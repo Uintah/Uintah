@@ -41,10 +41,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 //                                               Color(0,0,0), 0);
 
   Material* bookcoverimg = 
-    new MIPMaterial("/usr/sci/data/Geometry/textures/i3d97.smaller.gamma.ppm",
+    new MIPMaterial("/opt/SCIRun/data/Geometry/textures/i3d97.smaller.gamma.ppm",
                     .7, Color(.1,.1,.1),30,0,1);
   Material* bookcoverimg1 = 
-    new ImageMaterial("/usr/sci/data/Geometry/textures/i3d97.smaller.gamma.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/textures/i3d97.smaller.gamma.ppm",
                       ImageMaterial::Clamp,
                       ImageMaterial::Clamp,
                       .7,Color(.1,.1,.1), 30,

@@ -99,7 +99,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *craters = new Group;
   Group *rock_tower = new Group;
 
-  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/usr/sci/data/Geometry/textures/caustics/caust%d.pgm", 32,
+  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/opt/SCIRun/data/Geometry/textures/caustics/caust%d.pgm", 32,
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
@@ -376,41 +376,41 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // read in columns 
   t.pre_scale(Vector(.02, .02, .02));
   t.pre_translate(Vector(-2.5, -10.81, .67));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-	           "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+	           "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
 	           t,col1))
         exit(1);
   
   t.pre_translate(Vector(8.0 / 3.0, 0, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+                   "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
                    t,col2))
         exit(1);
   
   
   t.pre_translate(Vector(8.0 / 3.0, 0, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+                   "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
                    t,col3))
         exit(1);
 
   t.pre_translate(Vector(8.0 / 3.0, 0, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+                   "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
                    t,col4))
         exit(1);
   
   t.load_identity();
   t.pre_scale(Vector(1, 1, 2));
   t.pre_translate(Vector(4, 16, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/marble_tex/pedastal-01.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/marble_tex/pedastal-01.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/marble_tex/pedastal-01.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/marble_tex/pedastal-01.mtl",
                    t,col5))
         exit(1);
 
   t.pre_translate(Vector(-8, 0, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/marble_tex/pedastal-01.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/marble_tex/pedastal-01.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/marble_tex/pedastal-01.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/marble_tex/pedastal-01.mtl",
                    t,col6))
      exit(1);
   
@@ -420,8 +420,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t.pre_rotate(-1.3, Vector(0, 1, 0));
   t.pre_rotate(-.4, Vector(0, 0, 1));
   t.pre_translate(Vector(-16, 5, -1.2));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+                   "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
                    t,col7))
         exit(1);
 
@@ -429,8 +429,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t.load_identity();
   t.pre_scale(Vector(.02, .02, .02));
   t.pre_translate(Vector(-16, -2, -.8));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+                   "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
                    t,col8))
         exit(1);
   // columns by west tube
@@ -439,16 +439,16 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t.pre_rotate(.1, Vector(0, 1, 0));
   t.pre_rotate(.2, Vector(1, 0, 0));
   t.pre_translate(Vector(-19, -2, -.8));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+                   "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
                    t,col9))
         exit(1);
   // columns by west tube
   t.load_identity(); 
   t.pre_scale(Vector(.02, .02, .02));
   t.pre_translate(Vector(-19, 5, -.8));
-  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
-                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/column01/COLUMN.obj",
+                   "/opt/SCIRun/data/Geometry/models/column01/COLUMN.mtl",
                    t,col10))
         exit(1);
   
@@ -459,8 +459,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_rotate(.5, Vector(0, 1, 0));
   t1.pre_scale(Vector(.005, .005, .005)); 
   t1.pre_translate(Vector(-7, -4.5, -3.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.obj",
-	           "/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.obj",
+	           "/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.mtl",
 		    t1,rock3))
         exit(1);
 
@@ -468,8 +468,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_rotate(.6, Vector(0, 0, 1));
   t1.pre_scale(Vector(.005, .005, .005));
   t1.pre_translate(Vector(4.2, 5.5, -3.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.obj", 
-                   "/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.mtl", 
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.obj", 
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.mtl", 
                     t1,rock4))
         exit(1);
 
@@ -477,8 +477,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_rotate(.6, Vector(0, 0, 1));
   t1.pre_scale(Vector(.05, .05, .05));
   t1.pre_translate(Vector(14.2, -3.5, -43.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein003.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/rocks/stein003.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein003.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein003.mtl",
                    t1,rock2))
   
         exit(1);
@@ -487,8 +487,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_rotate(.6, Vector(0, 0, 1));
   t1.pre_scale(Vector(.05, .05, .05));
   t1.pre_translate(Vector(-33.2, 19.5, -43.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein003.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/rocks/stein003.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein003.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein003.mtl",
                    t1,rock1))
   
         exit(1);
@@ -497,8 +497,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //t1.pre_rotate(.6, Vector(0, 0, 1));
   t1.pre_scale(Vector(.08, .05, .05));
   t1.pre_translate(Vector(33.2, 36.5, -26.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.mtl",
                    t1,temple))
 
         exit(1);
@@ -507,8 +507,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_rotate(M_PI, Vector(0, 0, 1));
   t1.pre_scale(Vector(.07, .05, .05));
   t1.pre_translate(Vector(-20.2, 80.5, -26.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.mtl",
                    t1,temple))
 
         exit(1);
@@ -517,8 +517,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_rotate(M_PI, Vector(0, 0, 1));
   t1.pre_scale(Vector(.12, .05, .05));
   t1.pre_translate(Vector(0, 80.5, -16.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/rocks/stein002.mtl",
                    t1,temple))
 
         exit(1);
@@ -527,14 +527,14 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // this is the clump near southwest corner
   t2.pre_scale(Vector(.03, .03, .03));
   t2.pre_translate(Vector(-6.5, -3, .5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj", 
-	           "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj", 
+	           "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
 		   t2, patch1))
      exit(-1);
   
   t2.pre_translate(Vector(-.75, .5, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11-2.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11-2.mtl",
                    t2, patch1))
      exit(-1);  
 
@@ -542,31 +542,31 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // plant patch by north tube
   t3.pre_scale(Vector(.08, .02, .02));
   t3.pre_translate(Vector(-1.5, 7.3, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
-	           "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11-3.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
+	           "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11-3.mtl",
 		   t3, patch2))
      exit(-1);
   
   t3.load_identity();
   t3.pre_scale(Vector(.04, .03, .03));
   t3.pre_translate(Vector(1, 7.1, .3));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
                    t3, patch2))
      exit(-1);
   t3.load_identity();
   t3.pre_scale(Vector(.03, .02, .025));
   t3.pre_translate(Vector(4, 6.8, .31));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11-2.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11-2.mtl",
                    t3, patch2))
     exit(-1);
   
   t3.load_identity();
   t3.pre_scale(Vector(.14, .06, .03));
   t3.pre_translate(Vector(0, 13.6, .5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
                    t3, patch4))	
 
     exit(-1);   
@@ -576,8 +576,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(2, 2, 2));
   t3.pre_translate(Vector(7.2, 3.7, -.1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-	           "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+	           "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.mtl",
 		   t3, patch3)) 
     exit(-1); 
 
@@ -585,8 +585,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(.4, Vector(0, 0, 1));
   t3.pre_scale(Vector(1.8, 2, 2.63));
   t3.pre_translate(Vector(7.25, 2.8, -.1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13-2.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13-2.mtl",
 	           t3, patch3))      
     exit(-1);
  
@@ -594,8 +594,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(2.78, Vector(0, 0, 1));
   t3.pre_scale(Vector(1.5, 1.5, 1.5));
   t3.pre_translate(Vector(7.285, 2.4, -.1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13-3.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13-3.mtl",
                    t3, patch3))               
     exit(-1);
 
@@ -603,8 +603,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(3.78, Vector(0, 0, 1));
   t3.pre_scale(Vector(1.5, 1.5, 1.5));
   t3.pre_translate(Vector(7.285, -1.4, -.1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13-3.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13-3.mtl",
                    t3, patch3))
     exit(-1);
 
@@ -612,8 +612,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(3.78, Vector(0, 0, 1));
   t3.pre_scale(Vector(1.8, 1.9, 1.5));
   t3.pre_translate(Vector(7.1, -1.9, -.1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13-2.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13-2.mtl",
                    t3, patch3))
     exit(-1);
 
@@ -623,8 +623,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_scale(Vector(.16, .06, .06));
   t3.pre_rotate(-.8, Vector(0, 0, 1));
   t3.pre_translate(Vector(-1, -27.6, 1.3));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
                    t3, patch5))
     exit(-1);
  
@@ -632,8 +632,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(3.78, Vector(0, 0, 1));
   t3.pre_scale(Vector(2.2, 2.3, 2));
   t3.pre_translate(Vector(-5.5, -20.6, .2));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13-2.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13-2.mtl",
                    t3, patch6))
     exit(-1); 
 
@@ -641,8 +641,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(1, Vector(0, 0, 1));
   t3.pre_scale(Vector(1.8, 1.9, 1.5));
   t3.pre_translate(Vector(-6.41, -19.6, .2));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13-3.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13-3.mtl",
                    t3, patch6))
     exit(-1);
 
@@ -650,8 +650,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(2, Vector(0, 0, 1));
   t3.pre_scale(Vector(2.2, 2.2, 2.9));
   t3.pre_translate(Vector(-6, -19.2, .2));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models_rtrt/aq13.mtl",
                    t3, patch6))
     exit(-1);
 
@@ -660,8 +660,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.0005, .0005, .0005));
   t3.pre_translate(Vector(-3.9, -2.6, -.80));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/gaz.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/gaz.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/gaz.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/gaz.mtl",
                    t3, gazebo))
     exit(-1);
 
@@ -670,8 +670,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity(); 
   t3.pre_scale(Vector(.37, .37, .37));
   t3.pre_translate(Vector(60, 0, -2));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/keith/erectheion/Erectheion.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/keith/erectheion/Erectheion.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/keith/erectheion/Erectheion.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/keith/erectheion/Erectheion.mtl",
                    t3, erect))
     exit(-1); 
 
@@ -682,8 +682,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(1.5, Vector(0, 0, 1));
   t3.pre_scale(Vector(.07, .07, .07));
   t3.pre_translate(Vector(-70, 0, -1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/keith/pantheon/pantheon1.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/keith/pantheon/pantheon1.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/keith/pantheon/pantheon1.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/keith/pantheon/pantheon1.mtl",
                    t3, panth))
     exit(-1);
 */
@@ -692,8 +692,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.002, .002, .002));
   t3.pre_translate(Vector(0, 60, 5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/keith/architecture/stone_temple.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/keith/architecture/stone_temple.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/keith/architecture/stone_temple.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/keith/architecture/stone_temple.mtl",
                    t3, temple))
     exit(-1);
 
@@ -703,8 +703,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(M_PI + 1.5, Vector(0, 0, 1));
   t3.pre_scale(Vector(.08, .04, .08));
   t3.pre_translate(Vector(0, -50, -4));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/keith/parthenon/The_Parthenon.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/keith/parthenon/The_Parthenon.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/keith/parthenon/The_Parthenon.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/keith/parthenon/The_Parthenon.mtl",
                    t3, parth))
     exit(-1);
 
@@ -714,8 +714,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(M_PI / 2.0 , Vector(1, 0, 0));
   t3.pre_scale(Vector(3.5, 3.5, 3.5));
   t3.pre_translate(Vector(6, -30, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models1/temple/Greek_temple.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models1/temple/Greek_temple.mtl",
                    t3, temple2))
     exit(-1);
  
@@ -724,8 +724,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.03, .03, .03));
   t3.pre_translate(Vector(-40, 0 , -3));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/telescope_island/TelescopeIsland.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models1/telescope_island/TelescopeIsland.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models1/telescope_island/TelescopeIsland.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models1/telescope_island/TelescopeIsland.mtl",
                    t3, rock_tower))
     exit(-1);
  
@@ -734,8 +734,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.3, .3, .3));
   t3.pre_translate(Vector(-60, 30, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
                    t3, iceberg))
     exit(-1);
 
@@ -744,8 +744,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.3, .3, .3));
   t3.pre_translate(Vector(60, -40, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
                    t3, iceberg2))
     exit(-1);
 
@@ -754,8 +754,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.3, .3, .3));
   t3.pre_translate(Vector(50, 32, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG2.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG2.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG2.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG2.mtl",
                    t3, iceberg3))
     exit(-1);
 
@@ -781,16 +781,16 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_scale(Vector(.0001, .0001, .0001));
   // t3.pre_rotate(M_PI / 2.0 , Vector(1, 0, 0));
   t3.pre_translate(Vector(-2, 20, 2.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/keith/sharks/shark1.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/keith/sharks/shark1.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/keith/sharks/shark1.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/keith/sharks/shark1.mtl",
                    t3, shark1))
       exit(-1);
 /*
   t3.load_identity();
   t3.pre_scale(Vector(.1, .1, .1));
   t3.pre_translate(Vector(-20, -1, -.8));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/Anker/anker.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/Anker/anker.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/Anker/anker.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/Anker/anker.mtl",
                    t3, anker))
       exit(-1);
 */
@@ -799,41 +799,41 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(.1 * M_PI, Vector(-1, 0, 0));
   t3.pre_scale(Vector(.001, .001, .001));
   t3.pre_translate(Vector(-6.8, -.9, -.4));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/krabbe/krabbe.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/krabbe/krabbe.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/krabbe/krabbe.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/krabbe/krabbe.mtl",
                    t3, krabbe))
       exit(-1); 
 /*
   t3.load_identity();
   t3.pre_scale(Vector(1.2, 1.2, 1.2));
   t3.pre_translate(Vector(-1, -3, 1.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
                    t3, school1))
       exit(-1);
  
   t3.pre_translate(Vector(0, -.5, -.25));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
                    t3, school2))
       exit(-1);
 
   t3.pre_translate(Vector(-.5 ,-.5, .5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
                    t3, school3))
       exit(-1);  
   t3.pre_translate(Vector(1.20, .2, -.3));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
                    t3, school4))
       exit(-1);
 
   t3.load_identity();
   t3.pre_scale(Vector(1.3, 1.3, 1.3));
   t3.pre_translate(Vector(2, 7, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
                    t3, tiger))
       exit(-1);  
 */
@@ -841,8 +841,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_scale(Vector(1.2, 1.2, 1.2));
   t3.pre_translate(Vector(0, -3, 1.5));
   t3.pre_rotate(M_PI * .1, Vector(0, 0, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
                    t3, school1))
       exit(-1);
 
@@ -850,8 +850,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_scale(Vector(1.3, 1.3, 1.3));
   //t3.pre_translate(Vector(2, 7, 1));
   t3.pre_translate(Vector(0, 3, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
                    t3, tiger))
      exit(-1);
 
@@ -860,14 +860,14 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_rotate(-.6 , Vector(1, 0, 0));
   t3.pre_scale(Vector(.04, .04, .04));
   t3.pre_translate(Vector(7, -2, .1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/schnecken1/shell1.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/schnecken1/shell1.mtl",
                    t3, shell1))
       exit(-1);
 
   t3.pre_translate(Vector(-23.5, -2.5, 0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.obj",
-	           "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/schnecken1/shell1.obj",
+	           "/opt/SCIRun/data/Geometry/models/read_in_models/fish/schnecken1/shell1.mtl",
 	           t3, shell2))
       exit(-1);
 
@@ -876,8 +876,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //t.pre_rotate(-1.3, Vector(0, 1, 0));
   t.pre_rotate(-1.1, Vector(1, 0, 0));
   t.pre_translate(Vector(14, -.5, -.4));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/schnecken2/shell2.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/schnecken2/shell2.mtl",
                    t,shell3))
         exit(1);
 
@@ -887,8 +887,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t.pre_rotate(.352, Vector(1, 0, 0));
   t.pre_rotate(.2, Vector(0, 1, 0));
   t.pre_translate(Vector(-14, 1.8, -2.6));
-  if (!readObjFile("/usr/sci/data/Geometry/models/oceanpots_obj/pot3.obj",
-                   "/usr/sci/data/Geometry/models/oceanpots_obj/pot3.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/oceanpots_obj/pot3.obj",
+                   "/opt/SCIRun/data/Geometry/models/oceanpots_obj/pot3.mtl",
                    t,pot1))
         exit(1);
 
@@ -913,8 +913,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_scale(Vector(1.3, 1.3, 1.3));
   //t3.pre_translate(Vector(2, 7, 1));
   t3.pre_translate(Vector(0, 3, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
                    t3, tiger))
      exit(-1);
 
@@ -1143,7 +1143,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // ocean floor
   
   // add a plane for the ocean floor base
-  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "/usr/sci/data/Geometry/models/ocean_floor", 3, 8));
+  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "/opt/SCIRun/data/Geometry/models/ocean_floor", 3, 8));
   all_tubes->add(east_tube);
 
   all_tubes->add(new Rect(tan, Point(-100, 0, -1.5), Vector(50, 0, 0), Vector(0, 150, 0)));  

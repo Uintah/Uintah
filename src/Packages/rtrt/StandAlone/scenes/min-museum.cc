@@ -314,7 +314,7 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
   //  wall_group->add(new Box (clear, glass_bbox.min(), glass_bbox.max()));
 
   /* add cylinders */
-  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100,true);
+  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100);
   wall_group->add(new Cylinder (grey, top_left+in+right*0.05+down*0.05,
 				top_left+out*1.1+right*0.05+down*0.05, 0.01));
   wall_group->add(new Disc (grey, top_left+out*1.1+right*0.05+down*0.05, 
@@ -389,7 +389,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			       Vector(3,0,0), Vector(0,3,0));
   */
 
-  Material* floor_mat = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/carpet/carpet_black_blued2.ppm",
+  Material* floor_mat = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/museum/carpet/carpet_black_blued2.ppm",
 					  ImageMaterial::Tile,
 					  ImageMaterial::Tile, 1,
 					  Color(0,0,0), 0);
@@ -407,7 +407,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   ceiling_floor->add(check_floor);
 
-  Material* wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
+  Material* wall_white = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/museum/general/tex-wall.ppm",
 					   ImageMaterial::Tile,
 					   ImageMaterial::Tile, 1,
 					   Color(0,0,0), 0);
@@ -508,7 +508,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5, 
 			   Sphere_Ambient);
-  EnvironmentMapBackground *emap = new EnvironmentMapBackground ("/usr/sci/data/Geometry/textures/holo-room/environmap2.ppm", Vector(0,0,1));
+  EnvironmentMapBackground *emap = new EnvironmentMapBackground ("/opt/SCIRun/data/Geometry/textures/holo-room/environmap2.ppm", Vector(0,0,1));
   scene->set_ambient_environment_map(emap);
 
   scene->select_shadow_mode( Hard_Shadows );

@@ -59,7 +59,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       FILE *fp;
       double x,y,z;
       
-      fp = fopen("/usr/sci/data/Geometry/models/teapot.dat","r");
+      fp = fopen("/opt/SCIRun/data/Geometry/models/teapot.dat","r");
 
       while (fscanf(fp,"%s",buf) != EOF) {
 	if (!strcasecmp(buf,"bezier")) {

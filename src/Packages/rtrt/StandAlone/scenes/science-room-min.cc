@@ -107,7 +107,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group* table=new Group();
   Group* ceiling_floor=new Group();
 
-  ImageMaterial *stucco = new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/stucco.ppm",
+  ImageMaterial *stucco = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/science-room/stucco.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0, 0, true);
 
@@ -421,7 +421,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   // table top
   ImageMaterial *cement_floor = 
-    new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-floor.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/textures/science-room/cement-floor.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
   Object* floor=new Rect(cement_floor, Point(-8, 8, 0),
@@ -429,7 +429,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   ceiling_floor->add(floor);
 
   ImageMaterial *cement_pedestal = 
-    new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-pedestal.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/textures/science-room/cement-pedestal.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
   table->add(new UVCylinder(cement_pedestal, center,

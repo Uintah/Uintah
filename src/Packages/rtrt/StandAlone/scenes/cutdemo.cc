@@ -254,31 +254,31 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
 
   HVolumeBrick16* slc0=new HVolumeBrick16(vmat, vdpy,
-					  "/usr/sci/data/Geometry/volumes/vfem16_0",
+					  "/opt/SCIRun/data/Geometry/volumes/vfem16_0",
 					  3, nworkers);
   
   HVolumeBrick16* slc1=new HVolumeBrick16(vmat, vdpy,
-					  "/usr/sci/data/Geometry/volumes/vfem16_1",
+					  "/opt/SCIRun/data/Geometry/volumes/vfem16_1",
 					  3, nworkers);
   
   HVolumeBrick16* slc2=new HVolumeBrick16(vmat, vdpy,
-					  "/usr/sci/data/Geometry/volumes/vfem16_2",
+					  "/opt/SCIRun/data/Geometry/volumes/vfem16_2",
 					  3, nworkers);
 
   HVolumeBrick16* slc3=new HVolumeBrick16(vmat, vdpy,
-					  "/usr/sci/data/Geometry/volumes/vfem16_3",
+					  "/opt/SCIRun/data/Geometry/volumes/vfem16_3",
 					  3, nworkers);
   
   HVolumeBrick16* slc4=new HVolumeBrick16(vmat, vdpy,
-					  "/usr/sci/data/Geometry/volumes/vfem16_4",
+					  "/opt/SCIRun/data/Geometry/volumes/vfem16_4",
 					  3, nworkers);
   
   HVolumeBrick16* slc5=new HVolumeBrick16(vmat, vdpy,
-					  "/usr/sci/data/Geometry/volumes/vfem16_5",
+					  "/opt/SCIRun/data/Geometry/volumes/vfem16_5",
 					  3, nworkers);
 
   HVolumeBrick16* slc6=new HVolumeBrick16(vmat, vdpy,
-					  "/usr/sci/data/Geometry/volumes/vfem16_6",
+					  "/opt/SCIRun/data/Geometry/volumes/vfem16_6",
 					  3, nworkers);
 
   Group *vig = new Group();
@@ -310,18 +310,18 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #ifdef DODAVE
   Material* hmat=new LambertianMaterial(Color(0.5,0.5,0.5));
   CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(-.45,.45,-.76), Point(-8,8,2));
-  ColorMap *cmap = new ColorMap("/usr/sci/data/Geometry/volumes/vol_cmap");
+  ColorMap *cmap = new ColorMap("/opt/SCIRun/data/Geometry/volumes/vol_cmap");
   Material *cutmat = new CutMaterial(hmat, cmap, cpdpy);
   CutGroup *cut = new CutGroup(cpdpy);
   CutVolumeDpy* cvdpy = new CutVolumeDpy(82.5, cmap);
 
 #ifdef DOCUT
   HVolumeBrick16* davehead=new HVolumeBrick16(cutmat, cvdpy,
-					      "/usr/sci/data/Geometry/volumes/dave",
+					      "/opt/SCIRun/data/Geometry/volumes/dave",
 					      3, nworkers);
 #else
   HVolumeBrick16* davehead=new HVolumeBrick16(hmat, cvdpy,
-					      "/usr/sci/data/Geometry/volumes/dave",
+					      "/opt/SCIRun/data/Geometry/volumes/dave",
 					      3, nworkers);
 #endif
   InstanceWrapperObject *diw = new InstanceWrapperObject(davehead);

@@ -227,7 +227,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   points.resize(0);
 
-  parseobj("/usr/sci/data/Geometry/models/galleon.obj");
+  parseobj("/opt/SCIRun/data/Geometry/models/galleon.obj");
 
   g->compute_bounds(b,0);
   pmin = b.min();

@@ -139,7 +139,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
     int scenesize=2;
     double light_radius=0.8;
-    char* texfile="/usr/sci/data/Geometry/textures/7.tex.raw";
+    char* texfile="/opt/SCIRun/data/Geometry/textures/7.tex.raw";
     for(int i=1;i<argc;i++){
 	if(strcmp(argv[i], "-size")==0){
 	    i++;
