@@ -237,11 +237,9 @@ wait_shutdown()
 void
 Thread::allow_sgi_OpenGL_page0_sillyness()
 {
-#if 0
     if(mprotect(0, getpagesize(), PROT_READ|PROT_WRITE) != 0){
 	fprintf(stderr, "\007\007!!! Strange error re-mapping page 0 - tell Steve this number: %d\n", errno);
     }
-#endif
 }
 
 /*
@@ -1322,6 +1320,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.19  2000/02/24 16:59:24  sparker
+// enabled other half of Thread::allow_sgi_OpenGL_page0_sillyness()
+//
 // Revision 1.18  2000/02/24 06:10:17  sparker
 // Re-enabled the page 0 protection call.
 //
