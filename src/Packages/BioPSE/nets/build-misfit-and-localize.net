@@ -17,37 +17,17 @@
 
 # SCI Network 1.0
 
-if {[llength [array get env SCIRUN_DATA]] == 0} {
-   puts ""
-   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
-   puts "*** Please exit, set it in your shell, and rerun."
-   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
-   puts ""
-   ::netedit scheduleok
-   return
-}
-set DATADIR $env(SCIRUN_DATA)
-puts "*** Using SCIRUN_DATA $DATADIR"
+set results [sourceSettingsFile]
 
-if {[llength [array get env SCIRUN_DATASET]] == 0} {
-   puts ""
-   puts "*** Environment variable 'SCIRUN_DATASET' was not set -- "
-   puts "*** using 'sphere' as the default."
-   puts ""
-   set DATASET sphere
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
 } else {
-   set DATASET $env(SCIRUN_DATASET)
-   puts "*** Using DATASET $DATASET"
-}
 
-if {![file isfile $DATADIR/$DATASET/$DATASET.settings]} {
-   puts ""
-   puts "*** Error: $DATADIR/$DATASET/$DATASET.settings is not a valid file."
-   puts "*** Please exit and make sure the SCIRUN_DATA and SCIRUN_DATA_SET"
-   puts "*** environment variables are set correctly."
-   puts ""
-   ::netedit scheduleok
-   return
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
 }
 
 source $DATADIR/$DATASET/$DATASET.settings
