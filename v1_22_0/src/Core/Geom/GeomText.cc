@@ -498,7 +498,8 @@ PersistentTypeID GeomFTGLFontRenderer::type_id("GeomFTGLFontRenderer", "GeomObj"
 
 GeomFTGLFontRenderer::GeomFTGLFontRenderer(const string &fontfile, 
 					   int ptRez,
-					   int screenRez)
+					   int screenRez) :
+  filename_(fontfile)
 {
   font_ = scinew FTGLTextureFont(fontfile.c_str());
   font_->CharMap(ft_encoding_unicode);
