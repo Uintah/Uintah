@@ -66,7 +66,7 @@ private:
   int jindex_;
   int kindex_;
 
-  FieldHandle  fHandle_;
+  FieldHandle fHandle_;
 
   int fGeneration_;
 };
@@ -133,7 +133,7 @@ void FieldSlicer::execute(){
   // Check to see if the input field has changed.
   if( fGeneration_ != fHandle->generation )
   {
-    fGeneration_  = fHandle->generation;
+    fGeneration_ = fHandle->generation;
     updateField = true;
   }
 
