@@ -117,9 +117,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
     if (MPMPhysicalModules::thermalContactModel) {
        d_mpm->scheduleComputeHeatExchange(          patch,sched,old_dw,new_dw);
     }
-    d_mpm->scheduleExMomInterpolated(               patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeStressTensor(             patch,sched,old_dw,new_dw);
-     
+
     // schedule the interpolation of mass and volume to the cell centers
     scheduleInterpolateNCToCC_0(                    patch,sched,old_dw,new_dw);
     scheduleComputeEquilibrationPressure(           patch,sched,old_dw,new_dw);
@@ -127,6 +125,11 @@ void MPMICE::scheduleTimeAdvance(double, double,
     d_ice->scheduleAddExchangeContributionToFCVel(  patch,sched,old_dw,new_dw);
     d_ice->scheduleComputeDelPressAndUpdatePressCC( patch,sched,old_dw,new_dw);
 
+    scheduleInterpolateVelIncFCToNC(                patch,sched,old_dw,new_dw);
+
+//   d_mpm->scheduleExMomInterpolated(               patch,sched,old_dw,new_dw);
+    d_mpm->scheduleComputeStressTensor(             patch,sched,old_dw,new_dw);
+     
     scheduleInterpolatePressureToParticles(         patch,sched,old_dw,new_dw);
    
     d_mpm->scheduleComputeInternalForce(            patch,sched,old_dw,new_dw);
@@ -183,6 +186,36 @@ void MPMICE::scheduleInterpolatePressureToParticles(const Patch* patch,
      t->computes(new_dw, Mlb->pPressureLabel, idx, patch);
    }
 
+   sched->addTask(t);
+
+}
+//______________________________________________________________________
+//
+void MPMICE::scheduleInterpolateVelIncFCToNC(const Patch* patch,
+                                      SchedulerP& sched,
+                                      DataWarehouseP& old_dw,
+                                      DataWarehouseP& new_dw)
+{
+   int numMPMMatls = d_sharedState->getNumMPMMatls();
+   Task* t=scinew Task("MPMICE::interpolateVelIncFCToNC",
+                        patch, old_dw, new_dw,
+                        this, &MPMICE::interpolateVelIncFCToNC);
+
+   for(int m = 0; m < numMPMMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+     int idx = mpm_matl->getDWIndex();
+     t->requires(new_dw,MIlb->uvel_FCLabel,     idx, patch,Ghost::None);
+     t->requires(new_dw,MIlb->vvel_FCLabel,     idx, patch,Ghost::None);
+     t->requires(new_dw,MIlb->wvel_FCLabel,     idx, patch,Ghost::None);
+     t->requires(new_dw,MIlb->uvel_FCMELabel,   idx, patch,Ghost::None);
+     t->requires(new_dw,MIlb->vvel_FCMELabel,   idx, patch,Ghost::None);
+     t->requires(new_dw,MIlb->wvel_FCMELabel,   idx, patch,Ghost::None);
+
+     t->requires(new_dw,Mlb->gVelocityLabel,    idx, patch, Ghost::None);
+
+     t->computes(new_dw,Mlb->gMomExedVelocityLabel, idx, patch );
+
+   }
    sched->addTask(t);
 
 }
@@ -440,6 +473,71 @@ void MPMICE::interpolatePressureToParticles(const ProcessorGroup*,
     new_dw->put(pPressure,  Mlb->pPressureLabel);
 
   }
+}
+//______________________________________________________________________
+//
+void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
+                                     const Patch* patch,
+                                     DataWarehouseP&,
+                                     DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Vector zero(0.0,0.0,0.);
+  Vector dx = patch->dCell();
+  SFCXVariable<double> uvel_FC, uvel_FCME;
+  SFCYVariable<double> vvel_FC, vvel_FCME;
+  SFCZVariable<double> wvel_FC, wvel_FCME;
+  CCVariable<Vector> velInc_CC;
+  NCVariable<Vector> velInc_NC;
+  NCVariable<Vector> gvelocity;
+
+  for(int m = 0; m < numMatls; m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    int dwindex = mpm_matl->getDWIndex();
+    new_dw->get(uvel_FC,   MIlb->uvel_FCLabel,   dwindex, patch, Ghost::None,0);
+    new_dw->get(vvel_FC,   MIlb->vvel_FCLabel,   dwindex, patch, Ghost::None,0);
+    new_dw->get(wvel_FC,   MIlb->wvel_FCLabel,   dwindex, patch, Ghost::None,0);
+    new_dw->get(uvel_FCME, MIlb->uvel_FCMELabel, dwindex, patch, Ghost::None,0);
+    new_dw->get(vvel_FCME, MIlb->vvel_FCMELabel, dwindex, patch, Ghost::None,0);
+    new_dw->get(wvel_FCME, MIlb->wvel_FCMELabel, dwindex, patch, Ghost::None,0);
+
+    new_dw->get(gvelocity,Mlb->gVelocityLabel,   dwindex, patch, Ghost::None,0);
+
+    new_dw->allocate(velInc_CC, MIlb->velInc_CCLabel, dwindex, patch);
+    new_dw->allocate(velInc_NC, MIlb->velInc_NCLabel, dwindex, patch);
+    double xcomp,ycomp,zcomp;
+
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector cur = *iter;
+        IntVector adjx(cur.x()+1,cur.y(),  cur.z());
+        IntVector adjy(cur.x(),  cur.y()+1,cur.z());
+        IntVector adjz(cur.x(),  cur.y(),  cur.z()+1);
+	xcomp = ((uvel_FCME[cur]  - uvel_FC[cur]) +
+		 (uvel_FCME[adjx] - uvel_FC[adjx]))*0.5;
+	ycomp = ((vvel_FCME[cur]  - vvel_FC[cur]) +
+		 (vvel_FCME[adjy] - vvel_FC[adjy]))*0.5;
+	zcomp = ((wvel_FCME[cur]  - wvel_FC[cur]) +
+		 (wvel_FCME[adjz] - wvel_FC[adjz]))*0.5;
+
+        velInc_CC[*iter] = Vector(xcomp,ycomp,zcomp);
+
+//        cout << "velInc_CC[*iter] = " << velInc_CC[*iter] << endl;
+    }
+
+    IntVector cIdx[8];
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+	patch->findCellsFromNode(*iter,cIdx);
+	velInc_NC[*iter]  = zero;
+	for (int in=0;in<8;in++){
+	   velInc_NC[*iter]     +=  velInc_CC[cIdx[in]]*.125;
+        }
+	gvelocity[*iter] += velInc_NC[*iter];
+    }
+
+    new_dw->put(gvelocity, Mlb->gMomExedVelocityLabel, dwindex, patch);
+
+  }
+
 }
 //______________________________________________________________________
 //

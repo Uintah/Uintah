@@ -81,17 +81,20 @@ public:
 				   DataWarehouseP&, DataWarehouseP&);
 
   void scheduleFinishMPMICEproblemSetup(const ProblemSpecP& params, 
-                            GridP& grid,
-				SimulationStateP&);  
+                                        GridP& grid, SimulationStateP&);  
                             
   void scheduleFinishMPMICEinitialize(const LevelP& level, 
-                          SchedulerP& sched,
-			     DataWarehouseP& dw);
+                                      SchedulerP& sched, DataWarehouseP& dw);
 
   void scheduleInterpolateNCToCC_0(const Patch* patch,
                                    SchedulerP&,
                                    DataWarehouseP&,
                                    DataWarehouseP&);
+
+  void scheduleInterpolateVelIncFCToNC(const Patch* patch,
+                                       SchedulerP&,
+                                       DataWarehouseP&,
+                                       DataWarehouseP&);
 
   void scheduleInterpolateNCToCC(const Patch* patch,
                                  SchedulerP&,
@@ -129,6 +132,11 @@ public:
                            const Patch* patch,
                            DataWarehouseP& old_dw,
                            DataWarehouseP& new_dw);
+
+  void interpolateVelIncFCToNC(const ProcessorGroup*,
+                               const Patch* patch,
+                               DataWarehouseP& old_dw,
+                               DataWarehouseP& new_dw);
 
   void interpolateNCToCC(const ProcessorGroup*,
                          const Patch* patch,
