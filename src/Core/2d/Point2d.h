@@ -44,11 +44,12 @@ namespace SCIRun {
 class TypeDescription;
 class RigorousTest;
 class Piostream;
-class Vector;
+class Vector2d;
 
 class SCICORESHARE Point2d {
   double x_,y_;
 public:
+  Point2d(const Vector2d& v);
   inline Point2d(double x, double y): x_(x), y_(y) {}
   Point2d(double, double, double, double);
   inline Point2d(const Point2d&);
@@ -57,8 +58,8 @@ public:
   int operator!=(const Point2d&) const;
   inline Point2d& operator=(const Point2d&);
   //  inline Vector operator-(const Point2d&) const;
-  //inline Point2d operator+(const Vector&) const;
-  //inline Point2d operator-(const Vector&) const;
+  Point2d operator+(const Vector2d&) const;
+  Point2d operator-(const Vector2d&) const;
   inline Point2d operator*(double) const;
   inline Point2d& operator*=(const double);
   //inline Point2d& operator+=(const Vector&);
@@ -80,11 +81,11 @@ public:
   //! support dynamic compilation
   static const string& get_h_file_path();
     
-  //friend SCICORESHARE class Vector;
+  friend SCICORESHARE class Vector2d;
   friend SCICORESHARE inline double Dot(const Point2d&, const Point2d&);
-  //friend SCICORESHARE inline double Dot(const Vector&, const Point2d&);
-  //friend SCICORESHARE inline double Dot(const Point2d&, const Vector&);
-  //    friend inline double Dot(const Point2d&, const Vector&);
+  friend SCICORESHARE inline double Dot(const Vector2d&, const Point2d&);
+  friend SCICORESHARE inline double Dot(const Point2d&, const Vector2d&);
+  //friend inline double Dot(const Point2d&, const Vector2d&);
   friend SCICORESHARE inline Point2d Min(const Point2d&, const Point2d&);
   friend SCICORESHARE inline Point2d Max(const Point2d&, const Point2d&);
   friend SCICORESHARE Point2d Interpolate(const Point2d&, const Point2d&, double);

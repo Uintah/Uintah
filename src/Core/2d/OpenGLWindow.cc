@@ -99,26 +99,39 @@ OpenGLWindow::pre()
   if (!glXMakeCurrent(dpy, win, cx))
     cerr << "*glXMakeCurrent failed.\n";
   
+
   glViewport(0, 0, xres_, yres_);
   
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
 
-void
-OpenGLWindow::post()
-{
-  glXSwapBuffers( dpy, win);
 
-  GLenum errcode;
-  while((errcode=glGetError()) != GL_NO_ERROR){
-    cerr << "Plot got an error from GL: " 
-	 << (char*)gluErrorString(errcode) << endl;
-  }
+void
+OpenGLWindow::post( bool swap)
+{
+  if ( swap )
+    glXSwapBuffers( dpy, win);
+
   glXMakeCurrent(dpy, None, NULL);
+
   TCLTask::unlock();
 }
 
+
+void
+OpenGLWindow::set_cursor( const string& c )
+{
+  tcl_ << "set_cursor " << c;
+  tcl_exec();
+}
+
+void
+OpenGLWindow::set_binds( const string& obj )
+{
+  tcl_ << "setobj " << obj;
+  tcl_exec();
+}
 
 void 
 OpenGLWindow::make_raster_font()
@@ -163,6 +176,14 @@ OpenGLWindow::print_string(char *s)
   glPopAttrib ();
 }
 
+void
+OpenGLWindow::resize( int h, int w )
+{
+  xres_ = h;
+  yres_ = w;
+  tcl_ << " resize " << h << " " << w;
+  tcl_exec();
+}
 
 OpenGLWindow *
 OpenGLWindow::sub_window( int l, int r, int t, int b )

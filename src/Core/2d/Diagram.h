@@ -32,16 +32,15 @@
 #define SCI_Diagram_h 
 
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TclObj.h>
 #include <Core/Containers/Array1.h>
-#include <Core/2d/DrawObj.h>
+#include <Core/2d/DrawGui.h>
 #include <Core/2d/Widget.h>
 
 namespace SCIRun {
   
   class Polyline;
 
-class SCICORESHARE Diagram : public TclObj, public DrawObj {
+class SCICORESHARE Diagram : public DrawGui {
 private:
   Array1<bool> active_;
   Array1<Polyline *> poly_;
@@ -61,6 +60,7 @@ private:
 /*   ScaleMode scale_mode; */
   int select_mode_, scale_mode_;
   DrawMode draw_mode_;
+  bool changed_;
 
 public:
   Diagram( const string &name="" );
@@ -74,18 +74,24 @@ public:
 
   virtual void tcl_command(TCLArgs&, void*);
   virtual void set_id( const string &);
-  virtual void set_window( const string& );
+  virtual void set_windows( const string &menu, const string &tb,
+			    const string &ui);
 
   void get_active( Array1<Polyline *> &);
-
+  double get_at( double );
  private:  
   void button_press( int x, int y, int button );
   void button_motion( int x, int y, int button );
   void button_release( int x, int y, int button );
 
+  void pan_start( int x, int y, int button );
+  void pan_move( int x, int y, int button );
+  void pan_end( int x, int y, int button );
+
   void add_hairline();
   void add_zoom();
 
+  void child_changed( DrawObj *) { changed_ = true; }
  public:
   // For OpenGL
 #ifdef SCI_OPENGL

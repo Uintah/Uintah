@@ -33,28 +33,23 @@
 
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/2d/Polyline.h>
-#include <Core/2d/Widget.h>
 #include <Core/2d/HairObj.h>
 
 namespace SCIRun {
 
 class Diagram;  
 
-class SCICORESHARE Hairline :  public TclObj, public Widget {
+class SCICORESHARE Hairline :  public TclObj, public HairObj {
 private:
-  BBox2d bbox_;
-  HairObj *hair_;
   Array1< Polyline *> poly_;
   Diagram *parent_;
 
 public:
   
-  Hairline() : TclObj( "hairline") {}
-  Hairline( Diagram *, const string &name="hairline" );
+  Hairline() : TclObj( "hairline"), HairObj("Hairline") {}
+  Hairline( Diagram *, const string &name="Hairline" );
   virtual ~Hairline();
 
-  //void add( Polyline *);
-  void update_hair();
   void update();
 
   virtual void select( double x, double y, int b );

@@ -44,10 +44,10 @@ private:
   int viewport[4];
 public:
   
-  HairObj() {}
-  HairObj( const BBox2d &, const string &name="hairline" );
+  HairObj( const string &name="hairline" );
   virtual ~HairObj();
 
+  virtual void get_bounds( BBox2d & ) {} 
   double at() { return pos_; }
   void recompute();
   virtual void select( double x, double y, int b );

@@ -48,21 +48,11 @@ Persistent* make_Hairline()
   return scinew Hairline;
 }
 
-PersistentTypeID Hairline::type_id("Hairline", "Widget", make_Hairline);
+PersistentTypeID Hairline::type_id("Hairline", "HairObj", make_Hairline);
 
 Hairline::Hairline( Diagram *p, const string &name)
-  : TclObj( "Hairline" ), Widget(name), hair_(0), parent_(p)
+  : TclObj( "Hairline" ), HairObj(name), parent_(p)
 {
-  parent_->get_active( poly_ );
-
-  BBox2d bb;
-  for (int i=0; i<poly_.size(); i++) 
-    poly_[i]->get_bounds( bb );
-  
-  bbox_.extend( Point2d( bb.min().x(), 0 ) );
-  bbox_.extend( Point2d( bb.max().x(), 1 ) );
-
-  hair_ = scinew HairObj( bbox_, "hair" );
 }
 
 
@@ -74,60 +64,39 @@ Hairline::~Hairline()
 void
 Hairline::select( double x, double y, int b )
 {
-  update_hair();
-  hair_->select( x, y, b );
-  update();
+  HairObj::select( x, y, b );
+  //  update();
 }
   
 void
 Hairline::move( double x, double y, int b)
 {
-  update_hair();
-  hair_->move( x, y, b );
-  update();
+  HairObj::move( x, y, b );
+  //  update();
 }
   
 void
 Hairline::release( double x, double y, int b)
 {
-  update_hair();
-  hair_->release( x, y, b );
-  update();
+  HairObj::release( x, y, b );
+  //  update();
 }
   
 
 void
-Hairline::update_hair()
-{
-  parent_->get_active( poly_ );
-
-  // resert hair postion
-
-  bbox_.reset();
-  for (int i=0; i<poly_.size(); i++) 
-    poly_[i]->get_bounds( bbox_ );
-
-  if ( !bbox_.valid() ) {
-    cerr << "bbox not valid...\n";
-    return;
-  }
-
-  hair_->set_bbox ( BBox2d( Point2d( bbox_.min().x(), 0 ), 
-			    Point2d( bbox_.max().x(), 1 ) ) );
-}
-
-void
 Hairline::update()
 {
+  parent_->get_active( poly_ );
+  double pos = parent_->get_at( at() );
+
   // get and sort the values
 
-  double at = hair_->at();
   int index[poly_.size()];
   double value[poly_.size()];
 
   // get value and insert them in acsending order (using insert sort)
   for (int i=0; i<poly_.size(); i++) {
-    double v = poly_[i]->at(at);
+    double v = poly_[i]->at(pos);
     int j;
     for (j=i; j>0; j--) {
       if ( value[j-1] < v ) {
@@ -140,7 +109,7 @@ Hairline::update()
     value[j] = v;
     index[j] = i;
   }
-
+  
   // send the sorted list to the tcl side
   tcl_ << " values ";
   for (int i=0; i<poly_.size(); i++) 

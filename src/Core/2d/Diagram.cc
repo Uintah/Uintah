@@ -54,7 +54,7 @@ Persistent* make_Diagram()
 PersistentTypeID Diagram::type_id("diagram", "DrawObj", make_Diagram);
 
 Diagram::Diagram( const string &name)
-  : TclObj( "Diagram"), DrawObj(name)
+  : DrawGui(name, "Diagram")
 {
   select_mode_ = 2;
   scale_mode_ = 1;
@@ -184,6 +184,9 @@ Diagram::add_hairline()
 void
 Diagram::add_zoom()
 {
+  BoxObj *obj = scinew BoxObj( "Zoom" );
+  add_widget( obj );
+  redraw();
 //   Zoom *zoom = scinew Zoom( this, bbox_, "Zoom" );
 //   int w = add_widget( zoom );
 
@@ -205,11 +208,12 @@ Diagram::set_id( const string & id )
   TclObj::set_id( tmp.str() );
 }
 
-void
-Diagram::set_window( const string & window )
+void 
+Diagram::set_windows( const string &menu, const string &tb,
+		      const string &ui )
 {
-  TclObj::set_window( window, name() );
-
+  DrawGui::set_windows( menu, tb, ui );
+  if ( ogl_ ) ogl_->set_binds( id() );
   for (int i=0; i<poly_.size(); i++) {
     tcl_ << " add " << i << " ";
     if ( poly_[i]->name() != "" )
@@ -254,9 +258,15 @@ Diagram::button_press( int x, int y, int button )
     }
 
     glPopMatrix();
-    ogl_->post();
-    
+    ogl_->post(false);
+
     draw_mode_ = Draw;
+
+    if ( n == 0 && button == 1 ) {
+      selected_widget_ = -2;
+      pan_start( x, y, button );
+    }
+
     redraw();
   }
   else
@@ -266,22 +276,50 @@ Diagram::button_press( int x, int y, int button )
 void
 Diagram::button_motion( int x, int y, int button )
 {
-  if ( selected_widget_ != -1 ) {
+  if ( selected_widget_ > -1 ) {
     widget_[selected_widget_]->move( x, y, button );
     redraw();
+  }
+  else if ( selected_widget_ == -2 ) { // pan motion
+    pan_move( x, y, button );
   }
 }
 
 void
 Diagram::button_release( int x, int y, int button )
 {
-  if ( selected_widget_ != -1) {
+  if ( selected_widget_ > -1) {
     widget_[ selected_widget_ ]->release(x, y, button );
     selected_widget_ = -1;
     redraw();
+  } else if ( selected_widget_ == -2 ) { // pan motion
+    pan_end( x, y, button );
+    selected_widget_ = -1;
   }
 }
 
+
+void
+Diagram::pan_start( int x, int y, int button )
+{
+  cerr << "pan start\n";
+  if ( ogl_ ) {
+    ogl_->set_cursor ("fleur");
+  }
+}
+
+void
+Diagram::pan_move( int x, int y, int button )
+{
+}
+
+void
+Diagram::pan_end( int x, int y, int button )
+{
+  if ( ogl_ )
+    ogl_->set_cursor ("left_ptr");
+
+}
 
 void
 Diagram::get_active( Array1<Polyline *> &poly )
@@ -297,6 +335,15 @@ Diagram::get_active( Array1<Polyline *> &poly )
 	poly.add( poly_[i] );
   }
 }    
+
+double
+Diagram::get_at( double at )
+{
+  reset_bbox();
+  return (graphs_bounds_.min().x() + 
+	  at * ( graphs_bounds_.max().x() - graphs_bounds_.min().x() ));
+}
+
 
 #define DIAGRAM_VERSION 1
 

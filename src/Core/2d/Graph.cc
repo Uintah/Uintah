@@ -20,14 +20,37 @@ using std::ostringstream;
 
 #include <Core/2d/Graph.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/ConditionVariable.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCL.h>
 
 namespace SCIRun {
 
+class GraphHelper : public Runnable {
+  Graph *graph_;
+  Mutex lock_;
 
-ObjInfo::ObjInfo( const string &name, DrawObj *d)  
+public:
+  GraphHelper( Graph *g ) : graph_(g), lock_("GraphHelper") {}
+  virtual ~GraphHelper() {}
+
+  virtual void run();
+};
+
+
+void
+GraphHelper::run()
+{
+  for (;;) {
+    graph_->has_work_.wait( lock_ );
+    graph_->update();
+  }
+}
+
+
+ObjInfo::ObjInfo( const string &name, DrawGui *d)  
 {
   name_ = name;
   obj_ = d;
@@ -52,7 +75,8 @@ ObjInfo::set_id( const string &id)
 
 
 Graph::Graph( const string &id )
-  : TclObj( "Graph" ), DrawObj( id ), gl_window("gl-window", id, this )
+  : TclObj( "Graph" ), DrawObj( id ), gl_window("gl-window", id, this ),
+    has_work_("GraphLock")
 {
   obj_ = 0;
 
@@ -60,6 +84,11 @@ Graph::Graph( const string &id )
 
   ogl_ = scinew OpenGLWindow;
   ogl_->set_id( id + "-gl" );
+
+  helper_ = scinew GraphHelper(this);
+  Thread* t=new Thread(helper_, id.c_str() );
+  t->detach();
+  
 }
 
 void
@@ -71,16 +100,15 @@ Graph::set_window( const string &window )
   
   if ( obj_ ) {
     obj_->obj_->set_opengl( ogl_ );
-    TclObj *to = dynamic_cast<TclObj *>(obj_->obj_);
-    if ( to ) {
-      to->set_window( window );
-      if ( ogl_ ) ogl_->command( string(" setobj ") + to->id() );
-    }
+    obj_->obj_->set_windows( window+".menu", 
+			     window+".tb",
+			     window+".ui" );
+    //if ( ogl_ ) ogl_->command( string(" setobj ") + to->id() );
   }
 }
 
 void
-Graph::add( const string &name, DrawObj *d )
+Graph::add( const string &name, DrawGui *d )
 {
   d->set_parent( this );
 
@@ -91,11 +119,10 @@ Graph::add( const string &name, DrawObj *d )
   obj_->set_id( id() + "-obj" );
   if ( ogl_->initialized() &&  window() != "" ) {
     obj_->obj_->set_opengl( ogl_ );
-    TclObj *to = dynamic_cast<TclObj *>(obj_->obj_);
-    if ( to ) {
-      to->set_window( window() );
-      command( string(" setobj ") + to->id() );
-    }
+    obj_->obj_->set_windows( window()+".menu", 
+			     window()+".tb",
+			     window()+".ui" );
+    //command( string(" setobj ") + to->id() );
   }
 }
 
@@ -103,7 +130,7 @@ Graph::add( const string &name, DrawObj *d )
 void
 Graph::need_redraw() 
 {
-  update();
+  has_work_.conditionSignal();
 }
 
 void

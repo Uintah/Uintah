@@ -41,7 +41,6 @@ PersistentTypeID DrawObj::type_id("DrawObj", "Datatype", 0);
 DrawObj::DrawObj( const string &name) 
   : name_(name), parent_(0), ogl_(0)
 {
-  lock_ = scinew Mutex( name.c_str() );
 }
 
 

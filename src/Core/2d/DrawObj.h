@@ -34,7 +34,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/CrowdMonitor.h>
 #include <sci_config.h>
 
 #include <iosfwd>
@@ -46,9 +46,9 @@ class  OpenGLWindow;
 
 class SCICORESHARE DrawObj : public Datatype {
 private:
-  Mutex *lock_;
   string name_;
   DrawObj *parent_;
+  CrowdMonitor *lock_;
 
  protected:
   OpenGLWindow *ogl_;
@@ -57,8 +57,13 @@ public:
   DrawObj(const string &name="");
   virtual ~DrawObj();
 
-  void lock() { lock_->lock(); }
-  void unlock() { lock_->unlock(); }
+  void set_lock( CrowdMonitor *lock ) { lock_ = lock; }
+  void read_lock() { if (lock_) lock_->readLock(); }
+  void read_unlock() { lock_->readUnlock(); }
+
+  void write_lock() { if (lock_) lock_->writeLock(); }
+  void write_unlock() { lock_->writeUnlock(); }
+
   string name() { return name_;}
   void set_name ( const string &name) { name_=name;}
   DrawObj *parent() { return parent_; }
@@ -68,7 +73,7 @@ public:
   virtual void need_redraw() {}
   virtual void reset_bbox();
   virtual void get_bounds(BBox2d&) = 0;
-  
+  virtual void child_changed( DrawObj *) {}
 
   // For OpenGL
 #ifdef SCI_OPENGL

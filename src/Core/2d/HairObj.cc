@@ -52,11 +52,9 @@ Persistent* make_HairObj()
 
 PersistentTypeID HairObj::type_id("HairObj", "Widget", make_HairObj);
 
-HairObj::HairObj( const BBox2d &bbox, const string &name)
-  : Widget(name), 
-    from_(bbox.min().x()), to_(bbox.max().x()), pos_( (from_+to_)/2 )
+HairObj::HairObj( const string &name)
+  : Widget(name), pos_(0.5)
 {
-  set_bbox( bbox );
 }
 
 
@@ -67,13 +65,10 @@ HairObj::~HairObj()
 void
 HairObj::recompute()
 {
-  from_ = bbox_.min().x();
-  to_ = bbox_.max().x();
-
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  glOrtho( from_, to_,  0, 1,  -1, 1 );
+  glOrtho( 0, 1,  0, 1,  -1, 1 );
   glGetDoublev( GL_PROJECTION_MATRIX, proj );
   glGetDoublev( GL_MODELVIEW_MATRIX, model );
   glGetIntegerv( GL_VIEWPORT, viewport );
@@ -88,24 +83,22 @@ HairObj::select( double x, double y, int  )
 void
 HairObj::move( double x, double y, int )
 {
-  if ( from_ != bbox_.min().x() || to_ != bbox_.max().x() ) 
-    recompute();
+  recompute();
 
   GLdouble px, py, pz;
   gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-  if ( px >= from_ && px <= to_ )
+  if ( px >= 0 && px < 1 )
     pos_ = px;
 }
   
 void
 HairObj::release( double x, double y, int )
 {
-  if ( from_ != bbox_.min().x() || to_ != bbox_.max().x() ) 
-    recompute();
+  recompute();
 
   GLdouble px, py, pz;
   gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-  if ( px >= from_ && px <= to_ )
+  if ( px >= 0 && px < 1 )
     pos_ = px;
 }
   
