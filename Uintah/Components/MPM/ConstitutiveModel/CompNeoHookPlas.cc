@@ -13,6 +13,7 @@
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <iostream>
+#include <Uintah/Components/MPM/MPMLabel.h>
 using std::cerr;
 using namespace Uintah::MPM;
 using SCICore::Math::Min;
@@ -48,14 +49,15 @@ void CompNeoHookPlas::initializeCMData(const Region* region,
    // constitutive model parameters and deformationMeasure
    Matrix3 Identity, zero(0.);
    Identity.Identity();
+   const MPMLabel* lb = MPMLabel::getLabels();
 
    ParticleVariable<CMData> cmdata;
    new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), region);
    ParticleVariable<Matrix3> deformationGradient;
    new_dw->allocate(deformationGradient, 
-		pDeformationMeasureLabel, matl->getDWIndex(), region);
+		lb->pDeformationMeasureLabel, matl->getDWIndex(), region);
    ParticleVariable<Matrix3> pstress;
-   new_dw->allocate(pstress, pStressLabel, matl->getDWIndex(), region);
+   new_dw->allocate(pstress, lb->pStressLabel, matl->getDWIndex(), region);
    ParticleVariable<Matrix3> bElBar;
    new_dw->allocate(bElBar,  bElBarLabel, matl->getDWIndex(), region);
 
@@ -68,9 +70,9 @@ void CompNeoHookPlas::initializeCMData(const Region* region,
           pstress[*iter] = zero;
    }
    new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
-   new_dw->put(deformationGradient, pDeformationMeasureLabel,
+   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
 				 matl->getDWIndex(), region);
-   new_dw->put(pstress, pStressLabel, matl->getDWIndex(), region);
+   new_dw->put(pstress, lb->pStressLabel, matl->getDWIndex(), region);
    new_dw->put(bElBar, bElBarLabel, matl->getDWIndex(), region);
 
    computeStableTimestep(region, matl, new_dw);
@@ -85,14 +87,14 @@ void CompNeoHookPlas::computeStableTimestep(const Region* region,
    // are computed as a side-effect of computeStressTensor
   Vector dx = region->dCell();
   int matlindex = matl->getDWIndex();
-
+  const MPMLabel* lb = MPMLabel::getLabels();
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
   new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
+  new_dw->get(pmass, lb->pMassLabel, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
+  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   ParticleSubset* pset = pmass.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -111,7 +113,7 @@ void CompNeoHookPlas::computeStableTimestep(const Region* region,
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
     double delt_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
-    new_dw->put(delt_vartype(delt_new), deltLabel);
+    new_dw->put(delt_vartype(delt_new), lb->deltLabel);
 }
 
 void CompNeoHookPlas::computeStressTensor(const Region* region,
@@ -135,35 +137,35 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
   int matlindex = matl->getDWIndex();
-
+  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle position
   ParticleVariable<Point> px;
-  old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
+  old_dw->get(px, lb->pXLabel, matlindex, region, Ghost::None, 0);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  old_dw->get(deformationGradient, pDeformationMeasureLabel, 
+  old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, 
 	      matlindex, region, Ghost::None, 0);
   ParticleVariable<Matrix3> bElBar;
   old_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None, 0);
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  new_dw->allocate(pstress, pStressLabel, matlindex, region);
+  new_dw->allocate(pstress, lb->pStressLabel, matlindex, region);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
   old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
+  old_dw->get(pmass, lb->pMassLabel, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
+  old_dw->get(pvolume, lb->pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region,
+  new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,region,
 	      Ghost::None, 0);
   delt_vartype delt;
-  old_dw->get(delt, deltLabel);
+  old_dw->get(delt, lb->deltLabel);
 
   ParticleSubset* pset = px.getParticleSubset();
   ASSERT(pset == pstress.getParticleSubset());
@@ -271,16 +273,16 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
   WaveSpeed = sqrt(Max(c_rot,c_dil));
   // Fudge factor of .8 added, just in case
   double delt_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
-  new_dw->put(delt_vartype(delt_new), deltLabel);
-  new_dw->put(pstress, pStressLabel, matlindex, region);
-  new_dw->put(deformationGradient, pDeformationMeasureLabel,
+  new_dw->put(delt_vartype(delt_new), lb->deltLabel);
+  new_dw->put(pstress, lb->pStressLabel, matlindex, region);
+  new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
 		matlindex, region);
   new_dw->put(bElBar, bElBarLabel, matlindex, region);
 
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label, matlindex, region);
   // Volume is currently being carried forward, will be updated
-  new_dw->put(pvolume,pVolumeLabel, matlindex,region);
+  new_dw->put(pvolume,lb->pVolumeLabel, matlindex,region);
 
 }
 
@@ -290,10 +292,10 @@ double CompNeoHookPlas::computeStrainEnergy(const Region* region,
 {
   double U,W,J,se=0;
   int matlindex = matl->getDWIndex();
-
+  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  new_dw->get(deformationGradient, pDeformationMeasureLabel,
+  new_dw->get(deformationGradient, lb->pDeformationMeasureLabel,
               matlindex, region, Ghost::None, 0);
 
   // Get the elastic part of the shear strain
@@ -303,7 +305,7 @@ double CompNeoHookPlas::computeStrainEnergy(const Region* region,
   ParticleVariable<CMData> cmdata;
   new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
+  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   ParticleSubset* pset = deformationGradient.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -332,28 +334,29 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const
 {
-   task->requires(old_dw, pXLabel, matl->getDWIndex(), region,
+  const MPMLabel* lb = MPMLabel::getLabels();
+   task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), region,
                   Ghost::None);
-   task->requires(old_dw, pDeformationMeasureLabel, matl->getDWIndex(), region,
+   task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), region,
                   Ghost::None);
    task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  region,
                   Ghost::None);
-   task->requires(old_dw, pMassLabel, matl->getDWIndex(),  region,
+   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),  region,
                   Ghost::None);
-   task->requires(old_dw, pVolumeLabel, matl->getDWIndex(),  region,
+   task->requires(old_dw, lb->pVolumeLabel, matl->getDWIndex(),  region,
                   Ghost::None);
-   task->requires(new_dw, gMomExedVelocityLabel, matl->getDWIndex(), region,
+   task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), region,
                   Ghost::AroundCells, 1);
    task->requires(old_dw, bElBarLabel, matl->getDWIndex(), region,
                   Ghost::None);
-   task->requires(old_dw, deltLabel);
+   task->requires(old_dw, lb->deltLabel);
 
-   task->computes(new_dw, deltLabel);
-   task->computes(new_dw, pStressLabel, matl->getDWIndex(),  region);
-   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(), region);
+   task->computes(new_dw, lb->deltLabel);
+   task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), region);
    task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  region);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
-   task->computes(new_dw, pVolumeLabel, matl->getDWIndex(), region);
+   task->computes(new_dw, lb->pVolumeLabel, matl->getDWIndex(), region);
 
 
 }
@@ -378,6 +381,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.16  2000/05/26 21:37:33  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.15  2000/05/26 18:15:12  guilkey
 // Brought the CompNeoHook constitutive model up to functionality
 // with the UCF.  Also, cleaned up all of the working models to

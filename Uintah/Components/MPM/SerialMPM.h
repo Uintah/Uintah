@@ -171,7 +171,7 @@ WARNING
 	 Contact*         d_contactModel;
 	 Fracture*        d_fractureModel;
 	 bool             d_heatConductionInvolved;
-
+	 /*
 	 const VarLabel* deltLabel;
 	 
 	 const VarLabel* pDeformationMeasureLabel;
@@ -202,7 +202,7 @@ WARNING
 	 
 	 const VarLabel* cSelfContactLabel; //for fracture, CCVariable
 	 const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
-	 
+	 */
       };
       
    } // end namespace MPM
@@ -210,6 +210,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.33  2000/05/26 21:37:30  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.32  2000/05/26 17:14:43  tan
 // Added solveHeatEquations on grid.
 //

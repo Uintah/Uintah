@@ -35,12 +35,14 @@ static char *id="@(#) $Id$";
 #include <fstream>
 
 #include "GeometrySpecification/Problem.h"
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 using namespace Uintah;
 using namespace Uintah::MPM;
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
+using SCICore::Geometry::Dot;
 using SCICore::Math::Min;
 using SCICore::Math::Max;
 using namespace std;
@@ -50,81 +52,81 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
 
-   pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
-			    ParticleVariable<Matrix3>::getTypeDescription());
+  //   pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
+//  			    ParticleVariable<Matrix3>::getTypeDescription());
 
-   pStressLabel = new VarLabel( "p.stress",
-			     ParticleVariable<Matrix3>::getTypeDescription() );
+//     pStressLabel = new VarLabel( "p.stress",
+//  			     ParticleVariable<Matrix3>::getTypeDescription() );
 
-   pVolumeLabel = new VarLabel( "p.volume",
-			     ParticleVariable<double>::getTypeDescription());
+//     pVolumeLabel = new VarLabel( "p.volume",
+//  			     ParticleVariable<double>::getTypeDescription());
 
-   pMassLabel = new VarLabel( "p.mass",
-			ParticleVariable<double>::getTypeDescription() );
+//     pMassLabel = new VarLabel( "p.mass",
+//  			ParticleVariable<double>::getTypeDescription() );
 
-   pVelocityLabel = new VarLabel( "p.velocity", 
-			     ParticleVariable<Vector>::getTypeDescription() );
+//     pVelocityLabel = new VarLabel( "p.velocity", 
+//  			     ParticleVariable<Vector>::getTypeDescription() );
 
-   pExternalForceLabel = new VarLabel( "p.externalforce",
-			     ParticleVariable<Vector>::getTypeDescription() );
+//     pExternalForceLabel = new VarLabel( "p.externalforce",
+//  			     ParticleVariable<Vector>::getTypeDescription() );
 
-   pXLabel = new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
-			     VarLabel::PositionVariable);
+//     pXLabel = new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
+//  			     VarLabel::PositionVariable);
 
-   pTemperatureLabel = new VarLabel( "p.temperature",
-                           ParticleVariable<double>::getTypeDescription() );
+//     pTemperatureLabel = new VarLabel( "p.temperature",
+//                             ParticleVariable<double>::getTypeDescription() );
 
-   pTemperatureGradientLabel = new VarLabel( "p.temperatureGradient",
-			     ParticleVariable<Vector>::getTypeDescription() );
+//     pTemperatureGradientLabel = new VarLabel( "p.temperatureGradient",
+//  			     ParticleVariable<Vector>::getTypeDescription() );
 
-   //tan:
-   //  pSurfaceNormalLabel is used to define the surface normal of a boundary particle.
-   //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
-   //  in this way we can distinguish boundary particles to interior particles
-   //
-   pSurfaceNormalLabel = new VarLabel( "p.surfaceNormal",
-			     ParticleVariable<Vector>::getTypeDescription() );
+//     //tan:
+//     //  pSurfaceNormalLabel is used to define the surface normal of a boundary particle.
+//     //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
+//     //  in this way we can distinguish boundary particles to interior particles
+//     //
+//     pSurfaceNormalLabel = new VarLabel( "p.surfaceNormal",
+//  			     ParticleVariable<Vector>::getTypeDescription() );
 
-   gAccelerationLabel = new VarLabel( "g.acceleration",
-			      NCVariable<Vector>::getTypeDescription() );
+//     gAccelerationLabel = new VarLabel( "g.acceleration",
+//  			      NCVariable<Vector>::getTypeDescription() );
 
-   gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
-			      NCVariable<Vector>::getTypeDescription() );
+//     gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
+//  			      NCVariable<Vector>::getTypeDescription() );
 
-   gMassLabel = new VarLabel( "g.mass",
-			      NCVariable<double>::getTypeDescription() );
+//     gMassLabel = new VarLabel( "g.mass",
+//  			      NCVariable<double>::getTypeDescription() );
 
-   gVelocityLabel = new VarLabel( "g.velocity",
-				  NCVariable<Vector>::getTypeDescription() );
+//     gVelocityLabel = new VarLabel( "g.velocity",
+//  				  NCVariable<Vector>::getTypeDescription() );
 
-   gMomExedVelocityLabel = new VarLabel( "g.momexedvelocity",
-				NCVariable<Vector>::getTypeDescription() );
+//     gMomExedVelocityLabel = new VarLabel( "g.momexedvelocity",
+//  				NCVariable<Vector>::getTypeDescription() );
 
-   gExternalForceLabel = new VarLabel( "g.externalforce",
-			      NCVariable<Vector>::getTypeDescription() );
+//     gExternalForceLabel = new VarLabel( "g.externalforce",
+//  			      NCVariable<Vector>::getTypeDescription() );
 
-   gInternalForceLabel = new VarLabel( "g.internalforce",
-			      NCVariable<Vector>::getTypeDescription() );
+//     gInternalForceLabel = new VarLabel( "g.internalforce",
+//  			      NCVariable<Vector>::getTypeDescription() );
 
-   gVelocityStarLabel = new VarLabel( "g.velocity_star",
-			      NCVariable<Vector>::getTypeDescription() );
+//     gVelocityStarLabel = new VarLabel( "g.velocity_star",
+//  			      NCVariable<Vector>::getTypeDescription() );
 
-   gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
-			      NCVariable<Vector>::getTypeDescription() );
+//     gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
+//  			      NCVariable<Vector>::getTypeDescription() );
 
-   gSelfContactLabel = new VarLabel( "g.selfContact",
-			      NCVariable<bool>::getTypeDescription() );
+//     gSelfContactLabel = new VarLabel( "g.selfContact",
+//  			      NCVariable<bool>::getTypeDescription() );
 
-   cSelfContactLabel = new VarLabel( "c.selfContact",
-			      CCVariable<bool>::getTypeDescription() );
+//     cSelfContactLabel = new VarLabel( "c.selfContact",
+//  			      CCVariable<bool>::getTypeDescription() );
 
-   cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
-			      CCVariable<Vector>::getTypeDescription() );
+//     cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
+//  			      CCVariable<Vector>::getTypeDescription() );
 
 
-   // I'm not sure about this one:
-   deltLabel = 
-     new VarLabel( "delt", delt_vartype::getTypeDescription() );
+//     // I'm not sure about this one:
+//     deltLabel = 
+//       new VarLabel( "delt", delt_vartype::getTypeDescription() );
 
    //tan:
    //temporary set to false, underconstruction.
@@ -190,6 +192,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
    int numMatls = d_sharedState->getNumMatls();
 
+   const MPMLabel* lb = MPMLabel::getLabels();
+
    for(Level::const_regionIterator iter=level->regionsBegin();
        iter != level->regionsEnd(); iter++){
 
@@ -210,15 +214,15 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
+	    t->requires( old_dw, lb->pSurfaceNormalLabel, idx, region,
 			 Ghost::None);
 	 }
 
-         t->requires( old_dw, cSurfaceNormalLabel,
+         t->requires( old_dw, lb->cSurfaceNormalLabel,
                       d_sharedState->getMaterial(fieldIndependentVariable)
                                    ->getDWIndex(), region, Ghost::None);
 
-         t->computes( new_dw, cSelfContactLabel,
+         t->computes( new_dw, lb->cSelfContactLabel,
                       d_sharedState->getMaterial(fieldIndependentVariable)
                                    ->getDWIndex(), region );
 
@@ -239,18 +243,19 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires(old_dw, pMassLabel, idx, region,
+	    t->requires(old_dw, lb->pMassLabel, idx, region,
 			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, pVelocityLabel, idx, region,
+	    t->requires(old_dw, lb->pVelocityLabel, idx, region,
 			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, pExternalForceLabel, idx, region,
+	    t->requires(old_dw, lb->pExternalForceLabel, idx, region,
 			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, pXLabel, idx, region,
+	    t->requires(old_dw, lb->pXLabel, idx, region,
 			Ghost::AroundNodes, 1 );
 			
-	    t->computes(new_dw, gMassLabel, idx, region );
-	    t->computes(new_dw, gVelocityLabel, idx, region );
-	    t->computes(new_dw, gExternalForceLabel, idx, region );
+
+	    t->computes(new_dw, lb->gMassLabel, idx, region );
+	    t->computes(new_dw, lb->gVelocityLabel, idx, region );
+	    t->computes(new_dw, lb->gExternalForceLabel, idx, region );
 	 }
 		     
 	 sched->addTask(t);
@@ -324,12 +329,12 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, pDeformationMeasureLabel, idx, region,
+	    t->requires( old_dw, lb->pDeformationMeasureLabel, idx, region,
 			 Ghost::None);
-	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
+	    t->requires( old_dw, lb->pSurfaceNormalLabel, idx, region,
 			 Ghost::None);
 
-	    t->computes( new_dw, pSurfaceNormalLabel, idx, region );
+	    t->computes( new_dw, lb->pSurfaceNormalLabel, idx, region );
 	 }
 
 	 sched->addTask(t);
@@ -350,12 +355,12 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( new_dw, pStressLabel, idx, region,
+	    t->requires( new_dw, lb->pStressLabel, idx, region,
 			 Ghost::AroundNodes, 1);
-	    t->requires( new_dw, pVolumeLabel, idx, region,
+	    t->requires( new_dw, lb->pVolumeLabel, idx, region,
 			 Ghost::AroundNodes, 1);
 
-	    t->computes( new_dw, gInternalForceLabel, idx, region );
+	    t->computes( new_dw, lb->gInternalForceLabel, idx, region );
 	 }
 
 	 sched->addTask( t );
@@ -375,12 +380,12 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( new_dw, gMassLabel, idx, region,
+	    t->requires( new_dw, lb->gMassLabel, idx, region,
 			 Ghost::None);
-	    t->requires( new_dw, gInternalForceLabel, idx, region,
+	    t->requires( new_dw, lb->gInternalForceLabel, idx, region,
 			 Ghost::None);
 
-	    t->computes( new_dw, gAccelerationLabel, idx, region);
+	    t->computes( new_dw, lb->gAccelerationLabel, idx, region);
 	 }
 
 	 sched->addTask(t);
@@ -400,13 +405,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires(new_dw, gAccelerationLabel, idx, region,
+	    t->requires(new_dw, lb->gAccelerationLabel, idx, region,
 			Ghost::None);
-	    t->requires(new_dw, gMomExedVelocityLabel, idx, region,
+	    t->requires(new_dw, lb->gMomExedVelocityLabel, idx, region,
 			Ghost::None);
-	    t->requires(old_dw, deltLabel );
+	    t->requires(old_dw, lb->deltLabel );
 		     
-	    t->computes(new_dw, gVelocityStarLabel, idx, region );
+	    t->computes(new_dw, lb->gVelocityStarLabel, idx, region );
 	 }
 		     
 	 sched->addTask(t);
@@ -451,17 +456,17 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, gVelocityLabel, idx, region,
+	    t->requires( old_dw, lb->gVelocityLabel, idx, region,
 			 Ghost::None);
-	    t->requires( old_dw, gAccelerationLabel, idx, region,
+	    t->requires( old_dw, lb->gAccelerationLabel, idx, region,
 			 Ghost::None);
 
-	    t->computes( new_dw, gVelocityLabel, idx, region );
-	    t->computes( new_dw, gAccelerationLabel, idx, region );
+	    t->computes( new_dw, lb->gVelocityLabel, idx, region );
+	    t->computes( new_dw, lb->gAccelerationLabel, idx, region );
 	 }
 
          t->requires( old_dw,
-                      gSelfContactLabel,
+                      lb->gSelfContactLabel,
                       d_sharedState->getMaterial(fieldIndependentVariable)
                                    ->getDWIndex(),
                       region,
@@ -485,19 +490,19 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires(new_dw, gMomExedAccelerationLabel, idx, region,
+	    t->requires(new_dw, lb->gMomExedAccelerationLabel, idx, region,
 			Ghost::AroundCells, 1);
-	    t->requires(new_dw, gMomExedVelocityStarLabel, idx, region,
+	    t->requires(new_dw, lb->gMomExedVelocityStarLabel, idx, region,
 			Ghost::AroundCells, 1);
-	    t->requires(old_dw, pXLabel, idx, region,
+	    t->requires(old_dw, lb->pXLabel, idx, region,
 			Ghost::None);
-	    t->requires(old_dw, pMassLabel, idx, region, Ghost::None);
-	    t->requires(old_dw, pExternalForceLabel, idx, region, Ghost::None);
-	    t->requires(old_dw, deltLabel );
-	    t->computes(new_dw, pVelocityLabel, idx, region );
-	    t->computes(new_dw, pXLabel, idx, region );
-	    t->computes(new_dw, pMassLabel, idx, region);
-	    t->computes(new_dw, pExternalForceLabel, idx, region);
+	    t->requires(old_dw, lb->pMassLabel, idx, region, Ghost::None);
+	    t->requires(old_dw, lb->pExternalForceLabel, idx, region, Ghost::None);
+	    t->requires(old_dw, lb->deltLabel );
+	    t->computes(new_dw, lb->pVelocityLabel, idx, region );
+	    t->computes(new_dw, lb->pXLabel, idx, region );
+	    t->computes(new_dw, lb->pMassLabel, idx, region);
+	    t->computes(new_dw, lb->pExternalForceLabel, idx, region);
 	 }
 
 	 sched->addTask(t);
@@ -518,25 +523,25 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, pXLabel, idx, region,
+	    t->requires( old_dw, lb->pXLabel, idx, region,
 			 Ghost::None);
-	    t->requires( old_dw, pVelocityLabel, idx, region,
+	    t->requires( old_dw, lb->pVelocityLabel, idx, region,
 			 Ghost::None);
-	    t->requires( old_dw, pExternalForceLabel, idx, region,
+	    t->requires( old_dw, lb->pExternalForceLabel, idx, region,
 			 Ghost::None);
-	    t->requires( old_dw, pDeformationMeasureLabel, idx, region,
+	    t->requires( old_dw, lb->pDeformationMeasureLabel, idx, region,
 			 Ghost::None);
-	    t->requires( old_dw, pStressLabel, idx, region,
+	    t->requires( old_dw, lb->pStressLabel, idx, region,
 			 Ghost::None);
 
-	    t->computes( new_dw, pXLabel, idx, region );
-	    t->computes( new_dw, pVelocityLabel, idx, region );
-	    t->computes( new_dw, pDeformationMeasureLabel, idx, region );
-	    t->computes( new_dw, pStressLabel, idx, region );
+	    t->computes( new_dw, lb->pXLabel, idx, region );
+	    t->computes( new_dw, lb->pVelocityLabel, idx, region );
+	    t->computes( new_dw, lb->pDeformationMeasureLabel, idx, region );
+	    t->computes( new_dw, lb->pStressLabel, idx, region );
 	 }
 
          t->requires( old_dw,
-                      cSelfContactLabel,
+                      lb->cSelfContactLabel,
                       d_sharedState->getMaterial(fieldIndependentVariable)
                                    ->getDWIndex(),
                       region,
@@ -562,14 +567,14 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( new_dw, pStressLabel, idx, region,
+	    t->requires( new_dw, lb->pStressLabel, idx, region,
 			 Ghost::None);
-	    t->requires( new_dw, pXLabel, idx, region,
+	    t->requires( new_dw, lb->pXLabel, idx, region,
 			 Ghost::None);
-	    t->requires( new_dw, pSurfaceNormalLabel, idx, region,
+	    t->requires( new_dw, lb->pSurfaceNormalLabel, idx, region,
 			 Ghost::None);
 
-	    t->computes( new_dw, pSurfaceNormalLabel, idx, region );
+	    t->computes( new_dw, lb->pSurfaceNormalLabel, idx, region );
 	 }
 
 	 sched->addTask(t);
@@ -577,12 +582,12 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
     }
 
    if(d_fractureModel) {
-      new_dw->pleaseSave(pDeformationMeasureLabel, numMatls);
+      new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
-   new_dw->pleaseSave(pVolumeLabel, numMatls);
-   new_dw->pleaseSave(pExternalForceLabel, numMatls);
-   new_dw->pleaseSave(gVelocityLabel, numMatls);
-   new_dw->pleaseSave(pXLabel, numMatls);
+   new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
+   new_dw->pleaseSave(lb->pExternalForceLabel, numMatls);
+   new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
+   new_dw->pleaseSave(lb->pXLabel, numMatls);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
@@ -631,6 +636,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 
   // Dd: making this compile... don't know if this correct...
   int numMatls = d_sharedState->getNumMatls();
+  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -644,13 +650,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<Vector> pexternalforce;
 
-      old_dw->get(px,             pXLabel, matlindex, region,
+      old_dw->get(px,             lb->pXLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pmass,          pMassLabel, matlindex, region,
+      old_dw->get(pmass,          lb->pMassLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pvelocity,      pVelocityLabel, matlindex, region,
+      old_dw->get(pvelocity,      lb->pVelocityLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region,
+      old_dw->get(pexternalforce, lb->pExternalForceLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
 
       // Create arrays for the grid data
@@ -659,9 +665,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<Vector> externalforce;
 
 //      std::cerr << "allocating grid variables" << std::endl;
-      new_dw->allocate(gmass,         gMassLabel, vfindex, region);
-      new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region);
-      new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region);
+      new_dw->allocate(gmass,         lb->gMassLabel, vfindex, region);
+      new_dw->allocate(gvelocity,     lb->gVelocityLabel, vfindex, region);
+      new_dw->allocate(externalforce, lb->gExternalForceLabel, vfindex, region);
 
       ParticleSubset* pset = px.getParticleSubset();
 #if 0
@@ -733,9 +739,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       }
 #endif
 
-      new_dw->put(gmass,         gMassLabel, vfindex, region);
-      new_dw->put(gvelocity,     gVelocityLabel, vfindex, region);
-      new_dw->put(externalforce, gExternalForceLabel, vfindex, region);
+      new_dw->put(gmass,         lb->gMassLabel, vfindex, region);
+      new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, region);
+      new_dw->put(externalforce, lb->gExternalForceLabel, vfindex, region);
     }
   }
 }
@@ -747,6 +753,8 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 {
    // This needs the datawarehouse to allow indexing by material
    // for both the particle and the grid data.
+
+  
    for(int m = 0; m < d_sharedState->getNumMatls(); m++){
       Material* matl = d_sharedState->getMaterial(m);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -782,6 +790,8 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
   int numMatls = d_sharedState->getNumMatls();
 
+  const MPMLabel* lb = MPMLabel::getLabels();
+
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -795,14 +805,14 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
       ParticleVariable<Matrix3> pstress;
       NCVariable<Vector>        internalforce;
 
-      old_dw->get(px,      pXLabel, matlindex, region,
+      old_dw->get(px,      lb->pXLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      new_dw->get(pvol,    pVolumeLabel, matlindex, region,
+      new_dw->get(pvol,    lb->pVolumeLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      new_dw->get(pstress, pStressLabel, matlindex, region,
+      new_dw->get(pstress, lb->pStressLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
 
-      new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region);
+      new_dw->allocate(internalforce, lb->gInternalForceLabel, vfindex, region);
   
       ParticleSubset* pset = px.getParticleSubset();
 #if 0
@@ -834,10 +844,11 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 	  }
          }
       }
-      new_dw->put(internalforce, gInternalForceLabel, vfindex, region);
+      new_dw->put(internalforce, lb->gInternalForceLabel, vfindex, region);
     }
   }
 }
+
 
 void SerialMPM::computeInternalHeatRate(
                                      const ProcessorContext*,
@@ -853,6 +864,7 @@ void SerialMPM::computeInternalHeatRate(
   oodx[2] = 1.0/dx.z();
 
   int numMatls = d_sharedState->getNumMatls();
+  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -866,14 +878,14 @@ void SerialMPM::computeInternalHeatRate(
       ParticleVariable<Vector> pTemperatureGradient;
       NCVariable<double>       internalHeatRate;
 
-      old_dw->get(px,      pXLabel, matlindex, region,
+      old_dw->get(px,      lb->pXLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pvol,    pVolumeLabel, matlindex, region,
+      old_dw->get(pvol,    lb->pVolumeLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pTemperatureGradient, pTemperatureGradientLabel, matlindex, region,
+      old_dw->get(pTemperatureGradient, lb->pTemperatureGradientLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
 
-      new_dw->allocate(internalHeatRate, gInternalHeatRateLabel, vfindex, region);
+      new_dw->allocate(internalHeatRate, lb->gInternalHeatRateLabel, vfindex, region);
   
       ParticleSubset* pset = px.getParticleSubset();
 
@@ -896,15 +908,16 @@ void SerialMPM::computeInternalHeatRate(
          for (int k = 0; k < 8; k++){
 	  if(region->containsNode(ni[k])){
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	   internalHeatRate[ni[k]] -= SCICore::Geometry::Dot( div, pTemperatureGradient[idx] ) * 
+	   internalHeatRate[ni[k]] -= Dot( div, pTemperatureGradient[idx] ) * 
 	                              pvol[idx] * thermalConductivity;
 	  }
          }
       }
-      new_dw->put(internalHeatRate, gInternalHeatRateLabel, vfindex, region);
+      new_dw->put(internalHeatRate, lb->gInternalHeatRateLabel, vfindex, region);
     }
   }
 }
+
 
 void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 				     const Region* region,
@@ -917,6 +930,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
   // field for the grid data
 
   int numMatls = d_sharedState->getNumMatls();
+
+  const MPMLabel* lb = MPMLabel::getLabels();
 
   // Gravity
   Vector gravity = d_sharedState->getGravity();
@@ -931,15 +946,15 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       NCVariable<Vector> internalforce;
       NCVariable<Vector> externalforce;
 
-      new_dw->get(mass,          gMassLabel, vfindex, region, Ghost::None, 0);
-      new_dw->get(internalforce, gInternalForceLabel, vfindex, region,
+      new_dw->get(mass,          lb->gMassLabel, vfindex, region, Ghost::None, 0);
+      new_dw->get(internalforce, lb->gInternalForceLabel, vfindex, region,
 		  Ghost::None, 0);
-      new_dw->get(externalforce, gExternalForceLabel, vfindex, region,
+      new_dw->get(externalforce, lb->gExternalForceLabel, vfindex, region,
 		  Ghost::None, 0);
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
-      new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region);
+      new_dw->allocate(acceleration, lb->gAccelerationLabel, vfindex, region);
 
       // Do the computation of a = F/m for nodes where m!=0.0
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
@@ -954,11 +969,13 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       }
 
       // Put the result in the datawarehouse
-      new_dw->put(acceleration, gAccelerationLabel, vfindex, region);
+
+      new_dw->put(acceleration, lb->gAccelerationLabel, vfindex, region);
 
     }
   }
 }
+
 
 void SerialMPM::solveHeatEquations(const ProcessorContext*,
 				     const Region* region,
@@ -966,6 +983,8 @@ void SerialMPM::solveHeatEquations(const ProcessorContext*,
 				     DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMatls();
+
+  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -976,22 +995,22 @@ void SerialMPM::solveHeatEquations(const ProcessorContext*,
       double specificHeat = mpm_matl->getSpecificHeat();
       
       // Get required variables for this region
-      NCVariable<double> mass,internalHeatRateLabel,externalHeatRateLabel;
+      NCVariable<double> mass,internalHeatRate,externalHeatRate;
 
-      new_dw->get(mass, gMassLabel, vfindex, region, Ghost::None, 0);
-      new_dw->get(internalHeatRateLabel, gInternalHeatRateLabel, 
+      new_dw->get(mass, lb->gMassLabel, vfindex, region, Ghost::None, 0);
+      new_dw->get(internalHeatRate, lb->gInternalHeatRateLabel, 
                   vfindex, region, Ghost::None, 0);
-      new_dw->get(externalHeatRateLabel, gExternalHeatRateLabel, 
+      new_dw->get(externalHeatRate, lb->gExternalHeatRateLabel, 
                   vfindex, region, Ghost::None, 0);
 
       // Create variables for the results
       NCVariable<double> temperatureRate;
-      new_dw->allocate(temperatureRate, gTemperatureRateLabel, vfindex, region);
+      new_dw->allocate(temperatureRate, lb->gTemperatureRateLabel, vfindex, region);
 
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	if(mass[*iter]>0.0){
 	  temperatureRate[*iter] =
-		 (internalHeatRateLabel[*iter] + externalHeatRateLabel[*iter])
+		 (internalHeatRate[*iter] + externalHeatRate[*iter])
 		 /mass[*iter] /specificHeat;
 	}
 	else{
@@ -1000,11 +1019,12 @@ void SerialMPM::solveHeatEquations(const ProcessorContext*,
       }
 
       // Put the result in the datawarehouse
-      new_dw->put(temperatureRate, gTemperatureRateLabel, vfindex, region);
+      new_dw->put(temperatureRate, lb->gTemperatureRateLabel, vfindex, region);
 
     }
   }
 }
+
 
 void SerialMPM::integrateAcceleration(const ProcessorContext*,
 				      const Region* region,
@@ -1014,6 +1034,8 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
   // This needs the datawarehouse to allow indexing by material
 
   int numMatls = d_sharedState->getNumMatls();
+
+  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1025,16 +1047,16 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       NCVariable<Vector>        velocity;
       delt_vartype delt;
 
-      new_dw->get(acceleration, gAccelerationLabel, vfindex, region,
+      new_dw->get(acceleration, lb->gAccelerationLabel, vfindex, region,
 		  Ghost::None, 0);
-      new_dw->get(velocity, gMomExedVelocityLabel, vfindex, region,
+      new_dw->get(velocity, lb->gMomExedVelocityLabel, vfindex, region,
 		  Ghost::None, 0);
 
-      old_dw->get((ReductionVariableBase&)delt, deltLabel);
+      old_dw->get((ReductionVariableBase&)delt, lb->deltLabel);
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
-      new_dw->allocate(velocity_star, gVelocityStarLabel, vfindex, region);
+      new_dw->allocate(velocity_star, lb->gVelocityStarLabel, vfindex, region);
 
       // Do the computation
 
@@ -1044,7 +1066,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
 
 
       // Put the result in the datawarehouse
-      new_dw->put( velocity_star, gVelocityStarLabel, vfindex, region );
+      new_dw->put( velocity_star, lb->gVelocityStarLabel, vfindex, region );
     }
   }
 }
@@ -1070,6 +1092,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
   int numMatls = d_sharedState->getNumMatls();
 
+  const MPMLabel* lb = MPMLabel::getLabels();
+
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -1089,18 +1113,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> pmass;
 
-      old_dw->get(px,        pXLabel, matlindex, region, Ghost::None, 0);
-      old_dw->get(pvelocity, pVelocityLabel, matlindex, region, Ghost::None,0);
-      old_dw->get(pmass,     pMassLabel, matlindex, region, Ghost::None, 0);
+      old_dw->get(px,        lb->pXLabel, matlindex, region, Ghost::None, 0);
+      old_dw->get(pvelocity, lb->pVelocityLabel, matlindex, region, Ghost::None,0);
+      old_dw->get(pmass,     lb->pMassLabel, matlindex, region, Ghost::None, 0);
 
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
       delt_vartype delt;
 
-      new_dw->get(gvelocity_star,gMomExedVelocityStarLabel, vfindex, region,
+      new_dw->get(gvelocity_star,lb->gMomExedVelocityStarLabel, vfindex, region,
 		  Ghost::AroundCells, 1);
-      new_dw->get(gacceleration, gMomExedAccelerationLabel, vfindex, region,
+      new_dw->get(gacceleration, lb->gMomExedAccelerationLabel, vfindex, region,
 		  Ghost::AroundCells, 1);
 
 #if 0
@@ -1134,7 +1158,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       }
 #endif
 
-      old_dw->get(delt, deltLabel);
+      old_dw->get(delt, lb->deltLabel);
 
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == pvelocity.getParticleSubset());
@@ -1179,15 +1203,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       }
 
       // Store the new result
-      new_dw->put(px,        pXLabel, matlindex, region);
-      new_dw->put(pvelocity, pVelocityLabel, matlindex, region);
+      new_dw->put(px,        lb->pXLabel, matlindex, region);
+      new_dw->put(pvelocity, lb->pVelocityLabel, matlindex, region);
 
       ParticleVariable<Vector> pexternalforce;
 
-      new_dw->put(pmass,          pMassLabel, matlindex, region);
-      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region,
+      new_dw->put(pmass,          lb->pMassLabel, matlindex, region);
+      old_dw->get(pexternalforce, lb->pExternalForceLabel, matlindex, region,
 		  Ghost::None, 0);
-      new_dw->put(pexternalforce, pExternalForceLabel, matlindex, region);
+      new_dw->put(pexternalforce, lb->pExternalForceLabel, matlindex, region);
     }
   }
 
@@ -1219,11 +1243,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       int vfindex = matl->getVFIndex();
       // Get the arrays of particle values to be changed
       ParticleVariable<Point> px;
-      old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
+      old_dw->get(px, lb->XLabel, matlindex, region, Ghost::None, 0);
       ParticleVariable<Vector> pv;
-      old_dw->get(pv, pVelocityLabel, matlindex, region, Ghost::None, 0);
+      old_dw->get(pv, lb->pVelocityLabel, matlindex, region, Ghost::None, 0);
       ParticleVariable<double> pmass;
-      old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
+      old_dw->get(pmass,lb-> pMassLabel, matlindex, region, Ghost::None, 0);
 
       ParticleSubset* pset = px.getParticleSubset();
 
@@ -1262,6 +1286,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.66  2000/05/26 21:37:30  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.65  2000/05/26 17:14:56  tan
 // Added solveHeatEquations on grid.
 //

@@ -30,6 +30,7 @@ static char *id="@(#) $Id$";
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 using namespace std;
 using namespace Uintah::MPM;
@@ -75,6 +76,8 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
+  const MPMLabel* lb = MPMLabel::getLabels();
+
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(NVFs);
   vector<NCVariable<Vector> > gvelocity(NVFs);
@@ -83,9 +86,9 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region,
+      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , region,
 		  Ghost::None, 0);
-      new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region,
+      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, region,
 		  Ghost::None, 0);
     }
   }
@@ -109,7 +112,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
 
   // Store new velocities in DataWarehouse
   for(int n=0; n< NVFs; n++){
-    new_dw->put(gvelocity[n], gMomExedVelocityLabel, n, region);
+    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, region);
   }
 }
 
@@ -127,6 +130,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
+  const MPMLabel* lb = MPMLabel::getLabels();
+
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(NVFs);
   vector<NCVariable<Vector> > gvelocity_star(NVFs);
@@ -136,15 +141,15 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, Ghost::None, 0);
-      new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel, vfindex,
+      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , region, Ghost::None, 0);
+      new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel, vfindex,
 		  region, Ghost::None, 0);
-      new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex,
+      new_dw->get(gacceleration[vfindex], lb->gAccelerationLabel, vfindex,
 		  region, Ghost::None, 0);
     }
   }
   delt_vartype delt;
-  old_dw->get(delt, deltLabel);
+  old_dw->get(delt, lb->deltLabel);
 
   for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
@@ -168,8 +173,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 
   // Store new velocities and accelerations in DataWarehouse
   for(int n = 0; n < NVFs; n++){
-    new_dw->put(gvelocity_star[n], gMomExedVelocityStarLabel, n, region);
-    new_dw->put(gacceleration[n], gMomExedAccelerationLabel, n, region);
+    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, region);
+    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, region);
   }
 }
 
@@ -179,12 +184,12 @@ void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
-
+  const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
-  t->requires( new_dw, gMassLabel, idx, region, Ghost::None);
-  t->requires( new_dw, gVelocityLabel, idx, region, Ghost::None);
+  t->requires( new_dw, lb->gMassLabel, idx, region, Ghost::None);
+  t->requires( new_dw, lb->gVelocityLabel, idx, region, Ghost::None);
 
-  t->computes( new_dw, gMomExedVelocityLabel, idx, region );
+  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, region );
 
 
 }
@@ -197,17 +202,21 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 {
 
   int idx = matl->getDWIndex();
-  t->requires(new_dw, gMassLabel, idx, region, Ghost::None);
-  t->requires(new_dw, gVelocityStarLabel, idx, region, Ghost::None);
-  t->requires(new_dw, gAccelerationLabel, idx, region, Ghost::None);
+  const MPMLabel* lb = MPMLabel::getLabels();
+  t->requires(new_dw, lb->gMassLabel, idx, region, Ghost::None);
+  t->requires(new_dw, lb->gVelocityStarLabel, idx, region, Ghost::None);
+  t->requires(new_dw, lb->gAccelerationLabel, idx, region, Ghost::None);
 
-  t->computes( new_dw, gMomExedVelocityStarLabel, idx, region);
-  t->computes( new_dw, gMomExedAccelerationLabel, idx, region);
+  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, region);
+  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, region);
 
 
 }
 
 // $Log$
+// Revision 1.18  2000/05/26 21:37:35  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.17  2000/05/25 23:05:10  guilkey
 // Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
 // for each of the three derived Contact classes.  Also, got the NullContact
