@@ -413,8 +413,6 @@ FrameWidget::geom_moved( GeomPick*, int axis, double dist,
   ((DistanceConstraint*)constraints[ConstDC])->SetDefault(GetDownAxis());
    
   Transform trans;
-  Vector rot_curr_ray_norm;
-  double dot;
   Vector rot_axis;
   Point c(variables[CenterVar]->point());
   switch(pick)
