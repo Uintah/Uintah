@@ -49,6 +49,9 @@ WARNING
 	    double K;
             double Alpha;
 	 };	 
+
+	 friend bool isFlat(const CMData&);
+
 	 CMData d_initialData;
 	 
 	 // Prevent copying of this class
@@ -117,6 +120,9 @@ WARNING
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.11  2000/05/15 22:24:34  dav
+// Added isFlat declaration to CompNeoHookPlas.h
+//
 // Revision 1.10  2000/05/11 20:10:14  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
