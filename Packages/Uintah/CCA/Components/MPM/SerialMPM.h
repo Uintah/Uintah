@@ -112,11 +112,6 @@ public:
 	d_with_ice = true;
   };
 
-  void setWithArches()
-  {
-	d_with_arches = true;
-  };
-
   int get8or27()
   {
        return flags->d_8or27;
@@ -496,7 +491,6 @@ protected:
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
   bool             d_with_ice;
-  bool             d_with_arches;
   bool             d_recompile;
   IntegratorType d_integrator;
 
