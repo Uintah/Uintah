@@ -2101,7 +2101,8 @@ AC_SUBST(INC_Z_H)
 AC_SUBST(DEF_Z)
 
 ##  --  search for the fortran library  ----------------------------------
-if test $sci_check_fortran = "yes"; then
+# Always check for fortran, since we now always try to enable blas
+#if test $sci_check_fortran = "yes"; then
   F_LIB_FLAG=""
   case $host in 
     *-irix*)
@@ -2130,7 +2131,7 @@ if test $sci_check_fortran = "yes"; then
       SCI_TRY_LINK(F,fortran libraries,,,F77,,,,not-optional)
       ;;
   esac
-fi  
+#fi  
 
 AC_SUBST(F_LIB_FLAG)
 
@@ -2167,14 +2168,20 @@ case $host in
      ;;
 esac
 
+HAVE_CBLAS=$HAVE_BLAS
+DEF_CBLAS=$DEF_BLAS
+
 if test "$HAVE_BLAS" = "yes"; then
   DEF_BLAS="#define HAVE_BLAS 1"
+  DEF_CBLAS="#define HAVE_CBLAS 1"
   sci_check_blas=no
   AC_SUBST(HAVE_BLAS)
+  AC_SUBST(HAVE_CBLAS)
   AC_SUBST(INC_BLAS_H)
   AC_SUBST(BLAS_LIB_FLAG)
   AC_SUBST(BLAS_LIB_DIR_FLAG)
   AC_SUBST(DEF_BLAS)
+  AC_SUBST(DEF_CBLAS)
 fi
 
 
@@ -2207,11 +2214,31 @@ if test "$HAVE_BLAS" != "yes"; then
                       cxml,$_sci_lib,$F_LIB_FLAG,,not-optional)
        ;;
     *)
-       SCI_TRY_LINK(BLAS,optional blas library,,,
-                      blas,$_sci_lib,$F_LIB_FLAG,,optional)
-       if test "$HAVE_BLAS" = "no"; then
-         SCI_TRY_LINK(BLAS,optional fblas library,,,
-                      fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+       SCI_TRY_LINK(BLAS,optional blas and cblas libraries,[
+	  #include<cblas.h>
+          ],$_sci_inc,cblas blas,$_sci_lib,$F_LIB_FLAG,,optional)
+       if test "$HAVE_BLAS" = "yes"; then
+          HAVE_CBLAS=yes
+	  AC_SUBST(HAVE_CBLAS)
+	  DEF_CBLAS="#define HAVE_CBLAS 1"
+	  AC_SUBST(DEF_CBLAS)
+       else
+          SCI_TRY_LINK(BLAS,optional blas and cblas libraries,[
+	     #include<cblas.h>
+             ],$_sci_inc,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+          if test "$HAVE_BLAS" = "yes"; then
+             HAVE_CBLAS=yes
+	     AC_SUBST(HAVE_CBLAS)
+	     DEF_CBLAS="#define HAVE_CBLAS 1"
+	     AC_SUBST(DEF_CBLAS)
+          else
+             SCI_TRY_LINK(BLAS,optional blas library,,,
+	                  blas,$_sci_lib,$F_LIB_FLAG,,optional)
+             if test "$HAVE_BLAS" = "no"; then
+	        SCI_TRY_LINK(BLAS,optional fblas library,,,
+			     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+             fi
+	  fi
        fi
        ;;
   esac
