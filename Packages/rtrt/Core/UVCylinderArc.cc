@@ -122,5 +122,6 @@ void UVCylinderArc::uv(UV &uv, const Point &p, const HitInfo &hit)
 {
     Point xp = xform.project(p);
     double theta = acos(xp.x());
-    uv.set((theta/6.283185)/tex_scale.x(),xp.z()/tex_scale.y());
+    uv.set((theta/6.283185)/tex_scale.x(),
+           xp.z()/tex_scale.y());
 }
