@@ -211,7 +211,7 @@ ApplyFEMCurrentSource::execute_dipole()
 
       for (int i=0; i < nsize; i++)
       {
-        rhs->put(i, hRhsIn->get(i, 1));
+        rhs->put(i, hRhsIn->get(i, 0));
       }
     }
     else
@@ -480,7 +480,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
 
       for (int i=0; i < nsize; i++)
       {
-        rhs->put(i, hRhsIn->get(i, 1));
+        rhs->put(i, hRhsIn->get(i, 0));
       }
     }
     else
