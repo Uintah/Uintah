@@ -2,6 +2,8 @@
 
 #include "ParticlesNeighbor.h"
 #include "Visibility.h"
+#include "CrackFace.h"
+#include "CellsNeighbor.h"
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -32,43 +34,108 @@ initializeFractureModelData(const Patch* patch,
 {
 }
 
-void NormalFracture::computeNodeVisibility(
+void NormalFracture::computeBoundaryContact(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw)
 {
-  // Create arrays for the particle data
-  ParticleVariable<Point>  pX;
-  ParticleVariable<double> pVolume;
-  ParticleVariable<Vector> pCrackNormal;
-  ParticleVariable<int>    pIsBroken;
+  //patchAndGhost data
+  ParticleVariable<Point>  pX_pg;
+  ParticleVariable<Vector> pCrackNormal_pg;
+  ParticleVariable<int>    pIsBroken_pg;
+  ParticleVariable<double> pVolume_pg;
+  ParticleVariable<Vector> pVelocity_pg;
 
   int matlindex = mpm_matl->getDWIndex();
+  ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
+     patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-  ParticleSubset* pset_patchAndGhost = old_dw->getParticleSubset(matlindex, 
-     patch, Ghost::AroundNodes, 1, lb->pXLabel);
+  old_dw->get(pX_pg, lb->pXLabel, pset_pg);
+  old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, pset_pg);
+  old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
+  old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
+  old_dw->get(pVelocity_pg, lb->pVelocityLabel, pset_pg);
 
-  old_dw->get(pX, lb->pXLabel, pset_patchAndGhost);
-  old_dw->get(pVolume, lb->pVolumeLabel, pset_patchAndGhost);
-  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, 
-     pset_patchAndGhost);
-  old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset_patchAndGhost);
+  //patchOnly data
+  ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
+  ParticleVariable<Point>  pX_p;
+  new_dw->get(pX_p, lb->pXXLabel, pset_p);
 
-  ParticleSubset* pset_patchOnly = old_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<int>    pVisibility;
-  new_dw->allocate(pVisibility, lb->pVisibilityLabel, pset_patchOnly);
+  //particle index exchange from patch to patch+ghost
+  vector<int> pIdxEx( pset_p->numParticles() );
+  fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
 
-  Lattice lattice(pX);
+  Lattice lattice(pX_pg);
+  ParticlesNeighbor particles;
+  IntVector cellIdx;
+
+  //Allocate new data
+  ParticleVariable<Vector> pVelocity_p_new;
+  ParticleVariable<Vector> pCrackSurfaceContactForce_p_new;
+  
+  new_dw->allocate(pVelocity_p_new,
+    lb->pVelocityAfterBoundaryContactLabel, pset_p);
+  new_dw->allocate(pCrackSurfaceContactForce_p_new, 
+    lb->pCrackSurfaceContactForceLabel, pset_p);
+  
+  for(ParticleSubset::iterator iter = pset_p->begin();
+          iter != pset_p->end(); iter++)
+  {
+    particleIndex pIdx_p = *iter;
+    particleIndex pIdx_pg = pIdxEx[pIdx_p];
+
+    pVelocity_p_new[pIdx_p] = pVelocity_pg[pIdx_pg];
+    pCrackSurfaceContactForce_p_new[pIdx_p] = Vector(0.,0.,0.);
+  }
+
+  new_dw->put(pVelocity_p_new,
+    lb->pVelocityAfterBoundaryContactLabel);
+  new_dw->put(pCrackSurfaceContactForce_p_new, 
+    lb->pCrackSurfaceContactForceLabel);
+}
+
+void NormalFracture::computeVisibility(
+                  const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw)
+{
+  ParticleVariable<Point>  pX_pg;
+  ParticleVariable<double> pVolume_pg;
+  ParticleVariable<Vector> pCrackNormal_pg;
+  ParticleVariable<int>    pIsBroken_pg;
+
+  int matlindex = mpm_matl->getDWIndex();
+  ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
+     patch, Ghost::AroundCells, 1, lb->pXLabel);
+
+  old_dw->get(pX_pg, lb->pXLabel, pset_pg);
+  old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
+  old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, pset_pg);
+  old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
+
+  ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
+  ParticleVariable<int>    pVisibility_p;
+  new_dw->allocate(pVisibility_p, lb->pVisibilityLabel, pset_p);
+  ParticleVariable<Point>  pX_p;
+  new_dw->get(pX_p, lb->pXXLabel, pset_p);
+
+  vector<int> pIdxEx( pset_p->numParticles() );
+  fit(pset_p,pX_p,
+      pset_pg,pX_pg,
+      pIdxEx);
+
+  Lattice lattice(pX_pg);
   ParticlesNeighbor particles;
   IntVector cellIdx;
   IntVector nodeIdx[8];
 
-  for(ParticleSubset::iterator iter = pset_patchOnly->begin();
-          iter != pset_patchOnly->end(); iter++)
+  for(ParticleSubset::iterator iter = pset_p->begin();
+          iter != pset_p->end(); iter++)
   {
     particleIndex pIdx = *iter;
-    patch->findCell(pX[pIdx],cellIdx);
+    patch->findCell(pX_p[pIdx],cellIdx);
     particles.clear();
     particles.buildIn(cellIdx,lattice);
     
@@ -76,325 +143,357 @@ void NormalFracture::computeNodeVisibility(
     patch->findNodesFromCell(cellIdx,nodeIdx);
     
     Visibility vis;
-    //cout<<"point:"<<pX[pIdx]<<endl;
     for(int i=0;i<8;++i) {
-      //cout<<"node "<<i<<":"<<patch->nodePosition(nodeIdx[i])<<endl;
-      if(particles.visible( pIdx,
+      if(particles.visible( pIdxEx[pIdx],
                             patch->nodePosition(nodeIdx[i]),
-		            pX,
-		            pIsBroken,
-		            pCrackNormal,
-		            pVolume) ) vis.setVisible(i);
-      else vis.setUnvisible(i);
+		            pX_pg,
+		            pIsBroken_pg,
+		            pCrackNormal_pg,
+		            pVolume_pg) ) vis.setVisible(i);
+      else {
+        vis.setUnvisible(i);
+      }
     }
-    pVisibility[pIdx] = vis.flag();
+    pVisibility_p[pIdx] = vis.flag();
   }
   
-  new_dw->put(pVisibility, lb->pVisibilityLabel);
+  new_dw->put(pVisibility_p, lb->pVisibilityLabel);
 }
 
-void
-NormalFracture::
-crackGrow(const Patch* patch,
+void NormalFracture::computeFracture(
+                  const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw)
 {
-   ParticleVariable<Matrix3> pStress;
-   ParticleVariable<int> pIsBroken;
-   ParticleVariable<double> pTensileStrength;
-
-   ParticleVariable<int> pIsNewlyBroken;
-   ParticleVariable<Vector> pNewlyBrokenSurfaceNormal;
-
-   int matlindex = mpm_matl->getDWIndex();
-   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-
-   new_dw->get(pStress, lb->pStressAfterStrainRateLabel, pset);
-   old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
-   old_dw->get(pTensileStrength, lb->pTensileStrengthLabel, pset);
-   
-   new_dw->allocate(pIsNewlyBroken, lb->pIsNewlyBrokenLabel, pset);
-   new_dw->allocate(pNewlyBrokenSurfaceNormal, 
-     lb->pNewlyBrokenSurfaceNormalLabel, pset);
-
-   for(ParticleSubset::iterator iter = pset->begin(); 
-       iter != pset->end(); iter++)
-   {
-      particleIndex idx = *iter;
-      pIsNewlyBroken[idx] = 0;
-      pNewlyBrokenSurfaceNormal[idx] = Vector(0.,0.,0.);
-      
-      //label out the broken particles
-      if(pIsBroken[idx]) continue;
-
-      //get the max stress
-      double sig[3];
-      Matrix3 stre = pStress[idx];
-      stre(1,3) = 0;
-      stre(3,1) = 0;
-      stre(2,3) = 0;
-      stre(3,2) = 0;
-      stre(3,3) = 0;
-      
-      //pStress[idx].getEigenValues(sig[0], sig[1], sig[2]);
-      stre.getEigenValues(sig[0], sig[1], sig[2]);
-      double maxStress = sig[0];
-	
-      //compare with the tensile strength
-      if(maxStress < pTensileStrength[idx]) continue;
-      
-      //cout<<pStress[idx]<<endl;
-      
-      //vector<Vector> eigenVectors = pStress[idx].getEigenVectors(maxStress,
-	// fabs(maxStress));
-      vector<Vector> eigenVectors = stre.getEigenVectors(maxStress,
-	 fabs(maxStress));
-
-      //cout<<"eigenVectorsSize: "<<eigenVectors.size()<<endl;
-      for(int i=0;i<(int)eigenVectors.size();++i) {
-        //cout<<"eigenVectors: "<<eigenVectors[i]<<endl;
-        eigenVectors[i].normalize();
-      }
-	
-      Vector maxDirection;
-      if(eigenVectors.size() == 1) maxDirection = eigenVectors[0];
-
-      if(eigenVectors.size() == 2) {
-	cout<<"eigenVectors.size = 2"<<endl;
-	double theta = drand48() * M_PI * 2;
-	maxDirection = ( eigenVectors[0] * cos(theta) + 
-	                 eigenVectors[1] * sin(theta));
-      }
-	
-      if(eigenVectors.size() == 3) {
-	cout<<"eigenVectors.size = 3"<<endl;
-	double theta = drand48() * M_PI * 2;
-	double beta = drand48() * M_PI;
- 	double cos_beta = cos(beta);
-	double sin_beta = sin(beta);
-	Vector xy = eigenVectors[2] * sin_beta;
-	maxDirection = eigenVectors[0] * (sin_beta * cos(theta)) +
-	               eigenVectors[1] * (sin_beta * sin(theta)) +
-	               eigenVectors[2] * cos_beta;
-      }
-
-      //cout<<"Crack nucleated in direction: "<<maxDirection<<"."<<endl;
-      //if(drand48()>0.5) maxDirection = -maxDirection;
-      pNewlyBrokenSurfaceNormal[idx] = maxDirection;
-      pIsNewlyBroken[idx] = 1;
-
-      cout<<"Crack nucleated in direction: "<<maxDirection<<"."<<endl;
-   }
-      
-   new_dw->put(pIsNewlyBroken, lb->pIsNewlyBrokenLabel);
-   new_dw->put(pNewlyBrokenSurfaceNormal, lb->pNewlyBrokenSurfaceNormalLabel);
-   new_dw->put(pTensileStrength, lb->pTensileStrengthLabel_preReloc);
-}
-
-void
-NormalFracture::
-stressRelease(const Patch* patch,
-                  MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw)
-{
-  //patch + ghost variables
-  ParticleVariable<Point> pX;
-  ParticleVariable<int> pIsNewlyBroken;
-  ParticleVariable<Vector> pNewlyBrokenSurfaceNormal;
-  ParticleVariable<Matrix3> pStress;
+  // Create arrays for the particle data
+  ParticleVariable<Point>  pX_pg;
+  ParticleVariable<double> pVolume_pg;
+  ParticleVariable<Vector> pCrackNormal_pg;
+  ParticleVariable<int>    pIsBroken_pg;
 
   int matlindex = mpm_matl->getDWIndex();
+  ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
+     patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-  ParticleSubset* pset_patchAndGhost = old_dw->getParticleSubset(
-     matlindex, patch, Ghost::AroundNodes, 1, lb->pXLabel);
+  old_dw->get(pX_pg, lb->pXLabel, pset_pg);
+  old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
+  old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, 
+     pset_pg);
+  old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
 
-  old_dw->get(pX, lb->pXLabel, pset_patchAndGhost);
-  new_dw->get(pIsNewlyBroken, lb->pIsNewlyBrokenLabel, pset_patchAndGhost);
-  new_dw->get(pNewlyBrokenSurfaceNormal, lb->pNewlyBrokenSurfaceNormalLabel, 
-     pset_patchAndGhost);
-  new_dw->get(pStress, lb->pStressAfterStrainRateLabel, pset_patchAndGhost);
+  ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
+  ParticleVariable<Point>  pX_p;
+  new_dw->get(pX_p, lb->pXXLabel, pset_p);
 
-  Lattice lattice(pX);
+  vector<int> pIdxEx( pset_p->numParticles() );
+  fit(pset_p,pX_p,
+      pset_pg,pX_pg,
+      pIdxEx);
 
-  //patch variables
-  ParticleSubset* pset_patchOnly = old_dw->getParticleSubset(
-     matlindex, patch);
+  Lattice lattice(pX_pg);
+  ParticlesNeighbor particles;
+  IntVector cellIdx;
 
-  ParticleVariable<int> pIsBroken;
-  ParticleVariable<Vector> pCrackNormal;
-  ParticleVariable<Vector> pImageVelocity;
-  ParticleVariable<Vector> pVelocity;
-
-  ParticleVariable<double> pMass;
-  ParticleVariable<double> pStrainEnergy;
-  ParticleVariable<Vector> pRotationRate;
-
-  old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset_patchOnly);
-  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset_patchOnly);
-  old_dw->get(pImageVelocity, lb->pImageVelocityLabel, pset_patchOnly);
-  new_dw->get(pVelocity, lb->pVelocityAfterUpdateLabel, pset_patchOnly);
-
-  old_dw->get(pMass, lb->pMassLabel, pset_patchOnly);
-  new_dw->get(pStrainEnergy, lb->pStrainEnergyLabel, pset_patchOnly);
-  new_dw->get(pRotationRate, lb->pRotationRateLabel, pset_patchOnly);
+  //finding new crackFaces;
+  ParticleVariable<Matrix3> pStress_p;
+  ParticleVariable<double> pStrainEnergy_p;
+  ParticleVariable<double> pToughness_p;
   
-  ParticleVariable<int> pStressReleased;
-  new_dw->allocate(pStressReleased, lb->pStressReleasedLabel, pset_patchOnly);
-  
-  ParticleVariable<Matrix3> pStress_new;
-  ParticleVariable<int> pIsBroken_new;
-  ParticleVariable<Vector> pCrackNormal_new;
-  ParticleVariable<Vector> pImageVelocity_new;
-  ParticleVariable<Vector> pVelocity_new;
+  new_dw->get(pStress_p, lb->pStressAfterStrainRateLabel, pset_p);
+  new_dw->get(pStrainEnergy_p, lb->pStrainEnergyLabel, pset_p);
+  old_dw->get(pToughness_p, lb->pToughnessLabel, pset_p);
 
-  new_dw->allocate(pStress_new, lb->pStressLabel, pset_patchOnly);
-  new_dw->allocate(pIsBroken_new, lb->pIsBrokenLabel, pset_patchOnly);
-  new_dw->allocate(pCrackNormal_new, lb->pCrackNormalLabel, 
-     pset_patchOnly);
-  new_dw->allocate(pImageVelocity_new, lb->pImageVelocityLabel, pset_patchOnly);
-  new_dw->allocate(pVelocity_new, lb->pVelocityLabel, pset_patchOnly);
-  
-  
-  double range = ( patch->dCell().x() + 
-	           patch->dCell().y() + 
-		   patch->dCell().z() )/3;
+  for(ParticleSubset::iterator iter = pset_pg->begin();
+          iter != pset_pg->end(); iter++)
+  {
+    particleIndex pIdx = *iter;
+    if(pIsBroken_pg[pIdx] == 0) continue;
 
+    double pHalfSize = pow(pVolume_pg[pIdx],1./3.)/2;
+    CrackFace face(pCrackNormal_pg[pIdx],
+        pX_pg[pIdx] + pCrackNormal_pg[pIdx] * pHalfSize,
+	pHalfSize);
+    if(face.isTip(pCrackNormal_pg,
+                  pIsBroken_pg,
+		  lattice)) lattice.insert(face);
+  }
+  
+  ParticleVariable<Vector> pNewCrackNormal_p_new;
+  ParticleVariable<int> pNewIsBroken_p_new;
+  
+  new_dw->allocate(pNewCrackNormal_p_new, lb->pNewCrackNormalLabel, pset_p);
+  new_dw->allocate(pNewIsBroken_p_new, lb->pNewIsBrokenLabel, pset_p);
+  
+  //break
+  for(ParticleSubset::iterator iter = pset_p->begin();
+          iter != pset_p->end(); iter++)
+  {
+    particleIndex pIdx_p = *iter;
+    particleIndex pIdx_pg = pIdxEx[pIdx_p];
+    
+    pNewCrackNormal_p_new[pIdx_p] = 
+        pCrackNormal_pg[pIdx_pg];
+    pNewIsBroken_p_new[pIdx_p] = 0;
+    
+    if(pIsBroken_pg[pIdx_pg] == 1) continue;
+    
+    double area = pow(pVolume_pg[pIdx_pg],2./3.);
+    double resistEnergy = pToughness_p[pIdx_p] * area;
+    
+
+    //check toughness
+    /*
+    cout<<"pStrainEnergy/resistEnergy"
+        <<pStrainEnergy_p[pIdx_p]/resistEnergy<<endl;
+    */
+    
+    if( resistEnergy > pStrainEnergy_p[pIdx_p] ) continue;
+
+    Point& particlePoint = pX_pg[pIdx_pg];
+    
+    IntVector thisCellIndex;
+    patch->findCell(particlePoint,thisCellIndex);
+    CellsNeighbor cells;
+    cells.buildIncluding(thisCellIndex,lattice);
+        
+    CrackFace* crackFace = NULL;
+    
+    int cellsNum = cells.size();
+    for(int i=0;i<cellsNum;++i) {
+      cellIdx = cells[i];
+      for(list<CrackFace>::iterator fIter=lattice[cellIdx].crackFaces.begin();
+         fIter!=lattice[cellIdx].crackFaces.end();
+ 	 ++fIter)
+      {
+        if( fIter->atTip(particlePoint) )
+	{
+	  crackFace = &(*fIter);
+	  break;
+	}
+      }
+      if(crackFace) break;
+    }
+        
+    if(crackFace) {
+      //cout<<"particle at crack tip"<<endl;
+      
+      Vector maxDirection;
+      double maxStress;
+      
+/*
+      if( crackFace->closeToBoundary(particlePoint,lattice) )
+      {
+        maxDirection = crackFace->getNormal();
+	maxStress = Dot(maxDirection,
+	                pStress_p[pIdx_p]*maxDirection);
+      }
+      else
+      {
+*/
+        double sig[3];
+        pStress_p[pIdx_p].getEigenValues(sig[0], sig[1], sig[2]);
+        maxStress = sig[0];
+
+        vector<Vector> eigenVectors = pStress_p[pIdx_p].
+          getEigenVectors( maxStress,Max(fabs(sig[0]),fabs(sig[1]),fabs(sig[2])) );
+
+        for(int i=0;i<eigenVectors.size();++i) eigenVectors[i].normalize();
+
+        if(eigenVectors.size() == 1) maxDirection = eigenVectors[0];
+
+        else if(eigenVectors.size() == 2) {
+          cout<<"eigenVectors.size = 2"<<endl;
+          double theta = drand48() * M_PI * 2;
+          maxDirection = eigenVectors[0] * cos(theta) + 
+                       eigenVectors[1] * sin(theta);
+        }
+
+        else if(eigenVectors.size() == 3) {
+          cout<<"eigenVectors.size = 3"<<endl;
+          double theta = drand48() * M_PI * 2;
+          double beta = drand48() * M_PI;
+          double cos_beta = cos(beta);
+          double sin_beta = sin(beta);
+          Vector xy = eigenVectors[2] * sin_beta;
+          maxDirection = 
+	     eigenVectors[0] * (sin_beta * cos(theta)) +
+	     eigenVectors[1] * (sin_beta * sin(theta)) +
+	     eigenVectors[2] * cos_beta;
+        }
+//      }
+      
+      Vector N = maxDirection;
+      if( Dot(crackFace->getTip() - particlePoint, N) < 0 ) N = -N;
+      
+      double I2 = 0;
+      for(int i=1;i<=3;++i)
+      for(int j=1;j<=3;++j) {
+        double s = pStress_p[pIdx_p](i,j);
+        I2 +=  s * s;
+      }
+      
+      double driveEnergy = pStrainEnergy_p[pIdx_p] * 
+             maxStress * maxStress / I2;
+      //cout<<"driveEnergy/resistEnergy: "<<driveEnergy/resistEnergy<<endl;
+      if( driveEnergy < resistEnergy ) continue;
+      
+      if( lattice.checkPossible(N,
+                                 pIdx_pg,
+                                 pX_pg,
+		  		 pVolume_pg,
+				 pCrackNormal_pg,
+				 pIsBroken_pg) )
+      {
+        pNewCrackNormal_p_new[pIdx_p] = N;
+        pNewIsBroken_p_new[pIdx_p] = 1;
+      }
+    }
+  }
+
+  new_dw->put(pNewCrackNormal_p_new, lb->pNewCrackNormalLabel);
+  new_dw->put(pNewIsBroken_p_new, lb->pNewIsBrokenLabel);
+}
+
+void NormalFracture::stressRelease(
+                  const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw)
+{
+  static Vector zero(0.,0.,0.);
+  
+  //patchAndGhost data
+  ParticleVariable<Point>  pX_pg;
+  ParticleVariable<Vector> pNewCrackNormal_pg;
+  ParticleVariable<int>    pIsBroken_pg;
+  ParticleVariable<int>    pNewIsBroken_pg;
+
+  int matlindex = mpm_matl->getDWIndex();
+  ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
+     patch, Ghost::AroundCells, 1, lb->pXLabel);
+
+  old_dw->get(pX_pg, lb->pXLabel, pset_pg);
+  new_dw->get(pNewCrackNormal_pg, lb->pNewCrackNormalLabel, 
+     pset_pg);
+  old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, 
+     pset_pg);
+  new_dw->get(pNewIsBroken_pg, lb->pNewIsBrokenLabel, 
+     pset_pg);
+
+  //patchOnly data
+  ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
+  ParticleVariable<Point>  pX_p;
+  ParticleVariable<Matrix3> pStress_p;
+  ParticleVariable<Vector> pRotationRate_p;
+  ParticleVariable<double> pVolume_p;
+  
+  old_dw->get(pVolume_p, lb->pVolumeLabel, pset_p);
+  new_dw->get(pStress_p, lb->pStressAfterStrainRateLabel, pset_p);
+  new_dw->get(pRotationRate_p, lb->pRotationRateLabel, pset_p);
+  new_dw->get(pX_p, lb->pXXLabel, pset_p);
+
+  vector<int> pIdxEx( pset_p->numParticles() );
+  fit(pset_p,pX_p,
+      pset_pg,pX_pg,
+      pIdxEx);
+
+  Lattice lattice(pX_pg);
+  ParticlesNeighbor particles;
+  IntVector cellIdx;
+
+  //Allocate new data
+  ParticleVariable<Vector> pCrackNormal_p_new;
+  ParticleVariable<int> pIsBroken_p_new;
+  ParticleVariable<Matrix3> pStress_p_new;
+  
+  new_dw->allocate(pCrackNormal_p_new, lb->pCrackNormalLabel, pset_p);
+  new_dw->allocate(pIsBroken_p_new, lb->pIsBrokenLabel, pset_p);
+  new_dw->allocate(pStress_p_new, lb->pStressLabel, pset_p);
+  
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
-  IntVector cellIdx;
-
-  //update for broken particles,crack surface rotation
-  for(ParticleSubset::iterator iter = pset_patchOnly->begin(); 
-     iter != pset_patchOnly->end(); iter++)
+  for(ParticleSubset::iterator iter = pset_p->begin();
+          iter != pset_p->end(); iter++)
   {
-    particleIndex idx = *iter;
+    particleIndex pIdx_p = *iter;
+    particleIndex pIdx_pg = pIdxEx[pIdx_p];
 
-    pStressReleased[idx] = 0;
+    if( pIsBroken_pg[pIdx_pg] != 0 ) {
+      pCrackNormal_p_new[pIdx_p] = 
+        pNewCrackNormal_pg[pIdx_pg] +
+        Cross( pRotationRate_p[pIdx_p] * delT, 
+	       pNewCrackNormal_pg[pIdx_pg] );
 
-    pStress_new[idx] = pStress[idx];
-    pIsBroken_new[idx] = pIsBroken[idx];
-    pImageVelocity_new[idx] = pImageVelocity[idx];
-    pVelocity_new[idx] = pVelocity[idx];
+      /*
+      cout<<"===="<<endl;
+      cout<<pIdx_p<<endl;
+      cout<<pIdx_pg<<endl;
+      cout<<pNewCrackNormal_pg[pIdx_pg]<<endl;
+      cout<<pRotationRate_p[pIdx_p] * delT<<endl;
+      cout<<pCrackNormal_p_new[pIdx_p]<<endl;
+      */
+      
+      pCrackNormal_p_new[pIdx_p].normalize();
 
-    if(pIsBroken[idx]) {
-      pCrackNormal_new[idx] = pCrackNormal[idx] +
-                                  Cross( pRotationRate[idx] * delT, 
-	                                 pCrackNormal[idx] );
-      pCrackNormal_new[idx].normalize();
+      pIsBroken_p_new[pIdx_p] = 
+        pIsBroken_pg[pIdx_pg];
+      pStress_p_new[pIdx_p] = 
+        pStress_p[pIdx_p];
+      continue;
     }
-  }
+    
+    if( pNewIsBroken_pg[pIdx_pg] == 0 ) {
+      pCrackNormal_p_new[pIdx_p] = zero;
+      pIsBroken_p_new[pIdx_p] = 0;
+      pStress_p_new[pIdx_p] = 
+        pStress_p[pIdx_p];
+      continue;
+    }
 
-  double delTAfterFracture = 1.e12;
-
-  for(ParticleSubset::iterator iter = pset_patchAndGhost->begin(); 
-     iter != pset_patchAndGhost->end(); iter++)
-  {
-    particleIndex idx = *iter;
-        
-    if( pStressReleased[idx] == 1 ) continue;
-    if(!pIsNewlyBroken[idx]) continue;
-      
-    bool insidePatch,pairInsidePatch;
-    insidePatch = patch->findCell(pX[idx],cellIdx);
-    ParticlesNeighbor particlesNeighbor;
-    particlesNeighbor.buildIn(cellIdx,lattice);
-      
-    Vector N = pNewlyBrokenSurfaceNormal[idx];
-
-    particleIndex pairIdx = -1;
-    double pairRatio = 0;
-    double maxStress = Dot(pStress[idx]*N,N);
-    for(std::vector<particleIndex>::const_iterator 
-       ip = particlesNeighbor.begin();
-       ip != particlesNeighbor.end(); ++ip)
+    double r = pow(pVolume_p[pIdx_p],1./3.)/2;
+    if(lattice.checkPossible(
+                   pIdx_pg,
+		   r,
+                   pX_pg,
+                   pNewCrackNormal_pg,
+                   pIsBroken_pg,
+                   pNewIsBroken_pg ) )
     {
-      particleIndex pNeighbor = *ip;	
-
-      if( pStressReleased[pNeighbor] == 1 ) continue;
-      if( pIsBroken[pNeighbor] == 1 ) continue;
-      if(pNeighbor == idx) continue;
-      if( !patch->findCell(pX[pNeighbor],cellIdx) ) continue;	
-      Vector dis = (pX[idx] - pX[pNeighbor]);
-      double d = dis.length();
-      if( d > range ) continue;
-      if( fabs(Dot(dis,N))/d < sqrt(2.)/2 ) continue;
-        
-      double ratio = Dot(pStress[pNeighbor]*N,N) / maxStress;
-      if(ratio > pairRatio) {
-        pairIdx = pNeighbor;
-        pairRatio = ratio;
-      }
-    }
-    if(pairIdx == -1) continue;
-    pairInsidePatch = patch->findCell(pX[pairIdx],cellIdx);
-
-    if( Dot( (pX[pairIdx]-pX[idx]), N ) < 0 ) N = -N;
-    cout<<"pairRatio:"<<pairRatio<<endl;
-
-    Matrix3 stress;
-    double I2,sRelease;
-    double v;
-      
-    if(insidePatch) {
-      I2 = 0;
-      sRelease = maxStress;
+      cout<<"crack grow!"<<endl;
+      const Vector& N = pNewCrackNormal_pg[pIdx_pg];
+      double maxStress = Dot(N,pStress_p[pIdx_p] * N);
+      Matrix3 stress;
       for(int i=1;i<=3;++i)
       for(int j=1;j<=3;++j) {
-        I2 += pStress[idx](i,j) * pStress[idx](i,j);
-        stress(i,j) = N(i-1) * sRelease * N(j-1);
+        stress(i,j) = N(i-1) * maxStress * N(j-1);
       }
-      v = sqrt( pStrainEnergy[idx] * sRelease * sRelease / I2 / pMass[idx] );
-      pVelocity_new[idx] -= (N * v);
-      pStress_new[idx] -= stress;
-      pCrackNormal_new[idx] = N;
-      pIsBroken_new[idx] = 1;
-      if(v>0) delTAfterFracture = Min(delTAfterFracture, range/v/2);
-      pStressReleased[idx] = 1;
+      pStress_p_new[pIdx_p] = 
+        pStress_p[pIdx_p] - stress;
+      pIsBroken_p_new[pIdx_p] = 1;
+      pCrackNormal_p_new[pIdx_p] = N;
     }
-
-    if(pairInsidePatch) {
-      I2 = 0;
-      sRelease = maxStress * pairRatio;
-      for(int i=1;i<=3;++i)
-      for(int j=1;j<=3;++j) {
-        I2 += pStress_new[pairIdx](i,j) * pStress_new[pairIdx](i,j);
-        stress(i,j) = N(i-1) * sRelease * N(j-1);
-      }
-      v = sqrt( pStrainEnergy[pairIdx] * sRelease * sRelease / I2 / 
-         pMass[pairIdx] );
-      pVelocity_new[pairIdx] += (N * v);
-      pStress_new[pairIdx] -= stress;
-      pCrackNormal_new[pairIdx] = -N;
-      pIsBroken_new[pairIdx] = 1;
-      if(v>0) delTAfterFracture = Min(delTAfterFracture, range/v/2);
-      pStressReleased[pairIdx] = 1;
+    else {
+      pCrackNormal_p_new[pIdx_p] = zero;
+      pIsBroken_p_new[pIdx_p] = 0;
+      pStress_p_new[pIdx_p] = 
+        pStress_p[pIdx_p];
     }
   }
 
-  /*
-  for(ParticleSubset::iterator iter = pset->begin(); 
-     iter != pset->end(); iter++)
-  {
-    pVelocity_new[*iter].z(0);
-  }
-  */
-  
-  new_dw->put(pCrackNormal_new, lb->pCrackNormalLabel_preReloc);
-  new_dw->put(pIsBroken_new, lb->pIsBrokenLabel_preReloc);
-  new_dw->put(pStress_new, lb->pStressAfterFractureReleaseLabel);
-  new_dw->put(pImageVelocity_new, lb->pImageVelocityLabel_preReloc);
-  new_dw->put(pVelocity_new, lb->pVelocityAfterFractureLabel);
-
-  new_dw->put(delt_vartype(delTAfterFracture), lb->delTLabel);
+  new_dw->put(pStress_p_new, lb->pStressAfterFractureReleaseLabel);
+  new_dw->put(pCrackNormal_p_new, lb->pCrackNormalLabel_preReloc);
+  new_dw->put(pIsBroken_p_new, lb->pIsBrokenLabel_preReloc);
 }
 
 NormalFracture::
-NormalFracture(ProblemSpecP& ps)
-: Fracture(ps)
+NormalFracture(ProblemSpecP& ps) : Fracture(ps)
 {
 }
 
-} // End namespace Uintah
+NormalFracture::~NormalFracture()
+{
+}
+
+} //namespace Uintah

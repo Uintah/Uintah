@@ -110,18 +110,40 @@ public:
 
   //////////
   // Insert Documentation Here:
-  void computeNodeVisibility(const ProcessorGroup*,
+  void computeFracture(const ProcessorGroup*,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
-  void computeCrackSurfaceContactForce(
+  void stressRelease(const ProcessorGroup*,
+			     const Patch* patch,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
+
+
+  //////////
+  // Insert Documentation Here:
+  void computeVisibility(const ProcessorGroup*,
+			     const Patch* patch,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  void computeBoundaryContact(
                    const ProcessorGroup*,
 		   const Patch* patch,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  void carryForwardVariables( const ProcessorGroup*,
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -210,28 +232,7 @@ public:
 
   //////////
   // Insert Documentation Here:
-  void crackGrow(const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  void stressRelease(const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
-
-  //////////
-  // Insert Documentation Here:
   void setPositions( const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  void carryForwardVariables( const ProcessorGroup*,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw);
@@ -248,10 +249,30 @@ public:
 				     DataWarehouseP&,
 				     DataWarehouseP&);
 
-  void scheduleComputeNodeVisibility(const Patch* patch,
+  void scheduleComputeFracture(const Patch* patch,
 				     SchedulerP&,
 				     DataWarehouseP&,
 				     DataWarehouseP&);
+
+  void scheduleStressRelease(const Patch* patch,
+				     SchedulerP&,
+				     DataWarehouseP&,
+				     DataWarehouseP&);
+
+  void scheduleComputeVisibility(const Patch* patch,
+				     SchedulerP&,
+				     DataWarehouseP&,
+				     DataWarehouseP&);
+
+  void scheduleComputeBoundaryContact(const Patch* patch,
+			              SchedulerP&,
+				      DataWarehouseP&,
+				      DataWarehouseP&);
+
+  void scheduleCarryForwardVariables(const Patch* patch,
+					       SchedulerP&,
+					       DataWarehouseP&,
+					       DataWarehouseP&);
 
   void scheduleInterpolateParticlesToGrid(const Patch* patch,
 					  SchedulerP&,
@@ -317,26 +338,6 @@ public:
 			       SchedulerP&,
 			       DataWarehouseP&,
 			       DataWarehouseP&);
-
-  void scheduleCrackGrow(const Patch* patch,
-			 SchedulerP&,
-			 DataWarehouseP&,
-			 DataWarehouseP&);
-
-  void scheduleStressRelease(const Patch* patch,
-			     SchedulerP&,
-			     DataWarehouseP&,
-			     DataWarehouseP&);
-
-  void scheduleComputeCrackSurfaceContactForce(const Patch* patch,
-					       SchedulerP&,
-					       DataWarehouseP&,
-					       DataWarehouseP&);
-
-  void scheduleCarryForwardVariables(const Patch* patch,
-				     SchedulerP&,
-				     DataWarehouseP&,
-				     DataWarehouseP&);
 
   void scheduleInterpolateParticlesForSaving(const Patch* patch,
 					     SchedulerP&,

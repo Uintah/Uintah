@@ -32,23 +32,34 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
-  void   computeNodeVisibility(
+  void   computeBoundaryContact(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
 
-  void   crackGrow(const Patch* patch,
+  void   computeVisibility(
+                  const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
 
-  void   stressRelease(const Patch* patch,
+  void   computeFracture(
+                  const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw);
+
+  void   stressRelease(
+                  const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
 
          NormalFracture(ProblemSpecP& ps);
+	~NormalFracture();
+
+private:
 };
 
 } // End namespace Uintah

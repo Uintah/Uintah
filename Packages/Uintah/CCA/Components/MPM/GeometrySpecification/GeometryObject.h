@@ -71,16 +71,16 @@ WARNING
 	    return d_initialTemperature;
 	 }
 
-	 double getTensileStrengthMin() const {
-	    return d_tensileStrengthMin;
+	 double getToughnessMin() const {
+	    return d_toughnessMin;
 	 }
 
-	 double getTensileStrengthMax() const {
-	    return d_tensileStrengthMax;
+	 double getToughnessMax() const {
+	    return d_toughnessMax;
 	 }
 
-	 double getTensileStrengthVariation() const {
-	    return d_tensileStrengthVariation;
+	 double getToughnessVariation() const {
+	    return d_toughnessVariation;
 	 }
 
       private:
@@ -89,9 +89,9 @@ WARNING
 	 Vector d_initialVel;
 	 double d_initialTemperature;
 
-	 double d_tensileStrengthMin;
-	 double d_tensileStrengthMax;
-	 double d_tensileStrengthVariation;
+	 double d_toughnessMin;
+	 double d_toughnessMax;
+	 double d_toughnessVariation;
       };
 } // End namespace Uintah
       

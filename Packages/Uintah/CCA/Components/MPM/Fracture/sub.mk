@@ -3,9 +3,6 @@
 SRCDIR   := Packages/Uintah/CCA/Components/MPM/Fracture
 
 SRCS     += $(SRCDIR)/Fracture.cc \
-	$(SRCDIR)/SimpleFracture.cc \
-	$(SRCDIR)/NormalFracture.cc \
-	$(SRCDIR)/ExplosiveFracture.cc \
 	$(SRCDIR)/FractureFactory.cc \
 	$(SRCDIR)/Lattice.cc \
 	$(SRCDIR)/Cell.cc \
