@@ -15,6 +15,7 @@ SRCS     += \
 	$(SRCDIR)/EigenEvaluator.cc \
 	$(SRCDIR)/VectorFieldOperator.cc \
 	$(SRCDIR)/VectorParticlesOperator.cc \
+	$(SRCDIR)/TensorToTensorConvertor.cc \
 [INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
