@@ -1331,8 +1331,12 @@ Gui::createMenus( int winId )
 			  SOUND_VOLUME_SPINNER_ID );
   activeGui->soundVolumeSpinner_->set_speed( 0.01 );
   activeGui->soundVolumeSpinner_->set_int_limits( 0, 100 );
+#if defined(linux) || defined(SCI_64BITS)
+  activeGui->soundVolumeSpinner_->disable();
+#else
   if( activeGui->dpy_->scene->getSounds().size() == 0 )
     activeGui->soundVolumeSpinner_->disable();
+#endif
 
   // 
   activeGui->depthValue_ = 2;

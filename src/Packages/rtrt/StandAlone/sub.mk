@@ -5,6 +5,11 @@ SRCDIR := Packages/rtrt/StandAlone
 
 SRCS := $(SRCDIR)/rtrt.cc
 
+ifneq ($(USE_SOUND),no)
+   SOUNDDIR := Packages/rtrt/Sound
+   SOUNDLIBS := -laudio -laudiofile
+endif
+
 PROGRAM := Packages/rtrt/StandAlone/rtrt
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/rtrt
@@ -12,13 +17,14 @@ else
 
   PSELIBS := \
 	Packages/rtrt/Core \
+	$(SOUNDDIR) \
 	Packages/rtrt/visinfo \
 	Core/Thread \
 	Core/Geometry \
 	Core/Exceptions
 
 endif
-LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
+LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY) $(SOUNDLIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
