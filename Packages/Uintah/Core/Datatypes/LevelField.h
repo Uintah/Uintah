@@ -325,15 +325,34 @@ template <class Data>
 ScalarFieldInterface *
 LevelField<Data>::query_scalar_interface() const
 {
-  return new LevelFieldSFI<Data>( this );
+  return 0;
 }
+
+template <> ScalarFieldInterface *
+LevelField<double>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+LevelField<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+LevelField<long>::query_scalar_interface() const;
+
+
 
 template < class Data>
 VectorFieldInterface* 
 LevelField<Data>::query_vector_interface() const
 {
-  ASSERTFAIL("LevelField::query_vector_interface() not implemented");
+  return 0;
 }
+
+template <>
+VectorFieldInterface*
+LevelField<Vector>::query_vector_interface() const ;
+
+
+
+
 template <class Data>
 TensorFieldInterface* 
 LevelField<Data>::query_tensor_interface() const
@@ -577,7 +596,7 @@ template <>
 bool LevelFieldSFI<double>::interpolate( double& result, const Point &p) const;
 
 template <>
-bool LevelFieldSFI<int>::interpolate( double& result, const Point &p) const;
+bool LevelFieldSFI<float>::interpolate( double& result, const Point &p) const;
 
 template <>
 bool LevelFieldSFI<long>::interpolate( double& result, const Point &p) const;
