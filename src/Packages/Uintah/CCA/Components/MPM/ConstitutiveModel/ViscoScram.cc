@@ -291,7 +291,8 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     double delT_new = WaveSpeed.minComponent();
     //Timesteps larger than 1 microsecond cause VS to be unstable
     delT_new = min(1.e-6, delT_new);
-    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                lb->delTLabel);
 }
 
 void ViscoScram::computeStressTensor(const PatchSubset* patches,
@@ -702,7 +703,8 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     //Timesteps larger than 1 microsecond cause VS to be unstable
     delT_new = min(1.e-6, delT_new);
 
-    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
   }
 }
@@ -746,7 +748,8 @@ void ViscoScram::carryForward(const PatchSubset* patches,
       pCrackRadius[idx] = 0.;
       pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
-    new_dw->setDelT(1.e10, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

@@ -2187,7 +2187,8 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
               << patch->getID() <<"\t IMPM"<< "\n" << "\n";
 
    if(d_numIterations==0){
-    new_dw->setDelT(d_initialDt, lb->delTLabel, patch->getLevel());
+     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(d_initialDt)), 
+                 lb->delTLabel);
    }
    else{
     Vector dx = patch->dCell();
@@ -2222,7 +2223,8 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
         old_dt = d_delT_decrease_factor*old_delT;
       }
       delT_new = min(delT_new, old_dt);
-      new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                  lb->delTLabel);
     }
    }
   }

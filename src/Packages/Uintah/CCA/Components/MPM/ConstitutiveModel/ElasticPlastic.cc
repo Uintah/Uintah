@@ -580,7 +580,8 @@ void ElasticPlastic::computeStableTimestep(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+  new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+              lb->delTLabel);
 }
 
 void 
@@ -1230,7 +1231,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
   }
   cout_EP << getpid() << "... End." << endl;
@@ -1335,7 +1337,8 @@ void ElasticPlastic::carryForward(const PatchSubset* patches,
       pPlasticTempInc_new[idx] = 0.0;
     }
 
-    new_dw->setDelT(1.e10, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

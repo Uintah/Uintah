@@ -217,7 +217,8 @@ void MWViscoElastic::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                lb->delTLabel);
 }
 
 void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
@@ -394,7 +395,8 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(se),               lb->StrainEnergyLabel);
   }
 }

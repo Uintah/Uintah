@@ -88,10 +88,6 @@ public:
   virtual void put(const ReductionVariableBase&, const VarLabel*,
 		   const Level* level = 0, int matlIndex = -1) = 0;
 
-  //! Use this when you're done setting the delt, and this function
-  //! will compensate for whichever level you're on
-  virtual void setDelT(double delt, const VarLabel* delt_label, const Level* level) = 0;
-
   virtual void override(const ReductionVariableBase&, const VarLabel*,
 			const Level* level = 0, int matlIndex = -1) = 0;
   virtual void print(ostream& intout, const VarLabel* label,

@@ -176,7 +176,8 @@ void CompNeoHook::computeStableTimestep(const Patch* patch,
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+  new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+              lb->delTLabel);
 }
 
 void CompNeoHook::computeStressTensor(const PatchSubset* patches,
@@ -333,7 +334,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
 
   }
@@ -369,7 +371,8 @@ void CompNeoHook::carryForward(const PatchSubset* patches,
       pstress_new[idx] = Matrix3(0.0);
       pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
-    new_dw->setDelT(1.e10, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }
