@@ -63,10 +63,20 @@ void HypoElastic::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
   ParticleVariable<Matrix3> pstress;
   new_dw->allocateAndPut(pstress, lb->pStressLabel, pset);
-
+  // for J-Integral
+#ifdef FRACTURE
+  ParticleVariable<Matrix3> pdispGrads;
+  new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
+  ParticleVariable<double>  pstrainEnergyDensity;
+  new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, pset);
+#endif
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      deformationGradient[*iter] = Identity;
      pstress[*iter] = zero;
+#ifdef FRACTURE
+     pdispGrads[*iter] = zero;
+     pstrainEnergyDensity[*iter] = 0.0;
+#endif
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -79,6 +89,12 @@ void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
    from.push_back(lb->pStressLabel);
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
+#ifdef FRACTURE
+   from.push_back(lb->pDispGradsLabel);
+   from.push_back(lb->pStrainEnergyDensityLabel);
+   to.push_back(lb->pDispGradsLabel_preReloc);
+   to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
+#endif
 }
 
 void HypoElastic::computeStableTimestep(const Patch* patch,
@@ -169,10 +185,21 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel);
 
 #ifdef FRACTURE
-    constParticleVariable<Short27> pgCode;
-    new_dw->get(pgCode, lb->pgCodeLabel, pset);
     constNCVariable<Vector> Gvelocity;
     new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+
+    constParticleVariable<Short27> pgCode;
+    constParticleVariable<Matrix3> pdispGrads;
+    constParticleVariable<double>  pstrainEnergyDensity;
+    new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
+    old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
+    old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
+
+    ParticleVariable<Matrix3> pdispGrads_new;
+    ParticleVariable<double> pstrainEnergyDensity_new;
+    new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstrainEnergyDensity_new,
+                                 lb->pStrainEnergyDensityLabel_preReloc, pset);
 #endif
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
@@ -253,6 +280,14 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       se += e;
 
+#ifdef FRACTURE
+      // Update particle displacement gradients
+      pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
+      // Update particle strain energy density 
+      pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] + 
+                                         e/pvolume_deformed[idx];
+#endif
+
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = sqrt((bulk + 4.*G/3.)*pvolume_deformed[idx]/pmass[idx]);
@@ -302,10 +337,15 @@ void HypoElastic::addComputesAndRequires(Task* task,
   if(d_8or27==27){
     task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
+  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
+
 #ifdef FRACTURE
-  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None); 
   task->requires(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
+  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pDispGradsLabel,         matlset,Ghost::None);
+  task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,Ghost::None);
+  task->computes(lb->pDispGradsLabel_preReloc,             matlset);
+  task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
 #endif
 
   task->computes(lb->pStressLabel_preReloc,                matlset);
