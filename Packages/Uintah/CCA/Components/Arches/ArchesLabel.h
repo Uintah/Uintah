@@ -678,10 +678,6 @@ namespace Uintah {
 //      const VarLabel* d_velocityDivergenceLabel;
 //      const VarLabel* d_velocityDivergenceBCLabel;
 
-// labels for max(abs(velocity)) for Lax-Friedrichs flux
-      const VarLabel* d_maxAbsU_label;
-      const VarLabel* d_maxAbsV_label;
-      const VarLabel* d_maxAbsW_label;
  
     }; // End class ArchesLabel
 } // End namespace Uintah
