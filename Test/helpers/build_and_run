@@ -155,7 +155,17 @@ fi
 summary_log="${BUILDROOT}/${mode}/summary_log"
 rm -f $summary_log
 
+
 cd TestScripts
+TestDir=TestScripts
+
+# go to dir of weekly tests if WEEKLY set to 1
+if [ $WEEKLY == "1" ]; then
+    echo "Weekly tests running!"
+    cd Weekly
+    TestDir=TestScripts/Weekly
+fi
+
 for test in *; do
     if [ -f "$test" -a -x "$test" ]; then
 	if [ $WithArches == "no" -a $test == "ARCHES" ]; then
@@ -173,7 +183,7 @@ for test in *; do
 	echo "#!/bin/tcsh" > "$doTestScript"
 	echo "setenv PATH $PATH" >> "$doTestScript"
         echo "setenv OS $OS" >> "$doTestScript"
-	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+	echo "python $TestDir/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
 	nice "$doTestScript" > "${test}.log"  2>&1
 	retval=$?
