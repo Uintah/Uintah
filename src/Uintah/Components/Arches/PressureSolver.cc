@@ -210,7 +210,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       int matlIndex = 0;
 
       // Requires
-      // from old_dw
+      // from old_dw for time integration
       tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
@@ -359,6 +359,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.36  2000/07/14 03:45:46  rawat
+// completed velocity bc and fixed some bugs
+//
 // Revision 1.35  2000/07/13 06:32:10  bbanerje
 // Labels are once more consistent for one iteration.
 //

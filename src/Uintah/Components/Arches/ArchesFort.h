@@ -272,8 +272,10 @@ extern "C"
 		  const double* ceeu, const double* cweu, const double* cwwu,
 		  const double* cnn, const double* csn, const double* css,
 		  const double* ctt, const double* cbt, const double* cbb,
-		  const double* sewu, const double* sns, const double* stb,
+		  const double* sewu, const double* sew,
+		  const double* sns, const double* stb,
 		  const double* dxepu, const double* dxpwu,
+		  const double* dxpw,
 		  const double* dynp, const double* dyps,
 		  const double* dztp, const double* dzpb,
 		  const double* fac1u, const double* fac2u,
@@ -315,9 +317,11 @@ extern "C"
 		  const double* cee, const double* cwe, const double* cww,
 		  const double* cnnv, const double* csnv, const double* cssv,
 		  const double* ctt, const double* cbt, const double* cbb,
-		  const double* sew, const double* snsv, const double* stb,
+		  const double* sew, const double* snsv, const double* sns,
+		  const double* stb,
 		  const double* dxep, const double* dxpw,
 		  const double* dynpv, const double* dypsv,
+		  const double* dyps,
 		  const double* dztp, const double* dzpb,
 		  const double* fac1v, const double* fac2v,
 		  const double* fac3v, const double* fac4v,
@@ -359,9 +363,10 @@ extern "C"
 		  const double* cnn, const double* csn, const double* css,
 		  const double* cttw, const double* cbtw, const double* cbbw,
 		  const double* sew, const double* sns, const double* stbw,
-		  const double* dxep, const double* dxpw,
+		  const double* stb, const double* dxep, const double* dxpw,
 		  const double* dynp, const double* dyps,
 		  const double* dztpw, const double* dzpbw,
+		  const double* dzpb,
 		  const double* fac1w, const double* fac2w,
 		  const double* fac3w, const double* fac4w,
 		  const int* ktsdw, const int* kbsdw, 
@@ -460,7 +465,6 @@ extern "C"
     FORT_MASCAL(const int* domLo, const int* domHi,
 		const int* idxLo, const int* idxHi,
 		const double* velocity,  
-		const double* velCoefAP,
 		const double* velCoefAE,
 		const double* velCoefAW,
 		const double* velCoefAN,
@@ -498,6 +502,54 @@ extern "C"
 		const double* sewu, const double* sns, const double* stb,
 		const double* yy, const double* yv,
 		const double* zz, const double* zw);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the V-velocity bc
+    //
+    void
+    FORT_BCVVEL(const int* domLoV, const int* domHiV,
+		const int* idxLoV, const int* idxHiV,
+		const double* vVelocity,
+		double* vVelocityCoeff_AP,
+		double* vVelocityCoeff_AE,
+		double* vVelocityCoeff_AW,
+		double* vVelocityCoeff_AN,
+		double* vVelocityCoeff_AS,
+		double* vVelocityCoeff_AT,
+		double* vVelocityCoeff_AB,
+		double* nlsource, double* linsource,
+		const int* domLo, const int* domHi,
+		const int* pcell,
+		const int* wall, const int* ffield,
+		const double* viscosity,
+		const double* sew, const double* snsv, const double* stb,
+		const double* xx, const double* xu,
+		const double* zz, const double* zw);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the V-velocity bc
+    //
+    void
+    FORT_BCWVEL(const int* domLoW, const int* domHiW,
+		const int* idxLoW, const int* idxHiW,
+		const double* wVelocity,
+		double* wVelocityCoeff_AP,
+		double* wVelocityCoeff_AE,
+		double* wVelocityCoeff_AW,
+		double* wVelocityCoeff_AN,
+		double* wVelocityCoeff_AS,
+		double* wVelocityCoeff_AT,
+		double* wVelocityCoeff_AB,
+		double* nlsource, double* linsource,
+		const int* domLo, const int* domHi,
+		const int* pcell,
+		const int* wall, const int* ffield,
+		const double* viscosity,
+		const double* sew, const double* sns, const double* stbw,
+		const double* xx, const double* xu,
+		const double* yy, const double* yv);
 
 
 
@@ -608,6 +660,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.21  2000/07/14 03:45:44  rawat
+// completed velocity bc and fixed some bugs
+//
 // Revision 1.20  2000/07/13 04:51:32  bbanerje
 // Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
 //

@@ -299,9 +299,11 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->css.get_objs(),
 		  cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
 		  cellinfo->cbb.get_objs(),
-		  cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
+		  cellinfo->sewu.get_objs(), cellinfo->sew.get_objs(),
+		  cellinfo->sns.get_objs(),
 		  cellinfo->stb.get_objs(),
 		  cellinfo->dxepu.get_objs(), cellinfo->dxpwu.get_objs(),
+		  cellinfo->dxpw.get_objs(),
 		  cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
 		  cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(),
 		  cellinfo->fac1u.get_objs(), cellinfo->fac2u.get_objs(),
@@ -348,9 +350,11 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
 		  cellinfo->cbb.get_objs(),
 		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
+		  cellinfo->sns.get_objs(),
 		  cellinfo->stb.get_objs(),
 		  cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
 		  cellinfo->dynpv.get_objs(), cellinfo->dypsv.get_objs(),
+		  cellinfo->dyps.get_objs(),
 		  cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(),
 		  cellinfo->fac1v.get_objs(), cellinfo->fac2v.get_objs(),
 		  cellinfo->fac3v.get_objs(), cellinfo->fac4v.get_objs(),
@@ -396,10 +400,11 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->cttw.get_objs(), cellinfo->cbtw.get_objs(),
 		  cellinfo->cbbw.get_objs(),
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
-		  cellinfo->stbw.get_objs(),
+		  cellinfo->stbw.get_objs(), cellinfo->stb.get_objs(),
 		  cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
 		  cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
 		  cellinfo->dztpw.get_objs(), cellinfo->dzpbw.get_objs(),
+		  cellinfo->dzpb.get_objs(),
 		  cellinfo->fac1w.get_objs(), cellinfo->fac2w.get_objs(),
 		  cellinfo->fac3w.get_objs(), cellinfo->fac4w.get_objs(),
 		  cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs(), 
@@ -962,6 +967,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.31  2000/07/14 03:45:45  rawat
+// completed velocity bc and fixed some bugs
+//
 // Revision 1.30  2000/07/13 04:58:45  bbanerje
 // Updated pressureDiagonal calc.
 //

@@ -289,10 +289,7 @@ private:
       void vVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
 		       CCVariable<int>* cellType,
-		       SFCXVariable<double>* uVelocity, 
 		       SFCYVariable<double>* vVelocity, 
-		       SFCZVariable<double>* wVelocity, 
-		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
 		       int eqnType);
@@ -304,10 +301,7 @@ private:
       void wVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
 		       CCVariable<int>* cellType,
-		       SFCXVariable<double>* uVelocity, 
-		       SFCYVariable<double>* vVelocity, 
 		       SFCZVariable<double>* wVelocity, 
-		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
 		       int eqnType);
@@ -507,6 +501,9 @@ private:
   
 //
 // $Log$
+// Revision 1.36  2000/07/14 03:45:45  rawat
+// completed velocity bc and fixed some bugs
+//
 // Revision 1.35  2000/07/12 23:59:21  rawat
 // added wall bc for u-velocity
 //

@@ -14,8 +14,10 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/wvelcoef.F $(SRCDIR)/uvelsrc.F $(SRCDIR)/vvelsrc.F \
 	$(SRCDIR)/wvelsrc.F $(SRCDIR)/arrass.F $(SRCDIR)/mascal.F \
 	$(SRCDIR)/apcal.F $(SRCDIR)/prescoef.F $(SRCDIR)/pressrc.F \
-	$(SRCDIR)/bcuvel.F $(SRCDIR)/bcpress.F $(SRCDIR)/symbcs.F \
-	$(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F $(SRCDIR)/wallbc.F
+	$(SRCDIR)/bcuvel.F $(SRCDIR)/bcvvel.F $(SRCDIR)/bcwvel.F  \
+	$(SRCDIR)/bcpress.F $(SRCDIR)/symbcs.F \
+	$(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F $(SRCDIR)/wallbc.F \
+	$(SRCDIR)/fixval.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -23,7 +25,7 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 #	$(SRCDIR)/bcup.F $(SRCDIR)/bcvp.F $(SRCDIR)/bcwp.F \
 #	$(SRCDIR)/caleps.F $(SRCDIR)/calpbc.F $(SRCDIR)/calscf.F \
 #	$(SRCDIR)/cellg.F $(SRCDIR)/clip.F $(SRCDIR)/epsave.F \
-#	$(SRCDIR)/erchek.F $(SRCDIR)/eval.F $(SRCDIR)/fixval.F \
+#	$(SRCDIR)/erchek.F $(SRCDIR)/eval.F \
 #	$(SRCDIR)/fncd.F $(SRCDIR)/gaxpy.F $(SRCDIR)/gcopy.F \
 #	$(SRCDIR)/gdot.F $(SRCDIR)/geomin.F $(SRCDIR)/ggemv.F \
 #	$(SRCDIR)/gminit.F $(SRCDIR)/gnrm2.F $(SRCDIR)/grdgrf.F \
@@ -50,6 +52,9 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.26  2000/07/14 03:45:48  rawat
+# completed velocity bc and fixed some bugs
+#
 # Revision 1.25  2000/07/13 04:51:35  bbanerje
 # Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
 #

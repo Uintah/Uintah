@@ -31,11 +31,22 @@ using SCICore::Geometry::Vector;
 //****************************************************************************
 Source::Source()
 {
+
+ 				
+}
+
+//****************************************************************************
+// Another Constructor for Source
+//****************************************************************************
+Source::Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const)
+                           :d_turbModel(turb_model), 
+                            d_physicalConsts(phys_const)
+{
   // inputs (calcVelocitySource)
   d_cellTypeLabel = scinew VarLabel("cellType",
 				    CCVariable<int>::getTypeDescription() );
   d_cellInfoLabel = scinew VarLabel("cellInformation",
-			    PerPatch<CellInformation*>::getTypeDescription());
+				    PerPatch<CellInformation*>::getTypeDescription());
   d_uVelocitySPBCLabel = scinew VarLabel("uVelocitySPBC",
 				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySPBCLabel = scinew VarLabel("vVelocitySPBC",
@@ -131,16 +142,7 @@ Source::Source()
   d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
 				CCVariable<double>::getTypeDescription() );
   d_scalNonLinSrcSBLMLabel = scinew VarLabel("scalNonLinSrcSBLM",
-				CCVariable<double>::getTypeDescription() );
-}
-
-//****************************************************************************
-// Another Constructor for Source
-//****************************************************************************
-Source::Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const)
-                           :d_turbModel(turb_model), 
-                            d_physicalConsts(phys_const)
-{
+					     CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -183,12 +185,14 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   SFCZVariable<double> wVelNonlinearSrc; // SU in Arches 
 
   // get data
+  std::cerr << "begin pressure solve\n";
   old_dw->get(old_uVelocity, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(old_vVelocity, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(old_wVelocity, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
+  std::cerr << "after get old from dw pressure solve\n";
   switch(eqnType) {
   case Arches::PRESSURE:
     new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -798,7 +802,7 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
       }
       new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
-      new_dw->get(uVelLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch,
+      new_dw->get(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
       break;
     case Arches::YDIR:
@@ -812,7 +816,7 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
       }
       new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
-      new_dw->get(vVelLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch,
+      new_dw->get(vVelNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
       break;
     case Arches::ZDIR:
@@ -826,7 +830,7 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
       }
       new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
-      new_dw->get(wVelLinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch,
+      new_dw->get(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
       break;
     default:
@@ -846,7 +850,7 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
       }
       new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
-      new_dw->get(uVelLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch,
+      new_dw->get(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
       break;
     case Arches::YDIR:
@@ -860,7 +864,7 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
       }
       new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
-      new_dw->get(vVelLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch,
+      new_dw->get(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
       break;
     case Arches::ZDIR:
@@ -874,7 +878,7 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
       }
       new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
-      new_dw->get(wVelLinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch,
+      new_dw->get(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch,
 		  Ghost::None, numGhostCells);
       break;
     default:
@@ -900,7 +904,6 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
     FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		uVelocity.getPointer(),
-		uVelCoef[Arches::AP].getPointer(),
 		uVelCoef[Arches::AE].getPointer(),
 		uVelCoef[Arches::AW].getPointer(),
 		uVelCoef[Arches::AN].getPointer(),
@@ -924,7 +927,6 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
     FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vVelocity.getPointer(),
-		vVelCoef[Arches::AP].getPointer(),
 		vVelCoef[Arches::AE].getPointer(),
 		vVelCoef[Arches::AW].getPointer(),
 		vVelCoef[Arches::AN].getPointer(),
@@ -948,7 +950,6 @@ Source::modifyVelMassSource(const ProcessorGroup* pc,
     FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		wVelocity.getPointer(),
-		wVelCoef[Arches::AP].getPointer(),
 		wVelCoef[Arches::AE].getPointer(),
 		wVelCoef[Arches::AW].getPointer(),
 		wVelCoef[Arches::AN].getPointer(),
@@ -1039,6 +1040,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.28  2000/07/14 03:45:46  rawat
+//completed velocity bc and fixed some bugs
+//
 //Revision 1.27  2000/07/13 06:32:10  bbanerje
 //Labels are once more consistent for one iteration.
 //
