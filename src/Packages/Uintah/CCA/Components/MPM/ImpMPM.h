@@ -347,6 +347,7 @@ private:
   double           d_conv_crit_energy;
   double           d_initialDt;
   int              d_numIterations;
+  bool             d_doGridReset;  // Default is true, standard MPM
   
   const PatchSet* d_perproc_patches;
 
