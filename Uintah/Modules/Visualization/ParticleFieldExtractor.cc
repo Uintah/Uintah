@@ -196,7 +196,7 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
 
 
 
-void ParticleFieldExtractor::callback( long index)
+void ParticleFieldExtractor::callback( int index)
 {
   cerr<< "ParticleFieldExtractor::callback request data for index "<<
     index << ".\n";
