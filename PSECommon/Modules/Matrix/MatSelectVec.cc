@@ -14,6 +14,7 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <strstream.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -78,12 +79,24 @@ void MatSelectVec::execute() {
 	return;
     }
 
+    int changed=0;
     update_state(JustStarted);
 
-    if (colMaxTCL.get() != mh->ncols()-1)
+    if (colMaxTCL.get() != mh->ncols()-1) {
 	colMaxTCL.set(mh->ncols()-1);
-    if (rowMaxTCL.get() != mh->nrows()-1)
+	changed=1;
+    }
+    if (rowMaxTCL.get() != mh->nrows()-1) {
 	rowMaxTCL.set(mh->nrows()-1);
+	changed=1;
+    }
+    if (changed) {
+	char buf[1000];
+	ostrstream str(buf, 1000);
+	str << id << " update" << '\0';
+	TCL::execute(str.str());
+    }
+
     reset_vars();
 
     int which;
@@ -94,11 +107,11 @@ void MatSelectVec::execute() {
     if (!animateTCL.get()) {
 	ColumnMatrix *cm;
 	if (useRow) {
-	    ColumnMatrix* cm=new ColumnMatrix(mh->ncols());
+	    cm=new ColumnMatrix(mh->ncols());
 	    double *data = cm->get_rhs();
 	    for (int c=0; c<mh->ncols(); c++) data[c]=mh->get(which, c);
 	} else {
-	    ColumnMatrix* cm=new ColumnMatrix(mh->nrows());
+	    cm=new ColumnMatrix(mh->nrows());
 	    double *data = cm->get_rhs();
 	    for (int r=0; r<mh->nrows(); r++) data[r]=mh->get(r, which);
 	}	    
@@ -110,7 +123,7 @@ void MatSelectVec::execute() {
 	    for (; which<mh->nrows()-1; which++, rowTCL.set(which)) {
 		if (stop) { stop=0; break; }
 		cerr << which << "\n";
-		ColumnMatrix* cm=new ColumnMatrix(mh->ncols());
+		cm=new ColumnMatrix(mh->ncols());
 		double *data = cm->get_rhs();
 		for (int c=0; c<mh->ncols(); c++) data[c]=mh->get(which, c);
 		ColumnMatrixHandle cmh(cm);
@@ -120,7 +133,7 @@ void MatSelectVec::execute() {
 	    for (; which<mh->ncols()-1; which++, colTCL.set(which)) {
 		if (stop) { stop=0; break; }
 		cerr << which << "\n";
-		ColumnMatrix* cm=new ColumnMatrix(mh->nrows());
+		cm=new ColumnMatrix(mh->nrows());
 		double *data = cm->get_rhs();
 		for (int r=0; r<mh->nrows(); r++) data[r]=mh->get(r, which);
 		ColumnMatrixHandle cmh(cm);
@@ -128,11 +141,11 @@ void MatSelectVec::execute() {
 	    }
 	}	    
 	if (useRow) {
-	    ColumnMatrix* cm=new ColumnMatrix(mh->ncols());
+	    cm=new ColumnMatrix(mh->ncols());
 	    double *data = cm->get_rhs();
 	    for (int c=0; c<mh->ncols(); c++) data[c]=mh->get(which, c);
 	} else {
-	    ColumnMatrix* cm=new ColumnMatrix(mh->nrows());
+	    cm=new ColumnMatrix(mh->nrows());
 	    double *data = cm->get_rhs();
 	    for (int r=0; r<mh->nrows(); r++) data[r]=mh->get(r, which);
 	}	    
@@ -156,6 +169,9 @@ void MatSelectVec::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/09/16 00:38:11  dmw
+// fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
+//
 // Revision 1.2  1999/09/08 02:26:34  sparker
 // Various #include cleanups
 //

@@ -24,21 +24,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
-#include <PSECommon/Dataflow/Module.h>
 #include <SCICore/Datatypes/BasicSurfaces.h>
 #include <SCICore/Datatypes/ColorMap.h>
-#include <PSECommon/Datatypes/ColorMapPort.h>
-#include <PSECommon/Datatypes/GeometryPort.h>
-#include <PSECommon/Datatypes/ScalarFieldPort.h>
-#include <PSECommon/Datatypes/SurfTree.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Datatypes/Surface.h>
-#include <PSECommon/Datatypes/SurfacePort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Datatypes/ScalarField.h>
 #include <SCICore/Datatypes/TriSurface.h>
-#include <PSECommon/Datatypes/ScalarTriSurface.h>
+//#include <PSECommon/Datatypes/ScalarTriSurface.h>
 #include <SCICore/Geom/GeomArrows.h>
-#include <SCICore/Goem/GeomCylinder.h>
+#include <SCICore/Geom/GeomCylinder.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/Material.h>
@@ -53,8 +51,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Datatypes;
-using namespace PSECommon::Dataflow;
+using namespace PSECore::Datatypes;
+using namespace PSECore::Dataflow;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
@@ -123,17 +121,6 @@ SurfToGeom::SurfToGeom(const clString& id)
     c[6]=scinew Material(Color(.2,.2,.2),Color(.6,.6,.6),Color(.5,.5,.5),20);
 }
 
-SurfToGeom::SurfToGeom(const SurfToGeom&copy, int deep)
-: Module(copy, deep), range_min("range_min", id, this),
-  range_max("range_max", id, this), best("best", id, this),
-  invert("invert", id, this), nodes("nodes", id, this),
-  ntype("ntype", id, this), rad("rad", id, this), resol("resol", id, this),
-  named("named", id, this), clr_r("clr-r", id, this), clr_g("clr-g", id, this),
-  clr_b("clr-b", id, this), normals("normals", id, this)
-{
-    NOT_FINISHED("SurfToGeom::SurfToGeom");
-}
-
 SurfToGeom::~SurfToGeom()
 {
 	ogeom->delAll();
@@ -175,7 +162,7 @@ void SurfToGeom::execute()
 
     GeomPts* ptsGroup=scinew GeomPts(0);
 
-    ScalarTriSurface* ss=surf->getScalarTriSurface();
+//    ScalarTriSurface* ss=surf->getScalarTriSurface();
     TriSurface* ts=surf->getTriSurface();
     PointsSurface* ps=surf->getPointsSurface();
     SurfTree* st=surf->getSurfTree();
@@ -196,13 +183,10 @@ void SurfToGeom::execute()
 		    Color(.2,.2,.2), 20));
 
 
-    if (ss) {
-	cerr << "We don't use ScalarTriSurfaces any more -- use a TriSurface\n";
-	return;
-    } else if (ts) {
+    if (ts) {
 	if (ts->normals.size() != ts->bcIdx.size()) dsk=0;
 	if (nodes.get()) {
-	    surf->monitor.read_lock();
+	    surf->monitor.readLock();
 	    if (!sph) {
 		ptsGroup=new GeomPts(3*ts->points.size());
 		ptsGroup->pts.resize(3*ts->points.size());
@@ -331,7 +315,7 @@ void SurfToGeom::execute()
 		    ptsGroup->pts[i*3+2]=newP.z();
 		}
 	    }
-	    surf->monitor.read_unlock();
+	    surf->monitor.readUnlock();
 	} else {	// draw triangles! (not nodes)
 	    int nrm=normals.get();
 	    if (nrm) ts->bldNormals(TriSurface::VertexType);
@@ -674,6 +658,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/09/16 00:38:12  dmw
+// fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
+//
 // Revision 1.5  1999/09/05 05:32:27  dmw
 // updated and added Modules from old tree to new
 //

@@ -36,14 +36,14 @@ itcl_class PSECommon_Matrix_SolveMatrix {
         set meth [set $this-method]
      if {($meth == "conjugate_gradient_sci") || ($meth == "jacoby_sci") || ($meth == "bi_conjugate_gradient_sci")} {
            pack forget $w.stat                  
-     #     pack $w.converg $w.graph -side top -padx 2 -pady 2 -fill x
+	   pack $w.converg $w.graph -side top -padx 2 -pady 2 -fill x
 	 foreach t [winfo children $w.precond] {
 	     if {[winfo class $t] == "Radiobutton"} {
 		 $t configure -state disabled
 	     }
 	 }
         } else {
-     #       pack forget $w.graph $w.converg
+	     pack forget $w.graph $w.converg
              pack $w.stat  -side top -padx 2 -pady 2 -fill x
 	 foreach t [winfo children $w.precond] {
 	     if {[winfo class $t] == "Radiobutton"} {
@@ -122,7 +122,7 @@ itcl_class PSECommon_Matrix_SolveMatrix {
         pack $w.stat  -side top -padx 2 -pady 2 -fill x
 
 	frame $w.converg -borderwidth 2 -relief ridge
-#	pack $w.converg -side top -padx 2 -pady 2 -fill x
+	pack $w.converg -side top -padx 2 -pady 2 -fill x
 
         frame $w.stat.status
 	pack $w.stat.status -side top -fill x
@@ -198,6 +198,11 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 	global $this-target_error
 	set err [set $this-target_error]
 
+
+        expscale $w.graph -orient horizontal \
+		-variable $this-target_error -label "Target Error"
+        pack $w.graph -fill x
+
 #	blt_graph $w.graph -title "Convergence" -height 250 \
 #		-plotbackground gray99
 #	$w.graph yaxis configure -logscale true -title "error (RMS)"
@@ -211,6 +216,7 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 #	$w.graph element configure "Current Target" -data "0 $err" \
 #		-symbol diamond
 #	pack $w.graph -fill x
+    switchmethod
     }
 
     protected error_selected false

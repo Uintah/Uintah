@@ -94,21 +94,21 @@ itcl_class PSECommon_Surface_SurfToGeom {
 		-variable $this-named
 	
 	frame $w.d.sph -relief groove -borderwidth 2
-#	expscale $w.d.sph.radius -orient horizontal -variable $this-rad \
-#		-label "Radius:" \
-#		-command "$this-c needexecute"
+	expscale $w.d.sph.radius -orient horizontal -variable $this-rad \
+		-label "Radius:" \
+		-command "$this-c needexecute"
 	scale $w.d.sph.res -orient horizontal -variable $this-resol \
 		-label "Resolution:" -from 4 -to 20 \
 		-command "$this-c needexecute"
 	pack $w.d.sph.res -side left -fill x -expand 1
-#	pack $w.d.sph.radius -side left -fill x -expand 1
+	pack $w.d.sph.radius -side left -fill x -expand 1
 	pack $w.d.n $w.d.nodes $w.d.named $w.d.sph -side top -fill x -expand 1
 	frame $w.f
-#	expscale $w.f.min -orient horizontal -variable $this-range_min \
-#		-label "range min:"
-#	expscale $w.f.max -orient horizontal -variable $this-range_max \
-#		-label "range max:"
-#	pack $w.f.min $w.f.max -side left -expand 1
+	expscale $w.f.min -orient horizontal -variable $this-range_min \
+		-label "range min:"
+	expscale $w.f.max -orient horizontal -variable $this-range_max \
+		-label "range max:"
+	pack $w.f.min $w.f.max -side left -expand 1
 	frame $w.b
 	global $this-best
 	global $this-invert

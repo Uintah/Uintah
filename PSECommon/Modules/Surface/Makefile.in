@@ -3,7 +3,7 @@ SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
 SRCS     = GenSurface.cc LabelSurface.cc SFUGtoSurf.cc \
-           SurfGen.cc SurfInterpVals.cc SurfNewVals.cc
+           SurfGen.cc SurfInterpVals.cc SurfNewVals.cc SurfToGeom.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
