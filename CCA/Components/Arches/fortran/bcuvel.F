@@ -131,13 +131,13 @@ C--------------------------------------------------------------------
 c .AND.
 c     $        (VV(I,jEndGhost+1,K).GT.0.0D0)) THEN
              UU(I,jEndGhost,K) = UU(I,jend,K)
-             AN(I,jend,K) = 2.0D0*TINY
+c             AN(I,jend,K) = 2.0D0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD) then
 c.AND.
 c     $         VV(I,jBegGhost,K).LT.0.0D0) THEN
             UU(I,jBegGhost, K) = UU(I,jst,K)
-            AS(I,jst,K) = 2.0D0*TINY
+c            AS(I,jst,K) = 2.0D0*TINY
             END IF
   400   CONTINUE
   410 CONTINUE
@@ -152,13 +152,13 @@ C--------------------------------------------------------------------
 c.AND.
 c     $        (WW(I,J,kEndGhost+1).GT.0.0D0)) THEN
              UU(I,J,kEndGhost) = UU(I,J,kend)
-             AT(I,J,kend) = 2.0D0*TINY
+c             AT(I,J,kend) = 2.0D0*TINY
           END IF
           IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) then
 c.AND.
 c     $         WW(I,J,kBegGhost).LT.0.0D0) THEN
             UU(I,J,kBegGhost) = UU(I,J,kst)
-            AB(I,J,kst) = 2.0D0*TINY
+c            AB(I,J,kst) = 2.0D0*TINY
             END IF
   500   CONTINUE
   510 CONTINUE

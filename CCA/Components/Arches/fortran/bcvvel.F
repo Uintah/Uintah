@@ -126,7 +126,7 @@ C--------------------------------------------------------------------
      &              .AND. UU(iEndGhost+1,J,K).GT.0.0D0).or.
      $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
                   VV(iEndGhost,J,K) = VV(iend,J,K)
-                  AE(iend,J,K) = 2.0D0*TINY
+c                  AE(iend,J,K) = 2.0D0*TINY
                END IF
                IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
      &              .AND.UU(iBegGhost,J,K).LT.0.0D0) THEN
@@ -161,12 +161,12 @@ C--------------------------------------------------------------------
             IF (PCELL(I,J,kEndGhost).EQ.PBCFLD) then
 c     &           .AND.WW(I,J,kEndGhost+1).GT.0.0D0) THEN
                VV(I,J,kEndGhost) = VV(I,J,kend)
-               AT(I,J,kend) = 2.0D0*TINY
+c               AT(I,J,kend) = 2.0D0*TINY
             END IF
             IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) then
 c     &           .AND.WW(I,J,kBegGhost).LT.0.0D0) THEN
                VV(I,J,kBegGhost) = VV(I,J,kst)
-               AB(I,J,kst) = 2.0D0*TINY
+c               AB(I,J,kst) = 2.0D0*TINY
             END IF
  400     CONTINUE
  410  CONTINUE
