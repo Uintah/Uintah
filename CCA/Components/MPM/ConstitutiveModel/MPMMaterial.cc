@@ -74,6 +74,10 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
      d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27,
 		                                         haveLoadCurve,
 							 doErosion);
+   if (integrator == "fracture") 
+     d_particle_creator = scinew FractureParticleCreator(this,lb,n8or27,
+		                                         haveLoadCurve,
+							 doErosion);
    else if (dynamic_cast<Membrane*>(d_cm) != 0)
      d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
 		                                         haveLoadCurve,
