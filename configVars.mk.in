@@ -79,6 +79,11 @@ TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
 	testprograms $(PACKAGE_DIRS)
 
+HAVE_OSX := @HAVE_OSX@
+ifeq ($(HAVE_OSX),yes)
+  SUBDIRS := osx $(SUBDIRS)
+endif
+
 LDRUN_PREFIX      := @LDRUN_PREFIX@
 
 # Libraries and other flags

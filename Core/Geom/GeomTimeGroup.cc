@@ -37,7 +37,7 @@ using std::ostream;
 #ifdef _WIN32
 #include <float.h>
 #define MAXDOUBLE DBL_MAX
-#else
+#elif !defined __APPLE__
 #include <values.h>
 #endif
 

@@ -32,8 +32,9 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
   
-  if (LibraryHandle == 0) 
+  if (LibraryHandle == 0) {
     return 0;
+  }
   
 #ifdef _WIN32
   return GetProcAddress(LibraryHandle,symbolname);
@@ -46,8 +47,15 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32
   return GetProcAddress(handle,symbolname);
+#elif defined(__APPLE__)
+  string name("_");
+  name += symbolname;
+  void *symbol = dlsym(handle, name.c_str());
+//    if (!symbol)
+//      cerr << "dlsym failed: " << SOError(true) << "\n";
+  return symbol;
 #else
-  return dlsym(handle,symbolname);
+ return dlsym(handle,symbolname);
 #endif
 }
 
@@ -56,7 +64,10 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 #ifdef _WIN32
   return LoadLibrary(libname);
 #else
-  return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
+  void *lib = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
+//    if (!lib)
+//      cerr << "dlopen failed [" << libname << "] " << SOError(true) << "\n";
+  return lib;
 #endif
 }
 
@@ -69,11 +80,24 @@ void CloseLibrary(LIBRARY_HANDLE LibraryHandle)
 #endif
 }
 
-const char* SOError()
+const char* SOError( bool save )
 {
+  static string last_error;
+  static bool saved = false;
+
 #ifdef _WIN32
   return 0;
 #else
+  if ( saved ) {
+    saved = false;
+    return last_error.c_str();
+  }
+  if ( save ) {
+    last_error = dlerror();
+    saved = true;
+    return last_error.c_str();
+  }    
+
   return dlerror();
 #endif
 }

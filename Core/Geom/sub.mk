@@ -66,6 +66,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Light.cc		    		\
 	$(SRCDIR)/Lighting.cc		    		\
 	$(SRCDIR)/Material.cc		    		\
+	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/Pt.cc			    		\
 	$(SRCDIR)/TexSquare.cc		    		\
@@ -75,7 +76,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
-	Core/Math Core/Containers Core/Thread \
+	Core/Datatypes Core/Math Core/Containers Core/Thread \
 	Core/GuiInterface
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY)

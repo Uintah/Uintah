@@ -17,7 +17,9 @@
 
 
 #include <unistd.h>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 #include <fcntl.h>
 
 #include <sys/types.h>

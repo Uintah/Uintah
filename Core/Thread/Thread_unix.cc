@@ -105,9 +105,11 @@ Core_Thread_signal_name(int sig, void* addr)
     case SIGCHLD:
 	sprintf(buf, "SIGCLD (death of a child)");
 	break;
+#ifdef SIGPWR
     case SIGPWR:
 	sprintf(buf, "SIGPWR (power fail restart)");
 	break;
+#endif
     case SIGWINCH:
 	sprintf(buf, "SIGWINCH (window size changes)");
 	break;

@@ -37,6 +37,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <tcl.h>
 #include <tk.h>
+#include <iostream>
 
 using namespace SCIRun;
 

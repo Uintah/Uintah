@@ -56,9 +56,15 @@ static string SCIRUN_SRCTOP = SRCTOP;   // = INSTALL_DIR/SCIRun/src
 static string SCIRUN_OBJTOP = OBJTOP;   // = BUILD_DIR
 static string DEFAULT_LOAD_PACKAGE = LOAD_PACKAGE;  // configured packages
 
+#ifdef __APPLE__
+static string lib_ext = ".dylib";
+#else
+static string lib_ext = ".so";
+#endif
+
 namespace SCIRun {
   PackageDB* packageDB = 0;
-  env_map scirunrc;                        // contents of .scirunrc
+  //env_map scirunrc;                        // contents of .scirunrc
 
   typedef struct {
     string name;
@@ -118,7 +124,6 @@ LIBRARY_HANDLE PackageDB::findLibInPath(string lib, string path)
   // if not yet found, try to find it in the rpath 
   // or the LD_LIBRARY_PATH (last resort)
   handle = GetLibraryHandle(lib.c_str());
-    
   return handle;
 }
 
@@ -138,15 +143,15 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
   if (envi!=scirunrc.end())
     libpath=(*envi).second;
 
-  // try the large version of the .so
-  string libname = "lib" + pak_bname + ".so";
+  // try the large version of the shared library
+  string libname = "lib" + pak_bname +lib_ext;
   LIBRARY_HANDLE package_so = findLibInPath(libname,libpath);
   string package_error;
   if (!package_so)
     package_error = SOError();
 
-  // try the small version of the .so 
-  libname = "lib" + cat_bname + moduleInfo->categoryName + ".so";
+  // try the small version of the shared library
+  libname = "lib" + cat_bname + moduleInfo->categoryName + lib_ext;
   LIBRARY_HANDLE category_so = findLibInPath(libname,libpath);
   string category_error;
   if (!category_so)

@@ -52,24 +52,24 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 				   Persistent* (*maker)())
   :  type(typeName), parent(parentName), maker(maker)
 {
-  if (!table) {
-    table = scinew Piostream::MapStringPersistentTypeID;
-  }
+//    if (!table) {
+//      table = scinew Piostream::MapStringPersistentTypeID;
+//    }
   
-  Piostream::MapStringPersistentTypeID::iterator dummy;
+//    Piostream::MapStringPersistentTypeID::iterator dummy;
   
-  dummy = table->find(type);
+//    dummy = table->find(type);
 
-  if (dummy != table->end()) {
-    if ((*dummy).second->maker != maker 
-	|| ((*dummy).second->parent != parentName))
-    {
-      cerr << "WARNING: duplicate type in Persistent "
-	   << "Object Type Database: " << type << endl;
-    }
-  }
+//    if (dummy != table->end()) {
+//      if ((*dummy).second->maker != maker 
+//  	|| ((*dummy).second->parent != parentName))
+//      {
+//        cerr << "WARNING: duplicate type in Persistent "
+//  	   << "Object Type Database: " << type << endl;
+//      }
+//    }
   
-  (*table)[type] = this;
+//    (*table)[type] = this;
 }
 
 PersistentTypeID::~PersistentTypeID()
