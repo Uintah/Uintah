@@ -1,0 +1,45 @@
+#!/bin/csh
+#__________________________________
+#  This script pulls out data from sus 
+#   output and plots dt and when a timestep was
+#   restarted vs elapsedTime.
+#  Usage:
+#     plotRestarts <name of out file>
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "You must input the name of the file that contains the simulation spew"
+  exit(1)
+endif
+set out = $argv[1]
+
+unalias rm
+#__________________________________
+# extract the data
+echo "Now extracting the data"
+grep elap $out | cut -d"=" -f4 | cut -d "," -f1 >& elapsedTime
+grep elap $out | cut -d"=" -f2 | cut -d"," -f1 >& physicalTime
+grep delT $out | cut -d"=" -f3 | cut -d"," -f1 >& delT
+grep Restarting $out | cut -d"," -f1 | cut -d" " -f4 >& restartTime
+sdiff physicalTime restartTime >& tmp
+sed s/"                                                  <"/""/ tmp | sed s/"                                                  "/""/>&tmp2
+paste -d "  " elapsedTime delT tmp2>& data
+
+rm -f elapsedTime physicalTime delT restartTime tmp tmp2 
+#__________________________________
+# plot it up
+cat > gp << fin
+set autoscale
+set grid xtics ytics
+set xlabel "ElapsedTime (sec)"
+
+plot 'data' using 1:( \$4==\$3? \$2 :0  ) t 'restarted',\
+     'data' using 1:2 t 'dt' with lines 
+pause -1 "Hit return to kill plot"
+fin
+gnuplot gp
+
+#__________________________________
+# cleanup
+rm -f gp data
+exit(1)
