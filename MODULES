@@ -27,7 +27,6 @@ MakeScalarField
 MeshRender
 MeshToGeom
 MeshView
-MorphMesher3d
 OctreeToGeom
 SelectMesh
 
