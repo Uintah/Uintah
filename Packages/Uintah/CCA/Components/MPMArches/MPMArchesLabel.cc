@@ -26,6 +26,8 @@ MPMArchesLabel::MPMArchesLabel()
 					    CCVariable<double>::getTypeDescription() );
   solid_fraction_CCLabel = VarLabel::create( "solid_fraction",
 					    CCVariable<double>::getTypeDescription() );
+  solid_fractionNew_CCLabel = VarLabel::create( "solid_fractionNew",
+					    CCVariable<double>::getTypeDescription() );
 
   // Cell-centered solid velocity labels
 
@@ -201,9 +203,17 @@ MPMArchesLabel::MPMArchesLabel()
   void_frac_CCLabel  = VarLabel::create("void_frac_CC",
 					CCVariable<double>::getTypeDescription() );
   void_frac_old_CCLabel  = VarLabel::create("void_frac_CC_old",
-					CCVariable<double>::getTypeDescription() );
+					    CCVariable<double>::getTypeDescription() );
+  void_frac_MPM_CCLabel  = VarLabel::create("void_frac_MPM_CC",
+					    CCVariable<double>::getTypeDescription() );
+  void_frac_CutCell_CCLabel  = VarLabel::create("void_frac_CutCell_CC",
+						CCVariable<double>::getTypeDescription() );
   solid_frac_sum_CCLabel  = VarLabel::create("solid_frac_sum",
 					     CCVariable<double>::getTypeDescription() );
+  mmCellType_CutCellLabel  = VarLabel::create("mmCellType_CutCell",
+					      CCVariable<int>::getTypeDescription() );
+  mmCellType_MPMLabel  = VarLabel::create("mmCellType_MPM",
+					  CCVariable<int>::getTypeDescription() );
 
   // Stability Factor Labels
 
@@ -420,11 +430,18 @@ MPMArchesLabel::MPMArchesLabel()
   /*
   */
   d_nextCutCellILabel = VarLabel::create("nextCutCellI", 
-				    CCVariable<double>::getTypeDescription() );
+				    CCVariable<int>::getTypeDescription() );
   d_nextCutCellJLabel = VarLabel::create("nextCutCellJ", 
-				    CCVariable<double>::getTypeDescription() );
+				    CCVariable<int>::getTypeDescription() );
   d_nextCutCellKLabel = VarLabel::create("nextCutCellK", 
-				    CCVariable<double>::getTypeDescription() );
+				    CCVariable<int>::getTypeDescription() );
+
+  d_nextWallILabel = VarLabel::create("nextWallI", 
+				    CCVariable<int>::getTypeDescription() );
+  d_nextWallJLabel = VarLabel::create("nextWallJ", 
+				    CCVariable<int>::getTypeDescription() );
+  d_nextWallKLabel = VarLabel::create("nextWallK", 
+				    CCVariable<int>::getTypeDescription() );
 
 } 
 
@@ -433,6 +450,7 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(cMassLabel);
   VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(solid_fraction_CCLabel);
+  VarLabel::destroy(solid_fractionNew_CCLabel);
 
   VarLabel::destroy(vel_CCLabel);
   VarLabel::destroy(xvel_CCLabel);
@@ -515,7 +533,11 @@ MPMArchesLabel::~MPMArchesLabel()
 
   VarLabel::destroy(void_frac_CCLabel);
   VarLabel::destroy(void_frac_old_CCLabel);
+  VarLabel::destroy(void_frac_MPM_CCLabel);
+  VarLabel::destroy(void_frac_CutCell_CCLabel);
   VarLabel::destroy(solid_frac_sum_CCLabel);
+  VarLabel::destroy(mmCellType_CutCellLabel);
+  VarLabel::destroy(mmCellType_MPMLabel);
 
   VarLabel::destroy(KStabilityULabel);
   VarLabel::destroy(KStabilityVLabel);
@@ -591,5 +613,9 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(d_nextCutCellILabel);
   VarLabel::destroy(d_nextCutCellJLabel);
   VarLabel::destroy(d_nextCutCellKLabel);
+
+  VarLabel::destroy(d_nextWallILabel);
+  VarLabel::destroy(d_nextWallJLabel);
+  VarLabel::destroy(d_nextWallKLabel);
 
 }
