@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
@@ -31,12 +32,26 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
 {
   cout_doing << "Doing problemSetup  \t\t\t AMRICE" << '\n';
   ICE::problemSetup(params, grid, sharedState);
+  ProblemSpecP cfd_ps = params->findBlock("CFD");
+  ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
+  ProblemSpecP amr_ps = ice_ps->findBlock("AMR_Refinement_Criteria_Thresholds");
+  if(!amr_ps){
+    string warn;
+    warn ="\n INPUT FILE ERROR:\n <AMR_Refinement_Criteria_Thresholds> "
+         " block not found inside of <ICE> block \n";
+    throw ProblemSetupException(warn);
+  }
+  amr_ps->getWithDefault("Density",     d_rho_threshold,     1e100);
+  amr_ps->getWithDefault("Temperature", d_temp_threshold,    1e100);
+  amr_ps->getWithDefault("Pressure",    d_press_threshold,   1e100);
+  amr_ps->getWithDefault("VolumeFrac",  d_vol_frac_threshold,1e100);
+  amr_ps->getWithDefault("Velocity",    d_vel_threshold,     1e100);
 }
 //___________________________________________________________________              
 void AMRICE::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  cout_doing << "AMRICE::scheduleInitialize \t\tL-" << level->getIndex() << '\n';
+  cout_doing << "AMRICE::scheduleInitialize \t\tL-"<<level->getIndex()<< '\n';
   ICE::scheduleInitialize(level, sched);
 }
 //___________________________________________________________________
@@ -614,19 +629,194 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
   }
 }
 /*_____________________________________________________________________
+ Function~  AMRICE::scheduleInitialErrorEstimate--
+______________________________________________________________________*/
+void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                          SchedulerP& sched)
+{
+}
+
+/*_____________________________________________________________________
  Function~  AMRICE::scheduleErrorEstimate--
 ______________________________________________________________________*/
 void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
-                                   SchedulerP&)
+                                   SchedulerP& sched)
 {
-  cout_doing << "AMRICE::scheduleErrorEstimate \t\t\tL-" << coarseLevel->getIndex() << '\n';
-  // when we know what to estimate we'll fill it in
+  cout_doing << "AMRICE::scheduleErrorEstimate \t\t\tL-" 
+             << coarseLevel->getIndex() << '\n';
+  
+  Task* t = scinew Task("AMRICE::errorEstimate", 
+                  this, &AMRICE::errorEstimate, false);  
+  
+  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  MaterialSubset* press_matl = scinew MaterialSubset();
+  press_matl->add(0);
+  press_matl->addReference();
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+                  
+  t->requires(Task::NewDW, lb->rho_CCLabel,       gac, 1);
+  t->requires(Task::NewDW, lb->temp_CCLabel,      gac, 1);
+  t->requires(Task::NewDW, lb->vel_CCLabel,       gac, 1);
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel,  gac, 1);
+  t->requires(Task::NewDW, lb->press_CCLabel,    press_matl,oims,gac, 1);
+  
+  t->computes(lb->rho_CC_gradLabel);
+  t->computes(lb->temp_CC_gradLabel);
+  t->computes(lb->vel_CC_mag_gradLabel);
+  t->computes(lb->vol_frac_CC_gradLabel);
+  t->computes(lb->press_CC_gradLabel);
+  
+  t->modifies(d_sharedState->get_refineFlag_label());
+  t->computes(d_sharedState->get_refinePatchFlag_label());
+  
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
 }
-
+/*_____________________________________________________________________ 
+Function~  AMRICE::compute_q_CC_gradient--
+Purpose~   computes the gradient of q_CC in each direction.
+           First order central difference.
+______________________________________________________________________*/
+void AMRICE::compute_q_CC_gradient( constCCVariable<double>& q_CC,
+                                    CCVariable<Vector>& q_CC_grad,
+                                    const Patch* patch) 
+{                  
+  Vector dx = patch->dCell(); 
+      
+  for(int dir = 0; dir <3; dir ++ ) { 
+    double inv_dx = 0.5 /dx[dir];
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        IntVector r = c;
+        IntVector l = c;
+        r[dir] += 1;
+        l[dir] -= 1;
+        q_CC_grad[c][dir] = (q_CC[r] - q_CC[l])*inv_dx;
+    }
+  }
+}
+//______________________________________________________________________
+//          vector version
+void AMRICE::compute_q_CC_gradient( constCCVariable<Vector>& q_CC,
+                                    CCVariable<Vector>& q_CC_grad,
+                                    const Patch* patch) 
+{                  
+  Vector dx = patch->dCell(); 
+  
+  //__________________________________
+  // Vectors:  take the gradient of the magnitude
+  for(int dir = 0; dir <3; dir ++ ) { 
+    double inv_dx = 0.5 /dx[dir];
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        IntVector r = c;
+        IntVector l = c;
+        r[dir] += 1;
+        l[dir] -= 1;
+        q_CC_grad[c][dir] = (q_CC[r].length() - q_CC[l].length())*inv_dx;
+    }
+  }
+}
+/*_____________________________________________________________________
+ Function~  AMRICE::set_refinementFlags
+______________________________________________________________________*/         
+void AMRICE::set_refineFlags( CCVariable<Vector>& q_CC_grad,
+                                  double threshold,
+                                  CCVariable<int>& refineFlag,
+                                  PerPatch<int>& refinePatchFlag,
+                                  const Patch* patch) 
+{                  
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    IntVector c = *iter;
+    if( q_CC_grad[c].length() > threshold){
+      refineFlag[c] = true;
+      refinePatchFlag.setData(true);
+    }
+  }
+}
+/*_____________________________________________________________________
+ Function~  AMRICE::errorEstimate--
+______________________________________________________________________*/
 void AMRICE::errorEstimate(const ProcessorGroup*,
-                           const PatchSubset*,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse*)
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse*,
+			      DataWarehouse* new_dw,
+                           bool initial)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    PerPatch<int> refinePatchFlag(0);
+    
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
+    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    //__________________________________
+    //  PRESSURE       --- just computes the gradient
+    //  I still need to figure out how 
+    //  set the refinement flags for this index 0
+    //  and then do it again in the matl loop below
+    constCCVariable<double> press_CC;
+    CCVariable<Vector> press_CC_grad;
+    
+    new_dw->get(press_CC, lb->press_CCLabel,    0,patch,gac,1);
+    new_dw->allocateAndPut(press_CC_grad,
+                       lb->press_CC_gradLabel,  0,patch);
+    
+    compute_q_CC_gradient(press_CC, press_CC_grad, patch);
+   // set_refineFlags( press_CC_grad, d_press_threshold,refineFlag, 
+   //                         refinePatchFlag, patch);
+    //__________________________________
+    //  RHO, TEMP, VEL_CC, VOL_FRAC
+    int numICEMatls = d_sharedState->getNumICEMatls();
+    for(int m=0;m < numICEMatls;m++){
+      Material* matl = d_sharedState->getICEMaterial( m );
+      int indx = matl->getDWIndex();
+              
+      constCCVariable<double> rho_CC, temp_CC, vol_frac_CC;
+      constCCVariable<Vector> vel_CC;
+      CCVariable<Vector> rho_CC_grad, temp_CC_grad; 
+      CCVariable<Vector> vel_CC_mag_grad, vol_frac_CC_grad;
+      CCVariable<int> refineFlag;
+      
+      new_dw->get(rho_CC,      lb->rho_CCLabel,      indx,patch,gac,1);
+      new_dw->get(temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
+      new_dw->get(vel_CC,      lb->vel_CCLabel,      indx,patch,gac,1);
+      new_dw->get(vol_frac_CC, lb->vol_frac_CCLabel, indx,patch,gac,1);
+
+      new_dw->allocateAndPut(rho_CC_grad,     
+                         lb->rho_CC_gradLabel,     indx,patch);
+      new_dw->allocateAndPut(temp_CC_grad,    
+                         lb->temp_CC_gradLabel,    indx,patch);
+      new_dw->allocateAndPut(vel_CC_mag_grad, 
+                         lb->vel_CC_mag_gradLabel, indx,patch);
+      new_dw->allocateAndPut(vol_frac_CC_grad,
+                         lb->vol_frac_CC_gradLabel,indx,patch);
+      
+      new_dw->getModifiable(refineFlag, refineFlagLabel,indx, patch);      
+
+      //__________________________________
+      // compute the gradients and set the refinement flags
+                                        // Density
+      compute_q_CC_gradient(rho_CC,      rho_CC_grad,      patch); 
+      set_refineFlags( rho_CC_grad,     d_rho_threshold,refineFlag, 
+                            refinePatchFlag, patch);
+      
+                                        // Temperature
+      compute_q_CC_gradient(temp_CC,     temp_CC_grad,     patch); 
+      set_refineFlags( temp_CC_grad,    d_temp_threshold,refineFlag, 
+                            refinePatchFlag, patch);
+      
+                                        // Vol Fraction
+      compute_q_CC_gradient(vol_frac_CC, vol_frac_CC_grad, patch); 
+      set_refineFlags( vol_frac_CC_grad, d_vol_frac_threshold,refineFlag, 
+                            refinePatchFlag, patch);
+      
+                                        // Velocity
+      compute_q_CC_gradient(vel_CC,      vel_CC_mag_grad,  patch); 
+      set_refineFlags( vel_CC_mag_grad, d_vel_threshold,refineFlag, 
+                            refinePatchFlag, patch);
+      
+      new_dw->put(refinePatchFlag, refinePatchLabel, indx, patch);
+    }  // matls
+  }  // patches
 }
