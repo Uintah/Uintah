@@ -553,6 +553,7 @@ proc findMovedModulePath { packvar catvar modvar } {
     set xlat "
 {Fusion Fields NrrdFieldConverter} {Teem Converters NrrdToField}
 {SCIRun FieldsCreate GatherPoints} {SCIRun FieldsCreate GatherFields}
+{SCIRun Fields GatherPoints} {SCIRun FieldsCreate GatherFields}
 {Teem DataIO ColorMapToNrrd} {Teem Converters ColorMapToNrrd}
 {Teem DataIO FieldToNrrd} {Teem Converters FieldToNrrd}
 {Teem DataIO NrrdToMatrix} {Teem Converters NrrdToMatrix}
@@ -563,6 +564,7 @@ proc findMovedModulePath { packvar catvar modvar } {
 {SCIRun Visualization TextureVolVis} {SCIRun Visualization VolumeVisualizer}
 {SCIRun Visualization TexCuttingPlanes} {SCIRun Visualization VolumeSlicer}
 {SCIRun FieldsData ChangeFieldDataAt} {SCIRun FieldsData ChangeFieldBasis}
+{SCIRun Fields ChangeFieldDataAt} {SCIRun FieldsData ChangeFieldBasis}
 {SCIRun Visualization GenTransferFunc} {SCIRun Visualization EditColorMap}
 {SCIRun Visualization EditTransferFunc2} {SCIRun Visualization EditColorMap2D}
 "
