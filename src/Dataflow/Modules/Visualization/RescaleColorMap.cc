@@ -111,11 +111,14 @@ RescaleColorMap::execute()
 	return;
       }
       
+      // Increment here!  We do this because last one is always
+      // empty so we can test for it before issuing empty warning.
+      ++pi;
+
       FieldHandle fHandle;
       if (ifield->get(fHandle) && fHandle.get_rep()) {
 
 	fHandles.push_back(fHandle);
-
 	fHandle->get_property("units", units);
 
 	if( nFields == fGeneration_.size() ) {
@@ -125,9 +128,12 @@ RescaleColorMap::execute()
 	  fGeneration_[nFields] = fHandle->generation;
 	  update = true;
 	}
+
+	nFields++;
+      } else if (pi != range.second) {
+	error("Input port " + to_string(nFields) + " contained no data.");
+	return;
       }
-      ++pi;
-      ++nFields;
     }
   }
 
