@@ -364,10 +364,12 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 		    origin=pt1+(pt2-pt1)/2.;
 		  }
 		  else { // multiple segments
-                    if(segs[R]<0) { // right edge node
+                    if(segs[R]<0) { 
+		      // For the right edge node, shift the position to the neighbor
 	              origin=cx[m][cfSegNodes[m][2*segs[L]+1]];
 	            }
-                    else if(segs[L]<0) { // left edge node
+                    else if(segs[L]<0) {
+		      // For the left edge node, shift the position to the neibor
                       origin=cx[m][cfSegNodes[m][2*segs[R]]];
 	            }
                     else { // middle nodes
@@ -401,13 +403,15 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   */
                   double d_rJ=rJ; // Radius of J-contour
                   Point crossPt;
-                  while(!FindIntersectionOfJPathAndCrackPlane(m,d_rJ,A,crossPt))
+                  while(!FindIntersectionOfJPathAndCrackPlane(m,d_rJ,A,crossPt)) {
                     d_rJ*=0.7;
-                  //if(fabs(d_rJ-rJ)/rJ>1.e-6) {
-                  //  cout << "   ! Radius of J-contour decreased from " << rJ
-                  //       << " to " << d_rJ << " for seg "<< i << " of mat "
-                  //       << m << "." << endl;
-                  //}
+		    if(d_rJ/rJ<0.01) {
+		      cout << " J-integral radius (d_rJ) has been decreassed 100 times "
+			   << " before finding the intersection between J-contour and crack plane."
+	                   << " Program terminated." << endl;
+                      exit(1);
+                    }	
+                  }		    
 
                   // Get coordinates of intersection in local system (xcprime,ycprime)
                   double xc,yc,zc,xcprime,ycprime,scprime;
@@ -701,7 +705,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
         } // End of loop over ranks (i)
 
         // Output fracture parameters and crack-front position
-        if(m==mS && (calFractParameters || doCrackPropagation)) {
+        if(calFractParameters || doCrackPropagation) {
           if(pid==0) OutputCrackFrontResults(m);
         }
 
@@ -713,10 +717,20 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 // Output fracture parameters and crack-front position
 void Crack::OutputCrackFrontResults(const int& m)
 {
+
+  // Create output file name in format: CrackFrontResults.matXXX
   char outFileName[200]="";
-  strcat(outFileName,(udaDir+"/CrackFrontResults.dat").c_str());
+  strcat(outFileName,(udaDir+"/CrackFrontResults.mat").c_str());
+      
+  char* matbuf=new char[10];
+  sprintf(matbuf,"%d",m);
+  if(m<10) strcat(outFileName,"00");
+  else if(m<100) strcat(outFileName,"0");
+  strcat(outFileName,matbuf);
+	                 	
   ofstream outCrkFrt(outFileName, ios::app);
 
+  // Output crack-front parameters at the scheduled time steps
   bool timeToDump = dataArchiver->wasOutputTimestep();
   if(timeToDump) {
     double time=d_sharedState->getElapsedTime();
@@ -748,6 +762,6 @@ void Crack::OutputCrackFrontResults(const int& m)
         if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
       }
     }
-  }
+  } // End if(timeToDump)
 }
 
