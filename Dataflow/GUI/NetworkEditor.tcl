@@ -523,25 +523,6 @@ proc addModule2 {package category module modid} {
     return $modid
 }
 
-proc addConnection {omodid owhich imodid iwhich} {
-
-    set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
-    if {"" == $connid} {
-	tk_messageBox -type ok -parent . -message \
-	    "Invalid connection found while loading network: addConnection $omodid $owhich $imodid $iwhich -- discarding." \
-	    -icon warning
-	return
-    }
-    set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
-    
-    buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
-
-    global maincanvas
-    $omodid configureOPorts $maincanvas
-    $imodid configureIPorts $maincanvas
-
-    update idletasks
-}
 
 proc popupSaveMenu {} {
 
@@ -773,9 +754,6 @@ proc ClearCanvas {} {
 	
 	global unselected_color
 	set unselected_color gray
-	
-	global MModuleFakeConnections
-	set MModuleFakeConnections ""
 	
 	global CurrentlySelectedModules
 	set CurrentlySelectedModules ""

@@ -24,8 +24,8 @@ global port_height
 set port_height 7 
 
 global selected_color
-set selected_color blue
-#set selected_color darkgray
+#set selected_color blue
+set selected_color darkgray
 
 global unselected_color
 set unselected_color gray
@@ -35,6 +35,13 @@ set CurrentlySelectedModules ""
 
 global modules
 set modules ""
+
+global undoList
+set undoList ""
+
+global redoList
+set redoList ""
+
 
 itcl_class Module {
    
@@ -73,6 +80,7 @@ itcl_class Module {
     protected graph_width 50
     protected old_width 0
     protected indicator_width 15
+    protected initial_width 0
     protected mconnected {}
     protected made_icon 0
     public state "NeedData" {$this update_state}
@@ -261,6 +269,9 @@ itcl_class Module {
 	bind all <Control-d> "moduleDestroySelected $canvas $minicanvas"
 	# Clear the canvas
 	bind all <Control-l> "ClearCanvas"
+
+	bind all <Control-z> "undo"
+	bind all <Control-y> "redo"
         
 	# Select the clicked item, and unselect all others
 	bind $p <2> "$this toggleSelected $canvas 0"
@@ -301,15 +312,6 @@ itcl_class Module {
 	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
 	}
 	set made_icon 1
-	global $this-original_title_size
-	set $this-original_title_size 0
-
-	global $this-extra_ports
-	set $this-extra_ports 0
-
-	global $this-font_pixel_width
-	set $this-font_pixel_width [expr [font measure $modname_font \
-	    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]/53.0]
     }
     
     method set_moduleConnected { ModuleConnected } {
@@ -354,7 +356,7 @@ itcl_class Module {
 		    -x 0 -rely 1.0 -anchor nw
 	    bind $port <2> "startIPortConnection [modname] $i %x %y"
 	    bind $port <B2-Motion> "trackIPortConnection [modname] $i %x %y"
-	    bind $port <ButtonRelease-2> "endPortConnection \"$portcolor\""
+	    bind $port <ButtonRelease-2> "endPortConnection"
 	    bind $port <ButtonPress-1> "IPortTrace [modname] $i $temp"
 	    bind $port <ButtonRelease-1> "IPortReset $temp"
 	    incr i
@@ -393,7 +395,7 @@ itcl_class Module {
 	    place $modframe.oportlight$i -in $port -x 0 -y 0 -anchor sw
 	    bind $port <2> "startOPortConnection [modname] $i %x %y"
 	    bind $port <B2-Motion> "trackOPortConnection [modname] $i %x %y"
-	    bind $port <ButtonRelease-2> "endPortConnection \"$portcolor\""
+	    bind $port <ButtonRelease-2> "endPortConnection"
 	    bind $port <ButtonPress-1> "OPortTrace [modname] $i $temp"
 	    bind $port <ButtonRelease-1> "OPortReset $temp"
 	    incr i
@@ -631,86 +633,44 @@ itcl_class Module {
 	set $varName
     }
     
-    method module_grow {ports} {
-	global scirun2
-	if {$scirun2} {
-	    return
-	}
-
-	global maincanvas
-	global modname_font
-	global port_spacing
-	
-	set temp_spacing [expr $port_spacing+1]
-	set mod_width [winfo width $maincanvas.module[modname] ]
-	
-	#initialize all values first time through
-	if { [set $this-original_title_size] == 0} {
-	    set $this-original_title_size [font measure $modname_font $name]
-	}
-	
+    method module_grow { args } {
+	set ports [llength [$this-c iportinfo]]
+	incr ports
 	# thread problem - if mod_width=1, then
 	# module isn't done being created and it
-	# adds on too many extra_ports	
+	# adds on too many extra_ports
 	if {[set $this-done_bld_icon]} {
-	    if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
-		     $temp_spacing } {
-		incr $this-extra_ports 1
-		set title_width [expr [set $this-original_title_size]+\
-				     [expr $temp_spacing*[set $this-extra_ports]]]
-		set title_width [expr int([expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
-		$maincanvas.module[modname].ff.title configure -width $title_width
+	    global maincanvas
+	    global port_spacing
+	    set curwidth [winfo width $maincanvas.module[modname]]
+	    set width [expr 8+$ports*$port_spacing] 
+	    if {$curwidth < $width } {
+		$maincanvas itemconfigure [modname] -width $width
 	    }
 	}
     }
     
-    method module_shrink {} {  
+    method module_shrink {} {
+	set ports [llength [$this-c iportinfo]]
 	global maincanvas
 	global port_spacing
-
-	set temp_spacing [expr $port_spacing+1]
-	set mod_width [winfo width $maincanvas.module[modname] ]
-	set title_width [winfo width $maincanvas.module[modname].ff.title]
-	
-	if { [set $this-extra_ports] >=1 } {
-	    incr $this-extra_ports -1
+	set curwidth [winfo width $maincanvas.module[modname]]
+	set width [expr 8+$ports*$port_spacing]
+	if {$width < $initial_width} {
+	    set width $initial_width
 	}
-	
-	#determine if you have enough room to take a port size off
-	if { [expr $title_width-$temp_spacing] > [set $this-original_title_size] } {
-	    set title_width [expr [set $this-original_title_size]+\
-		    [expr [set $this-extra_ports]*$temp_spacing]]
-	    set title_width [expr $title_width/[set $this-font_pixel_width]]
-	    set title_width [expr int([expr ceil($title_width)])]
-	    $maincanvas.module[modname].ff.title configure -width $title_width
+	if {$width < $curwidth } {
+	    $maincanvas itemconfigure [modname] -width $width
 	}
     }
 
     method setDone {} {
 	#module actually mapped to the canvas
 	if {[set $this-done_bld_icon] == 0 } {
-	    set $this-done_bld_icon 1
-	    
 	    global maincanvas
-	    global port_spacing
-	    set mod_width [winfo width $maincanvas.module[modname] ]
-	    set title_width [winfo width $maincanvas.module[modname].ff.title ]
-	    set temp_spacing [expr $port_spacing+1]
-	    set ports [llength [$this-c iportinfo]]
-	    set extras $ports
-	    
-	    #making sure that it is big enough
-	    if {[expr $extras*$temp_spacing] > $mod_width } {
-		incr extras -1
-		while { [expr $extras*$temp_spacing] > $mod_width } {
-		    incr extras -1
-		}
-		#the minus 1 is to account for the fact that 
-		#when module_grow is called it will increment
-		#extra_ports as if a connection has been made
-		set $this-extra_ports [expr [expr $ports-$extras]-1]
-		module_grow $ports
-	    }
+	    set $this-done_bld_icon 1	
+	    set initial_width [winfo width $maincanvas.module[modname]]
+	    module_grow
 	}
     }
 }   
@@ -811,7 +771,7 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     global $connid-block
     set $connid-block 0
     $maincanvas bind $connid <ButtonRelease-2> "block_pipe $connid $omodid $owhich $imodid $iwhich $portcolor"
-    $maincanvas bind $connid <ButtonPress-3> "destroyConnection $connid $omodid $imodid"
+    $maincanvas bind $connid <ButtonPress-3> "destroyConnection $connid $omodid $imodid 1"
     $maincanvas bind $connid <ButtonPress-1> "lightPipe $temp $omodid $owhich $imodid $iwhich"
     $maincanvas bind $connid <ButtonRelease-1> "resetPipe $temp $omodid $imodid"
     $maincanvas bind $connid <Control-Button-1> "raisePipe $connid"
@@ -925,13 +885,51 @@ proc raisePipe { connid } {
     $netedit_mini_canvas raise $connid
 }
 
-proc destroyConnection {connid omodid imodid} { 
+
+# set the optional args command to anything to record the undo action
+proc addConnection {omodid owhich imodid iwhich args } {
+    set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
+    if {"" == $connid} {
+	tk_messageBox -type ok -parent . -message \
+	    "Invalid connection found while loading network: addConnection $omodid $owhich $imodid $iwhich -- discarding." \
+	    -icon warning
+	return
+    }
+    set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]    
+    buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
+
+    global maincanvas
+    $omodid configureOPorts $maincanvas
+    $imodid configureIPorts $maincanvas
+
+    #if we got here from undo, record this action as undoable
+    if [llength $args] {
+	global undoList redoList
+	lappend undoList [list "add_connection" $connid]
+	# new actions invalidate the redo list
+	set redoList ""	
+    }
+
+    update idletasks
+}
+
+
+# set the optional args command to anything to record the undo action
+proc destroyConnection {connid omodid imodid args} { 
     global maincanvas minicanvas
     $maincanvas delete $connid
     $minicanvas delete $connid
     netedit deleteconnection $connid $omodid 
     $omodid configureOPorts $maincanvas
     $imodid configureIPorts $maincanvas
+
+    #if we got here from undo, record this action as undoable
+    if [llength $args] {
+	global undoList redoList
+	lappend undoList [list "sub_connection" $connid]
+	# new actions invalidate the redo list
+	set redoList ""
+    }
 }
 
 proc scalePath { path } {
@@ -970,6 +968,8 @@ proc rebuildConnections {list color} {
 }
 
 proc trackIPortConnection {imodid which x y} {
+    global new_conn_oports
+    if ![llength $new_conn_oports] return
     # Get coords in canvas
     global maincanvas
     set ox1 [winfo x $maincanvas.module$imodid.iport$which]
@@ -978,21 +978,15 @@ proc trackIPortConnection {imodid which x y} {
     set oy1 [winfo y $maincanvas.module$imodid.iport$which]
     set oy2 [lindex [$maincanvas coords $imodid] 1]
     set y [expr $y+$oy1+$oy2]
-
     set c [computeIPortCoords $imodid $which]
-
     set ix [lindex $c 0]
     set iy [lindex $c 1]
     set mindist [computeDist $x $y $ix $iy]
     set minport ""
-    global new_conn_oports
-    
     foreach i $new_conn_oports {
 	set omodid [lindex $i 0]
 	set owhich [lindex $i 1]
-		
 	set c [computeOPortCoords $omodid $owhich]
-
 	set ox [lindex $c 0]
 	set oy [lindex $c 1]
 	set dist [computeDist $x $y $ox $oy]
@@ -1015,6 +1009,8 @@ proc trackIPortConnection {imodid which x y} {
 }
 
 proc trackOPortConnection {omodid which x y} {
+    global new_conn_iports
+    if ![llength $new_conn_iports] return
     # Get coords in canvas
     global maincanvas
     set ox1 [winfo x $maincanvas.module$omodid.oport$which]
@@ -1023,21 +1019,15 @@ proc trackOPortConnection {omodid which x y} {
     set oy1 [winfo y $maincanvas.module$omodid.oport$which]
     set oy2 [lindex [$maincanvas coords $omodid] 1]
     set y [expr $y+$oy1+$oy2]
-
     set c [computeOPortCoords $omodid $which]
-
     set ix [lindex $c 0]
     set iy [lindex $c 1]
     set mindist [computeDist $x $y $ix $iy]
     set minport ""
-    global new_conn_iports
-    
     foreach i $new_conn_iports {
 	set imodid [lindex $i 0]
 	set iwhich [lindex $i 1]
-
 	set c [computeIPortCoords $imodid $iwhich]
-
 	set ox [lindex $c 0]
 	set oy [lindex $c 1]
 	set dist [computeDist $x $y $ox $oy]
@@ -1060,19 +1050,81 @@ proc trackOPortConnection {omodid which x y} {
     }
 }
 
-proc endPortConnection {portcolor} {
+proc endPortConnection {} {
     global maincanvas
     $maincanvas delete tempconnections
     $maincanvas delete tempname
     destroy $maincanvas.frame
     global potential_connection
     if { $potential_connection != "" } {
-	set connid [eval netedit addconnection $potential_connection]
-	eval buildConnection $connid $portcolor $potential_connection
-	[lindex $potential_connection 0] configureOPorts $maincanvas
-	[lindex $potential_connection 2] configureIPorts $maincanvas
+	eval addConnection $potential_connection 1
     }
 }
+
+
+proc parseConnectionID {conn} {
+    set index1 [string first "_p" $conn ]
+    set omodid [string range $conn 0 [expr $index1-1]]
+    set index2 [string first "_to_" $conn ]
+    set owhich [string range $conn [expr $index1+2] [expr $index2-1]]
+    set index4 [string last "_p" $conn]
+    set index3 [string last "_" $conn $index4]
+    set imodid [string range $conn [expr $index2+4] [expr $index3-1]]
+    set iwhich [string range $conn [expr $index4+2] end]
+    return "$omodid $owhich $imodid $iwhich"
+}
+
+
+
+
+proc undo {} {
+    global undoList redoList
+    if ![llength $undoList] {
+	return
+    }
+    # Get the last action performed
+    set undo_item [lindex $undoList end]
+    # Remove it from the list
+    set undoList [lreplace $undoList end end]
+    # Add it to the redo list
+    lappend redoList $undo_item
+
+    set action [lindex $undo_item 0]
+    set connid [lindex $undo_item 1]
+    set conn_info [parseConnectionID $connid]
+    if { $action == "add_connection" } {
+	eval destroyConnection $connid [lindex $conn_info 0] [lindex $conn_info 2]
+    }
+    if { $action == "sub_connection" } {
+	eval addConnection $conn_info
+    }
+}
+
+
+proc redo {} {
+    global undoList redoList
+    if ![llength $redoList] {
+	return
+    }
+    # Get the last action undone
+    set redo_item [lindex $redoList end]
+    # Remove it from the list
+    set redoList [lreplace $redoList end end]
+    # Add it to the undo list
+    lappend undoList $redo_item
+
+    set action [lindex $redo_item 0]
+    set connid [lindex $redo_item 1]
+    set conn_info [parseConnectionID $connid]
+    if { $action == "add_connection" } {
+	eval addConnection $conn_info
+    }
+    if { $action == "sub_connection" } {
+	eval destroyConnection $connid [lindex $conn_info 0] [lindex $conn_info 2]
+    }
+}
+
+
 
 proc routeConnection {omodid owhich imodid iwhich} {
     set outpos [computeOPortCoords $omodid $owhich]
