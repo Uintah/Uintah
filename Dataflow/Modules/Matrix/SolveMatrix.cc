@@ -115,8 +115,9 @@ public:
     TCLint maxiter;
     TCLint use_previous_soln;
     TCLvarint emit_partial;
+    int ep;
     TCLstring status;
-  TCLint tcl_np;
+    TCLint tcl_np;
     CGData* data;
 };
 
@@ -177,7 +178,7 @@ void SolveMatrix::execute()
     solution=scinew ColumnMatrix(rhs->nrows());
     solution->zero();
   }
-  
+
   int size=matrix->nrows();
   if(matrix->ncols() != size){
     error(clString("Matrix should be square, but is ")
@@ -196,6 +197,8 @@ void SolveMatrix::execute()
   else if(pre == "ILU_P") flag = 3;
 #endif
   
+  ep=emit_partial.get();
+  cerr << "emit_partial="<<ep<<"\n";
   clString meth=method.get();
   if(0){
 #ifdef SCI_SPARSELIB
@@ -235,7 +238,10 @@ void SolveMatrix::execute()
    } else if(meth == "conjugate_gradient_sci"){
      conjugate_gradient_sci(matrix.get_rep(),
 			    *solution.get_rep(), *rhs.get_rep());
-     solport->send_intermediate(solution);
+//     if (ep)
+//	 solport->send_intermediate(solution);
+//     else
+	 solport->send(solution);
      
    } else if(meth == "bi_conjugate_gradient_sci"){
      bi_conjugate_gradient_sci(matrix.get_rep(),
@@ -900,7 +906,7 @@ struct CGData {
   PStats* stats;
   double err;
   double bnorm;
-    CGData();
+  CGData();
 };
 
 CGData::CGData()
@@ -962,7 +968,12 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     memrefs.set(0);
     memrate.set(0);
     iteration.set(0);
-    
+
+    if (data->rhs->vector_norm(stats->flop, stats->memref) < 0.0000001) {
+	*data->lhs=*data->rhs;
+	return;
+    }
+        
     data->diag=new ColumnMatrix(size);
     // We should try to do a better job at preconditioning...
     int i;
@@ -976,8 +987,8 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     data->R=new ColumnMatrix(size);
     ColumnMatrix& R=*data->R;
     ColumnMatrix& lhs=*data->lhs;
-    matrix->mult(lhs, R, stats->flop, stats->memref);
-    
+
+    matrix->mult(lhs, R, stats->flop, stats->memref);    
     
     ColumnMatrix& rhs=*data->rhs;
     Sub(R, rhs, R, stats->flop, stats->memref);
@@ -1065,6 +1076,8 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     // Calculate coefficient bk and direction vectors p and pp
     double my_bknum=Dot(Z, R, stats->flop, stats->memref, beg, end);
     double bknum=data->reducer.sum(processor, data->np, my_bknum);
+
+//    if (processor==0) cerr << "bknum="<<bknum<<"\n";
     
     if(data->niter==1){
       Copy(P, Z, stats->flop, stats->memref, beg, end);
@@ -1074,12 +1087,24 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     }
     data->reducer.wait(data->np);
     // Calculate coefficient ak, new iterate x and new residuals r and rr
+
+#if 0
+    if (processor==2) {
+	cerr << "P=";
+	for (int iii=beg; iii<end; iii++) cerr << " "<<P[iii];
+	cerr << "\n";
+    }
+#endif
+
     matrix->mult(P, Z, stats->flop, stats->memref, beg, end);
     bkden=bknum;
     double my_akden=Dot(Z, P, stats->flop, stats->memref, beg, end);
+    cerr << "p="<<processor<<" my_akden="<<my_akden<<"\n";
+
     double akden=data->reducer.sum(processor, data->np, my_akden);
     
     double ak=bknum/akden;
+//    if (processor == 0) cerr << "ak="<<ak<<"  akden="<<akden<<"\n";
     ColumnMatrix& lhs=*data->lhs;
     ScMult_Add(lhs, ak, P, lhs, stats->flop, stats->memref, beg, end);
 //     ColumnMatrix& rhs=*data->rhs;
@@ -1087,7 +1112,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     
     double my_err=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;
     err=data->reducer.sum(processor, data->np, my_err);
-
+//    if (processor==0) cerr << "err="<<err<<"\n";
     int ev=(err<1000000);
 //    cerr << "EVALUATING2 "<<ev<<"\n";
     if (!ev) err=1000000;
@@ -1125,7 +1150,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 	  }
 	}
 
-	if(emit_partial.get() && data->niter%60 == 0)
+	if(ep && data->niter%60 == 0)
 	  solport->send_intermediate(lhs.clone());
 
       }
@@ -1462,6 +1487,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.10  1999/09/21 23:20:10  dmw
+// fixed it so it works for RHS==0
+//
 // Revision 1.9  1999/09/16 00:38:11  dmw
 // fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
 //
