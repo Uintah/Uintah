@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -22,6 +23,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
   phys_cons_ps->require("gravity",d_gravity);
+  phys_cons_ps->require("reference_pressure",d_ref_press);
 
 }
 
@@ -41,6 +43,14 @@ void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
    ice_matls.push_back(matl);
    registerMaterial(matl);
+}
+
+int SimulationState::getNumVelFields() const {
+  int num_vf=0;
+  for (int i = 0; i < (int)matls.size(); i++) {
+    num_vf = Max(num_vf,matls[i]->getVFIndex());
+  }
+  return num_vf+1;
 }
 
 SimulationState::~SimulationState()
