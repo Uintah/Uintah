@@ -19,25 +19,25 @@ class BumpMaterial : public Material {
   int dimension_y;
   int *bumpimage;      /*holds the bump structure*/
   double evaru, evarv; /* 1/width, 1/height */
-  double persistence;
+  double ntiles;
+  double bump_scale;
 public:
-    BumpMaterial(Material *, char *, double);
-    virtual ~BumpMaterial();
-    virtual void shade(Color& result, const Ray& ray,
-		       const HitInfo& hit, int depth,
-		       double atten, const Color& accumcolor,
-		       Context* cx);
+  BumpMaterial(Material *, char *, double, double bump_scale=1);
+  virtual ~BumpMaterial();
+  virtual void shade(Color& result, const Ray& ray,
+		     const HitInfo& hit, int depth,
+		     double atten, const Color& accumcolor,
+		     Context* cx);
   void perturbnormal(Vector &, const Ray& ray, const HitInfo &);
-
-
+  
+  
   // added for file bumpmaps
   int read_file(char *filename);
   double fval(double u, double v);
-  double get_persistence() {return persistence;}
+  inline double get_ntiles() {return ntiles;}
   int readfromppm6(char *);
   //int readfromppm(char *);
-  FILE * readcomments (FILE*fin);
-
+  FILE * readcomments (FILE*fin);  
 };
 
 } // end namespace rtrt
