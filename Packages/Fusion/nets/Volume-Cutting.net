@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 17 17]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 231 129]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 231 20]
@@ -60,9 +57,9 @@ set $m3-k-start {0}
 set $m3-i-stop {384}
 set $m3-j-stop {0}
 set $m3-k-stop {0}
-set $m3-i-skip {10}
-set $m3-j-skip {5}
-set $m3-k-skip {1}
+set $m3-i-stride {1}
+set $m3-j-stride {1}
+set $m3-k-stride {1}
 set $m3-i-wrap {0}
 set $m3-j-wrap {1}
 set $m3-k-wrap {1}
@@ -84,7 +81,7 @@ set $m6-notes {}
 set $m6-show_status {1}
 set $m6-interpolation_basis {linear}
 set $m6-map_source_to_single_dest {0}
-set $m6-exhaustive_search {1}
+set $m6-exhaustive_search {0}
 set $m6-exhaustive_search_max_dist {-1}
 set $m6-np {1}
 set $m7-notes {}
