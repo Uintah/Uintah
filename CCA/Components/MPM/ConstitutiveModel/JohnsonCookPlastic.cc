@@ -93,33 +93,24 @@ JohnsonCookPlastic::updatePlastic(const particleIndex , const double& )
 }
 
 double 
-JohnsonCookPlastic::computeFlowStress(const double& plasticStrainRate,
-                                      const double& plasticStrain,
-                                      const double& temperature,
-                                      const double& delT,
-                                      const double& tolerance,
-                                      const MPMMaterial* matl,
-                                      const particleIndex idx)
+JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
+				      const double& delT,
+				      const double& tolerance,
+				      const MPMMaterial* matl,
+				      const particleIndex idx)
 {
-  return evaluateFlowStress(plasticStrain, plasticStrainRate, 
-                            temperature, matl, tolerance);
-}
+  double epdot = state->plasticStrainRate;
+  double ep = state->plasticStrain;
+  double T = state->temperature;
+  double Tr = matl->getRoomTemperature();
+  double Tm = state->meltingTemp;
 
-double 
-JohnsonCookPlastic::evaluateFlowStress(const double& ep, 
-				       const double& epdot,
-				       const double& T,
-                                       const MPMMaterial* matl,
-                                       const double& )
-{
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
   double strainRatePart = 1.0;
   if (epdot < 1.0) 
     strainRatePart = pow((1.0 + epdot),d_CM.C);
   else
     strainRatePart = 1.0 + d_CM.C*log(epdot);
-  double Tr = matl->getRoomTemperature();
-  double Tm = matl->getMeltTemperature();
   ASSERT(T < Tm);
   d_CM.TRoom = Tr;  d_CM.TMelt = Tm;
   double m = d_CM.m;
@@ -133,41 +124,26 @@ JohnsonCookPlastic::evaluateFlowStress(const double& ep,
     \f$ \dot{q_\alpha} = \gamma h_\alpha \f$ requires 
     \f$\gamma = \dot{\epsilon_p}\f$ and \f$ h_\alpha = 1\f$. */
 void 
-JohnsonCookPlastic::computeTangentModulus(const Matrix3& sig,
-				          const double& plasticStrainRate,
-				          const double& plasticStrain,
-                                          double T,
-                                          double ,
-                                          const particleIndex idx,
+JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
+                                          const PlasticityState* state,
+				          const double& ,
                                           const MPMMaterial* matl,
-                                          TangentModulusTensor& Ce,
+                                          const particleIndex idx,
+				          TangentModulusTensor& Ce,
 				          TangentModulusTensor& Cep)
 {
   // Calculate the deviatoric stress and rate of deformation
   Matrix3 one; one.Identity();
-  Matrix3 sigdev = sig - one*(sig.Trace()/3.0);
+  Matrix3 sigdev = stress - one*(stress.Trace()/3.0);
 
   // Calculate the equivalent stress
   double sigeqv = sqrt(sigdev.NormSquared()); 
 
-  // Calculate the dircetion of plastic loading (r)
+  // Calculate the direction of plastic loading (r)
   Matrix3 rr = sigdev*(1.5/sigeqv);
 
-  // Calculate f_q (h = 1, therefore f_q.h = f_q)
-  double ep = plasticStrain;
-  double epdot = plasticStrainRate;
-  double strainPart = d_CM.n*d_CM.B*pow(ep,d_CM.n-1);
-  double strainRatePart = 1.0;
-  if (epdot < 1.0) 
-    strainRatePart = pow((1.0 + epdot),d_CM.C);
-  else
-    strainRatePart = 1.0 + d_CM.C*log(epdot);
-  double Tr = matl->getRoomTemperature();
-  double Tm = matl->getMeltTemperature();
-  double m = d_CM.m;
-  double Tstar = (T-Tr)/(Tm-Tr);
-  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
-  double f_q = strainPart*strainRatePart*tempPart;
+  // Get f_q = dsigma/dep (h = 1, therefore f_q.h = f_q)
+  double f_q = evalDerivativeWRTPlasticStrain(state, idx);
 
   // Form the elastic-plastic tangent modulus
   Matrix3 Cr, rC;
@@ -203,12 +179,71 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& sig,
   }  
 }
 
+void
+JohnsonCookPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+						const particleIndex idx,
+						Vector& derivs)
+{
+  derivs[0] = evalDerivativeWRTStrainRate(state, idx);
+  derivs[1] = evalDerivativeWRTTemperature(state, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(state, idx);
+}
+
+
 double
-JohnsonCookPlastic::evalDerivativeWRTTemperature(double epdot,
-                                                 double ep,
-						 double T,
+JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+                                                   const particleIndex idx)
+{
+  // Get the state data
+  double ep = state->plasticStrain;
+  double epdot = state->plasticStrainRate;
+  double T = state->temperature;
+  double Tm = state->meltingTemp;
+
+  // Calculate strain rate part
+  double strainRatePart = 1.0;
+  if (epdot < 1.0) strainRatePart = pow((1.0 + epdot),d_CM.C);
+  else strainRatePart = 1.0 + d_CM.C*log(epdot);
+
+  // Calculate temperature part
+  double m = d_CM.m;
+  double Tstar = (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
+  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
+
+  double D = strainRatePart*tempPart;
+
+  double deriv = d_CM.B*d_CM.n*D*pow(ep,d_CM.n-1)/ep;
+  return deriv;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/*  Compute the shear modulus. */
+///////////////////////////////////////////////////////////////////////////
+double
+JohnsonCookPlastic::computeShearModulus(const PlasticityState* state)
+{
+  return state->shearModulus;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/* Compute the melting temperature */
+///////////////////////////////////////////////////////////////////////////
+double
+JohnsonCookPlastic::computeMeltingTemp(const PlasticityState* state)
+{
+  return state->meltingTemp;
+}
+
+double
+JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
                                                  const particleIndex idx)
 {
+  // Get the state data
+  double ep = state->plasticStrain;
+  double epdot = state->plasticStrainRate;
+  double T = state->temperature;
+  double Tm = state->meltingTemp;
+
   // Calculate strain part
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
 
@@ -219,7 +254,7 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(double epdot,
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T-d_CM.TRoom)/(d_CM.TMelt-d_CM.TRoom);
+  double Tstar = (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
 
   double F = strainPart*strainRatePart;
   double deriv = - m*F*pow(Tstar,m)/(T-d_CM.TRoom);
@@ -227,17 +262,21 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(double epdot,
 }
 
 double
-JohnsonCookPlastic::evalDerivativeWRTStrainRate(double epdot,
-                                                double ep, 
-						double T,
+JohnsonCookPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                                 const particleIndex idx)
 {
+  // Get the state data
+  double ep = state->plasticStrain;
+  double epdot = state->plasticStrainRate;
+  double T = state->temperature;
+  double Tm = state->meltingTemp;
+
   // Calculate strain part
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T-d_CM.TRoom)/(d_CM.TMelt-d_CM.TRoom);
+  double Tstar = (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
   double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
 
   double E = strainPart*tempPart;
@@ -247,37 +286,4 @@ JohnsonCookPlastic::evalDerivativeWRTStrainRate(double epdot,
 
 }
 
-double
-JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(double epdot,
-                                                   double ep,
-						   double T,
-                                                   const particleIndex idx)
-{
-  // Calculate strain rate part
-  double strainRatePart = 1.0;
-  if (epdot < 1.0) strainRatePart = pow((1.0 + epdot),d_CM.C);
-  else strainRatePart = 1.0 + d_CM.C*log(epdot);
 
-  // Calculate temperature part
-  double m = d_CM.m;
-  double Tstar = (T-d_CM.TRoom)/(d_CM.TMelt-d_CM.TRoom);
-  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
-
-  double D = strainRatePart*tempPart;
-
-  double deriv = d_CM.B*d_CM.n*D*pow(ep,d_CM.n)/ep;
-  return deriv;
-}
-
-
-void
-JohnsonCookPlastic::evalDerivativeWRTScalarVars(double epdot,
-                                                double ep,
-						double T,
-						const particleIndex idx,
-						Vector& derivs)
-{
-  derivs[0] = evalDerivativeWRTStrainRate(epdot, ep, T, idx);
-  derivs[1] = evalDerivativeWRTTemperature(epdot, ep, T, idx);
-  derivs[2] = evalDerivativeWRTPlasticStrain(epdot, ep, T, idx);
-}

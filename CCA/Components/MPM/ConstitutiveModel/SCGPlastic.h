@@ -70,8 +70,9 @@ namespace Uintah {
 
   class SCGPlastic : public PlasticityModel {
 
-    // Create datatype for storing model parameters
   public:
+
+    // Create datatype for storing model parameters
     struct CMData {
       double mu_0; 
       double A;
@@ -146,9 +147,7 @@ namespace Uintah {
     ///////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the flow stress */
     ///////////////////////////////////////////////////////////////////////////
-    virtual double computeFlowStress(const double& plasticStrainRate,
-				     const double& plasticStrain,
-				     const double& temperature,
+    virtual double computeFlowStress(const PlasticityState* state,
 				     const double& delT,
 				     const double& tolerance,
 				     const MPMMaterial* matl,
@@ -162,12 +161,10 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const double& plasticStrainRate,
-				       const double& plasticStrain,
-				       double temperature,
-				       double delT,
-				       const particleIndex idx,
-				       const MPMMaterial* matl,
+				       const PlasticityState* state,
+				       const double& delT,
+                                       const MPMMaterial* matl,
+                                       const particleIndex idx,
 				       TangentModulusTensor& Ce,
 				       TangentModulusTensor& Cep);
 
@@ -177,14 +174,12 @@ namespace Uintah {
       internal variables.
 
       \return Three derivatives in Vector deriv 
-      (deriv[0] = \f$d\sigma_Y/d\dot\epsilon_p\f$,
+      (deriv[0] = \f$d\sigma_Y/dp\f$,
       deriv[1] = \f$d\sigma_Y/dT\f$, 
       deriv[2] = \f$d\sigma_Y/d\epsilon_p\f$)
     */
     ///////////////////////////////////////////////////////////////////////////
-    void evalDerivativeWRTScalarVars(double edot,
-                                     double ep,
-                                     double T,
+    void evalDerivativeWRTScalarVars(const PlasticityState* state,
                                      const particleIndex idx,
                                      Vector& derivs);
 
@@ -194,15 +189,32 @@ namespace Uintah {
 
       The derivative is given by
       \f[
+         \frac{\partial \sigma}{\partial \epsilon_p} = 
+         \left(\frac{\sigma_0\mu~n~\beta}{\mu_0}\right)
+         \left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^{n-1}
       \f]
-      where
-      \f[
 
       \return Derivative \f$ d\sigma_Y / d\epsilon_p\f$.
+
+      \warning Not sure what should be done at Y = Ymax.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTPlasticStrain(double edot, double ep, double T,
+    double evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                           const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the shear modulus. 
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeShearModulus(const PlasticityState* state);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the melting temperature
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeMeltingTemp(const PlasticityState* state);
 
   protected:
 
@@ -210,19 +222,34 @@ namespace Uintah {
     /*!
       \brief Evaluate derivative of flow stress with respect to temperature.
 
-      The SCG yield stress is given by :
-      \f[
-      \f]
-
       The derivative is given by
       \f[
+         \frac{\partial \sigma}{\partial T} = 
+         B\sigma_0\left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^n
       \f]
 
       \return Derivative \f$ d\sigma_Y / dT \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTTemperature(double edot, double ep, double T,
+    double evalDerivativeWRTTemperature(const PlasticityState* state,
 					const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to pressure.
+
+      The derivative is given by
+      \f[
+         \frac{\partial \sigma}{\partial p} = 
+         \frac{A}{\eta^{1/3}}
+         \sigma_0\left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^n
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / dp \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTPressure(const PlasticityState* state,
+				     const particleIndex idx);
 
   };
 

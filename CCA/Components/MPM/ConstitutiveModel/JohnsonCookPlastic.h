@@ -39,8 +39,9 @@ namespace Uintah {
 
   class JohnsonCookPlastic : public PlasticityModel {
 
-    // Create datatype for storing model parameters
   public:
+
+    // Create datatype for storing model parameters
     struct CMData {
       double A;
       double B;
@@ -108,25 +109,25 @@ namespace Uintah {
 
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
-    // compute the flow stress
-    virtual double computeFlowStress(const double& plasticStrainRate,
-				     const double& plasticStrain,
-				     const double& temperature,
+    ///////////////////////////////////////////////////////////////////////////
+    /*! \brief  compute the flow stress */
+    ///////////////////////////////////////////////////////////////////////////
+    virtual double computeFlowStress(const PlasticityState* state,
 				     const double& delT,
 				     const double& tolerance,
 				     const MPMMaterial* matl,
 				     const particleIndex idx);
 
+    ///////////////////////////////////////////////////////////////////////////
     /*! Compute the elastic-plastic tangent modulus 
     **WARNING** Assumes vonMises yield condition and the
     associated flow rule */
+    ///////////////////////////////////////////////////////////////////////////
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const double& plasticStrainRate,
-				       const double& plasticStrain,
-				       double temperature,
-				       double delT,
-				       const particleIndex idx,
-				       const MPMMaterial* matl,
+				       const PlasticityState* state,
+				       const double& delT,
+                                       const MPMMaterial* matl,
+                                       const particleIndex idx,
 				       TangentModulusTensor& Ce,
 				       TangentModulusTensor& Cep);
 
@@ -141,9 +142,7 @@ namespace Uintah {
       deriv[2] = \f$d\sigma_Y/d\epsilon\f$)
     */
     ///////////////////////////////////////////////////////////////////////////
-    void evalDerivativeWRTScalarVars(double edot,
-                                     double ep,
-                                     double T,
+    void evalDerivativeWRTScalarVars(const PlasticityState* state,
                                      const particleIndex idx,
                                      Vector& derivs);
 
@@ -166,16 +165,24 @@ namespace Uintah {
       \warning Expect error when \f$ \epsilon_p = 0 \f$. 
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTPlasticStrain(double edot, double ep, double T,
+    double evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                           const particleIndex idx);
 
-  protected:
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the shear modulus. 
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeShearModulus(const PlasticityState* state);
 
-    double evaluateFlowStress(const double& ep, 
-			      const double& epdot,
-			      const double& T,
-			      const MPMMaterial* matl,
-			      const double& tolerance);
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the melting temperature
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeMeltingTemp(const PlasticityState* state);
+
+  protected:
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -197,7 +204,7 @@ namespace Uintah {
       \warning Expect error when \f$ T < T_{room} \f$. 
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTTemperature(double edot, double ep, double T,
+    double evalDerivativeWRTTemperature(const PlasticityState* state,
 					const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -218,7 +225,7 @@ namespace Uintah {
       \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTStrainRate(double edot, double ep, double T,
+    double evalDerivativeWRTStrainRate(const PlasticityState* state,
 				       const particleIndex idx);
 
   };
