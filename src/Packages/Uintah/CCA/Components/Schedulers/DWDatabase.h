@@ -66,6 +66,7 @@ public:
    void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
    void print(ostream&);
    void cleanForeign();
+   void scrub(const VarLabel* label);
 private:
    typedef vector<VarType*> dataDBtype;
 
@@ -151,6 +152,22 @@ DWDatabase<VarType>::cleanForeign()
    for (list<const VarLabel*>::iterator iter = toBeRemoved.begin();
 	iter != toBeRemoved.end(); iter++)
       globals.erase(*iter);
+}
+
+template<class VarType>
+void
+DWDatabase<VarType>::scrub(const VarLabel* var)
+{
+  nameDBtype::iterator iter = names.find(var);
+  if(iter != names.end()){
+    delete iter->second;
+    names.erase(iter);
+  }
+  globalDBtype::iterator iter2 = globals.find(var);
+  if(iter2 != globals.end()){
+    delete iter2->second;
+    globals.erase(iter2);
+  }
 }
 
 template<class VarType>

@@ -43,7 +43,7 @@ NullScheduler::advanceDataWarehouse(const GridP& grid)
 }
 
 void
-NullScheduler::compile(const ProcessorGroup* pg)
+NullScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
 {
   if(dt)
     delete dt;
@@ -63,6 +63,7 @@ NullScheduler::compile(const ProcessorGroup* pg)
   dt->assignMessageTags();
   int me=pg->myrank();
   dt->computeLocalTasks(me);
+  dt->createScrublists(init_timestep);
 }
 
 void

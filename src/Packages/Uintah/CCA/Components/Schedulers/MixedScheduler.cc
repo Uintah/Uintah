@@ -11,7 +11,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/ScatterGatherBase.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
@@ -96,31 +95,16 @@ struct VarDestType {
    }
 };
 
-static const TypeDescription* specialType;
-
 MixedScheduler::MixedScheduler(const ProcessorGroup* myworld, Output* oport)
    : SchedulerCommon(myworld, oport), log(myworld, oport)
 {
   d_generation = 0;
 
   d_threadPool = scinew ThreadPool( Parallel::getMaxThreads() );
-
-  if( !specialType ){
-    specialType = scinew
-      TypeDescription(TypeDescription::ScatterGatherVariable,
-		      "DataWarehouse::specialInternalScatterGatherType",
-		      false, -1);
-  }
-  scatterGatherVariable = 
-             scinew VarLabel("DataWarehouse::scatterGatherVariable",
-			     specialType, VarLabel::Internal);
-  reloc_matls = 0;
 }
 
 MixedScheduler::~MixedScheduler()
 {
-  if(reloc_matls && reloc_matls->removeReference())
-    delete reloc_matls;
 }
 
 void
@@ -572,7 +556,7 @@ MixedScheduler::verifyChecksum( vector<Task*> & tasks, int me )
 }
 
 void
-MixedScheduler::compile(const ProcessorGroup * pc )
+MixedScheduler::compile(const ProcessorGroup * pc, bool init_timestep )
 {
   NOT_FINISHED("MixedScheduler::compile");
 }
@@ -1137,361 +1121,13 @@ MixedScheduler::scheduleParticleRelocation(
                   const vector<vector<const VarLabel*> >& new_labels,
                   const MaterialSet* matls)
 {
-   reloc_old_posLabel = old_posLabel;
-   reloc_old_labels = old_labels;
-   reloc_new_posLabel = new_posLabel;
-   reloc_new_labels = new_labels;
-   if(reloc_matls && reloc_matls->removeReference())
-     delete reloc_matls;
-   reloc_matls = matls;
-   reloc_matls->addReference();
-#if 0
-   for (int m = 0; m < numMatls; m++ )
-     ASSERTEQ(reloc_new_labels[m].size(), reloc_old_labels[m].size());
-   for(Level::const_patchIterator iter=level->patchesBegin();
-       iter != level->patchesEnd(); iter++){
-
-      const Patch* patch=*iter;
-
-      Task* t = scinew Task("MixedScheduler::scatterParticles",
-                            patch, old_dw, new_dw,
-                            this, &MixedScheduler::scatterParticles);
-      for(int m=0;m < numMatls;m++){
-         t->requires( new_dw, old_posLabel, m, patch, Ghost::None);
-         for(int i=0;i<(int)old_labels[m].size();i++)
-            t->requires( new_dw, old_labels[m][i], m, patch, Ghost::None);
-      }
-      t->computes(new_dw, scatterGatherVariable, 0, patch);
-      t->setType(Task::Scatter);
-      addTask(t);
-
-      Task* t2 = scinew Task("MixedScheduler::gatherParticles",
-                             patch, old_dw, new_dw,
-                             this, &MixedScheduler::gatherParticles);
-      // Particles are only allowed to be one cell out
-      IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-      IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-      Level::selectType neighbors;
-      level->selectPatches(l, h, neighbors);
-      for(int i=0;i<(int)neighbors.size();i++)
-         t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
-      for(int m=0;m < numMatls;m++){
-         t2->computes( new_dw, new_posLabel, m, patch);
-         for(int i=0;i<(int)new_labels[m].size();i++)
-            t2->computes(new_dw, new_labels[m][i], m, patch);
-      }
-      t2->setType(Task::Gather);
-      addTask(t2);
-   }
-#else
-   NOT_FINISHED("new task stuff");
-#endif
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  reloc.scheduleParticleRelocation(this, d_myworld, lb, level,
+				   old_posLabel, old_labels,
+				   new_posLabel, new_labels, matls);
+  releasePort("load balancer");
 }
-
-namespace Uintah {
-   struct MPIScatterMaterialRecord {
-      ParticleSubset* relocset;
-      vector<ParticleVariableBase*> vars;
-   };
-
-   struct MPIScatterRecord : public ScatterGatherBase {
-      vector<MPIScatterMaterialRecord*> matls;
-   };
-} // End namespace Uintah
-
-void
-MixedScheduler::scatterParticles(const ProcessorGroup* pc,
-                               const Patch* patch,
-                               DataWarehouseP& old_dw,
-                               DataWarehouseP& new_dw)
-{
-   const Level* level = patch->getLevel();
-
-   // Particles are only allowed to be one cell out
-   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   Level::selectType neighbors;
-   level->selectPatches(l, h, neighbors);
-
-#if 0
-   vector<MPIScatterRecord*> sr(neighbors.size());
-   for(int i=0;i<(int)sr.size();i++)
-      sr[i]=0;
-   for(int m = 0; m < reloc_numMatls; m++){
-      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
-      ParticleVariable<Point> px;
-      new_dw->get(px, reloc_old_posLabel, pset);
-
-      ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
-						       false, -1, 0);
-
-      for(ParticleSubset::iterator iter = pset->begin();
-	  iter != pset->end(); iter++){
-	 particleIndex idx = *iter;
-	 if(!patch->getBox().contains(px[idx])){
-	    relocset->addParticle(idx);
-	 }
-      }
-      if(relocset->numParticles() > 0){
-	 // Figure out where they went...
-	 for(ParticleSubset::iterator iter = relocset->begin();
-	     iter != relocset->end(); iter++){
-	    particleIndex idx = *iter;
-	    // This loop should change - linear searches are not good!
-	    int i;
-	    for(i=0;i<(int)neighbors.size();i++){
-	       if(neighbors[i]->getBox().contains(px[idx])){
-		  break;
-	       }
-	    }
-	    if(i == (int)neighbors.size()){
-	       // Make sure that the particle left the world
-	       if(level->containsPoint(px[idx]))
-		  throw InternalError("Particle fell through the cracks!");
-	    } else {
-	       if(!sr[i]){
-		  sr[i] = scinew MPIScatterRecord();
-		  sr[i]->matls.resize(reloc_numMatls);
-		  for(int m=0;m<reloc_numMatls;m++){
-		     sr[i]->matls[m]=0;
-		  }
-	       }
-	       if(!sr[i]->matls[m]){
-		  MPIScatterMaterialRecord* smr=scinew MPIScatterMaterialRecord();
-		  sr[i]->matls[m]=smr;
-		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
-		  for(int v=0;v<(int)reloc_old_labels[m].size();v++)
-		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
-		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
-						     false, -1, 0);
-	       }
-	       sr[i]->matls[m]->relocset->addParticle(idx);
-	    }
-	 }
-      }
-      delete relocset;
-   }
-
-   int me = pc->myrank();
-   ASSERTEQ(sr.size(), sgargs.dest.size());
-   ASSERTEQ(sr.size(), sgargs.tags.size());
-   for(int i=0;i<(int)sr.size();i++){
-      if(sgargs.dest[i] == me){
-	 new_dw->scatter(sr[i], patch, neighbors[i]);
-      } else {
-	 // THIS SHOULD CHANGE INTO A SINGLE SEND, INSTEAD OF ONE PER MATL
-	 if(sr[i]){
-	    int sendsize = 0;
-	    for(int j=0;j<(int)sr[i]->matls.size();j++){
-	      if (sr[i]->matls[j]) {
-		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-		int size;
-		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
-		sendsize+=size;
-		int numP = mr->relocset->numParticles();
-		for(int v=0;v<(int)mr->vars.size();v++){
-		  ParticleVariableBase* var = mr->vars[v];
-		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
-		  var2->packsizeMPI(&sendsize, pc, 0, numP);
-		  //delete var2;
-		}
-	      } else {
-		int size;
-		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
-		sendsize+=size;
-	      }
-	    }
-	    char* buf = scinew char[sendsize];
-	    int position = 0;
-	    for(int j=0;j<(int)sr[i]->matls.size();j++){
-	      if (sr[i]->matls[j]) {
-		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-		int numP = mr->relocset->numParticles();
-		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
-		for(int v=0;v<(int)mr->vars.size();v++){
-		  ParticleVariableBase* var = mr->vars[v];
-		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
-		  int numP = mr->relocset->numParticles();
-		  var2->packMPI(buf, sendsize, &position, pc, 0, numP);
-		  delete var2;
-		}
-	      } else {
-		int numP = 0;
-		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
-              }   
-	    }
-	    ASSERTEQ(position, sendsize);
-	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i], sgargs.tags[i],
-		     pc->getComm());
-	    log.logSend(0, sizeof(int), "scatter");
-	    delete[] buf;
-	 } else {
-	    MPI_Send(NULL, 0, MPI_PACKED, sgargs.dest[i],
-	        sgargs.tags[i], pc->getComm());
-	    log.logSend(0, sizeof(int), "scatter");
-	 }
-      }
-   }
-#else
-   NOT_FINISHED("new task stuff");
-#endif
-} // end scatterParticles()
-
-void
-MixedScheduler::gatherParticles(const ProcessorGroup* pc,
-			      const Patch* patch,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw)
-{
-#if 0
-   const Level* level = patch->getLevel();
-
-   // Particles are only allowed to be one cell out
-   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-   Level::selectType neighbors;
-   level->selectPatches(l, h, neighbors);
-
-   vector<MPIScatterRecord*> sr;
-   vector<int> recvsize(neighbors.size());
-   int me = d_myworld->myrank();
-   ASSERTEQ((int)sgargs.dest.size(), (int)neighbors.size());
-   ASSERTEQ((int)sgargs.tags.size(), (int)neighbors.size());
-   vector<char*> recvbuf(neighbors.size());
-   vector<int> recvpos(neighbors.size());
-   for(int i=0;i<(int)neighbors.size();i++){
-      if(patch != neighbors[i]){
-	 if(sgargs.dest[i] == me){
-	    ScatterGatherBase* sgb = new_dw->gather(neighbors[i], patch);
-	    if(sgb != 0){
-	       MPIScatterRecord* srr = dynamic_cast<MPIScatterRecord*>(sgb);
-	       ASSERT(srr != 0);
-	       sr.push_back(srr);
-	    }
-	 } else {
-	    MPI_Status stat;
-	    MPI_Probe(sgargs.dest[i], sgargs.tags[i], pc->getComm(), &stat);
-	    MPI_Get_count(&stat, MPI_PACKED, &recvsize[i]);
-	    log.logRecv(0, sizeof(int), "sg_buffersize");
-	    recvpos[i] = 0;
-	    recvbuf[i] = scinew char[recvsize[i]];
-	    MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
-		     sgargs.dest[i], sgargs.tags[i],
-		     pc->getComm(), &stat);
-	    log.logRecv(0, recvsize[i], "gather");
-	 }
-      }
-   }
-   for(int m=0;m<reloc_numMatls;m++){
-      // Compute the new particle subset
-      vector<ParticleSubset*> subsets;
-      vector<ParticleVariableBase*> posvars;
-
-      // Get the local subset without the deleted particles...
-      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
-      ParticleVariable<Point> px;
-      new_dw->get(px, reloc_old_posLabel, pset);
-
-      ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
-						      false, -1, 0);
-
-      for(ParticleSubset::iterator iter = pset->begin();
-	  iter != pset->end(); iter++){
-	 particleIndex idx = *iter;
-	 if(patch->getBox().contains(px[idx]))
-	    keepset->addParticle(idx);
-      }
-      subsets.push_back(keepset);
-      particleIndex totalParticles = keepset->numParticles();
-      ParticleVariableBase* pos = new_dw->
-				    getParticleVariable(reloc_old_posLabel, pset);
-      posvars.push_back(pos);
-
-      // Get the subsets from the neighbors
-      particleIndex recvParticles = 0;
-      for(int i=0;i<(int)sr.size();i++){
-	 if(sr[i]->matls[m]){
-	    subsets.push_back(sr[i]->matls[m]->relocset);
-	    posvars.push_back(sr[i]->matls[m]->vars[0]);
-	    totalParticles += sr[i]->matls[m]->relocset->numParticles();
-	 }
-      }
-      vector<int> counts(neighbors.size());
-      for(int i=0;i<(int)neighbors.size();i++){
-	 if(sgargs.dest[i] != me){
-	    if(recvsize[i]){
-	       int n=-1234;
-	       MPI_Unpack(recvbuf[i], recvsize[i], &recvpos[i],
-			  &n, 1, MPI_INT, pc->getComm());
-	       counts[i]=n;
-	       totalParticles += n;
-	       recvParticles += n;
-	    } else {
-	       counts[i] = 0;
-	    }
-	 }
-      }
-
-      ParticleVariableBase* newpos = pos->clone();
-      ParticleSubset* newsubset = new_dw->createParticleSubset(totalParticles, m, patch);
-      newpos->gather(newsubset, subsets, posvars, recvParticles);
-
-      particleIndex start = totalParticles - recvParticles;
-      for(int i=0;i<(int)neighbors.size();i++){
-	 if(sgargs.dest[i] != me && counts[i]){
-	    newpos->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
-			      start, counts[i]);
-	    start += counts[i];
-	 }
-      }
-      ASSERTEQ(start, totalParticles);
-
-      new_dw->put(*newpos, reloc_new_posLabel);
-      delete newpos;
-
-      for(int v=0;v<(int)reloc_old_labels[m].size();v++){
-	 vector<ParticleVariableBase*> gathervars;
-	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
-
-	 gathervars.push_back(var);
-	 for(int i=0;i<(int)sr.size();i++){
-	    if(sr[i]->matls[m])
-	       gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
-	 }
-	 ParticleVariableBase* newvar = var->clone();
-	 newvar->gather(newsubset, subsets, gathervars, recvParticles);
-	 particleIndex start = totalParticles - recvParticles;
-	 for(int i=0;i<(int)neighbors.size();i++){
-	    if(sgargs.dest[i] != me && counts[i]){
-	       newvar->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
-				 start, counts[i]);
-	       start += counts[i];
-	    }
-	 }
-	 ASSERTEQ(start, totalParticles);
-	 new_dw->put(*newvar, reloc_new_labels[m][v]);
-	 delete newvar;
-      }
-      for(int i=0;i<(int)subsets.size();i++)
-	 delete subsets[i];
-   }
-   for(int i=0;i<(int)sr.size();i++){
-     for(int m=0;m<reloc_numMatls;m++)
-       if(sr[i]->matls[m])
-	 delete sr[i]->matls[m];
-     delete sr[i];
-   }
-   for(int i=0;i<(int)neighbors.size();i++){
-      ASSERTEQ(recvsize[i], recvpos[i]);
-      if(sgargs.dest[i] != me && recvsize[i] != 0){
-	 delete recvbuf[i];
-      }
-   }
-#else
-   NOT_FINISHED("new task stuff");
-#endif
-
-} // end gatherParticles()
 
 void
 MixedScheduler::displayTaskGraph( vector<Task*> & taskGraph )

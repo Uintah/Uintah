@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
 #include <fstream>
@@ -203,7 +204,7 @@ SchedulerCommon::getLoadBalancer()
 }
 
 void
-SchedulerCommon::compile(const ProcessorGroup* pg)
+SchedulerCommon::compile(const ProcessorGroup* pg, bool init_timestep)
 {
   if(dt)
     delete dt;
@@ -212,6 +213,8 @@ SchedulerCommon::compile(const ProcessorGroup* pg)
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   lb->assignResources(*dt, d_myworld);
   releasePort("load balancer");
+  dt->computeLocalTasks(pg->myrank());
+  dt->createScrublists(init_timestep);
 }
 
 void
@@ -263,7 +266,7 @@ Scheduler::VarLabelMaterialMap* SchedulerCommon::makeVarLabelMaterialMap()
   return graph.makeVarLabelMaterialMap();
 }
      
-const vector<const Task::Dependency*>& SchedulerCommon::getInitialRequires()
+const set<const VarLabel*>& SchedulerCommon::getInitialRequires()
 {
   return graph.getInitialRequires();
 }
@@ -271,4 +274,12 @@ const vector<const Task::Dependency*>& SchedulerCommon::getInitialRequires()
 void SchedulerCommon::doEmitTaskGraphDocs()
 {
   emit_taskgraph=true;
+}
+
+void SchedulerCommon::scrub(const DetailedTask* task)
+{
+  for(const ScrubItem* s=task->getScrublist();s!=0;s=s->next){
+    if(dw[s->dw])
+      dw[s->dw]->scrub(s->var);
+  }
 }

@@ -11,6 +11,7 @@ SRCS += \
 	$(SRCDIR)/MixedScheduler.cc \
 	$(SRCDIR)/NullScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
+	$(SRCDIR)/Relocate.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
 	$(SRCDIR)/SchedulerCommon.cc \
 	$(SRCDIR)/SendState.cc \

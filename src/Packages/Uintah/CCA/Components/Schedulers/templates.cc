@@ -9,7 +9,6 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/ScatterGatherBase.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -36,7 +35,6 @@ template class vector<MPI_Request>;
 template class vector<const VarLabel*>;
 template class vector<vector<const VarLabel*> >;
 template class vector<ParticleVariableBase*>;
-// template class vector<MPIScatterMaterialRecord*>; // Not in .h file
 
 
 template class pair<const Patch*, const Patch*>;
@@ -44,7 +42,6 @@ template class vector<ParticleSubset*>;
 template class vector<const Patch*>;
 template class ParticleVariable<Point>;
 template class vector<int>;
-template class map<pair<const Patch*, const Patch*>, ScatterGatherBase*>;
 //template class map<const Patch*, PatchRecord*>;
 //template class map<const VarLabel*, NameRecord*, VarLabel::Compare>;
 //template class 

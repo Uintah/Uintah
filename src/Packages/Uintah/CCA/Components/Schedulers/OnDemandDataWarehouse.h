@@ -77,11 +77,6 @@ public:
    virtual void override(const ReductionVariableBase&, const VarLabel*,
 			 int matIndex = -1);
 
-   // Scatther/gather.  This will need a VarLabel if anyone but the
-   // scheduler ever wants to use it.
-   virtual void scatter(ScatterGatherBase*, const Patch*, const Patch*);
-   virtual ScatterGatherBase* gather(const Patch*, const Patch*);
-      
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 						int matlIndex, const Patch*);
@@ -168,6 +163,8 @@ public:
 		const DetailedDep* dep);
    void reduceMPI(const VarLabel* label, const MaterialSubset* matls,
 		  const ProcessorGroup* world);
+
+   void scrub(const VarLabel*);
 private:
 
    struct dataLocation {
@@ -188,9 +185,6 @@ private:
    DWDatabase<ReductionVariableBase> d_reductionDB;
    DWDatabase<PerPatchBase>          d_perpatchDB;
    psetDBType                        d_psetDB;
-
-   map<pair<const Patch*, const Patch*>, ScatterGatherBase* > d_sgDB;
-
 
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
