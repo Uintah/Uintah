@@ -558,6 +558,10 @@ if test x"$X_LIBS" = x"-L/usr/lib" -o x"$X_LIBS" = x" -L/usr/lib"; then
   X_LIBS=""
 fi
 
+if ! test x"$X_LIBS" = x; then
+  X_LIBS="-Wl,-rpath,$x_libraries $X_LIBS"
+fi
+
 ##-- Check for library ------------------------------------------------------
 
 ## THIS NEEDS TO BE BETTER - steve
@@ -571,8 +575,8 @@ case $host in
 	XML_INCLUDE_DIR="/res/sci/data6/sparker/xerces-c/include"
         ;;
   *linux*) 
-  	XML_LIB_DIR="/tmp/opt/xerces-c-1.1/lib"
-	XML_INCLUDE_DIR="/tmp/opt/xerces-c-1.1/include"
+  	XML_LIB_DIR="/tmp/opt/xerces-1.1/lib"
+	XML_INCLUDE_DIR="/tmp/opt/xerces-1.1/include"
 	;;
   *)       
            ;;
@@ -603,6 +607,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.60  2000/07/11 20:21:56  yarden
+# add -rpath if the x_libraries are not in the standard place.
+#
 # Revision 1.59  2000/06/12 20:23:31  sparker
 # Commented out f77 config on linux - for now
 #
