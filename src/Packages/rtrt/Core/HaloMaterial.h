@@ -3,6 +3,7 @@
 #define HALOMATERIAL_H 1
 
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
+#include <Packages/rtrt/Core/HitInfo.h>
 #include <math.h>
 
 namespace rtrt {
