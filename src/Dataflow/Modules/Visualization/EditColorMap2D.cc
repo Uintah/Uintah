@@ -757,7 +757,7 @@ EditColorMap2D::update_to_gui(bool forward)
   }
   gui_selected_widget_.reset();
   int selected = gui_selected_widget_.get();
-  if (selected < 0 || selected >= widgets_.size())
+  if (selected < 0 || selected >= int(widgets_.size()))
     gui_selected_widget_.set(widgets_.size()-1);
   if (forward) { 
     gui->execute(id + " create_entries"); 
@@ -875,7 +875,11 @@ EditColorMap2D::push(int x, int y, int button)
     paint_widget_ = 
       dynamic_cast<PaintCM2Widget *>(widgets_[mouse_widget_].get_rep());
     if (paint_widget_) {
-      paint_widget_->add_stroke();
+      double range = 1.0;
+      if (value_range_.first < value_range_.second)
+	range = value_range_.second - value_range_.first;
+      range /= scale_.get();
+      paint_widget_->add_stroke(range/35.0);
       paint_widget_->add_coordinate(rescaled_val(x,y));
     }
   }
@@ -952,7 +956,6 @@ void
 EditColorMap2D::release(int x, int y)
 {
   button_ = 0;
-  paint_widget_ = 0;
   set_window_cursor(x,y);
   const int selected = gui_selected_widget_.get();
   if (selected >= 0 && selected < (int)widgets_.size())
@@ -962,6 +965,7 @@ EditColorMap2D::release(int x, int y)
     updating_ = false;
     force_execute();
   }
+  paint_widget_ = 0;
 }
 
 void

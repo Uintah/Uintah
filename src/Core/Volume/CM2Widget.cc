@@ -89,7 +89,8 @@ CM2Widget::CM2Widget(CM2Widget& copy)
     selected_(copy.selected_),
     shadeType_(copy.shadeType_),
     onState_(copy.onState_),
-    faux_(copy.faux_)
+    faux_(copy.faux_),
+    value_range_(copy.value_range_)
 {}
 
 void
@@ -1562,9 +1563,12 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
   GLdouble mid[4] = { color_.r(), color_.g(), color_.b(), alpha_ };
   GLdouble edg[4] = { color_.r(), color_.g(), color_.b(), 0 };
   glShadeModel(GL_SMOOTH);    
+  double range = 1.0;
+  if (value_range_.first < value_range_.second)
+    range = value_range_.second - value_range_.first;
   for (unsigned int s = 0; s < strokes_.size(); ++s)
   {
-    const double halfx = strokes_[s].first;
+    const double halfx = strokes_[s].first/range;
     Stroke &stroke = strokes_[s].second;
     const unsigned int coordinates = stroke.size();
     for (unsigned c = 1; c < coordinates; ++c)
@@ -1610,7 +1614,11 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
 
 void
 PaintCM2Widget::splat(Array3<float> &data, double width, int x0, int y0) {
-  const int wid = Round(data.dim2()*width);
+  double range = 1.0;
+  if (value_range_.first < value_range_.second)
+    range = value_range_.second - value_range_.first;
+
+  const int wid = Round(data.dim2()*(width/range));
   float r = color_.r();
   float g = color_.g();
   float b = color_.b();
@@ -1725,6 +1733,12 @@ PaintCM2Widget::draw()
 void
 PaintCM2Widget::add_stroke(double width)
 {
+  double range = 1.0;
+  if (value_range_.first < value_range_.second)
+    range = value_range_.second - value_range_.first;
+
+  if (width < 0.0)
+    width = range/35.0;
   strokes_.push_back(make_pair(width,Stroke()));
 }
 
