@@ -219,6 +219,31 @@ PointCloudMesh::size(PointCloudMesh::Cell::size_type &s) const
 }
 
 
+MeshHandle
+PointCloudMesh::clip(Clipper &clipper)
+{
+  PointCloudMesh *clipped = scinew PointCloudMesh();
+
+  Elem::iterator bi, ei;
+  begin(bi); end(ei);
+  while (bi != ei)
+  {
+    Point p;
+    get_center(p, *bi);
+    if (clipper.inside_p(p))
+    {
+      clipped->add_point(p);
+    }
+    
+    ++bi;
+  }
+  
+  clipped->flush_changes();  // Really should copy normals
+  return clipped;
+}
+
+
+
 const TypeDescription*
 PointCloudMesh::get_type_description() const
 {
