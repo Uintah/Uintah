@@ -95,6 +95,68 @@ funding of the SCIRun/BioPSE project.  Please send
 
 </qandaentry>
 
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>8/27/03</date>
+</revision>
+</revhistory>
+<question>
+<para>
+I've installed SCIRun from its RPM.  I'm running the networks in the
+tutorial and I'm getting these error messages and others like them:
+<literallayout class="monospaced">
+<![CDATA[
+REMARK: Maybe dynamically compiling some code, ignore failure here.
+DynamicLoader::create_cc(empty = false) - Could not create file
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.cc
+DynamicLoader - Executing: cd /usr/local/SCIRun/linux/on-the-fly-libs;
+/usr/bin/gmake VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so
+DynamicLoader::compile_so() syscal error 256: command was 'cd
+/usr/local/SCIRun/linux/on-the-fly-libs; /usr/bin/gmake
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so >
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.log 2>&1'
+DynamicLoader::create_cc(empty = true) - Could not create file
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.cc
+DynamicLoader - Executing: cd /usr/local/SCIRun/linux/on-the-fly-libs;
+/usr/bin/gmake VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so
+DynamicLoader::compile_so() syscal error 256: command was 'cd
+/usr/local/SCIRun/linux/on-the-fly-libs; /usr/bin/gmake
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so >
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.log 2>&1'
+DYNAMIC COMPILATION ERROR:
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.so does not compile!!
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.so: cannot open shared object file: No such file or directory
+REMARK: Dynamic compilation completed.
+]]>
+</literallayout>
+</para>
+</question>
+<answer>
+<para>
+One of the features of SCIRun/BioPSE is that it dynamically compiles
+some parts of the code at run-time based on the data that you're
+passing through your network.  In order for this to work, the software
+needs to be able to dynamically create files.  However, because you
+have installed the software from RPM, the directory that the dynamic
+files are wrtten to by default, <filename>/usr/local/SCIRun/linux/on-the-fly-libs/</filename>, is owned by root&mdash;which
+is why the program is having problems.  You can  fix this by
+creating a different directory that you own, and setting your
+<envar>SCIRUN_ON_THE_FLY_LIBS</envar> environment variable to point at that new
+directory.  This environment variable overrides the default location,
+so that should fix the problem you're having.  For example:
+<literallayout class="monospaced">
+mkdir /home/dmw/on-the-fly-libs/
+setenv SCIRUN_ON_THE_FLY_LIBS /home/dmw/on-the-fly-libs/
+</literallayout></para>
+</answer>
+</qandaentry>
+
 <qandaentry id="auto_exec_qa">
 <revhistory>
 <revision>
