@@ -33,6 +33,7 @@ WARNING
 #define Uintah_Component_Arches_SmagorinskyModel_h
 
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
   namespace Components {
@@ -53,7 +54,7 @@ public:
   ////////////////////////////////////////////////////////////////////////
   //
   // Blank constructor for SmagorinskyModel.
-  SmagorinskyModel(PhysicalConstants& phyConsts);
+  SmagorinskyModel(PhysicalConstants* phyConsts);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -81,7 +82,7 @@ private:
 			   const Region* region,
 			   const DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
-  PhysicalConstants& d_physicalConsts
+  PhysicalConstants* d_physicalConsts;
   double d_CF; //model constant
   double d_factorMesh; // lengthscale = fac_mesh*meshsize
   double d_filterl; // prescribed filter length scale

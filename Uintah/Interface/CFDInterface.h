@@ -9,71 +9,74 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-namespace Interface {
-
-using Uintah::Parallel::UintahParallelPort;
-using Uintah::Grid::LevelP;
-using Uintah::Grid::GridP;
-
-/**************************************
-
-CLASS
-   CFDInterface
-   
-   Short description...
-
-GENERAL INFORMATION
-
-   CFDInterface.h
-
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   CFD_Interface
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
-class CFDInterface : public UintahParallelPort {
-public:
-    CFDInterface();
-    virtual ~CFDInterface();
-
-    //////////
-    // Insert Documentation Here:
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      DataWarehouseP&)=0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void computeStableTimestep(const LevelP& level,
-				       SchedulerP&, DataWarehouseP&) = 0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void timeStep(double t, double dt,
-			  const LevelP& level, SchedulerP&,
-			  const DataWarehouseP&, DataWarehouseP&) = 0;
-private:
-    CFDInterface(const CFDInterface&);
-    CFDInterface& operator=(const CFDInterface&);
-};
-
-} // end namespace Interface
+  namespace Interface {
+    
+    using Uintah::Parallel::UintahParallelPort;
+    using Uintah::Grid::LevelP;
+    using Uintah::Grid::GridP;
+    
+    /**************************************
+      
+      CLASS
+        CFDInterface
+      
+	Short description...
+      
+      GENERAL INFORMATION
+      
+        CFDInterface.h
+      
+	Steven G. Parker
+	Department of Computer Science
+	University of Utah
+      
+	Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+      
+	Copyright (C) 2000 SCI Group
+      
+      KEYWORDS
+        CFD_Interface
+      
+      DESCRIPTION
+        Long description...
+      
+      WARNING
+      
+      ****************************************/
+    
+    class CFDInterface : public UintahParallelPort {
+    public:
+      CFDInterface();
+      virtual ~CFDInterface();
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+				DataWarehouseP&)=0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleStableTimestep(const LevelP& level,
+					  SchedulerP&, DataWarehouseP&) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleTimeAdvance(double t, double dt,
+				       const LevelP& level, SchedulerP&,
+				       const DataWarehouseP&, DataWarehouseP&) = 0;
+    private:
+      CFDInterface(const CFDInterface&);
+      CFDInterface& operator=(const CFDInterface&);
+    };
+    
+  } // end namespace Interface
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/04/13 06:51:04  sparker
+// More implementation to get this to work
+//
 // Revision 1.7  2000/04/11 07:10:52  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

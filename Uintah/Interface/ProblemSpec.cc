@@ -142,8 +142,6 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-      cerr << "Didn't find the tag . ." << name << endl;
-    cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
   }
@@ -167,8 +165,6 @@ ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-      cerr << "Didn't find the tag . ." << name << endl;
-    cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
   }
@@ -193,8 +189,6 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-      cerr << "Didn't find the tag . ." << name << endl;
-    cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
   }
@@ -224,8 +218,6 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-      cerr << "Didn't find the tag . ." << name << endl;
-    cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
   }
@@ -262,8 +254,6 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name, this->d_node);
   if (found_node.isNull()) {
-      cerr << "Didn't find the tag . ." << name << endl;
-    cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
   }
@@ -305,8 +295,6 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name, this->d_node);
   if (found_node.isNull()) {
-      cerr << "Didn't find the tag . ." << name << endl;
-    cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
   }
@@ -420,6 +408,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.11  2000/04/13 06:51:05  sparker
+// More implementation to get this to work
+//
 // Revision 1.10  2000/04/12 23:01:55  sparker
 // Implemented more of problem spec - added Point and IntVector readers
 //

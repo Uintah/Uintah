@@ -7,6 +7,7 @@
 
 namespace Uintah {
 namespace Grid {
+  class TypeDescription;
     using Uintah::Exceptions::TypeMismatchException;
 
 /**************************************
@@ -109,6 +110,9 @@ SoleVariable<T>::allocate(const Region*)
 
 //
 // $Log$
+// Revision 1.5  2000/04/13 06:51:02  sparker
+// More implementation to get this to work
+//
 // Revision 1.4  2000/04/11 07:10:50  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

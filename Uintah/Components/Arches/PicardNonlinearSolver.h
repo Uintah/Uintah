@@ -59,9 +59,9 @@ public:
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   //
-  PicardNonlinearSolver(Properties& props, BoundaryCondition& bc,
-			TurbulenceModel& turbModel, 
-			PhysicalConstants& physConst);
+  PicardNonlinearSolver(Properties* props, BoundaryCondition* bc,
+			TurbulenceModel* turbModel, 
+			PhysicalConstants* physConst);
 
 
 

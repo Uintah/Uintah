@@ -215,8 +215,8 @@ int m=1;
 #endif
 }
 
-void ICE::computeStableTimestep(const LevelP& level,
-				SchedulerP& sched, DataWarehouseP& dw)
+void ICE::scheduleStableTimestep(const LevelP& level,
+				 SchedulerP& sched, DataWarehouseP& dw)
 {
 #if 0
     for(Level::const_regionIterator iter=level->regionsBegin();
@@ -265,9 +265,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
 #endif
 }
 
-void ICE::timeStep(double t, double delt,
-		   const LevelP& level, SchedulerP& sched,
-		   const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::scheduleTimeAdvance(double t, double delt,
+			      const LevelP& level, SchedulerP& sched,
+			      const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
 #if 0
     for(Level::const_regionIterator iter=level->regionsBegin();

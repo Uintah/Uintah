@@ -42,11 +42,11 @@ public:
     virtual void problemInit(const LevelP& level,
 			     SchedulerP& sched, DataWarehouseP& dw,
 			     bool restrt);
-    virtual void computeStableTimestep(const LevelP& level,
+    virtual void scheduleStableTimestep(const LevelP& level,
 				       SchedulerP&, DataWarehouseP&);
-    virtual void timeStep(double t, double dt,
-			  const LevelP& level, SchedulerP&,
-			  const DataWarehouseP&, DataWarehouseP&);
+    virtual void scheduleTimeAdvance(double t, double dt,
+				     const LevelP& level, SchedulerP&,
+				     const DataWarehouseP&, DataWarehouseP&);
     void sched_paramInit(const LevelP& level,
 			 SchedulerP& sched, DataWarehouseP& dw);
 
@@ -73,6 +73,9 @@ private:
 
 //
 // $Log$
+// Revision 1.12  2000/04/13 06:50:50  sparker
+// More implementation to get this to work
+//
 // Revision 1.11  2000/04/11 19:55:52  rawat
 // modified nonlinear solver for initialization
 //

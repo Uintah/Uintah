@@ -63,22 +63,6 @@ void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 			     DataWarehouseP& dw)
 {
 #if 0
-    string infile("in.mpm");
-    Problem Enigma;
-    Enigma.preProcessor(infile);
-    LevelP level = grid->getLevel(0);
-    double bnds[7];
-    Enigma.getBnds(bnds);
-    Point lower(bnds[1], bnds[3], bnds[5]);
-    Point upper(bnds[2], bnds[4], bnds[6]);
-    double dx[4];
-    Enigma.getDx(dx);
-    Vector diag = upper-lower;
-    int nx = (int)(diag.x()/dx[1]+0.5);
-    int ny = (int)(diag.y()/dx[2]+0.5);
-    int nz = (int)(diag.z()/dx[3]+0.5);
-    
-    level->addRegion(lower, upper, nx, ny, nz);
     for(Level::const_regionIterator iter=level->regionsBegin();
 	iter != level->regionsEnd(); iter++){
 	const Region* region=*iter;
@@ -105,7 +89,7 @@ void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
     cerr << "SerialMPM::problemSetup not done\n";
 }
 
-void SerialMPM::computeStableTimestep(const LevelP& level,
+void SerialMPM::scheduleStableTimestep(const LevelP& level,
 				      SchedulerP& sched, DataWarehouseP& dw)
 {
     for(Level::const_regionIterator iter=level->regionsBegin();
@@ -122,9 +106,9 @@ void SerialMPM::computeStableTimestep(const LevelP& level,
     }
 }
 
-void SerialMPM::timeStep(double t, double dt,
-			 const LevelP& level, SchedulerP& sched,
-			 const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void SerialMPM::scheduleTimeAdvance(double t, double dt,
+				    const LevelP& level, SchedulerP& sched,
+				    const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
     for(Level::const_regionIterator iter=level->regionsBegin();
 	iter != level->regionsEnd(); iter++){
@@ -694,6 +678,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.14  2000/04/13 06:50:55  sparker
+// More implementation to get this to work
+//
 // Revision 1.13  2000/04/12 22:59:03  sparker
 // Working to make it compile
 // Added xerces to link line

@@ -69,14 +69,14 @@ public:
 
     //////////
     // Insert Documentation Here:
-    virtual void computeStableTimestep(const LevelP& level,
+    virtual void scheduleStableTimestep(const LevelP& level,
 				       SchedulerP&, DataWarehouseP&);
 
     //////////
     // Insert Documentation Here:
-    virtual void timeStep(double t, double dt,
-			  const LevelP& level, SchedulerP&,
-			  const DataWarehouseP&, DataWarehouseP&);
+    virtual void scheduleTimeAdvance(double t, double dt,
+				     const LevelP& level, SchedulerP&,
+				     const DataWarehouseP&, DataWarehouseP&);
 private:
     //////////
     // Insert Documentation Here:
@@ -130,6 +130,9 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/04/13 06:50:55  sparker
+// More implementation to get this to work
+//
 // Revision 1.7  2000/03/23 20:42:16  sparker
 // Added copy ctor to exception classes (for Linux/g++)
 // Helped clean up move of ProblemSpec from Interface to Grid

@@ -52,21 +52,21 @@ void Grid::performConsistencyCheck() const
 void Grid::printStatistics() const
 {
   cerr << "Grid statistics:\n";
-  cerr << "Number of levels:\t" << numLevels() << '\n';
+  cerr << "Number of levels:\t\t" << numLevels() << '\n';
   unsigned long totalCells = 0;
   unsigned long totalPatches = 0;
   for(int i=0;i<numLevels();i++){
     LevelP l = getLevel(i);
     cerr << "Level " << i << ":\n";
-    cerr << "  Number of regions:\t" << l->numRegions() << '\n';
+    cerr << "  Number of regions:\t\t" << l->numRegions() << '\n';
     totalPatches += l->numRegions();
-    double ppc = double(l->numRegions())/double(l->totalCells());
-    cerr << "  Total number of cells:\t" << l->totalCells() << "(" << ppc << " avg. per patch)\n";
+    double ppc = double(l->totalCells())/double(l->numRegions());
+    cerr << "  Total number of cells:\t" << l->totalCells() << " (" << ppc << " avg. per patch)\n";
     totalCells += l->totalCells();
   }
-  cerr << "Total patches in grid:\t" << totalPatches << '\n';
-  double ppc = double(totalPatches)/double(totalCells);
-  cerr << "Total cells in grid:\t" << totalCells << "(" << ppc << " avg. per patch)\n";
+  cerr << "Total patches in grid:\t\t" << totalPatches << '\n';
+  double ppc = double(totalCells)/double(totalPatches);
+  cerr << "Total cells in grid:\t\t" << totalCells << " (" << ppc << " avg. per patch)\n";
   cerr << "\n";
 }
 

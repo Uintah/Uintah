@@ -3,120 +3,128 @@
 
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Thread/CrowdMonitor.h>
+#include <Uintah/Grid/Grid.h>
 #include <map>
 
 namespace Uintah {
 
-namespace Grid {
+  namespace Grid {
     class DataItem;
     class TypeDescription;
     class Region;
-}
+  }
 
-namespace Components {
+  namespace Components {
 
-using Uintah::Interface::DataWarehouse;
-using Uintah::Grid::DataItem;
-using Uintah::Grid::TypeDescription;
-using Uintah::Grid::Region;
+    using Uintah::Interface::DataWarehouse;
+    using Uintah::Grid::DataItem;
+    using Uintah::Grid::TypeDescription;
+    using Uintah::Grid::Region;
+    using Uintah::Grid::GridP;
 
-/**************************************
+    /**************************************
 
-CLASS
-   OnDemandDataWarehouse
+      CLASS
+        OnDemandDataWarehouse
    
-   Short description...
+	Short description...
 
-GENERAL INFORMATION
+      GENERAL INFORMATION
 
-   OnDemandDataWarehouse.h
+        OnDemandDataWarehouse.h
 
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
+	Steven G. Parker
+	Department of Computer Science
+	University of Utah
 
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2000 SCI Group
+	Copyright (C) 2000 SCI Group
 
-KEYWORDS
-   On_Demand_Data_Warehouse
+      KEYWORDS
+        On_Demand_Data_Warehouse
 
-DESCRIPTION
-   Long description...
+      DESCRIPTION
+        Long description...
   
-WARNING
+      WARNING
   
-****************************************/
+      ****************************************/
 
-class OnDemandDataWarehouse : public DataWarehouse {
-public:
-    OnDemandDataWarehouse();
-    virtual ~OnDemandDataWarehouse();
+    class OnDemandDataWarehouse : public DataWarehouse {
+    public:
+      OnDemandDataWarehouse();
+      virtual ~OnDemandDataWarehouse();
 
-    //////////
-    // Insert Documentation Here:
-    virtual void getBroadcastData(DataItem& di, const std::string& name,
-				  const TypeDescription*) const;
+      virtual void setGrid(const GridP&);
 
-    //////////
-    // Insert Documentation Here:
-    virtual void getRegionData(DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*, int numGhostCells) const;
+      //////////
+      // Insert Documentation Here:
+      virtual void getBroadcastData(DataItem& di, const std::string& name,
+				    const TypeDescription*) const;
 
-    //////////
-    // Insert Documentation Here:
-    virtual void getRegionData(DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*) const;
+      //////////
+      // Insert Documentation Here:
+      virtual void getRegionData(DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*, int numGhostCells) const;
 
-    //////////
-    // Insert Documentation Here:
-    virtual void putRegionData(const DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*, int numGhostCells);
+      //////////
+      // Insert Documentation Here:
+      virtual void getRegionData(DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*) const;
 
-    //////////
-    // Insert Documentation Here:
-    virtual void putRegionData(const DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*);
+      //////////
+      // Insert Documentation Here:
+      virtual void putRegionData(const DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*, int numGhostCells);
 
-    //////////
-    // Insert Documentation Here:
-    virtual void putBroadcastData(const DataItem& di, const std::string& name,
-				  const TypeDescription*);
+      //////////
+      // Insert Documentation Here:
+      virtual void putRegionData(const DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*);
 
-    //////////
-    // Insert Documentation Here:
-    virtual void allocateRegionData(DataItem& di, const std::string& name,
-				    const TypeDescription*,
-				    const Region*, int numGhostCells);
+      //////////
+      // Insert Documentation Here:
+      virtual void putBroadcastData(const DataItem& di, const std::string& name,
+				    const TypeDescription*);
 
-private:
-    struct DataRecord {
+      //////////
+      // Insert Documentation Here:
+      virtual void allocateRegionData(DataItem& di, const std::string& name,
+				      const TypeDescription*,
+				      const Region*, int numGhostCells);
+
+    private:
+      struct DataRecord {
 	DataItem* di;
 	const TypeDescription* td;
 	const Region* region;
 	DataRecord(DataItem* di, const TypeDescription* td,
 		   const Region* region);
+      };
+      typedef std::map<std::string, DataRecord*> dbType;
+
+
+      //////////
+      // Insert Documentation Here:
+      mutable SCICore::Thread::CrowdMonitor  d_lock;
+      dbType                                 d_data;
+      bool                                   d_allowCreation;
+      GridP grid;
     };
-    typedef std::map<std::string, DataRecord*> dbType;
 
-
-    //////////
-    // Insert Documentation Here:
-    mutable SCICore::Thread::CrowdMonitor  d_lock;
-    dbType                                 d_data;
-    bool                                   d_allowCreation;
-};
-
-} // end namespace Components
+  } // end namespace Components
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/04/13 06:50:57  sparker
+// More implementation to get this to work
+//
 // Revision 1.4  2000/03/22 00:36:37  sparker
 // Added new version of getRegionData
 //
