@@ -99,9 +99,9 @@ bool
 FieldReader::call_importer(const string &filename)
 {
   const string ftpre = gui_filetype_.get();
-  const string::size_type loc = ftpre.find_first_of(" (");
+  const string::size_type loc = ftpre.find(" (");
   const string ft = ftpre.substr(0, loc);
-
+  
   FieldIEPluginManager mgr;
   FieldIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
@@ -117,7 +117,7 @@ void
 FieldReader::execute()
 {
   const string ftpre = gui_filetype_.get();
-  const string::size_type loc = ftpre.find_first_of(" (");
+  const string::size_type loc = ftpre.find(" (");
   const string ft = ftpre.substr(0, loc);
 
   importing_ = !(ft == "" ||
