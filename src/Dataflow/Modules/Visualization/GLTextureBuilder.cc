@@ -86,7 +86,7 @@ void GLTextureBuilder::execute(void)
 
 void GLTextureBuilder::real_execute(FieldHandle sfield)
 {
-  char me[] = "GLTextureBuilder::real_execute:";
+  //char me[] = "GLTextureBuilder::real_execute:";
   
   if (!sfield.get_rep() ||
       (sfield->mesh()->get_type_description()->get_name() !=
