@@ -425,11 +425,11 @@ itcl_class Module {
 	set coords [$canvas coords [modname]]
 	return [lindex $coords 1]
     }
-    method get_show_status {} {
-	global $this-show_status
+#    method get_show_status {} {
+#	global $this-show_status
 #	puts "show_status (tcl) = [set $this-show_status]"
-	return [set $this-show_status]
-    }
+#	return [set $this-show_status]
+#    }
 }
 
 proc startIPortConnection {imodid iwhich x y} {

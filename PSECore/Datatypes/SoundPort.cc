@@ -112,9 +112,9 @@ int SoundIPort::is_stereo()
 void SoundIPort::do_read(int fin)
 {
     if(fin)
-      if (module->show_status) turn_on(Finishing);
+      if (module->show_stat) turn_on(Finishing);
     else
-	if (module->show_status) turn_on();
+	if (module->show_stat) turn_on();
     SoundComm* comm;
     comm=mailbox.receive();
     switch(comm->action){
@@ -142,13 +142,13 @@ void SoundIPort::do_read(int fin)
 	break;
     }
     delete comm;
-    if (module->show_status) turn_off();
+    if (module->show_stat) turn_off();
 }
 
 void SoundOPort::finish()
 {
     // Flush the stream and send an end of stream marker...
-    if (module->show_status) turn_on();
+    if (module->show_stat) turn_on();
     if(!in){
 	Connection* connection=connections[0];
 	in=(SoundIPort*)connection->iport;
@@ -166,7 +166,7 @@ void SoundOPort::finish()
     comm->action=SoundComm::EndOfStream;
     in->mailbox.send(comm);
     state=End;
-    if (module->show_status) turn_off();
+    if (module->show_stat) turn_off();
 }
 
 void SoundOPort::set_nsamples(int s)
@@ -192,7 +192,7 @@ void SoundOPort::put_sample(double s)
     ASSERT(state != End);
     if(state == Begin){
 	// Send the Parameters message...
-	if (module->show_status) turn_on();
+	if (module->show_stat) turn_on();
 	SoundComm* comm=scinew SoundComm;
 	comm->action=SoundComm::Parameters;
 	comm->sample_rate=rate;
@@ -206,7 +206,7 @@ void SoundOPort::put_sample(double s)
 	state=Transmitting;
 	sbufsize=(int)(rate/10);
 	ptr=0;
-	if (module->show_status) turn_off();
+	if (module->show_stat) turn_off();
     }
     if(!sbuf){
 	sbuf=scinew double[sbufsize];
@@ -215,7 +215,7 @@ void SoundOPort::put_sample(double s)
     sbuf[ptr++]=s;
     if(ptr >= sbufsize){
 	// Send it away...
-	if (module->show_status) turn_on();
+	if (module->show_stat) turn_on();
 	SoundComm* comm=scinew SoundComm;
 	comm->action=SoundComm::SoundData;
 	comm->sbufsize=sbufsize;
@@ -224,7 +224,7 @@ void SoundOPort::put_sample(double s)
 	in->mailbox.send(comm);
 	sbuf=0;
 	ptr=0;
-	if (module->show_status) turn_off();
+	if (module->show_stat) turn_off();
     }
 }
 
@@ -249,6 +249,9 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.10  1999/12/07 02:53:35  dmw
+// made show_status variable persistent with network maps
+//
 // Revision 1.9  1999/11/12 01:38:31  ikits
 // Added ANL AVTC site visit modifications to make the demos work.
 // Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
