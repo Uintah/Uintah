@@ -20,6 +20,8 @@
 #include <TCL/TCLvar.h>
 #include <strstream.h>
 
+#include <Multitask/Task.h>
+
 class SolveMatrix : public Module {
     MatrixIPort* matrixport;
     ColumnMatrixIPort* rhsport;
@@ -48,6 +50,8 @@ public:
     TCLdouble current_error;
     TCLstring method;
     TCLint iteration;
+    TCLint maxiter;
+    TCLint use_previous_soln;
 };
 
 extern "C" {
@@ -60,9 +64,10 @@ Module* make_SolveMatrix(const clString& id)
 SolveMatrix::SolveMatrix(const clString& id)
 : Module("SolveMatrix", id, Filter), target_error("target_error", id, this),
   flops("flops", id, this), floprate("floprate", id, this),
+  memrefs("memrefs", id, this), memrate("memrate", id, this),
   orig_error("orig_error", id, this), current_error("current_error", id, this),
   method("method", id, this), iteration("iteration", id, this),
-  memrefs("memrefs", id, this), memrate("memrate", id, this)
+  maxiter("maxiter", id, this), use_previous_soln("use_previous_soln", id, this)
 {
     matrixport=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(matrixport);
@@ -76,9 +81,10 @@ SolveMatrix::SolveMatrix(const clString& id)
 SolveMatrix::SolveMatrix(const SolveMatrix& copy, int deep)
 : Module(copy, deep), target_error("target_error", id, this),
   flops("flops", id, this), floprate("floprate", id, this),
+  memrefs("memrefs", id, this), memrate("memrate", id, this),
   orig_error("orig_error", id, this), current_error("current_error", id, this),
   method("method", id, this), iteration("iteration", id, this),
-  memrefs("memrefs", id, this), memrate("memrate", id, this)
+  maxiter("maxiter", id, this), use_previous_soln("use_previous_soln", id, this)
 {
     NOT_FINISHED("SolveMatrix::SolveMatrix");
 }
@@ -100,11 +106,11 @@ void SolveMatrix::execute()
     ColumnMatrixHandle rhs;
     if(!rhsport->get(rhs))
 	return;
-    if(!solution.get_rep() || solution->nrows() != rhs->nrows()){
+    if(use_previous_soln.get() && solution.get_rep() && solution->nrows() == rhs->nrows()){
+	solution.detach();
+    } else {
 	solution=scinew ColumnMatrix(rhs->nrows());
 	solution->zero();
-    } else {
-	solution.detach();
     }
 
     int size=matrix->nrows();
@@ -169,7 +175,9 @@ void SolveMatrix::jacobi(Matrix* matrix,
     current_error.set(err);
 
     int niter=0;
-    int toomany=2*size;
+    int toomany=maxiter.get();
+    if(toomany == 0)
+	toomany=2*size;
     double max_error=target_error.get();
 
     double time=timer.time();
@@ -243,6 +251,8 @@ void SolveMatrix::jacobi(Matrix* matrix,
 
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
+
+	    solport->send_intermediate(rhs.clone());
 	}
     }
     iteration.set(niter);
@@ -302,7 +312,9 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
     current_error.set(err);
 
     int niter=0;
-    int toomany=2*size;
+    int toomany=maxiter.get();
+    if(toomany == 0)
+	toomany=2*size;
     double max_error=target_error.get();
 
     double time=timer.time();
@@ -391,6 +403,11 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
 
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
+
+	    solport->send_intermediate(lhs.clone());
+	    for(int i=0;i<10000;i++){
+		Task::yield();
+	    }
 	}
     }
     iteration.set(niter);
@@ -415,7 +432,8 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
     char buf[10000];
     ostrstream str(buf, 1000);
     str << id << " append_graph " << niter << " \"";
-    for(int i=last_update;i<errlist.size();i++){
+    int i;
+    for(i=last_update;i<errlist.size();i++){
 	str << i << " " << errlist[i] << " ";
     }
     str << "\" \"";

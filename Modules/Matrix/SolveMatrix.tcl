@@ -8,7 +8,8 @@ itcl_class SolveMatrix {
     method set_defaults {} {
 	global $this-target_error $this-method $this-orig_error
 	global $this-current_error $this-flops $this-floprate $this-iteration
-	global $this-memrefs $this-memrate
+	global $this-memrefs $this-memrate $this-maxiter
+	global $this-use_previous_soln
 	set $this-target_error 1.e-4
 	set $this-method conjugate_gradient
 	set $this-orig_error 9.99999e99
@@ -18,6 +19,8 @@ itcl_class SolveMatrix {
 	set $this-memrefs 0
 	set $this-memrate 0
 	set $this-iteration 0
+	set $this-maxiter 0
+	set $this-use_previous_soln 1
     }
     method ui {} {
 	set w .ui$this
@@ -43,6 +46,14 @@ itcl_class SolveMatrix {
 	expscale $w.target_error -orient horizontal -label "Target error:" \
 		-variable $this-target_error -command ""
 	pack $w.target_error -side top -fill x -pady 2
+
+	scale $w.maxiter -orient horizontal -label "Maximum Iterations:" \
+		-variable $this-maxiter -from 0 -to 200
+	pack $w.maxiter -side top -fill x -pady 2
+
+	checkbutton $w.use_prev -variable $this-use_previous_soln \
+		-text "Use previous solution as initial guess"
+	pack $w.use_prev -side top -fill x -pady 2
 
 
 	frame $w.converg -borderwidth 2 -relief ridge
