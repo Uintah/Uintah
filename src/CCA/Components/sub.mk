@@ -20,6 +20,6 @@
 SRCDIR   := CCA/Components
 
 ifeq ($(HAVE_QT),yes)
-SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/Hello $(SRCDIR)/ListPlotter
+SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter $(SRCDIR)/ZList
 include $(SCIRUN_SCRIPTS)/recurse.mk
 endif
