@@ -228,6 +228,13 @@ protected:
 				   const MaterialSubset* matls,
 				   DataWarehouse* old_dw,
 				   DataWarehouse* new_dw);
+  //////////
+  // Insert Documentation Here: for thermal stress analysis
+  virtual void computeParticleTempFromGrid(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw);  
 
   /*! Update the erosion parameter is mass is to be removed */
   void updateErosionParameter(const ProcessorGroup*,
@@ -361,6 +368,10 @@ protected:
 
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
 					   const MaterialSet*);
+  
+  // for thermal stress analysis
+  virtual void scheduleComputeParticleTempFromGrid(SchedulerP&, const PatchSet*,
+                                           const MaterialSet*); 
 
   void scheduleUpdateErosionParameter(SchedulerP& sched,
 				      const PatchSet* patches,
