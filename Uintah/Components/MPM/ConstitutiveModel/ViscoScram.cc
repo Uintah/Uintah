@@ -228,8 +228,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-         continue;
+     patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
       for(int k = 0; k < 8; k++) {
           Vector& gvel = gvelocity[ni[k]];
@@ -609,6 +608,10 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.16  2000/11/30 22:59:20  guilkey
+// Got rid of the if(! in front of all of the patch->findCellAnd...
+// since this is no longer needed.
+//
 // Revision 1.15  2000/11/15 18:37:24  guilkey
 // Reduced warnings in constitutive models.
 //

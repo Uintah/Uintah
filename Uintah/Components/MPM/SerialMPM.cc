@@ -1456,8 +1456,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          Vector d_S[8];
          double S[8];
 
-         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-         patch->findCellAndWeights(px[idx], ni, S);
+//         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+//         patch->findCellAndWeights(px[idx], ni, S);
+         patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 
          Visibility vis;
          vis = pVisibility[idx];
@@ -1484,8 +1485,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          Vector d_S[8];
          double S[8];
 
-         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-         patch->findCellAndWeights(px[idx], ni, S);
+//         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+//         patch->findCellAndWeights(px[idx], ni, S);
+         patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 
          for (int k = 0; k < 8; k++){
 	   if(patch->containsNode(ni[k])){
@@ -1927,8 +1929,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double S[8];
         Vector d_S[8];
 
-        patch->findCellAndWeights(px[idx], ni, S);
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+//        patch->findCellAndWeights(px[idx], ni, S);
+//        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 
         Visibility vis;
 	int numVisibleNodes = 0;
@@ -1991,8 +1994,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double S[8];
         Vector d_S[8];
 
-        patch->findCellAndWeights(px[idx], ni, S);
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+//        patch->findCellAndWeights(px[idx], ni, S);
+//        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
@@ -2049,6 +2053,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.168  2000/11/30 22:59:18  guilkey
+// Got rid of the if(! in front of all of the patch->findCellAnd...
+// since this is no longer needed.
+//
 // Revision 1.167  2000/11/30 17:08:32  guilkey
 // Got rid of the if(!) in front of the findCell functions, as this logic
 // is no longer needed.
