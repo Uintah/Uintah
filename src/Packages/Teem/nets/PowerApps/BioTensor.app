@@ -7761,18 +7761,18 @@ class BioTensorApp {
     method toggle_show_fibers {} {
 	global mods
         global $mods(ShowField-Fibers)-edges-on
-        global $mods(ShowField-Fibers)-nodes-on
+#        global $mods(ShowField-Fibers)-nodes-on
 	
         if {[set $mods(ShowField-Fibers)-edges-on] == 0} {
 	    # sync nodes
-	    set $mods(ShowField-Fibers)-nodes-on 0 
+#	    set $mods(ShowField-Fibers)-nodes-on 0 
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
 
 	    # disable rest of fibers tab except for checkbutton
         } else {
 	    # sync nodes
-	    set $mods(ShowField-Fibers)-nodes-on 1
+#	    set $mods(ShowField-Fibers)-nodes-on 1
             global $mods(ChooseField-FiberSeeds)-port-index
             if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
 		# enable Probe Widget
@@ -7786,7 +7786,7 @@ class BioTensorApp {
 	configure_fibers_tabs
 	
         $mods(ShowField-Fibers)-c toggle_display_edges
-        $mods(ShowField-Fibers)-c toggle_display_nodes
+#        $mods(ShowField-Fibers)-c toggle_display_nodes
         after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
     }
     
