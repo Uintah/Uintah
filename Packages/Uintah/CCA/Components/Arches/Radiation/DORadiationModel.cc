@@ -80,7 +80,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   }
   else {
     d_sn=2;
-    d_xumax=3.0;
+    d_xumax=6.0;
   }
   lprobone = false;
   lprobtwo = false;
@@ -113,26 +113,27 @@ DORadiationModel::computeOrdinatesOPL() {
         d_totalOrds = d_sn*(d_sn+2);
 //      d_totalOrds = 8*d_sn*d_sn;
 
-  //   omu.resize(1,d_totalOrds + 1);
-  //   oeta.resize(1,d_totalOrds + 1);
-  //   oxi.resize(1,d_totalOrds + 1);
-  //   wt.resize(1,d_totalOrds + 1);
-  //   ord.resize(1,d_sn/2 + 1);
-
-   omu.resize(1,150);
-   oeta.resize(1,150);
-   oxi.resize(1,150);
-   wt.resize(1,150);
-   ord.resize(1,10);
+  omu.resize(1,d_totalOrds + 1);
+  oeta.resize(1,d_totalOrds + 1);
+  oxi.resize(1,d_totalOrds + 1);
+  wt.resize(1,d_totalOrds + 1);
+  //  ord.resize(1,(d_sn/2) + 1);
+  /*
+   omu.resize(1,25);
+   oeta.resize(1,25);
+   oxi.resize(1,25);
+   wt.resize(1,25);
+  */
+   //   ord.resize(1,3);
 
    omu.initialize(0.0);
    oeta.initialize(0.0);
    oxi.initialize(0.0);
    wt.initialize(0.0);
-   ord.initialize(0.0);
+   //   ord.initialize(0.0);
 
-                fort_rordr(d_sn, ord, oxi, omu, oeta, wt);
-   //           fort_rordrss(d_sn, ord, oxi, omu, oeta, wt);
+                 fort_rordr(d_sn, oxi, omu, oeta, wt);
+   //           fort_rordrss(d_sn, oxi, omu, oeta, wt);
    //           fort_rordrtn(d_sn, ord, oxi, omu, oeta, wt);
 }
 
@@ -208,11 +209,11 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 					ArchesConstVariables* constvars)
 {
   double solve_start = Time::currentSeconds();
-   rgamma.resize(1,28);
-   sd15.resize(1,480);
-   sd.resize(1,2256);
-   sd7.resize(1,48);
-   sd3.resize(1,96);
+   rgamma.resize(1,29);
+   sd15.resize(1,481);
+   sd.resize(1,2257);
+   sd7.resize(1,49);
+   sd3.resize(1,97);
 
    rgamma.initialize(0.0);
    sd15.initialize(0.0);
@@ -222,9 +223,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   wavemin = 50;
   wavemax = 10000;
-
-
-
 
   if (lambda > 1) {
   dom = (wavemax - wavemin)/(lambda - 1); 
