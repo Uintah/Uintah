@@ -26,13 +26,13 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
      map<string,string> bc_attr;
      child->getAttributes(bc_attr);
      
-     if (bc_attr["var"] == "none")
+     if (bc_attr["var"] == "None")
        objs.push_back(new NoneBoundCond(child));
      
-     else if (bc_attr["var"] == "symmetry")
+     else if (bc_attr["var"] == "Symmetry")
        objs.push_back(new SymmetryBoundCond(child));
      
-     else if (bc_attr["var"] ==  "neigh")
+     else if (bc_attr["var"] ==  "Neighbor")
        objs.push_back(new NeighBoundCond(child));
      
      else if (bc_attr["label"] == "Velocity")
@@ -56,6 +56,10 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
 }
 
 // $Log$
+// Revision 1.5  2000/12/08 02:36:56  jas
+// Fixed some bugs for the names associated with NoneBC, NeighborBC and
+// SymmetryBC.
+//
 // Revision 1.4  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
