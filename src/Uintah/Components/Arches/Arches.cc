@@ -136,10 +136,14 @@ Arches::scheduleComputeStableTimestep(const LevelP&,
 				      SchedulerP&,
 				      DataWarehouseP& dw)
 {
+  cerr << "Arches::scheduleComputeStableTimestep\n";
+
 #ifdef WONT_COMPILE_YET
   delt_vartype delt_var = d_deltaT; // not sure if this will work
   dw->put((ReductionVariableBase&)d_deltaT,  d_sharedState->get_delt_label()); 
 #endif
+
+  cerr << "Done: Arches::scheduleComputeStableTimestep\n";
 }
 
 void 
@@ -147,6 +151,8 @@ Arches::scheduleTimeAdvance(double time, double dt,
 			    const LevelP& level, SchedulerP& sched,
 			    const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
+  cerr << "Arches::scheduleTimeAdvance\n";
+
 #ifdef WONT_COMPILE_YET
   int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
 					      sched, old_dw, new_dw);
@@ -159,6 +165,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
     cerr << "Nonlinear Solver didn't converge" << endl;
   }
 #endif
+  cerr << "Done: Arches::scheduleTimeAdvance\n";
 }
 
 void 
@@ -170,7 +177,7 @@ Arches::sched_paramInit(const LevelP& level,
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
     {
-      Task* tsk = new Task("Arches::Initialization",
+      Task* tsk = new Task("Arches::paramInit",
 			   region, dw, dw, this,
 			   &Arches::paramInit);
       cerr << "New task created successfully\n";
@@ -192,6 +199,8 @@ Arches::paramInit(const ProcessorContext* ,
 		  DataWarehouseP& new_dw)
 {
   // ....but will only compute for computational domain
+
+  cerr << "Arches::paramInit\n";
 
   CCVariable<Vector> velocity;
   CCVariable<double> pressure;
@@ -228,6 +237,9 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.28  2000/05/30 17:06:11  dav
+// added Cocoon doc template.  fixed non compilation problem.
+//
 // Revision 1.27  2000/05/30 15:44:57  rawat
 // modified computeStableTimestep
 //
