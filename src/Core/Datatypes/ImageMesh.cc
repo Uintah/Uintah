@@ -210,8 +210,8 @@ ImageMesh::locate(Face::index_type &face, const Point &p)
   // Rounds down, so catches intervals.  Might lose numerical precision on
   // upper edge (ie nodes on upper edges are not in any cell).
   // Nodes over 2 billion might suffer roundoff error.
-  face.i_ = (unsigned int)r.x();
-  face.j_ = (unsigned int)r.y();
+  face.i_ = (unsigned int)floor(r.x());
+  face.j_ = (unsigned int)floor(r.y());
 
   if (face.i_ >= (ni_-1) ||
       face.j_ >= (nj_-1))
@@ -230,8 +230,8 @@ ImageMesh::locate(Node::index_type &node, const Point &p)
   const Point r = transform_.unproject(p);
 
   // Nodes over 2 billion might suffer roundoff error.
-  node.i_ = (unsigned int)(r.x() + 0.5);
-  node.j_ = (unsigned int)(r.y() + 0.5);
+  node.i_ = (unsigned int)floor(r.x() + 0.5);
+  node.j_ = (unsigned int)floor(r.y() + 0.5);
 
   if (node.i_ >= ni_ ||
       node.j_ >= nj_)
@@ -252,8 +252,8 @@ ImageMesh::get_weights(const Point &p,
   const Point r = transform_.unproject(p);
   Node::index_type node0, node1, node2, node3;
 
-  node0.i_ = (unsigned int)r.x();
-  node0.j_ = (unsigned int)r.y();
+  node0.i_ = (unsigned int)floor(r.x());
+  node0.j_ = (unsigned int)floor(r.y());
 
   if (node0.i_ < (ni_-1) ||
       node0.j_ < (nj_-1))
