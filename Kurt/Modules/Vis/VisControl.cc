@@ -164,11 +164,11 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
 
   vector< string > names;
   vector< const TypeDescription *> types;
-  archive.listVariables(names, types);
+  archive.queryVariables(names, types);
 
   vector< double > times;
   vector< int > indices;
-  archive.listTimesteps( indices, times );
+  archive.queryTimesteps( indices, times );
 
   string psNames("");
   string pvNames("");
@@ -180,34 +180,45 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
   const TypeDescription *td;
   for( int i = 0; i < names.size(); i++ ){
     td = types[i];
-    if( td->getBasis() ==  TypeDescription::Node){
-      if( td->getType() == TypeDescription::Scalar){
+    if( td->getType() ==  TypeDescription::NCVariable){
+       const TypeDescription* subtype = td->getSubType();
+      if( subtype->getType() == TypeDescription::double_type){
+	 gsNames += " ";
 	gsNames += names[i];
-      }	else if(td->getType() == TypeDescription::Vector) {
+      }	else if(subtype->getType() == TypeDescription::Vector) {
+	 gvNames += " ";
 	gvNames += names[i];
       } // else {Point,Tensor,Other}
-    } else if(td->getBasis() ==  TypeDescription::Particle){
-      if( td->getType() == TypeDescription::Scalar){
+    } else if(td->getType() ==  TypeDescription::ParticleVariable){
+       const TypeDescription* subtype = td->getSubType();
+      if( subtype->getType() == TypeDescription::double_type){
+	 psNames += " ";
 	psNames += names[i];
-      }	else if(td->getType() == TypeDescription::Vector) {
+	cerr << "Added scalar: " << names[i] << '\n';
+      }	else if(subtype->getType() == TypeDescription::Vector) {
+	 pvNames += " ";
 	pvNames += names[i];
-      } else if(td->getBasis() ==  TypeDescription::Point){
+	cerr << "Added vector: " << names[i] << '\n';
+      } else if(subtype->getType() ==  TypeDescription::Point){
 	positionName = names[i];
       }// else { Tensor,Other}
     }
     TCL::execute(id + " destroyFrames");
+    TCL::execute(id + " build");
     
     TCL::execute(id + " SetTimeRange " + to_string( times[0] )
 		 + " " + to_string(times[times.size()-1])
 		 + " " + to_string((int)times.size()));
+    cerr << "scalars: " << psNames << '\n';
     TCL::execute(id + " setParticleScalars " + psNames.c_str());
+    cerr << "vectors: " << pvNames << '\n';
     TCL::execute(id + " setParticleVectors " + pvNames.c_str());
     TCL::execute(id + " buildVarList particleSet");
     TCL::execute(id + " setGridScalars " + gsNames.c_str());
     TCL::execute(id + " setGridVectors " + gvNames.c_str());
     TCL::execute(id + " buildVarList grid");
+    TCL::execute("update idletasks");
     reset_vars();
-    NOT_FINISHED("VisControl::setVars()");
   }
 }
 
@@ -271,12 +282,19 @@ void VisControl::execute()
 { 
    tcl_status.set("Calling VisControl!"); 
 
+#if 0
    ArchiveHandle handle;
    if(!in->get(handle)){
      std::cerr<<"Didn't get a handle\n";
      return;
    }
+#else
+   cerr << "Creating DataArchive\n";
+   ArchiveHandle handle = new Archive(new DataArchive("Uintah/disks.uda"));
+   cerr << "done\n";
+#endif
   
+   cerr << "Calling setVars\n";
    if ( handle.get_rep() != archive.get_rep() ) {
        
      if (archive.get_rep()  == 0 ){
@@ -284,9 +302,19 @@ void VisControl::execute()
      }
      archive = handle;
    }       
-   
+   cerr << "done with setVars\n";
    DataArchive& archive = *((*(handle.get_rep()))());
-   GridP grid = archive.getGrid(time.get());
+   double t = time.get();
+   int idx = 0;
+   vector< double > times;
+   vector< int > indices;
+   archive.queryTimesteps( indices, times );
+   while(t>times[idx] && idx < times.size())
+      idx++;
+   if(idx >= times.size())
+      idx=times.size()-1;
+   cerr << "Closest time is: " << times[idx] << "\n";
+   GridP grid = archive.queryGrid(times[idx]);
    LevelP level = grid->getLevel( 0 );
 
    // get index and spatial ranges 
@@ -321,17 +349,25 @@ void VisControl::execute()
      ParticleVariable< double > ps;
      ParticleVariable< Point  > pp;
      
-     archive.list(vv, string(gvVar.get()()), *r, time.get());
-     archive.list(sv, string(gsVar.get()()), *r, time.get());
-     archive.list(pv, string(pvVar.get()()), *r, time.get());
-     archive.list(ps, string(psVar.get()()), *r, time.get());
-     archive.list(pp, positionName, *r, time.get());
+     int matlIndex=0; // HARDCODED - Steve.  This should be fixed!
+     if(gvVar.get() != "")
+	archive.query(vv, string(gvVar.get()()), matlIndex, *r, times[idx]);
+     if(gsVar.get() != "")
+	archive.query(sv, string(gsVar.get()()), matlIndex, *r, times[idx]);
+     if(pvVar.get() != "")
+	archive.query(pv, string(pvVar.get()()), matlIndex, *r, times[idx]);
+     if(psVar.get() != "")
+	archive.query(ps, string(psVar.get()()), matlIndex, *r, times[idx]);
+     if(positionName != "")
+	archive.query(pp, positionName, matlIndex, *r, times[idx]);
      
+#if 0
      // fill up the scalar and vector fields
      for(NodeIterator n = (*r)->getNodeIterator(); !n.done(); n++){
        sf->grid((*n).x(), (*n).y(), (*n).z() ) = sv[*n];
        vf->grid((*n).x(), (*n).y(), (*n).z() ) = vv[*n]; 
      }
+#endif
      ParticleSubset* source_subset = ps.getParticleSubset();
      particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
      vectors.resync();
@@ -349,7 +385,7 @@ void VisControl::execute()
    sfout->send( sf );
    vfout->send( vf );
    psout->send( vps );
-   
+   cerr << "all done\n";
 } 
 //--------------------------------------------------------------- 
 } // end namespace Modules
