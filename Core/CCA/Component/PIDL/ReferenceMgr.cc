@@ -32,6 +32,8 @@ using namespace SCIRun;
 
 ReferenceMgr::ReferenceMgr()
 {
+  //modified by Keming
+  localSize=1; 
 }
 
 ReferenceMgr::ReferenceMgr(int rank, int size)
