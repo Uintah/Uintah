@@ -13,14 +13,6 @@
 namespace SCIRun {
   void swapbytes( Uintah::Matrix3& m);
 
-#if defined(_AIX)
-  // Looks like AIX doesn't have swapbytes(bool) but others do!... sigh...
-
-  // I assume a bool is one byte and swapping the bytes is really a no-op.
-  // This is needed for the instantiation (xlC) of :
-  // class Uintah::SoleVariable<bool,Uintah::Soles::And<bool> >".
-  void swapbytes( bool ) {}
-#endif
 } //end namespace SCIRun
 
 #include <sgi_stl_warnings_off.h>
