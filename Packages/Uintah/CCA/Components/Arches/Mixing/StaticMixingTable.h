@@ -112,6 +112,14 @@ public:
       inline int getNumRxnVars() const{
 	return d_numRxnVars;
       }
+
+      inline bool getCOOutput() const{
+	return 0;
+      }
+      inline bool getSulfurChem() const{
+	return 0;
+      }
+
       inline int getTableDimension() const{
 	return 0;
       }
