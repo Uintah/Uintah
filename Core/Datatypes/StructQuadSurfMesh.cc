@@ -225,6 +225,7 @@ StructQuadSurfMesh::locate(Node::index_type &node, const Point &p) const
       if (dist < min_dist)
       {
 	node = *ni;
+	min_dist = dist;
       }
       ++ni;
     }
