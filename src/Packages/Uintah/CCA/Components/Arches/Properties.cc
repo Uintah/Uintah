@@ -1,6 +1,11 @@
 //----- Properties.cc --------------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -39,39 +44,29 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->require("denUnderrelax", d_denUnderrelax);
   db->require("ref_point", d_denRef);
 
+  // read type of mixing model
+  string mixModel;
+  db->require("mixing_model",mixModel);
+  if (mixModel == "coldFlowMixingModel")
+    d_mixingModel = scinew ColdflowMixingModel();
+  else if (mixModel == "pdfMixingModel")
+    d_mixingModel = scinew PDFMixingModel();
+  else
+    throw InvalidValue("Mixing Model not supported" + mixModel);
+  d_mixingModel->problemSetup(db);
   // Read the mixing variable streams, total is noofStreams 0 
-  d_numMixingVars = 0;
-  for (ProblemSpecP stream_db = db->findBlock("Stream");
-       stream_db != 0; stream_db = stream_db->findNextBlock("Stream")) {
-
-    // Create the stream and add it to the vector
-    d_streams.push_back(Stream());
-    d_streams[d_numMixingVars].problemSetup(stream_db);
-    ++d_numMixingVars;
-  }
-  d_numMixingVars--;
+  d_numMixingVars = d_mixingModel->getNumMixVars();
 }
 
 //****************************************************************************
 // compute density for inlet streams: only for cold streams
 //****************************************************************************
 
-double 
-Properties::computeInletProperties(const std::vector<double>&
-				   mixfractionStream) 
+void
+Properties::computeInletProperties(const InletStream& inStream, 
+				   Stream& outStream)
 {
-  double invDensity = 0;
-  double mixfracSum = 0.0;
-  int ii;
-  for (ii = 0 ; ii < mixfractionStream.size(); ii++) {
-    invDensity += mixfractionStream[ii]/d_streams[ii].d_density;
-    mixfracSum += mixfractionStream[ii];
-  }
-  invDensity += (1.0 - mixfracSum)/d_streams[ii].d_density;
-  if (invDensity <= 0.0)
-    throw InvalidValue("Computed zero density for inlet stream" + ii );
-  else
-    return (1.0/invDensity);
+  d_mixingModel->computeProps(inStream, outStream);
 }
   
 //****************************************************************************
@@ -173,19 +168,22 @@ Properties::computeProps(const ProcessorGroup*,
 
 	// for combustion calculations mixingmodel will be called
 	// this is similar to prcf.f
-	double local_den = 0.0;
-	double mixFracSum = 0.0;
+	// construct an InletStream for input to the computeProps of mixingModel
+	InletStream inStream(d_numMixingVars, d_mixingModel->getNumMixStatVars(),
+			     d_mixingModel->getNumRxnVars());
 	for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-	  local_den += 
-	    (scalar[ii])[currCell]/d_streams[ii].d_density;
-	  mixFracSum += (scalar[ii])[currCell];
+	  inStream.d_mixVars[ii] = (scalar[ii])[currCell];
 	}
-	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
-	// std::cerr << "local_den " << local_den << endl;
-	if (local_den <= 0.0)
-	  throw InvalidValue("Computed zero density in props" );
-	else
-	  local_den = (1.0/local_den);
+	// after computing variance get that too, for the time being setting the 
+	// value to zero
+	inStream.d_mixVarVariance[0] = 0.0;
+	// currently not using any reaction progress variables
+	if (!d_mixingModel->isAdiabatic())
+	  // get absolute enthalpy from enthalpy eqn
+	  cerr << "No eqn for enthalpy yet" << '/n';
+	Stream outStream;
+	d_mixingModel->computeProps(inStream, outStream);
+	double local_den = outStream.getDensity();
 	if (d_bc == 0)
 	  throw InvalidValue("BoundaryCondition pointer not assigned");
 	if (cellType[currCell] != d_bc->wallCellType()) 
@@ -256,19 +254,23 @@ Properties::reComputeProps(const ProcessorGroup*,
       for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	// for combustion calculations mixingmodel will be called
 	// this is similar to prcf.f
-	double local_den = 0.0;
-	double mixFracSum = 0.0;
+	// construct an InletStream for input to the computeProps of mixingModel
+	IntVector currCell(colX, colY, colZ);
+	InletStream inStream(d_numMixingVars, d_mixingModel->getNumMixStatVars(),
+			     d_mixingModel->getNumRxnVars());
 	for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-	  local_den += 
-	    (scalar[ii])[IntVector(colX, colY, colZ)]/d_streams[ii].d_density;
-	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
+	  inStream.d_mixVars[ii] = (scalar[ii])[currCell];
 	}
-	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
-	// std::cerr << "local_den " << local_den << endl;
-	if (local_den <= 0.0)
-	  throw InvalidValue("Computed zero density in props" );
-	else
-	  local_den = (1.0/local_den);
+	// after computing variance get that too, for the time being setting the 
+	// value to zero
+	inStream.d_mixVarVariance[0] = 0.0;
+	// currently not using any reaction progress variables
+	if (!d_mixingModel->isAdiabatic())
+	  // get absolute enthalpy from enthalpy eqn
+	  cerr << "No eqn for enthalpy yet" << '/n';
+	Stream outStream;
+	d_mixingModel->computeProps(inStream, outStream);
+	double local_den = outStream.getDensity();
 	density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
                  	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
       }
@@ -304,20 +306,5 @@ Properties::reComputeProps(const ProcessorGroup*,
   new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
 }
 
-//****************************************************************************
-// Default constructor for Properties::Stream
-//****************************************************************************
-Properties::Stream::Stream()
-{
-}
 
-//****************************************************************************
-// Problem Setup for Properties::Stream
-//****************************************************************************
-void 
-Properties::Stream::problemSetup(ProblemSpecP& params)
-{
-  params->require("density", d_density);
-  params->require("temperature", d_temperature);
-}
 

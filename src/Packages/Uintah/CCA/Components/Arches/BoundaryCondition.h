@@ -17,6 +17,8 @@
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Core/Containers/Array1.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <vector>
 
 /**************************************
@@ -58,6 +60,8 @@ class VarLabel;
 class GeometryPiece;
 class TurbulenceModel;
 class Properties;
+class Stream;
+class InletStream;
 
 class BoundaryCondition {
 
@@ -268,10 +272,10 @@ private:
 	int d_cellTypeID;          // define enum for cell type
 	// inputs
 	double flowRate;           
-        std::vector<double> streamMixturefraction; // array [numMixingVars-1]
+        InletStream streamMixturefraction; // array [numMixingVars-1]
 	double turb_lengthScale;
 	// calculated values
-	double density;
+	Stream calcStream;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPiece*> d_geomPiece;
 	FlowInlet(int numMix, int cellID);
@@ -284,9 +288,9 @@ private:
       // PressureInlet
       struct PressureInlet {
 	int d_cellTypeID;
-	std::vector<double> streamMixturefraction; // array [numMixingVars-1]
+	InletStream streamMixturefraction; // array [numMixingVars-1]
 	double turb_lengthScale;
-	double density;
+	Stream calcStream;
 	double refPressure;
 	double area;
 	// stores the geometry information, read from problem specs
@@ -299,9 +303,9 @@ private:
       // FlowOutlet
       struct FlowOutlet {
 	int d_cellTypeID;
-	std::vector<double> streamMixturefraction;
+	InletStream streamMixturefraction; // array [numMixingVars-1]
 	double turb_lengthScale;
-	double density;
+	Stream calcStream;
 	double area;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPiece*> d_geomPiece;
