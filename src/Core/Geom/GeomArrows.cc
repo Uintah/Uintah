@@ -90,27 +90,22 @@ void GeomArrows::add(const Point& pos, const Vector& dir,
 
 void GeomArrows::add(const Point& pos, const Vector& dir)
 {
+  if(dir.length2() > 0) {
     positions.add(pos);
     directions.add(dir);
-    if(dir.length2() < 1.e-12){
-//     if( dir.length2() <= 0 ) {
-	Vector zero(0,0,0);
-	v1.add(zero);
-	v2.add(zero);
+    Vector vv1, vv2;
+    dir.find_orthogonal(vv1, vv2);
+    if (!normalize_headsize) {
+      // use the length to scale the head
+      double len = dir.length();
+      v1.add(vv1*headwidth*len);
+      v2.add(vv2*headwidth*len);
     } else {
-	Vector vv1, vv2;
-	dir.find_orthogonal(vv1, vv2);
-	if (!normalize_headsize) {
-	  // use the length to scale the head
-	  double len = dir.length();
-	  v1.add(vv1*headwidth*len);
-	  v2.add(vv2*headwidth*len);
-	} else {
-	  // don't scale the head by the length
-	  v1.add(vv1*headwidth);
-	  v2.add(vv2*headwidth);
-	}
+      // don't scale the head by the length
+      v1.add(vv1*headwidth);
+      v2.add(vv2*headwidth);
     }
+  }
 }
 
 void GeomArrows::get_bounds(BBox& bb)
