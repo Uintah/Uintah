@@ -2,6 +2,9 @@
 
 ::netedit dontschedule
 
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 21]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 263 159]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 466]
@@ -62,6 +65,7 @@ set $m2-show_status {1}
 set $m2-nodes-on {1}
 set $m2-nodes-as-disks {0}
 set $m2-edges-on {0}
+set $m2-edges-transparency {0}
 set $m2-faces-on {0}
 set $m2-use-normals {0}
 set $m2-use-transparency {0}
@@ -152,9 +156,9 @@ set $m6-k-start {0}
 set $m6-i-stop {384}
 set $m6-j-stop {0}
 set $m6-k-stop {0}
-set $m6-i-skip {10}
-set $m6-j-skip {5}
-set $m6-k-skip {1}
+set $m6-i-stride {1}
+set $m6-j-stride {1}
+set $m6-k-stride {1}
 set $m6-i-wrap {0}
 set $m6-j-wrap {1}
 set $m6-k-wrap {1}
@@ -162,7 +166,7 @@ set $m7-notes {}
 set $m7-show_status {1}
 set $m7-interpolation_basis {linear}
 set $m7-map_source_to_single_dest {0}
-set $m7-exhaustive_search {1}
+set $m7-exhaustive_search {0}
 set $m7-exhaustive_search_max_dist {-1}
 set $m7-np {1}
 set $m8-notes {}
@@ -184,9 +188,9 @@ set $m9-k-start {0}
 set $m9-i-stop {384}
 set $m9-j-stop {0}
 set $m9-k-stop {0}
-set $m9-i-skip {10}
-set $m9-j-skip {5}
-set $m9-k-skip {1}
+set $m9-i-stride {1}
+set $m9-j-stride {1}
+set $m9-k-stride {1}
 set $m9-i-wrap {0}
 set $m9-j-wrap {1}
 set $m9-k-wrap {1}
@@ -195,6 +199,7 @@ set $m10-show_status {1}
 set $m10-nodes-on {0}
 set $m10-nodes-as-disks {1}
 set $m10-edges-on {0}
+set $m10-edges-transparency {0}
 set $m10-faces-on {0}
 set $m10-use-normals {0}
 set $m10-use-transparency {0}
@@ -242,6 +247,7 @@ set $m11-show_status {1}
 set $m11-nodes-on {0}
 set $m11-nodes-as-disks {1}
 set $m11-edges-on {0}
+set $m11-edges-transparency {0}
 set $m11-faces-on {0}
 set $m11-use-normals {0}
 set $m11-use-transparency {0}
@@ -289,6 +295,7 @@ set $m12-show_status {1}
 set $m12-nodes-on {0}
 set $m12-nodes-as-disks {0}
 set $m12-edges-on {0}
+set $m12-edges-transparency {0}
 set $m12-faces-on {1}
 set $m12-use-normals {0}
 set $m12-use-transparency {1}
@@ -357,6 +364,7 @@ set $m14-show_status {1}
 set $m14-nodes-on {0}
 set $m14-nodes-as-disks {0}
 set $m14-edges-on {0}
+set $m14-edges-transparency {0}
 set $m14-faces-on {1}
 set $m14-use-normals {0}
 set $m14-use-transparency {1}
