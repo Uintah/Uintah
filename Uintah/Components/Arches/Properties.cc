@@ -265,6 +265,22 @@ Properties::reComputeProps(const ProcessorGroup*,
     }
   }
   // Write the computed density to the new data warehouse
+#ifdef ARCHES_PRES_DEBUG
+  // Testing if correct values have been put
+  cerr << " AFTER COMPUTE PROPERTIES " << endl;
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "Density for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(10);
+	cerr << density[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+#endif
   new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
 }
 
@@ -287,6 +303,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.29  2000/09/20 16:56:16  rawat
+// added some petsc parallel stuff and fixed some bugs
+//
 // Revision 1.28  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //
