@@ -789,6 +789,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-splitvar "" "" ""}
 	    {-imgwidth "" "" ""}
 	    {-imgheight "" "" ""}
+	    {-confirmvar "" "" ""}
 	}
     }
 
@@ -969,6 +970,17 @@ static char updir_bits[] = {
 	} else {
 	    set data(is_split) 1
 	}
+
+        if {$data(-confirmvar) != ""} {
+            set f6 [frame $w.f6 -bd 0]
+            label $f6.lab -text "" -width 15 -anchor e
+            checkbutton $f6.button  -text "Confirm Before Overwriting File " \
+              -variable $data(-confirmvar)
+            pack $f6.lab -side left -padx 2
+            pack $f6.button -side left -padx 2
+            pack $f6 -side bottom -fill x -pady 4
+        }
+	    
 
         if {$data(-imgwidth) != ""} {
             set f5 [frame $w.f5 -bd 0]
@@ -1536,16 +1548,23 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
 	set biopsePriv(selectFile)     $data(selectFile)
 	set biopsePriv(selectPath)     $data(selectPath)
 
-	if {[file exists $selectFilePath] && 
+	set confirm 1
+	if { [string length $data(-confirmvar)] && 
+	     [info exists $data(-confirmvar)] &&
+	     ![set $data(-confirmvar)] } {
+	    set confirm 0
+	}
+	
+	if {$confirm && 
+	    [file exists $selectFilePath] && 
 	    ![string compare $data(type) save]} {
-
 		set reply [tk_messageBox -icon warning -type yesno\
 			-parent $data(-parent) -message "File\
 			\"$selectFilePath\" already exists.\nDo\
 			you want to overwrite it?"]
-		if {![string compare $reply "no"]} {
-		    return
-		}
+	    if {![string compare $reply "no"]} {
+		return
+	    }
 	}
     }
     

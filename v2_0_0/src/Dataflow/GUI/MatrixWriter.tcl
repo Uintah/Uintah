@@ -29,11 +29,23 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype
+	global $this-filetype $this-confirm $this-split
 	set $this-filetype Binary
 	set $this-split 0
+	set $this-confirm 0
     }
-    
+    method overwrite {} {
+	global $this-confirm $this-filetype
+	if {[info exists $this-confirm] && [info exists $this-filename] && \
+		[set $this-confirm] && [file exists [set $this-filename]] } {
+	    set value [tk_messageBox -type yesno -parent . \
+			   -icon warning -message \
+			   "File [set $this-filename] already exists.\n Would you like to overwrite it?"]
+	    if [string equal "no" $value] { return 0 }
+	}
+	return 1
+    }
+
     method ui {} {
 	global env
 	set w .ui[modname]
@@ -90,6 +102,7 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 		-initialdir $initdir \
 		-defaultextension $defext \
 		-formatvar $this-filetype \
-		-splitvar $this-split
+		-splitvar $this-split \
+	        -confirmvar $this-confirm
     }
 }
