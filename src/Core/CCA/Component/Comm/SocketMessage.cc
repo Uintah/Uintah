@@ -15,34 +15,130 @@
   University of Utah. All Rights Reserved.
 */
 
-#include "SocketMessage.h"
+#include <stdlib.h>
+#include <string.h>
+#include <Core/CCA/Component/Comm/SocketMessage.h>
+
+using namespace std;
 using namespace SCIRun;
 
 SocketMessage::SocketMessage() { 
+  msg=NULL;
 }
 
 SocketMessage::~SocketMessage() {
+  if(msg!=NULL) free(msg);
 }
 
-void SocketMessage::createMessage()  {  }
-void SocketMessage::marshalInt(const int *i, int size)  {  }
-void SocketMessage::marshalByte(const char *b, int size) {  }
-void SocketMessage::marshalChar(const char *c, int size) {  }
-void SocketMessage::marshalFloat(const float *f, int size) {  }
-void SocketMessage::marshalDouble(const double *d, int size) {  }
-void SocketMessage::marshalLong(const long *l, int size) {  }
-void SocketMessage::marshalSpChannel(SpChannel* channel) {  }
-void SocketMessage::sendMessage(int handler) {  }
-void SocketMessage::waitReply()  {  }
-void SocketMessage::unmarshalReply()  {  }
-void SocketMessage::unmarshalInt(int *i, int size) {  }
-void SocketMessage::unmarshalByte(char *b, int size) {  }
-void SocketMessage::unmarshalChar(char *c, int size) {  }
-void SocketMessage::unmarshalFloat(float *f, int size) {  }
-void SocketMessage::unmarshalDouble(double *d, int size) {  }
-void SocketMessage::unmarshalLong(long *l, int size) {  }
-void SocketMessage::unmarshalSpChannel(SpChannel* channel) {  }
+void 
+SocketMessage::createMessage()  { 
+  realloc(msg, INIT_SIZE);
+  capacity=INIT_SIZE;
+  used=0;
+}
+
+void 
+SocketMessage::marshalInt(const int *buf, int size){
+  marshalBuf(buf, size*sizeof(int));
+}
+
+void 
+SocketMessage::marshalByte(const char *buf, int size){
+  marshalBuf(buf, size*sizeof(char));
+}
+
+void 
+SocketMessage::marshalChar(const char *buf, int size){
+  marshalBuf(buf, size*sizeof(char));
+}
+
+void 
+SocketMessage::marshalFloat(const float *buf, int size){
+  marshalBuf(buf, size*sizeof(float));
+}
+void 
+SocketMessage::marshalDouble(const double *buf, int size){
+  marshalBuf(buf, size*sizeof(double));
+}
+
+void 
+SocketMessage::marshalLong(const long *buf, int size){
+  marshalBuf(buf, size*sizeof(long));
+}
+
+void 
+SocketMessage::marshalSpChannel(SpChannel* channel){
+  //...
+}
+
+void 
+SocketMessage::sendMessage(int handler){
+  //...
+}
+
+void 
+SocketMessage::waitReply(){
+  //...
+}
+
+void 
+SocketMessage::unmarshalReply(){
+  //...
+}
+
+void 
+SocketMessage::unmarshalInt(int *buf, int size){
+  unmarshalBuf(buf, size*sizeof(int));
+}
+
+void 
+SocketMessage::unmarshalByte(char *buf, int size){
+  unmarshalBuf(buf, size*sizeof(char));
+}
+void 
+SocketMessage::unmarshalChar(char *buf, int size){
+  unmarshalBuf(buf, size*sizeof(char));
+}
+
+void 
+SocketMessage::unmarshalFloat(float *buf, int size){
+  unmarshalBuf(buf, size*sizeof(float));
+}
+
+void 
+SocketMessage::unmarshalDouble(double *buf, int size){
+  unmarshalBuf(buf, size*sizeof(double));
+}
+
+void 
+SocketMessage::unmarshalLong(long *buf, int size){
+  unmarshalBuf(buf, size*sizeof(long));
+}
+
+void SocketMessage::unmarshalSpChannel(SpChannel* channel){
+  //...
+}
 
 void* SocketMessage::getLocalObj() {  return 0; }
 
-void SocketMessage::destroyMessage() {  }
+void SocketMessage::destroyMessage() {
+  if(msg!=NULL) free(msg);
+}
+
+
+//private methods
+void 
+SocketMessage::marshalBuf(const void *buf, int fullsize){
+  used+=fullsize;
+  if(used>capacity){
+    capacity=used+INIT_SIZE;
+    realloc(msg, capacity);
+  }
+  memcpy((char*)msg+used-fullsize, buf, fullsize); 
+}
+
+void 
+SocketMessage::unmarshalBuf(void *buf, int fullsize){
+  memcpy(buf, (char*)msg+used, fullsize); 
+  used+=fullsize;
+}

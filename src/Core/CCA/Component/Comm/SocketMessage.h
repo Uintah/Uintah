@@ -49,6 +49,12 @@ namespace SCIRun {
     void destroyMessage();
 
   private:
+    inline void marshalBuf(const void *buf, int fullsize);
+    inline void unmarshalBuf(void *buf, int fullsize);
+    void *msg;
+    int capacity;
+    int used;
+    static const int INIT_SIZE=1024;
   };
 }
 
