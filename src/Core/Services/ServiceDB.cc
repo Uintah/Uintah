@@ -343,7 +343,7 @@ void ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,std::stri
   
   // 1. check the user's home/SCIRun/services directory
   char *HOME;
-  if (HOME = getenv("HOME")) 
+  if( (HOME = getenv("HOME")) != NULL ) 
   {
       filename = HOME+std::string("/SCIRun/services/") + rcname;
       foundrc = parse_service_rcfile(new_service,filename);
@@ -370,7 +370,7 @@ void ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,std::stri
   // try to copy this rc file to the SCIRun directory in the
   // users home directory
 	
-  if (HOME = getenv("HOME")) 
+  if( (HOME = getenv("HOME")) != NULL )
   {
       std::string dirname = HOME+std::string("/SCIRun/services");
       struct stat buf;

@@ -41,13 +41,13 @@
 namespace SCIRun {
 
 SystemCallProcess::SystemCallProcess(int processid) :
-    lock_("system_call_process"),
     processid_(processid),    
+    pid_(0),
     fd_stdin_(-1),
     fd_stdout_(-1),
     fd_stderr_(-1),
     fd_exit_(-1),
-    pid_(0)
+    lock_("system_call_process")
 {
 }
 

@@ -48,8 +48,8 @@ IComInternalSocket::IComInternalSocket() :
 	registered_(false),
 	localaddress_("internal","no_name"),
 	remotesocket_(0),
-	waitpacket_("packet_list_condition_variable"),
 	waitconnection_("connection_list_condition_variable"),
+	waitpacket_("packet_list_condition_variable"),
 	secs_(0),
 	microsecs_(0)
 {
