@@ -1488,8 +1488,8 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     }
     renderer_->setvisual(args[2], idx, width, height);
   } else if(args[1] == "setgl") {
-    if (renderer_->context_) delete renderer_->context_;
-    renderer_->context_ = scinew OpenGLContext(gui_, args[2]);
+    //    if (renderer_->context_) delete renderer_->context_;
+    //renderer_->context_ = scinew OpenGLContext(gui_, args[2]);
   } else if(args[1] == "centerGenAxes") { 
     // have to do this here, as well as in redraw() so the axes can be
     // turned on/off even while spinning with inertia
