@@ -793,7 +793,9 @@ EditTransferFunc2::redraw()
     glBlendFunc(GL_ONE, GL_DST_ALPHA);
     // draw histo
     if(histo_) {
+#ifdef CORRECT_OGLEXT_HDRS
       glActiveTexture(GL_TEXTURE0);
+#endif
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, histo_tex_);
@@ -828,6 +830,7 @@ EditTransferFunc2::redraw()
   } else {
     // draw histo
     if(histo_) {
+#ifdef CORRECT_OGLEXT_HDRS
       glActiveTexture(GL_TEXTURE0);
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
       glEnable(GL_TEXTURE_2D);
@@ -848,6 +851,7 @@ EditTransferFunc2::redraw()
       glEnd();
       glBindTexture(GL_TEXTURE_2D, 0);
       glDisable(GL_TEXTURE_2D);
+#endif
     }
     // draw textures
     glEnable(GL_BLEND);

@@ -143,6 +143,7 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
@@ -407,6 +408,7 @@ VolumeRenderer::draw()
          << (char*)gluErrorString(errcode) << "\n";
   }
   tex_->unlock_bricks();
+#endif
 }
 
 void

@@ -44,10 +44,12 @@ void GLAttenuate::preDraw()
 //   glEnable(GL_BLEND);
 
   // default blend equation, but make sure.
+#ifdef CORRECT_OGLEXT_HDRS
   glBlendEquation(GL_FUNC_ADD_EXT);
 
   glBlendFunc(GL_CONSTANT_ALPHA_EXT, GL_ONE);
   glBlendColor(1.f, 1.f, 1.f, 1.f/volren->slices());
+#endif
 }
 
 void GLAttenuate::postDraw()

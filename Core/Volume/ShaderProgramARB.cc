@@ -42,6 +42,7 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+#ifdef CORRECT_OGLEXT_HDRS
 #ifndef HAVE_GLEW
 
 #ifndef GL_ARB_vertex_program
@@ -99,8 +100,7 @@ static void *NSGLGetProcAddress (const GLubyte *name)
 #define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
 
 #endif
-
-#endif /* HAVE_GLEW */
+#endif
 
 static PFNGLGENPROGRAMSARBPROC SCIglGenProgramsARB = 0;
 static PFNGLDELETEPROGRAMSARBPROC SCIglDeleteProgramsARB = 0;
@@ -108,6 +108,8 @@ static PFNGLBINDPROGRAMARBPROC SCIglBindProgramARB = 0;
 static PFNGLPROGRAMSTRINGARBPROC SCIglProgramStringARB = 0;
 static PFNGLISPROGRAMARBPROC SCIglIsProgramARB = 0;
 static PFNGLPROGRAMLOCALPARAMETER4FARBPROC SCIglProgramLocalParameter4fARB = 0;
+
+#endif /* HAVE_GLEW */
 
 namespace SCIRun {
 
@@ -126,13 +128,18 @@ ShaderProgramARB::~ShaderProgramARB ()
 bool
 ShaderProgramARB::valid()
 {
-  return mSupported ? SCIglIsProgramARB(mId) : false;
+#ifdef CORRECT_OGLEXT_HDRS
+  return mSupported ? glIsProgramARB(mId) : false;
+#else
+  return false;
+#endif
 }
 
 bool
 ShaderProgramARB::create()
 {
   if(!mInit) {
+#ifdef CORRECT_OGLEXT_HDRS
 #ifdef HAVE_GLEW
     if (!GLEW_ARB_vertex_program || !GLEW_ARB_fragment_program) {
       mSupported = false;
@@ -140,7 +147,7 @@ ShaderProgramARB::create()
     } else {
       mSupported = true;
     }
-#else
+#else       
     if (!gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", glGetString(GL_EXTENSIONS)) ||
         !gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", glGetString(GL_EXTENSIONS))) {
       mSupported = false;
@@ -148,20 +155,19 @@ ShaderProgramARB::create()
     } else {
       mSupported = true;
     }
-#endif
     bool fail = !mSupported;
     fail = fail
-      || (SCIglGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)getProcAddress("glGenProgramsARB")) == 0;
+      || (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)getProcAddress("glGenProgramsARB")) == 0;
     fail = fail
-      || (SCIglDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)getProcAddress("glDeleteProgramsARB")) == 0;
+      || (glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)getProcAddress("glDeleteProgramsARB")) == 0;
     fail = fail
-      || (SCIglBindProgramARB = (PFNGLBINDPROGRAMARBPROC)getProcAddress("glBindProgramARB")) == 0;
+      || (glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)getProcAddress("glBindProgramARB")) == 0;
     fail = fail
-      || (SCIglProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)getProcAddress("glProgramStringARB")) == 0;
+      || (glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)getProcAddress("glProgramStringARB")) == 0;
     fail = fail
-      || (SCIglIsProgramARB = (PFNGLISPROGRAMARBPROC)getProcAddress("glIsProgramARB")) == 0;
+      || (glIsProgramARB = (PFNGLISPROGRAMARBPROC)getProcAddress("glIsProgramARB")) == 0;
     fail = fail
-      || (SCIglProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)getProcAddress("glProgramLocalParameter4fARB")) == 0;
+      || (glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)getProcAddress("glProgramLocalParameter4fARB")) == 0;
     if(fail) {
       mSupported = false;
       cerr << "GL_ARB_fragment_program is not supported." << endl;
@@ -169,15 +175,20 @@ ShaderProgramARB::create()
     } else {
       mSupported = true;
     }
+#endif
+#else
+    mSupported = false;
+#endif
     mInit = true;
   }
 
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
     dbg << mProgram << endl;
-    SCIglGenProgramsARB(1, &mId);
-    SCIglBindProgramARB(mType, mId);
-    SCIglProgramStringARB(mType, GL_PROGRAM_FORMAT_ASCII_ARB,
-			  mProgram.length(), mProgram.c_str());
+    glGenProgramsARB(1, &mId);
+    glBindProgramARB(mType, mId);
+    glProgramStringARB(mType, GL_PROGRAM_FORMAT_ASCII_ARB,
+                       mProgram.length(), mProgram.c_str());
     if (glGetError() != GL_NO_ERROR)
     {
       int position;
@@ -195,7 +206,7 @@ ShaderProgramARB::create()
       string underline = line;
       for (uint i=0; i<end-start+1; i++) underline[i] = '-';
       underline[position-start] = '#';
-      SCIglBindProgramARB(mType, 0);
+      glBindProgramARB(mType, 0);
       switch(mType) {
       case GL_VERTEX_PROGRAM_ARB:
         cerr << "Vertex" << endl;
@@ -213,6 +224,7 @@ ShaderProgramARB::create()
     }
     return false;
   }
+#endif
   
   return true;
 }
@@ -220,60 +232,74 @@ ShaderProgramARB::create()
 void
 ShaderProgramARB::destroy ()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
-    SCIglDeleteProgramsARB(1, &mId);
+    glDeleteProgramsARB(1, &mId);
     mId = 0;
   }
+#endif
 }
 
 void
 ShaderProgramARB::bind ()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
     glEnable(mType);
     glBindProgramARB(mType, mId);
   }
+#endif
 }
 
 void
 ShaderProgramARB::release ()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
     glBindProgramARB(mType, 0);
     glDisable(mType);
   }
+#endif
 }
 
 void
 ShaderProgramARB::enable ()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
     glEnable(mType);
   }
+#endif
 }
 
 void
 ShaderProgramARB::disable ()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
     glDisable(mType);
   }
+#endif
 }
 
 void
 ShaderProgramARB::makeCurrent ()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
     glBindProgramARB(mType, mId);
   }
+#endif
 }
 
 void
 ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 {
+#ifdef CORRECT_OGLEXT_HDRS
   if(mSupported) {
-    SCIglProgramLocalParameter4fARB(mType, i, x, y, z, w);
-  }    
+    glProgramLocalParameter4fARB(mType, i, x, y, z, w);
+  }
+#endif
 }
 
 VertexProgramARB::VertexProgramARB(const string& program)
