@@ -29,3 +29,4 @@ TD.eqno			{ }	/* equation-number cells */
 
 /* document-specific styles come next */
 body {background-color:#DDDDDD; text-color:#000000; font-family:"arial", "helvetica", "sans-serif"; margin-left:2em; margin-right:2em}
+pre {font-family: "Courier"; margin-left:25px}
