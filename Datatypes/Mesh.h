@@ -26,10 +26,7 @@ class Mesh;
 
 struct Element {
     int faces[4];
-    int n1;
-    int n2;
-    int n3;
-    int n4;
+    int n[4];
     int cond; // index to the conductivities array for the cond
               // tensor of this element
     Mesh* mesh;
