@@ -71,6 +71,8 @@ void RescaleColorMapForParticles::execute()
     ScalarParticlesHandle part;
     if (!iPort->get(part))
       return;
+    
+    if( part.get_rep() == 0) return;
 
     double mx = -1e30;
     double mn = 1e30;
