@@ -82,7 +82,7 @@ namespace SCIRun {
   static char stat_buffer[STATSIZE];
   static char trace_buffer[STATSIZE];
 
-Allocator* default_allocator;
+Allocator* default_allocator=0;
 
 // Granularity of small things - 8 bytes
 // Anything smaller than this is considered "small"
@@ -1271,6 +1271,8 @@ void GetBinStats(Allocator* a, int binno, size_t& minsize, size_t& maxsize,
 
 Allocator* DefaultAllocator()
 {
+    MakeDefaultAllocator();
+
     return default_allocator;
 }
 
