@@ -6,6 +6,14 @@
 
 using namespace rtrt;
 
+SCIRun::Persistent* group_maker() {
+  return new Group();
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID Group::type_id("Group", "Object", group_maker);
+
+
 Group::Group()
     : Object(0)
 {
@@ -70,16 +78,6 @@ void Group::add(Object* obj)
     objs.add(obj);
 }
 
-int Group::add2(Object* obj)
-{
-    return objs.add2(obj);
-}
-
-void Group::remove2(int idx)
-{
-    objs.remove(idx);
-}
-
 void Group::animate(double t, bool& changed)
 {
     for(int i=0;i<objs.size();i++){
@@ -131,4 +129,38 @@ void Group::transform(Transform& T)
     objs[i]->transform(T);
   }
 
+}
+
+const int GROUP_VERSION = 1;
+
+void 
+Group::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Group", GROUP_VERSION);
+  Object::io(str);
+  SCIRun::Pio(str, was_processed);
+  SCIRun::Pio(str, bbox);
+  SCIRun::Pio(str, all_children_are_groups);
+  SCIRun::Pio(str, objs);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::Group*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Group::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Group*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun
+
+bool Group::interior_value(double& ret_val, const Ray &ref, const double t)
+{
+  for(int i=0;i<objs.size();i++){
+    if (objs[i]->interior_value(ret_val, ref, t)) return true;
+  }
+  return false;
 }
