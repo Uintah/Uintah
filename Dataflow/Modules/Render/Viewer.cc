@@ -256,7 +256,13 @@ int Viewer::process_event()
     geomlock_.writeLock();
     initPort(gmsg->reply);
     geomlock_.writeUnlock();
-    break;	
+    break;
+
+  case MessageTypes::GeometryDetach:
+    geomlock_.writeLock();
+    detachPort(gmsg->portno);
+    geomlock_.writeUnlock();
+    break;
 
   case MessageTypes::GeometryAddObj:
   case MessageTypes::GeometryDelObj:
@@ -340,6 +346,20 @@ void Viewer::initPort(Mailbox<GeomReply>* reply)
   GeomViewerPort *pi = new GeomViewerPort(portid);
   ports_.addObj(pi,portid);
   reply->send(GeomReply(portid));
+}
+
+//----------------------------------------------------------------------
+void Viewer::detachPort(int portid)
+{
+  GeomViewerPort* pi;
+  if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
+  {
+    warning("Geometry message sent to bad port!!!\n");
+    return;
+  }
+  delAll(pi);
+  ports_.delObj(portid);
+  flushViews();
 }
 
 //----------------------------------------------------------------------
