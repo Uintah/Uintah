@@ -29,6 +29,8 @@
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/SizeTypeConvert.h>
 
 namespace SCIRun {
   using namespace std;
@@ -110,7 +112,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
+  
 template<class T>
 class DefaultRunLengthSequencer;
 
@@ -226,9 +228,11 @@ public:
     : size_(0)
   { addItems(begin, end); }
    
-  RunLengthEncoder(istream& in)
+  RunLengthEncoder(istream& in, bool swapBytes = false /* endianness swap */,
+		   int nByteMode = sizeof(unsigned long)  /* 32bit/64bit
+							     conversion */)
     : size_(0)
-  { read(in); }
+  { read(in, swapBytes, nByteMode); }
 
   void addItem(T item);
 
@@ -274,16 +278,59 @@ public:
   { return size_; }
 
   // these return the number of bytes written/read
-  long write(ostream& out) throw(ErrnoException); 
-  long read(istream& in) throw(InternalError);
+  long write(ostream& out) throw(ErrnoException);
+
+  long read(istream& in, bool swapBytes = false,
+	    int nByteMode = sizeof(unsigned long)) throw(InternalError)
+  {
+    if (swapBytes || nByteMode != sizeof(unsigned long))
+      return readPriv<true>(in, swapBytes, nByteMode);
+    else
+      return readPriv<false>(in, swapBytes, nByteMode);
+  }
 
   // seek for and read a single item from a file
-  static T seek(int fd /* file descriptor */, unsigned long index)
-    throw(InternalError);
-   
+  static T seek(int fd /* file descriptor */, unsigned long index,
+		bool swapBytes = false, int nByteMode = sizeof(unsigned long))
+    throw(InternalError)
+  {
+    if (swapBytes || nByteMode != sizeof(unsigned long))
+      return seekPriv<true>(fd, index, swapBytes, nByteMode);
+    else
+      return seekPriv<false>(fd, index, swapBytes, nByteMode);
+  }
+ 
   void testPrint(ostream& out);
 
 private:
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // template parameter not used in declaring arguments
+#endif
+  // should optimize itself when no conversion is needed
+  template <bool needConversion>
+  long readPriv(istream& in, bool swapBytes, int nByteMode)
+    throw(InternalError);
+
+  template <bool needConversion>
+  static T seekPriv(int fd /* file descriptor */, unsigned long index,
+		    bool swapBytes, int nByteMode)
+    throw(InternalError);
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif  
+
+  template<class SIZE_T>
+  inline void readSizeType(istream& in, bool needConversion, bool swapBytes,
+			   int nByteMode, SIZE_T& s);
+  
+  template<class SIZE_T>
+  inline void readSizeType(int fd, bool needConversion, bool swapBytes,
+			   int nByteMode, SIZE_T& s);
+  
+  template<class SIZE_T>
+  inline void pReadSizeType(int fd, bool needConversion, bool swapBytes,
+			    int nByteMode, off_t offset, SIZE_T& s);
+  
   void write(int fd, void* data, ssize_t size) throw(ErrnoException)
   {
     if (::write(fd, data, size) != size)
@@ -338,9 +385,9 @@ template <class T>
 class EqualElementSequencer
 {
 public:
-  // these don't really matter since no rule is neede
-  typedef bool SequenceRule;
-  static bool defaultSequenceRule;
+  // these don't really matter since no rule is needed
+  typedef short SequenceRule;
+  static short defaultSequenceRule;
 public:
   EqualElementSequencer()
   { }
@@ -362,7 +409,7 @@ private:
 };
 
 template <class T>
-bool EqualElementSequencer<T>::defaultSequenceRule = true; // arbitrary
+short EqualElementSequencer<T>::defaultSequenceRule = 0; // arbitrary
 
 
 // EqualElementSequencer for compressing equal interval runs.
@@ -661,9 +708,71 @@ long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
   return data_pos; // returns the number of bytes written
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // template parameter not used in declaring arguments
+#pragma set woff 1209 // constant controlling expressions (needConversion)
+#endif  
+
 template<class T, class Sequencer>
-long RunLengthEncoder<T, Sequencer>::read(istream& in) throw(InternalError)
+template<class SIZE_T> // should either be unsigned long or ssize_t
+inline void RunLengthEncoder<T, Sequencer>::
+readSizeType(istream& in, bool needConversion, bool swapBytes, int nByteMode,
+	     SIZE_T& s)
 {
+  if (needConversion) {
+    uint64_t s64;
+    in.read((char*)&s64, nByteMode);
+    s = (SIZE_T)convertSizeType(&s64, swapBytes, nByteMode);
+  }
+  else {
+    in.read((char*)&s, nByteMode);
+  }
+}
+
+template<class T, class Sequencer>
+template<class SIZE_T> // should either be unsigned long or ssize_t
+inline void RunLengthEncoder<T, Sequencer>::
+readSizeType(int fd, bool needConversion, bool swapBytes, int nByteMode,
+	     SIZE_T& s)
+{
+  if (needConversion) {
+    uint64_t s64;
+    ::read(fd, (char*)&s64, nByteMode);
+    s = (SIZE_T)convertSizeType(&s64, swapBytes, nByteMode);
+  }
+  else {
+    ::read(fd, (char*)&s, nByteMode);
+  }
+}
+
+template<class T, class Sequencer>
+template<class SIZE_T> // should either be unsigned long or ssize_t
+inline void RunLengthEncoder<T, Sequencer>::
+pReadSizeType(int fd, bool needConversion, bool swapBytes, int nByteMode,
+	      off_t offset, SIZE_T& s)
+{
+  if (needConversion) {
+    uint64_t s64;
+    pread(fd, (char*)&s64, nByteMode, offset);
+    s = (SIZE_T)convertSizeType(&s64, swapBytes, nByteMode);
+  }
+  else {
+    pread(fd, (char*)&s, nByteMode, offset);
+  }
+}
+
+template<class T, class Sequencer>
+template<bool needConversion>
+long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
+					      int nByteMode)
+  throw(InternalError)
+{
+  // assume the header item's are composed of unsigned longs and ssize_t's
+  ASSERT((RunLengthEncoder<T, Sequencer>::header_item_size %
+	  sizeof(unsigned long)) == 0);
+  unsigned long header_item_size = nByteMode *
+    RunLengthEncoder<T, Sequencer>::header_item_size / sizeof(unsigned long);
+  
   considerationItems_.clear();
   groups_.clear();
    
@@ -673,8 +782,8 @@ long RunLengthEncoder<T, Sequencer>::read(istream& in) throw(InternalError)
   unsigned long start_index;
   unsigned long end_index;
   
-  in.read((char*)&start_data_pos, sizeof(ssize_t));
-  in.read((char*)&start_index, sizeof(ssize_t));
+  readSizeType(in, needConversion, swapBytes, nByteMode, start_data_pos);
+  readSizeType(in, needConversion, swapBytes, nByteMode, start_index);
   header_size = start_data_pos;
 
   if (header_size % header_item_size != 0)
@@ -689,10 +798,11 @@ long RunLengthEncoder<T, Sequencer>::read(istream& in) throw(InternalError)
     groups_.push_back(Group());
     Group& group = groups_.back();
 
-    in.read((char*)&end_data_pos, sizeof(ssize_t));
-    in.read((char*)&end_index, sizeof(unsigned long));
+    readSizeType(in, needConversion, swapBytes, nByteMode, end_data_pos);
+    readSizeType(in, needConversion, swapBytes, nByteMode, end_index);
 
     group.length_ = end_index - start_index;
+    
     if (group.length_ * sizeof(T) == 
 	(unsigned long)(end_data_pos - start_data_pos))
       // not a run -- signify by resizing the data
@@ -716,17 +826,26 @@ long RunLengthEncoder<T, Sequencer>::read(istream& in) throw(InternalError)
     vector<T>& data = (*groupIter).data_;
     if ((*groupIter).isRun()) {
       in.read((char*)&data[0], sizeof(T));
+      if (needConversion && swapBytes) swapbytes(data[0]);
       if (Sequencer::needRule()) {
 	if (usesDefaultRule[i])
 	  (*groupIter).sequenceRule_ = Sequencer::defaultSequenceRule;
-	else
+	else {
 	  in.read((char*)&(*groupIter).sequenceRule_, ruleStorageSize(false));
+	  if (needConversion && swapBytes)
+	    swapbytes((*groupIter).sequenceRule_);
+	}
       }
     }
     else
     {
       ASSERT(data.size() == (*groupIter).length_);
       in.read((char*)&data[0], (long)(sizeof(T) * data.size()));
+      if (needConversion && swapBytes) {
+	for (unsigned long index = 0; index < data.size(); index++) {
+	  swapbytes(data[index]);
+	}
+      }
     }
   }
 
@@ -734,8 +853,14 @@ long RunLengthEncoder<T, Sequencer>::read(istream& in) throw(InternalError)
 }
 
 template<class T, class Sequencer>
-T RunLengthEncoder<T, Sequencer>::seek(int fd, unsigned long index) throw(InternalError)
+template<bool needConversion>
+T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
+					   bool swapBytes, int nByteMode)
+  throw(InternalError)
 {
+  ssize_t header_item_size = RunLengthEncoder<T, Sequencer>::header_item_size
+    / sizeof(unsigned long) * nByteMode;
+  
   // does a binary type search in the header
   ssize_t start = lseek(fd, 0, SEEK_CUR);
 
@@ -746,7 +871,7 @@ T RunLengthEncoder<T, Sequencer>::seek(int fd, unsigned long index) throw(Intern
   // [end_data_pos][# of elements]
     
   ssize_t header_size;
-  ::read(fd, &header_size, sizeof(ssize_t));
+  readSizeType(fd, needConversion, swapBytes, nByteMode, header_size);
 
   if (header_size % header_item_size != 0)
     throw InternalError("Invalid RunLengthEncoded data");
@@ -761,8 +886,10 @@ T RunLengthEncoder<T, Sequencer>::seek(int fd, unsigned long index) throw(Intern
 
   while (high > low + 1) {
     mid = (high + low) / 2;
-    pread(fd, &group_start_index, sizeof(unsigned long),
-	  start + mid * header_item_size + sizeof(ssize_t));
+    pread(fd, &group_start_index, nByteMode,
+	  start + mid * header_item_size + nByteMode);
+    if (needConversion && swapBytes) swapbytes(group_start_index);
+    
     if (index < group_start_index)
       high = mid; // counts mid out
     else
@@ -773,10 +900,10 @@ T RunLengthEncoder<T, Sequencer>::seek(int fd, unsigned long index) throw(Intern
   ssize_t data_end;
   unsigned long group_end_index;
   lseek(fd, start + low * header_item_size, SEEK_SET);
-  ::read(fd, &data_start, sizeof(ssize_t));
-  ::read(fd, &group_start_index, sizeof(unsigned long));
-  ::read(fd, &data_end, sizeof(ssize_t));
-  ::read(fd, &group_end_index, sizeof(unsigned long));
+  readSizeType(in, needConversion, swapBytes, nByteMode, data_start);
+  readSizeType(in, needConversion, swapBytes, nByteMode, group_start_index);
+  readSizeType(in, needConversion, swapBytes, nByteMode, data_end);
+  readSizeType(in, needConversion, swapBytes, nByteMode, group_end_index);
     
   unsigned long group_index = index - group_start_index;
   unsigned long group_length = group_end_index - group_start_index;
@@ -794,13 +921,16 @@ T RunLengthEncoder<T, Sequencer>::seek(int fd, unsigned long index) throw(Intern
     // the group is a run
     lseek(fd, start + data_start, SEEK_SET);
     ::read(fd, &item, sizeof(T));
+    if (needConversion && swapBytes) swapbytes(item);
     typename Sequencer::SequenceRule rule;
     if (Sequencer::needRule()) {
       if (data_end - data_start == sizeof(T))
 	// must be a default sequence rule
 	rule = Sequencer::defaultSequenceRule;
-      else
+      else {
 	::read(fd, &rule, ruleStorageSize(false));
+	if (needConversion && swapBytes) swapbytes(rule);
+      }
     }
     // rule should be unused below if needRule is false
     return Sequencer::getSequenceItem(item, rule, group_index);
@@ -808,9 +938,15 @@ T RunLengthEncoder<T, Sequencer>::seek(int fd, unsigned long index) throw(Intern
   else {
     // the group is not a run
     pread(fd, &item, sizeof(T), start + data_start + group_index * sizeof(T));
+    if (needConversion && swapBytes) swapbytes(item);
     return item;
   }
 }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424 
+#pragma reset woff 1209 
+#endif  
 
 template<class T, class Sequencer>
 void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)
