@@ -96,34 +96,386 @@ class BitmapToken : public Token
 
 
 
-class MaterialNameToken : public Token
+class MaterialToken : public Token
 {
+
+ protected:
+
+  string   name_;
+  unsigned index_;
+  double   ambient_[3];
+  double   diffuse_[3];
+  double   specular_[3];
+  double   shine_;
+  double   transparency_;
+  string   tmap_filename_;
+  string   bmap_filename_;
+  string   omap_filename_;
+  string   imap_filename_;
 
  public:
 
-  MaterialNameToken() : Token("*MATERIAL_NAME") {
+  MaterialToken() : Token("*MATERIAL") {
     nargs_ = 1;
+    AddChildMoniker("*MATERIAL_NAME");
+    AddChildMoniker("*MATERIAL_AMBIENT");
+    AddChildMoniker("*MATERIAL_DIFFUSE");
+    AddChildMoniker("*MATERIAL_SPECULAR");
+    AddChildMoniker("*MATERIAL_SHINE");
+    AddChildMoniker("*MATERIAL_TRANSPARENCY");
+    AddChildMoniker("*MAP_DIFFUSE");
+    AddChildMoniker("*MAP_BUMP");
+    AddChildMoniker("*MAP_OPACITY");
+    AddChildMoniker("*MAP_SELFILLUM");
+    AddChildMoniker("*SUBMATERIAL");
   }
-  ~MaterialNameToken() {}
+  virtual ~MaterialToken() {}
 
-  string GetName() { return args_[0]; }
+  virtual bool Parse(ifstream &str) {
+    str >> index_;
+    ParseChildren(str);
 
-  virtual Token *MakeToken() { return new MaterialNameToken(); }
+    cout << "Material " << index_ << ": " << name_ << endl
+         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
+         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
+         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
+         << endl
+         << shine_ << endl
+         << transparency_ << endl 
+         << tmap_filename_ << endl << endl;
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*MATERIAL " << index_ << "{" << endl;
+    ++indent_;
+    unsigned length = children_.size();
+    for (unsigned loop=0; loop<length; ++loop)
+      children_[loop]->Write(str);
+    --indent_;
+    Indent(str);
+    str << "}" << endl;
+  }
+
+  unsigned GetIndex() { return index_; }
+  
+  string GetName() { return name_; }
+  void SetName(const string& s) { name_ = s; }
+  
+  void GetAmbient(double c[3]) { 
+    c[0] = ambient_[0];
+    c[1] = ambient_[1];
+    c[2] = ambient_[2];
+  } 
+  void SetAmbient(double c[3]) { 
+    ambient_[0] = c[0];
+    ambient_[1] = c[1];
+    ambient_[2] = c[2];
+  } 
+
+  void GetDiffuse(double c[3]) { 
+    c[0] = diffuse_[0];
+    c[1] = diffuse_[1];
+    c[2] = diffuse_[2];
+  } 
+  void SetDiffuse(double c[3]) { 
+    diffuse_[0] = c[0];
+    diffuse_[1] = c[1];
+    diffuse_[2] = c[2];
+  } 
+
+  void GetSpecular(double c[3]) { 
+    c[0] = specular_[0];
+    c[1] = specular_[1];
+    c[2] = specular_[2];
+  } 
+  void SetSpecular(double c[3]) { 
+    specular_[0] = c[0];
+    specular_[1] = c[1];
+    specular_[2] = c[2];
+  } 
+
+  double GetShine() { return shine_; } 
+  void SetShine(double s) { shine_ = s; } 
+
+  double GetTransparency() { return transparency_; }
+  void SetTransparency(double s) { transparency_ = s; }
+
+  string GetTMapFilename() { return tmap_filename_; }
+  void SetTMapFilename(const string& s) { tmap_filename_ = s; }
+
+  string GetBMapFilename() { return bmap_filename_; }
+  void SetBMapFilename(const string& s) { bmap_filename_ = s; }
+
+  string GetOMapFilename() { return omap_filename_; }
+  void SetOMapFilename(const string& s) { omap_filename_ = s; }
+
+  string GetIMapFilename() { return imap_filename_; }
+  void SetIMapFilename(const string& s) { imap_filename_ = s; }
+
+  Token *MakeToken() { return new MaterialToken(); }
 };
 
 
 
-class MapGenericToken : public Token
+class MaterialNameToken : public Token
 {
 
  public:
+  
+  MaterialNameToken() : Token("*MATERIAL_NAME") { nargs_ = 1; }
+  ~MaterialNameToken() {}
 
-  MapGenericToken() : Token("*MAP_GENERIC") {
-    AddChildMoniker("*BITMAP");    
+  virtual bool Parse(ifstream &str) {
+    ParseArgs(str);
+    ((MaterialToken*)parent_)->SetName(args_[0]);
+    return true;
   }
-  ~MapGenericToken() {}
 
-  virtual Token *MakeToken() { return new MapGenericToken(); }
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*MATERIAL_NAME " << ((MaterialToken*)parent_)->GetName() << endl;
+  }
+
+  Token *MakeToken() { return new MaterialNameToken(); }
+};
+
+
+
+class MaterialAmbientToken : public Token
+{
+
+ public:
+  
+  MaterialAmbientToken() : Token("*MATERIAL_AMBIENT") {}
+  ~MaterialAmbientToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    double color[3];
+    str >> color[0] >> color[1] >> color [2];
+    ((MaterialToken*)parent_)->SetAmbient(color);
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    double color[3];
+    ((MaterialToken*)parent_)->GetAmbient(color);
+    str << "*MATERIAL_AMBIENT " 
+        << color[0] << " " 
+        << color[1] << " " 
+        << color[2] << endl;
+  }
+
+  Token *MakeToken() { return new MaterialAmbientToken(); }
+};
+
+
+
+class MaterialDiffuseToken : public Token
+{
+
+ public:
+  
+  MaterialDiffuseToken() : Token("*MATERIAL_DIFFUSE") {}
+  ~MaterialDiffuseToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    double color[3];
+    str >> color[0] >> color[1] >> color [2];
+    ((MaterialToken*)parent_)->SetDiffuse(color);
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    double color[3];
+    ((MaterialToken*)parent_)->GetDiffuse(color);
+    str << "*MATERIAL_DIFFUSE " 
+        << color[0] << " " 
+        << color[1] << " " 
+        << color[2] << endl;
+  }
+
+  Token *MakeToken() { return new MaterialDiffuseToken(); }
+};
+
+
+
+class MaterialSpecularToken : public Token
+{
+
+ public:
+  
+  MaterialSpecularToken() : Token("*MATERIAL_SPECULAR") {}
+  ~MaterialSpecularToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    double color[3];
+    str >> color[0] >> color[1] >> color [2];
+    ((MaterialToken*)parent_)->SetSpecular(color);
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    double color[3];
+    ((MaterialToken*)parent_)->GetSpecular(color);
+    str << "*MATERIAL_SPECULAR " 
+        << color[0] << " " 
+        << color[1] << " " 
+        << color[2] << endl;
+  }
+
+  Token *MakeToken() { return new MaterialSpecularToken(); }
+};
+
+
+
+class MaterialShineToken : public Token
+{
+
+ public:
+  
+  MaterialShineToken() : Token("*MATERIAL_SHINE") {}
+  ~MaterialShineToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    double shine;
+    str >> shine;
+    ((MaterialToken*)parent_)->SetShine(shine);
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*MATERIAL_SHINE " << ((MaterialToken*)parent_)->GetShine() << endl;
+  }
+
+  Token *MakeToken() { return new MaterialShineToken(); }
+};
+
+
+
+class MaterialTransparencyToken : public Token
+{
+
+ public:
+  
+  MaterialTransparencyToken() : Token("*MATERIAL_TRANSPARENCY") {}
+  ~MaterialTransparencyToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    double t;
+    str >> t;
+    ((MaterialToken*)parent_)->SetTransparency(t);
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*MATERIAL_TRANSPARENCY " 
+        << ((MaterialToken*)parent_)->GetTransparency() << endl;
+  }
+
+  Token *MakeToken() { return new MaterialTransparencyToken(); }
+};
+
+
+
+class MapDiffuseToken : public Token
+{
+
+ public:
+  
+  MapDiffuseToken() : Token("*MAP_DIFFUSE") {
+    AddChildMoniker("*BITMAP");
+  }
+  ~MapDiffuseToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    ParseChildren(str);
+    if (children_.size()>0) {
+      string name = (*(children_[0]->GetArgs()))[0];
+      ((MaterialToken*)parent_)->SetTMapFilename(name);
+    }
+    return true;
+  }
+
+  Token *MakeToken() { return new MapDiffuseToken(); }
+};
+
+
+
+class MapBumpToken : public Token
+{
+
+ public:
+  
+  MapBumpToken() : Token("*MAP_BUMP") {
+    AddChildMoniker("*BITMAP");
+  }
+  ~MapBumpToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    ParseChildren(str);
+    if (children_.size()>0) {
+      string name = (*(children_[0]->GetArgs()))[0];
+      ((MaterialToken*)parent_)->SetBMapFilename(name);
+    }
+    return true;
+  }
+
+  Token *MakeToken() { return new MapBumpToken(); }
+};
+
+
+
+class MapOpacityToken : public Token
+{
+
+ public:
+  
+  MapOpacityToken() : Token("*MAP_OPACITY") { 
+    AddChildMoniker("*BITMAP");
+  }
+  ~MapOpacityToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    ParseChildren(str);
+    if (children_.size()>0) {
+      string name = (*(children_[0]->GetArgs()))[0];
+      ((MaterialToken*)parent_)->SetOMapFilename(name);
+    }
+    return true;
+  }
+
+  Token *MakeToken() { return new MapOpacityToken(); }
+};
+
+
+
+class MapSelfIllumToken : public Token
+{
+
+ public:
+  
+  MapSelfIllumToken() : Token("*MAP_SELFILLUM") { 
+    AddChildMoniker("*BITMAP");
+  }
+  ~MapSelfIllumToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    ParseChildren(str);
+    if (children_.size()>0) {
+      string name = (*(children_[0]->GetArgs()))[0];
+      ((MaterialToken*)parent_)->SetIMapFilename(name);
+    }
+    return true;
+  }
+
+  Token *MakeToken() { return new MapSelfIllumToken(); }
 };
 
 
@@ -147,213 +499,46 @@ class SubMaterialToken : public Token
 
  public:
 
-  SubMaterialToken() : Token("*SUBMATERIAL") {
+  SubMaterialToken() : Token("*MATERIAL") {
     nargs_ = 1;
-    tmap_filename_="";
+    AddChildMoniker("*MATERIAL_NAME");
+    AddChildMoniker("*MATERIAL_AMBIENT");
+    AddChildMoniker("*MATERIAL_DIFFUSE");
+    AddChildMoniker("*MATERIAL_SPECULAR");
+    AddChildMoniker("*MATERIAL_SHINE");
+    AddChildMoniker("*MATERIAL_TRANSPARENCY");
+    AddChildMoniker("*MAP_DIFFUSE");
+    AddChildMoniker("*MAP_BUMP");
+    AddChildMoniker("*MAP_OPACITY");
+    AddChildMoniker("*MAP_SELFILLUM");
   }
   virtual ~SubMaterialToken() {}
-  
-  virtual bool Parse(ifstream &str) {
-    string curstring;
-    str >> index_;
-    str >> curstring; // delimiter
-    DELIMITER delimiter = (DELIMITER)curstring[0];
-    str >> curstring;
-    while (1) {
-      if (curstring == "*MATERIAL_NAME") {
-        MaterialNameToken t;
-        t.ParseArgs(str);
-        name_ = t.GetName();
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_AMBIENT") {
-        str >> ambient_[0] >> ambient_[1] >> ambient_[2];
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_DIFFUSE") {
-        str >> diffuse_[0] >> diffuse_[1] >> diffuse_[2];
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_SPECULAR") {
-        str >> specular_[0] >> specular_[1] >> specular_[2];
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_SHINE") {
-        str >> shine_;
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_TRANSPARENCY") {
-        str >> transparency_;
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_DIFFUSE") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            tmap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_BUMP") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            tmap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_FILTERCOLOR") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            //tmap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_OPACITY") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            omap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_SELFILLUM") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            imap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_GENERIC") {
-        MapGenericToken t;
-        t.Parse(str);
-        str >> curstring; // get next token
-      } else {
-        if (!match(delimiter,(DELIMITER)curstring[0])) {
-          str >> curstring;
-          continue;
-        } else
-          break;
-      }
-    }
 
-    cout << "SubMaterial " << index_ << ": " << tmap_filename_ << endl
-         << name_ << endl
+  virtual bool Parse(ifstream &str) {
+    str >> index_;
+    ParseChildren(str);
+
+    cout << "SubMaterial " << index_ << ": " << name_ << endl
          << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
          << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
          << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
          << endl
          << shine_ << endl
-         << transparency_ << endl << endl;
-
+         << transparency_ << endl 
+         << tmap_filename_ << endl 
+         << bmap_filename_ << endl 
+         << omap_filename_ << endl 
+         << imap_filename_ << endl << endl;
     return true;
   }
 
   virtual void Write(ofstream &str) {
     Indent(str);
-
-    str << moniker_ << " " << index_ << " {" << endl;
-
+    str << "*SUBMATERIAL " << index_ << "{" << endl;
     ++indent_;
-
-    Indent(str);
-    str << "*MATERIAL_NAME "
-        << "\"" << name_ << "\"" << endl;
-
-    Indent(str);
-    str << "*MATERIAL_AMBIENT " 
-        << ambient_[0] << " "
-        << ambient_[1] << " "
-        << ambient_[2] << endl;
-
-    Indent(str);
-    str << "*MATERIAL_DIFFUSE " 
-        << diffuse_[0] << " "
-        << diffuse_[1] << " "
-        << diffuse_[2] << endl;
-
-    Indent(str);
-    str << "*MATERIAL_SPECULAR " 
-        << specular_[0] << " "
-        << specular_[1] << " "
-        << specular_[2] << endl;
-
-    Indent(str);
-    str << "*MATERIAL_SHINE " << shine_ << endl;
-
-    Indent(str);
-    str << "*MATERIAL_TRANSPARENCY " << transparency_ << endl;
-
-    if (tmap_filename_!="") {
-      Indent(str);
-      str << "*MAP_DIFFUSE {" << endl;
-      
-      ++indent_;
-
-      Indent(str);
-      str << "*BITMAP \"" << tmap_filename_ << "\"" << endl; 
-      
-      --indent_;
-      Indent(str);
-      str << "}" << endl;
-    }
-
+    unsigned length = children_.size();
+    for (unsigned loop=0; loop<length; ++loop)
+      children_[loop]->Write(str);
     --indent_;
     Indent(str);
     str << "}" << endl;
@@ -361,276 +546,18 @@ class SubMaterialToken : public Token
 
   unsigned GetIndex() { return index_; }
 
-  void GetAmbient(double c[3]) { 
-    c[0] = ambient_[0];
-    c[1] = ambient_[1];
-    c[2] = ambient_[2];
-  } 
-
-  void GetDiffuse(double c[3]) { 
-    c[0] = diffuse_[0];
-    c[1] = diffuse_[1];
-    c[2] = diffuse_[2];
-  } 
-
-  void GetSpecular(double c[3]) { 
-    c[0] = specular_[0];
-    c[1] = specular_[1];
-    c[2] = specular_[2];
-  } 
-
-  double GetShine() { return shine_; } 
-
-  double GetTransparency() { return transparency_; }
-
-  string GetTMapFilename() { return tmap_filename_; }
-
-  virtual Token *MakeToken() { return new SubMaterialToken(); }
-};
-
-
-
-class MaterialToken : public Token
-{
-
- protected:
-
-  string   name_;
-  unsigned index_;
-  double   ambient_[3];
-  double   diffuse_[3];
-  double   specular_[3];
-  double   shine_;
-  double   transparency_;
-  string   tmap_filename_;
-  string   bmap_filename_;
-  string   omap_filename_;
-  string   imap_filename_;
-
- public:
-
-  MaterialToken() : Token("*MATERIAL") {
-    nargs_ = 1;
-    tmap_filename_="";
-  }
-  virtual ~MaterialToken() {}
+  string GetName() { return name_; }
+  void SetName(const string& s) { name_ = s; }
   
-  virtual bool Parse(ifstream &str) {
-    string curstring;
-    str >> index_;
-    str >> curstring; // delimiter
-    DELIMITER delimiter = (DELIMITER)curstring[0];
-    str >> curstring;
-    while (1) {
-      if (curstring == "*MATERIAL_NAME") {
-        MaterialNameToken t;
-        t.ParseArgs(str);
-        name_ = t.GetName();
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_AMBIENT") {
-        str >> ambient_[0] >> ambient_[1] >> ambient_[2];
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_DIFFUSE") {
-        str >> diffuse_[0] >> diffuse_[1] >> diffuse_[2];
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_SPECULAR") {
-        str >> specular_[0] >> specular_[1] >> specular_[2];
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_SHINE") {
-        str >> shine_;
-        str >> curstring; // get next token
-      } else if (curstring == "*MATERIAL_TRANSPARENCY") {
-        str >> transparency_;
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_DIFFUSE") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            tmap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_BUMP") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            tmap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_FILTERCOLOR") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            //tmap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_OPACITY") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            omap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_SELFILLUM") {
-        str >> curstring; // delimiter
-        DELIMITER delimiter = (DELIMITER)curstring[0];
-        str >> curstring;
-        while (1) {
-          if (curstring == "*BITMAP") {
-            BitmapToken map;
-            if (!map.Parse(str))
-              return false;
-            imap_filename_ = (*(map.GetArgs()))[0];
-            
-            str >> curstring; // get next token
-          } else {
-            if (match(delimiter,(DELIMITER)curstring[0]))
-              break;
-            else
-              str >> curstring;
-          }
-        }
-        str >> curstring; // get next token
-      } else if (curstring == "*MAP_GENERIC") {
-        MapGenericToken t;
-        t.Parse(str);
-        str >> curstring; // get next token
-      } else if (curstring == "*SUBMATERIAL") {
-        SubMaterialToken t;
-        t.Parse(str);
-        str >> curstring; // get next token
-      } else {
-        if (!match(delimiter,(DELIMITER)curstring[0])) {
-          str >> curstring;
-          continue;
-        } else
-          break;
-      }
-    }
-
-    cout << "Material " << index_ << ": " << tmap_filename_ << endl
-         << name_ << endl
-         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
-         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
-         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
-         << endl
-         << shine_ << endl
-         << transparency_ << endl << endl;
-
-    return true;
-  }
-
-  virtual void Write(ofstream &str) {
-    Indent(str);
-
-    str << moniker_ << " " << index_ << " {" << endl;
-
-    ++indent_;
-
-    Indent(str);
-    str << "*MATERIAL_NAME "
-        << "\"" << name_ << "\"" << endl;
-
-    Indent(str);
-    str << "*MATERIAL_AMBIENT " 
-        << ambient_[0] << " "
-        << ambient_[1] << " "
-        << ambient_[2] << endl;
-
-    Indent(str);
-    str << "*MATERIAL_DIFFUSE " 
-        << diffuse_[0] << " "
-        << diffuse_[1] << " "
-        << diffuse_[2] << endl;
-
-    Indent(str);
-    str << "*MATERIAL_SPECULAR " 
-        << specular_[0] << " "
-        << specular_[1] << " "
-        << specular_[2] << endl;
-
-    Indent(str);
-    str << "*MATERIAL_SHINE " << shine_ << endl;
-
-    Indent(str);
-    str << "*MATERIAL_TRANSPARENCY " << transparency_ << endl;
-
-    if (tmap_filename_!="") {
-      Indent(str);
-      str << "*MAP_DIFFUSE {" << endl;
-      
-      ++indent_;
-
-      Indent(str);
-      str << "*BITMAP \"" << tmap_filename_ << "\"" << endl; 
-      
-      --indent_;
-      Indent(str);
-      str << "}" << endl;
-    }
-
-    --indent_;
-    Indent(str);
-    str << "}" << endl;
-  }
-
-  unsigned GetIndex() { return index_; }
-
   void GetAmbient(double c[3]) { 
     c[0] = ambient_[0];
     c[1] = ambient_[1];
     c[2] = ambient_[2];
+  } 
+  void SetAmbient(double c[3]) { 
+    ambient_[0] = c[0];
+    ambient_[1] = c[1];
+    ambient_[2] = c[2];
   } 
 
   void GetDiffuse(double c[3]) { 
@@ -638,20 +565,42 @@ class MaterialToken : public Token
     c[1] = diffuse_[1];
     c[2] = diffuse_[2];
   } 
+  void SetDiffuse(double c[3]) { 
+    diffuse_[0] = c[0];
+    diffuse_[1] = c[1];
+    diffuse_[2] = c[2];
+  } 
 
   void GetSpecular(double c[3]) { 
     c[0] = specular_[0];
     c[1] = specular_[1];
     c[2] = specular_[2];
   } 
+  void SetSpecular(double c[3]) { 
+    specular_[0] = c[0];
+    specular_[1] = c[1];
+    specular_[2] = c[2];
+  } 
 
   double GetShine() { return shine_; } 
+  void SetShine(double s) { shine_ = s; } 
 
   double GetTransparency() { return transparency_; }
+  void SetTransparency(double s) { transparency_ = s; }
 
   string GetTMapFilename() { return tmap_filename_; }
+  void SetTMapFilename(const string& s) { tmap_filename_ = s; }
 
-  virtual Token *MakeToken() { return new MaterialToken(); }
+  string GetBMapFilename() { return bmap_filename_; }
+  void SetBMapFilename(const string& s) { bmap_filename_ = s; }
+
+  string GetOMapFilename() { return omap_filename_; }
+  void SetOMapFilename(const string& s) { omap_filename_ = s; }
+
+  string GetIMapFilename() { return imap_filename_; }
+  void SetIMapFilename(const string& s) { imap_filename_ = s; }
+
+  Token *MakeToken() { return new SubMaterialToken(); }
 };
 
 
@@ -1369,7 +1318,6 @@ class ASEFile : public Token
   MaterialListToken D;
   MaterialToken E;
   SubMaterialToken F;
-  MapGenericToken G;
   BitmapToken L;
   GeomObjectToken M;
   NodeNameToken N;
@@ -1385,6 +1333,16 @@ class ASEFile : public Token
   MeshNormalsToken BB;
   MaterialRefToken EE;
   GroupToken FF;
+  MaterialNameToken GG;
+  MaterialAmbientToken HH;
+  MaterialDiffuseToken II;
+  MaterialSpecularToken JJ;
+  MaterialShineToken KK;
+  MaterialTransparencyToken LL;
+  MapDiffuseToken MM;
+  MapBumpToken NN;
+  MapOpacityToken OO;
+  MapSelfIllumToken PP;
 
   bool is_open_;
   ifstream str_;
