@@ -59,6 +59,8 @@ SRCS := \
 	$(SRCDIR)/ClipByFunction.tcl \
 	$(SRCDIR)/ClipField.tcl \
 	$(SRCDIR)/ClipLattice.tcl \
+	$(SRCDIR)/ColorMap2Reader.tcl \
+	$(SRCDIR)/ColorMap2Writer.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
 	$(SRCDIR)/ColorMapWriter.tcl \
 	$(SRCDIR)/ComboListbox.tcl \

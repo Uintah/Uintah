@@ -27,42 +27,63 @@
 #
 
 
-# Makefile fragment for this subdirectory
+# example of reader
+# by Samsonov Alexei
+# October 2000
 
-# *** NOTE ***
-# Do not remove or modify the comment line:
-# #[INSERT NEW ?????? HERE]
-# It is required by the module maker to properly edit this file.
-# if you want to edit this file by hand, see the "Create A New Module"
-# documentation on how to do it correctly.
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+catch {rename SCIRun_DataIO_ColorMap2Reader ""}
 
-SRCDIR   := Dataflow/Modules/DataIO
+itcl_class SCIRun_DataIO_ColorMap2Reader {
+    inherit Module
+    constructor {config} {
+	set name ColorMap2Reader
+	set_defaults
+    }
 
-SRCS     += \
-	$(SRCDIR)/ColorMap2Reader.cc\
-	$(SRCDIR)/ColorMap2Writer.cc\
-	$(SRCDIR)/ColorMapReader.cc\
-	$(SRCDIR)/ColorMapWriter.cc\
-	$(SRCDIR)/FieldReader.cc\
-	$(SRCDIR)/FieldWriter.cc\
-	$(SRCDIR)/MatrixReader.cc\
-	$(SRCDIR)/MatrixWriter.cc\
-	$(SRCDIR)/PathReader.cc\
-	$(SRCDIR)/PathWriter.cc\
-#[INSERT NEW CODE FILE HERE]
+    method set_defaults {} {
+	global $this-types
+	global $this-filetype
+    }
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \
-	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Geometry Core/Datatypes \
-	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
-	Dataflow/Widgets Core/ImportExport
+    method ui {} {
+	set w .ui[modname]
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+	if {[winfo exists $w]} {
+	    return
+	}
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+	toplevel $w -class TkFDialog
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
+	set initdir [netedit getenv SCIRUN_DATA]
+	
+	#######################################################
+	# to be modified for particular reader
 
-ifeq ($(LARGESOS),no)
-SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
-endif
+	# extansion to append if no extension supplied by user
+	set defext ".cmap2"
+	set title "Open colormap2 file"
+	
+	
+	# Unwrap $this-types into a list.
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
+	
+	######################################################
+	
+	makeOpenFilebox \
+		-parent $w \
+		-filevar $this-filename \
+		-setcmd "wm withdraw $w" \
+		-command "$this-c needexecute; wm withdraw $w" \
+		-cancel "wm withdraw $w" \
+		-title $title \
+		-filetypes $tmp2 \
+		-initialdir $initdir \
+		-defaultextension $defext \
+	        -selectedfiletype $this-filetype
+
+	moveToCursor $w
+    }
+}
