@@ -3,7 +3,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageField.h>
-
+#include <Core/Datatypes/QuadSurf.h>
 
 using namespace SCIRun;
 
@@ -38,6 +38,31 @@ const TypeDescription* get_type_description(ImageField<float> *);
 const TypeDescription* get_type_description(ImageField<int> *);
 const TypeDescription* get_type_description(ImageField<short> *);
 const TypeDescription* get_type_description(ImageField<unsigned char> *);
+
+
+template class GenericField<QuadSurfMesh, vector<Tensor> >;
+template class GenericField<QuadSurfMesh, vector<Vector> >;
+template class GenericField<QuadSurfMesh, vector<double> >;
+template class GenericField<QuadSurfMesh, vector<float> >;
+template class GenericField<QuadSurfMesh, vector<int> >;
+template class GenericField<QuadSurfMesh, vector<short> >;
+template class GenericField<QuadSurfMesh, vector<unsigned char> >;
+
+template class QuadSurf<Tensor>;
+template class QuadSurf<Vector>;
+template class QuadSurf<double>;
+template class QuadSurf<float>;
+template class QuadSurf<int>;
+template class QuadSurf<short>;
+template class QuadSurf<unsigned char>;
+
+const TypeDescription* get_type_description(QuadSurf<Tensor> *);
+const TypeDescription* get_type_description(QuadSurf<Vector> *);
+const TypeDescription* get_type_description(QuadSurf<double> *);
+const TypeDescription* get_type_description(QuadSurf<float> *);
+const TypeDescription* get_type_description(QuadSurf<int> *);
+const TypeDescription* get_type_description(QuadSurf<short> *);
+const TypeDescription* get_type_description(QuadSurf<unsigned char> *);
 
 
 template <>
@@ -89,6 +114,60 @@ ScalarFieldInterface *
 ImageField<unsigned char>::query_scalar_interface() const
 {
   return scinew SFInterface<ImageField<unsigned char> >(this);
+}
+
+
+
+
+template <>
+TensorFieldInterface *
+QuadSurf<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<QuadSurf<Tensor> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+QuadSurf<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<QuadSurf<Vector> >(this);
+}
+
+
+template <>
+ScalarFieldInterface *
+QuadSurf<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadSurf<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadSurf<float>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadSurf<float> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadSurf<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadSurf<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadSurf<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadSurf<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+QuadSurf<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<QuadSurf<unsigned char> >(this);
 }
 
 
