@@ -11,9 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ThreadStats.h>
+#include <Dataflow/ThreadStats.h>
+
+#include <Classlib/NotFinished.h>
 #include <Multitask/Task.h>
-#include <NotFinished.h>
+
 #include <iostream.h>
 #include <stdio.h>
 

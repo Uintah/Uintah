@@ -11,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Connection.h>
-#include <Module.h>
-#include <NotFinished.h>
-#include <Port.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/Module.h>
+#include <Dataflow/Port.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
 

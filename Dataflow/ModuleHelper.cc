@@ -11,10 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ModuleHelper.h>
-#include <Geom.h>
-#include <Module.h>
-#include <MessageTypes.h>
+#include <Dataflow/ModuleHelper.h>
+
+#include <Comm/MessageTypes.h>
+#include <Dataflow/Module.h>
+#include <Geom/Geom.h>
+
 #include <iostream.h>
 
 #define DEFAULT_MODULE_PRIORITY 90

@@ -14,7 +14,7 @@
 #ifndef SCI_project_MemStats_h
 #define SCI_project_MemStats_h 1
 
-#include <TCL.h>
+#include <TCL/TCL.h>
 
 class MemStats : public TCL {
     int textwidth;

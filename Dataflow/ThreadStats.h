@@ -14,7 +14,7 @@
 #ifndef SCI_project_ThreadStats_h
 #define SCI_project_ThreadStats_h 1
 
-#include <TCL.h>
+#include <TCL/TCL.h>
 class TaskInfo;
 
 class ThreadStats : public TCL {

@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = Dialbox.o
+SRCS = Dialbox.cc
+
+LIBNAME = Devices
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))

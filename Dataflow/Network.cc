@@ -11,16 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Network.h>
-#include <Connection.h>
-#include <Module.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
+#include <Dataflow/Network.h>
+
 #include <Classlib/Args.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/Module.h>
+#include <Dataflow/ModuleList.h>
+
 #include <iostream.h>
 #include <stdlib.h>
-
-#define NETEDIT_CANVAS_SIZE 2000
 
 static Arg_stringval initial_net("net", "", "specify initial network to load");
 

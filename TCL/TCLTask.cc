@@ -11,11 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TCLTask.h>
-#include <TCL.h>
 #include <Multitask/ITC.h>
-#include "../tcl/tcl7.3/tcl.h"
-#include "../tcl/tk3.6/tk.h"
+#include <TCL/TCLTask.h>
+#include <TCL/TCL.h>
+
+#include <tcl/tcl7.3/tcl.h>
+#include <tcl/tk3.6/tk.h>
 
 extern "C" int tkMain(int argc, char** argv);
 extern Tcl_Interp* the_interp;

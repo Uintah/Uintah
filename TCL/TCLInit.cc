@@ -11,11 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TCL.h>
-#include <MemStats.h>
-#include <NetworkEditor.h>
-#include <ThreadStats.h>
-
+#include <Dataflow/MemStats.h>
+#include <Dataflow/NetworkEditor.h>
+#include <Dataflow/ThreadStats.h>
+#include <TCL/TCL.h>
 
 void TCL::initialize()
 {

@@ -11,10 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Port.h>
-#include <Connection.h>
-#include <Module.h>
-#include <NotFinished.h>
+#include <Dataflow/Port.h>
+
+#include <Classlib/NotFinished.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/Module.h>
+
 #include <iostream.h>
 
 Port::Port(Module* module, const clString& typename,

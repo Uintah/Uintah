@@ -11,10 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TCLvar.h>
-#include <TCL.h>
-#include <TCLTask.h>
-#include <tcl.h>
+#include <TCL/TCL.h>
+#include <TCL/TCLTask.h>
+#include <TCL/TCLvar.h>
+
+#include <tcl/tcl7.3/tcl.h>
 #include <iostream.h>
 
 extern Tcl_Interp* the_interp;

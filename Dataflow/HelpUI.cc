@@ -11,9 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <HelpUI.h>
-#include <Multitask/Task.h>
 #include <Classlib/String.h>
+#include <Dataflow/HelpUI.h>
+#include <Multitask/Task.h>
+
 #include <iostream.h>
 #include <fstream.h>
 #include <stdio.h>
