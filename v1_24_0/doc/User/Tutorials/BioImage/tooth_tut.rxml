@@ -589,13 +589,99 @@ DEALINGS IN THE SOFTWARE.
       in the volume visualization pane performs the same function.
     </para>
 
-    <!--
-	<section><title>Using the Paintbrush</title>
-	<para>
-	(Talk about the paintbrush interface when it is ready)
-	</para>
-	</section>
-    -->
+
+    <section>
+      <title>Using the Paintbrush</title>
+      <para>
+	BioImage provides a simple paintbrush tool for coloring the Volume.
+	First click on the Volume Rendering Tab, shown in <xref linkend="fig.volrender_tab"/>
+	and then click the Add Paint Layer button shown in <xref linkend="fig.volrender_tab"/>
+	item 10. Note a new item named "Paint" is added to the list of color layers 
+	in <xref linkend="fig.pb_paint_layer_added"/> item 11. 
+      </para>
+      <figure id="fig.pb_paint_layer_added">
+	<title>Paint Layer</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Paint Layer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_added.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_added.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>      
+      <para>
+        The paint color defaults to a random color so that each new paint layer has a unique
+	color. Click on the "Color" rectangle in <xref linkend="fig.volrender_tab"/> item 11
+	to bring up the color picker.
+      </para>
+      <para>
+	Using the color picker, set the color to blue by moving the red and green scrolls to the left, the blue
+	scroll to the right, and the alpha scroll to the center, as show in 
+	<xref linkend="fig.pb_color_picker"/>. Then click
+	OK to close the color picker.
+      </para>
+      <figure id="fig.pb_color_picker">
+	<title>Paint Color Picker</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Paint Color Picker</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_color_picker.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_color_picker.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+      <para>
+	Scroll through the remaining layers and disable them by toggling their "On" buttons, as
+	show in <xref linkend="fig.pb_paint_layer_only"/>, so that only the recently added paint layer is active. These layers are 
+	covered in the Transfer Function section.
+      </para>
+      <figure id="fig.pb_paint_layer_only">
+	<title>Only the paint layer is active</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Only the paint layer is active</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_only.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_paint_layer_only.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+      <para>
+	Using your left mouse button, color the area inside of the top of the tooth as displayed inside of the saggital
+	viewer. You should now see the blue color applied to the volume as shown in <xref linkend="fig.pb_painted_enamel"/>.
+      </para>
+      <figure id="fig.pb_painted_enamel">
+	<title>Paint applied to enamel</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Paing applied to enamel</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_painted_enamel.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/pb_painted_enamel.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+      <para>
+	Now add another paint layer, and set its color to red. Again, using the left mouse button color the area
+	inside of the root displaye in the saggital viewer. You should now see the root colored in red and the
+	top of the tooth colored in blue.
+      </para>
+    </section>
+
 
     <section>
       <title>Transfer Functions</title>
