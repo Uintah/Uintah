@@ -39,10 +39,12 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-// This program will read in a .pts (specifying the x/y/z coords of
-// each point, one per line, entries separated by white space, file
-// must have a one line header specifying number of points.  See usage
-// string for details.
+// This program will read in a .pts file specifying the
+// the x/y/z/s components for each point separated by
+// white space.  The input file should NOT contain any
+// header.  The 's' component of each line is the string
+// associated with that point. The SCIRun output file is
+// written in ASCII unless -binOutput is specified.
 
 
 #include <Core/Datatypes/PointCloudField.h>
@@ -95,11 +97,11 @@ int parseArgs(int argc, char *argv[]) {
 
 void printUsageInfo(char *progName) {
   cerr << "\n Usage: "<<progName<<" pts PointCloudMesh [-binOutput] [-debug]\n\n";
-  cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
-  cerr << "\t coords of each point, one per line, entries separated by \n";
-  cerr << "\t white space.  The file must contain a one line header \n";
-  cerr << "\t specifying number of points.  The strings are to be listed \n";
-  cerr << "\t one per line after the points.  The SCIRun output file is \n";
+  cerr << "\t This program will read in a .pts file specifying the \n";
+  cerr << "\t the x/y/z/s components for each point separated by \n";
+  cerr << "\t white space.  The input file should NOT contain any \n";
+  cerr << "\t header.  The 's' component of each line is the string \n";
+  cerr << "\t associated with that point. The SCIRun output file is \n";
   cerr << "\t written in ASCII unless -binOutput is specified.\n\n";
 }
 
