@@ -787,8 +787,12 @@ case $host in
     ##  this WOFF is required for configure 
     CPPFLAGS=""
     FFLAGS="$extra_cflags"
-    CFLAGS="-pthread $extra_cflags -D__USE_STD_IOSTREAM"
-    CXXFLAGS="-model ansi -pthread $extra_cflags -D__USE_STD_IOSTREAM"
+    CFLAGS="$extra_cflags -D__USE_STD_IOSTREAM"
+    CXXFLAGS="-model ansi $extra_cflags -D__USE_STD_IOSTREAM"
+    if test "$threads" != "none"; then
+      CFLAGS="$CFLAGS -pthread"
+      CXXFLAGS="$CXXFLAGS -pthread"
+    fi
     SOFLAGS="-shared -warning_unresolved -update_registry \$(LIBDIR)so_locations"
     LDFLAGS=""
     LDRUN_PREFIX="-rpath "
@@ -1332,7 +1336,7 @@ case $host in
   *)
     if test "$threads" = "unknown"; then
       threads=pthreads
-    elif test "$threads" != "pthreads"; then
+    elif test "$threads" != "pthreads" -a "$threads" != "none"; then
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
     fi
     ;;
@@ -1388,6 +1392,10 @@ case $threads in
         fi
       fi
       LIBS="$old_LIBS"
+      ;;
+   none)
+      DEF_THREAD="#define SCI_NOTHREAD 1"
+      AC_MSG_WARN(threads disabled - software may work incorrectly)
       ;;
    *)
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
