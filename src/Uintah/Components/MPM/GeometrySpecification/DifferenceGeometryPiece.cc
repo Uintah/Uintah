@@ -12,7 +12,7 @@ using namespace Uintah;
 
 DifferenceGeometryPiece::DifferenceGeometryPiece(ProblemSpecP &ps) 
 {
-  std::vector<GeometryPiece *> objs(2);
+  std::vector<GeometryPiece *> objs;
 
   GeometryPieceFactory::create(ps,objs);
 
