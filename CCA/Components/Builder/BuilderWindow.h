@@ -104,12 +104,12 @@ class BuilderWindow : public QMainWindow,
 public:
     BuilderWindow(const sci::cca::Services::pointer& services);
     virtual ~BuilderWindow();
-    Module* instantiateComponent(const sci::cca::ComponentClassDescription::pointer&);
+    Module* instantiateComponent(const sci::cca::ComponentClassDescription::pointer &);
     Module* instantiateComponent(const std::string& className,
 				const std::string& type,
 				const std::string& loaderName);
     // From sci::cca::ComponentEventListener
-    void componentActivity(const sci::cca::ports::ComponentEvent::pointer& e);
+    virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
     void displayMsg(const char *);
     void displayMsg(const QString &);
     void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg,
@@ -124,13 +124,14 @@ public slots:
 
 protected:
     void closeEvent( QCloseEvent* );
-    std::vector<int> packageMenuIDs;
+    typedef std::map<std::string, int> IndexMap;
+    IndexMap popupMenuIndex;
 
 private:
     BuilderWindow(const BuilderWindow&);
     BuilderWindow& operator=(const BuilderWindow&);
     void setupFileActions();
-    void setupClusterActions();
+    void setupLoaderActions();
     void buildPackageMenus();
     void insertHelpMenu();
     void writeFile();
@@ -154,8 +155,8 @@ private:
 	*addPathAction,
 	*quitAction,
 	*exitAction,
-	*addClusterAction,
-	*rmClusterAction,
+	*addLoaderAction,
+	*rmLoaderAction,
 	*refreshAction;
     QPopupMenu *componentMenu;
 
@@ -176,8 +177,8 @@ private slots:
     void performance_tau_add();
     void demos();
     void about();
-    void addCluster();
-    void rmCluster();
+    void addLoader();
+    void rmLoader();
     void refresh();
     void addSidlXmlPath();
 };
