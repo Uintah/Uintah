@@ -71,3 +71,20 @@ O3_NORMAL         =  '-O3 -G0 -OPT:div_split=OFF'
 
 
 
+--------------------------------------------------------------
+../src/configure '--enable-64bit' '--enable-package=Uintah'
+'--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r14k
+-OPT:Olimit=0:roundoff=3' '--disable-sci-malloc'
+'--enable-assertion-level=0'
+
+BUILD - 12/16/2003 - best of 3
+performanceTest.ups[SecondOrder]
+
+0.751596 s - initial
+0.729891 s - optimize face loop in SecondOrderAdvector
+0.719778 s - const Intvector& c = *iter, inline saveFaceFluxes
+0.702516 s - d_OAFS from StaticArray to facedata
+0.664768 s - reduce [c] operators in qAverageFlux
+0.65881  s - more reduce [c] operators in qAverageFlux
+0.631359 s - reduce [c] operators in inFluxOutFluxVolume
+0.629109 s - reduce [c] operators in addExchangeToMomentumAndEnergy
