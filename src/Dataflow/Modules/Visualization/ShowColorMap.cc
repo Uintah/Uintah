@@ -41,6 +41,7 @@ class ShowColorMap : public Module {
   GuiString gui_units_;
   GuiInt gui_text_color_;
   GuiInt gui_text_fontsize_;
+  GuiInt gui_extra_padding_;
 
 public:
   ShowColorMap(GuiContext*);
@@ -58,7 +59,8 @@ ShowColorMap::ShowColorMap(GuiContext* ctx)
     gui_scale_(ctx->subVar("scale")),
     gui_units_(ctx->subVar("units")),
     gui_text_color_(ctx->subVar("text_color")),
-    gui_text_fontsize_(ctx->subVar("text-fontsize"))
+    gui_text_fontsize_(ctx->subVar("text-fontsize")),
+    gui_extra_padding_(ctx->subVar("extra-padding"))
 {
 }
 
@@ -98,7 +100,14 @@ ShowColorMap::execute()
     out = Vector(-0.05, 0.0, 0.0);
     if (gui_length_.get() == "full" || gui_length_.get() == "half2")
     {
-      ref1 = Point(-1.0, -15.0/16.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	ref1 = Point(-1.0, -14.0/16.0, 0.0);
+      }
+      else
+      {
+	ref1 = Point(-1.0, -15.0/16.0, 0.0);
+      }
     }
     else
     {
@@ -106,7 +115,14 @@ ShowColorMap::execute()
     }
     if (gui_length_.get() == "full")
     {
-      along = Vector(0.0, 30.0/16.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	along = Vector(0.0, 29.0/16.0, 0.0);
+      }
+      else
+      {
+	along = Vector(0.0, 30.0/16.0, 0.0);
+      }
     }
     else
     {
@@ -126,11 +142,25 @@ ShowColorMap::execute()
     }
     if (gui_length_.get() == "full")
     {
-      along = Vector(30.0/16.0, 0.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	along = Vector(29.0/16.0, 0.0, 0.0);
+      }
+      else
+      {
+	along = Vector(30.0/16.0, 0.0, 0.0);
+      }
     }
     else
     {
-      along = Vector(14.0/16.0, 0.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	along = Vector(13.0/16.0, 0.0, 0.0);
+      }
+      else
+      {
+	along = Vector(14.0/16.0, 0.0, 0.0);
+      }
     }
   }
 
