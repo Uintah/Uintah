@@ -195,7 +195,7 @@ void
 GridVolRen::loadColorMap()
 {
 #ifdef GL_TEXTURE_COLOR_TABLE_SGI
-  glColorTableSGI(GL_TEXTURE_COLOR_TABLE_SGI,
+  glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
                256, // try larger sizes?
                GL_RGBA,  // need an alpha value...
