@@ -51,6 +51,14 @@ PROGRAM := $(SRCDIR)/TriSurfToCVRTI
 SRCS := $(SRCDIR)/TriSurfToCVRTI.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/CVRTItoPointCloud
+SRCS := $(SRCDIR)/CVRTItoPointCloud.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/PointCloudToCVRTI
+SRCS := $(SRCDIR)/PointCloudToCVRTI.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/RawToContourField
 SRCS := $(SRCDIR)/RawToContourField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
