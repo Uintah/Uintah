@@ -683,7 +683,6 @@ main(int argc, char* argv[])
   dpygui->setDpy(dpy);
   dpygui->setRTRTEngine(rtrt_engine);
   dpygui->set_resolution(xres, yres);
-  new Thread(dpygui, "DpyGui", rtrt_engine_tg);
   
   //////////////////////////////////////////////////////////////////
   // This is the glut glui stuff
@@ -698,6 +697,7 @@ main(int argc, char* argv[])
   }
 
   /*  bigler */
+  new Thread(dpygui, "DpyGui", rtrt_engine_tg);
   new Thread(dpy, "Render Display", rtrt_engine_tg);
 
   // Start up worker threads...
