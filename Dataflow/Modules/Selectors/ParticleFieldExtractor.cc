@@ -203,6 +203,7 @@ void ParticleFieldExtractor::showVarsForMatls()
      gui->eval(id + " isOn p" + to_string(matl), result);
      if ( result == "0")
 	continue;
+     cerr<<"Material "<<matl<<" is on.\n";
      onMaterials.addInOrder(matl);
   }
 
@@ -211,6 +212,7 @@ void ParticleFieldExtractor::showVarsForMatls()
   string vpNames = getVarsForMaterials(vectorVars, onMaterials, needToUpdate);
   string tpNames = getVarsForMaterials(tensorVars, onMaterials, needToUpdate);
 
+  
   if (needToUpdate) {
     string visible;
     gui->eval(id + " isVisible", visible);
@@ -260,7 +262,7 @@ ParticleFieldExtractor::getVarsForMaterials(list<VarInfo>& vars,
 	(*iter).wasShown = false;
      }
   }
-
+  
   return names;
 }
 
@@ -387,10 +389,10 @@ void ParticleFieldExtractor::execute()
      if( !setVars( handle )){
        warning("Cannot read any ParticleVariables, no action.");
        return;
-     }
+      }
 
      archiveH = handle;
-   }
+    }
    showVarsForMatls();
      
    DataArchive& archive = *((*(handle.get_rep()))());
@@ -406,10 +408,10 @@ void ParticleFieldExtractor::execute()
    time = times[idx];
 
    buildData( archive, time, sp, vp, tp );
-   psout->send( sp );
-   pvout->send( vp );
-   ptout->send( tp );	  
-   tcl_status.set("Done");
+//    psout->send( sp );
+//    pvout->send( vp );
+//    ptout->send( tp );	  
+//    tcl_status.set("Done");
 }
 
 
@@ -460,10 +462,11 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 			     &smutex, &vmutex, &tmutex, &imutex, gui),
 		  "Particle Field Extractor Thread");
     thrd->detach();
-//     PFEThread *thrd = scinew PFEThread( this, archive, *patch,  sp, vp, tp, pset,
+//     PFEThread *thrd = scinew PFEThread( this, archive, *patch,
+// 			     sp, vp, tp, pset,
 //  			     scalar_type, have_sp, have_vp,
 //  			     have_tp, have_ids, sema,
-//  			     &smutex, &vmutex, &tmutex, &imutex);
+//  			     &smutex, &vmutex, &tmutex, &imutex, gui);
 
 //     thrd->run(); 
   }
@@ -545,8 +548,10 @@ void PFEThread::run(){
       archive.query(pvi, pfe->particleIDs, matl, patch, pfe->time);
     }
 
-    if( !have_subset )
+    if( !have_subset ){
+      sema->up();
       return;
+    }
     string elems;
     //unsigned long totsize;
     //void* mem_start;
