@@ -75,6 +75,10 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
+                                      
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);
   private:
     ICELabel* lb;
                                                 
@@ -96,7 +100,14 @@ WARNING
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
                              const ModelInfo* mi);
-
+                             
+    void testConservation(const ProcessorGroup*, 
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const ModelInfo* mi);
+    //__________________________________
     AdiabaticTable(const AdiabaticTable&);
     AdiabaticTable& operator=(const AdiabaticTable&);
 
@@ -123,6 +134,7 @@ WARNING
       VarLabel* diffusionCoeffLabel;
       VarLabel* varianceLabel;
       VarLabel* scaledVarianceLabel;
+      VarLabel* sum_scalar_fLabel;
       
       vector<Region*> regions;
       double diff_coeff;
@@ -158,6 +170,7 @@ WARNING
     int d_ref_cv_index;
     int d_ref_gamma_index;
     int d_ref_temp_index;
+    bool d_test_conservation;
 
     bool useVariance;
     double varianceScale;

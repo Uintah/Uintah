@@ -5,6 +5,7 @@
 // Avoid recomputation of variance
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/Models/test/AdiabaticTable.h>
@@ -62,14 +63,17 @@ AdiabaticTable::~AdiabaticTable()
   
   if(d_scalar){
     VarLabel::destroy(d_scalar->scalar_CCLabel);
-    if(d_scalar->scalar_src_CCLabel)
-      VarLabel::destroy(d_scalar->scalar_src_CCLabel);
     VarLabel::destroy(d_scalar->diffusionCoeffLabel);
-    VarLabel::destroy(cumulativeEnergyReleased_CCLabel);
     VarLabel::destroy(d_scalar->varianceLabel);
     VarLabel::destroy(d_scalar->scaledVarianceLabel);
+    VarLabel::destroy(d_scalar->sum_scalar_fLabel);
+    if(d_scalar->scalar_src_CCLabel){
+      VarLabel::destroy(d_scalar->scalar_src_CCLabel);
+    }
   }
+  VarLabel::destroy(cumulativeEnergyReleased_CCLabel);
   VarLabel::destroy(cumulativeEnergyReleased_src_CCLabel);
+  
   delete lb;
   delete table;
   for(int i=0;i<(int)tablevalues.size();i++)
@@ -187,10 +191,14 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->name  = "f";
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
-  d_scalar->scalar_CCLabel =     VarLabel::create("scalar-f",       td_CCdouble);
-  d_scalar->varianceLabel = VarLabel::create("scalar-f-variance", td_CCdouble);
-  d_scalar->scaledVarianceLabel = VarLabel::create("scalar-f-scaledvariance", td_CCdouble);
-  d_scalar->diffusionCoeffLabel = VarLabel::create("scalar-diffCoeff",td_CCdouble);
+  d_scalar->scalar_CCLabel = VarLabel::create("scalar-f",         td_CCdouble);
+  d_scalar->varianceLabel  = VarLabel::create("scalar-f-variance",td_CCdouble);
+  d_scalar->scaledVarianceLabel = VarLabel::create("scalar-f-scaledvariance", 
+                                                                  td_CCdouble);
+  d_scalar->diffusionCoeffLabel = VarLabel::create("scalar-diffCoeff",
+                                                                  td_CCdouble);
+  d_scalar->sum_scalar_fLabel   = VarLabel::create("sum_scalar_f", 
+                                            sum_vartype::getTypeDescription());
   d_modelComputesThermoTransportProps = true;
   
   //__________________________________
@@ -199,9 +207,12 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
    if (!child){
      throw ProblemSetupException("AdiabaticTable: Couldn't find scalar tag");    
    }
+   
+   child->getWithDefault("test_conservation", d_test_conservation, false);
+   
    ProblemSpecP const_ps = child->findBlock("constants");
    if(!const_ps) {
-     throw ProblemSetupException("AdiabaticTable: Couldn't find constants tag");
+     throw ProblemSetupException("AdiabaticTable:Couldn't find constants tag");
    }
  
    const_ps->getWithDefault("diffusivity",  d_scalar->diff_coeff, 0.0);
@@ -272,7 +283,8 @@ void AdiabaticTable::scheduleInitialize(SchedulerP& sched,
                                    const ModelInfo*)
 {
   cout_doing << "ADIABATIC_TABLE::scheduleInitialize " << endl;
-  Task* t = scinew Task("AdiabaticTable::initialize", this, &AdiabaticTable::initialize);
+  Task* t = scinew Task("AdiabaticTable::initialize", this, 
+                        &AdiabaticTable::initialize);
 
   t->modifies(lb->sp_vol_CCLabel);
   t->modifies(lb->rho_micro_CCLabel);
@@ -306,7 +318,8 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     CCVariable<double> cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
     CCVariable<double> rho_micro, temp;
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
-    new_dw->allocateAndPut(eReleased, cumulativeEnergyReleased_CCLabel, indx, patch);
+    new_dw->allocateAndPut(eReleased, cumulativeEnergyReleased_CCLabel, 
+                                                              indx, patch);
     new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
     new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
     new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
@@ -355,16 +368,16 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     }
     
     CellIterator iter = patch->getExtraCellIterator();
-    table->interpolate(d_density_index,   rho_micro,   iter, ind_vars);
-    table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
-    table->interpolate(d_cv_index,        cv,       iter, ind_vars);
-    table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
-    table->interpolate(d_temp_index,      temp,     iter, ind_vars);
+    table->interpolate(d_density_index,     rho_micro,   iter, ind_vars);
+    table->interpolate(d_gamma_index,       gamma,       iter, ind_vars);
+    table->interpolate(d_cv_index,          cv,          iter, ind_vars);
+    table->interpolate(d_viscosity_index,   viscosity,   iter, ind_vars);
+    table->interpolate(d_temp_index,        temp,        iter, ind_vars);
     table->interpolate(d_thermalcond_index, thermalCond, iter, ind_vars);
     CCVariable<double> ref_temp, ref_cv, ref_gamma;
-    new_dw->allocateTemporary(ref_cv, patch);
+    new_dw->allocateTemporary(ref_cv,    patch);
     new_dw->allocateTemporary(ref_gamma, patch);
-    new_dw->allocateTemporary(ref_temp, patch);
+    new_dw->allocateTemporary(ref_temp,  patch);
     table->interpolate(d_ref_cv_index,    ref_cv,   iter, ind_vars);
     table->interpolate(d_ref_gamma_index, ref_gamma,iter, ind_vars);
     table->interpolate(d_ref_temp_index,  ref_temp, iter, ind_vars);
@@ -376,8 +389,8 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       rho_CC[c] = rho_micro[c]*volfrac[c];
       sp_vol[c] = 1./rho_micro[c];
 
-      double cp    = gamma[c] * cv[c];    
-      double icp   = ref_gamma[c] * ref_cv[c];
+      double cp  = gamma[c] * cv[c];    
+      double icp = ref_gamma[c] * ref_cv[c];
       // This is stupid, but since some machines can't do math when
       // optimization is turned on we trap the common case to make
       // the result be truly zero.  It just makes debugging a bit
@@ -571,10 +584,12 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
 
   t->modifies(mi->energy_source_CCLabel);
   t->modifies(cumulativeEnergyReleased_src_CCLabel);
-  if(d_scalar->scalar_src_CCLabel)
+  if(d_scalar->scalar_src_CCLabel){
     t->modifies(d_scalar->scalar_src_CCLabel);
-  if(useVariance)
-    t->requires(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
+  }
+  if(useVariance){
+    t->requires(Task::NewDW, d_scalar->varianceLabel, gn, 0);
+  }
 
   // Interpolated table values
   for(int i=0;i<(int)tablevalues.size();i++){
@@ -790,7 +805,76 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
     }
   }
 }
+//______________________________________________________________________
+void AdiabaticTable::scheduleTestConservation(SchedulerP& sched,
+                                              const PatchSet* patches,
+                                              const ModelInfo* mi)
+{
+  if(d_test_conservation){
+    cout_doing << "ADIABATICTABLE::scheduleTestConservation " << endl;
+    Task* t = scinew Task("AdiabaticTable::testConservation", 
+                     this,&AdiabaticTable::testConservation, mi);
 
+    Ghost::GhostType  gn = Ghost::None;
+    // compute sum(scalar_f * mass)
+    t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
+    t->requires(Task::NewDW, mi->density_CCLabel,      gn,0);
+    t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
+    t->computes(d_scalar->sum_scalar_fLabel);
+
+    sched->addTask(t, patches, d_matl_set);
+  }
+}
+
+//______________________________________________________________________
+void AdiabaticTable::testConservation(const ProcessorGroup*, 
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* /*matls*/,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const ModelInfo* mi)
+{
+  const Level* level = getLevel(patches);
+  delt_vartype delT;
+  old_dw->get(delT, mi->delT_Label, level);     
+  Ghost::GhostType gn = Ghost::None; 
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing testConservation on patch "<<patch->getID()
+               << "\t\t\t AdiabaticTable" << endl;
+               
+    //__________________________________
+    //  conservation of f test
+    constCCVariable<double> rho_CC, f;
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
+    int indx = d_matl->getDWIndex();
+    new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
+    new_dw->get(rho_CC,  mi->density_CCLabel,     indx,patch,gn,0); 
+    new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    Vector dx = patch->dCell();
+    double cellVol = dx.x()*dx.y()*dx.z();
+
+    CCVariable<double> q_CC;
+    new_dw->allocateTemporary(q_CC, patch);
+
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      q_CC[c] = rho_CC[c]*cellVol*f[c];
+    }
+
+    double sum_mass_f;
+    conservationTest(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, sum_mass_f);
+    
+    new_dw->put(sum_vartype(sum_mass_f), d_scalar->sum_scalar_fLabel);
+  }
+}
 //__________________________________      
 void AdiabaticTable::scheduleComputeStableTimestep(SchedulerP&,
                                       const LevelP&,
