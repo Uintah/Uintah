@@ -47,7 +47,7 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -626,9 +626,9 @@ protected:
   //!  point, we simply find which grid cell contains that point, and
   //!  then search just those prisms that overlap that grid cell.
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
-  typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
-  grid_handle           grid_;
-  Mutex                 grid_lock_; // Bad traffic!
+  LockingHandle<SearchGrid>  grid_;
+  Mutex                      grid_lock_; // Bad traffic!
+  Cell::index_type           locate_cache_;
 
   unsigned int		synchronized_;
 };

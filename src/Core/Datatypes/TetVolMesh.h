@@ -607,9 +607,9 @@ protected:
   //!  point, we simply find which grid cell contains that point, and
   //!  then search just those tets that overlap that grid cell.
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
-  //typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
   LockingHandle<SearchGrid>  grid_;
-  Mutex                 grid_lock_; // Bad traffic!
+  Mutex                      grid_lock_; // Bad traffic!
+  Cell::index_type           locate_cache_;
 
   unsigned int		synchronized_;
 };

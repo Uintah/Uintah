@@ -61,6 +61,7 @@
 #define SCI_project_StructHexVolMesh_h 1
 
 #include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
@@ -151,9 +152,9 @@ private:
 
   Array3<Point> points_;
 
-  typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
-  grid_handle                 grid_;
+  LockingHandle<SearchGrid>   grid_;
   Mutex                       grid_lock_; // Bad traffic!
+  Cell::index_type           locate_cache_;
 
   // returns a StructHexVolMesh
   static Persistent *maker() { return new StructHexVolMesh(); }
