@@ -217,32 +217,36 @@ namespace Uintah {
 
 	dbgTime << "1 sim second takes ";
 
+	dbgTime << left << showpoint << setprecision(3) << setw(4);
+
 	if (realSecondsNow < SECONDS_PER_MINUTE) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsNow << " seconds (now), ";
+	  dbgTime << realSecondsNow << " seconds (now), ";
 	} else if ( realSecondsNow < SECONDS_PER_HOUR ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
+	  dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
 	} else if ( realSecondsNow < SECONDS_PER_DAY  ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
+	  dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
 	} else if ( realSecondsNow < SECONDS_PER_WEEK ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
+	  dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
 	} else if ( realSecondsNow < SECONDS_PER_YEAR ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
+	  dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
 	} else {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
+	  dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
 	}
 
+	dbgTime << setw(4);
+
 	if (realSecondsAvg < SECONDS_PER_MINUTE) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsAvg << " seconds (avg) ";
+	  dbgTime << realSecondsAvg << " seconds (avg) ";
 	} else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
+	  dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
 	} else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
+	  dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
 	} else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
+	  dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
 	} else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
+	  dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
 	} else {
-	  dbgTime << left << setfill('0') << setw(8) << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
+	  dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
 	}
 
 	dbgTime << "to calculate." << endl;
