@@ -3,10 +3,11 @@
 
 OBJS = ColorMapReader.o   ColumnMatrixReader.o   ContourSetReader.o   \
 	GeomReader.o   MatrixReader.o   MeshReader.o MultiSFRGReader.o  \
-	MultiMeshReader.o   ScalarFieldReader.o   SigmaSetReader.o   \
+	MultiMeshReader.o   ScalarFieldReader.o  SigmaSetReader.o   \
 	SurfaceReader.o   VectorFieldReader.o VectorFieldOceanReader.o  \
 	PointsReader.o   VoidStarReader.o DukeRawRead.o ImageReader.o \
-	TiffReader.o ParticleSetReader.o
+	TiffReader.o
+# ParticleSetReader.o
 GENSRCS = ColorMapReader.cc ColumnMatrixReader.cc ContourSetReader.cc  \
 	MatrixReader.cc   MeshReader.cc   MultiSFRGReader.cc \
 	MultiMeshReader.cc  ScalarFieldReader.cc   SigmaSetReader.cc \
@@ -26,10 +27,11 @@ TCLS = $(GENTCLS) GeomReader.tcl PointsReader.tcl VectorFieldOceanReader.tcl \
 
 LIBNAME = Readers
 
-LOCALINCLUDES = 
+LOCALINCLUDES =
+
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
-	-lMultitask -lMalloc -lm -lC -lc -ltiff
+	-lMultitask -lMalloc -lm -lC -lc
 
 depend:: $(GENSRCS)
 
