@@ -70,6 +70,9 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	global allow_selection
 	set allow_selection true
+
+	global read_error
+	set read_error 0
     }
 
     method make_file_open_box {} {
@@ -228,8 +231,9 @@ itcl_class Teem_DataIO_HDF5DataReader {
 			$treeframe.tree selection set $id
 		    } else {
 
-			puts stderr "Could not find dataset"
-			puts stderr $dataset
+			set message "Could not find dataset: "
+			append message $dataset
+			$this-c error $message
 		    }
 		}
 	    }
@@ -433,12 +437,21 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    $tree delete root
 
 	    if {[catch {open $filename r} fileId]} {
-		
-		set message "Can not open "
-		append message $filename
-		$this-c error message
-		return
+		global read_error
 
+		# the file may have been removed from the /tmp dir so
+		# try to recreate it.
+		if { $read_error == 0 } {
+		    set read_error 1
+		    $this-c update_file
+		    return
+		} else {
+		    set read_error 0
+		    set message "Can not open "
+		    append message $filename
+		    $this-c error $message
+		    return
+		}
 	    } elseif {[gets $fileId line] >= 0 &&
 		      [string first HDF5* $line] != 1 } {
 		process_file $tree root $fileId $line
@@ -522,7 +535,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    set info(type) ""
 	    set info(Type) "Attribute"
 	    set info(Value) $attr
-	    set node [$tree insert $parent  -tag "attribute" -label $name -data [array get info]]
+	    $tree insert $parent  -tag "attribute" -label $name \
+		-data [array get info]
 	}
     }
 
@@ -549,7 +563,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    set info(type) ""
 	    set info(Type) "DataSet"
 	    set info(Value) $dims
-	    set node [$tree insert $parent -tag "dataset" -label $name -data [array get info]]
+	    $tree insert $parent -tag "dataset" -label $name \
+		-data [array get info]
 	}
     }
 
