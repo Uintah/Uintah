@@ -132,7 +132,7 @@ void genPtsAndTets(int nr, int nz, Point min, Vector diag, Mesh* mesh){
     }
 }
 
-void main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     if (argc != 3) {
 	cerr << "Usage: "<<argv[1]<<" nr nz\n";
 	exit(0);
@@ -275,4 +275,15 @@ void main(int argc, char *argv[]) {
     Pio(*stream2, mH);
     delete(stream);
     delete(stream2);
+    return 1;
 }
+
+
+
+
+
+
+
+
+
+

@@ -32,6 +32,12 @@ itcl_class DaveW_FEM_ErrorMetric {
 	set ITERSGROW 50
 	global $this-pTCL
 	set $this-pTCL 1
+	global $this-rms
+	set $this-rms 0
+	global $this-cc
+	set $this-cc 0
+	global $this-haveUI
+	set $this-haveUI 0
     }
     method make_entry {w text v c} {
         frame $w
@@ -48,7 +54,8 @@ itcl_class DaveW_FEM_ErrorMetric {
             raise $w
             return;
         }
-
+	global $this-haveUI
+	set $this-haveUI 1
         toplevel $w
         wm minsize $w 300 80
         frame $w.f
@@ -69,7 +76,7 @@ itcl_class DaveW_FEM_ErrorMetric {
         blt::graph $w.rms.g -height 200 \
                 -plotbackground #CCCCFF
         $w.rms.g element create RMS -data "1 0" -color black -symbol ""
-        $w.rms.g yaxis configure -title "RMS Error" -logscale true
+        $w.rms.g yaxis configure -title "Rel RMS Error" -logscale true
 	global NITERS
         $w.rms.g xaxis configure -title "Iteration" -min 1 -max $NITERS
         pack $w.rms.g -side top -fill x
@@ -85,10 +92,22 @@ itcl_class DaveW_FEM_ErrorMetric {
                 -plotbackground #CCFFCC
         $w.data.g element create A -data "1 0" -color red -symbol ""
         $w.data.g element create B -data "1 0" -color blue -symbol ""
-        $w.data.g yaxis configure -title "Value" -min 0
+        $w.data.g yaxis configure -title "Value" 
         $w.data.g xaxis configure -title "Element" -min 1
+	global $this-rms
+	global $this-cc
+	frame $w.vals -relief groove -borderwidth 2
+	frame $w.vals.rms
+	label $w.vals.rms.l -text "Rel RMS: "
+	entry $w.vals.rms.e -textvariable $this-rms -state disabled
+	pack $w.vals.rms.l $w.vals.rms.e -side left -fill x -expand 1
+	frame $w.vals.cc
+	label $w.vals.cc.l -text "1-CC: "
+	entry $w.vals.cc.e -textvariable $this-cc -state disabled
+	pack $w.vals.cc.l $w.vals.cc.e -side left -fill x -expand 1
+	pack $w.vals.rms $w.vals.cc -side left -fill x -expand 1
         pack $w.data.g -side top -fill x
-        pack $w.top $w.rms $w.cc $w.data -side top -fill x
+        pack $w.top $w.vals $w.rms $w.cc $w.data -side top -fill x
     }   
 
     method append_graph {cc rms a b} {
@@ -96,6 +115,10 @@ itcl_class DaveW_FEM_ErrorMetric {
         if {![winfo exists $w]} {
             return
         }
+	global $this-rms
+	global $this-cc
+	set $this-cc $cc
+	set $this-rms $rms
         global iter
 	global NITERS
 	global ITERSGROW

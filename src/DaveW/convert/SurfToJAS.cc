@@ -82,7 +82,7 @@ main(int argc, char **argv) {
     if (ts->normType != TriSurface::NrmlsNone) {
 	sprintf(name, "%s.nrm", argv[1]);
 	fout=fopen(name, "wt");
-	fprintf(fout, "%d", ts->normals.size());
+	fprintf(fout, "%d\n", ts->normals.size());
 	for (i=0; i<ts->normals.size(); i++) {
 	    fprintf(fout, "%lf %lf %lf\n", ts->normals[i].x(), 
 		    ts->normals[i].y(), ts->normals[i].z());

@@ -31,7 +31,7 @@ using namespace SCICore::PersistentSpace;
 using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 
-void main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
     MatrixHandle handle;
     char name[100];
@@ -74,4 +74,5 @@ void main(int argc, char **argv) {
 	}	 
     }
     fclose(f);
+    return 1;
 }    

@@ -32,7 +32,7 @@ using namespace SCICore::PersistentSpace;
 using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
     MeshHandle mesh;
     int i, j, k;
@@ -97,7 +97,8 @@ main(int argc, char **argv) {
     }
 
 #endif
-    BinaryPiostream stream2(clString(argv[2]), Piostream::Write);
+    clString base2(argv[2]);
+    BinaryPiostream stream2(base2, Piostream::Write);
     Pio(stream2, mesh);
 #if 0
     mesh->elems=badElems;

@@ -16,17 +16,13 @@ PROGRAM := $(SRCDIR)/BldDisks
 SRCS := $(SRCDIR)/BldDisks.cc
 include $(SRCTOP)/scripts/program.mk
 
-#PROGRAM := $(SRCDIR)/TestProto
-#SRCS := $(SRCDIR)/TestProto.cc
-#include $(SRCTOP)/scripts/program.mk
+PROGRAM := $(SRCDIR)/MakeRadialCylinder
+SRCS := $(SRCDIR)/MakeRadialCylinder.cc
+include $(SRCTOP)/scripts/program.mk
 
-#PROGRAM := $(SRCDIR)/MakeRadialCylinder
-#SRCS := $(SRCDIR)/MakeRadialCylinder.cc
-#include $(SRCTOP)/scripts/program.mk
-
-#PROGRAM := $(SRCDIR)/DuckReader
-#SRCS := $(SRCDIR)/DuckReader.cc
-#include $(SRCTOP)/scripts/program.mk
+PROGRAM := $(SRCDIR)/DuckReader
+SRCS := $(SRCDIR)/DuckReader.cc
+include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/DuckWriter
 SRCS := $(SRCDIR)/DuckWriter.cc
@@ -126,11 +122,15 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
-# Revision 1.2.2.4  2000/10/27 16:25:43  mcole
-# fix build in convert
+# Revision 1.2.2.5  2000/10/31 02:15:03  dmw
+# merging DaveW HEAD changes into FIELD_BRANCH
 #
-# Revision 1.2.2.3  2000/10/26 14:02:27  moulding
-# merge HEAD into FIELD_REDESIGN
+# Revision 1.7  2000/10/30 04:39:54  dmw
+# reverting to previous version
+#
+# Revision 1.5  2000/10/27 20:32:00  zyp
+# Fixed the sub.mk file.  Accidently included one of my test programs in
+# it (that I did not commit).  All better now...
 #
 # Revision 1.4  2000/10/24 23:58:19  zyp
 # This program (DuckWriter) converts a file containing a ColumnMatrix of

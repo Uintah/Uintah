@@ -213,10 +213,10 @@ void Taubin::bldCols() {
 	origZ[i]=oldZ[i]=st->nodes[i].z();
     }
 }
-
+#if 0
 void Taubin::smooth(int constrained, double cons) {
     double dx2=dx*.49*cons;
-    dx2*=dx2*dx2;
+    dx2=dx2*dx2;
     double dy2=dy*.49*cons;
     dy2=dy2*dy2;
     double dz2=dz*.49*cons;
@@ -253,7 +253,7 @@ void Taubin::smooth(int constrained, double cons) {
 	    tmp=oldZ[i]-origZ[i];
 	    d2+=tmp*tmp/dz2;
 	    if (d2>1) {
-//		cerr << "Out-of-bounds (d2="<<d2<<") orig=("<<origX[i]<<", "<<origY[i]<<", "<<origZ[i]<<")\n\twants=("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n\tgot="; 
+		cerr << "Out-of-bounds (d2="<<d2<<") orig=("<<origX[i]<<", "<<origY[i]<<", "<<origZ[i]<<")\n\twants=("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n\tgot="; 
 		// interesct the ellipsoid with the line between the 2 pts
 		double t;
 		double p1x, p1y, p1z, p0x, p0y, p0z;
@@ -267,13 +267,54 @@ void Taubin::smooth(int constrained, double cons) {
 		    2*dx2*dz2*p1y*p0y+
 		    dx2*dy2*(p1z*p1z+p0z*p0z)-
 		    2*dx2*dy2*p1z*p0z;
-//		cerr << "[denom="<<denom<<"] ";
+		cerr << "[denom="<<denom<<"] ";
 		t=Sqrt(denom*dx*dy*dz)/denom;
 		oldX[i]=origX[i]+t*(oldX[i]-origX[i]);
 		oldY[i]=origY[i]+t*(oldY[i]-origY[i]);
 		oldZ[i]=origZ[i]+t*(oldZ[i]-origZ[i]);
-//		cerr << "("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n";
+		cerr << "("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n";
 	    }
+	}
+	st->nodes[i].x(oldX[i]);
+	st->nodes[i].y(oldY[i]);
+	st->nodes[i].z(oldZ[i]);
+    }    
+}
+#endif
+
+void Taubin::smooth(int constrained, double cons) {
+    int flops, memrefs;
+    // multiplyiteratively
+    int iters=N.get();
+
+    if (jitterTCL.get()) {
+	for (int i=0; i<st->nodes.size(); i++) {
+	    oldX[i] += (mr()-.5)*dx/10.;
+	    oldY[i] += (mr()-.5)*dy/10.;
+	    oldZ[i] += (mr()-.5)*dz/10.;
+	}
+    }
+    for (int iter=0; iter<iters; iter++) {
+	srm->mult(oldX, tmpX, flops, memrefs);
+	srm->mult(oldY, tmpY, flops, memrefs);
+	srm->mult(oldZ, tmpZ, flops, memrefs);
+	srg->mult(tmpX, oldX, flops, memrefs);
+	srg->mult(tmpY, oldY, flops, memrefs);
+	srg->mult(tmpZ, oldZ, flops, memrefs);
+    }
+
+    // copy the resultant points back into the data
+    for (int i=0; i<st->nodes.size(); i++) {
+	if (constrained) {
+
+	  if (oldX[i]-origX[i] > 0.49*dx) oldX[i]=origX[i]+0.49*dx;
+	  else if (origX[i]-oldX[i] > 0.49*dx) oldX[i]=origX[i]-0.49*dx;
+
+	  if (oldY[i]-origY[i] > 0.49*dy) oldY[i]=origY[i]+0.49*dy;
+	  else if (origY[i]-oldY[i] > 0.49*dy) oldY[i]=origY[i]-0.49*dy;
+
+	  if (oldZ[i]-origZ[i] > 0.49*dz) oldZ[i]=origZ[i]+0.49*dz;
+	  else if (origZ[i]-oldZ[i] > 0.49*dz) oldZ[i]=origZ[i]-0.49*dz;
 	}
 	st->nodes[i].x(oldX[i]);
 	st->nodes[i].y(oldY[i]);
@@ -373,6 +414,12 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.9.2.1  2000/10/31 02:14:42  dmw
+// merging DaveW HEAD changes into FIELD_BRANCH
+//
+// Revision 1.10  2000/10/29 04:02:46  dmw
+// cleaning up DaveW tree
+//
 // Revision 1.9  2000/03/17 09:25:35  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

@@ -13,12 +13,14 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Bundles.tcl $(SRCDIR)/ContourSetReader.tcl \
 	$(SRCDIR)/ContourSetWriter.tcl $(SRCDIR)/Coregister.tcl \
 	$(SRCDIR)/DipoleInSphere.tcl $(SRCDIR)/DipoleMatToGeom.tcl \
-	$(SRCDIR)/Downhill_Simplex.tcl $(SRCDIR)/ErrorMetric.tcl \
+	$(SRCDIR)/DipoleSourceRHS.tcl \
+	$(SRCDIR)/Downhill_Simplex3.tcl $(SRCDIR)/ErrorMetric.tcl \
 	$(SRCDIR)/InvEEGSolve.tcl $(SRCDIR)/OptDip.tcl \
 	$(SRCDIR)/RTrace.tcl $(SRCDIR)/Radiosity.tcl \
 	$(SRCDIR)/RayMatrix.tcl $(SRCDIR)/RayTest.tcl \
 	$(SRCDIR)/RescaleSegFld.tcl $(SRCDIR)/SGI_LU.tcl \
 	$(SRCDIR)/SGI_Solve.tcl $(SRCDIR)/STreeExtractSurf.tcl \
+	$(SRCDIR)/SeedDipoles2.tcl \
 	$(SRCDIR)/SegFldOps.tcl $(SRCDIR)/SegFldReader.tcl \
 	$(SRCDIR)/SegFldWriter.tcl $(SRCDIR)/SelectSurfNodes.tcl \
 	$(SRCDIR)/SiReAll.tcl $(SRCDIR)/SiReCrunch.tcl \
@@ -35,8 +37,11 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
-# Revision 1.2.2.2  2000/10/26 14:01:53  moulding
-# merge HEAD into FIELD_REDESIGN
+# Revision 1.2.2.3  2000/10/31 02:14:38  dmw
+# merging DaveW HEAD changes into FIELD_BRANCH
+#
+# Revision 1.4  2000/10/29 03:47:58  dmw
+# new GUIs
 #
 # Revision 1.3  2000/10/24 05:57:07  moulding
 # new module maker Phase 2: new module maker goes online
