@@ -412,7 +412,7 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
 		
 		struct timeval  tv;
 		struct timespec tm;
-		::gettimeofday(&tv,0);
+		gettimeofday(&tv,0);
 		tm.tv_nsec = 0;
 		tm.tv_sec = tv.tv_sec + secondstowait;
 		
