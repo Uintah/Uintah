@@ -16,6 +16,7 @@
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
+#include <Packages/CardioWave/Core/Algorithms/CuthillMcKee.h>
 }
 
 #include <Packages/CardioWave/share/share.h>
@@ -31,6 +32,7 @@ class CardioWaveSHARE SetupFVMatrix : public Module {
   GuiDouble	sigx2_;
   GuiDouble	sigy2_;
   GuiDouble	sigz2_;
+  GuiString	sprbwfile_;
   GuiString	sprfile_;
   GuiString	volumefile_;
   GuiInt		BW_;
@@ -54,6 +56,7 @@ SetupFVMatrix::SetupFVMatrix(const string& id)
     sigy2_("sigy2", id, this),
     sigz2_("sigz2", id, this),
     sprfile_("sprfile", id, this),
+    sprbwfile_("sprbwfile", id, this),
     volumefile_("volumefile", id, this),
     BW_("BW", id, this)
   
@@ -71,6 +74,7 @@ void SetupFVMatrix::execute(){
   double sigy2 = sigy2_.get();
   double sigz2 = sigz2_.get();
   string sprfile = sprfile_.get();
+  string sprbwfile = sprbwfile_.get();
   string volumefile = volumefile_.get();
   int BW = BW_.get();
   
@@ -145,6 +149,8 @@ void SetupFVMatrix::execute(){
   HexVolMesh::Cell::size_type ncells;
   m->size(nnodes);
   m->size(ncells);
+
+  cerr << "\n\nSetupFVMatrix: nnodes="<<nnodes<<" ncells="<<ncells<<"\n\n\n";
 
   MESH *mesh = new MESH;
   mesh->vtx = new VERTEX[nnodes];
@@ -235,12 +241,36 @@ void SetupFVMatrix::execute(){
     
   compute_volumes(mesh, volumefile.c_str());
   compute_matrix(mesh, sprfile.c_str());
-  
-  // add bandwidth minimization -- get back the permutation vector
+
+  // bandwidth minimization -- get back the permutation vector
   //   from the permutation vector, reorder the nodes and fix the cells
+
+  if (BW) {
+    HexVolMesh *hvm = scinew HexVolMesh;
+    int *map = scinew int[nnodes];
+    cuthill_mckee_bandwidth_minimization(sprfile.c_str(), sprbwfile.c_str(), map, nnodes);
+    int i;
+    for (i=0; i<nnodes; i++)
+      hvm->add_point(m->point(map[i]));
+    for (i=0; i<ncells; i++) {
+      m->get_nodes(nodes, (HexVolMesh::Cell::index_type) i);
+      hvm->add_hex((HexVolMesh::Node::index_type) map[nodes[0]],
+		   (HexVolMesh::Node::index_type) map[nodes[1]],
+		   (HexVolMesh::Node::index_type) map[nodes[2]],
+		   (HexVolMesh::Node::index_type) map[nodes[3]],
+		   (HexVolMesh::Node::index_type) map[nodes[4]],
+		   (HexVolMesh::Node::index_type) map[nodes[5]],
+		   (HexVolMesh::Node::index_type) map[nodes[6]],
+		   (HexVolMesh::Node::index_type) map[nodes[7]]);
+    }
+    HexVol<int> *hv = scinew HexVol<int>(hvm, Field::NODE);
+    for (i=0; i<nnodes; i++) {
+      hv->fdata()[i] = ct->fdata()[map[i]];
+    }
+    ct=hv;
+  }
   
   omesh->send(ct);
-
 }
 
 } // End namespace CardioWave

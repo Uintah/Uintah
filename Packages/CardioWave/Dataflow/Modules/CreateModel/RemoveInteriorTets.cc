@@ -137,17 +137,24 @@ void RemoveInteriorTets::execute(){
     }
     ++nb;
   }
-  
+
+  if (count != nnodes) {
+    cerr << "\n\nWARNING: RemoveInteriorTets threshold was too large -- "<<nnodes-count<<" of "<<nnodes<<" were removed.\n\n\n";
+  }
+
   // add the valid tets to the new mesh
+  count=0;
   old_mesh->begin(cb);
   while(cb!=ce) {
     if (cell_valid[*cb]) {
       old_mesh->get_nodes(nodes, *cb);
       new_mesh->add_tet(node_map[nodes[0]], node_map[nodes[1]],
 		  node_map[nodes[2]], node_map[nodes[3]]);
+      count++;
     }
     ++cb;
   }
+  cerr << "\n\nRemoveInteriorTets: ncells="<<count<<"\n\n\n";
 
   // copy the fdata for valid nodes
   TetVol<Vector> *tv_new = scinew TetVol<Vector>(new_mesh, Field::NODE);

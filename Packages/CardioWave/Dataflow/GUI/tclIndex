@@ -6,5 +6,6 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
-set auto_index(CardioWave_CreateModel_CreateSimpleMesh) [list source [file join $dir CreateSimpleMesh.tcl]]
+set auto_index(CardioWave_CreateModel_RemoveInteriorTets) [list source [file join $dir RemoveInteriorTets.tcl]]
 set auto_index(CardioWave_CreateModel_SetupFVMatrix) [list source [file join $dir SetupFVMatrix.tcl]]
+set auto_index(CardioWave_CreateModel_CreateSimpleMesh) [list source [file join $dir CreateSimpleMesh.tcl]]
