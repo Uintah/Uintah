@@ -79,20 +79,18 @@ struct GeometryData {
 #define GEOM_TRIANGLES		8
 
 class PSECORESHARE GeometryOPort : public OPort {
-    GeometryIPort* in;
-    int portid;
+private:
+
     GeomID serial;
-    int dirty;
-    Mutex* lock;
+    bool dirty;
 
     GeometryComm* save_msgs;
     GeometryComm* save_msgs_tail;
-    void save_msg(GeometryComm*);
 
-    virtual void reset();
-    virtual void finish();
-
+    int portid;
     Mailbox<MessageBase*>* outbox;
+
+    void save_msg(GeometryComm*);
 
 public:
     GeometryOPort(Module*, const string& name);
@@ -107,6 +105,9 @@ public:
 
     void forward(GeometryComm* msg);
     bool direct_forward(GeometryComm* msg);
+
+    virtual void reset();
+    virtual void finish();
 
     virtual void attach(Connection*);
     virtual void detach(Connection*);
