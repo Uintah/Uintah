@@ -151,7 +151,7 @@ TendEstim::execute()
 			  soft_.get(), scale_.get()))
   {
     char *err = biffGetDone(TEN);
-    error(string("Error in epireg: ") + err);
+    error(string("Error in TendEstim: ") + err);
     free(err);
     return;
   }
