@@ -16,6 +16,7 @@ SEND_MAIL_TO=""
 MAIL_REMAKE_LOG_TO=""
 DEFAULT_MAIL_TO="csafe-homebrew@cs.utah.edu"
 DEFAULT_REMAKE_LOG_TO="kuzimmer@cs.utah.edu, bigler@cs.utah.edu, sparker@cs.utah.edu, dav@cs.utah.edu, worthen@cs.utah.edu"
+REPLY_TO="csafe-homebrew@cs.utah.edu"
 PARALLELISM=0
 VERBOSE="no"
 WEEKLY="0"
@@ -62,6 +63,7 @@ while [ "$#" -gt 0 ]; do
 	if [ "$#" -gt 1 ]; then
 	    shift
 	    SEND_MAIL_TO="$1"
+            REPLY_TO=""
 	fi
 	;;
     -verbose)
@@ -188,7 +190,7 @@ if [ -d /usr/var/tmp ]; then
 	export TMPDIR
 fi
 
-export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO MAIL_REMAKE_LOG_TO
+export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO MAIL_REMAKE_LOG_TO REPLY_TO
 
 if [ $VERBOSE == "yes" ]; then
     echo "TIME STAMP: Regression Tester Starting at:"
