@@ -71,6 +71,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LinAlgBinary.tcl \
 	$(SRCDIR)/LinAlgUnary.tcl \
+	$(SRCDIR)/LinearAlgebra.tcl \
 	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/MapDataToMeshCoord.tcl \
 	$(SRCDIR)/MaskLattice.tcl \

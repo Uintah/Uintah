@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/FieldToCanonicalTransform.cc\
 	$(SRCDIR)/LinAlgBinary.cc\
 	$(SRCDIR)/LinAlgUnary.cc\
+	$(SRCDIR)/LinearAlgebra.cc\
         $(SRCDIR)/MatrixSelectVector.cc\
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
