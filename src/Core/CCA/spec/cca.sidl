@@ -1302,7 +1302,11 @@ interface BuilderService  extends gov.cca.Port
 	  </ul>
   */
    void disconnectAll(in gov.cca.ComponentID id1, in gov.cca.ComponentID id2, in float timeout) throws gov.cca.CCAException ; 
+   string getFrameworkURL() throws gov.cca.CCAException;
+   array<gov.cca.Port> 
+   listPorts(in string name ) throws gov.cca.CCAException;
 
+   gov.cca.Port getUIPort(in string name ) throws gov.cca.CCAException;	
 }  // end interface BuilderService
 
 
@@ -1337,7 +1341,11 @@ interface GoPort  extends gov.cca.Port
 
 }  // end interface GoPort
 
-
+//abstract inferface 
+interface UIPort extends gov.cca.Port
+{
+	void ui();
+}
 
 /* $Source$ */
 
@@ -1534,7 +1542,7 @@ interface ComponentEventService  extends Port
       @param l, a previously added listener interface.
    */
    void removeComponentEventListener(in ComponentEventType type, in ComponentEventListener l) ;
-
+ 
    void moveComponent(in ComponentID component, in int x, in int y);
 }
 
