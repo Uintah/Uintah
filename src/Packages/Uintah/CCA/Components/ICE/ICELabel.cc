@@ -177,6 +177,9 @@ ICELabel::ICELabel()
   modelEng_srcLabel =
     VarLabel::create( "modelEng_src",
 		      CCVariable<double>::getTypeDescription());
+  modelVol_srcLabel =
+    VarLabel::create( "modelVol_src",
+		      CCVariable<double>::getTypeDescription());
 } 
 
 ICELabel::~ICELabel()
@@ -266,4 +269,5 @@ ICELabel::~ICELabel()
     VarLabel::destroy(modelMass_srcLabel);
     VarLabel::destroy(modelMom_srcLabel);
     VarLabel::destroy(modelEng_srcLabel);
+    VarLabel::destroy(modelVol_srcLabel);
 }
