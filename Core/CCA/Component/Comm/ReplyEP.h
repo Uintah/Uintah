@@ -32,6 +32,8 @@
 #define Component_PIDL_ReplyEP_h
 
 #include <Core/Thread/Semaphore.h>
+#include <stdio.h>
+#undef IOV_MAX
 #include <globus_nexus.h>
 
 

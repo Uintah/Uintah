@@ -20,6 +20,8 @@
 #define NEXUS_EP_CHANNEL_H 
 
 #include <Core/CCA/Component/Comm/EpChannel.h>
+#include <stdio.h>
+#undef IOV_MAX
 #include <globus_nexus.h>
 
 namespace SCIRun {

@@ -36,6 +36,8 @@ SEE ALSO
 
 #include <Core/CCA/Component/Comm/Message.h>
 #include <string>
+#include <stdio.h>
+#undef IOV_MAX
 #include <globus_nexus.h>
 
 namespace SCIRun {
