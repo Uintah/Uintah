@@ -3,7 +3,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Dataflow/Network/NetworkEditor.h>
+//#include <Dataflow/Network/NetworkEditor.h>
 #include <dom/DOM_NamedNodeMap.hpp>
 #include <iostream>
 #include <sstream>
@@ -15,6 +15,11 @@ using namespace std;
 namespace SCIRun {
 
 const char _NOTSET_[] = "(null string)";
+
+static void postMessage(const clString& errmsg)
+{
+    cerr << errmsg << '\n';
+}
 
 DOM_Node findNode(const std::string &name,DOM_Node node)
 {
