@@ -17,6 +17,9 @@
 
 #include <Core/CCA/Component/Comm/Intra/IntraCommMPI.h>
 
+#include <sci_config.h> // For MPIPP_H on SGI
+#include <mpi.h>
+
 using namespace SCIRun;
 
 IntraCommMPI::IntraCommMPI()
