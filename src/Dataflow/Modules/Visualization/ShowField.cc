@@ -169,8 +169,12 @@ ShowField::execute()
       TetVol<double> *tv = 0;
       TetVol<double> *tv1 = 0;
       tv = dynamic_cast<TetVol<double>*>(geom_handle.get_rep());
-      tv1 = dynamic_cast<TetVol<double>*>(geom_handle.get_rep());
-      if (tv && tv1) { render(tv, tv1, color_handle); }
+      tv1 = dynamic_cast<TetVol<double>*>(data_handle.get_rep());
+      if (tv && tv1) { 
+	// need faces and edges.
+	tv->finish_mesh();
+	render(tv, tv1, color_handle); 
+      }
       else { error = true; msg = "Not a valid TetVol."; }
     } else {
       error = true; msg ="TetVol of unknown type.";
@@ -201,7 +205,7 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
 {
   typename Field::mesh_handle_type mesh = geom->get_typed_mesh();
 
-  if (nodes_on_) {
+  if ((nodes_on_)) { // && (node_id_ == 0)) {
     GeomGroup* nodes = scinew GeomGroup;
     node_switch_ = scinew GeomSwitch(nodes);
     GeomPts *pts = 0;
@@ -232,11 +236,11 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     }
   }
 
-  if (edges_on_) {
+  if ((edges_on_)) { // && (edge_id_ == 0)) {
     GeomGroup* edges = scinew GeomGroup;
     edge_switch_ = scinew GeomSwitch(edges);
     // Second pass over the edges
-    mesh->compute_edges();
+    //mesh->compute_edges();
     typename Field::mesh_type::edge_iterator eiter = mesh->edge_begin();  
     while (eiter != mesh->edge_end()) {        
       typename Field::mesh_type::node_array nodes;
@@ -253,6 +257,31 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
       add_edge(p1, p2, 1.0, edges, cm->lookup(val1));
     }
   }
+
+//    if ((faces_on_) && (face_id_ == 0)) {
+//      GeomGroup* faces = scinew GeomGroup;
+//      face_switch_ = scinew GeomSwitch(faces);
+//      // Second pass over the faces
+//      //mesh->compute_faces();
+//      typename Field::mesh_type::face_iterator eiter = mesh->face_begin();  
+//      while (eiter != mesh->face_end()) {        
+//        typename Field::mesh_type::node_array nodes;
+//        mesh->get_nodes(nodes, *eiter); ++eiter;
+    
+//        Point p1, p2, p3;
+//        mesh->get_point(p1, nodes[0]);
+//        mesh->get_point(p2, nodes[1]);
+//        mesh->get_point(p3, nodes[1]);
+//        double val1;
+//        if (! c_index->value(val1, nodes[0])) { return false; }
+//        double val2;
+//        if (! c_index->value(val2, nodes[1])) { return false; } 
+//        double val3;
+//        if (! c_index->value(val3, nodes[2])) { return false; } 
+//        add_face(p1, p2, p3, cm->lookup(val1), cm->lookup(val2), 
+//  	       cm->lookup(val3), faces);
+//      }
+//    }
 }
 
 void 
