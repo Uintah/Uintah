@@ -745,7 +745,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       const VarLabel* var = saveItem.label_;
       const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
       t->requires(Task::NewDW, var, matls);
-      //t->setType(Task::Output);
+      t->setType(Task::Output);
     }
     
     sched->addTask(t, 0, 0);
@@ -765,7 +765,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       const VarLabel* var = saveItem.label_;
       const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
       t->requires(Task::NewDW, var, matls);
-      //t->setType(Task::Output);
+      t->setType(Task::Output);
     }
     sched->addTask(t, 0, 0);
     
@@ -1269,7 +1269,7 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
 			    this, &DataArchiver::output,
 			    &baseDir, (*saveIter).label_, isThisCheckpoint);
       t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
-      //t->setType(Task::Output);
+      t->setType(Task::Output);
       sched->addTask(t, patches, matls);
       n++;
     }

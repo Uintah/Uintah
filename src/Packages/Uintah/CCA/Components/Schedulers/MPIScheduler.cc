@@ -737,7 +737,7 @@ MPIScheduler::execute()
 	initiateReduction(task);
       break;
     case Task::Normal:
-      //case Task::Output:
+    case Task::Output:
     case Task::InitialSend:
       {
 	if( dbg.active() ) {
