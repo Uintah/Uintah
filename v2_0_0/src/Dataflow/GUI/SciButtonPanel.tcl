@@ -1,6 +1,6 @@
 
 #
-#   makeSciButtonPanel parent close_window this
+#   makeSciButtonPanel parent close_window this [no_exec_btn]
 #
 #   Author: J. Davison de St. Germain
 #
@@ -9,12 +9,15 @@
 #   withdrawn when the 'Close' button is pressed.  "This" will be 
 #   executed when the 'Execute' button is pressed.
 #
+#   If "no_exec_btn" is set to "true", then no execute button will be
+#   created. This parameter defaults to "false".
+#
 #   NOTE: This function also overrides the "close_window"s destruction
 #   window decoration and makes the window 'close' instead of being
 #   destroyed.
 #
 
-proc makeSciButtonPanel { parent close_window this } {
+proc makeSciButtonPanel { parent close_window this { no_exec_btn "false" } } {
 
   set outside_pad 4
 
@@ -24,9 +27,11 @@ proc makeSciButtonPanel { parent close_window this } {
   frame $parent.btnBox
   pack  $parent.btnBox -anchor e
 
-  button $parent.btnBox.execute -width 10 -text "Execute" -command "$this-c needexecute"
-  pack   $parent.btnBox.execute -padx $outside_pad -pady $outside_pad -side left
-  Tooltip $parent.btnBox.execute "Instructs SCIRun to run this (and any connected) module(s)"
+  if { $no_exec_btn == "false" } {
+      button $parent.btnBox.execute -width 10 -text "Execute" -command "$this-c needexecute"
+      pack   $parent.btnBox.execute -padx $outside_pad -pady $outside_pad -side left
+      Tooltip $parent.btnBox.execute "Instructs SCIRun to run this (and any connected) module(s)"
+  }
 
   button $parent.btnBox.close -width 10 -text "Close" -command "wm withdraw $close_window"
   pack   $parent.btnBox.close -padx $outside_pad -pady $outside_pad -side left
