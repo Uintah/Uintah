@@ -21,7 +21,7 @@ using std::vector;
 using std::cerr;
 
 #define FRACTURE
-#undef FRACTURE
+//#undef FRACTURE
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMLabel* lb,
@@ -82,9 +82,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       for (itr = points->begin(); itr != points->end(); ++itr) {
 	if (b2.contains(*itr)) {
 	  position[start+count] = (*itr);
-#ifdef FRACTURE
-          position0[start+count] = (*itr);
-#endif
 	  if (volumes->empty())
 	    pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 	  else
@@ -144,9 +141,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	      if(piece->inside(p)){
                 particleIndex pidx = start+count; 
 		position[pidx]=p;
-#ifdef FRACTURE
-                position0[pidx]=p;
-#endif
 		pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[pidx]=(*obj)->getInitialVelocity();
 		ptemperature[pidx]=(*obj)->getInitialTemperature();
@@ -266,9 +260,6 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
 							patch);
   new_dw->allocateAndPut(position,       lb->pXLabel,             subset);
-#ifdef FRACTURE
-  new_dw->allocateAndPut(position0,      lb->pX0Label,            subset);
-#endif
   new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      subset); 
   new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, subset);
   new_dw->allocateAndPut(pmass,          lb->pMassLabel,          subset);
@@ -355,10 +346,6 @@ ParticleCreator::countParticles(GeometryObject* obj, const Patch* patch) const
 void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 						     MPMLabel* lb)
 {
-#ifdef FRACTURE
-  particle_state.push_back(lb->pX0Label);
-  particle_state_preReloc.push_back(lb->pX0Label_preReloc);
-#endif
   particle_state.push_back(lb->pVelocityLabel);
   particle_state_preReloc.push_back(lb->pVelocityLabel_preReloc);
 
