@@ -365,7 +365,7 @@ void ParticleFieldExtractor::execute()
   ptout = (TensorParticlesOPort *) get_oport("Tensor Particles");
   ArchiveHandle handle;
    if(!in->get(handle)){
-     error("Didn't get a handle.");
+     warning("ParticleFieldExtractor::execute() Didn't get a handle.");
      return;
    }
    
