@@ -807,7 +807,7 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   if ( !pre_draw(di, m, 0) ) return;
   
-  if ( !di->dl ) 
+  if ( true ) //!di->dl ) 
   {
     child_->draw(di,m,time);  // do not use display list
   }
