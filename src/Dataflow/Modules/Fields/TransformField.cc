@@ -39,6 +39,9 @@
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/DispatchNonlattice1.h>
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
@@ -59,8 +62,9 @@ public:
 
 
   void matrix_to_transform(MatrixHandle mH, Transform& t);
-
-  template <class M> void dispatch(M *meshtype, Field *f, Transform &t);
+  template <class F> void dispatch(F *ifield);
+private:  
+  Transform trans_;
 };
 
 
@@ -91,23 +95,19 @@ TransformField::matrix_to_transform(MatrixHandle mH, Transform& t)
   t.set(a);
 }
 
-
-template <class M>
+template <class F>
 void
-TransformField::dispatch(M *, Field *ifield, Transform &trans)
+TransformField::dispatch(F *ifield)
 {
-  Field *ofield = ifield->clone();
-
-  ofield->mesh().detach();
-  M *omesh = (M *)(ofield->mesh().get_rep());
+  // do our own detach / clone
+  F::mesh_type *omesh=ifield->get_typed_mesh()->clone();
+  F *ofield = scinew F(omesh, ifield->data_at());
+  ofield->fdata() = ifield->fdata();
   
-  typename M::node_iterator ni = omesh->node_begin();
-  while (ni != omesh->node_end())
-  {
+  for (int i=0; i<ofield->get_typed_mesh()->nodes_size(); i++) {
     Point p;
-    omesh->get_point(p, *ni);
-    omesh->set_point(trans.project(p), *ni);
-    ++ni;
+    ofield->get_typed_mesh()->get_point(p, i);
+    ofield->get_typed_mesh()->set_point(trans_.project(p), i);
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
@@ -122,8 +122,7 @@ TransformField::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield_handle;
-  Field *ifield; 
-  if (!(ifp->get(ifield_handle) && (ifield = ifield_handle.get_rep())))
+  if (!(ifp->get(ifield_handle) && ifield_handle.get_rep()))
   {
     return;
   }
@@ -134,29 +133,10 @@ TransformField::execute()
   {
     return;
   }
-  Transform transform;
-  matrix_to_transform(imatrix_handle, transform);
+  matrix_to_transform(imatrix_handle, trans_);
 
-  // Create a new Vector field with the same geometry handle as field.
-  const string geom_name = ifield->get_type_name(0);
-  const string data_name = ifield->get_type_name(1);
-  if (geom_name == "TetVol")
-  {
-    dispatch((TetVolMesh *)0, ifield, transform);
-  }
-  else if (geom_name == "LatticeVol")
-  {
-    // Error cannot transform these yet.
-  }
-  else if (geom_name == "TriSurf")
-  {
-    dispatch((TriSurfMesh *)0, ifield, transform);
-  }
-  else
-  {
-    // Don't know what to do with this field type.
-    // Signal some sort of error.
-    return;
+  if (ifield_handle->get_type_name(0) != "LatticeVol") {
+    dispatch_nonlattice1(ifield_handle, dispatch);
   }
 }
 

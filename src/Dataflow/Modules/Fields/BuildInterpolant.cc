@@ -36,6 +36,8 @@
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -295,6 +297,123 @@ GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > >
   return NULL;
 }
 
+// PointCloud
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+
+// ContourField
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
 template <> Vector TetVol<vector<pair<TetVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
 template <> Vector TetVol<vector<pair<TetVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
 template <> Vector TetVol<vector<pair<TetVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
@@ -343,6 +462,27 @@ template class GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_ind
 template class GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >;
 
 
+template class GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >;
+template class GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >;
+template class GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >;
+template class GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >;
+template class GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >;
+template class GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >;
+template class GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >;
+template class GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >;
+
+
+
+template class GenericField<ContourMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >;
+template class GenericField<ContourMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >;
+template class GenericField<ContourMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >;
+template class GenericField<ContourMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >;
+template class GenericField<ContourMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >;
+template class GenericField<ContourMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >;
+template class GenericField<ContourMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >;
+template class GenericField<ContourMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >;
+
+
 template class TetVol<vector<pair<TetVolMesh::node_index, double> > >;
 template class TetVol<vector<pair<TetVolMesh::edge_index, double> > >;
 template class TetVol<vector<pair<TetVolMesh::face_index, double> > >;
@@ -370,6 +510,23 @@ template class TriSurf<vector<pair<LatVolMesh::edge_index, double> > >;
 template class TriSurf<vector<pair<LatVolMesh::face_index, double> > >;
 template class TriSurf<vector<pair<LatVolMesh::cell_index, double> > >;
 
+template class PointCloud<vector<pair<TetVolMesh::node_index, double> > >;
+template class PointCloud<vector<pair<TetVolMesh::edge_index, double> > >;
+template class PointCloud<vector<pair<TetVolMesh::face_index, double> > >;
+template class PointCloud<vector<pair<TetVolMesh::cell_index, double> > >;
+template class PointCloud<vector<pair<LatVolMesh::node_index, double> > >;
+template class PointCloud<vector<pair<LatVolMesh::edge_index, double> > >;
+template class PointCloud<vector<pair<LatVolMesh::face_index, double> > >;
+template class PointCloud<vector<pair<LatVolMesh::cell_index, double> > >;
+
+template class ContourField<vector<pair<TetVolMesh::node_index, double> > >;
+template class ContourField<vector<pair<TetVolMesh::edge_index, double> > >;
+template class ContourField<vector<pair<TetVolMesh::face_index, double> > >;
+template class ContourField<vector<pair<TetVolMesh::cell_index, double> > >;
+template class ContourField<vector<pair<LatVolMesh::node_index, double> > >;
+template class ContourField<vector<pair<LatVolMesh::edge_index, double> > >;
+template class ContourField<vector<pair<LatVolMesh::face_index, double> > >;
+template class ContourField<vector<pair<LatVolMesh::cell_index, double> > >;
 
 
 class BuildInterpolant : public Module
@@ -1468,6 +1625,154 @@ BuildInterpolant::execute()
 			(LatVolMesh *)src_field->mesh().get_rep(),
 			dst_field->data_at(),
 			(TriSurf<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "ContourField" &&
+	   src_mesh_name == "TetVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((ContourMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((ContourMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((ContourMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((ContourMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "ContourField" &&
+	   src_mesh_name == "LatticeVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((ContourMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((ContourMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((ContourMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((ContourMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(ContourField<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "TriSurf" &&
+	   src_mesh_name == "TetVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "PointCloud" &&
+	   src_mesh_name == "LatticeVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((PointCloudMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(PointCloud<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((PointCloudMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(PointCloud<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((PointCloudMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(PointCloud<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((PointCloudMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(PointCloud<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
       break;
 
     default:

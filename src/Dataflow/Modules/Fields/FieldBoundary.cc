@@ -151,8 +151,7 @@ FieldBoundary::boundary(const Msh *mesh)
 {
 
   
-  TriSurf<double> *ts = scinew TriSurf<double>;
-  TriSurfMeshHandle tmesh = ts->get_typed_mesh();
+  TriSurfMeshHandle tmesh = scinew TriSurfMesh;
   if (geom_tris_) delete geom_tris_;
   geom_tris_ = scinew GeomTriangles;  
   // Walk all the cells in the mesh.
@@ -198,7 +197,10 @@ FieldBoundary::boundary(const Msh *mesh)
       }
     }
   }
-  //tmesh->connect();
+  tmesh->connect();
+
+  TriSurf<double> *ts = scinew TriSurf<double>(tmesh, Field::NODE);
+
   if (tris_id_) viewer_->delObj(tris_id_);
   tris_id_ = viewer_->addObj(geom_tris_, "Boundary Surface");
   viewer_->flushViews();
