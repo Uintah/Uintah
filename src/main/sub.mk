@@ -4,7 +4,7 @@ SRCDIR   := main
 SRCS      := $(SRCDIR)/main.cc
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := PSECore Core
+  PSELIBS := Dataflow Core
   ifeq ($(BUILD_PARALLEL),yes)
     PSELIBS := $(PSELIBS) Core/CCA/Component
   endif
