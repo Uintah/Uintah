@@ -34,6 +34,7 @@ LOG
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
@@ -190,6 +191,7 @@ void VectorFieldExtractor::execute()
   Semaphore* thread_sema = scinew Semaphore( "vector extractor semahpore",
 					     max_workers); 
 
+  WallClockTimer my_timer;
   GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
   const TypeDescription* subtype = type->getSubType();
@@ -201,16 +203,20 @@ void VectorFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::Vector:
       {	
+	my_timer.start();
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::NODE );
 	vector<ShareAssignArray3<Vector> >& data = vfd->fdata();
 	data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	vector<ShareAssignArray3<Vector> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
-	    Thread *thrd =scinew Thread(new PatchDataThread<NCVariable<Vector>,
+	    Thread *thrd =scinew Thread(scinew PatchDataThread<NCVariable<Vector>,
 			                 vector<ShareAssignArray3<Vector> >::iterator>
 			  (archive, it, var, mat, *r, time, thread_sema),
 					"patch_data_worker");
@@ -218,6 +224,8 @@ void VectorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time() );
+	my_timer.stop();
 	vfout->send(vfd);
 	return;
       }
@@ -231,17 +239,21 @@ void VectorFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::Vector:
       {	
+	my_timer.start();
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::CELL );
 	vector<ShareAssignArray3<Vector> >& data = vfd->fdata();
 	data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	vector<ShareAssignArray3<Vector> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
 	    Thread *thrd =
-	      scinew Thread(new PatchDataThread<CCVariable<Vector>,
+	      scinew Thread(scinew PatchDataThread<CCVariable<Vector>,
 			    vector<ShareAssignArray3<Vector> >::iterator>
 			    (archive, it, var, mat, *r, time, thread_sema),
 			    "patch_data_worker");
@@ -249,6 +261,8 @@ void VectorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time() );
+	my_timer.stop();
 	vfout->send(vfd);
 	return;
       }
