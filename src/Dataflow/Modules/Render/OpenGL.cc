@@ -729,6 +729,22 @@ OpenGL::redraw_frame()
   drawinfo_->reset();
 
   int do_stereo=view_window_->gui_do_stereo_.get();
+  if (do_stereo)
+  {
+    GLboolean supported;
+    glGetBooleanv(GL_STEREO, &supported);
+    if (!supported)
+    {
+      do_stereo = false;
+      static bool warnonce = true;
+      if (warnonce)
+      {
+        cout << "Stereo display selected but not supported.\n";
+        warnonce = false;
+      }
+    }
+  }
+
   drawinfo_->ambient_scale_ = view_window_->gui_ambient_scale_.get();
   drawinfo_->diffuse_scale_ = view_window_->gui_diffuse_scale_.get();
   drawinfo_->specular_scale_ = view_window_->gui_specular_scale_.get();
