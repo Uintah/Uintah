@@ -28,7 +28,7 @@
 
 /* epsilon surrounding for near zero values */
 
-#define     EQN_EPS     1e-30
+#define     EQN_EPS     1e-8
 #define	    IsZero(x)	((x) > -EQN_EPS && (x) < EQN_EPS)
 
 #ifdef NOCBRT
