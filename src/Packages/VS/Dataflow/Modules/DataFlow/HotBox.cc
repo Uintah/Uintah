@@ -206,8 +206,6 @@ private:
 
   FieldHandle InputFieldHandle_;
   NrrdDataHandle InputNrrdHandle_;
-  ColorMapHandle inputCMapHandle_;
-  ColorMapHandle outputCMapHandle_;
   int probeWidgetid_;
   Point probeLoc_;
   int labelIndexVal_;
@@ -227,12 +225,11 @@ private:
   void executePhysio();
 
 protected:
+  FieldHandle injIconFieldHandle_;
+  Transform    inputTransform_;
   FieldHandle  selectGeomFilehandle_;
   FieldHandle  inj0GeomFilehandle_;
   FieldHandle  inj1GeomFilehandle_;
-  FieldHandle ablateIconFieldHandle_;
-  FieldHandle stunIconFieldHandle_;
-  Transform    inputTransform_;
   string    geomFilename_;
   string    activeBoundBoxSrc_;
   string    activeInjList_;
@@ -443,18 +440,6 @@ HotBox::execute()
       gui_curTime_.set(currentTime_);
     }
   } // end else (data on input matrix port)
-
-  // get the input ColorMap port
-  ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("Input ColorMap");
-
-  if (!cmap_port)
-  {
-    error("Unable to initialize iport 'ColorMap'.");
-  }
-  else if(!cmap_port->get(inputCMapHandle_) || !(inputCMapHandle_.get_rep()))
-  {
-    error( "No colormap handle or representation" );
-  }
 
   // get input Transform matrix port
   MatrixIPort *
@@ -877,29 +862,17 @@ HotBox::execute()
     makeInjGeometry();
   }
 
-  // get output geometry port -- Ablated Injury Icon
+  // get output geometry port -- Injury Icon
   SimpleOPort<FieldHandle> *
-  ablateInjuryOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Ablated Injury Icon");
+  injuryOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Injury Icon");
 
   // send the injury field (surface) downstream
-  if (!ablateInjuryOutport) {
-    error("Unable to initialize Ablated Injury oport.");
+  if (!injuryOutport) {
+    error("Unable to initialize oport.");
   }
-  else if(ablateIconFieldHandle_.get_rep() != 0)
-    ablateInjuryOutport->send(ablateIconFieldHandle_);
-
-  // get output geometry port -- Stunned Injury Icon
-  SimpleOPort<FieldHandle> *
-  stunInjuryOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Stunned Injury Icon");
-
-  // send the injury field (surface) downstream
-  if (!stunInjuryOutport) {
-    error("Unable to initialize Stunned Injury oport.");
-  }
-  else if(stunIconFieldHandle_.get_rep() != 0)
-    stunInjuryOutport->send(stunIconFieldHandle_);
+  else if(injIconFieldHandle_.get_rep() != 0)
+    injuryOutport->send(injIconFieldHandle_);
 
   // send the NrrdData downstream
   NrrdOPort *nrrdOutPort = (NrrdOPort *)get_oport("Physiology Data");
@@ -910,21 +883,6 @@ HotBox::execute()
   }
   if(InputNrrdHandle_.get_rep())
       nrrdOutPort->send(InputNrrdHandle_);
-
-  // send the ColorMap downstream
-  if(outputCMapHandle_.get_rep() ) {
-    ColorMapOPort *ocolormap_port =
-      (ColorMapOPort *) get_oport("Output ColorMap");
-
-    if (!ocolormap_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-    }
-    else
-    {// Send the data downstream
-      cerr << "Sending colormap" <<endl;
-      ocolormap_port->send( inputCMapHandle_ );
-    }
-  }
 
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
@@ -1149,62 +1107,6 @@ HotBox::execAdjacency()
     VS_HotBoxUI_->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 9)
 } // end HotBox::execAdjacency()
-
-/*****************************************************************************
- * method HotBox::execSelColorMap()
- *****************************************************************************/
-
-void
-HotBox::execSelColorMap()
-{
-
-  // detach the input colormap handle
-  if(!inputCMapHandle_.get_rep())
-  {
-    error( "No colormap handle or representation" );
-    return;
-  }
-  // inputCMapHandle_.detach();
-  // scale the colormap to the range of field data values
-  pair<double,double> minmax;
-  ScalarFieldInterfaceHandle sfi = 0;
-  if ((sfi = InputFieldHandle_->query_scalar_interface(this)).get_rep())
-  {
-    sfi->compute_min_max(minmax.first, minmax.second);
-  }
-  else
-  {
-    error("An input field is not a scalar field.");
-    return;
-  }
-  // inputCMapHandle_->Scale( minmax.first, minmax.second);
-
-  // create the output colormap from the modified input
-  // vector<float> rgbt = inputCMapHandle_->get_rgbT();
-
-  // set injury colors
-  // for each element of the injury list
-  for(unsigned int i = 0; i < injured_tissue_.size(); i++)
-  {
-    VH_injury injPtr = (VH_injury)injured_tissue_[i];
-    // find the colorMap entry for this label value
-    int injTissueIndex =
-        anatomytable_->get_labelindex((char *)injPtr.anatomyname.c_str());
-    // set this entry to RED
-    // if(injTissueIndex >= 0)
-        // rgbt[injTissueIndex] = (float)18.0;
-  }
-  // set selection colors
-  // set this entry to YELLOW
-  // rgbt[labelIndexVal_] = (float)19.0;
-
-  // build the output colormap
-  // ColorMap cm(inputCMapHandle_->get_rgbs(), rgbt,
-  //                             inputCMapHandle_->get_alphas(),
-  //                             inputCMapHandle_->get_alphaT(),
-  //                             inputCMapHandle_->resolution());
-  // outputCMapHandle_ = &cm;
-} // end HotBox::execSelColorMap()
 
 /*****************************************************************************
  * method HotBox::executeOQAFMA()
@@ -1974,9 +1876,12 @@ HotBox::makeInjGeometry()
         for(int j = 0; j <= CYLREZ/2; j++)
         { // make a circle in the X-Y plane
           double pi = 3.14159;
-          double x = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * cos(2.0 * pi * k/CYLREZ);
-          double y = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
-          double z = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * sin(2.0 * pi * k/CYLREZ);
+          double
+          x = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * cos(2.0 * pi * k/CYLREZ);
+          double
+          y = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
+          double
+          z = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * sin(2.0 * pi * k/CYLREZ);
           // rotate the circle into the plane defined by the longitudinal axis
 	  Point p(x, y, z);
           qsm->add_point(p);
@@ -2017,11 +1922,12 @@ HotBox::makeInjGeometry()
         double x = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
         double y = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ);
         // rotate the circle into the plane defined by the cylindrical axis
-        Point pt = cylXform.project(Point(x, y, 0.0));
-        Point p0 = pt;
+        Point p0 = cylXform.project(Point(x, y, 0.0));
         p0 += Vector(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
         qsm->add_point(p0);
-        Point p1 = pt;
+        x = injPtr.rad1 * cos(2.0 * pi * j/CYLREZ);
+        y = injPtr.rad1 * sin(2.0 * pi * j/CYLREZ);
+        Point p1 = cylXform.project(Point(x, y, 0.0));
         p1 += Vector(injPtr.axisX1, injPtr.axisY1, injPtr.axisZ1);
         qsm->add_point(p1);
         if(cvindx > 1)
@@ -2042,7 +1948,7 @@ HotBox::makeInjGeometry()
   {
     cerr << numQuads << " quads ";
     qsf = scinew QuadSurfField<double>(qsm, -1);
-    ablateIconFieldHandle_ = qsf;
+    injIconFieldHandle_ = qsf;
   }
 
   cerr << " done" << endl;
