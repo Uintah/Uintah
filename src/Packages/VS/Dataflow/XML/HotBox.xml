@@ -71,6 +71,13 @@
         <name>Input ColorMap</name>
         <datatype>SCIRun::ColorMap</datatype>
       </port>
+      <port>
+        <description>
+          <p>Input port -- Transform Matrix</p>
+        </description>
+        <name>Input Transform</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
