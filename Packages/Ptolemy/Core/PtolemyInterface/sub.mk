@@ -73,16 +73,8 @@ INCLUDES += \
             -I$(JAVA_INC) \
             -I$(JAVA_INC)/linux
 
-CFLAGS += -MD
-
-LDFLAGS :=
-#LDFLAGS := \
-#$(LDFLAGS) \
-#           -L$(JAVA_LIB) \
-#           -L$(JAVA_LIB)/client \
-#           -ljava \
-#           -ljvm \
-#           -lawt \
+SOFLAGS := \
+            -shared -L$(LIBDIR) $(CFLAGS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

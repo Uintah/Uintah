@@ -27,11 +27,6 @@
 */
 
 
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/ThreadGroup.h>
-
 #include <sci_defs/ptolemy_defs.h>
 
 #include <iostream>
@@ -48,69 +43,29 @@
 
 namespace Ptolemy {
 
-static SCIRun::Mutex jlock("Java VM lock");
-static SCIRun::Semaphore *startup;
-static JavaVM *jvm;
+SCIRun::Semaphore *JNIUtil::startup = new SCIRun::Semaphore("JVM startup wait", 0);
 
-JVMThread::JVMThread()
-{
-    std::cerr << "JVMThread::JVMThread" << std::endl;
-}
+Mutex jlock("Java VM lock");
+JavaVM *jvm = 0;
 
-JVMThread::~JVMThread()
-{
-    std::cerr << "JVMThread::~JVMThread" << std::endl;
-}
 
 void JVMThread::run()
 {
     std::cerr << "** JVMThread::run() **" << std::endl;
     JNIUtil::createVM() != JNI_OK;
-    startup->up();
+    JNIUtil::startup->up();
 }
-
-
-VergilThread::VergilThread(const std::string& cp, const std::string& mp) :
-	configPath(&cp), modelPath(&mp)
-{
-    std::cerr << "VergilThread::VergilThread" << std::endl;
-}
-
-VergilThread::~VergilThread()
-{
-    std::cerr << "VergilThread::~VergilThread" << std::endl;
-}
-
-void VergilThread::run()
-{
-    std::cerr << "** VergilThread::run() **" << std::endl;
-    if (! JNIUtil::vergilApplication(*configPath, *modelPath)) {
-	std::cerr << "Error running VergilApplication!" << std::endl;
-    }
-}
-
-
-void JNIUtil::getVergilApplication(const std::string& cp, const std::string& mp)
-{
-    SCIRun::Thread *t = new SCIRun::Thread(new VergilThread(cp, mp), "Ptolemy Thread",
-					    0, SCIRun::Thread::NotActivated);
-    t->setStackSize(1024*1024);
-    t->activate(false);
-    t->detach();
-}
-
 
 JavaVM* JNIUtil::getJavaVM()
 {
     // lock here?
     if (0 == jvm) {
-	startup = new SCIRun::Semaphore("JVM startup wait", 0);
-	SCIRun::Thread *t = new SCIRun::Thread(new JVMThread(), "JVM Thread",
-						0, SCIRun::Thread::NotActivated);
-	t->setStackSize(1024*1024);
-	t->activate(false);
-	t->detach();
-	startup->down();
+        Thread *t = new Thread(new JVMThread(), "JVM Thread",
+                               0, Thread::NotActivated);
+        t->setStackSize(1024*1024);
+        t->activate(false);
+        t->detach();
+	    JNIUtil::startup->down();
     }
     return jvm;
 }
@@ -193,109 +148,6 @@ int JNIUtil::destroyJavaVM()
     //status = jvm->DestroyJavaVM();
     //jlock.unlock();
     return status;
-}
-
-bool JNIUtil::vergilApplication(const std::string& configPath, const std::string& modelPath)
-{
-    jlock.lock();
-    if (0 == jvm) {
-	return false;
-    }
-
-    JNIEnv *env;
-    jint status = JNIUtil::DEFAULT;
-
-    if ((status = jvm->AttachCurrentThread((void**) &env, NULL)) != JNI_OK) {
-	jvm->DetachCurrentThread();
-	return false;
-    }
-
-    jclass ptCls, stringClass;
-    jobject ptObj;
-    jobjectArray localArray, strArray;
-    jstring str0, str1;
-    jmethodID cid;
-    jthrowable exc;
-
-    // JNI uses '/' instead of '.' to resolve package names
-    jclass localCls = env->FindClass("ptolemy/vergil/VergilApplication");
-    if (localCls == 0) {
-	return false;
-    }
-
-    // keep global reference that won't be garbage collected
-    if ((ptCls = (jclass) env->NewGlobalRef(localCls)) == 0) {
-	return false;
-    }
-    // don't need local reference
-    env->DeleteLocalRef(localCls);
-
-    if ((cid = env->GetMethodID(ptCls, "<init>", "(Ljava/lang/String;[Ljava/lang/String;)V")) == 0) {
-	return false;
-    }
-
-    if ((stringClass = env->FindClass("java/lang/String")) == 0) {
-	return false;
-    }
-
-    jstring localStr = env->NewStringUTF(modelPath.c_str());
-    if (localStr == 0) {
-	return false;
-    }
-    if ((str0 = (jstring) env->NewGlobalRef(localStr)) == 0) {
-	return false;
-    }
-    env->DeleteLocalRef(localStr);
-
-    jstring localStr1 = env->NewStringUTF(configPath.c_str());
-    if (localStr1 == 0) {
-	return false;
-    }
-    if ((str1 = (jstring) env->NewGlobalRef(localStr1)) == 0) {
-	return false;
-    }
-    env->DeleteLocalRef(localStr1);
-
-    if ((localArray = env->NewObjectArray(1, stringClass, str0)) == 0) {
-	return false;
-    }
-    if ((strArray = (jobjectArray) env->NewGlobalRef(localArray)) == 0) {
-	return false;
-    }
-    env->DeleteLocalRef(localArray);
-
-    jobject localObj = env->NewObject(ptCls, cid, str1, strArray);
-    if (localObj == 0) {
-std::cerr << "Error instantiating VergilApplication object!" << std::endl;
-	return false;
-    }
-    if ((ptObj = env->NewGlobalRef(localObj)) == 0) {
-	return false;
-    }
-    env->DeleteLocalRef(localObj);
-
-    exc = env->ExceptionOccurred();
-    // from:
-    // http://java.sun.com/docs/books/jni/html/exceptions.html#26377
-    if (exc) {
-	env->ExceptionDescribe();
-	env->ExceptionClear();
-	//jclass newExcCls;
-	//newExcCls = env->FindClass("java/lang/Exception");
-	//if (newExcCls == NULL) {
-	    // Unable to find the exception class, give up.
-	//    return false;
-	//}
-	//env->ThrowNew(newExcCls, "thrown from C code");
-	return false;
-    }
-    env->DeleteGlobalRef(str0);
-    env->DeleteGlobalRef(str1);
-    env->DeleteGlobalRef(ptCls);
-    env->DeleteGlobalRef(strArray);
-    env->DeleteGlobalRef(ptObj);
-    jlock.unlock();
-    return true;
 }
 
 }

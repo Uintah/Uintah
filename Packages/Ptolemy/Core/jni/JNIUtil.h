@@ -32,47 +32,47 @@
 
 #include <jni.h>
 #include <string>
-#include <vector>
 
 #include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
 
 namespace Ptolemy {
 
+using SCIRun::Mutex;
+using SCIRun::Runnable;
+using SCIRun::Semaphore;
+using SCIRun::Thread;
+
 class JVMThread : public SCIRun::Runnable {
 public:
-    JVMThread();
-    virtual ~JVMThread();
+    JVMThread() {}
+    virtual ~JVMThread() {}
     virtual void run();
 };
 
-class VergilThread : public SCIRun::Runnable {
-public:
-    VergilThread(const std::string& cp, const std::string& mp);
-    virtual ~VergilThread();
-    virtual void run();
-private:
-    const std::string *configPath;
-    const std::string *modelPath;
-};
 
 class JNIUtil {
 public:
     static JavaVM* getJavaVM();
-    static void getVergilApplication(const std::string& cp, const std::string& mp);
+    static int createVM();
     static int destroyJavaVM();
 
-    static int createVM();
-
-    // VergilApplication class throws Exception
-    static bool vergilApplication(const std::string& configPath, const std::string& modelPath);
-
     static const int DEFAULT = 1;
+
 private:
+    friend class JVMThread;
+    static SCIRun::Semaphore *startup;
+
     JNIUtil();
     ~JNIUtil();
     JNIUtil(const JNIUtil&);
     JNIUtil& operator=(const JNIUtil&);
 };
+
+    extern JavaVM* jvm;
+    extern Mutex jlock;
 
 }
 

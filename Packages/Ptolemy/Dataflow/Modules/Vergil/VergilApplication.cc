@@ -33,10 +33,13 @@
 
 #include <Dataflow/Network/Module.h>     // module base class
 #include <Core/GuiInterface/GuiVar.h>    // GUI data interface
+#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Util/Assert.h>
 #include <sci_defs/ptolemy_defs.h>
 
 #include <Packages/Ptolemy/Core/jni/JNIUtil.h>
+#include <Packages/Ptolemy/Core/jni/VergilWrapper.h>
 
 #include <string>
 
@@ -95,10 +98,13 @@ void VergilApplication::execute()
         file = filename_.get();
         // use defaults if a file name was not set
         if (file.empty()) {
-            JNIUtil::getVergilApplication(defaultConfig, defaultModel);
-        } else {
-            JNIUtil::getVergilApplication(defaultConfig, file);
+            file = defaultModel;
         }
+        Thread *t = new Thread(scinew VergilThread(defaultConfig, file),
+            "Ptolemy Thread", 0, Thread::NotActivated);
+        t->setStackSize(1024*1024);
+        t->activate(false);
+        t->detach();
     }
     catch (const Exception& e) {
         std::cerr << "Caught exception:\n";
