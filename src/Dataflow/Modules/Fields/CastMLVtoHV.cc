@@ -9,10 +9,10 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/HexVol.h>
 #include <Core/Datatypes/MaskedLatticeVol.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Modules/Fields/CastMLVtoHV.h>
 #include <math.h>
 
 #include <Core/share/share.h>
@@ -28,6 +28,7 @@ class PSECORESHARE CastMLVtoHV : public Module {
 private:
   int            last_gen_;
   FieldHandle    ofieldH_;
+
 public:
   CastMLVtoHV(const string& id);
   virtual ~CastMLVtoHV();
@@ -45,6 +46,8 @@ CastMLVtoHV::CastMLVtoHV(const string& id)
 
 CastMLVtoHV::~CastMLVtoHV(){
 }
+
+
 
 void CastMLVtoHV::execute()
 {
@@ -74,10 +77,10 @@ void CastMLVtoHV::execute()
   last_gen_ = ifieldH->generation;
 
   // we expect that the input field is a TetVol<Vector>
-  if (ifieldH->get_type_description()->get_name() !=
-      get_type_description((MaskedLatticeVol<Vector> *)0)->get_name())
+  if (ifieldH->get_type_description()->get_name().substr(0, 16)
+      != "MaskedLatticeVol")
   {
-    postMessage("CastMLVtoHV: ERROR: input volume is not a MaskedLatticeVol<Vector>.  Exiting.");
+    postMessage("CastMLVtoHV: ERROR: input volume is not a MaskedLatticeVol.  Exiting.");
     return;
   }                     
 
@@ -86,74 +89,83 @@ void CastMLVtoHV::execute()
     return;
   }                         
 
-  MaskedLatticeVol<Vector> *lv = dynamic_cast<MaskedLatticeVol<Vector> *>(ifieldH.get_rep());
-  LatVolMesh *lvm = lv->get_typed_mesh().get_rep();
-  HexVolMesh *hvm = scinew HexVolMesh;
+  const TypeDescription *fsrc_td = ifieldH->get_type_description();
+  const TypeDescription *lsrc_td = ifieldH->data_at_type_description();
+  const TypeDescription *ldst_td = 0;
+  switch (ifieldH->data_at())
+  {
+  case Field::NODE:
+    ldst_td = get_type_description((HexVolMesh::Node *)0);
+    break;
 
-  // fill in the nodes and connectivities
-  Point min = lvm->get_min();
-  Vector diag = lvm->diagonal();
-  int nx = lvm->get_nx();
-  int ny = lvm->get_ny();
-  int nz = lvm->get_nz();
-  double dx = diag.x()/(nx-1);
-  double dy = diag.y()/(ny-1);
-  double dz = diag.z()/(nz-1);
+  case Field::EDGE:
+    ldst_td = get_type_description((HexVolMesh::Edge *)0);
+    break;
 
-  int i, j, k;
-  int ii, jj, kk;
-  Array3<int> connectedNodes(nz, ny, nx);
-  connectedNodes.initialize(0);
-  for (k=0; k<nz-1; k++)
-    for (j=0; j<ny-1; j++)
-      for (i=0; i<nx-1; i++) {
-	int valid=1;
-	for (ii=0; ii<2; ii++)
-	  for (jj=0; jj<2; jj++)
-	    for (kk=0; kk<2; kk++)
-	      if (!lv->mask()(k+kk,j+jj,i+ii)) valid=0;
-	if (valid)
-	  for (ii=0; ii<2; ii++)
-	    for (jj=0; jj<2; jj++)
-	      for (kk=0; kk<2; kk++)
-		connectedNodes(k+kk,j+jj,i+ii)=1;
-      }
+  case Field::FACE:
+    ldst_td = get_type_description((HexVolMesh::Face *)0);
+    break;
 
-  Array3<int> nodeMap(nz, ny, nx);
-  nodeMap.initialize(-1);
-  Vector dummy;
-  for (k=0; k<nz; k++)
-    for (j=0; j<ny; j++)
-      for (i=0; i<nx; i++)
-	if (connectedNodes(k,j,i))
-	  nodeMap(k,j,i) = hvm->add_point(min + Vector(dx*i, dy*j, dz*k));
+  case Field::CELL:
+    ldst_td = get_type_description((HexVolMesh::Cell *)0);
+    break;
+  }
 
-  for (k=0; k<nz-1; k++)
-    for (j=0; j<ny-1; j++)
-      for (i=0; i<nx-1; i++) {
-	  HexVolMesh::Node::index_type n000, n001, n010, n011, n100, n101, n110, n111;
-	  if ((n000 = nodeMap(k  , j  , i  )) == -1) continue;
-	  if ((n001 = nodeMap(k  , j  , i+1)) == -1) continue;
-	  if ((n010 = nodeMap(k  , j+1, i  )) == -1) continue;
-	  if ((n011 = nodeMap(k  , j+1, i+1)) == -1) continue;
-	  if ((n100 = nodeMap(k+1, j  , i  )) == -1) continue;
-          if ((n101 = nodeMap(k+1, j  , i+1)) == -1) continue;
-	  if ((n110 = nodeMap(k+1, j+1, i  )) == -1) continue;
-	  if ((n111 = nodeMap(k+1, j+1, i+1)) == -1) continue;
-	  hvm->add_hex(n000, n001, n011, n010, n100, n101, n111, n110);
-      }
-      
-  HexVol<Vector> *hv = scinew HexVol<Vector>(hvm, Field::NODE);
-  int count=0;
-  for (k=0; k<nz; k++)
-    for (j=0; j<ny; j++)
-      for (i=0; i<nx; i++)
-	if (lv->mask()(k,j,i))
-	  hv->fdata()[count++] = lv->fdata()(k,j,i);
+  CompileInfo *ci =
+    CastMLVtoHVAlgo::get_compile_info(fsrc_td, lsrc_td, ldst_td);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    cout << "Could not compile algorithm." << std::endl;
+    return;
+  }
+  CastMLVtoHVAlgo *algo =
+    dynamic_cast<CastMLVtoHVAlgo *>(algo_handle.get_rep());
+  if (algo == 0)
+  {
+    cout << "Could not get algorithm." << std::endl;
+    return;
+  }
 
-  ofieldH_ = hv;
+  ofieldH_ = algo->execute(ifieldH, ifieldH->data_at());
+
   oport_->send(ofieldH_);
 }
+
+
+
+CompileInfo *
+CastMLVtoHVAlgo::get_compile_info(const TypeDescription *fsrc_td,
+				  const TypeDescription *lsrc_td,
+				  const TypeDescription *ldst_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("CastMLVtoHVAlgoT");
+  static const string base_class_name("CastMLVtoHVAlgo");
+
+  const string::size_type loc = fsrc_td->get_name().find_first_of('<');
+  const string fdst = "HexVol" + fsrc_td->get_name().substr(loc);
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc_td->get_filename() + "." +
+		       lsrc_td->get_filename() + "." +
+		       to_filename(fdst) + "." +
+		       ldst_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc_td->get_name() + ", " +
+		       lsrc_td->get_name() + ", " +
+                       fdst + ", " +
+		       ldst_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrc_td->fill_compile_info(rval);
+  return rval;
+}
+
 
 } // End namespace SCIRun
 
