@@ -49,13 +49,9 @@ public:
   void move(const Point&, double, int nu=20, int nv=10);
   void move(const Point& _cen);
     
-  GeomSphere(int nu, int nv, IntVector id);
-  GeomSphere(int nu, int nv, int id_int, IntVector id);
-  GeomSphere(int nu=20, int nv=10, int id = 0x1234567);
-  GeomSphere(const Point&, double, int nu=20, int nv=10, int id = 0x1234567);
-  GeomSphere(const Point&, double, int nu, int nv, int id_int, IntVector id);
-  GeomSphere(const Point&, double, int nu, int nv, IntVector id);
-  GeomSphere(const GeomSphere&);
+  GeomSphere(int nu=20, int nv=10);
+  GeomSphere(const Point &location, double radius, int nu=20, int nv=10);
+  GeomSphere(const GeomSphere &copy);
   virtual ~GeomSphere();
   
   virtual GeomObj* clone();
@@ -69,8 +65,6 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
-  virtual bool getId( int& id );
-  virtual bool getId( IntVector& id);
 
   // This is a helper function which determins the nu and nv given an
   // approximate number of polygons desired.

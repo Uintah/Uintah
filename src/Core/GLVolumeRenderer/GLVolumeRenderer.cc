@@ -29,14 +29,14 @@ using std::cerr;
 
 
 double GLVolumeRenderer::swap_matrix_[16] = { 0,0,1,0,
-					    0,1,0,0,
-					    1,0,0,0,
-					    0,0,0,1};
+					      0,1,0,0,
+					      1,0,0,0,
+					      0,0,0,1};
 
 int GLVolumeRenderer::r_count_ = 0;
 
-GLVolumeRenderer::GLVolumeRenderer(int id) : 
-  GeomObj( id ),
+GLVolumeRenderer::GLVolumeRenderer() : 
+  GeomObj(),
   slices_(0),
   tex_(0),
   state_(state(fr_, 0)),
@@ -66,10 +66,9 @@ GLVolumeRenderer::GLVolumeRenderer(int id) :
 }
 
 
-GLVolumeRenderer::GLVolumeRenderer(int id, 
-				   GLTexture3DHandle tex,
+GLVolumeRenderer::GLVolumeRenderer(GLTexture3DHandle tex,
 				   ColorMapHandle map) : 
-  GeomObj( id ),
+  GeomObj(),
   slices_(0),
   tex_(tex),
   state_(state(fr_, 0)),
@@ -99,7 +98,7 @@ GLVolumeRenderer::GLVolumeRenderer(int id,
 }
 
 GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy) : 
-  GeomObj( copy.id ),
+  GeomObj( copy ),
   slices_(copy.slices_),
   tex_(copy.tex_),
   state_(copy.state_),

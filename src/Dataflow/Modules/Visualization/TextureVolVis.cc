@@ -127,7 +127,7 @@ void TextureVolVis::execute(void)
 
   //AuditAllocator(default_allocator);
   if( !volren ){
-    volren = new GLVolumeRenderer(0x12345676, tex, cmap);
+    volren = new GLVolumeRenderer(tex, cmap);
 //     if(tex->CC()){
 //       volren->SetInterp(false);
 //       interp_mode.set(0);

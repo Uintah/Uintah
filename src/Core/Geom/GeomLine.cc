@@ -36,13 +36,15 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
-using std::cerr;
-using std::ostream;
 
 #include <stdlib.h>
 
 namespace SCIRun {
+
+using std::cerr;
+using std::ostream;
 
 
 Persistent* make_GeomLine()

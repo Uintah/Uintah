@@ -32,7 +32,6 @@
 #define SCI_Geom_Triangles_h 1
 
 #include <Core/Geom/GeomVertexPrim.h>
-#include <vector>
 
 namespace SCIRun {
 

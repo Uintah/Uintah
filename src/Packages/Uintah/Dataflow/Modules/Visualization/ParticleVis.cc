@@ -315,7 +315,8 @@ void ParticleVis::execute()
 		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomSphere( (*p_it)[*iter],
 					scalefactor * radius.get(),
-					nu, nv, (*id_it)[*iter]);
+					nu, nv);
+		sp->setId((*id_it)[*iter]);
 	      } else { // make an ellips
 		double matrix[16];
 		Matrix3 M = (*t_it)[*iter];
@@ -331,15 +332,15 @@ void ParticleVis::execute()
 		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  scalefactor * radius.get(),
-					  nu, nv, &(matrix[0]), 2,
-					  (*id_it)[*iter]);
+					  nu, nv, &(matrix[0]), 2);
+		sp->setId((*id_it)[*iter]);
 	      }
 	    }
 	  } else {
 	    if(!hasTensors){
 	      //cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
-	      sp = scinew GeomSphere( (*p_it)[*iter],
-				      radius.get(), nu, nv, (*id_it)[*iter]);
+	      sp = scinew GeomSphere( (*p_it)[*iter], radius.get(), nu, nv);
+	      sp->setId((*id_it)[*iter]);
 	    } else {
 	      double matrix[16];
 	      Matrix3 M = (*t_it)[*iter];
@@ -360,14 +361,14 @@ void ParticleVis::execute()
 		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  radius.get(), nu, nv, &(matrix[0]),
-					  2, (*id_it)[*iter]);
+					  2);
+		sp->setId((*id_it)[*iter]);
 	      }
 	    }
 	  }
 	  double value = (*s_it)[*iter];
 	  if( sp != 0) {
-	    sp->properties().freeze();
-	    sp->properties().set_property("id",LongLong((*id_it)[*iter]),true);
+	    sp->setId((long long)((*id_it)[*iter]));
 	    obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
 	  }
 	  count = 0;
@@ -451,14 +452,14 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   cerr << "this = "<< this <<", pick = "<<pick<<endl;
   cerr << "User data = "<<userdata<<endl;
   //  cerr << "sphere index = "<<index<<endl<<endl;
-  LongLong id(-1);
-  if ( picked_obj->properties().get_property("id",id) ) {
+  long long id(-1);
+  if ( picked_obj->getId(id)) {
     cerr<<"Id = "<< id.val_ <<endl;
   } else {
     cerr<<"Not getting the correct data\n";
   }
-  if( cbClass != 0 && id.val_ != -1 )
-    ((ParticleFieldExtractor *)cbClass)->callback( id.val_ );
+  if( cbClass != 0 && id != -1 )
+    ((ParticleFieldExtractor *)cbClass)->callback( id );
   // Now modify so that points and spheres store index.
 }
   

@@ -32,15 +32,18 @@
 #define SCI_Geom_GeomObj_h 1
 
 #include <Core/Containers/Array1.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Datatypes/PropertyManager.h>
 #include <sci_config.h>
 
+#include <vector>
 #include <iosfwd>
 
 namespace SCIRun {
+
+using std::vector;
 
 struct DrawInfoOpenGL;
 class  Material;
@@ -56,9 +59,7 @@ public:
   int ref_cnt;
   Mutex &lock;
 
-  GeomObj(int id = 0x1234567);
-  GeomObj(IntVector id);
-  GeomObj(int id_int, IntVector id);
+  GeomObj();
   GeomObj(const GeomObj&);
   virtual ~GeomObj();
   virtual GeomObj* clone() = 0;
@@ -77,17 +78,21 @@ public:
 
   virtual void io(Piostream&);    
   virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*)=0;
+
   // we want to return false if value is the default value
-  virtual bool getId( int& ) { return false; }
-  virtual bool getId( IntVector& ){ return false; }
+  virtual void setId(int id) { id_int_ = id; }
+  virtual void setId(const IntVector &id) { id_intvector_ = id; }
+  virtual void setId(long long id) { id_longlong_ = id; }
 
-  PropertyManager& properties() { return _properties; }
+  virtual bool getId( int &id );
+  virtual bool getId( IntVector &id );
+  virtual bool getId( long long &id );
 
-protected:
+private:
 
-  int id;
-  IntVector _id;
-  PropertyManager _properties;
+  int       id_int_;
+  IntVector id_intvector_;
+  long long  id_longlong_;
 };
 
 void Pio(Piostream&, GeomObj*&);

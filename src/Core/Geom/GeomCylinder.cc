@@ -34,13 +34,16 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
 #include <iostream>
-using std::cerr;
-using std::ostream;
 
 namespace SCIRun {
+
+using std::cerr;
+using std::ostream;
+using std::endl;
 
 Persistent* make_GeomCylinder()
 {
