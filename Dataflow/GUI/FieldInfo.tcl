@@ -85,10 +85,8 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
 	pack $att.l1 $att.l2 $att.l3 $att.l4 $att.l5 \
 	     $att.l7 $att.l8 $att.l9 -side top -expand y -fill x
 
-	frame $w.exec
-	pack $w.exec -side bottom -padx 5 -pady 5
-	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.exec.execute -side top -e n
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method labelpair { win text1 text2 } {
