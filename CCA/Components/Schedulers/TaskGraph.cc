@@ -17,6 +17,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
+#include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
 #include <fstream>
 #include <iostream>
@@ -27,8 +28,7 @@
 using namespace Uintah;
 
 using namespace SCIRun;
-using std::cerr;
-using std::is_sorted;
+using namespace std;
 
 static DebugStream dbg("TaskGraph", false);
 

@@ -15,6 +15,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 
+#include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
 
 #include <map>
