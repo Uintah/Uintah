@@ -58,24 +58,6 @@ itcl_class Teem_UnuAtoM_UnuJoin {
     }
 
 
-    method axis_radio {} {
-        set w .ui[modname]
-        if {[winfo exists $w]} {
-	    if {[winfo exists $w.f.rfr.radio]} { destroy $w.f.rfr.radio }
-
-	    set choices [list]
-
-	    for {set i 0} {$i < [set $this-dim]} {incr i} {
-		set lab "Axis $i"
-		lappend choices [list $lab $i]
-	    }
-
-	    make_labeled_radio $w.f.rfr.radio \
-		"Join Axis"  "" top $this-join-axis $choices		
-	    pack $w.f.rfr.radio -fill both -expand 1 -side top
-        }	
-    }
-
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -86,22 +68,19 @@ itcl_class Teem_UnuAtoM_UnuJoin {
 	frame $w.f -borderwidth 2
 	pack $w.f -side top -e y -f both -padx 5 -pady 5
 
-	#frame to pack and repack radio button in
-	frame $w.f.rfr -relief groove -borderwidth 2
-
-	axis_radio
+	iwidgets::entryfield $w.f.axis -labeltext "Join Axis:" \
+	    -labelpos w -textvariable $this-join-axis \
+	    -width 5
 
 	checkbutton $w.f.incrdim \
 		-text "Increment Dimension" \
 		-variable $this-incr-dim
 	
-	pack $w.f.rfr $w.f.incrdim -fill both -expand 1 -side top
+	pack $w.f.axis $w.f.incrdim -side top -anchor nw
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
 
-	# button $w.execute -text "Ok" -command "destroy $w"
-	# pack $w.execute -side top -e n -f both
     }
 }
 
