@@ -40,6 +40,10 @@ WorkQueue_private::WorkQueue_private()
 
 void WorkQueue::init() {
     storeop_store(priv->pvar, 0);
+    if(totalAssignments==0){
+	nassignments=0;
+	return;
+    }
     if(totalAssignments > nallocated){
 	if(assignments)
 	    delete[] assignments;
@@ -65,12 +69,16 @@ void WorkQueue::init() {
 	current_assignmentsize-=decrement;
 	if(current_assignmentsize<1)
 	    current_assignmentsize=1;
+	if(current_assignment >= totalAssignments){
+	    break;
+	}
     }
     while(current_assignment < totalAssignments){
 	assignments[idx++]=current_assignment;
 	current_assignment+=current_assignmentsize;
     }
     nassignments=idx;
+    cerr << nassignments << " assignments\n";
     assignments[nassignments]=totalAssignments;
     nwaiting=0;
     done=false;
@@ -84,7 +92,7 @@ WorkQueue::WorkQueue(const char* name, int totalAssignments, int nthreads,
        nallocated(0), assignments(0)
 {
     priv=new WorkQueue_private();
-    //init();
+    init();
 }
 
 WorkQueue::WorkQueue(const WorkQueue& copy)
@@ -101,11 +109,13 @@ WorkQueue::WorkQueue()
     : name(0), nallocated(0), assignments(0)
 {
     totalAssignments=0;
-    priv=new WorkQueue_private();
+    priv=0;
 }
 
 WorkQueue& WorkQueue::operator=(const WorkQueue& copy)
 {
+    if(!priv)
+	priv=new WorkQueue_private;
     name=copy.name;
     nthreads=copy.nthreads;
     totalAssignments=copy.totalAssignments;
@@ -118,7 +128,8 @@ WorkQueue& WorkQueue::operator=(const WorkQueue& copy)
 WorkQueue::~WorkQueue()
 {
     fetchop_free(reservoir, priv->pvar);
-    delete priv;
+    if(priv)
+	delete priv;
 }
 
 bool WorkQueue::nextAssignment(int& start, int& end)

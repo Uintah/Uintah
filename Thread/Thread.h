@@ -113,6 +113,8 @@ public:
     static void niceAbort() ;
     static int couldBlock(const char* why);
     static void couldBlock(int restore);
+
+    static void roundRobinPlacement( void *mem, size_t len );
 };
 
 #endif

@@ -26,6 +26,7 @@
 #include <sys/errno.h>
 #include <sys/syssgi.h>
 #include <sys/time.h>
+#include <assert.h>
 extern "C" {
 #include <sys/pmo.h>
 #include <fetchop.h>
@@ -104,6 +105,10 @@ static double seconds_to_ticks;
 static int hittimer;
 static usema_t* control_c_sema;
 static void handle_profile(int, int, sigcontext_t*);
+static pmo_handle_t *mlds=0;
+static pmo_handle_t mldset=0;
+static pmo_handle_t rr_policy=0;
+
 
 // Thread states
 #define STATE_STARTUP 1
@@ -465,7 +470,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
     Thread::niceAbort();
 
     action.sa_handler=(SIG_PF)handle_abort_signals;
-    action.sa_flags=SA_SIGINFO;
+    action.sa_flags=0;
     if(sigaction(sig, &action, NULL) == -1){
 	perror("sigaction");
 	exit(-1);
@@ -502,7 +507,7 @@ void Thread_send_event(Thread* t, Thread::ThreadEvent event) {
 static void install_signal_handlers(){
     struct sigaction action;
     sigemptyset(&action.sa_mask);
-    action.sa_flags=SA_SIGINFO;
+    action.sa_flags=0;
 
     action.sa_handler=(SIG_PF)handle_abort_signals;
     if(sigaction(SIGILL, &action, NULL) == -1){
@@ -562,6 +567,35 @@ static void handle_alrm(int, int, sigcontext_t*)
 	hittimer=1;
 }
 
+static void mld_alloc(int size, int nmld, 
+		      pmo_handle_t *(&mlds), pmo_handle_t &mldset)
+{
+  int i;
+
+  mlds = new pmo_handle_t[nmld];
+  assert(mlds);
+
+  for(i=0; i<nmld; i++) 
+    {
+      mlds[i] = mld_create( 0, size );
+      if ((long)mlds[i] < 0) 
+	perror("mld_create()");
+      
+    }
+  mldset = mldset_create( mlds, nmld );
+  if ((long) mldset < 0) 
+    perror("mldset_create");
+
+  if ( mldset_place( mldset, TOPOLOGY_FREE, 0, 0, RQMODE_ADVISORY ) < 0)
+    {
+      perror("mldset_place");
+      fprintf( stderr, "set: %p nmld: %d ( ", (void *)mldset, nmld );
+      for(i=0; i<nmld; i++)
+	fprintf( stderr, "%d ", mlds[i] );
+      fprintf( stderr, ")\n" );
+    }
+}
+
 /*
  * Intialize threads for irix
  */
@@ -572,6 +606,7 @@ void Thread::initialize() {
     __psunsigned_t phys_addr = syssgi(SGI_QUERY_CYCLECNTR, &cycleval);
     __psunsigned_t raddr = phys_addr & ~poffmask;
     int fd = open("/dev/mmem", O_RDONLY);
+
     iotimer_addr = (volatile TIMERTYPE *)mmap(0, poffmask, PROT_READ,
 					      MAP_PRIVATE, fd, (off_t)raddr);
     iotimer_addr = (volatile TIMERTYPE *)((__psunsigned_t)iotimer_addr +
@@ -625,7 +660,7 @@ void Thread::initialize() {
 
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 3*1024*1024);
-    usconfig(CONF_INITUSERS, (unsigned int)110);
+    usconfig(CONF_INITUSERS, (unsigned int)140);
     poolmutex_arena=usinit("/dev/zero");
     if(!poolmutex_arena){
 	perror("usinit 1");
@@ -655,7 +690,7 @@ void Thread::initialize() {
 
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 3*1024*1024);
-    usconfig(CONF_INITUSERS, (unsigned int)110);
+    usconfig(CONF_INITUSERS, (unsigned int)140);
     //char* lockfile=tempnam(NULL, "sci");
     //arena=usinit(lockfile);
     //free(lockfile);
@@ -725,8 +760,33 @@ void Thread::initialize() {
 	exit(1);
     }
 #endif
+
+    /* Setup memory locality domains and policy models for memory placement 
+     * (jamie@acl.lanl.gov 
+     */
+    mld_alloc( 32*1024*1024       /* memory needed per node */, 
+	       (nprocessors+1)/2,  /* number of nodes */ 
+	       mlds,
+	       mldset
+	       );
+    policy_set_t ps;
+    pm_filldefault(&ps);
+    ps.placement_policy_name = "PlacementRoundRobin";
+    ps.placement_policy_args = (void *) mldset;
+    rr_policy = pm_create ( &ps );
+    if (rr_policy == -1)
+      perror("pm_create");
 }
 
+void Thread::roundRobinPlacement( void *mem, size_t len )
+{
+  if (mlds != 0)
+    {
+      int err = pm_attach( rr_policy, mem, len );
+      if (err == -1)
+	perror("pm_attach");
+    }
+}
 void ThreadGroup::gangSchedule() {
     /* There are two problems with real gang scheduling.
      *
@@ -896,6 +956,11 @@ void Thread::os_start(bool stopped) {
 	    error("Cannot start new thread");
 	    return;
 	}
+	int imld = (nactive >= nprocessors) ? nprocessors-1 : nactive;
+	imld /= 2;
+	int err = process_mldlink( priv->pid, mlds[imld], RQMODE_ADVISORY );
+	if (err < 0)
+	  perror("process_mldlink");
     }
     priv->thread=this;
     active[nactive]=priv;
@@ -1034,7 +1099,7 @@ void Thread::waitFor(double seconds) {
     static long tps=0;
     if(tps==0)
 	tps=CLK_TCK;
-    long ticks=(long)(seconds*tps);
+    long ticks=(long)(seconds*(double)tps);
     while (ticks != 0){
 	ticks=sginap(ticks);
     }
@@ -1480,7 +1545,7 @@ static void find_symbols(void* dlhandle, ProfRegion* region, ProfProc* procs, in
 				    char* addr=(char*)sym[i].st_value;
 				    dso_off=dladdr-addr;
 				    if(dso_off){
-					fprintf(stderr, "Keyed offset of %x to %s\n", dso_off, sname);
+					fprintf(stderr, "Keyed offset of %lx to %s\n", dso_off, sname);
 				    }
 				    break;
 				}
@@ -1536,7 +1601,7 @@ int lookup_proc(ProfRegion* regions, int nregions,
 	}
     }
     if(!addr){
-	fprintf(stderr, "Region not found at address: %x\n", stataddr);
+	fprintf(stderr, "Region not found at address: %p\n", stataddr);
     }
     for(int j=0;j<nprocs;j++){
 	ProfProc* proc=&procs[j];
@@ -1585,7 +1650,7 @@ void Thread::profile(FILE* in, FILE* out) {
 	print_threads(out, 0);
 	fprintf(out, "\nProfile which thread? ");
 	fflush(out);
-	if(fscanf(in, "%ld", &tid) !=1){
+	if(fscanf(in, "%d", &tid) !=1){
 	    tid=-1;
 	    fprintf(out, "Error reading response\n");
 	    fflush(out);
@@ -1797,3 +1862,4 @@ void Thread::profile(FILE* in, FILE* out) {
 void Thread::alert(int) {
     fprintf(stderr, "Thread::alert not finished\n");
 }
+
