@@ -71,3 +71,4 @@ FFLAGS += -O2
 
 #include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+$(SRCDIR)/smagmodel.o: $(SRCDIR)/smagmodel_fort.h
