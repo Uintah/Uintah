@@ -34,6 +34,7 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	global $this-sliceRange
 	global $this-sliceStart
 	global $this-sliceStop
+	global $this-sliceSkip
 
 	global $this-bPressure
 	global $this-bBField
@@ -47,6 +48,7 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	set $this-sliceRange 0
 	set $this-sliceStart 0
 	set $this-sliceStop 0
+	set $this-sliceSkip 1
 
 	set $this-bPressure 0
 	set $this-bBField 0
@@ -94,8 +96,9 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 
 	labelEntry $w.range.start "Start" $this-sliceStart
 	labelEntry $w.range.stop  "Stop"  $this-sliceStop
+	labelEntry $w.range.skip  "Skip"  $this-sliceSkip
 
-	pack $w.range.start $w.range.stop  -side top
+	pack $w.range.start $w.range.stop $w.range.skip -side top
 
 
 	frame $w.space
