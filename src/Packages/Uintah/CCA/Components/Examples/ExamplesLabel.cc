@@ -70,6 +70,26 @@ ExamplesLabel::~ExamplesLabel()
   VarLabel::destroy(phi);
   VarLabel::destroy(residual);
   VarLabel::destroy(u);
+  VarLabel::destroy(bctype);
+  VarLabel::destroy(xvelocity);
+  VarLabel::destroy(yvelocity);
+  VarLabel::destroy(zvelocity);
+  VarLabel::destroy(density);
+  VarLabel::destroy(temperature);
+  VarLabel::destroy(xvelocity_matrix);
+  VarLabel::destroy(xvelocity_rhs);
+  VarLabel::destroy(yvelocity_matrix);
+  VarLabel::destroy(yvelocity_rhs);
+  VarLabel::destroy(zvelocity_matrix);
+  VarLabel::destroy(zvelocity_rhs);
+  VarLabel::destroy(density_matrix);
+  VarLabel::destroy(density_rhs);
+  VarLabel::destroy(temperature_matrix);
+  VarLabel::destroy(temperature_rhs);
+  VarLabel::destroy(pressure_matrix);
+  VarLabel::destroy(pressure_rhs);
+  VarLabel::destroy(pressure);
+  VarLabel::destroy(ccvelocity);
 }
 
 } // end namespace uintah 
