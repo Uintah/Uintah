@@ -52,7 +52,7 @@ using namespace std;
 #define MAX_BASIS 27
 #undef INTEGRAL_TRACTION
 
-static DebugStream cout_doing("MPM_DOING_COUT", false);
+static DebugStream cout_doing("MPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;

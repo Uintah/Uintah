@@ -7,7 +7,7 @@
 using namespace Uintah;
 using std::vector;
 #define LOG
-//#undef LOG
+#undef LOG
 
 MPMPetscSolver::MPMPetscSolver()
 {
@@ -46,9 +46,10 @@ void MPMPetscSolver::initialize()
 #endif
 }
 
-void MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
-					     const PatchSet* perproc_patches,
-					     const PatchSubset* patches)
+void 
+MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
+					   const PatchSet* perproc_patches,
+					   const PatchSubset* patches)
 {
 
   int numProcessors = d_myworld->size();
@@ -208,7 +209,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
   }
-
 #endif
 
   delete[] diag;
@@ -289,7 +289,8 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   IS is;
   int* indices;
   int in = 0;
-  PetscMalloc(d_DOF.size() * sizeof(int), &indices);
+
+  indices = new int[d_DOF.size()];
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
     indices[in++] = *iter;
@@ -305,7 +306,8 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
 
   ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
-  PetscFree(indices);
+  delete[] indices;
+
 
   PetscScalar one = 1.0;
   MatZeroRows(d_A,is,&one);
