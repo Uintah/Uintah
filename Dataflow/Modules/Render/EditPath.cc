@@ -78,7 +78,6 @@ POSSIBLE REVISIONS
 #include <math.h>
 
 #include <iostream>
-using std::cout;
 using namespace std;
 
 
@@ -644,13 +643,10 @@ void EditPath::tcl_command(TCLArgs& args, void* userdata)
     }
   }
   else if (args[1] == "w_show"){
-    cout << "entering widget lock" << endl;
     widget_lock.writeLock();
-    cout << " behind widget lock " << endl;
     cross_widget->SetState(tcl_widg_show.get());
     ogeom->flushViews();
     widget_lock.writeUnlock();
-    cout << " out of w_show handler" << endl;
   }
   else if (args[1] == "mk_circle_path"){
     if(sem.tryDown()){
