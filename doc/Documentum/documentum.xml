@@ -1322,9 +1322,6 @@ site.</para>
 <para>To publish docs on this web site do this:
 <orderedlist>
 <listitem>
-<para>Update your &sr; CVS tree.</para>
-</listitem>
-<listitem>
 <para>Build a doc tarball from the sources on the release branch.
 Rename the tarball to:
 <filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
@@ -1341,7 +1338,7 @@ Move the directory named <filename>present</filename> to the
 <filename>past</filename> directory and rename it to reflect the
 version of the docs contained therein, e.g.:
 <literallayout>
-mv present past/1.6.1.
+mv present past/1.6.1
 </literallayout>
 </para>
 </listitem>
@@ -1392,25 +1389,8 @@ external web site.
 To publish docs on this web site do this:
 <orderedlist>
 <listitem>
-<para>Build a doc tarball from the sources on the release branch.
-Rename the tarball to reflect its release number,
-e.g. <filename>SCIRunDocs-1.6.1.tar.gz</filename>.</para> 
-</listitem>
-<listitem>
-<para>Copy the doc tarball to the directory
-<filename>/w01/docs/scirun-biopse</filename> on
-<filename>dante.sci.utah.edu</filename>.</para>
-</listitem>
-<listitem>
-<para>Unpack the tarball using GNU tar.</para>
-</listitem>
-<listitem>
 <para>
 Build a doc tarball from the sources on the trunk.
-Rename the tarball to:
-<filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
-where <replaceable>d.d.d</replaceable> is the version
-number of the documentation set contained in the tarball.
 </para>
 </listitem>
 <listitem>
