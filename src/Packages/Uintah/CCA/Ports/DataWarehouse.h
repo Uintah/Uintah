@@ -95,8 +95,8 @@ public:
   // Particle Variables
   virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 					       int matlIndex, const Patch*) = 0;
-  virtual void saveParticleSubset(int matlIndex, const Patch*,
-				  ParticleSubset* psubset) = 0;
+  virtual void saveParticleSubset(ParticleSubset* psubset, 
+                                  int matlIndex, const Patch*) = 0;
   virtual bool haveParticleSubset(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
