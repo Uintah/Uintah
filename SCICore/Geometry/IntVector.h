@@ -15,6 +15,7 @@
 #define Geometry_IntVector_h
 
 #include <iosfwd>
+#include <SCICore/Math/MinMax.h>
 #include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
@@ -84,6 +85,14 @@ namespace SCICore {
     inline Vector operator/(const Vector& a, const IntVector& b) {
        return Vector(a.x()/b.x(), a.y()/b.y(), a.z()/b.z());
     }
+    inline IntVector Min(const IntVector& a, const IntVector& b) {
+       using SCICore::Math::Min;
+       return IntVector(Min(a.x(), b.x()), Min(a.y(), b.y()), Min(a.z(), b.z()));
+    }
+    inline IntVector Max(const IntVector& a, const IntVector& b) {
+       using SCICore::Math::Max;
+       return IntVector(Max(a.x(), b.x()), Max(a.y(), b.y()), Max(a.z(), b.z()));
+    }
   } // End namespace Geometry
 } // End namespace SCICore
 
@@ -91,6 +100,9 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.4  2000/05/10 22:15:39  sparker
+// Added min/max function for IntVector
+//
 // Revision 1.3  2000/04/27 23:18:14  sparker
 // Added multiplication operators with Vector
 //
