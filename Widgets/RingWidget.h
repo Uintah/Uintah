@@ -21,7 +21,7 @@
 // Variable indexs
 enum { RingW_PointUL, RingW_PointUR, RingW_PointDR, RingW_PointDL,
        RingW_Dist, RingW_Hypo, RingW_Center,
-       RingW_Slider, RingW_SDist, RingW_Angle };
+       RingW_Slider, RingW_SDist, RingW_Angle, RingW_Const };
 // Material indexs
 enum { RingW_PointMatl, RingW_EdgeMatl, RingW_SliderMatl, RingW_SpecialMatl, RingW_HighMatl };
 
@@ -35,30 +35,18 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
-   inline Real GetRatio() const;
-   inline Vector GetAxis();
+   void SetPosition( const Point& center, const Vector& normal, const Real radius );
+   void GetPosition( Point& center, Vector& normal, Real& radius ) const;
+      
+   void SetRatio( const Real ratio );
+   Real GetRatio() const;
+   
+   const Vector& GetAxis1();
+   const Vector& GetAxis2();
 
 private:
-   Vector oldaxis;
+   Vector oldaxis1, oldaxis2;
 };
-
-
-inline Real
-RingWidget::GetRatio() const
-{
-   return (variables[RingW_Angle]->Get().x() + 3.14159) / (2.0 * 3.14159);
-}
-
-
-inline Vector
-RingWidget::GetAxis()
-{
-   Vector axis(variables[RingW_PointDR]->Get() - variables[RingW_PointUL]->Get());
-   if (axis.length2() <= 1e-6)
-      return oldaxis;
-   else
-      return (oldaxis = axis.normal());
-}
 
 
 #endif

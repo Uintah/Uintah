@@ -36,7 +36,7 @@ enum { FrameW_PickSphUL, FrameW_PickSphUR, FrameW_PickSphDR, FrameW_PickSphDL, F
 
 FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
-  oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
+  oldaxis1(1, 0, 0), oldaxis2(0, 1, 0)
 {
    Real INIT = 1.0*widget_scale;
    // Schemes 5/6 are used by the picks in GeomMoved!!
@@ -189,7 +189,7 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    w->add(resizem);
    w->add(cylsm);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
    
    FinishWidget(w);
 }
@@ -251,7 +251,7 @@ FrameWidget::widget_execute()
    ((DistanceConstraint*)constraints[FrameW_ConstULDR])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
    ((DistanceConstraint*)constraints[FrameW_ConstURDL])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
 
    Vector spvec1(variables[FrameW_PointUR]->Get() - variables[FrameW_PointUL]->Get());
    Vector spvec2(variables[FrameW_PointDL]->Get() - variables[FrameW_PointUL]->Get());

@@ -33,30 +33,17 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
-   inline Real GetRatio();
-   inline Vector GetAxis();
+   void SetRatio( const Real ratio );
+   Real GetRatio() const;
+
+   void SetEndpoints( const Point& end1, const Point& end2 );
+   void GetEndpoints( Point& end1, Point& end2 ) const;
+
+   const Vector& GetAxis();
 
 private:
    Vector oldaxis;
 };
-
-
-inline Real
-GuageWidget::GetRatio()
-{
-   return (variables[GuageW_Ratio]->Get().x());
-}
-
-
-inline Vector
-GuageWidget::GetAxis()
-{
-   Vector axis(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
-   if (axis.length2() <= 1e-6)
-      return oldaxis;
-   else 
-      return (oldaxis = axis.normal());
-}
 
 
 #endif

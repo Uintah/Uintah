@@ -43,7 +43,7 @@ enum { SFrameW_PickSphUL, SFrameW_PickSphUR, SFrameW_PickSphDR, SFrameW_PickSphD
 ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
 				      Real widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
-  oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
+  oldaxis1(1, 0, 0), oldaxis2(0, 1, 0)
 {
    Real INIT = 1.0*widget_scale;
    variables[SFrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
@@ -288,7 +288,7 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
    w->add(cylsm);
    w->add(slidersm);
    
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
 
    FinishWidget(w);
 }
@@ -353,7 +353,7 @@ ScaledFrameWidget::widget_execute()
 							       + (GetAxis2() * 0.3 * widget_scale),
 							       1.1*widget_scale);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
 
    Vector spvec1(variables[SFrameW_PointUR]->Get() - variables[SFrameW_PointUL]->Get());
    Vector spvec2(variables[SFrameW_PointDL]->Get() - variables[SFrameW_PointUL]->Get());

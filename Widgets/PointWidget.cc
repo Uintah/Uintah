@@ -29,7 +29,6 @@ PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scal
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    variables[PointW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
-   Configure(Point(0,0,0));
 
    materials[PointW_PointMatl] = PointWidgetMaterial;
    materials[PointW_HighMatl] = HighlightWidgetMaterial;
@@ -56,6 +55,7 @@ PointWidget::widget_execute()
 						     1*widget_scale);
 }
 
+
 void
 PointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
@@ -67,8 +67,18 @@ PointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
    }
 }
 
-void PointWidget::Configure( const Point& p )
+
+void
+PointWidget::SetPosition( const Point& p )
 {
-    // Just move the point to the new place
     variables[PointW_Point]->Move(p);
+    execute();
 }
+
+
+const Point&
+PointWidget::GetPosition() const
+{
+   return variables[PointW_Point]->Get();
+}
+

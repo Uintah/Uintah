@@ -33,27 +33,15 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
-   inline void SetDirect( const Vector& v );
-   inline const Vector& GetDirect() const;
+   void SetPosition( const Point& );
+   const Point& GetPosition() const;
+   
+   void SetDirect( const Vector& v );
+   const Vector& GetDirect() const;
 
 private:
    Vector direction;
 };
-
-
-inline void
-ArrowWidget::SetDirect( const Vector& v )
-{
-   direction = v;
-   execute();
-}
-
-
-inline const Vector&
-ArrowWidget::GetDirect() const
-{
-   return direction;
-}
 
 
 #endif

@@ -82,6 +82,7 @@ CrosshairWidget::widget_execute()
 								 0.5*widget_scale);
 }
 
+
 void
 CrosshairWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
@@ -92,4 +93,43 @@ CrosshairWidget::geom_moved( int /* axis */, double /* dist */, const Vector& de
       break;
    }
 }
+
+
+void
+CrosshairWidget::SetPosition( const Point& p )
+{
+    variables[CrosshairW_Center]->Move(p);
+    execute();
+}
+
+
+const Point&
+CrosshairWidget::GetPosition() const
+{
+   return variables[CrosshairW_Center]->Get();
+}
+
+
+void
+CrosshairWidget::SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 )
+{
+   if ((v1.length2() > 1e-6)
+       && (v2.length2() > 1e-6)
+       && (v3.length2() > 1e-6)) {
+      axis1 = v1.normal();
+      axis2 = v2.normal();
+      axis3 = v3.normal();
+      execute();
+   }
+}
+
+
+void
+CrosshairWidget::GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const
+{
+   v1 = axis1;
+   v2 = axis2;
+   v3 = axis3;
+}
+
 

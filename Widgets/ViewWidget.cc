@@ -242,7 +242,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    w->add(resizem);
    w->add(cylsm);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
    
    FinishWidget(w);
 }
@@ -316,16 +316,16 @@ ViewWidget::widget_execute()
 						      GetUL(),
 						      0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagUL])->move(GetUL(),
-						       variables[ViewW_Eye]->Get(),
+						       variables[ViewW_PointUL]->Get(),
 						       0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagUR])->move(GetUR(),
-						       variables[ViewW_Eye]->Get(),
+						       variables[ViewW_PointUR]->Get(),
 						       0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagDR])->move(GetDR(),
-						       variables[ViewW_Eye]->Get(),
+						       variables[ViewW_PointDR]->Get(),
 						       0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagDL])->move(GetDL(),
-						       variables[ViewW_Eye]->Get(),
+						       variables[ViewW_PointDL]->Get(),
 						       0.5*widget_scale);
 
    ((DistanceConstraint*)constraints[ViewW_ConstULUR])->SetMinimum(3.2*widget_scale);
@@ -335,7 +335,7 @@ ViewWidget::widget_execute()
    ((DistanceConstraint*)constraints[ViewW_ConstULDR])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
    ((DistanceConstraint*)constraints[ViewW_ConstURDL])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
 
    Vector spvec1(variables[ViewW_PointUR]->Get() - variables[ViewW_PointUL]->Get());
    Vector spvec2(variables[ViewW_PointDL]->Get() - variables[ViewW_PointUL]->Get());
@@ -402,9 +402,11 @@ ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 		 - variables[ViewW_PointUL]->Get());
       }
       t = delt.length();
-      variables[ViewW_PointDL]->MoveDelta(GetAxis1()*t/2.0);
+      if (Dot(delt, GetAxis2()) < 0.0)
+	 t = -t;
+/*      variables[ViewW_PointDL]->MoveDelta(GetAxis1()*t/2.0);
       variables[ViewW_PointDR]->MoveDelta(-GetAxis1()*t/2.0);
-      variables[ViewW_PointUL]->MoveDelta(delt+GetAxis1()*t/2.0);
+      variables[ViewW_PointUL]->MoveDelta(delt+GetAxis1()*t/2.0);*/
       variables[ViewW_PointUR]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
    case ViewW_PickResizeD:
@@ -414,9 +416,11 @@ ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 		 - variables[ViewW_PointDR]->Get());
       }
       t = delt.length();
-      variables[ViewW_PointUL]->MoveDelta(GetAxis1()*t/2.0);
+      if (Dot(delt, GetAxis2()) < 0.0)
+	 t = -t;
+/*      variables[ViewW_PointUL]->MoveDelta(GetAxis1()*t/2.0);
       variables[ViewW_PointUR]->MoveDelta(-GetAxis1()*t/2.0);
-      variables[ViewW_PointDR]->MoveDelta(delt+GetAxis1()*t/2.0);
+      variables[ViewW_PointDR]->MoveDelta(delt+GetAxis1()*t/2.0);*/
       variables[ViewW_PointDL]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
    case ViewW_PickCyls:

@@ -38,10 +38,10 @@ enum { FFrameW_PickSphUL, FFrameW_PickSphUR, FFrameW_PickSphDR, FFrameW_PickSphD
 
 FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
-  oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
+  oldaxis1(1, 0, 0), oldaxis2(0, 1, 0)
 {
    Real INIT = 1.0*widget_scale;
-   // Scheme2/3 are used by the picks in GeomMoved!!
+   // Scheme5 is used by the resize picks in GeomMoved!!
    variables[FFrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[FFrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
    variables[FFrameW_PointDR] = new Variable("PntDR", Scheme3, Point(INIT, INIT, 0));
@@ -106,7 +106,7 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
    constraints[FFrameW_ConstPyth]->VarChoices(Scheme2, 1, 0, 1);
    constraints[FFrameW_ConstPyth]->VarChoices(Scheme3, 1, 0, 1);
    constraints[FFrameW_ConstPyth]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[FFrameW_ConstPyth]->VarChoices(Scheme5, 2, 2, 1);
+   constraints[FFrameW_ConstPyth]->VarChoices(Scheme5, 1, 0, 1);
    constraints[FFrameW_ConstPyth]->Priorities(P_Default, P_Default, P_HighMedium);
    constraints[FFrameW_ConstULUR] = new DistanceConstraint("Const12",
 							   NumSchemes,
@@ -197,7 +197,7 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
    w->add(resizem);
    w->add(cylsm);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
    
    FinishWidget(w);
 }
@@ -249,7 +249,7 @@ FixedFrameWidget::widget_execute()
    ((DistanceConstraint*)constraints[FFrameW_ConstULDR])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
    ((DistanceConstraint*)constraints[FFrameW_ConstURDL])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
 
    Vector spvec1(variables[FFrameW_PointUR]->Get() - variables[FFrameW_PointUL]->Get());
    Vector spvec2(variables[FFrameW_PointDL]->Get() - variables[FFrameW_PointUL]->Get());
@@ -301,9 +301,9 @@ FixedFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& d
 		 - variables[FFrameW_PointUL]->Get());
       }
       t = delt.length();
+      if (Dot(delt, GetAxis2()) < 0.0)
+	 t = -t;
       variables[FFrameW_PointDL]->MoveDelta(GetAxis1()*t/2.0);
-      variables[FFrameW_PointDR]->MoveDelta(-GetAxis1()*t/2.0);
-      variables[FFrameW_PointUL]->MoveDelta(delt+GetAxis1()*t/2.0);
       variables[FFrameW_PointUR]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
    case FFrameW_PickResizeD:
@@ -313,9 +313,9 @@ FixedFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& d
 		 - variables[FFrameW_PointDR]->Get());
       }
       t = delt.length();
-      variables[FFrameW_PointUL]->MoveDelta(GetAxis1()*t/2.0);
-      variables[FFrameW_PointUR]->MoveDelta(-GetAxis1()*t/2.0);
-      variables[FFrameW_PointDR]->MoveDelta(delt+GetAxis1()*t/2.0);
+      if (Dot(delt, GetAxis2()) < 0.0)
+	 t = -t;
+      variables[FFrameW_PointUR]->MoveDelta(GetAxis1()*t/2.0);
       variables[FFrameW_PointDL]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
    case FFrameW_PickCyls:

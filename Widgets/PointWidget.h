@@ -32,7 +32,9 @@ public:
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
-   void Configure(const Point&);
+
+   void SetPosition( const Point& );
+   const Point& GetPosition() const;
 };
 
 

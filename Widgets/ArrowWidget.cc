@@ -85,6 +85,7 @@ ArrowWidget::widget_execute()
    }
 }
 
+
 void
 ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
@@ -95,4 +96,35 @@ ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       break;
    }
 }
+
+
+void
+ArrowWidget::SetPosition( const Point& p )
+{
+    variables[ArrowW_Point]->Move(p);
+    execute();
+}
+
+
+const Point&
+ArrowWidget::GetPosition() const
+{
+   return variables[ArrowW_Point]->Get();
+}
+
+
+void
+ArrowWidget::SetDirect( const Vector& v )
+{
+   direction = v;
+   execute();
+}
+
+
+const Vector&
+ArrowWidget::GetDirect() const
+{
+   return direction;
+}
+
 

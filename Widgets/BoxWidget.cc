@@ -292,7 +292,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
    w->add(resizem);
    w->add(cylsm);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
 
    FinishWidget(w);
 }
@@ -478,6 +478,8 @@ BoxWidget::widget_execute()
    ((GeomCylinder*)geometries[BoxW_CylOL])->move(variables[BoxW_PointODL]->Get(),
 						 variables[BoxW_PointOUL]->Get(),
 						 0.5*widget_scale);
+
+   SetEpsilon(widget_scale*1e-6);
 
    Vector spvec1(variables[BoxW_PointIUR]->Get() - variables[BoxW_PointIUL]->Get());
    Vector spvec2(variables[BoxW_PointIDL]->Get() - variables[BoxW_PointIUL]->Get());

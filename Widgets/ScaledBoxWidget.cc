@@ -420,7 +420,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    w->add(cylsm);
    w->add(slidersm);
 
-   SetEpsilon(widget_scale*1e-4);
+   SetEpsilon(widget_scale*1e-6);
 
    FinishWidget(w);
 }
@@ -621,6 +621,8 @@ ScaledBoxWidget::widget_execute()
 							     variables[SBoxW_Slider3]->Get()
 							     + (GetAxis3() * 0.3 * widget_scale),
 							     1.1*widget_scale);
+
+   SetEpsilon(widget_scale*1e-6);
 
    Vector spvec1(variables[SBoxW_PointIUR]->Get() - variables[SBoxW_PointIUL]->Get());
    Vector spvec2(variables[SBoxW_PointIDL]->Get() - variables[SBoxW_PointIUL]->Get());
