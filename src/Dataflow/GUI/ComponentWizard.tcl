@@ -200,6 +200,8 @@ proc update_title_entry_bind {a b c} {
     set title_pentry $p.c.moduleFakeModule.ff.title
     set tmp [set .componentWizard.tmpdata(title)]
     set_prompted_entry $title_pentry $tmp
+
+    puts "I think the module name is $tmp"
 }
 
 
