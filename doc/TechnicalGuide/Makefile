@@ -15,36 +15,33 @@
 #  University of Utah. All Rights Reserved.
 #
 
-# this makefile uses the java classes XT and XP by James Clark to convert 
-# XML to HTML.  therefore, to use this makefile you must have xt.jar, xp.jar 
-# and sax.jar listed in your CLASSPATH, i.e.: 
 #
-#   export CLASSPATH=./xt.jar:./xp.jar:./sax.jar:$CLASSPATH
+# This file uses xalan-java 2.3.1 or higher to process the xml files.
+# The environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
+#  and xercesImpl.jar.
 #
 
-# each chapter (a single .xml file) is converted to a single .html file.
-# get list of all chapters (part 1 chapter 3 = p1c3), TOC and print
+# All the html files that make up the book.
 BASENAMES   = $(shell ls -1 p?c?.xml | sed 's,.xml,,g') TOC printable
+HTMLNAMES  = $(patsubst %,%.html,$(BASENAMES))
 
-#############################################################################
+STYLESHEET =../docbook.xsl
 
-.SUFFIXES:
-.SUFFIXES: .xml .html 
-
-HTMLNAMES   = $(patsubst %,%.html,$(BASENAMES) $(OTHERNAMES))
-
-JFLAGS      = com.jclark.xsl.sax.Driver TechnicalGuide.xml
+define xmltohtml
+java org.apache.xalan.xslt.Process -IN TechnicalGuide.xml -XSL ${STYLESHEET} \
+-OUT $@ -PARAM dir 2 -PARAM cont ${patsubst %.html,%,$@} -HTML
+endef
 
 default: $(HTMLNAMES)
 
-.xml.html TOC.html printable.html: ../docbook.xsl ../doc_styles.css
-	java $(JFLAGS) ../docbook.xsl $*.html dir=2 cont=$* 
+%.html: %.xml ${STYLESHEET}
+	${xmltohtml}
+
+TOC.html printable.html: ${STYLESHEET} TechnicalGuide.xml
+	${xmltohtml}
 
 clean: 
 	rm -f $(HTMLNAMES)
 
 
-
-
-
-
+veryclean: clean
