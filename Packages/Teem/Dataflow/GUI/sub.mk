@@ -30,6 +30,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/NrrdConvert.tcl\
 	$(SRCDIR)/NrrdCrop.tcl\
+	$(SRCDIR)/NrrdJoin.tcl\
 	$(SRCDIR)/NrrdPad.tcl\
 	$(SRCDIR)/NrrdPermute.tcl\
 	$(SRCDIR)/NrrdQuantize.tcl\
