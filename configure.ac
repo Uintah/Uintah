@@ -160,7 +160,7 @@ INIT_PACKAGE_CHECK_VARS()
 
 sci_pwd=""
 for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
-  mkdir pwd_test
+  mkdir -p pwd_test
   ln -s pwd_test pwd_temp
 
   cd pwd_test
@@ -170,7 +170,7 @@ for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
   pwd_2=`$my_pwd`
 
   cd ..
-  rm -r pwd_test pwd_temp
+  rm -fr pwd_test pwd_temp
   if test "$pwd_1" = "$pwd_2"; then
     sci_pwd=$my_pwd
     alias pwd="$my_pwd"
@@ -622,6 +622,12 @@ LDRUN_PREFIX="-Wl,-rpath -Wl,"
 ## (Eventually we could write our own if necessary...)
 if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   AC_MSG_ERROR(dirname or basename not found.  Configure script won't work!)
+fi
+
+## -- Can't use uni-petsc and Uintah (as Uintah needs full mpi petsc).
+
+if test "$pkg_Uintah" = "yes" && test "$with_unipetsc"; then
+   AC_MSG_ERROR(You have requested both Uintah and Uni-Petsc.  However Uintah requires MPI petsc.)
 fi
 
 ##  --------------------------------------------------------------------
@@ -1323,6 +1329,8 @@ if test -z "$thirdparty"; then
   sci_tp_version=1.22
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
+
+  # Try to figure out the compilers version (as it is used in the thirdparty directory name.)
   ac_try="$CC -v > /dev/null 2> conftest.out"
   (eval $ac_try) 2>&5
   vers=`grep "gcc version" conftest.out | sed -e 's/.*gcc version //' | cut -d' ' -f1`
@@ -1368,53 +1376,31 @@ if test -z "$thirdparty"; then
   uintah_tp_version=1.0.0
   uintah_tp_path=$_sci_tp_base/Uintah/Thirdparty/$uintah_tp_version/$_sci_tp_subdir
 
-  if test "$pkg_uintah" = "yes"; then
-    if test -e $cca_tp_path && test -e $uintah_tp_path; then
-      sci_thirdparty_dir="$sci_thirdparty_dir $cca_tp_path $uintah_tp_path"
-    else
-       AC_MSG_WARN(Default Uintah thirdparty directory does not exists!)
-    fi
-  fi
-
   # extra thirdparty code for rtrt
   rtrt_tp_version=1.0.0
   rtrt_tp_path=$_sci_tp_base/rtrt/Thirdparty/$rtrt_tp_version/$_sci_tp_subdir
 
-  if test "$pkg_rtrt" = "yes"; then
-    if test -e $rtrt_tp_path; then
-      sci_thirdparty_dir="$sci_thirdparty_dir $rtrt_tp_path"
-    else
-      AC_MSG_WARN(Default rtrt thirdparty directory $rtrt_tp_path does not exists!)
-    fi
-  fi
-
   AC_MSG_RESULT(Using default thirdparty directory $sci_thirdparty_dir)
 fi
 
-for i in $sci_thirdparty_dir; do
-  if test ! -d "$i"; then
-    continue
-  fi
+if test ! -d "$sci_thirdparty_dir"; then
+  AC_MSG_ERROR($sci_thirdparty_dir does not exist.)
+fi
 
-  #this is where the lib actually lives
-  if test ! -d "$i/lib"; then
-    continue
-  fi
-  # make sure there is no leading space in path
-  if test "$sci_thirdparty_libs"; then
-    sci_thirdparty_libs="$sci_thirdparty_libs $i/lib"
-  else
-    sci_thirdparty_libs="$i/lib"
-    SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_libs"
-    SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_libs -L$sci_thirdparty_libs"
-  fi
-  if test "$sci_thirdparty_includes"; then
-    sci_thirdparty_includes="$sci_thirdparty_includes $i/include"
-  else
-    sci_thirdparty_includes="$i/include"
-    INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_includes"
-  fi
-done
+# This is where the lib actually lives:
+if test ! -d "$sci_thirdparty_dir/lib"; then
+  AC_MSG_ERROR(SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist.)
+fi
+if test ! -d "$sci_thirdparty_dir/include"; then
+  AC_MSG_ERROR(SCI Thirdparty invalid.  $sci_thirdparty_dir/include does not exist.)
+fi
+
+
+sci_thirdparty_lib="$sci_thirdparty_dir/lib"
+sci_thirdparty_include="$sci_thirdparty_dir/include"
+SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_lib"
+SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib -L$sci_thirdparty_lib"
+INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
 
 AC_MSG_RESULT(Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR)
 
@@ -1670,7 +1656,7 @@ if test "$HAVE_DL" = "yes"; then
 else
   case $host in
   *-darwin*)
-    SCI_TRY_LINK(DL,dlopen in libdl,dlfcn.h,$sci_thirdparty_includes,dl,$sci_thirdparty_libs,,[
+    SCI_TRY_LINK(DL,dlopen in libdl,dlfcn.h,$sci_thirdparty_include,dl,$sci_thirdparty_lib,,[
       dlopen("bogus", 0);
     ],required)
     ;;
@@ -1773,8 +1759,8 @@ if test "$with_tcl"; then
   _sci_lib="$with_tcl/lib"
   _sci_optional=specific
 else
-  _sci_inc="$sci_thirdparty_includes"
-  _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_include"
+  _sci_lib="$sci_thirdparty_lib"
 fi
 
 if test -f "$_sci_lib/tclConfig.sh"; then 
@@ -1851,8 +1837,8 @@ if test "$with_xercesc"; then
   _xer_inc="$with_xercesc/include"
   _sci_optional=specific
 else
-  _xer_lib_path="$sci_thirdparty_libs"
-  _xer_inc="$sci_thirdparty_includes"
+  _xer_lib_path="$sci_thirdparty_lib"
+  _xer_inc="$sci_thirdparty_include"
 fi
 
 _xer_lib="xerces-c"
@@ -1924,13 +1910,17 @@ sci_defs_files="$sci_defs_files include/sci_defs/exe_testdefs.h"
 ## and TEEM stuff this section needs to preceed them.
 
 _sci_optional=required
+_sci_lib=
+_sci_inc=
+
 if test "$with_zlib"; then
-  _sci_lib="$with_zlib/lib"
-  _sci_inc="$with_zlib/include"
-  _sci_optional=specific
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
+  if test "$with_zlib" = "yes"; then
+    AC_MSG_WARN(Zlib is already required - you do not need to specify --with-zlib.)
+  else
+    _sci_lib="$with_zlib/lib"
+    _sci_inc="$with_zlib/include"
+    _sci_optional=specific
+  fi
 fi
 
 SCI_TRY_LINK(Z,zlib library and header,zlib.h,$_sci_inc,z,$_sci_lib,,,$_sci_optional)
@@ -1953,32 +1943,38 @@ sci_defs_files="$sci_defs_files include/sci_defs/z_testdefs.h"
 
 ##  --  search for jpeg and tiff -----------------------------------------
 
-if test "$sci_required_jpeg" = "yes"; then
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
 
-   if test "$with_jpeg"; then
-     _sci_lib="$with_jpeg/lib"
+if test "$with_jpeg"; then
+   if test "$with_jpeg" = "yes"; then
+      _sci_optional=required
    else
-     _sci_lib="$sci_thirdparty_libs"
-   fi 
+      _sci_lib="$with_jpeg/lib"
+      _sci_optional=specific
+   fi
+fi
 
-   SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,required)
-
-fi #end sci_required_jpeg
+SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,$_sci_optional)
 
 AC_SUBST(JPEG_LIB_FLAG)
 AC_SUBST(JPEG_LIB_DIR_FLAG)
 
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
 
-if test "$sci_required_tiff" = "yes"; then
-   if test "$with_tiff"; then
-     _sci_lib="$with_tiff/lib"
+if test "$with_tiff"; then
+   if test "$with_tiff" = "yes"; then
+      _sci_optional=required
    else
-     _sci_lib="$sci_thirdparty_libs"
+      _sci_lib="$with_tiff/lib"
+      _sci_optional=specific
    fi
+fi
 
-   SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,required)
-
-fi # end sci_required_tiff
+SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
 
 AC_SUBST(TIFF_LIB_FLAG)
 AC_SUBST(TIFF_LIB_DIR_FLAG)
@@ -2082,7 +2078,7 @@ if test "$with_mpeg"; then
   _sci_lib="$with_mpeg/lib"
   _sci_optional=specific
 else
-  _sci_lib="$sci_thirdparty_libs"
+  _sci_lib="$sci_thirdparty_lib"
 fi
 
 SCI_TRY_LINK(MPEGE,MPEG library,,,mpege,$_sci_lib,,,$_sci_optional)
@@ -2105,8 +2101,8 @@ AC_SUBST(DEF_MPEG)
 
 # Default values:
 _sci_optional=optional
-_sci_lib="$sci_thirdparty_libs"
-_sci_inc="$sci_thirdparty_includes"
+_sci_lib="$sci_thirdparty_lib"
+_sci_inc="$sci_thirdparty_include"
 
 if test "$with_magick" = "yes"; then
   # If --with-magick is specified without a parameter, then it makes it required
@@ -2174,15 +2170,15 @@ sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
 ##  --  search for unp --------------------------------------
 
 if test "$with_unp" = "yes"; then
-  AC_MSG_ERROR(Please provide the location of the UNP package.)
+  AC_MSG_ERROR(Please provide the location of the UNP package: --with-unp=<dir>)
 fi
 
 if test "$with_unp"; then
   _sci_lib="$with_unp/lib"
   _sci_inc="$with_unp/include"
 else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
+  _sci_lib="$sci_thirdparty_lib"
+  _sci_inc="$sci_thirdparty_include"
 fi
 
 SCI_TRY_LINK(UNP,unp socket library and headers,extern_C unpv12e/unp.h unpv12e/unpthread.h,$_sci_inc,
@@ -2473,7 +2469,7 @@ if test "$sci_required_mpi" = "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
           # of lam mpi.
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-          $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,,,optional)
+          $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
 
           if test "$HAVE_MPI" != "yes"; then
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
@@ -2493,10 +2489,15 @@ if test "$sci_required_mpi" = "yes"; then
         if test "$HAVE_MPI" = "yes"; then
 
            if test "$_sci_optional" = "specific"; then
+              the_file=libmpi
+              if test "$HAVE_MPICH" = "yes"; then
+                the_file=libmpich
+              fi
+
               # verify that it was found in the location requested.
-              if test ! -e $with_mpi/lib/libmpi.so &&
-                 test ! -e $with_mpi/lib/libmpi.a &&
-                 test ! -e $with_mpi/lib/libmpi.dylib; then
+              if test ! -e $with_mpi/lib/$the_file.so &&
+                 test ! -e $with_mpi/lib/$the_file.a &&
+                 test ! -e $with_mpi/lib/$the_file.dylib; then
                    echo
                    AC_MSG_ERROR(Found libmpi but not in requested directory: $with_mpi/lib)
               fi
@@ -2677,6 +2678,8 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     done  
   fi
 
+# For Petsc 2.2.0 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+
   SCI_TRY_LINK(PETSC,
                petsc libraries and headers,
                petsc.h,
@@ -2709,6 +2712,8 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
+
+# For petsc 2.2.0 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
 
     SCI_TRY_LINK(PETSC_UNI,
                  petsc-uni libraries and headers,
@@ -2746,6 +2751,7 @@ AC_SUBST(PETSC_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC)
 AC_SUBST(INC_PETSC_H)
 
+AC_SUBST(HAVE_PETSC_UNI)
 AC_SUBST(PETSC_UNI_LIB_FLAG)
 AC_SUBST(PETSC_UNI_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC_UNI)
@@ -2882,33 +2888,35 @@ fi
 AC_SUBST(TAU_MAKEFILE)
 
 ##  --  search for Babel  ----------------------------------------------------
-if test "$sci_required_babel" = "yes"; then
-  if test "$with_babel"; then
-    _sci_lib="$with_babel/lib"
-    _sci_inc="$with_babel/include"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
-  fi
-  echo $_sci_lib
-  echo $_sci_inc
-  SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,optional)
+
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$with_babel" = "yes"; then
+  _sci_optional=required
+elif test "$with_babel"; then
+  _sci_lib="$with_babel/lib"
+  _sci_inc="$with_babel/include"
+  _sci_optional=specific
+fi
+
+SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
   
-  BABEL_BIN=""
-  AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
-  AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
+BABEL_BIN=""
+
+AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
+AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
   
-  if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-     DEF_BABEL="#define HAVE_BABEL 1"
-     HAVE_BABEL="yes"
-  fi
+if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
+   DEF_BABEL="#define HAVE_BABEL 1"
+   HAVE_BABEL="yes"
+fi
   
-  if test "$with_babel" && test ! "$DEF_BABEL"; then
-    echo
-    AC_MSG_ERROR(One or more of the Babel components is missing.)
-    echo
-  fi
-fi # end sci_required_babel
+if test "$with_babel" && test ! "$DEF_BABEL"; then
+  echo
+  AC_MSG_ERROR(One or more of the Babel components is missing.)
+fi 
 
 AC_SUBST(HAVE_BABEL)
 AC_SUBST(DEF_BABEL)
@@ -2921,22 +2929,26 @@ sci_defs_files="$sci_defs_files include/sci_defs/babel_testdefs.h"
 
 ##  --  search for netsolve ----------------------------------------------
 
-if test "$sci_required_netsolve" = "yes"; then
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
 
-   if test "$with_netsolve"; then
-     _sci_lib="$with_netsolve"
-   else
-     _sci_lib="$sci_thirdparty_libs"
-   fi
-
-   SCI_TRY_LINK(NETSOLVE,netsolve library,,,netsolve,$_sci_lib,,,required)
+if test "$with_netsolve" = "yes"; then
+  _sci_optional=required
+elif test "$with_netsolve"; then
+  _sci_lib="$with_netsolve/lib"
+  _sci_inc="$with_netsolve/include"
+  _sci_optional=specific
 fi
+
+SCI_TRY_LINK(NETSOLVE,netsolve library,,,netsolve,$_sci_lib,,,$_sci_optional)
 
 AC_SUBST(NETSOLVE_LIB_FLAG)
 AC_SUBST(NETSOLVE_LIB_DIR_FLAG)
 
 
 ##  --  search for glut  -----------------------------------------------
+
 if test "$sci_required_glut" = "yes"; then
 
    libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS_FLAG"
@@ -2957,11 +2969,11 @@ if test "$sci_required_glut" = "yes"; then
      fi
    else
      if test "$with_opengl"; then
-       _sci_lib="$sci_thirdparty_libs $with_opengl/lib"
-       _sci_inc="$sci_thirdparty_includes $with_opengl/include"
+       _sci_lib="$sci_thirdparty_lib $with_opengl/lib"
+       _sci_inc="$sci_thirdparty_include $with_opengl/include"
      else
-       _sci_lib="$sci_thirdparty_libs /usr/X11R6/lib"
-       _sci_inc="$sci_thirdparty_includes /usr/X11R6/include"
+       _sci_lib="$sci_thirdparty_lib /usr/X11R6/lib"
+       _sci_inc="$sci_thirdparty_include /usr/X11R6/include"
      fi
    fi
 
@@ -3005,11 +3017,11 @@ if test "$sci_required_glui" = "yes"; then
      fi
    else
      if test "$with_opengl"; then
-       _sci_lib="$sci_thirdparty_libs $with_opengl/lib"
-       _sci_inc="$sci_thirdparty_includes $with_opengl/include"
+       _sci_lib="$sci_thirdparty_lib $with_opengl/lib"
+       _sci_inc="$sci_thirdparty_include $with_opengl/include"
      else
-       _sci_lib="$sci_thirdparty_libs /usr/X11R6/lib"
-       _sci_inc="$sci_thirdparty_includes /usr/X11R6/include"
+       _sci_lib="$sci_thirdparty_lib /usr/X11R6/lib"
+       _sci_inc="$sci_thirdparty_include /usr/X11R6/include"
      fi
    fi
 
@@ -3139,27 +3151,29 @@ AC_SUBST(GLEW_LIB_FLAG)
 AC_SUBST(GLEW_LIB_DIR_FLAG)
 
 ##  --  search for ftgl stuff  -------------------------------------------
-if test "$sci_required_ftgl" = "yes"; then
-  if test "$with_ftgl"; then
-    _sci_lib="$with_ftgl/unix/src/.libs"
-    _sci_inc="$with_ftgl/include /usr/include/freetype2"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-  fi
-  
-  SCI_TRY_LINK(FTGL,FTGL library,FTGLTextureFont.h,$_sci_inc,freetype ftgl,$_sci_lib,,,required)
 
-  if test "$HAVE_FTGL" = "yes"; then
-    DEF_FTGL="#define HAVE_FTGL 1"
-  fi
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
 
-  if test "$with_ftgl" && test ! "$DEF_FTGL"; then
-    echo
-    AC_MSG_ERROR(One or more of the FTGL components is missing.)
-    echo
-  fi
+if test "$with_ftgl" = "yes"; then
+  _sci_optional=required
+elif test "$with_ftgl"; then
+  _sci_lib="$with_ftgl/unix/src/.libs"
+  _sci_inc="$with_ftgl/include /usr/include/freetype2"
+  _sci_optional=specific
+fi
 
-fi # end sci_required_ftgl
+SCI_TRY_LINK(FTGL,FTGL library,FTGLTextureFont.h,$_sci_inc,freetype ftgl,$_sci_lib,,,$_sci_optional)
+
+if test "$HAVE_FTGL" = "yes"; then
+  DEF_FTGL="#define HAVE_FTGL 1"
+fi
+
+if test "$with_ftgl" && test ! "$DEF_FTGL"; then
+  echo
+  AC_MSG_ERROR(One or more of the FTGL components is missing.)
+fi
 
 AC_SUBST(FTGL_LIB_FLAG)
 AC_SUBST(FTGL_LIB_DIR_FLAG)
@@ -3201,12 +3215,12 @@ if test "$sci_required_teem" = "yes"; then
     _sci_lib="$with_teem/lib"
     _sci_inc="$with_teem/include"
   else
-    _sci_lib="$sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
+    _sci_lib="$sci_thirdparty_lib"
+    _sci_inc="$sci_thirdparty_include"
   fi
   _sci_optional=required
   
-  if test "$pkg_rtrt" = "yes" && test "$pkg_BioPSE" != "yes" && test "$pkg_teem" != "yes" && test "$pkg_MatlabInterface" != "yes" && test "$pkg_uintah" != "yes"; then
+  if test "$pkg_rtrt" = "yes" && test "$pkg_BioPSE" != "yes" && test "$pkg_teem" != "yes" && test "$pkg_MatlabInterface" != "yes" && test "$pkg_Uintah" != "yes"; then
      _sci_optional=optional
   fi
 
@@ -3327,7 +3341,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 ##  --  search for perfex  -----------------------------------------------
 
 if test "$sci_required_perfex" = "yes"; then
-  _sci_lib="$sci_thirdparty_libs"
+
+  _sci_lib=
 
   SCI_TRY_LINK(PERFEX,perfex library,,,perfex,$_sci_lib,,,required)
 
@@ -3371,10 +3386,13 @@ sci_defs_files="$sci_defs_files include/sci_defs/crypto_testdefs.h"
 ##  --  search for ssl ---------------------------------
 
 if test "$sci_required_ssl" = "yes"; then
+
+  _sci_lib=
+
   if test "$with_ssl"; then
     _sci_lib="$with_ssl/lib"
   else
-    _sci_lib="$sci_thirdparty_libs"
+    _sci_lib="$sci_thirdparty_lib"
   fi
 
   SCI_TRY_LINK(SSL,ssl library,,,ssl crypto,$_sci_lib,,,optional)  
@@ -3396,14 +3414,15 @@ AC_SUBST(SSL_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/ssl_testdefs.h"
 
 ##  --  globus nexus  ----------------------------------------------------
+
 if test "$sci_required_globus" = "yes"; then
 
   if test "$with_globus"; then
     _sci_lib="$with_globus/lib"
     _sci_inc="$with_globus/include"
   else
-    _sci_lib="$sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
+    _sci_lib="$sci_thirdparty_lib"
+    _sci_inc="$sci_thirdparty_include"
   fi
   
   if test ! "$DEF_SSL"; then
@@ -3453,32 +3472,34 @@ AC_SUBST(GLOBUS_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/globus_testdefs.h"
 
 ##  --  search for Qt  ----------------------------------------------------
-if test "$sci_required_qt" = "yes"; then
-  if test "$with_qt"; then
-    _sci_lib="$with_qt/lib"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-  fi
 
-  _qt_inc="$with_qt/include"
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$with_qt" = "yes"; then
+  _sci_optional=required
+elif test "$with_qt"; then
+  _sci_lib="$with_qt/lib"
+  _sci_inc="$with_qt/include"
+  _sci_optional=specific
+fi
+
+# Only looking for one .h file... assuming all the rest are in the same place.
+SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_sci_inc,qt-mt,$_sci_lib,,,optional)   
+QT_MOC_BIN=""
+AS_MESSAGE(checking for moc in $LIB_DIR_QT_MT/../bin...)
+AC_CHECK_PROG(QT_MOC_BIN,moc,$LIB_DIR_QT_MT/../bin/moc,NOMOC,$LIB_DIR_QT_MT/../bin)
   
-  # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_qt_inc,qt-mt,$_sci_lib,,,optional)   
-  QT_MOC_BIN=""
-  AS_MESSAGE(checking for moc in $LIB_DIR_QT_MT/../bin...)
-  AC_CHECK_PROG(QT_MOC_BIN,moc,$LIB_DIR_QT_MT/../bin/moc,NOMOC,$LIB_DIR_QT_MT/../bin)
+if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
+   DEF_QT="#define HAVE_QT 1"
+   HAVE_QT="yes"
+fi
   
-  if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
-     DEF_QT="#define HAVE_QT 1"
-     HAVE_QT="yes"
-  fi
-  
-  if test "$with_qt" && test ! "$DEF_QT"; then
-    echo
-    AC_MSG_ERROR(One or more of the QT components is missing.)
-    echo
-  fi
-fi # end sci_required_qt
+if test "$with_qt" && test ! "$DEF_QT"; then
+  echo
+  AC_MSG_ERROR(One or more of the QT components is missing.)
+fi
 
 AC_SUBST(HAVE_QT)
 AC_SUBST(DEF_QT)
@@ -3494,8 +3515,8 @@ if test "$sci_required_ruby" = "yes"; then
 
   if test "$with_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
-    _sci_lib="$sci_thirdparty_libs"
-    _ruby_inc="$sci_thirdparty_includes"
+    _sci_lib="$sci_thirdparty_lib"
+    _ruby_inc="$sci_thirdparty_include"
   else 
    if test "$with_ruby"; then
      #if --with-ruby has been specified with a parameter, then use that parameter
@@ -3538,8 +3559,8 @@ if test "$sci_required_vtk" = "yes"; then
     _sci_lib="$with_vtk/lib/vtk"
     _vtk_inc="$with_vtk/include/vtk"
   else
-    _sci_lib="$sci_thirdparty_libs"
-    _vtk_inc="$sci_thirdparty_includes"
+    _sci_lib="$sci_thirdparty_lib"
+    _vtk_inc="$sci_thirdparty_include"
   fi
   
   # Only looking for one .h file... assuming all the rest are in the same place.
@@ -3623,21 +3644,21 @@ sci_defs_files="$sci_defs_files include/sci_defs/vdt_testdefs.h"
 
 ##  --  search for hypre stuff  ------------------------------------------
 
+_sci_lib=
+_sci_inc=
 _sci_optional=optional
-if test "$sci_required_hypre" = "yes"; then
-  _sci_optional=required
-fi
 
-if test "$with_hypre"; then
+if test "$with_hypre" = "yes"; then
+  _sci_optional=required
+elif test "$with_hypre"; then
   _sci_lib="$with_hypre/lib"
   _sci_inc="$with_hypre/include"
   _sci_optional=specific
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
 fi
 
-SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI,$_sci_lib,,,$_sci_optional)
+SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI,
+                         $_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
@@ -3646,7 +3667,6 @@ fi
 if test "$with_hypre" && test ! "$DEF_HYPRE"; then
   echo
   AC_MSG_ERROR(One or more of the HYPRE components is missing.)
-  echo
 fi
 
 AC_SUBST(HAVE_HYPRE)
@@ -3826,7 +3846,7 @@ AC_CONFIG_FILES(configVars.mk Makefile on-the-fly-libs/Makefile
 
 ##   Only do the following if configuring with Uintah
 ##   Add a list of Uintah specific output files.
-if test "$pkg_uintah" = "yes" ; then
+if test "$pkg_Uintah" = "yes" ; then
    AC_CONFIG_FILES(Packages/Uintah/tools/fspec.pl)
 fi 
 
