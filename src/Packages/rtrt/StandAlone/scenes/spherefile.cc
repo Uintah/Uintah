@@ -327,6 +327,7 @@ GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
   }
   Array1<Material*> matls;
   get_material(matls);
+  cout << "Using radius "<<radius<<"\n";
   return new GridSpheres(data, mins, maxs, total_spheres, numvars-3, gridcellsize, griddepth, radius, matls.size(), &matls[0]);  
 }
 
@@ -717,7 +718,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     all->add((Object*)obj);
   }
 
-  new Thread(display, "GridSpheres display thread\n");
   Plane groundplane ( Point(-500, 300, 0), Vector(7, -3, 2) );
   //Color cup(0,0,0.3);
   //Color cdown(0.4, 0.2, 0);
@@ -743,6 +743,15 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
   scene->select_shadow_mode( No_Shadows );
+  scene->addObjectOfInterest(all, true);
+
+#if 0 // GridSpheresDpy needs to be made to inherit DpyBase.
+  scene->attach_display(display);
+  display->setName("Particle Vis");
+  scene->attach_auxiliary_display(display);
+#endif
+  (new Thread(display, "GridSpheres display thread\n"))->detach();
+
   return scene;
 }
 
