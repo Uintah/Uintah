@@ -595,11 +595,12 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
 				   DataWarehouse*,
 				   DataWarehouse* new_dw)
 {
+  sumlong_vartype pcount;
+  new_dw->get(pcount, lb->partCountLabel);
+  
   if(pg->myrank() == 0){
     static bool printed=false;
     if(!printed){
-      sumlong_vartype pcount;
-      new_dw->get(pcount, lb->partCountLabel);
       cerr << "Created " << pcount << " total particles\n";
       printed=true;
     }
