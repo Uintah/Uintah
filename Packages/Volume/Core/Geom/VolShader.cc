@@ -97,9 +97,14 @@ namespace Volume {
 "ABS_SAT n.w, n.w; # two-sided lighting \n" \
 "POW n.z, n.w, k.w; \n" \
 "MAD n.w, n.w, k.y, k.x; \n" \
-"MAD n.w, n.z, k.z, n.w; \n"
+"MUL n.z, k.z, n.z; \n"
 #define VOL_LIT_END \
-"MUL c.xyz, c.xyzz, n.w; \n"
+"MUL n.z, n.z, c.w;" \
+"MAD c.xyz, c.xyzz, n.w, n.z; \n"
+
+// "MAD n.w, n.z, k.z, n.w; \n"
+// #define VOL_LIT_END \
+// "MUL c.xyz, c.xyzz, n.w; \n"
 
 #define VOL_FRAGMENT_BLEND_HEAD \
 "TEMP n;"
