@@ -1,0 +1,16 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+include $(SRCTOP)/scripts/targets.mk
+
+all:: tclIndex
+
+tclIndex : Binop.tcl Delaunay.tcl Edge.tcl Gauss.tcl ImageConvolve.tcl \
+           ImageGen.tcl ImageSel.tcl MeshInterpVals.tcl MeshToGeom.tcl \
+           MeshView.tcl Noise.tcl Radon.tcl Segment.tcl Sharpen.tcl \
+           Snakes.tcl \
+           Subsample.tcl Ted.tcl Threshold.tcl TiffReader.tcl TiffWriter.tcl \
+           Transforms.tcl Unop.tcl
+	$(SRCTOP)/scripts/createTclIndex
+
