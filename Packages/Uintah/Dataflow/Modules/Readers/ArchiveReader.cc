@@ -1,17 +1,17 @@
 #include "ArchiveReader.h"
-#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream> 
 using std::endl;
 using std::cerr;
 
 namespace Uintah {
+
 using namespace SCIRun;
 
-extern "C" Dataflow::Dataflow::Module* make_ArchiveReader( const clString& id ) { 
+extern "C" Module* make_ArchiveReader( const clString& id ) { 
   return scinew ArchiveReader( id );
 }
-
 
 //--------------------------------------------------------------- 
 ArchiveReader::ArchiveReader(const clString& id) 
