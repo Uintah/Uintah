@@ -71,6 +71,16 @@ GeomMaterial::GeomMaterial(const GeomMaterial& copy)
 {
 }
 
+void GeomMaterial::setMaterial(const MaterialHandle& copy) 
+{
+    matl=copy;
+}
+
+MaterialHandle GeomMaterial::getMaterial()
+{
+    return matl;
+}
+
 GeomMaterial::~GeomMaterial()
 {
 }

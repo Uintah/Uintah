@@ -49,6 +49,8 @@ class GeomMaterial : public GeomContainer {
 public:
     GeomMaterial(GeomObj*, const MaterialHandle&);
     GeomMaterial(const GeomMaterial&);
+    void setMaterial(const MaterialHandle&);
+    MaterialHandle getMaterial();
     virtual ~GeomMaterial();
     virtual GeomObj* clone();
 
