@@ -54,6 +54,10 @@
         <name>HotBox Widget</name>
         <datatype>SCIRun::Geometry</datatype>
       </port>
+      <port>
+	<name>Bounding Box</name>
+        <datatype>SCIRun:::Matrix</datatype>
+      </port>
     </outputs>
   </io>
   <gui>
