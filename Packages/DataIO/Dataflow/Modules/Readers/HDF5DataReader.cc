@@ -1793,7 +1793,7 @@ HDF5DataReader::animate_execute( string new_filename,
 
   int which = current_.get();
 
-   bool cache = (playmode_.get() != "inc_w_exec");
+  bool cache = (playmode_.get() != "inc_w_exec");
 
   if (execmode_ == "step") {
 
