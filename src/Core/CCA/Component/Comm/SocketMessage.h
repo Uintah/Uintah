@@ -53,7 +53,7 @@ namespace SCIRun {
     inline void unmarshalBuf(void *buf, int fullsize);
     void *msg;
     int capacity;
-    int used;
+    int msg_size;
     static const int INIT_SIZE=1024;
   };
 }

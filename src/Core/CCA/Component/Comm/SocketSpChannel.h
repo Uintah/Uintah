@@ -36,7 +36,7 @@ namespace SCIRun {
   
     /////////////
     // File descriptor for the socket
-    int connfd;  
+    int sockfd;  
 
     Message* msg; 
 

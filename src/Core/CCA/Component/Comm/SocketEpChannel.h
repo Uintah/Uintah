@@ -41,12 +41,17 @@ namespace SCIRun {
   private:
   
     /////////////
-    // Hostname of this computer
-    std::string hostname;
-
-    /////////////
     // File descriptor for the socket
     int sockfd;  
+
+    ////////////
+    // The table of handlers from the sidl generated file
+    // used to relay a message to them
+    HPF* handler_table;
+
+    /////////////
+    // Handler table size
+    int table_size;
 
     Message* msg; 
   };

@@ -16,37 +16,81 @@
 */
 
 
-#include "SocketSpChannel.h"
+#include <iostream>
+#include <sstream>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <Core/CCA/Component/Comm/CommError.h>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/PIDL/URL.h>
 using namespace SCIRun;
 
 SocketSpChannel::SocketSpChannel() { 
-  connfd = 0;
-  msg = 0;
+  sockfd = 0;
+  msg = NULL;
 }
 
-SocketSpChannel::~SocketSpChannel() { }
+SocketSpChannel::~SocketSpChannel(){
+  if(sockfd!=0) close(sockfd);
+  if(msg!=NULL) delete msg;
+}
 
-void SocketSpChannel::openConnection(const URL& /*url*/) {
-  //Call connector and pass it the args
-  //connfd = open_connection(url.getHostname().c_str(),url.getPortNumber());
+void SocketSpChannel::openConnection(const URL& url) {
+  struct hostent *he;
+  struct sockaddr_in their_addr; // connector's address information 
+
+  // get the host info 
+  if((he=gethostbyname(url.getHostname().c_str())) == NULL){
+    throw CommError("gethostbyname", errno);
+  }
+     
+  if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+    throw CommError("socket", errno);
+  }
+  
+  their_addr.sin_family = AF_INET;                   // host byte order 
+  their_addr.sin_port = htons(url.getPortNumber());  // short, network byte order 
+  their_addr.sin_addr = *((struct in_addr *)he->h_addr);
+  memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
+
+  if(connect(sockfd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
+    throw CommError("connect", errno);
+  }
+  
+  /*  if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+    perror("recv");
+    exit(1);
+  }
+
+  buf[numbytes] = '\0';
+  
+  printf("Received: %s",buf);
+  
+  return 0;
+  */
 }
 
 SpChannel* SocketSpChannel::SPFactory(bool /*deep*/) {
+  //...
   SocketSpChannel* new_sp = new SocketSpChannel(); 
   return new_sp;
 }
 
 void SocketSpChannel::closeConnection() {
-  //close_connection(connfd);
-
+  close(sockfd);
 }
 
 Message* SocketSpChannel::getMessage() {
-  if (connfd == 0)
+  if (sockfd == 0)
     return NULL;
-  if (msg == 0)
+  if (msg == NULL)
     msg = new SocketMessage();
   return msg;
 }
