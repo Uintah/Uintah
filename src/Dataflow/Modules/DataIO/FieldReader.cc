@@ -10,6 +10,7 @@
  *
  *  Copyright (C) 2000 SCI Group
  */
+#include <string>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -17,6 +18,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLTask.h>
 #include <Core/TclInterface/TCLvar.h>
+#include <Core/Datatypes/SimpleAttrib.h>
 
 namespace SCIRun {
 
@@ -28,7 +30,7 @@ class FieldReader : public Module {
   FieldOPort*       d_oport;
   TCLstring         d_filename;
   FieldHandle       d_hField;
-  clString          d_oldFilename;
+  clString            d_oldFilename;
 
 public:
   // GROUP: Constructor/Destructor
@@ -88,6 +90,12 @@ void FieldReader::execute()
     }
     delete stream;
 
+    // add stream name as an attribute
+    SimpleAttrib<string> *filename = 
+      scinew SimpleAttrib<string> (string(fn()), 
+				   "Filename",
+				   Attrib::Normal);
+    d_hField->addAttribute( AttribHandle( filename ) );
   }
 
   d_oport->send(d_hField);
