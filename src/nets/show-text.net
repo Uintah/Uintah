@@ -19,7 +19,7 @@
 
 if {[llength [array get env SCIRUN_DATA]] == 0} {
    puts ""
-   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
    puts "*** Please exit, set it in your shell, and rerun."
    puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
    puts ""
@@ -38,6 +38,16 @@ if {[llength [array get env SCIRUN_DATASET]] == 0} {
 } else {
    set DATASET $env(SCIRUN_DATASET)
    puts "*** Using DATASET $DATASET"
+}
+
+if {![file isfile $DATADIR/$DATASET/$DATASET.settings]} {
+   puts ""
+   puts "*** Error: $DATADIR/$DATASET/$DATASET.settings is not a valid file."
+   puts "*** Please exit and make sure the SCIRUN_DATA and SCIRUN_DATA_SET"
+   puts "*** environment variables are set correctly."
+   puts ""
+   ::netedit scheduleok
+   return
 }
 
 source $DATADIR/$DATASET/$DATASET.settings
