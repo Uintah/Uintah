@@ -43,6 +43,7 @@ static int iterNum = 0;
 // I'M SURE OF THE NEW STYLE OF SETBC -Todd
 #define oldStyle_setBC 1
 #define newStyle_setBC 0
+#define setBC_FC 1
  /*==========TESTING==========`*/
 //#define ANNULUSICE
 #undef ANNULUSICE
@@ -321,7 +322,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   scheduleMassExchange(sched, patches, all_matls);
 
   scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
-                                                          ice_matls_sub,
+                                                          ice_matls_sub, 
+                                                          mpm_matls_sub,
                                                           all_matls);
 
   scheduleComputePressFC(sched, patches, press_matl,
@@ -363,7 +365,8 @@ void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
   task->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
   task->requires(Task::OldDW,lb->rho_CC_top_cycleLabel,     Ghost::None);
   task->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None);
-
+  task->requires(Task::OldDW,lb->vel_CCLabel,               Ghost::None);
+  
   task->computes(lb->speedSound_CCLabel);
   task->computes(lb->vol_frac_CCLabel);
   task->computes(lb->rho_micro_CCLabel);
@@ -455,6 +458,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 						  const PatchSet* patches,
                                             const MaterialSubset* press_matl,
                                             const MaterialSubset* ice_matls,
+                                            const MaterialSubset* mpm_matls,
 						  const MaterialSet* matls)
 {
 #ifdef DOING
@@ -474,7 +478,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->rho_micro_CCLabel, Ghost::None);
   task->requires( Task::NewDW, lb->rho_CCLabel,       Ghost::None);
   task->requires( Task::OldDW, lb->vel_CCLabel,       ice_matls, 
-                                                      Ghost::None);
+                                                      Ghost::None); 
+  task->requires( Task::NewDW, lb->vel_CCLabel,       mpm_matls, 
+                                                      Ghost::None);     
  task->requires(Task::NewDW,lb->burnedMass_CCLabel,   Ghost::None);
     
   task->computes(lb->press_CCLabel,    press_matl);
@@ -811,7 +817,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 #if 0
       cerr << "Before BC application" << endl;
       char description[50];
-      sprintf(description, "Initialization_Mat_%d ",m);
+      sprintf(description, "Initialization_Mat_patch_%d ", patch->getID());
       printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
 #endif
 
@@ -863,7 +869,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       if (switchDebugInitialize){
         cout << " Initial Conditions" << endl;       
         char description[50];
-        sprintf(description, "Initialization_Mat_%d ",indx);
+        sprintf(description, "Initialization_Mat_%d_patch_%d ", indx, 
+                patch->getID());
         printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
         printData(   patch, 1, description, "rho_micro_CC",rho_micro[m]);
       // printData(   patch, 1, description, "sp_vol_CC",  sp_vol_CC[m]);
@@ -935,6 +942,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > Temp(numMatls);
     StaticArray<CCVariable<double> > speedSound(numMatls);
     StaticArray<CCVariable<double> > speedSound_new(numMatls);
+    StaticArray<CCVariable<Vector> > vel_CC(numMatls);
     CCVariable<int> n_iters_equil_press;
     CCVariable<double> press,press_new;
     StaticArray<double> cv(numMatls);
@@ -948,6 +956,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       old_dw->get(Temp[m],  lb->temp_CCLabel,         indx,patch,
                                                     Ghost::None, 0);
       old_dw->get(rho_CC[m],lb->rho_CC_top_cycleLabel,indx,patch,
+		                                      Ghost::None,0);
+      old_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,
 		                                      Ghost::None,0);
 
       new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,indx, patch);
@@ -991,7 +1001,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
        char description[50];
-       sprintf(description, "TOP_equilibration_Mat_%d ",   indx);
+       sprintf(description, "TOP_equilibration_Mat_%d_patch_%d ", 
+                                                        indx, patch->getID());
        printData( patch, 1, description, "rho_CC",          rho_CC[m]);
        printData( patch, 1, description, "rho_micro_CC",    rho_micro[m]);
        printData( patch, 0, description, "speedSound",      speedSound_new[m]);
@@ -1140,9 +1151,17 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     fprintf(stderr, "\n max. iterations in any cell %i\n", test_max_iter); 
     //__________________________________
-    //  press_CC boundary conditions are updated in
-    //  ICE::ComputeDelPressAndUpdateCC()
-    
+    // update Boundary conditions
+/*`==========TESTING==========*/ 
+  #if oldStyle_setBC
+    setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch,0);
+  #endif
+  #if newStyle_setBC
+    setBC(press_new,     rho_micro,   rho_CC,
+          vol_frac,     vel_CC,         old_dw,
+          "Pressure",   patch,0);
+    #endif
+ /*==========TESTING==========`*/    
     //__________________________________
     // carry rho_cc forward 
     // In MPMICE was compute rho_CC_new and 
@@ -1166,7 +1185,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
        char description[50];
-       sprintf(description, "BOT_equilibration_Mat_%d ", indx);
+       sprintf(description, "BOT_equilibration_Mat_%d_patch_%d ", 
+              indx, patch->getID());
        printData( patch, 1, description, "rho_CC",       rho_CC[m]);
      //printData( patch, 1, description, "speedSound",   speedSound_new[m]);
        printData( patch, 1, description, "rho_micro_CC", rho_micro[m]);
@@ -1236,7 +1256,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       if (switchDebug_vel_FC ) {
       #if 0
         char description[50];
-        sprintf(description, "TOP_vel_FC_Mat_%d ",indx); 
+        sprintf(description, "TOP_vel_FC_Mat_%d_patch_%d  ",
+                                                      indx,patch->getID()); 
         printData(  patch, 1, description, "rho_CC",      rho_CC);
         printData(  patch, 1, description, "rho_micro_CC",rho_micro_CC);
         printVector( patch,1, description, "uvel_CC", 0, vel_CC);
@@ -1352,7 +1373,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
    //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
         char description[50];
-        sprintf(description, "bottom_of_vel_FC_Mat_%d ",indx);
+        sprintf(description, "bottom_of_vel_FC_Mat_%d_patch_%d ",
+                indx, patch->getID());
         printData_FC( patch,1, description, "uvel_FC", uvel_FC);
         printData_FC( patch,1, description, "vvel_FC", vvel_FC);
         printData_FC( patch,1, description, "wvel_FC", wvel_FC);
@@ -1459,7 +1481,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       vvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());
     }
-    
+ 
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector curcell = *iter;
       //__________________________________
@@ -1593,6 +1615,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       }
     }
 
+/*`==========TESTING==========*/ 
+#if setBC_FC
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -1600,20 +1624,21 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
     }
-
+#endif
+ /*==========TESTING==========`*/
    //---- P R I N T   D A T A ------ 
     if (switchDebug_Exchange_FC ) {
       for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       char description[50];
-      sprintf(description, "Exchange_FC_after_BC_Mat_%d ",indx);
+      sprintf(description, "Exchange_FC_after_BC_Mat_%d_patch_%d ", 
+              indx, patch->getID());
       printData_FC( patch,1, description, "uvel_FCME", uvel_FCME[m]);
       printData_FC( patch,1, description, "vvel_FCME", vvel_FCME[m]);
       printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
       }
     }
-
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -1690,6 +1715,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       CCVariable<double>   speedSound;
       SFCXVariable<double> uvel_FC;
       SFCYVariable<double> vvel_FC;
@@ -1702,18 +1728,20 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 		  Ghost::AroundCells, 2);
       new_dw->get(rho_CC[m],lb->rho_CCLabel,   indx,  patch,
 		  Ghost::None,0);
- /*`==========TESTING==========*/ 
-  if(ice_matl) {
-     old_dw->get(vel_CC[m],lb->vel_CCLabel,   indx,  patch,
-  		  Ghost::None,0);
-  }
- /*==========TESTING==========`*/
       new_dw->get(vol_frac[m],    lb->vol_frac_CCLabel,  indx,patch,
 		  Ghost::AroundCells,1);
       new_dw->get(rho_micro_CC[m],lb->rho_micro_CCLabel, indx,patch,
 		  Ghost::None,0);
       new_dw->get(speedSound,     lb->speedSound_CCLabel,indx,patch,
 		  Ghost::None,0);
+      if(ice_matl) {
+        old_dw->get(vel_CC[m],lb->vel_CCLabel,   indx,  patch,
+  		  Ghost::None,0);
+      }
+      if(mpm_matl) {
+        new_dw->get(vel_CC[m],lb->vel_CCLabel,   indx,  patch,
+  		  Ghost::None,0);
+      }
       new_dw->get(burnedMass,     lb->burnedMass_CCLabel,indx,patch,
 		  Ghost::None,0);
 
@@ -1734,7 +1762,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
         char description[50];
-        sprintf(description, "middle_of_explicit_Pressure_Mat_%d ",indx);
+        sprintf(description, "middle_of_explicit_Pressure_Mat_%d_patch_%d ",
+                indx, patch->getID());
         printData_FC( patch,1, description, "uvel_FC", uvel_FC);
         printData_FC( patch,1, description, "vvel_FC", vvel_FC);
         printData_FC( patch,1, description, "wvel_FC", wvel_FC);
@@ -1985,7 +2014,8 @@ void ICE::massExchange(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
         char description[50];
-        sprintf(description, "sources/sinks_Mat_%d",indx);
+        sprintf(description, "sources/sinks_Mat_%d_patch_%d ", 
+                indx, patch->getID());
         printData( patch, 0, description, "burnedMass", burnedMass[m]);
         printData( patch, 0, description, "releasedHeat", releasedHeat[m]);
       }
@@ -2127,7 +2157,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         char description[50];
-        sprintf(description, "sources/sinks_Mat_%d",indx);
+        sprintf(description, "sources/sinks_Mat_%d_patch_%d ", 
+                indx, patch->getID());
         printVector( patch, 1, description,    "xmom_source", 0, mom_source);
         printVector( patch, 1, description,    "ymom_source", 1, mom_source);
         printVector( patch, 1, description,    "zmom_source", 2, mom_source);
@@ -2214,7 +2245,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         char description[50];
-        sprintf(description, "sources/sinks_Mat_%d ",indx);
+        sprintf(description, "sources/sinks_Mat_%d_patch_%d ",
+                indx, patch->getID());
         printData( patch, 1, description, "int_eng_source", int_eng_source);
       }
 
@@ -2354,7 +2386,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           new_dw->get(mom_L,    lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
         }
         char description[50];
-        sprintf(description, "Bot_Lagrangian_Values_Mat_%d ",indx);
+        sprintf(description, "Bot_Lagrangian_Values_Mat_%d_patch_%d ", 
+                indx, patch->getID());
         printVector( patch,1, description, "xmom_L_CC", 0, mom_L);
         printVector( patch,1, description, "ymom_L_CC", 1, mom_L);
         printVector( patch,1, description, "zmom_L_CC", 2, mom_L);
@@ -2762,7 +2795,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
       char description[50];
-      sprintf(description, "AFTER_Advection_after_BC_Mat_%d ",indx);
+      sprintf(description, "AFTER_Advection_after_BC_Mat_%d_patch_%d ", 
+              indx, patch->getID());
       printVector( patch,1, description, "xmom_L_CC", 0, mom_L_ME);
       printVector( patch,1, description, "ymom_L_CC", 1, mom_L_ME);
       printVector( patch,1, description, "zmom_L_CC", 2, mom_L_ME);
@@ -2795,11 +2829,7 @@ void ICE::setBC(CCVariable<double>& press_CC,
                 DataWarehouse* old_dw,
                 const string& kind, 
                 const Patch* patch, const int mat_id)
-{
-  
-  Vector dx = patch->dCell();
-  Vector gravity = d_sharedState->getGravity();
-  
+{  
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace && patch->getBCType(face)==Patch::None;
       face=Patch::nextFace(face)){
@@ -2981,19 +3011,21 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
     } else
       continue;
 
+    IntVector offset(1,0,0);  // so you hit the inside walls of the domain
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") {
 	if (comp == "x")
-	  variable.fillFace(face,new_bcs->getValue().x());
+	  variable.fillFace(face,new_bcs->getValue().x(),offset);
 	if (comp == "y")
 	  variable.fillFace(face,new_bcs->getValue().y());
 	if (comp == "z")
 	  variable.fillFace(face,new_bcs->getValue().z());
       }
+
       
       if (new_bcs->getKind() == "Neumann") {
 	if (comp == "x")
-	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx,offset);
 	if (comp == "y")
 	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
 	if (comp == "z")
@@ -3019,22 +3051,23 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
       new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
-
+ 
+    IntVector offset(0,1,0);  // so you hit the inside walls of the domain
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") {
 	if (comp == "x")
 	  variable.fillFace(face,new_bcs->getValue().x());
 	if (comp == "y")
-	  variable.fillFace(face,new_bcs->getValue().y());
+	  variable.fillFace(face,new_bcs->getValue().y(),offset);
 	if (comp == "z")
 	  variable.fillFace(face,new_bcs->getValue().z());
       }
-      
+ 
       if (new_bcs->getKind() == "Neumann") {
 	if (comp == "x")
 	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx);
 	if (comp == "y")
-	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx, offset);
 	if (comp == "z")
 	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx);
       }
@@ -3058,7 +3091,8 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
       new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
-    
+
+    IntVector offset(0,0,1);  // so you hit the inside walls of the domain
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") {
 	if (comp == "x")
@@ -3066,8 +3100,9 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
 	if (comp == "y")
 	  variable.fillFace(face,new_bcs->getValue().y());
 	if (comp == "z")
-	  variable.fillFace(face,new_bcs->getValue().z());
+	  variable.fillFace(face,new_bcs->getValue().z(),offset);
       }
+
       
       if (new_bcs->getKind() == "Neumann") {
 	if (comp == "x")
@@ -3075,7 +3110,7 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
 	if (comp == "y")
 	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
 	if (comp == "z")
-	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx);
+	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx,offset);
       }
     }
   }
@@ -3681,7 +3716,8 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
                           const StaticArray<CCVariable<Vector> >& vel_CC)
 {
   int numICEMatls = d_sharedState->getNumICEMatls();
-  int numMatls = d_sharedState->getNumMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
+  int surrounding_mat;
   IntVector offset;
   
   double term1, term2, term3, term4, term5;
@@ -3692,39 +3728,43 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
   double tmp, beta;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
-  DenseMatrix K(numICEMatls,numICEMatls), junk(numICEMatls,numICEMatls);
+  DenseMatrix K(numALLMatls,numALLMatls), junk(numALLMatls,numALLMatls);
   K.zero();
   
-  StaticArray<CCVariable<double> > vel_FC(numICEMatls);
-  for(int m = 0; m < numICEMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int indx = matl->getDWIndex();
-    old_dw->allocate(vel_FC[m],  lb->scratchLabel,  indx,patch);
+  StaticArray<CCVariable<double> > vel_FC(numALLMatls);
+  for(int m = 0; m < numALLMatls; m++) {
+    vel_FC[m].allocate(patch->getCellLowIndex(),patch->getCellHighIndex());
     vel_FC[m].initialize(0.0);
   }
 
   getExchangeCoefficients(K, junk);
    
-//__________________________________
-//  For each wall
-//  - convert the vectors into a doubles, vel_CC into vel_FC
-//  - define the offsets to the interior cells and 
-//    which component of gravity
+   //__________________________________
+   // find the index for the first ICE matl
+   // which is the surrounding matl.
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if(ice_matl) { 
+        surrounding_mat = m;
+        m = numALLMatls;
+      }
+    }   
+   
+  //__________________________________
+  //  For each wall
+  //  - convert the vectors into a doubles, vel_CC into vel_FC
+  //  - define the offsets to the interior cells and 
+  //    which component of gravity
 
   Vector gravity = d_sharedState->getGravity();
   Vector dx = patch->dCell();
-  int m = SURROUND_MAT;          /*   H A R D W I R E   */
   
   if (face == Patch::xplus) {           //  X P L U S
     offset = IntVector(-1,0,0);
     grav   = gravity.x();
     del_Q  = dx.x();
     plus_minus_one  = -1.0;
-    for(int m = 0; m < numICEMatls; m++) {
-      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-        vel_FC[m][*iter] = vel_CC[m][*iter].x();
-      }
-    }
     //cout << "XPLUS:" <<endl;
   }
   if(face == Patch::xminus){            //  X M I N U S
@@ -3732,11 +3772,6 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.x();
     del_Q  = dx.x();
     plus_minus_one  = 1.0;
-    for(int m = 0; m < numICEMatls; m++) {
-      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-         vel_FC[m][*iter] = vel_CC[m][*iter].x();
-      }
-    }
     //cout << "XMINUS:" <<endl;
   }
   if(face == Patch::yplus) {            //  Y P L U S
@@ -3744,11 +3779,6 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.y();
     del_Q  = dx.y();
     plus_minus_one  = -1.0;
-    for(int m = 0; m < numICEMatls; m++) {
-      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-         vel_FC[m][*iter] = vel_CC[m][*iter].y();
-      }
-    }
     //cout << "YPLUS:" <<endl;
   }
   if(face == Patch::yminus) {           //  Y M I N U S
@@ -3756,11 +3786,6 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.y();
     del_Q  = dx.y();
     plus_minus_one  = 1.0;
-    for(int m = 0; m < numICEMatls; m++) {
-      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-        vel_FC[m][*iter] = vel_CC[m][*iter].y();
-      }
-    }
     //cout << "YMINUS:" <<endl;
   }
   if (face == Patch::zplus) {           //  Z P L U S
@@ -3768,11 +3793,6 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.z();
     del_Q  = dx.z();
     plus_minus_one  = -1.0;
-    for(int m = 0; m < numICEMatls; m++) {
-      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-        vel_FC[m][*iter] = vel_CC[m][*iter].z();
-      }
-    }
     //cout << "ZPLUS:" <<endl;
   } 
   if (face == Patch::zminus) {          //  Z M I N U S
@@ -3780,19 +3800,45 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.z();
     del_Q  = dx.z();
     plus_minus_one  = 1.0;
-    for(int m = 0; m < numICEMatls; m++) {
-      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-        vel_FC[m][*iter] = vel_CC[m][*iter].z();
-      }
-    }
     //cout << "ZMINUS:" <<endl;
   }
+  //__________________________________
+  //  Set the vel_FC = vel_CC on the 
+  //  face and one cell inward
+  for(int m = 0; m < numALLMatls; m++) {  
+    if (face == Patch::xplus||face == Patch::xminus) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter]        = vel_CC[m][*iter].x();
+        vel_FC[m][*iter+offset] = vel_CC[m][*iter+offset].x();
+      }
+    }
+    if(face == Patch::yplus || face == Patch::yminus) {  
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+         vel_FC[m][*iter]        = vel_CC[m][*iter].y();
+         vel_FC[m][*iter+offset] = vel_CC[m][*iter+offset].y();
+      }
+    }
+    if (face == Patch::zplus || face == Patch::zminus) {  
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter]        = vel_CC[m][*iter].z();
+        vel_FC[m][*iter+offset] = vel_CC[m][*iter+offset].z();
+      }
+    }
+/*`==========TESTING==========*/ 
+  #if 0
+    char description[50];
+    sprintf(description, "TOPbackoutGCPress_mat_%d",m);
+    printData(   patch, 1, description, "vel_FC",      vel_FC[m]);
+  #endif
+ /*==========TESTING==========`*/
+  }  //Loop  
    
   //__________________________________
   // Now loop over the ghostcells in that face
   // and backout the pressure this doesn't include 
-  // the corner or edge ghostcells 
+  // the corner or edge ghostcells.
   for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+    int m = surrounding_mat;  
     IntVector gcell = *iter;                  // current ghost cell
     IntVector adjcell(gcell.x()+offset.x(),   // interior adjacent cell
                       gcell.y()+offset.y(),
@@ -3809,23 +3855,28 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
              rho_CC[m][gcell]   * vel_FC[m][gcell])/(rho_FC);
 
     //__________________________________
-    // Exchange term
+    // Exchange term  CURRENTLY TURNED OFF
     term3 = 0.0;
-    for(int n = 0; n < numICEMatls; n++) {
+  #if 0
+    for(int n = 0; n < numALLMatls; n++) {
       tmp    = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][gcell]) * K[n][m];
       beta   = delT * tmp/ (rho_micro_CC[m][gcell] + rho_micro_CC[m][adjcell]);
       term3 += beta*(vel_FC[n][gcell] - vel_FC[m][gcell] );
     }
+  #endif
 
     //__________________________________
-    //gravity & denominator
+    //  gravity & denominator
     term4 =  delT * grav;
     term5 =  2.0 * delT/(rho_micro_FC);
     ASSERT(term5 > 0.0);
-   // cout<< *iter<<adjcell<<" "<<term1<<" "<<term2<<" " <<term3<<" "<<term4<<" "<<term5<<endl;
-    press_CC[gcell]  = press_CC[adjcell] + plus_minus_one * del_Q * 
-                      (term1- term2 - term3 - term4)/term5;
-                      
+  
+    double press_change;                  
+    press_change = plus_minus_one * del_Q *  (term1- term2 - term3 - term4)/term5;
+    press_CC[gcell]  = press_CC[adjcell] + press_change;
+//      cout<< *iter<<adjcell<<" "<<"press_change: "<<press_change<<
+//           " term1: "<<term1<<" term2: "<<term2<<" term3: "<<term3<<
+//           " term4: "<<term4<<" term5: "<<term5<< endl;                       
     //__________________________________
     //  Bulletproofing
     if (press_CC[gcell] < 0.0) {
@@ -3835,22 +3886,25 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
      k   = gcell.z();
      char warning[100];
      double stupid = delT;
+     cout<< *iter<<adjcell<<" "<<"press_change: "<<press_change<<
+          " term1: "<<term1<<" term2: "<<term2<<" term3: "<<term3<<
+          " term4: "<<term4<<" term5: "<<term5<< endl;
      sprintf(warning, " cell[%d][%d][%d]  delT = %e",i,j,k, stupid);
      Message(1,"ICE::backoutGCPressFromVelFC(): negative pressure detected",
              " This is usually caused by delT being too small. Now exiting..."
              , warning);
     }
-  }
-   //---- P R I N T   D A T A ------ 
- #if 0
-  if( face == Patch::endFace) {
-   char description[50];
-   sprintf(description, "backoutGCPress");
-   printData(   patch, 1, description, "press_CC",    press_CC);
-   printData(   patch, 1, description, "vel_FC",      vel_FC[m]);
-   getchar();
-  }
- #endif
+  }  // cell loop
+  //---- P R I N T   D A T A ------ 
+#if 0
+ if( face == Patch::endFace) {
+  char description[50];
+  sprintf(description, "backoutGCPress");
+  printData(   patch, 1, description, "press_CC",    press_CC);
+  printData(   patch, 1, description, "vel_FC",      vel_FC[m]);
+ // getchar();
+ }
+  #endif
 }
 
 /*---------------------------------------------------------------------
