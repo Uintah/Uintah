@@ -49,10 +49,13 @@ template class GenericWriter<MatrixHandle>;
 
 class MatrixWriter : public GenericWriter<MatrixHandle> {
 protected:
+  GuiString gui_types_;
+  GuiString gui_exporttype_;
+  GuiInt split_;
+
   virtual bool call_exporter(const string &filename);
 
 public:
-  GuiInt split_;
   MatrixWriter(GuiContext* ctx);
 
   virtual void execute();
@@ -63,16 +66,46 @@ DECLARE_MAKER(MatrixWriter)
 
 MatrixWriter::MatrixWriter(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "SCIRun"),
+    gui_types_(ctx->subVar("types")),
+    gui_exporttype_(ctx->subVar("exporttype")),
     split_(ctx->subVar("split"))
 {
+  MatrixIEPluginManager mgr;
+  vector<string> exporters;
+  mgr.get_exporter_list(exporters);
+  
+  string exporttypes = "{";
+  exporttypes += "{{SCIRun Matrix File} {.fld} } ";
+  exporttypes += "{{SCIRun Matrix Any} {.*} } ";
+
+  for (unsigned int i = 0; i < exporters.size(); i++)
+  {
+    MatrixIEPlugin *pl = mgr.get_plugin(exporters[i]);
+    if (pl->fileextension != "")
+    {
+      exporttypes += "{{" + exporters[i] + "} {" + pl->fileextension + "} } ";
+    }
+    else
+    {
+      exporttypes += "{{" + exporters[i] + "} {.*} } ";
+    }
+  }
+
+  exporttypes += "}";
+
+  gui_types_.set(exporttypes);
 }
 
 
 bool
 MatrixWriter::call_exporter(const string &filename)
 {
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+  
   MatrixIEPluginManager mgr;
-  MatrixIEPlugin *pl = mgr.get_plugin("SomePlugin");
+  MatrixIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
     return pl->filewriter(this, handle_, filename.c_str());
@@ -84,6 +117,14 @@ MatrixWriter::call_exporter(const string &filename)
 void
 MatrixWriter::execute()
 {
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  exporting_ = !(ft == "" ||
+		 ft == "SCIRun Matrix File" ||
+		 ft == "SCIRun Matrix Any");
+
   // Read data from the input port
   SimpleIPort<MatrixHandle> *inport = 
     (SimpleIPort<MatrixHandle> *)get_iport("Input Data");

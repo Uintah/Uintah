@@ -49,10 +49,15 @@ template class GenericWriter<FieldHandle>;
 
 class FieldWriter : public GenericWriter<FieldHandle> {
 protected:
+  GuiString gui_types_;
+  GuiString gui_exporttype_;
+
   virtual bool call_exporter(const string &filename);
 
 public:
   FieldWriter(GuiContext* ctx);
+
+  virtual void execute();
 };
 
 
@@ -60,22 +65,66 @@ DECLARE_MAKER(FieldWriter)
 
 
 FieldWriter::FieldWriter(GuiContext* ctx)
-  : GenericWriter<FieldHandle>("FieldWriter", ctx, "DataIO", "SCIRun")
+  : GenericWriter<FieldHandle>("FieldWriter", ctx, "DataIO", "SCIRun"),
+    gui_types_(ctx->subVar("types")),
+    gui_exporttype_(ctx->subVar("exporttype"))
 {
-  //exporting_ = true;  // Turn this on to test TextPointCloudString plugin.
+  FieldIEPluginManager mgr;
+  vector<string> exporters;
+  mgr.get_exporter_list(exporters);
+  
+  string exporttypes = "{";
+  exporttypes += "{{SCIRun Field File} {.fld} } ";
+  exporttypes += "{{SCIRun Field Any} {.*} } ";
+
+  for (unsigned int i = 0; i < exporters.size(); i++)
+  {
+    FieldIEPlugin *pl = mgr.get_plugin(exporters[i]);
+    if (pl->fileextension != "")
+    {
+      exporttypes += "{{" + exporters[i] + "} {" + pl->fileextension + "} } ";
+    }
+    else
+    {
+      exporttypes += "{{" + exporters[i] + "} {.*} } ";
+    }
+  }
+
+  exporttypes += "}";
+
+  gui_types_.set(exporttypes);
 }
 
 
 bool
 FieldWriter::call_exporter(const string &filename)
 {
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+  
   FieldIEPluginManager mgr;
-  FieldIEPlugin *pl = mgr.get_plugin("TextPointCloudString");
+  FieldIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
     return pl->filewriter(this, handle_, filename.c_str());
   }
   return false;
 }
+
+
+void
+FieldWriter::execute()
+{
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  exporting_ = !(ft == "" ||
+		 ft == "SCIRun Field File" ||
+		 ft == "SCIRun Field Any");
+  GenericWriter<FieldHandle>::execute();
+}
+
 
 } // End namespace SCIRun

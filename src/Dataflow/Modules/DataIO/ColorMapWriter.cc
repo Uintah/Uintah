@@ -49,32 +49,83 @@ template class GenericWriter<ColorMapHandle>;
 
 class ColorMapWriter : public GenericWriter<ColorMapHandle> {
 protected:
+  GuiString gui_types_;
+  GuiString gui_exporttype_;
+
   virtual bool call_exporter(const string &filename);
 
 public:
   ColorMapWriter(GuiContext* ctx);
+
+  virtual void execute();
 };
 
 
 DECLARE_MAKER(ColorMapWriter)
 
 ColorMapWriter::ColorMapWriter(GuiContext* ctx)
-  : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun")
+  : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun"),
+    gui_types_(ctx->subVar("types")),
+    gui_exporttype_(ctx->subVar("exporttype"))
 {
+  ColorMapIEPluginManager mgr;
+  vector<string> exporters;
+  mgr.get_exporter_list(exporters);
+  
+  string exporttypes = "{";
+  exporttypes += "{{SCIRun ColorMap File} {.fld} } ";
+  exporttypes += "{{SCIRun ColorMap Any} {.*} } ";
+
+  for (unsigned int i = 0; i < exporters.size(); i++)
+  {
+    ColorMapIEPlugin *pl = mgr.get_plugin(exporters[i]);
+    if (pl->fileextension != "")
+    {
+      exporttypes += "{{" + exporters[i] + "} {" + pl->fileextension + "} } ";
+    }
+    else
+    {
+      exporttypes += "{{" + exporters[i] + "} {.*} } ";
+    }
+  }
+
+  exporttypes += "}";
+
+  gui_types_.set(exporttypes);
 }
 
 
 bool
 ColorMapWriter::call_exporter(const string &filename)
 {
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
   ColorMapIEPluginManager mgr;
-  ColorMapIEPlugin *pl = mgr.get_plugin("SomePlugin");
+  ColorMapIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
     return pl->filewriter(this, handle_, filename.c_str());
   }
   return false;
 }
+
+
+
+void
+ColorMapWriter::execute()
+{
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  exporting_ = !(ft == "" ||
+		 ft == "SCIRun ColorMap File" ||
+		 ft == "SCIRun ColorMap Any");
+  GenericWriter<ColorMapHandle>::execute();
+}
+
 
 
 } // End namespace SCIRun
