@@ -84,6 +84,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SampleLattice.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/SetProperty.tcl \
+	$(SRCDIR)/SelectElements.tcl \
 	$(SRCDIR)/ShowColorMap.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \

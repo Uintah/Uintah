@@ -48,16 +48,17 @@ SRCS     += \
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/Probe.cc\
-	$(SRCDIR)/SamplePlane.cc\
+	$(SRCDIR)/SampleField.cc\
 	$(SRCDIR)/SampleLattice.cc\
+	$(SRCDIR)/SamplePlane.cc\
 	$(SRCDIR)/ScalarFieldStats.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
-	$(SRCDIR)/SampleField.cc\
+	$(SRCDIR)/SelectElements.cc\
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
-	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TetVolFieldCellToNode.cc\
 	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
+	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]
