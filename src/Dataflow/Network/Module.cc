@@ -68,6 +68,8 @@ typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
 #ifdef __APPLE__
 const string ext = ".dylib";
+#elif defined(_WIN32)
+const string ext = ".dll";
 #else
 const string ext = ".so";
 #endif
