@@ -62,14 +62,20 @@ void ShowLeads::execute(){
   }
   MatrixHandle mh;
   if (! iport_->get(mh)) {
+    error("Cannot get matrix from input port.");
     return;
   }
-  if (mh->generation == gen_) { return; }
+  if (mh->generation == gen_) { 
+    remark("Same input matrix, nothing changed.");
+    return; 
+  }
   gen_ = mh->generation;
 
   DenseMatrix *dm = dynamic_cast<DenseMatrix*>(mh.get_rep());
-  if (!dm) return;
-
+  if (!dm) {
+    error("Matrix is not a DenseMatrix");
+    return;
+  }
   int rows = dm->nrows();
   int cols = dm->ncols();
   
