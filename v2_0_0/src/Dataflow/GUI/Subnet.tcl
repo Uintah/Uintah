@@ -250,6 +250,14 @@ proc createSubnet { from_subnet { modules "" } } {
 		"Subnet${subnet} $which [iMod conn] [iNum conn]" 0 0
 	    createConnection \
 		"[oMod conn] [oNum conn] SubnetIcon${subnet} $which" 0 0
+	    foreach xconn $connections {
+		if { [oNum conn] == [oNum xconn] &&
+		     [string equal [oMod conn] [oMod xconn]] } {
+		    listFindAndRemove connections $xconn
+		    createConnection \
+			"Subnet${subnet} $which [iMod xconn] [iNum xconn]" 0 0
+		}
+	    }
 	}
     }
     showSubnetWindow $subnet [subnet_bbox $subnet]
