@@ -66,6 +66,11 @@
 	      <type>single_velocity</type>
 	      <vel_fields>[1,2,3]</vel_fields>
 	    </contact>
+	    
+	    <fracture>
+	      <average_microcrack_length>0.000001</average_microcrack_length>
+	      <material_toughness>500000.0</material_toughness>
+	    </fracture>
 	</MPM>
 
     </MaterialProperties>
