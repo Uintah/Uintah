@@ -194,7 +194,7 @@ void BuildElemLeadField::execute() {
     }
     for (i=0; i<nelems; i++)
       for (int j=0; j<3; j++) {
-	(*leadfield_mat)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
+	(*leadfield_mat)[counter+1][i*3+j] =- sol_in->get(i, j);
       }
     counter++;
   }

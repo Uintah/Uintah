@@ -223,19 +223,18 @@ void DipoleSearch::send_and_get_data(int which_dipole,
 
   // read back data, and set the caches and search matrix
   MatrixHandle mH;
-  Matrix* m;
-  if (!misfit_iport_->get(mH) || !(m = mH.get_rep())) {
+  if (!misfit_iport_->get(mH) || !(mH.get_rep())) {
     error("DipoleSearch::failed to read back error");
     return;
   }
-  cell_err_[ci]=misfit_[which_dipole]=(*m)[0][0];
-  if (!dir_iport_->get(mH) || !(m=mH.get_rep()) || mH->nrows()<3) {
+  cell_err_[ci] = misfit_[which_dipole] = mH->get(0, 0);
+  if (!dir_iport_->get(mH) || !(mH.get_rep()) || mH->nrows() < 3) {
     error("DipoleSearch::failed to read back orientation");
     return;
   }
-  cell_dir_[ci]=Vector((*m)[0][0], (*m)[1][0], (*m)[2][0]);
+  cell_dir_[ci] = Vector(mH->get(0, 0), mH->get(1, 0), mH->get(2, 0));
   for (j=0; j<3; j++)
-    dipoles_(which_dipole,j+3)=(*m)[j][0];
+    dipoles_(which_dipole,j+3) = mH->get(j, 0);
 }  
 
 
