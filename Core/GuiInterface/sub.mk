@@ -41,7 +41,8 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/TCLInterface.cc \
 	$(SRCDIR)/TCLTask.cc \
 	$(SRCDIR)/SciTCLstrbuff.cc \
-	$(SRCDIR)/TclObj.cc
+	$(SRCDIR)/TclObj.cc \
+	$(SRCDIR)/UIvar.cc
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
 		Core/Containers Core/TkExtensions Core/Math
