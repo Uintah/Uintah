@@ -2643,7 +2643,7 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 	    {
 	      if(si->crowd_lock_)
 		si->crowd_lock_->readLock();
-	      (r->*pmf)(manager, this, si,(pass == 3 && sticky));
+	      (r->*pmf)(manager, this, si);
 	      if(si->crowd_lock_)
 		si->crowd_lock_->readUnlock();
 	    }
