@@ -236,6 +236,16 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+IdealGasMP::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
 void IdealGasMP::addInitialComputesAndRequires(Task*,
                                                const MPMMaterial*,
                                                const PatchSet*) const
@@ -266,6 +276,14 @@ void IdealGasMP::addComputesAndRequires(Task* task,
    task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
    task->computes(lb->pVolumeDeformedLabel,              matlset);
+}
+
+void 
+IdealGasMP::addComputesAndRequires(Task* ,
+				   const MPMMaterial* ,
+				   const PatchSet* ,
+				   const bool ) const
+{
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

@@ -295,6 +295,16 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+MWViscoElastic::computeStressTensor(const PatchSubset* ,
+				    const MPMMaterial* ,
+				    DataWarehouse* ,
+				    DataWarehouse* ,
+				    Solver* ,
+				    const bool )
+{
+}
+	 
 void MWViscoElastic::addInitialComputesAndRequires(Task* task,
                                                    const MPMMaterial* matl,
                                                    const PatchSet* ) const
@@ -322,6 +332,14 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
+}
+
+void 
+MWViscoElastic::addComputesAndRequires(Task* ,
+				       const MPMMaterial* ,
+				       const PatchSet* ,
+				       const bool ) const
+{
 }
 
 double MWViscoElastic::computeRhoMicroCM(double pressure,

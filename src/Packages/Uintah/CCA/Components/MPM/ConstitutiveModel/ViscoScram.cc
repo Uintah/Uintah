@@ -574,6 +574,16 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+ViscoScram::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
 void ViscoScram::addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet*) const
@@ -614,6 +624,13 @@ void ViscoScram::addComputesAndRequires(Task* task,
   task->computes(lb->pVolumeDeformedLabel,                matlset);
 }
 
+void ViscoScram::addComputesAndRequires(Task* ,
+					const MPMMaterial* ,
+					const PatchSet*,
+					const bool ) const
+{
+}
+	 
 double ViscoScram::computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl)

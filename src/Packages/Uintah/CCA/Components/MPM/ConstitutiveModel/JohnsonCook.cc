@@ -539,6 +539,16 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+JohnsonCook::computeStressTensor(const PatchSubset* ,
+				 const MPMMaterial* ,
+				 DataWarehouse* ,
+				 DataWarehouse* ,
+				 Solver* ,
+				 const bool )
+{
+}
+	 
 
 void 
 JohnsonCook::addInitialComputesAndRequires(Task* task,
@@ -587,6 +597,14 @@ JohnsonCook::addComputesAndRequires(Task* task,
   task->computes(pPlasticStrainLabel_preReloc, matlset);
   task->computes(pDamageLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
+}
+
+void 
+JohnsonCook::addComputesAndRequires(Task* ,
+				    const MPMMaterial* ,
+				    const PatchSet* ,
+				    const bool ) const
+{
 }
 
 Matrix3

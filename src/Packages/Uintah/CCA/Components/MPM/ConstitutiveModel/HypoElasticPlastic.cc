@@ -518,6 +518,16 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+HypoElasticPlastic::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
 
 void 
 HypoElasticPlastic::addInitialComputesAndRequires(Task* task,
@@ -566,6 +576,14 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
 
   // Add internal evolution variables computed by plasticity model
   d_plasticity->addComputesAndRequires(task, matl, patch);
+}
+
+void 
+HypoElasticPlastic::addComputesAndRequires(Task* ,
+				   const MPMMaterial* ,
+				   const PatchSet* ,
+				   const bool ) const
+{
 }
 
 void

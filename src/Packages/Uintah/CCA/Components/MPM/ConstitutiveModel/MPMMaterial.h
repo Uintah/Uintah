@@ -136,8 +136,6 @@ WARNING
 
 	 std::vector<GeometryObject*> d_geom_objs;
 
-
-
 	 // Prevent copying of this class
 	 // copy constructor
 	 MPMMaterial(const MPMMaterial &mpmm);
