@@ -69,7 +69,6 @@ namespace SCIRun {
 
     //start the threads of listening, recieving, and sending
     void run();
-    void runListeningThread();
     void runSendingThread();
     void runRecvingThread();
     DTAddress getAddress();

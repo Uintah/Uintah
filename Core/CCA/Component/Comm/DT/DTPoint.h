@@ -34,11 +34,13 @@
 namespace SCIRun {
   class Semaphore;
   class DTMessage;
+  class DataTransmitter;
+
   class DTPoint{
   public:
     friend class DataTransmitter;
     void *object;
-    DTPoint();
+    DTPoint(DataTransmitter *dt);
     ~DTPoint();
     
     ///////////
@@ -56,6 +58,7 @@ namespace SCIRun {
 
   private:
     Semaphore *sema;
+    DataTransmitter *dt;
   };
 
 }//namespace SCIRun

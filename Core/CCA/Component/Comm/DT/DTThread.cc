@@ -41,11 +41,7 @@ DTThread::DTThread(DataTransmitter *dt, int id){
 void 
 DTThread::run()
 {
-  
   switch(id){
-  case 0:
-    dt->runListeningThread();
-    break;
   case 1:
     dt->runSendingThread();
     break;

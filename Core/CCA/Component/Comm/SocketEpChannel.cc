@@ -89,7 +89,7 @@ static void service(DTMessage *dtmsg){
 
 
 SocketEpChannel::SocketEpChannel(){ 
-  ep=new DTPoint;
+  ep=new DTPoint(PIDL::getDT());
   ep->service=::service;
   handler_table=NULL;
 }

@@ -27,7 +27,6 @@
  *  Copyright (C) 1999 SCI Group
  */
 #include <Core/Thread/Semaphore.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/Comm/DT/DTPoint.h>
 #include <Core/CCA/Component/Comm/DT/DTMessage.h>
 #include <Core/CCA/Component/Comm/DT/DataTransmitter.h>
@@ -35,28 +34,29 @@
 
 using namespace SCIRun;
 
-DTPoint::DTPoint(){
+DTPoint::DTPoint(DataTransmitter *dt){
+  this->dt=dt;
   object=NULL;
   sema=new Semaphore("DTPoint semaphore", 0);
-  PIDL::getDT()->registerPoint(this);
+  dt->registerPoint(this);
   service=NULL;
 }
 
 DTPoint::~DTPoint(){
   delete sema;
-  PIDL::getDT()->unregisterPoint(this);
+  dt->unregisterPoint(this);
 }
 
 DTMessage *
 DTPoint::getMessage(){
   sema->down();
-  return PIDL::getDT()->getMessage(this);
+  return dt->getMessage(this);
 }
 
 void 
 DTPoint::putMessage(DTMessage *msg){
   msg->sender=this;
-  PIDL::getDT()->putMessage(msg);
+  dt->putMessage(msg);
 }
 
 

@@ -30,6 +30,6 @@ SRCS := \
 LIBS := 
 
 
-PSELIBS := Core/Exceptions Core/Util Core/Thread Core/CCA/Component/Comm
+PSELIBS := Core/Exceptions Core/Util Core/Thread 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
