@@ -31,6 +31,15 @@ class PushButtonC;
 class SeparatorC;
 class GeomObj;
 
+class GeomItem {
+public:
+    GeomObj* geom;
+    ToggleButtonC* btn;
+    int vis;
+    GeomItem();
+    ~GeomItem();
+};
+
 class Roe {
     // User Interface stuff...
     DialogShellC* dialog;
@@ -44,7 +53,6 @@ class Roe {
     SeparatorC *objSep;
     ScrolledWindowC* objScroll;
     RowColumnC* objRC;
-    ToggleButtonC* item1;
     RowColumnC* shadeBox;
     LabelC* shadeLabel;
     SeparatorC *shadeSep;
@@ -79,7 +87,7 @@ class Roe {
     void btn2upCB(CallbackData*, void*);
     void btn2downCB(CallbackData*, void*);
     void btn2motionCB(CallbackData*, void*);
-    void item1CB(CallbackData*, void*);
+    void itemCB(CallbackData*, void*);
     void wireCB(CallbackData*, void*);
     void flatCB(CallbackData*, void*);
     void gouraudCB(CallbackData*, void*);
@@ -104,10 +112,17 @@ class Roe {
     int doneInit;
     int last_x;
     int last_y;
+    int haveInheritMat;
+    double inheritMat[16];
+    Array1<GeomItem *> geomItemA;
 public:
     Roe(Salmon *s);
+    Roe(Salmon *s, double *m);
     Roe(const Roe&);
     ~Roe();
+    void RoeInit(Salmon *s);
+    void itemAdded(GeomObj*, char*);
+    void itemDeleted(GeomObj*);
     void rotate(double angle, Vector v);
     void translate(Vector v);
     void scale(Vector v);
@@ -118,5 +133,7 @@ public:
     void redrawAll();
     void printLevel(int level, int&flag);
 };
+
+
 
 #endif

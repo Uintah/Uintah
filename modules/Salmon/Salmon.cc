@@ -16,7 +16,7 @@
 #include "myStringDefs.h"
 #include "myXmStrDefs.h"
 #include "myShell.h"
-
+#include <stdio.h>
 #include <Salmon/Salmon.h>
 #include <Salmon/Roe.h>
 #include <CallbackCloners.h>
@@ -33,7 +33,6 @@
 #include <iostream.h>
 #include <Geom.h>
 #include <Classlib/HashTable.h>
-#include <iostream.h>
 
 extern MtXEventLoop* evl;
 
@@ -126,7 +125,7 @@ void Salmon::create_interface()
     topRoe.add(new Roe(this));
     topRoe[topRoe.size()-1]->SetTop();
     
-    printFamilyTree();
+//    printFamilyTree();
 
     // Start up the event loop thread...
     helper=new ModuleHelper(this, 1);
@@ -169,7 +168,7 @@ void Salmon::flushViews()
 
 void Salmon::addObj(int portno, int serial, GeomObj *obj)
 {
-    cerr << "I'm adding an Object!\n";
+//    cerr << "I'm adding an Object!\n";
     HashTable<int, GeomObj*>* serHash;
     if (!portHash.lookup(portno, serHash)) {
 	// need to make this table
@@ -177,13 +176,23 @@ void Salmon::addObj(int portno, int serial, GeomObj *obj)
 	portHash.insert(portno, serHash);
     }
     serHash->insert(serial, obj);
+    char nm[30];
+    sprintf(nm, "Item %d", serial);
+    for (int i=0; i<topRoe.size(); i++) {
+	topRoe[i]->itemAdded(obj, nm);
+    }
 }
 
 void Salmon::delObj(int portno, int serial)
 {
     HashTable<int, GeomObj*>* serHash;
     if (portHash.lookup(portno, serHash)) {
+	GeomObj *g;
+	serHash->lookup(serial, g);
 	serHash->remove(serial);
+	for (int i=0; i<topRoe.size(); i++) {
+	    topRoe[i]->itemDeleted(g);
+	}
     }
 }
 
@@ -204,7 +213,16 @@ void Salmon::delAll(int portno)
 
     HashTable<int, GeomObj*>* serHash;
     if (portHash.lookup(portno, serHash)) {
-	serHash->remove_all();
+	HashTableIter<int, GeomObj*> iter(serHash);
+	for (iter.first(); iter.ok(); ++iter) {
+	    GeomObj* g=iter.get_data();
+	    int serial=iter.get_key();
+	    serHash->lookup(serial, g);
+	    serHash->remove(serial);
+	    for (int i=0; i<topRoe.size(); i++) {
+		topRoe[i]->itemDeleted(g);
+	    }
+	}
     }
 }
 
@@ -224,7 +242,7 @@ void Salmon::spawnIndCB(CallbackData*, void*)
 {
   topRoe.add(new Roe(this));
   topRoe[topRoe.size()-1]->SetTop();
-  printFamilyTree();
+//  printFamilyTree();
 }
 
 Salmon::Salmon(const Salmon& copy, int deep)
