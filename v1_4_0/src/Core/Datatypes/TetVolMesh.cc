@@ -69,6 +69,9 @@ TetVolMesh::TetVolMesh() :
   edges_(0),
   edge_table_(0),
   edge_table_lock_("TetVolMesh edge_ fill lock"),
+  node_cells_table_(0),
+  node_cells_table_lock_("TetVolMesh node_cells_ fill lock"),
+  have_node_cells_table_(false),
   node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("TetVolMesh grid_ fill lock")
@@ -88,6 +91,9 @@ TetVolMesh::TetVolMesh(const TetVolMesh &copy):
   edges_(copy.edges_),
   edge_table_(copy.edge_table_),
   edge_table_lock_("TetVolMesh edge_ fill lock"),
+  node_cells_table_(copy.node_cells_table_),
+  node_cells_table_lock_("TetVolMesh node_cells_ fill lock"),
+  have_node_cells_table_(copy.have_node_cells_table_),
   node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(copy.grid_),
   grid_lock_("TetVolMesh grid_ fill lock")
@@ -488,6 +494,42 @@ TetVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
   array.push_back((*(face_table_.find(f1))).second);
   array.push_back((*(face_table_.find(f2))).second);
   array.push_back((*(face_table_.find(f3))).second);
+}
+
+void
+TetVolMesh::get_cells(Cell::array_type &array, Node::index_type idx)
+{
+
+  // have to calculate it if it does not already exist
+  if (! is_frozen()) { 
+    ASSERTFAIL("can only call get_cells with a node index if frozen!!");
+    return;
+  }
+  if (! have_node_cells_table_) { calc_node_cells_map(); }
+  
+  array = node_cells_table_[idx];
+}
+
+void
+TetVolMesh::calc_node_cells_map() 
+{
+  node_cells_table_lock_.lock();
+  have_node_cells_table_ = true;
+  
+  Cell::iterator iter, endit;
+  begin(iter); 
+  end(endit);
+  while (iter != endit) {
+    Cell::index_type idx = *iter;
+    ++iter;
+    Node::array_type nodes;
+    get_nodes(nodes, idx);    
+    node_cells_table_[nodes[0]].push_back(idx);
+    node_cells_table_[nodes[1]].push_back(idx);
+    node_cells_table_[nodes[2]].push_back(idx);
+    node_cells_table_[nodes[3]].push_back(idx);
+  }
+  node_cells_table_lock_.unlock();
 }
 
 bool

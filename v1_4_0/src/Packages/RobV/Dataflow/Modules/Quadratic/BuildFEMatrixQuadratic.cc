@@ -69,8 +69,8 @@ private:
   int gen;
   string lastBCFlag;
   int refnode;
-  QuadraticTetVolField<int>* qtv;
-  Array1<int> bcArray;
+  QuadraticTetVolField<double>* qtv;
+  bit_vector bcArray;
   vector<pair<int, double> > dirichlet;
 
   Mutex mutex;
@@ -91,6 +91,7 @@ BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(const string& id) :
   BCFlag("BCFlag", id, this),
   UseCondGui("UseCondTCL", id, this), 
   refnodeGui("refnodeTCL", id, this), 
+  bcArray(256, false),
   mutex("mutex")
 {
 }
@@ -129,9 +130,10 @@ void BuildFEMatrixQuadratic::execute()
   UseCond=UseCondGui.get();
 
   // keep a handle on the field.
-  qtv = dynamic_cast<QuadraticTetVolField<int>*>(mesh.get_rep());
+  qtv = dynamic_cast<QuadraticTetVolField<double>*>(mesh.get_rep());
   if (!qtv) {
-    error("failed dynamic cast to QuadraticTetVolField<int>*");
+    error("failed dynamic cast to QuadraticTetVolField<double>*");
+    
     return;
   }
   QuadraticTetVolMeshHandle mesh_handle;
@@ -142,10 +144,12 @@ void BuildFEMatrixQuadratic::execute()
 
   qtvm_->get_property("dirichlet", dirichlet);
 
-  bcArray.resize(nnodes);
-  bcArray.initialize(0);
-  for(int aa=0; aa=dirichlet.size();aa++) {
-    bcArray[dirichlet[aa].first]= 1;
+  bcArray.resize(nnodes, false);
+
+  vector<pair<int, double> >::iterator iter = dirichlet.begin();
+  while (iter != dirichlet.end()) {
+    bcArray[(*iter).first] = true;
+    ++iter;
   }
 
   rows=scinew int[nnodes+1];  
@@ -205,14 +209,14 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 
   int r=start_node;
   int i;
-  Array1<int> mycols(0, 15*ndof);
+  QuadraticTetVolMesh::Node::array_type mycols(15*ndof, 0);
   for(i=start_node;i<end_node;i++){
     rows[r++]=mycols.size();
     if((bcArray[i] && DirSub) || (i==refnode && PinZero)) {
-      mycols.add(i); // Just a diagonal term
+      mycols.push_back(i); // Just a diagonal term
     } else if (i==refnode && AverageGround) { // 1's all across
       for (int ii=0; ii<nnodes; ii++) 
-	mycols.add(ii);
+	mycols.push_back(ii);
     } /*else if (qtvm_->nodes[i]->pdBC && DirSub) {
       int nd=qtvm_->nodes[i]->pdBC->diffNode;
       if (nd > i) {
@@ -221,9 +225,10 @@ void BuildFEMatrixQuadratic::parallel(int proc)
       } else {
 	mycols.add(nd);
 	mycols.add(i);
-      }
-      }*/ else {
-      qtvm_->add_neighbors(mycols, i, DirSub);
+	}
+	}*/ 
+    else {
+      qtvm_->add_node_neighbors(mycols, i, bcArray, DirSub);
     }
   }
 
