@@ -1,5 +1,10 @@
+#ifdef __linux
+#define select different_select
+#endif
 #include "include/nrrd.h"
-
+#ifdef __linux
+#undef select
+#endif
 double DvalueC(char *v)                      {return(*v);}
 double DvalueUC(unsigned char *v)            {return(*v);}
 double DvalueS(short *v)                     {return(*v);}
@@ -173,7 +178,7 @@ elementSize(Nrrd *nrrd) {
   }
 }
 
-void
+int
 select(void *dataIn, void *dataOut, int size,
        NRRD_BIG_INT *idx, NRRD_BIG_INT num) {
   NRRD_BIG_INT i, o;
@@ -183,6 +188,7 @@ select(void *dataIn, void *dataOut, int size,
     memcpy((char*)dataOut + (o++)*size, 
 	   (char*)dataIn + idx[i]*size, size);
   }
+  return 1;
 }
 
 /*
