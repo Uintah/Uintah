@@ -6,7 +6,9 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/pcube.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
   class Grid;

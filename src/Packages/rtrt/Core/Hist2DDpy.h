@@ -2,9 +2,10 @@
 #ifndef RTRT_Hist2DDPY_H
 #define RTRT_Hist2DDPY_H 1
 
-#include <X11/Xlib.h>
 #include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/Core/Array1.h>
+
+#include <X11/Xlib.h>
 
 namespace rtrt {
 

@@ -1,13 +1,16 @@
 #include <Packages/rtrt/Core/ColorMap.h>
+
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 
-#include <stdio.h>
-#include <unistd.h>
-
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
+#include <unistd.h>
 
 using namespace rtrt;
 using namespace std;

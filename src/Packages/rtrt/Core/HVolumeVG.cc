@@ -5,14 +5,19 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Hist2DDpy.h>
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/WorkQueue.h>
-#include <stdio.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
-#include <unistd.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
+#include <unistd.h>
 #include <fcntl.h>
 
 namespace rtrt {

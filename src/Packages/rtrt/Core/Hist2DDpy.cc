@@ -4,13 +4,18 @@
 #include <Packages/rtrt/Core/VolumeVGBase.h>
 #include <Packages/rtrt/Core/MinMax.h>
 #include <Packages/rtrt/Core/MiscMath.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
-#include <iostream>
 #include <stdlib.h>
 #include <values.h>
 #include <limits.h>
@@ -273,8 +278,8 @@ void Hist2DDpy::display() {
   redraw=false;
 }
 
-void Hist2DDpy::resize(const int width, const int height) {
 #if 0
+void Hist2DDpy::resize(const int width, const int height) {
   if (xres != width || yres != height) {
     xres = width;
     yres = height;
@@ -282,12 +287,15 @@ void Hist2DDpy::resize(const int width, const int height) {
     redraw_isoval = true;
     need_hist = true;
   }
+}
 #else
+void Hist2DDpy::resize(const int /*width*/, const int /*height*/) {
   // We want to prevent resizing for now, because the histogram creation is
   // really expensive to do over again.
-  XResizeWindow(dpy, win, xres, yres);  
-#endif
+  XResizeWindow(dpy, win, xres, yres);
 }
+#endif
+
 
 void Hist2DDpy::compute_hist(unsigned int fid)
 {
@@ -362,11 +370,12 @@ void Hist2DDpy::compute_hist(unsigned int fid)
   cerr << "Done building histogram: max=" << max << "\n";
 }
     
-void Hist2DDpy::draw_hist(unsigned int fid, XFontStruct* font_struct,
+void Hist2DDpy::draw_hist(unsigned int /*fid*/,
+			  XFontStruct* /*font_struct*/,
 			  bool redraw_isoval)
 {
-  int descent=font_struct->descent;
-  int textheight=font_struct->descent+font_struct->ascent;
+  //  int descent=font_struct->descent;
+  //  int textheight=font_struct->descent+font_struct->ascent;
   if(!redraw_isoval){
     glColorMask(GL_TRUE, GL_TRUE, GL_FALSE, GL_TRUE);
     glViewport(0, 0, xres, yres);
@@ -481,7 +490,8 @@ void Hist2DDpy::key_pressed(unsigned long key) {
   }
 }
 
-void Hist2DDpy::button_pressed(MouseButton button, const int x, const int y) {
+void Hist2DDpy::button_pressed(MouseButton /*button*/,
+			       const int x, const int y) {
   float xx0=(px0-vdatamin)*xres/(vdatamax-vdatamin);
   float xx1=(px1-vdatamin)*xres/(vdatamax-vdatamin);
   float yy0=(py0-gdatamin)*yres/(gdatamax-gdatamin);
@@ -500,12 +510,14 @@ void Hist2DDpy::button_pressed(MouseButton button, const int x, const int y) {
   redraw = true;
 }
 
-void Hist2DDpy::button_released(MouseButton button, const int x, const int y) {
+void Hist2DDpy::button_released(MouseButton /*button*/,
+				const int /*x*/, const int /*y*/) {
   redraw_isoval=true;
   redraw = true;
 }
 
-void Hist2DDpy::button_motion(MouseButton button, const int x, const int y) {
+void Hist2DDpy::button_motion(MouseButton /*button*/,
+			      const int x, const int y) {
   float xn=float(x)/xres;
   float xval=vdatamin+xn*(vdatamax-vdatamin);
   float yn=float(yres-y)/yres;

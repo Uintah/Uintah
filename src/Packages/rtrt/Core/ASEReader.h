@@ -1,10 +1,11 @@
 #ifndef ASEReader_h
 #define ASEReader_h 1
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Material.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
 
 namespace SCIRun {
   class Point;

@@ -2,10 +2,12 @@
 #ifndef HTVOLUMEBRICK_H
 #define HTVOLUMEBRICK_H 1
 
-#include <Core/Thread/WorkQueue.h>
-#include <Packages/rtrt/Core/VolumeBase.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
+#include <Packages/rtrt/Core/VolumeBase.h>
+
+#include <Core/Thread/WorkQueue.h>
+#include <Core/Geometry/Point.h>
+
 #include <stdlib.h>
 
 namespace rtrt {

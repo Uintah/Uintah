@@ -13,10 +13,12 @@
 #  include <values.h>
 #endif
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -14,12 +14,8 @@
 #ifndef Packages_rtrt_Core_Array3_h
 #define Packages_rtrt_Core_Array3_h 1
 
-#include <iostream>
-
 namespace rtrt {
 
-using namespace std;
-  
 template<class T>
 class Array3 {
     T*** objs;
@@ -35,9 +31,6 @@ public:
     ~Array3();
     inline T& operator()(int d1, int d2, int d3) const
         {
-	  //cerr << "d1 = " << d1 << "\td2 = " << d2 << "\td3 = " << d3 << endl;
-	  //cerr << "dm1= " << dm1<< "\tdm2= " << dm2<< "\tdm3= " << dm3<< endl;
-	  //flush(cerr);
             return objs[d1][d2][d3];
         }
     inline int dim1() const {return dm1;}

@@ -6,7 +6,10 @@
 #include <GL/glu.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Core/Thread/Runnable.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 

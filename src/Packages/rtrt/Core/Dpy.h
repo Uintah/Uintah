@@ -2,17 +2,19 @@
 #ifndef DPY_H
 #define DPY_H 1
 
+#include <Packages/rtrt/Core/Scene.h> // for ShadowType
+#include <Packages/rtrt/Core/DynamicInstance.h>
+#include <Packages/rtrt/Core/DpyBase.h>
+
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 
-#include <Packages/rtrt/Core/Scene.h> // for ShadowType
-#include <Packages/rtrt/Core/DynamicInstance.h>
-#include <Packages/rtrt/Core/DpyBase.h>
-
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 #include <X11/Xlib.h>
 
@@ -23,8 +25,6 @@ using SCIRun::Mutex;
 using SCIRun::Runnable;
 using SCIRun::Semaphore;
 using SCIRun::Thread;
-
-using std::vector;
 
 //class Barrier;
 //class Mutex;
@@ -104,7 +104,7 @@ extern Mutex xlock;
   int        ncounters;
   int        c0, c1;
 
-  vector<Worker*> workers_;
+  std::vector<Worker*> workers_;
 
   PerProcessorContext* ppc;
 

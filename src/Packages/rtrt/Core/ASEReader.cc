@@ -1,4 +1,3 @@
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Array3.h>
@@ -20,8 +19,14 @@
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
+
+#include <Core/Geometry/Point.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
 
 using namespace SCIRun;

@@ -3,24 +3,28 @@
 #define HVOLUME_H 1
 
 #include <Packages/rtrt/Core/VolumeBase.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Array3.h>
-#include <stdlib.h>
-#include <Core/Thread/WorkQueue.h>
-
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
+
+#include <Core/Geometry/Point.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Mutex.h>
-#include <stdio.h>
+#include <Core/Thread/WorkQueue.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
-#include <unistd.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <fcntl.h>
 
 namespace rtrt {
