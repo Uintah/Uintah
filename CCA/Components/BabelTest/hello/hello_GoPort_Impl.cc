@@ -31,15 +31,15 @@
 // Symbol:        hello.GoPort-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030618 13:12:33 MDT
-// Generated:     20030618 13:12:40 MDT
+// SIDL Created:  20040303 14:22:57 MST
+// Generated:     20040303 14:23:03 MST
 // Description:   Server-side implementation for hello.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 7
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
+// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
 // 
 #include "hello_GoPort_Impl.hh"
 
@@ -93,7 +93,7 @@ throw ()
   // DO-NOT-DELETE splicer.begin(hello.GoPort.go)
   cerr<<"hello::GoPort::go() starts..."<<endl;
   gov::cca::ports::IDPort s=svc.getPort("idport");
-  if(!s._is_nil())   cerr<<"Hello "<<s.getID()<<endl;
+  if(!s._is_nil()) cerr<<"Hello "<<s.getID()<<endl;
   else cerr<<"getPort() returns null"<<endl;
   // DO-NOT-DELETE splicer.end(hello.GoPort.go)
 }
