@@ -1149,7 +1149,6 @@ AC_SUBST(PETSC_DIR)
 AC_SUBST(PETSC_SUB)
 AC_SUBST(PETSC_ARCH)
 
-<<<<<<< configure.in
 ##-- Check for BLAS ------------------------------------------------
 
 AC_ARG_WITH(blas,
