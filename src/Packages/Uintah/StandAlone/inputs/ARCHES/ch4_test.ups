@@ -68,11 +68,12 @@
 	    <Properties>
 		<denUnderrelax>1.0</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
-	        <mixing_model>pdfMixingModel</mixing_model>
-	        <PDFMixingModel>
+	        <mixing_model>meanMixingModel</mixing_model>
+	        <MeanMixingModel>
 		  <adiabatic>false</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
+                  <PDFShape>Beta</PDFShape>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
 		  <Stream>
 		    <pressure>1.01325e+05</pressure>
@@ -125,9 +126,10 @@
      		       <NumDivsAbove>20</NumDivsAbove>
                     </MixFracVariance>             
                   </MixRxnTableInfo>
+                  <TableType>dynamic</TableType>
+                  <TableStorage>2DVector</TableStorage>
 		  <Integrator>
 		     <favre>false</favre>
-                     <PDFSHAPE>BetaPDFShape</PDFSHAPE>
                   </Integrator>
 	          <EquilibriumReactionModel>             
 		     <MixRxnTableInfo>
@@ -146,8 +148,10 @@
      		          <NumDivsAbove>20</NumDivsAbove>
                        </MixtureFraction>                   
                     </MixRxnTableInfo>
+                    <TableType>dynamic</TableType>
+                    <TableStorage>2DVector</TableStorage>
 	          </EquilibriumReactionModel>
-               </PDFMixingModel>
+               </MeanMixingModel>
 	    </Properties>
 
 	    <BoundaryConditions>
