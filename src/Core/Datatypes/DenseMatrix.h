@@ -63,6 +63,8 @@ class SCICORESHARE DenseMatrix : public Matrix {
   double** data;
   double*  dataptr;
 
+  void swap_rows(double *a, double *b);
+
 public:
   //! Constructors
   DenseMatrix();
