@@ -13,7 +13,7 @@
 	<maxTime>0.1</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
-	<delt_max>0.0001</delt_max>
+	<delt_max>0.001</delt_max>
    </Time>
 
     <MPM>
