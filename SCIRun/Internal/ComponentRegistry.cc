@@ -44,7 +44,8 @@ public:
   ~ComponentClassDescriptionAdapter();
 
   virtual string getComponentClassName();
-  //virtual string getModelName();
+  virtual string getComponentModelName();
+  virtual string getLoaderName();
 private:
   const ComponentDescription* cd;
 };
@@ -62,12 +63,17 @@ string ComponentClassDescriptionAdapter::getComponentClassName()
 {
   return cd->getType();
 }
-/*
-string ComponentClassDescriptionAdapter::getModelName()
+
+string ComponentClassDescriptionAdapter::getComponentModelName()
 {
   return cd->getModel()->getName();
 }
-*/
+
+string ComponentClassDescriptionAdapter::getLoaderName()
+{
+  return cd->getLoaderName();
+}
+
 
 ComponentRegistry::ComponentRegistry(SCIRunFramework* framework,
 				     const std::string& name)
