@@ -89,9 +89,13 @@ void MatrixWriter::execute()
   // Check whether the file should be split into header and data
   handle->set_raw(split_.get());
   
-  // Write the file
-  Pio(*stream, handle);
-  delete stream;
+  if (stream->error()) {
+    error("Could not open file for writing" + fn);
+  } else {
+    // Write the file
+    Pio(*stream, handle);
+    delete stream;
+  } 
 }
 
 } // End namespace SCIRun
