@@ -557,50 +557,6 @@ using namespace SCIRun;
      
     private:
       friend class MPMICE;
-      
-      void computeTauX( const Patch* patch,
-                        constCCVariable<double>& rho_CC,     
-                        constCCVariable<double>& sp_vol_CC,  
-                        constCCVariable<Vector>& vel_CC,     
-                        const CCVariable<double>& viscosity,               
-                        const Vector dx,                      
-                        SFCXVariable<Vector>& tau_X_FC);      
-                          
-      void computeTauY( const Patch* patch,
-                        constCCVariable<double>& rho_CC,     
-                        constCCVariable<double>& sp_vol_CC,  
-                        constCCVariable<Vector>& vel_CC,     
-                        const CCVariable<double>& viscosity,              
-                        const Vector dx,                      
-                        SFCYVariable<Vector>& tau_Y_FC);      
-                          
-      void computeTauZ( const Patch* patch,
-                        constCCVariable<double>& rho_CC,     
-                        constCCVariable<double>& sp_vol_CC,  
-                        constCCVariable<Vector>& vel_CC,     
-                        const CCVariable<double>& viscosity,              
-                        const Vector dx,                      
-                        SFCZVariable<Vector>& tau_Z_FC); 
-                        
-      template <class T> 
-      void q_conduction(CellIterator iter, 
-                        IntVector adj_offset,
-                        const double thermalCond,
-                        const double dx,
-                        const CCVariable<double>& rho_CC,      
-                        const CCVariable<double>& sp_vol_CC,   
-                        const CCVariable<double>& Temp_CC,
-                        T& q_FC);
-                        
-      void computeQ_conduction_FC(DataWarehouse* new_dw,
-                                  const Patch* patch,
-                                  const CCVariable<double>& rho_CC,     
-                                  const CCVariable<double>& sp_vol_CC,  
-                                  const CCVariable<double>& Temp_CC,
-                                  const double thermalConduct,
-                                  SFCXVariable<double>& q_X_FC,
-                                  SFCYVariable<double>& q_Y_FC,
-                                  SFCZVariable<double>& q_Z_FC);    
                    
        void printData_FC(int indx,
                       const  Patch* patch,
