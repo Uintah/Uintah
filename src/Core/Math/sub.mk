@@ -23,11 +23,11 @@ SRCDIR   := Core/Math
 
 FNSRCDIR	:= $(SRCTOP)/$(SRCDIR)
 
+#backward compatable fix for bison output file names in fnparser.h
 $(FNSRCDIR)/fnparser.cc \
 $(FNSRCDIR)/fnparser.h:	$(FNSRCDIR)/fnparser.y;
-	$(YACC) -p fn $(FNSRCDIR)/fnparser.y
-	mv -f y.tab.h $(FNSRCDIR)/fnparser.h
-	mv -f y.tab.c $(FNSRCDIR)/fnparser.cc
+	$(YACC) -p fn $(FNSRCDIR)/fnparser.y -o $(FNSRCDIR)/fnparser.cc
+	if test -e fnparser.cc.h; then mv -f $(FNSRCDIR)/fnparser.cc.h $(FNSRCDIR)/fnparser.h;else mv -f $(FNSRCDIR)/fnparser.hh $(FNSRCDIR)/fnparser.h;fi
 
 $(FNSRCDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(FNSRCDIR)/fnparser.cc;
 	$(LEX) -Pfn -o$(FNSRCDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
