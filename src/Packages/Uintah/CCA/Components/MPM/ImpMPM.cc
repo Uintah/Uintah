@@ -56,19 +56,6 @@ using namespace std;
 
 static DebugStream cout_doing("IMPM", false);
 
-static int face_index(Patch::FaceType f)
-{
-  switch(f) {
-  case Patch::xminus: return 0;
-  case Patch::xplus:  return 1;
-  case Patch::yminus: return 2;
-  case Patch::yplus:  return 3;
-  case Patch::zminus: return 4;
-  case Patch::zplus:  return 5;
-  default:
-    return -1; // oops !
-  }
-}
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
@@ -675,13 +662,12 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gInternalForceLabel,  Ghost::None);
 
   t->computes(lb->gStressForSavingLabel);
-  if (d_bndy_traction_faces.size()>0) {
+  if (!d_bndy_traction_faces.empty()) {
                                                                                 
     for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
         ftit!=d_bndy_traction_faces.end();ftit++) {
-      int iface = face_index(*ftit);
-      t->computes(lb->BndyForceLabel[iface]);       // node based
-      t->computes(lb->BndyContactAreaLabel[iface]); // node based
+      t->computes(lb->BndyForceLabel[*ftit]);       // node based
+      t->computes(lb->BndyContactAreaLabel[*ftit]); // node based
     }
                                                                                 
   }
@@ -2189,7 +2175,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
           fit!=d_bndy_traction_faces.end();fit++) {
         Patch::FaceType face = *fit;
-        int iface = face_index(face);
                                                                                 
         // Check if the face is on an external boundary
         if(patch->getBCType(face)==Patch::Neighbor)
@@ -2207,10 +2192,10 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
             for (int k = projlow.z(); k<projhigh.z(); k++) {
               IntVector ijk(i,j,k);
               // flip sign so that pushing on boundary gives positive force
-              bndyForce[iface] -= gintforce[m][ijk];
+              bndyForce[face] -= gintforce[m][ijk];
                                                                                 
-              double celldepth  = dx[iface/2];
-              bndyArea [iface] += gvolume[m][ijk]/celldepth;
+              double celldepth  = dx[face/2];
+              bndyArea [face] += gvolume[m][ijk]/celldepth;
             }
           }
         }
@@ -2225,9 +2210,8 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
   // it will fail early rather than just giving zeros.
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
-    int iface = face_index(*ftit);
-    new_dw->put(sumvec_vartype(bndyForce[iface]),lb->BndyForceLabel[iface]);
-    new_dw->put(sum_vartype(bndyArea [iface]),lb->BndyContactAreaLabel[iface]);
+    new_dw->put(sumvec_vartype(bndyForce[*ftit]),lb->BndyForceLabel[*ftit]);
+    new_dw->put(sum_vartype(bndyArea[*ftit]),lb->BndyContactAreaLabel[*ftit]);
   }
 
 }
