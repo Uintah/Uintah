@@ -3,8 +3,11 @@
 
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <sgi_stl_warnings_off.h>
+#include <vector>
+#include <string>
+#include <sgi_stl_warnings_on.h>
 
 #include <math.h>
 #ifndef M_PI
@@ -12,6 +15,9 @@
 #endif
 
 namespace Uintah {
+
+  using std::vector;
+  using std::string;
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
@@ -56,19 +62,30 @@ namespace Uintah {
     virtual Box getBoundingBox() const = 0;
 
     //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle locations */
+    //////////////////////////////////////////////////////////////////////
+    vector<Point>* getPoints();
+
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle volumes */
+    //////////////////////////////////////////////////////////////////////
+    vector<double>* getVolume();
+
+    //////////////////////////////////////////////////////////////////////
     /*! Returns the number of particles */
     //////////////////////////////////////////////////////////////////////
-    virtual int returnParticleCount(const Patch* patch) = 0;
+    int returnPointCount() const;
+
+  protected:
 
     //////////////////////////////////////////////////////////////////////
-    /*! Creates the particles */
+    /*! Writes the particle locations to a file that can be read by
+        the FileGeometryPiece */
     //////////////////////////////////////////////////////////////////////
-    virtual int createParticles(const Patch* patch,
-				ParticleVariable<Point>&  pos,
-				ParticleVariable<double>& vol,
-				ParticleVariable<Vector>& psize,
-				particleIndex start) = 0;
+    void writePoints(const string& f_name, const string& var);
 
+    vector<Point> d_points;
+    vector<double> d_volume;
   };
 } // End namespace Uintah
 

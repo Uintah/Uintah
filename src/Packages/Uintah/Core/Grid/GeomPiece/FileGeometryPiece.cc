@@ -79,13 +79,3 @@ void FileGeometryPiece::readPoints(const string& f_name, bool var)
   d_box = Box(min,max);
 }
 
-vector<Point>* FileGeometryPiece::getPoints()
-{
-  return &d_points;
-}
-
-
-vector<double>* FileGeometryPiece::getVolume()
-{
-  return &d_volume;
-}
