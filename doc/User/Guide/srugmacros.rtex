@@ -1,4 +1,4 @@
-% -*-latex-*-
+  % -*-latex-*-
 %< require("../../Utilities/Publish/srdoc.rb") %>
 %< doc = Doc.create(Doc::TeX) %>
 
@@ -21,24 +21,25 @@
 % Markup and style for SCIRun Users guide.
 %
 
-\setlength{\textheight}{9.5in}
-\setlength{\textwidth}{7in}
+\setlength{\textheight}{8.0in}
+\setlength{\textwidth}{6.0in}
 \setlength{\topmargin}{-.50in}
-\setlength{\oddsidemargin}{-.25in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
 \sloppy
 
 % Fancy headings stuff
 \pagestyle{fancy}
-\setlength{\headsep}{.08in}
-\setlength{\footskip}{25pt}
+\setlength{\headsep}{30pt}
+\setlength{\footskip}{45pt}
 \setlength{\headheight}{15pt}
 %\setlength{\footrulewidth}{.8pt}
 %\setlength{\headrulewidth}{.8pt}
 \rhead{{\sr{} User's Guide}}
 \lhead{Version \version}
-\lfoot{}
+\lfoot[{\thepage}]{}
+\rfoot[]{\thepage}
 \cfoot{}
-\rfoot{{\small \sf Page: \hspace{1em}\thepage\hspace{1em}}}
 
 % Setting to control figure placement.
 % These determine the rules used to place floating objects like figures 
