@@ -2847,7 +2847,6 @@ proc okNotes {w mclass} {
 }
 
 proc moduleDestroy {maincanvas minicanvas modid} {
-    puts "  ** ** ** here "
     # Remove me from the modules list
 
     global modules
