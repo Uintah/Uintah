@@ -90,7 +90,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *craters = new Group;
   Group *rock_tower = new Group;
 
-  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/usr/sci/date/Geometry/textures/caustics/caust%d.pgm", 32,
+  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/usr/sci/data/Geometry/textures/caustics/caust%d.pgm", 32,
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
