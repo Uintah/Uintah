@@ -975,18 +975,17 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         Vector vel_CC_mpm  = Vector(0.0, 0.0, 0.0);
         
         for (int in=0;in<8;in++){
-          cmass[c]    += NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-          cvolume[c]  += NC_CCweight[nodeIdx[in]] * gvolume[nodeIdx[in]];
-          sp_vol_mpm  += gSp_vol[nodeIdx[in]] *
-                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-          vel_CC_mpm  += gvelocity[nodeIdx[in]] *
-                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-          Temp_CC_mpm += gtemperature[nodeIdx[in]] *
-                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          cmass[c]    += NC_CCw_mass;
+          cvolume[c]  += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
+          sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
+          vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
+          Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
         } 
-        vel_CC_mpm  /= cmass[c];    
-        Temp_CC_mpm /= cmass[c];
-        sp_vol_mpm  /= cmass[c];
+        double inv_cmass = 1.0/cmass[c];
+        vel_CC_mpm  *= inv_cmass;    
+        Temp_CC_mpm *= inv_cmass;
+        sp_vol_mpm  *= inv_cmass;
         
         //__________________________________
         // set *_CC = to either vel/Temp_CC_ice or vel/Temp_CC_mpm
@@ -996,9 +995,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         // MPMICE::computeLagrangianValuesMPM
         double one_or_zero = (cmass[c] - very_small_mass)/cmass[c];
 
-        Temp_CC[c]  = (1.0-one_or_zero)*Temp_CC_ice[c]+one_or_zero*Temp_CC_mpm;
-        vel_CC[c]   = (1.0-one_or_zero)*vel_CC_ice[c] +one_or_zero*vel_CC_mpm;
-        sp_vol_CC[c]= (1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;   
+        Temp_CC[c]  =(1.0-one_or_zero)*Temp_CC_ice[c]  +one_or_zero*Temp_CC_mpm;
+        vel_CC[c]   =(1.0-one_or_zero)*vel_CC_ice[c]   +one_or_zero*vel_CC_mpm;
+        sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;   
       }
       //  Set BC's
       setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
@@ -1106,10 +1105,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         Vector cmomentum_sur = vel_CC_sur[c] * cmass[c];
         
         for (int in=0;in<8;in++){
-          cmomentum_mpm +=gvelocity[nodeIdx[in]] *
-                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-          int_eng_L_mpm +=gtempstar[nodeIdx[in]] * cv *
-                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          cmomentum_mpm +=gvelocity[nodeIdx[in]]      * NC_CCw_mass;
+          int_eng_L_mpm +=gtempstar[nodeIdx[in]] * cv * NC_CCw_mass;
         }
         //__________________________________
         // set cmomentum/int_eng_L to either 
@@ -1162,8 +1160,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
             double plus_minus_one = (mom_L_tmp+d_SMALL_NUM)/
                                     (fabs(mom_L_tmp+d_SMALL_NUM));
 
-            mom_L_tmp = (mom_L_tmp/mass_L[c] ) *
-                        (cmass[c] + burnedMassCC[c] );
+            mom_L_tmp = (mom_L_tmp/mass_L[c] ) * (cmass[c] + burnedMassCC[c] );
                                 
             cmomentum[c][dir] = plus_minus_one *
                                 std::max( fabs(mom_L_tmp), fabs(min_mom_L) );
