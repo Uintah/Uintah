@@ -27,6 +27,10 @@ PSELIBS := Core/Datatypes Core/Disclosure Core/Containers Core/Persistent \
 endif
 LIBS := -lm
 
+PROGRAM := $(SRCDIR)/BugProgram
+SRCS := $(SRCDIR)/BugProgram.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/CVRTItoTetVolDirichlet
 SRCS := $(SRCDIR)/CVRTItoTetVolDirichlet.cc
 include $(SCIRUN_SCRIPTS)/program.mk
