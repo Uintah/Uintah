@@ -28,11 +28,13 @@
 %define plat		rh9.0
 %define distro		Red Hat 9.0
 %define insightver	2.0.0
+%define scirunver	1.25.0
+%define thirdpartyver	1.24.1
 
 %undefine	__check_files
 
 Name:		SCIRunBioPSE
-Version:	${SCIRUN_VERSION}
+Version:	%{scirunver}
 Serial:		9
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
@@ -62,7 +64,7 @@ ExclusiveOS:	linux
 #BuildRoot:     /usr/local/SCIRun
 
 
-source0:	Thirdparty_install.${SCIRUN_THIRDPARTY_VERSION}.tar.gz
+source0:	Thirdparty_install.%{thirdpartyver}.tar.gz
 source1:	SCIRun.%{version}.tar.gz
 source2:	cmake-1.8.1-x86-linux-files.tar
 source3:	InsightToolkit-%{insightver}.tar.gz
@@ -80,7 +82,7 @@ SCIRun is a Problem Solving Environment (PSE), and a computational steering soft
 
 
 %prep
-rm -rf $RPM_BUILD_DIR/Thirdparty_install.${SCIRUN_THIRDPARTY_VERSION}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyver}
 tar -xvzf %{SOURCE0}
 
 cd /usr/local
@@ -112,17 +114,17 @@ $RPM_BUILD_DIR/cmake/bin/cmake /usr/local/InsightToolkit-%{insightver} -DBUILD_E
 make
 make install
 
-cd $RPM_BUILD_DIR/Thirdparty_install.${SCIRUN_THIRDPARTY_VERSION}
+cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyver}
 export TEEM_ZLIB=1
 export TEEM_PNG=1
-python $RPM_BUILD_DIR/Thirdparty_install.${SCIRUN_THIRDPARTY_VERSION}/install /usr/local/SCIRun/Thirdparty 32 1
+python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyver}/install /usr/local/SCIRun/Thirdparty 32 1
 
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
 export JAVA_HOME=/usr/java/jdk1.3.1_08
 export PATH=${JAVA_HOME}/bin:${PATH}
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/${SCIRUN_THIRDPARTY_VERSION}/Linux/gcc-${GCC_VERSION}-32bit/" -with-insight="/usr/local/lib/InsightToolkit" --enable-package="BioPSE Teem Insight MatlabInterface"
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{thirdpartyver}/Linux/gcc-${GCC_VERSION}-32bit/" -with-insight="/usr/local/lib/InsightToolkit" --enable-package="BioPSE Teem Insight MatlabInterface"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
 tar -xvzf %{SOURCE4}
 #tar -xvzf %{SOURCE5}
@@ -134,7 +136,7 @@ chown -R root.root /usr/local/SCIRun
 chmod -R a+r /usr/local/SCIRun
 
 %clean
-rm -rf $RPM_BUILD_DIR/Thirdparty_install.${SCIRUN_THIRDPARTY_VERSION}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyver}
 
 %files
 /usr/local/SCIRun
