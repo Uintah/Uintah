@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <filter name="watershed::SegmentTreeGenerator">
-  <include href="../../../../ITK/itk_WatershedSegmentTreeGenerator.xml"/>
-  <include href="gui_WatershedSegmentTreeGenerator_Darby.xml"/>
+  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/ITK/itk_WatershedSegmentTreeGenerator.xml"/>
+  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML/gui_WatershedSegmentTreeGenerator_Darby.xml"/>
 
 <filter-sci name="WatershedSegmentTreeGenerator">
   <package>Insight</package>
