@@ -28,6 +28,10 @@ proc makeColorPicker {w var command cancel} {
 
     global $var-r $var-g $var-b
     global $w-r $w-g $w-b
+    global $w-rgbhsv
+
+    set $w-rgbhsv "rgb"
+
     set $w-r [set $var-r]
     set $w-g [set $var-g]
     set $w-b [set $var-b]
@@ -93,21 +97,20 @@ proc makeColorPicker {w var command cancel} {
     frame $w.c.opts
     button $w.c.opts.ok -text OK -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 \"$command\""
     button $w.c.opts.cancel -text Cancel -command $cancel
-    checkbutton $w.c.opts.rgb -text RGB -variable $w-rgb \
-	    -command "cptogrgb $w $picks $rgb"
-    checkbutton $w.c.opts.hsv -text HSV -variable $w-hsv \
-	    -command "cptoghsv $w $picks $hsv"
+    radiobutton $w.c.opts.rgb -text RGB -variable $w-rgbhsv -value rgb \
+	    -command "cptogrgbhsv $w $picks $rgb $hsv"
+    radiobutton $w.c.opts.hsv -text HSV -variable $w-rgbhsv -value hsv \
+	    -command "cptogrgbhsv $w $picks $rgb $hsv"
     pack $w.c.opts.ok -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
     pack $w.c.opts.cancel -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
     pack $w.c.opts.rgb -in $w.c.opts -side left -padx 2 -pady 2 -anchor e
     pack $w.c.opts.hsv -in $w.c.opts -side left -padx 2 -pady 2 -anchor e
 
-    global $w-rgb $w-hsv
-    if [expr ([set $w-rgb] == 1) || ([set $w-hsv] != 1)] {
-	set $w-rgb 1
+
+    if { [set $w-rgbhsv] == "rgb" } {
 	pack $rgb -in $picks -side left -padx 2 -pady 2 -expand 1 -fill x
     }
-    if [expr [set $w-hsv] == 1] {
+    if { [set $w-rgbhsv] == "hsv" } {
 	pack $hsv -in $picks -side left -padx 2 -pady 2 -expand 1 -fill x
     }
 
@@ -239,23 +242,13 @@ proc cpcommitcolor {var rs gs bs command} {
     eval $command
 }
 
-proc cptogrgb {w picks rgb} {
-    global $w-rgb
-
-    if [expr [set $w-rgb] == 1] {
+proc cptogrgbhsv {w picks rgb hsv} {
+    global $w-rgbhsv
+    if { [set $w-rgbhsv] == "rgb" } {
+	pack forget $hsv
 	pack $rgb -in $picks -side left
     } else {
 	pack forget $rgb
-    }
-}
-
-proc cptoghsv {w picks hsv} {
-    global $w-hsv
-
-    if [expr [set $w-hsv] == 1] {
 	pack $hsv -in $picks -side left
-    } else {
-	pack forget $hsv
     }
 }
-
