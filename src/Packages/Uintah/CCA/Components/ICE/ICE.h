@@ -234,7 +234,7 @@ using namespace SCIRun;
       void Message(int abort, char message1[],char message2[],char message3[]);
 
       void readData(const Patch* patch, int include_GC, char filename[],
-		    char var_name[], const CCVariable<double>& q_CC);
+		    char var_name[], CCVariable<double>& q_CC);
                  
       void hydrostaticPressureAdjustment(const Patch* patch, 
                       const CCVariable<double>& rho_micro_CC, 
