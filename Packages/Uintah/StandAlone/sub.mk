@@ -2,6 +2,10 @@
 
 SRCDIR := Packages/Uintah/StandAlone
 
+SUBDIRS := $(SRCDIR)/tools
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
 SRCS := $(SRCDIR)/sus.cc
 ifneq ($(CC_DEPEND_REGEN),-MD)
 # Arches doesn't work under g++ yet
