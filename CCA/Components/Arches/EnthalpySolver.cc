@@ -478,6 +478,8 @@ EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 
   tsk->computes(d_lab->d_enthCoefPredLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
+  tsk->computes(d_lab->d_enthDiffCoefPredLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
   tsk->computes(d_lab->d_enthNonLinSrcPredLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -551,6 +553,8 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		       d_lab->d_enthCoefPredLabel, ii, patch);
       new_dw->allocate(enthalpyVars.scalarConvectCoeff[ii],
 		       d_lab->d_enthConvCoefPredLabel, ii, patch);
+      new_dw->allocate(enthalpyVars.scalarDiffusionCoeff[ii],
+		       d_lab->d_enthDiffCoefPredLabel, ii, patch);
     }
     new_dw->allocate(enthalpyVars.scalarLinearSrc, 
 		     d_lab->d_enthLinSrcPredLabel, matlIndex, patch);
@@ -661,6 +665,8 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(enthalpyVars.scalarCoeff[ii], 
 		  d_lab->d_enthCoefPredLabel, ii, patch);
+      new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_enthDiffCoefPredLabel, ii, patch);
     }
     new_dw->put(enthalpyVars.scalarNonlinearSrc, 
 		d_lab->d_enthNonLinSrcPredLabel, matlIndex, patch);
@@ -858,6 +864,9 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
       // added one more argument of index to specify enthalpy component
   tsk->computes(d_lab->d_enthCoefCorrLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
+  tsk->computes(d_lab->d_enthDiffCoefCorrLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
+ 
   tsk->computes(d_lab->d_enthNonLinSrcCorrLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -929,6 +938,9 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		       d_lab->d_enthCoefCorrLabel, ii, patch);
       new_dw->allocate(enthalpyVars.scalarConvectCoeff[ii],
 		       d_lab->d_enthConvCoefCorrLabel, ii, patch);
+      new_dw->allocate(enthalpyVars.scalarDiffusionCoeff[ii],
+		       d_lab->d_enthDiffCoefCorrLabel, ii, patch);
+
     }
     new_dw->allocate(enthalpyVars.scalarLinearSrc, 
 		     d_lab->d_enthLinSrcCorrLabel, matlIndex, patch);
@@ -1005,6 +1017,10 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(enthalpyVars.scalarCoeff[ii], 
 		  d_lab->d_enthCoefCorrLabel, ii, patch);
+      new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_enthDiffCoefCorrLabel, ii, patch);
+
+
     }
     new_dw->put(enthalpyVars.scalarNonlinearSrc, 
 		d_lab->d_enthNonLinSrcCorrLabel, matlIndex, patch);

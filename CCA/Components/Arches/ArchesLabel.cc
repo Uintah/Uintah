@@ -36,6 +36,8 @@ ArchesLabel::ArchesLabel()
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_totalflowOUTLabel = VarLabel::create("totalflowOUT",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_netflowOUTBCLabel = VarLabel::create("netflowOUTBC",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_totalflowOUToutbcLabel = VarLabel::create("totalflowOUToutbc",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_totalAreaOUTLabel = VarLabel::create("totalAreaOUT",
@@ -49,6 +51,10 @@ ArchesLabel::ArchesLabel()
   d_densitySPLabel = VarLabel::create("densitySP", 
 				   CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = VarLabel::create("densityCP", 
+				  CCVariable<double>::getTypeDescription() );
+  d_drhodfCPLabel = VarLabel::create("drhodfCP", 
+				  CCVariable<double>::getTypeDescription() );
+  d_drhodfPredLabel = VarLabel::create("drhodfPred", 
 				  CCVariable<double>::getTypeDescription() );
   // Viscosity Labels
   d_viscosityINLabel = VarLabel::create("viscosityIN", 
@@ -201,6 +207,8 @@ ArchesLabel::ArchesLabel()
   // Scalar Coef
   d_scalCoefSBLMLabel = VarLabel::create("scalCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
+
+
   // Scalar Conv Coef
   d_scalConvCoefSBLMLabel = VarLabel::create("scalConvCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
@@ -392,6 +400,20 @@ ArchesLabel::ArchesLabel()
   // Scalar Coef
   d_scalCoefPredLabel = VarLabel::create("scalCoefPred",
 				   CCVariable<double>::getTypeDescription() );
+
+  // scalar diffusion coeff for divergence constraint
+  d_scalDiffCoefPredLabel = VarLabel::create("scalDiffCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_scalDiffCoefCorrLabel = VarLabel::create("scalDiffCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthDiffCoefPredLabel = VarLabel::create("enthDiffCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthDiffCoefCorrLabel = VarLabel::create("enthDiffCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+
   // Scalar Conv Coef
   d_scalConvCoefPredLabel = VarLabel::create("scalConvCoefPred",
 				   CCVariable<double>::getTypeDescription() );
@@ -462,27 +484,27 @@ ArchesLabel::ArchesLabel()
   d_uVelNonLinSrcPBLMCorrLabel = VarLabel::create("uVelNonLinSrcPBLMCorr",
 				    SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMCorrLabel = VarLabel::create("vVelCoefPBLMCorr",
-			       SFCXVariable<double>::getTypeDescription() );
+			       SFCYVariable<double>::getTypeDescription() );
   // U-Velocity Convection Coeff Labels
   d_vVelConvCoefPBLMCorrLabel = VarLabel::create("vVelConvCoefPBLMCorr",
-				        SFCXVariable<double>::getTypeDescription() );
+				        SFCYVariable<double>::getTypeDescription() );
   // U-Velocity Linear Src Labels
   d_vVelLinSrcPBLMCorrLabel = VarLabel::create("vVelLinSrcPBLMCorr",
-				 SFCXVariable<double>::getTypeDescription() );
+				 SFCYVariable<double>::getTypeDescription() );
   // U-Velocity Non Linear Src Labels
   d_vVelNonLinSrcPBLMCorrLabel = VarLabel::create("vVelNonLinSrcPBLMCorr",
-				    SFCXVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMCorrLabel = VarLabel::create("wVelCoefPBLMCorr",
-			       SFCXVariable<double>::getTypeDescription() );
+			       SFCZVariable<double>::getTypeDescription() );
   // U-Velocity Convection Coeff Labels
   d_wVelConvCoefPBLMCorrLabel = VarLabel::create("wVelConvCoefPBLMCorr",
-				        SFCXVariable<double>::getTypeDescription() );
+				        SFCZVariable<double>::getTypeDescription() );
   // U-Velocity Linear Src Labels
   d_wVelLinSrcPBLMCorrLabel = VarLabel::create("wVelLinSrcPBLMCorr",
-				 SFCXVariable<double>::getTypeDescription() );
+				 SFCZVariable<double>::getTypeDescription() );
   // U-Velocity Non Linear Src Labels
   d_wVelNonLinSrcPBLMCorrLabel = VarLabel::create("wVelNonLinSrcPBLMCorr",
-				    SFCXVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   d_uVelRhoHatCorrLabel = VarLabel::create("uvelRhoHatCorr",
 				   SFCXVariable<double>::getTypeDescription() );
@@ -497,6 +519,11 @@ ArchesLabel::ArchesLabel()
 				  SFCYVariable<double>::getTypeDescription() );
   d_wVelRhoHatLabel= VarLabel::create("wvelRhoHat",
 				   SFCZVariable<double>::getTypeDescription() );
+
+  // div constraint
+  d_divConstraintLabel = VarLabel::create("divConstraint", 
+				    CCVariable<double>::getTypeDescription() );
+
 
   d_pressurePredLabel = VarLabel::create("pressurePred", 
 				    CCVariable<double>::getTypeDescription() );
@@ -612,12 +639,15 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_cellTypeLabel);
   VarLabel::destroy(d_totalflowINLabel);
   VarLabel::destroy(d_totalflowOUTLabel);
+  VarLabel::destroy(d_netflowOUTBCLabel);
   VarLabel::destroy(d_totalflowOUToutbcLabel);
   VarLabel::destroy(d_totalAreaOUTLabel);
   VarLabel::destroy(d_denAccumLabel);
   VarLabel::destroy(d_enthalpyRes);
   VarLabel::destroy(d_densityINLabel);
   VarLabel::destroy(d_densityCPLabel);
+  VarLabel::destroy(d_drhodfCPLabel);
+  VarLabel::destroy(d_drhodfPredLabel);
   VarLabel::destroy(d_densitySPLabel);
   VarLabel::destroy(d_viscosityINLabel);
   VarLabel::destroy(d_viscosityCTSLabel);
@@ -734,6 +764,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_wVelocityOUTBCLabel);
   VarLabel::destroy(d_scalarOUTBCLabel);
   VarLabel::destroy(d_scalCoefPredLabel);
+  VarLabel::destroy(d_scalDiffCoefPredLabel);
+  VarLabel::destroy(d_scalDiffCoefCorrLabel);
   VarLabel::destroy(d_scalConvCoefPredLabel);
   VarLabel::destroy(d_scalLinSrcPredLabel);
   VarLabel::destroy(d_scalNonLinSrcPredLabel);

@@ -97,6 +97,7 @@ C             East FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
                   IF (PCELL(I+1, J, K).NE.WALL) THEN
                      AW(I+2,J,K) = 0.0
+                     cwsav(i+2,j,k) = 0.0
                   end if
                end if
  110        CONTINUE
@@ -113,6 +114,7 @@ C--------------------------------------------------------------------
         DO 300 J = jst, jend
            IF (PCELL(iEndGhost, J, K).EQ.PBCFLD) THEN
               UU(iEndGhost+1,J,K) = UU(iEndGhost,J,K)
+c              AE(iend,J,K) = 2.0*TINY
           END IF
           IF (PCELL(iBegGhost,J,K).EQ.PBCFLD) THEN
              UU(iBegGhost,J,K) = UU(ist,J,K)

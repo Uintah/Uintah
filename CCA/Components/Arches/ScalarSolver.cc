@@ -444,6 +444,8 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefPredLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
+  tsk->computes(d_lab->d_scalDiffCoefPredLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
   tsk->computes(d_lab->d_scalNonLinSrcPredLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -518,6 +520,8 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		       d_lab->d_scalCoefPredLabel, ii, patch);
       new_dw->allocate(scalarVars.scalarConvectCoeff[ii],
 		       d_lab->d_scalConvCoefPredLabel, ii, patch);
+      new_dw->allocate(scalarVars.scalarDiffusionCoeff[ii],
+		       d_lab->d_scalDiffCoefPredLabel, ii, patch);
     }
     new_dw->allocate(scalarVars.scalarLinearSrc, 
 		     d_lab->d_scalLinSrcPredLabel, matlIndex, patch);
@@ -560,6 +564,8 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(scalarVars.scalarCoeff[ii], 
 		  d_lab->d_scalCoefPredLabel, ii, patch);
+      new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_scalDiffCoefPredLabel, ii, patch);
     }
     new_dw->put(scalarVars.scalarNonlinearSrc, 
 		d_lab->d_scalNonLinSrcPredLabel, matlIndex, patch);
@@ -740,7 +746,7 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   //DataWarehouseP old_dw = new_dw->getTop();
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
+  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
 		Ghost::AroundCells, numGhostCells);
@@ -760,6 +766,9 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefCorrLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
+  tsk->computes(d_lab->d_scalDiffCoefCorrLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
+ 
   tsk->computes(d_lab->d_scalNonLinSrcCorrLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -808,7 +817,7 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // ***warning* 21st July changed from IN to Pred
     new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
+    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
@@ -832,6 +841,9 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		       d_lab->d_scalCoefCorrLabel, ii, patch);
       new_dw->allocate(scalarVars.scalarConvectCoeff[ii],
 		       d_lab->d_scalConvCoefCorrLabel, ii, patch);
+      new_dw->allocate(scalarVars.scalarDiffusionCoeff[ii],
+		       d_lab->d_scalDiffCoefCorrLabel, ii, patch);
+
     }
     new_dw->allocate(scalarVars.scalarLinearSrc, 
 		     d_lab->d_scalLinSrcCorrLabel, matlIndex, patch);
@@ -874,6 +886,9 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(scalarVars.scalarCoeff[ii], 
 		  d_lab->d_scalCoefCorrLabel, ii, patch);
+      new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_scalDiffCoefCorrLabel, ii, patch);
+
     }
     new_dw->put(scalarVars.scalarNonlinearSrc, 
 		d_lab->d_scalNonLinSrcCorrLabel, matlIndex, patch);
@@ -973,13 +988,13 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
 		     matlIndex, patch);
-
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &scalarVars);
     // make it a separate task later
     d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
 				  &scalarVars, cellinfo, d_lab);
+
   // put back the results
     new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch);

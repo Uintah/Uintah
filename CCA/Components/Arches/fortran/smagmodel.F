@@ -25,7 +25,9 @@ c*********************************************************************
       double precision UNP, USP, DUDY, UTP, UBP, DUDZ
       double precision VEP, VWP, DVDX, VTP, VBP, DVDZ
       double precision WEP, WWP, DWDX, WNP, WSP, DWDY
+      double precision UEP, UWP, VNP, VSP, WTP, WBP
       double precision GRADVEL, CMLTM, VISOLD
+      double precision s11,s22,s33,s12,s13,s23,IsI
 
 c*********************************************************************
 c     Get the indices of interest
@@ -57,16 +59,20 @@ C--------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE GENERATION OF TURBULENCE
 C--------------------------------------------------------------------
-               UNP = (UU(I,J,K)+
-     &              UU(I+1,J,K)+UU(I,J+1,K)+UU(I+1,J+1,K))/4.0
-               USP = (UU(I,J,K)+
-     &              UU(I+1,J,K)+UU(I,J-1,K)+UU(I+1,J-1,K))/4.0
+               uep = uu(i+1,j,k)
+               uwp = uu(i,j,k)
+               UNP = 0.25*(UU(I,J,K)+
+     &              UU(I+1,J,K)+UU(I,J+1,K)+UU(I+1,J+1,K))
+               USP = 0.25*(UU(I,J,K)+
+     &              UU(I+1,J,K)+UU(I,J-1,K)+UU(I+1,J-1,K))
                DUDY = (UNP-USP)/SNS(J)
                UTP = (UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J,K+1)+UU(I+1,J,K+1))/4.0
                UBP = (UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J,K-1)+UU(I+1,J,K-1))/4.0 
                DUDZ = (UTP-UBP)/STB(K) 
+               vnp = vv(i,j+1,k)
+               vsp = vv(i,j,k)
                VEP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I+1,J,K)+VV(I+1,J+1,K))/4.0
                VWP = (VV(I,J,K)+
@@ -77,6 +83,8 @@ C--------------------------------------------------------------------
                VBP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I,J,K-1)+VV(I,J+1,K-1))/4.0 
                DVDZ = (VTP-VBP)/STB(K)
+               wtp = ww(i,j,k+1)
+               wbp = ww(i,j,k)
                WEP = (WW(I,J,K)+
      &              WW(I,J,K+1)+WW(I+1,J,K)+WW(I+1,J,K+1))/4.0
                WWP = (WW(I,J,K)+
@@ -111,6 +119,19 @@ C     &                   + DVDZ**2 + DWDX**2 + DWDY**2 )
 
                GRADVEL =SQRT(((DUDY + DVDX)**2) + ((DUDZ +
      &              DWDX)**2) + ((DVDZ + DWDY)**2))
+c              calculate the grid strain rate tensor
+
+               s11 = (uep-uwp)/sew(i)
+               s22 = (vnp-vsp)/sns(j)
+               s33 = (wtp-wbp)/stb(k)
+               s12 = 0.5*((unp-usp)/sns(j) + (vep-vwp)/sew(i))
+               s13 = 0.5*((utp-ubp)/stb(k) + (wep-wwp)/sew(i))
+               s23 = 0.5*((vtp-vbp)/stb(k) + (wnp-wsp)/sns(j))
+
+c              calculate absolute value of the grid strain rate
+   
+               IsI = sqrt(2.0*(s11**2 + s22**2 + s33**2 +
+     &              2.0*(s12**2 + s13**2 + s23**2)))
 
 Cmjb.... logic within next if/then block can be invoked
 Cmjb     when using mixing length model to start up a k-e model
@@ -121,7 +142,8 @@ Cmjb        correctly for your problem.
 c              IF (LKETM) URFVIS = 0.01
 c              IF (NITER.LT.5 .OR. .NOT.LKETM) THEN
                VIS(I,J,K) = VISCOS + CMLTM*(PMIXL**2)*DEN(I,J,K)
-     &              *GRADVEL
+     &                      *IsI
+c     $                      *GRADVEL
 c              END IF
  200        CONTINUE
  210     CONTINUE

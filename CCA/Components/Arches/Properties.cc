@@ -190,6 +190,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
+  tsk->computes(d_lab->d_drhodfCPLabel);
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_co2INLabel);
@@ -493,6 +494,7 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> co2;
     CCVariable<double> enthalpy;
     CCVariable<double> reactscalarSRC;
+    CCVariable<double> drhodf;
     if (d_reactingFlow) {
       new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
@@ -512,7 +514,8 @@ Properties::reComputeProps(const ProcessorGroup*,
       sootFV.initialize(0.0);
     }
     new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
- 
+    new_dw->allocate(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+    drhodf.initialize(0.0);
     StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
 
     constCCVariable<double> enthalpy_comp;
@@ -606,6 +609,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
+	  drhodf[currCell] = outStream.getdrhodf();
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
@@ -669,6 +673,7 @@ Properties::reComputeProps(const ProcessorGroup*,
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
     new_dw->put(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->put(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
     if (d_reactingFlow) {
       new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
@@ -782,6 +787,7 @@ Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
 
 
   tsk->computes(d_lab->d_densityPredLabel);
+  tsk->computes(d_lab->d_drhodfPredLabel);
   if (d_reactingFlow) {
     tsk->computes(d_lab->d_tempINPredLabel);
     tsk->computes(d_lab->d_co2INPredLabel);
@@ -825,6 +831,7 @@ Properties::computePropsPred(const ProcessorGroup*,
     CCVariable<double> co2;
     CCVariable<double> enthalpy;
     CCVariable<double> reactscalarSRC;
+    CCVariable<double> drhodf;
 
     if (d_reactingFlow) {
       new_dw->allocate(temperature, d_lab->d_tempINPredLabel, matlIndex, patch);
@@ -850,6 +857,9 @@ Properties::computePropsPred(const ProcessorGroup*,
     constCCVariable<double> enthalpy_comp;
 
     int nofGhostCells = 0;
+    new_dw->allocate(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
+    drhodf.initialize(0.0);
+
     new_dw->allocate(new_density, d_lab->d_densityPredLabel, 
 		     matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
@@ -919,8 +929,7 @@ Properties::computePropsPred(const ProcessorGroup*,
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
-	  //	  temperature[currCell] = outStream.getTemperature();
-	  //	  co2[currCell] = outStream.getCO2();
+	  drhodf[currCell] = outStream.getdrhodf();
 
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
@@ -973,6 +982,7 @@ Properties::computePropsPred(const ProcessorGroup*,
     density.print(cerr);
 #endif
     new_dw->put(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
+    new_dw->put(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
     //    if (d_MAlab)
     //      new_dw->put(denMicro, d_lab->densityMicroLabel, matlIndex, patch);
     if (d_reactingFlow) {

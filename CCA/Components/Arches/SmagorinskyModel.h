@@ -39,6 +39,7 @@ WARNING
 
 namespace Uintah {
 class PhysicalConstants;
+class BoundaryCondition;
 
 
 class SmagorinskyModel: public TurbulenceModel {
@@ -50,7 +51,8 @@ public:
       // Blank constructor for SmagorinskyModel.
       SmagorinskyModel(const ArchesLabel* label, 
 		       const MPMArchesLabel* MAlb,
-		       PhysicalConstants* phyConsts);
+		       PhysicalConstants* phyConsts,
+		       BoundaryCondition* bndryCondition);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -159,6 +161,7 @@ private:
 private:
 
       PhysicalConstants* d_physicalConsts;
+      BoundaryCondition* d_boundaryCondition;
       double d_CF; //model constant
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale

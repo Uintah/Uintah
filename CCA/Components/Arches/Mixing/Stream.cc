@@ -25,6 +25,8 @@ Stream::Stream(int numSpecies,  int numElements)
   d_sensibleEnthalpy = 0.0;
   d_moleWeight = 0.0;
   d_cp = 0.0;
+  d_drhodf = 0.0;
+  d_drhodh = 0.0;
   d_mole = false;
   d_numMixVars = 0;
   d_numRxnVars = 0;
@@ -49,6 +51,8 @@ Stream::Stream(int numSpecies, int numElements,
   d_sensibleEnthalpy = 0.0;
   d_moleWeight = 0.0;
   d_cp = 0.0;
+  d_drhodf = 0.0;
+  d_drhodh = 0.0;
   d_mole = false;
   //d_atomNumbers = vector<double>(numElements, 0.0); // initialize with 0
   if (d_numRxnVars > 0) {
@@ -82,6 +86,8 @@ Stream::Stream(const Stream& strm) // copy constructor
   d_sensibleEnthalpy = strm.d_sensibleEnthalpy;
   d_moleWeight = strm.d_moleWeight;
   d_cp = strm.d_cp;
+  d_drhodf = strm.d_drhodf;
+  d_drhodh = strm.d_drhodh;
   d_depStateSpaceVars = strm.d_depStateSpaceVars;
   d_mole = strm.d_mole;
   d_numMixVars = strm.d_numMixVars;
@@ -113,6 +119,8 @@ Stream::operator=(const Stream &rhs)
       d_cp = rhs.d_cp;
       d_depStateSpaceVars = rhs.d_depStateSpaceVars;
       d_mole = rhs.d_mole;
+      d_drhodf = rhs.d_drhodf;
+      d_drhodh = rhs.d_drhodh;
       d_numMixVars = rhs.d_numMixVars;
       d_numRxnVars = rhs.d_numRxnVars;
       d_lsoot = rhs.d_lsoot;
@@ -178,6 +186,8 @@ Stream::addStream(const Stream& strm, ChemkinInterface* chemInterf,
   d_sensibleEnthalpy += factor*strm.d_sensibleEnthalpy; //Does this even make sense??
   d_moleWeight += factor*strm.d_moleWeight;
   d_cp += factor*strm.d_cp;
+  d_drhodf += factor*strm.d_drhodf;
+  d_drhodh += factor* strm.d_drhodh;
   d_mole = false;
   //if (d_lsoot) {
   //for (int i = 0; i < strm.d_sootData.size(); i++)
@@ -244,6 +254,10 @@ Stream::getValue(int count, bool lfavre)
 	return d_moleWeight;
       case 6:
 	return d_cp;
+      case 7:
+	return d_drhodf;
+      case 8:
+	return d_drhodh;
       default:
 	cerr << "Invalid count value" << '\n';
 	return 0;
@@ -277,6 +291,8 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
   d_sensibleEnthalpy = vec_stateSpace[4];
   d_moleWeight = vec_stateSpace[5];
   d_cp = vec_stateSpace[6];
+  d_drhodf = vec_stateSpace[7];
+  d_drhodh = vec_stateSpace[8];
   d_numMixVars = numMixVars;
   d_numRxnVars = numRxnVars;
   d_lsoot = lsoot;
@@ -329,6 +345,8 @@ Stream::convertStreamToVec()
   vec_stateSpace.push_back(d_sensibleEnthalpy);
   vec_stateSpace.push_back(d_moleWeight);
   vec_stateSpace.push_back(d_cp);
+  vec_stateSpace.push_back(d_drhodf);
+  vec_stateSpace.push_back(d_drhodh);
   // copy d_speciesConcn to rest of the vector
   //int jj = 0;
   for (vector<double>::iterator iter = d_speciesConcn.begin(); 
@@ -365,6 +383,8 @@ Stream& Stream::linInterpolate(double upfactor, double lowfactor,
                                            rightvalue.d_sensibleEnthalpy;
   d_moleWeight = upfactor*d_moleWeight+lowfactor*rightvalue.d_moleWeight;
   d_cp = upfactor*d_cp+lowfactor*rightvalue.d_cp;
+  d_drhodf = upfactor*d_drhodf+lowfactor*rightvalue.d_drhodf;
+  d_drhodh = upfactor*d_drhodh+lowfactor*rightvalue.d_drhodh;
   for (int i = 0; i < d_speciesConcn.size(); i++)
     d_speciesConcn[i] = upfactor*d_speciesConcn[i] +
                    lowfactor*rightvalue.d_speciesConcn[i];
@@ -395,6 +415,8 @@ Stream::print(std::ostream& out) const {
   out << "Sensible Enthalpy: "<< d_sensibleEnthalpy << endl;
   out << "Molecular Weight: "<< d_moleWeight << endl;
   out << "CP: "<< d_cp << endl;
+  out << "Drhodf: "<< d_drhodf << endl;
+  out << "Drhodh: "<< d_drhodh << endl;
   out << "Species concentration in mass fraction: " << endl;
   for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
     out.width(10);
@@ -423,6 +445,8 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
   out << "Sensible Enthalpy: "<< d_sensibleEnthalpy << endl;
   out << "Molecular Weight: "<< d_moleWeight << endl;
   out << "CP: "<< d_cp << endl;
+  out << "Drhodf: "<< d_drhodf << endl;
+  out << "Drhodh: "<< d_drhodh << endl;
   int numSpecies = chemInterf->getNumSpecies();
   double* specMW = new double[numSpecies];
  chemInterf->getMoleWeight(specMW);
@@ -445,11 +469,11 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
-// Revision 1.12  2002/02/21 01:55:06  dav
-// moved the definition of NUM_DEP_VARS from the .cc file into the .h file (and out of the class  declaration)
+// Revision 1.13  2002/02/28 03:05:46  rawat
+// Added divergence constraint and modified pressure/outlet boundary condition.
 //
-// Revision 1.11  2002/02/21 01:32:51  dav
-// there is no such thing as a const int, etc, so I removed the const.  Also, I fixed a couple of \n that had been written /n
+// Revision 1.1  2002/01/11 14:22:19  spinti
+// Files modified to return drho/df and drho/dh as per Rajesh request.
 //
 // Revision 1.10  2001/11/17 00:23:00  spinti
 // 1. Modified addStream in Stream.cc to correct a problem with Newton iteration

@@ -83,6 +83,7 @@ namespace Uintah {
       CCVariable<double> pressLinearSrc;
       CCVariable<double> pressNonlinearSrc;
       StencilMatrix<CCVariable<double> > scalarCoeff; //7 point stencil
+      StencilMatrix<CCVariable<double> > scalarDiffusionCoeff; //7 point stencil
       StencilMatrix<CCVariable<double> > scalarConvectCoeff; //7 point stencil
       CCVariable<double> scalarLinearSrc;
       CCVariable<double> scalarNonlinearSrc;
@@ -121,6 +122,8 @@ namespace Uintah {
       SFCXVariable<double> uVelRhoHat;
       SFCYVariable<double> vVelRhoHat;
       SFCZVariable<double> wVelRhoHat;
+      CCVariable<double> divergence;
+      CCVariable<double> drhodf;
       CCVariable<double> densityPred;
       // for radiation calculations
       CCVariable<double> qfluxe;
