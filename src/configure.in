@@ -589,6 +589,10 @@ SCI_ARG_WITH(qt,
   [  --with-qt=DIR                     Use the Qt installation in DIR],
   [with_qt="$withval"],
   [with_qt=${with_qt='no'}])
+SCI_ARG_WITH(vdt,
+  [  --with-vdt=DIR                    <path-to-vdt>],
+  [with_vdt="$withval"],
+  [with_vdt=${with_qt='no'}])
 
 
 SCI_ARG_ENABLE(threads,
@@ -1734,7 +1738,7 @@ if test "$have_uuid" != "yes"; then
   # This is typical on linux and ??
   AC_MSG_CHECKING(for uuid_generate in uuid/uuid.h)
   AC_TRY_COMPILE([
-extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
+extern "C" { // The linux uuid.h does not have this, so we need exter C here
 #include <uuid/uuid.h>
 }],
 	[uuid_t uuid;
@@ -1755,13 +1759,13 @@ if test "$have_uuid" = "yes"; then
     AC_TRY_LINK([
 #if HAVE_SYS_UUID_H
 #include <sys/types.h>
-extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
+extern "C" { // SGI uuid.h does not have this, so we need extern C here
 #include <sys/uuid.h>
 }
 #define UUID_CREATE
 #else
 #if HAVE_UUID_UUID_H
-extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
+extern "C" { // The linux uuid.h does not have this, so we need exter C here
 #include <uuid/uuid.h>
 }
 #define UUID_GENERATE
@@ -1834,6 +1838,71 @@ AC_SUBST(HAVE_QT)
 AC_SUBST(DEF_QT)
 AC_SUBST(QT_INCLUDE)
 AC_SUBST(QT_LIB)
+
+##  --  search for VDT  ----------------------------------------------------
+
+FOUND_ALL_VDT=no
+VDT_INCLUDE=""
+VDT_LIB=""
+VDT_ADDITIONAL_LIBS=""
+
+for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then
+    continue
+  fi
+
+  #from here we should find
+     #src/vdt/bin
+  if test ! -d "$i/src/vdt/bin"; then
+    continue
+  fi
+
+  guess=`sh $i/src/vdt/bin/config.guess`
+  ad=`sh $i/src/vdt/bin/config.sub $guess`
+
+  #this is where the lib actually lives
+  if test ! -d "$i/src/vdt/VDT/lib/$ad"; then
+    continue
+  fi
+
+  # Testing the link also need by vdt to link is:
+  VDT_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/VDT/lib/$ad $X_LIBRARY"
+
+  VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt'
+
+  SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate,,continue,$VDT_LIB_PATH $VDT_NEEDED_LIBRARIES)
+
+
+  if test "$HAVE_LIBVDT"; then
+    FOUND_ALL_VDT=yes
+    DEF_VDT="#define HAVE_VDT 1"
+    HAVE_VDT="yes"
+    VDT_INCLUDE="$i/src/vdt/VDT/src"
+    VDT_LIB="$i/src/vdt/VDT/lib/$ad"
+    ELIXIR_LIB="$i/src/vdt/Elixir/lib/$ad"
+    LP_SOLVE_LIB="$i/src/vdt/lp_solve_2.2/$ad"
+    MESCHACH_LIB="$i/src/vdt/Meschach/$ad"
+    PIRAT_LIB="$i/src/vdt/PiRaT/lib/$ad"
+    LOBS_LIB="$i/src/vdt/LOBS/lib/$ad"
+    CKIT_LIB="$i/src/vdt/Ckit/lib/$ad"
+    G3D_LIB="$i/src/vdt/G3D/lib/$ad"
+    VDT_LINK="-lvdt $VDT_NEEDED_LIBRARIES"
+    break
+  fi
+done
+
+AC_SUBST(HAVE_VDT)
+AC_SUBST(DEF_VDT)
+AC_SUBST(VDT_INCLUDE)
+AC_SUBST(ELIXIR_LIB)
+AC_SUBST(LP_SOLVE_LIB)
+AC_SUBST(MESCHACH_LIB)
+AC_SUBST(PIRAT_LIB)
+AC_SUBST(LOBS_LIB)
+AC_SUBST(CKIT_LIB)
+AC_SUBST(G3D_LIB)
+AC_SUBST(VDT_LIB)
+AC_SUBST(VDT_LINK)
 
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
