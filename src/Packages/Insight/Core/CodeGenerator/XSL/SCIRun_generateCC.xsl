@@ -177,7 +177,8 @@ public:
 <xsl:template name="declare_guivars">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
-<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
+
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
@@ -349,7 +350,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   <xsl:for-each select="/filter/filter-itk/parameters/param">
   <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
   <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
-  <xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+  <xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
@@ -541,7 +542,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:value-of select="$category"/><xsl:text>&quot;, &quot;</xsl:text>
 <xsl:value-of select="$package"/><xsl:text>&quot;)</xsl:text>
 <xsl:for-each select="/filter/filter-itk/parameters/param">
-<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
@@ -747,6 +748,8 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:text>
 </xsl:template>
 
+
+
 <!-- Helper function to determine if a parameter is a primitive type or defined type -->
 <xsl:template name="determine_type">
 <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
@@ -758,4 +761,21 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:otherwise>yes</xsl:otherwise>
 </xsl:choose>
 </xsl:template>
+
+
+
+<!-- Helper function to determine if a parameter has been defined as const in the gui filter xml file.  If it has, a specified value will always be set and no gui will be visible to the user.
+-->
+<xsl:template name="determine_if_const_parameter">
+<xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+<xsl:variable name="const"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/const/@value"/></xsl:variable>
+<xsl:choose>
+<xsl:when test="$const != ''">yes</xsl:when>
+<xsl:otherwise>no</xsl:otherwise>
+</xsl:choose>
+
+</xsl:template>
+
 </xsl:stylesheet>
+
+
