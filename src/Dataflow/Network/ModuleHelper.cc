@@ -51,6 +51,7 @@
 
 #include <iostream>
 #include <unistd.h>
+
 using namespace std;
 
 #define DEFAULT_MODULE_PRIORITY 90
@@ -62,17 +63,24 @@ ModuleHelper::ModuleHelper(Module* module)
 {
 }
 
+
 ModuleHelper::~ModuleHelper()
 {
 }
 
-void ModuleHelper::run()
+
+void
+ModuleHelper::run()
 {
   module->setPid(getpid());
   if(module->have_own_dispatch)
+  {
     module->do_execute();
-  else {
-    for(;;){
+  }
+  else
+  {
+    for(;;)
+    {
       MessageBase* msg = module->mailbox.receive();
       switch(msg->type) {
       case MessageTypes::GoAway:
@@ -104,6 +112,7 @@ void ModuleHelper::run()
     }
   }
 }
+
 
 } // End namespace SCIRun
 
