@@ -111,10 +111,8 @@ void LinAlgUnary::execute() {
   
   update_state(NeedData);
   MatrixHandle mh;
-  if (!imat_->get(mh))
-    return;
-  if (!mh.get_rep()) {
-    warning("Empty input matrix.");
+  if (!imat_->get(mh) || !mh.get_rep()) {
+    error( "No handle or representation" );
     return;
   }
 
