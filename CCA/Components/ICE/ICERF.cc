@@ -265,18 +265,18 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     if (switchDebug_EQ_RF_press) {
       ostringstream desc;
       desc << "BOT_computeRFPress_patch_" << patch->getID();
-      printData( patch, 1, desc.str(), "Press_CC_RF", press_new);
+      printData(0, patch, 1, desc.str(), "Press_CC_RF", press_new);
 
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
        ostringstream desc;
        desc << "BOT_computeRFPress_Mat_" << indx << "_patch_"<< patch->getID();
-       printData( patch, 1, desc.str(), "matl_press",   matl_press[m]);
-       printData( patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
-       printData( patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]);
-       printData( patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
-       printData( patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
+       printData( indx, patch, 1, desc.str(), "matl_press",   matl_press[m]);
+       printData( indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
+       printData( indx, patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]);
+       printData( indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
+       printData( indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
      }
     }
   } // patches
@@ -478,10 +478,10 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       if (switchDebug_vel_FC ) {
         ostringstream desc;
         desc << "TOP_vel_FC_Mat_" << indx << "_patch_" << patch->getID();
-        printData(    patch,1, desc.str(), "rho_CC",     rho_CC);
-        printData(    patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);
-        printVector(  patch,1, desc.str(), "vel_CC",  0, vel_CC);
-        printVector(  patch,1, desc.str(), "D",       0, D);
+        printData(  indx, patch,1, desc.str(), "rho_CC",     rho_CC);     
+        printData(  indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);  
+        printVector(indx, patch,1, desc.str(), "vel_CC",  0, vel_CC);     
+        printVector(indx, patch,1, desc.str(), "D",       0, D);          
       }
 
       SFCXVariable<double> uvel_FC, pressDiffX_FC;
@@ -542,12 +542,12 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       if (switchDebug_vel_FC ) {
         ostringstream desc;
         desc << "BOT_vel_FC_Mat_"<< indx <<"_patch_"<< patch->getID();
-        printData_FC( patch,1, desc.str(), "uvel_FC",       uvel_FC);
-        printData_FC( patch,1, desc.str(), "vvel_FC",       vvel_FC);
-        printData_FC( patch,1, desc.str(), "wvel_FC",       wvel_FC);
-        printData_FC( patch,1, desc.str(), "pressDiffX_FC", pressDiffX_FC);
-        printData_FC( patch,1, desc.str(), "pressDiffY_FC", pressDiffY_FC);
-        printData_FC( patch,1, desc.str(), "pressDiffZ_FC", pressDiffZ_FC); 
+        printData_FC( indx, patch,1, desc.str(), "uvel_FC",       uvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "vvel_FC",       vvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "wvel_FC",       wvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "pressDiffX_FC", pressDiffX_FC);
+        printData_FC( indx, patch,1, desc.str(), "pressDiffY_FC", pressDiffY_FC);
+        printData_FC( indx, patch,1, desc.str(), "pressDiffZ_FC", pressDiffZ_FC); 
       }
     } // matls loop
   }  // patch loop
@@ -751,22 +751,22 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       if (switchDebugSource_Sink) {
         ostringstream desc;
         desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
-        printData(patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
-        printData(patch,1,desc.str(),"term1", term1);
-        printData(patch,1,desc.str(),"term2", term2);
-        printData(patch,1,desc.str(),"term3", term3);
+        printData(indx, patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
+        printData(indx, patch,1,desc.str(),"term1", term1);
+        printData(indx, patch,1,desc.str(),"term2", term2);
+        printData(indx, patch,1,desc.str(),"term3", term3);
 #if 0
         if (m == 0 ){
-          printData_FC( patch,1, desc.str(), "pressX_FC",     pressX_FC);
-          printData_FC( patch,1, desc.str(), "pressY_FC",     pressY_FC);
-          printData_FC( patch,1, desc.str(), "pressZ_FC",     pressZ_FC);
-          printData_FC( patch,1, desc.str(), "pressDiffX_FC", pressDiffX_FC);
-          printData_FC( patch,1, desc.str(), "pressDiffY_FC", pressDiffY_FC);
-          printData_FC( patch,1, desc.str(), "pressDiffZ_FC", pressDiffZ_FC);
+          printData_FC( indx, patch,1, desc.str(), "pressX_FC",     pressX_FC);
+          printData_FC( indx, patch,1, desc.str(), "pressY_FC",     pressY_FC);
+          printData_FC( indx, patch,1, desc.str(), "pressZ_FC",     pressZ_FC);
+          printData_FC( indx, patch,1, desc.str(), "pressDiffX_FC", pressDiffX_FC);
+          printData_FC( indx, patch,1, desc.str(), "pressDiffY_FC", pressDiffY_FC);
+          printData_FC( indx, patch,1, desc.str(), "pressDiffZ_FC", pressDiffZ_FC);
         }
-        printData_FC( patch,1, desc.str(), "uvel_FC",       uvel_FC[m]);
-        printData_FC( patch,1, desc.str(), "vvel_FC",       vvel_FC[m]);
-        printData_FC( patch,1, desc.str(), "wvel_FC",       wvel_FC[m]);
+        printData_FC( indx, patch,1, desc.str(), "uvel_FC",       uvel_FC[m]);
+        printData_FC( indx, patch,1, desc.str(), "vvel_FC",       vvel_FC[m]);
+        printData_FC( indx, patch,1, desc.str(), "wvel_FC",       wvel_FC[m]);
 #endif 
       }
     }  // matl loop
@@ -924,10 +924,10 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         ostringstream desc;
         desc<<"TOP_addExchangeToMomentumAndEnergy_RF"<<indx<<"_patch_"
             <<patch->getID();
-        printData(   patch,1, desc.str(),"Temp_CC",    old_Temp[m]);     
-        printData(   patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);   
-        printData(   patch,1, desc.str(),"mass_L",     mass_L[m]);      
-        printVector( patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);            
+        printData(   indx, patch,1, desc.str(),"Temp_CC",    old_Temp[m]);     
+        printData(   indx, patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);   
+        printData(   indx, patch,1, desc.str(),"mass_L",     mass_L[m]);      
+        printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);            
       }
     }
     //---------- M O M E N T U M   E X C H A N G E                  
@@ -1067,10 +1067,10 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         ostringstream desc;
         desc<<"addExchangeToMomentumAndEnergy_RF"<<indx<<"_patch_"
             <<patch->getID();
-        printVector(patch,1, desc.str(),"mom_L_ME", 0, mom_L_ME[m]);
-        printData(  patch,1, desc.str(),"tot_eng_L_ME",tot_eng_L_ME[m]);
-        printData(  patch,1, desc.str(),"Tdot",        Tdot[m]);
-        printData(  patch,1, desc.str(),"Temp_CC",     Temp_CC[m]); 
+        printVector(indx, patch,1, desc.str(),"mom_L_ME", 0, mom_L_ME[m]);
+        printData(  indx, patch,1, desc.str(),"tot_eng_L_ME",tot_eng_L_ME[m]);
+        printData(  indx, patch,1, desc.str(),"Tdot",        Tdot[m]);
+        printData(  indx, patch,1, desc.str(),"Temp_CC",     Temp_CC[m]); 
       }
     }
   } //patches
@@ -1183,15 +1183,15 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       if (switchDebugLagrangianSpecificVol ) {
         ostringstream desc;
         desc <<"BOT_Lagrangian_spVolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
-        printData(  patch,1, desc.str(), "Temp",          Temp_CC[m]);
-        printData(  patch,1, desc.str(), "vol_frac",      vol_frac[m]);
-        printData(  patch,1, desc.str(), "rho_CC",        rho_CC);
-        printData(  patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);
-        printData(  patch,1, desc.str(), "Tdot",          Tdot[m]);
-        printData(  patch,1, desc.str(), "f_theta",       f_theta);
-        printData(  patch,1, desc.str(), "sum_therm_exp", sum_therm_exp);
-        printData(  patch,1, desc.str(), "spec_vol_source",spec_vol_source);
-        printData(  patch,1, desc.str(), "spec_vol_L",     spec_vol_L);
+        printData(indx, patch,1, desc.str(), "Temp",          Temp_CC[m]);        
+        printData(indx, patch,1, desc.str(), "vol_frac",      vol_frac[m]);       
+        printData(indx, patch,1, desc.str(), "rho_CC",        rho_CC);            
+        printData(indx, patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);         
+        printData(indx, patch,1, desc.str(), "Tdot",          Tdot[m]);           
+        printData(indx, patch,1, desc.str(), "f_theta",       f_theta);           
+        printData(indx, patch,1, desc.str(), "sum_therm_exp", sum_therm_exp);     
+        printData(indx, patch,1, desc.str(), "spec_vol_source",spec_vol_source);  
+        printData(indx, patch,1, desc.str(), "spec_vol_L",     spec_vol_L);       
       }
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
