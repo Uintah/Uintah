@@ -22,21 +22,12 @@ SRCS      := $(SRCDIR)/main.cc
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
-  ifeq ($(BUILD_SCIRUN2),yes)
-    PSELIBS := $(PSELIBS) Core/CCA/Component
-  endif
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util
-  ifeq ($(BUILD_SCIRUN2),yes)
-   PSELIBS := $(PSELIBS) Core/CCA/Component/PIDL Core/globus_threads
-  endif
 endif
 
 LIBS := $(GL_LIBS)
-ifeq ($(BUILD_SCIRUN2),yes)
-LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_io
-endif
 ifeq ($(NEED_SONAME),yes)
 LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) -ldl -lz
 endif
@@ -52,6 +43,8 @@ CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/Dataflow/GUI\" \
 $(SRCDIR)/main.o:	$(SRCDIR)/main.cc Makefile
 	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
+include $(SCIRUN_SCRIPTS)/program.mk
+
 ifeq ($(BUILD_SCIRUN2),yes)
 
 SRCS      := $(SRCDIR)/newmain.cc
@@ -60,15 +53,11 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else
   PSELIBS := Core/Exceptions \
-        Core/CCA/Component/PIDL Core/globus_threads Core/CCA/ccaspec \
-	SCIRun Core/CCA/Component/CIA
+        Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
+	SCIRun Core/CCA/Component/CIA Core/Thread
 endif
 
 LIBS := $(GLOBUS_LIBS) -lglobus_io
-ifeq ($(NEED_SONAME),yes)
-LIBS := $(LIBS) 
-endif
-
 PROGRAM := sr
 
 include $(SCIRUN_SCRIPTS)/program.mk
