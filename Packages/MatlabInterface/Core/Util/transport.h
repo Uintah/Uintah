@@ -28,6 +28,11 @@ using namespace SCIRun;
 MatrixHandle transport(int wordy,int flag,const char *hport, MatrixHandle mh);
 void         transport(int wordy,int flag,const char *hport, char *cmd);
 
+void trnsp(double *p1,double *p2,int n,int m);
+void prt(double *m,int n1,int n2);
+
+
+
 }
 
 #endif
