@@ -326,6 +326,18 @@ inline void Matrix3::operator += (const Matrix3 &m3)
 
 }
 
+inline void Matrix3::operator -= (const Matrix3 &m3)
+{
+  // -= operator 
+
+  for(int i=0;i<3;i++){
+    for(int j=0;j<3;j++){
+        mat3[i][j] -= m3(i+1,j+1);
+    }
+  }
+
+}
+
 inline void Matrix3::operator /= (const double value)
 {
   // Divide each component of the Matrix3 by the value
@@ -494,6 +506,9 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.9  2000/09/16 22:15:40  tan
+// Finished the implementation of += operator.
+//
 // Revision 1.8  2000/08/24 21:18:27  witzel
 // Added sub-matrix eigen value solving methods
 //
