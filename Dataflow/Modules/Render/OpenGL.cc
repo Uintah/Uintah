@@ -1380,7 +1380,7 @@ OpenGL::redraw_frame()
 	
 	// Dump the mpeg in the local dir ... ignoring any path since mpeg
 	// can not handle it.
-	std::string::size_type pos = fname.find_last_of("/");
+	//std::string::size_type pos = fname.find_last_of("/");
 	//if( pos != std::string::npos ) {
         //cerr << "Removing the mpeg path." << std::endl;
         //fname = fname.erase(0, pos+1);

@@ -129,7 +129,6 @@ Camera::~Camera()
 
 void Camera::execute()
 {  
-  int next_frame;
   GuiInt frameReady(ctx->subVar("frameReady"),false);
   do frameReady.reset(); while (!frameReady.get());
   frame_.reset();
