@@ -219,8 +219,21 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        buf[7+last-2]='\0';
        string fname(&buf[7]);
        cerr << "FNAME=>>"<<fname<<"<<\n";
-       mtl.add(new ImageMaterial(fname, ImageMaterial::Tile,
-				 ImageMaterial::Tile, 1, Color(0,0,0), 0));
+
+       LambertianMaterial * lamb = 
+	 new LambertianMaterial( Color(1.0,0.0,1.0) );
+       ImageMaterial * image = 
+	 new ImageMaterial(fname, ImageMaterial::Tile,
+			   ImageMaterial::Tile, 1, Color(0,0,0), 0);
+
+       if( !image->valid() )
+	 {
+	   mtl.add( lamb );
+	 }
+       else
+	 {
+	   mtl.add( image );
+	 }
        have_matl=0;
      } else {
        cerr << "Ignoring mtl line: "<<buf<<"\n";
