@@ -1,7 +1,5 @@
 
-proc makeModule {modid name canvas} {
-    set modx 10
-    set mody 10
+proc makeModule {modid name canvas modx mody} {
     set modframe $canvas.module$modid
     global moduleframe
     set moduleframe($modid) $modframe
