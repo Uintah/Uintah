@@ -45,7 +45,6 @@ public:
        const std::string& port_name, const std::string& color_name);
   virtual ~Port();
 
-  int num_unblocked_connections();
   int nconnections();
   Connection* connection(int);
   virtual void attach(Connection* conn);

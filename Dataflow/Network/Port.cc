@@ -44,19 +44,6 @@ Port::Port(Module* module, const string& type_name,
 {
 }
 
-int 
-Port::num_unblocked_connections()
-{
-  int count = 0;
-  std::vector<Connection*>::iterator iter = connections.begin();
-  while (iter != connections.end()) {
-    Connection *c = *iter;
-    ++iter;
-    if (! c->is_blocked()) ++count;
-  }
-  return count;
-}
-
 int Port::nconnections()
 {
   return connections.size();
