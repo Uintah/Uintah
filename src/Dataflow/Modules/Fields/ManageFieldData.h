@@ -315,8 +315,8 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(ModuleReporter *mod,
   }
 
   mod->warning("Matrix datasize does not match field geometry.");
-  mod->msgStream_ << "Matrix size : " << rows << " " << columns << '\n';
-  mod->msgStream_ << "Field size : " << nsize << " " <<  esize <<
+  mod->msgStream() << "Matrix size : " << rows << " " << columns << '\n';
+  mod->msgStream() << "Field size : " << nsize << " " <<  esize <<
     " " << fsize << " " << csize << '\n';
   return 0;
 }
@@ -494,8 +494,8 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(ModuleReporter *mod,
     return FieldHandle(ofield);
   }
   mod->warning("Matrix datasize does not match field geometry.");
-  mod->msgStream_ << "Matrix size : " << rows << " " << columns << '\n';
-  mod->msgStream_ << "Field size : " << nsize << " " <<  esize <<
+  mod->msgStream() << "Matrix size : " << rows << " " << columns << '\n';
+  mod->msgStream() << "Field size : " << nsize << " " <<  esize <<
     " " << fsize << " " << csize << '\n';
   return 0;
 }
@@ -746,8 +746,8 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(ModuleReporter *mod,
     return FieldHandle(ofield);
   }
   mod->warning("Matrix datasize does not match field geometry.");
-  mod->msgStream_ << "Matrix size : " << rows << " " << columns << '\n';
-  mod->msgStream_ << "Field size : " << nsize << " " <<  esize <<
+  mod->msgStream() << "Matrix size : " << rows << " " << columns << '\n';
+  mod->msgStream() << "Field size : " << nsize << " " <<  esize <<
     " " << fsize << " " << csize << '\n';
   return 0;
 }
