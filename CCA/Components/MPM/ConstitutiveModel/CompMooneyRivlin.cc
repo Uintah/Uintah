@@ -184,18 +184,20 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 	connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
 	
 	for(int k = 0; k < 8; k++) {
-	  Vector& gvel = gvelocity[ni[k]];
-	  for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	      velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
+	  if( conn[k] == Connectivity::connect ) {
+	    Vector& gvel = gvelocity[ni[k]];
+	    for (int j = 0; j<3; j++){
+	      for (int i = 0; i<3; i++) {
+	        velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
+	      }
 	    }
-	  }
 
-	  //rotation rate computation, required for fracture
-	  //NOTE!!! gvel(0) = gvel.x() !!!
-	  omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2)*oodx[2];
-	  omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0)*oodx[0];
-	  omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1)*oodx[1];
+	    //rotation rate computation, required for fracture
+	    //NOTE!!! gvel(0) = gvel.x() !!!
+	    omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2)*oodx[2];
+	    omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0)*oodx[0];
+            omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1)*oodx[1];
+	  }
 	}
 	pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
       }
