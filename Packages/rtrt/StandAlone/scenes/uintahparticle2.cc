@@ -51,8 +51,8 @@ using namespace SCIRun;
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Variables/ShareAssignParticleVariable.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -65,11 +65,15 @@ using namespace SCIRun;
 
 #include <Dataflow/XMLUtil/XMLUtil.h>
 // general
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <sgi_stl_warnings_on.h>
+
 #include <sci_values.h>
 
 
