@@ -769,7 +769,7 @@ void GridSpheresDpy::animate(bool& changed) {
 void GridSpheresDpy::attach(GridSpheres* g) {
   // ndata only equals -1 if ndata has not been set 
   if (ndata != -1) {
-    if (ndata == g->ndata+3) {
+    if (ndata == g->ndata) {
       grids.add(g);
       g->dpy = this;
     }
@@ -778,7 +778,7 @@ void GridSpheresDpy::attach(GridSpheres* g) {
     }
   }
   else {
-    ndata = g->ndata + 3;
+    ndata = g->ndata;
     grids.add(g);
     g->dpy = this;
     var_names = g->var_names;
