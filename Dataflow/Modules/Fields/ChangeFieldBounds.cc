@@ -94,14 +94,26 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     cdataminmax_(ctx->subVar("cdataminmax")),
     widget_lock_("ChangeFieldBounds widget lock"),
     generation_(-1),
+    widgetid_(0),
     minmax_(1,0)
-  
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
-  widgetid_ = 0;
 }
 
-ChangeFieldBounds::~ChangeFieldBounds(){
+ChangeFieldBounds::~ChangeFieldBounds()
+{
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Transformation Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize oport 'Transformation Widget'.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
 }
 
 
@@ -380,7 +392,6 @@ ChangeFieldBounds::execute()
   Transform inv(field_initial_transform_);
   inv.invert();
   t.post_trans(inv);
-
 
   ef.detach();
   ef->mesh_detach();
