@@ -20,6 +20,7 @@
 
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
+#include <bitset>
 
 namespace SCIRun {
   class BBox;
@@ -41,9 +42,28 @@ public:
   virtual BBox get_bounding_box() const = 0;
   virtual void transform(Transform &t) = 0;
 
+  enum
+  { 
+    NONE_E = 0,
+    NODES_E,
+    EDGES_E,
+    FACES_E,
+    CELLS_E,
+    //    ELEMENTS_E,
+    NORMALS_E,
+    NODE_NEIGHBORS_E,
+    EDGE_NEIGHBORS_E,
+    FACE_NEIGHBORS_E,
+    GRID_E,
+    SYNCHRONIZE_COUNT
+  };
+
+  typedef bitset<SYNCHRONIZE_COUNT>     synchronized_t;
+  virtual bool		synchronize(const synchronized_t &which) { return false; };
+
+
   //! Optional virtual functions.
   //! finish all computed data within the mesh.
-  virtual void flush_changes() {}; //Not all meshes need to do this.
   virtual bool has_normals() const { return false; }
   virtual bool is_editable() const { return false; } // supports add_elem(...)
   // Required interfaces
