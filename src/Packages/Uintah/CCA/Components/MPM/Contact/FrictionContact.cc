@@ -517,15 +517,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       }
     }
 
-    // Store new velocities and accelerations in DataWarehouse
-    /* Not necessary when using getModifiable      
-    for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-      new_dw->modify(gvelocity_star[m], lb->gVelocityStarLabel, dwindex, patch);
-      new_dw->modify(gacceleration[m],  lb->gAccelerationLabel, dwindex, patch);
-      new_dw->modify(frictionalWork[m], lb->frictionalWorkLabel,dwindex, patch);
-    }
-    */
   }
 }
 

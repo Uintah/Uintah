@@ -100,13 +100,6 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
       }
     }
 
-    // Store new velocities in DataWarehouse
-    /* Not necessary when using getModifiable
-    for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-      new_dw->modify(gvelocity[m], lb->gVelocityLabel, dwindex, patch);
-    }
-    */
   }
 }
 
