@@ -25,7 +25,7 @@ SUBDIRS := \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := 
+PSELIBS := Packages/MatlabInterface/Core
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

@@ -658,22 +658,22 @@ Mutex::unlock()
 void
 Mutex::lock()
 {
-    Thread* t=Thread::self();
-    int oldstate=-1;
-    Thread_private* p=0;
-    if(t){
-	p=t->priv_;
-	oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
-    }
-    int status = pthread_mutex_lock(&priv_->mutex);
-    if(status != 0){
-	fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
-	throw ThreadError(std::string("pthread_mutex_lock: ")
-			  +strerror(status));
-    }
+  Thread* t=Thread::isInitialized()?Thread::self():0;
+  int oldstate=-1;
+  Thread_private* p=0;
+  if(t){
+    p=t->priv_;
+    oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
+  }
+  int status = pthread_mutex_lock(&priv_->mutex);
+  if(status != 0){
+    fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
+    throw ThreadError(std::string("pthread_mutex_lock: ")
+		      +strerror(status));
+  }
 		
-    if(t)
-	Thread::pop_bstack(p, oldstate);
+  if(t)
+    Thread::pop_bstack(p, oldstate);
 }
 
 bool
