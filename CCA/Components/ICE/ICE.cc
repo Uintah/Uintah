@@ -1935,7 +1935,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        for (int m = 0; m < numMatls; m++)  {
          sum += vol_frac[m][c];
        }
-       //cerr << "cell: " << *iter << ", sum=" << sum << '\n';
        if (fabs(sum-1.0) < convergence_crit)
          converged = true;
 
@@ -4201,7 +4200,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       update_q_CC<constCCVariable<double>, double>
                   ("energy",temp, int_eng_L_ME, q_advected, 
                    mass_L, mass_new, mass_advected, cv, cv_new, patch);
-                                     
       setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,
                                                     indx, new_dw,lodi_vars);
       //__________________________________
