@@ -49,7 +49,7 @@ static string handle_class = "\
 class @ {\n\
   @_interface* ptr;\n\
 public:\n\
-  static const ::PIDL::TypeInfo* _getTypeInfo();\n\
+  static const ::SCIRun::TypeInfo* _getTypeInfo();\n\
   typedef @_interface interfacetype;\n\
   inline @()\n\
   {\n\
@@ -95,7 +95,7 @@ public:\n\
   {\n\
     return ptr != 0;\n\
   }\n\
-  inline operator ::PIDL::Object() const\n\
+  inline operator ::SCIRun::Object() const\n\
   {\n\
     return ptr;\n\
   }\n\
@@ -205,6 +205,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/CCA/Component/PIDL/TypeInfo.h>\n";
   out << "#include <Core/CCA/Component/PIDL/TypeInfo_internal.h>\n";
   out << "#include <Core/CCA/Component/PIDL/PIDL.h>\n";
+  out << "#include <Core/CCA/Component/Comm/Message.h>\n";
   out << "#include <Core/Util/NotFinished.h>\n";
   out << "#include <Core/Thread/Thread.h>\n";
   out << "#include <iostream>\n";
@@ -387,14 +388,14 @@ void CI::emit_typeinfo(EmitState& e)
   uuid_generate( uuid );
   uuid_unparse(uuid, uuid_str);
 #endif
-  e.out << "const ::PIDL::TypeInfo* " << fn << "::_static_getTypeInfo()\n";
+  e.out << "const ::SCIRun::TypeInfo* " << fn << "::_static_getTypeInfo()\n";
   e.out << "{\n";
-  e.out << "  static ::PIDL::TypeInfo* ti=0;\n";
+  e.out << "  static ::SCIRun::TypeInfo* ti=0;\n";
   e.out << "  if(!ti){\n";
-  e.out << "    ::PIDL::TypeInfo_internal* tii=\n";
+  e.out << "    ::SCIRun::TypeInfo_internal* tii=\n";
  
 
-  e.out << "       new ::PIDL::TypeInfo_internal(\"" 
+  e.out << "       new ::SCIRun::TypeInfo_internal(\"" 
 	<< cppfullname(0) << "\", \"" << uuid_str << "\",\n";
 
   e.out << "                                      NULL,\n";
@@ -407,11 +408,11 @@ void CI::emit_typeinfo(EmitState& e)
       iter != parent_ifaces.end(); iter++){
     e.out << "    tii->add_parentiface(" << (*iter)->cppfullname(localScope) << "::_static_getTypeInfo(), " << (*iter)->vtable_base << ");\n";
   }
-  e.out << "    ti=new ::PIDL::TypeInfo(tii);\n";
+  e.out << "    ti=new ::SCIRun::TypeInfo(tii);\n";
   e.out << "  }\n";
   e.out << "  return ti;\n";
   e.out << "}\n\n";
-  e.out << "const ::PIDL::TypeInfo* " << fn << "::_virtual_getTypeInfo() const\n";
+  e.out << "const ::SCIRun::TypeInfo* " << fn << "::_virtual_getTypeInfo() const\n";
   e.out << "{\n";
   e.out << "  return _static_getTypeInfo();\n";
   e.out << "}\n\n";
@@ -425,7 +426,7 @@ void CI::emit_handlers(EmitState& e)
   e.out << "// methods from " << name << " " << curfile << ":" << lineno << "\n\n";
   e.out << "// isa handler\n";
   isaHandler=++e.handlerNum;
-  e.out << "static void _handler" << isaHandler << "(Message* message)\n";
+  e.out << "static void _handler" << isaHandler << "(::SCIRun::Message* message)\n";
   e.out << "{\n";
   e.out << "  int classname_size;\n";
   e.out << "  message->unmarshalInt(&classname_size);\n";
@@ -440,18 +441,18 @@ void CI::emit_handlers(EmitState& e)
   e.out << "  int _addRef;\n";
   e.out << "  message->unmarshalInt(&_addRef);\n";
   e.out << "  message->unmarshalReply();\n";
-  e.out << "  const ::PIDL::TypeInfo* ti=" << cppfullname(0) << "::_static_getTypeInfo();\n";
+  e.out << "  const ::SCIRun::TypeInfo* ti=" << cppfullname(0) << "::_static_getTypeInfo();\n";
   e.out << "  int result=ti->isa(classname, uuid);\n";
   e.out << "  delete[] classname;\n";
   e.out << "  delete[] uuid;\n";
   e.out << "  int flag;\n";
-  e.out << "  if(result == ::PIDL::TypeInfo::vtable_invalid) {\n";
+  e.out << "  if(result == ::SCIRun::TypeInfo::vtable_invalid) {\n";
   e.out << "    flag=0;\n";
   e.out << "  } else {\n";
   e.out << "    flag=1;\n";
   e.out << "    if(_addRef){\n";
   e.out << "      void* _v=message->getLocalObj();\n";
-  e.out << "      ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
+  e.out << "      ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
   e.out << "      _sc->d_objptr->addReference();\n";
   e.out << "    }\n";
   e.out << "  }\n";
@@ -466,10 +467,10 @@ void CI::emit_handlers(EmitState& e)
   e.out << "// methods from " << name << " " << curfile << ":" << lineno << "\n\n";
   e.out << "// delete reference handler\n";
   deleteReferenceHandler=++e.handlerNum;
-  e.out << "static void _handler" << deleteReferenceHandler << "(Message* message)\n";
+  e.out << "static void _handler" << deleteReferenceHandler << "(::SCIRun::Message* message)\n";
   e.out << "{\n";
   e.out << "  void* _v=message->getLocalObj();\n";
-  e.out << "  ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
+  e.out << "  ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
   e.out << "  _sc->d_objptr->deleteReference();\n";
   e.out << "  message->destroyMessage();\n";
   e.out << "}\n\n";
@@ -574,7 +575,7 @@ void CI::emit_handler_table(EmitState& e)
   e.out << "// handler table for " << (iam_class()?"class ":"interface ") << name << "\n";
   e.out << "//" << curfile << ":" << lineno << "\n\n";
   e.out << "void "<< cppfullname(0) << "::" << cppclassname()
-        << "::registerhandlers(EpChannel* epc)\n";
+        << "::registerhandlers(SCIRun::EpChannel* epc)\n";
   e.out << "{\n";
 
   EmitState* tempe = new EmitState();
@@ -665,7 +666,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 {
   // Server-side handlers
   emit_comment(e, "", true);
-  e.out << "static void _handler" << e.handlerNum << "(Message* message)\n";
+  e.out << "static void _handler" << e.handlerNum << "(::SCIRun::Message* message)\n";
   e.out << "{\n";
 
 //e.out << "\ncout << \"" << e.handlerNum << e.handlerNum << e.handlerNum << e.handlerNum << e.handlerNum << "\";\n"; 
@@ -688,7 +689,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
   e.out << "  void* _v=message->getLocalObj();\n";
   string myclass = emit_class->cppfullname(0);
-  e.out << "  ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
+  e.out << "  ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
   e.out << "  " << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
 
@@ -802,9 +803,9 @@ void CI::emit_proxyclass(EmitState& e)
   // Proxy
   std::string pname=name+"_proxy";
 
-  e.proxy << leader2 << "class " << pname << " : public ::PIDL::ProxyBase, public " << name << " {\n";
+  e.proxy << leader2 << "class " << pname << " : public ::SCIRun::ProxyBase, public " << name << " {\n";
   e.proxy << leader2 << "public:\n";
-  e.proxy << leader2 << "  " << pname << "(const ::PIDL::Reference&);\n";
+  e.proxy << leader2 << "  " << pname << "(const ::SCIRun::Reference&);\n";
   std::string oldleader=e.proxy.push_leader();
   std::vector<Method*> vtab;
   gatherVtable(vtab, false);
@@ -819,9 +820,9 @@ void CI::emit_proxyclass(EmitState& e)
   e.proxy << leader2 << "protected:\n";
   e.proxy << leader2 << "  virtual ~" << pname << "();\n";
   e.proxy << leader2 << "private:\n";
-  e.proxy << leader2 << "  virtual void _getReference(::PIDL::Reference&, bool copy) const;\n";
-  e.proxy << leader2 << "  friend const ::PIDL::TypeInfo* " << name << "::_static_getTypeInfo();\n";
-  e.proxy << leader2 << "  static ::PIDL::Object* create_proxy(const ::PIDL::Reference&);\n";
+  e.proxy << leader2 << "  virtual void _getReference(::SCIRun::Reference&, bool copy) const;\n";
+  e.proxy << leader2 << "  friend const ::SCIRun::TypeInfo* " << name << "::_static_getTypeInfo();\n";
+  e.proxy << leader2 << "  static ::SCIRun::Object* create_proxy(const ::SCIRun::Reference&);\n";
   e.proxy << leader2 << "  " << pname << "(const " << pname << "&);\n";
   e.proxy << leader2 << "  " << pname << "& operator=(const " << pname << "&);\n";
   e.proxy << leader2 << "};\n\n";
@@ -853,7 +854,7 @@ void CI::emit_header(EmitState& e)
     e.decl << "virtual public " << (*iter)->cppfullname(e.decl.currentPackage);
   }
   if(!haveone)
-    e.decl << "virtual public ::PIDL::Object";
+    e.decl << "virtual public ::SCIRun::Object";
   e.decl << " {\n";
   e.decl << leader2 << "public:\n";
   
@@ -871,12 +872,12 @@ void CI::emit_header(EmitState& e)
   }
   e.decl.pop_leader(oldleader);
   // The type signature method...
-  e.decl << leader2 << "  virtual const ::PIDL::TypeInfo* _virtual_getTypeInfo() const;\n";
-  e.decl << leader2 << "  static const ::PIDL::TypeInfo* _static_getTypeInfo();\n";
+  e.decl << leader2 << "  virtual const ::SCIRun::TypeInfo* _virtual_getTypeInfo() const;\n";
+  e.decl << leader2 << "  static const ::SCIRun::TypeInfo* _static_getTypeInfo();\n";
   e.decl << leader2 << "protected:\n";
   e.decl << leader2 << "  " << name << "(bool initServer=true);\n";
   e.decl << leader2 << "private:\n";
-  e.decl << leader2 << "   void registerhandlers(EpChannel* epc);\n";
+  e.decl << leader2 << "  void registerhandlers(SCIRun::EpChannel* epc);\n";
   e.decl << leader2 << "  " << name << "(const " << name << "&);\n";
   e.decl << leader2 << "  " << name << "& operator=(const " << name << "&);\n";
   e.decl << leader2 << "};\n\n";
@@ -925,7 +926,7 @@ void CI::emit_interface(EmitState& e)
   }
   e.out << "\n{\n";
   e.out << "  if(initServer) {\n";
-  e.out << "    EpChannel* epc = ::PIDL::PIDL::getEpChannel();\n";
+  e.out << "    SCIRun::EpChannel* epc = ::SCIRun::PIDL::getEpChannel();\n";
   e.out << "    registerhandlers(epc);\n";
   e.out << "    initializeServer(" << cppfullname(0) << "::_static_getTypeInfo(), this, epc);\n";
   e.out << "  }\n";
@@ -942,10 +943,10 @@ void CI::emit_proxy(EmitState& e)
   if(fn[0] == ':' && fn[1] == ':')
     fn=fn.substr(2);
   std::string cn=cppclassname()+"_proxy";
-  e.out << fn << "::" << cn << "(const ::PIDL::Reference& _ref) :\n";
+  e.out << fn << "::" << cn << "(const ::SCIRun::Reference& _ref) :\n";
   SymbolTable* localScope=symbols->getParent();
   
-  e.out << "::PIDL::ProxyBase(_ref),";
+  e.out << "::SCIRun::ProxyBase(_ref),";
 
   e.out << cppfullname(localScope) << "(false)";
   vector<Interface*> parents;
@@ -960,11 +961,11 @@ void CI::emit_proxy(EmitState& e)
   e.out << fn << "::~" << cn << "()\n";
   e.out << "{\n";
   e.out << "}\n\n";
-  e.out << "void " << fn << "::_getReference(::PIDL::Reference& ref, bool copy) const\n";
+  e.out << "void " << fn << "::_getReference(::SCIRun::Reference& ref, bool copy) const\n";
   e.out << "{\n";
   e.out << "  _proxyGetReference(ref,copy);\n";
   e.out << "}\n\n";
-  e.out << "::PIDL::Object* " << fn << "::create_proxy(const ::PIDL::Reference& ref)\n";
+  e.out << "::SCIRun::Object* " << fn << "::create_proxy(const ::SCIRun::Reference& ref)\n";
   e.out << "{\n";
   e.out << "  return new " << cn << "(ref);\n";
   e.out << "}\n\n";
@@ -984,9 +985,9 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 {
   emit_prototype_defin(e, fn+"::", localScope);
   e.out << "\n{\n";
-  e.out << "  PIDL::Reference _ref;\n";
+  e.out << "  ::SCIRun::Reference _ref;\n";
   e.out << "  _proxyGetReference(_ref,false);\n";
-  e.out << "  Message* message = _ref.chan->getMessage();\n";
+  e.out << "  ::SCIRun::Message* message = _ref.chan->getMessage();\n";
   e.out << "  message->createMessage();\n";
 
   std::vector<Argument*>& list=args->getList();
@@ -1558,13 +1559,13 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
-    e.out << leader2 << "  ::PIDL::Reference _ref;\n";
+    e.out << leader2 << "  ::SCIRun::Reference _ref;\n";
     e.out << leader2 << "  _ref.d_vtable_base=" << arg << "_vtable_base;\n";
     e.out << leader2 << "  message->unmarshalSpChannel(_ref.chan);\n";
-    e.out << leader2 << "  Message* spmsg = (_ref.chan)->getMessage();\n";
+    e.out << leader2 << "  ::SCIRun::Message* spmsg = (_ref.chan)->getMessage();\n";
     e.out << leader2 << "  void* _ptr;\n";
     e.out << leader2 << "  if ((_ptr=spmsg->getLocalObj()) != NULL) {\n";
-    e.out << leader2 << "    ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_ptr);\n";
+    e.out << leader2 << "    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_ptr);\n";
     e.out << leader2 << "    " << arg << "=dynamic_cast<" << name->cppfullname(0) << "*>(_sc->d_objptr);\n";
     e.out << leader2 << "  } else {\n";
     e.out << leader2 << "    " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
@@ -1586,7 +1587,7 @@ void NamedType::emit_marshalsize(EmitState& e, const string& arg,
       cerr << "NamedType::emit_marshalsize called with qty != 1: " << qty << '\n';
       exit(1);
     }
-    e.out << leader2 << "::PIDL::Reference " << arg << "_ref;\n";
+    e.out << leader2 << "::SCIRun::Reference " << arg << "_ref;\n";
     e.out << leader2 << "if(!" << arg << ".isNull()){\n";
     e.out << leader2 << "  " << arg << "->addReference();\n";
     e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
@@ -1624,10 +1625,10 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     }
     e.out << leader2 << "if(!" << arg << ".isNull()){\n";
     e.out << leader2 << "  " << arg << "->addReference();\n";
-    e.out << leader2 << "  const ::PIDL::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
-    e.out << leader2 << "  const ::PIDL::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
+    e.out << leader2 << "  const ::SCIRun::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
+    e.out << leader2 << "  const ::SCIRun::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
     e.out << leader2 << "  int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    e.out << leader2 << "  ::PIDL::Reference " << arg << "_ref;\n";
+    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref;\n";
     e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
     e.out << leader2 << "  int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
     e.out << leader2 << "  message->marshalInt(&_vtable_base);\n";
