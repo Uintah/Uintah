@@ -589,6 +589,7 @@ void DataArchiver::createIndexXML(Dir& dir)
    time_t t = time(NULL) ;
    appendElement(metaElem, "date", ctime(&t));
    appendElement(metaElem, "endianness", endianness().c_str() );
+   appendElement(metaElem, "nBits", (int)sizeof(unsigned long) * 8 );
    
    string iname = dir.getName()+"/index.xml";
    ofstream out(iname.c_str());
