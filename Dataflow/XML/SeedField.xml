@@ -24,11 +24,24 @@
 <component name="SeedField" category="Fields">
   <overview>
     <authors>
-      <author>Unknown</author>
+      <author>Chris Moulding</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>
+      <p>
+        SeedField samples an input field and outputs the samples as
+        a PointCloud field.
+      </p>
+    </summary>
     <description>
-      <p>Version Date: unknown</p><p>Version: 1.0</p>
+      <p>
+        SeedField samples an input field and outputs the samples as
+        a PointCloud field.  The samples can be generated randomly or
+        selected using a 3D widget.
+      </p>
+      <p>
+        The random sampling can be weighted by importance (determined by
+        the data value of the sample) or left unweighted.
+      </p>
     </description>
   </overview>
   <io>
@@ -49,6 +62,81 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <description>
+      <p>
+        The UI has two main tabs which determine how the samples will be
+        generated: Widget and Random.
+      </p>
+    </description>
+    <parameter>
+      <widget>radiobuttons</widget>
+      <datatype>enum</datatype>
+      <label>Distribution</label>
+      <description>
+        <p>
+          The selected radio button determines which probability distribution 
+          function is used to generate random samples.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>entry</widget>
+      <datatype>integer</datatype>
+      <label>Seed value for RNG</label>
+      <description>
+        <p>
+          The number indicated is used to seed the random number generator.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>entry</widget>
+      <datatype>integer</datatype>
+      <label>number of seeds</label>
+      <description>
+        <p>
+          SeedField will generate the number of samples indicated here.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>radiobuttons</widget>
+      <datatype>enum</datatype>
+      <label>Widget type</label>
+      <description>
+        <p>
+          The selected radio button determines the type of 3D widget used
+          to select samples from the field.  Currently only Rake is 
+          supported.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>entry</widget>
+      <datatype>integer</datatype>
+      <label>Maximum number of seeds</label>
+      <description>
+        <p>
+          The number of samples selected by the chosen widget is determined
+          by the collar slider(s) on the widget.  The minimum number of 
+          samples is usually zero.  The maximum number is set here.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>callback function</datatype>
+      <label>Execute</label>
+      <description>
+        <p>
+          This button forces the SeedField module (and possibly downstream
+          modules) to execute.
+        </p>
+      </description>
+    </parameter>
+    <img>../Modules/Fields/SeedFieldGUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>
