@@ -39,7 +39,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions
-LIBS := $(VDT_LIBRARY)
+LIBS := $(VDT_LIBRARY) $(LEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

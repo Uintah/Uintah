@@ -21,7 +21,7 @@
 default: all
 
 include @abs_conftop_dir@/configVars.mk
-SCIRUN_SRCTOP   := @abs_srcdir@
+SCIRUN_SRCTOP   := @abs_top_srcdir@
 SCIRUN_OBJTOP   := @abs_conftop_dir@
 LIBDIR	        := $(SCIRUN_OBJTOP)/lib/
 # get libraries in ./lib
@@ -74,6 +74,6 @@ all: $(OTF_LIBS)
 
 %.dylib : %.o 
 	rm -f $@
-	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIB_DIR) $(LIBS)
 
 

@@ -122,6 +122,7 @@ ifneq ($(TAU_MAKEFILE),)
   TAU_LIB_FLAG      := $(TAU_MPI_LIBS) $(TAU_SHLIBS)
 
   CFLAGS := $(CFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
+  CXXFLAGS := $(CXXFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
   TAU_LIBRARY := $(LDRUN_PREFIX)$(TAU_LIB_DIR) -L$(TAU_LIB_DIR) $(TAU_LIB_FLAG)
 else
   TAU_LIBRARY :=
@@ -139,18 +140,14 @@ MDSPLUS_INCLUDE := @INC_MDSPLUS_H@
 DEF_COLLAB_VIS  := @DEF_COLLAB_VIS@
 HAVE_COLLAB_VIS := @HAVE_COLLAB_VIS@
 
-X_LIBRARY := @XEXT_LIB_DIR_FLAG@ @XEXT_LIB_FLAG@ @X11_LIB_DIR_FLAG@ @X11_LIB_FLAG@
-XT_LIBRARY := @XT_LIB_DIR_FLAG@ @XT_LIB_FLAG@
-XI_LIBRARY := @XI_LIB_DIR_FLAG@ @XI_LIB_FLAG@
-XMU_LIBRARY := @XMU_LIB_DIR_FLAG@ @XMU_LIB_FLAG@
-XAW_LIBRARY := @XAW_LIB_DIR_FLAG@ @XAW_LIB_FLAG@
+X_LIBRARY := @X_LIB_DIR_FLAG@ @X_LIB_FLAG@ 
 
 THREAD_LIBRARY := @THREAD_LIB_FLAG@
 SEMAPHORE_LIB := @SEMAPHORE_LIB_FLAG@
 
 GL_INCLUDE := @INC_GL_H@
 
-GL_LIBRARY := @GLU_LIB_DIR_FLAG@ @GLU_LIB_FLAG@ @GL_LIB_DIR_FLAG@ @GL_LIB_FLAG@ $(X_LIBRARY)
+GL_LIBRARY := @GL_LIB_DIR_FLAG@ @GL_LIB_FLAG@ $(X_LIBRARY)
 
 PROGRAM_PSE   := @EXENAME@
 
@@ -186,7 +183,7 @@ GLUT_LIBRARY := @GLUT_LIB_DIR_FLAG@ @GLUT_LIB_FLAG@
 GLUI_LIBRARY := @GLUI_LIB_DIR_FLAG@ @GLUI_LIB_FLAG@ 
 OOGL_LIBRARY := @OOGL_LIB_DIR_FLAG@ @OOGL_LIB_FLAG@ 
 
-SOUND_LIBRARY := @AUDIO_LIB_DIR_FLAG@ @AUDIO_LIB_FLAG@ @AUDIOFILE_LIB_DIR_FLAG@ @AUDIOFILE_LIB_FLAG@
+SOUND_LIBRARY := @AUDIO_LIB_DIR_FLAG@ @AUDIO_LIB_FLAG@
 HAVE_AUDIO := @HAVE_AUDIO@
 
 XML_LIBRARY := @XERCES_C_LIB_DIR_FLAG@ @XERCES_C_LIB_FLAG@
@@ -216,9 +213,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
     BABEL_REPOSITORY:= Core/Babel/repository
   endif
 
-  GLOBUS_IO_LIBRARY := @GLOBUS_IO_LIB_DIR_FLAG@ @GLOBUS_IO_LIB_FLAG@
-  GLOBUS_COMMON_LIBRARY := @GLOBUS_COMMON_LIB_DIR_FLAG@ @GLOBUS_COMMON_LIB_FLAG@
-  GLOBUS_LIBRARY := @GLOBUS_LIB_DIR_FLAG@ @GLOBUS_LIB_FLAG@ @GLOBUS_EXTRA_LIB_FLAG@
+  GLOBUS_LIBRARY := @GLOBUS_LIB_DIR_FLAG@ @GLOBUS_LIB_FLAG@ 
   GLOBUS_INCLUDE := @INC_GLOBUS_H@
 
   HAVE_QT := @HAVE_QT@
@@ -231,7 +226,7 @@ endif
 
 
 VDT_INCLUDE := @INC_VDT_H@
-VDT_LIBRARY :=  @VDT_EXTRA_LIB_DIR_FLAG@ @VDT_EXTRA_LIB_FLAG@ @VDT_LIB_DIR_FLAG@ @VDT_LIB_FLAG@
+VDT_LIBRARY := @VDT_LIB_DIR_FLAG@ @VDT_LIB_FLAG@
 
 MAGICK_INCLUDE := @INC_MAGICK_H@
 MAGICK_LIBRARY := @MAGICK_EXTRA_LIB_DIR_FLAG@ @MAGICK_EXTRA_LIB_FLAG@ @MAGICK_LIB_DIR_FLAG@ @MAGICK_LIB_FLAG@
@@ -244,11 +239,11 @@ HYPRE_LIBRARY := @HYPRE_LIB_DIR_FLAG@ @HYPRE_LIB_FLAG@
 
 HAVE_PETSC    := @HAVE_PETSC@
 PETSC_INCLUDE := @INC_PETSC_H@
-PETSC_LIBRARY := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@ @PETSC_EXTRA_LIB_FLAG@
+PETSC_LIBRARY := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@ 
 
-PETSC_UNI_LIBRARY := @PETSC_UNI_LIB_DIR_FLAG@ @PETSC_UNI_LIB_FLAG@ @PETSC_UNI_EXTRA_LIB_FLAG@
+PETSC_UNI_LIBRARY := @PETSC_UNI_LIB_DIR_FLAG@ @PETSC_UNI_LIB_FLAG@ 
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_ITK_H@ @INC_BLT_H@ @INC_PLPLOT_H@ @INC_TCLMATRIX_H@ @INC_GLOBUS_H@ @INC_QT_MT_H@ @INC_XERCESC_H@ @INC_PETSC_H@ @INC_MPI_H@ @INC_PETSC_UNI_H@ @INC_GLUI_H@ @INC_GL_GLUT_H@ @INC_GL_H@ @INC_OOGL_H@ @INC_ZLIB_H@ @INC_HYPRE_H@ @INC_SIDL_H@ $(TAUINC) 
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_ITK_H@ @INC_BLT_H@ @INC_PLPLOT_H@ @INC_TCLMATRIX_H@ @INC_GLOBUS_H@ @INC_QT_MT_H@ @INC_XERCESC_H@ @INC_PETSC_H@ @INC_MPI_H@ @INC_PETSC_UNI_H@ @INC_GLUI_H@ @INC_GLUT_H@ @INC_GL_H@ @INC_OOGL_H@ @INC_Z_H@ @INC_HYPRE_H@ @INC_SIDL_H@ $(TAUINC) 
 FINCLUDES += -I$(SRCTOP) -I$(OBJTOP)
 
 
@@ -268,8 +263,9 @@ CXX             := @CXX@
 AS              := @AS@
 LD              := @LD@
 CFLAGS          := @CFLAGS@ $(CFLAGS) $(QT_DEFS)
+CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) $(QT_DEFS)
 SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
-LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CFLAGS)
+LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CXXFLAGS)
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
@@ -307,13 +303,13 @@ endif
 .cc.o: $<
 	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 else
 ifeq ($(CC_DEPEND_MODE),modify)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
 else
 ifeq ($(CC_DEPEND_MODE),move)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
@@ -327,11 +323,11 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         #
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
-	$(CXX) $(CFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
 else
 	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
 	exit 1
@@ -343,13 +339,13 @@ endif
 .cpp.o: $<
 	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 else
 ifeq ($(CC_DEPEND_MODE),modify)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
 else
 ifeq ($(CC_DEPEND_MODE),move)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
@@ -363,11 +359,11 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         #
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
-	$(CXX) $(CFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
 else
 	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
 	exit 1
@@ -403,7 +399,7 @@ ifeq ($(F77_DEPEND_MODE),stdout)
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
-	$(F77) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
 else
 	$(ECHO) Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE)
 	exit 1
@@ -439,7 +435,7 @@ ifeq ($(F77_DEPEND_MODE),stdout)
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
-	$(F77) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
 else
 	$(ECHO) Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE)
 	exit 1
