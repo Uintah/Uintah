@@ -131,7 +131,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # uda2nrrd
 
-ifeq ($(findstring Teem, $(LOAD_PACKAGE)),Teem)
+ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
 ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
