@@ -104,7 +104,6 @@ ChangeFieldDataAt::execute()
   if (!iport->get(fh) || !fh.get_rep())
   {
     gui->execute(string("set ")+id+"-inputdataat \"---\"");
-    gui->execute(id+" update_multifields");
     return;
   }
 
