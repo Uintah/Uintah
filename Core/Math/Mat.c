@@ -30,6 +30,7 @@
  */
 
 #include <Core/Math/Mat.h>
+#include <stdio.h>
 
 #define Abs(x) ((x)<0?-(x):(x))
 #define Max(x,y) ((x)<(y)?(y):(x))
@@ -72,11 +73,13 @@ void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int
   for (i=0; i<size; i++)
     for (j=0; j<3; j++)
       Ab[j] += (A[j][i]-offset[j])*(b[i]-b_offset);
+
   matsolve3by3(AtA, Ab);
+
   for (i=0; i<3; i++) x[i]=Ab[i];
 
   for (i=0; i<size; i++) {
-    bprime=0;
+    bprime[i]=0;
     for (j=0; j<3; j++)
       bprime[i] += x[j]*(A[j][i]-offset[j]);
   }
