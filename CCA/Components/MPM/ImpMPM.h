@@ -67,17 +67,15 @@ public:
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			    SimulationStateP&);
 	 
-  virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&);
+  virtual void scheduleInitialize(           const LevelP& level, SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
-					     SchedulerP&);
+  virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
-  virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&,
+  virtual void scheduleTimeAdvance(          const LevelP& level, SchedulerP&,
 				    int step, int nsteps );
 
   void setSharedState(SimulationStateP& ssp);
@@ -112,150 +110,139 @@ private:
     };
 
 
-  void actuallyInitialize(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
+  void actuallyInitialize(             const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
-  void printParticleCount(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
-
-  void interpolateParticlesForSaving(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
-
-
-
- 
-  //////////
-  // Insert Documentation Here:
-  void actuallyComputeStableTimestep(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
-
+  void printParticleCount(             const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
-  void interpolateParticlesToGrid(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw);
+  void actuallyComputeStableTimestep(  const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
-  void applyBoundaryConditions(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
-
-  void createMatrix(const ProcessorGroup*,
-		    const PatchSubset* patches,
-		    const MaterialSubset* matls,
-		    DataWarehouse* old_dw,
-		    DataWarehouse* new_dw,
-		    const bool recursion);
-
-  void destroyMatrix(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw,
-		     DataWarehouse* new_dw,
-		     const bool recursion);
   //////////
   // Insert Documentation Here:
+  void interpolateParticlesToGrid(     const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+  void applyBoundaryConditions(        const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+  void createMatrix(                   const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
+
+  void destroyMatrix(                  const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
 
   // This is for the computation with the 24 x 24 matrix
-  void computeStressTensor(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw,
-			   const bool recursion);
+  void computeStressTensor(            const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
 
   // No matrix calculations are performed.
-  void computeStressTensor(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
+  void computeStressTensor(            const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
-  void formStiffnessMatrix(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset* matls,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw,
-				const bool recursion);
-
-
-
-  //////////
-  // Insert Documentation Here:
-  void computeInternalForce(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw,
-			    bool recursion);
+  void formStiffnessMatrix(            const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
 
 
-  void iterate(const ProcessorGroup* pg,
-	       const PatchSubset* patches,
-	       const MaterialSubset* matls,
-	       DataWarehouse* old_dw, DataWarehouse* new_dw,
-	       LevelP level, Scheduler* sched);
-
-  void formQ(const ProcessorGroup*, const PatchSubset* patches,
-		  const MaterialSubset* matls, DataWarehouse* old_dw,
-		  DataWarehouse* new_dw,const bool recursion);
-
-  void applyRigidBodyCondition(const ProcessorGroup*, 
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls, 
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
-
-  void removeFixedDOF(const ProcessorGroup*, 
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls, 
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw, const bool recursion);
-
-
-  void solveForDuCG(const ProcessorGroup*, const PatchSubset* patches,
-			 const MaterialSubset* matls, DataWarehouse* old_dw,
-			 DataWarehouse* new_dw);
-
-
-  void updateGridKinematics(const ProcessorGroup*, const PatchSubset* patches,
-			    const MaterialSubset* matls, DataWarehouse* old_dw,
-			    DataWarehouse* new_dw, const bool recursion);
 
   //////////
   // Insert Documentation Here:
-  void checkConvergence(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* old_dw,
-			DataWarehouse* new_dw,
-			const bool recursion);
+  void computeInternalForce(           const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       bool recursion);
+
+  void iterate(                        const ProcessorGroup* pg,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       LevelP level, Scheduler* sched);
+
+  void formQ(                          const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
+
+  void removeFixedDOF(                 const ProcessorGroup*, 
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls, 
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
+
+
+  void solveForDuCG(                   const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+
+  void updateGridKinematics(           const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
+
+  //////////
+  // Insert Documentation Here:
+  void checkConvergence(               const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
 			
-
-
   //////////
   // Insert Documentation Here:
-  void computeAcceleration(const ProcessorGroup*,
-			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw);
+  void computeAcceleration(            const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -265,78 +252,60 @@ private:
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
 
-  void interpolateStressToGrid(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
+  void scheduleCreateMatrix(        SchedulerP&, const PatchSet*,
+                                    const MaterialSet*, const bool recursion);
 
+  void scheduleDestroyMatrix(       SchedulerP&, const PatchSet*,
+                                    const MaterialSet*, const bool recursion);
 
-  void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
-					  const MaterialSet*);
+  void scheduleComputeStressTensor( SchedulerP&, const PatchSet*,
+                                    const MaterialSet*, const bool recursion);
 
-
-  void scheduleApplyBoundaryConditions(SchedulerP&, const PatchSet*,
-				       const MaterialSet*);
-
-  void scheduleCreateMatrix(SchedulerP&, const PatchSet*,const MaterialSet*,
-			    const bool recursion);
-
-  void scheduleDestroyMatrix(SchedulerP&, const PatchSet*,const MaterialSet*,
-			     const bool recursion);
-
-  void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
-				   const MaterialSet*,
-				   const bool recursion);
-
-  void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
-
-
-  void scheduleFormStiffnessMatrix(SchedulerP&, const PatchSet*,
-				   const MaterialSet*,const bool recursion);
+  void scheduleFormStiffnessMatrix( SchedulerP&, const PatchSet*,
+                                    const MaterialSet*,const bool recursion);
 
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-				    const MaterialSet*,
-				    const bool recursion);
+				    const MaterialSet*, const bool recursion);
 
-  void scheduleIterate(SchedulerP&, const LevelP&,const PatchSet*, 
-		       const MaterialSet*);
+  void scheduleFormQ(               SchedulerP&, const PatchSet*,
+                                    const MaterialSet*, const bool recursion);
 
-  
-  void scheduleFormQ(SchedulerP&, const PatchSet*, const MaterialSet*,
-		     const bool recursion);
-
-  void scheduleApplyRigidBodyConditionI(SchedulerP&, const PatchSet*, 
-					 const MaterialSet*);
-
-  void scheduleApplyRigidBodyConditionR(SchedulerP&, const PatchSet*, 
-					 const MaterialSet*);
-
-  void scheduleRemoveFixedDOF(SchedulerP&, const PatchSet*, 
-			      const MaterialSet*,const bool recursion);
-
-  void scheduleSolveForDuCG(SchedulerP&,const PatchSet*,const MaterialSet*);
+  void scheduleRemoveFixedDOF(      SchedulerP&, const PatchSet*, 
+                                    const MaterialSet*,const bool recursion);
 
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
-				    const MaterialSet*,
-				    const bool recursion);
+				    const MaterialSet*, const bool recursion);
 
-  void scheduleCheckConvergence(SchedulerP&, const LevelP&, const PatchSet*,
-				const MaterialSet*, const bool recursion);
+  void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleComputeAcceleration(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+  void scheduleApplyBoundaryConditions(        SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-                                                 
+  void scheduleComputeStressTensor(            SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleSolveForDuCG(                   SchedulerP&,const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleComputeAcceleration(            SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
 
-  void scheduleInterpolateStressToGrid(SchedulerP&, const PatchSet*,
-			       const MaterialSet*);
+  void scheduleInterpolateStressToGrid(        SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleInterpolateParticlesForSaving(SchedulerP&, const PatchSet*,
-					     const MaterialSet*);
+  void scheduleInterpolateParticlesForSaving(  SchedulerP&, const PatchSet*,
+					       const MaterialSet*);
+
+  void scheduleIterate(             SchedulerP&, const LevelP&,const PatchSet*, 
+                                    const MaterialSet*);
+  
+  void scheduleCheckConvergence(    SchedulerP&, const LevelP&, const PatchSet*,
+                                    const MaterialSet*, const bool recursion);
+
 
   ImpMPM(const ImpMPM&);
   ImpMPM& operator=(const ImpMPM&);
@@ -355,6 +324,7 @@ private:
   Solver* d_solver;
   
   bool dynamic;
+  bool d_rigid_body;
   
   IntegratorType d_integrator;
 
