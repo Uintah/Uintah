@@ -1678,7 +1678,7 @@ for i in $mdsplus $thirdparty $SCI_LAB_TP_DEFAULT; do
 
   if test "$LIBMDSPLUS" && test "$INCMDSPLUS_H"; then
 
-    MDSPLUS_DEF_FLAG="-DMDSPLUS"
+    MDSPLUS_DEF_FLAG="#define MDSPLUS"
 
     break
   fi
