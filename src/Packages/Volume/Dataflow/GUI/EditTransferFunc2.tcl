@@ -45,6 +45,13 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 
 	global $this-num-entries
 	set $this-num-entries 2
+	#trace variable $this-num-entries w "$this unpickle"
+    }
+
+    method unpickle {a b c} {
+	global $this-num-entries
+	$this-c unpickle
+	trace vdelete $this-num-entries w "$this unpickle"
     }
 
     method raise_color {col color colMsg} {
@@ -126,6 +133,9 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
     }
 
     method ui {} {
+	global $this-num-entries
+	trace vdelete $this-num-entries w "$this unpickle"
+
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    create_gl
