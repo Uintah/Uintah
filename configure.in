@@ -84,6 +84,15 @@ else
 fi
 
 
+# Check whether --enable-output-avg-walltime or --disable-output-avg-walltime was given.
+AC_ARG_ENABLE(output-avg-walltime,
+	[  --enable-output-avg-walltime	Output ellapsed wall-times between timesteps],
+	[output_avg_walltime="$enableval"],
+	[output_avg_walltime=${output_avg_walltime='no'}])
+if ! test "$output_avg_walltime" = "no"; then
+  extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
+fi
+
 ##-- check for user supplied tcl paths --------------------------------------
 
 AC_ARG_WITH(thirdparty,
@@ -269,15 +278,6 @@ AC_ARG_WITH(tau,
 	  [  --with-tau=<tau-makefile>  Specify Tau Makefile],
 	  [tau="$withval"],
 	  [tau=""])
-
-if ! test "$output_avg_walltime" = "no"; then
-  extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
-fi
-
-AC_ARG_ENABLE(output-avg-walltime,
-	[  --enable-output-avg-walltime	Output ellapsed wall-times between timesteps],
-	[output_avg_walltime="$enableval"],
-	[output_avg_walltime=${output_avg_walltime='no'}])
 
 AC_ARG_ENABLE(largesos,
 	[  --enable-largesos		Build one .so per directory],
