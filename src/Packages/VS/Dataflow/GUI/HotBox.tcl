@@ -75,7 +75,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-enableDraw
     global $this-currentselection
     global $this-currentTime
-    # values: "fromHotBoxUI" or "fromProbe"
+    # values: "fromHotBoxUI", "UIsetProbeLoc" or "fromProbe"
     global $this-selectionsource
     global $this-datafile
     # In: HotBox.cc: #define VS_DATASOURCE_OQAFMA 1
@@ -181,7 +181,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-enableDraw "no"
     set $this-currentselection ""
     set $this-currentTime "1"
-    set $this-selectionsource "fromHotBoxUI"
+    set $this-selectionsource "UIsetProbeLoc"
     set $this-datafile ""
     set $this-datasource "2"
     set $this-anatomydatasource ""
@@ -337,6 +337,13 @@ itcl_class VS_DataFlow_HotBox {
     $this-c needexecute
   }
   # end method set_selection
+
+  method setProbeLoc {} {
+    set $this-selectionsource "UIsetProbeLoc"
+    # trigger the HotBox execution to move the probe
+    $this-c needexecute
+  }
+  # end method setProbeLoc
 
   method set_hier_selection { selection_id } {
     set w .ui[modname]
@@ -542,9 +549,9 @@ itcl_class VS_DataFlow_HotBox {
     entry $w.probeUI.loc.locx -width 10 -textvariable $this-gui_probeLocx
     entry $w.probeUI.loc.locy -width 10 -textvariable $this-gui_probeLocy
     entry $w.probeUI.loc.locz -width 10 -textvariable $this-gui_probeLocz
-    bind $w.probeUI.loc.locx <KeyPress-Return> "$this-c needexecute"
-    bind $w.probeUI.loc.locy <KeyPress-Return> "$this-c needexecute"
-    bind $w.probeUI.loc.locz <KeyPress-Return> "$this-c needexecute"
+    bind $w.probeUI.loc.locx <KeyPress-Return> "$this setProbeLoc"
+    bind $w.probeUI.loc.locy <KeyPress-Return> "$this setProbeLoc"
+    bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
     pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
                 -side left -anchor n -expand yes -fill x
 
