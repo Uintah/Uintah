@@ -49,7 +49,7 @@ bool PortInstance::available()
 
 PortInstance* PortInstance::getPeer()
 {
-  cerr<<"default available() is called!";
+  cerr<<"default getPeer() is called!";
   return 0;
 }
 
