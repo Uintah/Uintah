@@ -92,34 +92,6 @@
     </MaterialProperties>
 	
     <Grid>
-        <BoundaryConditions>
-                 <Face side = "x-">
-                        <BCType label = "Kinematic" var = "velocity">
-                           <velocity> [0.0,0.0,0.0] </velocity>
-                        </BCType>
-                </Face>
-                <Face side = "x+">
-                        <BCType label = "Kinematic" var = "velocity">
-                             <velocity> [0.0,0.0,0.0] </velocity>
-                        </BCType>
-                </Face>
-                <Face side = "y-">
-                        <BCType label = "Kinematic" var = "velocity">
-                           <velocity> [0.0,0.0,0.0] </velocity>
-                        </BCType>
-                </Face>
-                <Face side = "y+">
-                        <BCType label = "Kinematic" var = "velocity">
-                            <velocity> [0.0,0.0,0.0] </velocity>
-                        </BCType>
-                </Face>
-                <Face side = "z-">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                </Face>
-                <Face side = "z+">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                </Face>
-        </BoundaryConditions>
 	<Level>
 	    <Box label="1">
 		<lower>[0,0,0]</lower>
