@@ -141,14 +141,14 @@ Gradient::execute()
     {
       dispatch_tetvol((TetVol<short> *)field);
     }
-    else if (data_name == "char")
+    else if (data_name == "unsigned char")
     {
-      dispatch_tetvol((TetVol<char> *)field);
+      dispatch_tetvol((TetVol<unsigned char> *)field);
     }
     else
     {
       // Don't know what to do with this field type.
-      // Signal some sort of error.
+      error("Unsupported data type '" + data_name + "' in field.");
     }
   }
   else if (geom_name == "LatticeVol")
@@ -165,24 +165,24 @@ Gradient::execute()
     {
       dispatch_latticevol((LatticeVol<short> *)field);
     }
-    else if (data_name == "char")
+    else if (data_name == "unsigned char")
     {
-      dispatch_latticevol((LatticeVol<char> *)field);
+      dispatch_latticevol((LatticeVol<unsigned char> *)field);
     }
     else
     {
       // Don't know what to do with this field type.
-      // Signal some sort of error.
+      error("Unsupported data type '" + data_name + "' in field.");
     }
   }
   else
   {
     // Don't know what to do with this field type.
-    // Signal some sort of error.
+    error("Unsupported geometry type '" + geom_name + "' in field.");
     return;
   }
-
 }
+
 
 } // End namespace SCIRun
 
