@@ -1,4 +1,4 @@
-/*Based upon the version 1.140 of SerialMPM downloaded on 3/19/2003*/
+/* Synced with version 1.141 of SerialMPM (4/2/2003)*/
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -182,6 +182,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
 
   t->computes(lb->partCountLabel);
   t->computes(lb->pXLabel);
+  t->computes(lb->pDispLabel);
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
   t->computes(lb->pTemperatureLabel);
@@ -317,7 +318,9 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  schedulePrepareMovingCrack(             sched, patches, matls);
   scheduleMoveCrack(                      sched, patches, matls);
+  scheduleUpdateCrackExtentAndNormals(    sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
 				    lb->d_particleState_preReloc,
@@ -929,6 +932,18 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+// set if crack points moved to No
+void FractureMPM::schedulePrepareMovingCrack(SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls)
+{
+  Task* t = scinew Task("Crack::PrepareMovingCrack", crackMethod,
+                        &Crack::PrepareMovingCrack);
+
+  crackMethod->addComputesAndRequiresPrepareMovingCrack(t, patches, matls);
+  sched->addTask(t, patches, matls);
+}
+
 // move crack with center-of-mass velocity
 void FractureMPM::scheduleMoveCrack(SchedulerP& sched,
                                     const PatchSet* patches,
@@ -939,6 +954,19 @@ void FractureMPM::scheduleMoveCrack(SchedulerP& sched,
                         &Crack::MoveCrack);
 
   crackMethod->addComputesAndRequiresMoveCrack(t, patches, matls);
+  sched->addTask(t, patches, matls);
+}
+
+// Check if crack points moved and moved only once
+void FractureMPM::scheduleUpdateCrackExtentAndNormals(SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls)
+{
+  Task* t = scinew Task("Crack::UpdateCrackExtentAndNormals", crackMethod,
+                        &Crack::UpdateCrackExtentAndNormals);
+
+  crackMethod->addComputesAndRequiresUpdateCrackExtentAndNormals(t, 
+                                                       patches, matls);
   sched->addTask(t, patches, matls);
 }
 
