@@ -48,14 +48,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#include <GL/glxew.h>
-#else
-#include <GL/gl.h>
+#include <sci_gl.h>
 #include <sci_glu.h>
-#include <GL/glx.h>
-#endif
+#include <sci_glx.h>
 
 #include <Dataflow/Modules/Render/BaWGL.h>
 
