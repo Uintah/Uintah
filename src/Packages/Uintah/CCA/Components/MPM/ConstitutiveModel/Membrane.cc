@@ -83,16 +83,10 @@ void Membrane::addParticleState(std::vector<const VarLabel*>& from,
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
-   from.push_back(lb->pTang1Label);
-   from.push_back(lb->pTang2Label);
-   from.push_back(lb->pNormLabel);
    from.push_back(defGradInPlaneLabel);
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
-   to.push_back(lb->pTang1Label_preReloc);
-   to.push_back(lb->pTang2Label_preReloc);
-   to.push_back(lb->pNormLabel_preReloc);
    to.push_back(defGradInPlaneLabel_preReloc);
 }
 
