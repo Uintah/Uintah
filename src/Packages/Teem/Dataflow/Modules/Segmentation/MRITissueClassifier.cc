@@ -1297,6 +1297,11 @@ float *MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatri
             prob[k+1]=exp(-0.5*dist)*(*Fat_prior)*Fat_const;
             sum+=prob[k+1];
 
+#if defined(__APPLE__) && !defined(isnan)
+// On the mac, the isnan define (from math.h) gets screwed up if
+// iostream is included... go figure... this is a hack to fix that.
+#  define isnan(x) __isnanf(x)
+#endif
             for (j=0;j<2;j++) if (isnan(prob[k+j]))
               {
               std::cout<<"NaN prob. in EM1DVolumetric "<<k<<"\n";
