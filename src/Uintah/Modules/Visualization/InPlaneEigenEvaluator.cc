@@ -132,7 +132,7 @@ void computeGridEigenDiff(TensorField* tensorField, ScalarField* eDataField,
 	  // imaginary numbers.  Either case, just use 0 as the diff.
 	  eDataField->grid(x, y, z) = 0;
 	else
-	  eDataField->grid(x, y, z) = e2 - e1; // e2 > e1
+	  eDataField->grid(x, y, z) = e1 - e2; // e1 > e2
       }
     }
   }
@@ -160,7 +160,7 @@ void computeGridSinEigenDiff(TensorField* tensorField, ScalarField* eDataField,
 	  // imaginary numbers.  Either case, just use 0 as the diff.
 	  eDataField->grid(x, y, z) = 0;
 	else
-	  eDataField->grid(x, y, z) = sin((e2 - e1) / delta); // e2 > e1
+	  eDataField->grid(x, y, z) = sin((e1 - e2) / delta); // e1 > e2
       }
     }
   }
