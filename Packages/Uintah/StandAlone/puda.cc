@@ -166,6 +166,9 @@ int main(int argc, char** argv)
   bool tsup_set = false;
   string filebase;
   string raydatadir;
+  // set defaults for cout
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(8);
   /*
    * Parse arguments
    */
@@ -558,14 +561,19 @@ int main(int argc, char** argv)
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
+                     IntVector c_min, c_max;
 			CellIterator iter = patch->getCellIterator();
 			min=max=value[*iter];
 			for(;!iter.done(); iter++){
 			  min=Min(min, value[*iter]);
+                       if (min == value[*iter] ) 
+                         c_min = *iter;
 			  max=Max(max, value[*iter]);
-			}
-			cout << "\t\t\t\tmin value: " << min << '\n';
-			cout << "\t\t\t\tmax value: " << max << '\n';
+                       if (max == value[*iter] ) 
+                         c_max = *iter;
+			}                     
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<'\n';
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<'\n';
 		      }
 		    }
 		  break;
@@ -596,14 +604,19 @@ int main(int argc, char** argv)
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
+                     IntVector c_min, c_max;
 			CellIterator iter = patch->getCellIterator();
 			min=max=value[*iter].length2();
 			for(;!iter.done(); iter++){
 			  min=Min(min, value[*iter].length2());
+                       if (min == value[*iter].length2() ) 
+                         c_min = *iter;
 			  max=Max(max, value[*iter].length2());
+                       if (max == value[*iter].length2() ) 
+                         c_max = *iter;
 			}
-			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
-			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
+			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << "\t\t"<< c_min <<'\n';
+			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << "\t\t"<< c_max <<'\n';
 		      }
 		    }
 		  break;
