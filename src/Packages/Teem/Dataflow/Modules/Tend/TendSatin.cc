@@ -38,14 +38,15 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
   GuiDouble    anisotropy_;
+  GuiDouble    min_;
   GuiDouble    max_;
   GuiDouble    boundary_;
   GuiDouble    thickness_;
   GuiInt       size_;
+  GuiInt       torus_;
 };
 
 DECLARE_MAKER(TendSatin)
@@ -53,10 +54,12 @@ DECLARE_MAKER(TendSatin)
 TendSatin::TendSatin(SCIRun::GuiContext *ctx) : 
   Module("TendSatin", ctx, Filter, "Tend", "Teem"), 
   anisotropy_(ctx->subVar("anisotropy")),
+  min_(ctx->subVar("min")),
   max_(ctx->subVar("max")),
   boundary_(ctx->subVar("boundary")),
   thickness_(ctx->subVar("thickness")),
-  size_(ctx->subVar("size"))
+  size_(ctx->subVar("size")),
+  torus_(ctx->subVar("torus"))
 {
 }
 
@@ -68,26 +71,12 @@ TendSatin::execute()
 {
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
   if (!onrrd_) {
     error("Unable to initialize oport 'Nrrd'.");
     return;
   }
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
-
-  Nrrd *nin = nrrd_handle->nrrd;
 
   error("This module is a stub.  Implement me.");
 

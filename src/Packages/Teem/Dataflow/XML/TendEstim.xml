@@ -32,13 +32,21 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>nin</name>
+        <name>Bmat</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>DWI</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>nout</name>
+        <name>Tensors</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Error</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
     </outputs>

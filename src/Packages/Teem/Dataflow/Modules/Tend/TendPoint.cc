@@ -38,8 +38,8 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
+  NrrdIPort*      indata_;
+  NrrdIPort*      inpoint_;
 
   GuiString    point_;
 };
@@ -58,28 +58,41 @@ TendPoint::~TendPoint() {
 void 
 TendPoint::execute()
 {
-  NrrdDataHandle nrrd_handle;
+  NrrdDataHandle data_handle;
+  NrrdDataHandle point_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+  indata_ = (NrrdIPort *)get_iport("Data");
+  inpoint_ = (NrrdIPort *)get_iport("Point");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+
+  if (!indata_) {
+    error("Unable to initialize iport 'Data'.");
     return;
   }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
+  if (!inpoint_) {
+    error("Unable to initialize iport 'Point'.");
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  if (!indata_->get(data_handle))
+    return;
+  if (!inpoint_->get(point_handle))
+    return;
+
+  if (!data_handle.get_rep()) {
+    error("Empty input Data Nrrd.");
+    return;
+  }
+  if (!point_handle.get_rep()) {
+    error("Empty input Point Nrrd.");
+    return;
+  }
+
+  //FIX_ME : do the following:
+  // the point input to be supported both 
+  // as an input Nrrd, as well as via the user typing a string in a 
+  // text-entry field on the UI.  If both are supplied then the input Nrrd 
+  // should be used (and the UI value should be ignored).
 
   error("This module is a stub.  Implement me.");
 

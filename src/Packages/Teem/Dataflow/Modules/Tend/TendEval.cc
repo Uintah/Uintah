@@ -41,7 +41,6 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiString    eigensave_;
   GuiDouble    threshold_;
 };
 
@@ -49,7 +48,6 @@ DECLARE_MAKER(TendEval)
 
 TendEval::TendEval(SCIRun::GuiContext *ctx) : 
   Module("TendEval", ctx, Filter, "Tend", "Teem"), 
-  eigensave_(ctx->subVar("eigensave")),
   threshold_(ctx->subVar("threshold"))
 {
 }

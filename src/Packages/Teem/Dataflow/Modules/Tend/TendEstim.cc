@@ -38,8 +38,10 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
+  NrrdIPort*      inbmat_;
+  NrrdIPort*      indwi_;
+  NrrdOPort*      otens_;
+  NrrdOPort*      oerr_;
 
   GuiDouble    threshold_;
   GuiDouble    soft_;
@@ -64,28 +66,53 @@ TendEstim::~TendEstim() {
 void 
 TendEstim::execute()
 {
-  NrrdDataHandle nrrd_handle;
+  NrrdDataHandle bmat_handle;
+  NrrdDataHandle dwi_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+  inbmat_ = (NrrdIPort *)get_iport("Bmat");
+  indwi_ = (NrrdIPort *)get_iport("DWI");
+  otens_ = (NrrdOPort *)get_oport("Tensors");
+  oerr_ = (NrrdOPort *)get_oport("Error");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+  if (!inbmat_) {
+    error("Unable to initialize iport 'Bmat'.");
     return;
   }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+  if (!indwi_) {
+    error("Unable to initialize iport 'DWI'.");
     return;
   }
-  if (!inrrd_->get(nrrd_handle))
+  if (!otens_) {
+    error("Unable to initialize oport 'Tensors'.");
+    return;
+  }
+  if (!oerr_) {
+    error("Unable to initialize oport 'Error'.");
+    return;
+  }
+  if (!inbmat_->get(bmat_handle))
+    return;
+  if (!indwi_->get(dwi_handle))
     return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
+  if (!bmat_handle.get_rep()) {
+    error("Empty input Bmat Nrrd.");
+    return;
+  }
+  if (!dwi_handle.get_rep()) {
+    error("Empty input DWI Nrrd.");
     return;
   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  //FIX_ME : do the following:
+  // the B-matrix input on "tend estim" to be supported both 
+  // as an input Nrrd, as well as via the user typing a string in a 
+  //  text-entry field on the UI.  If both are supplied then the input Nrrd 
+  //should be used (and the UI value should be ignored).
+
+
+
+  //  Nrrd *nin = nrrd_handle->nrrd;
 
   error("This module is a stub.  Implement me.");
 

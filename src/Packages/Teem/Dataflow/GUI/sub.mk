@@ -39,7 +39,6 @@ SRCS := \
 	$(SRCDIR)/TendEval.tcl\
 	$(SRCDIR)/TendEvec.tcl\
 	$(SRCDIR)/TendExpand.tcl\
-	$(SRCDIR)/TendMake.tcl\
 	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/TendShrink.tcl\

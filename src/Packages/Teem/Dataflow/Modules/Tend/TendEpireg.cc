@@ -41,7 +41,6 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiString    dwi_list_;
   GuiString    gradient_list_;
   GuiInt       reference_;
   GuiDouble    blur_x_;
@@ -57,7 +56,6 @@ DECLARE_MAKER(TendEpireg)
 
 TendEpireg::TendEpireg(SCIRun::GuiContext *ctx) : 
   Module("TendEpireg", ctx, Filter, "Tend", "Teem"), 
-  dwi_list_(ctx->subVar("dwi_list")),
   gradient_list_(ctx->subVar("gradient_list")),
   reference_(ctx->subVar("reference")),
   blur_x_(ctx->subVar("blur_x")),
