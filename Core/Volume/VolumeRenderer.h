@@ -64,6 +64,8 @@ public:
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
+
+  double num_slices_to_rate(int slices);
   
   virtual GeomObj* clone();
 
