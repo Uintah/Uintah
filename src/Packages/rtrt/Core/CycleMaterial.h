@@ -15,13 +15,6 @@ namespace SCIRun {
 
 namespace rtrt {
 
-/*
-  Note: There is no check to make sure that members contains 1 or more
-  materials.  This is a silly waste of time, because it should
-  dump core the first time it tries to access members[0].  Besides
-  it doesn't make sense to have less than 1 material anyway.
-  -- bigler
-*/
 class CycleMaterial : public Material {
 protected:
   int current;
