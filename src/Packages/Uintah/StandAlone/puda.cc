@@ -141,6 +141,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -gridstats\n";
   cerr << "  -listvariables\n";
   cerr << "  -varsummary\n";
+  cerr << "  -jim1\n";
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
   cerr << "  -tecplot <variable name>\n";
@@ -736,6 +737,7 @@ int main(int argc, char** argv)
   bool do_gridstats=false;
   bool do_listvars=false;
   bool do_varsummary=false;
+  bool do_jim1=false;
   bool do_partvar=false;
   bool do_asci=false;
   bool do_cell_stresses=false;
@@ -765,8 +767,10 @@ int main(int argc, char** argv)
   bool do_all_ccvars = false;
   unsigned long time_step_lower = 0;
   unsigned long time_step_upper = 1;
+  unsigned long time_step_inc = 1;
   bool tslow_set = false;
   bool tsup_set = false;
+  bool tsinc_set = false;
   int tskip = 1;
   string i_xd;
   string filebase;
@@ -806,6 +810,8 @@ int main(int argc, char** argv)
       do_listvars=true;
     } else if(s == "-varsummary"){
       do_varsummary=true;
+    } else if(s == "-jim1"){
+      do_jim1=true;
     } else if(s == "-partvar"){
       do_partvar=true;
       particleVariable = argv[++i]; 
@@ -894,6 +900,9 @@ int main(int argc, char** argv)
     } else if (s == "-timestephigh") {
       time_step_upper = strtoul(argv[++i],(char**)NULL,10);
       tsup_set = true;
+    } else if (s == "-timestepinc") {
+      time_step_inc = strtoul(argv[++i],(char**)NULL,10);
+      tsinc_set = true;
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     }
@@ -1950,6 +1959,86 @@ int main(int argc, char** argv)
 	    }
 	  }
 	}
+      }
+    }
+
+    //______________________________________________________________________
+    //              J I M 1   O P T I O N
+    // This currently pulls out particle position, velocity and ID
+    // and prints that on one line for each particle.  This is useful
+    // for postprocessing of particle data for particles which move
+    // across patches.
+    if(do_jim1){
+      vector<string> vars;
+      vector<const Uintah::TypeDescription*> types;
+      da->queryVariables(vars, types);
+      ASSERTEQ(vars.size(), types.size());
+      cout << "There are " << vars.size() << " variables:\n";
+      for(int i=0;i<(int)vars.size();i++)
+	cout << vars[i] << ": " << types[i]->getName() << endl;
+      
+      vector<int> index;
+      vector<double> times;
+      da->queryTimesteps(index, times);
+      ASSERTEQ(index.size(), times.size());
+      cout << "There are " << index.size() << " timesteps:\n";
+      for(int i=0;i<(int)index.size();i++)
+	cout << index[i] << ": " << times[i] << endl;
+      
+      if (!tslow_set)
+	time_step_lower =0;
+      else if (time_step_lower >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      if (!tsup_set)
+	time_step_upper = times.size()-1;
+      else if (time_step_upper >= times.size()) {
+	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      
+      for(unsigned long t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
+	double time = times[t];
+	cout << "time = " << time << endl;
+	GridP grid = da->queryGrid(time);
+          ostringstream fnum;
+          string filename;
+          fnum << setw(4) << setfill('0') << t/time_step_inc;
+          string partroot("partout");
+          filename = partroot+ fnum.str();
+          ofstream partfile(filename.c_str());
+
+	  for(int l=0;l<grid->numLevels();l++){
+	    LevelP level = grid->getLevel(l);
+	    cout << "Level: " <<  endl;
+	    for(Level::const_patchIterator iter = level->patchesBegin();
+		iter != level->patchesEnd(); iter++){
+	      const Patch* patch = *iter;
+		int matl = 0;
+		  //__________________________________
+		  //   P A R T I C L E   V A R I A B L E
+		  ParticleVariable<long64> value_pID;
+		  ParticleVariable<Point> value_pos;
+		  ParticleVariable<Vector> value_vel;
+                  da->query(value_pID, "p.particleID", matl, patch, time);
+                  da->query(value_pos, "p.x",          matl, patch, time);
+                  da->query(value_vel, "p.velocity",   matl, patch, time);
+                  ParticleSubset* pset = value_pos.getParticleSubset();
+                  if(pset->numParticles() > 0){
+                     ParticleSubset::iterator iter = pset->begin();
+                     for(;iter != pset->end(); iter++){
+                         partfile << value_pos[*iter].x() << " " <<
+                                     value_pos[*iter].y() << " " <<
+                                     value_pos[*iter].z() << " "; 
+                         partfile << value_vel[*iter].x() << " " <<
+                                     value_vel[*iter].y() << " " <<
+                                     value_vel[*iter].z() << " "; 
+			 partfile << value_pID[*iter] <<  endl;
+                     } // for
+		  }  //if
+	    }  // for patches
+	  }   // for levels
       }
     }
     
