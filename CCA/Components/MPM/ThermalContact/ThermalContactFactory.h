@@ -8,11 +8,12 @@ namespace Uintah {
 
   class ThermalContact;
   class MPMLabel;
+  class MPMFlags;
 
   class ThermalContactFactory {
   public:
    static ThermalContact* create(const ProblemSpecP& ps,SimulationStateP& d_sS,
-								MPMLabel* lb);
+				 MPMLabel* lb,MPMFlags* flag);
 
   };
 

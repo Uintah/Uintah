@@ -62,7 +62,8 @@ WARNING
 	 
       public:
 	 // Constructor
-	 SingleVelContact(ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb);
+	 SingleVelContact(ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,
+			  MPMFlags* MFlag);
 	 
 	 // Destructor
 	 virtual ~SingleVelContact();

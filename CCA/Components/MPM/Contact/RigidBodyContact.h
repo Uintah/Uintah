@@ -66,7 +66,8 @@ WARNING
 	 
       public:
 	 // Constructor
-	 RigidBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb);
+	 RigidBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS,
+			  MPMLabel* lb,MPMFlags* flag);
 	 
 	 // Destructor
 	 virtual ~RigidBodyContact();

@@ -13,6 +13,7 @@
 
 namespace Uintah {
   using namespace SCIRun;
+  class MPMFlags;
   class MPMLabel;
   class ProcessorGroup;
   class Patch;
@@ -68,8 +69,11 @@ WARNING
                               const PatchSet* patches,
 			      const MaterialSet* matls) const = 0;
 
+  protected:
+    MPMFlags* flag;
   private:
     MPMLabel* lb;
+    
   };
       
 } // End namespace Uintah

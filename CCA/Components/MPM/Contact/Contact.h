@@ -9,10 +9,11 @@ namespace Uintah {
 using namespace SCIRun;
   class DataWarehouse;
   class MPMLabel;
-   class ProcessorGroup;
-   class Patch;
-   class VarLabel;
-   class Task;
+  class MPMFlags;
+  class ProcessorGroup;
+  class Patch;
+  class VarLabel;
+  class Task;
 
 /**************************************
 
@@ -72,6 +73,7 @@ WARNING
 
       protected:
 	 MPMLabel* lb;
+	 MPMFlags* flag;
       };
       
       inline bool compare(double num1, double num2) {

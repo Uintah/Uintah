@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ApproachContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -15,7 +16,7 @@ using std::cerr;
 using namespace Uintah;
 
 Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
-                                                    MPMLabel* lb, int n8or27)
+				MPMLabel* lb, MPMFlags* flag)
 {
 
    ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
@@ -26,19 +27,19 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
       child->require("type",con_type);
     
       if (con_type == "null")
-	 return(scinew NullContact(child,ss,lb));
+	 return(scinew NullContact(child,ss,lb,flag));
       
       else if (con_type == "single_velocity")
-	 return(scinew SingleVelContact(child,ss,lb));
+	 return(scinew SingleVelContact(child,ss,lb,flag));
 
       else if (con_type == "friction")
-	 return(scinew FrictionContact(child,ss,lb,n8or27));
+	 return(scinew FrictionContact(child,ss,lb,flag));
     
       else if (con_type == "approach")
-	 return(scinew ApproachContact(child,ss,lb,n8or27));
+	 return(scinew ApproachContact(child,ss,lb,flag));
 
       else if (con_type == "rigid")
-	 return(scinew RigidBodyContact(child,ss,lb));
+	 return(scinew RigidBodyContact(child,ss,lb,flag));
     
       else {
 	 cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
