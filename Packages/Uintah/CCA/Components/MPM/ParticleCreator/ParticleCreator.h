@@ -103,6 +103,7 @@ namespace Uintah {
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp;
+    ParticleVariable<Vector> pfiberdir;
 
     ParticleVariable<int> pLoadCurveID;
 
@@ -117,6 +118,7 @@ namespace Uintah {
     geomvols d_object_vols;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Vector> > geomvecs;
     geomvecs d_object_forces;
+    geomvecs d_object_fibers;
   };
 
 
