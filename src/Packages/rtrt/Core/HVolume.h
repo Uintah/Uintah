@@ -368,7 +368,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
 			Point min, Point max,
 			T _datamin, T _datamax, Array3<T> _indata):
   VolumeBase(matl, dpy), depth(depth), work(NULL), filebase(NULL),
-  nx(_nx), ny(_ny), nz(_nz), datadiag(max-min),
+  nx(_nx), ny(_ny), nz(_nz), min(min), datadiag(max-min),
   datamin(_datamin), datamax(_datamax)
 {
   indata.resize(nx,ny,nz);
@@ -379,7 +379,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
 
   //cerr << "Dim of indata = (" << indata.dim1() << ", " << indata.dim2() <<
   //", " << indata.dim3() << ")\n";
-#if 1
+#if 0
   {
     T my_datamin,my_datamax;
     int num_items = indata.dim1() * indata.dim2() * indata.dim3();
@@ -389,7 +389,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
       my_datamin = Min(my_datamin, data_ptr[i]);
       my_datamax = Max(my_datamax, data_ptr[i]);
     }
-    cerr << "my_datamin = " << my_datamin << "\tmy_datamax = " << my_datamax << endl;
+    cerr << "my_datamin = " << (double)my_datamin << "\tmy_datamax = " << (double)my_datamax << endl;
   }
 #endif
   
@@ -677,6 +677,7 @@ void HVolume<T,A,B>::parallel_calc_mcell(int)
 template<class T, class A, class B>
 void HVolume<T,A,B>::compute_bounds(BBox& bbox, double offset)
 {
+  //  cout << "HVolume::compute_bounds::min = "<<min<<", datadiag = "<<datadiag<<"\n";
   bbox.extend(min-Vector(offset,offset,offset));
   bbox.extend(min+datadiag+Vector(offset,offset,offset));
 }
