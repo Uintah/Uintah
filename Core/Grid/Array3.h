@@ -228,10 +228,11 @@ WARNING
       d_window->addReference();
     }
 
-    void rewindow(const IntVector& lowIndex, const IntVector& highIndex) {
+    // return true iff no reallocation is needed
+    bool rewindow(const IntVector& lowIndex, const IntVector& highIndex) {
       if (!d_window) {
 	resize(lowIndex, highIndex);
-	return;
+	return false; // reallocation needed
       }
       bool inside = true;
       IntVector relLowIndex = lowIndex - d_window->getOffset();
@@ -245,18 +246,16 @@ WARNING
 	}
       }
       Array3Window<T>* oldWindow = d_window;
+      bool no_reallocation_needed = false;
       if (inside) {
 	// just rewindow
 	d_window=
 	  scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
 				 lowIndex, highIndex);
+	no_reallocation_needed = true;
       }
       else {
 	// will have to re-allocate and copy
-	cerr << "RE-ALLOCATION NEEDED\n";
-	//cerr << relLowIndex << " to " << relHighIndex << " in " << size << endl;
-	//cerr << oldWindow->getData() << endl;
-	//ASSERT(false);
 	IntVector encompassingLow = Min(lowIndex, oldWindow->getLowIndex());
 	IntVector encompassingHigh = Max(highIndex, oldWindow->getHighIndex());
 	
@@ -274,15 +273,20 @@ WARNING
       d_window->addReference();      
       if(oldWindow->removeReference())
 	delete oldWindow;
+      return no_reallocation_needed;
     }
     
     inline const T& operator[](const IntVector& idx) const {
       return d_window->get(idx);
     }
       
-    inline Array3Window<T>* getWindow() const {
+    inline const Array3Window<T>* getWindow() const {
       return d_window;
     }
+    inline Array3Window<T>* getWindow() {
+      return d_window;
+    }
+
     inline T& operator[](const IntVector& idx) {
       return d_window->get(idx);
     }
@@ -311,13 +315,13 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////
     // Get low index for fortran calls
-    inline IntVector getFortLowIndex() {
+    inline IntVector getFortLowIndex() const {
       return d_window->getLowIndex();
     }
       
     ///////////////////////////////////////////////////////////////////////
     // Get high index for fortran calls
-    inline IntVector getFortHighIndex() {
+    inline IntVector getFortHighIndex() const {
       return d_window->getHighIndex()-IntVector(1,1,1);
     }
       

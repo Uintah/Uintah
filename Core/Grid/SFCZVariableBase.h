@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_SFCZVariableBase_H
 
 #include <Packages/Uintah/Core/Grid/Variable.h>
+#include <Packages/Uintah/Core/Grid/constVariable.h>
 
 namespace SCIRun {
   class IntVector;
@@ -44,6 +45,8 @@ WARNING
   
 ****************************************/
 
+#define constSFCZVariableBase constVariableBase<SFCZVariableBase>
+
    class SFCZVariableBase : public Variable {
    public:
       
@@ -51,18 +54,26 @@ WARNING
       
       virtual void copyPointer(SFCZVariableBase&) = 0;
       
-      virtual void rewindow(const IntVector& low, const IntVector& high) = 0;
+      virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
 
       //////////
       // Insert Documentation Here:
-      virtual SFCZVariableBase* clone() const = 0;
+      virtual SFCZVariableBase* clone() = 0;
+      virtual const SFCZVariableBase* clone() const = 0;     
+
+      // Make a new default object of the base class.
+      virtual SFCZVariableBase* cloneType() const = 0;
+      virtual constSFCZVariableBase* cloneConstType() const = 0;
 
       virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
+      virtual void allocate(const SFCZVariableBase* src) = 0;
       virtual void copyPatch(const SFCZVariableBase* src,
-			      const IntVector& lowIndex,
-			      const IntVector& highIndex) = 0;
+			     const IntVector& lowIndex,
+			     const IntVector& highIndex) = 0;
+      virtual void copyData(const SFCZVariableBase* src) = 0;
+
       void getMPIBuffer(BufferInfo& buffer,
 			const IntVector& low, const IntVector& high);
       virtual void* getBasePointer() const = 0;

@@ -4,6 +4,7 @@
 
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/Variable.h>
+#include <Packages/Uintah/Core/Grid/constVariable.h>
 
 #include <vector>
 
@@ -45,16 +46,26 @@ WARNING
   
 ****************************************/
 
+#define constParticleVariableBase constVariableBase<ParticleVariableBase>
+
    class ParticleVariableBase : public Variable {
    public:
       
       virtual ~ParticleVariableBase();
-      virtual void copyPointer(const ParticleVariableBase&) = 0;
+      virtual void copyPointer(ParticleVariableBase&) = 0;
       
       //////////
       // Insert Documentation Here:
-      virtual ParticleVariableBase* clone() const = 0;
-      virtual ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
+      virtual const ParticleVariableBase* clone() const = 0;
+      virtual ParticleVariableBase* clone() = 0;     
+      virtual const ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
+      virtual ParticleVariableBase* cloneSubset(ParticleSubset*) = 0;
+
+      // Make a new default object of the base class.
+      virtual ParticleVariableBase* cloneType() const = 0;
+      virtual constParticleVariableBase* cloneConstType() const = 0;
+     
+      virtual void copyData(const ParticleVariableBase* src) = 0;
 
       virtual void allocate(const Patch*) = 0; // will throw an InternalError
       virtual void allocate(ParticleSubset*) = 0;
@@ -101,5 +112,5 @@ WARNING
    };
 
 } // End namespace Uintah
-   
+
 #endif

@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_CCVariableBase_H
 
 #include <Packages/Uintah/Core/Grid/Variable.h>
+#include <Packages/Uintah/Core/Grid/constVariable.h>
 
 namespace SCIRun {
   class IntVector;
@@ -44,6 +45,8 @@ WARNING
   
 ****************************************/
 
+#define constCCVariableBase constVariableBase<CCVariableBase>
+
    class CCVariableBase : public Variable {
    public:
       
@@ -51,18 +54,26 @@ WARNING
       
       virtual void copyPointer(CCVariableBase&) = 0;
       
-      virtual void rewindow(const IntVector& low, const IntVector& high) = 0;
+      virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
 
       //////////
       // Insert Documentation Here:
-      virtual CCVariableBase* clone() const = 0;
+      virtual CCVariableBase* clone() = 0;
+      virtual const CCVariableBase* clone() const = 0;
+
+      // Make a new default object of the base class.
+      virtual CCVariableBase* cloneType() const = 0;
+      virtual constCCVariableBase* cloneConstType() const = 0;
 
       virtual void allocate(const Patch* patch) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
+      virtual void allocate(const CCVariableBase* src) = 0;
       virtual void copyPatch(const CCVariableBase* src,
-			      const IntVector& lowIndex,
-			      const IntVector& highIndex) = 0;
+			     const IntVector& lowIndex,
+			     const IntVector& highIndex) = 0;
+      virtual void copyData(const CCVariableBase* src) = 0;
+
       virtual void* getBasePointer() const = 0;
      void getMPIBuffer(BufferInfo& buffer,
 		       const IntVector& low, const IntVector& high);

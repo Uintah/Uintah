@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariableBase.h>
+#include <Packages/Uintah/Core/Grid/constGridVariable.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>
@@ -48,6 +49,7 @@ WARNING
 
   template<class T>
   class SFCZVariable : public Array3<T>, public SFCZVariableBase {
+    friend class constVariable<SFCZVariableBase, SFCZVariable<T>, T, const IntVector&>;
   public:
      
     SFCZVariable();
@@ -57,15 +59,24 @@ WARNING
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
      
+    inline void copyPointer(SFCZVariable<T>& copy)
+    { Array3<T>::copyPointer(copy); }
+
     virtual void copyPointer(SFCZVariableBase&);
 
-    virtual void rewindow(const IntVector& low, const IntVector& high)
-    { Array3<T>::rewindow(low, high); }
+    virtual bool rewindow(const IntVector& low, const IntVector& high)
+    { return Array3<T>::rewindow(low, high); }
 
     //////////
     // Insert Documentation Here:
-    virtual SFCZVariableBase* clone() const;
-     
+    virtual SFCZVariableBase* clone();
+    virtual const SFCZVariableBase* clone() const;    
+    virtual SFCZVariableBase* cloneType() const
+    { return scinew SFCZVariable<T>(); }
+    virtual constSFCZVariableBase* cloneConstType() const
+    { return scinew constGridVariable<SFCZVariableBase, SFCZVariable<T>, T>();
+    }
+
     //////////
     // Insert Documentation Here:
     virtual void allocate(const IntVector& lowIndex,
@@ -73,12 +84,22 @@ WARNING
      
     virtual void allocate(const Patch* patch)
     { allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex()); }
-   
+    virtual void allocate(const SFCZVariable<T>& src)
+    { allocate(src.getLowIndex(), src.getHighIndex()); }
+    virtual void allocate(const SFCZVariableBase* src)
+    { allocate(castFromBase(src)); }
+
+    void copyPatch(const SFCZVariable<T>& src,
+		   const IntVector& lowIndex, const IntVector& highIndex);
     virtual void copyPatch(const SFCZVariableBase* src,
 			   const IntVector& lowIndex,
-			   const IntVector& highIndex);
-    void copyPatch(const SFCZVariable& src)
-    { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
+			   const IntVector& highIndex)
+    { copyPatch(castFromBase(src), lowIndex, highIndex); }
+    
+    void copyData(const SFCZVariable<T>& src)
+    { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
+    virtual void copyData(const SFCZVariableBase* src)
+    { copyData(castFromBase(src)); }
      
     virtual void* getBasePointer() const;
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -370,10 +391,12 @@ WARNING
     virtual RefCounted* getRefCounted() {
       return getWindow();
     }
+  protected:
+    SFCZVariable(const SFCZVariable<T>&);
   private:
-    SFCZVariable(const SFCZVariable<T>&);    
     SFCZVariable<T>& operator=(const SFCZVariable<T>&);
 
+    static const SFCZVariable<T>& castFromBase(const SFCZVariableBase* srcptr);
     static Variable* maker();
   };
    
@@ -407,6 +430,13 @@ WARNING
    
   template<class T>
   SFCZVariableBase*
+  SFCZVariable<T>::clone()
+  {
+    return scinew SFCZVariable<T>(*this);
+  }
+
+  template<class T>
+  const SFCZVariableBase*
   SFCZVariable<T>::clone() const
   {
     return scinew SFCZVariable<T>(*this);
@@ -416,10 +446,10 @@ WARNING
   void
   SFCZVariable<T>::copyPointer(SFCZVariableBase& copy)
   {
-    const SFCZVariable<T>* c = dynamic_cast<const SFCZVariable<T>* >(&copy);
+    SFCZVariable<T>* c = dynamic_cast<SFCZVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in SFCZ variable");
-    Array3<T>::copyPointer(*c);
+    copyPointer(*c);
   }
 
   template<class T>
@@ -454,16 +484,22 @@ WARNING
     Array3<T>::operator=(newdata);
   }
 */
+
   template<class T>
-  void
-  SFCZVariable<T>::copyPatch(const SFCZVariableBase* srcptr,
-			     const IntVector& lowIndex,
-			     const IntVector& highIndex)
+  const SFCZVariable<T>& SFCZVariable<T>::castFromBase(const SFCZVariableBase* srcptr)
   {
     const SFCZVariable<T>* c = dynamic_cast<const SFCZVariable<T>* >(srcptr);
     if(!c)
       throw TypeMismatchException("Type mismatch in SFCZ variable");
-    const SFCZVariable<T>& src = *c;
+    return *c;
+  }
+
+  template<class T>
+  void
+  SFCZVariable<T>::copyPatch(const SFCZVariable<T>& src,
+			     const IntVector& lowIndex,
+			     const IntVector& highIndex)
+  {
     for(int i=lowIndex.x();i<highIndex.x();i++)
       for(int j=lowIndex.y();j<highIndex.y();j++)
 	for(int k=lowIndex.z();k<highIndex.z();k++)
@@ -506,6 +542,17 @@ WARNING
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			(int)(sizeof(T)*siz.y()*siz.x()));
   }
+
+  template <class T>
+  class constSFCZVariable : public constGridVariable<SFCZVariableBase, SFCZVariable<T>, T>
+  {
+  public:
+    constSFCZVariable()
+      : constGridVariable<SFCZVariableBase, SFCZVariable<T>, T>() {}
+    
+    constSFCZVariable(const SFCZVariable<T>& copy)
+      : constGridVariable<SFCZVariableBase, SFCZVariable<T>, T>(copy) {}
+  };
 
 } // end namespace Uintah
 
