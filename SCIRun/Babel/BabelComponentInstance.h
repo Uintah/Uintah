@@ -102,18 +102,34 @@ public:
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   gov::cca::Port getPort(const std::string& name);
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
   gov::cca::Port getPortNonblocking(const std::string& name);
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
   void releasePort(const std::string& name);
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
   gov::cca::TypeMap createTypeMap();
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */ 
   void registerUsesPort(const std::string& name, const std::string& type,
                         const gov::cca::TypeMap& properties);
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
   void unregisterUsesPort(const std::string& name);
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
   void addProvidesPort(const gov::cca::Port& port,
                        const std::string& name,
                        const std::string& type,
                        const gov::cca::TypeMap& properties);
   void removeProvidesPort(const std::string& name);
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
   gov::cca::TypeMap getPortProperties(const std::string& portName);
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
   gov::cca::ComponentID getComponentID();
   
   /** ? */
