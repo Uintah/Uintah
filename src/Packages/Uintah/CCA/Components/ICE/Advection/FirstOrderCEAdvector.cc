@@ -54,7 +54,6 @@ needs to be defined on all faces for these cells
 
 See schematic diagram at bottom of ice.cc for del* definitions
  ---------------------------------------------------------------------  */
-
 void FirstOrderCEAdvector::inFluxOutFluxVolume(
                         const SFCXVariable<double>& uvel_FC,
                         const SFCYVariable<double>& vvel_FC,
@@ -72,11 +71,10 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
 
   // Compute outfluxes 
   const IntVector gc(1,1,1);
-  double error_test = 0.0;
-  int    num_cells = 0;
+  bool error = false;
   
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
-    IntVector c = *iter;
+    const IntVector& c = *iter;
     delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
     delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
@@ -90,63 +88,67 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     
     //__________________________________
     //   SLAB outfluxes
-    d_OFS[c].d_fflux[TOP]   = delY_top   * delX_tmp * delZ_tmp;
-    d_OFS[c].d_fflux[BOTTOM]= delY_bottom* delX_tmp * delZ_tmp;
-    d_OFS[c].d_fflux[RIGHT] = delX_right * delY_tmp * delZ_tmp;
-    d_OFS[c].d_fflux[LEFT]  = delX_left  * delY_tmp * delZ_tmp;
-    d_OFS[c].d_fflux[FRONT] = delZ_front * delX_tmp * delY_tmp;
-    d_OFS[c].d_fflux[BACK]  = delZ_back  * delX_tmp * delY_tmp;
+    fflux& ofs = d_OFS[c];
+    ofs.d_fflux[TOP]   = delY_top   * delX_tmp * delZ_tmp;
+    ofs.d_fflux[BOTTOM]= delY_bottom* delX_tmp * delZ_tmp;
+    ofs.d_fflux[RIGHT] = delX_right * delY_tmp * delZ_tmp;
+    ofs.d_fflux[LEFT]  = delX_left  * delY_tmp * delZ_tmp;
+    ofs.d_fflux[FRONT] = delZ_front * delX_tmp * delY_tmp;
+    ofs.d_fflux[BACK]  = delZ_back  * delX_tmp * delY_tmp;
 
     // Edge flux terms
-    d_OFE[c].d_eflux[TOP_R]     = delY_top      * delX_right * delZ_tmp;
-    d_OFE[c].d_eflux[TOP_FR]    = delY_top      * delX_tmp   * delZ_front;
-    d_OFE[c].d_eflux[TOP_L]     = delY_top      * delX_left  * delZ_tmp;
-    d_OFE[c].d_eflux[TOP_BK]    = delY_top      * delX_tmp   * delZ_back;
+    eflux& ofe = d_OFE[c];
+    ofe.d_eflux[TOP_R]     = delY_top      * delX_right * delZ_tmp;
+    ofe.d_eflux[TOP_FR]    = delY_top      * delX_tmp   * delZ_front;
+    ofe.d_eflux[TOP_L]     = delY_top      * delX_left  * delZ_tmp;
+    ofe.d_eflux[TOP_BK]    = delY_top      * delX_tmp   * delZ_back;
     
-    d_OFE[c].d_eflux[BOT_R]     = delY_bottom   * delX_right * delZ_tmp;
-    d_OFE[c].d_eflux[BOT_FR]    = delY_bottom   * delX_tmp   * delZ_front;
-    d_OFE[c].d_eflux[BOT_L]     = delY_bottom   * delX_left  * delZ_tmp;
-    d_OFE[c].d_eflux[BOT_BK]    = delY_bottom   * delX_tmp   * delZ_back;
+    ofe.d_eflux[BOT_R]     = delY_bottom   * delX_right * delZ_tmp;
+    ofe.d_eflux[BOT_FR]    = delY_bottom   * delX_tmp   * delZ_front;
+    ofe.d_eflux[BOT_L]     = delY_bottom   * delX_left  * delZ_tmp;
+    ofe.d_eflux[BOT_BK]    = delY_bottom   * delX_tmp   * delZ_back;
     
-    d_OFE[c].d_eflux[RIGHT_BK]  = delY_tmp      * delX_right * delZ_back;
-    d_OFE[c].d_eflux[RIGHT_FR]  = delY_tmp      * delX_right * delZ_front;
+    ofe.d_eflux[RIGHT_BK]  = delY_tmp      * delX_right * delZ_back;
+    ofe.d_eflux[RIGHT_FR]  = delY_tmp      * delX_right * delZ_front;
     
-    d_OFE[c].d_eflux[LEFT_BK]   = delY_tmp      * delX_left  * delZ_back;
-    d_OFE[c].d_eflux[LEFT_FR]   = delY_tmp      * delX_left  * delZ_front;
+    ofe.d_eflux[LEFT_BK]   = delY_tmp      * delX_left  * delZ_back;
+    ofe.d_eflux[LEFT_FR]   = delY_tmp      * delX_left  * delZ_front;
     
     //__________________________________
     //   Corner flux terms
-    d_OFC[c].d_cflux[TOP_R_BK]  = delY_top      * delX_right * delZ_back;
-    d_OFC[c].d_cflux[TOP_R_FR]  = delY_top      * delX_right * delZ_front;
-    d_OFC[c].d_cflux[TOP_L_BK]  = delY_top      * delX_left  * delZ_back;
-    d_OFC[c].d_cflux[TOP_L_FR]  = delY_top      * delX_left  * delZ_front;
+    cflux& ofc = d_OFC[c];
+    ofc.d_cflux[TOP_R_BK]  = delY_top      * delX_right * delZ_back;
+    ofc.d_cflux[TOP_R_FR]  = delY_top      * delX_right * delZ_front;
+    ofc.d_cflux[TOP_L_BK]  = delY_top      * delX_left  * delZ_back;
+    ofc.d_cflux[TOP_L_FR]  = delY_top      * delX_left  * delZ_front;
     
-    d_OFC[c].d_cflux[BOT_R_BK]  = delY_bottom   * delX_right * delZ_back;
-    d_OFC[c].d_cflux[BOT_R_FR]  = delY_bottom   * delX_right * delZ_front;
-    d_OFC[c].d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
-    d_OFC[c].d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
+    ofc.d_cflux[BOT_R_BK]  = delY_bottom   * delX_right * delZ_back;
+    ofc.d_cflux[BOT_R_FR]  = delY_bottom   * delX_right * delZ_front;
+    ofc.d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
+    ofc.d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
 
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
     for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += d_OFS[c].d_fflux[face];
+      total_fluxout  += ofs.d_fflux[face];
     }
     for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
-      total_fluxout  += d_OFE[c].d_eflux[edge];
+      total_fluxout  += ofe.d_eflux[edge];
     }
     for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
-      total_fluxout  += d_OFC[c].d_cflux[corner];
+      total_fluxout  += ofc.d_cflux[corner];
     }
-    num_cells++;
-    error_test +=(vol - total_fluxout)/fabs(vol- total_fluxout);
+    if(total_fluxout > vol){
+      error = true;
+    }
   }  // cell iterator
   //__________________________________
   // if total_fluxout > vol then 
   // find the cell and throw an exception.  
-  if (fabs(error_test - num_cells) > 1.0e-2 && bulletProof_test) {
+  if (error && bulletProof_test) {
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
-      IntVector c = *iter; 
+      const IntVector& c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {
         total_fluxout  += d_OFS[c].d_fflux[face];
@@ -175,7 +177,7 @@ void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
 { 
   advectCE<double>(q_CC,patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesD);
+                      ignoreFaceFluxesD());
 }
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
@@ -189,7 +191,7 @@ void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
 				 DataWarehouse* /*new_dw*/)
 {
   advectCE<double>(q_CC,patch,q_advected,  
-                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes);
+                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
 }
 //__________________________________
 //     V E C T O R
@@ -200,7 +202,7 @@ void FirstOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
 {
   advectCE<Vector>(q_CC,patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesV);
+                      ignoreFaceFluxesV());
 }
 
 /* ---------------------------------------------------------------------
@@ -218,12 +220,13 @@ template <class T, typename F>
                                   //  W A R N I N G
   Vector dx = patch->dCell();    // assumes equal cell spacing             
   double invvol = 1.0/(dx.x() * dx.y() * dx.z());
+  double oneThird = 1.0/3.0;
   
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-    double oneThird = 1.0/3.0;
-    IntVector c = *iter;
+    const IntVector& c = *iter;
     //__________________________________
     //   all faces
+    T Q_CC = q_CC[c];
     T q_face_flux[6];
     double faceVol[6];
          
@@ -237,7 +240,7 @@ template <class T, typename F>
       double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
-      q_slab_flux  = - q_CC[c]  * outfluxVol + q_CC[ac] * influxVol;             
+      q_slab_flux  = - Q_CC  * outfluxVol + q_CC[ac] * influxVol;             
       slab_vol     =  outfluxVol +  influxVol;                 
 
       //__________________________________
@@ -253,7 +256,7 @@ template <class T, typename F>
         outfluxVol = 0.5 * d_OFE[c ].d_eflux[OF];
         influxVol  = 0.5 * d_OFE[ac].d_eflux[IF];
 
-        q_edge_flux += -q_CC[c] * outfluxVol
+        q_edge_flux += -Q_CC    * outfluxVol
                     +  q_CC[ac] * influxVol;
         edge_vol    += outfluxVol + influxVol;
       }                
@@ -271,7 +274,7 @@ template <class T, typename F>
         outfluxVol = oneThird * d_OFC[c ].d_cflux[OF];
         influxVol  = oneThird * d_OFC[ac].d_cflux[IF];
 
-        q_corner_flux += -q_CC[c] * outfluxVol 
+        q_corner_flux += -Q_CC * outfluxVol 
                       +  q_CC[ac] * influxVol; 
         corner_vol    += outfluxVol + influxVol;
       }  //  corner loop
