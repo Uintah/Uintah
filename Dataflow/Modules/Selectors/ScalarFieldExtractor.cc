@@ -136,7 +136,6 @@ void ScalarFieldExtractor::execute()
   ArchiveHandle handle;
   if(!in->get(handle)){
     warning("ScalarFieldExtractor::execute() Didn't get a handle.");
-    grid = 0;
     return;
   }
    
@@ -151,6 +150,11 @@ void ScalarFieldExtractor::execute()
 
   // get time, set timestep, set generation, update grid and update gui
   double time = field_update(); // yeah it does all that
+
+  if(type == 0){
+    warning( "No variables found.");
+    return;
+  }
   
   LevelP level = grid->getLevel( level_.get() );
   IntVector hi, low, range;
@@ -158,7 +162,7 @@ void ScalarFieldExtractor::execute()
   range = hi - low;
   BBox box;
   level->getSpatialRange(box);
-//   cerr<<"level  = "<<level_.get()<<" box: min("<<box.min()<<"), max("<<box.max()<<"), index range is imin = "<<low<<", imax = "<<hi<<", range = "<<range<<"\n";
+  cerr<<"level  = "<<level_.get()<<" box: min("<<box.min()<<"), max("<<box.max()<<"), index range is imin = "<<low<<", imax = "<<hi<<", range = "<<range<<"\n";
 
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
@@ -278,7 +282,13 @@ void ScalarFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y() - 1,
 					 range.z() - 1, box.min(),
 					 box.max());
-      }
+	  } else if(mesh_handle_->get_ni() != range.x() ||
+		    mesh_handle_->get_nj() != range.y() -1 ||
+		    mesh_handle_->get_nk() != range.z() -1 ){
+	    mesh_handle_ = scinew LatVolMesh(range.x(), range.y() - 1,
+					     range.z()-1, box.min(),
+					     box.max());
+	  }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
@@ -327,6 +337,12 @@ void ScalarFieldExtractor::execute()
       }
     case TypeDescription::SFCYVariable:
 	  if( mesh_handle_.get_rep() == 0 ){
+	    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
+					     range.z()-1, box.min(),
+					     box.max());
+	  } else if(mesh_handle_->get_ni() != range.x() -1 ||
+		    mesh_handle_->get_nj() != range.y() ||
+		    mesh_handle_->get_nk() != range.z() -1 ){
 	    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
 					     range.z()-1, box.min(),
 					     box.max());
@@ -382,8 +398,13 @@ void ScalarFieldExtractor::execute()
 	    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
 					     range.z(), box.min(),
 					     box.max());
-	  }
-      switch ( subtype->getType() ) {
+ 	  } else if(mesh_handle_->get_ni() != range.x() -1 ||
+		    mesh_handle_->get_nj() != range.y() -1 ||
+		    mesh_handle_->get_nk() != range.z() ){
+	    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
+					     range.z(), box.min(),
+					     box.max());
+	  }     switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
 	  SFCZVariable<double> gridVar;
