@@ -507,6 +507,7 @@ getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
 {
   switch(dom){
   case Task::NormalDomain:
+  case Task::OtherGridDomain: // use the same patches, we'll figure out where it corresponds on the other grid
     return ComputeSubset<T>::intersection(subset, domainSubset);
   case Task::OutOfDomain:
     return subset;
