@@ -3,6 +3,7 @@
 from os import environ,mkdir,path,system,chdir
 from time import asctime,localtime,time
 from sys import argv,exit
+from helpers.runSusTest import runSusTest,input,modes,num_processes
 
 TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
     	    ("disks2mat.ups",		    ["dbg", "opt"]),    \
@@ -21,15 +22,6 @@ TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
 	    ("sidecrack.ups",		    ["dbg", "opt", "mpi"], 2)	\
     	]
 
-def input (test):
-    return test[0]
-def modes (test):
-    return test[1]
-def num_processes (test):
-    return test[2]
-def date ():
-    return asctime(localtime(time()))
-
 if len(argv) < 2:
     print "usage: %s <mode>" % argv[0]
     print "    where <mode> is a short string used to select tests to run."
@@ -43,42 +35,27 @@ chdir(testdir)
 
 failcode = 0
 
+DO_RESTART = "yes"
+
 for test in TESTS:
-    if mode not in modes(test):
-    	continue
+  if mode not in modes(test):
+    continue
 
-    testname = path.splitext(input(test))[0]
-    mkdir(testname)
-    chdir(testname)
+  testname = path.splitext(input(test))[0];
+  mkdir(testname)
+  chdir(testname)
 
-    datmode = mode
+  # Run normal test
+  rc = runSusTest(test, mode, susdir, "mpm")
+  if rc == 0:
+    # Run restart test
+    rc = runSusTest(test, mode, susdir, "mpm", DO_RESTART)
+    if rc == 1:
+	failcode = 1
+  else:
+    failcode = 1
 
-    print "MPM-%s: Running test %s on %s" % (mode, testname, date())
-    if mode == "mpi":
-    	rc = system("mpirun -np %s %s/sus -mpm %s/inputs/MPM/%s > sus.log 2>&1" % (num_processes(test), susdir, susdir, input(test)))
-    	datmode = "opt"
-    else:
-    	rc = system("%s/sus -mpm %s/inputs/MPM/%s > sus.log 2>&1" % (susdir, susdir, input(test)))
-    if rc != 0:
-    	print "MPM-%s: Test %s failed with code %d" % (mode, testname, rc)
-    	failcode = 1
-    else:
-	print "\tComparing dat files"
-	errors_to = environ['ERRORS_TO']
-	if environ['ERRORMAIL'] != "yes":
-	    errors_to = ""
-    	rc = system("dat_test %s %s/MPM-%s %s/Uintah_testdata/%s_%s '%s' > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT'], environ['OS'], datmode, errors_to))
-    	if rc != 0:
-	    if rc != 65280:
-    	    	print "\tWarning, test %s failed dat comparision with error code %s" % (testname, rc)
-	    	failcode = 1
-	    else:
-		print "\tNo dat files to compare."
-	else:
-	    print "\tComparison tests passed."
-    chdir("..")
+  chdir("..")
 
 exit(failcode)
-
-
 
