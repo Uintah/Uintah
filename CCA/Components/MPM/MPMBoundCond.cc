@@ -79,14 +79,14 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       for (int child = 0; child < numChildren; child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+	vector<IntVector> bound,inter,nbound;
 	vector<IntVector>::const_iterator boundary;
 	if (type == "Acceleration")
 	  vel_bcs = patch->getArrayBCValues(face,dwi,"Velocity",bound,inter,
-					    sfx,sfy,sfz,nbound,child);
+					    nbound,child);
 	else
 	  vel_bcs  = patch->getArrayBCValues(face,dwi,type,bound,inter,
-					     sfx,sfy,sfz,nbound,child);
+					     nbound,child);
 	if (type == "Velocity")
 	  if (vel_bcs != 0) {
 	    const VelocityBoundCond* bc =
@@ -175,10 +175,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       for (int child = 0; child < numChildren; child++) {
-	vector<IntVector> bound, inter, sfx, sfy, sfz, nbound;
+	vector<IntVector> bound, inter, nbound;
 	vector<IntVector>::const_iterator boundary;
-	temp_bcs = patch->getArrayBCValues(face,dwi,type,bound,inter,sfx,sfy,
-					   sfz,nbound,child);
+	temp_bcs = patch->getArrayBCValues(face,dwi,type,bound,inter,nbound,
+					   child);
     
 	if (temp_bcs != 0) {
 	  const TemperatureBoundCond* bc =
@@ -276,10 +276,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
       int numChildren = 
 	patch->getBCDataArray(face)->getNumberChildren(dwi);
       for (int child = 0; child < numChildren; child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+	vector<IntVector> bound,inter,nbound;
 	vector<IntVector>::const_iterator boundary;
 	temp_bcs  = patch->getArrayBCValues(face,dwi,"Temperature",bound,
-					    inter, sfx,sfy,sfz,nbound,child);
+					    inter,nbound,child);
 	
 	double dx;
 	if (face == Patch::xplus || face == Patch::xminus) dx = deltax.x();
