@@ -26,7 +26,7 @@ char* find_builtin()
 #ifndef SIDL_BUILTINS
 #error SIDL_BUILTINS should point to the directory containing cia.sidl
 #endif
-    return SIDL_BUILTINS "cia.sidl";
+    return SIDL_BUILTINS "CIA.sidl";
 }
 
 int main(int argc, char* argv[])
@@ -150,6 +150,9 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.7  2000/03/23 10:56:03  sparker
+// Changed cia.sidl to CIA.sidl
+//
 // Revision 1.6  1999/09/24 06:26:30  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance
