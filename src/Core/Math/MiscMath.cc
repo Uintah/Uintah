@@ -40,6 +40,7 @@
  *  Copyright (C) 2004 SCI Group
  */
 
+#include <sci_defs.h>
 #include <Core/Math/MiscMath.h>
 #include <math.h>
 #ifdef __sgi
@@ -68,11 +69,6 @@ SCICORESHARE double MakeReal(double value)
       value = 0.0;
     }
   }      
-    const int is_inf = isinf(value);
-    if (is_inf == 1) 
-    if (is_inf == -1) value = (double)(0x0010000000000000ULL);
-    else value = 0.0; // Assumed NaN
-  }
   return value;
 }
 #else
