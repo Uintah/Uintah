@@ -137,6 +137,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	    { "Green Tint" { { 0 20 0 } { 235 255 235 } } }
 	    { "Blue Tint" { { 0 0 20 } { 235 235 255 } } }
 	    { "Purple Tint" { { 10 0 20 } { 245 235 255 } } }
+	    { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	}
     }
     
@@ -216,6 +217,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		    { "Green Tint" 14} \
 		    { "Blue Tint" 15} \
 		    { "Purple Tint" 16} \
+		    { "BP Seismic" 17} \
 		}
 	    
 	pack $w.f2.types -in $w.f2 -side left
