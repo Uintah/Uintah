@@ -2601,7 +2601,10 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
     }
   }
 
-  if (panning_ || zooming_) return;
+  if (panning_ || zooming_) {
+    for_each(layout, &ViewSlices::redraw_window);
+    return;
+  }
 
   const bool button1 = state & BUTTON_1_E;
   if (button1 && !crop_ && painting_ && 
