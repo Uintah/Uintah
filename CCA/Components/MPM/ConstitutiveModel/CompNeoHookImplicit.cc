@@ -19,10 +19,8 @@
 #include <Core/Util/NotFinished.h>
 #include <fstream>
 #include <iostream>
-#include <algorithm>
 
 using std::cerr;
-using std::sort;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -378,7 +376,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         kgeo.multiply(out1, Bnl);
         kgeo.multiply(volnew);
 
-	sort(dof.begin(),dof.end());
 	for (int I = 0; I < (int)dof.size();I++) {
 	  int dofi = dof[I];
 	  for (int J = 0; J < (int)dof.size(); J++) {
