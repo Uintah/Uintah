@@ -1592,8 +1592,9 @@ proc moduleDuplicate { module } {
     set bbox [$canvas bbox $module]
     set x [expr [lindex $bbox 0]-$ulx]
     set y [expr 20 + [lindex $bbox 3] - $uly]
-
+    set Subnet(Loading) $Subnet($module)
     set newmodule [eval addModuleAtPosition [modulePath $module] $x $y]
+    set Subnet(Loading) 0
 
     foreach connection $Subnet(${module}_connections) {
 	if { [string equal [iMod connection] $module] } {
