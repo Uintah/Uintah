@@ -28,14 +28,19 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Tend
 
 
 SRCS     += \
+	$(SRCDIR)/TendAnscale.cc\
 	$(SRCDIR)/TendAnvol.cc\
 	$(SRCDIR)/TendBmat.cc\
 	$(SRCDIR)/TendEpireg.cc\
 	$(SRCDIR)/TendEstim.cc\
 	$(SRCDIR)/TendEval.cc\
+	$(SRCDIR)/TendEvalClamp.cc\
+	$(SRCDIR)/TendEvalPow.cc\
 	$(SRCDIR)/TendEvec.cc\
+	$(SRCDIR)/TendEvecRGB.cc\
 	$(SRCDIR)/TendExpand.cc\
 	$(SRCDIR)/TendMake.cc\
+	$(SRCDIR)/TendNorm.cc\
 	$(SRCDIR)/TendPoint.cc\
 	$(SRCDIR)/TendSatin.cc\
 	$(SRCDIR)/TendShrink.cc\
