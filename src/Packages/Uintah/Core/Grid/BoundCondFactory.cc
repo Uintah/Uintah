@@ -77,6 +77,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
   
   else if (bc_attr["label"] == "Density" &&
 	   (bc_attr["var"]   == "Neumann"  ||
+	    bc_attr["var"]   == "Dirichlet_perturbed"  ||
 	    bc_attr["var"]   == "LODI" ||
 	    bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew DensityBoundCond(child,bc_attr["var"]);
