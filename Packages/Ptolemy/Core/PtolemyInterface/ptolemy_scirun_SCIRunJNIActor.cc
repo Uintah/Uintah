@@ -29,6 +29,8 @@ Java_ptolemy_scirun_SCIRunJNIActor_getScirun(JNIEnv *env, jobject obj, jstring n
     t->activate(false);
     t->join();
 
+    JNIUtils::setSCIRunStarted(env, obj);
+
 	return 1;
 }
 
