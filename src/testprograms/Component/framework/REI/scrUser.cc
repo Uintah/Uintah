@@ -50,7 +50,7 @@ scrUser::go()
   double O2 = 11;
   double sum_of_all_others = 12;
   double heat_loss = 13;
-  ::SIDL::array1<double> kmol_s;
+  ::SSIDL::array1<double> kmol_s;
   double noreduction = 14;
   double new_temp = 15;
   double kmol_s_tot = 16;

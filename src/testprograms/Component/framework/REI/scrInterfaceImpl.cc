@@ -31,7 +31,7 @@ scrInterfaceImpl::exec( int /*cells*/,
 			double /*O2*/,
 			double /*sum_of_all_others*/,
 			double /*heat_loss*/,
-			::SIDL::array1< double>& kmol_s,
+			::SSIDL::array1< double>& kmol_s,
 			double& /*noreduction*/,
 			double& /*new_temp*/,
 			double& kmol_s_tot)
