@@ -72,18 +72,34 @@ DenseMatrixSQLReader::~DenseMatrixSQLReader(){
 
 void DenseMatrixSQLReader::execute() {
   omatrix = (MatrixOPort *)get_oport("Field");
-    auto_ptr<Dbd> dbd(connect(database_ui.get().c_str(),
-                              hostname_ui.get().c_str(),
-                              atoi(port_ui.get().c_str()), 
-                              username_ui.get().c_str(), 
-                              password_ui.get().c_str()));
 
+  string dbase=database_ui.get();
+  string hname = hostname_ui.get();
+  string pnum = port_ui.get();
+  string uname = username_ui.get();
+  string pword = password_ui.get();
+
+ cerr << "dbase is: " << dbase << endl;
+ cerr << "hname is: " << hname << endl;
+ cerr << "pnum is: " << pnum << endl;
+ cerr << "uname is: " << uname << endl;
+ cerr << "pword is: " << pword << endl;
+
+  auto_ptr<Dbd> dbd(connect(dbase.c_str(),
+                              hname.c_str(),
+                              atoi(pnum.c_str()), 
+                              uname.c_str(), 
+                              pword.c_str()));
+
+        
+/*     system("/home/sci/butson/test.pl"); */
     if(!dbd.get()) {
         fprintf(stderr, "Unable to connect to database\n");
         return; // could not connect
     }
 
     int rows = 0;
+
 
     // count the number of rows
     if(!dbd->execute(sql_ui.get().c_str())) {
