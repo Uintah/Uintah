@@ -49,7 +49,8 @@ ContourSet::ContourSet()
 
 ContourSet::ContourSet(const ContourSet &copy)
 : space(copy.space), origin(copy.origin), contours(copy.contours),
-  name(copy.name), bbox(copy.bbox)
+  name(copy.name), bbox(copy.bbox), conductivity(copy.conductivity),
+  bdry_type(copy.bdry_type)
 {
     basis[0]=copy.basis[0];
     basis[1]=copy.basis[1];
@@ -101,12 +102,16 @@ void ContourSet::rotate(const Vector &rot) {
     bbox.reset();
 }
 
-#define CONTOUR_SET_VERSION 2
+#define CONTOUR_SET_VERSION 3
 
 void ContourSet::io(Piostream& stream) 
 {
     int version=stream.begin_class("ContourSet", CONTOUR_SET_VERSION);
     Pio(stream, contours);
+    if (version >=3) {
+	Pio(stream, conductivity);
+	Pio(stream, bdry_type);
+    }
     Pio(stream, basis[0]);
     Pio(stream, basis[1]);
     Pio(stream, basis[2]);
