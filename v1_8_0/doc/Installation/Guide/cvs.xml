@@ -35,7 +35,7 @@ repository, which in our case will probably always be on the main
 trunk. </para>
 
 <para>The CVS manual is quite useful and available at <ulink
-url="www.cvshome.org">www.cvshome.org</ulink>
+url="http://www.cvshome.org/docs/manual/">www.cvshome.org</ulink>
 along with the CVS downloads. The cvs manpage is also very
 informative.</para>
 
