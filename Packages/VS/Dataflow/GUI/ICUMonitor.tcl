@@ -1,3 +1,4 @@
+
 #  
 #  For more information, please see: http://software.sci.utah.edu
 #  
@@ -392,38 +393,42 @@ itcl_class VS_Render_ICUMonitor {
 
     method setTimeLabel {value} {
         set w .ui[modname]
-
-	$w.f.gl.timew.timel configure -text $value
+	if {[winfo exists $w]} {
+	    $w.f.gl.timew.timel configure -text $value
+	}
     }
 
     method selectMarker {} {
         set w .ui[modname]
-
-	set $this-selected_marker [$w.f.menu.mkrs.menu index active]
-        $this-c marker
+	if {[winfo exists $w]} {
+	    set $this-selected_marker [$w.f.menu.mkrs.menu index active]
+	    $this-c marker
+	}
     }
 
     method clearMarkers {} {
         set w .ui[modname]
-
-        $w.f.menu.mkrs.menu delete 0 end
-
-        $w.f.menu.mkrs configure -state disabled
+	if {[winfo exists $w]} {
+	    $w.f.menu.mkrs.menu delete 0 end    
+	    $w.f.menu.mkrs configure -state disabled
+	}
     }
 
     method setMarkers {value} {
         set w .ui[modname]
 
-        $w.f.menu.mkrs.menu add command -label $value \
-		-command "$this selectMarker"
-
-        $w.f.menu.mkrs configure -state normal
+	if {[winfo exists $w]} {
+	    $w.f.menu.mkrs.menu add command -label $value \
+		-command "$this selectMarker"	    
+	    $w.f.menu.mkrs configure -state normal
+	}
     }
 
     method setWindowTitle {value} {
         set w .ui[modname]
-
-	wm title $w $value
+	if {[winfo exists $w]} {
+	    wm title $w $value
+	}
     }
 
     method initialize_ui { {my_display "local"} } {
