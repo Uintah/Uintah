@@ -65,7 +65,8 @@ cd Thirdparty_install.<replaceable>x.x.x</replaceable>
 	<listitem>
 	  <para><emphasis>Optional:</emphasis> Enable
 	  <acronym>PNG</acronym> support in the TEEM third party
-	  library.  Set the <envar>TEEM_ZLIB</envar> and
+	  library.</para>
+	  <para>Set the <envar>TEEM_ZLIB</envar> and
 	  <envar>TEEM_PNG</envar> environment variables:</para>
 	  <para>
 	    For sh-type shells:
@@ -88,7 +89,8 @@ setenv TEEM_PNG
 	  environment variables <envar>TEEM_PNG_IPATH</envar> and
 	  <envar>TEEM_PNG_LPATH</envar> must be set.  For example, if
 	  PNG libraries and headers are installed in
-	  <filename>/usr/local</filename> then
+	  <filename>/usr/local/lib</filename> and
+	  <filename>/usr/local/include</filename> respectively then
 	  <envar>TEEM_PNG_IPATH</envar> and
 	  <envar>TEEM_PNG_LPATH</envar> are set as follows:</para>
 	  <para>
@@ -239,7 +241,8 @@ cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
       <listitem>
 	<para><emphasis>Optional:</emphasis> Enable
 	<acronym>PNG</acronym> support in the TEEM third party
-	library.  Set the <envar>TEEM_ZLIB</envar> and
+	library.</para>
+	<para>Set the <envar>TEEM_ZLIB</envar> and
 	<envar>TEEM_PNG</envar> environment variables:</para>
 	<para>
 	  For sh-type shells:
@@ -262,7 +265,8 @@ setenv TEEM_PNG
 	environment variables <envar>TEEM_PNG_IPATH</envar> and
 	<envar>TEEM_PNG_LPATH</envar> must be set.  For example, if
 	PNG libraries and headers are installed in
-	<filename>/usr/local</filename> then
+	<filename>/usr/local/lib</filename> and
+	<filename>/usr/local/include</filename> respectively then
 	<envar>TEEM_PNG_IPATH</envar> and
 	<envar>TEEM_PNG_LPATH</envar> are set as follows:</para>
 	<para>
