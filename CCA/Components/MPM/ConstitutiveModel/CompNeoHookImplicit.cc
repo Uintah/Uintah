@@ -74,9 +74,11 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
 
 }
 
-void CompNeoHookImplicit::allocateCMData(DataWarehouse* new_dw,
-					 ParticleSubset* subset,
-					 map<const VarLabel*, ParticleVariableBase*>* newState)
+void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
+					    ParticleSubset* subset,
+					    map<const VarLabel*, ParticleVariableBase*>* newState,
+					    ParticleSubset* delset,
+					    DataWarehouse* old_dw)
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure

@@ -56,6 +56,43 @@ JohnsonCookPlastic::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void 
+JohnsonCookPlastic::allocateCMDataAddRequires(Task* task,
+					      const MPMMaterial* matl,
+					      const PatchSet* patch,
+					      MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
+}
+
+void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
+					   ParticleSubset* addset,
+					   map<const VarLabel*, ParticleVariableBase*>* newState,
+					   ParticleSubset* delset,
+					   DataWarehouse* old_dw)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+ 
+  ParticleVariable<double> plasticStrain;
+  constParticleVariable<double> o_plasticStrain;
+
+  new_dw->allocateTemporary(plasticStrain,addset);
+  old_dw->get(o_plasticStrain,pPlasticStrainLabel,delset);
+
+  ParticleSubset::iterator n,o;
+
+  n = addset->begin();
+  for(o = delset->begin(); o != delset->end(); o++, n++) {
+    plasticStrain[*n] = o_plasticStrain[*o];
+  }
+
+  (*newState)[pPlasticStrainLabel]=plasticStrain.clone();
+
+}
+
+
+void 
 JohnsonCookPlastic::initializeInternalVars(ParticleSubset* pset,
 				           DataWarehouse* new_dw)
 {

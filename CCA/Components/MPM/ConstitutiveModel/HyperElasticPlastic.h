@@ -120,9 +120,11 @@ WARNING
 				  DataWarehouse* new_dw);
 
 
-    virtual void allocateCMData(DataWarehouse* new_dw,
-				ParticleSubset* subset,
-				map<const VarLabel*, ParticleVariableBase*>* newState);
+    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
+				   ParticleSubset* subset,
+				   map<const VarLabel*, ParticleVariableBase*>* newState,
+				   ParticleSubset* delset,
+				   DataWarehouse* old_dw);
 
 
     virtual void addInitialComputesAndRequires(Task* task,
