@@ -210,33 +210,40 @@ VolumeRenderer::draw_volume()
   psize[0] = NextPowerOf2(vp[2]);
   psize[1] = NextPowerOf2(vp[3]);
     
-  if(blend_num_bits_ != 8)
-  {
-    cout << "blend_num_bits_ = " << blend_num_bits_ << "\n";
+  if(blend_num_bits_ != 8) {
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
        || psize[0] != blend_buffer_->width()
-       || psize[1] != blend_buffer_->height())
-    {
-      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT,
-				  blend_num_bits_, true,
+       || psize[1] != blend_buffer_->height()) {
+      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, blend_num_bits_, true,
                                   GL_FALSE, GL_DONT_CARE, 24);
-      cout << "  Creating new buffer.\n";
-      if(blend_buffer_->create())
-      {
+      if(blend_buffer_->create()) {
         blend_buffer_->destroy();
         delete blend_buffer_;
         blend_buffer_ = 0;
         blend_num_bits_ = 8;
         use_blend_buffer_ = false;
-      }
-      else
-      {
+      } else {
         blend_buffer_->set_use_default_shader(false);
         blend_buffer_->set_use_texture_matrix(false);
       }
     }
-
-    // Blend buffer specific setup.
+  }
+  
+  if(blend_num_bits_ == 8) {
+    glEnable(GL_BLEND);
+    switch(mode_) {
+    case MODE_OVER:
+      glBlendEquation(GL_FUNC_ADD);
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      break;
+    case MODE_MIP:
+      glBlendEquation(GL_MAX);
+      glBlendFunc(GL_ONE, GL_ONE);
+      break;
+    default:
+      break;
+    }
+  } else {
     double mv[16], pr[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
     glGetDoublev(GL_PROJECTION_MATRIX, pr);
@@ -272,21 +279,6 @@ VolumeRenderer::draw_volume()
     }
   }
   
-  // Set blend mode.
-  glEnable(GL_BLEND);
-  switch(mode_) {
-  case MODE_OVER:
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    break;
-  case MODE_MIP:
-    glBlendEquation(GL_MAX);
-    glBlendFunc(GL_ONE, GL_ONE);
-    break;
-  default:
-    break;
-  }
-
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
 
