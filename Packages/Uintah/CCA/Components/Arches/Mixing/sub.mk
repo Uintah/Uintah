@@ -9,7 +9,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing
 SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
                 $(SRCDIR)/DynamicTable.cc \
                 $(SRCDIR)/MixRxnTableInfo.cc $(SRCDIR)/MixRxnTable.cc \
-		$(SRCDIR)/PDFMixingModel.cc \
+		$(SRCDIR)/PDFMixingModel.cc $(SRCDIR)/MeanMixingModel.cc \
 		$(SRCDIR)/Integrator.cc $(SRCDIR)/PDFShape.cc \
 		$(SRCDIR)/BetaPDFShape.cc \
 		$(SRCDIR)/ReactionModel.cc \

@@ -97,7 +97,7 @@ public:
       // All variables are in SI units with pressure in Pascals.
       // Parameters:
       // [in] mixVar is an array of independent variables
-      virtual Stream speciesStateSpace(const std::vector<double> mixVar);
+      virtual Stream speciesStateSpace(const std::vector<double>& mixVar);
 
 
       // GROUP: Get Methods :
@@ -120,7 +120,7 @@ public:
       inline int getTableDimension() const{
 	return d_tableDimension;
       }
-      inline string getMixTableType() const{
+      inline std::string getMixTableType() const{
 	return d_tableType;
       }
       //***warning** compute totalvars from number of species and dependent vars
@@ -159,7 +159,7 @@ private:
       // does not exist and table is dynamic, it calls the reaction model
       // to compute the entry.
       void tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars);
-      void convertKeytoFloatValues(int tableKeyIndex[], vector<double>& indepVars);
+      void convertKeytoFloatValues(int tableKeyIndex[], std::vector<double>& indepVars);
       void computeMeanValues(int* tableKeyIndex, Stream& meanStream);
    
       MixRxnTableInfo* d_tableInfo;
@@ -167,7 +167,7 @@ private:
       int d_numRxnVars;
       int d_depStateSpaceVars;
       bool d_adiabatic;
-      string d_tableType;
+      std::string d_tableType;
       std::vector<Stream> d_streams; 
       int d_tableDimension;
       // Data structure class that stores the table entries for state-space

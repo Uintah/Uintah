@@ -1,4 +1,4 @@
-//----- MixRxnTableInfo.h --------------------------------------------------
+//----- DynamicTable.h --------------------------------------------------
 
 #ifndef Uintah_Component_Arches_DynamicTable_h
 #define Uintah_Component_Arches_DynamicTable_h
@@ -64,8 +64,8 @@ class DynamicTable {
   //
   virtual ~DynamicTable();
 
-  Stream getProps(const std::vector<double> mixRxnVar); //Public or private???
-  virtual Stream tableLookUp(int* tableKeyIndex) = 0;//???Public or private???
+  void getProps(const std::vector<double>& mixRxnVar, Stream& outStream); //Public or private???
+  virtual void tableLookUp(int* tableKeyIndex, Stream& tableValue) = 0;//???Public or private???
   // Allocates memory for table
   void tableSetup(int numTableDim, MixRxnTableInfo* tableInfo);
  
@@ -78,8 +78,8 @@ class DynamicTable {
 
  private:
   // Recursive function to linearly interpolate from the KDTree
-  Stream interpolate(int currentDim, int* lowIndex, int* upIndex,
-		     double* lowFactor, double* upFactor);
+  void interpolate(int currentDim, int* lowIndex, int* upIndex,
+		     double* lowFactor, double* upFactor, Stream& interpValue);
   int d_tableDim;
   MixRxnTableInfo* d_tableInfo;
   // two dimensional arrays for storing information for linear interpolation
@@ -95,10 +95,15 @@ class DynamicTable {
 
 //
 // $Log$
-// Revision 1.6  2002/04/08 18:09:43  rawat
-// i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
-// ii) Modified computeStableTImeStep to include diffusion time scale
-// iii) changed mixing model back to the old one
+// Revision 1.7  2002/05/31 22:04:44  spinti
+// *** empty log message ***
+//
+// Revision 1.5  2002/03/28 23:14:50  spinti
+// 1. Added in capability to save mixing and reaction tables as KDTree or 2DVector
+// 2. Tables can be declared either static or dynamic
+// 3. Added capability to run using static clipped Gaussian MixingModel table
+// 4. Removed mean values mixing model option from PDFMixingModel and made it
+//    a separate mixing model, MeanMixingModel.
 //
 // Revision 1.4  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc

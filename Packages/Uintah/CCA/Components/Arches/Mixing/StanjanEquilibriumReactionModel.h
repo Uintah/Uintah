@@ -69,17 +69,17 @@ POSSIBLE REVISIONS:
 #include <iostream>
 
 namespace Uintah {
-using namespace std;
-  class KD_Tree;
   class ChemkinInterface;
   class Stream;
   class MixingModel;
+  class MixRxnTable;
   class MixRxnTableInfo;
   // Reference temperature defined to be the lower limit of integration in the
   // determination of the system sensible enthalpy
   const double TREF = 200.0;
   const double TLOW = 100.00;
   const double THIGH = 4000.0;
+  const int MAXITER = 1000;
  
 
   class StanjanEquilibriumReactionModel: public ReactionModel, public DynamicTable{
@@ -138,34 +138,34 @@ using namespace std;
     // Gets the state space (dependent) variables by  interpolation from a 
     // table using the values of the independent variables
     //
-    virtual void getRxnStateSpace(Stream& unreactedMixture, 
-				    vector<double>& varsHFPi, 
-				    Stream& reactedStream);
-
-
-  private:
+    virtual void getRxnStateSpace(const Stream& unreactedMixture, 
+				  std::vector<double>& varsHFPi, 
+				  Stream& reactedStream);
     // Computes the state space (dependent) variables using the Stanjan
     // equilibrium code given the unreacted stream information and values 
     // for the reaction variables
-    void computeRxnStateSpace(Stream& unreactedMixture, vector<double>& mixRxnVar, 
-			      Stream& equilStateSpace);
+    virtual void computeRxnStateSpace(const Stream& unreactedMixture, 
+				      const std::vector<double>& mixRxnVar, 
+				      Stream& equilStateSpace);
+
+
+  private:
     // Looks for needed entry in KDTree and returns that entry. If entry 
     // does not exist, calls integrator to compute entry before returning it.
-    Stream tableLookUp(int* tableKeyIndex);
+    void tableLookUp(int* tableKeyIndex, Stream& equilStateSpace);
     void convertIndextoValues(int* tableKeyIndex);
     void computeEquilibrium(double initTemp, double initPress,
-			    const vector<double> initMassFract, 
+			    const std::vector<double>& initMassFract, 
 			    Stream& equilSoln);
     double computeTemperature(const double absEnthalpy, 
-			      const vector<double>& massFract, double initTemp);   
+			      const std::vector<double>& massFract, 
+			      double initTemp);   
     void computeRadiationProperties();
     // Class object that stores all the information about the reaction
     // mechanism read in through Chemkin including species, elements, reaction
     // rates, and thermodynamic information.
     ChemkinInterface* d_reactionData;
     MixingModel* d_mixModel;
-    int d_numMixVars;
-    int d_numRxnVars;
     bool d_adiabatic;
     int d_rxnTableDimension;
     int d_depStateSpaceVars;
@@ -175,12 +175,7 @@ using namespace std;
     // Data structure class that stores the table entries for state-space
     // variables as a function of independent variables.
     // This could be implemented either as a k-d or a binary tree data structure.
-    KD_Tree* d_rxnTable;
-
-    static const int MAXITER = 1000;
-    // includes all the vars except vectors...
-    // increase the value if want to increase number of variables
-    static const int NUM_DEP_VARS = 7;
+    MixRxnTable* d_rxnTable;
  
   }; // End Class StanjanEquilibriumReactionModel
 

@@ -39,6 +39,7 @@ POSSIBLE REVISIONS
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
+#include <string>
 
 namespace Uintah {
   class Integrator;
@@ -91,13 +92,13 @@ public:
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
       //
-      // Get the number of mixing variables
       //
-      virtual int getNumMixVars() const = 0;
       virtual bool isAdiabatic() const = 0;
+      virtual int getNumMixVars() const = 0; // Get number of mixing variables
       virtual int getNumMixStatVars() const = 0;
       virtual int getNumRxnVars() const = 0;
       virtual int getTableDimension() const = 0;
+      virtual std::string getMixTableType() const = 0;
       virtual int getTotalVars() const = 0;
       virtual ReactionModel* getRxnModel() const = 0;
       virtual Integrator* getIntegrator() const = 0;
