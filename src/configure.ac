@@ -405,6 +405,14 @@ SCI_ARG_ENABLE(scirun2,
   [enable_scirun2=${enable_scirun2='no'}])
 
 
+if test "$pkg_CollabVis" = "yes"; then
+  DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
+  HAVE_COLLAB_VIS="yes"
+fi
+
+AC_SUBST(DEF_COLLAB_VIS)
+AC_SUBST(HAVE_COLLAB_VIS)
+
 ##  --------------------------------------------------------------------
 ##  Save off the arguments to configure, being careful to save 
 ##  Package strings for later parsing.
@@ -1545,6 +1553,27 @@ SCI_TRY_LINK(STD_HDRS,required standard headers,[
 #include <netinet/in.h>
 ],,,,,,not-optional)
 
+##  --  optional stat64 headers
+# stat64 is a CC lib so it has to be checked as a CC file not C.
+ext="$ac_ext"
+ac_ext="cc"
+
+SCI_TRY_LINK(STAT64,standard headers,[
+#include <sys/stat.h>
+],,,,,[
+  struct stat64 buf;
+],optional)
+
+# Restore the previous settings.
+ac_ext="$ext"
+
+if test "$HAVE_STAT64" = "yes"; then
+  DEF_STAT64="#define HAVE_STAT64 1"
+fi
+
+AC_SUBST(DEF_STAT64)
+
+
 # don't test for malloc.h or values.h on darwin
 case $host in
   *-darwin*)
@@ -1685,77 +1714,6 @@ SCI_TRY_LINK(BLT,required BLT library and headers,[
 AC_SUBST(BLT_LIB_FLAG)
 AC_SUBST(BLT_LIB_DIR_FLAG)
 AC_SUBST(INC_BLT_H)
-
-if test "$pkg_CollabVis" = "yes"; then
-  DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
-  HAVE_COLLAB_VIS="yes"
-fi
-
-AC_SUBST(DEF_COLLAB_VIS)
-AC_SUBST(HAVE_COLLAB_VIS)
-
-
-if test "$sci_check_plplot" = "yes"; then
-  if test "$with_plplot"; then
-    _sci_lib="$with_plplot/lib"
-    _sci_inc="$with_plplot/include"
-  else
-    _sci_lib="/usr/local/plplot/lib $sci_thirdparty_libs"
-    _sci_inc="/usr/local/plplot/include $sci_thirdparty_includes"
-  fi
-
-
-#  SCI_TRY_LINK(PLPLOTTCLTK,optional optimized plplottcltk library and headers,[
-#
-#  ],$_sci_inc,plplottcltk, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
-
-#  if test "$HAVE_PLPLOTTCLTK" = "no"; then
-#    SCI_TRY_LINK(PLPLOTTCLTK,optional debug plplottcltk library and headers,[
-#
-#    ],$_sci_inc,plplottcltkd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-#  fi
-
-  SCI_TRY_LINK(PLPLOT,optional optimized plplot library and headers,[
-  #include <plplot/plplot.h> 
-  ],$_sci_inc,plplot, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
-  if test "$HAVE_PLPLOT" = "no"; then
-    SCI_TRY_LINK(PLPLOT,optional debug plplot library and headers,[
-    #include <plplot/plplot.h> 
-    ],$_sci_inc,plplotd, $_sci_lib,$ITK_LIB_DIR_FLAG $ITK_LIB_FLAG $ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG,,optional)
-  fi
-
-  if test "$HAVE_PLPLOT" = "yes"; then
-    DEF_PLPLOT="#define HAVE_PLPLOT 1"
-  fi
-
-  SCI_TRY_LINK(TCLMATRIX,optional optimized tclMatrix library and headers,[
-  #include <plplot/tclMatrix.h> 
-  ],$_sci_inc,tclmatrix, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
-  if test "$HAVE_TCLMATRIX" = "no"; then
-    SCI_TRY_LINK(TCLMATRIX,optional debug tclMatrix library and headers,[
-    #include <plplot/tclMatrix.h> 
-    ],$_sci_inc,tclmatrixd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-  fi
-
-  if test "$HAVE_TCLMATRIX" = "yes"; then
-    DEF_TCLMATRIX="#define HAVE_TCLMATRIX 1"
-  fi
-fi #end sci_check_plplot
-
-#AC_SUBST(PLPLOTTCLTK_LIB_FLAG)
-#AC_SUBST(PLPLOTTCLTK_LIB_DIR_FLAG)
-AC_SUBST(PLPLOT_LIB_FLAG)
-AC_SUBST(PLPLOT_LIB_DIR_FLAG)
-AC_SUBST(INC_PLPLOT_H)
-AC_SUBST(DEF_PLPLOT)
-
-AC_SUBST(TCLMATRIX_LIB_FLAG)
-AC_SUBST(TCLMATRIX_LIB_DIR_FLAG)
-AC_SUBST(INC_TCLMATRIX_H)
-AC_SUBST(DEF_TCLMATRIX)
 
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
