@@ -71,6 +71,25 @@ public:
 };
 
 
+class SCICORESHARE GeomSuperquadric : public GeomObj {
+public:
+  GeomSuperquadric(int resolution);
+  GeomSuperquadric(const GeomSuperquadric &copy);
+  virtual ~GeomSuperquadric();
+  
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+  
+  
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+};
+
+
 class SCICORESHARE GeomSpheres : public GeomObj {
 private:
   vector<Point> centers_;

@@ -129,6 +129,52 @@ void GeomSphere::getnunv(int num_polygons, int &nu, int &nv) {
 }
 
 
+Persistent* make_GeomSuperquadric()
+{
+    return scinew GeomSuperquadric(5);
+}
+
+PersistentTypeID GeomSuperquadric::type_id("GeomSuperquadric",
+					   "GeomObj", make_GeomSuperquadric);
+
+GeomSuperquadric::GeomSuperquadric(int resolution)
+{
+}
+
+
+GeomSuperquadric::GeomSuperquadric(const GeomSuperquadric& copy)
+  : GeomObj(copy)
+{
+}
+
+GeomSuperquadric::~GeomSuperquadric()
+{
+}
+
+
+GeomObj* GeomSuperquadric::clone()
+{
+    return scinew GeomSuperquadric(*this);
+}
+
+
+void GeomSuperquadric::get_bounds(BBox& bb)
+{
+    bb.extend(Point(0.0, 0.0, 0.0), 1.0);
+}
+
+
+#define GEOMSUPERQUADRIC_VERSION 1
+
+void GeomSuperquadric::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomSuperquadric", GEOMSUPERQUADRIC_VERSION);
+    GeomObj::io(stream);
+    stream.end_class();
+}
+
+
 Persistent* make_GeomSpheres()
 {
   return scinew GeomSpheres;

@@ -3380,6 +3380,18 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
+void GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+
+  //di->polycount+=2*(nu-1)*(nv-1);
+
+  gluSphere(di->qobj, 1.0, 5, 5);
+
+  post_draw(di);
+}
+
+
 void
 GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
 {

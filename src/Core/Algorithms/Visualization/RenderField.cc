@@ -235,10 +235,11 @@ add_data(const Point &p, const Vector &d, GeomArrows *arrows,
 
 
 void 
-RenderTensorFieldBase::add_item(GeomHandle glyph,
+RenderTensorFieldBase::add_item(GeomGroup *g,
+				GeomHandle glyph,
 				const Point &p, Tensor &t,
-				double scale, int resolution,
-				GeomGroup *g, bool colorize)
+				double scale,
+				bool colorize)
 {
   Vector ecolor;
   GeomTransform *gt = 0;
@@ -297,6 +298,27 @@ RenderTensorFieldBase::add_item(GeomHandle glyph,
     g->add(gt);
   }
 }
+
+
+
+void 
+RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
+					 MaterialHandle mat,
+					 const Point &p, Tensor &t,
+					 double scale, int resolution,
+					 bool colorize)
+{
+  GeomHandle glyph = scinew GeomSuperquadric(resolution);
+
+  if (mat.get_rep())
+  {
+    glyph = scinew GeomMaterial(glyph, mat);
+  }
+
+  add_item(g, glyph, p, t, scale, colorize);
+}
+
+
 
 RenderScalarFieldBase::RenderScalarFieldBase()
 {}
