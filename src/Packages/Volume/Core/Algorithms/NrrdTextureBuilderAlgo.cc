@@ -106,7 +106,6 @@ NrrdTextureBuilderAlgo::build(TextureHandle texture,
   vector<Brick*>& bricks = texture->bricks();
   if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
      || nc != texture->nc() || card_mem != texture->card_mem()) {
-    cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
     build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
     texture->set_size(nx, ny, nz, nc, nb);
     texture->set_card_mem(card_mem);
@@ -179,14 +178,11 @@ NrrdTextureBuilderAlgo::build_bricks(vector<Brick*>& bricks, int nx, int ny,
   num_brick[0] = (int)ceil((double)(data_size[0]-1)/(brick_size[0]-1));
   num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
   num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
-  cerr << "Number of bricks: " << num_brick[0] << " x " << num_brick[1]
-       << " x " << num_brick[2] << endl;
   // padded sizes of last bricks
   brick_pad[0] = NextPowerOf2(data_size[0] - (num_brick[0]-1)*(brick_size[0]-1));
   brick_pad[1] = NextPowerOf2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
   brick_pad[2] = NextPowerOf2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
   // delete previous bricks (if any)
-  cerr << "DELETING BRICKS" << endl;
   for(unsigned int i=0; i<bricks.size(); i++) delete bricks[i];
   bricks.resize(0);
   bricks.reserve(num_brick[0]*num_brick[1]*num_brick[2]);
@@ -246,9 +242,6 @@ NrrdTextureBuilderAlgo::build_bricks(vector<Brick*>& bricks, int nx, int ny,
           BBox(Point(tmin[0], tmin[1], tmin[2]),
                Point(tmax[0], tmax[1], tmax[2])),
           true);
-        cerr << "Adding brick: " << b->nx() << " " << b->ny() << " " << b->nz() << " | "
-             << b->ox() << " " << b->oy() << " " << b->oz() << " -> "
-             << b->mx() << " " << b->my() << " " << b->mz() << endl;
         bricks.push_back(b);
 
         // update x parameters                     
