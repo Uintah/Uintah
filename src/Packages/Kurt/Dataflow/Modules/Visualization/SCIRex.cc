@@ -153,7 +153,7 @@ void SCIRex::execute(void)
     }
     old_fixed = ( is_fixed_.get() == 1);
     ogeom_->delAll();
-    ogeom_->addObj( volren_, "GridVolVis TransParent");
+    ogeom_->addObj( volren_, "SCIRex TransParent");
     
   } else {
     bool needbuild = false;
