@@ -40,7 +40,6 @@
 #     - 
 
 # For TESTING
-#set DataflowTCL .
 #source NetworkEditor.tcl
 #source Tooltips.tcl
 
