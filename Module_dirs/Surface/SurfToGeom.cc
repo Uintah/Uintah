@@ -93,8 +93,10 @@ Module* SurfToGeom::clone(int deep)
 void SurfToGeom::execute()
 {
     SurfaceHandle surf;
-    if (!isurface->get(surf))
+    if (!isurface->get(surf)){
+	ogeom->delAll();
 	return;
+    }
 
     ColormapHandle cmap;
     int have_cm=icmap->get(cmap);
