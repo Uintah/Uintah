@@ -173,8 +173,14 @@ class ViewImage : public Module
       
     UIint		mouse_x_;
     UIint		mouse_y_;
+    UIint		show_guidelines_;
+    bool		mouse_in_window_;
+
+    UIdouble		fusion_;
     
     GLfloat *		rgba_[4];
+
+
   };
   typedef vector<SliceWindow *>	SliceWindows;
 
@@ -202,13 +208,16 @@ class ViewImage : public Module
   int			colormap_generation_;
   int			colormap_size_;
 
-
+  SliceWindow *		current_window_;
 
   Point			cursor_;
 
   int			max_slice_[3];
   double		scale_[3];
   double		center_[3];
+
+  UIdouble		min_;
+  UIdouble		max_;
 
   //! output port
   GeometryOPort *	ogeom_;
@@ -248,6 +257,8 @@ class ViewImage : public Module
   void			handle_gui_motion(GuiArgs &args);
   void			handle_gui_button(GuiArgs &args);
   void			handle_gui_keypress(GuiArgs &args);
+  void			handle_gui_enter(GuiArgs &args);
+  void			handle_gui_leave(GuiArgs &args);
 
   void			debug_print_state(int state);
   
@@ -286,8 +297,8 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   z_(ctx->subVar("posz"),0.0),
   scale_(ctx->subVar("scale"), 1.0),
   bias_(ctx->subVar("bias"),0.0),
-  clut_ww_(ctx->subVar("clut_ww"), -1),
-  clut_wl_(ctx->subVar("clut_wl"), -1),
+  clut_ww_(ctx->subVar("clut_ww")),
+  clut_wl_(ctx->subVar("clut_wl")),
   auto_levels_(ctx->subVar("auto_levels"),0),
   mode_(ctx->subVar("mode"),0),
   crosshairs_(ctx->subVar("crosshairs"),0),
@@ -295,7 +306,10 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   invert_(ctx->subVar("invert"),0),
   reverse_(ctx->subVar("reverse"),0),
   mouse_x_(ctx->subVar("mouse_x"),0),
-  mouse_y_(ctx->subVar("mouse_y"),0)
+  mouse_y_(ctx->subVar("mouse_y"),0),
+  show_guidelines_(ctx->subVar("show_guidelines"),1),
+  mouse_in_window_(false),
+  fusion_(ctx->subVar("fusion"), 1.0)
 {
   for (int i = 0; i < 3; ++i) {
     //    slice_[i] = ctx->subVar("slice_"+to_string(i),0);
@@ -339,6 +353,9 @@ ViewImage::ViewImage(GuiContext* ctx) :
   colormap_(0),
   colormap_generation_(-1),
   colormap_size_(32),
+  current_window_(0),
+  min_(ctx->subVar("min"), -1),
+  max_(ctx->subVar("max"), -1),
   ogeom_(0)
 {
 
@@ -445,7 +462,8 @@ ViewImage::redraw_window(SliceWindow &window) {
   //  ASSERT(slices_[window.axis_][window.slice_num_]);
   for (unsigned int s = 0; s < window.slices_.size(); ++s)
     draw_slice(window, *window.slices_[s]);
-  draw_guidelines(window, cursor_.x(), cursor_.y(), cursor_.z());
+  if (*window.show_guidelines_)
+    draw_guidelines(window, cursor_.x(), cursor_.y(), cursor_.z());
   window.viewport_->swap();
   window.viewport_->release();
 }
@@ -465,6 +483,7 @@ ViewImage::extract_colormap(SliceWindow &window)
   if (colormap_->generation != colormap_generation_) recompute = true;
   if (ww != *window.clut_ww_) recompute = true;
   if (wl != *window.clut_wl_) recompute = true;
+  if (!window.rgba_[0]) recompute = true;
   if (!recompute) return false;
 
   colormap_generation_ = colormap_->generation;
@@ -491,9 +510,10 @@ ViewImage::extract_colormap(SliceWindow &window)
     for (i = 0; i < 4; i++) {
       const int cmap_pos = Round(scale*(c-min));
       if (cmap_pos < 0) 
-	window.rgba_[i][c] = 0.0;
-      else if (cmap_pos >= colormap_->resolution())
-	window.rgba_[i][c] = 1.0;
+	window.rgba_[i][c] = colormap_->get_rgba()[i];
+      else if (cmap_pos >= int(colormap_->resolution()))
+	window.rgba_[i][c] = 
+	  colormap_->get_rgba()[(colormap_->resolution()-1)*4+i];
       else
 	window.rgba_[i][c] =colormap_->get_rgba()[cmap_pos*4+i];
     }
@@ -510,6 +530,8 @@ ViewImage::extract_colormap(SliceWindow &window)
 // if x, y, or z < 0, then that dimension wont be rendered
 void
 ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
+  if (!current_window_) return;
+  if (!current_window_->show_guidelines_()) return;
   window.viewport_->make_current();
   setup_gl_view(window);
   const bool inside = mouse_in_window(window);
@@ -540,16 +562,16 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
   c[1] = y;
   c[2] = z;
   for (int i = 0; i < 2; ++i) {
-     if (c[p] > 0 && c[p] < max_slice_[p]) {
+     if (c[p] >= 0 && c[p] <= max_slice_[p]*scale_[p]) {
        glVertex3f(p==0?x:0.0, p==1?y:0.0, p==2?z:0.0);
        glVertex3f(p==0?x+one:0.0, p==1?y+one:0.0, p==2?z+one:0.0);
-       glVertex3f(p==0?x+one:(axis==0?0.0:max_slice_[s]*scale_[s]),
-		  p==1?y+one:(axis==1?0.0:max_slice_[s]*scale_[s]),
-		  p==2?z+one:(axis==2?0.0:max_slice_[s]*scale_[s]));
+       glVertex3f(p==0?x+one:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+		  p==1?y+one:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+		  p==2?z+one:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
        
-       glVertex3f(p==0?x:(axis==0?0.0:max_slice_[s]*scale_[s]),
-		  p==1?y:(axis==1?0.0:max_slice_[s]*scale_[s]),
-		  p==2?z:(axis==2?0.0:max_slice_[s]*scale_[s]));
+       glVertex3f(p==0?x:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+		  p==1?y:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+		  p==2?z:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
      }
      SWAP(p,s);
   }
@@ -572,7 +594,7 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
   glColor4dv(yellow);
   glBegin(GL_QUADS);
   for (int i = 0; i < 2; ++i) {
-    if (c[p] < 0 || c[p] > max_slice_[p]) {
+    if (c[p] < 0 || c[p] > max_slice_[p]*scale_[p]) {
       glVertex3f(p==0?x:cvll(0), 
 		 p==1?y:cvll(1), 
 		 p==2?z:cvll(2));
@@ -598,21 +620,21 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
 		 p==2?z:(axis==2?cvll(2):0.0));
 
 
-      glVertex3f(p==0?x:(axis==0?0.0:max_slice_[s]*scale_[s]), 
-		 p==1?y:(axis==1?0.0:max_slice_[s]*scale_[s]),
-		 p==2?z:(axis==2?0.0:max_slice_[s]*scale_[s]));
+      glVertex3f(p==0?x:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]), 
+		 p==1?y:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==2?z:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
 
-      glVertex3f(p==0?x+one:(axis==0?0.0:max_slice_[s]*scale_[s]), 
-		 p==1?y+one:(axis==1?0.0:max_slice_[s]*scale_[s]), 
-		 p==2?z+one:(axis==2?0.0:max_slice_[s]*scale_[s]));
+      glVertex3f(p==0?x+one:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]), 
+		 p==1?y+one:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]), 
+		 p==2?z+one:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
 
-      glVertex3f(p==0?x+one:(axis==0?(axis==0?0.0:max_slice_[s]*scale_[s]):cvur(0)),
-		 p==1?y+one:(axis==1?(axis==1?0.0:max_slice_[s]*scale_[s]):cvur(1)),
-		 p==2?z+one:(axis==2?(axis==2?0.0:max_slice_[s]*scale_[s]):cvur(2)));
+      glVertex3f(p==0?x+one:(axis==0?(axis==0?0.0:(max_slice_[s]+1)*scale_[s]):cvur(0)),
+		 p==1?y+one:(axis==1?(axis==1?0.0:(max_slice_[s]+1)*scale_[s]):cvur(1)),
+		 p==2?z+one:(axis==2?(axis==2?0.0:(max_slice_[s]+1)*scale_[s]):cvur(2)));
       
-      glVertex3f(p==0?x:(axis==0?(axis==0?0.0:max_slice_[s]*scale_[s]):cvur(0)),
-		 p==1?y:(axis==1?(axis==1?0.0:max_slice_[s]*scale_[s]):cvur(1)),
-		 p==2?z:(axis==2?(axis==2?0.0:max_slice_[s]*scale_[s]):cvur(2)));
+      glVertex3f(p==0?x:(axis==0?(axis==0?0.0:(max_slice_[s]+1)*scale_[s]):cvur(0)),
+		 p==1?y:(axis==1?(axis==1?0.0:(max_slice_[s]+1)*scale_[s]):cvur(1)),
+		 p==2?z:(axis==2?(axis==2?0.0:(max_slice_[s]+1)*scale_[s]):cvur(2)));
     }
     SWAP(p,s);
   }
@@ -718,14 +740,18 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
   GLfloat ones[4] = {1.0, 1.0, 1.0, 1.0};
   glColor4fv(ones);
-  //glColor4f(slice.opacity_, slice.opacity_, slice.opacity_, slice.opacity_);
+  GLfloat opacity = slice.opacity_*window.fusion_();
+  if (volumes_.size() == 2 && slice.volume_ == volumes_[1]) 
+    opacity = slice.opacity_*(1.0 - window.fusion_);
+  glColor4f(opacity, opacity, opacity, opacity);
   glDisable(GL_CULL_FACE);
   glDisable(GL_LIGHTING);
   glEnable(GL_BLEND);
   glEnable(GL_TEXTURE_2D);
 
   //  if (slice.invert_)
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(GL_ONE, GL_ONE);
   //else 
   //glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
     
@@ -767,8 +793,8 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 
     glPixelMapfv(GL_PIXEL_MAP_I_TO_R, colormap_size_, window.rgba_[0]);
@@ -780,11 +806,17 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
     //    glPixelTransferi(GL_INDEX_SHIFT, shift);
     //    glPixelTransferi(GL_INDEX_OFFSET, window.clut_wl_ - window.clut_ww_/2);
 
-    
+    GLenum type;
+    switch (slice.nrrd_->nrrd->type) {
+    case nrrdTypeChar:		type = GL_BYTE; break;
+    case nrrdTypeUChar:		type = GL_UNSIGNED_BYTE; break;
+    case nrrdTypeShort:		type = GL_SHORT; break;
+    case nrrdTypeUShort:	type = GL_UNSIGNED_SHORT; break;
+    default: ASSERT(0); break;
+    }
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
-		 0, GL_COLOR_INDEX, GL_UNSIGNED_SHORT, slice.nrrd_->nrrd->data);    
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
-    //	   0, GL_ALPHA, GL_UNSIGNED_BYTE, slice.nrrd_->nrrd->data);    
+		 0, GL_COLOR_INDEX, type, slice.nrrd_->nrrd->data);    
   }
 
 
@@ -891,7 +923,8 @@ ViewImage::set_slice_coords(NrrdSlice &slice) {
 
 void
 ViewImage::extract_window_slices(SliceWindow &window) {
-  unsigned int v, s, a;
+  unsigned int v, s;
+  int a;
   for (s = 0; s < window.slices_.size(); ++s)
     delete window.slices_[s];
   window.slices_.clear();
@@ -900,7 +933,7 @@ ViewImage::extract_window_slices(SliceWindow &window) {
     for (a = 0; a < 3; a++) {
       window.slices_.push_back
 	(scinew NrrdSlice(a, window.slice_[a], volumes_[v]));
-      if (int(window.axis_) == a)
+      if (window.axis_ == a)
 	extract_slice(*volumes_[v], *window.slices_.back(), a, *window.slice_[a]);
     }
   }
@@ -938,7 +971,7 @@ ViewImage::extract_slice(NrrdVolume &volume,
 
   NrrdDataHandle temp1 = scinew NrrdData;
   temp1->nrrd = nrrdNew();  
-  NrrdRange *range =nrrdRangeNewSet(slice.nrrd_->nrrd,nrrdBlind8BitRangeState);
+  
 
 //   if (nrrdQuantize(temp1->nrrd, slice.nrrd_->nrrd, range, 8)) {
 //     char *err = biffGetDone(NRRD);
@@ -988,9 +1021,9 @@ ViewImage::prev_slice(SliceWindow &window)
     window.slice_[window.axis_] = 0;
   else 
     window.slice_[window.axis_]--;
-  
+  cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   extract_window_slices(window);
-  redraw_window(window);
+  redraw_all();
 }
 
 void
@@ -1002,8 +1035,10 @@ ViewImage::next_slice(SliceWindow &window)
     window.slice_[window.axis_] = max_slice_[window.axis_];
   else
     window.slice_[window.axis_]++;
+  
+  cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   extract_window_slices(window);
-  redraw_window(window);
+  redraw_all();
 }
 
 void
@@ -1036,7 +1071,7 @@ ViewImage::screen_to_world(SliceWindow &window,
   gluUnProject(double(x), double(y), double(window.slice_[window.axis_]),
 	       model, proj, view, xyz+0, xyz+1, xyz+2);
   window.viewport_->release();
-  xyz[window.axis_] = window.slice_[window.axis_];
+  xyz[window.axis_] = double(window.slice_[window.axis_])*scale_[window.axis_];
   return Point(xyz[0], xyz[1], xyz[2]);
 }
   
@@ -1105,10 +1140,17 @@ ViewImage::execute()
     for (i = 0; i < 3; i++)
       max_slice_[i] = nrrd2->nrrd->axis[i].size-1;
 
-
+  bool first = true;
   // next line not efficent, but easy to code
   volumes_.clear();
   if (nrrd1.get_rep()) {
+    NrrdRange *range =nrrdRangeNewSet(nrrd1->nrrd,nrrdBlind8BitRangeState);
+    if (first) min_ = range->min;
+    min_ = Min(min_, range->min);
+    if (first) max_ = range->max;
+    max_ = Max(max_, range->max);
+    if (first) first = false;
+
     volumes_.push_back(scinew NrrdVolume(ctx->subVar("nrrd1",0)));
     volumes_.back()->nrrd_ = nrrd1;
   }
@@ -1141,7 +1183,8 @@ ViewImage::execute()
 
 bool
 ViewImage::mouse_in_window(SliceWindow &window) {
-  return (window.mouse_x_ >= window.viewport_->x() && 
+  return (window.mouse_in_window_ &&
+	  window.mouse_x_ >= window.viewport_->x() && 
 	  window.mouse_x_ < window.viewport_->x()+window.viewport_->width() &&
 	  window.mouse_y_ >= window.viewport_->y() &&
 	  window.mouse_y_ < window.viewport_->y()+window.viewport_->height());
@@ -1175,12 +1218,44 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
     window.mouse_x_ = x; // - window.viewport_->x();
     window.mouse_y_ = y; //- window.viewport_->y();
     if (mouse_in_window(window))
-      cursor_ = screen_to_world(window, x, y);
+      cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   }
   redraw_all();
 
 
 }
+
+
+
+void
+ViewImage::handle_gui_enter(GuiArgs &args) {
+  if (layouts_.find(args[2]) == layouts_.end()) {
+    error ("Cannot handle enter on "+args[2]);
+    return;
+  }
+  WindowLayout &layout = *layouts_[args[2]];
+  for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
+    SliceWindow &window = *layout.windows_[w];
+    window.mouse_in_window_ = true;
+    current_window_ = &window;
+  }
+}
+
+
+void
+ViewImage::handle_gui_leave(GuiArgs &args) {
+  if (layouts_.find(args[2]) == layouts_.end()) {
+    error ("Cannot handle enter on "+args[2]);
+    return;
+  }
+  WindowLayout &layout = *layouts_[args[2]];
+  for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
+    SliceWindow &window = *layout.windows_[w];
+    window.mouse_in_window_ = false;
+    current_window_ = false;
+  }
+}
+
 
 
 void
@@ -1379,6 +1454,8 @@ ViewImage::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "motion") handle_gui_motion(args);
   else if (args[1] == "button") handle_gui_button(args);
   else if (args[1] == "keypress") handle_gui_keypress(args);
+  else if (args[1] == "enter") handle_gui_enter(args);
+  else if (args[1] == "leave") handle_gui_leave(args);
   else if(args[1] == "setgl") {
     ASSERT(layouts_.find(args[2]) == layouts_.end());
     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
