@@ -42,10 +42,10 @@
 <title>The Doc Tree</title>
 
 <section>
-<title id="overview">Overview</title>
+<title id="sec.overview">Overview</title>
 <para><xref linkend="tbl.doc-tree"/> shows the organization of the
 doc tree.  It  shows only those files that are part of CVS.
-Generated files (aka products) are discussed in a later section.</para>
+Generated files (aka products) are discussed in a <link linkend="sec.srcsprds">later</link> section.</para>
 <para>
 <table id="tbl.doc-tree">
 <title>Doc Tree Organization (edition &edition;)</title>
@@ -134,7 +134,7 @@ guide. <filename>Makefile</filename> for generating developers guide.</para>
 <entry><filename>doc/Developer/CodeViews</filename></entry>
 <entry>
 <para>Tools (Makefile, configuration file, and script) for building source
-code (C++) based documentation using doxygen.
+code (C++) based documentation using Doxygen.
 </para>
 </entry>
 </row>
@@ -185,9 +185,9 @@ SCIRun installation documentation.</para>
 </section>
 
 <section>
-<title id="tools">Tools</title>
+<title id="sec.tools">Tools</title>
 <para>
-The following tools are needed for building SCIRun documentation:
+The following tools are needed to build SCIRun documentation:
 <variablelist>
 <varlistentry>
 <term><ulink url="http://www.gnu.org/software/make/make.html">GNU Make</ulink></term>
@@ -245,15 +245,21 @@ documentation from C++ source files.</para>
 <varlistentry>
 <term><ulink url="http://docbook.sourceforge.net/">DocBook Style Sheets</ulink></term>
 <listitem>
-<para>The DocBook stylesheets translate DocBook XML documents (Developers guide and
-Installation guide) to HTML.</para>
+<para>The DocBook stylesheets translate DocBook XML documents (Developers
+guide and Installation guide) to HTML.</para> 
+<para>There are 3 SCIRun
+specific stylesheets that must be copied into the DocBook distribution. The
+files <filename>doc/Utilities/XML/srdocbook.xsl</filename>,
+<filename>doc/Utilities/XML/srdocbook-common.xsl</filename>, and
+<filename>doc/Utilities/XML/srdocbook-chunk.xsl</filename> must be copied
+to the <filename>html</filename> directory of the DocBook
+distribution.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term><ulink url="http://www.pragmaticprogrammer.com/ruby/">Ruby</ulink></term>
 <listitem>
-<para>A number of scripts in the doc tree are written in the programming language
-Ruby.</para>
+<para>A number of scripts in the doc tree are written in the programming language Ruby.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -262,34 +268,143 @@ Ruby.</para>
 </section>
 
 <section>
-<title id="makedocs">Making Docs</title>
-<para>Present recipie for building docs.</para>
+<title id="sec.makedocs">Making Docs</title>
+<para>This section assumes that all necessary
+<link linkend="sec.tools">tools</link> have been installed.</para>
+<para>Three environment variables must be set before building
+the documentation.
+<simplelist>
+<member><envar>CLASSPATH</envar> must contain the path of the
+file <filename>saxon.jar</filename> within the Saxon distribution.
+</member>
+<member><envar>STYLESHEET_PATH</envar> must point to the location of the
+<filename>html</filename> directory within the DocBook stylesheet
+distribution.
+</member>
+<member>
+<envar>WITH_CV</envar> should be set to the string "true" if you want Doxygen
+to build the C++ based documentation.
+</member>
+</simplelist>
+For instance (assuming a Bourne type shell):
+<programlisting>
+export CLASSPATH=/usr/local/lib/Saxon/saxon.jar
+export STYLESHEET_PATH=/usr/local/xsl/docbook/html/
+export WITH_CV=true
+</programlisting>
+</para>
+<para>Now to make (all) docs <command>cd</command> to the
+<filename>doc</filename> directory and type <command>make</command>.
+</para>
+<para>You may want to build one particular doc or a particular set of docs.
+You can do 
+so by <command>cd</command>'ing to the directory of interest and typing
+<command>make</command>.  For example:
+<programlisting>
+cd doc/Developer; make        # Make all developer docs.
+</programlisting> or
+<programlisting>
+cd doc/Developer/Guide; make  # Make just the developer's guide.
+</programlisting>
+</para>
+<para>Type <command>make tarball</command> if you want to also create a
+doc tarball.</para>
+<para>Type <command>make clean</command> to remove "incidental" files (but
+no products).  Type <command>make veryclean</command> to remove products
+(generated files).</para>
+</section>
 
-<section>
-<title>Sources</title>
-<para>Discuss sources: XML, tex, HTML.</para>
+<section id="sec.srcsprds">
+<title>Sources, Products, and Makefiles</title>
+<para>The term <firstterm>sources</firstterm> refers to
+files that are created and edited manually.  The term
+<firstterm>products</firstterm> refers to files that are generated from sources by a
+tool of some sort.  Sources are always part of the CVS repository and
+products never are.</para>.
+<para>
+Makefiles are responsible for generating products from sources.
+<xref linkend="tbl.srcprd"/> shows sources, corresponding Makefiles, and
+the products generated by the Makefiles.
+<table id="tbl.srcprd">
+<title>Sources, Makefiles, and Products</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Source(s)</entry>
+<entry>Makefile</entry>
+<entry>Product(s)</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>C++ sources in the src side of the tree</entry>
+<entry><filename>doc/Developer/CodeViews/Makefile</filename></entry>
+<entry><filename>doc/Developer/CodeViews/html/*.html</filename></entry>
+</row>
+<row>
+<entry><filename>doc/Developer/Guide/main.xml</filename>,
+<filename>doc/Developer/Guide/dev/*.xml</filename>, and
+<filename>doc/Developer/Guide/src/*.xml</filename>.  These are DocBook
+sources.</entry>
+<entry><filename>doc/Developer/Guide/Makefile</filename></entry>
+<entry><filename>doc/Developer/Guide/*.html</filename> (although not all html files are generated).</entry>
+</row>
+<row>
+<entry>Module XML files in the <filename>src</filename> side of the tree
+(e.g. <filename>src/Dataflow/XML/*.xml</filename>).</entry>
+<entry><filename>doc/Developer/Modules/Makefile</filename></entry>
+<entry>HTML files saved with sources, e.g. <filename>src/Dataflow/XML/*.html</filename></entry>
+</row>
+<row>
+<entry><filename>doc/FAQBook/faqbook.xml</filename>,
+<filename>doc/Developer/FAQ/faq.xml</filename>,
+<filename>doc/Installation/FAQ/faq.xml</filename>, and
+<filename>doc/User/FAQ/faq.xml</filename>.</entry> 
+<entry>doc/FAQBook/Makefile</entry>
+<entry><filename>doc/FAQBook/*.html</filename>.</entry>
+</row>
+<row>
+<entry><filename>doc/Installation/Guide/*.xml</filename>. These are DocBook
+sources.</entry>
+<entry><filename>doc/Installation/Guide/Makefile</filename></entry>
+<entry><filename>doc/Installation/Guide/*.html</filename></entry>
+</row>
+<row>
+<entry><filename>doc/Developer/Guide/*.tex</filename> and xml files on the
+<filename>src</filename> side of the tree.</entry>
+<entry><filename>doc/Developer/Guide/Makefile</filename></entry>
+<entry><filename>doc/Developer/Guide/usersguide.ps</filename> and <filename>doc/Developer/Guide/usersguide/*.html</filename></entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</para>
+
 </section>
 
 <section>
-<title id="products">Products</title>
-<para>Discuss doc products, where they reside, etc.</para>
+<title id="sec.makefiles">Makefile Strategy</title>
+<para>The doc tree uses a conventional recursive makefile approach to
+building documentation.  Some Makefiles generate products while others
+merely invoke sub-make processes.</para>
+<para>Because each Makefile "module" (or
+directory) is independent of the others the Makefile system does not suffer
+from the problems that can plaque recursive Make systems (although the
+current system is not very mp friendly).</para>
+<para>The doc tree and its build system were designed so that anyone with
+the proper tools could build documentation.  This facilitates the
+edit/compile/test/debug cycle.  The doc developer need not wait for the doc
+tree to be published on the internal web site before discovering bugs and
+errors.  The doc developer can edit sources, invoke make to build products,
+test and debug the docs with his web browser, and correct problems all
+before committing his changes to the CVS repository.</para>
 </section>
 
 <section>
-<title id="makefiles">Makefiles</title>
-<para>Discuss Makefile strategy.</para>
-</section>
-
-<section>
-<title id="publishing">Publishing to Internal Web Site</title>
+<title id="sec.intwebsite">Publishing to Internal Web Site</title>
 <para>
 Discuss how docs are published on the internal web site.
 </para>
 </section>
 
-</section>
-
-<section>
-<title>Details</title>
-</section>
 </article>
