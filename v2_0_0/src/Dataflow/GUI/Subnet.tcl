@@ -109,7 +109,7 @@ proc setSubnetName { subnet name } {
     return 1
 }
 
-proc makeSubnet { from_subnet { x 0 } { y 0 }} {
+proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     global Subnet mainCanvasHeight mainCanvasWidth Color
     incr Subnet(num)
     set Subnet(Subnet$Subnet(num))		$Subnet(num)
@@ -123,8 +123,10 @@ proc makeSubnet { from_subnet { x 0 } { y 0 }} {
 
     set w .subnet$Subnet(num)
     if {[winfo exists $w]} { destroy $w }
-    toplevel $w
+
+    toplevel $w -width [getAdjWidth $bbox] -height [getAdjHeight $bbox] 
     wm withdraw $w
+    update idletasks
     wm title $w "$Subnet(Subnet$Subnet(num)_Name) Sub-Network Editor"
     wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
     
@@ -231,13 +233,13 @@ proc createSubnet { from_subnet { modules "" } } {
 	destroyConnection $conn 0 0
     }    
     
-    set bbox "$mouseX $mouseY 0 0"
+    # only the first two coordinates matter
+    set bbox "$mouseX $mouseY [expr $mouseX+100] [expr $mouseY+100]"
     if { $modules != "" } {
-	set bbox [compute_bbox $Subnet(Subnet${from_subnet}_canvas) $modules]
+	set canvas $Subnet(Subnet${from_subnet}_canvas)
+	set bbox [compute_bbox $canvas $modules]
     }
-
-    set subnet [makeSubnet $from_subnet [lindex $bbox 0] [lindex $bbox 1]]
-    
+    set subnet [makeSubnet $from_subnet $mouseX $mouseY $bbox]
     set Subnet(Subnet${subnet}_Modules) $modules
     # Then move the modules to the new canvas
     foreach modid $modules {
@@ -272,7 +274,7 @@ proc createSubnet { from_subnet { modules "" } } {
 		"[oMod conn] [oNum conn] SubnetIcon${subnet} $which" 0 0
 	}
     }
-    showSubnetWindow $subnet
+    showSubnetWindow $subnet $bbox
     unselectAll
 }
 
@@ -454,13 +456,11 @@ proc saveSubnet { subnet } {
     }
     set name $dir/$name
     set Subnet(Subnet${subnet}_filename) $name
-    
     if ![file writable $dir] {
 	tk_messageBox -type ok -parent . -icon error -message \
 	    "Cannot save Sub-Network $Subnet(Subnet${subnet}_Name) with filename $name to $SCIRUN_SRCDIR/Subnets or $home/Subnets" 
 	return
     }
-    
     netedit savenetwork $name $subnet
     return $name
 }
@@ -474,6 +474,8 @@ proc modVarName { modid } {
 proc writeSubnetModulesAndConnections { filename {subnet 0}} {
     global Subnet SCIRUN_SRCDIR modVar connVar Disabled Notes
     set out [open $filename {WRONLY APPEND}]
+
+    puts $out "set bbox \{[subnet_bbox $subnet]\}"
     puts $out "\n\# Set the name of our network"
     puts $out "\# NOTE: \$Subnet(Loading) is the Sub-Network slot \# we are loading into"
     puts -nonewline $out "set Subnet(Subnet\$Subnet(Loading)_Name) \{"
@@ -486,7 +488,7 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
 	if { [isaSubnetIcon $module] } {
 	    set iconsubnet $Subnet(${module}_num)
 	    # this will always save subnets and set $Subnet(Subnet${iconsubnet}_filename)
-	    if ![string length [saveSubnet $iconsubnet]] {
+	    if ![string length $Subnet(Subnet${iconsubnet}_filename)] {
 		#dont save this module if we cant save the subnet
 		continue
 	    }
@@ -494,14 +496,12 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
 	    puts -nonewline $out "set m$i \[loadSubnet \$Subnet(Loading) "
 	    set splitname [file split $Subnet(Subnet${iconsubnet}_filename)] 
 	    puts -nonewline $out "\"[lindex $splitname end]\" "
-	    puts $out "[expr int([$module get_x])] [expr int([$module get_y])]\]"
 	} else {
 	    set modVar($module) "\$m$i"
 	    puts -nonewline $out  "set m$i \[addModuleAtPosition "
 	    puts -nonewline $out  "\"[netedit packageName $module]\" "
 	    puts -nonewline $out  "\"[netedit categoryName $module]\" "
 	    puts -nonewline $out  "\"[netedit moduleName $module]\" "
-
 	}
 	puts $out "[expr int([$module get_x])] [expr int([$module get_y])]\]"
 	eval lappend connections $Subnet(${module}_connections)
@@ -565,27 +565,31 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
 }		          
 
 
+proc getAdjWidth { bbox } {
+    set minx 90
+    set wid [expr [lindex $bbox 2]-[lindex $bbox 0]+$minx/2]
+    set maxsize [wm maxsize .]
+    set wid [expr $wid>[lindex $maxsize 0]?[lindex $maxsize 0]:$wid]
+    set wid [expr $wid<$minx?$minx:$wid]
+}
+
+
+proc getAdjHeight { bbox } {
+    set miny 200	
+    set hei [expr [lindex $bbox 3]-[lindex $bbox 1]+$miny]
+    set maxsize [wm maxsize .]
+    set hei [expr $hei>[lindex $maxsize 1]?[lindex $maxsize 1]:$hei]
+    set hei [expr $hei<$miny?$miny:$hei]
+}
+    
     
 proc showSubnetWindow { subnet { bbox "" } } {
     wm deiconify .subnet${subnet}
     raise .subnet${subnet}
     global Subnet
     if { $bbox == "" } {
-	if { [info exists Subnet(Subnet${subnet}_Modules) ] } {
-	    set bbox [compute_bbox $Subnet(Subnet${subnet}_canvas) \
-			  $Subnet(Subnet${subnet}_Modules)]
-	} else {
-	    set bbox { 0 0 0 0 }
-	}	
+	set bbox [subnet_bbox $subnet]
     }
-    set minx 200
-    set miny 200	
-    set wid [expr [lindex $bbox 2]+$minx]
-    set hei [expr [lindex $bbox 3]+$miny]
-    set maxsize [wm maxsize .]
-    set wid [expr $wid>[lindex $maxsize 0]?[lindex $maxsize 0]:$wid]
-    set hei [expr $hei>[lindex $maxsize 1]?[lindex $maxsize 1]:$hei]
-    set wid [expr $wid<$minx?$minx:$wid]
-    set hei [expr $hei<$miny?$miny:$hei]
-    wm geometry .subnet${subnet} ${wid}x${hei}
+    wm geometry .subnet${subnet} [getAdjWidth $bbox]x[getAdjHeight $bbox]
+    update idletasks
 }
