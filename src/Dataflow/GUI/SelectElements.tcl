@@ -34,6 +34,8 @@ itcl_class SCIRun_Fields_SelectElements {
         set_defaults
     }
     method set_defaults {} {
+        global $this-keep-all-nodes
+        set $this-keep-all-nodes 0
         global $this-value
         set $this-value 0
     }
@@ -46,14 +48,15 @@ itcl_class SCIRun_Fields_SelectElements {
 
         toplevel $w
         wm minsize $w 300 80
+	global $this-keep-all-nodes
+	checkbutton $w.b -text "Keep all nodes" -variable $this-keep-all-nodes
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
 	global $this-value
-
 	label $w.f.l -text "Element value" -width 10 -just left
 	entry $w.f.e -width 10 -textvariable $this-value
 	bind $w.f.e <KeyPress-Return> "$this-c needexecute"
 	pack $w.f.l $w.f.e -side left -expand 1 -fill x
-	pack $w.f -expand 1 -fill x
+	pack $w.b $w.f -expand 1 -fill x
     }
 }
