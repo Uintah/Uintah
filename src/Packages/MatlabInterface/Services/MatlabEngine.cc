@@ -26,10 +26,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+
 #include <Core/Services/Service.h>
 #include <Core/Services/SimpleService.h>
 #include <Core/SystemCall/SystemCall.h>
 #include <Packages/MatlabInterface/Services/MatlabEngine.h>
+#include <sys/time.h>
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
 
 #include <sys/time.h>
 
@@ -132,6 +139,7 @@ MatlabCallHandler::MatlabCallHandler(MatlabCall* handle) :
 bool
 MatlabCallHandler::execute(std::string line)
 {
+
   if (line == "SCIRUN-MATLABINTERFACE-MATLABENGINE-END\n") 
     {
       if (handle_->engine_ptr_)
@@ -168,8 +176,8 @@ MatlabCallErrorHandler::MatlabCallErrorHandler(MatlabCall* handle) :
 {
 }
 
-bool
-MatlabCallErrorHandler::execute(std::string line)
+
+bool MatlabCallErrorHandler::execute(std::string line)
 {
   if (!handle_->passed_test_)
     {
@@ -266,25 +274,20 @@ MatlabCall::unlock_engine()
   unlock();
 }
 
-inline
-SystemCallHandle
-MatlabCall::getsyscallhandle()
+
+inline SystemCallHandle MatlabCall::getsyscallhandle()
 {
   SystemCallHandle handle = dynamic_cast<SystemCall *>(this);
   return(handle);
 }
 
-inline
-void
-MatlabCall::start_engine(std::string command)
+inline void MatlabCall::start_engine(std::string command)
 {
 
   execute(command);
 }
 
-inline
-void
-MatlabCall::close_engine()
+inline void MatlabCall::close_engine()
 {
   if (isrunning())
     {
@@ -321,10 +324,12 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
         {
           if(matlab_processes_[p].get_rep() == 0) break;
         }
-      session = p;
-      setsession(session);
+        session = p;
+
     }
-        
+
+	
+    setsession(session);
     
   putmsg("MatlabEngine: getting matlab process handle");
         
@@ -586,4 +591,10 @@ void MatlabEngine::send_end_command(bool detected_error)
 }
 
 }
+
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif
 
