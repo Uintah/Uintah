@@ -18,6 +18,8 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 
+#include <stdlib.h>
+
 namespace Uintah {
 namespace MPM {
 
@@ -42,7 +44,12 @@ initializeFractureModelData(const Patch* patch,
    new_dw->allocate(pMicrocrackPosition, lb->pMicrocrackPositionLabel, pset);
    ParticleVariable<double> pCrackingSpeed;
    new_dw->allocate(pCrackingSpeed, lb->pCrackingSpeedLabel, pset);
+   ParticleVariable<double> pTensileStrength;
+   new_dw->allocate(pTensileStrength, lb->pTensileStrengthLabel, pset);
    
+   double tensileStrengthAve = (d_tensileStrengthMin + d_tensileStrengthMax)/2;
+   double tensileStrengthWid = (d_tensileStrengthMax - d_tensileStrengthMin)/2 *
+      d_tensileStrengthVariationDegree;
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
         particleIndex idx = *iter;
@@ -51,6 +58,22 @@ initializeFractureModelData(const Patch* patch,
 	pMicrocrackSize[idx] = 0;
 	pMicrocrackPosition[idx] = 0;
 	pCrackingSpeed[idx] = 0;
+	
+	pTensileStrength[idx] = (d_tensileStrengthMin + d_tensileStrengthMax)/2;
+	
+	/*
+	double s;
+	double probability;
+	double x;
+	do {
+	  double rand = drand48();
+	  s = (1-rand) * d_tensileStrengthMin + rand * d_tensileStrengthMax;
+	  probability = drand48();
+	  x = (s-tensileStrengthAve)/tensileStrengthWid;
+	} while( exp(-x*x) < probability );
+	pTensileStrength[idx] = s;
+	cout<<"TensileStrength: "<<s<<endl;
+	*/
    }
 
    new_dw->put(pIsBroken, lb->pIsBrokenLabel);
@@ -58,6 +81,7 @@ initializeFractureModelData(const Patch* patch,
    new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel);
    new_dw->put(pMicrocrackPosition, lb->pMicrocrackPositionLabel);
    new_dw->put(pCrackingSpeed, lb->pCrackingSpeedLabel);
+   new_dw->put(pTensileStrength, lb->pTensileStrengthLabel);
 }
 
 void Fracture::computerNodesVisibility(
@@ -112,11 +136,14 @@ void Fracture::computerNodesVisibility(
     
     //visibility
     patch->findNodesFromCell(cellIdx,nodeIdx);
+    
     Visibility vis;
-    for(int i=0;i<8;++i) {
-      if( particles.visible( pX[pIdx],patch->nodePosition(nodeIdx[i]) ) )
-         vis.setVisible(i);
-      else vis.setUnvisible(i);
+    if( pIsBroken[pIdx] ) {
+      for(int i=0;i<8;++i) {
+        if(Dot ( patch->nodePosition(nodeIdx[i]) - pX[pIdx], 
+                 pCrackSurfaceNormal[pIdx] ) < 0) vis.setVisible(i);
+        else vis.setUnvisible(i);
+      }
     }
     pVisibility[pIdx] = vis.flag();
   }
@@ -143,6 +170,7 @@ crackGrow(const Patch* patch,
    ParticleVariable<double> pDilationalWaveSpeed;
    ParticleVariable<double> pVolume;
    ParticleVariable<Vector> pRotationRate;
+   ParticleVariable<double> pTensileStrength;
 
    new_dw->get(pStress, lb->pStressLabel_preReloc, pset);
    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
@@ -151,6 +179,7 @@ crackGrow(const Patch* patch,
    old_dw->get(pMicrocrackPosition, lb->pMicrocrackPositionLabel, pset);
    old_dw->get(pCrackingSpeed, lb->pCrackingSpeedLabel, pset);  
    old_dw->get(pVolume, lb->pVolumeLabel, pset);
+   old_dw->get(pTensileStrength, lb->pTensileStrengthLabel, pset);
    new_dw->get(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
    new_dw->get(pRotationRate, lb->pRotationRateLabel, pset);
 
@@ -171,47 +200,50 @@ crackGrow(const Patch* patch,
 	double sig[3];
         int eigenValueNum = pStress[idx].getEigenValues(sig[0], sig[1], sig[2]);
 	double maxStress = sig[eigenValueNum-1];
-        vector<Vector> eigenVectors = pStress[idx].getEigenVectors(maxStress);	
-	
-	for(int i=0;i<eigenVectors.size();++i) {
-          eigenVectors[i].normalize();
-	}
-	
-	Vector maxDirection;
-	if(eigenVectors.size() == 1) {
-          maxDirection = eigenVectors[0];
-	}
-
-	if(eigenVectors.size() == 2) {
-	  //cout<<"eigenVectors.size = 2"<<endl;
-	  double theta = drand48() * M_PI * 2;
-	  maxDirection = (eigenVectors[0] * cos(theta) + eigenVectors[1] * sin(theta));
-	}
-	
-	if(eigenVectors.size() == 3) {
-	  //cout<<"eigenVectors.size = 3"<<endl;
-	  double theta = drand48() * M_PI * 2;
-	  double beta = drand48() * M_PI;
-	  double cos_beta = cos(beta);
-	  double sin_beta = sin(beta);
-	  Vector xy = eigenVectors[2] * sin_beta;
-	  maxDirection = xy * cos(theta) +
-	                 xy * sin(theta) +
-			 eigenVectors[2] * cos_beta;
-	}
 
 	//compare with the tensile strength
-	if(maxStress > d_tensileStrength) {
+	if(maxStress > pTensileStrength[idx]) {
+          vector<Vector> eigenVectors = pStress[idx].getEigenVectors(maxStress);	
+	
+	  for(int i=0;i<eigenVectors.size();++i) {
+            eigenVectors[i].normalize();
+	  }
+	
+	  Vector maxDirection;
+	  if(eigenVectors.size() == 1) {
+            maxDirection = eigenVectors[0];
+	  }
+
+	  if(eigenVectors.size() == 2) {
+	    //cout<<"eigenVectors.size = 2"<<endl;
+	    double theta = drand48() * M_PI * 2;
+	    maxDirection = (eigenVectors[0] * cos(theta) + eigenVectors[1] * sin(theta));
+	  }
+	
+	  if(eigenVectors.size() == 3) {
+	    //cout<<"eigenVectors.size = 3"<<endl;
+	    double theta = drand48() * M_PI * 2;
+	    double beta = drand48() * M_PI;
+ 	    double cos_beta = cos(beta);
+	    double sin_beta = sin(beta);
+	    Vector xy = eigenVectors[2] * sin_beta;
+	    maxDirection = xy * cos(theta) +
+	                   xy * sin(theta) +
+			   eigenVectors[2] * cos_beta;
+	  }
+
 	  pIsBroken[idx] = 1;
-	  pCrackSurfaceNormal[idx] = maxDirection;
 	  pMicrocrackSize[idx] = 0;
-	  pMicrocrackPosition[idx] = pow(pVolume[idx],0.33333) * (drand48() - 0.5);
+	  if(drand48()>0.5) pCrackSurfaceNormal[idx] = maxDirection;
+	  else pCrackSurfaceNormal[idx] = -maxDirection;
 	  pCrackingSpeed[idx] = 0;
-	  cout<<"Microcrack initiated in direction "<<maxDirection<<"."<<endl;
+	  cout<<"Microcrack initiated in direction"
+	      <<maxDirection<<'.'<<endl;
 	}
       }
       else {
         //crack surface rotation
+	
 	pCrackSurfaceNormal[idx] += Cross( pRotationRate[idx] * delT, 
 	                                   pCrackSurfaceNormal[idx] );
 	pCrackSurfaceNormal[idx].normalize();
@@ -222,9 +254,9 @@ crackGrow(const Patch* patch,
 	double tensilStress = Dot(pStress[idx] * pCrackSurfaceNormal[idx],
 	   pCrackSurfaceNormal[idx]);
 	
-	if(tensilStress > d_tensileStrength)
+	if(tensilStress > pTensileStrength[idx])
 	  newSpeed = pDilationalWaveSpeed[idx] * 
-	  ( 1 - exp(tensilStress/d_tensileStrength - 1) );
+	  ( 1 - exp(tensilStress/pTensileStrength[idx] - 1) );
 	else newSpeed = 0;
 	
 	pMicrocrackSize[idx] += ( pCrackingSpeed[idx] + newSpeed )/2 * delT;
@@ -239,12 +271,15 @@ crackGrow(const Patch* patch,
    new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel_preReloc);
    new_dw->put(pMicrocrackPosition, lb->pMicrocrackPositionLabel_preReloc);
    new_dw->put(pCrackingSpeed, lb->pCrackingSpeedLabel_preReloc);
+   new_dw->put(pTensileStrength, lb->pTensileStrengthLabel_preReloc);
 }
 
 Fracture::
 Fracture(ProblemSpecP& ps)
 {
-  ps->require("tensile_strength",d_tensileStrength);
+  ps->require("tensile_strength_max",d_tensileStrengthMin);
+  ps->require("tensile_strength_min",d_tensileStrengthMax);
+  ps->require("tensile_strength_variation_degree",d_tensileStrengthVariationDegree);
 
   lb = scinew MPMLabel();
 }
@@ -257,6 +292,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.47  2000/09/16 04:18:04  tan
+// Modifications to make fracture works well.
+//
 // Revision 1.46  2000/09/12 16:52:11  tan
 // Reorganized crack surface contact force algorithm.
 //

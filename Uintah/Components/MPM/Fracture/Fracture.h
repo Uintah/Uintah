@@ -49,7 +49,9 @@ public:
         ~Fracture();
                 
 private:
-  double           d_tensileStrength;
+  double           d_tensileStrengthMin;
+  double           d_tensileStrengthMax;
+  double           d_tensileStrengthVariationDegree;
 
   MPMLabel*        lb;
 };
@@ -60,6 +62,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.29  2000/09/16 04:18:04  tan
+// Modifications to make fracture works well.
+//
 // Revision 1.28  2000/09/12 16:52:11  tan
 // Reorganized crack surface contact force algorithm.
 //

@@ -126,14 +126,16 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
                                            DataWarehouseP& old_dw,
                                            DataWarehouseP& new_dw)
 {
-  Matrix3 Identity,deformationGradientInc,B,velGrad,rotationRate;
+  Matrix3 Identity,deformationGradientInc,B,velGrad;
   double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
   double c_dil = 0.0,se=0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
+  double dtLimit = MAXDOUBLE;
 
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+  double dxLength = dx.length();
 
   int matlindex = matl->getDWIndex();
 
@@ -174,10 +176,16 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   //particle cracking speed is used for time-step computation
   ParticleVariable<double> pCrackingSpeed;
 
+  //pExternalForce and pCrackSurfaceContactForce are used for timestep estimation
+  ParticleVariable<Vector> pExternalForce;
+  old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+
   ParticleVariable<int> pVisibility;
   ParticleVariable<Vector> pRotationRate;
+  ParticleVariable<Vector> pCrackSurfaceContactForce;
   if(matl->getFractureModel()) {
     old_dw->get(pCrackingSpeed, lb->pCrackingSpeedLabel, pset);
+    new_dw->get(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel, pset);
     new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
   }
@@ -187,10 +195,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
      particleIndex idx = *iter;
 
      velGrad.set(0.0);
-     
-     if( matl->getFractureModel() ) {
-       rotationRate.set(0.0);
-     }
      
      // Get the node indices that surround the cell
      IntVector ni[8];
@@ -224,9 +228,10 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
 	    //rotation rate computation, required for fracture
             if(matl->getFractureModel()) {
-	      omega1 += gvel(3) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](3) * oodx[3];
-	      omega2 += gvel(1) * d_S[k](3) * oodx[3] - gvel(3) * d_S[k](1) * oodx[1];
-	      omega3 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
+	      //NOTE!!! gvel(0) = gvel.x() !!!
+	      omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
+	      omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0) * oodx[0];
+	      omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1) * oodx[1];
 	    }
 	    
 	 }
@@ -270,7 +275,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       i3w3 = invar3*w3;
 
       pstress[idx]=(B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
-
+      
       // Compute wave speed + particle velocity at each particle, 
       // store the maximum
       c_dil = sqrt((4.*(C1+C2*invar2)/J
@@ -282,11 +287,23 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
-     if( matl->getFractureModel() ) {
-       //compare with the cracking speed
-       WaveSpeed=Vector(Max(pCrackingSpeed[idx],WaveSpeed.x()),
+      double force = 0;
+
+      if( matl->getFractureModel() ) {
+        //compare with the cracking speed
+        WaveSpeed=Vector(Max(pCrackingSpeed[idx],WaveSpeed.x()),
                         Max(pCrackingSpeed[idx],WaveSpeed.y()),
 	  	        Max(pCrackingSpeed[idx],WaveSpeed.z()));
+			
+        force += pCrackSurfaceContactForce[idx].length();
+      }
+
+     if(force>0) {
+       dtLimit = Min(dtLimit,sqrt(pmass[idx]*dxLength/force/1000));
+       /*
+       double v = pvelocity[idx].length();
+       if(v>0) dtLimit = Min(pmass[idx] * v/10/force, dtLimit);
+       */
      }
 
       // Compute the strain energy for all the particles
@@ -299,6 +316,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
+    delT_new = Min(delT_new,dtLimit);
+    
     if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(pstress, lb->pStressLabel_preReloc);
@@ -356,6 +375,8 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 		  Ghost::None);
       task->requires(new_dw, lb->pVisibilityLabel, matl->getDWIndex(), patch,
 		  Ghost::None);
+      task->requires(new_dw, lb->pCrackSurfaceContactForceLabel, matl->getDWIndex(), patch,
+		  Ghost::None);
       task->computes(new_dw, lb->pDilationalWaveSpeedLabel, matl->getDWIndex(), patch);
       task->computes(new_dw, lb->pRotationRateLabel, matl->getDWIndex(),  patch);
    }
@@ -407,7 +428,8 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   {
     pCrackSurfaceContactForce[*iter] = Vector(0.,0.,0.);
   }
-  
+
+#if 0
   IntVector cellIdx;
   for(ParticleSubset::iterator iter = insidePset->begin();
           iter != insidePset->end(); iter++)
@@ -425,25 +447,25 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
     {
       particleIndex pContact = particles[pNeighbor];
 
-      if( particles[pNeighbor] <= pIdx ) continue;
       if( !pIsBroken[pContact] && 
           !pIsBroken[pIdx] ) continue;
       const Point& X2 = pX[pContact];
-      if(!particles.visible(X1,X2))
+
+      if( Dot(X2-X1, pCrackSurfaceNormal[pIdx]) > 0 )
       {
         double size2 = pow(pVolume[pContact],0.3333);
         Vector N = X2-X1;
         double distance = N.length();
-        double l = (size1+size2) /2;
-        double lambda = distance /l;
+        double l = (size1+size2) /2 * 0.8;
+        double delta = distance /l - 1;
 	
-        if( lambda < 0.9 ) {
+        if( delta < 0 ) {
           N /= distance;
-          Matrix3 deformationGradient;
+          Matrix3 deformationGradient = Identity;
 	  
           for(int i=1;i<=3;++i)
 	  for(int j=1;j<=3;++j)
-	  deformationGradient(i,j) = N(i) * N(j) * lambda;
+	  deformationGradient(i,j) += N(i) * N(j) * delta;
 
           // Compute the left Cauchy-Green deformation tensor
           Matrix3 B = deformationGradient * deformationGradient.Transpose();
@@ -468,11 +490,12 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
           double i3w3 = invar3*w3;
 
           Matrix3 stress = (B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
-	  double area = l*l;
+	  double area = M_PI* l * l * fabs(delta) /2;
           Vector F = stress * N * area;
           pCrackSurfaceContactForce[pIdx] += F;
 	  
-          bool pContactInside = false;
+          /*
+	  bool pContactInside = false;
 	  for(ParticleSubset::iterator i = insidePset->begin();
               i != insidePset->end(); i++)
 	  {
@@ -483,10 +506,13 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
 	  }
 	  
           if(pContactInside) pCrackSurfaceContactForce[pContact] -= F;
+	  */
 	}
       }
     }
   }
+
+#endif
   new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
 }
 
@@ -553,6 +579,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.66  2000/09/16 04:18:29  tan
+// Modifications to make fracture works well.
+//
 // Revision 1.65  2000/09/12 17:18:21  tan
 // Modified ParticlesNeighbor initialize.
 //
