@@ -60,7 +60,7 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
 
     <p class="firstpara">
       Refer to the <a href="ThirdpartyInfo.html">Third Party Software
-      Information</a> page for information on installing the
+      Installation</a> page for information on installing the
       required software.
     </p>
 
@@ -335,6 +335,16 @@ http://www.cs.utah.edu/scirun_docs/doc</A>
     It also includes solutions when available. 
   </p>
 
+<p class="subhead">Path Specifications</p>
+    <p class="firstpara">
+     If any of the software, SCIRun or thirdparty, is installed into a user's
+     home directory, <i><b>do not</b></i> use abbreviations such as tilde
+     expansion when specifying paths.  Instead, use full absolute paths.
+     For example, use /home/bob/SCIRun instead of ~bob/SCIRun for the 
+     --prefix arguments when configuring.  Most abbreviation techniques will
+     not get expanded by the build scripts for any of the software.
+    </p>
+
 <p class="subhead">Configuring SCIRun</p>
   <p class="firstpara">
     The configure script expects the OpenGL headers to live in /usr/include/GL
@@ -415,27 +425,23 @@ your choosing</a></p>
       </i></b> directory.  Depending on how SCIRun was obtained, either 
     </p>
 
-    <pre class="example">a) unzip and untar the SCIRun source tree, or 
-b) checkout the SCIRun source tree from the CVS repository.
-    </pre>
-
     <p class="firstpara">
-      The following are example installation transcripts:
+      a) unzip and untar the SCIRun source tree:
     </p>
-
-    <p class="firstpara">
-      For tarball:
-    </p>
-
+    
     <pre class="example"><font color=blue>cd /home/bob
 gunzip SCIRun.tar.gz
 tar xvf SCIRun.tar</font>
     </pre>
 
     <p class="firstpara">
-      For CVS:
+      or
     </p>
-    
+
+    <p class="firstpara">
+      b) checkout the SCIRun source tree from the CVS repository:
+    </p>
+
     <pre class="example"><font color=blue>cd /home/bob
 cvs checkout SCIRun</font>
     </pre>
@@ -447,7 +453,8 @@ cvs checkout SCIRun</font>
 
     <pre class="example">/home/bob/SCIRun</pre>
 
-<br><br><br><br><p class="subhead"><a name="Configure">Configuring SCIRun</a></p>
+<br><br><br><br>
+<p class="subhead"><a name="Configure">Configuring SCIRun</a></p>
     <p class="firstpara">
       There are many options for configuring SCIRun.  Chief among them
       is the configure location.  SCIRun can be configured from within the
@@ -456,7 +463,7 @@ cvs checkout SCIRun</font>
     </p>
 
     <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
-./configure <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
+./configure <b><i><font color=green>CONFIGURE_OPTIONS</font></font></i></b>
     </pre>
 
     <p class="firstpara">
@@ -486,7 +493,7 @@ cd ../sgi64
     </pre>
 
     <p class="firstpara">
-      The <b><i><font color=green>BUILD_DIR</font></i></b> for the above, in order, would be:
+      The <b><i><font color=green>BUILD_DIR</font></i></b>'s for the above, in order, would be:
     </p>
 
     <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/linux
