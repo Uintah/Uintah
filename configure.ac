@@ -836,9 +836,6 @@ if test $sci_required_fortran = "yes"; then
   fi
 fi
 
-# Reset if on an SGI in 64 bit mode to lib64.
-BASE_LIB_DIR=lib
-
 case $host in 
   *-irix*)
     AC_MSG_WARN(Configure script only allows SGI compilers on IRIX.)
@@ -871,10 +868,8 @@ case $host in
     WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     CPPFLAGS=" $WOFF -LANG:std"
     if test "$enable_64bit" = "yes"; then
-      BASE_LIB_DIR=lib64
       BINARYFLAGS="-64 -mips4"
     else
-      BASE_LIB_DIR=lib32
       BINARYFLAGS="-n32 -mips4"
     fi
     FFLAGS="$BINARYFLAGS $extra_cflags"
@@ -1006,10 +1001,6 @@ case $host in
     ;;
 
   *)
-    if test "$enable_64bit" = "yes"; then
-      BASE_LIB_DIR=lib64
-    fi
-
     # linux
     ac_objext=o
     CFLAGS=" -Wall"
@@ -1462,9 +1453,11 @@ if test "$with_X11_lib"; then
   _x_inc_dir="$with_X11_lib/../include"
   _sci_optional=specific
 else 
-  _x_lib_dir="/usr/X11R6/$BASE_LIB_DIR"
+  _x_lib_dir="/usr/X11R6"
+  BASE_LIB_PATH(_x_lib_dir,$_x_lib_dir)
   _x_inc_dir="/usr/X11R6/include"
 fi
+
 
 SCI_TRY_LINK(X,X libraries and headers,X11/Xlib.h,
              $_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,$_sci_optional)
@@ -1588,11 +1581,11 @@ fi
 case $host in
   *linux*)
     if test "$threads" != "none"; then
-      GLU_OTHERS="pthread"
-      GLU_OTHERS_FLAG="-lpthread"
+      GLU_OTHERS="pthread m"
+      GLU_OTHERS_FLAG="-lpthread -lm"
     else
-      GLU_OTHERS=""
-      GLU_OTHERS_FLAG=""
+      GLU_OTHERS="m"
+      GLU_OTHERS_FLAG="-lm"
     fi
   ;;
   *)
@@ -1912,7 +1905,7 @@ AC_SUBST(DEF_MPEG)
 
 # Default values:
 _sci_optional=optional
-_sci_lib="$sci_thirdparty_dir"
+_sci_lib="$sci_thirdparty_libs"
 _sci_inc="$sci_thirdparty_includes"
 
 if test "$with_magick" = "yes"; then
@@ -1921,7 +1914,8 @@ if test "$with_magick" = "yes"; then
 else 
   if test "$with_magick"; then
     # If --with-magick has a parameter, then use it
-    _sci_lib="$with_magick/$BASE_LIB_DIR"
+    _sci_lib="$with_magick"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_inc="$with_magick/include"
     _sci_optional=specific
   fi 
@@ -1929,19 +1923,38 @@ fi
 
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
 
-if test -e $_sci_lib/../bin/Magick-config; then
-   AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
+found_magic_config="no"
+for dif in "" "$_sci_lib"; do
 
-   MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
-   MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
+   if test -e $_sci_lib/../bin/Magick-config; then
+       found_magic_config="yes"
+       AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
 
-   MAGICK_LIB_DIR_FLAG=
-   SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
+       MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
+       MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
 
-   INC_MAGICK_H=`$_sci_lib/../bin/Magick-config --cppflags`
-   HAVE_MAGICK=yes
-   DEF_MAGICK="#define HAVE_MAGICK 1"
-else
+       #MAGICK_LIB_DIR_FLAG=
+       #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
+
+       MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
+       MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
+       tmp_includes=`$_sci_lib/../bin/Magick-config --cppflags`
+
+       includes=
+       # Remove the '-L's from the list that Magick-config returns
+       for inc in "" $tmp_includes; do
+          the_inc=`echo $inc | sed 's/-I//'`
+          includes="$includes $the_inc"
+       done
+
+       SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
+                    $includes,Magick,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,optional)
+
+       DEF_MAGICK="#define HAVE_MAGICK 1"
+    fi
+done
+
+if test "$found_magic_config" = "no"; then
    AC_MSG_RESULT(no.)
    if test "$_sci_optional" != "optional"; then
      echo
@@ -1974,8 +1987,9 @@ if test "$with_png" = "yes"; then
 else 
   if test "$with_png"; then
     # If --with-png has a parameter, then use it
-    _sci_lib="$with_png/$BASE_LIB_DIR"
+    _sci_lib="$with_png"
     _sci_inc="$with_png/include"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
   fi 
 fi
@@ -2828,11 +2842,17 @@ if test "$sci_required_glut" = "yes"; then
    libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS_FLAG"
 
    if test "$with_glut"; then
+     _sci_lib_glut="$with_glut"
+     BASE_LIB_PATH(_sci_lib_glut,$_sci_lib_glut)
      if test "$with_opengl"; then
-       _sci_lib="$with_glut/$BASE_LIB_DIR $with_opengl/lib"
+       _sci_lib_ogl="$with_opengl"
+       BASE_LIB_PATH(_sci_lib_ogl,$_sci_lib_ogl)
+       _sci_lib="$_sci_lib_glut $_sci_lib_ogl"
        _sci_inc="$with_glut/include $with_opengl/include"
      else
-       _sci_lib="$with_glut/$BASE_LIB_DIR /usr/X11R6/lib"
+       _sci_lib_X="/usr/X11R6"
+       BASE_LIB_PATH(_sci_lib_X,$_sci_lib_X)
+       _sci_lib="$_sci_lib_glut $_sci_lib_X"
        _sci_inc="$with_glut/include /usr/X11R6/include"
      fi
    else
@@ -2863,11 +2883,24 @@ AC_SUBST(GLUT_LIB_DIR_FLAG)
 ##  --  search for glui  -----------------------------------------------
 if test "$sci_required_glui" = "yes"; then
    if test "$with_glui"; then
+   
+     ## Set the path for glut and glui
+     _sci_lib_glut="$with_glut"
+     BASE_LIB_PATH(_sci_lib_glut,$_sci_lib_glut)
+     _sci_lib_glui="$with_glui"
+     BASE_LIB_PATH(_sci_lib_glui,$_sci_lib_glui)
+     
      if test "$with_opengl"; then
-       _sci_lib="$with_glut/$BASE_LIB_DIR $with_glui/$BASE_LIB_DIR $with_opengl/lib"
+       ## OpenGL path
+       _sci_lib_ogl="$with_opengl"
+       BASE_LIB_PATH(_sci_lib_ogl,$_sci_lib_ogl)
+       _sci_lib="$_sci_lib_glut $_sci_lib_glui $_sci_lib_ogl"
        _sci_inc="$with_glut/include $with_glui/include $with_opengl/include"
      else
-       _sci_lib="$with_glut/$BASE_LIB_DIR $with_glui/$BASE_LIB_DIR /usr/X11R6/lib"
+       ## X path
+       _sci_lib_X="/usr/X11R6"
+       BASE_LIB_PATH(_sci_lib_X,$_sci_lib_X)
+       _sci_lib="$_sci_lib_glut $_sci_lib_glui $_sci_lib_X"
        _sci_inc="$with_glut/include $with_glui/include /usr/X11R6/include"
      fi
    else
