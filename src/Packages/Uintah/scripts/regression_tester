@@ -36,6 +36,9 @@ fi
 #Set the default TestData directory
 DIR=dbg
 
+#Set up MPI 
+MPI=''
+
 #Set the default inputs directory
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 
@@ -148,7 +151,7 @@ mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static"
 arches_test_cases="methane_explicit_table"
-mpmarches_test_cases="matest_heptwb_cyl"
+mpmarches_test_cases="jp8cyl"
 examples_test_cases="poisson1 poisson2"
 
 # Check if the applications sus and compare_uda are available
@@ -182,8 +185,8 @@ REMOVE () {
 
 run_test () {
     cd $results
-    echo; echo "Running sus $opts $INPUTS/$CASE/$n.ups"
-    ../sus $opts ../$INPUTS/$CASE/$n.ups &> $n.out
+    echo; echo "Running $MPI ../sus $opts ../$INPUTS/$CASE/$n.ups"
+    $MPI ../sus $opts ../$INPUTS/$CASE/$n.ups &> $n.out
     success=`grep "successfully" $n.out`
     if test -n "$success";
 	then 
@@ -341,22 +344,20 @@ mpmarches_test () {
     echo; echo "Testing $mpmarches_test_cases"
     
     for n in $mpmarches_test_cases; do
-	echo; echo "Running sus -mpmarches $INPUTS/$CASE/$n.ups"
-	uda=`grep filebase /$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -mpmarches $INPUTS/$CASE/$n.ups &> $n.out
-	success=`grep "successfully" $n.out`
-	if test -n "$success";
-	    then 
-	    echo $success
-	else
-	    echo; echo "FAILURE running sus . . ."
-	    continue;
-	fi
-	udadir=$n
-	if test "$n" = "hotBlob2mat8patch"; then
-	    udadir=hotBlob8patch
-	fi
 
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	cd $results
+#	cp $INPUTS/MPMARCHES/chem_hept_westbrook.linux.bin chem.bin
+	cp ../$INPUTS/MPMARCHES/input.dtd input.dtd
+	cp ../$INPUTS/ARCHES/StaticMixingTables/JP-8/NAE.rxn.new NAE.rxn.new
+	cd ../
+
+	MPI='mpirun -np 1'
+	run_test
+
+#	mpirun -np 1 sus -mpmarches $INPUTS/$CASE/$n.ups &> $n.out
+	udadir=$n
+	
 	compare_results
 
     done
