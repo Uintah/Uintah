@@ -38,7 +38,7 @@ OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
 	   $(patsubst %.fif,%.o,$(filter %.fif,$(SRCS))) \
 	   $(patsubst %.y,%.o,$(filter %.y,$(SRCS)))
 
-LIBNAME := $(LIBDIR)lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
+LIBNAME := $(LIBDIR)/lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 
 # We always link against the internal Dataflow malloc
 ifneq ($(SRCDIR),Core/Malloc)
@@ -85,20 +85,20 @@ CORE_PSELIBS = $(patsubst PACKAGE%,,$(TMP_CORE_PSELIBS))
 TMP_PACK_PSELIBS = $(patsubst PACKAGE%,libPackages_%,$(TMP))
 PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
 
-$(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)%,$(PACK_PSELIBS))
+$(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)/%,$(PACK_PSELIBS))
 	rm -f $@
   ifeq ($(CC),newmpxlc)
 	ar -v -q $@ $(filter %.o,$^)
   else
   ifeq ($(IS_OSX),yes)
-	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
   else
-	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
   endif
   endif
 
 #$(LIBNAME).pure: $(LIBNAME)
-#	$(purify) $(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@.pure $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
+#	$(purify) $(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@.pure $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
 
 #  These will get removed on make clean
 CLEANLIBS := $(CLEANLIBS) $(LIBNAME)

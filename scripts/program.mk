@@ -61,9 +61,9 @@ $(PROGRAM)_LIBS := $(LIBS)
 # to lib/libCore_Thread.so.  The second transforms it from
 # lib/libCore_Thread.so to -lCore_Thread.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
-$(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)lib%.$(SO_OR_A_FILE),$(PSELIBS))
+$(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)/lib%.$(SO_OR_A_FILE),$(PSELIBS))
 	rm -f $@
-	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
+	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
 
 #  These will get removed on make clean
 CLEANOBJS := $(CLEANOBJS) $(OBJS)

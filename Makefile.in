@@ -156,9 +156,9 @@ sciCTAGS:  $(ETAGS_FILES)
 # The sophsticated looking $(...) mess below is just to convert a
 # subdirectory of the form a/b/c into ../../..
 ifeq ($(LARGESOS),yes)
-  HERE = $(LIBDIR)lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
+  HERE = $(LIBDIR)/lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
 else
-  HERE = $(LIBDIR)lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
+  HERE = $(LIBDIR)/lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
 endif
 $(SUBMAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
@@ -187,7 +187,7 @@ cleanreally::
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
-	rm -f $(LIBDIR)so_locations ./so_locations
+	rm -f $(LIBDIR)/so_locations ./so_locations
 ifeq ($(CC_DEPEND_EXT),depend.mk)
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 else
@@ -234,7 +234,7 @@ cleanrest::
 	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLOBJSUBDIRS))
 	-rmdir $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
-	rm -f $(LIBDIR)so_locations
+	rm -f $(LIBDIR)/so_locations
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
 	rm -f y.output

@@ -57,9 +57,9 @@ $(VOLATILE_LIB)_LIBS := $(LIBS)
 # to lib/libCore_Thread.so.  The second transforms it from
 # lib/libCore_Thread.so to -lCore_Thread.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
-$(VOLATILE_LIB): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
+$(VOLATILE_LIB): $(OBJS) $(patsubst %,$(LIBDIR)/lib%.so,$(PSELIBS))
 	rm -f $@
-	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $(LIBDIR_ABS)/lib$@.so $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $(LIBDIR_ABS)/lib$@.so $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #  These will get removed on make clean
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
