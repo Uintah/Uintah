@@ -167,6 +167,8 @@ set $m6-vectors-on {1}
 set $m6-normalize-vectors {0}
 set $m6-has_vector_data {1}
 set $m6-text-on {1}
+set $m6-text-backface-cull {1}
+set $m6-text-fontsize {2}
 set $m6-text-show-data {0}
 set $m6-text-show-nodes {1}
 set $m6-active_tab {Text}
