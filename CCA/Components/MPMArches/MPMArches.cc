@@ -493,7 +493,6 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // primitive variable initialization
   t=scinew Task("MPMArches::collectToCCGasMomExchSrcs",
 		this, &MPMArches::collectToCCGasMomExchSrcs);
-  numGhostCells = 1;
 
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmLinSrc_CCLabel, arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
@@ -561,7 +560,6 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   
   t=scinew Task("MPMArches::interpolateCCToFCGasMomExchSrcs",
 		      this, &MPMArches::interpolateCCToFCGasMomExchSrcs);
-  numGhostCells = 1;
   // requires
 
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmLinSrc_CC_CollectLabel, 
@@ -1467,9 +1465,10 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     
     constCCVariable<double> gas_fraction_cc;
     
-    // multimaterial contribution to SP and SU terms in Arches momentum eqns
-    // currently at cc and fcs.  Later we will interpolate to where
-    // Arches wants them.
+    // multimaterial contribution to SP and SU terms 
+    // in Arches momentum eqns currently at cc and fcs.  
+    // Later we will interpolate to where Arches wants 
+    // them.
     
     CCVariable<double> uVelLinearSrc_cc; 
     SFCYVariable<double> uVelLinearSrc_fcy; 
@@ -2243,7 +2242,7 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     int ioff;
     int joff;
     int koff;
-    
+
     // Interpolate x-momentum source terms
     
     ioff = 1;
@@ -2316,12 +2315,14 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     // Calculation done: now put things in DW
     
     // debug, April 18, 2002
-    //    su_dragx_fcx.initialize(0);
-    //    sp_dragx_fcx.initialize(0);
-    //    su_dragy_fcy.initialize(0);
-    //    sp_dragy_fcy.initialize(0);
-    //    su_dragz_fcz.initialize(0);
-    //    sp_dragz_fcz.initialize(0);
+    /*
+    su_dragx_fcx.initialize(0);
+    sp_dragx_fcx.initialize(0);
+    su_dragy_fcy.initialize(0);
+    sp_dragy_fcy.initialize(0);
+    su_dragz_fcz.initialize(0);
+    sp_dragz_fcz.initialize(0);
+    */
     // end debug, sk, April 18, 2002
     
     // allocateAndPut instead:
@@ -2629,6 +2630,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     
     IntVector valid_lo = patch->getCellFORTLowIndex();
     IntVector valid_hi = patch->getCellFORTHighIndex();
+
+    //    cout << "JUST BEFORE energy exchange call" << endl;
 
     for (int m = 0; m < numMPMMatls; m++) {
 

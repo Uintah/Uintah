@@ -53,7 +53,6 @@ c     Author: Seshadri Kumar, July 2, 2001
 c     Last modified: July 2, 2001
 c
 C-----------------------------------------------------------------------
-c#define debugEnergyExchange
 
       implicit none
       include 'param4.h'
@@ -299,7 +298,6 @@ c     alone,) so we don't need to divide by (1-epsg).
      $                    (tg(i-1,j,k) - 
      $                    ts_fcx(i,j,k))
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcx(i,j,k), 
      $                    tg(i-1,j,k), ts_fcx(i,j,k),
@@ -338,7 +336,6 @@ c     debug, SK, July 12, 2001
      $                    (tg(i+1,j,k) - 
      $                    ts_fcx(i,j,k))
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
                      print*, i+1,j,k, hts_fcx(i+1,j,k),
      $                    tg(i+1,j,k), ts_fcx(i,j,k),
@@ -377,7 +374,6 @@ c     south face of intrusion
      $                    (tg(i,j-1,k) -
      $                    ts_fcy(i,j,k))
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcy(i,j,k),
      $                    tg(i,j-1,k), ts_fcy(i,j,k),
@@ -416,7 +412,6 @@ c     debug, SK, July 12, 2001
      $                    (tg(i,j+1,k) - 
      $                    ts_fcx(i,j,k))
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
                      print*, i,j+1,k, hts_fcy(i,j+1,k),
      $                    tg(i,j+1,k), ts_fcx(i,j,k),
@@ -455,7 +450,6 @@ c     debug, SK, July 12, 2001
      $                    (tg(i,j,k-1) - 
      $                    ts_fcz(i,j,k))
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcz(i,j,k),
      $                    tg(i,j,k-1), ts_fcz(i,j,k),
@@ -494,7 +488,6 @@ c     debug, SK, July 12, 2001
      $                    (tg(i,j,k+1) - 
      $                    ts_fcz(i,j,k))
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
                      print*, i,j,k+1, hts_fcz(i,j,k+1),
      $                    tg(i,j,k+1), ts_fcz(i,j,k),
@@ -509,7 +502,6 @@ c     debug, SK, July 12, 2001
  610     continue
  620  continue
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
       print*, 'now for mixed cells'
 #endif
@@ -548,7 +540,6 @@ c     then factor = one.
      $                 qmult*(ts_cc(i,j,k) -
      $                 tg(i,j,k))
 
-c     debug, SK, July 12, 2001
 #ifdef debugEnergyExchange
                   print*, i,j,k, hts_cc(i,j,k),
      $                 tg(i,j,k), ts_cc(i,j,k),
