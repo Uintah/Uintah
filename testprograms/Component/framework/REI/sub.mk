@@ -8,5 +8,6 @@ PSELIBS +=
 
 SRCS    += \
 	$(SRCDIR)/scr.cc \
+	$(SRCDIR)/scrUser.cc \
 	$(SRCDIR)/scrInterfaceImpl.cc
 

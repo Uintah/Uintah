@@ -6,9 +6,14 @@ using namespace sci_cca;
 void
 scr::setServices( const Services & srv )
 {
+  ComponentImpl::setServices( srv );
+
   if( srv )
     {
-      PortInfo info = srv->createPortInfo( "scrPort0", "scrInterface", 0 );
+      cout << "Registering scrOut0 provides port\n";
+
+      PortInfo info = srv->createPortInfo( "scrOut0", 
+					   "sci_cca.scrInterface", 0 );
 
       scr_port_ = new scrInterfaceImpl();
 

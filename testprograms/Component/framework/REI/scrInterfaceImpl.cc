@@ -36,6 +36,11 @@ scrInterfaceImpl::exec( int cells,
 			double& kmol_s_tot)
 {
   cout << "scrInterfaceImpl: exec()\n";
+  flow = 99.0;
+  kmol_s.resize( 3 );
+  kmol_s[ 0 ] = 99.0;
+  kmol_s[ 1 ] = 77.0;
+  kmol_s_tot = 99.0;
 }
 
 } // namespace sci_cca
