@@ -29,6 +29,7 @@
 #include <SCIRun/Internal/BuilderService.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+#include <SCIRun/PortInstanceIterator.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <SCIRun/PortInstance.h>
@@ -71,8 +72,8 @@ gov::cca::ConnectionID::pointer BuilderService::connect(const gov::cca::Componen
   if(cid1->framework != framework || cid2->framework != framework){
     throw CCAException("Cannot connect components from different frameworks");
   }
-  ComponentInstance* comp1=framework->getComponent(cid1->name);
-  ComponentInstance* comp2=framework->getComponent(cid2->name);
+  ComponentInstance* comp1=framework->lookupComponent(cid1->name);
+  ComponentInstance* comp2=framework->lookupComponent(cid2->name);
   PortInstance* pr1=comp1->getPortInstance(port1);
   if(!pr1)
     throw CCAException("Unknown port");
@@ -137,14 +138,26 @@ void BuilderService::destroyInstance(const gov::cca::ComponentID::pointer& toDie
 
 CIA::array1<std::string> BuilderService::getProvidedPortNames(const gov::cca::ComponentID::pointer& cid)
 {
-   ComponentInstance *ci=framework->getComponent(cid->getInstanceName());
-   return ci->getProvidesPortNames();
+  CIA::array1<std::string> result;
+  ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
+  for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()){
+    PortInstance* port = iter->get();
+    if(port->portType() == PortInstance::To)
+      result.push_back(port->getUniqueName());
+  }
+  return result;
 }
 
 CIA::array1<std::string> BuilderService::getUsedPortNames(const gov::cca::ComponentID::pointer& cid)
 {
-   ComponentInstance *ci=framework->getComponent(cid->getInstanceName());
-   return ci->getUsesPortNames();
+  CIA::array1<std::string> result;
+  ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
+  for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()){
+    PortInstance* port = iter->get();
+    if(port->portType() == PortInstance::From)
+      result.push_back(port->getUniqueName());
+  }
+  return result;
 }
 
 gov::cca::TypeMap::pointer BuilderService::getPortProperties(const gov::cca::ComponentID::pointer& cid,
@@ -187,8 +200,8 @@ void BuilderService::disconnect(const gov::cca::ConnectionID::pointer& connID,
   ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
   ComponentID* providerID=dynamic_cast<ComponentID*>(connID->getProvider().getPointer());
 
-  ComponentInstance* user=framework->getComponent(userID->name);
-  ComponentInstance* provider=framework->getComponent(providerID->name);
+  ComponentInstance* user=framework->lookupComponent(userID->name);
+  ComponentInstance* provider=framework->lookupComponent(providerID->name);
 
   PortInstance* userPort=user->getPortInstance(connID->getUserPortName());
   PortInstance* providerPort=provider->getPortInstance(connID->getProviderPortName());
@@ -203,7 +216,8 @@ void BuilderService::disconnectAll(const gov::cca::ComponentID::pointer& id1,
   cerr << "BuilderService::disconnectAll not finished\n";
 }
 
-CIA::array1<std::string>  BuilderService::getAvailablePortList(
+
+CIA::array1<std::string>  BuilderService::getCompatiblePortList(
      const gov::cca::ComponentID::pointer& c1,
      const std::string& port1,
      const gov::cca::ComponentID::pointer& c2)
@@ -215,63 +229,25 @@ CIA::array1<std::string>  BuilderService::getAvailablePortList(
   if(cid1->framework != framework || cid2->framework != framework){
     throw CCAException("Cannot connect components from different frameworks");
   }
-  ComponentInstance* comp1=framework->getComponent(cid1->name);
-  ComponentInstance* comp2=framework->getComponent(cid2->name);
+  ComponentInstance* comp1=framework->lookupComponent(cid1->name);
+  ComponentInstance* comp2=framework->lookupComponent(cid2->name);
   PortInstance* pr1=comp1->getPortInstance(port1);
   if(!pr1)
     throw CCAException("Unknown port");
 
 
   CIA::array1<std::string> availablePorts;
-  CIA::array1<std::string> portnames=comp2->getUsesPortNames();
-  for(unsigned int i=0; i<portnames.size();i++){
-    PortInstance* pr2=comp2->getPortInstance(portnames[i]);
-    if(pr1->canConnectTo(pr2)){
-      availablePorts.push_back(portnames[i]);
-    }
+  for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
+      iter->next()){
+    PortInstance* pr2 = iter->get();
+    if(pr1->canConnectTo(pr2))
+      availablePorts.push_back(pr2->getUniqueName());
   }  
 
-  portnames=comp2->getProvidesPortNames();
-  for(unsigned int i=0; i<portnames.size();i++){
-    PortInstance* pr2=comp2->getPortInstance(portnames[i]);
-    if(pr1->canConnectTo(pr2)){
-      availablePorts.push_back(portnames[i]);
-    }
-  }  
   return availablePorts;
 }
 
-std::string BuilderService::getFrameworkURL()
+gov::cca::AbstractFramework::pointer BuilderService::getFramework()
 {
-   return framework->getURL().getString();
+  return gov::cca::AbstractFramework::pointer(framework);
 }
-
-::CIA::array1< gov::cca::Port::pointer > 
-BuilderService::listPorts(const std::string &com_name)
-{
-   cerr<<"listPorts() not implemented"<<endl;
-//   ComponentInstance *ci=framework->getComponent(com_name);
-//   ci->listPortMap();
-   CIA::array1<gov::cca::Port::pointer> ports;
-   return	ports;
-}
-
-gov::cca::Port::pointer BuilderService::getUIPort(const std::string &com_name)
-{
-   cerr<<"getUIPort() not implemented"<<endl;
-   ComponentInstance *ci=framework->getComponent(com_name);
-   return ci->getUIPort();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-

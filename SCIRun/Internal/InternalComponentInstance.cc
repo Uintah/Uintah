@@ -34,7 +34,7 @@ using namespace SCIRun;
 InternalComponentInstance::InternalComponentInstance(SCIRunFramework* framework,
 						     const std::string& instanceName,
 						     const std::string& className)
-  : ComponentInstance(framework, instanceName, className)
+  : ComponentInstance(framework, instanceName, className), useCount(0)
 {
 }
 
@@ -47,4 +47,23 @@ InternalComponentInstance::getPortInstance(const std::string& name)
 {
   cerr << "InternalComponentInstance::getPortInstance not finished\n";
   return 0;
+}
+
+PortInstanceIterator* InternalComponentInstance::getPorts()
+{
+  cerr << "SCIRunComponentInstance::getPorts not finished!\n";
+  return 0;
+}
+
+void InternalComponentInstance::incrementUseCount()
+{
+  useCount++;
+}
+
+bool InternalComponentInstance::decrementUseCount()
+{
+  if(useCount<=0)
+    return false;
+  useCount--;
+  return true;
 }

@@ -27,24 +27,96 @@
  */
 
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
-#include <iostream>
+#include <SCIRun/Dataflow/SCIRunPortInstance.h>
+#include <SCIRun/Dataflow/SCIRunUIPort.h>
+#include <SCIRun/CCA/CCAPortInstance.h>
+#include <Dataflow/Network/Module.h>
 using namespace std;
 using namespace SCIRun;
 
 SCIRunComponentInstance::SCIRunComponentInstance(SCIRunFramework* framework,
-						 const std::string& instanceName,
-						 const std::string& className,
+						 const string& instanceName,
+						 const string& className,
 						 Module* module)
   : ComponentInstance(framework, instanceName, className), module(module)
 {
+  // See if we have a user-interface...
+  if(module->haveUI()){
+    specialPorts.push_back(new CCAPortInstance("ui", "gov.cca.UIPort",
+					       gov::cca::TypeMap::pointer(0),
+					       gov::cca::Port::pointer(new SCIRunUIPort(this)),
+					       CCAPortInstance::Provides));
+  }
 }
 
 SCIRunComponentInstance::~SCIRunComponentInstance()
 {
 }
 
-PortInstance* SCIRunComponentInstance::getPortInstance(const std::string& name)
+PortInstance* SCIRunComponentInstance::getPortInstance(const string& name)
 {
-  cerr << "SCIRunComponentInstance::getPortInstance not finished!\n";
-  return 0;
+  // SCIRun ports can potentially have the same name for both, so
+  // SCIRunPortInstance tags them with a prefix of "Input: " or
+  // "Output: ", so we need to check that first.
+  if(name.substr(0, 7) == "Input: "){
+    IPort* port = module->getIPort(name.substr(7));
+    if(!port)
+      return 0;
+    return new SCIRunPortInstance(this, port, SCIRunPortInstance::Input);
+  } else if(name.substr(0,8) == "Output: "){
+    OPort* port = module->getOPort(name.substr(8));
+    if(!port)
+      return 0;
+    return new SCIRunPortInstance(this, port, SCIRunPortInstance::Output);
+  } else {
+    for(unsigned int i=0;i<specialPorts.size();i++)
+      if(specialPorts[i]->getName() == name)
+	return specialPorts[i];
+    return 0;
+  }
+}
+
+PortInstanceIterator* SCIRunComponentInstance::getPorts()
+{
+  return new Iterator(this);
+}
+
+SCIRunComponentInstance::Iterator::Iterator(SCIRunComponentInstance* component)
+  : component(component), idx(0)
+{
+}
+
+SCIRunComponentInstance::Iterator::~Iterator()
+{
+}
+
+void SCIRunComponentInstance::Iterator::next()
+{
+  idx++;
+}
+
+bool SCIRunComponentInstance::Iterator::done()
+{
+  return idx >= (int)component->specialPorts.size()
+    +component->module->numOPorts()
+    +component->module->numIPorts();
+}
+
+PortInstance* SCIRunComponentInstance::Iterator::get()
+{
+  Module* module = component->module;
+  int spsize = static_cast<int>(component->specialPorts.size());
+  if(idx < spsize)
+    return component->specialPorts[idx];
+  else if(idx < spsize+module->numOPorts())
+    return new SCIRunPortInstance(component,
+				  module->getOPort(idx-spsize),
+				  SCIRunPortInstance::Output);
+  else if(idx < spsize+module->numOPorts()
+	  +module->numIPorts())
+    return new SCIRunPortInstance(component,
+				  module->getIPort(idx-spsize-module->numOPorts()),
+				  SCIRunPortInstance::Input);
+  else
+    return 0; // Illegal
 }

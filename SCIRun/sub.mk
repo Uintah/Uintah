@@ -28,13 +28,16 @@ SRCS     += \
 	$(SRCDIR)/ComponentModel.cc \
 	$(SRCDIR)/PortDescription.cc \
 	$(SRCDIR)/SCIRunErrorHandler.cc \
-	$(SRCDIR)/PortInstance.cc
+	$(SRCDIR)/PortInstance.cc \
+	$(SRCDIR)/PortInstanceIterator.cc
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil
+PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
+	Dataflow/Network Core/GuiInterface Core/CCA/spec \
+	Core/TkExtensions
 LIBS := $(XML_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

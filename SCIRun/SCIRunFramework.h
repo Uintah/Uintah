@@ -57,10 +57,15 @@ namespace SCIRun {
     // Semi-private:
     // Used by builderService
     gov::cca::ComponentID::pointer createComponentInstance(const std::string& name, const std::string& type);
-    gov::cca::Port::pointer getFrameworkService(const std::string& type);
+    gov::cca::Port::pointer getFrameworkService(const std::string& type,
+						const std::string& componentName);
+    bool releaseFrameworkService(const std::string& type,
+				 const std::string& componentName);
     void registerComponent(ComponentInstance* ci, const std::string& name);
+    void shutdownComponent(const std::string& name);
     void listAllComponentTypes(std::vector<ComponentDescription*>&,
 			       bool);
+    ComponentInstance* lookupComponent(const std::string& name);
   protected:
     friend class Services;
     // Put these in a private structure to avoid #include bloat?
@@ -68,9 +73,6 @@ namespace SCIRun {
     std::map<std::string, ComponentInstance*> activeInstances;
     InternalComponentModel* internalServices;
     CCAComponentModel* cca;
-
-    friend class BuilderService;
-    ComponentInstance* getComponent(const std::string& name);
   };
 }
 

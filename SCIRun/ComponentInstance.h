@@ -35,6 +35,7 @@
 namespace SCIRun {
   class SCIRunFramework;
   class PortInstance;
+  class PortInstanceIterator;
 
   class ComponentInstance {
   public:
@@ -48,10 +49,7 @@ namespace SCIRun {
     std::string className;
 
     virtual PortInstance* getPortInstance(const std::string& name) = 0;
-
-    virtual std::vector<std::string>getProvidesPortNames(){}; 
-    virtual std::vector<std::string>getUsesPortNames(){}; 
-    virtual gov::cca::Port::pointer getUIPort(){return gov::cca::Port::pointer(0); }
+    virtual PortInstanceIterator* getPorts() = 0;
   private:
     ComponentInstance(const ComponentInstance&);
     ComponentInstance& operator=(const ComponentInstance&);

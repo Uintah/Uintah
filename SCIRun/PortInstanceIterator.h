@@ -16,40 +16,29 @@
 */
 
 /*
- *  SCIRunComponentDescription.cc:
+ *  PortInstanceIterator.h: 
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   October 2001
+ *   April 2002
  *
  */
 
-#include <SCIRun/Dataflow/SCIRunComponentDescription.h>
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
-#include <iostream>
-using namespace std;
-using namespace SCIRun;
+#ifndef SCIRun_Framework_PortInstanceIterator_h
+#define SCIRun_Framework_PortInstanceIterator_h
 
-SCIRunComponentDescription::SCIRunComponentDescription(SCIRunComponentModel* model,
-						       const std::string& package,
-						       const std::string& category,
-						       const std::string& module)
-  : model(model), package(package), category(category), module(module)
-{
-}
+namespace SCIRun {
+  class PortInstance;
 
-SCIRunComponentDescription::~SCIRunComponentDescription()
-{
+  class PortInstanceIterator {
+  public:
+    virtual ~PortInstanceIterator();
+    virtual PortInstance* get() = 0;
+    virtual bool done() = 0;
+    virtual void next() = 0;
+  };
 }
-
-string SCIRunComponentDescription::getType() const
-{
-  return package+"."+category+"."+module;
-}
-
-const ComponentModel* SCIRunComponentDescription::getModel() const
-{
-  return model;
-}
+  
+#endif

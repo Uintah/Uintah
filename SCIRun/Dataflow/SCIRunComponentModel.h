@@ -30,11 +30,12 @@
 #define SCIRun_Framework_SCIRunComponentModel_h
 
 #include <SCIRun/ComponentModel.h>
-#include <map>
 
 namespace SCIRun {
+  class Network;
   class SCIRunComponentDescription;
   class SCIRunFramework;
+  class GuiInterface;
   class SCIRunComponentModel : public ComponentModel {
   public:
     SCIRunComponentModel(SCIRunFramework* framework);
@@ -48,11 +49,8 @@ namespace SCIRun {
 				       bool);
   private:
     SCIRunFramework* framework;
-    typedef std::map<std::string, SCIRunComponentDescription*> componentDB_type;
-    componentDB_type components;
-    bool tcl_started;
-    void buildComponentList();
-    void destroyComponentList();
+    GuiInterface* gui;
+    Network* net;
 
     SCIRunComponentModel(const SCIRunComponentModel&);
     SCIRunComponentModel& operator=(const SCIRunComponentModel&);

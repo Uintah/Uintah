@@ -47,6 +47,7 @@ SCIRunFramework::SCIRunFramework()
 SCIRunFramework::~SCIRunFramework()
 {
   cerr << "~SCIRunFramewrok called!\n";
+  abort();
   for(vector<ComponentModel*>::iterator iter=models.begin();
       iter != models.end(); iter++)
     delete *iter;
@@ -101,16 +102,14 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     }
   }
   if(!mod){
-    cerr << "!mod\n";
+    cerr << "No component model wants to build " << type << '\n';
     return ComponentID::pointer(0);
   }
   ComponentInstance* ci = mod->createInstance(name, type);
-  if(!ci){
-    cerr << "!ci\n";
+  if(!ci)
     return ComponentID::pointer(0);
-  }
   registerComponent(ci, name);
-  return ComponentID::pointer(new ComponentID(this, name));
+  return ComponentID::pointer(new ComponentID(this, ci->instanceName));
 }
 
 void SCIRunFramework::registerComponent(ComponentInstance* ci,
@@ -131,7 +130,7 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
 }
 
 ComponentInstance*
-SCIRunFramework::getComponent(const std::string& name)
+SCIRunFramework::lookupComponent(const std::string& name)
 {
   map<string, ComponentInstance*>::iterator iter = activeInstances.find(name);
   if(iter == activeInstances.end())
@@ -141,9 +140,17 @@ SCIRunFramework::getComponent(const std::string& name)
 }
 
 gov::cca::Port::pointer
-SCIRunFramework::getFrameworkService(const std::string& type)
+SCIRunFramework::getFrameworkService(const std::string& type,
+				     const std::string& componentName)
 {
-  return internalServices->getFrameworkService(type);
+  return internalServices->getFrameworkService(type, componentName);
+}
+
+bool
+SCIRunFramework::releaseFrameworkService(const std::string& type,
+					 const std::string& componentName)
+{
+  return internalServices->releaseFrameworkService(type, componentName);
 }
 
 void
@@ -176,5 +183,3 @@ gov::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
   cerr << "SCIRunFramework::createEmptyFramework not finished\n";
   return gov::cca::AbstractFramework::pointer(0);
 }
-
-

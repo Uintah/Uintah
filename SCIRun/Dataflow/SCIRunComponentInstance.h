@@ -30,9 +30,12 @@
 #define SCIRun_Framework_SCIRunComponentInstance_h
 
 #include <SCIRun/ComponentInstance.h>
+#include <SCIRun/PortInstanceIterator.h>
 #include <string>
+#include <vector>
 
 namespace SCIRun {
+  class CCAPortInstance;
   class Module;
   class SCIRunComponentInstance : public ComponentInstance {
   public:
@@ -43,9 +46,28 @@ namespace SCIRun {
     virtual ~SCIRunComponentInstance();
 
     // Methods from ComponentInstance
-    PortInstance* getPortInstance(const std::string& name);
+    virtual PortInstance* getPortInstance(const std::string& name);
+    virtual PortInstanceIterator* getPorts();
+    Module* getModule() {
+      return module;
+    }
   private:
+    class Iterator : public PortInstanceIterator {
+    public:
+      Iterator(SCIRunComponentInstance*);
+      virtual ~Iterator();
+      virtual PortInstance* get();
+      virtual bool done();
+      virtual void next();
+    private:
+      Iterator(const Iterator&);
+      Iterator& operator=(const Iterator&);
+
+      SCIRunComponentInstance* component;
+      int idx;
+    };
     Module* module;
+    std::vector<CCAPortInstance*> specialPorts;
     SCIRunComponentInstance(const SCIRunComponentInstance&);
     SCIRunComponentInstance& operator=(const SCIRunComponentInstance);
   };
