@@ -145,7 +145,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 	       string(nh->nrrd->axis[0].label) + "}");
 
   gui->execute(string("set ") + id + "-size0 " + 
-	       string(nh->nrrd->axis[0].size));
+	       to_string(nh->nrrd->axis[0].size));
 
   gui->execute(id + " fill_tuple_tab");
 
