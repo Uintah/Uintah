@@ -16,8 +16,6 @@
 
 #include <SCICore/share/share.h>
 
-#include <stdlib.h> // For size_t
-
 #ifdef KCC
 #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
 #else
@@ -71,9 +69,6 @@ class SCICORESHARE clString {
 	char* s;		// pointer to data
 	int n;			// reference count
 	srep() { n=1; }
-// Can't do this yet - broken
-//	inline void* operator new(size_t);
-//	inline void operator delete(void*, size_t);
     };
     srep *p;
     clString(int, char*);
@@ -227,11 +222,56 @@ public:
 SCICORESHARE clString to_string(int);
 SCICORESHARE clString to_string(double);
 
+inline clString::clString()
+{
+    p=0;
+}
+
+inline clString::clString(const clString& str)
+{
+    if(str.p)str.p->n++;
+    p=str.p;
+}
+
+inline clString::clString(int, char* s)
+{
+    p=new srep;
+    p->s=s;
+}
+
+inline clString::~clString()
+{
+    if(p && --p->n == 0){
+	if(p->s)delete[] p->s;
+	delete p;
+    }
+}
+
+inline clString& clString::operator=(const clString& str)
+{
+    if(str.p)str.p->n++;		// Protect against st=st
+    if(p && --p->n==0){
+	if(p->s)delete[] p->s;
+	delete p;
+    }
+    p=str.p;
+    return *this;
+}
+
+inline const char* clString::operator()() const
+{
+    return (p && p->s)?p->s:"";
+}
+
 } // End namespace Containers
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:43  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:38:38  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

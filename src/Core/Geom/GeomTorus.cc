@@ -18,6 +18,7 @@
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/Trig.h>
 
 namespace SCICore {
@@ -212,6 +213,10 @@ bool GeomTorusArc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.6  1999/09/04 06:01:50  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.5  1999/08/29 00:46:56  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

@@ -17,7 +17,6 @@
 #include <sci_config.h>
 
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Tester/RigorousTest.h>
 
 namespace DaveW {
   namespace Datatypes {
@@ -42,6 +41,10 @@ namespace Containers {
  }
  namespace Geometry {
   void Pio();  // This is a dummy declaration to get things to compile.
+ }
+
+ namespace Tester {
+     class RigorousTest;
  }
 
 
@@ -190,8 +193,6 @@ public:
 #include <SCICore/Containers/String.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Malloc/Allocator.h>
-
-#include <SCICore/Tester/RigorousTest.h>
 
 namespace SCICore {
 namespace Containers {
@@ -386,6 +387,10 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.11  1999/09/04 06:01:41  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.10  1999/08/31 08:59:04  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

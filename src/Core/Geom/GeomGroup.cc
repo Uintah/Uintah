@@ -16,6 +16,7 @@
 #include <SCICore/Containers/Array2.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream.h>
 #ifdef _WIN32
 #include <float.h>
 #define MAXDOUBLE DBL_MAX
@@ -141,6 +142,10 @@ bool GeomGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.7  1999/09/04 06:01:48  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.6  1999/08/29 00:46:55  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

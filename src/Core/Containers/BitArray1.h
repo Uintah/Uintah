@@ -16,9 +16,10 @@
 
 #include <SCICore/share/share.h>
 
-#include <SCICore/Tester/RigorousTest.h>
-
 namespace SCICore {
+    namespace Tester {
+	class RigorousTest;
+    }
 namespace Containers {
 
 using SCICore::Tester::RigorousTest;
@@ -94,6 +95,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:41  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:38:35  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
