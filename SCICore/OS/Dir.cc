@@ -13,7 +13,6 @@ using namespace std;
 
 Dir Dir::create(const string& name)
 {
-   cerr << "Creating: " << name << '\n';
    int code = mkdir(name.c_str(), 0777);
    if(code != 0)
       throw ErrnoException("Dir::create (mkdir call)", errno);
@@ -41,7 +40,6 @@ Dir& Dir::operator=(const Dir& copy)
 
 void Dir::remove()
 {
-    cerr << "Removing: " << d_name << "\n";
     int code = rmdir(d_name.c_str());
     if (code != 0)
     	throw ErrnoException("Dir::remove (rmdir call)", errno);
@@ -61,6 +59,9 @@ Dir Dir::getSubdir(const string& sub)
 
 //
 // $Log$
+// Revision 1.3  2000/06/15 19:52:38  sparker
+// Removed chatter
+//
 // Revision 1.2  2000/05/31 15:20:44  jehall
 // - Added ability to remove() directories
 //
