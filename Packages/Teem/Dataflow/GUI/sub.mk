@@ -31,6 +31,8 @@ SRCS := \
 	$(SRCDIR)/DicomToNrrd.tcl\
 	$(SRCDIR)/EditTupleAxis.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
+	$(SRCDIR)/ImageImporter.tcl\
+	$(SRCDIR)/ImageExporter.tcl\
 	$(SRCDIR)/MRITissueClassifier.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\
 	$(SRCDIR)/NrrdSetProperty.tcl\

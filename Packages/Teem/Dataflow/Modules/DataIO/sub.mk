@@ -37,6 +37,8 @@ SRCS     += \
 	$(SRCDIR)/ConvertToNrrd.cc\
 	$(SRCDIR)/DicomToNrrd.cc\
 	$(SRCDIR)/FieldToNrrd.cc\
+	$(SRCDIR)/ImageExporter.cc\
+	$(SRCDIR)/ImageImporter.cc\
 	$(SRCDIR)/NrrdReader.cc\
 	$(SRCDIR)/NrrdWriter.cc\
 	$(SRCDIR)/NrrdToField.cc\
