@@ -20,6 +20,7 @@
 #include <TCL/TCLvar.h>
 
 #include <tcl/tcl/tcl.h>
+#include <tcl/tk/tk.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -51,7 +52,7 @@ void TCL::execute(const clString& string)
     TCLTask::lock();
     int code = Tcl_Eval(the_interp, string());
     if(code != TCL_OK)
-	cerr << "TCL error: " << the_interp->result << endl;
+	Tk_BackgroundError(the_interp);
     TCLTask::unlock();
 }
 
@@ -60,7 +61,7 @@ void TCL::execute(char* string)
     TCLTask::lock();
     int code = Tcl_Eval(the_interp, string);
     if(code != TCL_OK)
-	cerr << "TCL error: " << the_interp->result << endl;
+	Tk_BackgroundError(the_interp);
     TCLTask::unlock();
 }
 
@@ -70,7 +71,7 @@ void TCL::source_once(const clString& filename)
     clString complete_filename(prefix()+"/"+filename);
     int code = Tcl_EvalFile(the_interp, complete_filename());
     if(code != TCL_OK)
-	cerr << "TCL error: " << the_interp->result << endl;
+	Tk_BackgroundError(the_interp);
     TCLTask::unlock();
 }
 
@@ -282,7 +283,7 @@ int TCL::get_tcl_intvar(const clString& base, const clString& name,
     TCLTask::lock();
     char* l=Tcl_GetVar(the_interp, n(), TCL_GLOBAL_ONLY);
     if(!l){
-	cerr << "TCL error: " << the_interp->result << endl;
+	Tk_BackgroundError(the_interp);
 	TCLTask::unlock();
 	return 0;
     }
