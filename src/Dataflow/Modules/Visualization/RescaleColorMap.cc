@@ -27,6 +27,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Dataflow/Modules/Visualization/RescaleColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -38,7 +39,6 @@
 #include <Core/Datatypes/DispatchScalar1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Modules/Visualization/RescaleColorMap.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -88,10 +88,6 @@ RescaleColorMap::~RescaleColorMap()
 {
 }
 
-template<class F>
-void RescaleColorMap::dispatch_minmax(F *f) {
-  success_ = field_minmax(*f, minmax_);
-}
 
 void RescaleColorMap::get_minmax(FieldHandle field) {
   dispatch_scalar1(field, dispatch_minmax);

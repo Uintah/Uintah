@@ -1,3 +1,5 @@
+#ifndef SCIRun_RescaleColorMap_H
+#define SCIRun_RescaleColorMap_H
 /*
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -15,11 +17,12 @@
   University of Utah. All Rights Reserved.
 */
 
-
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 namespace SCIRun {
 
@@ -45,7 +48,8 @@ public:
 
   virtual void get_minmax(FieldHandle f);
 
-  template <class F> void dispatch_minmax(F *f);
+  template<class F> void dispatch_minmax(F *f) 
+  { success_ = field_minmax(*f, minmax_); }
 
         // GROUP:  Access functions:
         ///////////////////////////
@@ -64,3 +68,5 @@ private:
 };
 
 } // End namespace SCIRun
+
+#endif
