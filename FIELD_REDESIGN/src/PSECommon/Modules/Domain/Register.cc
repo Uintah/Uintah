@@ -25,7 +25,7 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/FieldWrapperPort.h>
-#include <PSECore/Datatypes/SFieldPort.h>
+#include <PSECore/Datatypes/FieldPort.h>
 #include <SCICore/Datatypes/Domain.h>
 #include <SCICore/Datatypes/FieldWrapper.h>
 #include <PSECommon/Modules/Domain/DomainManager.h>
@@ -43,7 +43,7 @@ using namespace SCICore::Util;
 
 class Register : public Module {
 private:
-  SFieldIPort* ifield;
+  FieldIPort* ifield;
   FieldWrapperOPort* oport;
 
   TCLstring tcl_attrib;
@@ -51,7 +51,7 @@ private:
 
   FieldWrapperHandle fwh;
   FieldWrapper *fw;
-  SFieldHandle sfh;  
+  FieldHandle sfh;  
 
   DebugStream dbg;
 public:
@@ -71,7 +71,7 @@ Register::Register(const clString& id)
   : Module("Register", id, Filter),dbg("Register", true),
   tcl_geom("geom", id, this), tcl_attrib("attrib", id, this)
   {
-    ifield = new SFieldIPort(this, "GenSField", SFieldIPort::Atomic);
+    ifield = new FieldIPort(this, "GenField", FieldIPort::Atomic);
     add_iport(ifield);
     // the which_port attribute is used by the connection funciton below
     // have to set which_port *AFTER* add_Xport is called...
@@ -105,8 +105,8 @@ void Register::execute(){
       }
       sfh->get_geom()->set_name(geom);
       sfh->get_attrib()->set_name(attrib);
-      SField* sfb = sfh->get_base();
-      //      if(SField<double>* sfd = dynamic_cast<SField<double>* >(sfb)){
+      Field* sfb = sfh->get_base();
+      //      if(Field<double>* sfd = dynamic_cast<Field<double>* >(sfb)){
       //	if(Interpolate<double>* inter = dynamic_cast<Interpolate<double>* >(sfd)){
       //	  double l;
       //	  inter->interpolate(l, Point(0, 0, 0));

@@ -39,7 +39,8 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class FieldWrapper;
 typedef LockingHandle<FieldWrapper> FieldWrapperHandle;
 
-enum field_t{
+enum field_t {
+  FIELD = 1,
   SFIELD,
   TFIELD,
   VFIELD,
@@ -54,11 +55,11 @@ public:
   // Constructors
   FieldWrapper(const GeomHandle&, status_t);
   FieldWrapper(const AttribHandle&, status_t);
-  FieldWrapper(const SFieldHandle&, status_t);
+  FieldWrapper(const FieldHandle&, status_t);
 
-  inline GeomHandle get_geom(){return mygeom;};
-  inline AttribHandle get_attrib(){return myattrib;};
-  inline SFieldHandle get_sfield(){return mysfield;};
+  inline GeomHandle get_geom(){return d_geom;};
+  inline AttribHandle get_attrib(){return d_attrib;};
+  inline FieldHandle get_field(){return d_field;};
   
   inline field_t get_field_type(){return fieldtype;};
   inline status_t get_status_type(){return statustype;};
@@ -71,9 +72,9 @@ public:
   static PersistentTypeID type_id;
   
 private:
-  GeomHandle mygeom;
-  AttribHandle myattrib;
-  SFieldHandle mysfield;
+  GeomHandle d_geom;
+  AttribHandle d_attrib;
+  FieldHandle d_field;
   field_t fieldtype;
   status_t statustype;
 };
