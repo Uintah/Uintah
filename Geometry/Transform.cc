@@ -216,6 +216,8 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
 			    double znear, double zfar,
 			    int xres, int yres)
 {
+    znear=-znear;
+    zfar=-zfar;
     Vector lookdir(lookat-eyep);
     Vector z(lookdir);
     z.normalize();
@@ -230,11 +232,12 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
     x*=xscale;
     y*=yscale;
     z*=zscale;
+    pre_translate(Point(0,0,0)-eyep);
     double m[4][4];
     // Viewing...
-    m[0][0]=x.x(); m[0][1]=y.x(); m[0][2]=z.x(); m[0][3]=-eyep.x();
-    m[1][0]=x.y(); m[1][1]=y.y(); m[1][2]=z.y(); m[1][3]=-eyep.y();
-    m[2][0]=x.z(); m[2][1]=y.z(); m[2][2]=z.z(); m[2][3]=-eyep.z();
+    m[0][0]=x.x(); m[0][1]=y.x(); m[0][2]=z.x(); m[0][3]=0;
+    m[1][0]=x.y(); m[1][1]=y.y(); m[1][2]=z.y(); m[1][3]=0;
+    m[2][0]=x.z(); m[2][1]=y.z(); m[2][2]=z.z(); m[2][3]=0;
     m[3][0]=0;     m[3][1]=y.x(); m[3][2]=0.0;   m[3][3]=1.0;
     invmat(m);
     pre_mulmat(m);
@@ -246,8 +249,8 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
     m[3][0]=0.0; m[3][1]=0.0; m[3][2]=-1.0; m[3][3]=0.0;
     pre_mulmat(m);
 
-    post_translate(Vector(1,1,0));
-    post_scale(Vector(xres/2., yres/2., 1.0));
+    pre_translate(Vector(1,1,0));
+    pre_scale(Vector(xres/2., yres/2., 1.0));
 }
 
 void Transform::invmat(double m[4][4])
@@ -298,8 +301,10 @@ void Transform::invmat(double m[4][4])
     for(i=0;i<4;i++){
         ASSERT(m[i][i]!=0);
         double factor=1./m[i][i];
-        for(int j=0;j<4;j++)
+        for(int j=0;j<4;j++){
             imat[i][j] *= factor;
+	    m[i][j]=imat[i][j];
+	}
     }
 }
 
