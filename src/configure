@@ -8224,7 +8224,7 @@ if test -n "m"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of M check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of M check (disregarding $lib)." >&2;}
@@ -8712,7 +8712,7 @@ if test -n "X11 Xext Xaw Xi Xt Xmu"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of X check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of X check (disregarding $lib)." >&2;}
@@ -9212,7 +9212,7 @@ if test -n "fetchop"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of FETCHOP check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of FETCHOP check (disregarding $lib)." >&2;}
@@ -9624,7 +9624,7 @@ if test -n "pthread"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PTHREAD check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PTHREAD check (disregarding $lib)." >&2;}
@@ -10249,7 +10249,7 @@ if test -n "GLU GL $GLU_OTHERS"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GL check (disregarding $lib)." >&2;}
@@ -10669,7 +10669,7 @@ if test -n "c"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&2;}
@@ -11118,7 +11118,7 @@ if test -n "dl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&2;}
@@ -11527,7 +11527,7 @@ if test -n "dl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&2;}
@@ -11948,7 +11948,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STAT64 check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STAT64 check (disregarding $lib)." >&2;}
@@ -12366,7 +12366,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&2;}
@@ -12778,7 +12778,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&2;}
@@ -13187,7 +13187,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&2;}
@@ -13606,7 +13606,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STL_HEADERS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STL_HEADERS check (disregarding $lib)." >&2;}
@@ -14227,7 +14227,7 @@ if test -n "tcl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TCL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TCL check (disregarding $lib)." >&2;}
@@ -14683,7 +14683,7 @@ if test -n "tk $TCL_LIB_FLAG"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TK check (disregarding $lib)." >&2;}
@@ -15130,7 +15130,7 @@ if test -n "itcl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of ITCL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of ITCL check (disregarding $lib)." >&2;}
@@ -15578,7 +15578,7 @@ if test -n "itk"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of ITK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of ITK check (disregarding $lib)." >&2;}
@@ -16025,7 +16025,7 @@ if test -n "BLT"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLT check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLT check (disregarding $lib)." >&2;}
@@ -16678,7 +16678,7 @@ if test -n "$_xer_lib"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of XERCES_C check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of XERCES_C check (disregarding $lib)." >&2;}
@@ -17097,7 +17097,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of SSTREAM check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SSTREAM check (disregarding $lib)." >&2;}
@@ -17560,7 +17560,7 @@ if test -n "exc"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of EXC check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of EXC check (disregarding $lib)." >&2;}
@@ -17992,7 +17992,7 @@ if test -n "mpege"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPEGE check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPEGE check (disregarding $lib)." >&2;}
@@ -18518,7 +18518,7 @@ if test -n "$MAGICK_LIB_FLAG"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MAGICK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MAGICK check (disregarding $lib)." >&2;}
@@ -19002,7 +19002,7 @@ if test -n "z"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of Z check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of Z check (disregarding $lib)." >&2;}
@@ -19477,7 +19477,7 @@ if test -n "unp scisock"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of UNP check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of UNP check (disregarding $lib)." >&2;}
@@ -19972,7 +19972,7 @@ if test -n "png"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PNG check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PNG check (disregarding $lib)." >&2;}
@@ -20448,7 +20448,7 @@ if test -n "ftn fortran"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&2;}
@@ -20856,7 +20856,7 @@ if test -n "xlf90"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&2;}
@@ -21265,7 +21265,7 @@ if test -n "pgftnrtl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&2;}
@@ -21671,7 +21671,7 @@ if test -n "g2c"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&2;}
@@ -22079,7 +22079,7 @@ if test -n "for Ufor"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&2;}
@@ -22487,7 +22487,7 @@ if test -n "g2c"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&2;}
@@ -22894,7 +22894,7 @@ if test -n "F77"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&2;}
@@ -23327,7 +23327,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -23773,7 +23773,7 @@ if test -n "cblas f77blas atlas f2c"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -24219,7 +24219,7 @@ if test -n "essl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -24626,7 +24626,7 @@ if test -n "cxml"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -25069,7 +25069,7 @@ if test -n "cblas blas"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -25516,7 +25516,7 @@ if test -n "blas"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -25927,7 +25927,7 @@ if test -n "blas"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -26333,7 +26333,7 @@ if test -n "fblas"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
@@ -26811,7 +26811,7 @@ if test -n "freetype ftgl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of FTGL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of FTGL check (disregarding $lib)." >&2;}
@@ -27255,7 +27255,7 @@ if test -n ""; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&2;}
@@ -27665,7 +27665,7 @@ if test -n "lapack"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&2;}
@@ -28074,7 +28074,7 @@ if test -n "flapack"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&2;}
@@ -28491,7 +28491,7 @@ if test -n "complib.sgimath"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&2;}
@@ -28899,7 +28899,7 @@ if test -n "complib.sgimath_mp"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACKMP check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACKMP check (disregarding $lib)." >&2;}
@@ -29402,7 +29402,7 @@ if test -n "mpi lam util pmpi"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&2;}
@@ -29847,7 +29847,7 @@ if test -n "mpi lam util pthread"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&2;}
@@ -30291,7 +30291,7 @@ if test -n "mpi"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&2;}
@@ -30734,7 +30734,7 @@ if test -n "mpich pmpich"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&2;}
@@ -31340,7 +31340,7 @@ if test -n "mpiuni"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPIUNI check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPIUNI check (disregarding $lib)." >&2;}
@@ -31783,7 +31783,7 @@ if test -n "mpiunich pmpiunich"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPIUNICH check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPIUNICH check (disregarding $lib)." >&2;}
@@ -32300,7 +32300,7 @@ if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petsc
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PETSC check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC check (disregarding $lib)." >&2;}
@@ -32763,7 +32763,7 @@ if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petsc
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (disregarding $lib)." >&2;}
@@ -33450,7 +33450,7 @@ if test -n "sidl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of SIDL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SIDL check (disregarding $lib)." >&2;}
@@ -33928,7 +33928,7 @@ if test -n "jpeg"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of JPEG check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of JPEG check (disregarding $lib)." >&2;}
@@ -34347,7 +34347,7 @@ if test -n "tiff"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TIFF check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TIFF check (disregarding $lib)." >&2;}
@@ -34768,7 +34768,7 @@ if test -n "netsolve"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of NETSOLVE check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of NETSOLVE check (disregarding $lib)." >&2;}
@@ -35325,7 +35325,7 @@ if test -n "glut"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLUT check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLUT check (disregarding $lib)." >&2;}
@@ -35923,7 +35923,7 @@ if test -n "glui"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLUI check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLUI check (disregarding $lib)." >&2;}
@@ -36403,7 +36403,7 @@ if test -n "oogl"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of OOGL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of OOGL check (disregarding $lib)." >&2;}
@@ -36907,7 +36907,7 @@ if test -n "GLEW"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLEW check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLEW check (disregarding $lib)." >&2;}
@@ -37346,7 +37346,7 @@ if test -n "audio audiofile"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of AUDIO check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of AUDIO check (disregarding $lib)." >&2;}
@@ -37843,7 +37843,7 @@ if test -n "teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TEEM check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TEEM check (disregarding $lib)." >&2;}
@@ -38323,7 +38323,7 @@ if test -n "MdsLib_client"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MDSPLUS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MDSPLUS check (disregarding $lib)." >&2;}
@@ -38803,7 +38803,7 @@ if test -n "hdf5"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of HDF5 check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of HDF5 check (disregarding $lib)." >&2;}
@@ -39237,7 +39237,7 @@ if test -n "perfex"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PERFEX check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PERFEX check (disregarding $lib)." >&2;}
@@ -39662,7 +39662,7 @@ if test -n "crypto"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of CRYPTO check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of CRYPTO check (disregarding $lib)." >&2;}
@@ -40094,7 +40094,7 @@ if test -n "ssl crypto"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of SSL check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SSL check (disregarding $lib)." >&2;}
@@ -40577,7 +40577,7 @@ if test -n "globus_dc pthread"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLOBUS check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLOBUS check (disregarding $lib)." >&2;}
@@ -41317,7 +41317,7 @@ if test -n "qt-mt"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of QT_MT check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of QT_MT check (disregarding $lib)." >&2;}
@@ -41842,7 +41842,7 @@ if test -n "ruby-static"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of RUBY check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of RUBY check (disregarding $lib)." >&2;}
@@ -42315,7 +42315,7 @@ if test -n "vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtk
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of VTK check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VTK check (disregarding $lib)." >&2;}
@@ -42811,7 +42811,7 @@ if test -n "$_vdt_libs"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of VDT check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VDT check (disregarding $lib)." >&2;}
@@ -43292,7 +43292,7 @@ if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of HYPRE check (disregarding $lib)." >&5
 echo "$as_me: WARNING: Only -l options are allowed in arg 5 of HYPRE check (disregarding $lib)." >&2;}
