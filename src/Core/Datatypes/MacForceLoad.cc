@@ -22,6 +22,7 @@
 #include <stdio.h>
 
 #include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/TriSurfField.h>
 
 using namespace SCIRun;
 
@@ -29,5 +30,13 @@ void
 macForceLoad()
 {
   printf( "Forcing load of Core/Datatypes (for Macintosh)\n" );
+
+  // It appears that we need more than one type to force the
+  // instantiation of all of Core/Datatypes.  Until we find a better
+  // solution (or upgrade to the next OS version (jaguar) which I
+  // think will fix this) I suggest that we just add the types to this
+  // file as we find them "missing"...  -Dd
+
   PointCloudField<double> pcfd;
+  TriSurfField<double> tsfd;
 }
