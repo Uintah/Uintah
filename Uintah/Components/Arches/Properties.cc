@@ -57,6 +57,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_streams[d_numMixingVars].problemSetup(stream_db);
     ++d_numMixingVars;
   }
+  d_numMixingVars--;
 }
 
 //****************************************************************************
@@ -256,6 +257,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.23  2000/07/12 23:59:22  rawat
+// added wall bc for u-velocity
+//
 // Revision 1.22  2000/07/03 05:30:15  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //
