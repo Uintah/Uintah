@@ -888,7 +888,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
     da1->query(field, var, matl, patch, time1);
 
     map<const Patch*, Field*> patch2FieldMap;
-    map<const Patch*, Field*>::iterator findIter;
+    typename map<const Patch*, Field*>::iterator findIter;
     for (Iterator iter = begin_ ; !iter.done(); iter++ ) {
       const Patch* patch2 = patch2Map[*iter];
       findIter = patch2FieldMap.find(patch2);
@@ -919,7 +919,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
       }
     }
 
-    map<const Patch*, Field*>::iterator iter = patch2FieldMap.begin();
+    typename map<const Patch*, Field*>::iterator iter = patch2FieldMap.begin();
     for ( ; iter != patch2FieldMap.end(); iter++) {
       delete (*iter).second;
     }
