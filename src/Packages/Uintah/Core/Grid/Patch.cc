@@ -1014,7 +1014,7 @@ Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
     const BoundCondBase* bc = itr->second->getBoundCondData(mat_id,type,child);
     itr->second->getBoundaryIterator(mat_id,bound,child);
     itr->second->getNBoundaryIterator(mat_id,nbound,child);
-    itr->second->getSFCZIterator(mat_id,sfx,child);
+    itr->second->getSFCXIterator(mat_id,sfx,child);
     itr->second->getSFCYIterator(mat_id,sfy,child);
     itr->second->getSFCZIterator(mat_id,sfz,child);
     return bc;
