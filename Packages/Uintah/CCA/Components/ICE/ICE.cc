@@ -310,7 +310,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->rho_micro_CCLabel);
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->press_CCLabel, press_matl);
-  t->computes(d_sharedState->get_delt_label());
+  //t->computes(d_sharedState->get_delt_label());
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
