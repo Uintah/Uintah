@@ -23,12 +23,22 @@
 #   Mar. 1994
 #  Copyright (C) 1994 SCI Group
 
+
+# If the window passed in in 'w' does not exist, makeColorPicker will
+# create the window for you.
+
 proc makeColorPicker {w var command cancel} {
     global $var
 
     global $var-r $var-g $var-b $var-a
     global $w-r $w-g $w-b $w-a
     global $w-rgbhsv
+
+    if ![winfo exists $w] {
+	toplevel $w
+	# Keep it from flickering
+	wm withdraw $w 
+    }
 
     set $w-rgbhsv "rgb"
 
@@ -115,13 +125,17 @@ proc makeColorPicker {w var command cancel} {
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
 
     frame $w.c.opts
-    button $w.c.opts.ok -text "Apply" -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 $rgb.s4 \"$command\""
+    button $w.c.opts.apply -text "Apply" \
+             -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 $rgb.s4 \"$command\""
+    button $w.c.opts.ok -text "OK" \
+	     -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 $rgb.s4 \"$command\"; $cancel"
     button $w.c.opts.cancel -text "Close" -command $cancel
     radiobutton $w.c.opts.rgb -text RGB -variable $w-rgbhsv -value rgb \
 	    -command "cptogrgbhsv $w $picks $rgb $hsv"
     radiobutton $w.c.opts.hsv -text HSV -variable $w-rgbhsv -value hsv \
 	    -command "cptogrgbhsv $w $picks $rgb $hsv"
-    pack $w.c.opts.ok -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
+    pack $w.c.opts.ok     -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
+    pack $w.c.opts.apply  -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
     pack $w.c.opts.cancel -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
     pack $w.c.opts.rgb -in $w.c.opts -side left -padx 2 -pady 2 -anchor e
     pack $w.c.opts.hsv -in $w.c.opts -side left -padx 2 -pady 2 -anchor e
@@ -137,6 +151,8 @@ proc makeColorPicker {w var command cancel} {
     pack $w.c.opts $picks $col -in $w.c -side top \
 	    -padx 2 -pady 2 -expand 1 -fill both
     pack $w.c
+
+    moveToCursor $w "leave_up"
 }
 
 proc Max {n1 n2 n3} {
