@@ -55,7 +55,7 @@ void bisect(const string& div, int num, int factor,
 {
   static int levels_of_recursion = -1;
 
-  int index;
+  int index = -1;
 
   // l is to bisect in the dimension of the largest amount of cells
   if(div[num] == 'l') { 
