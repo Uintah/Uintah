@@ -43,6 +43,7 @@ SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/Matlab.cc\
+	$(SRCDIR)/MatlabDataReader.cc\
 	$(SRCDIR)/MatlabMatricesReader.cc\
 	$(SRCDIR)/MatlabMatricesWriter.cc \
 	$(SRCDIR)/MatlabNrrdsReader.cc \
