@@ -268,7 +268,7 @@
        </Model>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-          <derivedValue name="reference_heat_capacity_Cv">[heat_capacity_Cv]</derivedValue>
+          <derivedValue name="reference_heat_capac_Cv">[heat_capac_Cv]</derivedValue>
           <derivedValue name="reference_gamma">[gamma]</derivedValue>
           <constantValue name="reference_Temp">298</constantValue>
 	   <filename>inputs/Models/ch4.rxn</filename>

@@ -246,8 +246,8 @@
 	   <defaultValue name="Hl">0.0</defaultValue>
 	   <filename>inputs/ARCHES/NewStaticMixingTables/JP8_reaction.tbl</filename>
            <constantValue name="viscosity">0.000020</constantValue>
-           <derivedValue name="heat_capacity_Cv">[heat_capac]-8314*[mix_mol_wt]</derivedValue>
-           <derivedValue name="gamma">[heat_capac]/[heat_capacity_Cv]</derivedValue>
+           <derivedValue name="heat_capac_Cv">[heat_capac]-8314*[mix_mol_wt]</derivedValue>
+           <derivedValue name="gamma">[heat_capac]/[heat_capac_Cv]</derivedValue>
 	</table>
         <material>BackgroundGas</material>
         <scalar name="f">
