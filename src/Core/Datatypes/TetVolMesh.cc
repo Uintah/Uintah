@@ -1054,7 +1054,6 @@ TetVolMesh::get_weights(const Point &p,
 			Node::array_type &l, vector<double> &w)
 {
   Cell::index_type idx;
-  w.resize(4);
   if (locate(idx, p))
   {
     get_nodes(l,idx);
@@ -1063,6 +1062,7 @@ TetVolMesh::get_weights(const Point &p,
     get_point(p1,l[1]);
     get_point(p2,l[2]);
     get_point(p3,l[3]);
+    w.resize(4);
     w[0] = tet_vol6(p, p1, p2, p3);
     w[1] = tet_vol6(p, p0, p2, p3);
     w[2] = tet_vol6(p, p1, p0, p3);
