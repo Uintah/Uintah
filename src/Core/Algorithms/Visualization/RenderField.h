@@ -1479,8 +1479,10 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       scinew GeomSwitch(scinew GeomColorMap(scinew GeomDL(scinew GeomMaterial(lines, default_material)), cmap));
   }
 
-  MaterialHandle tdefmat = default_material->clone();
-  tdefmat->transparency = 0.0;
+  MaterialHandle opaque = scinew Material(Color(1.0, 1.0, 1.0));
+  opaque->transparency = 1.0;
+  MaterialHandle transparent = scinew Material(Color(1.0, 1.0, 1.0));
+  transparent->transparency = 0.0;
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
 
@@ -1556,24 +1558,11 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	  tmp.safe_normalize();
 	}
 	tmp *= scale;
-	if (cmap.get_rep())
+
+	lines->add(p, opaque, ctmpd, p + tmp, transparent, ctmpd);
+	if (bidirectional)
 	{
-	  MaterialHandle color = cmap->lookup(ctmpd);
-	  MaterialHandle tcolor = color->clone();
-	  tcolor->transparency = 0.0;
-	  lines->add(p, color, p + tmp, tcolor);
-	  if (bidirectional)
-	  {
-	    lines->add(p, color, p - tmp, tcolor);
-	  }
-	}
-	else
-	{
-	  lines->add(p, default_material, p + tmp, tdefmat);
-	  if (bidirectional)
-	  {
-	    lines->add(p, default_material, p - tmp, tdefmat);
-	  }
+	  lines->add(p, opaque, ctmpd, p - tmp, transparent, ctmpd);
 	}
       }
     }
