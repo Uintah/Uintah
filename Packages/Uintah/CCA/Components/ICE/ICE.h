@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_ICE_H
 
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Packages/Uintah/CCA/Components/ICE/LODI.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
@@ -684,7 +685,10 @@ namespace Uintah {
       int d_dbgLevel; 
       int d_dbgSigFigs;
       
+      //__________________________________
+      // need by LODI      
       bool d_usingLODI;
+      Lodi_user_inputs* d_Lodi_user_inputs;
       
       Advector* d_advector;
       std::string d_advect_type;
