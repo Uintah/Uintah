@@ -33,9 +33,10 @@
 using namespace SCIRun;
 using namespace std;
 
-VtkComponentDescription::VtkComponentDescription(VtkComponentModel* model, const string& type)
-  : model(model), type(type)
+VtkComponentDescription::VtkComponentDescription(VtkComponentModel* m, const string& t)
 {
+  this->model = m;
+  this->type = t;
 }
 
 VtkComponentDescription::~VtkComponentDescription()

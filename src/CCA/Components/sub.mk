@@ -46,7 +46,7 @@ SUBDIRS+= $(SRCDIR)/BabelTest
 endif
 
 ifeq ($(HAVE_VTK),yes)
-SUBDIRS+= $(SRCDIR)/VtkTest
+SUBDIRS+= $(SRCDIR)/VTK
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

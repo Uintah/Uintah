@@ -43,8 +43,17 @@ namespace SCIRun{
     virtual const ComponentModel* getModel() const;
     std::string type;
 
+    /** Get/Set the name of the DLL for this component.  The loader will search
+     *    the SIDL_DLL_PATH for a matching library name. */
+    std::string getLibrary() const
+    { return library; }
+    void setLibrary(const std::string &l)
+    { library = l; }
+    
   private:
     VtkComponentModel* model;
+    std::string library;
+
     VtkComponentDescription(const VtkComponentDescription&);
     VtkComponentDescription& operator=(const VtkComponentDescription&);
   };
