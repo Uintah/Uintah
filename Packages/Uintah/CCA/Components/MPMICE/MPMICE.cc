@@ -52,6 +52,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = d_ice->d_SMALL_NUM; 
   d_TINY_RHO  = d_ice->d_TINY_RHO;
+  d_rigidMPM = false;
   
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
