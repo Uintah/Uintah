@@ -344,6 +344,7 @@ private:
   void createObjectWindow( GLUI * window );
   static void toggleObjectsWindowCB( int id );
   static void SGAutoCycleCB( int id );
+  static void SGNoSkipCB( int id );
   static void SGNextItemCB( int id );
   static void SISpinCB( int id );
   static void SIIncMagCB( int id );
