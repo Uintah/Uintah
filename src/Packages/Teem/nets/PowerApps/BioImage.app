@@ -51,6 +51,7 @@ set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 3000 3000]
 global mods
 set mods(Viewer) $m1
+
 set mods(ViewImage) ""
 set mods(EditTransferFunc) ""
 
@@ -314,7 +315,7 @@ class BioImageApp {
 	} elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "Completed"} {
 	    if {$has_autoviewed == 0} {
 		set has_autoviewed 1
-		after 100 "$mods(Viewer)-ViewWindow_0-c autoview"
+		after 200 "$mods(Viewer)-ViewWindow_0-c autoview"
 	    }
         } elseif {[string first "ViewImage" $which] != -1 && $state == "Completed"} {
             if {$2D_fixed == 0} {
@@ -389,7 +390,7 @@ class BioImageApp {
 
 	    if {$has_autoviewed == 0} {
 		set has_autoviewed 1
-		after 100 "$mods(Viewer)-ViewWindow_0-c autoview"
+		after 200 "$mods(Viewer)-ViewWindow_0-c autoview"
 	    }
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    # update slice sliders
@@ -3639,15 +3640,20 @@ class BioImageApp {
     method update_changes {} {
 	set mod ""
 	if {$has_executed == 1} {
-	    # find first valid filter and execute that
-	    for {set i 1} {$i < $num_filters} {incr i} {
-                if {[info exists filters($i)]} {
-		    set tmp_row [lindex $filters($i) $which_row]
-		    if {$tmp_row != -1} {
-			set mod [lindex [lindex $filters($i) $input] 0]
-			break
+
+            if {$num_filters == 1} {
+                set mod [lindex [lindex $filters(0) $input] 0]
+	    } else {
+	        # find first valid filter and execute that
+ 	        for {set i 1} {$i < $num_filters} {incr i} {
+                    if {[info exists filters($i)]} {
+		        set tmp_row [lindex $filters($i) $which_row]
+		        if {$tmp_row != -1} {
+			    set mod [lindex [lindex $filters($i) $input] 0]
+ 	  	   	    break
+	 	        }
 		    }
-		}
+                }
             }
 	} else {
 	    set mod [lindex [lindex $filters(0) $input] 0]
