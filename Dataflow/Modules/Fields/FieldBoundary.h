@@ -380,14 +380,14 @@ class FieldBoundaryAlgoT : public FieldBoundaryAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(ModuleReporter *m, const MeshHandle mesh,
+  virtual void execute(ProgressReporter *m, const MeshHandle mesh,
 		       FieldHandle &boundary, FieldHandle &interp);
 };
 
 
 template <class Msh>
 void 
-FieldBoundaryAlgoT<Msh>::execute(ModuleReporter *mod, const MeshHandle mesh,
+FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
 				 FieldHandle &boundary, FieldHandle &interp)
 {
   if (get_type_description((typename Msh::Elem *)0)->get_name() ==
