@@ -101,11 +101,6 @@ private:
   GuiInt resolution;
   GuiInt realres;
   GuiDouble gamma;
-  ColorMapOPort  *outport;
-  ColorMapHandle cmap;
-  vector< Color > colors;
-  bool genMap(const string& s);
-
 }; //class GenStandardColorMaps
 
 } // End namespace SCIRun
