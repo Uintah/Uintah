@@ -39,7 +39,6 @@ LOG
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
-#include <Packages/Uintah/Core/Datatypes/PatchDataThread.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -105,10 +104,10 @@ double FieldExtractor::update()
    vector< int > indices;
    double time;
    // check to see if we have a new Archive
+   archive.queryVariables(names, types);
    int new_generation = archiveH->generation;
    bool archive_dirty =  new_generation != generation;
    if (archive_dirty) {
-     archive.queryVariables(names, types);
      generation = new_generation;
      timestep = -1; // make sure old timestep is different from current
      times.clear();
@@ -119,11 +118,10 @@ double FieldExtractor::update()
      time = times[new_timestep];
      grid = archive.queryGrid(time);
      timestep = new_timestep;
-     if( archive_dirty ) get_vars( names, types );
-     return time;
    } else {
      time = times[timestep];
    }
+   get_vars( names, types );
    return time;
 }
 
@@ -136,8 +134,8 @@ void FieldExtractor::update_GUI(const string& var,
   LevelP level = grid->getLevel( 0 );
   Patch* r = *(level->patchesBegin());
   ConsecutiveRangeSet matls = 
-    archive.queryMaterials(var, r, times[0]);
-    
+    archive.queryMaterials(var, r, times[timestep]);
+
   string visible;
   TCL::eval(id + " isVisible", visible);
   if( visible == "1"){
