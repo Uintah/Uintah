@@ -29,6 +29,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/VDT/share/share.h>
 
+#include <iostream>
+#include <stdio.h>
+
 namespace VDT {
 extern "C" {
 #include <vdtpub.h>
