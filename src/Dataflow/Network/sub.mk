@@ -30,7 +30,7 @@ SRCS     += $(SRCDIR)/Connection.cc $(SRCDIR)/ModuleHelper.cc \
 
 PSELIBS := Dataflow/Comm Dataflow/XMLUtil Core/Exceptions Core/Thread \
 	Core/Containers Core/GuiInterface Core/Util \
-	Core/TkExtensions Core/Geom 
+	Core/TkExtensions Core/Geom Core/Datatypes
 LIBS := $(TCL_LIBRARY) $(XML_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
