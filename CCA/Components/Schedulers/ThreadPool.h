@@ -182,7 +182,7 @@ private:
   const ProcessorGroup*  pg_;
   Mutex                  d_lock;  
   
-  RecvRecord             recvs_;
+  CommRecMPI             recvs_;
   vector<AwaitingTask*>  awaitingTasks_;
   queue<int>             availTaskSlots_;
   queue<DetailedTask*>   newTasks_;
