@@ -263,6 +263,7 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -282,6 +283,7 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -301,6 +303,7 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -320,6 +323,7 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
 
@@ -356,6 +360,7 @@ ApplyInterpolant::dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -375,6 +380,7 @@ ApplyInterpolant::dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -394,6 +400,7 @@ ApplyInterpolant::dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -413,6 +420,7 @@ ApplyInterpolant::dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -449,6 +457,7 @@ ApplyInterpolant::dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -468,6 +477,7 @@ ApplyInterpolant::dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -487,6 +497,7 @@ ApplyInterpolant::dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -506,6 +517,7 @@ ApplyInterpolant::dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -525,7 +537,7 @@ ApplyInterpolant::dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp)
   FDST *fout = fdst->clone();
   FieldHandle fhout(fout);
 
-  switch(fdst->data_at())
+  switch (fdst->data_at())
   {
   case Field::NODE:
     {
@@ -542,6 +554,7 @@ ApplyInterpolant::dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -561,6 +574,7 @@ ApplyInterpolant::dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -580,6 +594,7 @@ ApplyInterpolant::dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
@@ -599,6 +614,7 @@ ApplyInterpolant::dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp)
 	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
 	}
 	fout->set_value(val, *iter);
+	++iter;
       }
     }
     break;
