@@ -32,6 +32,8 @@
 #define GuiVar_h 
 
 #include <Core/share/share.h>
+#include <Core/Parts/Part.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiManager.h>
 #include <string>
 #include <Core/Geometry/Point.h>
@@ -52,6 +54,7 @@ class Part;
 
 class SCICORESHARE GuiVar {
 protected:
+  string id_;
   string varname_;
   int is_reset_;
   Part* part;
@@ -64,10 +67,70 @@ public:
 
   string str();
   virtual void emit(std::ostream& out, string& midx)=0;
+
+  const string &get_var() 
+  {
+    return part->get_var( id_, varname_ );
+//     string cmd = id_ + " get " + varname_;
+//     static string res;
+//     Part::tcl_eval( cmd, res );
+//     return res;
+  }
+
+  void set_var( const string& v ) 
+  {
+    part->set_var( id_, varname_, v );
+//     string cmd = id_ + " set " + varname_ + " " + v;
+//     Part::tcl_execute( cmd );
+  }
 };
   
-  
-  
+class GuiInt : public GuiVar {
+  int value_;
+public:
+  GuiInt( const string &name, const string &id, Part *part ) :
+    GuiVar( name, id, part ) {}
+  virtual ~GuiInt() {}
+
+  int get() { string_to_int( get_var(), value_ ); return value_; }
+  void set( const int v ) { set_var( to_string( v ) ); }
+  virtual void emit(std::ostream& out, string& midx) {
+    out << "set " << midx << "-" << format_varname() << " {"
+	<< get() << "}" << endl;
+  }
+};
+
+class GuiDouble : public GuiVar {
+  double value_;
+public:
+  GuiDouble( const string &name, const string &id, Part *part ) :
+    GuiVar( name, id, part ) {}
+  virtual ~GuiDouble() {}
+
+  double get() { string_to_double( get_var(), value_ ); return value_; }
+  void set( const double v ) { set_var( to_string( v ) ); }
+  virtual void emit(std::ostream& out, string& midx) {
+    out << "set " << midx << "-" << format_varname() << " {"
+	<< get() << "}" << endl;
+  }
+};
+
+class GuiString : public GuiVar {
+  string value_;
+public:
+  GuiString( const string &name, const string &id, Part *part ) :
+    GuiVar( name, id, part ) {}
+  virtual ~GuiString() {}
+
+  string get() { value_ = get_var(); return value_; }
+  void set( const string &v ) { set_var( v ); }
+  virtual void emit(std::ostream& out, string& midx) {
+    out << "set " << midx << "-" << format_varname() << " {"
+	<< get() << "}" << endl;
+  }
+};
+
+
 template <class T>
 class GuiSingle : public GuiVar
 {
@@ -79,24 +142,31 @@ public:
   virtual ~GuiSingle() {}
 
   inline T get() {
-    return gm->get(value_, varname_, is_reset_);
+    cerr << "GET " << id_ << " :: " << varname_ << endl;
+    return 0;
+    //return gm->get(value_, varname_, is_reset_);
   }
   inline void set(const T value) {
-    if(value != value_) {
-      value_ = value;
-      gm->set(value_, varname_, is_reset_);
-    }
+    cerr << "SET " << id_ << " :: " << varname_ << " = " << value_ << endl;
+//     if(value != value_) {
+//       value_ = value;
+//       gm->set(value_, varname_, is_reset_);
+//     }
   }
+
   virtual void emit(std::ostream& out, string& midx) {
     out << "set " << midx << "-" << format_varname() << " {"
 	<< get() << "}" << endl;
   }
 };
 
+#if 0
 typedef GuiSingle<string> GuiString;
 typedef GuiSingle<double> GuiDouble;
-typedef GuiSingle<double> GuiVardouble;  // NEED TO GET RID OF
 typedef GuiSingle<int> GuiInt;
+#endif
+
+typedef GuiSingle<double> GuiVardouble;  // NEED TO GET RID OF
 typedef GuiSingle<int> GuiVarint;   // NEED TO GET RID OF
 
 template <class T>
