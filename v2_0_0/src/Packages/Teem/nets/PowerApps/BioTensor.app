@@ -5736,8 +5736,17 @@ class BioTensorApp {
 	    
 	    # configure ClipByFunction
 	    configure_ClipByFunction
+
 	    
-	    $mods(ClipByFunction-Seeds)-c needexecute
+            # only update if fibers or glyphs are on?
+	    # and if they are seeding on grid
+            global $mods(ShowField-Glyphs)-tensors-on
+	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    global $mods(ShowField-Fibers)-edges-on
+	    global $mods(ChooseField-FiberSeeds)-port-index
+	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }	    	   
 	    
 	    $mods(SamplePlane-X)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
@@ -5766,8 +5775,16 @@ class BioTensorApp {
 	    
 	    # configure ClipByFunction
 	    configure_ClipByFunction
-	    
-	    $mods(ClipByFunction-Seeds)-c needexecute
+
+            # only update if fibers or glyphs are on?
+	    # and if they are seeding on grid
+            global $mods(ShowField-Glyphs)-tensors-on
+	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    global $mods(ShowField-Fibers)-edges-on
+	    global $mods(ChooseField-FiberSeeds)-port-index
+	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }	    
 	    
 	    $mods(SamplePlane-Y)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
@@ -5797,7 +5814,15 @@ class BioTensorApp {
 	    # configure ClipByFunction
 	    configure_ClipByFunction
 
-	    $mods(ClipByFunction-Seeds)-c needexecute
+            # only update if fibers or glyphs are on?
+	    # and if they are seeding on grid
+            global $mods(ShowField-Glyphs)-tensors-on
+	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    global $mods(ShowField-Fibers)-edges-on
+	    global $mods(ChooseField-FiberSeeds)-port-index
+	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
 	    
 	    $mods(SamplePlane-Z)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
@@ -7143,6 +7168,9 @@ class BioTensorApp {
 
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
         }
 	
         $mods(ChooseField-GlyphSeeds)-c needexecute
@@ -7192,7 +7220,9 @@ class BioTensorApp {
             } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
-            }
+            } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
         }
 
 	configure_glyphs_tabs
@@ -7994,6 +8024,9 @@ class BioTensorApp {
 
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
+	    if {[set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
         }
 	
         $mods(ChooseField-FiberSeeds)-c needexecute
@@ -8050,7 +8083,9 @@ class BioTensorApp {
             } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
-            }
+            } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
         }
 
 	configure_fibers_tabs
