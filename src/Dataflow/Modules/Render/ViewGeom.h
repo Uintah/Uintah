@@ -24,17 +24,11 @@
 #include <Core/Persistent/Persistent.h>
 #include <Dataflow/Network/Module.h>
 
-namespace SCIRun {
-  class CrowdMonitor;
-}
-
-namespace SCIRun {
-  class GeometryComm;
-}
 
 namespace SCIRun {
 
-
+class CrowdMonitor;
+class GeometryComm;
 
 /* this is basicaly a indexed group that also has some simple message
  * stuff
