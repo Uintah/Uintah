@@ -88,6 +88,7 @@ public:
     MaterialHandle default_matl;
     friend class Roe;
     Salmon(const clString& id);
+    Salmon(const clString& id, const clString& moduleName);
     virtual ~Salmon();
     virtual void execute();
     void initPort(SCICore::Thread::Mailbox<GeomReply>*);
@@ -149,6 +150,17 @@ public:
 
 //
 // $Log$
+// Revision 1.9  2000/06/06 15:08:16  dahart
+// - Split OpenGL.cc into OpenGL.cc and OpenGL.h to allow class
+// derivations of the OpenGL renderer.
+// - Added a constructor to the Salmon class with a Module name parameter
+// to allow derivations of Salmon with different names.
+// - Added get_triangles() to SalmonGeom for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.8  2000/03/17 18:47:03  dahart
 // Included STL map header files where I forgot them, and removed less<>
 // parameter from map declarations
