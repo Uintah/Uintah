@@ -1,5 +1,7 @@
 
-#include "ProblemSpecReader.h"
+#include <Uintah/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Uintah/Parallel/Parallel.h>        // Only used for MPI cerr
+#include <Uintah/Parallel/ProcessorGroup.h>  // process determination
 #include <Uintah/Exceptions/ProblemSetupException.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
@@ -44,7 +46,7 @@ ProblemSpecP ProblemSpecReader::readInputFile()
       // Parse the input file
       // No exceptions just yet, need to add
 
-      cout << "Parsing " << filename << endl;
+      cerr << "Parsing " << filename << endl;
       parser.parse(filename.c_str());
 
       if(handler.foundError)
