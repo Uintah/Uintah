@@ -482,7 +482,6 @@ case $1 in
   Uintah)
     sci_check_fortran=yes
     sci_check_mpi=yes
-    sci_check_tau=yes
     sci_check_blas=yes
     sci_check_lapack=yes
     sci_check_hypre=yes
