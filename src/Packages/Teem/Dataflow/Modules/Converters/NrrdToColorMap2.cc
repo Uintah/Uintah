@@ -82,7 +82,7 @@ NrrdToColorMap2::execute()
         error("Invalid input dimension. Must be 3d");
 	return;
       }
-      if (h->nrrd->dim != 3 || axis[0].size != 4)
+      if (h->nrrd->dim != 3 || h->nrrd->axis[0].size != 4) {
         error("Invalid input size. Must be 4xWidthxHeigh");
 	return;
       }
