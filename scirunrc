@@ -220,6 +220,13 @@ SCIRUN_TMP_DIR = /tmp
 # FLIP_CAM_MANIP = false
 
 
+### SCIRUN_DRAWARRAYS_DISABLE
+#   Turns off use of glDrawArrays.  This should be set to true if you wish
+#   to avoid drawing artifacts on _ATI_ Radeon cards under Linux or to fix
+#   cross-platform remote display problems.
+# SCIRUN_DRAWARRAYS_DISABLE = false
+
+
 ############################
 # GUI PREFERENCES SECTION ##
 ############################
