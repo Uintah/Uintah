@@ -19,7 +19,6 @@
 namespace SCIRun {
 
 class FieldSetReader : public Module {
-  FieldSetOPort* outport_;
   GuiString filename_;
   FieldSetHandle handle_;
   clString old_filename_;
@@ -35,13 +34,10 @@ extern "C" Module* make_FieldSetReader(const clString& id) {
 }
 
 FieldSetReader::FieldSetReader(const clString& id)
-  : Module("FieldSetReader", id, Source),
+  : Module("FieldSetReader", id, Source, "DataIO", "SCIRun"),
     filename_("filename", id, this),
     old_filemodification_(0)
 {
-  // Create the output port
-  outport_ = scinew FieldSetOPort(this, "Output Data", FieldSetIPort::Atomic);
-  add_oport(outport_);
 }
 
 FieldSetReader::~FieldSetReader()
@@ -97,7 +93,8 @@ void FieldSetReader::execute()
   }
   
   // Send the data downstream
-  outport_->send(handle_);
+  FieldSetOPort *outport = (FieldSetOPort *)get_oport(0);
+  outport->send(handle_);
 }
 
 } // End namespace SCIRun

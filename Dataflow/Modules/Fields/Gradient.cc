@@ -1,15 +1,14 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Gradient.cc:  Unfinished modules
  *
  *  Written by:
- *   Steven G. Parker
+ *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   March 1994
+ *   March 2001
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2001 SCI Group
  */
 
 #include <Dataflow/Network/Module.h>
@@ -25,36 +24,34 @@ namespace SCIRun {
 
 class Gradient : public Module
 {
-  FieldIPort* infield;
-  FieldOPort* outfield;
+private:
+  GuiInt  interpolate_;
 
 public:
-  GuiInt interpolate;
   Gradient(const clString& id);
   virtual ~Gradient();
+
   virtual void execute();
 };
+
 
 extern "C" Module* make_Gradient(const clString& id) {
   return new Gradient(id);
 }
 
-Gradient::Gradient(const clString& id)
-  : Module("Gradient", id, Filter),
-    interpolate("interpolate", id, this)
-{
-  infield = new FieldIPort(this, "Geometry", FieldIPort::Atomic);
-  add_iport(infield);
 
-  // Create the output port
-  outfield = new FieldOPort(this, "Geometry", FieldIPort::Atomic);
-  add_oport(outfield);
+Gradient::Gradient(const clString& id)
+  : Module("Gradient", id, Filter, "Fields", "SCIRun"),
+    interpolate_("interpolate", id, this)
+{
 }
+
 
 
 Gradient::~Gradient()
 {
 }
+
 
 
 void

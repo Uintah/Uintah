@@ -18,7 +18,6 @@
 namespace SCIRun {
 
 class FieldSetWriter : public Module {
-  FieldSetIPort* inport_;
   GuiString filename_;
   GuiString filetype_;
 public:
@@ -32,13 +31,10 @@ extern "C" Module* make_FieldSetWriter(const clString& id) {
 }
 
 FieldSetWriter::FieldSetWriter(const clString& id)
-  : Module("FieldSetWriter", id, Source), filename_("filename", id, this),
+  : Module("FieldSetWriter", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     filetype_("filetype", id, this)
 {
-  // Create the output port
-  inport_ =
-    scinew FieldSetIPort(this, "Persistent Data", FieldSetIPort::Atomic);
-  add_iport(inport_);
 }
 
 FieldSetWriter::~FieldSetWriter()
@@ -48,8 +44,9 @@ FieldSetWriter::~FieldSetWriter()
 void FieldSetWriter::execute()
 {
   // Read data from the input port
+  FieldSetIPort *inport = (FieldSetIPort *)get_iport(0);
   FieldSetHandle handle;
-  if(!inport_->get(handle))
+  if(!inport->get(handle))
     return;
 
   // If no name is provided, return

@@ -4,9 +4,9 @@
 <component name="ManageFieldSet" category="Fields">
   <overview>
     <authors>
-      <author>David Weinstein</author>
+      <author>Michael Callahan</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Allows selection of fields.</summary>
     <description>
       <p>Version Date: February 2001</p><p>Version: 1.0</p>
     </description>

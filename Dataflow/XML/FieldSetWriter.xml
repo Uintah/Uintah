@@ -4,16 +4,19 @@
 <component name="FieldSetWriter" category="DataIO">
   <overview>
     <authors>
-      <author>Alexei Samsonov</author>
+      <author>Michael Callahan</author>
     </authors>
-    <summary>Saves persistent field objects received from upstream modules</summary>
+    <summary>Saves persistent set of field objects received from upstream modules</summary>
     <description>
-      <p>Version Date: December 2000</p><p>Version: 1.0</p>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
-      <!-- one of (device port file) -->
+      <port>
+	<name>Input FieldSet</name>
+	<datatype>SCIRun::FieldSet</datatype>>
+      </port>
     </inputs>
     <outputs>
     </outputs>
