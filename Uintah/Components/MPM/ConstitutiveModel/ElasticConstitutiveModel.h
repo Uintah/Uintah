@@ -22,8 +22,10 @@
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <vector>
 
+
 namespace Uintah {
 namespace Components {
+
 
 class ElasticConstitutiveModel : public ConstitutiveModel {
  private:
@@ -49,7 +51,7 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
 
  public:
   // constructors
-  ElasticConstitutiveModel();
+  ElasticConstitutiveModel(ProblemSpecP& ps);
   ElasticConstitutiveModel(double YM,double PR);
        
   // copy constructor
@@ -173,6 +175,10 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.6  2000/04/25 18:42:34  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.5  2000/04/19 21:15:55  jas
 // Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
 // functions that need access to data warehouse still have WONT_COMPILE_YET

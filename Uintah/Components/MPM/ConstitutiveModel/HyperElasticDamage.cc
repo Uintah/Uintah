@@ -44,10 +44,17 @@ using std::string;
 
 using namespace Uintah::Components;
 
-HyperElasticDamage::HyperElasticDamage()
+HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
 {
   // Constructor
   // Initialize deformationGradient
+
+
+  ps->require("bulk_modulus",d_Bulk);
+  ps->require("shear_modulus",d_Shear);
+  ps->require("alpha",d_Alpha);
+  ps->require("beta",d_Beta);
+  ps->require("max_equiv_strain",maxEquivStrain);
 
   deformationGradient.Identity();
   bElBar.Identity();
@@ -300,6 +307,7 @@ double HyperElasticDamage::getMu() const
 
 void HyperElasticDamage::readParameters(ProblemSpecP ps, double *p_array)
 {
+
   ps->require("bulk_modulus",p_array[0]);
   ps->require("shear_modulus",p_array[1]);
   ps->require("alpha",p_array[2]);
@@ -362,7 +370,7 @@ ConstitutiveModel* HyperElasticDamage::create(double *p_array)
 
 int HyperElasticDamage::getType() const
 {
-  return(ConstitutiveModelFactory::CM_HYPER_ELASTIC_DAMAGE);
+  //  return(ConstitutiveModelFactory::CM_HYPER_ELASTIC_DAMAGE);
 }
 
 std::string HyperElasticDamage::getName() const
@@ -407,6 +415,10 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.5  2000/04/25 18:42:34  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.4  2000/04/19 21:15:56  jas
 // Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
 // functions that need access to data warehouse still have WONT_COMPILE_YET

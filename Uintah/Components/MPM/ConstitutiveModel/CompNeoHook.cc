@@ -22,10 +22,15 @@ using std::string;
 
 using namespace Uintah::Components;
 
-CompNeoHook::CompNeoHook()
+CompNeoHook::CompNeoHook(ProblemSpecP& ps)
 {
   // Constructor
   // Initialize deformationGradient and bElBar
+
+
+  ps->require("bulk_modulus",d_Bulk);
+  ps->require("shear_modulus",d_Shear);
+
 
   deformationGradient.Identity();
   bElBar.Identity();
@@ -270,7 +275,7 @@ ConstitutiveModel* CompNeoHook::create(double *p_array)
 
 int CompNeoHook::getType() const
 {
-  return(ConstitutiveModelFactory::CM_NEO_HOOK);
+  //  return(ConstitutiveModelFactory::CM_NEO_HOOK);
 }
 
 string CompNeoHook::getName() const
@@ -308,6 +313,10 @@ int CompNeoHook::getSize() const
 
 
 // $Log$
+// Revision 1.5  2000/04/25 18:42:33  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.4  2000/04/19 21:15:54  jas
 // Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
 // functions that need access to data warehouse still have WONT_COMPILE_YET

@@ -80,7 +80,7 @@ class ViscoElasticDamage : public ConstitutiveModel {
 
  public:
   // constructors
-  ViscoElasticDamage();
+  ViscoElasticDamage(ProblemSpecP& ps);
   ViscoElasticDamage(double bulk,double shear,double alpha,double beta,
 			double tau, double gamma, double strainmax);
        

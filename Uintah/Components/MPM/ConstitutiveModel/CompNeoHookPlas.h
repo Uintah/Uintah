@@ -39,11 +39,13 @@ class CompNeoHookPlas : public ConstitutiveModel {
   // CompNeoHookPlas Constants
   double d_Bulk,d_Shear;
   // Yield strength,plastic modulus and hardening modulus
+  // Question:
+  // Ask Jim which one is hardening modulus d_Alpha or d_K???
   double d_FlowStress,d_K,d_Alpha;
 
  public:
   // constructors
-  CompNeoHookPlas();
+  CompNeoHookPlas(ProblemSpecP& ps);
   CompNeoHookPlas(double bulk,double shear,double flow,double harden,double alpha);
        
   // copy constructor
@@ -150,6 +152,10 @@ class CompNeoHookPlas : public ConstitutiveModel {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.6  2000/04/25 18:42:34  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.5  2000/04/19 21:15:55  jas
 // Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
 // functions that need access to data warehouse still have WONT_COMPILE_YET
