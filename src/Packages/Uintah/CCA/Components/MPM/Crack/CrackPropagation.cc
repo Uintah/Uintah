@@ -144,8 +144,9 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
           int preIdx=cfSegPreIdx[m][i];
           if(preIdx<0) { // Not operated
             // Count the nodes which propagate among (2ns+1) nodes around pt
-            int ns=(maxIdx-minIdx+1)/16+1;
-            // ns=1 for 1-7 segs; ns=2 for 8-14 segs; ...
+  	    int nsegs=(maxIdx-minIdx+1)/2; 
+            int ns=(nsegs+8)/8;
+            // ns=1 for 1-7 segs; ns=2 for 8-15 segs; ...
             int np=0;
             for(int j=-ns; j<=ns; j++) {
               int cIdx=i+2*j;
@@ -158,61 +159,73 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
             double fraction=(double)np/(2*ns+1);
             Point new_pt=pt+fraction*da[i];
 
-            /* Step 3: Deal with edge nodes, extending new_pt out to
-                       the boundary by (fraction*rdadx*dx_max*2)
-                       if it is inside of material
+            /* Step 2a: Deal with propagating edge nodes, extending 
+	       new_pt out to the boundary to make sure it is outside.  
+	       It is extended by a distance "dx_max/2" each time. 
             */
             if((segs[R]<0||segs[L]<0) &&  // Edge nodes
                (new_pt-pt).length()/dx_max>0.01) {  // propagate
               // Check if new_pt is inside of the material
+              Point tmp_pt=new_pt;
               short newPtInMat=YES;
-
-              // Processor ID (workID) of the node before propagation
-              int workID=-1;
-              for(int i1=0; i1<patch_size; i1++) {
-                for(int j1=0; j1<(int)cfnset[m][i1].size(); j1++){
-                  int nodeij=cfSegNodes[m][cfnset[m][i1][j1]];
-                  if(node==nodeij) { workID=i1; break;}
-                }
-              }
-
-              // Detect if new_pt is inside of material
-              if(pid==workID) {
-                IntVector ni[MAX_BASIS];
-                double S[MAX_BASIS];
-                if(d_8or27==8)
-                  patch->findCellAndWeights(new_pt, ni, S);
-                else if(d_8or27==27)
-                  patch->findCellAndWeights27(new_pt, ni, S, psize[0]);
-                for(int k = 0; k < d_8or27; k++) {
-                  double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                  if(totalMass<5*d_SMALL_NUM_MPM) {
-                    newPtInMat=NO;
-                    break;
+	      int extTimes=0;
+	      
+	      while(newPtInMat) {
+		MPI_Status status;
+		int tag=node+extTimes;
+	        // See if new_pt is inside		    	  
+		if(patch->containsPoint(new_pt)) {
+                  IntVector ni[MAX_BASIS];
+                  double S[MAX_BASIS];
+                  if(d_8or27==8)
+                    patch->findCellAndWeights(new_pt, ni, S);
+                  else if(d_8or27==27)
+                    patch->findCellAndWeights27(new_pt, ni, S, psize[0]);
+		  
+                  for(int k = 0; k < d_8or27; k++) {
+                    double totalMass=gmass[ni[k]]+Gmass[ni[k]];
+                    if(totalMass<5*d_SMALL_NUM_MPM) {
+                      newPtInMat=NO;
+                      break;
+                    }
                   }
-                }
-              }
-              MPI_Bcast(&newPtInMat,1,MPI_SHORT,workID,mpi_crack_comm);
 
-              if(newPtInMat) { // If it's inside of material, extend it out
-                Point tmp_pt=new_pt;
-                int n1=-1,n2=-1;
-                if(segs[R]<0) { // right edge nodes
-                  n1=cfSegNodes[m][2*segs[L]+1];
-                  n2=cfSegNodes[m][2*segs[L]];
-                }
-                else if(segs[L]<0) { // left edge nodes
-                  n1=cfSegNodes[m][2*segs[R]];
-                  n2=cfSegNodes[m][2*segs[R]+1];
-                }
+		  // Send newPtInMat to all other processors
+		  for(int k=0; k<patch_size; k++) {
+		    if(k!=pid) MPI_Send(&newPtInMat,1,MPI_SHORT,k,tag,mpi_crack_comm);
+		  }  
+		} 
+		else { // Processors which do not include new_pt, receive newPtInMat
+		  MPI_Recv(&newPtInMat,1,MPI_SHORT,MPI_ANY_SOURCE,tag,
+		            mpi_crack_comm, &status);
+		}  
+		
+		// If new_pt is inside, extend it out to the boundary
+                if(newPtInMat) { 
+                  int n1=-1,n2=-1;
+                  if(segs[R]<0) { // right edge nodes
+                    n1=cfSegNodes[m][2*segs[L]+1];
+                    n2=cfSegNodes[m][2*segs[L]];
+                  }
+                  else if(segs[L]<0) { // left edge nodes
+                    n1=cfSegNodes[m][2*segs[R]];
+                    n2=cfSegNodes[m][2*segs[R]+1];
+                  }
 
-                Vector v=TwoPtsDirCos(cx[m][n1],cx[m][n2]);
-                new_pt=tmp_pt+v*(fraction*rdadx*dx_max*2.);
-
-                // Check if it beyond the global gird
-                FindIntersectionLineAndGridBoundary(tmp_pt,new_pt);
-              }
-            }
+                  Vector v=TwoPtsDirCos(cx[m][n1],cx[m][n2]);
+                  new_pt+=v*(dx_max/2.);
+		  extTimes++;
+		} // end of if(newPtInMat)
+              } // End of while(newPtInMat)
+		
+              if(pid==0 && extTimes>1)
+	        cout << "   ! Edge node " << node << ", has been extended "
+		     << extTimes << " times to the outside of the material." 
+	             << endl;	     
+              // Check if it beyond the global gird
+              FindIntersectionLineAndGridBoundary(tmp_pt,new_pt);
+            } // End of if this is a edge node
+	    
             cfSegPtsT[m].push_back(new_pt);
           } // End if(!operated)
           else {
