@@ -40,6 +40,13 @@ itcl_class Uintah_Visualization_CuttingPlane {
 	set $this-xt 0
 	set $this-yt 0
 	set $this-zt 0
+	
+	global $this-plane_index
+	set $this-plane_index 0
+	global $this-use_plane_index
+	set $this-use_plane_index 0
+	global $this-which_plane
+	set $this-which_plane "Z index:  "
 }
     method ui {} {
 	set w .ui[modname]
@@ -68,6 +75,17 @@ itcl_class Uintah_Visualization_CuttingPlane {
 	
 	button $w.f.findxz -text "Find XZ" -command "$this-c findxz"
 	pack $w.f.findxz -pady 2 -side top -ipadx 3 -anchor e
+
+
+	frame $w.i -bd 2
+	pack $w.i -padx 2 -pady 2 -fill x -side top
+	entry $w.i.t -textvariable $this-which_plane -state disabled \
+	    -relief flat -width 10
+	entry $w.i.e -textvariable $this-plane_index
+	button $w.i.b -text "Use Plane Index" \
+	    -command "set $this-use_plane_index 1; $this-c use_idx"
+	pack $w.i.t $w.i.e $w.i.b -side left -padx 2 -anchor w -fill x
+
 
 	frame $w.g -bd 2 -relief groove
 	frame $w.g.x
