@@ -174,6 +174,12 @@ void ScalarFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
+      }else if(mesh_handle_->get_ni() != range.x() ||
+	       mesh_handle_->get_nj() != range.y() ||
+	       mesh_handle_->get_nk() != range.z() ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
       }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
@@ -218,6 +224,12 @@ void ScalarFieldExtractor::execute()
       }
     case TypeDescription::CCVariable:
       if( mesh_handle_.get_rep() == 0 ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
+      }else if(mesh_handle_->get_ni() != range.x() ||
+	       mesh_handle_->get_nj() != range.y() ||
+	       mesh_handle_->get_nk() != range.z() ){
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
