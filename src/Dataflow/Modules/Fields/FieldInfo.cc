@@ -112,15 +112,24 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   
   const BBox bbox = f->mesh()->get_bounding_box();
-  size = bbox.diagonal();
-  center = bbox.center();
-
-  gui->execute(string("set ")+id+"-cx "+to_string(center.x()));
-  gui->execute(string("set ")+id+"-cy "+to_string(center.y()));
-  gui->execute(string("set ")+id+"-cz "+to_string(center.z()));
-  gui->execute(string("set ")+id+"-sizex "+to_string(size.x()));
-  gui->execute(string("set ")+id+"-sizey "+to_string(size.y()));
-  gui->execute(string("set ")+id+"-sizez "+to_string(size.z()));
+  if (bbox.valid()) {
+    size = bbox.diagonal();
+    center = bbox.center();
+    gui->execute(string("set ")+id+"-cx "+to_string(center.x()));
+    gui->execute(string("set ")+id+"-cy "+to_string(center.y()));
+    gui->execute(string("set ")+id+"-cz "+to_string(center.z()));
+    gui->execute(string("set ")+id+"-sizex "+to_string(size.x()));
+    gui->execute(string("set ")+id+"-sizey "+to_string(size.y()));
+    gui->execute(string("set ")+id+"-sizez "+to_string(size.z()));
+  } else {
+    warning("Input ield is empty.");
+    gui->execute(string("set ")+id+"-cx \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-cy \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-cz \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-sizex \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-sizey \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-sizez \"--- N/A ---\"");
+  }
 
   ScalarFieldInterface *sdi = f->query_scalar_interface(this);
   if (sdi && f->data_at() != Field::NONE) {
