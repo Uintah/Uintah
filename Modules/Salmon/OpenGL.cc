@@ -7,6 +7,7 @@
 #include <Classlib/Timer.h>
 #include <Geom/Geom.h>
 #include <Geom/GeomOpenGL.h>
+#include <Geom/RenderMode.h>
 #include <Geom/Light.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
@@ -153,6 +154,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	glEnable(GL_NORMALIZE);
 
 	clString shading(roe->shading.get());
+//	GeomRenderMode::DrawType dt;
 	if(shading == "wire"){
 	    drawinfo.set_drawtype(DrawInfoOpenGL::WireFrame);
 	    drawinfo.lighting=0;
