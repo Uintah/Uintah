@@ -66,7 +66,7 @@ ImageExporter::~ImageExporter()
 }
 
 
-
+#ifdef HAVE_MAGICK
 static
 C_Magick::Quantum
 TO_QUANTUM(double f)
@@ -86,6 +86,7 @@ TO_QUANTUM(double f)
     return tmp;
   }
 }
+#endif
 
 void
 ImageExporter::execute()
