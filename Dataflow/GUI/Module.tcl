@@ -1459,6 +1459,7 @@ proc notesTrace { ArrayName Index mode } {
 }
 
 proc disabledTrace { ArrayName Index mode } {
+    if ![string length $Index] return
     networkHasChanged
     global Subnet Disabled Notes Color    
     if [info exists Subnet($Index)] {
