@@ -232,13 +232,29 @@ GLTexture3D::build_texture()
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<double>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
+  } else if (type == "float") {
+    bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+	       dynamic_cast<LatVolField<float>*>(texfld_.get_rep()), 0, 
+			   thread_sema, tg);
   } else if (type == "int") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<int>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
+  } else if (type == "unsigned_int") {
+    bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+	       dynamic_cast<LatVolField<unsigned_int>*>(texfld_.get_rep()), 0, 
+			   thread_sema, tg);
   } else if (type == "short") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<short>*>(texfld_.get_rep()), 0, 
+			   thread_sema, tg);
+  } else if (type == "unsigned_short") {
+    bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+	       dynamic_cast<LatVolField<unsigned short>*>(texfld_.get_rep()), 0, 
+			   thread_sema, tg);
+  } else if (type == "char") {
+    bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+	       dynamic_cast<LatVolField<char>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "unsigned_char") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
