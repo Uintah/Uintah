@@ -4819,8 +4819,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->vVelocity[currCell] - 
 	     avdenlow*vars->vVelocity[xminusCell]) / cellinfo->dxep[colX-1] +
 	    avdenlow*vars->vVelocity[xminusCell]) / new_avdenlow;
-
-//           vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
 	}
         if (!(zminus && (colZ == idxLo.z()))) {
            avden = 0.5 * (vars->old_density[currCell] +
@@ -4836,8 +4834,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->wVelocity[currCell] - 
 	     avdenlow*vars->wVelocity[xminusCell]) / cellinfo->dxep[colX-1] +
 	    avdenlow*vars->wVelocity[xminusCell]) / new_avdenlow;
-
-//           vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
 	}
         }
       }
@@ -4868,8 +4864,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->uVelocity[xplusCell] - 
 	     avdenlow*vars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1] +
 	    avden*vars->uVelocity[xplusCell]) / new_avden;
-//	   if (vars->uVelRhoHat[xplusCell] < 0.0)
-//		vars->uVelRhoHat[xplusCell] = 0.0;
 
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
 
@@ -4887,8 +4881,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->vVelocity[xplusCell] - 
 	     avdenlow*vars->vVelocity[currCell]) / cellinfo->dxpw[colX+1] +
 	    avden*vars->vVelocity[xplusCell]) / new_avden;
-
-//           vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
 	}
 
         if (!(zminus && (colZ == idxLo.z()))) {
@@ -4905,8 +4897,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->wVelocity[xplusCell] - 
 	     avdenlow*vars->wVelocity[currCell]) / cellinfo->dxpw[colX+1] +
 	    avden*vars->wVelocity[xplusCell]) / new_avden;
-
-//           vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
 	}
         }
       }
@@ -4955,8 +4945,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->uVelocity[currCell] - 
 	     avdenlow*vars->uVelocity[yminusCell]) / cellinfo->dynp[colY-1] +
 	    avdenlow*vars->uVelocity[yminusCell]) / new_avdenlow;
-
-//           vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
 	}
         if (!(zminus && (colZ == idxLo.z()))) {
            avden = 0.5 * (vars->old_density[currCell] +
@@ -4972,8 +4960,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->wVelocity[currCell] - 
 	     avdenlow*vars->wVelocity[yminusCell]) / cellinfo->dynp[colY-1] +
 	    avdenlow*vars->wVelocity[yminusCell]) / new_avdenlow;
-
-//           vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
 	}
         }
       }
@@ -5021,8 +5007,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->uVelocity[yplusCell] - 
 	     avdenlow*vars->uVelocity[currCell]) / cellinfo->dyps[colY+1] +
 	    avden*vars->uVelocity[yplusCell]) / new_avden;
-
-//           vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
 	}
 
         if (!(zminus && (colZ == idxLo.z()))) {
@@ -5039,8 +5023,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->wVelocity[yplusCell] - 
 	     avdenlow*vars->wVelocity[currCell]) / cellinfo->dyps[colY+1] +
 	    avden*vars->wVelocity[yplusCell]) / new_avden;
-
-//           vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
 	}
         }
       }
@@ -5089,8 +5071,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->uVelocity[currCell] - 
 	     avdenlow*vars->uVelocity[zminusCell]) / cellinfo->dztp[colZ-1] +
 	    avdenlow*vars->uVelocity[zminusCell]) / new_avdenlow;
-
-//           vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
 	}
         if (!(yminus && (colY == idxLo.y()))) {
            avden = 0.5 * (vars->old_density[currCell] +
@@ -5106,8 +5086,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->vVelocity[currCell] - 
 	     avdenlow*vars->vVelocity[zminusCell]) / cellinfo->dztp[colZ-1] +
 	    avdenlow*vars->vVelocity[zminusCell]) / new_avdenlow;
-
-//           vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
 	}
         }
       }
@@ -5155,8 +5133,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->uVelocity[zplusCell] - 
 	     avdenlow*vars->uVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
 	    avden*vars->uVelocity[zplusCell]) / new_avden;
-
-//           vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
 	}
 
         if (!(yminus && (colY == idxLo.y()))) {
@@ -5173,8 +5149,6 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
             (avden*vars->vVelocity[zplusCell] - 
 	     avdenlow*vars->vVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
 	    avden*vars->vVelocity[zplusCell]) / new_avden;
-
-//           vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
 	}
         }
       }
@@ -5275,7 +5249,6 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
            break;
            case Arches::YDIR:
            vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
-//	if (vars->vVelRhoHat[currCell] < 0.0) vars->vVelRhoHat[currCell] = 0.0;
            vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
            break;
            case Arches::ZDIR:
@@ -5304,7 +5277,6 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
            break;
            case Arches::YDIR:
            vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
-//	if (vars->vVelRhoHat[yplusCell] > 0.0) vars->vVelRhoHat[yplusCell] = 0.0;
            vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
            break;
            case Arches::ZDIR:
@@ -5337,7 +5309,6 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
            break;
            case Arches::ZDIR:
            vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
-//	if (vars->wVelRhoHat[currCell] < 0.0) vars->wVelRhoHat[currCell] = 0.0;
            vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
@@ -5366,7 +5337,6 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
            break;
            case Arches::ZDIR:
            vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
-//	if (vars->wVelRhoHat[zplusCell] > 0.0) vars->wVelRhoHat[zplusCell] = 0.0;
            vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
            break;
            default:
@@ -5435,8 +5405,6 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
 
            vars->uVelRhoHat[xplusCell] += 2.0*delta_t*vars->pressure[currCell]/
 				(cellinfo->sew[colX] * avden);
-//	   if (vars->uVelRhoHat[xplusCell] < 0.0)
-//		vars->uVelRhoHat[xplusCell] = 0.0;	
 
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
         }
@@ -6078,7 +6046,8 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
 	    IntVector xplusCell(colX+1, colY, colZ);
 	    
 	    uVelocity[currCell] += uvwcorr;
-//	    if (uVelocity[currCell] < 0.0) uVelocity[currCell] = 0.0;
+// Negative velocity limiter, as requested by Rajesh
+	    if (uVelocity[currCell] < 0.0) uVelocity[currCell] = 0.0;
 	    uVelocity[xplusCell] = uVelocity[currCell];
 	  }
 	}
