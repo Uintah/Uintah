@@ -356,10 +356,12 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     double diff_coeff_test = d_scalar->diff_coeff;
     if(diff_coeff_test != 0.0){ 
       bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
-      constCCVariable<double> placeHolder;
+      SFCXVariable<double> placeHolderX;
+      SFCYVariable<double> placeHolderY;
+      SFCZVariable<double> placeHolderZ;
 
-      scalarDiffusionOperator(new_dw, patch, use_vol_frac,
-                              placeHolder, placeHolder,  f_old,
+      scalarDiffusionOperator(new_dw, patch, use_vol_frac, f_old,
+                              placeHolderX, placeHolderY, placeHolderZ,
                               f_src, diff_coeff, delT);
     }
 
