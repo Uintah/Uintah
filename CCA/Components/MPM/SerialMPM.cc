@@ -932,15 +932,15 @@ void SerialMPM::scheduleRefine(const LevelP& fineLevel,
   // do nothing for now
 }
 
-void SerialMPM::scheduleRefineInterface(const LevelP& fineLevel, 
-                                        SchedulerP& scheduler,
-                                        int step, int nsteps)
+void SerialMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/, 
+                                        SchedulerP& /*scheduler*/,
+                                        int /*step*/, int /*nsteps*/)
 {
   // do nothing for now
 }
 
-void SerialMPM::scheduleCoarsen(const LevelP& coarseLevel, 
-                                SchedulerP& sched)
+void SerialMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/, 
+                                SchedulerP& /*sched*/)
 {
   // do nothing for now
 }
@@ -2904,51 +2904,59 @@ void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
   }
 }
 
-void SerialMPM::scheduleParticleVelocityField(SchedulerP&,  const PatchSet*,
-					      const MaterialSet*)
+void
+SerialMPM::scheduleParticleVelocityField(SchedulerP&,  const PatchSet*,
+                                         const MaterialSet*)
 {
 }
 
-void SerialMPM::scheduleAdjustCrackContactInterpolated(SchedulerP&, 
-						       const PatchSet*,
-						       const MaterialSet*)
+void
+SerialMPM::scheduleAdjustCrackContactInterpolated(SchedulerP&, 
+                                                  const PatchSet*,
+                                                  const MaterialSet*)
 {
 }
 
-void SerialMPM::scheduleAdjustCrackContactIntegrated(SchedulerP&, 
-						     const PatchSet*,
-						     const MaterialSet*)
+void
+SerialMPM::scheduleAdjustCrackContactIntegrated(SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSet*)
 {
 }
 
-void SerialMPM::scheduleCalculateFractureParameters(SchedulerP&, 
-						    const PatchSet*,
-						    const MaterialSet*)
+void
+SerialMPM::scheduleCalculateFractureParameters(SchedulerP&, 
+                                               const PatchSet*,
+                                               const MaterialSet*)
 {
 }
 
-void SerialMPM::scheduleDoCrackPropagation(SchedulerP& sched, 
-					 const PatchSet* patches, 
-					 const MaterialSet* matls)
+void
+SerialMPM::scheduleDoCrackPropagation(SchedulerP& /*sched*/, 
+                                      const PatchSet* /*patches*/, 
+                                      const MaterialSet* /*matls*/)
 {
 }
 
-void SerialMPM::scheduleMoveCracks(SchedulerP& sched,const PatchSet* patches,
-				   const MaterialSet* matls)
+void
+SerialMPM::scheduleMoveCracks(SchedulerP& /*sched*/,const PatchSet* /*patches*/,
+                              const MaterialSet* /*matls*/)
 {
 }
 
-void SerialMPM::scheduleUpdateCrackFront(SchedulerP& sched,
-					 const PatchSet* patches,
-					 const MaterialSet* matls)
+void
+SerialMPM::scheduleUpdateCrackFront(SchedulerP& /*sched*/,
+                                    const PatchSet* /*patches*/,
+                                    const MaterialSet* /*matls*/)
 {
 }
 
-void SerialMPM::initialErrorEstimate(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw)
+void
+SerialMPM::initialErrorEstimate(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* /*matls*/,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2981,11 +2989,12 @@ void SerialMPM::initialErrorEstimate(const ProcessorGroup*,
   }
 }
 
-void SerialMPM::errorEstimate(const ProcessorGroup* group,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw)
+void
+SerialMPM::errorEstimate(const ProcessorGroup* group,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw)
 {
   // coarsen the errorflag.
   cout_doing << "Doing Serial::errorEstimate" << '\n';
@@ -3046,11 +3055,12 @@ void SerialMPM::errorEstimate(const ProcessorGroup* group,
   }
 }  
 
-void SerialMPM::refine(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse*,
-                       DataWarehouse* new_dw)
+void
+SerialMPM::refine(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* /*matls*/,
+                  DataWarehouse*,
+                  DataWarehouse* new_dw)
 {
   // just create a particle subset if one doesn't exist
   for (int p = 0; p<patches->size(); p++) {
@@ -3096,4 +3106,4 @@ void SerialMPM::refine(const ProcessorGroup*,
     }
   }
 
-}
+} // end refine()

@@ -325,7 +325,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
           if(patch->findCell(Point(d_probePts[i]),cell) ) {
             string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
             fp = fopen(filename.c_str(), "a");
-            fprintf(fp, "%\% Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
+            fprintf(fp, "%% Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
                     d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].z(),
                     cell.x(), cell.y(), cell.z() );
             fclose(fp);
@@ -454,7 +454,7 @@ void SimpleRxn::scheduleComputeModelSources(SchedulerP& sched,
 //______________________________________________________________________
 void SimpleRxn::computeModelSources(const ProcessorGroup*, 
                                     const PatchSubset* patches,
-                                    const MaterialSubset* matls,
+                                    const MaterialSubset* /*matls*/,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
                                     const ModelInfo* mi)

@@ -53,8 +53,9 @@ VorticityConfinement::~VorticityConfinement()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void VorticityConfinement::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup)
+void
+VorticityConfinement::problemSetup(GridP&, SimulationStateP& in_state,
+                                   ModelSetup* /*setup*/)
 {
 /*`==========TESTING==========*/
 if (!oldStyleAdvect.active()){
@@ -108,16 +109,18 @@ if (!oldStyleAdvect.active()){
 }
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
-void VorticityConfinement::scheduleInitialize(SchedulerP& sched,
-                                   const LevelP& level,
-                                   const ModelInfo*)
+void
+VorticityConfinement::scheduleInitialize(SchedulerP& /*sched*/,
+                                         const LevelP& /*level*/,
+                                         const ModelInfo* /**/)
 {
 }
 
 //______________________________________________________________________     
-void VorticityConfinement::scheduleModifyThermoTransportProperties(SchedulerP& sched,
-                                                   const LevelP& level,
-                                                   const MaterialSet* /*ice_matls*/)
+void
+VorticityConfinement::scheduleModifyThermoTransportProperties(SchedulerP& /*sched*/,
+                                                              const LevelP& /*level*/,
+                                                              const MaterialSet* /*ice_matls*/)
 {
 }
 
@@ -125,10 +128,11 @@ void VorticityConfinement::scheduleModifyThermoTransportProperties(SchedulerP& s
 // Purpose:  Compute the specific heat at time.  This gets called immediately
 //           after (f) is advected
 //  TO DO:  FIGURE OUT A WAY TO ONLY COMPUTE CV ONCE
-void VorticityConfinement::computeSpecificHeat(CCVariable<double>& cv_new,
-                                    const Patch* patch,
-                                    DataWarehouse* new_dw,
-                                    const int indx)
+void
+VorticityConfinement::computeSpecificHeat(CCVariable<double>& /*cv_new*/,
+                                          const Patch* /*patch*/,
+                                          DataWarehouse* /*new_dw*/,
+                                          const int /*indx*/)
 { 
 } 
 
