@@ -468,8 +468,8 @@ proc itemDrag {c x y} {
 
 proc popupSaveMenu {} {
     set types {
-	{{SCIRun Script} {.sr} }
 	{{Uintah Scripts Files} {.uin} }
+	{{SCIRun Script} {.sr} }
 	{{Other} { * } }
     } 
     set netedit_savefile [ tk_getSaveFile -defaultextension {.uin} \
@@ -483,8 +483,8 @@ proc popupSaveMenu {} {
 proc popupLoadMenu {} {
     global netedit
     set types {
-	{{SCIRun Script} {.sr} }
 	{{Uintah Scripts Files} {.uin} }
+	{{SCIRun Script} {.sr} }
 	{{Other} { * } }
     } 
     
