@@ -74,23 +74,23 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
   if (!m_outPort->wasOutputTimestep())
     return;
   
-  DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));
+  DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(to_xml_ch_ptr("LS"));
 
   //m_graphDoc = scinew DOMDocument();
-  m_graphDoc = impl->createDocument(0, XMLString::transcode("Uintah_TaskGraph"), 0);
+  m_graphDoc = impl->createDocument(0, to_xml_ch_ptr("Uintah_TaskGraph"), 0);
   DOMElement* root = m_graphDoc->getDocumentElement();
   
-  DOMElement* meta = m_graphDoc->createElement(XMLString::transcode("Meta"));
+  DOMElement* meta = m_graphDoc->createElement(to_xml_ch_ptr("Meta"));
   root->appendChild(meta);
-  appendElement(meta, m_graphDoc->createTextNode(XMLString::transcode("username")), getenv("LOGNAME"));
+  appendElement(meta, m_graphDoc->createTextNode(to_xml_ch_ptr("username")), getenv("LOGNAME"));
   time_t t = time(NULL);
-  appendElement(meta, m_graphDoc->createTextNode(XMLString::transcode("date")), ctime(&t));
+  appendElement(meta, m_graphDoc->createTextNode(to_xml_ch_ptr("date")), ctime(&t));
   
   //m_nodes = scinew DOMElement(m_graphDoc->createElement("Nodes"));
-  m_nodes = m_graphDoc->createElement(XMLString::transcode("Nodes"));
+  m_nodes = m_graphDoc->createElement(to_xml_ch_ptr("Nodes"));
   root->appendChild(m_nodes);
   
-  DOMElement* edgesElement = m_graphDoc->createElement(XMLString::transcode("Edges"));
+  DOMElement* edgesElement = m_graphDoc->createElement(to_xml_ch_ptr("Edges"));
   root->appendChild(edgesElement);
   
   if (dts_) {
@@ -132,18 +132,18 @@ SchedulerCommon::emitNode( const DetailedTask* task,
     if (m_nodes == NULL)
         return;
     
-    DOMElement* node = m_graphDoc->createElement(XMLString::transcode("node"));
+    DOMElement* node = m_graphDoc->createElement(to_xml_ch_ptr("node"));
     m_nodes->appendChild(node);
 
-    appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("name")), task->getName());
-    appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("start")), start);
-    appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("duration")), duration);
+    appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("name")), task->getName());
+    appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("start")), start);
+    appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("duration")), duration);
     if (execution_duration > 0)
-      appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("execution_duration")), execution_duration);
+      appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("execution_duration")), execution_duration);
     if (execution_flops > 0)
-      appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("execution_flops")), (long)execution_flops);
+      appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("execution_flops")), (long)execution_flops);
     if (communication_flops > 0)
-      appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("communication_flops")), (long)communication_flops);
+      appendElement(node, node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("communication_flops")), (long)communication_flops);
 }
 
 void

@@ -903,12 +903,12 @@ void DetailedTask::emitEdges(DOMElement* edgesElement)
   map<DependencyBatch*, DependencyBatch*>::iterator req_iter;
   for (req_iter = reqs.begin(); req_iter != reqs.end(); req_iter++) {
     DetailedTask* fromTask = (*req_iter).first->fromTask;
-    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(XMLString::transcode("edge"));
+    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(to_xml_ch_ptr("edge"));
     appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("source")), 
+		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("source")), 
 		  fromTask->getName());
     appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("target")), 
+		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("target")), 
 		  getName());
     edgesElement->appendChild(edge);
   }
@@ -923,12 +923,12 @@ void DetailedTask::emitEdges(DOMElement* edgesElement)
       // are only needed for logistic reasons
       continue;
     }
-    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(XMLString::transcode("edge"));
+    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(to_xml_ch_ptr("edge"));
     appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("source")), 
+		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("source")), 
 		  fromTask->getName());
     appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(XMLString::transcode("target")), 
+		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("target")), 
 		  getName());
     edgesElement->appendChild(edge);
   }

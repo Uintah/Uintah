@@ -449,7 +449,7 @@ template<class T>
     const TypeDescription* td = fun_getTypeDescription((T*)0);
 
     if (findNode("numParticles", varnode) == 0) {
-      DOMText* text = varnode->getOwnerDocument()->createTextNode(XMLString::transcode("numParticles"));
+      DOMText* text = varnode->getOwnerDocument()->createTextNode(to_xml_ch_ptr("numParticles"));
       //appendElement(varnode, "numParticles", d_pset->numParticles());
       appendElement(varnode, text, d_pset->numParticles());
     }
@@ -479,7 +479,7 @@ template<class T>
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if (findNode("numParticles", varnode) == 0) {
-      DOMText* text = varnode->getOwnerDocument()->createTextNode(XMLString::transcode("numParticles"));
+      DOMText* text = varnode->getOwnerDocument()->createTextNode(to_xml_ch_ptr("numParticles"));
       //appendElement(varnode, "numParticles", d_pset->numParticles());
       appendElement(varnode, text, d_pset->numParticles());
     }
