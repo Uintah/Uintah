@@ -16,6 +16,11 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
@@ -666,12 +671,176 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 }
 */
 
+class FieldComparator
+{
+public:
+  virtual void
+  compareFields(DataArchive* da1, DataArchive* da2, const string& var,
+		ConsecutiveRangeSet matls, const Patch* patch,
+		const Array3<const Patch*>& patch2Map,
+		double time, double time2, double abs_tolerance,
+		double rel_tolerance) = 0;
+
+  static FieldComparator*
+  makeFieldComparator(const Uintah::TypeDescription* td,
+		      const Uintah::TypeDescription* subtype,
+		      const Patch* patch);
+};
+
 template <class Field, class Iterator>
-void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
-		   ConsecutiveRangeSet matls, const Patch* patch,
-		   const Array3<const Patch*>& patch2Map,
-		   double time, double time2, double abs_tolerance,
-		   double rel_tolerance, Iterator iter)
+class SpecificFieldComparator : public FieldComparator
+{
+public:
+  SpecificFieldComparator(Iterator begin)
+    : begin_(begin) { }
+  
+  virtual void
+  compareFields(DataArchive* da1, DataArchive* da2, const string& var,
+		ConsecutiveRangeSet matls, const Patch* patch,
+		const Array3<const Patch*>& patch2Map,
+		double time, double time2, double abs_tolerance,
+		double rel_tolerance);
+private:
+  Iterator begin_;
+};
+
+FieldComparator* FieldComparator::
+makeFieldComparator(const Uintah::TypeDescription* td,
+		    const Uintah::TypeDescription* subtype, const Patch* patch)
+{
+  switch(td->getType()){
+  case Uintah::TypeDescription::ParticleVariable:
+    // Particles handled differently (and previously)
+    break;
+  case Uintah::TypeDescription::NCVariable: {
+    NodeIterator iter = patch->getNodeIterator();
+    switch(subtype->getType()){
+    case Uintah::TypeDescription::double_type:
+      return scinew
+	SpecificFieldComparator<NCVariable<double>, NodeIterator>(iter);
+    case Uintah::TypeDescription::int_type:
+      return scinew
+	SpecificFieldComparator<NCVariable<int>, NodeIterator>(iter);
+    case Uintah::TypeDescription::Point:
+      return scinew
+	SpecificFieldComparator<NCVariable<Point>, NodeIterator>(iter);
+    case Uintah::TypeDescription::Vector:
+      return scinew
+	SpecificFieldComparator<NCVariable<Vector>, NodeIterator>(iter);
+    case Uintah::TypeDescription::Matrix3:
+      return scinew
+	SpecificFieldComparator<NCVariable<Matrix3>, NodeIterator>(iter);
+    default:
+      cerr << "NC Variable of unsupported type: " << subtype->getName() << '\n';
+      Thread::exitAll(-1);
+    }
+  }
+  case Uintah::TypeDescription::CCVariable: {
+    CellIterator iter = patch->getCellIterator();
+    switch(subtype->getType()){
+    case Uintah::TypeDescription::double_type:
+      return scinew
+	SpecificFieldComparator<CCVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::int_type:
+      return scinew
+	SpecificFieldComparator<CCVariable<int>, CellIterator>(iter);
+    case Uintah::TypeDescription::Point:
+      return scinew
+	SpecificFieldComparator<CCVariable<Point>, CellIterator>(iter);
+    case Uintah::TypeDescription::Vector:
+      return scinew
+	SpecificFieldComparator<CCVariable<Vector>, CellIterator>(iter);
+    case Uintah::TypeDescription::Matrix3:
+      return scinew
+	SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
+    default:
+      cerr << "CC Variable of unsupported type: " << subtype->getName() << '\n';
+      Thread::exitAll(-1);
+    }
+  }
+  case Uintah::TypeDescription::SFCXVariable: {
+    CellIterator iter = patch->getSFCXIterator();
+    switch(subtype->getType()){
+    case Uintah::TypeDescription::double_type:
+      return scinew
+	SpecificFieldComparator<SFCXVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::int_type:
+      return scinew
+	SpecificFieldComparator<SFCXVariable<int>, CellIterator>(iter);
+    case Uintah::TypeDescription::Point:
+      return scinew
+	SpecificFieldComparator<SFCXVariable<Point>, CellIterator>(iter);
+    case Uintah::TypeDescription::Vector:
+      return scinew
+	SpecificFieldComparator<SFCXVariable<Vector>, CellIterator>(iter);
+    case Uintah::TypeDescription::Matrix3:
+      return scinew
+	SpecificFieldComparator<SFCXVariable<Matrix3>, CellIterator>(iter);
+    default:
+      cerr << "SFCX Variable of unsupported type: " << subtype->getName() << '\n';
+      Thread::exitAll(-1);
+    }
+  }
+  case Uintah::TypeDescription::SFCYVariable: {
+    CellIterator iter = patch->getSFCYIterator();
+    switch(subtype->getType()){
+    case Uintah::TypeDescription::double_type:
+      return scinew
+	SpecificFieldComparator<SFCYVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::int_type:
+      return scinew
+	SpecificFieldComparator<SFCYVariable<int>, CellIterator>(iter);
+    case Uintah::TypeDescription::Point:
+      return scinew
+	SpecificFieldComparator<SFCYVariable<Point>, CellIterator>(iter);
+    case Uintah::TypeDescription::Vector:
+      return scinew
+	SpecificFieldComparator<SFCYVariable<Vector>, CellIterator>(iter);
+    case Uintah::TypeDescription::Matrix3:
+      return scinew
+	SpecificFieldComparator<SFCYVariable<Matrix3>, CellIterator>(iter);
+    default:
+      cerr << "SFCY Variable of unsupported type: " << subtype->getName() << '\n';
+      Thread::exitAll(-1);
+    }
+  }
+  case Uintah::TypeDescription::SFCZVariable: {
+    CellIterator iter = patch->getSFCZIterator();
+    switch(subtype->getType()){
+    case Uintah::TypeDescription::double_type:
+      return scinew
+	SpecificFieldComparator<SFCZVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::int_type:
+      return scinew
+	SpecificFieldComparator<SFCZVariable<int>, CellIterator>(iter);
+    case Uintah::TypeDescription::Point:
+      return scinew
+	SpecificFieldComparator<SFCZVariable<Point>, CellIterator>(iter);
+    case Uintah::TypeDescription::Vector:
+      return scinew
+	SpecificFieldComparator<SFCZVariable<Vector>, CellIterator>(iter);
+    case Uintah::TypeDescription::Matrix3:
+      return scinew
+	SpecificFieldComparator<SFCZVariable<Matrix3>, CellIterator>(iter);
+    default:
+      cerr << "SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
+      Thread::exitAll(-1);
+    }
+  }
+  default:
+    cerr << "Variable of unsupported type: " << td->getName() << '\n';
+    Thread::exitAll(-1);
+  }
+  return 0;
+}
+
+template <class Field, class Iterator>
+void SpecificFieldComparator<Field, Iterator>::
+compareFields(DataArchive* da1, DataArchive* da2, const string& var,
+	      ConsecutiveRangeSet matls, const Patch* patch,
+	      const Array3<const Patch*>& patch2Map,
+	      double time, double time2, double abs_tolerance,
+	      double rel_tolerance)
 {
   Field* pField2;
   bool firstMatl = true;
@@ -684,7 +853,7 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 
     map<const Patch*, Field*> patch2FieldMap;
     map<const Patch*, Field*>::iterator findIter;
-    for ( ; !iter.done(); iter++ ) {
+    for (Iterator iter = begin_ ; !iter.done(); iter++ ) {
       const Patch* patch2 = patch2Map[*iter];
       findIter = patch2FieldMap.find(patch2);
       if (findIter == patch2FieldMap.end()) {
@@ -1153,77 +1322,13 @@ int main(int argc, char** argv)
  
 	    ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, time);
 
-	    switch(td->getType()){
-	    case Uintah::TypeDescription::ParticleVariable:
-	      // Particles handled above and differently
-	      break;
-	    case Uintah::TypeDescription::NCVariable:
-	      switch(subtype->getType()){
-	      case Uintah::TypeDescription::double_type:
-		compareFields< NCVariable<double> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
-		break;
-	      case Uintah::TypeDescription::int_type:
-		compareFields< NCVariable<int> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
-		break;		
-	      case Uintah::TypeDescription::Point:
-		compareFields< NCVariable<Point> >
-		  (da1, da2, var, matls, patch, patch2Map, time,time2,
-		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
-		break;
-	      case Uintah::TypeDescription::Vector:
-		compareFields< NCVariable<Vector> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
-		break;
-	      case Uintah::TypeDescription::Matrix3:
-		compareFields< NCVariable<Matrix3> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
-		break;
-	      default:
-		cerr << "NC Variable of unsupported type: " << subtype->getName() << '\n';
-		Thread::exitAll(-1);
-	      }
-	      break;
-	    case Uintah::TypeDescription::CCVariable:
-	      switch(subtype->getType()){
-	      case Uintah::TypeDescription::double_type:
-		compareFields< CCVariable<double> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getCellIterator());
-		break;
-	      case Uintah::TypeDescription::int_type:
-		compareFields< CCVariable<int> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getCellIterator());
-		break;
-	      case Uintah::TypeDescription::Point:
-		compareFields< CCVariable<Point> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getCellIterator());
-		break;
-	      case Uintah::TypeDescription::Vector:
-		compareFields< CCVariable<Vector> >
-		  (da1, da2, var, matls, patch, patch2Map, time, time2,
-		   abs_tolerance, rel_tolerance, patch->getCellIterator());
-		break;
-	      case Uintah::TypeDescription::Matrix3:
-		  compareFields< CCVariable<Matrix3> >
-		    (da1, da2, var, matls, patch, patch2Map, time, time2,
-		     abs_tolerance, rel_tolerance, patch->getCellIterator());
-		  break;
-	      default:
-		cerr << "CC Variable of unsupported type: " << subtype->getName() << '\n';
-		Thread::exitAll(-1);
-	      }
-	      break;
-	    default:
-	      cerr << "Variable of unsupported type: " << td->getName() << '\n';
-	      Thread::exitAll(-1);
+	    FieldComparator* comparator =
+	      FieldComparator::makeFieldComparator(td, subtype, patch);
+	    if (comparator != 0) {
+	      comparator->compareFields(da1, da2, var, matls, patch,
+					patch2Map, time, time2,
+					abs_tolerance, rel_tolerance);
+	      delete comparator;
 	    }
 	  }
 	}
