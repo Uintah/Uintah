@@ -8,7 +8,7 @@
 using SCIRun::Point;
 using rtrt::Array3;
 
-int read_geoprobe(char *fname, int &nx, int &ny, int &nz,
+int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
 		  Point &min, Point &max, 
 		  unsigned char &datamin,
 		  unsigned char &datamax, 

@@ -6,7 +6,7 @@
 using namespace SCIRun;
 using std::cerr;
 
-int read_geoprobe(char *fname, int &nx, int &ny, int &nz,
+int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
 		  Point &min, Point &max, unsigned char &datamin,
 		  unsigned char &datamax, Array3<unsigned char> &data) {
   FILE *f = fopen(fname, "rb");
@@ -19,6 +19,7 @@ int read_geoprobe(char *fname, int &nx, int &ny, int &nz,
     cerr << "Error reading geovoxel header in file: "<<fname<<"\n";
     return 0;
   }
+  cerr << "hdr.nbits="<<hdr.nbits<<"\n";
   if (hdr.nbits != 8) {
     cerr << "Error -- we only know how to read 8-bit data right now.\n";
     return 0;

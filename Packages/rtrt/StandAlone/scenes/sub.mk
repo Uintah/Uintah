@@ -51,22 +51,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/graphics-museum.mo \
 	$(SRCDIR)/min-museum.mo \
 	$(SRCDIR)/3min-museum.mo \
-	$(SRCDIR)/living-room.mo \
-        $(SRCDIR)/seaworld-tubes2.mo \
-        $(SRCDIR)/seaworld-tubes3.mo \
-	$(SRCDIR)/sphere-room2.mo \
-	$(SRCDIR)/seaworld-tubes.mo \
-	$(SRCDIR)/multi-scene.mo \
-	$(SRCDIR)/cutdemo.mo  \
-	$(SRCDIR)/basic-sea.mo  \
 	$(SRCDIR)/single-sphere.mo  \
-	$(SRCDIR)/spinning_instance_demo.mo \
-	$(SRCDIR)/david.mo \
-	$(SRCDIR)/david_old.mo \
-	$(SRCDIR)/davidhead.mo  \
-	$(SRCDIR)/science-room.mo \
-	$(SRCDIR)/science-room-full.mo \
-	$(SRCDIR)/stadium.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/wine.mo \
 	$(SRCDIR)/FordField.mo \
@@ -79,6 +64,21 @@ SCENES := $(SRCDIR)/0.mo \
 # 	$(SRCDIR)/cbox.mo \
 #	$(SRCDIR)/graphics-museum-works.mo \
 # 	$(SRCDIR)/buddha.mo \
+#	$(SRCDIR)/living-room.mo \
+#	$(SRCDIR)/seaworld-tubes2.mo \
+#	$(SRCDIR)/seaworld-tubes3.mo \
+#	$(SRCDIR)/sphere-room2.mo \
+#	$(SRCDIR)/seaworld-tubes.mo \
+#	$(SRCDIR)/cutdemo.mo  \
+#	$(SRCDIR)/basic-sea.mo  \
+#	$(SRCDIR)/spinning_instance_demo.mo \
+#	$(SRCDIR)/david.mo \
+#	$(SRCDIR)/david_old.mo \
+#	$(SRCDIR)/davidhead.mo  \
+#	$(SRCDIR)/science-room.mo \
+#	$(SRCDIR)/science-room-full.mo \
+#	$(SRCDIR)/stadium.mo \
+#	$(SRCDIR)/multi-scene.mo \
 
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
