@@ -100,7 +100,7 @@ MDSPlusFieldReader::~MDSPlusFieldReader(){
 
 void MDSPlusFieldReader::execute(){
 
-#ifdef MDSPLUS
+#ifdef HAVE_MDSPLUS
 
   string server(sServerName_.get());      // MDS+ Server
   std::string tree(sTreeName_.get());     // MDS+ Tree 

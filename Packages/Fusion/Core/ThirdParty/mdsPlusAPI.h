@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-#ifdef MDSPLUS
+#ifdef HAVE_MDSPLUS
     int MDS_Connect( const char *server );
     int MDS_Open( const char *tree, int shot );
     void MDS_Disconnect();
@@ -60,7 +60,7 @@ extern "C" {
     char *get_slice_name( const int *nids, int slice );
     double get_slice_time( const char *name );
     double *get_realspace_data( const char *name, const char *node, int *dims );
-#endif  // MDSPLUS
+#endif  // HAVE_MDSPLUS
 
 #ifdef __cplusplus
 } // extern "C"

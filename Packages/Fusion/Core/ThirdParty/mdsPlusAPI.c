@@ -34,7 +34,7 @@
 
 #include <sci_defs.h>
 
-#ifdef MDSPLUS
+#ifdef HAVE_MDSPLUS
 
 #include "mdsPlusAPI.h"
 
@@ -395,7 +395,7 @@ double *get_realspace_data( const char *name, const char *node, int *dims )
   else
     return NULL;
 }
-#endif  // MDSPLUS
+#endif  // HAVE_MDSPLUS
 
 
 
