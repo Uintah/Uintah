@@ -22,14 +22,14 @@
 <head>
 
 	<title>SCIRun Makefile design rationale</title>
-	<!-- Changed by: Ted Dustman, 26-Feb-2002 -->
+	<!-- Changed by: Ted Dustman, 05-Mar-2002 -->
 
 	<link rel=stylesheet type="text/css" href="../doc_styles.css">
 </head>
 
 <body>
 <!-- ******************** DOCUMENTATION HEADER ********************* -->
-<div class="banner-margins">
+<div class="top-banner-margins">
 <table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
 <tr>
 	<td align="center" width="%100" background="../images/banner_top_fill.jpg"><img src="../images/banner_top.jpg" width="744" height="91" border="0" usemap="#banner" /></td>
@@ -239,6 +239,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2002/03/05 19:04:30  dustman
+# Implement top and bottom div sections
+#
 # Revision 1.3  2002/02/26 23:12:00  dustman
 # Oops, left out the disclaimer
 #
@@ -323,6 +326,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.4  2002/03/05 19:04:30  dustman
+# Implement top and bottom div sections
+#
 # Revision 1.3  2002/02/26 23:12:00  dustman
 # Oops, left out the disclaimer
 #
@@ -606,18 +612,18 @@ $(GENSRCS) by so_epilogue.mk
 </ul>
 
 <!-- ******************** DOCUMENTATION FOOTER ********************* -->
-<div class="banner-margins">
+<div class="bottom-banner-margins">
 <table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
 <tr>
 	<td align="left" background="../images/banner_bottom_fill.jpg" width="%100"><img src="../images/banner_bottom.jpg" width="444" height="32" border="0"></td>
 </tr>
 </table>
+</div>
 <center><font size="-2" face="arial, helvetica, sans-serif">Scientific
 Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
 3490 &#149; Salt Lake City, UT 84112<br />
 
 (801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
-</div>
 <!-- ****************** END DOCUMENTATION FOOTER ******************* -->
 
 </body>

@@ -384,7 +384,7 @@ University of Utah. All Rights Reserved.
 <!-- *************************************************************** -->
 
 <xsl:if test="$cont!='printable'">
-<div class="banner-margins">
+<div class="top-banner-margins">
 <table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
 <tr>
 <td align="center" width="%100">
@@ -719,7 +719,7 @@ NEXT
 <!-- ******************************************************************* -->
 
 <xsl:if test="$cont!='printable'">
-<div class="banner-margins">
+<div class="bottom-banner-margins">
 <table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
 <tr>
 <td align="left" width="%100">
@@ -734,12 +734,12 @@ NEXT
 </td>
 </tr>
 </table>
+</div>
 <center><font size="-2" face="arial, helvetica, sans-serif">Scientific
 Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
 3490 &#149; Salt Lake City, UT 84112<br />
 
 (801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
-</div>
 </xsl:if>
 
 <!-- ********************* END STANDARD SCI FOOTER ********************* -->
