@@ -52,10 +52,10 @@ public:
   virtual ~ShareAssignParticleVariable() {}
   
   ShareAssignParticleVariable<T>& operator=(const ParticleVariable<T>& pv)
-  { copyPointer(pv); return *this; }
+  { copyPointer(const_cast<ParticleVariable<T>&>(pv)); return *this; }
 
   ShareAssignParticleVariable<T>& operator=(const ShareAssignParticleVariable<T>& pv)
-  { copyPointer(pv); return *this; }
+  { copyPointer(const_cast<ShareAssignParticleVariable<T>&>(pv)); return *this; }
 };
 
 } // End namespace Uintah
