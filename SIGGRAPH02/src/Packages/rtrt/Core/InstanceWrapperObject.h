@@ -37,6 +37,14 @@ class InstanceWrapperObject : public SCIRun::Persistent {
       computed_bbox = false;
     }
 
+  // Force a particlular bounding box
+  InstanceWrapperObject(Object* obj, BBox &b) :
+    obj(obj), bb(b)
+    {
+      was_processed = false;
+      computed_bbox = true;
+    }
+
   InstanceWrapperObject() {} // for Pio.
 
   //! Persistent I/O.
