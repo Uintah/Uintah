@@ -9,8 +9,10 @@ def nameoftest (test):
     return test[0]
 def input (test):
     return test[1]
-def num_processes (test):
+def extra_sus_flags (test):
     return test[2]
+def num_processes (test):
+    return test[3]
 def date ():
     return asctime(localtime(time()))
 
@@ -178,11 +180,12 @@ def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelis
       print "Skipping test %s because %s processors exceeds maximum of %s" % (testname, np, max_parallelism);
     return -1; 
 
+  extra_flags = extra_sus_flags(test)
   if np == 1:
-    command = "%s/sus -%s" % (susdir, algo)
+    command = "%s/sus -%s %s" % (susdir, algo, extra_flags)
     mpimsg = ""
   else:
-    command = "mpirun -np %s %s/sus -%s" % (int(np), susdir, algo)
+    command = "mpirun -np %s %s/sus -%s %s" % (int(np), susdir, algo, extra_flags)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   if do_restart == "yes":

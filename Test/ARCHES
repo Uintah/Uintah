@@ -4,8 +4,8 @@ from os import symlink
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests
 
-TESTS = [   ("methane_explicit", "methane_explicit_table.ups", 1.1, "chem_meth"), \
-            ("methane_explicit_8patch", "methane_explicit_table_8patch.ups", 8, "chem_meth")
+TESTS = [   ("methane_explicit", "methane_explicit_table.ups", "", 1.1, "chem_meth"), \
+            ("methane_explicit_8patch", "methane_explicit_table_8patch.ups", "", 8, "chem_meth")
     	]
 
 def chemfile (test):
