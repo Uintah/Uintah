@@ -60,10 +60,23 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
+# boolToInt <environment variable name>
+#
+#   boolToInt will query the environment for the varaible's value.
+#   Usage example: boolToInt SCIRUN_INSERT_NET_COPYRIGHT
+#
 # Turns 'true/false', 'on/off', 'yes/no', '1/0' into '1/0' respectively
+#  (Non-existent environment variables are treated as 'false'.)
+#
 # This function is case insensitive.
 # Warns user if not a valid boolean string.
+#
 proc boolToInt { val } {
+
+    if { ! [info exists env($val)] } {
+       return 0
+    }
+
     if [string equal $val ""] {
 	return 0; # blank value is taken to mean false
     }
@@ -1014,9 +1027,16 @@ proc showChooseDatasetPrompt { initialdir } {
 proc sourceSettingsFile {} {
     renameSourceCommand
     
+    set DATADIR ""
+    set DATASET ""
+
     # Attempt to get environment variables:
-    set DATADIR [netedit getenv SCIRUN_DATA]
-    set DATASET [netedit getenv SCIRUN_DATASET]
+    if { [info exists env(SCIRUN_DATA)] } {
+        set DATADIR $env(SCIRUN_DATA)
+    }
+    if { [info exists env(SCIRUN_DATASET)] } {
+        set DATASET $env(SCIRUN_DATASET)
+    }
     
     if { "$DATASET" == "" } {
 	# if env var SCIRUN_DATASET not set... default to sphere:
@@ -1046,18 +1066,13 @@ proc sourceSettingsFile {} {
     displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
     displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
 
-    netedit setenv SCIRUN_DATA "$DATADIR"
-    netedit setenv SCIRUN_DATASET "$DATASET"
-
     set settings "$DATADIR/$DATASET/$DATASET.settings"
     if { [file isfile $settings] } {
 	source $settings
     }
 
-
     return "$DATADIR $DATASET"
 }
-
 
 #
 # displayErrorWarningOrInfo(): 
@@ -1437,9 +1452,20 @@ proc emitTCLStyleCopyright { out } {
 
 proc init_DATADIR_and_DATASET {} {
     upvar DATADIR datadir DATASET dataset
-    sourceSettingsFile
-    set datadir [netedit getenv SCIRUN_DATA]
-    set dataset [netedit getenv SCIRUN_DATASET]
+
+    # The following declarations make sure that these vars exist.
+    set DATADIR ""
+    set DATASET ""
+    set datadir ""
+    set dataset ""
+
+    # Must use ::env to get to the global scope
+    if { [info exists ::env(SCIRUN_DATA)] } {
+        set datadir $::env(SCIRUN_DATA)
+    }
+    if { [info exists ::env(SCIRUN_DATASET)] } {
+        set dataset $::env(SCIRUN_DATASET)
+    }
 }
     
 
@@ -1448,26 +1474,26 @@ proc writeNetwork { filename { subnet 0 } } {
 
     set out [open $filename {WRONLY CREAT TRUNC}]
     puts $out "\# SCI Network $SCIRUN_VERSION\n"
-    if [boolToInt $env(SCIRUN_INSERT_NET_COPYRIGHT)] {
+    if {[boolToInt SCIRUN_INSERT_NET_COPYRIGHT]} {
 	emitTCLStyleCopyright $out
     }
-    if [boolToInt $env(SCIRUN_NET_SUBSTITUTE_DATADIR)] {
+    if {[boolToInt SCIRUN_NET_SUBSTITUTE_DATADIR]} {
 	puts $out "\n# Ask SCIRun to tell us where the data is"
 	puts $out "init_DATADIR_and_DATASET\n"
     }
-    if [info exists userName] {
+    if {[info exists userName]} {
 	puts $out "global userName"
 	puts $out "set userName \"${userName}\"\n"
     }
-    if [info exists runDate] {
+    if {[info exists runDate]} {
 	puts $out "global runDate"
 	puts $out "set runDate \"${runDate}\"\n"
     }
-    if [info exists runTime] {
+    if {[info exists runTime]} {
 	puts $out "global runTime"
 	puts $out "set runTime \"${runTime}\"\n"
     }
-    if [info exists notes] {
+    if {[info exists notes]} {
 	puts $out "global notes"
 	puts $out "set notes \"${notes}\"\n"
     }
