@@ -149,7 +149,7 @@ int
 StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
 			     const Point &p    /* previous point */,
 			     float s           /* current step size */,
-			     VectorField *vf   /* the field */)
+			     VectorField * /* vf */   /* the field */)
 {
   typedef typename VectorField::mesh_type   vf_mesh_type;
   typedef typename vf_mesh_type::cell_index cell_index;
