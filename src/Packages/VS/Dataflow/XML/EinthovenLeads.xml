@@ -73,6 +73,13 @@ expected lead visualization.
 	</description>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
+      <port>
+	<name>Electrodes</name>
+	<description>
+	  <p>Connect to Viewer to show electrode location</p>
+	</description>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
     </outputs>
   </io>
   <gui>

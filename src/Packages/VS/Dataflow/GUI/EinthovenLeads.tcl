@@ -63,16 +63,20 @@ itcl_class VS_Render_EinthovenLeads {
 	pack $w.f.options -side top -expand yes
 
 	iwidgets::entryfield $w.f.options.lead_I \
-	    -labeltext "Lead I (node index):" -textvariable $this-lead_I
+	    -labeltext "Left Arm (node index):" -textvariable $this-lead_I
         pack $w.f.options.lead_I -side top -expand yes -fill x
 
 	iwidgets::entryfield $w.f.options.lead_II \
-	    -labeltext "Lead II (node index):" -textvariable $this-lead_II
+	    -labeltext "Right Arm (node index):" -textvariable $this-lead_II
         pack $w.f.options.lead_II -side top -expand yes -fill x
 
 	iwidgets::entryfield $w.f.options.lead_III \
-	    -labeltext "Lead III (node index):" -textvariable $this-lead_III
+	    -labeltext "Left Foot (node index):" -textvariable $this-lead_III
         pack $w.f.options.lead_III -side top -expand yes -fill x
+
+	iwidgets::pushbutton $w.f.reset -text "Reset Data" \
+	    -command "$this-c reset"
+	pack $w.f.reset -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w

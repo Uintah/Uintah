@@ -34,8 +34,12 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <VS/Dataflow/Modules/Render/EinthovenLeads.h>
+#include <Core/Geom/GeomSwitch.h>
+#include <Core/Geom/GeomText.h>
+#include <Core/Geom/GeomDL.h>
 
 namespace VS {
 using namespace SCIRun;
@@ -59,6 +63,7 @@ private:
   int                                  last_gen_;
   int                                  count_;
   NrrdDataHandle                       nrrd_out_;
+  int                                  text_id_;
 };
 
 
@@ -72,7 +77,8 @@ EinthovenLeads::EinthovenLeads(GuiContext* ctx) :
   gui_lead_III_(ctx->subVar("lead_III")),
   last_gen_(-1),
   count_(0),
-  nrrd_out_(0)
+  nrrd_out_(0),
+  text_id_(-1)
 {
 }
 
@@ -100,6 +106,7 @@ EinthovenLeads::execute()
     return;
   } 
 
+  vector<Point> pos(3);
   if (last_gen_ != torso->generation) {
     last_gen_ = torso->generation;
     NrrdDataHandle ndata;
@@ -109,7 +116,7 @@ EinthovenLeads::execute()
     if (!module_dynamic_compile(ci, algo)) return;
     vector<double> values(3, 0.0);
     if (algo->get_values(torso, gui_lead_I_.get(), gui_lead_II_.get(), 
-			 gui_lead_III_.get(), values)) 
+			 gui_lead_III_.get(), values, pos)) 
     {
       if (count_ % 100 == 0) {
 	int sz = (count_ / 100 + 1) * 100;
@@ -144,6 +151,20 @@ EinthovenLeads::execute()
     error("Unable to initialize output port Values.");
     return;
   }  
+  
+  GeometryOPort *goport = (GeometryOPort *)get_oport("Electrodes");
+  if (text_id_ != -1) goport->delObj(text_id_);
+
+  GeomTexts *texts = scinew GeomTexts();
+  GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
+  
+  Color c(.5, .95, .95);
+  texts->add(string("I"), pos[0], c);
+  texts->add(string("II"), pos[1], c);
+  texts->add(string("III"), pos[2], c);
+  texts->set_font_index(18);
+
+  text_id_ = goport->addObj(text_switch, "Electrode Location");
 
   oport->send(nrrd_out_);
   
@@ -155,8 +176,8 @@ EinthovenLeads::tcl_command(GuiArgs& args, void* userdata)
   if(args.count() < 2) {
     args.error("EinthovenLeads needs a minor command");
     return;
-  } else if(args[1] == "time") {
-    
+  } else if(args[1] == "reset") {
+    nrrd_out_ = 0;
   } else {
     Module::tcl_command(args, userdata);
   }
