@@ -52,60 +52,6 @@ LatVolMesh::get_point(Point &result, const node_index &index) const
   get_center(result,index);
 }
 
-
-inline LatVolMesh::node_iterator
-LatVolMesh::node_begin() const
-{
-  return node_iterator(this, 0, 0, 0);
-}
-
-
-inline LatVolMesh::node_iterator
-LatVolMesh::node_end() const
-{
-  return node_iterator(this, 0, 0, nz_);
-}
-
-inline LatVolMesh::edge_iterator
-LatVolMesh::edge_begin() const
-{
-  return 0;
-}
-
-
-inline LatVolMesh::edge_iterator
-LatVolMesh::edge_end() const
-{
-  return 0;
-}
-
-
-inline LatVolMesh::face_iterator
-LatVolMesh::face_begin() const
-{
-  return 0;
-}
-
-
-inline LatVolMesh::face_iterator
-LatVolMesh::face_end() const
-{
-  return 0;
-}
-
-inline LatVolMesh::cell_iterator
-LatVolMesh::cell_begin() const
-{
-  return cell_iterator(this, 0, 0, 0);
-}
-
-
-inline LatVolMesh::cell_iterator
-LatVolMesh::cell_end() const
-{
-  return cell_iterator(this, 0, 0, nz_-1);
-}
-
 inline void
 LatVolMesh::get_nodes(node_array &, edge_index) const
 {
