@@ -8,9 +8,15 @@ SRCDIR   := Uintah/Components/MPM/Fracture
 SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/FractureFactory.cc \
 	$(SRCDIR)/Lattice.cc
+	$(SRCDIR)/Cell.cc
 
 #
 # $Log$
+# Revision 1.5  2000/06/05 19:46:03  tan
+# Cell class will be designed to carray a link list of particle indexes
+# in a cell.  This will facilitate the seaching of particles from a given
+# cell.
+#
 # Revision 1.4  2000/06/05 17:22:20  tan
 # Lattice class will be designed to make it easier to handle the grid/particle
 # relationship in a given patch and a given velocity field.
