@@ -32,11 +32,7 @@
 #define __USE_UNIX98
 #include <pthread.h>
 #ifndef PTHREAD_MUTEX_RECURSIVE
-#ifdef PTHREAD_MUTEX_RECURSIVE_NP
 #define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
-#else
-#error "No recursive pthread mutex found"
-#endif
 #endif
 #define private public
 #define protected public
