@@ -5,14 +5,14 @@ OBJS = FFTImage.o IFFTImage.o PMFilterImage.o WhiteNoiseImage.o \
 	Threshold.o Edge.o ImageGen.o Gauss.o Subsample.o \
 	Noise.o Sharpen.o Hist.o ViewHist.o Unop.o Binop.o Turk.o \
 	Snakes.o HistEq.o FFT.o IFFT.o ImageSel.o Transforms.o \
-	Segment.o Radon.o DavsSnakes.o
+	Segment.o Radon.o 
 SRCS = FFTImage.cc IFFTImage.cc PMFilterImage.cc WhiteNoiseImage.cc \
         ImageToGeom.cc FilterImage.cc ImageConvolve.cc \
 	Threshold.cc Edge.cc ImageGen.cc \
 	Gauss.cc Subsample.cc Noise.cc Sharpen.cc Histogram.cc \
 	Hist.cc ViewHist.cc Unop.cc Binop.cc Turk.cc Snakes.cc HistEq.cc \
-	FFT.cc IFFT.cc ImageSel.cc Transforms.cc Segment.cc Radon.cc \
-	DavsSnakes.cc
+	FFT.cc IFFT.cc ImageSel.cc Transforms.cc Segment.cc Radon.cc 
+
 
 LIBNAME = Image
 
