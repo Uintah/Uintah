@@ -1,0 +1,251 @@
+%%
+%% Title: MatlabInterface documentation
+%%
+%% To compile (and produce a postscript) use "begtex"
+%% script:
+%%          begtex report
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% DRAFT COMMANDS
+% 
+% \documentclass[11pt,draft]{IEEEtran}
+
+% FINAL VERSION DOCUMENT
+% 
+\documentclass[12pt]{IEEEtran}
+% \documentclass[12pt]{article}
+\textwidth 6.0in
+\topmargin 0.4in
+\oddsidemargin 0.3in
+\evensidemargin 0.3in
+\textheight 8.5in
+
+\usepackage{times}              % Postscript fonts.
+\usepackage{epsfig}
+\usepackage{latexsym}
+\usepackage{amsmath}
+%\oddsidemargin 0in
+
+
+%
+% ONP: THIS IS A FIGURE COMMAND. LABEL IS THE SAME AS FILENAME. USE:
+%          \fgr{psfilename}{3in}{Caption text}
+
+\newcommand{\fgr}[3] 
+{                    
+\begin{figure}[htb]
+\centerline{\epsfig{file=../psfigs/#1.ps,width=#2}}
+\caption{\label{fig:#1} #3 }
+\end{figure}
+}
+
+\begin{document}
+\baselineskip 0.3in
+
+\begin{centering}
+\section*{SCIRun/Matlab Interface User Documentation}
+\end{centering}
+
+\subsection*{Purpose} \indent
+
+The purpose of MatlabInterface module is to enable calls to
+Matlab scripts within SCIRun environment. This is accomplished 
+by first, establishing independent Matlab process, and second,
+by SCIRun communicating with that process via network sockets.
+
+Possible uses of the MatlabInterface include both simple tasks
+such as converting SCIRun files to Matlab files and vice versa,
+and more complex tasks such as creating interactive SCIRun
+programs calling Matlab scripts for real-time applications.
+
+SCIRun communicates with Matlab via network sockets. The communication
+overhead is minimal when both packages reside on the same machine, 
+and may increase (depending on the network speed) if the Matlab is 
+running at the remote host. 
+
+The choise of network communication model (as opposed to hard-compiling 
+Matlab codes into SCIRun) is due to incompartibilities in Matlab
+libraries, and due to higher flexibility of the communication model. 
+The network communication model allows both remote calls to Matlab 
+scripts, as well as use of Matlab as a scripting engine to process 
+interactive user requests. This model resolves potential licencing 
+conflicts and provides convenience by saving extra installation time 
+in a situation when SCIRun and Matlab are installed on different hosts.
+
+\subsection*{Location and Installation} \indent
+
+We assume that the
+environment variable {\bf \$SCIRun} points to the root of SCIRun
+source tree and the package executables are compiled in the
+directory {\bf \$SCIRun/bin}.
+
+To install MatlabInterface package, at configure time provide the
+following option to the configure script: \\
+{\bf configure --with-package=MatlabInterface} \\
+and run {\bf gmake } in {\bf \$SCIRun/bin} directory
+to compile the package. 
+
+MatlabInterface {\bf Matlab} module, which provides communications with 
+Matlab engine on the SCIRun side, is located in MatlabInterface 
+package under {\bf DataIO}. Matlab engine scripts, as well as test 
+example nets (({\bf tst*.net} files) are located in SCIRun source tree: \\
+{\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine }\\
+
+\subsection*{Examples} \indent
+
+Examples are the best way to learn how to work with MatlabInterface.
+Three example scripts, named {\bf tst1.net, tst2.net and tst3.net}
+are attached to the package.
+These scripts are written for the situation where SCIRun and 
+Matlab are installed on the same machine. 
+It is also assumed that the user works from under Linux
+shell and Matlab package is accessable in the path. 
+
+To run examples, change current directory to \\
+{\bf cd \$SCIRun/src/Packages/MatlabInterface/matlab/engine } \\
+and execute SCIRun with first test net: \\
+{\bf \$SCIRun/bin/scirun  tst1.net} \\
+The resulting screen is shown in Figure \ref{fig:tst1}.
+
+The first test generates a random matrix under Matlab and sends the
+results to SCIRun, where the matrix is saved into SCIRun file. 
+Figure \ref{fig:tst1} shows the SCIRun environment window on the top,
+and Unix terminal at the bottom, from where the package was started
+(window with black background and title ``rapture'' in Figure 
+\ref{fig:tst1}).  Certain diagnostic output is directed into Unix 
+terminal window. Superimposed onto SCIRun window is the Matlab 
+module GUI dialog window (with the title ``Matlab\_O'' in
+Figure \ref{fig:tst1}). Field with white
+background in Matlab dialog window is where the Matlab commands
+are entered. In the first test example (Figure \ref{fig:tst1}
+the command is: \\
+{\bf o1=rand(5,5);} \\
+
+On top from the Matlab dialog window there is host:port line, which
+contains network address (IP or name and port) where the Matlab 
+engine will be running. In this example, Matlab is on the same
+machine, so the IP address is local loopback {\bf 127.0.0.1} and 
+the port is {\bf 5517}. In general, ports with numbers above 5000
+are recommended for the use with MatlabInterface. 
+
+The host:port line is also used to set the debug {\it wordy} parameter.
+It is an integer number which controls the wordiness
+of the diagnostic output. When {\it wordy} is 1, output is small, and
+when it is 5, the output is very wordy. When {\it wordy} $=0$ there
+is no diagnostic output. The {\it wordyi} parameter follows immedeately after
+host:port and is separated by space. It can also be ommited, in which
+case {\it wordy} $=0$.
+
+To the left from the Matlab dialog window there is a {\it Matlab } module.
+It is labeled ``Matlab'' in Figure \ref{fig:tst1}, and it has five input
+ports and five output ports, all of Matrix type (colored light blue). 
+When reffered in Matlab dialog window, the five input ports have mnemonic 
+names {\bf i1,i2,i3,i4,i5} respectively, and five output ports have
+names {\bf o1,o2,o3,o4,o5}. For example, the command: \\
+{\bf o1=rand(5,5);} \\
+will produce $5 \times 5$ random matrix and send the result
+into first output port (variable {\bf o1}. This example does
+not use any input ports of Matlab module.
+
+To run the script, push ``Execute'' button at the bottom of the
+Matlab dialog window. This will initiate the following
+sequence of events: \\
+1) The Matlab module fires \\
+2) automatically runs MATLAB with engine script in the background  \\
+3) compiles the engine components if necessary \\
+4) The engine starts listening at {\bf 127.0.0.1:5517} \\
+5) the Matlab module sends the command to the engine via the socket\\
+6) engine receives and executes command, creates variable {\bf o1} \\
+7) variable {\bf o1} is sent back to SCIRun via the socket \\
+8) SCIRun Matlab module receives matrix and sends it downstream
+   to MatrixWriter which saves it to disk as {\bf rand1.mat} file. \\
+
+To finish the script, shut down the Matlab engine. 
+Push left mouse button on the
+Matlab module dialog box and choose ``destroy''. This will destroy
+the Matlab module and shut down the engine. After that, exit
+the SCIRun environment. 
+
+To check if the example was run properly, open file {\bf rand1.mat }
+with any ascii text editor and and see that it contains random
+$5 \times 5$ matrix in SCIRun format. 
+
+The second example is run with {\bf tst2.net} file. In the same
+directory \\
+{\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine } \\
+start SCIRun again, this time with {\bf tst2.net} as command line argument: \\
+{\bf \$SCIRun/bin/scirun  tst2.net} \\
+The resulting window is shown in Figure \ref{fig:tst2}. This
+script reads SCIRun file {\bf rand1.mat} from disk, sends
+it to Matlab where it is saved as {\bf rand2.mat} file
+in Matlab ascii format. This time, the command is : \\
+{\bf save -ascii rand2.dat i1;} \\
+and, only one input port {\bf i1} is used. Pushing the
+``Execute'' button in Matlab dialog window results in
+the following sequence of events:
+1) The MatrixReader fires and reads {\bf rand1.mat} from disk \\
+2) The Matlab module fires, assepts the matrix on the first port \\
+3) automatically runs MATLAB with engine script in the background  \\
+4) The engine starts listening at {\bf 127.0.0.1:5517} \\
+5) the module sends matrix to the engine and creates {\it i1} variable\\
+6) the Matlab module sends the command to the engine via the socket\\
+7) engine receives and executes command, saving matrix to a file {\bf rand2.dat} \\
+
+To finish the script, shut down the Matlab engine.
+Push left mouse button on the
+Matlab module dialog box and choose ``destroy''. This will destroy
+the Matlab module and shut down the engine. After that, exit
+the SCIRun environment.
+
+To check if the example was run properly, open file {\bf rand2.dat}
+and see if it contains the same random numbers as file {\bf rand1.mat}.
+
+The third example is run with {\bf tst3.net} file. In the same
+directory \\
+{\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine } \\
+start SCIRun again, this time with {\bf tst3.net} as command line argument: \\
+{\bf \$SCIRun/bin/scirun  tst3.net} \\
+The resulting window is shown in Figure \ref{fig:tst3}. This
+script reads MATLAB file {\bf rand2.dat} from disk, sends
+it to SCIRun where it is saved as {\bf rand3.mat} file
+in SCIRun ascii format. This time, the command is : \\
+{\bf o1=load('rand2.dat');} \\
+and, only one output port {\bf o1} is used. Pushing the
+``Execute'' button in Matlab dialog window results in
+the following sequence of events:
+1) The Matlab module fires \\
+2) automatically runs MATLAB with engine script in the background  \\
+3) The engine starts listening at {\bf 127.0.0.1:5517} \\
+4) the Matlab module sends the command to the engine via the socket\\
+5) engine receives and executes command, creates variable {\bf o1} \\
+6) variable {\bf o1} is sent back to SCIRun via the socket \\
+7) SCIRun Matlab module receives matrix and sends it downstream
+   to MatrixWriter which saves it to disk as {\bf rand3.mat} file. \\
+
+To finish, shut down the Matlab engine.
+Push left mouse button on the
+Matlab module dialog box and choose ``destroy''. This will destroy
+the Matlab module and shut down the engine. After that, exit
+the SCIRun environment.
+
+To check if the example was run properly, open file {\bf rand3.mat}
+and see if it contains the same random numbers as files {\bf rand1.mat}
+and {\bf rand2.dat}.
+
+\fgr{tst1}{5.5in}
+{
+ Screen capture for the first test example.
+}
+
+\fgr{tst2}{5.5in}
+{
+ Screen capture for the second test example.
+}
+
+\fgr{tst3}{5.5in}
+{
+ Screen capture for the third test example.
+} 
+
+\end{document}
