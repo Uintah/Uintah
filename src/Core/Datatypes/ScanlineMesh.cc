@@ -42,12 +42,26 @@ using namespace std;
 PersistentTypeID ScanlineMesh::type_id("ScanlineMesh", "MeshBase", maker);
 
 
+ScanlineMesh::ScanlineMesh(unsigned int length,
+			   const Point &min, const Point &max)
+  : offset_(0), length_(length)
+{
+  transform_.pre_scale(Vector(1.0 / (length_-1.0), 1.0, 1.0));
+  transform_.pre_scale(max - min);
+  transform_.pre_translate(Vector(min));
+  transform_.compute_imat();
+}
+
+
 BBox
 ScanlineMesh::get_bounding_box() const
 {
+  Point p0(0.0, 0.0, 0.0);
+  Point p1(length_, 0.0, 0.0);
+  
   BBox result;
-  result.extend(min_);
-  result.extend(max_);
+  result.extend(transform_.project(p0));
+  result.extend(transform_.project(p1));
   return result;
 }
 
@@ -70,33 +84,26 @@ ScanlineMesh::get_edges(Edge::array_type &/* arr */, const BBox &/*bbox*/) const
 void
 ScanlineMesh::get_center(Point &result, Node::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (length_ - 1);
-
-  result.x(idx * sx + min_.x());
-  result.y(0);
-  result.z(0);
+  Point p(idx, 0.0, 0.0);
+  result = transform_.project(p);
 }
 
 
 void
 ScanlineMesh::get_center(Point &result, Edge::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (length_ - 1);
-
-  result.x((idx + 0.5) * sx + min_.x());
-  result.y(0);
-  result.z(0);
+  Point p(idx + 0.5, 0.0, 0.0);
+  result = transform_.project(p);
 }
 
 // TODO: verify
 bool
-ScanlineMesh::locate(Edge::index_type &cell, const Point &p) const
+ScanlineMesh::locate(Edge::index_type &elem, const Point &p)
 {
-  double i = (p.x() - min_.x()) / (max_.x() - min_.x()) * (length_ - 1) + 0.5;
+  const Point r = transform_.unproject(p);
+  elem = (unsigned int)(r.x());
 
-  cell = (unsigned int)i;
-
-  if (cell >= (length_ - 1))
+  if (elem >= (length_ - 1))
   {
     return false;
   }
@@ -109,7 +116,7 @@ ScanlineMesh::locate(Edge::index_type &cell, const Point &p) const
 
 // TODO: verify
 bool
-ScanlineMesh::locate(Node::index_type &node, const Point &p) const
+ScanlineMesh::locate(Node::index_type &node, const Point &p)
 {
   Node::array_type nodes;     // storage for node_indeces
   Cell::index_type cell;
@@ -148,8 +155,7 @@ ScanlineMesh::io(Piostream& stream)
 
   // IO data members, in order
   Pio(stream, length_);
-  Pio(stream, min_);
-  Pio(stream, max_);
+  Pio(stream, transform_);
 
   stream.end_class();
 }

@@ -32,6 +32,7 @@
 #define SCI_project_ScanlineMesh_h 1
 
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Datatypes/FieldIterator.h>
@@ -83,15 +84,13 @@ public:
   // storage types for get_* functions
   typedef vector<double>      weight_array;
 
-  ScanlineMesh()
-    : offset_(0), length_(0), min_(Point(0,0,0)), max_(Point(1,1,1)) {}
-  ScanlineMesh(unsigned int length, const Point &min, const Point &max)
-    : offset_(0), length_(length), min_(min), max_(max) {}
+  ScanlineMesh() : offset_(0), length_(0) {}
+  ScanlineMesh(unsigned int length, const Point &min, const Point &max);
   ScanlineMesh(ScanlineMesh* mh, unsigned int offset, unsigned int length)
-    : offset_(offset), length_(length), min_(mh->min_), max_(mh->max_) {}
+    : offset_(offset), length_(length), transform_(mh->transform_) {}
   ScanlineMesh(const ScanlineMesh &copy)
     : offset_(copy.offset_), length_(copy.get_length()),
-      min_(copy.get_min()), max_(copy.get_max()) {}
+      transform_(copy.transform_) {}
   virtual ScanlineMesh *clone() { return new ScanlineMesh(*this); }
   virtual ~ScanlineMesh() {}
 
@@ -117,16 +116,16 @@ public:
 
   //! get the mesh statistics
   unsigned get_length() const { return length_; }
-  Point get_min() const { return min_; }
-  Point get_max() const { return max_; }
-  Vector diagonal() const { return max_ - min_; }
+  //Point get_min() const { return min_; }
+  //Point get_max() const { return max_; }
+  Vector diagonal() const { return get_bounding_box().diagonal(); }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
-  void set_offset(unsigned int x) { offset_ = x; }
-  void set_length(unsigned int x) { length_ = x; }
-  void set_min(Point p) { min_ = p; }
-  void set_max(Point p) { max_ = p; }
+  //void set_offset(unsigned int x) { offset_ = x; }
+  //void set_length(unsigned int x) { length_ = x; }
+  //void set_min(Point p) { min_ = p; }
+  //void set_max(Point p) { max_ = p; }
 
 
   //! get the child elements of the given index
@@ -161,8 +160,8 @@ public:
   void get_center(Point &, Face::index_type) const {}
   void get_center(Point &, Cell::index_type) const {}
 
-  bool locate(Node::index_type &, const Point &) const;
-  bool locate(Edge::index_type &, const Point &) const;
+  bool locate(Node::index_type &, const Point &);
+  bool locate(Edge::index_type &, const Point &);
   bool locate(Face::index_type &, const Point &) const { return false; }
   bool locate(Cell::index_type &, const Point &) const { return false; }
 
@@ -179,7 +178,7 @@ public:
 
 private:
 
-  //! the min_Node::index_type ( incase this is a subLattice )
+  //! the min Node::index_type ( incase this is a subLattice )
   unsigned int offset_;
 
   //! the Node::index_type space extents of a ScanlineMesh
@@ -187,7 +186,7 @@ private:
   unsigned int length_;
 
   //! the object space extents of a ScanlineMesh
-  Point min_, max_;
+  Transform transform_;
 
   // returns a ScanlineMesh
   static Persistent *maker() { return new ScanlineMesh(); }
