@@ -384,8 +384,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	frame $win.l
 	frame $win.r
 	
-	puts stderr $stop
-	puts stderr $start
+#	puts stderr $stop
+#	puts stderr $start
 
 	set lg [expr floor( log10($stop-$start) ) ]
 	set range [expr pow(10.0, $lg )]
