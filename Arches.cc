@@ -71,6 +71,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_nlSolver = 0;
   d_physicalConsts = 0;
   d_calcReactingScalar = 0;
+  d_calcThermalNOx = 0;
   d_calcEnthalpy =0;
 #ifdef multimaterialform
   d_mmInterface = 0;
@@ -117,6 +118,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (d_reactingFlow) {
     db->require("solve_reactingscalar", d_calcReactingScalar);
     db->require("solve_enthalpy", d_calcEnthalpy);
+    db->getWithDefault("solve_thermalnox", d_calcThermalNOx,false);
   }
 
   // physical constant
@@ -131,7 +133,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_physicalConsts->problemSetup(db);
   // read properties
   // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab, d_reactingFlow, d_calcEnthalpy);
+  d_props = scinew Properties(d_lab, d_MAlab, d_reactingFlow, d_calcEnthalpy ,d_calcThermalNOx);
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
   d_nofScalarStats = d_props->getNumMixStatVars();
@@ -186,6 +188,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 					   d_turbModel, d_physicalConsts,
 					   d_calcReactingScalar,
 					   d_calcEnthalpy,
+				       	   d_calcThermalNOx,
 					   d_myworld);
   }
   else
@@ -291,6 +294,9 @@ Arches::sched_paramInit(const LevelP& level,
     }
     if (d_calcReactingScalar)
       tsk->computes(d_lab->d_reactscalarSPLabel);
+    //Thermal NOx 
+    if (d_calcThermalNOx)
+      tsk->computes(d_lab->d_thermalnoxSPLabel);
     if (d_calcEnthalpy) {
       tsk->computes(d_lab->d_enthalpySPLabel); 
       tsk->computes(d_lab->d_radiationSRCINLabel);
@@ -397,6 +403,13 @@ Arches::paramInit(const ProcessorGroup* ,
       new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel,
 		       matlIndex, patch);
       reactscalar.initialize(0.0);
+    }
+     // Thermal NOx 
+    CCVariable<double> thermalnox;
+    if (d_calcThermalNOx) {
+      new_dw->allocateAndPut(thermalnox, d_lab->d_thermalnoxSPLabel,
+                             matlIndex, patch);
+      thermalnox.initialize(0.0);
     }
 
     if (d_calcEnthalpy) {
