@@ -45,7 +45,6 @@ int IntraCommMPI::receive(int rank, char* bytestream, int length)
   MPI_Status status;
   ret = MPI_Recv((void *)bytestream, length, MPI_BYTE, rank, 13, 
 		 MPI_COMM_WORLD, &status);
-
   if(ret == MPI_SUCCESS)
     return 0;
   else
