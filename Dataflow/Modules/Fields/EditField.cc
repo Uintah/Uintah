@@ -540,10 +540,8 @@ EditField::execute()
   ScalarFieldInterface* sfi = ef->query_scalar_interface();
   if (sfi)
   {
-    ef->freeze();
     std::pair<double, double> minmax(1, 0);
     sfi->compute_min_max(minmax.first, minmax.second);
-    ef->set_property(string("minmax"), minmax, true);
   }
     
   oport->send(ef);

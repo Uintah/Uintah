@@ -90,13 +90,7 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     Vector vec;
 
     pair<double, double> minmax;
-
-    if ( !ifield->get_property("minmax", minmax)) {
-      sfi->compute_min_max(minmax.first, minmax.second);
-
-      // cache this potentially expensive to compute value.
-      ifield->set_property("minmax", minmax, true);
-    }
+    sfi->compute_min_max(minmax.first, minmax.second);
  
     scale /= minmax.second;
 

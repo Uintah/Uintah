@@ -71,6 +71,11 @@ void SelectElements::execute()
   if (!ifieldPort->get(field) || !field.get_rep()) return;
 
   ScalarFieldInterface *sfi = field->query_scalar_interface(this);
+  if (sfi == 0)
+  {
+    error("Only works on scalar fields.");
+    return;
+  }
   double min, max;
   sfi->compute_min_max(min, max);
   string value = value_.get();
