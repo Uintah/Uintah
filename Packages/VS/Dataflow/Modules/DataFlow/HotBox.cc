@@ -33,6 +33,11 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <iostream>
+// Foundational Model of Anatomy Web Services
+#include "soapServiceInterfaceSoapBindingProxy.h" // get proxy
+#include "ServiceInterfaceSoapBinding.nsmap" // get namespace bindings
+#include "stdsoap2.h"
+// VS/Hotbox
 #include "VS_SCI_HotBox.h"
 #include "labelmaps.h"
 
@@ -172,7 +177,7 @@ void
        remark("Input Field is not of type PointCloudField<unsigned short>.");
     }
 
-  }
+  } // end if(InputFieldHandle->query_scalar_interface()...)
   else if(InputFieldHandle->query_vector_interface(this).get_rep() != 0)
   {
     // we have vector data in the input field
@@ -203,15 +208,13 @@ void
   // get the matrix data
   //  Matrix *matrixPtr = inputMatrixHandle.get_rep();
 
+  const int dataSource(datasource_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
   const string enableDraw(enableDraw_.get());
   
-  // // launch queries via OQAFMA/Protege C function calls
-  //
-  // // collect query results
-
-  // for now, use fixed labelMap files
+  // The segmented volume (input field to the Probe)
+  // is an index into the MasterAnatomy list -- this only comes from a file
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
   if( anatomyDataSrc == "" ) {
@@ -231,28 +234,64 @@ void
     cout << " names" << endl;
   }
 
-  if(!adjacencytable->get_num_names())
-  { // adjacency data has not been read
-    adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
-  }
-  else
-  {
-    cout << "Adjacency Map file contains " << adjacencytable->get_num_names();
-    cout << " entries" << endl;
-  }
-
   char *selectName = anatomytable->get_anatomyname(labelIndexVal);
   if(selectName != 0)
     cout << "VS/HotBox: selected '" << selectName << "'" << endl;
   else
     remark("Selected [NULL]");
 
+  // we now have the anatomy name corresponding to the label value at the voxel
+  if(dataSource == VS_DATASOURCE_OQAFMA)
+  {
+    ns1__processStruQLResponse resultStruQL;
+    ServiceInterfaceSoapBinding ws;
+    // build the query to send to OQAFMA
+    std::string p2 = "WHERE X->\":NAME\"->\"";
+    p2 += selectName;
+    p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
+    p2 += selectName;
+    p2 += "(Parts)";
+    // launch a query via OQAFMA/Protege C function calls
+    if (ws.ns1__processStruQL(p2, resultStruQL) != SOAP_OK)
+    {
+      soap_print_fault(ws.soap, stderr);
+    }
+    else
+    {
+      // parse XML query results
+      std::string OQAFMA_result = resultStruQL._processStruQLReturn;
+      cout << OQAFMA_result;
+    }
+    // catch(exception& e)
+    // {
+    //   printf("Unknown exception has occured\n");
+    // }
+    // catch(...)
+    // {
+    //   printf("Unknown exception has occured\n");
+    // }
+
+  } // end if(dataSource == VS_DATASOURCE_OQAFMA)
+  else
+  {
+    // use fixed Adjacency Map files
+    if(!adjacencytable->get_num_names())
+    { // adjacency data has not been read
+      adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
+    }
+    else
+    {
+      cout << "Adjacency Map file contains " << adjacencytable->get_num_names();
+      cout << " entries" << endl;
+    }
+  } // end else(use fixed Adjacency Map files)
+
   // draw HotBox Widget
   GeomGroup *HB_geomGroup = scinew GeomGroup();
   Color text_color;
   text_color = Color(1,1,1);
   MaterialHandle text_material = scinew Material(text_color);
-  text_material->transparency = 0.75;
+  text_material->transparency = 0.95;
 
   GeomLines *lines = scinew GeomLines();
   GeomTexts *texts = scinew GeomTexts();
