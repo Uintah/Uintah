@@ -38,7 +38,7 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
+  NrrdIPort*      indwi_;
   NrrdOPort*      onrrd_;
 
 };
@@ -56,28 +56,53 @@ TendMake::~TendMake() {
 void 
 TendMake::execute()
 {
-  NrrdDataHandle nrrd_handle;
+  NrrdDataHandle dwi_handle;
+//   NrrdDataHandle eval_handle;
+//   NrrdDataHandle evec_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
+  indwi_ = (NrrdIPort *)get_iport("DWI");
+  //  inevals_ = (NrrdIPort *)get_iport("Evals");
+  //inevecs_ = (NrrdIPort *)get_iport("Evecs");
+
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+  if (!indwi_) {
+    error("Unable to initialize iport 'DWI'.");
     return;
   }
+//   if (!inevals_) {
+//     error("Unable to initialize iport 'Evals'.");
+//     return;
+//   }
+//   if (!inevecs_) {
+//     error("Unable to initialize iport 'Evecs'.");
+//     return;
+//   }
   if (!onrrd_) {
     error("Unable to initialize oport 'Nrrd'.");
     return;
   }
-  if (!inrrd_->get(nrrd_handle))
+  if (!indwi_->get(dwi_handle))
     return;
+//   if (!inevals_->get(eval_handle))
+//     return;
+//   if (!inevecs_->get(evec_handle))
+//     return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
+  if (!dwi_handle.get_rep()) {
+    error("Empty input DWI Nrrd.");
     return;
   }
+//   if (!eval_handle.get_rep()) {
+//     error("Empty input Evals Nrrd.");
+//     return;
+//   }
+//   if (!evec_handle.get_rep()) {
+//     error("Empty input Evecs Nrrd.");
+//     return;
+//   }
 
-  Nrrd *nin = nrrd_handle->nrrd;
+  //  Nrrd *nin = nrrd_handle->nrrd;
 
   error("This module is a stub.  Implement me.");
 

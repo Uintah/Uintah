@@ -26,13 +26,8 @@ itcl_class Teem_Tend_TendEval {
         set_defaults
     }
     method set_defaults {} {
-        global eigensave
-        set eigensave ""
-
         global threshold
         set threshold 0.0
-
-
     }
 
     method ui {} {
@@ -50,9 +45,8 @@ itcl_class Teem_Tend_TendEval {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.eigensave -labeltext "eigensave:" -textvariable $this-eigensave
-        pack $w.f.options.eigensave -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" -textvariable $this-threshold
+        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" \
+	    -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x
 
 	button $w.f.b -text "Execute" -command "$this-c needexecute"

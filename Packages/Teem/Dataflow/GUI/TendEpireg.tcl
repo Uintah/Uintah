@@ -26,9 +26,6 @@ itcl_class Teem_Tend_TendEpireg {
         set_defaults
     }
     method set_defaults {} {
-        global dwi_list
-        set dwi_list ""
-
         global gradient_list
         set gradient_list ""
 
@@ -74,25 +71,32 @@ itcl_class Teem_Tend_TendEpireg {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.dwi_list -labeltext "dwi_list:" -textvariable $this-dwi_list
-        pack $w.f.options.dwi_list -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.gradient_list -labeltext "gradient_list:" -textvariable $this-gradient_list
+        iwidgets::entryfield $w.f.options.gradient_list \
+	    -labeltext "gradient_list:" -textvariable $this-gradient_list
         pack $w.f.options.gradient_list -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.reference -labeltext "reference:" -textvariable $this-reference
+        iwidgets::entryfield $w.f.options.reference \
+	    -labeltext "reference:" -textvariable $this-reference
         pack $w.f.options.reference -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.blur_x -labeltext "blur_x:" -textvariable $this-blur_x
+        iwidgets::entryfield $w.f.options.blur_x -labeltext "blur_x:" \
+	    -textvariable $this-blur_x
         pack $w.f.options.blur_x -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.blur_y -labeltext "blur_y:" -textvariable $this-blur_y
+        iwidgets::entryfield $w.f.options.blur_y -labeltext "blur_y:" \
+	    -textvariable $this-blur_y
         pack $w.f.options.blur_y -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" -textvariable $this-threshold
+        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" \
+	    -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.cc_analysis -labeltext "cc_analysis:" -textvariable $this-cc_analysis
+        iwidgets::entryfield $w.f.options.cc_analysis \
+	    -labeltext "cc_analysis:" -textvariable $this-cc_analysis
         pack $w.f.options.cc_analysis -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.fitting -labeltext "fitting:" -textvariable $this-fitting
+        iwidgets::entryfield $w.f.options.fitting -labeltext "fitting:" \
+	    -textvariable $this-fitting
         pack $w.f.options.fitting -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.kernel -labeltext "kernel:" -textvariable $this-kernel
+        iwidgets::entryfield $w.f.options.kernel -labeltext "kernel:" \
+	    -textvariable $this-kernel
         pack $w.f.options.kernel -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.base -labeltext "base:" -textvariable $this-base
+        iwidgets::entryfield $w.f.options.base -labeltext "base:" \
+	    -textvariable $this-base
         pack $w.f.options.base -side top -expand yes -fill x
 
 	button $w.f.b -text "Execute" -command "$this-c needexecute"

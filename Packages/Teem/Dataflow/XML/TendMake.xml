@@ -32,7 +32,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>nin</name>
+        <name>DWI</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
     </inputs>

@@ -19,7 +19,8 @@
 -->
 
 
-<component name="TendPoint" category="Tend">  <overview>
+<component name="TendPoint" category="Tend">  
+  <overview>
     <authors>
       <author>Martin Cole</author>
     </authors>
@@ -32,16 +33,14 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>nin</name>
+        <name>Data</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Point</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
     </inputs>
-    <outputs>
-      <port>
-        <name>nout</name>
-	<datatype>Teem::Nrrd</datatype>
-      </port>
-    </outputs>
   </io>
   <testing>
   </testing>

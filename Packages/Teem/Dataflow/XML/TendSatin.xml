@@ -30,12 +30,6 @@
     <examplesr></examplesr>
   </overview>
   <io>
-    <inputs lastportdynamic="no">
-      <port>
-        <name>nin</name>
-	<datatype>Teem::Nrrd</datatype>
-      </port>
-    </inputs>
     <outputs>
       <port>
         <name>nout</name>

@@ -29,6 +29,9 @@ itcl_class Teem_Tend_TendSatin {
         global anisotropy
         set anisotropy 0.0
 
+        global min
+        set min 0.0
+
         global max
         set max 0.0
 
@@ -41,7 +44,8 @@ itcl_class Teem_Tend_TendSatin {
         global size
         set size 0
 
-
+        global torus
+        set torus 0
     }
 
     method ui {} {
@@ -59,15 +63,31 @@ itcl_class Teem_Tend_TendSatin {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.anisotropy -labeltext "anisotropy:" -textvariable $this-anisotropy
+        iwidgets::entryfield $w.f.options.torus -labeltext "torus:" \
+	    -textvariable $this-torus
+        pack $w.f.options.torus -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.anisotropy -labeltext "anisotropy:" \
+	    -textvariable $this-anisotropy
         pack $w.f.options.anisotropy -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.max -labeltext "max:" -textvariable $this-max
+
+        iwidgets::entryfield $w.f.options.min -labeltext "min:" \
+	    -textvariable $this-min
+        pack $w.f.options.min -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.max -labeltext "max:" \
+	    -textvariable $this-max
         pack $w.f.options.max -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.boundary -labeltext "boundary:" -textvariable $this-boundary
+
+        iwidgets::entryfield $w.f.options.boundary -labeltext "boundary:" \
+	    -textvariable $this-boundary
         pack $w.f.options.boundary -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.thickness -labeltext "thickness:" -textvariable $this-thickness
+        iwidgets::entryfield $w.f.options.thickness -labeltext "thickness:" \
+	    -textvariable $this-thickness
         pack $w.f.options.thickness -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.size -labeltext "size:" -textvariable $this-size
+
+        iwidgets::entryfield $w.f.options.size -labeltext "size:" \
+	    -textvariable $this-size
         pack $w.f.options.size -side top -expand yes -fill x
 
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
