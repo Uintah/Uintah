@@ -122,11 +122,9 @@ FieldBoundary::add_ordered_tri(const Point p[3], NIndex nidx[3],
   const Vector tmp = inside - p[0];
   const double val = Dot(norm, tmp);
   if (val > 0.0L) {
-    //cerr << "dot was positive: " << val << endl;
     // normal points inside, reverse the order.
     tmesh->add_triangle(nidx[2], nidx[1], nidx[0]);
   } else {
-    //cerr << "dot was negative: " << val << endl;
     // normal points outside.
     tmesh->add_triangle(nidx[0], nidx[1], nidx[2]);
   }

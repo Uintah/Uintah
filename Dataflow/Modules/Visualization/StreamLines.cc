@@ -52,9 +52,6 @@
 
 namespace SCIRun {
 
-using std::cerr;
-using std::endl;
-
 // LUTs for the RK-fehlberg algorithm 
 double a[]   ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
 double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};

@@ -90,7 +90,7 @@ void CastField::execute() {
 	return;
     isf=ifh->getRGBase();
     if(!isf){
-        error("CastField can't deal with unstructured grids!\n");
+        error("CastField can't deal with unstructured grids!");
 	return;
     }
     checkInterface();
