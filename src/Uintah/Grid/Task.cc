@@ -201,6 +201,18 @@ Task::display( ostream & out ) const
   if( d_completed ){ out << "Completed]"; } else { out << "Not Completed]"; }
 }
 
+void
+Task::displayAll(ostream& out) const
+{
+   display(out);
+   out << '\n';
+   out << "Dependency information: \n";
+   for(int i=0;i<d_reqs.size();i++)
+      out << "requires " << *d_reqs[i] << '\n';
+   for(int i=0;i<d_comps.size();i++)
+      out << "computes " << *d_comps[i] << '\n';
+}
+
 ostream &
 operator << (ostream &out, const Task & task)
 {
@@ -240,6 +252,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.21  2000/09/25 16:24:17  sparker
+// Added a displayAll method to Task
+//
 // Revision 1.20  2000/09/25 14:41:32  rawat
 // added mpi support for cell centered and staggered cell variables
 //

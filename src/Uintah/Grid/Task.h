@@ -2,13 +2,14 @@
 #define UINTAH_HOMEBREW_Task_H
 
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <string>
 #include <vector>
-#include <ostream>
+#include <iostream>
 
 using std::vector;
 using std::string;
@@ -523,6 +524,10 @@ WARNING
       // Prints out information about the task...
       void display( ostream & out ) const;
 
+      //////////
+      // Prints out all information about the task, including dependencies
+      void displayAll( ostream & out ) const;
+
    protected: // class Task
       friend class TaskGraph;
       bool visited;
@@ -557,6 +562,9 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.22  2000/09/25 16:24:17  sparker
+// Added a displayAll method to Task
+//
 // Revision 1.21  2000/09/13 20:57:25  sparker
 // Added ostream operator for dependencies
 //
