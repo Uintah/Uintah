@@ -112,16 +112,6 @@ namespace SCIRun {
       char* getSerializedChildren(DOM_Node& node);
       
       
-      //////////////////////////////
-      // removeWhiteSpace()
-      // removes all leading and trailing
-      // white space from "string".
-      // Returns "string" (after it has
-      // been modified).
-      
-      char* removeWhiteSpace(char* string);
-
-      
       string xmlto_string(const DOMString& str);
       string xmlto_string(const XMLCh* const str);
       void invalidNode(const DOM_Node& n, const string& filename);

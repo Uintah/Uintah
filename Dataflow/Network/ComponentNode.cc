@@ -24,6 +24,7 @@
  *   University of Utah
  */
 
+#include <Core/Util/RWS.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/PackageDBHandler.h>
@@ -54,7 +55,7 @@ using std::endl;
 using std::strstream;
 
 
-#define rWSgSC(x) removeWhiteSpace(getSerializedChildren(x))
+#define rWSgSC(x) removeLTWhiteSpace(getSerializedChildren(x))
 
 namespace SCIRun {
 
