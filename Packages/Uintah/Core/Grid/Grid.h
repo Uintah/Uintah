@@ -95,4 +95,6 @@ WARNING
 
 } // End namespace Uintah
 
+std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+
 #endif

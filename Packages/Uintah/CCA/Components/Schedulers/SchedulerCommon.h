@@ -119,6 +119,14 @@ WARNING
     virtual void setGeneration( int id ) { d_generation = id; }
     virtual const MaterialSet* getMaterialSet() const {return 0;}
 
+    // This function will copy the data from the old grid to the new grid.
+    // The PatchSubset structure will contain a patch on the new grid.
+    void copyDataToNewGrid(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset* ,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
+
   protected:
     void finalizeTimestep();
     virtual void actuallyCompile() = 0;

@@ -5,6 +5,8 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlLevel.h>
 
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 
@@ -82,6 +84,10 @@ using std::ostringstream;
 
    void logMemoryUse(ostream& out, unsigned long& total,
 		     const std::string& tag, int dwid);
+
+   void getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const;
+   void getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const;
+
 private:
    struct DataItem {
      DataItem()
@@ -557,6 +563,45 @@ DWDatabase<VarType, DomainType>::logMemoryUse(ostream& out, unsigned long& total
 	  const TypeDescription* td = label->typeDescription();
 	  logMemory(out, total, tag, label->getName(), (td?td->getName():"-"),
 		    pr->getDomain(), i, elems, totsize, ptr, dwid);
+	}
+      }
+    }
+  }
+}
+
+template<class VarType, class DomainType>
+void
+DWDatabase<VarType, DomainType>::getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const
+{
+  for(typename nameDBtype::const_iterator nameiter = names.begin();
+      nameiter != names.end(); nameiter++){
+    NameRecord* nameRecord = nameiter->second;
+    for(typename domainDBtype::const_iterator domainiter = nameRecord->domains.begin();
+	domainiter != nameRecord->domains.end();domainiter++){
+      DomainRecord* domainRecord = domainiter->second;
+      for(int i=0;i<(int)(domainRecord->getVars().size());i++){
+	if(domainRecord->getVars()[i].var){
+	  vars.push_back(VarLabelMatlPatch(nameRecord->label, i-1, domainRecord->getDomain() ));
+	}
+      }
+    }
+  }
+}
+
+template<class VarType, class DomainType>
+void
+DWDatabase<VarType, DomainType>::getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const
+{
+  for(typename nameDBtype::const_iterator nameiter = names.begin();
+      nameiter != names.end(); nameiter++){
+    NameRecord* nameRecord = nameiter->second;
+    for(typename domainDBtype::const_iterator domainiter = nameRecord->domains.begin();
+	domainiter != nameRecord->domains.end();domainiter++){
+      DomainRecord* domainRecord = domainiter->second;
+      for(int i=0;i<(int)(domainRecord->getVars().size());i++){
+	if(domainRecord->getVars()[i].var){
+	  cout << "  Label(" << nameRecord->label->getName() << "): Level(" << domainRecord->getDomain() << "): Material(" << i-1 << ")" << endl; 
+	  vars.push_back(VarLabelMatlLevel(nameRecord->label, i-1, domainRecord->getDomain() ));
 	}
       }
     }

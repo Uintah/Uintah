@@ -66,6 +66,9 @@ WARNING
     virtual bool needRecompile(double time, double delt,
 			       const GridP& grid);
 
+    //! Do we need to regrid this timestep?
+    virtual bool needsToReGrid();
+
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() { return d_isAdaptive; }
 
@@ -108,7 +111,7 @@ WARNING
     vector<int> d_numDeleted;
 
     bool d_newGrid;
-
+    int d_lastRegridTimestep;
 
     bool flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector low, IntVector high);
     SCIRun::IntVector calculateNumberOfPatches(SCIRun::IntVector& cell_num, SCIRun::IntVector& patch_size);
