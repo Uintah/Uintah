@@ -501,14 +501,15 @@ HotBox::execute()
       dm = scinew DenseMatrix(inputXFormMatrixHandle->nrows(),
                               inputXFormMatrixHandle->ncols());
       // dm->zero();
-      double **xformData = dm->getData2D();
+      double *xformData = dm->getData();
 
       for(int r = 0; r < nrows; r++)
       {
+	xformData = (*dm)[r];
         for(int c = 0; c < ncols; c++)
         {
-          xformData[r][c] = inputXFormMatrixHandle->get(r, c);
-          cerr << xformData[r][c] << " ";
+          xformData[c] = inputXFormMatrixHandle->get(r, c);
+          cerr << xformData[c] << " ";
         }
         cerr << endl;
       }
