@@ -11,8 +11,8 @@ ifneq (.,$(RECURSIVE_PATH))
 MAKEFLAGS += -j$(MAKE_PARALLELISM)
 endif
 
-OBJS  = $(addsuffix .o,$(basename $(SRCS)))
-DEPS  = $(addsuffix .d,$(basename $(SRCS)))
+OBJS = $(addsuffix .o,$(basename $(SRCS)))
+DEPS = $(addsuffix .d,$(basename $(SRCS)))
 VPATH = $(SRCDIR)
 
 all:: $(OBJS)
@@ -26,6 +26,8 @@ _cleanHere::
 
 include $(OBJTOP)/scripts/compile.mk
 
+ifneq (,$(DEPS))
 -include $(DEPS)
+endif
 
 endif
