@@ -26,7 +26,7 @@
 //  DEALINGS IN THE SOFTWARE.
 //  
 //    File   : ICUMonitor.cc
-//    Author : Martin Cole, McKay Davis
+//    Author : Martin Cole, McKay Davis, Alex Ade
 //    Date   : Thu Nov 11 15:54:44 2004
 
 #include <sci_gl.h>
@@ -62,6 +62,8 @@
 
 #include <typeinfo>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
@@ -107,6 +109,7 @@ private:
     {}
     void draw (float px, float py, float sx, float sy);
     void bind (FreeTypeFace *font);
+    void set (string s);
     
     unsigned      tex_width_;
     unsigned      tex_height_;
@@ -125,8 +128,13 @@ private:
       min_ref_label_(0),
       max_ref_label_(0),
       label_(0),
+      aux_data_(0),
+      aux_data_label_(0),
       index_(-1),
       snd_(0),
+      lines_(0),
+      draw_aux_data(0),
+      auxindex_(-1),
       min_(0.0),
       max_(1.0),
       r_(1.0),
@@ -139,8 +147,13 @@ private:
     LabelTex *min_ref_label_;
     LabelTex *max_ref_label_;
     LabelTex *label_;
+    LabelTex *aux_data_;
+    LabelTex *aux_data_label_;
     int       index_;
     int       snd_;
+    int       lines_;
+    int       draw_aux_data;
+    int       auxindex_;
     float     min_;
     float     max_;
     float     r_;
@@ -154,17 +167,23 @@ private:
   GuiDouble                            gui_dots_per_inch_;
   GuiDouble                            gui_plot_height_;
   GuiInt                               gui_play_mode_;
+  GuiInt                               gui_time_markers_mode_;
+  GuiInt                               gui_selected_marker_;
 
   GuiInt                               gui_plot_count_;
   vector<GuiString*>                   gui_nw_label_;
   vector<GuiString*>                   gui_sw_label_;
   vector<GuiString*>                   gui_label_;
+  vector<GuiString*>                   gui_aux_data_label_;
   vector<GuiString*>                   gui_min_ref_label_;
   vector<GuiString*>                   gui_max_ref_label_;
   vector<GuiDouble*>                   gui_min_;
   vector<GuiDouble*>                   gui_max_;
   vector<GuiInt*>                      gui_idx_;
   vector<GuiInt*>                      gui_snd_;
+  vector<GuiInt*>                      gui_lines_;
+  vector<GuiInt*>                      gui_draw_aux_data;
+  vector<GuiInt*>                      gui_auxidx_;
   vector<GuiDouble*>                   gui_red_;
   vector<GuiDouble*>                   gui_green_;
   vector<GuiDouble*>                   gui_blue_;
@@ -184,6 +203,7 @@ private:
   vector<Plot>                          plots_;
   NrrdDataHandle                        data_;
   NrrdDataHandle                        data2_;
+  vector<int>                           markers_;
   int                                   cur_idx_;
   bool                                  plots_dirty_;
 
@@ -195,7 +215,9 @@ private:
   void                  get_places(vector<int> &places, int num) const;
   void			setup_gl_view();
   static unsigned int	pow2(const unsigned int);
-  
+  void 			setTimeLabel();
+  void 			addMarkersToMenu();
+  void 			setWindowTitle();
 };
 
 
@@ -234,6 +256,12 @@ RTDraw::run()
     module_->redraw_all();
     tlast = t;
   }
+}
+
+void 
+ICUMonitor::LabelTex::set(string s)
+{
+  text_.replace(0, text_.length(), s);
 }
 
 void 
@@ -283,6 +311,11 @@ ICUMonitor::LabelTex::bind(FreeTypeFace *font)
   memset(buf, 0, tex_width_ * tex_height_ * 4);
   fttext.render(tex_width_, tex_height_, buf);     
 
+  GLboolean istex = glIsTexture(tex_id_);
+  if (istex) {
+    glDeleteTextures(1, &tex_id_);
+  }
+
   glEnable(GL_TEXTURE_2D);
   glGenTextures(1, &tex_id_);
   glBindTexture(GL_TEXTURE_2D, tex_id_);
@@ -312,6 +345,8 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_dots_per_inch_(ctx->subVar("dots_per_inch")),
   gui_plot_height_(ctx->subVar("plot_height")),
   gui_play_mode_(ctx->subVar("play_mode")),
+  gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
+  gui_selected_marker_(ctx->subVar("selected_marker")),
   gui_plot_count_(ctx->subVar("plot_count")),
   ctx_(0),
   dpy_(0),
@@ -325,6 +360,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   plots_(0),
   data_(0),
   data2_(0),
+  markers_(0),
   cur_idx_(0),
   plots_dirty_(true)
 {
@@ -376,6 +412,7 @@ ICUMonitor::inc_time(double elapsed)
 {
   gui_sample_rate_.reset();
   gui_play_mode_.reset();
+  gui_time_markers_mode_.reset();
 
   float samp_rate = gui_sample_rate_.get();  // samples per second.
   if (! data_.get_rep() || ! gui_play_mode_.get()) return;
@@ -388,6 +425,8 @@ ICUMonitor::inc_time(double elapsed)
   gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
   gui_time_.reset();
   gui->execute("update idletasks");
+
+  setTimeLabel();
 }
 
 bool
@@ -500,12 +539,16 @@ ICUMonitor::synch_plot_vars(int s)
   clear_vector(gui_nw_label_, s);
   clear_vector(gui_sw_label_, s);
   clear_vector(gui_label_, s);
+  clear_vector(gui_aux_data_label_, s);
   clear_vector(gui_min_ref_label_, s);
   clear_vector(gui_max_ref_label_, s);
   clear_vector(gui_min_, s);
   clear_vector(gui_max_, s);
   clear_vector(gui_idx_, s);
   clear_vector(gui_snd_, s);
+  clear_vector(gui_lines_, s);
+  clear_vector(gui_draw_aux_data, s);
+  clear_vector(gui_auxidx_, s);
   clear_vector(gui_red_, s);
   clear_vector(gui_green_, s);
   clear_vector(gui_blue_, s);
@@ -531,6 +574,12 @@ ICUMonitor::init_plots()
   while (iter != plots_.end()) {
     const string num = to_string(i);
     Plot &g = *iter++;
+
+    font->set_points(36.0);
+    if (g.aux_data_) delete g.aux_data_;
+      g.aux_data_ = scinew LabelTex(" ");
+      g.aux_data_->bind(font);
+
     font->set_points(12.0);
     if (! gui_nw_label_[i]) {
       gui_nw_label_[i] = scinew GuiString(ctx->subVar("nw_label-" + num));
@@ -558,6 +607,14 @@ ICUMonitor::init_plots()
       if (g.label_) delete g.label_;
       g.label_ = scinew LabelTex(gui_label_[i]->get());
       g.label_->bind(font);
+    }
+    if (! gui_aux_data_label_[i]) {
+      gui_aux_data_label_[i] = scinew GuiString(ctx->subVar("aux_data_label-" + num));
+    }
+    if (gui_aux_data_label_[i]->get() != string("")) {
+      if (g.aux_data_label_) delete g.aux_data_label_;
+      g.aux_data_label_ = scinew LabelTex(gui_aux_data_label_[i]->get());
+      g.aux_data_label_->bind(font);
     }
 
     font->set_points(14.0);
@@ -596,6 +653,18 @@ ICUMonitor::init_plots()
       gui_snd_[i] = scinew GuiInt(ctx->subVar("snd-" + num));
     }
     g.snd_ = gui_snd_[i]->get();
+    if (! gui_lines_[i]) {
+      gui_lines_[i] = scinew GuiInt(ctx->subVar("lines-" + num));
+    }
+    g.lines_ = gui_lines_[i]->get();
+    if (! gui_auxidx_[i]) {
+      gui_auxidx_[i] = scinew GuiInt(ctx->subVar("auxidx-" + num));
+    }
+    g.auxindex_ = gui_auxidx_[i]->get();
+    if (! gui_draw_aux_data[i]) {
+      gui_draw_aux_data[i] = scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
+    }
+    g.draw_aux_data = gui_draw_aux_data[i]->get();
 
     if (! gui_red_[i]) {
       gui_red_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
@@ -658,26 +727,53 @@ ICUMonitor::draw_plots()
       float xoff = g.min_ref_label_->tex_width_ * g.min_ref_label_->u_ + 3;
       float yoff = g.min_ref_label_->tex_height_ * g.min_ref_label_->v_ * 0.5;
       g.min_ref_label_->draw(cur_x, cur_y - gr_ht - yoff, sx, sy);
-      glDisable(GL_TEXTURE_2D);
-      glBegin(GL_LINES);
-      glVertex2f((cur_x + xoff) * sx, (cur_y - gr_ht) * sy);
-      glVertex2f((cur_x + (w * .70)) * sx, (cur_y - gr_ht) * sy);
-      glEnd();
-      glEnable(GL_TEXTURE_2D);
+      if (g.lines_ == 1) {
+        glDisable(GL_TEXTURE_2D);
+        glBegin(GL_LINES);
+        glVertex2f((cur_x + xoff) * sx, (cur_y - gr_ht) * sy);
+        glVertex2f((cur_x + (w * .70)) * sx, (cur_y - gr_ht) * sy);
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+      }
     }    
     if (g.max_ref_label_) { 
       float xoff = g.max_ref_label_->tex_width_ * g.max_ref_label_->u_ + 3;
       float yoff = g.max_ref_label_->tex_height_ * g.max_ref_label_->v_ * 0.5;
       g.max_ref_label_->draw(cur_x, cur_y - yoff, sx, sy);
-      glDisable(GL_TEXTURE_2D);
-      glBegin(GL_LINES);
-      glVertex2f((cur_x + xoff) * sx, cur_y * sy);
-      glVertex2f((cur_x + (w * .70)) * sx, cur_y * sy);
-      glEnd();
-      glEnable(GL_TEXTURE_2D);
+      if (g.lines_ == 1) {
+        glDisable(GL_TEXTURE_2D);
+        glBegin(GL_LINES);
+        glVertex2f((cur_x + xoff) * sx, cur_y * sy);
+        glVertex2f((cur_x + (w * .70)) * sx, cur_y * sy);
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+      }
     }
     if (g.label_) { 
       g.label_->draw(cur_x + w * 0.70, cur_y, sx, sy);
+    }
+    if (g.draw_aux_data == 1) { 
+      if (g.aux_data_label_)
+        g.aux_data_label_->draw(cur_x + w * 0.70 + 80, cur_y, sx, sy);
+
+      if (data_.get_rep()) {
+         int idx = cur_idx_;
+         if (idx > data_->nrrd->axis[1].size) {
+            idx -= data_->nrrd->axis[1].size;
+         }
+         float *dat = (float *)data_->nrrd->data;
+         int dat_index = idx * data_->nrrd->axis[0].size + g.auxindex_;
+         
+         ostringstream auxstr;
+         auxstr << (int)dat[dat_index];
+
+         FreeTypeFace *font = fonts_["anatomical"];
+         font->set_points(50.0);
+         g.aux_data_->set(auxstr.str());
+         g.aux_data_->bind(font);
+
+         g.aux_data_->draw(cur_x + w * 0.70 + 70, cur_y - 50, sx, sy);
+      }
     }
     if (data_.get_rep()) {
       const float norm = (float)gr_ht / (g.max_ - g.min_);
@@ -707,34 +803,36 @@ ICUMonitor::draw_plots()
 
 	if (idx % (int)samp_rate == 0){
 	  float tick = gr_ht * .15;// * norm;
-	  //glColor4f(0.0, 0.1, 0.9, 1.0);
-	  glColor4f(1.0, 1.0, 1.0, 1.0);
-	  glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-		     (start_y + val + tick) * sy);
-	  glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-		     (start_y + val - tick) * sy);
-	  glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-		     (start_y + val) * sy);
+	  if (gui_time_markers_mode_.get()) {
+	     //glColor4f(0.0, 0.1, 0.9, 1.0);
+	     glColor4f(1.0, 1.0, 1.0, 1.0);
+	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	   	     (start_y + val + tick) * sy);
+	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	   	     (start_y + val - tick) * sy);
+	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	   	     (start_y + val) * sy);
+	  }
 	  glColor4f(g.r_, g.g_, g.b_, 1.0);
 	}
       }
       glEnd();
 
-      if (g.snd_ == 1 && data2_.get_rep()) {
-         glBegin(GL_LINE_STRIP);
-         for (int i = 0; i < (int)samples; i++) {
-            int idx = i + cur_idx_;
-            if (idx > data2_->nrrd->axis[1].size) {
-               idx -= data2_->nrrd->axis[1].size;
-            }
-            float *dat = (float*)data2_->nrrd->data;
-            int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
-            float val = (dat[dat_index] - g.min_) * norm;
-            glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
+      if (data2_.get_rep() && data2_->nrrd->axis[1].size == data_->nrrd->axis[1].size && g.snd_ == 1) {
+        glBegin(GL_LINE_STRIP);
+        for (int i = 0; i < (int)samples; i++) {
+          int idx = i + cur_idx_;
+          if (idx > data2_->nrrd->axis[1].size) {
+            idx -= data2_->nrrd->axis[1].size;
+          }
+          float *dat = (float*)data2_->nrrd->data;
+          int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
+          float val = (dat[dat_index] - g.min_) * norm;
+          glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
-            glColor4f(0.5, 0.5, 0.5, 0.7);
-         }
-         glEnd();
+          glColor4f(0.5, 0.5, 0.5, 0.7);
+        }
+        glEnd();
       }
 
       glEnable(GL_TEXTURE_2D);     
@@ -807,6 +905,61 @@ ICUMonitor::setup_gl_view()
 
 }
 
+void 
+ICUMonitor::setTimeLabel()
+{
+    int hrs, min, sec;
+
+    int val = (int)(cur_idx_ / gui_sample_rate_.get());
+
+    hrs = val/(60*60);
+    min = (val - hrs*60*60)/60;
+    sec = val - hrs*60*60 - min*60;
+
+    ostringstream timestr;
+    timestr << setfill('0');
+    timestr << "Time ";
+    timestr << setw(2) << hrs << ":";
+    timestr << setw(2) << min << ":";
+    timestr << setw(2) << sec;
+    gui->execute(id + " setTimeLabel {" + timestr.str() + "}");
+}
+
+void 
+ICUMonitor::addMarkersToMenu()
+{
+  int value;
+  hash_map<int, string> tmpmkrs;
+  set<int> keys;
+
+  for (unsigned int c = 0; c < data_->nproperties(); c++) {
+     string name = data_->get_property_name(c);
+     data_->get_property(name, value);
+
+     keys.insert(value);
+     tmpmkrs[value] = name;
+  }
+
+  markers_.clear();
+  gui->execute(id + " clearMarkers");
+
+  set<int>::iterator iter;
+  for (iter = keys.begin(); iter != keys.end(); iter++) {
+      markers_.push_back(*iter);
+      gui->execute(id + " setMarkers {" + tmpmkrs[*iter] + "}");
+  }
+}
+
+void 
+ICUMonitor::setWindowTitle()
+{
+  char *name = nrrdKeyValueGet(data_->nrrd, "name");
+
+  if (name != NULL) {
+    string title(name);
+    gui->execute(id + " setWindowTitle {ICU Monitor: " + name + "}");
+  }
+}
 
 void
 ICUMonitor::execute()
@@ -826,7 +979,11 @@ ICUMonitor::execute()
     error ("Unable to get input data.");
     return;
   } 
-  
+
+  addMarkersToMenu();
+
+  setWindowTitle();
+
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
 
   if (!nrrd2_port) 
@@ -860,6 +1017,9 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
     if (data_.get_rep()) {
       cur_idx_ = (int)round(gui_time_.get() * data_->nrrd->axis[1].size);
     }
+
+    setTimeLabel();
+
   } else if(args[1] == "expose") {
     redraw_all();
   } else if(args[1] == "redraw") {
@@ -867,6 +1027,62 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
   } else if(args[1] == "init") {
     plots_dirty_ = true;
     //    init_plots();
+  } else if(args[1] == "marker") {
+    if (!data_.get_rep()) return;
+
+    int mkr = gui_selected_marker_.get();
+    int val = (mkr == -1)?-1:markers_[mkr];
+
+    if (val == -1 || val > data_->nrrd->axis[1].size) return;
+
+    cur_idx_ = val;
+
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.reset();
+    gui->execute("update idletasks");
+
+    setTimeLabel();
+
+  } else if(args[1] == "increment") {
+    if (!data_.get_rep()) return;
+
+    cur_idx_ += (int)gui_sample_rate_.get();
+    if (cur_idx_ > data_->nrrd->axis[1].size) {
+        cur_idx_ = data_->nrrd->axis[1].size;
+    }
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.reset();
+    gui->execute("update idletasks");
+
+    setTimeLabel();
+
+  } else if(args[1] == "decrement") {
+    if (!data_.get_rep()) return;
+
+    cur_idx_ -= (int)gui_sample_rate_.get();
+    if (cur_idx_ < 0) {
+       cur_idx_ = 0;
+    }
+    gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
+    gui_time_.reset();
+    gui->execute("update idletasks");
+
+    setTimeLabel();
+
+  } else if(args[1] == "configure") {
+    const string myname(".ui" + id + ".f.gl.gl");
+    Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
+                                      Tk_MainWindow(the_interp));
+    if(!tkwin) {
+      warning("Unable to locate window!");
+      gui->unlock();
+    } else {
+      //width_ = Tk_Width(tkwin);
+      height_ = Tk_Height(tkwin);
+
+      setup_gl_view();
+    }
+
   } else {
     Module::tcl_command(args, userdata);
   }
