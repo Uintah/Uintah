@@ -46,7 +46,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or
   ps->get("damage_cutoff", d_damageCutOff);
 
   d_yield = YieldConditionFactory::create(ps);
-  if(!d_plasticity){
+  if(!d_yield){
     ostringstream desc;
     desc << "An error occured in the YieldConditionFactory that has \n"
 	 << " slipped through the existing bullet proofing. Please tell \n"
