@@ -221,11 +221,11 @@ void PackageDB::loadPackage(bool resolve)
   else
     cerr << "Loading packages...\n";
 
-#ifdef __APPLE__
-  // A hack around a gcc (apple) init bug
-  GetLibrarySymbolAddress( "lib/libCore_Datatypes.dylib",
-			   "__ZN6SCIRun10CurveFieldINS_6TensorEE2ioERNS_9PiostreamE");
-#endif
+  //#ifdef __APPLE__
+  //  // A hack around a gcc (apple) init bug
+  //  GetLibrarySymbolAddress( "lib/libCore_Datatypes.dylib",
+  //			   "__ZN6SCIRun10CurveFieldINS_6TensorEE2ioERNS_9PiostreamE");
+  //#endif
 
   // the format of PACKAGE_PATH is a colon seperated list of paths to the
   // root(s) of package source trees.
