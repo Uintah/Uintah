@@ -2355,11 +2355,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(delT < 5.e-9){
 	if(delT < 1.e-10){
 	  d_min_part_mass = min(d_min_part_mass*2.0,5.e-9);
-	  cout << "New d_min_part_mass = " << d_min_part_mass << endl;
+          if(d_myworld->myrank() == 0){
+	    cout << "New d_min_part_mass = " << d_min_part_mass << endl;
+          }
 	}
 	else{
 	  d_min_part_mass = min(d_min_part_mass*2.0,5.e-12);
-	  cout << "New d_min_part_mass = " << d_min_part_mass << endl;
+          if(d_myworld->myrank() == 0){
+	    cout << "New d_min_part_mass = " << d_min_part_mass << endl;
+          }
 	}
       }
       else if(delT > 2.e-8){
