@@ -74,6 +74,8 @@ TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
 	testprograms $(PACKAGE_DIRS)
 
+LDRUN_PREFIX      := @LDRUN_PREFIX@
+
 # Libraries and other flags
 
 TCL_LIB_DIR    := @LIBTCL@
@@ -134,8 +136,6 @@ BLAS_LIBS         := -lblas
 
 LAPACK_LIB_DIR    := @LIBLAPACK@
 LAPACK_LIBS       := @LAPACK@
-
-LDRUN_PREFIX      := @LDRUN_PREFIX@
 
 PERFEX_LIBRARY      := @PERFEX_LIBRARY@
 
