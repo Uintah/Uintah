@@ -51,7 +51,7 @@ using namespace std;
 #define SYSTEM_SIZE_SCALE      (1.438848E-5*ROOMSCALE) /*1.438848E-6*/
 #define SYSTEM_DISTANCE_SCALE  (6.76E-9*ROOMSCALE) /*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
-#define SYSTEM_TIME_SCALE2     .01
+#define SYSTEM_TIME_SCALE2     .001
 #define FLIP_IMAGES            true
 #define ANIMATE                true
 #if 0
@@ -138,7 +138,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 #endif
   galaxy_room->add( solar_grid );
 #else
-  galaxy_room->add( solar_system );
+  BV1 *solar_grid = new BV1(solar_system);
+  galaxy_room->add( solar_grid );
 #endif
   BV1 *room_grid = new BV1(galaxy_room);
 
