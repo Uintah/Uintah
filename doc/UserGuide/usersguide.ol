@@ -111,13 +111,17 @@ Use of the Viewer module.  Possible topics:
 ** Control widgets
 ** Saving images and creating animations 
 
-* SCIRun Package
+* Packages
+
+** SCIRun Package
 Brief overview of contents of SCIRun package.
-** DataIO
-** Fields
-** Math
-** Render
-** Visualization
+*** DataIO
+*** Fields
+*** Math
+*** Render
+*** Visualization
+
+** BioPSE Package
 
 * User Interface control (Ted)
 
