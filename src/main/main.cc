@@ -179,7 +179,7 @@ parse_args( int argc, char *argv[] )
       else
         {
           struct stat buf;
-          if (stat(arg.c_str(),&buf) < 0)
+          if (stat(argv[cnt],&buf) < 0)
             {
               std::cerr << "Couldn't find net file " << arg
                         << ".\nNo such file or directory.  Exiting." 
@@ -193,11 +193,10 @@ parse_args( int argc, char *argv[] )
             }
 
           // determine if it is a PowerApp
-          if(strstr(arg.c_str(),".app")) {
+          if (ends_with(arg,".app")) {
             powerapp = true;
             found = cnt;
-          }
-          else if(!powerapp) {
+          } else if(!powerapp) {
             found = cnt;
           }
         }
@@ -370,7 +369,7 @@ main(int argc, char *argv[], char **environment) {
   // Start up TCL...
   Network* net=new Network();
   // Only passes program name to TCL
-  TCLThread* tcl_task = new TCLThread(argc,argv, net, startnetno);
+  TCLThread* tcl_task = new TCLThread(argc, argv, net, startnetno);
   // We need to start the thread in the NotActivated state, so we can
   // change the stack size.  The 0 is a pointer to a ThreadGroup which
   // will default to the global thread group.
