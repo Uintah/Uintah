@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xml-stylesheet href="../../../../doc/faq.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!-- 
+  Entry format:
+             Keywords
+             Question
+             Answer
+     Questions and answers are delimited with <p> or <pre> tags.
+
+  Example:
+  <entry>
+    <keywords>SGI, endian</keywords>
+    <question>
+      <p>
+        ...
+      </p>
+      ...
+    </question>
+    <answer>
+      <p>
+        ...
+      </p>
+      ...
+    </answer>
+  </entry>
+-->
+
+<faq name="Uintah FAQ">
+  <entry>
+    <keywords>fspec.pl</keywords>
+    <question>
+      <p>
+        Make complains that fspec.pl is not executable.
+      </p>
+    <answer>
+      <p>
+        Configure is supposed to "chmod +x" this file.  It appears
+	not to the first time.  Manually do the chmod if you run
+	into this problem.  (chmod +x Packages/Uintah/tools/fspec.pl)
+      </p>
+    </answer>
+  </entry>
+</faq>
