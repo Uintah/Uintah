@@ -6,12 +6,13 @@ gold_standard_dir="$1"
 replacement_dir="$2"
 testname="$3"
 
+# prompt for and replace udas
 if [ $# -ne 3 -o ! -d $gold_standard_dir/$testname -o ! -d $replacement_dir/$testname/*.uda ]; then
   echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname>"
   exit 1
 fi
 
-echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
+echo "Replace the udas at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
 
 read yesno
 
@@ -23,7 +24,6 @@ if [ $yesno = "y" -o $yesno = "yes" ]; then
   rm -r $gold_standard_dir/$testname/*.uda
   if [ $? != "0" ]; then
     echo "$testname replacement failed - could not remove old udas"
-    exit 1
   fi
 
 #  echo "cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
@@ -37,7 +37,6 @@ if [ $yesno = "y" -o $yesno = "yes" ]; then
     cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
     if [ $? != "0" ]; then
 	echo "$testname replacement failed - could not copy new udas"
-	exit 1
     fi
   fi
   echo "udas successfully replaced"
@@ -45,10 +44,10 @@ else
   echo "udas not replaced"
 fi
   
-echo "Are you sure you want to replace the memory usage results? (Enter 'yes' or 'y' to continue.) "
-read yesno
-
 # replace the memory usage (both normal and restart)
+echo "Replace $testname mem usage results? (Enter 'yes' or 'y' to continue.)"
+
+read yesno
 if [ $yesno = "y" -o $yesno = "yes" ]; then
   echo "Replacing $testname memory results"
   rm $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
@@ -64,10 +63,10 @@ else
   echo "No memory usage results replaced"
 fi
 
-echo "Are you sure you want to replace the performance results? (Enter 'yes' or 'y' to continue.) "
+# replace the performance results (both normal and restart)
+echo "Replace $testname performance results? (Enter 'yes' or 'y' to continue.)"
 read yesno
 
-# replace the performance results (both normal and restart)
 if [ $yesno = "y" -o $yesno = "yes" ]; then
   echo "Replacing $testname performance results"
   rm "$gold_standard_dir/$testname/*timestamp" > /dev/null 2>&1
@@ -85,16 +84,8 @@ fi
 
 
 # change groups and permissions so (hopefully) anybody can replace them later
-chgrp -R csafe "$gold_standard_dir/$testname"/* > /dev/null 2>&1
-if [ $? != "0" ]; then
-  echo "Could not change groups"
-  exit 1
-fi
-chmod -R g+rwX "$gold_standard_dir/$testname"/* > /dev/null 2>&1
-if [ $? != "0" ]; then
-  echo "Could not change permissions"
-  exit 1
-fi
+find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chmod g+wrX,o+rX
+find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chgrp csafe
 
 echo "$testname Gold Standard successfully replaced!"
 echo
