@@ -214,13 +214,13 @@ void* get_value( const char *signal, int dtype ) {
     break;
 
   case DTYPE_FLOAT:
-  case 52: //DTYPE_FS:
+  case 52: /*DTYPE_FS:*/
     dtype = DTYPE_FLOAT;
     value = (void*) malloc( sizeof( float ) );
     break;
 
   case DTYPE_DOUBLE:
-  case 53: //DTYPE_FT:
+  case 53: /*DTYPE_FT:*/
     dtype = DTYPE_DOUBLE;
     value = (void*) malloc( sizeof( double ) );
     break;
@@ -298,13 +298,13 @@ void* get_values( const char *signal, int dtype ) {
     break;
 
   case DTYPE_FLOAT:
-  case 52: //DTYPE_FS:
+  case 52: /*DTYPE_FS:*/
     dtype = DTYPE_FLOAT;
     values = (void*) malloc( size * sizeof( float ) );
     break;
 
   case DTYPE_DOUBLE:
-  case 53: //DTYPE_FT:
+  case 53: /*DTYPE_FT:*/
     dtype = DTYPE_DOUBLE;
     values = (void*) malloc( size * sizeof( double ) );
     break;
