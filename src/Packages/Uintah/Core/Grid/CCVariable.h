@@ -3,8 +3,8 @@
 
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/CCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/TypeUtils.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>

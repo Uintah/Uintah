@@ -1,5 +1,5 @@
 #include <Packages/Uintah/Core/Grid/SFCYVariableBase.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>

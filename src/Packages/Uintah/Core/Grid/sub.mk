@@ -20,8 +20,7 @@ SRCS     += \
 	$(SRCDIR)/Patch.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubPatch.cc \
-	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \
-	$(SRCDIR)/TypeUtils.cc $(SRCDIR)/VarLabel.cc \
+	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc \
 	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/templates.cc $(SRCDIR)/PerPatchBase.cc \
 	$(SRCDIR)/GeometryPiece.cc \
@@ -42,12 +41,13 @@ SRCS     += \
 	$(SRCDIR)/UnknownVariable.cc
 
 PSELIBS := \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/Exceptions \
+	Packages/Uintah/Core/Math        \
+	Packages/Uintah/Core/Disclosure  \
+	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/ProblemSpec \
-	Core/Thread \
-	Core/Exceptions \
-	Core/Geometry \
+	Core/Thread                      \
+	Core/Exceptions                  \
+	Core/Geometry                    \
 	Dataflow/XMLUtil
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm -lz

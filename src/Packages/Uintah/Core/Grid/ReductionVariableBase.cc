@@ -1,6 +1,6 @@
 
 #include <Packages/Uintah/Core/Grid/ReductionVariableBase.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
 using namespace Uintah;
 
