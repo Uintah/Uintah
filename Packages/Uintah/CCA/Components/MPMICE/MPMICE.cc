@@ -47,6 +47,9 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 #undef RIGID_MPM
 //#define RIGID_MPM
 
+#undef SHELL_MPM
+//#define SHELL_MPM
+
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -56,7 +59,11 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
 #ifdef RIGID_MPM
   d_mpm      = scinew RigidMPM(myworld);
 #else
-  d_mpm      = scinew SerialMPM(myworld);
+# ifdef SHELL_MPM
+    d_mpm      = scinew ShellMPM(myworld);
+# else
+    d_mpm      = scinew SerialMPM(myworld);
+# endif
 #endif
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = d_ice->d_SMALL_NUM; 
