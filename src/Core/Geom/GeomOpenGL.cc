@@ -3113,8 +3113,10 @@ void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-   if(state)
+   if (state && child_.get_rep())
+   {
       child_->draw(di, matl, time);
+   }
 }
 
 void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
