@@ -1582,8 +1582,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     IntVector lowIndex(patch->getSFCXLowIndex()); 
     
     // Extract the momentum exchange coefficients
-    vector<double> b(numMatls, numMatls);
-    vector<double> X(numMatls, numMatls);
+    vector<double> b(numMatls);
+    vector<double> X(numMatls);
     FastMatrix beta(numMatls, numMatls),a(numMatls, numMatls);
     FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
 
