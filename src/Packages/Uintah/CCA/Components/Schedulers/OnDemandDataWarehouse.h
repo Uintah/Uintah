@@ -154,8 +154,8 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch) const;
 
-   virtual void emit(ostream& intout, const VarLabel* label,
-		     int matlIndex = -1) const;
+   virtual void print(ostream& intout, const VarLabel* label,
+		      int matlIndex = -1) const;
 
    void sendParticleSubset(SendState& ss,
 			   ParticleSubset* pset, const VarLabel* pos_var,

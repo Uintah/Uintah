@@ -1507,19 +1507,19 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
    if (var == NULL)
       throw UnknownVariable(label->getName(), patch, matlIndex, "on emit");
   
-   var->emit(oc);
+   var->emit(oc, label->getCompressionMode());
    
   d_lock.readUnlock();
 }
 
-void OnDemandDataWarehouse::emit(ostream& intout, const VarLabel* label,
+void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
 				 int matlIndex /* = -1 */) const
 {
   d_lock.readLock();
 
    try {
       ReductionVariableBase* var = d_reductionDB.get(label, matlIndex, NULL);
-      var->emit(intout);
+      var->print(intout);
    }
    catch (UnknownVariable) {
       throw UnknownVariable(label->getName(), NULL, matlIndex,
