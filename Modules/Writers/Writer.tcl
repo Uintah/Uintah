@@ -17,7 +17,7 @@ itcl_class TYPEWriter {
 	}
 	toplevel $w
 
-	make_labeled_radio $w "Format:" "" left $this-filetype \
+	make_labeled_radio $w.filetype "Format:" "" left $this-filetype \
 		{Binary ASCII}
 	entry $w.f -textvariable $this-filename -width 40 \
 		-borderwidth 2 -relief sunken
