@@ -17,6 +17,8 @@
 using namespace SCIRun;
 using namespace Ptolemy;
 
+typedef string* stringPtr;
+
 class StartSCIRun : public Runnable {
 public:
     StartSCIRun(const std::string &netPath, const std::string &data,
@@ -43,14 +45,20 @@ private:
     std::string command;
 };
 
-class ChangeFile : public Runnable {
+class Iterate : public Runnable {
 public:
-    ChangeFile(std::string file) : file(file) {}
-    virtual ~ChangeFile() {}
+    Iterate(stringPtr input1, jint s1, stringPtr input2, jint s2, jint numP)
+	 : doOnce(input1), size1(s1), iterate(input2), size2(s2), numParams(numP) {}
+	virtual ~Iterate();
     void run();
 
 private:
-    std::string file;
+    stringPtr doOnce;
+	jint size1;
+	stringPtr iterate;
+	jint size2;
+	jint numParams;
+	
 };
 
 class SignalExecuteReady : public Runnable {
