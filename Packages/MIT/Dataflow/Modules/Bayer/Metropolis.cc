@@ -72,7 +72,8 @@ private:
   GuiInt gui_use_cvode;
 
   Graph *graph;
-  
+  CrowdMonitor *monitor_;
+
 
   // theta_init;
   int seed;
@@ -194,6 +195,7 @@ Metropolis::init()
   theta = 0;
   star = 0;
 
+  monitor_ = scinew CrowdMonitor( id.c_str() );
   graph = scinew Graph( id+"-Graph" );
   diagram = scinew Diagram("Metropolis");
   graph->add("Theta", diagram);
@@ -218,6 +220,7 @@ Metropolis::reset()
     srand48(0);
     for (int i=nparms; i<m; i++) {
       Polyline *p = scinew Polyline( i );
+      p->set_lock( monitor_ );
       p->set_color( Color( drand48(), drand48(), drand48() ) );
       poly.add( p );
       diagram->add( p );
@@ -319,14 +322,12 @@ void Metropolis::metropolis()
     {
       results->k.add(k) ;
 
-      graph->lock();
       for (int i=0; i<nparms; i++) {
 	results->theta[i].add(theta[i]);
 	poly[i]->add(theta[i]);
       }
-      graph->unlock();
 
-      graph->update();
+      graph->need_redraw();
     }
     
     //    r_port->send_intermediate( results );
