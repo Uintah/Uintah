@@ -100,6 +100,7 @@ private:
     const GenericField<Mesh, FData> *f_;
   };
 
+  static Persistent *maker();
 
   //! A (generic) mesh.
   mesh_handle_type             mesh_;
@@ -180,30 +181,21 @@ GenericField<Mesh, FData>::get_minmax( double &min, double &max)
   return true;
 }
 
-#if defined(__sgi)  
-// Turns off REMARKS like this:
-//cc-1424 CC: REMARK File = ./Core/Datatypes/TetVol.h, Line = 45
-//The template parameter "T" is not used in declaring the argument types of
-//          function template "SCIRun::make_TetVol".
- 
-#pragma set woff 1424
-#endif
 
 // PIO
 const double GENERICFIELD_VERSION = 1.0;
 
 
 template <class Mesh, class FData>
-Persistent* make_GenericField()
+Persistent *
+GenericField<Mesh, FData>::maker()
 {
   return scinew GenericField<Mesh, FData>;
 }
 
 template <class Mesh, class FData>
 PersistentTypeID 
-GenericField<Mesh, FData>::type_id(type_name(), 
-				   "Field",
-				   &make_GenericField<Mesh, FData>);
+GenericField<Mesh, FData>::type_id(type_name(), "Field", maker);
 
 
 template <class Mesh, class FData>
@@ -241,9 +233,6 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
   stream.end_class();
 }
 
-#if defined(__sgi)  
-#pragma reset woff 1424
-#endif
 
 } // end namespace SCIRun
 
