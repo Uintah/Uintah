@@ -9,6 +9,7 @@ SRCS += \
 	$(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/MixedScheduler.cc \
+	$(SRCDIR)/NirvanaLoadBalancer.cc \
 	$(SRCDIR)/NullScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/Relocate.cc \
