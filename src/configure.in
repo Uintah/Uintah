@@ -880,7 +880,7 @@ if test "$CC" = ""; then
 fi
 
 if test "$CXX" = ""; then
-  AC_PROG_CXX()
+  AC_PROG_CXX(CC gcc g++ c++)
   AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\n\t \
 	    Using default... $CXX)
 
@@ -1481,13 +1481,10 @@ case $host in
 
   *)
     CFLAGS=" -Wall"
-    AC_PROG_CC
     SCI_CHECK_VERSION($CC,--version,2.95.3,,
       echo configure: error: wrong $CC version.; exit)
-    AC_PROG_F77
     SCI_CHECK_VERSION($F77,--version,0.5.25,,
       echo configure: error: wrong $CC version.; exit)
-    AC_PROG_CXX
     SCI_CHECK_VERSION($CXX,--version,2.95.3,,
       echo configure: error: wrong $CXX version.; exit)    
     AC_PROG_CPP
@@ -2544,13 +2541,12 @@ if test $wantvdt = "yes"; then
     VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
   
     SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate,$VDT_LIB_PATH $VDT_NEEDED_LIBRARIES $LEXLIB,,optional)
-    echo "holy shit"
 
     if test "$HAVE_LIBVDT"; then
   	FOUND_ALL_VDT=yes
   	DEF_VDT="#define HAVE_VDT 1"
   	HAVE_VDT="yes"
-  	VDT_INCLUDE="$i/src/vdt/VDT/src"
+  	VDT_INCLUDE="-I$i/src/vdt/VDT/src"
   	VDT_LIB="$i/src/vdt/VDT/lib/$ad"
   	ELIXIR_LIB="$i/src/vdt/Elixir/lib/$ad"
   	LP_SOLVE_LIB="$i/src/vdt/lp_solve_2.2/$ad"
@@ -2601,12 +2597,15 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
   fi
 
   # capture in the libs to link
-  IM_LDFLAGS=`$i/bin/Magick-config --ldflags`
-  IM_LIBS=`$i/bin/Magick-config --libs`
+  if test -e $i/bin/Magick-config; then
+    IM_LDFLAGS=`$i/bin/Magick-config --ldflags`
+    IM_LIBS=`$i/bin/Magick-config --libs`
+  else
+    continue
+  fi
 
 
-
-  SCI_CHECK_LIB($dirs,Magick,WriteImage,$IM_LDFLAGS $IM_LIBS,,optional)
+  SCI_CHECK_LIB($i/lib,Magick,WriteImage,$IM_LDFLAGS $IM_LIBS,,optional)
 
   if test "$HAVE_LIBMAGICK"; then
       FOUND_ALL_MAGICK=yes
