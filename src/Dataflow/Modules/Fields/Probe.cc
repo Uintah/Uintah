@@ -99,26 +99,26 @@ public:
 
 DECLARE_MAKER(Probe)
 
-  Probe::Probe(GuiContext* ctx)
-    : Module("Probe", ctx, Filter, "FieldsCreate", "SCIRun"),
-      widget_lock_("Probe widget lock"),
-      last_input_generation_(0),
-      gui_locx_(ctx->subVar("locx")),
-      gui_locy_(ctx->subVar("locy")),
-      gui_locz_(ctx->subVar("locz")),
-      gui_value_(ctx->subVar("value")),
-      gui_node_(ctx->subVar("node")),
-      gui_edge_(ctx->subVar("edge")),
-      gui_face_(ctx->subVar("face")),
-      gui_cell_(ctx->subVar("cell")),
-      gui_show_value_(ctx->subVar("show-value")),
-      gui_show_node_(ctx->subVar("show-node")),
-      gui_show_edge_(ctx->subVar("show-edge")),
-      gui_show_face_(ctx->subVar("show-face")),
-      gui_show_cell_(ctx->subVar("show-cell")),
-      gui_moveto_(ctx->subVar("moveto", false)),
-      gui_probe_scale_(ctx->subVar("probe_scale")),
-      widgetid_(0)
+Probe::Probe(GuiContext* ctx)
+  : Module("Probe", ctx, Filter, "FieldsCreate", "SCIRun"),
+    widget_lock_("Probe widget lock"),
+    last_input_generation_(0),
+    gui_locx_(ctx->subVar("locx")),
+    gui_locy_(ctx->subVar("locy")),
+    gui_locz_(ctx->subVar("locz")),
+    gui_value_(ctx->subVar("value")),
+    gui_node_(ctx->subVar("node")),
+    gui_edge_(ctx->subVar("edge")),
+    gui_face_(ctx->subVar("face")),
+    gui_cell_(ctx->subVar("cell")),
+    gui_show_value_(ctx->subVar("show-value")),
+    gui_show_node_(ctx->subVar("show-node")),
+    gui_show_edge_(ctx->subVar("show-edge")),
+    gui_show_face_(ctx->subVar("show-face")),
+    gui_show_cell_(ctx->subVar("show-cell")),
+    gui_moveto_(ctx->subVar("moveto", false)),
+    gui_probe_scale_(ctx->subVar("probe_scale")),
+    widgetid_(0)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
   widget_->Connect((GeometryOPort*)get_oport("Probe Widget"));
@@ -225,10 +225,13 @@ Probe::execute()
     // If the current location looks reasonable, use that instead
     // of the center.
     Point curloc(gui_locx_.get(), gui_locy_.get(), gui_locz_.get());
-    
+
+    // Invalidate current position if it's outside of our field.
+    // Leave it alone if there was no field, as our bbox is arbitrary anyway.
     if (curloc.x() >= bmin.x() && curloc.x() <= bmax.x() && 
 	curloc.y() >= bmin.y() && curloc.y() <= bmax.y() && 
-	curloc.z() >= bmin.z() && curloc.z() <= bmax.z())
+	curloc.z() >= bmin.z() && curloc.z() <= bmax.z() ||
+	!input_field_p)
     {
       center = curloc;
     }
