@@ -35,6 +35,8 @@ public:
 	GeometryDelAll,
 	GeometryFlush,
 	GeometryFlushViews,
+	GeometryGetData,
+	GeometryGetNRoe,
 
 	GeometryPick,
 	GeometryRelease,

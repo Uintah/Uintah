@@ -7,7 +7,7 @@ SRCS = MessageBase.cc
 LIBNAME = Comm
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lMalloc
+SO_LDFLAGS = -L$(TOP)/lib -lMalloc -lC
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
