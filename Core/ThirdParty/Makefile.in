@@ -1,0 +1,7 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../../..
+
+SUBDIRS = mpeg
+
+include $(SRCTOP)/scripts/recurse.mk

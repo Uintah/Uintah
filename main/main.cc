@@ -20,37 +20,31 @@
 #include <PSECore/Dataflow/NetworkEditor.h>
 //#include <PSECore/Distributed/SlaveController.h>
 #include <PSECore/Dataflow/PackageDB.h>
+#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/GuiServer.h>
 #include <SCICore/TclInterface/GuiManager.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Thread/Thread.h>
 #include <SCICore/Containers/String.h>
-#ifdef SCI_PARALLEL
-#include <Component/PIDL/PIDL.h>
-#include <iostream>
-using std::cerr;
-using std::cout;
-using std::endl;
-using Component::PIDL::PIDL;
-#endif
 
-#ifdef _WIN32
-#include <afxwin.h>
-#endif
+#include <iostream.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <dlfcn.h>
 
+using SCICore::Multitask::Task;
 using SCICore::TclInterface::TCLTask;
 using SCICore::TclInterface::GuiManager;
 using SCICore::TclInterface::GuiServer;
-using SCICore::Thread::Thread;
 using namespace SCICore::Containers;
-using namespace PSECore::Dataflow;
+using namespace PSECommon::Dataflow;
 
-using PSECore::Dataflow::Network;
-using PSECore::Dataflow::NetworkEditor;
+using PSECommon::Dataflow::Network;
+using PSECommon::Dataflow::NetworkEditor;
+//using PSECommon::Distributed::SlaveController;
 
-
-namespace PSECore {
+namespace PSECommon {
   namespace Dataflow {
     extern bool global_remote;
   }
@@ -79,33 +73,17 @@ char** global_argv;
 #error You must set a DEFAULT_PACKAGE_PATH or life is pretty dull
 #endif
 
-#ifndef ITCL_WIDGETS
-#error You must set ITCL_WIDGETS to the iwidgets/scripts path
-#endif
-
 // master creates slave by rsh "sr -slave hostname portnumber"
 int main(int argc, char** argv)
 {
+    // Initialize the multithreader
+    Task::initialize(argv[0]);
     global_argc=argc;
     global_argv=argv;
 
-#ifdef SCI_PARALLEL
-    try {
-	PIDL::initialize(argc, argv);
-    } catch(const SCICore::Exceptions::Exception& e) {
-	cerr << "Caught exception:\n";
-	cerr << e.message() << '\n';
-	abort();
-    } catch(...) {
-	cerr << "Caught unexpected exception!\n";
-	abort();
-    }
-#endif
-
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
-    Thread* t=new Thread(tcl_task, "TCL main event loop");
-    t->detach();
+    tcl_task->activate(0);
     tcl_task->mainloop_waitstart();
 
     // Set up the TCL environment to find core components
@@ -115,7 +93,6 @@ int main(int argc, char** argv)
     TCL::eval("set SCICoreTCL "SCICORETCL,result);
     TCL::eval("lappend auto_path "SCICORETCL,result);
     TCL::eval("lappend auto_path "PSECORETCL,result);
-    TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
 
     // Create initial network
     // We build the Network with a 1, indicating that this is the
@@ -127,97 +104,33 @@ int main(int argc, char** argv)
     // task, and the Task* will be deleted by the task manager
     NetworkEditor* gui_task=new NetworkEditor(net);
 
-    // Activate the network editor and scheduler.  Arguments and return
-    // values are meaningless
-    Thread* t2=new Thread(gui_task, "Scheduler");
-    t2->setDaemon(true);
-    t2->detach();
-
-    // wait for the main window to display before continuing the startup.
-    TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
-
     // Load in the default packages
     if(getenv("PACKAGE_PATH")!=NULL)
       packageDB.loadPackage(getenv("PACKAGE_PATH"));
     else
       packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
-    
 
-#if 0
+    // Activate the network editor and scheduler.  Arguments and return
+    // values are meaningless
+    gui_task->activate(0);
+
     // startup master-side GuiServer, even when no slave..
     // XXX: Is this a remnant of dist'd stuff?  Michelle?
     GuiServer* gui_server = new GuiServer;
-    Thread* t3=new Thread(gui_server, "GUI server thread");
-    t3->setDaemon(true);
-    t3->detach();
-#endif
+    gui_server->activate(0);
 
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
 
-#ifdef _WIN32
-	// windows has a semantic problem with atexit(), so we wait here instead.
-	HANDLE forever = CreateSemaphore(0,0,1,"forever");
-	WaitForSingleObject(forever,INFINITE);
-#endif
+    // This will wait until all tasks have completed before exiting
+    Task::main_exit();
 
-#ifndef __sgi
-	SCICore::Thread::Semaphore wait("main wait", 0);
-	wait.down();
-#endif
-	
     // Never reached
     return 0;
 }
 
 //
 // $Log$
-// Revision 1.14  2000/11/28 22:39:41  moulding
-// force a wait for main window to display before system startup continues.
-// This mitigates the lengthy wait between typing "pse" and the window actually
-// appearing.
-//
-// Revision 1.13  2000/06/09 20:37:38  yarden
-// add a wait on a semaphore to prevent the system to start
-// deleting objects too soon.
-//
-// Revision 1.12  2000/03/17 09:30:48  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.11  1999/11/10 19:48:59  moulding
-// added some #ifdef's for win32
-//
-// Revision 1.10  1999/10/07 02:08:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.9  1999/09/08 02:27:09  sparker
-// Various #include cleanups
-//
-// Revision 1.8  1999/09/01 21:58:02  sparker
-// Restored the ITCL_WIDGETS configuration that somewhow got lost
-// Now the itk widgets should work
-//
-// Revision 1.7  1999/08/31 23:37:58  sparker
-// Put order of Package loading back to the way it was
-//
-// Revision 1.6  1999/08/31 23:26:51  sparker
-// Removed extraneous character in Makefile.in
-// Loaded packages before instantiating NetworkEditor
-//
-// Revision 1.5  1999/08/29 00:47:03  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:54  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 06:40:15  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
 // Revision 1.1  1999/07/27 16:57:37  mcq
 // Initial commit
 //

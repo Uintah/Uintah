@@ -1,0 +1,9 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = Allocator.cc AllocOS.cc malloc.cc new.cc lock_mips.s
+
+INCLUDES = -I$(OBJTOP) -I$(SRCDIR)/..
+
+include $(SRCTOP)/scripts/objs.mk
