@@ -21,9 +21,6 @@ MPMLabel::MPMLabel()
   pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pKeepDeleteLabel = VarLabel::create( "p.keepDelete",
-			ParticleVariable<int>::getTypeDescription() );
-
   //PermanentParticleState
   pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
@@ -298,7 +295,6 @@ MPMLabel::~MPMLabel()
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
   VarLabel::destroy(pTemperatureGradientLabel);
-  VarLabel::destroy(pKeepDeleteLabel);
 
   //PermanentParticleState
   VarLabel::destroy(pDeformationMeasureLabel);

@@ -54,7 +54,6 @@ WARNING
 					    LoadBalancer* lb,
 					    const LevelP& level,
 					    const VarLabel* old_posLabel,
-					    const VarLabel* keepDeleteLabel,
 					    const vector<vector<const VarLabel*> >& old_labels,
 					    const VarLabel* new_posLabel,
 					    const vector<vector<const VarLabel*> >& new_labels,
@@ -69,7 +68,6 @@ WARNING
 				   DataWarehouse* old_dw,
 				   DataWarehouse* new_dw) = 0;
     const VarLabel* reloc_old_posLabel;
-    const VarLabel* reloc_keepDeleteLabel;
     vector<vector<const VarLabel*> > reloc_old_labels;
     const VarLabel* reloc_new_posLabel;
     vector<vector<const VarLabel*> > reloc_new_labels;

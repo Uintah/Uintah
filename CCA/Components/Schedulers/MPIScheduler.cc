@@ -738,7 +738,6 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 void
 MPIScheduler::scheduleParticleRelocation(const LevelP& level,
 					 const VarLabel* old_posLabel,
-					 const VarLabel* keepDeleteLabel,
 					 const vector<vector<const VarLabel*> >& old_labels,
 					 const VarLabel* new_posLabel,
 					 const vector<vector<const VarLabel*> >& new_labels,
@@ -749,7 +748,7 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   reloc_.scheduleParticleRelocation( this, d_myworld, lb, level,
-				     old_posLabel, keepDeleteLabel, old_labels,
+				     old_posLabel, old_labels,
 				     new_posLabel, new_labels,
 				     particleIDLabel, matls );
   releasePort("load balancer");

@@ -30,7 +30,6 @@ extern DebugStream mixedDebug;
 Relocate::Relocate()
 {
   reloc_old_posLabel = reloc_new_posLabel = 0;
-  reloc_keepDeleteLabel = 0;
   reloc_matls = 0;
 }
 
@@ -212,24 +211,43 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
+      ParticleSubset* delset = new_dw->getDeleteSubset(matl, patch);
       constParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
-      constParticleVariable<int> pkeepDelete;
-      new_dw->get(pkeepDelete, reloc_keepDeleteLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						       false, -1, 0);
       ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
 						      false, -1, 0);
 
-      // Look for particles that left the patch, and put them in relocset
+      // Look for particles that left the patch, 
+      // and if they are not in the delete set, put them in relocset
+
+      ParticleSubset::iterator deliter = delset->begin();
+      
+      ASSERT(is_sorted(pset->begin(), pset->end()));
+      ASSERT(is_sorted(delset->begin(), delset->end()));
+      ASSERTEQ(*pset->begin(), 0);
+
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
+
+	bool keep = true; 
 	particleIndex idx = *iter;
-	if(patch->getBox().contains(px[idx]) && pkeepDelete[idx] == 1){
+
+	// if particle is in delete set, don't keep or relocate
+	//	for (ParticleSubset::iterator deliter = delset->begin(); 
+	//	     deliter != delset->end(); deliter++) {
+
+	if (deliter != delset->end() && idx == *deliter) {
+	  keep = false;
+	  deliter++;
+	}
+
+	if(patch->getBox().contains(px[idx]) && keep){
 	  keepset->addParticle(idx);
 	}
-        else if(pkeepDelete[idx] == 1) {
+	else if(keep) {
 	  relocset->addParticle(idx);
 	}
       }
@@ -381,7 +399,6 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     LoadBalancer* lb,
 				     const LevelP& level,
 				     const VarLabel* old_posLabel,
-				     const VarLabel* keepDeleteLabel,
 				     const vector<vector<const VarLabel*> >& old_labels,
 				     const VarLabel* new_posLabel,
 				     const vector<vector<const VarLabel*> >& new_labels,
@@ -389,7 +406,6 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     const MaterialSet* matls)
 {
   reloc_old_posLabel = old_posLabel;
-  reloc_keepDeleteLabel = keepDeleteLabel;
   reloc_old_labels = old_labels;
   reloc_new_posLabel = new_posLabel;
   reloc_new_labels = new_labels;
@@ -409,7 +425,6 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   if(lb)
     t->usesMPI();
   t->requires( Task::NewDW, old_posLabel, Ghost::None);
-  t->requires( Task::NewDW, keepDeleteLabel, Ghost::None);
   for(int m=0;m < numMatls;m++){
     MaterialSubset* thismatl = scinew MaterialSubset();
     thismatl->add(m);
@@ -589,22 +604,41 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       constParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
-      constParticleVariable<int> pkeepDelete;
-      new_dw->get(pkeepDelete, reloc_keepDeleteLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						       false, -1, 0);
       ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
 						      false, -1, 0);
 
-      // Look for particles that left the patch, and put them in relocset
+      ParticleSubset* delset = new_dw->getDeleteSubset(matl, patch);
+      // Look for particles that left the patch, 
+      // and if they are not in the delete set, put them in relocset
+
+      ParticleSubset::iterator deliter = delset->begin();
+
+      ASSERT(is_sorted(pset->begin(), pset->end()));
+      ASSERT(is_sorted(delset->begin(), delset->end()));
+      ASSERTEQ(*pset->begin(), 0);
+
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
+	
+	bool keep = true; 
 	particleIndex idx = *iter;
-	if(patch->getBox().contains(px[idx]) && pkeepDelete[idx] == 1){
+
+	// if particle is in delete set, don't keep or relocate
+	//	for (ParticleSubset::iterator deliter = delset->begin(); 
+	//	     deliter != delset->end(); deliter++) {
+
+	if (deliter != delset->end() && idx == *deliter) {
+	  cout << "Deleting " << idx << ", patch " << patch <<  endl;
+	  keep = false;
+	  deliter++;
+	}
+	if(patch->getBox().contains(px[idx]) && keep){
 	  keepset->addParticle(idx);
 	}
-        else if(pkeepDelete[idx] == 1) {
+	else if(keep) {
 	  relocset->addParticle(idx);
 	}
       }

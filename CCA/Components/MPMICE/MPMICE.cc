@@ -306,7 +306,6 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
                                                                   all_matls);
   sched->scheduleParticleRelocation(level,
                                 Mlb->pXLabel_preReloc, 
-                                Mlb->pKeepDeleteLabel, 
                                 Mlb->d_particleState_preReloc,
                                 Mlb->pXLabel, Mlb->d_particleState,
                                 Mlb->pParticleIDLabel, mpm_matls);

@@ -213,7 +213,6 @@ void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   scheduleInterpolateStressToGrid(sched,patches,matls);
 #endif
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
-				    lb->pKeepDeleteLabel,
 				    lb->d_particleState_preReloc,
 				    lb->pXLabel, lb->d_particleState,
 				    lb->pParticleIDLabel, matls);
@@ -1056,7 +1055,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
-  t->computes(lb->pKeepDeleteLabel);
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -2169,8 +2167,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 #if 1
 	  if(pmassNew[idx] <= 3.e-15){
 	    delete_particles->addParticle(idx);
-	    pvelocitynew[idx] = Vector(0.,0.,0);
-	    pxnew[idx] = px[idx];
 	  }
 #endif
 
@@ -2195,7 +2191,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // allocateAndPut instead:
       /* new_dw->put(pvolumeNew,      lb->pVolumeLabel_preReloc); */;
       new_dw->deleteParticles(delete_particles);
-      delete delete_particles;
 
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;

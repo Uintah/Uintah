@@ -102,7 +102,6 @@ NullScheduler::execute(const ProcessorGroup *)
 void
 NullScheduler::scheduleParticleRelocation(const LevelP&,
 					  const VarLabel*,
-					  const VarLabel*,
 					  const vector<vector<const VarLabel*> >&,
 					  const VarLabel*,
 					  const vector<vector<const VarLabel*> >&,

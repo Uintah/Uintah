@@ -236,7 +236,6 @@ void SerialMPM::scheduleTimeAdvance(const LevelP&         level,
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    lb->pKeepDeleteLabel,
 				    lb->d_particleState_preReloc,
 				    lb->pXLabel, lb->d_particleState,
 				    lb->pParticleIDLabel, matls);
@@ -587,7 +586,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
-  t->computes(lb->pKeepDeleteLabel);
   if(d_8or27==27){
     t->computes(lb->pSizeLabel_preReloc);
   }
@@ -1507,7 +1505,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						DataWarehouse* old_dw,
 						DataWarehouse* new_dw)
 {
- for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++){
    const Patch* patch = patches->get(p);
 
    cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
@@ -1539,7 +1537,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
      constParticleVariable<long64> pids;
      ParticleVariable<long64> pids_new;
-     ParticleVariable<int> keep_delete;
 
      // Get the arrays of grid data on which the new part. values depend
      constNCVariable<Vector> gvelocity_star, gacceleration;
@@ -1563,10 +1560,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
      new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
      new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
-     new_dw->allocateAndPut(keep_delete,  lb->pKeepDeleteLabel,          pset);
      new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
      new_dw->allocateAndPut(pextForceNew, lb->pExternalForceLabel_preReloc,
                                                                          pset);
+     ParticleSubset* delset = scinew ParticleSubset
+	(pset->getParticleSet(),false,dwi,patch);
+
      pids_new.copyData(pids);
      pextForceNew.copyData(pexternalForce);
      if(d_8or27==27){
@@ -1647,11 +1646,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  }
           pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
           pvolumeNew[idx]      = pmassNew[idx]/rho;
-          keep_delete[idx]     = 1;
 #if 1
 	  if(pmassNew[idx] <= 3.e-15){
-            keep_delete[idx]     = 0;
+	    cout << "Scheduling " << idx << endl;
+	    delset->addParticle(idx);
 	  }
+	    
 #endif
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
@@ -1660,8 +1660,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  CMV += pvelocitynew[idx]*pmass[idx];
           massLost += (pmass[idx] - pmassNew[idx]);
      }
-      
+
+     new_dw->deleteParticles(delset);      
    }
+   
    // DON'T MOVE THESE!!!
    new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
    new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
@@ -1672,6 +1674,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 // cout << "THERMAL ENERGY " << thermal_energy << endl;
  }
+  
 }
 
 void SerialMPM::setSharedState(SimulationStateP& ssp)
