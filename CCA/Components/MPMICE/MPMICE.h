@@ -73,6 +73,9 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
 
+  virtual void scheduleInitializeAddedMaterial(const LevelP& level,
+                                               SchedulerP&);
+
   virtual void restartInitialize();
 
   virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -222,8 +225,14 @@ public:
                                const MaterialSubset* matls,
                                DataWarehouse*, 
                                DataWarehouse*); 
-                               
-                               
+
+  // MATERIAL ADDITION
+  virtual bool needRecompile(double time, double dt, const GridP& grid);
+
+  virtual void addMaterial(const ProblemSpecP& params,
+                           GridP& grid,
+                           SimulationStateP&);
+
 private:
   void setBC_rho_micro(const Patch* patch,
                        MPMMaterial* mpm_matl,
@@ -256,6 +265,7 @@ protected:
   ICE*             d_ice;
   int              d_8or27;
   int              NGN;
+  bool             d_recompile;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;

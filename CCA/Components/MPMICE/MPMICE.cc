@@ -385,6 +385,18 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
     d_ice->schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
                                                                  all_matls); 
   }
+
+  if(d_ice->d_canAddMaterial){
+    //  This checks to see if the model on THIS patch says that it's
+    //  time to add a new material
+    d_ice->scheduleCheckNeedAddMaterial(    sched, level,   all_matls);
+                                                                                
+    //  This one checks to see if the model on ANY patch says that it's
+    //  time to add a new material
+    d_ice->scheduleSetNeedAddMaterialFlag(  sched, level,   all_matls);
+  }
+
+
   sched->scheduleParticleRelocation(level,
                                 Mlb->pXLabel_preReloc, 
                                 Mlb->d_particleState_preReloc,
@@ -1890,6 +1902,30 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
       }  //if(mpm_matl)
     }  //ALLmatls  
   }  //patches
+}
+
+bool MPMICE::needRecompile(double time, double dt, const GridP& grid) {
+  if(d_recompile){
+    d_recompile = false;
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+                                                                                
+void MPMICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
+                         SimulationStateP&   sharedState)
+{
+  cout << "In MPMICE::addMaterial" << endl;
+  d_recompile = true;
+  d_ice->addMaterial(prob_spec, grid, d_sharedState);
+  cout << "Leaving MPMICE::addMaterial" << endl;
+}
+void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
+                                             SchedulerP& sched)
+{
+  d_ice->scheduleInitializeAddedMaterial(level,sched);
 }
 /*______________________________________________________________________
  Function~  setBC_rho_micro
