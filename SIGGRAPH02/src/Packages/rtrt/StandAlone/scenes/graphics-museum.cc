@@ -85,12 +85,12 @@ using namespace SCIRun;
 #define SCALE 500
 
 // all the following should be 1 for demos  (0 to speedup for debugging)
-#define IMGSONWALL 1
+#define IMGSONWALL 0 
 #define INSERTDAVID 0
 #define INSERTCEILING 1
 #define INSERTVIDEO 0
-#define INSERTMODERNMODELS 1
-#define INSERTHISTORYMODELS 1
+#define INSERTMODERNMODELS 0
+#define INSERTHISTORYMODELS 0
 
 #if INSERTMODERNMODELS
 
@@ -2917,8 +2917,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *clearg = new Group();
   
   build_david_room (solidg,scene, DavL1, DavL2);
-  //  build_history_hall (solidg, clearg, scene, HistoryL0,HistoryL1, HistoryL2); 
-  //  build_modern_room (solidg,scene);
+  build_history_hall (solidg, clearg, scene, HistoryL0,HistoryL1, HistoryL2); 
+  build_modern_room (solidg,scene);
 
  /*
   Transform outlet_trans;

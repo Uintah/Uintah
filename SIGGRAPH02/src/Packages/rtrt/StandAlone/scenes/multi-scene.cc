@@ -62,6 +62,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Group *g = new Group;
   for (s=0; s<nscenes; s++) {
+     std::cerr << "\n\n\n\n==========================================================\n"
+               << "Creating scene " << argv[scene_first_arg[s]] 
+	       << "\n=========================================================="
+	       << "\n";		   
     char scenefile[MAXPATHLEN];
     sprintf(scenefile, "./%s.mo", argv[scene_first_arg[s]]);
     void* handle=dlopen(scenefile, RTLD_NOW);
@@ -85,7 +89,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     if (s!=0)
       for (int l=0; l<scene[s]->nlights(); l++)
 	scene[0]->add_light(scene[s]->light(l));
-  }
+    std::cerr << "==========================================================\n"
+              << "Finished creating scene " << argv[scene_first_arg[s]] 
+	      << "\n=========================================================="
+	      << "\n\n\n\n";
+  }                                                      
   scene[0]->set_object(g);
   return scene[0];
 }

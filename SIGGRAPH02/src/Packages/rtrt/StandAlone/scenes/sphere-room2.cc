@@ -26,7 +26,7 @@ using namespace rtrt;
 using namespace std;
 
 #define RENDERWALLS            1
-#define RENDERPLANETS          0
+#define RENDERPLANETS          0 
 #define DOORWIDTH              1.5
 #define DOORHEIGHT             2.3
 #define DOOROFFSET             5.25

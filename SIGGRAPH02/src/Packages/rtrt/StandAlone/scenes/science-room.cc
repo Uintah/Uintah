@@ -1222,7 +1222,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
 
-  Scene *scene = new Scene(new Grid(g, 16),
+  Scene *scene = new Scene(new Grid(g, 100),
 			   cam, bgcolor, cdown, cup, groundplane, 0.3);
 //  Scene *scene = new Scene(new HierarchicalGrid(g, 8, 8, 8, 20, 20, 5),
 //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
