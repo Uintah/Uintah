@@ -22,7 +22,9 @@
 <component name="BuildInterpolant" category="Fields">
   <overview>
     <authors>
-      <author>Peter-Pike Sloan and David Weinstein</author>
+      <author>Peter-Pike Sloan</author>
+      <author>David Weinstein</author>
+      <author>Michael Callahan</author>
     </authors>
     <summary>Summary not available yet.</summary>
     <description>
@@ -30,6 +32,22 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Source</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Destination</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Interpolant</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>
