@@ -101,6 +101,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    db->require("StationarySolid",d_stationarySolid);
    db->require("inviscid",d_inviscid);
    db->require("restart",d_restart);
+   db->getWithDefault("fixedCellType",fixCellType,true);
 
    //   cout << "Done with MPMArches problemsetup requires" << endl;
 
@@ -701,7 +702,7 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
   // compute celltypeinit
 
-  d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched, patches, arches_matls);
+  d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched, patches, arches_matls, fixCellType);
 
   // for explicit calculation, exchange will be at the beginning
 
@@ -1281,13 +1282,14 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 	}
 	// end CellIterator
       }
-      // else for recalculateVoidFrac
+
+      // else for no recalculateVoidFrac
+
       else {
-	old_dw->get(voidFracOld, d_MAlb->void_frac_CCLabel, 
-		    matlindex, patch, Ghost::None, zeroGhostCells); 
 	void_frac.copyData(voidFracOld);	
       }
     }
+
     // else if d_useCutCell
 
     else {
