@@ -307,6 +307,8 @@ public:
   virtual LevelMesh *clone(){ return scinew LevelMesh(*this); }
   virtual ~LevelMesh() {}
 
+  Node::index_type node(int i, int j, int k)
+  { return Node::index_type(this, i, j, k); }
 
   void begin(Node::iterator &itr) const { itr=Node::iterator(this, 0, 0, 0); }
   void end(Node::iterator &itr) const { itr=Node::iterator(this,0, 0, nz_); }
