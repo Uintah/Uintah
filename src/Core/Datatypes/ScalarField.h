@@ -94,6 +94,7 @@ public:
     ScalarFieldHUG* getHUG();
     void get_minmax(double&, double&);
     void get_bounds(Point&, Point&);
+    void set_minmax(double, double);
 //    void copy_bounds(ScalarField* c);
 
     void set_bounds(const Point&, const Point&);
@@ -146,6 +147,11 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:52  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/25 03:48:36  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

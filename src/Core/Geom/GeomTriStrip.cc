@@ -161,9 +161,9 @@ void GeomTriStripList::io(Piostream& stream)
     stream.begin_class("GeomTriStripList", GEOMTRISTRIPLIST_VERSION);
     GeomObj::io(stream);
     Pio(stream, n_strips);
-    Pio(stream, pts);
-    Pio(stream, nrmls);
-    Pio(stream, strips);
+    SCICore::Containers::Pio(stream, pts);
+    SCICore::Containers::Pio(stream, nrmls);
+    SCICore::Containers::Pio(stream, strips);
     stream.end_class();
 }
 
@@ -232,6 +232,11 @@ int GeomTriStripList::num_since(void)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:56  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:43  sparker
 // Integrated new Thread library
 //

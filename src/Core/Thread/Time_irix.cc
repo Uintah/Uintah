@@ -15,6 +15,7 @@
 
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Thread.h>
 #include <SCICore/Thread/ThreadError.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -23,7 +24,10 @@
 #include <sys/mman.h>
 #include <sys/syssgi.h>
 #include <sys/time.h>
+#include <errno.h>
 
+using SCICore::Thread::Mutex;
+using SCICore::Thread::Thread;
 using SCICore::Thread::Time;
 
 static int timer_32bit;
@@ -33,8 +37,8 @@ volatile unsigned int* iotimer_addr32;
 volatile unsigned int* iotimer_addr;
 #define TIMERTYPE unsigned int
 #else
-volatile unsigned long *iotimer_addr;
-#define TIMERTYPE unsigned long
+volatile unsigned long long *iotimer_addr;
+#define TIMERTYPE unsigned long long
 #endif
 static Time::SysClock orig_timer;
 static double ticks_to_seconds;
@@ -95,7 +99,26 @@ Time::initialize()
     overflow*=ticks_to_seconds;
 
     orig_timer=0;
-    orig_timer=Time::currentTicks();
+
+    if(timer_32bit){
+	for(;;){
+	    unsigned high=0;
+	    unsigned low=*iotimer_addr32;
+	    orig_timer=((long long)(high&(~TOPBIT))<<32|(long long)low);
+	}
+    } else {
+#if _MIPS_ISA == _MIPS_ISA_MIPS1 || _MIPS_ISA ==  _MIPS_ISA_MIPS2
+	while (1) {
+	    unsigned high = *iotimer_addr;
+	    unsigned low = *(iotimer_addr + 1);
+	    if (high == *iotimer_addr) {
+		orig_timer=((long long)high<<32|(long long)low);
+	    }
+	}
+#else
+	orig_timer=*iotimer_addr-orig_timer;
+#endif
+    }
 
     iotimer_high=(*iotimer_addr32)&TOPBIT;
 
@@ -133,6 +156,7 @@ Time::currentTicks()
     if(!initialized)
 	initialize();
     if(timer_32bit){
+	fprintf(stderr, "timer32bit\n");
 	for(;;){
 	    unsigned high=iotimer_high;
 	    unsigned ohigh=high;
@@ -149,6 +173,7 @@ Time::currentTicks()
 	}
     } else {
 #if _MIPS_ISA == _MIPS_ISA_MIPS1 || _MIPS_ISA ==  _MIPS_ISA_MIPS2
+	fprintf(stderr, "mips1\n");
 	while (1) {
 	    unsigned high = *iotimer_addr;
 	    unsigned low = *(iotimer_addr + 1);
@@ -234,6 +259,11 @@ Time::waitFor(SysClock time)
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:47:02  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/28 03:46:53  sparker
 // Final updates before integration with PSE
 //

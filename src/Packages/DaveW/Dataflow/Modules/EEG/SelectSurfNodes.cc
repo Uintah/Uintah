@@ -79,7 +79,8 @@ Module* make_SelectSurfNodes(const clString& id)
 static clString module_name("SelectSurfNodes");
 
 SelectSurfNodes::SelectSurfNodes(const clString& id)
-: Module("SelectSurfNodes", id, Filter), method("method", id, this),
+: Module("SelectSurfNodes", id, Filter), widget_lock("SelectSurfNodes widget lock"),
+    method("method", id, this),
   sel_geom_idx(0), pts_changed(0), sphereSize("sphereSize", id, this), igen(0)
 {
     // Create the input ports
@@ -231,6 +232,11 @@ void SelectSurfNodes::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:46:37  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/25 03:47:39  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

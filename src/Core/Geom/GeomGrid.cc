@@ -286,14 +286,14 @@ void GeomGrid::io(Piostream& stream)
 
     stream.begin_class("GeomGrid", GEOMGRID_VERSION);
     GeomObj::io(stream);
-    Pio(stream, verts);
+    SCICore::Containers::Pio(stream, verts);
     Pio(stream, have_matls);
-    Pio(stream, matls);
+    SCICore::Containers::Pio(stream, matls);
     Pio(stream, have_normals);
-    Pio(stream, normals);
-    Pio(stream, corner);
-    Pio(stream, u);
-    Pio(stream, v);
+    SCICore::Containers::Pio(stream, normals);
+    SCICore::Geometry::Pio(stream, corner);
+    SCICore::Geometry::Pio(stream, u);
+    SCICore::Geometry::Pio(stream, v);
     if(stream.reading())
 	adjust();
     stream.end_class();
@@ -465,6 +465,11 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:54  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:40  sparker
 // Integrated new Thread library
 //

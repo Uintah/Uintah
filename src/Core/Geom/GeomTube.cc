@@ -114,8 +114,8 @@ void GeomTube::io(Piostream& stream)
     stream.begin_class("GeomTube", GEOMTUBE_VERSION);
     GeomVertexPrim::io(stream);
     Pio(stream, nu);
-    Pio(stream, directions);
-    Pio(stream, radii);
+    SCICore::Containers::Pio(stream, directions);
+    SCICore::Containers::Pio(stream, radii);
     stream.end_class();
 }
 
@@ -130,6 +130,11 @@ bool GeomTube::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:57  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:43  sparker
 // Integrated new Thread library
 //

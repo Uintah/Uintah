@@ -27,6 +27,7 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 #include <PSECore/Widgets/PointWidget.h>
 #include <string.h>
 
@@ -127,7 +128,8 @@ TracePath::TracePath(const clString& id)
   eax("eax", id, this), eay("eay", id, this), eaz("eaz", id, this),
   ebx("ebx", id, this), eby("eby", id, this), ebz("ebz", id, this),
   ecx("ecx", id, this), ecy("ecy", id, this), ecz("ecz", id, this),
-  tclAlpha("tclAlpha", id, this), tclBeta("tclBeta", id, this)
+  tclAlpha("tclAlpha", id, this), tclBeta("tclBeta", id, this),
+    widget_lock("TracePath widget lock")
 {
     // Create the input ports
     inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
@@ -817,6 +819,11 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:46:40  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/25 03:47:48  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -22,9 +22,10 @@
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/ITC.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Barrier.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 
 #define PINVAL 1
 
@@ -35,7 +36,9 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
-using namespace SCICore::Multitask;
+using SCICore::Thread::Barrier;
+using SCICore::Thread::Parallel;
+using SCICore::Thread::Thread;
 
 class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
@@ -71,21 +74,15 @@ public:
     virtual void execute();
 };
 
-static void do_parallel(void* obj, int proc)
-{
-    BuildFEMatrix* module=(BuildFEMatrix*)obj;
-    module->parallel(proc);
-}
-    
-
 Module* make_BuildFEMatrix(const clString& id) {
   return new BuildFEMatrix(id);
 }
 
 
 BuildFEMatrix::BuildFEMatrix(const clString& id)
-: Module("BuildFEMatrix", id, Filter), BCFlag("BCFlag", id, this),
-  UseCondTCL("UseCondTCL", id, this)
+: Module("BuildFEMatrix", id, Filter), barrier("BuildFEMatrix barrier"),
+    BCFlag("BCFlag", id, this),
+    UseCondTCL("UseCondTCL", id, this)
 {
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -212,7 +209,7 @@ void BuildFEMatrix::execute()
      this->mesh=mesh.get_rep();
      int nnodes=mesh->nodes.size();
      rows=scinew int[nnodes+1];
-     np=Task::nprocessors();
+     np=Thread::numProcessors();
      if (np>10) np=5;
      colidx.resize(np+1);
 
@@ -220,8 +217,8 @@ void BuildFEMatrix::execute()
      if (BCFlag.get() == "DirSub") DirSub=1;
      else if (BCFlag.get() == "PinZero") PinZero=1;
   
-
-     Task::multiprocess(np, do_parallel, this);
+     Thread::parallel(Parallel<BuildFEMatrix>(this, &BuildFEMatrix::parallel),
+		      np, true);
 
      gbl_matrixH=gbl_matrix;
      outmatrix->send(gbl_matrixH);
@@ -382,6 +379,11 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:38  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:47:44  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

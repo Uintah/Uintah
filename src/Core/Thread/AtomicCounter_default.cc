@@ -60,15 +60,15 @@ AtomicCounter::operator int() const
     return d_priv->value;
 }
 
-AtomicCounter&
+int
 AtomicCounter::operator++()
 {
     int oldstate=Thread::couldBlock(d_name);
     d_priv->lock.lock();
-    ++d_priv->value;
+    int ret=++d_priv->value;
     d_priv->lock.unlock();
     Thread::couldBlockDone(oldstate);
-    return *this;
+    return ret;
 }
 
 int
@@ -82,15 +82,15 @@ AtomicCounter::operator++(int)
     return ret;
 }
 
-AtomicCounter&
+int
 AtomicCounter::operator--()
 {
     int oldstate=Thread::couldBlock(d_name);
     d_priv->lock.lock();
-    --d_priv->value;	
+    int ret=--d_priv->value;	
     d_priv->lock.unlock();
     Thread::couldBlockDone(oldstate);
-    return *this;
+    return ret;
 }
 
 int
@@ -116,6 +116,11 @@ AtomicCounter::set(int v)
 
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:47:00  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/28 03:46:46  sparker
 // Final updates before integration with PSE
 //

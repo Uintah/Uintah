@@ -70,10 +70,10 @@ void TexSquare::io(Piostream& stream) {
 
   stream.begin_class("TexSquare", TEXSQUARE_VERSION);
   GeomObj::io(stream);
-  Pio(stream, a);
-  Pio(stream, b);
-  Pio(stream, c);
-  Pio(stream, d);
+  SCICore::Geometry::Pio(stream, a);
+  SCICore::Geometry::Pio(stream, b);
+  SCICore::Geometry::Pio(stream, c);
+  SCICore::Geometry::Pio(stream, d);
   stream.end_class();
 }
 
@@ -87,6 +87,11 @@ bool TexSquare::saveobj(ostream&, const clString&, GeomSave*) {
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:58  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:45  sparker
 // Integrated new Thread library
 //

@@ -212,7 +212,7 @@ void GeomTriangles::io(Piostream& stream)
 
     stream.begin_class("GeomTriangles", GEOMTRIANGLES_VERSION);
     GeomVertexPrim::io(stream);
-    Pio(stream, normals);
+    SCICore::Containers::Pio(stream, normals);
     stream.end_class();
 }
 
@@ -250,7 +250,7 @@ void GeomTrianglesPT1d::io(Piostream& stream)
 
     stream.begin_class("GeomTrianglesPT1d", GeomTrianglesPT1d_VERSION);
     GeomTrianglesP::io(stream);
-    Pio(stream, scalars); // just save scalar values
+    SCICore::Containers::Pio(stream, scalars); // just save scalar values
     stream.end_class();
 }
 
@@ -735,8 +735,8 @@ void GeomTrianglesP::io(Piostream& stream)
 
     stream.begin_class("GeomTrianglesP", GEOMTRIANGLESP_VERSION);
     GeomObj::io(stream);
-    Pio(stream, points);
-    Pio(stream, normals);
+    SCICore::Containers::Pio(stream, points);
+    SCICore::Containers::Pio(stream, normals);
     stream.end_class();
 }
 
@@ -786,7 +786,7 @@ void GeomTrianglesPC::io(Piostream& stream)
 
     stream.begin_class("GeomTrianglesPC", GEOMTRIANGLESPC_VERSION);
     GeomTrianglesP::io(stream);
-    Pio(stream, colors);
+    SCICore::Containers::Pio(stream, colors);
     stream.end_class();
 }
 
@@ -938,8 +938,8 @@ void GeomTrianglesVP::io(Piostream& stream)
 
     stream.begin_class("GeomTrianglesVP", GEOMTRIANGLESVP_VERSION);
     GeomObj::io(stream);
-    Pio(stream, points);
-    Pio(stream, normals);
+    SCICore::Containers::Pio(stream, points);
+    SCICore::Containers::Pio(stream, normals);
     stream.end_class();
 }
 
@@ -991,7 +991,7 @@ void GeomTrianglesVPC::io(Piostream& stream)
 
     stream.begin_class("GeomTrianglesVPC", GEOMTRIANGLESVPC_VERSION);
     GeomTrianglesVP::io(stream);
-    Pio(stream, colors);
+    SCICore::Containers::Pio(stream, colors);
     stream.end_class();
 }
 
@@ -1069,6 +1069,11 @@ bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:57  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:43  sparker
 // Integrated new Thread library
 //

@@ -33,7 +33,7 @@ static Persistent* make_SiReData()
 PersistentTypeID SiReData::type_id("SiReData", "VoidStar", make_SiReData);
 
 SiReData::SiReData()
-: VoidStar(), lockstepSem(0)
+: VoidStar(), lockstepSem("SiReData lockstep semaphore", 0)
 {
     s.PFiles=0;
     s.RcvrSlabImgFiles=0;
@@ -57,7 +57,7 @@ SiReData::SiReData()
 }
 
 SiReData::SiReData(const SiReData& copy)
-: VoidStar(copy), lockstepSem(0)
+: VoidStar(copy), lockstepSem("SiReData lockstep semaphore", 0)
 {
     s=copy.s;
     int i,j;
@@ -273,6 +273,11 @@ void Pio(Piostream& stream, DaveW::Datatypes::SiReDataS& s)
 
 //
 // $Log$
+// Revision 1.2  1999/08/29 00:46:35  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.1  1999/08/23 02:53:02  dmw
 // Dave's Datatypes
 //

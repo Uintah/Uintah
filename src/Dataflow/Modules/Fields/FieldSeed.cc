@@ -40,8 +40,6 @@
 #include <PSECore/Datatypes/VectorFieldPort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Multitask/ITC.h>
-#include <SCICore/Multitask/Task.h>
 #include <PSECore/Widgets/ScaledBoxWidget.h>
 
 #include <stdlib.h>
@@ -120,7 +118,8 @@ FieldSeed::FieldSeed(const clString& id)
  hedge_scale("hedge_scale",id,this),osf(0),ovf(0),//ug(0),vug(0),vrg(0),
  lines(0),alpha(1.0),
  reghedge("reghedge",id,this),
- xstep("xstep",id,this),ystep("ystep",id,this),cludge2d(0)
+ xstep("xstep",id,this),ystep("ystep",id,this),cludge2d(0),
+    widget_lock("FieldSeed widget lock")
 {
 
   ifield = scinew
@@ -287,9 +286,9 @@ void FieldSeed::ComputeWidgetNodes()
 {
   Point center,dx,dy,dz;
   
-  widget_lock.read_lock();
+  widget_lock.readLock();
   widget->GetPosition(center,dx,dy,dz);
-  widget_lock.read_unlock();
+  widget_lock.readUnlock();
   
   Vector X(dx-center),Y(dy-center),Z(dz-center); // for now...
 
@@ -588,6 +587,11 @@ void FieldSeed::Visualize(int which, int onoff)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:39  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:47:47  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

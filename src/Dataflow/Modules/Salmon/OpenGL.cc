@@ -34,14 +34,15 @@
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/Datatypes/Image.h>
-#include <SCICore/Multitask/AsyncReply.h>
-#include <SCICore/Multitask/Mailbox.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECommon/Modules/Salmon/Ball.h>
 #include <PSECommon/Modules/Salmon/MpegEncoder.h>
 #include <PSECommon/Modules/Salmon/Renderer.h>
 #include <PSECommon/Modules/Salmon/Roe.h>
 #include <PSECommon/Modules/Salmon/Salmon.h>
+#include <SCICore/Thread/FutureValue.h>
+#include <SCICore/Thread/Runnable.h>
+#include <SCICore/Thread/Thread.h>
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -58,14 +59,13 @@ using PSECore::Datatypes::GeometryData;
 using SCICore::Datatypes::DepthImage;
 
 using SCICore::Datatypes::ColorImage;
-using SCICore::Multitask::AsyncReply;
 using SCICore::GeomSpace::Light;
 using SCICore::GeomSpace::Lighting;
 using SCICore::GeomSpace::View;
 using SCICore::Containers::to_string;
 using SCICore::TclInterface::TCLTask;
-using SCICore::Multitask::Task;
-using SCICore::Multitask::Mailbox;
+using SCICore::Thread::Runnable;
+using SCICore::Thread::Thread;
 
 const int STRINGSIZE=200;
 class OpenGLHelper;
@@ -78,8 +78,8 @@ class OpenGLHelper;
 
 struct GetReq {
     int datamask;
-    AsyncReply<GeometryData*>* result;
-    GetReq(int, AsyncReply<GeometryData*>* result);
+    FutureValue<GeometryData*>* result;
+    GetReq(int, FutureValue<GeometryData*>* result);
     GetReq();
 };
 
@@ -127,9 +127,9 @@ public:
 
     clString myname;
     void redraw_loop();
-    Mailbox<int> send_mb;
-    Mailbox<int> recv_mb;
-    Mailbox<GetReq> get_mb;
+    SCICore::Thread::Mailbox<int> send_mb;
+    SCICore::Thread::Mailbox<int> recv_mb;
+    SCICore::Thread::Mailbox<GetReq> get_mb;
 
     Salmon* salmon;
     Roe* roe;
@@ -158,8 +158,8 @@ protected:
     
     void initState(void);
 
-    virtual void getData(int datamask, AsyncReply<GeometryData*>* result);
-    virtual void real_getData(int datamask, AsyncReply<GeometryData*>* result);
+    virtual void getData(int datamask, FutureValue<GeometryData*>* result);
+    virtual void real_getData(int datamask, FutureValue<GeometryData*>* result);
 };
 
 static OpenGL* current_drawer=0;
@@ -183,7 +183,9 @@ static int query_OpenGL()
 RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
-: tkwin(0), send_mb(10), recv_mb(10), helper(0), get_mb(5)
+: tkwin(0), send_mb("OpenGL renderer send mailbox",10),
+  recv_mb("OpenGL renderer receive mailbox", 10), helper(0),
+  get_mb("OpenGL renderer request mailbox", 5)
 {
     encoding_mpeg = false;
     strbuf=scinew char[STRINGSIZE];
@@ -219,16 +221,16 @@ void OpenGL::initState(void)
     
 }
 
-class OpenGLHelper : public Task {
+class OpenGLHelper : public Runnable {
     OpenGL* opengl;
 public:
-    OpenGLHelper(char* name, OpenGL* opengl);
+    OpenGLHelper(OpenGL* opengl);
     virtual ~OpenGLHelper();
-    virtual int body(int);
+    virtual void run();
 };
 
-OpenGLHelper::OpenGLHelper(char* name, OpenGL* opengl)
-: Task(name, 1, DEFAULT_PRIORITY), opengl(opengl)
+OpenGLHelper::OpenGLHelper(OpenGL* opengl)
+: opengl(opengl)
 {
 }
 
@@ -236,10 +238,9 @@ OpenGLHelper::~OpenGLHelper()
 {
 }
 
-int OpenGLHelper::body(int)
+void OpenGLHelper::run()
 {
     opengl->redraw_loop();
-    return 0;
 }
 
 void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
@@ -255,8 +256,9 @@ void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
     // start one...
     if(!helper){
 	my_openglname=clString("OpenGL: ")+myname;
-	helper=new OpenGLHelper(const_cast<char *>(my_openglname()), this);
-	helper->activate(0);
+	helper=new OpenGLHelper(this);
+	Thread* t=new Thread(helper, my_openglname());
+	t->detach();
     }
 
     send_mb.send(DO_REDRAW);
@@ -301,7 +303,7 @@ void OpenGL::redraw_loop()
 
 	    for(;;){
 		int r;
-		if(!send_mb.try_receive(r))
+		if(!send_mb.tryReceive(r))
 		    break;
 		if(r == DO_PICK){
 		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_index);
@@ -443,7 +445,7 @@ void OpenGL::redraw_frame()
 
     // Get a lock on the geometry database...
     // Do this now to prevent a hold and wait condition with TCLTask
-    salmon->geomlock.read_lock();
+    salmon->geomlock.readLock();
 
     TCLTask::lock();
 
@@ -642,7 +644,7 @@ void OpenGL::redraw_frame()
 	}
 	glXSwapBuffers(dpy, win);
     }
-    salmon->geomlock.read_unlock();
+    salmon->geomlock.readUnlock();
 
     // Look for errors
     int errcode;
@@ -748,7 +750,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
     double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
-    salmon->geomlock.read_lock();
+    salmon->geomlock.readLock();
 
     // Compute znear and zfar...
     double znear;
@@ -866,7 +868,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	pick_index=(int)hit_pick_index;
 	cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
     }
-    salmon->geomlock.read_unlock();
+    salmon->geomlock.readUnlock();
 }
 
 void OpenGL::dump_image(const clString& name) {
@@ -1379,13 +1381,13 @@ void OpenGL::setvisual(const clString& wname, int which, int width, int height)
   //cerr << "done choosing visual\n";
 }
 
-void OpenGL::getData(int datamask, AsyncReply<GeometryData*>* result)
+void OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
 {
     send_mb.send(DO_GETDATA);
     get_mb.send(GetReq(datamask, result));
 }
 
-void OpenGL::real_getData(int datamask, AsyncReply<GeometryData*>* result)
+void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 {
     GeometryData* res = new GeometryData;
     if(datamask&GEOM_VIEW){
@@ -1440,32 +1442,29 @@ void OpenGL::real_getData(int datamask, AsyncReply<GeometryData*>* result)
 	}
 	TCLTask::unlock();
     }
-    result->reply(res);
+    result->send(res);
 }
 
 GetReq::GetReq()
 {
 }
 
-GetReq::GetReq(int datamask, AsyncReply<GeometryData*>* result)
+GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 : datamask(datamask), result(result)
 {
 }
 
-#ifdef __GNUG__
-/*
- * These template instantiations can't go in templates.cc, because
- * the classes are defined in this file.
- */
-#include <SCICore/Multitask/Mailbox.h>
-template class Mailbox<GetReq>;
-#endif
 
 } // End namespace Modules
 } // End namespace PSECommon
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:46:41  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/25 03:47:57  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
