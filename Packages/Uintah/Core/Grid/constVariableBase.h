@@ -67,8 +67,8 @@ WARNING
     */
   protected:
     constVariableBase() {}
-  private:
     constVariableBase(const constVariableBase&);    
+  private:
   };
 
 } // end namespace Uintah
