@@ -51,8 +51,8 @@
                 <specific_heat>1.004e-5</specific_heat>
 		<geom_object>
 		    <box label="Piston">
-			<min>[0.0,0.0,0.2]</min>
-			<max>[0.1,0.1,0.205]</max>
+			<min>[0.0,0.0,0.2005]</min>
+			<max>[0.1002,0.1002,0.206]</max>
 		    </box>
 		    <res>[1,1,1]</res>
 		    <velocity>[0.0,0.0,-.01]</velocity>
@@ -2172,7 +2172,7 @@
 	            </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -3808,7 +3808,7 @@
 	       	    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -5144,7 +5144,7 @@
 	       	    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -6310,7 +6310,7 @@
 	    	    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -7171,7 +7171,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -7947,7 +7947,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -8633,7 +8633,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -9189,7 +9189,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -9670,7 +9670,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10021,7 +10021,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10282,7 +10282,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10478,7 +10478,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10524,7 +10524,7 @@
 		    </union>
 			    <box label = "1">
 				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.2]</max>
+				<max>[0.1002,0.1002,0.2005]</max>
 			    </box>
 		</intersection>
 		    <res>[1,1,1]</res>
@@ -10547,7 +10547,7 @@
 	<Level>
 	    <Box label = "1">
 		<lower>[0.0,0.0,0.0]</lower>
-		<upper>[0.1,0.1,0.21]</upper>
+		<upper>[0.1002,0.1002,0.2084]</upper>
 		<patches>[1,1,1]</patches>
 		<resolution>[100,100,208]</resolution>
 	    </Box>
