@@ -39,31 +39,30 @@ bool TriGeometryPiece::inside(const Point &p) const
   // is outside.
 
   Vector infinity = Vector(-1e10,0.,0.) - p.asVector();
-  // cerr << "Testing point " << p << endl;
+  //cerr << "Testing point " << p << endl;
   int crossings = 0, NES = 0;
   for (int i = 0; i < (int) d_planes.size(); i++) {
     int NCS = 0;
-    Point hit;
+    Point hit(0.,0.,0.);
     Plane plane = d_planes[i];
+    //cerr << "i = " << i << endl;
     int hit_me = plane.Intersect(p,infinity,hit);
     if (hit_me) {
       // Check if hit point is inside of the triangle
       // Look to see if total angle is 0 or 2PI.  If
       // the point is interior, then angle will be 2PI,
       // else it will be zero.
-      //  cerr << "Hit me" << endl;
       // Need to check that the dot product of the intersection pt - p
       // and infinity - p is greater than 0.  This means that the 
       // intersection point is NOT behind the p.
       Vector int_ray = hit.asVector() - p.asVector();
       double cos_angle = Dot(infinity,int_ray)/
 	(infinity.length()*int_ray.length());
-      //cerr << "cos_angle = " << cos_angle << endl;
       if (cos_angle < 0.)
 	continue;
 
       insideTriangle(hit,i,NCS,NES);
-      // cerr << "in = " << in << endl;
+      // cerr << "in = " << endl;
       if (NCS % 2 != 0)
 	crossings++;
       if (NES != 0)
@@ -201,7 +200,10 @@ void TriGeometryPiece::insideTriangle(const Point& q,int num,int& NCS,
   p[2] = d_points[d_tri[num].z()];
 
   // Now translate the points that make up the vertices of the triangle.
-  Point trans_pt, trans_vt[3];
+  Point trans_pt(0.,0.,0.), trans_vt[3];
+  trans_vt[0] = Point(0.,0.,0.);
+  trans_vt[1] = Point(0.,0.,0.);
+  trans_vt[2] = Point(0.,0.,0.);
 
   if (dominant_coord == 1) {
     trans_pt.x(q.y());
