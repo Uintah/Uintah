@@ -759,8 +759,8 @@ void Viewer::flushPort(int portid)
 
   syncronized_map_[real_portno(portid)-1] = true;
   bool all = true;
-  unsigned int i;
-  for (i=0; i < numIPorts()-1; i++)
+  
+  for (unsigned int i=0; i+1 < (unsigned int)numIPorts(); i++)
   {
     if (syncronized_map_[i] == false)
     {
@@ -773,7 +773,7 @@ void Viewer::flushPort(int portid)
     if (regression_testing_flag)
     {
       geomlock_.writeUnlock();
-      for (i = 0; i < view_window_.size(); i++)
+      for (unsigned int i = 0; i < view_window_.size(); i++)
       {
 	const string name = string("snapshot") + to_string(i) + ".ppm";
 	view_window_[i]->redraw_if_needed();
@@ -783,7 +783,7 @@ void Viewer::flushPort(int portid)
       flushViews();
     }
 
-    for (i = 0; i < syncronized_map_.size(); i++)
+    for (unsigned int i = 0; i < syncronized_map_.size(); i++)
     {
       syncronized_map_[i] = false;
     }

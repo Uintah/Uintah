@@ -119,6 +119,12 @@ public:
 
 ShowMatrix::ShowMatrix(GuiContext* ctx)
   : Module("ShowMatrix", ctx, Filter, "Visualization", "SCIRun"),
+    right(1.0,0.0,0.0), left(-1.0,0.0,0.0), 
+    up(0.0,1.0,0.0), down(0.0,-1.0,0.0),
+    front(0.0,0.0,1.0), back(0.0,0.0,-1.0),
+    white_(scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20)),
+    black_(scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 20)),
+    swap_row_col_(false),
     gui_color_by_val_(ctx->subVar("color_by_val")),
     gui_grid_x_(ctx->subVar("grid_x")),
     gui_grid_y_(ctx->subVar("grid_y")),
@@ -138,14 +144,7 @@ ShowMatrix::ShowMatrix(GuiContext* ctx)
     gui_x_gap_(ctx->subVar("xgap")),
     gui_z_gap_(ctx->subVar("ygap")),
     gui_data_face_centered_(ctx->subVar("data_face_centered")),
-    gui_cmode_(ctx->subVar("colormapmode")),
-    swap_row_col_(false),
-    white_(scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20)),
-    black_(scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 20)),
-    right(1.0,0.0,0.0), left(-1.0,0.0,0.0), 
-    up(0.0,1.0,0.0), down(0.0,-1.0,0.0),
-    front(0.0,0.0,1.0), back(0.0,0.0,-1.0)
-								 
+    gui_cmode_(ctx->subVar("colormapmode"))
 {
 
 }
@@ -324,7 +323,7 @@ ShowMatrix::generate_3d_ribbon_graph(MatrixHandle mh,bool fill_sides)
 
   const MatrixData &data = get_matrix_data(mh);
   double midpoint = data.min;
-  double x_gap = gui_x_gap_.get();
+  //double x_gap = gui_x_gap_.get();
   double z_gap = gui_z_gap_.get();
   GeomGroup *bars = scinew GeomGroup();
 
@@ -402,7 +401,6 @@ ShowMatrix::generate_3d_sheet_graph(MatrixHandle mh)
   const MatrixData &data = get_matrix_data(mh);  
   set_color_scale(mh);
   int x,z;
-  const Vector normal(0.0, 1.0, 0.0);
   GeomGroup *bars = scinew GeomGroup();
   for(z = data.row_begin; z < data.row_end; z++) {
     for (x = data.col_begin; x < data.col_end; x++) {
@@ -447,7 +445,7 @@ ShowMatrix::generate_contour(MatrixHandle mh)
 {
   const MatrixData &data = get_matrix_data(mh);
   
-  const double dy = 1.0 / (data.max - data.min);
+  //const double dy = 1.0 / (data.max - data.min);
   const double dx = 1.0 / (data.col_end - data.col_begin);
   const double dz = 1.0 / (data.row_end - data.row_begin);
 
@@ -556,7 +554,7 @@ ShowMatrix::generate_3d_bar_graph(MatrixHandle mh)
 void
 ShowMatrix::execute()
 {
-  int deb = 0;
+  //int deb = 0;
   vector<MatrixHandle> matrices;
   port_range_type range = get_iports("Matrix");
   if (range.first == range.second) {

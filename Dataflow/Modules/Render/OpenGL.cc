@@ -246,7 +246,9 @@ OpenGL::kill_helper()
 void
 OpenGL::redraw_loop()
 {
-  int r,resx,resy;
+  int r;
+  int resx = -1;
+  int resy = -1;
   string fname, ftype;
   // Tell the ViewWindow that we are started...
   TimeThrottle throttle;
@@ -459,10 +461,10 @@ OpenGL::render_and_save_image(int x, int y,
   const int nrows = (int)ceil(hi_res.nrows);
   const int ncols = (int)ceil(hi_res.ncols);
 
-  ofstream *image_file;
+  ofstream *image_file = NULL;
 #ifdef HAVE_MAGICK
-  C_Magick::Image *image;
-  C_Magick::ImageInfo *image_info;
+  C_Magick::Image *image = NULL;
+  C_Magick::ImageInfo *image_info = NULL;
 #endif
   int channel_bytes, num_channels;
   bool do_magick;
