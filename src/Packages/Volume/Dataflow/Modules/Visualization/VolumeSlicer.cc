@@ -164,7 +164,6 @@ void
       ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
       ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
       ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
-      cerr<<"ddx_, ddy_, ddz_ = "<<ddx_<<", "<<ddy_<<", "<<ddz_<<"\n";
       ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
       control_widget_->SetScale(dv.length()/80.0);
