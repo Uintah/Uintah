@@ -32,6 +32,12 @@
 #include <iostream>
 #include <values.h>
 
+#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+#include <list>
+#include <fstream>
+#include <math.h>
+#endif
+
 #include <SCICore/Malloc/Allocator.h> // for memory leak tests...
 
 using std::cerr;
@@ -55,6 +61,27 @@ SimulationController::SimulationController(const ProcessorGroup* myworld) :
 SimulationController::~SimulationController()
 {
 }
+
+#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+double stdDeviation(list<double>& vals, double& mean)
+{
+  if (vals.size() < 2)
+    return -1;
+
+  list<double>::iterator it;
+
+  mean = 0;
+  double variance = 0;
+  for (it = vals.begin(); it != vals.end(); it++)
+    mean += *it;
+  mean /= vals.size();
+
+  for (it = vals.begin(); it != vals.end(); it++)
+    variance += pow(*it - mean, 2);
+  variance /= (vals.size() - 1);
+  return sqrt(variance);
+}
+#endif
 
 void SimulationController::run()
 {
@@ -148,6 +175,12 @@ void SimulationController::run()
 
    scheduler->execute(d_myworld, old_dw, old_dw);
 
+#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+   int n = 0;
+   list<double> wallTimes;
+   double prevWallTime;
+#endif
+
    while(t < timeinfo.maxTime) {
 
       double wallTime = Time::currentSeconds() - start_time;
@@ -193,6 +226,21 @@ void SimulationController::run()
 	       << ", elap T = " << wallTime 
 	       << ", DW: " << old_dw->getID() << ", Mem Use = " 
 	       << sizealloc - sizefree << "\n";
+	  
+#ifdef OUTPUT_AVE_ELLAPSED_WALLTIME
+	  if (n > 1) // ignore first set of elapsed times
+	    wallTimes.push_back(wallTime - prevWallTime);
+
+	  if (wallTimes.size() > 1) {
+	    double stdDev, mean;
+	    stdDev = stdDeviation(wallTimes, mean);
+	    ofstream timefile("ave_ellapsed_walltime.txt");
+	    timefile << __DATE__ << " " << __TIME__ << endl;
+	    timefile << mean << " +- " << stdDev << endl;
+	  }
+	  prevWallTime = wallTime;
+	  n++;
+#endif
 	}
       }
 
@@ -481,6 +529,11 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.47.4.3  2000/11/01 02:03:27  witzel
+// Added code to output average ellapsed wall clock times between
+// time steps to a file "ave_ellapsed_walltime.txt" if the
+// OUTPUT_AVE_ELLAPSED_WALLTIME macro is defined.
+//
 // Revision 1.47.4.2  2000/10/10 05:28:06  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
