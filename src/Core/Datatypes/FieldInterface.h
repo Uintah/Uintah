@@ -178,6 +178,7 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 	  if (val > maxout) maxout = val;
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
@@ -195,6 +196,7 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 	  if (val > maxout) maxout = val;
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
@@ -212,6 +214,7 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 	  if (val > maxout) maxout = val;
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
@@ -229,6 +232,7 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 	  if (val > maxout) maxout = val;
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
@@ -383,6 +387,7 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 	  if (val.z() > maxout.z()) maxout.z(val.z());
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
@@ -405,6 +410,7 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 	  if (val.z() > maxout.z()) maxout.z(val.z());
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
@@ -427,6 +433,7 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 	  if (val.z() > maxout.z()) maxout.z(val.z());
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
@@ -449,6 +456,7 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 	  if (val.z() > maxout.z()) maxout.z(val.z());
 	  result = true;
 	}
+	++bi;
       }      
     }
     break;
