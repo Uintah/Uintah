@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "../../../doc/UserGuide/dirspec.dtd">
+ 
+<dir name="Core/TkExtensions">
+
+<!-- ************** phase 1 content ************** -->
+ 
+  <fit>
+  <!-- describe how this directory fits into SCIRun - why does it
+       exist, how does SCIRun benefit from it, etc. -->
+    <p>
+      
+      The main purpose of this directory is provide additional GUI
+      componenet that are needed by SCIRun but are not provided by
+      Tk nor are easily implemented (if at all) in native TclTk. 
+      These extensions include support for an OpenGL window, three 
+      dimension look and feel and moving the cursor to a specified
+      window. These extensions are implemented here in C++ and are
+      added to the Tk built in commands in the initialization stage.
+    </p>
+  </fit>
+ 
+  <use>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+	There are three componenets to this interface: Initialization,
+	extensions and a hack of the Tk internals. GUI extensions to Tk
+	should be implemented here and added to the Tk built in commands
+	via the initialization in tkAppInit.c
+
+	A special attention should be given to the tclUnixNotify-*.c 
+	files. These files are a hack of a similar file internal to Tk.
+	Their purpose is to enable Tk to work in a multithreaded 
+	environment even though it was not designed to do so. Since the
+	coresponding file in the Tk distribution changes between different
+	versions of Tk we have included a modified version for the two
+	versions of Tk that are supported by SCIRun, namely 8.0.4 and 8.3 .
+      </p>
+    </why>
+
+    <when>
+    <!-- Discuss when or where to use the functions and classes in
+         this directory: From within modules?, when a certain event
+	 occurs? -->
+      <p>
+        The code in this directory is meant to be used only via the tcl 
+	commands that it provides. Any tcl code can call these commands
+	to create the GUI they provide.
+      </p>
+    </when>
+  </use>
+
+<!-- ************** phase 2 content ************** -->
+
+  <definition>
+  <!-- Give the definition for a term, or concept, that is embodied
+       by this directory.  Please provide feature length rather than
+       short story definitions. -->
+    <term>
+      tk command
+    </term>
+    <p>
+      Tk provides a set of builtin GUI commands. One can augement them
+      by providing additional functions writen in C++ (or C). These 
+      additional functions can interface the TCL/TK system via C function
+      calls as describe in the TCL/TK documentation.
+    </p>
+  </definition>
+
+  <definition>
+  <!-- Give the definition for a term, or concept, that is embodied
+       by this directory.  Please provide feature length rather than
+       short story definitions. -->
+    <term>
+      tkOpenGL
+    </term>
+    <p>
+      A Tk window that embodies an OpenGL window.
+    </p>
+  </definition>
+
+  <example>
+  <!-- give an example of how to use the classes and/or functions
+       here.  Again, more is better, however give only exactly 
+       that which is being explained, no superfluous text (i.e.
+       please don't cut and paste from existing code.) -->
+    
+    <p>
+    </p>
+  </example>
+</dir>
+
+<!-- author comments: suggestions for new/better tags for this xml file
+
+
+
+-->
