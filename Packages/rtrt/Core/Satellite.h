@@ -12,7 +12,6 @@ class Satellite : public UVSphere
  protected:
 
   Satellite *parent_;
-  string    name_;
   double    rev_speed_;
   double    orb_radius_;
   double    orb_speed_;
@@ -24,12 +23,11 @@ class Satellite : public UVSphere
             double radius, const Vector &up=Vector(0,0,1), 
             Satellite *parent=0) 
     : UVSphere(mat,center,radius,up), parent_(parent), 
-    name_(name), rev_speed_(.1), orb_speed_(.0001)
+    rev_speed_(.1), orb_speed_(.0001)
   {
+    orb_radius_ = center.asVector().length();
     theta_ = sqrt(cen.x()*cen.x()+cen.y()*cen.y());
-    orb_radius_ = sqrt(cen.x()*cen.x()+
-                       cen.y()*cen.y()+
-                       cen.z()*cen.z());
+    name_ = name;
   }
   virtual ~Satellite() {}
 
@@ -56,12 +54,14 @@ class Satellite : public UVSphere
 
   virtual void compute_bounds(BBox& bbox, double offset)
   {
-    if (parent_)
+    if (parent_) {
+      parent_->compute_bounds(bbox,offset);
       bbox.extend(parent_->get_center(), 
                   parent_->get_orb_radius()+parent_->get_radius()+
                   orb_radius_+radius+offset);
-    else
-      bbox.extend(Point(0,0,0), orb_radius_+radius+offset);
+    } else {
+      bbox.extend(get_center(), orb_radius_+radius+offset);
+    }
   }
 
   virtual void animate(double t, bool& changed)
