@@ -44,7 +44,7 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
-#ifdef WONT_COMPILE_YET
+using namespace Uintah::Components;
 
 ViscoElasticDamage::ViscoElasticDamage()
 {
@@ -181,29 +181,31 @@ Matrix3 ViscoElasticDamage::getDeformationMeasure() const
 
 }
 
-BoundedArray<double> ViscoElasticDamage::getMechProps() const
+std::vector<double> ViscoElasticDamage::getMechProps() const
 {
   // Return bulk and shear modulus
 
-  BoundedArray<double> props(1,8,0.0);
+  std::vector<double> props(8,0.0);
 
-  props[1] = d_Bulk;
-  props[2] = d_Shear;
-  props[3] = d_Alpha;
-  props[4] = d_Beta;
-  props[5] = d_Tau;
-  props[6] = d_Gamma;
-  props[7] = maxEquivStrain;
-  props[8] = damageG;
+  props[0] = d_Bulk;
+  props[1] = d_Shear;
+  props[2] = d_Alpha;
+  props[3] = d_Beta;
+  props[4] = d_Tau;
+  props[5] = d_Gamma;
+  props[6] = maxEquivStrain;
+  props[7] = damageG;
 
   return props;
 
 }
 
-void ViscoElasticDamage::computeStressTensor
-		(Matrix3 velocityGradient,double time_step)
+void ViscoElasticDamage::computeStressTensor(const Region* region,
+					     const MPMMaterial* matl,
+					     const DataWarehouseP& new_dw,
+					     DataWarehouseP& old_dw)
 {
-
+#ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,shearTrial,fbar,F_bar,C_bar,C_nn;
   double J,p;
   double equiv_strain;
@@ -297,15 +299,26 @@ void ViscoElasticDamage::computeStressTensor
   stressTensor = Identity*J*p + shearTrial;
 
   bElBar = bElBarTrial;
-
+#endif
 }
 
-double ViscoElasticDamage::computeStrainEnergy()
+double ViscoElasticDamage::computeStrainEnergy(const Region* region,
+					       const MPMMaterial* matl,
+					       const DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
+
   double strainenergy = 1;
 
   return strainenergy;
+#endif
 
+}
+
+void ViscoElasticDamage::initializeCMData(const Region* region,
+		      const MPMMaterial* matl,
+		      DataWarehouseP& new_dw)
+{
 }
 
 double ViscoElasticDamage::getLambda() const
@@ -444,4 +457,4 @@ int ViscoElasticDamage::getSize() const
   return(s);
 }
 
-#endif
+

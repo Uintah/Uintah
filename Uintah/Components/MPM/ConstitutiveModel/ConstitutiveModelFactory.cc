@@ -14,6 +14,7 @@ using std::ofstream;
 
 using namespace Uintah::Components;
 
+
 void ConstitutiveModelFactory::readParameters(ProblemSpecP ps, 
 					      std::string mat_type,
 					      double *p_array)
@@ -42,7 +43,7 @@ void ConstitutiveModelFactory::readParameters(ProblemSpecP ps,
   }
 }
 
-
+#ifdef WONT_COMPILE_YET  
 
 ConstitutiveModel* ConstitutiveModelFactory::readParametersAndCreate(
 					     ProblemSpecP ps,
@@ -131,6 +132,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(std::string mat_type,
   return(0);
 }
 
-
+#endif
 
 

@@ -20,9 +20,11 @@
 
 #include "ConstitutiveModel.h"	
 #include <Uintah/Components/MPM/Util/Matrix3.h>
+#include <vector>
 
 namespace Uintah {
 namespace Components {
+
 class ElasticConstitutiveModel : public ConstitutiveModel {
  private:
   // data areas
@@ -83,9 +85,8 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
   // access the Symmetric strain tensor
   virtual Matrix3 getDeformationMeasure() const;
   // access the mechanical properties
-#ifdef WONT_COMPILE_YET
-  virtual BoundedArray<double> getMechProps() const;
-#endif
+  std::vector<double> getMechProps() const;
+
   // access the strain increment tensor
   Matrix3 getStrainIncrement() const;
   // access the stress increment tensor
@@ -116,6 +117,11 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
 				   const MPMMaterial* matl,
                                    const DataWarehouseP& new_dw);
 
+  // initialize  each particle's constitutive model data
+  virtual void initializeCMData(const Region* region,
+				const MPMMaterial* matl,
+				DataWarehouseP& new_dw);   
+  
   // class function to read correct number of parameters
   // from the input file
   static void readParameters(ProblemSpecP ps, double *p_array);
@@ -159,12 +165,19 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
   virtual int getSize() const;
 };
 
+
 } // end namespace Components
 } // end namespace Uintah
+
 
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.5  2000/04/19 21:15:55  jas
+// Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
+// functions that need access to data warehouse still have WONT_COMPILE_YET
+// around the methods.
+//
 // Revision 1.4  2000/04/19 05:26:04  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

@@ -8,9 +8,6 @@
 #include "CompNeoHookPlas.h"
 #include "HyperElasticDamage.h"
 #include "ViscoElasticDamage.h"
-
-
-
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <string>

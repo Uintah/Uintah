@@ -22,7 +22,7 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
-#ifdef WONT_COMPILE_YET
+using namespace Uintah::Components;
 
 CompNeoHookPlas::CompNeoHookPlas()
 {
@@ -65,6 +65,12 @@ CompNeoHookPlas::~CompNeoHookPlas()
 {
   // Destructor
  
+}
+
+void CompNeoHookPlas::initializeCMData(const Region* region,
+                                        const MPMMaterial* matl,
+                                        DataWarehouseP& new_dw)
+{
 }
 
 void CompNeoHookPlas::setBulk(double bulk)
@@ -128,27 +134,31 @@ Matrix3 CompNeoHookPlas::getbElBar()
   return bElBar;
 
 }
-
-BoundedArray<double> CompNeoHookPlas::getMechProps() const
+#ifdef WONT_COMPILE_YET
+std::vector<double> CompNeoHookPlas::getMechProps() const
 {
   // Return bulk and shear modulus
 
-  BoundedArray<double> props(1,5,0.0);
+  std::vector<double> props(5,0.0);
 
-  props[1] = d_Bulk;
-  props[2] = d_Shear;
-  props[3] = d_FlowStress;
-  props[4] = d_K;
-  props[5] = d_Alpha;
+  props[0] = d_Bulk;
+  props[1] = d_Shear;
+  props[2] = d_FlowStress;
+  props[3] = d_K;
+  props[4] = d_Alpha;
 
   return props;
 
 }
+#endif
 
-void CompNeoHookPlas::computeStressTensor
-		(Matrix3 velocityGradient, double time_step)
+void CompNeoHookPlas::computeStressTensor(const Region* region,
+					  const MPMMaterial* matl,
+					  const DataWarehouseP& new_dw,
+					  DataWarehouseP& old_dw)
 {
 
+#ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,deformationGradientInc;
   Matrix3 shearTrial,Shear,normal;
   Matrix3 fbar;
@@ -223,9 +233,13 @@ void CompNeoHookPlas::computeStressTensor
   // compute the total stress (volumetric + deviatoric)
   stressTensor = Identity*J*p + Shear;
 
+#endif
+
 }
 
-double CompNeoHookPlas::computeStrainEnergy()
+double CompNeoHookPlas::computeStrainEnergy(const Region* region,
+					    const MPMMaterial* matl,
+					    const DataWarehouseP& new_dw)
 {
   double se,J,U,W;
 
@@ -318,7 +332,8 @@ ConstitutiveModel* CompNeoHookPlas::readRestartParametersAndCreate(ProblemSpecP 
 
 ConstitutiveModel* CompNeoHookPlas::create(double *p_array)
 {
-  return(new CompNeoHookPlas(p_array[0], p_array[1], p_array[2], p_array[3], 0.0));
+  return(new CompNeoHookPlas(p_array[0], p_array[1], p_array[2],
+			     p_array[3], 0.0));
 }
 
 int CompNeoHookPlas::getType() const
@@ -360,10 +375,15 @@ int CompNeoHookPlas::getSize() const
   return(s);
 }
 
-#endif
+
 
 
 // $Log$
+// Revision 1.4  2000/04/19 21:15:55  jas
+// Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
+// functions that need access to data warehouse still have WONT_COMPILE_YET
+// around the methods.
+//
 // Revision 1.3  2000/04/14 17:34:42  jas
 // Added ProblemSpecP capabilities.
 //

@@ -42,7 +42,7 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
-#ifdef WONT_COMPILE_YET
+using namespace Uintah::Components;
 
 HyperElasticDamage::HyperElasticDamage()
 {
@@ -155,27 +155,30 @@ Matrix3 HyperElasticDamage::getDeformationMeasure() const
 
 }
 
-BoundedArray<double> HyperElasticDamage::getMechProps() const
+std::vector<double> HyperElasticDamage::getMechProps() const
 {
   // Return bulk and shear modulus
 
-  BoundedArray<double> props(1,6,0.0);
+  std::vector<double> props(6,0.0);
 
-  props[1] = d_Bulk;
-  props[2] = d_Shear;
-  props[3] = d_Alpha;
-  props[4] = d_Beta;
-  props[5] = maxEquivStrain;
-  props[6] = damageG;
+  props[0] = d_Bulk;
+  props[1] = d_Shear;
+  props[2] = d_Alpha;
+  props[3] = d_Beta;
+  props[4] = maxEquivStrain;
+  props[5] = damageG;
 
   return props;
 
 }
 
-void HyperElasticDamage::computeStressTensor
-		(Matrix3 velocityGradient,double time_step)
+void HyperElasticDamage::computeStressTensor(const Region* region,
+					     const MPMMaterial* matl,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw)
 {
 
+#ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial, shearTrial,fbar,F_bar,C_bar;
   double J,p;
   double equiv_strain;
@@ -253,16 +256,27 @@ void HyperElasticDamage::computeStressTensor
   stressTensor = Identity*J*p + shearTrial;
 
   bElBar = bElBarTrial;
-
+#endif
 }
 
-double HyperElasticDamage::computeStrainEnergy()
+double HyperElasticDamage::computeStrainEnergy(const Region* region,
+					       const MPMMaterial* matl,
+					       const DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   double strainenergy = 1;
 
   return strainenergy;
+#endif
+}
+
+void HyperElasticDamage::initializeCMData(const Region* region,
+					  const MPMMaterial* matl,
+					  DataWarehouseP& new_dw)
+{
 
 }
+
 
 double HyperElasticDamage::getLambda() const
 {
@@ -389,10 +403,15 @@ int HyperElasticDamage::getSize() const
   return(s);
 }
 
-#endif
+
 
 //
 // $Log$
+// Revision 1.4  2000/04/19 21:15:56  jas
+// Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
+// functions that need access to data warehouse still have WONT_COMPILE_YET
+// around the methods.
+//
 // Revision 1.3  2000/04/14 17:34:42  jas
 // Added ProblemSpecP capabilities.
 //
