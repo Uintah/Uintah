@@ -356,7 +356,7 @@ set $m0-notes {}
 set $m0-label {unknown}
 set $m0-type {Scalar}
 set $m0-axis {axis0}
-set $m0-add {0}
+#set $m0-add {0}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m0-filename $DATADIR/$DATASET/demo-DWI.nrrd
 } else {
@@ -921,7 +921,7 @@ set $m48-notes {}
 set $m48-label {unknown}
 set $m48-type {Scalar}
 set $m48-axis {axis0}
-set $m48-add {1}
+#set $m48-add {1}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m48-filename $DATADIR/$DATASET/demo-B0.nrrd
 } else {
@@ -933,7 +933,7 @@ set $m50-notes {}
 set $m50-label {unknown}
 set $m50-type {Scalar}
 set $m50-axis {axis0}
-set $m50-add {0}
+#set $m50-add {0}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m50-filename $DATADIR/$DATASET/demo-gradients.txt
 } else {
@@ -1027,8 +1027,8 @@ set $m62-notes {}
 set $m63-notes {}
 set $m63-label {unknown}
 set $m63-type {Scalar}
-set $m63-axis {axis0}
-set $m63-add {1}
+set $m63-axis {axisCreateNewTuple}
+#set $m63-add {1}
 set $m63-filename {}
 # set $m64-notes {}
 # set $m64-threshold {0.5}
@@ -2235,11 +2235,8 @@ class BioTensorApp {
 	pack $attachedVFr -side left -anchor n 
 
 	set total_width [expr $process_width + $viewer_width + $vis_width]
-	#puts $total_width
-	#puts [winfo width .standalone]
 
 	set total_height $viewer_height
-	#puts $total_height
 
 	set pos_x [expr [expr $screen_width / 2] - [expr $total_width / 2]]
 	set pos_y [expr [expr $screen_height / 2] - [expr $total_height / 2]]
@@ -3510,16 +3507,6 @@ class BioTensorApp {
 	    $indicatorL1 configure -text "Press Execute to run to save point..."
 	    $indicatorL2 configure -text "Press Execute to run to save point..."
 
-# 	    global bmatrix
-# 	    if {$dt_completed  && $bmatrix == "load"} {
-# 		puts "Setting BMatrix stuff..."
-# 		global mods
-# 		global $mods(NrrdReader-BMatrix)-add
-# 		global $mods(NrrdReader-BMatrix)-axis
-# 		set $mods(NrrdReader-BMatrix)-add 1
-# 		set $mods(NrrdReader-BMatrix)-axis {}
-# 	    }
-
 	}	
     }
 
@@ -3659,7 +3646,9 @@ class BioTensorApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(TendEstim) && $state == "Completed"} {
 	    change_indicate_val 2
-	    activate_vis
+	    if {!$loading} {
+		activate_vis
+	    }
 	} elseif {$which == $mods(NrrdInfo1) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
@@ -3697,14 +3686,6 @@ class BioTensorApp {
 		set min_y [set $mods(NrrdInfo1)-min2]
 		set min_z [set $mods(NrrdInfo1)-min3]
 
-		# configure the variance offset
-		global $mods(ChangeFieldBounds-Variance)-outputcenterx
-		global $mods(ChangeFieldBounds-Variance)-outputcentery
-		set $mods(ChangeFieldBounds-Variance)-outputcenterx \
-		    [expr -($min_x + ($size_x*$spacing_x/2.0)*1.1)]
-		set $mods(ChangeFieldBounds-Variance)-outputcentery \
-		    [expr $min_y + ($size_y*$spacing_y/2.0)]
-
 		# configure fiber edges to be average spacing * 0.25
 		global $mods(ShowField-Fibers)-edge_scale
 		set $mods(ShowField-Fibers)-edge_scale [expr 0.125 * $average_spacing]
@@ -3727,6 +3708,15 @@ class BioTensorApp {
 		    
 		    configure_sample_planes
 
+		    # configure the variance offset
+		    global $mods(ChangeFieldBounds-Variance)-outputcenterx
+		    global $mods(ChangeFieldBounds-Variance)-outputcentery
+		    set $mods(ChangeFieldBounds-Variance)-outputcenterx \
+			[expr -($min_x + ($size_x*$spacing_x/2.0)*1.1)]
+		    set $mods(ChangeFieldBounds-Variance)-outputcentery \
+			[expr $min_y + ($size_y*$spacing_y/2.0)]
+
+
 		    # reconfigure registration reference image slider
 		    $ref_image1.s.ref configure -from 1 -to $volumes
 		    $ref_image2.s.ref configure -from 1 -to $volumes
@@ -3740,7 +3730,7 @@ class BioTensorApp {
 		    
 		}
 	    } else {
-		puts "NRRD STUFF DIDN'T EXIST"
+		puts "DATA IS NOT LOADED PROPERLY"
 	    }
  	} elseif {$which == $mods(ShowField-X) && $state == "JustStarted"} {
 	    change_indicate_val 1
@@ -3879,6 +3869,7 @@ class BioTensorApp {
 	    # and check if both DWI and T2 files have been specified
 	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
 		# Nrrd
+
 		global $mods(NrrdReader1)-filename
 		if {![file exists [set $mods(NrrdReader1)-filename]]} {
 		    set answer [tk_messageBox -message \
@@ -3892,7 +3883,6 @@ class BioTensorApp {
 		    return
 		}
 		
-		puts "Setting tuple axis to 0 for NrrdReader1 and NrrdReader-T2 (DWI Mode)"
 		global $mods(NrrdReader1)-axis
 		set $mods(NrrdReader1)-axis axis0
 
@@ -3903,6 +3893,8 @@ class BioTensorApp {
 
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
 		# Analyze
+		global $mods(AnalyzeToNrrd1)-file
+		global $mods(AnalyzeToNrrd-T2)-file
 	    } else {
 		# shouldn't get here
 		return
@@ -3933,7 +3925,6 @@ class BioTensorApp {
 				    "Please specify an valid nrrd file\nwith tensors before executing." -type ok -icon info -parent .standalone] 
 		    return
 		}
-		puts "Setting tuple axis to 0 for NrrdReader1 (tensor mode)"
 		global $mods(NrrdReader1)-axis
 		set $mods(NrrdReader1)-axis axis0
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
@@ -3941,6 +3932,12 @@ class BioTensorApp {
 
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
 		# Analyze
+		global $mods(AnalyzeToNrrd1)-file
+		if {[set $mods(AnalyzeToNrrd1)-file] == ""} {
+		    set answer [tk_messageBox -message \
+				    "Please specify valid Analyze files\nwith tensors before executing." -type ok -icon info -parent .standalone] 
+		    return
+		}
 	    } else {
 		# shouldn't get here
 		return
@@ -4474,26 +4471,22 @@ class BioTensorApp {
 
 
     method execute_DT {} {
-       global mods
- 
-       # Check bmatrix has been loaded
-       global $mods(NrrdReader-BMatrix)-filename
-       global bmatrix
-
+	global mods
+	
+	# Check bmatrix has been loaded
+	global $mods(NrrdReader-BMatrix)-filename
+	global bmatrix
+	
 	if {$bmatrix == "load"} {
 	    if {[set $mods(NrrdReader-BMatrix)-filename] == ""} {
 		set answer [tk_messageBox -message \
 				"Please load a B-Matrix file containing." -type ok -icon info -parent .standalone]
 		return
 	    }
-
-	    puts "Setting tuple axis to ADD for NrrdReader-BMatrix"
-	    # Set the BMatrix to add a tuple axis
-	    global $mods(NrrdReader-BMatrix)-add
-	    set $mods(NrrdReader-BMatrix)-add 1
 	    
+	    # Set the BMatrix to add a tuple axis
 	    global $mods(NrrdReader-BMatrix)-axis
-	    set $mods(NrrdReader-BMatrix)-axis {}
+	    set $mods(NrrdReader-BMatrix)-axis {axisCreateNewTuple}
 	    
 	} 
 	
@@ -4503,10 +4496,6 @@ class BioTensorApp {
 	
 	# execute
 	$mods(ChooseNrrd-ToSmooth)-c needexecute
-
-# 	if {$bmatrix == "load"} {
-# 	    $mods(NrrdReader-BMatrix)-c needexecute
-# 	}
 
 	set dt_completed 1
 	set reg_completed 1
@@ -4907,7 +4896,9 @@ class BioTensorApp {
     }
 
     method update_variance_slice {} {
-	if {$data_completed} {
+	# only update if not in loading mode, otherwise
+	# everything will execute twice
+	if {$data_completed && !$loading} {
 	    global mods
 	    $mods(UnuSlice1)-c needexecute
 	    
@@ -5591,273 +5582,273 @@ class BioTensorApp {
     }
 
     method toggle_clip_to_isosurface {} {
-       global mods
-       global clip_to_isosurface
-       global $mods(ChooseField-X)-port-index
-       global $mods(ChooseField-Y)-port-index
-       global $mods(ChooseField-Z)-port-index
-
-       if {$clip_to_isosurface == 1} {
-	# change ChooseField port to 1
- 
-        set $mods(ChooseField-X)-port-index 1
-        set $mods(ChooseField-Y)-port-index 1
-        set $mods(ChooseField-Z)-port-index 1
-       } else {
-	# change ChooseField port to 0
- 
-        set $mods(ChooseField-X)-port-index 0
-        set $mods(ChooseField-Y)-port-index 0
-        set $mods(ChooseField-Z)-port-index 0
-       }
-
-       # re-execute
-       $mods(ChooseField-ColorPlanes)-c needexecute
+	global mods
+	global clip_to_isosurface
+	global $mods(ChooseField-X)-port-index
+	global $mods(ChooseField-Y)-port-index
+	global $mods(ChooseField-Z)-port-index
+	
+	if {$clip_to_isosurface == 1} {
+	    # change ChooseField port to 1
+	    
+	    set $mods(ChooseField-X)-port-index 1
+	    set $mods(ChooseField-Y)-port-index 1
+	    set $mods(ChooseField-Z)-port-index 1
+	} else {
+	    # change ChooseField port to 0
+	    
+	    set $mods(ChooseField-X)-port-index 0
+	    set $mods(ChooseField-Y)-port-index 0
+	    set $mods(ChooseField-Z)-port-index 0
+	}
+	
+	# re-execute
+	$mods(ChooseField-ColorPlanes)-c needexecute
     }
-
+    
     method update_plane_x { } {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-X)-pos
- 
-       if {$vis_activated} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_x / [expr $size_x / 2.0] ] - 1.0]
-          set $mods(SamplePlane-X)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-1
-          global $clip-normal-d-2
-	  set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	  set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	  set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-
-          set $clip-normal-d-1 [expr -$span_x  + $plane_inc]
-          set $clip-normal-d-2 [expr $span_x  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(ClipByFunction-Seeds)-clipfunction
-          global $mods(Isosurface)-isoval
-	  
-	  set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-         
-
-	  $mods(ClipByFunction-Seeds)-c needexecute
-	  
-          $mods(SamplePlane-X)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	global mods plane_x plane_y plane_z
+	global $mods(SamplePlane-X)-pos
+	
+	if {$vis_activated} {
+	    # set the sample plane position to be the normalized value
+	    set result [expr [expr $plane_x / [expr $size_x / 2.0] ] - 1.0]
+	    set $mods(SamplePlane-X)-pos $result
+	    
+	    # set the glabal clipping planes values
+	    set clip $mods(Viewer)-ViewWindow_0-clip
+	    global $clip-normal-d-1
+	    global $clip-normal-d-2
+	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
+	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
+	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+	    
+	    set $clip-normal-d-1 [expr -$span_x  + $plane_inc]
+	    set $clip-normal-d-2 [expr $span_x  + $plane_inc]
+	    
+	    # configure ClipByFunction
+	    global $mods(ClipByFunction-Seeds)-clipfunction
+	    global $mods(Isosurface)-isoval
+	    
+	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
+	    
+	    
+	    $mods(ClipByFunction-Seeds)-c needexecute
+	    
+	    $mods(SamplePlane-X)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method update_plane_y {} {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-Y)-pos
- 
-       if {$vis_activated} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_y / [expr $size_y / 2.0] ] - 1.0]
-          set $mods(SamplePlane-Y)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-3
-          global $clip-normal-d-4
-	  set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	  set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	  set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-
-          set $clip-normal-d-3 [expr -$span_y  + $plane_inc]
-          set $clip-normal-d-4 [expr $span_y  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(Isosurface)-isoval
-          global $mods(ClipByFunction-Seeds)-clipfunction
-	  
-	  set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-          
-	  $mods(ClipByFunction-Seeds)-c needexecute
-
-          $mods(SamplePlane-Y)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	global mods plane_x plane_y plane_z
+	global $mods(SamplePlane-Y)-pos
+	
+	if {$vis_activated} {
+	    # set the sample plane position to be the normalized value
+	    set result [expr [expr $plane_y / [expr $size_y / 2.0] ] - 1.0]
+	    set $mods(SamplePlane-Y)-pos $result
+	    
+	    # set the glabal clipping planes values
+	    set clip $mods(Viewer)-ViewWindow_0-clip
+	    global $clip-normal-d-3
+	    global $clip-normal-d-4
+	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
+	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
+	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+	    
+	    set $clip-normal-d-3 [expr -$span_y  + $plane_inc]
+	    set $clip-normal-d-4 [expr $span_y  + $plane_inc]
+	    
+	    # configure ClipByFunction
+	    global $mods(Isosurface)-isoval
+	    global $mods(ClipByFunction-Seeds)-clipfunction
+	    
+	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
+	    
+	    $mods(ClipByFunction-Seeds)-c needexecute
+	    
+	    $mods(SamplePlane-Y)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method update_plane_z {} {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-Z)-pos
- 
-       if {$vis_activated} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_z / [expr $size_z / 2.0] ] - 1.0]
-          set $mods(SamplePlane-Z)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-5
-          global $clip-normal-d-6
-	  set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	  set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	  set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-	  
-          set $clip-normal-d-5 [expr -$span_z  + $plane_inc]
-          set $clip-normal-d-6 [expr $span_z  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(Isosurface)-isoval
-          global $mods(ClipByFunction-Seeds)-clipfunction
-
-	set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-
-	  $mods(ClipByFunction-Seeds)-c needexecute
-
-          $mods(SamplePlane-Z)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	global mods plane_x plane_y plane_z
+	global $mods(SamplePlane-Z)-pos
+	
+	if {$vis_activated} {
+	    # set the sample plane position to be the normalized value
+	    set result [expr [expr $plane_z / [expr $size_z / 2.0] ] - 1.0]
+	    set $mods(SamplePlane-Z)-pos $result
+	    
+	    # set the glabal clipping planes values
+	    set clip $mods(Viewer)-ViewWindow_0-clip
+	    global $clip-normal-d-5
+	    global $clip-normal-d-6
+	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
+	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
+	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+	    
+	    set $clip-normal-d-5 [expr -$span_z  + $plane_inc]
+	    set $clip-normal-d-6 [expr $span_z  + $plane_inc]
+	    
+	    # configure ClipByFunction
+	    global $mods(Isosurface)-isoval
+	    global $mods(ClipByFunction-Seeds)-clipfunction
+	    
+	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
+	    
+	    $mods(ClipByFunction-Seeds)-c needexecute
+	    
+	    $mods(SamplePlane-Z)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method toggle_plane { which } {
-       global mods
-       global show_plane_x show_plane_y show_plane_z
-       global $mods(ShowField-X)-faces-on
-       global $mods(ShowField-Y)-faces-on
-       global $mods(ShowField-Z)-faces-on
-       global $mods(Viewer)-ViewWindow_0-clip
-       set clip $mods(Viewer)-ViewWindow_0-clip
-
-
-       # turn off showfields and configure global clipping planes
-
-       if {$which == "X"} {
-          global $clip-visible-$last_x
-          if {$show_plane_x == 0} {
-              # turn off 
-              set $mods(ShowField-X)-faces-on 0
-              set $clip-visible-$last_x 0
-	      
-	      # disable connection
-	      block_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
-          } else {
-              set $mods(ShowField-X)-faces-on 1
-              set $clip-visible-$last_x 1
-	      # enable connection
-	      unblock_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
-          }  
-	   $mods(GatherPoints)-c needexecute
-
-	   $mods(ShowField-X)-c toggle_display_faces  
-	   $mods(Viewer)-ViewWindow_0-c redraw
-       } elseif {$which == "Y"} {
-          global $clip-visible-$last_y
-          if {$show_plane_y == 0} {
-              set $mods(ShowField-Y)-faces-on 0
-              set $clip-visible-$last_y 0   
-	      block_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
-          } else {
-              set $mods(ShowField-Y)-faces-on 1
-              set $clip-visible-$last_y 1
-	      unblock_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
-          }   
-	   $mods(GatherPoints)-c needexecute
-
-          $mods(ShowField-Y)-c toggle_display_faces
-          $mods(Viewer)-ViewWindow_0-c redraw
-       } else {
-	   # Z plane
-          global $clip-visible-$last_z
-          if {$show_plane_z == 0} {
-              set $mods(ShowField-Z)-faces-on 0
-              set $clip-visible-$last_z 0  
-	      block_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
-          } else {
-              set $mods(ShowField-Z)-faces-on 1
-              set $clip-visible-$last_z 1            
-	      unblock_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
-          }   
-
-	  $mods(GatherPoints)-c needexecute
-
-          $mods(ShowField-Z)-c toggle_display_faces
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
+	global mods
+	global show_plane_x show_plane_y show_plane_z
+	global $mods(ShowField-X)-faces-on
+	global $mods(ShowField-Y)-faces-on
+	global $mods(ShowField-Z)-faces-on
+	global $mods(Viewer)-ViewWindow_0-clip
+	set clip $mods(Viewer)-ViewWindow_0-clip
+	
+	
+	# turn off showfields and configure global clipping planes
+	
+	if {$which == "X"} {
+	    global $clip-visible-$last_x
+	    if {$show_plane_x == 0} {
+		# turn off 
+		set $mods(ShowField-X)-faces-on 0
+		set $clip-visible-$last_x 0
+		
+		# disable connection
+		block_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
+	    } else {
+		set $mods(ShowField-X)-faces-on 1
+		set $clip-visible-$last_x 1
+		# enable connection
+		unblock_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
+	    }  
+	    $mods(GatherPoints)-c needexecute
+	    
+	    $mods(ShowField-X)-c toggle_display_faces  
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	} elseif {$which == "Y"} {
+	    global $clip-visible-$last_y
+	    if {$show_plane_y == 0} {
+		set $mods(ShowField-Y)-faces-on 0
+		set $clip-visible-$last_y 0   
+		block_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
+	    } else {
+		set $mods(ShowField-Y)-faces-on 1
+		set $clip-visible-$last_y 1
+		unblock_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
+	    }   
+	    $mods(GatherPoints)-c needexecute
+	    
+	    $mods(ShowField-Y)-c toggle_display_faces
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    # Z plane
+	    global $clip-visible-$last_z
+	    if {$show_plane_z == 0} {
+		set $mods(ShowField-Z)-faces-on 0
+		set $clip-visible-$last_z 0  
+		block_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
+	    } else {
+		set $mods(ShowField-Z)-faces-on 1
+		set $clip-visible-$last_z 1            
+		unblock_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
+	    }   
+	    
+	    $mods(GatherPoints)-c needexecute
+	    
+	    $mods(ShowField-Z)-c toggle_display_faces
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
     method toggle_plane_y {} {
-       global mods
-       global show_plane_y
-       global $mods(ShowField-Y)-faces-on
-
-       if {$show_plane_y == 0} {
-           set $mods(ShowField-Y)-faces-on 0
-       } else {
-           set $mods(ShowField-X)-faces-on 1
-       }     
- 
-       # execute showfield
-       $mods(ShowField-X)-c toggle_display_faces
+	global mods
+	global show_plane_y
+	global $mods(ShowField-Y)-faces-on
+	
+	if {$show_plane_y == 0} {
+	    set $mods(ShowField-Y)-faces-on 0
+	} else {
+	    set $mods(ShowField-X)-faces-on 1
+	}     
+	
+	# execute showfield
+	$mods(ShowField-X)-c toggle_display_faces
     }
-
+    
     method toggle_plane_x {} {
-       global mods
-       global show_plane_x
-       global $mods(ShowField-X)-faces-on
-
-       if {$show_plane_x == 0} {
-           set $mods(ShowField-X)-faces-on 0
-       } else {
-           set $mods(ShowField-X)-faces-on 1
-       }     
- 
-       # execute showfield
-       $mods(ShowField-X)-c toggle_display_faces
+	global mods
+	global show_plane_x
+	global $mods(ShowField-X)-faces-on
+	
+	if {$show_plane_x == 0} {
+	    set $mods(ShowField-X)-faces-on 0
+	} else {
+	    set $mods(ShowField-X)-faces-on 1
+	}     
+	
+	# execute showfield
+	$mods(ShowField-X)-c toggle_display_faces
     }
 
     method toggle_show_planes {} {
-      global mods
-      global show_planes
-
-      global $mods(ShowField-X)-faces-on
-      global $mods(ShowField-Y)-faces-on
-      global $mods(ShowField-Z)-faces-on
-
-      global $mods(Viewer)-ViewWindow_0-clip
-      set clip $mods(Viewer)-ViewWindow_0-clip
-
-      global $clip-visible-$last_x
-      global $clip-visible-$last_y
-      global $clip-visible-$last_z
-
-      if {$show_planes == 0} {
-         # turn off global clipping planes
-         set $clip-visible-$last_x 0
-         set $clip-visible-$last_y 0
-         set $clip-visible-$last_z 0
- 
-         set $mods(ShowField-X)-faces-on 0
-         set $mods(ShowField-Y)-faces-on 0
-         set $mods(ShowField-Z)-faces-on 0
-
-         $mods(ChooseField-ColorPlanes)-c needexecute
-         $mods(Viewer)-ViewWindow_0-c redraw
-      } else {
-         global show_plane_x show_plane_y show_plane_z
-
-         if {$show_plane_x} {
-            set $mods(ShowField-X)-faces-on 1
-            set $clip-visible-$last_x 1
-         }
-         if {$show_plane_y} {
-            set $mods(ShowField-Y)-faces-on 1
-            set $clip-visible-$last_y 1
-         }
-         if {$show_plane_z} {
-            set $mods(ShowField-Z)-faces-on 1
-            set $clip-visible-$last_z 1
-         }
-         $mods(ChooseField-ColorPlanes)-c needexecute
-         $mods(Viewer)-ViewWindow_0-c redraw
-      }
+	global mods
+	global show_planes
+	
+	global $mods(ShowField-X)-faces-on
+	global $mods(ShowField-Y)-faces-on
+	global $mods(ShowField-Z)-faces-on
+	
+	global $mods(Viewer)-ViewWindow_0-clip
+	set clip $mods(Viewer)-ViewWindow_0-clip
+	
+	global $clip-visible-$last_x
+	global $clip-visible-$last_y
+	global $clip-visible-$last_z
+	
+	if {$show_planes == 0} {
+	    # turn off global clipping planes
+	    set $clip-visible-$last_x 0
+	    set $clip-visible-$last_y 0
+	    set $clip-visible-$last_z 0
+	    
+	    set $mods(ShowField-X)-faces-on 0
+	    set $mods(ShowField-Y)-faces-on 0
+	    set $mods(ShowField-Z)-faces-on 0
+	    
+	    $mods(ChooseField-ColorPlanes)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    global show_plane_x show_plane_y show_plane_z
+	    
+	    if {$show_plane_x} {
+		set $mods(ShowField-X)-faces-on 1
+		set $clip-visible-$last_x 1
+	    }
+	    if {$show_plane_y} {
+		set $mods(ShowField-Y)-faces-on 1
+		set $clip-visible-$last_y 1
+	    }
+	    if {$show_plane_z} {
+		set $mods(ShowField-Z)-faces-on 1
+		set $clip-visible-$last_z 1
+	    }
+	    $mods(ChooseField-ColorPlanes)-c needexecute
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
-
+    
 
 
 ######## ISOSURFACE #########
@@ -8187,7 +8178,7 @@ class BioTensorApp {
 		    #disableModule $mods(RescaleColorMap2) 0
 		    disableModule $mods(TendEpireg) 1
 		    disableModule $mods(UnuJoin) 1
-		    $mods(ChooseNrrd-ToReg)-c needexecute
+		    #$mods(ChooseNrrd-ToReg)-c needexecute
 		    activate_dt
 		    $proc_tab1 view "Build Tensors"
 		    $proc_tab2 view "Build Tensors"
