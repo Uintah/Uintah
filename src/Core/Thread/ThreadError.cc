@@ -25,14 +25,25 @@ ThreadError::~ThreadError()
 {
 }
 
-std::string
+const char*
 ThreadError::message() const
 {
-    return d_message;
+    return d_message.c_str();
+}
+
+const char*
+ThreadError::type() const
+{
+    return "SCICore::Thread::ThreadError";
 }
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 10:21:26  sparker
+// Use libexc to print out stack straces on the SGI
+// Added "name" method to ThreadError to match exception base class
+// Fixed a compiler warning in Thread_irix.cc
+//
 // Revision 1.4  1999/08/28 03:46:51  sparker
 // Final updates before integration with PSE
 //
