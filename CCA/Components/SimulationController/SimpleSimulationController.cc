@@ -26,7 +26,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -151,8 +150,7 @@ SimpleSimulationController::run()
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
    
-   LoadBalancer* lb = dynamic_cast<LoadBalancer*>
-     (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
+   LoadBalancer* lb = sched->getLoadBalancer();
    lb->problemSetup(ups, sharedState);
 
    // done after the sim->problemSetup to get defaults into the

@@ -3,9 +3,8 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -93,10 +92,8 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
 
   // get how many particles were each patch had at the end of the last timestep
   //   gather from each proc - based on the last location
-  SchedulerCommon* sc = const_cast<SchedulerCommon*>(dynamic_cast<const SchedulerCommon*>(d_scheduler));
 
-  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>
-    (sc->get_dw(0));
+  DataWarehouse* dw = d_scheduler->get_dw(0);
 
   // proc 0 - order patches by processor #
   vector<int> sorted_processorAssignment = d_processorAssignment;
@@ -722,8 +719,6 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
     return true;
   }
   
-  SchedulerCommon* sc = const_cast<SchedulerCommon*>(dynamic_cast<const SchedulerCommon*>(d_scheduler));
-
   int numProcs = d_myworld->size();
   int numPatches = 0;
 
@@ -734,9 +729,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
 
   int myrank = d_myworld->myrank();
 
-  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>
-    (sc->get_dw(0));
-
+  DataWarehouse* dw = d_scheduler->get_dw(0);
 
   if (dw == 0 || d_state == regridLoadBalance) {
     // on the first timestep, just assign the patches in a simple fashion
