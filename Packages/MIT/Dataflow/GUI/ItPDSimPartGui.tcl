@@ -33,13 +33,21 @@ class ItPDSimPartGui {
 	set w $window
 
         iwidgets::entryfield $w.df -labeltext "df:" \
-	    -validate numeric -command "$this-c df \[$w.df get\]" 
+	    -command "$this-c df \[$w.df get\]" 
+
+#-validate numeric 
 
 	frame $w.children
 
 	pack $w.df  -anchor w
 	pack $w.children
 
+    }
+
+    method set-df { df } {
+	if { [$w.df get] != $df } {
+	    $w.df set $df
+	}
     }
 
     method new-child-window { name } {

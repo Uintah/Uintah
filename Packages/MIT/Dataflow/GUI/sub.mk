@@ -23,6 +23,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MetropolisReader.tcl\
 	$(SRCDIR)/PPexample.tcl\
         $(SRCDIR)/PPexampleGui.tcl\
+	$(SRCDIR)/ItPDSimPartGui.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MIT/Dataflow/GUI
 
