@@ -186,41 +186,63 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
 /* ---------------------------------------------------------------------
  Function~ advectQ
 _____________________________________________________________________*/
-//     D O U B L E
-void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
-                             const Patch* patch,
-                             CCVariable<double>& q_advected,
-				 DataWarehouse* /*new_dw*/)
-{ 
+//     M A S S
+void FirstOrderCEAdvector::advectMass(const CCVariable<double>& q_CC,
+                                    const Patch* patch,
+                                    CCVariable<double>& q_advected,
+			               DataWarehouse* /*new_dw*/)
+{
+        
   advectCE<double>(q_CC,patch,q_advected, 
-                      d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesD());
+                   d_notUsedX, d_notUsedY, d_notUsedZ, 
+                   ignoreFaceFluxesD());
 }
+
+//__________________________________
+//     D O U B L E
+void FirstOrderCEAdvector::advectQ(const bool /*useCompatibleFluxes*/,
+                                 const bool /*is_Q_massSpecific*/,
+                                 const CCVariable<double>& q_CC,
+                                 const CCVariable<double>& /*mass*/,
+                                 const Patch* patch,
+                                 CCVariable<double>& q_advected,
+                                 DataWarehouse* /*new_dw*/)
+{
+        
+  advectCE<double>(q_CC,patch,q_advected, 
+                   d_notUsedX, d_notUsedY, d_notUsedZ, 
+                   ignoreFaceFluxesD());
+}
+
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
-//  needed by implicit solve
+//  needed by implicit ICE
 void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
-                             const Patch* patch,
-                             CCVariable<double>& q_advected,
-                             SFCXVariable<double>& q_XFC,
-                             SFCYVariable<double>& q_YFC,
-                             SFCZVariable<double>& q_ZFC,
-				 DataWarehouse* /*new_dw*/)
+                                 const Patch* patch,
+                                 CCVariable<double>& q_advected,
+                                 SFCXVariable<double>& q_XFC,
+                                 SFCYVariable<double>& q_YFC,
+                                 SFCZVariable<double>& q_ZFC,
+				     DataWarehouse* /*new_dw*/)
 {
   advectCE<double>(q_CC,patch,q_advected,  
-                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
+                   q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
 }
 //__________________________________
 //     V E C T O R
-void FirstOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
-                             const Patch* patch,
-                             CCVariable<Vector>& q_advected,
-				 DataWarehouse* /*new_dw*/)
+void FirstOrderCEAdvector::advectQ(const bool /*useCompatibleFluxes*/,
+                                 const bool /*is_Q_massSpecific*/,
+                                 const CCVariable<Vector>& q_CC,
+                                 const CCVariable<double>& /*mass*/,
+                                 const Patch* patch,
+                                 CCVariable<Vector>& q_advected,
+                                 DataWarehouse* /*new_dw*/)
 {
   advectCE<Vector>(q_CC,patch,q_advected, 
-                      d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesV());
-}
+                   d_notUsedX, d_notUsedY, d_notUsedZ, 
+                   ignoreFaceFluxesV());
+} 
+
 
 /* ---------------------------------------------------------------------
  Function~  Advect--  driver program that does the advection  
