@@ -915,16 +915,16 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   }
   Ghost::GhostType  gn  = Ghost::None; 
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
-                                // I C E
-  t->requires(Task::OldDW,  lb->temp_CCLabel,  ice_matls, gn);
-                                // M P M 
-  t->requires(Task::NewDW,  lb->temp_CCLabel,  mpm_matls, gn);      
-
+ 
+/*`==========TESTING==========*/
 #ifdef CONVECT
   Ghost::GhostType  gac  = Ghost::AroundCells; 
   t->requires(Task::NewDW,MIlb->gMassLabel,    mpm_matls,     gac, 1);      
   t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
-#endif
+#endif 
+/*==========TESTING==========`*/
+                                // I C E
+  t->requires(Task::OldDW,  lb->temp_CCLabel,  ice_matls, gn); 
                                 // A L L  M A T L S
   t->requires(Task::NewDW,  lb->mass_L_CCLabel,           gn);      
   t->requires(Task::NewDW,  lb->mom_L_CCLabel,            gn);      
@@ -937,21 +937,17 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::NewDW, lb->rho_CCLabel,             gn);      
     t->requires(Task::NewDW, lb->speedSound_CCLabel,      gn);        
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn);
-    t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn);   
-    t->requires(Task::NewDW, lb->vel_CCLabel,       mpm_matls,  gn);   
+    t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn); 
   }
 
   t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_ME_CCLabel);      
   t->computes(lb->eng_L_ME_CCLabel); 
-
-  t->modifies(lb->temp_CCLabel, mpm_matls);
-  t->modifies(lb->vel_CCLabel,  mpm_matls);
-  /*`==========TESTING==========*/
-//  t->computes(MIlb->scratch1Label); 
-//  t->computes(MIlb->scratch2Label); 
-//  t->computes(MIlb->scratchVecLabel); 
-  /*`==========TESTING==========*/
+  
+  if (mpm_matls->size() > 0){  
+    t->modifies(lb->temp_CCLabel, mpm_matls);
+    t->modifies(lb->vel_CCLabel,  mpm_matls);
+  }
   sched->addTask(t, patches, all_matls);
 } 
 
