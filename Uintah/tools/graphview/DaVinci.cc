@@ -7,6 +7,7 @@
 #include <list>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <stdio.h>
 #include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Malloc/Allocator.h>
