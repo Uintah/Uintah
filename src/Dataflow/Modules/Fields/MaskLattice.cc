@@ -126,10 +126,9 @@ MaskLattice::execute()
     return;
   }
 
-  if (ifieldhandle->query_vector_interface(this) ||
-      ifieldhandle->query_tensor_interface(this))
+  if (!ifieldhandle->query_scalar_interface(this))
   {
-    error("Module cannot handle vector or tensor Fields.");
+    error("This module only works on fields containing scalar data.");
     return;
   }
   

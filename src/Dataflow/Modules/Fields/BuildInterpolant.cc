@@ -91,6 +91,11 @@ BuildInterpolant::execute()
   {
     return;
   }
+  if (fdst_h->data_at() == Field::NONE)
+  {
+    warning("No data location in destination to interpolate to.");
+    return;
+  }
 
   src_port = (FieldIPort *)get_iport("Source");
   FieldHandle fsrc_h;
@@ -100,6 +105,11 @@ BuildInterpolant::execute()
   }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
+    return;
+  }
+  if (!fsrc_h->data_at() == Field::NONE)
+  {
+    warning("No data location in Source field to interpolate from.");
     return;
   }
 

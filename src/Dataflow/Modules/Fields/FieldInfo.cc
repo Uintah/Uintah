@@ -93,14 +93,20 @@ FieldInfo::update_input_attributes(FieldHandle f)
   switch(f->data_at())
   {
   case Field::NODE:
-    gui->execute(string("set ")+id+"-dataat Nodes"); break;
+    gui->execute(string("set ")+id+"-dataat Nodes");
+    break;
   case Field::EDGE: 
-    gui->execute(string("set ")+id+"-dataat Edges"); break;
+    gui->execute(string("set ")+id+"-dataat Edges");
+    break;
   case Field::FACE: 
-    gui->execute(string("set ")+id+"-dataat Faces"); break;
+    gui->execute(string("set ")+id+"-dataat Faces");
+    break;
   case Field::CELL: 
-    gui->execute(string("set ")+id+"-dataat Cells"); break;
-  default: ;
+    gui->execute(string("set ")+id+"-dataat Cells");
+    break;
+  case Field::NONE: 
+    gui->execute(string("set ")+id+"-dataat None");
+    break;
   }
 
   Point center;

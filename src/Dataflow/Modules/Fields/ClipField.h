@@ -145,7 +145,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ModuleReporter *mod,
   }
   else
   {
-    mod->warning("Unable to copy data at this data locations.");
+    mod->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;
@@ -262,7 +262,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ModuleReporter *mod,
   }
   else
   {
-    mod->warning("Unable to copy data at this data locations.");
+    mod->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;
