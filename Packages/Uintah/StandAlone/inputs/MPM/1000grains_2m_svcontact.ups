@@ -6386,28 +6386,28 @@
 	    <spacing>[.001,.001,.001]</spacing>
 	</Level>
         <BoundaryConditions>
-                <Face side = "x-">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                </Face>
-                <Face side = "x+">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                </Face>
-                <Face side = "y-">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                </Face>
-                <Face side = "y+">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                </Face>
-                <Face side = "z-">
-                        <BCType label = "Velocity" var = "Dirichlet">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
-                <Face side = "z+">
-                        <BCType label = "Velocity" var = "Dirichlet">
-                             <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
+          <Face side = "x-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+          </Face>
+          <Face side = "x+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+          </Face>
+          <Face side = "y-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+          </Face>
+          <Face side = "y+">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+          </Face>
+          <Face side = "z-">
+            <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                  <value> [0.0,0.0,0.0] </value>
+            </BCType>
+          </Face>
+          <Face side = "z+">
+            <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                  <value> [0.0,0.0,0.0] </value>
+            </BCType>
+          </Face>
         </BoundaryConditions>
     </Grid>
 
