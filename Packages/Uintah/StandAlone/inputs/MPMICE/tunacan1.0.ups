@@ -114,9 +114,9 @@
            <Box label="1">
               <lower>        [-0.0635,-0.0635,-0.0635]    </lower>
               <upper>        [ 0.0635, 0.0635, 0.0635]    </upper>
-                <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
-                <resolution>  [100,100,100]                 </resolution>
+              <extraCells>   [1,1,1]                      </extraCells>
+              <patches>      [1,1,1]                      </patches>
+              <resolution>   [100,100,100]                </resolution>
            </Box>
        </Level>
     </Grid>
@@ -141,6 +141,14 @@
 
        <checkpoint cycle = "2" timestepInterval = "400"/>
    </DataArchiver>
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <artificial_viscosity>false</artificial_viscosity>
+        <nodes8or27>8</nodes8or27>                            
+        <minimum_particle_mass>3.e-15</minimum_particle_mass>
+        <maximum_particle_velocity>3.e4</maximum_particle_velocity>
+    </MPM>
 
    <Debug>
      <dbg_timeStart>       0.00     </dbg_timeStart>
