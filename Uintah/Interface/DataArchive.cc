@@ -269,6 +269,58 @@ void DataArchive::queryVariables( vector<string>& names,
    dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
+
+void 
+DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
+			       long particleID, int matlIndex,
+			       double time)
+{
+  Patch *local = patch;
+  if( patch != NULL ){
+    ParticleVariable<long> var;
+    query(var, "p.particleID", matlIndex, patch, time);
+    //  cerr<<"var["<<idx<<"] = "<<var[idx]<<endl;
+    if( var[idx] == particleID )
+      return;
+    else {
+      ParticleSubset* subset = var.getParticleSubset();
+      for(ParticleSubset::iterator p_iter = subset->begin();
+	  p_iter != subset->end(); p_iter++){
+	if( var[*p_iter] == particleID){
+	  idx = *p_iter;
+	  return;
+	}
+      }
+    }
+  }
+  patch = NULL;
+  for (int level_nr = 0;
+       (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
+    
+    const LevelP level = grid->getLevel(level_nr);
+    
+    for (Level::const_patchIterator iter = level->patchesBegin();
+	 (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+      if( *iter == local ) continue;
+      ParticleVariable<long> var;
+      query(var, "p.particleID", matlIndex, *iter, time);
+      ParticleSubset* subset = var.getParticleSubset();
+      for(ParticleSubset::iterator p_iter = subset->begin();
+	  p_iter != subset->end(); p_iter++){
+	if( var[*p_iter] == particleID){
+	  patch = *iter;
+	  idx = *p_iter;
+	  //	  cerr<<"var["<<*p_iter<<"] = "<<var[*p_iter]<<endl;
+	  break;
+	}
+      }
+      
+      if( patch != NULL )
+	break;
+    }
+  }
+}  
+
 DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
 					const vector<XMLURL>& tsUrls,
 					const vector<DOM_Node>& tsTopNodes)
@@ -445,6 +497,9 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.13  2000/11/02 19:19:21  kuzimmer
+// Added particleVariable  query function
+//
 // Revision 1.12  2000/10/04 19:48:01  kuzimmer
 // added some locks since the xerces stuff appears not to be thread safe
 //
