@@ -348,6 +348,13 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->modifies(d_lab->d_radiationFluxBINLabel);
     }
   }
+  
+  /*
+  if (d_radiationCalc)
+    if (d_DORadiationCalc)
+      tsk->requires(d_MAlab->integTemp_CCLabel,
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+  */
 
   //  sched->addTask(tsk, patches, matls);
   sched->addTask(tsk, d_perproc_patches, matls);
@@ -373,6 +380,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
+
+  /*
+  constCCVariable<double> solidTemp;
+  */
 
   if (d_radiationCalc) {
     if (d_DORadiationCalc){
@@ -656,34 +667,36 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       else
 	new_dw->getModifiable(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
 			       matlIndex, patch);
-        enthalpyVars.ESRCG.allocate(patch->getCellLowIndex(),
-				    patch->getCellHighIndex());
+      enthalpyVars.ESRCG.allocate(patch->getCellLowIndex(),
+				  patch->getCellHighIndex());
 	
-	
-	enthalpyVars.ABSKG.initialize(0.0);
-	enthalpyVars.ESRCG.initialize(0.0);
+      enthalpyVars.ABSKG.initialize(0.0);
+      enthalpyVars.ESRCG.initialize(0.0);
 
-	if (d_radCounter%d_radCalcFreq == 0) {
-	  enthalpyVars.src.initialize(0.0);
-	  enthalpyVars.qfluxe.initialize(0.0);
-	  enthalpyVars.qfluxw.initialize(0.0);
-	  enthalpyVars.qfluxn.initialize(0.0);
-	  enthalpyVars.qfluxs.initialize(0.0);
-	  enthalpyVars.qfluxt.initialize(0.0);
-	  enthalpyVars.qfluxb.initialize(0.0);
+      if (d_radCounter%d_radCalcFreq == 0) {
+	enthalpyVars.src.initialize(0.0);
+	enthalpyVars.qfluxe.initialize(0.0);
+	enthalpyVars.qfluxw.initialize(0.0);
+	enthalpyVars.qfluxn.initialize(0.0);
+	enthalpyVars.qfluxs.initialize(0.0);
+	enthalpyVars.qfluxt.initialize(0.0);
+	enthalpyVars.qfluxb.initialize(0.0);
 
-	  d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
+	d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
 					     &enthalpyVars, &constEnthalpyVars);
-	  d_DORadiation->boundarycondition(pc, patch, cellinfo,
-					   &enthalpyVars, &constEnthalpyVars);
+	d_DORadiation->boundarycondition(pc, patch, cellinfo,
+					 &enthalpyVars, &constEnthalpyVars);
 
-	  if (d_MAlab) {
-	    constCCVariable<double> solidTemp;
-	    new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
-			matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-	    d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType, 
-						     solidTemp, enthalpyVars.temperature);
-	  }
+	/*
+	if (d_MAlab) {
+	  new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	  new_dw->allocateAndPut(enthalpyVars.temperature, d_lab->tempOUTLabel,
+				 matlIndex, patch);
+	  d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType,
+						   solidTemp, constEnthalpyVars.temperature);
+	}
+	*/
 
 	  d_DORadiation->intensitysolve(pc, patch, cellinfo,
 					&enthalpyVars, &constEnthalpyVars);
