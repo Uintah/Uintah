@@ -357,6 +357,21 @@ inline Point Vector::asPoint() const {
     return Point(_x,_y,_z);
 }
 
+
+inline SCICORESHARE Vector Min(const Vector &v1, const Vector &v2)
+{
+  return Vector(Min(v1.x(), v2.x()),
+		Min(v1.y(), v2.y()),
+		Min(v1.z(), v2.z()));
+}
+
+inline SCICORESHARE Vector Max(const Vector &v1, const Vector &v2)
+{
+  return Vector(Max(v1.x(), v2.x()),
+		Max(v1.y(), v2.y()),
+		Max(v1.z(), v2.z()));
+}
+
 } // End namespace SCIRun
 
 
