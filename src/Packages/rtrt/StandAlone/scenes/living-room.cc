@@ -1,5 +1,6 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Disc.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Phong.h>
@@ -154,7 +155,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(.9, 0.9, 0.9);
-  Scene *scene = new Scene(group, cam, bgcolor, cdown, cup, groundplane, 0.3);
+  Scene *scene = new Scene(new HierarchicalGrid(group, 8, 8, 8, 10, 10, 4), cam, bgcolor, cdown, cup, groundplane, 0.3);
 
   Transform globetrans;
   Group * globegroup = new Group;
@@ -256,6 +257,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->add_light( light );
 
   scene->animate=true;
+
 
   return scene;
 }

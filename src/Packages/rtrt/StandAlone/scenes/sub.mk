@@ -44,6 +44,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/terrain.mo \
 	$(SRCDIR)/heightfield.mo \
 	$(SRCDIR)/graphics-museum.mo \
+	$(SRCDIR)/min-museum.mo \
 	$(SRCDIR)/living-room.mo \
 	$(SRCDIR)/science-room.mo \
         $(SRCDIR)/seaworld-tubes2.mo \
