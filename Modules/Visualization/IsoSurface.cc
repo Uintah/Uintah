@@ -23,6 +23,8 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldUG.h>
 #include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/SurfacePort.h>
+#include <Datatypes/TriSurface.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
@@ -32,6 +34,7 @@
 #include <Geom/Sphere.h>
 #include <Geom/Tri.h>
 #include <Geometry/Point.h>
+#include <TCL/TCLvar.h>
 #include <iostream.h>
 
 class IsoSurface : public Module {
@@ -39,6 +42,7 @@ class IsoSurface : public Module {
 //    ColormapPort* incolormap;
     ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
+    SurfaceOPort* osurf;
     int abort_flag;
 
     TCLint emit_surface;
@@ -114,7 +118,7 @@ static clString widget_name("IsoSurface Widget");
 static clString surface_name("IsoSurface");
 
 IsoSurface::IsoSurface(const clString& id)
-: Module("IsoSurface", id, Filter)
+: Module("IsoSurface", id, Filter), emit_surface("emit_surface", id, this)
 {
     // Create the input ports
     infield=new ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -127,6 +131,8 @@ IsoSurface::IsoSurface(const clString& id)
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
+    osurf=new SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
+    add_oport(osurf);
 
     isoval=1;
 #ifdef OLDUI
@@ -165,7 +171,7 @@ IsoSurface::IsoSurface(const clString& id)
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), emit_surface("emit_surface", id, this)
 {
     NOT_FINISHED("IsoSurface::IsoSurface");
 }
