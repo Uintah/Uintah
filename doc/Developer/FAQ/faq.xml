@@ -179,7 +179,7 @@
         modules.  And it even provides information to <I>SCIRun</I> about
         the number of type of ports that the module needs when it appears
         in a network diagram.  There is additional <A NAME="tex2html12"
-        HREF="../Developer/Guide/module-xml.html">documentation</A> that describes the format and content of the XML
+        HREF="../../Documentum/module-xml/index.html">documentation</A> that describes the format and content of the XML
         spec.
       </para>
     </answer>
