@@ -1648,7 +1648,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pvolumeNew[idx]      = pmassNew[idx]/rho;
 #if 1
 	  if(pmassNew[idx] <= 3.e-15){
-	    cout << "Scheduling " << idx << endl;
 	    delset->addParticle(idx);
 	  }
 	    
