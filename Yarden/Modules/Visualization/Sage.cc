@@ -86,10 +86,12 @@ using namespace SCICore::TclInterface;
 using namespace Yarden::Datatypes;
 
 
-#define DOUBLE
+  //#define DOUBLE
 //#define VIS_WOMAN
   //#define FLOAT
-  
+
+#define SHORT
+
 #ifdef VIS_WOMAN
 #define SHORT
 #endif
@@ -463,15 +465,19 @@ static clString surface_name3("SagePts");
 static clString shadow_name("SageShadow");
 
 Sage::Sage(const clString& id)
-  : Module("Sage", id, Filter ), isoval("isoval", id, this),
-    isoval_min("isoval_min", id, this), isoval_max("isoval_max", id, this),
-    tcl_bbox("bbox", id, this), 
-    tcl_scan("scan", id, this),  tcl_value("value", id, this), 
-    tcl_visibility("visibility", id, this),
-    tcl_depth("cutoff_depth", id, this),
-    tcl_reduce("reduce",id,this), tcl_cover("cover",id,this), 
-    tcl_all("all",id,this),
-    tcl_rebuild("rebuild",id,this)
+  : Module("Sage", id, Filter ), 
+  isoval("isoval", id, this),
+  isoval_min("isoval_min", id, this), 
+  isoval_max("isoval_max", id, this),
+  tcl_bbox("bbox", id, this), 
+  tcl_value("value", id, this), 
+  tcl_visibility("visibility", id, this),
+  tcl_scan("scan", id, this),  
+  tcl_depth("cutoff_depth", id, this),
+  tcl_reduce("reduce",id,this), 
+  tcl_cover("cover",id,this), 
+  tcl_all("all",id,this),
+  tcl_rebuild("rebuild",id,this)
 {
   init_clock();
   printf( "Sage::Sage :: %d\n", tri_case[136].vertex[4]);
@@ -881,14 +887,14 @@ Sage::search()
 }
 
 int permutation[8][8] = {
-  0,4,1,2,6,3,5,7,
-  1,3,5,0,2,7,4,6,
-  2,3,6,0,4,1,7,5,
-  3,7,1,2,5,0,6,4,
-  4,6,0,5,7,2,1,3,
-  5,7,4,1,3,6,0,2,
-  6,7,2,4,5,0,3,1,
-  7,6,3,5,4,1,2,0
+  {0,4,1,2,6,3,5,7},
+  {1,3,5,0,2,7,4,6},
+  {2,3,6,0,4,1,7,5},
+  {3,7,1,2,5,0,6,4},
+  {4,6,0,5,7,2,1,3},
+  {5,7,4,1,3,6,0,2},
+  {6,7,2,4,5,0,3,1},
+  {7,6,3,5,4,1,2,0}
 };
 
 int
@@ -910,192 +916,178 @@ Sage::adjust( double left, double right, int &x )
 void
 Sage::search( double v )
 {
-  tpos = 0;
   iotimer_t begin = read_time();
-  iotimer_t start = read_time();
   while ( !stack.empty() ) {
-
+    
     if ( abort_flag )
       return;
-      
+    
     int i, j, k;
     int dx, dy, dz;
     int mask;
     BonNode *node;
-    //table[tpos].cycle = read_time() - start;
-    //    iotimer_t end = read_time();
     
-    //tpos++;
     stack.pop( node, i, j, k, dx, dy, dz, mask);
-
-    // if ( tpos == table_size ) {
-    //    cerr << "table too small!\n";
-    //    exit(0);
-    // }
-     //table[tpos] = empty_table;
-     if (  v < node->min || node->max < v ) {
-       //table[tpos].value = (dx+1)*(dy+1)*(dz+1);
-       statistics.value++;
-       continue;
-     }
-
-     if ( bbox_visibility  ) {
-       double left, right, top, bottom;
-       
-       //        glClear(GL_COLOR_BUFFER_BIT  );
-       //        bbox_projection2( i, j, k, dx+1, dy+1, dz+1,
-       // 			left, right, top, bottom );
-       //        bbox_projection1( i, j, k, dx+1, dy+1, dz+1,
-       // 			left, right, top, bottom );
-       //        bbox_projection( i, j, k, dx+1, dy+1, dz+1,
-       // 			left, right, top, bottom );
-       double pw = bbox_projection( i, j, k, dx+1, dy+1, dz+1,
-				    left, right, top, bottom );
-       if ( reduce ) {
-	 if ( (right-left) <= 1 && (top-bottom) <= 1 ) {
-	   int px,py;
-	   if ( adjust( left, right, px ) && adjust( bottom, top, py ) ) {
-	     if ( screen.cover_pixel(px,py) ) {
-	       double x = ((px+0.5)*2/xres-1);
-	       double y = ((py+0.5)*2/yres-1);
-	       double z = 1;
-	       
-	       Point Q = eye+((X*x+Y*y+Z*z)*pw);
-	       double val[8];
-	       val[0]=field->grid(i,      j,      k);
-	       val[1]=field->grid(i+dx+1, j,      k);
-	       val[2]=field->grid(i+dx+1, j+dy+1, k);
-	       val[3]=field->grid(i,      j+dy+1, k);
-	       val[4]=field->grid(i,      j,      k+dz+1);
-	       val[5]=field->grid(i+dx+1, j,      k+dz+1);
-	       val[6]=field->grid(i+dx+1, j+dy+1, k+dz+1);
-	       val[7]=field->grid(i,      j+dy+1, k+dz+1);
-	       
-	       Vector N( Deriv(0,3,4,7, 1,2,5,6),
-			 Deriv(0,1,4,5, 2,3,6,7),
-			 Deriv(0,1,2,3, 4,5,6,7));
-	       points->add( Q, 1, N );
-	     }
-	   }
-	   continue;
-	 }
-       }
-       //        if ( !node->child )
-       // 	 if ( left < 0 || right > 511 || bottom < 0 || top > 511 )
-       // 	   continue;
-       int l = trunc(left);
-       int r = trunc(right+1);
-       int b = trunc(bottom);
-       int t = trunc(top+1);
-       iotimer_t vis_begin = read_time();
-       int vis = screen.visible( l,b,r,t); //left, bottom, right, top );
-       iotimer_t vis_end = read_time();
+    
+    if (  v < node->min || node->max < v ) {
+      statistics.value++;
+      continue;
+    }
+    
+    if ( bbox_visibility  ) {
+      double left, right, top, bottom;
+      
+      //        glClear(GL_COLOR_BUFFER_BIT  );
+      //        bbox_projection2( i, j, k, dx+1, dy+1, dz+1,
+      // 			left, right, top, bottom );
+      //        bbox_projection1( i, j, k, dx+1, dy+1, dz+1,
+      // 			left, right, top, bottom );
+      //        bbox_projection( i, j, k, dx+1, dy+1, dz+1,
+      // 			left, right, top, bottom );
+      double pw = bbox_projection( i, j, k, dx+1, dy+1, dz+1,
+				   left, right, top, bottom );
+      if ( reduce ) {
+	if ( (right-left) <= 1 && (top-bottom) <= 1 ) {
+	  int px,py;
+	  if ( adjust( left, right, px ) && adjust( bottom, top, py ) ) {
+	    if ( screen.cover_pixel(px,py) ) {
+	      double x = ((px+0.5)*2/xres-1);
+	      double y = ((py+0.5)*2/yres-1);
+	      double z = 1;
+	      
+	      Point Q = eye+((X*x+Y*y+Z*z)*pw);
+	      double val[8];
+	      val[0]=field->grid(i,      j,      k);
+	      val[1]=field->grid(i+dx+1, j,      k);
+	      val[2]=field->grid(i+dx+1, j+dy+1, k);
+	      val[3]=field->grid(i,      j+dy+1, k);
+	      val[4]=field->grid(i,      j,      k+dz+1);
+	      val[5]=field->grid(i+dx+1, j,      k+dz+1);
+	      val[6]=field->grid(i+dx+1, j+dy+1, k+dz+1);
+	      val[7]=field->grid(i,      j+dy+1, k+dz+1);
+	      
+	      Vector N( Deriv(0,3,4,7, 1,2,5,6),
+			Deriv(0,1,4,5, 2,3,6,7),
+			Deriv(0,1,2,3, 4,5,6,7));
+	      points->add( Q, 1, N );
+	    }
+	  }
+	  continue;
+	}
+      }
+      //        if ( !node->child )
+      // 	 if ( left < 0 || right > 511 || bottom < 0 || top > 511 )
+      // 	   continue;
+      int l = trunc(left);
+      int r = trunc(right+1);
+      int b = trunc(bottom);
+      int t = trunc(top+1);
+      iotimer_t vis_begin = read_time();
+      int vis = screen.visible( l,b,r,t); //left, bottom, right, top );
+      iotimer_t vis_end = read_time();
        vis_timer += vis_end-vis_begin;
        
        if ( !vis ) {
 	 statistics.bbox++;
 	 // printf("%3d %3d %3d - not visible\n", dx+1, dy+1, dz+1);
-	 //table[tpos].bbox_visible=-(dx+1)*(dy+1)*(dz+1);
 	 continue;
        }
-       //table[tpos].bbox_visible= (dx+1)*(dy+1)*(dz+1);
-       
-     }
-     
-     if ( !node->child ) {
-       int start  = (eye.x() > (i+2)*sx) ? 1 : 0;
-       if ( eye.y() > (j+2)*sy ) start += 2;
-       if ( eye.z() > (k+2)*sz ) start += 4;
-       
-       int *order = permutation[start];
-       for (int o=7; o>=0; o--)
-	 switch (order[o] ) {
-	   case 0:
-	     extract( v, i,j,k, 1, 1, 1 );
-	     break;
-	   case 1:
-	     extract( v, i+1,j,k, 1, 1, 1 );
-	     break;
+    }
+    
+    if ( !node->child ) {
+      int start  = (eye.x() > (i+2)*sx) ? 1 : 0;
+      if ( eye.y() > (j+2)*sy ) start += 2;
+      if ( eye.z() > (k+2)*sz ) start += 4;
+      
+      int *order = permutation[start];
+      for (int o=7; o>=0; o--)
+	switch (order[o] ) {
+	case 0:
+	  extract( v, i,j,k, 1, 1, 1 );
+	  break;
+	case 1:
+	  extract( v, i+1,j,k, 1, 1, 1 );
+	  break;
 	   case 2:
 	     extract( v, i,j+1,k, 1, 1, 1 );
 	     break;
-	   case 3:
-	     extract( v, i+1,j+1,k, 1, 1, 1 );
-	     break;
-	   case 4:
-	     extract( v, i,j,k+1, 1, 1, 1 );
-	     break;
-	   case 5:
-	     extract( v, i+1,j,k+1, 1, 1, 1 );
-	     break;
-	   case 6:
-	     extract( v, i,j+1,k+1, 1, 1, 1 );
-	     break;
-	   case 7:
-	     extract( v, i+1,j+1,k+1, 1, 1, 1 );
-	     break;
-	 }
-       continue;
-     }
-     
-     int dx1, dy1, dz1;
-     dx1 = dy1 = dz1 = 0;
-     if ( mask & dx ) {
-       dx1 = dx & ~mask;
-       dx  = mask-1;
-     }
-     if ( mask & dy ) {
-       dy1 = dy & ~mask;
-       dy  = mask-1;
-     }
-     if ( mask & dz ) {
-       dz1 = dz & ~mask;
-       dz  = mask-1;
-     }
-     mask >>= 1;
-     int start  = (eye.x() > (i+dx+1)*sx) ? 1 : 0;
-     if ( eye.y() > (j+dy+1)*sy ) start += 2;
-     if ( eye.z() > (k+dz+1)*sz ) start += 4;
-     
-     int *order = permutation[start];
-     
-     int type = node->type;
-     BonNode *child = node->child;
+	case 3:
+	  extract( v, i+1,j+1,k, 1, 1, 1 );
+	  break;
+	case 4:
+	  extract( v, i,j,k+1, 1, 1, 1 );
+	  break;
+	case 5:
+	  extract( v, i+1,j,k+1, 1, 1, 1 );
+	  break;
+	case 6:
+	  extract( v, i,j+1,k+1, 1, 1, 1 );
+	  break;
+	case 7:
+	  extract( v, i+1,j+1,k+1, 1, 1, 1 );
+	  break;
+	}
+      continue;
+    }
     
-     for (int o=7; o>=0 ; o-- ) {
-       switch ( order[o] ) {
-	 case 0:
-	   stack.push( child, i, j, k, dx, dy, dz, mask );
-	   break;
-	 case 1:
-	   if ( !(type & 1) )
-	     stack.push( child+1, i+dx+1, j, k, dx1, dy, dz, mask );
-	   break;
-	 case 2:
+    int dx1, dy1, dz1;
+    dx1 = dy1 = dz1 = 0;
+    if ( mask & dx ) {
+      dx1 = dx & ~mask;
+      dx  = mask-1;
+    }
+    if ( mask & dy ) {
+      dy1 = dy & ~mask;
+      dy  = mask-1;
+    }
+    if ( mask & dz ) {
+      dz1 = dz & ~mask;
+      dz  = mask-1;
+    }
+    mask >>= 1;
+    int start  = (eye.x() > (i+dx+1)*sx) ? 1 : 0;
+    if ( eye.y() > (j+dy+1)*sy ) start += 2;
+    if ( eye.z() > (k+dz+1)*sz ) start += 4;
+    
+    int *order = permutation[start];
+    
+    int type = node->type;
+    BonNode *child = node->child;
+    
+    for (int o=7; o>=0 ; o-- ) {
+      switch ( order[o] ) {
+      case 0:
+	stack.push( child, i, j, k, dx, dy, dz, mask );
+	break;
+      case 1:
+	if ( !(type & 1) )
+	  stack.push( child+1, i+dx+1, j, k, dx1, dy, dz, mask );
+	break;
+      case 2:
 	   if ( !(type & 2) )
 	     stack.push( child+2, i, j+dy+1, k, dx, dy1, dz, mask );
 	   break;
-	 case 3:
-	   if ( !(type & 3) )
-	     stack.push( child+3, i+dx+1, j+dy+1, k, dx1, dy1, dz, mask );
-	   break;
-	 case 4:
-	   if ( !(type & 4) )
-	     stack.push( child+4, i, j, k+dz+1, dx, dy, dz1, mask );
-	   break;
-	 case 5:
-	   if ( !(type & 5) )
-	     stack.push( child+5, i+dx+1, j, k+dz+1, dx1, dy, dz1, mask  );
-	   break;
-	 case 6:
-	   if ( !(type & 6) )
-	     stack.push( child+6, i, j+dy+1, k+dz+1, dx, dy1, dz1, mask );
-	   break;
-	 case 7:
-	   if ( !(type & 7) )
-	     stack.push( child+7, i+dx+1, j+dy+1, k+dz+1, dx1, dy1, dz1, mask );
-	   break;
-       }
+      case 3:
+	if ( !(type & 3) )
+	  stack.push( child+3, i+dx+1, j+dy+1, k, dx1, dy1, dz, mask );
+	break;
+      case 4:
+	if ( !(type & 4) )
+	  stack.push( child+4, i, j, k+dz+1, dx, dy, dz1, mask );
+	break;
+      case 5:
+	if ( !(type & 5) )
+	  stack.push( child+5, i+dx+1, j, k+dz+1, dx1, dy, dz1, mask  );
+	break;
+      case 6:
+	if ( !(type & 6) )
+	  stack.push( child+6, i, j+dy+1, k+dz+1, dx, dy1, dz1, mask );
+	break;
+      case 7:
+	if ( !(type & 7) )
+	  stack.push( child+7, i+dx+1, j+dy+1, k+dz+1, dx1, dy1, dz1, mask );
+	break;
+      }
     }
   }
   iotimer_t end = read_time();
@@ -1103,14 +1095,9 @@ Sage::search( double v )
   //shadow.stat();
 }
 
-//#include "mcube2.h"
-
-int scan_type = 2;
-
 int
 Sage::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
 {
-  //table[tpos].extract = 1;;
   iotimer_t start = read_time();
 
   double val[8];
@@ -1190,14 +1177,13 @@ Sage::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
       if ( scan ) project( q[id], p[id] );
     }
   }
-
+  
   v = 0;
-  if ( !scan ) v = 1;
   int scan_edges[10];
   int double_edges[10];
-
+  
   GeomTrianglesP *tmp = scinew GeomTrianglesP;
-
+  
   int vis = 0;
 
   for ( int t=0; t<tcase->n; t++) {
@@ -1218,10 +1204,11 @@ Sage::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
       e++;
       tmp->add(q[v0], q[v1], q[v2]);
     }
+    
     scan_edges[e] = scan_edges[0];
     double_edges[e] = double_edges[0] = double_edges[e-1];
     double_edges[1] = double_edges[2];
-
+    
     if ( scan )
       vis += screen.scan(p, e,  scan_edges, double_edges);
     else
@@ -1233,7 +1220,7 @@ Sage::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
   }
   else
     delete tmp;
-
+  
   statistics.extracted++;
   extract_timer += read_time() - start;
   return 1;
@@ -1296,7 +1283,6 @@ Sage::make_current( int xres, int yres) {
 void
 Sage::redraw( int xres, int yres)
 {
-  GLenum errcode;
   rebuild_start = read_time();
   int ok = make_current( xres, yres ) ;
   rebuild_make = read_time();
@@ -1452,10 +1438,10 @@ Sage::bbox_projection2( int i, int j, int k, int dx, int dy, int dz,
 
   glColor3f(1,0,0);
   glBegin(GL_LINE_LOOP);
-  glVertex2i( left, bottom );
-  glVertex2i( right, bottom );
-  glVertex2i( right, top );
-  glVertex2i( left, top );
+  glVertex2d( left, bottom );
+  glVertex2d( right, bottom );
+  glVertex2d( right, top );
+  glVertex2d( left, top );
   glEnd();
   printf("red   : %.1f %.1f %.1f %.1f\n", left,right,bottom,top);
 }
@@ -1554,10 +1540,10 @@ Sage::bbox_projection1( int i, int j, int k, int dx, int dy, int dz,
   
   glColor3f(1,1,0);
   glBegin(GL_LINE_LOOP);
-  glVertex2i( left, bottom );
-  glVertex2i( right, bottom );
-  glVertex2i( right, top );
-  glVertex2i( left, top );
+  glVertex2d( left, bottom );
+  glVertex2d( right, bottom );
+  glVertex2d( right, top );
+  glVertex2d( left, top );
   glEnd();
 
   printf("yellow: %.1f %.1f %.1f %.1f\n", left,right,bottom,top);

@@ -7,7 +7,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Yarden/Modules/Visualization
 
-SRCS     += $(SRCDIR)/Sage.cc $(SRCDIR)/Screen.cc $(SRCDIR)/Hase.cc
+SRCS     += $(SRCDIR)/Sage.cc $(SRCDIR)/Screen.cc 
 
 PSELIBS := Yarden/Datatypes/General PSECore/Datatypes PSECore/Dataflow \
 	SCICore/Persistent SCICore/Containers SCICore/Util \
@@ -20,6 +20,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/20 23:38:40  yarden
+# Linux port
+#
 # Revision 1.2  2000/03/20 19:38:58  sparker
 # Added VPATH support
 #
