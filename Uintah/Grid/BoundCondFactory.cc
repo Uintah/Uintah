@@ -29,7 +29,7 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
      if (bc_attr["var"] == "None")
        objs.push_back(new NoneBoundCond(child));
      
-     else if (bc_attr["var"] == "Symmetry")
+     else if (bc_attr["label"] == "Symmetric")
        objs.push_back(new SymmetryBoundCond(child));
      
      else if (bc_attr["var"] ==  "Neighbor")
@@ -56,6 +56,9 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
 }
 
 // $Log$
+// Revision 1.6  2000/12/09 01:22:03  guilkey
+// Fix to the creation of Symmetric Boundary conditions.
+//
 // Revision 1.5  2000/12/08 02:36:56  jas
 // Fixed some bugs for the names associated with NoneBC, NeighborBC and
 // SymmetryBC.
