@@ -8,9 +8,12 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/SchedulerP.h>
+#include <SCICore/OS/Dir.h>
 #include <string>
 
 namespace Uintah {
+   using namespace SCICore::OS;
+
    class ProcessorGroup;
    class Patch;
 
@@ -62,6 +65,18 @@ WARNING
       // Insert Documentation Here:
       virtual const std::string getOutputLocation() const = 0;
 
+      //////////
+      // Get the current time step
+      virtual int getCurrentTimestep() = 0;
+
+      //////////
+      // Returns true if the last timestep was one
+      // in which data was output.
+      virtual bool wasOutputTimestep() = 0;
+     
+      //////////
+      // Get the directory of the current time step for outputting info.
+      virtual const std::string& getLastTimestepOutputLocation() const = 0;
    private:
       Output(const Output&);
       Output& operator=(const Output&);
@@ -71,6 +86,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.12  2000/09/08 17:02:51  witzel
+// Added virtual methods for getting the current timestep, the last
+// timestep directory (where data was output), and whether the last
+// timestep was one in which data was output.
+//
 // Revision 1.11  2000/07/26 20:14:12  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers
