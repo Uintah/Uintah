@@ -25,12 +25,14 @@ itcl_class CardioWave_CreateModel_HexIntMask {
 
 	global $this-exclude
 	global $this-delete-nodes
+	global $this-levels
         set_defaults
     }
 
     method set_defaults {} {
 	set $this-exclude ""
 	set $this-delete-nodes 0
+	set $this-levels 0
     }
 
     method ui {} {
@@ -44,8 +46,12 @@ itcl_class CardioWave_CreateModel_HexIntMask {
 	frame $w.chelper
 	label $w.chelper.label -text "Exclude List"
 	entry $w.chelper.entry -textvariable $this-exclude
-
+	
 	pack $w.chelper.label $w.chelper.entry -side left -anchor n
+
+	scale $w.levels -label "Hull Levels:" -variable $this-levels \
+	    -from 0 -to 20 -showvalue true \-orient horizontal
+	pack $w.levels -side top
 
 	pack $w.chelper -side top -anchor w -padx 10
 	checkbutton $w.delete -text "Delete Unattached Nodes" -variable $this-delete-nodes

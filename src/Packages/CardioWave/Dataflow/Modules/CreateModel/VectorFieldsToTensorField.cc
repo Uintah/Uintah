@@ -66,6 +66,14 @@ VectorFieldsToTensorField::execute()
     return;
   }
 
+  FieldIPort *imask = (FieldIPort*)get_iport("Mask");
+  if (!imask) {
+    error("Unable to initialize iport 'Mask'.");
+    return;
+  }
+  FieldHandle maskH;
+  imask->get(maskH);
+
   FieldOPort *otfld = (FieldOPort*)get_oport("Tensors");
   if (!otfld) {
     error("Unable to initialize oport 'Tensors'.");
@@ -86,8 +94,15 @@ VectorFieldsToTensorField::execute()
     return;
   }
 
+  LatVolField<double> *mask = 0;
+  if (maskH.get_rep())
+    mask = dynamic_cast<LatVolField<double> *>(maskH.get_rep());
+    
   LatVolMeshHandle ev1mesh = ev1->get_typed_mesh();
-  LatVolMeshHandle ev2mesh = ev1->get_typed_mesh();
+  LatVolMeshHandle ev2mesh = ev2->get_typed_mesh();
+  LatVolMeshHandle maskmesh;
+  if (mask) maskmesh = mask->get_typed_mesh();
+
   if (ev1->data_at() != ev2->data_at()) {
     error("Vector fields must have the same data_at.");
     return;
@@ -101,10 +116,28 @@ VectorFieldsToTensorField::execute()
     return;
   }
 
+  if (mask) {
+    if (ev1->data_at() != mask->data_at()) {
+      error("Vector fields and mask must have the same data_at.");
+      return;
+    }
+    if (ev1mesh->get_ni() != maskmesh->get_ni() ||
+	ev1mesh->get_nj() != maskmesh->get_nj() ||
+	ev1mesh->get_nk() != maskmesh->get_nk()) 
+    {
+      error("Fields must all be the same size.");
+      return;
+    }
+  }
+
+
   LatVolField<int> *tfield = scinew LatVolField<int>(ev1mesh, ev1->data_at());
 
   Vector *v1 = ev1->fdata().begin();
   Vector *v2 = ev2->fdata().begin();
+  double *maskiter=0;
+  if (mask) maskiter = mask->fdata().begin();
+
   int *tidx = tfield->fdata().begin();
   vector<pair<string, Tensor> > conds;
   Tensor t(Vector(0,0,0), Vector(0,0,0), Vector(0,0,0));
@@ -117,7 +150,8 @@ VectorFieldsToTensorField::execute()
   conds.push_back(cond);  // ventricles
 
   while (v1 != ev1->fdata().end()) {
-    if (v1->length() != 0) {
+    if (v1->length() != 0 && mask && (*maskiter != 0)) {
+
       Vector v3(Cross(*v1, *v2).normal());
       v3 *= v2->length();
       t = Tensor(*v1, *v2, v3);
@@ -130,6 +164,7 @@ VectorFieldsToTensorField::execute()
     ++v1;
     ++v2;
     ++tidx;
+    if (mask) ++maskiter;
   }
   tfield->set_property("conductivity_table", conds, false);
   otfld->send(tfield);

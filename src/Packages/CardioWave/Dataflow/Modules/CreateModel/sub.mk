@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/FloodFillNewValue.cc\
 	$(SRCDIR)/HexIntMask.cc\
 	$(SRCDIR)/HexMeshCuthillMcKee.cc\
+	$(SRCDIR)/RakeVectorsToThetaPhi.cc\
 	$(SRCDIR)/ReclassifyInteriorTets.cc\
 	$(SRCDIR)/RemoveInteriorTets.cc\
 	$(SRCDIR)/SetupFVMatrix.cc\
