@@ -15,7 +15,6 @@
 #include <Multitask/ITC.h>
 
 #include <string.h>
-#include <iostream.h>
 
 static clString widget_name("Histogram");
 
@@ -30,7 +29,7 @@ static clString make_id(const clString& name)
 }
 
 Histogram::Histogram()
-: id(make_id(widget_name)), freqs(640), freqlist(640),
+: id(make_id(widget_name)), numbuckets(200), freqs(1000),
   minfreq(0), maxfreq(0), minval(0), maxval(0),
   l("rangeleft", id, this), r("rangeright", id, this)
 {
@@ -51,9 +50,35 @@ Histogram::init_tcl()
 void
 Histogram::tcl_command(TCLArgs& args, void*)
 {
-   if (args.count() > 1) {
-      args.error("Histogram needs no minor command");
+   if (args.count() < 2) {
+      args.error("Histogram needs a minor command");
       return;
+   } else if(args[1] == "buckets"){
+      if (args.count() != 4) {
+	 args.error("Histogram needs maxbuckets ratio");
+	 return;
+      }
+      int maxbuckets;
+      double ratio;
+      if (!args[2].get_int(maxbuckets)) {
+	 args.error("Histogram can't parse maxbuckets `"+args[2]+"'");
+	 return;
+      }
+      if (!args[3].get_double(ratio)) {
+	 args.error("Histogram can't parse ratio `"+args[3]+"'");
+	 return;
+      }
+      if ((ratio < 0.0) || (ratio > 1.0)) {
+	 args.error("Histogram ratio out of range `"+args[3]+"'");
+	 return;
+      }
+      reset_vars();
+      numbuckets = int(maxbuckets*ratio);
+      if (numbuckets < 1) {
+	 numbuckets = 1;
+      }
+      SetNumBuckets(numbuckets);
+      TCL::execute(id+" ui");
    }
 }
 
@@ -62,6 +87,8 @@ void
 Histogram::SetData( const Array1<double> values )
 {
    ASSERT(values.size() > 1);
+
+   data = values;
    
    // Find minval/maxval.
    minval = maxval = values[0];
@@ -73,16 +100,23 @@ Histogram::SetData( const Array1<double> values )
       }
    }
 
-   double range(639.0/(maxval-minval));
+   FillBuckets();
+}
+
+
+void
+Histogram::FillBuckets()
+{
+   double range(double(numbuckets-1)/(maxval-minval));
    
    initfreqs();
-   for (i=0; i<values.size(); i++) {
-      freqs[int((values[i]-minval)*range)]++;
+   for (int i=0; i<data.size(); i++) {
+      freqs[int(0.5+(data[i]-minval)*range)]++;
    }
-
+   
    minfreq = maxfreq = freqs[0];
    // C++ can calcminmax faster than tcl...
-   for (i=1; i<freqs.size(); i++) {
+   for (i=1; i<numbuckets; i++) {
       if (freqs[i] < minfreq) {
 	 minfreq = freqs[i];
       } else if (freqs[i] > maxfreq) {
@@ -90,7 +124,9 @@ Histogram::SetData( const Array1<double> values )
       }
    }
 
-   for (i=0; i<freqs.size(); i++) {
+   Array1<clString> freqlist(numbuckets);
+
+   for (i=0; i<numbuckets; i++) {
       freqlist[i] = to_string(freqs[i]);
    }
 
@@ -105,7 +141,7 @@ Histogram::SetData( const Array1<double> values )
 void
 Histogram::initfreqs()
 {
-   for (int i=0; i<freqs.size(); i++) {
+   for (int i=0; i<numbuckets; i++) {
       freqs[i] = 0;
    }
 }
@@ -191,3 +227,18 @@ Histogram::SetRange( const double left, const double right )
 }
 
 
+int
+Histogram::GetNumBuckets()
+{
+   return numbuckets;
+}
+
+
+void
+Histogram::SetNumBuckets( const int nb )
+{
+   freqs.resize(numbuckets=nb);
+   FillBuckets();
+}
+
+   

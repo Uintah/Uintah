@@ -71,25 +71,31 @@ itcl_class Histogram {
 	
 	canvas $hist.canvas -scrollregion {0 0 745 410} \
 		-width 745 -height 410
-	bind $hist.canvas <Motion> "$this mouse %x"
-	# Resize? bind $hist.canvas <Configure> "$this setsize %w %h"
+	global $this-scale
+	set $this-scale 1.0
+	scale $hist.scale -from 0 -to 1 -resolution 0.001 \
+		-variable $this-scale \
+		-command "$this-c buckets [expr $xmax-$xmin]"
+	pack $hist.scale -side left -padx 2 -pady 2 -fill y -expand yes
 	pack $hist.canvas -side left -padx 2 -pady 2 -fill both -expand yes
 	pack $hist -fill both -expand yes
+
+	bind $hist.canvas <Motion> "$this mouse %x"
+	# bind $hist.canvas <Configure> "$this setsize %w %h"
 
 	$this update
     }
 
     method update {} {
 	$this MinMax
-	set xdelt [expr $xrange/double($datasize-1)]
 	set xnum 30
 	set ynum 20
 
 	.ui$this.f.canvas delete all
 
 	.ui$this.f.canvas create text [expr $canvasx/2.0] 0 \
-		-text $title -anchor n -justify center \
-		-font "-Adobe-Helvetica-bold-R-Normal--*-180-100-*"
+		-text $title -anchor n -justify center
+	#	-font "-Adobe-Helvetica-bold-R-Normal--*-180-100-*"
 	.ui$this.f.canvas create text [expr $canvasx/2.0] [expr $canvasy-4] \
 		-text $valtitle -anchor s -justify center
 	.ui$this.f.canvas create text 5 [expr $ymin-10] \
@@ -102,7 +108,7 @@ itcl_class Histogram {
 		.ui$this.f.canvas create line $xmin $y $xmax $y
 	    }
 	    for {set i 0} {$i <= $xnum} {incr i 1} {
-		set x [expr $xmin+$i*($xrange-$xdelt)/double($xnum)]
+		set x [expr $xmin+$i*$xrange/double($xnum)]
 		.ui$this.f.canvas create line $x $ymin $x $ymax
 	    }
 	}
@@ -111,23 +117,10 @@ itcl_class Histogram {
 	    return
 	}
 
-	set x $xmin
-	for {set i 0} {$i < $datasize} {incr i 1} {
-	    set val [expr $minval+$i*$valrange/($datasize-1)]
-	    set freq [lindex $freqs $i]
-	    set oldx $x
-	    set x [expr $xmin+($val-$minval)*$xrange/double($valrange)]
-	    set y [expr $ymax-$freq*$yrange/double($maxfreq)]
-	    .ui$this.f.canvas create rectangle \
-		    $oldx $ymax $x $y -tags rects\
-		    -fill #224488 \
-		    -outline #224488
-	    if [expr $datasize < 20] {
-		.ui$this.f.canvas create text [expr $oldx+$xdelt/2.0] $y \
-			-anchor s -justify center -text $freq
-	    }
-	}
-	set xnum [$this Min 6 $datasize]
+	eval .ui$this.f.canvas create polygon [getpoly 0 [expr $datasize-1]] -tags poly \
+		-smooth no -fill #226688
+
+	set xnum [$this Min 6 $datasize-1]
 	for {set i 0} {$i <= $xnum} {incr i 1} {
 	    .ui$this.f.canvas create text [expr $xmin+$i*$xrange/double($xnum)] \
 		    [expr $ymax+4] -anchor n -justify center \
@@ -146,19 +139,19 @@ itcl_class Histogram {
 		|| ([string compare $range "yes"]==0))] {
 	    set i1 [expr int(($rangeleft-$xmin)*($datasize-1)/double($xrange))]
 	    set i2 [expr int(($rangeright-$xmin)*($datasize-1)/double($xrange))]
-	    set val1 [expr $minval+$i1*$valrange/($datasize-1)]
-	    set val2 [expr $minval+$i2*$valrange/($datasize-1)]
+	    set val1 [expr $minval+$i1*$valrange/double($datasize-1)]
+	    set val2 [expr $minval+$i2*$valrange/double($datasize-1)]
 	    .ui$this.f.canvas create text 4 [expr $canvasy-4] -tags range \
 		    -text "Range($val1--$val2)" -anchor sw -justify left
 	    
 	    .ui$this.f.canvas create rectangle \
 		    [expr $rangeleft-5] $ymax $rangeleft $ymin \
-		    -tags left \
+		    -tags "left rangelr" \
 		    -fill #ffff00000000 \
 		    -outline #ffff00000000
 	    .ui$this.f.canvas create rectangle \
 		    $rangeright $ymax [expr $rangeright+5] $ymin \
-		    -tags right \
+		    -tags "right rangelr" \
 		    -fill #ffff00000000 \
 		    -outline #ffff00000000
 	    .ui$this.f.canvas bind left <Button1-Motion> \
@@ -170,23 +163,45 @@ itcl_class Histogram {
 	}
     }
 
+    method getpoly {i1 i2} {
+	if [expr (($i1>=$datasize)||($i2>=$datasize))] {
+	    puts "Index out of range for getpoly."
+	    return
+	}
+	# Precalc for speed.
+	set xvalpre [expr $xrange/double($datasize)]
+	set ypre [expr $yrange/double($maxfreq)]
+
+	set x [expr int(0.5+$xmin+$i1*$xvalpre)]
+
+	set result [list $x $ymax]
+	for {set i $i1} {$i <= $i2} {incr i 1} {
+	    set oldx $x
+	    set x [expr int(0.5+$xmin+($i+1)*$xvalpre)]
+	    set y [expr int(0.5+$ymax-[lindex $freqs $i]*$ypre)]
+	    lappend result $oldx $y $x $y
+	}
+	lappend result $x $ymax
+	return $result
+    }
+
     protected rangeleft 200
     protected rangeright 300
 
     method leftval {} {
 	set i1 [expr int(($rangeleft-$xmin)*($datasize-1)/double($xrange))]
-	return [expr $minval+$i1*$valrange/($datasize-1)]
+	return [expr $minval+$i1*$valrange/double($datasize-1)]
     }
 
     method rightval {} {
 	set i2 [expr int(($rangeright-$xmin)*($datasize-1)/double($xrange))]
-	return [expr $minval+$i2*$valrange/($datasize-1)]
+	return [expr $minval+$i2*$valrange/double($datasize-1)]
     }
 
     method mouse {x} {
 	if [expr (($x >= $xmin) && ($x <= $xmax))] {
 	    set i [expr int(($x-$xmin)*($datasize-1)/double($xrange))]
-	    set val [expr $minval+$i*$valrange/($datasize-1)]
+	    set val [expr $minval+$i*$valrange/double($datasize-1)]
 	    set freq [lindex $freqs $i]
 	    .ui$this.f.canvas itemconfigure text \
 		    -text "$valtitle\($val) $freqtitle\($freq)"
@@ -222,8 +237,8 @@ itcl_class Histogram {
     method repaint {} {
 	set i1 [expr int(($rangeleft-$xmin)*($datasize-1)/double($xrange))]
 	set i2 [expr int(($rangeright-$xmin)*($datasize-1)/double($xrange))]
-	set val1 [expr $minval+$i1*$valrange/($datasize-1)]
-	set val2 [expr $minval+$i2*$valrange/($datasize-1)]
+	set val1 [expr $minval+$i1*$valrange/double($datasize-1)]
+	set val2 [expr $minval+$i2*$valrange/double($datasize-1)]
 	.ui$this.f.canvas itemconfigure range \
 		-text "Range($val1--$val2)"
 
@@ -231,21 +246,11 @@ itcl_class Histogram {
 	set $this-rangeleft $val1
 	set $this-rangeright $val2
 
-	set lst1 [.ui$this.f.canvas find withtag rects]
-	# Use a flat overlap rectangle to get almost only rectangles
-	set lst2 [.ui$this.f.canvas find overlapping \
-		$rangeleft [expr $ymax-1] $rangeright [expr $ymax-2]]
-	foreach rect $lst1 {
-	    if [expr [lsearch $lst2 $rect] > -1] {
-		.ui$this.f.canvas itemconfigure $rect \
-			-fill #000000000000 \
-			-outline #000000000000
-	    } else {
-		.ui$this.f.canvas itemconfigure $rect \
-			-fill #224488 \
-			-outline #224488
-	    }
-	}
+	.ui$this.f.canvas delete smallpoly
+	eval .ui$this.f.canvas create polygon [getpoly $i1 $i2] -tags smallpoly \
+		-smooth no -fill #00ff00
+	
+	.ui$this.f.canvas raise rangelr
     }
 
     protected datasize 0

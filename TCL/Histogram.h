@@ -19,14 +19,16 @@
 #include <TCL/TCLvar.h>
 
 class Histogram : public TCL {
+   Array1<double> data;
+   int numbuckets;
    Array1<int> freqs;
-   Array1<clString> freqlist;
    
    double minfreq, maxfreq;
    double minval, maxval;
    clString id;
 
    void initfreqs();
+   void FillBuckets();
 
    TCLdouble l, r;
    
@@ -49,6 +51,9 @@ public:
 
    void GetRange( double& left, double& right );
    void SetRange( const double left, const double right );
+   
+   int GetNumBuckets();
+   void SetNumBuckets( const int nb );
    
    void SetData( const Array1<double> values );
    void ui() const;
