@@ -58,7 +58,7 @@
 	<save label="totHtFluxY"/>
 	<save label="totHtFluxZ"/>
 
-	<Checkpoint interval="0.1" cycle="2"/>
+	<checkpoint interval="0.1" cycle="2"/>
 
    </DataArchiver>
 
