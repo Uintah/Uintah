@@ -202,7 +202,7 @@ Thread_shutdown(Thread* thread, bool actually_exit)
       throw ThreadError(std::string("uspsema failed on main_sema")
 			+strerror(errno));
   }
-  delete priv;
+//  delete priv;    -- Steve says to comment this out
   if(actually_exit)
     _exit(0);
 }
