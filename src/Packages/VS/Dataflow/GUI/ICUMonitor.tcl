@@ -54,6 +54,7 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-show_date
 	global  $this-show_time
 	global  $this-dump_frames
+	global  $this-geom
 
 	set $this-edit          0
 	set $this-edit-target   0
@@ -74,11 +75,20 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-show_date 0
 	set $this-show_time 0
 	set $this-dump_frames   0
+	set $this-geom "640x640+0+0"
+    }
+    method do_expose {} {
+	if {[winfo exists .ui[modname]]!= 0} {
+	    set w .ui[modname]
+	    set $this-geom [wm geometry $w]
+	    
+	}
+	$this-c expose
     }
 
     method bind_events {w} {
 	# every time the OpenGL widget is displayed, redraw it
-	bind $w <Expose> "$this-c expose"
+	bind $w <Expose> "$this do_expose"
 # 	bind $w <Shift-ButtonPress-1> "$this-c mouse push %x %y %b 0"
 # 	bind $w <Shift-ButtonPress-2> "$this-c mouse push %x %y %b 0"
 # 	bind $w <Shift-ButtonPress-3> "$this-c mouse push %x %y %b 1"
@@ -606,7 +616,7 @@ itcl_class VS_Render_ICUMonitor {
 
 	    wm title $w "ICU Monitor"
 	    #wm minsize $w 640 128
-	    wm geometry $w "640x640"
+	    wm geometry $w [set $this-geom]
 	}
     }
 
