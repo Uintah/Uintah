@@ -21,20 +21,6 @@ double IdealGas::computeRhoMicro(double press, double gamma,
   return  press/((gamma - 1.0)*cv*Temp);
 }
 
-
-void IdealGas::computeRhoMicro(const Patch* patch, 
-                            CCVariable<double>& press, 
-                            double gamma,double cv, 
-                            constCCVariable<double>& Temp,
-                            CCVariable<double>& rho_micro)
-{
-
-  for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
-    IntVector c = *iter;
-    rho_micro[c] = press[c]/((gamma - 1.0)*cv*Temp[c]);
-  }
-}
-
 //__________________________________
 //
 void IdealGas::computeTempCC(const Patch* patch,
@@ -72,30 +58,6 @@ void IdealGas::computePressEOS(double rhoM, double gamma,
   press   = (gamma - 1.0)*rhoM*cv*Temp;
   dp_drho = (gamma - 1.0)*cv*Temp;
   dp_de   = (gamma - 1.0)*rhoM;
-}
-
-
-void IdealGas::computePressEOS(const Patch* patch, 
-                            CCVariable<double>& rhoM, 
-                            double gamma, double cv, 
-                            constCCVariable<double>& Temp,
-                            CCVariable<double>& press, 
-                            CCVariable<double>& dp_drho,
-                            CCVariable<double>& dp_de)
-{
-  // Pointwise computation of thermodynamic quantities
-  for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
-    IntVector c = *iter;
-    press[c]   = (gamma - 1.0)*rhoM[c]*cv*Temp[c];
-    dp_drho[c] = (gamma - 1.0)*cv*Temp[c];
-    dp_de[c]   = (gamma - 1.0)*rhoM[c];
-  }
-}
-
-//____________________________________________________________________
-double IdealGas::getCompressibility(double press)
-{
-  return  1./press;
 }
 
 //______________________________________________________________________

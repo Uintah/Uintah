@@ -55,20 +55,6 @@ WARNING
                                       double& press, double& dp_drho, 
                                       double& dp_de) = 0;
 
-        virtual void computeRhoMicro(const Patch* patch,
-                                  CCVariable<double>& press,
-                                  double gamma,double cv, 
-                                  constCCVariable<double>& Temp,
-                                  CCVariable<double>& rho_micro) =0;
-
-         virtual void computePressEOS(const Patch* patch,
-                                  CCVariable<double>& rhoM,
-                                  double gamma, double cv, 
-                                  constCCVariable<double>& Temp,
-                                      CCVariable<double>& press,
-                                  CCVariable<double>& dp_drho, 
-                                      CCVariable<double>& dp_de) = 0;
-                                                               
         virtual void computeTempCC(const Patch* patch,
                                const string& comp_domain,
                                const CCVariable<double>& press, 
@@ -86,13 +72,6 @@ WARNING
                                           const double& cv,
                                           const Vector& dx,
                                           CCVariable<double>& Temp_CC)=0;
-
-
-         virtual double getCompressibility(double press) =0;
-
-        protected:
-
-        ICELabel* lb;
       };
 } // End namespace Uintah
       

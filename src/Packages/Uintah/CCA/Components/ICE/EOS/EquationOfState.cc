@@ -5,11 +5,8 @@ using namespace Uintah;
 EquationOfState::EquationOfState()
 {
    // Constructor
-  lb = scinew ICELabel();
-
 }
 
 EquationOfState::~EquationOfState()
 {
-  delete lb;
 }
