@@ -46,6 +46,7 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
+  GuiInt          mode_;
   GuiInt          radius_;
   GuiDouble       weight_;
   GuiInt          bins_;
@@ -56,6 +57,7 @@ DECLARE_MAKER(NrrdCmedian)
 
 NrrdCmedian::NrrdCmedian(SCIRun::GuiContext *ctx) : 
   Module("NrrdCmedian", ctx, Filter, "Filters", "Teem"), 
+  mode_(ctx->subVar("mode")),
   radius_(ctx->subVar("radius")),
   weight_(ctx->subVar("weight")),
   bins_(ctx->subVar("bins")),
@@ -86,7 +88,8 @@ NrrdCmedian::do_filter(Nrrd *nin)
     ntmp = nin;
   }
 
-  if (nrrdCheapMedian(nout, ntmp, radius_.get(), weight_.get(), bins_.get())) {
+  if (nrrdCheapMedian(nout, ntmp, mode_.get(), radius_.get(), 
+		      weight_.get(), bins_.get())) {
     char *err = biffGetDone(NRRD);
     error(string("Error doing cheap median: ") + err);
     free(err);
