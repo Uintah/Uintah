@@ -174,8 +174,8 @@ NrrdGradient::execute()
   NrrdDataHandle nout_handle(nd);
 
   // Copy the properties
-  *((PropertyManager *) nout_handle.get_rep()) =
-    *((PropertyManager *) nin_handle.get_rep());
+  nout_handle->copy_properties(nin_handle.get_rep());
+
   onrrd_->send(nout_handle);
 }
 

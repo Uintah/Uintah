@@ -139,9 +139,9 @@ void
   nrrd->nrrd = nout;
 
   NrrdDataHandle out(nrrd);
+
   // Copy the properties.
-  *((PropertyManager *) out.get_rep()) =
-    *((PropertyManager *) nrrd_handle.get_rep());
+  out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
   for (int i=0; i<nin->dim; i++) {
