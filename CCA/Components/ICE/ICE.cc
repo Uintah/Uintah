@@ -53,6 +53,10 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
+/*`==========TESTING==========*/
+static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
+/*==========TESTING==========`*/
+
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
 {
@@ -620,13 +624,15 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   
   sched->addTask(t, level->eachPatch(), ice_matls);
 
- //__________________________________
-  //  If models want to compute the properties
+  //__________________________________
+  //  Each model *can* modify the properties
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
+                                          iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
-      model->scheduleModifyThermoTransportProperties(sched, level, ice_matls); 
+      if(model-> computesThermoTransportProps() ) {
+         model->scheduleModifyThermoTransportProperties(sched,level,ice_matls);
+      } 
     }
   }
 }
@@ -1158,8 +1164,8 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->mass_L_CCLabel,      gac,2);
   task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    gac,2);
   task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  gac,2);
+  task->requires(Task::NewDW, lb->specific_heatLabel,  gac,2);  
   task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);
-  task->requires(Task::NewDW, lb->specific_heatLabel,  gac,2);
   
   //__________________________________
   if(d_usingLODI) { 
@@ -1569,7 +1575,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::computeThermoTransportProperties
- Purpose~   compute the thermodynamic or transport properties
+ Purpose~   
  ---------------------------------------------------------------------  */
 void ICE::computeThermoTransportProperties(const ProcessorGroup*,
                                           const PatchSubset* patches,
@@ -1696,12 +1702,12 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         IntVector c = *iter;
 /*`==========TESTING==========*/
 // This might be wrong.  Try 1/sp_vol -- Todd 11/22
-#if 1
+#if 0
         rho_micro[m][c] = 
          ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],cv[m][c],
                                              Temp[m][c]); 
 #endif 
-#if 0
+#if 1
         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
 #endif
 /*==========TESTING==========`*/
@@ -1724,7 +1730,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 #if 1
       ostringstream desc,desc1;
       desc1 << "TOP_equilibration_patch_" << patch->getID();
-      printData( 0, patch, 1, desc.str(), "Press_CC_top", press);
+      printData( 0, patch, 1, desc1.str(), "Press_CC_top", press);
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
@@ -3728,6 +3734,65 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 }
  
 /* --------------------------------------------------------------------- 
+Function~  ICE::update_q_CC--
+Purpose~   This function tacks on the advection of q_CC.  There are two
+     different ways to do it.  
+---------------------------------------------------------------------  */
+template< class V, class T>
+void ICE::update_q_CC(const std::string& desc,
+                      CCVariable<T>& Q_CC,
+                      V& Q_Lagrangian,
+                      const CCVariable<T>& Q_advected,
+                      constCCVariable<double>& mass_L,
+                      const CCVariable<double>& mass_new,
+                      const CCVariable<double>& mass_advected,
+                      constCCVariable<double>& cv,
+                      const CCVariable<double>& cv_new,
+                      const Patch* patch) 
+{
+  //__________________________________
+  //  all Q quantites except Temperature
+  if (oldStyleAdvect.active() && desc != "energy"){
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      Q_CC[c] = (Q_Lagrangian[c] + Q_advected[c])/mass_new[c] ;
+    }
+  }
+  //_______________
+  //  BAK's update
+  if (!oldStyleAdvect.active() && desc != "energy" ){
+    T q_L_tmp, q_Advected; 
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      q_L_tmp    = Q_Lagrangian[c]/mass_L[c];
+      q_Advected = (Q_advected[c] - q_L_tmp * mass_advected[c]) / mass_new[c];
+      Q_CC[c]    = q_L_tmp + q_Advected;
+    }
+  }
+  //__________________________________
+  //  Temperature
+  if(oldStyleAdvect.active() && desc == "energy" ) {
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      Q_CC[c] = (Q_Lagrangian[c] + Q_advected[c])/(mass_new[c] * cv_new[c]) ;
+    }
+  }
+  //_______________
+  //  BAK's update
+  if (!oldStyleAdvect.active() && desc == "energy" ){
+    T Temp_advected, Temp_cv_L_ME, Temp_L_ME; 
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      Temp_cv_L_ME  = Q_Lagrangian[c]/mass_L[c];
+      Temp_L_ME     = Temp_cv_L_ME/cv[c];
+   
+      Temp_advected = (Q_advected[c] - Temp_cv_L_ME * mass_advected[c])/
+                      (cv_new[c] * mass_new[c] );
+      Q_CC[c]       = Temp_L_ME + Temp_advected;
+    }
+  }
+} 
+/* --------------------------------------------------------------------- 
  Function~  ICE::advectAndAdvanceInTime--
  Purpose~
    This task calculates the The cell-centered, time n+1, mass, momentum
@@ -3735,7 +3800,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
    Need to include kinetic energy 
  ---------------------------------------------------------------------  */
-void ICE::advectAndAdvanceInTime(const ProcessorGroup*,  
+void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,  
                                  const PatchSubset* patches,
                                  const MaterialSubset* /*matls*/,
                                  DataWarehouse* old_dw,
@@ -3809,6 +3874,17 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       vel_CC.initialize(Vector(0.0,0.0,0.0));
       qV_advected.initialize(Vector(0.0,0.0,0.0)); 
 
+
+/*`==========TESTING==========*/
+ int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+ if (timestep == 1 ) {
+   if(oldStyleAdvect.active()){
+    cout << " OLD update eq. processor group "<<  pg->myrank() << endl;
+   } else{
+    cout << " BAK update eq. processor group "<<  pg->myrank() << endl;
+   }
+ }
+/*==========TESTING==========`*/
       //__________________________________
       //  preprocessing for lodi bcs
       Lodi_vars* lodi_vars = new Lodi_vars();
@@ -3846,73 +3922,37 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       // Advect  momentum and backout vel_CC
       advector->advectQ(mom_L_ME,patch,qV_advected, new_dw);
 
-      Vector vel_L_ME, vel_advected;
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        IntVector c = *iter;
-        vel_L_ME = mom_L_ME[c]/mass_L[c];
+      constCCVariable<double> PH;  // placeHolders
+      CCVariable<double> PH2;
+      update_q_CC<constCCVariable<Vector>, Vector>
+                 ("velocity",vel_CC, mom_L_ME, qV_advected, 
+                   mass_L, mass_new, mass_advected, PH, PH2, patch);
 
-        vel_advected = (qV_advected[c] - vel_L_ME * mass_advected[c])/
-                       (mass_new[c]);
-        vel_CC[c]    = (vel_L_ME + vel_advected);
-
-//      if(rho_CC[c] < 1.e-2){             
-//          vel_CC[c] = Vector(0.,0.,0.);  
-//      }                                  
-      }
-
+      //__________________________________
+      //    Jim's tweak
+      //for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      //  IntVector c = *iter;
+      //  if(rho_CC[c] < 1.e-2){             
+      //    vel_CC[c] = Vector(0.,0.,0.); 
+      //  }
+      //}
+      
       setBC(vel_CC, "Velocity", patch,d_sharedState, indx, lodi_vars); 
 
       if(d_usingLODI){  // you need vel_CC_new
         lodi_vars->vel_CC.copyData(vel_CC);
       }
-      //__________________________________
-      // Advect internal energy and backout Temp_CC
-      advector->advectQ(int_eng_L_ME,patch,q_advected, new_dw);
 
-      double Temp_advected, Temp_cv_L_ME, Temp_L_ME;
-      if (d_EqForm){         // EQ FORM
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          Temp_cv_L_ME  = int_eng_L_ME[c]/mass_L[c];
-          Temp_L_ME     = Temp_cv_L_ME/cv[c];
-          Temp_advected = (q_advected[c] - Temp_cv_L_ME * mass_advected[c])/
-                          (cv[c] * mass_new[c] );
-
-          temp[c]       = Temp_L_ME + Temp_advected;
-        }
-      }
-
-      if (d_RateForm){      // RATE FORM
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          double KE = 0.5 * vel_CC[c].length() * vel_CC[c].length();
-
-          Temp_cv_L_ME  = int_eng_L_ME[c]/mass_L[c];
-          Temp_L_ME     = Temp_cv_L_ME/cv[c];
-          Temp_advected = (q_advected[c] - Temp_cv_L_ME * mass_advected[c])/
-                          (cv[c] * mass_new[c]);
-
-          temp[c]       = (Temp_L_ME + Temp_advected - KE/cv[c]);
-
-  //    double KE = 0.5 * mass_new[c] * vel_CC[c].length() * vel_CC[c].length();
-  //        temp[c] = (int_eng_L_ME[c] + q_advected[c] - KE)/(mass_new[c] * cv);
-        }
-      } 
-      setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,indx,lodi_vars);
       
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
       advector->advectQ(spec_vol_L,patch,q_advected, new_dw); 
 
-      double sp_vol_tmp, sp_vol_advected;      
-      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-        IntVector c = *iter;
-        sp_vol_tmp      = spec_vol_L[c]/mass_L[c];        
-        sp_vol_advected = (q_advected[c] - sp_vol_tmp * mass_advected[c])/
-                          ( mass_new[c]);
-        sp_vol_CC[c]    = sp_vol_tmp + sp_vol_advected;  
-      }
+      update_q_CC<constCCVariable<double>, double>
+                  ("sp_vol",sp_vol_CC, spec_vol_L, q_advected, 
+                   mass_L, mass_new, mass_advected, PH, PH2, patch);
+
       //  Set Neumann = 0 if symmetric Boundary conditions
       setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
 
@@ -3941,30 +3981,51 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 		  IntVector c = *iter;                            
 		  q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
 	       }
-	       advector->advectQ(q_new,patch,q_advected, new_dw);
 	     } else {
 	       for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
 		    !iter.done(); iter++){
 		  IntVector c = *iter;                            
 		  q_new[c]  = q_L_CC[c]*mass_L[c];
 	       }
-	       advector->advectQ(q_new,patch,q_advected, new_dw);
 	     }
-
-	     for(CellIterator iter = patch->getCellIterator();
-                                                          !iter.done(); iter++){
-	       IntVector c = *iter;
-	       double q_tmp = q_new[c]/mass_L[c];
-	       double q_a   = (q_advected[c] - q_tmp * mass_advected[c])/
-                             ( mass_new[c]);
-	       q_CC[c] = q_tmp + q_a; 
-	     }
-
+            advector->advectQ(q_new,patch,q_advected, new_dw);
+            
+            update_q_CC<CCVariable<double>, double>
+                  ("q_new",q_CC, q_new, q_advected, 
+                   mass_L, mass_new, mass_advected, PH, PH2, patch);
+            
             //  Set Boundary Conditions 
-	     setBC(q_CC, "zeroNeumann",  patch, d_sharedState, indx);
+            string Labelname = tvar->var->getName();
+	     setBC(q_CC, Labelname,  patch, d_sharedState, indx);
           }
         }
       }
+
+      //__________________________________
+      // A model *can* compute the specific heat
+      CCVariable<double> cv_new;
+      new_dw->allocateTemporary(cv_new, patch,gac,2);
+      cv_new.copyData(cv);
+      
+      if(d_models.size() != 0){
+        for(vector<ModelInterface*>::iterator iter = d_models.begin();
+                                              iter != d_models.end(); iter++){ 
+          ModelInterface* model = *iter;
+          if(model->computesThermoTransportProps() ) {
+            model->computeSpecificHeat(cv_new, patch, new_dw, indx);
+          }
+        }
+      }
+
+      //__________________________________
+      // Advect internal energy and backout Temp_CC
+      advector->advectQ(int_eng_L_ME,patch,q_advected, new_dw);
+      
+      update_q_CC<constCCVariable<double>, double>
+                  ("energy",temp, int_eng_L_ME, q_advected, 
+                   mass_L, mass_new, mass_advected, cv, cv_new, patch);
+                                     
+      setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,indx,lodi_vars);
       //__________________________________
       // Compute Auxilary quantities
       for(CellIterator iter = patch->getExtraCellIterator();
