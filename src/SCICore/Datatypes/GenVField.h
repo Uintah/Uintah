@@ -35,7 +35,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 
 
 template <class T, class G, class A=DiscreteAttrib<T> > 
-  class SCICORESHARE GenVField: public VField, public SLInterpolate
+  class SCICORESHARE GenVField: public VField, public VLInterpolate
 {
   public:
     
@@ -92,7 +92,7 @@ template <class T, class G, class A=DiscreteAttrib<T> >
   
   //////////
   // Interpolate at the point
-  virtual int slinterpolate(const Point& ipoint, double& outval, double eps=1.e-6);
+  virtual int vlinterpolate(const Point& ipoint, Vector& outval);
 
   /////////
   // Compute the gradient at the point
@@ -254,11 +254,11 @@ bool GenVField<T,G,A>::longest_dimension(double &odouble)
 
 
 template <class T, class G, class A >
-int GenVField<T,G,A>::slinterpolate(const Point& , double& , double)
+int GenVField<T,G,A>::vlinterpolate(const Point& p, Vector& outval)
 {
-  //T out;
-  //geom->interp(attrib.get_rep(), p, out);
-  //outval = out;
+  T out;
+  geom->interp(attrib.get_rep(), p, out);
+  outval = out;
   return 0;
 }
 
