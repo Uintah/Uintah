@@ -2,7 +2,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/rtrt/Core/PathTracer
 
-SRCS += $(SRCDIR)/PathTraceEngine.cc
+SRCS += $(SRCDIR)/PathTraceEngine.cc \
+	$(SRCDIR)/AmbientOcclusion.cc
 
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Persistent Core/Geometry Packages/rtrt/Core
