@@ -97,6 +97,8 @@ public:
 protected:
   void add_axis(const Point &p, double scale, GeomLines *lines);
   void add_axis(const Point &p, double scale, GeomLines *lines, double val);
+  void add_axis(const Point &p, double scale, GeomLines *lines,
+		const MaterialHandle &vcol);
 };
 
 
@@ -133,7 +135,7 @@ public:
 				 bool render_cells);
 
 private:
-  GeomHandle render_nodes(const Fld *fld, 
+  GeomHandle render_nodes(Fld *fld, 
 			  const string &node_display_mode,
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
@@ -290,7 +292,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 
 template <class Fld, class Loc>
 GeomHandle
-RenderField<Fld, Loc>::render_nodes(const Fld *sfld, 
+RenderField<Fld, Loc>::render_nodes(Fld *sfld, 
 				    const string &node_display_mode,
 				    ColorMapHandle color_handle,
 				    MaterialHandle def_mat,
@@ -347,21 +349,31 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   else if (mode == 3)
   {
     discs = scinew GeomCappedCylinders(node_resolution, node_scale);
-    spheres = scinew GeomSpheres(node_scale, node_resolution, node_resolution);
+    spheres = scinew GeomSpheres(node_scale * 0.75,
+				 node_resolution, node_resolution);
     GeomGroup *grp = scinew GeomGroup();
     grp->add(discs);
     grp->add(spheres);
     display_list = scinew GeomDL(grp);
   }
 
+  // Use a default color?
+  bool def_color = !(color_handle.get_rep());
+  bool vec_color = false;
+  if (def_color && sfld->query_vector_interface() != NULL)
+  {
+    def_color = false;
+    vec_color = true;
+  }
+   
+  MaterialHandle vcol = scinew Material();
+  vcol->transparency = 1.0;
+
   // First pass: over the nodes
   mesh->synchronize(Mesh::NODES_E);
   typename Fld::mesh_type::Node::iterator niter;  mesh->begin(niter);  
   typename Fld::mesh_type::Node::iterator niter_end;  mesh->end(niter_end);  
   while (niter != niter_end) {
-    // Use a default color?
-    bool def_color = !(color_handle.get_rep());
-    
     Point p;
     mesh->get_point(p, *niter);
 
@@ -377,6 +389,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 	
 	to_vector(tmp, vec);
 	to_double(tmp, val);
+	if (vec_color) { vcol->diffuse = Color(vec.x(), vec.y(), vec.z()); }
       }
       break;
 
@@ -395,6 +408,10 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       {
 	points->add(p);
       }
+      else if (vec_color)
+      {
+	points->add(p, vcol);
+      }
       else
       {
 	points->add(p, val);
@@ -405,6 +422,10 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       if (def_color)
       {
 	spheres->add(p);
+      }
+      else if (vec_color)
+      {
+	spheres->add(p, vcol);
       }
       else
       {
@@ -417,6 +438,10 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       {
 	add_axis(p, node_scale, lines);
       }
+      else if (vec_color)
+      {
+	add_axis(p, node_scale, lines, vcol);
+      }
       else
       {
 	add_axis(p, node_scale, lines, val);
@@ -425,11 +450,15 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 
     case 3: // Disks
     default:
-      if (vec.safe_normalize() < 1.0e-6)
+      if (vec.safe_normalize() < 1.0e-5)
       {
 	if (def_color)
 	{
 	  spheres->add(p);
+	}
+	else if (vec_color)
+	{
+	  spheres->add(p, vcol);
 	}
 	else
 	{
@@ -442,6 +471,10 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 	if (def_color)
 	{
 	  discs->add(p-vec, p+vec);
+	}
+	else if (vec_color)
+	{
+	  discs->add(p-vec, vcol, p+vec, vcol);
 	}
 	else
 	{
