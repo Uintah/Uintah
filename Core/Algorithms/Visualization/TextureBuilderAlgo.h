@@ -116,13 +116,12 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
   nb[0] = gfield.get_rep() ? 4 : 1;
   nb[1] = gfield.get_rep() ? 1 : 0;
   Transform tform;
-  //mesh->transform(tform);
+  mesh->get_canonical_transform(tform);
 
   texture->lock_bricks();
   vector<TextureBrick*>& bricks = texture->bricks();
-  // TODO:  BBox is only the transform if we're axis aligned.
-  // Fix to use the mesh transform.
-  const BBox &bbox = mesh->get_bounding_box();
+  // bbox for the canonical_transform.
+  const BBox bbox(Point(0, 0, 0), Point(1, 1, 1));
   if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
       || nc != texture->nc() || card_mem != texture->card_mem() ||
       bbox.min() != texture->bbox().min() ||

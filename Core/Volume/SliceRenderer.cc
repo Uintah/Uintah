@@ -102,14 +102,14 @@ SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
   if(di->get_drawtype() == DrawInfoOpenGL::WireFrame) {
     draw_wireframe();
   } else {
-    draw();
+    draw_slice();
   }
   di_ = 0;
   mutex_.unlock();
 }
 
 void
-SliceRenderer::draw()
+SliceRenderer::draw_slice()
 {
 #ifdef HAVE_AVR_SUPPORT
   tex_->lock_bricks();

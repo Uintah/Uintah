@@ -247,9 +247,10 @@ TextureRenderer::compute_view()
   glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
   // index space view direction
   Vector v = field_trans.unproject(Vector(-mvmat[2], -mvmat[6], -mvmat[10]));
+  v.safe_normalize();
   Transform mv;
   mv.set_trans(mvmat);
-  Point p = field_trans.unproject(mv.unproject(Point(0.0, 0.0, 0.0)));
+  Point p = tex_->bbox().center();
   return Ray(p, v);
 }
 
