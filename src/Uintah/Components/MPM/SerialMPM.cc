@@ -214,18 +214,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			 Ghost::None);
 	 }
 
-         t->requires( old_dw,
-                      cSurfaceNormalLabel,
+         t->requires( old_dw, cSurfaceNormalLabel,
                       d_sharedState->getMaterial(fieldIndependentVariable)
-                                   ->getDWIndex(),
-                      region,
-	              Ghost::None);
+                                   ->getDWIndex(), region, Ghost::None);
 
-         t->computes( new_dw,
-                      cSelfContactLabel,
+         t->computes( new_dw, cSelfContactLabel,
                       d_sharedState->getMaterial(fieldIndependentVariable)
-                                   ->getDWIndex(),
-                      region );
+                                   ->getDWIndex(), region );
 
 	 sched->addTask(t);
       }
@@ -283,15 +278,15 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			    region, old_dw, new_dw,
 			    d_contactModel,
 			    &Contact::exMomInterpolated);
+
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires( new_dw, gMassLabel, idx, region,
-			 Ghost::None);
-	    t->requires( new_dw, gVelocityLabel, idx, region,
-			 Ghost::None);
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    if(mpm_matl){
+               d_contactModel->addComputesAndRequiresInterpolated(
+					t, mpm_matl, region, old_dw, new_dw);
+	    }
 
-	    t->computes( new_dw, gMomExedVelocityLabel, idx, region );
 	 }
 
 	 sched->addTask(t);
@@ -440,16 +435,10 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			   d_contactModel, &Contact::exMomIntegrated);
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 	    int idx = matl->getDWIndex();
-	    t->requires(new_dw, gMassLabel, idx, region,
-			Ghost::None);
-	    t->requires(new_dw, gVelocityStarLabel, idx, region,
-			Ghost::None);
-	    t->requires(new_dw, gAccelerationLabel, idx, region,
-			Ghost::None);
-
-	    t->computes(new_dw, gMomExedVelocityStarLabel, idx, region);
-	    t->computes(new_dw, gMomExedAccelerationLabel, idx, region);
+            d_contactModel->addComputesAndRequiresIntegrated(
+				t, mpm_matl, region, old_dw, new_dw);
 	}
 
 	sched->addTask(t);
@@ -1169,6 +1158,11 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.63  2000/05/25 23:03:11  guilkey
+// Implemented calls to addComputesAndRequires for the Contact
+// funtions (addComputesAndRequiresInterpolated and
+// addComputesAndRequiresIntegrated)
+//
 // Revision 1.62  2000/05/25 22:06:34  tan
 // A boolean variable d_heatConductionInvolved is set to true when
 // heat conduction considered in the simulation.
