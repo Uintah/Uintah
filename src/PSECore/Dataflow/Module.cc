@@ -33,6 +33,7 @@ using SCICore::Thread::Thread;
 
 #include <iostream>
 using std::cerr;
+using std::endl;
 #include <stdlib.h>
 
 namespace PSECore {
@@ -53,7 +54,6 @@ Module::Module(const clString& name, const clString& id,
   packageName="error: unset package name";
   categoryName="error: unset category name";
   moduleName="error: unset module name";
-
 }
 
 Module::~Module()
@@ -465,6 +465,11 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.9  1999/11/12 01:38:30  ikits
+// Added ANL AVTC site visit modifications to make the demos work.
+// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
+// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
+//
 // Revision 1.8  1999/11/10 23:24:30  dmw
 // added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
 //
