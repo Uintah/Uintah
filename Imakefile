@@ -76,7 +76,21 @@ SC_LIBS = \
 SC_LDFLAGS = SCI_LM
 SCIProgramTarget2($(SC_TARGET), $(SC_OBJS), $(SC_LIBS), $(SC_LDFLAGS))
 
-SRCS = $(SR_SRCS) $(SEG_SRCS) $(SC_SRCS)
+MESH_TARGET = ConvMesh
+MESH_SRCS = ConvMesh.cc
+MESH_OBJS = ConvMesh.o
+MESH_LIBS = \
+	Datatypes/libDatatypes.a \
+	Classlib/libClasslib.a \
+	Geometry/libGeometry.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Malloc/libMalloc.a
+
+MESH_LDFLAGS = SCI_LM
+SCIProgramTarget2($(MESH_TARGET), $(MESH_OBJS), $(MESH_LIBS), $(MESH_LDFLAGS))
+
+SRCS = $(SR_SRCS) $(SEG_SRCS) $(SC_SRCS) $(MESH_SRCS)
 SCIDependTarget($(SRCS))
 
 World:
