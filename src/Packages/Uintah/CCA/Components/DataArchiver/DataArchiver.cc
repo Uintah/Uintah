@@ -595,10 +595,10 @@ void DataArchiver::createIndexXML(Dir& dir)
 }
 
 void DataArchiver::finalizeTimestep(double time, double delt,
-				    const LevelP& level, SchedulerP& sched)
+				    const GridP& grid, SchedulerP& sched)
 {
   static bool wereSavesAndCheckpointsInitialized = false;
-  cout << "Finalize delt= " << delt << endl;
+  dbg << "DataArchiver finalizeTimestep, delt= " << delt << endl;
   d_currentTime=time+delt;
 
   if (!wereSavesAndCheckpointsInitialized &&
@@ -637,7 +637,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     
     dbg << "Created reduction variable output task" << endl;
     if (d_wasOutputTimestep){
-      scheduleOutputTimestep(d_dir, d_saveLabels, level, sched);
+      scheduleOutputTimestep(d_dir, d_saveLabels, grid, sched);
       do_output=true;
     }
   }
@@ -658,16 +658,16 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     dbg << "Created checkpoint reduction variable output task" << endl;
 
     scheduleOutputTimestep(d_checkpointsDir, d_checkpointLabels,
-			   level, sched);
+			   grid, sched);
     do_output=true;
   }
   if(do_output && delt == 0)
-    beginOutputTimestep(time, delt, level);
+    beginOutputTimestep(time, delt, grid);
 }
 
 
 void DataArchiver::beginOutputTimestep(double time, double delt,
-				       const LevelP& level)
+				       const GridP& grid)
 {
   d_currentTime=time+delt;
   dbg << "beginOutputTimestep called at time=" << d_currentTime << '\n';
@@ -675,7 +675,7 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
     if(d_currentTime >= d_nextOutputTime) {
       // output timestep
       d_wasOutputTimestep = true;
-      outputTimestep(d_dir, d_saveLabels, time, delt, level,
+      outputTimestep(d_dir, d_saveLabels, time, delt, grid,
 		     &d_lastTimestepLocation);
       while (d_currentTime >= d_nextOutputTime)
 	d_nextOutputTime+=d_outputInterval;
@@ -687,7 +687,7 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
     if(d_currentTimestep >= d_nextOutputTimestep) {
       // output timestep
       d_wasOutputTimestep = true;
-      outputTimestep(d_dir, d_saveLabels, time, delt, level,
+      outputTimestep(d_dir, d_saveLabels, time, delt, grid,
 		     &d_lastTimestepLocation);
       while (d_currentTimestep >= d_nextOutputTimestep)
 	d_nextOutputTimestep+=d_outputTimestepInterval;
@@ -702,7 +702,7 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
     d_wasCheckpointTimestep=true;
     string timestepDir;
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
-		   level, &timestepDir,
+		   grid, &timestepDir,
 		   d_checkpointReductionLabels.size() > 0);
     
     string iname = d_checkpointsDir.getName()+"/index.xml";
@@ -716,7 +716,7 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       ofstream index_backup(ibackup_name.c_str());
       index_backup << index << endl;
     }
-      
+
     d_checkpointTimestepDirs.push_back(timestepDir);
     if ((int)d_checkpointTimestepDirs.size() > d_checkpointCycle) {
       if (d_writeMeta) {
@@ -752,10 +752,11 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
 void DataArchiver::outputTimestep(Dir& baseDir,
 				  vector<DataArchiver::SaveItem>&,
 				  double time, double delt,
-				  const LevelP& level,
+				  const GridP& grid,
 				  string* pTimestepDir /* passed back */,
 				  bool hasGlobals /* = false */)
 {
+  int numLevels = grid->numLevels();
   int timestep = d_currentTimestep;
   
   ostringstream tname;
@@ -784,8 +785,6 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       DOM_Element gridElem = doc.createElement("Grid");
       rootElem.appendChild(gridElem);
       
-      GridP grid = level->getGrid();
-      int numLevels = grid->numLevels();
       appendElement(gridElem, "numLevels", numLevels);
       for(int l = 0;l<numLevels;l++){
 	LevelP level = grid->getLevel(l);
@@ -798,6 +797,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	appendElement(levelElem, "totalCells", level->totalCells());
 	appendElement(levelElem, "cellspacing", level->dCell());
 	appendElement(levelElem, "anchor", level->getAnchor());
+	appendElement(levelElem, "id", level->getID());
 	Level::const_patchIterator iter;
 	for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 	  const Patch* patch=*iter;
@@ -814,9 +814,9 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       }
       DOM_Element dataElem = doc.createElement("Data");
       rootElem.appendChild(dataElem);
-      ostringstream lname;
-      {
-	lname << "l0"; // Hard coded - steve
+      for(int l=0;l<numLevels;l++){
+	ostringstream lname;
+	lname << "l" << l;
 	for(int i=0;i<d_myworld->size();i++){
 	  ostringstream pname;
 	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
@@ -858,15 +858,17 @@ void DataArchiver::outputTimestep(Dir& baseDir,
     }
       
     // Create the directory for this level, if necessary
-    ostringstream lname;
-    lname << "l0"; // Hard coded - steve
-    Dir ldir;
-    try {
-      ldir = tdir.createSubdir(lname.str());
-    } catch(ErrnoException& e) {
-      if(e.getErrno() != EEXIST)
-	throw;
-      ldir = tdir.getSubdir(lname.str());
+    for(int l=0;l<numLevels;l++){
+      ostringstream lname;
+      lname << "l" << l;
+      Dir ldir;
+      try {
+	ldir = tdir.createSubdir(lname.str());
+      } catch(ErrnoException& e) {
+	if(e.getErrno() != EEXIST)
+	  throw;
+	ldir = tdir.getSubdir(lname.str());
+      }
     }
   }
 }
@@ -929,26 +931,28 @@ void DataArchiver::executedTimestep()
   }
 }
 
-void DataArchiver::scheduleOutputTimestep(Dir& baseDir,
-				    vector<DataArchiver::SaveItem>& saveLabels,
-				    const LevelP& level, SchedulerP& sched)
+void
+DataArchiver::scheduleOutputTimestep(Dir& baseDir,
+				     vector<DataArchiver::SaveItem>& saveLabels,
+				     const GridP& grid, SchedulerP& sched)
 {
   // Schedule a bunch o tasks - one for each variable, for each patch
-  // This will need to change for parallel code
   int n=0;
-  vector< SaveItem >::iterator saveIter;
-  const PatchSet* patches = level->eachPatch();
-  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
-      saveIter++) {
-    const MaterialSet* matls = (*saveIter).getMaterialSet();
-    Task* t = scinew Task("DataArchiver::output", 
-			  this, &DataArchiver::output,
-			  &baseDir, (*saveIter).label_);
-    t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
-    sched->addTask(t, patches, matls);
-    n++;
+  for(int i=0;i<grid->numLevels();i++){
+    const LevelP& level = grid->getLevel(i);
+    vector< SaveItem >::iterator saveIter;
+    const PatchSet* patches = level->eachPatch();
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
+	saveIter++) {
+      const MaterialSet* matls = (*saveIter).getMaterialSet();
+      Task* t = scinew Task("DataArchiver::output", 
+			    this, &DataArchiver::output,
+			    &baseDir, (*saveIter).label_);
+      t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
+      sched->addTask(t, patches, matls);
+      n++;
+    }
   }
-   
   dbg << "Created " << n << " output tasks\n";
 }
 
@@ -1021,7 +1025,7 @@ void DataArchiver::indexAddGlobals()
 }
 
 void DataArchiver::outputReduction(const ProcessorGroup*,
-				   const PatchSubset*,
+				   const PatchSubset* pss,
 				   const MaterialSubset* /*matls*/,
 				   DataWarehouse* /*old_dw*/,
 				   DataWarehouse* new_dw)
@@ -1049,7 +1053,7 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
       ofstream out(filename.str().c_str(), ios_base::app);
 #endif
       out << setprecision(17) << d_currentTime << "\t";
-      new_dw->print(out, var, matlIndex);
+      new_dw->print(out, var, 0, matlIndex);
       out << "\n";
     }
   }
@@ -1085,7 +1089,7 @@ void DataArchiver::output(const ProcessorGroup*,
   bool isReduction = var->typeDescription()->isReductionVariable();
 
   dbg << "output called ";
-  if(patches->size() == 1 && !patches->get(1)){
+  if(patches->size() == 1 && !patches->get(0)){
     dbg << "for reduction";
   } else {
     dbg << "on patches: ";
@@ -1116,7 +1120,14 @@ void DataArchiver::output(const ProcessorGroup*,
   string dataFilename;
   if (!isReduction) {
     ostringstream lname;
-    lname << "l0"; // Hard coded - steve
+    ASSERT(patches->size() != 0);
+    ASSERT(patches->get(0) != 0);
+    const Level* level = patches->get(0)->getLevel();
+#if SCI_ASSERTION_LEVEL >= 1
+    for(int i=0;i<patches->size();i++)
+      ASSERT(patches->get(i)->getLevel() == level);
+#endif
+    lname << "l" << level->getIndex(); // Hard coded - steve
     Dir ldir = tdir.getSubdir(lname.str());
     
     ostringstream pname;
@@ -1124,8 +1135,7 @@ void DataArchiver::output(const ProcessorGroup*,
     xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
     dataFilebase = pname.str() + ".data";
     dataFilename = ldir.getName() + "/" + dataFilebase;
-  }
-  else {
+  } else {
     xmlFilename =  tdir.getName() + "/global.xml";
     dataFilebase = "global.data";
     dataFilename = tdir.getName() + "/" + dataFilebase;
@@ -1530,8 +1540,9 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
 }
 
 bool DataArchiver::need_recompile(double time, double dt,
-				  const LevelP& level )
+				  const GridP& grid)
 {
+  LevelP level = grid->getLevel(0);
   d_currentTime=time+dt;
   dbg << "DataArchiver::need_recompile called\n";
   d_currentTimestep++;
@@ -1561,7 +1572,7 @@ bool DataArchiver::need_recompile(double time, double dt,
   dbg << "dt=" << dt << '\n';
   dbg << "do_output=" << do_output << '\n';
   if(do_output)
-    beginOutputTimestep(time, dt, level);
+    beginOutputTimestep(time, dt, grid);
   else
     d_wasCheckpointTimestep=d_wasOutputTimestep=false;
   if(recompile)
