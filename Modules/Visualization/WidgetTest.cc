@@ -46,6 +46,7 @@ private:
    int widget_id;
    TCLdouble widget_scale;
    TCLint widget_type;
+   TCLMaterial widget_material;
 
    BaseWidget* widgets[NumWidgetTypes];
 
@@ -73,7 +74,8 @@ static clString module_name("WidgetTest");
 
 WidgetTest::WidgetTest(const clString& id)
 : Module("WidgetTest", id, Source), widget_scale("widget_scale", id, this),
-  widget_type("widget_type", id, this), init(1)
+  widget_type("widget_type", id, this), widget_material("widget_material", id, this),
+  init(1)
 {
    // Create the output port
    ogeom = new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -99,7 +101,8 @@ WidgetTest::WidgetTest(const clString& id)
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
 : Module(copy, deep),
   widget_scale("widget_scale", id, this),
-  widget_type("widget_type", id, this)
+  widget_type("widget_type", id, this),
+  widget_material("material", id, this)
 {
    NOT_FINISHED("WidgetTest::WidgetTest");
 }
@@ -175,12 +178,27 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
        widgets[widget_type.get()]->execute();
        widget_lock.write_unlock();
    } else if(args[1] == "scale"){
-       widget_lock.write_lock();
-       widgets[widget_type.get()]->SetScale(widget_scale.get());
-       widgets[widget_type.get()]->execute();
-       widget_lock.write_unlock();
-       ogeom->flushViews();
-    } else {
+      reset_vars();
+      widget_lock.write_lock();
+      widgets[widget_type.get()]->SetScale(widget_scale.get());
+      widgets[widget_type.get()]->execute();
+      widget_lock.write_unlock();
+      ogeom->flushViews();
+   } else if(args[1] == "material"){
+      reset_vars();
+      Material mat(widget_material.get());
+
+      cout << "Material{" << endl;
+      cout << "  ambient(" << mat.ambient.r() << "," << mat.ambient.g() << "," << mat.ambient.b() << ")" << endl;
+      cout << "  diffuse(" << mat.diffuse.r() << "," << mat.diffuse.g() << "," << mat.diffuse.b() << ")" << endl;
+      cout << "  specular(" << mat.specular.r() << "," << mat.specular.g() << "," << mat.specular.b() << ")" << endl;
+      cout << "  shininess(" << mat.shininess << ")" << endl;
+      cout << "  emission(" << mat.emission.r() << "," << mat.emission.g() << "," << mat.emission.b() << ")" << endl;
+      cout << "  reflectivity(" << mat.reflectivity << ")" << endl;
+      cout << "  transparency(" << mat.transparency << ")" << endl;
+      cout << "  refraction_index(" << mat.refraction_index << ")" << endl;
+      cout << "}" << endl;
+   } else {
       Module::tcl_command(args, userdata);
    }
 }

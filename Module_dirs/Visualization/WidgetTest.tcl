@@ -12,7 +12,12 @@ itcl_class WidgetTest {
 	set $this-widget_scale 0.01
 	global $this-widget_type
 	set $this-widget_type 6
+
+	global $this-widget_material
+	initMaterial $this-widget_material
+
 	$this-c select
+	$this-c material
 	$this-c needexecute
     }
     method ui {} {
@@ -45,5 +50,32 @@ itcl_class WidgetTest {
 
 	button $w.f.nextmode -text "NextMode" -command "$this-c nextmode"
 	pack $w.f.nextmode -fill x -pady 2
+	
+	toplevel $w.mat
+	makeMaterialEditor $w.mat $this-widget_material "$this-c material" "destroy $w.mat"
     }
 }
+
+proc initColor {c r g b} {
+    global $c-r $c-g $c-b
+    set $c-r $r
+    set $c-g $g
+    set $c-b $b
+}
+
+proc initMaterial {matter} {
+    initColor $matter-ambient 0.1 0.2 0.3
+    initColor $matter-diffuse 0.4 0.5 0.6
+    initColor $matter-specular 0.7 0.8 0.9
+    global $matter-shininess
+    set $matter-shininess 10.0
+    initColor $matter-emission 0.1 0.4 0.7
+    global $matter-reflectivity
+    set $matter-reflectivity 0.5
+    global $matter-transparency
+    set $matter-transparency 0
+    global $matter-refraction_index
+    set $matter-refraction_index 1.0
+}
+
+source $sci_root/TCL/MaterialEditor.tcl
