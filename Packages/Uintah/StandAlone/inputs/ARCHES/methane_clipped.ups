@@ -157,7 +157,7 @@
                        </MixtureFraction>
                     </MixRxnTableInfo>
 	            <TableType>dynamic</TableType>
-                    <TableStorage>KDTree</TableStorage>
+                    <TableStorage>2DVector</TableStorage>
                   </EquilibriumReactionModel>
                 </PDFMixingModel>
 	    </Properties>

@@ -75,6 +75,7 @@
 		  <adiabatic>false</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
+                  <PDFShape>Beta</PDFShape>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
 		  <Stream>
 		    <density>0.133</density>
@@ -102,9 +103,10 @@
      		       <NumDivsAbove>20</NumDivsAbove>
                      </MixtureFraction>
                   </MixRxnTableInfo>
+                  <TableType>dynamic</TableType>
+                  <TableStorage>2DVector</TableStorage>
 		  <Integrator>
 		     <favre>false</favre>
-                     <PDFSHAPE>BetaPDFShape</PDFSHAPE>
                   </Integrator>
                 </ColdflowMixingModel>
 	    </Properties>

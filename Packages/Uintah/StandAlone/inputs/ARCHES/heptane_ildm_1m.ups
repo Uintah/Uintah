@@ -82,11 +82,12 @@
 		<denUnderrelax>0.9</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>true</radiation>
-	        <mixing_model>pdfMixingModel</mixing_model>
-	        <PDFMixingModel>
+	        <mixing_model>meanMixingModel</mixing_model>
+	        <MeanMixingModel>
 		  <adiabatic>true</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>1</rxnvars>
+                  <PDFShape>Beta</PDFShape>
 		  <reaction_model>ILDMReactionModel</reaction_model>
 		  <Stream>
 		    <pressure>1.01325e+05</pressure>
@@ -142,13 +143,12 @@
      		       <NumDivsAbove>20</NumDivsAbove>
                     </ReactionVariables>               
                   </MixRxnTableInfo>
+                  <TableType>dynamic</TableType>
+                  <TableStorage>2DVector</TableStorage>
 		  <Integrator>
 		     <favre>false</favre>
-                     <PDFSHAPE>BetaPDFShape</PDFSHAPE>
                   </Integrator>
                   <ILDMReactionModel>
-                    <ComputeSoot>true</ComputeSoot>
-                    <SpeciesInTable>13</SpeciesInTable>
 		     <MixRxnTableInfo>
  		        <Enthalpy>
                           <MaxValue>0.0</MaxValue>
@@ -172,8 +172,10 @@
      		          <NumDivsAbove>20</NumDivsAbove>
                        </ReactionVariables>
                     </MixRxnTableInfo>
+                    <TableType>static</TableType>
+                    <TableStorage>2DVector</TableStorage>
 	          </ILDMReactionModel>
-                </PDFMixingModel>
+                </MeanMixingModel>
 	    </Properties>
 
 	    <BoundaryConditions>
