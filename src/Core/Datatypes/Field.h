@@ -82,6 +82,76 @@ protected:
 
 typedef LockingHandle<Field> FieldHandle;
 
+
+template <class FIELD>
+static FieldHandle
+append_fields(vector<FIELD *> fields)
+{
+  typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
+
+  unsigned int offset = 0;
+  unsigned int i;
+  for (i=0; i < fields.size(); i++)
+  {
+    typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
+    typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
+    imesh->begin(nitr);
+    imesh->end(nitr_end);
+    while (nitr != nitr_end)
+    {
+      Point p;
+      imesh->get_center(p, *nitr);
+      omesh->add_point(p);
+      ++nitr;
+    }
+
+    typename FIELD::mesh_type::Elem::iterator eitr, eitr_end;
+    imesh->begin(eitr);
+    imesh->end(eitr_end);
+    while (eitr != eitr_end)
+    {
+      typename FIELD::mesh_type::Node::array_type nodes;
+      imesh->get_nodes(nodes, *eitr);
+      unsigned int j;
+      for (j = 0; j < nodes.size(); j++)
+      {
+	nodes[j] = ((unsigned int)nodes[j]) + offset;
+      }
+      omesh->add_elem(nodes);
+      ++eitr;
+    }
+    
+    typename FIELD::mesh_type::Node::size_type size;
+    imesh->size(size);
+    offset += (unsigned int)size;
+  }
+
+  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  offset = 0;
+  for (i=0; i < fields.size(); i++)
+  {
+    typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
+    typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
+    imesh->begin(nitr);
+    imesh->end(nitr_end);
+    while (nitr != nitr_end)
+    {
+      double val;
+      fields[i]->value(val, *nitr);
+      typename FIELD::mesh_type::Node::index_type
+	new_index(((unsigned int)(*nitr)) + offset);
+      ofield->set_value(val, new_index);
+      ++nitr;
+    }
+
+    typename FIELD::mesh_type::Node::size_type size;
+    imesh->size(size);
+    offset += (unsigned int)size;
+  }
+
+  return ofield;
+}
+
 } // end namespace SCIRun
 
 #endif // Datatypes_Field_h
