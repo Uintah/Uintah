@@ -25,6 +25,11 @@ GlobusError::GlobusError(const std::string& msg, int code)
     d_msg = o.str();
 }
 
+GlobusError::GlobusError(const GlobusError& copy)
+    : d_msg(copy.d_msg), d_code(copy.d_code)
+{
+}
+
 GlobusError::~GlobusError()
 {
 }
@@ -41,6 +46,9 @@ const char* GlobusError::type() const
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 20:43:06  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.4  2000/03/23 10:27:35  sparker
 // Added "name" method to match new Exception base class
 //

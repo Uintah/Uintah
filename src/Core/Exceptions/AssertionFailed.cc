@@ -28,6 +28,11 @@ AssertionFailed::AssertionFailed(const char* message,
     sprintf(d_message, "%s (file: %s, line: %d)", message, file, lineno);
 }
 
+AssertionFailed::AssertionFailed(const AssertionFailed& copy)
+    : d_message(strdup(copy.d_message))
+{
+}
+
 AssertionFailed::~AssertionFailed()
 {
     free(d_message);
@@ -45,6 +50,9 @@ const char* AssertionFailed::type() const
 
 //
 // $Log$
+// Revision 1.2  2000/03/23 20:43:09  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.1  2000/03/23 10:25:40  sparker
 // New exception facility - retired old "Exception.h" classes
 //

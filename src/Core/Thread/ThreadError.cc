@@ -21,6 +21,11 @@ ThreadError::ThreadError(const std::string& message)
 {
 }
 
+ThreadError::ThreadError(const ThreadError& copy)
+    : d_message(copy.d_message)
+{
+}
+
 ThreadError::~ThreadError()
 {
 }
@@ -39,6 +44,9 @@ ThreadError::type() const
 
 //
 // $Log$
+// Revision 1.6  2000/03/23 20:43:14  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.5  2000/03/23 10:21:26  sparker
 // Use libexc to print out stack straces on the SGI
 // Added "name" method to ThreadError to match exception base class
