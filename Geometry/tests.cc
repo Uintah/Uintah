@@ -3,7 +3,7 @@
 #include <Geometry/Vector.h>
 
 TestTable test_table[] = {
-        {"Vector/Point", &Point::test_rigorous, 0},
+        {"Point/Vector", &Point::test_rigorous, 0},
 	{0,0,0}
 };
 

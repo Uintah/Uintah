@@ -196,74 +196,7 @@ void Point::test_rigorous(RigorousTest* __test)
 	}
     }
    
-    //Basic Vector Tests
-
-    Vector V(0,0,0);
-    Vector V2(0,0,0);
-
-    for(x=0;x<=100;++x){
-	for(int y=0;y<=100;++y){
-	    for(int z=0;z<=100;++z){
-		V.x(x);
-		V.y(y);
-		V.z(z);
-
-		TEST(V.x()==x);
-		TEST(V.y()==y);
-		TEST(V.z()==z);
-    
-		V2=V;
-		TEST(V2.x()==x);
-		TEST(V2.y()==y);
-		TEST(V2.z()==z);
-		TEST(V==V2);
-		
-		V2.x(-1);
-		TEST(!(V==V2));
-		V2.x(x);
-		
-		TEST(V==V2);
-		V2.y(-1);
-		TEST(!(V==V2));
-		V2.y(y);
-
-             	TEST(V==V2);
-		V2.z(z+1);
-		TEST(!(V==V2));
-	    }
-	}
-    }
-    
-    //with doubles
-
-    for(x=0;x<=100;++x){
-	for(int y=0;y<=100;++y){
-	    for(int z=0;z<=100;++z){
-		V.x((double)x-.00007);
-		V.y((double)y-.00007);
-		V.z((double)z-.00007);
-
-		TEST(V.x()==(double)x-.00007);
-		TEST(V.y()==(double)y-.00007);
-		TEST(V.z()==(double)z-.00007);
-		V2=V;
-		TEST(V.x()==V2.x());
-		TEST(V.y()==V2.y());
-		TEST(V.z()==V2.z());
-		TEST(V==V2);
-		
-		V.x(x);
-	        TEST(!(V==V2));
-		
-		V.x((double)x-.00007);
-		
-	       
-		TEST(V==V2);
-	    }	
-	}
-    }
-
-    //Operator tests
+    //Point Testss
 
     Point p1(0,0,0);
     Point p2(0,0,0);
@@ -606,7 +539,310 @@ void Point::test_rigorous(RigorousTest* __test)
 	    }    
 	}
     }
+
+
+    //Vector Tests
+
+    
+    for(x=0;x<=100;++x){
+	for(int y=0;y<=100;++y){
+	    for(int z=0;z<=100;++z){
+	      Vector v1(x,y,z);
+	      TEST(v1.x()==x);
+	      TEST(v1.y()==y);
+	      TEST(v1.z()==z);
+
+	      Vector v2=v1;
+	      TEST(v2==v1);
+	      TEST(v1.x()==v2.x());
+	      TEST(v1.y()==v2.y());
+	      TEST(v1.z()==v2.z());
+
+	      Vector vx(1,1,1);
+	      
+	      v1+=vx;
+	      TEST(!(v2==v1));
+	      TEST(!(v1.x()==v2.x()));
+	      TEST(!(v1.y()==v2.y()));
+	      TEST(!(v1.z()==v2.z()));
+	      
+
+	    }
+	}
+    }
+		
+    //Dot() is tested above.
+    
+    for(x=1;x<=10;++x){
+      for(int y=0;y<=10;++y){
+	for(int z=0;z<=10;++z){
+	  Vector v1(x,y,z);
+	  TEST((v1.length())==(sqrt(x*x+y*y+z*z)));
+	  TEST((v1.length2())==(x*x+y*y+z*z));
+
+	  //Vector*double Tests
+	  const double c = 123.4567;
+	  Vector v2=v1*c;
+	  TEST(v2.x()==(v1.x()*c));
+	  TEST(v2.y()==(v1.y()*c));
+	  TEST(v2.z()==(v1.z()*c));
+
+	  //Vector*=double Tests
+	  v2=v1;
+	  v1*=c;
+	  TEST(v1.x()==(v2.x()*c));
+	  TEST(v1.y()==(v2.y()*c));
+	  TEST(v1.z()==(v2.z()*c));
+
+	  //Vector/double Tests
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+
+	  v2 = v1/c;
+	  TEST(v2.x()==(v1.x()/c));
+	  TEST(v2.y()==(v1.y()/c));
+	  TEST(v2.z()==(v1.z()/c));
+	  
+	  //Vector/Vector Tests
+
+	  Vector v3(0,0,0);
+	  
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+
+	  v2.x(z);
+	  v2.y(x);
+	  v2.z(y);
+
+	  v3 = v1/v2;
+
+	  TEST((v3.x()==(v1.x()/v2.x()))||(v2.x()==0));
+
+	  //Vector+Vector Tests
+	  v3=v1+v2;
+	  TEST(v3.x()==(v1.x()+v2.x()));
+	  TEST(v3.y()==(v1.y()+v2.y()));
+	  TEST(v3.z()==(v1.z()+v2.z()));
+
+	  //Vector+=Vector Tests
+	  v3=v1;
+	  TEST(v3==v1);
+	  v1+=v2;
+	  TEST(v1.x()==(v3.x()+v2.x()));
+	  TEST(v1.y()==(v3.y()+v2.y()));
+	  TEST(v1.z()==(v3.z()+v2.z()));
+	  
+	  //-Vector Tests
+
+	  v2= -v1;
+	  TEST(v2.x()==-(v1.x()));
+	  TEST(v2.y()==-(v1.y()));
+	  TEST(v2.z()==-(v1.z()));
+
+	  //Vector-Vector Tests
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+
+	  v2.x(y);
+	  v2.y(z);
+	  v2.z(x);
+	  
+	  v3=v1-v2;
+
+	  TEST(v3.x()==v1.x()-v2.x());
+
+
+	  //Vector-=Vector Tests
+	  v3=v1;
+	  
+	  v1-=v2;
+
+	  TEST(v1.x()==v3.x()-v2.x());
+	  TEST(v1.y()==v3.y()-v2.y());
+	  TEST(v1.z()==v3.z()-v2.z());
+				      
+	  //Vector.normal() and Vector.normalize() Tests
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+	  v2=v1;
+
+	  double l=v2.normalize();
+	  TEST(l==v1.length());
+	  Vector vec3(v1.normal());
+	  TEST(vec3==v2);
+	  TEST(vec3.length() > .999999 && vec3.length() < 1.0000001);
+	  
+
+	  //Cross-Product Tests
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+	  
+	  v2.x(z);
+	  v2.y(x);
+	  v2.z(y);
+
+	  v3 = Cross(v1,v2);
+
+	  TEST(v3.x()==v1.y()*v2.z()-v1.z()*v2.y());
+	  TEST(v3.y()==v1.z()*v2.x()-v1.x()*v2.z());
+	  TEST(v3.z()==v1.x()*v2.y()-v1.y()*v2.x());
+	  
+	  //Absolute Value Tests
+	  
+	  v3=Abs(v1);
+
+	  TEST(v3.x()==abs(v1.x()));
+	  TEST(v3.y()==abs(v1.y()));
+	  TEST(v3.z()==abs(v1.z()));
+
+	  //rotz90() tests
+
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+
+	  //Rotate 0 Degrees
+	  v1.rotz90(0);
+	  TEST(v1.x()==x);
+	  TEST(v1.y()==y);
+	  TEST(v1.z()==z);
+
+	  //Rotate 90 Degrees
+	  v1.rotz90(1);
+	  TEST(v1.x()==(-y));
+	  TEST(v1.y()==x);
+	  TEST(v1.z()==z);
+
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+
+	  //Rotate 180 Degrees
+	  v1.rotz90(2);
+	  TEST(v1.x()==-x);
+	  TEST(v1.y()==-y);
+	  TEST(v1.z()==z);
+	
+	  //Rotate 270 Degrees
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+	  
+	  v1.rotz90(3);
+
+	  TEST(v1.x()==y);
+	  TEST(v1.y()==-x);
+	  TEST(v1.z()==z);
+
+	  //Vector.point() Tests
+
+	  Point pt = v1.point();
+
+	  TEST(pt.x()==v1.x());
+	  TEST(pt.y()==v1.y());
+	  TEST(pt.z()==v1.z());
+
+	  //Interpolate Tests
+
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+
+	  v2.x(z);
+	  v2.y(x);
+	  v2.z(y);
+
+	  for(int a=1;c<=10;++a){
+	    double cnst = a*.1;
+	    v3 = Interpolate(v1,v2,cnst);
+	    TEST(v3.x()==(Abs(v2.x()-v1.x())*c));
+	    TEST(v3.y()==(Abs(v2.y()-v1.y())*c));
+	    TEST(v3.z()==(Abs(v2.z()-v1.z())*c));
+	  }
+
+	  //find_orthogonal() Tests
+
+	  Vector va(x,y,z);
+
+	  va.normalize();
+
+	  Vector vb,vc;
+	  va.find_orthogonal(vb,vc);
+
+	  TEST(Abs(Dot(va,vb)) < 1.e-6);
+	  TEST(Abs(Dot(va,vc)) < 1.e-6);
+	  TEST(Abs(Dot(vb,vc)) < 1.e-6);
+
+	  TEST(vb.length()>.999999 && vb.length() < 1.0000001);
+	  TEST(vc.length()>.999999 && vc.length() < 1.0000001);
+	       
+	  //asPoint() Tests
+	  v1.x(x);
+	  v1.y(y);
+	  v1.z(z);
+	  Point npt=v1.asPoint();
+
+	  TEST(npt.x()==x);
+	  TEST(npt.y()==y);
+	  TEST(npt.z()==z);
+			   
+	  //minComponent() Tests
+	  if(x<=y&&x<=z)
+	    TEST(v1.minComponent()==double(x));
+	  if(y<=x&&y<=z)
+	    TEST(v1.minComponent()==double(y));
+	  if(z<=x&&z<=y)
+	    TEST(v1.minComponent()==double(z));
+
+	  //maxComponent() Tests
+	  if(x>=y&&x>=z)
+	    TEST(v1.maxComponent()==double(x));
+	  if(y>=x&&y>=z)
+	    TEST(v1.maxComponent()==double(y));
+	  if(z>=x&&z>=y)
+	    TEST(v1.maxComponent()==double(z));
+	  
+	  
+	  
+	  
+	    
+	    
+	  
+	}
+      }
+    } 
+
+    //Point.string() Tests
+    Point pst1(1,2,3);
+    TEST(pst1.string()=="[1, 2, 3]");
+
+    Point pst2(1.2,3.4,5.6);
+    TEST(pst2.string()=="[1.2, 3.4, 5.6]");
+    
+    Point pst3(12.3,45.6,78.9);
+    TEST(pst3.string()=="[12.3, 45.6, 78.9]");
+
+    //Vector.string() Tests
+
+    Vector vst1(1,2,3);
+    TEST(vst1.string()=="[1, 2, 3]");
+
+    Vector vst2(1.2,3.4,5.6);
+    TEST(vst2.string()=="[1.2, 3.4, 5.6]");
+    
+    Vector vst3(12.3,45.6,78.9);
+    TEST(vst3.string()=="[12.3, 45.6, 78.9]");
+    
+    
+
+
 }
+
 
 
 
