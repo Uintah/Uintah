@@ -26,7 +26,7 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
         SCICore/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
 	SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
-	Kurt/Datatypes Kurt/DataArchive Kurt/Geom 
+	Kurt/Datatypes Kurt/DataArchive Kurt/Geom SCICore/Util
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -35,6 +35,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/06/15 19:49:39  sparker
+# Link against SCICore/Util
+#
 # Revision 1.6  2000/06/13 20:28:16  kuzimmer
 # Added a colormap key sticky for particle sets
 #
