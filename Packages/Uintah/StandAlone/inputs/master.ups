@@ -161,14 +161,12 @@
 		<specific_heat>5</specific_heat>
 		<geom_object>
 		  <union>
-		    <box>
-			<label>gp1</label>
+		    <box label="gp1">
 			<min>[.25,.25,.25]</min>
 			<max>[.75,.75,.75]</max>
 			<res>[2,2,2]</res>
 		    </box>
-		    <box>
-			<label>gp2</label>
+		    <box label="gp2">
 			<min>[.75,.75,.75]</min>
 			<max>[1.75,1.75,1.75]</max>
 			<res>[2,2,2]</res>
@@ -189,14 +187,12 @@
 		<specific_heat>5</specific_heat>
 		<geom_object>
 		  <difference>
-		    <box>
-			<label>gp1</label>
+		    <box label="gp1">
 			<min>[.25,.25,.25]</min>
 			<max>[.75,.75,.75]</max>
 			<res>[2,2,2]</res>
 		    </box>
-		    <box>
-		        <label>gp1hole</label>
+		    <box label="gp1hole">
 		        <min>[.25,.25,.25]</min>
 			<max>[.75,.75,.75]</max>
 			<res>[2,2,2]</res>
@@ -215,8 +211,7 @@
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
-		    <cylinder>
-			<label>gp2</label>
+		    <cylinder label="gp2">
 			<bottom>[.75,.75,.75]</bottom>
 			<top>[2.75,.75,.75]</top>
 			<radius>0.75</radius>
@@ -237,14 +232,12 @@
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
-		    <sphere>
-			<label>gp3</label>
+		    <sphere label="gp3">
 			<origin>[.75,.75,.75]</origin>
 			<radius>0.75</radius>
 			<res>[2,2,2]</res>
 		    </sphere>
 		</geom_object>
-		<object>gp3</object>
 		<velocity_field>3</velocity_field>
 	    </material>
 
@@ -260,13 +253,11 @@
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
-		    <tri>
-			<label>gp4</label>
+		    <tri label="gp4">
 			<file>crack.dat</file>
 			<res>[2,2,2]</res>
 		    </tri>
 		</geom_object>
-		<object>gp4</object>
 		<velocity_field>4</velocity_field>
 	    </material>
 
@@ -285,14 +276,12 @@
 		<specific_heat>5</specific_heat>
 		<geom_object>
 		   <intersection>
-		    <box>
-			<label>gp1</label>
+		    <box label="gp1">
 			<min>[.25,.25,.25]</min>
 			<max>[.75,.75,.75]</max>
 			<res>[2,2,2]</res>
 		    </box>
-		    <cylinder>
-			<label>gp2</label>
+		    <cylinder label="gp2">
 			<bottom>[.75,.75,.75]</bottom>
 			<top>[2.75,.75,.75]</top>
 			<radius>0.75</radius>
