@@ -20,6 +20,7 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/SketchMaterial.h>
 #include <Packages/rtrt/Core/SelectableGroup.h>
+#include <Packages/rtrt/Core/ColorMap.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>
 #include <math.h>
@@ -42,6 +43,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   double rate=3;
   Array1<char*> sil_filenames;
   Array1<Material*> gui_materials;
+  char *colormap_file = 0;
   
   for(int i=1;i<argc;i++){
     if(strcmp(argv[i], "-depth")==0){
@@ -53,6 +55,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       rate = atof(argv[++i]);
     } else if(strcmp(argv[i], "-sil")==0){
       sil_filenames.add(argv[++i]);
+    } else if(strcmp(argv[i], "-cmap")==0){
+      colormap_file = argv[++i];
     } else if(argv[i][0] != '-'){
       files.add(argv[i]);
     } else {
@@ -60,6 +64,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr << "Valid options for scene: " << argv[0] << '\n';
       cerr << " -depth n   - set depth of hierarchy\n";
       cerr << " file       - raw file name\n";
+      cerr << " -cmap [file.cmp] - file to use for a colormap\n";
       return 0;
     }
   }
@@ -125,8 +130,61 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	  sil_trans(x,y) = *data;
 	  data++;
 	}
-	
-    Material *sm = new SketchMaterial<BrickArray3<short>, short>(hvol->blockdata, bbox, sil_trans, nrrdsil->axis[0].max);
+
+    // Load the colormap
+    Nrrd *nrrdcmap = nrrdNew();
+    ScalarTransform1D<float, Color> *cmap;
+    if (colormap_file) {
+      if (nrrdLoad(nrrdcmap, colormap_file,0)) {
+	fprintf(stderr, "%s: problem with loading cool2warm transfer function (%s):\n%s\n",
+		me, colormap_file, errS = biffGetDone(NRRD));
+	free(errS);
+	return 0;
+      }
+      // Do some double checking
+      if (nrrdcmap->dim != 2) {
+	fprintf(stderr, "%s: colormap is not of dim 2 (actual = %d)\n", me,
+		nrrdcmap->dim);
+	return 0;
+      }
+      if (nrrdcmap->axis[0].size != 3) {
+	fprintf(stderr, "%s: Only know how to deal with 3 component colors (actual = %d)\n", me,
+		nrrdcmap->axis[0].size);
+	return 0;
+      }
+      if (nrrdcmap->type != nrrdTypeFloat) {
+	Nrrd *new_nrrd = nrrdNew();
+	nrrdConvert(new_nrrd, nrrdcmap, nrrdTypeFloat);
+	// since the data was copied blow away the memory for the old nrrd
+	nrrdNuke(nrrdcmap);
+	nrrdcmap = new_nrrd;
+      }
+      // Now that we have the colors load them into the colormap
+      Array1<Color> colors(nrrdcmap->axis[1].size);
+      float *data = (float*)(nrrdcmap->data);
+      for(int i = 0; i < nrrdcmap->axis[1].size; i++)
+	colors[i] = Color(*data++, *data++, *data++);
+      cmap = new ScalarTransform1D<float, Color>(colors);
+      if (AIR_EXISTS_D(nrrdcmap->axis[1].min) &&
+	  AIR_EXISTS_D(nrrdcmap->axis[1].max))
+	cmap->scale(nrrdcmap->axis[1].min, nrrdcmap->axis[1].max);
+      else
+	cmap->scale(-1,1);
+    } else {
+      Array1<ColorCell> ccells;
+      ccells.add(ColorCell(Color(1.0980393, 1.0392157, 0.86274511), 0));
+      ccells.add(ColorCell(Color(0.98039216, 0.74509805, 0.47058824), 0.6));
+      ccells.add(ColorCell(Color(0.84313726, 0.54901963, 0.3137255), 1.5));
+      ccells.add(ColorCell(Color(0.66666669, 0.49019608, 0.54901963), 2.5));
+      ccells.add(ColorCell(Color(0.43137255, 0.3137255, 0.47058824), 3.7));
+      ccells.add(ColorCell(Color(0.3137255, 0.27450982, 0.35294119), 5));
+      ColorMap cm(ccells);
+      cmap = new ScalarTransform1D<float, Color>(cm.slices.get_results_ref());
+      cmap->scale(-1,1);
+    }
+    
+
+    Material *sm = new SketchMaterial<BrickArray3<short>, short>(hvol->blockdata, bbox, sil_trans, nrrdsil->axis[0].max, cmap);
     hvol->set_matl(sm);
     gui_materials.add(sm);
 #endif
@@ -171,10 +229,19 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->addAnimateObject(obj);
   for(int i = 0; i < gui_materials.size(); i++)
     scene->addGuiMaterial(gui_materials[i]);
-  //scene->add_light(new Light(Point(50,-30,30), Color(1.0,0.8,0.2), 0));
-  Light *light0 = new Light(Point(1100,-600,3000), Color(1.0,1.0,1.0), 0);
-  light0->name_ = "light 0";
-  scene->add_light(light0);
+
+  // Compute the location of the light
+  BBox bounds;
+  obj->compute_bounds(bounds, 0);
+  // Take the corners and then extend one of them
+  Point light_loc = bounds.max() + (bounds.max()-bounds.min())*0.2;
+  
+  Light *light = new Light(light_loc, Color(.8, .8, .8),
+			   (bounds.max()-bounds.min()).length()*0.01);
+  light->name_ = "Main Light";
+  scene->add_light(light);
+
+  // Change the background to LinearBackground
   scene->set_background_ptr( new LinearBackground(
 						  Color(0.2, 0.4, 0.9),
 						  Color(0.0,0.0,0.0),
