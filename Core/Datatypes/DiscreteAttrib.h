@@ -18,11 +18,16 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Datatypes/TypeName.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Util/DebugStream.h>
 #include <memory.h>
+#include <iostream>
+using namespace std;
+#ifdef __sgi
+#include <limits>
+#endif
 
 namespace SCIRun {
-
 
 template <class T> class AttribFunctor
 {
@@ -30,7 +35,7 @@ public:
   virtual void operator() (T &) {}
 };
 
-template <class T> class DiscreteAttrib : public Attrib //abstract class
+template <class T> class DiscreteAttrib : public Attrib
 {
 public:
   DiscreteAttrib();
@@ -54,7 +59,6 @@ public:
   T &fget2(int x, int y);
   T &fget3(int x, int y, int z);
   
-
   virtual void set1(int x, const T &val);
   virtual void set2(int x, int y, const T &val);
   virtual void set3(int x, int y, int z, const T &val);
@@ -62,28 +66,33 @@ public:
   void fset1(int x, const T &val);
   void fset2(int x, int y, const T &val);
   void fset3(int x, int y, int z, const T &val);
-
+  
   // Implement begin()
   // Implement end()
-
+  
   // Resize the attribute to the specified dimensions
   virtual void resize(int, int, int);
   virtual void resize(int, int);
   virtual void resize(int);
-
+  
   int size() const;
-
+  
   //////////
   // Attribute validity check
   virtual bool isValid(int) const;
   virtual bool isValid(int, int) const;
   virtual bool isValid(int, int, int) const;
-  virtual int  getNumOfValid() const { return d_numValid;};
-
-  virtual bool setValidBit(int, bool);
-  virtual bool setValidBit(int, int, bool);
-  virtual bool setValidBit(int, int, int, bool);
+  virtual int  getNumOfValid() const;
   
+  virtual void setValidBit(int, bool);
+  virtual void setValidBit(int, int, bool);
+  virtual void setValidBit(int, int, int, bool);
+  virtual void setValidBit(const IntVector& , const IntVector&, bool);
+    
+  virtual bool getValid1(int x, T&);
+  virtual bool getValid2(int x, int y, T&);
+  virtual bool getValid3(int x, int y, int z, T&);
+
   virtual string getInfo();
 
   //////////
@@ -91,7 +100,7 @@ public:
   virtual void io(Piostream &);
   static PersistentTypeID type_id;
   static string typeName();
-  static Persistent* make();
+  static Persistent* maker();
 
   virtual int iterate(AttribFunctor<T> &func);
 
@@ -108,20 +117,24 @@ protected:
   inline int      resizeValidBits(int);
   //////////
   // -- returns true if bit of supplied number is valid one
-  inline bool     validTest(int) const;
+  inline bool     testValidBit(int) const;
 
   //////////
   // set bits to specified value in the supplied range
   inline void     validSet(int, int, bool);
+  inline void     validSet(int, bool);
 
   // GROUP: protected data
   //////////
   // 
+
 #ifdef __sgi
   static const int nbits = sizeof(unsigned int)*numeric_limits<unsigned char>::digits;
 #else
   static const int nbits = sizeof(unsigned int)*8;
 #endif
+
+  static const unsigned int maxUI;
 
   /////////
   // Sizes and dimensionality
@@ -130,8 +143,7 @@ protected:
 
   unsigned int*   d_pValidBits;
   int             d_nalloc;
-  int             d_numValid;
-
+ 
 private:
   T d_defval;
   static DebugStream dbg;
@@ -142,10 +154,6 @@ private:
 template <class T> 
 DebugStream DiscreteAttrib<T>::dbg("DiscreteAttrib", true);
  
-template <class T> Persistent*
-DiscreteAttrib<T>::make(){
-  return new DiscreteAttrib<T>();
-}
 
 template <class T>
 string DiscreteAttrib<T>::typeName(){
@@ -153,10 +161,28 @@ string DiscreteAttrib<T>::typeName(){
   return typeName;
 }
 
+template <class T> Persistent*
+DiscreteAttrib<T>::maker(){
+  return new DiscreteAttrib<T>();
+}
+
+#ifdef __sgi
+
+template <class T> 
+const unsigned int DiscreteAttrib<T>::maxUI = numeric_limits<unsigned int>::max();
+
+#else
+
+template <class T> 
+const unsigned int DiscreteAttrib<T>::maxUI = 0xFFFF;
+
+#endif
+
+
 template <class T> 
 PersistentTypeID DiscreteAttrib<T>::type_id(DiscreteAttrib<T>::typeName(), 
 					    "Attrib", 
-					    DiscreteAttrib<T>::make);
+					    DiscreteAttrib<T>::maker);
 
 #define DISCRETEATTRIB_VERSION 1
 
@@ -173,7 +199,6 @@ DiscreteAttrib<T>::io(Piostream& stream)
   Pio(stream, d_dim);
   Pio(stream, d_defval);
   Pio(stream, d_nalloc);
-  Pio(stream, d_numValid);
   
   if(stream.reading()){
     delete[] d_pValidBits;        // -- in case we're reading different file into the object
@@ -192,8 +217,7 @@ template <class T>
 DiscreteAttrib<T>::DiscreteAttrib() :
   Attrib(), d_nx(0), d_ny(0), d_nz(0), 
   d_dim(0),
-  d_pValidBits(0),
-  d_numValid(0)
+  d_pValidBits(0)
 {
 }
 
@@ -203,7 +227,6 @@ DiscreteAttrib<T>::DiscreteAttrib(int ix) :
 {
   d_pValidBits = 0;
   resizeValidBits(ix);
-  d_numValid = ix;
 }
 
 template <class T>
@@ -212,7 +235,6 @@ DiscreteAttrib<T>::DiscreteAttrib(int ix, int iy) :
 {
   d_pValidBits = 0;
   resizeValidBits(ix*iy);
-  d_numValid = ix*iy;
 }
 
 template <class T>
@@ -221,7 +243,6 @@ DiscreteAttrib<T>::DiscreteAttrib(int ix, int iy, int iz) :
 {
   d_pValidBits = 0;
   resizeValidBits(ix*iy*iz);
-  d_numValid = ix*iy*iz;
 }
 
 template <class T>
@@ -233,7 +254,6 @@ DiscreteAttrib<T>::DiscreteAttrib(const DiscreteAttrib& copy) :
   d_pValidBits = 0;
   resizeValidBits(d_nx*d_ny*d_nz);
   memcpy(d_pValidBits, copy.d_pValidBits, d_nalloc*sizeof(unsigned int));
-  d_numValid = copy.d_numValid;
 }
 
 template <class T>
@@ -439,17 +459,17 @@ DiscreteAttrib<T>::getInfo()
 
 template <class T> bool 
 DiscreteAttrib<T>::isValid(int ix) const{
-  ASSERTEQ(d_dim, 3);
+  ASSERTEQ(d_dim, 1);
   CHECKARRAYBOUNDS(ix, 0, d_nx);
-  return validTest(ix);
+  return testValidBit(ix);
 }
 
 template <class T> bool 
 DiscreteAttrib<T>::isValid(int ix, int iy) const{
-  ASSERTEQ(d_dim, 3);
+  ASSERTEQ(d_dim, 2);
   CHECKARRAYBOUNDS(ix, 0, d_nx);
   CHECKARRAYBOUNDS(iy, 0, d_ny);
-  return validTest(ix*iy);
+  return testValidBit(iy*(d_nx)+ix);
 }
 
 template <class T> bool 
@@ -458,7 +478,7 @@ DiscreteAttrib<T>::isValid(int ix, int iy, int iz) const{
   CHECKARRAYBOUNDS(ix, 0, d_nx);
   CHECKARRAYBOUNDS(iy, 0, d_ny);
   CHECKARRAYBOUNDS(iz, 0, d_nz);
-  return validTest(ix*iy*iz);
+  return testValidBit(iz*(d_nx*d_ny)+iy*(d_nx)+ix);
 }
 
 
@@ -474,12 +494,15 @@ DiscreteAttrib<T>::resizeValidBits(int nelem){
     throw;
   }
   
-  memset(newbuff, 255, sizeof (unsigned int)*nallocNew);
-
-  int cpyNum = (nallocNew>d_nalloc)?d_nalloc:nallocNew;
-  memcpy(newbuff, d_pValidBits, sizeof (unsigned int)*cpyNum);
+  for (int i=0; i<nallocNew; i++)
+    newbuff[i]=maxUI;
   
-  delete[] d_pValidBits;
+  if (d_pValidBits){
+    int cpyNum = (nallocNew>d_nalloc)?d_nalloc:nallocNew;
+    memcpy(newbuff, d_pValidBits, sizeof (unsigned int)*cpyNum);
+    delete[] d_pValidBits;
+  }
+
   d_pValidBits = newbuff;
   d_nalloc = nallocNew;
 
@@ -487,39 +510,140 @@ DiscreteAttrib<T>::resizeValidBits(int nelem){
 }
 
 template <class T> inline bool
-DiscreteAttrib<T>::validTest(int bitn) const{
+DiscreteAttrib<T>::testValidBit(int bitn) const{
   return ( d_pValidBits[bitn/nbits] >> (bitn%nbits)) & 1;
 }
 
 template <class T> inline void 
-DiscreteAttrib<T>::validSet(int lb, int rb, bool val){
-  CHECKARRAYBOUNDS(lb, 0, d_nalloc*nbits);
-  CHECKARRAYBOUNDS(rb, lb, d_nalloc*nbits);
-  // --  mapping lb
+DiscreteAttrib<T>::validSet(int lb, int rb, bool bitVal){
+  CHECKARRAYBOUNDS(lb, 0, d_nx*d_ny*d_nz);
+  CHECKARRAYBOUNDS(rb, lb, d_nx*d_ny*d_nz);
+
   int lbInd = lb/nbits;
   int rbInd = rb/nbits;
-  
-  
+  unsigned int lbMask = (bitVal)?(maxUI<<(lb%nbits)):~(maxUI<<(lb%nbits));
+  unsigned int rbMask = (bitVal)?(~(maxUI<<((rb+1)%nbits))):(maxUI<<((rb+1)%nbits));
+
+  if (lbInd==rbInd)
+    if (bitVal)
+      d_pValidBits[lbInd] |=(lbMask&rbMask);
+    else
+      d_pValidBits[lbInd] &=(lbMask&rbMask);
+  else {
+    if (bitVal){
+      d_pValidBits[lbInd] |= lbMask;
+      for (int i=lbInd+1; i<rbInd; i++){
+	d_pValidBits[i] = maxUI;
+      }
+      d_pValidBits[rbInd] |= rbMask;
+    }
+    else {
+      d_pValidBits[lbInd] &= lbMask; 
+      for (int i=lbInd+1; i<rbInd; i++){
+	d_pValidBits[i] = 0;
+      }
+      d_pValidBits[rbInd] &= rbMask;
+    }
+  }
 }
 
-template <class T> inline bool
-DiscreteAttrib<T>::setValidBit(int, bool){
-  return true;
+template <class T> inline void 
+DiscreteAttrib<T>::validSet(int pos, bool bitVal){
+  CHECKARRAYBOUNDS(pos, 0, d_nx*d_ny*d_nz);
+
+  unsigned int mask = 1<<(pos%nbits);
+ 
+  if (bitVal)
+    d_pValidBits[pos/nbits] |= mask;
+  else
+    d_pValidBits[pos/nbits] &= ~mask;
+ 
+  for (int i=0; i<d_nalloc; i++)
+    cout << hex << d_pValidBits[i] << " ";
+  cout << endl;
 }
 
-template <class T> inline bool
-DiscreteAttrib<T>::setValidBit(int, int, bool){
-  return true;
+template <class T> inline void
+DiscreteAttrib<T>::setValidBit(int ix, bool bitVal){
+  ASSERTEQ(d_dim, 1);
+  CHECKARRAYBOUNDS(ix, 0, d_nx-1);
+  validSet(ix, bitVal);
 }
 
-template <class T> inline bool
-DiscreteAttrib<T>::setValidBit(int, int, int, bool){
-  return true;
+template <class T> inline void
+DiscreteAttrib<T>::setValidBit(int ix, int iy, bool bitVal){
+  ASSERTEQ(d_dim, 2);
+  CHECKARRAYBOUNDS(ix, 0, d_nx-1);
+  CHECKARRAYBOUNDS(iy, 0, d_ny-1);
+  validSet(iy*(d_nx)+ix, bitVal);
 }
+
+template <class T> inline void
+DiscreteAttrib<T>::setValidBit(int ix, int iy, int iz, bool bitVal){
+  ASSERTEQ(d_dim, 3);
+  CHECKARRAYBOUNDS(ix, 0, d_nx-1);
+  CHECKARRAYBOUNDS(iy, 0, d_ny-1);
+  CHECKARRAYBOUNDS(iz, 0, d_nz-1);
+  validSet((iz*d_ny+iy)*d_nx+ix, bitVal);
+}
+
+template <class T> inline void
+DiscreteAttrib<T>::setValidBit(const IntVector& low, const IntVector& high, bool bitVal){
   
+  if (low.x()==high.x()){
+    for (int i = low.x(); i<=high.x(); i++)
+      for (int j = low.y(); j<=high.y(); j++)
+	for (int k = low.z(); k<=high.z(); k++)
+	  validSet((k*d_ny+j)*d_nx+i, bitVal);
+  }
+  else {
+    int il = low.x(), ih = high.x();    
+    for (int j=low.y(); j<=high.y(); j++)
+      for (int k=low.z(); k<=high.z(); k++)
+	validSet((k*d_ny+j)*d_nx+il, (k*d_ny+j)*d_nx+ih, bitVal);
+  }
+}
+
+template <class T> int  
+DiscreteAttrib<T>::getNumOfValid() const{
+  int resNum = 0;
+
+  if (d_pValidBits){
+    unsigned int buff = 0;
+    for (int i=0; i<d_nx*d_ny*d_nz; i++){
+      
+      if (!(i%nbits)){
+	buff = d_pValidBits[i/nbits];
+      }
+     
+      if(buff & 1){
+	resNum++;
+      }
+      buff>>=1;
+    }
+  }
+  
+  return resNum;
+}
+
+template <class T> bool  
+DiscreteAttrib<T>::getValid1(int ix, T& res){
+  res = get1(ix);
+  return testValidBit(ix);
+}
+
+template <class T> bool
+DiscreteAttrib<T>::getValid2(int ix, int iy, T& res){
+  res = get2(ix, iy);
+  return testValidBit(iy*(d_nx)+ix);
+}
+
+template <class T> bool
+DiscreteAttrib<T>::getValid3(int ix, int iy, int iz, T& res){
+  res = get3(ix, iy, iz);
+  return testValidBit(iz*(d_nx*d_ny)+iy*(d_nx)+ix);
+}
+
 } // End namespace SCIRun
 
 #endif
-
-
-
