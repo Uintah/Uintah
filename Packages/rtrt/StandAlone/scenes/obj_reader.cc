@@ -75,7 +75,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   g->compute_bounds(b, 0.001);
   scene->select_shadow_mode( No_Shadows );
   scene->maxdepth = 4;
-  scene->add_light(new Light(b.max()+b.diagonal(),Color(1.0,1.0,1.0), 0));
+  Light *l = new Light(b.max()+b.diagonal(),Color(1.0,1.0,1.0), 0);
+  l->name_ = "Light0";
+  scene->add_light(l);
   scene->animate=false;
   return scene;
 }
