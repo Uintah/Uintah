@@ -18,7 +18,7 @@
 #include <SCICore/TclInterface/TCLTask.h>
 
 #include <SCICore/Geom/Color.h>
-
+#include <SCICore/Math/MinMax.h>
 #define Colormap XColormap
 
 #include <SCICore/Geom/GeomOpenGL.h>
@@ -51,7 +51,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
-
+using SCICore::Math::Max;
 struct ColorPoint {
   float  _t;  // time - 
   Color _rgb;
@@ -348,17 +348,19 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   glDisable(GL_BLEND);
 
-  for (j=0;j<80; j++) {
+  glShadeModel(GL_FLAT);
+  for (j=0;j<32; j++) {
     glBegin(GL_QUAD_STRIP);
-    for(i=0;i<10;i++) {
+    for(i=0;i<5;i++) {
       int on=0;
       if ((i&1 && j&1) || (!(i&1) && (!(j&1)))) on=1;
       glColor3f(on, on, on);
-      glVertex2f(j/79.0,i/9.0);
-      glVertex2f((j+1)/79.0,i/9.0);
+      glVertex2f(j/31.0,i/4.0);
+      glVertex2f((j+1)/31.0,i/4.0);
     }
-  glEnd();
+    glEnd();
   }
+  glShadeModel(GL_SMOOTH);
   glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_TRUE);
   
   glBegin(GL_QUAD_STRIP);
@@ -508,7 +510,7 @@ GetClosest(float time, float val, int& cline, int& cpoint)
       }
     }
   } else { // HSV space...
-    printf("Fuck!\n");
+    printf("HSV window doesn't exist\n");
   }
 
   // now check alpha...
@@ -774,8 +776,9 @@ void GenTransferFunc::execute(void)
 
     cerr << endl << "We are sending a cmap!\n" << endl << endl;
     // Bad for Volume Rendering...
-    cmap = scinew ColorMap(ncolors,times,alphas,aTimes);
-    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
+//    cmap = scinew ColorMap(ncolors,times,alphas,aTimes,Max(ncolors.size(),aTimes.size()));
+    cmap = scinew ColorMap(ncolors,times,alphas,aTimes,256);
+//    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
     cerr << cmap.get_rep() << endl;
 
     cerr << cmap->colors.size() << " - Size\n";
@@ -902,6 +905,9 @@ int GenTransferFunc::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.9  2000/12/13 21:04:53  dmw
+// Fixed it so we can take in a Colormap from GenStandardColorMaps, edit it and pass it out
+//
 // Revision 1.8  2000/11/02 21:44:36  dmw
 // new points are placed along exisint lines
 //
