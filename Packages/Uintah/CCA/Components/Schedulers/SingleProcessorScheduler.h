@@ -53,7 +53,7 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual void execute( const ProcessorGroup * pg);
+    virtual void execute();
     
     virtual SchedulerP createSubScheduler();
     //////////
@@ -68,7 +68,7 @@ WARNING
 
     virtual const MaterialSet* getMaterialSet(){return reloc_.getMaterialSet();}
   protected:
-    virtual void actuallyCompile(const ProcessorGroup* pg );
+    virtual void actuallyCompile();
   private:
     SPRelocate reloc_;
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);

@@ -75,7 +75,7 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void execute( const ProcessorGroup * pg);
+    virtual void execute();
 
     virtual SchedulerP createSubScheduler();
       
@@ -102,10 +102,10 @@ WARNING
 
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
-    { return pg_; }
+    { return d_myworld; }
     virtual const MaterialSet* getMaterialSet(){return reloc_.getMaterialSet();}
   protected:
-    virtual void actuallyCompile( const ProcessorGroup * pg );
+    virtual void actuallyCompile();
     
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
@@ -126,7 +126,6 @@ WARNING
     virtual void verifyChecksum();
 
     MPIScheduler* parentScheduler;
-    const ProcessorGroup* pg_;    
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
     SendState*            ss_;

@@ -43,13 +43,13 @@ SimpleScheduler::verifyChecksum()
 }
 
 void
-SimpleScheduler::actuallyCompile(const ProcessorGroup*)
+SimpleScheduler::actuallyCompile()
 {
   graph.topologicalSort(tasks);
 }
 
 void
-SimpleScheduler::execute(const ProcessorGroup * pc)
+SimpleScheduler::execute()
 {
   int ntasks = (int)tasks.size();
   if(ntasks == 0){
@@ -70,11 +70,11 @@ SimpleScheduler::execute(const ProcessorGroup * pc)
 	const PatchSubset* patch_subset = patchset->getSubset(p);
 	for(int m=0;m<matlset->size();m++){
 	  const MaterialSubset* matl_subset = matlset->getSubset(m);
-	  task->doit( pc, patch_subset, matl_subset, plain_old_dws);
+	  task->doit( d_myworld, patch_subset, matl_subset, plain_old_dws);
 	}
       }
     } else {
-      task->doit(pc, 0, 0, plain_old_dws);
+      task->doit(d_myworld, 0, 0, plain_old_dws);
     }
     double dt = Time::currentSeconds()-start;
     dbg << "Completed task: " << tasks[i]->getName()

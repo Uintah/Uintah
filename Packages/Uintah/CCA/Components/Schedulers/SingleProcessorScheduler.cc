@@ -48,7 +48,7 @@ SingleProcessorScheduler::verifyChecksum()
 }
 
 void
-SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg)
+SingleProcessorScheduler::actuallyCompile()
 {
   if(dts_)
     delete dts_;
@@ -60,19 +60,19 @@ SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg)
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  dts_ = graph.createDetailedTasks( pg, lb, useInternalDeps() );
+  dts_ = graph.createDetailedTasks(lb, useInternalDeps() );
 
   lb->assignResources(*dts_, d_myworld);
 
   if (useInternalDeps()) {
-    graph.createDetailedDependencies(dts_, lb, pg);
+    graph.createDetailedDependencies(dts_, lb);
   }
   
   releasePort("load balancer");
 }
 
 void
-SingleProcessorScheduler::execute(const ProcessorGroup * pg)
+SingleProcessorScheduler::execute()
 {
   if(dts_ == 0){
     cerr << "SingleProcessorScheduler skipping execute, no tasks\n";
@@ -119,7 +119,7 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
     DetailedTask* task = dts_->getTask( i );
     if(dbg.active())
       dbg << "Running task: " << task->getTask()->getName() << "\n";
-    task->doit(pg, dws, plain_old_dws);
+    task->doit(d_myworld, dws, plain_old_dws);
     if(dbg.active())
       dbg << "calling done\n";
     task->done(dws);
