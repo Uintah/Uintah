@@ -42,15 +42,19 @@ public:
                                CCVariable<T>& q_grad_y,
                                CCVariable<T>& q_grad_z);
                                   
-  enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
   struct fflux { double d_fflux[6]; };    // face flux
+
+  CCVariable<fflux>  r_out_x, r_out_y, r_out_z;
+
 
  private:
 
   friend const TypeDescription* fun_getTypeDescription(fflux*); 
 
 };
-
+/* ---------------------------------------------------------------------
+ Function~ gradientLimiter
+_____________________________________________________________________*/
 template <class T>
 void
 SecondOrderBase::gradientLimiter(const CCVariable<T>& q_CC,
@@ -103,11 +107,12 @@ SecondOrderBase::gradientLimiter(const CCVariable<T>& q_CC,
     grad_lim[c] = temp;
   }
 }
+/* ---------------------------------------------------------------------
+Function~  q_CCMaxMin
+Purpose~   This calculates the max and min values of q_CC from the surrounding
+           cells
+_____________________________________________________________________*/
 
-//______________________________________________________________________
-//    Function~  q_CCMaxMin
-//    This calculates the max and min values of q_CC from the surrounding
-//    cells
 template <class T>
 void
 SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
@@ -115,8 +120,7 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
 			    CCVariable<T>& q_CC_max, 
 			    CCVariable<T>& q_CC_min)
 {  
-  T q_CC_max_tmp, q_CC_min_tmp;
-  IntVector adjcell;
+  T max_tmp, min_tmp;
 
   //__________________________________
   //  At patch boundaries you need to extend
@@ -125,36 +129,38 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
     
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
-    IntVector c = *iter;
-    int i = c.x();
-    int j = c.y();
-    int k = c.z();
-
-    adjcell = IntVector(i-1, j, k);
-    q_CC_max_tmp = q_CC[adjcell];
-    q_CC_min_tmp = q_CC[adjcell];
-    adjcell = IntVector(i+1, j, k);
-    q_CC_max_tmp = Max(q_CC_max_tmp, q_CC[adjcell]);
-    q_CC_min_tmp = Min(q_CC_min_tmp, q_CC[adjcell]);
-    adjcell = IntVector(i, j-1, k);
-    q_CC_max_tmp = Max(q_CC_max_tmp, q_CC[adjcell]);
-    q_CC_min_tmp = Min(q_CC_min_tmp, q_CC[adjcell]);
-    adjcell = IntVector(i, j+1, k);
-    q_CC_max_tmp = Max(q_CC_max_tmp, q_CC[adjcell]);
-    q_CC_min_tmp = Min(q_CC_min_tmp, q_CC[adjcell]);
-    adjcell = IntVector(i, j, k-1);
-    q_CC_max_tmp = Max(q_CC_max_tmp, q_CC[adjcell]);
-    q_CC_min_tmp = Min(q_CC_min_tmp, q_CC[adjcell]);
-    adjcell = IntVector(i, j, k+1);
-    q_CC_max_tmp = Max(q_CC_max_tmp, q_CC[adjcell]);
-    q_CC_min_tmp = Min(q_CC_min_tmp, q_CC[adjcell]);
-
-    q_CC_max[c] = q_CC_max_tmp;
-    q_CC_min[c] = q_CC_min_tmp;
+    IntVector c = *iter;      
+    IntVector r = c + IntVector( 1, 0, 0);
+    IntVector l = c + IntVector(-1, 0, 0);
+    IntVector t = c + IntVector( 0, 1, 0);
+    IntVector b = c + IntVector( 0,-1, 0);
+    IntVector f = c + IntVector( 0, 0, 1);    
+    IntVector bk= c + IntVector( 0, 0,-1); 
+  
+    max_tmp = Max(q_CC[r], q_CC[l]);
+    min_tmp = Min(q_CC[r], q_CC[l]);
+    
+    max_tmp = Max(max_tmp, q_CC[t]);
+    min_tmp = Min(min_tmp, q_CC[t]);
+    
+    max_tmp = Max(max_tmp, q_CC[b]);
+    min_tmp = Min(min_tmp, q_CC[b]);
+    
+    max_tmp = Max(max_tmp, q_CC[f]);
+    min_tmp = Min(min_tmp, q_CC[f]);
+    
+    max_tmp = Max(max_tmp, q_CC[bk]);
+    min_tmp = Min(min_tmp, q_CC[bk]);
+   
+    q_CC_max[c] = max_tmp;
+    q_CC_min[c] = min_tmp;
   }  
 }                                                   
 
-//______________________________________________________________________
+/* ---------------------------------------------------------------------
+ Function~ q_vertexMaxMin
+ Purpose   Find the max and min vertex value of q at the vertex.  
+_____________________________________________________________________*/
 template <class T>
 void
 SecondOrderBase::q_vertexMaxMin( const CCVariable<T>& q_CC,
@@ -215,8 +221,11 @@ SecondOrderBase::q_vertexMaxMin( const CCVariable<T>& q_CC,
     q_vrtx_min[c] = q_vrtx_tmp_min; 
   }    
 }
-//______________________________________________________________________
-//
+/* ---------------------------------------------------------------------
+ Function~ gradQ
+ Purpose   Find the x, y, z gradients of q_CC. centered
+           differencing 
+_____________________________________________________________________*/
 template <class T>
 void
 SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
@@ -238,22 +247,17 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
      
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {   
-    IntVector c = *iter;
-    int i = c.x();
-    int j = c.y();
-    int k = c.z();
-
-    adjcell1 = IntVector(i+1, j, k);
-    adjcell2 = IntVector(i-1, j, k);
-    q_grad_x[c] = (q_CC[adjcell1] - q_CC[adjcell2]) * inv_2delX;
-
-    adjcell1 = IntVector(i, j+1, k);
-    adjcell2 = IntVector(i, j-1, k);
-    q_grad_y[c] = (q_CC[adjcell1] - q_CC[adjcell2]) * inv_2delY;
-
-    adjcell1 = IntVector(i, j, k+1);
-    adjcell2 = IntVector(i, j, k-1);
-    q_grad_z[c] = (q_CC[adjcell1] - q_CC[adjcell2]) * inv_2delZ;
+    IntVector c = *iter;      
+    IntVector r = c + IntVector( 1, 0, 0);
+    IntVector l = c + IntVector(-1, 0, 0);
+    IntVector t = c + IntVector( 0, 1, 0);
+    IntVector b = c + IntVector( 0,-1, 0);
+    IntVector f = c + IntVector( 0, 0, 1);    
+    IntVector bk= c + IntVector( 0, 0,-1);
+    
+    q_grad_x[c] = (q_CC[r] - q_CC[l]) * inv_2delX;
+    q_grad_y[c] = (q_CC[t] - q_CC[b]) * inv_2delY;
+    q_grad_z[c] = (q_CC[f] - q_CC[bk])* inv_2delZ;
   }
 }
 

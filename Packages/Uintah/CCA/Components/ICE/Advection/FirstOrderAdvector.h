@@ -9,9 +9,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
-
-
-
 namespace Uintah {
 
 
@@ -34,6 +31,13 @@ namespace Uintah {
                                  const int&  indx,
                                  const bool& bulletProof_test);
 
+    virtual void  advectQ(const CCVariable<double>& q_CC,
+                             const Patch* patch,
+                             CCVariable<double>& q_advected,
+                             SFCXVariable<double>& q_XFC,
+                             SFCYVariable<double>& q_YFC,
+                             SFCZVariable<double>& q_ZFC,
+				 DataWarehouse* /*new_dw*/);
 
     virtual void advectQ(const CCVariable<double>& q_CC,
                       const Patch* patch,
@@ -45,24 +49,26 @@ namespace Uintah {
                       CCVariable<Vector>& q_advected,
 			 DataWarehouse* new_dw);
     
-    enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
     struct fflux { double d_fflux[6]; };    // face flux
-    
-
+                                
   private:
     CCVariable<fflux> d_OFS;
     const VarLabel* OFS_CCLabel;
-
+    
     friend class FirstOrderCEAdvector;
     friend const TypeDescription* fun_getTypeDescription(fflux*);
 
   private:
-    template<class T> void advect(const CCVariable<T>& q_CC,
-                              const Patch* patch,
-                              CCVariable<T>& q_advected);
+ 
+    template<class T, typename F> 
+      void advectSlabs(const CCVariable<T>& q_CC,
+                  const Patch* patch,
+                  CCVariable<T>& q_advected,
+                  SFCXVariable<double>& q_XFC,
+                  SFCYVariable<double>& q_YFC,
+                  SFCZVariable<double>& q_ZFC,
+                  F function);                  
   };
-
-  
 }
 
 namespace SCIRun {
