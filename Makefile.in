@@ -86,14 +86,7 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM Uintah_StateTables
-
-# FYI: If Uintah is being used, then Uintah_StateTables is defined in
-# src/Packages/Uintah/StandAlone/sub.mk.  Otherwise just make it do nothing.
-ifneq ($(findstring Uintah,$(LOAD_PACKAGE)),Uintah)
-  Uintah_StateTables:
-endif
-
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
