@@ -973,7 +973,6 @@ void DataArchiver::output(const ProcessorGroup*,
     dataFilebase = "global.data";
     dataFilename = tdir.getName() + "/" + dataFilebase;
     pLock = &d_outputReductionLock;
-    cerr << "\nOUTPUT GLOBALS\n\n";
   }
 
  pLock->lock();
