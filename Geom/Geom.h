@@ -16,11 +16,12 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/Stack.h>
+#include <Comm/MessageBase.h>
+#include <Geom/Color.h>
 #include <Geometry/Point.h>
 #include <Geometry/BBox.h>
-#include <Color.h>
-#include <MessageBase.h>
 #include <Multitask/ITC.h>
+
 #include <X11/Xlib.h>
 
 class BBox;

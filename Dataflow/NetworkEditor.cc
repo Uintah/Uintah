@@ -11,16 +11,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <NetworkEditor.h>
-#include <Connection.h>
-#include <MessageBase.h>
-#include <Module.h>
-#include <ModuleList.h>
-#include <Network.h>
-#include <NotFinished.h>
-#include <Port.h>
-#include <TCL.h>
+#include <Dataflow/NetworkEditor.h>
+
+#include <Classlib/NotFinished.h>
+#include <Comm/MessageBase.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/Module.h>
+#include <Dataflow/ModuleList.h>
+#include <Dataflow/Network.h>
+#include <Dataflow/Port.h>
 #include <Math/MiscMath.h>
+#include <TCL/TCL.h>
 
 NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),

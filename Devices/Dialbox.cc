@@ -11,9 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dialbox.h>
-#include <NotFinished.h>
+#include <Classlib/NotFinished.h>
+#include <Devices/Dialbox.h>
 #include <Math/Trig.h>
+
 #include <iostream.h>
 #include <stdio.h>
 #include <X11/Xlib.h>

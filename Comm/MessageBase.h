@@ -14,7 +14,7 @@
 #ifndef SCI_project_MessageBase_h
 #define SCI_project_MessageBase_h 1
 
-#include <MessageTypes.h>
+#include <Comm/MessageTypes.h>
 
 class MessageBase {
 public:

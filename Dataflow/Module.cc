@@ -11,14 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Module.h>
-#include <Connection.h>
-#include <ModuleHelper.h>
-#include <Network.h>
-#include <NetworkEditor.h>
-#include <NotFinished.h>
-#include <Port.h>
-#include <TCL.h>
+#include <Dataflow/Module.h>
+
+#include <Classlib/NotFinished.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/ModuleHelper.h>
+#include <Dataflow/Network.h>
+#include <Dataflow/NetworkEditor.h>
+#include <Dataflow/Port.h>
+#include <TCL/TCL.h>
+
 #include <stdlib.h>
 
 Module::Module(const clString& name, const clString& id,

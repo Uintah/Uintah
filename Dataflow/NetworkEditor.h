@@ -14,10 +14,11 @@
 #ifndef SCI_project_NetworkEditor_h
 #define SCI_project_NetworkEditor_h 1
 
+#include <Comm/MessageBase.h>
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
-#include <MessageBase.h>
-#include <TCL.h>
+#include <TCL/TCL.h>
+
 class Connection;
 class Datatype;
 class MessageBase;

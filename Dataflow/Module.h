@@ -18,7 +18,7 @@
 #include <Classlib/String.h>
 #include <Classlib/Timer.h>
 #include <Multitask/ITC.h>
-#include <TCL.h>
+#include <TCL/TCL.h>
 class Connection;
 class IPort;
 class MessageBase;

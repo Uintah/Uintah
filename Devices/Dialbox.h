@@ -14,9 +14,9 @@
 #ifndef sci_project_Dialbox_h
 #define sci_project_Dialbox_h 1
 
+#include <Devices/DBContext.h>
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
-#include <DBContext.h>
 
 struct DialMsg : public MessageBase {
     DBContext* context;

@@ -11,13 +11,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TCL.h>
-#include <TCLTask.h>
-#include <TCLvar.h>
-#include <Module.h>
-#include <NotFinished.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
-#include <tcl.h>
+#include <Dataflow/Module.h>
+#include <TCL/TCL.h>
+#include <TCL/TCLTask.h>
+#include <TCL/TCLvar.h>
+
+#include <tcl/tcl7.3/tcl.h>
 #include <stdlib.h>
 #include <string.h>
 

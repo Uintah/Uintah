@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <MemStats.h>
+#include <Dataflow/MemStats.h>
 #include <Malloc/New.h>
 #include <iostream.h>
 #include <stdio.h>

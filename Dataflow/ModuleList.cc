@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ModuleList.h>
+#include <Dataflow/ModuleList.h>
 #include <iostream.h>
 
 static ModuleDB* top=0;

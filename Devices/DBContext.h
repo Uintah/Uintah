@@ -14,9 +14,10 @@
 #ifndef sci_project_DBContext_h
 #define sci_project_DBContext_h 1
 
-#include <Multitask/ITC.h>
 #include <Classlib/String.h>
-#include <MessageBase.h>
+#include <Comm/MessageBase.h>
+#include <Multitask/ITC.h>
+
 class DBCallbackBase;
 
 class DBContext {
