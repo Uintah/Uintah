@@ -79,7 +79,6 @@ SCICORESHARE Matrix *Add(Matrix *A, Matrix *B) {
 SCICORESHARE Matrix *Mult(Matrix *A, Matrix *B) {
   ASSERT(A->ncols() == B->nrows());
   ASSERTFAIL("Matrix multiplication not yet implemented.");
-  return A;
 }
 
 Transform Matrix::toTransform() {

@@ -163,7 +163,7 @@ QuadSurfMesh::begin(QuadSurfMesh::Edge::iterator &itr) const
 void
 QuadSurfMesh::end(QuadSurfMesh::Edge::iterator &itr) const
 {
-  itr = faces_.size();
+  itr = static_cast<Edge::iterator>(faces_.size());
 }
 
 void
@@ -175,7 +175,7 @@ QuadSurfMesh::begin(QuadSurfMesh::Face::iterator &itr) const
 void
 QuadSurfMesh::end(QuadSurfMesh::Face::iterator &itr) const
 {
-  itr = faces_.size() / 4;
+  itr = static_cast<Face::iterator>(faces_.size() / 4);
 }
 
 void
@@ -316,8 +316,8 @@ QuadSurfMesh::get_weights(const Point &p,
 }
 
 void
-QuadSurfMesh::get_weights(const Point &p,
-			 Node::array_type &l, vector<double> &w)
+QuadSurfMesh::get_weights(const Point &/*p*/,
+			  Node::array_type &/*l*/, vector<double> &/*w*/)
 {
 #if 0
   Face::index_type idx;
@@ -360,7 +360,7 @@ QuadSurfMesh::get_center(Point &p, Edge::index_type i) const
     v += pp.asVector();
     ++nai;
   }
-  v *= 1.0 / nodes.size();
+  v *= 1.0 / static_cast<double>(nodes.size());
   p = v.asPoint();
 }
 
@@ -379,7 +379,7 @@ QuadSurfMesh::get_center(Point &p, Face::index_type i) const
     v += pp.asVector();
     ++nai;
   }
-  v *= 1.0 / nodes.size();
+  v *= 1.0 / static_cast<double>(nodes.size());
   p = v.asPoint();
 }
 
@@ -519,7 +519,7 @@ QuadSurfMesh::add_find_point(const Point &p, double err)
   else
   {
     points_.push_back(p);
-    return points_.size() - 1;
+    return static_cast<Node::index_type>(points_.size() - 1);
   }
 }
 
@@ -543,13 +543,13 @@ QuadSurfMesh::add_elem(Node::array_type a)
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   faces_.push_back(a[3]);
-  return (faces_.size() - 1) >> 2;
+  return static_cast<Elem::index_type>((faces_.size() - 1) >> 2);
 }
 
 
 
 void
-QuadSurfMesh::connect(double err)
+QuadSurfMesh::connect(double /*err*/)
 {
 #if 0 
   // Collapse point set by err.
@@ -632,7 +632,7 @@ QuadSurfMesh::Node::index_type
 QuadSurfMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  return points_.size() - 1;
+  return static_cast<Node::index_type>(points_.size() - 1);
 }
 
 

@@ -141,7 +141,6 @@ public:
 
   double get_volume(const Cell::index_type &/*ci*/) {
     ASSERTFAIL("don't know how to compute the volume for an arbitrary hex");
-    return 1;
   }
   double get_area(const Face::index_type &) { return 0; }
   double get_element_size(const Elem::index_type &ci)
@@ -320,6 +319,9 @@ private:
    *  hash to the same value. nodes are sorted on edge construction. */
   static const int sz_int = sizeof(int) * 8; // in bits
   struct FaceHash {
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+
     static const int sz_quarter_int = (int)(sz_int * .25); // in bits
     static const int top4_mask = ((~((int)0)) << sz_quarter_int << sz_quarter_int << sz_quarter_int);
     static const int up4_mask = top4_mask ^ (~((int)0) << sz_quarter_int << sz_quarter_int);
@@ -332,11 +334,16 @@ private:
 	      (mid4_mask & (f.snodes_[2] << sz_quarter_int)) |
 	      (low4_mask & f.snodes_[3]));
     }
+    bool operator()(const PFace &f1, const PFace& f2) const {
+      return f1 == f2;
+    }
   };
 
   /*! hash the egde's node_indecies such that edges with the same nodes
    *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
     static const int sz_int = sizeof(int) * 8; // in bits
     static const int sz_half_int = sizeof(int) << 2; // in bits
     static const int up_mask = ((~((int)0)) << sz_half_int);
@@ -344,6 +351,9 @@ private:
 
     size_t operator()(const PEdge &e) const {
       return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[1]);
+    }
+    bool operator()(const PEdge &e1, const PEdge& e2) const {
+      return e1 == e2;
     }
   };
 
