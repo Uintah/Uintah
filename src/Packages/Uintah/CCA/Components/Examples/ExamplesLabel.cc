@@ -10,11 +10,15 @@ ExamplesLabel::ExamplesLabel()
 {
   phi = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual = VarLabel::create("residual", sum_vartype::getTypeDescription());
+
+  //For Burger's
+  u = VarLabel::create("u", NCVariable<double>::getTypeDescription());
 }
 
 ExamplesLabel::~ExamplesLabel()
 {
   VarLabel::destroy(phi);
   VarLabel::destroy(residual);
+  VarLabel::destroy(u);
 }
 

@@ -16,6 +16,9 @@ namespace Uintah {
     const VarLabel* wvel;
     const VarLabel* pressure;
 
+    // For Burger
+    const VarLabel* u;
+
     ExamplesLabel();
     ~ExamplesLabel();
   };
