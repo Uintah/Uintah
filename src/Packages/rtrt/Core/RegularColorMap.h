@@ -49,17 +49,22 @@ namespace rtrt {
     RegularColorMap(Array1<Color> &input_color_list, int size = 256);
 
     // This can be used to generate default values
-    RegularColorMap(int type = InvRainbow, int size = 256);
+    RegularColorMap(int type = RegCMap_InvRainbow, int size = 256);
 
     ~RegularColorMap();
 
+    // This return the enum of the type based on the input string
+    // passed in.
+    int parseType(const char* type);
+    
     enum {
-      InvRainbow,
-      Rainbow,
-      InvBlackBody,
-      BlackBody,
-      GrayScale,
-      InvGrayScale
+      RegCMap_Unknown,
+      RegCMap_InvRainbow,
+      RegCMap_Rainbow,
+      RegCMap_InvBlackBody,
+      RegCMap_BlackBody,
+      RegCMap_InvGrayScale,
+      RegCMap_GrayScale
     };
 
     // These are used to change the colors in the colormap.
