@@ -35,14 +35,15 @@
 using namespace std;
 using namespace SCIRun;
 
-GuiContext::GuiContext(GuiInterface* gui, const std::string& name)
-  : gui(gui), name(name), cached(false)
+GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
+  : gui(gui), name(name), cached(false), save(save)
 {
 }
 
-GuiContext* GuiContext::subVar(const std::string& subname)
+GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
 {
-  GuiContext* child = new GuiContext(gui, name+"-"+subname);
+  save=false; // Do not save intermediate nodes
+  GuiContext* child = new GuiContext(gui, name+"-"+subname, saveChild);
   children.push_back(child);
   return child;
 }
@@ -197,10 +198,12 @@ string GuiContext::format_varname()
 
 void GuiContext::emit(std::ostream& out, const string& midx)
 {
-  string result;
-  gui->get(name, result);
-  out << "set " << midx << "-" << format_varname() << " {"
-      << result << "}" << std::endl;
+  if(save){
+    string result;
+    gui->get(name, result);
+    out << "set " << midx << "-" << format_varname() << " {"
+	<< result << "}" << std::endl;
+  }
   for(vector<GuiContext*>::iterator iter = children.begin();
       iter != children.end(); ++iter)
     (*iter)->emit(out, midx);
@@ -222,4 +225,9 @@ string GuiContext::getfullname()
 GuiInterface* GuiContext::getInterface()
 {
   return gui;
+}
+
+void GuiContext::dontSave()
+{
+  save=false;
 }
