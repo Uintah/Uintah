@@ -53,6 +53,7 @@ public:
   int data_generation_;
   int rows_generation_;
   int cols_generation_;
+  bool has_error_;
 
   MatrixHandle last_matrix_;
 
@@ -89,8 +90,8 @@ NrrdToMatrix::NrrdToMatrix(GuiContext* ctx)
   : Module("NrrdToMatrix", ctx, Source, "DataIO", "Teem"),
     ndata_(0), nrows_(0), ncols_(0), omat_(0),
     data_generation_(-1), rows_generation_(-1), 
-    cols_generation_(-1), last_matrix_(0),
-    cols_(ctx->subVar("cols")),
+    cols_generation_(-1), has_error_(false),
+    last_matrix_(0), cols_(ctx->subVar("cols")),
     old_cols_(-1)
 {
 }
@@ -127,15 +128,32 @@ void
   NrrdDataHandle rowsH;
   NrrdDataHandle colsH;
 
-  // Determine if we have data, points, connections, etc.
-  if (!ndata_->get(dataH))
-    dataH = 0;
-  if (!nrows_->get(rowsH))
-    rowsH = 0;
-  if (!ncols_->get(colsH))
-    colsH = 0;
-
   bool do_execute = false;
+  // Determine if we have data, points, connections, etc.
+  if (!ndata_->get(dataH)) {
+    dataH = 0;
+    if (data_generation_ != -1) {
+      data_generation_ = -1;
+      do_execute = true;
+    }
+  }
+
+  if (!nrows_->get(rowsH)){
+    rowsH = 0;
+    if (rows_generation_ != -1) {
+      rows_generation_ = -1;
+      do_execute = true;
+    }
+  }
+
+  if (!ncols_->get(colsH)) {
+    colsH = 0;
+    if (cols_generation_ != -1) {
+      cols_generation_ = -1;
+      do_execute = true;
+    }
+  }
+
   // check the generations to see if we need to re-execute
   if (dataH != 0 && data_generation_ != dataH->generation) {
     data_generation_ = dataH->generation;
@@ -154,12 +172,17 @@ void
     do_execute = true;
   }
 
+  if (has_error_)
+    do_execute = true;
+  
   if (do_execute) {
     last_matrix_ = create_matrix_from_nrrds(dataH, rowsH, colsH, cols_.get());
   }
 
-  if (last_matrix_ != 0)
+  if (last_matrix_ != 0) {
+    has_error_ = false;
     omat_->send(last_matrix_);  
+  }
 }
 
 MatrixHandle
@@ -209,6 +232,7 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
 	break;
       default:
 	error("Unkown nrrd type.");
+	has_error_ = true;
 	return 0;
       }
     } else if (dataH->nrrd->dim == 2) {
@@ -240,10 +264,12 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
 	break;
       default:
 	error("Unkown nrrd type.");
+	has_error_ = true;
 	return 0;
       }
     } else {
       error("Can only convert data nrrds of 1 or 2D (Column or Dense Matrix).");
+      has_error_ = true;
       return 0;
     }
   } else if (has_data && has_rows && has_cols) {
@@ -252,11 +278,13 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
       // rows and cols should be of type nrrdTypeInt
       if (rowsH->nrrd->type != nrrdTypeInt || colsH->nrrd->type != nrrdTypeInt) {
         error("Rows and Columns nrrds must both be of type nrrdTypeInt");
+	has_error_ = true;
         return 0;
       }
       
       if (dataH->nrrd->dim != 1 || rowsH->nrrd->dim != 1 || colsH->nrrd->dim != 1) {
 	error("All nrrds must be 1 dimension for a SparseRowMatrix.");
+	has_error_ = true;
 	return 0;
       }
       switch(dataH->nrrd->type) {
@@ -286,10 +314,12 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
 	break;
       default:
 	error("Unkown nrrd type.");
+	has_error_ = true;
 	return 0;
       }
   } else {
     error("Must have data to convert to any type of Matrix.  Must have rows and columns for a SparseRowMatrix.");
+    has_error_ = true;
     return 0;
   }
 
@@ -379,6 +409,7 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   // cols_n and dn should be of size nnz
   if (cols_n->axis[0].size != nnz) {
     error("The Data and Columns nrrds should be the same size.");
+    has_error_ = true;
     return 0;
   }
   
@@ -386,6 +417,7 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   for (int i=0; i<rows_n->axis[0].size-1; i++) {
     if (rows_d[i] > rows_d[i+1] || rows_d[i] < 0) {
       error("Rows nrrd must contain values in increasing order and positive.");
+      has_error_ = true;
       return 0;
     }
   }
@@ -393,12 +425,14 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   // last rows value should be less than nnz
   if (rows_d[rows_n->axis[0].size-1] > nnz) {
     error("The last entry in the rows array must be less than the number of non zeros.");
+    has_error_ = true;
     return 0;
   }
 
   for (int i=0; i<nnz; i++) {
     if (cols_d[i] < 0) {
       error("Columns nrrd must have positive values");
+      has_error_ = true;
       return 0;
     }
   }
@@ -410,6 +444,7 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
     for(int j=i;j<(i+span-1);j++) {
       if (cols_d[j] > cols_d[j+1]) {
 	error("Columns nrrd ordered incorrectly.");
+	has_error_ = true;
 	return 0;
       }
     }
