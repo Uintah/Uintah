@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>9.e-6</maxTime>
+	<maxTime>3.e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>5.e-8</delt_min>
 	<delt_max>5.e-8</delt_max>
@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>4disks_2d.uda</filebase>
-	<outputInterval>1.e-6</outputInterval>
+	<outputInterval>5.e-7</outputInterval>
 	<save label = "p.x"/>
 	<save label = "p.velocity"/>
 	<save label = "p.volume"/>
@@ -167,8 +167,8 @@
 	<Level>
 	    <Box label = "1">
 		<lower>[-0.55, 0.00, -0.10]</lower>
-		<upper>[ 0.55, 0.05,  4.05]</upper>
-	        <resolution>[22,1,83]</resolution>
+		<upper>[ 0.55, 0.05,  4.10]</upper>
+	        <resolution>[22,1,84]</resolution>
 		<patches>[1,1,4]</patches>
 	    </Box>
 	</Level>
