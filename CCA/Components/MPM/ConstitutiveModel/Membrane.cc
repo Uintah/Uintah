@@ -318,9 +318,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       T1[idx] = R*Vector(1,0,0);
       T2[idx] = R*Vector(0,0,1);
 
-//      T1[idx] = Vector(4./sqrt(53.),   6./sqrt(53.),   1./sqrt(53.));
-//      T2[idx] = Vector(-3./sqrt(13.),  2./sqrt(13.),   0.);
-
       // T3 = T1 X T2
       Vector T3(T1[idx].y()*T2[idx].z() - T1[idx].z()*T2[idx].y(),
               -(T1[idx].x()*T2[idx].z() - T1[idx].z()*T2[idx].x()),
@@ -329,9 +326,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       Matrix3 Q(Dot(T1[idx],I), Dot(T1[idx],J), Dot(T1[idx],K),
                 Dot(T2[idx],I), Dot(T2[idx],J), Dot(T2[idx],K),
                 Dot(T3     ,I), Dot(T3     ,J), Dot(T3     ,K));
-
-//      cout << Q << endl;
-//      getchar();
 
       Matrix3 L_ij_ip(0.0), L_ip(0.0), L_local;
 
@@ -345,9 +339,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       L_ij_ip(3,2) = Dot(T3     , velGrad*T2[idx]);
       L_ij_ip(3,3) = Dot(T3     , velGrad*T3     );
 
-//      cout << L_ij_ip << endl;
-//      getchar();
-
       Matrix3 T1T1, T1T2, T2T1, T2T2;
 
       for(int i = 1; i<=3; i++){
@@ -359,43 +350,59 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
         }
       }
 
-//      cout << T1T1 << endl;
-//      getchar();
-
       L_ip = T1T1*L_ij_ip(1,1) + T1T2*L_ij_ip(1,2) +
              T2T1*L_ij_ip(2,1) + T2T2*L_ij_ip(2,2);
 
-//      cout << L_ip << endl;
-//      getchar();
-
-//      if(velGrad.Norm() > 0.01){
-//        cout << "L_ip" << endl;
-//        cout << L_ip << endl;
-//      }
-
       L_local = Q * L_ip * Q.Transpose();
-
-//      if(velGrad.Norm() > 0.01){
-//        cout << "L_local" << endl;
-//        cout <<  L_local << endl;
-//      }
-
-      L_local = Q * L_ip * Q.Transpose();
-
-//      cout << L_local << endl;
-//      getchar();
 
       Matrix3 defGradIPInc = L_local * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
       defGradIP[idx] = defGradIPInc * defGradIPOld[idx];
 
+      // Use Newton's method to determine defGradIP(3,3)
+      Matrix3 F=defGradIP[idx];
+
+      double epsilon = 1.e-14;
+      double delta = 1.;
+      double f33, f33p, f33m, jv, jvp, jvm, sig33, sig33p, sig33m;
+
+      f33 =  1./(F(1,1)*F(2,2));
+
+      while(fabs(delta) > epsilon){
+        jv = f33*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+
+        sig33 = (shear/(3.*pow(jv,2./3.)))*
+                (2.*f33*f33 -
+                   (F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2))) 
+              + (bulk/2.)*(jv - 1/jv);
+
+	f33p = 1.01*f33;
+	f33m = 0.99*f33;
+        jvp = f33p*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+        jvm = f33m*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+
+        sig33p = (shear/(3.*pow(jvp,2./3.)))*
+                (2.*f33p*f33p -
+                   (F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2)))
+               + (bulk/2.)*(jvp - 1/jvp);
+
+        sig33m = (shear/(3.*pow(jvm,2./3.)))*
+                (2.*f33m*f33m -
+                   (F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2)))
+               + (bulk/2.)*(jvm - 1/jvm);
+
+        delta = -sig33/((sig33p-sig33m)/(f33p-f33m));
+
+        f33 = f33 + delta;
+      }
+
       // get the volumetric part of the deformation
-      double jvol    = defGradIP[idx](1,1)*defGradIP[idx](2,2) -
-                       defGradIP[idx](2,1)*defGradIP[idx](1,2);
+      jv = f33*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+      defGradIP[idx](3,3) = f33;
 
       bElBar_new = defGradIP[idx]
-		 * defGradIP[idx].Transpose()*pow(jvol,-(2./3.));
+		 * defGradIP[idx].Transpose()*pow(jv,-(2./3.));
 
       IEl = onethird*bElBar_new.Trace();
 
@@ -403,24 +410,22 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       Shear = (bElBar_new - Identity*IEl)*shear;
 
       // get the hydrostatic part of the stress
-      p = 0.5*bulk*(jvol - 1.0/jvol);
+      p = 0.5*bulk*(jv - 1.0/jv);
 
       // compute the total stress (volumetric + deviatoric)
-      pstress_new[idx] = Identity*p + Shear/jvol;
+      pstress_new[idx] = Identity*p + Shear/jv;
       pstress_new[idx](3,3) = 0.;
 
       pstress_new[idx] = Q.Transpose() * pstress_new[idx] * Q;
 
-//      cout << pstress_new[idx] << endl;
-//      getchar();
 
       // Compute the strain energy for all the particles
-      U = .5*bulk*(.5*(pow(jvol,2.0) - 1.0) - log(jvol));
+      U = .5*bulk*(.5*(pow(jv,2.0) - 1.0) - log(jv));
       W = .5*shear*(bElBar_new.Trace() - 3.0);
 
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*jvol;
+      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*jv;
       
-      double e = (U + W)*pvolume_deformed[idx]/jvol;
+      double e = (U + W)*pvolume_deformed[idx]/jv;
 
       se += e;
 
