@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
 	$(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc \
+	$(SRCDIR)/ConeGeometryPiece.cc \
 	$(SRCDIR)/TriGeometryPiece.cc \
 	$(SRCDIR)/UnionGeometryPiece.cc \
 	$(SRCDIR)/DifferenceGeometryPiece.cc \
