@@ -210,6 +210,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label());
     Vector dx      = patch->dCell();
 
+    StaticArray<CCVariable<double>      > scratch(3); 
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
     StaticArray<constCCVariable<double> > matl_press(numMatls);
@@ -244,6 +245,14 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
       press_diffY_FC[m].initialize(0.0);
       press_diffZ_FC[m].initialize(0.0);
     }
+    vector<IntVector> adj_offset(3);
+    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+    
+    for(int dir=0; dir < 3; dir ++) {
+      new_dw->allocate(scratch[dir], lb->scratchLabel, 0, patch); 
+    } 
    //---- P R I N T   D A T A ------    
     if (switchDebug_PressDiffRF ) {
       for(int m = 0; m < numMatls; m++)  {
@@ -264,6 +273,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     //______________________________________________________________________
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       double Kcur, Kadj;
@@ -272,64 +282,42 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
         Kadj = mpm_matl->getConstitutiveModel()->getCompressibility();
       }
       //__________________________________
-      //  B O T T O M   F A C E
-      for(CellIterator iter=patch->getSFCYIterator();!iter.done();iter++){
-        IntVector cur = *iter;
-        IntVector adj(cur.x(),cur.y()-1,cur.z());  // adjacent cell
-        double rho_brack = (rho_CC[m][cur]*rho_CC[m][adj])/
-                           (rho_CC[m][cur]+rho_CC[m][adj]);
-        if(ice_matl){
-          Kcur = ice_matl->getEOS()->getCompressibility(press_CC[cur]);
-          Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adj]);
+      //  For each face compute the press_Diff
+      for (int dir= 0; dir < 3; dir++) {
+        for(CellIterator iter=patch->getSFCIterator(dir);!iter.done(); iter++){
+          IntVector cur = *iter;
+          IntVector adj = cur + adj_offset[dir]; 
+          double rho_brack = (rho_CC[m][cur]*rho_CC[m][adj])/
+                             (rho_CC[m][cur]+rho_CC[m][adj]);
+          if(ice_matl){
+            Kcur = ice_matl->getEOS()->getCompressibility(press_CC[cur]);
+            Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adj]);
+          }
+          double deltaP = 2.*delT*(vel_CC[m][adj](dir) - vel_CC[m][cur](dir))/
+                          ((Kcur + Kadj)*dx(dir));
+                          
+          scratch[dir][cur] = rho_brack*
+               ((matl_press[m][cur] - press_CC[cur]) * sp_vol_CC[m][cur] +
+                (matl_press[m][adj] - press_CC[adj]) * sp_vol_CC[m][adj] +
+                (sp_vol_CC[m][cur] + sp_vol_CC[m][adj]) * deltaP);
         }
-        double deltaP = 2.*delT*(vel_CC[m][adj].y() - vel_CC[m][cur].y())/
-                        ((Kcur + Kadj)*dx.y());
-              
-        press_diffY_FC[m][cur] = rho_brack*
-             ((matl_press[m][cur] - press_CC[cur]) * sp_vol_CC[m][cur] +
-              (matl_press[m][adj] - press_CC[adj]) * sp_vol_CC[m][adj] +
-              (sp_vol_CC[m][cur] + sp_vol_CC[m][adj]) * deltaP);
-      }
+      } 
       //__________________________________
-      //  L E F T   F A C E
-      for(CellIterator iter=patch->getSFCXIterator();!iter.done();iter++){
+      //  Extract the different components
+      for(CellIterator iter=patch->getSFCXIterator();!iter.done(); iter++){
         IntVector cur = *iter;
-        IntVector adj(cur.x()-1,cur.y(),cur.z());  // adjacent cell
-
-        double  rho_brack = (rho_CC[m][cur]*rho_CC[m][adj])/
-                            (rho_CC[m][cur]+rho_CC[m][adj]);
-        if(ice_matl){
-          Kcur = ice_matl->getEOS()->getCompressibility(press_CC[cur]);
-          Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adj]);
-        }
-        double deltaP = 2.*delT*(vel_CC[m][adj].x()-vel_CC[m][cur].x())/
-                        ((Kcur + Kadj)*dx.x());
-              
-         press_diffX_FC[m][cur] = rho_brack*
-             ((matl_press[m][cur] - press_CC[cur]) * sp_vol_CC[m][cur] +
-              (matl_press[m][adj] - press_CC[adj]) * sp_vol_CC[m][adj] +
-              (sp_vol_CC[m][cur] + sp_vol_CC[m][adj]) * deltaP);
+        press_diffX_FC[m][cur] = scratch[0][cur];   
       }
-      //__________________________________
-      //     B A C K   F A C E
-      for(CellIterator iter=patch->getSFCZIterator();!iter.done();iter++){
+      for(CellIterator iter=patch->getSFCYIterator();!iter.done(); iter++){
         IntVector cur = *iter;
-        IntVector adj(cur.x(),cur.y(),cur.z()-1);     // adjacent cell
-        double rho_brack = (rho_CC[m][cur]*rho_CC[m][adj])/
-                           (rho_CC[m][cur]+rho_CC[m][adj]);
-        if(ice_matl){
-          Kcur = ice_matl->getEOS()->getCompressibility(press_CC[cur]);
-          Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adj]);
-        }
-        double deltaP = 2.*delT*(vel_CC[m][adj].z()-vel_CC[m][cur].z())/
-                        ((Kcur + Kadj)*dx.z());
-                        
-         press_diffZ_FC[m][cur] = rho_brack*
-             ((matl_press[m][cur] - press_CC[cur]) * sp_vol_CC[m][cur] +
-              (matl_press[m][adj] - press_CC[adj]) * sp_vol_CC[m][adj] +
-              (sp_vol_CC[m][cur] + sp_vol_CC[m][adj]) * deltaP);
+        press_diffY_FC[m][cur] = scratch[1][cur];   
       }
-    }
+      for(CellIterator iter=patch->getSFCZIterator();!iter.done(); iter++){
+        IntVector cur = *iter;
+        press_diffZ_FC[m][cur] = scratch[2][cur];   
+      }     
+    }  // for(numMatls)
+    
     for(int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
