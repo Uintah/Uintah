@@ -20,6 +20,7 @@
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/OS/Dir.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>

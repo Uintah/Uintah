@@ -38,10 +38,20 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <util/PlatformUtils.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
+
 #ifdef USE_VAMPIR
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif
 
+#define HAVE_FPSETMASK 1
 #if HAVE_FPSETMASK
 #include <ieeefp.h>
 #endif
@@ -383,7 +393,6 @@ main(int argc, char** argv)
 	  sim->doRestart(restartFromDir, restartTimestep,
 			 restartFromScratch, restartRemoveOldDir);
 	}
-	cout << "About to run simulation\n";
 	sim->run();
 
 	delete mpm;
