@@ -89,6 +89,10 @@ void NrrdToField::execute()
     }
     // matrix, x, y, z
     if (n->size[0] == 7) {
+      if (n->type != nrrdTypeFloat) {
+	cerr << "Error - NrrdToField can only convert float data for tensors.\n";
+	return;
+      }
       // the Nrrd assumed samples at nodes and gave min/max accordingly
       // but we want to think of those samples as centers of cells, so
       // we need a different mesh
@@ -101,12 +105,13 @@ void NrrdToField::execute()
       LatVolMesh *lvm = scinew LatVolMesh(nx+1, ny+1, nz+1, minP, maxP);
       MaskedLatticeVol<Tensor> *f =
 	scinew MaskedLatticeVol<Tensor>(lvm, Field::CELL);
-      double *p=(double *)n->data;
+      float *p=(float *)n->data;
       Array1<double> tens(6);
       for (k=0; k<nz; k++)
 	for (j=0; j<ny; j++)
-	  for (i=0; i<nx; i++, p++) {
-	    if (*p++ > .5) f->mask()(k,j,i)=1; else f->mask()(k,j,i)=0;
+	  for (i=0; i<nx; i++) {
+	    if (*p++ > .5) f->mask()(k,j,i)=1;
+	    else f->mask()(k,j,i)=0;
 	    for (int ch=0; ch<6; ch++) tens[ch]=*p++;
 	    f->fdata()(k,j,i)=Tensor(tens);
 	  }
@@ -133,8 +138,9 @@ void NrrdToField::execute()
   LatVolMeshHandle lvmH(lvm);
  
   if (n->type == nrrdTypeChar) {
-    LatticeVol<char> *f = 
-      scinew LatticeVol<char>(lvm, Field::NODE);
+    cerr << "Converting char to short... sorry.\n";
+    LatticeVol<short> *f = 
+      scinew LatticeVol<short>(lvm, Field::NODE);
     char *p=(char *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
@@ -160,8 +166,9 @@ void NrrdToField::execute()
 	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
   } else if (n->type == nrrdTypeUShort) {
-    LatticeVol<unsigned short> *f = 
-      scinew LatticeVol<unsigned short>(lvm, Field::NODE);
+    cerr << "Converting unsigned short to int... sorry.\n";
+    LatticeVol<int> *f = 
+      scinew LatticeVol<int>(lvm, Field::NODE);
     unsigned short *p=(unsigned short *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
@@ -178,8 +185,9 @@ void NrrdToField::execute()
 	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
   } else if (n->type == nrrdTypeUInt) {
-    LatticeVol<unsigned int> *f = 
-      scinew LatticeVol<unsigned int>(lvm, Field::NODE);
+    cerr << "Converting unsigned int to int... let's hope there's no wrap-around!\n";
+    LatticeVol<int> *f = 
+      scinew LatticeVol<int>(lvm, Field::NODE);
     unsigned int *p=(unsigned int *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
