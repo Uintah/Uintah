@@ -119,7 +119,10 @@ ICE::~ICE()
   delete d_advector;
   if(d_turbulence)
     delete d_turbulence;
-
+     
+  if (d_press_matl->removeReference()){
+    delete d_press_matl;
+  }
   cout_doing << "Doing: destorying Model Machinery " << endl;
   // delete transported Lagrangian variables
   vector<TransportedVariable*>::iterator t_iter;
@@ -160,6 +163,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 {
   d_sharedState = sharedState;
   lb->delTLabel = sharedState->get_delt_label();
+  d_press_matl = scinew MaterialSubset();
+  d_press_matl->add(0);
+  d_press_matl->addReference();
 
   cout_norm << "In the preprocessor . . ." << endl;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
@@ -356,11 +362,13 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       d_conservationTest->momentum = true;
       d_conservationTest->onOff    = true;
     }
-    if (var_attr["label"] == "TotalIntEng"   || var_attr["label"] == "KineticEnergy"){
+    if (var_attr["label"] == "TotalIntEng"   || 
+        var_attr["label"] == "KineticEnergy"){
       d_conservationTest->energy   = true;
       d_conservationTest->onOff    = true;
     }
-    if (var_attr["label"] == "eng_exch_error"||var_attr["label"] == "mom_exch_error"){
+    if (var_attr["label"] == "eng_exch_error"||
+        var_attr["label"] == "mom_exch_error"){
       d_conservationTest->exchange = true;
       d_conservationTest->onOff    = true;
     }
@@ -396,7 +404,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       (*iter)->problemSetup(grid, sharedState, d_modelSetup);
     }
     
-    //  bullet proofing each transported variable must have a boundary condition.
+    //bullet proofing each transported variable must have a boundary condition.
     for(vector<TransportedVariable*>::iterator
                                     iter =  d_modelSetup->tvars.begin();
                                     iter != d_modelSetup->tvars.end(); iter++){
@@ -626,9 +634,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   cout_doing << "Doing ICE::scheduleInitialize " << endl;
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
-  MaterialSubset* press_matl = scinew MaterialSubset();
-  press_matl->add(0);
-  press_matl->addReference();
+
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   
   t->computes(lb->vel_CCLabel);
@@ -642,8 +648,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->viscosityLabel);
   t->computes(lb->gammaLabel);
   t->computes(lb->specific_heatLabel);
-  t->computes(lb->press_CCLabel,     press_matl, oims);
-  t->computes(lb->initialGuessLabel, press_matl, oims); 
+  t->computes(lb->press_CCLabel,     d_press_matl, oims);
+  t->computes(lb->initialGuessLabel, d_press_matl, oims); 
   
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
@@ -675,16 +681,13 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
    
     t2->modifies(lb->rho_micro_CCLabel);
     t2->modifies(lb->temp_CCLabel);
-    t2->modifies(lb->press_CCLabel, press_matl, oims); 
+    t2->modifies(lb->press_CCLabel, d_press_matl, oims); 
 
-    cout << "ICE: press_matl: " << press_matl->size()<< "\n";
+    cout << "ICE: press_matl: " << d_press_matl->size()<< "\n";
 
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
   
-  // The task will have a reference to press_matl
-  if (press_matl->removeReference())
-    delete press_matl; // shouln't happen, but...
 }
 
 /* _____________________________________________________________________
@@ -784,10 +787,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
-  MaterialSubset* press_matl    = scinew MaterialSubset();
-  press_matl->add(0);
-  press_matl->addReference();
-  MaterialSubset* one_matl = press_matl;
+
+  MaterialSubset* one_matl = d_press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
   
@@ -797,13 +798,13 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
     // quantities (such as variance) to be computed
     d_turbulence->scheduleTurbulence1(sched, patches, ice_matls);
   }
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
   scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
                                                           maxMach_PSS);
                                                           
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
   
-  scheduleComputePressure(                sched, patches, press_matl,
+  scheduleComputePressure(                sched, patches, d_press_matl,
                                                           all_matls);
 
   if (d_RateForm) {
@@ -823,7 +824,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
   scheduleComputeVel_FC(                   sched, patches,ice_matls_sub, 
                                                          mpm_matls_sub, 
-                                                         press_matl,    
+                                                         d_press_matl,    
                                                          all_matls,     
                                                          false);        
 
@@ -839,47 +840,47 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   
     scheduleImplicitPressureSolve(         sched, level,   patches,
                                                            one_matl,      
-                                                           press_matl,    
+                                                           d_press_matl,    
                                                            ice_matls_sub,  
                                                            mpm_matls_sub, 
                                                            all_matls);
                                                            
     scheduleComputeDel_P(                   sched,  level, patches,  
                                                            one_matl,
-                                                           press_matl,
+                                                           d_press_matl,
                                                            all_matls);    
                                                            
   }                    
 
   if(!d_impICE){         //  E X P L I C I T
-    scheduleComputeDelPressAndUpdatePressCC(sched, patches,press_matl,     
+    scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,     
                                                            ice_matls_sub,  
                                                            mpm_matls_sub,  
                                                            all_matls);     
   }
   
-  scheduleComputePressFC(                 sched, patches, press_matl,
+  scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                           all_matls);
 
-  scheduleAccumulateMomentumSourceSinks(  sched, patches, press_matl,
+  scheduleAccumulateMomentumSourceSinks(  sched, patches, d_press_matl,
                                                           ice_matls_sub,
                                                           mpm_matls_sub,
                                                           all_matls);
   scheduleAccumulateEnergySourceSinks(    sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
-                                                          press_matl,
+                                                          d_press_matl,
                                                           all_matls);
 
   scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
   scheduleAddExchangeToMomentumAndEnergy( sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
-                                                          press_matl,
+                                                          d_press_matl,
                                                           all_matls);
                                                            
   scheduleComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
                                                           mpm_matls_sub, 
-                                                          press_matl,
+                                                          d_press_matl,
                                                           all_matls);
 
   scheduleComputeLagrangian_Transported_Vars(sched, patches,
@@ -887,7 +888,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                    
   scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
-                                                          press_matl,
+                                                          d_press_matl,
                                                           all_matls);
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
@@ -903,11 +904,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
     scheduleSetNeedAddMaterialFlag(         sched, level,   all_matls);
   }
 
-  //__________________________________
-  //  clean up memory
-  if (press_matl->removeReference()){
-    delete press_matl;
-  }
 }
 
 /* _____________________________________________________________________
@@ -1035,7 +1031,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
   }
                       // EQ  & RATE FORM 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.                      
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, lb->delTLabel);    For AMR
   t->requires(Task::NewDW,lb->press_CCLabel,       press_matl, oims, gac,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
@@ -1182,7 +1178,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->delP_MassXLabel,      press_matl, oims);
   task->computes(lb->term2Label,           press_matl, oims);
   task->computes(lb->term3Label,           press_matl, oims);
-  task->computes(lb->sum_rho_CCLabel,      press_matl, oims);  // only one mat subset
+  task->computes(lb->sum_rho_CCLabel,      press_matl, oims);
   
   sched->setRestartable(true);
   sched->addTask(task, patches, matls);
@@ -1758,8 +1754,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
             double sweptVol_R = characteristicVel_R * faceArea[dir];
             double sweptVol_L = characteristicVel_L * -faceArea[dir]; 
-            
-            sweptVol_R = std::max( 0.0, sweptVol_R);  // only compute outflow volumes
+            // only compute outflow volumes
+            sweptVol_R = std::max( 0.0, sweptVol_R);  
             sweptVol_L = std::max( 0.0, sweptVol_L);
             sumSwept_Vol += sweptVol_R + sweptVol_L;
           } // dir loop
@@ -1984,7 +1980,8 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing initialize_hydrostaticAdj on patch "<< patch->getID() << "\t ICE" << endl;
+    cout_doing << "Doing initialize_hydrostaticAdj on patch "
+               << patch->getID() << "\t ICE" << endl;
    
     Ghost::GhostType  gn = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
@@ -2053,7 +2050,8 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeThermoTransportProperties on patch "<< patch->getID() << "\t ICE" << endl;
+    cout_doing << "Doing computeThermoTransportProperties on patch "
+               << patch->getID() << "\t ICE" << endl;
    
     int numMatls = d_sharedState->getNumICEMatls();
     
@@ -2160,7 +2158,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     old_dw->get(press,                lb->press_CCLabel, 0,patch,gn, 0); 
     new_dw->allocateAndPut(press_new, lb->press_equil_CCLabel, 0,patch);
     new_dw->allocateAndPut(press_copy,lb->press_CCLabel,       0,patch);
-        
+       
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
@@ -2209,6 +2207,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        printData(indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);   
       }
     }
+
   //______________________________________________________________________
   // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
@@ -2333,7 +2332,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // - update Boundary conditions
     // - make copy of press for implicit calc.
-    preprocess_CustomBCs("EqPress",old_dw, new_dw, lb,  patch, 999,d_customBC_var_basket);
+    preprocess_CustomBCs("EqPress",old_dw, new_dw, lb,  patch, 
+                          999,d_customBC_var_basket);
     
     setBC(press_new,   rho_micro, placeHolder, d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, 
@@ -2408,7 +2408,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        printData( indx, patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]); 
        printData( indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
        printData( indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
-     //printData( indx, patch, 1, desc.str(), "iterations",   n_iters_equil_press);
        
      }
     }
@@ -4021,7 +4020,8 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
           setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
 
           // multiply by mass so advection is conserved
-          for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
+          for(CellIterator iter=patch->getExtraCellIterator();
+                          !iter.done();iter++){
             IntVector c = *iter;                            
             q_L_CC[c] *= mass_L[m][c];
           }
@@ -4375,7 +4375,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
    }
 
     /*`==========TESTING==========*/ 
-    if(d_customBC_var_basket->usingLodi || d_customBC_var_basket->usingNG_nozzle ||
+    if(d_customBC_var_basket->usingLodi || 
+       d_customBC_var_basket->usingNG_nozzle ||
        d_customBC_var_basket->usingMicroSlipBCs){ 
       StaticArray<CCVariable<double> > temp_CC_Xchange(numALLMatls);
       StaticArray<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);      
@@ -4389,7 +4390,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
     
-    preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, 999,d_customBC_var_basket);
+    preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, 
+                          999,d_customBC_var_basket);
     
 /*===========TESTING==========`*/  
     for (int m = 0; m < numALLMatls; m++)  {
@@ -4482,7 +4484,7 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
           Material* matl = d_sharedState->getMaterial( m );
           ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
           if(ice_matl) {
-            for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+            for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells");
                                                           !iter.done();iter++) {
               IntVector c = *iter;
               maxMach = Max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);
@@ -4719,7 +4721,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                         int_eng_L_ME, mass_L, patch,q_advected, new_dw);
       
       update_q_CC<constCCVariable<double>, double>
-            ("energy",temp, int_eng_L_ME, q_advected, mass_new, cv_new, patch);                        
+            ("energy",temp, int_eng_L_ME, q_advected, mass_new, cv_new, patch);
       
       //__________________________________
       // set the boundary conditions
@@ -4837,7 +4839,7 @@ void ICE::TestConservation(const ProcessorGroup*,
       new_dw->allocateTemporary(mass[m],patch);
       new_dw->get(rho_CC, lb->rho_CCLabel,   indx, patch, gn,0);
       
-      for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         mass[m][c] = rho_CC[c] * cell_vol;
       }
@@ -4860,7 +4862,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         int indx = ice_matl->getDWIndex();
         new_dw->get(vel_CC, lb->vel_CCLabel,   indx, patch, gn,0);
 
-        for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
           IntVector c = *iter;
           mom[c] = mass[m][c] * vel_CC[c];
         }
@@ -4886,7 +4888,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         new_dw->get(temp_CC, lb->temp_CCLabel,      indx, patch, gn,0);
         new_dw->get(cv,      lb->specific_heatLabel,indx, patch, gn,0);
         
-        for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
           IntVector c = *iter;
           int_eng[c] = mass[m][c] * cv[c] * temp_CC[c];
         }
@@ -4894,7 +4896,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         double mat_int_eng(0);
         
         conservationTest<double>(patch, delT, int_eng,
-                                  uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_int_eng);
+                                 uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_int_eng);
         total_int_eng += mat_int_eng;
       }
     }
@@ -4911,7 +4913,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         int indx = ice_matl->getDWIndex();
         new_dw->get(vel_CC, lb->vel_CCLabel,indx, patch, gn,0);
         
-        for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
           IntVector c = *iter;
           double vel_mag = vel_CC[c].length();
           KE[c] = 0.5 * mass[m][c] * vel_mag * vel_mag;
@@ -4938,8 +4940,8 @@ void ICE::TestConservation(const ProcessorGroup*,
         constCCVariable<double> int_eng_L_CC, eng_L_ME_CC;
         constCCVariable<Vector> mom_L_CC, mom_L_ME_CC;
         new_dw->get(mom_L_CC,     lb->mom_L_CCLabel,     indx, patch,gn, 0);
-        new_dw->get(int_eng_L_CC, lb->int_eng_L_CCLabel, indx, patch,gn, 0);       
-        new_dw->get(mom_L_ME_CC,  lb->mom_L_ME_CCLabel,  indx, patch,gn, 0);       
+        new_dw->get(int_eng_L_CC, lb->int_eng_L_CCLabel, indx, patch,gn, 0);
+        new_dw->get(mom_L_ME_CC,  lb->mom_L_ME_CCLabel,  indx, patch,gn, 0);
         new_dw->get(eng_L_ME_CC,  lb->eng_L_ME_CCLabel,  indx, patch,gn, 0); 
 
         for (CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
