@@ -14,12 +14,12 @@
 #ifndef SCI_Geom_Switch_h
 #define SCI_Geom_Switch_h 1
 
-#include <Geom/GeomContainer.h>
+#include <SCICore/Geom/GeomContainer.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomSwitch : public GeomContainer {
+class SCICORESHARE GeomSwitch : public GeomContainer {
     int state;
     GeomSwitch(const GeomSwitch&);
 public:
@@ -49,7 +49,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomTimeSwitch : public GeomContainer {
+class SCICORESHARE GeomTimeSwitch : public GeomContainer {
     double tbeg;
     double tend;
     GeomTimeSwitch(const GeomTimeSwitch&);
@@ -73,6 +73,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:23  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:52  mcq
 // Initial commit
 //

@@ -30,26 +30,26 @@ LOG
     Created January 5, 1999
 ****************************************/
 
-#include <Datatypes/Particles/MPMaterial.h>
-#include <Datatypes/Particles/MPVizParticleSet.h>
-#include <ParticleGridVisControl.h>
-#include <TecplotReader.h>
-
-#include <Util/NotFinished.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/Histogram.h>
-
 #include <iostream.h> 
 #include <strstream.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/Histogram.h>
+
+#include <Uintah/Datatypes/Particles/MPMaterial.h>
+#include <Uintah/Datatypes/Particles/MPVizParticleSet.h>
+#include "ParticleGridVisControl.h"
+#include "TecplotReader.h"
 
 namespace Uintah {
 namespace Modules {
 
 using namespace SCICore::Containers;
 
-PSECommon::Dataflow::Module* make_ParticleGridVisControl( const clString& id ) {
+PSECore::Dataflow::Module* make_ParticleGridVisControl( const clString& id ) {
   return new ParticleGridVisControl( id ); 
 }
 

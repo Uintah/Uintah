@@ -12,11 +12,11 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CoreDatatypes/DenseMatrix.h>
-#include <Util/Assert.h>
-#include <CoreDatatypes/ColumnMatrix.h>
-#include <Malloc/Allocator.h>
-#include <Math/MiscMath.h>
+#include <SCICore/CoreDatatypes/DenseMatrix.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -499,6 +499,10 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:45  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:21  mcq
 // Initial commit
 //

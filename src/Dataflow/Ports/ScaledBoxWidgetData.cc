@@ -12,14 +12,16 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <CommonDatatypes/ScaledBoxWidgetData.h>
-#include <Containers/String.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
+#include <PSECore/CommonDatatypes/ScaledBoxWidgetData.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
+
+using namespace SCICore::PersistentSpace;
 
 static Persistent* maker()
 {
@@ -92,10 +94,14 @@ void ScaledBoxWidgetData::io(Piostream& stream)
 }
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:49  mcq
 // Initial commit
 //

@@ -12,21 +12,21 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Widgets/RingWidget.h>
-#include <Constraints/AngleConstraint.h>
-#include <Constraints/DistanceConstraint.h>
-#include <Constraints/RatioConstraint.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomTorus.h>
-#include <Geometry/Plane.h>
-#include <Malloc/Allocator.h>
-#include <Math/Expon.h>
-#include <Math/Trig.h>
-#include <Dataflow/Module.h>
+#include <PSECore/Widgets/RingWidget.h>
+#include <PSECore/Constraints/AngleConstraint.h>
+#include <PSECore/Constraints/DistanceConstraint.h>
+#include <PSECore/Constraints/RatioConstraint.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomTorus.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/Trig.h>
+#include <PSECore/Dataflow/Module.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::GeomSpace::GeomGroup;
@@ -37,7 +37,7 @@ using SCICore::GeomSpace::GeomCappedCylinder;
 using SCICore::Geometry::Cross;
 using SCICore::Geometry::Plane;
 
-using namespace PSECommon::Constraints;
+using namespace PSECore::Constraints;
 
 const Index NumCons = 6;
 const Index NumVars = 8;
@@ -537,10 +537,14 @@ RingWidget::GetMaterialName( const Index mindex ) const
 }
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:31  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:08  mcq
 // Initial commit
 //

@@ -12,15 +12,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomTri.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geom/GeomRaytracer.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Geometry/Ray.h>
-#include <Malloc/Allocator.h>
-#include <Math/MinMax.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geom/GeomRaytracer.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Geometry/Ray.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MinMax.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -251,6 +251,10 @@ bool GeomTri::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:16  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:46  mcq
 // Initial commit
 //

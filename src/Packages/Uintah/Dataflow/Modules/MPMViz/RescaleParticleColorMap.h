@@ -24,20 +24,21 @@ DESCRIPTION
 
 ****************************************/ 
 
-#include <Datatypes/Particles/ParticleSetPort.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <Datatypes/Particles/ParticleSet.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
-#include <Dataflow/Module.h>
-#include <TclInterface/TCLvar.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/Dataflow/Module.h>
+
+#include <Uintah/Datatypes/Particles/ParticleSet.h>
+#include <Uintah/Datatypes/Particles/ParticleSetPort.h>
 
 namespace Uintah {
 namespace Modules {
 
 
 using namespace Uintah::Datatypes;
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 
 

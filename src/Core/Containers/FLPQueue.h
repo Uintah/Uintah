@@ -15,7 +15,7 @@
 #define SCI_Containers_FLPQueue_h 1
 
 #include <config.h>
-#include <Persistent/Persistent.h>
+#include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
 namespace Containers {
@@ -62,7 +62,7 @@ public:
 // Start of included FLPQueue.cc
 //
 
-#include <Malloc/Allocator.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace Containers {
@@ -261,6 +261,10 @@ void Pio(Piostream& stream, Containers::FLPQueueNode<T>& n)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:35  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:12  mcq
 // Initial commit
 //

@@ -12,19 +12,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CommonDatatypes/BooleanPort.h>
+#include <PSECore/CommonDatatypes/BooleanPort.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
+
+using namespace SCICore::CoreDatatypes;
 
 clString SimpleIPort<sciBooleanHandle>::port_type("Boolean");
 clString SimpleIPort<sciBooleanHandle>::port_color("blue4");
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:06  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:45  mcq
 // Initial commit
 //

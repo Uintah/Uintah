@@ -14,14 +14,14 @@
 #ifndef SCI_Geom_Triangles_h
 #define SCI_Geom_Triangles_h 1
 
-#include <Geom/GeomVertexPrim.h>
+#include <SCICore/Geom/GeomVertexPrim.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 class Color;
 
-class GeomTriangles : public GeomVertexPrim {
+class SCICORESHARE GeomTriangles : public GeomVertexPrim {
 private:
     void add(const Point&);
     void add(const Point&, const Vector&);
@@ -65,7 +65,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomTrianglesP: public GeomObj {
+class SCICORESHARE GeomTrianglesP: public GeomObj {
 protected:
     Array1<float> points;
     Array1<float> normals;
@@ -109,7 +109,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomTrianglesPT1d : public GeomTrianglesP {
+class SCICORESHARE GeomTrianglesPT1d : public GeomTrianglesP {
 protected:
   Array1<float> scalars;
 public:
@@ -132,7 +132,7 @@ public:
 };
 
 
-class GeomTranspTrianglesP : public GeomTrianglesP {
+class SCICORESHARE GeomTranspTrianglesP : public GeomTrianglesP {
 protected:
   Array1<int> xlist;
   Array1<int> ylist;
@@ -170,7 +170,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class GeomTrianglesPC: public GeomTrianglesP {
+class SCICORESHARE GeomTrianglesPC: public GeomTrianglesP {
     Array1<float> colors;
 public:
     GeomTrianglesPC();
@@ -189,7 +189,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomTrianglesVP: public GeomObj {
+class SCICORESHARE GeomTrianglesVP: public GeomObj {
 protected:
     Array1<float> points;
     Array1<float> normals;
@@ -224,7 +224,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomTrianglesVPC: public GeomTrianglesVP {
+class SCICORESHARE GeomTrianglesVPC: public GeomTrianglesVP {
     Array1<float> colors;
 public:
     GeomTrianglesVPC();
@@ -248,6 +248,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:17  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:47  mcq
 // Initial commit
 //

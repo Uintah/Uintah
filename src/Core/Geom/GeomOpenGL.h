@@ -14,16 +14,29 @@
 #ifndef SCI_Geom_GeomOpenGL_h
 #define SCI_Geom_GeomOpenGL_h 1
 
+#ifdef _WIN32
+#define WINGDIAPI __declspec(dllimport)
+#define APIENTRY __stdcall
+#define CALLBACK APIENTRY
+#endif
+
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
 
-class Roe;
+#include <config.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
+
+namespace PSECommon {
+  namespace Modules {
+    class Roe;
+  }
+}
 
 namespace SCICore {
 namespace GeomSpace {
 
+using PSECommon::Modules::Roe;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 
@@ -89,7 +102,9 @@ public:
     void init_view(double znear, double zfar, Point& eyep, Point& lookat);
 
     Roe* roe;
+#ifndef _WIN32
     Display *dpy;
+#endif
     int debug;
     void reset();
 };
@@ -99,6 +114,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:10  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:41  mcq
 // Initial commit
 //

@@ -14,16 +14,18 @@
 #ifndef SCI_Geom_Group_h
 #define SCI_Geom_Group_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geometry/BSphere.h>
-#include <Geometry/BBox.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Geometry/BBox.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 struct ITree;
 
-class GeomGroup : public GeomObj {
+class SCICORESHARE GeomGroup : public GeomObj {
     Array1<GeomObj*> objs;
     BSphere bsphere;
     int del_children;
@@ -62,6 +64,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:40  mcq
 // Initial commit
 //

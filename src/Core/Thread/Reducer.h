@@ -40,7 +40,7 @@ WARNING
 
 
 
-class Reducer  : public Barrier {
+class SCICORESHARE Reducer  : public Barrier {
     struct data {
 	double d;
     };

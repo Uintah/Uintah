@@ -12,15 +12,15 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Geom/GeomArrows.h>
+#include <SCICore/Geom/GeomArrows.h>
 
-#include <Geom/GeomSave.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
-#include <Persistent/Persistent.h>
+#include <SCICore/Geom/GeomSave.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Persistent/Persistent.h>
 
 #include <stdio.h>
 

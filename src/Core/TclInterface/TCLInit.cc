@@ -11,11 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TclInterface/MemStats.h>
-#include <TclInterface/DebugSettings.h>
-#include <TclInterface/ThreadStats.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/TclInterface/MemStats.h>
+#include <SCICore/TclInterface/DebugSettings.h>
+#include <SCICore/TclInterface/ThreadStats.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCL.h>
 
 namespace SCICore {
 namespace TclInterface {
@@ -35,6 +35,10 @@ void TCL::initialize()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:16  mcq
 // Initial commit
 //

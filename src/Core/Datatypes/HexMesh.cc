@@ -24,10 +24,10 @@
 * Includes
 *******************************************************************************/
 
-#include <CoreDatatypes/HexMesh.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/HexMesh.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -1416,20 +1416,11 @@ void HexMesh::get_boundary_lines(Array1<Point>&)
     NOT_FINISHED("HexMesh::get_boundary_lines");
 }
 
-} // End namespace CoreDatatypes
-} // End namespace SCICore
-
-
-namespace SCICore {
-namespace PersistentSpace {
-
 /*******************************************************************************
 * void Pio (Piostream & p, HexNode & n)
 *
 *	Output or input the node to the given io stream.
 *******************************************************************************/
-
-  using namespace SCICore::CoreDatatypes;
 
 void Pio (Piostream & p, HexNode & n)
 {
@@ -1563,11 +1554,15 @@ void Pio (Piostream & p, Hexahedron * & h)
   Pio (p, *h); 
 }
 
-} // End namespace PersistentSpace
+} // End namespace CoreDatatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:45  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:21  mcq
 // Initial commit
 //

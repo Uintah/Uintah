@@ -12,7 +12,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CoreDatatypes/cMatrix.h>
+#include <SCICore/CoreDatatypes/cMatrix.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -30,6 +30,10 @@ void cMatrix::io(Piostream&) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:01  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:34  mcq
 // Initial commit
 //

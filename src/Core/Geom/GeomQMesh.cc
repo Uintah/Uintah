@@ -12,12 +12,12 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Geom/GeomQMesh.h>
+#include <SCICore/Geom/GeomQMesh.h>
 
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
-#include <Util/NotFinished.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -114,6 +114,10 @@ bool GeomQMesh::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:42  mcq
 // Initial commit
 //

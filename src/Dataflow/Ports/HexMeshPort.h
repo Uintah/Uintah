@@ -15,10 +15,10 @@
 #ifndef SCI_project_HexMeshPort_h
 #define SCI_project_HexMeshPort_h 1
 
-#include <CommonDatatypes/SimplePort.h>
-#include <CoreDatatypes/HexMesh.h>
+#include <PSECore/CommonDatatypes/SimplePort.h>
+#include <SCICore/CoreDatatypes/HexMesh.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
 using namespace SCICore::CoreDatatypes;
@@ -27,15 +27,19 @@ typedef SimpleIPort<HexMeshHandle> HexMeshIPort;
 typedef SimpleOPort<HexMeshHandle> HexMeshOPort;
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:47  mcq
 // Initial commit
 //
 // Revision 1.4  1999/05/06 20:17:01  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.2  1999/04/27 23:18:35  dav
 // looking for lost files to commit

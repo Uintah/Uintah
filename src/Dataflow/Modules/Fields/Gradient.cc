@@ -12,28 +12,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CoreDatatypes/ScalarFieldRGdouble.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CoreDatatypes/ScalarFieldRGshort.h>
-#include <CoreDatatypes/ScalarFieldRGchar.h>
-// #include <CoreDatatypes/ScalarFieldRGuchar.h>
-#include <CommonDatatypes/VectorFieldPort.h>
-#include <CoreDatatypes/VectorFieldRG.h>
-#include <CoreDatatypes/VectorFieldUG.h>
-#include <Geometry/Point.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGdouble.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGshort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
+// #include <SCICore/CoreDatatypes/ScalarFieldRGuchar.h>
+#include <PSECore/CommonDatatypes/VectorFieldPort.h>
+#include <SCICore/CoreDatatypes/VectorFieldRG.h>
+#include <SCICore/CoreDatatypes/VectorFieldUG.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -190,6 +190,10 @@ void Gradient::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:28  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:42  mcq
 // Initial commit
 //

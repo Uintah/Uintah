@@ -1,6 +1,6 @@
 SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
-OBJTOP  = ../..
+OBJTOP  = ..
 
 TCL_LIB_DIR  = @TCL_LIB_DIR@
 TK_LIB_DIR   = @TK_LIB_DIR@

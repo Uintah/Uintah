@@ -13,13 +13,13 @@
  */
 
 #if 1
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
-#include <Util/Assert.h>
-#include <Persistent/Persistent.h>
-#include <Containers/String.h>
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iostream.h>
 #include <stdio.h>
 
@@ -100,6 +100,10 @@ Pio(Piostream& stream, Vector& p)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:29  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:57  mcq
 // Initial commit
 //

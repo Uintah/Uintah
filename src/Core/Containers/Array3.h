@@ -14,8 +14,8 @@
 #ifndef SCI_Containers_Array3_h
 #define SCI_Containers_Array3_h 1
 
-#include <Util/Assert.h>
-#include <Persistent/Persistent.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
 
@@ -134,9 +134,9 @@ public:
 // Start of included Array3.cc
 //
 
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
-#include <Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
 
 namespace SCICore {
 namespace Containers {
@@ -293,6 +293,10 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:35  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:11  mcq
 // Initial commit
 //

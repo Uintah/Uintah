@@ -37,7 +37,7 @@ WARNING
    
 ****************************************/
 
-class ThreadGroup {
+class SCICORESHARE ThreadGroup {
     Mutex lock;
     char* name;
     ThreadGroup* parent;

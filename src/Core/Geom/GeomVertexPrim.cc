@@ -12,12 +12,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomVertexPrim.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
-#include <Containers/TrivialAllocator.h>
+#include <SCICore/Geom/GeomVertexPrim.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Containers/TrivialAllocator.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -27,7 +27,6 @@ using SCICore::PersistentSpace::Pio;
 
 static TrivialAllocator GeomVertex_alloc(sizeof(GeomVertex));
 static TrivialAllocator GeomNVertex_alloc(sizeof(GeomNVertex));
-static TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));
 static TrivialAllocator GeomNMVertex_alloc(sizeof(GeomNMVertex));
 static TrivialAllocator GeomCVertex_alloc(sizeof(GeomCVertex));
 
@@ -63,12 +62,12 @@ void GeomNMVertex::operator delete(void* rp, size_t)
 
 void* GeomMVertex::operator new(size_t)
 {
-  return GeomMVertex_alloc.alloc();
+  return GeomVertex_alloc.alloc();
 }
 
 void GeomMVertex::operator delete(void* rp, size_t)
 {
-  GeomMVertex_alloc.free(rp);
+  GeomVertex_alloc.free(rp);
 }
 
 void* GeomCVertex::operator new(size_t)
@@ -354,13 +353,7 @@ GeomCVertex::~GeomCVertex()
 {
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
-
-namespace SCICore {
-namespace PersistentSpace {
-
-void Pio(Piostream& stream, GeomSpace::GeomVertex*& obj)
+void Pio(Piostream& stream, GeomVertex*& obj)
 {
     Persistent* tmp=obj;
     stream.io(tmp, GeomSpace::GeomVertex::type_id);
@@ -375,8 +368,9 @@ void Pio(Piostream& stream, GeomSpace::GeomVertex*& obj)
 
 //
 // $Log$
-// Revision 1.2  1999/08/02 22:54:35  kuzimmer
-// Added TrivialAllocator for GeomMVertex to fix memory overwriting error
+// Revision 1.3  1999/08/17 06:39:17  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
 //
 // Revision 1.1  1999/07/27 16:56:47  mcq
 // Initial commit

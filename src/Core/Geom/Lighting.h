@@ -14,33 +14,29 @@
 #ifndef SCI_Geom_Lighting_h
 #define SCI_Geom_Lighting_h 1
 
-#include <Geom/Light.h>
-#include <Containers/Array1.h>
-#include <Geom/Color.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Geom/Light.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Geom/Color.h>
 
 namespace SCICore {
-
-namespace GeomSpace {
-  struct Lighting;
-}
-
-namespace PersistentSpace {
-  class Piostream;
-  void Pio( Piostream &, GeomSpace::Lighting & );
-}
-
 namespace GeomSpace {
 
 using SCICore::Containers::Array1;
 
-struct Lighting {
-    Array1<Light*> lights;
-    Color amblight;
-
+class SCICORESHARE Lighting {
+public:
     Lighting();
     ~Lighting();
 
-    friend void PersistentSpace::Pio(Piostream&, Lighting&);
+  // Dd: Lighting was a struct... don't know why the following
+  //     were made private... things don't compile that way...
+  // private:
+    Array1<Light*> lights;
+    Color amblight;
+
+    friend SCICORESHARE void Pio( Piostream&, Lighting& );
 };
 
 } // End namespace GeomSpace
@@ -48,6 +44,10 @@ struct Lighting {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:20  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:49  mcq
 // Initial commit
 //

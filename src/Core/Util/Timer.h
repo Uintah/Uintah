@@ -14,9 +14,9 @@
 #ifndef SCI_Containers_Timer_h
 #define SCI_Containers_Timer_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-class SHARE Timer {
+class SCICORESHARE Timer {
     double total_time;
     double start_time;
     enum State {
@@ -35,20 +35,20 @@ public:
     void add(double t);
 };
 
-class SHARE CPUTimer : public Timer {
+class SCICORESHARE CPUTimer : public Timer {
     virtual double get_time();
 public:
     virtual ~CPUTimer();
 };
 
-class SHARE WallClockTimer : public Timer {
+class SCICORESHARE WallClockTimer : public Timer {
     virtual double get_time();
 public:
     WallClockTimer();
     virtual ~WallClockTimer();
 };
 
-class SHARE TimeThrottle : public WallClockTimer {
+class SCICORESHARE TimeThrottle : public WallClockTimer {
 public:
     TimeThrottle();
     virtual ~TimeThrottle();

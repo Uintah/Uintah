@@ -1,6 +1,14 @@
-itcl_class Uintah_MPMViz_RescaleParticleColorMap { 
+itcl_class RescaleParticleColorMap { 
 
     inherit Module 
+
+    method modname {} {
+	set n $this
+	if {[string first "::" "$n"] == 0} {
+	    set n "[string range $n 2 end]"
+	}
+	return $n
+    }
 
     constructor {config} { 
         set name RescaleParticleColorMap 

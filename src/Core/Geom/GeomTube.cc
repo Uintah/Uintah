@@ -12,14 +12,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomTube.h>
-#include <Containers/String.h>
-#include <Geometry/BBox.h>
-#include <Geom/GeomLine.h>
-#include <Util/NotFinished.h>
-#include <Malloc/Allocator.h>
-#include <Math/Trig.h>
-#include <Math/TrigTable.h>
+#include <SCICore/Geom/GeomTube.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/Math/TrigTable.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -153,6 +153,10 @@ bool GeomTube::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:17  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:47  mcq
 // Initial commit
 //

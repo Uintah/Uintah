@@ -3,7 +3,7 @@
 #include <PSECore/Dataflow/Module.h>
 
 #define MP(makesuf) \
-namespace PSECommon { namespace Modules { using namespace PSECommon::Dataflow;\
+namespace PSECommon { namespace Modules { using namespace PSECore::Dataflow;\
   Module* make_##makesuf (const clString& id); } }\
 
 // FEM
@@ -102,7 +102,7 @@ MP(SurfaceWriter)
 MP(TetraWriter)
 MP(VectorFieldWriter)
 
-using namespace PSECommon::Dataflow;
+using namespace PSECore::Dataflow;
 using namespace PSECommon::Modules;
 
 #define RM(a,b,c,d) packageDB.registerModule("PSE Common",a,b,c,d)

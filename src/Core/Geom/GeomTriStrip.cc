@@ -12,14 +12,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomTriStrip.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Geom/GeomSave.h>
-#include <Geom/GeomTri.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/GeomTriStrip.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geom/GeomSave.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -272,6 +272,10 @@ int GeomTriStripList::num_since(void)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:16  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:46  mcq
 // Initial commit
 //

@@ -5,11 +5,12 @@
 
 */
 
-#include <Containers/PQueue.h>
+#include <SCICore/Containers/PQueue.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Tester/RigorousTest.h>
+
 #include <iostream.h>
 #include <stdlib.h>
-#include <Malloc/Allocator.h>
-#include <Tester/RigorousTest.h>
 
 namespace SCICore {
 namespace Containers {
@@ -17,12 +18,13 @@ namespace Containers {
 PQueue :: PQueue ( unsigned n )
 {
   N = n;
+  int i;
     
   heap = scinew int[ N + 1 ];
   weight = scinew double[ N + 1];
   pos = scinew int [N  + 1 ];
 
-  for ( int i = 0; i <= N; i++ )
+  for ( i = 0; i <= N; i++ )
       weight[i] = -1;
   
   count = 0;
@@ -39,14 +41,15 @@ PQueue ::  PQueue ( const PQueue &pq )
 {
   N = pq.N;
   count = pq.count;
+  int i;
   
   heap = scinew int[ N + 1 ];
   weight = scinew double[ N + 1 ];
   pos = scinew int[ N + 1 ];
   
-  for ( int i = 0; i <= count; i++ )
+  for ( i = 0; i <= count; i++ )
       heap[i] = pq.heap[i];
-  for ( int i = 0; i <= N; i++ )
+  for ( i = 0; i <= N; i++ )
   {
        weight[i] = pq.weight[i];
        pos[i] = pq.pos[i];
@@ -61,14 +64,15 @@ PQueue &  PQueue :: operator = ( const PQueue &pq )
   delete [] heap;
   delete [] weight;
   delete [] pos;
+  int i;
   
   heap = scinew int[ N + 1 ];
   weight = scinew double[ N + 1 ];
   pos = scinew int[ N + 1 ];
   
-  for ( int i = 0; i <= count; i++ )
+  for ( i = 0; i <= count; i++ )
       heap[i] = pq.heap[i];
-  for ( int i = 0; i <= N; i++ )
+  for ( i = 0; i <= N; i++ )
   {
       weight[i] = pq.weight[i];
       pos[i] = pq.pos[i];
@@ -190,10 +194,11 @@ const int num_vals=16;
 void main(int argc, char* argv)
 {
   double val[num_vals+1];
+  int i;
 
   PQueue the_queue(num_vals);
 
-  for(int i=1;i<=num_vals;i++) {
+  for(i=1;i<=num_vals;i++) {
     val[i] = drand48()*100; // get a [0,1] value
     if (the_queue.replace(i,val[i])) {
       cerr << "worked...\n";
@@ -206,7 +211,8 @@ void main(int argc, char* argv)
 
   the_queue.print();
 
-  for(int k=0;k<200;k++) {
+  int k;
+  for(k=0;k<200;k++) {
     int pos = drand48()*(num_vals-1)+1;
     double nval;
     if (drand48() > 0.5) { // make it bigger...
@@ -255,12 +261,13 @@ void PQueue::test_rigorous(RigorousTest* __test)
 {
     int c;
     int size;
+	int i;
 
     PQueue q(100);
     TEST(q.isEmpty());
     TEST(q.size()==0);
     size=q.size();
-    for(int i=1;i<=100;i++){
+    for(i=1;i<=100;i++){
 	q.replace(i,i);
 	++size;
 	TEST(q.size()==size);
@@ -268,37 +275,37 @@ void PQueue::test_rigorous(RigorousTest* __test)
     }
 
     
-    for(int i=1;i<=100;i++){
+    for(i=1;i<=100;i++){
 	TEST(q.remove()==i);
 	--size;
 	TEST(q.size()==size);
     }
     
     c=100;
-    for(int i=1;i<=100;i++){
+    for(i=1;i<=100;i++){
 	q.replace(i,c);
 	++size;
 	--c;
 	TEST(q.size()==size);
     }
 
-    for(int i=100;i>=1;i--){
+    for(i=100;i>=1;i--){
 	TEST(q.remove()==i);
 	size--;
 	TEST(q.size()==size);
     }
 
-    for(int i=1;i<=100;i++)
+    for(i=1;i<=100;i++)
 	q.replace(i,i);
     
     size=100;
-    for(int i=100;i>50;i--){
+    for(i=100;i>50;i--){
 	q.nuke(i);
 	size--;
 	TEST(q.size()==size);
     }
 
-    for(int i=1;i<=100;i++){
+    for(i=1;i<=100;i++){
 	if(i>50)
 	    TEST(q.remove()==0);
 	else
@@ -308,7 +315,7 @@ void PQueue::test_rigorous(RigorousTest* __test)
     PQueue a(1000);
     
     size=0;
-    for(int i=1;i<=1000;i++){
+    for(i=1;i<=1000;i++){
 	a.replace(i,i);
 	++size;
 	TEST(a.size()==size);
@@ -316,31 +323,31 @@ void PQueue::test_rigorous(RigorousTest* __test)
     
     PQueue b = a;
     
-    for(int i=1;i<=1000;i++)
+    for(i=1;i<=1000;i++)
 	TEST(b.remove()==i);
 
     TEST(b.isEmpty());
 
-    for(int i=1;i<=1000;i++)
+    for(i=1;i<=1000;i++)
 	TEST(b.replace(i,i));
 
     c=1000;
-    for(int i=1;i<=1000;i++){
+    for(i=1;i<=1000;i++){
 	TEST(b.replace(i,c));
 	--c;
     }
 
-    for(int i=1000;i>=1;i--)
+    for(i=1000;i>=1;i--)
 	TEST(b.remove()==i);
 
     
     TEST(a.size()==1000);
 
-    for(int i=1;i<=1000;i+=2)
+    for(i=1;i<=1000;i+=2)
 	a.nuke(i);
     
     c=0;
-    for(int i=1;i<=1000;i++){
+    for(i=1;i<=1000;i++){
 	c+=2;
 	if(i<=500)
 	    TEST(a.remove()==c);
@@ -356,6 +363,10 @@ void PQueue::test_rigorous(RigorousTest* __test)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:13  mcq
 // Initial commit
 //

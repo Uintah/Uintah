@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/Light.h>
+#include <SCICore/Geom/Light.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -37,13 +37,6 @@ void Light::io(Piostream& stream)
     stream.end_class();
 }
 
-} // End namespace GeomSpace
-
-
-namespace PersistentSpace {
-
-using namespace GeomSpace;
-
 void Pio(Piostream& stream, Light*& light)
 {
     Persistent* tlight=light;
@@ -57,6 +50,10 @@ void Pio(Piostream& stream, Light*& light)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:19  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:49  mcq
 // Initial commit
 //

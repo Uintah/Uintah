@@ -12,17 +12,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/Pt.h>
-#include <Geom/GeomRaytracer.h>
-#include <Containers/String.h>
-#include <Containers/Sort.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Geometry/Ray.h>
-#include <Malloc/Allocator.h>
-#include <Math/TrigTable.h>
-#include <Math/Trig.h>
-#include <Util/NotFinished.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/GeomRaytracer.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Containers/Sort.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Geometry/Ray.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/TrigTable.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/Util/NotFinished.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -409,6 +409,10 @@ void GeomTimedParticles::draw(DrawInfoOpenGL*, Material*, double)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:21  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:51  mcq
 // Initial commit
 //

@@ -14,13 +14,13 @@
 #ifndef sci_Math_Mat_h
 #define sci_Math_Mat_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-    void SHARE matsolve3by3(double mat[3][3], double rhs[3]);
-    void SHARE matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
+    void SCICORESHARE matsolve3by3(double mat[3][3], double rhs[3]);
+    void SCICORESHARE matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
 #ifdef __cplusplus
 }
 #endif

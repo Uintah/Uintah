@@ -14,12 +14,18 @@
 #ifndef SCI_project_Pstream_h
 #define SCI_project_Pstream_h 1
 
-#include <Persistent/Persistent.h>
-#include <Containers/String.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/String.h>
 #include <stdio.h>
+#ifdef _WIN32
+#define ZEXPORT __stdcall
+#define ZEXTERN extern "C"
+#endif
+#include <zlib.h>
 #include <rpc/types.h>
 #include <rpc/xdr.h>
-#include <zlib.h>
 
 // KCC stuff
 #include <fstream.h>
@@ -31,7 +37,7 @@ namespace PersistentSpace {
 
 using SCICore::Containers::clString;
 
-class BinaryPiostream : public Piostream {
+class SCICORESHARE BinaryPiostream : public Piostream {
     FILE* fp;
     void* addr;
     int len;
@@ -67,7 +73,7 @@ public:
     virtual void io(clString& string);
 };
 
-class TextPiostream : public Piostream {
+class SCICORESHARE TextPiostream : public Piostream {
     ifstream* istr;
     ofstream* ostr;
     int len;
@@ -102,7 +108,7 @@ public:
     void io(int, clString& string);
 };
 
-class GzipPiostream : public Piostream {
+class SCICORESHARE GzipPiostream : public Piostream {
     gzFile gzfile;
     int len;
     int have_peekname;
@@ -136,7 +142,7 @@ public:
     inline int fileOpen() { return (gzfile!=0); }
 };
 
-class GunzipPiostream : public Piostream {
+class SCICORESHARE GunzipPiostream : public Piostream {
     int unzipfile;	// file descriptor
     int len;
     int have_peekname;
@@ -174,6 +180,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:41  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:10  mcq
 // Initial commit
 //

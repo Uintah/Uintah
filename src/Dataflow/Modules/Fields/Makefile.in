@@ -1,6 +1,6 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../../..
+OBJTOP   = ../../..
 
 TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
 TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
@@ -11,7 +11,7 @@ SRCS     = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldGainCorrect.cc \
            GradientMagnitude.cc MergeTensor.cc OpenGL_Ex.cc TracePath.cc \
            TrainSeg2.cc TrainSegment.cc TransformField.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs/SCICore -I$(SRCTOP)/libs/PSECore \
+INCLUDES = -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk

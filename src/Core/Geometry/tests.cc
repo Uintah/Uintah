@@ -1,6 +1,6 @@
-#include <Tester/TestTable.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Tester/TestTable.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 TestTable test_table[] = {
         {"Vector_Point", &Point::test_rigorous, 0},

@@ -13,16 +13,16 @@
  */
 
 
-#include <Widgets/ArrowWidget.h>
-#include <Geom/GeomCone.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomPick.h>
-#include <Malloc/Allocator.h>
-#include <Dataflow/Module.h>
+#include <PSECore/Widgets/ArrowWidget.h>
+#include <SCICore/Geom/GeomCone.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <PSECore/Dataflow/Module.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::GeomSpace::GeomGroup;
@@ -31,7 +31,7 @@ using SCICore::GeomSpace::GeomCylinder;
 using SCICore::GeomSpace::GeomCone;
 using SCICore::GeomSpace::GeomCappedCone;
 
-using namespace PSECommon::Constraints;
+using namespace PSECore::Constraints;
 
 const Index NumCons = 0;
 const Index NumVars = 1;
@@ -272,10 +272,14 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 }
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:27  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:04  mcq
 // Initial commit
 //

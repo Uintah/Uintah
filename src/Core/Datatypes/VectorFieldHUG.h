@@ -23,9 +23,9 @@
 * Includes
 *******************************************************************************/
 
-#include <CoreDatatypes/VectorField.h>
-#include <CoreDatatypes/HexMesh.h>
-#include <Containers/Array1.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/CoreDatatypes/HexMesh.h>
+#include <SCICore/Containers/Array1.h>
 
 
 /*******************************************************************************
@@ -39,7 +39,7 @@ using SCICore::Containers::Array1;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 
-class VectorFieldHUG : public VectorField
+class SCICORESHARE VectorFieldHUG : public VectorField
 {
   public:
   
@@ -68,6 +68,10 @@ class VectorFieldHUG : public VectorField
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:58  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:31  mcq
 // Initial commit
 //

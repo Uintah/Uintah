@@ -21,7 +21,7 @@ itcl_class PSECommon_Visualization_IsoSurfaceDW {
 	set $this-method MC
 	global $this-min $this-max
 	set $this-min 0
-	set $this-max 100
+	set $this-max 200
 	global $this-tclBlockSize
 	set $this-tclBlockSize 4
 	global $this-clr-r

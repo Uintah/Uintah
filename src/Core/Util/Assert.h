@@ -31,14 +31,12 @@
 #define SCI_ASSERTION_LEVEL 4
 #endif
 
-#include <Exceptions/Exceptions.h>
-using namespace SCICore;
-using namespace ExceptionsSpace;
+#include <SCICore/Exceptions/Exceptions.h>
 
 #if SCI_ASSERTION_LEVEL >= 1
 #define ASSERTL1(condition) \
 	if(!(condition)){ \
-		AssertionFailed exc(#condition); \
+		SCICore::ExceptionsSpace::AssertionFailed exc(#condition); \
 		EXCEPTION(exc); \
 	}
 #else
@@ -48,7 +46,7 @@ using namespace ExceptionsSpace;
 #if SCI_ASSERTION_LEVEL >= 2
 #define ASSERTL2(condition) \
 	if(!(condition)){ \
-		AssertionFailed exc(#condition); \
+		SCICore::ExceptionsSpace::AssertionFailed exc(#condition); \
 		EXCEPTION(exc); \
 	}
 #else
@@ -58,7 +56,7 @@ using namespace ExceptionsSpace;
 #if SCI_ASSERTION_LEVEL >= 3
 #define ASSERTL3(condition) \
 	if(!(condition)){ \
-		AssertionFailed exc(#condition); \
+		SCICore::ExceptionsSpace::AssertionFailed exc(#condition); \
 		EXCEPTION(exc); \
 	}
 #else
@@ -68,7 +66,7 @@ using namespace ExceptionsSpace;
 #if SCI_ASSERTION_LEVEL >= 4
 #define ASSERTL4(condition) \
 	if(!(condition)){ \
-		AssertionFailed exc(#condition); \
+		SCICore::ExceptionsSpace::AssertionFailed exc(#condition); \
 		EXCEPTION(exc); \
 	}
 #else
@@ -78,12 +76,12 @@ using namespace ExceptionsSpace;
 #if SCI_ASSERTION_LEVEL >= 2
 #define ASSERTEQ(c1, c2) \
 	if(c1 != c2){ \
-		AssertionEQFailed exc(#c1, #c2, (int)c1, (int)c2); \
+		SCICore::ExceptionsSpace::AssertionEQFailed exc(#c1, #c2, (int)c1, (int)c2); \
 		EXCEPTION(exc); \
 	}
 #define ASSERTRANGE(c, l, h) \
         if(c < l || c >= h){ \
-		AssertionRangeFailed exc(#c, #l, #h, c, l, h); \
+		SCICore::ExceptionsSpace::AssertionRangeFailed exc(#c, #l, #h, c, l, h); \
 		EXCEPTION(exc); \
         }
 #else

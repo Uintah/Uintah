@@ -3,7 +3,7 @@
 #include <PSECore/Dataflow/Module.h>
 
 #define MP(makesuf) \
-namespace Uintah { namespace Modules { using namespace PSECommon::Dataflow;\
+namespace Uintah { namespace Modules { using namespace PSECore::Dataflow;\
   Module* make_##makesuf (const clString& id); } }\
 
 // MPMViz
@@ -15,9 +15,8 @@ MP(cfdGridLines)
 
 // Readers
 MP(ParticleSetReader)
-MP(TriangleReader)
 
-using namespace PSECommon::Dataflow;
+using namespace PSECore::Dataflow;
 using namespace Uintah::Modules;
 
 #define RM(a,b,c,d) packageDB.registerModule("Uintah",a,b,c,d)
@@ -34,8 +33,6 @@ void initPackage(const clString& tcl) {
 
   // Readers
   RM("Readers", "Particle Set Reader", make_ParticleSetReader, "");
-  RM("Readers", "Triangle Reader", make_TriangleReader, tcl+"/TriangleReader.tcl");
 
-cerr << "Initfn done -- TCL path was " << tcl << "\n";
 }
 }

@@ -12,17 +12,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomTorus.h>
-#include <Containers/String.h>
-#include <Geom/GeomRaytracer.h>
-#include <Geom/GeomTri.h>
-#include <Geometry/BBox.h>
-#include <Geometry/BSphere.h>
-#include <Geometry/Ray.h>
-#include <Util/NotFinished.h>
-#include <Malloc/Allocator.h>
-#include <Math/TrigTable.h>
-#include <Math/Trig.h>
+#include <SCICore/Geom/GeomTorus.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Geom/GeomRaytracer.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/BSphere.h>
+#include <SCICore/Geometry/Ray.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/TrigTable.h>
+#include <SCICore/Math/Trig.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -250,6 +250,10 @@ bool GeomTorusArc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:15  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:45  mcq
 // Initial commit
 //

@@ -15,10 +15,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <Constraints/BaseVariable.h>
-#include <Constraints/ConstraintSolver.h>
+#include <PSECore/Constraints/BaseVariable.h>
+#include <PSECore/Constraints/ConstraintSolver.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 BaseVariable::BaseVariable( const clString& name,
@@ -218,10 +218,14 @@ SchemeString( const Scheme s )
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:16  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:53  mcq
 // Initial commit
 //

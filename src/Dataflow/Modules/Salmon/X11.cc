@@ -12,19 +12,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Salmon/Renderer.h>
-#include <Modules/Salmon/Salmon.h>
-#include <Modules/Salmon/Roe.h>
-#include <Containers/Array1.h>
-#include <Containers/AVLTree.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Geometry/Transform.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomX11.h>
-#include <Malloc/Allocator.h>
-#include <Math/Trig.h>
-#include <TclInterface/TCLTask.h>
+#include <PSECommon/Modules/Salmon/Renderer.h>
+#include <PSECommon/Modules/Salmon/Salmon.h>
+#include <PSECommon/Modules/Salmon/Roe.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/AVLTree.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Geometry/Transform.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomX11.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/TclInterface/TCLTask.h>
 
 #include <X11/Xlib.h>
 #include <tcl.h>
@@ -303,6 +303,10 @@ void X11::put_scanline(int y, int width, Color* scanline, int repeat)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:40  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:54  mcq
 // Initial commit
 //

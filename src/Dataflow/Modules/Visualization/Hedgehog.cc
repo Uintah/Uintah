@@ -12,24 +12,24 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/VectorFieldPort.h>
-#include <Geom/GeomArrows.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/VectorFieldPort.h>
+#include <SCICore/Geom/GeomArrows.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
-#include <Widgets/ScaledBoxWidget.h>
-#include <Widgets/ScaledFrameWidget.h>
+#include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <PSECore/Widgets/ScaledFrameWidget.h>
 #include <iostream.h>
 
 #define CP_PLANE 0
@@ -39,13 +39,53 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
 using namespace SCICore::Containers;
+
+/**************************************
+CLASS
+   Hedgehog
+      Hedgehog produces arrows at sample points in a vector field.
+
+
+GENERAL INFORMATION
+
+   Hedgehog
+  
+   Author:  Steven G. Parker (sparker@cs.utah.edu)
+            
+            Department of Computer Science
+            
+            University of Utah
+   
+   Date:    June 1995
+   
+   C-SAFE
+   
+   Copyright <C> 1995 SCI Group
+
+KEYWORDS
+   Visualization, vector_field, GenColormap
+
+DESCRIPTION
+   Hedgehog produces arrows at sample points in a vector
+   field.  The length of the arrow indicates the magnitude of the
+   field at that point, and the orientation indicates the
+   direction of the field.  In addition, the shaft of the arrow
+   is mapped to a scalar field value using a colormap produced by
+   GenColormap.
+
+WARNING
+   None
+
+
+
+****************************************/
 
 class Hedgehog : public Module {
    VectorFieldIPort *invectorfield;
@@ -57,6 +97,11 @@ class Hedgehog : public Module {
    int widget_id;
    ScaledBoxWidget* widget3d;
    ScaledFrameWidget *widget2d;
+ 
+        // GROUP:  Widgets:
+        //////////////////////
+        //
+        // widget_moved -  
    virtual void widget_moved(int last);
    TCLdouble length_scale;
    TCLdouble width_scale;
@@ -71,12 +116,44 @@ class Hedgehog : public Module {
    int need_find3d;
 
 public:
+ 
+        // GROUP:  Constructors:
+        ///////////////////////////
+        //
+        // Constructs an instance of class Hedgehog
+        //
+        // Constructor taking
+        //    [in] id as an identifier
+        //
    Hedgehog(const clString& id);
+       
+        ///////////////////////////
+        //
+        // Constructor taking
+        //    [in] Hedgehog for copying
+        //    [in] deep a copying flag
+        //
+        //  NOT FINISHED 
    Hedgehog(const Hedgehog&, int deep);
+ 
+        // GROUP:  Destructor:
+        ///////////////////////////
+        // Destructor
    virtual ~Hedgehog();
    virtual Module* clone(int deep);
+  
+        // GROUP:  Access functions:
+        ///////////////////////////
+        //
+        // execute() - execution scheduled by scheduler
    virtual void execute();
 
+        //////////////////////////
+        //
+        // tcl_commands - overides tcl_command in base class Module, takes:
+        //                                  findxy,
+        //                                  findyz,
+        //                                  findxz
    virtual void tcl_command(TCLArgs&, void*);
 };
 
@@ -369,6 +446,10 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:49  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:13  mcq
 // Initial commit
 //

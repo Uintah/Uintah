@@ -53,7 +53,7 @@ WARNING
    
 ****************************************/
 
-class Runnable {
+class SCICORESHARE Runnable {
 protected:
     friend class Thread;
     Thread* mythread;

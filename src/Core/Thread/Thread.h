@@ -42,7 +42,7 @@ WARNING
    
 ****************************************/
 
-class Thread {
+class SCICORESHARE Thread {
     friend class Mutex;
     friend class Semaphore;
     friend class Barrier;
@@ -101,7 +101,7 @@ class Thread {
     //////////
     //<i>No documentation provided</i>
     void run_body();
-    class ParallelHelper : public Runnable {
+    class SCICORESHARE ParallelHelper : public Runnable {
 	const ParallelBase* helper;
 	int proc;
     public:

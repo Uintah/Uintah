@@ -12,19 +12,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Salmon/Salmon.h>
-#include <Modules/Salmon/Renderer.h>
-#include <Modules/Salmon/Roe.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Comm/MessageTypes.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/ModuleHelper.h>
-#include <Geom/GeomObj.h>
-#include <Modules/Salmon/SalmonGeom.h>
-#include <Geom/HeadLight.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/AsyncReply.h>
+#include <PSECommon/Modules/Salmon/Salmon.h>
+#include <PSECommon/Modules/Salmon/Renderer.h>
+#include <PSECommon/Modules/Salmon/Roe.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Comm/MessageTypes.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/ModuleHelper.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <PSECommon/Modules/Salmon/SalmonGeom.h>
+#include <SCICore/Geom/HeadLight.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/AsyncReply.h>
 
 #include <iostream.h>
 
@@ -35,9 +35,9 @@
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::GeometryIPort;
-using PSECommon::CommonDatatypes::GeometryComm;
+using PSECore::Dataflow::Module;
+using PSECore::CommonDatatypes::GeometryIPort;
+using PSECore::CommonDatatypes::GeometryComm;
 
 using SCICore::GeomSpace::HeadLight;
 using SCICore::Containers::to_string;
@@ -504,6 +504,10 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:39  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:53  mcq
 // Initial commit
 //

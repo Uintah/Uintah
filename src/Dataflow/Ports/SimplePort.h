@@ -1,6 +1,3 @@
-#ifndef SCI_project_SimplePort_h
-#define SCI_project_SimplePort_h 1
-
 /*
  *  SimplePort.h:  Ports that use only the Atomic protocol
  *
@@ -13,11 +10,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Port.h>
-#include <Multitask/ITC.h>
-#include <Util/Timer.h>
+#ifndef SCI_project_SimplePort_h
+#define SCI_project_SimplePort_h 1
 
-namespace PSECommon {
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Util/Timer.h>
+
+namespace PSECore {
 
 namespace Dataflow {
   class Module;
@@ -25,10 +25,10 @@ namespace Dataflow {
 
 namespace CommonDatatypes {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::Dataflow::IPort;
-using PSECommon::Dataflow::OPort;
-using PSECommon::Dataflow::Connection;
+using PSECore::Dataflow::Module;
+using PSECore::Dataflow::IPort;
+using PSECore::Dataflow::OPort;
+using PSECore::Dataflow::Connection;
 using SCICore::Multitask::Mailbox;
 using SCICore::Containers::clString;
 
@@ -86,36 +86,38 @@ public:
 };
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 ////////////////////////////////////////////////////////////
 //
 // Start of included SimplePort.cc
 //
 
-#include <Persistent/Pstreams.h>
+#include <SCICore/Persistent/Pstreams.h>
 
-#include <Util/Assert.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/Remote.h>
+#include <SCICore/Util/Assert.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/Remote.h>
 
 #include <stdio.h>
 #include <iostream.h>
 #include <fstream.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
-#include <fcntl.h>
 #include <unistd.h>
+#include <netdb.h>
+#endif
+#include <fcntl.h>
 
 //#define DEBUG 1
 
 extern char** global_argv;
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
 using namespace SCICore::PersistentSpace;
@@ -355,8 +357,8 @@ int SimpleIPort<T>::special_get(T& data)
     using SCICore::PersistentSpace::Pio;
     using SCICore::Containers::Pio;
 
-    using PSECommon::Comm::MessageTypes;
-    using PSECommon::Dataflow::Demand_Message;
+    using PSECore::Comm::MessageTypes;
+    using PSECore::Dataflow::Demand_Message;
 
     if(nconnections()==0)
 	return 0;
@@ -448,10 +450,14 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 }
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:50  mcq
 // Initial commit
 //
@@ -459,7 +465,7 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 // added beginnings of support for g++ compilation
 //
 // Revision 1.3  1999/05/06 20:17:03  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:47  dav
 // Import sources

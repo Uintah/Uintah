@@ -12,26 +12,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldRGBase.h>
-#include <CoreDatatypes/ScalarFieldRGdouble.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CoreDatatypes/ScalarFieldRGchar.h>
-#include <Geometry/Point.h>
-#include <TclInterface/TCLvar.h>
 #include <stdio.h>
+
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGdouble.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/TclInterface/TCLvar.h>
+
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -198,6 +200,10 @@ void ClipField::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:26  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:40  mcq
 // Initial commit
 //

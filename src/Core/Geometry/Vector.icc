@@ -1,4 +1,4 @@
-#include <Exceptions/Exceptions.h>
+#include <SCICore/Exceptions/Exceptions.h>
 
 using SCICore::ExceptionsSpace::Exception;
 using SCICore::ExceptionsSpace::AssertionFailed;

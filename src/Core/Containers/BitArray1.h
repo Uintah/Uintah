@@ -13,7 +13,10 @@
 
 #ifndef SCI_Containers_BitArray1_h
 #define SCI_Containers_BitArray1_h 1
-#include <Tester/RigorousTest.h>
+
+#include <SCICore/share/share.h>
+
+#include <SCICore/Tester/RigorousTest.h>
 
 namespace SCICore {
 namespace Containers {
@@ -48,7 +51,7 @@ WARNING
   
 ****************************************/
 
-class BitArray1 {
+class SCICORESHARE BitArray1 {
     int size;
     int nbits;
     unsigned char* bits;
@@ -91,6 +94,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:35  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:12  mcq
 // Initial commit
 //

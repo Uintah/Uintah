@@ -12,21 +12,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/GeometryComm.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/GeometryComm.h>
 
-#include <Util/Assert.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
-#include <Dataflow/Port.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/AsyncReply.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/AsyncReply.h>
 
 #include <iostream.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
 static clString Geometry_type("Geometry");
@@ -324,10 +324,14 @@ GeometryData::Print()
 }
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:47  mcq
 // Initial commit
 //

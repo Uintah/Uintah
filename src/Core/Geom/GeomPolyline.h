@@ -14,13 +14,13 @@
 #ifndef SCI_Geom_Polyline_h
 #define SCI_Geom_Polyline_h 1
 
-#include <Geom/GeomVertexPrim.h>
-#include <Geometry/BBox.h>
+#include <SCICore/Geom/GeomVertexPrim.h>
+#include <SCICore/Geometry/BBox.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomPolyline : public GeomVertexPrim {
+class SCICORESHARE GeomPolyline : public GeomVertexPrim {
 public:
     GeomPolyline();
     GeomPolyline(const GeomPolyline&);
@@ -42,7 +42,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomPolylineTC: public GeomObj {
+class SCICORESHARE GeomPolylineTC: public GeomObj {
 protected:
     Array1<float> data;
     BBox bbox;
@@ -79,6 +79,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:42  mcq
 // Initial commit
 //

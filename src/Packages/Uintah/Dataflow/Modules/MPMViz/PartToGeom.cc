@@ -18,31 +18,32 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Datatypes/Particles/ParticleSetPort.h>
-#include <Datatypes/Particles/MPVizParticleSet.h>
+#include <Uintah/Datatypes/Particles/ParticleSetPort.h>
+#include <Uintah/Datatypes/Particles/MPVizParticleSet.h>
+#include "ParticleGridVisControl.h"
 
-#include <ParticleGridVisControl.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <Geom/GeomArrows.h>
-#include <Geom/Color.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Material.h>
-#include <Geom/GeomPick.h>
-#include <Geom/Pt.h>
-#include <Geom/GeomSphere.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Geom/GeomArrows.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
 
 namespace Uintah {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
@@ -332,6 +333,10 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 17:08:57  mcq
 // Initial commit
 //

@@ -37,7 +37,7 @@ PATTERNS
 WARNING
    
 ****************************************/
-class WorkQueue {
+class SCICORESHARE WorkQueue {
     WorkQueue_private* priv;
     int* assignments;
     int nallocated;

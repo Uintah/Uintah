@@ -14,13 +14,13 @@
 #ifndef SCI_Geom_Sphere_h
 #define SCI_Geom_Sphere_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Point.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomSphere : public GeomObj {
+class SCICORESHARE GeomSphere : public GeomObj {
 public:
     Point cen;
     double rad;
@@ -58,6 +58,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:13  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:44  mcq
 // Initial commit
 //

@@ -167,7 +167,7 @@ register unsigned long lwrd;
 	   (lwrd<<24) 		);
 }
 
-cvtshorts( buffer, n)
+void cvtshorts( buffer, n)
 register unsigned short buffer[];
 register long n;
 {
@@ -196,6 +196,7 @@ register long n;
 	   		(lwrd<<8 & 0xff0000) 	| 
 	   		(lwrd<<24) 		);
     }
+    return 0;
 }
 
 cvtimage( buffer )
@@ -204,6 +205,7 @@ register long buffer[];
     cvtshorts(buffer,12);
     cvtlongs(buffer+3,12);
     cvtlongs(buffer+26,4);
+    return 0;
 }
 
 static void (*i_errfunc)();
@@ -228,10 +230,11 @@ char *fmt;
 	}
 	fprintf(stderr, fmt, a1, a2, a3, a4);
 	exit(1);
+	return 0;
 }
 
 /* this function sets the error handler for i_errhdlr */
-i_seterror(func)
+void i_seterror(func)
 void (*func)();
 {
 	i_errfunc = func;

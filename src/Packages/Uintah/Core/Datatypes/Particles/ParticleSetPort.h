@@ -14,13 +14,14 @@
 #ifndef SCI_project_ParticleSetPort_h
 #define SCI_project_ParticleSetPort_h 1
 
-#include <CommonDatatypes/SimplePort.h>
-#include <Datatypes/Particles/ParticleSet.h>
+#include <PSECore/CommonDatatypes/SimplePort.h>
+
+#include <Uintah/Datatypes/Particles/ParticleSet.h>
 
 namespace Uintah {
 namespace Datatypes {
 
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::CommonDatatypes;
 
 typedef SimpleIPort<ParticleSetHandle> ParticleSetIPort;
 typedef SimpleOPort<ParticleSetHandle> ParticleSetOPort;
@@ -30,6 +31,10 @@ typedef SimpleOPort<ParticleSetHandle> ParticleSetOPort;
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:09  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:59:01  mcq
 // Initial commit
 //

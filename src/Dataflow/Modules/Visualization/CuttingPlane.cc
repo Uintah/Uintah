@@ -12,25 +12,25 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldRGBase.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
-#include <Widgets/ScaledFrameWidget.h>
+#include <PSECore/Widgets/ScaledFrameWidget.h>
 #include <iostream.h>
 
 #define CP_PLANE 0
@@ -40,15 +40,51 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
 
 #define EPS 1.e-6
+
+/**************************************
+CLASS
+   CuttingPlane
+       CuttingPlane interpolates a planar slice through the
+       unstructured data and maps data values to colors on a
+       semitransparent surface.
+
+GENERAL INFORMATION
+
+   CuttingPlane
+  
+   Author:  Colette Mullenhoff<br>
+            Department of Computer Science<br>
+            University of Utah
+   Date:    June 1995
+   
+   C-SAFE
+   
+   Copyright <C> 1995 SCI Group
+
+KEYWORDS
+   Visualization, Widget, GenColormap
+
+DESCRIPTION
+   CuttingPlane interpolates a planar slice through the
+   unstructured data and maps data values to colors on a
+   semitransparent surface.  The plane can be manipulated with a
+   3D widget to allow the user to look at different
+   cross sections of the electric potential.
+
+WARNING
+   None
+
+****************************************/
+
 class CuttingPlane : public Module {
    ScalarFieldIPort *inscalarfield;
    ColorMapIPort *inColorMap;
@@ -72,12 +108,44 @@ class CuttingPlane : public Module {
    clString msg;
    Mesh* m;
 public:
+ 
+        // GROUP:  Constructors:
+        ///////////////////////////
+        //
+        // Constructs an instance of class CuttingPlane
+        //
+        // Constructor taking
+        //    [in] id as an identifier
+        //
    CuttingPlane(const clString& id);
+
+        ///////////////////////////
+        //
+        // Constructor taking
+        //    [in] CuttingPlane for copying
+        //    [in] deep a copying flag
+        //
    CuttingPlane(const CuttingPlane&, int deep);
+
+        // GROUP:  Destructor:
+        ///////////////////////////
+        // Destructor
    virtual ~CuttingPlane();
    virtual Module* clone(int deep);
+
+        // GROUP:  Access functions:
+        ///////////////////////////
+        //
+        // execute() - execution scheduled by scheduler
    virtual void execute();
 
+
+        //////////////////////////
+        //
+        // tcl_commands - overides tcl_command in base class Module, takes:
+        //                                  findxy, findyz, findxz, 
+        //                                  plusx, minusx, plusy, minusy, plusz, minusz,
+        //                                  connectivity
    virtual void tcl_command(TCLArgs&, void*);
 };
 
@@ -388,7 +456,7 @@ void CuttingPlane::execute()
 	    int ix = 0;
 	    int i, j;
 	    int haveval=0;
-
+ 
 	    for (i = 0; i < u_num; i++)
 		for (j = 0; j < v_num; j++) {
 		    Point p = corner + u * ((double) i/(u_num-1)) + 
@@ -613,6 +681,10 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:11  mcq
 // Initial commit
 //

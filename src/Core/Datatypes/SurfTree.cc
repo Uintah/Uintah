@@ -14,16 +14,16 @@
 
 #include <iostream.h>
 
-#include <Util/Assert.h>
-#include <Util/NotFinished.h>
-#include <Containers/TrivialAllocator.h>
-#include <CoreDatatypes/SurfTree.h>
-#include <CoreDatatypes/TopoSurfTree.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Grid.h>
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/CoreDatatypes/SurfTree.h>
+#include <SCICore/CoreDatatypes/TopoSurfTree.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Grid.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -588,6 +588,10 @@ void Pio(Piostream& stream, NodeInfo& node)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:29  mcq
 // Initial commit
 //

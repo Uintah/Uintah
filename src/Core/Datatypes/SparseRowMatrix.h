@@ -15,8 +15,8 @@
 #ifndef SCI_project_SparseRowMatrix_h
 #define SCI_project_SparseRowMatrix_h 1
 
-#include <CoreDatatypes/Matrix.h>
-#include <Containers/Array1.h>
+#include <SCICore/CoreDatatypes/Matrix.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -24,7 +24,7 @@ namespace CoreDatatypes {
 using SCICore::Containers::Array1;
 
 class AddMatrices;
-class SparseRowMatrix : public Matrix {
+class SCICORESHARE SparseRowMatrix : public Matrix {
     int nnrows;
     int nncols;
     int* rows;
@@ -76,6 +76,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:29  mcq
 // Initial commit
 //

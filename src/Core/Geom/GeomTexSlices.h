@@ -14,18 +14,18 @@
 #ifndef SCI_Geom_GeomTexSlices_h
 #define SCI_Geom_GeomTexSlices_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Containers/Array3.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Containers/Array3.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::Containers::Array3;
 
-class GeomTexSlices : public GeomObj {
+class SCICORESHARE GeomTexSlices : public GeomObj {
     Point min, max;
     int nx, ny, nz;
     unsigned int texids[3];
@@ -64,6 +64,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:14  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:45  mcq
 // Initial commit
 //
