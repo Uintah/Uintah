@@ -2462,14 +2462,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
   CCVariable<eflux> OFE;
   CCVariable<cflux> OFC;
 
-  CCVariable<double> rho_CC, mass_CC, visc_CC, temp, sp_vol_CC, rho_micro;
-  CCVariable<Vector> vel_CC, mom_L_ME;
-  CCVariable<double > int_eng_L_ME, mass_L,speedSound;
-
-  SFCXVariable<double > uvel_FC;
-  SFCYVariable<double > vvel_FC;
-  SFCZVariable<double > wvel_FC;
-
   new_dw->allocate(q_CC,       lb->q_CCLabel,       0, patch,gc);
   new_dw->allocate(q_advected, lb->q_advectedLabel, 0, patch);
   new_dw->allocate(qV_CC,      lb->qV_CCLabel,      0, patch,gc);
@@ -2481,6 +2473,14 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
   for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
+
+    CCVariable<double> rho_CC, mass_CC, visc_CC, temp, sp_vol_CC, rho_micro;
+    CCVariable<Vector> vel_CC, mom_L_ME;
+    CCVariable<double > int_eng_L_ME, mass_L,speedSound;
+
+    SFCXVariable<double > uvel_FC;
+    SFCYVariable<double > vvel_FC;
+    SFCZVariable<double > wvel_FC;
     
     new_dw->get(uvel_FC,lb->uvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
     new_dw->get(vvel_FC,lb->vvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
