@@ -56,7 +56,7 @@ VarLabel::getFullName(int matlIndex, const Patch* patch) const
 
 void allowMultipleComputes()
 {
-   if (!d_td.isReductionVariable())
+   if (!d_td->isReductionVariable())
       throw InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable."))
    d_allowMultipleComputes = true;
 }
@@ -71,6 +71,9 @@ operator<<( ostream & out, const Uintah::VarLabel & vl )
 
 //
 // $Log$
+// Revision 1.14  2001/01/05 20:14:05  witzel
+// Oops, d_td is a pointer
+//
 // Revision 1.13  2001/01/05 20:09:29  witzel
 // Only let reduction VarLabel's allow multiple computes.
 //
