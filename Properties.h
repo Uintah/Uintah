@@ -47,6 +47,7 @@ POSSIBLE REVISIONS
 
 namespace Uintah {
 class MixingModel;
+class TimeIntegratorLabel;
 class Properties {
 
 public:
@@ -96,7 +97,9 @@ public:
       // Schedule the recomputation of proprties
 
       void sched_reComputeProps(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls);
+				const MaterialSet* matls,
+				const TimeIntegratorLabel* timelabels,
+			        bool modify_density);
 
 
       void sched_computePropsPred(SchedulerP&, const PatchSet* patches,
@@ -109,25 +112,20 @@ public:
       // Schedule the computation of density reference array here
 
       void sched_computeDenRefArray(SchedulerP&, const PatchSet* patches,
-				    const MaterialSet* matls);
+				    const MaterialSet* matls,
+			            const TimeIntegratorLabel* timelabels);
 
-      void sched_computeDenRefArrayPred(SchedulerP&, const PatchSet* patches,
-				    const MaterialSet* matls);
-
-      void sched_computeDenRefArrayInterm(SchedulerP&, const PatchSet* patches,
-				    const MaterialSet* matls);
       void sched_averageRKProps(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
-				const int Runge_Kutta_current_step,
-				const bool Runge_Kutta_last_step);
-      void sched_reComputeRKProps(SchedulerP&, const PatchSet* patches,
+			        const TimeIntegratorLabel* timelabels);
+
+      void sched_saveRho2Density(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
-				const int Runge_Kutta_current_step,
-				const bool Runge_Kutta_last_step);
+			        const TimeIntegratorLabel* timelabels);
+
       void sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
 				const MaterialSet* matls,
-				const int Runge_Kutta_current_step,
-				const bool Runge_Kutta_last_step);
+			        const TimeIntegratorLabel* timelabels);
 
 
       // GROUP: Get Methods :
@@ -180,7 +178,9 @@ private:
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels,
+			  bool modify_density);
 
       void computePropsPred(const ProcessorGroup*,
 			    const PatchSubset* patches,
@@ -211,43 +211,29 @@ private:
 			      const PatchSubset* patches,
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
-
-      void computeDenRefArrayPred(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
-
-      void computeDenRefArrayInterm(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
+			      DataWarehouse* new_dw,
+			      const TimeIntegratorLabel* timelabels);
 
       void averageRKProps(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
-			  const int runge_kutta_current_step,
-			  const bool runge_kutta_last_step);
+			  const TimeIntegratorLabel* timelabels);
 
-      void reComputeRKProps(const ProcessorGroup*,
+      void saveRho2Density(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
-			  const int runge_kutta_current_step,
-			  const bool runge_kutta_last_step);
+			  const TimeIntegratorLabel* timelabels);
 
       void computeDrhodt(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
-			  const int runge_kutta_current_step,
-			  const bool runge_kutta_last_step);
+			  const TimeIntegratorLabel* timelabels);
 
       // GROUP: Constructors Not Instantiated:
       ///////////////////////////////////////////////////////////////////////

@@ -48,13 +48,14 @@ namespace Uintah {
   class ArchesLabel;
   class MPMArchesLabel;
   class ProcessorGroup;
-class TurbulenceModel;
-class PhysicalConstants;
-class Discretization;
-class Source;
-class BoundaryCondition;
-class LinearSolver;
- class RadiationModel;
+  class TurbulenceModel;
+  class PhysicalConstants;
+  class Discretization;
+  class Source;
+  class BoundaryCondition;
+  class LinearSolver;
+  class RadiationModel;
+  class TimeIntegratorLabel;
 
 class EnthalpySolver {
 
@@ -85,64 +86,25 @@ public:
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized scalar equation
-      void solve(SchedulerP& sched,
+      void solve(const LevelP& level,
+		 SchedulerP& sched,
 		 const PatchSet* patches,
-		 const MaterialSet* matls);
+		 const MaterialSet* matls,
+		 const TimeIntegratorLabel* timelabels);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
-      void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls);
+      void sched_buildLinearMatrix(const LevelP& level,
+				   SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+		 		   const TimeIntegratorLabel* timelabels);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Enthalpy[index]
       void sched_enthalpyLinearSolve(SchedulerP&, const PatchSet* patches,
-				     const MaterialSet* matls);
+				     const MaterialSet* matls,
+		 		     const TimeIntegratorLabel* timelabels);
 
-      void solvePred(const LevelP& level,
-		     SchedulerP& sched,
-		 const PatchSet* patches,
-		 const MaterialSet* matls);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixPred(const LevelP& level,SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Linear Solve for Enthalpy[index]
-      void sched_enthalpyLinearSolvePred(SchedulerP&, const PatchSet* patches,
-					 const MaterialSet* matls);
-  
-      void solveCorr(const LevelP& level,
-		     SchedulerP& sched,
-		 const PatchSet* patches,
-		     const MaterialSet* matls);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixCorr(const LevelP& level,SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Linear Solve for Enthalpy[index]
-      void sched_enthalpyLinearSolveCorr(SchedulerP&, const PatchSet* patches,
-					 const MaterialSet* matls);
-
-      void solveInterm(const LevelP& level,
-		       SchedulerP& sched,
-		 const PatchSet* patches,
-		     const MaterialSet* matls);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixInterm(const LevelP& level,SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Linear Solve for Enthalpy[index]
-      void sched_enthalpyLinearSolveInterm(SchedulerP&, const PatchSet* patches,
-					 const MaterialSet* matls);
 
 protected:
 
@@ -162,65 +124,19 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw);
+			     DataWarehouse* new_dw,
+		 	     const TimeIntegratorLabel* timelabels);
   
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Enthalpy[index]
       //    [in] 
       //        add documentation here
       void enthalpyLinearSolve(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
-  
-      void buildLinearMatrixPred(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Solver the Linear System for Enthalpy[index]
-      //    [in] 
-      //        add documentation here
-      void enthalpyLinearSolvePred(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
-  
-      void buildLinearMatrixCorr(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Solver the Linear System for Enthalpy[index]
-      //    [in] 
-      //        add documentation here
-      void enthalpyLinearSolveCorr(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
-  
-      void buildLinearMatrixInterm(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Solver the Linear System for Enthalpy[index]
-      //    [in] 
-      //        add documentation here
-      void enthalpyLinearSolveInterm(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
+			       const PatchSubset* patches,
+			       const MaterialSubset* /*matls*/,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw,
+		 	       const TimeIntegratorLabel* timelabels);
   
 private:
       // const VarLabel* (required)

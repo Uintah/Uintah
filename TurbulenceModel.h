@@ -39,6 +39,7 @@ WARNING
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #endif
 namespace Uintah {
+class TimeIntegratorLabel;
 class TurbulenceModel
 {
 public:
@@ -101,18 +102,17 @@ public:
       virtual void sched_reComputeTurbSubmodel(SchedulerP&,
 				 const PatchSet* patches,
 				 const MaterialSet* matls,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step) = 0;
+			    	 const TimeIntegratorLabel* timelabels) = 0;
 
 
-      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
+      virtual void sched_computeScalarVariance(SchedulerP&,
+					       const PatchSet* patches,
 					       const MaterialSet* matls,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step) = 0;
-      virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
+			    	     const TimeIntegratorLabel* timelabels) = 0;
+      virtual void sched_computeScalarDissipation(SchedulerP&,
+						  const PatchSet* patches,
 						  const MaterialSet* matls,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step) = 0;
+			    	     const TimeIntegratorLabel* timelabels) = 0;
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Calculate the wall velocity boundary conditions

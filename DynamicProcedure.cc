@@ -9,6 +9,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/Core/Grid/Stencil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -136,14 +137,14 @@ void
 DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-					    const int Runge_Kutta_current_step,
-					    const bool Runge_Kutta_last_step)
+				         const TimeIntegratorLabel* timelabels)
 {
   {
-    Task* tsk = scinew Task("DynamicProcedure::reComputeTurbSubmodel",
-			    this,
+    string taskname =  "DynamicProcedure::reComputeTurbSubmodel" +
+		       timelabels->integrator_step_name;
+    Task* tsk = scinew Task(taskname, this,
 			    &DynamicProcedure::reComputeTurbSubmodel,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			    timelabels);
 
     // Requires
     // Assuming one layer of ghost cells
@@ -151,47 +152,17 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
 
-  if (Runge_Kutta_last_step) {
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		  Ghost::AroundFaces,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-		  Ghost::AroundFaces,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-		  Ghost::AroundFaces,
-		  Arches::ONEGHOSTCELL);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-		tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+    tsk->requires(Task::NewDW, timelabels->uvelocity_out,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-		tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel, 
+    tsk->requires(Task::NewDW, timelabels->vvelocity_out, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-		tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel, 
+    tsk->requires(Task::NewDW, timelabels->wvelocity_out, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-		tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
-		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-		tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel, 
-		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-		tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel, 
-		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
-    
         
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST) 
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     tsk->computes(d_lab->d_strainTensorCompLabel, d_lab->d_stressSymTensorMatl,
 		  Task::OutOfDomain);
   else 
@@ -201,10 +172,11 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     sched->addTask(tsk, patches, matls);
   }
   {
-    Task* tsk = scinew Task("DynamicProcedure::reComputeFilterValues",
-			    this,
+    string taskname =  "DynamicProcedure::reComputeFilterValues" +
+		       timelabels->integrator_step_name;
+    Task* tsk = scinew Task(taskname, this,
 			    &DynamicProcedure::reComputeFilterValues,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			    timelabels);
 
     // Requires
     // Assuming one layer of ghost cells
@@ -212,55 +184,22 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
     
-  if (Runge_Kutta_last_step) {
     tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityPredLabel,
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityPredLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityPredLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-	 break;
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-	 case Arches::SECOND:
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityIntermLabel,
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityIntermLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityIntermLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
-    tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel, d_lab->d_stressSymTensorMatl,
-		  Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
+		  d_lab->d_stressSymTensorMatl, Task::OutOfDomain,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST) {
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_strainMagnitudeLabel);
     tsk->computes(d_lab->d_strainMagnitudeMLLabel);
     tsk->computes(d_lab->d_strainMagnitudeMMLabel);
@@ -274,41 +213,29 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     sched->addTask(tsk, patches, matls);
   }
   {
-    Task* tsk = scinew Task("DynamicProcedure::reComputeSmagCoeff",
-			    this,
+    string taskname =  "DynamicProcedure::reComputeSmagCoeff" +
+		       timelabels->integrator_step_name;
+    Task* tsk = scinew Task(taskname, this,
 			    &DynamicProcedure::reComputeSmagCoeff,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			    timelabels);
 
     // Requires
     // Assuming one layer of ghost cells
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as an array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  if (Runge_Kutta_last_step) 
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,
+    tsk->requires(Task::NewDW, timelabels->density_out, Ghost::AroundCells,
 		  Arches::ONEGHOSTCELL);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-	 break;
 
-	 case Arches::SECOND:
-    tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-	 break;
+    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
 
@@ -317,27 +244,10 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    
     // Computes
-  if (Runge_Kutta_last_step)
-    tsk->computes(d_lab->d_viscosityCTSLabel);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    tsk->computes(d_lab->d_viscosityPredLabel);
-	 break;
+    tsk->computes(timelabels->viscosity_out);
 
-	 case Arches::SECOND:
-    tsk->computes(d_lab->d_viscosityIntermLabel);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
-  if (Runge_Kutta_current_step == Arches::FIRST) 
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     tsk->computes(d_lab->d_CsLabel);
   else 
     tsk->modifies(d_lab->d_CsLabel);
@@ -356,8 +266,7 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+				        const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -372,38 +281,12 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-  if (Runge_Kutta_last_step) {
-    new_dw->get(uVel,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+    new_dw->get(uVel, timelabels->uvelocity_out, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
+    new_dw->get(vVel, timelabels->vvelocity_out, matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+    new_dw->get(wVel, timelabels->wvelocity_out, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(uVel,d_lab->d_uVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel,d_lab->d_vVelocityPredLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-    new_dw->get(uVel,d_lab->d_uVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel,d_lab->d_vVelocityIntermLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_wVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -424,7 +307,7 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     // compatible with fortran index
     StencilMatrix<CCVariable<double> > SIJ;    //6 point tensor
     for (int ii = 0; ii < d_lab->d_stressSymTensorMatl->size(); ii++) {
-    if (Runge_Kutta_current_step == Arches::FIRST) 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       new_dw->allocateAndPut(SIJ[ii], 
 			     d_lab->d_strainTensorCompLabel, ii, patch);
     else 
@@ -871,8 +754,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+				        const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
   TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
@@ -889,38 +771,12 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-  if (Runge_Kutta_last_step) {
     new_dw->get(ccuVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(ccvVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(ccwVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(ccuVel, d_lab->d_newCCUVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccvVel, d_lab->d_newCCVVelocityPredLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccwVel, d_lab->d_newCCWVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-    new_dw->get(ccuVel, d_lab->d_newCCUVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccvVel, d_lab->d_newCCVVelocityIntermLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccwVel, d_lab->d_newCCWVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -969,7 +825,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     CCVariable<double> IsImag;
     CCVariable<double> MLI;
     CCVariable<double> MMI;
-    if (Runge_Kutta_current_step == Arches::FIRST) {
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     new_dw->allocateAndPut(IsImag, 
 			   d_lab->d_strainMagnitudeLabel, matlIndex, patch);
     new_dw->allocateAndPut(MLI, 
@@ -2003,8 +1859,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 				     const MaterialSubset*,
 				     DataWarehouse*,
 				     DataWarehouse* new_dw,
-				     const int Runge_Kutta_current_step,
-				     const bool Runge_Kutta_last_step)
+				     const TimeIntegratorLabel* timelabels)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
@@ -2020,27 +1875,14 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     CCVariable<double> viscosity;
-    if (Runge_Kutta_current_step == Arches::FIRST) 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
        new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);
     else
        new_dw->getModifiable(Cs, d_lab->d_CsLabel, matlIndex, patch);
     Cs.initialize(0.0);
-    if (Runge_Kutta_last_step)
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
-	 break;
 
-	 case Arches::SECOND:
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
+    new_dw->allocateAndPut(viscosity, timelabels->viscosity_out,
+			   matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -2051,25 +1893,10 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    if (Runge_Kutta_last_step) 
-       new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
-		   Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-       new_dw->get(den, d_lab->d_densityPredLabel, matlIndex, patch,
-		   Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
 
-	 case Arches::SECOND:
-       new_dw->get(den, d_lab->d_densityIntermLabel, matlIndex, patch,
-		   Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
+    new_dw->get(den, timelabels->density_out, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-    }
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -2145,7 +1972,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     if (time < 2.0)
       factor = (time+0.000001)*0.5;
 #endif
-  if (Runge_Kutta_last_step) {
+  if (timelabels->integrator_last_step) {
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -2309,39 +2136,22 @@ void
 DynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-					    const int Runge_Kutta_current_step,
-					    const bool Runge_Kutta_last_step)
+			    		 const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task("DynamicProcedure::computeScalarVarince",
-			  this,
+  string taskname =  "DynamicProcedure::computeScalarVaraince" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &DynamicProcedure::computeScalarVariance,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			  timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  if (Runge_Kutta_last_step)
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+  tsk->requires(Task::NewDW, timelabels->scalar_out, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-  }
 
   // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
      tsk->computes(d_lab->d_scalarVarSPLabel);
   else
      tsk->modifies(d_lab->d_scalarVarSPLabel);
@@ -2356,8 +2166,7 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+			    		const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2367,26 +2176,10 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    if (Runge_Kutta_last_step)
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
 
-	 case Arches::SECOND:
-    new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in DynamicProcedure");
-	 }
-    }
-    if (Runge_Kutta_current_step == Arches::FIRST)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
     else

@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/Core/Grid/Stencil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -162,72 +163,33 @@ void
 ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-					    const int Runge_Kutta_current_step,
-					    const bool Runge_Kutta_last_step)
+				        const TimeIntegratorLabel* timelabels)
 {
   SmagorinskyModel::sched_reComputeTurbSubmodel(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+						timelabels);
 
-    Task* tsk = scinew Task("ScaleSimilarityModel::ReTurbSubmodel",
-			  this,
-			  &ScaleSimilarityModel::reComputeTurbSubmodel,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+  string taskname =  "ScaleSimilarityModel::ReTurbSubmodel" +
+		     timelabels->integrator_step_name;
+    Task* tsk = scinew Task(taskname, this,
+			    &ScaleSimilarityModel::reComputeTurbSubmodel,
+			    timelabels);
 
   // Requires
   // Assuming one layer of ghost cells
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  if (Runge_Kutta_last_step) {
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, timelabels->density_out, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, timelabels->scalar_out, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
 
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-		  Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    		tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
-			      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
-			      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    		tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityPredLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    		tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityPredLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    		tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityPredLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-    		tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
-			      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel,
-			      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    		tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityIntermLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    		tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityIntermLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    		tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityIntermLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-	 }
-  }
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -239,7 +201,7 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
 
       // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST) {
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_stressTensorMatl,
 		  Task::OutOfDomain);
 
@@ -266,8 +228,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+				        const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -283,50 +244,16 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-  if (Runge_Kutta_last_step) {
     new_dw->get(uVel,d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(vVel,d_lab->d_newCCVVelocityLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(wVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
+    new_dw->get(den, timelabels->density_out, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    		new_dw->get(uVel,d_lab->d_newCCUVelocityPredLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-   		new_dw->get(vVel,d_lab->d_newCCVVelocityPredLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		new_dw->get(wVel, d_lab->d_newCCWVelocityPredLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		new_dw->get(den, d_lab->d_densityPredLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-    		new_dw->get(uVel,d_lab->d_newCCUVelocityIntermLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-   		new_dw->get(vVel,d_lab->d_newCCVVelocityIntermLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		new_dw->get(wVel, d_lab->d_newCCWVelocityIntermLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		new_dw->get(den, d_lab->d_densityIntermLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-		new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex,
-			patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-	 }
-  }
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
@@ -355,14 +282,12 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
   // allocate stress tensor coeffs
     for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
-      if (Runge_Kutta_current_step == Arches::FIRST) {
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         new_dw->allocateAndPut(stressTensorCoeff[ii], 
 			       d_lab->d_stressTensorCompLabel, ii, patch);
-      }
-      else {
+      else
         new_dw->getModifiable(stressTensorCoeff[ii], 
 			      d_lab->d_stressTensorCompLabel, ii, patch);
-      }
       stressTensorCoeff[ii].initialize(0.0);
     }
 
@@ -378,14 +303,12 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     // allocate stress tensor coeffs
     for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
-      if (Runge_Kutta_current_step == Arches::FIRST) {
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         new_dw->allocateAndPut(scalarFluxCoeff[ii], 
 			       d_lab->d_scalarFluxCompLabel, ii, patch);
-      }
-      else {
+      else
         new_dw->getModifiable(scalarFluxCoeff[ii], 
 			       d_lab->d_scalarFluxCompLabel, ii, patch);
-      }
       scalarFluxCoeff[ii].initialize(0.0);
     }
 
@@ -1028,39 +951,22 @@ void
 ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-					    const int Runge_Kutta_current_step,
-					    const bool Runge_Kutta_last_step)
+			    		 const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task("ScaleSimilarityModel::computeScalarVar",
-			  this,
+  string taskname =  "ScaleSimilarityModel::computeScalarVaraince" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &ScaleSimilarityModel::computeScalarVariance,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			  timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  if (Runge_Kutta_last_step)
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+  tsk->requires(Task::NewDW, timelabels->scalar_out, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-	 }
-  }
 
   // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
      tsk->computes(d_lab->d_scalarVarSPLabel);
   else
      tsk->modifies(d_lab->d_scalarVarSPLabel);
@@ -1075,8 +981,7 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+			    		const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1086,26 +991,10 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    if (Runge_Kutta_last_step)
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
 
-	 case Arches::SECOND:
-    new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-	 }
-    }
-    if (Runge_Kutta_current_step == Arches::FIRST)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
     else
@@ -1187,66 +1076,37 @@ void
 ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
 						 const MaterialSet* matls,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+			    		 const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task("ScaleSimilarityModel::computeScalarDissipation",
-			  this,
+  string taskname =  "ScaleSimilarityModel::computeScalarDissipation" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &ScaleSimilarityModel::computeScalarDissipation,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			  timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  if (Runge_Kutta_last_step)
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+  tsk->requires(Task::NewDW, timelabels->scalar_out, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+  tsk->requires(Task::NewDW, timelabels->viscosity_in,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
 
-	 case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-	 }
-  }
-  switch (Runge_Kutta_current_step) {
-  case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
-		Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  break;
-
-  case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
-		Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  break;
-
-  case Arches::THIRD:
-  tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
-		Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  default:
-	throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-  }
-
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+		   d_lab->d_scalarFluxMatl,
+		   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST)
      tsk->computes(d_lab->d_scalarDissSPLabel);
-  else
+  }
+  else {
+     tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+		   d_lab->d_scalarFluxMatl,
+		   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  // Computes
      tsk->modifies(d_lab->d_scalarDissSPLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1260,8 +1120,7 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse* old_dw,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+			    		const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1271,67 +1130,31 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
     CCVariable<double> scalarDiss;  // dissipation..chi
-    if (Runge_Kutta_last_step)
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-    new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-	 }
-    }
     StencilMatrix<constCCVariable<double> > scalarFlux; //3 point stencil
-    switch (Runge_Kutta_current_step) {
-    case Arches::FIRST:
-    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
+
+    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
-      old_dw->get(scalarFlux[ii], 
-		      d_lab->d_scalarFluxCompLabel, ii, patch,
-		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    }
-    break;
-
-    case Arches::SECOND:
-    new_dw->get(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch,
+    new_dw->get(viscosity, timelabels->viscosity_in, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
-      new_dw->get(scalarFlux[ii], 
-		      d_lab->d_scalarFluxCompLabel, ii, patch,
-		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    }
-    break;
 
-    case Arches::THIRD:
-    new_dw->get(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
-      new_dw->get(scalarFlux[ii], 
-		      d_lab->d_scalarFluxCompLabel, ii, patch,
-		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+        old_dw->get(scalarFlux[ii], 
+		    d_lab->d_scalarFluxCompLabel, ii, patch,
+		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      }
+      new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
+			     matlIndex, patch);
     }
-    break;
-
-    default:
-	throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
+    else {
+      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+        new_dw->get(scalarFlux[ii], 
+		    d_lab->d_scalarFluxCompLabel, ii, patch,
+		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      }
+      new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
+			    matlIndex, patch);
     }
-
-    if (Runge_Kutta_current_step == Arches::FIRST)
-       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
-			      matlIndex, patch);
-    else
-       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
-			      matlIndex, patch);
     scalarDiss.initialize(0.0);
     
     // Get the PerPatch CellInformation data

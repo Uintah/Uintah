@@ -15,9 +15,7 @@ c*********************************************************************
       integer j
       integer k
       integer idf
-      double precision dene
-      double precision old_uu
-      double precision old_dene
+      double precision denaverage
       double precision theta
 
       do 120 k =idxlo_u(3), idxhi_u(3)
@@ -30,18 +28,16 @@ c*********************************************************************
 
                   idf = ioff*i+joff*j+koff*k
 
-                  dene = 0.5D0*(den(i-ioff,j-joff,k-koff)+den(i,j,k))
-                  old_dene = 0.5D0*(old_den(i-ioff,j-joff,k-koff)+
-     $                 old_den(i,j,k))
-                  old_uu = uu(i,j,k)
+                  denaverage = 0.5D0*(den(i-ioff,j-joff,k-koff)+
+     +                                den(i,j,k))
 
                   theta = pt5*(epsg(i-ioff,j-joff,k-koff)+
      $                 epsg(i,j,k))
                   
-                  uu(i,j,k) = (deltat*theta*
+                  uu(i,j,k) = deltat*theta*
      $                 (press(i-ioff,j-joff,k-koff)-
-     $                 press(i,j,k))/dxpw(idf) +
-     $                 old_uu*old_dene)/old_dene
+     $                 press(i,j,k))/dxpw(idf)/denaverage +
+     $                 uu(i,j,k)
 
                else
 

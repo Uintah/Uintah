@@ -48,12 +48,13 @@ namespace Uintah {
   class ArchesLabel;
   class MPMArchesLabel;
   class ProcessorGroup;
-class TurbulenceModel;
-class PhysicalConstants;
-class Discretization;
-class Source;
-class BoundaryCondition;
-class LinearSolver;
+  class TurbulenceModel;
+  class PhysicalConstants;
+  class Discretization;
+  class Source;
+  class BoundaryCondition;
+  class LinearSolver;
+  class TimeIntegratorLabel;
 
 class ReactiveScalarSolver {
 
@@ -82,60 +83,26 @@ public:
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized reactive scalar equation
-      void solvePred(SchedulerP& sched,
+      void solve(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
+		 const TimeIntegratorLabel* timelabels,
 		 int index);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
+      void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
+				   const TimeIntegratorLabel* timelabels,
 				   int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for ReactiveScalar[index]
-      void sched_reactscalarLinearSolvePred(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
+      void sched_reactscalarLinearSolve(SchedulerP&, const PatchSet* patches,
+				        const MaterialSet* matls,
+				        const TimeIntegratorLabel* timelabels,
+				        int index);
 
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Solve of linearized reactive scalar equation
-      void solveCorr(SchedulerP& sched,
-		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 int index);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
-				       const MaterialSet* matls,
-				       int index);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Linear Solve for ReactiveScalar[index]
-      void sched_reactscalarLinearSolveCorr(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Solve of linearized reactive scalar equation
-      void solveInterm(SchedulerP& sched,
-		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 int index);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixInterm(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Linear Solve for ReactiveScalar[index]
-      void sched_reactscalarLinearSolveInterm(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
 protected:
 
 private:
@@ -151,69 +118,26 @@ private:
       //    [in] 
       //        add documentation here
 
-      void buildLinearMatrixPred(const ProcessorGroup* pc,
-				 const PatchSubset* patches,
-				 const MaterialSubset* /*matls*/,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw,
-				 int index);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Solve the Linear System for ReactiveScalar[index]
-      //    [in] 
-      //        add documentation here
-      void reactscalarLinearSolvePred(const ProcessorGroup* pc,
-				      const PatchSubset* patches,
-				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw,
-				      int index);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Build the linear matrix
-      //    [in] 
-      //        add documentation here
-
-      void buildLinearMatrixCorr(const ProcessorGroup* pc,
-				 const PatchSubset* patches,
-				 const MaterialSubset* /*matls*/,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw,
-				 int index);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Solve the Linear System for ReactiveScalar[index]
-      //    [in] 
-      //        add documentation here
-      void reactscalarLinearSolveCorr(const ProcessorGroup* pc,
-				      const PatchSubset* patches,
-				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw,
-				      int index);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Build the linear matrix
-      //    [in] 
-      //        add documentation here
-
-      void buildLinearMatrixInterm(const ProcessorGroup* pc,
+      void buildLinearMatrix(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
+			     const TimeIntegratorLabel* timelabels,
 			     int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solve the Linear System for ReactiveScalar[index]
       //    [in] 
       //        add documentation here
-      void reactscalarLinearSolveInterm(const ProcessorGroup* pc,
-				      const PatchSubset* patches,
-				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw,
-				      int index);
+      void reactscalarLinearSolve(const ProcessorGroup* pc,
+				  const PatchSubset* patches,
+				  const MaterialSubset* /*matls*/,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw,
+				  const TimeIntegratorLabel* timelabels,
+				  int index);
+
 
 private:
 

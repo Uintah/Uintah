@@ -240,8 +240,7 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 			  int, double,
 			  ArchesVariables*,
 			  ArchesConstVariables*,
-			  CellInformation*,
-			  const ArchesLabel*)
+			  CellInformation*)
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -265,8 +264,7 @@ PetscSolver::enthalpyLisolve(const ProcessorGroup*,
 			  double ,
 			  ArchesVariables*,
 			  ArchesConstVariables*,
-			  CellInformation*,
-			  const ArchesLabel*)
+			  CellInformation*)
 {
   throw InternalError("PetscSolver not configured");
 }
