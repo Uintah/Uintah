@@ -15,7 +15,7 @@ SRCS     += $(SRCDIR)/ClipField.cc $(SRCDIR)/Downsample.cc \
 	$(SRCDIR)/MergeTensor.cc $(SRCDIR)/OpenGL_Ex.cc \
 	$(SRCDIR)/SFRGfile.cc $(SRCDIR)/TracePath.cc \
 	$(SRCDIR)/TrainSeg2.cc $(SRCDIR)/TrainSegment.cc \
-	$(SRCDIR)/TransformField.cc
+	$(SRCDIR)/TransformField.cc $(SRCDIR)/GenField.cc
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -27,6 +27,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.1  2000/06/07 17:28:46  kuehne
+# Added GenField module.  Creates a scalar field from a specified equation and bounds.
+#
 # Revision 1.2  2000/03/20 19:36:57  sparker
 # Added VPATH support
 #
