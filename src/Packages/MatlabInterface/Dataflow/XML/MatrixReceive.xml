@@ -36,8 +36,20 @@
   </implementation>
   <io>
     <inputs lastportdynamic="yes">
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </outputs>
   </io>
   <gui>

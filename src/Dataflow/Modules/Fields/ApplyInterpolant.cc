@@ -50,6 +50,10 @@ using std::pair;
 
 
 class ApplyInterpolant : public Module {
+private:
+  FieldIPort *src_port;
+  FieldIPort *itp_port;
+  FieldOPort *ofp;
 public:
   ApplyInterpolant(const string& id);
   virtual ~ApplyInterpolant();
@@ -193,7 +197,7 @@ ApplyInterpolant::callback(FSRC *fsrc, FITP *fitp, FOUT *)
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+  
   ofp->send(fhout);
 }
 
@@ -275,7 +279,7 @@ default:\
 void
 ApplyInterpolant::execute()
 {
-  FieldIPort *src_port = (FieldIPort *)get_iport("Source");
+  src_port = (FieldIPort *)get_iport("Source");
   FieldHandle sfieldhandle;
   Field *src_field;
   if (!(src_port->get(sfieldhandle) && (src_field = sfieldhandle.get_rep())))
@@ -283,14 +287,14 @@ ApplyInterpolant::execute()
     return;
   }
 
-  FieldIPort *itp_port = (FieldIPort *)get_iport("Interpolant");
+  itp_port = (FieldIPort *)get_iport("Interpolant");
   FieldHandle ifieldhandle;
   Field *itp_field;
   if (!(itp_port->get(ifieldhandle) && (itp_field = ifieldhandle.get_rep())))
   {
     return;
   }
-
+  ofp = (FieldOPort *)get_oport("Output");
   const string src_geom_name = src_field->get_type_name(0);
   const string src_data_name = src_field->get_type_name(1);
   const string itp_geom_name = itp_field->get_type_name(0);

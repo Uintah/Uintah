@@ -42,6 +42,8 @@ namespace SCIRun {
 class Gradient : public Module
 {
 private:
+  FieldIPort *ifp;
+  FieldOPort *ofp;
   GuiInt  interpolate_;
 
 public:
@@ -85,7 +87,6 @@ Gradient::dispatch_tetvol(F *f)
     ++ci;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Gradient");
   FieldHandle fh(result);
   ofp->send(fh);
 }
@@ -116,7 +117,8 @@ Gradient::dispatch_latticevol(F *f)
 void
 Gradient::execute()
 {
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
+  ifp = (FieldIPort *)get_iport("Input Field");
+  ofp = (FieldOPort *)get_oport("Output Gradient");
   FieldHandle fieldhandle;
   Field *field;
   if (!(ifp->get(fieldhandle) && (field = fieldhandle.get_rep())))

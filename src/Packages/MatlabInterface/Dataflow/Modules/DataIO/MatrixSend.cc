@@ -65,17 +65,9 @@ extern "C" MatlabInterfaceSHARE Module* make_MatrixSend(const string& id)
 }
 
 MatrixSend::MatrixSend(const string& id)
-: Module("MatrixSend", id, Filter), hpTCL("hpTCL",id,this)
+: Module("MatrixSend", id, Filter, "DataIO", "MatlabInterface"), hpTCL("hpTCL",id,this)
 //  : Module("MatrixSend", id, Source, "DataIO", "MatlabInterface")
 {
-    imat1=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-    add_iport(imat1);
-
-    imat2=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-    add_iport(imat2);
-
-    omat=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-    add_oport(omat);
 }
 
 MatrixSend::~MatrixSend(){}
@@ -83,7 +75,11 @@ MatrixSend::~MatrixSend(){}
 void MatrixSend::execute()
 {
 
-/* OBTAIN HOST:PORT INFORMATION */
+  imat1 = (MatrixIPort *)get_iport("Matrix");
+  imat2 = (MatrixIPort *)get_iport("Matrix");
+  omat = (MatrixOPort *)get_oport("Matrix");
+
+  /* OBTAIN HOST:PORT INFORMATION */
 
  const char *hport=hpTCL.get().c_str();
  DenseMatrix *matr;

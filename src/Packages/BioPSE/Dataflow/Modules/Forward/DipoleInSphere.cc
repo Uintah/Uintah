@@ -85,18 +85,8 @@ extern "C" Module* make_DipoleInSphere(const string& id)
 }
 
 DipoleInSphere::DipoleInSphere(const string& id)
-: Module("DipoleInSphere", id, Filter)
+: Module("DipoleInSphere", id, Filter, "Forward", "BioPSE")
 {
-  // Create the input ports
-  iportGeom_ = new FieldIPort(this, "Sphere", FieldIPort::Atomic);
-  add_iport(iportGeom_);
-  
-  iportDip_ = new FieldIPort(this, "Dipole Sources", FieldIPort::Atomic);
-  add_iport(iportDip_);
-
-  // Create the output port
-  oportPot_ = new FieldOPort(this, "SphereWithPots", FieldIPort::Atomic);
-  add_oport(oportPot_);
 }
 
 DipoleInSphere::~DipoleInSphere()
@@ -104,9 +94,11 @@ DipoleInSphere::~DipoleInSphere()
 }
 
 void DipoleInSphere::execute() {
-  
   update_state(NeedData);
   
+  iportGeom_ = (FieldIPort *)get_iport("Sphere");
+  iportDip_ = (FieldIPort *)get_iport("Dipole Sources");
+  oportPot_ = (FieldOPort *)get_oport("SphereWithPots");
   FieldHandle field_handle;
   
   if (!iportGeom_->get(field_handle)){

@@ -56,15 +56,8 @@ extern "C" Module* make_NrrdToField(const string& id) {
 }
 
 
-NrrdToField::NrrdToField(const string& id):Module("NrrdToField", id, Filter)
+NrrdToField::NrrdToField(const string& id):Module("NrrdToField", id, Filter, "DataIO", "Teem")
 {
-  // Create the input port
-  inrrd = scinew NrrdIPort(this, "Nrrd", NrrdIPort::Atomic);
-  add_iport(inrrd);
-  
-  // Create the output ports
-  ofield = scinew FieldOPort(this, "Field", FieldIPort::Atomic);
-  add_oport(ofield);
 }
 
 NrrdToField::~NrrdToField()
@@ -74,6 +67,8 @@ NrrdToField::~NrrdToField()
 void NrrdToField::execute()
 {
   NrrdDataHandle ninH;
+  inrrd = (NrrdIPort *)get_iport("Nrrd");
+  ofield = (FieldOPort *)get_oport("Field");
   if(!inrrd->get(ninH))
     return;
 

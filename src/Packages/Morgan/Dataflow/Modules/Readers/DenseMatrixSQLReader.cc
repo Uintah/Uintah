@@ -57,7 +57,7 @@ extern "C" MorganSHARE Module* make_DenseMatrixSQLReader(const string& id) {
 
 #define init_var(name) name##_ui(#name, id, this)
 DenseMatrixSQLReader::DenseMatrixSQLReader(const string& id)
-  : Module("DenseMatrixSQLReader", id, Source),
+  : Module("DenseMatrixSQLReader", id, Source, "Readers", "Morgan"),
     init_var(database),
     init_var(hostname),
     init_var(port),
@@ -65,14 +65,13 @@ DenseMatrixSQLReader::DenseMatrixSQLReader(const string& id)
     init_var(password),
     init_var(sql)
 {
-    omatrix = new MatrixOPort(this, "Field", MatrixIPort::Atomic);
-    add_oport(omatrix);
 }
 
 DenseMatrixSQLReader::~DenseMatrixSQLReader(){
 }
 
 void DenseMatrixSQLReader::execute() {
+  omatrix = (MatrixOPort *)get_oport("Field");
     auto_ptr<Dbd> dbd(connect(database_ui.get().c_str(),
                               hostname_ui.get().c_str(),
                               atoi(port_ui.get().c_str()), 

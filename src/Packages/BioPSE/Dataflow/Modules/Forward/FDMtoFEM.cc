@@ -66,15 +66,8 @@ extern "C" Module* make_FDMtoFEM(const string& id)
 }
 
 FDMtoFEM::FDMtoFEM(const string& id)
-  : Module("FDMtoFEM", id, Filter), ifdmGen_(-1), ofemH_(0)
+  : Module("FDMtoFEM", id, Filter, "Forward", "BioPSE"), ifdmGen_(-1), ofemH_(0)
 {
-  // Create the input port
-  ifdm_ = new FieldIPort(this, "FDM (LVT, cell sigmas)", FieldIPort::Atomic);
-  add_iport(ifdm_);
-  
-  // Create the output ports
-  ofem_ = new FieldOPort(this, "FEM (TVT, cell sigmas)", FieldIPort::Atomic);
-  add_oport(ofem_);
 }
 
 FDMtoFEM::~FDMtoFEM()
@@ -84,7 +77,8 @@ FDMtoFEM::~FDMtoFEM()
 void FDMtoFEM::execute() {
   
   update_state(NeedData);
-  
+  ifdm_ = (FieldIPort *)get_iport("FDM (LVT, cell sigmas)");
+  ofem_ = (FieldOPort *)get_oport("FEM (TVT, cell sigmas)");
   FieldHandle ifdmH;
   
   if (!ifdm_->get(ifdmH)) {

@@ -59,9 +59,6 @@ NrrdReader::NrrdReader(const string& id)
   filename_("filename", id, this),
   old_filemodification_(0)
 {
-    // Create the output data handle and port
-    outport_=scinew NrrdOPort(this, "Output Data", NrrdIPort::Atomic);
-    add_oport(outport_);
 }
 
 NrrdReader::~NrrdReader()
@@ -71,7 +68,8 @@ NrrdReader::~NrrdReader()
 void NrrdReader::execute()
 {
   string fn(filename_.get());
-
+  outport_ = (NrrdOPort *)get_oport("Output Data");
+  
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
   if (stat(fn.c_str(), &buf)) {

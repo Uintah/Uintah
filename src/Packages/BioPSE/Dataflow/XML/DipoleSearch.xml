@@ -12,6 +12,46 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>DipoleSeeds</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TetMesh</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TestMisfit</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>TestDirection</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>TestDipoleX</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>TestDipoleY</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>TestDipoleZ</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>DipoleSimplex</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TestDipole</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

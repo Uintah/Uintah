@@ -32,6 +32,22 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>GL Texture</name>
+	<datatype>SCIRun::GLTexture3D</datatype>
+      </port>
+      <port>
+        <name>Color Map</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

@@ -52,6 +52,9 @@ using std::pair;
 
 class BuildInterpolant : public Module
 {
+  FieldIPort *src_port;
+  FieldIPort *dst_port;
+  FieldOPort *ofp; 
   GuiString   interp_op_gui_;
 
 public:
@@ -428,7 +431,6 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
   ofp->send(fh);
 }
 
@@ -601,7 +603,6 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
   ofp->send(fh);
 }
 
@@ -774,7 +775,6 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
   ofp->send(fh);
 }
 
@@ -903,7 +903,7 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
+
   ofp->send(fh);
 }
 
@@ -911,7 +911,7 @@ BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
 void
 BuildInterpolant::execute()
 {
-  FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
+  dst_port = (FieldIPort *)get_iport("Destination");
   FieldHandle dfieldhandle;
   Field *dst_field;
   if (!(dst_port->get(dfieldhandle) && (dst_field = dfieldhandle.get_rep())))
@@ -919,14 +919,14 @@ BuildInterpolant::execute()
     return;
   }
 
-  FieldIPort *src_port = (FieldIPort *)get_iport("Source");
+  src_port = (FieldIPort *)get_iport("Source");
   FieldHandle sfieldhandle;
   Field *src_field;
   if (!(src_port->get(sfieldhandle) && (src_field = sfieldhandle.get_rep())))
   {
     return;
   }
-  
+  ofp = (FieldOPort *)get_oport("Interpolant");
   const string dst_mesh_name = dst_field->get_type_name(0);
   const string src_mesh_name = src_field->get_type_name(0);
 

@@ -12,6 +12,34 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>FiniteElementMesh</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>ConductivityParameters</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>TestMisfit</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>FiniteElementMesh</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>OldAndNewConductivities</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>FiniteElementMatrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

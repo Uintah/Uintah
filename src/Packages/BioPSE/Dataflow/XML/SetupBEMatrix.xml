@@ -59,14 +59,14 @@
 	<description>
 	  <p>Takes a handle to Field object representing inner surface</p>
 	</description>
-	<datatype>Core::Datatype::TriSurf(double)</datatype>
+	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Outer Surface</name>
 	<description>
 	  <p>Takes a handle to Field object representing outer surface</p>
 	</description>
-	<datatype>Core::Datatype::TriSurf(double)</datatype>
+	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
 
@@ -80,16 +80,16 @@
 	    <p>The handle is to base class of DenseMatrix (Matrix)</p>
 	  </note>
 	</description>
-	<datatype>Core::Datatype::DenseMatrix</datatype>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-	<name></name>
+	<name>Outer Surf with Pots</name>
 	<description>
 	  <p>Sends handle to the field object containing outer surface
 	  and calculated potentials at the nodes. If no potentials
 	  were supplied on inner surface, the field contains zero potentials</p>
 	</description>
-	<datatype>Core::Datatype::TriSurf(double)</datatype>
+	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>
       </port>
     </outputs>

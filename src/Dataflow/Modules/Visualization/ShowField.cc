@@ -151,15 +151,6 @@ ShowField::ShowField(const string& id) :
   res_(0),
   renderer_(0)
  {
-  // Create the input ports
-  fld_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
-  add_iport(fld_);
-  color_ = scinew ColorMapIPort(this, "ColorMap", FieldIPort::Atomic);
-  add_iport(color_);
-    
-  // Create the output port
-  ogeom_ = scinew GeometryOPort(this, "Scene Graph", GeometryIPort::Atomic);
-  add_oport(ogeom_);
  }
 
 ShowField::~ShowField() {}
@@ -169,6 +160,9 @@ ShowField::execute()
 {
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
+  fld_ = (FieldIPort *)get_iport("Field");
+  color_ = (ColorMapIPort *)get_iport("ColorMap");
+  ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
   FieldHandle fld_handle;
 
   fld_->get(fld_handle);

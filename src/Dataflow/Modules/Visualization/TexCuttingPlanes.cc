@@ -67,20 +67,6 @@ TexCuttingPlanes::TexCuttingPlanes(const string& id)
   interp_mode("interp_mode", id, this),
   volren(0)
 {
-  // Create the input ports
-  intexture = scinew GLTexture3DIPort( this, "GL Texture",
-				     GLTexture3DIPort::Atomic);
-  add_iport(intexture);
-  incolormap=scinew  
-    ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
-    
-  add_iport(incolormap);
-					
-  // Create the output port
-  ogeom = scinew GeometryOPort(this, "Geometry", 
-			       GeometryIPort::Atomic);
-  add_oport(ogeom);
-
 }
 
 TexCuttingPlanes::~TexCuttingPlanes()
@@ -133,6 +119,10 @@ void TexCuttingPlanes::widget_moved(int)
 
 void TexCuttingPlanes::execute(void)
 {
+  intexture = (GLTexture3DIPort *)get_iport("GL Texture");
+  incolormap = (ColorMapIPort *)get_iport("Color Map");
+  ogeom = (GeometryOPort *)get_oport("Geometry");
+  
   //AuditAllocator(default_allocator);
   static GLTexture3DHandle oldtex = 0;
   if (!intexture->get(tex)) {

@@ -114,15 +114,6 @@ ErrorMetric::ErrorMetric(const string& id)
     methodTCL_("methodTCL", id, this),
     pTCL_("pTCL", id, this)
 {
-    // Create the input port
-    ivec1P_=scinew MatrixIPort(this, "Vec1",MatrixIPort::Atomic);
-    add_iport(ivec1P_);
-    ivec2P_=scinew MatrixIPort(this, "Vec2", MatrixIPort::Atomic);
-    add_iport(ivec2P_);
-
-    // Create the output ports
-    errorP_=scinew MatrixOPort(this,"Error out",MatrixIPort::Atomic);
-    add_oport(errorP_);
 }
 
 ErrorMetric::~ErrorMetric()
@@ -131,6 +122,10 @@ ErrorMetric::~ErrorMetric()
 
 void ErrorMetric::execute()
 {
+     ivec1P_ = (MatrixIPort *)get_iport("Vec1");
+     ivec2P_ = (MatrixIPort *)get_iport("Vec2");
+     errorP_ = (MatrixOPort *)get_oport("Error out");
+  
      MatrixHandle ivec1H;
      ColumnMatrix* ivec1;
      if (!ivec1P_->get(ivec1H) || !(ivec1=dynamic_cast<ColumnMatrix*>(ivec1H.get_rep()))) return;

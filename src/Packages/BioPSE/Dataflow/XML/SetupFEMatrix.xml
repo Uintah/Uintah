@@ -85,7 +85,7 @@
 	  <p>Takes a handle to Field object containing properties
 	  described in overview section</p>
 	</description>
-	<datatype>Core::Datatype::Fieldx</datatype>
+	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
@@ -100,7 +100,7 @@
 	    Matrix</p>
 	  </note>
 	</description>
-	<datatype>Core::Datatype::SparseRowMatrix</datatype>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
 	<name>RHS</name>
@@ -115,7 +115,7 @@
 	    Matrix</p>
 	  </note>
 	</description>
-	<datatype>Core::Datatype::ColumnMatrix</datatype>
+	<datatype>SCIRun::Matrix</datatype>
 	
       </port>
 

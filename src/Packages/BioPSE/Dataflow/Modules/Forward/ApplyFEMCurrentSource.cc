@@ -74,24 +74,8 @@ extern "C" Module* make_ApplyFEMCurrentSource(const string& id)
 }
 
 ApplyFEMCurrentSource::ApplyFEMCurrentSource(const string& id)
-  : Module("ApplyFEMCurrentSource", id, Filter) 
+  : Module("ApplyFEMCurrentSource", id, Filter, "Forward", "BioPSE") 
 {
-  // Create the input ports
-  iportField_ = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
-  add_iport(iportField_);
-
-  iportSource_=scinew FieldIPort(this, "Dipole Sources", MatrixIPort::Atomic);
-  add_iport(iportSource_);
-
-  iportRhs_=scinew MatrixIPort(this, "Input RHS", MatrixIPort::Atomic);
-  add_iport(iportRhs_);
-
-  // Create the output ports
-  oportRhs_=scinew MatrixOPort(this,"Output RHS", MatrixIPort::Atomic);
-  add_oport(oportRhs_);
-
-  oportWeights_=scinew MatrixOPort(this,"Output Weights", MatrixIPort::Atomic);
-  add_oport(oportWeights_);
 }
 
 ApplyFEMCurrentSource::~ApplyFEMCurrentSource()
@@ -100,6 +84,12 @@ ApplyFEMCurrentSource::~ApplyFEMCurrentSource()
 
 void ApplyFEMCurrentSource::execute()
 {
+  iportField_ = (FieldIPort *)get_iport("Mesh");
+  iportSource_ = (FieldIPort *)get_iport("Dipole Sources");
+  iportRhs_ = (MatrixIPort *)get_iport("Input RHS");
+  oportRhs_ = (MatrixOPort *)get_oport("Output RHS");
+  oportWeights_ = (MatrixOPort *)get_oport("Output Weights");
+  
   //! Obtaining handles to computation objects
   FieldHandle hField;
   

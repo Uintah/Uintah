@@ -59,15 +59,6 @@ GLTextureBuilder::GLTextureBuilder(const string& id)
     max_("max", id, this),
     old_brick_size_(0), old_min_(-1), old_max_(-1)
 {
-  // Create the input ports
-  infield_ = scinew FieldIPort( this, " Field", FieldIPort::Atomic);
-  add_iport(infield_);
-
-  // Create the output port
-  otexture_ = scinew GLTexture3DOPort(this, "GL Texture", 
-				      GLTexture3DIPort::Atomic);
-  add_oport(otexture_);
-
 }
 
 GLTextureBuilder::~GLTextureBuilder()
@@ -114,7 +105,8 @@ GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
 
 void GLTextureBuilder::execute(void)
 {
-
+  infield_ = (FieldIPort *)get_iport("Field");
+  otexture_ = (GLTexture3DOPort *)get_oport("GL Texture");
   FieldHandle sfield;
   if (!infield_->get(sfield))
   {

@@ -33,6 +33,22 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Vec1</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Vec2</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Error out</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

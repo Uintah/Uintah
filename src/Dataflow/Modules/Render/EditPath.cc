@@ -174,14 +174,6 @@ EditPath::EditPath(const string& id)
   widget_lock("EditPath module widget lock"),
   sem("EditPath Semaphore", 0)
 {
-  ipath=scinew PathIPort(this, "Path", PathIPort::Atomic);
-  add_iport(ipath);
-  opath=scinew PathOPort(this, "Path", PathIPort::Atomic);
-  add_oport(opath);
-  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(ogeom);
-  ocam_view=scinew PathOPort(this, "Camera View", PathIPort::Atomic);
-  add_oport(ocam_view);
   cross_widget =scinew CrosshairWidget(this, &widget_lock, 0.01);
   cross_widget->SetState(0);
   cross_widget->SetPosition(Point(0, 0, 0));
@@ -206,7 +198,11 @@ EditPath::~EditPath()
 
 void EditPath::execute()
 {
-
+  ipath = (PathIPort *)get_iport("Path");
+  opath = (PathOPort *)get_oport("Path");
+  ogeom = (GeometryOPort *)get_oport("Geometry");
+  ocam_view = (PathOPort *)get_oport("Camera View");
+  
   sem.tryDown();
   { 
     PathHandle p;

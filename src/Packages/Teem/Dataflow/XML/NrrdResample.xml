@@ -30,6 +30,18 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

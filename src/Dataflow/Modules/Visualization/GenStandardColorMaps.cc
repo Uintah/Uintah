@@ -120,11 +120,7 @@ GenStandardColorMaps::GenStandardColorMaps(const string& id)
     minRes("minRes", id, this),
     resolution("resolution", id, this)
 { 
- // Create the output port
-  outport = scinew ColorMapOPort(this,"ColorMap", ColorMapIPort::Atomic);
-  add_oport(outport);
- // Initialization code goes here 
-} 
+ } 
 
 //---------------------------------------------------------- 
 GenStandardColorMaps::~GenStandardColorMaps(){} 
@@ -132,7 +128,9 @@ GenStandardColorMaps::~GenStandardColorMaps(){}
 //-------------------------------------------------------------- 
 
 void GenStandardColorMaps::execute() 
-{ 
+{
+   outport = (ColorMapOPort *)get_oport("ColorMap");
+  
    static int res = -1;
    tcl_status.set("Calling GenStandardColorMaps!"); 
 

@@ -71,23 +71,8 @@ extern "C" Module* make_MinNormLeastSq(const string& id)
 }
 
 MinNormLeastSq::MinNormLeastSq(const string& id)
-: Module("MinNormLeastSq", id, Filter)
+: Module("MinNormLeastSq", id, Filter, "Math", "SCIRun")
 {
-  // Create the input port
-  v0_imat_=new MatrixIPort(this, "BasisVec1(Col)", MatrixIPort::Atomic);
-  add_iport(v0_imat_);
-  v1_imat_=new MatrixIPort(this, "BasisVec2(Col)", MatrixIPort::Atomic);
-  add_iport(v1_imat_);
-  v2_imat_=new MatrixIPort(this, "BasisVec3(Col)", MatrixIPort::Atomic);
-  add_iport(v2_imat_);
-  b_imat_=new MatrixIPort(this, "TargetVec(Col)", MatrixIPort::Atomic);
-  add_iport(b_imat_);
-  
-  // Create the output port
-  w_omat_=new MatrixOPort(this,"WeightVec(Row)", MatrixIPort::Atomic);
-  add_oport(w_omat_);
-  x_omat_=new MatrixOPort(this,"ResultVec(Col)", MatrixIPort::Atomic);
-  add_oport(x_omat_);
 }
 
 MinNormLeastSq::~MinNormLeastSq()
@@ -135,6 +120,12 @@ MinNormLeastSq::error_norm( double* x1, double* x2,int  n)
 void
 MinNormLeastSq::execute()
 {
+  v0_imat_ = (MatrixIPort *)get_iport("BasisVec1(Col)");
+  v1_imat_ = (MatrixIPort *)get_iport("BasisVec2(Col)");
+  v2_imat_ = (MatrixIPort *)get_iport("BasisVec3(Col)");
+  b_imat_  = (MatrixIPort *)get_iport("TargetVec(Col)");
+  w_omat_  = (MatrixOPort *)get_oport("WeightVec(Row)");
+  x_omat_  = (MatrixOPort *)get_oport("ResultVec(Col)");
   int i,j;
   Array1<MatrixHandle> in(4);
   if (!v0_imat_->get(in[0])) return;

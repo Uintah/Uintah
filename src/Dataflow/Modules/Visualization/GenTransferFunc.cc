@@ -151,18 +151,7 @@ GenTransferFunc::GenTransferFunc( const string& id)
 {
 
   cmap = scinew ColorMap; // start as nothing...
-
-  // Create the input port
-  inport = scinew ColorMapIPort(this,"ColorMap",ColorMapIPort::Atomic);
-  add_iport(inport);
-
-  // Create the output port
-  outport = scinew ColorMapOPort(this,"ColorMap",ColorMapIPort::Atomic);
-  add_oport(outport);
-
-  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(ogeom);
- 
+  
   // initialize the transfer function
 
   ColorPoint p;
@@ -739,6 +728,9 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
 void
 GenTransferFunc::execute(void)
 {
+  inport = (ColorMapIPort *)get_iport("ColorMap");
+  outport = (ColorMapOPort *)get_oport("ColorMap");
+  ogeom = (GeometryOPort *)get_oport("Geometry");
   ColorMapHandle newcmap;
   int c = inport->get(newcmap);
 

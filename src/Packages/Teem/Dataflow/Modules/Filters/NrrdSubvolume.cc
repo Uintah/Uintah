@@ -70,7 +70,7 @@ extern "C" Module* make_NrrdSubvolume(const string& id)
 }
 
 NrrdSubvolume::NrrdSubvolume(const string& id)
-  : Module("NrrdSubvolume", id, Filter), minAxis0_("minAxis0", id, this),
+  : Module("NrrdSubvolume", id, Filter, "Filters", "Teem"), minAxis0_("minAxis0", id, this),
     maxAxis0_("maxAxis0", id, this), minAxis1_("minAxis1", id, this),
     maxAxis1_("maxAxis1", id, this), minAxis2_("minAxis2", id, this),
     maxAxis2_("maxAxis2", id, this), last_minAxis0_(""), last_maxAxis0_(""),
@@ -78,10 +78,6 @@ NrrdSubvolume::NrrdSubvolume(const string& id)
     last_maxAxis2_(""),
     last_generation_(-1), last_nrrdH_(0)
 {
-  inrrd_ = new NrrdIPort(this, "", NrrdIPort::Atomic);
-  add_iport(inrrd_);
-  onrrd_ = new NrrdOPort(this, "", NrrdIPort::Atomic);
-  add_oport(onrrd_);
 }
 
 NrrdSubvolume::~NrrdSubvolume() {
@@ -139,7 +135,8 @@ NrrdSubvolume::execute()
 {
   NrrdDataHandle nrrdH;
   update_state(NeedData);
-
+  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
+  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {

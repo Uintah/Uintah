@@ -65,8 +65,8 @@
 	  <p>The only output port.  GenStandardColormaps outputs a
              colormap.</p>
 	</description>
-	<datatype>Colormap</datatype>
-	<componentname>RescaleColormap</componentname>
+	<name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
     </outputs>
   </io>
