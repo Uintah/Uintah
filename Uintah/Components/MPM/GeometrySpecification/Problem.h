@@ -1,7 +1,7 @@
 #ifndef __PROBLEM_H__
 #define __PROBLEM_H__
 
-#include <Uintah/Components/MPM/GeometrySpecification/GeometryPiece.h>
+#include <Uintah/Grid/GeometryPiece.h>
 #include <Uintah/Components/MPM/BoundCond.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -47,6 +47,9 @@ namespace Uintah {
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.11  2000/06/09 18:45:19  jas
+// Moved GeometryPiece stuff to Grid/.
+//
 // Revision 1.10  2000/05/30 20:19:15  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

@@ -6,7 +6,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Uintah/Components/MPM/GeometrySpecification/GeometryPieceFactory.h>
+#include <Uintah/Grid/GeometryPieceFactory.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/SimulationState.h>
 
@@ -86,6 +86,9 @@ void Problem::createParticles(const Patch* patch, DataWarehouseP& dw)
 #endif
 
 // $Log$
+// Revision 1.16  2000/06/09 18:45:19  jas
+// Moved GeometryPiece stuff to Grid/.
+//
 // Revision 1.15  2000/05/30 20:19:15  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
