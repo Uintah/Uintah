@@ -15,10 +15,10 @@ set runDate " Fri  Feb 23 19101"
 global runTime
 set runTime " 16:40:9"
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 185 12]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 141 17]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 397 40]
 set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 449 122]
-set m3 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 243 124]
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 287 121]
 set m4 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 27 213]
 set m5 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 252 213]
 set m6 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 473 216]
@@ -26,18 +26,24 @@ set m7 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 689 216]
 set m8 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 601 373]
 set m9 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 759 371]
 set m10 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 28 467]
-set m11 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 92 551]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 70 546]
 set m12 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 427 665]
 set m13 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 707 724]
 set m14 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 51 810]
-set m15 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 246 765]
+set m15 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 223 721]
 set m16 [addModuleAtPosition "SCIRun" "Render" "Viewer" 514 1048]
 set m17 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 51 929]
 set m18 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 240 905]
+set m19 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 134 115]
+set m20 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 197 427]
+set m21 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 362 427]
+set m22 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 521 446]
+set m23 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 241 619]
 
 addConnection $m17 1 $m16 0
 addConnection $m18 1 $m16 1
 addConnection $m14 0 $m17 0
+addConnection $m23 0 $m15 1
 
 set ::SCIRun_DataIO_FieldReader_0-notes {}
 set ::SCIRun_DataIO_FieldReader_0-show_status 1
@@ -124,5 +130,20 @@ set ::BioPSE_Visualization_ShowDipoles_1-widgetSizeGui_ {}
 set ::BioPSE_Visualization_ShowDipoles_1-scaleModeGui_ {}
 set ::BioPSE_Visualization_ShowDipoles_1-showLastVecGui_ -2147483647
 set ::BioPSE_Visualization_ShowDipoles_1-showLinesGui_ -2147483647
+set ::SCIRun_Math_ManipMatrix_0-notes {}
+set ::SCIRun_Math_ManipMatrix_0-show_status 1
+set ::SCIRun_Math_ManipMatrix_0-manipulationName {}
+set ::SCIRun_Math_ManipMatrix_1-notes {}
+set ::SCIRun_Math_ManipMatrix_1-show_status 1
+set ::SCIRun_Math_ManipMatrix_1-manipulationName {}
+set ::SCIRun_Math_ManipMatrix_2-notes {}
+set ::SCIRun_Math_ManipMatrix_2-show_status 1
+set ::SCIRun_Math_ManipMatrix_2-manipulationName {}
+set ::SCIRun_Math_ManipMatrix_3-notes {}
+set ::SCIRun_Math_ManipMatrix_3-show_status 1
+set ::SCIRun_Math_ManipMatrix_3-manipulationName {}
+set ::SCIRun_Math_ManipMatrix_4-notes {}
+set ::SCIRun_Math_ManipMatrix_4-show_status 1
+set ::SCIRun_Math_ManipMatrix_4-manipulationName {}
 
 ::netedit scheduleok
