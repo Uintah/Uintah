@@ -90,7 +90,6 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
       }
    }
 
-#undef MPI_THREAD_SINGLE
 #ifdef MPI_THREAD_SINGLE
    int provided = -1;
    int required = MPI_THREAD_SINGLE;
