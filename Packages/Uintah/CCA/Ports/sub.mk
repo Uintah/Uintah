@@ -4,11 +4,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Ports
 
-SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
+SRCS     += $(SRCDIR)/SimulationInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/DataWarehouse.cc $(SRCDIR)/LoadBalancer.cc \
-	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
+	$(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Scheduler.cc $(SRCDIR)/MPMCFDInterface.cc 
+	$(SRCDIR)/Scheduler.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
