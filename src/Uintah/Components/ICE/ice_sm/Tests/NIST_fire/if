@@ -26,7 +26,7 @@ Note:  The tilde character MUST proceed each input.
 * yHiLimit                          ~20
 * zHiLimit                          ~1
 * Number of materials               ~1
-* CFL                               ~0.9
+* CFL                               ~0.1
 *__________________________________
 *   T  I  M  E     V  A  R  I  A  B  L  E  S 
 *
@@ -35,10 +35,10 @@ Note:  The tilde character MUST proceed each input.
 *   t_delta_output   = delta time between output
 *                    = 0 output every timestep
 *___________________________________
-* Finish Time (sec)             ~0.5
+* Finish Time (sec)             ~0.1
 * t_initial_output              ~0.0
 * t_final_output                ~5.0
-* t_delta_output                ~0.005
+* t_delta_output                ~0.001
 * delt_min                      ~0.0
 * delt_max                      ~0.1 
 * delt_initial_iteration        ~1.0e-9
@@ -48,7 +48,7 @@ Note:  The tilde character MUST proceed each input.
 *   direction
 *___________________________________
 * gravity xdir                  ~0.0
-* gravity ydir                  ~0.0
+* gravity ydir                  ~-9.81
 * gravity zdir                  ~0.0
 *_________________________________
 *    N  I  S  T     F  I  R  E   
@@ -63,7 +63,7 @@ Note:  The tilde character MUST proceed each input.
 *  Heat of combustion:          del_H_fuel
 *__________________________________
 * t_initial_inject_TE           ~0.0
-* t_final_inject_TE             ~0.00
+* t_final_inject_TE             ~0.1
 * t_delta_inject_TE             ~0.005
 * Number of TE injected per     ~10
 * Heat release rate of fire [W] ~1000.0     
@@ -72,7 +72,7 @@ Note:  The tilde character MUST proceed each input.
 *
 * Indices where TE are injected
 *   xLo     -   xHi             ~9  ~11
-*   yLo     -   yHi             ~1  ~1
+*   yLo     -   yHi             ~9  ~11
 *   zLo     -   zHi             ~1  ~1
 *
 *
@@ -84,7 +84,7 @@ Note:  The tilde character MUST proceed each input.
 *  Initial values for the primitive variables
 *___________________________________
 * u velocity            [m/s]       ~0.0
-* v velocity            [m/s]       ~1.0
+* v velocity            [m/s]       ~0.0
 * w velocity            [m/s]       ~0.0
 * Density               [kg/m^3]    ~1.0
 * Temperature           [K]         ~300.0
@@ -136,33 +136,33 @@ Note:  The tilde character MUST proceed each input.
 *
 *   Note not all of the values that are specified below are actually used.
 *_______________________________________________________________________*
-*                               BC_inputs[TOP]  ~2
+*                               BC_inputs[TOP]  ~6
 *                               [UVEL]          ~0.0
-*                               [VVEL]          ~1.0
+*                               [VVEL]          ~0.0
 *                               [WVEL]          ~0.0
-*                               [PRESS]         ~101325
-*                               [TEMP]          ~300
-*                               [DENSITY]       ~1.0
+*                               [PRESS]         ~0.0
+*                               [TEMP]          ~0.0
+*                               [DENSITY]       ~0.0
 *                            __________________________
 *                           |                          |
 *                           |                          |
 *                           |                          |
-*  BC_inputs[LEFT] ~1       |                          |  BC_inputs[RIGHT] ~1
-*  [UVEL]          ~0.0     |                          |  [UVEL]         ~0.0
-*  [VVEL]          ~0.0     |                          |  [VVEL]         ~0.0
-*  [WVEL]          ~0.0     |                          |  [WVEL]         ~0.0
-*  [PRESS]         ~0.0     |                          |  [PRESS]        ~0.0
-*  [TEMP]          ~0.0     |                          |  [TEMP]         ~0.0
-*  [DENSITY]       ~0.      |                          |  [DENSITY]      ~0.0
+*  BC_inputs[LEFT] ~6       |                          |  BC_inputs[RIGHT] ~6
+*  [UVEL]          ~0.0     |                          |  [UVEL]           ~0.0
+*  [VVEL]          ~0.0     |                          |  [VVEL]           ~0.0
+*  [WVEL]          ~0.0     |                          |  [WVEL]           ~0.0
+*  [PRESS]         ~0.0     |                          |  [PRESS]          ~0.0
+*  [TEMP]          ~0.0     |                          |  [TEMP]           ~0.0
+*  [DENSITY]       ~0.0     |                          |  [DENSITY]        ~0.0
 *                           |__________________________|
 *
-*                               BC_inputs[BOT]  ~2
+*                               BC_inputs[BOT]  ~6
 *                               [UVEL]          ~0.0
-*                               [VVEL]          ~1.0
+*                               [VVEL]          ~0.0
 *                               [WVEL]          ~0.0
-*                               [PRESS]         ~101325
-*                               [TEMP]          ~300
-*                               [DENSITY]       ~1.0
+*                               [PRESS]         ~0.0
+*                               [TEMP]          ~0.0
+*                               [DENSITY]       ~0.0
 * 
 *
 *                            __________________________

@@ -198,7 +198,7 @@ void advect_and_advance_in_time(
                         outflux_vol,    outflux_vol_CF, 
                         influx_vol,     influx_vol_CF,
                         m );   
- 
+    putenv("PGPLOT_PLOTTING_ON_OFF=0");
         /*-------density-------*/                                
          advect_q(
                         xLoLimit,       yLoLimit,       zLoLimit,
@@ -212,7 +212,7 @@ void advect_and_advance_in_time(
                         advct_rho_CC,   m);
 
           
-        putenv("PGPLOT_PLOTTING_ON_OFF=0");
+        
         /*-----Internal Energy-----*/
          advect_q(
                         xLoLimit,       yLoLimit,       zLoLimit,
@@ -237,7 +237,9 @@ void advect_and_advance_in_time(
                         outflux_vol,    outflux_vol_CF, 
                         influx_vol,     influx_vol_CF,
                         advct_xmom_CC,  m); 
+       
         /*-------y-momentum------*/
+         putenv("PGPLOT_PLOTTING_ON_OFF=1");
          advect_q(
                         xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,

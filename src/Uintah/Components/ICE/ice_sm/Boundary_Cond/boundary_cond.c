@@ -424,14 +424,16 @@ Sticky Point:
                                         /* boundaries                       */ 
     int     nMaterials,                 /* number of materials              */
     int     n_data_arrays,              /* number of data arrays            (INPUT) */
-    double  ****data_CC,                /* cell-centered data array         (IN/OUT)*/
-    int     var,...)                    /* used to designate whether        (INPUT) */
+            ...)                    /* used to designate whether        (INPUT) */
                                         /* the input array is UVEL,TEMP....         */
                        
  {
     va_list ptr_data_array;             /* pointer to each data array       */
-    int     m,               
+    int     m,  
+            var,                        /* used to designate whether the    */
+                                        /* input array is UVEL, TEMP....    */               
             array;                      /* array number                     */
+    double ****data_CC;                 /* cell-centered data array         */
 /*__________________________________
 *   double check inputs.
 *___________________________________*/
@@ -591,16 +593,14 @@ Sticky Point:
                                         /* boundaries                       */ 
     int    nMaterials,                  /* number of materials              */
     int    n_data_arrays,               /* number of data arrays            */
-    double ****data_CC,                 /* cell-centered data array         */
-    int     var,                        /* used to designate whether        */
-                                        /* the input array is UVEL,TEMP.... */
-    double ******data_FC, ...)          /* face-centered data               (INPUT) */
-                                        /*     (x,y,z,face, material)       */              
-                       
+         ...)          
  {
     va_list ptr_data_array;             /* pointer to each data array       */
     int    m,
-            array;                      /* array number                     */
+           array,                       /* array number                     */
+           var;
+    double ****data_CC,
+           ******data_FC;
 /*__________________________________
 *   double check inputs.
 *___________________________________*/
@@ -669,8 +669,9 @@ Sticky Point:
            set_Neumann_BC_FC(          
                                 xLoLimit,       yLoLimit,       zLoLimit,
                                 xHiLimit,       yHiLimit,       zHiLimit,
+                                delX,           delY,           delZ,
                                 data_CC,        data_FC,        var,
-                                BC_types,       BC_float_or_fixed,     
+                                BC_types,       BC_Values,      BC_float_or_fixed,     
                                 m        );
       }  
 /*______________________________________________________________________

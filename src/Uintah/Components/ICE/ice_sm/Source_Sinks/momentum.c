@@ -147,11 +147,11 @@ void accumulate_momentum_source_sinks(
 *___________________________________*/
     for (m = 1; m <= nMaterials; m++)
     { 
-        for ( i = xLoLimit; i <= xHiLimit; i++)
+        for ( i =  (xLoLimit); i <=  (xHiLimit); i++)
         {
-            for ( j = yLoLimit; j <= yHiLimit; j++)
+            for ( j =  (yLoLimit); j <=  (yHiLimit); j++)
             {
-                for ( k = zLoLimit; k <= zHiLimit; k++)
+                for ( k =  (zLoLimit); k <=  (zHiLimit); k++)
                 {
                     mass = rho_CC[m][i][j][k] * delX * delY * delZ;
                     /*__________________________________

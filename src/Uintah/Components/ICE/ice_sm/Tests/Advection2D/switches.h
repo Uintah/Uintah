@@ -64,15 +64,15 @@
 *_______________________________________________________________________*/
 #define switch_explicit_implicit                        0       /* = 0 then run the code in explicit mode   */
                                                                 /* = 1 then run in implicit mode            */
-#define switch_Compute_burgers_eq                       1       /* This switch reduces the computation to   */
+#define switch_Compute_burgers_eq                       0       /* This switch reduces the computation to   */
                                                                 /* to computing Burgers eq.  by turning     */
                                                                 /* off all of the sources and sinks of mass */
                                                                 /* momentum and energy                      */
 #define switchOveride_Initial_Conditions                1       /* if you want to include a file that       */
                                                                 /* overides the initial conditions specified*/
                                                                 /* by the input file                        */
-#define switch_step1_OnOff                              0       /* Step 1 Evaluate equation of state        */
-#define switch_step2_OnOff                              0       /* Step 2 face-centered vel. and delpress   */
+#define switch_step1_OnOff                              1       /* Step 1 Evaluate equation of state        */
+#define switch_step2_OnOff                              1       /* Step 2 face-centered vel. and delpress   */
 #define switch_step3_OnOff                              1       /* Step 3 face-centered pressure            */
 #define switch_step4_OnOff                              1       /* Step 4 source/sink of momentum and enery */
 #define switch_step4_stress_source_OnOff                0       /*        shear stress terms                */
@@ -117,7 +117,7 @@
 #define switchDebug_pressure_PCG                        0     /* Plot delPress_CC                         */
 #define switchDebug_press_eq_residual                   0     /* =1 printout div_vel, dpress_dt, residual */
                                                               /* =2 plot of div_vel, dpress_dt, residual  */
-#define switchDebug_compute_face_centered_velocities    1     /* Face-centered velocities                 */
+#define switchDebug_compute_face_centered_velocities    0     /* Face-centered velocities                 */
 
 /*__________________________________
 *   Step 3: Face-centered pressure

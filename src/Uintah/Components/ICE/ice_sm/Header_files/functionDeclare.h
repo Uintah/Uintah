@@ -1,17 +1,14 @@
 #ifndef __FUNCTIONDECLARE_H
 #define __FUNCTIONDECLARE_H
-
+#ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
 #include <stdio.h>
 #include <time.h>
 #ifdef IMPLICIT
 #include "pcgmg.h"
 #endif
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*______________________________________________________________________
 *   INLINE.H
 *_______________________________________________________________________*/
@@ -294,8 +291,7 @@ void find_delta_time_based_on_change_in_vol(
 void zero_arrays_3d(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
-                int n_data_arrays,
-                double ***array1,           ...);
+                int n_data_arrays,          ...);
                 
 void divergence_of_face_centered_velocity(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
@@ -308,21 +304,21 @@ void zero_arrays_4d(
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 int n4dl,                   int n4dh,                   int n_data_arrays,
-                double ****array1,          ...);
+                ...);
                 
 void zero_arrays_5d(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 int n4dlo,                  int n4dhi,                  
                 int n5dlo,                  int n5dhi,                  int n_data_arrays,
-                double *****array1,          ...);
+                ...);
 
 void zero_arrays_6d(  
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 int n4dlo,                  int n4dhi,                  
                 int n5dlo,                  int n5dhi,                  int n_data_arrays,
-                double ******array1,          ...);              
+                 ...);              
 
                                    
 void grad_q(
@@ -528,17 +524,14 @@ void equate_ptr_addresses_adjacent_cell_faces(
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 double delX,                double delY,                double delZ,
                 int ***BC_types,            int ***BC_float_or_fixed,   double ***BC_Values,
-                int nMaterials,             int n_data_arrays,          
-                double ****data_CC,         int var,                    double ******data_FC,
-                ... );
+                int nMaterials,             int n_data_arrays,          ... );
                 
  void update_CC_physical_boundary_conditions( 
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
                 double delX,                double delY,                double delZ,
                 int ***BC_types,            int ***BC_float_or_fixed,   double ***BC_Values,
-                int nMaterials,             int n_data_arrays,          
-                double ****data_CC,         int var, ...);
+                int nMaterials,             int n_data_arrays,          ...);
 
 void set_Dirichlet_BC(
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
@@ -594,8 +587,10 @@ void set_Periodic_BC(
 void set_Neumann_BC_FC(
                 int xLoLimit,               int yLoLimit,               int zLoLimit,
                 int xHiLimit,               int yHiLimit,               int zHiLimit,
+                double delX,                double delY,                double delZ,
                 double ****data_CC,         double ******data_FC,       int var,       
-                int ***BC_types,            int ***BC_float_or_fixed,   int m);
+                int ***BC_types,            double ***BC_Values,        int ***BC_float_or_fixed,   
+                int m);
                 
  void set_Dirichlet_BC_FC(           
                 int xLoLimit,               int yLoLimit,               int zLoLimit,             
@@ -771,6 +766,7 @@ void    plot(
 *    P  L  O  T  _  V  E  C  T  O  R  .  C 
 *_______________________________________________________________________*/
 void plot_vector_2D(       
+               int xLoLimit,               int yLoLimit,
                int xHiLimit,               int yHiLimit,
                int max_len,                const float *data_array1,
                const float *data_array2);
@@ -862,9 +858,7 @@ void    convective_viscous_terms(
                 double ******uvel_FC,       double ******vvel_FC,       double ******wvel_FC,
                 double delt,           
                 double ****F,               double ****G);
-
-                             
 #ifdef __cplusplus
-}
-#endif
+ }
+ #endif                               
 #endif      /*FUNCTIONDECLARE_H*/

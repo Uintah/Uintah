@@ -89,7 +89,7 @@
 * Switches for printing and plotting debugging information
 *   MAIN CODE ROUTINES
 *_______________________________________________________________________*/
-#define switchDebug_main                                1     /* main program                             */
+#define switchDebug_main                                0     /* main program                             */
                                                               /* = 1 plot vars. =2 print to stderr        */
 #define switchDebug_main_input                          0     /* visualize the inputs                     */
 

@@ -9,21 +9,17 @@
         {
             for ( i = GC_LO(xLoLimit); i <= GC_HI(xHiLimit); i++)
             { 
-                   Temp_CC[m][i][j][k]   = 1.0;                           
+                   Temp_CC[m][i][j][k]   = 300;
+                   rho_CC[m][i][j][k]   = 1.0;                           
          
                if(     i > ( (int)(xHiLimit - xLoLimit)/2 - 3 ) 
                     && i < ( (int)(xHiLimit - xLoLimit)/2 + 3 ) 
                     && j > ( (int)(yHiLimit - yLoLimit)/2 - 3 ) 
                     && j < ( (int)(yHiLimit - yLoLimit)/2 + 3 )  )
                {
-                   Temp_CC[m][i][j][k]   = 2.0;
+                   Temp_CC[m][i][j][k]  = 350;
+                   rho_CC[m][i][j][k]   = 1.25;
                 }
-        /*        
-	 uvel_CC[m][i][j][k] = (double)i;
-	 vvel_CC[m][i][j][k] = (double)j;
-         vvel_CC[m][i][j][k] = 0.;	
-	*/
-                
             }
         }
     }

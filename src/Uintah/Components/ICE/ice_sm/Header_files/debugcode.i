@@ -71,7 +71,6 @@
                                 &max_len); 
         PLOT;
          free_vector_nr(    data_array1,       1, max_len);                              
-      
     }
          
 #endif
@@ -232,7 +231,7 @@
                                 m,               m,
                                 &max_len); 
         PLOT;
-         free_vector_nr(    data_array1,       1, max_len);  
+         free_vector_nr(    data_array1,       1, max_len);         
          
     }                        
 /*__________________________________
@@ -326,8 +325,9 @@
                                 delX,                   delY,               press_FC,
                                 x_label,                y_label,            graph_label,
                                 outline_ghostcells,     Number_sub_plots,    
-                                file_basename,          outputfile_type,    m); 
-                                
+                                file_basename,          outputfile_type,    m);  
+    fprintf(stderr, "press return to continue\n");
+    getchar();
     }                               
 /*__________________________________
 *   MAIN WINDOW 5
@@ -337,31 +337,31 @@
     *___________________________________*/
     for (m = 1; m <= nMaterials; m++)
     {
-        x_axis_origin       = (xLoLimit);	
+        x_axis_origin       = (xLoLimit);
         y_axis_origin       = (yLoLimit);
         x_axis              = (xHiLimit);
         y_axis              = (yHiLimit); 
         plot_type           = 3;
         Number_sub_plots    = 0;
+        outline_ghostcells  = 0; 
         sprintf(graph_label, "Main Program Velocity Vector Plot, Mat. %d \0",m);
         data_array1    = convert_darray_4d_to_vector(
                                 uvel_CC,
-                                (xLoLimit),       (xHiLimit),  (yLoLimit),
-                                (yHiLimit),       (zLoLimit),      (zHiLimit),
+                                (xLoLimit),         (xHiLimit),      (yLoLimit),
+                                (yHiLimit),         (zLoLimit),      (zHiLimit),
                                 m,               m,
                                 &max_len); 
 
         data_array2    = convert_darray_4d_to_vector(
                                 vvel_CC,
-                                (xLoLimit),       (xHiLimit), (yLoLimit),
-                                (yHiLimit),       (zLoLimit),      (zHiLimit),
+                                (xLoLimit),         (xHiLimit),      (yLoLimit),
+                                (yHiLimit),         (zLoLimit),       (zHiLimit),
                                 m,               m,
                                 &max_len); 
   
         PLOT;
         free_vector_nr(    data_array1,       1, max_len);
-        free_vector_nr(    data_array2,       1, max_len);                     
- 
+        free_vector_nr(    data_array2,       1, max_len);                      
     }
     
     cpgend();       /* close all pgplot windows, do this at the very end*/
@@ -373,7 +373,7 @@
 
 
 /*______________________________________________________________________
-*            LAGRANGIAN_VOL
+*             L  A  G  R  A  N  G  I  A  N  _  V  O  L 
 *_______________________________________________________________________*/
 #if switchInclude_lagrangian_vol
     /*printData_4d(   xLoLimit,       yLoLimit,       zLoLimit,
@@ -431,7 +431,7 @@
 
 
 /*______________________________________________________________________
-*           GRADIENT_LIMITER FUNCTION
+*            G  R  A  D  I  E  N  T  _  L  I  M  I  T  E  R     F  U  N  C  T  I  O  N 
 *_______________________________________________________________________*/
 
 #if switchInclude_Advect_gradient_limiter
@@ -462,14 +462,14 @@
                         
        PLOT;
        
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
 #endif 
 
 
 
 
 /*______________________________________________________________________
-*           INFLUX_OUTFLUX_VOLUME
+*            I  N  F  L  U  X  _  O  U  T  F  L  U  X  _  V  O  L  U  M  E 
 *_______________________________________________________________________*/
 
 #if switchInclude_Advect_influx_outflux_volume
@@ -501,7 +501,7 @@
 
 
     PLOT;
-    free_vector(data_array1, 1, max_len);
+    free_vector_nr(data_array1, 1, max_len);
     sprintf(graph_label, "plot2 influx_outflux_volume, Mat. %d \0",m);                 
 
     data_array1    = convert_darray_3d_to_vector(
@@ -511,7 +511,7 @@
                             &max_len);     
     PLOT;
     
-   free_vector(data_array1, 1, max_len);
+   free_vector_nr(data_array1, 1, max_len);
 #endif
 
 
@@ -519,7 +519,7 @@
 
 
 /*______________________________________________________________________
-*           ADVECT_Q_OUT_FLUX
+*              A  D  V  E  C  T  _  Q  _  O  U  T  _  F  L  U  X 
 *_______________________________________________________________________*/
 
 #if switchInclude_Advect_q_out_flux
@@ -542,32 +542,31 @@
 *  convert the multidimensional arrays 
 *   into a float vector
 *__________________________________*/ 
-    sprintf(graph_label, "Test inside of q_out_flux, Mat. %d \0",m);                 
+    sprintf(graph_label, "Plot 1 inside of q_out_flux, Mat. %d \0",m);                 
      data_array1    = convert_darray_3d_to_vector(
-                            test,
-                            xLoLimit,        xHiLimit,       yLoLimit,
-                            yHiLimit,        zLoLimit,       zHiLimit,
+                            plot1,
+                            GC_LO(xLoLimit),       GC_HI(xHiLimit),     GC_LO(yLoLimit),
+                            GC_HI(yHiLimit),       (zLoLimit),          GC_HI(zHiLimit),
                             &max_len);                                   
 
 
     PLOT;
-    free_vector(data_array1, 1, max_len);
-    sprintf(graph_label, "Test2 inside of q_out_flux, Mat. %d \0",m);                 
+    free_vector_nr(data_array1, 1, max_len);
+    sprintf(graph_label, "Plot 2 inside of q_out_flux, Mat. %d \0",m);                 
 
     data_array1    = convert_darray_3d_to_vector(
-                            test2,
-                            xLoLimit,        xHiLimit,       yLoLimit,
-                            yHiLimit,        zLoLimit,       zHiLimit,
+                            plot2,
+                            GC_LO(xLoLimit),       GC_HI(xHiLimit),     GC_LO(yLoLimit),
+                            GC_HI(yHiLimit),       (zLoLimit),          GC_HI(zHiLimit),
                             &max_len);     
     PLOT;
     
-   free_vector(data_array1, 1, max_len);
-
+   free_vector_nr(data_array1, 1, max_len);
 #endif
 
 
 /*______________________________________________________________________
-*           ADVECT_Q_IN_FLUX
+*            A  D  V  E  C  T  _  Q  _  I  N  _  F  L  U  X 
 *_______________________________________________________________________*/
 
 #if switchInclude_Advect_q_in_flux
@@ -578,10 +577,10 @@
     Number_sub_plots    = 2;
     strcpy(file_basename,"");
     outputfile_type     = 0;
-    x_axis_origin       = (xLoLimit);
-    y_axis_origin       = (yLoLimit);
-    x_axis              = (xHiLimit);
-    y_axis              = (yHiLimit);
+    x_axis_origin       = GC_LO(xLoLimit);
+    y_axis_origin       = GC_LO(yLoLimit);
+    x_axis              = GC_HI(xHiLimit);
+    y_axis              = GC_HI(yHiLimit);
     outline_ghostcells  = 0;
     strcpy(x_label,"x\0");
     strcpy(y_label,"y\0");
@@ -593,23 +592,23 @@
     sprintf(graph_label, "plot1 inside of q_in_flux, Mat. %d \0",m);                 
      data_array1    = convert_darray_3d_to_vector(
                             plot1,
-                            xLoLimit,        xHiLimit,       yLoLimit,
-                            yHiLimit,        zLoLimit,       zHiLimit,
+                            GC_LO(xLoLimit),       GC_HI(xHiLimit),     GC_LO(yLoLimit),
+                            GC_HI(yHiLimit),       (zLoLimit),          GC_HI(zHiLimit),
                             &max_len);                                   
 
 
     PLOT;
-    free_vector(data_array1, 1, max_len);
+    free_vector_nr(data_array1, 1, max_len);
     sprintf(graph_label, "plot2 inside of q_in_flux, Mat. %d \0",m);                 
 
     data_array1    = convert_darray_3d_to_vector(
                             plot2,
-                            xLoLimit,        xHiLimit,       yLoLimit,
-                            yHiLimit,        zLoLimit,       zHiLimit,
+                            GC_LO(xLoLimit),       GC_HI(xHiLimit),     GC_LO(yLoLimit),
+                            GC_HI(yHiLimit),       (zLoLimit),          GC_HI(zHiLimit),
                             &max_len);     
     PLOT;
     
-   free_vector(data_array1, 1, max_len);
+   free_vector_nr(data_array1, 1, max_len);
 #endif
 
 
@@ -618,7 +617,7 @@
 
 
 /*______________________________________________________________________
-*       FIND_Q_VERTEX_MAX_MIN
+*          F  I  N  D  _  Q  _  V  E  R  T  E  X  _  M  A  X  _  M  I  N 
 *_______________________________________________________________________*/
 #if switchInclude_find_q_vertex_max
         /*__________________________________
@@ -679,12 +678,12 @@
 
     PLOT;                               
    
-    free_vector(data_array1, 1, max_len);  
+    free_vector_nr(data_array1, 1, max_len);  
 #endif
 
 
 /*______________________________________________________________________
-*           ADVECT_PREPROCESS
+*            A  D  V  E  C  T  _  P  R  E  P  R  O  C  E  S  S 
 *_______________________________________________________________________*/
 #if switchInclude_advect_preprocess
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
@@ -714,7 +713,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);                                   
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
 
         /* ______________________________
         *  Variable 2
@@ -732,8 +731,8 @@
 
 
 /*______________________________________________________________________
-*           ADVECT_Q
-*_______________________________________________________________________*/
+*            A  D  V  E  C  T  _  Q  
+*______________________________________________________________________*/
 #if switchInclude_Advect_q 
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
     if (stay_or_go == '1')
@@ -770,7 +769,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);                                   
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
 
         /* ______________________________
         *  Variable 2
@@ -782,7 +781,7 @@
                                 (yHiLimit),       (zLoLimit),               (zHiLimit),
                                 &max_len);        
         PLOT;
-        free_vector(data_array1, 1, max_len);
+        free_vector_nr(data_array1, 1, max_len);
         
         /* ______________________________
         *  Variable 3
@@ -804,52 +803,10 @@
 
 
 /*______________________________________________________________________
-*           ADVECT_AND_ADVANCE_IN_TIME
+*            A  D  V  E  C  T  _  A  N  D  _  A  D  V  A  N  C  E  _  I  N  _  T  I  M  E 
 *_______________________________________________________________________*/
 #if switchInclude_advect_and_advance_in_time
-    #if (switchDebug_advect_and_advance_in_time == 1)
-    for (m = 1; m <= nMaterials; m++)
-    { 
-        fprintf(stderr,"\tMaterial %i \n",m);
-        printData_4d(       GC_LO(xLoLimit),    GC_LO(yLoLimit),       zLoLimit,
-                            GC_HI(xHiLimit),    GC_HI(yHiLimit),       zHiLimit,
-                            m,           m,
-                            "advect_and_advance_in_time","rho_CC",      rho_CC);
-                            
-        printData_4d(       GC_LO(xLoLimit),    GC_LO(yLoLimit),       zLoLimit,
-                            GC_HI(xHiLimit),    GC_HI(yHiLimit),       zHiLimit,
-                            m,           m,
-                            "advect_and_advance_in_time","xmom_CC",    xmom_CC);
 
-        printData_4d(       GC_LO(xLoLimit),    GC_LO(yLoLimit),       zLoLimit,
-                            GC_HI(xHiLimit),    GC_HI(yHiLimit),       zHiLimit,
-                            m,           m,
-                            "advect_and_advance_in_time","advct_xmom_CC",    advct_xmom_CC);
-
-        printData_4d(       GC_LO(xLoLimit),    GC_LO(yLoLimit),       zLoLimit,
-                            GC_HI(xHiLimit),    GC_HI(yHiLimit),       zHiLimit,
-                            m,            m,
-                            "advect_and_advance_in_time","uvel_CC",      uvel_CC);
-                            
-        printData_4d(       GC_LO(xLoLimit),    GC_LO(yLoLimit),       zLoLimit,
-                            GC_HI(xHiLimit),    GC_HI(yHiLimit),       zHiLimit,
-                            m,           m,
-                            "advect_and_advance_in_time","ymom_CC",    ymom_CC);
-
-        printData_4d(       GC_LO(xLoLimit),    GC_LO(yLoLimit),       zLoLimit,
-                            GC_HI(xHiLimit),    GC_HI(yHiLimit),       zHiLimit,
-                            m,           m,
-                            "advect_and_advance_in_time","advct_ymom_CC",    advct_ymom_CC);
-
-        printData_4d(       GC_LO(xLoLimit),    GC_LO(yLoLimit),       zLoLimit,
-                            GC_HI(xHiLimit),    GC_HI(yHiLimit),       zHiLimit,
-                            m,            m,
-                            "advect_and_advance_in_time","yvel_CC",      vvel_CC);
-    }
-                       
-                    
-    #endif
-    #if (switchDebug_advect_and_advance_in_time == 2)  
     /*__________________________________
     * Define plotting variables 
     *___________________________________*/
@@ -913,9 +870,7 @@
         free_vector_nr(    data_array1,       1, max_len);
         
 
-    }
-
-    #endif    
+    }   
 #endif
 
 
@@ -926,7 +881,7 @@
 
 
 /*______________________________________________________________________
-*           ACCUMULATE_MOMENTUM_SOURCES_SINKS
+*            A  C  C  U  M  U  L  A  T  E  _  M  O  M  E  N  T  U  M  _  S  O  U  R  C  E  S  _  S  I  N  K  S 
 *_______________________________________________________________________*/
 #if switchInclude_accumulate_momentum_source_sinks
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
@@ -974,7 +929,6 @@
             PLOT;
             free_vector_nr(    data_array1,       1, max_len);
         }
-        first_pass = 1;
     }
                               
 #endif
@@ -983,7 +937,7 @@
 
 
 /*______________________________________________________________________
-*           ACCUMULATE_ENERGY_SOURCES_SINKS
+*            A  C  C  U  M  U  L  A  T  E  _  E  N  E  R  G  Y  _  S  O  U  R  C  E  S  _  S  I  N  K  S 
 *_______________________________________________________________________*/
 #if switchInclude_accumulate_energy_source_sinks
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
@@ -1018,7 +972,6 @@
             PLOT;
             free_vector_nr(    data_array1,       1, max_len);
         }
-        first_pass = 1;
     }
                               
 #endif
@@ -1028,7 +981,7 @@
 
 
 /*______________________________________________________________________
-*           EQUATION_OF_STATE
+*              E  Q  U  A  T  I  O  N  _  O  F  _  S  T  A  T  E 
 *_______________________________________________________________________*/
 #if switchInclude_equation_of_state    
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
@@ -1079,7 +1032,6 @@
             PLOT;
             free_vector_nr(    data_array1,       1, max_len);
         }
-        first_pass = 1;
     }
                               
 #endif
@@ -1087,7 +1039,7 @@
 
 
 /*______________________________________________________________________
-*           FACE_CENTERED PRESSURE
+*              F  A  C  E  _  C  E  N  T  E  R  E  D     P  R  E  S  S  U  R  E 
 *_______________________________________________________________________*/
 #if switchInclude_p_face               
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
@@ -1097,7 +1049,7 @@
         * Define plotting variables 
         *___________________________________*/
         plot_type           = 1;
-        Number_sub_plots    = 1;
+        Number_sub_plots    = 2;
         strcpy(file_basename,"");
         outputfile_type     = 0;
         x_axis_origin       = GC_LO(xLoLimit);
@@ -1109,6 +1061,16 @@
         strcpy(y_label,"cell\0");
         for (m = 1; m <= nMaterials; m++)
         {                        
+            sprintf(graph_label, "P_FACE, press_CC, Mat. %d \0",m);                
+            data_array1    = convert_darray_4d_to_vector(
+                                    press_CC,
+                                    GC_LO(xLoLimit),       GC_HI(xHiLimit),     GC_LO(yLoLimit),
+                                    GC_HI(yHiLimit),       (zLoLimit),          (zHiLimit),
+                                    m,                      m,
+                                    &max_len);
+            PLOT;
+            free_vector_nr(    data_array1,       1, max_len);  
+              
             sprintf(graph_label, "P_FACE, Press_FC, Mat. %d",m);        
             plot_face_centered_data(
                                     GC_LO(xLoLimit),        GC_HI(xHiLimit),    GC_LO(yLoLimit),
@@ -1117,12 +1079,13 @@
                                     x_label,                y_label,            graph_label,
                                     outline_ghostcells,     Number_sub_plots,    
                                     file_basename,          outputfile_type,    m);
+        fprintf(stderr, "press return to continue\n");
+        getchar();
         }
-        first_pass = 1;
     }
 #endif 
 /*______________________________________________________________________
-*           INTERPOLATE_VEL_CC_TO_FC
+*            I  N  T  E  R  P  O  L  A  T  E  _  V  E  L  _  C  C  _  T  O  _  F  C 
 *_______________________________________________________________________*/
 #if switchInclude_compute_face_centered_velocities
     stay_or_go = *getenv("PGPLOT_PLOTTING_ON_OFF");
@@ -1211,15 +1174,15 @@
                                 x_label,                y_label,            graph_label,
                                 outline_ghostcells,     Number_sub_plots,    
                                 file_basename,          outputfile_type,    m); 
-    
         
+    fprintf(stderr, "press return to continue \n");
+    getchar();
     }   /*mat loop   */
-    first_pass =1;
     }   /*stay or go */        
 #endif
 
 /*______________________________________________________________________
-*                   PRESSURE_PCGMG
+*                      P  R  E  S  S  U  R  E  _  P  C  G  M  G 
 *_______________________________________________________________________*/
 #if switchInclude_pressure_PCG
 
@@ -1345,7 +1308,8 @@
                                 (yHiLimit),       (zLoLimit),          (zHiLimit),
                                 &max_len);
         PLOT;
-        free_vector_nr(    data_array1,       1, max_len);  
+        free_vector_nr(    data_array1,       1, max_len); 
+
 /*__________________________________
 *  Window 2
 *___________________________________*/
@@ -1376,7 +1340,7 @@
                                 &max_len);
         PLOT;
         free_vector_nr(    data_array1,       1, max_len);          
-
+              
        
 #endif
 
@@ -1384,7 +1348,7 @@
 
 
 /*______________________________________________________________________
-*           PRESSURE_RESIDUAL
+*              P  R  E  S  S  U  R  E  _  R  E  S  I  D  U  A  L 
 *_______________________________________________________________________*/
 #if switchInclude_press_eq_residual
     #if (switchDebug_press_eq_residual == 1)
@@ -1401,7 +1365,6 @@
                             (xLoLimit),    (yLoLimit),       zLoLimit,
                             (xHiLimit),    (yHiLimit),       zHiLimit,
                             "press_residual","residual",    plot_3);
-  
 #endif  
 #if (switchDebug_press_eq_residual == 2)                                    
         /*__________________________________
@@ -1452,14 +1415,14 @@
                                 &max_len);
         PLOT;
         free_vector_nr(    data_array1,       1, max_len);
-    
+        
     #endif                              
 #endif
 
 
 
 /*______________________________________________________________________
-*   SHEAR_STRESS.C
+*    S  H  E  A  R  _  S  T  R  E  S  S  .  C 
 *_______________________________________________________________________*/
 #if switchInclude_shear_stress_Xdir
 
@@ -1488,8 +1451,7 @@
         *___________________________________*/
         plot_type = plot_type;      x_axis_origin = x_axis_origin;       y_axis_origin = y_axis_origin;
         x_axis = x_axis;            y_axis = y_axis;                    max_len = max_len;
-        data_array1 = data_array1;
-                             
+        data_array1 = data_array1;                        
 #endif
 /*__________________________________
 *   SHEAR_STRESS_YDIR
@@ -1522,8 +1484,6 @@
         plot_type = plot_type;      x_axis_origin = x_axis_origin;       y_axis_origin = y_axis_origin;
         x_axis = x_axis;            y_axis = y_axis;                    max_len = max_len;
         data_array1 = data_array1;
-
-    
                                
 #endif
 
@@ -1635,8 +1595,6 @@
                                 &max_len);
         PLOT;
         free_vector_nr(    data_array1,       1, max_len);
-        fprintf(stderr,"press return to continue\n");
-        getchar();
 /*__________________________________
 *   Variable 3
 *___________________________________*/
@@ -1662,8 +1620,5 @@
                                 outline_ghostcells,     Number_sub_plots,    
                                 file_basename,          outputfile_type,    m);
         putenv("PGPLOT_ITERATING_NOW=0");
-        fprintf(stderr,"press return to continue\n");
-        getchar();
-        
                               
 #endif
