@@ -214,16 +214,6 @@ tkMain(argc, argv)
 	    ((fileName == NULL) && tty) ? "1" : "0", TCL_GLOBAL_ONLY);
 
     /*
-     * Add a few application-specific commands to the application's
-     * interpreter.
-     */
-
-#ifdef SQUARE_DEMO
-    Tcl_CreateCommand(the_interp, "square", SquareCmd, (ClientData) mainWindow,
-	    (void (*)()) NULL);
-#endif
-
-    /*
      * Invoke application-specific initialization.
      */
 
