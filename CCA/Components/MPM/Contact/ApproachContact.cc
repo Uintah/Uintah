@@ -115,7 +115,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
       IntVector low(patch->getInteriorNodeLowIndex());
       IntVector high(patch->getInteriorNodeHighIndex());
 
-      int ILOW,IHIGH,JLOW,JHIGH,KLOW,KHIGH;
+      int ILOW=0,IHIGH=0,JLOW=0,JHIGH=0,KLOW=0,KHIGH=0;
       // First, figure out some ranges for for loops
       for(Patch::FaceType face = Patch::startFace;
       		  face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -175,7 +175,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 	// Next the nodes which make up the problem domain
 	else if (bc_type == Patch::None) {
 	  if(face==Patch::xplus || face==Patch::xminus){
-            int I;
+            int I=0;
             if(face==Patch::xminus){ I=low.x(); }
             if(face==Patch::xplus) { I=high.x()-1; }
             for (int j = JLOW; j<JHIGH; j++) {
@@ -192,7 +192,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
           }
 
           if(face==Patch::yplus || face==Patch::yminus){
-            int J;
+            int J=0;
             if(face==Patch::yminus){ J=low.y(); }
             if(face==Patch::yplus) { J=high.y()-1; }
             for (int i = ILOW; i<IHIGH; i++) {
@@ -210,7 +210,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
           }
 
           if(face==Patch::zplus || face==Patch::zminus){
-            int K;
+            int K=0;
             if(face==Patch::zminus){ K=low.z(); }
             if(face==Patch::zplus) { K=high.z()-1; }
             for (int i = ILOW; i<IHIGH; i++) {
