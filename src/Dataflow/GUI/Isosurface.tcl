@@ -31,6 +31,7 @@ itcl_class SCIRun_Visualization_Isosurface {
     method set_defaults {} {
 	global $this-isoval-min 
 	global $this-isoval-max 
+	global $this-isoval
 	global $this-isoval-typed
 	global $this-isoval-quantity
 	global $this-active-isoval-selection-tab
@@ -49,6 +50,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	set $this-isoval-min 0
 	set $this-isoval-max 4095
+	set $this-isoval 0
 	set $this-isoval-typed 0
 	set $this-isoval-quantity 1
 	set $this-active-isoval-selection-tab 0
@@ -397,7 +399,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval-min $min
 	set $this-isoval-max $max
 	if [ expr [winfo exists $w] ] {
-	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.s configure -from $min -to $max
+	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.s \
+		configure -from $min -to $max
+	    
+	    bind $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.e \
+		<Return> "$this manualSliderEntry $min $max $this-isoval $this-isoval2"
 	}
     }
 
@@ -428,14 +434,22 @@ itcl_class SCIRun_Visualization_Isosurface {
 
     method manualSliderEntry { start stop var1 var2 } {
 
-	if { [set $var2] < 0 } {
-	    set $var2 0
+	puts stdout $start
+	puts stdout $stop
+	puts stdout $var1
+	puts stdout $var2
+
+	if { [set $var2] < $start } {
+	    set $var2 $start
 	}
 	
 	if { [set $var2] > $stop } {
 	    set $var2 $stop }
 	
 	set $var1 [set $var2]
+
+	puts stdout [set $var1]
+	puts stdout [set $var2]
 
 	change-isoval [set $var1]
     }
