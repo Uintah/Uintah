@@ -37,6 +37,9 @@ var inDocTree = base == roottag;
 if (inDocTree) {
 document.write("<link href='",treetop,"doc/Utilities/HTML/mainindex.css' rel='stylesheet' type='text/css'/>")
 }
+function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,"","toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=" + scroll + ",resizable=0,width=" + wide + ",height=" + tall + ",left=0,top=0");
+}
 </script>
 
 <title>Guide to SCIRun Documentation</title>
@@ -106,6 +109,18 @@ environment.
 </li>
 <li><a href="User/FAQ/faq.html">FAQ</a>
 <p>Common user questions and answers.</p>
+</li>
+<li>
+<a
+href="JavaScript:NewWindow('http://software.sci.utah.edu/scirun_citation.bib',
+'600','400','1')">SCIRun Citation</a>
+<p>BibTeX and plain text versions</p>
+</li>
+<li>
+<a
+href="JavaScript:NewWindow('http://software.sci.utah.edu/biopse_citation.bib',
+'600','400','1')">BioPSE Citation</a>
+<p>BibTeX and plain text versions</p>
 </li>
 </ul>
 </td>
