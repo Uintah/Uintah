@@ -672,6 +672,21 @@ void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
     child->draw(di,m,time);
 }
 
+
+GeomDL::~GeomDL()
+{
+  if (have_dl && dl)
+  {
+    glDeleteLists(dl, 1);
+  }
+
+  if(child)
+  {
+    delete child;
+  }
+}
+
+
 void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
   if ( !child ) return;
@@ -693,9 +708,7 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
       // do we need to allocate a dl ?
       if ( !have_dl ) {
 	dl = glGenLists(1);
-	cerr << "dl = " << dl << endl;
 	if ( dl == 0 ) {
-	  cerr << "can not allocate dl\n";
 	   child->draw(di,m,time);  // do not use display list
 	   post_draw(di);
 	   return;
@@ -1791,9 +1804,8 @@ void GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
     glLineWidth(line_width_);
-
     glBegin(GL_LINES);
-    for (unsigned int i=0; i<points_.size(); i++)
+    for (unsigned int i=0; i < points_.size(); i++)
     {
       glColor3d(colors_[i].r(), colors_[i].g(), colors_[i].b());
       glVertex3d(points_[i].x(), points_[i].y(), points_[i].z());
