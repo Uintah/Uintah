@@ -35,7 +35,21 @@ then
    # Just loading the needed packages.
    export SCIRUN_LOAD_PACKAGE=SCIRun,Teem,Insight
 
-  __OBJ_DIR__/scirun __SRC_DIR__/Packages/Insight/nets/PowerApps/LevelSetSegmenter.app $1
+   # Check if filenames were passed in as arguments
+   if test "$1" != ""; then
+     export LEVELSETSEGMENTER_LOAD_FILE="$1"
+   fi
+
+   if test "$2" != ""; then
+     export LEVELSETSEGMENTER_SAVE_BINARY_FILE="$2"
+   fi
+
+   if test "$3" != ""; then
+     export LEVELSETSEGMENTER_SAVE_FLOAT_FILE="$3"
+   fi
+
+   
+  __OBJ_DIR__/scirun __SRC_DIR__/Packages/Insight/nets/PowerApps/LevelSetSegmenter.app 
 else
   echo "Your scirun was not compiled with the Teem and Insight Packages.  Please"
   echo "reconfigure by adding 'Teem' and 'Insight' to the --enable-package='package list'" 

@@ -266,7 +266,12 @@ set c106 [addConnection $m91 0 $m38 7]
 
 
 # Set GUI variables
-setGlobal $m1-filename "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
+if {[netedit getenv LEVELSETSEGMENTER_LOAD_FILE] == ""} {
+    setGlobal $m1-filename "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
+} else {
+    setGlobal $m1-filename "[netedit getenv LEVELSETSEGMENTER_LOAD_FILE]"
+}
+
 setGlobal $m5-uis {3}
 
 
@@ -314,7 +319,11 @@ setGlobal $m21-copy {1}
 
 setGlobal $m22-uis {3}
 
-setGlobal $m24-filename "/tmp/binary.mhd"
+if {[netedit getenv LEVELSETSEGMENTER_SAVE_BINARY_FILE] == ""} {
+    setGlobal $m24-filename "/tmp/binary.mhd"
+} else {
+    setGlobal $m24-filename "[netedit getenv LEVELSETSEGMENTER_SAVE_BINARY_FILE]"
+}
 
 setGlobal $m30-uis 3
 
@@ -473,7 +482,11 @@ setGlobal $m78-axis 2
 
 setGlobal $m80-axis 2
 
-setGlobal $m83-filename "/tmp/float.mhd"
+if {[netedit getenv LEVELSETSEGMENTER_SAVE_FLOAT_FILE] == ""} {
+    setGlobal $m83-filename "/tmp/float.mhd"
+} else {
+    setGlobal $m83-filename "[netedit getenv LEVELSETSEGMENTER_SAVE_FLOAT_FILE]"
+}
 
 setGlobal $m86-copy 1
 
@@ -674,7 +687,7 @@ class LevelSetSegmenterApp {
 	set win .standalone
 
 	set viewer_width 700
-	set viewer_height 700
+	set viewer_height 750
 
 	set process_width 350
 	set process_height $viewer_height
@@ -896,20 +909,6 @@ class LevelSetSegmenterApp {
 
 	    build_menu $m
 
-	    # remove quit, add saving binary and float, and then re-add quit
-	    $m.main_menu.file.menu delete end
-
-	    $m.main_menu.file.menu add command -label "Save Segmented Binary Volume" \
-		-underline 1 -command "$this save_binary" -state disabled
-
-
-	    $m.main_menu.file.menu add command -label "Save Segmented Float Volume" \
-		-underline 1 -command "$this save_float" -state disabled
-
-	    $m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
-		-underline 0 -command "$this exit_app" -state active
-
-
 	    ### Processing Steps
 	    #####################
 	    iwidgets::labeledframe $m.p \
@@ -932,7 +931,8 @@ class LevelSetSegmenterApp {
 	    iwidgets::labeledframe $step_tab.load \
 		-labeltext "Data File Format and Orientation" \
 		-labelpos nw
-	    pack $step_tab.load -side top -anchor nw -pady 3 -expand yes -fill x
+	    pack $step_tab.load -side top -anchor nw -pady 3 \
+		-expand yes -fill x
 
 	    set load [$step_tab.load childsite]
 
@@ -1026,7 +1026,7 @@ class LevelSetSegmenterApp {
 	    iwidgets::labeledframe $step_tab.stats \
 		-labeltext "Volume Statistics" \
 		-labelpos nw
-	    pack $step_tab.stats -side top -anchor nw -expand yes -fill y
+	    pack $step_tab.stats -side top -anchor nw -expand yes -fill x
 	    set stats [$step_tab.stats childsite]
 
 	    label $stats.samples -text "Samples: $orig_size0, $orig_size1, $orig_size2"
@@ -1200,7 +1200,7 @@ class LevelSetSegmenterApp {
 
 	    # ViewSlices toggle
 	    frame $smooth.toggle
-	    pack $smooth.toggle -side bottom -anchor n
+	    pack $smooth.toggle -side bottom -anchor n -pady 3
 
 	    global $mods(ChooseNrrd-2D)-port-index
 	    radiobutton $smooth.toggle.orig -text "Show Original" \
@@ -1211,7 +1211,8 @@ class LevelSetSegmenterApp {
 		-variable $mods(ChooseNrrd-2D)-port-index -value 1 \
 		-command "$this update_ViewSlices_input"
 
-	    pack $smooth.toggle.orig $smooth.toggle.smooth -side left
+	    pack $smooth.toggle.orig $smooth.toggle.smooth -side left \
+		-padx 4
 
 
 
@@ -1341,30 +1342,48 @@ class LevelSetSegmenterApp {
 	    trace variable $mods(SampleField-Seeds)-num_seeds w "$this seeds_changed"
 	    trace variable $mods(SampleField-SeedsNeg)-num_seeds w "$this seeds_changed"
 
+	    frame $seeds.options
+	    frame $seeds.options.a
+	    frame $seeds.options.b
+	    pack $seeds.options -side top -anchor n
+
+	    pack $seeds.options.a $seeds.options.b -side left -anchor nw
+
 	    # Previous
-	    radiobutton $seeds.prev -text "Use Previous Segmentation and Seed Points" \
+	    radiobutton $seeds.options.a.prev \
+		-text "Use Previous Segmentation" \
 		-variable seed_method -value "prev" \
 		-command "$this change_seed_method"
 
 	    # Current
-	    radiobutton $seeds.curr -text "Use Current Segmentation and Seed Points" \
+	    radiobutton $seeds.options.a.curr \
+		-text "Use Current Segmentation" \
 		-variable seed_method -value "curr" \
 		-command "$this change_seed_method"
 
 	    # Current
-	    radiobutton $seeds.next -text "Use Next Segmentation and Seed Points" \
+	    radiobutton $seeds.options.a.next \
+		-text "Use Next Segmentation" \
 		-variable seed_method -value "next" \
 		-command "$this change_seed_method"
 
 	    # Thresholds
-	    radiobutton $seeds.thresh -text "Use Thresholds and Seed Points" \
+	    radiobutton $seeds.options.b.thresh \
+		-text "Use Thresholds" \
 		-variable seed_method -value "thresh" \
 		-command "$this change_seed_method"
 
 	    # Seeds
-	    radiobutton $seeds.point -text "Use Seed Points Only" \
+	    radiobutton $seeds.options.b.point -text "Use Seed Points Only" \
 		-variable seed_method -value "points" \
 		-command "$this change_seed_method"
+
+	    pack $seeds.options.a.prev $seeds.options.a.curr \
+		$seeds.options.a.next -side top -anchor nw
+
+	    pack $seeds.options.b.thresh $seeds.options.b.point \
+		-side top -anchor nw
+
 
 	    frame $seeds.points -relief groove -borderwidth 2
 
@@ -1405,8 +1424,7 @@ class LevelSetSegmenterApp {
 		-activebackground $execute_active_color \
 		-command "$this create_seeds"
 
-	    pack $seeds.prev $seeds.curr $seeds.next $seeds.thresh $seeds.point \
-		-side top -anchor nw
+
 	    pack $seeds.points $seeds.generate -side top -anchor n -pady 3 -ipadx 2
 
 	    # Segment frame
@@ -1455,7 +1473,7 @@ class LevelSetSegmenterApp {
 
 # 	    # Radiobuttons for what is volume rendered
  	    frame $step_tab.whichvol 
- 	    pack $step_tab.whichvol -side top -anchor n 
+ 	    pack $step_tab.whichvol -side top -anchor n -pady 3
  	    global vol_foreground
  	    radiobutton $step_tab.whichvol.a -text "Show Segmentation" \
  		-variable vol_foreground -value 1 \
@@ -1465,6 +1483,33 @@ class LevelSetSegmenterApp {
  		-command "$this toggle_volume_render_object"
  	    pack $step_tab.whichvol.a $step_tab.whichvol.b -side left \
  		-anchor nw -pady 3
+
+	    frame $step_tab.savebin 
+	    frame $step_tab.savefl
+	    pack $step_tab.savebin $step_tab.savefl -side top -anchor n \
+		-pady 2
+	    
+	    global $mods(ImageFileWriter-Binary)-filename
+	    button $step_tab.savebin.btn -text "Save Binary" \
+		-command "$this save_binary"
+	    label $step_tab.savebin.l -text "File:"
+	    entry $step_tab.savebin.e \
+		-textvariable $mods(ImageFileWriter-Binary)-filename
+	    button $step_tab.savebin.browse -text "Browse" \
+		-command "$this open_save_binary_ui"
+	    pack $step_tab.savebin.btn $step_tab.savebin.l \
+		$step_tab.savebin.e $step_tab.savebin.browse -side left
+
+	    global $mods(ImageFileWriter-Float)-filename
+	    button $step_tab.savefl.btn -text " Save Float " \
+		-command "$this save_binary"
+	    label $step_tab.savefl.l -text "File:"
+	    entry $step_tab.savefl.e \
+		-textvariable $mods(ImageFileWriter-Float)-filename
+	    button $step_tab.savefl.browse -text "Browse" \
+		-command "$this open_save_float_ui"
+	    pack $step_tab.savefl.btn $step_tab.savefl.l \
+		$step_tab.savefl.e $step_tab.savefl.browse -side left
 	    
 	    
             ### Indicator
@@ -3100,16 +3145,6 @@ class LevelSetSegmenterApp {
     method commit_segmentation {} {
 	global slice mods axis
 	
-	# enable menu options to save out binary/float segmentations
-	if {[$attachedPFr.f.main_menu.file.menu entrycget 4 -state] == "disabled"} {
-	    $attachedPFr.f.main_menu.file.menu entryconfigure 4 -state normal
-	    $attachedPFr.f.main_menu.file.menu entryconfigure 5 -state normal
-	    $detachedPFr.f.main_menu.file.menu entryconfigure 4 -state normal
-	    $detachedPFr.f.main_menu.file.menu entryconfigure 5 -state normal
-	}
-
-	
-
 	# Add current segmentation into paste image filters 
 	if {$axis == 0} {
 	    global $mods(PasteImageFilter-Binary)-index
@@ -3291,19 +3326,74 @@ class LevelSetSegmenterApp {
 
     method save_binary {} {
 	global mods
+	global $mods(ImageFileWriter-Binary)-filename
+	
+	# enable writer, open ui
+	disableModule $mods(ImageFileWriter-Binary) 0
+
+	if {[set $mods(ImageFileWriter-Binary)-filename] != ""} {
+	    $mods(ImageFileWriter-Binary)-c needexecute
+	} else {
+	    $mods(ImageFileWriter-Binary) initialize_ui
+
+	    # Disable execute behavior
+	    set m $mods(ImageFileWriter-Binary)
+	    .ui$m.f7.execute configure -state disabled
+	    
+	    upvar \#0 .ui$m data	
+	    set data(-command) "wm withdraw .ui$m"
+	}
+    }
+
+    method open_save_binary_ui {} {
+	global mods
 
 	# enable writer, open ui
 	disableModule $mods(ImageFileWriter-Binary) 0
 	$mods(ImageFileWriter-Binary) initialize_ui
+
+	# Disable execute behavior
+	set m $mods(ImageFileWriter-Binary)
+	.ui$m.f7.execute configure -state disabled
+	
+	upvar \#0 .ui$m data	
+	set data(-command) "wm withdraw .ui$m"
     }
 
     method save_float {} {
+	global mods
+	global $mods(ImageFileWriter-Float)-filename
+
+	# enable writer, open ui
+	disableModule $mods(ImageFileWriter-Float) 0
+
+	if {[set $mods(ImageFileWriter-Float)-filename] != ""} {
+	    $mods(ImageFileWriter-Float)-c needexecute
+	} else {
+	    $mods(ImageFileWriter-Float) initialize_ui
+
+	    # Disable execute behavior
+	    set m $mods(ImageFileWriter-Float)
+	    .ui$m.f7.execute configure -state disabled
+	    
+	    upvar \#0 .ui$m data	
+	    set data(-command) "wm withdraw .ui$m"
+	}
+    }
+
+    method open_save_float_ui {} {
 	global mods
 
 	# enable writer, open ui
 	disableModule $mods(ImageFileWriter-Float) 0
 	$mods(ImageFileWriter-Float) initialize_ui
 
+	# Disable execute behavior
+	set m $mods(ImageFileWriter-Float)
+	.ui$m.f7.execute configure -state disabled
+	
+	upvar \#0 .ui$m data	
+	set data(-command) "wm withdraw .ui$m"
     }
 
     method seeds_changed {a b c} {
