@@ -43,28 +43,22 @@ void IdealGasMP::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
-   // Put stuff in here to initialize each particle's
-   // constitutive model parameters and deformationMeasure
-   Matrix3 Identity, zero(0.);
-   Identity.Identity();
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
 
-   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<Matrix3> deformationGradient, pstress;
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<Matrix3> deformationGradient, pstress;
 
-   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocateAndPut(pstress, lb->pStressLabel,             pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
+  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
 
-   for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++) {
-          deformationGradient[*iter] = Identity;
-          pstress[*iter] = zero;
-   }
-   // allocateAndPut instead:
-   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pstress, lb->pStressLabel); */;
-
-   computeStableTimestep(patch, matl, new_dw);
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+      deformationGradient[*iter] = Identity;
+      pstress[*iter] = zero;
+  }
+  computeStableTimestep(patch, matl, new_dw);
 }
 
 void IdealGasMP::addParticleState(std::vector<const VarLabel*>& from,
@@ -84,9 +78,9 @@ void IdealGasMP::computeStableTimestep(const Patch* patch,
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
-  int matlindex = matl->getDWIndex();
+  int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
+  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   constParticleVariable<double> pmass, pvolume, ptemp;
   constParticleVariable<Vector> pvelocity;
 
@@ -141,8 +135,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-    int matlindex = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
@@ -153,17 +147,17 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
 
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(ptemp,               lb->pTemperatureLabel,        pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    new_dw->allocateAndPut(pstress, lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    old_dw->get(px,                          lb->pXLabel,                 pset);
+    old_dw->get(pmass,                       lb->pMassLabel,              pset);
+    old_dw->get(ptemp,                       lb->pTemperatureLabel,       pset);
+    old_dw->get(pvelocity,                   lb->pVelocityLabel,          pset);
+    old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
+    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity,           lb->gVelocityLabel, matlindex,patch,
-            Ghost::AroundCells, 1);
+    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, Ghost::AroundCells,1);
     old_dw->get(delT, lb->delTLabel);
     constParticleVariable<Vector> psize;
     if(d_8or27==27){
@@ -239,14 +233,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(pstress,                lb->pStressLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel); */;
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
-
   }
 }
 

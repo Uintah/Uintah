@@ -72,13 +72,11 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      new_dw->getModifiable(gv_star, lb->gVelocityStarLabel, dwi, patch);
-      new_dw->getModifiable(gacc,    lb->gAccelerationLabel, dwi, patch);
+      new_dw->getModifiable(gv_star, lb->gVelocityStarLabel,        dwi, patch);
+      new_dw->getModifiable(gacc,    lb->gAccelerationLabel,        dwi, patch);
 
-      new_dw->allocateAndPut(frictionalWork, lb->frictionalWorkLabel, dwi, patch);
+      new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi, patch);
       frictionalWork.initialize(0.);
-      // allocateAndPut instead:
-      /* new_dw->put(frictionalWork,    lb->frictionalWorkLabel,dwi,patch); */;
     }
   }
 }

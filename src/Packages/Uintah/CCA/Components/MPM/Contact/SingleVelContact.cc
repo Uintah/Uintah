@@ -72,17 +72,18 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
       Vector centerOfMassMom(0,0,0);
       double centerOfMassMass=0.0;
       for(int n = 0; n < numMatls; n++){
-	centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
-	centerOfMassMass+=gmass[n][*iter]; 
+	centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
+	centerOfMassMass+=gmass[n][c]; 
       }
 
       // Set each field's velocity equal to the center of mass velocity
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int n = 0; n < numMatls; n++){
-	gvelocity[n][*iter] = centerOfMassVelocity;
+	gvelocity[n][c] = centerOfMassVelocity;
       }
     }
 
@@ -110,45 +111,37 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
-    StaticArray<NCVariable<double> > frictionalWork(numMatls);
+    StaticArray<NCVariable<double> > frictionWork(numMatls);
 
     for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-      new_dw->get(gmass[m],lb->gMassLabel, dwindex, patch, Ghost::None, 0);
-      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
-		  patch);
-      new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwindex,
-		  patch);
-      new_dw->allocateAndPut(frictionalWork[m], lb->frictionalWorkLabel,
-                                                            dwindex, patch);
-      frictionalWork[m].initialize(0.);
+     int dwi = matls->get(m);
+     new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
+     new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
+     new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
+     new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,patch);
+     frictionWork[m].initialize(0.);
     }
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
       centerOfMassMom=zero;
       centerOfMassMass=0.0; 
       for(int  n = 0; n < numMatls; n++){
-	centerOfMassMom+=gvelocity_star[n][*iter] * gmass[n][*iter];
-	centerOfMassMass+=gmass[n][*iter]; 
+	centerOfMassMom+=gvelocity_star[n][c] * gmass[n][c];
+	centerOfMassMass+=gmass[n][c]; 
       }
 
       // Set each field's velocity equal to the center of mass velocity
       // and adjust the acceleration of each field to account for this
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int  n = 0; n < numMatls; n++){
-	Dvdt = (centerOfMassVelocity - gvelocity_star[n][*iter])/delT;
-	gvelocity_star[n][*iter] = centerOfMassVelocity;
-	gacceleration[n][*iter]+=Dvdt;
+	Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
+	gvelocity_star[n][c] = centerOfMassVelocity;
+	gacceleration[n][c]+=Dvdt;
       }
-    }
-
-    for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-      // allocateAndPut instead:
-      /* new_dw->put(frictionalWork[m],    lb->frictionalWorkLabel,dwindex,patch); */;
     }
   }
 }

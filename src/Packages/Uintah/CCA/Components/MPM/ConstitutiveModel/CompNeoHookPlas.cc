@@ -72,29 +72,28 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
-   // Put stuff in here to initialize each particle's
-   // constitutive model parameters and deformationMeasure
-   Matrix3 Identity, zero(0.);
-   Identity.Identity();
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
 
-   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<StateData> statedata;
-   ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<StateData> statedata;
+  ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
 
-   new_dw->allocateAndPut(statedata, p_statedata_label,            pset);
-   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocateAndPut(pstress, lb->pStressLabel,            pset);
-   new_dw->allocateAndPut(bElBar,  bElBarLabel,                 pset);
+  new_dw->allocateAndPut(statedata, p_statedata_label,            pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
+  new_dw->allocateAndPut(pstress, lb->pStressLabel,            pset);
+  new_dw->allocateAndPut(bElBar,  bElBarLabel,                 pset);
 
-   for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++) {
-	  statedata[*iter].Alpha = d_initialData.Alpha;
-          deformationGradient[*iter] = Identity;
-          bElBar[*iter] = Identity;
-          pstress[*iter] = zero;
-   }
+  for(ParticleSubset::iterator iter =pset->begin();iter != pset->end(); iter++){
+         statedata[*iter].Alpha = d_initialData.Alpha;
+         deformationGradient[*iter] = Identity;
+         bElBar[*iter] = Identity;
+         pstress[*iter] = zero;
+  }
 
-   computeStableTimestep(patch, matl, new_dw);
+  computeStableTimestep(patch, matl, new_dw);
 }
 
 void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
@@ -191,7 +190,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(bElBar_new, bElBarLabel_preReloc,             pset);
     new_dw->allocateAndPut(statedata,  p_statedata_label_preReloc,       pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                                  lb->pDeformationMeasureLabel_preReloc, pset);
     statedata.copyData(statedata_old);
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,

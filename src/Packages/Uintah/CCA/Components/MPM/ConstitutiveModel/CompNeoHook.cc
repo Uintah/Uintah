@@ -93,9 +93,9 @@ void CompNeoHook::computeStableTimestep(const Patch* patch,
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
-  int matlindex = matl->getDWIndex();
+  int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
+  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
 
@@ -141,8 +141,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-    int matlindex = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
@@ -153,16 +153,16 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
 
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    old_dw->get(px,                  lb->pXLabel,                         pset);
+    old_dw->get(pmass,               lb->pMassLabel,                      pset);
+    old_dw->get(pvelocity,           lb->pVelocityLabel,                  pset);
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,        pset);
+    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity,           lb->gVelocityLabel, matlindex,patch,
-            Ghost::AroundCells, 1);
+    new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, Ghost::AroundCells, 1);
     old_dw->get(delT, lb->delTLabel);
     constParticleVariable<Vector> psize;
     if(d_8or27==27){
@@ -281,8 +281,8 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     
-    int matlindex = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     cout << "number of particles = " << pset->numParticles() << endl;
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
@@ -298,11 +298,9 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(bElBar_old, lb->bElBarLabel, pset);
     if (recursion)
-      old_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,
-		  Ghost::AroundCells,1);
+      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     else
-      new_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,
-		  Ghost::AroundCells,1);
+      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
@@ -608,8 +606,8 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
      Vector dx = patch->dCell();
      double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-     int matlindex = matl->getDWIndex();
-     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+     int dwi = matl->getDWIndex();
+     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
      constParticleVariable<Point> px;
      ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
      constParticleVariable<Matrix3> deformationGradient,bElBar_old;
@@ -623,13 +621,13 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
      old_dw->get(px,                  lb->pXLabel,                  pset);
      old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-     old_dw->get(bElBar_old, lb->bElBarLabel, pset);
-     new_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::AroundCells,1);
-     new_dw->getModifiable(pstress,        lb->pStressLabel_preReloc, pset);
-     new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+     old_dw->get(bElBar_old,          lb->bElBarLabel,              pset);
+     new_dw->getModifiable(pstress,          lb->pStressLabel_preReloc, pset);
+     new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
+     new_dw->getModifiable(bElBar_new,       lb->bElBarLabel_preReloc,  pset);
      new_dw->getModifiable(deformationGradient_new,
 			   lb->pDeformationMeasureLabel_preReloc, pset);
-     new_dw->getModifiable(bElBar_new,lb->bElBarLabel_preReloc, pset);
+     new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
 
 
      cout << "delT = " << delT << endl;
