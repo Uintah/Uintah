@@ -78,12 +78,12 @@ public:
 
 private:
 
-  MatrixIPort* d_ivec1P;
-  MatrixIPort* d_ivec2P;
-  MatrixOPort* d_errorP;
-  GuiInt d_haveUI;
-  GuiString d_methodTCL;
-  GuiString d_pTCL;
+  MatrixIPort* ivec1P_;
+  MatrixIPort* ivec2P_;
+  MatrixOPort* errorP_;
+  GuiInt haveUI_;
+  GuiString methodTCL_;
+  GuiString pTCL_;
 }; 
 
 
@@ -94,19 +94,19 @@ extern "C" Module* make_ErrorMetric(const clString& id)
 
 ErrorMetric::ErrorMetric(const clString& id)
   : Module("ErrorMetric", id, Filter),
-    d_haveUI("haveUI", id, this),
-    d_methodTCL("methodTCL", id, this),
-    d_pTCL("pTCL", id, this)
+    haveUI_("haveUI", id, this),
+    methodTCL_("methodTCL", id, this),
+    pTCL_("pTCL", id, this)
 {
     // Create the input port
-    d_ivec1P=scinew MatrixIPort(this, "Vec1",MatrixIPort::Atomic);
-    add_iport(d_ivec1P);
-    d_ivec2P=scinew MatrixIPort(this, "Vec2", MatrixIPort::Atomic);
-    add_iport(d_ivec2P);
+    ivec1P_=scinew MatrixIPort(this, "Vec1",MatrixIPort::Atomic);
+    add_iport(ivec1P_);
+    ivec2P_=scinew MatrixIPort(this, "Vec2", MatrixIPort::Atomic);
+    add_iport(ivec2P_);
 
     // Create the output ports
-    d_errorP=scinew MatrixOPort(this,"Error out",MatrixIPort::Atomic);
-    add_oport(d_errorP);
+    errorP_=scinew MatrixOPort(this,"Error out",MatrixIPort::Atomic);
+    add_oport(errorP_);
 }
 
 ErrorMetric::~ErrorMetric()
@@ -117,11 +117,11 @@ void ErrorMetric::execute()
 {
      MatrixHandle ivec1H;
      ColumnMatrix* ivec1;
-     if (!d_ivec1P->get(ivec1H) || !(ivec1=dynamic_cast<ColumnMatrix*>(ivec1H.get_rep()))) return;
+     if (!ivec1P_->get(ivec1H) || !(ivec1=dynamic_cast<ColumnMatrix*>(ivec1H.get_rep()))) return;
 
      MatrixHandle ivec2H;
      ColumnMatrix *ivec2;
-     if (!d_ivec2P->get(ivec2H) || !(ivec2=dynamic_cast<ColumnMatrix*>(ivec2H.get_rep()))) return;
+     if (!ivec2P_->get(ivec2H) || !(ivec2=dynamic_cast<ColumnMatrix*>(ivec2H.get_rep()))) return;
      
      if (ivec1->nrows() != ivec2->nrows()) {
          cerr << "Error - can't compute error on vectors of different lengths!\n";
@@ -152,7 +152,7 @@ void ErrorMetric::execute()
      double ccDenom2=0;
      double rms=0;
      double pp;
-     d_pTCL.get().get_double(pp);
+     pTCL_.get().get_double(pp);
      for (iterate=0; iterate<ne; iterate++) {
 	 double shift1=((*ivec1)[iterate]-avg1);
 	 double shift2=((*ivec2)[iterate]-avg2);
@@ -173,7 +173,7 @@ void ErrorMetric::execute()
      double rmsRel=Min(rms/ccDenom1, 1000000.);
 
 
-     if (d_haveUI.get()) {
+     if (haveUI_.get()) {
 	 ostringstream str;
 	 str << id << " append_graph " << ccInv << " " << rmsRel << " \"";
 	 for (iterate=0; iterate<ne; iterate++)
@@ -186,7 +186,7 @@ void ErrorMetric::execute()
 	 TCL::execute(str.str().c_str());
      }
 
-     clString meth=d_methodTCL.get();
+     clString meth=methodTCL_.get();
      if (meth == "CC") {
          *val=cc;
      } else if (meth == "CCinv") {
@@ -196,11 +196,11 @@ void ErrorMetric::execute()
      } else if (meth == "RMSrel") {
          *val=rmsRel;
      } else {
-         cerr << "Unknown ErrorMetric::d_methodTCL - "<<meth<<"\n";
+         cerr << "Unknown ErrorMetric::methodTCL_ - "<<meth<<"\n";
          *val=0;
      }
 //     cerr << "Error="<<*val<<"\n";
-     d_errorP->send(errorH);
+     errorP_->send(errorH);
 } // End namespace SCIRun
 }
 
