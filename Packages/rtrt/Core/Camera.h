@@ -51,6 +51,10 @@ public:
     inline const Point& get_eye() const {
 	return eye;
     }
+
+    // Returns 2 points on either side of the camera at 2*separation distance.
+    void get_ears( Point & left, Point & right, double separation ) const;
+
     inline bool operator != (const Camera& c) const {
 	return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov || eyesep != c.eyesep;
     }

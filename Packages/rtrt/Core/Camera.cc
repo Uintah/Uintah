@@ -92,7 +92,18 @@ void Camera::setup()
 
 }
 
-void Camera::print()
+void
+Camera::get_ears( Point & left, Point & right, double separation ) const
+{
+  Vector side = v;
+  side.normalize();
+
+  left  = eye +  (side * separation);
+  right = eye + -(side * separation);
+}
+
+void
+Camera::print()
 {
   cerr << "-eye " << eye.x() << ' ' << eye.y() << ' ' << eye.z() << ' ';
   cerr << "-lookat " << lookat.x() << ' ' << lookat.y() << ' ' << lookat.z() << ' ';
