@@ -280,9 +280,9 @@ Thread::niceAbort()
   fprintf(stderr, "\n");
   fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
   if(s)
-    fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname_);
+    fprintf(stderr, "Occured for thread: \"%s\"\n", s->threadname_);
   else
-    fprintf(stderr, "With NULL thread pointer\n");
+    fprintf(stderr, "With NULL thread pointer.\n");
 
   for (;;) {
     if (strcasecmp(smode, "ask") == 0) {
@@ -291,7 +291,7 @@ Thread::niceAbort()
       fflush(stderr);
       while(read(fileno(stdin), buf, 100) <= 0){
 	if(errno != EINTR){
-	  fprintf(stderr, "\nCould not read response, sleeping for 20 seconds\n");
+	  fprintf(stderr, "\nCould not read response, sleeping for 20 seconds.\n");
 	  sleep(20);
 	  buf[0]='e';
 	  exitAll(1);
