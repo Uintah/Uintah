@@ -60,10 +60,9 @@ namespace Uintah {
 						  SparseMatrix<double,int>& KK);
 
          virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
-						  const MPMMaterial* matl,
-						  DataWarehouse* old_dw,
-						  DataWarehouse* new_dw,
-						  SparseMatrix<double,int>& KK);
+						      const MPMMaterial* matl,
+						      DataWarehouse* old_dw,
+						      DataWarehouse* new_dw);
 
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
@@ -105,8 +104,8 @@ namespace Uintah {
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
 
-	const VarLabel* bElBar_oldLabel;
-	const VarLabel* bElBar_newLabel;
+	const VarLabel* bElBarLabel;
+	const VarLabel* bElBarLabel_preReloc;
 
       };
 } // End namespace Uintah
