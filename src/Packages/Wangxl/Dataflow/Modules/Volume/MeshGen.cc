@@ -12,6 +12,7 @@
 
 #include <Packages/Wangxl/share/share.h>
 
+#include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/Wangxl/Core/Datatypes/Mesh/Delaunay.h>
 #include <Packages/Wangxl/Core/Datatypes/Mesh/FObject.h>
@@ -32,6 +33,7 @@ class WangxlSHARE MeshGen : public Module {
 
   FieldIPort* d_iport;
   FieldOPort* d_oport;
+  TetVolField<double>* tv;
 public:
   MeshGen(GuiContext*);
 
@@ -42,6 +44,7 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 private:
   void get_data();
+  void output_data();
 };
 
 
@@ -68,7 +71,9 @@ void
     return;
   }
   get_data();
-
+  output_data();
+  FieldHandle fH(tv);
+  d_oport->send(fH);
 }
 
 void MeshGen::get_data() {
@@ -96,18 +101,24 @@ void MeshGen::get_data() {
     d_vmap[v] = d_index++;
     ++ni;
   }
-  /*  ifstream ptsFile("data/tank0.pts");
-  
-  double x, y, z;
-  while ( ptsFile >> x >> y >> z ) {
-    v = d_vMesh.insert(Point(x,y,z));
-    v->set_input(true); // all points are original
-    d_vertices.push_back(v);
-    d_vmap[v] = d_index++;
-  }
-  d_vMesh.is_valid(true,0);*/
 }
 
+void MeshGen::output_data()
+{
+  DCell* c;
+  TetVolMeshHandle tvm = new TetVolMesh;
+  tv = new TetVolField<double>(tvm, Field::NODE);
+
+  DCellIterator<VolumeMesh> ci = d_vMesh.finite_cells_begin();
+  while ( ci != d_vMesh.cells_end() ) {
+    c = &(*ci);
+    Point p0 = c->vertex(0)->point();
+    Point p1 = c->vertex(1)->point();
+    Point p2 = c->vertex(2)->point();
+    Point p3 = c->vertex(3)->point();
+    tvm->add_tet(p0,p1,p2,p3);
+  }
+}
 
 void
  MeshGen::tcl_command(GuiArgs& args, void* userdata)
