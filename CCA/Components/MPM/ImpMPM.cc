@@ -614,7 +614,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
 
-  t->modifies(lb->gStressForSavingLabel);
+  t->computes(lb->gStressForSavingLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -1966,7 +1966,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       old_dw->get(px,   lb->pXLabel,    pset);
       old_dw->get(pmass,lb->pMassLabel, pset);
       new_dw->get(gmass,lb->gMassLabel, dwi, patch,Ghost::None,0);
-      new_dw->getModifiable(gstress,  lb->gStressForSavingLabel,dwi, patch);
+      new_dw->allocateAndPut(gstress,  lb->gStressForSavingLabel,dwi, patch);
 
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
 
