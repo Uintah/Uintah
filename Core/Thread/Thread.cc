@@ -51,9 +51,13 @@
 #else
 #include <unistd.h>
 #endif
-#ifdef __sgi
+#ifdef HAVE_EXC
 #include <libexc.h>
+#elif defined(__GNUC__) && defined(__linux)
+#include <execinfo.h>
 #endif
+
+
 
 #define THREAD_DEFAULT_STACKSIZE 64*1024*2
 
@@ -233,9 +237,10 @@ void
 Thread::niceAbort()
 {
 #ifndef _WIN32
-#ifdef __sgi
-  // Use -lexc to print out a stack trace
+
   static const int MAXSTACK = 100;
+#ifdef HAVE_EXC
+  // Use -lexc to print out a stack trace
   static const int MAXNAMELEN = 1000;
   __uint64_t addrs[MAXSTACK];
   char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
@@ -250,7 +255,21 @@ Thread::niceAbort()
     for(int i=0;i<nframes;i++)
       fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
   }
-#endif	// __sgi
+#elif defined(__GNUC__) && defined(__linux)
+  static void *addresses[MAXSTACK];
+  int n = backtrace( addresses, MAXSTACK );
+  if (n == 0){
+    fprintf(stderr, "Backtrace not available!\n");
+  } else {
+    fprintf(stderr, "Backtrace:\n");
+    char **names = backtrace_symbols( addresses, n );
+    for ( int i = 0; i < n; i++ )
+    {
+      fprintf (stderr, "%s\n", names[i]);
+    } 
+    free(names);
+  } 
+#endif
 
   char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)
