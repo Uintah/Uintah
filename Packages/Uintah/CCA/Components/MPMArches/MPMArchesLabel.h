@@ -68,7 +68,9 @@ namespace Uintah {
       const VarLabel* PressureForce_FCZLabel; 
 
       const VarLabel* SumAllForcesCCLabel; 
+      const VarLabel* AccArchesCCLabel; 
       const VarLabel* SumAllForcesNCLabel; 
+      const VarLabel* AccArchesNCLabel; 
 
       // reqd by Arches
 

@@ -62,7 +62,13 @@ MPMArchesLabel::MPMArchesLabel()
   SumAllForcesCCLabel = scinew VarLabel("SumAllForcesCC",
 				 CCVariable<Vector>::getTypeDescription() );
 
+  AccArchesCCLabel = scinew VarLabel("AccArchesCC",
+				 CCVariable<Vector>::getTypeDescription() );
+
   SumAllForcesNCLabel = scinew VarLabel("SumAllForcesNC",
+				 NCVariable<Vector>::getTypeDescription() );
+
+  AccArchesNCLabel = scinew VarLabel("AccArchesNC",
 				 NCVariable<Vector>::getTypeDescription() );
 
   // used for temporary computation:
@@ -355,6 +361,11 @@ MPMArchesLabel::~MPMArchesLabel()
   delete PressureForce_FCXLabel;
   delete PressureForce_FCYLabel;
   delete PressureForce_FCZLabel;
+
+  delete SumAllForcesCCLabel;
+  delete SumAllForcesNCLabel;
+  delete AccArchesCCLabel;
+  delete AccArchesNCLabel;
 
   delete void_frac_CCLabel;
 
