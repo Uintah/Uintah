@@ -44,6 +44,11 @@ set bbox {0 0 3100 3100}
 
 set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
 
+
+
+
+
+
 global mods
 set mods(Viewer) $m1
 
@@ -2411,6 +2416,47 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	bind $page.sampling.srate_lo <ButtonRelease> $n
 
 	bind $page.tf.stransp <ButtonRelease> $n
+
+        # display window and level
+        global $mods(ViewImage)-axial-viewport0-clut_ww 
+        global $mods(ViewImage)-axial-viewport0-clut_wl
+        global $mods(ViewImage)-min $mods(ViewImage)-max
+
+        iwidgets::labeledframe $page.winlevel \
+            -labeltext "Window/Level Controls" \
+            -labelpos nw
+        pack $page.winlevel -side top -anchor nw -expand no -fill x \
+            -pady 3
+        set winlevel [$page.winlevel childsite]
+
+        frame $winlevel.ww
+        frame $winlevel.wl
+        pack $winlevel.ww $winlevel.wl -side top -anchor ne -pady 0
+
+        label $winlevel.ww.l -text "Window Width"
+        scale $winlevel.ww.s -variable $mods(ViewImage)-axial-viewport0-clut_ww \
+            -from 0 -to 129 -length 130 -width 15 \
+            -showvalue false -orient horizontal \
+            -command "$this change_volume_window_width"
+        bind $winlevel.ww.s <ButtonRelease> "$this update_planes_threshold"
+        entry $winlevel.ww.e -textvariable $mods(ViewImage)-axial-viewport0-clut_ww \
+            -relief flat
+        bind $winlevel.ww.e <Return> "$this change_volume_window_width 1; $this update_planes_threshold"
+        pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
+
+        label $winlevel.wl.l -text "Window Level "
+        scale $winlevel.wl.s -variable $mods(ViewImage)-axial-viewport0-clut_wl \
+            -from 0 -to 1299 -length 130 -width 15 \
+            -showvalue false -orient horizontal \
+            -command "$this change_volume_window_level"
+        bind $winlevel.wl.s <ButtonRelease> "$this update_planes_threshold"
+        entry $winlevel.wl.e -textvariable $mods(ViewImage)-axial-viewport0-clut_wl \
+            -relief flat
+        bind $winlevel.wl.e <Return> "$this change_volume_window_level 1; $this update_planes_threshold"
+        pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
+
+        trace variable $mods(ViewImage)-min w "$this update_volume_window_level_scales"
+        trace variable $mods(ViewImage)-max w "$this update_volume_window_level_scales"
        
 
         ### Renderer Options Tab
@@ -3128,6 +3174,66 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 
 	$mods(ViewImage)-c redrawall
     }
+
+    method update_volume_window_level_scales {varname varele varop} {
+	global mods
+	global $mods(ViewImage)-min $mods(ViewImage)-max
+	global $mods(ViewImage)-axial-viewport0-clut_ww
+	global $mods(ViewImage)-axial-viewport0-clut_wl
+
+	set min [set $mods(ViewImage)-min]
+	set max [set $mods(ViewImage)-max]
+
+	# configure window width scale
+	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
+	    configure -from $min -to $max
+	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
+	    configure -from $min -to $max
+
+	# configure window level scale
+	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
+	    configure -from $min -to $max
+	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
+	    configure -from $min -to $max
+	
+    }
+
+    method change_volume_window_width { val } {
+	# sync other windows with axial window width
+	global mods
+	global $mods(ViewImage)-axial-viewport0-clut_ww
+	global $mods(ViewImage)-sagittal-viewport0-clut_ww
+	global $mods(ViewImage)-coronal-viewport0-clut_ww
+
+	set val [set $mods(ViewImage)-axial-viewport0-clut_ww]
+
+	set $mods(ViewImage)-sagittal-viewport0-clut_ww $val
+	set $mods(ViewImage)-coronal-viewport0-clut_ww $val
+
+	# set windows to be dirty
+	$mods(ViewImage)-c setclut
+
+	$mods(ViewImage)-c redrawall
+    }
+
+    method change_volume_window_level { val } {
+	# sync other windows with axial window level
+	global mods
+	global $mods(ViewImage)-axial-viewport0-clut_wl
+	global $mods(ViewImage)-sagittal-viewport0-clut_wl
+	global $mods(ViewImage)-coronal-viewport0-clut_wl
+
+	set val [set $mods(ViewImage)-axial-viewport0-clut_wl]
+
+	set $mods(ViewImage)-sagittal-viewport0-clut_wl $val
+	set $mods(ViewImage)-coronal-viewport0-clut_wl $val
+
+	# set windows to be dirty
+	$mods(ViewImage)-c setclut
+
+	$mods(ViewImage)-c redrawall
+    }
+
 
      method update_BioImage_shading_button_state {varname varele varop} {
          set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
@@ -3864,6 +3970,7 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 		$mod-c needexecute
             }
 	} else {
+            $this set_viewer_position
             $this execute_Data
 	}
 
@@ -4701,6 +4808,34 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 
     method set_saved_class_var {var val} {
 	set $var $val
+    }
+
+    method set_viewer_position {} {
+	global mods
+	
+	global $mods(Viewer)-ViewWindow_0-view-eyep-x
+	global $mods(Viewer)-ViewWindow_0-view-eyep-y
+	global $mods(Viewer)-ViewWindow_0-view-eyep-z
+   	set $mods(Viewer)-ViewWindow_0-view-eyep-x {560.899236544}
+        set $mods(Viewer)-ViewWindow_0-view-eyep-y {356.239586973}
+        set $mods(Viewer)-ViewWindow_0-view-eyep-z {178.810334192}
+
+	global $mods(Viewer)-ViewWindow_0-view-lookat-x
+	global $mods(Viewer)-ViewWindow_0-view-lookat-y
+	global $mods(Viewer)-ViewWindow_0-view-lookat-z
+        set $mods(Viewer)-ViewWindow_0-view-lookat-x {51.5}
+        set $mods(Viewer)-ViewWindow_0-view-lookat-y {47.0}
+        set $mods(Viewer)-ViewWindow_0-view-lookat-z {80.5}
+
+	global $mods(Viewer)-ViewWindow_0-view-up-x
+	global $mods(Viewer)-ViewWindow_0-view-up-y
+	global $mods(Viewer)-ViewWindow_0-view-up-z
+        set $mods(Viewer)-ViewWindow_0-view-up-x {-0.181561715965}
+        set $mods(Viewer)-ViewWindow_0-view-up-y {0.0242295849764}
+        set $mods(Viewer)-ViewWindow_0-view-up-z {0.983081009128}
+
+	global $mods(Viewer)-ViewWindow_0-view-fov
+        set $mods(Viewer)-ViewWindow_0-view-fov {20.0}
     }
 
 
