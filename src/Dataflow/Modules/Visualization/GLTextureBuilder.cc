@@ -56,10 +56,10 @@ extern "C" Module* make_GLTextureBuilder( const clString& id) {
 GLTextureBuilder::GLTextureBuilder(const clString& id)
   : Module("GLTextureBuilder", id, Filter, "Visualization", "SCIRun"), 
     tex_(0),
+    is_fixed_("is_fixed", id, this),
     max_brick_dim_("max_brick_dim", id, this),
     min_("min", id, this),
     max_("max", id, this),
-    is_fixed_("is_fixed", id, this),
     old_brick_size_(0), old_min_(-1), old_max_(-1)
 {
   // Create the input ports
@@ -198,8 +198,8 @@ void GLTextureBuilder::execute(void)
     }
   }    
 
-  old_min_ = minV;
-  old_max_ = maxV;
+  old_min_ = (int)minV;
+  old_max_ = (int)maxV;
 
   if (tex_.get_rep())
   {
