@@ -13,7 +13,7 @@
 	<maxTime>0.1</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
-	<delt_max>0.0001</delt_max>
+	<delt_max>0.01</delt_max>
    </Time>
 
     <MPM>
@@ -60,7 +60,7 @@
 	    </material>
 
 	    <material>
-		<density>1200.0</density>
+		<density>1000.0</density>
 		<comp_mooney_rivlin> 
 		   <he_constant_1>100000.0</he_constant_1>
 		   <he_constant_2>20000.0</he_constant_2>
@@ -88,8 +88,9 @@
 	    </material>
 
 	    <contact>
-	      <type>single_velocity</type>
+	      <type>friction</type>
 	      <vel_fields>[0,1,0]</vel_fields>
+	      <mu> .2 </mu>
 	    </contact>
 	</MPM>
 
