@@ -148,7 +148,7 @@ struct GeomCVertex : public GeomVertex {
 #endif
 };
 
-class SCICORESHARE GeomVertexPrim : public GeomObj {
+class GeomVertexPrim : public GeomObj {
 public:
   Array1<double> times;
   Array1<GeomVertex*> verts;

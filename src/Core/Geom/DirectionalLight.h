@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE DirectionalLight : public Light {
+class DirectionalLight : public Light {
     Vector v;
     Color c;
 public:

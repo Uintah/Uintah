@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomTetra : public GeomObj {
+class GeomTetra : public GeomObj {
 public:
     Point p1;
     Point p2;

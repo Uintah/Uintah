@@ -52,7 +52,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE GeomTexSlices : public GeomObj {
+class GeomTexSlices : public GeomObj {
     Point min, max;
     int nx, ny, nz;
     unsigned int texids[3];

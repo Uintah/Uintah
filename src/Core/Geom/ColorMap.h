@@ -52,6 +52,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
+#include <Core/Geom/share.h>
 
 /* changed to work less stupid with transfer functions
  * Peter-Pike Sloan
@@ -61,7 +62,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class SCICORESHARE ColorMap : public PropertyManager,
+class ColorMap : public PropertyManager,
                               public GeomColormapInterface
 {
 public:

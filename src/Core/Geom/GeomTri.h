@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomTri : public GeomVertexPrim {
+class GeomTri : public GeomVertexPrim {
     Vector n;
 public:
     GeomTri(const Point&, const Point&, const Point&);

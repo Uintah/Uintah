@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomDisc : public GeomObj {
+class GeomDisc : public GeomObj {
     Vector v1;
     Vector v2;
     Vector zrotaxis;

@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomSwitch : public GeomContainer {
+class GeomSwitch : public GeomContainer {
     int state;
     GeomSwitch(const GeomSwitch&);
 
@@ -69,7 +69,7 @@ public:
 };
 
 
-class SCICORESHARE GeomTimeSwitch : public GeomContainer {
+class GeomTimeSwitch : public GeomContainer {
     double tbeg;
     double tend;
     GeomTimeSwitch(const GeomTimeSwitch&);

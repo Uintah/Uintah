@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE TexGeomGrid : public GeomObj {
+class TexGeomGrid : public GeomObj {
     int tmap_size;
     int tmap_dlist;
     Point corner;

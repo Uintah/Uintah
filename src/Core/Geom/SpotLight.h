@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE SpotLight : public Light {
+class SpotLight : public Light {
     Point p;
     Vector v;
     float cutoff; // must be [0-90], or 180

@@ -45,8 +45,6 @@
 #ifndef SCI_project_GuiView_h
 #define SCI_project_GuiView_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Geom/View.h>
 #include <Core/Geom/GuiGeom.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -54,7 +52,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE GuiView : public GuiVar {
+class GuiView : public GuiVar {
     GuiPoint eyep;
     GuiPoint lookat;
     GuiVector up;
@@ -69,7 +67,7 @@ public:
     void set(const View&);
 };
 
-class SCICORESHARE GuiExtendedView : public GuiVar {
+class GuiExtendedView : public GuiVar {
     GuiPoint eyep;
     GuiPoint lookat;
     GuiVector up;

@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomTimeGroup : public GeomObj {
+class GeomTimeGroup : public GeomObj {
     vector<GeomHandle> objs;
     vector<double>     start_times;
 
