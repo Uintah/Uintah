@@ -1099,7 +1099,20 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	    foreach w [winfo children .] {
 		if { [string first .ui$module $w] == 0 } {
 		    append script "\n${tab}$modVar($module) addViewer"
-		    append script "\n${tab}set $modVar($module)-ViewWindow_$num-geometry [wm geometry $w]\n"
+		    # since the viewer always initially comes up without
+		    # the extended controls, save the geometry to only
+		    # include the menu, viewer gl window, and standard controls
+		    set width [winfo width .ui$module-ViewWindow_$num.bsframe]
+		    set height1 [winfo height .ui$module-ViewWindow_$num.menu]
+		    set height2 [winfo height .ui$module-ViewWindow_$num.wframe]
+		    set height3 [winfo height .ui$module-ViewWindow_$num.bsframe]
+
+		    # Depending on if the extended controls are attached/detached,
+		    # there are 5-8 pixels used for padding, hence the magic 7
+		    set height [expr $height1 + $height2 + $height3 + 7]
+		    set x [winfo rootx .ui$module-ViewWindow_$num]
+		    set y [winfo rooty .ui$module-ViewWindow_$num]
+		    append script "\n${tab}set $modVar($module)-ViewWindow_$num-geometry $width\x$height\+$x\+$y\n"
 		    incr num
 		}
 	    }
