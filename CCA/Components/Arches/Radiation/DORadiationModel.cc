@@ -311,6 +311,12 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       if (converged) {
 	d_linearSolver->copyRadSoln(patch, vars);
       }
+      else {
+        if (pg->myrank() == 0) {
+          cerr << "radiation solver not converged" << endl;
+        }
+        exit(1);
+      }
       d_linearSolver->destroyMatrix();
       fort_rdomvolq(idxLo, idxHi, direcn, wt, vars->cenint, volq);
       fort_rdomflux(idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
