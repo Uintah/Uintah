@@ -194,11 +194,11 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                         0);
           } else if (token->GetTMapFilename()=="") {
             ase_matls[token->GetIndex()] = 
-              new DielectricMaterial(.9,
-                                     1.1,
-                                     1-token->GetTransparency(),
+              new DielectricMaterial(1.,
+                                     1.,
+                                     1.-token->GetTransparency(),
                                      token->GetShine(),
-                                     Color(diffuse)*1000,
+                                     Color(diffuse),
                                      Color(diffuse));
           } else {
             ase_matls[token->GetIndex()] = 
