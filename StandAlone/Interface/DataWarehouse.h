@@ -19,7 +19,9 @@ namespace Geometry {
 }
 
 namespace Uintah {
+
    class VarLabel;
+
 /**************************************
 	
 CLASS
@@ -50,6 +52,9 @@ WARNING
 ****************************************/
       
    class DataWarehouse : public RefCounted {
+
+     friend class DataWarehouseMpiHandler;
+     
    public:
       virtual ~DataWarehouse();
       
@@ -81,6 +86,22 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void carryForward(const DataWarehouseP& from) = 0;
+
+      //////////
+      // When the Scheduler determines that another MPI node will be
+      // creating a piece of data (ie: a sibling DataWarehouse will have
+      // this data), it uses this procedure to let this DataWarehouse
+      // know which mpiNode has the data so that if this DataWarehouse
+      // needs the data, it will know who to ask for it.
+      virtual void registerOwnership( const VarLabel * label,
+				      const Region   * region,
+				            int        mpiNode ) = 0;
+      //////////
+      // Searches through the list containing which DataWarehouse's
+      // have which data to find the mpiNode that the requested
+      // variable (in the given region) is on.
+      virtual int findMpiNode( const VarLabel * label,
+			       const Region   * region ) = 0;
        
    protected:
       DataWarehouse( int MpiRank, int MpiProcesses );
@@ -91,11 +112,14 @@ WARNING
       DataWarehouse(const DataWarehouse&);
       DataWarehouse& operator=(const DataWarehouse&);
    };
-   
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.18  2000/05/05 06:42:46  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.17  2000/05/02 17:54:34  sparker
 // Implemented more of SerialMPM
 //
