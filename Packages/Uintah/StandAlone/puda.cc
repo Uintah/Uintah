@@ -53,6 +53,7 @@ string replaceChar(string s, char old, char newch) {
 
 // use this function to open a pair of files for outputing
 // data to the reat-time raytracer.
+//
 // in: pointers to the pointer to the files data and header
 //     the file names
 // out: inialized files for writing
@@ -107,6 +108,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -listvariables\n";
     cerr << "  -varsummary\n";
     cerr << "  -asci\n";
+    cerr << "  -cell_stresses\n";
     cerr << "  -rtdata [output directory]\n";
     cerr << "  -PTvar\n";
     cerr << "  -ptonly (prints out only the point location\n";
@@ -135,6 +137,7 @@ int main(int argc, char** argv)
   bool do_listvars=false;
   bool do_varsummary=false;
   bool do_asci=false;
+  bool do_cell_stresses=false;
   bool do_rtdata = false;
   bool do_NCvar_double = false;
   bool do_NCvar_point = false;
@@ -170,6 +173,8 @@ int main(int argc, char** argv)
       do_varsummary=true;
     } else if(s == "-asci"){
       do_asci=true;
+    } else if(s == "-cell_stresses"){
+      do_cell_stresses=true;
     } else if(s == "-rtdata") {
       do_rtdata = true;
       if (++i < argc) {
@@ -897,7 +902,135 @@ int main(int argc, char** argv)
     //end of do_asci		
     }
 		
-
+    if (do_cell_stresses){
+      vector<string> vars;
+      vector<const TypeDescription*> types;
+      da->queryVariables(vars, types);
+      ASSERTEQ(vars.size(), types.size());
+      
+      cout << "There are " << vars.size() << " variables:\n";
+      vector<int> index;
+      vector<double> times;
+      da->queryTimesteps(index, times);
+      ASSERTEQ(index.size(), times.size());
+      
+      cout << "There are " << index.size() << " timesteps:\n";
+      
+      if (!tslow_set)
+	time_step_lower =0;
+      else if (time_step_lower >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      if (!tsup_set)
+	time_step_upper = times.size()-1;
+      else if (time_step_upper >= times.size()) {
+	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      
+      // obtain the desired timesteps
+      int start_time, stop_time, t = 0;
+      cout << "Time Step       Value\n";
+      
+      for(t = time_step_lower; t <= time_step_upper; t++){
+	double time = times[t];
+	cout << "    " << t + 1 << "        "  << time << "\n";
+      }
+      cout << endl;
+      if (t != (time_step_lower +1)){
+	cout << "Enter start time-step (1 - " << t << "): ";
+	cin >> start_time;
+	start_time--;
+	cout << "Enter stop  time-step (1 - " << t << "): ";
+	cin >> stop_time;
+	stop_time--;
+      }
+      else 
+      	if(t == (time_step_lower + 1)){
+	  start_time = t-1;
+	  stop_time  = t-1;
+	}
+      // end of timestep acquisition
+      
+      for(t=start_time;t<=stop_time;t++){
+	
+	double time = times[t];
+	cout << "time = " << time << "\n";
+	GridP grid = da->queryGrid(time);
+	for(int v=0;v<(int)vars.size();v++){
+	  std::string var = vars[v];
+	  
+	  // only dumps out data if it is variable g.stressFS
+	  if (var == "g.stressFS"){
+	    const TypeDescription* td = types[v];
+	    const TypeDescription* subtype = td->getSubType();
+	    cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	    for(int l=0;l<grid->numLevels();l++){
+	      LevelP level = grid->getLevel(l);
+	      for(Level::const_patchIterator iter = level->patchesBegin();
+		  iter != level->patchesEnd(); iter++){
+		const Patch* patch = *iter;
+		cout << "\t\tPatch: " << patch->getID() << "\n";
+		int numMatls = da->queryNumMaterials(var, patch, time);
+		
+		for(int matl=0;matl<numMatls;matl++){
+		  
+		  // dumps header and variable info to file
+		  char fnum[5], matnum[5];
+		  string filename;
+		  int timestepnum=t+1;
+		  sprintf(fnum,"%04d",timestepnum);
+		  sprintf(matnum,"%04d",matl);
+		  string partroot("stress.t");
+		  string partext(".m");
+		  filename = partroot+fnum+partext+matnum;
+		  ofstream partfile(filename.c_str());
+		  partfile << "# x, y, z, st11, st12, st13, st21, st22, st23, st31, st32, st33" << endl;
+		  
+		  cout << "\t\t\tMaterial: " << matl << "\n";
+		  switch(td->getType()){
+		  case TypeDescription::NCVariable:
+		    switch(subtype->getType()){
+		    case TypeDescription::Matrix3:{
+		      NCVariable<Matrix3> value;
+		      da->query(value, var, matl, patch, time);
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex()
+			   << " to " << value.getHighIndex() << "\n";
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			NodeIterator iter = patch->getNodeIterator();
+			for(;!iter.done(); iter++){
+			  partfile << (*iter).x() << " " << (*iter).y() << " " << (*iter).z()
+				   << " " << (value[*iter])(1,1) << " " << (value[*iter])(1,2) << " " 
+				   << (value[*iter])(1,3) << " " << (value[*iter])(2,1) << " "
+				   << (value[*iter])(2,2) << " " << (value[*iter])(2,3) << " "
+				   << (value[*iter])(3,1) << " " << (value[*iter])(3,2) << " "
+				   << (value[*iter])(3,3) << endl;
+			}
+		      }
+		    }
+		    break;
+		    default:
+		      cerr << "No Matrix3 Subclass avaliable." << subtype->getType() << '\n';
+		      break;
+		    }
+		    break;
+		  default:
+		    cerr << "No NC Variables avaliable." << td->getType() << '\n';
+		    break;
+		  }
+		}
+	      }
+	    }
+	  }
+	  else
+	    cout << "No g.stressFS variables avaliable at time " << t << "." << endl;
+	}
+	if (start_time == stop_time)
+	  t++;   
+      }
+    }
     
     if (do_rtdata) {
       // Create a directory if it's not already there.

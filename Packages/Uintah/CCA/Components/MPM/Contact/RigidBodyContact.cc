@@ -1,36 +1,30 @@
-//
-// $Id$
-//
-
 // RigidBodyContact.cc
-//
 
 #include "RigidBodyContact.h"
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <Uintah/Grid/Array3Index.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/NodeIterator.h>
-#include <Uintah/Grid/ReductionVariable.h>
-#include <Uintah/Grid/SimulationState.h>
-#include <Uintah/Grid/SimulationStateP.h>
-#include <Uintah/Interface/DataWarehouse.h>
-#include <Uintah/Grid/Task.h>
-#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Uintah/Grid/VarTypes.h>
-#include <Uintah/Grid/VarLabel.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/Core/Grid/Array3Index.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <Uintah/Components/MPM/MPMLabel.h>
 
 using namespace std;
-using namespace Uintah::MPM;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::IntVector;
-using std::vector;
+using namespace Uintah;
+using namespace SCIRun;
 
 RigidBodyContact::RigidBodyContact(ProblemSpecP& ps, 
 				    SimulationStateP& d_sS)
@@ -196,17 +190,3 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
   t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
 
 }
-
-// $Log$
-// Revision 1.1  2001/01/17 21:29:27  dav
-// Added to new tree
-//
-// Revision 1.2  2001/01/15 23:44:06  bard
-// Modified algorithm to only enforce rigid contact in z-direction.
-//
-// Generalized algorithm to handle multiple non rigid bodies (all
-// materials with indices > 0).  Material 0 is the rigid one.
-//
-// Revision 1.1  2001/01/11 03:31:31  guilkey
-// Created new contact model for rigid bodies.
-//

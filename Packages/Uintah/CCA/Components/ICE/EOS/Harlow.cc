@@ -73,8 +73,6 @@ void Harlow::addComputesAndRequiresPEOS(Task* task,
 
 }
 
-
-
 void Harlow::computeSpeedSound(const Patch* patch,
                                  const ICEMaterial* matl,
                                  DataWarehouseP& old_dw,
@@ -85,7 +83,7 @@ void Harlow::computeSpeedSound(const Patch* patch,
   CCVariable<double> cv;
   CCVariable<double> speedSound;
 
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
   double gamma = matl->getGamma();
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
@@ -103,7 +101,6 @@ void Harlow::computeSpeedSound(const Patch* patch,
   }
 
   new_dw->put(speedSound,lb->speedSound_CCLabel,vfindex,patch);
-
 }
 
 double Harlow::computeRhoMicro(double& press, double& gamma,
@@ -135,7 +132,7 @@ void Harlow::computeRhoMicro(const Patch* patch,
   CCVariable<double> cv;
   CCVariable<double> press;
   
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
   old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
@@ -149,8 +146,6 @@ void Harlow::computeRhoMicro(const Patch* patch,
   }
 
   new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
-
-
 }
 
 void Harlow::computePressEOS(const Patch* patch,
@@ -158,8 +153,7 @@ void Harlow::computePressEOS(const Patch* patch,
                                DataWarehouseP& old_dw,
                                DataWarehouseP& new_dw)
 {
-
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
   CCVariable<double> rho_micro;
   CCVariable<double> temp;
   CCVariable<double> cv;
@@ -172,11 +166,9 @@ void Harlow::computePressEOS(const Patch* patch,
   old_dw->get(rho_micro, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
   new_dw->allocate(press,lb->rho_micro_CCLabel,vfindex,patch);
 
-
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     press[*iter] = (gamma - 1.)* rho_micro[*iter] * cv[*iter] * temp[*iter];
   }
 
   new_dw->put(press,lb->press_CCLabel,vfindex,patch);
-
 }

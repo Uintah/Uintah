@@ -5,10 +5,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Core/Parallel
 
 SRCS     += \
-	$(SRCDIR)/Parallel.cc \
-	$(SRCDIR)/ProcessorGroup.cc \
+	$(SRCDIR)/Parallel.cc                \
+	$(SRCDIR)/ProcessorGroup.cc          \
 	$(SRCDIR)/UintahParallelComponent.cc \
-	$(SRCDIR)/UintahParallelPort.cc
+	$(SRCDIR)/UintahParallelPort.cc      \
+	$(SRCDIR)/Vampir.cc
 
 PSELIBS := \
 	Core/Thread \

@@ -30,9 +30,9 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
   ps->require("hardening_modulus",d_initialData.K);
   ps->require("alpha",d_initialData.Alpha);
 
-  p_statedata_label = scinew VarLabel("p.statedata",
+  p_statedata_label = scinew VarLabel("p.statedata_cnhp",
                              ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata+",
+  p_statedata_label_preReloc = scinew VarLabel("p.statedata_cnhp+",
                              ParticleVariable<StateData>::getTypeDescription());
  
   bElBarLabel = scinew VarLabel("p.bElBar",
@@ -339,11 +339,12 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
   new_dw->put(bElBar, bElBarLabel_preReloc);
 
+  //
   if( matl->getFractureModel() ) {
     new_dw->put(pRotationRate, lb->pRotationRateLabel);
   }
@@ -412,6 +413,7 @@ void CompNeoHookPlas::addComputesAndRequiresForCrackSurfaceContact(
 #endif
 
 namespace Uintah {
+
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(CompNeoHookPlas::StateData), sizeof(double)*1);

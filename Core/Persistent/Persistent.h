@@ -23,15 +23,12 @@
 #include <Core/share/share.h>
 
 namespace SCIRun {
-  class clString;
-}
-
-namespace SCIRun {
 
 using std::string;
 using std::map;
 using std::vector;
 
+class clString;
 class Persistent;
 
 //----------------------------------------------------------------------

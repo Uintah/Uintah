@@ -26,7 +26,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace Uintah;
 using namespace SCIRun;
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
@@ -83,14 +82,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
       piece_num++;
       d_geom_objs.push_back(scinew GeometryObject(this,mainpiece, geom_obj_ps));
-      
-      // Step 4 -- Assign the boundary conditions to the object
-
-      
-      // Step 5 -- Assign the velocity field
-      int vf;
-      ps->require("velocity_field",vf);
-      setVFIndex(vf);
    }
 
    lb = scinew MPMLabel();
@@ -170,7 +161,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
 
    ParticleVariable<int> pIsBroken;
-   ParticleVariable<Vector> pCrackSurfaceNormal;
+   ParticleVariable<Vector> pCrackNormal;
    ParticleVariable<Vector> pCrackSurfaceContactForce;
    ParticleVariable<double> pTensileStrength;
    ParticleVariable<Vector> pImageVelocity;
@@ -178,8 +169,8 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    if(d_fracture) {
      new_dw->allocate(pIsBroken, 
        lb->pIsBrokenLabel, subset);
-     new_dw->allocate(pCrackSurfaceNormal, 
-       lb->pCrackSurfaceNormalLabel, subset);
+     new_dw->allocate(pCrackNormal, 
+       lb->pCrackNormalLabel, subset);
      new_dw->allocate(pCrackSurfaceContactForce, 
        lb->pCrackSurfaceContactForceLabel, subset);
      new_dw->allocate(pTensileStrength, 
@@ -210,7 +201,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      
      if(d_fracture) {
 	pIsBroken[pIdx] = 0;
-	pCrackSurfaceNormal[pIdx] = Vector(0.,0.,0.);
+	pCrackNormal[pIdx] = Vector(0.,0.,0.);
 	pCrackSurfaceContactForce[pIdx] = Vector(0.,0.,0.);
 	pImageVelocity[pIdx] = Vector(0.,0.,0.);
      }
@@ -218,6 +209,9 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
 
      //applyPhysicalBCToParticles
+     
+     const Point& p( position[pIdx] );
+     
      for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ ) {
        string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
         
@@ -228,13 +222,65 @@ void MPMMaterial::createParticles(particleIndex numParticles,
          const Point& lower( bc->getLowerRange() );
          const Point& upper( bc->getUpperRange() );
           
-         if(lower.x()<= position[pIdx].x() && position[pIdx].x() <= upper.x() &&
-            lower.y()<= position[pIdx].y() && position[pIdx].y() <= upper.y() &&
-            lower.z()<= position[pIdx].z() && position[pIdx].z() <= upper.z() ){
+         if(lower.x()<= p.x() && p.x() <= upper.x() &&
+            lower.y()<= p.y() && p.y() <= upper.y() &&
+            lower.z()<= p.z() && p.z() <= upper.z() ){
                pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
                //cout << pexternalforce[pIdx] << endl;
          }
        }
+
+       if(d_fracture) {
+       if (bcs_type == "Crack") {
+         CrackBC* bc = dynamic_cast<CrackBC*>
+			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+	 
+	 Vector d = p - bc->origin();
+	 double x = Dot(d,bc->e1());
+	 double y = Dot(d,bc->e2());
+	 
+	 {
+	   Matrix3 mat(1, bc->x1(), bc->y1(),
+	               1, bc->x2(), bc->y2(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+
+	 {
+	   Matrix3 mat(1, bc->x2(), bc->y2(),
+	               1, bc->x3(), bc->y3(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+	 
+	 {
+	   Matrix3 mat(1, bc->x3(), bc->y3(),
+	               1, bc->x4(), bc->y4(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+
+	 {
+	   Matrix3 mat(1, bc->x4(), bc->y4(),
+	               1, bc->x1(), bc->y1(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+	 
+	 double vdis = Dot( (p - bc->origin()), bc->e3() );
+
+	 double particle_half_size = pow( pvolume[pIdx], 1./3.) /2;
+
+	 if(vdis > 0 && vdis < particle_half_size) {
+	   pIsBroken[pIdx] = 1;
+	   pCrackNormal[pIdx] = - bc->e3();
+	 }
+	 else if(vdis < 0 && vdis > -particle_half_size) {
+	   pIsBroken[pIdx] = 1;
+	   pCrackNormal[pIdx] = bc->e3();
+	 }
+       } //"Crack"
+       } //fracture
      }
    }
 
@@ -252,7 +298,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    
    if(d_fracture) {
      new_dw->put(pIsBroken, lb->pIsBrokenLabel);
-     new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
+     new_dw->put(pCrackNormal, lb->pCrackNormalLabel);
      new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
      new_dw->put(pTensileStrength, lb->pTensileStrengthLabel);
      new_dw->put(pImageVelocity, lb->pImageVelocityLabel);
@@ -347,23 +393,30 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 
 
 		  if( d_fracture ) {
-	            double probability;
-	            double x;
-                    double tensileStrengthAve = ( obj->getTensileStrengthMin() + 
+		    if(obj->getTensileStrengthMin() == obj->getTensileStrengthMax())
+		    {
+		      tensilestrength[start+count] = obj->getTensileStrengthMin();
+		    }
+		    else
+		    {
+	              double probability;
+		      double x;
+		      double tensileStrengthAve = ( obj->getTensileStrengthMin() + 
                                  obj->getTensileStrengthMax() )/2;
-                    double tensileStrengthWid = ( obj->getTensileStrengthMax() - 
+		      double tensileStrengthWid = ( obj->getTensileStrengthMax() - 
                                  obj->getTensileStrengthMin() )/2 *
                                  obj->getTensileStrengthVariation();
-	            double s;
-		    do {
-	              double rand = drand48();
-	              s = (1-rand) * obj->getTensileStrengthMin() + 
-		          rand * obj->getTensileStrengthMax();
+		      double s;
+		      do {
+	                double rand = drand48();
+	                s = (1-rand) * obj->getTensileStrengthMin() + 
+		            rand * obj->getTensileStrengthMax();
 	              
-	              probability = drand48();
-	              x = (s-tensileStrengthAve)/tensileStrengthWid;
-	            } while( exp(-x*x) < probability );
-	            tensilestrength[start+count] = s;
+	                probability = drand48();
+	                x = (s-tensileStrengthAve)/tensileStrengthWid;
+	              } while( exp(-x*x) < probability );
+	              tensilestrength[start+count] = s;
+		    }
 		  }
 		  
 		  count++;
@@ -426,5 +479,4 @@ double MPMMaterial::getHeatTransferCoefficient() const
 {
   return d_heatTransferCoefficient;
 }
-
 

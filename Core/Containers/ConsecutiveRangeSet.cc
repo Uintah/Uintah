@@ -127,6 +127,36 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
   setSize();
 }
 
+// Add to the range set, asserting that value is greater or equal
+// to anything already in the set.
+void ConsecutiveRangeSet::addInOrder(int value)
+   throw(ConsecutiveRangeSetException)
+{
+   if (d_rangeSet.size() == 0)
+      d_rangeSet.push_back(Range(value, value));
+   else {
+      Range& range = d_rangeSet.back();
+      int last_value = (int)(range.d_low + range.d_extent);
+      if (value < last_value) {
+	 ostringstream msg;
+	 msg << "ConsecutiveRangeSet::addInOrder given value not in order: "
+	     << value << " < " << last_value;
+	 throw ConsecutiveRangeSetException(msg.str());
+      }
+      if (value > last_value) {
+	 if ((unsigned long)value == (unsigned long)last_value + 1)
+	    range.d_extent++;
+	 else {
+	    // end of range
+	    d_rangeSet.push_back(Range(value, value));
+	 }
+      }
+      else
+	 return; // value == last_value -- don't increment the size
+   }
+   d_size++;
+}
+
 void ConsecutiveRangeSet::setSize()
 {
   d_size = 0;
@@ -153,7 +183,8 @@ bool ConsecutiveRangeSet::operator==(const ConsecutiveRangeSet& set2) const
 {
   vector<Range>::const_iterator it = d_rangeSet.begin();
   vector<Range>::const_iterator it2 = set2.d_rangeSet.begin();
-  for (; it != d_rangeSet.end() && it2 != set2.d_rangeSet.end(); it++, it2++) {
+  for (; it != d_rangeSet.end() && it2 != set2.d_rangeSet.end();
+       it++, it2++) {
     if (*it != *it2)
       return false;
   }
@@ -241,8 +272,20 @@ ConsecutiveRangeSet ConsecutiveRangeSet::unioned(const ConsecutiveRangeSet&
 string ConsecutiveRangeSet::toString() const
 {
   ostringstream stream;
-  stream << *this << '\0';
+  stream << *this; // << '\0';
   return stream.str();
+}
+
+string ConsecutiveRangeSet::expandedString() const
+{
+   ostringstream stream;
+   iterator it = begin();
+   if (it != end()) {
+      stream << *it;
+      for (it++; it != end(); it++)
+	 stream << " " << *it;
+   }
+   return stream.str();
 }
 
 ConsecutiveRangeSet::Range::Range(int low, int high)

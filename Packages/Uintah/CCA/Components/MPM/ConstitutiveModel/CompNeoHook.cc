@@ -280,7 +280,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
   new_dw->put(bElBar, bElBarLabel_preReloc);
@@ -350,8 +350,9 @@ void CompNeoHook::addComputesAndRequiresForCrackSurfaceContact(
 #pragma set woff 1209
 #endif
 
-#if 0
 namespace Uintah {
+
+#if 0
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(CompNeoHook::StateData), sizeof(double)*0);
@@ -370,6 +371,5 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::StateData*)
    }
    return td;
 }
-} // End namespace Uintah
 #endif
-
+} // End namespace Uintah

@@ -100,7 +100,9 @@ void IdealGas::computeSpeedSound(const Patch* patch,
     double press    = (gamma - 1.0)   * rho_micro[*iter]*cv[*iter]*temp[*iter];
     double denom    = rho_micro[*iter]*rho_micro[*iter];
     speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom)));
+#if 0
     cout << "speedSound"<<*iter<<"="<<speedSound[*iter]<<endl;
+#endif
   }
 
   new_dw->put(speedSound,lb->speedSound_CCLabel,dwindex,patch);

@@ -3,7 +3,7 @@
 
 <!-- @version: -->
 
-<Packages/Uintah_specification>
+<Uintah_specification>
 
    <Meta>
 	<title>Advection test</title>
@@ -25,7 +25,7 @@
 	<delt_min>           0.0         </delt_min>
 	<delt_max>           1.0         </delt_max>
 	<delt_init>          1.0e-9      </delt_init>
-	<timestep_multiplier>0.8         </timestep_multiplier>
+	<timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -216,4 +216,4 @@
         </ICE>
     </InitialConditions>                   
 	
-</Packages/Uintah_specification>
+</Uintah_specification>

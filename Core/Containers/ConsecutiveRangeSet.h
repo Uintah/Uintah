@@ -49,7 +49,6 @@ WARNING
   
 ****************************************/
 
-
 class ConsecutiveRangeSetException : public Exception
 {
 public:
@@ -77,7 +76,7 @@ public:
   class iterator
   {
   public:
-    iterator(ConsecutiveRangeSet* set, int range, int offset)
+    iterator(const ConsecutiveRangeSet* set, int range, int offset)
       : d_set(set), d_range(range), d_offset(offset) { }
     iterator(const iterator& it2)
       : d_set(it2.d_set), d_range(it2.d_range), d_offset(it2.d_offset) { }
@@ -98,7 +97,7 @@ public:
     iterator& operator++();
     inline iterator operator++(int);
   private:
-    ConsecutiveRangeSet* d_set;
+    const ConsecutiveRangeSet* d_set;
     int d_range;
     int d_offset;
   };
@@ -148,6 +147,10 @@ public:
   ConsecutiveRangeSet& operator=(const ConsecutiveRangeSet& set2)
   { d_rangeSet = set2.d_rangeSet; d_size = set2.d_size; return *this; }
 
+  // Add to the range set, asserting that value is greater or equal
+  // to anything already in the set.
+  void addInOrder(int value) throw(ConsecutiveRangeSetException);
+
   bool operator==(const ConsecutiveRangeSet& set2) const;
   bool operator!=(const ConsecutiveRangeSet& set2) const
   { return !(*this == set2); }
@@ -163,20 +166,23 @@ public:
   // needed. -- Wayne
   //iterator find(int n);
   
-  inline iterator begin()
+  inline iterator begin() const
   { return iterator(this, 0, 0); }
 
-  inline iterator end()
-  { return iterator(this, d_rangeSet.size(), 0); }
+  inline iterator end() const
+  { return iterator(this, (int)d_rangeSet.size(), 0); }
 
   unsigned long size() const
   { return d_size; }
 
   std::string toString() const;
  
+  // return a space separated list of integers
+  std::string expandedString() const;
+
   // used for debugging
   int getNumRanges()
-  { return d_rangeSet.size(); }
+  { return (int)d_rangeSet.size(); }
 
   static const ConsecutiveRangeSet empty;
   static const ConsecutiveRangeSet all;  

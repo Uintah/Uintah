@@ -43,6 +43,18 @@ namespace SCIRun {
       static Dir create(const std::string& name);
       
       void remove();
+      void forceRemove(); // removes even if the directory has contents
+
+      void remove(const std::string& filename); // remove a file
+
+      // copy this directory to under the destination directory
+      void copy(Dir& destDir);
+      void move(Dir& destDir);
+
+      // copy a file in this directory to the destination directory
+      void copy(const std::string& filename, Dir& destDir);
+      void move(const std::string& filename, Dir& destDir);
+
       Dir createSubdir(const std::string& name);
       Dir getSubdir(const std::string& name);
 

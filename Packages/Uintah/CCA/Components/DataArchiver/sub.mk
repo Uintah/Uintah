@@ -12,8 +12,12 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/Core/ProblemSpec \
-	Core/OS Core/Exceptions Core/Containers Dataflow/XMLUtil \
+	Core/OS \
+	Core/Exceptions \
+	Core/Containers \
+	Dataflow/XMLUtil \
 	Core/Util
+
 LIBS := $(XML_LIBRARY) -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

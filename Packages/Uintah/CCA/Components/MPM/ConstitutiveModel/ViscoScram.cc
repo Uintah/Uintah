@@ -45,14 +45,15 @@ ViscoScram::ViscoScram(ProblemSpecP& ps)
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
+  //
   //  FIX  Need to add load curve reader
   //  ps->require("LoadCurveNumber",d_initialData.LoadCurveNumber);
   //  ps->require("NumberOfPoints",d_initialData.NumberOfPoints);
 
 
-  p_statedata_label = scinew VarLabel("p.statedata",
+  p_statedata_label = scinew VarLabel("p.statedata_vs",
                                 ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata+",
+  p_statedata_label_preReloc = scinew VarLabel("p.statedata_vs+",
                                 ParticleVariable<StateData>::getTypeDescription());
 }
 
@@ -148,7 +149,6 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-//    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -157,8 +157,10 @@ void ViscoScram::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& old_dw,
                                         DataWarehouseP& new_dw)
 {
+  //
   //  FIX  To do:  Read in table for vres
   //               Obtain and modify particle temperature (deg K)
+  //
   Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
   double J,se=0.;
   double c_dil=0.0,Jinc;
@@ -505,7 +507,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new),lb->delTAfterConstitutiveModelLabel);
+  new_dw->put(delt_vartype(delT_new),lb->delTLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
@@ -523,6 +525,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 //                                        DataWarehouseP& new_dw)
 //{
 //  double se=0;
+//
 //  return se;
 //}
 
@@ -577,6 +580,7 @@ void ViscoScram::addComputesAndRequiresForCrackSurfaceContact(
 #endif
 
 namespace Uintah {
+
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(ViscoScram::StateData), sizeof(double)*2);
@@ -594,6 +598,6 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 			       "ViscoScram::StateData", true, &makeMPI_CMData);
    }
    return td;
-} // End namespace Uintah
 }
 
+} // End namespace Uintah

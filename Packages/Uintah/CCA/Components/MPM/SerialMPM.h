@@ -224,6 +224,13 @@ public:
 
   //////////
   // Insert Documentation Here:
+  void setPositions( const ProcessorGroup*,
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
   void carryForwardVariables( const ProcessorGroup*,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
@@ -235,6 +242,11 @@ public:
 		  const Patch* patch,
 		  DataWarehouseP& /*old_dw*/,
 		  DataWarehouseP& new_dw);
+
+  void scheduleSetPositions(const Patch* patch,
+				     SchedulerP&,
+				     DataWarehouseP&,
+				     DataWarehouseP&);
 
   void scheduleComputeNodeVisibility(const Patch* patch,
 				     SchedulerP&,
@@ -345,6 +357,7 @@ public:
 
   PatchDataAnalyze*  d_analyze;
 };
-} // End namespace Uintah
       
+} // end namespace Uintah
+
 #endif

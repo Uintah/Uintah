@@ -47,11 +47,18 @@ namespace Uintah {
       virtual void problemSetup(const ProblemSpecP& params);
 
       //////////
+      // Call this when restarting from a checkpoint after calling
+      // problemSetup.  This will copy timestep directories and dat
+      // files up to the specified timestep from restartFromDir and
+      // will set time and timestep variables appropriately to
+      // continue smoothly from that timestep.
+      virtual void restartSetup(Dir& restartFromDir, int timestep,
+				double time, bool removeOldDir);
+      //////////
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
 				    SchedulerP&,
 				    DataWarehouseP&);
-
       //////////
       // Insert Documentation Here:
       virtual const std::string getOutputLocation() const;
@@ -62,9 +69,10 @@ namespace Uintah {
 		  const Patch* patch,
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& new_dw,
-		  int timestep,
-		  const VarLabel*,
-		  int matlindex);
+		  Dir* p_dir, int timestep,
+		  std::pair<const VarLabel*, int>
+		  /* combined as a pair because Tasks take up to 3 extra
+		     args and I'm too lazy to overload for a 4 arg Task */);
 
       // Method to output reduction variables to a single file
       void outputReduction(const ProcessorGroup*,
@@ -72,6 +80,13 @@ namespace Uintah {
 			   DataWarehouseP& new_dw,
 			   double time);
 
+      // This calls output for all of the checkpoint reduction variables
+      // which will end up in globals.xml / globals.data -- in this way,
+      // all this data will be output by one process avoiding conflicts.
+      void outputCheckpointReduction(const ProcessorGroup* world,
+				     DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw,
+				     int timestep);
       //////////
       // Get the current time step
       virtual int getCurrentTimestep()
@@ -88,8 +103,38 @@ namespace Uintah {
       virtual const std::string& getLastTimestepOutputLocation() const
       { return d_lastTimestepLocation; }
    private:
+      struct SaveNameItem {
+	 std::string labelName;
+         ConsecutiveRangeSet matls;
+      };
+      struct SaveItem {
+	 const VarLabel* label;
+         ConsecutiveRangeSet matls;
+      };
+
       void initSaveLabels(SchedulerP& sched);
+      void initCheckpoints(SchedulerP& sched);
      
+      // helper for finalizeTimestep
+      void outputTimestep(Dir& dir, std::vector<SaveItem>& saveLabels,
+			  double time, double delt,
+			  const LevelP& level, SchedulerP& sched,
+			  DataWarehouseP& new_dw,
+			  std::string* pTimestepDir /* passed back */,
+			  bool hasGlobals = false);
+
+      // helper for problemSetup
+      void createIndexXML(Dir& dir);
+
+      // helpers for restartSetup
+      void copyTimesteps(Dir& fromDir, Dir& toDir, int maxTimestep,
+			 bool removeOld, bool areCheckpoints = false);
+      void copyDatFiles(Dir& fromDir, Dir& toDir, int maxTimestep,
+			bool removeOld);
+   
+      // add saved global (reduction) variables to index.xml
+      void indexAddGlobals();
+
       std::string d_filebase;
       double d_outputInterval;
       double d_nextOutputTime;
@@ -99,23 +144,26 @@ namespace Uintah {
       std::string d_lastTimestepLocation;
       bool d_wasOutputTimestep;
 
+      bool d_wereSavesAndCheckpointsInitialized;      
       // d_saveLabelNames is a temporary list containing VarLabel
       // names to be saved and the materials to save them for.  The
       // information will be basically transferred to d_saveLabels or
       // d_saveReductionLabels after mapping VarLabel names to their
       // actual VarLabel*'s.
-      struct SaveNameItem {
-	 std::string labelName;
-         ConsecutiveRangeSet matls;
-      };
       std::list< SaveNameItem > d_saveLabelNames;
-
-      struct SaveItem {
-	 const VarLabel* label;
-         ConsecutiveRangeSet matls;
-      };
       std::vector< SaveItem > d_saveLabels;
       std::vector< SaveItem > d_saveReductionLabels;
+
+      // d_checkpointLabelNames is a temporary list containing
+      // the names of labels to save when checkpointing
+      std::vector< SaveItem > d_checkpointLabels;
+      std::vector< SaveItem > d_checkpointReductionLabels;
+      double d_checkpointInterval;
+      int d_checkpointCycle;
+
+      Dir d_checkpointsDir;
+      list<std::string> d_checkpointTimestepDirs;
+      double d_nextCheckpointTime;
 
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);

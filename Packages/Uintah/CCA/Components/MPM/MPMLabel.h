@@ -5,9 +5,9 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <vector>
 
-using std::vector;
-
 namespace Uintah {
+
+using std::vector;
 
     class MPMLabel {
     public:
@@ -18,9 +18,6 @@ namespace Uintah {
       void registerPermanentParticleState(int i,const VarLabel* l,
 					  const VarLabel* lp);
 
-      const VarLabel* delTAfterConstitutiveModelLabel;
-      const VarLabel* delTAfterFractureLabel;
-      const VarLabel* delTAfterCrackSurfaceContactLabel;
       const VarLabel* delTLabel;
       
       //non PermanentParticleState
@@ -38,6 +35,8 @@ namespace Uintah {
       const VarLabel* pStrainEnergyLabel;
       const VarLabel* pNewlyBrokenSurfaceNormalLabel;
       
+      const VarLabel* pXXLabel;
+      
       //PermanentParticleState
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
@@ -48,7 +47,7 @@ namespace Uintah {
       const VarLabel* pXLabel;
       const VarLabel* pSurfLabel;
       const VarLabel* pIsBrokenLabel; //for fracture
-      const VarLabel* pCrackSurfaceNormalLabel; //for fracture
+      const VarLabel* pCrackNormalLabel; //for fracture
       const VarLabel* pCrackSurfaceContactForceLabel;
       const VarLabel* pTensileStrengthLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
@@ -70,7 +69,7 @@ namespace Uintah {
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pIsBrokenLabel_preReloc; //for fracture
-      const VarLabel* pCrackSurfaceNormalLabel_preReloc; //for fracture
+      const VarLabel* pCrackNormalLabel_preReloc; //for fracture
       const VarLabel* pCrackSurfaceContactForceLabel_preReloc;
       const VarLabel* pTensileStrengthLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
@@ -93,6 +92,8 @@ namespace Uintah {
       const VarLabel* gExternalForceLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gSelfContactLabel; //for fracture
+      const VarLabel* gCrackNormalLabel;
+      const VarLabel* gTensileStrengthLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
       const VarLabel* gTemperatureStarLabel; //for heat conduction
@@ -107,9 +108,6 @@ namespace Uintah {
       const VarLabel* gWeightLabel; //for who knows what?
       
       const VarLabel* cBurnedMassLabel; //for burn models
-      const VarLabel* cVelocityLabel; //for interaction with ICE
-      const VarLabel* cVelocityMELabel; //for interaction with ICE
-      const VarLabel* cMassLabel; //for interaction with ICE
 
       const VarLabel* fVelocityLabel; //for interaction with ICE
       const VarLabel* fMassLabel; //for interaction with ICE
@@ -117,6 +115,7 @@ namespace Uintah {
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* TotalMassLabel;
+      const VarLabel* NTractionZMinusLabel;
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* CenterOfMassVelocityLabel;
 
