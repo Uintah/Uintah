@@ -187,7 +187,7 @@ public:
       return;
     }
 
-    d_dbg << d_sfield->get_attrib()->get_info();
+    d_dbg << d_sfield->get_attrib()->getInfo();
   
     Gradient *gradient = d_sfield->query_interface((Gradient *)0);
     if(!gradient){
@@ -201,7 +201,7 @@ public:
     }
 
     BBox bbox;
-    d_sfield->get_geom()->get_bbox(bbox);
+    d_sfield->get_geom()->getBoundingBox(bbox);
 
     d_dbg << bbox.min().x() << " " << bbox.min().y() << " " 
 	  << bbox.min().z() << " " << bbox.max().x() << " " << bbox.max().y() 
@@ -217,13 +217,9 @@ public:
 
     if (grid) {
 
-      int nx = grid->get_nx();
-      int ny = grid->get_ny();
-      int nz = grid->get_nz();
-
-      d_dbg << "grid->nx" << nx << endl;
-      d_dbg << "grid->ny" << ny << endl;
-      d_dbg << "grid->nz" << nz << endl;
+      int nx = grid->getSizeX();
+      int ny = grid->getSizeY();
+      int nz = grid->getSizeZ();
 
       Vector xDir, yDir, zDir;
       double sx, sy, sz, aveScale;
@@ -272,18 +268,18 @@ public:
   inline void addConnections(int i, int j, int k, 
 			     bool lastI, bool lastJ, bool lastK,
 			     Lattice3Geom *grid, GeomGroup *g) {
-    Point p0 = grid->get_point(i, j, k);
+    Point p0 = grid->getPoint(i, j, k);
     Point p1;
     if (! lastI) {
-      p1 = grid->get_point(i + 1, j, k);
+      p1 = grid->getPoint(i + 1, j, k);
       g->add(new GeomLine(p0, p1));
     }
     if (! lastJ) {
-      p1 = grid->get_point(i, j + 1, k);
+      p1 = grid->getPoint(i, j + 1, k);
       g->add(new GeomLine(p0, p1));
     }
     if (! lastK) {
-      p1 = grid->get_point(i, j, k + 1);
+      p1 = grid->getPoint(i, j, k + 1);
       g->add(new GeomLine(p0, p1));
     }
 
@@ -295,7 +291,7 @@ public:
   inline void addSphere(int i, int j, int k, Lattice3Geom *grid, 
 			GeomGroup *g, double size) {
 
-    Point p0 = grid->get_point(i, j, k);
+    Point p0 = grid->getPoint(i, j, k);
     g->add(scinew GeomSphere(p0, size, 8, 4));
   }
 
@@ -306,7 +302,7 @@ public:
 		      Vector &x, Vector &y, Vector &z, 
 		      Lattice3Geom *grid, GeomGroup *g) {
 
-    Point p0 = grid->get_point(i, j, k);
+    Point p0 = grid->getPoint(i, j, k);
     Point p1 = p0 + x;
     Point p2 = p0 - x;
     GeomLine *l = new GeomLine(p1, p2);
@@ -395,17 +391,17 @@ public:
     d_dbg << "sy: " << sy << endl;
     d_dbg << "sz: " << sz << endl;
 
-    int nx = grid->get_nx();
-    int ny = grid->get_ny();
-    int nz = grid->get_nz();
+    int nx = grid->getSizeX();
+    int ny = grid->getSizeY();
+    int nz = grid->getSizeZ();
 
     sx /= nx;
     sy /= ny;
     sz /= nz;
 
     if (nx > 0) {
-      Point p0 = grid->get_point(0, 0, 0);
-      Point p1 = grid->get_point(1, 0, 0);
+      Point p0 = grid->getPoint(0, 0, 0);
+      Point p1 = grid->getPoint(1, 0, 0);
       x = p1 - p0;
     } else {
       x.x(1.0L);
@@ -414,8 +410,8 @@ public:
     }
 
     if (ny > 0) {
-      Point p0 = grid->get_point(0, 0, 0);
-      Point p1 = grid->get_point(0, 1, 0);
+      Point p0 = grid->getPoint(0, 0, 0);
+      Point p1 = grid->getPoint(0, 1, 0);
       y = p1 - p0;
     } else {
       y.x(0.0L);
@@ -424,8 +420,8 @@ public:
     }
       
     if (nz > 0) {
-      Point p0 = grid->get_point(0, 0, 0);
-      Point p1 = grid->get_point(0, 0, 1);
+      Point p0 = grid->getPoint(0, 0, 0);
+      Point p1 = grid->getPoint(0, 0, 1);
       z = p1 - p0;
     } else {
       z.x(0.0L);
