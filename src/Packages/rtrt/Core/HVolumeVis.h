@@ -50,9 +50,17 @@ public:
 /*        (int)max_index_prep+1:(int)max_index_prep; */
     int max_index = (int)ceil(double((max-data_min)/(data_max-data_min)*63));
     // Do some checks
+#if 0
     if (min_index > 63 || max_index < 0)
       // We don't want to turn any bits on
       return;
+#else
+    // This will handle clamping, I hope.
+    if (min_index > 63)
+      min_index = 63;
+    if (max_index < 0)
+      max_index = 0;
+#endif
     if (min_index < 0)
       min_index = 0;
     if (max_index > 63)
@@ -519,6 +527,12 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 
       // Update the new position
       t_sample += isctx.t_inc;
+
+      // If we have overstepped the limit of the ray
+      if(t_sample >= isctx.t_max)
+	break;
+
+      // Check to see if we leave the level or not
       bool break_forloop = false;
       while (t_sample > next_x) {
 	// Step in x...
@@ -648,6 +662,9 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
       double step = ceil((closest - t_sample)*isctx.t_inc_inv);
       t_sample += isctx.t_inc * step;
 
+      if(t_sample >= isctx.t_max)
+	break;
+
       // Now that we have the next sample point, we need to determine
       // which cell it ended up in.  There are cases (grazing corners
       // for example) which will make the next sample not be in the
@@ -694,8 +711,6 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 #endif
       if (isctx.alpha >= RAY_TERMINATION_THRESHOLD)
 	break;
-      if(t_sample >= isctx.t_max)
-	break;
     }
   }
 #ifdef BIGLER_DEBUG
@@ -718,7 +733,14 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 
   float t_min = hit.min_t;
   float* t_maxp = (float*)hit.scratchpad;
-  float t_max = *t_maxp;
+  float t_max = t_maxp[30];
+  float child_hit = t_maxp[31];
+  bool shade_child = false;
+  if (child_hit < t_max) {
+    t_max = child_hit;
+    shade_child = true;
+  }
+
 #ifdef BIGLER_DEBUG
   cerr << "\t\tt_min = "<<t_min<<", t_max = "<<t_max<<endl;
   cerr << "ray.origin = "<<ray.origin()<<", dir = "<<ray.direction()<<endl;
@@ -952,9 +974,18 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   
   if (alpha < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
-    Ray r(ray.origin() + ray.direction() * t_max,ray.direction());
-    ctx->worker->traceRay(bgcolor, r, ray_depth+1, atten,
-			  accumcolor, ctx);
+    if (child && shade_child) {
+      HitInfo hit_child = hit;
+      hit_child.hit_obj = child;
+      hit_child.min_t = child_hit;
+      child->get_matl()->shade(bgcolor, ray, hit_child, depth+1,
+                               atten, accumcolor, ctx);
+    } else {
+      // Grab the background color
+      Ray r(ray.origin() + ray.direction() * t_max,ray.direction());
+      ctx->worker->traceRay(bgcolor, r, ray_depth+1, atten,
+                            accumcolor, ctx);
+    }
     total += bgcolor * (1-alpha);
   }
   result = total;
