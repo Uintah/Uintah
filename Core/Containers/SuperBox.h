@@ -448,12 +448,12 @@ class BasicBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator> {
 
 public:
   BasicBox(BoxP box)
-    : SB(SB::Region(box->getLow(), box->getHigh()), box->getVolume()),
+    : SB(typename SB::Region(box->getLow(), box->getHigh()), box->getVolume()),
       available_(true)
   { init(box); }
 
   BoxP getBox() const
-  { return getBoxes()[0]; }
+  { return this->getBoxes()[0]; }
 
 #if 0
   template <class RangeQuerier>
@@ -559,8 +559,8 @@ public:
   // (it only gets calculated as more due to overlapping/conflicting
   // sub SuperBoxes).
   Value getCurrentMaximumPossibleSubValue() const
-  { return activeSubSuperBoxMaxValue_ > getValue() ?
-      getValue() : activeSubSuperBoxMaxValue_; }
+  { return activeSubSuperBoxMaxValue_ > this->getValue() ?
+      this->getValue() : activeSubSuperBoxMaxValue_; }
 protected:  
   void makeAvailable();
   void makeUnavailable();
@@ -1053,12 +1053,12 @@ inactivate(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& boxMap,
 {
   ASSERT(activeSubSuperBoxMaxValue_ == 0);
   inactivate();
-  propogateDeltaMaxValue(parent_, -getValue(), maxPossibleValue);
+  propogateDeltaMaxValue(parent_, -this->getValue(), maxPossibleValue);
   
   SB::buildActivatedMaximalSuperBoxes(basicBoxes_.begin(),
 				      basicBoxes_.end(), rangeQuerier,
 				      boxMap, activatedSubSuperBoxes_,
-				      &getRegion());
+				      &this->getRegion());
 #if 0
   vector<BB*>::iterator iter;    
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
@@ -1100,7 +1100,7 @@ reactivate(set<SB*, typename SB::ValueCompare>& activeBoxes,
     propogateDeltaMaxValue(this, -(*subIter)->getValue(), maxPossibleValue);
   }
   activeBoxes.insert(this);
-  propogateDeltaMaxValue(parent_, getValue(), maxPossibleValue);
+  propogateDeltaMaxValue(parent_, this->getValue(), maxPossibleValue);
 
   activatedSubSuperBoxes_.clear();  
   
