@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class Insight_DataIO_ImageToField {
+itcl_class Insight_Converters_ImageToField {
     inherit Module
     constructor {config} {
         set name ImageToField
@@ -50,10 +50,12 @@ itcl_class Insight_DataIO_ImageToField {
 	    -value 1
 	pack $w.b 
 
-	button $w.execute -text "Execute" -command "$this-c needexecute"
-	button $w.close -text "Close" -command "destroy $w"
-	pack $w.execute $w.close 
 
+	frame $w.buttons
+        button $w.buttons.execute -text "Execute" -command "$this-c needexecute"
+        button $w.buttons.close -text "Close" -command "destroy $w"
+        pack $w.buttons.execute $w.buttons.close -side left
+	pack $w.buttons -side top -padx 5 -pady 5
     }
 }
 
