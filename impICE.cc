@@ -627,6 +627,17 @@ void ICE::updatePressure(const ProcessorGroup*,
       IntVector c = *iter;
       press_CC[c] = pressure[c] + imp_delP[c];
     }  
+    //____ B U L L E T   P R O O F I N G----
+    // This was done to help robustify the equilibration
+    // pressure calculation in MPMICE.  Also, in rate form, negative
+    // mean pressures are allowed.
+    if(d_EqForm){
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+        IntVector c = *iter;
+        press_CC[c] = max(1.0e-12, press_CC[c]); 
+      } 
+    }
+
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
     
