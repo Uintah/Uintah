@@ -184,7 +184,7 @@ void MxNScheduler::setArray(std::string distname, std::string uuid, int callid, 
 
       arrRepList::iterator this_iter = myreps.find(distname);
       //TODO throw exception?
-      assert(this_iter!=myreps.end());
+      ASSERT(this_iter!=myreps.end());
 
       MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second,this_iter->second);
 
@@ -198,7 +198,7 @@ void MxNScheduler::setArray(std::string distname, std::string uuid, int callid, 
 void* MxNScheduler::waitCompleteArray(std::string distname, std::string uuid, int callid)
 {
   //only callee can call this method.
-  assert(sch_type==callee); 
+  ASSERT(sch_type==callee); 
 
   MxNArrSynch* mxnasync=getArrSynch(distname, uuid, callid);
   arrRepList::iterator this_iter = myreps.find(distname);
@@ -217,7 +217,7 @@ void* MxNScheduler::waitCompleteArray(std::string distname, std::string uuid, in
 MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::std::string uuid, int callid)
 {
   //for server scheduler only
-  assert(sch_type==callee); 
+  ASSERT(sch_type==callee); 
 
   //first wait for meta data completion. because array synchronization
   //needs to know which proxy will send data.
@@ -236,7 +236,7 @@ MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::std::string uui
     else {
       arrRepList::iterator this_iter = myreps.find(distname);
       //TODO throw exception?
-      assert(this_iter!=myreps.end());
+      ASSERT(this_iter!=myreps.end());
 
       MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second,this_iter->second);
       ((*sch_iter).second)->s_list[callid] = mxnasync;
@@ -251,7 +251,7 @@ MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::std::string uui
 MxNMetaSynch* MxNScheduler::getMetaSynch(::std::string distname, ::std::string uuid, int size)
 {
   //for server scheduler only
-  assert(sch_type==callee); 
+  ASSERT(sch_type==callee); 
   schedList::iterator sch_iter = entries.find(distname+uuid);
   if (sch_iter == entries.end()) {
     MxNScheduleEntry* sch_e = new MxNScheduleEntry();
@@ -271,7 +271,7 @@ MxNMetaSynch* MxNScheduler::getMetaSynch(::std::string distname, ::std::string u
 descriptorList* MxNScheduler::getRedistributionReps(std::string distname, std::string uuid)
 {
   //only client can make the schedule
-  assert(sch_type==caller);
+  ASSERT(sch_type==caller);
   //entries for caller is callee entry, distname is the key
   schedList::iterator iter = entries.find(distname);
   arrRepList::iterator this_iter = myreps.find(distname+uuid);
