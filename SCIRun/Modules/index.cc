@@ -38,6 +38,18 @@ MP(Unop)
 MP(ViewHist)
 MP(WhiteNoiseImage)
 
+// Mesh
+MP(Delaunay)
+MP(ExtractMesh)
+MP(HexMeshToGeom)
+MP(InsertDelaunay)
+MP(MakeScalarField)
+MP(MeshBoundary)
+MP(MeshInterpVals)
+MP(MeshRender)
+MP(MeshToGeom)
+MP(MeshView)
+
 // Writers
       //MP(TiffWriter)
 
@@ -81,6 +93,17 @@ void initPackage(const clString& tcl) {
   RMI("ViewHist", 	make_ViewHist,	    tcl+"/ViewHist.tcl");
   RMI("WhiteNoiseImage",make_WhiteNoiseImage,tcl+"/WhiteNoiseImage.tcl");
 
+   // Mesh
+  RMI("Delaunay",	make_Delaunay,	    tcl+"/Delaunay.tcl");
+  RMI("ExtractMesh",	make_ExtractMesh,	    "");
+  RMI("HexMeshToGeom",	make_HexMeshToGeom,	    "");
+  RMI("InsertDelaunay",	make_InsertDelaunay,	    "");
+  RMI("MakeScalarField",	make_MakeScalarField,	"");
+  RMI("MeshBoundary",	make_MeshBoundary,	    "");
+  RMI("MeshInterpVals",	make_MeshInterpVals,	    tcl+"/MeshInterpVals.tcl");
+  RMI("MeshRender",	make_MeshRender,	    "");
+  RMI("MeshToGeom",	make_MeshToGeom,	    tcl+"/MeshToGeom.tcl");
+  RMI("MeshView",	make_MeshView,	    tcl+"/MeshView.tcl");
 
     // Writers
   //  RM("Writers", "TiffWriter",     make_TiffWriter,	    tcl+"/TiffWriter.tcl");

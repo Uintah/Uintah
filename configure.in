@@ -48,6 +48,7 @@ if test "$scirun" = "yes"; then
 		  SCIRun/Datatypes/Image/Makefile \
 		SCIRun/Modules/Makefile \
 		  SCIRun/Modules/Image/Makefile \
+		  SCIRun/Modules/Mesh/Makefile \
 		  SCIRun/Modules/Tbon/Makefile \
 		  SCIRun/Modules/Visualization/Makefile \
 		  SCIRun/Modules/Writers/Makefile
