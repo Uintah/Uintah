@@ -382,9 +382,10 @@ proc createModulesMenu { subnet } {
 	# isn't the first package to go in there
 	if { [$canvas.modulesMenu index end] != "none" } \
 	    { $canvas.modulesMenu add separator }
+	$canvas.modulesMenu add command -label "$ModuleMenu($pack)"
 	foreach cat $ModuleMenu(${pack}_categories) {
 	    # Add the category to the right-button menu
-	    $canvas.modulesMenu add cascade -label "$ModuleMenu($cat)" \
+	    $canvas.modulesMenu add cascade -label "  $ModuleMenu($cat)" \
 		-menu $canvas.modulesMenu.$cat
 	    menu $canvas.modulesMenu.$cat -tearoff false
 	    foreach mod $ModuleMenu(${pack}_${cat}_modules) {
