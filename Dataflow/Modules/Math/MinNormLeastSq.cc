@@ -112,7 +112,6 @@ MinNormLeastSq::execute()
   if (!A1_imat_->get(in[1])) return;
   if (!A2_imat_->get(in[2])) return;
   if (!b_imat_->get(in[3])) return;
-
   vector<ColumnMatrix *> Ac(4);
   for (i = 0; i < 4; i++) {
     ASSERT (Ac[i] = dynamic_cast<ColumnMatrix *>(in[i].get_rep()))
@@ -123,9 +122,9 @@ MinNormLeastSq::execute()
   }
   double *A[3];
   for (i=0; i<3; i++) {
-    A[i]=&((*Ac[i])[0]);
+    A[i]=Ac[i]->get_data();
   }
-  double *b = &((*Ac[3])[0]);
+  double *b = Ac[3]->get_data();
   double *bprime = new double[size];
   double *x = new double[3];
 
