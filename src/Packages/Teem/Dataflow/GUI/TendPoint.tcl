@@ -27,7 +27,7 @@ itcl_class Teem_Tend_TendPoint {
     }
     method set_defaults {} {
 	global $this-firstwidth
-	set $this-firstwidth 15
+	set $this-firstwidth 17
 
         global $this-x
         set $this-x 0
@@ -39,7 +39,7 @@ itcl_class Teem_Tend_TendPoint {
         set $this-z 0
 
 	global $this-confidence
-	set $this-confidence "---"
+	set $this-confidence "- - - -"
 
 	global $this-tensor1
 	global $this-tensor2
@@ -47,19 +47,19 @@ itcl_class Teem_Tend_TendPoint {
 	global $this-tensor4
 	global $this-tensor5
 	global $this-tensor6
-	set $this-tensor1 "---"
-	set $this-tensor2 "---"
-	set $this-tensor3 "---"
-	set $this-tensor4 "---"
-	set $this-tensor5 "---"
-	set $this-tensor6 "---"
+	set $this-tensor1 "- - - -"
+	set $this-tensor2 "- - - -"
+	set $this-tensor3 "- - - -"
+	set $this-tensor4 "- - - -"
+	set $this-tensor5 "- - - -"
+	set $this-tensor6 "- - - -"
 
 	global $this-eval1
 	global $this-eval2
 	global $this-eval3
-	set $this-eval1 "---"
-	set $this-eval2 "---"
-	set $this-eval3 "---"
+	set $this-eval1 "- - - -"
+	set $this-eval2 "- - - -"
+	set $this-eval3 "- - - -"
 
 	global $this-evec1
 	global $this-evec2
@@ -71,24 +71,24 @@ itcl_class Teem_Tend_TendPoint {
 	global $this-evec8
 	global $this-evec9
 	
-	set $this-evec1 "---"
-	set $this-evec2 "---"
-	set $this-evec3 "---"
-	set $this-evec4 "---"
-	set $this-evec5 "---"
-	set $this-evec6 "---"
-	set $this-evec7 "---"
-	set $this-evec8 "---"
-	set $this-evec9 "---"
+	set $this-evec1 "- - - -"
+	set $this-evec2 "- - - -"
+	set $this-evec3 "- - - -"
+	set $this-evec4 "- - - -"
+	set $this-evec5 "- - - -"
+	set $this-evec6 "- - - -"
+	set $this-evec7 "- - - -"
+	set $this-evec8 "- - - -"
+	set $this-evec9 "- - - -"
 
 	global $this-angle
-	set $this-angle "---"
+	set $this-angle "- - - -"
 	global $this-axis1
 	global $this-axis2
 	global $this-axis3
-	set $this-axis1 "---"
-	set $this-axis2 "---"
-	set $this-axis3 "---"
+	set $this-axis1 "- - - -"
+	set $this-axis2 "- - - -"
+	set $this-axis3 "- - - -"
 
 	global $this-mat1
 	global $this-mat2
@@ -99,15 +99,15 @@ itcl_class Teem_Tend_TendPoint {
 	global $this-mat7
 	global $this-mat8
 	global $this-mat9
-	set $this-mat1 "---"
-	set $this-mat2 "---"
-	set $this-mat3 "---"
-	set $this-mat4 "---"
-	set $this-mat5 "---"
-	set $this-mat6 "---"
-	set $this-mat7 "---"
-	set $this-mat8 "---"
-	set $this-mat9 "---"
+	set $this-mat1 "- - - -"
+	set $this-mat2 "- - - -"
+	set $this-mat3 "- - - -"
+	set $this-mat4 "- - - -"
+	set $this-mat5 "- - - -"
+	set $this-mat6 "- - - -"
+	set $this-mat7 "- - - -"
+	set $this-mat8 "- - - -"
+	set $this-mat9 "- - - -"
 
 	global $this-cl1
 	global $this-cp1
@@ -132,28 +132,28 @@ itcl_class Teem_Tend_TendPoint {
 	global $this-det
 	global $this-tr
 
-	set $this-cl1 "---"
-	set $this-cp1 "---"
-	set $this-ca1 "---"
-	set $this-cs1 "---"
-	set $this-ct1 "---"
-	set $this-cl2 "---"
-	set $this-cp2 "---"
-	set $this-ca2 "---"
-	set $this-cs2 "---" 
-	set $this-ct2 "---"
-	set $this-ra "---"
-	set $this-fa "---"
-	set $this-vf "---"
-	set $this-b "---"
-	set $this-q "---"
-	set $this-r "---"
-	set $this-s "---"
-	set $this-skew "---"
-	set $this-th "---"
-	set $this-cz "---"
-	set $this-det "---"
-	set  $this-tr "---"	
+	set $this-cl1 "- - - -"
+	set $this-cp1 "- - - -"
+	set $this-ca1 "- - - -"
+	set $this-cs1 "- - - -"
+	set $this-ct1 "- - - -"
+	set $this-cl2 "- - - -"
+	set $this-cp2 "- - - -"
+	set $this-ca2 "- - - -"
+	set $this-cs2 "- - - -" 
+	set $this-ct2 "- - - -"
+	set $this-ra "- - - -"
+	set $this-fa "- - - -"
+	set $this-vf "- - - -"
+	set $this-b "- - - -"
+	set $this-q "- - - -"
+	set $this-r "- - - -"
+	set $this-s "- - - -"
+	set $this-skew "- - - -"
+	set $this-th "- - - -"
+	set $this-cz "- - - -"
+	set $this-det "- - - -"
+	set  $this-tr "- - - -"	
     }
     
     method build_info_widgets {w} {
@@ -235,17 +235,39 @@ itcl_class Teem_Tend_TendPoint {
 
 	frame $w.rot2 
 	pack $w.rot2 -side top -anchor nw -padx 5
-	label $w.rot2.l1 -text "Rotation around" -width [set $this-firstwidth] \
+	label $w.rot2.l1 -text "Rotation around X" -width [set $this-firstwidth] \
 		      -anchor w -just left
 	label $w.rot2.colon  -text ":" -width 2 -anchor w -just left 
 	label $w.rot2.l2 -textvar $this-axis1 -width 20 -anchor w -just left \
 		-fore darkred
-	label $w.rot2.l3 -textvar $this-axis2 -width 20 -anchor w -just left \
-		-fore darkred
-	label $w.rot2.l4 -textvar $this-axis3 -width 20 -anchor w -just left \
-		-fore darkred
+
 	pack $w.rot2.l1 $w.rot2.colon -side left
-	pack $w.rot2.l2 $w.rot2.l3 $w.rot2.l4 -side left -fill x -expand yes
+	pack $w.rot2.l2 -side left -fill x -expand yes
+
+	frame $w.rot3
+	pack $w.rot3 -side top -anchor nw -padx 5
+	label $w.rot3.l1 -text "Rotation around Y" -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $w.rot3.colon  -text ":" -width 2 -anchor w -just left 
+	label $w.rot3.l2 -textvar $this-axis2 -width 20 -anchor w -just left \
+		-fore darkred
+
+	pack $w.rot3.l1 $w.rot3.colon -side left
+	pack $w.rot3.l2 -side left -fill x -expand yes
+	
+	frame $w.rot4
+	pack $w.rot4 -side top -anchor nw -padx 5
+	label $w.rot4.l1 -text "Rotation around Z" -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $w.rot4.colon  -text ":" -width 2 -anchor w -just left 
+	label $w.rot4.l2 -textvar $this-axis3 -width 20 -anchor w -just left \
+		-fore darkred
+
+	pack $w.rot4.l1 $w.rot4.colon -side left
+	pack $w.rot4.l2 -side left -fill x -expand yes
+
+
+
 
 	# for {set i 1} {$i < 4} {incr i} {
 	    # labelpair $w.axis$i "Axis\[[expr $i - 1]\]" $this-axis$i
@@ -256,28 +278,32 @@ itcl_class Teem_Tend_TendPoint {
 
 	set ani [$w.aniso childsite]
 
-	labelpair $ani.cl1 "Cl1" $this-cl1
-	labelpair $ani.cp1 "Cp1" $this-cp1
-	labelpair $ani.ca1 "Ca1" $this-ca1
-	labelpair $ani.cs1 "Cs1" $this-cs1
-	labelpair $ani.ct1 "Ct1" $this-ct1
-	labelpair $ani.cl2 "Cl2" $this-cl2
-	labelpair $ani.cp2 "Cp2" $this-cp2
-	labelpair $ani.ca2 "Ca2" $this-ca2
-	labelpair $ani.cs2 "Cs2" $this-cs2
-	labelpair $ani.ct2 "Ct2" $this-ct2
-	labelpair $ani.ra "RA" $this-ra
-	labelpair $ani.fa "FA" $this-fa
-	labelpair $ani.vf "VF" $this-vf
-	labelpair $ani.b "B" $this-b
-	labelpair $ani.q "Q" $this-q
-	labelpair $ani.r "R" $this-r
-	labelpair $ani.s "S" $this-s
-	labelpair $ani.skew "Skew" $this-skew
-	labelpair $ani.th "Th" $this-th
-	labelpair $ani.cz "Cz" $this-cz
-	labelpair $ani.det "Det" $this-det
-	labelpair $ani.tr "Tr" $this-tr
+	frame $ani.a
+	frame $ani.b
+	pack $ani.a $ani.b -side left -anchor nw
+
+	labelpair_small $ani.a.cl1 "Cl1" $this-cl1
+	labelpair_small $ani.a.cp1 "Cp1" $this-cp1
+	labelpair_small $ani.a.ca1 "Ca1" $this-ca1
+	labelpair_small $ani.a.cs1 "Cs1" $this-cs1
+	labelpair_small $ani.a.ct1 "Ct1" $this-ct1
+	labelpair_small $ani.a.cl2 "Cl2" $this-cl2
+	labelpair_small $ani.a.cp2 "Cp2" $this-cp2
+	labelpair_small $ani.a.ca2 "Ca2" $this-ca2
+	labelpair_small $ani.a.cs2 "Cs2" $this-cs2
+	labelpair_small $ani.a.ct2 "Ct2" $this-ct2
+	labelpair_small $ani.a.ra "RA" $this-ra
+	labelpair_small $ani.b.fa "FA" $this-fa
+	labelpair_small $ani.b.vf "VF" $this-vf
+	labelpair_small $ani.b.b "B" $this-b
+	labelpair_small $ani.b.q "Q" $this-q
+	labelpair_small $ani.b.r "R" $this-r
+	labelpair_small $ani.b.s "S" $this-s
+	labelpair_small $ani.b.skew "Skew" $this-skew
+	labelpair_small $ani.b.th "Th" $this-th
+	labelpair_small $ani.b.cz "Cz" $this-cz
+	labelpair_small $ani.b.det "Det" $this-det
+	labelpair_small $ani.b.tr "Tr" $this-tr
     }
 
 
@@ -323,6 +349,18 @@ itcl_class Teem_Tend_TendPoint {
 	frame $win 
 	pack $win -side top -anchor nw -padx 5
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ":" -width 2 -anchor w -just left 
+	label $win.l2 -textvar $text2 -width 20 -anchor w -just left \
+		-fore darkred
+	pack $win.l1 $win.colon -side left
+	pack $win.l2 -side left -fill x -expand yes
+    } 
+
+    method labelpair_small { win text1 text2 } {
+	frame $win 
+	pack $win -side top -anchor nw -padx 5
+	label $win.l1 -text $text1 -width [expr [set $this-firstwidth] / 2] \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	label $win.l2 -textvar $text2 -width 20 -anchor w -just left \
