@@ -51,6 +51,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#else
+#include <windows.h>
 #endif
 #include <limits.h>
 #include <iostream>
@@ -252,11 +254,15 @@ void TimeThrottle::wait_for_time(double endtime)
     }
     sginap(nticks);
 #else
+#ifdef _WIN32
+    Sleep(delta*1e6); // windows Sleep is in ms
+#else
     timespec delay, remaining;
     remaining.tv_sec = SCIRun::Floor(delta);
     remaining.tv_nsec = SCIRun::Floor((delta-SCIRun::Floor(delta))*1000000000);
     do {
       delay = remaining;
     } while (nanosleep(&delay,&remaining) != 0);
+#endif
 #endif
 }
