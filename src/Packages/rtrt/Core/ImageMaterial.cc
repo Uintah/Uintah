@@ -106,9 +106,8 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	}
         break;
     case Clamp:
-      // If u == 1, seg fault occurs.
 	if(u>=1)
-	    u=0.99999999;
+	    u=1;
 	else if(u<0)
 	    u=0;
     };
@@ -128,25 +127,15 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
         break;
     case Clamp:
 	if(v>=1)
-	    v=.9999999;
+	    v=1;
 	else if(v<0)
 	    v=0;
     };
     {
-#if 1
       if (flip_)
 	diffuse = interp_color(image,u,1-v);
       else
 	diffuse = interp_color(image,u,v);
-#else
-	u*=image.dim1();
-	v*=image.dim2();
-	int iu=(int)u;
-	int iv=(int)v;
-        if (flip_)
-          iv = image.dim2()-iv;
-	diffuse=image(iu, iv);
-#endif
     }
 skip:
     phongshade(result, diffuse, specular, specpow, refl,
