@@ -28,7 +28,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include "MxNArrayRep.h"
+#include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 using namespace SCIRun;
 
 int SCIRun::gcd(int a, int b, int &x, int &y) {

@@ -31,7 +31,7 @@
 using namespace SCIRun;
 
 HandlerGateKeeper::HandlerGateKeeper()
-  :currentID(64,' '), callsToGo(0), d_gate_sema("HandlerGateKeeper Semaphore",0),
+  :d_gate_sema("HandlerGateKeeper Semaphore",0),
    d_gate_mutex("HandlerGateKeeper Mutex")
 {
 }
@@ -40,28 +40,45 @@ HandlerGateKeeper::~HandlerGateKeeper()
 {
 }
 
-int HandlerGateKeeper::getTickets(::std::string sessionID, int number_of_calls)
+int HandlerGateKeeper::getTickets(int handler_num, ::std::string sessionID, int number_of_calls)
 {
+ ::std::cout << "gatekeeper-0000 \n";
+  if(callsToGo.size() <= handler_num) callsToGo.resize(handler_num+1);
   d_gate_mutex.lock();
-  if((callsToGo > 0)&&(currentID != sessionID)) {
+  if((callsToGo[handler_num] > 0)&&(currentID.find(handler_num) != currentID.end())
+		                 &&(currentID[handler_num] != sessionID)) {
+    ::std::cout << "gatekeeper-2222 \n";
     d_gate_mutex.unlock();
     d_gate_sema.down(); 	
+    d_gate_mutex.lock();
   }
-  if(currentID != sessionID) {
-    currentID = sessionID;
-    ::std::cout << "current sessionID is '" << currentID << "', numCalls=" << number_of_calls << "\n";
-    callsToGo = number_of_calls;
+ ::std::cout << "gatekeeper-5555 \n";
+  if((currentID.find(handler_num) == currentID.end())||(currentID[handler_num] != sessionID)) {
+    ::std::cout << "gatekeeper-7777 \n";
+    currentID.insert(IDMap_valType(handler_num, sessionID));
+    if(number_of_calls == 0) number_of_calls++; 
+    ::std::cout << "current sessionID for handler " << handler_num << "is '" 
+		<< currentID[handler_num] << "', numCalls=" << number_of_calls << "\n";
+    callsToGo[handler_num] = number_of_calls;
   }
   d_gate_mutex.unlock();
   return 0;
 }
 
-void HandlerGateKeeper::releaseOneTicket() 
+void HandlerGateKeeper::releaseOneTicket(int handler_num) 
 {
-  callsToGo--;
-  ::std::cout << callsToGo << " calls to go\n";
-  if(callsToGo == 0) {
-    currentID.clear();
+  d_gate_mutex.lock();
+  //Decrement number of calls to go
+  callsToGo[handler_num]--;
+  d_gate_mutex.unlock();
+
+  ::std::cout << callsToGo[handler_num] << " calls to go\n";
+  if(callsToGo[handler_num] == 0) {
+    d_gate_mutex.lock();
+    //reset ID
+    currentID[handler_num].clear();
+    d_gate_mutex.unlock();
+    //Lift sema in getTickets()
     d_gate_sema.up();	  
   }
 }

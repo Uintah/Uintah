@@ -37,6 +37,8 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 #include <string>
+#include <map>
+#include <vector>
 
 namespace SCIRun {
 /**************************************
@@ -70,21 +72,34 @@ DESCRIPTION
     ///////
     // Gets access to critical section for all processes invoking with the
     // same session ID
-    int getTickets(::std::string sessionID, int number_of_calls);
+    int getTickets(int handler_num,::std::string sessionID, int number_of_calls);
 
     ///////
     // Releases access to critical section after called number_of_calls for 
     // all processes invoking with the same session ID.
-    void releaseOneTicket();
+    void releaseOneTicket(int handler_num);
 
   private:
-    //////////
-    // The current session ID of the component that has access
-    ::std::string currentID;
+
+    //String comparison function for std::map
+    struct ltint
+    {
+      bool operator()(const int i1, const int i2) const
+      {
+        return (i1 < i2);
+      }
+    };
+    
+    //////////////
+    //A map of handler numbers to current session ID of the component 
+    //that has access to that method. 
+    typedef ::std::map<int, ::std::string, ltint> IDMap;
+    typedef ::std::map<int, ::std::string>::value_type IDMap_valType;
+    IDMap currentID;
 
     //////////
-    // Number of calls associated with a specific session
-    int callsToGo;
+    // Number of calls associated with a specific method/handler
+    ::std::vector< int> callsToGo;
 
     /////////
     // Semaphore used to hold out of order invocations

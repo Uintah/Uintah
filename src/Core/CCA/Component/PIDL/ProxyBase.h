@@ -100,6 +100,11 @@ DESCRIPTION
 	  // Returns the unique identifier of this proxy 
           ::std::string getProxyUUID(); 
 
+	  /////////
+	  // Created a subset of processes on the callee to service
+	  // all collective calls.
+	  void createSubset(int ssize);
+
 	private:
 
           ////////
