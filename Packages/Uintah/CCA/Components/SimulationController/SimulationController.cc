@@ -175,6 +175,7 @@ void SimulationController::run()
       
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			   d_restartFromScratch, d_restartRemoveOldDir);
+      scheduler->get_new_dw()->finalize();
    } else {
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
