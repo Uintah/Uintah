@@ -31,6 +31,7 @@ else
 	Packages/Uintah/CCA/Components/Examples \
 	Packages/Uintah/CCA/Components/Arches \
 	Packages/Uintah/CCA/Components/MPMArches \
+	Packages/Uintah/CCA/Components/PatchCombiner \
 	Dataflow/Network \
 	Core/Exceptions  \
 	Core/Thread      \
