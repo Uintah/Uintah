@@ -275,12 +275,12 @@ StructCurveMesh::get_weights(const Point &p, Edge::array_type &l, double *w)
 void
 StructCurveMesh::io(Piostream& stream)
 {
-  //  int version = stream.begin_class(type_name(-1), STRUCT_CURVE_MESH_VERSION);
+  stream.begin_class(type_name(-1), STRUCT_CURVE_MESH_VERSION);
 
-  Mesh::io(stream);
+  ScanlineMesh::io(stream);
 
- // IO data members, in order
-  Pio(stream,points_);
+  // IO data members, in order
+  Pio(stream, points_);
 
   stream.end_class();
 }

@@ -468,18 +468,16 @@ StructQuadSurfMesh::compute_normals()
   normal_lock_.unlock();
 }
 
-#define STRUCT_QUAD_SURF_MESH_VERSION 1
+#define STRUCT_QUAD_SURF_MESH_VERSION 2
 
 void
 StructQuadSurfMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name(-1), STRUCT_QUAD_SURF_MESH_VERSION);
 
-  Mesh::io(stream);
+  ImageMesh::io(stream);
 
-  // IO data members, in order
-  Pio(stream, ni_);
-  Pio(stream, nj_);
+  Pio(stream, points_);
 
   stream.end_class();
 }
