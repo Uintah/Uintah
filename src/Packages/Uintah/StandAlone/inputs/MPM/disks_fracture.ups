@@ -18,7 +18,13 @@
    </Time>
    <DataArchiver>
         <filebase>disks_fracture.uda</filebase>
-	<outputInterval>.01</outputInterval>
+	<outputInterval>.005</outputInterval>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<checkpoint cycle = "2" interval = "0.005"/>
    </DataArchiver>
 
     <MPM>

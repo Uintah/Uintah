@@ -20,6 +20,12 @@
    <DataArchiver>
         <filebase>heatcond2mat.uda</filebase>
         <outputInterval>.01</outputInterval>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
    <MPM>
