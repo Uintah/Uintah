@@ -515,6 +515,7 @@ public:
   void run() {
     PatchData patchdata;
     rtrt::Array1<SphereData> sphere_data;
+    Matrix3 one; one.Identity();
     
     // for all vars in one timestep in one patch
     for(int v=0;v<vars->size();v++){
@@ -726,7 +727,7 @@ public:
 		      iter != pset->end(); iter++) {
 		    float temp_value= (float)(value[*iter].Trace()/3.0);
 		    *p++ = temp_value;
-		    temp_value= (float)(sqrt(1.5 * value[*iter].NormSquared()));
+		    temp_value= (float)(sqrt(1.5*(value[*iter]-one*temp_value).NormSquared()));
 		    *p2++ = temp_value;
 		  }
 		  // add the extracted data to the variable
