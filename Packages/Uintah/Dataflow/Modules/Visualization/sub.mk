@@ -9,6 +9,7 @@ SRCS     += \
 	$(SRCDIR)/PatchVisualizer.cc \
 	$(SRCDIR)/PatchDataVisualizer.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
+	$(SRCDIR)/ParticleColorMapKey.cc \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/RescaleColorMap.cc \
 	$(SRCDIR)/GLTextureBuilder.cc \
