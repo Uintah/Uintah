@@ -100,10 +100,14 @@ public:
   static void invoke_remove_callback(CleanupManagerCallback cb, void *data);
   static void remove_callback(CleanupManagerCallback cb, void *data);
 
+  // After calling this, all registered functions will be removed.
+  // Should this also delete all the memory allocated by initialize()?
   static void call_callbacks();
 
 protected:
-  static std::vector<std::pair<CleanupManagerCallback, void *> > callbacks_;
+  // callbacks_ needs to be allocated off the heap to make sure it's
+  // still around when exitAll is called.
+  static std::vector<std::pair<CleanupManagerCallback, void *> >* callbacks_;
   static bool    initialized_;
   static Mutex * lock_;
 };
