@@ -65,8 +65,7 @@ itcl_class SCIRun_Math_ErrorMetric {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 	global $this-haveUI
 	set $this-haveUI 1
@@ -122,6 +121,9 @@ itcl_class SCIRun_Math_ErrorMetric {
 	pack $w.vals.rms $w.vals.cc -side left -fill x -expand 1
         pack $w.data.g -side top -fill x
         pack $w.top $w.vals $w.rms $w.cc $w.data -side top -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }   
 
     method append_graph {cc rms a b} {
