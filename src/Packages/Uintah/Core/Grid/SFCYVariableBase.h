@@ -58,6 +58,7 @@ WARNING
       // Insert Documentation Here:
       virtual SFCYVariableBase* clone() const = 0;
 
+      virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
       virtual void copyPatch(SFCYVariableBase* src,
@@ -81,6 +82,7 @@ WARNING
    private:
       SFCYVariableBase& operator=(const SFCYVariableBase&);
    };
+
 } // End namespace Uintah
 
 #endif

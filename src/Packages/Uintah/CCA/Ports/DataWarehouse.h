@@ -71,7 +71,12 @@ WARNING
       virtual void setGrid(const GridP&)=0;
 
       virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const =0;
-      
+
+      // Generic put, passing Variable as a pointer rather than by reference
+      // to avoid ambiguity with other put overloaded methods.
+      virtual void put(const Variable*, const VarLabel*, int matlIndex,
+		       const Patch*) = 0;
+ 
       // Reduction Variables
       virtual void allocate(ReductionVariableBase&, const VarLabel*,
 			    int matlIndex = -1) = 0;
@@ -118,31 +123,6 @@ WARNING
       virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const CCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
-
-      // Face  Centered (XFC) Variables
-      virtual void allocate(XFCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*) = 0;
-      virtual void get(XFCVariableBase&, const VarLabel*, int matlIndex,
-		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const XFCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
-
-      // Face  Centered (YFC) Variables
-      virtual void allocate(YFCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*) = 0;
-      virtual void get(YFCVariableBase&, const VarLabel*, int matlIndex,
-		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const YFCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
-
-
-      // Face  Centered (ZFC) Variables
-      virtual void allocate(ZFCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*) = 0;
-      virtual void get(ZFCVariableBase&, const VarLabel*, int matlIndex,
-		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const ZFCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*) = 0;
 
       // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
