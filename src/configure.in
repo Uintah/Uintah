@@ -2428,7 +2428,6 @@ case $host in
 esac
 
 SCI_CHECK_HEADERS(,inttypes.h stdint.h,,,optional)
-
 ##  --  required STL headers 
 ##  --      (only look for STL after going into cplusplus mode)
 ##
