@@ -613,6 +613,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     m->transparency = def_color_a_.get();
     def_mat_handle_ = m;
     data_at_dirty_ = true;
+    edges_dirty_ = true;
     maybe_execute(DATA_AT);
   } else if (args[1] == "text_color_change") {
     text_color_r_.reset();
