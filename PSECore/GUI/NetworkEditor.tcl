@@ -610,5 +610,5 @@ source $SCICoreTCL/ThreadStats.tcl
 
 source $SCICoreTCL/Dialbox.tcl
 source $SCICoreTCL/Util.tcl
-
+source $SCICoreTCL/PointVector.tcl
 source $PSECoreTCL/Module.tcl
