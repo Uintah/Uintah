@@ -1052,6 +1052,8 @@ ICUMonitor::redraw_all()
 void
 ICUMonitor::setup_gl_view()
 {
+  gui->lock();
+  if (! make_current()) return;
   glViewport(0, 0, width_, height_);
 
   glDisable(GL_DEPTH_TEST);
@@ -1069,8 +1071,7 @@ ICUMonitor::setup_gl_view()
 
   glClearColor(0.0, .25, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-
-  //gui->unlock();
+  gui->unlock();
 }
 
 void 
