@@ -281,9 +281,7 @@ void processSUBMATERIAL(token_list* children2, unsigned loop2,
                               Color(specular),
                               token->GetShine()*1000,
                               token->GetTransparency(),
-                              0);
-
-      ((ImageMaterial*)mat)->flip();
+                              0,true);
     }
   } else {
     mat = new SubMaterial();
@@ -337,8 +335,7 @@ void processMATERIAL(token_list* children2, unsigned loop2,
                           Color(specular),
                           token->GetShine()*1000,
                           token->GetTransparency(),
-                          0);
-      ((ImageMaterial*)(ase_matls[token->GetIndex()]))->flip();
+                          0,true);
     }
   } else {
     ase_matls[token->GetIndex()] = new SubMaterial();

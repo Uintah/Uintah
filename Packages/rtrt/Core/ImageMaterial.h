@@ -16,7 +16,6 @@ public:
 	None
     };
 private:
-    bool flip_;
     bool valid_;
 
     double Kd;
@@ -34,20 +33,19 @@ public:
     ImageMaterial(int /* oldstyle */, const string &filename, 
 		  Mode umode, Mode vmode,
 		  double Kd, const Color& specular,
-		  double specpow, double refl=0);
+		  double specpow, double refl=0, bool flipped=0);
     ImageMaterial(const string &filename, Mode umode, Mode vmode,
 		  double Kd, const Color& specular,
 		  double specpow, double refl, 
-		  double transp=0);
+		  double transp=0, bool flipped=false);
     ImageMaterial(const string &filename, Mode umode, Mode vmode,
 		  double Kd, const Color& specular,
-		  double specpow, double refl=0);
+		  double specpow, double refl=0, bool flipped=false);
     virtual ~ImageMaterial();
     virtual void shade(Color& result, const Ray& ray,
                        const HitInfo& hit, int depth, 
                        double atten, const Color& accumcolor,
                        Context* cx);
-    void flip() { flip_ = !flip_; }
     bool valid() { return valid_; }
     void set_refl(double r)
       {

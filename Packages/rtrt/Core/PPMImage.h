@@ -40,10 +40,14 @@ class PPMImage
   unsigned            max_;
   bool                valid_;
   vector<rtrt::Color> image_;
+  bool                flipped_;
 
  public:
-  PPMImage(const string& s) : valid_(false) { read_image(s.c_str()); }
-  PPMImage(int nu, int nv) : u_(nu), v_(nv), valid_(false) 
+  PPMImage(const string& s) : valid_(false), flipped_(false) 
+  { 
+    read_image(s.c_str()); 
+  }
+  PPMImage(int nu, int nv) : u_(nu), v_(nv), valid_(false), flipped_(false) 
   {
     image_.resize(u_*v_);
   }
@@ -54,13 +58,21 @@ class PPMImage
   unsigned get_height() { return v_; }
   unsigned get_size() { return max_; }
 
-  void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv) {
+  void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv, 
+                               bool flipped=false) {
     c.resize(u_+2,v_+2);  // image size + slop for interpolation
-    for (int u=0; u<u_; u++)
-      for (int v=0; v<v_; v++)
-	c(u,v)=image_[v*u_+u];
     nu=u_;
     nv=v_;
+    flipped_ = flipped;
+    if (!flipped_) {
+      for (int u=0; u<u_; ++u)
+        for (int v=0; v<v_; ++v)
+          c(u,v)=image_[v*u_+u];
+    } else {
+      for (int u=0; u<u_; ++u)
+        for (int v=0; v<v_; ++v)
+          c(u,v_-v-1)=image_[v*u_+u];
+    }
   }
 
   bool valid() { return valid_; }
