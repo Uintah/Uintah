@@ -28,6 +28,7 @@ namespace Uintah {
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
+      const VarLabel* pParticleIDLabel;
       
       const VarLabel* gMassLabel;
       const VarLabel* gAccelerationLabel;
@@ -49,6 +50,8 @@ namespace Uintah {
       
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
+
+      const VarLabel* ppNAPIDLabel;
       
     };
   } // end namepsace MPM
@@ -56,6 +59,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.6  2000/06/02 23:16:32  guilkey
+// Added ParticleID labels.
+//
 // Revision 1.5  2000/05/31 22:15:38  guilkey
 // Added VarLabels for some integrated quantities.
 //

@@ -5,12 +5,15 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/VarTypes.h>
+#include <Uintah/Grid/PerPatch.h>
 
 using namespace Uintah;
 using namespace Uintah::MPM;
 
 MPMLabel::MPMLabel()
 {
+  // Particle Variables
+
   pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
@@ -49,6 +52,11 @@ MPMLabel::MPMLabel()
   //
   pSurfaceNormalLabel = new VarLabel( "p.surfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
+
+  pParticleIDLabel = new VarLabel("p.particleID",
+			ParticleVariable<long>::getTypeDescription() );
+
+  // Node Centered Variables
   
   gAccelerationLabel = new VarLabel( "g.acceleration",
 			NCVariable<Vector>::getTypeDescription() );
@@ -80,12 +88,6 @@ MPMLabel::MPMLabel()
   gSelfContactLabel = new VarLabel( "g.selfContact",
 			NCVariable<bool>::getTypeDescription() );
   
-  cSelfContactLabel = new VarLabel( "c.selfContact",
-			CCVariable<bool>::getTypeDescription() );
-  
-  cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
-			CCVariable<Vector>::getTypeDescription() );
-  
   gTemperatureRateLabel = new VarLabel("g.temperatureRate",
 			NCVariable<double>::getTypeDescription());
 
@@ -95,6 +97,16 @@ MPMLabel::MPMLabel()
   gExternalHeatRateLabel = new VarLabel("g.externalTemperatureRate",
 			NCVariable<double>::getTypeDescription());
 
+  // Cell centered variables
+
+  cSelfContactLabel = new VarLabel( "c.selfContact",
+			CCVariable<bool>::getTypeDescription() );
+  
+  cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
+			CCVariable<Vector>::getTypeDescription() );
+  
+  // Reduction variables
+
   delTLabel = new VarLabel( "delT", delt_vartype::getTypeDescription() );
 
   StrainEnergyLabel = new VarLabel( "StrainEnergy",
@@ -102,6 +114,11 @@ MPMLabel::MPMLabel()
 
   KineticEnergyLabel = new VarLabel( "KineticEnergy",
 			sum_vartype::getTypeDescription() );
+
+  // PerPatch variables
+
+  ppNAPIDLabel = new VarLabel("NAPID",PerPatch<long>::getTypeDescription() );
+
 } 
 
 const MPMLabel* MPMLabel::getLabels()
@@ -113,6 +130,9 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.6  2000/06/02 23:16:32  guilkey
+// Added ParticleID labels.
+//
 // Revision 1.5  2000/05/31 22:15:38  guilkey
 // Added VarLabels for some integrated quantities.
 //
