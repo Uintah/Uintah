@@ -427,7 +427,8 @@ WARNING
       NormalDomain,  // <- Normal/default setting
       OutOfDomain,   // <- Require things from another level or set of patches
       CoarseLevel,   // <- AMR 
-      FineLevel
+      FineLevel,
+      OtherGridDomain // for when we copy data to new grid after a regrid.
     };
 
     //////////
