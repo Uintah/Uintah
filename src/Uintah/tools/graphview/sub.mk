@@ -10,13 +10,17 @@ PROGRAM := $(SRCDIR)/graphview
 SRCS := $(SRCDIR)/graphview.cc	$(SRCDIR)/GV_TaskGraph.cc 	\
 	$(SRCDIR)/DaVinci.cc
 
-PSELIBS := PSECore/XMLUtil SCICore/Exceptions SCICore/Thread Uintah/Interface
+PSELIBS := PSECore/XMLUtil SCICore/Exceptions SCICore/Thread Uintah/Interface \
+	Uintah/Grid
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.4  2001/01/04 19:34:31  witzel
+# Needed to add Uintah/Grid in PSELIBS
+#
 # Revision 1.3  2000/11/22 02:29:35  witzel
 # List timesteps using DataArchive queryTimesteps instead of listing
 # the directories, and changed Task to GV_Task and TaskGraph to GV_TaskGraph
