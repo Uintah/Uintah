@@ -543,7 +543,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
         
       } // for patchIterator
 
-      sim->scheduleRefine(refineSet, sched);
+      if (refineSet->size() > 0)
+        sim->scheduleRefine(refineSet, sched);
     }
     
     dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
@@ -559,9 +560,15 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
     }
   }
 
+  // set so the load balancer will make an adequate neighborhood, as the default
+  // neighborhood isn't good enough for the copy data timestep
+  state->setCopyDataTimestep(true);
+
   this->compile(); 
   this->execute();
   
+  state->setCopyDataTimestep(false);
+
   vector<VarLabelMatl<Level> > levelVariableInfo;
   oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
   
@@ -605,7 +612,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
     }
     
     // find old patches associated with this patch
-    const Level* oldLevel = (oldDataWarehouse->getGrid()->getLevel( newLevel->getIndex() )).get_rep();
+    LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel( newLevel->getIndex() );
     
     for ( label_matl_map::iterator iter = label_matls_[oldLevel->getIndex()].begin(); 
           iter != label_matls_[oldLevel->getIndex()].end(); iter++) {
