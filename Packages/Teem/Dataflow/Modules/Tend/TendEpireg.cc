@@ -50,6 +50,7 @@ public:
   TendEpireg(SCIRun::GuiContext *ctx);
   virtual ~TendEpireg();
   virtual void execute();
+  virtual void presave();
 
 private:
   bool extract_gradients(vector<double> &d);
@@ -98,6 +99,7 @@ TendEpireg::~TendEpireg() {
 bool
 TendEpireg::extract_gradients(vector<double> &d)
 {
+  gui->execute(id + " update_text"); // make gradient_list current
   istringstream str(gradient_list_.get().c_str());
   for (;;)
   {
@@ -225,5 +227,13 @@ TendEpireg::execute()
 
   update_state(Completed);
 }
+
+
+void
+TendEpireg::presave()
+{
+  gui->execute(id + " update_text"); // make gradient_list current
+}
+
 
 } // End namespace SCITeem

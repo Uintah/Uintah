@@ -43,11 +43,11 @@ set DATADIR [netedit getenv SCIRUN_DATA]
 
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 66 6]
 set m1 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 84]
-set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 240 84]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 241 326]
+set m2 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 240 84]
+set m3 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 241 326]
 set m4 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 65 246]
 set m5 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 239 165]
-set m6 [addModuleAtPosition "Teem" "Unu" "UnuQuantize" 65 166]
+set m6 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 65 166]
 set m7 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 242 246]
 
 addConnection $m0 0 $m4 3

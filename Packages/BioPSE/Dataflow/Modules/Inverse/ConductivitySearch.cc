@@ -261,6 +261,7 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
     conds.push_back(pair<string, Tensor>(to_string(i), Tensor(c)));
     (*cm)[i]=c;
   }
+  mesh_out_->freeze();
   mesh_out_->set_property("conductivity_table", conds, true);
 
   fem_mat_ = build_composite_matrix(which_conductivity);

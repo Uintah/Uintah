@@ -50,6 +50,7 @@ public:
   TendBmat(SCIRun::GuiContext *ctx);
   virtual ~TendBmat();
   virtual void execute();
+  virtual void presave();
 
 private:
   // Create a memory for a new nrrd, that is arranged 3 x n;
@@ -77,6 +78,7 @@ TendBmat::~TendBmat() {
 bool
 TendBmat::extract_gradients(vector<double> &d)
 {
+  gui->execute(id + " update_text"); // make gradient_list current
   istringstream str(gradient_list_.get().c_str());
   while (true)
   {
@@ -159,5 +161,13 @@ TendBmat::execute()
   nrrd->nrrd = nout;
   onrrd_->send(NrrdDataHandle(nrrd));
 }
+
+
+void
+TendBmat::presave()
+{
+  gui->execute(id + " update_text"); // make gradient_list current
+}
+
 
 } // End namespace SCITeem

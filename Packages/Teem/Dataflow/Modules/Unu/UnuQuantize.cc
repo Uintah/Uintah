@@ -172,6 +172,7 @@ UnuQuantize::execute()
     return;
   }
 
+  nrrdKeyValueCopy(nrrd->nrrd, nin);
   last_minf_ = minf;
   last_maxf_ = maxf;
   last_nbits_ = nbits;

@@ -74,7 +74,7 @@ set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 222 283]
 set m15 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 391 588]
 set m16 [addModuleAtPosition "BioPSE" "Forward" "ConfigureElectrode" 6 66]
 set m17 [addModuleAtPosition "BioPSE" "Forward" "ConfigureElectrode" 222 72]
-set m18 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 572 501]
+set m18 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 572 501]
 set m19 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMVoltageSource" 474 291]
 set m20 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 590 420]
 
@@ -109,6 +109,7 @@ addConnection $m16 0 $m3 0
 addConnection $m17 0 $m7 1
 addConnection $m16 0 $m7 2
 addConnection $m17 0 $m14 0
+addConnection $m20 1 $m18 2
 
 set $m0-filename $DATADIR/shared/square-electrode.cfi.fld
 
