@@ -85,6 +85,9 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 {
   d_nofScalars = d_props->getNumMixVars();
   MM_CUTOFF_VOID_FRAC = 0.01;
+  d_wallBdry = 0;
+  d_pressureBdry = 0;
+  d_outletBC = 0;
 }
 
 //****************************************************************************
@@ -92,6 +95,9 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 //****************************************************************************
 BoundaryCondition::~BoundaryCondition()
 {
+  delete d_wallBdry;
+  delete d_pressureBdry;
+  delete d_outletBC;
 }
 
 //****************************************************************************
