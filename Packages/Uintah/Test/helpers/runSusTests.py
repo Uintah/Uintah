@@ -69,7 +69,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   if mode == "dbg" and do_dbg == 0:
     print "Skipping %s tests because we're in debug mode" % algo
-    return 0
+    return 3
   
   if mode == "opt":
     do_memory = 0

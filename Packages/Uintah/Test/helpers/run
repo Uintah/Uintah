@@ -91,6 +91,8 @@ for test in *; do
 	        # test ran successfully - remove the lock
 	        rm "${BUILD_DIR}/${test}-${mode}.lock"
 	    fi
+	elif [ $retval = "3" ]; then
+	    echo "Passed: ${test}-$mode tests (tests skipped)"
 	else
 	    echo "Failed: ${test}-${mode} tests"
 	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
