@@ -25,7 +25,10 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Thread/FutureValue.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ostream;
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -486,6 +489,9 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:06:57  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/08/29 00:46:43  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

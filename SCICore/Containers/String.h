@@ -16,11 +16,11 @@
 
 #include <SCICore/share/share.h>
 
-#ifdef KCC
-#include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
-#else
-class ostream;
+#include <iosfwd>
+
+#ifdef DEFINE_OLD_IOSTREAM_OPERATORS
 class istream;
+class ostream;
 #endif
 
 namespace SCICore {
@@ -91,12 +91,21 @@ public:
 
     //////////
     // I/O
-    friend SCICORESHARE ostream& operator<<(ostream& s, const clString&);
+    friend SCICORESHARE std::ostream& operator<<(std::ostream& s, const clString&);
     
     //////////
     //<i>No documentation provided</i>
-    friend SCICORESHARE istream& operator>>(istream& s, clString&);
+    friend SCICORESHARE std::istream& operator>>(std::istream& s, clString&);
 
+#ifdef DEFINE_OLD_IOSTREAM_OPERATORS
+    //////////
+    // I/O
+    friend SCICORESHARE ::ostream& operator<<(::ostream& s, const clString&);
+    
+    //////////
+    //<i>No documentation provided</i>
+    friend SCICORESHARE ::istream& operator>>(::istream& s, clString&);
+#endif
 
     //////////
     //<i>No documentation provided</i>
@@ -268,6 +277,9 @@ inline const char* clString::operator()() const
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:28  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/04 06:01:43  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

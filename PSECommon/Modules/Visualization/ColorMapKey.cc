@@ -27,7 +27,8 @@
 #include <SCICore/Geom/Sticky.h>
 #include <values.h>
 #include <stdio.h>
-
+#include <iostream>
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {
@@ -168,6 +169,9 @@ void ColorMapKey::execute() {
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:05  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -19,7 +19,9 @@
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 #define Sqr(x) ((x)*(x))
 
@@ -147,6 +149,9 @@ ContourSet* ContourSet::clone()
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:20  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/01 05:27:35  dmw
 // more DaveW datatypes...
 //

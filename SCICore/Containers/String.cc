@@ -24,9 +24,9 @@ char *strcpy( char *, const char *);
 #include <SCICore/Containers/String.h>
 
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 #include <string.h>
-#include <iomanip.h>
+#include <iomanip>
 #include <ctype.h>
 
 #include <SCICore/Util/Assert.h>
@@ -182,25 +182,54 @@ clString to_string(double d)
     return clString(s);
 }
 
-ostream& operator<<(ostream& s, const clString& str)
+std::ostream& operator<<(std::ostream& s, const clString& str)
 {
     return s << ((str.p && str.p->s)?str.p->s:"");
 }
 
-istream& operator>>(istream& s, clString& str)
+std::istream& operator>>(std::istream& s, clString& str)
 {
   const int bufsize = 1024;
   char* buf = scinew char[bufsize];
-  s >> setw( bufsize ) >> buf;
+  s >> ::std::setw( bufsize ) >> buf;
   str = buf;
   while (s.gcount() == bufsize - 1) { // string is longer than 1024
-    s >> setw( bufsize) >> buf;
+    s >> ::std::setw( bufsize) >> buf;
     str +=  buf;
   }
   delete [] buf;
   return s;
 }
-      
+
+#ifndef _KCC
+} // End namespace Containers
+} // End namespace SCICore
+
+#include <iostream.h>
+#include <iomanip.h>
+
+namespace SCICore {
+namespace Containers {
+
+::ostream& operator<<(::ostream& s, const clString& str)
+{
+    return s << str();
+}
+
+::istream& operator>>(::istream& s, clString& str)
+{
+  const int bufsize = 1024;
+  char* buf = scinew char[bufsize];
+  s >> ::setw( bufsize ) >> buf;
+  str = buf;
+  while (s.gcount() == bufsize - 1) { // string is longer than 1024
+    s >> ::setw( bufsize) >> buf;
+    str +=  buf;
+  }
+  delete [] buf;
+  return s;
+}
+#endif
     
 /* -----------------  Old version ----------------------
 istream& operator>>(istream& s, clString& str)
@@ -475,6 +504,9 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:28  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:46  sparker
 // Various #include cleanups
 //

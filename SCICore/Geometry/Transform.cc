@@ -17,8 +17,8 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/Trig.h>
-#include <iostream.h>
-
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 
 namespace SCICore {
@@ -562,6 +562,9 @@ Transform& Transform::operator=(const Transform& copy)
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:56  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/04 06:01:52  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

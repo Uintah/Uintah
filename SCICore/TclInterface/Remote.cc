@@ -20,8 +20,8 @@
 #include <SCICore/TclInterface/Remote.h>
 
 #include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -175,6 +175,9 @@ int receiveReply (TCLMessage* msg, int skt)
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:08:03  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/23 06:30:40  sparker
 // Linux port
 // Added X11 configuration options

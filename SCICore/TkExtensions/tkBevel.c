@@ -25,6 +25,7 @@
  */
 
 #ifndef lint
+/* REFERENCED */
 static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 #endif
 
@@ -201,7 +202,7 @@ BevelCmd(clientData, interp, argc, argv)
     Tk_CreateEventHandler(BevelPtr->tkwin, ExposureMask|StructureNotifyMask,
 	    BevelEventProc, (ClientData) BevelPtr);
     Tcl_CreateCommand(interp, Tk_PathName(BevelPtr->tkwin), BevelWidgetCmd,
-	    (ClientData) BevelPtr, (void (*)(int*)) NULL);
+	    (ClientData) BevelPtr, (Tcl_CmdDeleteProc*)NULL);
     if (BevelConfigure(interp, BevelPtr, argc-2, argv+2, 0) != TCL_OK) {
 	Tk_DestroyWindow(BevelPtr->tkwin);
 	return TCL_ERROR;
@@ -412,7 +413,9 @@ BevelDisplay(clientData)
 {
     Bevel *BevelPtr = (Bevel *) clientData;
     Tk_Window tkwin = BevelPtr->tkwin;
+#if 0
     Pixmap pm = None;
+#endif
     Drawable d;
     char* edge=BevelPtr->edge;
     int bw=BevelPtr->borderWidth;

@@ -19,6 +19,11 @@
 namespace PSECore {
 namespace Widgets {
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off warnings about partially overridden virtual functions
+#pragma set woff 1682
+#endif
+
 class BoxWidget : public BaseWidget {
 public:
    BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
@@ -59,8 +64,15 @@ private:
 } // End namespace Widgets
 } // End namespace PSECore
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1682
+#endif
+
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:24  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:38:28  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

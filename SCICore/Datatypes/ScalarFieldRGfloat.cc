@@ -20,7 +20,8 @@
 //#include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace SCICore {
 namespace Datatypes {
@@ -327,6 +328,9 @@ void ScalarFieldRGfloat::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:33  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/04 06:01:44  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -57,7 +57,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 class SCICORESHARE GeomTrianglesP: public GeomObj {
@@ -95,7 +95,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 class SCICORESHARE GeomTrianglesPT1d : public GeomTrianglesP {
@@ -117,7 +117,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 
@@ -175,7 +175,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 class SCICORESHARE GeomTrianglesVP: public GeomObj {
@@ -204,7 +204,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 class SCICORESHARE GeomTrianglesVPC: public GeomTrianglesVP {
@@ -223,7 +223,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 } // End namespace GeomSpace
@@ -231,6 +231,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:48  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/17 23:50:28  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

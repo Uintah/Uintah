@@ -54,7 +54,10 @@
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/SimpleReducer.h>
 #include <SCICore/Thread/Thread.h>
-#include <strstream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+#include <sstream>
 
 namespace PSECommon {
 namespace Modules {
@@ -200,9 +203,8 @@ void SolveMatrix::execute()
   ep=emit_partial.get();
   cerr << "emit_partial="<<ep<<"\n";
   clString meth=method.get();
-  if(0){
 #ifdef SCI_SPARSELIB
-     } else if(meth == "conjugate_gradient"){
+    if(meth == "conjugate_gradient"){
       rhs.detach();
 	conjugate_gradient(matrix.get_rep(),
 			   *solution.get_rep(), *rhs.get_rep(),flag);
@@ -233,9 +235,9 @@ void SolveMatrix::execute()
 	richardson_iter(matrix.get_rep(),
 	       *solution.get_rep(), *rhs.get_rep(),flag);
         solport->send(solution);
-	
+   } else 
 #endif
-   } else if(meth == "conjugate_gradient_sci"){
+   if(meth == "conjugate_gradient_sci"){
      conjugate_gradient_sci(matrix.get_rep(),
 			    *solution.get_rep(), *rhs.get_rep());
 //     if (ep)
@@ -276,8 +278,7 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
 				const Array1<double>& targetlist,
 				int& last_errupdate)
 {
-    char buf[10000];
-    ostrstream str(buf, 10000);
+    std::ostringstream str;
     str << id << " append_graph " << niter << " \"";
     int i;
     for(i=last_update;i<errlist.size();i++){
@@ -290,8 +291,8 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
     for(i=last_errupdate;i<targetidx.size();i++){
 	str << targetidx[i] << " " << targetlist[i] << " ";
     }
-    str << "\" ; update idletasks" << '\0';
-    TCL::execute(str.str());
+    str << "\" ; update idletasks";
+    TCL::execute(str.str().c_str());
     last_update=errlist.size();
     last_errupdate=targetidx.size();
 }
@@ -1485,6 +1486,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.12  1999/10/07 02:06:52  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.11  1999/09/22 04:06:15  dmw
 // removed debug info
 //

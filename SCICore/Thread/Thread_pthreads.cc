@@ -31,7 +31,6 @@
 #include <SCICore/Thread/WorkQueue.h>
 #include "Thread_unix.h"
 #include <errno.h>
-#include <iostream.h>
 extern "C" {
 #include <semaphore.h>
 };
@@ -799,6 +798,9 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.10  1999/10/07 02:08:06  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.9  1999/09/22 19:10:29  sparker
 // Implemented timedWait method for ConditionVariable.  A default
 // implementation of CV is no longer possible, so the code is moved

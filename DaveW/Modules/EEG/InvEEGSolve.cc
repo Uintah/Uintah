@@ -65,7 +65,7 @@
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
 
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -956,6 +956,9 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:06:27  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/08 02:26:23  sparker
 // Various #include cleanups
 //

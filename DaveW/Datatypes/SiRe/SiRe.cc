@@ -17,7 +17,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 // Here's the code for the SiReData
 
@@ -273,6 +274,9 @@ void Pio(Piostream& stream, DaveW::Datatypes::SiReDataS& s)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:22  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/29 00:46:35  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

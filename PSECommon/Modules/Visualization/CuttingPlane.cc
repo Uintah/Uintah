@@ -31,7 +31,9 @@
 #include <SCICore/TclInterface/TCLvar.h>
 
 #include <PSECore/Widgets/ScaledFrameWidget.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 #define CP_PLANE 0
 #define CP_SURFACE 1
@@ -656,6 +658,9 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:05  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/04 06:01:40  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

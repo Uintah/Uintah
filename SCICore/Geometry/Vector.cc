@@ -19,7 +19,9 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Math/Expon.h>
 #include <SCICore/Math/MiscMath.h>
-#include <iostream.h>
+#include <iostream>
+using std::istream;
+using std::ostream;
 #include <stdio.h>
 
 namespace SCICore {
@@ -130,6 +132,9 @@ void Vector::rotz90(const int c)
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:57  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:53  sparker
 // Various #include cleanups
 //

@@ -38,9 +38,12 @@ DESCRIPTION
 #include <SCICore/Malloc/Allocator.h>
 
 #include <math.h>
-#include <iostream.h> 
-#include <strstream.h>
-#include <iomanip.h>
+#include <iostream>
+using std::ios;
+#include <sstream>
+using std::ostringstream;
+#include <iomanip>
+using std::setw;
 #include <stdio.h>
 
 namespace PSECommon {
@@ -347,7 +350,7 @@ void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
     
     if (m < minRes.get()) return;
     
-    ostrstream colorOstr;
+    ostringstream colorOstr;
     colorOstr.setf(ios::hex, ios::basefield);
     colorOstr.fill('0');
     float frac = (n-1)/float(m-1);
@@ -371,7 +374,7 @@ void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
       colorOstr << "#"<< setw(2) << int(color.r()*255) << setw(2) <<
 	int(color.g()*255) << setw(2) << int(color.b()*255) << " ";
     }
-    args.result(colorOstr.str());
+    args.result(colorOstr.str().c_str());
     
   } else {
     Module::tcl_command(args, userdata);

@@ -20,6 +20,8 @@
 #include <SCICore/Math/MusilRNG.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 
 namespace PSECommon {
@@ -170,6 +172,9 @@ void BldTransform::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:51  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/05 05:32:25  dmw
 // updated and added Modules from old tree to new
 //

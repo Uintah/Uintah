@@ -27,7 +27,9 @@
 #include <SCICore/Thread/Semaphore.h>
 #include <SCICore/Thread/Thread.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdio.h>
 #include <math.h>
 
@@ -363,6 +365,9 @@ void Downhill_Simplex::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:37  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/05 23:16:46  dmw
 // new module
 //

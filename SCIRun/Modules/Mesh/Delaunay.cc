@@ -16,6 +16,9 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace SCIRun {
 namespace Modules {
@@ -117,9 +120,11 @@ void Delaunay::execute()
     mesh->elems.add(el5);
 
     int onn=nn;
+#if 0
     GeometryOPort* aport=ogeom;
     if(ogeom->nconnections() == 0)
 	aport=0;
+#endif
     nn=nnodes.get();
     if(nn==0 || nn > onn)nn=onn;
     for(int node=0;node<nn;node++){
@@ -164,6 +169,9 @@ cerr << "Adding node " << node << endl;
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:08:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/05 01:15:26  dmw
 // added all of the old SCIRun mesh modules
 //

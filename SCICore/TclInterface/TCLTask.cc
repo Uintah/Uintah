@@ -18,7 +18,9 @@
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Thread.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdlib.h>
 #include <tcl.h>
 #include <tk.h>
@@ -210,6 +212,9 @@ Thread* TCLTask::get_owner()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:03  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 02:26:55  sparker
 // Various #include cleanups
 //

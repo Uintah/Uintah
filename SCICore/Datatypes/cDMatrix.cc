@@ -13,7 +13,13 @@
  */
 
 #include <SCICore/Datatypes/cDMatrix.h>
-#include <fstream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ostream;
+#include <fstream>
+using std::complex;
+using std::ifstream;
 
 namespace SCICore {
 namespace Datatypes {
@@ -96,7 +102,7 @@ cDMatrix& cDMatrix::operator=(const cDMatrix &B){
 }
 
 //-----------------------------------------------------------------
-Complex& cDMatrix::operator()(int i, int j){
+cDMatrix::Complex& cDMatrix::operator()(int i, int j){
 
 if((i>=0)&&(i<Size)&&(j>=0)&&(j<Size)){
   return(a[i][j]);
@@ -107,7 +113,7 @@ else
  return(a[0][0]);  
 }
 
-Complex& cDMatrix::get(int i, int j) {
+cDMatrix::Complex& cDMatrix::get(int i, int j) {
     return (*this)(i,j);
 }
 
@@ -154,7 +160,7 @@ cDMatrix cDMatrix:: operator*(const cDMatrix& B) const{
 //-----------------------------------------------------------------
 int cDMatrix::load(char* filename){
 
-ifstream file_in(filename);
+std::ifstream file_in(filename);
 
  if(!file_in){
       cerr<<"Error:Cannot open input file:" <<filename<<endl;
@@ -187,7 +193,7 @@ ostream &operator<< (ostream &output, cDMatrix &A){
 }
 
 //-----------------------------------------------------------------
-cDMatrix operator*(Complex x,const cDMatrix &B){
+cDMatrix operator*(cDMatrix::Complex x,const cDMatrix &B){
 cDMatrix C(B.Size);
 
  for(int i=0;i<B.Size;i++){
@@ -200,7 +206,7 @@ cDMatrix C(B.Size);
 
 //-----------------------------------------------------------------
 
-cDMatrix operator*(const cDMatrix &B,Complex x){
+cDMatrix operator*(const cDMatrix &B,cDMatrix::Complex x){
  cDMatrix C(B.Size);
 
  for(int i=0;i<B.Size;i++){
@@ -274,6 +280,9 @@ void cDMatrix::mult(cVector& V,cVector& tmp){
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/04 06:01:45  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

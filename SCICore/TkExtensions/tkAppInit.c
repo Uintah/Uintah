@@ -143,10 +143,12 @@ Tcl_AppInit(interp)
     Tcl_Interp *interp;		/* Interpreter for application. */
 {
   /* Dd: Begin */
+#if 0
     Tk_Window mainwin;
     Visual* visual;
     int depth = 32;
     Colormap colormap;
+#endif
   /* Dd: End */
 
   printf("Starting Tcl_AppInit { sci\\tkAppInit.c }\n");

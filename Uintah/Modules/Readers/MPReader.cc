@@ -3,9 +3,13 @@
 #include "MPReader.h"
 #include <Uintah/Datatypes/Particles/MPParticleGridReader.h>
 
-#include <iostream.h> 
-#include <iomanip.h>
-#include <strstream.h>
+#include <fstream>
+#include <iostream> 
+using std::endl;
+#include <iomanip>
+using std::setw;
+#include <sstream>
+using std::ostringstream;
 
 #include <ctype.h>
 #include <unistd.h>
@@ -53,7 +57,7 @@ MPReader::~MPReader(){}
 
 bool MPReader::checkFile(const clString& fname)
 {
-  ifstream in( fname() );
+    std::ifstream in( fname() );
 
   if ( !in ) {
     // TCL::execute( id + " errorDialog 'File doesn't exist'");
@@ -89,7 +93,7 @@ void MPReader::execute()
    //TCL::execute(command);
    //cout <<endl;
 
-   cerr<<"Filename = "<<filebase.get()<<endl;
+   std::cerr<<"Filename = "<<filebase.get()<<endl;
    if( filebase.get() == "" )
      return;
    
@@ -125,14 +129,14 @@ void MPReader::doAnimation()
   root[k] = '\0';
 
   for(i = startFrame.get(); i <= endFrame.get(); i += increment.get() ){
-    ostrstream ostr;
+    ostringstream ostr;
     sleep(2);
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
-    cerr << ostr.str()<< endl;
-    reader = new MPParticleGridReader( ostr.str(), startFrame.get(),
+    std::cerr << ostr.str()<< endl;
+    reader = new MPParticleGridReader( ostr.str().c_str(), startFrame.get(),
 					  endFrame.get(), increment.get() );
-    filebase.set( ostr.str() );
+    filebase.set( ostr.str().c_str() );
     file = basename( filebase.get() );
     reset_vars();
     if( i != endFrame.get() && animate.get()){
@@ -155,6 +159,9 @@ void MPReader::doAnimation()
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:08:31  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/21 16:12:26  kuzimmer
 // changes made to support binary/ASCII file IO
 //

@@ -29,12 +29,9 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
-
-// just so I can see the proccess id...
-
-#include <sys/types.h>
-#include <unistd.h>
 
 #define NUM_MATERIALS 5
 
@@ -278,6 +275,9 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:08  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:48  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

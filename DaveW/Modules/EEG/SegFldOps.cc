@@ -20,6 +20,8 @@
 #include <SCICore/Datatypes/ScalarFieldRGchar.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -172,6 +174,9 @@ void SegFldOps::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:28  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:24  sparker
 // Various #include cleanups
 //

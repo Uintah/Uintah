@@ -21,6 +21,8 @@
 #else
 #include <strings.h>
 #endif
+#include <iostream>
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -83,6 +85,9 @@ bool GeomTexSlices::saveobj(ostream&, const clString& /*format*/, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:45  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/19 23:18:06  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

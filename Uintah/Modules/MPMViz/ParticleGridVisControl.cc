@@ -39,7 +39,12 @@ LOG
 #include <SCICore/TclInterface/Histogram.h>
 
 #include <string.h>
-#include <strstream.h>
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
+#include <sstream>
+using std::ostringstream;
 
 namespace Uintah {
 namespace Modules {
@@ -375,7 +380,7 @@ void ParticleGridVisControl::graph(clString idx, clString var)
       for(i = 0; i < values.size(); i++)
 	vs.add( values[i] );
     
-      ostrstream ostr;
+      ostringstream ostr;
       ostr << id << " graph " << idx+var<<" "<<var << " ";
       int j = 0;
       for( i = tpr->GetStartTime(); i <= tpr->GetEndTime();
@@ -383,7 +388,7 @@ void ParticleGridVisControl::graph(clString idx, clString var)
 	{
 	  ostr << i << " " << values[j++] << " ";
 	}
-      TCL::execute( ostr.str() );
+      TCL::execute( ostr.str().c_str() );
     }
   }
 }

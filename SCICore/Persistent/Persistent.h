@@ -15,7 +15,7 @@
 #define SCI_project_Persistent_h 1
 
 #include <SCICore/share/share.h>
-class ifstream;
+#include <iosfwd>
 
 namespace SCICore {
 namespace Containers {
@@ -54,8 +54,8 @@ protected:
     HashTable<int, Persistent*>* inpointers;
     int current_pointer_id;
     virtual void emit_pointer(int&, int&)=0;
-    virtual double get_percent_done()=0;
-
+    static bool readHeader(const clString& filename, char* hdr,
+			   const char* type, int& version);
 public:
     virtual ~Piostream();
     virtual clString peek_class()=0;
@@ -83,12 +83,9 @@ public:
     int reading();
     int writing();
     int error();
-    void watch_progress(void (*tf)(double, void*), void* td);
-};
 
-Piostream* auto_istream(const clString& filename);
-Piostream* auto_istream(int fd);
-Piostream* auto_istream(ifstream* inp, const char *name=0);
+    friend Piostream* auto_istream(const clString& filename);
+};
 
 class SCICORESHARE Persistent {
 public:

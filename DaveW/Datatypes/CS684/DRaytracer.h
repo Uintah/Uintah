@@ -28,7 +28,6 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/Trig.h>
 
-#include <iostream.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>

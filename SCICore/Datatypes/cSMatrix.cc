@@ -13,13 +13,17 @@
  */
 
 #include <SCICore/Datatypes/cSMatrix.h>
-#include <iostream.h>
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::complex;
+using std::ostream;
 
 namespace SCICore {
 namespace Datatypes {
 
 //-----------------------------------------------------------------
-cSMatrix::cSMatrix(int lnrows, int lncols,int lnnz,Complex *la, int * lrow, int *lcol ){
+cSMatrix::cSMatrix(int lnrows, int lncols,int lnnz, Complex *la, int * lrow, int *lcol ){
   
  nrows = lnrows;
  ncols = lncols;
@@ -117,7 +121,7 @@ void cSMatrix::mult(cVector& V,cVector& tmp){
 }
 //------------------------------------------------------------------
 
-Complex& cSMatrix::get(int i, int j) {
+cSMatrix::Complex& cSMatrix::get(int i, int j) {
     int row_idx=row_ptr[i];
     int next_idx=row_ptr[i+1];
     int l=row_idx;
@@ -144,6 +148,9 @@ Complex& cSMatrix::get(int i, int j) {
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:36  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:49  sparker
 // Various #include cleanups
 //

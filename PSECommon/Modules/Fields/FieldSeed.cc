@@ -41,6 +41,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <iostream>
+using std::cerr;
 
 #include <stdlib.h>
 
@@ -160,6 +162,7 @@ void FieldSeed::execute()
   if ((testg->nx == 1) ||
       (testg->ny == 1) ||
       (testg->nz == 1)) {
+
     cerr << "Doing a slice...\n";
     cludge2d = 1;
     return;
@@ -587,6 +590,9 @@ void FieldSeed::Visualize(int which, int onoff)
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:06:47  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:39  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

@@ -44,7 +44,7 @@ typedef AVLTreeIter<clString, DebugVars*> DebugIter;
 class SCICORESHARE DebugSwitch {
     clString module;
     clString var;
-    friend ostream& operator<<(ostream&, DebugSwitch&);
+    friend std::ostream& operator<<(std::ostream&, DebugSwitch&);
 public:
     // Creation and destruction of debug switches
     DebugSwitch(const clString& module, const clString& var);
@@ -84,6 +84,9 @@ DebugSwitch::operator int() const
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:11  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:55  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -58,7 +58,7 @@ public:
    VarCore& operator+=( const Real r );
 
    inline int epsilonequal( const Real Epsilon, const VarCore& v );
-   friend PSECORESHARE ostream& operator<<( ostream& os, VarCore& c );
+   friend PSECORESHARE std::ostream& operator<<( std::ostream& os, VarCore& c );
 private:
    VarType vartype;
    Point pointvalue;
@@ -127,6 +127,9 @@ VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:17  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/26 23:57:03  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

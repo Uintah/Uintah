@@ -19,12 +19,7 @@
 #include <SCICore/Persistent/Persistent.h>
 #include <sci_config.h>
 
-#ifdef KCC
-#include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
-#else
-class istream;
-class ostream;
-#endif
+#include <iosfwd>
 
 namespace SCICore {
 
@@ -72,7 +67,7 @@ public:
     static PersistentTypeID type_id;
 
     virtual void io(Piostream&);    
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*)=0;
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*)=0;
 };
 
 void Pio(Piostream&, GeomObj*&);
@@ -82,6 +77,9 @@ void Pio(Piostream&, GeomObj*&);
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:42  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 02:26:50  sparker
 // Various #include cleanups
 //
@@ -120,5 +118,3 @@ void Pio(Piostream&, GeomObj*&);
 //
 
 #endif // ifndef SCI_Geom_GeomObj_h
-
-

@@ -17,8 +17,11 @@
 #include <SCICore/Datatypes/Mesh.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+#include <fstream>
+using std::ifstream;
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -116,6 +119,9 @@ void PointsReader::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:55  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:47:55  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

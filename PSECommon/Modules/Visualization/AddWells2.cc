@@ -20,7 +20,10 @@
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <fstream.h>
+#include <iostream>
+using std::cerr;
+#include <fstream>
+using std::ifstream;
 
 namespace PSECommon {
 namespace Modules {
@@ -113,6 +116,9 @@ void AddWells2::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:04  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:04  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

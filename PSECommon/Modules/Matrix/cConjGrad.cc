@@ -16,13 +16,13 @@
 
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
 #include <SCICore/Datatypes/cSMatrix.h>
 #include <SCICore/Datatypes/cDMatrix.h>
 #include <PSECore/Datatypes/cMatrixPort.h>
 #include <SCICore/Datatypes/cVector.h>
 #include <PSECore/Datatypes/cVectorPort.h>
-#include <SCICore/Math/Complex.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {
@@ -148,7 +148,7 @@ cVector r((*b) - (*A)*(*x));
 cVector p(r);
 cVector q(p);
 cVector p1(p),q1(q),tmp(q);
-Complex alpha,beta,ro1,ro2;
+cVector::Complex alpha,beta,ro1,ro2;
 int flag = -1;
 double err;
 cVector z(r);
@@ -242,6 +242,9 @@ void cConjGrad::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:53  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:47:52  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -9,7 +9,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdlib.h>
 
 namespace SCICore {
@@ -363,6 +364,9 @@ void PQueue::test_rigorous(RigorousTest* __test)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:27  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:38:37  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

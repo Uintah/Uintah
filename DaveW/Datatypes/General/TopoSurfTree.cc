@@ -11,7 +11,8 @@
   *
  *  Copyright (C) 1997 SCI Group
  */
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Containers/Array2.h>
@@ -1207,6 +1208,9 @@ void TopoSurfTree::TypesToSurfs() {
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:21  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/01 05:27:37  dmw
 // more DaveW datatypes...
 //

@@ -19,6 +19,8 @@
 #include <SCICore/Datatypes/ScalarField.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {
@@ -54,14 +56,6 @@ MultiScalarFieldWriter::MultiScalarFieldWriter(const clString& id)
 MultiScalarFieldWriter::~MultiScalarFieldWriter()
 {
 }
-
-#if 0
-static void watcher(double pd, void* cbdata)
-{
-    MultiScalarFieldWriter* writer=(MultiScalarFieldWriter*)cbdata;
-    writer->update_progress(pd);
-}
-#endif
 
 void MultiScalarFieldWriter::execute()
 {
@@ -101,7 +95,6 @@ void MultiScalarFieldWriter::execute()
 	stream=scinew TextPiostream(tmps, Piostream::Write);
       }
       // Write the file
-      //stream->watch_progress(watcher, (void*)this);
       Pio(*stream, *temp_handle);
       delete stream;
 #ifdef NEEDAUGDATA
@@ -124,6 +117,9 @@ void MultiScalarFieldWriter::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:12  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:15  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -171,6 +171,10 @@ Tk_DrawBeveledLine(display, drawable, border, pointPtr, numPoints,
 	} else {
 	    lightOnLeft = (dy < dx);
 	}	
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+	/* Mipspro doesn't like these expressions... */
+#pragma set woff 3496
+#endif
 	if ( lightOnLeft ^ (relief == TK_RELIEF_RAISED)) {
 	    gc = gcDark; /* Tk_BorderDarkGC(border); */
 	} else {

@@ -23,19 +23,20 @@ LOG
     June 28, 1999
 ****************************************/
 
-#include <iostream.h> 
+#include <iostream>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
 #include <SCICore/Geometry/Point.h>
+
 namespace Uintah {
 namespace Datatypes {  
 
 using namespace SCICore::Containers;
 using namespace SCICore::Datatypes;
 using SCICore::Geometry::Point;
-//using SCICore::Geometry::Vector;
+using SCICore::Geometry::Vector;
   
 class MPWrite {
  public:
@@ -45,7 +46,7 @@ class MPWrite {
   // Create the MPWrite object, passing a filename and a file
   // writing mode ios::out or ios::app.  The file is opened
   // with the appropriate mode and the object state is set to Open.
-  MPWrite(clString fname, int mode = ios::out);
+  MPWrite(clString fname, int mode = std::ios::out);
 
   // GROUP: Destructors
   //////////
@@ -173,7 +174,7 @@ class MPWrite {
   State state;
   FileType fileType;
   GridType currentGrid;
-  ofstream os;
+  std::ofstream os;
   clString filename;
   bool headerWritten;
   Array1< clString > sVars;
@@ -183,7 +184,7 @@ class MPWrite {
   Array1< clString > pvVars;
  
 
-  void printCurrentState(ostream& out);
+  void printCurrentState(std::ostream& out);
   int pN;
   int pCount;
   int svCount;

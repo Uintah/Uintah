@@ -29,9 +29,9 @@
 #include <SCICore/Math/MusilRNG.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <values.h>
-#include <strstream.h>
 
 namespace DaveW {
 namespace Modules {
@@ -866,6 +866,9 @@ void Bundles::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:41  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/05 05:32:24  dmw
 // updated and added Modules from old tree to new
 //

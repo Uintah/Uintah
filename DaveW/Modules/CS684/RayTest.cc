@@ -28,6 +28,8 @@
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
+#include <iostream>
+using std::cerr;
 #define Colormap XColormap
 #include <tcl.h>
 #include <tk.h>
@@ -216,6 +218,9 @@ void RayTest::execute()
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:25  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/22 19:00:34  dmw
 // using Makefile variable to specify itcl includes
 //

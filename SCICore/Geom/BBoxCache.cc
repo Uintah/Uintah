@@ -14,7 +14,9 @@
 
 #include <SCICore/Geom/BBoxCache.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -107,6 +109,9 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:39  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:53  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

@@ -27,7 +27,8 @@
 #include <io.h>
 #endif
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <string.h>
 
 //#define DEBUG 1
@@ -402,6 +403,9 @@ int Network::delete_module(const clString& id)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/28 17:54:29  sparker
 // Integrated new Thread library
 //

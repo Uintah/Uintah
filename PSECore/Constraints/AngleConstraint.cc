@@ -18,6 +18,10 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/Debug.h>
 #include <SCICore/Util/NotFinished.h>
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
 #include <math.h>
 
 namespace PSECore {
@@ -150,6 +154,9 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:14  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:37  sparker
 // Various #include cleanups
 //

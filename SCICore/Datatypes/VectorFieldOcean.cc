@@ -21,7 +21,9 @@
 #include <sys/mman.h>
 #endif
 #include <sys/stat.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <fcntl.h>
 
 #if defined(__sun) || defined(__linux)
@@ -268,6 +270,9 @@ void VectorFieldOcean::get_boundary_lines(Array1<Point>&)
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/23 01:07:07  moulding
 // #ifndef'ed out the io functions, in win32, for these datatypes.  They are
 // causing problems with Pio and namespaces in VC++.  Sooner or later these have

@@ -69,6 +69,9 @@
 #include <SCICore/Math/Trig.h>
 #include <SCICore/Math/TrigTable.h>
 #include <SCICore/Geometry/Plane.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -4087,6 +4090,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.11  1999/10/07 02:07:43  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.10  1999/10/06 23:22:58  yarden
 // GeomPts: add support for normals
 //

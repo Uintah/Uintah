@@ -31,7 +31,7 @@
 #include <string.h>
 #include <io.h>
 #endif
-#include <iostream.h>
+#include <iostream>
 
 namespace PSECore {
 namespace Distributed {
@@ -453,6 +453,9 @@ Module_Scheduler_Message::~Module_Scheduler_Message()
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:22  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:38:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

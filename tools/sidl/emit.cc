@@ -935,6 +935,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	e.out << "globus_nexus_sizeof_startpoint(&_sp, 1);\n";
     else
 	e.out << "0;\n";
+    string oldleader=e.out.push_leader();
     int argNum=0;
     for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
 	argNum++;
@@ -950,7 +951,6 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
     if(list.size() != 0)
 	e.out << "    // Marshal the arguments\n";
-    string oldleader=e.out.push_leader();
     argNum=0;
     for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
 	argNum++;
@@ -1112,9 +1112,7 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
 	}
 	e.out << ";\n";
 	e.out << leader << cppfullname(0) << "::pointer " << pname << "=const_cast<" << cppfullname(0) << "::pointer>(" << arg << ".begin());\n";
-	string oldleader=e.out.push_leader();
 	subtype->emit_unmarshal(e, pname, sizename, bufname, false);
-	e.out.pop_leader(oldleader);
     } else {
 	string pname=arg+"_iter";
 	e.out << leader << "for(" << cppfullname(0) << "::iterator " << pname << "=" << arg << ".begin();";
@@ -1140,15 +1138,13 @@ void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
 	    string dimname=arg+"_mdim";
 	    e.out << leader << "int " << dimname << "[" << dim << "];\n";
 	    for(int i=0;i<dim;i++)
-		e.out << leader << dimname << "[" << i << "]=" << arg << ".size" << i+1 << ";\n";
+		e.out << leader << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
 	    e.out << leader << "int " << sizename << "=" << dimname << "[0]";
 	    for(int i=1;i<dim;i++)
 		e.out << "*" << dimname << "[" << i << "]";
 	    e.out << ";\n";
 	}
-	string oldleader=e.out.push_leader();
 	subtype->emit_marshalsize(e, "", sizevar, arg+"_mtotalsize");
-	e.out.pop_leader(oldleader);
     } else {
 	string pname=arg+"_iter";
 	e.out << leader << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
@@ -1195,7 +1191,7 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
 	} else {
 	    e.out << leader << "int " << dimname << "[" << dim << "];\n";
 	    for(int i=0;i<dim;i++)
-		e.out << leader << dimname << "[" << i << "]=" << arg << ".size" << i+1 << ";\n";
+		e.out << leader << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
 	    e.out << leader << "int " << sizename << "=" << dimname << "[0]";
 	    for(int i=1;i<dim;i++)
 		e.out << "*" << dimname << "[" << i << "]";
@@ -1205,13 +1201,11 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
     if(dim == 1){
 	e.out << leader << "globus_nexus_put_int(" << bufname << ", &" << sizename << ", 1);\n";
     } else {
-	e.out << leader << "globus_nexus_put_int(" << bufname << ", &" << dimname << "[0], 1);\n";
+	e.out << leader << "globus_nexus_put_int(" << bufname << ", &" << dimname << "[0], " << dim << ");\n";
     }
 
     if(subtype->array_use_pointer()){
-	string oldleader=e.out.push_leader();
 	subtype->emit_marshal(e, pname, sizename, bufname, false);
-	e.out.pop_leader(oldleader);
     } else {
 	e.out << leader << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
 	e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
@@ -1528,6 +1522,9 @@ bool NamedType::uniformsize() const
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:08:40  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/29 07:35:18  sparker
 // Finished marshal/unmarshaling of all different kinds of arrays (1D).
 // Cleaned up marshal/unmarshal code

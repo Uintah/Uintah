@@ -18,7 +18,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Expon.h>
 #include <SCICore/Math/LinAlg.h>
-#include <iostream.h>
+#include <iostream>
+using std::endl;
 
 namespace SCICore {
 namespace Datatypes {
@@ -123,7 +124,7 @@ double ColumnMatrix::vector_norm(int& flops, int& memrefs, int beg, int end)
     return linalg_norm2((end-beg), data+beg);
 }
 
-void ColumnMatrix::print(ostream& str)
+void ColumnMatrix::print(std::ostream& str)
 {
     str << "Column Matrix: " << rows << endl;
     for(int i=0;i<rows;i++){
@@ -305,6 +306,9 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:30  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/25 03:48:31  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

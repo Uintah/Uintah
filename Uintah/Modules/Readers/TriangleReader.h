@@ -55,7 +55,6 @@
 
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
-class istream;
 
 namespace Uintah {
 namespace Modules {
@@ -81,7 +80,7 @@ public:
     TCLstring status;
 
 private:
-  bool Read(istream& is, ColorMapHandle cmh, GeomGroup* tris);
+  bool Read(std::istream& is, ColorMapHandle cmh, GeomGroup* tris);
   void doAnimation( ColorMapHandle cmh );
   bool checkFile( clString filename );
 
@@ -92,6 +91,9 @@ private:
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:08:31  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/10/05 16:40:36  kuzimmer
 // added animation control to triangle file reader
 //

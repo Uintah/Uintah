@@ -31,6 +31,9 @@
 
 #undef Colormap
 
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdio.h>
 
 // tcl interpreter corresponding to this module
@@ -877,6 +880,9 @@ int GenTransferFunc::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:05  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:07  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

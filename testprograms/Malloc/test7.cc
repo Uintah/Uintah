@@ -42,7 +42,8 @@ main()
 
 #else
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 main()
 {

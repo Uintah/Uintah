@@ -11,14 +11,24 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <iostream.h>
-#include <fstream.h>
-#include <iomanip.h>
-#include <strstream.h>
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::ios;
+using std::endl;
+#include <fstream>
+using std::istream;
+using std::ifstream;
+#include <iomanip>
+using std::setw;
+#include <sstream>
+using std::istringstream;
+using std::ostringstream;
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
+#include <SCICore/Containers/Array1.h>
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -148,11 +158,11 @@ void TecplotReader::GetParticleData(int particleId,
   if(index == -1) return;
 
   for( ii = startTime; ii <= endTime; ii += increment){
-    ostrstream ostr;
+    ostringstream ostr;
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<ii;
     
-    ifstream in( ostr.str(), ios::in);
+    ifstream in( ostr.str().c_str(), ios::in);
     if( !in ) {
       cerr << "Error opening file " << filename << endl;
       return;
@@ -324,7 +334,7 @@ void TecplotReader::readVars(istream& is)
       buf[readin] = '\0';       //  append a null character
     }
 
-    istrstream iss(buf);
+    istringstream iss(buf);
     
     while( c = iss.get() ) {  // remove whitespace and =
       if ( c != ' ' && c != '\t' && c != '\n' && c != '=')
@@ -389,7 +399,7 @@ void removeChars(istream& is)
 
 int TecplotReader::find( char c, char *buf)
 {
-  istrstream iss(buf);
+  istringstream iss(buf);
   char tok[LINEMAX];
   int i;
   iss.get(tok,LINEMAX,',');
@@ -806,6 +816,9 @@ VectorFieldHandle TecplotReader::makeVectorField(int ii, int jj,
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:28  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/21 16:12:25  kuzimmer
 // changes made to support binary/ASCII file IO
 //

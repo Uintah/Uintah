@@ -94,7 +94,7 @@ public:
 
     void tcl_command(TCLArgs&, void*);
 
-    virtual void emit_vars(ostream& out); // Override from class TCL
+    virtual void emit_vars(std::ostream& out); // Override from class TCL
 
     // The scene...
     GeomIndexedGroup ports; // this contains all of the ports...
@@ -135,6 +135,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:57  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/29 00:46:43  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

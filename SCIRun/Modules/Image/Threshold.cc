@@ -23,6 +23,8 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
+#include <iostream>
+using std::cerr;
 
 using namespace SCICore::Thread;
 
@@ -182,6 +184,9 @@ void Threshold::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:16  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 02:27:02  sparker
 // Various #include cleanups
 //

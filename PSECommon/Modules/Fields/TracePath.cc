@@ -30,6 +30,8 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <PSECore/Widgets/PointWidget.h>
+#include <iostream>
+using std::cerr;
 #include <string.h>
 
 #define PCGVCCOMINDEX(i,x,I,L) ((I) - (i)                                  \
@@ -820,6 +822,9 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.9  1999/10/07 02:06:48  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.8  1999/09/08 02:26:34  sparker
 // Various #include cleanups
 //

@@ -14,10 +14,11 @@
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
 
-#include <iostream.h>
 #include <fstream.h>
-#include <iomanip.h>
-#include <strstream.h>
+#include <iomanip>
+using std::setw;
+#include <sstream>
+using std::ostringstream;
 
 namespace Uintah {
 namespace Datatypes {
@@ -105,11 +106,11 @@ void MPParticleGridReader::GetParticleData(int particleId,
   // by checking isVector we know to which variableId refers.
 
   for( ii = startTime; ii <= endTime; ii += increment){
-    ostrstream ostr;
+    ostringstream ostr;
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<ii;
     
-    MPRead read( ostr.str() );
+    MPRead read( ostr.str().c_str() );
     double value;
     read.GetParticleVariableValue( particleId, varname, value );
     values.add( value );
@@ -128,7 +129,7 @@ void MPParticleGridReader::GetParticleData(int particleId,
 
 ParticleSetHandle MPParticleGridReader::GetParticleSet( clString name )
 {
-  cerr<<"Trying to obtain particleset "<<name<<endl;
+    std::cerr<<"Trying to obtain particleset "<<name<<endl;
   map<clString, ParticleSetHandle, ltstr>::iterator it = psmap.find( name );
   if (it == psmap.end())
     return 0;
@@ -138,7 +139,7 @@ ParticleSetHandle MPParticleGridReader::GetParticleSet( clString name )
 
 VizGridHandle MPParticleGridReader::GetGrid( clString name )
 {
-  cerr<< "Trying to obtain grid "<<name<<endl;
+    std::cerr<< "Trying to obtain grid "<<name<<endl;
   map<clString, VizGridHandle, ltstr>::iterator it = vgmap.find( name );
   if (it == vgmap.end())
     return 0;
@@ -233,7 +234,7 @@ void MPParticleGridReader::readGrid( MPRead& reader)
       reader.GetVectorField( vfh );
       grid->AddVectorField(vVars[i], vfh );
     }
-    cerr <<"Adding grid "<< name << " to vgmap "<<endl;
+    std::cerr <<"Adding grid "<< name << " to vgmap "<< std::endl;
     vgmap[ name ] = VizGridHandle( grid );
     
   }
@@ -280,7 +281,7 @@ void MPParticleGridReader::readParticles(MPRead& reader)
 
   ps->add(ts);
   ParticleSetHandle psh = ParticleSetHandle( ps );
-  cerr <<   "adding particleset "<< name << " to psmap"<< endl;
+  std::cerr <<   "adding particleset "<< name << " to psmap"<< std::endl;
   psmap[name] = psh;
 
 }
@@ -292,6 +293,9 @@ void MPParticleGridReader::readParticles(MPRead& reader)
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:08:23  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/21 16:08:29  kuzimmer
 // modifications for binary file format
 //

@@ -24,7 +24,8 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/MiscMath.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <math.h>
 #include <stdio.h>
 
@@ -56,7 +57,7 @@ BRDF::~BRDF() {
 void BRDF::io(Piostream& stream) {
     using SCICore::PersistentSpace::Pio;
     
-    int version=stream.begin_class("BRDF", BRDF_VERSION);
+    /*int version=*/stream.begin_class("BRDF", BRDF_VERSION);
     int* repp=(int*)&rep;
     Pio(stream, *repp);
     stream.end_class();
@@ -227,7 +228,7 @@ void RTMaterial::io(Piostream& stream) {
     using SCICore::Containers::Pio;
     using DaveW::Datatypes::Pio;
 
-    int version=stream.begin_class("RTMaterial", RTMaterial_VERSION);
+    /*int version=*/stream.begin_class("RTMaterial", RTMaterial_VERSION);
     Pio(stream, name);		      
     Pio(stream, diffuse);
     Pio(stream, emission);
@@ -430,7 +431,7 @@ void RTObject::io(Piostream& stream) {
     using SCICore::Containers::Pio;
     using DaveW::Datatypes::Pio;
 
-    int version=stream.begin_class("RTObject", RTObject_VERSION);
+    /*int version=*/stream.begin_class("RTObject", RTObject_VERSION);
     int* repp=(int*)&rep;
     Pio(stream, name);
     Pio(stream, *repp);
@@ -1191,6 +1192,9 @@ void Pio(Piostream& stream, RTLight& l)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:18  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/25 03:35:47  sparker
 // *** empty log message ***
 //

@@ -199,7 +199,7 @@ public:
 #endif
   virtual void io(Piostream&);
   static PersistentTypeID type_id;  
-  virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+  virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 } // End namespace Modules
@@ -207,6 +207,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:58  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/17 23:50:16  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

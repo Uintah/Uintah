@@ -19,7 +19,8 @@
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Persistent/Persistent.h>
-#include <iostream.h>
+#include <iostream>
+using std::ostream;
 
 #include <stdio.h>
 

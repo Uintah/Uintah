@@ -54,14 +54,6 @@ ColumnMatrixWriter::~ColumnMatrixWriter()
 {
 }
 
-#if 0
-static void watcher(double pd, void* cbdata)
-{
-    ColumnMatrixWriter* writer=(ColumnMatrixWriter*)cbdata;
-    writer->update_progress(pd);
-}
-#endif
-
 void ColumnMatrixWriter::execute()
 {
     using SCICore::Containers::Pio;
@@ -80,7 +72,6 @@ void ColumnMatrixWriter::execute()
 	stream=scinew TextPiostream(fn, Piostream::Write);
     }
     // Write the file
-    //stream->watch_progress(watcher, (void*)this);
     Pio(*stream, handle);
     delete stream;
 }
@@ -90,6 +81,9 @@ void ColumnMatrixWriter::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:11  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:14  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

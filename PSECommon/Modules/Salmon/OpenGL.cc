@@ -16,8 +16,13 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <strstream.h>
-#include <fstream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+#include <sstream>
+using std::ostringstream;
+#include <fstream>
+using std::ofstream;
 #include <string.h>
 
 #include "image.h"
@@ -67,7 +72,6 @@ using SCICore::TclInterface::TCLTask;
 using SCICore::Thread::Runnable;
 using SCICore::Thread::Thread;
 
-const int STRINGSIZE=200;
 class OpenGLHelper;
 
 #define DO_REDRAW 0
@@ -88,7 +92,6 @@ class OpenGL : public Renderer {
     Window win;
     Display* dpy;
     GLXContext cx;
-    char* strbuf;
     int maxlights;
     SCICore::GeomSpace::DrawInfoOpenGL* drawinfo;
     WallClockTimer fpstimer;
@@ -188,7 +191,6 @@ OpenGL::OpenGL()
   get_mb("OpenGL renderer request mailbox", 5)
 {
     encoding_mpeg = false;
-    strbuf=scinew char[STRINGSIZE];
     drawinfo=scinew SCICore::GeomSpace::DrawInfoOpenGL;
     fpstimer.start();
 }
@@ -196,7 +198,6 @@ OpenGL::OpenGL()
 OpenGL::~OpenGL()
 {
     fpstimer.stop();
-    delete[] strbuf;
     
     if(encoding_mpeg) // make sure we finish up mpeg that was in progress
       encoding_mpeg = false;
@@ -621,9 +622,9 @@ void OpenGL::redraw_frame()
 	double fps=nframes/throttle.time();
 	int fps_whole=(int)fps;
 	int fps_hund=(int)((fps-fps_whole)*100);
-	ostrstream str(strbuf, STRINGSIZE);
-	str << roe->id << " setFrameRate " << fps_whole << "." << fps_hund << '\0';
-	TCL::execute(str.str());
+	ostringstream str;
+	str << roe->id << " setFrameRate " << fps_whole << "." << fps_hund;
+	TCL::execute(str.str().c_str());
 	roe->set_current_time(tend);
     } else {
 	// Just show the cleared screen
@@ -661,12 +662,12 @@ void OpenGL::redraw_frame()
     int fps_tenths=(int)((fps-fps_whole)*10);
     fpstimer.clear();
     fpstimer.start(); // Start it running for next time
-    ostrstream str(strbuf, STRINGSIZE);
+    ostringstream str;
     str << roe->id << " updatePerf \"";
     str << drawinfo->polycount << " polygons in " << timer.time()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
-	    << " polygons/second\"" << " \"" << fps_whole << "."
-		<< fps_tenths << " frames/sec\""	<< '\0';
+	<< " polygons/second\"" << " \"" << fps_whole << "."
+	<< fps_tenths << " frames/sec\"";
     if (roe->doingMovie) {
 //      cerr << "Saving a movie!\n";
       unsigned char movie[10];
@@ -699,7 +700,7 @@ void OpenGL::redraw_frame()
       cerr << " done!\n";
       roe->curFrame++;
     }
-    TCL::execute(str.str());
+    TCL::execute(str.str().c_str());
     TCLTask::unlock();
 }
 
@@ -1459,6 +1460,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.10  1999/10/07 02:06:56  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.9  1999/09/14 17:08:11  kuzimmer
 // added glPixelStorei(GL_PACK_ALIGNMENT,1); to the dump_image function so that raw images were dumped correctly
 //

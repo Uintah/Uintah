@@ -19,7 +19,9 @@
 #include <SCICore/Datatypes/SymSparseRowMatrix.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <time.h>
 
 namespace DaveW {
@@ -191,6 +193,9 @@ for (i=0;i<nrows+1;i++){
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:37  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/02 04:50:04  dmw
 // more of Dave's modules
 //

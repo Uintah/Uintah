@@ -13,7 +13,8 @@
  */
 
 #include <SCICore/Datatypes/cMatrix.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace SCICore {
 namespace Datatypes {
@@ -30,6 +31,9 @@ void cMatrix::io(Piostream&) {
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/25 03:48:48  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

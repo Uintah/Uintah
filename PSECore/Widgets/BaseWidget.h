@@ -147,7 +147,7 @@ public:
    BaseWidget& operator=( const BaseWidget& );
    int operator==( const BaseWidget& );
 
-   void print( ostream& os ) const;
+   void print( std::ostream& os ) const;
 
    void init_tcl();
    void tcl_command( TCLArgs&, void* );
@@ -223,13 +223,16 @@ protected:
    static MaterialHandle DefaultHighlightMaterial;
 };
 
-ostream& operator<<( ostream& os, BaseWidget& w );
+std::ostream& operator<<( std::ostream& os, BaseWidget& w );
 
 } // End namespace Widgets
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:24  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 02:26:43  sparker
 // Various #include cleanups
 //

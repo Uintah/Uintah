@@ -97,7 +97,7 @@ public:
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    bool saveobj(ostream& out, const clString& format,
+    bool saveobj(std::ostream& out, const clString& format,
 		 GeomSave* saveinfo);
     
     clString& getString(void) { return name;}
@@ -108,6 +108,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:58  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/29 00:46:43  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

@@ -2,11 +2,29 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = MPMaterial.cc MPVizParticleSet.cc ParticleGridReader.cc \
+ifeq (@BUILD_PARALLEL@,yes)
+PARALLEL_SRCS = Particles_sidl.cc PIDLObject.cc PIDLObjectPort.cc
+endif
+
+SRCS     = MPMaterial.cc MPRead.cc MPVizParticleSet.cc ParticleGridReader.cc \
            ParticleGridReaderPort.cc ParticleSet.cc ParticleSetPort.cc \
            cfdlibParticleSet.cc VizGrid.cc MPVizGrid.cc MPWrite.cc \
-	   MPRead.cc MPParticleGridReader.cc
+	   MPParticleGridReader.cc $(PARALLEL_SRCS)
 
-INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+GLOBUS_INCLUDE = @GLOBUS_INCLUDE@
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) $(GLOBUS_INCLUDE)
+
+SIDL_EXE = $(OBJTOP)/tools/sidl/sidl
 
 include $(SRCTOP)/scripts/objs.mk
+
+Particles_sidl.o: Particles_sidl.cc Particles_sidl.h
+$(OBJS): Particles_sidl.h
+
+Particles_sidl.cc: Particles.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -o $@ $<
+
+Particles_sidl.h: Particles.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -h -o $@ $<
+

@@ -1,6 +1,8 @@
 // soloader.cpp written by Chris Moulding 11/98
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <SCICore/Util/soloader.h>
 
 LIBRARY_HANDLE explicitlyopenedhandles[3000];

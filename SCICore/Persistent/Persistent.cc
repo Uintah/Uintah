@@ -17,6 +17,13 @@
 #include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+#include <fstream>
+using std::ifstream;
+#include <sstream>
+using std::istringstream;
 
 namespace SCICore {
 namespace PersistentSpace {
@@ -169,73 +176,73 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 
 Piostream* auto_istream(const clString& filename)
 {
-    ifstream* inp=scinew ifstream(filename());
-    return auto_istream(inp, filename());
-}
-
-Piostream* auto_istream(int fd)
-{
-  // Dd:
-//  printf("Persistent.cc: auto_istream using fd taken out for now.\n");
-    ifstream* inp=scinew ifstream(fd);
-    return auto_istream(inp);
-//  return NULL;
-}
-
-Piostream* auto_istream(ifstream* inp, const char *name)
-{
-  // Dd:
-//  printf("Persistent.cc: auto_istream(inp,name) using fd taken out for now.\n");
-  //    ifstream* inp=scinew ifstream(fd);
-  //    return auto_istream(inp);
-//  return NULL;
-//
-//    GzipPiostream *gzp=scinew GzipPiostream(const clString(name), 1);
-//    if (gzp->fileOpen()) return gzp;
-//    delete gzp;
-
-    ifstream& in=(*inp);
+    std::ifstream in(filename());
     if(!in){
-	cerr << "file not found: " << inp->rdbuf()->fd() << endl;
+	cerr << "file not found: " << filename << endl;
 	return 0;
     }
-    char m1, m2, m3, m4;
-    // >> Won't work here - it eats white space...
-    in.get(m1); in.get(m2); in.get(m3); in.get(m4);
-    if(!in || m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n'){
-	cerr << inp->rdbuf()->fd() << " is not a valid SCI file! (magic=" << m1 << m2 << m3 << m4 << ")\n";
-	return 0;
-    }
-    in.get(m1); in.get(m2); in.get(m3); in.get(m4);
+    char hdr[12];
+    in.read(hdr, 12);
     if(!in){
-	cerr << "Error reading file: " << inp->rdbuf()->fd() << " (while readint type)" << endl;
+	cerr << "Error reading header of file: " << filename << "\n";
 	return 0;
     }
     int version;
-    in >> version;
-    if(!in){
-	cerr << "Error reading file: " << inp->rdbuf()->fd() << " (while reading version)" << endl;
+    if(!Piostream::readHeader(filename, hdr, 0, version)){
+	cerr << "Error parsing header of file: " << filename << "\n";
 	return 0;
     }
-    char m;
-    do {
-	in.get(m);
-	if(!in){
-	    cerr << "Error reading file: " << inp->rdbuf()->fd() << " (while reading newline)" << endl;
-	    return 0;
-	}
-    } while(m != '\n');
+    if(version != 1){
+	cerr << "Unkown PIO version: " << version << ", found in file: " << filename << '\n';
+	return 0;
+    }
+    char m1=hdr[4];
+    char m2=hdr[5];
+    char m3=hdr[6];
     if(m1 == 'B' && m2 == 'I' && m3 == 'N'){
-	return scinew BinaryPiostream(inp, version);
+	return scinew BinaryPiostream(filename, Piostream::Read);
     } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
-	return scinew TextPiostream(inp, version);
+	return scinew TextPiostream(filename, Piostream::Read);
     } else if(m1 == 'G' && m2 == 'Z' && m3 == 'P'){
-	return scinew GunzipPiostream(inp, version);
+	return scinew GunzipPiostream(filename, Piostream::Read);
     } else {
-        cerr << name << " is an unknown type!\n";
+        cerr << filename << " is an unknown type!\n";
         return 0;
     }
 }
+
+bool Piostream::readHeader(const clString& filename, char* hdr,
+			   const char* filetype, int& version)
+{
+    char m1=hdr[0];
+    char m2=hdr[1];
+    char m3=hdr[2];
+    char m4=hdr[3];
+    if(m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n'){
+	cerr << filename << " is not a valid SCI file! (magic=" << m1 << m2 << m3 << m4 << ")\n";
+	return false;
+    }
+    char v[5];
+    v[0]=hdr[8];
+    v[1]=hdr[9];
+    v[2]=hdr[10];
+    v[3]=hdr[11];
+    v[4]=0;
+    istringstream in(v);
+    in >> version;
+    if(!in){
+	cerr << "Error reading file: " << filename << " (while reading version)" << endl;
+	return false;
+    }
+    if(filetype){
+	if(hdr[4] != filetype[0] || hdr[5] != filetype[1] || hdr[6] != filetype[2]){
+	    cerr << "Wrong filetype: " << filename << endl;
+	    return false;
+	}
+    }
+    return true;
+}
+
 
 int Piostream::begin_class(const char* classname, int current_version)
 {

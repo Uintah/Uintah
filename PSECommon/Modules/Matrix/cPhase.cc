@@ -67,8 +67,8 @@ void cPhase::execute()
     cVector& inh=*in.get_rep();
     ColumnMatrix& outh=*out.get_rep();
     for(int i=0;i<n;i++){
-	Complex& cr(inh(i));
-	double r=c*cr.Re()+s*cr.Im();
+	cVector::Complex& cr(inh(i));
+	double r=c*cr.real()+s*cr.imag();
 	outh[i]=r;
     }
     outport->send(out);
@@ -79,6 +79,9 @@ void cPhase::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:53  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:47:52  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

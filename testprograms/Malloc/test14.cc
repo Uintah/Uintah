@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include "Allocator.h"
 
 struct X {

@@ -18,7 +18,8 @@
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
@@ -421,6 +422,9 @@ void Pio(Piostream& stream, tripleInt& t) {
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:21  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/02 04:45:51  dmw
 // magnetic field
 //

@@ -18,7 +18,8 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Datatypes {
@@ -344,6 +345,9 @@ ScalarField* ManhattanDist::clone()
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:21  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/01 05:27:36  dmw
 // more DaveW datatypes...
 //

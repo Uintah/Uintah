@@ -12,9 +12,6 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <iostream.h>
-#include <strstream.h>
-
 #include <SCICore/Tester/RigorousTest.h>
 #include <SCICore/Containers/BitArray1.h>
 #include <SCICore/Containers/HashTable.h>
@@ -47,10 +44,9 @@
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <PSECore/Datatypes/SurfacePort.h>
 
-// just so I can see the proccess id...
-
-#include <sys/types.h>
-#include <unistd.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace PSECommon {
 namespace Modules {
@@ -272,6 +268,9 @@ cerr << "Dd: SurfOctree Portion of this code deleted... it is"
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:47  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:47:46  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -21,6 +21,8 @@
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace SCIRun {
 namespace Modules {
@@ -199,6 +201,9 @@ void MeshToGeom::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:08:20  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/05 01:15:28  dmw
 // added all of the old SCIRun mesh modules
 //

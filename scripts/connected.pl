@@ -33,6 +33,7 @@ close(FILES);
 $sum=0;
 $nfiles=$#scounts;
 $lsum=0;
+$totallines=0;
 foreach $t (@scounts) {
     if( open(F, $t) ){
         $n=0;
@@ -41,12 +42,15 @@ foreach $t (@scounts) {
         $lcount="$n lines";
     } else {
         $lcount="unknown # lines";
+	$n = 0;
     }
     $p=100.*$counts{$t}/$nfiles;
     $p=int($p*10+0.5)/10.;
     print "$counts{$t}\t$p%\t$t ($lcount)\n";
     $sum+=$counts{$t};
-    $nlcounts{$t}=$lcount*$counts{$t};
-    $lsum+=$lcount*$counts{$t};
+    $nlcounts{$t}=$n*$counts{$t};
+    $lsum+=$n*$counts{$t};
+    $totallines+=$n
 }
 print "$sum total files included ($lsum total lines)\n";
+print "$nfiles unique files included ($totallines total lines)\n";

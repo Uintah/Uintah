@@ -14,7 +14,9 @@
 
 #include <SCICore/Datatypes/ScalarFieldRGBase.h>
 #include <SCICore/Containers/String.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 #ifdef _WIN32
 #include <stdlib.h>
@@ -374,6 +376,9 @@ void ScalarFieldRGBase::distribute_samples()
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:32  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:48  sparker
 // Various #include cleanups
 //

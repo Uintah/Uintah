@@ -14,7 +14,9 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <strstream.h>
+#include <iostream>
+using std::cerr;
+#include <sstream>
 
 namespace PSECommon {
 namespace Modules {
@@ -91,10 +93,9 @@ void MatSelectVec::execute() {
 	changed=1;
     }
     if (changed) {
-	char buf[1000];
-	ostrstream str(buf, 1000);
-	str << id << " update" << '\0';
-	TCL::execute(str.str());
+	std::ostringstream str;
+	str << id << " update";
+	TCL::execute(str.str().c_str());
     }
 
     reset_vars();
@@ -169,6 +170,9 @@ void MatSelectVec::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:52  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/16 00:38:11  dmw
 // fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
 //

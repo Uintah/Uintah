@@ -33,7 +33,10 @@
 #include <PSECore/Widgets/LightWidget.h>
 #include <PSECore/Widgets/PathWidget.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
 
 namespace PSECommon {
 namespace Modules {
@@ -184,6 +187,9 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:09  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:49  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

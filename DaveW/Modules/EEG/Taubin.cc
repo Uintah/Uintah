@@ -19,6 +19,8 @@
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -296,6 +298,9 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:29  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:25  sparker
 // Various #include cleanups
 //

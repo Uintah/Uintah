@@ -16,6 +16,9 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 //#include <SCICore/Containers/LockingHandle.h>
 
 namespace SCICore {

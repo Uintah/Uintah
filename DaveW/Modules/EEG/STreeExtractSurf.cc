@@ -21,7 +21,8 @@
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
@@ -129,6 +130,9 @@ void STreeExtractSurf::execute() {
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:28  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:23  sparker
 // Various #include cleanups
 //

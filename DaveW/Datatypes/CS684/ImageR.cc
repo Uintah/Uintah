@@ -21,7 +21,8 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Util/NotFinished.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdlib.h>
 
 namespace DaveW {
@@ -366,6 +367,9 @@ void ImageRM::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:18  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/04 06:01:38  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

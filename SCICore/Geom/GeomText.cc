@@ -19,6 +19,8 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Geom/GeomText.h>
+#include <iostream>
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -98,6 +100,9 @@ bool GeomText::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:46  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/19 23:18:06  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -15,7 +15,10 @@
 
 #include <PSECore/Constraints/CenterConstraint.h>
 #include <SCICore/Util/Debug.h>
-#include <iostream.h>
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
 
 namespace PSECore {
 namespace Constraints {
@@ -179,6 +182,9 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:15  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:38  sparker
 // Various #include cleanups
 //

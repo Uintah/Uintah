@@ -18,11 +18,7 @@
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 
-#ifdef KCC
-#include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
-#else
-class ostream;
-#endif
+#include <iosfwd>  // Forward declarations for KCC C++ I/O routines
 
 namespace SCICore {
 namespace Datatypes {
@@ -84,7 +80,7 @@ public:
     friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
 
     void zero();
-    void print(ostream&);
+    void print(std::ostream&);
     void resize(int);
 
     // Persistent representation...
@@ -105,6 +101,9 @@ inline double& ColumnMatrix::operator[](int i) const
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:30  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/25 03:48:31  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

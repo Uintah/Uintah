@@ -1,7 +1,8 @@
 #include <PSECore/Dataflow/PackageDB.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 #define MP(makesuf) \
 namespace PSECommon { namespace Modules { using namespace PSECore::Dataflow;\

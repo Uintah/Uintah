@@ -13,7 +13,12 @@
  */
 
 #include <SCICore/Datatypes/cVector.h>
-#include <fstream.h>
+#include <fstream>
+using std::complex;
+using std::cerr;
+using std::abs;
+using std::conj;
+using std::endl;
 
 namespace SCICore {
 namespace Datatypes {
@@ -69,7 +74,7 @@ cVector &cVector::operator=(const cVector &B){
 }
 
 //-----------------------------------------------------------------
-Complex& cVector::operator()(int i){
+cVector::Complex& cVector::operator()(int i){
 
  if((i>=0)&&(i<Size)){
   return(a[i]);
@@ -106,7 +111,7 @@ double norm2=0;
 
  for(int i = 0;i < Size;i++)
        
-         norm2 = norm2 + a[i].abs()*a[i].abs();
+         norm2 = norm2 + abs(a[i])*abs(a[i]);
  
  return (sqrt(norm2));
 }
@@ -114,7 +119,7 @@ double norm2=0;
 //-----------------------------------------------------------------
 int cVector::load(char* filename){
 
- ifstream file_in(filename);
+    std::ifstream file_in(filename);
 
  if(!file_in){
       cerr<<"Error:Cannot open input file:" <<filename<<endl;
@@ -156,22 +161,22 @@ void cVector::mult(const Complex x){
 //-----------------------------------------------------------------
 void cVector::conj(){
   for(int i=0;i<Size;i++)
-    a[i] = a[i].conj();    
+    a[i] = std::conj(a[i]);    
 }
 
 //------------------------------------------------------------------
-Complex operator* (cVector& A, cVector& B){
-Complex S;
+cVector::Complex operator* (cVector& A, cVector& B){
+cVector::Complex S;
   S = 0;
 
  for(int i=0;i<A.Size;i++)
-     S = S + ((A.a[i]).conj())*B.a[i];
+     S = S + conj(A.a[i])*B.a[i];
 
  return (S);
 }
 
 //-----------------------------------------------------------------
-ostream &operator<< (ostream &output, cVector  &A){
+std::ostream &operator<< (std::ostream &output, cVector  &A){
 
  output<<"[";
 
@@ -185,7 +190,7 @@ ostream &operator<< (ostream &output, cVector  &A){
 }
 
 //-----------------------------------------------------------------
-cVector operator*(Complex x,const cVector &B){
+cVector operator*(cVector::Complex x,const cVector &B){
  cVector  C(B.Size);
 
  for(int i=0;i<B.Size;i++)
@@ -195,7 +200,7 @@ cVector operator*(Complex x,const cVector &B){
 }
 
 //-----------------------------------------------------------------
-cVector operator*(const cVector &B,Complex x){
+cVector operator*(const cVector &B,cVector::Complex x){
  cVector  C(B.Size);
 
  for(int i=0;i<B.Size;i++)
@@ -234,6 +239,9 @@ void cVector::io(Piostream&) {
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:36  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/04 06:01:46  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -44,7 +44,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 class SCICORESHARE GeomLines : public GeomObj {
@@ -64,7 +64,7 @@ public:
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+  virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 // can generate "lit" streamlines this way
@@ -111,7 +111,7 @@ protected:
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+  virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 } // End namespace GeomSpace
@@ -119,6 +119,9 @@ protected:
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:42  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/28 17:54:40  sparker
 // Integrated new Thread library
 //

@@ -26,6 +26,12 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Containers/String.h>
+#ifdef SCI_PARALLEL
+#include <Component/PIDL/PIDL.h>
+#include <iostream>
+using std::cerr;
+using Component::PIDL::PIDL;
+#endif
 
 using SCICore::TclInterface::TCLTask;
 using SCICore::TclInterface::GuiManager;
@@ -36,6 +42,7 @@ using namespace PSECore::Dataflow;
 
 using PSECore::Dataflow::Network;
 using PSECore::Dataflow::NetworkEditor;
+
 
 namespace PSECore {
   namespace Dataflow {
@@ -75,6 +82,19 @@ int main(int argc, char** argv)
 {
     global_argc=argc;
     global_argv=argv;
+
+#ifdef SCI_PARALLEL
+    try {
+	PIDL::initialize(argc, argv);
+    } catch(const SCICore::Exceptions::Exception& e) {
+	cerr << "Caught exception:\n";
+	cerr << e.message() << '\n';
+	abort();
+    } catch(...) {
+	cerr << "Caught unexpected exception!\n";
+	abort();
+    }
+#endif
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
@@ -131,6 +151,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.10  1999/10/07 02:08:34  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.9  1999/09/08 02:27:09  sparker
 // Various #include cleanups
 //

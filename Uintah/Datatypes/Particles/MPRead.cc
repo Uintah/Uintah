@@ -23,12 +23,15 @@ AUTHOR
 LOG
     Created June 28, 1999
 ****************************************/
+
+#define DEFINE_OLD_IOSTREAM_OPERATORS
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
 #include "MPRead.h"
 
-#include <strstream.h>
+#include <sstream>
+using std::istringstream;
 
 namespace Uintah {
 namespace Datatypes {  
@@ -41,7 +44,7 @@ MPRead::MPRead(clString fname) :is(fname(), ios::in), filename(fname),
   svCount(0), vvCount(0), minPt(0,0,0), maxPt(0,0,0)
 {
   if (!(is.good())) {
-    cerr<<"Error in opening file: "<<fname<<endl;
+      std::cerr<<"Error in opening file: "<<fname<<endl;
   } else {
     state = Open;
   }
@@ -183,7 +186,7 @@ MPRead::GetGridInfo( clString& name,
   clString bufout;
 
   is.getline(buf, buflen);
-  istrstream in( buf );
+  istringstream in( buf );
 
   in >> name >> type >> x >> y >> z;
 
@@ -191,14 +194,14 @@ MPRead::GetGridInfo( clString& name,
   x_size = x; y_size = y; z_size = z;
 
   is.getline(buf, buflen);
-  istrstream sv( buf );
+  istringstream sv( buf );
   while ( sv >> bufout ) {
     sVars.add( bufout );
     sV.add( bufout );
   }
 
   is.getline(buf, buflen);
-  istrstream vv( buf );
+  istringstream vv( buf );
   while ( vv >> bufout ) {
     vVars.add( bufout );
     vV.add( bufout );
@@ -230,7 +233,7 @@ MPRead::GetGridPoints( double& o_x, double& o_y, double& o_z,
   char buf[buflen];
 
   is.getline(buf, buflen);
-  istrstream in( buf );
+  istringstream in( buf );
 
   in >> o_x >> o_y >> o_z >> dx >> dy >> dz;
   
@@ -471,20 +474,20 @@ MPRead::GetParticleInfo( clString& name,
     char buf[buflen];
     clString bufout;
     is.getline(buf,buflen);
-    istrstream in( buf );
+    istringstream in( buf );
 
     in >> name >> N;
     nParticles = N;
 
 
     is.getline(buf,buflen);
-    istrstream sv( buf );
+    istringstream sv( buf );
     while( sv >> bufout ){
       s.add(bufout);
       psVars.add( bufout );
     }
     is.getline(buf,buflen);
-    istrstream vv( buf );
+    istringstream vv( buf );
     while( vv >> bufout ) {
       v.add( bufout );
       pvVars.add( bufout ); 

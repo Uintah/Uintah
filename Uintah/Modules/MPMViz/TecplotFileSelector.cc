@@ -1,8 +1,15 @@
 //static char *id="@(#) $Id$";
 
-#include <iostream.h> 
-#include <iomanip.h>
-#include <strstream.h>
+#include <fstream>
+using std::ifstream;
+#include <iostream> 
+using std::cerr;
+using std::cout;
+using std::endl;
+#include <iomanip>
+using std::setw;
+#include <sstream>
+using std::ostringstream;
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -124,14 +131,14 @@ void TecplotFileSelector::doAnimation()
   root[k] = '\0';
 
   for(i = startFrame.get(); i <= endFrame.get(); i += increment.get() ){
-    ostrstream ostr;
+    ostringstream ostr;
     sleep(2);
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     cerr << ostr.str()<< endl;
-    reader = new TecplotReader( ostr.str(), startFrame.get(),
+    reader = new TecplotReader( ostr.str().c_str(), startFrame.get(),
 				   endFrame.get(), increment.get() );
-    filebase.set( ostr.str() );
+    filebase.set( ostr.str().c_str() );
     if( i != endFrame.get())
       out->send_intermediate( ParticleGridReaderHandle( reader));
     else
@@ -151,6 +158,9 @@ PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:28  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/21 16:12:25  kuzimmer
 // changes made to support binary/ASCII file IO
 //

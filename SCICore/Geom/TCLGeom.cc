@@ -17,6 +17,8 @@
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/Material.h>
+#include <iostream>
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -103,6 +105,9 @@ void TCLMaterial::emit(ostream& out)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:50  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:23  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

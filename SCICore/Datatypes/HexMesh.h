@@ -128,7 +128,7 @@ class SCICORESHARE HexNode : public Point
     inline void set_index (int i) { my_index = i; };
     inline int index () { return my_index; };
     
-    friend SCICORESHARE ostream & operator << (ostream & o, const HexNode & n);
+    friend SCICORESHARE std::ostream & operator << (std::ostream & o, const HexNode & n);
     friend SCICORESHARE void Pio( Piostream & p, HexNode & );
     friend SCICORESHARE void Pio( Piostream & p, HexNode * & );
 };
@@ -184,7 +184,7 @@ class SCICORESHARE HexFace
     
     // I/o functions.
     
-    friend SCICORESHARE ostream & operator << (ostream & o, const HexFace & n);
+    friend SCICORESHARE std::ostream & operator << (std::ostream & o, const HexFace & n);
     friend SCICORESHARE void Pio( Piostream & p, HexFace & );
     friend SCICORESHARE void Pio( Piostream & p, HexFace * & );
     void finish_read (HexMesh * m);
@@ -231,7 +231,7 @@ class SCICORESHARE Hexahedron
         
     void find_stu (const Vector & P, double & s, double & t, double & u);    
         
-    friend SCICORESHARE ostream & operator << (ostream & o, const Hexahedron & n);
+    friend SCICORESHARE std::ostream & operator << (std::ostream & o, const Hexahedron & n);
     friend SCICORESHARE void Pio( Piostream & p, Hexahedron & );
     friend SCICORESHARE void Pio( Piostream & p, Hexahedron * & );
     void finish_read (HexMesh * m);
@@ -294,7 +294,7 @@ class SCICORESHARE HexMesh : public Datatype
     
     // Io functions
         
-    friend SCICORESHARE ostream & operator << (ostream & o, HexMesh & m);
+    friend SCICORESHARE std::ostream & operator << (std::ostream & o, HexMesh & m);
     virtual void io (Piostream & p);
 };
 
@@ -303,6 +303,9 @@ class SCICORESHARE HexMesh : public Datatype
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:31  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/25 03:48:33  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -29,6 +29,9 @@
 #include <PSECore/Widgets/GaugeWidget.h>
 #include <PSECore/Widgets/PointWidget.h>
 #include <SCICore/Thread/CrowdMonitor.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace PSECommon {
 namespace Modules {
@@ -336,6 +339,9 @@ void GenSurface::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:06:59  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/04 06:01:39  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -37,10 +37,13 @@
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <SCICore/Thread/FutureValue.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdio.h>
 #include <string.h>
-#include <strstream.h>
+#include <sstream>
+using std::ostringstream;
 
 #define MouseStart 0
 #define MouseEnd 1
@@ -59,7 +62,6 @@ using SCICore::GeomSpace::GeomScene;
 using SCICore::PersistentSpace::BinaryPiostream;
 using SCICore::PersistentSpace::TextPiostream;
 
-const int MODEBUFSIZE = 100;
 //static DebugSwitch autoview_sw("Roe", "autoview");
 
 Roe::Roe(Salmon* s, const clString& id)
@@ -76,8 +78,6 @@ Roe::Roe(Salmon* s, const clString& id)
     view.set(homeview);
     TCL::add_command(id+"-c", this, 0);
     current_renderer=0;
-    modebuf=scinew char[MODEBUFSIZE];
-    modecommand=scinew char[MODEBUFSIZE];
     maxtag=0;
     mouse_obj=0;
     ball = new BallData();
@@ -101,15 +101,13 @@ void Roe::itemAdded(GeomSalmonItem* si)
 	vis->visible->set(1);
 	vis->tagid=maxtag++;
 	visible.insert(si->name, vis);
-	char buf[1000];
-	ostrstream str(buf, 1000);
-	str << id << " addObject " << vis->tagid << " \"" << si->name << "\"" << '\0';
-	TCL::execute(str.str());
+	ostringstream str;
+	str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
+	TCL::execute(str.str().c_str());
     } else {
-	char buf[1000];
-	ostrstream str(buf, 1000);
-	str << id << " addObject2 " << vis->tagid << '\0';
-	TCL::execute(str.str());
+	ostringstream str;
+	str << id << " addObject2 " << vis->tagid;
+	TCL::execute(str.str().c_str());
     }
     // invalidate the bounding box
     bb.reset();
@@ -122,10 +120,9 @@ void Roe::itemDeleted(GeomSalmonItem *si)
     if(!visible.lookup(si->name, vis)){
 	cerr << "Where did that object go???" << endl;
     } else {
-	char buf[1000];
-	ostrstream str(buf, 1000);
-	str << id << " removeObject " << vis->tagid << '\0';
-	TCL::execute(str.str());
+	ostringstream str;
+	str << id << " removeObject " << vis->tagid;
+	TCL::execute(str.str().c_str());
     }
     // invalidate the bounding box
     bb.reset();
@@ -156,10 +153,7 @@ void Roe::spawnChCB(CallbackData*, void*)
 Roe::~Roe()
 {
     TCL::delete_command( id+"-c" );
-    delete[] modebuf;
-    delete[] modecommand;
 }
-
 
 void Roe::get_bounds(BBox& bbox)
 {
@@ -313,9 +307,9 @@ void Roe::mouse_translate(int action, int x, int y, int, int, int)
 	    view.set(tmpview);
 
 	    need_redraw=1;
-	    ostrstream str(modebuf, MODEBUFSIZE);
-	    str << "translate: " << total_x << ", " << total_y << '\0';
-	    update_mode_string(str.str());
+	    ostringstream str;
+	    str << "translate: " << total_x << ", " << total_y;
+	    update_mode_string(str.str().c_str());
 	}
 	break;
     case MouseEnd:
@@ -353,9 +347,9 @@ void Roe::mouse_scale(int action, int x, int y, int, int, int)
 
 	    view.set(tmpview);
 	    need_redraw=1;
-	    ostrstream str(modebuf, MODEBUFSIZE);
-	    str << "scale: " << total_x*100 << "%" << '\0';
-	    update_mode_string(str.str());
+	    ostringstream str;
+	    str << "scale: " << total_x*100 << "%";
+	    update_mode_string(str.str().c_str());
 	}
 	break;
     case MouseEnd:
@@ -956,9 +950,9 @@ void Roe::update_mode_string(GeomObj* pick_obj)
 
 void Roe::update_mode_string(const clString& msg)
 {
-    ostrstream str(modecommand, MODEBUFSIZE);    
-    str << id << " updateMode \"" << msg << "\"" << '\0';
-    TCL::execute(str.str());
+    ostringstream str;
+    str << id << " updateMode \"" << msg << "\"";
+    TCL::execute(str.str().c_str());
 }
 
 RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,
@@ -1101,6 +1095,9 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:56  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 22:04:33  sparker
 // Fixed picking
 // Added messages for pick mode

@@ -14,9 +14,9 @@
 #define cVECTOR_H 1
 
 #include <SCICore/share/share.h>
-class ostream;
+#include <iosfwd>
 #include <math.h>
-#include <SCICore/Math/Complex.h>
+#include <complex>
 
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
@@ -24,7 +24,6 @@ class ostream;
 namespace SCICore {
 namespace Datatypes {
 
-using SCICore::Math::Complex;
 using SCICore::Containers::LockingHandle;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
@@ -36,10 +35,12 @@ class SCICORESHARE cVector :public Datatype{
 
   friend class cDMatrix;
   friend class cSMatrix;
-  
+
+public:  
+    typedef std::complex<double> Complex;
 private:
-  Complex *a;
-  int Size;
+    Complex *a;
+    int Size;
   
 public:
 
@@ -69,12 +70,12 @@ public:
   cVector operator-(const cVector& B) const;
   
   friend SCICORESHARE Complex operator*(cVector& A, cVector& B);
-  friend SCICORESHARE cVector  operator*(const cVector& B,Complex x);
+  friend SCICORESHARE cVector  operator*(const cVector& B, Complex x);
   friend SCICORESHARE cVector  operator*(Complex x, const cVector &B);
   friend SCICORESHARE cVector  operator*(const cVector& B,double x);
   friend SCICORESHARE cVector  operator*(double x, const cVector &B);
   
-  friend SCICORESHARE ostream &operator<< (ostream &output, cVector &B);
+  friend SCICORESHARE std::ostream &operator<< (std::ostream &output, cVector &B);
   
 };
 
@@ -83,6 +84,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:36  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/25 03:48:49  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

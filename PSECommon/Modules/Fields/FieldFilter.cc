@@ -31,7 +31,8 @@
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <stdio.h>
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 #define RESIZE_MACRO   fX->resize(lastZ, isf->nx, isf->ny);fX->grid.initialize(0);fY->resize(lastY, lastZ, isf->nx);fY->grid.initialize(0);of->resize(lastX, lastY, lastZ);of->grid.initialize(0);fldX=fX;fldY=fY;osf=of;
 
@@ -664,6 +665,9 @@ void FieldFilter::buildOversampleMitchellTable(Array2<double> *table,
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:06:47  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:38  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

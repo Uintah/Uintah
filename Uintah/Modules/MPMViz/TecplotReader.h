@@ -36,6 +36,8 @@ LOG
 #include <Uintah/Datatypes/Particles/MPMaterial.h>
 #include <Uintah/Datatypes/Particles/VizGrid.h>
 
+#include <iosfwd>
+
 namespace Uintah {
 namespace Datatypes {
 
@@ -119,17 +121,17 @@ private:
   void stripVar(const clString &, clString&, int& index);
 
 
-  void readVars(istream& is);
-  void readZone(istream& is);
+  void readVars(std::istream& is);
+  void readZone(std::istream& is);
 
-  void readBlock(int,int,int,istream&);
-  void readParticles(int, int, istream&);
+  void readBlock(int,int,int,std::istream&);
+  void readParticles(int, int, std::istream&);
   void getBounds(double& min, double& max,
 		 int ii, int jj, int kk,
-		 istream& is);
+		 std::istream& is);
 
-  ScalarFieldHandle makeScalarField(int ii, int jj, int kk, istream& is);
-  VectorFieldHandle makeVectorField(int ii, int jj, int kk, istream& is);
+  ScalarFieldHandle makeScalarField(int ii, int jj, int kk, std::istream& is);
+  VectorFieldHandle makeVectorField(int ii, int jj, int kk, std::istream& is);
 
   int ComputeAdjustedIndex(int variableId, int materialId, bool isVector);
 
@@ -153,6 +155,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:08:29  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/21 16:12:25  kuzimmer
 // changes made to support binary/ASCII file IO
 //

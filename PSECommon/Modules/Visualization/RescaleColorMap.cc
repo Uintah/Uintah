@@ -18,6 +18,9 @@
 #include <SCICore/Datatypes/ScalarField.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 #include <PSECommon/Modules/Visualization/RescaleColorMap.h>
 
@@ -112,6 +115,9 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:08  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:10  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -16,7 +16,9 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -146,6 +148,9 @@ bool TimeGrid::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:51  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/04 06:01:50  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -11,6 +11,7 @@ namespace Datatypes {
 //        Blue    0.150   0.070            "     "   xb and yb
 //        White   0.313   0.329            "     "   xw and yw
 //
+/* REFERENCED */
 static float NTSC_rgb[3][3] = {
     {2.739, -1.145, -0.424},  // R
     {-1.119, 2.029, 0.033},   // G
@@ -32,18 +33,28 @@ static float NTSC_rgb[3][3] = {
 //        Blue    0.140   0.080
 //        White   0.313   0.329
 
+/* REFERENCED */
 static int xSpacing = 5;
+/* REFERENCED */
 static int ySpacing = 5;
+/* REFERENCED */
 static int zSpacing = 5;
+/* REFERENCED */
 static int xMinWavelength = 375;
+/* REFERENCED */
 static int yMinWavelength = 380;
+/* REFERENCED */
 static int zMinWavelength = 375;
+/* REFERENCED */
 static int xNumEntries = 82;
+/* REFERENCED */
 static int yNumEntries = 78;
+/* REFERENCED */
 static int zNumEntries = 52;
 
 // data from Peter Shirley
 
+/* REFERENCED */
 static float xWavelengths[82] = {
 375,
 380,
@@ -228,6 +239,7 @@ static float xAmplitudes[82] = {
 
 };
 
+/* REFERENCED */
 static float yWavelengths[78] = {
 
 380,
@@ -403,6 +415,7 @@ static float yAmplitudes[78] = {
 
 
 
+/* REFERENCED */
 static float zWavelengths[52] = {
 375,
 380,
@@ -525,6 +538,9 @@ static float zAmplitudes[52] = {
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/08/23 02:52:59  dmw
 // Dave's Datatypes
 //

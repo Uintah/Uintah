@@ -20,9 +20,17 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Malloc/Allocator.h>
 #include "TriangleReader.h"
-#include <iostream.h> 
-#include <iomanip.h>
-#include <strstream.h>
+#include <fstream>
+using std::ifstream;
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ios;
+using std::istream;
+#include <iomanip>
+using std::setw;
+#include <sstream>
+using std::ostringstream;
 
 #include <ctype.h>
 #include <unistd.h>
@@ -206,11 +214,11 @@ void TriangleReader::doAnimation( ColorMapHandle cmh )
   root[k] = '\0';
 
   for(i = startFrame.get(); i <= endFrame.get(); i += increment.get() ){
-    ostrstream ostr;
+    ostringstream ostr;
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     cerr << ostr.str()<< endl;
-    ifstream is( ostr.str(), ios::in);
+    ifstream is( ostr.str().c_str(), ios::in);
     GeomGroup *tris = scinew GeomGroup;
     wasRead = Read(is, cmh, tris ); 
     if( wasRead ){
@@ -218,7 +226,7 @@ void TriangleReader::doAnimation( ColorMapHandle cmh )
       outport->addObj(tris, "Triangles");
       outport->flushViewsAndWait();
     }
-    filename.set( ostr.str() );
+    filename.set( ostr.str().c_str() );
     file = basename( filename.get() );
     reset_vars();
     status.set( file );
@@ -233,6 +241,9 @@ void TriangleReader::doAnimation( ColorMapHandle cmh )
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:31  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/10/05 16:40:36  kuzimmer
 // added animation control to triangle file reader
 //

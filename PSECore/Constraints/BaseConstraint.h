@@ -57,8 +57,8 @@ public:
 		    const Index i6 = 0,
 		    const Index i7 = 0 );
 
-   void print( ostream& os );
-   void printc( ostream& os, const Scheme scheme );
+   void print( std::ostream& os );
+   void printc( std::ostream& os, const Scheme scheme );
 
 protected:
    clString name;
@@ -75,7 +75,7 @@ protected:
    virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
 			BaseVariable*& var, VarCore& c );
 };
-inline PSECORESHARE ostream& operator<<( ostream& os, BaseConstraint& v );
+inline PSECORESHARE std::ostream& operator<<( std::ostream& os, BaseConstraint& v );
 
 
 /***************************************************************************
@@ -88,8 +88,8 @@ BaseConstraint::ChooseChange( const Index index, const Scheme scheme )
    return whichMethod = var_choices(scheme, callingMethod = index);
 }
 
-inline ostream&
-operator<<( ostream& os, BaseConstraint& c )
+inline std::ostream&
+operator<<( std::ostream& os, BaseConstraint& c )
 {
    c.print(os);
    return os;
@@ -100,6 +100,9 @@ operator<<( ostream& os, BaseConstraint& c )
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:15  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:37  sparker
 // Various #include cleanups
 //

@@ -15,9 +15,7 @@
 #define CSMATRIX_H 1
 
 #include <SCICore/share/share.h>
-class ostream;
 #include <SCICore/Datatypes/cMatrix.h>
-#include <SCICore/Math/Complex.h>
 #include <SCICore/Datatypes/cVector.h>
 
 namespace SCICore {
@@ -26,6 +24,7 @@ namespace Datatypes {
 class SCICORESHARE cSMatrix:public cMatrix{
   
 private:
+    typedef std::complex<double> Complex;
   Complex *a;
   int *row_ptr;
   int *col;
@@ -38,7 +37,7 @@ public:
   cSMatrix(int nrows, int ncols,int nnz,Complex *a, int * row, int *col );
   ~cSMatrix();
     
-  friend SCICORESHARE ostream &operator<< (ostream &output, cSMatrix &B);
+  friend SCICORESHARE std::ostream &operator<< (std::ostream &output, cSMatrix &B);
   
  
  cVector  operator*(cVector &V);
@@ -53,6 +52,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:36  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/25 03:48:48  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

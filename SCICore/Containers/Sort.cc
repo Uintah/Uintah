@@ -7,8 +7,9 @@
 
 #include <SCICore/Containers/Sort.h>
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
+using std::cerr;
 
 namespace SCICore {
 namespace Containers {
@@ -568,6 +569,9 @@ void main(int argc, char* argv)
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:28  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/23 06:30:33  sparker
 // Linux port
 // Added X11 configuration options
