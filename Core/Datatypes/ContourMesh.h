@@ -115,7 +115,7 @@ public:
 
   //! get the child elements of the given index
   void get_nodes(node_array &a, edge_index i) const
-    { a[0] = edges_[i].first; a[1] = edges_[i].second; } 
+    { a.resize(2,0); a[0] = edges_[i].first; a[1] = edges_[i].second; } 
   void get_nodes(node_array &, face_index) const {}
   void get_nodes(node_array &, cell_index) const {}
   void get_edges(edge_array &, face_index) const {}
