@@ -1036,3 +1036,115 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
 #endif
   }
 }
+
+
+void 
+ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched, 
+						 const PatchSet* patches,
+						 const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("ScaleSimilarityModel::computeScalarDissipation",
+			  this,
+			  &ScaleSimilarityModel::computeScalarDissipation);
+
+  
+  // Requires, only the scalar corresponding to matlindex = 0 is
+  //           required. For multiple scalars this will be put in a loop
+  // assuming scalar dissipation is computed before turbulent viscosity calculation 
+  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#ifdef correctorstep
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#else  
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
+  tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
+		Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  // Computes
+  tsk->computes(d_lab->d_scalarDissSPLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+
+
+
+void 
+ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
+					const PatchSubset* patches,
+					const MaterialSubset*,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    // Variables
+    constCCVariable<double> viscosity;
+    constCCVariable<double> scalar;
+    CCVariable<double> scalarDiss;  // dissipation..chi
+    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#ifdef correctorstep
+    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+#else
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+#endif
+    StencilMatrix<CCVariable<double> > scalarFlux; //3 point stencil
+    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      old_dw->getCopy(scalarFlux[ii], 
+		      d_lab->d_scalarFluxCompLabel, ii, patch,
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    }
+
+    new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+    scalarDiss.initialize(0.0);
+    
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    
+    // compatible with fortran index
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  double scale = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX+1,colY,colZ)]);
+	  double scalw = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX-1,colY,colZ)]);
+	  double scaln = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY+1,colZ)]);
+	  double scals = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY-1,colZ)]);
+	  double scalt = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY,colZ+1)]);
+	  double scalb = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY,colZ-1)]);
+	  double dfdx = (scale-scalw)/cellinfo->sew[colX];
+	  double dfdy = (scaln-scals)/cellinfo->sns[colY];
+	  double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
+	  // molecular diffusivity
+	  scalarDiss[currCell] = 2.0*viscosity[currCell]/d_turbPrNo*
+	                        (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
+	  double turbProduction = -2.0*((scalarFlux[0])[currCell]*dfdx+
+				       (scalarFlux[1])[currCell]*dfdy+
+				       (scalarFlux[2])[currCell]*dfdz);
+	  if (turbProduction > 0)
+	    scalarDiss[currCell] += turbProduction;
+	  if (scalarDiss[currCell] < 0.0)
+	    scalarDiss[currCell] = 0.0;
+	}
+      }
+    }
+  }
+}
