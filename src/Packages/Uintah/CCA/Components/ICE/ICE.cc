@@ -743,7 +743,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                            all_matls,     
                                                            false);        
 
-    scheduleAddExchangeContributionToFCVel( sched, patches,all_matls,
+    scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
+                                                           all_matls,
                                                            false); 
 
   if(!d_impICE){         //  E X P L I C I T
@@ -957,7 +958,8 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
                                            const PatchSet* patches,
-                                           const MaterialSet* matls,
+                                           const MaterialSubset* ice_matls,
+                                           const MaterialSet* all_matls,
                                            const bool recursion)
 {
   cout_doing << "ICE::scheduleAddExchangeContributionToFCVel" << endl;
@@ -965,11 +967,18 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
                      this, &ICE::addExchangeContributionToFCVel, recursion);
 
 //  task->requires(Task::OldDW, lb->delTLabel);    FOR AMR 
-  task->requires(Task::NewDW,lb->sp_vol_CCLabel,    Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->vol_frac_CCLabel,  Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->uvel_FCLabel,      Ghost::AroundCells,2);
-  task->requires(Task::NewDW,lb->vvel_FCLabel,      Ghost::AroundCells,2);
-  task->requires(Task::NewDW,lb->wvel_FCLabel,      Ghost::AroundCells,2);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  task->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/gac,1);
+  task->requires(Task::NewDW,lb->vol_frac_CCLabel,  /*all_matls*/gac,1);
+  task->requires(Task::NewDW,lb->uvel_FCLabel,      /*all_matls*/gac,2);
+  task->requires(Task::NewDW,lb->vvel_FCLabel,      /*all_matls*/gac,2);
+  task->requires(Task::NewDW,lb->wvel_FCLabel,      /*all_matls*/gac,2);
+  
+/*`==========TESTING==========*/
+  if(d_usingNG_hack){
+    addRequires_NGNozzle(task, "velFC_Exchange", lb, ice_matls);  // NG hack
+  } 
+/*===========TESTING==========`*/
 
   task->computes(lb->sp_volX_FCLabel);
   task->computes(lb->sp_volY_FCLabel);
@@ -978,7 +987,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   task->computes(lb->vvel_FCMELabel);
   task->computes(lb->wvel_FCMELabel);
   
-  sched->addTask(task, patches, matls);
+  sched->addTask(task, patches, all_matls);
 }
 
 /* ---------------------------------------------------------------------
@@ -2875,7 +2884,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 /*`==========TESTING==========*/
     NG_BC_vars* ng = new NG_BC_vars;
     if(d_usingNG_hack){
-      getVars_for_NGNozzle(old_dw, new_dw, lb, patch, 1,"velFC_Exchange",ng); 
+      getVars_for_NGNozzle(pOldDW, pNewDW, lb, patch, 1,"velFC_Exchange",ng); 
     } 
 /*===========TESTING==========`*/   
     
@@ -3900,6 +3909,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
          sp_vol_L[c] += Modelsp_vol_src[c];
         }
       }
+      
       //__________________________________
       //  add the sources to sp_vol_L
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
