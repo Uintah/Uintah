@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Arrows.h>
+#include <Geom/Save.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Geometry/BBox.h>
@@ -135,128 +136,219 @@ void GeomArrows::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomArrows::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomArrows::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 {
-#if 0
   int n=positions.size();
 
-  // Draw shafts - they are the same for all draw types....
-  double shaft_scale=headlength;
-
+  //////////////////////////////////////////////////////////////////////
+  // Draw the lines.
   if(shaft_matls.size() == 1){
     // Material is same across all arrows.
     // Output the material.
-    // You need to make a generic material outputter.
-#if 0
-	matl->ambient.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-	matl->diffuse.get_color(color);
-	glColor4fv(color);
-	matl->specular.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
-	matl->emission.get_color(color);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
-#endif
 
-    // Output each line.
+    saveinfo->start_attr(out);
+
+    saveinfo->indent(out);
+    out << "Color [ " << shaft_matls[0]->diffuse.r() << " "
+	<< shaft_matls[0]->diffuse.g() << " "
+	<< shaft_matls[0]->diffuse.b() << " ]\n";
+
+    saveinfo->indent(out);
+    out << "Surface \"plastic\" \"Ka\" 0.0 \"Kd\" 1.0 \"Ks\" 1.0 \"roughness\" "
+	<< 1.0 / shaft_matls[0]->shininess << " \"specularcolor\" [ "
+	<< shaft_matls[0]->specular.r() << " "
+	<< shaft_matls[0]->specular.g() << " "
+	<< shaft_matls[0]->specular.b() << " ]\n";
+
+    // Have to output them as cylinders.
     for(int i=0;i<n;i++){
-      Point from(positions[i]);
-      Point to(from+directions[i]*shaft_scale);
-      // From -> to.
+      saveinfo->start_trn(out);
+      saveinfo->rib_orient(out, positions[i], directions[i]);
+      saveinfo->indent(out);
+      out << "Cylinder " << 0.002 << " 0 " << directions[i].length() * headlength
+	  << " 360\n";
+      saveinfo->end_trn(out);
     }
+
+    saveinfo->end_attr(out);
   } else {
+    saveinfo->start_attr(out);
+
     // Output each line.
     for(int i=0;i<n;i++){
       // Output the material.
-      Point from(positions[i]);
-      Point to(from+directions[i]*shaft_scale);
-      // From -> to.
+      
+      saveinfo->indent(out);
+      out << "Color [ " << shaft_matls[i]->diffuse.r() << " "
+	  << shaft_matls[i]->diffuse.g() << " "
+	  << shaft_matls[i]->diffuse.b() << " ]\n";
+
+      saveinfo->indent(out);
+      out << "Surface \"plastic\" \"Ka\" 0.0 \"Kd\" 1.0 \"Ks\" 1.0 \"roughness\" "
+	  << 1.0 / shaft_matls[i]->shininess << " \"specularcolor\" [ "
+	  << shaft_matls[i]->specular.r() << " "
+	  << shaft_matls[i]->specular.g() << " "
+	  << shaft_matls[i]->specular.b() << " ]\n";
+      
+      saveinfo->start_trn(out);
+      saveinfo->rib_orient(out, positions[i], directions[i]);
+      saveinfo->indent(out);
+      out << "Cylinder " << 0.002 << " 0 " << directions[i].length() * headlength
+	  << " 360\n";
+      saveinfo->end_trn(out);
+      
     }
+    saveinfo->end_attr(out);
   }
 
+  //////////////////////////////////////////////////////////////////////
   // Draw the back.
   if(back_matls.size() == 1){
     // Color is same on each.
-    glBegin(GL_QUADS);
+
+    saveinfo->start_attr(out);
+
+    saveinfo->indent(out);
+    out << "Color [ " << back_matls[0]->diffuse.r() << " "
+	<< back_matls[0]->diffuse.g() << " "
+	<< back_matls[0]->diffuse.b() << " ]\n";
+
+    saveinfo->indent(out);
+    out << "Surface \"plastic\" \"Ka\" 0.0 \"Kd\" 1.0 \"Ks\" 1.0 \"roughness\" "
+	<< 1.0 / back_matls[0]->shininess << " \"specularcolor\" [ "
+	<< back_matls[0]->specular.r() << " "
+	<< back_matls[0]->specular.g() << " "
+	<< back_matls[0]->specular.b() << " ]\n";
+
     for(int i=0;i<n;i++){
       Point from(positions[i]+directions[i]*headlength);
-      glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
-      Point to(from+directions[i]);
+
       Point p1(from+v1[i]);
-      glVertex3d(p1.x(), p1.y(), p1.z());
       Point p2(from+v2[i]);
-      glVertex3d(p2.x(), p2.y(), p2.z());
       Point p3(from-v1[i]);
-      glVertex3d(p3.x(), p3.y(), p3.z());
       Point p4(from-v2[i]);
-      glVertex3d(p4.x(), p4.y(), p4.z());
+      
+      saveinfo->indent(out);
+      out << "Polygon \"P\" [ "
+	  << p1.x() << " " << p1.y() << " " << p1.z() << "  "
+	  << p2.x() << " " << p2.y() << " " << p2.z() << "  "
+	  << p3.x() << " " << p3.y() << " " << p3.z() << "  "
+	  << p4.x() << " " << p4.y() << " " << p4.z()
+          << " ]\n";
     }
+    saveinfo->end_attr(out);
   } else {
-    glBegin(GL_QUADS);
     for(int i=0;i<n;i++){
-      di->set_matl(back_matls[i].get_rep());
-      glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
+      saveinfo->start_attr(out);
+
+      saveinfo->indent(out);
+      out << "Color [ " << back_matls[i]->diffuse.r() << " "
+	  << back_matls[i]->diffuse.g() << " "
+	  << back_matls[i]->diffuse.b() << " ]\n";
+
+      saveinfo->indent(out);
+      out << "Surface \"plastic\" \"Ka\" 0.0 \"Kd\" 1.0 \"Ks\" 1.0 \"roughness\" "
+	  << 1.0 / back_matls[i]->shininess << " \"specularcolor\" [ "
+	  << back_matls[i]->specular.r() << " "
+	  << back_matls[i]->specular.g() << " "
+	  << back_matls[i]->specular.b() << " ]\n";
+
       Point from(positions[i]+directions[i]*headlength);
-      Point to(from+directions[i]);
+
       Point p1(from+v1[i]);
-      glVertex3d(p1.x(), p1.y(), p1.z());
       Point p2(from+v2[i]);
-      glVertex3d(p2.x(), p2.y(), p2.z());
       Point p3(from-v1[i]);
-      glVertex3d(p3.x(), p3.y(), p3.z());
       Point p4(from-v2[i]);
-      glVertex3d(p4.x(), p4.y(), p4.z());
+      
+      saveinfo->indent(out);
+      out << "Polygon \"P\" [ "
+	  << p1.x() << " " << p1.y() << " " << p1.z() << "  "
+	  << p2.x() << " " << p2.y() << " " << p2.z() << "  "
+	  << p3.x() << " " << p3.y() << " " << p3.z() << "  "
+	  << p4.x() << " " << p4.y() << " " << p4.z() << " ]\n";
+      saveinfo->end_attr(out);
     }
+
   }
 
   // Draw the head.
   if(head_matls.size() == 1){
-    double w=headwidth;
-    double h=1.0-headlength;
-    double w2h2=w*w/h;
-    for(int i=0;i<n;i++){
-      glBegin(GL_TRIANGLES);
-      Vector dn(directions[i]*w2h2);
-      Vector n(dn+v1[i]+v2[i]);
-      glNormal3d(n.x(), n.y(), n.z());
+    // Color is same on each.
 
+    saveinfo->start_attr(out);
+
+    saveinfo->indent(out);
+    out << "Color [ " << head_matls[0]->diffuse.r() << " "
+	<< head_matls[0]->diffuse.g() << " "
+	<< head_matls[0]->diffuse.b() << " ]\n";
+
+    saveinfo->indent(out);
+    out << "Surface \"plastic\" \"Ka\" 0.0 \"Kd\" 1.0 \"Ks\" 1.0 \"roughness\" "
+	<< 1.0 / head_matls[0]->shininess << " \"specularcolor\" [ "
+	<< head_matls[0]->specular.r() << " "
+	<< head_matls[0]->specular.g() << " "
+	<< head_matls[0]->specular.b() << " ]\n";
+
+    for(int i=0;i<n;i++){
+      Point from(positions[i]+directions[i]*headlength);
       Point top(positions[i]+directions[i]);
-      Point from=top-directions[i]*h;
-      Point to(from+directions[i]);
+
       Point p1(from+v1[i]);
       Point p2(from+v2[i]);
-      glVertex3d(top.x(), top.y(), top.z());
-      glVertex3d(p1.x(), p1.y(), p1.z());
-      glVertex3d(p2.x(), p2.y(), p2.z()); // 1st tri
-      n=dn-v1[i]+v2[i];
-      glNormal3d(n.x(), n.y(), n.z());
       Point p3(from-v1[i]);
-      glVertex3d(top.x(), top.y(), top.z());
-      glVertex3d(p2.x(), p2.y(), p2.z());
-      glVertex3d(p3.x(), p3.y(), p3.z()); // 2nd tri
-      n=dn-v1[i]-v2[i];
-      glNormal3d(n.x(), n.y(), n.z());
       Point p4(from-v2[i]);
-      glVertex3d(top.x(), top.y(), top.z());
-      glVertex3d(p3.x(), p3.y(), p3.z());
-      glVertex3d(p4.x(), p4.y(), p4.z()); // 3rd tri
-      n=dn+v1[i]-v2[i];
-      glNormal3d(n.x(), n.y(), n.z());
-      glVertex3d(top.x(), top.y(), top.z());
-      glVertex3d(p4.x(), p4.y(), p4.z());
-      glVertex3d(p1.x(), p1.y(), p1.z()); // 4th tri
+      
+      saveinfo->indent(out);
+      out << "Polygon \"P\" [ "
+	  << top.x() << " " << top.y() << " " << top.z()
+	  << p1.x() << " " << p1.y() << " " << p1.z() << "  "
+	  << p2.x() << " " << p2.y() << " " << p2.z() << "  "
+          << " ]\n";
+
+      out << "Polygon \"P\" [ "
+	  << top.x() << " " << top.y() << " " << top.z()
+	  << p2.x() << " " << p2.y() << " " << p2.z() << "  "
+	  << p3.x() << " " << p3.y() << " " << p3.z() << "  "
+          << " ]\n";
+
+      out << "Polygon \"P\" [ "
+	  << top.x() << " " << top.y() << " " << top.z()
+	  << p3.x() << " " << p3.y() << " " << p3.z() << "  "
+	  << p4.x() << " " << p4.y() << " " << p4.z()
+          << " ]\n";
+
+      out << "Polygon \"P\" [ "
+	  << top.x() << " " << top.y() << " " << top.z()
+	  << p4.x() << " " << p4.y() << " " << p4.z()
+	  << p1.x() << " " << p1.y() << " " << p1.z() << "  "
+          << " ]\n";
+
     }
-  } else {
+    saveinfo->end_attr(out);
+  }
+#if 0
+ else {
     double w=headwidth;
     double h=1.0-headlength;
     double w2h2=w*w+h*h;
     for(int i=0;i<n;i++){
+      saveinfo->start_attr(out);
+      
+      matl[i]->diffuse.get_color(color);
+      saveinfo->indent(out);
+      out << "Color [ " << color.r() << " " << color.g() << " " << color.b() << " ]\n";
+
+      matl[i]->specular.get_color(color);
+      saveinfo->indent(out);
+      out << "Surface \"plastic\" \"Ka\" 0.0 \"Kd\" 1.0 \"Ks\" 1.0 \"roughness\" "
+	  << 1.0 / matl[i]->shininess << " \"specularcolor\" [ "
+	  << color.r() << " " << color.g() << " " << color.b() << " ]\n";
+      
       glBegin(GL_TRIANGLES);
       Vector dn(directions[i]*w2h2);
       Vector n(dn+v1[i]+v2[i]);
       glNormal3d(n.x(), n.y(), n.z());
-      di->set_matl(back_matls[i].get_rep());
+      di->set_matl(head_matls[i].get_rep());
 
       Point top(positions[i]+directions[i]);
       Point from=top-directions[i]*h;

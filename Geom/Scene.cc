@@ -88,7 +88,7 @@ bool GeomScene::save(const clString& filename, const clString& format)
 
 	// Do rendering info.
 	out << "PixelVariance 0.01\n";
-	out << "Format 400 300 1.0\n";
+	out << "Format 600 500 1.0\n";
 	out << "Display \"" << filename << ".tif\" \"file\" \"rgb\"\n\n";
 
 	// Do lighting.
@@ -302,58 +302,16 @@ void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
       Vector NewY1(Cross(NewX, upn));
       Vector NewY = NewY1.normal();
 
-#if 0
       out << "ConcatTransform [ "
 	  << -NewX.x() << " " << -NewX.y() << " " << -NewX.z() << " 0  "
 	  << -NewY.x() << " " << -NewY.y() << " " << -NewY.z() << " 0  "
 	  << upn.x() << " " << upn.y() << " " << upn.z() << " 0  "
 	  << center.x() << " " << center.y() << " " << center.z() << " 1 ]\n";
-#else
-
+    } else if(Dot(up, Vector(0,0, 1)) > 0){
       out << "ConcatTransform [ "
-	  << -NewX.x() << " " << -NewX.y() << " " << -NewX.z() << " 0  "
-	  << -NewY.x() << " " << -NewY.y() << " " << -NewY.z() << " 0  "
-	  << upn.x() << " " << upn.y() << " " << upn.z() << " 0  "
+	  << "1 0 0 0\n"
+	  << "0 1 0 0\n"
+	  << "0 0 1 0\n"
 	  << center.x() << " " << center.y() << " " << center.z() << " 1 ]\n";
-#endif
-    } else {
-        cerr << "Can't orient it.\n";
     }      
 }
-
-#if 0
-   /* Z vector */
-Vector z = view.eyep() - view.lookat();
-
-z.normalize();
-
-   /* Y vector */
-   y = up;
-
-   /* X vector = Y cross Z */
-Vector x = Cross(y,z);
-
-   /* Recompute Y = Z cross X */
-Vector y = Cross(z, x);
-
-   /* cross product gives area of parallelogram, which is < 1.0 for
-    * non-perpendicular unit-length vectors; so normalize x, y here
-    */
-
-x.normalize();
-
-y.normalize();
-
-#define M(row,col)  m[col*4+row]
-   M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
-   M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
-   M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
-   M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
-#undef M
-   glMultMatrixd( m );
-
-   /* Translate Eye to Origin */
-   glTranslated( -eyex, -eyey, -eyez );
-
-}
-#endif
