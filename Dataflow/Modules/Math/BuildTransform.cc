@@ -37,7 +37,7 @@
 #include <Core/Math/Expon.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Widgets/BoxWidget.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -62,7 +62,7 @@ class BuildTransform : public Module {
   GuiDouble widget_scale_gui_;
 
   MatrixHandle omatrixH_;
-  ScaledBoxWidget *box_widget_;
+  BoxWidget *box_widget_;
   GeomSwitch *widget_switch_;
   CrowdMonitor widget_lock_;
   Transform composite_trans_, latest_trans_, latest_widget_trans_;
@@ -115,7 +115,7 @@ BuildTransform::BuildTransform(const string& id)
     have_been_initialized_(0)
 {
   
-  box_widget_=scinew ScaledBoxWidget(this, &widget_lock_, 0.2, false, false);
+  box_widget_=scinew BoxWidget(this, &widget_lock_, 0.2, false, false);
   widget_switch_=box_widget_->GetWidget();
 }
 

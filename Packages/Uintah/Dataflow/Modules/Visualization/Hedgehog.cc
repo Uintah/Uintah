@@ -28,8 +28,8 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Dataflow/Widgets/ScaledBoxWidget.h>
-#include <Dataflow/Widgets/ScaledFrameWidget.h>
+#include <Dataflow/Widgets/BoxWidget.h>
+#include <Dataflow/Widgets/FrameWidget.h>
 
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
@@ -95,8 +95,8 @@ class Hedgehog : public Module {
   CrowdMonitor widget_lock;
   int init;
   int widget_id;
-  ScaledBoxWidget* widget3d;
-  ScaledFrameWidget *widget2d;
+  BoxWidget* widget3d;
+  FrameWidget *widget2d;
   
   // GROUP:  Widgets:
   //////////////////////
@@ -185,8 +185,8 @@ Hedgehog::Hedgehog(const string& id)
     init = 1;
     float INIT(.1);
 
-    widget2d = scinew ScaledFrameWidget(this, &widget_lock, INIT);
-    widget3d = scinew ScaledBoxWidget(this, &widget_lock, INIT);
+    widget2d = scinew FrameWidget(this, &widget_lock, INIT, true);
+    widget3d = scinew BoxWidget(this, &widget_lock, INIT, false, true);
     grid_id=0;
 
     need_find2d=1;

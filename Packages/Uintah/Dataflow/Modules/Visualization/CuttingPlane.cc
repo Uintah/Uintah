@@ -31,7 +31,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Datatypes/LatticeVol.h>
-#include <Dataflow/Widgets/ScaledFrameWidget.h>
+#include <Dataflow/Widgets/FrameWidget.h>
 #include <Packages/Uintah/Core/Datatypes/DispatchScalar1.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <iostream>
@@ -91,7 +91,7 @@ class CuttingPlane : public Module {
    CrowdMonitor widget_lock;
    int init;
    int widget_id;
-   ScaledFrameWidget *widget;
+   FrameWidget *widget;
    virtual void widget_moved(int last);
    GuiInt cutting_plane_type;
    GuiInt num_contours;   
@@ -179,7 +179,7 @@ CuttingPlane::CuttingPlane(const string& id) :
 {
     float INIT(.1);
 
-    widget = scinew ScaledFrameWidget(this, &widget_lock, INIT);
+    widget = scinew FrameWidget(this, &widget_lock, INIT, true);
     grid_id=0;
 
     need_find.set(1);

@@ -20,7 +20,7 @@
 #include <Dataflow/Ports/VoidStarPort.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 #include <Dataflow/Widgets/RingWidget.h>
-#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
@@ -67,7 +67,7 @@ class BldScene : public Module {
     Array1<int> plane_idx;
     Array1<int> box_geom_id;
     Array1<int> box_widget_id;
-    Array1<ScaledBoxWidget*> box_widget;
+    Array1<BoxWidget*> box_widget;
     Array1<int> box_idx;
     Array1<int> rect_geom_id;
     Array1<int> rect_widget_id;
@@ -75,7 +75,7 @@ class BldScene : public Module {
     Array1<int> rect_idx;
     Array1<int> tris_geom_id;
     Array1<int> tris_widget_id;
-    Array1<ScaledBoxWidget*> tris_widget;
+    Array1<BoxWidget*> tris_widget;
     Array1<int> tris_idx;
     Array1<int> global_idx;
 
@@ -251,8 +251,8 @@ void BldScene::buildWidgets() {
 	    name="Box Widget "+to_string(i);
 	    sprintf(ud, "b%d", box_idx.size());
 	    global_idx.add(box_idx.size());
-	    ScaledBoxWidget* b=scinew
-		ScaledBoxWidget(this, &widget_lock, 0.1);
+	    BoxWidget* b=scinew
+		BoxWidget(this, &widget_lock, 0.1, false, true);
 	    b->SetCurrentMode(1);
 	    b->SetPosition(rtb->center, 
 			   rtb->center+Vector(rtb->d.x(),0,0),
@@ -284,8 +284,8 @@ void BldScene::buildWidgets() {
 	    name="Tris Widget "+to_string(i);
 	    sprintf(ud, "t%d", tris_idx.size());
 	    global_idx.add(tris_idx.size());
-	    ScaledBoxWidget* b=scinew
-		ScaledBoxWidget(this, &widget_lock, 0.1);
+	    BoxWidget* b=scinew
+		BoxWidget(this, &widget_lock, 0.1, false, true);
 	    b->SetCurrentMode(3);
 	    Vector d(rtt->bb.max()-rtt->bb.center());
 	    b->SetPosition(rtt->bb.center(), 

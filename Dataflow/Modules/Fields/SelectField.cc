@@ -24,7 +24,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Fields/SelectField.h>
-#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Clipper.h>
 #include <Core/GuiInterface/GuiVar.h>
 
@@ -38,7 +38,7 @@ class SelectField : public Module
 private:
   FieldHandle output_field_;
   CrowdMonitor widget_lock_;
-  ScaledBoxWidget *box_;
+  BoxWidget *box_;
 
   GuiInt value_;
   GuiInt mode_;  // 0 nothing 1 accumulate 2 replace
@@ -65,7 +65,7 @@ SelectField::SelectField(const string& id)
     mode_("runmode", id, this),
     last_generation_(0)
 {
-  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, false, false);
+  box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
 }
 
 
