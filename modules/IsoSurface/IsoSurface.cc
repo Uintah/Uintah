@@ -117,7 +117,7 @@ void IsoSurface::execute()
 	need_seed=0;
     }
     if(do_3dwidget){
-	GeomSphere* ptobj=new GeomSphere(seed_point, 0.5);
+	GeomSphere* ptobj=new GeomSphere(seed_point, 0.05);
 	//ptobj->make it movable()
 	widget_id=ogeom->addObj(ptobj);
     }
@@ -402,29 +402,22 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     int nx=field->get_nx();
     int ny=field->get_ny();
     int nz=field->get_nz();
-    Point p0(field->get_point(0,0,0));
-    Point p1(field->get_point(nx-1, ny-1, nz-1));
-    double tx=(p.x()-p0.x())/(p1.x()-p0.x());
-    double ty=(p.y()-p0.y())/(p1.y()-p0.y());
-    double tz=(p.z()-p0.z())/(p1.z()-p0.z());
-    if (tx<0 || tx>1 || ty<0 || ty>1 || tz<0 || tz>1) {
-	error("Isosurface Seed Point not in field\n");
+    if(!field->interpolate(p, isoval)){
+	error("Seed point not in field boundary");
 	return;
     }
-    int px=int(nx*tx);
-    int py=int(ny*ty);
-    int pz=int(nz*tz);
-    isoval=field->get(px,py,pz);
     value_slider->set_value(isoval);
     cerr << "Isoval = " << isoval << "\n";
     HashTable<int, int> visitedPts;
     Queue<int> surfQ;
+    int px, py, pz;
+    field->locate(p, px, py, pz);
     int pLoc=(((pz*ny)+py)*nx)+px;
     int dummy;
     visitedPts.insert(pLoc, 0);
     surfQ.append(pLoc);
     int counter=1;
-    GeomID groupid;
+    GeomID groupid=0;
     while(!surfQ.is_empty()) {
 	if (counter%100 == 0) {
 	    if (counter != 100)
@@ -496,13 +489,13 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 
 
 void IsoSurface::iso_tetrahedra(const Field3DHandle&, const Point&,
-				ObjGroup* group)
+				ObjGroup*)
 {
     NOT_FINISHED("IsoSurface::iso_tetrahedra");
 }
 
 void IsoSurface::iso_tetrahedra(const Field3DHandle&, double,
-				ObjGroup* group)
+				ObjGroup*)
 {
     NOT_FINISHED("IsoSurface::iso_tetrahedra");
 }
