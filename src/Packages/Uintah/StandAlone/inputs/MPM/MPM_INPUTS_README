@@ -10,31 +10,34 @@ constitutive models.  The individual files are:
 	const_test_nhp.ups  Neo Hookean Plasticity
 	const_test_vs.ups   ViscoScram
 
-disks.ups  This is the standard disks problem which we've been running
-since the first MPM code.  Excercises CompMooneyRivlin Constitutive
-Model.
+Also here is the gnuplot batch file const_test.gnp, which will
+plot Stress/Time (Time is approximately equal to strain) for
+these runs.
 
-disksel.ups Same as disks.ups except the CompNeoHook constitutive
-model is used.
+Disks test suite
 
-disksplas.ups Same as disks.ups except the CompNeoHookPlas constitutive
-model is used.
+  disks.ups:  2 Compressible Mooney Rivlin disks collide in a single
+  velocity field.  This is a single material calculation but with 
+  two parts (the disks).
 
-diskshypo.ups Same as disks.ups except the HypoElastic constitutive
-model is used.
+  disks_fracture.ups:  Same as disks, but with fracture.
 
-disksvs.ups Disks problem for ViscoScram.  This is a much more resolved
-calculation than the standard disks problems, and is actually a pretty big
-run (24 hr.s on 4 processors).
+  disks2mat.ups:  Same as disks, but with the two disks represented as
+  distinct (but identical) materials.  Contact is single velocity field. 
+  Output should be identical to that for disks.
 
-disks_4patch.ups Same as disks.ups except that it uses 4 patches to solve
-the problem.  Should give identical answers to disks.ups.
+  disks2mat4patch.ups:  Same as disks2mat, but with 4 patches.  Output
+  should be identical to that for disks.
 
-disks2mat.ups This differs from disks.ups in that each disk is a separate
-velocity field and they interact via the friction contact algorithm.
+  disks2mat_fc.ups:  Same as disks2mat, but with frictional contact.
 
-disks2mat4patch.ups Same as disks2mat.ups except that it uses 4 patches.
-Should give identical answers to disks2mat.ups
+  disks_complex.ups:  1 Compressible Mooney Rivlen disk, 1 HypoElastic (2
+  materials) and frictional contact.  Uses 4 patches.  Add fracture when
+  available.
+
+Also here is the gnuplot batch file disks.gnp, which will
+plot various integrated quantities for these runs with indications
+of which runs should be identical.
 
 heatcond.ups  Problem to test heat conduction in a bar, with one side
 hot, one side cold.  They should go to equilibrium over time.
@@ -59,6 +62,8 @@ the first material, via the thermal contact algorithm, the first material
 ignites and burns away.
 
 Bigger runs:
+
+These granular compaction problems all use g, cm, us (10^-6 s) units.
 
 10grains.ups 10 stationary grains compacted by a heavy rectangular 
 piston with an initial velocity of .01 cm/us = 100 m/s. Frictional
