@@ -8,6 +8,7 @@
 #include <iostream> 
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 using std::cerr;
 using std::endl;
@@ -34,6 +35,7 @@ TimestepSelector::TimestepSelector(const clString& id)
     time("time", id, this),
     timeval("timeval", id, this),
     animate("animate",id, this),
+    anisleep("anisleep", id, this),
     archiveH(0)
 { 
   //////////// Initialization code goes here
@@ -98,6 +100,10 @@ void TimestepSelector::execute()
 
    timeval.set(times[idx]);
 
+   cerr<<"timestep  = "<<time.get()<<endl;
+
+   cerr<<"Sleep time = "<<anisleep.get()<<endl;
+   
    if( animate.get() ){
      while( animate.get() && idx < (int)times.size() - 1){
        idx++;
@@ -105,6 +111,8 @@ void TimestepSelector::execute()
        time.set( idx );
        handle->SetTimestep( idx );
        out->send_intermediate( handle );
+       cerr<<"Sleep time = "<<anisleep.get()<<endl;
+       sleep(unsigned( anisleep.get()));
        reset_vars();
      }
      animate.set(0);

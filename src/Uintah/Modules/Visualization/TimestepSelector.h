@@ -70,7 +70,7 @@ private:
   TCLstring tcl_status;
 
   TCLint animate;
-
+  TCLint anisleep;
   TCLint time;
   TCLdouble timeval;
 
