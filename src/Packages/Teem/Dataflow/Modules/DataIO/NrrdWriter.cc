@@ -69,7 +69,7 @@ NrrdWriter::~NrrdWriter()
 
 void NrrdWriter::execute()
 {
-  static int counter = 1;
+  //  static int counter = 1;
   // Read data from the input port
   NrrdDataHandle handle;
   inport_ = (NrrdIPort *)get_iport("Input Data");

@@ -120,7 +120,7 @@ template <class T>
 void do_tensor(Tensor &t, void *&ptr) 
 {
   T *&p = (T*&)ptr;
-  float scl = (p[0] > 0.5);
+  //  float scl = (p[0] > 0.5);
   ++p; // skip first value (confidence)
   t.mat_[0][0] = (*p);//*scl;
   ++p;
