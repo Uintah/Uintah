@@ -22,25 +22,6 @@
 
 using namespace Uintah;
 
-CGSolver::CGSolver(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
-{
-}
-
-CGSolver::~CGSolver()
-{
-}
-
-double*** get3DPointer(const Array3<double>& X)
-{
-  return X.get3DPointer();
-}
-
-Stencil7*** get3DPointer(const Array3<Stencil7>& X)
-{
-  return X.get3DPointer();
-}
-
 static void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 		 const Array3<double>& X, CellIterator iter, long64& flops)
 {
@@ -161,6 +142,27 @@ static void ScMult_Add(Array3<double>& r, double s,
     r[*iter] = s*a[*iter]+b[*iter];
   IntVector diff = iter.end()-iter.begin();
   flops += 2*diff.x()*diff.y()*diff.z();
+}
+
+namespace Uintah {
+
+CGSolver::CGSolver(const ProcessorGroup* myworld)
+  : UintahParallelComponent(myworld)
+{
+}
+
+CGSolver::~CGSolver()
+{
+}
+
+double*** get3DPointer(const Array3<double>& X)
+{
+  return X.get3DPointer();
+}
+
+Stencil7*** get3DPointer(const Array3<Stencil7>& X)
+{
+  return X.get3DPointer();
 }
 
 class SFCXTypes {
@@ -292,8 +294,9 @@ public:
 
 	// Q = A*D
 	long64 flops = 0;
-	Mult(Q, A, D, iter, flops);
-	double aden=Dot(D, Q, iter, flops);
+	// Must be qualified with :: for the IBM xlC compiler.
+	::Mult(Q, A, D, iter, flops);
+	double aden = ::Dot(D, Q, iter, flops);
 	new_dw->put(sum_vartype(aden), aden_label);
 
 	new_dw->put(sumlong_vartype(flops), flop_label);
@@ -441,7 +444,7 @@ public:
 	typename Types::sol_type Dnew;
 	new_dw->allocateAndPut(Dnew, D_label, matl, patch, Ghost::None, 0);
 	long64 flops = 0;
-	ScMult_Add(Dnew, b, D, Q, iter, flops);
+	::ScMult_Add(Dnew, b, D, Q, iter, flops);
 	new_dw->put(sumlong_vartype(flops), flop_label);
       }
     }
@@ -481,10 +484,10 @@ public:
 	    parent_new_dw->get(X, guess_label, matl, patch, Around, 1);
 
 	  // R = A*X
-	  Mult(R, A, X, iter, flops);
+	  ::Mult(R, A, X, iter, flops);
 
 	  // R = B-R
-	  Sub(R, B, R, iter, flops);
+	  ::Sub(R, B, R, iter, flops);
 	  Xnew.copy(X, iter.begin(), iter.end());
 	} else {
 	  R.copy(B);
@@ -494,14 +497,14 @@ public:
 	// D = R/Ap
 	typename Types::sol_type D;
 	new_dw->allocateAndPut(D, D_label, matl, patch);
-	DivDiagonal(D, R, A, iter, flops);
+	::DivDiagonal(D, R, A, iter, flops);
 
-	double dnew=Dot(R, D, iter, flops);
+	double dnew = ::Dot(R, D, iter, flops);
 	new_dw->put(sum_vartype(dnew), d_label);
 	switch(params->norm){
 	case CGSolverParams::L1:
 	  {
-	    double err = L1(R, iter, flops);
+	    double err = ::L1(R, iter, flops);
 	    new_dw->put(sum_vartype(err), err_label);
 	  }
 	  break;
@@ -510,7 +513,7 @@ public:
 	  break;
 	case CGSolverParams::LInfinity:
 	  {
-	    double err = LInf(R, iter, flops);
+	    double err = ::LInf(R, iter, flops);
 	    new_dw->put(max_vartype(err), err_label);
 	  }
 	  break;
@@ -851,3 +854,5 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 								   d_myworld);
   sched->addTask(task, perproc_patches, matls);
 }
+
+} // end namespace Uintah
