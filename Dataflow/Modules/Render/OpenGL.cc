@@ -1625,13 +1625,26 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 
 
 #if defined(HAVE_PBUFFER)
-  // write the pbuffer image to the Viewer's draw buffer
-  if( pbuffer.is_valid() && pbuffer.is_current()){
-    glXMakeCurrent( dpy, win, cx );
-    glDrawBuffer(GL_FRONT);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glDrawPixels(vp[2],vp[3], GL_RGB, GL_UNSIGNED_BYTE,pxl);
+  if( pbuffer.is_valid() && pbuffer.is_current() ){
+    glXMakeCurrent( dpy, win, cx ); 
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, vp[2], 0.0, vp[3], -10.0, 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
+    glRasterPos2i(0, 0);
     glDrawBuffer(GL_BACK);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawPixels(vp[2],vp[3], GL_RGB, GL_UNSIGNED_BYTE,pxl);
+    glEnable(GL_DEPTH_TEST);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glXSwapBuffers(dpy,win);
   }
 #endif
 
@@ -2463,10 +2476,24 @@ OpenGL::AddMpegFrame()
 #if defined(HAVE_PBUFFER)
   if( pbuffer.is_valid() && pbuffer.is_current() ){
     glXMakeCurrent( dpy, win, cx ); 
-    glDrawBuffer(GL_FRONT);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glDrawPixels(width,height, GL_RGB, GL_UNSIGNED_BYTE,ptr);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, width, 0.0, height, -10.0, 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
+    glRasterPos2i(0, 0);
     glDrawBuffer(GL_BACK);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawPixels(width,height, GL_RGB, GL_UNSIGNED_BYTE,ptr);
+    glEnable(GL_DEPTH_TEST);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glXSwapBuffers(dpy,win);
   }
 #endif
 
