@@ -54,6 +54,9 @@ namespace Uintah {
     //////////
     // Destructor
     virtual ~SphereShellPiece();
+
+    /// Make a clone
+    SphereShellPiece* clone();
 	 
     //////////
     // Determines whether a point is inside the sphere. 

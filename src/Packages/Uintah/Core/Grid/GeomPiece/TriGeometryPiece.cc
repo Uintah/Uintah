@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Ray.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
@@ -29,6 +30,11 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 
 TriGeometryPiece::~TriGeometryPiece()
 {
+}
+
+TriGeometryPiece* TriGeometryPiece::clone()
+{
+  return scinew TriGeometryPiece(*this);
 }
 
 bool TriGeometryPiece::inside(const Point &p) const

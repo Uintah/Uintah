@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace std;
@@ -66,6 +66,11 @@ ConeGeometryPiece::ConeGeometryPiece(const Point& top,
 
 ConeGeometryPiece::~ConeGeometryPiece()
 {
+}
+
+ConeGeometryPiece* ConeGeometryPiece::clone()
+{
+  return scinew ConeGeometryPiece(*this);
 }
 
 bool 

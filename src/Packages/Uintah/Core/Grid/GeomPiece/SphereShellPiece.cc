@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -26,6 +27,11 @@ SphereShellPiece::SphereShellPiece(ProblemSpecP& ps)
 
 SphereShellPiece::~SphereShellPiece()
 {
+}
+
+SphereShellPiece* SphereShellPiece::clone()
+{
+  return scinew SphereShellPiece(*this);
 }
 
 bool 

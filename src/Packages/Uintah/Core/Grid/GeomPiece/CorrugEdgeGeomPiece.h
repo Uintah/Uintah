@@ -62,6 +62,9 @@ namespace Uintah {
     /*! Destructor */
     //////////////////////////////////////////////////////////////////////
     virtual ~CorrugEdgeGeomPiece();
+
+    /// Make a clone
+    CorrugEdgeGeomPiece* clone();
 	 
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the cylinder. */

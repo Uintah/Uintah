@@ -64,9 +64,17 @@ WARNING
 	 // input specification and builds the intersection of geometry pieces.
 	 IntersectionGeometryPiece(ProblemSpecP &);
 	 
+	 /// Copy constructor
+	 IntersectionGeometryPiece(const IntersectionGeometryPiece&);
+
+	 /// Assignment operator
+	 IntersectionGeometryPiece& operator=(const IntersectionGeometryPiece& );
 	 //////////
 	 // Destructor
 	 virtual ~IntersectionGeometryPiece();
+
+	 /// Make a clone
+	 IntersectionGeometryPiece* clone();
 	 
 	 //////////
 	 // Determines whether a point is inside the intersection piece.  

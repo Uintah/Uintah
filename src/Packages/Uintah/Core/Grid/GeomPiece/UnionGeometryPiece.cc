@@ -2,6 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -19,6 +20,37 @@ UnionGeometryPiece::UnionGeometryPiece(const vector<GeometryPiece*>& child)
    : child(child)
 {
 }
+
+UnionGeometryPiece::UnionGeometryPiece(const UnionGeometryPiece& rhs)
+{
+  for (vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
+       it != rhs.child.end(); ++it)
+    child.push_back((*it)->clone());
+}
+
+UnionGeometryPiece& UnionGeometryPiece::operator=(const UnionGeometryPiece& rhs){
+  if (this == &rhs)
+    return *this;
+
+  // Delete the lhs
+  for (vector<GeometryPiece*>::const_iterator it = child.begin();
+       it != child.end(); ++it)
+    delete *it;
+  child.clear();
+
+  for (vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
+       it != rhs.child.end(); ++it)
+    child.push_back((*it)->clone());
+
+  return *this;
+
+}
+
+UnionGeometryPiece* UnionGeometryPiece::clone()
+{
+  return scinew UnionGeometryPiece(*this);
+}
+
 
 UnionGeometryPiece::~UnionGeometryPiece()
 {

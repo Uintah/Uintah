@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -60,6 +61,13 @@ CorrugEdgeGeomPiece::CorrugEdgeGeomPiece(ProblemSpecP& ps)
 CorrugEdgeGeomPiece::~CorrugEdgeGeomPiece()
 {
 }
+
+
+CorrugEdgeGeomPiece* CorrugEdgeGeomPiece::clone()
+{
+  return scinew CorrugEdgeGeomPiece(*this);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 /*! Find if a point is inside the plate with corrugated edge */

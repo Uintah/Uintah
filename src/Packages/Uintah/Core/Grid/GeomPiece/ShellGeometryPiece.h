@@ -69,6 +69,9 @@ namespace Uintah {
     /*! \brief Destructor */
     //////////////////////////////////////////////////////////////////////
     virtual ~ShellGeometryPiece();
+
+    /// Make a clone
+    virtual ShellGeometryPiece* clone() = 0;
 	 
     //////////////////////////////////////////////////////////////////////
     /*! \brief Returns the bounding box surrounding the box. */
@@ -99,7 +102,6 @@ namespace Uintah {
 
   protected:
     ShellGeometryPiece();
-    ShellGeometryPiece(ShellGeometryPiece&);
 
   };
 } // End namespace Uintah
