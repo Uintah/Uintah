@@ -94,9 +94,9 @@ set $m5-k-start {0}
 set $m5-i-stop {384}
 set $m5-j-stop {191}
 set $m5-k-stop {9}
-set $m5-i-skip {10}
-set $m5-j-skip {5}
-set $m5-k-skip {1}
+set $m5-i-stride {10}
+set $m5-j-stride {5}
+set $m5-k-stride {1}
 set $m5-i-wrap {0}
 set $m5-j-wrap {0}
 set $m5-k-wrap {0}
@@ -126,9 +126,9 @@ set $m8-k-start {0}
 set $m8-i-stop {384}
 set $m8-j-stop {191}
 set $m8-k-stop {9}
-set $m8-i-skip {10}
-set $m8-j-skip {5}
-set $m8-k-skip {1}
+set $m8-i-stride {10}
+set $m8-j-stride {5}
+set $m8-k-stride {1}
 set $m8-i-wrap {0}
 set $m8-j-wrap {0}
 set $m8-k-wrap {0}

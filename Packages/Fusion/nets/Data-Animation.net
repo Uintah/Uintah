@@ -220,9 +220,9 @@ set $m12-k-start {0}
 set $m12-i-stop {384}
 set $m12-j-stop {1}
 set $m12-k-stop {0}
-set $m12-i-skip {10}
-set $m12-j-skip {5}
-set $m12-k-skip {1}
+set $m12-i-stride {10}
+set $m12-j-stride {5}
+set $m12-k-stride {1}
 set $m12-i-wrap {0}
 set $m12-j-wrap {1}
 set $m12-k-wrap {1}
