@@ -60,10 +60,6 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
-# Make sure version stays in sync with main/main.cc
-global SCIRun_version
-set SCIRun_version v1.20.2
-
 # TCL has some trace on the env array that makes it impossible
 # to set it in neteditGetenv wihtout causing an error
 # Here, we just back it up, unset it, then restore it
