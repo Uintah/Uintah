@@ -104,13 +104,6 @@ class CompMooneyRivlin : public ConstitutiveModel {
   // class function to create a new object from parameters
   static ConstitutiveModel* create(double *p_array);
 
-   const VarLabel* px_label;
-   const VarLabel* p_deformationMeasure_label;
-   const VarLabel* p_stress_label;
-   const VarLabel* p_mass_label;
-   const VarLabel* p_volume_label;
-   const VarLabel* g_velocity_label;
-   const VarLabel* delt_label;
    const VarLabel* p_cmdata_label;
 };
 
@@ -120,6 +113,10 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.10  2000/04/21 01:22:55  guilkey
+// Put the VarLabels which are common to all constitutive models in the
+// base class.  The only one which isn't common is the one for the CMData.
+//
 // Revision 1.9  2000/04/20 18:56:18  sparker
 // Updates to MPM
 //

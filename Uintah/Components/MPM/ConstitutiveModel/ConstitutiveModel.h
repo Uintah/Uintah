@@ -11,8 +11,11 @@ using Uintah::Interface::ProblemSpec;
 namespace Uintah {
     namespace Grid {
 	class Region;
+	class VarLabel;
     }
 namespace Components {
+
+    using Uintah::Grid::VarLabel;
 
     // THIS DOES NOT GO HERE - steve
 class MPMMaterial;
@@ -74,12 +77,24 @@ public:
 				const MPMMaterial* matl,
                                 DataWarehouseP& new_dw) = 0;
 
+   const VarLabel* px_label;
+   const VarLabel* p_deformationMeasure_label;
+   const VarLabel* p_stress_label;
+   const VarLabel* p_mass_label;
+   const VarLabel* p_volume_label;
+   const VarLabel* g_velocity_label;
+   const VarLabel* delt_label;
+
 };
 
 } // end namespace Components
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.8  2000/04/21 01:22:56  guilkey
+// Put the VarLabels which are common to all constitutive models in the
+// base class.  The only one which isn't common is the one for the CMData.
+//
 // Revision 1.7  2000/04/14 02:19:41  jas
 // Now using the ProblemSpec for input.
 //
