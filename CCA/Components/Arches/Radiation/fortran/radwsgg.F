@@ -42,8 +42,8 @@ C      IMPLICIT NONE
 
       PI1 = 1.0d0 / PI
 
-      TWALL = 800.0d0
-      TWALLTWO = 800.0d0
+      TWALL = 293.0d0
+      TWALLTWO = 293.0d0
 
 	if (bands.eq.1) then
 
@@ -88,6 +88,7 @@ C      IMPLICIT NONE
 
             ABSKG(I,J,K) = a*(CO2(I,J,K)+H2O(I,J,K))+
      &      402.834d0*SFV(I,J,K)*TG(I,J,K)
+        if(abskg(i,j,k).eq.0.0d0)abskg(i,j,k) = 1.0d-06
 
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
@@ -96,7 +97,6 @@ c     (for spherical harmonics only)
             phfunc   = 0.0d0
             shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
      &      phfunc*scatcoef
-        if(shgamma(i,j,k).eq.0.0d0)shgamma(i,j,k) = 1.0d-10
             shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
 
             fracn = (b(1)*1E-01)+
@@ -119,75 +119,75 @@ c     (for spherical harmonics only)
 
 c     Emissivity curve-fit stuff for wall bc's
 
-c	fraction(bands) = (b(1)*1E-01)+
-c     &	    (b(2)*1E-04)*twall +
-c     &	    (b(3)*1E-07)*(twall**2)+
-c     &      (b(4)*1E-011)*(twall**3)
-
-c	if (bands.eq.4) then
-
-c           fraction(bands) = 1.0d0 - fraction(bands)
-
-c	end if
-
-c     Emissivity curve-fit stuff for the second wall bc's
-
-c	fractiontwo(bands) = (b(1)*1E-01)+
-c     &	    (b(2)*1E-04)*twalltwo +
-c     &	    (b(3)*1E-07)*(twalltwo**2)+
-c     &      (b(4)*1E-011)*(twalltwo**3)
-
-c	if (bands.eq.4) then
-
-c           fractiontwo(bands) = 1.0d0 - fractiontwo(bands)
-
-c	end if
-
-c     Absorptivity curve-fit stuff
-
-      fraction(bands)=0.0d0
-
-	do 100 j=1,4
-      fracnsum = 0.0d0
-	   do 90 k=1,4
-
-	      fracnsum=fracnsum+c(bands,j,k)*(twall**(k-1))
-
- 90	   continue
-
-      fraction(bands)=fraction(bands)+
-     &fracnsum*(1467.0d0**(j-1))
-
- 100	continue
-
+	fraction(bands) = (b(1)*1E-01)+
+     &	    (b(2)*1E-04)*twall +
+     &	    (b(3)*1E-07)*(twall**2)+
+     &      (b(4)*1E-011)*(twall**3)
 
 	if (bands.eq.4) then
 
-      fracntot = 0.0d0
-
-	   do 130 i=1,3
-
-	    fraction(i) = 0.0d0
-
-	      do 120 j=1,4
-              fracnsum = 0.0d0
-		 do 110 k=1,4
-
-	      fracnsum=fracnsum+c(i,j,k)*(twall**(k-1))
-
-110	         continue
-
-	      fraction(i)=fraction(i)+fracnsum*(1467.0d0**(j-1))
-
-120	      continue
-
-	      fracntot = fracntot + fraction(i)
-
-130	   continue
-           
-	   fraction(bands) = 1.0d0 - fracntot
+           fraction(bands) = 1.0d0 - fraction(bands)
 
 	end if
+
+c     Emissivity curve-fit stuff for the second wall bc's
+
+	fractiontwo(bands) = (b(1)*1E-01)+
+     &	    (b(2)*1E-04)*twalltwo +
+     &	    (b(3)*1E-07)*(twalltwo**2)+
+     &      (b(4)*1E-011)*(twalltwo**3)
+
+	if (bands.eq.4) then
+
+           fractiontwo(bands) = 1.0d0 - fractiontwo(bands)
+
+	end if
+
+c     Absorptivity curve-fit stuff
+
+c      fraction(bands)=0.0d0
+
+c	do 100 j=1,4
+c      fracnsum = 0.0d0
+c	   do 90 k=1,4
+
+c	      fracnsum=fracnsum+c(bands,j,k)*(twall**(k-1))
+
+c 90	   continue
+
+c      fraction(bands)=fraction(bands)+
+c     &fracnsum*(1467.0d0**(j-1))
+
+c 100	continue
+
+
+c	if (bands.eq.4) then
+
+c      fracntot = 0.0d0
+
+c	   do 130 i=1,3
+
+c	    fraction(i) = 0.0d0
+
+c	      do 120 j=1,4
+c              fracnsum = 0.0d0
+c		 do 110 k=1,4
+
+c	      fracnsum=fracnsum+c(i,j,k)*(twall**(k-1))
+
+c110	         continue
+
+c	      fraction(i)=fraction(i)+fracnsum*(1467.0d0**(j-1))
+
+c120	      continue
+
+c	      fracntot = fracntot + fraction(i)
+
+c130	   continue
+           
+c	   fraction(bands) = 1.0d0 - fracntot
+
+c	end if
 
 c	write(6,*)bands,fraction(bands)
 

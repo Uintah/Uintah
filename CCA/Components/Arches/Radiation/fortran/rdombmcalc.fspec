@@ -21,5 +21,6 @@ void rdombmcalc(IntVector idxlo, IntVector idxhi,
              CCVariable<double> qfluxb,
              bool lprobone, bool lprobtwo, bool lprobthree,
              OffsetArray1<double> srcpone,
-             CCVariable<double> volq);
+             CCVariable<double> volq,
+             double srcsum);
 

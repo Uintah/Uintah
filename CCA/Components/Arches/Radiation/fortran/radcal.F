@@ -10,7 +10,7 @@ C      IMPLICIT NONE
      &x,y,z,xxx,yyy,zzz,TEMP,ABSKP,FV,FACTOR,
      &MUONE,MUTWO,SUMONE,SUMTWO,FRACNONE,FRACNTWO,FRACN,twall,
      &small,wavemin,wavemax,dom,omega,SDTOTAL,intervals,GDINV,
-     &GDDINV,XSTAR,XC,XD,YC,YD,YCD
+     &GDDINV,XSTAR,XC,XD,YC,YD,YCD,scatcoef,phfunc
 
       Integer I,II,J,K,L,M
 
@@ -257,7 +257,7 @@ C     provided by Chang and Rhee (1984).
 c       Calculate fraction of the blackbody wall emission here (this is only 
 c       valid when all walls are at same temperature)
 
-       TWALL = 300.0d0
+       TWALL = 293.0d0
        
        MUONE = CTWO*OMEGA/TWALL
        MUTWO = CTWO*(OMEGA+DOM)/TWALL
@@ -295,9 +295,19 @@ c       valid when all walls are at same temperature)
       IF (LPATCHMEAN)THEN
 
        ABSKG(I,J,K) = PATCHN(I,J,K)/PATCHD(I,J,K)
+	if(abskg(i,j,k).eq.0.0d0)abskg(i,j,k) = 1.0d-06
        ESRCG(I,J,K) = FRACNSUM(I,J,K)*SIG*PI1*ABSKG(I,J,K)*TG(I,J,K)**4
 
       END IF
+
+c     Anisotropic scattering properties for the interior nodes
+c     (for spherical harmonics only)
+
+            scatcoef = 0.0d0
+            phfunc   = 0.0d0
+            shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
+     &      phfunc*scatcoef
+            shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
 
               ENDIF
 

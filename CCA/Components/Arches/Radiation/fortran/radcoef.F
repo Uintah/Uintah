@@ -236,6 +236,8 @@ C-----------------------------------------------------------------------
 	    ABSKG(I,J,K) = ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
      1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) )
 
+        if(abskg(i,j,k).eq.0.0d0)abskg(i,j,k) = 1.0d-06
+
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
 
@@ -243,8 +245,6 @@ c     (for spherical harmonics only)
             phfunc   = 0.0d0
             shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
      &      phfunc*scatcoef
-
-        if(shgamma(i,j,k).eq.0.0d0)shgamma(i,j,k) = 1.0d-10
 
             shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
 	    

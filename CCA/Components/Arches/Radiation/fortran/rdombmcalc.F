@@ -3,7 +3,7 @@
       integer i,ii,j,jj,k,kk,m
 
       double precision x,z,relerr,relerr2,big,big2,relerrsq,relerrsq2,
-     &rmserrnm,rmserrnm2,small,PI,srcsum,fluxsume,fluxsumw,fluxsumtb,
+     &rmserrnm,rmserrnm2,small,PI,fluxsume,fluxsumw,fluxsumtb,
      &egerror
 
       DATA PI/3.141593D0/, small/1.0d-10/
@@ -26,7 +26,9 @@ c     For energy balance
       fluxsumtb = 0.0d0
       egerror = 0.0d0
 
-      IF (LPROBTWO.OR.LPROBTHREE)GO TO 30 
+c      IF (LPROBTWO.OR.LPROBTHREE)GO TO 30 
+
+      IF (LPROBONE)THEN
 
             z=0.5-zz(kk)
             if (zz(kk).ge.0.5)
@@ -70,7 +72,9 @@ c     For energy balance
 
       write(6,*)rmserrnm,rmserrnm2
 
-30    continue
+      END IF
+
+c30    continue
 
       IF (LPROBTWO)THEN
 
@@ -93,44 +97,44 @@ c45    continue
 c     Calculate relative error in energy balance for lprob(one/two)
 c     Note: We make use of the symmetry in heat fluxes here
 
-      do 60 k=idxlo(3),idxhi(3)
-         do 55 j=idxlo(2),idxhi(2)
-            do 50 i=idxlo(1),idxhi(1)
+c      do 60 k=idxlo(3),idxhi(3)
+c         do 55 j=idxlo(2),idxhi(2)
+c            do 50 i=idxlo(1),idxhi(1)
 
-            if (pcell(i,j,k).eq.ffield) then
+c            if (pcell(i,j,k).eq.ffield) then
 
-               volume(i,j,k) = sew(i) * sns(j) * stb(k)
-               srcsum = srcsum - src(i,j,k)*volume(i,j,k)
+c               volume(i,j,k) = sew(i) * sns(j) * stb(k)
+c               srcsum = srcsum - src(i,j,k)*volume(i,j,k)
 
-            endif
+c            endif
 
-            if (pcell(i-1,j,k).ne.ffield) then
+c            if (pcell(i-1,j,k).ne.ffield) then
 
-            areaew = sns(j)*stb(k)
-            fluxsumw = fluxsumw + (qfluxw(i,j,k))*areaew 
+c            areaew = sns(j)*stb(k)
+c            fluxsumw = fluxsumw + (qfluxw(i,j,k))*areaew 
 
-            endif
+c            endif
 
-            if (pcell(i+1,j,k).ne.ffield) then
+c            if (pcell(i+1,j,k).ne.ffield) then
 
-            areaew = sns(j)*stb(k)
-            fluxsume = fluxsume + (qfluxe(i,j,k))*areaew 
+c            areaew = sns(j)*stb(k)
+c            fluxsume = fluxsume + (qfluxe(i,j,k))*areaew 
 
-            endif
+c            endif
 
-            if (pcell(i,j,k-1).ne.ffield) then
+c            if (pcell(i,j,k-1).ne.ffield) then
 
-            areatb(i) = sew(i) * sns(j)
-            fluxsumtb = fluxsumtb + (qfluxb(i,j,k))*areatb(i) 
+c            areatb(i) = sew(i) * sns(j)
+c            fluxsumtb = fluxsumtb + (qfluxb(i,j,k))*areatb(i) 
 
-            endif
+c            endif
 
- 50         continue
- 55      continue
- 60   continue
+c 50         continue
+c 55      continue
+c 60   continue
 
-      egerror = (srcsum - (fluxsume + fluxsumw + 4*fluxsumtb))/srcsum
-      write(6,*)"% relative error in energy balance =",egerror*100
+c      egerror = (srcsum - (fluxsume + fluxsumw + 4*fluxsumtb))/srcsum
+c      write(6,*)"% relative error in energy balance =",egerror*100
 
       IF (LPROBTHREE)THEN
 
