@@ -301,8 +301,22 @@ Thread_shutdown(Thread* thread, bool actually_exit)
   } else {
     idle_main=priv;
   }
+
+  // This can't be done in checkExit, because of a potential race
+  // condition.
+  int done=true;
+  for(int i=0;i<nactive;i++){
+    Thread_private* p=active[i];
+    if(!p->thread->isDaemon()){
+      done=false;
+      break;
+    }
+  }
   unlock_scheduler();
-  Thread::checkExit();
+
+  if(done)
+    Thread::exitAll(0);
+  
   delete thread;
 
   if(pid == main_pid){
