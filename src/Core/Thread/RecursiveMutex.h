@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_RecursiveMutex_h
 #define SCICore_Thread_RecursiveMutex_h
 
+#include <SCICore/share/share.h>
+
 #include <SCICore/Thread/Mutex.h>
 
 namespace SCICore {
@@ -39,7 +41,7 @@ DESCRIPTION
    be used unless the recursive lock feature is really required.
  
 ****************************************/
-	class RecursiveMutex {
+	class SCICORESHARE RecursiveMutex {
 	public:
 	    //////////
 	    // Create the Mutex.  The Mutex is allocated in the unlocked
@@ -77,6 +79,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/24 18:55:07  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.7  1999/09/02 16:52:43  sparker
 // Updates to cocoon documentation
 //

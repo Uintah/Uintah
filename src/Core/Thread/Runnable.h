@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Runnable_h
 #define SCICore_Thread_Runnable_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	class Thread;
@@ -43,7 +45,7 @@ DESCRIPTION
    of this same thread.
    
 ****************************************/
-	class Runnable {
+	class SCICORESHARE Runnable {
 	protected:
 	    friend class Thread;
 	    Thread* d_my_thread;
@@ -78,6 +80,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/24 18:55:07  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.7  1999/09/02 16:52:43  sparker
 // Updates to cocoon documentation
 //

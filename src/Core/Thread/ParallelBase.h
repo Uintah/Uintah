@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_ParallelBase_h
 #define SCICore_Thread_ParallelBase_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	class Semaphore;
@@ -31,7 +33,7 @@ DESCRIPTION
    by a user program.  See <b>Parallel</b> instead.
    
 ****************************************/
-	class ParallelBase {
+	class SCICORESHARE ParallelBase {
 	public:
 	    //////////
 	    // <i>The thread body</i>
@@ -56,6 +58,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.9  1999/09/24 18:55:07  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.8  1999/09/03 19:51:15  sparker
 // Fixed bug where if Thread::parallel was called with block=false, the
 //   helper object could get destroyed before it was used.
