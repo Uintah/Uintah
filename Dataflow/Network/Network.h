@@ -38,7 +38,6 @@
 #include <Dataflow/share/share.h>
 
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/String.h>
 #include <Core/Thread/Mutex.h>
 
 #include <map.h>
@@ -54,16 +53,16 @@ class NetworkEditor;
 class PSECORESHARE Network {
 public:
     
-    typedef map<clString, Connection*>	MapClStringConnection;
-    typedef map<clString, Module*>	MapClStringModule;
+    typedef map<string, Connection*>	MapStringConnection;
+    typedef map<string, Module*>	MapStringModule;
     typedef map<int, Connection*>	MapIntConnection;
     typedef map<int, Module*>		MapIntModule;
     
 private:
     Mutex the_lock;
-    int read_file(const clString&);
+    int read_file(const string&);
 
-    MapClStringConnection conn_ids;
+    MapStringConnection conn_ids;
     
     NetworkEditor* netedit;
     int first;
@@ -72,7 +71,7 @@ public:				// mm-hack to get direct access
     Array1<Connection*> connections;
     Array1<Module*> modules;
     
-    MapClStringModule module_ids;
+    MapStringModule module_ids;
     MapIntModule mod_handles;
     MapIntConnection conn_handles;
     
@@ -96,16 +95,16 @@ public:
 
     int nconnections();
     Connection* connection(int);
-    clString connect(Module*, int, Module*, int);
-    int disconnect(const clString&);
+    string connect(Module*, int, Module*, int);
+    int disconnect(const string&);
     Connection* get_connect_by_handle (int handle); 	// mm
     
-    Module* add_module(const clString& packageName,
-                       const clString& categoryName,
-                       const clString& moduleName);
-    int delete_module(const clString& name);
+    Module* add_module(const string& packageName,
+                       const string& categoryName,
+                       const string& moduleName);
+    int delete_module(const string& name);
 
-    Module* get_module_by_id(const clString& id); 	
+    Module* get_module_by_id(const string& id); 	
     Module* get_module_by_handle (int handle);		// mm
 
 };

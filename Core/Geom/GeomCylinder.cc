@@ -34,7 +34,6 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Containers/String.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
 #include <iostream>

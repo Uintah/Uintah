@@ -33,8 +33,10 @@
 
 #include <Dataflow/share/share.h>
 
-#include <Core/Containers/String.h>
 #include <Dataflow/Comm/MessageBase.h>
+#include <string>
+
+using std::string;
 
 namespace SCIRun {
 
@@ -54,7 +56,7 @@ public:
     OPort* oport;
     IPort* iport;
     int local;
-    clString id;
+    string id;
     bool remote;	// mm-flag for remote connection
     int handle;		// mm-connection handle for distrib. connections
     int socketPort;	// mm-port number for remote connections

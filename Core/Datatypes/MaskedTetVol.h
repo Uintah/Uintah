@@ -115,7 +115,7 @@ template <class T>
 void 
 MaskedTetVol<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name().c_str(), MASKED_TET_VOL_VERSION);
+  stream.begin_class(type_name(), MASKED_TET_VOL_VERSION);
   TetVol<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();

@@ -36,7 +36,7 @@ public:
   FieldOPort     *outport_;
 
 public:
-  TetVolCellToNode(const clString& id);
+  TetVolCellToNode(const string& id);
 
   virtual ~TetVolCellToNode();
 
@@ -45,11 +45,11 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" PSECORESHARE Module* make_TetVolCellToNode(const clString& id) {
+extern "C" PSECORESHARE Module* make_TetVolCellToNode(const string& id) {
   return scinew TetVolCellToNode(id);
 }
 
-TetVolCellToNode::TetVolCellToNode(const clString& id)
+TetVolCellToNode::TetVolCellToNode(const string& id)
   : Module("TetVolCellToNode", id, Source, "Fields", "SCIRun")
 {
 }

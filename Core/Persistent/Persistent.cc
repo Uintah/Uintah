@@ -29,7 +29,6 @@
 
 #include <Core/Persistent/Persistent.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -44,7 +43,7 @@ using std::istringstream;
 
 namespace SCIRun {
 
-static Piostream::MapClStringPersistentTypeID* table = 0;  
+static Piostream::MapStringPersistentTypeID* table = 0;  
 
 //////////
 // Constructors/Destructor
@@ -54,25 +53,23 @@ PersistentTypeID::PersistentTypeID(const char* typeName,
   type(typeName), parent(parentName), maker(maker)
 {
   if (!table) {
-    table = scinew Piostream::MapClStringPersistentTypeID;
+    table = scinew Piostream::MapStringPersistentTypeID;
   }
   
-  string typestring(type.c_str());
-  
-  Piostream::MapClStringPersistentTypeID::iterator dummy;
+  Piostream::MapStringPersistentTypeID::iterator dummy;
 
-  dummy = table->find(typestring);
+  dummy = table->find(type);
   if (dummy != table->end()) {
     if ((*dummy).second->maker != maker 
 	|| ((*dummy).second->parent != parent))
     {
       cerr << "WARNING: duplicate type in Persistent "
-	   << "Object Type Database: " << typestring << endl;
+	   << "Object Type Database: " << type << endl;
     }
   }
   
 				// should this be else { ?
-  (*table)[typestring] = this;
+  (*table)[type] = this;
   
 }
 
@@ -83,31 +80,29 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   :  type(typeName), parent(parentName), maker(maker)
 {
   if (!table) {
-    table = scinew Piostream::MapClStringPersistentTypeID;
+    table = scinew Piostream::MapStringPersistentTypeID;
   }
   
-  string typestring(type.c_str());
+  Piostream::MapStringPersistentTypeID::iterator dummy;
   
-  Piostream::MapClStringPersistentTypeID::iterator dummy;
-  
-  dummy = table->find(typestring);
+  dummy = table->find(type);
 
   if (dummy != table->end()) {
     if ((*dummy).second->maker != maker 
 	|| ((*dummy).second->parent != parentName))
     {
       cerr << "WARNING: duplicate type in Persistent "
-	   << "Object Type Database: " << typestring << endl;
+	   << "Object Type Database: " << type << endl;
     }
   }
   
-  (*table)[typestring] = this;
+  (*table)[type] = this;
 }
 
 PersistentTypeID::~PersistentTypeID()
 {
-  Piostream::MapClStringPersistentTypeID::iterator iter;
-  iter = table->find(type.c_str());
+  Piostream::MapStringPersistentTypeID::iterator iter;
+  iter = table->find(type);
   if (iter == table->end()) {
     cerr << "WARNING: Could not remove type from Object type database: " << type << endl;
   } else {
@@ -163,7 +158,7 @@ static PersistentTypeID* find_derived(const string& classname,
   if (!table) return 0;
   PersistentTypeID* pid;
   
-  Piostream::MapClStringPersistentTypeID::iterator iter;
+  Piostream::MapStringPersistentTypeID::iterator iter;
   
   iter = table->find(classname);
   if(iter == table->end()) return 0;
@@ -173,9 +168,9 @@ static PersistentTypeID* find_derived(const string& classname,
     return 0;
   }
   
-  if (basename == pid->parent.c_str()) return pid;
+  if (basename == pid->parent) return pid;
   
-  if (find_derived(pid->parent.c_str(), basename)) return pid;
+  if (find_derived(pid->parent, basename)) return pid;
   
   return 0;
 }
@@ -197,7 +192,7 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 				// from pid->type, then read it in
 				// Otherwise, it is an error...
       string in_name(peek_class());
-      string want_name(pid.type.c_str());
+      string want_name(pid.type);
       
       Persistent* (*maker)() = 0;
       if (in_name == want_name) {
@@ -352,25 +347,6 @@ bool Piostream::readHeader(const string& filename, char* hdr,
     }
   }
   return true;
-}
-
-//----------------------------------------------------------------------
-int Piostream::begin_class(const char* classname, int current_version)
-{
-  return begin_class(string(classname), current_version);
-}
-
-//----------------------------------------------------------------------
-void Pio(Piostream& stream, clString& data) { 
-  if (stream.reading()){
-    string tmp;
-    stream.io(tmp);
-    data=tmp.c_str();
-  }
-  else {
-    string tmp(data());
-    stream.io(tmp);
-  }
 }
 
 } // End namespace SCIRun

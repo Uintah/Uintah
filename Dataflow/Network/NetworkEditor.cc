@@ -367,20 +367,20 @@ Module_Scheduler_Message::~Module_Scheduler_Message()
 {
 }
 
-void NetworkEditor::add_text(const clString& str)
+void NetworkEditor::add_text(const string &str)
 {
     TCL::execute("global netedit_errortext");
     TCL::execute("$netedit_errortext configure -state normal");
-    TCL::execute("$netedit_errortext insert end \""+str+"\n\"");
+    TCL::execute("$netedit_errortext insert end \"" + str + "\n\"");
     TCL::execute("$netedit_errortext configure -state disabled");
 }
 
-void NetworkEditor::save_network(const clString& filename)
+void NetworkEditor::save_network(const string& filename)
 {
 
     char *myvalue ;
 
-    ofstream out(filename());
+    ofstream out(filename.c_str());
     if(!out)
       return;
     out << "# SCI Network 1.0\n";
@@ -461,16 +461,16 @@ void NetworkEditor::save_network(const clString& filename)
     // Emit variables...
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-	clString midx(clString("$m")+to_string(i));
+	string midx("$m" + to_string(i));
 	module->emit_vars(out, midx);
     }
 
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-        clString result;
-	TCL::eval("winfo exists .ui"+module->id, result);
+        string result;
+	TCL::eval("winfo exists .ui" + module->id, result);
 	int res;
-	if(result.get_int(res) && res){
+	if(string_to_int(result, res)) {
 	    out << "$m" << i << " ui\n";
 	}
     }
@@ -528,7 +528,7 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	int owhich;
-	if(!args[3].get_int(owhich)){
+	if(!string_to_int(args[3], owhich)) {
 	    args.error("netedit addconnection can't parse owhich");
 	    return;
 	}
@@ -538,7 +538,7 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	int iwhich;
-	if(!args[5].get_int(iwhich)){
+	if(!string_to_int(args[5], iwhich)) {
 	    args.error("netedit addconnection can't parse iwhich");
 	    return;
 	}
@@ -561,13 +561,13 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    args.error("netedit addconnection can't find output module");
 	    return;
 	}
-	Array1<clString> res;
+	Array1<string> res;
 	int i;
 	for(i=0;i<mod->niports();i++){
 	    Port* p=mod->iport(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		Array1<clString> cinfo(5);
+		Array1<string> cinfo(5);
 		cinfo[0]=conn->id;
 		cinfo[1]=conn->oport->get_module()->id;
 		cinfo[2]=to_string(conn->oport->get_which_port());
@@ -580,7 +580,7 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    Port* p=mod->oport(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		Array1<clString> cinfo(5);
+		Array1<string> cinfo(5);
 		cinfo[0]=conn->id;
 		cinfo[1]=conn->oport->get_module()->id;
 		cinfo[2]=to_string(conn->oport->get_which_port());
@@ -617,12 +617,14 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	int which;
-	if(!args[3].get_int(which) || which<0 || which>=mod->noports()){
+	if(!string_to_int(args[3], which) ||
+	   which < 0 || which >= mod->noports())
+	{
 	    args.error("bad port number");
 	    return;
 	}
 	OPort* oport=mod->oport(which);
-	Array1<clString> iports;
+	Array1<string> iports;
 	for(int i=0;i<net->nmodules();i++){
 	    Module* m=net->module(i);
 	    for(int j=0;j<m->niports();j++){
@@ -647,7 +649,8 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	int which;
-	if(!args[3].get_int(which) || which<0 || which>=mod->niports()){
+	if(!string_to_int(args[3], which) || which<0 || which>=mod->niports())
+	{
 	    args.error("bad port number");
 	    return;
 	}
@@ -657,7 +660,7 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    args.result("");
 	    return;
 	}
-	Array1<clString> oports;
+	Array1<string> oports;
 	for(int i=0;i<net->nmodules();i++){
 	    Module* m=net->module(i);
 	    for(int j=0;j<m->noports();j++){
@@ -686,38 +689,37 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	save_network(args[2]);
     } else if (args[1] == "load_component_spec"){
       int check=0;
-      char string[100]="\0";
+      char buff[100]="\0";
       if (args.count()!=3) {
 	args.error("load_component_spec needs 1 argument");
 	return;
       }
       component_node* n = CreateComponentNode(1);
-      check = ReadComponentNodeFromFile(n,args[2]());
+      check = ReadComponentNodeFromFile(n,args[2].c_str());
       if (check!=1) {
-	args.error(clString("NetworkEditor: XML file did not pass"
-			    " validation: ")+args[2]+".  Please see the"
-                            " messages window for details.");
+	args.error("NetworkEditor: XML file did not pass validation: " + 
+		   args[2] + ".  Please see the messages window for details.");
 	return;
       }
       if (n->name==NOT_SET||n->category==NOT_SET) {
-	args.error(clString("NetworkEditor: XML file does not define"
-                            " a component name and/or does not define a"
-                            "  category: ")+args[2]);
+	args.error("NetworkEditor: XML file does not define"
+		   " a component name and/or does not define a"
+		   "  category: " + args[2]);
 	return;
       }
-      sprintf(string,"%ld",(long)n);
-      TCL::execute(clString("GetPathAndPackage {")+string+"} {"+
+      sprintf(buff,"%ld",(long)n);
+      TCL::execute(string("GetPathAndPackage {")+buff+"} {"+
 		   n->name+"} {"+n->category+"}");
     } else if (args[1] == "create_pac_cat_mod"){
         if (args.count()!=7) {
           args.error("create_pac_cat_mod needs 5 arguments");
           return;
         }
-	if (!(GenPackage((char*)args[3](),(char*)args[2]()) &&
-	      GenCategory((char*)args[4](),(char*)args[3](),
-			  (char*)args[2]()) &&
-	      GenComponent((component_node*)atol(args[6]()),
-			   (char*)args[3](),(char*)args[2]()))) {
+	if (!(GenPackage((char*)args[3].c_str(),(char*)args[2].c_str()) &&
+	      GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
+			  (char*)args[2].c_str()) &&
+	      GenComponent((component_node*)atol(args[6].c_str()),
+			   (char*)args[3].c_str(),(char*)args[2].c_str()))) {
           args.error("Unable to create new package, category or module."
 		     "  Check your paths and names and try again.");
           return;
@@ -728,10 +730,10 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
           return;
         }
 	
-	if (!(GenCategory((char*)args[4](),(char*)args[3](),
-			  (char*)args[2]()) &&
-	      GenComponent((component_node*)atol(args[6]()),
-			   (char*)args[3](),(char*)args[2]()))) {
+	if (!(GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
+			  (char*)args[2].c_str()) &&
+	      GenComponent((component_node*)atol(args[6].c_str()),
+			   (char*)args[3].c_str(),(char*)args[2].c_str()))) {
           args.error("Unable to create new category or module."
 		     "  Check your paths and names and try again.");
 	  return;
@@ -741,8 +743,8 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
           args.error("create_mod needs 3 arguments");
           return;
         }
-	if (!(GenComponent((component_node*)atol(args[6]()),
-			   (char*)args[3](),(char*)args[2]()))) {
+	if (!(GenComponent((component_node*)atol(args[6].c_str()),
+			   (char*)args[3].c_str(),(char*)args[2].c_str()))) {
           args.error("Unable to create new module."
 		     "  Check your paths and names and try again.");
 	  return;
@@ -762,22 +764,22 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
     }
 }
 
-void postMessage(const clString& errmsg, bool err)
+void postMessage(const string& errmsg, bool err)
 {
-  clString tag;
+  string tag;
   if(err)
     tag += " errtag";
-  TCL::execute(clString(".top.errorFrame.text insert end \"")+
+  TCL::execute(string(".top.errorFrame.text insert end \"")+
 	       errmsg+"\\n\""+tag);
   TCL::execute(".top.errorFrame.text see end");
 }
 
-void postMessageNoCRLF(const clString& errmsg, bool err)
+void postMessageNoCRLF(const string& errmsg, bool err)
 {
-  clString tag;
+  string tag;
   if(err)
     tag += " errtag";
-  TCL::execute(clString(".top.errorFrame.text insert end \"")+
+  TCL::execute(string(".top.errorFrame.text insert end \"")+
 	       errmsg+"\""+tag);
   TCL::execute(".top.errorFrame.text see end");
 }

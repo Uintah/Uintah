@@ -30,7 +30,6 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Util/Assert.h>
-#include <Core/Containers/String.h>
 
 namespace SCIRun {
 

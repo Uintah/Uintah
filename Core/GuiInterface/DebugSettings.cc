@@ -65,15 +65,15 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
 	args.result("");
 	return;
     }
-    Array1<clString> debuglist(debug->size());
+    Array1<string> debuglist(debug->size());
     
     DebugIter iter(debug);
     int i;
     for(iter.first(),i=0;iter.ok();++iter,++i){
 	DebugVars& debug_vars=*iter.get_data();
-	Array1<clString> vars(debug_vars.size());
+	Array1<string> vars(debug_vars.size());
 	for(int j=0;j<debug_vars.size();j++){
-	    DebugSwitch* sw=debug_vars[j];
+	    DebugSwitch* sw = debug_vars[j];
 	    vars[j]=sw->get_var();
 	    if(makevars)
 		variables.add(scinew GuiVarintp(sw->get_flagpointer(),
@@ -82,10 +82,10 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
 	}
 
 	// Make a list of the variables
-	clString varlist(args.make_list(vars));
+	string varlist(args.make_list(vars));
 	
 	// Make a list with the module name and this list
-	clString mlist(args.make_list(iter.get_key(), varlist));
+	string mlist(args.make_list(iter.get_key(), varlist));
 
 	// Put this in the array
 	debuglist[i]=mlist;

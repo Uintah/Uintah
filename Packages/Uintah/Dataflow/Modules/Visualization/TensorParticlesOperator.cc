@@ -15,7 +15,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 
-extern "C" Module* make_TensorParticlesOperator( const clString& id ) { 
+extern "C" Module* make_TensorParticlesOperator( const string& id ) { 
   return scinew TensorParticlesOperator( id );
 }
 
@@ -24,7 +24,7 @@ void computeScalars(TensorParticles* tensors, ScalarParticles* scalars,
 		    TensorOp op /* TensorOp should be a functor for
 				   converting tensors scalars */ );
 
-TensorParticlesOperator::TensorParticlesOperator(const clString& id)
+TensorParticlesOperator::TensorParticlesOperator(const string& id)
   : Module("TensorParticlesOperator",id,Source),
     tclOperation("operation", id, this),
     tclRow("row", id, this),

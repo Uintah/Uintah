@@ -32,7 +32,6 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Containers/String.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Math/MusilRNG.h>
@@ -71,7 +70,7 @@ class ConductivitySearch : public Module {
   Array1<double> cell_err_;
   Array1<Vector> cell_dir_;  
   int seed_counter_;
-  clString state_;
+  string state_;
   int stop_search_;
   int last_intermediate_;
   Mutex mylock_;
@@ -96,13 +95,13 @@ class ConductivitySearch : public Module {
   void read_mesh_and_cond_param_ports(int &valid_data, int &new_data);
 public:
   GuiInt seed_gui_;
-  ConductivitySearch(const clString& id);
+  ConductivitySearch(const string& id);
   virtual ~ConductivitySearch();
   virtual void execute();
   void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_ConductivitySearch(const clString& id) {
+extern "C" Module* make_ConductivitySearch(const string& id) {
   return new ConductivitySearch(id);
 }
 
@@ -113,7 +112,7 @@ int ConductivitySearch::MAX_EVALS_ = 100;
 double ConductivitySearch::CONVERGENCE_ = 0.001;
 double ConductivitySearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
-ConductivitySearch::ConductivitySearch(const clString& id)
+ConductivitySearch::ConductivitySearch(const string& id)
   : Module("ConductivitySearch", id, Filter), 
   mylock_("pause lock for ConductivitySearch"), 
   seed_gui_("seed_gui", id, this)

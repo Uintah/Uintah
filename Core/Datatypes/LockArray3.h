@@ -85,7 +85,6 @@ public:
 // Start of included LockArray3.cc
 
 #include <Core/Datatypes/LockArray3.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <Core/Geometry/Point.h>

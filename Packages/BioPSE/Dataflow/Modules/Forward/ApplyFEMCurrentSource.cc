@@ -60,19 +60,19 @@ class ApplyFEMCurrentSource : public Module {
 
 public:
   //! Constructor/Destructor
-  ApplyFEMCurrentSource(const clString& id);
+  ApplyFEMCurrentSource(const string& id);
   virtual ~ApplyFEMCurrentSource();
   
   //! Public methods
   virtual void execute();
 };
 
-extern "C" Module* make_ApplyFEMCurrentSource(const clString& id)
+extern "C" Module* make_ApplyFEMCurrentSource(const string& id)
 {
   return scinew ApplyFEMCurrentSource(id);
 }
 
-ApplyFEMCurrentSource::ApplyFEMCurrentSource(const clString& id)
+ApplyFEMCurrentSource::ApplyFEMCurrentSource(const string& id)
   : Module("ApplyFEMCurrentSource", id, Filter) 
 {
   // Create the input ports

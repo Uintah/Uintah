@@ -66,7 +66,7 @@ GeomViewerItem::GeomViewerItem()
 {
 }
 
-GeomViewerItem::GeomViewerItem(GeomObj* obj,const clString& nm, 
+GeomViewerItem::GeomViewerItem(GeomObj* obj,const string& nm, 
 			       CrowdMonitor* lck)
 :child(obj),name(nm),lock(lck)
 {

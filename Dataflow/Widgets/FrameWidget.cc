@@ -454,7 +454,7 @@ FrameWidget::GetDownAxis()
  *      a widget's material property.  The string is used in the 
  *      BaseWidget UI.
  */
-clString
+string
 FrameWidget::GetMaterialName( const Index mindex ) const
 {
    ASSERT(mindex<NumMaterials);

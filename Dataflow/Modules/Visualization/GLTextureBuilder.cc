@@ -27,7 +27,6 @@
 #include <unistd.h>
 
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/String.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -45,15 +44,15 @@ namespace SCIRun {
 
 
 
-static clString widget_name("GLTextureBuilderLocatorWidget");
-static clString res_name("Resolution Widget");
+static string widget_name("GLTextureBuilderLocatorWidget");
+static string res_name("Resolution Widget");
 
-extern "C" Module* make_GLTextureBuilder( const clString& id) {
+extern "C" Module* make_GLTextureBuilder( const string& id) {
   return scinew GLTextureBuilder(id);
 }
 
 
-GLTextureBuilder::GLTextureBuilder(const clString& id)
+GLTextureBuilder::GLTextureBuilder(const string& id)
   : Module("GLTextureBuilder", id, Filter, "Visualization", "SCIRun"), 
     tex_(0),
     is_fixed_("is_fixed", id, this),

@@ -38,7 +38,6 @@ LOG
 #include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
 #include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -60,12 +59,12 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-extern "C" Module* make_ParticleFieldExtractor( const clString& id ) {
+extern "C" Module* make_ParticleFieldExtractor( const string& id ) {
   return scinew ParticleFieldExtractor( id ); 
 }
 
 //--------------------------------------------------------------- 
-ParticleFieldExtractor::ParticleFieldExtractor(const clString& id) 
+ParticleFieldExtractor::ParticleFieldExtractor(const string& id) 
   : Module("ParticleFieldExtractor", id, Filter),
     tcl_status("tcl_status", id, this),
     psVar("psVar", id, this),
@@ -184,7 +183,7 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
   num_materials = archive.queryNumMaterials(r, times[0]);
   cerr << "Number of Materials " << num_materials << endl;
 
-  clString visible;
+  string visible;
   TCL::eval(id + " isVisible", visible);
   if( visible == "1"){
      TCL::execute(id + " destroyFrames");
@@ -199,7 +198,7 @@ void ParticleFieldExtractor::showVarsForMatls()
 {
   ConsecutiveRangeSet onMaterials;
   for (int matl = 0; matl < num_materials; matl++) {
-     clString result;
+     string result;
      eval(id + " isOn p" + to_string(matl), result);
      if ( result == "0")
 	continue;
@@ -212,7 +211,7 @@ void ParticleFieldExtractor::showVarsForMatls()
   string tpNames = getVarsForMaterials(tensorVars, onMaterials, needToUpdate);
 
   if (needToUpdate) {
-    clString visible;
+    string visible;
     TCL::eval(id + " isVisible", visible);
     if( visible == "1"){
       TCL::execute(id + " clearVariables");
@@ -295,7 +294,7 @@ void ParticleFieldExtractor::callback(long particleID)
 		
 /*
 
-void ParticleFieldExtractor::graph(clString idx, clString var)
+void ParticleFieldExtractor::graph(string idx, string var)
 {
   int i;
   if( MPParticleGridReader *tpr = dynamic_cast<MPParticleGridReader*> (pgrh.get_rep())){
@@ -337,7 +336,7 @@ void ParticleFieldExtractor::execute()
    if ( handle.get_rep() != archiveH.get_rep() ) {
      
      if (archiveH.get_rep()  == 0 ){
-       clString visible;
+       string visible;
        TCL::eval(id + " isVisible", visible);
        if( visible == "0" ){
 	 TCL::execute(id + " buildTopLevel");
@@ -408,21 +407,21 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     
     //int numMatls = 29;
     for(int matl = 0; matl < num_materials; matl++) {
-      clString result;
+      string result;
       eval(id + " isOn p" + to_string(matl), result);
       if ( result == "0")
 	continue;
       if (pvVar.get() != ""){
 	have_vp = true;
-	archive.query(pvv, string(pvVar.get()()), matl, *r, time);
+	archive.query(pvv, pvVar.get(), matl, *r, time);
       }
       if( psVar.get() != ""){
 	have_sp = true;
-	archive.query(pvs, string(psVar.get()()), matl, *r, time);
+	archive.query(pvs, psVar.get(), matl, *r, time);
       }
       if (ptVar.get() != ""){
 	have_tp = true;
-	archive.query(pvt, string(ptVar.get()()), matl, *r, time);
+	archive.query(pvt, ptVar.get(), matl, *r, time);
       }
       if(positionName != "")
 	archive.query(pvp, positionName, matl, *r, time);
@@ -498,18 +497,18 @@ void ParticleFieldExtractor::tcl_command(TCLArgs& args, void* userdata) {
     return;
   }
   if(args[1] == "graph") {
-    string varname(args[2]());
-    string particleID(args[3]());
+    string varname(args[2]);
+    string particleID(args[3]);
     int num_mat;
-    args[4].get_int(num_mat);
+    string_to_int(args[4], num_mat);
     cerr << "Extracting " << num_mat << " materals:";
     vector< string > mat_list;
     vector< string > type_list;
     for (int i = 5; i < 5+(num_mat*2); i++) {
-      string mat(args[i]());
+      string mat(args[i]);
       mat_list.push_back(mat);
       i++;
-      string type(args[i]());
+      string type(args[i]);
       type_list.push_back(type);
     }
     cerr << endl;

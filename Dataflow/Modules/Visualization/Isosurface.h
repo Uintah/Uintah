@@ -109,7 +109,7 @@ protected:
 
 
 public:
-  Isosurface(const clString& id);
+  Isosurface(const string& id);
   virtual ~Isosurface();
   virtual void execute();
 

@@ -45,12 +45,6 @@ namespace SCIRun {
 string
 Vector::get_string() const
 {
-#if 0
-    return clString("[")
-	+to_string(_x)+clString(", ")
-	    +to_string(_y)+clString(", ")
-		+to_string(_z)+clString("]");
-#endif
     char buf[100];
     sprintf(buf, "[%g, %g, %g]", _x, _y, _z);
     return buf;

@@ -46,7 +46,7 @@ class GeomObj;
 class TexCuttingPlanes : public Module {
 
 public:
-  TexCuttingPlanes( const clString& id);
+  TexCuttingPlanes( const string& id);
 
   virtual ~TexCuttingPlanes();
   virtual void widget_moved(int last);    

@@ -32,7 +32,6 @@
 #define SCI_Geom_BBoxCache_h 1
 
 #include <Core/Geom/GeomObj.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 
 namespace SCIRun {

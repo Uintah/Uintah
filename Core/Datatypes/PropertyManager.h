@@ -115,7 +115,7 @@ template<class T>
 void
 Property<T>::io( Piostream &stream)
 {
-  stream.begin_class( type_name(-1).c_str(), PROPERTY_VERSION);
+  stream.begin_class( type_name(-1), PROPERTY_VERSION);
   if ( stream.reading() ) {
     T *tmp = new T;
     Pio(stream, *tmp );

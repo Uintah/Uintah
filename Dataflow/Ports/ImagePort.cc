@@ -36,15 +36,15 @@
 using namespace SCIRun;
 
 extern "C" {
-PSECORESHARE IPort* make_ImageIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_ImageIPort(Module* module, const string& name) {
   return scinew SimpleIPort<ImageHandle>(module,name);
 }
-PSECORESHARE OPort* make_ImageOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_ImageOPort(Module* module, const string& name) {
   return scinew SimpleOPort<ImageHandle>(module,name);
 }
 }
 
-template<> clString SimpleIPort<ImageHandle>::port_type("Image");
-template<> clString SimpleIPort<ImageHandle>::port_color("misty rose");
+template<> string SimpleIPort<ImageHandle>::port_type("Image");
+template<> string SimpleIPort<ImageHandle>::port_color("misty rose");
 
 

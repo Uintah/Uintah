@@ -35,16 +35,16 @@ namespace SCIRun {
 
 
 extern "C" {
-PSECORESHARE IPort* make_ColorMapIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_ColorMapIPort(Module* module, const string& name) {
   return scinew SimpleIPort<ColorMapHandle>(module,name);
 }
-PSECORESHARE OPort* make_ColorMapOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_ColorMapOPort(Module* module, const string& name) {
   return scinew SimpleOPort<ColorMapHandle>(module,name);
 }
 }
 
-template<> clString ColorMapIPort::port_type("ColorMap");
-template<> clString ColorMapIPort::port_color("blueviolet");
+template<> string ColorMapIPort::port_type("ColorMap");
+template<> string ColorMapIPort::port_color("blueviolet");
 
 } // End namespace SCIRun
 

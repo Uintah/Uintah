@@ -30,7 +30,6 @@
 
 #include <Core/Geom/IndexedGroup.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <Core/Persistent/PersistentSTL.h>

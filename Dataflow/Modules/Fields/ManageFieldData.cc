@@ -28,7 +28,6 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#include <Core/Containers/String.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -50,7 +49,7 @@ namespace SCIRun {
 class ManageFieldData : public Module
 {
 public:
-  ManageFieldData(const clString& id);
+  ManageFieldData(const string& id);
   virtual ~ManageFieldData();
 
   template <class F> void dispatch_scalar(F *ifield);
@@ -63,12 +62,12 @@ public:
 };
 
 
-extern "C" Module* make_ManageFieldData(const clString& id)
+extern "C" Module* make_ManageFieldData(const string& id)
 {
   return new ManageFieldData(id);
 }
 
-ManageFieldData::ManageFieldData(const clString& id)
+ManageFieldData::ManageFieldData(const string& id)
   : Module("ManageFieldData", id, Filter, "Fields", "SCIRun")
 {
 }

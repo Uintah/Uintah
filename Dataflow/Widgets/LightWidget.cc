@@ -397,7 +397,7 @@ LightWidget::NextMode()
  *      a widget's material property.  The string is used in the 
  *      BaseWidget UI.
  */
-clString
+string
 LightWidget::GetMaterialName( const Index mindex ) const
 {
    ASSERT(mindex<NumMaterials);

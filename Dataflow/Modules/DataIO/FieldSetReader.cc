@@ -38,19 +38,19 @@ namespace SCIRun {
 class FieldSetReader : public Module {
   GuiString filename_;
   FieldSetHandle handle_;
-  clString old_filename_;
+  string old_filename_;
   time_t old_filemodification_;
 public:
-  FieldSetReader(const clString& id);
+  FieldSetReader(const string& id);
   virtual ~FieldSetReader();
   virtual void execute();
 };
 
-extern "C" Module* make_FieldSetReader(const clString& id) {
+extern "C" Module* make_FieldSetReader(const string& id) {
   return new FieldSetReader(id);
 }
 
-FieldSetReader::FieldSetReader(const clString& id)
+FieldSetReader::FieldSetReader(const string& id)
   : Module("FieldSetReader", id, Source, "DataIO", "SCIRun"),
     filename_("filename", id, this),
     old_filemodification_(0)
@@ -63,12 +63,12 @@ FieldSetReader::~FieldSetReader()
 
 void FieldSetReader::execute()
 {
-  clString fn(filename_.get());
+  string fn(filename_.get());
 
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
-  if (stat(fn(), &buf)) {
-    error(clString("FieldSetReader error - file not found ")+fn);
+  if (stat(fn.c_str(), &buf)) {
+    error("FieldSetReader error - file not found " + fn);
     return;
   }
 
@@ -85,24 +85,22 @@ void FieldSetReader::execute()
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
-    Piostream* stream=auto_istream(fn());
+    Piostream* stream=auto_istream(fn);
     if(!stream){
-      error(clString("Error reading file: ")+filename_.get());
+      error("Error reading file: " + fn);
       return;
     }
     
     // Read the file
     Pio(*stream, handle_);
     if(stream->error()){
-      error(clString("Stream Error reading FieldSet from file:")+
-	    filename_.get());
+      error("Stream Error reading FieldSet from file:" + fn);
       delete stream;
       return;
     }
 
     if(! handle_.get_rep()){
-      error(clString("Error building FieldSet from stream: ")+
-	    filename_.get());
+      error("Error building FieldSet from stream: " + fn);
       delete stream;
       return;
     }

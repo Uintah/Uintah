@@ -39,8 +39,8 @@ using std::cerr;
 
 namespace SCIRun {
 
-Port::Port(Module* module, const clString& type_name,
-	   const clString& portname, const clString& colorname,
+Port::Port(Module* module, const string& type_name,
+	   const string& portname, const string& colorname,
 	   int protocols)
 : type_name(type_name), portname(portname), colorname(colorname),
   protocols(protocols), u_proto(0), module(module), which_port(-1),
@@ -48,15 +48,15 @@ Port::Port(Module* module, const clString& type_name,
 {
 }
 
-IPort::IPort(Module* module, const clString& type_name,
-	     const clString& portname, const clString& colorname,
+IPort::IPort(Module* module, const string& type_name,
+	     const string& portname, const string& colorname,
 	     int protocols)
 : Port(module, type_name, portname, colorname, protocols)
 {
 }
 
-OPort::OPort(Module* module, const clString& type_name,
-	     const clString& portname, const clString& colorname,
+OPort::OPort(Module* module, const string& type_name,
+	     const string& portname, const string& colorname,
 	     int protocols)
 : Port(module, type_name, portname, colorname, protocols)
 {
@@ -130,7 +130,7 @@ void IPort::update_light()
 	break;
     }
     char str[1000];
-    sprintf(str,"%s lightIPort %d %s",module->id(),which_port,color);
+    sprintf(str,"%s lightIPort %d %s",module->id.c_str(),which_port,color);
     TCL::execute(str);
 }
 
@@ -157,7 +157,7 @@ void OPort::update_light()
 	break;
     }
     char str[1000];
-    sprintf(str,"%s lightOPort %d %s",module->id(),which_port,color);
+    sprintf(str,"%s lightOPort %d %s",module->id.c_str(),which_port,color);
     TCL::execute(str);
 }
 
@@ -185,17 +185,17 @@ void OPort::turn_off()
     update_light();
 }
 
-clString Port::get_typename()
+string Port::get_typename()
 {
     return type_name;
 }
 
-void Port::set_portname(clString& newname)
+void Port::set_portname(string& newname)
 {
   portname = newname;
 }
 
-clString Port::get_portname()
+string Port::get_portname()
 {
     return portname;
 }
@@ -213,7 +213,7 @@ OPort::~OPort()
 }
 
 
-clString Port::get_colorname()
+string Port::get_colorname()
 {
     return colorname;
 }

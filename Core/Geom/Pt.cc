@@ -29,7 +29,6 @@
  */
 
 #include <Core/Geom/Pt.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/Sort.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>

@@ -40,7 +40,7 @@ namespace SCIRun {
 static Debug* debugs=0;
 static int initialized=0;
 
-DebugSwitch::DebugSwitch(const clString& module, const clString& var)
+DebugSwitch::DebugSwitch(const string& module, const string& var)
 : module(module), var(var), flagvar(0)
 {
     if(initialized){
@@ -53,7 +53,7 @@ DebugSwitch::DebugSwitch(const clString& module, const clString& var)
     // Init flag
     // cerr << "This part is broken...\n";
     char* env=getenv("SCI_DEBUG");
-    if((env!=0)&&(strstr(env,(module+"("+var+")")())!=0))
+    if((env!=0)&&(strstr(env,(module+"("+var+")").c_str())!=0))
 	flagvar=1;
 
     DebugIter debugsiter(debugs);
@@ -87,12 +87,12 @@ Debug* DebugSwitch::get_debuginfo()
     return debugs;
 }
 
-clString DebugSwitch::get_module()
+string DebugSwitch::get_module()
 {
     return module;
 }
 
-clString DebugSwitch::get_var()
+string DebugSwitch::get_var()
 {
     return var;
 }

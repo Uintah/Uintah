@@ -171,7 +171,7 @@ LatVolMesh::locate(node_index &node, const Point &p) const
 void
 LatVolMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name().c_str(), LATVOLMESH_VERSION);
+  stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
 
   MeshBase::io(stream);
 

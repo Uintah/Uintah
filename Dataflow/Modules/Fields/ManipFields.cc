@@ -201,7 +201,7 @@ ManipFields::tcl_command(TCLArgs& args, void* userdata)
 
   if( manips_.count( name_.get()() ) == 0 ) 
   {
-    string name = name_.get()();
+    string name = name_.get();
     //add new manip. 
     if( !name.empty() )
     { 
@@ -226,8 +226,8 @@ ManipFields::tcl_command(TCLArgs& args, void* userdata)
   }  
   else if( args[1] == "launch-editor" )
   {
-    string ecmd = string( args[2]() ) + " " + FIELD_MANIP_SRC
-      + "/" + name_.get()() + ".cc &";
+    string ecmd = args[2] + " " + FIELD_MANIP_SRC
+      + "/" + name_.get() + ".cc &";
     
     cout << "Launch Editor: " << ecmd << endl;
 
@@ -397,14 +397,6 @@ ManipFields::compileFile(const string& file)
 
 
 
-inline static
-string 
-convert_to_string(DOMString s) {  
-  return string(s.transcode());
-}
-
-
-
 void 
 ManipFields::readSrcNode(DOM_Node n) 
 {
@@ -416,7 +408,7 @@ ManipFields::readSrcNode(DOM_Node n)
     DOM_Node d = attribute.getNamedItem("name");
     cout << "name: " << d.getNodeValue() << endl;
     manipData = new ManipData;
-    manips_[convert_to_string(d.getNodeValue())] = manipData;
+    manips_[d.getNodeValue()] = manipData;
   }
 
   if( manipData ) 
@@ -429,7 +421,7 @@ ManipFields::readSrcNode(DOM_Node n)
       {
         cout << "description: " 
              << removeWhiteSpace(getSerializedChildren(child)) << endl;
-        manipData->desc_ = clString(removeWhiteSpace
+        manipData->desc_ = string(removeWhiteSpace
                          (getSerializedChildren(child)))();
       }
       else if( childname.equals("lib") ) 
@@ -437,19 +429,19 @@ ManipFields::readSrcNode(DOM_Node n)
         DOM_Node d = child.getAttributes().getNamedItem("name");
         cout << "lib: " << d.getNodeValue() << endl;
 
-        manipData->libs_.push_back(convert_to_string(d.getNodeValue()));
+        manipData->libs_.push_back(d.getNodeValue());
       }
       else if (childname.equals("libpath")) 
       {
         DOM_Node d = child.getAttributes().getNamedItem("name");
         cout << "libpath : " << d.getNodeValue() << endl;
-        manipData->libpath_.push_back(convert_to_string(d.getNodeValue()));
+        manipData->libpath_.push_back(d.getNodeValue());
       }
       else if( childname.equals("inc") )
       {
         DOM_Node d = child.getAttributes().getNamedItem("name");
         cout << "include: " << d.getNodeValue() << endl;
-        manipData->inc_.push_back(convert_to_string(d.getNodeValue()));
+        manipData->inc_.push_back(d.getNodeValue());
       }
     }
   }
@@ -693,7 +685,7 @@ ManipFields::getManips()
 
 
 
-extern "C" PSECORESHARE Module* make_ManipFields(const clString& id) 
+extern "C" PSECORESHARE Module* make_ManipFields(const string& id) 
 {
   return new ManipFields(id());
 }

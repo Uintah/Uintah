@@ -47,7 +47,7 @@ namespace SCIRun {
 //! Module to build a surface field from a volume field.
 class FieldBoundary : public Module {
 public:
-  FieldBoundary(const clString& id);
+  FieldBoundary(const string& id);
   virtual ~FieldBoundary();
   virtual void execute();
 
@@ -78,12 +78,12 @@ private:
   int                      tris_id_;
 };
 
-extern "C" Module* make_FieldBoundary(const clString& id)
+extern "C" Module* make_FieldBoundary(const string& id)
 {
   return scinew FieldBoundary(id);
 }
 
-FieldBoundary::FieldBoundary(const clString& id) : 
+FieldBoundary::FieldBoundary(const string& id) : 
   Module("FieldBoundary", id, Filter, "Fields", "SCIRun"),
   infield_gen_(-1),
   tri_fh_(scinew FieldHandle(scinew TriSurf<double>)),

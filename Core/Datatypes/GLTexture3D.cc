@@ -22,7 +22,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 #include <Core/Datatypes/LatticeVol.h>
 
 #include <GL/gl.h>
@@ -44,7 +43,7 @@ void glPrintError(const string& word){
 
   if((errCode = glGetError()) != GL_NO_ERROR) {
     errString = gluErrorString(errCode);
-    cerr<<"OpenGL Error at "<<word.c_str()<<": "<< errString<<endl;
+    cerr << "OpenGL Error at " << word << ": " << errString << endl;
   }
 }
 

@@ -36,7 +36,6 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Persistent.h>
 #include <Dataflow/Network/Module.h>
@@ -72,13 +71,13 @@ public:
 
 class GeomViewerItem: public GeomObj {
   GeomObj *child;
-  clString name;
+  string name;
   CrowdMonitor* lock;
 
 public:
   friend class ViewWindow;
   GeomViewerItem();
-  GeomViewerItem(GeomObj*,const clString&, CrowdMonitor* lock);
+  GeomViewerItem(GeomObj*,const string&, CrowdMonitor* lock);
   virtual ~GeomViewerItem();
 
   virtual GeomObj* clone();
@@ -94,7 +93,7 @@ public:
   bool saveobj(std::ostream& out, const string& format,
 	       GeomSave* saveinfo);
     
-  clString& getString(void) { return name;}
+  string& getString(void) { return name;}
 };
 
 } // End namespace SCIRun

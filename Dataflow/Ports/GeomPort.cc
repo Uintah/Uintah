@@ -29,8 +29,8 @@
 namespace SCIRun {
 
 
-template<> clString SimpleIPort<GeomHandle>::port_type("Geom");
-template<> clString SimpleIPort<GeomHandle>::port_color("blue");
+template<> string SimpleIPort<GeomHandle>::port_type("Geom");
+template<> string SimpleIPort<GeomHandle>::port_color("blue");
 
 } // End namespace SCIRun
 

@@ -114,15 +114,15 @@ public:
   // --  BAWGL -- 
   
 public:
-  typedef map<clString, Renderer*>	MapClStringRenderer;
-  typedef map<clString, ObjTag*>	MapClStringObjTag;
+  typedef map<string, Renderer*>	MapStringRenderer;
+  typedef map<string, ObjTag*>	        MapStringObjTag;
   GuiString pos;  
   GuiInt caxes;
   GuiInt iaxes;  
 protected:
   friend class Viewer;
   
-  MapClStringRenderer renderers;
+  MapStringRenderer renderers;
   
   void do_mouse(MouseHandler, TCLArgs&);
   
@@ -136,7 +136,7 @@ protected:
   GeomObj* pick_obj;
   int pick_n;
 
-  void update_mode_string(const clString&);
+  void update_mode_string(const string&);
   void update_mode_string(GeomObj*);
 
   int maxtag;
@@ -188,7 +188,7 @@ public:
   bool doingMovie;
   bool makeMPEG;
   int curFrame;
-  clString curName;
+  string curName;
   
   // variables for dollying into / out-of the scene
   double dolly_total;
@@ -205,17 +205,17 @@ public:
 
 
   Renderer* current_renderer;
-  Renderer* get_renderer(const clString&);
-  clString id;
+  Renderer* get_renderer(const string&);
+  string id;
   int need_redraw;
 
   SCIBaWGL* get_bawgl(void) { return(bawgl); }
     
-  ViewWindow(Viewer *s, const clString& id);
+  ViewWindow(Viewer *s, const string& id);
   ViewWindow(const ViewWindow&);
   ~ViewWindow();
 
-  clString set_id(const clString& new_id);
+  string set_id(const string& new_id);
 
   void itemAdded(GeomViewerItem*);
   void itemDeleted(GeomViewerItem*);
@@ -295,17 +295,17 @@ public:
   void autoview(const BBox&);
 
 				// sets up the state (OGL) for a tool/viewwindow
-  void setState(DrawInfoOpenGL*,clString);
+  void setState(DrawInfoOpenGL*,string);
 				// sets up DI for this drawinfo
-  void setDI(DrawInfoOpenGL*,clString);
+  void setDI(DrawInfoOpenGL*,string);
 				// sets up OGL clipping planes...
   void setClip(DrawInfoOpenGL*); 
 
 				// Which of the objects do we draw?
-  MapClStringObjTag visible;
+  MapStringObjTag visible;
 
 				// Which of the lights are on?
-  //map<clString, int> light_on;
+  //map<string, int> light_on;
     
 				// The Camera
   GuiView view;
@@ -336,7 +336,7 @@ public:
   
   void set_current_time(double time);
   
-  void dump_objects(const clString&, const clString& format);
+  void dump_objects(const string&, const string& format);
   
   void getData(int datamask, FutureValue<GeometryData*>* result);
   void setView(View view);
@@ -345,7 +345,7 @@ public:
 
 class ViewWindowMouseMessage : public MessageBase {
 public:
-  clString rid;
+  string rid;
   MouseHandler handler;
   int action;
   int x, y;
@@ -354,7 +354,7 @@ public:
   int time;
   
   
-  ViewWindowMouseMessage(const clString& rid, MouseHandler handler,
+  ViewWindowMouseMessage(const string& rid, MouseHandler handler,
 		  int action, int x, int y, int state, int btn,
 		  int time);
   virtual ~ViewWindowMouseMessage();

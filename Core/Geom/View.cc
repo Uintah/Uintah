@@ -31,7 +31,6 @@
 #include <stdio.h>
 #include <Core/Geom/View.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 #include <Core/Math/Trig.h>
 
 namespace SCIRun {

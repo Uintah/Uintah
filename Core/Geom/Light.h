@@ -37,7 +37,6 @@
 #include <sci_config.h>
 #endif
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 
 namespace SCIRun {
 

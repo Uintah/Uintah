@@ -142,7 +142,7 @@ public:
         // Constructs an instance of class NodeHedgehog
         // Constructor taking
         //    [in] id as an identifier
-   NodeHedgehog(const clString& id);
+   NodeHedgehog(const string& id);
        
         // GROUP:  Destructor:
         ///////////////////////////
@@ -162,10 +162,10 @@ public:
    virtual void tcl_command(TCLArgs&, void*);
 };
 
-static clString module_name("NodeHedgehog");
-static clString widget_name("NodeHedgehog Widget");
+static string module_name("NodeHedgehog");
+static string widget_name("NodeHedgehog Widget");
 
-extern "C" Module* make_NodeHedgehog(const clString& id) {
+extern "C" Module* make_NodeHedgehog(const string& id) {
   return scinew NodeHedgehog(id);
 }       
 
@@ -188,7 +188,7 @@ GridP NodeHedgehog::getGrid()
   return grid;
 }
 
-NodeHedgehog::NodeHedgehog(const clString& id)
+NodeHedgehog::NodeHedgehog(const string& id)
 : Module("NodeHedgehog", id, Filter),
   widget_lock("NodeHedgehog widget lock"),
   length_scale("length_scale", id, this),

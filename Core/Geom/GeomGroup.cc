@@ -29,7 +29,6 @@
 
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;

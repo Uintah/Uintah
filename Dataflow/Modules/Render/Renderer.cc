@@ -31,7 +31,6 @@
 
 #include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -44,10 +43,10 @@ using std::endl;
 namespace SCIRun {
 
 
-static AVLTree<clString, RegisterRenderer*>* known_renderers=0;
+static AVLTree<string, RegisterRenderer*>* known_renderers=0;
 static int db_trimmed=0;
 
-RegisterRenderer::RegisterRenderer(const clString& name,
+RegisterRenderer::RegisterRenderer(const string& name,
 				   query_Renderer query,
 				   make_Renderer maker)
 : name(name), query(query), maker(maker)
@@ -55,7 +54,7 @@ RegisterRenderer::RegisterRenderer(const clString& name,
     cerr << "Registering renderer: " << name << endl;
     RegisterRenderer* tmp;
     if(!known_renderers)
-	known_renderers=scinew AVLTree<clString, RegisterRenderer*>;
+	known_renderers=scinew AVLTree<string, RegisterRenderer*>;
     if(known_renderers->lookup(name, tmp)){
 	cerr << "Error: Two renderers of the same name!" << endl;
     } else {
@@ -68,7 +67,7 @@ RegisterRenderer::~RegisterRenderer()
 {
 }
 
-Renderer* Renderer::create(const clString& type)
+Renderer* Renderer::create(const string& type)
 {
     RegisterRenderer* rr;
     if(known_renderers->lookup(type, rr)){
@@ -79,10 +78,10 @@ Renderer* Renderer::create(const clString& type)
     }
 }
 
-AVLTree<clString, RegisterRenderer*>* Renderer::get_db()
+AVLTree<string, RegisterRenderer*>* Renderer::get_db()
 {
     if(!db_trimmed){
-	AVLTreeIter<clString, RegisterRenderer*> iter(known_renderers);
+	AVLTreeIter<string, RegisterRenderer*> iter(known_renderers);
 	for(iter.first();iter.ok();++iter){
 	    query_Renderer query=iter.get_data()->query;
 	    if(! (*query)()){
@@ -140,7 +139,7 @@ int Renderer::compute_depth(ViewWindow* viewwindow, const View& view,
     }
 }
 
-void Renderer::dump_image(const clString&, const clString&) {
+void Renderer::dump_image(const string&, const string&) {
     NOT_FINISHED("This is not implemented!");
 }
 
@@ -161,7 +160,7 @@ void Renderer::listvisuals(TCLArgs& args)
   args.result("Only");
 }
 
-void Renderer::setvisual(const clString&, int, int, int)
+void Renderer::setvisual(const string&, int, int, int)
 {
 }
 

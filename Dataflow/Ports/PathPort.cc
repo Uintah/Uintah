@@ -34,15 +34,15 @@ namespace SCIRun {
 
 
 extern "C" {
-PSECORESHARE IPort* make_PathIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_PathIPort(Module* module, const string& name) {
   return scinew SimpleIPort<PathHandle>(module,name);
 }
-PSECORESHARE OPort* make_PathOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_PathOPort(Module* module, const string& name) {
   return scinew SimpleOPort<PathHandle>(module,name);
 }
 }
 
-template<> clString SimpleIPort<PathHandle>::port_type("Path");
-template<> clString SimpleIPort<PathHandle>::port_color("chocolate4");
+template<> string SimpleIPort<PathHandle>::port_type("Path");
+template<> string SimpleIPort<PathHandle>::port_color("chocolate4");
 
 } // End namespace SCIRun

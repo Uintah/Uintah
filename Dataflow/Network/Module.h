@@ -38,7 +38,6 @@
 #include <Dataflow/share/share.h>
 #include <Dataflow/Network/Port.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/String.h>
 #include <Core/Util/Timer.h>
 #include <Core/GuiInterface/TCL.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -61,11 +60,11 @@ class AI;
 class ViewWindow;
 class Module;
 
-typedef IPort* (*iport_maker)(Module*, const clString&);
-typedef OPort* (*oport_maker)(Module*, const clString&);
-typedef std::multimap<clString,int> port_map;
+typedef IPort* (*iport_maker)(Module*, const string&);
+typedef OPort* (*oport_maker)(Module*, const string&);
+typedef std::multimap<string,int> port_map;
 typedef port_map::iterator port_iter;
-typedef std::pair<clString,int> port_pair;
+typedef std::pair<string,int> port_pair;
 typedef std::pair<port_map::iterator,port_map::iterator> dynamic_port_range;
 
 template<class T> 
@@ -78,7 +77,7 @@ public:
   void add(T);
   void remove(int);
   const T& operator[](int);
-  dynamic_port_range operator[](clString);
+  dynamic_port_range operator[](string);
 };
 
 class PSECORESHARE Module : public TCL, public Pickable {
@@ -119,7 +118,7 @@ public:
     int first_dynamic_port;
     char lastportdynamic;
     iport_maker dynamic_port_maker;
-    clString lastportname;
+    string lastportname;
     ModuleHelper* helper;
     FutureValue<int> helper_done;
     int have_own_dispatch;
@@ -140,8 +139,8 @@ public:
 	Iterator,
 	ViewerSpecial
     };
-    Module(const clString& name, const clString& id, SchedClass,
-	   const clString& cat="unknown", const clString& pack="unknown");
+    Module(const string& name, const string& id, SchedClass,
+	   const string& cat="unknown", const string& pack="unknown");
     virtual ~Module();
 
     /*
@@ -183,8 +182,8 @@ public:
     void add_oport(OPort*);
     void remove_iport(int);
     void remove_oport(int);
-    void rename_iport(int, const clString&);
-    void rename_oport(int, const clString&);
+    void rename_iport(int, const string&);
+    void rename_oport(int, const string&);
     virtual void reconfigure_iports();
     virtual void reconfigure_oports();
     // return port at position
@@ -198,7 +197,7 @@ public:
     dynamic_port_range get_oports(const char *name) { return oports[name]; }
 
     // Used by Module subclasses
-    void error(const clString&);
+    void error(const string&);
     void update_state(State);
     void update_progress(double);
     void update_progress(double, Timer &);
@@ -209,10 +208,10 @@ public:
     // User Interface information
     NetworkEditor* netedit;
     Network* network;
-    clString name;
-    clString categoryName;   
-    clString packageName;    
-    clString moduleName;  
+    string name;
+    string categoryName;   
+    string packageName;    
+    string moduleName;  
     int abort_flag;
 public:
     int niports();
@@ -226,7 +225,7 @@ public:
     SchedClass sched_class;
     // virtual int should_execute();
 
-    clString id;
+    string id;
     int handle; 	// mm-skeleton and remote share the same handle
     bool remote;        // mm-is this a remote module?  not used.
     bool skeleton;	// mm-is this a skeleton module?
@@ -236,7 +235,7 @@ public:
     bool get_abort() { return abort_flag; }
 };
 
-typedef Module* (*ModuleMaker)(const clString& id);
+typedef Module* (*ModuleMaker)(const string& id);
 
 
 template<class T>
@@ -246,13 +245,13 @@ int PortManager<T>::size() {
 
 template<class T>
 void PortManager<T>::add(T item) { 
-  namemap.insert(port_pair(item->get_portname(),ports.size())); 
+  namemap.insert(port_pair(item->get_portname(), ports.size())); 
   ports.add(item);
 }
 
 template<class T>
 void PortManager<T>::remove(int item) {
-  clString name = ports[item]->get_portname();
+  string name = ports[item]->get_portname();
   port_iter erase_me;
 
   dynamic_port_range p = namemap.equal_range(name);
@@ -272,7 +271,7 @@ const T& PortManager<T>::operator[](int item) {
 }
 
 template<class T>
-dynamic_port_range PortManager<T>::operator[](clString item) {
+dynamic_port_range PortManager<T>::operator[](string item) {
   return dynamic_port_range(namemap.equal_range(item));
 }
 

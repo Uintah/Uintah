@@ -30,7 +30,6 @@
 
 #include <Core/Geom/GeomScene.h>
 
-#include <Core/Containers/String.h>
 #include <Core/Geom/Lighting.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomSave.h>

@@ -31,7 +31,6 @@
 #include <Core/Geometry/Grid.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array3.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>

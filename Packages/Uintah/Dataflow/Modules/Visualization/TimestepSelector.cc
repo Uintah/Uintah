@@ -2,7 +2,6 @@
 
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include "TimestepSelector.h"
@@ -19,12 +18,12 @@ namespace Uintah {
   
 using namespace SCIRun;
 
-extern "C" Module* make_TimestepSelector( const clString& id ) {
+extern "C" Module* make_TimestepSelector( const string& id ) {
   return scinew TimestepSelector( id ); 
 }
 
 //--------------------------------------------------------------- 
-TimestepSelector::TimestepSelector(const clString& id) 
+TimestepSelector::TimestepSelector(const string& id) 
   : Module("TimestepSelector", id, Filter),
     tcl_status("tcl_status", id, this), 
     time("time", id, this),
@@ -57,7 +56,7 @@ void TimestepSelector::execute()
    }
 
    if (archiveH.get_rep()  == 0 ){
-     clString visible;
+     string visible;
      TCL::eval(id + " isVisible", visible);
      if( visible == "0" ){
        TCL::execute(id + " buildTopLevel");

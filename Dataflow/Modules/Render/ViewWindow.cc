@@ -76,7 +76,7 @@ namespace SCIRun {
 
 
 //static DebugSwitch autoview_sw("ViewWindow", "autoview");
-static ViewWindow::MapClStringObjTag::iterator viter;
+static ViewWindow::MapStringObjTag::iterator viter;
 
 void add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
 {
@@ -86,7 +86,7 @@ void add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
   viewwindow->need_redraw = 1;
 }
 
-ViewWindow::ViewWindow(Viewer* s, const clString& id)
+ViewWindow::ViewWindow(Viewer* s, const string& id)
   : manager(s),
     pos("pos", id, this),
     caxes("caxes", id, this),iaxes("iaxes", id, this), 
@@ -148,9 +148,9 @@ ViewWindow::ViewWindow(Viewer* s, const clString& id)
 
 }
 
-clString ViewWindow::set_id(const clString& new_id)
+string ViewWindow::set_id(const string& new_id)
 {
-  clString old_id=id;
+  string old_id=id;
   id=new_id;
   return old_id;
 }
@@ -1711,22 +1711,22 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
       return;
     }
     double tbeg;
-    if(!args[2].get_double(tbeg)){
+    if(!string_to_double(args[2], tbeg)){
       args.error("Can't figure out tbeg");
       return;
     } 
     double tend;
-    if(!args[3].get_double(tend)){
+    if(!string_to_double(args[3], tend)){
       args.error("Can't figure out tend");
       return;
     }
     int nframes;
-    if(!args[4].get_int(nframes)){
+    if(!string_to_int(args[4], nframes)){
       args.error("Can't figure out nframes");
       return;
     }
     double framerate;
-    if(!args[5].get_double(framerate)){
+    if(!string_to_double(args[5], framerate)){
       args.error("Can't figure out framerate");
       return;
     }
@@ -1847,7 +1847,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     // (with x1 being the positive x axis and x0 being
     // the negative x axis) and then which axis is up
     // represented the same way
-    clString position = pos.get();
+    string position = pos.get();
     Vector lookdir(df.eyep()-df.lookat()); 
     double distance = lookdir.length();
     if(position == "x1_y1") {
@@ -1980,17 +1980,17 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
       return;
     }
     int idx;
-    if(!args[3].get_int(idx)){
+    if(!string_to_int(args[3], idx)){
       args.error("bad index for switchvisual");
       return;
     }
     int width;
-    if(!args[4].get_int(width)){
+    if(!string_to_int(args[4], width)){
       args.error("Bad width");
       return;
     }
     int height;
-    if(!args[5].get_int(height)){
+    if(!string_to_int(args[5], height)){
       args.error("Bad height");
       return;
     }
@@ -2045,36 +2045,36 @@ void ViewWindow::do_mouse(MouseHandler handler, TCLArgs& args)
     return;
   }
   int x,y;
-  if(!args[3].get_int(x)){
+  if(!string_to_int(args[3], x)){
     args.error("error parsing x");
     return;
   }
-  if(!args[4].get_int(y)){
+  if(!string_to_int(args[4], y)){
     args.error("error parsing y");
     return;
   }
   int state;
   int btn;
   if(args.count() == 7){
-    if(!args[5].get_int(state)){
+    if(!string_to_int(args[5], state)){
       args.error("error parsing state");
       return;
 
     }
-    if(!args[6].get_int(btn)){
+    if(!string_to_int(args[6], btn)){
       args.error("error parsing btn");
       return;
     }
   }
   int time;
   if(args.count() == 8){
-    if(!args[7].get_int(time)){
+    if(!string_to_int(args[7], time)){
       args.error("err parsing time");
       return;
     }
   }
   if(args.count() == 6){
-    if(!args[5].get_int(time)){
+    if(!string_to_int(args[5], time)){
       args.error("err parsing time");
       return;
     }
@@ -2147,7 +2147,7 @@ void ViewWindow::redraw(double tbeg, double tend, int nframes, double framerate)
 
 void ViewWindow::update_mode_string(GeomObj* pick_obj)
 {
-  clString ms="pick: ";
+  string ms="pick: ";
   GeomViewerItem* si=dynamic_cast<GeomViewerItem*>(pick_obj);
   if(!si){
     ms+="not a GeomViewerItem?";
@@ -2159,14 +2159,14 @@ void ViewWindow::update_mode_string(GeomObj* pick_obj)
   update_mode_string(ms);
 }
 
-void ViewWindow::update_mode_string(const clString& msg)
+void ViewWindow::update_mode_string(const string& msg)
 {
   ostringstream str;
   str << id << " updateMode \"" << msg << "\"";
   TCL::execute(str.str().c_str());
 }
 
-ViewWindowMouseMessage::ViewWindowMouseMessage(const clString& rid, MouseHandler handler,
+ViewWindowMouseMessage::ViewWindowMouseMessage(const string& rid, MouseHandler handler,
 				 int action, int x, int y, int state, int btn,
 				 int time)
   : MessageBase(MessageTypes::ViewWindowMouse), rid(rid), handler(handler),
@@ -2185,11 +2185,11 @@ void ViewWindow::animate_to_view(const View& v, double /*time*/)
   manager->mailbox.send(scinew ViewerMessage(id));
 }
 
-Renderer* ViewWindow::get_renderer(const clString& name)
+Renderer* ViewWindow::get_renderer(const string& name)
 {
   // See if we already have one like that...
   Renderer* r;
-  MapClStringRenderer::iterator riter;
+  MapStringRenderer::iterator riter;
 
   riter = renderers.find(name);
   if (riter == renderers.end()) { // if not found
@@ -2243,7 +2243,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
       if (viter != visible.end()) { // if found
 	vis = (*viter).second;
 	if (vis->visible->get()) {
-	  if (strstr(si->name(),"TransParent")) { // delay drawing
+	  if (strstr(si->name.c_str(),"TransParent")) { // delay drawing
 	    transp_objs.add(si);
 	  }
 	  else {
@@ -2282,14 +2282,14 @@ void ViewWindow::set_current_time(double time)
   set_guivar(id, "current_time", to_string(time));
 }
 
-void ViewWindow::dump_objects(const clString& filename, const clString& format)
+void ViewWindow::dump_objects(const string& filename, const string& format)
 {
   if(format == "scirun_binary" || format == "scirun_ascii"){
     Piostream* stream;
     if(format == "scirun_binary")
-      stream=new BinaryPiostream(filename(), Piostream::Write);
+      stream=new BinaryPiostream(filename, Piostream::Write);
     else
-      stream=new TextPiostream(filename(), Piostream::Write);
+      stream=new TextPiostream(filename, Piostream::Write);
     if(stream->error()){
       delete stream;
       return;

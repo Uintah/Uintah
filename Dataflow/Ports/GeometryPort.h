@@ -36,7 +36,6 @@
 #include <Core/Thread/Mailbox.h>
 namespace SCIRun {
 
-class clString;
 class GeomObj;
 class View;
 class CrowdMonitor;
@@ -56,7 +55,7 @@ public:
 protected:
     friend class GeometryOPort;
 public:
-    GeometryIPort(Module*, const clString& name, int protocol=GeometryIPort::Atomic);
+    GeometryIPort(Module*, const string& name, int protocol=GeometryIPort::Atomic);
     virtual ~GeometryIPort();
 
     virtual void reset();
@@ -99,10 +98,10 @@ class PSECORESHARE GeometryOPort : public OPort {
     Mailbox<MessageBase*>* outbox;
     virtual void attach(Connection*);
 public:
-    GeometryOPort(Module*, const clString& name, int protocol=GeometryIPort::Atomic);
+    GeometryOPort(Module*, const string& name, int protocol=GeometryIPort::Atomic);
     virtual ~GeometryOPort();
 
-    GeomID addObj(GeomObj*, const clString& name, CrowdMonitor* lock=0);
+    GeomID addObj(GeomObj*, const string& name, CrowdMonitor* lock=0);
     void delObj(GeomID, int del=1);
     void delAll();
     void flush();

@@ -81,8 +81,8 @@ public:
 
   ////////////////////////////////////////////////////////////
   // Constructor taking
-  //  [in] clString
-  ErrorMetric(const clString& id);
+  //  [in] string
+  ErrorMetric(const string& id);
 
   // GROUP: Destructors:
   ///////////////////////////////////////////////////////////
@@ -104,12 +104,12 @@ private:
 }; 
 
 
-extern "C" Module* make_ErrorMetric(const clString& id)
+extern "C" Module* make_ErrorMetric(const string& id)
 {
     return scinew ErrorMetric(id);
 }
 
-ErrorMetric::ErrorMetric(const clString& id)
+ErrorMetric::ErrorMetric(const string& id)
   : Module("ErrorMetric", id, Filter, "Math", "SCIRun"),
     haveUI_("haveUI", id, this),
     methodTCL_("methodTCL", id, this),
@@ -169,7 +169,7 @@ void ErrorMetric::execute()
      double ccDenom2=0;
      double rms=0;
      double pp;
-     pTCL_.get().get_double(pp);
+     string_to_double(pTCL_.get(), pp);
      for (iterate=0; iterate<ne; iterate++) {
 	 double shift1=((*ivec1)[iterate]-avg1);
 	 double shift2=((*ivec2)[iterate]-avg2);
@@ -203,7 +203,7 @@ void ErrorMetric::execute()
 	 TCL::execute(str.str().c_str());
      }
 
-     clString meth=methodTCL_.get();
+     string meth=methodTCL_.get();
      if (meth == "CC") {
          *val=cc;
      } else if (meth == "CCinv") {

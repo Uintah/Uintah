@@ -45,7 +45,7 @@ class SCICORESHARE Histogram : public TCL {
    
    double minfreq, maxfreq;
    double minval, maxval;
-   clString id;
+   string id;
 
    void initfreqs();
    void FillBuckets();
@@ -59,9 +59,9 @@ public:
    void init_tcl();
    virtual void tcl_command(TCLArgs&, void*);
 
-   void SetTitle( const clString& t ) const;
-   void SetValueTitle( const clString& t ) const;
-   void SetFrequencyTitle( const clString& t ) const;
+   void SetTitle( const string& t ) const;
+   void SetValueTitle( const string& t ) const;
+   void SetFrequencyTitle( const string& t ) const;
 
    void ShowGrid() const;
    void HideGrid() const;

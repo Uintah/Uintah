@@ -58,29 +58,29 @@ class ManageFieldSet : public Module
   FHMap  fidmap_;
 
 public:
-  ManageFieldSet(const clString& id);
+  ManageFieldSet(const string& id);
   virtual ~ManageFieldSet();
   virtual void execute();
 
-  void add_fieldset(clString path, FieldSetHandle fieldset);
-  void add_field(clString path, FieldHandle field);
+  void add_fieldset(string path, FieldSetHandle fieldset);
+  void add_field(string path, FieldHandle field);
 
   void update_hiertable();
 
-  const clString get_name(PropertyManager *pm);
-  const clString data_at_to_string(Field::data_location loc);
+  const string get_name(PropertyManager *pm);
+  const string data_at_to_string(Field::data_location loc);
 
   virtual void connection(Module::ConnectionMode mode, int a, int b);
 };
 
 
-extern "C" Module* make_ManageFieldSet(const clString& id)
+extern "C" Module* make_ManageFieldSet(const string& id)
 {
   return new ManageFieldSet(id);
 }
 
 
-ManageFieldSet::ManageFieldSet(const clString& id)
+ManageFieldSet::ManageFieldSet(const string& id)
   : Module("ManageFieldSet", id, Filter, "Fields", "SCIRun"),
     state_gui_("state", id, this)
 {
@@ -93,12 +93,12 @@ ManageFieldSet::~ManageFieldSet()
 
 
 void
-ManageFieldSet::add_fieldset(clString path, FieldSetHandle fs)
+ManageFieldSet::add_fieldset(string path, FieldSetHandle fs)
 {
-  const clString name = get_name(fs.get_rep());
-  clString newpath;
+  const string name = get_name(fs.get_rep());
+  string newpath;
   TCL::eval(id + " add_sitem " + path + " " + name, newpath);
-  const string sindex = newpath();
+  const string sindex = newpath;
   fsidmap_[sindex] = fs;
 
   vector<FieldSetHandle>::iterator fsi = fs->fieldset_begin();
@@ -118,18 +118,18 @@ ManageFieldSet::add_fieldset(clString path, FieldSetHandle fs)
 
 
 void
-ManageFieldSet::add_field(clString path, FieldHandle f)
+ManageFieldSet::add_field(string path, FieldHandle f)
 {
-  const clString name = get_name(f.get_rep());
-  const clString data = clString("{") +
+  const string name = get_name(f.get_rep());
+  const string data = string("{") +
     " Datatype " + "unknown" +
     " Location " + data_at_to_string(f->data_at()) +
     " }";
 
-  clString index;
+  string index;
   TCL::eval(id + " add_fitem " + path + " " +  name + " " + data, index);
 
-  const string sindex = index();
+  const string sindex = index;
   fidmap_[sindex] = f;
 }
 
@@ -137,7 +137,7 @@ ManageFieldSet::add_field(clString path, FieldHandle f)
 void
 ManageFieldSet::update_hiertable()
 {
-  clString result;
+  string result;
   TCL::eval(id + " ui", result);
   TCL::eval(id + " clear_all", result);
 
@@ -178,7 +178,7 @@ ManageFieldSet::update_hiertable()
 }
 
 
-const clString
+const string
 ManageFieldSet::get_name(PropertyManager *pm)
 {
   string n;
@@ -189,11 +189,11 @@ ManageFieldSet::get_name(PropertyManager *pm)
   {
     char buffer[256];
     sprintf(buffer, "#<field-%lu>", (unsigned long)pm->generation);
-    return clString(buffer);
+    return string(buffer);
   }
 }
 
-const clString
+const string
 ManageFieldSet::data_at_to_string(Field::data_location loc)
 {
   switch(loc)
@@ -243,7 +243,7 @@ ManageFieldSet::connection(Module::ConnectionMode mode, int a, int b)
 void
 ManageFieldSet::execute()
 {
-  clString state_gui = state_gui_.get();
+  string state_gui = state_gui_.get();
   
   if (state_gui != "output")
   {
@@ -257,11 +257,11 @@ ManageFieldSet::execute()
 
     FieldSet *ofs = NULL;
 
-    clString result;
+    string result;
     TCL::eval(".ui" + id + ".sel.h curselection", result);
 
     list<string> selected;
-    split(selected, result());
+    split(selected, result);
 
     list<string>::iterator si = selected.begin();
     while (si != selected.end())

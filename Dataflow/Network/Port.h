@@ -33,7 +33,6 @@
 
 #include <Dataflow/share/share.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/String.h>
 #include <Dataflow/Comm/MessageBase.h>
 
 namespace SCIRun {
@@ -43,9 +42,9 @@ class Connection;
 class Module;
 
 class PSECORESHARE Port {
-    clString type_name;
-    clString portname;
-    clString colorname;
+    string type_name;
+    string portname;
+    string colorname;
     int protocols;
     int u_proto;
 protected:
@@ -61,8 +60,8 @@ protected:
     };
     PortState portstate;
 public:
-    Port(Module*, const clString&, const clString&,
-	 const clString&, int protocols);
+    Port(Module*, const string&, const string&,
+	 const string&, int protocols);
     virtual ~Port();
     void set_port(int which_port);
     int using_protocol();
@@ -75,17 +74,17 @@ public:
     virtual void detach(Connection*);
     virtual void reset()=0;
     virtual void finish()=0;
-    clString get_typename();
-    clString get_portname();
-    clString get_colorname();
-    void set_portname(clString&);
+    string get_typename();
+    string get_portname();
+    string get_colorname();
+    void set_portname(string&);
 };
 
 class PSECORESHARE IPort : public Port {
     void update_light();
 protected:
-    IPort(Module*, const clString&, const clString&,
-	  const clString&, int protocols);
+    IPort(Module*, const string&, const string&,
+	  const string&, int protocols);
     void turn_on(PortState st=On);
     void turn_off();
 public:
@@ -95,8 +94,8 @@ public:
 class PSECORESHARE OPort : public Port {    
     void update_light();
 protected:
-    OPort(Module*, const clString&, const clString&,
-	  const clString&, int protocols);
+    OPort(Module*, const string&, const string&,
+	  const string&, int protocols);
     void turn_on(PortState st=On);
     void turn_off();
 public:

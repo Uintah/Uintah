@@ -17,7 +17,7 @@
 
 #include <Dataflow/Network/PackageDBHandler.h>
 
-#include <Core/Containers/String.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/NetworkEditor.h>
 
@@ -36,16 +36,16 @@ PackageDBHandler::~PackageDBHandler()
 void PackageDBHandler::error(const SAXParseException& e)
 {
   foundError=true;
-  postMessage(clString("Error at (file ")+xmlto_string(e.getSystemId())
+  postMessage(string("Error at (file ")+xmlto_string(e.getSystemId())
 	      +", line "+to_string((int)e.getLineNumber())
 	      +", char "+to_string((int)e.getColumnNumber())
-		+"): "+xmlto_string(e.getMessage()));
+	      +"): "+xmlto_string(e.getMessage()));
 }
 
 void PackageDBHandler::fatalError(const SAXParseException& e)
 {
   foundError=true;
-  postMessage(clString("Fatal Error at (file ")+xmlto_string(e.getSystemId())
+  postMessage(string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
 	      +", line "+to_string((int)e.getLineNumber())
 	      +", char "+to_string((int)e.getColumnNumber())
 	      +"): "+xmlto_string(e.getMessage()));
@@ -53,7 +53,7 @@ void PackageDBHandler::fatalError(const SAXParseException& e)
 
 void PackageDBHandler::warning(const SAXParseException& e)
 {
-  postMessage(clString("Warning at (file ")+xmlto_string(e.getSystemId())
+  postMessage(string("Warning at (file ")+xmlto_string(e.getSystemId())
 	      +", line "+to_string((int)e.getLineNumber())
 	      +", char "+to_string((int)e.getColumnNumber())
 	      +"): "+xmlto_string(e.getMessage()));

@@ -77,12 +77,12 @@ MaterialHandle BaseWidget::DefaultHighlightMaterial(scinew Material(Color(0,0,0)
 								 Color(.5,.5,.5),
 								 20));
 
-static clString make_id(const clString& name)
+static string make_id(const string& name)
 {
    static int next_widget_number=0;
    static Mutex idlock("Widget ID lock");
    idlock.lock();
-   clString id ( name+"_"+to_string(next_widget_number++) );
+   string id ( name+"_"+to_string(next_widget_number++) );
    idlock.unlock();
    return id;
    
@@ -97,7 +97,7 @@ static clString make_id(const clString& name)
  *      includes some consistency checking to ensure full initialization.
  */
 BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
-			const clString& name,
+			const string& name,
 			const Index NumVariables,
 			const Index NumConstraints,
 			const Index NumGeometries,
@@ -228,7 +228,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget doesn't need a minor command");
 	 return;
       }
-      Array1<clString> defmateriallist(NumDefaultMaterials);
+      Array1<string> defmateriallist(NumDefaultMaterials);
       
       for(Index i=0;i<NumDefaultMaterials;i++){
 	 defmateriallist[i]=GetDefaultMaterialName(i);
@@ -239,7 +239,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget doesn't nedd a minor command");
 	 return;
       }
-      Array1<clString> materiallist(NumMaterials);
+      Array1<string> materiallist(NumMaterials);
       
       for(Index i=0;i<NumMaterials;i++){
 	 materiallist[i]=GetMaterialName(i);
@@ -250,7 +250,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget needs default material index");
 	 return;
       }
-      if (!args[2].get_int(mati)){
+      if (!string_to_int(args[2], mati)){
 	 args.error("widget can't parse default material index `"+args[2]+"'");
 	 return;
       }
@@ -265,7 +265,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget needs material index");
  	 return;
       }
-      if (!args[2].get_int(mati)) {
+      if (!string_to_int(args[2], mati)) {
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
@@ -279,7 +279,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget needs material index");
 	 return;
       }
-      if (!args[2].get_int(mati)) {
+      if (!string_to_int(args[2], mati)) {
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
@@ -296,7 +296,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget needs material index");
 	 return;
       }
-      if (!args[2].get_int(mati)) {
+      if (!string_to_int(args[2], mati)) {
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
@@ -314,7 +314,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 return;
       }
       Real us;
-      if (!args[2].get_double(us)) {
+      if (!string_to_double(args[2], us)) {
 	 args.error("widget can't parse user scale `"+args[2]+"'");
 	 return;
       }
@@ -495,7 +495,7 @@ BaseWidget::GetDefaultMaterial( const Index mindex ) const
 }
 
 
-clString
+string
 BaseWidget::GetDefaultMaterialName( const Index mindex ) const
 {
    ASSERT(mindex<NumDefaultMaterials);

@@ -35,15 +35,14 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/AVLTree.h>
-#include <Core/Containers/String.h>
 
 namespace SCIRun {
 
 
 class DebugSwitch;
 typedef Array1<DebugSwitch*> DebugVars;
-typedef AVLTree<clString, DebugVars*> Debug;
-typedef AVLTreeIter<clString, DebugVars*> DebugIter;
+typedef AVLTree<string, DebugVars*> Debug;
+typedef AVLTreeIter<string, DebugVars*> DebugIter;
 
 /*
  * DebugSwitchs initialize to no debugging unless the environment
@@ -54,12 +53,12 @@ typedef AVLTreeIter<clString, DebugVars*> DebugIter;
 
 // DebugSwitch class.
 class SCICORESHARE DebugSwitch {
-    clString module;
-    clString var;
+    string module;
+    string var;
     friend std::ostream& operator<<(std::ostream&, DebugSwitch&);
 public:
     // Creation and destruction of debug switches
-    DebugSwitch(const clString& module, const clString& var);
+    DebugSwitch(const string& module, const string& var);
     ~DebugSwitch();   
    
     inline int operator!() const;
@@ -67,8 +66,8 @@ public:
    
     static Debug* get_debuginfo();
     int* get_flagpointer();
-    clString get_module();
-    clString get_var();
+    string get_module();
+    string get_var();
 private:
     int flagvar;
 };

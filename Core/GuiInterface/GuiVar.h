@@ -33,9 +33,7 @@
 
 #include <Core/share/share.h>
 
-#include <Core/Containers/String.h>
 #include <string>
-
 
 using std::string;
 
@@ -52,84 +50,84 @@ class TCL;
 
 class SCICORESHARE GuiVar {
 protected:
-    clString varname;
+    string varname;
     int is_reset;
     TCL* tcl;
 public:
-    GuiVar(const clString& name, const clString& id, TCL* tcl);
+    GuiVar(const string& name, const string& id, TCL* tcl);
     virtual ~GuiVar();
     virtual void reset();
 
-    clString format_varname();
+    string format_varname();
 
-    clString str();
-    virtual void emit(std::ostream& out, clString& midx)=0;
+    string str();
+    virtual void emit(std::ostream& out, string& midx)=0;
 };
 
 class SCICORESHARE GuiString : public GuiVar {
-    clString value;
+    string value;
 public:
-    GuiString(const clString& name, const clString& id, TCL* tcl);
+    GuiString(const string& name, const string& id, TCL* tcl);
     virtual ~GuiString();
 
-    clString get();
-    void set(const clString&);
-    virtual void emit(std::ostream& out, clString& midx);
+    string get();
+    void set(const string&);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiDouble : public GuiVar {
     double value;
 public:
-    GuiDouble(const clString& name, const clString& id, TCL* tcl);
+    GuiDouble(const string& name, const string& id, TCL* tcl);
     virtual ~GuiDouble();
 
     double get();
     void set(double);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiInt : public GuiVar {
     int value;
 public:
-    GuiInt(const clString& name, const clString& id, TCL* tcl);
+    GuiInt(const string& name, const string& id, TCL* tcl);
     virtual ~GuiInt();
 
     int get();
     void set(int);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiVardouble : public GuiVar {
     double value;
 public:
-    GuiVardouble(const clString& name, const clString& id, TCL* tcl);
+    GuiVardouble(const string& name, const string& id, TCL* tcl);
     virtual ~GuiVardouble();
 
     double get();
     void set(double);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiVarint : public GuiVar {
     int value;
 public:
-    GuiVarint(const clString& name, const clString& id, TCL* tcl);
+    GuiVarint(const string& name, const string& id, TCL* tcl);
     virtual ~GuiVarint();
 
     int get();
     void set(int);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiVarintp : public GuiVar {
     int* value;
 public:
-    GuiVarintp(int*, const clString& name, const clString& id, TCL* tcl);
+    GuiVarintp(int*, const string& name, const string& id, TCL* tcl);
     virtual ~GuiVarintp();
 
     int get();
     void set(int);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiPoint : public GuiVar {
@@ -137,12 +135,12 @@ class SCICORESHARE GuiPoint : public GuiVar {
     GuiDouble y;
     GuiDouble z;
 public:
-    GuiPoint(const clString& name, const clString& id, TCL* tcl);
+    GuiPoint(const string& name, const string& id, TCL* tcl);
     virtual ~GuiPoint();
 
     Point get();
     void set(const Point&);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiVector : public GuiVar {
@@ -150,12 +148,12 @@ class SCICORESHARE GuiVector : public GuiVar {
     GuiDouble y;
     GuiDouble z;
 public:
-    GuiVector(const clString& name, const clString& id, TCL* tcl);
+    GuiVector(const string& name, const string& id, TCL* tcl);
     virtual ~GuiVector();
 
     Vector get();
     void set(const Vector&);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 } // End namespace SCIRun

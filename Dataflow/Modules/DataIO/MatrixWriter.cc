@@ -40,16 +40,16 @@ class MatrixWriter : public Module {
   GuiString filetype_;
   GuiInt split_;
 public:
-  MatrixWriter(const clString& id);
+  MatrixWriter(const string& id);
   virtual ~MatrixWriter();
   virtual void execute();
 };
 
-extern "C" Module* make_MatrixWriter(const clString& id) {
+extern "C" Module* make_MatrixWriter(const string& id) {
   return new MatrixWriter(id);
 }
 
-MatrixWriter::MatrixWriter(const clString& id)
+MatrixWriter::MatrixWriter(const string& id)
   : Module("MatrixWriter", id, Source, "DataIO", "SCIRun"),
     filename_("filename", id, this),
     filetype_("filetype", id, this), split_("split", id, this)
@@ -71,7 +71,7 @@ void MatrixWriter::execute()
     return;
 
   // If no name is provided, return
-  clString fn(filename_.get());
+  string fn(filename_.get());
   if(fn == "") {
     error("Warning: no filename in MatrixWriter");
     return;
@@ -79,11 +79,11 @@ void MatrixWriter::execute()
 
   // Open up the output stream
   Piostream* stream;
-  clString ft(filetype_.get());
+  string ft(filetype_.get());
   if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn(), Piostream::Write);
+    stream=scinew BinaryPiostream(fn, Piostream::Write);
   } else { // "ASCII"
-    stream=scinew TextPiostream(fn(), Piostream::Write);
+    stream=scinew TextPiostream(fn, Piostream::Write);
   }
 
   // Check whether the file should be split into header and data

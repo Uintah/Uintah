@@ -32,7 +32,6 @@
 #include <Dataflow/Ports/GeometryComm.h>
 
 #include <Core/Util/Assert.h>
-#include <Core/Containers/String.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Port.h>
@@ -47,18 +46,18 @@ using std::cerr;
 namespace SCIRun {
 
 extern "C" {
-PSECORESHARE IPort* make_GeometryIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_GeometryIPort(Module* module, const string& name) {
   return scinew GeometryIPort(module,name);
 }
-PSECORESHARE OPort* make_GeometryOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_GeometryOPort(Module* module, const string& name) {
   return scinew GeometryOPort(module,name);
 }
 }
 
-static clString Geometry_type("Geometry");
-static clString Geometry_color("magenta3");
+static string Geometry_type("Geometry");
+static string Geometry_color("magenta3");
 
-GeometryIPort::GeometryIPort(Module* module, const clString& portname, int protocol)
+GeometryIPort::GeometryIPort(Module* module, const string& portname, int protocol)
 : IPort(module, Geometry_type, portname, Geometry_color, protocol)
 {
 }
@@ -67,7 +66,7 @@ GeometryIPort::~GeometryIPort()
 {
 }
 
-GeometryOPort::GeometryOPort(Module* module, const clString& portname, int protocol)
+GeometryOPort::GeometryOPort(Module* module, const string& portname, int protocol)
 : OPort(module, Geometry_type, portname, Geometry_color, protocol),
   save_msgs(0), outbox(0)
 {
@@ -130,7 +129,7 @@ void GeometryOPort::finish()
     }
 }
 
-GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
+GeomID GeometryOPort::addObj(GeomObj* obj, const string& name,
 			     CrowdMonitor* lock)
 {
     if (module->show_stat) turn_on();
@@ -288,7 +287,7 @@ GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
 }
 
 GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj,
-			   const clString& name, CrowdMonitor* lock)
+			   const string& name, CrowdMonitor* lock)
   : MessageBase(MessageTypes::GeometryAddObj),
     portno(portno),
     serial(serial),

@@ -123,7 +123,7 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	int bin;
-	if(!args[2].get_int(bin)){
+	if(!string_to_int(args[2], bin)) {
 	    args.error("Error parsing bin argument");
 	    return;
 	}

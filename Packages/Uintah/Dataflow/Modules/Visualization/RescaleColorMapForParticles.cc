@@ -20,7 +20,7 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-RescaleColorMapForParticles::RescaleColorMapForParticles(const clString& id)
+RescaleColorMapForParticles::RescaleColorMapForParticles(const string& id)
 : Module("RescaleColorMapForParticles", id, Filter),
   minVal("minVal", id, this),
   maxVal("maxVal", id, this),
@@ -83,7 +83,7 @@ void RescaleColorMapForParticles::execute()
    omap->send(cmap);
 }
   
-extern "C" Module* make_RescaleColorMapForParticles( const clString& id ) {
+extern "C" Module* make_RescaleColorMapForParticles( const string& id ) {
   return scinew RescaleColorMapForParticles( id );
 }
 } // End namespace Uintah

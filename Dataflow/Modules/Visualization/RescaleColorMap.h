@@ -39,7 +39,7 @@ public:
         // Constructs an instance of class RescaleColorMap
         // Constructor taking
         //    [in] id as an identifier
-  RescaleColorMap(const clString& id);
+  RescaleColorMap(const string& id);
 
         // GROUP:  Destructor:
         ///////////////////////////

@@ -24,69 +24,68 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/AVLTree.h>
-#include <Core/Containers/String.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
 
 
     typedef struct {
-      clString name;
-      clString datatype;
+      string name;
+      string datatype;
       iport_maker maker;
     } IPortInfo;
 
     typedef struct {
-      clString name;
-      clString datatype;
+      string name;
+      string datatype;
       oport_maker maker;
     } OPortInfo;
 
     typedef struct {
-      clString packageName;
-      clString categoryName;
-      clString moduleName;
+      string packageName;
+      string categoryName;
+      string moduleName;
       ModuleMaker maker;
-      clString uiFile;
+      string uiFile;
       std::map<int,IPortInfo*>* iports;
       std::map<int,OPortInfo*>* oports;
       char lastportdynamic;
     } ModuleInfo;
 
-    typedef AVLTree<clString,ModuleInfo*> Category;
-    typedef AVLTree<clString,Category*> Package;
-    typedef AVLTree<clString,Package*> Packages;
+    typedef AVLTree<string,ModuleInfo*> Category;
+    typedef AVLTree<string,Category*> Package;
+    typedef AVLTree<string,Package*> Packages;
     
-    typedef AVLTreeIter<clString,ModuleInfo*> CategoryIter;
-    typedef AVLTreeIter<clString,Category*> PackageIter;
-    typedef AVLTreeIter<clString,Package*> PackagesIter;
+    typedef AVLTreeIter<string,ModuleInfo*> CategoryIter;
+    typedef AVLTreeIter<string,Category*> PackageIter;
+    typedef AVLTreeIter<string,Package*> PackagesIter;
 
     class PSECORESHARE PackageDB {
       public:
         PackageDB(void);
         ~PackageDB(void);
 
-        void loadPackage(const clString& packagePath);
+        void loadPackage(const string& packagePath);
         void registerModule(ModuleInfo* info);
-	void createAlias(const clString& fromPackageName,
-			 const clString& fromCategoryName,
-			 const clString& fromModuleName,
-			 const clString& toPackageName,
-			 const clString& toCategoryName,
-			 const clString& toModuleName);
+	void createAlias(const string& fromPackageName,
+			 const string& fromCategoryName,
+			 const string& fromModuleName,
+			 const string& toPackageName,
+			 const string& toCategoryName,
+			 const string& toModuleName);
 
-        Module* instantiateModule(const clString& packageName,
-                                  const clString& categoryName,
-                                  const clString& moduleName,
-                                  const clString& instanceName) const;
+        Module* instantiateModule(const string& packageName,
+                                  const string& categoryName,
+                                  const string& moduleName,
+                                  const string& instanceName) const;
 
-        Array1<clString> packageNames(void) const;
-        Array1<clString> categoryNames(const clString& packageName) const;
-        Array1<clString> moduleNames(const clString& packageName,
-                                     const clString& categoryName) const;
+        Array1<string> packageNames(void) const;
+        Array1<string> categoryNames(const string& packageName) const;
+        Array1<string> moduleNames(const string& packageName,
+                                     const string& categoryName) const;
       public:
         void *             db_;
-        Array1<clString>   packageList_;
+        Array1<string>   packageList_;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break

@@ -72,11 +72,11 @@ DESCRIPTION
 
 ****************************************/
 
-extern "C" Module* make_RescaleColorMap(const clString& id) {
+extern "C" Module* make_RescaleColorMap(const string& id) {
   return new RescaleColorMap(id);
 }
 
-RescaleColorMap::RescaleColorMap(const clString& id)
+RescaleColorMap::RescaleColorMap(const string& id)
   : Module("RescaleColorMap", id, Filter, "Visualization", "SCIRun"),
     isFixed("isFixed", id, this),
     min("min", id, this ),

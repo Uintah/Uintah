@@ -40,7 +40,6 @@
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Containers/String.h>
 
 #ifdef SCI_PARALLEL
 #include <Core/CCA/Component/PIDL/PIDL.h>
@@ -108,7 +107,7 @@ int main(int argc, char** argv)
   tcl_task->mainloop_waitstart();
 
   // Set up the TCL environment to find core components
-  clString result;
+  string result;
   TCL::eval("global PSECoreTCL CoreTCL",result);
   TCL::eval("set DataflowTCL "PSECORETCL,result);
   TCL::eval("set CoreTCL "SCICORETCL,result);

@@ -13,7 +13,7 @@ using namespace SCIRun;
 
   class TensorParticlesOperator: public Module {
   public:
-    TensorParticlesOperator(const clString& id);
+    TensorParticlesOperator(const string& id);
     virtual ~TensorParticlesOperator() {}
     
     virtual void execute(void);

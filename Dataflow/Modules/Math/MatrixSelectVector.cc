@@ -30,19 +30,19 @@ class MatrixSelectVector : public Module {
   GuiString row_or_col_;
   GuiInt animate_;
 public:
-  MatrixSelectVector(const clString& id);
+  MatrixSelectVector(const string& id);
   virtual ~MatrixSelectVector();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
   int stop_;
 };
 
-extern "C" Module* make_MatrixSelectVector(const clString& id)
+extern "C" Module* make_MatrixSelectVector(const string& id)
 {
     return new MatrixSelectVector(id);
 }
 
-MatrixSelectVector::MatrixSelectVector(const clString& id)
+MatrixSelectVector::MatrixSelectVector(const string& id)
 : Module("MatrixSelectVector", id, Filter),
   row_("row", id, this),
   row_max_("row_max", id, this),

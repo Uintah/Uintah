@@ -30,7 +30,6 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 using std::istream;

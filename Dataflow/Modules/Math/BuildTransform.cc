@@ -72,22 +72,22 @@ class BuildTransform : public Module {
   int ignoring_widget_changes_;
   int have_been_initialized_;
 public:
-  BuildTransform(const clString& id);
+  BuildTransform(const string& id);
   virtual ~BuildTransform();
   virtual void widget_moved(int last);
   virtual void execute();
   void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_BuildTransform(const clString& id)
+extern "C" Module* make_BuildTransform(const string& id)
 {
   return new BuildTransform(id);
 }
 
-static clString module_name("BuildTransform");
-static clString widget_name("TransformWidget");
+static string module_name("BuildTransform");
+static string widget_name("TransformWidget");
 
-BuildTransform::BuildTransform(const clString& id)
+BuildTransform::BuildTransform(const string& id)
   : Module("BuildTransform", id, Filter, "Math", "SCIRun"),
     rotate_x_gui_("rotate_x", id, this),
     rotate_y_gui_("rotate_y", id, this),
@@ -134,7 +134,7 @@ BuildTransform::~BuildTransform()
 
 void BuildTransform::execute()
 {
-  clString which_transform=which_transform_gui_.get();
+  string which_transform=which_transform_gui_.get();
 
   // create the widget
   if (!have_been_initialized_) {

@@ -27,7 +27,6 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Datatypes/ContourField.h>

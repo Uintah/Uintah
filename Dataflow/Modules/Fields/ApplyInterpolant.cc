@@ -52,7 +52,7 @@ using std::pair;
 
 class ApplyInterpolant : public Module {
 public:
-  ApplyInterpolant(const clString& id);
+  ApplyInterpolant(const string& id);
   virtual ~ApplyInterpolant();
 
   virtual void execute();
@@ -62,13 +62,13 @@ public:
 };
 
 
-extern "C" Module* make_ApplyInterpolant(const clString& id)
+extern "C" Module* make_ApplyInterpolant(const string& id)
 {
   return new ApplyInterpolant(id);
 }
 
 
-ApplyInterpolant::ApplyInterpolant(const clString& id)
+ApplyInterpolant::ApplyInterpolant(const string& id)
   : Module("ApplyInterpolant", id, Filter, "Fields", "SCIRun")
 {
 }

@@ -182,7 +182,7 @@ template <class Data>
 void
 LatticeVol<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1).c_str(), LATTICEVOL_VERSION);
+  stream.begin_class(type_name(-1), LATTICEVOL_VERSION);
   GenericField<LatVolMesh, FData3d<Data> >::io(stream);
   stream.end_class();                                                         
 }

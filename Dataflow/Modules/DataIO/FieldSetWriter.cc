@@ -38,16 +38,16 @@ class FieldSetWriter : public Module {
   GuiString filename_;
   GuiString filetype_;
 public:
-  FieldSetWriter(const clString& id);
+  FieldSetWriter(const string& id);
   virtual ~FieldSetWriter();
   virtual void execute();
 };
 
-extern "C" Module* make_FieldSetWriter(const clString& id) {
+extern "C" Module* make_FieldSetWriter(const string& id) {
   return new FieldSetWriter(id);
 }
 
-FieldSetWriter::FieldSetWriter(const clString& id)
+FieldSetWriter::FieldSetWriter(const string& id)
   : Module("FieldSetWriter", id, Source, "DataIO", "SCIRun"),
     filename_("filename", id, this),
     filetype_("filetype", id, this)
@@ -67,7 +67,7 @@ void FieldSetWriter::execute()
     return;
 
   // If no name is provided, return
-  clString fn(filename_.get());
+  string fn(filename_.get());
   if(fn == "") {
     error("Warning: no filename in FieldSetWriter");
     return;
@@ -75,11 +75,11 @@ void FieldSetWriter::execute()
    
   // Open up the output stream
   Piostream* stream;
-  clString ft(filetype_.get());
+  string ft(filetype_.get());
   if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn(), Piostream::Write);
+    stream=scinew BinaryPiostream(fn, Piostream::Write);
   } else { // "ASCII"
-    stream=scinew TextPiostream(fn(), Piostream::Write);
+    stream=scinew TextPiostream(fn, Piostream::Write);
   }
 
   // Write the file

@@ -34,7 +34,6 @@
 #include <Core/share/share.h>
 
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 #include <stdio.h>
 #ifdef _WIN32
 #define ZEXPORT __stdcall

@@ -74,7 +74,7 @@ struct ID {
   
 class GridVisualizer : public Module {
 public:
-  GridVisualizer(const clString& id);
+  GridVisualizer(const string& id);
   virtual ~GridVisualizer();
   virtual void execute();
   virtual void widget_moved(int last);
@@ -85,7 +85,7 @@ private:
   void addBoxGeometry(GeomLines* edges, const Box& box);
   GridP getGrid();
   void setupColors();
-  MaterialHandle getColor(clString color, int type);
+  MaterialHandle getColor(string color, int type);
   void add_type(string &type_list,const TypeDescription *subtype);
   void setVars(GridP grid);
   void getnunv(int* nu, int* nv);
@@ -152,13 +152,13 @@ private:
   map< string, string > material_data_list;
 };
 
-static clString widget_name("GridVisualizer Widget");
+static string widget_name("GridVisualizer Widget");
  
-extern "C" Module* make_GridVisualizer(const clString& id) {
+extern "C" Module* make_GridVisualizer(const string& id) {
   return scinew GridVisualizer(id);
 }
 
-GridVisualizer::GridVisualizer(const clString& id)
+GridVisualizer::GridVisualizer(const string& id)
 : Module("GridVisualizer", id, Filter),
   level1_grid_color("level1_grid_color",id, this),
   level2_grid_color("level2_grid_color",id, this),
@@ -271,7 +271,7 @@ void GridVisualizer::setupColors() {
 }
 
 // based on the color expressed by color returns the color
-MaterialHandle GridVisualizer::getColor(clString color, int type) {
+MaterialHandle GridVisualizer::getColor(string color, int type) {
   float i;
   if (type == GRID_COLOR)
     i = 1.0;
@@ -394,7 +394,7 @@ void GridVisualizer::execute()
   setupColors();
   nl.set(numLevels);
   setVars(grid);
-  clString visible;
+  string visible;
   TCL::eval(id + " isVisible", visible);
   if ( visible == "1") {
     TCL::execute(id + " destroyFrames");
@@ -575,7 +575,7 @@ void GridVisualizer::execute()
     id_list.push_back(ogeom->addObj(pick,"Selectable Nodes"));
   }
   if (node_selected) {
-    Point p;
+    //Point p;
     switch (var_orientation.get()) {
     case NC_VAR:
       //p = patch->nodePosition(currentNode);
@@ -616,18 +616,18 @@ void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
     want_to_execute();
   }
   else if(args[1] == "graph") {
-    string varname(args[2]());
-    string index(args[3]());
+    string varname(args[2]);
+    string index(args[3]);
     int num_mat;
-    args[4].get_int(num_mat);
+    string_to_int(args[4], num_mat);
     cerr << "Extracting " << num_mat << " materals:";
     vector< string > mat_list;
     vector< string > type_list;
     for (int i = 5; i < 5+(num_mat*2); i++) {
-      string mat(args[i]());
+      string mat(args[i]);
       mat_list.push_back(mat);
       i++;
-      string type(args[i]());
+      string type(args[i]);
       type_list.push_back(type);
     }
     cerr << endl;

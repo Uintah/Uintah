@@ -236,7 +236,7 @@ CrosshairWidget::GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const
  *      a widget's material property.  The string is used in the 
  *      BaseWidget UI.
  */
-clString
+string
 CrosshairWidget::GetMaterialName( const Index mindex ) const
 {
    ASSERT(mindex<NumMaterials);
@@ -261,12 +261,12 @@ CrosshairWidget::widget_tcl( TCLArgs& args )
 	 return;
       }
       Real trans;
-      if (!args[3].get_double(trans)) {
+      if (!string_to_double(args[3], trans)) {
 	 args.error("crosshair widget can't parse translation `"+args[3]+"'");
 	 return;
       }
       Point p(GetPosition());
-      switch (args[2](0)) {
+      switch (args[2][0]) {
       case 'x':
 	 p.x(trans);
 	 break;

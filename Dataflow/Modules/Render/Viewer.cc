@@ -53,12 +53,12 @@ namespace SCIRun {
 
 
 //----------------------------------------------------------------------
-extern "C" Module* make_Viewer(const clString& id) {
+extern "C" Module* make_Viewer(const string& id) {
   return new Viewer(id);
 }
 
 //----------------------------------------------------------------------
-Viewer::Viewer(const clString& id)
+Viewer::Viewer(const string& id)
   : Module("Viewer", id, ViewerSpecial,"Render","SCIRun"), max_portno(0), geomlock("Viewer geometry lock")
 {
 				// Add a headlight
@@ -96,9 +96,9 @@ Viewer::Viewer(const clString& id)
 }
 
 //----------------------------------------------------------------------
-Viewer::Viewer(const clString& id, const clString& moduleName):
+Viewer::Viewer(const string& id, const string& moduleName):
   Module(moduleName, id, ViewerSpecial,"Render","SCIRun"), max_portno(0),
-  geomlock((moduleName + clString(" geometry lock"))())
+  geomlock((moduleName + " geometry lock").c_str())
 {
 
 				// Add a headlight
@@ -336,11 +336,11 @@ void Viewer::flushViews()
 
 //----------------------------------------------------------------------
 void Viewer::addObj(GeomViewerPort* port, int serial, GeomObj *obj,
-		    const clString& name, CrowdMonitor* lock)
+		    const string& name, CrowdMonitor* lock)
 {
-    clString pname(name+" ("+to_string(port->portno)+")");
+    string pname(name+" ("+to_string(port->portno)+")");
     // SceneItem* si=scinew SceneItem(obj, pname, lock);
-    GeomViewerItem* si = scinew GeomViewerItem(obj, pname(), lock);
+    GeomViewerItem* si = scinew GeomViewerItem(obj, pname, lock);
     port->addObj(si,serial);
     // port->objs->insert(serial, si);
     for (int i=0; i<viewwindow.size(); i++) {
@@ -438,8 +438,8 @@ void Viewer::tcl_command(TCLArgs& args, void* userdata)
 	ViewWindow* r=scinew ViewWindow(this, args[2]);
 	viewwindow.add(r);
     } else if(args[1] == "listrenderers"){
-	Array1<clString> list;
-	AVLTreeIter<clString, RegisterRenderer*> iter(Renderer::get_db());
+	Array1<string> list;
+	AVLTreeIter<string, RegisterRenderer*> iter(Renderer::get_db());
 	for(iter.first();iter.ok();++iter){
 	    list.add(iter.get_key());
 	}
@@ -456,13 +456,13 @@ void Viewer::execute()
 }
 
 //----------------------------------------------------------------------
-ViewerMessage::ViewerMessage(const clString& rid)
+ViewerMessage::ViewerMessage(const string& rid)
 : MessageBase(MessageTypes::ViewWindowRedraw), rid(rid), nframes(0)
 {
 }
 
 //----------------------------------------------------------------------
-ViewerMessage::ViewerMessage(const clString& rid, double tbeg, double tend,
+ViewerMessage::ViewerMessage(const string& rid, double tbeg, double tend,
 			     int nframes, double framerate)
 : MessageBase(MessageTypes::ViewWindowRedraw), rid(rid), tbeg(tbeg), tend(tend),
   nframes(nframes), framerate(framerate)
@@ -473,15 +473,15 @@ ViewerMessage::ViewerMessage(const clString& rid, double tbeg, double tend,
 
 //----------------------------------------------------------------------
 ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
-			     const clString& rid, const clString& filename)
+			     const string& rid, const string& filename)
 : MessageBase(type), rid(rid), filename(filename)
 {
 }
 
 //----------------------------------------------------------------------
 ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
-			     const clString& rid, const clString& filename,
-			     const clString& format)
+			     const string& rid, const string& filename,
+			     const string& format)
 : MessageBase(type), rid(rid), filename(filename), format(format)
 {
 }
@@ -493,7 +493,7 @@ ViewerMessage::~ViewerMessage()
 
 //----------------------------------------------------------------------
 #if 0
-SceneItem::SceneItem(GeomObj* obj, const clString& name, CrowdMonitor* lock)
+SceneItem::SceneItem(GeomObj* obj, const string& name, CrowdMonitor* lock)
 : obj(obj), name(name), lock(lock)
 {
 }
@@ -563,11 +563,11 @@ void Viewer::flushPort(int portid)
 }
 
 //----------------------------------------------------------------------
-int Viewer::lookup_specific(const clString& key, void*& data)
+int Viewer::lookup_specific(const string& key, void*& data)
 {
     //return specific.lookup(key, data);
     
-    MapClStringVoid::iterator result = specific.find(key);
+    MapStringVoid::iterator result = specific.find(key);
     if (result != specific.end()) {
 	data = (*result).second;
 	return 1;
@@ -576,20 +576,20 @@ int Viewer::lookup_specific(const clString& key, void*& data)
 }
 
 //----------------------------------------------------------------------
-void Viewer::insert_specific(const clString& key, void* data)
+void Viewer::insert_specific(const string& key, void* data)
 {
     //specific.insert(key, data);
     specific[key] = data;
 }
 
 //----------------------------------------------------------------------
-void Viewer::emit_vars(ostream& out, clString& midx)
+void Viewer::emit_vars(ostream& out, string& midx)
 {
 //  cerr << "Viewer emitvars" << endl;
   TCL::emit_vars(out, midx);
-  clString viewwindowstr;
+  string viewwindowstr;
   for(int i=0;i<viewwindow.size();i++){
-    viewwindowstr=midx+clString("-ViewWindow_")+to_string(i);
+    viewwindowstr=midx+string("-ViewWindow_")+to_string(i);
     out << midx << " ui\n";
     viewwindow[i]->emit_vars(out, viewwindowstr);
   }

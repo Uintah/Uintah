@@ -14,7 +14,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 
-extern "C" Module* make_EigenEvaluator( const clString& id ) { 
+extern "C" Module* make_EigenEvaluator( const string& id ) { 
   return scinew EigenEvaluator( id );
 }
 
@@ -24,7 +24,7 @@ void computeGridEigens(TensorField* tensorField,
 		       int chosenEValue);
  
 
-EigenEvaluator::EigenEvaluator(const clString& id)
+EigenEvaluator::EigenEvaluator(const string& id)
   : Module("EigenEvaluator",id,Source),
     tclEigenSelect("eigenSelect", id, this)
     //    tcl_status("tcl_status", id, this),

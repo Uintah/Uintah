@@ -30,7 +30,6 @@
 
 #include <Core/Geom/GeomTetra.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>

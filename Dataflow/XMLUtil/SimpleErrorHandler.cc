@@ -28,7 +28,7 @@ namespace SCIRun {
 
 SimpleErrorHandler::SimpleErrorHandler()
 {
-    foundError=false;
+  foundError=false;
 }
 
 SimpleErrorHandler::~SimpleErrorHandler()
@@ -37,40 +37,40 @@ SimpleErrorHandler::~SimpleErrorHandler()
 
 static string sehToString(int i)
 {
-    char buf[20];
-    sprintf(buf, "%d", i);
-    return string(buf);
+  char buf[20];
+  sprintf(buf, "%d", i);
+  return string(buf);
 }
 
 static void postMessage(const string& errmsg)
 {
-    cerr << errmsg << '\n';
+  cerr << errmsg << '\n';
 }
 
 void SimpleErrorHandler::error(const SAXParseException& e)
 {
-    foundError=true;
-    postMessage(string("Error at (file ")+toString(e.getSystemId())
-		+", line "+toString((int)e.getLineNumber())
-		+", char "+toString((int)e.getColumnNumber())
-		+"): "+toString(e.getMessage()));
+  foundError=true;
+  postMessage("Error at (file " + toString(e.getSystemId())
+	      + ", line " + toString((int)e.getLineNumber())
+	      + ", char " + toString((int)e.getColumnNumber())
+	      + "): " + toString(e.getMessage()));
 }
 
 void SimpleErrorHandler::fatalError(const SAXParseException& e)
 {
-    foundError=true;
-    postMessage(string("Fatal Error at (file ")+toString(e.getSystemId())
-		+", line "+sehToString((int)e.getLineNumber())
-		+", char "+sehToString((int)e.getColumnNumber())
-		+"): "+toString(e.getMessage()));
+  foundError=true;
+  postMessage("Fatal Error at (file " + toString(e.getSystemId())
+	      + ", line " + sehToString((int)e.getLineNumber())
+	      + ", char " + sehToString((int)e.getColumnNumber())
+	      + "): " + toString(e.getMessage()));
 }
 
 void SimpleErrorHandler::warning(const SAXParseException& e)
 {
-    postMessage(string("Warning at (file ")+toString(e.getSystemId())
-		+", line "+sehToString((int)e.getLineNumber())
-		+", char "+sehToString((int)e.getColumnNumber())
-		+"): "+toString(e.getMessage()));
+  postMessage("Warning at (file " + toString(e.getSystemId())
+	      + ", line " + sehToString((int)e.getLineNumber())
+	      + ", char " + sehToString((int)e.getColumnNumber())
+	      + "): " + toString(e.getMessage()));
 }
 
 void SimpleErrorHandler::resetErrors()

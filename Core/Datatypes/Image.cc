@@ -32,7 +32,6 @@
 
 #include <Core/Datatypes/Image.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 
 namespace SCIRun {
 

@@ -36,7 +36,6 @@
 #include <vector>
 #include <string>
 
-#include <Core/Containers/String.h>
 #include <Core/share/share.h>
 
 #include <string>
@@ -68,7 +67,7 @@ public:
 
   typedef map<Persistent*, int>			MapPersistentInt;
   typedef map<int, Persistent*>			MapIntPersistent;
-  typedef map<string, PersistentTypeID*>	MapClStringPersistentTypeID;
+  typedef map<string, PersistentTypeID*>	MapStringPersistentTypeID;
 
   enum Direction {
     Read,
@@ -93,7 +92,6 @@ public:
 
   virtual ~Piostream();
   virtual string peek_class()=0;
-  int begin_class(const char* name, int current_version);
   virtual int begin_class(const string& name, int current_version)=0;
   virtual void end_class()=0;
 
@@ -143,7 +141,6 @@ SCICORESHARE inline void Pio(Piostream& stream, double& data) { stream.io(data);
 SCICORESHARE inline void Pio(Piostream& stream, float& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, string& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
-SCICORESHARE        void Pio(Piostream& stream, clString& data);
 
 // GROUP: Templates for persistent io for C++ standard library units
 //////////

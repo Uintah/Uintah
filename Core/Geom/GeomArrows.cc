@@ -31,7 +31,6 @@
 #include <Core/Geom/GeomArrows.h>
 
 #include <Core/Geom/GeomSave.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>

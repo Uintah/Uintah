@@ -200,9 +200,9 @@ ManipMatrix::tcl_command(TCLArgs& args, void* userdata)
 
   cout << "TCLCOMMMAND: arg1: " << args[1] << endl; 
 
-  if( manips_.count( name_.get()() ) == 0 ) 
+  if( manips_.count( name_.get() ) == 0 ) 
   {
-    string name = name_.get()();
+    string name = name_.get();
     //add new manip. 
     if( !name.empty() )
     { 
@@ -215,20 +215,20 @@ ManipMatrix::tcl_command(TCLArgs& args, void* userdata)
     }
   }
 
-  ManipData &manipData = *manips_[name_.get()()];
+  ManipData &manipData = *manips_[name_.get()];
 
   if( args[1] == "compile" ) 
   {
     write_sub_mk();
     cout << "C++ compile now!!" << endl;
-    curFun_ = getFunctionFromDL(name_.get()());
+    curFun_ = getFunctionFromDL(name_.get());
     if( !curFun_ )
       cerr << "Failed to load so" << endl;
   }  
   else if( args[1] == "launch-editor" )
   {
-    string ecmd = string( args[2]() ) + " " + MATRIX_MANIP_SRC
-      + "/" + name_.get()() + ".cc &";
+    string ecmd = args[2] + " " + MATRIX_MANIP_SRC
+      + "/" + name_.get() + ".cc &";
     
     cout << "Launch Editor: " << ecmd << endl;
 
@@ -398,14 +398,6 @@ ManipMatrix::compileFile(const string& file)
 
 
 
-inline static
-string 
-convert_to_string(DOMString s) {  
-  return string(s.transcode());
-}
-
-
-
 void 
 ManipMatrix::readSrcNode(DOM_Node n) 
 {
@@ -417,7 +409,7 @@ ManipMatrix::readSrcNode(DOM_Node n)
     DOM_Node d = attribute.getNamedItem("name");
     cout << "name: " << d.getNodeValue() << endl;
     manipData = new ManipData;
-    manips_[convert_to_string(d.getNodeValue())] = manipData;
+    manips_[d.getNodeValue()] = manipData;
   }
 
   if( manipData ) 
@@ -430,7 +422,7 @@ ManipMatrix::readSrcNode(DOM_Node n)
       {
         cout << "description: " 
              << removeWhiteSpace(getSerializedChildren(child)) << endl;
-        manipData->desc_ = clString(removeWhiteSpace
+        manipData->desc_ = string(removeWhiteSpace
                          (getSerializedChildren(child)))();
       }
       else if( childname.equals("lib") ) 
@@ -438,19 +430,19 @@ ManipMatrix::readSrcNode(DOM_Node n)
         DOM_Node d = child.getAttributes().getNamedItem("name");
         cout << "lib: " << d.getNodeValue() << endl;
 
-        manipData->libs_.push_back(convert_to_string(d.getNodeValue()));
+        manipData->libs_.push_back(d.getNodeValue());
       }
       else if (childname.equals("libpath")) 
       {
         DOM_Node d = child.getAttributes().getNamedItem("name");
         cout << "libpath : " << d.getNodeValue() << endl;
-        manipData->libpath_.push_back(convert_to_string(d.getNodeValue()));
+        manipData->libpath_.push_back(d.getNodeValue)));
       }
       else if( childname.equals("inc") )
       {
         DOM_Node d = child.getAttributes().getNamedItem("name");
         cout << "include: " << d.getNodeValue() << endl;
-        manipData->inc_.push_back(convert_to_string(d.getNodeValue()));
+        manipData->inc_.push_back(d.getNodeValue());
       }
     }
   }
@@ -690,7 +682,7 @@ ManipMatrix::getManips()
 
 
 
-extern "C" PSECORESHARE Module* make_ManipMatrix(const clString& id) 
+extern "C" PSECORESHARE Module* make_ManipMatrix(const string& id) 
 {
   return new ManipMatrix(id());
 }

@@ -29,7 +29,7 @@ SRCS     += $(SRCDIR)/DebugSettings.cc $(SRCDIR)/GuiManager.cc \
 	$(SRCDIR)/TCLstrbuff.cc \
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
-	Core/Containers Core/TkExtensions
+		Core/Containers Core/TkExtensions
 LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X11_LIBS)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

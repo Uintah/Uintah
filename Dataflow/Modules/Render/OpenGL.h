@@ -116,9 +116,9 @@ struct GetReq {
 };
 
 struct ImgReq {
-  clString name;
-  clString type;
-  ImgReq( const clString& n, const clString& t);
+  string name;
+  string type;
+  ImgReq( const string& n, const string& t);
   ImgReq();
 };
 
@@ -141,11 +141,11 @@ protected:
     void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
     void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
     //OpenGLHelper* helper;
-    clString my_openglname;
+    string my_openglname;
     Array1<XVisualInfo*> visuals;
 
    /* Call this each time an mpeg frame is generated. */
-  void StartMpeg(const clString& fname);
+  void StartMpeg(const string& fname);
   void AddMpegFrame();
   void EndMpeg();
 #ifdef __sgi
@@ -167,22 +167,22 @@ protected:
 public:
     OpenGL();
     virtual ~OpenGL();
-    virtual clString create_window(ViewWindow* viewwindow, const clString& name,
-      const clString& width, const clString& height);
+    virtual string create_window(ViewWindow* viewwindow, const string& name,
+      const string& width, const string& height);
     virtual void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
       int ntimesteps, double frametime);
     void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&, GeomPick*&, int&);
     virtual void get_pick(Viewer*, ViewWindow*, int, int,
       GeomObj*&, GeomPick*&, int& );
     virtual void hide();
-    virtual void dump_image(const clString& fname,
-			    const clString& type = "raw");
+    virtual void dump_image(const string& fname,
+			    const string& type = "raw");
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
-  virtual void saveImage(const clString& fname,
-		   const clString& type = "raw");
-  void real_saveImage(const clString& fname,
-		      const clString& type = "raw");
+  virtual void saveImage(const string& fname,
+		   const string& type = "raw");
+  void real_saveImage(const string& fname,
+		      const string& type = "raw");
 
 // HACK -- support data for get_pixel_depth
 float  pixel_depth_data[1310720];  // assume no screen is > 1280x1024
@@ -196,7 +196,7 @@ GLint    get_depth_view[4];
     virtual int    pick_scene(int x, int y, Point *p);
     virtual void kill_helper();
 
-    clString myname;
+    string myname;
     virtual void redraw_loop();
     Mailbox<int> send_mb;
     Mailbox<int> recv_mb;
@@ -219,7 +219,7 @@ GLint    get_depth_view[4];
     int ret_pick_index;
 
     virtual void listvisuals(TCLArgs&);
-    virtual void setvisual(const clString&, int i, int width, int height);
+    virtual void setvisual(const string&, int i, int width, int height);
 
     View lastview;
     double znear, zfar;

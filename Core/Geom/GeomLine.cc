@@ -35,7 +35,6 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Containers/TrivialAllocator.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 using std::cerr;

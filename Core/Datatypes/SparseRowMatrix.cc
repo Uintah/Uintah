@@ -32,7 +32,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/Assert.h>
-#include <Core/Containers/String.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
