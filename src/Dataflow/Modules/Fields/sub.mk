@@ -57,6 +57,7 @@ SRCS     += \
 	$(SRCDIR)/HexToTet.cc\
 	$(SRCDIR)/InterpolantToTransferMatrix.cc\
 	$(SRCDIR)/ManageFieldData.cc\
+	$(SRCDIR)/ManageFieldMesh.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\
 	$(SRCDIR)/MaskLattice.cc\
 	$(SRCDIR)/QuadToTri.cc\
