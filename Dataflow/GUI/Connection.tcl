@@ -59,6 +59,10 @@ proc makeConnID { args } {
 proc drawConnections { connlist } {
     global Color Disabled ToolTipText Subnet TracedConnections
     foreach conn $connlist {
+	if { [llength $conn] != 4 } { 
+	    puts "Not drawing invalid connection: $conn" 
+	}
+
 	set id [makeConnID $conn]
 	set path [routeConnection $conn]
 	set canvas $Subnet(Subnet$Subnet([oMod conn])_canvas)
@@ -77,7 +81,9 @@ proc drawConnections { connlist } {
 	    eval $canvas create bline $path $flags
 	    eval $minicanvas create line [scalePath $path] $miniflags
 
-	    $canvas bind $id <1> "$canvas raise $id; traceConnection {$conn}; moduleStartDrag [oMod conn] %X %Y 0;"
+	    $canvas bind $id <1> "$canvas raise $id
+                                  traceConnection \{$conn\}
+                                  moduleStartDrag [oMod conn] %X %Y 0"
 	    $canvas bind $id <B1-Motion> "moduleDrag [oMod conn] %X %Y"
 	    $canvas bind $id <ButtonRelease-1> "moduleEndDrag [oMod conn] %X %Y;
                                                 deleteTraces"
@@ -100,14 +106,14 @@ proc drawConnections { connlist } {
 
 proc traceConnection { conn { traverse 0 } } {
     global Color TracedConnections
+    if { [info exists TracedConnections] } return 
+    lappend TracedConnections $conn
     unselectAll
     [oMod conn] toggleSelected
     [iMod conn] toggleSelected
     lightPort [oPort conn] $Color(Trace)
     lightPort [iPort conn] $Color(Trace)
-    # drawConnectionTrace $conn
-    set TracedConnections ""
-    lappend TracedConnections $conn
+    drawConnections [list $conn]
     if { $traverse } { tracePortsBackwards [list [oPort conn] [iPort conn]] }
 }
 
@@ -116,7 +122,7 @@ proc traceConnection { conn { traverse 0 } } {
 proc deleteTraces {} {
     global Subnet Color TracedSubnets TracedConnections
     setIfExists backup TracedConnections ""
-    set TracedConnections ""
+    unsetIfExists TracedConnections
     drawConnections $backup
     unselectAll
     lightPort
