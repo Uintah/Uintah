@@ -193,12 +193,7 @@ WARNING
       }
 
     };
-    // Use to apply symmetry boundary conditions.  On the
-    // indicated face, replace the component of the vector
-    // normal to the face with 0.0
-    void fillFaceNormal(Patch::FaceType face, 
-			IntVector offset = IntVector(0,0,0));
-     
+
     virtual void emitNormal(ostream& out, DOM_Element /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -270,20 +265,6 @@ WARNING
     return td;
   }
    
-  // Use to apply symmetry boundary conditions.  On the
-  // indicated face, replace the component of the vector
-  // normal to the face with 0.0
-  template<>
-  void
-  SFCYVariable<Vector>::fillFaceNormal(Patch::FaceType face, 
-				       IntVector offset);
-  template<class T>
-  void
-  SFCYVariable<T>::fillFaceNormal(Patch::FaceType, IntVector)
-  {
-    return;
-  }
-
   template<class T>
   Variable*
   SFCYVariable<T>::maker()
