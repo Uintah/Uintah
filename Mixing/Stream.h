@@ -32,6 +32,8 @@ WARNING
 ************************************************************************/
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <ostream>
+#include <fstream>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
