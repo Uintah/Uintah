@@ -15,15 +15,18 @@
   University of Utah. All Rights Reserved.
 */
 
-#ifndef Core_Util_scirun_env_h
-#define Core_Util_scirun_env_h 1
+#ifndef Core_GuiInterface_scirun_env_h
+#define Core_GuiInterface_scirun_env_h 1
 
 #include <string>
 
 namespace SCIRun {
 class GuiInterface;
 void parse_scirunrc(GuiInterface *gui);
-void sci_putenv(const string &var,const string &val, GuiInterface *gui);
+void sci_putenv(const string &var,
+		const string &val,
+		GuiInterface *gui,
+		bool force=false);
 }
 
 #endif

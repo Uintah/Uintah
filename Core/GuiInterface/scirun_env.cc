@@ -27,12 +27,14 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <Core/Util/scirun_env.h>
+#include <Core/GuiInterface/scirun_env.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string>
+
 
 
 namespace SCIRun {
@@ -86,8 +88,21 @@ char* MacroSubstitute(char* var_val)
 }
 
 
-void sci_putenv(const string &var,const string &val, GuiInterface *gui) {
-  // Check the dynamic compilation directory for validity
+void sci_putenv(const string &var,const string &val,
+		GuiInterface *gui, bool force)
+{
+  // Check TCL's backup of the enviroment when scirun started
+  // to make sure we dont overwrite any env string that the user
+  // set before running
+  if (!force && gui) {
+    string result;
+    gui->eval("info exists alreadySetEnv", result);
+    if (result == "1") {
+      gui->eval("lsearch $alreadySetEnv "+var,result);      
+      if (result != "-1") return;
+    }
+  }
+
   const string envarstr = var+"="+val;
   char *envar = scinew char[envarstr.size()+1];
   memcpy(envar, envarstr.c_str(), envarstr.size());
@@ -131,6 +146,7 @@ bool RCParse(const char* rcfile, GuiInterface *gui)
 
 void parse_scirunrc(GuiInterface *gui)
 {
+  gui->execute("set alreadySetEnv [array names env]");
   ostringstream str;
   
   bool foundrc=false;
@@ -182,7 +198,6 @@ void parse_scirunrc(GuiInterface *gui)
       {
 	close(fd);
 	unlink(homerc.c_str());
-	
 	string tclresult;
 	gui->eval("licenseDialog 1", tclresult);
 	if (tclresult == "cancel")

@@ -34,14 +34,15 @@
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCLInterface.h>
+#include <Core/GuiInterface/scirun_env.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Util/scirun_env.h>
 #include <sys/stat.h>
 
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
 #endif
 
+#include <string>
 #include <iostream>
 using std::cerr;
 using std::cout;
