@@ -1,8 +1,57 @@
 <?xml version="1.0"?>
 
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:param name="dir"/>
 <xsl:param name="cont"/>
+
+<xsl:template match="table">
+  <center><table border="1"><xsl:apply-templates/></table></center>
+</xsl:template>
+
+<xsl:template match="entrytbl">
+  <table border="0"><xsl:apply-templates/></table>
+</xsl:template>
+
+<xsl:template match="tgroup">
+  <xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="thead">
+  <xsl:for-each select="./row">
+    <xsl:for-each select="./entry">
+      <th><xsl:apply-templates/></th>
+    </xsl:for-each>
+  </xsl:for-each>
+</xsl:template>
+
+<xsl:template match="tbody">
+  <xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="row">
+  <tr><xsl:apply-templates/></tr>
+</xsl:template>
+
+<xsl:template match="entry">
+  <td><xsl:apply-templates/></td>
+</xsl:template>
 
 <xsl:template match="chapter/title">
   <p class="title"><xsl:value-of select="."/></p>
@@ -47,7 +96,7 @@
 </xsl:template>
 
 <xsl:template match="computeroutput">
-  <div class="box">
+  <div class="box"><br/>
     <font color="blue">
       <pre class="example"><xsl:apply-templates/></pre>
     </font>
@@ -119,7 +168,7 @@
 
         <area coords="0,41,156,64" shape="rect" alt="Installation Guide">
         <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.html')" />
+        <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.xml?cont=0&amp;dir=2')" />
         </xsl:attribute>
         </area>
 
