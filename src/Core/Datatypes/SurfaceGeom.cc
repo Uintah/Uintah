@@ -30,7 +30,7 @@ SurfaceGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(), SURFACEGEOM_VERSION);
   ContourGeom::io(stream);
-  Pio(stream, d_face);
+  Pio(stream, face_);
   stream.end_class();
 }
 
@@ -46,7 +46,7 @@ string
 SurfaceGeom::getInfo()
 {
   ostringstream retval;
-  retval << "name = " << d_name << endl;
+  retval << "name = " << name_ << endl;
   return retval.str();
 }
 

@@ -32,16 +32,16 @@ void GenFunction::io(Piostream& stream){
 
   stream.begin_class("GenFunction", GENFUNCTION_VERSION);
   
-  Pio(stream, d_domDims);
-  Pio(stream, d_resDims);
-  Pio(stream, d_fnsDims);
-  Pio(stream, d_isFast);
-  Pio(stream, d_isChanged);
+  Pio(stream, domDims_);
+  Pio(stream, resDims_);
+  Pio(stream, fnsDims_);
+  Pio(stream, isFast_);
+  Pio(stream, isChanged_);
 
-  Pio(stream, d_fstr);
+  Pio(stream, fstr_);
 
   if(stream.reading()){
-    set_funcs(d_fstr, d_domDims);
+    set_funcs(fstr_, domDims_);
     refresh_fast_eval();
   }
 
@@ -56,44 +56,44 @@ void GenFunction::clear(FuncPtrV& ff){
 }
 
 GenFunction::GenFunction()
-  : d_fns(0), d_fevals(0), d_fstr(0), d_domDims(0), d_resDims(0), d_fnsDims(0)
+  : fns_(0), fevals_(0), fstr_(0), domDims_(0), resDims_(0), fnsDims_(0)
 {   
 }
    
 GenFunction::GenFunction(const GenFunction& copy) : 
-  d_fevals(copy.d_fevals),
-  d_fstr(copy.d_fstr),
-  d_domDims(copy.d_domDims),
-  d_resDims(copy.d_resDims),
-  d_fnsDims(copy.d_fnsDims),
-  d_isFast(copy.d_isFast),
-  d_isChanged(copy.d_isChanged)
+  fevals_(copy.fevals_),
+  fstr_(copy.fstr_),
+  domDims_(copy.domDims_),
+  resDims_(copy.resDims_),
+  fnsDims_(copy.fnsDims_),
+  isFast_(copy.isFast_),
+  isChanged_(copy.isChanged_)
 {
-  d_fns.resize(d_resDims);
-  for (int i=0; i<d_resDims; i++)
-    d_fns[i]=new Function(copy.d_fns[i]);
-  delete d_vars2;
-  d_vars2=new double[d_domDims];
+  fns_.resize(resDims_);
+  for (int i=0; i<resDims_; i++)
+    fns_[i]=new Function(copy.fns_[i]);
+  delete vars2_;
+  vars2_=new double[domDims_];
 }
   
 GenFunction::~GenFunction(){
-  clear(d_fns);
-  delete d_vars2;
+  clear(fns_);
+  delete vars2_;
 } 
   
 GenFunction& GenFunction::operator=(const GenFunction& copy){
-  d_domDims=copy.d_domDims;
-  d_resDims=copy.d_resDims;
-  d_isFast=copy.d_isFast;
-  d_isChanged=copy.d_isChanged;
-  d_fstr=copy.d_fstr;
-  d_fevals=copy.d_fevals;
-  d_fns.resize(d_resDims);
-  for (int i=0; i<d_resDims; i++)
-    d_fns[i]=new Function(copy.d_fns[i]);
+  domDims_=copy.domDims_;
+  resDims_=copy.resDims_;
+  isFast_=copy.isFast_;
+  isChanged_=copy.isChanged_;
+  fstr_=copy.fstr_;
+  fevals_=copy.fevals_;
+  fns_.resize(resDims_);
+  for (int i=0; i<resDims_; i++)
+    fns_[i]=new Function(copy.fns_[i]);
 
-  delete d_vars2;
-  d_vars2=new double[d_domDims];
+  delete vars2_;
+  vars2_=new double[domDims_];
   return *this;
 }
 
@@ -126,21 +126,21 @@ void GenFunction::set_funcs(const StrV& ss, int dd){
     throw;
   }
 
-  d_fnsDims=fdims;
-  d_resDims=dims;
+  fnsDims_=fdims;
+  resDims_=dims;
     
   // getting rid of old functions
-  clear(d_fns);
+  clear(fns_);
     
-  d_fns.resize(d_resDims);
-  d_fstr.resize(d_resDims);
-  d_fevals.resize(d_resDims);
-  for (int i=0; i<d_resDims; i++){
-    d_fns[i]=ff[i];
-    d_fstr[i]=ss[i];
+  fns_.resize(resDims_);
+  fstr_.resize(resDims_);
+  fevals_.resize(resDims_);
+  for (int i=0; i<resDims_; i++){
+    fns_[i]=ff[i];
+    fstr_[i]=ss[i];
   }
-  d_domDims=dd;
-  d_isChanged=1;
+  domDims_=dd;
+  isChanged_=1;
   set_speed(0);
 }
 
@@ -162,48 +162,48 @@ void GenFunction::set_funcs(const FuncPtrV& ff, int dd){
     }
   }
    
-  d_resDims=dims;
-  d_fnsDims=fdims;
+  resDims_=dims;
+  fnsDims_=fdims;
     
   // getting rid of old functions
-  clear(d_fns);
+  clear(fns_);
 
-  d_fns.resize(d_resDims);
-  d_fstr.resize(d_resDims);
-  d_fevals.resize(d_resDims);
+  fns_.resize(resDims_);
+  fstr_.resize(resDims_);
+  fevals_.resize(resDims_);
   for (unsigned int i=0; i<ff.size(); i++){
     ostringstream ostr;
-    d_fns[i]=new Function (ff[i]);
-    ostr << d_fns[i];
-    d_fstr[i]=ostr.str();
+    fns_[i]=new Function (ff[i]);
+    ostr << fns_[i];
+    fstr_[i]=ostr.str();
   }
-  d_domDims=dd;
-  d_isChanged=1;
+  domDims_=dd;
+  isChanged_=1;
   refresh_fast_eval();
 }
 
 void GenFunction::set_speed(bool is_f){
-  if (is_f ^ d_isFast){
-    d_isFast=is_f;
+  if (is_f ^ isFast_){
+    isFast_=is_f;
     refresh_fast_eval();
   }
 }
 
 void GenFunction::refresh_fast_eval(){
-  if (d_isChanged && d_isFast) {
-    d_fevals.resize(d_fns.size());
+  if (isChanged_ && isFast_) {
+    fevals_.resize(fns_.size());
       
-    for (int i=0; i<d_resDims; i++){
-      ASSERT(d_fns[i]!=NULL);
-      d_fevals[i]=d_fns[i]->getFastEval();
+    for (int i=0; i<resDims_; i++){
+      ASSERT(fns_[i]!=NULL);
+      fevals_[i]=fns_[i]->getFastEval();
     }
   }
 }
   
 string GenFunction::get_str_f(unsigned int n) const
 {
-  if (n < d_fstr.size())
-    return d_fstr[n];
+  if (n < fstr_.size())
+    return fstr_[n];
   else
     return "0";
 }
@@ -211,10 +211,10 @@ string GenFunction::get_str_f(unsigned int n) const
 void GenFunction::set_num_comp(int nc){    
   ASSERT(nc>=0);
   unsigned int unc = nc;
-  if (unc>=d_fns.size()){
-    throw DimensionMismatch((long)unc, (long)d_fns.size());
+  if (unc>=fns_.size()){
+    throw DimensionMismatch((long)unc, (long)fns_.size());
   }
-  d_resDims=nc+1;
+  resDims_=nc+1;
 }
 
 } // End namespace SCIRun

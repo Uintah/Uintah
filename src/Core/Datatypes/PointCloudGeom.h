@@ -49,7 +49,7 @@ public:
 
   virtual string getInfo();
   virtual string getTypeName(int=0);
-  vector<NodeSimp> d_node;
+  vector<NodeSimp> node_;
   
 protected:
 

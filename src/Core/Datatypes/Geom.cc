@@ -30,8 +30,8 @@ void Geom::io(Piostream& stream){
   
   stream.begin_class(typeName(0).c_str(), GEOM_VERSION);
   
-  Pio(stream, d_name);
-  Pio(stream, d_bbox);
+  Pio(stream, name_);
+  Pio(stream, bbox_);
 
   stream.end_class();
 }
@@ -50,9 +50,9 @@ string Geom::getTypeName(int n){
 bool
 Geom::getBoundingBox(BBox& ibbox)
 {
-  if (d_bbox.valid() || computeBoundingBox())
+  if (bbox_.valid() || computeBoundingBox())
     {
-      ibbox = d_bbox;
+      ibbox = bbox_;
       return true;
     }
   else
@@ -65,11 +65,11 @@ Geom::getBoundingBox(BBox& ibbox)
 bool
 Geom::longestDimension(double& odouble)
 {
-  if (!d_bbox.valid())
+  if (!bbox_.valid())
     {
       computeBoundingBox();
     }
-  odouble = d_bbox.longest_edge();
+  odouble = bbox_.longest_edge();
   return true;
 }
 
@@ -77,11 +77,11 @@ Geom::longestDimension(double& odouble)
 bool
 Geom::getDiagonal(Vector& ovec)
 {
-  if(!d_bbox.valid())
+  if(!bbox_.valid())
     {
       computeBoundingBox();
     }
-  ovec = d_bbox.diagonal();
+  ovec = bbox_.diagonal();
   return true;
 }
 

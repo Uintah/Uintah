@@ -47,7 +47,7 @@ public:
   static string typeName(int);
 protected:
 
-  vector<list<int> > d_cell;
+  vector<list<int> > cell_;
 
 private:
   static DebugStream dbg;

@@ -59,7 +59,7 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static string typeName(int);
-  vector<EdgeSimp> d_edge;
+  vector<EdgeSimp> edge_;
 
 protected:
 

@@ -71,16 +71,16 @@ public:
   //////////
   // Attribute naming
   void setName(string name){
-    d_name=name;
+    name_=name;
   };
 
   string getName(){
-    return d_name;
+    return name_;
   };
 
-  Type getType() { return d_type; }
-  void setType( Type type=Attrib::Normal ) { d_type = type; }
-  bool isTemp() { return d_type == Attrib::Temp; }
+  Type getType() { return type_; }
+  void setType( Type type=Attrib::Normal ) { type_ = type; }
+  bool isTemp() { return type_ == Attrib::Temp; }
 
   // GROUP: Support of persistent representation
   //////////
@@ -93,17 +93,17 @@ public:
   // GROUP: Public Data
   //////////
   // 
-  string      d_unitName;
+  string      unitName_;
   
   //////////
   // Attribute creation data
-  string      d_authorName;
-  string      d_date;
-  string      d_orgName;
+  string      authorName_;
+  string      date_;
+  string      orgName_;
   
 protected:
-  string      d_name;
-  Type        d_type;
+  string      name_;
+  Type        type_;
 };
 
 }  // end namespace SCIRun

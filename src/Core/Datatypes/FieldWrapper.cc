@@ -17,17 +17,17 @@ PersistentTypeID FieldWrapper::type_id("FieldWrapper", "Datatype", 0);
 
 FieldWrapper::FieldWrapper(const GeomHandle &handle):
   fieldtype(GEOM){
-  d_geom = handle;
+  geom_ = handle;
 }
 
 FieldWrapper::FieldWrapper(const AttribHandle &handle):
   fieldtype(ATTRIB){
-  d_attrib = handle;
+  attrib_ = handle;
 }
 
 FieldWrapper::FieldWrapper(const FieldHandle &handle):
   fieldtype(FIELD) {
-  d_field = handle;
+  field_ = handle;
 }
 
 

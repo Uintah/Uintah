@@ -75,7 +75,7 @@ class PSECORESHARE Module : public TCL, public Pickable {
 protected:
   //////////
   // Log stream for the module
-  TCLstrbuff d_msgStream;
+  TCLstrbuff msgStream_;
 
 public:
   enum State {

@@ -45,18 +45,18 @@ public:
 
   // This transform can be directly manipulated.  updateTransform()
   // must be called after to flush the changes to the scaled transform.
-  Transform &getUnscaledTransform() { return d_prescale; }
-  void updateTransform();  // flushes d_prescale -> d_transform
+  Transform &getUnscaledTransform() { return prescale_; }
+  void updateTransform();  // flushes prescale_ -> transform_
 
 
-  inline int getDim() { return d_dim; }
-  inline int getSizeX() { return d_nx; }
-  inline int getSizeY() { return d_ny; }
-  inline int getSizeZ() { return d_nz; }
+  inline int getDim() { return dim_; }
+  inline int getSizeX() { return nx_; }
+  inline int getSizeY() { return ny_; }
+  inline int getSizeZ() { return nz_; }
   virtual void setBoundingBox(BBox &box);
 
   // Return the transform from attribute space to world space.
-  const Transform &getTransform() { return d_transform; }
+  const Transform &getTransform() { return transform_; }
 
 
   // Transform from attribute space to world space.
@@ -100,23 +100,23 @@ protected:
   virtual bool computeBoundingBox();
   
   // Number of grid lines in each axis.
-  int d_dim;
-  int d_nx, d_ny, d_nz;
+  int dim_;
+  int nx_, ny_, nz_;
 
-  Transform d_transform;
-  Transform d_prescale;
+  Transform transform_;
+  Transform prescale_;
 };
 
 void
 LatticeGeom::ftransform(const Point &p, Point &r)
 {
-  r = d_transform.project(p);
+  r = transform_.project(p);
 }
 
 void
 LatticeGeom::fitransform(const Point &p, Point &r)
 {
-  r = d_transform.unproject(p);
+  r = transform_.unproject(p);
 }
 
 
@@ -125,24 +125,24 @@ LatticeGeom::fitransform(const Point &p, Point &r)
 inline int
 LatticeGeom::clampi(int x)
 {
-  //MASSERT(x >= 0 && x < d_nx, "LATTICE OUT OF BOUNDS");
-  if (x >= 0 && x < d_nx) throw "LATTICE OUT OF BOUNDS";
+  //MASSERT(x >= 0 && x < nx_, "LATTICE OUT OF BOUNDS");
+  if (x >= 0 && x < nx_) throw "LATTICE OUT OF BOUNDS";
   return x;
 }
 
 inline int
 LatticeGeom::clampj(int y)
 {
-  //MASSERT(y >= 0 && y < d_ny, "LATTICE OUT OF BOUNDS");
-  if (y >= 0 && y < d_ny) throw "LATTICE OUT OF BOUNDS";
+  //MASSERT(y >= 0 && y < ny_, "LATTICE OUT OF BOUNDS");
+  if (y >= 0 && y < ny_) throw "LATTICE OUT OF BOUNDS";
   return y;
 }
 
 inline int
 LatticeGeom::clampk(int z)
 {
-  //MASSERT(z >= 0 && z < d_nz, "LATTICE OUT OF BOUNDS");
-  if (z >= 0 && z < d_nz) throw "LATTICE OUT OF BOUNDS";
+  //MASSERT(z >= 0 && z < nz_, "LATTICE OUT OF BOUNDS");
+  if (z >= 0 && z < nz_) throw "LATTICE OUT OF BOUNDS";
   return z;
 }
 #elif 0
@@ -150,43 +150,43 @@ LatticeGeom::clampk(int z)
 inline int
 LatticeGeom::clampi(int x)
 {
-  return Min(Max(0, x), d_nx-1);
+  return Min(Max(0, x), nx_-1);
 }
 
 inline int
 LatticeGeom::clampj(int y)
 {
-  return Min(Max(0, y), d_ny-1);
+  return Min(Max(0, y), ny_-1);
 }
 
 inline int
 LatticeGeom::clampk(int z)
 {
-  return Min(Max(0, z), d_nz-1);
+  return Min(Max(0, z), nz_-1);
 }
 #else
 // Wrap
 inline int
 LatticeGeom::clampi(int x)
 {
-  int m = x % d_nx;
-  if (m < 0) m+=d_nx;
+  int m = x % nx_;
+  if (m < 0) m+=nx_;
   return m;
 }
 
 inline int
 LatticeGeom::clampj(int y)
 {
-  int m = y % d_ny;
-  if (m < 0) m+=d_ny;
+  int m = y % ny_;
+  if (m < 0) m+=ny_;
   return m;
 }
 
 inline int
 LatticeGeom::clampk(int z)
 {
-  int m = z % d_nz;
-  if (m < 0) m+=d_nz;
+  int m = z % nz_;
+  if (m < 0) m+=nz_;
   return m;
 }
 #endif

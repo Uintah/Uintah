@@ -55,23 +55,23 @@ class BuildBEMatrix : public Module {
 
   //////////
   // Input port pointer
-  FieldIPort*        d_iportSurfOut;
-  FieldIPort*        d_iportSurfIn;
+  FieldIPort*        iportSurfOut_;
+  FieldIPort*        iportSurfIn_;
 
   //////////
   // Output ports pointers
-  MatrixOPort*       d_oportMatrix;
-  ColumnMatrixOPort* d_oportPhiHeart;
+  MatrixOPort*       oportMatrix_;
+  ColumnMatrixOPort* oportPhiHeart_;
  
-  DenseMatrixHandle  d_hZbh;
-  ColumnMatrixHandle d_hPhiH;
+  DenseMatrixHandle  hZbh_;
+  ColumnMatrixHandle hPhiH_;
 
   //////////
   // matrices used in calculation of integrals
-  Array1<DenseMatrix> d_baseMtrx;
-  DenseMatrix         d_coef16;
-  DenseMatrix         d_coef64;
-  DenseMatrix         d_coef256;
+  Array1<DenseMatrix> baseMtrx_;
+  DenseMatrix         coef16_;
+  DenseMatrix         coef64_;
+  DenseMatrix         coef256_;
 
   // GROUP: Private Methods
   ///////////////////////////
@@ -132,33 +132,33 @@ extern "C" Module* make_BuildBEMatrix(const clString& id) {
 
 BuildBEMatrix::BuildBEMatrix(const clString& id): 
   Module("BuildBEMatrix", id, Source),
-  d_baseMtrx(),
-  d_coef16(16, 3),
-  d_coef64(64, 3),
-  d_coef256(256, 3)  
+  baseMtrx_(),
+  coef16_(16, 3),
+  coef64_(64, 3),
+  coef256_(256, 3)  
 {
   // Create the input ports
-  d_iportSurfOut = scinew FieldIPort(this, "Outer Surface", FieldIPort::Atomic);
-  add_iport(d_iportSurfOut);
+  iportSurfOut_ = scinew FieldIPort(this, "Outer Surface", FieldIPort::Atomic);
+  add_iport(iportSurfOut_);
 
-  d_iportSurfIn = scinew FieldIPort(this, "Inner Surface", FieldIPort::Atomic);
-  add_iport(d_iportSurfIn);
+  iportSurfIn_ = scinew FieldIPort(this, "Inner Surface", FieldIPort::Atomic);
+  add_iport(iportSurfIn_);
 
   // Create the output ports
-  d_oportMatrix = scinew MatrixOPort(this, "Zbh Matrix", MatrixIPort::Atomic);
-  add_oport(d_oportMatrix);
+  oportMatrix_ = scinew MatrixOPort(this, "Zbh Matrix", MatrixIPort::Atomic);
+  add_oport(oportMatrix_);
   
-  d_oportPhiHeart = scinew ColumnMatrixOPort(this, "Inner Surf Potentials", ColumnMatrixIPort::Atomic);
-  add_oport(d_oportPhiHeart);
+  oportPhiHeart_ = scinew ColumnMatrixOPort(this, "Inner Surf Potentials", ColumnMatrixIPort::Atomic);
+  add_oport(oportPhiHeart_);
   
-  d_hPhiH  = new ColumnMatrix(1);
+  hPhiH_  = new ColumnMatrix(1);
   DenseMatrix tmpMtrx(4, 4);
   tmpMtrx.zero();
 
-  d_baseMtrx.add(tmpMtrx);
-  d_baseMtrx.add(tmpMtrx);
-  d_baseMtrx.add(tmpMtrx);
-  d_baseMtrx.add(tmpMtrx);
+  baseMtrx_.add(tmpMtrx);
+  baseMtrx_.add(tmpMtrx);
+  baseMtrx_.add(tmpMtrx);
+  baseMtrx_.add(tmpMtrx);
 
   initBase();
   init16();
@@ -178,12 +178,12 @@ void BuildBEMatrix::execute()
   FieldHandle hFieldOut;
   FieldHandle hFieldIn;
   
-  if(!d_iportSurfOut->get(hFieldOut)) { 
-    d_msgStream << "BuildBEMatrix -- couldn't get outer surface. Returning." << endl;
+  if(!iportSurfOut_->get(hFieldOut)) { 
+    msgStream_ << "BuildBEMatrix -- couldn't get outer surface. Returning." << endl;
     return;
   }
-  if(!d_iportSurfIn->get(hFieldIn)) { 
-    d_msgStream << "BuildBEMatrix -- couldn't get inner surface. Returning." << endl;
+  if(!iportSurfIn_->get(hFieldIn)) { 
+    msgStream_ << "BuildBEMatrix -- couldn't get inner surface. Returning." << endl;
     return;
   }
 
@@ -200,40 +200,40 @@ void BuildBEMatrix::execute()
   PotentialsHandle  hPhiIn   = hAttribInner->downcast((Potentials*)0);
   
   if (hSurfOut.get_rep()){
-    d_msgStream << "BuildBEMatrix -- couldn't cast Geom to SurfaceGeom for outer surface. Returning." << endl;
+    msgStream_ << "BuildBEMatrix -- couldn't cast Geom to SurfaceGeom for outer surface. Returning." << endl;
     releaseHandles();
     return;
   }
   
   if (hSurfIn.get_rep()){
-    d_msgStream << "BuildBEMatrix -- couldn't cast Geom to SurfaceGeom for inner surface. Returning." << endl;
+    msgStream_ << "BuildBEMatrix -- couldn't cast Geom to SurfaceGeom for inner surface. Returning." << endl;
     releaseHandles();
     return;
   }
 
   if (hPhiIn.get_rep()){
-    d_msgStream << "BuildBEMatrix -- couldn't cast Attrib to DiscreateAttrib<double> for inner surface potentials. Returning." << endl;
+    msgStream_ << "BuildBEMatrix -- couldn't cast Attrib to DiscreateAttrib<double> for inner surface potentials. Returning." << endl;
     releaseHandles();
     return;
   }
   
   // -- allocating matrices
-  int nnIn = hSurfIn->d_face.size();
-  int nnOut= hSurfOut->d_face.size();
+  int nnIn = hSurfIn->face_.size();
+  int nnOut= hSurfOut->face_.size();
 
-  d_hZbh = scinew DenseMatrix(nnOut, nnIn);
+  hZbh_ = scinew DenseMatrix(nnOut, nnIn);
   
   // -- STARTING CALCULATIONS
   // -- Zbh<-Gbh
-  if(!makeGbh(*d_hZbh.get_rep(), hSurfOut, hSurfIn)){
-    d_msgStream << "BuildBEMatrix: Cann't construct Gbh. Returning." << endl;
+  if(!makeGbh(*hZbh_.get_rep(), hSurfOut, hSurfIn)){
+    msgStream_ << "BuildBEMatrix: Cann't construct Gbh. Returning." << endl;
     return;
   }
 
   // -- calculating Ghh
   DenseMatrixHandle hGhh = scinew DenseMatrix(nnIn, nnIn);
   if(!makeGhh(*hGhh.get_rep(), hSurfIn)){
-    d_msgStream << "BuildBEMatrix: Cann't construct Ghh. Returning." << endl;
+    msgStream_ << "BuildBEMatrix: Cann't construct Ghh. Returning." << endl;
     return;
   }
 
@@ -242,14 +242,14 @@ void BuildBEMatrix::execute()
   
   // -- tmpBH<-Zbh*(Ghh^-1)
   DenseMatrixHandle hTmpBH = scinew DenseMatrix(nnOut, nnIn);
-  Mult(*hTmpBH.get_rep(), *d_hZbh.get_rep(), *hGhh.get_rep());
+  Mult(*hTmpBH.get_rep(), *hZbh_.get_rep(), *hGhh.get_rep());
   
   // -- Ybb<-tmpBH*Phb
   DenseMatrixHandle hPhb = scinew DenseMatrix(nnIn, nnOut);
   DenseMatrixHandle hYbb = scinew DenseMatrix(nnOut, nnOut);
   
   if (!makePhb(*hPhb.get_rep(), hSurfIn, hSurfOut)){
-    d_msgStream << "BuildBEMatrix: Cann't construct Phb. Returning." << endl;
+    msgStream_ << "BuildBEMatrix: Cann't construct Phb. Returning." << endl;
     return;
   }
 
@@ -259,7 +259,7 @@ void BuildBEMatrix::execute()
   DenseMatrixHandle hPbb = scinew DenseMatrix(nnOut, nnOut);
 
   if(!makePbb(*hPbb.get_rep(), hSurfOut)){
-    d_msgStream << "BuildBEMatrix: Cann't construct Pbb. Returning." << endl;
+    msgStream_ << "BuildBEMatrix: Cann't construct Pbb. Returning." << endl;
     return;
   }
 
@@ -272,32 +272,32 @@ void BuildBEMatrix::execute()
   DenseMatrixHandle hPhh = scinew DenseMatrix(nnIn, nnIn);
   
   if(!makePhh(*hPhh.get_rep(), hSurfIn)){
-    d_msgStream << "BuildBEMatrix: Cann't construct Phh. Returning." << endl;
+    msgStream_ << "BuildBEMatrix: Cann't construct Phh. Returning." << endl;
     return;
   }
 
-  Mult(*d_hZbh.get_rep(), *hTmpBH.get_rep(), *hPhh.get_rep());
+  Mult(*hZbh_.get_rep(), *hTmpBH.get_rep(), *hPhh.get_rep());
   
   // -- Zbh <- Zbh-Pbh
   DenseMatrixHandle hPbh = scinew DenseMatrix(nnOut, nnIn);
   if (!makePbh(*hPbh.get_rep(), hSurfOut, hSurfIn)){
-    d_msgStream << "BuildBEMatrix: Cann't construct Pbh. Returning." << endl;
+    msgStream_ << "BuildBEMatrix: Cann't construct Pbh. Returning." << endl;
     return;
   }
 
-  Add(1.0, *d_hZbh.get_rep(), -1.0, *hPbh.get_rep());
+  Add(1.0, *hZbh_.get_rep(), -1.0, *hPbh.get_rep());
 
   // -- tmpBH <- Ybb*Zbh
-  Mult(*hTmpBH.get_rep(), *hYbb.get_rep(), *d_hZbh.get_rep());
+  Mult(*hTmpBH.get_rep(), *hYbb.get_rep(), *hZbh_.get_rep());
 
   // -- Zbh <- tmpBH
-  d_hZbh = hTmpBH;
+  hZbh_ = hTmpBH;
 
   // TODO: PhiHeart vector, mapping from original geometry to the vector
 
   // -- sending handles to cloned objects
-  d_oportMatrix->send(MatrixHandle(d_hZbh->clone()));
-  d_oportPhiHeart->send(ColumnMatrixHandle(d_hPhiH->clone()));
+  oportMatrix_->send(MatrixHandle(hZbh_->clone()));
+  oportPhiHeart_->send(ColumnMatrixHandle(hPhiH_->clone()));
   releaseHandles();
 }
 
@@ -312,13 +312,13 @@ bool BuildBEMatrix::makePbb(DenseMatrix& mP, SurfaceGeomHandle hSurf){
   int nr = mP.ncols();
   int nc = mP.nrows();
 
-  int nNodes = hSurf->d_node.size();
-  int nFaces = hSurf->d_face.size();
+  int nNodes = hSurf->node_.size();
+  int nFaces = hSurf->face_.size();
   
   ASSERTEQ(nr, nc);
   ASSERTEQ(nr, nNodes);
 
-  vector<NodeSimp>& nodes = hSurf->d_node;
+  vector<NodeSimp>& nodes = hSurf->node_;
   
   int n1, n2, n3;
   double tmp = 0;
@@ -328,9 +328,9 @@ bool BuildBEMatrix::makePbb(DenseMatrix& mP, SurfaceGeomHandle hSurf){
     Point& rNode = nodes[i].p;
     autoAngle = 0;
     for (int j=0; j<nFaces; j++){             // -- find Rt-coefficient for each triangle
-      n1 = hSurf->d_face[j].nodes[0];
-      n2 = hSurf->d_face[j].nodes[1];
-      n3 = hSurf->d_face[j].nodes[2];
+      n1 = hSurf->face_[j].nodes[0];
+      n2 = hSurf->face_[j].nodes[1];
+      n3 = hSurf->face_[j].nodes[2];
       
       Point& rn1 = nodes[n1].p;
       Point& rn2 = nodes[n2].p;
@@ -361,13 +361,13 @@ bool BuildBEMatrix::makePhh(DenseMatrix& mP, SurfaceGeomHandle hSurf){
   int nr = mP.ncols();
   int nc = mP.nrows();
 
-  int nNodes = hSurf->d_node.size();
-  int nFaces = hSurf->d_face.size();
+  int nNodes = hSurf->node_.size();
+  int nFaces = hSurf->face_.size();
   
   ASSERTEQ(nr, nc);
   ASSERTEQ(nr, nNodes);
 
-  vector<NodeSimp>& nodes = hSurf->d_node;
+  vector<NodeSimp>& nodes = hSurf->node_;
   
   int n1, n2, n3;
   double tmp = 0;
@@ -377,9 +377,9 @@ bool BuildBEMatrix::makePhh(DenseMatrix& mP, SurfaceGeomHandle hSurf){
     Point& rNode = nodes[i].p;
     autoAngle = 0;
     for (int j=0; j<nFaces; j++){             // -- find Rt-coefficient for each triangle
-      n1 = hSurf->d_face[j].nodes[0];
-      n2 = hSurf->d_face[j].nodes[1];
-      n3 = hSurf->d_face[j].nodes[2];
+      n1 = hSurf->face_[j].nodes[0];
+      n2 = hSurf->face_[j].nodes[1];
+      n3 = hSurf->face_[j].nodes[2];
       
       Point& rn1 = nodes[n1].p;
       Point& rn2 = nodes[n2].p;
@@ -410,15 +410,15 @@ bool BuildBEMatrix::makePbh(DenseMatrix& mP, SurfaceGeomHandle hSurfB, SurfaceGe
   int nr = mP.ncols();
   int nc = mP.nrows();
 
-  int nNodesB = hSurfB->d_node.size();
-  int nNodesH = hSurfH->d_node.size();
-  int nFacesH = hSurfH->d_face.size();
+  int nNodesB = hSurfB->node_.size();
+  int nNodesH = hSurfH->node_.size();
+  int nFacesH = hSurfH->face_.size();
   
   ASSERTEQ(nr, nNodesB);
   ASSERTEQ(nc, nNodesH);
 
-  vector<NodeSimp>& nodesB = hSurfB->d_node;
-  vector<NodeSimp>& nodesH = hSurfH->d_node;
+  vector<NodeSimp>& nodesB = hSurfB->node_;
+  vector<NodeSimp>& nodesH = hSurfH->node_;
   
   int n1, n2, n3;
   double tmp = 0;
@@ -426,9 +426,9 @@ bool BuildBEMatrix::makePbh(DenseMatrix& mP, SurfaceGeomHandle hSurfB, SurfaceGe
   for (int i=0; i<nNodesB; i++){               // -- for every node on the first surface
     Point& rNode = nodesB[i].p;
     for (int j=0; j<nFacesH; j++){             // -- find Rt-coefficient for each triangle
-      n1 = hSurfH->d_face[j].nodes[0];
-      n2 = hSurfH->d_face[j].nodes[1];
-      n3 = hSurfH->d_face[j].nodes[2];
+      n1 = hSurfH->face_[j].nodes[0];
+      n2 = hSurfH->face_[j].nodes[1];
+      n3 = hSurfH->face_[j].nodes[2];
       
       Point& rn1 = nodesH[n1].p;
       Point& rn2 = nodesH[n2].p;
@@ -452,15 +452,15 @@ bool BuildBEMatrix::makePhb(DenseMatrix& mP, SurfaceGeomHandle hSurfH, SurfaceGe
   int nr = mP.ncols();
   int nc = mP.nrows();
 
-  int nNodesB = hSurfB->d_node.size();
-  int nNodesH = hSurfH->d_node.size();
-  int nFacesB = hSurfB->d_face.size();
+  int nNodesB = hSurfB->node_.size();
+  int nNodesH = hSurfH->node_.size();
+  int nFacesB = hSurfB->face_.size();
   
   ASSERTEQ(nc, nNodesB);
   ASSERTEQ(nr, nNodesH);
 
-  vector<NodeSimp>& nodesB = hSurfB->d_node;
-  vector<NodeSimp>& nodesH = hSurfH->d_node;
+  vector<NodeSimp>& nodesB = hSurfB->node_;
+  vector<NodeSimp>& nodesH = hSurfH->node_;
   
   int n1, n2, n3;
   double tmp = 0;
@@ -468,9 +468,9 @@ bool BuildBEMatrix::makePhb(DenseMatrix& mP, SurfaceGeomHandle hSurfH, SurfaceGe
   for (int i=0; i<nNodesH; i++){               // -- for every node on the first surface
     Point& rNode = nodesH[i].p;
     for (int j=0; j<nFacesB; j++){             // -- find Rt-coefficient for each triangle
-      n1 = hSurfB->d_face[j].nodes[0];
-      n2 = hSurfB->d_face[j].nodes[1];
-      n3 = hSurfB->d_face[j].nodes[2];
+      n1 = hSurfB->face_[j].nodes[0];
+      n2 = hSurfB->face_[j].nodes[1];
+      n3 = hSurfB->face_[j].nodes[2];
       
       Point& rn1 = nodesB[n1].p;
       Point& rn2 = nodesB[n2].p;
@@ -495,15 +495,15 @@ bool BuildBEMatrix::makeGbh(DenseMatrix& mG, SurfaceGeomHandle hSurfB, SurfaceGe
   int nr = mG.ncols();
   int nc = mG.nrows();
 
-  int nNodesB = hSurfB->d_node.size();
-  int nNodesH = hSurfH->d_node.size();
-  int nFacesH = hSurfB->d_face.size();
+  int nNodesB = hSurfB->node_.size();
+  int nNodesH = hSurfH->node_.size();
+  int nFacesH = hSurfB->face_.size();
   
   ASSERTEQ(nc, nNodesB);
   ASSERTEQ(nr, nNodesH);
 
-  vector<NodeSimp>& nodesB = hSurfB->d_node;
-  vector<NodeSimp>& nodesH = hSurfH->d_node;
+  vector<NodeSimp>& nodesB = hSurfB->node_;
+  vector<NodeSimp>& nodesH = hSurfH->node_;
   
   int n1, n2, n3;
   double tmp = 0;
@@ -511,9 +511,9 @@ bool BuildBEMatrix::makeGbh(DenseMatrix& mG, SurfaceGeomHandle hSurfB, SurfaceGe
   for (int i=0; i<nNodesB; i++){               // -- for every node on the first surface
     Point& rNode = nodesB[i].p;
     for (int j=0; j<nFacesH; j++){             // -- find Rt-coefficient for each triangle
-      n1 = hSurfH->d_face[j].nodes[0];
-      n2 = hSurfH->d_face[j].nodes[1];
-      n3 = hSurfH->d_face[j].nodes[2];
+      n1 = hSurfH->face_[j].nodes[0];
+      n2 = hSurfH->face_[j].nodes[1];
+      n3 = hSurfH->face_[j].nodes[2];
       
       Point& rn1 = nodesH[n1].p;
       Point& rn2 = nodesH[n2].p;
@@ -538,13 +538,13 @@ bool BuildBEMatrix::makeGhh(DenseMatrix& mG, SurfaceGeomHandle hSurfH){
   int nr = mG.ncols();
   int nc = mG.nrows();
 
-  int nNodesH = hSurfH->d_node.size();
-  int nFacesH = hSurfH->d_face.size();
+  int nNodesH = hSurfH->node_.size();
+  int nFacesH = hSurfH->face_.size();
   
   ASSERTEQ(nc, nNodesH);
   ASSERTEQ(nr, nNodesH);
 
-  vector<NodeSimp>& nodesH = hSurfH->d_node;
+  vector<NodeSimp>& nodesH = hSurfH->node_;
   
   int n1, n2, n3;
   double tmp = 0;
@@ -552,9 +552,9 @@ bool BuildBEMatrix::makeGhh(DenseMatrix& mG, SurfaceGeomHandle hSurfH){
   for (int i=0; i<nNodesH; i++){               // -- for every node on the first surface
     Point& rNode = nodesH[i].p;
     for (int j=0; j<nFacesH; j++){             // -- find Rt-coefficient for each triangle
-      n1 = hSurfH->d_face[j].nodes[0];
-      n2 = hSurfH->d_face[j].nodes[1];
-      n3 = hSurfH->d_face[j].nodes[2];
+      n1 = hSurfH->face_[j].nodes[0];
+      n2 = hSurfH->face_[j].nodes[1];
+      n3 = hSurfH->face_[j].nodes[2];
       
       Point& rn1 = nodesH[n1].p;
       Point& rn2 = nodesH[n2].p;
@@ -572,8 +572,8 @@ bool BuildBEMatrix::makeGhh(DenseMatrix& mG, SurfaceGeomHandle hSurfH){
 }
 
 void BuildBEMatrix::releaseHandles(){
-  d_hZbh = 0;
-  d_hPhiH = 0;
+  hZbh_ = 0;
+  hPhiH_ = 0;
 }
 
 //////////
@@ -620,13 +620,13 @@ double BuildBEMatrix::getIntegral(const Point& p1, const Point& p2, const Point&
   
   switch (nt){
   case 16:
-    pM = &d_coef16;
+    pM = &coef16_;
     break;
   case 64:
-    pM = &d_coef64;
+    pM = &coef64_;
     break;
   case 128:
-    pM = &d_coef256;
+    pM = &coef256_;
     break;
   }
   DenseMatrix& coeffs = *pM;
@@ -643,21 +643,21 @@ double BuildBEMatrix::getIntegral(const Point& p1, const Point& p2, const Point&
 // Initialize matrix used in calculations of subdivision coefficients
 void BuildBEMatrix::initBase(){
   // -- initializing base matrix
-  d_baseMtrx[0][0][0] = 0.5; d_baseMtrx[0][0][1] = 0.5;   d_baseMtrx[0][0][2] = 0;
-  d_baseMtrx[0][1][0] = 0;   d_baseMtrx[0][1][1] = 0.5;   d_baseMtrx[0][1][2] = 0.5;
-  d_baseMtrx[0][2][0] = 0.5; d_baseMtrx[0][2][1] = 0.0;   d_baseMtrx[0][2][2] = 0.5;
+  baseMtrx_[0][0][0] = 0.5; baseMtrx_[0][0][1] = 0.5;   baseMtrx_[0][0][2] = 0;
+  baseMtrx_[0][1][0] = 0;   baseMtrx_[0][1][1] = 0.5;   baseMtrx_[0][1][2] = 0.5;
+  baseMtrx_[0][2][0] = 0.5; baseMtrx_[0][2][1] = 0.0;   baseMtrx_[0][2][2] = 0.5;
 
-  d_baseMtrx[1][0][0] = 1.0; d_baseMtrx[1][0][1] = 0.0;   d_baseMtrx[1][0][2] = 0.0;
-  d_baseMtrx[1][1][0] = 0.5; d_baseMtrx[1][1][1] = 0.5;   d_baseMtrx[1][1][2] = 0.0;
-  d_baseMtrx[1][2][0] = 0.5; d_baseMtrx[1][2][1] = 0.0;   d_baseMtrx[1][2][2] = 0.5;
+  baseMtrx_[1][0][0] = 1.0; baseMtrx_[1][0][1] = 0.0;   baseMtrx_[1][0][2] = 0.0;
+  baseMtrx_[1][1][0] = 0.5; baseMtrx_[1][1][1] = 0.5;   baseMtrx_[1][1][2] = 0.0;
+  baseMtrx_[1][2][0] = 0.5; baseMtrx_[1][2][1] = 0.0;   baseMtrx_[1][2][2] = 0.5;
 
-  d_baseMtrx[2][0][0] = 0.5; d_baseMtrx[2][0][1] = 0.5;   d_baseMtrx[2][0][2] = 0.0;
-  d_baseMtrx[2][1][0] = 0.0; d_baseMtrx[2][1][1] = 1.0;   d_baseMtrx[2][1][2] = 0.0;
-  d_baseMtrx[2][2][0] = 0.0; d_baseMtrx[2][2][1] = 0.5;   d_baseMtrx[2][2][2] = 0.5;
+  baseMtrx_[2][0][0] = 0.5; baseMtrx_[2][0][1] = 0.5;   baseMtrx_[2][0][2] = 0.0;
+  baseMtrx_[2][1][0] = 0.0; baseMtrx_[2][1][1] = 1.0;   baseMtrx_[2][1][2] = 0.0;
+  baseMtrx_[2][2][0] = 0.0; baseMtrx_[2][2][1] = 0.5;   baseMtrx_[2][2][2] = 0.5;
 
-  d_baseMtrx[3][0][0] = 0.5; d_baseMtrx[3][0][1] = 0.0;   d_baseMtrx[3][0][2] = 0.5;
-  d_baseMtrx[3][1][0] = 0.0; d_baseMtrx[3][1][1] = 0.5;   d_baseMtrx[3][1][2] = 0.5;
-  d_baseMtrx[3][2][0] = 0.0; d_baseMtrx[3][2][1] = 0.0;   d_baseMtrx[3][2][2] = 1.0;
+  baseMtrx_[3][0][0] = 0.5; baseMtrx_[3][0][1] = 0.0;   baseMtrx_[3][0][2] = 0.5;
+  baseMtrx_[3][1][0] = 0.0; baseMtrx_[3][1][1] = 0.5;   baseMtrx_[3][1][2] = 0.5;
+  baseMtrx_[3][2][0] = 0.0; baseMtrx_[3][2][1] = 0.0;   baseMtrx_[3][2][2] = 1.0;
 }
 
 //////////
@@ -667,9 +667,9 @@ void BuildBEMatrix::init16(){
   for (int i=0; i<4; i++)
     for (int j=0; j<4; j++){
       DenseMatrix tmpMtrx(4, 4);
-      Mult(tmpMtrx, d_baseMtrx[i], d_baseMtrx[j]);
+      Mult(tmpMtrx, baseMtrx_[i], baseMtrx_[j]);
       for (int k=0; k<3; k++)
-	d_coef16[j+i*4][k] = tmpMtrx.sumOfCol(k)/3.0;
+	coef16_[j+i*4][k] = tmpMtrx.sumOfCol(k)/3.0;
     }
 }
 
@@ -679,11 +679,11 @@ void BuildBEMatrix::init64(){
     for (int j=0; j<4; j++)
       for (int j1=0; j1<4; j1++){
 	DenseMatrix tmpMtrx(4, 4);
-	Mult(tmpMtrx, d_baseMtrx[i], d_baseMtrx[j]);
+	Mult(tmpMtrx, baseMtrx_[i], baseMtrx_[j]);
 	DenseMatrix tmpMtrx2(4, 4);
-	Mult(tmpMtrx2, tmpMtrx, d_baseMtrx[j1]);
+	Mult(tmpMtrx2, tmpMtrx, baseMtrx_[j1]);
 	for (int k=0; k<3; k++)
-	  d_coef64[j1+j*4+i*4*4][k] = tmpMtrx2.sumOfCol(k)/3.0;
+	  coef64_[j1+j*4+i*4*4][k] = tmpMtrx2.sumOfCol(k)/3.0;
       }
 }
 
@@ -694,12 +694,12 @@ void BuildBEMatrix::init128(){
       for (int j1=0; j1<4; j1++)
 	for (int j2=0; j2<4; j2++){
 	  DenseMatrix tmpMtrx1(4, 4);
-	  Mult(tmpMtrx1, d_baseMtrx[i], d_baseMtrx[j]);
+	  Mult(tmpMtrx1, baseMtrx_[i], baseMtrx_[j]);
 	  DenseMatrix tmpMtrx2(4, 4);
-	  Mult(tmpMtrx2, tmpMtrx1, d_baseMtrx[j1]);
-	  Mult(tmpMtrx1, tmpMtrx2, d_baseMtrx[j2]);
+	  Mult(tmpMtrx2, tmpMtrx1, baseMtrx_[j1]);
+	  Mult(tmpMtrx1, tmpMtrx2, baseMtrx_[j2]);
 	  for (int k=0; k<3; k++)
-	    d_coef256[j2+4*(j1+4*(j+i*4))][k] = tmpMtrx1.sumOfCol(k)/3.0;
+	    coef256_[j2+4*(j1+4*(j+i*4))][k] = tmpMtrx1.sumOfCol(k)/3.0;
       }
 }
 

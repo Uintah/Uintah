@@ -60,13 +60,13 @@ typedef std::map<int,package*>::iterator package_iter;
 PackageDB packageDB;
 
 PackageDB::PackageDB(void) :
-    d_db((void*)new Packages), d_packageList(0)
+    db_((void*)new Packages), packageList_(0)
 {
 }
 
 PackageDB::~PackageDB(void)
 { 
-  delete (Packages*)d_db; 
+  delete (Packages*)db_; 
 }
 
 typedef void (*pkgInitter)(const clString& tclPath);
@@ -302,13 +302,13 @@ void PackageDB::loadPackage(const clString& packPath)
 }
   
 void PackageDB::registerModule(ModuleInfo* info) {
-  Packages* db=(Packages*)d_db;
+  Packages* db=(Packages*)db_;
  
   Package* package;
   if(!db->lookup(info->packageName,package))
     {
       db->insert(info->packageName,package=new Package);
-      d_packageList.add( info->packageName );
+      packageList_.add( info->packageName );
     }
   
   Category* category;
@@ -331,7 +331,7 @@ void PackageDB::createAlias(const clString& fromPackageName,
 			    const clString&,// toCategoryName,
 			    const clString&)// toModuleName)
 {
-  Packages* db=(Packages*)d_db;
+  Packages* db=(Packages*)db_;
   
   Package* package;
   if(!db->lookup(fromPackageName,package)) {
@@ -357,7 +357,7 @@ Module* PackageDB::instantiateModule(const clString& packageName,
 				     const clString& categoryName,
 				     const clString& moduleName,
 				     const clString& instanceName) const {
-  Packages* db=(Packages*)d_db;
+  Packages* db=(Packages*)db_;
 
   Package* package;
   if(!db->lookup(packageName,package)) {
@@ -430,17 +430,17 @@ Module* PackageDB::instantiateModule(const clString& packageName,
  
 Array1<clString> PackageDB::packageNames(void) const {
    
-  // d_packageList is used to keep a list of the packages 
+  // packageList_ is used to keep a list of the packages 
   // that are in this PSE IN THE ORDER THAT THEY ARE SPECIFIED
   // by the user in the Makefile (for main.cc) or in their
   // environment.
   
-  return d_packageList;
+  return packageList_;
 }
 
 Array1<clString>
 PackageDB::categoryNames(const clString& packageName) const {
-  Packages* db=(Packages*)d_db;
+  Packages* db=(Packages*)db_;
   {
     PackagesIter iter(db);
     for(iter.first();iter.ok();++iter) if(iter.get_key()==packageName) {
@@ -463,7 +463,7 @@ PackageDB::categoryNames(const clString& packageName) const {
 Array1<clString>
 PackageDB::moduleNames(const clString& packageName,
 		       const clString& categoryName) const {
-  Packages* db=(Packages*)d_db;
+  Packages* db=(Packages*)db_;
   {
     PackagesIter iter(db);
     for(iter.first();iter.ok();++iter) 

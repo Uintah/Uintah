@@ -69,8 +69,8 @@ public:
   // n!=0 - name of the n-th parameter (for templatazed types)
   virtual string getTypeName(int n) = 0;
 
-  inline void setName(string iname) { d_name = iname; };
-  inline string getName() { return d_name; };
+  inline void setName(string iname) { name_ = iname; };
+  inline string getName() { return name_; };
 
   /////////
   // Casts down to handle to attribute of specific type.
@@ -93,8 +93,8 @@ protected:
   // Compute the bounding box, set has_bbox to true
   virtual bool computeBoundingBox() = 0;
 
-  BBox d_bbox;
-  string d_name;
+  BBox bbox_;
+  string name_;
 };
 
 } // End namespace SCIRun

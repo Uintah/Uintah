@@ -55,7 +55,7 @@ public:
   //////////
   // Total number of registred attributes
   inline int getNumAttribs() const{
-    return d_attribHandles.size();
+    return attribHandles_.size();
   }
 
   //////////
@@ -84,8 +84,8 @@ public:
   
 
 protected:
-  AttribMap       d_attribHandles;
-  string          d_currAttrib;
+  AttribMap       attribHandles_;
+  string          currAttrib_;
 };
 
 } // end namespace SCIRun

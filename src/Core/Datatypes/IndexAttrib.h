@@ -331,9 +331,9 @@ IndexAttrib<T, I, A>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << d_name << endl <<
+    "Name = " << name_ << endl <<
     "Type = IndexAttrib" << endl <<
-    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
+    "Dim = " << dim_ << ": " << nx_ << ' ' << ny_ << ' ' << nz_ << endl <<
     "Size = " << size() << endl <<
     "Datasize = " << index.size() << endl <<
     "Data = ";
