@@ -219,6 +219,12 @@ SCI_ARG_WITH(petsc,
   [with_petsc="$withval"
    sci_required_petsc=yes],
   [with_petsc=""])
+SCI_ARG_WITH(png,
+  AC_HELP_STRING(--with-png=DIR,
+                 Use the png installation in DIR),
+  [with_png="$withval"
+   sci_required_png=yes],
+  [with_png=""])
 SCI_ARG_WITH(unipetsc,
   AC_HELP_STRING(--with-unipetsc=DIR,
                  Use the unipetsc installation in DIR),
@@ -265,7 +271,7 @@ SCI_ARG_WITH(qt,
   [with_qt=""])
 SCI_ARG_WITH(ruby,
   AC_HELP_STRING(--with-ruby=DIR,
-                 Use the ruby installation in DIR),
+                 Use the ruby installation in DIR, where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/local),
   [with_ruby="$withval"
    sci_required_ruby=yes],
   [with_ruby=""])
@@ -3255,19 +3261,29 @@ AC_SUBST(QT_MT_LIB_DIR_FLAG)
 AC_SUBST(QT_MOC_BIN)
 
 ##  --  search for ruby  ----------------------------------------------------
-##  -- Point to the BUILD directory of ruby unless you installed ruby in the standard
-##  -- locations on your system (i.e. /usr/include, /usr/lib).
 if test "$sci_required_ruby" = "yes"; then
-  if test "$with_ruby"; then
-    _sci_lib="$with_ruby"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-  fi
+  _sci_optional=required;
 
-  _ruby_inc="$with_ruby"
+  if test "$with_ruby" = "yes"; then
+    # --with-ruby has been specified without a parameter.
+    _sci_lib="$sci_thirdparty_libs"
+    _ruby_inc="$sci_thirdparty_includes"
+  else 
+   if test "$with_ruby"; then
+     #if --with-ruby has been specified with a parameter, then use that parameter
+    _sci_lib="$with_ruby/lib"
+    # A standard ruby install only places include files in platform-specific directories and does
+    # not bother to create symlinks.  We have to search for the .h files here.  This may fail where
+    # multiple builds of ruby are placed under the same root install tree.  If "find" fails, then the
+    # configure will also fail unless ruby.h is in a standard path.
+    echo "Searching for ruby.h under $with_ruby"
+    _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed s/ruby.h//`
+    _sci_optional=specific;
+   fi
+  fi
   
   # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(RUBY,ruby library,ruby.h,$_ruby_inc,ruby-static,$_sci_lib,,,optional)
+  SCI_TRY_LINK(RUBY,ruby library,ruby.h,$_ruby_inc,ruby-static,$_sci_lib,,,$_sci_optional)
 
   if test "$HAVE_RUBY" = "yes"; then
      DEF_RUBY="#define HAVE_RUBY 1"
