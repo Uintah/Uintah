@@ -104,7 +104,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      sharedState->registerMPMMaterial(mat);
    }
    
-   d_solver = scinew PetscSolver();
+   d_solver = scinew MPMPetscSolver();
    d_solver->initialize();
 
 }
