@@ -1090,7 +1090,7 @@ TriSurfMesh::add_elem(Node::array_type a)
 
 
 void
-TriSurfMesh::compute_edge_neighbors(double err)
+TriSurfMesh::compute_edge_neighbors(double /*err*/)
 {
   // TODO: This is probably broken with the new indexed edges.
   ASSERTMSG(synchronized_ & EDGES_E,
