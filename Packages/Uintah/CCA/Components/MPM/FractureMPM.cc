@@ -318,7 +318,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
-  scheduleDoCrackPropagation(             sched, patches, matls);
+  //scheduleDoCrackPropagation(             sched, patches, matls);
   scheduleMoveCracks(                      sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -931,12 +931,12 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->CenterOfMassVelocityLabel);
   sched->addTask(t, patches, matls);
 }
-
+/*
 // Do crack propgation
 void FractureMPM::scheduleDoCrackPropagation(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
-{
+{ 
   // Step 1: Calculate nodal solutions required for J Integral
   Task* t = scinew Task("FractureMPM::GetNodalSolutions", this,
                         &FractureMPM::GetNodalSolutions);
@@ -991,7 +991,7 @@ void FractureMPM::scheduleDoCrackPropagation(SchedulerP& sched,
   sched->addTask(t, patches, matls);
  
 }
-
+*/
 // Move crack with center-of-mass velocity
 void FractureMPM::scheduleMoveCracks(SchedulerP& sched,
                                     const PatchSet* patches,
@@ -3010,7 +3010,7 @@ void FractureMPM::GetNodalSolutions(const ProcessorGroup*,
     }
   }
 }
-
+/*
 void FractureMPM::ConvertJToK(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* ,
@@ -3027,4 +3027,4 @@ void FractureMPM::ConvertJToK(const ProcessorGroup*,
       cm->ConvertJToK(patches, mpm_matl, old_dw, new_dw);
   } // End of loop over matls
 }
-
+*/
