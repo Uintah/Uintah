@@ -731,15 +731,23 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
   rho_micro.initialize(0.);
   rho_CC.initialize(0.);
   temp.initialize(0.);
+  Vector dx = patch->dCell();
   
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
    Box b1 = piece->getBoundingBox();
    Box b2 = patch->getBox();
    Box b = b1.intersect(b2);
+   // Find the bounds of a region a little bigger than the piece's BBox.
+   Point b1low(b1.lower().x()-3.*dx.x(),b1.lower().y()-3.*dx.y(),
+                                        b1.lower().z()-3.*dx.z());
+   Point b1up(b1.upper().x()+3.*dx.x(),b1.upper().y()+3.*dx.y(),
+                                        b1.upper().z()+3.*dx.z());
    
-   if(b.degenerate())
+   if(b.degenerate()){
       cerr << "b.degenerate" << endl;
+      cerr << "So what? " << endl;
+   }
 
    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
    Vector dxpp    = patch->dCell()/ppc;
@@ -780,10 +788,14 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
       }   
       if (numMatls > 1 ) {
         double vol_frac_CC= count/totalppc;       
-        vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
         rho_micro[*iter]  = getInitialDensity();
         rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC +SMALL_NUM;
-        temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+        Point pd = patch->cellPosition(*iter);
+        if((pd.x() > b1low.x() && pd.y() > b1low.y() && pd.z() > b1low.z()) &&
+           (pd.x() < b1up.x()  && pd.y() < b1up.y()  && pd.z() < b1up.z())){
+            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+        }    
       }    
     }  // Loop over domain
   }  // Loop over geom_objects
