@@ -1,3 +1,65 @@
+//
+// Dpy.cc
+//
+// Key Board User Interface Key Mapping:
+//
+// ------------------------------------------------------------------
+// Key Pad -- Used to move Stealth
+//
+//                  / (Down)          * (Up)           - (decelerate)
+// 7 (move left)    8 (Pitch Forward) 9 (move right)   + (accelerate)
+// 4 (turn left)    5 (Stop Rotates)  6 (turn right)   
+// 1 (nothing yet)  2 (Pitch Back/Up) 3 (nothing yet)  Enter (0 pitch/roll)
+// 0 (stop all movement)              . (slow down all)
+//
+// OTHER STEALTH COMMANDS
+//
+// x    follow path
+// /    Clear Stealth Path
+// '    Load Stealth Path from file "..."
+// ,    Save Stealth Path to file "temp"
+// .    Add a path "frame" (current location and look at point) to path list.
+// 
+// ------------------------------------------------------------------
+//
+// a      toggle animate
+// c      display (c)amera position
+// f      decrease framerate
+// F      increase framerate (was 'g' key.)
+// h      toggle ambient_hack
+// j      toggle on/off jitter sampling
+// m      scale eyesep to 1.1
+// n      scale eyesep to 0.9
+// o      cycle through materials
+// p      toggle pstats
+// q      quit
+// r      toggle rstats
+// s      toggle through shadow modes
+// t      toggle hotspots
+// v      recenter view so that whole scene is displayed
+// w      (W)rite picture of screen in images/image.raw 
+// x      see STEALTH COMMANDS
+// y      Synchronize Mode for Frameless Rendering
+// 
+// Esc    quit
+// 2      toggle stereo on/off
+// -      decrease max depth (keyboard minus, NOT KEYPAD)
+// +      increase max depth (actually the '=' key.  NOT KEYPAD)
+// 
+// HOME   Galpha + 1
+// END    Galpha - 1
+// ------------------------------------------------------------------
+//
+// ARROW KEYS (not keypad)
+//
+// UP     up + 4    ???
+// DOWN   up - 4    ???
+// LEFT   left + 4  ???
+// RIGHT  right + 4 ???
+// ------------------------------------------------------------------
+//
+//
+
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Thread/Barrier.h>
@@ -56,6 +118,18 @@ Mutex rtrt::xlock("X windows startup lock");
 Mutex io("io lock");
 
 //extern int do_jitter;
+
+//////////////////////////////////////////////////////////////////
+// STEALTH RELATED DPY VARIABLES
+static Stealth * stealth = NULL;
+
+static bool follow_path = false;
+
+//////////////////////////////////////////////////////////////////
+
+// Do or do not output certain types of information to the tty.
+static bool be_quiet = false;
+
 
 inline double RtoD(double rad) {
   return rad*180/M_PI;
@@ -141,6 +215,12 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   drawstats[0]=new Stats(1000);
   drawstats[1]=new Stats(1000);
   priv = new Dpy_private;
+
+  // Get the size of the area of interest and use it to initialize 
+  // the stealth.  This will effect how fast the stealth moves.
+  BBox bb;
+  scene->get_object()->compute_bounds( bb, 1e-3 );
+  stealth = new Stealth( bb.diagonal().length() );
 
 }
 
@@ -450,11 +530,6 @@ float Galpha=1.0; // doh!  global variable...  probably should be moved...
     cerr << "full_threshold=" << full_threshold << '\n';
 */
 
-static Stealth stealth;
-
-static bool follow_path = false;
-static bool be_quiet = false;
-
 void
 Dpy::handle_keypress( XEvent & e )
 {
@@ -479,55 +554,59 @@ Dpy::handle_keypress( XEvent & e )
   XKeyEvent & xke = (XKeyEvent&)e;
   bool        shift_down = xke.state & ShiftMask;
 
-  cout << "shift_down: " << shift_down << "\n";
-
   switch( key ){
 
   // KEYPAD KEYS USED FOR MOVEMENT
 
   // SPEED up or slow down
   case XK_KP_Add:
-    stealth.accelerate();
+    stealth->accelerate();
     break;
   case XK_KP_Subtract:
-    stealth.decelerate();
+    stealth->decelerate();
     break;
   // PITCH up and down
   case XK_KP_Up:
     cout << "pitchdown\n";
-    stealth.pitchDown();
+    stealth->pitchDown();
     break;
   case XK_KP_Down:
     cout << "pitchup\n";
-    stealth.pitchUp();
+    stealth->pitchUp();
     break;
   // SLIDE left and right
   case XK_KP_Page_Up:
-    stealth.slideRight();
+    stealth->slideRight();
     break;
   case XK_KP_Home:
-    stealth.slideLeft();
+    stealth->slideLeft();
     break;
   // TURN left and right
   case XK_KP_Left:
-    stealth.turnLeft();
+    stealth->turnLeft();
     break;
   case XK_KP_Right:
-    stealth.turnRight();
+    stealth->turnRight();
     break;
   // SLOW down and STOP
   case XK_KP_Delete:
-    stealth.slowDown();
+    stealth->slowDown();
     break;
   case XK_KP_Insert:
-    stealth.stopAllMovement();
+    stealth->stopAllMovement();
     break;
   // ACCELERATE UPWARDS or DOWNWARDS
   case XK_KP_Multiply: 
-    stealth.goUp();   // Accelerate UP
+    stealth->goUp();   // Accelerate UP
     break;
   case XK_KP_Divide: 
-    stealth.goDown(); // Accelerate DOWN
+    stealth->goDown(); // Accelerate DOWN
+    break;
+  case XK_KP_Begin:    // STOP rotations (pitch/turn)
+    stealth->stopPitchAndRotate();
+    break;
+  case XK_KP_Enter: 
+    camera->flatten(); // Right yourself (0 pitch, 0 roll)
     break;
   case XK_KP_Page_Down:
     break;
@@ -542,19 +621,20 @@ Dpy::handle_keypress( XEvent & e )
     }
     break;
   case XK_2:
-    stereo=true;
+    stereo=!stereo;
     break;
   case XK_1:
-    stereo=false;
+    cout << "NOTICE: Use 2 key to toggle Stereo\n";
+    cout << "      : 1 key is deprecated and may go away\n";
     break;
   case XK_x:
     follow_path = !follow_path;
 
-    // If starting to follow the path, stop all movement, and then
-    // accelerate once.  This will start us moving.
+    // If starting/stopping following a path, stop all other movement.
+    // if starting to following, increase movement once to make us move.
+    stealth->stopAllMovement();
     if( follow_path ) {
-      stealth.stopAllMovement();
-      stealth.accelerate();
+      stealth->accelerate();
     }
 
     break;
@@ -572,14 +652,18 @@ Dpy::handle_keypress( XEvent & e )
     cerr << "maxdepth=" << maxdepth << '\n';
     break;
   case XK_f:
-    FPS -= 1;
-    if (FPS <= 0.0) FPS = 1.0;
-    FrameRate = 1.0/FPS;
+    if( shift_down ) {
+      FPS += 1.0;
+      FrameRate = 1.0/FPS;
+      cerr << FPS << endl;
+    } else {
+      FPS -= 1;
+      if (FPS <= 0.0) FPS = 1.0;
+      FrameRate = 1.0/FPS;
+    }
     break;
   case XK_g:
-    FPS += 1.0;
-    FrameRate = 1.0/FPS;
-    cerr << FPS << endl;
+    cout << "Use 'F' for increase framerate.  'g' is deprecated\n";
     break;
 
   case XK_o:
@@ -589,8 +673,7 @@ Dpy::handle_keypress( XEvent & e )
     }
     break;
 
-	// turning on/off jittered sampling...
-  case XK_j:
+  case XK_j: // turning on/off jittered sampling...
     scene->rtrt_engine->do_jitter=1-scene->rtrt_engine->do_jitter;
     break;
 
@@ -609,7 +692,7 @@ Dpy::handle_keypress( XEvent & e )
     break;
 
   case XK_y: // sychronizing mode for frameless...
-    synch_frameless = 1-synch_frameless;
+    synch_frameless = !synch_frameless;  //1-synch_frameless;
     //doing_frameless = 1-doing_frameless; // just toggle...
     cerr << synch_frameless << " Synch?\n";
     break;
@@ -636,6 +719,9 @@ Dpy::handle_keypress( XEvent & e )
     break;
   case XK_v:
     {
+      if( follow_path ) { follow_path = false; }
+      stealth->stopAllMovement();
+
       // Animate lookat point to center of BBox...
       Object* obj=scene->get_object();
       BBox bbox;
@@ -686,17 +772,17 @@ Dpy::handle_keypress( XEvent & e )
   case XK_Right:
     left-=4;
     break;
-  case XK_slash: // Save a checkpoint frame.
-    stealth.clearPath();
+  case XK_slash: // Clear Stealth Path
+    stealth->clearPath();
     break;
-  case XK_quoteright: // Save a checkpoint frame.
-    stealth.loadPath( "stealth_path" );
+  case XK_quoteright: // Load Stealth Path from File
+    stealth->loadPath( "stealth_path" );
     break;
-  case XK_comma: // Save a checkpoint frame.
-    stealth.savePath( "temp" );
+  case XK_comma: // Save Stealth Path to file "temp"
+    stealth->savePath( "temp" );
     break;
   case XK_period: // Save a checkpoint frame.
-    stealth.addToPath( camera->get_eye(), camera->get_lookat() );
+    stealth->addToPath( camera->get_eye(), camera->get_lookat() );
     break;
   }
 } // end handle_keypress();
@@ -1463,9 +1549,9 @@ void Dpy::run()
       if (display_frames) {
 	get_input(); // this does all of the x stuff...
 	if( !follow_path )
-	  priv->camera->updatePosition( stealth );
+	  priv->camera->updatePosition( *stealth );
 	else
-	  priv->camera->followPath( stealth );
+	  priv->camera->followPath( *stealth );
 
       }
 
