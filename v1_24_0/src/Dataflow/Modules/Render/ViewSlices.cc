@@ -291,6 +291,7 @@ class ViewSlices : public Module
 
   int			max_slice_[3];
   int			cur_slice_[3];
+  int			slab_width_[3];
   double		scale_[3];
   double		center_[3];
   UIint			probe_;
@@ -349,8 +350,9 @@ class ViewSlices : public Module
   float *		apply_colormap(NrrdSlice &, double min, double max, 
 				       float *);
 
-  void			draw_guidelines(SliceWindow &, float, float, float, 
+  void			draw_guide_lines(SliceWindow &, float, float, float, 
 					bool cursor=true);
+  void			draw_slice_lines(SliceWindow &);
 
   // Crop Widget routines
   void			draw_crop_bbox(SliceWindow &, BBox &);
@@ -774,9 +776,8 @@ ViewSlices::real_draw_all()
       }
       
       if (bool(window.show_guidelines_()) && mouse_in_window(window))
-	draw_guidelines(window, cursor_.x(), cursor_.y(), cursor_.z());
-      draw_guidelines(window, cur_slice_[0]*scale_[0],
-		      cur_slice_[1]*scale_[1], cur_slice_[2]*scale_[2], false);
+	draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
+      draw_slice_lines(window);
       if (crop_) {
 	draw_crop_bbox(window, crop_draw_bbox_);
 	crop_pick_boxes_ = compute_crop_pick_boxes(window,crop_draw_bbox_);
@@ -872,12 +873,12 @@ ViewSlices::redraw_window(SliceWindow &window) {
   window.redraw_ = true;
 }
 
-// draw_guidlines
+// draw_guide_lines
 // renders vertical and horizontal bars that represent
 // selected slices in other dimensions
 // if x, y, or z < 0, then that dimension wont be rendered
 void
-ViewSlices::draw_guidelines(SliceWindow &window, float x, float y, float z, 
+ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z, 
 			   bool cursor) {
   if (cursor && !current_window_) return;
   if (cursor && !current_window_->show_guidelines_()) return;
@@ -1006,6 +1007,62 @@ ViewSlices::draw_guidelines(SliceWindow &window, float x, float y, float z,
   glEnd();
 }  
 
+
+
+// renders vertical and horizontal bars that represent
+// selected slices in other dimensions
+void
+ViewSlices::draw_slice_lines(SliceWindow &window)
+{
+  setup_gl_view(window);
+  GL_ERROR();
+
+  Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
+  tmp[window.axis_] = 0;
+  double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
+  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
+  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
+
+  const int axis = window.axis_;
+  int p = (axis+1)%3;
+  int s = (axis+2)%3;
+
+
+  double one;
+  double xyz[3];
+  int i;
+  for (int i = 0; i < 3; ++i)
+    xyz[i] = cur_slice_[i]*scale_[i];
+  
+  for (i = 0; i < 2; ++i) {
+    one = Max(screen_space_one, double(scale_[p]*slab_width_[p]));
+
+    switch (p) {
+    case 0: glColor4dv(red); break;
+    case 1: glColor4dv(green); break;
+    default:
+    case 2: glColor4dv(blue); break;
+    }
+    glBegin(GL_QUADS);    
+    if (xyz[p] >= 0 && xyz[p] <= max_slice_[p]*scale_[p]) {
+      glVertex3f(p==0?xyz[0]:0.0, p==1?xyz[1]:0.0, p==2?xyz[2]:0.0);
+      glVertex3f(p==0?xyz[0]+one:0.0, p==1?xyz[1]+one:0.0, p==2?xyz[2]+one:0.0);
+      glVertex3f(p==0?xyz[0]+one:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==1?xyz[1]+one:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==2?xyz[2]+one:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
+      
+      glVertex3f(p==0?xyz[0]:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==1?xyz[1]:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==2?xyz[2]:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
+    }
+    glEnd();
+    SWAP(p,s);
+  }
+}
 
 
 
@@ -2090,14 +2147,22 @@ ViewSlices::extract_window_slices(SliceWindow &window) {
   s = 0;
   for (v = 0; v < volumes_.size(); ++v) {
     for (a = 0; a < 3; a++) {
-      window.slices_[s]->do_lock();
-      window.slices_[s]->nrrd_dirty_ = true;
-      window.slices_[s]->mode_ = window.mode_();
-      window.slices_[s]->volume_ = volumes_[v];
-      window.slices_[s]->slab_min_ = window.slab_min_();
-      window.slices_[s]->slab_max_ = window.slab_max_();
-      cur_slice_[window.axis_()] = window.slice_num_();
-      window.slices_[s]->do_unlock();	
+      NrrdSlice &slice = *window.slices_[s];
+      slice.do_lock();
+      slice.nrrd_dirty_ = true;
+      slice.mode_ = window.mode_();
+      slice.volume_ = volumes_[v];
+      slice.slice_num_ = window.slice_num_();
+      slice.slab_min_ = window.slab_min_();
+      slice.slab_max_ = window.slab_max_();
+      if (slice.mode_ == normal_e) {
+	cur_slice_[window.axis_()] = window.slice_num_();
+	slab_width_[window.axis_()] = 1;
+      } else {
+	cur_slice_[window.axis_()] = slice.slab_min_;
+	slab_width_[window.axis_()] = slice.slab_max_ - slice.slab_min_;
+      }
+      slice.do_unlock();	
       s++;
     }
   }
