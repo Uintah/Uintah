@@ -26,5 +26,7 @@
 #define HAVE_UNISTD_H 0
 #define HAVE_SYS_TIME_H 0
 #define HAVE_IEEEFP_H 0
+#define HAVE_SYS_UUID_H 0
+#define HAVE_UUID_UUID_H 0
 
 #endif
