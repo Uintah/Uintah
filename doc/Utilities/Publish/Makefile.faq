@@ -21,6 +21,8 @@
 edition:=../../edition.xml
 stylesheet_html := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
+params_print := -V %footnote-ulinks% -V %section-autolabel% \
+  -V "(define %default-quadding% 'justify)"
 
 .PHONY: clean veryclean
 
@@ -44,7 +46,7 @@ print: faq.pdf
 faq.pdf: faq.rxml ${edition}
 	OUTPUT_MODE=print eruby --delimiters xml faq.rxml > faq.pxml
 	openjade -t tex -V tex-backend -c ${CATALOG} -o faq.tex \
-          -d ${stylesheet_print} ${XML_DCL} faq.pxml 
+          -d ${stylesheet_print} ${params_print} ${XML_DCL} faq.pxml 
 	for i in 1 2 ; do jadetex faq.tex ; done
 	dvipdfm -p letter faq.dvi
 
