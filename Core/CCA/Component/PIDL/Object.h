@@ -122,9 +122,8 @@ public:
   void createScheduler();
 
   /////////
-  // Create a subset of processes to service
-  // collective calls.
-  void createSubset(int ssize);
+  // Create a subset of processes 
+  void createSubset(int, int);
 
 
   int getRefCount();

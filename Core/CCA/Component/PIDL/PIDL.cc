@@ -62,8 +62,8 @@ void
 PIDL::initialize(int, char*[])
 {
   //Default for communication purposes 
-  //setCommunication(COMM_NEXUS);
-  setCommunication(COMM_SOCKET);
+  setCommunication(COMM_NEXUS);
+  //setCommunication(COMM_SOCKET);
 
   switch (comm_type) {
   case COMM_SOCKET:

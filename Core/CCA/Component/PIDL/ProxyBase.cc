@@ -121,12 +121,12 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()
   return proxy_uuid;
 }
 
-void ProxyBase::_proxycreateSubset(int ssize)
+void ProxyBase::_proxycreateSubset(int localsize, int remotesize)
 {
   ::std::cerr << "ProxyBase::_proxycreateSubset()\n";
   if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
     getProxyUUID();
   }
-  rm.createSubset(ssize);
+  rm.createSubset(localsize,remotesize);
 }
 

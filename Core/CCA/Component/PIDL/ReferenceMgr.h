@@ -125,17 +125,18 @@ DESCRIPTION
     int getRank();
 
     //////////
-    // Create a subset. Only affects getCollectiveReference() and
-    // the localRank and localSize variables. Passing 0 or a negative
-    // number resets the state of this object to no subsets. Passing a
-    // number larger than the current parallel size has no effect.
-    void createSubset(int ssize);
+    // Create a subset. Affects all get*Reference() methods and 
+    // the getRank(), getSize(), and getRemoteSize() methods. 
+    // Passing 0 or a negative number resets the state
+    // of this object to no subsets. Passing a
+    // number larger than the  parallel size has no effect.
+    void createSubset(int localsize, int remotesize);
 
     /////////
     // An object used to facilitate intra-component communication
     // (parallel component case)
     IntraComm* intracomm;
-
+    
   protected:
     ///////
     // These class is involved in setting up ReferenceMgr
@@ -149,17 +150,17 @@ DESCRIPTION
 
     /////////
     // For parallel proxies, my ordered number
-    ///////
     int localRank;
 
-    // Denote whether we have subsetted this object  
-    bool isSubset;
-
     ////////
-    // Save true variables when replaced by subset specific
-    // values. Able to restore them if needed.   
-    int save_lSize;
-      
+    // Subset specific value of localSize. Some methods return this
+    // value in order to facilitate subsetting
+    int s_lSize;
+
+    ///////
+    // Subset specific value of d_ref.size(). 
+    int s_refSize;
+
     //////////
     // A vector of reference to the remote objects.
     refList d_ref;
