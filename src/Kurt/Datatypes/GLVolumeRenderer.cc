@@ -30,9 +30,9 @@ GLVolumeRenderer::GLVolumeRenderer(int id)
   cmapHasChanged(true),
   slice_alpha(1.0),
   drawX(false),drawY(false),drawZ(false),drawView(false),
-  _interp(true), _tp(0), _roi(0), _fr(0), _los(0),
+  _interp(true), _lighting(0), _tp(0), _roi(0), _fr(0), _los(0),
   _oo(0), _mip(0), _atten(0), _planes(0),
-  _state(state(_fr)),  _gl_state(state(_oo))
+  _state(state(_fr, 0)),  _gl_state(state(_oo, 0))
 {
 
   NOT_FINISHED("GLVolumeRenderer::GLVolumeRenderer(int id, const Texture3D* tex, ColorMap* cmap)");
@@ -48,9 +48,9 @@ GLVolumeRenderer::GLVolumeRenderer(int id,
   cmapHasChanged(true),
   slice_alpha(1.0), 
   drawX(false),drawY(false),drawZ(false),drawView(false),
-  _interp(true), _tp(0), _roi(0), _fr(0), _los(0),
+  _interp(true),  _lighting(0), _tp(0), _roi(0), _fr(0), _los(0),
   _oo(0), _mip(0), _atten(0), _planes(0),
-  _state(state(_fr)),  _gl_state(state(_oo))
+  _state(state(_fr, 0)),  _gl_state(state(_oo, 0))
 {
 }
 
@@ -62,7 +62,7 @@ GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
   slice_alpha(copy.slice_alpha), _state(copy._state),
   _gl_state(copy._gl_state),
   drawX(copy.drawX),drawY(copy.drawY),
-   drawZ(copy.drawZ),drawView(copy.drawView), 
+    drawZ(copy.drawZ),drawView(copy.drawView),  _lighting(copy._lighting),
    _interp(copy._interp), _tp(copy._tp), _roi(copy._roi), _fr(copy._fr),
    _los(copy._los), _oo(copy._oo), _mip(copy._mip), _atten(copy._atten),
    _planes(copy._planes)
@@ -97,7 +97,7 @@ void
 GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
     //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
-  if( !pre_draw(di, mat, 0) ) return;
+  if( !pre_draw(di, mat, _lighting) ) return;
   mutex.lock();
   if( di->get_drawtype() == DrawInfoOpenGL::WireFrame ){
     drawWireFrame();
