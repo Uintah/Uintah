@@ -33,15 +33,15 @@ ICELabel::ICELabel()
      scinew VarLabel("wvel_CC",    CCVariable<double>::getTypeDescription() );
 
     cv_CCLabel        = 
-     scinew VarLabel("cv_CC",     CCVariable<double>::getTypeDescription() );
+     scinew VarLabel("cv_CC",         CCVariable<double>::getTypeDescription());
     rho_micro_CCLabel = 
-     scinew VarLabel("rho_micro_CC",CCVariable<double>::getTypeDescription());
+     scinew VarLabel("rho_micro_CC",  CCVariable<double>::getTypeDescription());
     speedSound_CCLabel = 
-     scinew VarLabel("speedSound_CC",CCVariable<double>::getTypeDescription());
+     scinew VarLabel("speedSound_CC", CCVariable<double>::getTypeDescription());
     div_velfc_CCLabel = 
-     scinew VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
+     scinew VarLabel("div_velfc_CC",  CCVariable<double>::getTypeDescription());
     vol_frac_CCLabel = 
-     scinew VarLabel("vol_frac_CC", CCVariable<double>::getTypeDescription() );
+     scinew VarLabel("vol_frac_CC",   CCVariable<double>::getTypeDescription());
 
   // Face centered variables
     uvel_FCLabel       = 
@@ -87,6 +87,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.6  2000/10/16 18:32:40  guilkey
+// Implemented "step1e" of the ICE algorithm.
+//
 // Revision 1.5  2000/10/13 00:01:11  guilkey
 // More work on ICE
 //

@@ -70,26 +70,35 @@ public:
 			          DataWarehouseP&,
 			          DataWarehouseP&);
 
+   // compute speedSound
    void actuallyStep1a(const ProcessorGroup*,
 		       const Patch* patch,
 		       DataWarehouseP&,
 		       DataWarehouseP&);
 
+   // calculateEquilibrationPressure
    void actuallyStep1b(const ProcessorGroup*,
 		       const Patch* patch,
 		       DataWarehouseP&,
 		       DataWarehouseP&);
 
+   // computeFCVelocity
    void actuallyStep1c(const ProcessorGroup*,
 		       const Patch* patch,
 		       DataWarehouseP&,
 		       DataWarehouseP&);
 
+   // momentumExchangeFCVelocity
    void actuallyStep1d(const ProcessorGroup*,
 		       const Patch* patch,
 		       DataWarehouseP&,
 		       DataWarehouseP&);
 
+   // computeDivFCVelocity
+   void actuallyStep1e(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
 
    void actuallyStep2(const ProcessorGroup*,
 		      const Patch* patch,
@@ -375,6 +384,9 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.26  2000/10/16 18:32:40  guilkey
+// Implemented "step1e" of the ICE algorithm.
+//
 // Revision 1.25  2000/10/13 00:01:11  guilkey
 // More work on ICE
 //
