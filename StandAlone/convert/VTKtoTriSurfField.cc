@@ -181,6 +181,29 @@ read_scalar_lookup(FLD *fld, int n, ifstream &str) {
   }
 }
 
+template <class FLD>
+void
+read_vector_lookup(FLD *fld, int n, ifstream &str) {
+  fld->resize_fdata();
+  typedef typename FLD::value_type val_t;
+  //val_t last = 0;
+  int vset = 0;
+  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
+  for(int i = 0; i < n; i++) {
+    typedef typename FLD::value_type val_t;
+    val_t x, y, z;
+    str.read((char*)&x, sizeof(val_t));
+    str.read((char*)&y, sizeof(val_t));
+    str.read((char*)&z, sizeof(val_t));
+    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    swap_endianess_4((unsigned*)&x);
+    swap_endianess_4((unsigned*)&y);
+    swap_endianess_4((unsigned*)&z);
+    vset++;
+    //fld->set_value(val, (typename FLD::mesh_type::Face::index_type)i);    
+  }
+}
+
 
 int
 main(int argc, char **argv) {
@@ -272,11 +295,22 @@ main(int argc, char **argv) {
   TriSurfField<float> *ts;
   string data, name;
   vtk >> data >> name >> type;
-  //cout << data << " " << name << " " << type << endl;
+  
+  if (!vtk.fail() && data == "COLOR_SCALARS") {
+    unsigned char r, g, b;
+    for (int i = 0; i < n; i++) {
+      vtk >> r >> g >> b;
+    }
+  }
+  vtk >> dat >> n;
+  cout << dat << " " << n << endl;
+  vtk >> data >> name >> type;
+  cout << data << " " << name << " " << type << endl;
+  if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
 
   if (dat == "CELL_DATA") {
     if (type != "float") {
-      cerr << "supporting float only atm..." << endl;
+      cerr << "supporting float only. got " << type << endl;
       return 1;
     }
     ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 0);
@@ -284,22 +318,35 @@ main(int argc, char **argv) {
   } else {
     // node centered data ...
     if (type != "float") {
-      cerr << "supporting float only atm..." << endl;
+      cerr << "supporting float only. got " << type << endl;
       return 1;
     }
     ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 1);
   }
   ts->resize_fdata();
-  string table, tname;
-  vtk >> table >> tname;
-  //cout << table << " " << tname << endl;
-  vtk.get(); // eat a newline
-  read_scalar_lookup(ts, n, vtk);
 
-  vtk >> dat; 
-  vtk >> n;
-  //cout << dat << " " << n << endl;
-  if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
+  if (data == "NORMALS") {
+    vtk.get(); // eat a newline
+    read_vector_lookup(ts, n, vtk);
+  }
+//   vtk.get(); // eat a newline
+//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
+//   vtk >> dat >> n;
+//   cout << dat << " " << n << endl;
+//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
+//   vtk >> data >> name >> type;
+//   cout << data << " " << name << " " << type << endl;
+//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
+//   string table, tname;
+//   vtk >> table >> tname;
+//   //cout << table << " " << tname << endl;
+//   vtk.get(); // eat a newline
+//   read_scalar_lookup(ts, n, vtk);
+
+//   vtk >> dat; 
+//   vtk >> n;
+//   //cout << dat << " " << n << endl;
+//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
   
   while (!vtk.eof()) {
     vtk.get();
