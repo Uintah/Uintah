@@ -5,8 +5,6 @@
 PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
 export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA
 
-echo "" >> "$BUILDROOT"/log
-
 if [ ! -d "$BUILDROOT"/dbg ]; then
   mkdir "$BUILDROOT"/dbg
 fi
@@ -22,7 +20,7 @@ use_html=1
 #remove files from previous tests if necessary
 rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$BUILDROOT"/opt/summary_log 
 
-#if VERBOSE is on, then have all output go to sdtout instead of log
+#if VERBOSE is on, then have all output go to stdout instead of log
 
 
 
@@ -79,7 +77,6 @@ fi
 
 # make outputs to the file which will be sent in the mail
 echo "" >> "$BUILDROOT"/log
-echo "" >> "$BUILDROOT"/log
 
 if [ "$WEEKLY" != "1" ]; then
   echo "/--------------------------\\" >> "$BUILDROOT"/log
@@ -93,7 +90,6 @@ if [ "$WEEKLY" != "1" ]; then
 
   cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
 
-echo "" >> "$BUILDROOT"/log
 echo "" >> "$BUILDROOT"/log
 fi
     echo "/--------------------------\\" >> "$BUILDROOT"/log

@@ -85,14 +85,14 @@ for test in *; do
 	cd TestScripts
 
 	if [ $retval = "0" ]; then
-	    echo "${test}-${mode} tests passed!"
+	    echo "Passed: ${test}-${mode} tests! "
 	    # It was successful, so it can remove the lock
 	    if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 	        # test ran successfully - remove the lock
 	        rm "${BUILD_DIR}/${test}-${mode}.lock"
 	    fi
 	else
-	    echo "${test}-${mode} tests *failed*"
+	    echo "$Failed: {test}-${mode} tests"
 	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
 		if [ -f "${BUILDROOT}/${mode}/${test}-short.log" ]; then

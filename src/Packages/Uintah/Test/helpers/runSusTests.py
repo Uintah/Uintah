@@ -4,6 +4,7 @@ from os import environ,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
 from time import asctime,localtime,time
 from sys import argv,exit
 from string import upper,rstrip
+from modUPS import modUPS
 
 def nameoftest (test):
     return test[0]
@@ -288,6 +289,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   pf_rc = 0
   mem_rc = 0
 
+
   extra_flags = extra_sus_flags(test)
   output_to_browser=1
   try:
@@ -304,6 +306,14 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 
   # set where to view the log files
   logpath = environ['WEBLOG']
+
+  # if doing performance tests, strip the output and checkpoints portions
+  if do_performance_test == 1:
+    inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
+                      "<outputTimestepInterval>0</outputTimestepInterval>",
+                      '<checkpoint interval="0"/>'])
+
+
 
   # set the command for sus, based on # of processors
   # the /usr/bin/time is to tell how long it took
@@ -335,6 +345,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
         environ['MALLOC_STRICT'] = "blah"
     except Exception:
       pass
+
 
   # messages to print
   if environ['outputlinks'] == "1":
