@@ -32,12 +32,17 @@ itcl_class GenStandardColorMaps {
   
         #set n "$this-c needexecute " 
 	set n "$this change"
-  
-        frame $w.f1 -relief sunken -height 25 -borderwidth 2 
-	pack $w.f1 -side top -padx 2 -pady 2 -expand yes -fill x
 
-	canvas $w.f1.canvas -bg "#ffffff" -height 25
-	pack $w.f1.canvas -anchor w -expand yes -fill x
+	frame $w.f -relief flat -borderwidth 2
+	pack $w.f -side top -expand yes -fill x 
+	button $w.f.b -text "close" -command "destroy $w"
+	pack $w.f.b -side left -expand yes -fill y
+
+        frame $w.f.f1 -relief sunken -height 25 -borderwidth 2 
+	pack $w.f.f1 -side right -padx 2 -pady 2 -expand yes -fill x
+
+	canvas $w.f.f1.canvas -bg "#ffffff" -height 25
+	pack $w.f.f1.canvas -anchor w -expand yes -fill x
 
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -side left -padx 2 -pady 2 -expand yes -fill both
@@ -52,11 +57,11 @@ itcl_class GenStandardColorMaps {
 	label $w.f2.f3.label -text "Resolution"
 	pack $w.f2.f3.label -side top -pady 2
 	scale $w.f2.f3.s -from [set $this-minRes] -to 255 -state normal \
-	    -orient horizontal  -variable $this-resolution
+	    -orient horizontal  -variable $this-resolution 
 	pack $w.f2.f3.s -side top -padx 2 -pady 2 -expand yes -fill x
 
 	bind $w.f2.f3.s <ButtonRelease> "$this update"
-	bind $w <Expose> "$this update"
+	bind $w <Expose> "$this redraw"
 
 	$this update
     }
@@ -79,25 +84,29 @@ itcl_class GenStandardColorMaps {
 	$this update
     }
 
-    method update {} {
+    method update { } {
+	$this redraw
+	$this-c needexecute
+    }
+
+    method redraw {} {
 	global $this-resolution
 	set w .ui$this
-	$this-c needexecute
 	set n [set $this-resolution]
-	set canvas $w.f1.canvas
+	puts "tcl-resolution = $n"
+	set canvas $w.f.f1.canvas
 	$canvas delete all
 	set cw [winfo width $canvas]
 	set ch [winfo height $canvas]
 	set dx [expr $cw/double($n)] 
 	set x 0
+	set colors [$this-c getcolors]
 	for {set i 0} {$i < $n} {incr i 1} {
-	    set color [$this-c getcolor $i]
+	    set color [lindex $colors $i]
 	    set oldx $x
 	    set x [expr ($i+1)*$dx]
 	    $canvas create rectangle \
 		$oldx 0 $x $ch -fill $color -outline $color
 	}
-		
-
-    }
+    }	
 }
