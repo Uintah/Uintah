@@ -60,7 +60,6 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
-
 # TCL has some trace on the env array that makes it impossible
 # to set it in neteditGetenv wihtout causing an error
 # Here, we just back it up, unset it, then restore it
@@ -87,8 +86,8 @@ trace variable env r neteditGetenv
 # Warns user if not a valid boolean string.
 proc boolToInt { val } {
     if [string equal $val ""] {
-#	puts "TCL boolToInt: Boolean value is empty!"
-	return 0; # Special case where even if defined, its false
+	puts "TCL boolToInt: Boolean value is empty!"
+	return 1; # follows the C convention of any non-zero value equals true
     }
     if ![string is boolean $val] {
 	puts "TCL boolToInt: Cannot determine boolean value: $val."
@@ -934,7 +933,6 @@ proc loadnet { netedit_loadfile } {
 	    "File \"$netedit_loadfile\" does not exist."
 	return
     }
-
     global netedit_loadfile_global
     set netedit_loadfile_global $netedit_loadfile
 
@@ -951,62 +949,71 @@ proc loadnet { netedit_loadfile } {
     uplevel \#0 {source $netedit_loadfile_global}
     set Subnet(Subnet$Subnet(Loading)_filename) $netedit_loadfile
     if { !$inserting } { set NetworkChanged 0 }
+    resetSourceCommand
 }
 
-# Ask the user to select a data directory 
-# (Because the enviroment variable SCIRUN_DATA was not set)
-proc getDataDirectory { dataset } {
-   set answer [createSciDialog -warning -button1 "Ok" -button2 "Quit SCIRun" -message \
-         "The '$dataset' dataset was specified (either by the enviroment variable\nSCIRUN_DATASET or by the network loaded).  However, the location of\nthis dataset was not specified (with the SCIRUN_DATA env var).  Please\nselect a directory (eg: /usr/sci/data/SCIRunData/1.20.0).  Note, this directory\nmust have the '$dataset' subdirectory in it." ]
-   case $answer {
-       1 "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
-       2 "netedit quit"
-   }
+
+
+
+proc renameSourceCommand {} {
+    if { [llength [info commands SCIRunBackup_source]] } return
+    rename source SCIRunBackup_source
+    rename SCIRunNew_source source
 }
 
-#
-# Tell the user the reason that they are being asked for the data, and
-# then ask for the data.  If "warn_user" is "true", warning is displayed,
-# otherwise we bring up the choose directory dialog directly.  "warn_user"
-# most likely should only be displayed the first time.
-#
-proc getSettingsDirectory { warn_user } {
+proc resetSourceCommand {} {
+    if { ![llength [info commands SCIRunBackup_source]] } return
+    rename source SCIRunNew_source
+    rename SCIRunBackup_source source
 
-   if { "$warn_user" == "true" } {
-      set answer [createSciDialog -warning -button1 "Ok" -parent . -button2 "Quit SCIRun" -message \
-         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET\nare not set (or are invalid).  You must specify a valid data\nset directory in order to use this net!  You will now be asked\nto select the directory of the dataset you are interested in.\n(eg: /usr/sci/data/SCIRunData/1.20.0/sphere)\n\nFYI, if you set these environment variables, you will not need\nto select a directory manually when you load this network." ]
-       case $answer {
-	   1 "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
-	   2 "netedit quit"
-       }
-   }
-   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]
 }
 
-#
-# Verify that the "file_name" file exists.  If not, tells the user that
-# they will next have to input valid data.  It is up to the calling routine
-# to check if verifyFile() returns "true", and if not, to ask the user for
-# new information.
-#
-proc verifyFile { file_name } {
-  if {![file isfile $file_name]} {
 
-     set message "Error: $file_name is not a valid file.\nPlease select a valid directory (eg: /usr/sci/data/SCIRunData/1.20.0/sphere)"
+proc SCIRunNew_source { args } {
+    if { ![file exists $args] } {
+	set script [string tolower [info script]]
+	set lastNet [string last .net $script]
+	if { $lastNet != -1 && [expr [string length $script] - $lastNet] == 4 } {
+	    set lastSettings [string last .settings $args]
+	    if { $lastSettings != -1 && 
+		 [expr [string length $args] - $lastSettings] == 9 } {
+		global SCIRUN_SRCDIR
+		set file "$SCIRUN_SRCDIR/nets/default.settings"
+		displayErrorWarningOrInfo "*** '$args' file not found.\n*** Loading default settings file: '$file'" warning
 
-     # This occurs if the user presses "cancel".
-     if { "$file_name" == "//.settings" } {
-        set message "You must select a data set directory for use with this network.\n\nEg: /usr/sci/data/SCIRunData/1.20.0/sphere"
-     }
-
-     createSciDialog -error -message "$message"
-
-     return "false"
-  }
-  return "true"
+		uplevel SCIRunBackup_source \{$file\}
+		return
+	    }
+	}
+    }
+    uplevel SCIRunBackup_source \{$args\}
 }
 
-#
+
+proc showInvalidDatasetPrompt {} {
+    global SCIRUN_VERSION
+    set filename [lindex [file split [info script]] end]
+    return [createSciDialog -warning \
+		-parent . \
+		-button1 "Select Dataset" \
+		-button2 "Ignore Dataset" \
+		-button3 "Exit SCIRun" \
+		-message "The environment variables SCIRUN_DATA and/or SCIRUN_DATASET\nare not set or they are invalid.\n\nChoose 'Select Dataset' to select a valid dataset directory.\neg: /usr/sci/data/SCIRunData/${SCIRUN_VERSION}/sphere\n\nChoose 'Ignore Dataset' to load $filename anyway.  You will\nhave to manually set the reader modules to valid filenames.\n\nIf you set these environment variables before running SCIRun, then\nyou will not receive this dialog when loading $filename.\n\nYou may also permanently set these variables in the ~/.scirunrc file."]
+}
+
+
+
+proc showChooseDatasetPrompt { initialdir } {
+    if { ![string length $initialdir] } {
+	global SCIRUN_VERSION
+	set initialdir "/usr/sci/data/SCIRunData/${SCIRUN_VERSION}"
+    }
+    set value [tk_chooseDirectory -parent . -mustexist 1 \
+		   -initialdir $initialdir]
+    return $value
+}
+
+
 # sourceSettingsFile()
 #
 # Finds and then sources the ".settings" file.  Uses environment
@@ -1018,61 +1025,52 @@ proc verifyFile { file_name } {
 # Returns "DATADIR DATASET"
 #
 proc sourceSettingsFile {} {
-   global env
-
-   # Attempt to get environment variables:
+    renameSourceCommand
+    
+    # Attempt to get environment variables:
     set DATADIR [netedit getenv SCIRUN_DATA]
     set DATASET [netedit getenv SCIRUN_DATASET]
+    
+    if { "$DATASET" == "" } {
+	# if env var SCIRUN_DATASET not set... default to sphere:
+	set DATASET sphere
+    } 
+    
+    set initialdir ""
+    while {![string length [glob -nocomplain "$DATADIR/$DATASET/$DATASET*"]]} {
+	case [showInvalidDatasetPrompt] {
+	    1 "set data [showChooseDatasetPrompt $initialdir]"
+	    2 { 
+		displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
+		return
+	    }
+	    3 {
+		::netedit quit
+	    }
+	}
+	if { [string length $data] } {
+	    set initialdir $data
+	    set data [file split $data]
+	    set DATASET [lindex $data end]
+	    set DATADIR [eval file join [lrange $data 0 end-1]]
+	}	      
+    }
 
-   if { "$DATASET" == "" } {
-       # if env var SCIRUN_DATASET not set... default to sphere:
-       set DATASET "sphere"
-   } else {
-       if { "$DATADIR" == 0 } {
-          # DATASET specified, but not DATADIR.  Ask for DATADIR
-          set DATADIR [getDataDirectory $DATASET]
-	  # Push out to the environment so user doesn't get asked
-	  # again if we need to check for this var again.
-	  # (Do it twice do to tcl bug...)
-	  netedit setenv SCIRUN_DATA $DATADIR
-       }
-   }
+    displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
+    displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
 
-   if { "$DATADIR" != "" && \
-        [verifyFile $DATADIR/$DATASET/$DATASET.settings] == "true" } {
-      displayErrorWarningOrInfo "*** Using SCIRUN_DATA $DATADIR" "info"
-      displayErrorWarningOrInfo "*** Using DATASET $DATASET" "info"
-   } else {
-      set done "false"
-      set warn_user "true"
-      while { $done == "false" } {
+    netedit setenv SCIRUN_DATA "$DATADIR"
+    netedit setenv SCIRUN_DATASET "$DATASET"
 
-         # "result" is the directory of the dataset (eg: /usr/sci/data/sphere)
-	 set result [getSettingsDirectory "$warn_user"]
-         # cut off beginning: if /my/data/sets/sphere, this gives "sphere"
-	 set DATASET [lrange [split "$result" / ] end end]
-         # cut off end: if /my/data/sets/sphere, this gives "/my/data/sets"
-	 set DATADIR [string range "$result" 0 \
-		[expr [string length $result] - [string length $DATASET] - 2]]
+    set settings "$DATADIR/$DATASET/$DATASET.settings"
+    if { [file isfile $settings] } {
+	source $settings
+    }
 
-         if { [verifyFile $DATADIR/$DATASET/$DATASET.settings] == "true" } {
-            displayErrorWarningOrInfo "*** Using SCIRUN_DATA $DATADIR" "info"
-            displayErrorWarningOrInfo "*** Using DATASET $DATASET" "info"
-            set done "true"
-	 }
-         set warn_user "false"
 
-	 # Push out to the environment so user doesn't get asked
-	 # again if we need to check for these vars again.
-	 # NOTE: For some reason you have to do this twice... perhaps
-	 # a newer version of TCL will fix this...
-	 netedit setenv SCIRUN_DATA $DATADIR
-	 netedit setenv SCIRUN_DATASET $DATASET
-      }
-   }
-   source $DATADIR/$DATASET/$DATASET.settings
-   return "$DATADIR $DATASET"
+    return "$DATADIR $DATASET"
 }
+
 
 #
 # displayErrorWarningOrInfo(): 
@@ -1447,27 +1445,29 @@ proc emitTCLStyleCopyright { out } {
     puts $out "\# The Original Source Code was developed by the University of Utah."
     puts $out "\# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 "
     puts $out "\# University of Utah. All Rights Reserved."
-    puts $out "\nset results \[sourceSettingsFile\]"
-    puts $out ""
-    puts $out "if \{ \$results == \"failed\" \} \{"
-    puts $out "    ::netedit scheduleok"
-    puts $out "    return"
-    puts $out "\} else \{"
-    puts $out "    set DATADIR \[lindex \$results 0\]"
-    puts $out "    set DATASET \[lindex \$results 1\]"
-    puts $out "\}"
-    puts $out "\nsource \$DATADIR\/\$DATASET\/\$DATASET.settings\n";
 }
 
+
+proc init_DATADIR_and_DATASET {} {
+    upvar DATADIR datadir DATASET dataset
+    sourceSettingsFile
+    set datadir [netedit getenv SCIRUN_DATA]
+    set dataset [netedit getenv SCIRUN_DATASET]
+}
+    
+
 proc writeNetwork { filename { subnet 0 } } {
-    global SCIRun_version
+    global env userName runDate runTime notes SCIRUN_VERSION
+
     set out [open $filename {WRONLY CREAT TRUNC}]
-    puts $out "\# SCI Network ${SCIRun_version}\n"
-    if [boolToInt [netedit getenv SCI_INSERT_NET_COPYRIGHT]] {
+    puts $out "\# SCI Network $SCIRUN_VERSION\n"
+    if [boolToInt $env(SCIRUN_INSERT_NET_COPYRIGHT)] {
 	emitTCLStyleCopyright $out
     }
-
-    global userName runDate runTime notes
+    if [boolToInt $env(SCIRUN_NET_SUBSTITUTE_DATADIR)] {
+	puts $out "\n# Ask SCIRun to tell us where the data is"
+	puts $out "init_DATADIR_and_DATASET\n"
+    }
     if [info exists userName] {
 	puts $out "global userName"
 	puts $out "set userName \"${userName}\"\n"
