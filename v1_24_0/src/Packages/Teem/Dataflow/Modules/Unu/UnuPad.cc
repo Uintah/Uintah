@@ -209,7 +209,7 @@ UnuPad::execute()
     last_nrrdH_ = nrrd;
 
     // Copy the properies, kinds, and labels.
-    *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+    nrrd->copy_properties(nrrdH.get_rep());
 
     for( int i=0; i<nin->dim; i++ ) {
       nout->axis[i].kind  = nin->axis[i].kind;

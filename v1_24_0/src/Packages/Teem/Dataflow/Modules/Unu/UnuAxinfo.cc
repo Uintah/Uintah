@@ -179,8 +179,7 @@ void UnuAxinfo::execute()
   NrrdDataHandle out(nrrd);
   
   // Copy the properties.
-  *((PropertyManager *) out.get_rep()) =
-    *((PropertyManager *) nh.get_rep());
+  out->copy_properties(nh.get_rep());
   
   oport->send(out);
 

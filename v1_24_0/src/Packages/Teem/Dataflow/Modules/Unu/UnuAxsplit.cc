@@ -106,8 +106,7 @@ UnuAxsplit::execute()
   NrrdDataHandle out(nrrd);
 
   // Copy the properties.
-  *((PropertyManager *) out.get_rep()) =
-    *((PropertyManager *) nrrd_handle.get_rep());
+  out->copy_properties(nrrd_handle.get_rep());
 
   onrrd_->send(out);
 }
