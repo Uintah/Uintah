@@ -10,7 +10,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Array3Index.h>
@@ -49,6 +49,9 @@ using namespace Uintah;
 using namespace SCIRun;
 
 using namespace std;
+
+// From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
+extern Mutex cerrLock;
 
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
@@ -764,7 +767,9 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       new_dw->get(NAPID,lb->ppNAPIDLabel, 0, patch);
 
     for(int m=0;m<matls->size();m++){
-       NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
+      //cerrLock.lock();
+      //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
+      //cerrLock.unlock();
        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
        particleIndex numParticles = mpm_matl->countParticles(patch);
        totalParticles+=numParticles;
