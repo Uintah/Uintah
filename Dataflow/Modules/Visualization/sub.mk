@@ -16,8 +16,8 @@ SRCS     += \
 	$(SRCDIR)/Hedgehog.cc\
 	$(SRCDIR)/AnimatedStreams.cc\
 	$(SRCDIR)/VariablePlotter.cc \
-[INSERT NEW CODE FILE HERE]
-#	$(SRCDIR)/NodeHedgehog.cc \
+	$(SRCDIR)/NodeHedgehog.cc \
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
 	Dataflow/Network Dataflow/Ports \
