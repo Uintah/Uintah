@@ -26,7 +26,7 @@ itcl_class SCIRun_Math_LinearAlgebra {
     }
 
     method set_defaults {} {
-	set $this-function "o1 = scinew DenseMatrix(10, 20);"
+	set $this-function "o1 = i1 * 12;"
     }
 
     method update_text {} {
