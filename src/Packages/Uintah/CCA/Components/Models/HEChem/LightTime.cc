@@ -330,3 +330,10 @@ void LightTime::scheduleErrorEstimate(const LevelP&,
 {
   // Not implemented yet
 }
+//__________________________________
+void LightTime::scheduleTestConservation(SchedulerP&,
+                                         const PatchSet*,                      
+                                         const ModelInfo*)                     
+{
+  // Not implemented yet
+}

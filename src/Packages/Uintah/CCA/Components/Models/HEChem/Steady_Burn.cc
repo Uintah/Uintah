@@ -566,4 +566,10 @@ void Steady_Burn::scheduleErrorEstimate(const LevelP&,
 {
   // Not implemented yet
 }
-
+//__________________________________
+void Steady_Burn::scheduleTestConservation(SchedulerP&,
+                                           const PatchSet*,                      
+                                           const ModelInfo*)                     
+{
+  // Not implemented yet
+}

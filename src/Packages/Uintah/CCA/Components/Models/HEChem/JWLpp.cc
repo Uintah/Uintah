@@ -379,3 +379,10 @@ void JWLpp::scheduleErrorEstimate(const LevelP&,
 {
   // Not implemented yet
 }
+//__________________________________
+void JWLpp::scheduleTestConservation(SchedulerP&,
+                                     const PatchSet*,                      
+                                     const ModelInfo*)                     
+{
+  // Not implemented yet
+}
