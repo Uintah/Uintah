@@ -499,7 +499,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	  }	  
 	}
 
-	NrrdData* onrrd = new NrrdData(true);
+	NrrdData* onrrd = new NrrdData();
 	  
 	int axis = 0; // axis
 	int incr = 1; // incr.
@@ -1336,7 +1336,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   }
 
   // Stuff the data into the NRRD.
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   // If the user asks us to assume vector or tensor data, the
   // assumption is based on the size of the last dimension of the hdf5 data

@@ -170,7 +170,7 @@ UnuJoin::execute()
   vector<Nrrd*> arr(nrrds.size());
 
   if (do_join) {
-    NrrdData *onrrd = new NrrdData(true);
+    NrrdData *onrrd = new NrrdData();
     int i = 0;
     string new_label("");
     vector<NrrdDataHandle>::iterator iter = nrrds.begin();

@@ -56,7 +56,8 @@ public:
   // 
   Nrrd *nrrd;
 
-  NrrdData(bool owned = true);
+  NrrdData();
+  NrrdData(LockingHandle<Datatype> data_owner);
   NrrdData(const NrrdData&);
   virtual ~NrrdData();
 
@@ -77,9 +78,8 @@ protected:
 
   bool in_name_set(const string &s) const;
 
-  //! did we wrap some existing memory, or was this allocated
-  //! for this object to delete.
-  bool                 data_owned_;
+  //! Either the NrrdData owns the data or it wraps this external object.
+  LockingHandle<Datatype> data_owner_;
 
   // To help with pio
   string                nrrd_fname_;

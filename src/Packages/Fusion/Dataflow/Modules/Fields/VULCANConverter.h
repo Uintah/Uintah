@@ -103,7 +103,7 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 {
   int ndims = 1;
 
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   register int i, kj, cc = 0;
 
@@ -200,7 +200,7 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   int ndims = 1;
   int hex = 8;
 
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   register int i, j, kj, cc = 0;
 
@@ -392,7 +392,7 @@ execute(vector< NrrdDataHandle >& nHandles,
 {
   int ndims = 1;
 
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   int nCon = nHandles[mesh[LIST]]->nrrd->axis[1].size; // Connection list
   int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[0].size; // Phi
@@ -509,7 +509,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   int nPhi = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
   int nZR  = nHandles[data[ZR ]]->nrrd->axis[1].size; // Radial
   
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   register int i,kj,cc = 0;
 
