@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
       bool stop=false;
       bool test=false;
       string url;
-      int reps=1000;
+      int reps=1;
       
       for(int i=1;i<argc;i++){
 	string arg(argv[i]);
@@ -87,61 +87,71 @@ int main(int argc, char* argv[])
 	usage(argv[0]);
       
       if(server) {
-	PingPong_impl::pointer pp=PingPong_impl::pointer(new PingPong_impl);
+	PingPong_impl::pointer pp(new PingPong_impl);
+	Port_impl::pointer port(new Port_impl);
+	port->addReference();
 	pp->addReference();
-	cerr << "Waiting for pp connections...\n";
+	cerr << "Port is Waiting connections...\n";
 	ofstream f("pp.url");
 	std::string s;
-	f<<pp->getURL().getString();
+	f<<pp->getURL().getString()<<endl;
+	f<<port->getURL().getString()<<endl;
 	f.close();
       } 
 
       else if(client){
 	ifstream f("pp.url");
-	std::string s;
-	f>>s;
+	std::string ppurl, porturl;
+	f>>ppurl;
+	f>>porturl;
+	cerr<<"ppurl="<<ppurl<<endl;
+	cerr<<"porturl="<<porturl<<endl;
 	f.close();
-	Object::pointer obj=
-	  PIDL::objectFrom(s);
+	Object::pointer ppobj=
+	  PIDL::objectFrom(ppurl);
+	Object::pointer portobj=
+	  PIDL::objectFrom(porturl);
 	cerr << "Object_from completed\n";
-	PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
+
+	PingPong::pointer pp=pidl_cast<PingPong::pointer>(ppobj);
+	Port::pointer port=pidl_cast<Port::pointer>(portobj);
 	cerr << "pidl_cast completed\n";
-	if(pp.isNull()){
-	  cerr << "pp_isnull\n";
+
+	if(port.isNull() || pp.isNull() ){
+	  cerr << "port or pp is null\n";
 	  abort();
 	}
 
 	cerr << "Calling pingpong....\n";
-	bool good=true;
-	for(int i=0; i<reps; i++){
-	  //cerr<<"call pingpong("<<i<<")\n";
-	  int j=pp->pingpong(i);
-	  if(i!=j){
-	    cerr << "BAD data: " << i << " vs. " << j << '\n';
-	    good=false;
-	    break;
-	  }
-	  //cerr<<"done pingpong("<<i<<")\n";
-	}
-	if(good){
-	  cerr << "Successful\n";
-	}
+	cerr<<pp->pingpong(port)<<endl;
       }
       else if(stop){
 	ifstream f("pp.url");
-	std::string s;
-	f>>s;
+	std::string ppurl, porturl;
+	f>>ppurl;
+	f>>porturl;
+	cerr<<"ppurl="<<ppurl<<endl;
+	cerr<<"porturl="<<porturl<<endl;
 	f.close();
-	Object::pointer obj=PIDL::objectFrom(s);
+	Object::pointer ppobj=
+	  PIDL::objectFrom(ppurl);
+	Object::pointer portobj=
+	 PIDL::objectFrom(porturl);
 	cerr << "Object_from completed\n";
-	PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
+	
+	PingPong::pointer pp=pidl_cast<PingPong::pointer>(ppobj);
+	Port::pointer port=pidl_cast<Port::pointer>(portobj);
 	cerr << "pidl_cast completed\n";
-	if(pp.isNull()){
-	  cerr << "pp_isnull\n";
+	
+	if(port.isNull() || pp.isNull() ){
+	  cerr << "port or pp is null\n";
 	  abort();
 	}
-	cerr << "Calling pp.stop()....\n";
+	
+	cerr << "Calling stop() for both server objects....\n";
 	pp->stop();
+	port->stop();
+	
       }
       else if(test){
 	cerr<<"url="<<url;

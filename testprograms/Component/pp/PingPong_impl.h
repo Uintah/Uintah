@@ -34,14 +34,18 @@
 #include <testprograms/Component/pp/PingPong_sidl.h>
 
 namespace PingPong_ns {
+  class SCIRun::TypeInfo;
+  class PingPong_impl : public PingPong{
+  public:
+    std::string pingpong(const Port::pointer &port);
+    void stop();
+  };
 
-    class PingPong_impl : public PingPong {
-    public:
-	PingPong_impl();
-	~PingPong_impl();
-	int pingpong(int arg);
-	void stop();
-    };
+  class Port_impl : public Port{
+  public:
+    std::string getString(int i);
+    void stop();
+  };
 
 } // End namespace pingpong
 

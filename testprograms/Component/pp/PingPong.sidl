@@ -16,9 +16,14 @@
 */
 
 package PingPong_ns {
+    interface Port{
+      string getString(in int i);
+      void stop();	
+    }	
+    
     interface PingPong {
-	int pingpong(in int arg);
-	void stop();
+      string pingpong(in Port port);
+      void stop();
     };
    
 };

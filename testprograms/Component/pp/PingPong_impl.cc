@@ -40,21 +40,33 @@
 using namespace PingPong_ns;
 using namespace std;
 
-PingPong_impl::PingPong_impl()
+string 
+PingPong_impl::pingpong(const Port::pointer& port)
 {
+  string s="FromPort.";
+  s+=port->getString(1999);
+  return s;
 }
 
-PingPong_impl::~PingPong_impl()
+void 
+PingPong_impl::stop()
 {
-}
-
-int PingPong_impl::pingpong(int arg)
-{
-    return arg;
-}
-
-void PingPong_impl::stop()
-{
-  cerr<<"stop() is called\n";
+  cerr<<"PingPong::stop() is called\n";
   deleteReference();
 }
+
+void 
+Port_impl::stop()
+{
+  cerr<<"Port::stop() is called\n";
+  deleteReference();
+}
+
+string 
+Port_impl::getString(int i){
+  string s;
+  s="***you got me***";
+  return s;
+}
+
+
