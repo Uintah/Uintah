@@ -84,7 +84,7 @@ void VolumeVis::display() {
 #endif
 
 void VolumeVisDpy::run() {
-  open_window();
+  open_display();
 
   init();
 
@@ -107,7 +107,7 @@ void VolumeVisDpy::run() {
 
     // Now we need to test to see if we should die
     if (scene->get_rtrt_engine()->stop_execution()) {
-      destroy_window();
+      close_display();
       return;
     }
 
@@ -353,6 +353,10 @@ void VolumeVisDpy::compute_hist(GLuint fid) {
   histmax=max;
   cout << "histmax = " << histmax << endl;
   //cerr << "VolumeVisDpy:compute_hist:end\n";
+}
+
+void draw_bbox(GLuint fid, XFontStruct* font_struct) {
+
 }
 
 void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
