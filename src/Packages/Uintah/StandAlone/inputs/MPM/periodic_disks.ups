@@ -17,11 +17,6 @@
    <DataArchiver>
         <filebase>periodic_disks.uda</filebase>
 	<outputTimestepInterval>20</outputTimestepInterval>
-	<save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
 	<save label = "p.particleID"/>
 	<save label = "p.x"/>
 	<save label = "p.volume"/>
