@@ -25,7 +25,7 @@ JWL::~JWL()
 }
 //__________________________________
 double JWL::computeRhoMicro(double press, double,
-                            double cv, double Temp)
+                            double cv, double Temp,double rho_guess)
 {
   // Pointwise computation of microscopic density
   // P=P(rho,T) is not invertable to get rho=rho(P,T)
@@ -35,12 +35,12 @@ double JWL::computeRhoMicro(double press, double,
   //         B*exp(-R2*rho0/rhoM) + om*rhoM*cv*Temp) = 0
   // First guess comes from inverting the last term of this equation
 
-  double rhoM;
-  if(B>0){
-    rhoM = min(10000.,press/(om*cv*Temp));
-  } else {
-    rhoM = rho0;
-  }
+  double rhoM=rho_guess;
+//  if(B>0){
+//    rhoM = min(10000.,press/(om*cv*Temp));
+//  } else {
+//    rhoM = rho0;
+//  }
 
   double epsilon = 1.e-15;
   double delta = 1.;

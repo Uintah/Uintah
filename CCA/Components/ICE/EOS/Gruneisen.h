@@ -42,7 +42,7 @@ WARNING
         virtual ~Gruneisen();
         
         virtual double computeRhoMicro(double press,double gamma,
-                                       double cv, double Temp);
+                                      double cv, double Temp, double rho_guess);
          
         virtual void computePressEOS(double rhoM, double gamma,
                                      double cv, double Temp,
