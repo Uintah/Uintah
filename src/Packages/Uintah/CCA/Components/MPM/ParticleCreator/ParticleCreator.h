@@ -42,9 +42,16 @@ namespace Uintah {
 					      const Patch* patch,
 					      DataWarehouse* new_dw);
 
+    virtual void allocateVariablesAddRequires(Task* task, 
+					      const MPMMaterial* matl,
+					      const PatchSet* patch, 
+					      MPMLabel* lb) const;
+
     virtual void allocateVariablesAdd(MPMLabel* lb, DataWarehouse* new_dw,
-				      ParticleSubset* subset,
-				      map<const VarLabel*,ParticleVariableBase*>* newState);
+				      ParticleSubset* addset,
+				      map<const VarLabel*,ParticleVariableBase*>* newState,
+				      ParticleSubset* delset,
+				      DataWarehouse* old_dw);
 
     virtual void registerPermanentParticleState(MPMMaterial* matl,
 						MPMLabel* lb);
@@ -54,6 +61,8 @@ namespace Uintah {
 
     virtual particleIndex countAndCreateParticles(const Patch*,
 						  GeometryObject* obj);
+
+    virtual vector<const VarLabel* > returnParticleState();
 
   protected:
 
@@ -83,7 +92,7 @@ namespace Uintah {
 
     ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
-    ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol;
+    ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp;
 

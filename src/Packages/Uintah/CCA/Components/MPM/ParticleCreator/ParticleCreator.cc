@@ -201,47 +201,119 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   return subset;
 }
 
+void ParticleCreator::allocateVariablesAddRequires(Task* task, 
+						   const MPMMaterial* matl,
+						   const PatchSet* patch,
+						   MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,lb->pDispLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pXLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pVelocityLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pExternalForceLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pMassLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pTemperatureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pSp_volLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pParticleIDLabel, Ghost::None);
+
+  if (d_8or27 == 27)
+    task->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
+
+  if (d_useLoadCurves)
+    task->requires(Task::OldDW,lb->pLoadCurveIDLabel, Ghost::None);
+
+  if (d_doErosion)
+    task->requires(Task::OldDW,lb->pErosionLabel, Ghost::None);
+
+}
+
 
 void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
-					   ParticleSubset* subset,
-					   map<const VarLabel*, ParticleVariableBase*>* newState)
+					   ParticleSubset* addset,
+					   map<const VarLabel*, ParticleVariableBase*>* newState,
+					   ParticleSubset* delset,
+					   DataWarehouse* old_dw)
 {
-  new_dw->allocateTemporary(position, subset);
-  (*newState)[lb->pXLabel] = position.clone();
+  ParticleSubset::iterator n,o;
 
-  new_dw->allocateTemporary(pvelocity,subset); 
-  (*newState)[lb->pVelocityLabel]=pvelocity.clone();
+  constParticleVariable<Vector> o_disp;
+  constParticleVariable<Point> o_position;
+  constParticleVariable<Vector> o_velocity;
+  constParticleVariable<Vector> o_external_force;
+  constParticleVariable<double> o_mass;
+  constParticleVariable<double> o_volume;
+  constParticleVariable<double> o_temperature;
+  constParticleVariable<double> o_sp_vol;
+  constParticleVariable<long64> o_particleID;
+  constParticleVariable<Vector> o_size;
+  constParticleVariable<int> o_loadcurve;
+  constParticleVariable<double> o_erosion;
 
-  new_dw->allocateTemporary(pexternalforce,subset);
-  (*newState)[lb->pExternalForceLabel]=pexternalforce.clone();
+  new_dw->allocateTemporary(pdisp,addset);
+  new_dw->allocateTemporary(position, addset);
+  new_dw->allocateTemporary(pvelocity,addset); 
+  new_dw->allocateTemporary(pexternalforce,addset);
+  new_dw->allocateTemporary(pmass,addset);
+  new_dw->allocateTemporary(pvolume,addset);
+  new_dw->allocateTemporary(ptemperature,addset);
+  new_dw->allocateTemporary(psp_vol,addset); 
+  new_dw->allocateTemporary(pparticleID,addset);
+  new_dw->allocateTemporary(psize,addset);
+  new_dw->allocateTemporary(pLoadCurveID,addset); 
+  new_dw->allocateTemporary(perosion,addset); 
 
-  new_dw->allocateTemporary(pmass,subset);
-  (*newState)[lb->pMassLabel]=pmass.clone();
 
-  new_dw->allocateTemporary(pvolume,subset);
-  (*newState)[lb->pVolumeLabel]=pvolume.clone();
+  old_dw->get(o_disp,lb->pDispLabel,delset);
+  old_dw->get(o_position,lb->pXLabel,delset);
+  old_dw->get(o_velocity,lb->pVelocityLabel,delset);
+  old_dw->get(o_external_force,lb->pExternalForceLabel,delset);
+  old_dw->get(o_mass,lb->pMassLabel,delset);
+  old_dw->get(o_volume,lb->pVolumeLabel,delset);
+  old_dw->get(o_temperature,lb->pTemperatureLabel,delset);
+  old_dw->get(o_sp_vol,lb->pSp_volLabel,delset);
+  old_dw->get(o_particleID,lb->pParticleIDLabel,delset);
+  if (d_8or27 == 27) 
+    old_dw->get(o_size,lb->pSizeLabel,delset);
+  if (d_useLoadCurves) 
+    old_dw->get(o_loadcurve,lb->pLoadCurveIDLabel,delset);
+  if (d_doErosion) 
+    old_dw->get(o_erosion,lb->pErosionLabel,delset);
 
-  new_dw->allocateTemporary(ptemperature,subset);
-  (*newState)[lb->pTemperatureLabel]=ptemperature.clone();
-
-  new_dw->allocateTemporary(pparticleID,subset);
-  (*newState)[lb->pParticleIDLabel]=pparticleID.clone();
-
-  new_dw->allocateTemporary(psize,subset);
-  (*newState)[lb->pSizeLabel]=psize.clone();
-
-  new_dw->allocateTemporary(psp_vol,subset); 
-  (*newState)[lb->pSp_volLabel]=psp_vol.clone();
-
-  new_dw->allocateTemporary(pdisp,subset);
-  (*newState)[lb->pDispLabel]=pdisp.clone();
-
-  if (d_useLoadCurves) {
-    new_dw->allocateTemporary(pLoadCurveID,subset); 
-    (*newState)[lb->pLoadCurveIDLabel_Add]=pLoadCurveID.clone();
+  n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    pdisp[*n]=o_disp[*o];
+    position[*n] = o_position[*o];
+    pvelocity[*n]=o_velocity[*o];
+    pexternalforce[*n]=o_external_force[*o];
+    pmass[*n] = o_mass[*o];
+    pvolume[*n] = o_volume[*o];
+    ptemperature[*n]=o_temperature[*o];
+    psp_vol[*n]=o_sp_vol[*o];
+    pparticleID[*n]=o_particleID[*o];
+    if (d_8or27 == 27) 
+      psize[*n]=o_size[*o];
+    if (d_useLoadCurves) 
+      pLoadCurveID[*n]=o_loadcurve[*o];
+    if (d_doErosion) 
+      perosion[*n]=o_erosion[*o];
   }
-
-
+  
+  (*newState)[lb->pDispLabel]=pdisp.clone();
+  (*newState)[lb->pXLabel] = position.clone();
+  (*newState)[lb->pVelocityLabel]=pvelocity.clone();
+  (*newState)[lb->pExternalForceLabel]=pexternalforce.clone();
+  (*newState)[lb->pMassLabel]=pmass.clone();
+  (*newState)[lb->pVolumeLabel]=pvolume.clone();
+  (*newState)[lb->pTemperatureLabel]=ptemperature.clone();
+  (*newState)[lb->pSp_volLabel]=psp_vol.clone();
+  (*newState)[lb->pParticleIDLabel]=pparticleID.clone();
+  if (d_8or27 == 27) 
+    (*newState)[lb->pSizeLabel]=psize.clone();
+  if (d_useLoadCurves) 
+    (*newState)[lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
+  if (d_doErosion) 
+    (*newState)[lb->pErosionLabel]=perosion.clone();
 }
 
 
@@ -345,6 +417,11 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     createPoints(patch,obj);
   
   return d_object_points[key].size();
+}
+
+vector<const VarLabel* > ParticleCreator::returnParticleState()
+{
+  return particle_state;
 }
 
 void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
