@@ -43,21 +43,22 @@ public:
 
     //////////
     // Insert Documentation Here:
-#if 0
     inline NodeIterator operator++(int) {
 	NodeIterator old(*this);
-	if(++d_iz > d_region->d_nz){
-	    d_iz=0;
-	    if(++d_iy > d_region->d_ny){
-		d_iy=0;
-		if(++d_ix > d_region->d_nx){
-		    d_iy=d_region->d_ny+1; d_iz=d_region->d_nz+1;
+
+	if(++d_iz > d_region->d_box.upper().z()){
+	    d_iz = d_region->d_box.lower().z();
+	    if(++d_iy > d_region->d_box.upper().y()){
+		d_iy = d_region->d_box.lower().y();
+		if(++d_ix > d_region->d_box.upper().x()){
+		    d_ix = d_region->d_box.upper().x() + 1;
+		    d_iy = d_region->d_box.upper().y() + 1;
+		    d_iz = d_region->d_box.upper().z() + 1;
 		}
 	    }
 	}
 	return old;
     }
-#endif
 
     //////////
     // Insert Documentation Here:
@@ -95,6 +96,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/04/25 00:41:21  dav
+// more changes to fix compilations
+//
 // Revision 1.4  2000/04/12 23:00:48  sparker
 // Starting problem setup code
 // Other compilation fixes

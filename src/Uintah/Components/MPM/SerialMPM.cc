@@ -295,23 +295,18 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  *		  the others according to specific rules)
 	  *   out(G.VELOCITY_STAR, G.ACCELERATION)
 	  */
-	 /*
-	   #warning
-	   Task* t = new Task("Contact::exMomIntegrated",
-	   region, old_dw, new_dw,
-	   this, Contact::exMomIntegrated);
-	   t->requires(new_dw, "g.mass", region, 0,
-	   NCVariable<double>::getTypeDescription());
-	   t->requires(new_dw, "g.velocity_star", region, 0,
-	   NCVariable<Vector>::getTypeDescription());
-	   t->requires(new_dw, "g.acceleration", region, 0,
-	   NCVariable<Vector>::getTypeDescription());
-	   t->computes(new_dw, "g.velocity_star", region, 0,
-	   NCVariable<Vector>::getTypeDescription());
-	   t->computes(new_dw, "g.acceleration", region, 0,
-	   NCVariable<Vector>::getTypeDescription());
-	   sched->addTask(t);
-	   */
+
+	Task* t = new Task("Contact::exMomIntegrated",
+			   region, old_dw, new_dw,
+			   d_contactModel, Contact::exMomIntegrated);
+	t->requires(new_dw, gMassLabel, region, 0);
+	t->requires(new_dw, gVelocityStarLabel, region, 0);
+	t->requires(new_dw, gAccelerationLabel, region, 0);
+
+	t->computes(new_dw, gVelocityStarLabel, region);
+	t->computes(new_dw, gAccelerationLabel, region);
+
+	sched->addTask(t);
       }
       
       {
@@ -400,14 +395,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<double> gmass;
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
-#ifdef WONT_COMPILE_YET
+
       new_dw->allocate(gmass,         gMassLabel, vfindex, region, 0);
       new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region, 0);
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region, 0);
 
-      ParticleSubset* pset = px.getParticleSubset(matlindex);
-      ASSERT(pset == pmass.getParticleSubset(matlindex));
-      ASSERT(pset == pvelocity.getParticleSubset(matlindex));
+      ParticleSubset* pset = px.getParticleSubset();
+      ASSERT(pset == pmass.getParticleSubset());
+      ASSERT(pset == pvelocity.getParticleSubset());
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -438,17 +433,15 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	}
       }
 
-      for(NodeIterator iter = region->begin();
-	iter != region->end(); iter++){
+      for(NodeIterator iter = region->begin(); iter != region->end(); iter++){
 	if(gmass[*iter] != 0.0){
 	    gvelocity[*iter] *= 1./gmass[*iter];
 	}
       }
 
-      new_dw->put(gmass,         gMassLabel, vfindex, region, 0);
-      new_dw->put(gvelocity,     gVelocityLabel, vfindex, region, 0);
-      new_dw->put(externalforce, gExternalForceLabel, vfindex, region, 0);
-#endif
+      new_dw->put(gmass,         gMassLabel, vfindex, region);
+      new_dw->put(gvelocity,     gVelocityLabel, vfindex, region);
+      new_dw->put(externalforce, gExternalForceLabel, vfindex, region);
     }
   }
 }
@@ -503,13 +496,13 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
       old_dw->get(px,      pXLabel, matlindex, region, 0);
       old_dw->get(pvol,    pVolumeLabel, matlindex, region, 0);
       old_dw->get(pstress, pStressLabel, matlindex, region, 0);
-#ifdef WONT_COMPILE_YET
+
       new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region, 0);
   
-      ParticleSubset* pset = px.getParticleSubset(matlindex);
-      ASSERT(pset == px.getParticleSubset(matlindex));
-      ASSERT(pset == pvol.getParticleSubset(matlindex));
-      ASSERT(pset == pstress.getParticleSubset(matlindex));
+      ParticleSubset* pset = px.getParticleSubset();
+      ASSERT(pset == px.getParticleSubset());
+      ASSERT(pset == pvol.getParticleSubset());
+      ASSERT(pset == pstress.getParticleSubset());
 
       internalforce.initialize(Vector(0,0,0));
 
@@ -528,8 +521,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
   	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
          }
       }
-      new_dw->put(internalforce, gInternalForceLabel, vfindex, region, 0);
-#endif
+      new_dw->put(internalforce, gInternalForceLabel, vfindex, region);
     }
   }
 }
@@ -562,7 +554,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
-#ifdef WONT_COMPILE_YET
+
       new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region, 0);
 
       // Do the computation of a = F/m for nodes where m!=0.0
@@ -576,9 +568,9 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 	  acceleration[*iter] = zero;
 	}
       }
-#endif
+
       // Put the result in the datawarehouse
-      new_dw->put(acceleration, gAccelerationLabel, vfindex, region );
+      new_dw->put(acceleration, gAccelerationLabel, vfindex, region);
 
     }
   }
@@ -607,7 +599,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       new_dw->get(velocity, gVelocityLabel, vfindex, region, 0);
 
       old_dw->get(delt, deltLabel);
-#ifdef WONT_COMPILE_YET
+
       // Create variables for the results
       NCVariable<Vector> velocity_star;
       new_dw->allocate(velocity_star, gVelocityStarLabel, vfindex, region, 0);
@@ -622,7 +614,6 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
 
       // Put the result in the datawarehouse
       new_dw->put( velocity_star, gVelocityStarLabel, vfindex, region );
-#endif
     }
   }
 }
@@ -665,9 +656,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
       old_dw->get(delt, deltLabel);
 
-#if WONT_COMPILE_YET
-      ParticleSubset* pset = px.getParticleSubset(matlindex);
-      ASSERT(pset == pvelocity.getParticleSubset(matlindex));
+      ParticleSubset* pset = px.getParticleSubset();
+      ASSERT(pset == pvelocity.getParticleSubset());
 
       double ke=0;
       for(ParticleSubset::iterator iter = pset->begin();
@@ -708,7 +698,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       tmpout2 << ts << " " << px[5] << std::endl;
       ts++;
 
-#endif
       // Store the new result
       new_dw->put(px,        pXLabel, matlindex, region);
       new_dw->put(pvelocity, pVelocityLabel, matlindex, region);
@@ -731,6 +720,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.27  2000/04/25 00:41:19  dav
+// more changes to fix compilations
+//
 // Revision 1.26  2000/04/24 21:04:24  sparker
 // Working on MPM problem setup and object creation
 //
