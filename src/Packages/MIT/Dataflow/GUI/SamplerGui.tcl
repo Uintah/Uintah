@@ -26,42 +26,53 @@ class SamplerGui {
 
     constructor {} {
 	global $this-interations
+	global $this-sub
+	global $this-kappa
+
 	set mode "stop"
+	set n 0
     }
 
     method ui { window } {
+	global $this-interations
+	global $this-sub
+	global $this-kappa
 
 	set w $window
-	
-        iwidgets::entryfield $w.iteration -labeltext "Iterations:" \
-	    -validate numeric \
+
+	# Iterations & Subsampling
+	frame $w.set
+        iwidgets::entryfield $w.set.iteration -labeltext "Iterations:" \
+	    -validate numeric -width 6 \
 	    -textvariable $this-iterations \
-	    -command "$this-c iteration \[$w.iteration get\]" 
+	    -command "$this-c iterations \[$w.set.iteration get\]" 
 
-#        iwidgets::entryfield $w.monitor -labeltext "Monitor:" \
-\#	    -validate numeric -command "$this-c monitor \[$w.monitor get\]" 
+        iwidgets::entryfield $w.set.sub -labeltext "Subsample:" \
+	    -validate numeric -width 3 \
+	    -textvariable $this-sub \
+	    -command "$this-c sub \[$w.set.sub get\]" 
 
-#        iwidgets::entryfield $w.thin -labeltext "Thin:" \
-\#	    -validate numeric -command "$this-c thin  \[$w.thin get\]" 
+	pack $w.set.iteration $w.set.sub -anchor w -side left
+	pack $w.set -anchor w
 
+	# Kappa
         iwidgets::entryfield $w.kappa -labeltext "Kappa:" \
-	    -validate numeric -command "$this-c kappa \[$w.kappa get\]" 
+	    -validate numeric -width 6 \
+	    -textvariable $this-kappa \
+	    -command "$this-c kappa \[$w.kappa get\]" 
+	pack $w.kappa -anchor w
 
+	# Control
 	frame $w.ctrl
 	button $w.ctrl.stop -text "Stop" -command "$this stop" -state disable
 	button $w.ctrl.run -text "  Run   " -command "$this run "
 	label  $w.ctrl.current -text ""
 	pack $w.ctrl.stop $w.ctrl.run $w.ctrl.current -side left -anchor w
-
-	frame $w.children
-
-	pack $w.iteration -anchor w
 	pack $w.ctrl -anchor w
-	pack $w.children 
 
-	set n 0
-	#iwidgets::Labeledframe $w.graph -labeltext "Progress"
-	#pack $w.graph -expand yes -fill both
+	# Children
+	frame $w.children
+	pack $w.children 
     }
 
     method run {} {
@@ -101,11 +112,12 @@ class SamplerGui {
 	$w.ctrl.current configure -text $n
     }
 
+    method set-kappa { k } {
+	global $this-kappa
+	set $this-kappa k
+    }
+	
     method new-child-window { name } {
-#	set child [frame $w.children.$n]
-#	pack $child -side top
-#	incr n
-#	return $child
 	set child [iwidgets::Labeledframe $w.children.$n -labeltext $name]
 	pack $child -side top -anchor w
 	incr n
