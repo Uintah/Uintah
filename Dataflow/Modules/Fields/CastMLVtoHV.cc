@@ -89,7 +89,7 @@ void CastMLVtoHV::execute()
   }                         
 
   const TypeDescription *fsrc_td = ifieldH->get_type_description();
-  const TypeDescription *lsrc_td;// = ifieldH->data_at_type_description();
+  const TypeDescription *lsrc_td = 0;// = ifieldH->data_at_type_description();
   const TypeDescription *ldst_td = 0;
   switch (ifieldH->data_at())
   {
