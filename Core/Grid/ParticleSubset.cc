@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
+#include <algo.h>
 
 using namespace Uintah;
 using namespace std;
