@@ -68,6 +68,12 @@ AC_CONFIG_HEADER(sci_config.h)
 SCI_ARG_WITH_LIST="--no-create --no-recursion"
 SCI_ARG_ENABLE_LIST=""
 
+ECHO_N=$ac_n
+ECHO_C=$ac_c
+
+AC_SUBST(ECHO_N)
+AC_SUBST(ECHO_C)
+
 ##  ---------------------------------------------------------------------
 ##  --------------------  new macro definitions  ------------------------
 ##  ---------------------------------------------------------------------
