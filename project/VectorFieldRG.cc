@@ -73,7 +73,6 @@ void VectorFieldRG::io(Piostream& stream)
     Pio(stream, nx);
     Pio(stream, ny);
     Pio(stream, nz);
-    cerr << "nx=" << nx << ", ny=" << ny << ", nz=" << nz << endl;
     Pio(stream, grid);
     stream.end_class();
 }	
@@ -98,8 +97,6 @@ int VectorFieldRG::interpolate(const Point& p, Vector& value)
     int ix1=ix+1;
     int iy1=iy+1;
     int iz1=iz+1;
-    cerr << "interpolate: p=" << p.string() << endl;
-    cerr << "ix=" << ix << ", iy=" << iy << ", iz=" << iz << endl;
     if(ix<0 || ix1>=nx)return 0;
     if(iy<0 || iy1>=ny)return 0;
     if(iz<0 || iz1>=nz)return 0;

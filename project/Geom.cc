@@ -30,6 +30,24 @@ Vector GeomPick::principal(int i) {
     return directions[i];
 }
 
+void GeomPick::set_principal(const Vector& v1)
+{
+    directions.remove_all();
+    directions.grow(2);
+    directions[0]=v1;
+    directions[1]=-v1;
+}
+
+void GeomPick::set_principal(const Vector& v1, const Vector& v2)
+{
+    directions.remove_all();
+    directions.grow(4);
+    directions[0]=v1;
+    directions[1]=-v1;
+    directions[2]=v2;
+    directions[3]=-v2;
+}
+
 void GeomPick::set_principal(const Vector& v1, const Vector& v2,
 			     const Vector& v3)
 {
@@ -43,8 +61,8 @@ void GeomPick::set_principal(const Vector& v1, const Vector& v2,
     directions[5]=-v3;
 }
 
-GeomObj::GeomObj()
-: matl(0), pick(0)
+GeomObj::GeomObj(int lit)
+: lit(lit), matl(0), pick(0)
 {
 }
 
@@ -71,12 +89,31 @@ void GeomObj::set_matl(MaterialProp* _matl)
     matl=_matl;
 }
 
+void GeomObj::draw(DrawInfo* di)
+{
+    if(matl)
+	di->push_matl(matl);
+    if(pick && di->pick_mode)
+	glLoadName((GLuint)pick);
+    if(lit && di->lighting && !di->currently_lit){
+	di->currently_lit=1;
+	glEnable(GL_LIGHTING);
+    }
+    if((!lit || !di->lighting) && di->currently_lit){
+	di->currently_lit=0;
+	glDisable(GL_LIGHTING);
+    }
+    objdraw(di);
+    if(matl)
+	di->pop_matl();
+}
+
 ObjTransform::~ObjTransform() {
     delete(obj);
 }
 
 ObjTransform::ObjTransform(GeomObj *g)
-: obj(g)
+: GeomObj(1), obj(g)
 {
     for (int i=0; i<16; i++)
 	if (i%5 == 0) trans[i]=1; else trans[i]=0;
@@ -86,7 +123,7 @@ ObjTransform::ObjTransform(GeomObj *g)
 }
 
 ObjTransform::ObjTransform(const ObjTransform& ot) 
-: obj(ot.obj), center(ot.center) {
+: GeomObj(1), obj(ot.obj), center(ot.center) {
     for (int i=0; i<16; i++)
 	trans[i] = ot.trans[i];
 }
@@ -125,7 +162,7 @@ void ObjTransform::translate(Vector mtn) {
     glPopMatrix();
 }
 
-void ObjTransform::draw(DrawInfo *di) {
+void ObjTransform::objdraw(DrawInfo *di) {
     glPushMatrix();
     glMultMatrixd(trans);
     obj->draw(di);
@@ -141,7 +178,7 @@ void ObjTransform::get_bounds(BBox& bb) {
 }
 
 ObjGroup::ObjGroup()
-: objs(0, 100)
+: GeomObj(1), objs(0, 100)
 {
 }
 
@@ -171,14 +208,10 @@ int ObjGroup::size()
     return objs.size();
 }
 
-void ObjGroup::draw(DrawInfo* di)
+void ObjGroup::objdraw(DrawInfo* di)
 {
-    if(matl)
-	di->push_matl(matl);
     for (int i=0; i<objs.size(); i++)
 	objs[i]->draw(di);
-    if(matl)
-	di->pop_matl();
 }
 
 GeomObj* ObjGroup::clone()
@@ -197,12 +230,12 @@ void ObjGroup::get_bounds(BBox& in_bb)
 }
 
 Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
-: p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
+: GeomObj(1), p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
 {
 }
 
 Triangle::Triangle(const Triangle &copy)
-: p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
+: GeomObj(1), p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
 {
 }
 
@@ -210,9 +243,7 @@ Triangle::~Triangle()
 {
 }
 
-void Triangle::draw(DrawInfo* di) {
-    if(matl)
-	di->push_matl(matl);
+void Triangle::objdraw(DrawInfo* di) {
     di->polycount++;
     switch(di->drawtype){
     case DrawInfo::WireFrame:
@@ -239,8 +270,6 @@ void Triangle::draw(DrawInfo* di) {
 	glEnd();
 	break;
     }
-    if(matl)
-	di->pop_matl();
 }
 
 GeomObj* Triangle::clone()
@@ -256,12 +285,12 @@ void Triangle::get_bounds(BBox& bb)
 }
 
 Tetra::Tetra(const Point& p1, const Point& p2, const Point& p3, const Point& p4)
-: p1(p1), p2(p2), p3(p3), p4(p4)
+: GeomObj(0), p1(p1), p2(p2), p3(p3), p4(p4)
 {
 }
 
 Tetra::Tetra(const Tetra& copy)
-: p1(copy.p1), p2(copy.p2), p3(copy.p3), p4(copy.p4)
+: GeomObj(0), p1(copy.p1), p2(copy.p2), p3(copy.p3), p4(copy.p4)
 {
 }
 
@@ -269,9 +298,7 @@ Tetra::~Tetra()
 {
 }
 
-void Tetra::draw(DrawInfo* di) {
-    if(matl)
-	di->push_matl(matl);
+void Tetra::objdraw(DrawInfo* di) {
     di->polycount+=4;
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
@@ -283,8 +310,6 @@ void Tetra::draw(DrawInfo* di) {
     glVertex3d(p3.x(), p3.y(), p3.z());
     glVertex3d(p4.x(), p4.y(), p4.z());
     glEnd();
-    if(matl)
-	di->pop_matl();
 }
 
 GeomObj* Tetra::clone()
@@ -300,15 +325,30 @@ void Tetra::get_bounds(BBox& bb)
     bb.extend(p4);
 }
 
+GeomSphere::GeomSphere()
+: GeomObj(1)
+{
+}
+
 GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
-: cen(cen), rad(rad), nu(nu), nv(nv)
+: GeomObj(1), cen(cen), rad(rad), nu(nu), nv(nv)
 {
     adjust();
 }
 
-GeomSphere::GeomSphere(const GeomSphere& copy)
-: cen(copy.cen), rad(copy.rad), nu(copy.nu), nv(copy.nv)
+void GeomSphere::move(const Point& _cen, double _rad, int _nu, int _nv)
 {
+    cen=_cen;
+    rad=_rad;
+    nu=_nu;
+    nv=_nv;
+    adjust();
+}
+
+GeomSphere::GeomSphere(const GeomSphere& copy)
+: GeomObj(1), cen(copy.cen), rad(copy.rad), nu(copy.nu), nv(copy.nv)
+{
+    adjust();
 }
 
 GeomSphere::~GeomSphere()
@@ -319,10 +359,8 @@ void GeomSphere::adjust()
 {
 }
 
-void GeomSphere::draw(DrawInfo* di)
+void GeomSphere::objdraw(DrawInfo* di)
 {
-    if(matl)
-	di->push_matl(matl);
     SinCosTable u(nu, 0, 2.*Pi);
     SinCosTable v(nv, 0, Pi, rad);
     double cx=cen.x();
@@ -421,8 +459,6 @@ void GeomSphere::draw(DrawInfo* di)
 	}
 	break;
     }
-    if(matl)
-	di->pop_matl();
 }
 
 GeomObj* GeomSphere::clone()
@@ -436,27 +472,23 @@ void GeomSphere::get_bounds(BBox& bb)
 }
 
 GeomPt::GeomPt(const Point& p)
-: p1(p)
+: GeomObj(0), p1(p)
 {
 }
 
 GeomPt::GeomPt(const GeomPt& copy)
-: p1(copy.p1)
+: GeomObj(0), p1(copy.p1)
 {
 }
 
 GeomPt::~GeomPt() {
 }
 
-void GeomPt::draw(DrawInfo* di) {
-    if(matl)
-	di->push_matl(matl);
+void GeomPt::objdraw(DrawInfo* di) {
     di->polycount++;
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glEnd();
-    if(matl)
-	di->pop_matl();
 }
 
 GeomObj* GeomPt::clone()
@@ -470,28 +502,24 @@ void GeomPt::get_bounds(BBox& bb)
 }
 
 GeomLine::GeomLine(const Point& p1, const Point& p2)
-: p1(p1), p2(p2)
+: GeomObj(0), p1(p1), p2(p2)
 {
 }
 
 GeomLine::GeomLine(const GeomLine& copy)
-: p1(copy.p1), p2(copy.p2)
+: GeomObj(0), p1(copy.p1), p2(copy.p2)
 {
 }
 
 GeomLine::~GeomLine() {
 }
 
-void GeomLine::draw(DrawInfo* di) {
-    if(matl)
-	di->push_matl(matl);
+void GeomLine::objdraw(DrawInfo* di) {
     di->polycount++;
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glEnd();
-    if(matl)
-	di->pop_matl();
 }
 
 GeomObj* GeomLine::clone()
@@ -506,20 +534,19 @@ void GeomLine::get_bounds(BBox& bb)
 }
 
 GeomPolyLine::GeomPolyLine()
+: GeomObj(0)
 {
 }
 
 GeomPolyLine::GeomPolyLine(const GeomPolyLine& copy)
-: pts(copy.pts)
+: GeomObj(0), pts(copy.pts)
 {
 }
 
 GeomPolyLine::~GeomPolyLine() {
 }
 
-void GeomPolyLine::draw(DrawInfo* di) {
-    if(matl)
-	di->push_matl(matl);
+void GeomPolyLine::objdraw(DrawInfo* di) {
     di->polycount+=pts.size()-1;
     glBegin(GL_LINE_STRIP);
     for(int i=0;i<pts.size();i++){
@@ -527,8 +554,6 @@ void GeomPolyLine::draw(DrawInfo* di) {
 	glVertex3d(p.x(), p.y(), p.z());
     }
     glEnd();
-    if(matl)
-	di->pop_matl();
 }
 
 GeomObj* GeomPolyLine::clone()
@@ -595,6 +620,11 @@ void DrawInfo::pop_matl()
     }
 }
 
+GeomPick::GeomPick(Module* module)
+: module(module), mailbox(0), cbdata(0)
+{
+}
+
 GeomPick::GeomPick(Module* module, const Vector& v1)
 : module(module), directions(2), mailbox(0), cbdata(0)
 {
@@ -632,6 +662,11 @@ void GeomPick::set_highlight(MaterialProp* matl)
     hightlight=matl;
 }
 
+void GeomPick::set_cbdata(void* _cbdata)
+{
+    cbdata=_cbdata;
+}
+
 void GeomPick::pick()
 {
     if(mailbox){
@@ -661,18 +696,37 @@ void GeomPick::moved(int axis, double distance, const Vector& delta)
 	mailbox->send(new GeomPickMessage(module,
 					  axis, distance, delta, cbdata));
     } else {
+	cerr << "Calling moved...\n";
 	module->geom_moved(axis, distance, delta, cbdata);
+	cerr << "done\n";
     }
+}
+
+GeomCylinder::GeomCylinder()
+: GeomObj(1)
+{
 }
 
 GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,
 			   double rad, int nu, int nv)
-: bottom(bottom), top(top), rad(rad), nu(nu), nv(nv)
+: GeomObj(1), bottom(bottom), top(top), rad(rad), nu(nu), nv(nv)
 {
+    adjust();
+}
+
+void GeomCylinder::move(const Point& _bottom, const Point& _top,
+			double _rad, int _nu, int _nv)
+{
+    bottom=_bottom;
+    top=_top;
+    rad=_rad;
+    nu=_nu;
+    nv=_nv;
+    adjust();
 }
 
 GeomCylinder::GeomCylinder(const GeomCylinder& copy)
-: bottom(copy.bottom), top(copy.top), rad(copy.rad), nu(copy.nu),
+: GeomObj(1), bottom(copy.bottom), top(copy.top), rad(copy.rad), nu(copy.nu),
   nv(copy.nv), axis(copy.axis), v1(copy.v1), v2(copy.v2)
 {
     adjust();
@@ -706,10 +760,8 @@ void GeomCylinder::get_bounds(BBox& bb)
     bb.extend(top);
 }
 
-void GeomCylinder::draw(DrawInfo* di)
+void GeomCylinder::objdraw(DrawInfo* di)
 {
-    if(matl)
-	di->push_matl(matl);
     SinCosTable u(nu, 0, 2.*Pi);
     int i,j;
     di->polycount+=nu*nv;
@@ -803,19 +855,35 @@ void GeomCylinder::draw(DrawInfo* di)
 	}
 	break;
     }
-    if(matl)
-	di->pop_matl();
+}
+
+GeomCone::GeomCone()
+: GeomObj(1)
+{
 }
 
 GeomCone::GeomCone(const Point& bottom, const Point& top,
 		   double bot_rad, double top_rad, int nu, int nv)
-: bottom(bottom), top(top), bot_rad(bot_rad),
+: GeomObj(1), bottom(bottom), top(top), bot_rad(bot_rad),
   top_rad(top_rad), nu(nu), nv(nv)
 {
+    adjust();
+}
+
+void GeomCone::move(const Point& _bottom, const Point& _top,
+		    double _bot_rad, double _top_rad, int _nu, int _nv)
+{
+    bottom=_bottom;
+    top=_top;
+    bot_rad=_bot_rad;
+    top_rad=_top_rad;
+    nu=_nu;
+    nv=_nv;
+    adjust();
 }
 
 GeomCone::GeomCone(const GeomCone& copy)
-: bottom(copy.bottom), top(copy.top), top_rad(copy.top_rad),
+: GeomObj(1), bottom(copy.bottom), top(copy.top), top_rad(copy.top_rad),
   bot_rad(copy.bot_rad), nu(copy.nu), nv(copy.nv),
   v1(copy.v1), v2(copy.v2), axis(copy.axis)
 {
@@ -849,10 +917,8 @@ void GeomCone::get_bounds(BBox& bb)
     bb.extend(top);
 }
 
-void GeomCone::draw(DrawInfo* di)
+void GeomCone::objdraw(DrawInfo* di)
 {
-    if(matl)
-	di->push_matl(matl);
     SinCosTable u(nu, 0, 2.*Pi);
     int i,j;
     di->polycount+=nu*nv;
@@ -967,18 +1033,33 @@ void GeomCone::draw(DrawInfo* di)
 	}
 	break;
     }
-    if(matl)
-	di->pop_matl();
+}
+
+GeomDisc::GeomDisc()
+: GeomObj(1)
+{
 }
 
 GeomDisc::GeomDisc(const Point& cen, const Vector& normal,
 		   double rad, int nu, int nv)
-: cen(cen), normal(normal), rad(rad), nu(nu), nv(nv)
+: GeomObj(1), cen(cen), normal(normal), rad(rad), nu(nu), nv(nv)
 {
+    adjust();
+}
+
+void GeomDisc::move(const Point& _cen, const Vector& _normal,
+		    double _rad, int _nu, int _nv)
+{
+    cen=_cen;
+    normal=_normal;
+    rad=_rad;
+    nu=_nu;
+    nv=_nv;
+    adjust();
 }
 
 GeomDisc::GeomDisc(const GeomDisc& copy)
-: cen(copy.cen), normal(copy.normal), rad(copy.rad), nu(copy.nu),
+: GeomObj(1), cen(copy.cen), normal(copy.normal), rad(copy.rad), nu(copy.nu),
   nv(copy.nv), v1(copy.v1), v2(copy.v2)
 {
     adjust();
@@ -1008,10 +1089,8 @@ void GeomDisc::get_bounds(BBox& bb)
     bb.extend(cen);
 }
 
-void GeomDisc::draw(DrawInfo* di)
+void GeomDisc::objdraw(DrawInfo* di)
 {
-    if(matl)
-	di->push_matl(matl);
     SinCosTable u(nu, 0, 2.*Pi);
     int i,j;
     di->polycount+=nu*nv;
@@ -1071,8 +1150,6 @@ void GeomDisc::draw(DrawInfo* di)
 	}
 	break;
     }
-    if(matl)
-	di->pop_matl();
 }
 
 GeomPickMessage::GeomPickMessage(Module* module, void* cbdata)

@@ -14,3 +14,7 @@ typedef ScalarFieldReader _dummy3_;
 #include <ScalarField.h>
 
 typedef ScalarFieldHandle _dummy4_;
+
+#include <Classlib/Array1.h>
+
+typedef Array1<int> _dummy5_;

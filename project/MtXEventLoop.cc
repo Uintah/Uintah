@@ -35,6 +35,28 @@ MtXEventLoop::MtXEventLoop()
 {
     started=0;
     lock_count=0;
+    XtToolkitInitialize();
+    eventloop_taskid=Task::self();
+    context=XtCreateApplicationContext();
+    XtAppSetFallbackResources(context, fallback_resources);
+    int x_argc;
+    char** x_argv;
+    ArgProcessor::get_x_args(x_argc, x_argv);
+    clString progname(ArgProcessor::get_program_name());
+    display=XtOpenDisplay(context, NULL, progname(),
+			  "sci", NULL, 0, &x_argc, x_argv);
+    if(!display){
+	cerr << "Error opening display\n";
+	exit(-1);
+    }
+    screen=DefaultScreenOfDisplay(display);
+
+    // Setup token...
+    mutex=new Mutex;
+    sema=new Semaphore(0);
+    pipe(&pipe_fd[0]);
+    XtAppAddInput(context, pipe_fd[READ], (XtPointer)XtInputReadMask,
+		  do_process_token, this);
 }
 
 MtXEventLoop::~MtXEventLoop()
@@ -71,28 +93,6 @@ void do_process_token(XtPointer ud, int* source, XtInputId*)
 
 int MtXEventLoop::body(int)
 {
-    eventloop_taskid=Task::self();
-    XtToolkitInitialize();
-    context=XtCreateApplicationContext();
-    XtAppSetFallbackResources(context, fallback_resources);
-    int x_argc;
-    char** x_argv;
-    ArgProcessor::get_x_args(x_argc, x_argv);
-    clString progname(ArgProcessor::get_program_name());
-    display=XtOpenDisplay(context, NULL, progname(),
-			  "sci", NULL, 0, &x_argc, x_argv);
-    if(!display){
-	cerr << "Error opening display\n";
-	exit(-1);
-    }
-    screen=DefaultScreenOfDisplay(display);
-
-    // Setup token...
-    mutex=new Mutex;
-    sema=new Semaphore(0);
-    pipe(&pipe_fd[0]);
-    XtAppAddInput(context, pipe_fd[READ], (XtPointer)XtInputReadMask,
-		  do_process_token, this);
 
     // Go into main loop;
     started=1;
