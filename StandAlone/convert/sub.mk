@@ -27,114 +27,120 @@ PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
 endif
 LIBS := $(PLPLOT_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
 
-PROGRAM := $(SRCDIR)/BugProgram
-SRCS := $(SRCDIR)/BugProgram.cc
+
+PROGRAM := $(SRCDIR)/CurveFieldToText
+SRCS := $(SRCDIR)/CurveFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/MaskLatVolWithHexVol
-SRCS := $(SRCDIR)/MaskLatVolWithHexVol.cc
+PROGRAM := $(SRCDIR)/HexVolFieldToText
+SRCS := $(SRCDIR)/HexVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToHexVol
-SRCS := $(SRCDIR)/RawToHexVol.cc
+PROGRAM := $(SRCDIR)/PointCloudFieldToText
+SRCS := $(SRCDIR)/PointCloudFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToStructHexVol
-SRCS := $(SRCDIR)/RawToStructHexVol.cc
+PROGRAM := $(SRCDIR)/QuadSurfFieldToText
+SRCS := $(SRCDIR)/QuadSurfFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoTetVolDirichlet
-SRCS := $(SRCDIR)/CVRTItoTetVolDirichlet.cc
+PROGRAM := $(SRCDIR)/StructCurveFieldToText
+SRCS := $(SRCDIR)/StructCurveFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoPointCloudGrad
-SRCS := $(SRCDIR)/CVRTItoPointCloudGrad.cc
+PROGRAM := $(SRCDIR)/StructHexVolFieldToText
+SRCS := $(SRCDIR)/StructHexVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoTetVolGrad
-SRCS := $(SRCDIR)/CVRTItoTetVolGrad.cc
+PROGRAM := $(SRCDIR)/StructQuadSurfFieldToText
+SRCS := $(SRCDIR)/StructQuadSurfFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoTetVolPot
-SRCS := $(SRCDIR)/CVRTItoTetVolPot.cc
+PROGRAM := $(SRCDIR)/TetVolFieldToText
+SRCS := $(SRCDIR)/TetVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoTetVolMesh
-SRCS := $(SRCDIR)/CVRTItoTetVolMesh.cc
+PROGRAM := $(SRCDIR)/TriSurfFieldToText
+SRCS := $(SRCDIR)/TriSurfFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/TetVolToCVRTI
-SRCS := $(SRCDIR)/TetVolToCVRTI.cc
+
+
+PROGRAM := $(SRCDIR)/ColumnMatrixToText
+SRCS := $(SRCDIR)/ColumnMatrixToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoTriSurfGrad
-SRCS := $(SRCDIR)/CVRTItoTriSurfGrad.cc
+PROGRAM := $(SRCDIR)/DenseMatrixToText
+SRCS := $(SRCDIR)/DenseMatrixToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoTriSurf
-SRCS := $(SRCDIR)/CVRTItoTriSurf.cc
+PROGRAM := $(SRCDIR)/SparseRowMatrixToText
+SRCS := $(SRCDIR)/SparseRowMatrixToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoTriSurfPot
-SRCS := $(SRCDIR)/CVRTItoTriSurfPot.cc
+
+
+PROGRAM := $(SRCDIR)/ColorMapToText
+SRCS := $(SRCDIR)/ColorMapToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/TriSurfToCVRTI
-SRCS := $(SRCDIR)/TriSurfToCVRTI.cc
+
+
+
+
+
+PROGRAM := $(SRCDIR)/TextToCurveField
+SRCS := $(SRCDIR)/TextToCurveField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/TriSurfToTetgen
-SRCS := $(SRCDIR)/TriSurfToTetgen.cc
+PROGRAM := $(SRCDIR)/TextToHexVolField
+SRCS := $(SRCDIR)/TextToHexVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/CVRTItoPointCloud
-SRCS := $(SRCDIR)/CVRTItoPointCloud.cc
+PROGRAM := $(SRCDIR)/TextToPointCloudField
+SRCS := $(SRCDIR)/TextToPointCloudField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/PointCloudToCVRTI
-SRCS := $(SRCDIR)/PointCloudToCVRTI.cc
+PROGRAM := $(SRCDIR)/TextToQuadSurfField
+SRCS := $(SRCDIR)/TextToQuadSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToContourField
-SRCS := $(SRCDIR)/RawToContourField.cc
+PROGRAM := $(SRCDIR)/TextToStructCurveField
+SRCS := $(SRCDIR)/TextToStructCurveField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToColumnMatrix
-SRCS := $(SRCDIR)/RawToColumnMatrix.cc
+PROGRAM := $(SRCDIR)/TextToStructHexVolField
+SRCS := $(SRCDIR)/TextToStructHexVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToDenseMatrix
-SRCS := $(SRCDIR)/RawToDenseMatrix.cc
+PROGRAM := $(SRCDIR)/TextToStructQuadSurfField
+SRCS := $(SRCDIR)/TextToStructQuadSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToLatVol
-SRCS := $(SRCDIR)/RawToLatVol.cc
+PROGRAM := $(SRCDIR)/TextToTetVolField
+SRCS := $(SRCDIR)/TextToTetVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToTetVol
-SRCS := $(SRCDIR)/RawToTetVol.cc
+PROGRAM := $(SRCDIR)/TextToTriSurfField
+SRCS := $(SRCDIR)/TextToTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/TetgenToTetVol
-SRCS := $(SRCDIR)/TetgenToTetVol.cc
+
+
+PROGRAM := $(SRCDIR)/TextToColumnMatrix
+SRCS := $(SRCDIR)/TextToColumnMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToTriSurf
-SRCS := $(SRCDIR)/RawToTriSurf.cc
+PROGRAM := $(SRCDIR)/TextToDenseMatrix
+SRCS := $(SRCDIR)/TextToDenseMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/SingleTet
-SRCS := $(SRCDIR)/SingleTet.cc
+PROGRAM := $(SRCDIR)/TextToSparseRowMatrix
+SRCS := $(SRCDIR)/TextToSparseRowMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/TriSurfToVtk
-SRCS := $(SRCDIR)/TriSurfToVtk.cc
-include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/VtkToTriSurf
-SRCS := $(SRCDIR)/VtkToTriSurf.cc
-include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/TriSurfToOBJ
-SRCS := $(SRCDIR)/TriSurfToOBJ.cc
+PROGRAM := $(SRCDIR)/TextToColorMap
+SRCS := $(SRCDIR)/TextToColorMap.cc
 include $(SCIRUN_SCRIPTS)/program.mk
