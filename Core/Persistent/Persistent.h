@@ -34,6 +34,7 @@
 #include <map>
 #include <string>
 
+#include <Core/Util/Assert.h>
 #include <Core/share/share.h>
 
 namespace SCIRun {
@@ -111,6 +112,9 @@ public:
   int reading();
   int writing();
   int error();
+
+  virtual bool supports_block_io() { return false; }
+  virtual void block_io(void*, size_t, size_t) { ASSERTFAIL("unsupported"); }
 
   friend Piostream* auto_istream(const string& filename);
 };
