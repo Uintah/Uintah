@@ -25,6 +25,10 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <sstream>
 
 namespace SCIRun {
@@ -220,6 +224,70 @@ public:
 };
 
 
+template <class M, class L, class S>
+bool
+probe_center_compute_index(L &index, S &size,
+			   const M *mesh, const string &indexstr)
+{
+  unsigned int i = atoi(indexstr.c_str());
+  index = i;
+  mesh->size(size);
+  return index < size;
+}
+
+
+template <>
+bool
+probe_center_compute_index(LatVolMesh::Node::index_type &index,
+			   LatVolMesh::Node::size_type &size,
+			   const LatVolMesh *m, const string &indexstr);
+
+template <>
+bool
+probe_center_compute_index(LatVolMesh::Cell::index_type &index,
+			   LatVolMesh::Cell::size_type &size,
+			   const LatVolMesh *m, const string &indexstr);
+
+template <>
+bool
+probe_center_compute_index(StructHexVolMesh::Node::index_type &index,
+			   StructHexVolMesh::Node::size_type &size,
+			   const StructHexVolMesh *m, const string &indexstr);
+
+template <>
+bool
+probe_center_compute_index(StructHexVolMesh::Cell::index_type &index,
+			   StructHexVolMesh::Cell::size_type &size,
+			   const StructHexVolMesh *m, const string &indexstr);
+
+
+template <>
+bool
+probe_center_compute_index(ImageMesh::Node::index_type &index,
+			   ImageMesh::Node::size_type &size,
+			   const ImageMesh *m, const string &indexstr);
+
+template <>
+bool
+probe_center_compute_index(ImageMesh::Face::index_type &index,
+			   ImageMesh::Face::size_type &size,
+			   const ImageMesh *m, const string &indexstr);
+
+template <>
+bool
+probe_center_compute_index(StructQuadSurfMesh::Node::index_type &index,
+			   StructQuadSurfMesh::Node::size_type &size,
+			   const StructQuadSurfMesh *m,
+			   const string &indexstr);
+
+template <>
+bool
+probe_center_compute_index(StructQuadSurfMesh::Face::index_type &index,
+			   StructQuadSurfMesh::Face::size_type &size,
+			   const StructQuadSurfMesh *m,
+			   const string &indexstr);
+
+
 template <class MESH>
 bool
 ProbeCenterAlgoT<MESH>::get_node(MeshHandle mesh_h, const string &indexstr,
@@ -227,13 +295,9 @@ ProbeCenterAlgoT<MESH>::get_node(MeshHandle mesh_h, const string &indexstr,
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
-  unsigned int i = atoi(indexstr.c_str());
-  typename MESH::Node::index_type index(i);
-
+  typename MESH::Node::index_type index;
   typename MESH::Node::size_type size;
-  mesh->size(size);
-
-  if (index < size)
+  if (probe_center_compute_index(index, size, mesh, indexstr))
   {
     mesh->get_center(p, index);
     return true;
@@ -249,13 +313,9 @@ ProbeCenterAlgoT<MESH>::get_edge(MeshHandle mesh_h, const string &indexstr,
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
   mesh->synchronize(Mesh::EDGES_E);
 
-  unsigned int i = atoi(indexstr.c_str());
-  typename MESH::Edge::index_type index(i);
-  
   typename MESH::Edge::size_type size;
-  mesh->size(size);
-
-  if (index < size)
+  typename MESH::Edge::index_type index;
+  if (probe_center_compute_index(index, size, mesh, indexstr))
   {
     mesh->get_center(p, index);
     return true;
@@ -271,13 +331,9 @@ ProbeCenterAlgoT<MESH>::get_face(MeshHandle mesh_h, const string &indexstr,
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
   mesh->synchronize(Mesh::FACES_E);
 
-  unsigned int i = atoi(indexstr.c_str());
-  typename MESH::Face::index_type index(i);
-  
   typename MESH::Face::size_type size;
-  mesh->size(size);
-
-  if (index < size)
+  typename MESH::Face::index_type index;
+  if (probe_center_compute_index(index, size, mesh, indexstr))
   {
     mesh->get_center(p, index);
     return true;
@@ -292,13 +348,9 @@ ProbeCenterAlgoT<MESH>::get_cell(MeshHandle mesh_h, const string &indexstr,
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
-  unsigned int i = atoi(indexstr.c_str());
-  typename MESH::Cell::index_type index(i);
-  
   typename MESH::Cell::size_type size;
-  mesh->size(size);
-
-  if (index < size)
+  typename MESH::Cell::index_type index;
+  if (probe_center_compute_index(index, size, mesh, indexstr))
   {
     mesh->get_center(p, index);
     return true;
