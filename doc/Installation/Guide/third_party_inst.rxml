@@ -109,7 +109,7 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
 
   <para>Internal third party software is distributed with SCIRun and
   is required for SCIRun to run properly.  It must be built before
-  building &sr;.  This section provides instruction for building
+  building SCIRun.  This section provides instruction for building
   internal third party software.</para>
 
   <note os="linux;irix">
@@ -161,16 +161,16 @@ python install <replaceable>dir</replaceable> <replaceable>bits</replaceable> <r
 	availabe for <command>make</command>'s use when building the software.
 	For example:
 	<literallayout class="monospaced">
-python install /usr/local/&sr;/Thirdparty 64 2
+python install /usr/local/SCIRun/Thirdparty 64 2
 	</literallayout>
 	or
 	<literallayout class="monospaced">
-python install /usr/local/&sr;/Thirdparty 32 1
+python install /usr/local/SCIRun/Thirdparty 32 1
 	</literallayout>
 	When finished, the installation script displays the
 	complete path of the third-party software installation
 	directory. Make note of this value, it is used in the
-	configure step of the &sr; build process described in
+	configure step of the SCIRun build process described in
 	<xref linkend="sec.build-sr"/>.
       </para>
     </listitem>
@@ -184,13 +184,13 @@ python install /usr/local/&sr;/Thirdparty 32 1
     operating systems and machine architectures.  For example, on a
     &pf; machine, the installation command:
     <literallayout class="monospaced">
-<phrase os="linux">python install /usr/local/&sr;/Thirdparty</phrase>
-<phrase os="irix">python install /usr/local/&sr;/Thirdparty 64</phrase>
+<phrase os="linux">python install /usr/local/SCIRun/Thirdparty</phrase>
+<phrase os="irix">python install /usr/local/SCIRun/Thirdparty 64</phrase>
     </literallayout>
     creates the installation under:
     <literallayout class="monospaced">
-<phrase os="linux">/usr/local/&sr;/Thirdparty/1.8/Linux/gcc-3.2-32bit</phrase>
-<phrase os="irix">/usr/local/&sr;/Thirdparty/1.8/IRIX64/MIPSpro-7.3.1.3m-32bit</phrase>
+<phrase os="linux">/usr/local/SCIRun/Thirdparty/1.8/Linux/gcc-3.2-32bit</phrase>
+<phrase os="irix">/usr/local/SCIRun/Thirdparty/1.8/IRIX64/MIPSpro-7.3.1.3m-32bit</phrase>
     </literallayout>
   </para>
 
@@ -209,7 +209,7 @@ python install /usr/local/&sr;/Thirdparty 32 1
       <para>Create a directory for third-party binaries and libraries,
       for example:
       <literallayout class="monospaced">
-mkdir /usr/local/&sr;/Thirdparty_osx
+mkdir /usr/local/SCIRun/Thirdparty_osx
       </literallayout></para>
     </listitem>
 
@@ -234,10 +234,10 @@ cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
 	directory.  <replaceable>Dir</replaceable> must be an absolute
 	path.  For example:
 	<literallayout class="monospaced">
-./install.sh /usr/local/&sr;/Thirdparty_osx
+./install.sh /usr/local/SCIRun/Thirdparty_osx
 	</literallayout>
 	The path to the third-party installation directory is used
-	in the configure step of the &sr; build process.  The configure
+	in the configure step of the SCIRun build process.  The configure
 	step is described in <xref linkend="sec.build-sr"/>.
       </para>
     </listitem>

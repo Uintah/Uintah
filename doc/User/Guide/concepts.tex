@@ -591,3 +591,52 @@ elements.
 \index{color map}
 
 \sr{} \datatype{ColorMap} type is a mapping of color values to data values.
+
+\section{Bioelectric Field Quantities and Units}
+\label{sec:units}
+\index{quantities}\index{units}
+
+The quantities of interest in bioelectric field problems are
+conductivity, potentials, electric field, dipole source, current
+density, and current source density. These quantities and their
+associated units are listed in table \ref{tbl:units}.
+
+\begin{table}[htbp]
+ \begin{center}
+  \begin{tabular}{|l|l|}
+   \hline
+   {\em Quantity}&{\em Unit} \\
+   \hline
+   Conductivity&$amps / volts / meter$  ($siemens / meter$) \\
+   Potential&$volts$ \\
+   Electric Field&$volts / meter$ \\
+   Dipole Source&$amps / meter$ \\
+   Current Density&$amps / meter^2$ \\
+   Current Source Density&$amps / meter^3$ \\
+   \hline
+  \end{tabular}
+  \caption{SCIRun bioelectric field quantities and units}
+  \label{tbl:units}
+ \end{center}
+\end{table}
+
+SCIRun doesn't keep track of unit scale factors (e.g. centi-, milli-,
+etc).  SCIRun assumes a dipole source is in units of $amps / meter$,
+conductivities are in $siemens / meter$, model geometry is in $meters$;
+results are therefore in units of $volts$.  If this isn't true (e.g. you
+know that the model is in $mm$), then you have to carry those scale
+factors through your computation (e.g. know that the results you get out
+are in $kv$).
+
+The rule of thumb is that if we \emph{increase} the conductivity, then
+we \emph{decrease} the potentials by that same scale factor.
+Conversely, if we \emph{increase} the dipole source moment, then we
+\emph{increase} the potentials by that same scale factor.  i.e. $V = I /
+sigma$.  Similarly, if we hold everything else constant, but
+\emph{increase} the size of the domain, then we \emph{decrease} the
+potentials by that same scale factor.
+
+For example, the SCIRun Utah Torso model has a length scale of
+centimeters ($10^{-2} meters$) and conductivity units of $siemens /
+meter$, so our output potentials are in $hectovolts$  ($10^2 volts$).
+

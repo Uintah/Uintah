@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
   <para>
     Note that SCIRun is compatible with GCC 3.4. However,  when building
     ITK, for use with
-    SCIRun's ITK package, ITK version 1.10 must be used because
+    SCIRun's ITK package, ITK version 2.0 must be used because
     earlier ITK versions are not compatible with GCC 3.4.
   </para>
 </listitem>}
@@ -85,7 +85,13 @@ DEALINGS IN THE SOFTWARE.
 	  <entry>
 	    <itemizedlist>
 	      <listitem>
-		<para>OpenGL compatible video card and driver</para>
+		<para>OpenGL compatible video card and driver.</para>
+		<para>Nvidia FX class or better and ATI Radeon 9500 or
+		better video cards are required to enable SCIRun's
+		advance volume rendering code.  See the <ulink
+		url="(%= doc.treeUrl(%Q{doc/User/FAQ/faq.html})
+		%)">User FAQ</ulink> for more information on video
+		cards and drivers.</para>
 	      </listitem>
 	      <listitem>
 		<para>512 Mb (or more) RAM</para>
@@ -211,6 +217,14 @@ DEALINGS IN THE SOFTWARE.
     Additional notes:
     <itemizedlist>
       <!--%= gcc_itk_info %-->
+      <listitem>
+	<para>
+	  See the <ulink url="(%=
+	  doc.treeUrl(%Q{doc/User/FAQ/faq.html}) %)">User FAQ</ulink>
+	  for information on video cards and drivers that work with
+	  SCIRun's advanced volume rendering code.
+	</para>
+      </listitem>
       <listitem>
 	<para>NVIDIA drivers, versions 1.0-5328, 1.0-5336, and
 	1.0-6106, will not work for hardware based texture volume

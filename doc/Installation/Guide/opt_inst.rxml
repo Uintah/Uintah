@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
     (<acronym>ITK</acronym>)</ulink>,</phrase> <ulink
     url="http://www.mdsplus.org"><acronym>MDSplus</acronym></ulink>,
     and <ulink
-    url="http://www.hdf.ncsa.uiuc.edu"><acronym>HDF5</acronym></ulink>
+    url="http://hdf.ncsa.uiuc.edu/HDF5"><acronym>HDF5</acronym></ulink>
     software.  External third party software provides SCIRun with
     additional capabilities:
 

@@ -265,7 +265,7 @@ class Doc
   def Doc.getEdition()
     editionFile = docRoot() + "/src/main/sci_version.h"
     File.open(editionFile) do |f|
-      match = /SCIRUN_VERSION +"(\d+\.\d+\.\d+)"/.match(f.read())
+      match = /SCIRUN_VERSION +"(\d+\.\d+\.\d+b?)"/.match(f.read())
       raise "Couldn't match edition from #{editionFile}" if match == nil
       match[1]
     end
