@@ -274,6 +274,10 @@ EOF
        ac_try="$CXX $CFLAGS conftest.cc $LIBRARY -l$2 $_SCI_OTHER_LIBS_ >/dev/null >> conftest.out 2>> conftest.out"
        (eval $ac_try) 2>&5
 
+       if test "$debugging" = "yes"; then
+          echo ac_try is $ac_try
+       fi
+
        if test -f a.out; then
           if test "$_CHECK_PATH_" = ""; then
              AC_MSG_RESULT(yes)
@@ -575,13 +579,10 @@ EOF
                    fi
                    continue
                 fi
+             else
+	        AC_MSG_RESULT(yes)
              fi
              eval $_SCI_HEADER_HAVE_=yes
-             if test "$_CHECK_PATH_" = ""; then
-	        AC_MSG_RESULT(yes)
-             else
-	        AC_MSG_RESULT($_CHECK_PATH_)
-             fi
 
 	     if test "$debugging" = "yes"; then
 	        eval echo "Setting HAVE_$_SCI_HEADER_NAME_: $"$_SCI_HEADER_HAVE_""
@@ -999,6 +1000,14 @@ SCI_ARG_WITH(mdsplus,
   [  --with-mdsplus=<path-to-mdsplus>	<path-to-mdsplus>/lib/MdsLib_client.so],
   [mdsplus="$withval"],
   [mdsplus=""])
+SCI_ARG_WITH(glut,
+  [  --with-glut=DIR                   Use the glut installation in DIR],
+  [with_glut="$withval"],
+  [with_glut=${with_glut='no'}])
+SCI_ARG_WITH(glui,
+  [  --with-glui=DIR                   Use the glui installation in DIR],
+  [with_glui="$withval"],
+  [with_glui=${with_gluip='no'}])
 
 
 SCI_ARG_ENABLE(verbosity,
@@ -1212,6 +1221,13 @@ else
    uintah=no
 fi
 
+need_rtrt=`echo $package | sed 's/.*rtrt.*/rtrt/'`
+if test "$need_rtrt" = "rtrt" ; then
+   need_rtrt="yes"
+else
+   need_rtrt="no"
+fi
+
 u=`echo $package | sed 's/.*VDT.*/VDT/'`
 if test "$u" = "VDT" ; then
    wantvdt=yes
@@ -1411,8 +1427,10 @@ case $host in
     WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     CPPFLAGS=" $WOFF -LANG:std"
     if test "$is_64bit" = "yes"; then
+      BASE_LIB_DIR=lib64
       BINARYFLAGS="-64 -mips4"
     else
+      BASE_LIB_DIR=lib
       BINARYFLAGS="-n32 -mips4"
     fi
     FFLAGS="$BINARYFLAGS $extra_cflags"
@@ -2705,6 +2723,26 @@ AC_SUBST(LIBZ_INCLUDE)
 AC_SUBST(LIBZ_FLAG)
 AC_SUBST(DEF_Z)
 
+
+##  --  search for glut and glui -----------------------------------------
+
+if test "$need_rtrt" = "yes"; then
+
+   dirs="$with_glut/$BASE_LIB_DIR $thirdparty/lib $SCI_LAB_TP_LIBS"
+   SCI_CHECK_LIB($dirs,glut,main,-lGLU -lGL,,not-optional)
+   SCI_CHECK_HEADERS($with_glut/include $LIBGLUT/../include $thirdparty/include,GL/glut.h,,,not-optional)
+
+   dirs="$with_glui/$BASE_LIB_DIR $thirdparty/lib $SCI_LAB_TP_LIBS"
+   SCI_CHECK_LIB($dirs,glui,main,$GLUT_LIBRARY -lglut -lGLU -lGL,,not-optional)
+   SCI_CHECK_HEADERS($with_glui/include $LIBGLUI/../include $thirdparty/include,glui.h,$INCGL_GLUT_H,,not-optional)
+
+   AC_SUBST(INCGL_GLUT_H)
+   AC_SUBST(INCGLUI_H)
+
+   AC_SUBST(GLUT_LIBRARY)
+   AC_SUBST(GLUI_LIBRARY)
+fi
+
 ##  --  search for blas stuff  -------------------------------------------
 
 dirs="$blas/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
@@ -2763,6 +2801,8 @@ AC_SUBST(LIBLAPACK)
   PETSC_SUB=libO
 #fi
 
+PETSC_VERSION_DIR=petsc-2.1.1
+
 case $host in
   *-irix*)
     if test "$is_64bit" = "yes"; then
@@ -2807,7 +2847,7 @@ FOUND_ALL_PETSC=no
 initial_dirs="$petsc $thirdparty $SCI_LAB_TP_DEFAULT"
 dirs=""
 for i in $initial_dirs; do
-  dirs="$dirs $i/lib/$PETSC_SUB/$PETSC_ARCH"
+  dirs="$dirs $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$PETSC_ARCH"
 done
 
 SCI_CHECK_LIB($dirs,petsc,main, \
