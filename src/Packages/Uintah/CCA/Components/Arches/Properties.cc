@@ -89,8 +89,12 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->require("mixing_model",mixModel);
   if (mixModel == "coldFlowMixingModel")
     d_mixingModel = scinew ColdflowMixingModel();
-  else if (mixModel == "pdfMixingModel")
-    d_mixingModel = scinew PDFMixingModel();
+  else if (mixModel == "pdfMixingModel"){
+    if(!d_thermalNOx)
+    	d_mixingModel = scinew PDFMixingModel();
+    else
+    	d_mixingModel = scinew PDFMixingModel(d_thermalNOx);
+  }
   else if (mixModel == "meanMixingModel")
     d_mixingModel = scinew MeanMixingModel();
   else if (mixModel == "flameletModel") {
@@ -100,7 +104,10 @@ Properties::problemSetup(const ProblemSpecP& params)
   else if (mixModel == "StaticMixingTable")
     d_mixingModel = scinew StaticMixingTable();
   else if (mixModel == "SteadyFlameletsTable"){
-    d_mixingModel = scinew SteadyFlameletsTable();
+    if(!d_thermalNOx)
+    	d_mixingModel = scinew SteadyFlameletsTable();
+    else
+    	d_mixingModel = scinew SteadyFlameletsTable(d_thermalNOx);
     d_steadyflamelet = true;
   }
   else
@@ -414,6 +421,10 @@ Properties::computeProps(const ProcessorGroup* pc,
 	  if (d_steadyflamelet) {
 	      inStream.d_scalarDisp = scalarDisp[currCell];
 	  }
+	  // This will set the flag to compute thermal NOx
+	  if (d_thermalNOx) {
+	      inStream.d_calcthermalNOx = true;
+	  }
 
 	  if (d_flamelet) {
 	    if (colX >= 0)
@@ -441,7 +452,7 @@ Properties::computeProps(const ProcessorGroup* pc,
 	    if (d_steadyflamelet)
               c2h2[currCell] = outStream.getC2H2();
             if (d_thermalNOx)
-              thermalnoxSRC[currCell] = 0.0;
+              thermalnoxSRC[currCell] = outStream.getnoxRxnSource();
 	  }
 	  if (d_flamelet) {
 	    temperature[currCell] = outStream.getTemperature();
@@ -1240,6 +1251,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      inStream.d_scalarDisp = scalarDisp[currCell];
 	  }
 
+	  // This will set the flag to compute thermal NOx
+	  if (d_thermalNOx) {
+	      inStream.d_calcthermalNOx = true;
+	  }
+
 	  if (d_mixingModel->getNumRxnVars() > 0) {
 	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
 	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
@@ -1292,7 +1308,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    if (d_steadyflamelet)
 	      c2h2[currCell] = outStream.getC2H2();
             if (d_thermalNOx)
-              thermalnoxSRC[currCell] = 0.0;
+              thermalnoxSRC[currCell] = outStream.getnoxRxnSource();
 	  }
 	  
 
