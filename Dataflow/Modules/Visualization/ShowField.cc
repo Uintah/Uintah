@@ -96,6 +96,7 @@ class ShowField : public Module
   GuiDouble                text_color_g_;
   GuiDouble                text_color_b_;
   GuiInt                   text_backface_cull_;
+  GuiInt                   text_fontsize_;
   GuiInt                   text_show_data_;
   GuiInt                   text_show_nodes_;
   GuiInt                   text_show_edges_;
@@ -187,6 +188,7 @@ ShowField::ShowField(GuiContext* ctx) :
   text_color_g_(ctx->subVar("text-color-g")),
   text_color_b_(ctx->subVar("text-color-b")),
   text_backface_cull_(ctx->subVar("text-backface-cull")),
+  text_fontsize_(ctx->subVar("text-fontsize")),
   text_show_data_(ctx->subVar("text-show-data")),
   text_show_nodes_(ctx->subVar("text-show-nodes")),
   text_show_edges_(ctx->subVar("text-show-edges")),
@@ -542,6 +544,7 @@ ShowField::execute()
       GeomSwitch *text =
 	renderer_->render_text(fld_handle, text_use_default_color_.get(), m,
 			       text_backface_cull_.get(),
+			       text_fontsize_.get(),
 			       text_show_data_.get(),
 			       text_show_nodes_.get(),
 			       text_show_edges_.get(),

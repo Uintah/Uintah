@@ -116,13 +116,15 @@ static Persistent* make_GeomTexts()
 PersistentTypeID GeomTexts::type_id("GeomTexts", "GeomObj", make_GeomTexts);
 
 GeomTexts::GeomTexts()
-  : GeomObj()
+  : GeomObj(),
+    fontindex_(2)
 {
 }
 
 
 GeomTexts::GeomTexts(const GeomTexts& copy) :
   GeomObj(copy),
+  fontindex_(copy.fontindex_),
   text_(copy.text_),
   location_(copy.location_),
   color_(copy.color_)
@@ -157,6 +159,16 @@ GeomTexts::reset_bbox()
 
 
 void
+GeomTexts::set_font_index(int a)
+{
+  if (a >= 0 && a < 5)
+  {
+    fontindex_ = a;
+  }
+}
+
+
+void
 GeomTexts::add(const string &t, const Point &p, const Color &c)
 {
   text_.push_back(t);
@@ -174,6 +186,7 @@ GeomTexts::io(Piostream& stream)
     stream.begin_class("GeomTexts", GEOMTEXTS_VERSION);
     // Do the base class first...
     GeomObj::io(stream);
+    Pio(stream, fontindex_);
     Pio(stream, text_);
     Pio(stream, location_);
     Pio(stream, color_);

@@ -68,6 +68,7 @@ public:
 
 class SCICORESHARE GeomTexts : public GeomObj {
 protected:
+  int fontindex_;
   vector<string> text_;
   vector<Point>  location_;
   vector<Color>  color_;
@@ -78,6 +79,7 @@ public:
   virtual ~GeomTexts();
   virtual GeomObj* clone();
 
+  void set_font_index(int);
 
   void add (const string &text, const Point &loc,
 	    const Color &c = Color(1,1,1));
