@@ -81,7 +81,8 @@ public:
   virtual void geom_pick(GeomPick* pick, void* userdata);
   virtual void geom_pick(GeomPick* pick, ViewWindow* window,
 			 int data, const BState& bs);
-
+  void pick();
+  
 private:
   void addBoxGeometry(GeomLines* edges, const Box& box);
   GridP getGrid();
@@ -577,6 +578,8 @@ void GridVisualizer::execute()
     GeomPick* pick = scinew GeomPick(pick_nodes,this);
     id_list.push_back(ogeom->addObj(pick,"Selectable Nodes"));
   }
+#if 0
+  // may implement this some day
   if (node_selected) {
     //Point p;
     switch (var_orientation.get()) {
@@ -589,6 +592,7 @@ void GridVisualizer::execute()
     }
     //seleted_sphere->move(p);
   }
+#endif
   cerr << "\t\tFinished execute\n";
 }
 
@@ -767,6 +771,8 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 				  vector <string> mat_list,
 				  vector <string> type_list, string index) {
 
+  pick();
+  
   /*
     template<class T>
     void query(std::vector<T>& values, const std::string& name, int matlIndex,
@@ -794,7 +800,15 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 	// query the value and then cache it
 	vector< double > values;
 	int matl = atoi(mat_list[i].c_str());
-	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	try {
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+	  return;
+	} catch (...) {
+	  cerr << "Caught an unknown exception" << endl;
+	  return;
+	}
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values,data);
       } else {
@@ -814,7 +828,15 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 	// query the value and then cache it
 	vector< Vector > values;
 	int matl = atoi(mat_list[i].c_str());
-	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	try {
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+	  return;
+	} catch (...) {
+	  cerr << "Caught an unknown exception" << endl;
+	  return;
+	}
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	// could integrate this in with the cache_value somehow
 	data = vector_to_string(values,type_list[i]);
@@ -836,7 +858,15 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 	// query the value and then cache it
 	vector< Matrix3 > values;
 	int matl = atoi(mat_list[i].c_str());
-	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	try {
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+	  return;
+	} catch (...) {
+	  cerr << "Caught an unknown exception" << endl;
+	  return;
+	}
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	// could integrate this in with the cache_value somehow
 	data = vector_to_string(values,type_list[i]);
@@ -881,6 +911,7 @@ void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
     index_x.set(currentNode.id.x());
     index_y.set(currentNode.id.y());
     index_z.set(currentNode.id.z());
+#if 0  // may implement this some day
     // add the selected sphere to the geometry
     Point p;
     int nu,nv;
@@ -904,6 +935,7 @@ void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
     else {
       //seleted_sphere->move(p);
     }
+#endif
   }
   else
     cerr<<"Not getting the correct data\n";
@@ -916,6 +948,16 @@ void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/) {
 // this doesn't do anything.  They are only here to eliminate compiler warnings
 void GridVisualizer::geom_pick(GeomPick* /*pick*/, ViewWindow* /*window*/,
 			       int /*data*/, const BState& /*bs*/) {
+}
+
+// if a pick event was received extract the id from the picked
+void GridVisualizer::pick() {
+  reset_vars();
+  currentNode.id.x(index_x.get());
+  currentNode.id.y(index_y.get());
+  currentNode.id.z(index_z.get());
+  currentNode.level = index_l.get();
+  cerr << "Extracting values for " << currentNode.id << ", level " << currentNode.level << endl;
 }
 
 } // End namespace Uintah
