@@ -12,8 +12,10 @@ itcl_class MeshView {
 	set $this-allLevels 1
 	global $this-elmMeas
 	global $this-elmSwitch
-	set $this-elmSwitch 0
+	set $this-elmSwitch 1
 	set $this-elmMeas 1
+	global $this-tech
+	set $this-tech 0
     }
     method ui {} {
 	set w .ui$this
@@ -28,60 +30,79 @@ itcl_class MeshView {
 	pack $w.f -padx 4 -pady 4 -fill x
 	set n "$this-c needexecute "
 
-	scale $w.f.numLevels -variable $this-numLevels -from 0 -to 10 \
+	frame $w.f.man -relief groove -borderwidth 3
+	pack $w.f.man -side top -padx 2 -pady 2
+	label $w.f.man.label -text "Manipulative Techniques"
+	pack $w.f.man.label -side top
+
+	scale $w.f.man.numLevels -variable $this-numLevels -from 0 -to 10 \
 		-label "Number of Levels" -command $n \
 		-orient horizontal
-	pack $w.f.numLevels -side top -fill x
+	pack $w.f.man.numLevels -side top -fill x
 
-	scale $w.f.seedTet -variable $this-seedTet -from 0 -to 1 -command $n \
+	scale $w.f.man.seedTet -variable $this-seedTet -from 0 -to 1 \
+		-command $n \
 		-orient horizontal -label "Starting Tetrahedron"
-	pack $w.f.seedTet -side top -fill both -anchor nw
+	pack $w.f.man.seedTet -side top -fill both -anchor nw
 
-	frame $w.f.levels
-	pack $w.f.levels -side top
-	label $w.f.levels.label -text "Show:"
-	radiobutton $w.f.levels.on -text "All Levels" -relief flat \
+	frame $w.f.man.levels
+	pack $w.f.man.levels -side top
+	label $w.f.man.levels.label -text "Show:"
+	radiobutton $w.f.man.levels.on -text "All Levels" -relief flat \
 		-variable $this-allLevels -value 0  -command $n
-	radiobutton $w.f.levels.off -text "Outermost Level Only" -relief flat \
+	radiobutton $w.f.man.levels.off -text "Outermost Level Only" \
+		-relief flat \
 		-variable $this-allLevels -value 1  -command $n
-	pack $w.f.levels.label $w.f.levels.on $w.f.levels.off -side left \
-		-fill both -anchor nw
+	pack $w.f.man.levels.label $w.f.man.levels.on $w.f.man.levels.off \
+		-side left -fill both -anchor nw
 
 
-	frame $w.f.clips -relief groove -borderwidth 2 
-	label $w.f.clips.label -text "Clipping surfaces"
-	pack $w.f.clips -side top -expand 1 -fill x -pady 2
-	
-	range $w.f.clips.clipX -var_min $this-clipX -var_max $this-clipNX \
+	frame $w.f.man.clips -relief groove -borderwidth 2 
+	label $w.f.man.clips.label -text "Clipping surfaces"
+	pack $w.f.man.clips -side top -expand 1 -fill x -pady 2
+	pack $w.f.man.clips.label -side top
+
+	range $w.f.man.clips.clipX -var_min $this-clipX -var_max $this-clipNX \
 		-from -1 -to 1 -showvalue true \
 		-orient horizontal -command $n -label X
-	range $w.f.clips.clipY -var_min $this-clipY -var_max $this-clipNY \
+	range $w.f.man.clips.clipY -var_min $this-clipY -var_max $this-clipNY \
 		-from -1 -to 1 -showvalue true \
 		-orient horizontal -command $n -label Y
-	range $w.f.clips.clipZ -var_min $this-clipZ -var_max $this-clipNZ \
+	range $w.f.man.clips.clipZ -var_min $this-clipZ -var_max $this-clipNZ \
 		-from -1 -to 1 -showvalue true \
 		-orient horizontal -command $n -label Z
-	pack $w.f.clips.clipX $w.f.clips.clipY \
-		$w.f.clips.clipZ -side top -fill x
+	pack $w.f.man.clips.clipX $w.f.man.clips.clipY \
+		$w.f.man.clips.clipZ -side top -fill x
 
 
-	frame $w.f.elms -relief groove -borderwidth 2
-	pack $w.f.elms -side top -side left -padx 2 -pady 2
+	frame $w.f.which
+	pack $w.f.which -side top
+	label $w.f.which.label -text "Technique: "
+	pack $w.f.which.label -side top
+
+	radiobutton $w.f.which.man -text "Manipulative" -relief flat \
+		-variable $this-tech -value 0 -command $n \
+		-anchor w
+	radiobutton $w.f.which.elm -text "Quantifying" -relief flat \
+		-variable $this-tech -value 1 -command $n \
+		-anchor w
+ 	pack $w.f.which.man $w.f.which.elm -side top -expand 1 -fill x
+
+	frame $w.f.elms -relief groove -borderwidth 3
+	pack $w.f.elms -side left -padx 2 -pady 2
 	label $w.f.elms.label -text "Quantifying Measures"
 	pack $w.f.elms.label -side top
 
 	frame $w.f.elms.switch
 	pack $w.f.elms.switch -side top
 	label $w.f.elms.switch.label -text "Show:"
-	radiobutton $w.f.elms.switch.off -text "Off" -relief flat \
-		-variable $this-elmSwitch -value 0  -command $n
 	radiobutton $w.f.elms.switch.hil -text "Elements Only" \
 		-relief flat \
 		-variable $this-elmSwitch -value 1  -command $n
 	radiobutton $w.f.elms.switch.only -text "Elements Hilited" \
 		-relief flat  -variable $this-elmSwitch -value 2 \
 		-command $n
-        pack $w.f.elms.switch.label $w.f.elms.switch.off \
+        pack $w.f.elms.switch.label \
 		$w.f.elms.switch.hil $w.f.elms.switch.only \
 		-side left -fill both -anchor nw
 	
@@ -105,7 +126,7 @@ itcl_class MeshView {
 	pack $w.f.elms.dummy -side top -pady 2 -fill y
 
 	range $w.f.elms.range -from -1 -to 1 -showvalue true \
-		-orient horizontal -command $n -label Measure \
+		-orient horizontal -command $n -label Volume \
 		-var_min $this-mMin -var_max $this-mMax
 	pack $w.f.elms.range -side left -fill x -expand 1
 
@@ -113,12 +134,12 @@ itcl_class MeshView {
     method set_minmax_nl {min max} {
 	set w .ui$this
 	global $w.f.numLevels
-	$w.f.numLevels configure -from $min -to $max
+	$w.f.man.numLevels configure -from $min -to $max
     }
     method set_minmax_numTet {min max} {
 	set w .ui$this
 	global $w.f.seedTet
-	$w.f.seedTet configure -from $min -to $max
+	$w.f.man.seedTet configure -from $min -to $max
     }
     method set_bounds {xmin xmax ymin ymax zmin zmax} {
 	set w .ui$this
@@ -129,20 +150,26 @@ itcl_class MeshView {
 	global $w.f.clipNY
 	global $w.f.clipNZ
 
-	$w.f.clips.clipX configure -from $xmin -to $xmax
-	$w.f.clips.clipY configure -from $ymin -to $ymax
-	$w.f.clips.clipZ configure -from $zmin -to $zmax
+	$w.f.man.clips.clipX configure -from $xmin -to $xmax
+	$w.f.man.clips.clipY configure -from $ymin -to $ymax
+	$w.f.man.clips.clipZ configure -from $zmin -to $zmax
     }
 
     method do_measure {min max} {
 	global $this-mMin
 	global $this-mMax
+	global $this-elmMeas
 	set w .ui$this
-	if {1 == 1} {
+
+	set a [set $this-elmMeas]
+
+puts -nonewline "elmMeas = "
+puts $a
+	if {$a == 1} {
 	    $w.f.elms.range configure -label "Volume"
-	} elseif {1 == 2} {
+	} elseif {$a == 2} {
 	    $w.f.elms.range configure -label "Aspect Ratio"
-	} elseif {1 == 3} {
+	} elseif {$a == 3} {
 	    $w.f.elms.range configure -label "Size v neighbor"
 	} else {
 	    $w.f.elms.range configure -label "Error"

@@ -63,10 +63,11 @@ class MeshView : public Module {
         oldNumTet;                  //  The previous number of elements
     TCLint allLevels, elmMeas;	    //  Flag of whether to show all levels
                                     //    or only the current one
-    TCLint elmSwitch;
+    TCLint elmSwitch, tech;
     TCLdouble mMin, mMax;
     CrosshairWidget *startingTet;
 
+    int oldmMin, oldmMax;
     int oldMeas, switchSet, oldElm;
     Array1<BBox> tb;
 
@@ -129,7 +130,7 @@ MeshView::MeshView(const clString& id)
   clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
   clipNZ("clipNZ", id, this), allLevels("allLevels", id, this),
   elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this),
-  mMin("mMin", id, this), mMax("mMax", id, this)
+  mMin("mMin", id, this), mMax("mMax", id, this), tech("tech", id, this)
 {
 
     // Create an input port, of type Mesh
@@ -159,6 +160,7 @@ MeshView::MeshView(const clString& id)
     haveVol = haveAsp = haveSize = 0;
     switchSet = 0;
 
+    oldmMin = 10000; oldmMax = 10000;
     startingTet = new CrosshairWidget(this, &widget_lock, 0.01);
     measTetra = new GeomGroup;
     measAuxTetra = new GeomGroup;
@@ -171,7 +173,7 @@ MeshView::MeshView(const MeshView& copy, int deep)
   clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
   clipNZ("clipNZ", id, this), allLevels("allLevels", id, this),
   elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this),
-  mMin("mMin", id, this), mMax("mMax", id, this)
+  mMin("mMin", id, this), mMax("mMax", id, this), tech("tech", id, this)
 {
     NOT_FINISHED("MeshView::MeshView");
 }
@@ -275,7 +277,7 @@ void MeshView::execute()
 	oldMeas = elmMeas.get();
     }
 
-    if (elmSwitch.get())
+    if (tech.get())
     {
 	for (int j = 0; j < deep; j++)
 	{
@@ -547,6 +549,7 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 		*max = sizeMeas[i];
 	}
 	haveSize = 1;
+cerr << "Size (min, max) = " << *min << ", " << *max << endl;
     }
 
 }
@@ -561,11 +564,12 @@ void MeshView::getMeas(const MeshHandle& mesh)
     double meas;
     int numTetra=mesh->elems.size();
 
-    if (e != oldElm)
+
+    if ((e != oldElm) || ((oldmMin != min) || (oldmMax != max)))
     {
-	if (measTetra -> size())
+//	if (measTetra -> size())
 	    measTetra -> remove_all();
-	if (measAuxTetra -> size())
+//	if (measAuxTetra -> size())
 	    measAuxTetra -> remove_all();
 	for (int i = 0; i < numTetra; i++)
 	{
@@ -632,18 +636,24 @@ void MeshView::getMeas(const MeshHandle& mesh)
 	    measAuxTetra -> add(gline);
 	}
 
-	measMatl = new GeomMaterial(measTetra, mat3);
-	measSwitch = new GeomSwitch(measMatl, 0);
-	measAuxMatl = new GeomMaterial(measAuxTetra, mat1);
-	measAuxSwitch = new GeomSwitch(measAuxMatl, 0);
-	gr -> add(measAuxSwitch);
-	gr -> add(measSwitch);
+	if (!switchSet)
+	{
+	    measMatl = new GeomMaterial(measTetra, mat3);
+	    measSwitch = new GeomSwitch(measMatl, 0);
+	    measAuxMatl = new GeomMaterial(measAuxTetra, mat1);
+	    measAuxSwitch = new GeomSwitch(measAuxMatl, 0);
+	    gr -> add(measAuxSwitch);
+	    gr -> add(measSwitch);
+	}
 
 	switchSet = 1;
 //    ogeom -> delAll();
 	ogeom -> addObj(gr, mesh_name, &geom_lock);
 	oldElm = e;
+	oldmMin = min;
+	oldmMax = max;
     }
+
 }
 double MeshView::volume(Point p1, Point p2, Point p3, Point p4)
 {
@@ -682,16 +692,39 @@ double MeshView::aspect_ratio(Point p0, Point p1, Point p2, Point p3)
 
 double MeshView::calcSize(const MeshHandle& mesh, int ind)
 {
+    double m1 = 10000, m2 = -10000, a, b, c, d;
+
     Element* e=mesh->elems[ind];
-    double a=volMeas[e->face(0)];
-    double b=volMeas[e->face(1)];
-    double c=volMeas[e->face(2)];
-    double d=volMeas[e->face(3)];
+    int q = e->face(0);
+    if (q != -1)
+    {
+	a=volMeas[q];
+	if (a != 0)
+	    m1 = Min(m1, a); m2 = Max(m2, a);
+    }
+    q = e->face(1);
+    if (q != -1)
+    {
+	b=volMeas[q];
+	if (b != 0)
+	    m1 = Min(m1, b); m2 = Max(m2, b);
+    }
+    q = e->face(2);
+    if (q != -1)
+    {
+	c=volMeas[q];
+	if (c != 0)
+	    m1 = Min(m1, c); m2 = Max(m2, c);
+    }
+    q = e->face(3);
+    if (q != -1)
+    {
+	d=volMeas[q];
+	if (d != 0)
+	    m1 = Min(m1, d); m2 = Max(m2, d);
+    }
 
-    double m1 = Min(Min(Min(a, b), c), d);
-    double m2 = Max(Max(Max(a, b), c), d);
-
-    double m3 = Max(volMeas[ind] / m2, m1 / volMeas[ind]);
+    double m3 = Max(volMeas[ind] / m1, m2 / volMeas[ind]);
 
     return m3;
 }
