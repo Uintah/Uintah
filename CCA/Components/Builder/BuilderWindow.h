@@ -108,7 +108,7 @@ public:
 				const std::string& type,
 				const std::string& loaderName);
     // From sci::cca::ComponentEventListener
-    void componentActivity(const sci::cca::ports::ComponentEvent::pointer& msgTextEdit);
+    void componentActivity(const sci::cca::ports::ComponentEvent::pointer& e);
     void displayMsg(const char *);
     void displayMsg(const QString &);
     void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg,
@@ -166,8 +166,6 @@ private slots:
     void clear();
     void addInfo();
     void exit();
-    void clusterAdd();
-    void clusterRemove();
     void mxn_add();
     void performance_mngr();
     void performance_tau_add();
