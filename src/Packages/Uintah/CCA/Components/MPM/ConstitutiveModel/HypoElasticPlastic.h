@@ -3,6 +3,7 @@
 
 
 #include "ConstitutiveModel.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldCondition.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
@@ -77,6 +78,7 @@ WARNING
     double d_tol;
     double d_damageCutOff;
     bool d_useModifiedEOS;
+    YieldCondition* d_yield;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;
     MPMEquationOfState* d_eos;
