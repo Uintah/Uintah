@@ -75,7 +75,9 @@ static Transform prev_trans;
 #define OBJECTS_BUTTON_ID        141
 #define ATTACH_KEYPAD_BTN_ID     142
 
-#define TOGGLE_HOTSPOTS_ID       190
+#define TOGGLE_HOTSPOTS_ID          190
+#define TOGGLE_TRANSMISSION_MODE_ID 191
+#define SOUND_VOLUME_SPINNER_ID     192
 
 // GLUT MENU ITEM IDS
 
@@ -1304,7 +1306,7 @@ Gui::createMenus( int winId )
 			   &(activeGui->fovValue_), FOV_SPINNER_ID,
 			  updateFovCB );
   activeGui->fovSpinner_->set_float_limits( MIN_FOV, MAX_FOV );
-  activeGui->fovSpinner_->set_speed( 0.1 );
+  activeGui->fovSpinner_->set_speed( 0.01 );
 
   // Other Controls
   GLUI_Panel * otherControls = activeGui->mainWindow->
@@ -1313,8 +1315,24 @@ Gui::createMenus( int winId )
   activeGui->mainWindow->add_button_to_panel( otherControls,
 	 "Toggle Hot Spot Display", TOGGLE_HOTSPOTS_ID, toggleHotspotsCB );
 
+  activeGui->mainWindow->add_button_to_panel( otherControls,
+	 "Toggle Transmission Mode", TOGGLE_TRANSMISSION_MODE_ID,
+					      toggleTransmissionModeCB );
+
   // ...This probably goes to the objects window...
-  activeGui->mainWindow->add_button_to_panel(otherControls,"Toggle Materials");
+  GLUI_Button * toggleMaterials = activeGui->mainWindow->
+    add_button_to_panel(otherControls,"Toggle Materials");
+  toggleMaterials->disable();
+
+  // 
+  activeGui->soundVolumeSpinner_ = activeGui->mainWindow->
+    add_spinner_to_panel( otherControls, "Sound Volume", GLUI_SPINNER_INT, 
+			  &(activeGui->dpy_->scene->soundVolume_),
+			  SOUND_VOLUME_SPINNER_ID );
+  activeGui->soundVolumeSpinner_->set_speed( 0.01 );
+  activeGui->soundVolumeSpinner_->set_int_limits( 0, 100 );
+  if( activeGui->dpy_->scene->getSounds().size() == 0 )
+    activeGui->soundVolumeSpinner_->disable();
 
   // 
   activeGui->depthValue_ = 2;
@@ -1448,6 +1466,14 @@ Gui::update()
   routePositionET->set_text( status );
 
 } // end update()
+
+// Display image as a "transmission".  Ie: turn off every other scan line.
+void
+Gui::toggleTransmissionModeCB( int /* id */ )
+{
+  activeGui->dpy_->turnOnTransmissionMode_ = 
+    !activeGui->dpy_->turnOnTransmissionMode_;
+}
 
 void
 Gui::toggleHotspotsCB( int /*id*/ )

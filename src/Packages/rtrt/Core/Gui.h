@@ -145,6 +145,8 @@ private:
   GLUI_Listbox  * ambientModeLB_;
   GLUI_Button   * jitterButton_;
 
+  GLUI_Spinner  * soundVolumeSpinner_;
+
   GLUI_EditText * framesPerSecondTxt;
   GLUI_Spinner  * fovSpinner_;
 
@@ -262,6 +264,7 @@ private:
   ////////////////////////////////////////////////////////////////
 
   static void toggleHotspotsCB( int id );
+  static void toggleTransmissionModeCB( int id );
 
   ////////////////////////////////////////////////////////////////
 
