@@ -45,7 +45,8 @@ static int iterNum = 0;
 #define oldStyle_setBC 1
 #define newStyle_setBC 0
 #define setBC_FC 1
-#define setBC_FC_John 0
+#define setBC_FC_John 
+#undef setBC_FC_John
  /*==========TESTING==========`*/
 //#define ANNULUSICE
 #undef ANNULUSICE
@@ -1620,14 +1621,14 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
 /*`==========TESTING==========*/ 
 #if setBC_FC
-    #if setBC_FC_John
+    #ifdef setBC_FC_John
     SFCXVariable<Vector> vel_FC;
     new_dw->allocate(vel_FC,lb->scratch_FCVectorLabel,0,patch);
     #endif
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      #if setBC_FC_John
+      #ifdef setBC_FC_John
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
 	  iter++){  
 	IntVector cell = *iter; 
@@ -1644,7 +1645,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       }
       #endif
       // Turn off the old way if setBC_FC_John is turned on.
-      #if 1
+      #ifndef setBC_FC_John 
+      cout << "Not doing setBC_FC_John . . ." << endl;
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
@@ -3165,7 +3167,7 @@ void ICE::setBC(SFCXVariable<Vector>& variable, const  string& kind,
     } else
       continue;
 
-    IntVector offset(1,1,1);  // so you hit the inside walls of the domain
+    IntVector offset(0,0,0);  // so you hit the inside walls of the domain
 
     if (sym_bcs != 0) {
       // First set the Neumann conditions for the non-normal faces
