@@ -19,7 +19,8 @@
 
 namespace Uintah {
 
-  using namespace SCIRun;
+  using SCIRun::Exception;
+
   class Level; 
   class Patch;
 

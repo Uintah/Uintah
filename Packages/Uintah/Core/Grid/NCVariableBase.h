@@ -10,7 +10,8 @@ namespace SCIRun {
 }
 
 namespace Uintah {
-  using namespace SCIRun;
+
+  using SCIRun::IntVector;
 
   class BufferInfo;
   class OutputContext;
@@ -69,8 +70,8 @@ WARNING
 
       // Clones the type with a variable having the given extents
       // but with null data -- good as a place holder.
-      virtual NCVariableBase* makePlaceHolder(IntVector low,
-					      IntVector high) const = 0;     
+      virtual NCVariableBase* makePlaceHolder(const IntVector & low,
+					      const IntVector & high) const = 0;     
 
       virtual void allocate(const Patch* patch) = 0;
       virtual void allocate(const IntVector& lowIndex,

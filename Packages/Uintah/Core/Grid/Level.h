@@ -21,11 +21,15 @@ namespace SCIRun {
 
 namespace Uintah {
 
+  using SCIRun::Vector;
+  using SCIRun::Point;
+  using SCIRun::IntVector;
+  using SCIRun::BBox;
+
 #ifdef SELECT_RANGETREE
 class PatchRangeTree;
 #endif
-  
-using namespace SCIRun;
+ 
   class BoundCondBase;
   class Box;
   class Patch;

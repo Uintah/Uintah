@@ -8,7 +8,8 @@
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
-  using namespace SCIRun;
+
+  using SCIRun::IntVector;
   using std::string;
 
   class TypeDescription;

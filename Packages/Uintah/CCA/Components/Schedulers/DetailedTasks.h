@@ -16,6 +16,11 @@
 #include <set>
 
 namespace Uintah {
+  using SCIRun::Min;
+  using SCIRun::Max;
+  using SCIRun::Mutex;
+  using SCIRun::Semaphore;
+
   class ProcessorGroup;
   class DataWarehouse;
   class DetailedTask;

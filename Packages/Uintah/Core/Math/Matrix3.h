@@ -13,15 +13,15 @@
 #include <Core/share/share.h>
 
 #include <math.h>
+
 #include <iosfwd>
 #include <vector>
+#include <string>
 
-namespace SCIRun {
-  class TypeDescription;
-  class Piostream;
-}
 namespace Uintah {
-using namespace SCIRun;
+
+using SCIRun::Vector;
+using std::string;
 
 class Matrix3 {
  private:
@@ -661,12 +661,15 @@ std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
 #include <Core/Datatypes/TypeName.h>
 #include <string>
 namespace SCIRun {
-  using namespace Uintah;
-void swapbytes( Uintah::Matrix3& m);
-template<> const string find_type_name(Matrix3*);
-const TypeDescription* get_type_description(Matrix3*);
-void Pio( Piostream&, Uintah::Matrix3& );
+  class TypeDescription;
+  class Piostream;
 
+  using namespace Uintah;
+
+  void swapbytes( Uintah::Matrix3& m);
+  template<> const string find_type_name(Matrix3*);
+  const TypeDescription* get_type_description(Matrix3*);
+  void Pio( Piostream&, Uintah::Matrix3& );
 } // namespace SCIRun
 
 #endif  // __MATRIX3_H__

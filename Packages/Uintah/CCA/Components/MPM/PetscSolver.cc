@@ -1,11 +1,16 @@
 #define PETSC_USE_LOG
-#include "PetscSolver.h"
+
+#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+
 #include <vector>
+#include <iostream>
 
 using namespace Uintah;
-using std::vector;
+using namespace SCIRun;
+using namespace std;
+
 #define LOG
 #undef LOG
 

@@ -22,29 +22,31 @@
 
 namespace Uintah {
 
-   class DependencyException : public Exception {
-   public:
-     DependencyException(const Task* task, const VarLabel* label,
-			 int matlIndex, const Patch* patch,
-			 string has, string needs);
-     DependencyException(const DependencyException& copy);
-     virtual ~DependencyException() {}
+  using SCIRun::Exception;
 
-     static string
-     makeMessage(const Task* task, const VarLabel* label, int matlIndex,
-		 const Patch* patch, string has, string needs);
+  class DependencyException : public Exception {
+  public:
+    DependencyException(const Task* task, const VarLabel* label,
+			int matlIndex, const Patch* patch,
+			string has, string needs);
+    DependencyException(const DependencyException& copy);
+    virtual ~DependencyException() {}
+
+    static string
+    makeMessage(const Task* task, const VarLabel* label, int matlIndex,
+		const Patch* patch, string has, string needs);
      
-     virtual const char* message() const;
-     virtual const char* type() const;
-   protected:
-   private:
-     DependencyException& operator=(const DependencyException& copy);
-     const Task* task_;
-     const VarLabel* label_;
-     int matlIndex_;
-     const Patch* patch_;
-     string d_msg;
-   };
+    virtual const char* message() const;
+    virtual const char* type() const;
+  protected:
+  private:
+    DependencyException& operator=(const DependencyException& copy);
+    const Task* task_;
+    const VarLabel* label_;
+    int matlIndex_;
+    const Patch* patch_;
+    string d_msg;
+  };
 
 } // End namespace Uintah
 

@@ -4,6 +4,7 @@
 #include <vector>
 
 using namespace Uintah;
+using namespace SCIRun;
 using std::vector;
 
 SimpleSolver::SimpleSolver()

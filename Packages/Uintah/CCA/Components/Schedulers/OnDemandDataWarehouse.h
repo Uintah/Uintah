@@ -24,8 +24,10 @@ namespace Uintah {
   int getDB_ID(const Patch* patch);
   int getDB_ID(const Level* level);
 
-  using namespace std;
-  using namespace SCIRun;
+  using SCIRun::CrowdMonitor;
+  using SCIRun::Max;
+  using SCIRun::Thread;
+
   class BufferInfo;
   class DependencyBatch;
   class DetailedDep;
@@ -253,10 +255,10 @@ public:
    void scrub(const VarLabel* label, int matlIndex, const Patch* patch);
    void initializeScrubs(int dwid, const map<VarLabelMatlPatchDW, int>& scrubcounts);
 
-   void logMemoryUse(ostream& out, unsigned long& total, const string& tag);
+   void logMemoryUse(ostream& out, unsigned long& total, const std::string& tag);
 
    // must be called by the thread that will run the test
-   void pushRunningTask(const Task* task, vector<OnDemandDataWarehouseP>* dws);
+   void pushRunningTask(const Task* task, std::vector<OnDemandDataWarehouseP>* dws);
    void popRunningTask();  
 
    // does a final check to see if gets/puts/etc. consistent with
@@ -290,14 +292,14 @@ private:
    struct RunningTaskInfo {
      RunningTaskInfo()
        : d_task(0), dws(0) {}
-     RunningTaskInfo(const Task* task, vector<OnDemandDataWarehouseP>* dws)
+     RunningTaskInfo(const Task* task, std::vector<OnDemandDataWarehouseP>* dws)
        : d_task(task), dws(dws) {}
      RunningTaskInfo(const RunningTaskInfo& copy)
        : d_task(copy.d_task), dws(copy.dws), d_accesses(copy.d_accesses) {}
      RunningTaskInfo& operator=(const RunningTaskInfo& copy)
      { d_task = copy.d_task; dws = copy.dws; d_accesses = copy.d_accesses; return *this; }
      const Task* d_task;
-     vector<OnDemandDataWarehouseP>* dws;
+     std::vector<OnDemandDataWarehouseP>* dws;
      VarAccessMap d_accesses;
    };  
 
@@ -364,7 +366,7 @@ private:
             int        mpiNode;
    };
 
-   typedef vector<dataLocation*> variableListType;
+   typedef std::vector<dataLocation*> variableListType;
    typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
    typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
 

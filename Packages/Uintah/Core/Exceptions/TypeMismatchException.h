@@ -18,8 +18,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
-
    class TypeMismatchException : public SCIRun::Exception {
    public:
       TypeMismatchException(const std::string& msg);
