@@ -290,10 +290,10 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++)   {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC(matl_press[m], rho_micro, placeHolder,
+      setBC(matl_press[m], rho_micro, placeHolder,d_surroundingMatl_indx,
             "rho_micro", "Pressure", patch, d_sharedState, indx, new_dw);
     }  
-    setBC(press_new,  rho_micro, placeHolder,
+    setBC(press_new,  rho_micro, placeHolder,d_surroundingMatl_indx,
          "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
          
     press_copy.copyData(press_new);

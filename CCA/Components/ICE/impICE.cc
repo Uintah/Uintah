@@ -636,7 +636,7 @@ void ICE::updatePressure(const ProcessorGroup*,
       lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, old_dw, new_dw);
     } 
     
-    setBC(press_CC, placeHolder, sp_vol_CC, 
+    setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
           
     delete lv;
