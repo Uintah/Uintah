@@ -384,6 +384,15 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelocitynew[idx]*pmass[idx];
       }
+      
+      
+      //__________________________________
+      //  hardwiring for Northrup Grumman nozzle
+      #define RigidMPM_1
+      #include "../MPMICE/NGC_nozzle.i"
+      #undef RigidMPM_1
+      
+      
       //__________________________________
       //  particle debugging label-- carry forward
       if (flags->d_with_color) {

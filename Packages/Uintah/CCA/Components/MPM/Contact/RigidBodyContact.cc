@@ -172,12 +172,6 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 	  gvelocity_star[0][c]   = new_velocity;
       }
     }
-    
-    //__________________________________
-    //  hardwiring for Northrup Grumman nozzle
-    #define rigidBody_2
-    #include "../../MPMICE/NGC_nozzle.i"
-    #undef rigidBody_2
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
