@@ -71,12 +71,11 @@ namespace Uintah {
 
     int createPoints();
 
-    string d_file_name,d_var_name;
   private:
-
-    void readPoints(const string& f_name, bool var = false);
-
     Box d_box;
+    bool d_var1_bool;
+    bool d_var2_bool;
+    string d_file_name,d_var_name1,d_var_name2;
   };
 } // End namespace Uintah
 
