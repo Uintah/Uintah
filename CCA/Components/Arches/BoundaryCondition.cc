@@ -1972,6 +1972,51 @@ BoundaryCondition::enthalpyBC(const ProcessorGroup*,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
+  //#define enthalpySolve_debug
+#ifdef enthalpySolve_debug
+
+      // code to print all values of any variable within
+      // a box, for multi-patch case
+
+     IntVector indexLow = patch->getCellLowIndex();
+     IntVector indexHigh = patch->getCellHighIndex();
+
+      int ibot = 0;
+      int itop = 0;
+      int jbot = 8;
+      int jtop = 8;
+      int kbot = 8;
+      int ktop = 8;
+
+      // values above can be changed for each case as desired
+
+      bool printvalues = true;
+      int idloX = Max(indexLow.x(),ibot);
+      int idhiX = Min(indexHigh.x()-1,itop);
+      int idloY = Max(indexLow.y(),jbot);
+      int idhiY = Min(indexHigh.y()-1,jtop);
+      int idloZ = Max(indexLow.z(),kbot);
+      int idhiZ = Min(indexHigh.z()-1,ktop);
+      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
+	printvalues = false;
+      printvalues = false;
+
+      if (printvalues) {
+	for (int ii = idloX; ii <= idhiX; ii++) {
+	  for (int jj = idloY; jj <= idhiY; jj++) {
+	    for (int kk = idloZ; kk <= idhiZ; kk++) {
+	      cerr.width(14);
+	      cerr << " point coordinates "<< ii << " " << jj << " " << kk << endl;
+	      cerr << "Source after Radiation" << endl;
+	      cerr << "Radiation source = " << vars->src[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Nonlinear source     = " << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << endl; 
+	    }
+	  }
+	}
+      }
+
+#endif
+
   //fortran call
   fort_bcenthalpy(domLo, domHi, idxLo, idxHi, constvars->enthalpy,
 		  vars->scalarCoeff[Arches::AE],
@@ -2760,8 +2805,8 @@ BoundaryCondition::mmWallTemperatureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	IntVector currCell = IntVector(colX, colY, colZ);	  
 	if (cellType[currCell]==d_mmWallID) {
-	  //	  temperature[currCell] = solidTemp[currCell];
-	  temperature[currCell] = 298.0;
+	  temperature[currCell] = solidTemp[currCell];
+	  //	  temperature[currCell] = 298.0;
 	}
       }
     }
@@ -4334,21 +4379,64 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 			    delta_t,
 			    constvars->cellType, d_mmWallID);
 
+  //#define enthalpySolve_debug
 #ifdef enthalpySolve_debug
 
      cerr << " NEW enthalpy VALUES " << endl;
-     for (int ii = 5; ii <= 9; ii++) {
-       for (int jj = 7; jj <= 12; jj++) {
-	 for (int kk = 7; kk <= 12; kk++) {
-	   cerr.width(14);
-	   cerr << " point coordinates "<< ii << " " << jj << " " << kk ;
-	   cerr << " new scalar = " << vars->enthalpy[IntVector(ii,jj,kk)] ; 
-	   cerr << " cellType = " << constvars->cellType[IntVector(ii,jj,kk)] ; 
-	   cerr << " void fraction = " << constvars->voidFraction[IntVector(ii,jj,kk)] << endl; 
-	 }
-       }
-     }
+
+      // code to print all values of any variable within
+      // a box, for multi-patch case
+
+     IntVector indexLow = patch->getCellLowIndex();
+     IntVector indexHigh = patch->getCellHighIndex();
+
+      int ibot = 0;
+      int itop = 0;
+      int jbot = 8;
+      int jtop = 8;
+      int kbot = 8;
+      int ktop = 8;
+
+      // values above can be changed for each case as desired
+
+      bool printvalues = true;
+      int idloX = Max(indexLow.x(),ibot);
+      int idhiX = Min(indexHigh.x()-1,itop);
+      int idloY = Max(indexLow.y(),jbot);
+      int idhiY = Min(indexHigh.y()-1,jtop);
+      int idloZ = Max(indexLow.z(),kbot);
+      int idhiZ = Min(indexHigh.z()-1,ktop);
+      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
+	printvalues = false;
+
+      if (printvalues) {
+	for (int ii = idloX; ii <= idhiX; ii++) {
+	  for (int jj = idloY; jj <= idhiY; jj++) {
+	    for (int kk = idloZ; kk <= idhiZ; kk++) {
+	      cerr.width(14);
+	      cerr << " point coordinates "<< ii << " " << jj << " " << kk << endl;
+	      cerr << "Enthalpy after solve = " << vars->enthalpy[IntVector(ii,jj,kk)] << endl;
+	      cerr << "Void Fraction after solve = " << constvars->voidFraction[IntVector(ii,jj,kk)] << endl;
+	      cerr << "CellType for enthalpy solve = " << constvars->cellType[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Printing Coefficients and Sources" << endl;
+	      cerr << "East     coefficient = " << constvars->scalarCoeff[Arches::AE][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "West     coefficient = " << constvars->scalarCoeff[Arches::AW][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "North    coefficient = " << constvars->scalarCoeff[Arches::AN][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "South    coefficient = " << constvars->scalarCoeff[Arches::AS][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Top      coefficient = " << constvars->scalarCoeff[Arches::AT][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Bottom   coefficient = " << constvars->scalarCoeff[Arches::AB][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Diagonal coefficient = " << constvars->scalarCoeff[Arches::AP][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Nonlinear source     = " << constvars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Old Density          = " << constvars->old_density[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "delta_t = " << delta_t << endl;
+	      
+	    }
+	  }
+	}
+      }
+
 #endif
+
 
 #ifdef ARCHES_DEBUG
     cerr << " After Scalar Explicit solve : " << endl;
