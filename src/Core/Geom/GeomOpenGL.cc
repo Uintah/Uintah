@@ -6309,9 +6309,6 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 "LRP c.xyz, v.x, c.xyzz, fctmp.xyzz; \n" \
 "MOV result.color, c; \n" \
 "END"
-#    ifndef GL_ARB_fragment_program
-#      define GL_FRAGMENT_PROGRAM_ARB 0x8804
-#    endif /* GL_ARB_fragment_program */
 #endif
 
 void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double) 
