@@ -44,6 +44,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
+#define SMIDGE 0.05
 
 namespace SCIRun {
 
@@ -61,6 +62,9 @@ Polyline::draw()
 void 
 Diagram::draw()
 {
+  double smidgex;
+  double smidgey;
+  
   if ( graph_.size() == 0 ) return; 
 
   if ( select_mode == 2 ) { // select_mode = many
@@ -71,8 +75,14 @@ Diagram::draw()
       
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
-      glOrtho( graphs_bounds_.min().x(),  graphs_bounds_.max().x(),
-	       graphs_bounds_.min().y(),  graphs_bounds_.max().y(),
+
+      smidgex = (graphs_bounds_.max().x()-graphs_bounds_.min().x())*SMIDGE;
+      smidgey = (graphs_bounds_.max().y()-graphs_bounds_.min().y())*SMIDGE;
+
+      glOrtho( graphs_bounds_.min().x()-smidgex,
+	       graphs_bounds_.max().x()+smidgex,
+	       graphs_bounds_.min().y()-smidgey,
+	       graphs_bounds_.max().y()+smidgey,
 	       -1, 1 );
       
       glColor3f( 0,0,0 );
@@ -85,11 +95,13 @@ Diagram::draw()
 	if ( graph_[i]->is_enabled() ) {
 	  BBox2d bbox;
 	  graph_[i]->get_bounds( bbox );
+	  smidgex = (bbox.max().x()-bbox.min().x())*SMIDGE;
+	  smidgey = (bbox.max().y()-bbox.min().y())*SMIDGE;
 	  if ( bbox.valid() ) {
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();
-	    glOrtho( bbox.min().x(),  bbox.max().x(),
-		     bbox.min().y(),  bbox.max().y(),
+	    glOrtho( bbox.min().x()-smidgex,  bbox.max().x()+smidgex,
+		     bbox.min().y()-smidgey,  bbox.max().y()+smidgey,
 		     -1, 1 );
 	    graph_[i]->draw();
 	  }
@@ -100,11 +112,13 @@ Diagram::draw()
     if ( graph_[selected_]->is_enabled() ) {
       BBox2d bbox;
       graph_[selected_]->get_bounds( bbox );
+      smidgex = (bbox.max().x()-bbox.min().x())*SMIDGE;
+      smidgey = (bbox.max().y()-bbox.min().y())*SMIDGE;
       if ( bbox.valid() ) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho( bbox.min().x(),  bbox.max().x(),
-		 bbox.min().y(),  bbox.max().y(),
+	glOrtho( bbox.min().x()-smidgex,  bbox.max().x()+smidgex,
+		 bbox.min().y()-smidgey,  bbox.max().y()+smidgey,
 		 -1, 1 );
 	graph_[selected_]->draw();
       }
@@ -115,10 +129,46 @@ Diagram::draw()
 void 
 Axes::draw()
 {
-  glBegin(GL_LINE);
-  glVertex2f(0.0f, 0.0f);
-  glVertex2f(100.0f, 100.0f);
+  if (!initialized) {
+    init_glprintf();
+    initialized = true;
+  }
+
+  double pm[16];
+  double smidge;
+  glGetDoublev(GL_PROJECTION_MATRIX,pm);
+
+  // set the projection to NDC
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  smidge = 2.*SMIDGE/(1.+2.*SMIDGE);
+
+  glBegin(GL_LINES);
+  glVertex2f(-1.0f,0.0f);
+  glVertex2f(1.0f,0.0f);
+  glVertex2f(-1.f+smidge,-1.0f);
+  glVertex2f(-1.f+smidge,1.0f);
   glEnd();
+
+  double hdelta = 2./num_h_tics;
+  double vdelta = 2./num_v_tics;
+  int loop;
+
+  glBegin(GL_LINES);
+  for (loop=0;loop<num_h_tics;++loop) {
+    glVertex2d(loop*hdelta-1.,0.0161);
+    glVertex2d(loop*hdelta-1.,-0.0161);
+  }
+
+  for (loop=0;loop<num_v_tics;++loop) {
+    glVertex2d(-0.99+smidge,vdelta*loop-1);
+    glVertex2d(-1.01+smidge,vdelta*loop-1);
+  }
+  glEnd();
+
+  // restore the projection
+  glLoadMatrixd(pm);
 }
 
 } // End namespace SCIRun
