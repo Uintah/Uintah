@@ -65,10 +65,7 @@ namespace Uintah {
   private:
     CCVariable<fflux> d_OFS;
     CCVariable<eflux> d_OFE;
-    CCVariable<cflux> d_OFC;
-    const VarLabel* OFE_CCLabel;
-    const VarLabel* OFC_CCLabel;
-    const VarLabel* OFS_CCLabel;    
+    CCVariable<cflux> d_OFC;   
   };
 }
 

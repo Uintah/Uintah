@@ -54,7 +54,6 @@ namespace Uintah {
                                          
   private:
     CCVariable<fflux> d_OFS;
-    const VarLabel* OFS_CCLabel;
 
   private:                                 
     template<class T> 
