@@ -10,7 +10,7 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Packages/rtrt/Core/TimeObj.h>
+#include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/RegularColorMap.h>
 
 #include <Core/Thread/Time.h>
@@ -267,20 +267,6 @@ GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
     abort();
   }
 
-  float *mins, *maxs;
-  mins = (float*)malloc(numvars * sizeof(float));
-  maxs = (float*)malloc(numvars * sizeof(float));
-  // initialize the mins and maxs
-  for (int i = 0; i < numvars; i++) {
-    mins[i] =  MAXFLOAT;
-    maxs[i] = -MAXFLOAT;
-  }
-  // now concatenate the spheres and compute the mins and maxs
-  for (int i = 0; i < numvars; i++) {
-    mins[i] =  MAXFLOAT;
-    maxs[i] = -MAXFLOAT;
-  }
-
   // allocate memory for the data
   static const int d_mem = 512;
   static const int nsph = (512*400);
@@ -297,11 +283,6 @@ GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
   int index = 0;
   
   for (int g = 0; g < data_group.size(); g++) {
-    // compute the mins and maxs
-    for (int i = 0; i < numvars; i++) {
-      mins[i] = Min(mins[i], data_group[g].mins[i]);
-      maxs[i] = Max(maxs[i], data_group[g].maxs[i]);
-    }
     // copy the data
     // this may be done more efficient using mcopy or something like it.
     int ndata = data_group[g].nspheres * numvars;
@@ -315,7 +296,7 @@ GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
     cerr << "Wrong number of vars copied: index = " << index << ", total_spheres * numvars = " << total_spheres * numvars << endl;
   }
   cout << "Using radius "<<radius<<"\n";
-  return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, cmap);  
+  return new GridSpheres(data, 0, 0, total_spheres, numvars, gridcellsize, griddepth, radius, cmap);  
 }
 
 GridSpheres* read_spheres(char* spherefile, int datanum,
@@ -433,11 +414,13 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   int d_mem=512;
   cerr << "Couldn't open with O_DIRECT, reading slow\n";
 #endif
-  struct stat statbuf;
-  if(fstat(in_fd, &statbuf) == -1){
+  struct stat64 statbuf;
+  if(fstat64(in_fd, &statbuf) == -1){
     perror("fstat");
     cerr << "cannot stat file\n";
     exit(1);
+  } else {
+    cerr << "size of " << spherefile << " is " << statbuf.st_size << " bytes\n";
   }
 
   // make sure the data file is the correct size
@@ -608,10 +591,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // the value will be checked later and the program will abort
   // if the value is not correct.
   GridSpheresDpy* display = new GridSpheresDpy(colordata-1);
+
+  SelectableGroup* alltime = 0;
   
   if (timevary) {
     ifstream in(file);
-    TimeObj* alltime = new TimeObj(rate);
+    alltime = new SelectableGroup(1.0/rate);
     //Group* timeblock;
     int numtimeblock = 0;
     Array1<SphereData> sphere_data;
@@ -643,10 +628,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	}
 	else {
 	  cerr << "Reading " << file << "\n";
-	  append_spheres(file,sphere_data,radius, radius_factor);
-	  //GridSpheres* obj=read_spheres(file, colordata, gridcellsize, griddepth, radius, radius_factor, numvars);
-	  //display->attach(obj);
-	  //timeblock->add((Object*)obj);
+          //	  append_spheres(file,sphere_data,radius, radius_factor);
+#if 1
+	  GridSpheres* obj=read_spheres(file, colordata, gridcellsize, griddepth, radius, radius_factor, numvars, cmap);
+	  display->attach(obj);
+	  alltime->add((Object*)obj);
+#endif
 	}
       }
     }
@@ -693,7 +680,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   light->name_ = "Main Light";
   scene->add_light(light);
   scene->select_shadow_mode( No_Shadows );
-  scene->addObjectOfInterest(all, true);
+
+  // Add objects of interest
+  if (timevary)
+    scene->addGuiObject("Timesteps", alltime);
+  else
+    scene->addAnimateObject(all);
 
 #if 0 // GridSpheresDpy needs to be made to inherit DpyBase.
   scene->attach_display(display);
