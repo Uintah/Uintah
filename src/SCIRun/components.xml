@@ -1,5 +1,17 @@
 <?xml version='1.0' encoding='us-ascii' ?>
 
+<!-- *** NOTE ***
+ 
+ Do not remove or modify the comment lines that contain:
+
+    INSERT NEW ??????? HERE 
+ 
+ They are required by the module maker to properly edit this file.
+ if you want to edit this file by hand, see the "Create A New Module"
+ documentation on how to do it correctly.
+
+-->
+
 <!-- description of the SCIRun package -->
 
 <package name="SCIRun">
