@@ -259,39 +259,61 @@ int DenseMatrix::solve(ColumnMatrix& sol)
 }
 
 void DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-		       int& flops, int& memrefs, int beg, int end) const
+		       int& flops, int& memrefs, int beg, int end, 
+		       int spVec) const
 {
     // Compute A*x=b
     ASSERTEQ(x.nrows(), nc);
     ASSERTEQ(b.nrows(), nr);
     if(beg==-1)beg=0;
     if(end==-1)end=nr;
-    for(int i=beg;i<end;i++){
-	double sum=0;
-	double* row=data[i];
-	for(int j=0;j<nc;j++){
-	    sum+=row[j]*x[j];
+    int i, j;
+    if(!spVec) {
+	for(i=beg; i<end; i++){
+	    double sum=0;
+	    double* row=data[i];
+	    for(j=0;j<nc;j++){
+		sum+=row[j]*x[j];
+	    }
+	    b[i]=sum;
 	}
-	b[i]=sum;
+    } else {
+	for (i=beg; i<end; i++) b[i]=0;
+	for (j=0; j<nc; j++) 
+	    if (x[j]) 
+		for (i=beg; i<end; i++) 
+		    b[i]+=data[i][j]*x[j];
     }
     flops+=(end-beg)*nc*2;
     memrefs+=(end-beg)*nc*2*sizeof(double)+(end-beg)*sizeof(double);
 }
     
 void DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				 int& flops, int& memrefs, int beg, int end)
+				 int& flops, int& memrefs, int beg, int end,
+				 int spVec)
 {
     // Compute At*x=b
     ASSERT(x.nrows() == nr);
     ASSERT(b.nrows() == nc);
     if(beg==-1)beg=0;
     if(end==-1)end=nc;
-    for(int i=beg;i<end;i++){
-	double sum=0;
-	for(int j=0;j<nr;j++){
-	    sum+=data[j][i]*x[j];
+    int i, j;
+    if (!spVec) {
+	for(i=beg; i<end; i++){
+	    double sum=0;
+	    for(j=0;j<nr;j++){
+		sum+=data[j][i]*x[j];
+	    }
+	    b[i]=sum;
 	}
-	b[i]=sum;
+    } else {
+	for (i=beg; i<end; i++) b[i]=0;
+	for (j=0; j<nr; j++)
+	    if (x[j]) {
+		double *row=data[j];
+		for (i=beg; i<end; i++)
+		    b[i]+=row[i]*x[j];
+	    }
     }
     flops+=(end-beg)*nr*2;
     memrefs+=(end-beg)*nr*2*sizeof(double)+(end-beg)*sizeof(double);
@@ -313,11 +335,13 @@ MatrixRow DenseMatrix::operator[](int row)
     return MatrixRow(this, row);
 }
 
-#define DENSEMATRIX_VERSION 1
+#define DENSEMATRIX_VERSION 3
 
 void DenseMatrix::io(Piostream& stream)
 {
-    stream.begin_class("DenseMatrix", DENSEMATRIX_VERSION);
+    using SCICore::PersistentSpace::Pio;
+
+    int version=stream.begin_class("DenseMatrix", DENSEMATRIX_VERSION);
     // Do the base class first...
     Matrix::io(stream);
 
@@ -333,10 +357,48 @@ void DenseMatrix::io(Piostream& stream)
 	}
     }
     stream.begin_cheap_delim();
-    int idx=0;
-    for(int i=0;i<nr;i++)
-	for (int j=0; j<nc; j++, idx++)
-	    stream.io(dataptr[idx]);
+
+    int split;
+    if (stream.reading()) {
+	if (version > 2) {
+	    Pio(stream, separate_raw);
+	    if (separate_raw) {
+		Pio(stream, raw_filename);
+		FILE *f=fopen(raw_filename(), "r");
+		fread(data[0], sizeof(double), nr*nc, f);
+	    }
+	} else {
+	    separate_raw=0;
+	}
+	split=separate_raw;
+    } else {	// writing
+	clString filename = raw_filename;
+	split=separate_raw;
+	if (split) {
+	    if (filename == "") {
+		if (stream.file_name()) {
+		    char *tmp=strdup(stream.file_name());
+		    char *dot = strrchr( tmp, '.' );
+		    if (!dot ) dot = strrchr( tmp, 0);
+		    filename = stream.file_name.substr(0,dot-tmp)+clString(".raw");
+		    delete tmp;
+		} else split=0;
+	    }
+	}
+	Pio(stream, split);
+	if (split) {
+	    Pio(stream, filename);
+	    FILE *f=fopen(filename(), "w");
+	    fwrite(data[0], sizeof(double), nr*nc, f);
+	}
+    }
+
+    if (!split) {
+	int idx=0;
+	for(int i=0;i<nr;i++)
+	    for (int j=0; j<nc; j++, idx++)
+		stream.io(dataptr[idx]);
+    }
     stream.end_cheap_delim();
     stream.end_class();
 }
@@ -516,6 +578,9 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.9  2000/07/12 15:45:08  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.8  1999/12/11 05:47:41  dmw
 // sparserowmatrix -- someone had commented out the code that lets you get() a zero entry... I put it back in.    densematrix -- just cleaned up some comments
 //

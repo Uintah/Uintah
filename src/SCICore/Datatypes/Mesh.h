@@ -189,6 +189,8 @@ public:
     int current_generation;
 
     void detach_nodes();
+    void get_elem_nbrhd(int eidx, Array1<int>& nbrs, int dupsOk=1);
+    void get_node_nbrhd(int nidx, Array1<int>& nbrs, int dupsOk=1);
     void compute_neighbors();
     int locate(const Point&, int&, double epsilon1=1.e-6, double epsilon2=1.e-6);
     int locate(const RPoint&, int&);
@@ -259,6 +261,9 @@ void Pio(Piostream& stream, ElementVersion1& node);
 
 //
 // $Log$
+// Revision 1.8  2000/07/12 15:45:09  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.7  2000/03/11 00:41:29  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

@@ -49,6 +49,9 @@ protected:
 	other
     };
 
+    int separate_raw;
+    clString raw_filename;
+
     Sym sym;
     Matrix(Sym symmetric, Representation dense);
     int extremaCurrent;
@@ -79,9 +82,15 @@ public:
     virtual double minValue()=0;
     virtual double maxValue()=0;
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1) const=0;
+		      int& flops, int& memrefs, int beg=-1, int end=-1, int spVec=0) const=0;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				int& flops, int& memrefs, int beg=-1, int end=-1)=0;
+				int& flops, int& memrefs, int beg=-1, int end=-1, int spVec=0)=0;
+
+    // separate raw files
+    void set_raw(int v) { separate_raw = v; }
+    int get_raw() { return separate_raw; }
+    void set_raw_filename( clString &f ) { raw_filename = f; separate_raw = 1;}
+    clString &get_raw_filename() { return raw_filename; }
 
     // Persistent representation...
     virtual void io(Piostream&);
@@ -110,6 +119,9 @@ void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 //
 // $Log$
+// Revision 1.5  2000/07/12 15:45:08  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.4  1999/09/08 02:26:48  sparker
 // Various #include cleanups
 //
