@@ -432,9 +432,10 @@ OpenGLDestroy(clientData)
 }
 
 
-GLXContext OpenGLGetContext(interp, name)
+GLXContext OpenGLGetContext2(interp, name, dpy)
     Tcl_Interp* interp;
     char* name;
+    Display* dpy;
 {
     Tcl_CmdInfo info;
     OpenGL* OpenGLPtr;
@@ -444,13 +445,21 @@ GLXContext OpenGLGetContext(interp, name)
     if(!OpenGLPtr->cx){
 	Tk_Window tkwin;
 	tkwin=Tk_NameToWindow(interp, name, Tk_MainWindow(interp));
-	OpenGLPtr->cx = glXCreateContext(Tk_Display(tkwin),
+	if(!dpy)
+	    dpy=Tk_Display(tkwin);
+	OpenGLPtr->cx = glXCreateContext(dpy, 
 					 OpenGLPtr->vi, 0, OpenGLPtr->direct);
 	if(!OpenGLPtr->cx){
 	    Tcl_AppendResult(interp, "Error making GL context", (char*)NULL);
 	    return 0;
 	}
     }
-    fprintf(stderr, "cx=%p\n", OpenGLPtr->cx);
     return OpenGLPtr->cx;
+}
+
+GLXContext OpenGLGetContext(interp, name)
+    Tcl_Interp* interp;
+    char* name;
+{
+    return OpenGLGetContext2(interp, name, 0);
 }
