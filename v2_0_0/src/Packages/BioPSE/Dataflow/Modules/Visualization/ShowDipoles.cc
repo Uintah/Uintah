@@ -150,11 +150,10 @@ ShowDipoles::execute()
   reset_vars();
   if (reset_ || (gen != lastGen_))
   {
+    // Assume I input a new dipole field because I actually wanted to use it.
     lastGen_ = gen;
-    if (reset_ || 
-	(field_pcv->fdata().size() != (unsigned)num_dipoles_.get())) {
-      new_input_data(field_pcv);
-    }
+    new_input_data(field_pcv);
+    output_dirty_ = true;
   }
 
   //widget_moved(true);
