@@ -30,6 +30,12 @@ using SCICore::Geometry::Point;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
+template <class T> class AttribFunctor
+{
+public:
+  virtual void operator() (T &) {}
+};
+
 template <class T> class DiscreteAttrib : public Attrib //abstract class
 {
 public:
@@ -81,10 +87,7 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
-  typedef T* iterator;
-
-  virtual T* begin() { return &defval; }
-  virtual T* end() { return (&defval)+1; }
+  virtual int iterate(AttribFunctor<T> &func);
 
   virtual int xsize() const { return nx; }
   virtual int ysize() const { return ny; }
@@ -291,6 +294,14 @@ DiscreteAttrib<T>::resize(int x)
   ny = 0;
   nz = 0;
   dim = 1;
+}
+
+
+template <class T> int
+DiscreteAttrib<T>::iterate(AttribFunctor<T> &func)
+{
+  func(defval);
+  return 1;
 }
 
 
