@@ -174,7 +174,8 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     gui_global_cull_(ctx->subVar("global-cull")),
     gui_global_dl_(ctx->subVar("global-dl")),
     gui_global_type_(ctx->subVar("global-type")),
-    gui_ortho_view_(ctx->subVar("ortho-view"))
+    gui_ortho_view_(ctx->subVar("ortho-view")),
+    gui_current_time_(ctx->subVar("current_time",false))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
@@ -2570,11 +2571,7 @@ void ViewWindow::redraw()
   need_redraw=0;
   ctx->reset();
   // Get animation variables
-  double ct;
-  if(!ctx || !ctx->getSub("current_time", ct)){
-    manager->error("Error reading current_time");
-    return;
-  }
+  double ct = gui_current_time_.get();
   // Find out whether to draw the axes or not.  Generally, this is handled
   //  in the centerGenAxes case of the tcl_command, but for the first redraw
   //  it's needed here (can't check it in the constructor since the variable
@@ -2704,7 +2701,7 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 
 void ViewWindow::set_current_time(double time)
 {
-  ctx->setSub("current_time", to_string(time));
+  gui_current_time_.set(time);
 }
 
 void ViewWindow::dump_objects(const string& filename, const string& format)

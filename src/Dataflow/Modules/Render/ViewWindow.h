@@ -424,6 +424,8 @@ private:
   GuiInt gui_global_dl_;
   GuiString gui_global_type_;
   GuiInt gui_ortho_view_;
+  GuiInt gui_current_time_;
+
 };
 
 class ViewWindowMouseMessage : public MessageBase {
