@@ -61,6 +61,7 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
   d_serverContext->d_typeinfo=typeinfo;
   d_serverContext->d_ptr=ptr;
   d_serverContext->storage = new HandlerStorage();
+  d_serverContext->gatekeeper = new HandlerGateKeeper();
 }
 
 Object::~Object()

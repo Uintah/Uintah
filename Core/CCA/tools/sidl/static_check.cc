@@ -346,8 +346,8 @@ void Method::staticCheck(SymbolTable* names)
   }
 
   /* Check return type and arguments */
-  return_type->staticCheck(names);
-  args->staticCheck(names);
+  return_type->staticCheck(names,this);
+  args->staticCheck(names,this);
   checked=true;
 
   /* Method shouldn't match another method exactly */
@@ -481,16 +481,16 @@ bool Method::matches(const Method* m, Method::MatchWhich match) const
   return false;
 }
 
-void ArgumentList::staticCheck(SymbolTable* names) const
+void ArgumentList::staticCheck(SymbolTable* names, Method* method) const
 {
   for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-    (*iter)->staticCheck(names);
+    (*iter)->staticCheck(names,method);
   }
 }
 
-void Argument::staticCheck(SymbolTable* names) const
+void Argument::staticCheck(SymbolTable* names, Method* method) const
 {
-  type->staticCheck(names);
+  type->staticCheck(names,method);
 }
 
 bool ArgumentList::matches(const ArgumentList* a, bool checkmode) const
@@ -515,13 +515,14 @@ bool Argument::matches(const Argument* a, bool checkmode) const
   return type->matches(a->type);
 }
 
-void BuiltinType::staticCheck(SymbolTable*) const
+void BuiltinType::staticCheck(SymbolTable*, Method* method) 
 {
-  // Nothing to be done...
+  thisMethod = method;
 }
 
-void NamedType::staticCheck(SymbolTable* names) const
+void NamedType::staticCheck(SymbolTable* names, Method* method) 
 {
+  thisMethod = method;
   Symbol* s=names->lookup(name);
   if(!s){
     cerr << "Couldn't find " << name->getName() << " in " << names->fullname() << '\n';
@@ -549,9 +550,10 @@ void NamedType::staticCheck(SymbolTable* names) const
   }
 }
 
-void ArrayType::staticCheck(SymbolTable* names) const
+void ArrayType::staticCheck(SymbolTable* names, Method* method) 
 {
-  subtype->staticCheck(names);
+  thisMethod = method;
+  subtype->staticCheck(names,method);
 }
 
 bool ScopedNameList::matches(const ScopedNameList* l) const
@@ -749,38 +751,42 @@ void DistributionArrayList::gatherSymbols(SymbolTable* names) const
 }
 
 
-bool ArrayType::detectRedistribution() { return false; }
+int ArrayType::detectRedistribution() { return 0; }
 
-bool BuiltinType::detectRedistribution() { return false; }
+int BuiltinType::detectRedistribution() { return 0; }
 
-bool NamedType::detectRedistribution() 
+int NamedType::detectRedistribution() 
 {
   Symbol::Type t = name->getSymbol()->getType(); 
   if(t == Symbol::DistArrayType) {
-    return true;
+    return 1;
   }
   else {
-    return false;
+    return 0;
   }
 }
 
-bool Argument::detectRedistribution() 
+int Argument::detectRedistribution() 
 {
-  return (type->detectRedistribution());
+  if(type->detectRedistribution()) {
+    if(mode == InOut) return 2;
+    return 1;
+  }
+  return 0;  
 }
 
-bool ArgumentList::detectRedistribution() 
+int ArgumentList::detectRedistribution() 
 {
-  bool redis = false;
+  int totalRedisMessages = 0;
   for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-    if ((*iter)->detectRedistribution()) redis = true;
+    totalRedisMessages += (*iter)->detectRedistribution();
   }
-  return redis;
+  return totalRedisMessages;
 }
 
 bool Method::detectRedistribution()
 {
-  if (args->detectRedistribution()) {
+  if((numRedisMessages=(args->detectRedistribution()))) {
     doRedistribution = true;
     isCollective = true;
     return true;

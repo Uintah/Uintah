@@ -83,6 +83,7 @@ DESCRIPTION
     /////////
     // For parallel proxies, my ordered number
     int par_rank;
+
   };
 } // End namespace SCIRun
 
