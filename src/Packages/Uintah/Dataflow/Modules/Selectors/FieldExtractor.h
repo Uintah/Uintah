@@ -122,6 +122,9 @@ void FieldExtractor::build_field(DataArchive& archive,
 				 Var& /*var*/,
                                   LatVolField<T>*& sfd)
 {
+  // Initialize the data
+  sfd->fdata().initialize(T(0));
+
   int max_workers = Max(Thread::numProcessors()/2, 2);
   Semaphore* thread_sema = scinew Semaphore( "extractor semaphore",
                                              max_workers);
