@@ -58,7 +58,7 @@ class NrrdResample : public Module {
   NrrdDataHandle last_nrrdH_;
 public:
   int getint(const char *str, int *n, int *none);
-  int get_sizes(string *resampAxis, Nrrd *nrrd, nrrdResampleInfo *info);
+  int get_sizes(string *resampAxis, Nrrd *nrrd, NrrdResampleInfo *info);
   NrrdResample(GuiContext *ctx);
   virtual ~NrrdResample();
   virtual void execute();
@@ -106,7 +106,7 @@ int NrrdResample::getint(const char *str, int *n, int *none) {
 }
 
 int NrrdResample::get_sizes(string *resampAxis, Nrrd *nrrd,
-			    nrrdResampleInfo *info) {
+			    NrrdResampleInfo *info) {
   msgStream_ << "NrrdResample sizes: ";
   for (int a=0; a<3; a++) {
     info->samples[a]=nrrd->axis[a].size;
@@ -162,13 +162,13 @@ NrrdResample::execute()
     return;
   }
 
-  nrrdResampleInfo *info = nrrdResampleInfoNew();
+  NrrdResampleInfo *info = nrrdResampleInfoNew();
 
   Nrrd *nin = nrrdH->nrrd;
   msgStream_ << "Resampling with a "<<ftype<<" filter."<<endl;
-  nrrdKernel *kern;
-  double p[NRRD_KERNEL_PARAMS_MAX];
-  memset(p, 0, NRRD_KERNEL_PARAMS_MAX*sizeof(double));
+  NrrdKernel *kern;
+  double p[NRRD_KERNEL_PARMS_NUM];
+  memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
   p[0]=1.0;
   if (ftype == "box") kern=nrrdKernelBox;
   else if (ftype == "tent") kern=nrrdKernelTent;
@@ -178,9 +178,9 @@ NrrdResample::execute()
   else /* if (ftype == "quartic") */ { kern=nrrdKernelAQuartic; p[1]=0.0834; }
   for (int a=0; a<3; a++) {
     info->kernel[a] = kern;
-    memcpy(info->param[a], p, NRRD_KERNEL_PARAMS_MAX*sizeof(double));
+    memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))
-      nrrdAxisSetMinMax(nrrdH->nrrd, a);
+      nrrdAxisMinMaxSet(nrrdH->nrrd, a);
     info->min[a] = nrrdH->nrrd->axis[a].min;
     info->max[a] = nrrdH->nrrd->axis[a].max;
   }    
