@@ -81,7 +81,7 @@ public:
 };
 
 int main() {
-  int num_waiters = 2;
+  int num_waiters = 3;
 #ifdef USE_SCI_THREADS
   Barrier *barrier = new Barrier("glthread");
 #else
