@@ -53,6 +53,8 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
 {
   d_wasOutputTimestep = false;
   d_wereSavesAndCheckpointsInitialized = false;
+  d_currentTime=-1;
+  d_currentTimestep=-1;
 }
 
 DataArchiver::~DataArchiver()
@@ -386,6 +388,7 @@ void DataArchiver::createIndexXML(Dir& dir)
 void DataArchiver::finalizeTimestep(double time, double delt,
 				    const LevelP& level, SchedulerP& sched)
 {
+  d_currentTime=time;
   if (!d_wereSavesAndCheckpointsInitialized &&
       !(delt == 0) /* skip the initialization timestep for this
 		      because it needs all computes to be set
@@ -408,15 +411,16 @@ void DataArchiver::finalizeTimestep(double time, double delt,
   if (d_outputInterval != 0.0 && delt != 0) {
     // Schedule task to dump out reduction variables at every timestep
     Task* t = scinew Task("DataArchiver::outputReduction",
-			  this, &DataArchiver::outputReduction, time);
+			  this, &DataArchiver::outputReduction);
 
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
       SaveItem& saveItem = d_saveReductionLabels[i];
       const VarLabel* var = saveItem.label;
       MaterialSubset* matls = scinew MaterialSubset();
       for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	   matIt != saveItem.matls.end(); matIt++)
+	   matIt != saveItem.matls.end(); matIt++){
 	matls->add(*matIt);
+      }
       t->requires(Task::NewDW, var, matls);
     }
     
@@ -439,8 +443,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     // output checkpoint timestep
     string timestepDir;
     Task* t = scinew Task("DataArchiver::outputCheckpointReduction",
-			  this, &DataArchiver::outputCheckpointReduction,
-			  d_currentTimestep);
+			  this, &DataArchiver::outputCheckpointReduction);
 
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
@@ -672,7 +675,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
     matls->addAll(ms);
     Task* t = scinew Task("DataArchiver::output", 
 			  this, &DataArchiver::output,
-			  &baseDir, timestep, (*saveIter).label);
+			  &baseDir, (*saveIter).label);
     t->requires(Task::NewDW, (*saveIter).label, Ghost::None);
     sched->addTask(t, patches, matls);
     n++;
@@ -746,46 +749,43 @@ void DataArchiver::indexAddGlobals()
 }
 
 void DataArchiver::outputReduction(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
 				   DataWarehouse* /*old_dw*/,
-				   DataWarehouse* new_dw,
-				   double time)
+				   DataWarehouse* new_dw)
 {
-   // Dump the stuff in the reduction saveset into files in the uda
+  // Dump the stuff in the reduction saveset into files in the uda
 
-   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
-      SaveItem& saveItem = d_saveReductionLabels[i];
-      const VarLabel* var = saveItem.label;
-      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	   matIt != saveItem.matls.end(); matIt++) {
-#if 0
-         int matlIndex = *matIt;
-#else
-	 int matlIndex = -1;
-	 NOT_FINISHED("outputReduction matlIndex");
-#endif
-         ostringstream filename;
-         filename << d_dir.getName() << "/" << var->getName();
-         if (matlIndex < 0)
-	    filename << ".dat\0";
-	 else
-	    filename << "_" << matlIndex << ".dat\0";
+  for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
+    SaveItem& saveItem = d_saveReductionLabels[i];
+    const VarLabel* var = saveItem.label;
+    for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
+	 matIt != saveItem.matls.end(); matIt++) {
+      int matlIndex = *matIt;
+      ostringstream filename;
+      filename << d_dir.getName() << "/" << var->getName();
+      if (matlIndex < 0)
+	filename << ".dat\0";
+      else
+	filename << "_" << matlIndex << ".dat\0";
 	  
 #ifdef __GNUG__
-	 ofstream out(filename.str().c_str(), ios::app);
+      ofstream out(filename.str().c_str(), ios::app);
 #else
-	 ofstream out(filename.str().c_str(), ios_base::app);
+      ofstream out(filename.str().c_str(), ios_base::app);
 #endif
-	 out << setprecision(17) << time << "\t";
-	 new_dw->print(out, var, matlIndex);
-	 out << "\n";
-      }
-   }
+      out << setprecision(17) << d_currentTime << "\t";
+      new_dw->print(out, var, matlIndex);
+      out << "\n";
+    }
+  }
 }
 
 void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
+					     const PatchSubset* patches,
+					     const MaterialSubset* matls,
 					     DataWarehouse* old_dw,
-					     DataWarehouse* new_dw,
-					     int timestep)
+					     DataWarehouse* new_dw)
 {
   // Dump the stuff in the reduction saveset into files in the uda
 
@@ -798,8 +798,7 @@ void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
       matls->add(*matIt);
     PatchSubset* patches = scinew PatchSubset(0);
     patches->add(0);
-    output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, timestep,
-	   var);
+    output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, var);
     delete matls;
     delete patches;
   }
@@ -810,7 +809,7 @@ void DataArchiver::output(const ProcessorGroup*,
 			  const MaterialSubset* matls,
 			  DataWarehouse* /*old_dw*/,
 			  DataWarehouse* new_dw,
-			  Dir* p_dir, int timestep,
+			  Dir* p_dir,
 			  const VarLabel* var)
 {
   bool isReduction = var->typeDescription()->isReductionVariable();
@@ -832,10 +831,10 @@ void DataArchiver::output(const ProcessorGroup*,
       dbg << ", ";
     dbg << matls->get(m);
   }
-  dbg << " at time: " << timestep << "\n";
+  dbg << " at time: " << d_currentTimestep << "\n";
   
   ostringstream tname;
-  tname << "t" << setw(4) << setfill('0') << timestep;
+  tname << "t" << setw(4) << setfill('0') << d_currentTimestep;
   
   Dir tdir = p_dir->getSubdir(tname.str());
   
@@ -1165,6 +1164,7 @@ bool DataArchiver::need_recompile(double time, double /* dt */,
 				  const LevelP& /* level */)
 {
   d_currentTimestep++;
+  d_currentTime=time;
   bool recompile=false;
   if (d_outputInterval != 0 && time >= d_nextOutputTime){
     if(!d_wasOutputTimestep)
