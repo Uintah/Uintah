@@ -69,7 +69,7 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
     send_amount_(ctx->subVar("send-amount")),
-    update_function_(ctx->subVar("update-function")),
+    update_function_(ctx->subVar("update-function", false)),
     inc_(1),
     stop_(false)
 {
