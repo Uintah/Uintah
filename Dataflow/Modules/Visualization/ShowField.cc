@@ -670,7 +670,7 @@ ShowField::execute()
   if (do_nodes) {
     nodes_dirty_ = false;
     if (renderer_.get_rep() && nodes_on_.get()) {
-      const char *name = nodes_transparency_.get()?"TransParent Nodes":"Nodes";
+      const char *name = nodes_transparency_.get()?"Transparent Nodes":"Nodes";
       if (node_id_) ogeom_->delObj(node_id_);
       node_id_ = ogeom_->addObj(renderer_->node_switch_, name);
     }
@@ -678,7 +678,7 @@ ShowField::execute()
   if (do_edges) {
     edges_dirty_ = false;
     if (renderer_.get_rep() && edges_on_.get()) {
-      const char *name = edges_transparency_.get()?"TransParent Edges":"Edges";
+      const char *name = edges_transparency_.get()?"Transparent Edges":"Edges";
       if (edge_id_) ogeom_->delObj(edge_id_);
       edge_id_ = ogeom_->addObj(renderer_->edge_switch_, name);
     }
@@ -687,7 +687,7 @@ ShowField::execute()
     faces_dirty_ = false;
     if (renderer_.get_rep() && faces_on_.get()) 
     {
-      const char *name = faces_transparency_.get()?"TransParent Faces":"Faces";
+      const char *name = faces_transparency_.get()?"Transparent Faces":"Faces";
       if (face_id_) ogeom_->delObj(face_id_);
       face_id_ = ogeom_->addObj(renderer_->face_switch_, name);
     }
@@ -709,7 +709,7 @@ ShowField::execute()
 					   normalize_vectors_.get(),
 					   bidirectional_.get(),
 					   data_resolution_);
-      const string vdname = (vdt=="Needles")?"TransParent Vectors":"Vectors";
+      const string vdname = (vdt=="Needles")?"Transparent Vectors":"Vectors";
       data_id_ = ogeom_->addObj(data, vdname);
     }
     else if (vfld_handle.get_rep() &&
@@ -738,7 +738,7 @@ ShowField::execute()
 							   sdt, sscale,
 							   data_resolution_,
 							   transp);
-      data_id_ = ogeom_->addObj(data, transp?"TransParent Scalars":"Scalars");
+      data_id_ = ogeom_->addObj(data, transp?"Transparent Scalars":"Scalars");
     }
   }
   if (do_text) {

@@ -2635,7 +2635,9 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 	  vis = (*viter).second;
 	  if (vis->visible->get())
 	  {
-	    const bool transparent = strstr(si->name_.c_str(), "TransParent");
+	    const bool transparent =
+	      strstr(si->name_.c_str(), "TransParent") ||
+	      strstr(si->name_.c_str(), "Transparent");
 	    const bool culledtext = strstr(si->name_.c_str(), "Culled Text");
 	    const bool sticky = strstr(si->name_.c_str(), "Sticky");
 	    if ((pass == 0 && !transparent && !culledtext && !sticky) ||
