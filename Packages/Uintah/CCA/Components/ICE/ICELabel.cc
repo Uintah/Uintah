@@ -10,8 +10,7 @@ using namespace Uintah;
 
 ICELabel::ICELabel()
 {
-  delTLabel
-    = VarLabel::create("delT",      delt_vartype::getTypeDescription());
+  delTLabel = 0; // Placed in later, in problemSetup
   doMechLabel
     = VarLabel::create("doMech",    delt_vartype::getTypeDescription());
   press_CCLabel     =
@@ -168,6 +167,16 @@ ICELabel::ICELabel()
   mom_exch_errorLabel = 
     VarLabel::create( "mom_exch_error",
                                       sumvec_vartype::getTypeDescription() );
+  // Model variables
+  model_mass_source_CCLabel =
+    VarLabel::create( "model_mass_source",
+		      CCVariable<double>::getTypeDescription());
+  model_momentum_source_CCLabel =
+    VarLabel::create( "model_momentum_source",
+		      CCVariable<double>::getTypeDescription());
+  model_energy_source_CCLabel =
+    VarLabel::create( "model_energy_source",
+		      CCVariable<double>::getTypeDescription());
 } 
 
 ICELabel::~ICELabel()
@@ -244,7 +253,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(scratch_FCZLabel);
 
     // Reduction Variables
-    VarLabel::destroy(delTLabel);
     VarLabel::destroy(TotalMassLabel);
     VarLabel::destroy(KineticEnergyLabel);
     VarLabel::destroy(CenterOfMassVelocityLabel);
@@ -253,5 +261,9 @@ ICELabel::~ICELabel()
     VarLabel::destroy(mom_exch_errorLabel);  
     VarLabel::destroy(max_RHSLabel);   
     VarLabel::destroy(doMechLabel);
-}
 
+    // Model variables
+    VarLabel::destroy(model_mass_source_CCLabel);
+    VarLabel::destroy(model_momentum_source_CCLabel);
+    VarLabel::destroy(model_energy_source_CCLabel);
+}

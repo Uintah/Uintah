@@ -24,6 +24,8 @@
 
 namespace Uintah { 
 using namespace SCIRun;
+ class ModelInfo; 
+ class ModelInterface; 
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
     public:
@@ -125,7 +127,7 @@ using namespace SCIRun;
                                           const MaterialSet*); 
 
       void scheduleMassExchange(SchedulerP&, 
-                                const PatchSet*,
+				const PatchSet*,
                                 const MaterialSet*);
                              
       void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
@@ -177,6 +179,15 @@ using namespace SCIRun;
                                          const MaterialSubset* mpm_matls,
                                          const MaterialSet* all_matls);  
                                    
+      // Model support
+      void scheduleModelMassExchange(SchedulerP& sched,
+				     const LevelP& level,
+				     const MaterialSet* matls);
+      void scheduleModelMomentumAndEnergyExchange(SchedulerP& sched,
+						  const LevelP& level,
+						  const MaterialSet* matls);
+
+
       void setICELabel(ICELabel* Ilb) {
        delete lb;
        lb = Ilb;
@@ -402,6 +413,15 @@ using namespace SCIRun;
                                  const MaterialSubset*,
                                  const MaterialSubset*);
                                                 
+//__________________________________ 
+//   M O D E L S
+                               
+      void zeroModelSources(const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse*,
+			    DataWarehouse*);
+
 //__________________________________ 
 //   O T H E R                            
                                
@@ -630,7 +650,10 @@ using namespace SCIRun;
       
       SolverInterface* solver;
       SolverParameters* solver_parameters;    
-      
+
+      // For attachable models
+      std::vector<ModelInterface*> d_models;
+      ModelInfo* d_modelInfo;
     };
 
 #define SURROUND_MAT 0        /* Mat index of surrounding material, assumed */
@@ -639,10 +662,3 @@ using namespace SCIRun;
 } // End namespace Uintah
 
 #endif
-
-
-
-
-
-
-
