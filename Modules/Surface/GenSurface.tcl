@@ -34,6 +34,17 @@ itcl_class GenSurface {
 	set $this-cyl_nu 4
 	set $this-cyl_nv 10
 	set $this-cyl_ndiscu 2
+
+	global $this-sph_cen-x $this-sph_cen-y $this-sph_cen-z
+	set $this-sph_cen-x 0
+	set $this-sph_cen-y 0
+	set $this-sph_cen-z 0
+	global $this-sph_rad
+	set $this-sph_rad .1
+	global $this-sph_nu $this-sph_nv
+	set $this-sph_nu 4
+	set $this-sph_nv 10
+
 	global $this-point_pos-x $this-point_pos-y $this-point_pos-z
 	set $this-point_pos-x 0
 	set $this-point_pos-y 0
@@ -72,11 +83,11 @@ itcl_class GenSurface {
 
 	make_labeled_radio $w.type "Surface Type:" "$this switch_type" \
 		top $this-surfacetype \
-		{{Point point} {Cylinder cylinder}}
+		{{Point point} {Cylinder cylinder} {Sphere sphere}}
 	pack $w.type -side top -padx 5 -anchor w -side top
 
 	frame $w.cylinder -borderwidth 2 -relief groove
-	label $w.cylinder.cyl -text "Cylinders:"
+	label $w.cylinder.cyl -text "Cylinder:"
 	pack $w.cylinder.cyl -side top -pady 5 -anchor w
 	make_entry $w.cylinder.bc "Voltage:" $this-boundary_expr $n
 	make_entry $w.cylinder.rad "Radius:" $this-cyl_rad $n
@@ -85,6 +96,15 @@ itcl_class GenSurface {
 	make_entry $w.cylinder.ndiscu "ndiscu:" $this-cyl_ndiscu $n
 	pack $w.cylinder.bc $w.cylinder.rad $w.cylinder.nu $w.cylinder.nv \
 		$w.cylinder.ndiscu -fill x
+
+	frame $w.sphere -borderwidth 2 -relief groove
+	label $w.sphere.lab -text "Sphere:"
+	pack $w.sphere.lab -side top -pady 5 -anchor w
+	make_entry $w.sphere.bc "Voltage:" $this-boundary_expr $n
+	make_entry $w.sphere.rad "Radius:" $this-cyl_rad $n
+	make_entry $w.sphere.nu "nu:" $this-cyl_nu $n
+	make_entry $w.sphere.nv "nv:" $this-cyl_nv $n
+	pack $w.sphere.bc $w.sphere.rad $w.sphere.nu $w.sphere.nv -fill x
 
 	frame $w.point
 
@@ -96,5 +116,6 @@ itcl_class GenSurface {
 	pack forget $w.[set $this-oldst]
 	pack $w.[set $this-surfacetype] \
 		-side top -padx 2 -pady 2 -ipadx 2 -ipady 2 -fill x
+	set $this-oldst [set $this-surfacetype]
     }
 }

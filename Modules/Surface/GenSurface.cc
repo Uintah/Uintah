@@ -34,6 +34,10 @@ class GenSurface : public Module {
     TCLint cyl_nu;
     TCLint cyl_nv;
     TCLint cyl_ndiscu;
+    TCLPoint sph_cen;
+    TCLdouble sph_rad;
+    TCLint sph_nu;
+    TCLint sph_nv;
     TCLPoint point_pos;
     TCLdouble point_rad;
     TCLColor widget_color;
@@ -49,6 +53,7 @@ class GenSurface : public Module {
     clString oldst;
     int widget_id;
     GaugeWidget* cyl_widget;
+    GaugeWidget* sph_widget;
     CrowdMonitor widget_lock;
 
     int surf_id;
@@ -57,14 +62,15 @@ class GenSurface : public Module {
     Point last_cyl_p2;
     double last_cyl_rad;
     int last_cyl_nu, last_cyl_nv, last_cyl_ndiscu;
+    Point last_sph_cen;
+    double last_sph_rad;
+    int last_sph_nu, last_sph_nv;
 public:
     GenSurface(const clString& id);
     GenSurface(const GenSurface&, int deep);
     virtual ~GenSurface();
     virtual Module* clone(int deep);
     virtual void execute();
-    virtual void geom_release(GeomPick*, void*);
-    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
     virtual void widget_moved(int last);
 };
 
@@ -80,6 +86,8 @@ GenSurface::GenSurface(const clString& id)
   cyl_p1("cyl_p1", id, this), cyl_p2("cyl_p2", id, this),
   cyl_rad("cyl_rad", id, this), cyl_nu("cyl_nu", id, this),
   cyl_nv("cyl_nv", id, this), cyl_ndiscu("cyl_ndiscu", id, this),
+  sph_cen("sph_cen", id, this), sph_rad("sph_rad", id, this),
+  sph_nu("sph_nu", id, this), sph_nv("sph_nv", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
   widget_color("widget_color", id, this),
   boundary_expr("boundary_expr", id, this)
@@ -97,6 +105,7 @@ GenSurface::GenSurface(const clString& id)
     surf_id=0;
 
     cyl_widget=new GaugeWidget(this, &widget_lock, .1);
+    sph_widget=new GaugeWidget(this, &widget_lock, .1);
     last_generation=0;
 }
 
@@ -105,6 +114,8 @@ GenSurface::GenSurface(const GenSurface& copy, int deep)
   cyl_p1("cyl_p1", id, this), cyl_p2("cyl_p2", id, this),
   cyl_rad("cyl_rad", id, this), cyl_nu("cyl_nu", id, this),
   cyl_nv("cyl_nv", id, this), cyl_ndiscu("cyl_ndiscu", id, this),
+  sph_cen("sph_cen", id, this), sph_rad("sph_rad", id, this),
+  sph_nu("sph_nu", id, this), sph_nv("sph_nv", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
   widget_color("widget_color", id, this),
   boundary_expr("boundary_expr", id, this)
@@ -147,7 +158,7 @@ void GenSurface::execute()
 	    sphere=widget;
 	
 #endif    
-	} else {
+	} else if(st=="cylinder"){
 	    widget_id=ogeom->addObj(cyl_widget->GetWidget(), "Cylinder source widget",
 				    &widget_lock);
 	    cyl_widget->Connect(ogeom);
@@ -158,6 +169,16 @@ void GenSurface::execute()
 	    double ratio=cyl_rad.get()/(2*dist);
 	    cyl_widget->SetRatio(ratio);
 	    cyl_widget->SetScale(dist/10);
+	} else if(st=="sphere"){
+	    widget_id=ogeom->addObj(sph_widget->GetWidget(), "Sphere source widget",
+				    &widget_lock);
+	    sph_widget->Connect(ogeom);
+	    Point cen(sph_cen.get());
+	    double rad=sph_rad.get();
+	    Point p1(cen-Vector(0,0,rad));
+	    Point p2(cen+Vector(0,0,rad));
+	    sph_widget->SetEndpoints(p1, p2);
+	    sph_widget->SetScale(rad/5);
 	}
 	oldst=st;
 	last_generation=0;
@@ -167,19 +188,11 @@ void GenSurface::execute()
     if(st=="cylinder"){
 	surf=scinew CylinderSurface(cyl_p1.get(), cyl_p2.get(), cyl_rad.get(),
 				    cyl_nu.get(), cyl_nv.get(), cyl_ndiscu.get());
-	cerr << "last_generation=" << last_generation << endl;
-	cerr << "p1=" << cyl_p1.get() << " " << last_cyl_p1 << (cyl_p1.get() == last_cyl_p1) << endl;
-	cerr << "p2=" << cyl_p2.get() << " " << last_cyl_p2 << (cyl_p1.get() == last_cyl_p1) << endl;
-	cerr << "rad=" << cyl_rad.get() <<  " " << last_cyl_rad << (cyl_rad.get() == last_cyl_rad) << " " << cyl_rad.get()-last_cyl_rad << endl;
-	cerr << "nu=" << cyl_nu.get() << " " << last_cyl_nu << (cyl_nu.get() == last_cyl_nu) << endl;
-	cerr << "nv=" << cyl_nv.get() << " " << last_cyl_nv << (cyl_nv.get() == last_cyl_nv) << endl;
-	cerr << "ndiscu=" << cyl_ndiscu.get() << " " << last_cyl_ndiscu << (cyl_ndiscu.get() == last_cyl_ndiscu) << endl;
 	if(last_generation && cyl_p1.get() == last_cyl_p1 
 	   && cyl_p2.get() == last_cyl_p2 && Abs(cyl_rad.get()-last_cyl_rad) < 1.e-8
 	   && cyl_nu.get() == last_cyl_nu && cyl_nv.get() == last_cyl_nv 
 	   && cyl_ndiscu.get() == last_cyl_ndiscu){
 	    surf->generation=last_generation;
-	    cerr << "Setting generation...\n";
 	}
 	last_cyl_p1=cyl_p1.get();
 	last_cyl_p2=cyl_p2.get();
@@ -187,6 +200,18 @@ void GenSurface::execute()
 	last_cyl_nu=cyl_nu.get();
 	last_cyl_nv=cyl_nv.get();
 	last_cyl_ndiscu=cyl_ndiscu.get();
+    } else if(st=="sphere"){
+	surf=scinew SphereSurface(sph_cen.get(), sph_rad.get(),
+				    cyl_nu.get(), cyl_nv.get());
+	if(last_generation && sph_cen.get() == last_sph_cen
+	   && Abs(sph_rad.get()-last_sph_rad) < 1.e-8
+	   && sph_nu.get() == last_sph_nu && sph_nv.get() == last_sph_nv ){
+	    surf->generation=last_generation;
+	}
+	last_sph_cen=sph_cen.get();
+	last_sph_rad=sph_rad.get();
+	last_sph_nu=sph_nu.get();
+	last_sph_nv=sph_nv.get();
     } else if(st=="point"){
 	surf=scinew PointSurface(point_pos.get());
     } else {
