@@ -296,9 +296,9 @@ MPMLabel::MPMLabel()
   CenterOfMassVelocityLabel = scinew VarLabel( "CenterOfMassVelocity",
 				 sumvec_vartype::getTypeDescription() );
 
-  // PerPatch variables
-
-  ppNAPIDLabel = scinew VarLabel("NAPID",PerPatch<long>::getTypeDescription() );
+  // for assigning particle ids
+  pCellNAPIDLabel =
+    scinew VarLabel("cellNAPID", CCVariable<short int>::getTypeDescription());
 
 } 
 
@@ -403,7 +403,7 @@ MPMLabel::~MPMLabel()
   delete NTractionZMinusLabel;
   delete CenterOfMassPositionLabel;
   delete CenterOfMassVelocityLabel;
-  delete ppNAPIDLabel;
+  delete pCellNAPIDLabel;
 }
 
 void MPMLabel::registerPermanentParticleState(int i,

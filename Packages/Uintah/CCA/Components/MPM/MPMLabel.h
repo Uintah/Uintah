@@ -126,7 +126,7 @@ using std::vector;
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* CenterOfMassVelocityLabel;
 
-      const VarLabel* ppNAPIDLabel;
+      const VarLabel* pCellNAPIDLabel;
 
       vector<vector<const VarLabel* > > d_particleState;
       vector<vector<const VarLabel* > > d_particleState_preReloc;
