@@ -1,9 +1,25 @@
-Update MPIScheduler like SPScheduler
-WorkAssigner?
-Change MpiProcess to ProcessorContext or similar
+Fix oport in scheduler
+fix getRequiresForComputes
+
+Particle motion limit to config file?
+MPI_Type_commit?
+MPI_buffer stuff
+nix zero-length messages
+
+GetRforC and getCforR will need dw arg?
+optimize:
+ - don't wait if no waitset
+ - don't send particles for numParticles == 0
+ - remove all audits
+ - remove iostream from Particle*h
+ - remove all bzero calls!
+
+Move specialization of getOp
+
+C++ header file patches for everyone
+.forwards for everyone
 My malloc with MPI??? or configure my malloc
 Simplify/decompose DataWarehouse?
-different schedulers in sus
 
 Classes:
  - DataWarehouse/scheduler in detail
@@ -33,3 +49,9 @@ constHandle?
 
 7. PSE integration
   - sort out handles/RefCounted
+
+
+scaling:
+1 397.042
+2 269.317
+4 222.688
