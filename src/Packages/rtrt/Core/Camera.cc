@@ -51,11 +51,12 @@ void Camera::makeRay(Ray& ray, double x, double y, double ixres, double iyres)
     ray.set_origin(eye + raydir*ray_offset);
 }
 
+#if 1
 #if 0
 void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
 {
     double screenx=(x+0.5)*ixres-0.5;
-    Vector sv(v*screenx+v*5*iyres*eyesep);
+    Vector sv(v*screenx+v*5*ixres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
     Vector raydir=su+sv+direction;
@@ -67,7 +68,7 @@ void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
 void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
 {
     double screenx=(x+0.5)*ixres-0.5;
-    Vector sv(v*screenx-v*5*iyres*eyesep);
+    Vector sv(v*screenx-v*5*ixres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
     Vector raydir=su+sv+direction;
@@ -75,6 +76,39 @@ void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
     ray.set_direction(raydir - v*5*eyesep*iyres + raydir*ray_offset);
     ray.set_origin(eye + v*5*eyesep*iyres + raydir*ray_offset);
 }
+#else
+// Here the ide is to actually change the location of the eye point in
+// the plane parallel to the image plane.  The pixel location will
+// remain the same, but direction will have to be recomputed.
+void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
+{
+    double screenx=(x+0.5)*ixres-0.5;
+    Vector sv(v*screenx);
+    double screeny=(y+0.5)*iyres-0.5;
+    Vector su(u*screeny);
+    // Here direction is lookat-eye.  So doing a little bit of math gets us:
+    Point neweye = eye-v*5*ixres*eyesep;
+    Vector raydir=su+sv+(lookat-neweye);
+    raydir.normalize();
+    ray.set_direction(raydir);
+    ray.set_origin(neweye + raydir*ray_offset);
+}
+void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
+{
+    double screenx=(x+0.5)*ixres-0.5;
+    Vector sv(v*screenx);
+    double screeny=(y+0.5)*iyres-0.5;
+    Vector su(u*screeny);
+    // Here direction is lookat-eye.  So doing a little bit of math gets us:
+    Point neweye = eye+v*5*ixres*eyesep;
+    Vector raydir=su+sv+(lookat-neweye);
+    raydir.normalize();
+    ray.set_direction(raydir);
+    ray.set_origin(neweye + raydir*ray_offset);
+}
+
+
+#endif
 #else
 // Old school stereo, just move the eyepoint
 void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
