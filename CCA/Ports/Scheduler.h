@@ -62,7 +62,11 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual void compile(const ProcessorGroup * pc, bool scrub_new, bool scrub_old=true ) = 0;
+    // TEMPORARY UNTIL STEVE REWORKS AMR
+    void compile(const ProcessorGroup * pc, bool scrub_new,
+		 bool scrub_old )
+    { compile(pc, scrub_new); }
+    virtual void compile(const ProcessorGroup * pc, bool scrub_new ) = 0;
     virtual void execute(const ProcessorGroup * pc ) = 0;
     virtual void executeTimestep(const ProcessorGroup *  ) {};
     virtual void executeRefine(const ProcessorGroup * ) {};

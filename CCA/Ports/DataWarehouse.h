@@ -268,6 +268,15 @@ WARNING
       virtual void popRunningTask() = 0;     
       virtual void checkTasksAccesses(const PatchSubset* patches,
 				      const MaterialSubset* matls) = 0;
+
+     // Scrub counter manipulator functions -- when the scrub count goes to
+     // zero, the data is scrubbed.
+     virtual void setScrubCountIfZero(const VarLabel*, int matlIndex,
+				      const Patch*, int count) = 0;
+     virtual void decrementScrubCount(const VarLabel* label, int matlIndex,
+				      const Patch* patch, int count = 1,
+				      unsigned int addIfZero = 0) = 0;
+     virtual void scrubExtraneous() = 0;
      
       int getID() const {
 	 return d_generation;
