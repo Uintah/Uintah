@@ -473,6 +473,7 @@ AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_VERSION)
 
+
 ##-- Find iTcl ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built iTcl and iTk 3... "
@@ -530,10 +531,8 @@ if test "$ITCL_MAJOR_VERSION" = "3" ; then
   ITK_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
   ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
-#  ITCL_LIB_FLAG="-litk3.1 -litcl3.1"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
   ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${ITCL_VERSION}"
-  #echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
   echo ${ITCL_LIB_SPEC}
 else
   if test -z "$ITCL_VERSION" ; then
@@ -597,7 +596,7 @@ AC_SUBST(BLT_LIB_FLAG)
 echo -n "Looking for Pre-built Xerces-c... "
 
 if test "$xerces"; then
-  XML_LIB_DIR=$xerces
+  XML_LIB_DIR=$xerces/lib
 fi
 
 if test -z "$XML_LIB_DIR"; then
@@ -873,6 +872,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.81  2000/12/12 20:14:06  yarden
+# fix a problem with xerces dir
+#
 # Revision 1.80  2000/12/10 09:05:02  sparker
 # Support for VAMPIR from Wayne Witzel
 #
