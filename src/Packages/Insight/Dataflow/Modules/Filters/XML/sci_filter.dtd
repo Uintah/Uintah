@@ -18,7 +18,6 @@
 
 
 <!ELEMENT filter (include+, filter-sci)>
-  <!ATTLIST filter name  CDATA #REQUIRED>
 
 <!ELEMENT include EMPTY>
   <!ATTLIST include href CDATA #REQUIRED>
