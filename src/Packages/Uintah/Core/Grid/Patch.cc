@@ -995,10 +995,13 @@ Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
   return d_bcs[face].getBCValues(mat_id,type);
 }
 
-BCDataArray Patch::getBCDataArray(Patch::FaceType face) const
+BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 {
-  map<Patch::FaceType,BCDataArray > m = this->array_bcs;
-  return  m[face];
+  map<Patch::FaceType,BCDataArray>* m = 
+    const_cast<map<Patch::FaceType, BCDataArray>* >(&array_bcs);
+  BCDataArray* ubc = &((*m)[face]);
+  return ubc;
+  
 }
 
 const BoundCondBase*
@@ -1010,15 +1013,16 @@ Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
 			vector<IntVector>& sfcz,
 			int child) const
 {
-  map<Patch::FaceType,BCDataArray > m = this->array_bcs;
+  map<Patch::FaceType,BCDataArray >* m = 
+    const_cast<map<Patch::FaceType,BCDataArray>* >(&array_bcs);
+  BCDataArray* ubc = &((*m)[face]);
   BCData bc_data;
-  BCDataArray ubc = m[face];
-  ubc.getBCData(bc_data,child);
-  ubc.getBoundaryIterator(bound,child);
-  ubc.getInteriorIterator(inter,child);
-  ubc.getSFCXIterator(sfcx,child);
-  ubc.getSFCYIterator(sfcy,child);
-  ubc.getSFCZIterator(sfcz,child);
+  ubc->getBCData(bc_data,child);
+  ubc->getBoundaryIterator(bound,child);
+  ubc->getInteriorIterator(inter,child);
+  ubc->getSFCXIterator(sfcx,child);
+  ubc->getSFCYIterator(sfcy,child);
+  ubc->getSFCZIterator(sfcz,child);
   return bc_data.getBCValues(mat_id,type);
 }
 
