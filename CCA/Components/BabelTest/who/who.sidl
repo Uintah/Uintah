@@ -1,8 +1,8 @@
 //test components
 
-version who 1.0;
+//version who 1.0;
 
-package who{
+package who version 1.0{
 
   class IDPort implements-all gov.cca.ports.IDPort{
   };

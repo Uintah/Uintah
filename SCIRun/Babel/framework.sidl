@@ -1,8 +1,8 @@
 //test components
 
-version framework 1.0;
+//version framework 1.0;
 
-package framework{
+package framework version 1.0{
 
   class Services implements-all gov.cca.Services{
 	opaque getData();

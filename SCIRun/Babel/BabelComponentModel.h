@@ -60,11 +60,23 @@ namespace SCIRun {
     virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
 				       bool);
 
+    /**
+     * Get/Set the directory path to the XML files describing Babel
+     * components. By default, sidlXMLPath is initialized to the
+     * environment variable SIDL_XML_PATH. This path is expected to
+     * contain all .scl and .cca files for Babel components.
+     */
+    std::string getSidlXMLPath() const
+    { return sidlXMLPath; }
+    void setSidlXMLPath( const std::string& s)
+    { sidlXMLPath = s; }
+
   private:
     SCIRunFramework* framework;
     typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
     componentDB_type components;
-
+    std::string sidlXMLPath;
+    
     void destroyComponentList();
     void buildComponentList();
     void readComponentDescription(const std::string& file);

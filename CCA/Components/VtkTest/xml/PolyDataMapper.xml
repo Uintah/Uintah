@@ -1,3 +1,3 @@
 
-<component name="Vtk.PolyDataMapper">
+<component name="Vtk.PolyDataMapper" model="vtk">
 </component>

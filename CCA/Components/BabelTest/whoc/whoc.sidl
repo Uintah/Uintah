@@ -1,8 +1,8 @@
 //test components
 
-version whoc 1.0;
+//version whoc 1.0;
 
-package whoc{
+package whoc version 1.0{
 
   class IDPort implements-all gov.cca.ports.IDPort{
   };
