@@ -424,11 +424,25 @@ MatrixSelectVector::execute()
       which = start;
     }
     const int delay = delay_.get();
+    int stop;
     do {
-      send_selection(mh, which, use_row, stop_);
-      if (delay > 0) { usleep(delay * 1000); }
-      which = increment(which, lower, upper);
-    } while (!stop_);
+      int next;
+      if (playmode_.get() == "once")
+      {
+	next = increment(which, lower, upper);
+      }
+      stop = stop_;
+      send_selection(mh, which, use_row, stop);
+      if (!stop && delay > 0) { usleep(delay * 1000); }
+      if (playmode_.get() == "once")
+      {
+	which = next;
+      }
+      else if (!stop)
+      {
+	which = increment(which, lower, upper);
+      }
+    } while (!stop);
   }
   else
   {
