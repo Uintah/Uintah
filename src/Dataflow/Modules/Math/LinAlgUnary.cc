@@ -40,6 +40,7 @@
 
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Math/LinAlgUnary.h>
@@ -153,10 +154,12 @@ void LinAlgUnary::execute() {
     }
     m = dm;
   } else if (op == "Sort") {
-    m = mh->clone();
+    // Not real efficient for sparse row matrices, but works now.
+    m = (mh->is_sparse())?mh->dense():mh->clone();
     insertion_sort(m->get_data_pointer(), m->get_data_size());
+    if (mh->is_sparse()) { m = m->sparse(); }
   } else if (op == "Subtract_Mean") {
-    m = mh->clone();
+    m = (mh->is_sparse())?mh->dense():mh->clone();
     subtract_mean(m->get_data_pointer(), m->get_data_size());
   } else if (op == "Normalize") {
     m = mh->clone();
@@ -171,6 +174,10 @@ void LinAlgUnary::execute() {
     m = mh->clone();
     Ceil(m->get_data_pointer(), m->get_data_size());
   } else if (op == "Function") {
+    if (mh->is_sparse())
+    {
+      remark("Only calling function for non-zero sparse matrix elements.");
+    }
 
     // Remove trailing white-space from the function string.
     string func = function_.get();
