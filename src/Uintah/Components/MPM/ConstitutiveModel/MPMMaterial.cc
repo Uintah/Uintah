@@ -297,7 +297,16 @@ double  MPMMaterial::getSpecificHeat() const
   return d_spec_heat;
 }
 
+double  MPMMaterial::getHeatTransferCoefficient() const
+{
+  return d_heatTransferCoefficient;
+}
+
 // $Log$
+// Revision 1.23  2000/05/31 21:01:40  tan
+// Added getHeatTransferCoefficient() to retrieve the material
+// constants for heat exchange.
+//
 // Revision 1.22  2000/05/31 16:35:07  guilkey
 // Added code to initialize particle temperatures.  Moved the specification
 // of the temperature from the Material level to the GeometryObject level.

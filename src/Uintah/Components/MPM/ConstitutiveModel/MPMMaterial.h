@@ -83,8 +83,10 @@ WARNING
 	 int checkForSurface(const GeometryPiece* piece,
 				const Point p, const Vector dxpp);
 				
+	 //tan: material constants for heat conduction
 	 double  getThermalConductivity() const;
 	 double  getSpecificHeat() const;
+	 double  getHeatTransferCoefficient() const;
 
       private:
 	 
@@ -120,6 +122,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.17  2000/05/31 21:01:22  tan
+// Added getHeatTransferCoefficient() to retrieve the material
+// constants for heat exchange.
+//
 // Revision 1.16  2000/05/31 16:35:07  guilkey
 // Added code to initialize particle temperatures.  Moved the specification
 // of the temperature from the Material level to the GeometryObject level.
