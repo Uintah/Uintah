@@ -144,10 +144,10 @@ int main(int argc, char** argv)
 	// Connect a CFD module if applicable
 	CFDInterface* cfd = 0;
 	if(do_arches){
-	    cfd = new Arches::Arches( MpiRank, MpiProcesses );
+	    cfd = new ArchesSpace::Arches( MpiRank, MpiProcesses );
 	}
 	if(do_ice){
-	    cfd = new ICE::ICE();
+	    cfd = new ICESpace::ICE();
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
@@ -181,6 +181,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.9  2000/05/09 22:58:34  sparker
+// Changed namespace names
+//
 // Revision 1.8  2000/04/26 06:47:56  sparker
 // Streamlined namespaces
 //
