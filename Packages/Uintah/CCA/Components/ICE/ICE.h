@@ -298,6 +298,10 @@ using namespace SCIRun;
       void getExchangeCoefficients( DenseMatrix& K,
                                     DenseMatrix& H ); 
 
+
+      bool areAllValuesPositive( CCVariable<double> & src, 
+                                 IntVector& neg_cell );
+     
       // Debugging switches
       bool switchDebugInitialize;
       bool switchDebug_EQ_RF_press;
@@ -307,6 +311,7 @@ using namespace SCIRun;
       bool switchDebug_explicit_press;
       bool switchDebug_PressFC;
       bool switchDebugLagrangianValues;
+      bool switchDebugLagrangianSpecificVol;
       bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
