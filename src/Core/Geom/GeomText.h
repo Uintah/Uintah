@@ -42,7 +42,6 @@
 #include <GL/gl.h>
 #include <Core/Datatypes/Color.h>
 
-//#define HAVE_FTGL
 
 class FTGLTextureFont;
 
@@ -137,7 +136,7 @@ private:
   FTGLTextureFont *font_;
   int ptRez_,screenRez_;
 public:
-  GeomFTGLFontRenderer(const string &filename, double ptSize=1.0, int screenRez=72);
+  GeomFTGLFontRenderer(const string &filename, int ptRez=72, int screenRez=72);
   GeomFTGLFontRenderer(const GeomFTGLFontRenderer &);
   virtual ~GeomFTGLFontRenderer();
   virtual GeomObj *clone();
@@ -147,7 +146,7 @@ public:
   virtual void get_bounds(BBox&,const string &);
   virtual void draw(DrawInfoOpenGL*, Material*, double time){}
   void render(const string &text);
-  void set_resolution(double ptSize=1.0, int screenRez=72);
+  void set_resolution(int ptRez=72, int screenRez=72);
 };
   
 typedef LockingHandle<GeomFTGLFontRenderer> GeomFTGLFontRendererHandle;
