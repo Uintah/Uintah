@@ -98,6 +98,12 @@ WARNING
       IntVector low,hi;
       low = getLowIndex() + offset;
       hi = getHighIndex() - offset;
+      //__________________________________
+      //  Note that getHighIndex returns 
+      //  IntVector (ncells+gc, ncells+gc, ncells+gc+1] 
+      //cout<< "fillFace: SCZVariable.h"<<endl;
+      //cout<< "low: "<<low<<endl;
+      //cout<< "hi: "<<hi<<endl;
       switch (face) {
       case Patch::xplus:
 	for (int j = low.y(); j<hi.y(); j++) {
@@ -156,6 +162,12 @@ WARNING
       IntVector low,hi;
       low = getLowIndex() + offset;
       hi = getHighIndex() - offset;
+      //__________________________________
+      //  Note that getHighIndex returns 
+      //  IntVector (ncells+gc, ncells+gc, ncells+gc+1] 
+      //cout<< "fillFaceFlux: SCZVariable.h"<<endl;
+      //cout<< "low: "<<low<<endl;
+      //cout<< "hi: "<<hi<<endl;
       switch (face) {
       case Patch::xplus:
 	for (int j = low.y(); j<hi.y(); j++) {
