@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <iostream>

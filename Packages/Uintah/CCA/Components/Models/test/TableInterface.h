@@ -46,6 +46,7 @@ WARNING
     virtual void setup() = 0;
     
     virtual void interpolate(int index, CCVariable<double>& result,
+			     const CellIterator&,
 			     vector<constCCVariable<double> >& independents) = 0;
   private:
   };

@@ -5,11 +5,8 @@
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 namespace Uintah {
-
+  class ICELabel;
 /**************************************
 
 CLASS

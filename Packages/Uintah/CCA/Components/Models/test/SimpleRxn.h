@@ -1,7 +1,6 @@
 
 #ifndef Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
 #define Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
@@ -14,6 +13,7 @@
 #include <vector>
 
 namespace Uintah {
+  class ICELabel;
 
 /**************************************
 

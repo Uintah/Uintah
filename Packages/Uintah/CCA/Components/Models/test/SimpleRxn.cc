@@ -1,3 +1,4 @@
+
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
@@ -14,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Containers/StaticArray.h>
