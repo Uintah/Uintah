@@ -12,13 +12,17 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataWarehouse.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc
 
-PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions SCICore/Thread
+PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions SCICore/Thread \
+	SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/05/12 18:12:01  sparker
+# Link against exceptions
+#
 # Revision 1.7  2000/05/11 20:10:23  dav
 # adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 #
