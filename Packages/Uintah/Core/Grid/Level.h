@@ -75,15 +75,15 @@ WARNING
       patchIterator patchesBegin();
       patchIterator patchesEnd();
       
-      Patch* addPatch(const IntVector& lowIndex,
-		      const IntVector& highIndex,
-		      const IntVector& extraLowIndex,
-		      const IntVector& extrahighIndex);
+      Patch* addPatch(const IntVector& extraLowIndex,
+		      const IntVector& extraHighIndex,
+		      const IntVector& lowIndex,
+		      const IntVector& highIndex);
       
-      Patch* addPatch(const IntVector& lowIndex,
+      Patch* addPatch(const IntVector& extraLowIndex,
+		      const IntVector& extraHighIndex,
+		      const IntVector& lowIndex,
 		      const IntVector& highIndex,
-		      const IntVector& extraLowIndex,
-		      const IntVector& extrahighIndex,
 		      int ID);
 
      //////////
@@ -109,6 +109,8 @@ WARNING
       Point getAnchor() const {
 	 return d_anchor;
       }
+
+      void setExtraCells(const IntVector& ec);
 
       Point getNodePosition(const IntVector&) const;
       Point getCellPosition(const IntVector&) const;
@@ -147,6 +149,8 @@ WARNING
 
       PatchSet* each_patch;
       PatchSet* all_patches;
+
+      IntVector d_extraCells;
 
 #ifdef SELECT_GRID
       IntVector d_idxLow;
