@@ -123,7 +123,8 @@ SelectElementsAlgoT<FIELD, MESH>::execute(FieldHandle field,
 
   FIELD *ofld = 
     scinew FIELD(mesh_no_unattached_nodes, Field::CELL);
-  
+  *(PropertyManager *)ofld = *(PropertyManager *)(field.get_rep());  
+
   mesh->begin(citer);
   mesh->end(citere);
   typename MESH::Cell::iterator citer_new;
