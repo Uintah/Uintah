@@ -424,7 +424,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc+=1;
 	}
-	if ((nbrs | 2) && (px!=nx)) {
+	if ((nbrs | 2) && (px!=nx-2)) {
 	    pLoc+=1;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
@@ -440,7 +440,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc+=nx;
 	}
-	if ((nbrs | 8) && (py!=ny)) {
+	if ((nbrs | 8) && (py!=ny-2)) {
 	    pLoc+=nx;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
@@ -456,7 +456,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc+=nx*ny;
 	}
-	if ((nbrs | 32) && (pz!=nz)) {
+	if ((nbrs | 32) && (pz!=nz-2)) {
 	    pLoc+=nx*ny;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
 		visitedPts.insert(pLoc, 0);
