@@ -992,6 +992,20 @@ EditColorMap2D::execute()
     }
     histo_ = h->nrrd;
     histo_dirty_ = true;
+
+    if (histo_ && histo_->kvp) {
+      const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_min");
+      const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_max");
+      double dmin, dmax;
+      if (min && max &&
+	  string_to_double(min, dmin) && string_to_double(max, dmax))
+      {
+	value_range_ = make_pair(float(dmin), float(dmax));
+	cmap_dirty_ = true;
+      }
+    }
+
+
   } else if (!h.get_rep()) {
     if (histo_ != 0)
       histo_dirty_ = true;
@@ -1212,18 +1226,6 @@ EditColorMap2D::build_histogram_texture()
 		 axis_size[histo_->dim-1], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		 histo_->data);
     glBindTexture(GL_TEXTURE_2D, 0);
-    
-    if (histo_->kvp) {
-      const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_min");
-      const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_max");
-      double dmin, dmax;
-      if (min && max &&
-	  string_to_double(min, dmin) && string_to_double(max, dmax))
-      {
-	value_range_ = make_pair(float(dmin), float(dmax));
-	cmap_dirty_ = true;
-      }
-    }
   }
 }
 
