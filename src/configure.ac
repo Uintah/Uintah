@@ -1079,16 +1079,13 @@ case $host in
     # linux
     ac_objext=o
 
-    case $host in
-    *ia64*)  
+    if test "$CC" = "icc"; then
       CFLAGS=" -w1"
       CXXFLAGS=" -w1"
-      ;;
-    *)
+    else
       CFLAGS=" -Wall"
       CXXFLAGS=" -Wall"
-      ;;
-    esac
+    fi
 
     if test "$enable_64bit" = "yes"; then
        CFLAGS="-fPIC $CFLAGS"
