@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE faqbook SYSTEM "faq.dtd"
+[
+<!ENTITY userfaq SYSTEM "userfaq.xml">
+<!ENTITY techfaq SYSTEM "techfaq.xml">
+]>
+
+<faqbook>
+  <title>SCIRun FAQs</title>
+  <subtitle></subtitle>
+  <bookinfo>
+    <authorgroup></authorgroup>
+    <copyright>
+      <holder></holder>
+      <year>2002</year>
+    </copyright>
+  </bookinfo>
+  <description>
+    <para>User and Developer FAQs</para>
+  </description>
+  &userfaq;
+  &techfaq;
+</faqbook>
