@@ -28,9 +28,9 @@ itcl_class SCIRun_Visualization_StreamLines {
     }
 
     method set_defaults {} {
-	set $this-tolerance 0.01
-	set $this-stepsize 0.01
-	set $this-maxsteps 200
+	set $this-tolerance 0.0001
+	set $this-stepsize 0.0001
+	set $this-maxsteps 2000
     }
 
     method ui {} {
