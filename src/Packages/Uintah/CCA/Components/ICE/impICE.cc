@@ -310,6 +310,10 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->modifies(lb->vvel_FCMELabel);
   t->modifies(lb->wvel_FCMELabel);
   
+  t->modifies(lb->vol_fracX_FCLabel);
+  t->modifies(lb->vol_fracY_FCLabel);
+  t->modifies(lb->vol_fracZ_FCLabel);  
+  
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  
                         loadBal->createPerProcessorPatchSet(level);
@@ -940,17 +944,25 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool replace = true;
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   ParentNewDW->transferFrom(subNewDW,         // press
-                    lb->press_CCLabel,  patch_sub, d_press_matl, replace); 
+                    lb->press_CCLabel,    patch_sub,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,         // term2
-                    lb->term2Label,     patch_sub, one_matl,   replace);   
+                    lb->term2Label,       patch_sub,  one_matl,   replace);   
   ParentNewDW->transferFrom(subNewDW,         // beta
-                    lb->betaLabel,      patch_sub, one_matl,   replace);   
+                    lb->betaLabel,        patch_sub,  one_matl,   replace);   
   ParentNewDW->transferFrom(subNewDW,         // uvel_FC
-                    lb->uvel_FCMELabel, patch_sub, all_matls_sub,replace); 
+                    lb->uvel_FCMELabel,   patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vvel_FC
-                    lb->vvel_FCMELabel, patch_sub, all_matls_sub,replace); 
+                    lb->vvel_FCMELabel,   patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // wvel_FC
-                    lb->wvel_FCMELabel, patch_sub, all_matls_sub,replace); 
+                    lb->wvel_FCMELabel,   patch_sub,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
+                    lb->vol_fracX_FCLabel, patch_sub, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
+                    lb->vol_fracY_FCLabel, patch_sub, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
+                    lb->vol_fracZ_FCLabel, patch_sub, all_matls_sub,replace); 
+                    
+                    
     
   //__________________________________
   //  Turn scrubbing back on
