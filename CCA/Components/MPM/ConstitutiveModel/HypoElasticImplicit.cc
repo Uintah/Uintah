@@ -242,7 +242,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
         pstress_new[idx] = pstress[idx] + (ePrime*2.*G+Identity*K*e.Trace());
 
-        cout << pstress_new[idx] << endl;
+//        cout << pstress_new[idx] << endl;
 
         // Compute the deformation gradient increment using the dispGrad
       
