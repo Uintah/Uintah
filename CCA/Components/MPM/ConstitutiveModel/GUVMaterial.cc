@@ -22,6 +22,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
@@ -32,6 +33,7 @@ static DebugStream debug_doing("GUVMat_doing", false);
 static DebugStream debug("GUVMat", false);
 static DebugStream debug_data("GUVMat_data", false);
 static DebugStream debug_extra("GUVMat_extra", false);
+static DebugStream debug_stress("GUVMat_stress", false);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -297,6 +299,109 @@ GUVMaterial::computeStableTimestep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
+///////////////////////////////////////////////////////////////////////////
+//
+// Add computes and requires for interpolation of particle rotation to grid
+//
+void 
+GUVMaterial::addComputesRequiresParticleRotToGrid(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* )
+{
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,   lb->pTypeLabel,          matlset, gan, NGN);
+  task->requires(Task::OldDW,   lb->pMassLabel,          matlset, gan, NGN);
+  task->requires(Task::OldDW,   lb->pXLabel,             matlset, gan, NGN);
+  if (d_8or27==27) 
+    task->requires(Task::OldDW, lb->pSizeLabel,          matlset, gan, NGN);
+  task->requires(Task::OldDW,   pNormalRotRateLabel,     matlset, gan, NGN);
+  task->requires(Task::NewDW,   lb->gMassLabel,          matlset, gan, NGN);
+  task->computes(lb->gNormalRotRateLabel, matlset);
+  task->computes(lb->gTypeLabel, matlset);
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Actually interpolate normal rotation from particles to the grid
+//
+void 
+GUVMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
+                                            const MPMMaterial* matl,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw)
+{
+  // Constants
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  int dwi = matl->getDWIndex();
+
+  // Create arrays for the particle data
+  constParticleVariable<int> pType;
+  constParticleVariable<double> pMass;
+  constParticleVariable<Point>  pX;
+  constParticleVariable<Vector> pRotRate, pSize;
+  constNCVariable<double> gMass;
+
+  // Create arrays for the grid data
+  NCVariable<Vector> gRotRate;
+  NCVariable<double> gType;
+
+  // Loop thru patches
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGN, 
+                                                     lb->pXLabel);
+
+    // Get the required data
+    old_dw->get(pType,          lb->pTypeLabel,          pset);
+    old_dw->get(pMass,          lb->pMassLabel,          pset);
+    old_dw->get(pX,             lb->pXLabel,             pset);
+    if(d_8or27==27)
+      old_dw->get(pSize,        lb->pSizeLabel,          pset);
+    old_dw->get(pRotRate,       pNormalRotRateLabel,     pset);
+    new_dw->get(gMass,          lb->gMassLabel, dwi,     patch, gan, NGN);
+
+    // Allocate arrays for the grid data
+    new_dw->allocateAndPut(gType,    lb->gTypeLabel,          dwi,patch);
+    new_dw->allocateAndPut(gRotRate, lb->gNormalRotRateLabel, dwi,patch);
+    gType.initialize(0.0);
+    gRotRate.initialize(Vector(0,0,0));
+
+    // Interpolate particle data to Grid data.  Attempt to conserve 
+    // angular momentum (I_grid*omega_grid =  S*I_particle*omega_particle).
+    IntVector ni[MAX_BASIS];
+    double S[MAX_BASIS];
+    Vector pMom(0.0,0.0,0.0);
+    for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); 
+         iter++){
+      particleIndex idx = *iter;
+
+      // Get the node indices that surround the cell
+      if(d_8or27==27) patch->findCellAndWeights27(pX[idx], ni, S, pSize[idx]);
+      else            patch->findCellAndWeights(pX[idx], ni, S);
+
+      // Calculate momentum
+      pMom = pRotRate[idx]*pMass[idx];
+
+      // Get type
+      double type = (double) pType[idx]*pMass[idx];
+
+      // Add each particles contribution to the grid rotation rate
+      for(int k = 0; k < d_8or27; k++) {
+        if(patch->containsNode(ni[k])) {
+           gType[ni[k]] += type * S[k];
+           gRotRate[ni[k]] += pMom * S[k];
+        }
+      }
+    } // End of particle loop
+
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      gType[*iter] /= gMass[*iter];
+      gRotRate[*iter] /= gMass[*iter];
+    }
+  }  // End loop over patches
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Create task graph for each time step after initialization
@@ -525,9 +630,18 @@ GUVMaterial::computeStressTensor(const PatchSubset* patches,
         cerr << "SigCen = " << sigCen << endl;
         exit(1);
       }
-      if (idx == 1) 
-        cout << "GUVMaterial::compStress:: Particle = " << idx
-             << " \n F = " << defGradCen_new << " \n sig = " << sigCen << endl;
+      Matrix3 F = defGradCen_new; Matrix3 S = sigCen;
+      debug_stress << setprecision(4);
+      debug_stress << scientific;
+      debug_stress << "GUVMaterial::compStress:: Particle = " << idx << endl;
+      debug_stress 
+             << " F = [[" << F(0,0) << "," << F(0,1) << "," << F(0,2) << "];\n"
+             << "      [" << F(1,0) << "," << F(1,1) << "," << F(1,2) << "];\n"
+             << "      [" << F(2,0) << "," << F(2,1) << "," << F(2,2) << "]]\n";
+      debug_stress 
+             << " S = [[" << S(0,0) << "," << S(0,1) << "," << S(0,2) << "];\n"
+             << "      [" << S(1,0) << "," << S(1,1) << "," << S(1,2) << "];\n"
+             << "      [" << S(2,0) << "," << S(2,1) << "," << S(2,2) << "]]\n";
       debug << "GUVMaterial::compStress:: Particle = " << idx
             << " sigCen = " << sigCen << endl;
 
@@ -723,9 +837,9 @@ GUVMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
       else E = E_cholesterol; 
       double fac = 6.0*E*(pVol[idx]/pMass[idx])*pow(delT/hh, 2);
       Is = One + Is*fac; 
-      Vector corrRotRateTilde = rotRateTilde;
-      //Vector corrRotRateTilde(0.0,0.0,0.0);
-      //Is.solveCramer(rotRateTilde, corrRotRateTilde);
+      //Vector corrRotRateTilde = rotRateTilde;
+      Vector corrRotRateTilde(0.0,0.0,0.0);
+      Is.solveCramer(rotRateTilde, corrRotRateTilde);
 
       // Update the particle's rotational velocity
       pRotRate_new[idx] = pRotRate[idx] + corrRotRateTilde;
@@ -760,10 +874,11 @@ GUVMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
 double 
 GUVMaterial::computeRhoMicroCM(double pressure, 
                                const double p_ref,
-                               const MPMMaterial* matl)
+                               const MPMMaterial* matl,
+                               double type)
 {
   double rho_orig = matl->getInitialDensity();
-  double bulk = 0.5*(d_cm.Bulk_lipid+d_cm.Bulk_cholesterol);
+  double bulk = (1.0-type)*d_cm.Bulk_lipid+type*d_cm.Bulk_cholesterol;
 
   double p_gauge = pressure - p_ref;
   double rho_cur;
@@ -777,15 +892,36 @@ void
 GUVMaterial::computePressEOSCM(double rho_cur,double& pressure, 
                                double p_ref,
                                double& dp_drho, double& tmp,
-                               const MPMMaterial* matl)
+                               const MPMMaterial* matl,
+                               double type)
 {
-  double bulk = 0.5*(d_cm.Bulk_lipid+d_cm.Bulk_cholesterol);
+  double bulk = (1.0-type)*d_cm.Bulk_lipid+type*d_cm.Bulk_cholesterol;
   double rho_orig = matl->getInitialDensity();
 
   double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
   pressure = p_ref + p_g;
   dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
   tmp = bulk/rho_cur;  // speed of sound squared
+}
+
+double 
+GUVMaterial::computeRhoMicroCM(double pressure, 
+                               const double p_ref,
+                               const MPMMaterial* matl)
+{
+  cerr << "GUVMaterial::**ERROR** No compute rho_micro without type." << endl;
+  exit(0);
+  return 0.0;
+}
+
+void 
+GUVMaterial::computePressEOSCM(double rho_cur,double& pressure, 
+                               double p_ref,
+                               double& dp_drho, double& tmp,
+                               const MPMMaterial* matl)
+{
+  cerr << "GUVMaterial::**ERROR** No compute pressEOS without type." << endl;
+  exit(0);
 }
 
 double 
@@ -804,58 +940,90 @@ bool
 GUVMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig, 
                                             double bulk, double shear)
 {
-  /*
+  Matrix3 One; One.Identity();
+  double J = 1.0;
+  double p = 0.0;
+  Matrix3 b(0.0);
+  Matrix3 s(0.0);
+  double Jp = 1.0;
+  double pp = 0.0;
+  Matrix3 Fp(F);
+  Matrix3 bp(0.0);
+  Matrix3 sp(0.0);
+  double sig33p = 0.0; // Cauchy stress
+  double Jm = 1.0;
+  double pm = 0.0;
+  Matrix3 Fm(F);
+  Matrix3 bm(0.0);
+  Matrix3 sm(0.0);
+  double sig33m = 0.0; // Cauchy stress
+  double slope = 0;
+
+  // Initial guess for F(2,2), delta
+  double delta = 1.0;
   double epsilon = 1.e-14;
-  double delta = 1.;
-  double f33, f33p, jv, f33m, jvp, jvm, sig33, sig33p, sig33m;
+  F(2,2) = 1.0/(F(0,0)*F(1,1));
+  do {
+    // Central value
+    J = F.Determinant();
+    if (!(J > 0.0)) {
+       cerr << "** ERROR ** F = " << F << " det F = " << J << endl;
+       return false;
+    }
+    //ASSERT(J > 0.0);
+    p = (0.5*bulk)*(J - 1.0/J);
+    b = (F*F.Transpose())/pow(J, 2.0/3.0);
+    s = (b - One*(b.Trace()/3.0))*(shear/J);
+    sig = One*p + s;
 
-  // Guess F33
-  f33 =  1./(F(0,0)*F(1,1));
+    // Left value
+    Fp(2,2) = 1.00001*F(2,2);
+    Jp = Fp.Determinant();
+    if (!(Jp > 0.0)) {
+       cerr << "** ERROR ** Fp = " << Fp << " det Fp = " << Jp << endl;
+       return false;
+    }
+    //ASSERT(Jp > 0.0);
+    pp = (0.5*bulk)*(Jp - 1.0/Jp);
+    bp = (Fp*Fp.Transpose())/pow(Jp, 2.0/3.0);
+    sp = (bp - One*(bp.Trace()/3.0))*(shear/Jp);
+    sig33p = pp + sp(2,2);
 
-  // Find F33 that enforces plane stress
-  while(fabs(delta) > epsilon){
-    double detF2=(F(0,0)*F(1,1) - F(1,0)*F(0,1));
-    jv = f33*detF2;
-    double FinF = F(0,0)*F(0,0)+F(0,1)*F(0,1)+F(1,0)*F(1,0)+F(1,1)*F(1,1);
-    sig33 = (shear/(3.*pow(jv,2./3.)))*
-            (2.*f33*f33 - FinF) + (.5*bulk)*(jv - 1./jv);
+    // Right value
+    Fm(2,2) = 0.99999*F(2,2);
+    Jm = Fm.Determinant();
+    if (!(Jm > 0.0)) {
+       if (d_world->myrank() == 16) {
+         cerr << "Current Processor = " << d_world->myrank() << endl;
+         cerr << "** ERROR ** F = " << F << " det F = " << J << endl;
+         cerr << "** ERROR ** Fm = " << Fm << " det Fm = " << Jm << endl;
+       }
+       return false;
+    }
+    //ASSERT(Jm > 0.0);
+    pm = (0.5*bulk)*(Jm - 1.0/Jm);
+    bm = (Fm*Fm.Transpose())/pow(Jm, 2.0/3.0);
+    sm = (bm - One*(bm.Trace()/3.0))*(shear/Jm);
+    sig33m = pm + sm(2,2);
 
-    f33p = 1.01*f33;
-    f33m = 0.99*f33;
-    jvp = f33p*detF2;
-    jvm = f33m*detF2;
+    // Calculate slope and increment F(2,2)
+    slope = (Fp(2,2)-Fm(2,2))/(sig33p-sig33m);
+    delta = -sig(2,2)*slope;
+    F(2,2) += delta;
 
-    sig33p = (shear/(3.*pow(jvp,2./3.)))*
-                (2.*f33p*f33p - FinF) + (.5*bulk)*(jvp - 1./jvp);
+  } while (fabs(delta) > epsilon);
 
-    sig33m = (shear/(3.*pow(jvm,2./3.)))*
-                (2.*f33m*f33m - FinF) + (.5*bulk)*(jvm - 1./jvm);
-
-    delta = -sig33/((sig33p-sig33m)/(f33p-f33m));
-
-    f33 = f33 + delta;
-  }
-
-  // Update F
-  F(0,2) = 0.0; F(2,0) = 0.0; F(1,2) = 0.0; F(2,1) = 0.0;
-  F(2,2) = f33;
-
-  */
-  // Calculate Jacobian
-  double J = F.Determinant();
+  // Calculate the stress
+  J = F.Determinant();
   if (!(J > 0.0)) {
-    cerr << "GUVMaterial::** ERROR ** F = " << F << " det F = " << J << endl;
+    cerr << "** ERROR ** F(upd) = " << F << " det F = " << J << endl;
     return false;
   }
-
-  // Calcuate Kirchhoff stress
-  Matrix3 I; I.Identity();
-  double Jp = (0.5*bulk)*(J*J - 1.0);
-  Matrix3 b = (F*F.Transpose())*pow(J, -(2.0/3.0));
-  Matrix3 Js = (b - I*(b.Trace()/3.0))*shear;
-  Matrix3 tau = I*Jp + Js;
-
-  sig = tau/J;
+  p = (0.5*bulk)*(J - 1.0/J);
+  b = (F*F.Transpose())/pow(J, 2.0/3.0);
+  s = (b - One*(b.Trace()/3.0))*(shear/J);
+  sig = One*p + s;
+  sig(2,2) = 0.0;
   return true;
 }
 
