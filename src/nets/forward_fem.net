@@ -17,6 +17,16 @@
 
 # SCI Network 1.0
 
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+
 ::netedit dontschedule
 
 global userName
@@ -27,16 +37,6 @@ set runDate " Tue  Mar 13 2001"
 
 global runTime
 set runTime " 0:22:14"
-
-if {[llength [array get env SCIRUN_DATA]] == 0} {
-   puts ""
-   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
-   puts "*** Please exit, set it in your shell, and rerun."
-   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
-   puts ""
-   ::netedit scheduleok
-   return
-}
 
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 6 4]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 371 5]
