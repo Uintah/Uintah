@@ -967,7 +967,12 @@ class ASEFile : public Token
   }
 
 #if 1
-  virtual bool Parse() { return ((Token*)this)->Parse(str_); }
+  virtual bool Parse() { 
+    if (is_open_) 
+      return ((Token*)this)->Parse(str_);
+    else
+      return false;
+  }
 #else
   virtual bool Parse() {
     GeomObjectToken A;
