@@ -26,8 +26,6 @@ ifeq ($(HAVE_INSIGHT),yes)
   SRCS     += \
           $(SRCDIR)/DicomSeriesReader.cc \
           $(SRCDIR)/DicomImage.cc        \
-          $(SRCDIR)/AnalyzeReader.cc     \
-          $(SRCDIR)/AnalyzeImage.cc      \
 
   LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 endif
