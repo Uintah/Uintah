@@ -40,7 +40,7 @@ addConnection $m14 1 $m6 2
 addConnection $m13 1 $m6 3
 
 set $m0-notes {}
-set $m0-filename $DATADIR/metaimage/case1seed.mhd
+set $m0-filename $DATADIR/case1seed.mhd
 set $m1-notes {}
 set $m1-copy {0}
 set $m2-notes {}
