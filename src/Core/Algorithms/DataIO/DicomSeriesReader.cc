@@ -107,7 +107,10 @@ void DicomSeriesReader::set_dir( std::string dir )
 
   // Set the directory to read DICOM files from for this series
   names_->SetDirectory( dir_ );
-}
+
+  // Set the sortin order
+  names_->SetFileNameSortingOrderToSortByImageNumber();
+ }
 
 /*===========================================================================*/
 // 

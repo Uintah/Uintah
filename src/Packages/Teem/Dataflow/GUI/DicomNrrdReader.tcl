@@ -260,10 +260,10 @@ itcl_class Teem_DataIO_DicomNrrdReader {
         set list_files [split $fls " "]
         set $this-series-files ""
          
-        # Delete the first entry in the list -- this is always empty
-        set len [llength $list_files]
-        set list_files [lrange $list_files 1 $len]
-        set $this-num-files [llength $list_files]
+        # Delete the last entry in the list -- this is always empty
+        #set len [llength $list_files]
+        #set list_files [lrange $list_files [expr $len - 1] $len]
+        set $this-num-files [expr [llength $list_files] -1]
 
         foreach entry $list_files {
             # Grab the filename of the end
@@ -315,9 +315,9 @@ itcl_class Teem_DataIO_DicomNrrdReader {
                 set fls [set  $this-series-files] 
                 set list_files [split $fls " "]
  
-                # Delete the first entry in the list -- this is always empty
+                # Delete the last entry in the list -- this is always empty
                 #set len [llength $list_files]
-                #set list_files [lrange $list_files 1 $len]
+                #set list_files [lrange $list_files 0 [expr $len-2]]
 
                 set start_file [lindex $list_files 0]
                 set end_file [lindex $list_files end]
@@ -362,6 +362,7 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 
 		    for {set j 0} {$j < [llength $list_files]} {incr j} {
 			set $this-entry-files$i [ concat [set $this-entry-files$i] [lindex $list_files $j] ]
+			puts [set $this-entry-files$i]
 		    }
 
 		    set $this-max-entries [expr [set $this-max-entries] + 1]
