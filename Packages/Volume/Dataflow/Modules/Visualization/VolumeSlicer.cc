@@ -204,10 +204,11 @@ void
       ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       if (!b.inside(control_widget_->GetPosition())) {
 	control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
-	control_widget_->SetScale(dv.length()/80.0);
       }
+      control_widget_->SetScale(dv.length()/80.0);
       slice_ren_->SetTexture( tex_ );
       slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+
     }
 
     if( cmap != old_cmap_ ){
