@@ -86,6 +86,7 @@ class LoadBalancer;
       
      ****************************************/
    
+//! Container to hold UCF data when read in from disk.
 class DataArchive {
 private:
 
@@ -97,8 +98,8 @@ private:
   friend class MaterialHashMaps;
   friend class TimeHashMaps;
   
-  // Top of data structure for storing hash maps of variable data
-  // - containing data for each time step.
+  //! Top of DataArchive structure for storing hash maps of variable data
+  //! - containing data for each time step.
   class TimeHashMaps {
   public:
     TimeHashMaps(DataArchive* archive, const vector<double>& tsTimes,
@@ -143,8 +144,8 @@ private:
     int default_cache_size;
   };
   
-  // Second layer of data structure for storing hash maps of variable data
-  // - containing data for each patch at a certain time step.
+  //! Second layer of DataArchive structure for storing hash maps of variable data
+  //! - containing data for each patch at a certain time step.
   class PatchHashMaps {
     friend class TimeHashMaps;
   public:
@@ -180,8 +181,8 @@ private:
     vector<ProblemSpecP> docs; // kept around for memory cleanup purposes
   };
   
-  // Third layer of data structure for storing hash maps of variable data
-  // - containing data for each material at a certain patch and time step.
+  //! Third layer of DataArchive structure for storing hash maps of variable data
+  //! - containing data for each material at a certain patch and time step.
   class MaterialHashMaps {
     friend class PatchHashMaps;
   public:
@@ -210,6 +211,7 @@ public:
   // Destructor
   virtual ~DataArchive();
   
+  //! Set up data arachive for restarting a Uintah simulation   
   void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
                          LoadBalancer* lb,
 			 double* pTime /* passed back */,

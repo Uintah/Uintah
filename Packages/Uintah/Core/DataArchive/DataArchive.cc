@@ -151,39 +151,39 @@ DataArchive::queryTimesteps( std::vector<int>& index,
     if(!have_timesteps){
       ProblemSpecP ts = d_indexDoc->findBlock("timesteps");
       if(ts == 0)
-	throw InternalError("timesteps node not found in index.xml");
+        throw InternalError("timesteps node not found in index.xml");
       for(ProblemSpecP t = ts->getFirstChild(); t != 0; t = t->getNextSibling()){
-	if(t->getNodeType() == ProblemSpec::ELEMENT_NODE){
-	  map<string,string> attributes;
-	  t->getAttributes(attributes);
-	  string tsfile = attributes["href"];
-	  if(tsfile == "")
-	    throw InternalError("timestep href not found");
-	  
-	  XMLURL url(d_base, tsfile.c_str());
-
-	  char* urltext = XMLString::transcode(url.getURLText());
-	  ProblemSpecReader psr(urltext);
-	  delete [] urltext;
-
-	  ProblemSpecP top = psr.readInputFile();
-	  
-	  d_tstop.push_back(top);
-	  d_tsurl.push_back(url);
-	  ProblemSpecP time = top->findBlock("Time");
-	  if(time == 0)
-	    throw InternalError("Cannot find Time block");
-	  
-	  int timestepNumber;
-	  if(!time->get("timestepNumber", timestepNumber))
-	    throw InternalError("Cannot find timestepNumber");
-
-	  double currentTime;
-	  if(!time->get("currentTime", currentTime))
-	    throw InternalError("Cannot find currentTime");
-	  d_tsindex.push_back(timestepNumber);
-	  d_tstimes.push_back(currentTime);
-	}
+        if(t->getNodeType() == ProblemSpec::ELEMENT_NODE){
+          map<string,string> attributes;
+          t->getAttributes(attributes);
+          string tsfile = attributes["href"];
+          if(tsfile == "")
+            throw InternalError("timestep href not found");
+      	  
+          XMLURL url(d_base, tsfile.c_str());
+          
+          char* urltext = XMLString::transcode(url.getURLText());
+          ProblemSpecReader psr(urltext);
+          delete [] urltext;
+          
+          ProblemSpecP top = psr.readInputFile();
+      	  
+          d_tstop.push_back(top);
+          d_tsurl.push_back(url);
+          ProblemSpecP time = top->findBlock("Time");
+          if(time == 0)
+            throw InternalError("Cannot find Time block");
+      	  
+          int timestepNumber;
+          if(!time->get("timestepNumber", timestepNumber))
+            throw InternalError("Cannot find timestepNumber");
+          
+          double currentTime;
+          if(!time->get("currentTime", currentTime))
+            throw InternalError("Cannot find currentTime");
+          d_tsindex.push_back(timestepNumber);
+          d_tstimes.push_back(currentTime);
+        }
       }
       have_timesteps=true;
     }
@@ -373,20 +373,20 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
 
       string type = attributes["type"];
       if(type == "")
-	throw InternalError("Variable type not found");
+        throw InternalError("Variable type not found");
       const TypeDescription* td = TypeDescription::lookupType(type);
       if(!td){
-	static TypeDescription* unknown_type = 0;
-	if(!unknown_type)
-	  unknown_type = scinew TypeDescription(TypeDescription::Unknown,
-						"-- unknown type --",
-						false, MPI_Datatype(-1));
-	td = unknown_type;
+        static TypeDescription* unknown_type = 0;
+        if(!unknown_type)
+          unknown_type = scinew TypeDescription(TypeDescription::Unknown,
+                                                "-- unknown type --",
+                                                false, MPI_Datatype(-1));
+        td = unknown_type;
       }
       types.push_back(td);
       string name = attributes["name"];
       if(name == "")
-	throw InternalError("Variable name not found");
+      	throw InternalError("Variable name not found");
       names.push_back(name);
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "WARNING: Unknown variable data: " << n->getNodeName() << '\n';
@@ -471,24 +471,29 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
   delete [] urlpath;
   
   int fd = open(datafile.c_str(), O_RDONLY);
-  if(fd == -1)
+  if(fd == -1) {
+    cerr << "Error closing file: " << datafile.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (open call)", errno);
+  }
 #ifdef __sgi
   off64_t ls = lseek64(fd, start, SEEK_SET);
 #else
   off_t ls = lseek(fd, start, SEEK_SET);
 #endif
-  if(ls == -1)
-    throw ErrnoException("DataArchive::query (lseek64 call)", errno);
-  
-  InputContext ic(fd, start);
+  if(ls == -1) {
+    cerr << "Error lseek - file: " << datafile.c_str() << ", errno=" << errno << '\n';
+    throw ErrnoException("DataArchive::query (lseek call)", errno);
+  }
+  InputContext ic(fd, datafile.c_str(), start);
   double starttime = Time::currentSeconds();
   var.read(ic, end, d_swapBytes, d_nBytes, compressionMode);
   dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
   ASSERTEQ(end, ic.cur);
   int s = close(fd);
-  if(s == -1)
-    throw ErrnoException("DataArchive::query (read call)", errno);
+  if(s == -1) {
+    cerr << "Error closing file: " << datafile.c_str() << ", errno=" << errno << '\n';
+    throw ErrnoException("DataArchive::query (close call)", errno);
+  }
   d_lock.unlock();  
 }
 
@@ -572,7 +577,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   else {
     for (i = 0; i < indices.size(); i++)
       if (indices[i] == timestep)
-	break;
+        break;
   }
 
   if (i == indices.size()) {
@@ -640,12 +645,11 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
                 }
               }
 	    }
-	  }
-	}
+          }
+        }
       }
   }
 }
-
 bool DataArchive::queryRestartTimestep(int& timestep)
 {
   ProblemSpecP restartNode = d_indexDoc->findBlock("restart");
@@ -887,16 +891,16 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
       string proc = attributes["proc"];
       /* - Remove this check for restarts.  We need to accurately
          determine which patch goes on which proc, and for the moment
-         we need to be able to parse all pxxxx.xml files.  --BJW
+         we need to be able to parse all pxxxx.xml files.  --BJW 
       if (proc != "") {
-	int procnum = atoi(proc.c_str());
-	if ((procnum % numProcessors) != processor)
-	  continue;
+        int procnum = atoi(proc.c_str());
+        if ((procnum % numProcessors) != processor)
+          continue;
       }
       */ 
       string datafile = attributes["href"];
       if(datafile == "")
-	throw InternalError("timestep href not found");
+        throw InternalError("timestep href not found");
       XMLURL url(tsUrl, datafile.c_str());
        d_xmlUrls.push_back(url);
     }
@@ -983,7 +987,6 @@ void DataArchive::PatchHashMaps::parseProc(int proc)
 void DataArchive::PatchHashMaps::parse()
 {
   for (size_t proc = 0; proc < d_xmlUrls.size(); proc++) {
-
     parseProc(proc);
   }
   
