@@ -31,7 +31,7 @@ LOG
 
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Datatypes/PatchDataThread.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchDataThread.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -95,7 +95,7 @@ void FieldExtractor::build_field(DataArchive& archive,
 				      const Var& v,
 				      LevelField<T>*& sfd)
 {
-  int max_workers = Max(Thread::numProcessors()/2, 4);
+  int max_workers = Max(Thread::numProcessors()/2, 2);
   Semaphore* thread_sema = scinew Semaphore( "extractor semahpore",
 					     max_workers); 
   WallClockTimer my_timer;
@@ -116,6 +116,10 @@ void FieldExtractor::build_field(DataArchive& archive,
 		    (archive, it, varname, mat, *r, time, thread_sema),
 		    "patch_data_worker");
     thrd->detach();
+//     PatchDataThread<Var, vector<ShareAssignArray3<T> >::iterator> *pdt =
+//       scinew PatchDataThread<Var, vector<ShareAssignArray3<T> >::iterator>
+//       (archive, it, varname, mat, *r, time, thread_sema);
+//     pdt->run();
   }
   thread_sema->down(max_workers);
   if( thread_sema ) delete thread_sema;
