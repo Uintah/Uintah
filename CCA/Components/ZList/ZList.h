@@ -43,7 +43,7 @@
 
 class ZList;
 
-  class ImUIPort1 : public virtual gov::cca::ports::UIPort {
+  class ImUIPort1 : public virtual sci::cca::ports::UIPort {
 
   public:
     virtual ~ImUIPort1(){}
@@ -53,33 +53,33 @@ class ZList;
     ZList *com;	   	
   };
 
-  class ImZListPort : public virtual gov::cca::ports::ZListPort {
+  class ImZListPort : public virtual sci::cca::ports::ZListPort {
 
   public:
     ImZListPort(){};	
     virtual ~ImZListPort(){};
-    virtual SIDL::array1<double> getList();
+    virtual SSIDL::array1<double> getList();
     void setParent(ZList *com){this->com=com;}
   private:
     ZList *com;	   	
   };
 
 
-class ZList : public gov::cca::Component{
+class ZList : public sci::cca::Component{
 
   public:
     std::vector<double> datalist; 	
     ZList();
     virtual ~ZList();
 
-    virtual void setServices(const gov::cca::Services::pointer& svc);
+    virtual void setServices(const sci::cca::Services::pointer& svc);
   private:
 
     ZList(const ZList&);
     ZList& operator=(const ZList&);
     ImUIPort1 uiport;
     ImZListPort listport;
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 //}
 
