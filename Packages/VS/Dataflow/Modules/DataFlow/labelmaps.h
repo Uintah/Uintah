@@ -71,12 +71,24 @@ private:
  ******************************************************************************/
 class VH_AnatomyBoundingBox {
 public:
-	void readFile(char *infilename);
+        VH_AnatomyBoundingBox() { flink = (VH_AnatomyBoundingBox *)0; };
         void readFile(FILE *infileptr);
-private:
 	char *anatomyname;
 	int minX, maxX, minY, maxY, minZ, maxZ, minSlice, maxSlice;
 	VH_AnatomyBoundingBox *flink;
+private:
 };
+
+/******************************************************************************
+ * Read an ASCII AnatomyBoundingBox file into a linked list
+ ******************************************************************************/
+VH_AnatomyBoundingBox *
+VH_Anatomy_readBoundingBox_File(char *infilename);
+
+/******************************************************************************
+ * Find the boundingBOx of a named anatomical entity
+ ******************************************************************************/
+VH_AnatomyBoundingBox *
+VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *anatomyname);
 
 #endif
