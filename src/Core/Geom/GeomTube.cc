@@ -69,7 +69,9 @@ GeomObj* GeomTube::clone()
 void  GeomTube::get_bounds(BBox& bb)
 {
     for(int i=0;i<verts.size();i++)
-	bb.extend_cyl(verts[i]->p, directions[i], radii[i]);
+    {
+	bb.extend_cylinder(verts[i]->p, directions[i], radii[i]);
+    }
 }
 
 // the function to extend the length of the tube geometry

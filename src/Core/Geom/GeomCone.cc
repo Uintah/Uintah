@@ -123,8 +123,8 @@ void GeomCone::adjust()
 
 void GeomCone::get_bounds(BBox& bb)
 {
-    bb.extend_cyl(bottom, axis, bot_rad);
-    bb.extend_cyl(top, axis, top_rad);
+    bb.extend_cylinder(bottom, axis, bot_rad);
+    bb.extend_cylinder(top, axis, top_rad);
 }
 
 #define GEOMCONE_VERSION 1

@@ -168,14 +168,14 @@ GeomObj* GeomTorusArc::clone()
 
 void GeomTorus::get_bounds(BBox& bb)
 {
-    bb.extend_cyl(cen-axis*rad2, axis, rad1+rad2);
-    bb.extend_cyl(cen+axis*rad2, axis, rad1+rad2);
+    bb.extend_cylinder(cen-axis*rad2, axis, rad1+rad2);
+    bb.extend_cylinder(cen+axis*rad2, axis, rad1+rad2);
 }
 
 void GeomTorusArc::get_bounds(BBox& bb)
 {
-    bb.extend_cyl(cen-axis*rad2, axis, rad1+rad2);
-    bb.extend_cyl(cen+axis*rad2, axis, rad1+rad2);
+    bb.extend_cylinder(cen-axis*rad2, axis, rad1+rad2);
+    bb.extend_cylinder(cen+axis*rad2, axis, rad1+rad2);
 }
 
 #define GEOMTORUS_VERSION 1
