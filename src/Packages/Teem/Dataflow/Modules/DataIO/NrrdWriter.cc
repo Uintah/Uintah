@@ -77,21 +77,15 @@ void NrrdWriter::execute()
     return;
   }
 
-  FILE *f;
-  if (!(f = fopen(fn.c_str(), "wt"))) {
-    cerr << "Error opening file "<<fn<<"\n";
-    return;
-  }
-
-  if (nrrdWrite(f, handle->nrrd)) {
+  char name[200];
+  strcpy(name, fn.c_str());
+  if (nrrdSave(name, handle->nrrd, nrrdIONew())) {
     char *err = biffGet(NRRD);      
     cerr << "Error writing nrrd " << fn << ": " << err << "\n";
     free(err);
     biffDone(NRRD);
-    fclose(f);
     return;
   }
-  fclose(f);
 }
 
 } // End namespace SCITeem

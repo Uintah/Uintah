@@ -24,7 +24,7 @@ PSELIBS := Core Packages/Teem/Core
 else
 PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Math Packages/Teem/Core/Datatypes
 endif
-LIBS := $(TEEM_LIBRARY) -llineal -lm
+LIBS := $(TEEM_LIBRARY) -lell -lm
 
 INCLUDES += $(TEEM_INCLUDE)
 

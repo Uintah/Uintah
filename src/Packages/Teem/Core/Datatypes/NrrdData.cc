@@ -45,7 +45,8 @@ NrrdData::NrrdData() : nrrd(0) {}
 NrrdData::NrrdData(const NrrdData &copy) :
   fname(copy.fname) 
 {
-  nrrd = nrrdNewCopy(copy.nrrd);
+  nrrd = nrrdNew();
+  nrrdCopy(nrrd, copy.nrrd);
 }
 
 NrrdData::~NrrdData() {
@@ -59,41 +60,35 @@ NrrdData::~NrrdData() {
 void NrrdData::io(Piostream& stream) {
   /*  int version = */ stream.begin_class("NrrdData", NRRDDATA_VERSION);
 
-  FILE *f;
   if (stream.reading()) {
     Pio(stream, fname);
-    if (!(f = fopen(fname.c_str(), "rt"))) {
-      cerr << "Error opening file "<<fname<<"\n";
-      return;
-    }
-    if (!(nrrd=nrrdNewRead(f))) {
+    char name[200];
+    strcpy(name, fname.c_str());
+    nrrd = nrrdNew();
+    if (!(nrrdLoad(nrrd, name))) {
       char *err = biffGet(NRRD);
       cerr << "Error reading nrrd "<<fname<<": "<<err<<"\n";
       free(err);
       biffDone(NRRD);
-      fclose(f);
+      nrrdNuke(nrrd);
       return;
     }
-    fclose(f);
     fname="";
   } else { // writing
     if (fname == "") {   // if fname wasn't set up stream, just append .nrrd
       fname = stream.file_name + string(".nrrd");
     }
     Pio(stream, fname);
-    if (!(f = fopen(fname.c_str(), "wt"))) {
-      cerr << "Error opening file "<<fname<<"\n";
-      return;
-    }
-    if (nrrdWrite(f, nrrd)) {
+    char name[200];
+    strcpy(name, fname.c_str());
+    if (nrrdSave(name, nrrd, nrrdIONew())) {
       char *err = biffGet(NRRD);      
       cerr << "Error writing nrrd "<<fname<<": "<<err<<"\n";
       free(err);
       biffDone(NRRD);
-      fclose(f);
+      nrrdNuke(nrrd);
       return;
     }
-    fclose(f);
   }
   stream.end_class();
 }

@@ -102,7 +102,7 @@ int NrrdResample::get_sizes(string *resampAxis, Nrrd *nrrd,
 			    nrrdResampleInfo *info) {
   cerr << "NrrdResample sizes: ";
   for (int a=0; a<3; a++) {
-    info->samples[a]=nrrd->size[a];
+    info->samples[a]=nrrd->axis[a].size;
     const char *str = resampAxis[a].c_str();
     int none=0;
     if (getint(str, &(info->samples[a]), &none)) { 
@@ -153,8 +153,8 @@ NrrdResample::execute()
   Nrrd *nout = nrrdNew();
   cerr << "Resampling with a "<<ftype<<" filter."<<endl;
   nrrdKernel *kern;
-  float p[NRRD_MAX_KERNEL_PARAMS];
-  memset(p, 0, NRRD_MAX_KERNEL_PARAMS*sizeof(float));
+  float p[NRRD_KERNEL_PARAMS_MAX];
+  memset(p, 0, NRRD_KERNEL_PARAMS_MAX*sizeof(float));
   p[0]=1.0;
   if (ftype == "box") kern=nrrdKernelBox;
   else if (ftype == "tent") kern=nrrdKernelTent;
@@ -163,9 +163,9 @@ NrrdResample::execute()
   else /* if (ftype == "quartic") */ { kern=nrrdKernelAQuartic; p[1]=0.0834; }
   for (int a=0; a<3; a++) {
     info->kernel[a] = kern;
-    memcpy(info->param[a], p, NRRD_MAX_KERNEL_PARAMS*sizeof(float));
+    memcpy(info->param[a], p, NRRD_KERNEL_PARAMS_MAX*sizeof(float));
     info->min[a] = 0;
-    info->max[a] = nin->size[a]-1;
+    info->max[a] = nin->axis[a].size-1;
   }    
   info->boundary = nrrdBoundaryBleed;
   info->type = nin->type;

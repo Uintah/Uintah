@@ -89,6 +89,7 @@ void FieldToNrrd::execute()
     return;
   }
   LatVolMeshHandle lvm;
+  nout->nrrd = nrrdNew();
   if (data == "double") { 
     LatticeVol<double> *f = 
       dynamic_cast<LatticeVol<double>*>(field);
@@ -103,7 +104,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeDouble, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeDouble, 3);
   } else if (data == "float") { 
     LatticeVol<float> *f = 
       dynamic_cast<LatticeVol<float>*>(field);
@@ -118,7 +119,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeFloat, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeFloat, 3);
 #if 0
   } else if (data == "unsigned_int") {
     LatticeVol<unsigned int> *f = 
@@ -134,7 +135,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUInt, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeUInt, 3);
 #endif
   } else if (data == "int") {
     LatticeVol<int> *f = 
@@ -150,7 +151,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeInt, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeInt, 3);
 #if 0
   } else if (data == "unsigned_short") {
     LatticeVol<unsigned short> *f = 
@@ -166,7 +167,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUShort, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeUShort, 3);
 #endif
   } else if (data == "short") {
     LatticeVol<short> *f = 
@@ -182,7 +183,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeShort, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeShort, 3);
   } else if (data == "unsigned_char") {
     LatticeVol<unsigned char> *f = 
       dynamic_cast<LatticeVol<unsigned char>*>(field);
@@ -197,7 +198,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUChar, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeUChar, 3);
 #if 0
   } else if (data == "char") {
     LatticeVol<char> *f = 
@@ -213,7 +214,7 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeChar, 3);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeChar, 3);
 #endif
   } else if (data == "Vector") {
     LatticeVol<Vector> *f = 
@@ -231,7 +232,7 @@ void FieldToNrrd::execute()
 	  *p++=f->fdata()(k,j,i).y();
 	  *p++=f->fdata()(k,j,i).z();
 	}
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz*3, nrrdTypeDouble, 4);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz*3, nrrdTypeDouble, 4);
   } else if (data == "Tensor") {
     LatticeVol<Tensor> *f = 
       dynamic_cast<LatticeVol<Tensor>*>(field);
@@ -252,7 +253,7 @@ void FieldToNrrd::execute()
 	  *p++=f->fdata()(k,j,i).mat_[1][2];
 	  *p++=f->fdata()(k,j,i).mat_[2][2];
 	}
-    nout->nrrd=nrrdNewWrap(data, nx*ny*nz*3, nrrdTypeDouble, 4);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz*7, nrrdTypeDouble, 7);
   } else {
     cerr << "Error - unknown LatticeVol data type " << data << endl;
     free(nout);
@@ -266,40 +267,34 @@ void FieldToNrrd::execute()
     nout->nrrd->max=minmax.second;
   }
   Vector v(maxP-minP);
-  nout->nrrd->encoding=nrrdEncodingRaw;
-  nout->nrrd->size[0]=nx;
-  nout->nrrd->size[1]=ny;
-  nout->nrrd->size[2]=nz;
+  nout->nrrd->axis[0].size=nx;
+  nout->nrrd->axis[1].size=ny;
+  nout->nrrd->axis[2].size=nz;
   v.x(v.x()/(nx-1));
   v.y(v.y()/(ny-1));
   v.z(v.z()/(nz-1));
-  nout->nrrd->axisMin[0]=minP.x();
-  nout->nrrd->axisMin[1]=minP.y();
-  nout->nrrd->axisMin[2]=minP.z();
-  nout->nrrd->axisMax[0]=maxP.x();
-  nout->nrrd->axisMax[1]=maxP.y();
-  nout->nrrd->axisMax[2]=maxP.z();
-  nout->nrrd->spacing[0]=v.x();
-  nout->nrrd->spacing[1]=v.y();
-  nout->nrrd->spacing[2]=v.z();
-  nout->nrrd->label[0][0]='x';
-  nout->nrrd->label[0][1]='\0';
-  nout->nrrd->label[1][0]='y';
-  nout->nrrd->label[1][1]='\0';
-  nout->nrrd->label[2][0]='z';
-  nout->nrrd->label[2][1]='\0';
+  nout->nrrd->axis[0].min=minP.x();
+  nout->nrrd->axis[1].min=minP.y();
+  nout->nrrd->axis[2].min=minP.z();
+  nout->nrrd->axis[0].max=maxP.x();
+  nout->nrrd->axis[1].max=maxP.y();
+  nout->nrrd->axis[2].max=maxP.z();
+  nout->nrrd->axis[0].spacing=v.x();
+  nout->nrrd->axis[1].spacing=v.y();
+  nout->nrrd->axis[2].spacing=v.z();
+  nout->nrrd->axis[0].label = "x";
+  nout->nrrd->axis[1].label = "y";
+  nout->nrrd->axis[2].label = "z";
   if (data == "Vector") {
-    nout->nrrd->size[3]=3;
-    nout->nrrd->axisMin[3]=0;
-    nout->nrrd->axisMax[3]=3;
-    nout->nrrd->label[3][0]='v';
-    nout->nrrd->label[3][1]='\0';
+    nout->nrrd->axis[3].size=3;
+    nout->nrrd->axis[3].min=0;
+    nout->nrrd->axis[3].max=3;
+    nout->nrrd->axis[3].label = "v";
   } else if (data == "Tensor") {
-    nout->nrrd->size[3]=6;
-    nout->nrrd->axisMin[3]=0;
-    nout->nrrd->axisMax[3]=6;
-    nout->nrrd->label[3][0]='t';
-    nout->nrrd->label[3][1]='\0';
+    nout->nrrd->axis[3].size=6;
+    nout->nrrd->axis[3].min=0;
+    nout->nrrd->axis[3].max=6;
+    nout->nrrd->axis[3].label = "t";
   }
 
   NrrdDataHandle noutH(nout);
