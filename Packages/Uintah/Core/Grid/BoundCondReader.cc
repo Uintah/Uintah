@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/SideBCData.h>
 #include <Packages/Uintah/Core/Grid/CircleBCData.h>
+#include <Packages/Uintah/Core/Grid/AnnulusBCData.h>
 #include <Packages/Uintah/Core/Grid/RectangleBCData.h>
 #include <Packages/Uintah/Core/Grid/UnionBCData.h>
 #include <Packages/Uintah/Core/Grid/DifferenceBCData.h>
@@ -79,6 +80,28 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     }
     bcGeom = scinew CircleBCData(p,r);
   }
+  else if (values.find("annulus") != values.end()) {
+    fc = values["annulus"];
+    string origin = values["origin"];
+    string in_radius = values["inner_radius"];
+    string out_radius = values["outer_radius"];
+    stringstream origin_stream(origin);
+    stringstream in_radius_stream(in_radius);
+    stringstream out_radius_stream(out_radius);
+    double i_r,o_r,o[3];
+    in_radius_stream >> i_r;
+    out_radius_stream >> o_r;
+    origin_stream >> o[0] >> o[1] >> o[2];
+    Point p(o[0],o[1],o[2]);
+    
+    if (origin == "" || in_radius == "" || out_radius == "" ) {
+      ostringstream warn;
+      warn<<"ERROR\n Circle BC geometry not correctly specified \n"
+          << " you must specify origin [x,y,z], inner_radius [r] outer_radius [r] \n\n";
+      throw ProblemSetupException(warn.str());
+    }
+    bcGeom = scinew AnnulusBCData(p,i_r,o_r);
+  }
   else if (values.find("rectangle") != values.end()) {
     fc = values["rectangle"];
     string low = values["lower"];
@@ -109,7 +132,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   else {
     ostringstream warn;
     warn << "ERROR\n Boundary condition geometry not correctly specified "
-      " Valid options (side, circle, rectangle";
+      " Valid options (side, circle, rectangle, annulus";
     throw ProblemSetupException(warn.str());  
   }
   
@@ -215,7 +238,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
       }
 						   
       BCR_dbg << "Printing out bcDataArray . . " << endl;
-      d_BCReaderData[face_side].print();
+      //d_BCReaderData[face_side].print();
 
 
       delete bcGeom;
@@ -245,8 +268,18 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
 					   (*itr)->clone());
 	}
       }
-    BCR_dbg << "Printing out bcDataArray after adding 'all' . . " << endl;
-    d_BCReaderData[face].print();
+#if 0
+    for (bc_geom_itr = d_BCReaderData[face].d_BCDataArray.begin();
+	 bc_geom_itr != d_BCReaderData[face].d_BCDataArray.end();
+	 bc_geom_itr++) {
+      cout << "mat_id = " << bc_geom_itr->first << endl;
+      d_BCReaderData[face].combineBCGeometryTypes(bc_geom_itr->first);
+    }
+#endif
+    
+    BCR_dbg << "Printing out bcDataArray for face " << face 
+	    << " after adding 'all' . . " << endl;
+    //d_BCReaderData[face].print();
   }
 #endif
 
@@ -260,7 +293,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
     BCR_dbg << endl << endl << "Before Face . . ." << face << endl;
-    d_BCReaderData[face].print();
+    //    d_BCReaderData[face].print();
   } 
   
 
@@ -271,7 +304,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
     BCR_dbg << "After Face . . .  " << face << endl;
-    d_BCReaderData[face].print();
+    //    d_BCReaderData[face].print();
   } 
 
 }
@@ -294,7 +327,7 @@ void BoundCondReader::combineBCS()
     BCDataArray rearranged;
     BCDataArray& original = d_BCReaderData[face];
 
-    original.print();
+    //    original.print();
     BCR_dbg << endl;
 
     BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
@@ -321,7 +354,7 @@ void BoundCondReader::combineBCS()
 	   ++bcd_itr) {
 
 	BCR_dbg << "Printing out the bcd types" << endl;
-	bcd_itr->first.print();
+	//	bcd_itr->first.print();
 
 	
 	if (count_if(bcd_itr->second.begin(),
@@ -419,7 +452,7 @@ void BoundCondReader::combineBCS()
     }
 
     BCR_dbg << endl << "Printing out rearranged list" << endl;
-    rearranged.print();
+    //    rearranged.print();
 
     // Reassign the rearranged data
     d_BCReaderData[face] = rearranged;
@@ -427,7 +460,7 @@ void BoundCondReader::combineBCS()
     BCR_dbg << endl << "Printing out rearranged from d_BCReaderData list" 
 	    << endl;
 
-    d_BCReaderData[face].print();
+    //    d_BCReaderData[face].print();
 
   }
 
@@ -436,7 +469,7 @@ void BoundCondReader::combineBCS()
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
     BCR_dbg << "After Face . . .  " << face << endl;
-    d_BCReaderData[face].print();
+    //    d_BCReaderData[face].print();
   } 
 
 
