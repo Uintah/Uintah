@@ -26,10 +26,10 @@ Camera::Camera()
 }
 
 Camera::Camera(const Point& eye, const Point& lookat,
-	       const Vector& up, double fov)
-  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1), 
-  verticalFov_(fov), windowAspectRatio_(1.0)
-
+	       const Vector& up, double fov) :
+  eye(eye), lookat(lookat), up(up), fov(fov), 
+  verticalFov_(fov), windowAspectRatio_(1.0),
+  eyesep(1)
 {
   setup();
 }

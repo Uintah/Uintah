@@ -78,7 +78,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
     } else if ((*children1)[loop1]->GetMoniker() == "*GEOMOBJECT") {
       matl_index = 
         ((GeomObjectToken*)((*children1)[loop1]))->GetMaterialIndex();
-      if (ase_matls.size()<=matl_index)
+      if ((int)ase_matls.size()<=matl_index)
         matl_index = 0;
       children2 = (*children1)[loop1]->GetChildren();
       length2 = children2->size();
@@ -220,8 +220,8 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
               ase_matls[token->GetIndex()] = 
                 new Phong(Color(diffuse),
                           Color(specular),
-                          token->GetShine()*1000,
-                          0);
+                          (int)(token->GetShine()*1000),
+                          0.0);
             }
           } else if (token->GetTMapFilename()=="") {
             ase_matls[token->GetIndex()] = 
