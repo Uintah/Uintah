@@ -132,12 +132,9 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
   nout->nrrd->axis[2].label = strdup("Theta");
   nout->nrrd->axis[3].label = strdup("Phi");
 
-  PropertyManager*  in = (PropertyManager*) (nHandles[mesh[2]]->nrrd);
-  PropertyManager* out = (PropertyManager*) (nout);
+  *((PropertyManager *)nout) =
+    *((PropertyManager *)(nHandles[mesh[2]].get_rep()));
 
-  //  *in = *out;
-
-  nout->set_property( "Topology", string("Structured"), false );
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 
   return  NrrdDataHandle( nout );	
@@ -214,10 +211,123 @@ execute(vector< NrrdDataHandle > nHandles,
   nout->nrrd->axis[2].label = strdup("Theta");
   nout->nrrd->axis[3].label = strdup("Phi");
 
-  PropertyManager*  in = (PropertyManager*) (nHandles[data[2]]->nrrd);
-  PropertyManager* out = (PropertyManager*) (nout);
+  *((PropertyManager *)nout) =
+    *((PropertyManager *)(nHandles[data[2]].get_rep()));
 
-  //  *in = *out;
+  nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
+
+  return  NrrdDataHandle( nout );	
+}
+
+template< class NTYPE >
+class NIMRODPerturbedConverterAlgoT : public NIMRODConverterAlgo
+{
+public:
+
+  virtual NrrdDataHandle execute(vector< NrrdDataHandle > nHandles,
+				 vector< int > mesh,
+				 vector< int > data,
+				 int idim, int jdim, int kdim);
+};
+
+
+template< class NTYPE >
+NrrdDataHandle
+NIMRODPerturbedConverterAlgoT< NTYPE >::
+execute(vector< NrrdDataHandle > nHandles,
+	vector< int > mesh,
+	vector< int > data,
+	int idim, int jdim, int kdim)
+{
+  unsigned int sink_size = 1;
+  unsigned int ndims = 3;
+
+  NrrdData *nout = scinew NrrdData(false);
+
+  register int i,j,k,cc = 0;
+
+  unsigned int rank = data.size() / 2;
+
+  NTYPE *ptrs[data.size()];
+
+  for( unsigned int i=0; i<data.size(); i++ )
+    ptrs[i] = (NTYPE *)(nHandles[data[i]]->nrrd->data);
+
+  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[2]]->nrrd->data);
+  NTYPE *ptrMeshK   = (NTYPE *)(nHandles[mesh[3]]->nrrd->data);
+
+  unsigned int nmodes = nHandles[mesh[3]]->nrrd->axis[1].size;
+
+  unsigned int mode = idim;
+  idim = nHandles[mesh[2]]->nrrd->axis[1].size; // Phi
+  
+  NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
+
+  for( i=0; i<idim; i++ ) {
+    double phi = ptrMeshPhi[i];
+      
+    for( j=0; j<jdim; j++ ) {
+      for( k=0; k<kdim; k++ ) {
+
+	unsigned int m;
+
+	//  If summing start at 0 otherwise start with the mode
+	if( mode == nmodes ) m = 0;
+	else                 m = mode;
+
+	for( ; m<nmodes; m++ ) {  // Mode loop.
+
+	  unsigned int index = (m * jdim + j) * kdim + k;
+
+	  double angle = ptrMeshK[m] * phi; // Mode * phi slice.
+
+	  for( unsigned int c=0; c<rank; c++ )
+	    ndata[cc*rank+c] = 0;
+
+	  for( unsigned int c=0; c<rank; c++ ) {
+	    ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[c     ][index] -
+					sin( angle ) * ptrs[c+rank][index] );
+
+	    //	    cerr << i << " " << j << " " << k << " ";
+	    //	    cerr << c << " " << c+rank << "  " << cc*rank+c << endl;
+	  }
+
+	  //  Not summing so quit.
+	  if( mode < nmodes )
+	    break;
+	}
+
+	++cc;
+      }
+    }
+  }
+
+  nrrdWrap(nout->nrrd, ndata, nHandles[data[2]]->nrrd->type,
+	   ndims+1, sink_size, jdim, kdim, idim);
+  nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+
+  vector< string > dataset;
+
+  nHandles[data[2]]->get_tuple_indecies(dataset);
+
+  char tmpstr[12];
+  
+  if( mode == nmodes )
+    sprintf( tmpstr,"SUM" );
+  else
+    sprintf( tmpstr,"MODE-%d-", mode );
+
+  dataset[0].replace( dataset[0].find( "REAL" ), 4, tmpstr );
+  dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
+
+  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
+  nout->nrrd->axis[1].label = strdup("Radial");
+  nout->nrrd->axis[2].label = strdup("Theta");
+  nout->nrrd->axis[3].label = strdup("Phi");
+
+  *((PropertyManager *)nout) =
+    *((PropertyManager *)(nHandles[data[2]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 
