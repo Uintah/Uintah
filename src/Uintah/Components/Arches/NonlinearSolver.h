@@ -35,7 +35,7 @@ WARNING
 #include <Uintah/Components/Arches/Arches.h>
 
 namespace Uintah {
-    namespace Arches {
+    namespace ArchesSpace {
 
 class NonlinearSolver
 {

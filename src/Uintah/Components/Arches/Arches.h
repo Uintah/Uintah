@@ -12,7 +12,7 @@
 #include <Uintah/Parallel/ProcessorContext.h>
 
 namespace Uintah {
-   namespace Arches {
+   namespace ArchesSpace {
 
 class PhysicalConstants;
 class NonlinearSolver;
@@ -64,11 +64,14 @@ private:
     BoundaryCondition* d_boundaryCondition;
 };
 
-} // end namespace Arches
+} // end namespace ArchesSpace
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.18  2000/05/09 22:56:22  sparker
+// Changed name of namespace
+//
 // Revision 1.17  2000/04/26 06:48:00  sparker
 // Streamlined namespaces
 //

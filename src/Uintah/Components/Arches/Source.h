@@ -39,7 +39,7 @@ none
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
-namespace Arches {
+namespace ArchesSpace {
 class TurbulenceModel;
  using namespace SCICore::Containers;
 
