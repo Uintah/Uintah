@@ -23,4 +23,8 @@ LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRAR
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+ifeq ($(LARGESOS),no)
+RTRT_SCIRUN := $(RTRT_SCIRUN) $(LIBNAME)
+endif
+
 

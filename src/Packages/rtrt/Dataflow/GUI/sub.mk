@@ -11,4 +11,5 @@ SRCS := \
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
+RTRT_SCIRUN := $(RTRT_SCIRUN) $(TCLINDEX)
 
