@@ -259,7 +259,7 @@ void EditField::build_widget(FieldHandle f)
   }
 
   // Fix degenerate boxes.
-  const double size_estimate = MAX((max-min).length() * 0.01, 1.0e-5);
+  const double size_estimate = Max((max-min).length() * 0.01, 1.0e-5);
   if (fabs(max.x() - min.x()) < 1.0e-6)
   {
     min.x(min.x() - size_estimate);
