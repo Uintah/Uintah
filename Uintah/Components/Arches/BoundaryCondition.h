@@ -489,6 +489,8 @@ private:
 
       // PressureBC
       const VarLabel* d_presCoefPBLMLabel;
+      const VarLabel* d_presLinSrcPBLMLabel;
+      const VarLabel* d_presNonLinSrcPBLMLabel;
 
       // ScalarBC
       const VarLabel* d_scalarINLabel;
@@ -501,6 +503,9 @@ private:
   
 //
 // $Log$
+// Revision 1.37  2000/07/17 22:06:58  rawat
+// modified momentum source
+//
 // Revision 1.36  2000/07/14 03:45:45  rawat
 // completed velocity bc and fixed some bugs
 //

@@ -155,6 +155,7 @@ public:
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
+			     double delta_t,
 			     int index);
   
 private:
@@ -206,6 +207,8 @@ private:
       const VarLabel* d_uVelConvCoefMBLMLabel ;
       const VarLabel* d_vVelConvCoefMBLMLabel ;
       const VarLabel* d_wVelConvCoefMBLMLabel ;
+      // for pressure gradient
+      const VarLabel* d_pressurePSLabel;
 
       // inputs/outputs for CalculatePressureSource 
       const VarLabel* d_pressureSPBCLabel ;
@@ -228,6 +231,9 @@ private:
   
 //
 // $Log$
+// Revision 1.21  2000/07/17 22:06:59  rawat
+// modified momentum source
+//
 // Revision 1.20  2000/07/12 23:23:23  bbanerje
 // Added pressure source .. modified Kumar's version a bit.
 //

@@ -310,6 +310,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateVelDiagonal(pc, patch, new_dw, new_dw, 
 				       index,
 				       Arches::PRESSURE);
+    std::cerr << "Done building matrix for press coeff" << endl;
   }
 
   // Calculate Pressure Coeffs
@@ -359,6 +360,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.37  2000/07/17 22:06:58  rawat
+// modified momentum source
+//
 // Revision 1.36  2000/07/14 03:45:46  rawat
 // completed velocity bc and fixed some bugs
 //

@@ -7,6 +7,7 @@ c*********************************************************************
       SUBROUTINE bcpress(domLo, domHi, idxLo, idxHi,
      &     PP,
      &     AE,AW,AN,AS,AT,AB,
+     &     SU, SP,
      &     PCELL, WALL, SYMTRY, FFIELD)
 *-----------------------------------------------------------------------
 *     This subroutine calculates the boundary
@@ -15,7 +16,6 @@ c*********************************************************************
       implicit none
 
 #include "param4.h"
-c#include "pcell.h"
 
 c*********************************************************************
 c     Arguments :
@@ -34,6 +34,10 @@ c*********************************************************************
       double precision AT(domLo(1):domHi(1), domLo(2):domHi(2),
      &     domLo(3):domHi(3))
       double precision AB(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision SU(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision SP(domLo(1):domHi(1), domLo(2):domHi(2),
      &     domLo(3):domHi(3))
       integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
@@ -75,6 +79,24 @@ c*********************************************************************
       LPRDAV = .false.
 
 *----------------------------------------------------------------------
+*     intrusion boundary conditions
+*----------------------------------------------------------------------
+
+      do 520 k = idxLo(3), idxHi(3)
+         do 510 j = idxLo(2), idxHi(2)
+            do 500 i = idxLo(1), idxHi(1)
+               
+               if (pcell(i,j,k).eq.wall) then
+                  call fixval(
+     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
+     $                 at(i,j,k), ab(i,j,k),
+     $                 su(i,j,k), sp(i,j,k), one)
+               endif
+
+ 500        continue
+ 510     continue
+ 520  continue
+*----------------------------------------------------------------------
 *     INLET/OUTLET BOUNDARY CONDITIONS 
 *       EAST AND/OR WEST WALLS
 *----------------------------------------------------------------------
@@ -82,12 +104,14 @@ C$DIR SCALAR
       DO 610 K = KST,KEND
 C$DIR SCALAR
          DO 600 J = JST,JEND
-            IF (PCELL(iEndGhost,J,K).NE.WALL .AND.
-     &           PCELL(IEND,J,K).NE.WALL) THEN
+            IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
+     &           PCELL(IEND,J,K).NE.WALL).AND.
+     $           (PCELL(IEND+1,J,K).NE.FFIELD)) THEN
                AE(IEND,J,K) = ZERO
             END IF
-            IF (PCELL(iBegGhost,J,K).NE.WALL .AND.
-     &           PCELL(IST,J,K).NE.WALL) THEN
+            IF ((PCELL(IST-1,J,K).NE.WALL .AND.
+     &           PCELL(IST,J,K).NE.WALL).AND.
+     $           (PCELL(IST-1,J,K).NE.FFIELD)) THEN
                AW(IST,J,K) = ZERO
             END IF
  600     CONTINUE
@@ -99,12 +123,14 @@ C$DIR SCALAR
       DO 710 K = KST,KEND
 C$DIR SCALAR
          DO 700 I = IST,IEND
-            IF (PCELL(I,jEndGhost,K).NE.WALL.AND.
-     &           PCELL(I,JEND,K).NE.WALL) THEN
+            IF ((PCELL(I,JEND+1,K).NE.WALL.AND.
+     &           PCELL(I,JEND,K).NE.WALL).AND.
+     $           (PCELL(I,JEND+1,K).NE.FFIELD)) THEN
                AN(I,JEND,K) = ZERO
             END IF
-            IF (PCELL(I,jBegGhost,K).NE.WALL.AND.
-     &           PCELL(I,JST,K).NE.WALL) THEN
+            IF ((PCELL(I,JST-1,K).NE.WALL.AND.
+     &           PCELL(I,JST,K).NE.WALL).AND.
+     $           (PCELL(I,JST-1,K).NE.FFIELD)) THEN
                AS(I,JST,K) = ZERO
             END IF
  700     CONTINUE
@@ -116,12 +142,14 @@ C$DIR SCALAR
       DO 810 J = JST,JEND
 C$DIR SCALAR
          DO 800 I = IST,IEND
-            IF (PCELL(I,J,kEndGhost).NE.WALL .AND. 
-     &           PCELL(I,J,KEND).NE.WALL) THEN
+            IF ((PCELL(I,J,KEND+1).NE.WALL .AND. 
+     &           PCELL(I,J,KEND).NE.WALL).AND.
+     $           (PCELL(I,J,KEND+1).NE.FFIELD))THEN
                AT(I,J,KEND) = ZERO
             END IF
-            IF (PCELL(I,J,kBegGhost).NE.WALL .AND. 
-     &           PCELL(I,J,KST).NE.WALL) THEN
+            IF ((PCELL(I,J,KST-1).NE.WALL .AND. 
+     &           PCELL(I,J,KST).NE.WALL).AND.
+     $           (PCELL(I,J,KST-1).NE.FFIELD)) THEN
                AB(I,J,KST) = ZERO
             END IF
  800     CONTINUE
@@ -136,17 +164,7 @@ C$DIR SCALAR
      &        PCELL, SYMTRY,
      $        LPRDJK, LPRDKK)
       ENDIF
-      IF (LWRAP) THEN
-         CALL PRDBC1(domLo, domHi, idxLo, idxHi,
-     $        PP,
-     &        PCELL, SYMTRY, FFIELD,
-     &        LPRDAV, LPRDJK, LPRDKK)
-         CALL PRDBC2(domLo, domHi, idxLo, idxHi,
-     $        PP,
-     &        AS,AT,AB,
-     &        PCELL, SYMTRY, FFIELD,
-     $        LPRDAV, LPRDJK, LPRDKK)
-      ENDIF
+
       CALL WALLBC(domLo, domHi, idxLo, idxHi,
      $     AE,AW,AN,AS,AT,AB,
      &     PCELL,WALL)
@@ -156,6 +174,9 @@ C$DIR SCALAR
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/17 22:07:02  rawat
+c modified momentum source
+c
 c Revision 1.1  2000/07/13 04:51:34  bbanerje
 c Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
 c
