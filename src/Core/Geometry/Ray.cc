@@ -49,7 +49,7 @@ Vector Ray::direction() const
     return d;
 }
 
-Point Ray::parameter(double t)
+Point Ray::parameter(double t) const
 {
   return o + d*t;
 }
