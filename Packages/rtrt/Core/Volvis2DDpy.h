@@ -9,6 +9,8 @@
 #include <vector>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
 
+#define CLEAN 0
+#define FAST 1
 
 using std::vector;
 
