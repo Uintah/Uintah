@@ -33,6 +33,7 @@ PSELIBS := \
 	Core/Containers                \
 	Core/Datatypes                 \
         Core/Geom                      \
+        Core/GeomInterface             \
 	Core/Geometry                  \
 	Core/GLVolumeRenderer          \
 	Core/Util                      \
