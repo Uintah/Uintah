@@ -45,6 +45,7 @@ public:
   double delt_max;
   double delt_factor;
   double max_delt_increase;
+  double override_restart_delt; 
 
   // Explicit number of timesteps to run.  Simulation runs either this
   // number of time steps, or to maxTime, which ever comes first.

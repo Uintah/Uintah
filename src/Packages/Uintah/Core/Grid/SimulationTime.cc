@@ -17,7 +17,8 @@ using namespace std;
 SimulationTime::SimulationTime(const ProblemSpecP& params)
 {
   delt_factor = 1.0;
-
+  override_restart_delt = 0.0;
+  
   ProblemSpecP time_ps = params->findBlock("Time");
   time_ps->require("maxTime", maxTime);
   time_ps->require("initTime", initTime);
@@ -34,6 +35,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
 
   num_time_steps = MAXINT;
   time_ps->get( "max_iterations", num_time_steps );
+  time_ps->get( "override_restart_delt", override_restart_delt);
 
   if (!time_ps->get("clamp_timesteps_to_output", timestep_clamping))
     timestep_clamping = false;
