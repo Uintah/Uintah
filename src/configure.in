@@ -61,6 +61,13 @@ AC_SUBST(PACKAGE_DIRS)
 AC_SUBST(PACKAGE_PATH)
 AC_SUBST(EXENAME)
 
+##-- check for supplied xerces path ------------------------------------------
+
+AC_ARG_WITH(xerces,
+	[  --with-xerces=<path-to-xerces>  <path-to-xerces>],
+	[xerces="$withval"],
+	[xerces=""])
+
 ##-- Canonical Host Type -----------------------------------------------------
 
 AC_CANONICAL_HOST
@@ -189,7 +196,7 @@ case $host in
      TIME_IMPL=Time_unix.cc
      PLATFORM_LDFLAGS="-ldl"
      TRACEBACK_LIB=""
-     IMAGE_LIBS =""
+     IMAGE_LIBS=""
      echo "checking for sstream"
      AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
            ;;
@@ -356,7 +363,9 @@ if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
   echo -L$TCL_LIB_DIR $TCL_LIB_FLAG
 
   if test "$TCL_LD_FLAGS" != "" ; then
-    echo "  XXX: Check SGI ABI"
+    if test "$host" = "*-irix*"; then
+      echo "  XXX: Check SGI ABI"
+    fi
   fi
 
 else
@@ -500,7 +509,7 @@ AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
 
 ##-- Find BLT ---------------------------------------------------------------
-echo -n "Looking for Pre-built blt2.4... "
+echo -n "Looking for Pre-built blt 2.4... "
 
 if test "$blt" ; then
   BLT_PREFIX=$blt
@@ -530,6 +539,81 @@ fi
 AC_SUBST(BLT_INCLUDE_DIR)
 AC_SUBST(BLT_LIB_DIR)
 AC_SUBST(BLT_LIB_FLAG)
+
+##-- Find Xerces-c  ------------------------------------------------------
+
+echo -n "Looking for Pre-built Xerces-c... "
+
+if test "$xerces"; then
+  XML_LIB_DIR=$xerces
+fi
+
+if test -z "$XML_LIB_DIR"; then
+  case $host in
+  *-irix*)
+    if test "$is_64bit" = "yes"; then
+      if test -e /res/sci/data6/sparker/xerces-c/lib64/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib64"
+      elif test -e /usr/lib64/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib64"
+      elif test -e /usr/local/lib64/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib64"
+      elif test -e /usr/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib"
+      elif test -e /usr/local/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib"
+      fi
+    else
+      if test -e /res/sci/data6/sparker/xerces-c/lib32/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib32"
+      elif test -e /usr/lib32/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib32"
+      elif test -e /usr/local/lib32/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib32"
+      elif test -e /usr/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib"
+      elif test -e /usr/local/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib"
+      fi
+    fi
+    ;;
+  *linux*)
+    if test -e /tmp/opt/xerces-1.1/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/tmp/opt/xerces-1.1/lib"
+    elif test -e /usr/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/lib"
+    elif test -e /usr/local/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/local/lib"
+    fi
+    ;;
+  *)
+    if test -e /usr/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/lib"
+    elif test -e /usr/local/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/local/lib"
+    fi
+    ;;
+  esac
+fi
+
+if test -z "$XML_LIB_DIR"; then
+  echo "Couldn't find libxerces-c1_?.so.  exiting."
+  exit 1
+fi
+
+XML_INCLUDE_DIR=$XML_LIB_DIR/../include
+
+if test -e $XML_LIB_DIR/libxerces-c1_1.so; then
+  XML_LIB_FLAG="-lxerces-c1_1"
+elif test -e $XML_LIB_DIR/libxerces-c1_2.so; then
+  XML_LIB_FLAG="-lxerces-c1_2"
+fi
+
+echo "-L$XML_LIB_DIR $XML_LIB_FLAG"
+
+AC_SUBST(XML_LIB_DIR)
+AC_SUBST(XML_LIB_FLAG)
+AC_SUBST(XML_INCLUDE_DIR)
 
 ##-- Find Nektar--------------------------------------------------------------
 
@@ -686,31 +770,6 @@ if ! test x"$X_LIBS" = x; then
   X_LIBS="-Wl,-rpath,$x_libraries $X_LIBS"
 fi
 
-##-- Check for library ------------------------------------------------------
-
-## THIS NEEDS TO BE BETTER - steve
-case $host in
-  *-irix*) 
-	if test "$is_64bit" = "yes"; then
-  	  XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib64"
-	else
-  	  XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib32"
-	fi
-	XML_INCLUDE_DIR="/res/sci/data6/sparker/xerces-c/include"
-        ;;
-  *linux*) 
-  	XML_LIB_DIR="/tmp/opt/xerces-1.1/lib"
-	XML_INCLUDE_DIR="/tmp/opt/xerces-1.1/include"
-	;;
-  *)       
-           ;;
-esac
-
-XML_LIB_FLAG="-lxerces-c1_1"
-AC_SUBST(XML_LIB_DIR)
-AC_SUBST(XML_LIB_FLAG)
-AC_SUBST(XML_INCLUDE_DIR)
-
 ##-- Check for programs ------------------------------------------------------
 
 # Yacc - for sidl
@@ -731,7 +790,15 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.67  2000/09/05 17:26:54  moulding
+# removed hardcoding for xerces stuff.  It now looks for xerces in Utah locations
+# first ('cuz we're lazy) and then some standard locations (/usr/lib,
+# /usr/local/lib).  And to top it off, there's a --with-xerces switch in case
+# it's somewhere else.
+#
 # Revision 1.66  2000/09/04 06:20:03  moulding
+#
+#
 # fixed execute permissions for createTclIndex
 #
 # Revision 1.65  2000/09/03 23:47:17  moulding
