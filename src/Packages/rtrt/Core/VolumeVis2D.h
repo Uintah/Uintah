@@ -12,13 +12,17 @@
 
 namespace rtrt {
 
+#define CLEAN 0
+#define FAST 1
+
 #ifndef MAXUNSIGNEDSHORT
 #define MAXUNSIGNEDSHORT 65535
 #endif
 
+// template<class T>
 class VolumeVis2DDpy;
 
-template<class T>
+ template<class T>
 class Voxel2D {
 public:
   T _data[2];
@@ -67,6 +71,7 @@ inline Voxel2D<T> operator-(T& lhs, const Voxel2D<T>& rhs)
 }
 
   
+// template<class T>
 class VolumeVis2D : public Object, public Material {
 protected:
   friend class Volvis2DDpy;
@@ -108,6 +113,7 @@ public:
 		     double atten, const Color& accumcolor,
 		     Context* cx);
   virtual void animate(double t, bool& changed);
+  virtual void cblookup( Object* obj );
 };
   
 } // end namespace rtrt
