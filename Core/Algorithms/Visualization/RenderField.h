@@ -70,7 +70,9 @@ public:
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
 		      int sphere_resolution, int cylinder_resolution,
-		      bool use_normals, bool edge_transparency,
+		      bool use_normals,
+		      bool node_transparency,
+		      bool edge_transparency,
 		      bool face_transparency,
 		      bool bidirectional, bool arrow_heads) = 0;
 
@@ -132,7 +134,9 @@ public:
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
 		      int sphere_resolution, int cylinder_resolution,
-		      bool use_normals, bool edge_transparency,
+		      bool use_normals,
+		      bool node_transparency,
+		      bool edge_transparency,
 		      bool face_transparency,
 		      bool bidirectional, bool arrow_heads);
 
@@ -153,7 +157,8 @@ private:
   GeomSwitch *render_nodes(const Fld *fld, 
 			   const string &node_display_mode,
 			   double node_scale,
-			   int node_resolution);
+			   int node_resolution,
+			   bool use_transparency);
   GeomSwitch *render_edges(const Fld *fld,
 			   const string &edge_display_mode,
 			   double edge_scale,
@@ -269,7 +274,9 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      const string &ndt, const string &edt,
 			      double ns, double es, double vs, bool normalize, 
 			      int sphere_res, int cyl_res,
-			      bool use_normals, bool e_transp,
+			      bool use_normals,
+			      bool n_transp,
+			      bool e_transp,
 			      bool f_transp,
 			      bool bidirectional, bool arrow_heads)
 {
@@ -279,9 +286,20 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   color_handle_ = color_handle;
 
   if (def_col) { render_materials(fld, ndt); }
-  if (nodes) { node_switch_ = render_nodes(fld, ndt, ns, sphere_res); }
-  if (edges) { edge_switch_ = render_edges(fld, edt, es, cyl_res, e_transp); }
-  if (faces) { face_switch_ = render_faces(fld, use_normals, f_transp); }
+  if (nodes)
+  {
+    node_switch_ = render_nodes(fld, ndt, ns, sphere_res, n_transp);
+  }
+  
+  if (edges)
+  {
+    edge_switch_ = render_edges(fld, edt, es, cyl_res, e_transp);
+  }
+
+  if (faces)
+  {
+    face_switch_ = render_faces(fld, use_normals, f_transp);
+  }
   if (data)
   {
     data_switch_ = render_data(fld, ndt, vs, normalize, bidirectional,
@@ -524,7 +542,8 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_nodes(const Fld *sfld, 
 				    const string &node_display_mode,
 				    double node_scale,
-				    int node_resolution) 
+				    int node_resolution,
+				    bool use_transparency)
 {
   //cerr << "rendering nodes" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -541,7 +560,14 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   else if (node_display_mode == "Disks")   { mode = 3; }
 
   if (mode == 0) { // Points
-    pts = scinew GeomPoints();
+    if (use_transparency)
+    {
+      pts = scinew GeomTranspPoints();
+    }
+    else
+    {
+      pts = scinew GeomPoints();
+    }
   }
   // First pass: over the nodes
   mesh->synchronize(Mesh::NODES_E);

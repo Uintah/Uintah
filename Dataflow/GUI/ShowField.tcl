@@ -26,6 +26,7 @@ itcl_class SCIRun_Visualization_ShowField {
 
     method set_defaults {} {
 	global $this-nodes-on
+	global $this-nodes-transparency
 	global $this-nodes-as-disks
 	global $this-edges-on
 	global $this-faces-on
@@ -83,6 +84,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-def-color-b 0.5
 	set $this-def-color-a 0.5
 	set $this-nodes-on 1
+	set $this-nodes-transparency 0
 	set $this-nodes-as-disks 0
 	set $this-edges-on 1
 	set $this-faces-on 1
@@ -200,6 +202,11 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_display_nodes" \
 		-variable $this-nodes-on
 
+	checkbutton $node.nodes_transparency \
+		-text "Enable Transparency (Points Only)" \
+		-command "$this-c rerender_nodes" \
+		-variable $this-nodes-transparency
+
 	global $this-node_display_type
 	
 	if {[set $this-nodes-as-disks] == 1} {
@@ -214,7 +221,8 @@ itcl_class SCIRun_Visualization_ShowField {
 		    {{Spheres Spheres} {Axes Axes} {Points Points}}
 	}
 
-	pack $node.show_nodes $node.radio -fill y -anchor w
+	pack $node.show_nodes $node.nodes_transparency $node.radio \
+	    -fill y -anchor w
 
 	expscale $node.slide -label NodeScale \
 		-orient horizontal \
@@ -287,7 +295,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Enable Transparency" \
 		-command "$this-c rerender_faces" \
 		-variable $this-use-transparency
-	pack $face.show_faces $face.use_normals $face.use_transparency \
+	pack $face.show_faces $face.use_transparency $face.use_normals \
 		-side top -fill y -anchor w
     }
 
