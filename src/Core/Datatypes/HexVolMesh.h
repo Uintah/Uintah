@@ -360,7 +360,22 @@ private:
       return ((snodes_[0] == f.snodes_[0]) && (snodes_[1] == f.snodes_[1]) &&
 	      (snodes_[2] == f.snodes_[2]) && (snodes_[3] == f.snodes_[3]));
     }
-  };
+
+    //! Compares each node.  When a non equal node is found the <
+    //! operator is applied.
+    bool operator<(const PFace &f) const {
+      if (snodes_[0] == f.snodes_[0])
+        if (snodes_[1] == f.snodes_[1])
+          if (snodes_[2] == f.snodes_[2])
+            return (snodes_[3] < f.snodes_[3]);
+          else
+            return (snodes_[2] < f.snodes_[2]);
+        else
+          return (snodes_[1] < f.snodes_[1]);
+      else
+        return (snodes_[0] < f.snodes_[0]);
+    }
+};
 
 
   //! Edge information.
@@ -389,29 +404,45 @@ private:
     bool operator==(const PEdge &e) const {
       return ((nodes_[0] == e.nodes_[0]) && (nodes_[1] == e.nodes_[1]));
     }
+
+    //! Compares each node.  When a non equal node is found the <
+    //! operator is applied.
+    bool operator<(const PEdge &e) const {
+      if (nodes_[0] == e.nodes_[0])
+        return (nodes_[1] < e.nodes_[1]);
+      else
+        return (nodes_[0] < e.nodes_[0]);
+    }
   };
 
   /*! hash the egde's node_indecies such that edges with the same nodes
    *  hash to the same value. nodes are sorted on edge construction. */
   static const int sz_int = sizeof(int) * 8; // in bits
   struct FaceHash {
-    static const size_t bucket_size;
-    static const size_t min_buckets;
+    //! These are needed by the hash_map particularly
+    // ANSI C++ allows us to initialize these variables in the
+    // declaration.  However there may be compilers which will complain
+    // about it.
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
 
-    static const int sz_quarter_int;
-    static const int top4_mask;
-    static const int up4_mask;
-    static const int mid4_mask;
-    static const int low4_mask;
+    //! These are for our own use (making the hash function.
+    static const int sz_quarter_int = (int)(sz_int * .25);
+    static const int top4_mask = ((~((int)0)) << sz_quarter_int << sz_quarter_int << sz_quarter_int);
+    static const int up4_mask = top4_mask ^ (~((int)0) << sz_quarter_int << sz_quarter_int);
+    static const int mid4_mask =  top4_mask ^ (~((int)0) << sz_quarter_int);
+    static const int low4_mask = ~(top4_mask | mid4_mask);
 
+    //! This is the hash function
     size_t operator()(const PFace &f) const {
       return ((f.snodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
 	      (up4_mask & (f.snodes_[1] << sz_quarter_int << sz_quarter_int)) |
 	      (mid4_mask & (f.snodes_[2] << sz_quarter_int)) |
 	      (low4_mask & f.snodes_[3]));
     }
+    //! This should return less than rather than equal to.
     bool operator()(const PFace &f1, const PFace& f2) const {
-      return f1 == f2;
+      return f1 < f2;
     }
   };
 
@@ -420,18 +451,26 @@ private:
   /*! hash the egde's node_indecies such that edges with the same nodes
    *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {
+    //! These are needed by the hash_map particularly
+    // ANSI C++ allows us to initialize these variables in the
+    // declaration.  However there may be compilers which will complain
+    // about it.
     static const size_t bucket_size = 4;
     static const size_t min_buckets = 8;
+
+    //! These are for our own use (making the hash function.
     static const int sz_int = sizeof(int) * 8; // in bits
     static const int sz_half_int = sizeof(int) << 2; // in bits
     static const int up_mask = ((~((int)0)) << sz_half_int);
     static const int low_mask = (~((int)0) ^ up_mask);
 
+    //! This is the hash function
     size_t operator()(const PEdge &e) const {
       return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[1]);
     }
+    //!  This should return less than rather than equal to.
     bool operator()(const PEdge &e1, const PEdge& e2) const {
-      return e1 == e2;
+      return e1 < e2;
     }
   };
 
@@ -494,8 +533,6 @@ private:
 
 // Handle type for HexVolMesh mesh.
 typedef LockingHandle<HexVolMesh> HexVolMeshHandle;
-
-
 
 template <class Iter, class Functor>
 void
