@@ -688,6 +688,15 @@ std::string BuiltinType::fullname() const
     return cname;
 }
 
+std::string BuiltinType::cppfullname(SymbolTable*) const
+{
+    if(cname == "string"){
+	return "::CIA::string";
+    } else {
+	return cname;
+    }
+}
+
 bool BuiltinType::isvoid() const
 {
     if(cname == "void")
@@ -715,6 +724,11 @@ bool NamedType::isvoid() const
     return false;
 }
 
+std::string NamedType::cppfullname(SymbolTable* localScope) const
+{
+    return name->cppfullname(localScope);
+}
+
 ArrayType::ArrayType(Type* t, int dim)
     : subtype(t), dim(dim)
 {
@@ -727,7 +741,17 @@ ArrayType::~ArrayType()
 std::string ArrayType::fullname() const
 {
     std::ostringstream o;
-    o << "array<" << subtype->fullname() << ", " << dim << ">";
+    o << "array" << dim << "<" << subtype->fullname() << ", " << dim << ">";
+    return o.str();
+}
+
+std::string ArrayType::cppfullname(SymbolTable* localScope) const
+{
+    std::ostringstream o;
+    o << "::CIA::array" << dim << "<" << subtype->cppfullname(localScope);
+    if(dynamic_cast<ArrayType*>(subtype))
+	o << " "; // Keep > > from being >>
+    o << ">";
     return o.str();
 }
 
@@ -738,6 +762,10 @@ bool ArrayType::isvoid() const
 
 //
 // $Log$
+// Revision 1.8  1999/09/29 07:35:17  sparker
+// Finished marshal/unmarshaling of all different kinds of arrays (1D).
+// Cleaned up marshal/unmarshal code
+//
 // Revision 1.7  1999/09/28 08:21:42  sparker
 // Added support for arrays (incomplete)
 // Added support for strings
