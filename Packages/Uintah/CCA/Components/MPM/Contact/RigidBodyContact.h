@@ -61,6 +61,7 @@ WARNING
 	 
 	 SimulationStateP d_sharedState;
 	 double d_stop_time;
+         IntVector d_direction;
 	 
       public:
 	 // Constructor
