@@ -1,34 +1,35 @@
 /*
-* Print out a uintah data archive
-* into Tecplot format, currently only for 
-* CCvariables.
-* 
-* The code is modified from puda.cc written by
-* Steven Parker, Department of Computer Science,
-* University of Utah in February 2000
-* 
-* Modified by:
-* Patrick Hu
-* Department of Mechanical engineering
-* University of Utah
-* May, 2003
-* 
-* Usage of converting Uintah data archive to a tecplot data file
-* puda_mov -tecplot <i_xd> <Uintah data archive directory> :
-*           print all CCVariables into different tecplot data files 
-* puda_mov -tecplot <i_xd> <CCVariable's Name> <Uintah data archive directory>:
-*           print one CCVariable into a tecplot data file
-* puda_mov -tecplot <i_xd> <tskip> <Uintah data archive directory>:
-*           print all CCVariables into different tecplot data files
-*           by every tskip time steps
-* puda_mov -tecplot <i_xd> <CCVariable's Name> <tskip> <Uintah data archive directory>:
-*           print one CCVariable into a tecplot data file
-*           by every tskip time steps
-* i_xd may be i_1d, i_2d, i_3d for 1D, 2D and 3D problem
-*
-* 
-* Copyright (C) 2003 U of U
-*/
+ *  puda.cc: Print out a uintah data archive
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   February 2000
+ *
+ *  Copyright (C) 2000 U of U
+ */
+
+/*
+ *  Support for printing out Tecplot data added by Patric Hu
+ *  Department of Mechanical Enginerring, U of U, 2003.
+ *
+ *  Currently it only supports CCVariables.
+ * 
+ * Usage of converting Uintah data archive to a tecplot data file
+ * puda_mov -tecplot <i_xd> <uda directory> :
+ *           print all CCVariables into different tecplot data files 
+ * puda_mov -tecplot <i_xd> <CCVariable's Name> <uda directory>:
+ *           print one CCVariable into a tecplot data file
+ * puda_mov -tecplot <i_xd> <tskip> <uda directory>:
+ *           print all CCVariables into different tecplot data files
+ *           by every tskip time steps
+ * puda_mov -tecplot <i_xd> <CCVariable's Name> <tskip> <uda directory>:
+ *           print one CCVariable into a tecplot data file
+ *           by every tskip time steps
+ * i_xd may be i_1d, i_2d, i_3d for 1D, 2D and 3D problem
+ *
+ */
 
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -44,6 +45,7 @@
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
+#include <Core/Containers/Array3.h>
 
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
@@ -170,10 +172,10 @@ getParticleStrains(DataArchive* da, string flag) {
    // Parse the flag and check which option is needed
    bool doAverage = false;
    bool doTrue = false;
-   bool doAll = false;
+   //   bool doAll = false;
    if (flag == "avg") doAverage = true;
    else if (flag == "true") doTrue = true;
-   else doAll = true;
+   //   else doAll = true;
 
    // Check if all the required variables are there .. for all cases
    // we need p.deformationMeasure and for the volume average we need p.volume
@@ -323,10 +325,10 @@ getParticleStresses(DataArchive* da, string flag) {
    // Parse the flag and check which option is needed
    bool doAverage = false;
    bool doEquiv = false;
-   bool doAll = false;
+   //   bool doAll = false;
    if (flag == "avg") doAverage = true;
    else if (flag == "equiv") doEquiv = true;
-   else doAll = true;
+   //   else doAll = true;
 
    // Check if all the required variables are there .. for all cases
    // we need p.stress and for the volume average we need p.volume
@@ -655,7 +657,7 @@ int main(int argc, char** argv)
   unsigned long time_step_upper = 1;
   bool tslow_set = false;
   bool tsup_set = false;
-  int tskip;
+  int tskip = 1;
   string i_xd;
   string filebase;
   string raydatadir;
@@ -671,23 +673,23 @@ int main(int argc, char** argv)
     string s=argv[i];
     if(s == "-timesteps"){
       do_timesteps=true;}
-      else if(s == "-tecplot"){ 
-       do_tecplot = true;
-        if(argc == 4) {
-         do_all_ccvars = true;
-	 i_xd = argv[i+1];
-	  tskip = 1;
-          } else if(argc == 5){
-           do_all_ccvars = true;
-           i_xd = argv[i+1];
-           tskip = atoi(argv[i+2]);
-              } else if(argc == 6 ) {
-	      i_xd = argv[i+1];
-              ccVarInput = argv[i+2];
-              tskip = atoi(argv[i+3]);
-              if (ccVarInput[0] == '-')
-	      usage("-tecplot <i_xd> <ccVariable name> <tskip> ", argv[0]);
-	         }
+    else if(s == "-tecplot"){ 
+      do_tecplot = true;
+      if(argc == 4) {
+	do_all_ccvars = true;
+	i_xd = argv[i+1];
+	tskip = 1;
+      } else if(argc == 5){
+	do_all_ccvars = true;
+	i_xd = argv[i+1];
+	tskip = atoi(argv[i+2]);
+      } else if(argc == 6 ) {
+	i_xd = argv[i+1];
+	ccVarInput = argv[i+2];
+	tskip = atoi(argv[i+3]);
+	if (ccVarInput[0] == '-')
+	  usage("-tecplot <i_xd> <ccVariable name> <tskip> ", argv[0]);
+      }
     } else if(s == "-gridstats"){
       do_gridstats=true;
     } else if(s == "-listvariables"){
@@ -871,454 +873,450 @@ int main(int argc, char** argv)
     }
 
     if(do_tecplot){ // if begin: 1
-	    string ccVariable;
-            bool ccVarFound = false;
-            vector<string> vars;
-	    vector<const Uintah::TypeDescription*> types;
-            da->queryVariables(vars, types);
-	    ASSERTEQ(vars.size(), types.size());
-	    cout << "There are " << vars.size() << " variables:\n";
+      string ccVariable;
+      bool ccVarFound = false;
+      vector<string> vars;
+      vector<const Uintah::TypeDescription*> types;
+      da->queryVariables(vars, types);
+      ASSERTEQ(vars.size(), types.size());
+      cout << "There are " << vars.size() << " variables:\n";
 
-	    const Uintah::TypeDescription* td;
-	    const Uintah::TypeDescription* subtype;
-             if(!do_all_ccvars) {
-	      for(int i=0;i<(int)vars.size();i++){
-	       cout << vars[i] << ": " << types[i]->getName() << endl;
-	        if(vars[i] == ccVarInput) {
-	         ccVarFound = true;
-	          }
-	        }
-	       if(!ccVarFound) {
-	         cerr << "the input ccVariable for tecplot is not storaged in the Dada Archive" << endl;
-	         abort();
-	        }
-	     }//end of (!do_all_ccvars)
+      const Uintah::TypeDescription* td;
+      const Uintah::TypeDescription* subtype;
+      if(!do_all_ccvars) {
+	for(int i=0;i<(int)vars.size();i++){
+	  cout << vars[i] << ": " << types[i]->getName() << endl;
+	  if(vars[i] == ccVarInput) {
+	    ccVarFound = true;
+	  }
+	}
+	if(!ccVarFound) {
+	  cerr << "the input ccVariable for tecplot is not storaged in the Dada Archive" << endl;
+	  abort();
+	}
+      }//end of (!do_all_ccvars)
 
-            vector<int> index;
-	    vector<double> times;
-	    da->queryTimesteps(index, times);
-            ASSERTEQ(index.size(), times.size());
-	    cout << "There are " << index.size() << " timesteps:\n";
-	    for(int i=0;i<(int)index.size();i++)
-	    cout << index[i] << ": " << times[i] << endl;
+      vector<int> index;
+      vector<double> times;
+      da->queryTimesteps(index, times);
+      ASSERTEQ(index.size(), times.size());
+      cout << "There are " << index.size() << " timesteps:\n";
+      for(int i=0;i<(int)index.size();i++)
+	cout << index[i] << ": " << times[i] << endl;
 
-	    if (!tslow_set)
-	       time_step_lower =0;
-	         else if (time_step_lower >= times.size()) {
-	              cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-				           abort();
-					         }
-	    if (!tsup_set)
-	     time_step_upper = times.size()-1;
-	      else if (time_step_upper >= times.size()) {
-	       cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
-	         abort();
-		  }
+      if (!tslow_set)
+	time_step_lower =0;
+      else if (time_step_lower >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      if (!tsup_set)
+	time_step_upper = times.size()-1;
+      else if (time_step_upper >= times.size()) {
+	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
               
-	 for(int i=0;i<(int)vars.size();i++){ //for loop over all the variables: 2
-	       cout << vars[i] << ": " << types[i]->getName() << endl;
-	            if(do_all_ccvars || ((!do_all_ccvars) && (vars[i] == ccVarInput))){ // check if do all CCVariables 
-			                                                                // or just do one variable: 3  
-		        td = types[i];
-			subtype = td->getSubType();
-		           ccVariable = vars[i];
-  	      switch(td->getType()){ //switch to get data type: 4
+      for(int i=0;i<(int)vars.size();i++){ //for loop over all the variables: 2
+	cout << vars[i] << ": " << types[i]->getName() << endl;
+	if(do_all_ccvars || ((!do_all_ccvars) && (vars[i] == ccVarInput))){ // check if do all CCVariables 
+	  // or just do one variable: 3  
+	  td = types[i];
+	  subtype = td->getSubType();
+	  ccVariable = vars[i];
+	  switch(td->getType()){ //switch to get data type: 4
     
-              //___________________________________________
-              //  Curently C C  V A R I A B L E S Only
-	      //
-	       case Uintah::TypeDescription::CCVariable:
-		{ //CCVariable case: 5 
-	         //    generate the name of the output file;
-   	               string filename;
-	               string fileroot("tec.");
-	               string filetype(".dat");
-                       filename = fileroot + ccVariable;
-                       filename = filename + filetype;
-   	               ofstream outfile(filename.c_str());
-                       outfile.setf(ios::scientific,ios::floatfield);
-                       outfile.precision(10);
+	    //___________________________________________
+	    //  Curently C C  V A R I A B L E S Only
+	    //
+	  case Uintah::TypeDescription::CCVariable:
+	    { //CCVariable case: 5 
+	      //    generate the name of the output file;
+	      string filename;
+	      string fileroot("tec.");
+	      string filetype(".dat");
+	      filename = fileroot + ccVariable;
+	      filename = filename + filetype;
+	      ofstream outfile(filename.c_str());
+	      outfile.setf(ios::scientific,ios::floatfield);
+	      outfile.precision(10);
 
-	  //    print out the Title of the output file according to the subtype of the CCVariables 
+	      //    print out the Title of the output file according to the subtype of the CCVariables 
 		       
-	        outfile << "TITLE = " << "\"" << ccVariable << " tecplot data file" << "\"" << endl;
+	      outfile << "TITLE = " << "\"" << ccVariable << " tecplot data file" << "\"" << endl;
 
               if(i_xd == "i_3d") {
 	        if(subtype->getType() == Uintah::TypeDescription::double_type) {
-		      outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", "
-		      << "\"" << ccVariable << "\""; 
+		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", "
+			  << "\"" << ccVariable << "\""; 
 	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Vector || subtype->getType() == Uintah::TypeDescription::Point) {
-		      outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", "
-		      << "\"" << ccVariable << ".X" << "\", " << "\"" << ccVariable << ".Y" << "\", " 
-		      << "\"" << ccVariable << ".Z" << "\"";
+		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", "
+			  << "\"" << ccVariable << ".X" << "\", " << "\"" << ccVariable << ".Y" << "\", " 
+			  << "\"" << ccVariable << ".Z" << "\"";
 	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Matrix3) {
-		      outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", " 
-		              << "\"" << ccVariable  << ".1.1\"" << ", \"" << ccVariable << ".1.2\"" << ", \"" << ccVariable << ".1.3\""
-			      << ", \"" << ccVariable << ".2.1\"" << ", \"" << ccVariable << ".2.2\"" << ", \"" << ccVariable << ".2.3\""
-	                      << ", \"" << ccVariable << ".3.1\"" << ", \"" << ccVariable << ".3.2\"" << ", \"" << ccVariable << ".3.3\"";
+		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", " 
+			  << "\"" << ccVariable  << ".1.1\"" << ", \"" << ccVariable << ".1.2\"" << ", \"" << ccVariable << ".1.3\""
+			  << ", \"" << ccVariable << ".2.1\"" << ", \"" << ccVariable << ".2.2\"" << ", \"" << ccVariable << ".2.3\""
+			  << ", \"" << ccVariable << ".3.1\"" << ", \"" << ccVariable << ".3.2\"" << ", \"" << ccVariable << ".3.3\"";
 	        }
 	        outfile << endl;
-	        } else if(i_xd == "i_2d") {
+	      } else if(i_xd == "i_2d") {
 	        if(subtype->getType() == Uintah::TypeDescription::double_type) {
-		      outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " 
-	          	      << "\"" << ccVariable << "\""; 
+		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " 
+			  << "\"" << ccVariable << "\""; 
 	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Vector || subtype->getType() == Uintah::TypeDescription::Point) {
-		      outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", "
-		              << "\"" << ccVariable << ".X" << "\", " << "\"" << ccVariable << ".Y" << "\"";
+		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", "
+			  << "\"" << ccVariable << ".X" << "\", " << "\"" << ccVariable << ".Y" << "\"";
 	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Matrix3) {
-		      outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", " 
-		              << "\"" << ccVariable  << ".1.1\"" << ", \"" << ccVariable << ".1.2\"" 
-			      << ", \"" << ccVariable << ".2.1\"" << ", \"" << ccVariable << ".2.2\""; 
+		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", " 
+			  << "\"" << ccVariable  << ".1.1\"" << ", \"" << ccVariable << ".1.2\"" 
+			  << ", \"" << ccVariable << ".2.1\"" << ", \"" << ccVariable << ".2.2\""; 
 	        }
 	        outfile << endl;
-		} else if(i_xd == "i_1d") {
+	      } else if(i_xd == "i_1d") {
 	        if(subtype->getType() == Uintah::TypeDescription::double_type) {
-		      outfile << "VARIABLES = " << "\"X" << "\", " << "\"" << ccVariable << "\""; 
+		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"" << ccVariable << "\""; 
 	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Vector || subtype->getType() == Uintah::TypeDescription::Point) {
-		      outfile << "VARIABLES =" << "\"X" << "\", " << "\"" << ccVariable << ".X" << "\" ";
+		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"" << ccVariable << ".X" << "\" ";
 	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Matrix3) {
-		      outfile << "VARIABLES =" << "\"X" << "\", " << "\"" << ccVariable  << ".1.1\"";
+		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"" << ccVariable  << ".1.1\"";
 	        }
 	        outfile << endl;
-	    }
+	      }
 
-        //loop over the time
-        for(unsigned long t=time_step_lower;t<=time_step_upper;t=t+tskip){  //time loop: 6
-	double time = times[t];
-	cout << "time = " << time << endl;
+	      //loop over the time
+	      for(unsigned long t=time_step_lower;t<=time_step_upper;t=t+tskip){  //time loop: 6
+		double time = times[t];
+		cout << "time = " << time << endl;
 	
-/////////////////////////////////////////////////////////////////
-// find index ranges for current grid level
-////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////
+		// find index ranges for current grid level
+		////////////////////////////////////////////////////////////////
 
-	GridP grid = da->queryGrid(times[t]);
-        for(int l=0;l<grid->numLevels();l++){  //level loop: 7
-	  LevelP level = grid->getLevel(l);
-	  cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
+		GridP grid = da->queryGrid(times[t]);
+		for(int l=0;l<grid->numLevels();l++){  //level loop: 7
+		  LevelP level = grid->getLevel(l);
+		  cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
 
-	    int numNode,numPatch,numMatl;
-	    int Imax,Jmax,Kmax,Imin,Jmin,Kmin;
-	    int Irange, Jrange, Krange;
-            int indexI, indexJ, indexK;
-	    IntVector lo,hi;
-	    numMatl = 0;
-	    Imax = 0;
-	    Imin = 0;
-	    Jmax = 0;
-	    Jmin = 0;
-	    Kmax = 0;
-	    Kmin = 0;
-	    Irange = 0;
-	    Jrange = 0;
-	    Krange = 0;
-            for(Level::const_patchIterator iter = level->patchesBegin();
-	     iter != level->patchesEnd(); iter++){ // patch loop
-	      const Patch* patch = *iter;
-		lo = patch->getLowIndex();
-		 hi = patch->getHighIndex();
-	          cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
-                  int matlNum = da->queryNumMaterials(patch, time);
-	          if(numMatl < matlNum) numMatl = matlNum;
-	          if(Imax < hi.x()) Imax = hi.x();
-	          if(Jmax < hi.y()) Jmax = hi.y();
-	          if(Kmax < hi.z()) Kmax = hi.z();
-	          if(Imin > lo.x()) Imin = lo.x();
-	          if(Jmin > lo.y()) Jmin = lo.y();
-	          if(Kmin > lo.z()) Kmin = lo.z();
-             } //patch loop
+		  //		  int numNode,numPatch;
+		  int numMatl;
+		  int Imax,Jmax,Kmax,Imin,Jmin,Kmin;
+		  int Irange, Jrange, Krange;
+		  int indexI, indexJ, indexK;
+		  IntVector lo,hi;
+		  numMatl = 0;
+		  Imax = 0;
+		  Imin = 0;
+		  Jmax = 0;
+		  Jmin = 0;
+		  Kmax = 0;
+		  Kmin = 0;
+		  Irange = 0;
+		  Jrange = 0;
+		  Krange = 0;
+		  for(Level::const_patchIterator iter = level->patchesBegin();
+		      iter != level->patchesEnd(); iter++){ // patch loop
+		    const Patch* patch = *iter;
+		    lo = patch->getLowIndex();
+		    hi = patch->getHighIndex();
+		    cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
+		    int matlNum = da->queryNumMaterials(patch, time);
+		    if(numMatl < matlNum) numMatl = matlNum;
+		    if(Imax < hi.x()) Imax = hi.x();
+		    if(Jmax < hi.y()) Jmax = hi.y();
+		    if(Kmax < hi.z()) Kmax = hi.z();
+		    if(Imin > lo.x()) Imin = lo.x();
+		    if(Jmin > lo.y()) Jmin = lo.y();
+		    if(Kmin > lo.z()) Kmin = lo.z();
+		  } //patch loop
 	    
-            Irange = Imax - Imin;             
-            Jrange = Jmax - Jmin;
-	    Krange = Kmax - Kmin;
+		  Irange = Imax - Imin;             
+		  Jrange = Jmax - Jmin;
+		  Krange = Kmax - Kmin;
 
-            for(int matlsIndex = 0; matlsIndex < numMatl; matlsIndex++){ //matls loop: 8
- //         write each Zone for diferent material at different time step for all patches for one of the levels
-	    if((ccVariable != "delP_Dilatate" && ccVariable != "press_equil_CC") || 
-	      ((ccVariable == "delP_Dilatate" || ccVariable == "press_equil_CC") && matlsIndex == 0)) { // pressure ccVariable if: 8'9 
-            if(i_xd == "i_3d"){ 
-	        outfile << "ZONE T =  " << "\"T:" << time << "," <<"M:" << matlsIndex << "," << "L:" << l << "," << "\"," 
-		        << "N = " << Irange*Jrange*Krange << "," << "E = " << (Irange-1)*(Jrange-1)*(Krange-1) << "," 
-		        << "F = " << "\"FEPOINT\"" << "," << "ET = " << "\"BRICK\"" << endl;
-	       } else if(i_xd == "i_2d") {
-	        outfile << "ZONE T =  " <<"\"T:"  << time << "," <<"M:" << matlsIndex << ","  << "L:" << l << "\"," 
-		        << "N = " << Irange*Jrange << "," << "E = " << (Irange-1)*(Jrange-1) << "," 
-		        << "F = " << "\"FEPOINT\"" << "," << "ET = " << "\"QUADRILATERAL\"" << endl;
-	       } else if(i_xd == "i_1d"){
-	        outfile << "ZONE T =  " <<"\"T:"  << time << "," <<"M:" << matlsIndex << ","  << "L:" << l << "\","
-		        << "I = " << Irange << "," << "F = " << "\"POINT\"" << endl;
-	       }
+		  for(int matlsIndex = 0; matlsIndex < numMatl; matlsIndex++){ //matls loop: 8
+		    //         write each Zone for diferent material at different time step for all patches for one of the levels
+		    if((ccVariable != "delP_Dilatate" && ccVariable != "press_equil_CC") || 
+		       ((ccVariable == "delP_Dilatate" || ccVariable == "press_equil_CC") && matlsIndex == 0)) { // pressure ccVariable if: 8'9 
+		      if(i_xd == "i_3d"){ 
+			outfile << "ZONE T =  " << "\"T:" << time << "," <<"M:" << matlsIndex << "," << "L:" << l << "," << "\"," 
+				<< "N = " << Irange*Jrange*Krange << "," << "E = " << (Irange-1)*(Jrange-1)*(Krange-1) << "," 
+				<< "F = " << "\"FEPOINT\"" << "," << "ET = " << "\"BRICK\"" << endl;
+		      } else if(i_xd == "i_2d") {
+			outfile << "ZONE T =  " <<"\"T:"  << time << "," <<"M:" << matlsIndex << ","  << "L:" << l << "\"," 
+				<< "N = " << Irange*Jrange << "," << "E = " << (Irange-1)*(Jrange-1) << "," 
+				<< "F = " << "\"FEPOINT\"" << "," << "ET = " << "\"QUADRILATERAL\"" << endl;
+		      } else if(i_xd == "i_1d"){
+			outfile << "ZONE T =  " <<"\"T:"  << time << "," <<"M:" << matlsIndex << ","  << "L:" << l << "\","
+				<< "I = " << Irange << "," << "F = " << "\"POINT\"" << endl;
+		      }
 
-	    int nodeIndex[Imax-Imin][Jmax-Jmin][Kmax-Kmin];
-              for(indexK = Kmin; indexK < Kmax; indexK++ ){
-                for(indexJ = Jmin; indexJ < Jmax; indexJ++){
-                   for(indexI = Imin; indexI < Imax; indexI++){
-			    nodeIndex[indexI-Imin][indexJ-Jmin][indexK-Kmin] = 0;
-		   }
-	       }
-	    }
-	 int totalNode = 0;
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Write values of variable in current Zone
-// //////////////////////////////////////////////////////////////////////////////////////////
+		      SCIRun::Array3<int> nodeIndex(Imax-Imin,Jmax-Jmin,Kmax-Kmin);
+		      nodeIndex.initialize(0);
 
-	    for(Level::const_patchIterator iter = level->patchesBegin();
-		iter != level->patchesEnd(); iter++){ // patch loop: 9
-	        const Patch* patch = *iter;
-	   // get anchor, spacing for current level and patch
-              Point start = level->getAnchor();
-	      Vector dx = patch->dCell();
-	      IntVector lo = patch->getLowIndex();
-	      IntVector hi = patch->getHighIndex();
-	      cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
-	      ConsecutiveRangeSet matls = da->queryMaterials(ccVariable, patch, time);
-	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		matlIter != matls.end(); matlIter++){ //material loop: 10
-		int matl = *matlIter;
-                   if(matlsIndex == matl) { // if(matlsIndex == matl): 11
-	             switch(subtype->getType()){ //switch to get data subtype: 12
-		        case Uintah::TypeDescription::double_type:
-		            {
-		              CCVariable<double> value;
-                              da->query(value, ccVariable, matl, patch, time);
-			      if(i_xd == "i_3d") {
-                               for(indexK = lo.z(); indexK < hi.z(); ++indexK){
-                                for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                                 for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][indexJ-Jmin][indexK-Kmin] = totalNode;
-			          IntVector cellIndex(indexI, indexJ, indexK);
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
-		                          << start.y() + dx.y()*(indexJ + 1) << " "   
-		                          << start.z() + dx.z()*(indexK + 1) << " "  
-			                  << value[cellIndex] << endl;
-	                         }
-			        }
-			       } 
-			      } //(i_xd == "i_3d") 
+		      int totalNode = 0;
+		      ////////////////////////////////////////////
+		      // Write values of variable in current Zone
+		      // /////////////////////////////////////////
 
-			      else if(i_xd == "i_2d") {
-                                for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                                 for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][indexJ-Jmin][0] = totalNode;
-			          IntVector cellIndex(indexI, indexJ, 0);
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
-		                          << start.y() + dx.y()*(indexJ + 1) << " "   
-			                  << value[cellIndex] << endl;
-	                          }
-				}
-			      } //end of if(i_xd == "i_2d")
+		      for(Level::const_patchIterator iter = level->patchesBegin();
+			  iter != level->patchesEnd(); iter++){ // patch loop: 9
+			const Patch* patch = *iter;
+			// get anchor, spacing for current level and patch
+			Point start = level->getAnchor();
+			Vector dx = patch->dCell();
+			IntVector lo = patch->getLowIndex();
+			IntVector hi = patch->getHighIndex();
+			cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
+			ConsecutiveRangeSet matls = da->queryMaterials(ccVariable, patch, time);
+			for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+			    matlIter != matls.end(); matlIter++){ //material loop: 10
+			  int matl = *matlIter;
+			  if(matlsIndex == matl) { // if(matlsIndex == matl): 11
+			    switch(subtype->getType()){ //switch to get data subtype: 12
+			    case Uintah::TypeDescription::double_type:
+			      {
+				CCVariable<double> value;
+				da->query(value, ccVariable, matl, patch, time);
+				if(i_xd == "i_3d") {
+				  for(indexK = lo.z(); indexK < hi.z(); ++indexK){
+				    for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				      for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+					++totalNode;
+					nodeIndex(indexI-Imin,indexJ-Jmin,indexK-Kmin) = totalNode;
+					IntVector cellIndex(indexI, indexJ, indexK);
+					outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
+						<< start.y() + dx.y()*(indexJ + 1) << " "   
+						<< start.z() + dx.z()*(indexK + 1) << " "  
+						<< value[cellIndex] << endl;
+				      }
+				    }
+				  } 
+				} //(i_xd == "i_3d") 
 
-                               else if(i_xd == "i_1d") {
-                                 for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][0][0] = totalNode;
-			          IntVector cellIndex(indexI, 0, 0);
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
-			                  << value[cellIndex] << endl;
-	                           }
-			       }//end of if(i_xd == "i_1d") 
-			    }
-		        break;
-		        case Uintah::TypeDescription::Vector:
-		         {
-		          CCVariable<Vector> value;
-		          da->query(value, ccVariable, matl, patch, time);
-			   if(i_xd == "i_3d") {
-                           for(indexK = lo.z(); indexK < hi.z(); ++indexK){
-                            for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                             for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			      IntVector cellIndex(indexI, indexJ, indexK);
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][indexJ-Jmin][indexK-Kmin] = totalNode;
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-		                          << start.y() + dx.y()*(indexJ + 1) << " "
-		                          << start.z() + dx.z()*(indexK + 1) << " " 
-				          << value[cellIndex].x() << " " << value[cellIndex].y() << " "
-			                  << value[cellIndex].z() << endl;  
-	                          }
-			        }
+				else if(i_xd == "i_2d") {
+				  for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				    for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				      ++totalNode;
+				      nodeIndex(indexI-Imin,indexJ-Jmin,0) = totalNode;
+				      IntVector cellIndex(indexI, indexJ, 0);
+				      outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
+					      << start.y() + dx.y()*(indexJ + 1) << " "   
+					      << value[cellIndex] << endl;
+				    }
+				  }
+				} //end of if(i_xd == "i_2d")
+
+				else if(i_xd == "i_1d") {
+				  for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				    ++totalNode;
+				    nodeIndex(indexI-Imin,0,0) = totalNode;
+				    IntVector cellIndex(indexI, 0, 0);
+				    outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
+					    << value[cellIndex] << endl;
+				  }
+				}//end of if(i_xd == "i_1d") 
 			      }
-			    } // end of if(i_xd == "i_3d") 
-			   else if(i_xd == "i_2d"){
-                             for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                              for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			       IntVector cellIndex(indexI, indexJ, 0);
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][indexJ-Jmin][0] = totalNode;
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-		                          << start.y() + dx.y()*(indexJ + 1) << " "
-				          << value[cellIndex].x() << " " << value[cellIndex].y() << endl;
-			      }
-			     }
-			   } //end of if(i_xd == "i_2d")
+			    break;
+			    case Uintah::TypeDescription::Vector:
+			      {
+				CCVariable<Vector> value;
+				da->query(value, ccVariable, matl, patch, time);
+				if(i_xd == "i_3d") {
+				  for(indexK = lo.z(); indexK < hi.z(); ++indexK){
+				    for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				      for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+					IntVector cellIndex(indexI, indexJ, indexK);
+					++totalNode;
+					nodeIndex(indexI-Imin,indexJ-Jmin,indexK-Kmin) = totalNode;
+					outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+						<< start.y() + dx.y()*(indexJ + 1) << " "
+						<< start.z() + dx.z()*(indexK + 1) << " " 
+						<< value[cellIndex].x() << " " << value[cellIndex].y() << " "
+						<< value[cellIndex].z() << endl;  
+				      }
+				    }
+				  }
+				} // end of if(i_xd == "i_3d") 
+				else if(i_xd == "i_2d"){
+				  for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				    for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				      IntVector cellIndex(indexI, indexJ, 0);
+				      ++totalNode;
+				      nodeIndex(indexI-Imin,indexJ-Jmin,0) = totalNode;
+				      outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+					      << start.y() + dx.y()*(indexJ + 1) << " "
+					      << value[cellIndex].x() << " " << value[cellIndex].y() << endl;
+				    }
+				  }
+				} //end of if(i_xd == "i_2d")
 
-			   else if(i_xd == "i_1d") {
-                              for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			       IntVector cellIndex(indexI, 0, 0);
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][0][0] = totalNode;
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-				          << value[cellIndex].x() << endl;
-			     }
-			   } //end of if(i_xd == "i_1d")
-			 }
-		         break;
-		         case Uintah::TypeDescription::Point:
-		          {
-		          CCVariable<Point> value;
-		          da->query(value, ccVariable, matl, patch, time);
-		          if(i_xd == "i_3d") {
-                           for(indexK = lo.z(); indexK < hi.z(); ++indexK){
-                            for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                             for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			      IntVector cellIndex(indexI, indexJ, indexK);
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][indexJ-Jmin][indexK-Kmin] = totalNode;
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-		                          << start.y() + dx.y()*(indexJ + 1) << " "
-		                          << start.z() + dx.z()*(indexK + 1) << " " 
-				          << value[cellIndex].x() << " " << value[cellIndex].y() << " "
-			                  << value[cellIndex].z() << endl;  
-	                          }
-			        }
+				else if(i_xd == "i_1d") {
+				  for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				    IntVector cellIndex(indexI, 0, 0);
+				    ++totalNode;
+				    nodeIndex(indexI-Imin,0,0) = totalNode;
+				    outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+					    << value[cellIndex].x() << endl;
+				  }
+				} //end of if(i_xd == "i_1d")
 			      }
-			    } // end of if(i_xd == "i_3d") 
+			    break;
+			    case Uintah::TypeDescription::Point:
+			      {
+				CCVariable<Point> value;
+				da->query(value, ccVariable, matl, patch, time);
+				if(i_xd == "i_3d") {
+				  for(indexK = lo.z(); indexK < hi.z(); ++indexK){
+				    for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				      for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+					IntVector cellIndex(indexI, indexJ, indexK);
+					++totalNode;
+					nodeIndex(indexI-Imin,indexJ-Jmin,indexK-Kmin) = totalNode;
+					outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+						<< start.y() + dx.y()*(indexJ + 1) << " "
+						<< start.z() + dx.z()*(indexK + 1) << " " 
+						<< value[cellIndex].x() << " " << value[cellIndex].y() << " "
+						<< value[cellIndex].z() << endl;  
+				      }
+				    }
+				  }
+				} // end of if(i_xd == "i_3d") 
 			   
-			   else if(i_xd == "i_2d") {
-                             for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                              for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			       IntVector cellIndex(indexI, indexJ, 0);
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][indexJ-Jmin][0] = totalNode;
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-		                          << start.y() + dx.y()*(indexJ + 1) << " "
-				          << value[cellIndex].x() << " " << value[cellIndex].y() << endl;
-			       }
-			     }
-		           } //end of if(i_xd == "i_2d")
+				else if(i_xd == "i_2d") {
+				  for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				    for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				      IntVector cellIndex(indexI, indexJ, 0);
+				      ++totalNode;
+				      nodeIndex(indexI-Imin,indexJ-Jmin,0) = totalNode;
+				      outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+					      << start.y() + dx.y()*(indexJ + 1) << " "
+					      << value[cellIndex].x() << " " << value[cellIndex].y() << endl;
+				    }
+				  }
+				} //end of if(i_xd == "i_2d")
 
-			   else if(i_xd == "i_1d") {
-                              for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			       IntVector cellIndex(indexI, 0, 0);
-				  ++totalNode;
-				  nodeIndex[indexI-Imin][0][0] = totalNode;
-		                  outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-				          << value[cellIndex].x() << endl;
-			  }
-		        } //end of if(i_xd == "i_1d")
-		      }
-		    break;
+				else if(i_xd == "i_1d") {
+				  for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				    IntVector cellIndex(indexI, 0, 0);
+				    ++totalNode;
+				    nodeIndex(indexI-Imin,0,0) = totalNode;
+				    outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+					    << value[cellIndex].x() << endl;
+				  }
+				} //end of if(i_xd == "i_1d")
+			      }
+			    break;
 
-		    case Uintah::TypeDescription::Matrix3:
-		    {
-		      CCVariable<Matrix3> value;
-		      da->query(value, ccVariable, matl, patch, time);
-		      if(i_xd == "i_3d") {
-                       for(indexK = lo.z(); indexK < hi.z(); ++indexK){
-                         for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                          for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			     ++totalNode;
-			     nodeIndex[indexI-Imin][indexJ-Jmin][indexK-Kmin] = totalNode;
-			     IntVector cellIndex(indexI, indexJ, indexK);
-		             outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-		                     << start.y() + dx.y()*(indexJ + 1) << " " 
-		                     << start.z() + dx.z()*(indexK + 1) << " "   
-			             << (value[cellIndex])(1,1) << " " << (value[cellIndex])(1,2) << " " 
-			             << (value[cellIndex])(1,3) << " " 
-		                     << (value[cellIndex])(2,1) << " " << (value[cellIndex])(2,2) << " "  
-		                     << (value[cellIndex])(2,3) << " " 
-			             << (value[cellIndex])(3,1) << " " << (value[cellIndex])(3,2) << " " 
-			             << (value[cellIndex])(3,3) << endl;  
-	                         }
-			     }
-		         }
-		      }//end of if(i_xd == "i_3d")
+			    case Uintah::TypeDescription::Matrix3:
+			      {
+				CCVariable<Matrix3> value;
+				da->query(value, ccVariable, matl, patch, time);
+				if(i_xd == "i_3d") {
+				  for(indexK = lo.z(); indexK < hi.z(); ++indexK){
+				    for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				      for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+					++totalNode;
+					nodeIndex(indexI-Imin,indexJ-Jmin,indexK-Kmin) = totalNode;
+					IntVector cellIndex(indexI, indexJ, indexK);
+					outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+						<< start.y() + dx.y()*(indexJ + 1) << " " 
+						<< start.z() + dx.z()*(indexK + 1) << " "   
+						<< (value[cellIndex])(1,1) << " " << (value[cellIndex])(1,2) << " " 
+						<< (value[cellIndex])(1,3) << " " 
+						<< (value[cellIndex])(2,1) << " " << (value[cellIndex])(2,2) << " "  
+						<< (value[cellIndex])(2,3) << " " 
+						<< (value[cellIndex])(3,1) << " " << (value[cellIndex])(3,2) << " " 
+						<< (value[cellIndex])(3,3) << endl;  
+				      }
+				    }
+				  }
+				}//end of if(i_xd == "i_3d")
 		      
-		      else if(i_xd == "i_2d"){
-                         for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
-                          for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			     ++totalNode;
-			     nodeIndex[indexI-Imin][indexJ-Jmin][0] = totalNode;
-			     IntVector cellIndex(indexI, indexJ, 0);
-		             outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-		                     << start.y() + dx.y()*(indexJ + 1) << " "  
-			             << (value[cellIndex])(1,1) << " " << (value[cellIndex])(1,2) << " "
-		                     << (value[cellIndex])(2,1) << " " << (value[cellIndex])(2,2) << " "
-				     << endl;
-	                         }
-		              }
-		          }//end of if(i_xd == "i_2d")
+				else if(i_xd == "i_2d"){
+				  for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				    for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				      ++totalNode;
+				      nodeIndex(indexI-Imin,indexJ-Jmin,0) = totalNode;
+				      IntVector cellIndex(indexI, indexJ, 0);
+				      outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+					      << start.y() + dx.y()*(indexJ + 1) << " "  
+					      << (value[cellIndex])(1,1) << " " << (value[cellIndex])(1,2) << " "
+					      << (value[cellIndex])(2,1) << " " << (value[cellIndex])(2,2) << " "
+					      << endl;
+				    }
+				  }
+				}//end of if(i_xd == "i_2d")
 
-		       else if(i_xd == "i_1d"){
-                          for(indexI = lo.x(); indexI < hi.x(); ++indexI){
-			     ++totalNode;
-			     nodeIndex[indexI-Imin][0][0] = totalNode;
-			     IntVector cellIndex(indexI, 0, 0);
-		             outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-			             << (value[cellIndex])(1,1) << endl; 
-	                         }
-                            }//end of if(i_xd == "i_1d") 
-		      }
-		     break;
-		     default:
-		     cerr << "CC Variable of unknown type: " << subtype->getType() << endl;
-	             break;
-		  } //end of switch (subtype->getType()): 12
-	         } //end of if(matlsIndex == matl): 11
-	        } //end of matls loop: 10
-	       } // end of loop over patches: 9
+				else if(i_xd == "i_1d"){
+				  for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				    ++totalNode;
+				    nodeIndex(indexI-Imin,0,0) = totalNode;
+				    IntVector cellIndex(indexI, 0, 0);
+				    outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
+					    << (value[cellIndex])(1,1) << endl; 
+				  }
+				}//end of if(i_xd == "i_1d") 
+			      }
+			    break;
+			    default:
+			      cerr << "CC Variable of unknown type: " << subtype->getType() << endl;
+			      break;
+			    } //end of switch (subtype->getType()): 12
+			  } //end of if(matlsIndex == matl): 11
+			} //end of matls loop: 10
+		      } // end of loop over patches: 9
 	    
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Write connectivity list in current Zone
-/////////////////////////////////////////////////////////////////////////////////////////////
-		        if(i_xd == "i_3d"){
-                          for(indexK = Kmin; indexK < Kmax-1; ++indexK){
-                           for(indexJ = Jmin; indexJ < Jmax-1; ++indexJ){
+		      //////////////////////////////////////////////////////////////////////////////////////////////
+		      // Write connectivity list in current Zone
+		      /////////////////////////////////////////////////////////////////////////////////////////////
+		      if(i_xd == "i_3d"){
+			for(indexK = Kmin; indexK < Kmax-1; ++indexK){
+			  for(indexJ = Jmin; indexJ < Jmax-1; ++indexJ){
                             for(indexI = Imin; indexI < Imax-1; ++indexI){
-		                  outfile << nodeIndex[indexI-Imin][indexJ-Jmin][indexK-Kmin] << " "  
-		                          << nodeIndex[indexI+1-Imin][indexJ-Jmin][indexK-Kmin] << " "  
-		                          << nodeIndex[indexI+1-Imin][indexJ+1-Jmin][indexK-Kmin] << " "  
-		                          << nodeIndex[indexI-Imin][indexJ+1-Jmin][indexK-Kmin] << " "  
-		                          << nodeIndex[indexI-Imin][indexJ-Jmin][indexK+1-Kmin] << " "  
-		                          << nodeIndex[indexI+1-Imin][indexJ-Jmin][indexK+1-Kmin] << " "  
-		                          << nodeIndex[indexI+1-Imin][indexJ+1-Jmin][indexK-Kmin] << " "  
-		                          << nodeIndex[indexI-Imin][indexJ+1-Jmin][indexK+1-Kmin] << endl;
-	                          } //end of loop over indexI
-			        } //end of loop over indexJ
-			      } //end of loop over indexK
-			   }//end of if(i_xd == "i_3d") 
+			      outfile << nodeIndex(indexI-Imin,indexJ-Jmin,indexK-Kmin) << " "  
+				      << nodeIndex(indexI+1-Imin,indexJ-Jmin,indexK-Kmin) << " "  
+				      << nodeIndex(indexI+1-Imin,indexJ+1-Jmin,indexK-Kmin) << " "  
+				      << nodeIndex(indexI-Imin,indexJ+1-Jmin,indexK-Kmin) << " "  
+				      << nodeIndex(indexI-Imin,indexJ-Jmin,indexK+1-Kmin) << " "  
+				      << nodeIndex(indexI+1-Imin,indexJ-Jmin,indexK+1-Kmin) << " "  
+				      << nodeIndex(indexI+1-Imin,indexJ+1-Jmin,indexK-Kmin) << " "  
+				      << nodeIndex(indexI-Imin,indexJ+1-Jmin,indexK+1-Kmin) << endl;
+			    } //end of loop over indexI
+			  } //end of loop over indexJ
+			} //end of loop over indexK
+		      }//end of if(i_xd == "i_3d") 
 			
-			  else if(i_xd == "i_2d"){
-                           for(indexJ = Jmin; indexJ < Jmax-1; ++indexJ){
-                            for(indexI = Imin; indexI < Imax-1; ++indexI){
-		                  outfile << nodeIndex[indexI-Imin][indexJ-Jmin][0] << " "  
-		                          << nodeIndex[indexI+1-Imin][indexJ-Jmin][0] << " "  
-		                          << nodeIndex[indexI+1-Imin][indexJ+1-Jmin][0] << " "  
-		                          << nodeIndex[indexI-Imin][indexJ+1-Jmin][0] << " "  
-					  << endl;
-	                          } //end of loop over indexI
-			        } //end of loop over indexJ
-			    } //end of if(i_xd == "i_2d") 
-	       } // end of pressure ccVariable if: 8'9
-	      } // end of loop over matlsIndex: 8
-             } // end of loop over levels: 7
-            } // end of loop over times: 6
-          }//end of CCVariable case: 5
-        break;
-        default:
-        // for other variables in the future
-        break;
-     } // end switch( td->getType() ): 4
-    } // end of if block (do_all_ccvars || ...): 3
-  } // end of loop over variables: 2
- } //end of if (do_tecplot): 1
+		      else if(i_xd == "i_2d"){
+			for(indexJ = Jmin; indexJ < Jmax-1; ++indexJ){
+			  for(indexI = Imin; indexI < Imax-1; ++indexI){
+			    outfile << nodeIndex(indexI-Imin,indexJ-Jmin,0) << " "  
+				    << nodeIndex(indexI+1-Imin,indexJ-Jmin,0) << " "  
+				    << nodeIndex(indexI+1-Imin,indexJ+1-Jmin,0) << " "  
+				    << nodeIndex(indexI-Imin,indexJ+1-Jmin,0) << " "  
+				    << endl;
+			  } //end of loop over indexI
+			} //end of loop over indexJ
+		      } //end of if(i_xd == "i_2d") 
+		    } // end of pressure ccVariable if: 8'9
+		  } // end of loop over matlsIndex: 8
+		} // end of loop over levels: 7
+	      } // end of loop over times: 6
+	    }//end of CCVariable case: 5
+	  break;
+	  default:
+	    // for other variables in the future
+	    break;
+	  } // end switch( td->getType() ): 4
+	} // end of if block (do_all_ccvars || ...): 3
+      } // end of loop over variables: 2
+    } //end of if (do_tecplot): 1
 
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
@@ -1555,9 +1553,11 @@ int main(int argc, char** argv)
 			NodeIterator iter = patch->getNodeIterator();
 			min=max=value[*iter].length2();
 			for(;!iter.done(); iter++){
+			  cout << "iter = "<<*iter<<" ";
 			  min=Min(min, value[*iter].length2());
 			  max=Max(max, value[*iter].length2());
 			}
+			cout << "\n";
 			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << endl;
 			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << endl;
 		      }
@@ -2232,7 +2232,7 @@ int main(int argc, char** argv)
 		  // dumps header and variable info to file
 		  ostringstream fnum, pnum, matnum; 
 		  string filename;
-		  int timestepnum=t+1;
+		  unsigned long timestepnum=t+1;
 		  fnum << setw(4) << setfill('0') << timestepnum;
                   pnum << setw(4) << setfill('0') << patch->getID();
 		  matnum << setw(4) << setfill('0') << matl;
