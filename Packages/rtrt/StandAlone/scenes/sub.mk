@@ -46,10 +46,12 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/graphics-museum.mo \
 	$(SRCDIR)/living-room.mo \
 	$(SRCDIR)/science-room.mo \
+        $(SRCDIR)/seaworld-tubes2.mo \
 	$(SRCDIR)/sphere-room2.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
 	$(SRCDIR)/multi-scene.mo \
 	$(SRCDIR)/cutdemo.mo  \
+	$(SRCDIR)/basic-sea.mo  \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
 	$(SRCDIR)/ramsey.mo \
