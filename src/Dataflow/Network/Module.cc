@@ -650,16 +650,15 @@ parse_description(const string &in)
 	  {
 	    const string tmp = tag.substr(tag.find("name=\"") + 6);
 	    const string modname = tmp.substr(0, tmp.find('"'));
-	    cout << "modname = '" << modname << "'\n";
-	    out = out + modname + ' ';
+	    out = out + modname;
 	    state.pop();
-	    state.push(2);
+	    if (state.top() == 2) state.pop();
 	  }
 	  else if (tag.find("<listitem") == 0)
 	  {
-	    out = out + " * ";
+	    out = out + "  * ";
 	    state.pop();
-	    state.push(2);
+	    if (state.top() != 2) state.push(2);
 	  }
 	  else
 	  {
