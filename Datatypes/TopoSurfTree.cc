@@ -88,6 +88,8 @@ void TopoSurfTree::BldPatches() {
     int i,j,k,l;
 
     cerr << "We have "<<faces.size()<<" faces.\n";
+    if (!faces.size()) return;
+
     // make a list of what surfaces each faces is attached to
     Array1<Array1<int> > allFaceRegions(faces.size());
 //    cerr << "Membership.size()="<<allFaceRegions.size()<<"\n";
@@ -181,6 +183,7 @@ void TopoSurfTree::BldPatches() {
 	    int currSize=patchRegions.size();
 	    patchBdryEdgeFace.resize(currSize+1);
 	    patchBdryEdgeFace[currSize].resize(edgeI.size());
+	    patchBdryEdgeFace[currSize].initialize(-1);
 	    patches.resize(currSize+1);
 	    tmpPatches.resize(currSize+1);
 	    patchesOrient.resize(currSize+1);
@@ -263,6 +266,7 @@ void TopoSurfTree::BldPatches() {
 		    patchesOrient.resize(currSize+1);
 		    patchBdryEdgeFace.resize(currSize+1);
 		    patchBdryEdgeFace[currSize].resize(edgeI.size());
+		    patchBdryEdgeFace[currSize].initialize(-1);
 		}
 
 		Queue<int> q;
@@ -366,9 +370,9 @@ void TopoSurfTree::BldWires() {
     Array1<Array1<int> > allEdgePatches(edges.size());
     
     for (i=0; i<patches.size(); i++)
-	for (j=0; j<patches[i].size(); j++)
-	    for (k=0; k<faceI[patches[i][j]].edges.size(); k++)
-		allEdgePatches[faceI[patches[i][j]].edges[k]].add(i);
+	for (j=0; j<edges.size(); j++)
+	    if (patchBdryEdgeFace[i][j] != -1)
+		allEdgePatches[j].add(i);
     int maxMembership=1;
 
     // sort all of the lists from above, and find the maximum number of
@@ -379,6 +383,9 @@ void TopoSurfTree::BldWires() {
 		maxMembership=allEdgePatches[i].size();
 	    order(allEdgePatches[i]);
 	}
+
+    if (maxMembership<2) return;
+
     int sz=pow(patches.size(), maxMembership);
     cerr << "allocating "<<maxMembership<<" levels with "<< patches.size()<< " types (total="<<sz<<").\n";
 
@@ -571,9 +578,11 @@ void TopoSurfTree::BldJunctions() {
     int i,j;
 
     cerr << "We have "<<nodes.size()<<" nodes.\n";
+    if (!wires.size()) return;
+
     // make a list of what patches each edge is attached to
     Array1<Array1<int> > allNodeWires(nodes.size());
-    
+
     for (i=0; i<wires.size(); i++)
 	for (j=0; j<wires[i].size(); j++) {
 	    allNodeWires[edges[wires[i][j]]->i1].add(i);
@@ -589,6 +598,7 @@ void TopoSurfTree::BldJunctions() {
 		maxMembership=allNodeWires[i].size();
 	    order(allNodeWires[i]);
 	}
+
     int sz=pow(wires.size(), maxMembership);
     cerr << "allocating "<<maxMembership<<" levels with "<< wires.size()<< " types (total="<<sz<<").\n";
 
@@ -627,6 +637,16 @@ void TopoSurfTree::BldJunctions() {
 		junctions[currSize]=tmpTypeMembers[i][j];
 	}
     }
+
+    Array1<int> wireVisited(wires.size());
+    wireVisited.initialize(0);
+    
+    for (i=0; i<junctionWires.size(); i++) 
+	for (j=0; j<junctionWires[i].size(); j++)
+	    wireVisited[junctionWires[i][j]]=1;
+    for (i=0; i<wireVisited.size(); i++)
+	if (!wireVisited[i]) junctionlessWires.add(i);
+
     cerr << "Done with BuildJunctions!!\n";
 }
 
@@ -641,8 +661,15 @@ GeomObj* TopoSurfTree::get_obj(const ColorMapHandle&)
 void TopoSurfTree::io(Piostream& stream) {
     int version=stream.begin_class("TopoSurfTree", TopoSurfTree_VERSION);
     SurfTree::io(stream);		    
-    Pio(stream, patches);
-    Pio(stream, wires);
+    Pio(stream, patches);	// indices into the SurfTree elems
+    Pio(stream, patchesOrient);
+    Pio(stream, patchRegions);
+    Pio(stream, wires);		// indices into the SurfTree edges
+    Pio(stream, wiresOrient);
+    Pio(stream, wirePatches);
+    Pio(stream, junctions);		// indices into the SurfTree nodes
+    Pio(stream, junctionWires);
+    Pio(stream, junctionlessWires);
     Pio(stream, junctions);
     stream.end_class();
 }

@@ -25,6 +25,7 @@ public:
     Array1< Array1<int> > wirePatches;
     Array1<int> junctions;		// indices into the SurfTree nodes
     Array1<Array1<int> > junctionWires;
+    Array1<int> junctionlessWires;	// wires can be closed loops
     Array1< Array1<int> > patchBdryEdgeFace;  // each patch boundary edge has
                                               // an idx to the face it bounds
 public:
