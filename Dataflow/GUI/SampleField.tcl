@@ -32,12 +32,14 @@ itcl_class SCIRun_Fields_SampleField {
 	global $this-numseeds
 	global $this-rngseed
 	global $this-whichtab
+        global $this-clamp
 	set $this-wtype rake
 	set $this-maxseeds 15
 	set $this-dist impuni
 	set $this-numseeds 10
 	set $this-rngseed 1
 	set $this-whichtab Widget
+        set $this-clamp 0
     }
 
     method ui {} {
@@ -114,7 +116,7 @@ itcl_class SCIRun_Fields_SampleField {
 	pack $rtab.f2.numseeds_l $rtab.f2.numseeds -side left
         frame $rtab.f3
         pack $rtab.f3 -side top
-        checkbutton $rtab.f3.clamp -text "Clamp to nodes" 
+        checkbutton $rtab.f3.clamp -text "Clamp to nodes" -var $this-clamp
         pack $rtab.f3.clamp
 
 	
