@@ -5,9 +5,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <Uintah/Components/MPM/Contact/SingleVelContact.h>
-#include <Uintah/Components/MPM/Contact/Contact.h>
-
+#include <Uintah/Components/MPM/Contact/ContactFactory.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -101,7 +99,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    Problem prob_description;
    prob_description.preProcessor(prob_spec, grid, d_sharedState);
 
-   d_contactModel = new SingleVelContact(sharedState);
+   //   d_contactModel = new SingleVelContact(sharedState);
+   d_contactModel = ContactFactory::create(prob_spec,sharedState);
    cerr << "SerialMPM::problemSetup not done\n";
 }
 
@@ -701,6 +700,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.30  2000/04/27 21:39:27  jas
+// Now creating contact via a factory.
+//
 // Revision 1.29  2000/04/26 06:48:12  sparker
 // Streamlined namespaces
 //

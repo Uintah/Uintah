@@ -14,7 +14,7 @@ using std::ofstream;
 
 using namespace Uintah::MPM;
 
-ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP ps)
+ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps)
 {
 
   for (ProblemSpecP child = ps->findBlock(); child != 0;
