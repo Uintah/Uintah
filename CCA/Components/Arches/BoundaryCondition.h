@@ -203,7 +203,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Initialize multimaterial wall cell types
       void sched_mmWallCellTypeInit( SchedulerP&, const PatchSet* patches,
-				     const MaterialSet* matls);
+				     const MaterialSet* matls, bool fixCellType);
 
       ////////////////////////////////////////////////////////////////////////
       // Initialize multimaterial wall cell types for first time step
@@ -276,7 +276,8 @@ public:
 			      const PatchSubset* patches,
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
+			      DataWarehouse* new_dw,
+			      bool fixCellType);
 
       ////////////////////////////////////////////////////////////////////////
       // Initialize multi-material wall celltyping and void fraction 
