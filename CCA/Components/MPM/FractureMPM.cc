@@ -734,9 +734,8 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
-  if(flags->d_8or27==27){
-   t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
-  }
+  t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
+
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
 
   // for Fracture
@@ -771,9 +770,8 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
-  if(flags->d_8or27==27){
-    t->computes(lb->pSizeLabel_preReloc);
-  }
+  t->computes(lb->pSizeLabel_preReloc);
+
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -2270,11 +2268,10 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	(pset->getParticleSet(),false,dwi,patch, 0);
 
       pids_new.copyData(pids);
-      if(flags->d_8or27==27){
-	old_dw->get(psize,               lb->pSizeLabel,                 pset);
-	new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
-	psizeNew.copyData(psize);
-      }
+      old_dw->get(psize,               lb->pSizeLabel,                 pset);
+      new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
+      psizeNew.copyData(psize);
+      
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
