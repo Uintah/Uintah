@@ -95,6 +95,7 @@ public:
     NetworkEditor* netedit;
     Network* network;
     clString name;
+    int abort_flag;
 public:
     int niports();
     int noports();

@@ -20,14 +20,14 @@ class Connection;
 class Module;
 
 class Port {
-    Module* module;
-    int which_port;
     clString typename;
     clString portname;
     clString colorname;
     int protocols;
     int u_proto;
 protected:
+    Module* module;
+    int which_port;
     Array1<Connection*> connections;
     int xlight, ylight;
     enum PortState {
