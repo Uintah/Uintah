@@ -130,7 +130,7 @@ namespace Datatypes{
 
     //////////
     // Returns string representation of the component
-    string    get_str_f(int) const;
+    string    get_str_f(unsigned int) const;
 
     //////////
     // Evaluation functions
