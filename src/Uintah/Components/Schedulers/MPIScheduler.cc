@@ -19,6 +19,10 @@
 #include <iomanip>
 #include <set>
 
+#ifdef USE_VAMPIR
+#include <Uintah/Parallel/Vampir.h>
+#endif //USE_VAMPIR
+
 using namespace Uintah;
 using namespace std;
 using SCICore::Thread::Time;
@@ -115,6 +119,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		      DataWarehouseP   & old_dw,
 		      DataWarehouseP   & dw )
 {
+#ifdef USE_VAMPIR
+   VT_begin(VT_EXECUTE);
+#endif
+
    d_labels.clear();
    d_times.clear();
    emitTime("time since last execute");
@@ -136,6 +144,11 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    graph.assignSerialNumbers();
 
    emitTime("assignSerialNumbers");
+
+#ifdef USE_VAMPIR
+   VT_begin(VT_SEND_PARTICLES);
+#endif
+
    // Send particle sets
    int me = pc->myrank();
    vector<Task*> presort_tasks = graph.getTasks();
@@ -173,6 +186,11 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       }
    }
 
+#ifdef USE_VAMPIR
+   VT_end(VT_SEND_PARTICLES);
+   VT_begin(VT_RECV_PARTICLES);
+#endif
+
    // Recv particle sets
    for(vector<Task*>::iterator iter = presort_tasks.begin();
        iter != presort_tasks.end(); iter++){
@@ -198,6 +216,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	 }
       }
    }
+
+#ifdef USE_VAMPIR
+   VT_end(VT_RECV_PARTICLES);
+   VT_begin(VT_SEND_INITDATA);
+#endif
+
    emitTime("send/recv particles sets");
 
    set<VarDestType> varsent;
@@ -255,6 +279,11 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       }
    }
 
+#ifdef USE_VAMPIR
+   VT_end(VT_SEND_INITDATA);
+   VT_begin(VT_RECV_INITDATA);
+#endif
+
    // recv initial data from old datawarhouse
    vector<MPI_Request> recv_ids;
    for(vector<Task*>::iterator iter = presort_tasks.begin();
@@ -297,6 +326,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       dbg << me << " Done calling recv waitall with " << recv_ids.size() << " waiters\n";
    }
 
+#ifdef USE_VAMPIR
+   VT_end(VT_RECV_INITDATA);
+#endif
+
    emitTime("send initial data");
 
    vector<Task*> tasks;
@@ -309,6 +342,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 
    emitTime("topologicalSort:");
 
+#ifdef USE_VAMPIR
+   VT_begin(VT_CHECKSUM);
+#endif
    // Compute a simple checksum to make sure that all processes
    // are trying to execute the same graph.  We should do two
    // things in the future:
@@ -325,6 +361,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	   << " and global is " << result_checksum << '\n';
       MPI_Abort(d_myworld->getComm(), 1);
    }
+#ifdef USE_VAMPIR
+   VT_end(VT_CHECKSUM);
+#endif
+
    emitTime("checksum reduction");
 
    dbg << "Executing " << ntasks << " tasks\n";
@@ -364,6 +404,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    dbg << '\n';
 	    double recvstart = Time::currentSeconds();
 	    if(task->getType() != Task::Gather){
+#ifdef USE_VAMPIR
+	      VT_begin(VT_RECV_DEPENDENCIES);
+#endif
 	       // Receive any of the foreign requires
 	       const vector<Task::Dependency*>& reqs = task->getRequires();
 	       vector<MPI_Request> recv_ids;
@@ -403,6 +446,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       }
 	    }
 
+#ifdef USE_VAMPIR
+	    VT_end(VT_RECV_DEPENDENCIES);
+#endif
+
 	    if(task->getType() == Task::Scatter){
 	       const vector<Task::Dependency*>& comps = task->getComputes();
 	       ASSERTEQ(comps.size(), 1);
@@ -432,6 +479,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       sgargs.tags.resize(0);
 	    }
 
+#ifdef USE_VAMPIR
+	    VT_begin(VT_PERFORM_TASK);
+#endif
 	    dbg << me << " Starting task: " << task->getName();
 	    if(task->getPatch())
 	       dbg << " on patch " << task->getPatch()->getID() << '\n';
@@ -439,6 +489,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    task->doit(pc);
 	    double sendstart = Time::currentSeconds();
 	    
+#ifdef USE_VAMPIR
+	    VT_end(VT_PERFORM_TASK);
+	    VT_begin(VT_SEND_COMPUTES);
+#endif	    
 
 	    if(task->getType() != Task::Scatter){
 	       //cerr << me << " !scatter\n";
@@ -496,6 +550,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  }
 	       }
 	    }
+
+#ifdef USE_VAMPIR
+	    VT_end(VT_SEND_COMPUTES);
+#endif	    
 
 	    double dsend = Time::currentSeconds()-sendstart;
 	    double dtask = sendstart-taskstart;
@@ -564,6 +622,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       cerr << "MPIScheduler: time sum reduction (one processor only):   " 
 	   << rtime << '\n';
    }
+
+#ifdef USE_VAMPIR
+   VT_end(VT_EXECUTE);
+#endif
 }
 
 void
@@ -961,6 +1023,9 @@ MPIScheduler::emitTime(char* label, double dt)
 
 //
 // $Log$
+// Revision 1.25.4.4  2000/10/06 23:57:02  witzel
+// Added support for vampir -- mpi performance analysis tool.
+//
 // Revision 1.25.4.3  2000/10/06 16:42:33  sparker
 // Added instrumentation
 //
