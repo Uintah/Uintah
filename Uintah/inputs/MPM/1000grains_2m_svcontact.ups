@@ -22,6 +22,11 @@
     <DataArchiver>
         <filebase>1000grains_2m_svcontact.uda</filebase>
         <outputInterval>.01</outputInterval>
+        <save label="KineticEnergy"/>
+        <save label="TotalMass"/>
+        <save label="StrainEnergy"/>
+        <save label="g.mass"/>
+        <save label="g.stressFS"/>
     </DataArchiver>
 
     <PhysicalConstants>
