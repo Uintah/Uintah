@@ -84,9 +84,9 @@ c                  avdenlow = 1.0
                   flowout = flowout+ avden*
      $                 uu(i,j,k)*sns(j)*stb(k)
                   UU(I+1,J,K) = uu(i,j,k)
-                  ff(i,j,k) = -delta_t*uvwout*(old_ff(i,j,k)-
-     $                         old_ff(i-1,j,k))/(dxpw(i)) + 
-     $                         old_ff(i,j,k)
+                 ff(i,j,k)=(-delta_t*uvwout*(den(i,j,k)*old_ff(i,j,k)-
+     $                        den(i-1,j,k)*old_ff(i-1,j,k))/(dxpw(i))+ 
+     $                         den(i,j,k)*old_ff(i,j,k))/den(i,j,k)
                   if (ff(i,j,k) .lt. 0.0D0) then 
                      ff(i,j,k) = 0.0D0
                   else if (ff(i,j,k) .gt. 1.0D0) then
@@ -100,9 +100,11 @@ c                  avdenlow = 1.0
          DO K=KST,KEND
 	    DO J=JST_mod,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  VV(I,J,K) = -delta_t*uvwout*(old_vv(i,j,k)-
-     $                         old_vv(i-1,j,k))/(dxpw(i)) + 
-     $                         old_vv(i,j,k)
+                  avden = 0.5D0*(den(i,j,k)+den(i,j-1,k))
+                  avdenlow = 0.5D0*(den(i-1,j,k)+den(i-1,j-1,k))
+                  VV(I,J,K) = (-delta_t*uvwout*(avden*old_vv(i,j,k)-
+     $                         avdenlow*old_vv(i-1,j,k))/(dxpw(i)) + 
+     $                         avden*old_vv(i,j,k))/avden
                endif
             end do
          end do
@@ -111,9 +113,11 @@ c                  avdenlow = 1.0
          DO K=KST_mod,KEND
 	    DO J=JST,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  WW(I,J,K) = -delta_t*uvwout*(old_ww(i,j,k)-
-     $                         old_ww(i-1,j,k))/(dxpw(i)) + 
-     $                         old_ww(i,j,k)
+                  avden = 0.5D0*(den(i,j,k)+den(i,j,k-1))
+                  avdenlow = 0.5D0*(den(i-1,j,k)+den(i-1,j,k-1))
+                  WW(I,J,K) = (-delta_t*uvwout*(avden*old_ww(i,j,k)-
+     $                         avdenlow*old_ww(i-1,j,k))/(dxpw(i)) + 
+     $                         avden*old_ww(i,j,k))/avden
                endif
             end do
          end do
