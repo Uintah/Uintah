@@ -115,11 +115,11 @@ DirectInterpolate::execute()
     return;
   }
   if (!(sfield_port->get(sfHandle) && sfHandle.get_rep())) {
-    error( "NoSource field handle or representation" );
+    error( "No source field handle or representation" );
     return;
   }
   if (!sfHandle->basis_order() == -1) {
-    warning("No data basis in Source field to interpolate from.");
+    warning("No data basis in source field to interpolate from.");
     return;
   }
 
@@ -131,11 +131,11 @@ DirectInterpolate::execute()
     return;
   }
   if (!(dfield_port->get(dfHandle) && dfHandle.get_rep())) {
-    error( "No Destination field handle or representation" );
+    error( "No destination field handle or representation" );
     return;
   }
   if (dfHandle->basis_order() == -1) {
-    warning("No data basis in destination to interpolate to.");
+    warning("No data basis in destination field to interpolate to.");
     return;
   }
 
