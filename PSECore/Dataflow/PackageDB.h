@@ -47,7 +47,7 @@ namespace PSECore {
     // if you instantiate it many times.  This is the singleton instance,
     // on which you should invoke operations:
 
-    extern PackageDB packageDB;
+    PSECORESHARE extern PackageDB packageDB;
 
   }
 }
