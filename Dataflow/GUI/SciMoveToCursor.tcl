@@ -23,7 +23,7 @@ set screenHeight [winfo screenheight .]
 
 proc moveToCursor { window { leave_up "no" } } {
 
-  if { ![boolToInt SCIRUN_GUI_MoveGuiToMouse] } {
+  if { ![envBool SCIRUN_GUI_MoveGuiToMouse] } {
      return
   }
 
