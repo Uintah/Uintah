@@ -29,6 +29,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
@@ -309,8 +310,27 @@ Source::calculatePressureSourcePred(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   fort_pressrcpred(idxLo, idxHi, vars->pressNonlinearSrc, vars->density,
-		   vars->old_density, vars->uVelRhoHat, vars->vVelRhoHat,
-		   vars->wVelRhoHat, delta_t,
+		   vars->old_density, vars->old_old_density, vars->uVelRhoHat,
+                   vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
+		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
+}
+
+
+void
+Source::calculatePressureSourceCorr(const ProcessorGroup*,
+				    const Patch* patch,
+				    double delta_t,
+				    CellInformation* cellinfo,
+				    ArchesVariables* vars)
+{
+
+  // Get the patch and variable indices
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  fort_pressrccorr(idxLo, idxHi, vars->pressNonlinearSrc, vars->density,
+		   vars->old_density, vars->pred_density, vars->uVelRhoHat,
+                   vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
 }
 
@@ -889,7 +909,7 @@ Source::addPressureSource(const ProcessorGroup* ,
 		      cellinfo->dxpw.get_objs());
 #endif    
     fort_addpressgrad(idxLoU, idxHiU, vars->uVelocity, vars->uVelNonlinearSrc,
-		      vars->uVelocityCoeff[Arches::AP], vars->pressure,
+		      vars->pressure,
 		      vars->old_density, delta_t, ioff, joff, koff,
 		      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
 		      cellinfo->dxpw);
@@ -939,7 +959,7 @@ Source::addPressureSource(const ProcessorGroup* ,
 #endif    
 
     fort_addpressgrad(idxLoU, idxHiU, vars->vVelocity, vars->vVelNonlinearSrc,
-		      vars->vVelocityCoeff[Arches::AP], vars->pressure,
+		      vars->pressure,
 		      vars->old_density, delta_t, ioff, joff, koff,
 		      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
 		      cellinfo->dyps);
@@ -990,7 +1010,7 @@ Source::addPressureSource(const ProcessorGroup* ,
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_addpressgrad(idxLoU, idxHiU, vars->wVelocity, vars->wVelNonlinearSrc,
-		      vars->wVelocityCoeff[Arches::AP], vars->pressure,
+		      vars->pressure,
 		      vars->old_density, delta_t, ioff, joff, koff,
 		      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
 		      cellinfo->dzpb);

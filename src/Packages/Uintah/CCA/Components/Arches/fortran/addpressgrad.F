@@ -15,7 +15,7 @@ c*********************************************************************
 
       double precision VOL, APO
       logical*1 ltim, lexpl
-      ltim = .true.
+      ltim = .false.
       lexpl = .true.
       do 120 k =idxLoU(3), idxHiU(3)
          do 110 j = idxLoU(2), idxHiU(2)
@@ -24,11 +24,11 @@ c*********************************************************************
                idf  = i*ioff + j*joff + k*koff
                SU(I,J,K) = SU(I,J,K)+(PRESS(I-IOFF,J-JOFF,K-KOFF)-
      $              PRESS(I,J,K))*VOL/DXPW(idf)
-               if (ltim) then
-                  APO =  old_den(I,J,K)*VOL/deltat
-                  SU(I,J,K) = SU(I,J,K) + APO*UU(I,J,K)
-                  if (.not.lexpl) AP(I,J,K) = AP(I,J,K) + APO
-               end if
+c               if (ltim) then
+c                  APO =  old_den(I,J,K)*VOL/deltat
+c                  SU(I,J,K) = SU(I,J,K) + APO*UU(I,J,K)
+c                  if (.not.lexpl) AP(I,J,K) = AP(I,J,K) + APO
+c               end if
  100        continue
  110     continue
  120  continue

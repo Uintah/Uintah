@@ -47,6 +47,7 @@ namespace Uintah {
       SFCYVariable<double> old_vVelocity;
       SFCZVariable<double> old_wVelocity;
       CCVariable<double> old_density;
+      CCVariable<double> old_old_density;
       CCVariable<double> old_scalar;
       CCVariable<double> old_reactscalar;
       SFCXVariable<double> uVelocity;
@@ -56,7 +57,11 @@ namespace Uintah {
       SFCYVariable<double> variableCalledDV; //used for pc calculation
       SFCZVariable<double> variableCalledDW; //used for pc calculation
       CCVariable<double> pressure;
+      CCVariable<double> pressureNew;
+      CCVariable<double> pressureCorr;
       CCVariable<double> density;
+      CCVariable<double> pred_density;
+      CCVariable<double> new_density; // using for pressure solver
       CCVariable<double> viscosity;
       CCVariable<double> scalar;
       CCVariable<double> reactscalar;

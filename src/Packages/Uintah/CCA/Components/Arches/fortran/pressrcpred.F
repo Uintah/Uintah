@@ -26,24 +26,27 @@ c-----------------------------------------------------------------------
                areaew = sns(j)*stb(k)
                areatb = sns(j)*sew(i)
                vol = sns(j)*sew(i)*stb(k)
-               dene = pt5*(den_old(i+1,j,k)+den_old(i,j,k))
-               denw = pt5*(den_old(i-1,j,k)+den_old(i,j,k))
-               denn = pt5*(den_old(i,j+1,k)+den_old(i,j,k))
-               dens = pt5*(den_old(i,j-1,k)+den_old(i,j,k))
-               dent = pt5*(den_old(i,j,k+1)+den_old(i,j,k))
-               denb = pt5*(den_old(i,j,k-1)+den_old(i,j,k))
+               dene = pt5*(den(i+1,j,k)+den(i,j,k))
+               denw = pt5*(den(i-1,j,k)+den(i,j,k))
+               denn = pt5*(den(i,j+1,k)+den(i,j,k))
+               dens = pt5*(den(i,j-1,k)+den(i,j,k))
+               dent = pt5*(den(i,j,k+1)+den(i,j,k))
+               denb = pt5*(den(i,j,k-1)+den(i,j,k))
                ce = areaew*dene
                cw = areaew*denw
                cn = arean*denn
                cs = areas*dens
                ct = areatb*dent
                cb = areatb*denb
-               apo = (den_old(i,j,k) - den(i,j,k))*vol/delta_t
+c               apo = (4.0*den_old(i,j,k) - 3.0*den(i,j,k) - 
+c     $                den_old_old(i,j,k))*vol/(2.*delta_t)
+               apo = (den_old(i,j,k) - den(i,j,k))
+     $                 *vol/delta_t
                smp = (cn*vhat(i,j+1,k)-cs*vhat(i,j,k)+
      $                ce*uhat(i+1,j,k)-cw*uhat(i,j,k)+
      $                ct*what(i,j,k+1)-cb*what(i,j,k) - apo)/delta_t
 c    $              -sign*spm(i,j,k)
-               su(i,j,k)=-smp
+               su(i,j,k)= -smp
  100           continue
  110        continue
  120     continue
