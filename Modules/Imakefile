@@ -1,15 +1,15 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = ASCI Contours CFD CS684 EEG FDM FEM Fields HP Haptics Image \
-	Iterators MRA Matrix Mesh Readers Salmon Surface Treat \
+SUBDIRS = ASCI Contours CFD CS684 FDM FEM Fields HP Haptics Image \
+	Iterators Matrix EEG Mesh Readers Salmon Surface Treat \
 	Visualization Writers
 
 SCISubdirs($(SUBDIRS))
 
 OBJS = CS684/libCS684.o Contours/libContours.o EEG/libEEG.o \
 	FDM/libFDM.o FEM/libFEM.o Fields/libFields.o Haptics/libHaptics.o \
-	Image/libImage.o Iterators/libIterators.o MRA/libMRA.o \
+	Image/libImage.o Iterators/libIterators.o \
 	Matrix/libMatrix.o Mesh/libMesh.o Readers/libReaders.o \
 	Salmon/libSalmon.o Surface/libSurface.o \
 	Visualization/libVisualization.o Writers/libWriters.o

@@ -8,7 +8,7 @@ all:
 
 SO_LDFLAGS = -L$(TOP)/lib -lSalmon -lDatatypes -lDataflow -lGeom \
 	-lGeometry -lMath -lTCL \
-	-lClasslib -lMultitask -lMalloc -lm
+	-lClasslib -lMultitask -lTester -lMalloc -lm
 
 #define ConvertProgram(name) @@\
 SCIProgramTarget(name, name.o, , $(SO_LDFLAGS)) @@\

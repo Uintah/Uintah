@@ -54,5 +54,24 @@ SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lMath \
 	-lTCL -lClasslib -lMultitask $(OPENGLLIBS) -lscitk -ltk \
 	-lMalloc $(IML_LDFLAGS) -lm -lC -lc
 
+MATRIXDIRS = sp1_5c/src sp1_5c/spblas sp1_5c/mv/src
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+
+clean::
+	@	for flag in ${MAKEFLAGS} ''; do \
+	  case "$$flag" in *=*) ;; *[ik]*) set +e;; esac; done; \
+	for i in $(MATRIXDIRS) ;\
+	do \
+		echo "cleaning" "in $(CURRENT_DIR)/$$i..."; \
+		(cd $$i &&  $(MAKE) $(MFLAGS)  clean); \
+	done
+
+all::
+	@	for flag in ${MAKEFLAGS} ''; do \
+	  case "$$flag" in *=*) ;; *[ik]*) set +e;; esac; done; \
+	for i in $(MATRIXDIRS) ;\
+	do \
+		echo "making" all "in $(CURRENT_DIR)/$$i..."; \
+		(cd $$i &&  $(MAKE) $(MFLAGS)  all); \
+	done

@@ -1,0 +1,34 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_OPENGL
+OPENGLOBJS = RTrace.o  RayMatrix.o  XYZtoRGB.o
+OPENGLSRCS = RTrace.cc RayMatrix.cc XYZtoRGB.cc
+
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include -I/usr/openwin/include
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+#else
+OPENGLINCS =
+OPENGLLIBS = -lGLU -lGL -lXext -lX11
+#endif
+#else
+OPENGLOBJS =
+OPENGLSRCS = 
+#endif
+
+OBJS = BldBRDF.o  BldScene.o  DRaytracer.o  RTPrims.o  RadPrims.o  \
+	Radiosity.o  Sample2D.o  Scene.o  $(OPENGLOBJS)
+SRCS = BldBRDF.cc BldScene.cc DRaytracer.cc RTPrims.cc RadPrims.cc  \
+	Radiosity.cc Sample2D.cc Scene.cc $(OPENGLSRCS)
+
+LIBNAME = CS684
+
+LOCALINCLUDES = $(OPENGLINCS)
+SO_LIBS = 
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lGeom -lDataflow \
+	-lGeometry -lMath -lTCL -lClasslib -lMultitask $(OPENGLLIBS) \
+	-lMalloc -lWidgets -lm -lscitk -ltk
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
