@@ -92,8 +92,8 @@ ICE::~ICE()
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
-void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
-                     SimulationStateP&   sharedState)
+void  ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+                        SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
   d_SMALL_NUM   = 1.e-100;
@@ -110,9 +110,14 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
     d_dbgStartTime = 0.;
     d_dbgStopTime  = 1.;
     d_dbgOutputInterval = 0.0;
+    d_dbgBeginIndx = IntVector(0,0,0);
+    d_dbgEndIndx   = IntVector(0,0,0);
+     
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
     debug_ps->get("dbg_timeStop",      d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
+    debug_ps->get("d_dbgBeginIndx",    d_dbgBeginIndx);
+    debug_ps->get("d_dbgEndIndx",      d_dbgEndIndx );
     d_dbgOldTime      = -d_dbgOutputInterval;
     d_dbgNextDumpTime = 0.0;
 
@@ -152,7 +157,7 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   cout_norm<< "  debugging starting time "  <<d_dbgStartTime<<endl;
   cout_norm<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
   cout_norm<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
-  
+ 
   //__________________________________
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
@@ -278,12 +283,12 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   press_matl->addReference();
   t->computes(lb->doMechLabel);
   t->computes(lb->vel_CCLabel);
+  t->computes(lb->rho_CCLabel); 
   t->computes(lb->temp_CCLabel);
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->rho_micro_CCLabel);
   t->computes(lb->speedSound_CCLabel);
-  t->computes(lb->rho_CC_top_cycleLabel);
   t->computes(lb->press_CCLabel, press_matl);
   t->computes(d_sharedState->get_delt_label());
 
@@ -408,13 +413,13 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
 
   if (d_EqForm) {       // EQ FORM
     t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
-    t->requires(Task::OldDW,lb->rho_CC_top_cycleLabel,     Ghost::None);
+    t->requires(Task::OldDW,lb->rho_CCLabel,               Ghost::None);
     t->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None); 
     t->requires(Task::OldDW,lb->vel_CCLabel,               Ghost::None);
   }         
   else if (d_RateForm) {     // RATE FORM
     t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
-    t->requires(Task::OldDW,lb->rho_CC_top_cycleLabel,     Ghost::None);
+    t->requires(Task::OldDW,lb->rho_CCLabel,               Ghost::None);
     t->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None); 
     t->requires(Task::OldDW,lb->sp_vol_CCLabel,            Ghost::None);
     t->computes(lb->matl_press_CCLabel);
@@ -643,7 +648,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
-  //t->requires(Task::NewDW, lb->delP_MassXLabel,   press_matl,Ghost::None);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->speedSound_CCLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
@@ -790,7 +794,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->int_eng_L_ME_CCLabel,Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,1);
  
-  task->computes(lb->rho_CC_top_cycleLabel);
+  task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
   task->computes(lb->temp_CCLabel);
   task->computes(lb->vel_CCLabel);
@@ -914,7 +918,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     Vector grav     = d_sharedState->getGravity();
     StaticArray<CCVariable<double>   > rho_micro(numMatls);
     StaticArray<CCVariable<double>   > sp_vol_CC(numMatls);
-    StaticArray<CCVariable<double>   > rho_top_cycle(numMatls);
+    StaticArray<CCVariable<double>   > rho_CC(numMatls); 
     StaticArray<CCVariable<double>   > Temp_CC(numMatls);
     StaticArray<CCVariable<double>   > speedSound(numMatls);
     StaticArray<CCVariable<double>   > vol_frac_CC(numMatls);
@@ -934,8 +938,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       int indx= ice_matl->getDWIndex();
       new_dw->allocate(rho_micro[m],   lb->rho_micro_CCLabel,   indx,patch);
       new_dw->allocate(sp_vol_CC[m],   lb->sp_vol_CCLabel,      indx,patch);
-      new_dw->allocate(rho_top_cycle[m],lb->rho_CC_top_cycleLabel,
-                                                                indx,patch);
+      new_dw->allocate(rho_CC[m],      lb->rho_CCLabel,         indx,patch); 
       new_dw->allocate(Temp_CC[m],     lb->temp_CCLabel,        indx,patch);
       new_dw->allocate(speedSound[m],  lb->speedSound_CCLabel,  indx,patch);
       new_dw->allocate(vol_frac_CC[m], lb->vol_frac_CCLabel,    indx,patch);
@@ -944,13 +947,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
-      ice_matl->initializeCells(rho_micro[m], sp_vol_CC[m],   rho_top_cycle[m],
+      ice_matl->initializeCells(rho_micro[m], sp_vol_CC[m],   rho_CC[m],
                                 Temp_CC[m],   speedSound[m], 
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
-      setBC(rho_top_cycle[m], "Density",      patch, d_sharedState, indx);
+      setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
       setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
@@ -978,7 +981,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       int indx = ice_matl->getDWIndex(); 
       new_dw->put(rho_micro[m],     lb->rho_micro_CCLabel,      indx,patch);
       new_dw->put(sp_vol_CC[m],     lb->sp_vol_CCLabel,         indx,patch);
-      new_dw->put(rho_top_cycle[m], lb->rho_CC_top_cycleLabel,  indx,patch);
+      new_dw->put(rho_CC[m],        lb->rho_CCLabel,            indx,patch);
       new_dw->put(vol_frac_CC[m],   lb->vol_frac_CCLabel,       indx,patch);
       new_dw->put(Temp_CC[m],       lb->temp_CCLabel,           indx,patch);
       new_dw->put(speedSound[m],    lb->speedSound_CCLabel,     indx,patch);
@@ -988,7 +991,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         cout_norm << " Initial Conditions" << endl;       
         ostringstream desc;
         desc << "Initialization_Mat_" << indx << "_patch_"<< patch->getID();
-        printData(patch,   1, desc.str(), "rho_CC",      rho_top_cycle[m]);
+        printData(patch,   1, desc.str(), "rho_CC",      rho_CC[m]);
         printData(patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
      // printData(patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[m]);
         printData(patch,   1, desc.str(), "Temp_CC",     Temp_CC[m]);
@@ -1075,12 +1078,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
-      old_dw->get(Temp[m],  lb->temp_CCLabel,         indx,patch,
-                                                    Ghost::None, 0);
-      old_dw->get(rho_CC[m],lb->rho_CC_top_cycleLabel,indx,patch,
-                                                    Ghost::None,0);
-      old_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,
-                                                    Ghost::None,0);
+      old_dw->get(Temp[m],  lb->temp_CCLabel,indx,patch, Ghost::None,0);
+      old_dw->get(rho_CC[m],lb->rho_CCLabel, indx,patch, Ghost::None,0);
+      old_dw->get(vel_CC[m],lb->vel_CCLabel, indx,patch, Ghost::None,0);
 
       new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,indx, patch);
       new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel, indx, patch);
@@ -2608,7 +2608,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         constCCVariable<Vector> mom_L_Debug = mom_L;
          if(mpm_matl) {
           new_dw->get(int_eng_L_Debug,lb->int_eng_L_CCLabel,indx,patch,Ghost::None,0);
-          new_dw->get(mom_L_Debug,lb->mom_L_CCLabel,indx,patch,Ghost::None,0);
+          new_dw->get(mom_L_Debug,    lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
         }
         ostringstream desc;
         desc <<"Bot_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
@@ -2996,8 +2996,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
                                    indx,patch,Ghost::AroundCells,1);
       new_dw->getModifiable(sp_vol_CC,  
                                lb->sp_vol_CCLabel,indx,patch);
+      new_dw->getModifiable(rho_CC,  
+                               lb->rho_CCLabel,indx,patch);
 
-      new_dw->allocate(rho_CC,    lb->rho_CC_top_cycleLabel,  indx,patch);
       new_dw->allocate(temp,      lb->temp_CCLabel,           indx,patch);
       new_dw->allocate(vel_CC,    lb->vel_CCLabel,            indx,patch);
       rho_CC.initialize(0.0);
@@ -3100,8 +3101,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
        printVector( patch,1, desc.str(), "wvel_CC", 2,  vel_CC);
       }
 #endif
-
-      new_dw->put(rho_CC,   lb->rho_CC_top_cycleLabel, indx,patch);
       new_dw->put(vel_CC,   lb->vel_CCLabel,           indx,patch);
       new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
 
