@@ -40,9 +40,9 @@ namespace Uintah {
     class Stream {
     public:
       Stream();
-      Stream(const int numSpecies, const int numElements);
-      Stream(const int numSpecies, const int numElements,
-	     const int numMixVars, const int numRxnVars, const bool lsoot);
+      Stream(int numSpecies, int numElements);
+      Stream(int numSpecies, int numElements,
+	     int numMixVars, int numRxnVars, bool lsoot);
       ///////////////////////////////////////////////////////////////////////
       //
       // Copy Constructor
@@ -70,8 +70,8 @@ namespace Uintah {
       //std::vector<double> convertStreamToVec(const bool lsoot);
       std::vector<double> convertStreamToVec();
       void convertVecToStream(const std::vector<double>& vec_stateSpace, 
-			      const bool flag, const int numMixVars, 
-                              const int numRxnVars, const bool lsoot);
+			      bool flag, int numMixVars, 
+                              int numRxnVars, bool lsoot);
       double getValue(int count, bool flag);
       void normalizeStream();
       inline double getDensity() const {
