@@ -794,9 +794,9 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     t->requires(Task::OldDW, lb->delTLabel);
     t->requires(Task::NewDW, lb->rho_CCLabel,         gn);
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
-    t->requires(Task::NewDW, lb->vol_frac_CCLabel,    gn);
     t->requires(Task::NewDW, lb->Tdot_CCLabel,        gn);
     t->requires(Task::NewDW, lb->f_theta_CCLabel,     gn);
+    t->requires(Task::NewDW, lb->vol_frac_CCLabel,    gac,1);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,1); 
     t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,1); 
     t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,1);
