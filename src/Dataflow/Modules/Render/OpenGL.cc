@@ -423,7 +423,7 @@ OpenGL::render_and_save_image(int x, int y,
 #endif
 
   cerr << "Saving Image: " << fname << " with width=" << x
-       << " and height=" << y <<"... ";
+       << " and height=" << y <<"...\n";
 
 
   // FIXME: this next line was apparently meant to raise the Viewer to the
@@ -2573,10 +2573,12 @@ OpenGL::render_rotation_axis(const View &view,
   const double zfar = eyedist + 2.0;
 
   glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
   glLoadIdentity();
-
   gluPerspective(fovy, aspect, znear, zfar);
+
   glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
   glLoadIdentity();
 
   Vector oldeye(view.eyep().asVector() - view.lookat().asVector());
@@ -2599,8 +2601,10 @@ OpenGL::render_rotation_axis(const View &view,
   gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 	    lookat.x(), lookat.y(), lookat.z(),
 	    up.x(), up.y(), up.z());
-  if(do_hi_res)
-    setFrustumToWindowPortion();
+  //if(do_hi_res)
+  //  {
+  //    setFrustumToWindowPortion();
+  //  }
 
   // Disable fog for the orientation axis.
   const bool fog = drawinfo->fog;
@@ -2632,6 +2636,12 @@ OpenGL::render_rotation_axis(const View &view,
   glDepthRange(0.0, 1.0);
 
   drawinfo->fog = fog;  // Restore fog state.
+
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
 
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
