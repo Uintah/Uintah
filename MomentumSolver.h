@@ -93,6 +93,27 @@ public:
       void sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* patches,
 				     const MaterialSet* matls,
 				     double delta_t, int index);
+      void solvePred(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
+		 double time, double delta_t, int index);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized momentum matrix
+      void sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   double delta_t, int index);
+      void solveCorr(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
+		 double time, double delta_t, int index);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized momentum matrix
+      void sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   double delta_t, int index);
+
 
 protected: 
 
@@ -107,6 +128,20 @@ private:
       ///////////////////////////////////////////////////////////////////////
       // Actually build the linearized momentum matrix
       void buildLinearMatrix(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     double delta_t, int index);
+
+      void buildLinearMatrixPred(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     double delta_t, int index);
+
+      void buildLinearMatrixCorr(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,

@@ -83,6 +83,11 @@ WARNING
 #define FORT_LINEGS linegs_
 #define FORT_NORMPRESS normpress_
 #define FORT_EXPLICIT explicit_
+#define FORT_EXPLICIT_VELOCITY explicit_velocity_
+#define FORT_OUTLETBC outletbc_
+#define FORT_COMPUTEVEL computevel_
+#define FORT_PRESSRCPRED pressrcpred_
+#define FORT_EXPLICIT_VEL explicit_vel_
 // for multimaterial
 #define FORT_MMMOMSRC mmmomsrc_
 #define FORT_MMBCVELOCITY mmbcvelocity_
@@ -246,7 +251,7 @@ extern "C"
 		const int* idxLo, const int* idxHi, 
 		const double* density,
 		const int* cellType,
-		const int* cellTypeVal,
+		const int* cellTypeVal, double* time,
 		int* xminus, int* xplus, int* yminus, int* yplus,
 		int* zminus, int* zplus);
 
@@ -264,6 +269,7 @@ extern "C"
 		 const int* cellType,
 		 const int* cellTypeVal,
 		 double* delta_t, double* flowin, double* flowout,
+		 const int* domLoG, const int* domHiG, 
 		 const double* sew,const double* sns,const double* stb,
 		 int* xminus, int* xplus, int* yminus, int* yplus,
 		 int* zminus, int* zplus);
@@ -287,6 +293,7 @@ extern "C"
 		 const int* cellType,
 		 const int* domLoD, const int* domHiD, 
 		 const double* density,
+		 const int* domLoG, const int* domHiG, 
 		 const double* sew,const double* sns,const double* stb,
 		 double* areaOUT, const int* cellTypeVal,
 		 int* xminus, int* xplus, int* yminus, int* yplus,
@@ -719,12 +726,6 @@ extern "C"
 		    double* pressCoefAS,
 		    double* pressCoefAT,
 		    double* pressCoefAB,
-		    const int* domLoU, const int* domHiU,
-		    const double* uVelCoefAP,
-		    const int* domLoV, const int* domHiV,
-		    const double* vVelCoefAP,
-		    const int* domLoW, const int* domHiW,
-		    const double* wVelCoefAP,
 		    const double* sew, const double* sns, const double* stb,
 		    const double* sewu, const double* dxep, const double* dxpw,
 		    const double* snsv, const double* dynp, const double* dyps,
@@ -773,6 +774,7 @@ extern "C"
 		    const double* wVelCoefAB,
 		    const double* wVelNonLinSrc,
 		    const double* sew, const double* sns, const double* stb,
+		    const double* sewu, const double* snsv, const double* stbw,
 		    const int* cellType, const int* cellTypeID,
 		    const double* delta_t);
 
@@ -1019,6 +1021,25 @@ extern "C"
 		double* old_density,
 		double* sew, double* sns, double* stb,
 		double* delta_t);
+  void 
+  FORT_EXPLICIT_VELOCITY(const int* domLo, const int* domHi,
+			 const int* domLong, const int* domHing,
+			 const int* idxLo, const int* idxHi,
+			 double* variable, double* old_variable,
+			 double* coeffEast,
+			 double* coeffWest,
+			 double* coeffNorth,
+			 double* coeffSouth,
+			 double* coeffTop,
+			 double* coeffBottom,
+			 double* coeffDiagonal,
+			 double* nonlinearSrc,
+			 const int* domLoDen, const int* domHiDen,
+			 const int* domLoDenwg, const int* domHiDenwg,
+			 double* old_density,
+			 double* sew, double* sns, double* stb,
+			 double* delta_t,
+			 int * ioff, int* joff, int* koff);
   
   // multimaterial functions
   ////////////////////////////////////////////////////////////////////////
@@ -1086,6 +1107,92 @@ extern "C"
 			  double* epsg,
 			  const int* valid_lo,
 			  const int* valid_hi);
+
+    void
+    FORT_OUTLETBC(const int* domLoU, const int* domHiU, 
+		  double* uVelocity, 
+		  const int* domLoV, const int* domHiV, 
+		  double* vVelocity, 
+		  const int* domLoW, const int* domHiW, 
+		  double* wVelocity, 
+		  const int* domLoScalar, const int* domHiScalar,
+		  double* scalar,
+		  const int* domLoU_old, const int* domHiU_old, 
+		  double* old_uVelocity,
+		  const int* domLoV_old, const int* domHiV_old, 
+		  double* old_vVelocity,
+		  const int* domLoW_old, const int* domHiW_old, 
+		  double* old_wVelocity,
+		  const int* domLoScalar_old, const int* domHiScalar_old,
+		  double* old_scalar,
+		  const int* domLoct, const int* domHict, 
+		  const int* idxLo, const int* idxHi,
+		  int* celltype, const int* celltypeval,
+		  double* uvwout,
+		  int* xminus, int* xplus, int* yminus, int* yplus,
+		  int* zminus, int* zplus,
+		  double* delta_t,
+		  const int* domLoG, const int* domHiG, 
+		  double* dxpwu, double* dxpw);
+
+
+
+  // for pred-corr
+    void
+  FORT_COMPUTEVEL(const int* domLoU, const int* domHiU,
+		  const int* idxLoU, const int* idxHiU,
+		  double* vVelocity,
+		  const int* domLo, const int* domHi,
+		  double* pressure,
+		  const int* domLong, const int* domHing,
+		  double* density,
+		  const int* domLongO, const int* domHingO,
+		  double* old_density,
+		  double* delta_t, int* ioff, int* joff, int* koff,
+		  const int* domLoGeom, const int* domHiGeom,
+		  double* dxpw);
+
+
+  void
+  FORT_PRESSRCPRED(const int* domLo, const int* domHi,
+		   const int* domLong, const int* domHing,
+		   const int* idxLo, const int* idxHi,
+		   double* pressNonlinearSrc,
+		   const int* domLoDen,const int* domHiDen,
+		   double* drho, 
+		   const int* domLoDenO,const int* domHiDenO,
+		   double* old_den, 
+		   const int* domLoU, const int* domHiU,
+		   double* uhat, 
+		   const int* domLoV, const int* domHiV,
+		   double* vhat, 
+		   const int* domLoW, const int* domHiW,
+		   double* what, 
+		   double* deltat_t,
+		   double* sew, double* sns, 
+		   double* stb);
+
+
+  void 
+  FORT_EXPLICIT_VEL(const int* domLoU, const int* domHiU,
+		    const int* domLoUO, const int* domHiUO,
+		    const int* domLong, const int* domHing,
+		    const int* idxLo, const int* idxHi,
+		    double* variable, double* old_variable,
+		    double* coeffEast,
+		    double* coeffWest,
+		    double* coeffNorth,
+		    double* coeffSouth,
+		    double* coeffTop,
+		    double* coeffBottom,
+		    double* coeffDiagonal,
+		    double* nonlinearSrc,
+		    const int* domLoDen, const int* domHiDen,
+		    const int* domLoDenwg, const int* domHiDenwg,
+		    double* old_density,
+		    double* sew, double* sns, double* stb,
+		    double* delta_t,
+		    int * ioff, int* joff, int* koff);
 
   ////////////////////////////////////////////////////////////////////////
   // Add hydrostatic term to relative pressure

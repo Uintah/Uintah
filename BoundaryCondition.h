@@ -145,12 +145,18 @@ public:
       // Schedule Setting inlet velocity bc's
       // we need to do it because of staggered grid
       void sched_setInletVelocityBC(SchedulerP&, const PatchSet* patches,
-				    const MaterialSet* matls);
+				    const MaterialSet* matls, double time);
 
       void sched_computeFlowINOUT(SchedulerP& sched, const PatchSet* patches,
 				  const MaterialSet* matls, double delta_t);
       void sched_computeOMB(SchedulerP& sched, const PatchSet* patches,
 			    const MaterialSet* matls);
+
+      void sched_transOutletBC(SchedulerP& sched, 
+			       const PatchSet* patches,
+			       const MaterialSet* matls,
+			       double delta_t);
+
       ////////////////////////////////////////////////////////////////////////
       // Schedule Compute Pressure BCS
       // used for pressure boundary type (during time advance)
@@ -291,7 +297,15 @@ private:
 			       const PatchSubset* patches,
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
+			      DataWarehouse* new_dw,
+			      double time);
+
+      void transOutletBC(const ProcessorGroup* ,
+			 const PatchSubset* patches,
+			 const MaterialSubset* matls,
+			 DataWarehouse* old_dw,
+			 DataWarehouse* new_dw,
+			 double delta_t);
 
       void computeFlowINOUT(const ProcessorGroup* pc,
 			    const PatchSubset* patches,

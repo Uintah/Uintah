@@ -101,6 +101,30 @@ public:
       void sched_pressureLinearSolve(const LevelP& level,
 				     SchedulerP& sched);
 
+      void solvePred(const LevelP& level,
+		 SchedulerP& ,
+		 double time, double delta_t);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized eqn
+      void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls, double delta_t);
+ 
+      void sched_pressureLinearSolvePred(const LevelP& level,
+				     SchedulerP& sched);
+
+      void solveCorr(const LevelP& level,
+		 SchedulerP& ,
+		 double time, double delta_t);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized eqn
+      void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls, double delta_t);
+ 
+      void sched_pressureLinearSolveCorr(const LevelP& level,
+				     SchedulerP& sched);
+
       ///////////////////////////////////////////////////////////////////////
       // Schedule the addition of the hydrostatic term to the relative pressure
 
@@ -141,6 +165,53 @@ private:
 				   DataWarehouse* new_dw,
 				   DataWarehouse* matrix_dw);
       void pressureLinearSolve(const ProcessorGroup* pc,
+			       const Patch* patch,
+			       const int matlIndex,
+			       DataWarehouse* new_dw,
+			       DataWarehouse* matrix_dw,
+			       ArchesVariables& pressureVars);
+
+
+      void buildLinearMatrixPred(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls,
+			     DataWarehouse* new_dw,
+			     DataWarehouse* matrix_dw,
+			     double delta_t);
+      void buildLinearMatrixPressPred(const ProcessorGroup* pc,
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* new_dw,
+				  DataWarehouse* matrix_dw,
+				  double delta_t);
+
+      void pressureLinearSolvePred_all(const ProcessorGroup* pc,
+				   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+				   DataWarehouse* new_dw,
+				   DataWarehouse* matrix_dw);
+      void pressureLinearSolvePred(const ProcessorGroup* pc,
+			       const Patch* patch,
+			       const int matlIndex,
+			       DataWarehouse* new_dw,
+			       DataWarehouse* matrix_dw,
+			       ArchesVariables& pressureVars);
+
+
+      void buildLinearMatrixPressCorr(const ProcessorGroup* pc,
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* new_dw,
+				  DataWarehouse* matrix_dw,
+				  double delta_t);
+
+      void pressureLinearSolveCorr_all(const ProcessorGroup* pc,
+				   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+				   DataWarehouse* new_dw,
+				   DataWarehouse* matrix_dw);
+
+      void pressureLinearSolveCorr(const ProcessorGroup* pc,
 			       const Patch* patch,
 			       const int matlIndex,
 			       DataWarehouse* new_dw,
