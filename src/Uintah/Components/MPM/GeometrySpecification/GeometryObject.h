@@ -39,7 +39,7 @@ namespace Uintah {
 	 
 	 virtual Box getBoundingBox() const = 0;
 	 virtual bool inside(const Point &p) const = 0;
-	 virtual GeometryObject* readParameters(ProblemSpecP &ps);
+
 	 
       private:
 	 IntVector d_num_par_per_cell;
@@ -52,6 +52,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.10  2000/04/20 22:37:13  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.9  2000/04/20 18:56:21  sparker
 // Updates to MPM
 //

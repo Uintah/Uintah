@@ -8,13 +8,17 @@ using namespace Uintah::Components;
 using SCICore::Geometry::Vector;
 
 
-SphereGeometryObject::SphereGeometryObject()
+SphereGeometryObject::SphereGeometryObject(ProblemSpecP& ps)
 {
-}
 
-SphereGeometryObject::SphereGeometryObject(const double r, const  Point o):
-  d_origin(o),d_radius(r)
-{
+  Point orig;
+  double rad;
+
+  ps->require("origin",orig);
+  ps->require("radius",rad);
+
+  d_origin = orig;
+  d_radius = rad;
 }
 
 SphereGeometryObject::~SphereGeometryObject()
@@ -44,21 +48,13 @@ Box SphereGeometryObject::getBoundingBox() const
 
 }
 
-GeometryObject* SphereGeometryObject::readParameters(ProblemSpecP &ps)
-{
-  Point orig;
-  double rad;
-
-  ps->require("origin",orig);
-  ps->require("radius",rad);
-
-  return (new SphereGeometryObject(rad,orig));
-  
-
-}
 
 
 // $Log$
+// Revision 1.4  2000/04/20 22:37:14  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.3  2000/04/20 18:56:23  sparker
 // Updates to MPM
 //

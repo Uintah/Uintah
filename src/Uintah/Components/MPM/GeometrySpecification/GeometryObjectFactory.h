@@ -3,6 +3,7 @@
 
 // add #include for each ConstitutiveModel here
 #include <Uintah/Interface/ProblemSpecP.h>
+#include <vector>
 
 namespace Uintah {
 namespace Components {
@@ -15,7 +16,8 @@ public:
   // this function has a switch for all known go_types
   // and calls the proper class' readParameters()
   // addMaterial() calls this
-  static GeometryObject* create(const ProblemSpecP& ps);
+  static void create(const ProblemSpecP& ps,
+		     std::vector<GeometryObject*>& objs);
 };
 
 } // end namespace Components

@@ -14,7 +14,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Region.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubRegion.cc \
-	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc
+	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc 
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
 	SCICore/Geometry
@@ -24,6 +24,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/04/20 22:37:17  jas
+# Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+# to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+#
 # Revision 1.7  2000/04/20 18:56:32  sparker
 # Updates to MPM
 #

@@ -179,7 +179,6 @@
  		</geom_object>
 		<velocity_field>1</velocity_field>
 	    </material>
-	    
 	    <material>
 		<density>1.0</density>
 		<material_type>comp_mooney_rivlin</material_type>

@@ -1,50 +1,64 @@
 #include "GeometryObjectFactory.h"
-#include <fstream>
+#include "BoxGeometryObject.h"
+#include "SphereGeometryObject.h"
+#include "CylinderGeometryObject.h"
+#include "TriGeometryObject.h"
+#include "UnionGeometryObject.h"
+#include "DifferenceGeometryObject.h"
+#include "IntersectionGeometryObject.h"
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <iostream>
 #include <string>
+
 using std::cerr;
-using std::ifstream;
-using std::ofstream;
+using std::endl;
 
 using namespace Uintah::Components;
+using Uintah::Interface::ProblemSpecP;
 
-#ifdef WONT_COMPILE_YET
-void GeometryObjectFactory::create(ProblemSpecP& ps,
-				   vector<GeometryObject*>& objs)
+
+
+
+void GeometryObjectFactory::create(const ProblemSpecP& ps,
+				   std::vector<GeometryObject*>& objs)
 
 {
    for(ProblemSpecP child = ps->findBlock(); child != 0;
        child = child->findNextBlock()){
-      string go_type = child->getNodeName();
+      std::string go_type = child->getNodeName();
       if (go_type == "box")
-	 objs.push_back(new BoxGeometryObject(ps));
+	 objs.push_back(new BoxGeometryObject(child));
       
       else if (go_type == "sphere")
-	 return new SphereGeometryObject(ps);
+	 objs.push_back(new SphereGeometryObject(child));
 
       else if (go_type ==  "cylinder")
-	 return new CylinderGeometryObject(ps);
+	 objs.push_back(new CylinderGeometryObject(child));
 
       else if (go_type == "tri")
-	 return new TriGeometryObjectPlas(ps);
+	 objs.push_back(new TriGeometryObject(child));
  
       else if (go_type == "union")
-	 return new UnionGeometryObject(ps);
+	 objs.push_back(new UnionGeometryObject(child));
    
       else if (go_type == "difference")
-	 return new DifferenceGeometryObject(ps);
+	 objs.push_back(new DifferenceGeometryObject(child));
 
       else if (go_type == "instersection")
-	 return new IntersectionGeometryObject(ps);
-   
-  else {
-      cerr << "Unknown Geometry Object Type R (" << go_type << ") aborting\n";
-      exit(1);
-  }
+	 objs.push_back(new IntersectionGeometryObject(child));
+      
+      else {
+	cerr << "Unknown Geometry Object Type " << go_type << endl;
+	exit(1);
+      }
+   }
 }
-#endif
 
 
-#endif
+
+
+
+
 
 

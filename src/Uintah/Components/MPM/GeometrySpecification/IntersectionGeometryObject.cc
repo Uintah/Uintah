@@ -1,5 +1,6 @@
 #include "IntersectionGeometryObject.h"
 #include <SCICore/Geometry/Point.h>
+#include "GeometryObjectFactory.h"
 
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Max;
@@ -8,8 +9,10 @@ using SCICore::Geometry::Min;
 using namespace Uintah::Components;
 
 
-IntersectionGeometryObject::IntersectionGeometryObject() 
+IntersectionGeometryObject::IntersectionGeometryObject(ProblemSpecP &ps) 
 {
+  GeometryObjectFactory::create(ps,child);
+
 }
 
 IntersectionGeometryObject::~IntersectionGeometryObject()

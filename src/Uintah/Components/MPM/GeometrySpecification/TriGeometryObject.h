@@ -15,14 +15,11 @@ namespace Components {
 class TriGeometryObject : public GeometryObject {
  public:
 
-  TriGeometryObject();
-  TriGeometryObject(std::string file);
+  TriGeometryObject(ProblemSpecP &);
   virtual ~TriGeometryObject();
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
-
-  virtual GeometryObject* readParameters(ProblemSpecP &ps);
 
  private:
   
@@ -35,6 +32,10 @@ class TriGeometryObject : public GeometryObject {
 #endif // __TRI_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.3  2000/04/20 22:37:14  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.2  2000/04/20 15:09:26  jas
 // Added factory methods for GeometryObjects.
 //
