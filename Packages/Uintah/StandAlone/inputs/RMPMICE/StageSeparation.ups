@@ -124,9 +124,9 @@
            <Box label = "1">
               <lower>        [0.0,0.0,-0.005]       </lower>
               <!--<upper>    [0.5,0.25,0.005]       </upper> -->
-              <upper>        [0.5,0.50,0.005]       </upper>
+              <upper>        [0.5,0.5,0.005]       </upper>
               <extraCells>   [1,1,1]                </extraCells>
-              <patches>      [4,8,1]                </patches>
+              <patches>      [4,4,1]                </patches>
               <!--<resolution>   [400,400,1]            </resolution> -->
             </Box>
             <spacing>        [0.001,0.001,0.01]    </spacing>
@@ -192,7 +192,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.2</cfl>
+         <cfl>0.4</cfl>
        <ICE>
         <max_iteration_equilibration> 100</max_iteration_equilibration>
         <advection type = "SecondOrder"/>
