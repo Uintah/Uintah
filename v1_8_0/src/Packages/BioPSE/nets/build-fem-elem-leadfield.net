@@ -53,20 +53,18 @@ set runDate "Thu Mar  1 2001"
 global runTime
 set runTime " 21:53:29"
 
-set bbox {45.0 14.0 537 529}
-
 global notes
 set notes "This net builds an element-centered finite element lead-field for an input finite element
 mesh and set of electrodes.
 
 "
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 45 70]
-set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 45 179]
-set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 387 14]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 30 104]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 30 178]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 399 15]
 set m3 [addModuleAtPosition "BioPSE" "LeadField" "BuildElemLeadField" 262 179]
 set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 244 263]
-set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 393 279]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 422 263]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 226 333]
 set m7 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 280 104]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 226 403]
