@@ -356,7 +356,9 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 		     lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
     
-    
+    cerr << "after allocates and puts" << endl;    
+    if (pset->begin() == pset->end())
+      cerr << "no particles to iterate over . . ." << endl;
     
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -638,8 +640,10 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       kgeo.multiply(out1, Bnl);
       kgeo.multiply(volnew);
       cerr.precision(16);
+#if 0
       for (int d_o_f = 0; d_o_f < (int) dof.size(); d_o_f++)
 	cerr << "dof = " << dof[d_o_f] << endl;
+#endif
       for (int I = 0; I < (int)dof.size();I++) {
 	int dofi = dof[I];
 	for (int J = 0; J < (int)dof.size(); J++) {
