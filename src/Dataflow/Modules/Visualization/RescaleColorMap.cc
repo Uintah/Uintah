@@ -93,7 +93,7 @@ RescaleColorMap::execute()
 	return;
       }
       FieldHandle field;
-      if (ifield->get(field)) {
+      if (ifield->get(field) && field.get_rep()) {
 
 	ScalarFieldInterface *sfi = field->query_scalar_interface();
 	VectorFieldInterface *vfi = field->query_vector_interface();
