@@ -1,15 +1,18 @@
 itcl_class GenStandardColorMaps { 
 
     inherit Module 
+    protected exposed
+
     constructor {config} { 
         set name GenStandardColorMaps 
         set_defaults 
     } 
   
 
+
     method set_defaults {} { 
         global $this-tcl_status 
-  
+	set exposed 0
     } 
   
 
@@ -35,7 +38,7 @@ itcl_class GenStandardColorMaps {
 
 	frame $w.f -relief flat -borderwidth 2
 	pack $w.f -side top -expand yes -fill x 
-	button $w.f.b -text "close" -command "destroy $w"
+	button $w.f.b -text "close" -command "$this close"
 	pack $w.f.b -side left -expand yes -fill y
 
         frame $w.f.f1 -relief sunken -height 25 -borderwidth 2 
@@ -61,9 +64,9 @@ itcl_class GenStandardColorMaps {
 	pack $w.f2.f3.s -side top -padx 2 -pady 2 -expand yes -fill x
 
 	bind $w.f2.f3.s <ButtonRelease> "$this update"
-	bind $w <Expose> "$this redraw"
-
+	bind $w.f.f1.canvas <Expose> "$this canvasExpose"
 	$this update
+
     }
 
     method change {} {
@@ -89,8 +92,30 @@ itcl_class GenStandardColorMaps {
 	$this-c needexecute
     }
 
+    method close {} {
+	set w .ui$this
+	set exposed 0
+	destroy $w
+    }
+    method canvasExpose {} {
+	set w .ui$this
+
+	if { [winfo viewable $w.f.f1.canvas] } { 
+	    if { $exposed } {
+		return
+	    } else {
+		set exposed 1
+		$this redraw
+	    } 
+	} else {
+	    return
+	}
+    }
+	
     method redraw {} {
 	global $this-resolution
+	set w .ui$this
+
 	set w .ui$this
 	set n [set $this-resolution]
 	set canvas $w.f.f1.canvas
