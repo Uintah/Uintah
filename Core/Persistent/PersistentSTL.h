@@ -14,11 +14,13 @@
 #include <Core/Persistent/Persistent.h>
 #include <map>
 #include <vector>
+#include <list>
 
 namespace SCIRun {
 
 using std::map;
 using std::vector;
+using std::list;
 
 #define MAP_VERSION 1
 
@@ -93,11 +95,35 @@ SCICORESHARE void Pio(Piostream& stream, vector<T>& data)
   
   vector<T>::iterator ii;
   
-  for (ii=data.begin(); ii<data.end(); ii++)
+  for (ii=data.begin(); ii!=data.end(); ii++)
     Pio(stream, *ii);
 
   stream.end_class();  
 }
+
+//////////
+// PIO for lists
+#define STLLIST_VERSION 1
+
+template <class T> 
+SCICORESHARE void Pio(Piostream& stream, list<T>& data)
+{ 
+  stream.begin_cheap_delim();
+  
+  int size=data.size();
+  stream.io(size);
+  
+  if(stream.reading()){
+    data.resize(size);
+  }
+  
+  list<T>::iterator ii;
+  for (ii=data.begin(); ii!=data.end(); ii++)
+    Pio(stream, *ii);
+     
+  stream.end_cheap_delim();  
+}
+
 
 } // End namespace SCIRun
 
