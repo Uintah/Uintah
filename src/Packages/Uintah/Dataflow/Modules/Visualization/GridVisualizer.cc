@@ -163,7 +163,7 @@ extern "C" Module* make_GridVisualizer(const string& id) {
 }
 
 GridVisualizer::GridVisualizer(const string& id)
-: Module("GridVisualizer", id, Filter),
+: Module("GridVisualizer", id, Filter, "Visualization", "Uintah"),
   level1_grid_color("level1_grid_color",id, this),
   level2_grid_color("level2_grid_color",id, this),
   level3_grid_color("level3_grid_color",id, this),
