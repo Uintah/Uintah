@@ -73,10 +73,11 @@ TetVolMesh::hash_face(node_index n1, node_index n2, node_index n3,
   f.nodes_[2] = n3;
   hash_set<Face, FaceHash>::iterator iter = table.find(f);
   if (iter == table.end()) {
+    f.cells_[0] = ci;
     table.insert(f); // insert for the first time
   } else {
     Face f = *iter;
-    f.cells_.push_back(ci); // add this cell
+    f.cells_[1] = ci; // add this cell
     table.erase(iter);
     table.insert(f);
   }
@@ -283,10 +284,18 @@ TetVolMesh::get_faces(face_array &array, cell_index index) const
   array.push_back(++idx);
 }
 
-void
-TetVolMesh::get_neighbor(cell_index &neighbor, face_index idx) const
+bool
+TetVolMesh::get_neighbor(cell_index &neighbor, cell_index from,
+			 face_index idx) const
 {
-  neighbor = neighbors_[idx];
+  const Face &f= faces_[idx];
+  if (from == f.cells_[0]) {
+    neighbor = f.cells_[1];
+  } else { 
+    neighbor = f.cells_[0];
+  }
+  if (neighbor == -1) return false;
+  return true;
 }
 
 void 

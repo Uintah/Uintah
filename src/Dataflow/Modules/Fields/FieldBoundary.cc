@@ -13,6 +13,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -30,9 +31,10 @@ public:
 private:
   
   //! Iterates over mesh, and build TriSurf at the boundary
-  template <class Mesh>
-  void                                           // FIX_ME
-  find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/);
+  template <class Field>
+  void                                     
+  find_boundary(Field *field, GeomTrianglesP *tris, 
+		TriSurf<typename Field::value_type> *osurf);
 
   //! Input should be a volume field.
   FieldIPort*              inport_;
@@ -76,38 +78,47 @@ FieldBoundary::execute()
     return;
   }
     
-  MeshBaseHandle mesh = input->mesh();
   GeomTrianglesP *tris= scinew GeomTrianglesP;  
-  //FIX_ME TriSurf *ts = new TriSurf();
 
-  // Get exact mesh type, and find boundary for it.
-  string type_string = mesh->type_name(0);
-  if (type_string == "TetVolMesh") {
-    TetVolMesh *mesht = dynamic_cast<TetVolMesh*>(mesh.get_rep());
-    find_boundary<TetVolMesh>(mesht, tris/*, ts*/); //FIX_ME
-//    } else if (type_string == "MeshRG") {
-//      MeshRG *meshrg = dynamic_cast<MeshRG*>(mesh.get_rep());
-//      find_boundary<MeshRG>(meshrg, tris/*, ts*/); //FIX_ME
-  } else {
-    cerr << "ERROR: Input mesh type not known!!" << endl;
+  bool error = false;
+  string msg;
+  string name = input->get_type_name(0);
+  if (name == "TetVol") {
+    if (input->get_type_name(1) == "double") {
+      TetVol<double> *tv = 0;
+      TriSurf<double> *ts = scinew TriSurf<double>;
+      tv = dynamic_cast<TetVol<double>*>(input.get_rep());
+      if (tv) { 
+	// need faces and edges.
+	tv->finish_mesh();
+	find_boundary(tv, tris, ts);
+	FieldHandle ts_handle(ts);
+	osurf_->send(ts_handle);
+      }
+      else { error = true; msg = "Not a valid TetVol."; }
+    } else {
+      error = true; msg ="TetVol of unknown type.";
+    }
+  } else if (error) {
+    cerr << "FieldBoundary Error: " << msg << endl;
     return;
   }
-  
+
   outport_->delAll();
   outport_->addObj(tris,"Boundary Triangles");
-// FIX_ME
-//    FieldHandle ts_handle(ts);
-//    osurf_->send(ts_handle);
+
 }
 
-template <class Mesh>
-void                                                         // FIX_ME
-FieldBoundary::find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/)
+template <class Field>
+void                                                         
+FieldBoundary::find_boundary(Field *f, GeomTrianglesP *tris, 
+			     TriSurf<typename Field::value_type> *osurf)
 {
-#if 0  
+  typedef typename Field::mesh_type Mesh;
+  typename Field::mesh_handle_type mesh = f->get_typed_mesh();
   // Walk all the cells in the mesh.
-  typename Mesh::cell_iterator citer = mesh.cell_begin();
-  while (citer != mesh.cell_end()) {
+  typename Mesh::cell_iterator citer = mesh->cell_begin();
+  while (citer != mesh->cell_end()) {
     typename Mesh::cell_index ci = *citer;
     ++citer;
     // Get all the faces in the cell.
@@ -118,7 +129,7 @@ FieldBoundary::find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*
     while (fiter != faces.end()) {
       typename Mesh::cell_index nci;
       typename Mesh::face_index fi = *fiter;
-      if (! mesh->get_neighbor_cell(fi, nci)) {
+      if (! mesh->get_neighbor(nci , ci, fi)) {
 	// Faces with no neighbors are on the boundary, build a tri.
 	typename Mesh::node_array nodes;
 	mesh->get_nodes(nodes, fi);
@@ -149,7 +160,6 @@ FieldBoundary::find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*
   }
   // FIX_ME remove duplicates and build neighbors
   // osurf->resolve_surf();
-#endif
 }
 
 } // End namespace SCIRun
