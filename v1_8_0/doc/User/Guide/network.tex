@@ -197,16 +197,24 @@ dialog for the \module{Show Field}.
 coordinated fashion. The coordinated execution of modules is managed by
 \sr{}'s \dfn{scheduler}.
 
+Note that some modules may need to be compiled before they are
+executed --- compilation will delay execution of the network.  The
+modules will turn a different color while they are being compiled.
+See \secref{Dynamic Compilation}{sec:dyncomp} and
+\htmladdnormallinkfoot{\etitle{Dynamic
+    Compilation}}{http://www.sci.utah.edu/publications/mcole01/dyn.pdf}
+for for more information on dynamic compilation.
+
 \subsubsection{The Basics}
 
 The scheduler is invoked when an event occurs that \dfn{triggers} a
-module's execution.  The scheduler creates a list of all modules that must
-executed in coordination with the triggered module. Modules
-\dfn{upstream} (directly or indirectly) from the triggered module will be
-put on the execution list if they have not previously executed.  And all
-modules \dfn{downstream} from the triggered module will be put on the
-list.  Once the scheduler determines which modules must be executed, it
-executes them.
+module's execution.  The scheduler creates a list of all modules that
+must executed in coordination with the triggered module. Modules
+\dfn{upstream} (directly or indirectly) from the triggered module will
+be put on the execution list if they have not previously executed.
+And all modules \dfn{downstream} from the triggered module will be put
+on the list.  Once the scheduler determines which modules must be
+executed, it executes them.
 
 Network execution is mostly transparent.  That is, the events that trigger
 module execution will usually be generated automatically while you work
