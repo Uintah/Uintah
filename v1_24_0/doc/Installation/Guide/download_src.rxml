@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
     <listitem id="src_download">
       <para>Three <firstterm>problem solving
       environments</firstterm> (<acronym>PSE</acronym>) can be built
-      from &sr;s sources: BioPSE, Fusion, and Insight.  Each PSE
+      from &sr;'s sources: BioPSE, Fusion, and Insight.  Each PSE
       requires a particular set of sources, which can be downloaded
       from the <ulink
       url="http://software.sci.utah.edu/archive_entry.html">software
