@@ -126,6 +126,16 @@ namespace Uintah {
 
     virtual double getCompressibility();
 
+  private:
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the plane stress deformation gradient corresponding
+    // to sig33 = 0 and the Cauchy stress */
+    //
+    virtual bool computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig,
+                                      double bulk, double shear);
+
   };
 } // End namespace Uintah
       
