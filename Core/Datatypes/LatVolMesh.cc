@@ -34,7 +34,7 @@ LatVolMesh::get_bounding_box() const
   return result;
 }
 
-inline void 
+void 
 LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 {
   array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_; 
@@ -47,7 +47,7 @@ LatVolMesh::get_nodes(node_array &array, cell_index idx) const
   array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
 }
 
-inline void 
+void 
 LatVolMesh::get_center(Point &result, node_index idx) const
 {
   double xgap,ygap,zgap;
@@ -63,13 +63,13 @@ LatVolMesh::get_center(Point &result, node_index idx) const
   result.z(min_.z()+idx.k_*zgap);
 }
 
-inline void
+void
 LatVolMesh::get_point(Point &result, node_index index) const
 { 
   get_center(result,index);
 }
 
-inline void 
+void 
 LatVolMesh::get_center(Point &result, cell_index idx) const
 {
   node_array nodes;
@@ -88,7 +88,7 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
   result.z(min.z()+(max.z()-min.z())*.5);
 }
 
-inline bool
+bool
 LatVolMesh::locate(cell_index &cell, const Point &p) const
 {
   double xgap,ygap,zgap;
@@ -115,7 +115,7 @@ LatVolMesh::locate(cell_index &cell, const Point &p) const
   return true;
 }
 
-inline bool
+bool
 LatVolMesh::locate(node_index &node, const Point &p) const
 {
   node_array nodes;     // storage for node_indeces
