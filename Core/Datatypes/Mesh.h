@@ -47,7 +47,7 @@ public:
   virtual bool has_normals() const { return false; }
   // Required interfaces
 
-  virtual MeshHandle clip(Clipper &c) { return 0; }
+  virtual MeshHandle clip(Clipper &/* c */) { return 0; }
 
   //! Persistent I/O.
   void    io(Piostream &stream);

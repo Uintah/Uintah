@@ -32,7 +32,7 @@ Clipper::~Clipper()
 
 
 bool
-Clipper::inside_p(const Point &p)
+Clipper::inside_p(const Point &/* p */)
 {
   return false;
 }
