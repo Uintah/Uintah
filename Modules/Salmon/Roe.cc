@@ -326,6 +326,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int, int)
 
 	    View tmpview(view.get());
 	    tmpview.fov(RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov()/2.)))));
+
 	    view.set(tmpview);
 	    need_redraw=1;
 	    ostrstream str(modebuf, MODEBUFSIZE);
@@ -860,19 +861,20 @@ void Roe::autoview(const BBox& bbox)
         animate_to_view(cv, 2.0);
         
         // Move forward/backwards until entire view is in scene...
-        Vector lookdir(cv.lookat()-cv.eyep());
-        double old_dist=lookdir.length();
-        PRINTVAR(autoview_sw, old_dist);
-        double old_w=2*Tan(DtoR(cv.fov()/2.))*old_dist;
-        PRINTVAR(autoview_sw, old_w);
+
+	// change this a little, make it so that the FOV must
+	// be 60 deg...
+
         Vector diag(bbox.diagonal());
-        double w=diag.length();
-        PRINTVAR(autoview_sw, w);
-        double dist=old_dist*w/old_w;
-        PRINTVAR(autoview_sw, dist);
-        cv.eyep(cv.lookat()-lookdir*dist/old_dist);
-        PRINTVAR(autoview_sw, cv.eyep());
+	double w=diag.length();
+	Vector lookdir(cv.lookat()-cv.eyep()); 
+	lookdir.normalize();
+	const double scale = 1.0/(2*Tan(DtoR(60.0/2.0)));
+	double length = w*scale;
+	cv.fov(60.0);
+	cv.eyep(cv.lookat() - lookdir*length);
         animate_to_view(cv, 2.0);
+
     }
 }
 
