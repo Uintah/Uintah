@@ -12,7 +12,7 @@
 #define SCI_NativeOptimizeCFlags -O2
 #define SCI_NativeDebugCFlags -g
 #define SCI_NativeOtherCFlags -mips2 -fullwarn
-#define SCI_NativeCppCompiler CC
+#define SCI_NativeCppCompiler CC -Dbool=int -Dtrue=1 -Dfalse=0
 #define SCI_NativeOptimizeCppFlags SCI_NativeOptimizeCFlags
 #define SCI_NativeDebugCppFlags SCI_NativeDebugCFlags
 #define SCI_NativeOtherCppFlags SCI_OtherCFlags +w -pte.cc -ptr$(TOP)/templates
@@ -26,7 +26,7 @@
 #define SCI_DeltaOptimizeCFlags -O
 #define SCI_DeltaDebugCFlags -g
 #ifdef SCI_IRIX_BIN_o32
-#define SCI_BinFlags -32 -mips2 -Dbool=int -Dtrue=1 -Dfalse=0
+#define SCI_BinFlags -32 -mips2
 #else
 #ifdef SCI_IRIX_BIN_n32_mips3
 #define SCI_BinFlags -n32 -mips3
