@@ -20,6 +20,8 @@
 #include <GL/glut.h>
 #include <glui.h>
 
+#include <unistd.h>  // for sleep
+
 using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
@@ -219,7 +221,8 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     // Stop threads...
     activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
     // Stop Glut mainloop.
-    exit( 0 );
+    usleep(1000);
+    Thread::exitAll( 0 );
     break;
   case 'G': // Toggle Display of Gui
     activeGui->toggleGui();
