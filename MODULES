@@ -52,6 +52,7 @@ BuildOctree
 Delaunay
 ExtractMeshSF
 GenerateMesh
+HexMeshToGeom
 InsertDelaunay
 MakeScalarField
 MeshRender
@@ -104,21 +105,22 @@ BitVisualize
 BoxClipSField
 CuttingPlane
 GenAxes
-GenColormap
+GenColorMap
+GenTransferFunc
 GenFieldEdges
 Hedgehog
 IsoMask
 IsoSurface
 IsoSurfaceSP
 OctIsoSurface
-RescaleColormap
+RescaleColorMap
 Streamline
 VectorSeg
 VolVis
 WidgetTest
 
 Category: Writers
-ColormapWriter
+ColorMapWriter
 ColumnMatrixWriter
 ContourSetWriter
 MatrixWriter
