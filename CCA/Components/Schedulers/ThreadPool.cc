@@ -30,6 +30,8 @@ extern DebugStream mixedDebug;
 #define DAV_DEBUG 1
 
 #ifdef USE_TAU_PROFILING
+// Turn this on to get profiling split up by patches
+// #define TAU_SEPARATE_PATCHES
 
 map<string,int> taskname_to_id_map;
 int unique_id = 9999;
@@ -38,7 +40,8 @@ int
 create_tau_mapping( const string & taskname, const PatchSubset * patches )
 {
   string full_name = taskname;
- 
+
+#ifdef TAU_SEPARATE_PATCHES 
   if( patches ) {
     for(int i=0;i<patches->size();i++) {
 
@@ -48,6 +51,7 @@ create_tau_mapping( const string & taskname, const PatchSubset * patches )
       full_name = full_name + "-" + patch_num.str();
     }
   }
+#endif //TAU_SEPARATE_PATCHES
 
   map<string,int>::iterator iter = taskname_to_id_map.find( full_name );
   if( iter != taskname_to_id_map.end() )
