@@ -49,8 +49,11 @@ void processSCENE(token_list* children1, unsigned loop1, string env_map)
 {
   token_list *children2, *children3;
   children2 = (*children1)[loop1]->GetChildren();
-  children3 = (*children2)[0]->GetChildren();
-  env_map = (*(((BitmapToken*)((*children3))[0])->GetArgs()))[0];
+  if (children2) {
+    children3 = (*children2)[0]->GetChildren();
+    if (children3) 
+      env_map = (*(((BitmapToken*)((*children3))[0])->GetArgs()))[0];
+  }
 }
 
 void processGEOMOBJECT(token_list* children1, unsigned loop1, 
