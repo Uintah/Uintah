@@ -155,7 +155,7 @@ void GuiContext::set(double value)
   value = MakeReal(value);
   ostringstream stream;
   // Print the number 17 digits wide with decimal
-  stream << showpoint << setprecision(17) << value;
+  stream << setiosflags(ios::showpoint) << setprecision(17) << value;
   // Evaluate it in TCL to pare down extra 0's at the end
   const string svalue = gui->eval("expr "+stream.str());
   string tmp;
