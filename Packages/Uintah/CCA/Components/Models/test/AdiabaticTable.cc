@@ -314,7 +314,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       double mass      = rho_CC[c]*volume;
       double cp        = gamma[c] * cv[c];
       double icp = initial_gamma[c] * initial_cv[c];
-      eReleased[c] = temp[c] * cp * mass - initialTemp[c] * icp * mass;
+      eReleased[c] = temp[c] * cp - initialTemp[c] * icp;
     }
     setBC(f,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
 
@@ -543,16 +543,16 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         // cp might need to change to be interpolated from the table
         // when we make the cp in the dw correct
         double cp        = gamma[c] * cv[c];
-        double energyNew = flameTemp[c] * cp * mass;
+        double energyNew = flameTemp[c] * cp;
         // double icp = initial_cp[c];
         double icp = initial_gamma[c] * initial_cv[c];
-        double energyOrig = initialTemp[c] * icp * mass;
+        double energyOrig = initialTemp[c] * icp;
         double erelease = (energyNew-energyOrig) - eReleased[c];
 
         // Add energy released to the cumulative total and hand it to ICE
         // as a source
         eReleased_src[c] += erelease;
-        energySource[c] += erelease;
+        energySource[c] += erelease*mass;
 #if 0
         // Diagnostics
         if(erelease != 0){
@@ -575,13 +575,13 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
 
         //__________________________________
         // debugging
-        totalEnergy += erelease;
+        totalEnergy += erelease*mass;
         fsum += f_old[c] * mass;
         esum += oldTemp[c]*cp*mass;
         cpsum += cp;
         masssum += mass;
         ncells++;
-        double newTemp = oldTemp[c] + erelease/(cp*mass);
+        double newTemp = oldTemp[c] + erelease/cp;
         if(newTemp > maxTemp)
           maxTemp = newTemp;
         if(flameTemp[c] > maxFlameTemp)
