@@ -670,6 +670,11 @@ proc regenModuleMenu { modid menu_id } {
     if { ![$modid is_subnet] } {
 	$menu_id add command -label "Duplicate" -command "moduleDuplicate $modid"
     }
+
+    # 'Replace' module Menu Option
+    if { ![$modid is_subnet] && [moduleReplaceMenu $modid $menu_id.replace] } {
+	$menu_id add cascade -label "Replace With" -menu $menu_id.replace
+    }
     
     # 'Show Log' module Menu Option
     if {![$modid is_subnet]} {
@@ -1211,7 +1216,7 @@ proc moduleDestroy {modid} {
 }
 
 proc moduleDuplicate { module } {
-    global Subnet CurrentlySelectedModules
+    global Subnet
     networkHasChanged
  
     set bbox [$Subnet(Subnet$Subnet($module)_canvas) bbox $module]
@@ -1220,6 +1225,12 @@ proc moduleDuplicate { module } {
 
     set newmodule [eval addModuleAtPosition [modulePath $module] $x $y]
 
+    foreach connection $Subnet(${module}_connections) {
+	if { [string equal [iMod connection] $module] } {
+	    createConnection [lreplace $connection 2 2 $newmodule] 1 1
+	}
+    }
+
     foreach oldvar [uplevel \#0 info vars $module-*] { 
 	set pos [expr [string length $module]-1]
 	set newvar [string replace $oldvar 0 $pos $newmodule]
@@ -1227,6 +1238,127 @@ proc moduleDuplicate { module } {
 	catch "uplevel set \"$newvar\" \{$oldval\}"
     }
 
+}
+
+proc findModuleReplacements { module } {
+    global Subnet ModuleIPorts ModuleOPorts
+
+    set path [modulePath $module]
+    set iports ""
+    set oports ""
+    foreach conn $Subnet(${module}_connections) {
+	if { [string equal $module [iMod conn]] } {
+	    lappend iports [iNum conn]
+	}	    
+	if { [string equal $module [oMod conn]] } {
+	    lappend oports [oNum conn]
+	}
+    }
+    # input port are always unique: set iports [lsort -unique $iports]
+    set oports [lsort -unique $oports]
+    
+    set candidates [array names ModuleIPorts]
+    foreach pnum $iports {
+	set newcandidates ""
+	set ptype [lindex $ModuleIPorts($path) $pnum]
+	foreach maybe $candidates {	    
+	    if { [string equal $ptype [lindex $ModuleIPorts($maybe) $pnum]] } {
+		lappend newcandidates $maybe
+	    }
+	}
+	set candidates $newcandidates
+    }
+
+    foreach pnum $oports {
+	set newcandidates ""
+	set ptype [lindex $ModuleOPorts($path) $pnum]
+	foreach maybe $candidates {	    
+	    if { [string equal $ptype [lindex $ModuleOPorts($maybe) $pnum]] } {
+		lappend newcandidates $maybe
+	    }
+	}
+	set candidates $newcandidates
+    }
+
+    # Remove the module we're replacing from the replacement possibilites list
+    listFindAndRemove candidates $path
+
+    #TODO: SUBNETS
+
+    return [lsort $candidates]
+}
+
+
+proc moduleReplaceMenu { module menu } {
+    global ModuleMenu
+    # return if there is no information to put in menu
+    if { ![info exists ModuleMenu] } { return 0 }
+    set moduleList [findModuleReplacements $module]
+    if { ![llength $moduleList] } { return 0 }
+    # destroy the old menu
+    if [winfo exists $menu] {
+	destroy $menu
+    }
+     # create a new menu
+    menu $menu -tearoff false -disabledforeground black
+
+    set added ""
+    foreach path $moduleList {
+	set last [lindex $added end]
+	lappend added $path
+	if { ![string equal [lindex $path 0] [lindex $last 0]] } {
+	    # Add a menu separator if this package isn't the first one
+	    if { [$menu index end] != "none" } {
+		$menu add separator 
+	    }
+	    # Add a label for the Package name
+	    $menu add command -label [lindex $path 0] -state disabled
+	}
+
+	if { ![string equal [lindex $path 1] [lindex $last 1]] } {
+	    $menu add cascade -label "  [lindex $path 1]" \
+		-menu $menu.menu_[lindex $path 1]
+	    menu $menu.menu_[lindex $path 1] -tearoff false
+	}
+
+	if { ![string equal [lindex $path 2] [lindex $last 2]] } {
+	    $menu.menu_[lindex $path 1] add command -label [lindex $path 2] \
+		-command "replaceModule $module $path"
+	}
+    }
+    update idletasks
+    return 1
+}
+
+
+proc replaceModule { oldmodule package category module } {
+    global Subnet inserting insertOffset
+    set connections $Subnet(${oldmodule}_connections)
+    set bbox [$Subnet(Subnet$Subnet($oldmodule)_canvas) bbox $oldmodule]
+    set x [lindex $bbox 0]
+    set y [lindex $bbox 1]
+
+    foreach connection $connections {
+	destroyConnection $connection 1 1 1
+    }
+
+    moduleDestroy $oldmodule 
+    set inserting 1
+    set insertOffset "0 0"
+    set newmodule [addModuleAtPosition $package $category $module $x $y]
+    set inserting 0
+
+    foreach connection [lsort -integer -index 3 $connections] {
+	
+	if { [string equal [oMod connection] $oldmodule] } {
+	    set connection [lreplace $connection 0 0 $newmodule]
+	}
+
+	if { [string equal [iMod connection] $oldmodule] } {
+	    set connection [lreplace $connection 2 2 $newmodule]
+	}
+	after 100 createConnection "\{$connection\}" 1 1
+    }
 }
 
 
