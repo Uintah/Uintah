@@ -16,6 +16,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/SurfacePort.h>
+#include <Datatypes/TriSurface.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
@@ -74,7 +75,7 @@ void InsertDelaunay::execute()
     MeshHandle mesh_handle;
     if(!iport->get(mesh_handle))
 	return;
-    Array1<SurfaceHandle> surfs;
+    Array1<SurfaceHandle> surfs(surfports.size());
     for(int i=0;i<surfports.size();i++){
 	if(!surfports[i]->get(surfs[i]))
 	   return;
@@ -84,5 +85,31 @@ void InsertDelaunay::execute()
     mesh_handle.detach();
     Mesh* mesh=mesh_handle.get_rep();
 
+    // Insert the points...
+    int nsurfs=surfports.size();
+    Array1<Point> points;
+    for(int isurf=0;isurf<nsurfs;isurf++){
+	surfs[isurf]->get_surfpoints(points);
+	int npoints=points.size();
+	for(int i=0;i<npoints;i++){
+	    mesh->insert_delaunay(points[i]);
+	    update_progress(i, npoints);
+	}
+    }
+
+    // Go through the mesh and remove all points that are
+    // inside any of the inserted surfaces.
+    int nnodes=mesh->nodes.size();
+    for(i=0;i<nnodes;i++){
+	update_progress(i, nnodes);
+	for(int isurf=0;isurf<nsurfs;isurf++){
+	    if(surfs[isurf]->inside(mesh->nodes[i]->p)){
+		// Remove this node...
+		mesh->remove_delaunay(i);
+	    }
+	}
+    }
+    mesh->pack_nodes();
+    mesh->pack_elems();
     oport->send(mesh);
 }
