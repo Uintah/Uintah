@@ -346,7 +346,6 @@ QuadraticTetVolMesh::get_weights(const Point& p, Node::array_type &l,
     l.push_back(ra[8]);
     l.push_back(ra[9]);
 
-    w.resize(10);
     w.push_back(-1*(1-xi-nu-gam)*(1-2*(1-xi-nu-gam)));
     w.push_back(-1*xi*(1-2*xi));
     w.push_back(-1*nu*(1-2*nu));
@@ -608,7 +607,7 @@ QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array,
   Node::array_type neighbor_nodes(10 * tets.size() + 1);
   int nodesi=0;
   // Gather all of the nodes
-  
+
   Cell::array_type::iterator iter = tets.begin();
   while (iter != tets.end()) {
     // nodes in this tet...
