@@ -120,9 +120,9 @@ DEALINGS IN THE SOFTWARE.
     </simplelist>
 
     <para>
-      To reset the views to the default parameters, simply press
-      the "Reset" button in the lower right corner of the Load Data
-      window.
+      To reset the views to the default parameters, press
+      <guibutton>Reset</guibutton> in the lower right corner of
+      the Load Data window.
     </para>
   </section><!-- end:Loading Data -->
 
@@ -277,9 +277,9 @@ DEALINGS IN THE SOFTWARE.
 
       <para>
 	Cross-hairs correspond to planes orthogonal to a slice
-	displayed in a slice pane.  Use the middle mouse button to
-	click and drag the cross hairs, selecting slices in 
-	orthogonal planes.
+	displayed in a slice pane.  Press
+	<mousebutton>Button2</mousebutton> (middle mouse button) and
+	drag the cross hairs, selecting slices in orthogonal planes.
       </para>
 
       <para>
@@ -405,10 +405,22 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Choose the Rainbow colormap and notice the difference in the
 	resulting images displayed in the viewer windows.
-<!--	Using a rainbow color map makes it easy to identify
-	variations in the underlying data, but also makes it more
-	difficult to correlate differences in colors to differences in
-	data (ie is green high density?).-->
+      </para>
+      <para>
+	With the rainbow colormap it is easier to see small variations
+	in the data, for example the variation in the center of the
+	tooth root from blue to green. Using the greyscale colormap
+	the whole center appears the same shade of grey.
+      </para>
+      <para>
+	With the greyscale colormap it is easier to tell what the
+	underlying data values are. With the greyscale colormap you
+	know that a dark grey region is substantially different than a
+	white region.  Using a rainbow colormap they show up as green
+	and red, and it is not as obvious that green and red represent
+	substantially different data values. It is also not as obvious
+	that red represents a high data value, and the blue represents
+	a low data value.
       </para>
     </section><!-- end:Coloring slices -->
 
@@ -438,15 +450,15 @@ DEALINGS IN THE SOFTWARE.
       </para>
 
       <para>
-	The left mouse button inside a slice pane can also be used to
-	change the window and level.  Left click and drag the mouse up
-	and down inside of the 2D viewer to change the level.  Left
-	click and drag the mouse from side to side to change the
-	window width.
+	The mouse can also be used to change the width and level.
+	Press <mousebutton>Button1</mousebutton> and drag up and down
+	inside of a slice pane to change the level.  Press
+	<mousebutton>Button1</mousebutton> and drag the mouse from
+	side to side to change the window width.
       </para>
       <para>
 	The tooth dataset's values range from 0 to 1300.
-	It's default level is 650 and default window width is 1300.
+	The dataset's default level is 650 and default width is 1300.
 	To view only the enamel, set the window width to 77 and the
 	window level to 942.
       </para>
@@ -469,11 +481,15 @@ DEALINGS IN THE SOFTWARE.
 
   <section>
     <title>Visualizing the Tooth Volume</title>
+
     <para>
-      The 3D Viewer is displayed in the upper left portion of the
-      Visualization Pane.  The 3D Viewer by default displays the
-      saggital, axial and coronal planes.
+      Initially the volume visualization pane (top of the Visualization pane)
+      displays a three dimensional representation of the data
+      as orthogonal slices.   However, the volume visualization pane
+      can perform full volume rendering as shown in <xref linkend="fig.3dVolRen"/>.
     </para>
+    
+<!--
     <figure id="fig.3dview">
       <title>3d Viewer Window</title>
       <mediaobject>
@@ -488,67 +504,87 @@ DEALINGS IN THE SOFTWARE.
 	</imageobject>
       </mediaobject>
     </figure>
+-->
 
-    <para>
-      In addition to viewing 2D slices of the data, it is also
-      possible to view a full 3D Volume rendering of the data.
-    </para>
-    <figure id="fig.3dVolRen"><title>Volume Rendering in 3D Viewer Window</title>
-    <mediaobject>
-      <textobject>
-	<phrase>Volume Rendering in 3D Viewer Window</phrase>
-      </textobject>
-      <imageobject>
-	<imagedata fileref="Figures/3dVolRen.eps" align="center" format="EPS"/>
-      </imageobject>
-      <imageobject>
-	<imagedata fileref="Figures/3dVolRen.jpg" align="center" format="JPG"/>
-      </imageobject>
-    </mediaobject>
+    <figure id="fig.3dVolRen">
+      <title>Volume Rendering</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Volume Rendering in 3D Viewer Window</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dVolRen.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dVolRen.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
     </figure>
 
     <para>
-      To turn on Volume Rendering, select the Volume Rendering
-      tab and put a checkmark in the box labelled "Show Volume
-      Rendering".
+      Turn on volume rendering by clicking the Visualization pane's
+      <guilabel>Volume Rendering</guilabel> tab and then click the
+      check-box labeled <guilabel>Show Volume Rendering</guilabel>.
     </para>
-    <figure id="fig.volrender_tab"><title>Turning on Volume Rendering</title>
-    <mediaobject>
-      <textobject>
-	<phrase>Turning on Volume Rendering</phrase>
-      </textobject>
-      <imageobject>
-	<imagedata fileref="Figures/volrender_tab.eps" align="center" format="EPS"/>
-      </imageobject>
-      <imageobject>
-	<imagedata fileref="Figures/volrender_tab.jpg" align="center" format="JPG"/>
-      </imageobject>
-    </mediaobject>
+
+    <figure id="fig.volrender_tab">
+      <title>Turning on Volume Rendering</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Turning on Volume Rendering</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/volrender_tab.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/volrender_tab.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
     </figure>
 
     <para>
-      The 3D Viewer can be manipulated using the mouse. Please see
-      the SCIRun Userguide for more detailed information on
-      navigating inside of the Viewer Window.  <ulink
-      url="../../Guide/usersguide/srug6_3.html"><citetitle>Section
-      6.3 of the SCIRun Userguide: "Mouse Control in the Viewer
-      Window"</citetitle></ulink>.
-      http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
+      The volume can be manipulated with the mouse.  The most commonly
+      used actions are listed in <xref
+      linkend="tbl.vol_mouse_actions"/>.  A complete list of
+      keyboard/mouse actions can be found in the <ulink
+      url="../../Guide/usersguide/srug6_3.html">SCIRun Users
+      Guide</ulink>.
     </para>
+
+    <table id="tbl.vol_mouse_actions">
+      <title>Manipulating the Volume</title>
+      <tgroup cols="2">
+	<thead>
+	  <row>
+	    <entry>Control</entry>
+	    <entry>Effect</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry><mousebutton>Button1</mousebutton>+Drag</entry>
+	    <entry>Translate left, right, up, down</entry>
+	  </row>
+	  <row>
+	    <entry><mousebutton>Button3</mousebutton>+Drag</entry>
+	    <entry>Zoom in and out</entry>
+	  </row>
+	  <row>
+	    <entry><mousebutton>Button2</mousebutton>+Drag</entry>
+	    <entry>Rotate volume</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+
     <para>
-      A quick list of the most commonly used mouse commands:
-      <simplelist type="vert" columns="1">
-	<member>Left Mouse Button: translate up/down, side-to-side</member>
-	<member>Right Mouse Button: zoom in and out</member>
-	<member>Center Mouse Button: rotate the object</member>
-      </simplelist>
-    </para>
-    <para>
-      If the object is no longer in view, you can go to the "3D
-      Options" tab in the left control panel and click "Autoview"
-      and a reasonable default view will be set.  Pressing the
-      Control-V buttons inside of the 3D window will also autoview
-      the volume.
+      If the object is no longer in view, click
+      <guibutton>Autoview</guibutton>, found in the Visualization
+      pane's <guilabel>3D Options</guilabel> tab.
+      <guibutton>Autoview</guibutton> restores a resonable view.
+      Pressing <keycombo
+      action="simul"><keycap>Control</keycap><keycap>V</keycap></keycombo>
+      performs the same function.
     </para>
 
     <!--
@@ -562,162 +598,190 @@ DEALINGS IN THE SOFTWARE.
     <section>
       <title>Transfer Functions</title>
       <para>
-	The Transfer Function assigns optical properties to 3D
-	data in order to help the user comprehend the data
-	visually. The transfer function maps color to specific
-	data values.
+	BioImage supports editable <firstterm>transfer
+	functions</firstterm>.  A transfer function assigns color to
+	three dimensional data to help the user comprehend the data
+	visually.  <xref linkend="fig.editTFWindow"/> shows BioImage's
+	interface for editing transfer functions.
       </para>
       <para>
-	To edit the transfer function directly, select the "Edit
-	Transfer Function" button in the Volume Rendering
-	Tab. <xref linkend="fig.volrender_tab"/>
-      </para>
-
-      <figure id="fig.editTFWindow"><title>The Edit Transfer Function Window</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>The Edit Transfer Function Window</phrase>
-	</textobject>
-	<imageobject>
-	  <imagedata fileref="Figures/editTFWindow.eps" align="center" format="EPS"/>
-	</imageobject>
-	<imageobject>
-	  <imagedata fileref="Figures/editTFWindow.jpg" align="center" format="JPG"/>
-	</imageobject>
-      </mediaobject>
-      </figure>
-      <para>
-	The Edit Transfer Function Window <xref
-	linkend="fig.editTFWindow"/> provides an advanced
-	interface to the color-to-data mapping used for volume
-	rendering.
-      </para>
-      <para>
-	The Edit Transfer Function Window shows a histogram
-	<xref linkend="fig.histo"/> of the data values contained
-	in the dataset.
-      </para>
-      <figure id="fig.histo"><title>Histogram of values in dataset</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>Histogram of values in dataset</phrase>
-	</textobject>
-	<imageobject>
-	  <imagedata fileref="Figures/histo.eps" align="center" format="EPS"/>
-	</imageobject>
-	<imageobject>
-	  <imagedata fileref="Figures/histo.jpg" align="center" format="JPG"/>
-	</imageobject>
-      </mediaobject>
-      </figure>
-      <para>
-	The X axis of the histogram corresponds to the value or
-	'V' of the dataset, and usually corresponds with a
-	measured quantity, such as density. For the sample tooth
-	dataset, the X axis has a range from 0-1300.
-      </para>
-      <para>
-	The Y axis of the histogram corresponds to the Gradient
-	Magnitude or 'G' of the dataset. Areas with high
-	Gradient Magnitude correspond to material borders in the
-	dataset.
+	To edit transfer functions, press <guibutton>Edit
+	Transfer Function</guibutton>, located in the Visualization
+	pane's <guilabel>Volume Rendering
+	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/>.  This
+	displays the transfer function editor shown in <xref
+	linkend="fig.editTFWindow"/>. 
       </para>
 
+      <figure id="fig.editTFWindow">
+	<title>The Transfer Function Editor</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The Edit Transfer Function Window</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/editTFWindow.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/editTFWindow.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
       <para>
-	The other controls in the Edit Transfer Function window
-	can be used to turn the individual color widget on/off,
-	change their color or assign then a name. There are also
-	controls to load/save the color widgets to disk, and to
-	delete individual color widgets.
+	The  transfer function editor displays a histogram
+	<xref linkend="fig.histo"/> of data values.
+      </para>
+
+     <para>
+	The histogram's horizontal axis corresponds to the dataset's
+	range of values.  For the tooth dataset the measure quantity
+	is density. For the tooth dataset, density values range
+	from 0-1300.
+      </para>
+      
+      <para>
+	The histogram's vertical axis measures gradient magnitude.
+	Areas of high gradient magnitude correspond to material
+	borders in the dataset.  Areas of low gradient magnitude
+	correspond to different materials in the dataset.
+      </para>
+      
+      <para>
+	A transfer function is represented by a shape in the editor
+	window.  The shape encloses a histogram region of
+	value/gradient magnitude space and is used to specify a
+	material or material border.  Shapes are moved and resized by
+	pressing mouse <mousebutton>Button1</mousebutton> on a vertex,
+	side, or shape interior and then dragging.  Triangle shapes
+	have one vertex anchored to the bottom of the histogram.
+      </para>
+
+      <figure id="fig.histo">
+	<title>Histogram of values in dataset</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Histogram of values in dataset</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/histo.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/histo.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+       <para>
+	Other transfer function editor controls are used to toggle a
+	transfer function on/off, change its color, or assign it a
+	name.  Transfer function sets can be saved to disk and later
+	reloaded.
       </para>
     </section>
 
     <section>
       <title>Emphasizing Tooth Materials</title>
+      
       <para>
 	In the tooth histogram <xref linkend="fig.histo"/>
-	there are four distinct materials, denoted by areas of
+	four distinct materials are visible, denoted by areas of
 	high concentration near the bottom of the histogram.
       </para>
+      
       <para>
-	If we do an "add rectangle" and drag the newly formed
-	rectangle over to the first material, we see that the
-	material corresponds to the root of the tooth.
+	The tooth's root is visualized by adding a rectangle shaped
+	transfer function over the first material area, as shown in
+	<xref linkend="fig.root_ren_tf"/>.
       </para>
-      <figure id="fig.root_ren_tf"><title>The root of the tooth displayed in the viewer</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>The root of the tooth displayed in the viewer</phrase>
-	</textobject>
-	<imageobject>
-	  <imagedata fileref="Figures/root_ren_tf.eps" align="center" format="EPS"/>
-	</imageobject>
-	<imageobject>
-	  <imagedata fileref="Figures/root_ren_tf.jpg" align="center" format="JPG"/>
-	</imageobject>
-      </mediaobject>
+      
+      <figure id="fig.root_ren_tf">
+	<title>Transfer function highlighting the tooth's root</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The root of the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/root_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/root_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
       </figure>
+
       <para>
-	Similarly, we discover the air surrounding the tooth <xref linkend="fig.air_ren_tf"/>,
-	the tooth dentin <xref linkend="fig.dentin_ren_tf"/> and tooth 
-	enamel <xref linkend="fig.enamel_ren"/>.
+	Now move the transfer function, in turn, to the other material
+	regions to discover the air surrounding the tooth <xref
+	linkend="fig.air_ren_tf"/>, the tooth dentin <xref
+	linkend="fig.dentin_ren_tf"/>, and tooth enamel <xref
+	linkend="fig.enamel_ren"/>.
       </para>
-      <figure id="fig.air_ren_tf"><title>The air around the tooth displayed in the viewer</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>The air around the tooth displayed in the viewer</phrase>
-	</textobject>
-	<imageobject>
-	  <imagedata fileref="Figures/air_ren_tf.eps" align="center" format="EPS"/>
-	</imageobject>
-	<imageobject>
-	  <imagedata fileref="Figures/air_ren_tf.jpg" align="center" format="JPG"/>
-	</imageobject>
-      </mediaobject>
+
+      <figure id="fig.air_ren_tf">
+	<title>The air around the tooth displayed in the viewer</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The air around the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/air_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/air_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
       </figure>
-      <figure id="fig.dentin_ren_tf"><title>The dentin of the tooth displayed in the viewer</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>The dentin of the tooth displayed in the viewer</phrase>
-	</textobject>
-	<imageobject>
-	  <imagedata fileref="Figures/dentin_ren_tf.eps" align="center" format="EPS"/>
-	</imageobject>
-	<imageobject>
-	  <imagedata fileref="Figures/dentin_ren_tf.jpg" align="center" format="JPG"/>
-	</imageobject>
-      </mediaobject>
+
+      <figure id="fig.dentin_ren_tf">
+	<title>Tooth dentin</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The dentin of the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/dentin_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/dentin_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
       </figure>
-      <figure id="fig.enamel_ren"><title>The enamel of the tooth displayed in the viewer</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>The enamel of the tooth displayed in the viewer</phrase>
-	</textobject>
-	<imageobject>
-	  <imagedata fileref="Figures/enamel_ren_tf.eps" align="center" format="EPS"/>
-	</imageobject>
-	<imageobject>
-	  <imagedata fileref="Figures/enamel_ren_tf.jpg" align="center" format="JPG"/>
-	</imageobject>
-      </mediaobject>
+
+      <figure id="fig.enamel_ren">
+	<title>Tooth enamel</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>The enamel of the tooth displayed in the viewer</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
       </figure>
     </section><!-- end:Emphasizing Tooth Materials -->
 
     <section>
       <title>Emphasizing Tooth Material Borders</title>
+      
       <para>
 	The arcs in the histogram <xref linkend="fig.histo"/>
-	represent the borders between different materials in
-	the tooth dataset. If we add a triangle to the
-	transfer function and position it on the arc <xref
-	linkend="fig.border_dentin_enamel_ren_tf"/> connecting
-	the dentin and enamel, we see the dentin-enamel border
-	displayed <xref
-	linkend="fig.border_dentin_enamel_ren_tf"/> in the
-	viewer window.
+	represent  borders between different materials in
+	the tooth dataset.
       </para>
+
+      <para>
+	To visualize the dentin-enamel border, add a triangle to the
+	transfer function and position it on the arc connecting the
+	dentin and enamel, &#x2014;see <xref
+	linkend="fig.border_dentin_enamel_ren_tf"/>.
+      </para>
+
       <figure id="fig.border_dentin_enamel_ren_tf">
-	<title>Adding color to the transfer function</title>
+	<title>Dentin, enamel border</title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>Adding color tp the transfer function</phrase>
