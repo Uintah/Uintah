@@ -25,7 +25,10 @@
 using namespace Uintah;
 using namespace std;
 static DebugStream cout_doing("flameSheet_RXN_DOING_COUT", false);
-
+//______________________________________________________________________
+//    To Do:
+//      - fix smearing of initial distribution when patch boundary 
+//        intersects the scalar field
 //______________________________________________________________________
 // flame sheet approach for laminar diffusion flames.
 // Reference:  "An Introduction to Combustion Concepts and Applications"
@@ -73,6 +76,7 @@ flameSheet_rxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
 			   ModelSetup* setup)
 {
+  cout_doing << "Doing problemSetup \t\t\t\tFLAMESHEET" << endl;
   sharedState = in_state;
   matl = sharedState->parseAndLookupMaterial(params, "material");
 
@@ -128,7 +132,9 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
     react_ps->getWithDefault("delta_H_combustion",    d_del_h_comb,    -9);  
     react_ps->getWithDefault("oxidizer_temp_infinity",d_T_oxidizer_inf,-9);
     react_ps->getWithDefault("initial_fuel_temp",     d_T_fuel_init,   -9);    
-    react_ps->getWithDefault("diffusivity",           d_diffusivity,   -9);   
+    react_ps->getWithDefault("diffusivity",           d_diffusivity,   -9);
+    react_ps->getWithDefault("smear_initialDistribution_knob",       
+                              d_smear_initialDistribution_knob,       0);   
     if( d_f_stoic == -9        ||  d_del_h_comb == -9 ||    // bulletproofing
         d_T_oxidizer_inf == -9 ||  d_T_fuel_init == -9 ) {
       ostringstream warn;
@@ -171,8 +177,11 @@ void flameSheet_rxn::scheduleInitialize(SchedulerP& sched,
 				const LevelP& level,
 				const ModelInfo*)
 {
+  //__________________________________
+  //  intialize the scalar field
+  cout_doing << "FLAMESHEET::scheduleInitialize " << endl;
   Task* t = scinew Task("flameSheet_rxn::initialize",
-			this, &flameSheet_rxn::initialize);
+                  this, &flameSheet_rxn::initialize);
   for(vector<Scalar*>::iterator iter = scalars.begin();
       iter != scalars.end(); iter++){
     Scalar* scalar = *iter;
@@ -187,7 +196,7 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
 			DataWarehouse*,
 			DataWarehouse* new_dw)
 {
-  cout_doing << "flameSheet_rxn::Initialize " << endl;
+  cout_doing << "Doing Initialize \t\t\t\tFLAMESHEET" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
@@ -198,7 +207,8 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
 	  iter != scalars.end(); iter++){
 	 Scalar* scalar = *iter;
 
-	 new_dw->allocateAndPut(var, scalar->scalar_CCLabel, matl, patch);
+	 new_dw->allocateAndPut(var, scalar->scalar_CCLabel, matl, patch,
+                               Ghost::AroundCells, 1);
 	 var.initialize(0);
 
 	 for(vector<Region*>::iterator iter = scalar->regions.begin();
@@ -207,15 +217,43 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
 	   Box b1 = region->piece->getBoundingBox();
 	   Box b2 = patch->getBox();
 	   Box b = b1.intersect(b2);
-
+          
 	   for(CellIterator iter = patch->getExtraCellIterator();
 	       !iter.done(); iter++){
-
 	     Point p = patch->cellPosition(*iter);
 	     if(region->piece->inside(p)) {
 	       var[*iter] = region->initialScalar;
             }
 	   } // Over cells
+          
+          //__________________________________
+          //  Smooth out initial distribution with some diffusion
+          double FakeDiffusivity = 10.0;
+          for( int i =1 ; i < d_smear_initialDistribution_knob; i++ ){
+            Vector dx = patch->dCell();
+            IntVector right, left, top, bottom, front, back;
+            double areaX = dx.y() * dx.z();
+            double areaY = dx.x() * dx.z();
+            double areaZ = dx.x() * dx.y();
+            SFCXVariable<double> f_flux_X_FC;
+            SFCYVariable<double> f_flux_Y_FC;
+            SFCZVariable<double> f_flux_Z_FC;
+
+            computeQ_diffusion_FC( new_dw, patch, var, FakeDiffusivity,
+                                   f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
+
+            for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
+                                                                      iter++){
+              IntVector c = *iter;
+              right  = c + IntVector(1,0,0);    left   = c ;
+              top    = c + IntVector(0,1,0);    bottom = c ;
+              front  = c + IntVector(0,0,1);    back   = c ;
+
+              var[c]   +=((f_flux_X_FC[right] - f_flux_X_FC[left]) *areaX + 
+                         (f_flux_Y_FC[top]   - f_flux_Y_FC[bottom])*areaY +
+                         (f_flux_Z_FC[front] - f_flux_Z_FC[back])  *areaZ );
+            } // cells
+          }  // diffusion loop
         } // Over regions
       } // over scalars
     } // Over matls
@@ -240,7 +278,7 @@ void flameSheet_rxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
 					       const LevelP& level,
 					       const ModelInfo* mi)
 {
-  cout_doing << "flameSheet_rxn::react " << endl;
+  cout_doing << "FLAMESHEET::scheduleMomentumAndEnergyExchange " << endl;
   Task* t = scinew Task("flameSheet_rxn::react",
 			this, &flameSheet_rxn::react, mi);
                      
@@ -273,7 +311,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing react on patch "<<patch->getID()<< "\t\t\t\t flameSheet" << endl;
+    cout_doing << "Doing react on patch "<<patch->getID()<< "\t\t\t\t\t FLAMESHEET" << endl;
 
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();
