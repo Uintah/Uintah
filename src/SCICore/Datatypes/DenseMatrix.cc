@@ -662,11 +662,8 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
-// Revision 1.8.2.2  2000/10/26 10:04:19  moulding
+// Revision 1.8.2.3  2000/10/26 17:30:32  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.8.2.1  2000/09/28 03:13:31  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.11  2000/10/18 17:26:14  guilkey
 // Added a version of solve which take a vector<double>.

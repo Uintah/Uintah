@@ -169,11 +169,8 @@ void TriDiagonalMatrix::solve(ColumnMatrix& cc)
 
 //
 // $Log$
-// Revision 1.3.2.2  2000/10/26 10:04:22  moulding
+// Revision 1.3.2.3  2000/10/26 17:30:47  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.3.2.1  2000/09/28 03:13:32  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.4  2000/07/12 15:45:10  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort

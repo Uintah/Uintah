@@ -110,46 +110,8 @@ clean::
 
 #
 # $Log$
-# Revision 1.3.2.13  2000/10/26 10:04:22  moulding
+# Revision 1.3.2.14  2000/10/26 17:30:48  moulding
 # merge HEAD into FIELD_REDESIGN
-#
-# Revision 1.3.2.12  2000/10/10 23:02:17  michaelc
-# move from {SVT}Field ports to Field ports
-#
-# Revision 1.3.2.11  2000/09/29 22:45:25  samsonov
-# added GenFunction.cc into build
-#
-# Revision 1.3.2.10  2000/09/28 03:13:32  mcole
-# merge trunk into FIELD_REDESIGN branch
-#
-# Revision 1.3.2.9  2000/09/25 21:52:08  yarden
-# move GenSField.cc into GenSField.h
-# (template implementation should be in .h file
-# for portablity)
-#
-# Revision 1.3.2.8  2000/09/22 17:31:23  michaelc
-# Cleanup data members, rearrange LatticeGeom
-#
-# Revision 1.3.2.7  2000/09/11 16:11:57  kuehne
-# updates to field redesign
-#
-# Revision 1.3.2.6  2000/08/31 23:09:08  mcole
-# fix build, bad comment
-#
-# Revision 1.3.2.5  2000/08/24 16:36:57  mcole
-# remove GenFunction from build until it compiles
-#
-# Revision 1.3.2.4  2000/08/22 20:32:30  samsonov
-# *** empty log message ***
-#
-# Revision 1.3.2.3  2000/08/14 21:29:45  michaelc
-# Attributes as general acceleration class
-#
-# Revision 1.3.2.2  2000/08/03 16:52:52  kuehne
-# Initial commit
-#
-# Revision 1.3.2.1  2000/06/07 17:42:25  kuehne
-# Added datastructures used by the new fields
 #
 # Revision 1.9  2000/08/20 04:19:50  samsonov
 # path to CameraView.cc
