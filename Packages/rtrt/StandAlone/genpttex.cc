@@ -420,7 +420,7 @@ int main(int argc, char** argv)
   char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
   char *outfile = 0;
   int nworkers = 1;
-  bool dilate = false;
+  bool dilate = true;
   int support = 2;
   int use_weighted_ave = 0;
   float threshold = 0.3;
@@ -466,8 +466,8 @@ int main(int argc, char** argv)
       gridcellsize = atoi(argv[++i]);
     } else if (strcmp(argv[i],"-gdepth")==0) {
       griddepth = atoi(argv[++i]);
-    } else if (strcmp(argv[i],"-dilate")==0) {
-      dilate = true;
+    } else if (strcmp(argv[i],"-no_dilate")==0) {
+      dilate = false;
     } else if (strcmp(argv[i],"-s")==0) {
       support = atoi(argv[++i]);
     } else if (strcmp(argv[i],"-wa")==0) {
@@ -496,7 +496,7 @@ int main(int argc, char** argv)
       cerr<<"  -np <int>                   number of processors to use (1)\n";
       cerr<<"  -nsides <int>               grid cell size (6)\n";
       cerr<<"  -gdepth <int>               grid depth (2)\n";
-      cerr<<"  -dilate                     dilate textures before writing (false)\n";
+      cerr<<"  -no_dilate                  do not dilate textures before writing (false)\n";
       cerr<<"  -s <int>                    size of support kernel for dilation (2)\n";
       cerr<<"  -wa                         use weighted averaging during dilation (false)\n";
       cerr<<"  -t <float>                  threshold for contribution determination (0.3)\n";
