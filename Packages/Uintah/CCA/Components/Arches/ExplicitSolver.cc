@@ -491,6 +491,12 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   int nofScalarVars = d_props->getNumMixStatVars();
   if (nofScalarVars > 0) {
@@ -810,6 +816,15 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    constCCVariable<double> newintUVel;
+    constCCVariable<double> newintVVel;
+    constCCVariable<double> newintWVel;
+    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> density;
     constCCVariable<double> viscosity;
     constCCVariable<double> pressure;
@@ -854,6 +869,9 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 	cerr << "UVelocity: " << newUVel[*iter] << endl;
 	cerr << "VVelocity: " << newVVel[*iter] << endl;
 	cerr << "WVelocity: " << newWVel[*iter] << endl;
+	cerr << "CCUVelocity: " << newintUVel[*iter] << endl;
+	cerr << "CCVVelocity: " << newintVVel[*iter] << endl;
+	cerr << "CCWVelocity: " << newintWVel[*iter] << endl;
 	if (d_props->getNumMixStatVars() > 0) {
 	  cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
 	}
