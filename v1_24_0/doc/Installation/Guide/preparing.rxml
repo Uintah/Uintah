@@ -36,25 +36,23 @@ DEALINGS IN THE SOFTWARE.
     Before starting &sr;:
     <itemizedlist>
       <listitem os="osx">
-	<para>Increase the open files limit on &osx;&mdash;
-	<xref linkend="sec.prepare.limits"
-	      /></para>
+	<para>Increase the open files limit&#x2014;
+	<xref linkend="sec.prepare.limits"/></para>
       </listitem>
       <listitem>
-	<para>Understand <firstterm>dynamic compilation</firstterm>&mdash;
-	<xref linkend="sec.dyncomp"
-	      /></para>
+	<para>Understand <firstterm>dynamic compilation</firstterm>&#x2014;
+	<xref linkend="sec.dyncomp"/></para>
       </listitem>
       <listitem>
 	<para>Initialize environment variables
-	<envar>SCIRUN_DATA</envar>&mdash;<xref linkend="sec.prepare.datasets"
+	<envar>SCIRUN_DATA</envar>&#x2014;<xref linkend="sec.prepare.datasets"
 	/></para>
       </listitem>
     </itemizedlist>
     The following sections discuss each of these tasks.
   </para>
 
-  <section os="linux" id="sec.prepare.limits">
+  <section os="osx" id="sec.prepare.limits">
     <title id="sec.title.prepare.limits">Increasing the Open Files Limit
     </title>
     <para>

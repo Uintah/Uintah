@@ -42,7 +42,8 @@ stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
 params_nochunk = ${params_common}
 
 stylesheet_fo := ${STYLESHEET_XSL_PRINT}/profile-docbook.xsl
-params_fo := ${params_common} section.autolabel=1
+params_fo := ${params_common} section.autolabel=1 ulink.footnotes=1 \
+  section.label.includes.component.label=1
 
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \

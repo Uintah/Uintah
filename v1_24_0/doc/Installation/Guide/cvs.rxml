@@ -87,7 +87,7 @@ DEALINGS IN THE SOFTWARE.
       <listitem>
 	<para>Set environment variable: 
 	<literallayout class="monospaced">
-	  setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
+setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
 	</literallayout>
 	</para>
       </listitem>
@@ -123,33 +123,33 @@ DEALINGS IN THE SOFTWARE.
 
 	  <listitem>
 	    <literallayout class="monospaced">
-	      tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/&sr;.1.6.0
+tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/&sr;.1.6.0
 	    </literallayout>
 	  </listitem>
 
 	  <listitem>
 	    <literallayout class="monospaced">
-	      tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/docs.1.6.0.tar
+tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/docs.1.6.0.tar
 	    </literallayout>
 	  </listitem>
 
 	  <listitem>
 	    <literallayout class="monospaced">
-	      cd ./&sr;/src/Packages
+cd ./&sr;/src/Packages
 	    </literallayout>
 	  </listitem>
 
 	  <listitem>
 	    <literallayout class="monospaced">
-	      tar xvf \
-	      /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/BioPSE.PKG.1.6.0.tar
+tar xvf \
+/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/BioPSE.PKG.1.6.0.tar
 	    </literallayout>
 	  </listitem>
 
 	  <listitem>
 	    <literallayout class="monospaced">
-	      tar xvf \
-	      /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/MatlabInterface.PKG.1.6.0.tar
+tar xvf \
+/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/MatlabInterface.PKG.1.6.0.tar
 	    </literallayout> 
 
 	  </listitem>
@@ -161,8 +161,8 @@ DEALINGS IN THE SOFTWARE.
 	<para>Import source files into CVS repository. Run the following command in
 	the <filename>./&sr;</filename> directory.
 	<literallayout class="monospaced">
-	  cvs import -m"Import of release 1.6.0" /proj/cdsp/biomed2/cvs&sr;
-	  SCI_DIST V1_6_0 > cvsimport.out
+cvs import -m"Import of release 1.6.0" /proj/cdsp/biomed2/cvs&sr;
+SCI_DIST V1_6_0 > cvsimport.out
 	</literallayout>
 	Redirect output to a file in order to reliably identify any conflicts.
 	</para>
@@ -172,8 +172,8 @@ DEALINGS IN THE SOFTWARE.
 	  and committed individually (or en masse). Use the following commands
 	  to remove retired files: 
 	  <literallayout class="monospaced">
-	    cvs rm -f `cat remove.txt`
-	    cvs commit -m"sync removed files" `cat remove.txt`
+cvs rm -f `cat remove.txt`
+cvs commit -m"sync removed files" `cat remove.txt`
 	  </literallayout>
 	  <filename>remove.txt</filename> is a space-delimited list of retired
 	  files. The cvs <command>rm</command> command marks files for removal;
@@ -200,7 +200,7 @@ DEALINGS IN THE SOFTWARE.
 	<para>Resolve any conflicts that occur between the imported files and locally
 	modified files:
 	<literallayout class="monospaced">
-	  cvs checkout -jSCI_DIST:yesterday -jSCI_DIST filename 
+cvs checkout -jSCI_DIST:yesterday -jSCI_DIST filename 
 	</literallayout>
 	(see Section 13 of the CVS manual).
 	</para>
@@ -230,14 +230,14 @@ DEALINGS IN THE SOFTWARE.
     <orderedlist>
       <listitem>
 	<literallayout class="monospaced">
-	  setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
+setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
 	</literallayout>
 	<para>
 	  or to retrieve source code via ssh:
 	</para>
 	<literallayout class="monospaced">
-	  setenv CVSROOT gateway.ece.neu.edu:/proj/cdsp/biomed2/cvs&sr;
-	  setenv CVS_RSH ssh
+setenv CVSROOT gateway.ece.neu.edu:/proj/cdsp/biomed2/cvs&sr;
+setenv CVS_RSH ssh
 	</literallayout>
       </listitem>
 
@@ -260,18 +260,18 @@ DEALINGS IN THE SOFTWARE.
 	<orderedlist>
 	  <listitem>
 	    <literallayout class="monospaced">
-	      tar xvf \
-	      /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/Thirdparty_install.1.6.0
+tar xvf \
+/proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/Thirdparty_install.1.6.0
 	    </literallayout>
 	  </listitem>
 	  <listitem>
 	    <literallayout class="monospaced">
-	      tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/DataSets.1.6.0.tar
+tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/DataSets.1.6.0.tar
 	    </literallayout>
 	  </listitem>
 	  <listitem>
 	    <literallayout class="monospaced">
-	      tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/docs.1.6.0.tar
+tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/docs.1.6.0.tar
 	  </literallayout></listitem>
 	</orderedlist>
 	</para>
@@ -283,7 +283,7 @@ DEALINGS IN THE SOFTWARE.
 	  previous step, eg.,
 	</para>
 	<literallayout class="monospaced">
-	  cd /export/scratch/&sr;.1.6.0.test/Thirdparty_install.1.4.3. 
+cd /export/scratch/&sr;.1.6.0.test/Thirdparty_install.1.4.3. 
 	</literallayout>
 	<note>
 	  <para>The Thirdparty software distributed with v1.6.0 is unchanged from
@@ -293,7 +293,7 @@ DEALINGS IN THE SOFTWARE.
 	<para>Run the install script:</para>
 
 	<literallayout class="monospaced">
-	  python install <replaceable>INSTALLDIR</replaceable> [irix, Linux] [sgi, gcc] [32, 64]
+python install <replaceable>INSTALLDIR</replaceable> [irix, Linux] [sgi, gcc] [32, 64]
 	</literallayout>
 
 	<para>where <replaceable>INSTALLDIR</replaceable> is the top-level
@@ -335,7 +335,7 @@ DEALINGS IN THE SOFTWARE.
 	&sr;/BioPSE source code files. Note that the period at the end of the
 	line below is an essential part of the command.</para>
 	<literallayout class="monospaced">
-	  cvs checkout . 
+cvs checkout . 
 	</literallayout>
 
 	<para>This command creates and populates the src and doc directories below
@@ -352,9 +352,9 @@ DEALINGS IN THE SOFTWARE.
       <listitem>
 	<para>Run configure as follows (eg.):</para>
 	<literallayout class="monospaced">
-	  ../src/configure
-	  --with-thirdparty=/export/scratch/&sr;.1.6.0.test/1.4.2/Linux/gcc-32bit  
-	  --enable-package='BioPSE MatlabInterface'--enable-debug
+../src/configure
+--with-thirdparty=/export/scratch/&sr;.1.6.0.test/1.4.2/Linux/gcc-32bit  
+--enable-package='BioPSE MatlabInterface'--enable-debug
 	</literallayout>
 
 	<para>If configure does not run successfully under sgi, try setting
@@ -362,9 +362,9 @@ DEALINGS IN THE SOFTWARE.
 	command.</para>
 
 	<literallayout class="monospaced">
-	  setenv CC cc
-	  setenv CXX CC
-	  setenv F77 f77
+setenv CC cc
+setenv CXX CC
+setenv F77 f77
 	</literallayout>
 
       </listitem>
@@ -372,20 +372,21 @@ DEALINGS IN THE SOFTWARE.
       <listitem>
 	<para>Compile &sr;/BioPSE:</para>
 	<literallayout class="monospaced">
-	  gmake -j <replaceable>JOBNUMBER</replaceable>
+gmake -j <replaceable>JOBNUMBER</replaceable>
 	</literallayout>
 
 	<para>where 5 is a typical value for
 	<replaceable>JOBNUMBER</replaceable></para>
 
-	<para>&sr; may appear to compile successfully, but run-time errors
-	may occur if environment variables starting with
-	<envar>LD_LIBRARY</envar> were set prior to compilation. Therefore, it is
-	recommended to unset these environment variables when compiling and
-	running &sr;, e.g.,</para>
+	<para>&sr; may appear to compile successfully, but run-time
+	errors may occur if environment variables starting with
+	<envar>LD_LIBRARY</envar> were set prior to
+	compilation. Therefore, it is recommended to unset these
+	environment variables when compiling and running &sr;,
+	e.g.,</para>
 
 	<literallayout class="monospaced">
-	  unsetenv LD_LIBRARY_PATH
+unsetenv LD_LIBRARY_PATH
 	</literallayout>
       </listitem>
     </orderedlist>
@@ -396,15 +397,15 @@ DEALINGS IN THE SOFTWARE.
     <title>Common CVS Commands</title>
 
     <para>CVS commands are issued by typing <command>cvs</command>,
-    followed by a list of global options (if any), followed by the desired
-    cvs command name, followed by a list of options specific to that
-    command (if any). Below are some commonly used commands and examples
-    of how they are invoked. A CVS command can apply to a single file, a
-    directory or the whole repository.</para>
+    followed by a list of global options (if any), followed by the
+    desired cvs command name, followed by a list of options specific
+    to that command (if any). Below are some commonly used commands
+    and examples of how they are invoked. A CVS command can apply to a
+    single file, a directory or the whole repository.</para>
 
     <tip>
-      <para>If entering cvs alone results in a "command not found" error, type
-      <filename>/usr/bin/cvs</filename>.</para>
+      <para>If entering cvs alone results in a "command not found"
+      error, type <filename>/usr/bin/cvs</filename>.</para>
     </tip>
 
     <variablelist>
@@ -428,21 +429,23 @@ DEALINGS IN THE SOFTWARE.
 	    <varlistentry>
 	      <term><command>cvs co src/Core/Datatypes/TriSurfMesh.cc</command></term>
 	      <listitem>
-		<para>Checkout the HEAD (the tip of the tree) revision of a specific
-		file; invoke at the top of the working tree, where src and doc
-		subdirectories reside or where they are to be
-		created. Invoking this command in the subdirectory where the file
-		resides, or without giving the path specification as indicated,
-		will not work.</para>
+		<para>Checkout the HEAD (the tip of the tree) revision
+		of a specific file; invoke at the top of the working
+		tree, where src and doc subdirectories reside or where
+		they are to be created. Invoking this command in the
+		subdirectory where the file resides, or without giving
+		the path specification as indicated, will not
+		work.</para>
 	      </listitem>
 	    </varlistentry>
 
 	    <varlistentry>
 	      <term><command>cvs co -rV1_4_2 src/Core/Datatypes/TriSurfMesh.cc</command></term>
 	      <listitem>
-		<para>Checkout a tagged revision of a specific file; invoke at the top of
-		the working tree, where src and doc subdirectories reside, or where
-		they are to be created.</para>
+		<para>Checkout a tagged revision of a specific file;
+		invoke at the top of the working tree, where src and
+		doc subdirectories reside, or where they are to be
+		created.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -472,41 +475,44 @@ DEALINGS IN THE SOFTWARE.
 	    <varlistentry>
 	      <term><command>cvs -n update -A -P -d > cvsupdate.out</command></term>
 	      <listitem>
-		<para>Find out what cvs would do if the update command were issued;
-		invoke in the top level directory (where src and doc reside), and
-		redirect output to a file.  Option <option>-A</option> resets any
-		sticky tags, <option>-P</option> prunes empty directories, and
-		<option>-d</option> creates any directories that exist in the
-		repository if they are missing from the working directory.</para>
+		<para>Find out what cvs would do if the update command
+		were issued; invoke in the top level directory (where
+		src and doc reside), and redirect output to a file.
+		Option <option>-A</option> resets any sticky tags,
+		<option>-P</option> prunes empty directories, and
+		<option>-d</option> creates any directories that exist
+		in the repository if they are missing from the working
+		directory.</para>
 	      </listitem>
 	    </varlistentry>
 
 	    <varlistentry>
 	      <term><command>cvs update -A -P -d</command></term>
 	      <listitem>
-		<para>Do the update for real. Options same as above.  The output of
-		this command is:</para>
+		<para>Do the update for real. Options same as above.
+		The output of this command is:</para>
 		<screen>
-		  RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.cc,v
-		  retrieving revision 1.2
-		  retrieving revision 1.3
-		  Merging differences between 1.2 and 1.3 into TriSurfMesh.cc
-		  C Core/Datatypes/TriSurfMesh.cc
-		  RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.h,v
-		  retrieving revision 1.2
-		  retrieving revision 1.4
-		  Merging differences between 1.2 and 1.4 into TriSurfMesh.h
-		  M Core/Datatypes/TriSurfMesh.h
-		  U Core/Datatypes/TypeName.h
-		  ? Core/Datatypes/TriSurfMesh.cc.1.2
+RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.cc,v
+retrieving revision 1.2
+retrieving revision 1.3
+Merging differences between 1.2 and 1.3 into TriSurfMesh.cc
+C Core/Datatypes/TriSurfMesh.cc
+RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.h,v
+retrieving revision 1.2
+retrieving revision 1.4
+Merging differences between 1.2 and 1.4 into TriSurfMesh.h
+M Core/Datatypes/TriSurfMesh.h
+U Core/Datatypes/TypeName.h
+? Core/Datatypes/TriSurfMesh.cc.1.2
 		</screen>
-		<para>The character at the beginning of certain lines indicates the
-		result of the update. The "C" indicates that cvs tried to merge two
-		revisions and encountered conflicts, which are highlighted by the
-		standard diff demarcations. Manual resolution is required. "M"
-		means the files were merged successfully, "U" means the file is
-		unchanged, and "?" means there is no record of the file in the
-		repository.</para>
+		<para>The character at the beginning of certain lines
+		indicates the result of the update. The "C" indicates
+		that cvs tried to merge two revisions and encountered
+		conflicts, which are highlighted by the standard diff
+		demarcations. Manual resolution is required. "M" means
+		the files were merged successfully, "U" means the file
+		is unchanged, and "?" means there is no record of the
+		file in the repository.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -524,7 +530,7 @@ DEALINGS IN THE SOFTWARE.
 	  which the new file exists. Then run the commit command to
 	  check the file into the repository.  For example:</para>
 	  <literallayout class="monospaced">
-	    cvs add <replaceable>filename</replaceable>
+cvs add <replaceable>filename</replaceable>
 	  </literallayout>
 	</listitem>
       </varlistentry>
@@ -536,30 +542,34 @@ DEALINGS IN THE SOFTWARE.
 	  repository. <command>commit</command> is abbreviated as <command>ci</command>.</para>
 
 	  <tip>
-	    <para>When checking in files, cvs will prompt for comments using
-	    the vi editor, unless otherwise specified. To avoid vi, 
-	    set the <envar>EDITOR</envar> environment variable to point to an editor. For example:</para>
+	    <para>When checking in files, cvs will prompt for comments
+	    using the vi editor, unless otherwise specified. To avoid
+	    vi, set the <envar>EDITOR</envar> environment variable to
+	    point to an editor. For example:</para>
+	    
 	    <literallayout class="monospaced">
-	      setenv EDITOR emacs
+setenv EDITOR emacs
 	    </literallayout>
 	  </tip>
 
 	  <para>The command:</para>
 
 	  <literallayout class="monospaced">
-	    cvs ci TriSurfMesh.cc
+cvs ci TriSurfMesh.cc
 	  </literallayout>	
 
-	  <para>commits the working version of a file, making it the HEAD (tip of
-	  the tree) revision; typically invoked in the directory where the
-	  file resides without any path specification (not sure if it can be
-	  run any other way). CVS will automatically assign the next internal
-	  revision number to the file upon checkin.</para>
+	  <para>commits the working version of a file, making it the
+	  HEAD (tip of the tree) revision; typically invoked in the
+	  directory where the file resides without any path
+	  specification (not sure if it can be run any other way). CVS
+	  will automatically assign the next internal revision number
+	  to the file upon checkin.</para>
 
-	  <para>The "-m" option can be used to avoid being put into an editor:</para>
+	  <para>The <option>-m</option> option can be used to avoid
+	  being put into an editor:</para>
 
 	  <literallayout class="monospaced">
-	    cvs ci -m"this is my checkin comment" TriSurfMesh.cc
+cvs ci -m"this is my checkin comment" TriSurfMesh.cc
 	  </literallayout>
 	</listitem>
       </varlistentry>
@@ -567,18 +577,20 @@ DEALINGS IN THE SOFTWARE.
       <varlistentry>
 	<term><command>rdiff</command></term>
 	<listitem>
-	  <para>Create a patch file for use by SCI to incorporate changes made
-	  locally into the next official release. See manual for details.</para>
+	  <para>Create a patch file for use by SCI to incorporate
+	  changes made locally into the next official release. See
+	  manual for details.</para>
 	</listitem>
       </varlistentry>
       <varlistentry>
 	<term><command>log</command></term>
 	<listitem>
-	  <para>View log information about a file, such as revision numbers and
-	  check in comments. Most conveniently invoked in the directory in which
-	  the file of interest resides, e.g.:</para>
+	  <para>View log information about a file, such as revision
+	  numbers and check in comments. Most conveniently invoked in
+	  the directory in which the file of interest resides,
+	  e.g.:</para>
 	  <literallayout class="monospaced">
-	    cvs log TriSurfMesh.cc
+cvs log TriSurfMesh.cc
 	  </literallayout>
 	</listitem>
       </varlistentry>
