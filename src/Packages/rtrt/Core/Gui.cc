@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/Gui.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/DpyPrivate.h>
+#include <Packages/rtrt/Core/DpyGui.h>
 #include <Packages/rtrt/Core/Stealth.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Scene.h>
@@ -75,6 +76,7 @@ BasicTexture * backgroundTex;     // from rtrt.cc
 ////////////////////////////////////////////
 
 extern "C" Display *__glutDisplay;
+extern "C" Window** __glutWindowList;
 
 namespace rtrt {
   double ORBIT_SPEED  = 0;
@@ -85,7 +87,7 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
-static Gui * activeGui;
+static GGT * activeGGT;
 
 PPMImage * livingRoomImage = NULL;
 PPMImage * scienceRoomImage = NULL;
@@ -194,7 +196,8 @@ static std::vector<CallbackInfo*> callback_info_list;
 // on the machine that rtrt is running on.
 #define MAX_NUM_THREADS 120
 
-Gui::Gui() :
+GGT::GGT() :
+  on_death_row(false), opened(false), mainWindowID(-1),
   activeMTT_(NULL), queuedMTT_(NULL),
   bottomGraphicTrig_(NULL), leftGraphicTrig_(NULL),
   visWomanTrig_(NULL), csafeTrig_(NULL), geophysicsTrig_(NULL),
@@ -218,203 +221,257 @@ Gui::Gui() :
 {
   inputString_[0] = 0;
 
+  setActiveGGT(this);
 }
 
-Gui::~Gui()
+GGT::~GGT()
 {
+  cleanup();
+}
+
+void GGT::run() {
+  printf("before glutInit\n");
+  char *argv = "GGT Thread run";
+  int argc = 1;
+  glutInit( &argc, &argv );
+  printf("after glutInit\n");
+    
+  // Initialize GLUT and GLUI stuff.
+  printf("start glut inits\n");
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+  glutInitWindowSize(400, 545 );
+  glutInitWindowPosition( 400, 0 );
+    
+  DpyBase::xlock();
+  mainWindowID = glutCreateWindow("GG Controls");
+  DpyBase::xunlock();
+
+  glut_dpy = __glutDisplay;
+  // This is an ugly, cheaty way of getting the window id out of glut...
+  glut_win = __glutWindowList[mainWindowID-1][1];
+  cerr << "initial win = "<<glut_win<<"\n";
+
+  // Setup callback functions
+  glutDisplayFunc( GGT::displayCB );
+
+#if 0
+  //////////////////////////////////////////////////////////////////
+    
+  cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
+    
+  glutKeyboardFunc( Gui::handleKeyPressCB );
+  glutSpecialFunc( Gui::handleSpecialKeyCB );
+  glutMouseFunc( Gui::handleMouseCB );
+  glutMotionFunc( Gui::handleMouseMotionCB );
+  glutSpaceballMotionFunc( Gui::handleSpaceballMotionCB );
+  glutSpaceballRotateFunc( Gui::handleSpaceballRotateCB );
+  glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
+    
+  glutReshapeFunc( Gui::handleWindowResizeCB );
+  glutDisplayFunc( Gui::redrawBackgroundCB );
+#endif
+
+  // Must do this after glut is initialized.
+  createMenus(mainWindowID);
+
+  opened = true;
+
+  addSceneLights();
+  
+  printf("end glut inits\n");
+    
+  glutMainLoop();
 }
 
 void
-Gui::quit()
-{
-  cerr << "Quitting rtrt.\n";
-  // Stop threads...
-  activeGui->dpy_->scene->rtrt_engine->stop_engine();
-  // Stop Glut mainloop.
-  usleep(5000);
-  //Thread::exitAll( 0 );
-  Thread::exit();
+GGT::cleanup() {
+  if (!opened) return;
+  else opened = false;
+  
+  DpyBase::xlock();
+  GLUI_Master.close_all();
+  cerr << "GLUI_Master.close_all finished\n";
+  glutDestroyWindow(activeGGT->mainWindowID);
+  cerr << "glutDestroyWindow finished\n";
+  XCloseDisplay(glut_dpy);
+  cerr << "XCloseDisplay for GGT finished\n";
+  DpyBase::xunlock();
 }
 
 void
-Gui::handleMenuCB( int item )
+GGT::stop() {
+  on_death_row = true;
+}
+
+void
+GGT::quit(int all)
+{
+  if (all) {
+    cerr << "Quitting rtrt.\n";
+    // Stop threads...This will eventually call stop().
+    activeGGT->rtrt_dpy->rtrt_engine->stop_engine();
+  } else {
+    // Remove yourself from the DpyGui list.
+    dpygui->removeExternalUIInterface(this);
+    stop();
+  }
+}
+
+void
+GGT::setDpyGui(DpyGui* new_gui) {
+  dpygui = new_gui;
+  dpygui->addExternalUIInterface(this);
+}
+
+void
+GGT::handleMenuCB( int item )
 {
   switch( item ) {
   case TOGGLE_HOT_SPOTS:
-    activeGui->toggleHotspotsCB( -1 );
+    activeGGT->toggleHotspotsCB( -1 );
     break;
   case TOGGLE_GUI:
-    activeGui->toggleGui();
+    activeGGT->toggleGui();
     break;
   case TOGGLE_RIGHT_BUTTON_MENU:
-    if( activeGui->rightButtonMenuActive_ )
+    if( activeGGT->rightButtonMenuActive_ )
       {
-	activeGui->rightButtonMenuActive_ = false;
+	activeGGT->rightButtonMenuActive_ = false;
 	glutDetachMenu(GLUT_RIGHT_BUTTON);
       }
     else
       {
-	activeGui->rightButtonMenuActive_ = true;
+	activeGGT->rightButtonMenuActive_ = true;
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
       }
     break;
   case QUIT_MENU_ID:
-    activeGui->quit();
+    activeGGT->quit();
     break;
   }
 }
 
 void
-Gui::setActiveGui( Gui * gui )
+GGT::setActiveGGT( GGT * gui )
 {
-  activeGui = gui;
+  activeGGT = gui;
 }
 
-Gui*
-Gui::getActiveGui()
+GGT*
+GGT::getActiveGGT()
 {
-  return activeGui;
+  return activeGGT;
 }
 
 void
-Gui::setStealth( Stealth * stealth )
+GGT::setStealth( Stealth * stealth )
 {
   stealth_ = stealth;
 }
 
 void
-Gui::setDpy( Dpy * dpy )
+GGT::setDpy( Dpy * dpy )
 {
-  dpy_     = dpy;
+  rtrt_dpy = dpy;
   priv     = dpy->priv;
   stealth_ = dpy->stealth_;
   camera_  = dpy->guiCam_;
 }
 
-GLuint        fontbase, fontbase2;
-XFontStruct * fontInfo;
-XFontStruct * fontInfo2;
-
 void
-Gui::setupFonts()
-{
-  fontInfo = XLoadQueryFont(__glutDisplay, __FONTSTRING__);
-
-  if (fontInfo == NULL) {
-    cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
-    Thread::exitAll(1);
-  }
-
-  Font id = fontInfo->fid;
-  unsigned int first = fontInfo->min_char_or_byte2;
-  unsigned int last = fontInfo->max_char_or_byte2;
-
-  fontbase = glGenLists((GLuint) 2);/* last-first+1);*/
-  if (fontbase == 0) {
-    cout << "Out of display lists: errno: " << errno << "\n";
-    Thread::exitAll(0);
-  }
-  glXUseXFont(id, first, last-first+1, fontbase+first);
-
-  fontInfo2 = XLoadQueryFont(__glutDisplay, __FONTSTRING__);
-
-  if (fontInfo2 == NULL) {
-    cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
-    Thread::exitAll(1);
-  }
-
-  id = fontInfo2->fid;
-  first = fontInfo2->min_char_or_byte2;
-  last = fontInfo2->max_char_or_byte2;
-
-  fontbase2 = glGenLists((GLuint) last+1);
-  if (fontbase2 == 0) {
-    cout << "Out of display lists (fontbase2) : errno: " << errno << "\n";
-    Thread::exitAll(0);
-  }
-  glXUseXFont(id, first, last-first+1, fontbase2+first);
+GGT::idleFunc() {
+  // Check to see if we need to go bye bye
+  if (activeGGT->on_death_row)
+    Thread::exit();
+  else
+    usleep(1000);
 }
 
 void
-Gui::handleTriggers()
+GGT::displayCB() {
+  // Do nothing
+}
+
+void
+GGT::handleTriggers()
 {
   // Handle Active Trigger
-  if( activeGui->activeMTT_ )
+  if( activeGGT->activeMTT_ )
     {
       Trigger * next = NULL;
       // next is NULL if no next trigger associated with this trigger.
-      bool result = activeGui->activeMTT_->advance( next );
+      bool result = activeGGT->activeMTT_->advance( next );
       if( result == false ) // done, remove from active list.
 	{
-	  if( activeGui->queuedMTT_ )
+	  if( activeGGT->queuedMTT_ )
 	    {
 	      if( next )
 		{
-		  double quedPriority = activeGui->queuedMTT_->getPriority();
+		  double quedPriority = activeGGT->queuedMTT_->getPriority();
 		  double nextPriority = next->getPriority();
 		  if( quedPriority < nextPriority )
 		    {
 		      cout << "using 'next' trigger: " <<next->getName()<<"\n";
 		      cout << " priorities: " << nextPriority << ", "
 			   << quedPriority << "\n";
-		      activeGui->activeMTT_ = next;
+		      activeGGT->activeMTT_ = next;
 		    }
 		  else
 		    {
-		      activeGui->activeMTT_ = activeGui->queuedMTT_;
-		      activeGui->queuedMTT_ = NULL;
+		      activeGGT->activeMTT_ = activeGGT->queuedMTT_;
+		      activeGGT->queuedMTT_ = NULL;
 		    }
 		}
 	      else
 		{
 		  cout << "moving in queued trigger: " << 
-		    activeGui->queuedMTT_->getName() << "\n";
-		  activeGui->activeMTT_ = activeGui->queuedMTT_;
-		  activeGui->queuedMTT_ = NULL;
+		    activeGGT->queuedMTT_->getName() << "\n";
+		  activeGGT->activeMTT_ = activeGGT->queuedMTT_;
+		  activeGGT->queuedMTT_ = NULL;
 		}
 	    }
 	  else
 	    {
-	      activeGui->activeMTT_ = next;
+	      activeGGT->activeMTT_ = next;
 	    }
-	  if( activeGui->activeMTT_ ) 
+	  if( activeGGT->activeMTT_ ) 
 	    {
 	      cout << "using next trigger: " << next->getName() << "\n";
-	      activeGui->activeMTT_->activate();
+	      activeGGT->activeMTT_->activate();
 	    }
 	}
     }
 
   // Check all triggers.
-  vector<Trigger*> & triggers = dpy_->scene->getTriggers();
+  vector<Trigger*> & triggers = rtrt_dpy->scene->getTriggers();
   for( unsigned int cnt = 0; cnt < triggers.size(); cnt++ )
     {
       Trigger * trigger = triggers[cnt];
-      bool result = trigger->check( activeGui->camera_->eye );
-      if( result == true && trigger != activeGui->activeMTT_ )
+      bool result = trigger->check( activeGGT->camera_->eye );
+      if( result == true && trigger != activeGGT->activeMTT_ )
 	{
 	  // The trigger is in range, so determine what to do with it
 	  // based on its priority and the active triggers priority.
-	  if( activeGui->activeMTT_ )
+	  if( activeGGT->activeMTT_ )
 	    {
-	      if( trigger == activeGui->queuedMTT_ ) // already queued.
+	      if( trigger == activeGGT->queuedMTT_ ) // already queued.
 		continue;
 	      double trigPriority = trigger->getPriority();
-	      double currPriority = activeGui->activeMTT_->getPriority();
+	      double currPriority = activeGGT->activeMTT_->getPriority();
 	      if( currPriority <= trigPriority )
 		{ // Tell current to stop and queue up new trigger.
 		  cout << "deactivating current trigger: " <<
-		    activeGui->activeMTT_->getName() << " to start " <<
+		    activeGGT->activeMTT_->getName() << " to start " <<
 		    trigger->getName() << "\n";
-		  activeGui->activeMTT_->deactivate();
-		  activeGui->queuedMTT_ = trigger;
+		  activeGGT->activeMTT_->deactivate();
+		  activeGGT->queuedMTT_ = trigger;
 		}
-	      else if( activeGui->queuedMTT_ )
+	      else if( activeGGT->queuedMTT_ )
 		{
-		  double quedPriority = activeGui->queuedMTT_->getPriority();
+		  double quedPriority = activeGGT->queuedMTT_->getPriority();
 		  if( trigPriority > quedPriority )
 		    {
-		      activeGui->queuedMTT_ = trigger;
+		      activeGGT->queuedMTT_ = trigger;
 		    }
 		  
 		}
@@ -422,52 +479,52 @@ Gui::handleTriggers()
 	  else
 	    {
 	      cout << "starting " << trigger->getName() << "\n";
-	      activeGui->activeMTT_ = trigger;
-	      activeGui->activeMTT_->activate();
+	      activeGGT->activeMTT_ = trigger;
+	      activeGGT->activeMTT_->activate();
 	    }
 	}
     }
 
   // Deal with bottom graphic trigger
-  if( activeGui->bottomGraphicTrig_ )
+  if( activeGGT->bottomGraphicTrig_ )
     {
       Trigger * next = NULL;
-      activeGui->bottomGraphicTrig_->advance( next );
+      activeGGT->bottomGraphicTrig_->advance( next );
       if( next )
 	{
-	  activeGui->bottomGraphicTrig_ = next;
+	  activeGGT->bottomGraphicTrig_ = next;
 	  next->activate();
 	}
       else
 	{
 	  // Calling check() just to advance the time of the trigger.
-	  activeGui->bottomGraphicTrig_->check( Point(0,0,0) );
+	  activeGGT->bottomGraphicTrig_->check( Point(0,0,0) );
 	}
     }
 
   // Deal with left graphic trigger
-  if( activeGui->leftGraphicTrig_ )
+  if( activeGGT->leftGraphicTrig_ )
     {
       Trigger * next = NULL;
-      activeGui->leftGraphicTrig_->advance( next );
+      activeGGT->leftGraphicTrig_->advance( next );
       if( next )
 	{
-	  activeGui->leftGraphicTrig_ = next;
+	  activeGGT->leftGraphicTrig_ = next;
 	  next->activate();
 	}
       else
 	{
 	  // Calling check() just to advance the time of the trigger.
-	  activeGui->leftGraphicTrig_->check( Point(0,0,0) );
+	  activeGGT->leftGraphicTrig_->check( Point(0,0,0) );
 	}
     }
 } // end handleTriggers()
 
 void
-Gui::drawBackground()
+GGT::drawBackground()
 {
 #if defined(HAVE_OOGL)
-  glutSetWindow( glutDisplayWindowId );
+  glutSetWindow( mainWindowID );
 
   glViewport(0, 0, 1280, 1024);
   glMatrixMode(GL_PROJECTION);
@@ -478,7 +535,7 @@ Gui::drawBackground()
   glLoadIdentity();
   glTranslatef(0.375, 0.375, 0.0);
 
-  backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
+  backgroundTex->reset( GL_FLOAT, &((*(activeGGT->backgroundImage_))(0,0)) );
   backgroundTexQuad->draw();
 #if 0   // this was for two-screen mode for the demo at SIGGRAPH
   // the following prevents flickering on the second channel
@@ -491,19 +548,19 @@ Gui::drawBackground()
 }
 
 void
-Gui::redrawBackgroundCB()
+GGT::redrawBackgroundCB()
 {
-  if( activeGui->dpy_->fullScreenMode_ ) {
-    if( !activeGui->backgroundImage_ ) return;
+  if( activeGGT->rtrt_dpy->fullScreenMode_ ) {
+    if( !activeGGT->backgroundImage_ ) return;
     // update loop will check for a new background, see it is different,
     // and update correctly.
-    activeGui->recheckBackgroundCnt_ = 10; // forces a redraw
-    activeGui->backgroundImage_ = NULL;
+    activeGGT->recheckBackgroundCnt_ = 10; // forces a redraw
+    activeGGT->backgroundImage_ = NULL;
   }
 }
 
 bool
-Gui::setBackgroundImage( int room )
+GGT::setBackgroundImage( int room )
 {
   PPMImage * current = backgroundImage_;
 
@@ -530,70 +587,70 @@ Gui::setBackgroundImage( int room )
 
 #if 0
 void
-Gui::idleFunc()
+GGT::idleFunc()
 {
-  Dpy               * dpy = activeGui->dpy_;
-  struct DpyPrivate * priv = activeGui->priv;
+  Dpy               * dpy = activeGGT->rtrt_dpy;
+  struct DpyPrivate * priv = activeGGT->priv;
 
   // Hacking these vars for now:
   static double lasttime  = SCIRun::Time::currentSeconds();
   static double cum_ttime = 0;
   static double cum_dt    = 0;
 
-  if( activeGui->enableSounds_ )
+  if( activeGGT->enableSounds_ )
     {
       // Sound Thread has finished loading sounds and is now active...
       // ...so turn on the sound GUIs.
-      activeGui->enableSounds_ = false; 
-      activeGui->openSoundPanelBtn_->enable();
-      activeGui->soundVolumeSpinner_->enable();
-      activeGui->startSoundThreadBtn_->set_name( "Sounds Started" );
+      activeGGT->enableSounds_ = false; 
+      activeGGT->openSoundPanelBtn_->enable();
+      activeGGT->soundVolumeSpinner_->enable();
+      activeGGT->startSoundThreadBtn_->set_name( "Sounds Started" );
     }
 
-  glutSetWindow( activeGui->glutDisplayWindowId );
-  activeGui->handleTriggers();
+  glutSetWindow( activeGGT->mainWindowID );
+  activeGGT->handleTriggers();
 
   // I know this is a hack... 
   if( dpy->showImage_ ){
 
     // Display textual information on the screen:
     char buf[100];
-    sprintf( buf, "%3.1lf fps", (activeGui->priv->FrameRate) );
+    sprintf( buf, "%3.1lf fps", (activeGGT->priv->FrameRate) );
 
     bool redrawBG = false;
     if( dpy->fullScreenMode_ )
       {
-	redrawBG = activeGui->checkBackgroundWindow();
-	if( redrawBG ) activeGui->drawBackground();
+	redrawBG = activeGGT->checkBackgroundWindow();
+	if( redrawBG ) activeGGT->drawBackground();
       }
 
     dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
     if( dpy->fullScreenMode_ )
-      activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
+      activeGGT->printString(fontbase, 133, 333, buf, Color(1,1,1));
     else
-      activeGui->displayText(fontbase, 5, 5, buf, Color(1,1,1));
+      activeGGT->printString(fontbase, 5, 5, buf, Color(1,1,1));
 
     if( dpy->fullScreenMode_ ) {
       glutSwapBuffers();
       // Need to draw into other buffer so that as we "continuously"
       // flip them, it doesn't look bad.
-      if( redrawBG ) activeGui->drawBackground();
+      if( redrawBG ) activeGGT->drawBackground();
       dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
-      activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
+      activeGGT->printString(fontbase, 133, 333, buf, Color(1,1,1));
     }
 
-    if( activeGui->displayRStats_ )
+    if( activeGGT->displayRStats_ )
       {
-	activeGui->drawrstats(dpy->nworkers, dpy->workers_,
+	activeGGT->drawrstats(dpy->nworkers, dpy->workers_,
 			      priv->showing_scene, fontbase2, 
 			      priv->xres, priv->yres,
 			      fontInfo2, priv->left, priv->up,
 			      0.0 /* dt */);
       }
-    if( activeGui->displayPStats_ )
+    if( activeGGT->displayPStats_ )
       {
 	Stats * mystats = dpy->drawstats[!priv->showing_scene];
-	activeGui->drawpstats(mystats, dpy->nworkers, dpy->workers_, 
+	activeGGT->drawpstats(mystats, dpy->nworkers, dpy->workers_, 
 			      /*draw_framerate*/true, priv->showing_scene,
 			      fontbase, lasttime, cum_ttime,
 			      cum_dt);
@@ -602,9 +659,9 @@ Gui::idleFunc()
     dpy->showImage_ = NULL;
 
     // Let the Dpy thread start drawing the next image.
-    //activeGui->priv->waitDisplay->unlock();
-    if( activeGui->mainWindowVisible ) {
-      activeGui->update(); // update the gui each time a frame is finished.
+    //activeGGT->priv->waitDisplay->unlock();
+    if( activeGGT->mainWindowVisible ) {
+      activeGGT->update(); // update the gui each time a frame is finished.
     }
     if( !dpy->fullScreenMode_ )
       glutSwapBuffers(); 
@@ -616,11 +673,11 @@ Gui::idleFunc()
 #endif
 
 void
-Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
+GGT::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 {
   // static double FPS = 15;
 
-  DpyPrivate * priv = activeGui->priv;
+  DpyPrivate * priv = activeGGT->priv;
 
   // int     & maxdepth       = priv->maxdepth;
   // bool    & stereo         = priv->stereo;  
@@ -634,127 +691,127 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   // int     & up             = priv->up;
 
   int mods   = glutGetModifiers();
-  activeGui->shiftDown_ = mods & GLUT_ACTIVE_SHIFT;
-  activeGui->altDown_   = mods & GLUT_ACTIVE_ALT;
-  activeGui->ctrlDown_  = mods & GLUT_ACTIVE_CTRL;
+  activeGGT->shiftDown_ = mods & GLUT_ACTIVE_SHIFT;
+  activeGGT->altDown_   = mods & GLUT_ACTIVE_ALT;
+  activeGGT->ctrlDown_  = mods & GLUT_ACTIVE_CTRL;
 
   switch( key ){
 
   // KEYPAD KEYS USED FOR MOVEMENT
 
   case '+':
-    if (activeGui->shiftDown_) {
+    if (activeGGT->shiftDown_) {
       // increase planet orbit speed
       if (ORBIT_SPEED<.02) ORBIT_SPEED=1;
       else ORBIT_SPEED*=1.9;
       cerr << "orbit speed: " << ORBIT_SPEED << endl;
-    } else if (activeGui->ctrlDown_) {
+    } else if (activeGGT->ctrlDown_) {
       // increase planet rotate speed
       ROTATE_SPEED*=1.1;
     } else {
       // SPEED up or slow down
-      activeGui->stealth_->accelerate();
+      activeGGT->stealth_->accelerate();
     }
     break;
   case '-':
-    if (activeGui->shiftDown_) {
+    if (activeGGT->shiftDown_) {
       // decrease planet orbit speed
       if (ORBIT_SPEED<.1) ORBIT_SPEED=0;
       else ORBIT_SPEED*=.6;
       cerr << "orbit speed: " << ORBIT_SPEED << endl;
-    } else if (activeGui->ctrlDown_) {
+    } else if (activeGGT->ctrlDown_) {
       // decrease planet rotate speed
       ROTATE_SPEED*=.6;
     } else {
-      activeGui->stealth_->decelerate();
+      activeGGT->stealth_->decelerate();
     }
     break;
   // PITCH up and down
   case '8':
     cout << "pitchdown\n";
-    activeGui->stealth_->pitchDown();
+    activeGGT->stealth_->pitchDown();
     break;
   case '2':
     cout << "pitchup\n";
-    activeGui->stealth_->pitchUp();
+    activeGGT->stealth_->pitchUp();
     break;
   // SLIDE left and right
   case '9':
-    activeGui->stealth_->slideRight();
+    activeGGT->stealth_->slideRight();
     break;
   case '7':
-    activeGui->stealth_->slideLeft();
+    activeGGT->stealth_->slideLeft();
     break;
   // TURN left and right
   case '4':
-    activeGui->stealth_->turnLeft();
+    activeGGT->stealth_->turnLeft();
     break;
   case '5':    // STOP rotations (pitch/turn)
-    activeGui->stealth_->stopPitchAndRotate();
+    activeGGT->stealth_->stopPitchAndRotate();
     break;
   case '6':
-    activeGui->stealth_->turnRight();
+    activeGGT->stealth_->turnRight();
     break;
   // SLOW down and STOP
   case '.':
-    activeGui->stealth_->slowDown();
+    activeGGT->stealth_->slowDown();
     break;
   case ' ':
   case '0':
-    activeGui->stealth_->stopAllMovement();
+    activeGGT->stealth_->stopAllMovement();
     break;
   // ACCELERATE UPWARDS or DOWNWARDS
   case '*': 
-    activeGui->stealth_->goUp();   // Accelerate UP
+    activeGGT->stealth_->goUp();   // Accelerate UP
     break;
   case '/': 
-    activeGui->stealth_->goDown(); // Accelerate DOWN
+    activeGGT->stealth_->goDown(); // Accelerate DOWN
     break;
   case 'q':
-    activeGui->quit();
+    activeGGT->quit();
     break;
   case 'G': // Toggle Display of Gui
-    activeGui->toggleGui();
+    activeGGT->toggleGui();
     break;
   case 'g':
     cout << "Toggling Gravity.  If you want to increase framerate, use 'F'\n";
-    activeGui->stealth_->toggleGravity();
+    activeGGT->stealth_->toggleGravity();
     break;
   case 't':
-    if( activeGui->dpy_->rtrt_engine->hotSpotsMode != RTRT::HotSpotsOff)
-      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
+    if( activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode != RTRT::HotSpotsOff)
+      activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
     else
-      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOn;
+      activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOn;
     break;
   case 'T':
-    if( activeGui->dpy_->rtrt_engine->hotSpotsMode != RTRT::HotSpotsOff)
-      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
+    if( activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode != RTRT::HotSpotsOff)
+      activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
     else
-      activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsHalfScreen;
+      activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode = RTRT::HotSpotsHalfScreen;
     break;
   case 'Q':
-    activeGui->beQuiet_ = !activeGui->beQuiet_;
+    activeGGT->beQuiet_ = !activeGGT->beQuiet_;
     break;
   case 's':
-    activeGui->cycleShadowMode();
+    activeGGT->cycleShadowMode();
     break;
   case 'h':
-    activeGui->cycleAmbientMode();
+    activeGGT->cycleAmbientMode();
     break;
   case 'z':
     handleMenuCB( TOGGLE_RIGHT_BUTTON_MENU );
     break;
   case 'v':
     {
-      if(activeGui->priv->followPath) { activeGui->priv->followPath = false; }
-      activeGui->stealth_->stopAllMovement();
+      if(activeGGT->priv->followPath) { activeGGT->priv->followPath = false; }
+      activeGGT->stealth_->stopAllMovement();
 
       // Animate lookat point to center of BBox...
-      Object* obj= activeGui->dpy_->scene->get_object();
+      Object* obj= activeGGT->rtrt_dpy->scene->get_object();
       BBox bbox;
       obj->compute_bounds(bbox, 0);
       if(bbox.valid()){
-	activeGui->camera_->set_lookat(bbox.center());
+	activeGGT->camera_->set_lookat(bbox.center());
         
 	// Move forward/backwards until entire view is in scene...
 	// change this a little, make it so that the FOV must
@@ -762,33 +819,33 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 	// 60 degrees sucks - try 40...
         // Let user specify using gui.
 
-	const double FOVtry = activeGui->fovValue_;
+	const double FOVtry = activeGGT->fovValue_;
 
 	Vector diag(bbox.diagonal());
 	double w=diag.length();
-	Vector lookdir(activeGui->camera_->get_lookat() -
-		       activeGui->camera_->get_eye()); 
+	Vector lookdir(activeGGT->camera_->get_lookat() -
+		       activeGGT->camera_->get_eye()); 
 	lookdir.normalize();
 	const double scale = 1.0/(2*tan(DtoR(FOVtry/2.0)));
 	double length = w*scale;
-	activeGui->camera_->set_fov(FOVtry);
-	activeGui->camera_->set_eye( activeGui->camera_->get_lookat() -
+	activeGGT->camera_->set_fov(FOVtry);
+	activeGGT->camera_->set_eye( activeGGT->camera_->get_lookat() -
 				    lookdir*length );
-	activeGui->camera_->setup();
-	activeGui->fovSpinner_->set_float_val( FOVtry );
+	activeGGT->camera_->setup();
+	activeGGT->fovSpinner_->set_float_val( FOVtry );
 
 	Point origin;
 	Vector lookdir2;
 	Vector up;
 	Vector side;
 	double fov;
-	activeGui->camera_->getParams(origin, lookdir2, up, side, fov);
+	activeGGT->camera_->getParams(origin, lookdir2, up, side, fov);
 	lookdir2.normalize();
 	up.normalize();
 	side.normalize();
 	// Move the lights that are fixed to the eye
-	for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-	  Light *light = activeGui->dpy_->scene->light(i);
+	for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+	  Light *light = activeGGT->rtrt_dpy->scene->light(i);
 	  if (light->fixed_to_eye) {
 	    //	    light->updatePosition(light->get_pos() + dir*scl);
 	    light->updatePosition(origin, 
@@ -802,37 +859,37 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     }
     break;
   case 13: // Enter
-    if (activeGui->shiftDown_) {
+    if (activeGGT->shiftDown_) {
       // toggle holo room on/off
-      activeGui->dpy_->holoToggle_ = !activeGui->dpy_->holoToggle_;
-      cout << "holo room is now " << activeGui->dpy_->holoToggle_ << endl;
+      activeGGT->rtrt_dpy->holoToggle_ = !activeGGT->rtrt_dpy->holoToggle_;
+      cout << "holo room is now " << activeGGT->rtrt_dpy->holoToggle_ << endl;
     } else {
-      activeGui->camera_->flatten(); // Right yourself (0 pitch, 0 roll)
+      activeGGT->camera_->flatten(); // Right yourself (0 pitch, 0 roll)
     }
     break;
   case 'x':
     traverseRouteCB(-1);
     break;
   case 'a':
-    activeGui->priv->animate =! activeGui->priv->animate;
-    cout << "animate is now " << activeGui->priv->animate << "\n";
+    activeGGT->priv->animate =! activeGGT->priv->animate;
+    cout << "animate is now " << activeGGT->priv->animate << "\n";
     break;
   case 'c':
-    activeGui->camera_->print();
+    activeGGT->camera_->print();
     break;
   case 'n':
-    activeGui->camera_->scale_eyesep(0.9);
-    cerr << "camera->eyesep="<<activeGui->camera_->get_eyesep()<<"\n";
+    activeGGT->camera_->scale_eyesep(0.9);
+    cerr << "camera->eyesep="<<activeGGT->camera_->get_eyesep()<<"\n";
     break;
   case 'm':
-    activeGui->camera_->scale_eyesep(1.1);
-    cerr << "camera->eyesep="<<activeGui->camera_->get_eyesep()<<"\n";
+    activeGGT->camera_->scale_eyesep(1.1);
+    cerr << "camera->eyesep="<<activeGGT->camera_->get_eyesep()<<"\n";
     break;
   case 'o':
-    printf("Number materials: %d\n",activeGui->dpy_->scene->nmaterials());
-    for (int m=0; m<activeGui->dpy_->scene->nmaterials(); m++) {
+    printf("Number materials: %d\n",activeGGT->rtrt_dpy->scene->nmaterials());
+    for (int m=0; m<activeGGT->rtrt_dpy->scene->nmaterials(); m++) {
       CycleMaterial * cm =
-	dynamic_cast<CycleMaterial*>(activeGui->dpy_->scene->get_material(m));
+	dynamic_cast<CycleMaterial*>(activeGGT->rtrt_dpy->scene->get_material(m));
       if (cm) { cm->next(); printf("Got a cycle material!\n");}
     }
     break;
@@ -845,36 +902,36 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
 
   case 'e':
-    activeGui->dpy_->nstreams++;
+    activeGGT->rtrt_dpy->nstreams++;
     break;
   case 'E':
-    if(activeGui->dpy_->nstreams > 1)
-      activeGui->dpy_->nstreams--;
+    if(activeGGT->rtrt_dpy->nstreams > 1)
+      activeGGT->rtrt_dpy->nstreams--;
     break;
 
   case 'r':
-    activeGui->displayRStats_ = !activeGui->displayRStats_;
+    activeGGT->displayRStats_ = !activeGGT->displayRStats_;
     break;
   case 'p':
-    activeGui->displayPStats_ = !activeGui->displayPStats_;
+    activeGGT->displayPStats_ = !activeGGT->displayPStats_;
     break;
 
   case 'f':
 #if 0
-    if( activeGui->dpy_->fullScreenMode_ )
-      activeGui->dpy_->toggleRenderWindowSize_ = true;
+    if( activeGGT->rtrt_dpy->fullScreenMode_ )
+      activeGGT->rtrt_dpy->toggleRenderWindowSize_ = true;
     else
       cout << "Can't toggle to full res on non-full screen mode.\n";
 #else
-    activeGui->priv->show_frame_rate = !activeGui->priv->show_frame_rate;
+    activeGGT->priv->show_frame_rate = !activeGGT->priv->show_frame_rate;
 #endif
     break;
 
   case 27: // Escape key... need to find a symbolic name for this...
-    activeGui->quit();
+    activeGGT->quit();
     break;
   case 'S':
-    activeGui->priv->stereo=!(activeGui->priv->stereo);
+    activeGGT->priv->stereo=!(activeGGT->priv->stereo);
     break;
 #if 0
     // below is for blending "pixels" in
@@ -888,42 +945,42 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 #endif
   case 'W':
     cerr << "Saving raw image file\n";
-    activeGui->dpy_->scene->get_image(showing_scene)->save("images/image.raw");
+    activeGGT->rtrt_dpy->scene->get_image(showing_scene)->save("images/image.raw");
     break;
   case 'w':
     cerr << "Saving ppm image file\n";
-    activeGui->dpy_->priv->dumpFrame = 1;
+    activeGGT->rtrt_dpy->priv->dumpFrame = 1;
     break;
   case 'M':
     cerr << "Saving every frame to ppm image\n";
-    switch (activeGui->dpy_->priv->dumpFrame)
+    switch (activeGGT->rtrt_dpy->priv->dumpFrame)
       {
       case 0:
       case 1: // Start
-        activeGui->dpy_->priv->dumpFrame = -1;
+        activeGGT->rtrt_dpy->priv->dumpFrame = -1;
         break;
       case -1: // Stop
       case -2:
       case -3:
-        activeGui->dpy_->priv->dumpFrame = -3;
+        activeGGT->rtrt_dpy->priv->dumpFrame = -3;
         break;
       }
     break;
   case 'd':
     {
-      bool dd = activeGui->scene()->display_depth;
-      bool ds = activeGui->scene()->display_sils;
-      activeGui->scene()->display_depth = !dd && !ds;
-      activeGui->scene()->display_sils = dd && !ds;
-      activeGui->scene()->store_depth = !ds;
+      bool dd = activeGGT->scene()->display_depth;
+      bool ds = activeGGT->scene()->display_sils;
+      activeGGT->scene()->display_depth = !dd && !ds;
+      activeGGT->scene()->display_sils = dd && !ds;
+      activeGGT->scene()->store_depth = !ds;
     }
     break;
   case 'D':
     {
-      bool ds = activeGui->scene()->display_sils;
-      activeGui->scene()->display_depth = false;
-      activeGui->scene()->display_sils = !ds;
-      activeGui->scene()->store_depth = !ds;
+      bool ds = activeGGT->scene()->display_sils;
+      activeGGT->scene()->display_depth = false;
+      activeGGT->scene()->display_sils = !ds;
+      activeGGT->scene()->store_depth = !ds;
     }
     break;
   default:
@@ -934,7 +991,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 
 // WARNING: THESE ARE NOT THE KEYPAD KEYS!
 void
-Gui::handleSpecialKeyCB( int key, int /*mouse_x*/, int /*mouse_y*/ )
+GGT::handleSpecialKeyCB( int key, int /*mouse_x*/, int /*mouse_y*/ )
 {
   switch( key ) {
   case GLUT_KEY_LEFT:
@@ -973,7 +1030,7 @@ Gui::handleSpecialKeyCB( int key, int /*mouse_x*/, int /*mouse_y*/ )
 static double    eye_dist = 0;
 
 void
-Gui::handleMousePress(int button, int mouse_x, int mouse_y)
+GGT::handleMousePress(int button, int mouse_x, int mouse_y)
 {
   // Figure out if the shift is down at this point because you can't
   // do it in the mouse motion handler.
@@ -986,14 +1043,14 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
   static DepthStats *ds = new DepthStats(gui_stats->ds[0]);
   Object *current_obj;
   if( shiftDown_ ) {
-    Camera *C = activeGui->dpy_->scene->get_camera( 0 );
+    Camera *C = activeGGT->rtrt_dpy->scene->get_camera( 0 );
     Ray ray;
-    C->makeRay( ray, mouse_x, activeGui->dpy_->priv->yres-mouse_y, 
-		1.0/activeGui->dpy_->priv->xres,
-		1.0/activeGui->dpy_->priv->yres );
+    C->makeRay( ray, mouse_x, activeGGT->rtrt_dpy->priv->yres-mouse_y, 
+		1.0/activeGGT->rtrt_dpy->priv->xres,
+		1.0/activeGGT->rtrt_dpy->priv->yres );
     HitInfo hit;
-    activeGui->dpy_->scene->get_object()->intersect( ray, hit, ds,
-  						     activeGui->dpy_->ppc );
+    activeGGT->rtrt_dpy->scene->get_object()->intersect( ray, hit, ds,
+  						     activeGGT->rtrt_dpy->ppc );
     if( hit.was_hit ) {
       current_obj = hit.hit_obj;
 //        cout << "Mouse down on object "<<current_obj->get_name()<<endl;
@@ -1011,8 +1068,8 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
   // know what operation to perform.
   mouseDown_ = button;
 
-  activeGui->last_x_ = mouse_x;
-  activeGui->last_y_ = mouse_y;
+  activeGGT->last_x_ = mouse_x;
+  activeGGT->last_y_ = mouse_y;
 
   switch(button){
   case GLUT_MIDDLE_BUTTON:
@@ -1025,8 +1082,8 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
     // around (so stuff correlates correctly)
 			
     Vector y_axis,x_axis;
-    activeGui->camera_->get_viewplane(y_axis, x_axis);
-    Vector z_axis(activeGui->camera_->eye - activeGui->camera_->lookat);
+    activeGGT->camera_->get_viewplane(y_axis, x_axis);
+    Vector z_axis(activeGGT->camera_->eye - activeGGT->camera_->lookat);
 
     x_axis.normalize();
     y_axis.normalize();
@@ -1053,23 +1110,23 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
 } // end handleMousePress()
 
 void
-Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
+GGT::handleMouseRelease(int button, int mouse_x, int mouse_y)
 {
-  DpyPrivate * priv      = activeGui->priv;
+  DpyPrivate * priv      = activeGGT->priv;
   double     & last_time = priv->last_time;
 
   static Stats *gui_stats = new Stats(1);
   static DepthStats *ds = new DepthStats(gui_stats->ds[0]);
   Object *current_obj;
-  if( activeGui->shiftDown_ ) {
-    Camera *C = activeGui->dpy_->scene->get_camera( 0 );
+  if( activeGGT->shiftDown_ ) {
+    Camera *C = activeGGT->rtrt_dpy->scene->get_camera( 0 );
     Ray ray;
-    C->makeRay( ray, mouse_x, activeGui->dpy_->priv->yres-mouse_y, 
-		1.0/activeGui->dpy_->priv->xres,
-		1.0/activeGui->dpy_->priv->yres );
+    C->makeRay( ray, mouse_x, activeGGT->rtrt_dpy->priv->yres-mouse_y, 
+		1.0/activeGGT->rtrt_dpy->priv->xres,
+		1.0/activeGGT->rtrt_dpy->priv->yres );
     HitInfo hit;
-    activeGui->dpy_->scene->get_object()->intersect( ray, hit, ds,
-  						     activeGui->dpy_->ppc );
+    activeGGT->rtrt_dpy->scene->get_object()->intersect( ray, hit, ds,
+  						     activeGGT->rtrt_dpy->ppc );
     if( hit.was_hit ) {
       current_obj = hit.hit_obj;
 //        cout << "Mouse up on object "<<current_obj->get_name()<<endl;
@@ -1083,7 +1140,7 @@ Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
 
   switch(button){
   case GLUT_RIGHT_BUTTON:
-    activeGui->fovSpinner_->set_float_val( activeGui->camera_->get_fov() );
+    activeGGT->fovSpinner_->set_float_val( activeGGT->camera_->get_fov() );
     break;
   case GLUT_MIDDLE_BUTTON:
     {
@@ -1106,9 +1163,9 @@ Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
 	Vector z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	z_a.normalize();
 	    
-	activeGui->camera_->up  = y_a;
-	activeGui->camera_->eye = activeGui->camera_->lookat+z_a*eye_dist;
-	activeGui->camera_->setup();
+	activeGGT->camera_->up  = y_a;
+	activeGGT->camera_->eye = activeGGT->camera_->lookat+z_a*eye_dist;
+	activeGGT->camera_->setup();
 	prev_trans = prv;
 
 	Point origin;
@@ -1116,13 +1173,13 @@ Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
 	Vector up;
 	Vector side;
 	double fov;
-	activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+	activeGGT->camera_->getParams(origin, lookdir, up, side, fov);
 	lookdir.normalize();
 	up.normalize();
 	side.normalize();
 	// Move the lights that are fixed to the eye
-	for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-	  Light *light = activeGui->dpy_->scene->light(i);
+	for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+	  Light *light = activeGGT->rtrt_dpy->scene->light(i);
 	  if (light->fixed_to_eye) {
 	    //	    light->updatePosition(light->get_pos() + dir*scl);
 	    light->updatePosition(origin, 
@@ -1162,76 +1219,32 @@ Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
   }
 } // end handleMouseRelease()
 
-extern Window** __glutWindowList;
-
 void
-Gui::handleWindowResizeCB( int width, int height )
+GGT::handleWindowResizeCB( int width, int height )
 {
   //  printf("window resized\n");
-  // This is an ugly, cheaty way of getting the window id out of glut...
   static bool first=true;
   if(first){
-    Window win = __glutWindowList[activeGui->glutDisplayWindowId-1][1];
-    cerr << "winid=" << (void*)win << '\n';
-    activeGui->dpy_->release(win);
     first=false;
   }
-  if (activeGui->dpy_->display_frames) {
-    activeGui->dpy_->priv->xres=width;
-    activeGui->dpy_->priv->yres=height;
-    activeGui->camera_->setWindowAspectRatio((double)height/width);
-  }
-  
-#if 0
-  glutSetWindow( activeGui->glutDisplayWindowId );
-
-  glViewport(0, 0, activeGui->dpy_->priv->xres, activeGui->dpy_->priv->yres);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0, activeGui->dpy_->priv->xres, 0, activeGui->dpy_->priv->yres);
-  glDisable( GL_DEPTH_TEST );
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(0.375, 0.375, 0.0);
-#endif
-
-  return;
-
-#if 0
-  DpyPrivate * priv = activeGui->priv;
-
-  // Resize the image...
-  priv->xres = width;
-  priv->yres = height;
-
-  glViewport(0, 0, priv->xres, priv->yres);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0, priv->xres, 0, priv->yres);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(0.375, 0.375, 0.0);
-
-  printf("done window resized\n");
-#endif
 }
 
 void
-Gui::handleMouseCB(int button, int state, int x, int y)
+GGT::handleMouseCB(int button, int state, int x, int y)
 {
   if( state == GLUT_DOWN ) {
-    activeGui->handleMousePress( button, x, y );
+    activeGGT->handleMousePress( button, x, y );
   } else {
-    activeGui->handleMouseRelease( button, x, y );
+    activeGGT->handleMouseRelease( button, x, y );
   }
 }
 
 void
-Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
+GGT::handleMouseMotionCB( int mouse_x, int mouse_y )
 {
-  int          last_x = activeGui->last_x_;
-  int          last_y = activeGui->last_y_;
-  DpyPrivate * priv   = activeGui->priv;
+  int          last_x = activeGGT->last_x_;
+  int          last_y = activeGGT->last_y_;
+  DpyPrivate * priv   = activeGGT->priv;
 
   double     & last_time = priv->last_time;
   BallData  *& ball      = priv->ball;
@@ -1239,15 +1252,15 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
   static Stats *gui_stats = new Stats(1);
   static DepthStats *ds = new DepthStats(gui_stats->ds[0]);
   Object *current_obj;
-  if( activeGui->shiftDown_ ) {
-    Camera *C = activeGui->dpy_->scene->get_camera( 0 );
+  if( activeGGT->shiftDown_ ) {
+    Camera *C = activeGGT->rtrt_dpy->scene->get_camera( 0 );
     Ray ray;
-    C->makeRay( ray, mouse_x, activeGui->dpy_->priv->yres-mouse_y, 
-		1.0/activeGui->dpy_->priv->xres,
-		1.0/activeGui->dpy_->priv->yres );
+    C->makeRay( ray, mouse_x, activeGGT->rtrt_dpy->priv->yres-mouse_y, 
+		1.0/activeGGT->rtrt_dpy->priv->xres,
+		1.0/activeGGT->rtrt_dpy->priv->yres );
     HitInfo hit;
-    activeGui->dpy_->scene->get_object()->intersect( ray, hit, ds,
-  						     activeGui->dpy_->ppc );
+    activeGGT->rtrt_dpy->scene->get_object()->intersect( ray, hit, ds,
+  						     activeGGT->rtrt_dpy->ppc );
     if( hit.was_hit ) {
       current_obj = hit.hit_obj;
 //        cout << "Mouse moving on object "<<current_obj->get_name()<<endl;
@@ -1258,15 +1271,15 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
     return;
   }
 
-  switch( activeGui->mouseDown_ ) {
+  switch( activeGGT->mouseDown_ ) {
   case GLUT_RIGHT_BUTTON:
     {
-      if( activeGui->rightButtonMenuActive_ )
+      if( activeGGT->rightButtonMenuActive_ )
 	{ // Note: This should actually never be the case as the right 
 	  // button menu gets the click if it is active.
 	  return;
 	}
-      if( activeGui->shiftDown_ )
+      if( activeGGT->shiftDown_ )
 	{
 	  // Move towards/away from the lookat point.
 	  double scl;
@@ -1277,21 +1290,21 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  last_x = mouse_x;
 	  last_y = mouse_y;
 	  if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
-	  Vector dir = activeGui->camera_->lookat - activeGui->camera_->eye;
-	  activeGui->camera_->eye += dir*scl;
+	  Vector dir = activeGGT->camera_->lookat - activeGGT->camera_->eye;
+	  activeGGT->camera_->eye += dir*scl;
 
 	  Point origin;
 	  Vector lookdir;
 	  Vector up;
 	  Vector side;
 	  double fov;
-	  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+	  activeGGT->camera_->getParams(origin, lookdir, up, side, fov);
 	  lookdir.normalize();
 	  up.normalize();
 	  side.normalize();
 	  // Move the lights that are fixed to the eye
-	  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-	    Light *light = activeGui->dpy_->scene->light(i);
+	  for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+	    Light *light = activeGGT->rtrt_dpy->scene->light(i);
 	    if (light->fixed_to_eye) {
 	      //light->updatePosition(light->get_pos() + dir*scl);
 	    light->updatePosition(origin, 
@@ -1313,14 +1326,14 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
 	  if (scl<0) scl=1/(1-scl); else scl+=1;
 
-	  double fov = RtoD(2*atan(scl*tan(DtoR(activeGui->camera_->fov/2.))));
+	  double fov = RtoD(2*atan(scl*tan(DtoR(activeGGT->camera_->fov/2.))));
 	  if( fov < MIN_FOV )
 	    fov = MIN_FOV;
 	  else if( fov > MAX_FOV )
 	    fov = MAX_FOV;
-	  activeGui->camera_->set_fov( fov );
+	  activeGGT->camera_->set_fov( fov );
 	}
-      activeGui->camera_->setup();
+      activeGGT->camera_->setup();
     }
     break;
   case GLUT_LEFT_BUTTON:
@@ -1329,26 +1342,26 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
       double ymtn = -double(last_y-mouse_y)/double(priv->yres);
 
       Vector u,v;
-      activeGui->camera_->get_viewplane(u, v);
+      activeGGT->camera_->get_viewplane(u, v);
       Vector trans(u*ymtn+v*xmtn);
 
       // Translate the view...
-      activeGui->camera_->eye+=trans;
-      activeGui->camera_->lookat+=trans;
-      activeGui->camera_->setup();
+      activeGGT->camera_->eye+=trans;
+      activeGGT->camera_->lookat+=trans;
+      activeGGT->camera_->setup();
 
       Point origin;
       Vector lookdir;
       Vector up;
       Vector side;
       double fov;
-      activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+      activeGGT->camera_->getParams(origin, lookdir, up, side, fov);
       lookdir.normalize();
       up.normalize();
       side.normalize();
       // Move the lights that are fixed to the eye
-      for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-	Light *light = activeGui->dpy_->scene->light(i);
+      for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+	Light *light = activeGGT->rtrt_dpy->scene->light(i);
 	if (light->fixed_to_eye) {
 	  //	  light->updatePosition(light->get_pos() + trans);
 	  light->updatePosition(origin, 
@@ -1395,22 +1408,22 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
       Vector z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
       z_a.normalize();
 
-      activeGui->camera_->up  = y_a;
-      activeGui->camera_->eye = activeGui->camera_->lookat+z_a*eye_dist;
-      activeGui->camera_->setup();
+      activeGGT->camera_->up  = y_a;
+      activeGGT->camera_->eye = activeGGT->camera_->lookat+z_a*eye_dist;
+      activeGGT->camera_->setup();
 			
       Point origin;
       Vector lookdir;
       Vector up;
       Vector side;
       double fov;
-      activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+      activeGGT->camera_->getParams(origin, lookdir, up, side, fov);
       lookdir.normalize();
       up.normalize();
       side.normalize();
       // Move the lights that are fixed to the eye
-      for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-	Light *light = activeGui->dpy_->scene->light(i);
+      for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+	Light *light = activeGGT->rtrt_dpy->scene->light(i);
 	if (light->fixed_to_eye) {
 	  //	    light->updatePosition(light->get_pos() + dir*scl);
 	  light->updatePosition(origin, 
@@ -1427,227 +1440,227 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
     break;
   }
 
-  activeGui->last_x_ = mouse_x;
-  activeGui->last_y_ = mouse_y;
+  activeGGT->last_x_ = mouse_x;
+  activeGGT->last_y_ = mouse_y;
 
 } // end handleMouseMotion()
 
 void
-Gui::handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z )
+GGT::handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z )
 {
   double sensitivity = 100.0;
 
   if( abs(sbm_x) > 2 )
-    activeGui->camera_->moveLaterally( sbm_x / sensitivity );
+    activeGGT->camera_->moveLaterally( sbm_x / sensitivity );
   if( abs(sbm_y) > 2 )
-    activeGui->camera_->moveVertically( sbm_y / sensitivity );
+    activeGGT->camera_->moveVertically( sbm_y / sensitivity );
   if( abs(sbm_z) > 2 )
-    activeGui->camera_->moveForwardOrBack( sbm_z / sensitivity );
+    activeGGT->camera_->moveForwardOrBack( sbm_z / sensitivity );
 }
 
 void
-Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int /*sbr_z*/ )
+GGT::handleSpaceballRotateCB( int sbr_x, int sbr_y, int /*sbr_z*/ )
 {
   double sensitivity = 1000.0;
 
   if( abs(sbr_x) > 2 )
-    activeGui->camera_->changePitch( sbr_x / (sensitivity*2) );
+    activeGGT->camera_->changePitch( sbr_x / (sensitivity*2) );
   if( abs(sbr_y) > 2 )
-    activeGui->camera_->changeFacing( sbr_y / sensitivity );
+    activeGGT->camera_->changeFacing( sbr_y / sensitivity );
   // Don't allow roll (at least for now)
 }
 
 void
-Gui::handleSpaceballButtonCB( int button, int /*state*/ )
+GGT::handleSpaceballButtonCB( int button, int /*state*/ )
 {
   cout << "spaceball button: " << button << "\n"; 
 }
 
 
 void
-Gui::toggleRoutesWindowCB( int /*id*/ )
+GGT::toggleRoutesWindowCB( int /*id*/ )
 {
-  if( activeGui->routeWindowVisible )
-    activeGui->routeWindow->hide();
+  if( activeGGT->routeWindowVisible )
+    activeGGT->routeWindow->hide();
   else
-    activeGui->routeWindow->show();
-  activeGui->routeWindowVisible = !activeGui->routeWindowVisible;
+    activeGGT->routeWindow->show();
+  activeGGT->routeWindowVisible = !activeGGT->routeWindowVisible;
 }
 
 void
-Gui::toggleLightsWindowCB( int /*id*/ )
+GGT::toggleLightsWindowCB( int /*id*/ )
 {
-  if( activeGui->lightsWindowVisible )
-    activeGui->lightsWindow->hide();
+  if( activeGGT->lightsWindowVisible )
+    activeGGT->lightsWindow->hide();
   else
-    activeGui->lightsWindow->show();
-  activeGui->lightsWindowVisible = !activeGui->lightsWindowVisible;
+    activeGGT->lightsWindow->show();
+  activeGGT->lightsWindowVisible = !activeGGT->lightsWindowVisible;
 }
 
 void
-Gui::toggleObjectsWindowCB( int /*id*/ )
+GGT::toggleObjectsWindowCB( int /*id*/ )
 {
-  if( activeGui->objectsWindowVisible )
-    activeGui->objectsWindow->hide();
+  if( activeGGT->objectsWindowVisible )
+    activeGGT->objectsWindow->hide();
   else
-    activeGui->objectsWindow->show();
-  activeGui->objectsWindowVisible = !activeGui->objectsWindowVisible;
+    activeGGT->objectsWindow->show();
+  activeGGT->objectsWindowVisible = !activeGGT->objectsWindowVisible;
 }
 
 void
-Gui::toggleMaterialsWindowCB( int /*id*/ )
+GGT::toggleMaterialsWindowCB( int /*id*/ )
 {
-  if( activeGui->materialsWindowVisible )
-    activeGui->materialsWindow->hide();
+  if( activeGGT->materialsWindowVisible )
+    activeGGT->materialsWindow->hide();
   else
-    activeGui->materialsWindow->show();
-  activeGui->materialsWindowVisible = !activeGui->materialsWindowVisible;
+    activeGGT->materialsWindow->show();
+  activeGGT->materialsWindowVisible = !activeGGT->materialsWindowVisible;
 }
 
 void
-Gui::toggleTriggersWindowCB( int /*id*/ )
+GGT::toggleTriggersWindowCB( int /*id*/ )
 {
-  if( activeGui->triggersWindowVisible )
-    activeGui->triggersWindow_->hide();
+  if( activeGGT->triggersWindowVisible )
+    activeGGT->triggersWindow_->hide();
   else
-    activeGui->triggersWindow_->show();
-  activeGui->triggersWindowVisible = !activeGui->triggersWindowVisible;
+    activeGGT->triggersWindow_->show();
+  activeGGT->triggersWindowVisible = !activeGGT->triggersWindowVisible;
 }
 
 void
-Gui::toggleSoundWindowCB( int /*id*/ )
+GGT::toggleSoundWindowCB( int /*id*/ )
 {
-  if( activeGui->soundsWindowVisible )
-    activeGui->soundsWindow->hide();
+  if( activeGGT->soundsWindowVisible )
+    activeGGT->soundsWindow->hide();
   else
     {
-      activeGui->soundsWindow->show();
+      activeGGT->soundsWindow->show();
       updateSoundCB( -1 );
     }
-  activeGui->soundsWindowVisible = !activeGui->soundsWindowVisible;
+  activeGGT->soundsWindowVisible = !activeGGT->soundsWindowVisible;
 }
 
 void
-Gui::updateLightPanelCB( int /*id*/ )
+GGT::updateLightPanelCB( int /*id*/ )
 {
-  if( activeGui->lights_.size() == 0 ) return;
+  if( activeGGT->lights_.size() == 0 ) return;
 
-  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  Light * light = activeGGT->lights_[ activeGGT->selectedLightId_ ];
   const Color & color = light->getOrigColor();
   const Point & pos   = light->get_pos();
 
-  activeGui->r_color_spin->set_float_val( color.red() );
-  activeGui->g_color_spin->set_float_val( color.green() );
-  activeGui->b_color_spin->set_float_val( color.blue() );
+  activeGGT->r_color_spin->set_float_val( color.red() );
+  activeGGT->g_color_spin->set_float_val( color.green() );
+  activeGGT->b_color_spin->set_float_val( color.blue() );
 
-  activeGui->lightIntensity_->set_float_val( light->get_intensity() );
+  activeGGT->lightIntensity_->set_float_val( light->get_intensity() );
 
-  activeGui->light_radius_spinner->set_float_val( light->radius );
+  activeGGT->light_radius_spinner->set_float_val( light->radius );
 
-  activeGui->lightPosX_->set_float_val( pos.x() );
-  activeGui->lightPosY_->set_float_val( pos.y() );
-  activeGui->lightPosZ_->set_float_val( pos.z() );
+  activeGGT->lightPosX_->set_float_val( pos.x() );
+  activeGGT->lightPosY_->set_float_val( pos.y() );
+  activeGGT->lightPosZ_->set_float_val( pos.z() );
 
   if( light->isOn() )
     {
-      activeGui->lightOnOffBtn_->set_name( "Turn Off" );
-      activeGui->lightsColorPanel_->enable();
-      activeGui->lightsPositionPanel_->enable();
+      activeGGT->lightOnOffBtn_->set_name( "Turn Off" );
+      activeGGT->lightsColorPanel_->enable();
+      activeGGT->lightsPositionPanel_->enable();
     }
   else
     {
-      activeGui->lightOnOffBtn_->set_name( "Turn On" );
-      activeGui->lightsColorPanel_->disable();
-      activeGui->lightsPositionPanel_->disable();
+      activeGGT->lightOnOffBtn_->set_name( "Turn On" );
+      activeGGT->lightsColorPanel_->disable();
+      activeGGT->lightsPositionPanel_->disable();
     }
 }
 
 void
-Gui::updateRouteCB( int /*id*/ )
+GGT::updateRouteCB( int /*id*/ )
 {
-  activeGui->stealth_->selectPath( activeGui->selectedRouteId_ );
+  activeGGT->stealth_->selectPath( activeGGT->selectedRouteId_ );
   goToRouteBeginningCB( -1 );
 }
 
 
 void
-Gui::updateSoundCB( int /*id*/ )
+GGT::updateSoundCB( int /*id*/ )
 {
 #if !defined(linux) && !defined(__APPLE__)
-  activeGui->currentSound_ = activeGui->sounds_[ activeGui->selectedSoundId_ ];
+  activeGGT->currentSound_ = activeGGT->sounds_[ activeGGT->selectedSoundId_ ];
 
-  Point & location = activeGui->currentSound_->locations_[0];
+  Point & location = activeGGT->currentSound_->locations_[0];
 
-  activeGui->soundOriginX_->set_float_val( location.x() );
-  activeGui->soundOriginY_->set_float_val( location.y() );
-  activeGui->soundOriginZ_->set_float_val( location.z() );
+  activeGGT->soundOriginX_->set_float_val( location.x() );
+  activeGGT->soundOriginY_->set_float_val( location.y() );
+  activeGGT->soundOriginZ_->set_float_val( location.z() );
 #endif
 }
 
 void
-Gui::toggleShowLightsCB( int /*id*/ )
+GGT::toggleShowLightsCB( int /*id*/ )
 {
-  if( activeGui->lightsBeingRendered_ ) {
-    activeGui->toggleShowLightsBtn_->set_name( "Show Lights" );
-    activeGui->dpy_->showLights_ = false;
-    activeGui->lightsBeingRendered_ = false;
+  if( activeGGT->lightsBeingRendered_ ) {
+    activeGGT->toggleShowLightsBtn_->set_name( "Show Lights" );
+    activeGGT->rtrt_dpy->showLights_ = false;
+    activeGGT->lightsBeingRendered_ = false;
   } else {
-    activeGui->toggleShowLightsBtn_->set_name( "Hide Lights" );
-    activeGui->dpy_->showLights_ = true;
-    activeGui->lightsBeingRendered_ = true;
+    activeGGT->toggleShowLightsBtn_->set_name( "Hide Lights" );
+    activeGGT->rtrt_dpy->showLights_ = true;
+    activeGGT->lightsBeingRendered_ = true;
   }
 }
 
 void
-Gui::toggleLightOnOffCB( int /*id*/ )
+GGT::toggleLightOnOffCB( int /*id*/ )
 {
-  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  Light * light = activeGGT->lights_[ activeGGT->selectedLightId_ ];
   if( light->isOn() )
     {
       // turn it off
-      activeGui->lightOnOffBtn_->set_name( "Turn On" );
+      activeGGT->lightOnOffBtn_->set_name( "Turn On" );
       light->turnOff();
-      activeGui->lightsColorPanel_->disable();
-      activeGui->lightsPositionPanel_->disable();
+      activeGGT->lightsColorPanel_->disable();
+      activeGGT->lightsPositionPanel_->disable();
     }
   else
     {
       // turn it on
-      activeGui->lightOnOffBtn_->set_name( "Turn Off" );
+      activeGGT->lightOnOffBtn_->set_name( "Turn Off" );
       light->turnOn();
-      activeGui->lightsColorPanel_->enable();
-      activeGui->lightsPositionPanel_->enable();
+      activeGGT->lightsColorPanel_->enable();
+      activeGGT->lightsPositionPanel_->enable();
     }
 }
 
 void
-Gui::toggleLightSwitchesCB( int /*id*/ )
+GGT::toggleLightSwitchesCB( int /*id*/ )
 {
-  if( activeGui->lightsOn_ ) {
-    activeGui->toggleLightsOnOffBtn_->set_name( "Turn On Lights" );
-    activeGui->dpy_->turnOffAllLights_ = true;
-    activeGui->dpy_->turnOnAllLights_ = false;
-    activeGui->lightsOn_ = false;
-    activeGui->lightsColorPanel_->disable();
-    activeGui->lightsPositionPanel_->disable();
+  if( activeGGT->lightsOn_ ) {
+    activeGGT->toggleLightsOnOffBtn_->set_name( "Turn On Lights" );
+    activeGGT->rtrt_dpy->turnOffAllLights_ = true;
+    activeGGT->rtrt_dpy->turnOnAllLights_ = false;
+    activeGGT->lightsOn_ = false;
+    activeGGT->lightsColorPanel_->disable();
+    activeGGT->lightsPositionPanel_->disable();
   } else {
-    activeGui->toggleLightsOnOffBtn_->set_name( "Turn Off Lights" );
-    activeGui->dpy_->turnOnAllLights_ = true;
-    activeGui->dpy_->turnOffAllLights_ = false;
-    activeGui->lightsOn_ = true;
-    activeGui->lightsColorPanel_->enable();
-    activeGui->lightsPositionPanel_->enable();
+    activeGGT->toggleLightsOnOffBtn_->set_name( "Turn Off Lights" );
+    activeGGT->rtrt_dpy->turnOnAllLights_ = true;
+    activeGGT->rtrt_dpy->turnOffAllLights_ = false;
+    activeGGT->lightsOn_ = true;
+    activeGGT->lightsColorPanel_->enable();
+    activeGGT->lightsPositionPanel_->enable();
   }
 }
 
 void
-Gui::updateAmbientCB( int /*id*/ )
+GGT::updateAmbientCB( int /*id*/ )
 {
-  activeGui->dpy_->scene->setAmbientLevel( activeGui->ambientBrightness_ );
+  activeGGT->rtrt_dpy->scene->setAmbientLevel( activeGGT->ambientBrightness_ );
 }
 
 void
-Gui::createRouteWindow( GLUI * window )
+GGT::createRouteWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Routes" );
 
@@ -1707,31 +1720,31 @@ Gui::createRouteWindow( GLUI * window )
 }
 
 void
-Gui::createGetStringWindow( GLUI * window )
+GGT::createGetStringWindow( GLUI * window )
 {
   getStringPanel = window->add_panel( "" );
 
   getStringText_ = 
     window->add_edittext_to_panel( getStringPanel, "", GLUI_EDITTEXT_TEXT,
-				 &(activeGui->inputString_) );
+				 &(activeGGT->inputString_) );
 
   GLUI_Panel * buttonsPanel = window->add_panel_to_panel( getStringPanel, "" );
 
   getStringButton = 
-    window->add_button_to_panel( buttonsPanel, "OK", CLOSE_GETSTRING_BTN );
+    window->add_button_to_panel( buttonsPanel, "Set", CLOSE_GETSTRING_BTN );
 
   window->add_column_to_panel( buttonsPanel );
 
-  window->add_button_to_panel( buttonsPanel, "Cancel", 
+  window->add_button_to_panel( buttonsPanel, "Close", 
 			       -1, hideGetStringWindowCB );
 }
 
 void
-Gui::createObjectWindow( GLUI * window )
+GGT::createObjectWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Objects" );
 					    
-  Array1<Object*> & objects = dpy_->scene->objectsOfInterest_;
+  Array1<Object*> & objects = rtrt_dpy->scene->objectsOfInterest_;
   for( int num = 0; num < objects.size(); num++ )
     {
       char name[ 1024 ];
@@ -1829,11 +1842,11 @@ Gui::createObjectWindow( GLUI * window )
 } // end createObjectWindow()
 
 void
-Gui::createMaterialsWindow( GLUI * window )
+GGT::createMaterialsWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Materials" );
 					    
-  Array1<Material*> & materials = dpy_->scene->guiMaterials_;
+  Array1<Material*> & materials = rtrt_dpy->scene->guiMaterials_;
   for( int num = 0; num < materials.size(); num++ ) {
     char name[ 1024 ];
     sprintf( name, "%s", Names::getName(materials[num]).c_str() );
@@ -1900,7 +1913,7 @@ Gui::createMaterialsWindow( GLUI * window )
 } // end createMaterialsWindow()
 
 void
-Gui::createSoundsWindow( GLUI * window )
+GGT::createSoundsWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Sounds" );
 
@@ -1911,11 +1924,11 @@ Gui::createSoundsWindow( GLUI * window )
   GLUI_Panel * soundOriginPanel = window->
     add_panel_to_panel( panel, "Location" );
 
-  activeGui->soundOriginX_ = window->add_edittext_to_panel
+  activeGGT->soundOriginX_ = window->add_edittext_to_panel
     ( soundOriginPanel, "X position:", GLUI_EDITTEXT_FLOAT );
-  activeGui->soundOriginY_ = window->add_edittext_to_panel
+  activeGGT->soundOriginY_ = window->add_edittext_to_panel
     ( soundOriginPanel, "Y position:", GLUI_EDITTEXT_FLOAT );
-  activeGui->soundOriginZ_ = window->add_edittext_to_panel
+  activeGGT->soundOriginZ_ = window->add_edittext_to_panel
     ( soundOriginPanel, "Z position:", GLUI_EDITTEXT_FLOAT );
 
 
@@ -1924,7 +1937,7 @@ Gui::createSoundsWindow( GLUI * window )
   currentSound_ = sounds_[0];
 
 #if !defined(linux) && !defined(__APPLE__)
-  sounds_ = dpy_->scene->getSounds();
+  sounds_ = rtrt_dpy->scene->getSounds();
   for( int num = 0; num < sounds_.size(); num++ )
     {
       char name[ 1024 ];
@@ -1933,10 +1946,10 @@ Gui::createSoundsWindow( GLUI * window )
     }
 #endif
 
-  activeGui->leftVolume_ = window->
+  activeGGT->leftVolume_ = window->
     add_edittext_to_panel( volumePanel, "Left:", GLUI_EDITTEXT_FLOAT );
 
-  activeGui->rightVolume_ = window->
+  activeGGT->rightVolume_ = window->
     add_edittext_to_panel( volumePanel, "Right:", GLUI_EDITTEXT_FLOAT );
 
   window->add_button_to_panel( panel, "Close",
@@ -1944,9 +1957,9 @@ Gui::createSoundsWindow( GLUI * window )
 }
 
 void
-Gui::createTriggersWindow( GLUI * window )
+GGT::createTriggersWindow( GLUI * window )
 {
-  vector<Trigger*> triggers = dpy_->scene->getTriggers();
+  vector<Trigger*> triggers = rtrt_dpy->scene->getTriggers();
 
   GLUI_Panel * panel = window->add_panel( "Triggers" );
 
@@ -1971,11 +1984,11 @@ Gui::createTriggersWindow( GLUI * window )
 }
 
 void
-Gui::activateTriggerCB( int /* id */ )
+GGT::activateTriggerCB( int /* id */ )
 {
-  if( activeGui->selectedTriggerId_ == -1 ) return;
-  vector<Trigger*> triggers = activeGui->dpy_->scene->getTriggers();
-  Trigger * trig = triggers[ activeGui->selectedTriggerId_ ];
+  if( activeGGT->selectedTriggerId_ == -1 ) return;
+  vector<Trigger*> triggers = activeGGT->rtrt_dpy->scene->getTriggers();
+  Trigger * trig = triggers[ activeGGT->selectedTriggerId_ ];
 
   if( trig->isSoundTrigger() )
     {
@@ -1992,64 +2005,64 @@ Gui::activateTriggerCB( int /* id */ )
 	  next = next->getNext();
 	}
 
-      if( activeGui->activeMTT_ ) // If a trigger is already running...
+      if( activeGGT->activeMTT_ ) // If a trigger is already running...
 	{
 	  cout << "QUEUING trigger: " << trig->getName() << "\n";
-	  activeGui->activeMTT_->deactivate(); // then tell it to stop.
-	  activeGui->queuedMTT_ = trig;        // and queue up the new trigger.
+	  activeGGT->activeMTT_->deactivate(); // then tell it to stop.
+	  activeGGT->queuedMTT_ = trig;        // and queue up the new trigger.
 	}
       else
 	{
 	  cout << "activating TRIGGER: " << trig->getName() << "\n";
-	  activeGui->activeMTT_ = trig;
-	  activeGui->activeMTT_->activate();
+	  activeGGT->activeMTT_ = trig;
+	  activeGGT->activeMTT_->activate();
 	}
     }
 }
 
 void
-Gui::startSoundThreadCB( int /*id*/ )
+GGT::startSoundThreadCB( int /*id*/ )
 {
 #if !defined(linux) && !defined(__APPLE__)
-  activeGui->startSoundThreadBtn_->disable();
-  activeGui->startSoundThreadBtn_->set_name( "Starting Sounds" );
+  activeGGT->startSoundThreadBtn_->disable();
+  activeGGT->startSoundThreadBtn_->set_name( "Starting Sounds" );
 
   SoundThread * soundthread = NULL;
 
   cout << "Starting Sound Thread!\n";
-  soundthread = new SoundThread( activeGui->dpy_->getGuiCam(), 
-				 activeGui->dpy_->scene,
-				 activeGui );
+  soundthread = new SoundThread( activeGGT->rtrt_dpy->getGuiCam(), 
+				 activeGGT->rtrt_dpy->scene,
+				 activeGGT );
   Thread * t = new Thread( soundthread, "Sound thread");
   t->detach();
 #endif
 }
 
 void
-Gui::soundThreadNowActive()
+GGT::soundThreadNowActive()
 {
-  activeGui->enableSounds_ = true;
+  activeGGT->enableSounds_ = true;
 }
 
 Scene*
-Gui::scene()
+GGT::scene()
 {
-  return dpy_->scene;
+  return rtrt_dpy->scene;
 }
 
-void Gui::SGAutoCycleCB( int id ) {
+void GGT::SGAutoCycleCB( int id ) {
   SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
   sgcbi->sg->toggleAutoswitch();
   // Now get the current timestep and then display it
   sgcbi->current_frame_spinner->set_int_val(sgcbi->sg->GetChild());
 }
 
-void Gui::SGNoSkipCB( int id ) {
+void GGT::SGNoSkipCB( int id ) {
   SelectableGroup *sg = ((SGCallbackInfo*)callback_info_list[id])->sg;
   sg->toggleNoSkip();
 }
 
-void Gui::SGNextItemCB( int id )
+void GGT::SGNextItemCB( int id )
 {
   SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
   sgcbi->sg->nextChild();
@@ -2061,78 +2074,92 @@ void Gui::SGNextItemCB( int id )
     Trigger * trig = NULL;
 
     if( Names::getName(newObj) == "Visible Female Volume" ) {
-      trig = activeGui->visWomanTrig_;
+      trig = activeGGT->visWomanTrig_;
     } else if( Names::getName(newObj) == "Brain Volume" ) {
       trig = NULL;
     } else if( Names::getName(newObj) == "CSAFE Fire Volume" ) {
-      trig = activeGui->csafeTrig_;
+      trig = activeGGT->csafeTrig_;
     } else if( Names::getName(newObj) == "Geological Volume" ) {
-      trig = activeGui->geophysicsTrig_;
+      trig = activeGGT->geophysicsTrig_;
     } else if( Names::getName(newObj) == "Sheep Heart Volume" ) {
       trig = NULL;
     }
 
     if( trig ) {
       trig->setPriority( Trigger::HighTriggerPriority );
-      if( activeGui->activeMTT_ ) // If a trigger is already running...
+      if( activeGGT->activeMTT_ ) // If a trigger is already running...
 	{
-	  activeGui->activeMTT_->deactivate(); // then tell it to stop.
-	  activeGui->queuedMTT_ = trig;        // and queue up the new trigger.
+	  activeGGT->activeMTT_->deactivate(); // then tell it to stop.
+	  activeGGT->queuedMTT_ = trig;        // and queue up the new trigger.
 	}
       else // just start this trigger
 	{
-	  activeGui->activeMTT_ = trig;
-	  activeGui->activeMTT_->activate();
+	  activeGGT->activeMTT_ = trig;
+	  activeGGT->activeMTT_->activate();
 	}
     }
   }
 }
 
-void Gui::SGCurrentFrameCB( int id ) {
+void GGT::SGCurrentFrameCB( int id ) {
   SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
   sgcbi->sg->SetChild(sgcbi->current_frame_spinner->get_int_val());
 }
 
-void Gui::SISpinCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+void GGT::SISpinCB( int id ) {
+  Array1<Object*> & objects = activeGGT->rtrt_dpy->scene->objectsOfInterest_;
   SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
   obj->toggleDoSpin();      
 }
-void Gui::SIIncMagCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+void GGT::SIIncMagCB( int id ) {
+  Array1<Object*> & objects = activeGGT->rtrt_dpy->scene->objectsOfInterest_;
   SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
   obj->incMagnification();      
 }
-void Gui::SIDecMagCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+void GGT::SIDecMagCB( int id ) {
+  Array1<Object*> & objects = activeGGT->rtrt_dpy->scene->objectsOfInterest_;
   SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
   obj->decMagnification();      
 }
-void Gui::SISlideUpCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+void GGT::SISlideUpCB( int id ) {
+  Array1<Object*> & objects = activeGGT->rtrt_dpy->scene->objectsOfInterest_;
   SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
   obj->upPole();      
 }
-void Gui::SISlideDownCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+void GGT::SISlideDownCB( int id ) {
+  Array1<Object*> & objects = activeGGT->rtrt_dpy->scene->objectsOfInterest_;
   SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
   obj->downPole();      
 }
 
-void Gui::CGOnCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+void GGT::CGOnCB( int id ) {
+  Array1<Object*> & objects = activeGGT->rtrt_dpy->scene->objectsOfInterest_;
   CutGroup *obj = dynamic_cast<CutGroup*>(objects[id]);  
   obj->toggleOn();
 }
 
-void Gui::CGSpinCB( int id ) {
-  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+void GGT::CGSpinCB( int id ) {
+  Array1<Object*> & objects = activeGGT->rtrt_dpy->scene->objectsOfInterest_;
   CutGroup *obj = dynamic_cast<CutGroup*>(objects[id]);  
   obj->toggleAnimate();
 }
 
 void
-Gui::addLight( Light * light )
+GGT::addSceneLights() {
+  int cnt;
+  for( cnt = 0; cnt < scene()->nlights(); cnt++ ) {
+    addLight( scene()->light( cnt ) );
+  }
+  for( ; cnt < scene()->nlights()+scene()->nPerMatlLights(); cnt++ ) {
+    Light *light = scene()->per_matl_light( cnt - scene()->nlights() );
+    if( light->name_ != "" )
+      light->name_ = light->name_ + " (pm)";
+    addLight( light );
+  }
+}
+
+void
+GGT::addLight( Light * light )
 {
   string & name = light->name_;
   if( name != "" ) {
@@ -2148,11 +2175,11 @@ Gui::addLight( Light * light )
 }
 
 void
-Gui::createLightWindow( GLUI * window )
+GGT::createLightWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Lights" );
 
-  activeGui->ambientBrightness_ = activeGui->dpy_->scene->getAmbientLevel();
+  activeGGT->ambientBrightness_ = activeGGT->rtrt_dpy->scene->getAmbientLevel();
 
   ambientIntensity_ = 
     window->add_spinner_to_panel( panel, "Ambient Level:", GLUI_SPINNER_FLOAT,
@@ -2194,15 +2221,15 @@ Gui::createLightWindow( GLUI * window )
   lightsPositionPanel_ = window->add_panel_to_panel( panel, "Position" );
   lightPosX_ = 
     window->add_spinner_to_panel(lightsPositionPanel_,"X:",GLUI_SPINNER_FLOAT,
-			  &(activeGui->lightX_),
+			  &(activeGGT->lightX_),
 			  LIGHT_X_POS_ID, updateLightPositionCB );
   lightPosY_ =
     window->add_spinner_to_panel(lightsPositionPanel_,"Y:",GLUI_SPINNER_FLOAT,
-			  &(activeGui->lightY_),
+			  &(activeGGT->lightY_),
 			  LIGHT_Y_POS_ID, updateLightPositionCB );
   lightPosZ_ =
     window->add_spinner_to_panel(lightsPositionPanel_,"Z:",GLUI_SPINNER_FLOAT,
-			  &(activeGui->lightZ_),
+			  &(activeGGT->lightZ_),
 			  LIGHT_Z_POS_ID, updateLightPositionCB );
 
   GLUI_Rollout * moreControls = 
@@ -2231,228 +2258,219 @@ Gui::createLightWindow( GLUI * window )
 
 
 void
-Gui::createMenus( int winId, bool soundOn /* = false */,
+GGT::createMenus( int winId, bool soundOn /* = false */,
 		  bool showGui /* = true */ )
 {
+  DpyBase::xlock();
   printf("createmenus\n");
 
-  // Need to do this at this point as glut has now been initialized.
-  activeGui->setupFonts();
-
-  activeGui->glutDisplayWindowId = winId;
-
-  /*int modemenu = */glutCreateMenu( Gui::handleMenuCB );
-
-  glutAddMenuEntry( "Toggle Gui [G]", TOGGLE_GUI );
-  glutAddMenuEntry( "Toggle Hot Spots [t]", TOGGLE_HOT_SPOTS );
-  glutAddMenuEntry( "----------------", -1);
-  glutAddMenuEntry( "Toggle On/Off This Menu [z]", TOGGLE_RIGHT_BUTTON_MENU );
-  glutAddMenuEntry( "----------------", -1);
-  glutAddMenuEntry( "Quit [q]", QUIT_MENU_ID );
-  //glutAddSubMenu("Texture mode", modemenu);
-  if( activeGui->rightButtonMenuActive_ )
-    glutAttachMenu(GLUT_RIGHT_BUTTON);
-
+  // Register callbacks
+  //  GLUI_Master.set_glutKeyboardFunc( GGT::handleKeyPress );
+  GLUI_Master.set_glutReshapeFunc( GGT::handleWindowResizeCB );
+  GLUI_Master.set_glutIdleFunc( GGT::idleFunc );
+  
   // Build GLUI Windows
-  activeGui->mainWindow = GLUI_Master.create_glui( "RTRT Controls",
-						   0, 804, 0 );
+  mainWindow =
+    GLUI_Master.create_glui_subwindow( mainWindowID, GLUI_SUBWINDOW_RIGHT);
+
+  mainWindow->set_main_gfx_window( mainWindowID );
+  
   if( !showGui ){
-    activeGui->mainWindow->hide();
-    activeGui->mainWindowVisible = false;
+    activeGGT->mainWindow->hide();
+    activeGGT->mainWindowVisible = false;
   }
 
-  activeGui->routeWindow     = GLUI_Master.create_glui( "Route",   0,900,400 );
-  activeGui->lightsWindow    = GLUI_Master.create_glui( "Lights",  0,900,500 );
-  activeGui->objectsWindow   = GLUI_Master.create_glui( "Objects", 0,900,600 );
-  activeGui->materialsWindow = GLUI_Master.create_glui("Materials",0,900,700 );
-  activeGui->soundsWindow    = GLUI_Master.create_glui( "Sounds",  0,900,800 );
-  activeGui->triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,900,900 );
+  routeWindow     = GLUI_Master.create_glui( "Route",   0,900,400 );
+  lightsWindow    = GLUI_Master.create_glui( "Lights",  0,900,500 );
+  objectsWindow   = GLUI_Master.create_glui( "Objects", 0,900,600 );
+  materialsWindow = GLUI_Master.create_glui("Materials",0,900,700 );
+  soundsWindow    = GLUI_Master.create_glui( "Sounds",  0,900,800 );
+  triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,900,900 );
 
-  activeGui->getStringWindow = 
-                    GLUI_Master.create_glui( "Input Request", 0, 900, 600 );
+  getStringWindow = GLUI_Master.create_glui( "Input Request", 0, 900, 600 );
 
-  //  activeGui->routeWindow->set_main_gfx_window( winId );
-  //  activeGui->lightsWindow->set_main_gfx_window( winId );
-  //  activeGui->objectsWindow->set_main_gfx_window( winId );
-  //  activeGui->mainWindow->set_main_gfx_window( winId );
+  //  routeWindow->set_main_gfx_window( winId );
+  //  lightsWindow->set_main_gfx_window( winId );
+  //  objectsWindow->set_main_gfx_window( winId );
+  //  mainWindow->set_main_gfx_window( winId );
 
-  activeGui->routeWindow->hide();
-  activeGui->lightsWindow->hide();
-  activeGui->objectsWindow->hide();
-  activeGui->materialsWindow->hide();
-  activeGui->soundsWindow->hide();
-  activeGui->triggersWindow_->hide();
+  routeWindow->hide();
+  lightsWindow->hide();
+  objectsWindow->hide();
+  materialsWindow->hide();
+  soundsWindow->hide();
+  triggersWindow_->hide();
 
-  activeGui->getStringWindow->hide();
+  getStringWindow->hide();
 
-  activeGui->createRouteWindow( activeGui->routeWindow );
-  activeGui->createLightWindow( activeGui->lightsWindow );
-  activeGui->createObjectWindow( activeGui->objectsWindow );
-  activeGui->createMaterialsWindow( activeGui->materialsWindow );
-  activeGui->createTriggersWindow( activeGui->triggersWindow_ );
-  activeGui->createGetStringWindow( activeGui->getStringWindow );
+  createRouteWindow( routeWindow );
+  createLightWindow( lightsWindow );
+  createObjectWindow( objectsWindow );
+  createMaterialsWindow( materialsWindow );
+  createTriggersWindow( triggersWindow_ );
+  createGetStringWindow( getStringWindow );
 
   /////////////////////////////////////////////////////////
   // Main Panel
   //
-  GLUI_Panel * main_panel   = activeGui->mainWindow->add_panel( "" );
-  //  GLUI_Panel * button_panel = activeGui->mainWindow->add_panel( "" );
+  GLUI_Panel * main_panel   = mainWindow->add_panel( "" );
+  //  GLUI_Panel * button_panel = mainWindow->add_panel( "" );
 
   /////////////////////////////////////////////////////////
   // Display Parameters Panel
   //
-  GLUI_Panel *display_panel = activeGui->mainWindow->
+  GLUI_Panel *display_panel = mainWindow->
     add_panel_to_panel( main_panel, "Display Parameters" );
 
   // Shadows
   GLUI_Panel * shadows = 
-    activeGui->mainWindow->add_panel_to_panel( display_panel, "Shadows" );
-  activeGui->shadowModeLB_ = activeGui->mainWindow->
-    add_listbox_to_panel( shadows, "Mode:", &activeGui->dpy_->shadowMode_ );
-  activeGui->shadowModeLB_->add_item( No_Shadows, 
+    mainWindow->add_panel_to_panel( display_panel, "Shadows" );
+  shadowModeLB_ = mainWindow->
+    add_listbox_to_panel( shadows, "Mode:", &rtrt_dpy->shadowMode_ );
+  shadowModeLB_->add_item( No_Shadows, 
 				      ShadowBase::shadowTypeNames[0] );
-  activeGui->shadowModeLB_->add_item( Single_Soft_Shadow,
+  shadowModeLB_->add_item( Single_Soft_Shadow,
 				      ShadowBase::shadowTypeNames[1] );
-  activeGui->shadowModeLB_->add_item( Hard_Shadows,
+  shadowModeLB_->add_item( Hard_Shadows,
 				      ShadowBase::shadowTypeNames[2] );
-  activeGui->shadowModeLB_->add_item( Glass_Shadows,
+  shadowModeLB_->add_item( Glass_Shadows,
 				      ShadowBase::shadowTypeNames[3] );
-  activeGui->shadowModeLB_->add_item( Soft_Shadows,
+  shadowModeLB_->add_item( Soft_Shadows,
 				      ShadowBase::shadowTypeNames[4] );
-  activeGui->shadowModeLB_->add_item( Uncached_Shadows,
+  shadowModeLB_->add_item( Uncached_Shadows,
 				      ShadowBase::shadowTypeNames[5] );
-  activeGui->shadowModeLB_->set_int_val( activeGui->dpy_->scene->shadow_mode );
+  shadowModeLB_->set_int_val( rtrt_dpy->scene->shadow_mode );
 
   // Ambient
   GLUI_Panel * ambient = 
-    activeGui->mainWindow->add_panel_to_panel(display_panel, "Ambient Light");
-  activeGui->ambientModeLB_ = activeGui->mainWindow->
-    add_listbox_to_panel( ambient, "Mode:", &activeGui->dpy_->ambientMode_ );
+    mainWindow->add_panel_to_panel(display_panel, "Ambient Light");
+  ambientModeLB_ = mainWindow->
+    add_listbox_to_panel( ambient, "Mode:", &rtrt_dpy->ambientMode_ );
 
-  activeGui->ambientModeLB_->add_item( Constant_Ambient, "Constant" );
-  activeGui->ambientModeLB_->add_item( Arc_Ambient, "Arc" );
-  activeGui->ambientModeLB_->add_item( Sphere_Ambient, "Sphere" );
-  activeGui->ambientModeLB_->set_int_val( activeGui->dpy_->ambientMode_ );
+  ambientModeLB_->add_item( Constant_Ambient, "Constant" );
+  ambientModeLB_->add_item( Arc_Ambient, "Arc" );
+  ambientModeLB_->add_item( Sphere_Ambient, "Sphere" );
+  ambientModeLB_->set_int_val( rtrt_dpy->ambientMode_ );
 
   // Background Color controls
   GLUI_Panel * bgcolor = 
-    activeGui->mainWindow->add_panel_to_panel( display_panel, "Background Color" );
-  activeGui->WhiteBGButton_ = activeGui->mainWindow->
+    mainWindow->add_panel_to_panel( display_panel, "Background Color" );
+  WhiteBGButton_ = mainWindow->
     add_button_to_panel( bgcolor, "White Background",
 			 WHITE_BG_BUTTON, bgColorCB);
-  activeGui->BlackBGButton_ = activeGui->mainWindow->
+  BlackBGButton_ = mainWindow->
     add_button_to_panel( bgcolor, "Black Background",
 			 BLACK_BG_BUTTON, bgColorCB);
-  activeGui->OrigBGButton_ = activeGui->mainWindow->
+  OrigBGButton_ = mainWindow->
     add_button_to_panel( bgcolor, "Original Background",
 			 ORIG_BG_BUTTON, bgColorCB);
   // Jitter
   GLUI_Panel * jitter = 
-    activeGui->mainWindow->add_panel_to_panel( display_panel, "Jitter" );
-  if (activeGui->dpy_->scene->rtrt_engine->do_jitter)
-    activeGui->jitterButton_ = activeGui->mainWindow->
+    mainWindow->add_panel_to_panel( display_panel, "Jitter" );
+  if (rtrt_dpy->rtrt_engine->do_jitter)
+    jitterButton_ = mainWindow->
       add_button_to_panel( jitter, "Turn Jitter OFF",
 			   TURN_ON_JITTER_BTN, toggleJitterCB );
   else
-    activeGui->jitterButton_ = activeGui->mainWindow->
+    jitterButton_ = mainWindow->
       add_button_to_panel( jitter, "Turn Jitter ON",
 			   TURN_ON_JITTER_BTN, toggleJitterCB );
 
   // FOV
-  activeGui->fovValue_ = activeGui->camera_->get_fov();
-  activeGui->fovSpinner_ = activeGui->mainWindow->
+  fovValue_ = camera_->get_fov();
+  fovSpinner_ = mainWindow->
     add_spinner_to_panel( display_panel, "FOV:", GLUI_SPINNER_FLOAT,
-			   &(activeGui->fovValue_), FOV_SPINNER_ID,
+			   &(fovValue_), FOV_SPINNER_ID,
 			  updateFovCB );
-  activeGui->fovSpinner_->set_float_limits( MIN_FOV, MAX_FOV );
-  activeGui->fovSpinner_->set_speed( 0.01 );
+  fovSpinner_->set_float_limits( MIN_FOV, MAX_FOV );
+  fovSpinner_->set_speed( 0.01 );
 
   // Ray offset
-  activeGui->ray_offset_spinner = activeGui->mainWindow->
+  ray_offset_spinner = mainWindow->
     add_spinner_to_panel( display_panel, "Ray Offset", GLUI_SPINNER_FLOAT,
-			   &(activeGui->ray_offset), 0,
+			   &(ray_offset), 0,
 			  updateRayOffsetCB );
-  activeGui->ray_offset_spinner->set_float_val(activeGui->dpy_->scene->get_camera(0)->get_ray_offset());
-  activeGui->ray_offset_spinner->set_float_limits( 0, 5000 );
-  activeGui->ray_offset_spinner->set_speed( 0.01 );
+  ray_offset_spinner->set_float_val(rtrt_dpy->scene->get_camera(0)->get_ray_offset());
+  ray_offset_spinner->set_float_limits( 0, 5000 );
+  ray_offset_spinner->set_speed( 0.01 );
 
   // Other Controls
-  GLUI_Panel * otherControls = activeGui->mainWindow->
+  GLUI_Panel * otherControls = mainWindow->
     add_panel_to_panel( display_panel, "Other Controls" );
 
-  activeGui->mainWindow->add_button_to_panel( otherControls,
+  mainWindow->add_button_to_panel( otherControls,
 	 "Toggle Hot Spot Display", TOGGLE_HOTSPOTS_ID, toggleHotspotsCB );
 
-  activeGui->mainWindow->add_button_to_panel( otherControls,
+  mainWindow->add_button_to_panel( otherControls,
 	 "Toggle Transmission Mode", TOGGLE_TRANSMISSION_MODE_ID,
 					      toggleTransmissionModeCB );
 
-  activeGui->numThreadsSpinner_ = activeGui->mainWindow->
+  numThreadsSpinner_ = mainWindow->
     add_spinner_to_panel( otherControls, "Number of Threads",
 			  GLUI_SPINNER_INT,
-			  &(activeGui->dpy_->numThreadsRequested_new),
+			  &(rtrt_dpy->numThreadsRequested_new),
 			  NUM_THREADS_SPINNER_ID );
-  activeGui->numThreadsSpinner_->set_speed( 0.0001 );
-  activeGui->numThreadsSpinner_->set_int_limits( 1, MAX_NUM_THREADS );
+  numThreadsSpinner_->set_speed( 0.0001 );
+  numThreadsSpinner_->set_int_limits( 1, MAX_NUM_THREADS );
 
   // ...This probably goes to the objects window...
-  GLUI_Button * toggleMaterials = activeGui->mainWindow->
+  GLUI_Button * toggleMaterials = mainWindow->
     add_button_to_panel(otherControls,"Toggle Materials");
   toggleMaterials->disable();
 
   // 
-  activeGui->soundVolumeSpinner_ = activeGui->mainWindow->
+  soundVolumeSpinner_ = mainWindow->
     add_spinner_to_panel( otherControls, "Sound Volume", GLUI_SPINNER_INT, 
-			  &(activeGui->dpy_->scene->soundVolume_),
+			  &(rtrt_dpy->scene->soundVolume_),
 			  SOUND_VOLUME_SPINNER_ID );
-  activeGui->soundVolumeSpinner_->set_speed( 0.01 );
-  activeGui->soundVolumeSpinner_->set_int_limits( 0, 100 );
-  activeGui->soundVolumeSpinner_->disable();
+  soundVolumeSpinner_->set_speed( 0.01 );
+  soundVolumeSpinner_->set_int_limits( 0, 100 );
+  soundVolumeSpinner_->disable();
 #if !defined(linux) && !defined(__APPLE__)
   //adding in the start sounds button after volume spinner
   //disabled if no sounds or sounds selected in beginning
-  activeGui->startSoundThreadBtn_ = activeGui->mainWindow->
+  startSoundThreadBtn_ = mainWindow->
     add_button_to_panel(otherControls, "Start Sounds",-1, startSoundThreadCB);
-  if( activeGui->dpy_->scene->getSounds().size() == 0 )
+  if( rtrt_dpy->scene->getSounds().size() == 0 )
     {
-      activeGui->startSoundThreadBtn_->disable();
-      activeGui->startSoundThreadBtn_->set_name( "No Sounds" );
+      startSoundThreadBtn_->disable();
+      startSoundThreadBtn_->set_name( "No Sounds" );
     }
   else
     {
-      activeGui->createSoundsWindow( activeGui->soundsWindow );
+      createSoundsWindow( soundsWindow );
       if( soundOn )
 	{
-	  activeGui->startSoundThreadBtn_->disable();
+	  startSoundThreadBtn_->disable();
 	  startSoundThreadCB( -1 );
 	}
     }
 #endif
   
-  activeGui->glyphThresholdSpinner_ = activeGui->mainWindow->
+  glyphThresholdSpinner_ = mainWindow->
     add_spinner_to_panel( otherControls, "Glyph Threshold",
 			  GLUI_SPINNER_FLOAT, 
 			  &glyph_threshold,
 			  -1);
-  activeGui->glyphThresholdSpinner_->set_speed( 0.1 );
-  activeGui->glyphThresholdSpinner_->set_float_limits( 0, 1 );
+  glyphThresholdSpinner_->set_speed( 0.1 );
+  glyphThresholdSpinner_->set_float_limits( 0, 1 );
   
-  activeGui->sceneDepthSpinner_ = activeGui->mainWindow->
+  sceneDepthSpinner_ = mainWindow->
     add_spinner_to_panel( otherControls, "Sil Value",
 			  GLUI_SPINNER_FLOAT, 
-			  &(activeGui->dpy_->scene->max_depth),
+			  &(rtrt_dpy->scene->max_depth),
 			  0, updateSceneDepthCB);
-  activeGui->sceneDepthSpinner_->set_speed( 0.1 );
-  //  activeGui->sceneDepthSpinner_->set_float_limits( 0, 500 );
+  sceneDepthSpinner_->set_speed( 0.1 );
+  //  sceneDepthSpinner_->set_float_limits( 0, 500 );
   
   // 
-  activeGui->depthValue_ = activeGui->priv->maxdepth;
-  GLUI_Spinner * depthSpinner = activeGui->mainWindow->
+  depthValue_ = priv->maxdepth;
+  GLUI_Spinner * depthSpinner = mainWindow->
     add_spinner_to_panel( display_panel, "Ray Depth", GLUI_SPINNER_INT, 
-			  &(activeGui->depthValue_), DEPTH_SPINNER_ID, 
+			  &(depthValue_), DEPTH_SPINNER_ID, 
 			  updateDepthCB );
-  if (activeGui->dpy_->scene->maxdepth > 12)
-    depthSpinner->set_int_limits( 0, activeGui->dpy_->scene->maxdepth * 3/2);
+  if (rtrt_dpy->scene->maxdepth > 12)
+    depthSpinner->set_int_limits( 0, rtrt_dpy->scene->maxdepth * 3/2);
   else
     depthSpinner->set_int_limits( 0, 12 );
   depthSpinner->set_speed( 0.1 );
@@ -2460,141 +2478,104 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   /////////////////////////////////////////////////////////
   // Eye Position Panel
   //
-  activeGui->mainWindow->add_column_to_panel( main_panel, false );
+  mainWindow->add_column_to_panel( main_panel, false );
 
+#if 0
   GLUI_Panel *eye_panel = 
-    activeGui->mainWindow->add_panel_to_panel( main_panel, "Eye Position" );
+    mainWindow->add_panel_to_panel( main_panel, "Eye Position" );
   GLUI_Panel *pos_panel = 
-    activeGui->mainWindow->add_panel_to_panel( eye_panel, "Position" );
+    mainWindow->add_panel_to_panel( eye_panel, "Position" );
 
-  activeGui->x_pos = activeGui->mainWindow->
+  x_pos = mainWindow->
     add_edittext_to_panel( pos_panel, "X:", GLUI_EDITTEXT_FLOAT );
-  activeGui->y_pos = activeGui->mainWindow->
+  y_pos = mainWindow->
     add_edittext_to_panel( pos_panel, "Y:", GLUI_EDITTEXT_FLOAT );
-  activeGui->z_pos = activeGui->mainWindow->
+  z_pos = mainWindow->
     add_edittext_to_panel( pos_panel, "Z:", GLUI_EDITTEXT_FLOAT );
 
-  activeGui->mainWindow->add_separator_to_panel( pos_panel );
-  activeGui->direct = 
-    activeGui->mainWindow->add_edittext_to_panel( pos_panel, "Facing" );
+  mainWindow->add_separator_to_panel( pos_panel );
+  direct = 
+    mainWindow->add_edittext_to_panel( pos_panel, "Facing" );
 
   GLUI_Panel *speed_panel = 
-    activeGui->mainWindow->add_panel_to_panel( eye_panel, "Speed" );
+    mainWindow->add_panel_to_panel( eye_panel, "Speed" );
 
-  activeGui->forward_speed = activeGui->mainWindow->
+  forward_speed = mainWindow->
     add_edittext_to_panel( speed_panel, "Forward:", GLUI_EDITTEXT_FLOAT );
-  activeGui->upward_speed = activeGui->mainWindow->
+  upward_speed = mainWindow->
     add_edittext_to_panel( speed_panel, "Up:", GLUI_EDITTEXT_FLOAT );
-  activeGui->leftward_speed = activeGui->mainWindow->
+  leftward_speed = mainWindow->
     add_edittext_to_panel( speed_panel, "Right:", GLUI_EDITTEXT_FLOAT );
-
-  GLUI_Rollout *control_panel = activeGui->mainWindow->
-    add_rollout_to_panel( eye_panel, "Control Sensitivity", false );
-  activeGui->rotateSensitivity_ = 1.0;
-  GLUI_Spinner * rot = activeGui->mainWindow->
+#endif
+  
+  GLUI_Rollout *control_panel = mainWindow->
+    add_rollout_to_panel( main_panel, "Control Sensitivity", false );
+  rotateSensitivity_ = 1.0;
+  GLUI_Spinner * rot = mainWindow->
     add_spinner_to_panel( control_panel, "Rotation:", GLUI_SPINNER_FLOAT,
-			  &(activeGui->rotateSensitivity_),
+			  &(rotateSensitivity_),
 			  SENSITIVITY_SPINNER_ID, updateRotateSensitivityCB );
   rot->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
   rot->set_speed( 0.1 );
 
-  activeGui->translateSensitivity_ = 1.0;
-  GLUI_Spinner * trans = activeGui->mainWindow->
+  translateSensitivity_ = 1.0;
+  GLUI_Spinner * trans = mainWindow->
     add_spinner_to_panel(control_panel, "Translation:", GLUI_SPINNER_FLOAT,
-			 &(activeGui->translateSensitivity_),
+			 &(translateSensitivity_),
 			 SENSITIVITY_SPINNER_ID, updateTranslateSensitivityCB);
   trans->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
   trans->set_speed( 0.01 );
 
   // Benchmarking
   GLUI_Panel * bench_panel = 
-    activeGui->mainWindow->add_panel_to_panel( main_panel, "Benchmarking" );
-  activeGui->mainWindow->add_button_to_panel( bench_panel, "Start",
+    mainWindow->add_panel_to_panel( main_panel, "Benchmarking" );
+  mainWindow->add_button_to_panel( bench_panel, "Start",
                                               START_BENCH_BTN, BenchCB );
-  //  activeGui->mainWindow->add_column_to_panel( bench_panel, false );
-  activeGui->mainWindow->add_button_to_panel( bench_panel, "Stop",
+  //  mainWindow->add_column_to_panel( bench_panel, false );
+  mainWindow->add_button_to_panel( bench_panel, "Stop",
                                               STOP_BENCH_BTN, BenchCB );
 
   /////////////////////////////////////////////////////////
   // Route/Light/Objects/Sounds Window Buttons
   //
   GLUI_Panel * button_panel =
-    activeGui->mainWindow->add_panel_to_panel( main_panel, "" );
+    mainWindow->add_panel_to_panel( main_panel, "" );
 
-  activeGui->mainWindow->
+  mainWindow->
     add_button_to_panel( button_panel, "Routes",
 			 ROUTE_BUTTON_ID, toggleRoutesWindowCB );
 
-  activeGui->mainWindow->
+  mainWindow->
     add_button_to_panel( button_panel, "Lights",
 			 LIGHTS_BUTTON_ID, toggleLightsWindowCB );
 
-  activeGui->mainWindow->
+  mainWindow->
     add_button_to_panel( button_panel, "Objects",
 			 OBJECTS_BUTTON_ID, toggleObjectsWindowCB );
 
-  activeGui->mainWindow->
+  mainWindow->
     add_button_to_panel( button_panel, "Materials",
 			 MATERIALS_BUTTON_ID, toggleMaterialsWindowCB );
   
-  activeGui->openSoundPanelBtn_ = activeGui->mainWindow->
+  openSoundPanelBtn_ = mainWindow->
     add_button_to_panel( button_panel, "Sounds",
 			 SOUNDS_BUTTON_ID, toggleSoundWindowCB );
-  activeGui->openSoundPanelBtn_->disable();
+  openSoundPanelBtn_->disable();
   
-  activeGui->mainWindow->
+  mainWindow->
     add_button_to_panel( button_panel, "Triggers",
 			 OBJECTS_BUTTON_ID, toggleTriggersWindowCB );
 
 
-  ///////////////////////////////////////////////////////////
-
-  if( activeGui->dpy_->fullScreenMode_ )
-    {
-      livingRoomImage = new PPMImage( 
-	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_livingroom.ppm",
-	true );
-      scienceRoomImage = new PPMImage( 
-	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_science.ppm",
-	true );
-      museumRoomImage = new PPMImage( 
-	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_museum.ppm",
-	true );
-      underwaterRoomImage = new PPMImage( 
-	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_atlantis.ppm",
-	true );
-      galaxyRoomImage = new PPMImage( 
-	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_galaxy.ppm",
-	true );
-      activeGui->backgroundImage_ = scienceRoomImage;
-
-      ///////// CREATE SOME TRIGGERS
-      ///// VIS WOMEN
-      string ifpath = "/usr/sci/data/Geometry/interface/";      
-      vector<Point> loc;
-      PPMImage * ppm = 
-	new PPMImage(ifpath+"scienceroom/science_vis-woman.ppm", true);
-      loc.clear(); loc.push_back(Point(-30,-30,1.9));
-      activeGui->visWomanTrig_ = new Trigger( "Visible Woman", loc, 1,
-					      60,ppm,true );
-      ///// GEOPHYSICS
-      ppm = new PPMImage(ifpath+"scienceroom/science_geophysics.ppm", true);
-      loc.clear(); loc.push_back(Point(-40,-40,1.9));
-      activeGui->geophysicsTrig_ = new Trigger( "Geophysics", loc, 1,
-						30,ppm,true );
-      ///// C-SAFE
-      ppm = new PPMImage(ifpath+"scienceroom/science_firespread.ppm", true);
-      loc.clear(); loc.push_back(Point(-50,-50,1.9));
-      activeGui->csafeTrig_ = new Trigger( "C-SAFE Fire", loc, 1,30,ppm,true );
-    }
+  DpyBase::xunlock();
   printf("done createmenus\n");
 } // end createMenus()
 
 const string
-Gui::getFacingString() const
+GGT::getFacingString() const
 {
   Vector lookAtVectHorizontal = 
-    activeGui->camera_->get_lookat() - activeGui->camera_->get_eye();
+    activeGGT->camera_->get_lookat() - activeGGT->camera_->get_eye();
 
   lookAtVectHorizontal.z( 0.0 );
 
@@ -2632,48 +2613,48 @@ Gui::getFacingString() const
 }
 
 void
-Gui::updateFovCB( int /*id*/ )
+GGT::updateFovCB( int /*id*/ )
 {
-  activeGui->camera_->set_fov( activeGui->fovValue_ );
-  activeGui->camera_->setup();
+  activeGGT->camera_->set_fov( activeGGT->fovValue_ );
+  activeGGT->camera_->setup();
 }
 
 void
-Gui::updateRayOffsetCB( int /*id*/ )
+GGT::updateRayOffsetCB( int /*id*/ )
 {
-  activeGui->camera_->set_ray_offset( activeGui->ray_offset );
+  activeGGT->camera_->set_ray_offset( activeGGT->ray_offset );
 }
 
 void
-Gui::updateSceneDepthCB( int /*id*/ )
+GGT::updateSceneDepthCB( int /*id*/ )
 {
-  if (activeGui->scene()->max_depth < 0) {
-    activeGui->scene()->max_depth = 0;
-    activeGui->sceneDepthSpinner_->set_float_val(0);
+  if (activeGGT->scene()->max_depth < 0) {
+    activeGGT->scene()->max_depth = 0;
+    activeGGT->sceneDepthSpinner_->set_float_val(0);
   }
 }
 
 void
-Gui::updateDepthCB( int /*id*/ )
+GGT::updateDepthCB( int /*id*/ )
 {
-  activeGui->priv->maxdepth = activeGui->depthValue_;
+  activeGGT->priv->maxdepth = activeGGT->depthValue_;
 }
 
 void
-Gui::updateRotateSensitivityCB( int /*id*/ )
+GGT::updateRotateSensitivityCB( int /*id*/ )
 {
-  activeGui->stealth_->updateRotateSensitivity(activeGui->rotateSensitivity_);
+  activeGGT->stealth_->updateRotateSensitivity(activeGGT->rotateSensitivity_);
 }
 
 void
-Gui::updateTranslateSensitivityCB( int /*id*/ )
+GGT::updateTranslateSensitivityCB( int /*id*/ )
 {
-  activeGui->stealth_->
-    updateTranslateSensitivity(activeGui->translateSensitivity_);
+  activeGGT->stealth_->
+    updateTranslateSensitivity(activeGGT->translateSensitivity_);
 }
 
 void
-Gui::update()
+GGT::update()
 {
   // Update Main Window
   x_pos->set_float_val( camera_->eye.x() );
@@ -2705,7 +2686,7 @@ Gui::update()
 } // end update()
 
 bool
-Gui::checkBackgroundWindow()
+GGT::checkBackgroundWindow()
 {
   // See if we have moved nearer to another room... return true if so.
 
@@ -2752,7 +2733,7 @@ Gui::checkBackgroundWindow()
 }
 
 void
-Gui::updateSoundPanel()
+GGT::updateSoundPanel()
 {
 #if !defined(linux) && !defined(__APPLE__)
   if( soundsWindowVisible )
@@ -2768,31 +2749,31 @@ Gui::updateSoundPanel()
 
 // Display image as a "transmission".  Ie: turn off every other scan line.
 void
-Gui::toggleTransmissionModeCB( int /* id */ )
+GGT::toggleTransmissionModeCB( int /* id */ )
 {
-  activeGui->dpy_->turnOnTransmissionMode_ = 
-    !activeGui->dpy_->turnOnTransmissionMode_;
+  activeGGT->rtrt_dpy->turnOnTransmissionMode_ = 
+    !activeGGT->rtrt_dpy->turnOnTransmissionMode_;
 }
 
 void
-Gui::toggleHotspotsCB( int /*id*/ )
+GGT::toggleHotspotsCB( int /*id*/ )
 {
-  switch (activeGui->dpy_->rtrt_engine->hotSpotsMode) {
+  switch (activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode) {
   case RTRT::HotSpotsOff:
-    activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOn;
+    activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOn;
     break;
   case RTRT::HotSpotsOn:
-    activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsHalfScreen;
+    activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode = RTRT::HotSpotsHalfScreen;
     break;
   case RTRT::HotSpotsHalfScreen:
-    activeGui->dpy_->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
+    activeGGT->rtrt_dpy->rtrt_engine->hotSpotsMode = RTRT::HotSpotsOff;
     break;
   }
 }
 
 
 void
-Gui::toggleGui()
+GGT::toggleGui()
 {
   if( mainWindowVisible ) {
     routeWindow->hide();
@@ -2808,74 +2789,74 @@ Gui::toggleGui()
     objectsWindowVisible = false;
     soundsWindowVisible = false;
 
-    activeGui->dpy_->scene->hide_auxiliary_displays();
+    activeGGT->rtrt_dpy->scene->hide_auxiliary_displays();
   } else {
     mainWindow->show();
-    activeGui->dpy_->scene->show_auxiliary_displays();
+    activeGGT->rtrt_dpy->scene->show_auxiliary_displays();
   }
   mainWindowVisible = !mainWindowVisible;
 }
 
 
 void
-Gui::updateIntensityCB( int /*id*/ )
+GGT::updateIntensityCB( int /*id*/ )
 {
-//  cout << "set light intensity to " << activeGui->lightBrightness_ << "\n";
+//  cout << "set light intensity to " << activeGGT->lightBrightness_ << "\n";
 
-  if( activeGui->lights_.size() == 0 ) return;
+  if( activeGGT->lights_.size() == 0 ) return;
 
-  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  Light * light = activeGGT->lights_[ activeGGT->selectedLightId_ ];
 
-  light->updateIntensity( activeGui->lightBrightness_ );
+  light->updateIntensity( activeGGT->lightBrightness_ );
 
-  if( activeGui->lightBrightness_ == 0.0 )
+  if( activeGGT->lightBrightness_ == 0.0 )
     {
-      activeGui->lightsPositionPanel_->disable();
-      activeGui->lightsColorPanel_->disable();
-      activeGui->dpy_->turnOffLight_ = light;
+      activeGGT->lightsPositionPanel_->disable();
+      activeGGT->lightsColorPanel_->disable();
+      activeGGT->rtrt_dpy->turnOffLight_ = light;
     }
   else if( !light->isOn() )
     {
-      activeGui->lightsPositionPanel_->enable();
-      activeGui->lightsColorPanel_->enable();
-      activeGui->dpy_->turnOnLight_ = light;
+      activeGGT->lightsPositionPanel_->enable();
+      activeGGT->lightsColorPanel_->enable();
+      activeGGT->rtrt_dpy->turnOnLight_ = light;
     }
 }
 
 void
-Gui::getStringCB( int id )
+GGT::getStringCB( int id )
 {
   if( id == LOAD_ROUTE_BUTTON_ID ) {
-    activeGui->getStringPanel->set_name( "Load File Name" );
-    activeGui->getStringButton->callback = loadRouteCB;
-    activeGui->getStringText_->callback = loadRouteCB;
+    activeGGT->getStringPanel->set_name( "Load File Name" );
+    activeGGT->getStringButton->callback = loadRouteCB;
+    activeGGT->getStringText_->callback = loadRouteCB;
   } else if( id == NEW_ROUTE_BUTTON_ID ) {
-    activeGui->getStringPanel->set_name( "Enter Route Name" );
-    activeGui->getStringButton->callback = newRouteCB;
-    activeGui->getStringText_->callback = newRouteCB;
+    activeGGT->getStringPanel->set_name( "Enter Route Name" );
+    activeGGT->getStringButton->callback = newRouteCB;
+    activeGGT->getStringText_->callback = newRouteCB;
   } else if( id == SAVE_ROUTE_BUTTON_ID ) {
-    activeGui->getStringPanel->set_name( "Save File Name" );
-    activeGui->getStringButton->callback = saveRouteCB;
-    activeGui->getStringText_->callback = saveRouteCB;
+    activeGGT->getStringPanel->set_name( "Save File Name" );
+    activeGGT->getStringButton->callback = saveRouteCB;
+    activeGGT->getStringText_->callback = saveRouteCB;
   } else {
     cout << "don't know what string to get\n";
     return;
   }
   
-  activeGui->getStringWindow->show();
+  activeGGT->getStringWindow->show();
 }
 
 void 
-Gui::hideGetStringWindowCB( int /*id*/ )
+GGT::hideGetStringWindowCB( int /*id*/ )
 {
-  activeGui->getStringWindow->hide();
+  activeGGT->getStringWindow->hide();
 }
 
 
 void
-Gui::loadAllRoutes()
+GGT::loadAllRoutes()
 {
-  const vector<string> & routes = activeGui->dpy_->scene->getRoutes();
+  const vector<string> & routes = activeGGT->rtrt_dpy->scene->getRoutes();
   string routeName;
   char name[1024];
 
@@ -2884,23 +2865,23 @@ Gui::loadAllRoutes()
       routeName = routes[i];
 
       sprintf( name, "%s", routeName.c_str() );
-      activeGui->routeList->add_item( routeNumber, name );
-      activeGui->routeList->set_int_val( routeNumber );
+      activeGGT->routeList->add_item( routeNumber, name );
+      activeGGT->routeList->set_int_val( routeNumber );
       
       routeNumber++;
     }
 }
 
 void
-Gui::loadRouteCB( int /*id*/ )
+GGT::loadRouteCB( int /*id*/ )
 {
   // glui is screwy when you have this type of window where you want
   // either the "ok" button or "return" to do the same thing.  By
   // removing the callbacks like this, you avoid an infinite loop.
-  activeGui->getStringButton->callback = NULL;
-  activeGui->getStringText_->callback = NULL;
+  activeGGT->getStringButton->callback = NULL;
+  activeGGT->getStringText_->callback = NULL;
 
-  string routeName = activeGui->stealth_->loadPath( activeGui->inputString_ );
+  string routeName = activeGGT->stealth_->loadPath( activeGGT->inputString_ );
 
   if( routeName == "" )
     {
@@ -2910,36 +2891,36 @@ Gui::loadRouteCB( int /*id*/ )
 
   cout << "loaded route: " << routeName << "\n";
 
-  activeGui->getStringWindow->hide();
+  //  activeGGT->getStringWindow->hide();
 
   char name[1024];
   sprintf( name, "%s", routeName.c_str() );
-  activeGui->routeList->add_item( routeNumber, name );
-  activeGui->routeList->set_int_val( routeNumber );
+  activeGGT->routeList->add_item( routeNumber, name );
+  activeGGT->routeList->set_int_val( routeNumber );
 
   routeNumber++;
 
-  activeGui->routeList->enable();
-  activeGui->routePositionPanel->enable();
-  activeGui->traverseRouteBtn->enable();
-  activeGui->editorRO->enable();
-  activeGui->goToRteBegBtn->enable();
+  activeGGT->routeList->enable();
+  activeGGT->routePositionPanel->enable();
+  activeGGT->traverseRouteBtn->enable();
+  activeGGT->editorRO->enable();
+  activeGGT->goToRteBegBtn->enable();
 
   goToRouteBeginningCB( -1 );
 }
 
 void
-Gui::newRouteCB( int /*id*/ )
+GGT::newRouteCB( int /*id*/ )
 {
   // glui is screwy when you have this type of window where you want
   // either the "ok" button or "return" to do the same thing.  By
   // removing the callbacks like this, you avoid an infinite loop.
-  activeGui->getStringButton->callback = NULL;
-  activeGui->getStringText_->callback = NULL;
+  activeGGT->getStringButton->callback = NULL;
+  activeGGT->getStringText_->callback = NULL;
 
-  activeGui->getStringWindow->hide();
+  //  activeGGT->getStringWindow->hide();
 
-  string routeName = activeGui->inputString_;
+  string routeName = activeGGT->inputString_;
 
   if( routeName == "" )
     {
@@ -2947,76 +2928,76 @@ Gui::newRouteCB( int /*id*/ )
       return;
     }
 
-  activeGui->stealth_->newPath( routeName );
+  activeGGT->stealth_->newPath( routeName );
 
   char name[1024];
   sprintf( name, "%s", routeName.c_str() );
-  activeGui->routeList->add_item( routeNumber, name );
-  activeGui->routeList->set_int_val( routeNumber );
+  activeGGT->routeList->add_item( routeNumber, name );
+  activeGGT->routeList->set_int_val( routeNumber );
   routeNumber++;
 
-  activeGui->routeList->enable();
-  activeGui->routePositionPanel->enable();
-  activeGui->traverseRouteBtn->enable();
-  activeGui->editorRO->enable();
-  activeGui->goToRteBegBtn->enable();
+  activeGGT->routeList->enable();
+  activeGGT->routePositionPanel->enable();
+  activeGGT->traverseRouteBtn->enable();
+  activeGGT->editorRO->enable();
+  activeGGT->goToRteBegBtn->enable();
 }
 
 void
-Gui::saveRouteCB( int /*id*/ )
+GGT::saveRouteCB( int /*id*/ )
 {
   // glui is screwy when you have this type of window where you want
   // either the "ok" button or "return" to do the same thing.  By
   // removing the callbacks like this, you avoid an infinite loop.
-  activeGui->getStringButton->callback = NULL;
-  activeGui->getStringText_->callback = NULL;
+  activeGGT->getStringButton->callback = NULL;
+  activeGGT->getStringText_->callback = NULL;
 
-  activeGui->getStringWindow->hide();
+  //  activeGGT->getStringWindow->hide();
   
-  if( strcmp( activeGui->inputString_, "" ) )
+  if( strcmp( activeGGT->inputString_, "" ) != 0)
     {
-      activeGui->stealth_->savePath( activeGui->inputString_ );
+      activeGGT->stealth_->savePath( activeGGT->inputString_ );
     }
 }
 
 void
-Gui::clearRouteCB( int /*id*/ )
+GGT::clearRouteCB( int /*id*/ )
 {
-  activeGui->stealth_->clearPath();
+  activeGGT->stealth_->clearPath();
 }
 
 void
-Gui::deleteCurrentMarkerCB( int /*id*/ )
+GGT::deleteCurrentMarkerCB( int /*id*/ )
 {
-  activeGui->stealth_->deleteCurrentMarker();
+  activeGGT->stealth_->deleteCurrentMarker();
 }
 
 void
-Gui::addToRouteCB( int /*id*/ )
+GGT::addToRouteCB( int /*id*/ )
 {
-  activeGui->stealth_->addToMiddleOfPath( activeGui->camera_ );
+  activeGGT->stealth_->addToMiddleOfPath( activeGGT->camera_ );
 }
 
 void
-Gui::traverseRouteCB( int /*id*/ )
+GGT::traverseRouteCB( int /*id*/ )
 {
-  activeGui->priv->followPath = !activeGui->priv->followPath;
+  activeGGT->priv->followPath = !activeGGT->priv->followPath;
 
   // If starting/stopping following a path, stop all other movement.
   // if starting to following, increase movement once to make us move.
-  activeGui->stealth_->stopAllMovement();
-  if( activeGui->priv->followPath ) {
-    activeGui->stealth_->accelerate();
-    activeGui->traverseRouteBtn->set_name("Stop");
+  activeGGT->stealth_->stopAllMovement();
+  if( activeGGT->priv->followPath ) {
+    activeGGT->stealth_->accelerate();
+    activeGGT->traverseRouteBtn->set_name("Stop");
   } else {
-    activeGui->traverseRouteBtn->set_name("Follow Route");
+    activeGGT->traverseRouteBtn->set_name("Follow Route");
   }
 }
 
 void
-Gui::goToNextMarkerCB( int /*id*/ )
+GGT::goToNextMarkerCB( int /*id*/ )
 {
-  int index = activeGui->stealth_->getNextMarker( activeGui->camera_ );  
+  int index = activeGGT->stealth_->getNextMarker( activeGGT->camera_ );  
 
   if( index == -1 ) return;
 
@@ -3025,13 +3006,13 @@ Gui::goToNextMarkerCB( int /*id*/ )
   Vector up;
   Vector side;
   double fov;
-  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+  activeGGT->camera_->getParams(origin, lookdir, up, side, fov);
   lookdir.normalize();
   up.normalize();
   side.normalize();
   // Move the lights that are fixed to the eye
-  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-    Light *light = activeGui->dpy_->scene->light(i);
+  for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+    Light *light = activeGGT->rtrt_dpy->scene->light(i);
     if (light->fixed_to_eye) {
       //	    light->updatePosition(light->get_pos() + dir*scl);
       light->updatePosition(origin, 
@@ -3044,9 +3025,9 @@ Gui::goToNextMarkerCB( int /*id*/ )
 }
 
 void
-Gui::goToPrevMarkerCB( int /*id*/ )
+GGT::goToPrevMarkerCB( int /*id*/ )
 {
-  int index = activeGui->stealth_->getPrevMarker( activeGui->camera_ );  
+  int index = activeGGT->stealth_->getPrevMarker( activeGGT->camera_ );  
 
   if( index == -1 ) return;
 
@@ -3055,13 +3036,13 @@ Gui::goToPrevMarkerCB( int /*id*/ )
   Vector up;
   Vector side;
   double fov;
-  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+  activeGGT->camera_->getParams(origin, lookdir, up, side, fov);
   lookdir.normalize();
   up.normalize();
   side.normalize();
   // Move the lights that are fixed to the eye
-  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-    Light *light = activeGui->dpy_->scene->light(i);
+  for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+    Light *light = activeGGT->rtrt_dpy->scene->light(i);
     if (light->fixed_to_eye) {
       light->updatePosition(origin, 
 			    Vector(side*light->eye_offset_basis.x()+
@@ -3073,9 +3054,9 @@ Gui::goToPrevMarkerCB( int /*id*/ )
 }
 
 void
-Gui::goToRouteBeginningCB( int /*id*/ )
+GGT::goToRouteBeginningCB( int /*id*/ )
 {
-  int index = activeGui->stealth_->goToBeginning( activeGui->camera_ );  
+  int index = activeGGT->stealth_->goToBeginning( activeGGT->camera_ );  
 
   if( index == -1 ) return;
 
@@ -3084,13 +3065,13 @@ Gui::goToRouteBeginningCB( int /*id*/ )
   Vector up;
   Vector side;
   double fov;
-  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+  activeGGT->camera_->getParams(origin, lookdir, up, side, fov);
   lookdir.normalize();
   up.normalize();
   side.normalize();
   // Move the lights that are fixed to the eye
-  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
-    Light *light = activeGui->dpy_->scene->light(i);
+  for(int i = 0; i < activeGGT->rtrt_dpy->scene->nlights(); i++) {
+    Light *light = activeGGT->rtrt_dpy->scene->light(i);
     if (light->fixed_to_eye) {
       light->updatePosition(origin, 
 			    Vector(side*light->eye_offset_basis.x()+
@@ -3102,72 +3083,72 @@ Gui::goToRouteBeginningCB( int /*id*/ )
 }
 
 void
-Gui::bgColorCB( int id )
+GGT::bgColorCB( int id )
 {
   switch ( id ) {
   case WHITE_BG_BUTTON:
-    activeGui->dpy_->scene->set_bgcolor(Color(1,1,1));
+    activeGGT->rtrt_dpy->scene->set_bgcolor(Color(1,1,1));
     break;
   case BLACK_BG_BUTTON:
-    activeGui->dpy_->scene->set_bgcolor(Color(0,0,0));
+    activeGGT->rtrt_dpy->scene->set_bgcolor(Color(0,0,0));
     break;
   case ORIG_BG_BUTTON:
-    activeGui->dpy_->scene->set_original_bg();
+    activeGGT->rtrt_dpy->scene->set_original_bg();
     break;
   }
 }
 
 void
-Gui::toggleAutoJitterCB( int /*id*/ )
+GGT::toggleAutoJitterCB( int /*id*/ )
 {
-  activeGui->dpy_->doAutoJitter_ = !activeGui->dpy_->doAutoJitter_;
+  activeGGT->rtrt_dpy->doAutoJitter_ = !activeGGT->rtrt_dpy->doAutoJitter_;
 }
 
 void
-Gui::toggleJitterCB( int /*id*/ )
+GGT::toggleJitterCB( int /*id*/ )
 {
-  int *do_jitter = &(activeGui->dpy_->scene->rtrt_engine->do_jitter);
+  int *do_jitter = &(activeGGT->rtrt_dpy->rtrt_engine->do_jitter);
   *do_jitter = !(*do_jitter);
   if( !(*do_jitter))
-    activeGui->jitterButton_->set_name("Turn Jitter ON");
+    activeGGT->jitterButton_->set_name("Turn Jitter ON");
   else
-    activeGui->jitterButton_->set_name("Turn Jitter OFF");
+    activeGGT->jitterButton_->set_name("Turn Jitter OFF");
 }
 
 void
-Gui::BenchCB( int id )
+GGT::BenchCB( int id )
 {
   if (id == START_BENCH_BTN) {
-    activeGui->dpy_->start_bench();
+    activeGGT->rtrt_dpy->start_bench();
   } else if (id == STOP_BENCH_BTN) {
-    activeGui->dpy_->stop_bench();
+    activeGGT->rtrt_dpy->stop_bench();
   }
 }
 
 void
-Gui::updateLightPositionCB( int id )
+GGT::updateLightPositionCB( int id )
 {
-  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  Light * light = activeGGT->lights_[ activeGGT->selectedLightId_ ];
   Point pos = light->get_pos();
 
   cout << "updating light position: " << id << "\n";
   cout << "pos was " << pos << "\n";
 
-  cout << activeGui->lightX_ << ", "
-       << activeGui->lightY_ << ", "
-       << activeGui->lightZ_ << "\n";
+  cout << activeGGT->lightX_ << ", "
+       << activeGGT->lightY_ << ", "
+       << activeGGT->lightZ_ << "\n";
 
   switch( id ) {
   case LIGHT_X_POS_ID:
-    pos.x( activeGui->lightX_ );
+    pos.x( activeGGT->lightX_ );
     light->updatePosition( pos );
     break;
   case LIGHT_Y_POS_ID:
-    pos.y( activeGui->lightY_ );
+    pos.y( activeGGT->lightY_ );
     light->updatePosition( pos );
     break;
   case LIGHT_Z_POS_ID:
-    pos.z( activeGui->lightZ_ );
+    pos.z( activeGGT->lightZ_ );
     light->updatePosition( pos );
     break;
   }
@@ -3175,353 +3156,44 @@ Gui::updateLightPositionCB( int id )
 }
 
 void
-Gui::updateLightRadiusCB( int /*id*/ )
+GGT::updateLightRadiusCB( int /*id*/ )
 {
-  if (activeGui->light_radius < 0) {
+  if (activeGGT->light_radius < 0) {
     // This is a no no
     cerr << "light_radius cannot be less than zero...Fixing.\n";
-    activeGui->light_radius_spinner->set_float_val( 0 );
+    activeGGT->light_radius_spinner->set_float_val( 0 );
   }
 
-  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  Light * light = activeGGT->lights_[ activeGGT->selectedLightId_ ];
   double radius = light->radius;
 
   cout << "updating light radius for light : " << light->name_ << "\n";
 
-  light->updateRadius(activeGui->light_radius);
+  light->updateRadius(activeGGT->light_radius);
 
-  cout << "radius was " << radius << " now is "<<activeGui->light_radius<<"\n";
+  cout << "radius was " << radius << " now is "<<activeGGT->light_radius<<"\n";
 }
 
 void
-Gui::cycleAmbientMode()
+GGT::cycleAmbientMode()
 {
-  if( dpy_->ambientMode_ == Sphere_Ambient )
+  if( rtrt_dpy->ambientMode_ == Sphere_Ambient )
     {
-      dpy_->ambientMode_ = Constant_Ambient;
+      rtrt_dpy->ambientMode_ = Constant_Ambient;
     }
   else
     {
-      dpy_->ambientMode_++;
+      rtrt_dpy->ambientMode_++;
     }
 
-  ambientModeLB_->set_int_val( dpy_->ambientMode_ );
+  ambientModeLB_->set_int_val( rtrt_dpy->ambientMode_ );
 }
 
 void
-Gui::cycleShadowMode()
+GGT::cycleShadowMode()
 {
-  dpy_->shadowMode_ = ShadowBase::increment_shadow_type(dpy_->shadowMode_);
-  shadowModeLB_->set_int_val( dpy_->shadowMode_ );
+  rtrt_dpy->shadowMode_ = ShadowBase::increment_shadow_type(rtrt_dpy->shadowMode_);
+  shadowModeLB_->set_int_val( rtrt_dpy->shadowMode_ );
 }
-
-/////////////////////////////////////////////////////////////////////
-// Draws the string "s" to the GL window at x,y.
-//
-void
-Gui::displayText(GLuint fontbase, double x, double y, char *s, const Color& c)
-{
-  glColor3f(c.red(), c.green(), c.blue());
-  
-  glRasterPos2d(x,y);
-  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
-  glPushAttrib (GL_LIST_BIT);
-  glListBase(fontbase);
-  glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
-  glPopAttrib ();
-}
-
-// Looks like this displays the string with a shadow on it...
-void
-Gui::displayShadowText(GLuint fontbase,
-		       double x, double y, char *s, const Color& c)
-{
-  Color b(0,0,0);
-  displayText(fontbase, x-1, y-1, s, b);
-  displayText(fontbase, x, y, s, c);
-}
-
-int
-calc_width(XFontStruct* font_struct, char* str)
-{
-  XCharStruct overall;
-  int ascent, descent;
-  int dir;
-  XTextExtents(font_struct, str, (int)strlen(str), &dir,
-	       &ascent, &descent, &overall);
-  if (overall.width < 20) return 50;
-  else return overall.width;
-}
-
-#define PS(str) \
-displayShadowText(fontbase, x, y, str, c); y-=dy; \
-width=calc_width(font_struct, str); \
-maxwidth=width>maxwidth?width:maxwidth;
-
-void
-Gui::draw_labels(XFontStruct* font_struct, GLuint fontbase,
-		 int& column, int dy, int top)
-{
-  int x=column;
-  int y=top;
-  int maxwidth=0;
-  int width;
-  Color c(0,1,0);
-  PS("");
-  PS("Number of Rays");
-  PS("Hit background");
-  PS("Reflection rays");
-  PS("Tranparency rays");
-  PS("Shadow rays");
-  PS("Rays in shadow");
-  PS("Shadow cache tries");
-  PS("Shadow cache misses");
-  PS("BV intersections");
-  PS("BV primitive intersections");
-  PS("Light BV intersections");
-  PS("Light BV prim intersections");
-  PS("Sphere intersections");
-  PS("Sphere hits");
-  PS("Sphere light intersections");
-  PS("Sphere light hits");
-  PS("Sphere light hit penumbra");
-  PS("Tri intersections");
-  PS("Tri hits");
-  PS("Tri light intersections");
-  PS("Tri light hits");
-  PS("Tri light hit penumbra");
-  PS("Rect intersections");
-  PS("Rect hits");
-  PS("Rect light intersections");
-  PS("Rect light hits");
-  PS("Rect light hit penumbra");
-  y-=dy;
-  PS("Rays/second");
-  PS("Rays/second/processor");
-  PS("Rays/pixel");
-  column+=maxwidth;
-} // end draw_labels()
-
-#define PN(n) \
-sprintf(buf, "%d", n); \
-width=calc_width(font_struct, buf); \
-displayShadowText(fontbase, x-width-w2, y, buf, c); y-=dy;
-
-#define PD(n) \
-sprintf(buf, "%g", n); \
-width=calc_width(font_struct, buf); \
-displayShadowText(fontbase, x-width-w2, y, buf, c); y-=dy;
-
-#define PP(n, den) \
-if(den==0) \
-percent=0; \
-else \
-percent=100.*n/den; \
-sprintf(buf, "%d", n); \
-width=calc_width(font_struct, buf); \
-displayShadowText(fontbase, x-width-w2, y, buf, c); \
-sprintf(buf, " (%4.1f%%)", percent); \
-displayShadowText(fontbase, x-w2, y, buf, c); \
-y-=dy;
-  
-void
-Gui::draw_column(XFontStruct* font_struct,
-		 GLuint fontbase, char* heading, DepthStats& sum,
-		 int x, int w2, int dy, int top,
-		 bool first/*=false*/, double dt/*=1*/, int nworkers/*=0*/,
-		 int npixels/*=0*/)
-{
-  char buf[100];
-  int y=top;
-  Color c(0,1,0);
-  double percent;
-
-  int width=calc_width(font_struct, heading);
-  displayShadowText(fontbase, x-width-w2, y, heading, Color(1,0,0)); y-=dy;
-  
-  PN(sum.nrays);
-  PP(sum.nbg, sum.nrays);
-  PP(sum.nrefl, sum.nrays);
-  PP(sum.ntrans, sum.nrays);
-  PN(sum.nshadow);
-  PP(sum.inshadow, sum.nshadow);
-  PP(sum.shadow_cache_try, sum.nshadow);
-  PP(sum.shadow_cache_miss, sum.shadow_cache_try);
-  PN(sum.bv_total_isect);
-  PP(sum.bv_prim_isect, sum.bv_total_isect);
-  PN(sum.bv_total_isect_light);
-  PP(sum.bv_prim_isect_light, sum.bv_total_isect_light);
-  
-  PN(sum.sphere_isect);
-  PP(sum.sphere_hit, sum.sphere_isect);
-  PN(sum.sphere_light_isect);
-  PP(sum.sphere_light_hit, sum.sphere_light_isect);
-  PP(sum.sphere_light_penumbra, sum.sphere_light_isect);
-  
-  PN(sum.tri_isect);
-  PP(sum.tri_hit, sum.tri_isect);
-  PN(sum.tri_light_isect);
-  PP(sum.tri_light_hit, sum.tri_light_isect);
-  PP(sum.tri_light_penumbra, sum.tri_light_isect);
-  
-  PN(sum.rect_isect);
-  PP(sum.rect_hit, sum.rect_isect);
-  PN(sum.rect_light_isect);
-  PP(sum.rect_light_hit, sum.rect_light_isect);
-  PP(sum.rect_light_penumbra, sum.rect_light_isect);
-  if(first){
-    y-=dy;
-    double rps=sum.nrays/dt;
-    PD(rps);
-    double rpspp=rps/nworkers;
-    PD(rpspp);
-    double rpp=sum.nrays/(double)npixels;
-    PD(rpp);
-  }
-} // end draw_column()
-
-
-void
-Gui::drawpstats(Stats* mystats, int nworkers, vector<Worker*> & workers,
-		bool draw_framerate, int showing_scene,
-		GLuint fontbase, double& lasttime,
-		double& cum_ttime, double& cum_dt)
-{
-  double thickness=.3;
-  double border=.5;
-
-  double mintime=1.e99;
-  double maxtime=0;
-  for(int i=0;i<nworkers;i++){
-    Stats* stats=workers[i]->get_stats(showing_scene);
-    int nstats=stats->nstats();
-    if(stats->time(0)<mintime)
-      mintime=stats->time(0);
-    if(stats->time(nstats-1)>maxtime)
-      maxtime=stats->time(nstats-1);
-  }
-  double maxworker=maxtime;
-  if(mystats->time(0)<mintime)
-    mintime=mystats->time(0);
-  int nstats=mystats->nstats();
-  if(mystats->time(nstats-1)>maxtime)
-    maxtime=mystats->time(nstats-1);
-    
-  if(draw_framerate){
-    char buf[100];
-    double total_dt=0;
-    for(int i=0;i<nworkers;i++){
-      Stats* stats=workers[i]->get_stats(showing_scene);
-      int nstats=stats->nstats();
-      double dt=maxtime-stats->time(nstats-1);
-      total_dt+=dt;
-    }
-    double ttime=(maxtime-lasttime)*nworkers;
-    double imbalance=total_dt/ttime*100;
-    cum_ttime+=ttime;
-    cum_dt+=total_dt;
-    double cum_imbalance=cum_dt/cum_ttime*100;
-    sprintf(buf, "%5.1fms  %5.1f%% %5.1f%%", (maxtime-maxworker)*1000,
-	    imbalance, cum_imbalance);
-    displayText(fontbase, 80, 3, buf, Color(0,1,0));
-    lasttime=maxtime;
-  }
-  //cerr << mintime << " " << maxworker << " " << maxtime << " " << (maxtime-maxworker)*1000 << '\n';
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(mintime, maxtime, -border, nworkers+2+border);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-	    
-  for(int i=0;i<nworkers;i++){
-    Stats* stats=workers[i]->get_stats(showing_scene);
-    int nstats=stats->nstats();
-    double tlast=stats->time(0);
-    for(int j=1;j<nstats;j++){
-      double tnow=stats->time(j);
-      glColor3dv(stats->color(j));
-      glRectd(tlast, i+1, tnow, i+thickness+1);
-      tlast=tnow;
-    }
-  }
-
-  double tlast=mystats->time(0);
-  int i=nworkers+1;
-  for(int j=1;j<nstats;j++){
-    double tnow=mystats->time(j);
-    glColor3dv(mystats->color(j));
-    glRectd(tlast, i, tnow, i+thickness);
-    tlast=tnow;
-  }	
-} // end drawpstats()
-
-void
-Gui::drawrstats(int nworkers, vector<Worker*> & workers,
-		int showing_scene,
-		GLuint fontbase, int xres, int yres,
-		XFontStruct* font_struct,
-		int left, int up,
-		double dt)
-{
-  DepthStats sums[MAXDEPTH];
-  DepthStats sum;
-  bzero(sums, sizeof(sums));
-  bzero(&sum, sizeof(sum));
-  int md=0;
-  for(int i=0;i<nworkers;i++){
-    int depth=md;
-    while(depth<MAXDEPTH){
-      Stats* st=workers[i]->get_stats(showing_scene);
-      if(st->ds[depth].nrays==0)
-	break;
-      depth++;
-    }
-    md=depth;
-  }
-
-  for(int i=0;i<nworkers;i++){
-    for(int depth=0;depth<md;depth++){
-      Stats* st=workers[i]->get_stats(showing_scene);
-      sums[depth].addto(st->ds[depth]);
-    }
-  }
-  for(int depth=0;depth<md;depth++){
-    sum.addto(sums[depth]);
-  }
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0, xres, 0, yres);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(0.375, 0.375, 0.0);
-
-  XCharStruct overall;
-  int ascent, descent;
-  char* str="123456789 (100%)";
-  int dir;
-  XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
-  int dy=ascent+descent;
-  if (dy == 0) dy=15;
-  int dx=overall.width;
-  if (dx == 0) dx=175;
-  int column=3-left;
-  int top=yres-3-dy+up;
-  char* str2="(100%)";
-  XTextExtents(font_struct, str2, (int)strlen(str2), &dir, &ascent, &descent, &overall);
-  int w2=overall.width;
-  draw_labels(font_struct, fontbase, column, dy, top);
-  column+=dx;
-  draw_column(font_struct, fontbase, "Total", sum, column, w2, dy, top,
-  	      true, dt, nworkers, xres*yres);
-  column+=dx;
-  for(int depth=0;depth<md;depth++){
-    char buf[20];
-    sprintf(buf, "%d", depth);
-    draw_column(font_struct, fontbase, buf, sums[depth], column, w2, dy, top);
-    column+=dx;
-  }
-} // end draw_rstats()
 
 
