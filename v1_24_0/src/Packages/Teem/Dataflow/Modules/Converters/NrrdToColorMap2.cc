@@ -92,11 +92,14 @@ NrrdToColorMap2::execute()
 	error("input nrrd must be of type float: use UnuConvert");
 	return;
       }
+      NrrdRange *range = 
+	nrrdRangeNewSet(h->nrrd, nrrdBlind8BitRangeFalse);
 
       vector<CM2WidgetHandle> widget;
       widget.push_back(scinew ImageCM2Widget(h));
 
-      ocmap_h_ = scinew ColorMap2(widget, false, false);
+      ocmap_h_ = scinew ColorMap2(widget, false, 
+				  -1, make_pair(range->min, range->max));
     } else if (!h.get_rep()) {
       error("No data in input port.");
       return;
