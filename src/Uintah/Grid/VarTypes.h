@@ -40,10 +40,16 @@ namespace Uintah {
 
    typedef ReductionVariable<double, Reductions::Sum<double> > sum_vartype;
     
+   typedef ReductionVariable<Vector, Reductions::Sum<Vector> > sumvec_vartype;
+    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/06/27 21:47:08  guilkey
+// Added a new typedef to the VarTypes.h to accomodate ReductionVariables
+// of type Vector
+//
 // Revision 1.2  2000/05/31 20:25:33  guilkey
 // Added the beginnings of a Sum reduction, which would take data from
 // multiple patches, materials, etc. and add them together.  The immediate
