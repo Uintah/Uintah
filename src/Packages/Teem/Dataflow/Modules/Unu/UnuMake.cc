@@ -65,6 +65,7 @@ private:
   GuiString       samples_;
   GuiString       spacing_;
   GuiString       labels_;
+  GuiString       kind_;
   GuiString       content_;
   GuiInt          line_skip_;
   GuiInt          byte_skip_;
@@ -106,6 +107,7 @@ UnuMake::UnuMake(GuiContext* ctx)
     samples_(ctx->subVar("samples")),
     spacing_(ctx->subVar("spacing")),
     labels_(ctx->subVar("labels")),
+    kind_(ctx->subVar("kind")),
     content_(ctx->subVar("content")),
     line_skip_(ctx->subVar("line_skip")),
     byte_skip_(ctx->subVar("byte_skip")),
@@ -159,10 +161,11 @@ void UnuMake::read_file_and_create_nrrd() {
 #else
   time_t new_filemodification = buf.st_mtime;
 #endif
-  if(!read_handle_.get_rep() || 
-     fn != old_filename_ || 
-     new_filemodification != old_filemodification_)
-  {
+//   if(!read_handle_.get_rep() || 
+//      fn != old_filename_ || 
+//      new_filemodification != old_filemodification_)
+//   {
+  if (1) { // read automatically because one of the many ui values could have changed
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
     read_handle_ = 0;
@@ -174,8 +177,31 @@ void UnuMake::read_file_and_create_nrrd() {
     // Reset guivars
     write_header_.reset();
     data_type_.reset();
+    kind_.reset();
     line_skip_.reset();
     byte_skip_.reset();
+
+    // set first axes kind to be what user specified
+    string kind = kind_.get();
+    if (kind == "nrrdKindDomain") 
+      nout_->nrrd->axis[0].kind = nrrdKindDomain;
+    else if (kind == "nrrdKindScalar")
+      nout_->nrrd->axis[0].kind = nrrdKindScalar;
+    else if (kind == "nrrdKind3Color")
+      nout_->nrrd->axis[0].kind = nrrdKind3Color;
+    else if (kind == "nrrdKind3Vector")
+      nout_->nrrd->axis[0].kind = nrrdKind3Vector;
+    else if (kind == "nrrdKind3Normal")
+      nout_->nrrd->axis[0].kind = nrrdKind3Normal;
+    else if (kind == "nrrdKind3DSymTensor")
+      nout_->nrrd->axis[0].kind = nrrdKind3DSymTensor;
+    else if (kind == "nrrdKind3DMaskedSymTensor")
+      nout_->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
+    else if (kind == "nrrdKind3DTensor")
+      nout_->nrrd->axis[0].kind = nrrdKind3DTensor;
+    else
+      nout_->nrrd->axis[0].kind = nrrdKindUnknown;
+
     
     string data_type = data_type_.get();
     if (data_type == "char") {
@@ -210,6 +236,11 @@ void UnuMake::read_file_and_create_nrrd() {
     }
     
     nout_->nrrd->dim = dimension_;
+
+    // set the rest of the axes to have a kind of nrrdKindDomain
+    for (int i=1; i<dimension_; i++) {
+      nout_->nrrd->axis[i].kind = nrrdKindDomain;
+    }
     
     // Set the nrrd's labels, sizes, and spacings that were
     // parsed in the parse_gui_vars function
