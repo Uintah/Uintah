@@ -103,18 +103,17 @@ void RawToDenseMatrix::execute(){
     old_filename_ = filename_.get();
     int rows = 0;
     // Parse pnt file to see how many we have.
-    ifstream infile(filename_.get().c_str());
-    if (infile.good()) {
+    FILE *f = fopen(filename_.get().c_str(), "rt");
+    if (f) {
       float x,y,z;
-      while (!infile.eof()) {
-	infile >> x >> y >> z;
+      while (!feof(f) && fscanf(f, "%f %f %f", &x, &y, &z) == 3) {
 	++rows;
       }
     } else {
       error("Could not open file: " + filename_.get());
       return;
     } 
-    infile.close();
+    fclose(f);
 
     if (potfiles_.size() == 0) {
       //then the filename was saved in a net, not entered into the gui.
@@ -128,11 +127,10 @@ void RawToDenseMatrix::execute(){
     vector<string>::iterator iter = potfiles_.begin();
     while (iter != potfiles_.end()) {
       int row = 0;
-      ifstream pfile((*iter).c_str());
-      if (pfile.good()) {
-	while (!pfile.eof()) {
-	  double val;
-	  pfile >> val;
+      FILE *f=fopen((*iter).c_str(), "rt");
+      if (f) {
+	double val;
+	while(!feof(f) && fscanf(f, "%lf", &val) == 1) {
 	  mat->put(row, col, val);
 	  ++row;
 	}
