@@ -83,7 +83,7 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 	Point c;
 	mesh->get_center(c, *bi);
 	const double dist = (p - c).length2();
-	if (!found_p || dist < mindist)
+	if (!found_p || (dist < mindist))
 	{
 	  mindist = dist;
 	  index = *bi;
@@ -91,7 +91,7 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 	}
 	++bi;
       }
-    }
+    } 
     if (found_p)
     {
       std::ostringstream ostr;

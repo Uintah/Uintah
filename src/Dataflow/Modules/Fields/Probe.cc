@@ -64,10 +64,12 @@ private:
   GuiString gui_face_;
   GuiString gui_cell_;
   GuiString gui_moveto_;
+  GuiDouble gui_probe_scale_;
 
   int widgetid_;
 
   bool bbox_similar_to(const BBox &a, const BBox &b);
+  double l2norm_;
 
 public:
   Probe(GuiContext* ctx);
@@ -93,6 +95,7 @@ DECLARE_MAKER(Probe)
       gui_face_(ctx->subVar("face")),
       gui_cell_(ctx->subVar("cell")),
       gui_moveto_(ctx->subVar("moveto")),
+      gui_probe_scale_(ctx->subVar("probe_scale")),
       widgetid_(0)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
@@ -195,7 +198,7 @@ Probe::execute()
     }
 
     Point center = bmin + Vector(bmax - bmin) * 0.5;
-    const double l2norm = (bmax - bmin).length();
+    l2norm_ = (bmax - bmin).length();
 
     // If the current location looks reasonable, use that instead
     // of the center.
@@ -207,8 +210,7 @@ Probe::execute()
     {
       center = curloc;
     }
-
-    widget_->SetScale(l2norm * 0.015);
+    
     widget_->SetPosition(center);
 
     GeomGroup *widget_group = scinew GeomGroup;
@@ -226,6 +228,8 @@ Probe::execute()
 
     last_bounds_ = bbox;
   }
+
+  widget_->SetScale(gui_probe_scale_.get() * l2norm_ * 0.003);
 
   const string &moveto = gui_moveto_.get();
   bool moved_p = false;
@@ -444,7 +448,6 @@ Probe::widget_moved(bool last)
     want_to_execute();
   }
 }
-
 
 
 CompileInfoHandle
