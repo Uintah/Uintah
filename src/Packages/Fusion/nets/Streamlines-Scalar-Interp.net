@@ -68,9 +68,9 @@ set $m3-k-start {0}
 set $m3-i-stop {384}
 set $m3-j-stop {0}
 set $m3-k-stop {0}
-set $m3-i-skip {10}
-set $m3-j-skip {5}
-set $m3-k-skip {1}
+set $m3-i-stride {10}
+set $m3-j-stride {5}
+set $m3-k-stride {1}
 set $m3-i-wrap {0}
 set $m3-j-wrap {1}
 set $m3-k-wrap {1}
@@ -87,9 +87,9 @@ set $m4-k-start {0}
 set $m4-i-stop {384}
 set $m4-j-stop {0}
 set $m4-k-stop {0}
-set $m4-i-skip {10}
-set $m4-j-skip {5}
-set $m4-k-skip {1}
+set $m4-i-stride {10}
+set $m4-j-stride {5}
+set $m4-k-stride {1}
 set $m4-i-wrap {0}
 set $m4-j-wrap {1}
 set $m4-k-wrap {1}

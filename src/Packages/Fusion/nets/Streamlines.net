@@ -50,9 +50,9 @@ set $m2-k-start {0}
 set $m2-i-stop {384}
 set $m2-j-stop {0}
 set $m2-k-stop {0}
-set $m2-i-skip {10}
-set $m2-j-skip {5}
-set $m2-k-skip {1}
+set $m2-i-stride {10}
+set $m2-j-stride {5}
+set $m2-k-stride {1}
 set $m2-i-wrap {0}
 set $m2-j-wrap {1}
 set $m2-k-wrap {1}
