@@ -245,8 +245,6 @@ void* get_value( const char *signal, int dtype ) {
 /*  Query the long values of the node - as in the nids the of slices. */
 void* get_values( const char *signal, int dtype ) {
 
-  is_valid( signal );
-
   /* Local vars */
   char buf[1024];                     /* buffer for MDS+ exp */  
   int len, dsc;                       /* Used in MDS+ calls  */
@@ -256,7 +254,11 @@ void* get_values( const char *signal, int dtype ) {
 
   void* values;
 
-  int rank = get_dims( signal, &dims );
+  int rank;
+
+  is_valid( signal );
+
+  rank = get_dims( signal, &dims );
 
   if( rank < 0 )
     return NULL;
