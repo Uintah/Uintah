@@ -135,12 +135,13 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial
   //  fprintf(stderr, "%s: gagePerVolumeAttach finished without errors\n", me);
   
   // Set up what you are querying for
-  unsigned int query = 0;
+  gageQuery query;
+  GAGE_QUERY_RESET(query);
+  GAGE_QUERY_ITEM_ON(query, gageSclGradVec);
+  GAGE_QUERY_ITEM_ON(query, gageSclGeomTens);
 #ifdef COMPUTE_K1_K2
-  query = (1<<gageSclK1) | (1<<gageSclK2) | (1<<gageSclGradVec) |
-    (1<<gageSclGeomTens);
-#else
-  query = (1<<gageSclGradVec) | (1<<gageSclGeomTens);
+  GAGE_QUERY_ITEM_ON(query, gageSclK1);
+  GAGE_QUERY_ITEM_ON(query, gageSclK2);
 #endif
   
   gageQuerySet(main_ctx, pvl, query);
