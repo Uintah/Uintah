@@ -312,8 +312,8 @@ crackGrow(
 Fracture::
 Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 {
-  ps->require("averageMicrocrackLength",d_averageMicrocrackLength);
-  ps->require("materialToughness",d_materialToughness);
+  ps->require("average_microcrack_length",d_averageMicrocrackLength);
+  ps->require("toughness",d_toughness);
 
   d_sharedState = d_sS;
 }
@@ -322,6 +322,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.23  2000/06/23 01:38:07  tan
+// Moved material property toughness to Fracture class.
+//
 // Revision 1.22  2000/06/17 07:06:40  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
