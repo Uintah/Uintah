@@ -174,6 +174,11 @@ void Port::turn_off()
     update_light();
 }
 
+
+void Port::synchronize()
+{
+}
+
 string Port::get_typename()
 {
   return type_name;

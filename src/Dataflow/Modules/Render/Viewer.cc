@@ -93,7 +93,8 @@ Viewer::Viewer(GuiContext* ctx)
     geomlock_("Viewer geometry lock"), 
     view_window_lock_("Viewer view window lock"),
     max_portno_(0),
-    stop_rendering_(false)
+    stop_rendering_(false),
+    synchronized_debt_(0)
 {
 
   map<LightID, int> li;
@@ -117,7 +118,6 @@ Viewer::Viewer(GuiContext* ctx)
   // light source icons, etc.
   ports_.addObj(new GeomViewerPort(0),0);
   max_portno_ = 1;
-
 }
 
 //----------------------------------------------------------------------
@@ -179,6 +179,7 @@ Viewer::do_execute()
   }
 }
 
+
 //----------------------------------------------------------------------
 int 
 Viewer::process_event()
@@ -199,6 +200,19 @@ Viewer::process_event()
     break;
 
   case MessageTypes::ExecuteModule:
+    if (synchronized_debt_ < 0)
+    {
+      synchronized_debt_++;
+      sched->report_execution_finished(msg);
+    }
+    else
+    {
+      Scheduler_Module_Message *smmsg = (Scheduler_Module_Message *)msg;
+      synchronized_serials_.push_back(smmsg->serial);
+    }
+    break;
+
+  case MessageTypes::SynchronizeModule:
     // We (mostly) ignore these messages.
     sched->report_execution_finished(msg);
     break;
@@ -402,6 +416,13 @@ Viewer::process_event()
     geomlock_.writeUnlock();
     break;
 
+  case MessageTypes::GeometrySynchronize:
+    // Port finish message.  Synchronize viewer.
+    //geomlock_.writeLock();
+    finishPort(gmsg->portno);
+    //geomlock_.writeUnlock();
+    break;
+
   case MessageTypes::GeometryFlushViews:
     geomlock_.writeLock();
     flushPort(gmsg->portno);
@@ -456,7 +477,7 @@ Viewer::initPort(Mailbox<GeomReply>* reply)
 {
   int portid=max_portno_++;
   portno_map_.push_back(portid);
-  syncronized_map_.push_back(false);
+  synchronized_map_.push_back(0);
   ports_.addObj(new GeomViewerPort(portid), portid);   // Create the port
   reply->send(GeomReply(portid));
 }
@@ -523,7 +544,7 @@ Viewer::delete_patch_portnos(int portid)
   if (found >= 0)
   {
     portno_map_.erase(portno_map_.begin() + found);
-    syncronized_map_.erase(syncronized_map_.begin() + found);
+    synchronized_map_.erase(synchronized_map_.begin() + found);
   }
 
 }
@@ -789,41 +810,108 @@ Viewer::flushPort(int portid)
     flushViews();
     pi->msg_head=pi->msg_tail=0;
   }
+}
 
-  syncronized_map_[real_portno(portid)-1] = true;
-  bool all = true;
-  
-  for (unsigned int i=0; i+1 < (unsigned int)numIPorts(); i++)
+
+//----------------------------------------------------------------------
+void
+Viewer::finishPort(int portid)
+{
+  synchronized_map_[real_portno(portid)-1]++;
+
+#if 0
+  // Debugging junk.  Whole block not needed.
+  if (synchronized_serials_.size())
   {
-    if (syncronized_map_[i] == false)
+    unsigned int serial = synchronized_serials_.front();
+    cout << "   finishPort " << real_portno(portid) <<
+      " (" << serial << ")   :";
+    for (unsigned int k = 0; k < synchronized_map_.size(); k++)
+    {
+      cout << " " << synchronized_map_[k];
+    }
+    cout << "\n";
+  }
+  else
+  {
+    cout << "   finishPort " << real_portno(portid) << " (...)   :";
+    for (unsigned int k = 0; k < synchronized_map_.size(); k++)
+    {
+      cout << " " << synchronized_map_[k];
+    }
+    cout << "\n";
+  }
+#endif
+
+  bool all = true;
+  for (unsigned int i=0; i < synchronized_map_.size(); i++)
+  {
+    if (synchronized_map_[i] == 0)
     {
       all = false;
       break;
     }
   }
+  
   if (all)
   {
-    if (sci_getenv("SCI_REGRESSION_TESTING"))
+    // Clear the entries from the map.
+    for (unsigned int i = 0; i < synchronized_map_.size(); i++)
     {
-      geomlock_.writeUnlock();
-      for (unsigned int i = 0; i < view_window_.size(); i++)
-      {
-	const string name = string("snapshot") + to_string(i) + ".ppm";
-	view_window_[i]->redraw_if_needed();
-        // Make sure that the 640x480 here matches up with ViewWindow.cc defaults.
-	view_window_[i]->renderer_->saveImage(name, "ppm", 640, 480);
-      }
-      geomlock_.writeLock();
-      flushViews();
+      synchronized_map_[i]--;
     }
 
-    for (unsigned int i = 0; i < syncronized_map_.size(); i++)
+    // Push the serial number back to the scheduler.
+    if (synchronized_serials_.size())
     {
-      syncronized_map_[i] = false;
+      unsigned int serial = synchronized_serials_.front();
+      synchronized_serials_.pop_front();
+
+#if 0      
+      // Debugging.
+      cout << " Finished, sending " << serial << "   :";
+      for (unsigned int k = 0; k < synchronized_map_.size(); k++)
+      {
+        cout << " " << synchronized_map_[k]-1;
+      }
+      cout << "\n";
+#endif
+      
+      sched->report_execution_finished(serial);
+    }
+    else
+    {
+      // Serial number hasn't arrived yet, defer until we get it.
+      synchronized_debt_--;
     }
   }
 }
 
+
+void
+Viewer::set_context(Scheduler* sched, Network* network)
+{
+  Module::set_context(sched, network);
+  if (sci_getenv("SCI_REGRESSION_TESTING"))
+  {
+    sched->add_callback(regression_callback, this);
+  }
+}
+
+
+void
+Viewer::regression_callback(void *ths)
+{
+  Viewer *viewer = (Viewer *)ths;
+  for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
+  {
+    const string name = string("snapshot") + to_string(i) + ".ppm";
+    viewer->view_window_[i]->redraw_if_needed();
+    // Make sure that the 640x480 here matches up with ViewWindow.cc defaults.
+    viewer->view_window_[i]->renderer_->saveImage(name, "ppm", 640, 480);
+    viewer->view_window_[i]->redraw(); // flushes saveImage.
+  }
+}
 
 
 } // End namespace SCIRun

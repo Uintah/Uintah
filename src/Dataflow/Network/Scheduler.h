@@ -72,6 +72,8 @@ struct SerialSet
   {}
 };
 
+typedef void (*SchedulerCallback)(void *);
+
 
 class Scheduler : public Runnable
 {
@@ -80,6 +82,7 @@ class Scheduler : public Runnable
   bool schedule;
   unsigned int serial_id;
   std::list<SerialSet> serial_set;
+  std::vector<std::pair<SchedulerCallback, void *> > callbacks_;
 
   virtual void run();
   void main_loop();
@@ -87,8 +90,9 @@ class Scheduler : public Runnable
   void do_scheduling_real(Module*);
   void report_execution_finished_real(unsigned int serial);
 
-public:
   Mailbox<MessageBase*> mailbox;
+
+public:
 
   Scheduler(Network*);
   ~Scheduler();
@@ -102,6 +106,10 @@ public:
 
   // msg must be of type ModuleExecute.
   void report_execution_finished(const MessageBase *msg);
+  void report_execution_finished(unsigned int serial);
+
+  void add_callback(SchedulerCallback cv, void *data);
+  void remove_callback(SchedulerCallback cv, void *data);
 };
 
 
@@ -109,6 +117,7 @@ class Scheduler_Module_Message : public MessageBase {
 public:
   Connection* conn;
   unsigned int serial;
+  Scheduler_Module_Message(unsigned int serial, bool ignored);
   Scheduler_Module_Message(unsigned int serial);
   Scheduler_Module_Message(Connection* conn);
   virtual ~Scheduler_Module_Message();

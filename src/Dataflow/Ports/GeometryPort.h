@@ -142,6 +142,7 @@ public:
 
   virtual void reset();
   virtual void finish();
+  virtual void synchronize();
 
   virtual void attach(Connection *c);
   virtual void detach(Connection *c, bool blocked);

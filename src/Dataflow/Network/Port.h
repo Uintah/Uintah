@@ -63,6 +63,7 @@ public:
   virtual void detach(Connection* conn, bool blocked);
   virtual void reset()=0;
   virtual void finish()=0;
+  virtual void synchronize();
 
   Module* get_module();
   int get_which_port();

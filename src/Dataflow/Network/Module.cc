@@ -873,6 +873,17 @@ void Module::do_execute()
   }
 }
 
+
+void
+Module::do_synchronize()
+{
+  for (int i=0; i<oports.size(); i++)
+  {
+    oports[i]->synchronize();
+  }
+}
+
+
 void Module::request_multisend(OPort* p1)
 {
   sched->request_multisend(p1);

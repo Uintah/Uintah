@@ -221,11 +221,12 @@ public:
   // Used by ModuleHelper
   void setPid(int pid);
   virtual void do_execute();
+  virtual void do_synchronize();
   virtual void execute() = 0;
 
   void request_multisend(OPort*);
   Mailbox<MessageBase*> mailbox;
-  void set_context(Scheduler* sched, Network* network);
+  virtual void set_context(Scheduler* sched, Network* network);
 
   // Callbacks
   virtual void connection(Port::ConnectionState, int, bool);
