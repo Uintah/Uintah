@@ -162,11 +162,13 @@ void TriGeometryPiece::makeTriBoxes()
 void TriGeometryPiece::insideTriangle(const Point& q,int num,int& NCS,
 				      int& NES) const
 {
+#if 0
   // Check if the point is inside the bounding box of the triangle.
   if (!(q == Max(q,d_boxes[num].lower()) && q == Min(q,d_boxes[num].upper()))){
     NCS = NES = 0;
     return;
   }
+#endif
 
   // Pulled from makemesh.77.c
   //  Now we have to do the pt_in_pgon test to determine if ri is
