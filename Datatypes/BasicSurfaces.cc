@@ -113,6 +113,16 @@ void CylinderSurface::io(Piostream& stream)
     stream.end_class();
 }
 
+void CylinderSurface::construct_grid(int, int, int, const Point&, double)
+{
+    NOT_FINISHED("CylinderSurface::construct_grid");
+}
+
+void CylinderSurface::construct_grid()
+{
+    NOT_FINISHED("CylinderSurface::construct_grid");
+}
+
 static Persistent* make_PointSurface()
 {
     return new PointSurface(Point(0,0,0));
@@ -140,7 +150,7 @@ Surface* PointSurface::clone()
     return new PointSurface(*this);
 }
 
-int PointSurface::inside(const Point& p)
+int PointSurface::inside(const Point&)
 {
     return 0;
 }
@@ -158,5 +168,15 @@ void PointSurface::io(Piostream& stream)
     Surface::io(stream);
     Pio(stream, pos);
     stream.end_class();
+}
+
+void PointSurface::construct_grid(int, int, int, const Point &, double)
+{
+    NOT_FINISHED("PointSurface::construct_grid");
+}
+
+void PointSurface::construct_grid()
+{
+    NOT_FINISHED("PointSurface::construct_grid");
 }
 

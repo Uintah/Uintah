@@ -35,9 +35,12 @@ class CylinderSurface : public Surface {
 public:
     CylinderSurface(const Point& p1, const Point& p2, double radius,
 		    int nu, int nv, int ndiscu);
+    CylinderSurface(const CylinderSurface& copy);
     virtual ~CylinderSurface();
     virtual Surface* clone();
     virtual int inside(const Point& p);
+    virtual void construct_grid(int, int, int, const Point &, double);
+    virtual void construct_grid();
     virtual void get_surfpoints(Array1<Point>&);
 
     // Persistent representation...
@@ -49,9 +52,12 @@ class PointSurface : public Surface {
     Point pos;
 public:
     PointSurface(const Point& pos);
+    PointSurface(const PointSurface& copy);
     virtual ~PointSurface();
     virtual Surface* clone();
     virtual int inside(const Point& p);
+    virtual void construct_grid(int, int, int, const Point &, double);
+    virtual void construct_grid();
     virtual void get_surfpoints(Array1<Point>&);
 
     // Persistent representation...

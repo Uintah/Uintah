@@ -44,13 +44,10 @@ void Surface::io(Piostream& stream) {
     Pio(stream, name);
     if (version >= 2) {
 	Pio(stream, conductivity);
-#ifdef __GNUG__
 	int bt=bdry_type;
 	Pio(stream, bt);
-	bdry_type=bt;
-#else
-	Pio(stream, bdry_type);
-#endif
+	if(stream.reading())
+	    bdry_type=(Boundary_type)bt;
     }
     stream.end_class();
 }

@@ -26,4 +26,4 @@ LIBNAME = Datatypes
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))
