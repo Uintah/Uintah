@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   // convert the type to floats if you need to
-  nrrdBigInt num_elements = nrrdElementNumber(n);
+  size_t num_elements = nrrdElementNumber(n);
   cerr << "Number of data members = " << num_elements << endl;
   if (n->type != nrrdTypeFloat) {
     cerr << "Converting type from ";
