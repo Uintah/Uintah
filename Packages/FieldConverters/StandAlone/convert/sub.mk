@@ -22,7 +22,7 @@ SRCDIR := Packages/FieldConverters/StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core Packages/FieldConverters/Core
 else
-PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Packages/FieldConverters/Core/Datatypes
+PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Math Packages/FieldConverters/Core/Datatypes
 endif
 LIBS := -lm
 
@@ -64,8 +64,4 @@ include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/NewTriSurfToOldSurface
 SRCS := $(SRCDIR)/NewTriSurfToOldSurface.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/PropTest
-SRCS := $(SRCDIR)/PropTest.cc
 include $(SRCTOP)/scripts/program.mk

@@ -16,23 +16,6 @@
 */
 
 /*
-  The contents of this file are subject to the University of Utah Public
-  License (the "License"); you may not use this file except in compliance
-  with the License.
-  
-  Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-  License for the specific language governing rights and limitations under
-  the License.
-  
-  The Original Source Code is SCIRun, released March 12, 2001.
-  
-  The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
-*/
-
-/*
  *  OldSurfaceToNewTriSurf.cc
  *
  *  Written by:
@@ -87,8 +70,8 @@ main(int argc, char **argv) {
   }
 
   
-  TriSurfMesh *tsm = new TriSurfMesh();
-
+  TriSurfMesh *tsm = new TriSurfMesh;
+  TriSurfMeshHandle tsmh(tsm);
 
   int i;
   for (i=0; i<ts->points.size(); i++)
@@ -102,74 +85,20 @@ main(int argc, char **argv) {
     tsm->add_triangle(ele->i1, ele->i2, ele->i3);
   }
 
-  tsm->connect();
-  TriSurfMeshHandle tsmh(tsm);
+  TriSurf<double> *tsd = scinew TriSurf<double>(tsmh, Field::NODE);
+  FieldHandle tsdh(tsd);
+
+  for (i=0; i<ts->points.size(); i++) {
+    tsd->fdata()[i] = 0;
+  }
+  for (i=0; i<ts->bcIdx.size(); i++) {
+    tsd->fdata()[ts->bcIdx[i]] = ts->bcVal[i];
+  }
 
   BinaryPiostream out_stream(argv[2], Piostream::Write);
 
-#if 0
-  // Package up the boundary conditions into a field.
-  Field::data_location bcloc = Field::NONE;
-  if (ts->valType == TriSurface::NodeType)
-  {
-    bcloc = Field::NODE;
-  }
-  else
-  {
-    bcloc = Field::FACE;
-  }
-
-  GenericField<TriSurfMesh, HashTable<int, double> > *bcfield =
-    new GenericField<TriSurfMesh, HashTable<int, double> >(tsmh, bcloc);
-
-  HashTable<int, double> &table = bcfield->fdata();
+  // Write out the new field.
   
-  for (i=0; i<ts->bcIdx.size(); i++)
-  {
-    table.insert(ts->bcIdx[i],ts->bcVal[i])
-  }
-
-
-  // Package up the normals into a field.
-  Field::data_location loc = Field::NONE;
-  switch (ts->normType)
-  {
-  case TriSurface::PointType:
-    loc = Field::NODE;
-    break;
-  case TriSurface::VertexType:
-    loc = Field::EDGE;
-    break;
-  case TriSurface::ElementType:
-    loc = Field::FACE;
-    break;
-  default:
-    loc = Field::NONE;
-  }
-  if (loc != Field::NONE)
-  {
-    TriSurf<Vector> *normals = new TriSurf<Vector>(tsmh, loc);
-    vector<Vector> &vec = normals->fdata();
-    for (int i = 0; i< ts->normals.size(); i++)
-    {
-      vec.push_back(ts->normals[i]);
-    }
-
-    FieldSet *fset = new FieldSet();
-    //fset->add(GenericField<TriSurfMesh, HashTable<int, double> >::handle_type(bcfield));
-    //fset->add(TriSurf<Vector>::handle_type(normals));
-
-    FieldSetHandle fsetH(fset);
-
-    // Write out the new field.
-    Pio(out_stream, fsetH);
-  }
-  else
-  {
-    //GenericField<TriSurfMesh, HashTable<int, double> >::handle_type bch(bcfield);    
-    //Pio(out_stream, bch);
-  }
-
-#endif
+  Pio(out_stream, tsdh);
   return 0;  
 }    
