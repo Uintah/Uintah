@@ -79,6 +79,7 @@ class ShowField : public Module
   int                      node_id_;
   int                      edge_id_;
   int                      face_id_;
+  int                      data_id_;
 
   //! top level nodes for switching on and off..
   //! nodes.
@@ -90,7 +91,11 @@ class ShowField : public Module
   //! faces.
   GuiInt                   faces_on_;
   bool                     faces_dirty_;
-
+  //! data.
+  GuiInt                   vectors_on_;
+  GuiInt                   has_vec_data_;
+  bool                     data_dirty_;
+  
   //! default color and material
   bool                     use_def_color_;
   GuiDouble                def_color_r_;
@@ -104,6 +109,7 @@ class ShowField : public Module
   GuiString                active_tab_; //! for saving nets state
   GuiDouble                node_scale_;
   GuiDouble                edge_scale_;
+  GuiDouble                vectors_scale_;
   GuiInt                   showProgress_;
 
   //! Refinement resolution for cylinders and spheres
@@ -129,12 +135,16 @@ ShowField::ShowField(const string& id) :
   node_id_(0),
   edge_id_(0),
   face_id_(0),
+  data_id_(0),
   nodes_on_("nodes-on", id, this),
   nodes_dirty_(true),
   edges_on_("edges-on", id, this),
   edges_dirty_(true),
   faces_on_("faces-on", id, this),
   faces_dirty_(true),
+  vectors_on_("vectors-on", id, this),
+  has_vec_data_("has_vec_data", id, this),
+  data_dirty_(true),
   use_def_color_(true),
   def_color_r_("def-color-r", id, this),
   def_color_g_("def-color-g", id, this),
@@ -145,6 +155,7 @@ ShowField::ShowField(const string& id) :
   active_tab_("active_tab", id, this),
   node_scale_("node_scale", id, this),
   edge_scale_("edge_scale", id, this),
+  vectors_scale_("vectors_scale", id, this),
   showProgress_("show_progress", id, this),
   resolution_("resolution", id, this),
   res_(0),
@@ -171,6 +182,9 @@ ShowField::execute()
   } else if (fld_gen_ != fld_handle->generation) {
     const TypeDescription *td = fld_handle->get_type_description();
 
+    if (fld_handle->query_vector_interface() != 0) {
+      has_vec_data_.set(1);
+    }
     error(td->get_h_file_path().c_str());
 
     // Get the Algorithm.
@@ -187,7 +201,8 @@ ShowField::execute()
       return;
     }
     fld_gen_ = fld_handle->generation;  
-    nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
+    nodes_dirty_ = true; edges_dirty_ = true; 
+    faces_dirty_ = true; data_dirty_ = true;
     MeshBaseHandle mh = fld_handle->mesh();
     mh->finish_mesh();  
   }
@@ -196,12 +211,14 @@ ShowField::execute()
   if(!color_handle_.get_rep()){
     warning("No ColorMap in port 2 ColorMap.");
     if (colm_gen_ != -1) {
-      nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
+      nodes_dirty_ = true; edges_dirty_ = true; 
+      faces_dirty_ = true; data_dirty_ = true;
     }
     colm_gen_ = -1;
   } else if (colm_gen_ != color_handle_->generation) {
     colm_gen_ = color_handle_->generation;  
-    nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
+    nodes_dirty_ = true; edges_dirty_ = true; 
+    faces_dirty_ = true; data_dirty_ = true;
   }
 
   if (resolution_.get() != res_) {
@@ -211,7 +228,8 @@ ShowField::execute()
   res_ = resolution_.get();
 
   // check to see if we have something to do.
-  if ((!nodes_dirty_) && (!edges_dirty_) && (!faces_dirty_))  { return; }
+  if ((!nodes_dirty_) && (!edges_dirty_) && 
+      (!faces_dirty_) && (!data_dirty_))  { return; }
 
   use_def_color_ = ! fld_handle->is_scalar();
 
@@ -226,12 +244,15 @@ ShowField::execute()
   string edt = edge_display_type_.get();
   edge_scale_.reset();
   double es = edge_scale_.get();
+  vectors_scale_.reset();
+  double vs = vectors_scale_.get();
 
   RenderFieldBase* alg = dynamic_cast<RenderFieldBase*>(renderer_.get_rep());
 
-  alg->render(fld_handle, nodes_dirty_, edges_dirty_, faces_dirty_, 
-		    def_mat_handle_, use_def_color_, color_handle_,
-		    ndt, edt, ns, es, res_);
+  alg->render(fld_handle, 
+	      nodes_dirty_, edges_dirty_, faces_dirty_, data_dirty_,
+	      def_mat_handle_, use_def_color_, color_handle_,
+	      ndt, edt, ns, es, vs, res_);
 
   // cleanup...
   if (nodes_dirty_) {
@@ -256,6 +277,13 @@ ShowField::execute()
     if (alg && faces_on_.get()) 
       face_id_ = ogeom_->addObj(alg->face_switch_, "Faces");
   }  
+  if (data_dirty_) {
+    if (data_id_) ogeom_->delObj(data_id_); 
+    data_id_ = 0;
+    data_dirty_ = false;
+    if (alg && vectors_on_.get()) 
+      data_id_ = ogeom_->addObj(alg->data_switch_, "Vector Data");
+  }
   ogeom_->flushViews();
 }
 
@@ -272,6 +300,8 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     nodes_dirty_ = true;
   } else if (args[1] == "edge_scale") {
     edges_dirty_ = true;
+  } else if (args[1] == "data_scale") {
+    data_dirty_ = true;
   } else if (args[1] == "default_color_change") {
     def_color_r_.reset();
     def_color_g_.reset();
@@ -318,6 +348,18 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
 
     if ((faces_on_.get()) && (face_id_ == 0)) {
       faces_dirty_ = true;
+      want_to_execute();
+    } else {
+      ogeom_->flushViews();
+    }
+  } else if (args[1] == "toggle_display_vectors"){
+    // Toggle the GeomSwitch.
+    vectors_on_.reset();
+    if (alg && alg->data_switch_) 
+      alg->data_switch_->set_state(vectors_on_.get());
+
+    if ((vectors_on_.get()) && (data_id_ == 0)) {
+      data_dirty_ = true;
       want_to_execute();
     } else {
       ogeom_->flushViews();

@@ -25,6 +25,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
@@ -37,17 +38,20 @@
 
 namespace SCIRun {
 
+class GeomEllipsoid;
+class GeomArrows;
+
 //! RenderFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderFieldBase from the DynamicAlgoBase they will have a pointer to.
 class RenderFieldBase : public DynamicAlgoBase
 {
 public:
-  virtual void render(FieldHandle f, bool nodes, bool edges, bool faces, 
-		      MaterialHandle def_mat, 
+  virtual void render(FieldHandle f, bool nodes, bool edges, 
+		      bool faces, bool data, MaterialHandle def_mat, 
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
-		      double ns, double es, int res) = 0;
+		      double ns, double es, double vs, int res) = 0;
 
   virtual ~RenderFieldBase();
 
@@ -74,6 +78,8 @@ public:
   GeomSwitch*              node_switch_;
   GeomSwitch*              edge_switch_;
   GeomSwitch*              face_switch_;
+  GeomSwitch*              data_switch_;
+  GeomArrows*              vec_node_;
   MaterialHandle           def_mat_handle_;
   ColorMapHandle           color_handle_;
   int                      res_;
@@ -93,16 +99,22 @@ public:
 		    double edge_scale);
   void render_faces(const Fld *fld, bool use_def_color);
 
-  void render_all(const Fld *fld,  bool nodes, bool edges, bool faces, 
+  void render_all(const Fld *fld,  
+		  bool nodes, bool edges, bool faces, bool data, 
 		  bool def_col, const string &ndt, const string &edt, 
-		  double ns, double es);
-    
+		  double ns, double es, double vs);
+
+  void render_data(const Fld *fld, 
+		   const string &data_display_type,
+		   double scale);
+
   //! virtual interface. 
-  virtual void render(FieldHandle fh,  bool nodes, bool edges, bool faces, 
+  virtual void render(FieldHandle fh,  
+		      bool nodes, bool edges, bool faces, bool data,
 		      MaterialHandle def_mat,
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
-		      double ns, double es, int res);
+		      double ns, double es, double vs, int res);
     
 private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
@@ -151,21 +163,115 @@ template <>
 bool
 to_double(const unsigned char&, double &);
 
+template <class Dat>
+bool 
+add_data(const Point &, const Dat &, GeomArrows *, 
+	 GeomSwitch *, MaterialHandle &, const string &, double)
+{
+  return false;
+}
+
+template <>
+bool 
+add_data(const Point &, const Vector &, GeomArrows *, 
+	 GeomSwitch *, MaterialHandle &, const string &, double);
+
+template <>
+bool 
+add_data(const Point &, const Tensor &, GeomArrows *, 
+	 GeomSwitch *, MaterialHandle &, const string &, double);
+
 template <class Fld>
 void 
 RenderField<Fld>::render(FieldHandle fh,  bool nodes, 
-			 bool edges, bool faces, 
+			 bool edges, bool faces, bool data,
 			 MaterialHandle def_mat,
 			 bool def_col, ColorMapHandle color_handle,
 			 const string &ndt, const string &edt,
-			 double ns, double es, int res)
+			 double ns, double es, double vs, int res)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
   def_mat_handle_ = def_mat;
   color_handle_ = color_handle;
   res_ = res;
-  render_all(fld, nodes, edges, faces, def_col,  ndt, edt, ns, es);
+  render_all(fld, nodes, edges, faces, data, def_col,  ndt, edt, ns, es, vs);
+}
+
+
+template <class Fld>
+void 
+RenderField<Fld>::render_data(const Fld *sfld, 
+			       const string &display_type,
+			       double scale) 
+{
+  typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
+
+  // pass: over the data
+  switch (sfld->data_at()) {
+  case Field::NODE:
+    {
+      typename Fld::mesh_type::Node::iterator niter = mesh->node_begin();  
+      while (niter != mesh->node_end()) {
+	typename Fld::value_type tmp;
+	if (sfld->value(tmp, *niter)) {
+	  Point p;
+	  mesh->get_point(p, *niter);
+	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
+		   display_type, scale); 
+	}
+	++niter;
+      }
+    }
+    break;
+  case Field::EDGE:      
+    {
+      typename Fld::mesh_type::Edge::iterator eiter = mesh->edge_begin();  
+      while (eiter != mesh->edge_end()) { 
+	typename Fld::value_type tmp;
+	if (sfld->value(tmp, *eiter)) {
+	  Point p;
+	  mesh->get_center(p, *eiter);
+	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
+		   display_type, scale);
+	}
+	++eiter;
+      }
+    }
+    break;
+  case Field::FACE:
+    {
+      typename Fld::mesh_type::Face::iterator fiter = mesh->face_begin();  
+      while (fiter != mesh->face_end()) { 
+	typename Fld::value_type tmp;
+	if (sfld->value(tmp, *fiter)) {
+	  Point p;
+	  mesh->get_center(p, *fiter);
+	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
+		   display_type, scale);
+	}
+	++fiter;
+      }
+    }
+    break;
+  case Field::CELL:
+    {
+      typename Fld::mesh_type::Cell::iterator citer = mesh->cell_begin();  
+      while (citer != mesh->cell_end()) { 
+	typename Fld::value_type tmp;
+	if (sfld->value(tmp, *citer)) {
+	  Point p;
+	  mesh->get_center(p, *citer);
+	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
+		   display_type, scale);
+	}
+	++citer;
+      }
+    }
+    break;
+  case Field::NONE:
+    break;
+  }
 }
 
 template <class Fld>
@@ -389,14 +495,20 @@ RenderField<Fld>::render_faces(const Fld *sfld,
 template <class Fld>
 void
 RenderField<Fld>::render_all(const Fld *fld, bool nodes, 
-			     bool edges, bool faces, 
+			     bool edges, bool faces, bool data,
 			     bool def_col,
 			     const string &ndt, const string &edt,
-			     double ns, double es)
+			     double ns, double es, double vs)
 {
   if (nodes) render_nodes(fld, ndt, def_col, ns);
   if (edges) render_edges(fld, edt, def_col, es);
   if (faces) render_faces(fld, def_col);
+  
+  if (data) {
+    vec_node_ = scinew GeomArrows(vs);
+    data_switch_ = scinew GeomSwitch(vec_node_);
+    render_data(fld, ndt, vs);
+  }
 }
 
 template <class Fld>

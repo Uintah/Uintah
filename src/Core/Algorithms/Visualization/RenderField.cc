@@ -18,6 +18,7 @@
 //    Date   : Tue May 22 10:57:12 2001
 
 #include <Core/Algorithms/Visualization/RenderField.h>
+#include <Core/Geom/GeomArrows.h>
 
 namespace SCIRun {
 
@@ -73,4 +74,23 @@ to_double(const unsigned char&in, double &out)
   return true;
 }
 
+template <>
+bool 
+add_data(const Point &p, const Tensor &d, GeomArrows *arrows, 
+	 GeomSwitch *dat_sw,
+	 MaterialHandle &mat, const string &s, double sf)
+{
+  return false;
+}
+
+template <>
+bool 
+add_data(const Point &p, const Vector &d, GeomArrows *arrows, 
+	 GeomSwitch *dat_sw,
+	 MaterialHandle &mat, const string &s, double sf)
+{
+  //  cerr << "sf is :" << sf << endl;
+  arrows->add(p, d*sf, mat, mat, mat);
+  return true;
+}
 } // end namespace SCIRun

@@ -28,27 +28,34 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-nodes-on
 	global $this-edges-on
 	global $this-faces-on
+	global $this-vectors-on
 	global $this-node_display_type
 	global $this-def-color-r
 	global $this-def-color-g
 	global $this-def-color-b
 	global $this-node_scale
 	global $this-edge_scale
+	global $this-vectors_scale
 	global $this-resolution
 	global $this-active_tab
+	global $this-has_vec_data
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
 	set $this-edge_scale 0.03
+	set $this-vectors_scale 0.03
 	set $this-def-color-r 0.5
 	set $this-def-color-g 0.5
 	set $this-def-color-b 0.5
 	set $this-nodes-on 1
 	set $this-edges-on 1
 	set $this-faces-on 1
+	set $this-vectors-on 0
 	set $this-resolution 4
+	set $this-has_vec_data 0
 	set $this-active_tab "Nodes"
 	trace variable $this-active_tab w "$this switch_to_active_tab"
+	trace variable $this-has_vec_data w "$this vec_tab_changed"
     }
 
     method raiseColor {col color colMsg} {
@@ -119,6 +126,111 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
     }
 
+    # Nodes Tab
+    method add_nodes_tab {dof} {
+	
+	set nodes [$dof.tabs add -label "Nodes" \
+		-command "$this set_active_tab \"Nodes\""]
+	
+	checkbutton $nodes.show_nodes \
+		-text "Show Nodes" \
+		-command "$this-c toggle_display_nodes" \
+		-variable $this-nodes-on
+
+	global $this-node_display_type
+	make_labeled_radio $nodes.radio \
+		"Node Display Type" "$this-c node_display_type" top \
+		$this-node_display_type \
+		{{Spheres Spheres} {Axes Axes} {Point Points}}
+
+	pack $nodes.show_nodes $nodes.radio -fill y -anchor w
+
+	expscale $nodes.slide -label NodeScale \
+		-orient horizontal \
+		-variable $this-node_scale -command "$this-c node_scale"
+
+	bind $nodes.slide.scale <ButtonRelease> \
+		"$this-c needexecute"
+    }
+
+    # Edges Tab
+    method add_edges_tab {dof} {
+
+	set edge [$dof.tabs add -label "Edges" \
+		-command "$this set_active_tab \"Edges\""]
+	checkbutton $edge.show_edges \
+		-text "Show Edges" \
+		-command "$this-c toggle_display_edges" \
+		-variable $this-edges-on
+
+	global $this-edge_display_type
+	make_labeled_radio $edge.radio \
+		"Edge Display Type" "$this-c edge_display_type" top \
+		$this-edge_display_type {{Cylinders Cylinders} {Lines Lines}}
+
+	pack $edge.show_edges $edge.radio \
+		-side top -fill y -anchor w
+
+	expscale $edge.slide -label CylinderScale \
+		-orient horizontal \
+		-variable $this-edge_scale -command "$this-c edge_scale"
+
+	bind $edge.slide.scale <ButtonRelease> \
+		"$this-c needexecute"
+    }
+
+    # Faces Tab
+    method add_faces_tab {dof} {
+	set face [$dof.tabs add -label "Faces" \
+		-command "$this set_active_tab \"Faces\""]
+	checkbutton $face.show_faces \
+		-text "Show Faces" \
+		-command "$this-c toggle_display_faces" \
+		-variable $this-faces-on
+	pack $face.show_faces -side top -fill y -anchor w
+    }
+
+
+    # Vector Tab
+    method add_vector_tab {dof} {
+
+	set vector [$dof.tabs add -label "Vectors" \
+		-command "$this set_active_tab \"Vectors\""]
+	checkbutton $vector.show_vectors \
+		-text "Show Vectors" \
+		-command "$this-c toggle_display_vectors" \
+		-variable $this-vectors-on
+
+#	 global $this-vector_display_type
+#	 make_labeled_radio $vector.radio \
+#		 "Vector Display Type" "$this-c vector_display_type" top \
+#		 $this-vector_display_type {{Cylinders Cylinders} {Lines Lines}}
+#
+	pack $vector.show_vectors -side top -fill y -anchor w
+
+	expscale $vector.slide -label CylinderScale \
+		-orient horizontal \
+		-variable $this-vectors_scale -command "$this-c data_scale"
+
+	bind $vector.slide.scale <ButtonRelease> \
+		"$this-c needexecute"
+    }
+
+
+    method vec_tab_changed {name1 name2 op} {
+	global $this-has_vec_data
+
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set dof [$window.options.disp.frame_title childsite]	
+	    if {[set $name1] == 1} { 
+		add_vector_tab $dof
+		$dof.tabs view [set $this-active_tab]
+	    } else {
+		$dof.tabs delete "Vectors"
+	    }
+	}
+    }
     method ui {} {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
@@ -144,70 +256,12 @@ itcl_class SCIRun_Visualization_ShowField {
 	iwidgets::tabnotebook  $dof.tabs -height 220 -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
-	# Nodes Tab
-	set nodes [$dof.tabs add -label "Nodes" \
-		-command "$this set_active_tab \"Nodes\""]
-
-	checkbutton $nodes.show_nodes \
-		-text "Show Nodes" \
-		-command "$this-c toggle_display_nodes" \
-		-variable $this-nodes-on
-	#$window.options.disp.show_nodes select
-
-
-	global $this-node_display_type
-	set b $this-node_display_type
-
-
-	make_labeled_radio $nodes.radio \
-		"Node Display Type" "$this-c node_display_type" top \
-		$this-node_display_type \
-		{{Spheres Spheres} {Axes Axes} {Point Points}}
-
-	pack $nodes.show_nodes $nodes.radio -fill y -anchor w
-
-	expscale $nodes.slide -label NodeScale \
-		-orient horizontal \
-		-variable $this-node_scale -command "$this-c node_scale"
-
-	bind $nodes.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
-
-
-	# Edges Tab
-	set edge [$dof.tabs add -label "Edges" \
-		-command "$this set_active_tab \"Edges\""]
-	checkbutton $edge.show_edges \
-		-text "Show Edges" \
-		-command "$this-c toggle_display_edges" \
-		-variable $this-edges-on
-
-	global $this-edge_display_type
-	set e $this-edge_display_type
-	make_labeled_radio $edge.radio \
-		"Edge Display Type" "$this-c edge_display_type" top \
-		$this-edge_display_type {{Cylinders Cylinders} {Lines Lines}}
-
-	pack $edge.show_edges $edge.radio \
-		-side top -fill y -anchor w
-
-	expscale $edge.slide -label CylinderScale \
-		-orient horizontal \
-		-variable $this-edge_scale -command "$this-c edge_scale"
-
-	bind $edge.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
-
-
-	# Faces Tab
-	set face [$dof.tabs add -label "Faces" \
-		-command "$this set_active_tab \"Faces\""]
-	checkbutton $face.show_faces \
-		-text "Show Faces" \
-		-command "$this-c toggle_display_faces" \
-		-variable $this-faces-on
-	pack $face.show_faces -side top -fill y -anchor w
-	#$window.options.disp.show_faces select
+	add_nodes_tab $dof
+	add_edges_tab $dof
+	add_faces_tab $dof
+	if {[set $this-has_vec_data] == 1} {
+	    add_vector_tab $dof
+	}
 
 	global $this-active_tab
 	# view the active tab
