@@ -155,8 +155,14 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
 
       // we need to check both where the patch is and where
       // it used to be (in the case of a dynamic reallocation)
-      if(getPatchwiseProcessorAssignment(patch) == me ||
-         getOldProcessorAssignment(NULL, patch, 0) == me) {
+      int proc = getPatchwiseProcessorAssignment(patch);
+      int oldproc = getOldProcessorAssignment(NULL, patch, 0);
+
+      // we also need to see if the output processor for patch is this proc,
+      // in case it wouldn't otherwise have been in the neighborhood
+      int outputproc = (proc / d_outputNthProc)*d_outputNthProc;
+
+      if(proc == me || oldproc == me || outputproc == me) {
 	Patch::selectType n;
 	IntVector lowIndex, highIndex;
 	patch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
