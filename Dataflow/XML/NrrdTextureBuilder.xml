@@ -31,7 +31,7 @@
 
 
 
-<component name="NrrdTextureBuilder" category="Visualization">
+<component name="NrrdTextureBuilder" category="Visualization" optional="true">
   <overview>
     <authors>
       <author>Kurt Zimmerman</author>

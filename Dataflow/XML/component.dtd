@@ -67,7 +67,8 @@
 <!ELEMENT component (overview, implementation?, io, gui?, nets?, testing?)>
 <!ATTLIST component 
         name CDATA #REQUIRED
-        category CDATA #REQUIRED>
+        category CDATA #REQUIRED
+        optional (true | false) "false">
 
 <!--  Overview of component's purpose  -->
 <!ELEMENT overview (authors, summary, description, examplesr?)>

@@ -98,6 +98,132 @@ AC_DEFUN([BASE_LIB_PATH], [
   eval $1='"$_new_lib_path"'
 ])
 
+## original SCI_TRY_LINK...
+AC_DEFUN([SCI_COMPILE_LINK_TEST], [
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags 
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+## 
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_$1        => lib path
+##      $1_LIB_DIR_FLAG   => all the -L's
+##      $1_LIB_FLAG       => all the -l's
+##      HAVE_$1           => yes or no
+##      INC_$1_H          => all the -I's
+##      HAVE_$1_H         => yes or no
+
+ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
+
+ifelse([$9],[optional],,[$9],[not-optional],,
+       [AC_FATAL(arg 9 must be either 'optional' or 'not-optional')])dnl
+
+AC_MSG_CHECKING(for $2 ($9))
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+ifelse([$4],[],,[
+for i in $4; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+])dnl
+
+ifelse([$5],[],_sci_libs=,[
+for i in $5; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+])dnl
+
+_sci_lib_path=
+ifelse([$6],[],,[
+for i in $6; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+])dnl
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs $7 $LIBS"
+
+AC_TRY_LINK([$3],[$8],[
+eval LIB_DIR_$1='"$6"'
+
+if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  eval $1_LIB_DIR_FLAG=''
+else
+  eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
+fi
+
+eval $1_LIB_FLAG='"$_sci_libs"'
+eval HAVE_$1="yes"
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_$1_H=''
+else
+  eval INC_$1_H='"$_sci_includes"'
+fi
+
+eval HAVE_$1_H="yes"
+AC_MSG_RESULT(yes)
+], 
+[
+eval LIB_DIR_$1=''
+eval $1_LIB_DIR_FLAG=''
+eval $1_LIB_FLAG=''
+eval HAVE_$1="no"
+eval INC_$1_H=''
+eval HAVE_$1_H="no"
+AC_MSG_RESULT(not found)
+if test "$9" = "not-optional"; then
+  SCI_MSG_ERROR([[Test for required $1 failed. 
+    To see the failed compile information, look in config.log, 
+    search for $1. Please install the relevant libraries
+     or specify the correct paths and try to configure again.]])
+fi
+])
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+])
+
+
 AC_DEFUN([SCI_TRY_LINK], [
 ##
 ## SCI_TRY_LINK ($1):  $2
