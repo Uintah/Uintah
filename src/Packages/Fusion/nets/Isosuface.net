@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 19]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 36 207]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 18 348]
@@ -28,7 +25,7 @@ set $m1-max {           476463}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
 set $m2-show_status {1}
-set $m2-isoval {250527}
+set $m2-isoval {250527.000}
 set $m2-isoval-min {1.04083e-17}
 set $m2-isoval-max {476463}
 set $m2-isoval-typed {0}
@@ -37,7 +34,7 @@ set $m2-quantity-range {colormap}
 set $m2-quantity-min {0}
 set $m2-quantity-max {100}
 set $m2-isoval-list {0}
-set $m2-extract-from-new-field {0}
+set $m2-extract-from-new-field {1}
 set $m2-algorithm {0}
 set $m2-build_trisurf {0}
 set $m2-np {1}
