@@ -54,10 +54,17 @@ public:
 
   void setLocalParam(int, float, float, float, float);
 
+  // This is only callable from within a valid opengl context!
+  static bool shaders_supported();
+
 protected:
   unsigned int mType;
   unsigned int mId;
   std::string mProgram;
+
+  static bool mInit;
+  static bool mSupported;
+
 };
 
 class VertexProgramARB : public ShaderProgramARB

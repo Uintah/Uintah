@@ -34,8 +34,8 @@
 #include <sci_glx.h>
 
 #include <Core/Volume/ShaderProgramARB.h>
-//#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Thread/Mutex.h>
 
 #include <iostream>
 using std::cerr;
@@ -103,8 +103,9 @@ namespace SCIRun {
 
 static SCIRun::DebugStream dbg("ShaderProgramARB", false);
 
-static bool mInit = false;
-static bool mSupported = false;
+bool ShaderProgramARB::mInit = false;
+bool ShaderProgramARB::mSupported = false;
+static Mutex ShaderProgramARB_mInitMutex("ShaderProgramARB Init Lock");  
 
 ShaderProgramARB::ShaderProgramARB(const string& program)
   : mType(0), mId(0), mProgram(program)
@@ -117,72 +118,89 @@ bool
 ShaderProgramARB::valid()
 {
 #ifdef HAVE_AVR_SUPPORT
-  return mSupported ? glIsProgramARB(mId) : false;
+  return shaders_supported() ? glIsProgramARB(mId) : false;
 #else
   return false;
 #endif
 }
 
+
+bool
+ShaderProgramARB::shaders_supported()
+{
+  if(!mInit)
+  {
+    ShaderProgramARB_mInitMutex.lock();
+    if (!mInit)
+    {
+#ifdef HAVE_AVR_SUPPORT
+#ifdef HAVE_GLEW
+      if (!GLEW_ARB_vertex_program || !GLEW_ARB_fragment_program)
+      {
+	mSupported = false;
+      }
+      else
+      {
+	mSupported = true;
+      }
+#else
+      if (!gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
+			     glGetString(GL_EXTENSIONS)) ||
+	  !gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
+			     glGetString(GL_EXTENSIONS))) 
+      {
+	mSupported = false;
+      }
+      else
+      {
+	mSupported = true;
+      }
+      bool fail = !mSupported;
+#if !defined(CORRECT_OGLEXT_HDRS)
+      fail = fail
+	|| (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
+	    getProcAddress("glGenProgramsARB")) == 0;
+      fail = fail
+	|| (glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)
+	    getProcAddress("glDeleteProgramsARB")) == 0;
+      fail = fail
+	|| (glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)
+	    getProcAddress("glBindProgramARB")) == 0;
+      fail = fail
+	|| (glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
+	    getProcAddress("glProgramStringARB")) == 0;
+      fail = fail
+	|| (glIsProgramARB = (PFNGLISPROGRAMARBPROC)
+	    getProcAddress("glIsProgramARB")) == 0;
+      fail = fail
+	|| (glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)
+	    getProcAddress("glProgramLocalParameter4fARB")) == 0;
+#endif
+      if(fail)
+      {
+	mSupported = false;
+      }
+      else
+      {
+	mSupported = true;
+      }
+#endif
+#else
+      mSupported = false;
+#endif
+      mInit = true;
+    }
+    ShaderProgramARB_mInitMutex.unlock();
+  }
+  return mSupported;
+}
+
+
 bool
 ShaderProgramARB::create()
 {
-  if(!mInit) {
 #ifdef HAVE_AVR_SUPPORT
-#ifdef HAVE_GLEW
-    if (!GLEW_ARB_vertex_program || !GLEW_ARB_fragment_program) {
-      mSupported = false;
-      //SCI_THROW(InternalError("GL_ARB_fragment_program is not supported."));
-    } else {
-      mSupported = true;
-    }
-#else       
-    if (!gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
-			   glGetString(GL_EXTENSIONS)) ||
-        !gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
-			   glGetString(GL_EXTENSIONS))) 
-    {
-      mSupported = false;
-      //SCI_THROW(InternalError("GL_ARB_fragment_program is not supported."));
-    } else {
-      mSupported = true;
-    }
-    bool fail = !mSupported;
-#if !defined(CORRECT_OGLEXT_HDRS)
-    fail = fail
-      || (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)
-	  getProcAddress("glGenProgramsARB")) == 0;
-    fail = fail
-      || (glDeleteProgramsARB = (PFNGLDELETEPROGRAMSARBPROC)
-	  getProcAddress("glDeleteProgramsARB")) == 0;
-    fail = fail
-      || (glBindProgramARB = (PFNGLBINDPROGRAMARBPROC)
-	  getProcAddress("glBindProgramARB")) == 0;
-    fail = fail
-      || (glProgramStringARB = (PFNGLPROGRAMSTRINGARBPROC)
-	  getProcAddress("glProgramStringARB")) == 0;
-    fail = fail
-      || (glIsProgramARB = (PFNGLISPROGRAMARBPROC)
-	  getProcAddress("glIsProgramARB")) == 0;
-    fail = fail
-      || (glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)
-	  getProcAddress("glProgramLocalParameter4fARB")) == 0;
-#endif
-    if(fail) {
-      mSupported = false;
-      cerr << "GL_ARB_fragment_program is not supported." << endl;
-      //SCI_THROW(InternalError("GL_ARB_fragment_program is not supported."));
-    } else {
-      mSupported = true;
-    }
-#endif
-#else
-    mSupported = false;
-#endif
-    mInit = true;
-  }
-
-#ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     //dbg << mProgram << endl;
     glGenProgramsARB(1, &mId);
     glBindProgramARB(mType, mId);
@@ -228,11 +246,12 @@ ShaderProgramARB::create()
   return true;
 }
 
+
 void
 ShaderProgramARB::destroy ()
 {
 #ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     glDeleteProgramsARB(1, &mId);
     mId = 0;
   }
@@ -243,7 +262,7 @@ void
 ShaderProgramARB::bind ()
 {
 #ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     glEnable(mType);
     glBindProgramARB(mType, mId);
   }
@@ -254,7 +273,7 @@ void
 ShaderProgramARB::release ()
 {
 #ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     glBindProgramARB(mType, 0);
     glDisable(mType);
   }
@@ -265,7 +284,7 @@ void
 ShaderProgramARB::enable ()
 {
 #ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     glEnable(mType);
   }
 #endif
@@ -275,7 +294,7 @@ void
 ShaderProgramARB::disable ()
 {
 #ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     glDisable(mType);
   }
 #endif
@@ -285,7 +304,7 @@ void
 ShaderProgramARB::makeCurrent ()
 {
 #ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     glBindProgramARB(mType, mId);
   }
 #endif
@@ -295,7 +314,7 @@ void
 ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 {
 #ifdef HAVE_AVR_SUPPORT
-  if(mSupported) {
+  if(shaders_supported()) {
     glProgramLocalParameter4fARB(mType, i, x, y, z, w);
   }
 #endif
