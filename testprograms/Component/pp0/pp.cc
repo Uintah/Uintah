@@ -115,11 +115,14 @@ int main(int argc, char* argv[])
 	  abort();
 	}
 	cerr << "Calling pingpong....\n";
+	double t0=Time::currentSeconds();
 	if(pp->pingpong(1999)==1999){
 	  cerr<<"Successful\n";
 	}
 	else
 	  cerr<<"FAIL\n";
+	double t1=Time::currentSeconds();
+	cerr<<"time="<<(int)((t1-t0)*1000000)<< "us\n";
       }
       else if(stop){
 	ifstream f("pp.url");
