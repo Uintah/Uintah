@@ -319,7 +319,7 @@
 
     for(;;){  
       // exit if you are supposed to
-      if (scene->get_rtrt_engine()->stop_execution()) { Thread::exit(); }
+      if (scene->get_rtrt_engine()->exit_engine) { Thread::exit(); }
       
       iteration++;
       Stats* st=stats[rendering_scene];
