@@ -1,15 +1,3 @@
-<% 
-def babelizeType ( type )
-  case type
-    when "string"
-      print "char*"
-    when "int"
-      print "int32_t" 
-
-  end
-end
-%>
-
 
 START HEADER
 
@@ -40,7 +28,7 @@ namespace somethingspc {
   public:
     <%= portname%>();
     ~<%= portname%>();
-    <%= methodret%> <%= methodname%>(<% outDefArgs(methodname,doc)%>);
+    <%= methodret%> <%= methodname%>(<% outDefArgs(methodname,doc,method(:babelType))%>);
     ::SCIRun::BridgeServices* mysvcs;
   };
 
@@ -60,12 +48,13 @@ extern "C" BridgeComponent* make_Bridge_<%= makename%>()
 
 static BridgeServices* st_svcs;
 
-<% babelizeType(methodret)%> skel_<%= package%>_<%= portname%>_<%= methodname%>( struct <%= package%>_<%= portname%>__object* self <% commaoutDefArgs(methodname,doc)%>)
+<% print babelType(methodret)%> skel_<%= package%>_<%= portname%>_<%= methodname%>( struct <%= package%>_<%= portname%>__object* self <% commaoutDefArgs(methodname,doc,method(:babelType))%>)
 {
-  <%= methodret%> _result;
+  <% ifNEQPrint(babelType(methodret),"void",babelType(methodret)+" _result;")%> 
   somethingspc::<%= portname%>* _this = reinterpret_cast< somethingspc::<%= portname%>*>(self->d_data);
-  _result = _this-><%= methodname%>(<% outCallArgs(methodname,doc)%>);
-  return <% if(methodret == "string") then print 'SIDL_String_strdup(_result.c_str())' else print '_result' end%>;
+  <% ifNEQPrint(babelType(methodret),"void"," _result = ")%>_this-><%= methodname%>(<% outCallArgs(methodname,doc)%>);
+  <% ifEQPrint(methodret,"string",'result = SIDL_String_strdup(_result.c_str());')%>
+  <% ifNEQPrint(babelType(methodret),"void","return _result;")%>
 }
 
 void skel_<%= package%>_<%= portname%>__ctor(struct <%= package%>_<%= portname%>__object* self ) {
@@ -100,7 +89,7 @@ somethingspc::<%= portname%>::<%= portname%>(){
 somethingspc::<%= portname%>::~<%= portname%>(){
 }
 
-<%= methodret%> somethingspc::<%= portname%>::<%= methodname%>(<% outDefArgs(methodname,doc)%>) {
+<%= methodret%> somethingspc::<%= portname%>::<%= methodname%>(<% outDefArgs(methodname,doc,method(:babelType))%>) {
   sci::cca::Port::pointer pp = st_svcs->getCCAPort("uport");
   sci::cca::ports::<%= portname %>::pointer sp=pidl_cast<sci::cca::ports::<%= portname%>::pointer>(pp);
   return sp-><%= methodname%>(<% outCallArgs(methodname,doc)%>);

@@ -38,40 +38,40 @@
  *
  */
 
-#ifndef SCIRun_CCA_Components_World_h
-#define SCIRun_CCA_Components_World_h
+#ifndef STRAUSS_GENERATED_Bridge221
+#define STRAUSS_GENERATED_Bridge221
 
 #include <Core/CCA/spec/cca_sidl.h>
-//#include <CCA/Components/Hello/Hello_sidl.h>
-
-#include <CCA/Components/BabelTest/who/gov_cca_ports_IDPort.hh>
+#include <CCA/Components/BabelTest/NewPort/NewPort_StringPort.hh>
+#include <SIDL_String.h>
 
 #include <SCIRun/Bridge/BridgeComponent.h>
 #include <SCIRun/Bridge/BridgeServices.h>
 
+using namespace std;
 
 namespace SCIRun {
-
-  class HelloWorldBridge : public BridgeComponent{
+  class Bridge221 : public BridgeComponent{
   public:
-    HelloWorldBridge();
-    virtual ~HelloWorldBridge();
+    Bridge221();
+    virtual ~Bridge221();
     virtual void setServices(const BridgeServices* svc);
   private:
-    HelloWorldBridge(const HelloWorldBridge&);
-    HelloWorldBridge& operator=(const HelloWorldBridge&);
+    Bridge221(const Bridge221&);
+    Bridge221& operator=(const Bridge221&);
     BridgeServices* services;
   };
+} //end of namespace
 
-  class StringPort: public sci::cca::ports::StringPort{
+namespace somethingspc {
+  class StringPort {
   public:
-    StringPort(BridgeServices* svc) : mysvcs(svc) { }
-    std::string getString(); 
-  private:
-    BridgeServices* mysvcs;
+    StringPort();
+    ~StringPort();
+    string getString();
+    ::SCIRun::BridgeServices* mysvcs;
   };
 
-} //namepace SCIRun
-
+} //end of namespace
 
 #endif

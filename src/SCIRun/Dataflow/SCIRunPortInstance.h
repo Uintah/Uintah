@@ -63,6 +63,8 @@ namespace SCIRun {
     virtual std::string getUniqueName();
     virtual bool disconnect(PortInstance*);
     virtual bool canConnectTo(PortInstance *);
+    virtual std::string getType();
+    virtual std::string getModel();
 
   private:
     friend class BridgeComponentInstance;

@@ -75,7 +75,6 @@ bool SCIRunPortInstance::connect(PortInstance* to)
   if(!canConnectTo(to))
     return false;
   SCIRunPortInstance* p2 = dynamic_cast<SCIRunPortInstance*>(to);
-
   Network* net = port->get_module()->getNetwork();
   if(porttype == Output){
     net->connect(port->get_module(), port->get_which_port(),
@@ -106,4 +105,13 @@ bool SCIRunPortInstance::canConnectTo(PortInstance *to)
     return true;
   }
   return false;
+}
+
+
+std::string SCIRunPortInstance::getType() {
+  return (port->get_typename());
+}
+
+std::string SCIRunPortInstance::getModel() {
+  return "dataflow";	
 }

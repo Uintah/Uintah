@@ -114,6 +114,7 @@ string readMetaFile(string component, string ext) {
   int nlist = list->getLength();
   if(nlist == 0){
     cerr << "WARNING: file " << file << " does not contain a sidl file reference!\n";
+    return "";
   }
   DOMNode* d = list->item(0);
   DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("source"));
@@ -154,6 +155,8 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   } else if(modelFrom == "cca") {
     cFrom = cFrom.substr(cFrom.find(".")+1); //CCA SCIRun.xxx
     cCCA = cFrom;
+  } else if(modelFrom == "dataflow") {
+    cFrom = cFrom.substr(cFrom.rfind(".")+1); //SCIRun.yyy.xxx
   }
   else {}
   
@@ -163,7 +166,9 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   } else if(modelTo == "cca") {
     cTo = cTo.substr(cTo.find(".")+1); //CCA SCIRun.xxx
     cCCA = cTo;
-  }  
+  } else if(modelTo == "dataflow") {
+    cTo = cTo.substr(cTo.rfind(".")+1); //SCIRun.yyy.xxx
+  }
   else {}
 
   string name = cFrom+"__"+cTo;
@@ -191,7 +196,11 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
     plugin = "../src/Core/CCA/tools/strauss/ruby/BabeltoCCA.erb";
   } else if((modelFrom == "cca")&&(modelTo == "babel")) {
     plugin = "../src/Core/CCA/tools/strauss/ruby/CCAtoBabel.erb";
-  }  
+  } else if((modelFrom == "dataflow")&&(modelTo == "cca")) {
+    plugin = "../src/Core/CCA/tools/strauss/ruby/DataflowtoCCA.erb";
+  } else if((modelFrom == "cca")&&(modelTo == "dataflow")) {
+    plugin = "../src/Core/CCA/tools/strauss/ruby/CCAtoDataflow.erb";
+  }
   else {}
 
 
@@ -219,7 +228,7 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   status = sci_system(execline.c_str());
   if(status!=0) {
     execline = "rm -f "+COMPILEDIR+"/"+name+".*"; 
-    sci_system(execline.c_str());
+    //sci_system(execline.c_str());
     cerr << "**** gmake was unsuccessful\n";
     return "";
   }
@@ -232,8 +241,9 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
 
 bool AutoBridge::canBridge(PortInstance* pr1, PortInstance* pr2)
 {
-  std::string t1 = pr1->getType();
-  std::string t2 = pr2->getType();
+  std::string t1 = "." + pr1->getType();
+  std::string t2 = "." + pr2->getType();
+  std::cerr << "Going with " << t1 << " and " << t2 << "\n"; 
   if( pr1->portType()!=pr2->portType() && 
        t1.substr(t1.rfind("."),t1.size()) == t2.substr(t2.rfind("."),t2.size()) )
     return true;

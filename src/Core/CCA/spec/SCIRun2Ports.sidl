@@ -33,7 +33,8 @@ interface IDPort extends sci.cca.Port
 }
 interface BridgeTestPort extends sci.cca.Port
 {
-  int m1(in int i);
+  //int m1(in int i);
+  void m2(in array<int, 1> a);  
 }
 
 

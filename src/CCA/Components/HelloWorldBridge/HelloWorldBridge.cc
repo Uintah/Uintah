@@ -38,38 +38,65 @@
  *
  */
 
-#include <CCA/Components/HelloWorldBridge/HelloWorldBridge.h>
-#include <iostream>
+#include "/home/sci/damevski/SCIRun/src/CCA/Components/HelloWorldBridge/HelloWorldBridge.h"
 
-using namespace std;
+using namespace somethingspc;
 using namespace SCIRun;
+using namespace NewPort;
+using namespace SCIRun;
+using namespace std;
 
 extern "C" BridgeComponent* make_Bridge_HelloWorldBridge()
 {
-  return static_cast<BridgeComponent*>(new HelloWorldBridge());
+  return static_cast<BridgeComponent*>(new Bridge221());
 }
 
+static BridgeServices* st_svcs;
 
-HelloWorldBridge::HelloWorldBridge(){
+char* skel_NewPort_StringPort_getString( struct NewPort_StringPort__object* self )
+{
+  std::string _result;
+  somethingspc::StringPort* _this = reinterpret_cast< somethingspc::StringPort*>(self->d_data);
+  _result = _this->getString();
+  return SIDL_String_strdup(_result.c_str());
 }
 
-HelloWorldBridge::~HelloWorldBridge(){
+void skel_NewPort_StringPort__ctor(struct NewPort_StringPort__object* self ) {
+  self->d_data = reinterpret_cast< void*>(new somethingspc::StringPort());
 }
 
-void HelloWorldBridge::setServices(const BridgeServices* svc){
-  ::std::cerr << "Begin HWB::setSVcs\n";
+void skel_NewPort_StringPort__dtor(struct NewPort_StringPort__object* self ) {
+  delete ( reinterpret_cast< somethingspc::StringPort*>(self->d_data) );
+}
+
+Bridge221::Bridge221(){
+}
+
+Bridge221::~Bridge221(){
+}
+
+void Bridge221::setServices(const BridgeServices* svc) {
   services=const_cast<BridgeServices*>(svc);
-  StringPort::pointer* strport = new StringPort::pointer;
-  (*strport) = StringPort::pointer(new StringPort(services));
-  ::std::cerr << "MIdway HWB::setSVcs\n";
-  services->addProvidesPort((void*)strport,"stringport","sci.cca.ports.StringPort",CCA);
-  services->registerUsesPort("idport","gov.cca.ports.IDPort",Babel);
-  ::std::cerr << "End HWB::setSVcs\n";
+st_svcs = const_cast<BridgeServices*>(svc);
+  NewPort::StringPort dp = NewPort::StringPort::_create();
+  dp._get_ior()->d_epv->f_getString = skel_NewPort_StringPort_getString;
+  dp._get_ior()->d_epv->f__ctor = (skel_NewPort_StringPort__ctor);
+  dp._get_ior()->d_epv->f__dtor = (skel_NewPort_StringPort__dtor);
+  services->addProvidesPort((void*)&dp,"pport","gov.cca.ports.StringPort",Babel);
+  services->registerUsesPort("uport","sci.cca.ports.StringPort",CCA);
+
 }
 
-std::string StringPort::getString() {
-  gov::cca::ports::IDPort s = mysvcs->getBabelPort("idport");
-  if(s._is_nil()) return "NIL\n"; 
-  return s.getID();
+somethingspc::StringPort::StringPort(){
+}
+
+somethingspc::StringPort::~StringPort(){
+}
+
+string somethingspc::StringPort::getString() {
+  sci::cca::Port::pointer pp = st_svcs->getCCAPort("uport");
+  sci::cca::ports::StringPort::pointer sp=pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
+  return sp->getString();
+
 }
 
