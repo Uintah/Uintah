@@ -27,6 +27,7 @@ PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/CCA/Component/C
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 
+LIBS := $(MPI_LIBRARY)
 #LIBS := $(QT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
