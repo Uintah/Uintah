@@ -128,6 +128,13 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     exit(1)
   compare_root = "%s/%s" % (gold_standard, ALGO)
 
+  try:
+    chdir(compare_root)
+  except Exception:
+    # create the gold_standard algo subdir
+    chdir(gold_standard)
+    mkdir(ALGO)
+
   environ['PATH'] = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
   environ['SCI_SIGNALMODE'] = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
@@ -169,14 +176,33 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     solotest_found = 1 # if there is a solotest, that is
     testname = nameoftest(test)
 
+    # make sure that this test exists in the gold standard
+    try:
+      chdir(compare_root)
+      chdir(testname)
+    except Exception:
+      chdir(compare_root)
+      mkdir(testname)
+    
+    
+    # in certain cases (like when algo was performance), we need to make it
+    # something usable by sus (MPM, ARCHES, etc.), but we will also need to
+    # have the original ALGO name, i.e., to save in PERFORMANCE-results
 
     # set inputsdir in the loop since certain (performance) algos can have
-    # different inputs dirs
-    if do_performance == 1:
-      algo = perf_algo(test)
-      ALGO = upper(algo)
-      
-    inputsdir = "%s/%s" % (inputpath, ALGO)
+    # different inputs dirs or have different sus flags
+    if ALGO == "Examples":
+      newalgo = testname
+      NEWALGO = ALGO
+    elif do_performance == 1:
+      newalgo = perf_algo(test)
+      NEWALGO = upper(newalgo)
+    else:
+      newalgo = ""
+      NEWALGO = ALGO
+
+
+    inputsdir = "%s/%s" % (inputpath, NEWALGO)
 
     try:
       chdir(inputsdir)
@@ -184,6 +210,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       print "%s does not exist" % (inputsdir)
       print "Please give a valid <inputsdir> argument"
       exit(1)
+
 
     chdir(resultsdir)
 
@@ -196,14 +223,12 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
+
     chdir(testname)
+
 
     # call the callback function before running each test
     callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
-    if ALGO == "Examples":
-      newalgo = testname
-    else:
-      newalgo = ""
 
     inputxml = path.basename(input(test))
     system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
@@ -313,6 +338,9 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
                       "<outputTimestepInterval>0</outputTimestepInterval>",
                       '<checkpoint interval="0"/>'])
 
+    # will create a file in tmp/filename, copy it back
+    system("cp %s ." % inputxml)
+    inputxml = path.basename(inputxml)
 
 
   # set the command for sus, based on # of processors
