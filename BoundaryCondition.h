@@ -73,7 +73,7 @@ public:
       // BoundaryCondition constructor used in  PSE
       BoundaryCondition(const ArchesLabel* label, const MPMArchesLabel* MAlb,
 			TurbulenceModel* turb_model, Properties* props,
-			bool calcEnthalpy);
+			bool calcReactScalar, bool calcEnthalpy);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -423,6 +423,8 @@ private:
       double d_overallMB;
       // for enthalpy solve 
       bool d_enthalpySolve;
+      // for reacting scalar
+      bool d_reactingScalarSolve;
       // variable labels
       std::vector<int> d_cellTypes;
       WallBdry* d_wallBdry;

@@ -1546,7 +1546,7 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     
     }
     d_boundaryCondition->newrecomputePressureBC(pc, patch,
-   						cellinfo, &pressureVars); 
+						cellinfo, &pressureVars); 
 
   // put required vars
 

@@ -108,6 +108,9 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
 		numGhostCells);
   }
+  if (d_mixingModel->getNumRxnVars())
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, Ghost::None,
+		  numGhostCells);
 
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
@@ -117,6 +120,9 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
+    if (d_mixingModel->getNumRxnVars())
+      tsk->computes(d_lab->d_reactscalarSRCINLabel);
+
   }
   if (d_radiationCalc) {
     tsk->computes(d_lab->d_absorpINLabel);
@@ -158,6 +164,10 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 		numGhostCells);
   }
 
+  if (d_mixingModel->getNumRxnVars())
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, Ghost::None,
+		  numGhostCells);
+
   if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, Ghost::None,
 		  numGhostCells);
@@ -168,6 +178,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
+    if (d_mixingModel->getNumRxnVars())
+      tsk->computes(d_lab->d_reactscalarSRCINLabel);
   }
   if (d_radiationCalc) {
     tsk->computes(d_lab->d_absorpINLabel);
@@ -239,10 +251,16 @@ Properties::computeProps(const ProcessorGroup*,
     CCVariable<double> temperature;
     CCVariable<double> co2;
     CCVariable<double> enthalpyRXN;
+    CCVariable<double> reactscalarSRC;
     if (d_reactingFlow) {
       new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
       new_dw->allocate(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      if (d_mixingModel->getNumRxnVars()) {
+	new_dw->allocate(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+			 matlIndex, patch);
+	reactscalarSRC.initialize(0.0);
+      }
     }
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
@@ -262,6 +280,13 @@ Properties::computeProps(const ProcessorGroup*,
     for (int ii = 0; ii < d_numMixStatVars; ii++)
       new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
+    }
+    StaticArray<CCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    
+    if (d_mixingModel->getNumRxnVars() > 0) {
+      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
+	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
+		    matlIndex, patch, Ghost::None, nofGhostCells);
     }
 
     // get multimaterial vars
@@ -307,6 +332,11 @@ Properties::computeProps(const ProcessorGroup*,
 
 	  }
 
+	  if (d_mixingModel->getNumRxnVars() > 0) {
+	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
+	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
+	  }
+
 	  // currently not using any reaction progress variables
 
 	  if (!d_mixingModel->isAdiabatic())
@@ -320,6 +350,8 @@ Properties::computeProps(const ProcessorGroup*,
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
+	    if (d_mixingModel->getNumRxnVars())
+	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	  }
 	  if (d_bc == 0)
 	    throw InvalidValue("BoundaryCondition pointer not assigned");
@@ -373,6 +405,9 @@ Properties::computeProps(const ProcessorGroup*,
       new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
       new_dw->put(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      if (d_mixingModel->getNumRxnVars())
+	new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+		    matlIndex, patch);
     }
     if (d_radiationCalc){
       new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
@@ -409,10 +444,16 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> new_density;
     CCVariable<double> co2;
     CCVariable<double> enthalpy;
+    CCVariable<double> reactscalarSRC;
     if (d_reactingFlow) {
       new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
       new_dw->allocate(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      if (d_mixingModel->getNumRxnVars()) {
+	new_dw->allocate(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+			 matlIndex, patch);
+	reactscalarSRC.initialize(0.0);
+      }
     }
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
@@ -425,6 +466,7 @@ Properties::reComputeProps(const ProcessorGroup*,
     new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
  
     StaticArray<CCVariable<double> > scalar(d_numMixingVars);
+
     CCVariable<double> enthalpy_comp;
     CCVariable<double> denMicro;
 
@@ -452,6 +494,15 @@ Properties::reComputeProps(const ProcessorGroup*,
 	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
 		    matlIndex, patch, Ghost::None, nofGhostCells);
     }
+
+    StaticArray<CCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    
+    if (d_mixingModel->getNumRxnVars() > 0) {
+      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
+	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
+		    matlIndex, patch, Ghost::None, nofGhostCells);
+    }
+
 
     if (!(d_mixingModel->isAdiabatic()))
       new_dw->get(enthalpy_comp, d_lab->d_enthalpySPLabel, 
@@ -489,6 +540,11 @@ Properties::reComputeProps(const ProcessorGroup*,
 
 	  }
 
+	  if (d_mixingModel->getNumRxnVars() > 0) {
+	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
+	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
+	  }
+
 	  // after computing variance get that too, for the time being setting the 
 	  // value to zero
 	  //	  inStream.d_mixVarVariance[0] = 0.0;
@@ -503,29 +559,35 @@ Properties::reComputeProps(const ProcessorGroup*,
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
 	    enthalpy[currCell] = outStream.getEnthalpy();
+	    if (d_mixingModel->getNumRxnVars())
+	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	  }
 	  if (d_radiationCalc) {
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
-	    if (temperature[currCell] > 1000) {
-	      double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
-	      double c3 = 0.1;
-	      double rhosoot = 1950.0;
-	      double cmw = 12.0;
-	      double opl = 3.0;
-	      double factor = 0.01;
-	      if (inStream.d_mixVars[0] > 0.1)
-		sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
-	      else
-		sootFV[currCell] = 0.0;
-	      absorption[currCell] = Min(0.5,(4.0/opl)*log(1.0+350.0*
-		     sootFV[currCell]*temperature[currCell]*opl));
-	      //	      absorption[currCell] = 0.01;
-	    }
+	    // optical path length
+	    double opl = 3.0;
+	    if (d_mixingModel->getNumRxnVars()) 
+	      sootFV[currCell] = outStream.getSootFV();
 	    else {
-	      absorption[currCell] = 0.0;
+	      if (temperature[currCell] > 1000) {
+		double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
+		double c3 = 0.1;
+		double rhosoot = 1950.0;
+		double cmw = 12.0;
+
+		double factor = 0.01;
+		if (inStream.d_mixVars[0] > 0.1)
+		  sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+		else
+		  sootFV[currCell] = 0.0;
+	      }
+	      else 
+		sootFV[currCell] = 0.0;
 	    }
+	    absorption[currCell] = Min(0.5,(4.0/opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*opl));
 	  }
 	  if (d_MAlab) {
 	    denMicro[IntVector(colX, colY, colZ)] = local_den;
@@ -560,6 +622,9 @@ Properties::reComputeProps(const ProcessorGroup*,
       new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
       new_dw->put(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      if (d_mixingModel->getNumRxnVars())
+	new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+		    matlIndex, patch);
     }
     if (d_radiationCalc) {
       new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch);

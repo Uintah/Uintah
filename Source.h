@@ -113,6 +113,14 @@ public:
 				 CellInformation* cellinfo,
 				 ArchesVariables* vars);
 
+      void addReactiveScalarSource(const ProcessorGroup*,
+				   const Patch* patch,
+				   double delta_t,
+				   int, 
+				   CellInformation* cellinfo,
+				   ArchesVariables* vars);
+
+
       void calculateEnthalpySource(const ProcessorGroup* pc,
 				 const Patch* patch,
 				 double delta_t, 

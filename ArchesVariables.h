@@ -48,6 +48,7 @@ namespace Uintah {
       SFCZVariable<double> old_wVelocity;
       CCVariable<double> old_density;
       CCVariable<double> old_scalar;
+      CCVariable<double> old_reactscalar;
       SFCXVariable<double> uVelocity;
       SFCYVariable<double> vVelocity;
       SFCZVariable<double> wVelocity;
@@ -58,6 +59,7 @@ namespace Uintah {
       CCVariable<double> density;
       CCVariable<double> viscosity;
       CCVariable<double> scalar;
+      CCVariable<double> reactscalar;
       CCVariable<double> enthalpy;
       CCVariable<double> old_enthalpy;
       StencilMatrix<SFCXVariable<double> > uVelocityCoeff;
@@ -79,6 +81,12 @@ namespace Uintah {
       StencilMatrix<CCVariable<double> > scalarConvectCoeff; //7 point stencil
       CCVariable<double> scalarLinearSrc;
       CCVariable<double> scalarNonlinearSrc;
+      StencilMatrix<CCVariable<double> > reactscalarCoeff; //7 point stencil
+      StencilMatrix<CCVariable<double> > reactscalarConvectCoeff; //7 point stencil
+      CCVariable<double> reactscalarLinearSrc;
+      CCVariable<double> reactscalarNonlinearSrc;
+      // reaction source term
+      CCVariable<double> reactscalarSRC;
       // for refdensity and refpressure
       double den_Ref;
       double press_ref;
@@ -98,6 +106,7 @@ namespace Uintah {
       SFCYVariable<double> residualVVelocity;
       SFCZVariable<double> residualWVelocity;
       CCVariable<double> residualScalar;      
+      CCVariable<double> residualReactivescalar;      
       CCVariable<double> residualEnthalpy;      
       // pressure gradient vars added to momentum source terms
       SFCXVariable<double> pressGradUSu;
