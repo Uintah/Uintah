@@ -151,7 +151,7 @@ void BuildFEMatrix::parallel(int proc)
  
     for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
     {
-      if (jj && neib_nodes[jj] != mycols.back())
+      if (jj == 0 || neib_nodes[jj] != mycols.back())
       {
         mycols.push_back(neib_nodes[jj]);
       }
