@@ -240,7 +240,7 @@ InsertElectrodes::insertNodesIntoTetMesh(vector<pair<int, double> > &dirichlet,
     }
   }
   int e;
-  int num_old_tets=tet_fld->fdata().size();
+  unsigned long num_old_tets=tet_fld->fdata().size();
 //  cerr << "Num old tets="<<num_old_tets<<"\n";
   tet_fld->fdata().resize(num_old_tets+new_tets.size()-split_elems.size());
 //  cerr << "  num new tets="<<new_tets.size()-split_elems.size()<<"\n";
