@@ -15,7 +15,9 @@
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#ifdef HAVE_HYPRE
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
+#endif
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
