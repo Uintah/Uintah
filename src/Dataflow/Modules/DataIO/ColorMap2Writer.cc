@@ -78,7 +78,7 @@ ColorMap2Writer::ColorMap2Writer(GuiContext* ctx)
 
 
 bool
-ColorMap2Writer::call_exporter(const string &filename)
+ColorMap2Writer::call_exporter(const string &/*filename*/)
 {
   return false;
 }

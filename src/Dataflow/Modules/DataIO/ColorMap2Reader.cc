@@ -77,7 +77,7 @@ ColorMap2Reader::ColorMap2Reader(GuiContext* ctx)
 
 
 bool
-ColorMap2Reader::call_importer(const string &filename)
+ColorMap2Reader::call_importer(const string &/*filename*/)
 {
   return false;
 }
