@@ -1,7 +1,13 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/SimulationController/SimulationController.h>
 #include <SCICore/Thread/Time.h>
+
 using SCICore::Thread::Time;
+
+namespace Uintah {
+namespace Components {
 
 SimulationController::SimulationController()
 {
@@ -216,3 +222,13 @@ void SimulationController::timeAdvance(double t, double delt,
     }
 #endif
 }
+
+} // end namespace Components
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/17 20:58:31  dav
+// namespace updates
+//
+//
