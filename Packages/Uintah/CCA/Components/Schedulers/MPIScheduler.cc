@@ -330,7 +330,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       dbg << pg_->myrank() << " --> sending " << *req << " from dw " << dw->getID() << '\n';
       const VarLabel* posLabel;
       OnDemandDataWarehouse* posDW;
-      if(!reloc_new_posLabel_){
+      if(!reloc_new_posLabel_ && parentScheduler){
 	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
 	posLabel = parentScheduler->reloc_new_posLabel_;
       } else {
@@ -448,7 +448,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
       }
 
       OnDemandDataWarehouse* posDW;
-      if(!reloc_new_posLabel_){
+      if(!reloc_new_posLabel_ && parentScheduler){
 	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       } else {
 	posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
