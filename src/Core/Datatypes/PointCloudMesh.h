@@ -107,6 +107,11 @@ public:
   void resize_nodes(Node::size_type n) { points_.resize(n); }
 
   //! get the child elements of the given index
+  // this first one is so get_node(Node::array_type &, Cell::index_type)
+  //   will compile.  For PointCloudMesh, Cell==Node.  This is needed
+  //   in ClipField, for example.
+  void get_nodes(Node::array_type &a, Node::index_type i) const
+    { a.resize(1); a[0] = i; }
   void get_nodes(Node::array_type &, Edge::index_type) const {}
   void get_nodes(Node::array_type &, Face::index_type) const {}
   void get_nodes(Node::array_type &, Cell::index_type) const {}
