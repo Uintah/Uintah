@@ -2315,6 +2315,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 			  pressure, cellinfo->sew, cellinfo->sns,
 			  cellinfo->stb, valid_lo, valid_hi, cellType,
 			  mmwallid, ffieldid);
+    }
   }
 }
 
