@@ -53,14 +53,14 @@ using namespace SCIRun;
 
 bool ptsCountHeader;
 int baseIndex;
-bool tetsCountHeader;
+bool elementsCountHeader;
 bool binOutput;
 bool debugOn;
 
 void setDefaults() {
   ptsCountHeader=true;
   baseIndex=0;
-  tetsCountHeader=true;
+  elementsCountHeader=true;
   binOutput=false;
   debugOn=false;
 }
@@ -71,8 +71,8 @@ int parseArgs(int argc, char *argv[]) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
       currArg++;
-    } else if (!strcmp(argv[currArg], "-noTetsCount")) {
-      tetsCountHeader=false;
+    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
+      elementsCountHeader=false;
       currArg++;
     } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
       baseIndex=1;
@@ -92,7 +92,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" pts tets TetVolMesh [-noPtsCount] [-noTetsCount] [-oneBasedIndexing] [-binOutput] [-debug]\n\n";
+  cerr << "\n Usage: "<<progName<<" pts tets TetVolMesh [-noPtsCount] [-noElementsCount] [-oneBasedIndexing] [-binOutput] [-debug]\n\n";
   cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
   cerr << "\t coords of each point, one per line, entries separated by \n";
   cerr << "\t white space, file can have an optional one line header \n";
@@ -139,9 +139,9 @@ main(int argc, char **argv) {
   cerr << "done adding points.\n";
 
   int ntets;
-  if (!tetsCountHeader) ntets = getNumNonEmptyLines(tetsName);
+  if (!elementsCountHeader) ntets = getNumNonEmptyLines(tetsName);
   ifstream tetsstream(tetsName);
-  if (tetsCountHeader) tetsstream >> ntets;
+  if (elementsCountHeader) tetsstream >> ntets;
   cerr << "number of tets = "<< ntets <<"\n";
   for (i=0; i<ntets; i++) {
     int n1, n2, n3, n4;
