@@ -68,12 +68,7 @@ void
 HypreSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("LinearSolver");
-  if (db->findBlock("max_iter"))
-    db->require("max_iter", d_maxSweeps);
-  else
-    d_maxSweeps = 75;
-  if (db->findBlock("ksptype"))
-    db->require("ksptype",d_kspType);
+  db->getWithDefault("ksptype", d_kspType, "cg");
   if (d_kspType == "smg")
     d_kspType = "0";
   else
@@ -82,7 +77,7 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
     else
       if (d_kspType == "cg")
 	{
-	  db->require("pctype", d_pcType);
+	  db->getWithDefault("pctype", d_pcType, "pfmg");
 	  if (d_pcType == "smg")
 	    d_kspType = "10";
 	  else
@@ -92,24 +87,12 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
 	      if (d_pcType == "jacobi")
 		d_kspType = "17";
 	      else
-		d_kspType = "19";
+		if (d_pcType == "none")
+		  d_kspType = "19";
 	}
-      else
-	d_kspType = "11";
-  if (db->findBlock("underrelax"))
-    db->require("underrelax", d_underrelax);
-  else
-    d_underrelax = 1.0;
-  if (db->findBlock("res_tol"))
-    db->require("res_tol", d_residual);
-  else
-    d_residual = 1.0e-7;
-  /*
   db->getWithDefault("max_iter", d_maxSweeps, 75);
-  db->getWithDefault("ksptype", d_kspType, 11);
   db->getWithDefault("underrelax", d_underrelax, 1.0);
-  db->getWithDefault("res_tol", d_residual, 1.0e-7);
-  */
+  db->getWithDefault("res_tol", d_residual, 1.0e-8);
 }
 
 
