@@ -673,7 +673,7 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
     double* ez=new double[n1+1];
 
     // Positins of the intervals
-    s[1]=S[1]-(S[2]-S[1])/5.;
+    s[1]=S[1]-(S[2]-S[1])/50.;
     for(l=2; l<=m; l++) s[l]=s[1]+(S[n]-s[1])/m*(l-1);
 
     // Number of points in each seg & the segs to which
