@@ -35,6 +35,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
 
@@ -79,6 +80,7 @@ public:
 
   virtual void reset();
   virtual void finish();
+  virtual void detach(Connection *conn);
 
   void send(const T&);
   void send_intermediate(const T&);
@@ -97,6 +99,7 @@ private:
   bool cache_;
   bool sent_something_;
   T handle_;
+  Mutex send_lock_;
 };
 
 
@@ -121,7 +124,8 @@ SimpleOPort<T>::SimpleOPort(Module* module,
 	  SimpleIPort<T>::port_color_),
     cache_(true),
     sent_something_(false),
-    handle_(0)
+    handle_(0),
+    send_lock_("SimpleOPort send lock")
 {
 }
 
@@ -164,13 +168,28 @@ void SimpleOPort<T>::finish()
       SimplePortComm<T>* msg = new SimplePortComm<T>();
       Connection* conn = connections[i];
       if (! conn->is_blocked()) {
+	send_lock_.lock();
 	((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+	send_lock_.unlock();
       }
     }
-    
+
     if (module->show_stats())
        turn_off();
   }
+}
+
+template<class T>
+void SimpleOPort<T>::detach(Connection *conn) {
+  // Add the new message
+  SimplePortComm<T>* msg = new SimplePortComm<T>(0);
+  if (! conn->is_blocked()) {
+    send_lock_.lock();
+    ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+    send_lock_.unlock();
+  }
+  sent_something_ = true;
+  OPort::detach(conn);
 }
 
 //! Declare specialization for field ports.
@@ -203,7 +222,9 @@ void SimpleOPort<T>::do_send(const T& data)
     SimplePortComm<T>* msg = new SimplePortComm<T>(data);
     Connection* conn = connections[i];
     if (! conn->is_blocked()) {
+      send_lock_.lock();
       ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+      send_lock_.unlock();
     }
   }
   sent_something_ = true;
@@ -239,7 +260,9 @@ void SimpleOPort<T>::do_send_intermediate(const T& data)
     SimplePortComm<T>* msg=new SimplePortComm<T>(data);
     Connection* conn = connections[i];
     if (! conn->is_blocked()) {
+      send_lock_.lock();
       ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+      send_lock_.unlock();
     }
   }
   sent_something_ = true;
