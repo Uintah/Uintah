@@ -263,15 +263,18 @@ MPMLabel::MPMLabel()
   dispIncLabel = VarLabel::create("dispInc",
 				  NCVariable<Vector>::getTypeDescription()); 
 
-  converged = VarLabel::create("converged",
-			       bool_and_vartype::getTypeDescription());
-
   dispIncQNorm0 = VarLabel::create("dispIncQNorm0",
 				   sum_vartype::getTypeDescription());
 
   dispIncNormMax = VarLabel::create("dispIncNormMax",
 				    sum_vartype::getTypeDescription());
 
+  dispIncQNorm = VarLabel::create("dispIncQNorm",
+				  sum_vartype::getTypeDescription());
+
+  dispIncNorm = VarLabel::create("dispIncNorm",
+				 sum_vartype::getTypeDescription());
+  
   pAccelerationLabel = VarLabel::create("p.acceleration",
 				   ParticleVariable<Vector>::getTypeDescription()); 
 
@@ -378,9 +381,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(dispNewLabel);
   VarLabel::destroy(dispIncLabel);
   VarLabel::destroy(pAccelerationLabel);
-  VarLabel::destroy(converged);
   VarLabel::destroy(dispIncQNorm0);
   VarLabel::destroy(dispIncNormMax);
+  VarLabel::destroy(dispIncQNorm);
+  VarLabel::destroy(dispIncNorm);
   VarLabel::destroy(pAccelerationLabel_preReloc);
   VarLabel::destroy(bElBarLabel);
   VarLabel::destroy(bElBarLabel_preReloc);
