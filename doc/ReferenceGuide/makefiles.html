@@ -21,9 +21,27 @@
 <html>
 <head>
 
-        <title>SCIRun Makefile design rationale</title>
+	<title>SCIRun Makefile design rationale</title>
+
+	<link rel=stylesheet type="text/css" href="../doc_styles.css">
 </head>
+
 <body>
+<!-- *************************************************************** -->
+<!-- *************** STANDARD SCI RESEARCH HEADER ****************** -->
+<!-- *************************************************************** -->
+<center><img SRC="../images/research_menuheader.gif" usemap="#head-links" height="71" width="600" border="0"></center>
+<map name="head-links">
+	<area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html">
+	<area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu">
+	<area href="../InstallGuide/pseInstall.html" coords="0,45,150,70">
+	<area href="../UserGuide/userguide.html" coords="150,45,300,70">
+	<area href="../DeveloperGuide/devguide.html" coords="300,45,450,70">
+	<area href="../ReferenceGuide/refguide.html" coords="450,45,600,70">
+</map>
+<!-- *************************************************************** -->
+<!-- *************************************************************** -->
+<p class="title">SCIRun Makefile design rationale</p>
 
 <h1>Introduction</h1>
 
@@ -218,6 +236,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2001/03/27 21:43:54  moulding
+# - newly stylized
+# - turn all absolute links to be relative
+#
 # Revision 1.6  2001/03/13 01:00:27  mcole
 # add license
 #
@@ -268,6 +290,10 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.7  2001/03/27 21:43:54  moulding
+# - newly stylized
+# - turn all absolute links to be relative
+#
 # Revision 1.6  2001/03/13 01:00:27  mcole
 # add license
 #
@@ -515,6 +541,17 @@ must be built before any sources are compiled.
 These will be removed by make clean.  Creates from $(GENHDRS) and
 $(GENSRCS) by so_epilogue.mk
 </ul>
+
+<!-- ******************************************************************* -->
+<!-- *********************** STANDARD SCI FOOTER *********************** -->
+<!-- ******************************************************************* -->
+<center>
+<hr size="1" width="600">
+<font size="-1"><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; 
+(801) 585-1867</font>
+</center>
+<!-- ********************* END STANDARD SCI FOOTER ********************* -->
+<!-- ******************************************************************* -->
 
 </body>
 </html>
