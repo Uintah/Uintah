@@ -13,6 +13,9 @@
 
 namespace SCIRun {
 
+using std::cout;
+using std::endl;
+
 // GROUP: Implementation of Attrib class
 //////////
 // 
@@ -27,6 +30,7 @@ void Attrib::io(Piostream& stream){
   
   stream.begin_class("Attrib", ATTRIB_VERSION);
   
+  cout << "Starting attrib output" << endl;
   Pio(stream, d_name);
   Pio(stream, d_authorName);
   Pio(stream, d_date);

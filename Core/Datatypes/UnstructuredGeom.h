@@ -50,7 +50,6 @@ public:
 private:
 };
 
-
 class EdgeSimp {
 public:
   EdgeSimp();
@@ -96,14 +95,17 @@ private:
 
 };
 
-
+void SCICORESHARE Pio(Piostream&, NodeSimp&);
+void SCICORESHARE Pio(Piostream&, EdgeSimp&);
+void SCICORESHARE Pio(Piostream&, FaceSimp&);
+void SCICORESHARE Pio(Piostream&, TetSimp&);
 
 class SCICORESHARE UnstructuredGeom : public Geom
 {
 public:
   
   virtual ~UnstructuredGeom() {};
-
+  static string typeName();
 protected:
 };
 

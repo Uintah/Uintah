@@ -72,6 +72,7 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static string typeName();
+  static Persistent* maker();
 
 protected:
   void create_accel_structure();
@@ -83,6 +84,11 @@ protected:
 
 //////////
 // PIO support
+template <class T>
+Persistent* AccelAttrib<T>::maker(){
+  return new AccelAttrib<T>();
+}
+
 template <class T> string AccelAttrib<T>::typeName(){
   static string typeName = string("AccelAttrib<") + findTypeName((T*)0)+">";
   return typeName;
@@ -91,7 +97,7 @@ template <class T> string AccelAttrib<T>::typeName(){
 template <class T> 
 PersistentTypeID AccelAttrib<T>::type_id(AccelAttrib<T>::typeName(),
 					 FlatAttrib<T>::typeName(),
-					 0);
+					 AccelAttrib<T>::maker);
 
 #define ACCELATTRIB_VERSION 1
 
@@ -102,7 +108,11 @@ AccelAttrib<T>::io(Piostream& stream)
   
   // -- base class PIO
   FlatAttrib<T>::io(stream);
-  Pio(stream, d_data);
+ 
+  if (stream.reading()){
+    create_accel_structure();
+  }
+
   stream.end_class();
 }
 

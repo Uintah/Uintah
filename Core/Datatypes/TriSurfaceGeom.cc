@@ -10,7 +10,12 @@
 
 namespace SCIRun {
 
-PersistentTypeID TriSurfaceGeom::type_id("TriSurfaceGeom", "Datatype", 0);
+string TriSurfaceGeom::typeName(){
+  static string typeName = "TriSurfaceGeom";
+  return typeName;
+}
+
+PersistentTypeID TriSurfaceGeom::type_id(TriSurfaceGeom::typeName(), "Datatype", 0);
 
 DebugStream TriSurfaceGeom::dbg("TriSurfaceGeom", true);
 

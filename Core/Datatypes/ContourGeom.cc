@@ -7,14 +7,37 @@
 //  Copyright (C) 2000 SCI Institute
 
 #include <Core/Datatypes/ContourGeom.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
-PersistentTypeID ContourGeom::type_id("ContourGeom", "Datatype", 0);
+//////////
+// PIO support
+static Persistent* maker(){
+  return new ContourGeom();
+}
+
+string ContourGeom::typeName(){
+  static string typeName = "ContourGeom";
+  return typeName;
+}
+
+PersistentTypeID ContourGeom::type_id(ContourGeom::typeName(),
+				      UnstructuredGeom::typeName(),
+				      maker);
+
+#define CONTOURGEOM_VERSION 1
+void ContourGeom::io(Piostream& stream)
+{
+  stream.begin_class(typeName().c_str(), CONTOURGEOM_VERSION);
+  Pio(stream, d_edge);
+  stream.end_class();
+}
 
 DebugStream ContourGeom::dbg("ContourGeom", true);
 
-
+//////////
+// Constructors/Destructor
 ContourGeom::ContourGeom()
 {
 }
@@ -44,10 +67,5 @@ ContourGeom::setEdges(const vector<EdgeSimp>& iedges)
   d_edge.clear();
   d_edge = iedges;
 }
-
-void ContourGeom::io(Piostream&)
-{
-}
-
 
 } // End namespace SCIRun

@@ -29,7 +29,7 @@ using namespace std;
 class LatticeGeom;
 typedef LockingHandle<LatticeGeom> LatticeGeomHandle;
 
-class LatticeGeom : public StructuredGeom
+class LatticeGeom : public Geom
 {
 public:
 
@@ -90,6 +90,7 @@ public:
   // Persistent representation.
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName();
 
   virtual string getInfo();
 
@@ -104,9 +105,6 @@ protected:
   Transform d_transform;
   Transform d_prescale;
 };
-
-
-
 
 void
 LatticeGeom::ftransform(const Point &p, Point &r)

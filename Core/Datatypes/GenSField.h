@@ -19,13 +19,14 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/SField.h>
 #include <Core/Datatypes/DiscreteAttrib.h>
+#include <Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
     
 
 
 template <class T, class G, class A=DiscreteAttrib<T> > 
-  class SCICORESHARE GenSField: public SField, public SLInterpolate
+  class SCICORESHARE GenSField: public Field, public SLInterpolate
 {
   public:
     
@@ -95,6 +96,8 @@ template <class T, class G, class A=DiscreteAttrib<T> >
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName();
+  static Persistent* maker();
 
 private:
 
@@ -105,12 +108,28 @@ private:
     
 };
 
+//////////
+// PIO support
+
+template <class T, class G, class A> Persistent*
+GenSField<T,G,A>::maker(){
+  return new GenSField<T,G,A>();
+}
+
 template <class T, class G, class A>
-PersistentTypeID GenSField<T,G,A>::type_id("GenSField", "Datatype", 0);
+string GenSField<T,G,A>::typeName(){
+  static string typeName = string("GenSField<") + findTypeName((T*)0) + "," + findTypeName((G*)0) +","+ findTypeName((A*)0) + ">";
+  return typeName;
+}
+
+template <class T, class G, class A>
+PersistentTypeID GenSField<T,G,A>::type_id(GenSField<T,G,A>::typeName(), 
+					   "Field", 
+					   GenSField<T,G,A>::maker);
 
 template <class T, class G, class A >
 GenSField<T,G,A>::GenSField():
-  SField()
+  Field()
 {
 }
 
@@ -121,7 +140,7 @@ GenSField<T,G,A>::~GenSField()
 
 template <class T, class G, class A >
 GenSField<T,G,A>::GenSField(G* igeom, A* iattrib):
-  SField(), geom(igeom), attrib(iattrib)
+  Field(), geom(igeom), attrib(iattrib)
 {
 }
 
@@ -298,16 +317,22 @@ int GenSField<T,G,A>::slinterpolate(const Point& p, double& outval, double)
   return 1;
 }
 
-
 template <class T, class G, class A >
 Vector GenSField<T,G,A>::gradient(const Point& /* ipoint */)
 {
   return Vector();
 }
 
+#define GENSFIELD_VERSION 1
 
 template <class T, class G, class A >
-void GenSField<T,G,A>::io(Piostream&){
+void GenSField<T,G,A>::io(Piostream& stream){
+
+  stream.begin_class(typeName().c_str(), GENSFIELD_VERSION);
+  //  Field::io(stream);
+  Pio(stream, geom);
+  Pio(stream, attrib);
+  stream.end_class();
 }
 
 } // End namespace SCIRun

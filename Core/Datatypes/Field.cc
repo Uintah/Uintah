@@ -8,15 +8,23 @@
 //
 //  Copyright (C) 2000 SCI Institute
 
-#include  <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun{
+
+using std::cout;
+using std::endl;
 
 // GROUP: Persistence support
 //////////
 //
 
-PersistentTypeID Field::type_id("Field", "Datatype", 0);
+static Persistent* maker(){
+  return new Field();
+}
+
+PersistentTypeID Field::type_id("Field", "Datatype", maker);
 
 //////////
 // Persistent IO
@@ -25,7 +33,7 @@ PersistentTypeID Field::type_id("Field", "Datatype", 0);
 void Field::io(Piostream& stream){
   
   stream.begin_class("Field", FIELD_VERSION);
-  
+  cout << "Starting io: " << endl;
   Pio(stream, d_attribHandles);
   Pio(stream, d_geomHandle);
   Pio(stream, d_currAttrib);

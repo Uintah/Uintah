@@ -137,7 +137,8 @@ AnalytAttrib<T>::io(Piostream& stream)
   
   // -- base class PIO
   Attrib::io(stream);
-  
+  Pio(stream, func);
+  Pio(stream, fstrings);
   stream.end_class();
 }
 

@@ -81,12 +81,14 @@ public:
   int size() const;
 
   virtual string getInfo();  
-
+  
 
   //////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName();
+  static Persistent* maker();
 
 protected:
 #if BITBOUND
@@ -111,8 +113,39 @@ protected:
 };
 
 
+//////////
+// PIO support
+template <class T> 
+Persistent* BrickAttrib<T>::maker(){
+  return new BrickAttrib<T>();
+}
 
-template <class T> PersistentTypeID BrickAttrib<T>::type_id("BrickAttrib", "Datatype", 0);
+template <class T>
+string BrickAttrib<T>::typeName(){
+  static string typeName = string("BrickAttrib<") + findTypeName((T*)0)+">";
+  return typeName;
+}
+
+template <class T> 
+PersistentTypeID BrickAttrib<T>::type_id(BrickAttrib<T>::typeName(), 
+					 FlatAttrib<T>::typeName(), 
+					 BrickAttrib<T>::maker);
+
+
+#define BRICKATTRIB_VERSION 1
+template <class T> 
+void BrickAttrib<T>::io(Piostream& stream){
+  stream.begin_class(typeName().c_str(), BRICKATTRIB_VERSION);
+  
+  // -- base class PIO
+  FlatAttrib<T>::io(stream);
+  
+  Pio(stream, xbrickcount);
+  Pio(stream, ybrickcount);
+  Pio(stream, zbrickcount);
+
+  stream.end_class();
+}
 
 
 template <class T> void
@@ -508,9 +541,6 @@ BrickAttrib<T>::getInfo()
   if (itr != d_data.end()) { retval << "..."; }
   retval << endl;
   return retval.str();
-}
-
-template <class T> void BrickAttrib<T>::io(Piostream&){
 }
 
 } // End namespace SCIRun
