@@ -53,9 +53,9 @@ WARNING
 				 const ProcessorGroup* resources) = 0;
     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						const ProcessorGroup* pg) = 0;
-    virtual int getOldProcessorAssignment(const VarLabel*,
-					  const Patch* patch, const int, 
-					  const ProcessorGroup* pg) 
+    virtual int getOldProcessorAssignment(const VarLabel * /*var*/,
+					  const Patch* patch, int /*matl*/, 
+					  const ProcessorGroup * pg) 
       { return getPatchwiseProcessorAssignment(patch, pg); }
     virtual bool needRecompile(double, double, const GridP&)
       { return false; }
