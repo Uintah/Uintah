@@ -13,9 +13,9 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/Properties.cc $(SRCDIR)/SmagorinskyModel.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 
-SUBDIRS := $(SRCDIR)/fortran
+#SUBDIRS := $(SRCDIR)/fortran
 
-include $(SRCTOP)/scripts/recurse.mk
+#include $(SRCTOP)/scripts/recurse.mk
 
 #$(SRCDIR)/Discretization.cc 
 #	$(SRCDIR)/PressureSolver.cc
@@ -27,6 +27,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/05/18 16:14:39  sparker
+# Commented out fortran compilation until we get the autoconf
+#  part done
+#
 # Revision 1.9  2000/05/17 21:33:04  bbanerje
 # Updated sub.mk to build library at this level with fortran routines.
 #
