@@ -41,6 +41,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PathWriter.tcl \
 	$(SRCDIR)/PointWidget.tcl \
     $(SRCDIR)/PromptedText.tcl \
+    $(SRCDIR)/PromptedEntry.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
 	$(SRCDIR)/ScaledBoxWidget.tcl \
