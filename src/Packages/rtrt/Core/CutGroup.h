@@ -8,6 +8,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/CutPlaneDpy.h>
+#include <Packages/rtrt/Core/Material.h>
 
 //This is a replacement for the buggy CutPlane object.
 
@@ -29,7 +30,7 @@ namespace rtrt {
 //If your scene uses them for something else and also has cutgroups in it there will be
 //conflicts.
 
-class CutGroup : public Group {
+class CutGroup : public Group, public Material {
     Vector n;
     double d;
     CutPlaneDpy* dpy;
@@ -45,6 +46,10 @@ public:
 			   PerProcessorContext*);
     virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
 				 DepthStats* st, PerProcessorContext* ppc);
+    virtual void softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+				      double dist, Color& atten, DepthStats* st,
+				      PerProcessorContext* ppc);
+    
     virtual void multi_light_intersect(Light* light, const Point& orig,
 				       const Array1<Vector>& dirs,
 				       const Array1<Color>& attens,
@@ -53,7 +58,16 @@ public:
     virtual void animate(double t, bool& changed);
     virtual void collect_prims(Array1<Object*>& prims);
     bool interior_value(double& ret_val, const Ray &ref, const double t);
+
+
+    virtual void shade(Color& result, const Ray& ray,
+		       const HitInfo& hit, int depth,
+		       double atten, const Color& accumcolor,
+		       Context* cx);
+
+    virtual Vector normal(const Point&, const HitInfo& hit);
 };
+
 
 } // end namespace rtrt
 

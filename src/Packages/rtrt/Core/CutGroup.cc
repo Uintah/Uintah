@@ -19,6 +19,7 @@ CutGroup::CutGroup(const Vector& n, const Point& cen)
     this->n.normalize();
     d=Dot(this->n, cen);
     on = true;
+    this->set_matl(this);
 }
 
 CutGroup::CutGroup(CutPlaneDpy* dpy)
@@ -27,10 +28,18 @@ CutGroup::CutGroup(CutPlaneDpy* dpy)
     n=dpy->n;
     d=dpy->d;
     on = true;
+    this->set_matl(this);
 }
 
 CutGroup::~CutGroup()
 {
+}
+
+void CutGroup::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+				 double dist, Color& atten, DepthStats* st,
+				 PerProcessorContext* ppc)
+{
+  light_intersect(ray, hit, atten, st, ppc);
 }
 
 void CutGroup::light_intersect(const Ray& ray, HitInfo& hit,
@@ -75,7 +84,10 @@ void CutGroup::light_intersect(const Ray& ray, HitInfo& hit,
 	  hit = newhit;
 	  atten=Color(0,0,0);
 	  *((double *)(hit.scratchpad+CUTGROUPDIST)) = (t>0)?t:newhit.min_t;
-	  *((CutGroup **)(hit.scratchpad+CUTGROUPPTR)) = (CutGroup *)this;
+	  *((Object **)(hit.scratchpad+CUTGROUPPTR)) = hit.hit_obj;
+	  Point p = ray.origin() + ray.direction()*hit.min_t;
+	  *(Vector*)hit.scratchpad = hit.hit_obj->normal(p,hit);
+	  hit.hit_obj = this;
 	}
     } else {
 	// On far side of plane...
@@ -90,7 +102,10 @@ void CutGroup::light_intersect(const Ray& ray, HitInfo& hit,
 	  hit.min_t+=t;
 	  atten = Color(0,0,0);
 	  *((double *)(hit.scratchpad+CUTGROUPDIST)) = t;
-	  *((CutGroup **)(hit.scratchpad+CUTGROUPPTR)) = (CutGroup *)this;
+	  *((Object **)(hit.scratchpad+CUTGROUPPTR)) = hit.hit_obj;
+	  Point p = ray.origin() + ray.direction()*hit.min_t;
+	  *(Vector*)hit.scratchpad = hit.hit_obj->normal(p,hit);
+	  hit.hit_obj = this;
 	}
     }
   } else {
@@ -136,7 +151,10 @@ void CutGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 	*((double *)(hit.scratchpad+CUTGROUPDIST)) = (t>0)?t:newhit.min_t; 
 	// you could probably do nested cut planes by prioritizing the t's here
 	// you might need to store a min and max t to do it
-	*((CutGroup **)(hit.scratchpad+CUTGROUPPTR)) = (CutGroup *)this;
+	*((Object **)(hit.scratchpad+CUTGROUPPTR)) = hit.hit_obj;
+	Point p = ray.origin() + ray.direction()*hit.min_t;
+	*(Vector*)hit.scratchpad = hit.hit_obj->normal(p,hit);
+	hit.hit_obj = this;
       }
 
     } else {
@@ -158,7 +176,10 @@ void CutGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 	hit.min_t+=t;
 	//store this object, and the plane distance for CutMaterial's use
 	*((double *)(hit.scratchpad+CUTGROUPDIST)) = t;
-	*((CutGroup **)(hit.scratchpad+CUTGROUPPTR)) = (CutGroup *)this;
+	*((Object **)(hit.scratchpad+CUTGROUPPTR)) = hit.hit_obj;
+	Point p = ray.origin() + ray.direction()*hit.min_t;
+	*(Vector*)hit.scratchpad = hit.hit_obj->normal(p,hit);	
+	hit.hit_obj = this;
       }
 
     }
@@ -171,7 +192,10 @@ void CutGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     //you still need to store this info, the cutmaterial will need it
     if (hit.hit_obj != ohit) {
       *((double *)(hit.scratchpad+CUTGROUPDIST)) = hit.min_t;
-      *((CutGroup **)(hit.scratchpad+CUTGROUPPTR)) = (CutGroup *)this;
+      *((Object **)(hit.scratchpad+CUTGROUPPTR)) = hit.hit_obj;
+      Point p = ray.origin() + ray.direction()*hit.min_t;
+      *(Vector*)hit.scratchpad = hit.hit_obj->normal(p,hit);
+      hit.hit_obj = this;
     }
   }
 }
@@ -248,5 +272,22 @@ bool CutGroup::interior_value(double& ret_val, const Ray &ref, const double t)
 }
 
 
+
+void CutGroup::shade(Color& result, const Ray& ray,
+		     const HitInfo& hit, int depth,
+		     double atten, const Color& accumcolor,
+		     Context* cx) {
+
+  //cerr << "USING CG AS A MAT" << endl;
+  Object *o = *((Object **)(hit.scratchpad+CUTGROUPPTR));
+  Material *mat = o->get_matl();
+  mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
+}
+
+Vector CutGroup::normal(const Point& p, const HitInfo& hit)
+{
+  Vector* n=(Vector*)hit.scratchpad;
+  return *n;  
+}
 
 

@@ -25,6 +25,9 @@ public:
   virtual ~SelectableGroup();
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
+  virtual void softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+				    double dist, Color& atten, DepthStats* st,
+				    PerProcessorContext* ppc);
   virtual void light_intersect(const Ray& ray,
 			       HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext*);

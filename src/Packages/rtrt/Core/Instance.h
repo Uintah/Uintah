@@ -45,6 +45,7 @@ public:
 	    //cerr << "A IBBMIN" << bbox.min() << endl;
 	    //cerr << "A IBBMAX" << bbox.max() << endl;
 
+	    this->set_matl(this);
 	}
 
     Instance(InstanceWrapperObject* o, Transform* trans, BBox& b) 
@@ -55,6 +56,7 @@ public:
 
 	    bbox = b.transform(t);
 	    
+	    this->set_matl(this);
 	}
 	    
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
@@ -63,22 +65,25 @@ public:
 
 	  double min_t = hit.min_t;
 	  if (!bbox.intersect(ray, min_t)) return;	  
+	  min_t = hit.min_t;
 
 	  Ray tray;
+	  HitInfo thit=hit;
 	  
 	  ray.transform(t,tray);
-	  	  
-	  o->intersect(tray,hit,st,ppc);
+
+	  o->intersect(tray,thit,st,ppc);
 	  
 	  // if the ray hit one of our objects....
-	  if (min_t > hit.min_t)
+	  if (min_t > thit.min_t)
 	    {
-	      InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-	      Point p = ray.origin() + hit.min_t*ray.direction();
-	      i->normal = hit.hit_obj->normal(p,hit);
-	      i->obj = hit.hit_obj;
-	      hit.hit_obj = this;
-	    }
+	      InstanceHit* i = (InstanceHit*)(thit.scratchpad);
+	      Point p = ray.origin() + thit.min_t*ray.direction();
+	      i->normal = thit.hit_obj->normal(p,thit);
+	      i->obj = thit.hit_obj;
+	      thit.hit_obj = this;
+	      hit = thit;
+	    }	      
 	}
     
     virtual Vector normal(const Point&, const HitInfo& hit)

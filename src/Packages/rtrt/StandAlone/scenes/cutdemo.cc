@@ -60,13 +60,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     return 0;
   }
 
-  /*
   //between doors
   Point Eye(-5.85, 6.2, 1.6);
   Point Lookat(-13.5, 13.5, 2.0);
   Vector Up(0,0,1);
   double fov=60;
-  */
 
   /*
   //outside room
@@ -76,13 +74,16 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   double fov=60;
   */
 
+  /*
   //centered above room
   Point Eye(-8, 8, 11);
   Point Lookat(-8, 8, 0);
   Vector Up(0, 1, 0);
   double fov=40;
+  */
 
   Camera cam(Eye,Lookat,Up,fov);
+
 
   Material* marble1=new CrowMarble(5.0,
 				   Vector(2,1,0),
@@ -390,8 +391,21 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   sg->add(vig);
 #endif
 #endif
+
 #ifdef DODAVE
+
+#ifdef DOCUT
   sg->add(cut);
+#else
+
+#ifdef DOINST
+  sg->add(dinst);
+#else
+  sg->add(davehead);  
+#endif
+
+#endif
+
 #endif
   g->add(sg);
 
