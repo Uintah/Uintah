@@ -102,7 +102,6 @@ public:
   virtual const TypeDescription *get_type_description() const;
 
     private:
-  const Point& ave_point(const Point &p0, const Point &p1) const;
   double calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam, 
 			 double xi, double nu, double gam, 
 			 Cell::index_type ci) const;

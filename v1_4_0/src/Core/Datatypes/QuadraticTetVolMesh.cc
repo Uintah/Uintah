@@ -100,13 +100,13 @@ QuadraticTetVolMesh::begin(Node::iterator &itr) const
 void
 QuadraticTetVolMesh::end(Node::iterator &itr) const
 {
-  itr = points_.size() + cells_.size() / 4 * 6;
+  itr = points_.size() + edges_.size();
 }
 
 void
 QuadraticTetVolMesh::size(Node::size_type &s) const
 {
-  s = points_.size() + cells_.size() / 4 * 6;
+  s = points_.size() + edges_.size();
 }
 
 void
@@ -163,15 +163,6 @@ QuadraticTetVolMesh::size(TetVolMesh::Cell::size_type &s) const
   TetVolMesh::size(s);
 }
 
-const Point &
-QuadraticTetVolMesh::ave_point(const Point &p0, const Point &p1) const
-{
-  static Point rval;
-  Vector v = p1 - p0;
-  rval = p0 + v * 0.5;
-  return rval;
-}
-
 void 
 QuadraticTetVolMesh::get_nodes(Node::array_type &array, 
 			       Edge::index_type idx) const
@@ -191,13 +182,16 @@ QuadraticTetVolMesh::get_nodes(Node::array_type &array,
 {
   TetVolMesh::get_nodes(array, idx);
   const int sz = points_.size();
-  const int cindex = idx * 6;
-  array.push_back(sz + cindex);
-  array.push_back(sz + cindex + 1);
-  array.push_back(sz + cindex + 2);
-  array.push_back(sz + cindex + 3);
-  array.push_back(sz + cindex + 4);
-  array.push_back(sz + cindex + 5);
+
+  Edge::array_type edges;
+  TetVolMesh::get_edges(edges, idx);
+
+  array.push_back(sz + edges[0]);
+  array.push_back(sz + edges[1]);
+  array.push_back(sz + edges[2]);
+  array.push_back(sz + edges[3]);
+  array.push_back(sz + edges[4]);
+  array.push_back(sz + edges[5]);
 }
 
 void 
@@ -283,48 +277,11 @@ QuadraticTetVolMesh::locate(Cell::index_type &loc, const Point &p)
 void 
 QuadraticTetVolMesh::get_point(Point &result, Node::index_type index) const
 { 
-  // nodes 1 - 4 are the natural tet extremities.
-  // nodes 5 - 10 are center points of edges bewteen the 4 tet nodes
   const int sz = points_.size();
   if (index < sz) {
     TetVolMesh::get_point(result, index);
   } else {
-    int cell    = (index - sz) / 6;
-    int node_id = (index - sz) % 6;
-    Point p0, p1;
-    switch (node_id) {
-    case 0:
-      // maps to node 5 center between nodes 1, 2
-      TetVolMesh::get_point(p0, cells_[cell * 4]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 1]);
-      break;
-    case 1:
-      // maps to node 6 center between nodes 1, 3
-      TetVolMesh::get_point(p0, cells_[cell * 4]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 2]);
-      break;
-    case 2:
-      // maps to node 7 center between nodes 1, 4
-      TetVolMesh::get_point(p0, cells_[cell * 4]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 3]);
-      break;
-    case 3:
-      // maps to node 8 center between nodes 2, 3
-      TetVolMesh::get_point(p0, cells_[cell * 4 + 1]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 2]);
-      break;
-    case 4:
-      // maps to node 9 center between nodes 3, 4
-      TetVolMesh::get_point(p0, cells_[cell * 4 + 2]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 3]);
-      break;
-    case 5:
-      // maps to node 10 center between nodes 2, 2
-      TetVolMesh::get_point(p0, cells_[cell * 4 + 1]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 3]);
-      break;
-    };
-    result = ave_point(p0, p1);
+    TetVolMesh::get_center(result, (Edge::index_type)(index - sz));
   }
 }
 
