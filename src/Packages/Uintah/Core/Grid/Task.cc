@@ -10,6 +10,8 @@
 
 using namespace Uintah;
 
+MaterialSubset* Task::globalMatlSubset = 0;
+
 void Task::initialize()
 {
   d_resourceIndex=-1;
@@ -56,6 +58,16 @@ void Task::setSets(const PatchSet* ps, const MaterialSet* ms)
     matl_set->addReference();
 }
 
+const MaterialSubset* Task::getGlobalMatlSubset()
+{
+  if (globalMatlSubset == 0) {
+    globalMatlSubset = new MaterialSubset();
+    globalMatlSubset->add(-1);
+    globalMatlSubset->addReference();
+  }
+  return globalMatlSubset;
+}
+
 void
 Task::usesMPI(bool state)
 {
@@ -80,6 +92,10 @@ Task::requires(WhichDW dw, const VarLabel* var,
 	       const MaterialSubset* matls, DomainSpec matls_dom,
 	       Ghost::GhostType gtype, int numGhostCells)
 {
+  if (matls == 0 && var->typeDescription()->isReductionVariable())
+    // default material for a reduction variable is the global material (-1)
+    matls = getGlobalMatlSubset();
+  
   Dependency* dep = scinew Dependency(this, dw, var, patches, matls,
 				      patches_dom, matls_dom,  gtype, numGhostCells);
   dep->next=0;

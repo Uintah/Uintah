@@ -572,6 +572,9 @@ WARNING
     
     Task(const Task&);
     Task& operator=(const Task&);
+
+    static const MaterialSubset* getGlobalMatlSubset();
+    static MaterialSubset* globalMatlSubset;
   };
   
   inline void Task::Dependency::addComp(Edge* edge)
