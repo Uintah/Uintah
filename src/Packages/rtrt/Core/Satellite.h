@@ -75,6 +75,7 @@ class Satellite : public UVSphere
 
   virtual void compute_bounds(BBox& bbox, double offset)
   {
+#if 0
     if (parent_) {
       parent_->compute_bounds(bbox,offset);
       bbox.extend(parent_->get_center(), 
@@ -83,6 +84,8 @@ class Satellite : public UVSphere
     } else {
       bbox.extend(cen, orb_radius_+radius+offset);
     }
+#endif
+    bbox.extend(cen,radius+offset);
   }
 
   virtual void animate(double t, bool& changed);
