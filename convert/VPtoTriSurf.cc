@@ -43,6 +43,7 @@ main(int argc, char **argv) {
     sprintf(triname, "%s.tri", argv[1]);
     ifstream ptsstream(ptsname);
     ifstream tristream(triname);
+#if 0
     surf->conductivity.add(1);
     surf->conductivity.add(0);
     surf->conductivity.add(0);
@@ -50,6 +51,7 @@ main(int argc, char **argv) {
     surf->conductivity.add(0);
     surf->conductivity.add(1);
     surf->bdry_type=TriSurface::Interior;
+#endif
     char *name=&(argv[1][0]);
     for (int i=0; argv[1][i]!='\0'; i++)
 	if (argv[1][i]=='/') name=&(argv[1][i+1]);

@@ -44,13 +44,6 @@ main(int argc, char **argv) {
     sprintf(triname, "%s.tri", argv[1]);
     ifstream ptsstream(ptsname);
     ifstream tristream(triname);
-    surf->conductivity.add(1);
-    surf->conductivity.add(0);
-    surf->conductivity.add(0);
-    surf->conductivity.add(1);
-    surf->conductivity.add(0);
-    surf->conductivity.add(1);
-    surf->bdry_type=TriSurface::Interior;
     char *name=&(argv[1][0]);
     for (int i=0; argv[1][i]!='\0'; i++)
 	if (argv[1][i]=='/') name=&(argv[1][i+1]);
@@ -60,6 +53,18 @@ main(int argc, char **argv) {
     for (; i>0; i--) {
 	double x, y, z;
 	ptsstream >> x >> y >> z;
+        if(x<0)
+	   x+=1;
+	else
+	   x-=1;
+	if(y<0)
+	   y+=1;
+	else
+	   y-=1;
+	if(z<200)
+	   z+=1;
+	else
+	   z-=1;
 	surf->points.add(Point(tx+(sc*x),ty+(sc*y),tz+(sc*z)));
     }
     while (tristream) {
@@ -78,7 +83,7 @@ main(int argc, char **argv) {
     }
     
     char tsname[100];
-    sprintf(tsname, "/home/grad/dweinste/mydata/%s.surf", name);
+    sprintf(tsname, "%s.surf", name);
     TextPiostream stream(tsname, Piostream::Write);
     SurfaceHandle sh=surf;
     Pio(stream, sh);

@@ -44,12 +44,23 @@ main(int argc, char **argv) {
     }
     Surface *su=handle.get_rep();
     TriSurface *ts=su->getTriSurface();
+    if(!ts){
+       printf("Error getting ts\n");
+       exit(-1);
+    }
 
     sprintf(name, "%s.pts", argv[1]);
     FILE *fout=fopen(name, "wt");
+    if(!fout){
+       printf("Error opening output file: %s\n", name);
+       exit(-1);
+    }
     fprintf(fout, "%d\n", ts->points.size());
+    fprintf(stderr, "%d\n", ts->points.size());
     for (int i=0; i<ts->points.size(); i++) {
 	fprintf(fout, "%lf %lf %lf\n", ts->points[i].x(), ts->points[i].y(),
+		ts->points[i].z());
+	fprintf(stderr, "%lf %lf %lf\n", ts->points[i].x(), ts->points[i].y(),
 		ts->points[i].z());
     }
     fclose(fout);

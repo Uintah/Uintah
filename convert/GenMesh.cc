@@ -104,13 +104,13 @@ int main(int argc, char **argv)
 		double yy=y;
 		double zz=z;
 		if(i>0 && i<n-1)
-		    xx+=(rng()-.5)*0.00/double(n-1);
+		    xx+=(rng()-.5)*0.02/double(n-1);
 		    //xx+=rng()*0.0/double(n-1);
 		if(j>0 && j<n-1)
-		    yy+=(rng()-.5)*0.00/double(n-1);
+		    yy+=(rng()-.5)*0.02/double(n-1);
 		    //yy+=rng()*0.0/double(n-1);
 		if(k>0 && k<n-1)
-		    zz+=(rng()-.5)*0.00/double(n-1);
+		    zz+=(rng()-.5)*0.02/double(n-1);
 		    //zz+=rng()*0.0/double(n-1);
 		//mesh->nodes.add(NodeHandle(new Node(Point(xx,yy,zz))));
 		if(!mesh->insert_delaunay(Point(xx,yy,zz), 0)){

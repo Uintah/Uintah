@@ -56,6 +56,9 @@ int main(int argc, char **argv)
 	}
 	cerr << "nelems=" << mesh->elems.size() << endl;
     }
+    for(int i=0;i<mesh->elems.size();i++){
+	cerr << "volume[" << i << "]=" << mesh->elems[i]->volume() << endl;
+    }
     BinaryPiostream stream(argv[argc-1], Piostream::Write);
     Pio(stream, mesh);
     return 0;
