@@ -96,6 +96,10 @@ WARNING
       IntVector findCell(const Point& pos) const;
 
       //////////
+      // Find the index of a cell contaning the given Point. 
+      bool findCell(const Point& pos, IntVector& ci) const;
+
+      //////////
       // Find the 8 neighboring cell indexes according to a 
       // given node index.
       //    --tan
@@ -279,6 +283,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.7  2000/06/14 19:58:03  guilkey
+// Added a different version of findCell.
+//
 // Revision 1.6  2000/06/07 18:30:50  tan
 // Requirement for getHighGhostCellIndex() and getLowGhostCellIndex()
 // cancelled.
