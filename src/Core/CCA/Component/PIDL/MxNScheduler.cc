@@ -39,6 +39,10 @@ MxNScheduler::MxNScheduler()
 
 MxNScheduler::~MxNScheduler()
 {
+  schedList::iterator iter = entries.begin();
+  for(;iter != entries.end(); iter++) {
+    delete ((*iter).second);
+  }
 }
 
 void MxNScheduler::setCalleeRepresentation(std::string distname, 
@@ -89,6 +93,12 @@ MxNArrayRep* MxNScheduler::calleeGetCalleeRep(std::string distname)
     }
   }
   return NULL;
+}
+
+MxNArrayRep* MxNScheduler::makeBlock(int rank)
+{
+
+
 }
 
 void* MxNScheduler::getArray(std::string distname)

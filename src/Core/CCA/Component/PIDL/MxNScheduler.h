@@ -54,6 +54,7 @@
 
 namespace SCIRun {  
 
+  #define BLOCK(R) MxNScheduler::makeBlock(R)
 
   //String comparison function for std::map
   struct ltstr
@@ -89,6 +90,12 @@ namespace SCIRun {
     // gets the native distribution representation
     MxNArrayRep* calleeGetCalleeRep(std::string distname);
     MxNArrayRep* callerGetCallerRep(std::string distname);
+
+    /////////
+    // Static methods that retrieve a appropriate MxNArrayRep
+    // to each process participating in a defined distribution
+    // such as block, cyclic, etc.
+    static MxNArrayRep* makeBlock(int rank);
     
     ////////////
     // (Callee Metods)

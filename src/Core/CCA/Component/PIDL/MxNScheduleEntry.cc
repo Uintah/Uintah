@@ -44,9 +44,19 @@ MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
 
 MxNScheduleEntry::~MxNScheduleEntry()
 {
-  callee_rep.clear();
-  caller_rep.clear();
-  sched.clear();
+  descriptorList::iterator iter;
+  iter = callee_rep.begin();
+  for(;iter != callee_rep.end(); iter++) {
+    delete (*iter);
+  }
+  iter = caller_rep.begin();
+  for(;iter != caller_rep.end(); iter++) {
+    delete (*iter);
+  }
+  iter = sched.begin();
+  for(;iter != sched.end(); iter++) {
+    delete (*iter);
+  }
 }
 
 void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
