@@ -1,3 +1,3 @@
-SRCDIR   := Babel/Components/hello
+SRCDIR   := CCA/Components/BabelTest/hello
 SRCS:=
 include $(SCIRUN_SCRIPTS)/babel_component.mk
