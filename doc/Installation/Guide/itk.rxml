@@ -103,10 +103,13 @@ endterm="title.build-sr"/></citetitle>).
 <varlistentry>
 <term><option>--with-insight=<replaceable>path-to-insight-libs</replaceable></option></term>
 <listitem>
-<para>Specifies the path to the <acronym>ITK</acronym> library
-installation directory&mdash;the directory containing
-<acronym>ITK</acronym> libraries
-(e.g. <filename>/usr/local/lib/InsightToolkit</filename>)
+<para>Specifies the directory containing the <acronym>ITK</acronym>
+libraries.  The
+<citetitle>ITK Software Guide</citetitle> refers to this directory as
+ITK_BINARY_DIR.  The <acronym>ITK</acronym> library (or binary)
+directory is commonly
+<filename>/usr/local/lib/InsightToolkit</filename>.  The directory
+will contain file <filename>ITKConfig.make</filename>.
 </para>
 </listitem>
 </varlistentry>
