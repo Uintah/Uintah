@@ -46,6 +46,7 @@ template class LockingHandle<Matrix>;
 #include <Core/Datatypes/TetVol.h>
 // linux needs these explicit declarations so that type_id is initialized.
 template class TetVol<double>;
+template class TetVol<int>;
 template class GenericField<TetVolMesh, vector<double> >;
 
 #include <Core/Geometry/Tensor.h>
