@@ -69,8 +69,9 @@ using namespace SCIRun;
   };
 
 template<class FieldLeft, class FieldRight, class ScalarField>
-bool initField(FieldLeft* left_field, FieldRight * right_field,
-	       ScalarField* scalarField) {
+bool BinaryFieldOperator::initField(FieldLeft* left_field,
+				    FieldRight * right_field,
+				    ScalarField* scalarField) {
   // We need to make sure that the data for the two fields are the same
   if ( left_field->data_at() != right_field->data_at() )
     return false;
@@ -122,10 +123,10 @@ bool initField(FieldLeft* left_field, FieldRight * right_field,
 }
     
 template<class FieldLeft, class FieldRight, class ScalarField, class ScalarOp >
-void computeScalars(FieldLeft* left_field, FieldRight * right_field,
-		    ScalarField* scalarField,
-		    ScalarOp op /* ScalarOp should be a functor for
-				   modiyfying scalars */ ) {
+void BinaryFieldOperator::computeScalars(FieldLeft* left_field,
+					 FieldRight * right_field,
+					 ScalarField* scalarField,
+					 ScalarOp op) {
 
   // so far only node and cell centered data
   ASSERT( left_field->data_at() == FieldLeft::CELL ||
