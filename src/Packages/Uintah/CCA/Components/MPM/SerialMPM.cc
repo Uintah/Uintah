@@ -237,6 +237,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
+  t->requires(Task::OldDW, lb->pSp_volLabel,           gan,NGP); 
+  
   if(d_8or27==27){
    t->requires(Task::OldDW,lb->pSizeLabel,             gan,NGP);
   }
@@ -247,6 +249,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 	      Task::OutOfDomain);
   t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
+  t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
@@ -254,8 +257,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
-
   t->computes(lb->TotalMassLabel);
+  
+
   sched->addTask(t, patches, matls);
 }
 
@@ -563,11 +567,13 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
+  t->requires(Task::NewDW, lb->gSp_volLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->frictionalWorkLabel,    gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
+  t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   if(d_8or27==27){
@@ -577,6 +583,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
+    t->requires(Task::NewDW, lb->gSp_vol_srcLabel,     gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
 
@@ -584,6 +591,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pXLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
+  t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
   if(d_8or27==27){
@@ -688,7 +696,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pmass, pvolume, pTemperature;
+      constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
       constParticleVariable<Vector> pvelocity, pexternalforce,psize;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -697,6 +705,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
+      old_dw->get(pSp_vol,        lb->pSp_volLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
@@ -711,10 +720,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<Vector> gexternalforce;
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
+      NCVariable<double> gSp_vol;
       NCVariable<double> gTemperatureNoBC;
       NCVariable<double> gnumnearparticles;
 
-      new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
+      new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);   
+      new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
@@ -735,6 +746,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gTemperatureNoBC.initialize(0);
       gexternalheatrate.initialize(0);
       gnumnearparticles.initialize(0.);
+      gSp_vol.initialize(0.);
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -775,6 +787,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	       gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
 //             gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
                gnumnearparticles[ni[k]] += 1.0;
+              gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
 	    }
 	  }
         }
@@ -787,6 +800,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gtempglobal[c]  += gTemperature[c];
         gTemperature[c] /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
+        gSp_vol[c]      /= gmass[c];
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
@@ -1568,8 +1582,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      ParticleVariable<Point> pxnew;
      constParticleVariable<Vector> pvelocity, psize;
      ParticleVariable<Vector> pvelocitynew, psizeNew;
-     constParticleVariable<double> pmass, pvolume, pTemperature;
-     ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
+     constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
+     ParticleVariable<double> pmassNew,pvolumeNew,pTempNew, pSp_volNew;
      constParticleVariable<long64> pids;
      ParticleVariable<long64> pids_new;
 
@@ -1577,12 +1591,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      constNCVariable<Vector> gvelocity_star, gacceleration;
      constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
      constNCVariable<double> dTdt, massBurnFraction, frictionTempRate;
+     constNCVariable<double> gSp_vol_src;
 
      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
      old_dw->get(px,                    lb->pXLabel,                     pset);
      old_dw->get(pmass,                 lb->pMassLabel,                  pset);
      old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
+     old_dw->get(pSp_vol,               lb->pSp_volLabel,                pset);
      new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
      old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
      old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
@@ -1593,6 +1609,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
      new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
      new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
+     new_dw->allocateAndPut(pSp_volNew,   lb->pSp_volLabel_preReloc,     pset);
+     
      ParticleSubset* delset = scinew ParticleSubset
 	(pset->getParticleSet(),false,dwi,patch);
 
@@ -1609,19 +1627,22 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
      new_dw->get(gTemperature,     lb->gTemperatureLabel,    dwi,patch,gac,NGP);
      new_dw->get(gTemperatureNoBC, lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
-     new_dw->get(frictionTempRate, lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
-
+     new_dw->get(frictionTempRate, lb->frictionalWorkLabel,  dwi,patch,gac,NGP);    
      if(d_with_ice){
       new_dw->get(dTdt,            lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
+      new_dw->get(gSp_vol_src,     lb->gSp_vol_srcLabel,     dwi,patch,gac,NGP);
       new_dw->get(massBurnFraction,lb->massBurnFractionLabel,dwi,patch,gac,NGP);
      }
      else{
-      NCVariable<double> dTdt_create, massBurnFraction_create;	
+      NCVariable<double> dTdt_create, massBurnFraction_create,gSp_vol_src_create;	
       new_dw->allocateTemporary(dTdt_create,                     patch,gac,NGP);
+      new_dw->allocateTemporary(gSp_vol_src_create,              patch,gac,NGP);
       new_dw->allocateTemporary(massBurnFraction_create,         patch,gac,NGP);
       dTdt_create.initialize(0.);
+      gSp_vol_src_create.initialize(0.);
       massBurnFraction_create.initialize(0.);
       dTdt = dTdt_create;                         // reference created data
+      gSp_vol_src = gSp_vol_src_create;           // reference created data
       massBurnFraction = massBurnFraction_create; // reference created data
      }
 
@@ -1649,20 +1670,23 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Vector acc(0.0,0.0,0.0);
           double tempRate = 0;
           double burnFraction = 0;
+          double sp_vol_dt = 0.0;
 
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < d_8or27; k++) {
 	      vel      += gvelocity_star[ni[k]]  * S[k];
    	      acc      += gacceleration[ni[k]]   * S[k];
-              tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
+             tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
 			   frictionTempRate[ni[k]])   * S[k];
-              burnFraction += massBurnFraction[ni[k]] * S[k];
+             burnFraction += massBurnFraction[ni[k]] * S[k];
+             sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
           }
 
           // Update the particle's position and velocity
           pxnew[idx]           = px[idx] + vel * delT;
           pvelocitynew[idx]    = pvelocity[idx] + acc * delT;
           pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
+          pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
     
           double rho;
 	  if(pvolume[idx] > 0.){
