@@ -130,13 +130,13 @@ void MeshInterpVals::execute()
 	SparseRowMatrix *mm;
 	if (potMatTCL.get()) {
 	    rows=new int[ts->bcIdx.size()];
-	    cols=new int[(ts->bcIdx.size()-1)*2];
-	    a=new double[(ts->bcIdx.size()-1)*2];
+	    cols=new int[(ts->bcIdx.size()-1)];
+	    a=new double[(ts->bcIdx.size()-1)];
 	    mm=scinew SparseRowMatrix(ts->bcIdx.size()-1,
 				      meshH->nodes.size(),
 				      rows, cols,
 				      ts->bcIdx.size()-1, a);
-	    for (i=0; i<ts->bcIdx.size(); i++) { rows[i]=i*2; }
+	    for (i=0; i<ts->bcIdx.size(); i++) { rows[i]=i; }
 	} else {
 	    rows=new int[ts->bcIdx.size()+1];
 	    cols=new int[ts->bcIdx.size()];
@@ -145,7 +145,7 @@ void MeshInterpVals::execute()
 				      meshH->nodes.size(),
 				      rows, cols,
 				      ts->bcIdx.size(), a);
-	    for (i=0; i<ts->bcIdx.size()+1; i++) { rows[i]=i; }
+	    for (i=0; i<=ts->bcIdx.size()+1; i++) { rows[i]=i; }
 	}
 	matH=mm;
 //	cerr << "MeshInterpVals 1)...\n";
@@ -169,6 +169,7 @@ void MeshInterpVals::execute()
 
 	    Array1<int> selected(meshH->nodes.size());
 	    selected.initialize(0);
+	    int counter=0;
 	    for (int aa=0; aa<p.size(); aa++) {
 		double dt;
 		int si=-1;
@@ -183,30 +184,12 @@ void MeshInterpVals::execute()
 		}
 		selected[si]=1;
 //		cerr << "("<<aa<<") closest to "<<p[aa]<<"="<<meshH->nodes[si]->p<<"\n";
-		if (potMatTCL.get()) {
-		    if (aa==0) firstIdx=si;
-		    else {
-			if (firstIdx<si) {
-			    vals[(aa-1)*2]=firstIdx;
-			    a[(aa-1)*2]=-1;
-			    cols[(aa-1)*2]=firstIdx;
-			    vals[(aa-1)*2+1]=si;
-			    a[(aa-1)*2+1]=1;
-			    cols[(aa-1)*2+1]=si;
-			} else {
-			    vals[(aa-1)*2]=si;
-			    a[(aa-1)*2]=1;
-			    cols[(aa-1)*2]=si;
-			    vals[(aa-1)*2+1]=firstIdx;
-			    a[(aa-1)*2+1]=-1;
-			    cols[(aa-1)*2+1]=firstIdx;
-			}			    
-		    }
-		} else {
-		    vals[aa]=si;
-		    a[aa]=1;
-		    cols[aa]=si;
-	        }
+		if (!potMatTCL.get() || aa!=0) {
+		    a[counter]=1;
+		    cols[counter]=si;
+		    counter++;
+		}
+		vals[aa]=si;
 	    }
 	}
     } else {
@@ -223,6 +206,9 @@ void MeshInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/12/11 05:48:55  dmw
+// fixed code for generating the R matrix for RAinverse basis
+//
 // Revision 1.3  1999/12/10 06:58:13  dmw
 // added another flag to MeshInterpVals
 //
