@@ -16,6 +16,7 @@
 #include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
 #include <Geom/Color.h>
+#include <Geom/View.h>
 #include <Geometry/BBox.h>
 #include <TCL/TCL.h>
 
@@ -34,33 +35,14 @@ class Roe : public TCL {
 
     BBox bb;
 
-    DBContext* dbcontext_st;
-    
-    makeIndepRoe();
-    int doneInit;
-    int last_x;
-    int last_y;
-    double total_x;
-    double total_y;
-    double total_z;
-    int haveInheritMat;
-    double mtnScl;
-    double inheritMat[16];
-
-    GeomObj *geomSelected;
-    GeomPick* gpick;
-
-    int salmon_count;
     int need_redraw;
-    void get_bounds(BBox&);
-    Roe(const Roe&);
 public:
     clString id;
 
-    HashTable<clString, int> visible;
     Roe(Salmon *s, const clString& id);
+    Roe(const Roe&);
     ~Roe();
-    void RoeInit(Salmon *s);
+
     void itemAdded(GeomObj*, const clString&);
     void itemDeleted(GeomObj*);
     void rotate(double angle, Vector v, Point p);
@@ -81,13 +63,16 @@ public:
 
     void tcl_command(TCLArgs&, void*);
     void redraw();
+    void get_bounds(BBox&);
 
-    // Lighting...
-    Color ambient_light;
-    Array1<Light*> light;
+    // Which of the objects do we draw?
+    HashTable<clString, int> visible;
+
+    // Which of the lights are on?
+    HashTable<clString, int> light_on;
 
     // The Camera
-    Point eyep;
+    View view;
 };
 
 #endif

@@ -2,7 +2,7 @@
  *  Salmon.h: The Geometry Viewer!
  *
  *  Written by:
- *   Steven G. Parker
+ *   Steven G. Parker & Dave Weinstein
  *   Department of Computer Science
  *   University of Utah
  *   March 1994
@@ -18,6 +18,7 @@
 #include <Classlib/HashTable.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geom/Geom.h>
+#include <Geom/Lighting.h>
 #include <Multitask/ITC.h>
 
 class Roe;
@@ -51,8 +52,11 @@ public:
 
     void tcl_command(TCLArgs&, void*);
 
-    //gotta store the geometry!
+    // The scene...
     HashTable<int, HashTable<int, GeomObj*>*> portHash;
+
+    // Lighting
+    Lighting lighting;
 };
 
 class RedrawMessage : public MessageBase {
