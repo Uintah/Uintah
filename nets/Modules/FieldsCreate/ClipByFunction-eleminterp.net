@@ -20,54 +20,45 @@ set notes ""
 
 global Subnet
 set Subnet(Subnet$Subnet(Loading)_Name) {Main}
-set bbox {29 16 613 531}
+set bbox {69 16 546 485}
 
 # Create a SCIRun->DataIO->FieldReader Module
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 69 16]
 
 # Create a SCIRun->FieldsCreate->ClipByFunction Module
-set m2 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 214 106]
+set m2 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 97 100]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 285 406]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 187 347]
 
 # Create a SCIRun->Render->Viewer Module
-set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 285 487]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 187 441]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 418 140]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 351 133]
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 448 271]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 247 232]
 
-# Create a SCIRun->FieldsData->ManageFieldData Module
-set m7 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 29 135]
-
-# Create a SCIRun->Math->LinAlgBinary Module
-set m8 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 240 235]
-
-# Create a SCIRun->FieldsData->ManageFieldData Module
-set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 72 320]
+# Create a SCIRun->FieldsData->ApplyInterpMatrix Module
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 79 255]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m2 0]
 set c2 [addConnection $m1 0 $m7 0]
-set c3 [addConnection $m2 0 $m9 0]
-set c4 [addConnection $m2 1 $m8 0]
-set c5 [addConnection $m9 0 $m3 0]
-set c6 [addConnection $m5 0 $m6 0]
-set c7 [addConnection $m3 0 $m4 0]
-set c8 [addConnection $m2 0 $m6 1]
-set c9 [addConnection $m7 1 $m8 1]
-set c10 [addConnection $m8 0 $m9 1]
-set c11 [addConnection $m6 0 $m3 1]
+set c3 [addConnection $m7 0 $m3 0]
+set c4 [addConnection $m5 0 $m6 0]
+set c5 [addConnection $m3 0 $m4 0]
+set c6 [addConnection $m2 0 $m7 1]
+set c7 [addConnection $m2 0 $m6 1]
+set c8 [addConnection $m6 0 $m3 1]
+set c9 [addConnection $m2 1 $m7 2]
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
 setGlobal $m1-filename {/scratch/callahan/SCIRunData/utahtorso-lowres/utahtorso-lowres-mesh.tvt.fld}
 
 # Setup GUI for the SCIRun->FieldsCreate->ClipByFunction Module
 setGlobal $m2-clipfunction {z > 350}
-$m2 initialize_ui
 
 # Setup GUI for the SCIRun->Visualization->ShowField Module
 setGlobal $m3-nodes-on {0}
@@ -182,11 +173,6 @@ setGlobal $m4-ViewWindow_0-unused {1}
 setGlobal $m6-min {1}
 setGlobal $m6-max {9}
 
-# Setup GUI for the SCIRun->FieldsData->ManageFieldData Module
-
-# Setup GUI for the SCIRun->Math->LinAlgBinary Module
-
-# Setup GUI for the SCIRun->FieldsData->ManageFieldData Module
-setGlobal $m9-preserve-scalar-type {1}
+# Setup GUI for the SCIRun->FieldsData->ApplyInterpMatrix Module
 
 ::netedit scheduleok

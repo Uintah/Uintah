@@ -17,53 +17,45 @@
 # University of Utah. All Rights Reserved.
 global Subnet
 set Subnet(Subnet$Subnet(Loading)_Name) {Main}
-set bbox {11 15 643 546}
+set bbox {26 15 541 466}
 
 # Create a SCIRun->DataIO->FieldReader Module
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 26 15]
 
 # Create a SCIRun->Render->Viewer Module
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 340 502]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 358 422]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 478 303]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 376 255]
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 382 154]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 321 135]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 371 35]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 338 18]
 
 # Create a SCIRun->FieldsCreate->ClipByFunction Module
-set m6 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 198 120]
+set m6 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 111 122]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 190 407]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 207 332]
 
-# Create a SCIRun->FieldsData->ManageFieldData Module
-set m8 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 11 135]
-
-# Create a SCIRun->Math->LinAlgBinary Module
-set m9 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 36 226]
-
-# Create a SCIRun->FieldsData->ManageFieldData Module
-set m10 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 235 330]
+# Create a SCIRun->FieldsData->ApplyInterpMatrix Module
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 93 237]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m6 0]
 set c2 [addConnection $m1 0 $m8 0]
-set c3 [addConnection $m6 0 $m10 0]
-set c4 [addConnection $m6 0 $m3 0]
-set c5 [addConnection $m6 1 $m9 0]
-set c6 [addConnection $m10 0 $m7 0]
-set c7 [addConnection $m5 0 $m4 0]
-set c8 [addConnection $m7 0 $m2 0]
-set c9 [addConnection $m1 0 $m4 1]
-set c10 [addConnection $m8 1 $m9 1]
-set c11 [addConnection $m9 0 $m10 1]
-set c12 [addConnection $m4 0 $m3 1]
-set c13 [addConnection $m4 0 $m7 1]
-set c14 [addConnection $m3 0 $m2 1]
+set c3 [addConnection $m6 0 $m3 0]
+set c4 [addConnection $m8 0 $m7 0]
+set c5 [addConnection $m5 0 $m4 0]
+set c6 [addConnection $m7 0 $m2 0]
+set c7 [addConnection $m1 0 $m4 1]
+set c8 [addConnection $m6 0 $m8 1]
+set c9 [addConnection $m4 0 $m3 1]
+set c10 [addConnection $m4 0 $m7 1]
+set c11 [addConnection $m3 0 $m2 1]
+set c12 [addConnection $m6 1 $m8 2]
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
 setGlobal $m1-filename {/scratch/callahan/SCIRunData/sphere/sphere-voltage.tvd.fld}
@@ -194,10 +186,6 @@ setGlobal $m7-edge_scale {0.0150}
 setGlobal $m7-scalars_scale {0.300}
 setGlobal $m7-show_progress {}
 
-# Setup GUI for the SCIRun->FieldsData->ManageFieldData Module
-
-# Setup GUI for the SCIRun->Math->LinAlgBinary Module
-
-# Setup GUI for the SCIRun->FieldsData->ManageFieldData Module
+# Setup GUI for the SCIRun->FieldsData->ApplyInterpMatrix Module
 
 ::netedit scheduleok
