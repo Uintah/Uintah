@@ -23,7 +23,6 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MeshPort.h>
 #include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Array1.h>
@@ -801,6 +800,10 @@ void BldEEGMesh::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 18:44:20  dahart
+// Replaced all instances of HashTable<class X, class Y> with the STL
+// map<class X, class Y>.  Removed all includes of HashTable.h
+//
 // Revision 1.5  2000/03/17 09:25:33  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
