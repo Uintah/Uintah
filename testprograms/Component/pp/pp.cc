@@ -35,6 +35,7 @@
 
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/Comm/Message.h>
 
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
@@ -111,6 +112,18 @@ int main(int argc, char* argv[])
 	sockf.close();
 	SpChannel *ssp=new SocketSpChannel();
 	ssp->openConnection(socks);
+	Message *msg=ssp->getMessage();
+	int testvalue=1999;
+	msg->marshalInt(&testvalue, 1);
+	cerr<<"sending Message"<<endl;
+	msg->sendMessage(0);
+	msg->destroyMessage();
+	
+	cerr<<"sending deleteReference Message"<<endl;
+	msg->createMessage();
+	msg->sendMessage(1);
+	msg->destroyMessage();
+
 
 	/*
 	ifstream f("pp.url");
