@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/MaterialSetP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
@@ -54,9 +55,12 @@ using std::pair;
       virtual ~DataArchiver();
 
       //////////
-      // Insert Documentation Here:
+      // Sets up when the DataArchiver will output and what data, according
+      // to params.  Also stores state to keep track of time and timesteps
+      // in the simulation.  (If you only need to use DataArchiver to copy 
+      // data, then you can pass a NULL SimulationState
       virtual void problemSetup(const ProblemSpecP& params,
-                                SimulationStateP& state);
+                                SimulationState* state);
 
       //////////
       // This function will set up the output for the simulation.  As part
@@ -213,6 +217,7 @@ using std::pair;
 
       string d_filebase;
       SimulationStateP d_sharedState;
+      double d_tempElapsedTime; // set in finalizeTimestep for output tasks
 
       // only one of these should be nonzero
       double d_outputInterval;
