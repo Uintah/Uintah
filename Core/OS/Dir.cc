@@ -62,28 +62,28 @@ Dir& Dir::operator=(const Dir& copy)
    return *this;
 }
 
-void Dir::remove()
+void Dir::remove(bool throwOnError)
 {
   int code = rmdir(name_.c_str());
-  if (code != 0)
+  if (code != 0 && throwOnError)
     throw ErrnoException("Dir::remove (rmdir call)", errno);
   return;
 }
 
-void Dir::forceRemove()
+void Dir::forceRemove(bool throwOnError)
 {
    int code = system((string("rm -f -r ") + name_).c_str());
-   if (code != 0)
-      throw InternalError(string("Dir::remove failed to remove: ") + name_);
+   if (code != 0 && throwOnError)
+     throw ErrnoException(string("Dir::remove failed to remove: ") + name_, errno);
    return;
 }
 
-void Dir::remove(const string& filename)
+void Dir::remove(const string& filename, bool throwOnError)
 {
    string filepath = name_ + "/" + filename;
    int code = system((string("rm -f ") + filepath).c_str());
-   if (code != 0)
-      throw InternalError(string("Dir::remove failed to remove: ") + filepath);
+   if (code != 0 && throwOnError)
+     throw ErrnoException(string("Dir::remove failed to remove: ") + filepath, errno);
    return;
 }
 
