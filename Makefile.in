@@ -27,6 +27,7 @@ Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
 # Actually include the module makefile fragments
 ALLSUBDIRS := . 
 include $(SRCTOP)/scripts/recurse.mk
+ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
@@ -86,15 +87,21 @@ $(SUBMAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
 	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
 
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ALLDEPENDS :=  $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+else
+  ALLDEPENDS := $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+endif
 
 clean::
-	rm -f $(patsubst %,%/*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
-	for fname in $(patsubst %,%/ii_files, $(ALLSUBDIRS)); \
+	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
-	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
 	rm -f $(LIBDIR)so_locations ./so_locations
+	rm -f $(ALLDEPENDS)
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
 	rm -f y.output
@@ -104,36 +111,36 @@ clean::
 distclean:: clean
 	rm -f config.status config.log config.cache
 	rm -f scripts/createTclIndex scripts/CC scripts/cc
-	rm -f $(patsubst %,%/Makefile, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
 	rm -f sci_config.h sci_defs.h stamp-
 
 cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
 
 cleanai::
-	rm -f $(patsubst %,%/[a-i]*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/[a-i]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLOBJSUBDIRS))
 cleanAI::
-	rm -f $(patsubst %,%/[A-I]*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/[A-I]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLOBJSUBDIRS))
 cleanjs::
-	rm -f $(patsubst %,%/[j-s]*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/[j-s]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLOBJSUBDIRS))
 cleanJS::
-	rm -f $(patsubst %,%/[J-S]*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/[J-S]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLOBJSUBDIRS))
 cleantz::
-	rm -f $(patsubst %,%/[t-z]*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/[t-z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLOBJSUBDIRS))
 cleanTZ::
-	rm -f $(patsubst %,%/[T-Z]*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/[T-Z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLOBJSUBDIRS))
 cleanrest::
-	rm -f $(patsubst %,%/*.o, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLSUBDIRS))
-	-rmdir $(patsubst %,%/ii_files, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLOBJSUBDIRS))
+	-rmdir $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
 	rm -f $(LIBDIR)so_locations
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
