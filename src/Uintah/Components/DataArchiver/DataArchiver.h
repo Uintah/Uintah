@@ -118,6 +118,7 @@ namespace Uintah {
       };
 
       void initSaveLabels(SchedulerP& sched);
+      void initCheckpoints(SchedulerP& sched);
 
       // helper for finalizeTimestep
       void outputTimestep(Dir& dir, std::vector<SaveItem>& saveLabels,
@@ -148,6 +149,7 @@ namespace Uintah {
       std::string d_lastTimestepLocation;
       bool d_wasOutputTimestep;
 
+      bool d_wereSavesAndCheckpointsInitialized;      
       // d_saveLabelNames is a temporary list containing VarLabel
       // names to be saved and the materials to save them for.  The
       // information will be basically transferred to d_saveLabels or
@@ -159,7 +161,6 @@ namespace Uintah {
 
       // d_checkpointLabelNames is a temporary list containing
       // the names of labels to save when checkpointing
-      std::list< std::string > d_checkpointLabelNames;
       std::vector< SaveItem > d_checkpointLabels;
       std::vector< SaveItem > d_checkpointReductionLabels;
       double d_checkpointInterval;
@@ -177,6 +178,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.14  2001/01/09 00:57:52  witzel
+// Automated checkpointing so you don't have to specify what variables you
+// want to save.
+//
 // Revision 1.13  2001/01/06 02:32:13  witzel
 // Added checkpoint/restart capabilities
 //
