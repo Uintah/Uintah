@@ -426,6 +426,7 @@
             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
+      </ICE>
 
       <exchange_properties> 
          <exchange_coefficients>
@@ -434,6 +435,7 @@
         </exchange_coefficients>
       </exchange_properties> 
     </MaterialProperties>
+    
     <!--____________________________________________________________________-->
     <!--      M O D E L S                                                   -->
     <!--____________________________________________________________________-->
