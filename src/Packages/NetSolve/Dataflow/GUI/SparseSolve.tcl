@@ -1,4 +1,4 @@
-itcl_class Netsolve_Matrix_SparseSolve {
+itcl_class NetSolve_Matrix_SparseSolve {
     
     inherit Module
     
