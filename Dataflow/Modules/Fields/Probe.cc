@@ -80,20 +80,20 @@ public:
 
 DECLARE_MAKER(Probe)
 
-Probe::Probe(GuiContext* ctx)
-  : Module("Probe", ctx, Source, "Fields", "SCIRun"),
-    widget_lock_("Probe widget lock"),
-    last_input_generation_(0),
-    gui_locx_(ctx->subVar("locx")),
-    gui_locy_(ctx->subVar("locy")),
-    gui_locz_(ctx->subVar("locz")),
-    gui_value_(ctx->subVar("value")),
-    gui_node_(ctx->subVar("node")),
-    gui_edge_(ctx->subVar("edge")),
-    gui_face_(ctx->subVar("face")),
-    gui_cell_(ctx->subVar("cell")),
-    gui_moveto_(ctx->subVar("moveto")),
-    widgetid_(0)
+  Probe::Probe(GuiContext* ctx)
+    : Module("Probe", ctx, Source, "Fields", "SCIRun"),
+      widget_lock_("Probe widget lock"),
+      last_input_generation_(0),
+      gui_locx_(ctx->subVar("locx")),
+      gui_locy_(ctx->subVar("locy")),
+      gui_locz_(ctx->subVar("locz")),
+      gui_value_(ctx->subVar("value")),
+      gui_node_(ctx->subVar("node")),
+      gui_edge_(ctx->subVar("edge")),
+      gui_face_(ctx->subVar("face")),
+      gui_cell_(ctx->subVar("cell")),
+      gui_moveto_(ctx->subVar("moveto")),
+      widgetid_(0)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
 }
@@ -163,13 +163,24 @@ Probe::execute()
     error("Unable to initialize " +name + "'s iport.");
     return;
   }
+  bool input_field_p = true;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
-    return;
+    input_field_p = false;
   }
 
   // Maybe update the widget.
-  const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
+  BBox bbox;
+  if (input_field_p)
+  {
+    bbox = ifieldhandle->mesh()->get_bounding_box();
+  }
+  else
+  {
+    bbox.extend(Point(-1.0, -1.0, -1.0));
+    bbox.extend(Point(1.0, 1.0, 1.0));
+  }
+
   if (!bbox_similar_to(last_bounds_, bbox))
   {
     Point bmin = bbox.min();
@@ -261,7 +272,7 @@ Probe::execute()
     widget_->SetPosition(center);
     moved_p = true;
   }
-  else if (moveto != "")
+  else if (moveto != "" && input_field_p)
   {
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     CompileInfoHandle ci = ProbeCenterAlgo::get_compile_info(mtd);
@@ -322,25 +333,36 @@ Probe::execute()
   PointCloudMesh::Node::index_type pcindex = mesh->add_point(location);
   FieldHandle ofield;
 
-  const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-  CompileInfoHandle ci = ProbeLocateAlgo::get_compile_info(mtd);
-  Handle<ProbeLocateAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
-
   string nodestr, edgestr, facestr, cellstr;
-  algo->execute(ifieldhandle->mesh(), location,
-		nodestr, edgestr, facestr, cellstr);
+  if (input_field_p)
+  {
+    const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
+    CompileInfoHandle ci = ProbeLocateAlgo::get_compile_info(mtd);
+    Handle<ProbeLocateAlgo> algo;
+    if (!module_dynamic_compile(ci, algo)) return;
 
-  gui_node_.set(nodestr);
-  gui_edge_.set(edgestr);
-  gui_face_.set(facestr);
-  gui_cell_.set(cellstr);
+    algo->execute(ifieldhandle->mesh(), location,
+		  nodestr, edgestr, facestr, cellstr);
+
+    gui_node_.set(nodestr);
+    gui_edge_.set(edgestr);
+    gui_face_.set(facestr);
+    gui_cell_.set(cellstr);
+  }
 
   std::ostringstream valstr;
   ScalarFieldInterface *sfi = 0;
   VectorFieldInterface *vfi = 0;
   TensorFieldInterface *tfi = 0;
-  if ((sfi = ifieldhandle->query_scalar_interface(this)))
+  if (!input_field_p)
+  {
+    valstr << 0;
+    PointCloudField<double> *field =
+      scinew PointCloudField<double>(mesh, Field::NODE);
+    field->set_value(0.0, pcindex);
+    ofield = field;
+  }
+  else if ((sfi = ifieldhandle->query_scalar_interface(this)))
   {
     double result;
     if (!sfi->interpolate(result, location))
@@ -391,33 +413,36 @@ Probe::execute()
   }
   ofp->send(ofield);
 
-  MatrixOPort *mp = (MatrixOPort *)get_oport("Element Index");
-  if (!mp)
+  if (input_field_p)
   {
-    error("Unable to initialize oport 'Element Index'.");
-    return;
+    MatrixOPort *mp = (MatrixOPort *)get_oport("Element Index");
+    if (!mp)
+    {
+      error("Unable to initialize oport 'Element Index'.");
+      return;
+    }
+    unsigned int index = 0;
+    switch (ifieldhandle->data_at())
+    {
+    case Field::NODE:
+      index = atoi(nodestr.c_str());
+      break;
+    case Field::EDGE:
+      index = atoi(edgestr.c_str());
+      break;
+    case Field::FACE:
+      index = atoi(facestr.c_str());
+      break;
+    case Field::CELL:
+      index = atoi(cellstr.c_str());
+      break;
+    case Field::NONE:
+      break;
+    }
+    MatrixHandle cm = scinew ColumnMatrix(1);
+    cm->get(0, 0) = (double)index;
+    mp->send(cm);
   }
-  unsigned int index = 0;
-  switch (ifieldhandle->data_at())
-  {
-  case Field::NODE:
-    index = atoi(nodestr.c_str());
-    break;
-  case Field::EDGE:
-    index = atoi(edgestr.c_str());
-    break;
-  case Field::FACE:
-    index = atoi(facestr.c_str());
-    break;
-  case Field::CELL:
-    index = atoi(cellstr.c_str());
-    break;
-  case Field::NONE:
-    break;
-  }
-  MatrixHandle cm = scinew ColumnMatrix(1);
-  cm->get(0, 0) = (double)index;
-  mp->send(cm);
 }
 
 
