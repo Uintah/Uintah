@@ -75,8 +75,6 @@ public:
     
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time) = 0;
-  virtual void draw() = 0;
-  virtual void draw_wireframe() = 0;
 #endif
   
   virtual GeomObj* clone() = 0;

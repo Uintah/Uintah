@@ -134,14 +134,14 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
   if(di->get_drawtype() == DrawInfoOpenGL::WireFrame ) {
     draw_wireframe();
   } else {
-    draw();
+    draw_volume();
   }
   di_ = 0;
   mutex_.unlock();
 }
 
 void
-VolumeRenderer::draw()
+VolumeRenderer::draw_volume()
 {
 #ifdef HAVE_AVR_SUPPORT
   tex_->lock_bricks();

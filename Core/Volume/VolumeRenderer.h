@@ -74,7 +74,7 @@ protected:
   bool adaptive_;
 
 #ifdef SCI_OPENGL
-  virtual void draw();
+  virtual void draw_volume();
   virtual void draw_wireframe();
 #endif
 };
