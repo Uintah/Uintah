@@ -2,11 +2,10 @@
 #ifndef UINTAH_HOMEBREW_CellIterator_H
 #define UINTAH_HOMEBREW_CellIterator_H
 
-#include <Packages/Uintah/Core/Grid/Array3Index.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
+  using SCIRun::IntVector;
 
 /**************************************
 

@@ -1,31 +1,25 @@
 #ifndef UINTAH_HOMEBREW_Patch_H
 #define UINTAH_HOMEBREW_Patch_H
 
-#include <Packages/Uintah/Core/Grid/SubPatch.h>
-#include <Packages/Uintah/Core/Grid/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
 
 #include <string>
 #include <iosfwd>
-#include <stdio.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
-using std::string;
+  using std::string;
    
-class NodeIterator;
-class CellIterator;
+  class NodeIterator;
+  class CellIterator;
+  class BCData;
    
 /**************************************
       
@@ -204,14 +198,7 @@ WARNING
      IntVector getGhostSFCZLowIndex(const int numGC) const;
      IntVector getGhostSFCZHighIndex(const int numGC) const;
      
-     inline Box getBox() const {
-	return d_level->getBox(d_lowIndex, d_highIndex);
-     }
-     
-     inline IntVector getNFaces() const {
-       // NOT CORRECT
-       return IntVector(0,0,0);
-     }
+     Box getBox() const;
      
      inline IntVector getNNodes() const {
        return getNodeHighIndex()-getNodeLowIndex();

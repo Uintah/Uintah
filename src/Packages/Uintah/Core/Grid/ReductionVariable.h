@@ -7,13 +7,19 @@
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ErrnoException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
 
-#include <iosfwd>
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <dom/DOM_Element.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
+
 #include <iostream>
-#include <errno.h>
 
 namespace Uintah {
 

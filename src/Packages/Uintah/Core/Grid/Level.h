@@ -2,23 +2,22 @@
 #define UINTAH_GRID_LEVEL_H
 
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
-#include <string>
 #include <vector>
 
 #define SELECT_RANGETREE
+
+namespace SCIRun {
+  class BBox;
+}
 
 namespace Uintah {
 
@@ -27,10 +26,10 @@ class PatchRangeTree;
 #endif
   
 using namespace SCIRun;
-
   class BoundCondBase;
-class Patch;
-class Task;
+  class Box;
+  class Patch;
+  class Task;
    
 /**************************************
 

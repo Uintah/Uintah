@@ -2,16 +2,19 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/SubPatch.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Math/Primes.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/AtomicCounter.h>
+#include <Core/Math/MiscMath.h>
 
 #include <values.h>
 #include <iostream>
 #include <sstream>
+#include <map>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -893,3 +896,8 @@ bool Patch::getLayoutHint(IntVector& pos) const
   return have_layout;
 }
 
+
+Box Patch::getBox() const
+{
+  return d_level->getBox(d_lowIndex, d_highIndex);
+}

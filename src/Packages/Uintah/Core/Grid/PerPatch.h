@@ -6,6 +6,7 @@
 #include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
+  class TypeDescription;
 /**************************************
 
 CLASS

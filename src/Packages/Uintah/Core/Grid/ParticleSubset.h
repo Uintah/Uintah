@@ -4,11 +4,11 @@
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
 
 #include <vector>
 
 namespace Uintah {
+  class Patch;
 /**************************************
 
 CLASS
