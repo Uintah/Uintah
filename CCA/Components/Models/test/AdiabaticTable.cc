@@ -223,9 +223,10 @@ if (!oldStyleAdvect.active()){
       
       d_probePts.push_back(location);
       d_probePtsNames.push_back(name);
-      d_usingProbePts = false;
     }
-  } 
+  } else {
+    d_usingProbePts = false;
+  }
 }
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
