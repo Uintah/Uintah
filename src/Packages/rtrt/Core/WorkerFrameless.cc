@@ -1,7 +1,7 @@
 
 void Worker::fill_frameless_work(Array1<int>& xpos, Array1<int>& ypos,
                                  int xres, int yres, int& nwork) {
-  int np = scene->get_rtrt_engine()->np;
+  int np = scene->get_rtrt_engine()->rtrt_nworkers();
   int clusterSize = scene->get_rtrt_engine()->clusterSize;
   int numChunks = scene->get_rtrt_engine()->NUMCHUNKS;
 
@@ -235,12 +235,6 @@ void Worker::fill_frameless_work(Array1<int>& xpos, Array1<int>& ypos,
 
 
 void Worker::renderFrameless() {
-  // Convience aliases
-  int np = scene->get_rtrt_engine()->np;
-
-  // you just need 1 for this...
-  int showing_scene=0; 
-    
   Camera rcamera;
   Camera *camera = &rcamera; // keep a copy...
     
@@ -353,6 +347,22 @@ void Worker::renderFrameless() {
         io_lock_.unlock();
         return;
       }
+
+      // Redistribute the work allocations
+      fill_frameless_work(xpos, ypos, xres, yres, nwork);
+      
+      camerareload = (int)(nwork*scene->get_rtrt_engine()->updatePercent);
+      cameracounter = (int)(camerareload - drand48()*camerareload); // random
+      
+      lastC.resize(xpos.size());
+      lastCa.resize(xpos.size());
+      lastCb.resize(xpos.size());
+      lastCc.resize(xpos.size());
+      lastCd.resize(xpos.size());
+      lastCs.resize(xpos.size());
+      jitterMask.resize(xpos.size());
+      for(int ii=0;ii<jitterMask.size();ii++)
+        jitterMask[ii] = (int)(drand48()*100.0);
     }
       
     iteration++;
