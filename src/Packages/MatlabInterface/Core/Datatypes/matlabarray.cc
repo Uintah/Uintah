@@ -645,6 +645,8 @@ void matlabarray::createdensearray(std::vector<long> &dims,mitype type)
     m_->ref_ = 1;
     m_->class_ = mlDENSE;
     m_->type_ = type; 
+    m_->flags_ = 0;
+
     setdims(dims);
     
     // the numeric data can be inserted later
@@ -662,6 +664,8 @@ void matlabarray::createdensearray(long m,long n,mitype type)
     m_->ref_ = 1;
     m_->class_ = mlDENSE;
     m_->type_ = type; 
+    m_->flags_ = 0;
+
     setdims(dims);
     
     // the numeric data can be inserted later
@@ -675,6 +679,8 @@ void matlabarray::createsparsearray(std::vector<long> &dims,mitype type)
     m_->ref_ = 1;
     m_->class_ = mlSPARSE;
     m_->type_ = type;  // need to add some type checking here
+    m_->flags_ = 0;
+
     setdims(dims);
     
     // actual data can be added lateron
@@ -690,6 +696,8 @@ void matlabarray::createsparsearray(long m,long n,mitype type)
     m_->ref_ = 1;
     m_->class_ = mlSPARSE;
     m_->type_ = type;  // need to add some type checking here
+    m_->flags_ = 0;
+
     setdims(dims);
     
     // actual data can be added lateron
@@ -705,6 +713,8 @@ void matlabarray::createcellarray(std::vector<long> &dims)
     m_->ref_ = 1;
     m_->class_ = mlCELL;
     m_->type_ = miMATRIX;  // need to add some type checking here
+    m_->flags_ = 0;
+
     setdims(dims);
 	
 	m_->subarray_.clear();
@@ -727,6 +737,8 @@ void matlabarray::createstructarray(std::vector<long> &dims,std::vector<std::str
 	m_->ref_ = 1;
     m_->class_ = mlSTRUCT;
     m_->type_ = miMATRIX;  // need to add some type checking here
+    m_->flags_ = 0;
+
     setdims(dims);
     m_->fieldnames_ = fieldnames;
 	m_->subarray_.clear();
@@ -741,6 +753,7 @@ void matlabarray::createstructarray()
 	m_->ref_ = 1;
     m_->class_ = mlSTRUCT;
     m_->type_ = miMATRIX;  // need to add some type checking here
+    m_->flags_ = 0;
 	
 	std::vector<long> dims(2);
 	dims[0] = 1;
@@ -769,6 +782,7 @@ void matlabarray::createclassarray(std::vector<long> &dims,std::vector<std::stri
 	m_->ref_ = 1;
     m_->class_ = mlOBJECT;
     m_->type_ = miMATRIX;  // need to add some type checking here
+    m_->flags_ = 0;
     setdims(dims);
     m_->classname_ = classname;
     m_->fieldnames_ = fieldnames;
@@ -790,7 +804,8 @@ void matlabarray::createstringarray(std::string str)
     m_->ref_ = 1;
     m_->class_ = mlSTRING; 
     m_->type_ = miUINT8;
-    
+    m_->flags_ = 0;
+	
 	setstring(str);
 } 
         

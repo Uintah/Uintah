@@ -273,6 +273,8 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
       return(1);			
     } 
     break;
+	default:
+	break;
   }
   postmsg(module,std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (matrix is not struct, dense or sparse array)"));
   return (0);
@@ -510,13 +512,13 @@ bool matlabconverter::isvalidmatrixname(std::string name)
   bool valid = true;
   bool foundchar = false;
 
-  for (long p=0; p < name.size(); p++)
+  for (long p=0; p < static_cast<long>(name.size()); p++)
   {
     if (p == 0)
     {   
       // A variable name is not allowed to start with a number
       foundchar = false;
-      for (long q = 0; q < validstartchar.size(); q++) 
+      for (long q = 0; q < static_cast<long>(validstartchar.size()); q++) 
       {
 	if (name[p] == validstartchar[q]) { foundchar = true; break; }
       }
@@ -524,7 +526,7 @@ bool matlabconverter::isvalidmatrixname(std::string name)
     else
     {
       foundchar = false;
-      for (long q = 0; q < validchar.size(); q++) 
+      for (long q = 0; q < static_cast<long>(validchar.size()); q++) 
       {
 	if (name[p] == validchar[q]) { foundchar = true; break; }
       }
@@ -1386,7 +1388,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     {
       std::vector<long> dims = fs.scalarfield.getdims();
       // dimensions need to be one bigger
-      for (long p = 0; p<dims.size(); p++) dims[p] = dims[p]+1;
+      for (long p = 0; p<static_cast<long>(dims.size()); p++) dims[p] = dims[p]+1;
       fs.dims.createlongvector(dims);
     }
   }
@@ -2005,7 +2007,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
     {
       std::vector<long> dims;
       fs.dims.getnumericarray(dims);
-      for (long p = 0; p<dims.size(); p++) dims[p] = dims[p]+1;
+      for (long p = 0; p<static_cast<long>(dims.size()); p++) dims[p] = dims[p]+1;
       fs.dims.setnumericarray(dims);
     }
   }
@@ -2826,8 +2828,7 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMes
   for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
   meshH = new SCIRun::StructQuadSurfMesh;
-  long numnodes =fs.x.getnumelements();
-	
+ 	
   std::vector<double> X;
   std::vector<double> Y;
   std::vector<double> Z;
@@ -2860,7 +2861,6 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh>
   for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
   meshH = new SCIRun::StructHexVolMesh;
-  long numnodes =fs.x.getnumelements();
 	
   std::vector<double> X;
   std::vector<double> Y;
@@ -3268,7 +3268,6 @@ bool mladdfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray)
   dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
 		
-  unsigned int size = fdata.size();
   unsigned int p,q,r;
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
@@ -3302,7 +3301,6 @@ bool mladdfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray)
   dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
 		
-  unsigned int size = fdata.size();
   unsigned int p,q,r,s;
 
   unsigned int dim1 = fdata.dim1();
@@ -3346,7 +3344,6 @@ bool mladdfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray)
   dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
 		
-  unsigned int size = fdata.size();
   unsigned int p,q,r;
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
@@ -3387,7 +3384,6 @@ bool mladdfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray)
   dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
 		
-  unsigned int size = fdata.size();
   unsigned int p,q,r,s;
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();

@@ -175,21 +175,47 @@ matlabfile::mxtype matlabfile::convertclass(matlabfile::mlclass mclass,matlabfil
 void matlabfile::exportmatlabarray(matlabarray &matrix)
 {
 	matfiledata matrixheader;
-	matrixheader.type(miMATRIX);
-	
-	writedat(matrixheader);
-	if (matrix.isempty()) 
-	{   // in case of an empty matrix goto the next one
-		nexttag();
-		return;
-	}
-	
 	matfiledata matrixclass;
 	matfiledata matrixdims;
 	matfiledata matrixname;
 	
-	mxtype   mtype = convertclass(matrix.getclass(),matrix.gettype());
+	matrixheader.type(miMATRIX);
+	writedat(matrixheader);
+
 	std::vector<unsigned long> classinfo(2);
+	
+	if (matrix.isempty()) 
+	{   // in case of an empty matrix goto the next one
+		
+		// Write an empty matrix if no data was given
+		nexttag();
+		mxtype   m =mxDOUBLE;
+		classinfo[0] = m;
+		classinfo[1] = 0;
+			
+		matrixclass.putandcastvector(classinfo,miUINT32);
+		std::vector<long> mdims(2);
+		mdims[0] = 0; mdims[1] = 0;
+		matrixdims.putandcastvector(mdims,miINT32);
+		matrixname.putstring("");
+		
+		openchild();
+		writedat(matrixclass);
+		nexttag();
+		writedat(matrixdims);
+		nexttag();
+		writedat(matrixname);
+		nexttag();
+		
+		matfiledata mpreal;
+		writedat(mpreal);
+		closechild();
+		return;
+		
+		
+	}
+	
+	mxtype   mtype = convertclass(matrix.getclass(),matrix.gettype());
 	
 	classinfo[0] |= mtype;
 	if (matrix.islogical()) classinfo[0] |= 0x0200;
