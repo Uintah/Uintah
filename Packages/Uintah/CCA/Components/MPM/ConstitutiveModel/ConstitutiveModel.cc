@@ -69,25 +69,6 @@ ConstitutiveModel::addInitialComputesAndRequiresWithErosion(Task* task,
 }
 
 //////////
-// Initialize CM data with erosion 
-void 
-ConstitutiveModel::initializeCMDataWithErosion(const Patch* patch,
-			     const MPMMaterial* matl,
-			     DataWarehouse* new_dw)
-{
-  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(),
-						   patch);
-  ParticleVariable<double> pErosion;
-  new_dw->allocateAndPut(pErosion, lb->pErosionLabel, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-    pErosion[*iter] = 1.0;
-  }
-
-  initializeCMData(patch, matl, new_dw);
-}
-
-//////////
 // Computes and requires with erosion
 void 
 ConstitutiveModel::addComputesAndRequiresWithErosion(Task* task,

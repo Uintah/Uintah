@@ -12,6 +12,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/Crack/Crack.h>//for Fracture
+#include <Packages/Uintah/Core/Grid/ParticleSet.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 
 namespace Uintah {
 
@@ -126,6 +128,14 @@ private:
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
+
+  //////////
+  // Initialize particle data with a default values using 
+  // a temporary variable
+  void setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
+                                  ParticleSubset* pset,
+                                  DataWarehouse* new_dw,
+                                  double val);
 
   void scheduleInitializePressureBCs(const LevelP& level,
 				     SchedulerP&);
