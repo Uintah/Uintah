@@ -37,6 +37,8 @@
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/ImageField.h>
+#include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/DispatchScalar1.h>

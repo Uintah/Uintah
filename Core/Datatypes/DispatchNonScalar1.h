@@ -44,6 +44,42 @@
         disp_error = true; disp_msg = "LatticeVol<Tensor>::get_type_name is broken";\
       }\
     }\
+  } else if (disp_name == "TriSurf") {\
+    if (field1->get_type_name(1) == "Vector") {\
+      TriSurf<Vector> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<Vector>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<Vector>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "Tensor") {\
+      TriSurf<Tensor> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<Tensor>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<Tensor>::get_type_name is broken";\
+      }\
+    }\
+  } else if (disp_name == "ImageField") {\
+    if (field1->get_type_name(1) == "Vector") {\
+      ImageField<Vector> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<Vector>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<Vector>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "Tensor") {\
+      ImageField<Tensor> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<Tensor>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<Tensor>::get_type_name is broken";\
+      }\
+    }\
   } else if (disp_name == "ContourField") {\
     if (field1->get_type_name(1) == "Vector") {\
       ContourField<Vector> *f1 = 0;\
@@ -62,22 +98,22 @@
         disp_error = true; disp_msg = "ContourField<Tensor>::get_type_name is broken";\
       }\
     }\
-  } else if (disp_name == "TriSurf") {\
+  } else if (disp_name == "ScanlineField") {\
     if (field1->get_type_name(1) == "Vector") {\
-      TriSurf<Vector> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<Vector>*>(field1.get_rep());\
+      ScanlineField<Vector> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<Vector>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<Vector>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<Vector>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "Tensor") {\
-      TriSurf<Tensor> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<Tensor>*>(field1.get_rep());\
+      ScanlineField<Tensor> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<Tensor>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<Tensor>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<Tensor>::get_type_name is broken";\
       }\
     }\
   } else if (disp_name == "PointCloud") {\
