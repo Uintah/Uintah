@@ -74,8 +74,11 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
   else
     tex_index = sphere_index;
 
-  if (tex_index >= ntextures) {
-    // bad index
+  if (tex_index==-1) {
+    // Solid black texture
+    result=Color(0, 0, 0);
+  } else if (tex_index >= ntextures) {
+    // Bad index
     result = Color(1,0,1);
     return;
   }
