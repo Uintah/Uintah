@@ -2113,6 +2113,9 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   params->getWithDefault("Flow_rate", flowRate,0.0);
   params->getWithDefault("InletVelocity", inletVel,0.0);
   params->require("TurblengthScale", turb_lengthScale);
+  // This parameter only needs to be set for fuel inlets for which
+  // mixture fraction > 0, if there is an air inlet, and air has some CO2,
+  // this air CO2 will be counted in the balance automatically
   params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
@@ -4215,7 +4218,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	if ((co2out_inlet > 0.0)&&(doing_carbon_balance))
 		throw InvalidValue("CO2 comming out of inlet");
 
-	// Count CO2 comming trough the air inlet
+	// Count CO2 comming through the air inlet
 	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
 	if (scalarValue == 0.0)
 	  co2IN += co2in_inlet;
@@ -4503,7 +4506,9 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       CO2FlowRate = sum_CO2FlowRate;
       for (int indx = 0; indx < d_numInlets; indx++) {
 	FlowInlet fi = d_flowInlets[indx];
-	totalCarbonFlowRate += fi.flowRate * fi.fcr;
+	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
+	if (scalarValue > 0.0)
+	  totalCarbonFlowRate += fi.flowRate * fi.fcr;
       }
       if (totalCarbonFlowRate > 0.0)
 	carbonEfficiency = CO2FlowRate * 12.0/28.0 /totalCarbonFlowRate;
