@@ -72,8 +72,7 @@ NrrdData::NrrdData(LockingHandle<Datatype> data_owner) :
 
 
 NrrdData::NrrdData(const NrrdData &copy) :
-  data_owner_(0),
-  nrrd_fname_(copy.nrrd_fname_)
+  data_owner_(0)
 {
   nrrd = nrrdNew();
   nrrdCopy(nrrd, copy.nrrd);
@@ -121,7 +120,7 @@ NrrdData::in_name_set(const string &s) const
 }
 
 
-#define NRRDDATA_VERSION 5
+#define NRRDDATA_VERSION 6
 
 //////////
 // PIO for NrrdData objects
@@ -166,13 +165,17 @@ void NrrdData::io(Piostream& stream)
       // errors are reported
       // Functions have been added to supply a filename for external
       // nrrds 
-		
-      Pio(stream, nrrd_fname_);
-      if (nrrdLoad(nrrd = nrrdNew(), nrrd_fname_.c_str(), 0)) 
+      string::size_type e = stream.file_name.rfind('.');
+      //remove the .nd
+      string nrrd_fname = stream.file_name.substr(0, e) + string(".nrrd");
+      if (version < 6) {
+	Pio(stream, nrrd_fname);
+      }
+      if (nrrdLoad(nrrd = nrrdNew(), nrrd_fname.c_str(), 0)) 
       {
 	// Need to upgade error reporting
 	char *err = biffGet(NRRD);
-	cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << endl;
+	cerr << "Error reading nrrd " << nrrd_fname << ": " << err << endl;
 	free(err);
 	biffDone(NRRD);
 	return;
@@ -384,9 +387,11 @@ void NrrdData::io(Piostream& stream)
     // the nrrd file name will just append .nrrd
   
     if ((version < 4)||(!embed_object_))
-    {    
-      nrrd_fname_ = stream.file_name + string(".nrrd");
-      Pio(stream, nrrd_fname_);
+    { 
+      
+      string::size_type e = stream.file_name.rfind('.');
+      //remove the .nd
+      string nrrd_fname = stream.file_name.substr(0, e) + string(".nrrd");
       NrrdIoState *no = 0;
       TextPiostream *text = dynamic_cast<TextPiostream*>(&stream);
       if (text)
@@ -394,10 +399,10 @@ void NrrdData::io(Piostream& stream)
 	no = nrrdIoStateNew();
 	no->encoding = nrrdEncodingAscii;
       } 
-      if (nrrdSave(nrrd_fname_.c_str(), nrrd, no))
+      if (nrrdSave(nrrd_fname.c_str(), nrrd, no))
       {
 	char *err = biffGet(NRRD);      
-	cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << endl;
+	cerr << "Error writing nrrd " << nrrd_fname << ": "<< err << endl;
 	free(err);
 	biffDone(NRRD);
 	return;
