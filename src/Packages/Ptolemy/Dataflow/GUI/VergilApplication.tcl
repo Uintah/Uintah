@@ -11,18 +11,20 @@ itcl_class Ptolemy_Vergil_VergilApplication {
   }
 
   method set_defaults {} {
-    global $this-types
+    ##global $this-types
     global $this-filename
-    global $this-filetype
+    ##global $this-filetype
 
     set $this-filename ""
+    ##set $this-filetype ""
   }
 
   method ui {} {
+    global $this-filename
     set w .ui[modname]
 
     if {[winfo exists $w]} {
-	return
+      return
     }
 
     toplevel $w -class TkFDialog
@@ -39,24 +41,24 @@ itcl_class Ptolemy_Vergil_VergilApplication {
 
     # file types to appers in filter box
     set types {
-	{{Ptolemy Module}  {.xml} }
-	{{All Files}       {.*}   }
+      {{Ptolemy Module}  {.xml} }
+      {{All Files}       {.*}   }
     }
 
     ######################################################
-	
+    
     makeOpenFilebox \
-	    -parent $w \
-	    -filevar $this-filename \
-	    -setcmd "wm withdraw $w" \
-	    -command "$this-c needexecute; wm withdraw $w" \
-	    -cancel "wm withdraw $w" \
-	    -title $title \
-	    -filetypes $types \
-	    -initialdir $initdir \
-	    -defaultextension $defext
+        -parent $w \
+        -filevar $this-filename \
+        -setcmd "wm withdraw $w" \
+        -command "$this-c needexecute; wm withdraw $w" \
+        -cancel "wm withdraw $w" \
+        -title $title \
+        -filetypes $types \
+        -initialdir $initdir \
+        -defaultextension $defext
 
-    moveToCursor $w	
+    moveToCursor $w 
   }
 }
 
