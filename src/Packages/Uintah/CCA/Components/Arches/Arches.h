@@ -227,8 +227,6 @@ private:
 
 }; // end class Arches
 
-const int Arches::NDIM = 3;
-
 } // End namespace Uintah
 
 #endif
