@@ -24,13 +24,78 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>The module changes/recreates right-hand side (RHS) for Finite
+    Elements discretization approach due to source current dipoles</summary>
     <description>
-      <p>Version Date: May 1999</p><p>Version: 1.0</p>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <p>The module has the following behaviour:</p>
+      <orderedlist>
+	<listitem>
+	  <p>When the module doesn't find ColumnMatrix on its imput
+	  containing RHS to modify or the ColumnMatrix found is of
+	  size different than the number of nodes in the mesh, it creates new ColumnMatrix and
+	  fills it in correspondence with supplied mesh and dipole parameters</p>
+	</listitem>
+	<listitem>
+	  <p>The supplied mesh is assumed to be of type TetVol(int)
+	  containing indices to conductivity tensor lookup
+	  table. Further requirements to the supplied mesh are
+	  described in documentation to BioPSE::Forward::SetupFEMatrix module</p>
+	</listitem>
+	<listitem>
+	  <p>Dipoles are represented as nodes in TetVolMesh. The
+	  corresponding value are vectors representing dipole
+	  moments. So the module expects dipoles as TetVol(Vector) field</p>
+	</listitem>
+      </orderedlist>
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Mesh</name>
+	<description>
+	  <p>Takes handle to the field containing condictivity mesh</p>
+	</description>
+	<datatype>TetVol(int)</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Dipole Sources</name>
+	<description>
+	  <p>Takes handle to the field containing dipole positions and
+	  their moment values</p>
+	</description>
+	<datatype>TetVol(Vector)</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Input RHS</name>
+	<description>
+	  <p>Takes handle to the matrix containing RHS for FE
+	  discretization obtained from SetupFEMatrix</p>
+	</description>
+	<datatype>ColumnMatrix</datatype>
+	<componentname>SetupFEMatrix</componentname>
+	<componentname>MatrixReader</componentname>
+      </port>
+    </inputs>
+
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Output RHS</name>
+	<description>
+	  <p>Sends handle to Matrix containing dipole terms to downstream modules</p>
+	</description>
+	<datatype>ColumnMatrix</datatype>
+	<componentname>SolveMatrix</componentname>
+	<componentname>MatrixWriter</componentname>
+      </port>
+    </outputs>
   </io>
+  
   <testing>
   </testing>
 </component>
