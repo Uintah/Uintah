@@ -28,20 +28,12 @@
 #    Created January 5, 1999
 ########################################
 
-itcl_class ParticleGridVisControl { 
+itcl_class Uintah_MPMViz_ParticleGridVisControl { 
     inherit Module 
 
     protected sf ""
     protected vf ""
     protected pf ""
-
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
 
     constructor {config} { 
         set name ParticleGridVisControl 

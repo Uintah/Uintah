@@ -1,4 +1,4 @@
-itcl_class TecplotFileSelector { 
+itcl_class Uintah_MPMViz_TecplotFileSelector { 
 
     inherit Module 
     
@@ -10,14 +10,6 @@ itcl_class TecplotFileSelector {
         set_defaults
     } 
   
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
-
     method filedir { filebase } {
 	set n [string last "/" "$filebase"]
 	if { $n != -1} {
