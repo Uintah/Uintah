@@ -101,6 +101,7 @@ public:
 		      DataWarehouseP&,
 		      DataWarehouseP&);
 
+   // computeFaceCenteredPressure
    void actuallyStep3(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP&,
@@ -380,6 +381,9 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.28  2000/10/16 20:31:00  guilkey
+// Step3 added
+//
 // Revision 1.27  2000/10/16 19:10:34  guilkey
 // Combined step1e with step2 and eliminated step1e.
 //
