@@ -705,8 +705,10 @@ public:
 
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
-	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
+	IntVector ec = params->getSolveOnExtraCells() ?
+	  IntVector(0,0,0) : -level->getExtraCells();
+	IntVector l = patch->getLowIndex(basis, ec);
+	IntVector h = patch->getHighIndex(basis, ec);
 	CellIterator iter(l, h);
 
 	IntVector ll(l);
@@ -745,8 +747,10 @@ public:
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
-	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
+	IntVector ec = params->getSolveOnExtraCells() ?
+	  IntVector(0,0,0) : -level->getExtraCells();
+	IntVector l = patch->getLowIndex(basis, ec);
+	IntVector h = patch->getHighIndex(basis, ec);
 	CellIterator iter(l, h);
 
 	// Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
@@ -858,8 +862,10 @@ public:
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
-	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
+	IntVector ec = params->getSolveOnExtraCells() ?
+	  IntVector(0,0,0) : -level->getExtraCells();
+	IntVector l = patch->getLowIndex(basis, ec);
+	IntVector h = patch->getHighIndex(basis, ec);
 	CellIterator iter(l, h);
 
 	sum_vartype dnew, dold;
@@ -899,8 +905,10 @@ public:
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis,  IntVector(0,0,0));
-	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
+	IntVector ec = params->getSolveOnExtraCells() ?
+	  IntVector(0,0,0) : -level->getExtraCells();
+	IntVector l = patch->getLowIndex(basis, ec);
+	IntVector h = patch->getHighIndex(basis, ec);
 	CellIterator iter(l, h);
 
 	typename Types::sol_type R, Xnew, diagonal;
@@ -1159,8 +1167,10 @@ public:
 	  int matl = matls->get(m);
 	  typedef typename Types::sol_type sol_type;
 	  Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	  IntVector l = patch->getLowIndex(basis,  IntVector(0,0,0));
-	  IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
+	  IntVector ec = params->getSolveOnExtraCells() ?
+	    IntVector(0,0,0) : -level->getExtraCells();
+	  IntVector l = patch->getLowIndex(basis, ec);
+	  IntVector h = patch->getHighIndex(basis, ec);
 	  CellIterator iter(l, h);
 
 	  typename Types::sol_type Xnew;
