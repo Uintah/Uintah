@@ -1594,7 +1594,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
          << "\t\t ICE" << endl;
     double    converg_coeff = 15;              
     double    convergence_crit = converg_coeff * DBL_EPSILON;
-    double    sum, tmp;
+    double    sum=0., tmp;
 
     int       numMatls = d_sharedState->getNumICEMatls();
     static int n_passes;                  
@@ -2889,7 +2889,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl        = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       indx = matl->getDWIndex();
 
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,gac,2);
@@ -2931,7 +2930,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         include_term = 1.0;
         // This multiplies terms that are only included in the ice_matls
       }
-      if(mpm_matl){
+      else{
         include_term = 0.0;
       }
       
