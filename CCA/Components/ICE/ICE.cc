@@ -1362,7 +1362,6 @@ cout << "Works after setBCJohn zeroNeumann" << endl;
       setBCJohn(vel_CC[m],        "Velocity",     patch, indx); 
 #else
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
-       cout << "Works after setBCJohn Velocity" << endl;
 #endif
      
       
