@@ -5,10 +5,14 @@
 
 SRCDIR   := Uintah/Components/MPM/Fracture
 
-SRCS     += $(SRCDIR)/Fracture.cc
+SRCS     += $(SRCDIR)/Fracture.cc \
+	$(SRCDIR)/FractureFactory.cc
 
 #
 # $Log$
+# Revision 1.3  2000/05/10 17:21:46  tan
+# Added FractureFactory.cc.
+#
 # Revision 1.2  2000/05/05 00:05:50  tan
 # Added Fracture.cc.
 #
