@@ -45,6 +45,7 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 #undef IDEAL_GAS
 //#define FAKE_BURN_MODEL
 #undef FAKE_BURN_MODEL
+
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -602,7 +603,6 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
 //______________________________________________________________________
 //       A C T U A L   S T E P S :
 //______________________________________________________________________
-//
 void MPMICE::actuallyInitialize(const ProcessorGroup*, 
                             const PatchSubset* patches,
                             const MaterialSubset* ,
@@ -1561,8 +1561,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
          tmp = dp_drho[m] + dp_de[m] * 
            (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
-
-         speedSound_new[m][c] = sqrt(tmp);
         } 
 
         if(mpm_matl){                //  M P M
@@ -1573,8 +1571,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           mpm_matl->getConstitutiveModel()->
             computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                               dp_drho[m], tmp,mpm_matl);
-           speedSound_new[m][c] = sqrt(tmp);
-
   #endif
           mat_volume[m] = mat_vol[m][c];
 
@@ -1590,20 +1586,20 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
           tmp = dp_drho[m] + dp_de[m] *
             (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
-            
-          speedSound_new[m][c] = sqrt(tmp);
-  #endif
-        }              
+  #endif   
+        }
+/*`==========TESTING==========*/
+    //  speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
+        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
+/*==========TESTING==========`*/        
         total_mat_vol += mat_volume[m];
-       }
+      }  // numAllMatls loop
 
-       for (int m = 0; m < numALLMatls; m++) {
-         vol_frac[m][c] = mat_volume[m]/total_mat_vol;
-         rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
-       }
+      for (int m = 0; m < numALLMatls; m++) {
+        vol_frac[m][c] = mat_volume[m]/total_mat_vol;
+        rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
+      }
     }  // cell iterator
-
-
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  {
         char description[50];
@@ -1752,7 +1748,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                       (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
   #endif
          }
-         speedSound_new[m][c] = sqrt(tmp);
+/*`==========TESTING==========*/
+     //  speedSound_new[m][c] = sqrt(tmp)/gamma[m];// Isothermal speed of sound  
+         speedSound_new[m][c] = sqrt(tmp);         // Isentropic speed of sound  
+/*==========TESTING==========`*/
        }
        //__________________________________
        // - Test for convergence 
@@ -1874,7 +1873,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          d_ice->printData( patch,1,description, "rho_micro_CC",rho_micro[m]);
          d_ice->printData( patch,1,description, "vol_frac_CC", vol_frac[m]);
       }
-     #endif
+    #endif
     }
   }  //patches
 }
@@ -2243,4 +2242,4 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 //______________________________________________________________________
 //  Bring all the rate form code here
 
-#include "MPMICERF.cc"
+//#include "MPMICERF.cc"
