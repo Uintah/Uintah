@@ -59,13 +59,13 @@ li {
 }
 
 /* TOC styles */
-p.toc-H1 {
+.TOC-H1 {
   font-weight: bold;
   margin-top: 0;
   margin-bottom: 0;
 }
 
-p.toc-H2 {
+.TOC-H2 {
   margin-left: 0.25in;
   margin-top: 0;
   margin-bottom: 0;
