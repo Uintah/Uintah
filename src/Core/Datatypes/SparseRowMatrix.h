@@ -97,7 +97,7 @@ public:
   virtual int*    get_col() { return columns; }
 
   virtual void zero();
-  virtual double& get(int, int) const;
+  virtual double get(int, int) const;
   virtual void put(int row, int col, double val);
   virtual void add(int row, int col, double val);
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);

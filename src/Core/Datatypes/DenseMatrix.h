@@ -85,7 +85,7 @@ public:
 
   //! slow setters/getter for polymorphic operations
   virtual void    zero();
-  virtual double& get(int r, int c) const;
+  virtual double  get(int r, int c) const;
   virtual void    put(int r, int c, double val);
   virtual void    add(int r, int c, double val);
   virtual void    getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);

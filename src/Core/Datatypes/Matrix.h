@@ -59,7 +59,6 @@ class SparseRowMatrix;
 class DenseMatrix;
 class ColumnMatrix;
 class Matrix;
-class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
 class SCICORESHARE Matrix : public PropertyManager
@@ -99,11 +98,10 @@ public:
   virtual size_t get_data_size() = 0;
 
   virtual void zero() = 0;
-  virtual double& get(int, int) const = 0;
+  virtual double  get(int, int) const = 0;
   virtual void    put(int r, int c, double val) = 0;
   virtual void    add(int r, int c, double val) = 0;
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
-  inline MatrixRow operator[](int r);
 
   virtual Matrix* transpose() = 0;
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
@@ -165,25 +163,6 @@ protected:
   bool     separate_raw_;
   string   raw_filename_;
 };
-
-
-class SCICORESHARE MatrixRow
-{
-  Matrix* matrix;
-  int row;
-public:
-  inline MatrixRow(Matrix* matrix, int row) : matrix(matrix), row(row) {}
-  inline ~MatrixRow() {}
-
-  inline double& operator[](int col) {return matrix->get(row, col);}
-};
-
-
-inline MatrixRow
-Matrix::operator[](int row)
-{
-  return MatrixRow(this, row);
-}
 
 
 void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);

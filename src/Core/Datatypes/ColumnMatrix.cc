@@ -220,7 +220,7 @@ void ColumnMatrix::print() {
   print(cerr);
 }
 
-double& ColumnMatrix::get(int r, int c) const
+double ColumnMatrix::get(int r, int c) const
 {
     ASSERTRANGE(r, 0, nrows_);
     ASSERTEQ(c, 0);
