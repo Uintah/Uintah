@@ -132,7 +132,7 @@ void Focusing::execute()
   w=&((*wwww)[0]);
   for(int i=0;i<Nm;i++) w[i]=1.;
 
-// ACTUAL OPERATION (EMULATOR FOR NOW)
+// ACTUAL OPERATION 
 
   focusing(F,d,r,w,m,noise,1e5,-1e+5,(int)fcsdg,Nd,Nm);
 
@@ -2012,3 +2012,29 @@ mm.release_double_ptr();
 
 }
 
+void tikhonov(double *f,double *d,double *r,double *w,double *m,
+              double noise,double mu,double ml,int Nd,int Nm)
+{
+
+mlb mm("mm"),dd("dd"),ww("ww"),ff("ff"),rr("rr");
+
+dd.set_double_ptr(Nd,1,d);
+rr.set_double_ptr(Nd,1,r);
+ww.set_double_ptr(Nm,1,w);
+mm.set_double_ptr(Nm,1,m);
+
+ff.set_double_ptr(Nm,Nd,f);
+mlb pp("pp");
+pp=trnsp(ff);
+rr=-dd;
+
+mm=cnjgrd1(pp,ww,rr,a2m(noise),a2m(mu),a2m(ml));
+rr=pp*mm-dd;
+
+ff.release_double_ptr();
+dd.release_double_ptr();
+rr.release_double_ptr();
+ww.release_double_ptr();
+mm.release_double_ptr();
+
+}
