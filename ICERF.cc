@@ -471,7 +471,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
     constCCVariable<double> press_CC;
     constCCVariable<double> matl_press_CC;
     Ghost::GhostType  gac = Ghost::AroundCells; 
-    new_dw->get(press_CC,lb->press_equil_CCLabel, 0,patch,gac,1);
+    new_dw->get(press_CC,lb->press_CCLabel, 0, patch,gac,1);
 
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
