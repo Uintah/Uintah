@@ -42,7 +42,7 @@ VectorFieldsToTensorField::~VectorFieldsToTensorField(){
 void VectorFieldsToTensorField::execute(){
   FieldIPort *iev1 = (FieldIPort*)get_iport("Major Eigenvectors");
   if (!iev1) {
-    postMessage("Unable to initialize "+name+"'s ev1 port\n");
+    error("Unable to initialize iport 'Major Eigenvectors'.");
     return;
   }
   FieldHandle ev1H;
@@ -53,7 +53,7 @@ void VectorFieldsToTensorField::execute(){
 
   FieldIPort *iev2 = (FieldIPort*)get_iport("Median Eigenvectors");
   if (!iev2) {
-    postMessage("Unable to initialize "+name+"'s ev2 port\n");
+    error("Unable to initialize iport 'Median Eigenvectors'.");
     return;
   }
   FieldHandle ev2H;
@@ -64,7 +64,7 @@ void VectorFieldsToTensorField::execute(){
 
   FieldOPort *otfld = (FieldOPort*)get_oport("Tensors");
   if (!otfld) {
-    postMessage("Unable to initialize "+name+"'s output port\n");
+    error("Unable to initialize oport 'Tensors'.");
     return;
   }
 

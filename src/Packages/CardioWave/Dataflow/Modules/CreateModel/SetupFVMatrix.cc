@@ -77,25 +77,25 @@ void SetupFVMatrix::execute(){
   // must find ports and have valid data on inputs
   FieldIPort *ifib1 = (FieldIPort*)get_iport("PrimaryFiberOrientation");
   if (!ifib1) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'PrimaryFiberOrientation'.");
     return;
   }
   
   FieldIPort *ifib2 = (FieldIPort*)get_iport("SecondaryFiberOrientation");
   if (!ifib2) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'SecondaryFiberOrientation'.");
     return;
   }
   
   FieldIPort *icell = (FieldIPort*)get_iport("CellType");
   if (!icell) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'CellType'.");
     return;
   }
   
   FieldOPort *omesh = (FieldOPort*)get_oport("ReorderedMesh");
   if (!omesh) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'ReorderedMesh'.");
     return;
   }
 

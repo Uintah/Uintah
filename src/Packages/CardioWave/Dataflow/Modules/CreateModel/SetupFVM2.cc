@@ -67,7 +67,7 @@ void SetupFVM2::execute(){
   // must find ports and have valid data on inputs
   FieldIPort *ifld = (FieldIPort*)get_iport("HexVolTensor");
   if (!ifld) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'HexVolTensor'.");
     return;
   }
 

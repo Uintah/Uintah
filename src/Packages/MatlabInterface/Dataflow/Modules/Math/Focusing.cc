@@ -75,19 +75,19 @@ void Focusing::execute()
   oport2 = (MatrixOPort *)get_oport("Residual");
 
   if (!iport1) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'Lead Field'.");
     return;
   }
   if (!iport2) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'RHS (data)'.");
     return;
   }
   if (!oport1) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Sources'.");
     return;
   }
   if (!oport2) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Residual'.");
     return;
   }
   

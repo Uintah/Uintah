@@ -72,7 +72,7 @@ void NrrdReader::execute()
   string fn(filename_.get());
   outport_ = (NrrdOPort *)get_oport("Output Data");
   if (!outport_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Outport Data'.");
     return;
   }
 

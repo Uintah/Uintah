@@ -123,7 +123,7 @@ void CreateSimpleMesh::execute(){
   fld->set_property("eigenvectors", fibers, false);
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Mesh");
   if (!ofield_port) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize oport 'Mesh'.");
     return;
   }
   ofield_port->send(FieldHandle(fld));

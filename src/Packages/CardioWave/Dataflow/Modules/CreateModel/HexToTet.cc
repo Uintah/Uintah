@@ -81,7 +81,7 @@ HexToTet::execute()
 {
   FieldIPort *ifieldport = (FieldIPort *)get_iport("HexVol");
   if (!ifieldport) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize iport 'HexVol'.");
     return;
   }
   FieldHandle ifieldhandle;
