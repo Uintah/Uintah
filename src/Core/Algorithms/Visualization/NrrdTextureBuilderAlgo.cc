@@ -314,7 +314,7 @@ void
 NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
 				   const NrrdDataHandle &nvn,
 				   const NrrdDataHandle &gmn,
-                                   int ni, int nj, int nk)
+                                   int ni, int nj, int /*nk*/)
 {
   NrrdTextureBrick *nbrick =
     dynamic_cast<NrrdTextureBrick *>(brick.get_rep());
