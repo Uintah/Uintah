@@ -2213,6 +2213,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "  if ((_ptr=spmsg->getLocalObj()) != NULL) {\n";
     e.out << leader2 << "    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_ptr);\n";
     e.out << leader2 << "    " << arg << "=dynamic_cast<" << name->cppfullname(0) << "*>(_sc->d_objptr);\n";
+    e.out << leader2 << "    " << arg << "->_deleteReference();\n";
     e.out << leader2 << "  } else {\n";
     e.out << leader2 << "    " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
     e.out << leader2 << "  }\n";
