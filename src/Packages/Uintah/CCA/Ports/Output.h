@@ -3,7 +3,6 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
@@ -48,6 +47,8 @@ WARNING
   
 ****************************************/
 
+class SimulationState;
+
   class Output : public UintahParallelPort {
   public:
     Output();
@@ -56,7 +57,7 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual void problemSetup(const ProblemSpecP& params,
-                              SimulationStateP& state) = 0;
+                              SimulationState* state) = 0;
 
     virtual void initializeOutput(const ProblemSpecP& params) = 0;
     //////////
