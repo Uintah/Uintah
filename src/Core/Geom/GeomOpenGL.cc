@@ -785,6 +785,7 @@ GeomDL::~GeomDL()
   if (display_list_)
   {
     glDeleteLists(display_list_, 1);
+    display_list_ = 0;
   }
 }
 
