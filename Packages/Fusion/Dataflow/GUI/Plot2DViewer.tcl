@@ -724,12 +724,58 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 #Create a rainbow color map.
 	rainbow_cmap1 $w 36 1
-	set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+	if { [set $this-zmax] > [set $this-zmin] } {
+	    set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+	} else {
+	    set cOffset 0
+	}
 
 # Select color 1 from colormap 0
 	$w cmd plcol0 1
 
 # Set the plotting envelope i.e. the min-max of the plot.
+	if { [set $this-xmax] == [set $this-xmin] } {
+	    if { [set $this-xmax] > 0 } {
+		set $this-xmax [expr [set $this-xmax] * 1.1]
+	    } else {
+		if { [set $this-xmax] < 0 } {
+		    set $this-xmax [expr [set $this-xmax] * 0.9]
+		} else {
+		    if { [set $this-xmax] == 0 } {
+			set $this-xmax 0.1
+		    }
+		}
+	    }
+	}
+
+	if { [set $this-ymax] == [set $this-ymin] } {
+	    if { [set $this-ymax] > 0 } {
+		set $this-ymax [expr [set $this-ymax] * 1.1]
+	    } else {
+		if { [set $this-ymax] < 0 } {
+		    set $this-ymax [expr [set $this-ymax] * 0.9]
+		} else {
+		    if { [set $this-ymax] == 0 } {
+			set $this-ymax 0.1
+		    }
+		}
+	    }
+	}
+
+	if { [set $this-zmax] == [set $this-zmin] } {
+	    if { [set $this-zmax] > 0 } {
+		set $this-zmax [expr [set $this-zmax] * 1.1]
+	    } else {
+		if { [set $this-zmax] < 0 } {
+		    set $this-zmax [expr [set $this-zmax] * 0.9]
+		} else {
+		    if { [set $this-zmax] == 0 } {
+			set $this-zmax 0.1
+		    }
+		}
+	    }
+	}
+
 	$w cmd plenv [set $this-xmin] [set $this-xmax] \
   	             [set $this-ymin] [set $this-ymax] 0 0
 
@@ -888,12 +934,58 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 #Create a rainbow color map.
 	rainbow_cmap1 $w 36 1
-	set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+	if { [set $this-zmax] > [set $this-zmin] } {
+	    set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+	} else {
+	    set cOffset 0
+	}
 
 # Select color 1 from colormap 0
 	$w cmd plcol0 1
 
 # Set the plotting envelope i.e. the min-max of the plot.
+	if { [set $this-xmax] == [set $this-xmin] } {
+	    if { [set $this-xmax] > 0 } {
+		set $this-xmax [expr [set $this-xmax] * 1.1]
+	    } else {
+		if { [set $this-xmax] < 0 } {
+		    set $this-xmax [expr [set $this-xmax] * 0.9]
+		} else {
+		    if { [set $this-xmax] == 0 } {
+			set $this-xmax 0.1
+		    }
+		}
+	    }
+	}
+
+	if { [set $this-ymax] == [set $this-ymin] } {
+	    if { [set $this-ymax] > 0 } {
+		set $this-ymax [expr [set $this-ymax] * 1.1]
+	    } else {
+		if { [set $this-ymax] < 0 } {
+		    set $this-ymax [expr [set $this-ymax] * 0.9]
+		} else {
+		    if { [set $this-ymax] == 0 } {
+			set $this-ymax 0.1
+		    }
+		}
+	    }
+	}
+
+	if { [set $this-zmax] == [set $this-zmin] } {
+	    if { [set $this-zmax] > 0 } {
+		set $this-zmax [expr [set $this-zmax] * 1.1]
+	    } else {
+		if { [set $this-zmax] < 0 } {
+		    set $this-zmax [expr [set $this-zmax] * 0.9]
+		} else {
+		    if { [set $this-zmax] == 0 } {
+			set $this-zmax 0.1
+		    }
+		}
+	    }
+	}
+
 	$w cmd plenv [set $this-xmin] [set $this-xmax] \
   	             [set $this-ymin] [set $this-ymax] 0 0
 
@@ -1077,7 +1169,11 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 # Create a rainbow color map.
 	rainbow_cmap1 $w 36 1
-	set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+	if { [set $this-zmax] > [set $this-zmin] } {
+	    set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+	} else {
+	    set cOffset 0
+	}
 
 # Select color 1 from colormap 0
 	$w cmd plcol0 1
@@ -1086,6 +1182,48 @@ itcl_class Fusion_Render_Plot2DViewer {
 	$w cmd plvpor 0.0 1.0 0.0 0.9
 # Specify world coordinates of viewport boundaries
 	$w cmd plwind -1.0 1.0 -0.9 1.1
+
+	if { [set $this-xmax] == [set $this-xmin] } {
+	    if { [set $this-xmax] > 0 } {
+		set $this-xmax [expr [set $this-xmax] * 1.1]
+	    } else {
+		if { [set $this-xmax] < 0 } {
+		    set $this-xmax [expr [set $this-xmax] * 0.9]
+		} else {
+		    if { [set $this-xmax] == 0 } {
+			set $this-xmax 0.1
+		    }
+		}
+	    }
+	}
+
+	if { [set $this-ymax] == [set $this-ymin] } {
+	    if { [set $this-ymax] > 0 } {
+		set $this-ymax [expr [set $this-ymax] * 1.1]
+	    } else {
+		if { [set $this-ymax] < 0 } {
+		    set $this-ymax [expr [set $this-ymax] * 0.9]
+		} else {
+		    if { [set $this-ymax] == 0 } {
+			set $this-ymax 0.1
+		    }
+		}
+	    }
+	}
+
+	if { [set $this-zmax] == [set $this-zmin] } {
+	    if { [set $this-zmax] > 0 } {
+		set $this-zmax [expr [set $this-zmax] * 1.1]
+	    } else {
+		if { [set $this-zmax] < 0 } {
+		    set $this-zmax [expr [set $this-zmax] * 0.9]
+		} else {
+		    if { [set $this-zmax] == 0 } {
+			set $this-zmax 0.1
+		    }
+		}
+	    }
+	}
 
 	$w cmd plw3d 1.0 1.0 1.0 \
 	    [set $this-xmin] [set $this-xmax] \

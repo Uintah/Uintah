@@ -29,15 +29,12 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
-#include <Core/Datatypes/StructHexVolField.h>
-
-#include <Dataflow/Ports/FieldPort.h>
 
 #include <Packages/Fusion/Dataflow/Modules/Fields/FusionSlicer.h>
-
 #include <Packages/Fusion/share/share.h>
 
 namespace Fusion {
@@ -54,6 +51,7 @@ public:
 
 private:
   GuiInt Axis_;
+  GuiInt Dims_;
 
   GuiInt iDim_;
   GuiInt jDim_;
@@ -86,6 +84,7 @@ FusionSlicer::FusionSlicer(GuiContext *context)
   : Module("FusionSlicer", context, Source, "Fields", "Fusion"),
     
     Axis_(context->subVar("axis")),
+    Dims_(context->subVar("dims")),
 
     iDim_(context->subVar("idim")),
     jDim_(context->subVar("jdim")),
@@ -119,11 +118,8 @@ void FusionSlicer::execute(){
 
   FieldHandle fHandle;
 
-  StructHexVolMesh *hvmInput;
-
   // Get a handle to the input field port.
-  FieldIPort* ifield_port =
-    (FieldIPort *)	get_iport("Input Field");
+  FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
 
   if (!ifield_port)
   {
@@ -133,7 +129,7 @@ void FusionSlicer::execute(){
 
   // The field input is required.
   if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
-      !(hvmInput = (StructHexVolMesh*) fHandle->mesh().get_rep()))
+      !(fHandle->mesh().get_rep()))
   {
     error( "No handle or representation" );
     return;
@@ -146,19 +142,48 @@ void FusionSlicer::execute(){
     updateField = true;
   }
 
+  int dims = 0;
+
   // Get the dimensions of the mesh.
-  idim_ = hvmInput->get_ni();
-  jdim_ = hvmInput->get_nj();
-  kdim_ = hvmInput->get_nk();
+  if( fHandle->get_type_description(0)->get_name() == "LatVolField" ||
+      fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
+    LatVolMesh *lvmInput = (LatVolMesh*) fHandle->mesh().get_rep();
+
+    idim_ = lvmInput->get_ni();
+    jdim_ = lvmInput->get_nj();
+    kdim_ = lvmInput->get_nk();
+
+    dims = 3;
+
+  } else if( fHandle->get_type_description(0)->get_name() == "ImageField" ||
+	     fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
+    ImageMesh *imInput = (ImageMesh*) fHandle->mesh().get_rep();
+
+    idim_ = imInput->get_ni();
+    jdim_ = imInput->get_nj();
+    kdim_ = 1;
+
+    dims = 2;
+
+  } else if( fHandle->get_type_description(0)->get_name() == "ScanlineField" ||
+	     fHandle->get_type_description(0)->get_name() == "StructCurveField" ) {
+    error( fHandle->get_type_description(0)->get_name() );
+    error( "Fully sliced data." );
+
+  } else {
+    error( fHandle->get_type_description(0)->get_name() );
+    error( "Only availible for uniformly gridded or structure gridded data." );
+    return;
+  }
 
   // Check to see if the dimensions have changed.
-  if( idim_   != iDim_.get() ||
-      jdim_-1 != jDim_.get() ||
-      kdim_-1 != kDim_.get() )
+  if( idim_ != iDim_.get() ||
+      jdim_ != jDim_.get() ||
+      kdim_ != kDim_.get() )
   {
     // Update the dims in the GUI.
     ostringstream str;
-    str << id << " set_size " << idim_ << " " << jdim_-1 << " " << kdim_-1;
+    str << id << " set_size " << dims << " " << idim_ << " " << jdim_ << " " << kdim_;
 
     gui->execute(str.str().c_str());
 
@@ -192,7 +217,7 @@ void FusionSlicer::execute(){
 
     unsigned int index;
     if (axis_ == 0) {
-      index = Max(iindex_, 1);
+      index = iindex_;
     }
     else if (axis_ == 1) {
       index = jindex_;
@@ -200,7 +225,19 @@ void FusionSlicer::execute(){
     else {
       index = kindex_;
     }
-    fHandle_ = algo->execute(fHandle, index, axis_);
+
+    fHandle_ = algo->execute(fHandle, axis_);
+
+    // Now the new field is defined so do the work on it.
+    const TypeDescription *iftd = fHandle->get_type_description();
+    const TypeDescription *oftd = fHandle_->get_type_description();
+
+    ci = FusionSlicerWorkAlgo::get_compile_info(iftd,oftd);
+    Handle<FusionSlicerWorkAlgo> workalgo;
+
+    if (!module_dynamic_compile(ci, workalgo)) return;
+  
+    workalgo->execute(fHandle, fHandle_, index, axis_);
   }
 
   // Get a handle to the output field port.
@@ -243,5 +280,29 @@ FusionSlicerAlgo::get_compile_info(const TypeDescription *ftd,
   return rval;
 }
 
+CompileInfo *
+FusionSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
+				       const TypeDescription *oftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("FusionSlicerWorkAlgoT");
+  static const string base_class_name("FusionSlicerWorkAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       iftd->get_filename() + "." +
+		       oftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       iftd->get_name() + ", " +
+		       oftd->get_name() );
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_namespace("Fusion");
+  iftd->fill_compile_info(rval);
+  return rval;
+}
 
 } // End namespace Fusion

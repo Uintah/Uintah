@@ -95,7 +95,7 @@ public:
 class Plot2DViewerAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(FieldHandle src, int slice, Plot2DViewer* p2Dv) = 0;
+  virtual void execute(FieldHandle src, unsigned int slice, Plot2DViewer* p2Dv) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
@@ -112,7 +112,7 @@ class Plot2DViewerAlgoT : public Plot2DViewerAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(FieldHandle src, int slice, Plot2DViewer* p2Dv);
+  virtual void execute(FieldHandle src, unsigned int slice, Plot2DViewer* p2Dv);
 };
 
 
@@ -123,15 +123,22 @@ template< template<class> class FIELD, class TYPE >
 #endif
 void
 Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
-					int slice,
+					unsigned int slice,
 					Plot2DViewer* p2Dv )
 {
   FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
 
   typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
 
-  const unsigned int onx = imesh->get_nx();
-  const unsigned int ony = imesh->get_ny();
+  Array1<unsigned int> dim = imesh->get_dim();
+
+  unsigned int onx = dim[0];
+  unsigned int ony;
+  
+  if( dim.size() > 1 )
+    ony = dim[1];
+  else
+    ony = 1;
 
   p2Dv->dMat_x_ = scinew DenseMatrix( onx, ony );
   p2Dv->dMat_y_ = scinew DenseMatrix( onx, ony );
@@ -162,7 +169,7 @@ Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
       p2Dv->dMat_v_->put( i, j, v );
       
       imesh->get_center(p, *nodeItr);
-      
+
       p2Dv->dMat_x_->put( i, j, sqrt(p.x() * p.x() + p.y() * p.y() ) );
       p2Dv->dMat_y_->put( i, j, p.z() );
 

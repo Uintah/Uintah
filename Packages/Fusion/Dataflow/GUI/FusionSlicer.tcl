@@ -19,6 +19,9 @@
 # by Allen R. Sanderson
 # March 2002
 
+# This GUI interface is for selecting an axis and index for sub sampling a
+# topologically structured field
+
 itcl_class Fusion_Fields_FusionSlicer {
     inherit Module
     constructor {config} {
@@ -42,6 +45,8 @@ itcl_class Fusion_Fields_FusionSlicer {
 	global $this-jindex2
 	global $this-kindex2
 
+	global $this-dims
+
 	set $this-axis 2
 
 	set $this-idim 1
@@ -55,6 +60,8 @@ itcl_class Fusion_Fields_FusionSlicer {
 	set $this-iindex2 "0"
 	set $this-jindex2 "0"
 	set $this-kindex2 "0"
+
+	set $this-dims 3
     }
 
     method ui {} {
@@ -65,11 +72,17 @@ itcl_class Fusion_Fields_FusionSlicer {
 
 	global $this-iindex
 	global $this-kindex
-	global $this-kindex
+	global $this-jindex
 
 	global $this-iindex2
 	global $this-kindex2
-	global $this-kindex2
+	global $this-jindex2
+
+	global $this-axis
+
+	global $this-dims
+
+	set $this-axis [expr [set $this-dims]-1]
 
 	set tmp 0.0
 
@@ -89,7 +102,7 @@ itcl_class Fusion_Fields_FusionSlicer {
 
 	frame $w.i
 
-	radiobutton $w.i.l -text "Radial :" -width 9 -anchor w -just left -variable $this-axis -value 0
+	radiobutton $w.i.l -text "i axis" -width 9 -anchor w -just left -variable $this-axis -value 0
 
 	pack $w.i.l -side left
 
@@ -101,7 +114,7 @@ itcl_class Fusion_Fields_FusionSlicer {
 
 	frame $w.j
 
-	radiobutton $w.j.l -text "Theta :" -width 9 -anchor w -just left -variable $this-axis -value 1
+	radiobutton $w.j.l -text "j axis" -width 9 -anchor w -just left -variable $this-axis -value 1
 
 	pack $w.j.l -side left
 
@@ -113,7 +126,7 @@ itcl_class Fusion_Fields_FusionSlicer {
 
 	frame $w.k
 
-	radiobutton $w.k.l -text "Phi :" -width 9 -anchor w -just left -variable $this-axis -value 2
+	radiobutton $w.k.l -text "k axis" -width 9 -anchor w -just left -variable $this-axis -value 2
 
 	pack $w.k.l -side left
 
@@ -129,7 +142,11 @@ itcl_class Fusion_Fields_FusionSlicer {
 
 	pack $w.misc.b  -side left -padx 25
 
-        pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
+	if { [set $this-dims] == 3 } {
+	    pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
+	} elseif { [set $this-dims] == 2 } {
+	    pack $w.l $w.i $w.j $w.misc -side top -padx 10 -pady 5	    
+	}
     }
 
 
@@ -189,7 +206,7 @@ itcl_class Fusion_Fields_FusionSlicer {
 	set $this-kindex [set $this-kindex2]
     }
 
-    method set_size {idim jdim kdim} {
+    method set_size {dim idim jdim kdim} {
 	set w .ui[modname]
 
 	global $this-idim
@@ -200,14 +217,30 @@ itcl_class Fusion_Fields_FusionSlicer {
 	global $this-jindex
 	global $this-kindex
 
+	global $this-axis
+
+	global $this-dims
+
 	set $this-idim $idim
 	set $this-jdim $jdim
 	set $this-kdim $kdim
 
 	# Reset all of the slider values to the index values.
-	set $this-iindex 0
-	set $this-jindex 0
-	set $this-kindex 0
+	if { [set $this-iindex] > [expr [set $this-idim]-1] } {
+	    set $this-iindex [expr [set $this-idim]-1]
+	}
+	if { [set $this-jindex] > [expr [set $this-jdim]-1] } {
+	    set $this-jindex [expr [set $this-jdim]-1]
+	}
+	if { [set $this-kindex] > [expr [set $this-kdim]-1] } {
+	    set $this-kindex [expr [set $this-kdim]-1]
+	}
+
+	set $this-dims $dim
+
+	if { [set $this-axis] > [expr [set $this-dims]-1] } {
+	    set $this-axis [expr [set $this-dims]-1]
+	}
 
 	if [ expr [winfo exists $w] ] {
 
@@ -221,7 +254,15 @@ itcl_class Fusion_Fields_FusionSlicer {
 	set $this-iindex2 [set $this-iindex]
 	set $this-jindex2 [set $this-jindex]
 	set $this-kindex2 [set $this-kindex]
-   }
+
+        if {[winfo exists $w]} {
+	    if { [set $this-dims] == 3 } {
+		pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
+	    } elseif { [set $this-dims] == 2 } {
+		pack $w.l $w.i $w.j $w.misc -side top -padx 10 -pady 5	    
+	    }
+	}
+    }
 }
 
 
