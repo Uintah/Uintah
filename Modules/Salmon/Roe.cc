@@ -513,7 +513,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
 	    cerr << "Redraw event dropped, mailbox full!\n";
 	} else {
-	    manager->mailbox.send(scinew SalmonMessage(id, args[2]));
+	    manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpImage, id, args[2]));
 	}
     } else if(args[1] == "startup"){
 	// Fill in the visibility database...
@@ -632,7 +632,19 @@ void Roe::tcl_command(TCLArgs& args, void*)
     } else if(args[1] == "reset_tracker"){
 	have_trackerdata=0;
     } else if(args[1] == "saveall") {
-	saveall(args[2], 0);
+	if(args.count() != 3){
+	    args.error("Roe::dump_roe needs an output file name!");
+	    return;
+	}
+	// We need to dispatch this one to the remote thread
+	// We use an ID string instead of a pointer in case this roe
+	// gets killed by the time the redraw message gets dispatched.
+	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
+	    cerr << "Redraw event dropped, mailbox full!\n";
+	} else {
+	    manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpObjects,
+						       id, args[2]));
+	}
     } else {
 	args.error("Unknown minor command for Roe");
     }
@@ -908,10 +920,10 @@ void Roe::head_moved(const TrackerPosition& pos)
     need_redraw=1;
 }
 
-void Roe::saveall(const clString& filename, int binary)
+void Roe::saveall(const clString& filename, const clString& format)
 {
     Piostream* stream;
-    if(binary)
+    if(format == "binary")
 	stream=new BinaryPiostream(filename, Piostream::Write);
     else
 	stream=new TextPiostream(filename, Piostream::Write);

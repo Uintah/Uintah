@@ -41,7 +41,8 @@ public:
 
 	RoeRedraw,
 	RoeMouse,
-	RoeDump,
+	RoeDumpImage,
+	RoeDumpObjects,
 
 	AttachDialbox,
 	DialMoved,

@@ -122,7 +122,19 @@ int Salmon::process_event(int block)
 	    }
 	}
 	break;
-    case MessageTypes::RoeDump:
+    case MessageTypes::RoeDumpImage:
+	{
+	    SalmonMessage* rmsg=(SalmonMessage*)msg;
+	    for(int i=0;i<roe.size();i++){
+		Roe* r=roe[i];
+		if(r->id == rmsg->rid){
+		    r->current_renderer->dump_image(rmsg->filename);
+		    break;
+		}
+	    }
+	}
+	break;
+    case MessageTypes::RoeDumpObjects:
 	{
 	    SalmonMessage* rmsg=(SalmonMessage*)msg;
 	    for(int i=0;i<roe.size();i++){
@@ -328,8 +340,9 @@ SalmonMessage::SalmonMessage(const clString& rid, double tbeg, double tend,
 	cerr << "Warning - nframes shouldn't be zero for animation\n";
 }
 
-SalmonMessage::SalmonMessage(const clString& rid, const clString& filename)
-: MessageBase(MessageTypes::RoeDump), rid(rid), filename(filename)
+SalmonMessage::SalmonMessage(MessageTypes::MessageType type,
+			     const clString& rid, const clString& filename)
+: MessageBase(type), rid(rid), filename(filename)
 {
 }
 

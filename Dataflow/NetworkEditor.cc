@@ -131,6 +131,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 
 	// Now, look upstream...
 	int ni=module->niports();
+	int i;
 	for(i=0;i<ni;i++){
 	    IPort* iport=module->iport(i);
 	    if(iport->nconnections()){
@@ -154,6 +155,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
     }
 
     // Trigger the ports in the trigger list...
+    int i;
     for(i=0;i<to_trigger.size();i++){
 	Connection* conn=to_trigger[i];
 	OPort* oport=conn->oport;
@@ -416,3 +418,10 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	args.error("Unknown minor command for netedit");
     }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Queue.cc>
+template class Queue<Module*>;
+
+#endif

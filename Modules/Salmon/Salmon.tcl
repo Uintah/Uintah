@@ -41,10 +41,10 @@ itcl_class Roe {
 	menubutton $w.menu.file -text "File" -underline 0 \
 		-menu $w.menu.file.menu
 	menu $w.menu.file.menu
-	$w.menu.file.menu add command -label "Load..." -underline 0 \
-		-command "$this makeLoadPopup"
-	$w.menu.file.menu add command -label "Save..." -underline 0 \
-		-command "$this makeSavePopup"
+	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
+		-command "$this makeSaveObjectsPopup"
+	$w.menu.file.menu add command -label "Save image file..." -underline 0 \
+		-command "$this makeSaveImagePopup"
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
 		-menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
@@ -510,8 +510,22 @@ itcl_class Roe {
 	puts "fov by $amt"
     }
 
-    method makeSavePopup {} {
-	$this-c saveall "test1.geom"
+    method makeSaveObjectsPopup {} {
+	toplevel .ui$this-save
+	global $this-saveobjfile $this-saveformat
+	set $this-saveobjfile "out.geom"
+	makeFilebox .ui$this-save $this-saveobjfile \
+		"$this doSaveObjects" "destroy .ui$this-save"
+	set ex .ui$this-save.f.extra
+	radiobutton $ex.geom -variable $this-saveformat \
+		-text "SCIRun geom object file" -value "scirun"
+	radiobutton $ex.vrml -variable $this-saveformat \
+		-text "VRML file" -value "vrml"
+	$ex.geom select
+	pack $ex.geom $ex.vrml -side top -anchor w
+    }
+    method doSaveObjects {} {
+	global $this-saveobjfile $this-saveformat
+	$this-c saveobj [set $this-saveobjfile] [set $this-saveformat]
     }
 }
-

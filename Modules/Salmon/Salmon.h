@@ -97,7 +97,8 @@ public:
     SalmonMessage(const clString& rid);
     SalmonMessage(const clString& rid, double tbeg, double tend,
 		  int nframes, double framerate);
-    SalmonMessage(const clString& rid, const clString& filename);
+    SalmonMessage(MessageTypes::MessageType,
+		  const clString& rid, const clString& filename);
     virtual ~SalmonMessage();
 };
 

@@ -14,7 +14,7 @@ proc makeFilebox {w var command cancel} {
     global $w-filter $w-path $w-oldpath $w-oldsel
     global $var
 
-    set $w-filter "*.*"
+    set $w-filter "*"
 
     set $var ""
     set $w-oldsel ""
@@ -100,6 +100,9 @@ proc makeFilebox {w var command cancel} {
     pack $w.f.sel.sel -in $w.f.sel -side bottom -padx 2 -pady 2 \
 	    -anchor w -fill x
 
+
+    frame $w.f.extra
+
     frame $w.f.but
     button $w.f.but.ok -text OK -command $command
     button $w.f.but.filt -text Filter -command "fbupdate $w $dirs $files"
@@ -113,7 +116,8 @@ proc makeFilebox {w var command cancel} {
     pack $w.f.but.home -in $w.f.but -side left -padx 2 -pady 8 -expand 1
     pack $w.f.but.data -in $w.f.but -side left -padx 2 -pady 8 -expand 1
 
-    pack $w.f.filt $w.f.path $w.f.bro $w.f.sel $w.f.but -in $w.f -side top \
+    pack $w.f.filt $w.f.path $w.f.bro $w.f.sel $w.f.extra \
+	    $w.f.but -in $w.f -side top \
 	    -padx 2 -pady 2 -expand 1 -fill both
     pack $w.f
 
@@ -123,12 +127,10 @@ proc makeFilebox {w var command cancel} {
 proc fbsel {w dirs files var command} {
     global $w-path $w-oldpath $w-oldsel $var
 
-    if [file isfile [set $var]] {
-	eval $command
-    } elseif [file isdirectory [set $var]] {
+    if [file isdirectory [set $var]] {
 	fbcd $w [set $var] $dirs $files
     } else {
-	set $var [set $w-oldsel]
+	eval $command
     }
 }
 
