@@ -175,8 +175,6 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   old_dw->get(pvolume, lb->pVolumeLabel, pset);
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-  ParticleVariable<double> pvolumedef;
-  new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, pset);
 
   NCVariable<Vector> gvelocity;
 
@@ -251,7 +249,6 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-    pvolumedef[idx]=pvolume[idx];
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -267,7 +264,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label_preReloc);
   // Volume is currently being carried forward, will be updated
-  new_dw->put(pvolumedef,lb->pVolumeDeformedLabel);
+  new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 }
 
 double CompNeoHook::computeStrainEnergy(const Patch* patch,
@@ -365,6 +362,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.28  2000/07/07 23:52:09  guilkey
+// Removed some inefficiences in the way the deformed volume was allocated
+// and stored, and also added changing particle volume to CompNeoHookPlas.
+//
 // Revision 1.27  2000/07/05 23:43:33  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

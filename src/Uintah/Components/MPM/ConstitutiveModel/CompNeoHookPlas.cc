@@ -145,7 +145,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   Matrix3 bElBarTrial,deformationGradientInc;
   Matrix3 shearTrial,Shear,normal;
   Matrix3 fbar,velGrad;
-  double J,p,fTrial,IEl,muBar,delgamma,sTnorm;
+  double J,p,fTrial,IEl,muBar,delgamma,sTnorm,Jinc;
   double onethird = (1.0/3.0);
   double sqtwthds = sqrt(2.0/3.0);
   Matrix3 Identity;
@@ -183,8 +183,6 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   old_dw->get(pvolume, lb->pVolumeLabel, pset);
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-  ParticleVariable<double> pvolumedef;
-  new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, pset);
 
   NCVariable<Vector> gvelocity;
 
@@ -226,13 +224,15 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     // F_n^np1 = dudx * dt + Identity
     deformationGradientInc = velGrad * delT + Identity;
 
+    Jinc = deformationGradientInc.Determinant();
+
     // Update the deformation gradient tensor to its time n+1 value.
     deformationGradient[idx] = deformationGradientInc *
                              deformationGradient[idx];
 
     // get the volume preserving part of the deformation gradient increment
     fbar = deformationGradientInc *
-			pow(deformationGradientInc.Determinant(),-onethird);
+			pow(Jinc,-onethird);
 
     // predict the elastic part of the volume preserving part of the left
     // Cauchy-Green deformation tensor
@@ -279,10 +279,13 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
     // compute the total stress (volumetric + deviatoric)
     pstress[idx] = Identity*p + Shear/J;
+//    pstress[idx] = Identity*p*J + Shear;
 
     // Compute the strain energy for all the particles
     U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
     W = .5*shear*(bElBar[idx].Trace() - 3.0);
+
+    pvolume[idx]=Jinc*pvolume[idx];
 
     se += (U + W)*pvolume[idx];
 
@@ -298,7 +301,6 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-    pvolumedef[idx]=pvolume[idx];
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -314,7 +316,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label_preReloc);
   // Volume is currently being carried forward, will be updated
-  new_dw->put(pvolumedef,lb->pVolumeDeformedLabel);
+  new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 
 }
 
@@ -412,6 +414,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.33  2000/07/07 23:52:09  guilkey
+// Removed some inefficiences in the way the deformed volume was allocated
+// and stored, and also added changing particle volume to CompNeoHookPlas.
+//
 // Revision 1.32  2000/07/05 23:43:33  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

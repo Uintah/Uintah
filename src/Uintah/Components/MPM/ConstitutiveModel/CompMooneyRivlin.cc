@@ -156,8 +156,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   old_dw->get(pvolume, lb->pVolumeLabel, pset);
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-  ParticleVariable<double> pvolumedef;
-  new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, pset);
 
   NCVariable<Vector> gvelocity;
 
@@ -240,7 +238,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
             C3*(1.0/(invar3*invar3) - 1.0) +
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
-      pvolumedef[idx]=pvolume[idx];
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -254,7 +251,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     // This is just carried forward.
     new_dw->put(cmdata, p_cmdata_label_preReloc);
     // Volume is currently just carried forward, but will be updated.
-    new_dw->put(pvolumedef, lb->pVolumeDeformedLabel);
+    new_dw->put(pvolume, lb->pVolumeDeformedLabel);
 }
 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
@@ -359,6 +356,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.49  2000/07/07 23:52:08  guilkey
+// Removed some inefficiences in the way the deformed volume was allocated
+// and stored, and also added changing particle volume to CompNeoHookPlas.
+//
 // Revision 1.48  2000/07/05 23:43:33  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
