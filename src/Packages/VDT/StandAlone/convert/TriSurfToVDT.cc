@@ -16,7 +16,19 @@
 */
 
 /*
- *  TriSurfFieldToVtk.cc
+ *  TriSurfFieldToVDT.cc
+ *      Builds a mesh between two SCIRun surfaces (and by default also fills
+ *      in elements with the inner surface).
+ *      Assumes that surfaces are like CVRTI format and standard SCIRun format
+ *      in terms of surface normals (if they look good in the Viewer, with
+ *      back-face culling turned on, they're good).  Inner surface can either
+ *      be "hollow" (e.g. nothing inside heart), as specified by the optional
+ *      -hollow command-line flag, or it can be filled (default).
+ *      Sets up a .vin file for VDT mesh generation.  If -hollow is specified
+ *      only one material region (between inner and outer surfaces) will be
+ *      meshed with tets; otherwise two regions will be meshed (inner-most
+ *      region will get material tag 2; region between inner and outer surface
+ *      will get material tag 1).
  *
  *  Written by:
  *   David Weinstein
@@ -41,10 +53,15 @@ using namespace SCIRun;
 
 int
 main(int argc, char **argv) {
-  if (argc != 4) {
-    cerr << "Usage: "<<argv[0]<<" scirun_inner_trisurf scirun_outer_trisurf vdt_vin_file\n";
+  if (argc != 4 && argc != 5) {
+    cerr << "Usage: "<<argv[0]<<" scirun_inner_trisurf scirun_outer_trisurf vdt_vin_file [-hollow]\n";
     return 0;
   }
+
+  bool hollow=false;
+  if (argc == 5)
+    if (string(argv[4]) == "-hollow")
+      hollow=true;
 
   FieldHandle inner_surf;
   Piostream* stream1=auto_istream(argv[1]);
@@ -136,7 +153,10 @@ main(int argc, char **argv) {
     int ival = (int)val;
     if (ival < 1) ival = 1;
     maxval = Max(ival, maxval);
-    fprintf(fout, "bsf %d %d %d  %d 1 0\n", i1, i2, i3, ival);
+    if (hollow)
+      fprintf(fout, "bsf %d %d %d %d 1 0\n", i1, i2, i3, ival);
+    else
+      fprintf(fout, "bsf %d %d %d %d 1 2\n", i1, i2, i3, ival);
   }
   maxval++;
   outer->begin(fiter);
