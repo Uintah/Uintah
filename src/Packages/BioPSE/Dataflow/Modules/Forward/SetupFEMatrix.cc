@@ -460,7 +460,7 @@ SetupFEMatrix::execute()
       scinew BuildHexFEMatrix(hvfiH, hvftH, 
 			      index_based, tens, unitsScale);
     hGblMtrx_ = hexmat->buildMatrix();
-  } else if (tet && index_based && lastUseBasis_) {     // TETS -- indexed
+  } else if (tet && index_based && lastUseBasis_) { // TETS -- indexed & bases
     //! If the user wants to use basis matrices, 
     //!    first check to see if we need to recompute them
     if (hField->mesh()->generation != meshGen_ || 
@@ -471,7 +471,7 @@ SetupFEMatrix::execute()
     }
     //! Have basis matrices, compute combined matrix
     hGblMtrx_ = build_composite_matrix(tens);
-  } else if (tet && (!index_based) ) {      // TETS -- non-indexed
+  } else if (tet) {          // TETS -- (non-indexed or bases)
     BuildFEMatrix::build_FEMatrix(tvfiH, tvftH,
 				  index_based, tens, hGblMtrx_, 
 				  unitsScale, nprocs);
@@ -487,7 +487,7 @@ SetupFEMatrix::execute()
       }
       //! Have basis matrices, compute combined matrix
       hGblMtrx_ = build_composite_matrix(tens);
-    } else if (tri && (!index_based)) {
+    } else if (tri) {
       BuildTriFEMatrix::build_FEMatrix(tsfiH, tsftH, index_based,
 				       tens, hGblMtrx_, unitsScale);
     }  
