@@ -85,6 +85,11 @@ ICELabel::ICELabel()
     VarLabel::create("gamma",        CCVariable<double>::getTypeDescription());
   specific_heatLabel =
     VarLabel::create("specific_heat",CCVariable<double>::getTypeDescription());
+  temp_CC_XchangeLabel  = 
+    VarLabel::create("temp_CC_Xchange",CCVariable<double>::getTypeDescription());
+  vel_CC_XchangeLabel = 
+    VarLabel::create("vel_CC_Xchange", CCVariable<Vector>::getTypeDescription());
+ 
  
   //__________________________________
   // Implicit Labels
@@ -233,7 +238,9 @@ ICELabel::~ICELabel()
     VarLabel::destroy(rho_CCLabel);
     VarLabel::destroy(sum_rho_CCLabel);
     VarLabel::destroy(temp_CCLabel);
+    VarLabel::destroy(temp_CC_XchangeLabel);
     VarLabel::destroy(vel_CCLabel);
+    VarLabel::destroy(vel_CC_XchangeLabel);
     VarLabel::destroy(rho_micro_CCLabel);
     VarLabel::destroy(sp_vol_CCLabel);
     VarLabel::destroy(DLabel);
