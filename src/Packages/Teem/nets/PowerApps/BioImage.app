@@ -49,7 +49,7 @@ global mods
 set mods(Viewer) $m1
 
 set mods(ViewSlices) ""
-set mods(EditTransferFunc) ""
+set mods(EditColorMap2D) ""
 
 # Tooltips
 global tips
@@ -1228,8 +1228,7 @@ class BioImageApp {
 
 
 	    # store some in mods
-	    set mods(EditTransferFunc) $m14
-
+	    set mods(EditColorMap2D) $m14
 	    
 	    set c1 [addConnection $m17 0 $m18 0]
 	    set c2 [addConnection $m12 0 $m15 0]
@@ -1294,9 +1293,7 @@ class BioImageApp {
 	    set c44 [addConnection $m10 0 $m37 1]
 	    set c45 [addConnection $m37 0 $m12 0]
 
-
 	    set c46 [addConnection $m26 1 $m14 0]
-
 
 	    # disable the volume rendering
  	    disableModule $m8 1
@@ -1315,120 +1312,88 @@ class BioImageApp {
 	    disableModule $m32 1
 
 	    # set some ui parameters
-	    global $m1-filename
-	    set $m1-filename $data_dir/volume/tooth.nhdr
+	    setGlobal $m1-filename $data_dir/volume/tooth.nhdr
 
-	    global $m8-nbits
-	    set $m8-nbits {8}
-	    global $m8-useinputmin
-	    set $m8-useinputmin 0
-	    global $m8-useinputmax
-	    set $m8-useinputmax 0
+	    setGlobal $m8-nbits {8}
+	    setGlobal $m8-useinputmin 0
+	    setGlobal $m8-useinputmax 0
 
-	    global $m9-nbits
-	    set $m9-nbits {8}
-	    global $m9-useinputmin
-	    set $m9-useinputmin 1
-	    global $m9-useinputmax
-	    set $m9-useinputmax 1
+	    setGlobal $m9-nbits {8}
+	    setGlobal $m9-useinputmin 1
+	    setGlobal $m9-useinputmax 1
 
-	    global $m11-nbits
-	    set $m11-nbits {8}
-	    global $m11-useinputmin
-	    set $m11-useinputmin 1
-	    global $m11-useinputmax
-	    set $m11-useinputmax 1
+	    setGlobal $m11-nbits {8}
+	    setGlobal $m11-useinputmin 1
+	    setGlobal $m11-useinputmax 1
 
-	    global $m13-measure
-	    set $m13-measure {9}
-
-	    global $m14-faux
-	    global $m14-num-entries
-	    global $m14-name-0 $m14-name-1 $m14-name-2 $m14-name-3
-	    global $m14-0-color-r $m14-0-color-g $m14-0-color-b $m14-0-color-a
-	    global $m14-1-color-r $m14-1-color-g $m14-1-color-b $m14-1-color-a
-	    global $m14-2-color-r $m14-2-color-g $m14-2-color-b $m14-2-color-a
-	    global $m14-3-color-r $m14-3-color-g $m14-3-color-b $m14-3-color-a
-	    global $m14-state-0 $m14-state-1 $m14-state-2 $m14-state-3
-	    global $m14-marker
+	    setGlobal $m13-measure {9}
 
 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
-	    set $m14-faux {1}
-	    set $m14-histo {0.5}
-	    set $m14-num-entries {4}
-	    set $m14-name-0 {Generic}
-	    set $m14-0-color-r {0.8}
-	    set $m14-0-color-g {0.17}
-	    set $m14-0-color-b {0.17}
-	    set $m14-0-color-a {1.0}
-	    set $m14-state-0 {r 0 0.0429688 0.335938 0.367187 0.453125 0.427807}
-	    set $m14-on-0 {1}
-	    set $m14-name-1 {Generic}
-	    set $m14-1-color-r {0.82}
-	    set $m14-1-color-g {0.84}
-	    set $m14-1-color-b {0.33}
-	    set $m14-1-color-a {0.600000023842}
-	    set $m14-state-1 {t 0.462891 0.0679688 0.554687 0.295832 0.304965}
-	    set $m14-on-1 {1}
-	    set $m14-name-2 {Generic}
-	    set $m14-2-color-r {0.38}
-	    set $m14-2-color-g {0.4}
-	    set $m14-2-color-b {1.0}
-	    set $m14-2-color-a {0.72000002861}
-	    set $m14-state-2 {r 0 0.607422 0.222656 0.277344 0.300781 0.465753}
-	    set $m14-on-2 {1}
-	    set $m14-name-3 {Generic}
-	    set $m14-3-color-r {1.0}
-	    set $m14-3-color-g {1.0}
-	    set $m14-3-color-b {1.0}
-	    set $m14-3-color-a {0.810000002384}
-	    set $m14-state-3 {r 0 0.443359 0.722656 0.367188 0.253906 0.515625}
-	    set $m14-on-3 {1}
-	    set $m14-marker {end}
+	    setGlobal $m14-faux {1}
+	    setGlobal $m14-histo {0.5}
+	    setGlobal $m14-num-entries {4}
+	    setGlobal $m14-name-0 {Nerve}
+	    setGlobal $m14-0-color-r {0.8}
+	    setGlobal $m14-0-color-g {0.17}
+	    setGlobal $m14-0-color-b {0.17}
+	    setGlobal $m14-0-color-a {1.0}
+	    setGlobal $m14-state-0 \
+		{r 0 0.0429688 0.335938 0.367187 0.453125 0.427807}
+	    setGlobal $m14-on-0 {1}
+	    setGlobal $m14-name-1 {Tooth}
+	    setGlobal $m14-1-color-r {0.82}
+	    setGlobal $m14-1-color-g {0.84}
+	    setGlobal $m14-1-color-b {0.33}
+	    setGlobal $m14-1-color-a {0.600000023842}
+	    setGlobal $m14-state-1 \
+		{t 0.462891 0.0679688 0.554687 0.295832 0.304965}
+	    setGlobal $m14-on-1 {1}
+	    setGlobal $m14-name-2 {Bond}
+	    setGlobal $m14-2-color-r {0.38}
+	    setGlobal $m14-2-color-g {0.4}
+	    setGlobal $m14-2-color-b {1.0}
+	    setGlobal $m14-2-color-a {0.72000002861}
+	    setGlobal $m14-state-2 \
+		{r 0 0.607422 0.222656 0.277344 0.300781 0.465753}
+	    setGlobal $m14-on-2 {1}
+	    setGlobal $m14-name-3 {Crown}
+	    setGlobal $m14-3-color-r {1.0}
+	    setGlobal $m14-3-color-g {1.0}
+	    setGlobal $m14-3-color-b {1.0}
+	    setGlobal $m14-3-color-a {0.810000002384}
+	    setGlobal $m14-state-3 \
+		{r 0 0.443359 0.722656 0.367188 0.253906 0.515625}
+	    setGlobal $m14-on-3 {1}
+	    setGlobal $m14-marker {end}
 
-	    global $m15-sw_raster $m15-alpha_scale
-	    global $m15-shading $m15-ambient
-	    global $m15-diffuse $m15-specular
-	    global $m15-shine
-            global $m15-adaptive
-	    set $m15-alpha_scale {0.0}
-	    set $m15-shading {1}
-	    set $m15-ambient {0.5}
-	    set $m15-diffuse {0.5}
-	    set $m15-specular {0.388}
-	    set $m15-shine {24}
-            set $m15-adaptive {1}
+	    setGlobal $m15-alpha_scale {0.0}
+	    setGlobal $m15-shading {1}
+	    setGlobal $m15-ambient {0.5}
+	    setGlobal $m15-diffuse {0.5}
+	    setGlobal $m15-specular {0.388}
+	    setGlobal $m15-shine {24}
+            setGlobal $m15-adaptive {1}
 	    global $m15-shading-button-state
-	    trace variable $m15-shading-button-state w "$this update_BioImage_shading_button_state"
+	    trace variable $m15-shading-button-state w \
+		"$this update_BioImage_shading_button_state"
 
-	    global $m19-bins
-	    global $m19-sbins
-	    set $m19-bins {3000}
-	    set $m19-sbins {1}
+	    setGlobal $m19-bins {3000}
+	    setGlobal $m19-sbins {1}
 
-	    global $m20-gamma
-	    set $m20-gamma {0.5}
+	    setGlobal $m20-gamma {0.5}
 
-	    global $m21-nbits
-	    set $m21-nbits {8}
-	    global $m21-useinputmin
-	    set $m21-useinputmin 1
-	    global $m21-useinputmax
-	    set $m21-useinputmax 1
+	    setGlobal $m21-nbits {8}
+	    setGlobal $m21-useinputmin 1
+	    setGlobal $m21-useinputmax 1
 
-	    global $m22-bins
-	    global $m22-type
-	    global $m22-mins $m22-maxs
-	    set $m22-bins {512 256}
-	    set $m22-mins {nan nan}
-	    set $m22-maxs {nan nan}
-	    set $m22-type {nrrdTypeFloat}
+	    setGlobal $m22-bins {512 256}
+	    setGlobal $m22-mins {nan nan}
+	    setGlobal $m22-maxs {nan nan}
+	    setGlobal $m22-type {nrrdTypeFloat}
 
-	    global $m23-operator
-	    set $m23-operator {+}
+	    setGlobal $m23-operator {+}
 
-	    global $m24-operator
-	    set $m24-operator {log}
+	    setGlobal $m24-operator {log}
 
             global $m26-crop_minAxis0 $m26-crop_maxAxis0
             global $m26-crop_minAxis1 $m26-crop_maxAxis1
@@ -1441,28 +1406,22 @@ class BioImageApp {
 	    trace variable $m26-crop_maxAxis2 w "$this update_crop_values"
 	    trace variable $m26-geom_flushed  w "$this maybe_autoview"
 
-            global $m27-mapType planes_mapType
-	    set $m27-mapType $planes_mapType
-	    global $m27-width $m27-height
-	    set $m27-width 441
-	    set $m24-height 40
+	    global planes_mapType
+	    setGlobal $m27-mapType $planes_mapType
+	    setGlobal $m27-width 441
+	    setGlobal $m24-height 40
 	    
 	    # intialize at full alpha
-	    global $m27-nodeList $m27-positionList
-	    set $m27-positionList {{0 0} {441 0}}
-	    set $m27-nodeList {514 1055}
+	    setGlobal $m27-positionList {{0 0} {441 0}}
+	    setGlobal $m27-nodeList {514 1055}
 
-	    global $m30-axis
-	    set $m30-axis 0
+	    setGlobal $m30-axis 0
 
-	    global $m31-axis
-	    set $m31-axis 1
+	    setGlobal $m31-axis 1
 
-	    global $m32-axis
-	    set $m32-axis 2
+	    setGlobal $m32-axis 2
 
-	    global $m37-port-index
-	    set $m37-port-index 1
+	    setGlobal $m37-port-index 1
 
 	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
 	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1 "Data - Unknown"]
@@ -2314,7 +2273,7 @@ class BioImageApp {
 
 
             button $page.vol -text "Edit Transfer Function" \
-                -command "$this check_crop; $mods(EditTransferFunc) initialize_ui"
+                -command "$this check_crop; $mods(EditColorMap2D) initialize_ui"
             Tooltip $page.vol "Open up the interface\nfor editing the transfer function"
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
@@ -2492,13 +2451,13 @@ class BioImageApp {
            -command "$mods(ViewSlices)-c add_paint_widget"
         pack $page.paint -side top -expand 0 -padx 10 -pady 3
 
-        $mods(EditTransferFunc) label_widget_columns $page.widgets_label
+        $mods(EditColorMap2D) label_widget_columns $page.widgets_label
         pack $page.widgets_label -side top -fill x -padx 2
         iwidgets::scrolledframe $page.widgets -hscrollmode none \
 	    -vscrollmode static
 
         pack $page.widgets -side top -fill both -expand yes -padx 2
-        $mods(EditTransferFunc) add_frame [$page.widgets childsite]
+        $mods(EditColorMap2D) add_frame [$page.widgets childsite]
 
 
         ### Renderer Options Tab
