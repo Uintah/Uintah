@@ -181,6 +181,7 @@ void InsertDelaunay::execute()
 	    }
 	}
     } else {
+#ifdef CHEAT
 	mesh_handle->remove_all_elements();
 	{
 	    ofstream pts("/tmp/InsertDelaunay");
@@ -225,32 +226,34 @@ void InsertDelaunay::execute()
 		}
 	    }
 	}
+#else
+
+	// Get our own copy of the mesh...
+	Mesh* mesh=mesh_handle.get_rep();
+	update_progress(2, 6);
 #if 0
-
-    // Get our own copy of the mesh...
-    update_progress(0, 6);
-    mesh_handle.detach();
-    update_progress(1, 6);
-    mesh_handle->detach_nodes();
-    Mesh* mesh=mesh_handle.get_rep();
-    update_progress(3, 6);
-    mesh->compute_neighbors();
-
-    // Insert the points...
-    int nsurfs=surfs.size();
-    Array1<NodeHandle> newnodes;
-    int isurf;
-    for(isurf=0;isurf<nsurfs;isurf++){
-	newnodes.remove_all();
-	surfs[isurf]->get_surfnodes(newnodes);
-	int npoints=newnodes.size();
-	for(int i=0;i<npoints;i++){
-	    mesh->nodes.add(newnodes[i]);
-	    mesh->insert_delaunay(mesh->nodes.size()-1);
-	    update_progress(i, 3*npoints);
-	}
-    }
+	mesh->compute_neighbors();
 #endif
+
+	// Insert the points...
+	int nsurfs=surfs.size();
+	Array1<NodeHandle> newnodes;
+	int isurf;
+	for(isurf=0;isurf<nsurfs;isurf++){
+	    newnodes.remove_all();
+	    surfs[isurf]->get_surfnodes(newnodes);
+	    int npoints=newnodes.size();
+	    int nt=nsurfs*npoints;
+	    for(int i=0;i<npoints;i++){
+		mesh->nodes.add(newnodes[i]);
+		mesh->insert_delaunay(mesh->nodes.size()-1);
+		if(i%100 == 0)
+		    update_progress(nt+isurf*npoints+i, 2*nt);
+	    }
+	}
+#endif
+    }
+    last_mesh=mesh_handle;
 #if 0
     mesh->compute_neighbors();
 
@@ -302,8 +305,7 @@ void InsertDelaunay::execute()
 	}
     }
 #endif
-	last_mesh=mesh_handle;
-    }
+    update_progress(6, 6);
     mesh_handle->pack_all();
     cerr << "There are now " << mesh_handle->elems.size() << " elements" << endl;
     oport->send(mesh_handle);
