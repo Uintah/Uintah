@@ -158,6 +158,7 @@ double get_datum( const char *signal ) {
   int dtype_long = DTYPE_DOUBLE;      /* MDS+ Descripter type def, double */
 
   double datum = 0;
+  double retVal;
 
   /* Build a descriptor for fectching the data. */
   dsc = descr(&dtype_long, &datum, &null);
@@ -167,7 +168,7 @@ double get_datum( const char *signal ) {
   sprintf(buf,"%s", signal);
     
   /* Use MdsValue to get the value */
-  double retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? datum : -1;
+  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? datum : -1;
 
   return retVal;
 }
