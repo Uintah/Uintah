@@ -13,6 +13,8 @@ void momentum_exchange_term_continuous_cc(
      	const Array3<double> up_fcy, 
 	const Array3<double> up_fcz,
      	constCCVariable<double> epsg, 
+	constCCVariable<double> den,
+	constCCVariable<double> denMicro,
 	constCCVariable<double> epss,
      	double viscos, double csmag, 
 	OffsetArray1<double> sew,
