@@ -16,13 +16,14 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
+#include <TCL/TCLvar.h>
 
 #include <iostream.h>
 #include <audiofile.h>
 
 class SoundReader : public Module {
     SoundOPort* osound;
-    clString filename;
+    TCLstring filename;
 public:
     SoundReader(const clString& id);
     SoundReader(const SoundReader&, int deep);
@@ -39,21 +40,15 @@ static Module* make_SoundReader(const clString& id)
 static RegisterModule db1("Sound", "SoundReader", make_SoundReader);
 
 SoundReader::SoundReader(const clString& id)
-: Module("SoundReader", id, Source)
+: Module("SoundReader", id, Source), filename("filename", id, this)
 {
     // Create the output data handle and port
     osound=new SoundOPort(this, "Sound", SoundIPort::Stream);
     add_oport(osound);
-
-    // Set up the interface
-#ifdef OLDUI
-    add_ui(new MUI_file_selection("Sound File", &filename,
-				  MUI_widget::NotExecuting));
-#endif
 }
 
 SoundReader::SoundReader(const SoundReader& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), filename("filename", id, this)
 {
     NOT_FINISHED("SoundReader::SoundReader");
 }
@@ -70,7 +65,7 @@ Module* SoundReader::clone(int deep)
 void SoundReader::execute()
 {
     // Open the sound port...
-    AFfilehandle afile=AFopenfile(filename(), "r", 0);
+    AFfilehandle afile=AFopenfile(filename.get()(), "r", 0);
     if(!afile){
 	cerr << "Error opening file: " << afile << endl;
 	return;
@@ -183,11 +178,3 @@ void SoundReader::execute()
     delete sampl;
     delete sampc;
 }
-
-#ifdef OLDUI
-void SoundReader::mui_callback(void*, int)
-{
-    want_to_execute();
-}
-
-#endif

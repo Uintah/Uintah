@@ -16,6 +16,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
+#include <TCL/TCLvar.h>
 
 #include <audio.h>
 #include <iostream.h>
@@ -24,7 +25,7 @@
 
 class SoundInput : public Module {
     SoundOPort* osound;
-    int onoff;
+    TCLvarint onoff;
     double rate;
 public:
     SoundInput(const clString& id);
@@ -43,20 +44,15 @@ static Module* make_SoundInput(const clString& id)
 static RegisterModule db1("Sound", "SoundInput", make_SoundInput);
 
 SoundInput::SoundInput(const clString& id)
-: Module("SoundInput", id, Source)
+: Module("SoundInput", id, Source), onoff("onoff", id, this)
 {
     // Create the output data handle and port
     osound=new SoundOPort(this, "Sound Output", SoundIPort::Stream);
     add_oport(osound);
-
-    // Set up the interface
-    //MUI_onoff_switch* oo=new MUI_onoff_switch("Input",
-    //&onoff, 0);
-    //add_ui(oo);
 }
 
 SoundInput::SoundInput(const SoundInput& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), onoff("onoff", id, this)
 {
     NOT_FINISHED("SoundInput::SoundInput");
 }
@@ -110,8 +106,7 @@ void SoundInput::execute()
 
     int sample=0;
     int nsamples=(int)(rate*10);
-    onoff=1;
-    while(onoff){
+    while(onoff.get()){
 	// Read a sound sample
 	double s;
 	if(ALreadsamps(port, (void*)&s, 1) == -1){
@@ -129,7 +124,7 @@ void SoundInput::execute()
 
 int SoundInput::should_execute()
 {
-    if(!onoff){
+    if(!onoff.get()){
 	if(sched_state == SchedDormant)
 	    return 0;
 	sched_state=SchedDormant;
