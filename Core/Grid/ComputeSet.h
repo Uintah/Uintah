@@ -6,6 +6,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Packages/Uintah/Core/ProblemSpec/constHandle.h>
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -61,12 +62,50 @@ namespace Uintah {
     const vector<T>& getVector() const 
     { return items; }
 
-    const ComputeSubset<T>* intersection(const ComputeSubset<T>* s2) const
+    const ComputeSubset<T>* equals(const ComputeSubset<T>* s2) const;
+    
+    constHandle< ComputeSubset<T> >
+    intersection(constHandle< ComputeSubset<T> > s2) const
     { return intersection(this, s2); }
 
-    static const ComputeSubset<T>* intersection(const ComputeSubset<T>* s1,
-						const ComputeSubset<T>* s2);
+    // May return the same Handle as one that came in.
+    static constHandle< ComputeSubset<T> >
+    intersection(const constHandle< ComputeSubset<T> >& s1,
+		 const constHandle< ComputeSubset<T> >& s2)
+    {
+      constHandle< ComputeSubset<T> > dummy = 0;
+      return intersectionAndMaybeDifferences<false>(s1, s2, dummy, dummy);
+    }
+
+    // May pass back Handles to same sets that came in.    
+    static void
+    intersectionAndDifferences(const constHandle< ComputeSubset<T> >& A,
+			       const constHandle< ComputeSubset<T> >& B,
+			       constHandle< ComputeSubset<T> >& intersection,
+			       constHandle< ComputeSubset<T> >& AminusB,
+			       constHandle< ComputeSubset<T> >& BminusA)
+    {
+      intersection =
+	intersectionAndMaybeDifferences<true>(A, B, AminusB, BminusA);
+    }
+
+    static constHandle< ComputeSubset<T> > emptySet;
   private:
+    // May pass back Handles to same sets that came in.
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // template parameter not used in declaring arguments
+#endif  
+    template <bool passBackDifferences>
+    static constHandle< ComputeSubset<T> >
+    intersectionAndMaybeDifferences(const constHandle< ComputeSubset<T> >& s1,
+				    const constHandle< ComputeSubset<T> >& s2,
+			      constHandle< ComputeSubset<T> >& setDifference1,
+			      constHandle< ComputeSubset<T> >& setDifference2);
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif  
+
+ 
     vector<T> items;
 
     ComputeSubset(const ComputeSubset&);
@@ -108,7 +147,7 @@ namespace Uintah {
   typedef ComputeSet<int>             MaterialSet;
   typedef ComputeSubset<const Patch*> PatchSubset;
   typedef ComputeSubset<int>          MaterialSubset;
-
+  
   template<class T>
   ComputeSet<T>::ComputeSet()
   {
@@ -130,6 +169,7 @@ namespace Uintah {
   {
     ASSERT(!un);
     ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub);
+    subset->sort();
     subset->addReference();
     set.push_back(subset);
   }
@@ -193,21 +233,57 @@ namespace Uintah {
     return total;
   }
 
-  // Will need to do something about const-ness here.
+  template <class T>
+  static constHandle< ComputeSubset<T> > ComputeSubset<T>::emptySet =
+  scinew ComputeSubset<T>();
+  
+  
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // template parameter not used in declaring arguments
+#pragma set woff 1209 // constant controlling expressions (passBackDifference)
+#endif  
+  
   template<class T>
-  const ComputeSubset<T>*
-  ComputeSubset<T>::intersection(const ComputeSubset<T>* s1,
-				 const ComputeSubset<T>* s2)
+  template<bool passBackDifferences>
+  constHandle< ComputeSubset<T> > ComputeSubset<T>::
+  intersectionAndMaybeDifferences(const constHandle< ComputeSubset<T> >& s1,
+				  const constHandle< ComputeSubset<T> >& s2,
+			    constHandle< ComputeSubset<T> >& setDifference1,
+			    constHandle< ComputeSubset<T> >& setDifference2)
   {
-    if(!s1)
-      return s2;
-    if(!s2)
+    if (s1 == s2) {
+      // for efficiency -- expedite when s1 and s2 point to the same thing 
+      setDifference1 = setDifference2 = ComputeSubset<T>::emptySet;
       return s1;
+    }
     
-    ComputeSubset<T>* result = scinew ComputeSubset<T>;
+    if (passBackDifferences) {      
+      setDifference1 = s1;
+      setDifference2 = s2;
+    }
+   
+    if (!s1) {
+      setDifference2 = 0; // arbitrarily
+      return s2; // treat null as everything -- intersecting with it gives all
+    }
+    if (!s2) {
+      setDifference1 = 0; // arbitrarily
+      return s1; // treat null as everything -- intersecting with it gives all
+    }
     
-    if(s1->size() == 0 || s2->size() == 0)
-      return result;
+    if (s1->size() == 0)
+      return s1; // return an empty set
+    if (s2->size() == 0)
+      return s2; // return an empty set
+    
+    Handle< ComputeSubset<T> > intersection = scinew ComputeSubset<T>;
+    Handle< ComputeSubset<T> > s1_minus_s2, s2_minus_s1;        
+    
+    if (passBackDifferences) {      
+      setDifference1 = s1_minus_s2 = scinew ComputeSubset<T>;
+      setDifference2 = s2_minus_s1 = scinew ComputeSubset<T>;
+    }
+    
     T el1 = s1->get(0);
     for(int i=1;i<s1->size();i++){
       T el = s1->get(i);
@@ -232,18 +308,57 @@ namespace Uintah {
     int i2=0;
     for(;;){
       if(s1->get(i1) == s2->get(i2)){
-	result->add(s1->get(i1));
+	intersection->add(s1->get(i1));
 	i1++; i2++;
       } else if(s1->get(i1) < s2->get(i2)){
+	if (passBackDifferences) {
+	  s1_minus_s2->add(s1->get(i1)); // alters setDifference1
+	}
 	i1++;
       } else {
+	if (passBackDifferences) {
+	  s2_minus_s1->add(s2->get(i2)); // alters setDifference2
+	}	
 	i2++;
       }
       if(i1 == s1->size() || i2 == s2->size())
 	break;
     }
-    return result;
+
+    if (passBackDifferences) {
+      if (intersection->empty()) {
+	// if the intersection is empty, then the set differences are
+	// the same as the sets that came in.
+	setDifference1 = s1;
+	setDifference2 = s2;
+      }
+      else {
+	// get the rest of whichever difference set wasn't finished (if any)
+	for (; i1 != s1->size(); i1++) {
+	  s1_minus_s2->add(s1->get(i1)); // alters setDifference1
+	}
+	for (; i2 != s2->size(); i2++) {
+	  s2_minus_s1->add(s2->get(i2));  // alters setDifference2
+	}
+      }
+    }
+
+    if (intersection->size() == s1->size()) {
+      return s1;
+    }
+    else if (intersection->size() == s2->size()) {
+      return s2;
+    }
+    else {
+      return intersection;
+    }
   }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209  
+#endif  
+  
 }
 
 #endif
