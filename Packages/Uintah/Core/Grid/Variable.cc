@@ -10,6 +10,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/SizeTypeConvert.h>
 #include <sstream>
 #include <zlib.h>
 #include <math.h>
@@ -140,16 +142,16 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
   // (round up, so use + 13).
   unsigned long compressBufsize = uncompressedSize * 101 / 100 + 13; 
 
-  pBuffer->resize(compressBufsize + sizeof(unsigned long));
+  pBuffer->resize(compressBufsize + sizeof(ssize_t));
   char* buf = const_cast<char*>(pBuffer->c_str()); // casting from const
-  buf += sizeof(unsigned long); /* the first part will give the size of
+  buf += sizeof(ssize_t); /* the first part will give the size of
 				   the uncompressed data */
   
   if (compress((Bytef*)buf, &compressBufsize,
 	       (const Bytef*)pUncompressed->c_str(), uncompressedSize) != Z_OK)
     cerr << "compress failed in Uintah::Variable::gzipCompress\n";
 
-  pBuffer->resize(compressBufsize + sizeof(unsigned long));
+  pBuffer->resize(compressBufsize + sizeof(ssize_t));
   if (pBuffer->size() > uncompressedSize) {
     // gzip made it worse -- forget that
     // (this should rarely, if ever, happen, but just in case)
@@ -160,7 +162,7 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
   else {
     // write out the uncompressed size to the first part of the buffer
     char* pbyte = (char*)(&uncompressedSize);
-    for (int i = 0; i < (int)sizeof(unsigned long); i++, pbyte++) {
+    for (int i = 0; i < (int)sizeof(ssize_t); i++, pbyte++) {
       (*pBuffer)[i] = *pbyte;
     }
     pUncompressed->erase(); /* the original buffer isn't needed, erase it to
@@ -170,7 +172,8 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 }
 
 
-void Variable::read(InputContext& ic, long end, const string& compressionMode)
+void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
+		    const string& compressionMode)
 {
   bool use_rle = false;
   bool use_gzip = false;
@@ -205,11 +208,13 @@ void Variable::read(InputContext& ic, long end, const string& compressionMode)
     // use gzip compression
 
     // first read the uncompressed data size
-    unsigned long uncompressed_size;
     istringstream compressedStream(data);
-    compressedStream.read((char*)&uncompressed_size, sizeof(unsigned long));
-    const char* compressed_data = data.c_str() + sizeof(unsigned long);
-    long compressed_datasize = datasize - (long)sizeof(unsigned long);
+    uint64_t uncompressed_size_64;    
+    compressedStream.read((char*)&uncompressed_size_64, nByteMode);
+    unsigned long uncompressed_size =
+      convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
+    const char* compressed_data = data.c_str() + nByteMode;
+    long compressed_datasize = datasize - (long)(nByteMode);
 
     // casting from const char* below to char* -- use caution
     bufferStr.resize(uncompressed_size);
@@ -225,12 +230,12 @@ void Variable::read(InputContext& ic, long end, const string& compressionMode)
   istringstream instream(*uncompressedData);
   
   if (use_rle)
-    readRLE(instream);
+    readRLE(instream, swapBytes, nByteMode);
   else
-    readNormal(instream);
+    readNormal(instream, swapBytes);
   ASSERT(instream.fail() == 0);
 #ifdef __sgi // should be removed when we get gcc-3.0+ working
-  ASSERTEQ((unsigned long)instream.tellg(), uncompressedData->size());
+  ASSERTEQ((ssize_t)instream.tellg(), uncompressedData->size());
 #endif
 }
 
@@ -239,7 +244,7 @@ bool Variable::emitRLE(ostream& /*out*/, DOM_Element /*varnode*/)
   return false; // not supported by default
 }
   
-void Variable::readRLE(istream& /*in*/)
+void Variable::readRLE(istream& /*in*/, bool /*swapBytes*/, int /*nByteMode*/)
 {
   throw InvalidCompressionMode("rle",
 			       virtualGetTypeDescription()->getName());
