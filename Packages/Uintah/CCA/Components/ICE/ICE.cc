@@ -489,11 +489,13 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
   t->requires(Task::OldDW,lb->doMechLabel);
   
   if (d_RateForm) {     //RATE FORM
-    t->requires(Task::NewDW,lb->press_diffX_FCLabel, /*all_matls*/ gac, 1);
-    t->requires(Task::NewDW,lb->press_diffY_FCLabel, /*all_matls*/ gac, 1);
-    t->requires(Task::NewDW,lb->press_diffZ_FCLabel, /*all_matls*/ gac, 1);
-    t->requires(Task::NewDW,lb->matl_press_CCLabel,  /*all_matls*/ gac, 1);
-    t->requires(Task::NewDW,lb->vol_frac_CCLabel,    /*all_matls*/ gac, 1);
+    t->requires(Task::NewDW,lb->DLabel,                        gac, 1);
+    t->requires(Task::NewDW,lb->matl_press_CCLabel,            gac, 1);
+    t->requires(Task::NewDW,lb->vol_frac_CCLabel,              gac, 1);
+    t->requires(Task::NewDW,lb->speedSound_CCLabel,            gac, 1);
+    t->computes(lb->press_diffX_FCLabel);
+    t->computes(lb->press_diffY_FCLabel);
+    t->computes(lb->press_diffZ_FCLabel); 
   }
 
   t->computes(lb->uvel_FCLabel);
@@ -669,9 +671,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gn);
   t->requires(Task::NewDW, lb->speedSound_CCLabel,           gn);
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
+
   if (d_EqForm) {       //EQ FORM
     t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
+    t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
   }
   if (d_RateForm) {     //RATE FORM
     t->requires(Task::NewDW, lb->matl_press_CCLabel,         gn,0);
@@ -687,7 +690,8 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW, lb->wvel_FCMELabel,             gac,1);
     t->requires(Task::NewDW, lb->press_diffX_FCLabel,        gac,1);     
     t->requires(Task::NewDW, lb->press_diffY_FCLabel,        gac,1);     
-    t->requires(Task::NewDW, lb->press_diffZ_FCLabel,        gac,1);     
+    t->requires(Task::NewDW, lb->press_diffZ_FCLabel,        gac,1);
+    t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);     
   }
 
 #ifdef ANNULUSICE
@@ -767,9 +771,9 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     t->requires(Task::NewDW, lb->f_theta_CCLabel,     gn);
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,gn);
     t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2); 
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2); 
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,2); 
+    t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,1); 
+    t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,1); 
+    t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,1); 
     t->computes(lb->spec_vol_L_CCLabel);
     t->computes(lb->spec_vol_source_CCLabel);
   }
