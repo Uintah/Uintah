@@ -299,11 +299,11 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	string result;
 	while (!in.eof()) {
 	  in >> c;
-	  if (c == '[' || c == ',' || c == ']')
+	  if (c == '[' || c == ',' || c == ' ' || c == ']')
 	    continue;
 	  next = in.peek();
 	  result += c;
-	  if (next == ',' || next == ']') {
+	  if (next == ',' ||  next == ' ' || next == ']') {
 	    // turn the result into a number
 	    double val = atof(result.c_str());
 	    value.push_back(val);
@@ -514,6 +514,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.27  2001/01/10 00:13:43  jas
+// Fixed the parsing of vector<double> to allow for spaces and . in the
+// [num,num, . . .].
+//
 // Revision 1.26  2000/12/21 21:53:09  jas
 // Added capability to read in an arbitrary length vector described by
 // [num,num,num,num,num].
