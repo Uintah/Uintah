@@ -185,8 +185,9 @@ namespace Uintah {
 	 virtual ConstitutiveModel* copy() const;
 	 
 	 virtual int getSize() const;
-} // End namespace Uintah
       };
+
+} // End namespace Uintah
 
 
 #endif  // __HYPERELASTIC_DAMAGE_CONSTITUTIVE_MODEL_H__

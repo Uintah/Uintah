@@ -472,6 +472,7 @@ void ElasticConstitutiveModel::printParameterNames(ofstream& out) const
 #endif
 
 namespace Uintah {
+
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(ElasticConstitutiveModel::CMData), sizeof(double)*2);
@@ -488,8 +489,6 @@ const TypeDescription* fun_getTypeDescription(ElasticConstitutiveModel::CMData*)
       td = scinew TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true, &makeMPI_CMData);
    }
    return td;   
-}
-   }
 }
 
 ConstitutiveModel*
@@ -526,5 +525,6 @@ int ElasticConstitutiveModel::getSize() const
   s += sizeof(double) * 2;  // properties
   s += sizeof(int) * 1;     // type
   return(s);
+}
 
-
+} //namespace Uintah
