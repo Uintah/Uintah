@@ -11,6 +11,7 @@ using std::ifstream;
 
 FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
 {
+  setName("file");
   string file_name,var_name;
   ps->require("name",file_name);
   

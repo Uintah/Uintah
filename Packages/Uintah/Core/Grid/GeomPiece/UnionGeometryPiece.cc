@@ -9,6 +9,7 @@ using namespace std;
 
 UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP &ps) 
 {
+  setName("union");
   // Need to loop through all the geometry pieces
   GeometryPieceFactory::create(ps,child);
   

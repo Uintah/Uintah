@@ -14,6 +14,7 @@ SRCS     += \
 	$(SRCDIR)/DifferenceGeometryPiece.cc \
 	$(SRCDIR)/IntersectionGeometryPiece.cc \
 	$(SRCDIR)/FileGeometryPiece.cc \
+	$(SRCDIR)/NullGeometryPiece.cc \
 	$(SRCDIR)/GeometryPieceFactory.cc \
 	$(SRCDIR)/ShellGeometryPiece.cc \
 	$(SRCDIR)/ShellGeometryFactory.cc \

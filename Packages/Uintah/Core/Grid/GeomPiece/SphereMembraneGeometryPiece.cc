@@ -12,6 +12,7 @@ using namespace SCIRun;
 
 SphereMembraneGeometryPiece::SphereMembraneGeometryPiece(ProblemSpecP& ps)
 {
+  setName("sphere_membrane");
   ps->require("origin",d_origin);
   ps->require("radius",d_radius);
   ps->require("thickness",d_h);

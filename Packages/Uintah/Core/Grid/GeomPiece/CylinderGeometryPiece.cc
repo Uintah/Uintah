@@ -19,6 +19,7 @@ CylinderGeometryPiece::CylinderGeometryPiece()
 
 CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) 
 {
+  setName("cylinder");
   Point top,bottom;
   double rad;
   

@@ -9,6 +9,7 @@ using namespace Uintah;
 
 IntersectionGeometryPiece::IntersectionGeometryPiece(ProblemSpecP &ps) 
 {
+  setName("intersection");
   GeometryPieceFactory::create(ps,child);
 
 }
