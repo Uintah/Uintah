@@ -58,6 +58,10 @@ DESCRIPTION
     static void initialize(int, char*[]);
 
     //////////
+    // Finalize PIDL
+    static void finalize();
+
+    //////////
     // Get the start point channel  
     static SpChannel* getSpChannel();
 
