@@ -95,7 +95,7 @@ itcl_class PSECommon_Fields_GenField {
 	frame $w.f.r
 
 
-	iwidgets::tabnotebook $w.f.r.functions -width 3i -height 2i
+	iwidgets::tabnotebook $w.f.r.functions -width 3i -height 1i
 
 	set page1 [$w.f.r.functions add -label "Scalar"]
 	make_entry $page1.fval1 "Function" $this-fval1 "$this-c needexecute"
@@ -107,19 +107,19 @@ itcl_class PSECommon_Fields_GenField {
 	make_entry $page2.fval3 "Function Z" $this-fval3 "$this-c needexecute"
 	pack $page2.fval1 $page2.fval2 $page2.fval3
 
-	set page3 [$w.f.r.functions add -label "Tensor"]
-	make_entry $page3.fval1 "Function XX" $this-fval1 "$this-c needexecute"
-	make_entry $page3.fval2 "Function XY" $this-fval2 "$this-c needexecute"
-	make_entry $page3.fval3 "Function XZ" $this-fval3 "$this-c needexecute"
-	make_entry $page3.fval4 "Function YX" $this-fval4 "$this-c needexecute"
-	make_entry $page3.fval5 "Function YY" $this-fval5 "$this-c needexecute"
-	make_entry $page3.fval6 "Function YZ" $this-fval6 "$this-c needexecute"
-	make_entry $page3.fval7 "Function ZX" $this-fval7 "$this-c needexecute"
-	make_entry $page3.fval8 "Function ZY" $this-fval8 "$this-c needexecute"
-	make_entry $page3.fval9 "Function ZZ" $this-fval9 "$this-c needexecute"
-	pack $page3.fval1 $page3.fval2 $page3.fval3
-	pack $page3.fval4 $page3.fval5 $page3.fval6
-	pack $page3.fval7 $page3.fval8 $page3.fval9
+	# set page3 [$w.f.r.functions add -label "Tensor"]
+	# make_entry $page3.fval1 "Function XX" $this-fval1 "$this-c needexecute"
+	# make_entry $page3.fval2 "Function XY" $this-fval2 "$this-c needexecute"
+	# make_entry $page3.fval3 "Function XZ" $this-fval3 "$this-c needexecute"
+	# make_entry $page3.fval4 "Function YX" $this-fval4 "$this-c needexecute"
+	# make_entry $page3.fval5 "Function YY" $this-fval5 "$this-c needexecute"
+	# make_entry $page3.fval6 "Function YZ" $this-fval6 "$this-c needexecute"
+	# make_entry $page3.fval7 "Function ZX" $this-fval7 "$this-c needexecute"
+	# make_entry $page3.fval8 "Function ZY" $this-fval8 "$this-c needexecute"
+	# make_entry $page3.fval9 "Function ZZ" $this-fval9 "$this-c needexecute"
+	# pack $page3.fval1 $page3.fval2 $page3.fval3
+	# pack $page3.fval4 $page3.fval5 $page3.fval6
+	# pack $page3.fval7 $page3.fval8 $page3.fval9
 
 	$w.f.r.functions view "Scalar"
 	$w.f.r.functions configure -tabpos n
