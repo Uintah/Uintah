@@ -1126,238 +1126,433 @@ class BioImageApp {
 	if {$case == 0} {
 	    global mods
 	    
-	    # create load modules and inner connections
-	    set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
-	    set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 28 70]
-	    set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 46 128]
-	    set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 65 186]
-	    set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 245]
-	    set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 324]
-	    set m25 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 65 1054]
+# # 	    # create load modules and inner connections
+# # 	    set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
+# # 	    set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 28 70]
+# # 	    set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 46 128]
+# # 	    set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 65 186]
+# # 	    set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 245]
+# # 	    set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 324]
+# # 	    set m25 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 65 1054]
 	    	  
-	    set c1 [addConnection $m4 0 $m5 0]
-	    set c2 [addConnection $m1 0 $m6 0]
-	    set c3 [addConnection $m2 0 $m6 1]
-	    set c4 [addConnection $m3 0 $m6 2]
-	    set c5 [addConnection $m5 2 $m6 3]
+# # 	    set c1 [addConnection $m4 0 $m5 0]
+# # 	    set c2 [addConnection $m1 0 $m6 0]
+# # 	    set c3 [addConnection $m2 0 $m6 1]
+# # 	    set c4 [addConnection $m3 0 $m6 2]
+# # 	    set c5 [addConnection $m5 2 $m6 3]
 
 	    
-	    # Disable other load modules (Dicom, Analyze, Field)
+# # 	    # Disable other load modules (Dicom, Analyze, Field)
+# # 	    disableModule $m2 1
+# # 	    disableModule $m3 1
+# # 	    disableModule $m4 1
+	    
+# # 	    # create vis modules and inner connections
+# # 	    set m7 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 163 1848]
+# # #	    set m8 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 10 2191]
+# # 	    set m9 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 253 2139]
+# # #	    set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 218 2278]
+# # #	    set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 218 2198]
+# # 	    set m11 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 235 1998]
+# # 	    set m12 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 0 2263]
+# # #	    set m13 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 447 2138]
+# # 	    set m14 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 181 2471]
+# # 	    set m15 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 0 2548]
+# # #	    set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 182 1937]
+# # #	    set m17 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 182 1997]
+# # #	    set m18 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 182 2056]
+# # 	    set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 422 2266]
+# # 	    set m20 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 422 2330]
+# # 	    set m21 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 422 2393]
+# # 	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 440 2075]
+# # 	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 422 2139]
+# # 	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 422 2202]
+# #             set m26 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 163 2397]
+# # 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 199 2264]
+# # 	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 0 1998]
+
+# # 	    set m29 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 81 408]
+# # 	    set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 81 575]
+# # 	    set m31 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 60 731]
+# # 	    set m32 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 50 892]
+# # 	    set m33 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 9 653]
+# # 	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 813]
+# # 	    set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 970]
+# # 	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 485]
+# #             set m37 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 18 2486]
+
+
+# # 	    # store some in mods
+# # 	    set mods(EditColorMap2D) $m14
+	    
+# # 	    set c1 [addConnection $m11 0 $m12 0]
+# # 	    set c2 [addConnection $m12 0 $m15 0]
+# # 	    set c3 [addConnection $m11 1 $m9 0]
+# # 	    set c4 [addConnection $m11 1 $m22 2]
+# # 	    set c5 [addConnection $m27 0 $m37 0]
+# # 	    set c6 [addConnection $m24 0 $m19 0]
+# # 	    set c7 [addConnection $m23 0 $m24 0]
+# # 	    set c8 [addConnection $m20 0 $m21 0]
+# # 	    set c9 [addConnection $m19 0 $m20 0]
+# # 	    set c10 [addConnection $m37 0 $m15 1]
+# # #	    set c11 [addConnection $m13 0 $m9 0]
+# # #	    set c12 [addConnection $m11 1 $m10 0]
+# # 	    set c13 [addConnection $m22 0 $m23 1]
+# # #	    set c14 [addConnection $m8 0 $m10 1]
+# # 	    set c15 [addConnection $m9 0 $m12 1]
+# # 	    set c16 [addConnection $m21 0 $m14 1]
+# # 	    set c17 [addConnection $m14 0 $m15 2]
+# # #	    set c18 [addConnection $m13 0 $m22 2]
+# # 	    set c19 [addConnection $m7 0 $m26 0]
+# # 	    set c20 [addConnection $m27 0 $m26 2]
+# # 	    set c29 [addConnection $m7 0 $m28 0]
+
+# # 	    # connect load to vis
+# # 	    set c21 [addConnection $m6 0 $m36 0]
+# # #	    set c22 [addConnection $m7 0 $m8 0]
+# # 	    set c23 [addConnection $m7 0 $m11 0]
+# # 	    set c24 [addConnection $m7 0 $m22 1]
+
+# # 	    # connect vis to Viewer
+# # 	    set c25 [addConnection $m15 0 $mods(Viewer) 0]
+
+# # 	    # flip connections
+# # 	    # might want to connect this to $m6 instead of $m36
+# # 	    # depending on desired behavior
+
+# #  	    set c26 [addConnection $m33 0 $m34 0]
+# #  	    set c27 [addConnection $m33 0 $m31 0]
+# #  	    set c28 [addConnection $m34 0 $m35 0]
+# #  	    set c29 [addConnection $m34 0 $m32 0]
+# #             set c32 [addConnection $m6 0 $m29 0]
+# #             set c33 [addConnection $m6 0 $m36 0]
+# #             set c34 [addConnection $m29 0 $m36 1]
+# # 	    set c35 [addConnection $m36 0 $m30 0]
+# # 	    set c36 [addConnection $m36 0 $m33 0]
+# # 	    set c36 [addConnection $m30 0 $m33 1]
+# # 	    set c38 [addConnection $m31 0 $m34 1]
+# # 	    set c39 [addConnection $m32 0 $m35 1]
+# # 	    set c40 [addConnection $m35 0 $m25 0]
+# # 	    set c41 [addConnection $m35 0 $m7 0]
+
+# # 	    # connect 2D Viewer to 3D Viewer
+# # 	    set c37 [addConnection $m26 0 $mods(Viewer) 1]
+
+# # 	    # connect EditColorMap2D to ViewSlices for painting
+# # 	    set c42 [addConnection $m14 0 $m26 4]
+
+# # 	    # connect Gradient Magnitude to ViewSlices for painting
+# # 	    set c43 [addConnection $m9 0 $m26 5]
+
+# # 	    set c46 [addConnection $m26 1 $m14 0]
+
+# # 	    # disable the volume rendering
+# #  	    disableModule $m15 1
+# # 	    disableModule $m11 1
+# #  	    disableModule $m22 1
+# #             disableModule $m14 1
+# # 	    disableModule $m12 1
+# # 	    disableModule $m9 1
+
+# # 	    # disable flip/permute modules
+# # 	    disableModule $m29 1
+# # 	    disableModule $m30 1
+# # 	    disableModule $m31 1
+# # 	    disableModule $m32 1
+
+# # 	    # set some ui parameters
+# # 	    setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
+
+# # 	    setGlobal $m9-nbits {8}
+# # 	    setGlobal $m9-useinputmin 1
+# # 	    setGlobal $m9-useinputmax 1
+
+# # 	    setGlobal $m11-valuesonly {0}
+# # 	    setGlobal $m11-useinputmin {0}
+# # 	    setGlobal $m11-useinputmax {0}
+
+# # 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
+# #             setGlobal $m14-panx {0.0}
+# #             setGlobal $m14-pany {0.0}
+# #             setGlobal $m14-scale_factor {1.0}
+# #             setGlobal $m14-faux {1}
+# #             setGlobal $m14-histo {0.5}
+# #             setGlobal $m14-name-0 {Triangle}
+# #             setGlobal $m14-0-color-r {0.12221829371}
+# #             setGlobal $m14-0-color-g {0.773248783139}
+# #             setGlobal $m14-0-color-b {0.741646733309}
+# #             setGlobal $m14-0-color-a {0.800000011921}
+# #             setGlobal $m14-state-0 {t 0.670178 0.0621057 0.540499 0.495436 0.464177}
+# #             setGlobal $m14-shadeType-0 {0}
+# #             setGlobal $m14-on-0 {1}
+# #             setGlobal $m14-name-1 {Rectangle}
+# #             setGlobal $m14-1-color-r {0.0157082642279}
+# #             setGlobal $m14-1-color-g {0.602349504633}
+# #             setGlobal $m14-1-color-b {0.310323060825}
+# #             setGlobal $m14-1-color-a {0.800000011921}
+# #             setGlobal $m14-state-1 {r 0 0.222522 0.0544884 0.212415 0.318622 0.612325}
+# #             setGlobal $m14-shadeType-1 {0}
+# #             setGlobal $m14-on-1 {1}
+# #             setGlobal $m14-marker {end}
+
+# # 	    setGlobal $m15-alpha_scale {0.0}
+# # 	    setGlobal $m15-shading {1}
+# # 	    setGlobal $m15-ambient {0.5}
+# # 	    setGlobal $m15-diffuse {0.5}
+# # 	    setGlobal $m15-specular {0.388}
+# # 	    setGlobal $m15-shine {24}
+# #             setGlobal $m15-adaptive {1}
+# # 	    global $m15-shading-button-state
+# # 	    trace variable $m15-shading-button-state w \
+# # 		"$this update_BioImage_shading_button_state"
+
+# # 	    setGlobal $m19-bins {3000}
+# # 	    setGlobal $m19-sbins {1}
+
+# # 	    setGlobal $m20-gamma {0.5}
+
+# # 	    setGlobal $m21-nbits {8}
+# # 	    setGlobal $m21-useinputmin 1
+# # 	    setGlobal $m21-useinputmax 1
+
+# # 	    setGlobal $m22-bins {512 256}
+# # 	    setGlobal $m22-mins {nan nan}
+# # 	    setGlobal $m22-maxs {nan nan}
+# # 	    setGlobal $m22-type {nrrdTypeFloat}
+
+# # 	    setGlobal $m23-operator {+}
+
+# # 	    setGlobal $m24-operator {log}
+
+# #             global $m26-crop_minAxis0 $m26-crop_maxAxis0
+# #             global $m26-crop_minAxis1 $m26-crop_maxAxis1
+# #             global $m26-crop_minAxis2 $m26-crop_maxAxis2
+# # 	    trace variable $m26-crop_minAxis0 w "$this update_crop_values"
+# # 	    trace variable $m26-crop_minAxis1 w "$this update_crop_values"
+# # 	    trace variable $m26-crop_minAxis2 w "$this update_crop_values"
+# # 	    trace variable $m26-crop_maxAxis0 w "$this update_crop_values"
+# # 	    trace variable $m26-crop_maxAxis1 w "$this update_crop_values"
+# # 	    trace variable $m26-crop_maxAxis2 w "$this update_crop_values"
+# # 	    trace variable $m26-geom_flushed  w "$this maybe_autoview"
+
+# # 	    global planes_mapType
+# # 	    setGlobal $m27-mapType $planes_mapType
+# # 	    setGlobal $m27-width 441
+# # 	    setGlobal $m24-height 40
+	    
+# # 	    # intialize at full alpha
+# # 	    setGlobal $m27-positionList {{0 0} {441 0}}
+# # 	    setGlobal $m27-nodeList {514 1055}
+
+# # 	    setGlobal $m30-axis 0
+
+# # 	    setGlobal $m31-axis 1
+
+# # 	    setGlobal $m32-axis 2
+
+# # 	    setGlobal $m37-isFixed 1
+# # 	    setGlobal $m37-min 0
+# # 	    setGlobal $m37-max 0
+
+	    set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
+	    set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 28 68]
+	    set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 46 128]
+	    set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 91 184]
+	    set m5 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 91 242]
+	    set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 322]
+	    set m7 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 76 402]
+	    set m8 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 479]
+	    set m9 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 72 563]
+	    set m10 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 641]
+	    set m11 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 62 723]
+	    set m12 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 808]
+	    set m13 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 54 890]
+	    set m14 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 972]
+	    set m15 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 139 1055]
+	    set m16 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 238 2012]
+	    set m17 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 29 2121]
+	    set m18 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 310 2126]
+	    set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 527 2209]
+	    set m20 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 328 2268]
+	    set m21 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 509 2267]
+	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 509 2330]
+	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 509 2392]
+	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 509 2455]
+	    set m25 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 509 2517]
+	    set m26 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 42 2350]
+	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 274 2432]
+	    set m28 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 238 2519]
+	    set m29 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 256 2597]
+	    set m30 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 60 2629]
+	    set m31 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 42 2700]
+	    
+	    # Create the Connections between Modules
+	    set c1 [addConnection $m4 0 $m5 0]
+	    set c2 [addConnection $m28 1 $m29 0]
+	    set c3 [addConnection $m27 0 $m30 0]
+	    set c4 [addConnection $m26 0 $m31 0]
+	    set c5 [addConnection $m1 0 $m6 0]
+	    set c6 [addConnection $m6 0 $m8 0]
+	    set c7 [addConnection $m6 0 $m7 0]
+	    set c8 [addConnection $m8 0 $m10 0]
+	    set c9 [addConnection $m8 0 $m9 0]
+	    set c10 [addConnection $m10 0 $m12 0]
+	    set c11 [addConnection $m10 0 $m11 0]
+	    set c12 [addConnection $m12 0 $m14 0]
+	    set c13 [addConnection $m12 0 $m13 0]
+	    set c14 [addConnection $m14 0 $m16 0]
+	    set c15 [addConnection $m14 0 $m15 0]
+	    set c16 [addConnection $m16 0 $m28 0]
+	    set c17 [addConnection $m16 0 $m17 0]
+	    set c18 [addConnection $m16 0 $m18 0]
+	    set c19 [addConnection $m18 0 $m26 0]
+	    set c20 [addConnection $m18 1 $m20 0]
+	    set c21 [addConnection $m22 0 $m23 0]
+	    set c22 [addConnection $m21 0 $m22 0]
+	    set c23 [addConnection $m24 0 $m25 0]
+	    set c24 [addConnection $m23 0 $m24 0]
+	    set c25 [addConnection $m30 0 $m31 1]
+	    set c26 [addConnection $m2 0 $m6 1]
+	    set c27 [addConnection $m16 0 $m19 1]
+	    set c28 [addConnection $m9 0 $m10 1]
+	    set c29 [addConnection $m11 0 $m12 1]
+	    set c30 [addConnection $m13 0 $m14 1]
+	    set c31 [addConnection $m19 0 $m21 1]
+	    set c32 [addConnection $m7 0 $m8 1]
+	    set c33 [addConnection $m20 0 $m26 1]
+	    set c34 [addConnection $m25 0 $m29 1]
+	    set c35 [addConnection $m29 0 $m31 2]
+	    set c36 [addConnection $m27 0 $m28 2]
+	    set c37 [addConnection $m3 0 $m6 2]
+	    set c38 [addConnection $m18 1 $m19 2]
+	    set c39 [addConnection $m5 2 $m6 3]
+	    set c40 [addConnection $m29 0 $m28 4]
+	    set c41 [addConnection $m20 0 $m28 5]
+	    set c42 [addConnection $m31 0 $mods(Viewer) 0]
+	    set c42 [addConnection $m28 0 $mods(Viewer) 1]
+
+ 	    # set some ui parameters
+ 	    setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
+
+ 	    setGlobal $m20-nbits {8}
+ 	    setGlobal $m20-useinputmin 1
+ 	    setGlobal $m20-useinputmax 1
+
+ 	    setGlobal $m18-valuesonly {0}
+ 	    setGlobal $m18-useinputmin {0}
+ 	    setGlobal $m18-useinputmax {0}
+
+ 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
+	    setGlobal $m29-panx {0.0}
+	    setGlobal $m29-pany {0.0}
+	    setGlobal $m29-scale_factor {1.0}
+	    setGlobal $m29-faux {1}
+	    setGlobal $m29-histo {0.5}
+	    setGlobal $m29-name-0 {Triangle}
+	    setGlobal $m29-0-color-r {0.12221829371}
+	    setGlobal $m29-0-color-g {0.773248783139}
+	    setGlobal $m29-0-color-b {0.741646733309}
+	    setGlobal $m29-0-color-a {0.800000011921}
+	    setGlobal $m29-state-0 {t 0.670178 0.0621057 0.540499 0.495436 0.464177}
+	    setGlobal $m29-shadeType-0 {0}
+	    setGlobal $m29-on-0 {1}
+	    setGlobal $m29-name-1 {Rectangle}
+	    setGlobal $m29-1-color-r {0.0157082642279}
+	    setGlobal $m29-1-color-g {0.602349504633}
+	    setGlobal $m29-1-color-b {0.310323060825}
+	    setGlobal $m29-1-color-a {0.800000011921}
+	    setGlobal $m29-state-1 {r 0 0.222522 0.0544884 0.212415 0.318622 0.612325}
+	    setGlobal $m29-shadeType-1 {0}
+	    setGlobal $m29-on-1 {1}
+	    setGlobal $m29-marker {end}
+
+  	    setGlobal $m31-alpha_scale {0.0}
+  	    setGlobal $m31-shading {1}
+  	    setGlobal $m31-ambient {0.5}
+  	    setGlobal $m31-diffuse {0.5}
+  	    setGlobal $m31-specular {0.388}
+  	    setGlobal $m31-shine {24}
+              setGlobal $m31-adaptive {1}
+  	    global $m31-shading-button-state
+  	    trace variable $m31-shading-button-state w \
+  		"$this update_BioImage_shading_button_state"
+
+ 	    setGlobal $m23-bins {3000}
+ 	    setGlobal $m23-sbins {1}
+
+ 	    setGlobal $m24-gamma {0.5}
+
+ 	    setGlobal $m25-nbits {8}
+ 	    setGlobal $m25-useinputmin 1
+ 	    setGlobal $m25-useinputmax 1
+
+ 	    setGlobal $m19-bins {512 256}
+ 	    setGlobal $m19-mins {nan nan}
+ 	    setGlobal $m19-maxs {nan nan}
+ 	    setGlobal $m19-type {nrrdTypeFloat}
+
+ 	    setGlobal $m21-operator {+}
+
+ 	    setGlobal $m22-operator {log}
+
+	    global $m28-crop_minAxis0 $m28-crop_maxAxis0
+	    global $m28-crop_minAxis1 $m28-crop_maxAxis1
+	    global $m28-crop_minAxis2 $m28-crop_maxAxis2
+  	    trace variable $m28-crop_minAxis0 w "$this update_crop_values"
+  	    trace variable $m28-crop_minAxis1 w "$this update_crop_values"
+  	    trace variable $m28-crop_minAxis2 w "$this update_crop_values"
+  	    trace variable $m28-crop_maxAxis0 w "$this update_crop_values"
+  	    trace variable $m28-crop_maxAxis1 w "$this update_crop_values"
+  	    trace variable $m28-crop_maxAxis2 w "$this update_crop_values"
+  	    trace variable $m28-geom_flushed  w "$this maybe_autoview"
+
+ 	    global planes_mapType
+ 	    setGlobal $m27-mapType $planes_mapType
+ 	    setGlobal $m27-width 441
+ 	    setGlobal $m27-height 40
+ 	    setGlobal $m27-positionList {{0 0} {441 0}}
+ 	    setGlobal $m27-nodeList {514 1055}
+
+ 	    setGlobal $m9-axis 0
+
+ 	    setGlobal $m11-axis 1
+
+ 	    setGlobal $m13-axis 2
+
+ 	    setGlobal $m30-isFixed 1
+ 	    setGlobal $m30-min 0
+ 	    setGlobal $m30-max 0
+
+	    # disable other load modules
 	    disableModule $m2 1
 	    disableModule $m3 1
 	    disableModule $m4 1
-	    
-	    # create vis modules and inner connections
-	    set m7 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 163 1848]
-#	    set m8 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 10 2191]
-	    set m9 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 253 2139]
-#	    set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 218 2278]
-#	    set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 218 2198]
-	    set m11 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 235 1998]
-	    set m12 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 0 2263]
-#	    set m13 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 447 2138]
-	    set m14 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 181 2471]
-	    set m15 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 0 2548]
-#	    set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 182 1937]
-#	    set m17 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 182 1997]
-#	    set m18 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 182 2056]
-	    set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 422 2266]
-	    set m20 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 422 2330]
-	    set m21 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 422 2393]
-	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 440 2075]
-	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 422 2139]
-	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 422 2202]
-            set m26 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 163 2397]
-	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 199 2264]
-	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 0 1998]
 
-	    set m29 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 81 408]
-	    set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 81 575]
-	    set m31 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 60 731]
-	    set m32 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 50 892]
-	    set m33 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 9 653]
-	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 813]
-	    set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 970]
-	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 485]
-            set m37 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 18 2486]
-
-
-	    # store some in mods
-	    set mods(EditColorMap2D) $m14
-	    
-	    set c1 [addConnection $m11 0 $m12 0]
-	    set c2 [addConnection $m12 0 $m15 0]
-	    set c3 [addConnection $m11 1 $m9 0]
-	    set c4 [addConnection $m11 1 $m22 2]
-	    set c5 [addConnection $m27 0 $m37 0]
-	    set c6 [addConnection $m24 0 $m19 0]
-	    set c7 [addConnection $m23 0 $m24 0]
-	    set c8 [addConnection $m20 0 $m21 0]
-	    set c9 [addConnection $m19 0 $m20 0]
-	    set c10 [addConnection $m37 0 $m15 1]
-#	    set c11 [addConnection $m13 0 $m9 0]
-#	    set c12 [addConnection $m11 1 $m10 0]
-	    set c13 [addConnection $m22 0 $m23 1]
-#	    set c14 [addConnection $m8 0 $m10 1]
-	    set c15 [addConnection $m9 0 $m12 1]
-	    set c16 [addConnection $m21 0 $m14 1]
-	    set c17 [addConnection $m14 0 $m15 2]
-#	    set c18 [addConnection $m13 0 $m22 2]
-	    set c19 [addConnection $m7 0 $m26 0]
-	    set c20 [addConnection $m27 0 $m26 2]
-	    set c29 [addConnection $m7 0 $m28 0]
-
-	    # connect load to vis
-	    set c21 [addConnection $m6 0 $m36 0]
-#	    set c22 [addConnection $m7 0 $m8 0]
-	    set c23 [addConnection $m7 0 $m11 0]
-	    set c24 [addConnection $m7 0 $m22 1]
-
-	    # connect vis to Viewer
-	    set c25 [addConnection $m15 0 $mods(Viewer) 0]
-
-	    # flip connections
-	    # might want to connect this to $m6 instead of $m36
-	    # depending on desired behavior
-
- 	    set c26 [addConnection $m33 0 $m34 0]
- 	    set c27 [addConnection $m33 0 $m31 0]
- 	    set c28 [addConnection $m34 0 $m35 0]
- 	    set c29 [addConnection $m34 0 $m32 0]
-            set c32 [addConnection $m6 0 $m29 0]
-            set c33 [addConnection $m6 0 $m36 0]
-            set c34 [addConnection $m29 0 $m36 1]
-	    set c35 [addConnection $m36 0 $m30 0]
-	    set c36 [addConnection $m36 0 $m33 0]
-	    set c36 [addConnection $m30 0 $m33 1]
-	    set c38 [addConnection $m31 0 $m34 1]
-	    set c39 [addConnection $m32 0 $m35 1]
-	    set c40 [addConnection $m35 0 $m25 0]
-	    set c41 [addConnection $m35 0 $m7 0]
-
-	    # connect 2D Viewer to 3D Viewer
-	    set c37 [addConnection $m26 0 $mods(Viewer) 1]
-
-	    # connect EditColorMap2D to ViewSlices for painting
-	    set c42 [addConnection $m14 0 $m26 4]
-
-	    # connect Gradient Magnitude to ViewSlices for painting
-	    set c43 [addConnection $m9 0 $m26 5]
-
-	    set c46 [addConnection $m26 1 $m14 0]
-
-	    # disable the volume rendering
- 	    disableModule $m15 1
-	    disableModule $m11 1
- 	    disableModule $m22 1
-            disableModule $m14 1
-	    disableModule $m12 1
-	    disableModule $m9 1
-
-	    # disable flip/permute modules
+  	    # disable the volume rendering
+   	    disableModule $m31 1
+  	    disableModule $m18 1
+   	    disableModule $m19 1
 	    disableModule $m29 1
-	    disableModule $m30 1
-	    disableModule $m31 1
-	    disableModule $m32 1
+  	    disableModule $m26 1
+  	    disableModule $m20 1
 
-	    # set some ui parameters
-	    setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
+  	    # disable flip/permute modules
+  	    disableModule $m7 1
+  	    disableModule $m9 1
+  	    disableModule $m11 1
+  	    disableModule $m13 1
 
-	    setGlobal $m9-nbits {8}
-	    setGlobal $m9-useinputmin 1
-	    setGlobal $m9-useinputmax 1
+ 	    set mods(EditColorMap2D) $m29
 
-	    setGlobal $m11-valuesonly {0}
-	    setGlobal $m11-useinputmin {0}
-	    setGlobal $m11-useinputmax {0}
 
-	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
-            setGlobal $m14-panx {0.0}
-            setGlobal $m14-pany {0.0}
-            setGlobal $m14-scale_factor {1.0}
-            setGlobal $m14-faux {1}
-            setGlobal $m14-histo {0.5}
-            setGlobal $m14-name-0 {Triangle}
-            setGlobal $m14-0-color-r {0.12221829371}
-            setGlobal $m14-0-color-g {0.773248783139}
-            setGlobal $m14-0-color-b {0.741646733309}
-            setGlobal $m14-0-color-a {0.800000011921}
-            setGlobal $m14-state-0 {t 0.670178 0.0621057 0.540499 0.495436 0.464177}
-            setGlobal $m14-shadeType-0 {0}
-            setGlobal $m14-on-0 {1}
-            setGlobal $m14-name-1 {Rectangle}
-            setGlobal $m14-1-color-r {0.0157082642279}
-            setGlobal $m14-1-color-g {0.602349504633}
-            setGlobal $m14-1-color-b {0.310323060825}
-            setGlobal $m14-1-color-a {0.800000011921}
-            setGlobal $m14-state-1 {r 0 0.222522 0.0544884 0.212415 0.318622 0.612325}
-            setGlobal $m14-shadeType-1 {0}
-            setGlobal $m14-on-1 {1}
-            setGlobal $m14-marker {end}
 
-	    setGlobal $m15-alpha_scale {0.0}
-	    setGlobal $m15-shading {1}
-	    setGlobal $m15-ambient {0.5}
-	    setGlobal $m15-diffuse {0.5}
-	    setGlobal $m15-specular {0.388}
-	    setGlobal $m15-shine {24}
-            setGlobal $m15-adaptive {1}
-	    global $m15-shading-button-state
-	    trace variable $m15-shading-button-state w \
-		"$this update_BioImage_shading_button_state"
+#	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 0 $m9 0 $m11 $m12 0 $m14 $m15 0 0 0 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
+#	    set filters(0) [list load $mod_list [list $m6] [list $m35 0] start end 0 0 1 "Data - Unknown"]
+	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m16 0 $m20 0 $m18 $m26 0 $m29 $m31 0 0 0 $m23 $m24 $m25 $m19 $m21 $m22 $m15 $m28 $m27 $m17 $m7 $m9 $m11 $m13 $m10 $m12 $m14 $m8 $m30]
 
-	    setGlobal $m19-bins {3000}
-	    setGlobal $m19-sbins {1}
+	    set filters(0) [list load $mod_list [list $m6] [list $m14 0] start end 0 0 1 "Data - Unknown"]
 
-	    setGlobal $m20-gamma {0.5}
-
-	    setGlobal $m21-nbits {8}
-	    setGlobal $m21-useinputmin 1
-	    setGlobal $m21-useinputmax 1
-
-	    setGlobal $m22-bins {512 256}
-	    setGlobal $m22-mins {nan nan}
-	    setGlobal $m22-maxs {nan nan}
-	    setGlobal $m22-type {nrrdTypeFloat}
-
-	    setGlobal $m23-operator {+}
-
-	    setGlobal $m24-operator {log}
-
-            global $m26-crop_minAxis0 $m26-crop_maxAxis0
-            global $m26-crop_minAxis1 $m26-crop_maxAxis1
-            global $m26-crop_minAxis2 $m26-crop_maxAxis2
-	    trace variable $m26-crop_minAxis0 w "$this update_crop_values"
-	    trace variable $m26-crop_minAxis1 w "$this update_crop_values"
-	    trace variable $m26-crop_minAxis2 w "$this update_crop_values"
-	    trace variable $m26-crop_maxAxis0 w "$this update_crop_values"
-	    trace variable $m26-crop_maxAxis1 w "$this update_crop_values"
-	    trace variable $m26-crop_maxAxis2 w "$this update_crop_values"
-	    trace variable $m26-geom_flushed  w "$this maybe_autoview"
-
-	    global planes_mapType
-	    setGlobal $m27-mapType $planes_mapType
-	    setGlobal $m27-width 441
-	    setGlobal $m24-height 40
-	    
-	    # intialize at full alpha
-	    setGlobal $m27-positionList {{0 0} {441 0}}
-	    setGlobal $m27-nodeList {514 1055}
-
-	    setGlobal $m30-axis 0
-
-	    setGlobal $m31-axis 1
-
-	    setGlobal $m32-axis 2
-
-	    setGlobal $m37-isFixed 1
-	    setGlobal $m37-min 0
-	    setGlobal $m37-max 0
-
-	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 0 $m9 0 $m11 $m12 0 $m14 $m15 0 0 0 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
-	    set filters(0) [list load $mod_list [list $m6] [list $m35 0] start end 0 0 1 "Data - Unknown"]
-
-            $this build_viewers $m25 $m26
+            $this build_viewers $mods(Viewer) $m28
 	}
 	
 	set f [add_Load_UI $history 0 0]
