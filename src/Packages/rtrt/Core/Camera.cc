@@ -146,11 +146,12 @@ double Camera::get_fov() const
 }
 
 void Camera::getParams(Point& origin, Vector& direction,
-		       Vector& up, double& vfov)
+		       Vector& up, Vector& side, double& vfov)
 {
     origin=eye;
     direction=this->direction;
     up=u;
+    side=v;
     vfov=fov;
 }
 
