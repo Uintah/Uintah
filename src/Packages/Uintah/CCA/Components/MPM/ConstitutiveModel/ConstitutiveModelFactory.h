@@ -6,6 +6,7 @@
 namespace Uintah {
 
   class ConstitutiveModel;
+  class MPMLabel;
 
   class ConstitutiveModelFactory
   {
@@ -13,7 +14,7 @@ namespace Uintah {
     // this function has a switch for all known mat_types
     // and calls the proper class' readParameters()
     // addMaterial() calls this
-    static ConstitutiveModel* create(ProblemSpecP& ps);
+    static ConstitutiveModel* create(ProblemSpecP& ps, MPMLabel* lb);
   };
 } // End namespace Uintah
       

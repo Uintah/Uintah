@@ -54,7 +54,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb)
 
   // Step 1 -- create the constitutive gmodel.
 
-   d_cm = ConstitutiveModelFactory::create(ps);
+   d_cm = ConstitutiveModelFactory::create(ps,lb);
    if(!d_cm)
       throw ParameterNotFound("No constitutive model");
 
@@ -153,8 +153,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				  const Patch* patch,
 				  DataWarehouse* new_dw)
 {
-  //   const MPMLabel* lb = MPMLabel::getLabels();
-
    ParticleSubset* subset = new_dw->createParticleSubset(numParticles,
 							 getDWIndex(), patch);
    ParticleVariable<Point> position;

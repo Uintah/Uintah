@@ -27,8 +27,6 @@ namespace Uintah {
             double Shear;
          };
       private:
-//         friend const TypeDescription* fun_getTypeDescription(StateData*);
-
          CMData d_initialData;
 
          // Prevent copying of this class
@@ -38,7 +36,7 @@ namespace Uintah {
 
       public:
          // constructors
-         CompNeoHook(ProblemSpecP& ps);
+         CompNeoHook(ProblemSpecP& ps,  MPMLabel* lb);
        
          // destructor
          virtual ~CompNeoHook();

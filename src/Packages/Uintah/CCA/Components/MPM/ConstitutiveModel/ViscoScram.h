@@ -57,7 +57,7 @@ namespace Uintah {
 
       public:
          // constructors
-         ViscoScram(ProblemSpecP& ps);
+         ViscoScram(ProblemSpecP& ps, MPMLabel* lb);
        
          // destructor
          virtual ~ViscoScram();

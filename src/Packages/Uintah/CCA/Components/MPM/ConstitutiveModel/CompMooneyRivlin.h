@@ -56,7 +56,7 @@ WARNING
 	 
       public:
 	 // constructor
-	 CompMooneyRivlin(ProblemSpecP& ps);
+	 CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* lb);
 	 
 	 // destructor 
 	 virtual ~CompMooneyRivlin();

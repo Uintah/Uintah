@@ -23,8 +23,10 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElastic::HypoElastic(ProblemSpecP& ps)
+HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb)
 {
+  lb = Mlb;
+
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
   d_se=0;

@@ -23,8 +23,10 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
+CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb)
 {
+  lb = Mlb;
+
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   ps->require("yield_stress",d_initialData.FlowStress);
