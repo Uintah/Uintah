@@ -30,6 +30,7 @@ public:
 				   const clString& width,
 				   const clString& height)=0;
     virtual void redraw(Salmon*, Roe*)=0;
+    virtual void hide()=0;
 };
 
 class RegisterRenderer {
