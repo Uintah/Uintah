@@ -161,7 +161,6 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
     cerr << "  -cmap [file with rgb triples]\n";
-    cerr << "  -PTvar\n";
     cerr << "  -ptonly (outputs only the point locations\n";
     cerr << "  -patch (outputs patch id with data)\n";
     cerr << "  -material (outputs material number with data)\n";
@@ -175,8 +174,6 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -radius [float]\n";
     cerr << "  -rate [float]\n";
     cerr << "  -dpyconfig [filename] file used to configure the display\n";
-    cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh \
-are used in conjuntion with -PTvar.\n";
     
     return;
 }
