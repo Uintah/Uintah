@@ -30,6 +30,7 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomQuads.h>
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomDL.h>
@@ -723,15 +724,24 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
 
   GeomSwitch *face_switch;
   GeomFastTriangles* faces;
+  GeomFastQuads* qfaces;
   if (use_transparency)
   {
     faces = scinew GeomTranspTriangles;
-    face_switch = scinew GeomSwitch(faces);
+    qfaces = scinew GeomTranspQuads;
+    GeomGroup *tmp = scinew GeomGroup;
+    tmp->add(faces);
+    tmp->add(qfaces);
+    face_switch = scinew GeomSwitch(tmp);
   }
   else
   {
     faces = scinew GeomFastTriangles;
-    GeomDL *display_list = scinew GeomDL(faces);
+    qfaces = scinew GeomFastQuads;
+    GeomGroup *tmp = scinew GeomGroup;
+    tmp->add(faces);
+    tmp->add(qfaces);
+    GeomDL *display_list = scinew GeomDL(tmp);
     face_switch = scinew GeomSwitch(display_list);
   }
 
@@ -788,16 +798,40 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
       }
       break;
     }
-    
-    for (i=2; i<nodes.size(); i++) {
-      if (with_normals) {
-	faces->add(points[0], normals[0], mats[0],
-		   points[i-1], normals[i-1], mats[i-1],
-		   points[i], normals[i], mats[i]);
-      } else {
-	faces->add(points[0], mats[0],
-		   points[i-1], mats[i-1],
-		   points[i], mats[i]);
+
+    if (nodes.size() == 4)
+    {
+      if (with_normals)
+      {
+	qfaces->add(points[0], normals[0], mats[0],
+		    points[1], normals[1], mats[1],
+		    points[2], normals[2], mats[2],
+		    points[3], normals[3], mats[3]);
+      }
+      else
+      {
+	qfaces->add(points[0], mats[0],
+		    points[1], mats[1],
+		    points[2], mats[2],
+		    points[3], mats[3]);
+      }
+    }
+    else
+    {
+      for (i=2; i<nodes.size(); i++)
+      {
+	if (with_normals)
+	{
+	  faces->add(points[0], normals[0], mats[0],
+		     points[i-1], normals[i-1], mats[i-1],
+		     points[i], normals[i], mats[i]);
+	}
+	else
+	{
+	  faces->add(points[0], mats[0],
+		     points[i-1], mats[i-1],
+		     points[i], mats[i]);
+	}
       }
     }
     ++fiter;     
