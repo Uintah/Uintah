@@ -48,16 +48,13 @@
 #include <Modules/Visualization/LevoyVis.h>
 #include "kuswik.h"
 
-// the initial view data
 
-//const View homeview
-//(Point(2, 0.5, 0.5), Point(0.5, 0.5, 0.5), Vector(.0,.0,1), 45);
+// the initial view data
 
 const View homeview
 (Point(0.6, 2.6, 0.6), Point(0.6, 0.6, 0.6), Vector(1.,0.,0.), 30);
 
-// the_interp is the tcl interpreter corresponding to this
-// module
+// tcl interpreter corresponding to this module
 
 extern Tcl_Interp* the_interp;
 
@@ -178,6 +175,25 @@ class VolVis : public Module {
   // pointer to the levoy structure
   
   Levoy * calc;
+
+  // specifies the number of separate slices processed by
+  // each of the processors
+
+  TCLint intervalCount;
+
+  
+
+  // The following variables will be supplied by Salmon
+  // if the Salmon module is connected to this VolVis module.
+  
+  // SalmonView  = camera info for the scene,
+  // DepthBuffer = distance from the eye to some pt in space,
+  // ColorBuffer = RGB(A?) background color for each pixel.
+
+  View SalmonView;
+
+  Array2<double> DepthBuffer;
+  Array2<Color>  ColorBuffer;
   
   
   // initialize an OpenGL window
@@ -268,6 +284,7 @@ VolVis::VolVis(const clString& id)
   maxSV("maxSV", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
+  intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
   Gsv("Gsv", id, this),
   Bsv("Bsv", id, this),
@@ -315,6 +332,8 @@ VolVis::VolVis(const clString& id)
   // TCL code does not work.
 
   ibgColor.set(BLACK);
+
+//  intervalCount.set(1);
 }
 
 
@@ -334,6 +353,7 @@ VolVis::VolVis(const VolVis& copy, int deep)
   minSV("minSV", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
+  intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
   Gsv("Gsv", id, this),
   Bsv("Bsv", id, this),
@@ -401,25 +421,63 @@ do_parallel(void* obj, int proc)
 void
 VolVis::parallel( int proc )
 {
-  int interval = iRasterX.get() / procCount;
+  int i;
 
-  if ( proc == procCount - 1 )
+  cerr << "Why am i here in parallel? " << proc << endl;
+
+  int interval = iRasterX.get() / procCount / intervalCount.get();
+
+  cerr << "count of intervals is " << intervalCount.get() << "  " <<
+    interval << endl;
+
+  if ( projection.get() )
     {
-    if ( projection.get() )
-      calc->PerspectiveTrace( interval * proc, iRasterX.get() );
-    else
-      calc->ParallelTrace( interval * proc, iRasterX.get() );
-  }
+      if ( proc != procCount - 1 )
+	for ( i = 0; i < intervalCount.get(); i++ )
+	  {
+	    cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
+	    cerr << interval * (proc + 1 + procCount * i ) << endl;
+	    
+	  calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+				 interval * ( proc + 1 + procCount * i ) );
+	  }
+      else
+	{
+	  for ( i = 0; i < intervalCount.get()-1; i++ )
+	    {
+	    cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
+	    cerr << interval * (proc + 1 + procCount * i ) << endl;
+	    
+	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+				   interval * ( proc + 1 + procCount * i ) );
+	  }
+	  
+	    cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
+	    cerr << interval * (proc + 1 + procCount * i ) << endl;
+	    
+	  calc->PerspectiveTrace( interval * ( proc + procCount *
+					      ( intervalCount.get() - 1 ) ),
+				 iRasterX.get() );
+	}
+    }
   else
     {
-    if ( projection.get() )
-      calc->PerspectiveTrace( interval * proc, interval * ( proc + 1 ) );
-    else
-      calc->ParallelTrace( interval * proc, interval * ( proc + 1 ) );
-  }
+      if ( proc != procCount - 1 )
+	for ( i = 0; i < intervalCount.get(); i++ )
+	  calc->ParallelTrace( interval * ( proc + procCount * i ),
+				 interval * ( proc + 1 + procCount * i ) );
+      else
+	{
+	  for ( i = 0; i < intervalCount.get()-1; i++ )
+	    calc->ParallelTrace( interval * ( proc + procCount * i ),
+				   interval * ( proc + 1 + procCount * i ) );
+	  
+	  calc->ParallelTrace( interval * ( proc + procCount *
+					      ( intervalCount.get() - 1 ) ),
+				 iRasterX.get() );
+	}
+    }
 }
-
-
 
 
 
@@ -442,12 +500,25 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
   // Make sure this is a valid scalar field
 
   if ( ! homeSFHandle.get_rep() )
-    return 0;
+    {
+      cerr << "bailed on getting the representation\n";
+      return 0;
+    }
 
   // make sure scalar field is a regular grid
+  // actually, it doesn't have to be (Steve says so)
   
   if ( ( (*homeSFRGrid) = homeSFHandle->getRG()) == 0)
     return 0;
+
+/*  
+  if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getUG()) == 0)
+    if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getRG()) == 0 )
+      {
+	cerr << "bailed on getting the grid\n";
+	return 0;
+      }
+*/
 
   if ( homeSFgeneration != homeSFHandle->generation )
   {
@@ -716,9 +787,16 @@ void
 VolVis::execute()
 {
   ScalarFieldRG *homeSFRGrid;
+
   ColormapHandle cmap;
   CharColor temp;
   Array2<CharColor> * tempImage;
+
+  WallClockTimer watch;
+
+  WallClockTimer justsee;
+
+  justsee.start();
 
   TCL::execute(id+" get_data");
   
@@ -742,18 +820,32 @@ VolVis::execute()
 
   // instantiate the levoy class
 
+  
   Levoy levoyModule ( homeSFRGrid, colormapport,
 		     ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
 
-  // calculate the new image
+  /* DAVES
 
+     call a proc that will supply me with the zbuffer, rgb buffer,
+     and the view
+
+     // retrieve the vital information
+
+     Salmon::shareview( SalmonView, DepthBuffer, ColorBuffer );
+
+     */
+  
   levoyModule.SetUp( iView.get(), iRasterX.get(), iRasterY.get() );
+
+  // DAVES
+  // levoyModule.SetUp( SalmonView, iRasterX.get(), iRasterY.get(),
+  //                   &DepthBuffer, &ColorBuffer );
+
+  cerr << "the initial part takes: " << justsee.time() << " time units\n";
 
   calc = &levoyModule;
 
-  WallClockTimer watch;
-
-//  tempImage = levoyModule.TraceRays ( projection.get() );
+  // calculate the new image
 
   watch.start();
 

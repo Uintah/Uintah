@@ -79,6 +79,145 @@ Levoy::Levoy ( ScalarFieldRG * grid, ColormapIPort * c,
 }
 
 
+
+
+
+
+
+void
+Levoy::SetUp ( const View& myview, const int& x, const int& y )
+{
+  // temporary storage for eye position
+
+  eye = myview.eyep();
+
+  // the original ray from the eye point to the lookat point
+
+  homeRay = myview.lookat() - eye;
+  homeRay.normalize();
+
+  cerr << "NORMALIZED is " << homeRay << endl;
+  homeRay *= cos( DtoR( myview.fov() / 2 ) );
+
+  cerr << "The home ray is: " << homeRay  <<endl;
+
+  // rayStep represents the length of vector.  in order to
+  // traverse the volume, a vector of this length in the direction
+  // of the ray is added to the current point in space
+
+  rayStep = DetermineRayStepSize ();
+
+  // the length of longest possible ray
+
+  dmax = DetermineFarthestDistance ( eye );
+
+  // create and initialize the array containing the image
+
+  this->x = x;
+  this->y = y;
+  
+  CharColor temp;
+
+  // deallocate the array
+  
+  Image->newsize( y, x );
+  Image->initialize( temp );
+
+  // calculate the increments to be added in the u,v directions
+
+  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+
+  // determine the function to use
+
+  if ( colormapFlag )
+    CastRay = &Levoy::Ten;
+  else if ( whiteFlag )
+    CastRay = &Levoy::Eight;
+  else // user defined SV-color map
+    CastRay = &Levoy::Nine;
+
+  CombineSalmonFlag = 0;
+}
+
+
+
+
+void
+Levoy::SetUp ( const View& myview, const int& x, const int& y,
+	       Array2<double>* db, Array2<Color>*  cb, double Cnear,
+	      double Cfar )
+{
+  // temporary storage for eye position
+
+  eye = myview.eyep();
+
+  // the original ray from the eye point to the lookat point
+
+  homeRay = myview.lookat() - eye;
+  homeRay.normalize();
+
+  cerr << "NORMALIZED is " << homeRay << endl;
+  homeRay *= cos( DtoR( myview.fov() / 2 ) );
+
+  cerr << "The home ray is: " << homeRay  <<endl;
+  
+
+  // the distance between the 2 clipping planes
+  
+  clipConst = ( Cfar - Cnear ) / homeRay.length();
+
+  // the ratio of near clipping plane to homeRaylength
+
+  nearTohome = Cnear / homeRay.length();
+  
+
+  // rayStep represents the length of vector.  in order to
+  // traverse the volume, a vector of this length in the direction
+  // of the ray is added to the current point in space
+
+  rayStep = DetermineRayStepSize ();
+
+  // the length of longest possible ray
+
+  dmax = DetermineFarthestDistance ( eye );
+
+  // create and initialize the array containing the image
+
+  this->x = x;
+  this->y = y;
+  
+  CharColor temp;
+
+  // keep the depth and color buffer information
+
+  this->DepthBuffer = db;
+  this->ColorBuffer = cb;
+
+  // deallocate and initialize the array
+  
+  Image->newsize( y, x );
+  Image->initialize( temp );
+
+  // calculate the increments to be added in the u,v directions
+
+  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+
+  // determine the function to use
+
+  if ( colormapFlag )
+    CastRay = &Levoy::Thirteen;
+  else if ( whiteFlag )
+    CastRay = &Levoy::Eleven;
+  else // user defined SV-color map
+    CastRay = &Levoy::Twelve;
+  
+  CombineSalmonFlag = 1;
+}
+
+
+
+
+
 Levoy::~Levoy()
 {
 }
@@ -97,7 +236,7 @@ Levoy::DetermineRayStepSize ()
   double result;
   
   // calculate a step size that is about the length of one voxel
-  
+
   small[0] = ( gmax.x() - gmin.x() ) / ( homeSFRGrid->nx  );
   small[1] = ( gmax.y() - gmin.y() ) / ( homeSFRGrid->ny  );
   small[2] = ( gmax.z() - gmin.z() ) / ( homeSFRGrid->nz  );
@@ -196,7 +335,7 @@ Levoy::DetermineFarthestDistance ( const Point& e )
 
 
 Color
-Levoy::Five ( const Point& eye, Vector& step, const double& rayStep,
+Levoy::Five ( const Point& eye, Vector& step,
 	     const Point& beg, const Point& end )
 {
 
@@ -294,7 +433,7 @@ Levoy::Five ( const Point& eye, Vector& step, const double& rayStep,
 
 
 Color
-Levoy::Six ( const Point& eye, Vector& step, const double& rayStep,
+Levoy::Six ( const Point& eye, Vector& step,
 	     const Point& beg, const Point& end )
 {
 
@@ -386,7 +525,7 @@ Levoy::Six ( const Point& eye, Vector& step, const double& rayStep,
 
 
 Color
-Levoy::Seven ( const Point& eye, Vector& step, const double& rayStep,
+Levoy::Seven ( const Point& eye, Vector& step,
 	     const Point& beg, const Point& end )
 {
 
@@ -490,8 +629,9 @@ Levoy::Seven ( const Point& eye, Vector& step, const double& rayStep,
  **************************************************************************/
 
 Color
-Levoy::Eight ( const Point& eye, Vector& step, const double& rayStep,
-	     const Point& beg, const Point& end )
+Levoy::Eight ( const Point& eye, Vector& step,
+	     const Point& beg, const Point& end, const int& px,
+	      const int& py )
 {
   // as the ray passes through the volume, the voxel's
   // color contribution decreases
@@ -620,8 +760,9 @@ Levoy::Eight ( const Point& eye, Vector& step, const double& rayStep,
 
 
 Color
-Levoy::Nine ( const Point& eye, Vector& step, const double& rayStep,
-	     const Point& beg, const Point& end )
+Levoy::Nine ( const Point& eye, Vector& step,
+	     const Point& beg, const Point& end, const int& px,
+	      const int& py )
 {
 
   // as the ray passes through the volume, the voxel's
@@ -753,8 +894,9 @@ Levoy::Nine ( const Point& eye, Vector& step, const double& rayStep,
 
 
 Color
-Levoy::Ten ( const Point& eye, Vector& step, const double& rayStep,
-	     const Point& beg, const Point& end )
+Levoy::Ten ( const Point& eye, Vector& step,
+	     const Point& beg, const Point& end, const int& px,
+	      const int& py )
 {
 
   // as the ray passes through the volume, the voxel's
@@ -871,6 +1013,476 @@ Levoy::Ten ( const Point& eye, Vector& step, const double& rayStep,
 
 
 
+
+/**************************************************************************
+ *
+ * calculates the pixel color by casting a ray starting at the first
+ * intersection of the ray with the bbox, and ending at the second
+ * intersection of the ray with the bbox or the z-buffer value provided
+ * for that particular point in space.
+ *
+ * the opacity map is not limited to 5 nodes.
+ * opacity varies according with the transfer map specified
+ * by the user.  the color associated with any scalar value
+ * is fixed to be white.
+ *
+ * the background color is that provided by an array. 
+ *
+ **************************************************************************/
+
+Color
+Levoy::Eleven ( const Point& eye, Vector& step,
+	       const Point& beg, const Point& end, const int& px,
+	      const int& py )
+{
+  // as the ray passes through the volume, the voxel's
+  // color contribution decreases
+  
+  double contribution;
+
+  // the current location in the volume
+
+  Point atPoint;
+
+  // accumulated color as the ray passes through the volume
+  
+  Color accumulatedColor;
+
+  // a scalar value corresponds to a particular point
+  // in space
+  
+  double scalarValue;
+
+  // opacity for a particular position in the volume
+
+  double opacity;
+
+  // step length
+
+  double stepLength;
+
+  // the length of the ray to be cast
+
+  double mylength;
+
+  // the length of ray stepped through so far
+
+  double traversed;
+
+  // contribution of the first voxel's color and opacity
+  
+  contribution = 1.0;
+  
+  // since no voxels have been crossed, no color has been
+  // accumulated.
+
+  accumulatedColor = BLACK;
+
+  /* DAVES
+
+     // calculate the length from the eye to the DepthBuffer based point
+     // in space
+
+     int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
+     nearTohome );
+
+     // compare the 2 lengths, pick the shorter one
+
+  if ( templength < mylength )
+    mylength = templength;
+  else
+    cerr << "T";
+    
+    */
+
+  // find step vector
+
+  step.normalize();
+
+  step *= rayStep;
+
+  // memorize length
+
+  stepLength = step.length();
+
+  // the color for rendering
+
+  Color colr = WHITE;
+
+  // position of the point in space at the beginning of the cast
+  
+  atPoint = beg + EpsilonVector - step;
+
+  // the length of the ray to be cast
+
+  mylength = (end - eye).length() - (beg - eye).length();
+
+
+  // the ray cast begins before entering the volume
+
+  traversed = - stepLength;
+
+  // yet another check for whether i calculated the dmax correctly...
+  // actually, i probably didn't calculate it correctly...
+
+  if ( mylength + ( eye - beg ).length() + 1.e-5 > dmax )
+    {
+      cerr << "DMAX not calculated correctly: " << dmax << " vs " << mylength + ( eye - beg ).length() + 1.e-5 << endl;
+      cerr << beg <<"   " << end << endl;
+    }
+
+  // begin traversing through the volume at the first point of
+  // intersection of the ray with the bbox.  keep going through
+  // the volume until the contribution of the voxel color
+  // is almost none, or until the second intersection point has
+  // been reached.
+
+  while ( contribution > EpsilonContribution && traversed <= mylength )
+    {
+      atPoint += step;
+      scalarValue = 0;
+      traversed += stepLength;
+
+      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
+	{
+	  opacity = AssociateValue( scalarValue, ScalarVals[0],
+				   AssociatedVals[0] );
+
+	  accumulatedColor += colr * ( contribution * opacity );
+	  contribution = contribution * ( 1.0 - opacity );
+	}
+    }
+
+  // background color should contribute to the final color of
+  // the pixel.  if contribution is minute, the background
+  // is not visible therefore don't add the background color
+  // to the accumulated one.
+  
+  if ( contribution > EpsilonContribution )
+    accumulatedColor = backgroundColor * contribution + accumulatedColor;
+
+    // DAVES
+    //    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
+  
+
+  return accumulatedColor;
+}
+
+
+
+
+
+
+/**************************************************************************
+ *
+ * calculates the pixel color by casting a ray starting at the first
+ * intersection of the ray with the bbox, and ending at the second
+ * intersection of the ray with the bbox.
+ *
+ * the opacity map is not limited to 5 nodes.
+ * opacity and color vary according with the transfer map specified
+ * by the user.
+ *
+ **************************************************************************/
+
+
+Color
+Levoy::Twelve ( const Point& eye, Vector& step,
+	     const Point& beg, const Point& end, const int& px,
+	      const int& py )
+{
+
+  // as the ray passes through the volume, the voxel's
+  // color contribution decreases
+  
+  double contribution;
+
+  // the current location in the volume
+
+  Point atPoint;
+
+  // accumulated color as the ray passes through the volume
+  
+  Color accumulatedColor;
+
+  // a scalar value corresponds to a particular point
+  // in space
+  
+  double scalarValue;
+
+  // step length
+
+  double stepLength;
+
+  // the length of the ray to be cast
+
+  double mylength;
+
+  // the length of ray stepped through so far
+
+  double traversed;
+
+  // the color corresponding to the scalar value
+
+  Color colr;
+
+  // the opacity corresponding to the scalar value
+
+  double opacity;
+
+  
+  // contribution of the first voxel's color and opacity
+  
+  contribution = 1.0;
+  
+  // since no voxels have been crossed, no color has been
+  // accumulated.
+
+  accumulatedColor = BLACK;
+
+  /* DAVES
+
+     // calculate the length from the eye to the DepthBuffer based point
+     // in space
+
+     int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
+     nearTohome );
+
+     // compare the 2 lengths, pick the shorter one
+
+  if ( templength < mylength )
+    mylength = templength;
+  else
+    cerr << "T";
+    
+    */
+
+  // find step vector
+  
+  step.normalize();
+
+  step *= rayStep;
+
+  // set step length
+
+  stepLength = step.length();
+
+  // position of the point in space at the beginning of the cast
+  
+  atPoint = beg + EpsilonVector - step;
+
+  // the length of the ray to be cast
+
+  mylength = (end - eye).length() - (beg - eye).length();
+
+
+  // the ray cast begins before entering the volume
+
+  traversed = - stepLength;
+
+  // begin traversing through the volume at the first point of
+  // intersection of the ray with the bbox.  keep going through
+  // the volume until the contribution of the voxel color
+  // is almost none, or until the second intersection point has
+  // been reached.
+
+  while ( contribution > EpsilonContribution && traversed <= mylength )
+    {
+      atPoint += step;
+      scalarValue = 0;
+      traversed += stepLength;
+
+      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
+	{
+	  
+	  Color tempcolr( AssociateValue( scalarValue,
+					 ScalarVals[1], AssociatedVals[1] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[2], AssociatedVals[2] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[3], AssociatedVals[3] ) );
+
+	  colr = tempcolr;
+
+	  opacity = AssociateValue( scalarValue, ScalarVals[0],
+				   AssociatedVals[0] );
+	  
+	  accumulatedColor += colr * ( contribution * opacity );
+	  contribution = contribution * ( 1.0 - opacity );
+	}
+    }
+
+  // background color should contribute to the final color of
+  // the pixel
+  // if contribution is minute, the background is not visible
+  // therefore don't add the background color to the accumulated one.
+  
+  if ( contribution > EpsilonContribution )
+    accumulatedColor = backgroundColor * contribution + accumulatedColor;
+
+  // DAVES  
+//    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
+
+  return accumulatedColor;
+}
+
+
+
+
+
+/**************************************************************************
+ *
+ * calculates the pixel color by casting a ray starting at the first
+ * intersection of the ray with the bbox, and ending at the second
+ * intersection of the ray with the bbox.
+ *
+ * the color associated with an opacity is retrieved from the
+ * attached colormap module.
+ *
+ **************************************************************************/
+
+
+Color
+Levoy::Thirteen ( const Point& eye, Vector& step,
+		 const Point& beg, const Point& end, const int& px,
+	      const int& py )
+{
+
+  // as the ray passes through the volume, the voxel's
+  // color contribution decreases
+  
+  double contribution;
+
+  // the current location in the volume
+
+  Point atPoint;
+
+  // accumulated color as the ray passes through the volume
+  
+  Color accumulatedColor;
+
+  // a scalar value corresponds to a particular point
+  // in space
+  
+  double scalarValue;
+
+  // step length
+
+  double stepLength;
+
+  // the length of the ray to be cast
+
+  double mylength;
+
+  // the length of ray stepped through so far
+
+  double traversed;
+
+  // the color corresponding to the scalar value
+
+  Color colr;
+
+  // the opacity corresponding to the scalar value
+
+  double opacity;
+
+  
+  // contribution of the first voxel's color and opacity
+  
+  contribution = 1.0;
+  
+  // begin trace at the eye (somewhat inefficient, TEMP)
+  
+  atPoint = eye;
+
+  // since no voxels have been crossed, no color has been
+  // accumulated.
+
+  accumulatedColor = BLACK;
+
+  /* DAVES
+
+     // calculate the length from the eye to the DepthBuffer based point
+     // in space
+
+     int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
+     nearTohome );
+
+     // compare the 2 lengths, pick the shorter one
+
+  if ( templength < mylength )
+    mylength = templength;
+  else
+    cerr << "T";
+    
+    */
+
+  // find step vector
+  
+  step.normalize();
+
+  step *= rayStep;
+
+  // find the step length
+
+  stepLength = step.length();
+
+  // position of the point in space at the beginning of the cast
+  
+  atPoint = beg + EpsilonVector - step;
+
+  // the length of the ray to be cast
+
+  mylength = (end - eye).length() - (beg - eye).length();
+
+  // the ray cast begins before entering the volume
+
+  traversed = - stepLength;
+
+  // begin traversing through the volume at the first point of
+  // intersection of the ray with the bbox.  keep going through
+  // the volume until the contribution of the voxel color
+  // is almost none, or until the second intersection point has
+  // been reached.
+
+  while ( contribution > EpsilonContribution && traversed <= mylength )
+    {
+      atPoint += step;
+      scalarValue = 0;
+      traversed += stepLength;
+
+      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
+	{
+
+	  // a MaterialHandle is retrieved through cmap->lookup(SV)
+	  
+	  colr = ( cmap->lookup( scalarValue ))->diffuse;
+
+	  opacity = AssociateValue( scalarValue,
+				   ScalarVals[0], AssociatedVals[0] );
+
+	  accumulatedColor += colr * ( contribution * opacity );
+	  contribution = contribution * ( 1.0 - opacity );
+	}
+    }
+
+  // background color should contribute to the final color of
+  // the pixel
+  // if contribution is minute, the background is not visible
+  // therefore don't add the background color to the accumulated one.
+  
+  if ( contribution > EpsilonContribution )
+    accumulatedColor = backgroundColor * contribution + accumulatedColor;
+
+// DAVES    
+//    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
+
+  return accumulatedColor;
+}
+
+
+
+
 /**************************************************************************
  *
  * Associates a value for the particular scalar value
@@ -923,66 +1535,6 @@ Levoy::AssociateValue ( double scalarValue,
 
 
 void
-Levoy::SetUp ( const View& myview, const int& x, const int& y )
-{
-  // temporary storage for eye position
-
-  eye = myview.eyep();
-
-  // the original ray from the eye point to the lookat point
-
-  homeRay = myview.lookat() - eye;
-  homeRay.normalize();
-
-  cerr << "NORMALIZED is " << homeRay << endl;
-  homeRay *= cos( DtoR( myview.fov() / 2 ) );
-
-  cerr << "The home ray is: " << homeRay  <<endl;
-
-  // rayStep represents the length of vector.  in order to
-  // traverse the volume, a vector of this length in the direction
-  // of the ray is added to the current point in space
-
-  rayStep = DetermineRayStepSize ();
-
-  // the length of longest possible ray
-
-  dmax = DetermineFarthestDistance ( eye );
-
-  // create and initialize the array containing the image
-
-  this->x = x;
-  this->y = y;
-  
-  CharColor temp;
-
-#if 0  
-  if ( Image != NULL )
-    delete Image;
-#endif
-
-  // deallocate the array
-  
-  Image->newsize( y, x );
-  Image->initialize( temp );
-
-  // calculate the increments to be added in the u,v directions
-
-  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
-
-  // determine the function to use
-
-  if ( colormapFlag )
-    CastRay = &Levoy::Ten;
-  else if ( whiteFlag )
-    CastRay = &Levoy::Eight;
-  else // user defined SV-color map
-    CastRay = &Levoy::Nine;
-}
-
-
-
-void
 Levoy::PerspectiveTrace( int from, int till )
 {
   int loop, pool;
@@ -1019,7 +1571,7 @@ Levoy::PerspectiveTrace( int from, int till )
 		pixelColor = backgroundColor;
 	      else
 		pixelColor = (this->*CastRay)( eye, rayToTrace,
-					      rayStep, beg, end );
+					      beg, end, pool, loop );
 	    }
 	  else
 	    pixelColor = backgroundColor;
@@ -1041,6 +1593,62 @@ Levoy::PerspectiveTrace( int from, int till )
   
 }
 
+
+
+
+#if 0
+DAVES
+
+void
+Levoy::PerspectiveTrace( int from, int till )
+{
+  int loop, pool;
+  Vector rayToTrace;
+  Color pixelColor;
+  Point beg, end;
+
+  for ( pool = from; pool < till; pool++ )
+    {
+      for ( loop = 0; loop < y; loop++ )
+	{
+	  // slightly alter the direction of ray
+	  
+	  rayToTrace = homeRay;
+	  rayToTrace += rayIncrementU * ( pool - x/2 );
+	  rayToTrace += rayIncrementV * ( loop - y/2 );
+
+	  if ( box.Intersect( eye, rayToTrace, beg, end ) )
+	    {
+	      // TEMP!!!  perhaps i still want to check what the
+	      // SV is at the point (it must be the corner)
+	      // i will need to REMOVE this later
+
+	      if ( beg.InInterval( end, 1.e-5 ) )
+		pixelColor = ColorBuffer( pool, loop );
+	      else
+		pixelColor = (this->*CastRay)( eye, rayToTrace,
+					      beg, end, pool, loop );
+	    }
+	  else
+	    pixelColor = ColorBuffer( pool, loop );
+
+	  /*
+	     i need to do it this way, unless i can write
+	     an operator overload fnc for ()=
+	     Image( loop, pool ) returns a value; it cannot
+	     be assigned.
+	     Image( loop, pool ) = pixelColor;
+	     */
+
+	  ((*Image)( loop, pool )).red = (char)(pixelColor.r()*255);
+	  ((*Image)( loop, pool )).green = (char)(pixelColor.g()*255);
+	  ((*Image)( loop, pool )).blue = (char)(pixelColor.b()*255);
+
+	}
+    }
+  
+}
+#endif
 
 
 
@@ -1082,7 +1690,7 @@ Levoy::ParallelTrace( int from, int till )
 		pixelColor = backgroundColor;
 	      else
 		pixelColor = (this->*CastRay)( startAt, homeRay,
-					      rayStep, beg, end );
+					      beg, end, loop, pool );
 	    }
 	  else
 	    pixelColor = backgroundColor;

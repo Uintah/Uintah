@@ -60,6 +60,8 @@ itcl_class VolVis {
 	global $this-minSV $this-maxSV
 	global $this-project
 
+	global $this-intervalCount
+
 	global Selected
 
 	# set variables shared by c++ and tcl
@@ -105,6 +107,7 @@ itcl_class VolVis {
 	set LineColor(2) green
 	set LineColor(3) blue
 
+	set $this-intervalCount 1
     }
     
     #
@@ -375,9 +378,14 @@ itcl_class VolVis {
 		    -showvalue true -tickinterval 100 \
 		    -digits 3 -length 5c
 
+	    scale $w.f.slice -orient horizontal -variable $this-intervalCount \
+		    -from 1 -to 40 -label "Slices per processor: " \
+		    -showvalue true -tickinterval 5 \
+		    -digits 3 -length 5c
+
 	    # place the scales in a window
 	    
-	    pack $w.f.x $w.f.y -expand yes -fill x
+	    pack $w.f.x $w.f.y $w.f.slice -expand yes -fill x
 	    pack $w.f
 
 	}
@@ -754,7 +762,8 @@ itcl_class VolVis {
 	# create the fillin rectangle
 
 	canvas $w.main.bot.fillin -width $RulerWidth \
-		-height $RulerWidth -bg blue
+		-height $RulerWidth
+	# this fillin square used to be blue: -bg blue
 
 	# create the bottom ruler
 
@@ -839,11 +848,17 @@ itcl_class VolVis {
 
 	frame $where.a; frame $where.b; frame $where.c
 
+# these used to be white:
+#	 label $where.a.txt -font 6x12 -text "SCALAR VALUE"      -bg white
+#	 label $where.b.min -font 6x12 -textvariable $this-minSV -bg white
+#	 label $where.c.max -font 6x12 -textvariable $this-maxSV -bg white
+#
+
 	# create labels
 	
-	label $where.a.txt -font 6x12 -text "SCALAR VALUE"      -bg white
-	label $where.b.min -font 6x12 -textvariable $this-minSV -bg white
-	label $where.c.max -font 6x12 -textvariable $this-maxSV -bg white
+	label $where.a.txt -font 6x12 -text "SCALAR VALUE"
+	label $where.b.min -font 6x12 -textvariable $this-minSV
+	label $where.c.max -font 6x12 -textvariable $this-maxSV
 
 	# place labels in the frame
 

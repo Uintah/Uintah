@@ -38,8 +38,15 @@
 
 class Levoy;
 
-typedef Color (Levoy::*CRF) ( const Point&, Vector&, const double&,
-			     const Point&, const Point& );
+// the type of fnc corresponding to the various cast ray fncs
+
+typedef Color (Levoy::*CRF) ( const Point&, Vector&,
+			     const Point&, const Point&, const int&,
+			     const int& );
+
+// the type of fnc corresponding to Perspective/Parallel trace fncs
+
+typedef void (Levoy::*TR) ( int, int );
 
 class Levoy
 {
@@ -78,6 +85,13 @@ private:
 
   Vector homeRay;
 
+  // consts used in determination of the distance between
+  // 2 clipping planes
+
+  double clipConst;
+
+  double nearTohome;
+
   // pointer to the array of char colors
 
   CRF CastRay;
@@ -85,6 +99,14 @@ private:
   // the size of the image
 
   int x, y;
+
+
+  // the depth and color buffers
+
+  Array2<double>* DepthBuffer;
+  Array2<Color>*  ColorBuffer;
+
+  int CombineSalmonFlag;
 
 public:
 
@@ -105,30 +127,61 @@ public:
 
   double DetermineFarthestDistance ( const Point& e );
   
-  Color Cast( Point eye, Vector ray );
+  Color Five ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end );
+
+  Color Six ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end );
+
+  Color Seven ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end );
+
   
-  Color Five ( const Point& eye, Vector& step, const double& rayStep,
-	      const Point& beg , const Point& end );
+  // uses the new transfer map
 
-  Color Six ( const Point& eye, Vector& step, const double& rayStep,
-	      const Point& beg , const Point& end );
+  Color Eight ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end, const int& px,
+	       const int& py );
 
-  Color Seven ( const Point& eye, Vector& step, const double& rayStep,
-	      const Point& beg , const Point& end );
+  Color Nine ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end, const int& px,
+	       const int& py );
 
-  Color Eight ( const Point& eye, Vector& step , const double& rayStep,
-	      const Point& beg , const Point& end );
+  Color Ten ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end, const int& px,
+	       const int& py );
 
-  Color Nine ( const Point& eye, Vector& step, const double& rayStep,
-	      const Point& beg , const Point& end );
+  
+  // uses Salmon view stuff
+  
+  Color Eleven ( const Point& eye, Vector& step,
+		const Point& beg , const Point& end, const int& px,
+	       const int& py );
 
-  Color Ten ( const Point& eye, Vector& step, const double& rayStep,
-	      const Point& beg , const Point& end );
+  Color Twelve ( const Point& eye, Vector& step,
+		const Point& beg , const Point& end, const int& px,
+	       const int& py );
+  
+  Color Thirteen ( const Point& eye, Vector& step,
+		  const Point& beg , const Point& end, const int& px,
+	       const int& py );
 
+  
   Array2<CharColor>* TraceRays ( int projectionType );
+  
+
+  // no depth buffer or color buffer info; therefore, Salmon view
+  // is not applicable
 
   void SetUp ( const View& myview, const int& x, const int& y );
 
+  // allows the Salmon image and my volvis stuff to be superimposed
+
+  void SetUp ( const View& myview, const int& x, const int& y,
+	      Array2<double>* db, Array2<Color>* cb, double Cnear,
+	      double Cfar );
+
+  
   void PerspectiveTrace( int from, int till );
   void ParallelTrace( int from, int till );
 
