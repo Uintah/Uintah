@@ -4,6 +4,8 @@
 % Documentation for component specification xml documents.  Also see
 % component.dtd. 
 %
+% tjd is responsible for this atrocity.
+%
 
 \documentclass{article}
 \usepackage{html}
@@ -248,11 +250,11 @@ element, which is used in several contexts, is not described in detail here
 -- section~\sechyperref{\SUBSECdescElement} describes it fully.
 
 \begin{description}
-  \elementitem{component name="component-name" package="package-name"
+  \elementitem{component name="component-name" 
     category="category-name"} Starts the component specification.  All
   other elements are nested within this one.  This element requires the
-  \icode{name}, \icode{package}, and \icode{category} attributes.  These
-  attributes name your component, the package the component belongs to, and
+  \icode{name} and \icode{category} attributes.  These
+  attributes name your component and specify
   the category the component belongs to respectively.
   \begin{description}
     \elementitem{overview} Starts the overview section.  Contains only
@@ -751,8 +753,6 @@ file:
         (end-tag   . sgml-end-tag-face) 
         (doctype   . sgml-doctype-face) 
         (entity    . sgml-entity-face))) 
-
-
 \end{verbatim}
 
 \subsection{\SUBSECgettingStarted}
@@ -778,10 +778,9 @@ To start a new component specification with \emacs\ do this:
   menu (shift-button1 or shift-button3 for emacs and button3 for xemacs):
   Position the cursor at the end of the file and select the item named
   \menuitem{component} from the pop-up menu.  After doing this you will be
-  prompted for the \element{component} element's \attribute{name},
-  \attribute{package}, and \attribute{category} attributes.
-  attribute.  After typing in each of the attributes \Emacs\ 
-  will then insert a number of other required elements.
+  prompted for the \element{component} element's \attribute{name} and
+  \attribute{category} attributes.  attribute.  After typing in each of the
+  attributes \Emacs\ will then insert a number of other required elements.
 \item Insert content into these elements.  For example, you may insert your
   name between the start and end tags of the \element{author} element.
   Refer to section~\sechyperref{\SECcontent} if you have question about the
