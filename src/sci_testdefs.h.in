@@ -60,8 +60,14 @@
 #define SCIRUN_OBJDIR "@abs_conftop_dir@"
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
 
-@MDSPLUS_DEF_FLAG@
+#define PSECORETCL "@abs_srcdir@/Dataflow/GUI"
+#define SCICORETCL "@abs_srcdir@/Core/GUI"
+#define ITCL_WIDGETS "@LIBITCL@/iwidgets/scripts"
+#define DEF_LOAD_PACK "@LOAD_PACKAGE@"
+#define SRCTOP "@abs_srcdir@"
+#define OBJTOP "@abs_conftop_dir@"
 
+@MDSPLUS_DEF_FLAG@
 
 /* Someday, we should make this a config variable - it might help the
    optimizer, at the cost of more difficult debugging */
