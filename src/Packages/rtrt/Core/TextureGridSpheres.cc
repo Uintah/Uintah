@@ -61,7 +61,7 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
     return;
   }
   // cell is the index of the sphere which was intersected.  To get to
-  // the actuall data you need to simply just add cell to spheres.  To
+  // the actual data you need to simply just add cell to spheres.  To
   // get the number of the sphere which was intersected you need to
   // divide by the number of data items.
   int cell=*(int*)hit.scratchpad;
