@@ -73,6 +73,11 @@ itcl_class Uintah_MPMViz_PartToGeom {
 
 	pack $w.f1.res -side top -expand yes -fill x
 
+	scale $w.f1.nth -label "Show Nth Particle:" -orient horizontal \
+	    -variable $this-show_nth -command $n \
+	    -from 1 -to 100 -tickinterval 99 -resolution 1
+	
+	pack $w.f1.nth -side top -expand yes -fill x
 
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -side top -expand yes -fill both
