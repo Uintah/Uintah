@@ -143,8 +143,10 @@ color="maroon">
     <div align="left">
     <p><br>
    <p> A module is a single-purpose unit that functions within a dataflow environment. Modules will always have at least one input port for receiving data, located at the top of the module, or one output port for sending data, located at the bottom.</p> 
-<p>For a more complete description of modules, you may consult the User's Guide, Section 2.3 Modules and Networks>.</p>
-<p> Each datatype in SCIRun has a unique color such as yellow, purple, or pink.  You may connect ports of the same color. These colors are described in more detail in the User's Guide, Section 4.2, Anatomy of a Module.</p> 
+<p>For a more complete description of modules, you may consult the <a
+    HREF="../Guide/usersguide/srug2.html#sec:modulesandnetworks">User's Guide, Section 2.3 Modules and Networks</a>.</p>
+<p> Each datatype in SCIRun has a unique color such as yellow, purple, or pink.  You may connect ports of the same color. These colors are described in more detail in the <a
+    HREF="../Guide/usersguide/srug4.html#sec:anatomyofamodule">User's Guide, Section 4.2, Anatomy of a Module</a>.</p> 
 <p>By joining the modules together, data passes from one module to another; two or more connected modules form a SCIRun network (&quot;net&quot;).</p>
 
     <p>We will first create a FieldReader module that loads a SCIRun Field.</p>
@@ -283,7 +285,7 @@ color="maroon">
     flow between them.</p>  
    
        
-     <p><ol><li>Select ShowField from the SCIRun/Visualization menu</li></p>
+     <p><ol><li>Select ShowField from the SCIRun/Visualization menu.</li></p>
  <p><li value="2.">Position the
       mouse pointer over the yellow output port on
       the FieldReader. Now press and hold
@@ -293,16 +295,16 @@ color="maroon">
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7a.gif"><br>
-    <b>Figure 1.7.1</b></p>
+    <b>Figure 1.6.1</b></p>
     </center>
     <div align="left">
- <ol><li value="3."> Continue to hold the button and drag your mouse toward the yellow ShowField input port</p> 
+ <ol><li value="3."> Continue to hold the button and drag your mouse toward the yellow ShowField input port.</p> 
       <p><li>The line turns red, showing the desired connection. Release the mouse
 	  button.</p>   
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7b.gif"><br>
-    <b>Figure 1.7.2</b></p>
+    <b>Figure 1.6.2</b></p>
     </center>
     <div align="left">
 <ol><li value="4.">You should see a yellow pipe showing a data flow connection
@@ -312,7 +314,7 @@ color="maroon">
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7c.gif"><br>
-    <b>Figure 1.7.3</b></p>
+    <b>Figure 1.6.3</b></p>
     </center>
     <div align="left">
 
@@ -329,12 +331,12 @@ color="maroon">
     <p><li value= "2.">Select the Default Color button
       near the bottom of the GUI to change the default color and a separate &quot;color&quot; GUI appears.</p>    
       <li ><p>In the color GUI, you can use the sliders to adjust the color values. Set Red and Green to 0.00, and Blue to 1.00. The Alpha value remains at 0.50. </p>  
-      <li><p>Select the &quot;OK&quot; button in the color GUI. Notice that the Default Color swatch in the ShowField GUI has changed to blue.  Your SCIRun environment should look like <b>Figure 1.8</b>.</p>  
+      <li><p>Select the &quot;OK&quot; button in the color GUI. Notice that the Default Color swatch in the ShowField GUI has changed to blue.  Your SCIRun environment should look like <b>Figure 1.7</b>.</p>  
       <li ><p>In the color GUI, Select &quot;Cancel&quot; to close the window.</p></ol>
 </div>
     <center>
-    <p><img height="512" width="500" src="images/figures/1_8.gif"><br>
-    <b>Figure 1.8</b></p>
+    <p><img height="461" width="450" src="images/figures/1_8.gif"><br>
+    <b>Figure 1.7 SCIRun environment after changing ShowField's Default Color</b></p>
     </center>
     <div align="left">
 <br>
@@ -344,17 +346,18 @@ color="maroon">
 <p><li>Set the Sphere Resolution
 	  to 5.</p> 
       <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box.</p>  
-      <li><p>Go the the Faces tab and repeat the same action.</p></ol><br> 
+      <li><p>Go the the Faces tab and repeat the same action.</p>
+      <li><p>Close the ShowField GUI by pressing the Dismiss button.</p><ol><br>
       <p>The ShowField module is now ready to render the nodes as blue
-	  spheres. The module will &quot;Interactively Update&quot;, by default, to execute after every change.  Or, you may select &quot;Execute Button Only&quot; that holds all changes until you press the Execute button.
+	  spheres. The module will &quot;Interactively Update,&quot; by default, to execute after every change.  Or, you may select &quot;Execute Button Only&quot; that holds all changes until you press the Execute button.
     </ol>
     <p>Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
     User's Guide 4.5,
     Executing a Network</a> for more details. 
-    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library as needed where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;.</p>
+    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library as needed where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
 <p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-    Compilation</a> or the Developer's Guide, Section .
+    Compilation</a>.
 
     <!--chapter break here-->
     
@@ -374,27 +377,27 @@ color="maroon">
 	  input port;an example of a SCIRun module that
 	  has dynamic input ports.</p> 
       <li><p>Open the Viewer window by pressing the Viewer's UI button.</p>
-      <li><p>In the Viewer window, you will see a set of axes, representing X, Y, and Z directions. Press the Autoview button near the bottom of the window, and you should see the points of the geometry, similar to <b>Figure 1.10</b>  
+      <li><p>In the Viewer window, you will see a set of axes, representing X, Y, and Z directions. Press the Autoview button near the bottom of the window, and you should see the points of the geometry, similar to <b>Figure 1.8</b>  
     .</ol></p> 
-	<p>The image in your Viewer will appear at a somewhat different angle, since the image in <b>Figure 1.10</b> has been rotated.</p>  	
+	<p>The image in your Viewer will appear at a somewhat different angle, since the image in <b>Figure 1.8</b> has been rotated.</p>  	
     </div>
     <center>
     <p><img height="451" width="450" src="images/figures/1_10.gif"><br>
-    <b>Figure 1.10, Viewer window showing the utahtorso-lowres-voltage.tvd.fld data</b></p>
+    <b>Figure 1.8, Viewer window showing the utahtorso-lowres-voltage.tvd.fld data</b></p>
     </center>
     <div align="left">
     <p><br>
     
        <p><b><A name="section-6">Navigating the Viewer Window</b><br></A>
     
-    <p>Since the Viewer is one of the most important SCIRun modules.  The <a
+    <p>Since the Viewer is one of the most important SCIRun modules, the <a
     HREF="../Guide/usersguide/srug5.html#sec:view-anatomy">User's Guide 5.1,
     Anatomy of the Viewer Window</a> provides a full description of the
     Viewer.   
            
     <p><b><A name="section-7">Mouse controls</b><br></A>
     
-    <p>In the Viewer, you can rotate scale and translate your image using the mouse. The <a
+    <p>In the Viewer, you can rotate, scale, and translate your image using the mouse. The <a
     HREF="../Guide/usersguide/srug5.html#sec:view-mouse">User's Guide 5.2,
     Mouse Control in the Viewer</a> 
 	provides more complete information.</p><br>
@@ -403,7 +406,7 @@ color="maroon">
       <p><li> Move the mouse to the center of the image.</p>
       <p><li> Click and hold the left mouse button.</p> 
       <p><li> Move the mouse in order to move the image.</p>  
-      <p><li>Release the button and the image will stay where you have placed it within the Viewer window</p></ol><br>
+      <p><li>Release the button and the image will stay where you have placed it within the Viewer window.</p></ol><br>
 <p><b>Rotating the image</b>.</p>
       <ol><p><li> Click and hold the middle mouse button.</p> 
 	<p><li>Move the mouse in order to rotate the image.</p>
@@ -417,12 +420,12 @@ color="maroon">
     <ol><p><li>Click the right mouse button and drag the mouse.</p>
 <p><li>Move the mouse up or to the left in order to zoom the image out.</p>
 <p><li>Move the mouse down or to the right in order to zoom the image in.</p>
- <p><b>Figure 1.10.1</b> shows the image rotated approximately 90 degrees and scaled. 
+ <p><b>Figure 1.8.1</b> shows the image rotated approximately 90 degrees and scaled. 
     
     </div>
     <center>
     <p><img height="451" width="450" src="images/figures/1_10_1.gif"><br>
-    <b>Figure 1.10.1, rotated and scaled image</b></p>
+    <b>Figure 1.8.1, rotated and scaled image</b></p>
     </center>
     <div align="left">
     <p><br>
@@ -434,7 +437,7 @@ color="maroon">
     
    
     
-    <p>Now we will use the controls at the bottom of the Viewer window, <b>(Figure 1.10.2)</b>. Here, you see buttons
+    <p>Now we will use the controls at the bottom of the Viewer window, <b>Figure 1.8.2</b>. Here, you see buttons
     for the 
     following functions:
     <br>
@@ -453,7 +456,7 @@ color="maroon">
   </div>
     <center>
     <p><img height="64" width="500" src="images/figures/1_10_2.gif"><br>
-    <b>Figure 1.10.2, basic Viewer controls</b></p>
+    <b>Figure 1.8.2, basic Viewer controls</b></p>
     </center>
     <div align="left">
     <p><br>
@@ -463,13 +466,13 @@ color="maroon">
     <p>To access even more display options:
     <ul>
       <p><li>Locate the "+" button in the lower right corner of the Viewer
-	  window to access the Extended Control Window which contains additional Viewer settings<b>(Figure 1.10.3)</b>, as described in the <a
+	  window to access the Extended Control Window which contains additional Viewer settings<b>(Figure 1.8.3)</b>, as described in the <a
 	  HREF="../Guide/usersguide/srug5.html#sec:view-control">User's Guide
 	  5.3, Extended Control Window</a>.</p> 
     </ul> 
 <center>
     <p><img height="273" width="500" src="images/figures/1_10_3.gif"><br>
-    <b>Figure 1.10.3, Extended Control Window</b></p>
+    <b>Figure 1.8.3, Extended Control Window</b></p>
     </center>
     <div align="left">
     <p><br>
@@ -489,13 +492,13 @@ color="maroon">
 	  location and filename for your net. By convention, most
 	  nets are stored in the SCIRun/src/nets/ directory, but you can store them in another location.</p>
       <p><li>For this example, store the net as
-	  SCIRun/src/nets/show-torso-mesh.net, as in <b>Figure 1.11</b>. The .net suffix represents a SCIRun network file.</p>
+	  SCIRun/src/nets/show-torso-mesh.net, as in <b>Figure 1.9</b>. The .net suffix represents a SCIRun network file.</p>
     </ol><br> 
 
     </div>
     <center>
     <p><img height="216" width="320" src="images/figures/1_11.gif"><br>
-    <b>Figure 1.11, &quot;Save As&quot; GUI</b>
+    <b>Figure 1.9, &quot;Save As&quot; GUI</b>
     </center>
     <div align="left">
     </p><br>
@@ -512,7 +515,7 @@ color="maroon">
     </div>
     <center>
     <p><img height="369" width="500" src="images/figures/1_12.gif"><br>
-    <b>Figure 1.12, GUI for loading a network</b></p>
+    <b>Figure 1.10, GUI for loading a network</b></p>
     </center>
     <div align="left">
     <p><br>
