@@ -440,7 +440,8 @@ void MPMICE::interpolatePressureToParticles(const ProcessorGroup*,
 	for (int k = 0; k < 8; k++) {
 	    press += pressNC[ni[k]] * S[k];
 	}
-	pPressure[idx] = press;
+// HARDWIRING
+	pPressure[idx] = press-101325.0;
     }
 
     new_dw->put(pPressure,  Mlb->pPressureLabel);
@@ -526,10 +527,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 //      don't then the Malloc lib initializes it as a NAN.
     if(timestep==0){
     cout<<"I've hardwired the initial CC Vars for mpm matl"<<endl;
-//      Vector initialVel_CC(0.,0.,0.);
       double initialTemp_CC = 300.0;
       double initialCv_CC   = 716.0;
-//      vel_CC.initialize(initialVel_CC);
       Temp_CC.initialize(initialTemp_CC);
       cv_CC.initialize(initialCv_CC);
     }
