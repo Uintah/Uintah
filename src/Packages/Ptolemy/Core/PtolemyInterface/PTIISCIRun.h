@@ -13,12 +13,15 @@ using namespace SCIRun;
 
 class StartSCIRun : public Runnable {
 public:
-  StartSCIRun(std::string netPath) { netName = netPath; }
-  StartSCIRun() { netName = ""; }
+  StartSCIRun(std::string netPath, std::string data, std::string module) 
+  		{ netName = netPath;  dataPath = data;  readerName = module; }
+  StartSCIRun() { netName = "";  dataPath = "";  readerName = "";}
   virtual ~StartSCIRun() { netName = "";  std::cerr << "~StartSCIRun" << std::endl; }
   void run();
 private:
   std::string netName;
+  std::string dataPath;
+  std::string readerName;
   
 };
 

@@ -6,6 +6,7 @@
 #include <main/sci_version.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Containers/StringUtil.h>
@@ -16,6 +17,9 @@
 #include <Core/Util/sci_system.h>
 #include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
+
+#include <Core/GuiInterface/GuiCallback.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
 #include <Core/Services/ServiceLog.h>
 #include <Core/Services/ServiceDB.h>
@@ -143,14 +147,35 @@ void StartSCIRun::run()
 	
     // Activate "File" menu sub-menus once packages are all loaded.
     gui->eval("activate_file_submenus");
-
-	//string command = "loadnet {/scratch/SCIRun/test.net}";
-	if(netName != "")
-		gui->eval("loadnet {" + netName + "}");
 	
+	
+	
+	Module* mod;
+	//string command = "loadnet {/scratch/SCIRun/test.net}";
+	if(netName != ""){
+		gui->eval("loadnet {" + netName + "}");
+		if(dataPath != "" && readerName != ""){
+			
+			mod=net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
+			
+			GuiInterface* modGui = mod->getGui();
+			
+			//for testing
+			//std::string result;
+			//modGui->get("::SCIRun_DataIO_FieldReader_0-filename", result);
+			//std::cerr << "result: " << result << std::endl;
+			
+			// example" modGui->set("::SCIRun_DataIO_FieldReader_0-filename", "/scratch/DATA1.22.0/utahtorso/utahtorso-voltage.tvd.fld");
+			modGui->set("::" + readerName + "-filename", dataPath);
+		}
+		
+	}
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
 
+	//tell the first module that it wants to execute
+	mod->want_to_execute();
+	
     JNIUtils::sem().up();
 
 #if 0
