@@ -31,7 +31,7 @@ PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/SimulationController Uintah/Components/ICE \
 	Uintah/Components/Schedulers Uintah/Components/Arches \
 	Uintah/Components/ProblemSpecification \
-	SCICore/Exceptions
+	SCICore/Exceptions Uintah/Interface SCICore/Thread
 LIBS :=
 endif
 
@@ -39,6 +39,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.6  2000/05/11 20:10:10  dav
+# adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+#
 # Revision 1.5  2000/05/07 06:01:57  sparker
 # Added beginnings of multiple patch support and real dependencies
 #  for the scheduler

@@ -62,7 +62,7 @@ WARNING
        
        //////////
        // Insert Documentation Here:
-       virtual DataWarehouseP createDataWarehouse() = 0;
+       virtual DataWarehouseP createDataWarehouse( int generation ) = 0;
        
     private:
        Scheduler(const Scheduler&);
@@ -73,6 +73,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2000/05/11 20:10:23  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.8  2000/05/05 06:42:46  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //
