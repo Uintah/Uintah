@@ -53,8 +53,8 @@ FieldHandle
 ApplyInterpAlgoT<FSRC, FITP, LITP, FOUT>::execute(FieldHandle fsrc_h,
 						  FieldHandle fitp_h)
 {
-  FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
-  FITP *fitp = dynamic_cast<FITP *>(fitp_h.get_rep());
+  FSRC *fsrc = (FSRC *)(fsrc_h.get_rep()); // dynamic cast fails on sgi
+  FITP *fitp = (FITP *)(fitp_h.get_rep());
   FOUT *fout = scinew FOUT(fitp->get_typed_mesh(), fitp->data_at());
   FieldHandle fhout(fout);
 
