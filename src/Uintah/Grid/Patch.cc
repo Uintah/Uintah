@@ -272,8 +272,14 @@ long Patch::totalCells() const
 
 void Patch::performConsistencyCheck() const
 {
-  if(d_res.x() < 1 || d_res.y() < 1 || d_res.z() < 1)
-    throw InvalidGrid("Degenerate patch");
+  if(d_res.x() < 1 || d_res.y() < 1 || d_res.z() < 1) {
+
+    char msg[ 1024 ];
+
+    sprintf( msg, "Degenerate patch %d: [res: %d, %d, %d] ", 
+	     d_id, d_res.x(), d_res.y(), d_res.z() );
+    throw InvalidGrid( string( msg ) + toString() );
+  }
 }
 
 Patch::BCType 
@@ -400,6 +406,9 @@ Patch::determineGhostPatches( int numGhostCells )
      
 //
 // $Log$
+// Revision 1.8  2000/06/08 17:47:47  dav
+// longer error message
+//
 // Revision 1.7  2000/06/07 18:31:00  tan
 // Requirement for getHighGhostCellIndex() and getLowGhostCellIndex()
 // cancelled.
