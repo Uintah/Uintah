@@ -32,6 +32,7 @@ template class LockingHandle<Mesh>;
 
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/MeshTet.h>
+#include <Core/Persistent/PersistentSTL.h>
 template class GenericField<MeshTet, vector<double> >;
 
 #ifdef __sgi
