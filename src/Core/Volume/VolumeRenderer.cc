@@ -163,7 +163,7 @@ VolumeRenderer::draw_volume()
 			 diag.z()/tex_->nz());
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
-  
+
   vector<float> vertex;
   vector<float> texcoord;
   vector<int> size;
@@ -297,7 +297,6 @@ VolumeRenderer::draw_volume()
   if(use_shading) {
     // set shader parameters
     Vector l(light_pos[0], light_pos[1], light_pos[2]);
-    //cerr << "LIGHTING: " << pos << endl;
     double m[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, m);
     Transform mv;
@@ -305,6 +304,7 @@ VolumeRenderer::draw_volume()
     const Transform &t = tex_->transform();
     l = mv.unproject(l);
     l = t.unproject(l);
+    l.safe_normalize();
     shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
   }
@@ -440,7 +440,7 @@ VolumeRenderer::draw_wireframe()
 			 diag.z()/tex_->nz());
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
-  
+
   vector<float> vertex;
   vector<float> texcoord;
   vector<int> size;
