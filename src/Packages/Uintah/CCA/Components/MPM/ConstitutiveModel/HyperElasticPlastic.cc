@@ -20,6 +20,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityState.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -328,6 +329,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double totalStrainEnergy = 0.0;
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
+  double Tm = matl->getMeltTemperature();
   double rho_0 = matl->getInitialDensity();
   double oneThird = (1.0/3.0);
   double sqrtTwoThird = sqrt(2.0/3.0);
@@ -469,6 +471,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Update the deformation gradient tensor to its time n+1 value.
       pDeformGrad_new[idx] = tensorFinc*pDeformGrad[idx];
       double J = pDeformGrad_new[idx].Determinant();
+      tensorF_new = pDeformGrad_new[idx];
       //cout << "J = " << J << "\n Updated deformation gradient =\n " 
       //     << pDeformGrad_new[idx] << endl;
 
@@ -497,11 +500,45 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       plasticStrainRate = max(plasticStrainRate, d_tol);
       double plasticStrain = pPlasticStrain[idx] + plasticStrainRate*delT;
 
+      // compute pressure, temperature, density
+      double pressure = pStress[idx].Trace()/3.0;
+      double temperature = pTemperature[idx];
+      double rho_cur = rho_0/J;
+
+      // Set up the PlasticityState
+      PlasticityState* state = scinew PlasticityState();
+      state->plasticStrainRate = plasticStrainRate;
+      state->plasticStrain = plasticStrain;
+      state->pressure = pressure;
+      state->temperature = temperature;
+      state->density = rho_cur;
+      state->initialDensity = rho_0;
+      state->shearModulus = shear ;
+      state->initialShearModulus = shear;
+      state->meltingTemp = Tm ;
+      state->initialMeltTemp = Tm;
+    
+      // Calculate the shear modulus and the melting temperature at the
+      // start of the time step
+      double mu_cur = d_plasticity->computeShearModulus(state);
+      double Tm_cur = d_plasticity->computeMeltingTemp(state);
+
+      // Update the plasticity state
+      state->shearModulus = mu_cur ;
+      state->meltingTemp = Tm_cur ;
+
+      // get the hydrostatic part of the stress .. the pressure should ideally
+      // be obtained from a strain energy functional of the form U'(J)
+      // which is usually satisfied by equations of states that may or may not
+      // satisfy small strain elasticity
+      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, mu_cur, 
+                                                tensorF_new, tensorEta, 
+                                                tensorS, pTemperature[idx], 
+                                                rho_cur, delT);
+
       // Calculate the flow stress
-      flowStress = d_plasticity->computeFlowStress(plasticStrainRate, 
-                                                   plasticStrain,
-                                                   pTemperature[idx],
-                                                   delT, d_tol, matl, idx);
+      flowStress = d_plasticity->computeFlowStress(state, delT, d_tol, 
+                                                   matl, idx);
       flowStress *= sqrtTwoThird;
       //cout << "Flow Stress = " << flowStress << endl;
 
@@ -511,7 +548,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	// Plastic case
         // Calculate delGamma
         double Ielastic = oneThird*traceBbarElastic;
-        double muBar = shear*Ielastic;
+        double muBar = mu_cur*Ielastic;
 	double delGamma = (trialSNorm - flowStress)/(2.0*muBar);
         //cout << "Ie = " << Ielastic << " mubar = " << muBar 
         //     << " delgamma = " << delGamma << endl;
@@ -524,7 +561,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	tensorS = trialS - normal*2.0*muBar*delGamma;
 
 	// Update deviatoric part of elastic left Cauchy-Green tensor
-	pBbarElastic_new[idx] = tensorS/shear + one*Ielastic;
+	pBbarElastic_new[idx] = tensorS/mu_cur + one*Ielastic;
 
         // Update the plastic strain
         pPlasticStrain_new[idx] = plasticStrain;
@@ -557,17 +594,6 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
         d_plasticity->updateElastic(idx);
       }
 
-      // get the hydrostatic part of the stress .. the pressure should ideally
-      // be obtained from a strain energy functional of the form U'(J)
-      // which is usually satisfied by equations of states that may or may not
-      // satisfy small strain elasticity
-      tensorF_new = pDeformGrad_new[idx];
-      double rho_cur = rho_0/J;
-      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, 
-                                                tensorF_new, tensorEta, 
-                                                tensorS, pTemperature[idx], 
-                                                rho_cur, delT);
-
       //cout << "tensorS = \n" << tensorS << endl << "tensorHy = \n" 
       //     << tensorHy << endl;
 
@@ -581,13 +607,13 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute the strain energy for all the particles
       double U = 0.5*bulk*(0.5*(J*J - 1.0) - log(J));
-      double W = 0.5*shear*(pBbarElastic_new[idx].Trace() - 3.0);
+      double W = 0.5*mu_cur*(pBbarElastic_new[idx].Trace() - 3.0);
       double e = (U + W)*pVolume_new[idx]/J;
       totalStrainEnergy += e;
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      double c_dil = sqrt((bulk + 4.*shear/3.)*pVolume_new[idx]/pMass[idx]);
+      double c_dil = sqrt((bulk + 4.*mu_cur/3.)*pVolume_new[idx]/pMass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
 		       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));

@@ -165,39 +165,23 @@ MTSPlastic::updatePlastic(const particleIndex idx, const double& )
 }
 
 double 
-MTSPlastic::computeFlowStress(const double& plasticStrainRate,
-                              const double& ,
-                              const double& T,
-                              const double& delT,
-                              const double& ,
-                              const MPMMaterial* ,
-                              const particleIndex idx)
+MTSPlastic::computeFlowStress(const PlasticityState* state,
+			      const double& delT,
+			      const double& ,
+			      const MPMMaterial* ,
+			      const particleIndex idx)
 {
   // Calculate strain rate and incremental strain
-  double edot = plasticStrainRate;
+  double edot = state->plasticStrainRate;
   double delEps = edot*delT;
 
   // Check if temperature is correct
-  if (T <= 0.0) {
-    ostringstream desc;
-    desc << "**MTS ERROR** Absolute temperature <= 0." << endl;
-    desc << "T = " << T << " edot = " << edot << endl;
-    throw InvalidValue(desc.str());
-  }
+  double T = state->temperature;
+  ASSERT(T > 0.0);
 
-  // Calculate mu and mu/mu_0
-  double expT0_T = exp(d_CM.T_0/T) - 1.0;
-  ASSERT(expT0_T != 0);
-  double mu = d_CM.mu_0 - d_CM.D/expT0_T;
-  if (mu <= 0.0) {
-    ostringstream desc;
-    desc << "**MTS ERROR** Shear modulus <= 0." << endl;
-    desc << "T = " << T << " mu0 = " << d_CM.mu_0 << " T0 = " << d_CM.T_0
-         << " exp(To/T) = " << exp(d_CM.T_0/T) << " D = " << d_CM.D << endl;
-    throw InvalidValue(desc.str());
-  }
-  //double mu_mu_0 = mu/d_CM.mu_0;
-  //cout << "mu = " << mu << " mu/mu_0 = " << mu_mu_0 << endl;
+  // Check if shear modulus is correct
+  double mu = state->shearModulus;
+  ASSERT(mu > 0.0);
 
   // Calculate S_i
   double CC = d_CM.koverbcubed*T/mu;
@@ -284,32 +268,31 @@ MTSPlastic::computeFlowStress(const double& plasticStrainRate,
   where \f$\sigma\f$ is the MTS flow stress.
 */
 void 
-MTSPlastic::computeTangentModulus(const Matrix3& sig,
-				  const double& plasticStrainRate, 
-				  const double& , 
-				  double T,
-				  double ,
-				  const particleIndex idx,
+MTSPlastic::computeTangentModulus(const Matrix3& stress,
+				  const PlasticityState* state,
+				  const double& ,
 				  const MPMMaterial* ,
+				  const particleIndex idx,
 				  TangentModulusTensor& Ce,
 				  TangentModulusTensor& Cep)
 {
   // Calculate the deviatoric stress and rate of deformation
   Matrix3 one; one.Identity();
-  Matrix3 sigdev = sig - one*(sig.Trace()/3.0);
+  Matrix3 sigdev = stress - one*(stress.Trace()/3.0);
 
   // Calculate the equivalent stress and strain rate
   double sigeqv = sqrt(sigdev.NormSquared()); 
-  double edot = plasticStrainRate;
+  double edot = state->plasticStrainRate;
 
   // Calculate the direction of plastic loading (r)
   Matrix3 rr = sigdev*(1.5/sigeqv);
 
   // Calculate mu and mu/mu_0
-  double mu_mu_0 = 1.0 - d_CM.D/(d_CM.mu_0*(exp(d_CM.T_0/T) - 1.0)); 
-  double mu = mu_mu_0*d_CM.mu_0;
+  double mu = state->shearModulus;
+  double mu_mu_0 = mu/d_CM.mu_0;
 
   // Calculate theta_0
+  double T = state->temperature;
   double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
     - d_CM.a_3*T;
 
@@ -325,13 +308,16 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
 
   // Calculate theta
   double theta = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
-  double h = theta;
+  double h0 = theta;
 
   // Calculate f_q (h = theta, therefore f_q.h = f_q.theta)
   double CCe = CC/d_CM.g_0e;
   double logee = log(d_CM.edot_0e/edot);
   double S_e = pow((1.0-pow((CCe*logee),(1.0/d_CM.q_e))),(1.0/d_CM.p_e));
-  double f_q = mu_mu_0*S_e;
+  double f_q0 = mu_mu_0*S_e;
+
+  // Get f_q1 = dsigma/dep (h = 1, therefore f_q.h = f_q)
+  double f_q1 = evalDerivativeWRTPlasticStrain(state, idx);
 
   // Form the elastic-plastic tangent modulus
   Matrix3 Cr, rC;
@@ -360,34 +346,103 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
         int kk1 = kk+1;
 	for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii1,jj1)*rC(kk1,ll+1)/(-f_q*h + rCr);
+	    Cr(ii1,jj1)*rC(kk1,ll+1)/(-f_q0*h0 - f_q1 + rCr);
 	}  
       }  
     }  
   }  
 }
 
+void
+MTSPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+                                        const particleIndex idx,
+                                        Vector& derivs)
+{
+  derivs[0] = evalDerivativeWRTStrainRate(state, idx);
+  derivs[1] = evalDerivativeWRTTemperature(state, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(state, idx);
+}
 
 double
-MTSPlastic::evalDerivativeWRTTemperature(double edot,
-                                         double ,
-                                         double T,
+MTSPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+					   const particleIndex idx)
+{
+  // Get the state data
+  double edot = state->plasticStrainRate;
+  double mu = state->shearModulus;
+  double T = state->temperature;
+
+  //double sigma_e = pMTS_new[idx];
+  double dsigY_dsig_e = evalDerivativeWRTSigmaE(state, idx);
+
+  // Calculate theta_0
+  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
+    - d_CM.a_3*T;
+
+  // Check mu
+  ASSERT (mu > 0.0);
+
+  // Calculate sigma_es
+  double CC = d_CM.koverbcubed*T/mu;
+  double CCes = CC/d_CM.g_0es;
+  double powees = pow(edot/d_CM.edot_es0, CCes);
+  double sigma_es = d_CM.sigma_es0*powees;
+
+  // Calculate X and FX
+  double X = pMTS_new[idx]/sigma_es;
+  double FX = tanh(d_CM.alpha*X);
+
+  // Calculate theta
+  double dsig_e_dep = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
+  
+  return (dsigY_dsig_e*dsig_e_dep);
+}
+
+///////////////////////////////////////////////////////////////////////////
+/*  Compute the shear modulus. */
+///////////////////////////////////////////////////////////////////////////
+double
+MTSPlastic::computeShearModulus(const PlasticityState* state)
+{
+  double T = state->temperature;
+  ASSERT(T > 0.0);
+  double expT0_T = exp(d_CM.T_0/T) - 1.0;
+  ASSERT(expT0_T != 0);
+  double mu = d_CM.mu_0 - d_CM.D/expT0_T;
+  if (!(mu > 0.0)) {
+    ostringstream desc;
+    desc << "**MTS Deriv Edot ERROR** Shear modulus <= 0." << endl;
+    desc << "T = " << T << " mu0 = " << d_CM.mu_0 << " T0 = " << d_CM.T_0
+         << " exp(To/T) = " << expT0_T << " D = " << d_CM.D << endl;
+    throw InvalidValue(desc.str());
+  }
+  return mu;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/* Compute the melting temperature */
+///////////////////////////////////////////////////////////////////////////
+double
+MTSPlastic::computeMeltingTemp(const PlasticityState* state)
+{
+  return state->meltingTemp;
+}
+
+double
+MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 					 const particleIndex idx)
 {
+  // Get the state data
+  double edot = state->plasticStrainRate;
+  double T = state->temperature;
+  double mu = state->shearModulus;
+
   double sigma_e = pMTS_new[idx];
 
   // Calculate exp(T0/T)
   double expT0T = exp(d_CM.T_0/T);
 
-  // Calculate mu and mu/mu_0
-  double mu = d_CM.mu_0 - d_CM.D/(expT0T - 1.0); 
-  if (!(mu > 0.0)) {
-    ostringstream desc;
-    desc << "**MTS Deriv Edot ERROR** Shear modulus <= 0." << endl;
-    desc << "T = " << T << " mu0 = " << d_CM.mu_0 << " T0 = " << d_CM.T_0
-         << " exp(To/T) = " << expT0T << " D = " << d_CM.D << endl;
-    throw InvalidValue(desc.str());
-  }
+  // Calculate mu/mu_0 and CC
   double mu_mu_0 = mu/d_CM.mu_0;
   double CC = d_CM.koverbcubed/mu;
 
@@ -461,22 +516,18 @@ MTSPlastic::evalDerivativeWRTTemperature(double edot,
 }
 
 double
-MTSPlastic::evalDerivativeWRTStrainRate(double edot,
-                                        double ,
-                                        double T,
+MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                         const particleIndex idx)
 {
-  double sigma_e = pMTS_new[idx];
+  // Get the state data
+  double edot = state->plasticStrainRate;
+  double T = state->temperature;
+  double mu = state->shearModulus;
 
-  // Calculate mu and mu/mu_0
-  double mu_mu_0 = 1.0 - d_CM.D/(d_CM.mu_0*(exp(d_CM.T_0/T) - 1.0)); 
-  if (!(mu_mu_0 > 0.0)) {
-    ostringstream desc;
-    desc << "**MTS Deriv Edot ERROR** Shear modulus <= 0." << endl;
-    throw InvalidValue(desc.str());
-  }
-  double mu = mu_mu_0*d_CM.mu_0;
+  double mu_mu_0 = mu/d_CM.mu_0;
   double CC = d_CM.koverbcubed*T/mu;
+
+  double sigma_e = pMTS_new[idx];
 
   // Materials with (sigma_i != 0) are treated specially
   double ratioi = 0.0;
@@ -530,58 +581,14 @@ MTSPlastic::evalDerivativeWRTStrainRate(double edot,
 }
 
 double
-MTSPlastic::evalDerivativeWRTPlasticStrain(double edot,
-                                           double ep,
-                                           double T,
-					   const particleIndex idx)
-{
-  //double sigma_e = pMTS_new[idx];
-  double dsigY_dsig_e = evalDerivativeWRTSigmaE(edot, ep, T, idx);
-
-  // Calculate theta_0
-  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
-    - d_CM.a_3*T;
-
-  // Calculate mu and mu/mu_0
-  double mu = d_CM.mu_0 - d_CM.D/(exp(d_CM.T_0/T) - 1.0); 
-  if (!(mu > 0.0)) {
-    ostringstream desc;
-    desc << "**MTS Deriv Edot ERROR** Shear modulus <= 0." << endl;
-    throw InvalidValue(desc.str());
-  }
-
-  // Calculate sigma_es
-  double CC = d_CM.koverbcubed*T/mu;
-  double CCes = CC/d_CM.g_0es;
-  double powees = pow(edot/d_CM.edot_es0, CCes);
-  double sigma_es = d_CM.sigma_es0*powees;
-
-  // Calculate X and FX
-  double X = pMTS_new[idx]/sigma_es;
-  double FX = tanh(d_CM.alpha*X);
-
-  // Calculate theta
-  double dsig_e_dep = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
-  
-  return (dsigY_dsig_e*dsig_e_dep);
-}
-
-double
-MTSPlastic::evalDerivativeWRTSigmaE(double edot,
-                                    double ,
-                                    double T,
+MTSPlastic::evalDerivativeWRTSigmaE(const PlasticityState* state,
 				    const particleIndex )
 {
-  //double sigma_e = pMTS_new[idx];
-
-  // Calculate mu and mu/mu_0
-  double mu_mu_0 = 1.0 - d_CM.D/(d_CM.mu_0*(exp(d_CM.T_0/T) - 1.0)); 
-  if (!(mu_mu_0 > 0.0)) {
-    ostringstream desc;
-    desc << "**MTS Deriv T ERROR** Shear modulus <= 0." << endl;
-    throw InvalidValue(desc.str());
-  }
-  double mu = mu_mu_0*d_CM.mu_0;
+  // Get the state data
+  double edot = state->plasticStrainRate;
+  double T = state->temperature;
+  double mu = state->shearModulus;
+  double mu_mu_0 = mu/d_CM.mu_0;
 
   // Calculate S_e
   double CC = d_CM.koverbcubed*T/mu;
@@ -593,14 +600,3 @@ MTSPlastic::evalDerivativeWRTSigmaE(double edot,
 }
 
 
-void
-MTSPlastic::evalDerivativeWRTScalarVars(double edot,
-                                        double ep,
-                                        double T,
-                                        const particleIndex idx,
-                                        Vector& derivs)
-{
-  derivs[0] = evalDerivativeWRTStrainRate(edot, ep, T, idx);
-  derivs[1] = evalDerivativeWRTTemperature(edot, ep, T, idx);
-  derivs[2] = evalDerivativeWRTPlasticStrain(edot, ep, T, idx);
-}

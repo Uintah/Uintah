@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityState.h>
 
 
 namespace Uintah {
@@ -80,10 +81,9 @@ namespace Uintah {
                                const double& delGamma) = 0;
 
     //////////
-    // Calculate the flow stress
-    virtual double computeFlowStress(const double& plasticStrainRate,
-				     const double& plasticStrain,
-				     const double& temperature,
+    /*! \brief Calculate the flow stress */
+    //////////
+    virtual double computeFlowStress(const PlasticityState* state,
 				     const double& delT,
 				     const double& tolerance,
 				     const MPMMaterial* matl,
@@ -104,12 +104,10 @@ namespace Uintah {
       \f$ f_q = \partial f /\partial q \f$ 
     */
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const double& plasticStrainRate,
-				       const double& plasticStrain,
-				       double temperature,
-				       double delT,
-                                       const particleIndex idx,
+                                       const PlasticityState* state,
+				       const double& delT,
                                        const MPMMaterial* matl,
+                                       const particleIndex idx,
 				       TangentModulusTensor& Ce,
 				       TangentModulusTensor& Cep) = 0;
 
@@ -124,9 +122,7 @@ namespace Uintah {
          derivs[2] = \f$d\sigma_Y/d(int. var.)\f$)
     */
     ///////////////////////////////////////////////////////////////////////////
-    virtual void evalDerivativeWRTScalarVars(double edot,
-                                             double ep,
-                                             double T,
+    virtual void evalDerivativeWRTScalarVars(const PlasticityState* state,
                                              const particleIndex idx,
                                              Vector& derivs) = 0;
 
@@ -138,10 +134,22 @@ namespace Uintah {
       \return \f$d\sigma_Y/d\epsilon\f$
     */
     ///////////////////////////////////////////////////////////////////////////
-    virtual double evalDerivativeWRTPlasticStrain(double edot, 
-                                                  double ep,
-                                                  double T,
+    virtual double evalDerivativeWRTPlasticStrain(const PlasticityState* state, 
                                                   const particleIndex idx) = 0;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the shear modulus. 
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    virtual double computeShearModulus(const PlasticityState* state) = 0;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the melting temperature
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    virtual double computeMeltingTemp(const PlasticityState* state) = 0;
   };
 } // End namespace Uintah
       

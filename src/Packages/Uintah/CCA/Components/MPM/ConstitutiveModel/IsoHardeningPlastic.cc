@@ -88,8 +88,6 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
 }
 
-
-
 void 
 IsoHardeningPlastic::initializeInternalVars(ParticleSubset* pset,
 					    DataWarehouse* new_dw)
@@ -141,9 +139,7 @@ IsoHardeningPlastic::updatePlastic(const particleIndex idx,
 }
 
 double 
-IsoHardeningPlastic::computeFlowStress(const double& ,
-				       const double& ,
-				       const double& ,
+IsoHardeningPlastic::computeFlowStress(const PlasticityState* ,
 				       const double& ,
 				       const double& ,
 				       const MPMMaterial* ,
@@ -155,14 +151,12 @@ IsoHardeningPlastic::computeFlowStress(const double& ,
 
 void 
 IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
-					   const double& , 
-					   const double& , 
-					   double ,
-					   double ,
-                                           const particleIndex ,
+				           const PlasticityState* state,
+				           const double& ,
                                            const MPMMaterial* ,
-					   TangentModulusTensor& Ce,
-					   TangentModulusTensor& Cep)
+                                           const particleIndex ,
+				           TangentModulusTensor& Ce,
+				           TangentModulusTensor& Cep)
 {
   // Calculate the deviatoric stress
   Matrix3 one; one.Identity();
@@ -175,7 +169,7 @@ IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
   Matrix3 nn = sigdev*(1.0/sigeqv);
 
   // Calculate gamma
-  double shear = Ce(0,1,0,1);
+  double shear = state->shearModulus;
   double gamma = 1.0/(1+d_CM.K/(3.0*shear));
 
   // Form the elastic-plastic tangent modulus
@@ -194,29 +188,18 @@ IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
   }  
 }
 
-double
-IsoHardeningPlastic::evalDerivativeWRTTemperature(double , double, double,
-                                                  const particleIndex )
+void
+IsoHardeningPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+						 const particleIndex idx,
+						 Vector& derivs)
 {
-  return 0.0;
+  derivs[0] = evalDerivativeWRTStrainRate(state, idx);
+  derivs[1] = evalDerivativeWRTTemperature(state, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(state, idx);
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTStrainRate(double , double, double,
-						 const particleIndex )
-{
-  return 0.0;
-}
-
-double
-IsoHardeningPlastic::evalDerivativeWRTAlpha(double , double, double,
-					    const particleIndex )
-{
-  return d_CM.K;
-}
-
-double
-IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(double , double, double,
+IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState*,
 						    const particleIndex )
 {
   ostringstream desc;
@@ -226,15 +209,44 @@ IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(double , double, double,
   //return 0.0;
 }
 
-
-void
-IsoHardeningPlastic::evalDerivativeWRTScalarVars(double epdot,
-						 double ep,
-						 double T,
-						 const particleIndex idx,
-						 Vector& derivs)
+///////////////////////////////////////////////////////////////////////////
+/*  Compute the shear modulus. */
+///////////////////////////////////////////////////////////////////////////
+double
+IsoHardeningPlastic::computeShearModulus(const PlasticityState* state)
 {
-  derivs[0] = evalDerivativeWRTStrainRate(epdot, ep, T, idx);
-  derivs[1] = evalDerivativeWRTTemperature(epdot, ep, T, idx);
-  derivs[2] = evalDerivativeWRTPlasticStrain(epdot, ep, T, idx);
+  return state->shearModulus;
 }
+
+///////////////////////////////////////////////////////////////////////////
+/* Compute the melting temperature */
+///////////////////////////////////////////////////////////////////////////
+double
+IsoHardeningPlastic::computeMeltingTemp(const PlasticityState* state)
+{
+  return state->meltingTemp;
+}
+
+double
+IsoHardeningPlastic::evalDerivativeWRTTemperature(const PlasticityState* ,
+                                                  const particleIndex )
+{
+  return 0.0;
+}
+
+double
+IsoHardeningPlastic::evalDerivativeWRTStrainRate(const PlasticityState* ,
+						 const particleIndex )
+{
+  return 0.0;
+}
+
+double
+IsoHardeningPlastic::evalDerivativeWRTAlpha(const PlasticityState* ,
+					    const particleIndex )
+{
+  return d_CM.K;
+}
+
+
+

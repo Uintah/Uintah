@@ -104,8 +104,9 @@ namespace Uintah {
 
   class MTSPlastic : public PlasticityModel {
 
-    // Create datatype for storing model parameters
   public:
+
+    // Create datatype for storing model parameters
     struct CMData {
       double sigma_a;
       double mu_0; //b1
@@ -195,10 +196,10 @@ namespace Uintah {
 
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
-    // compute the flow stress
-    virtual double computeFlowStress(const double& plasticStrainRate,
-				     const double& plasticStrain,
-				     const double& temperature,
+    ///////////////////////////////////////////////////////////////////////////
+    /*! \brief Compute the flow stress */
+    ///////////////////////////////////////////////////////////////////////////
+    virtual double computeFlowStress(const PlasticityState* state,
 				     const double& delT,
 				     const double& tolerance,
 				     const MPMMaterial* matl,
@@ -212,12 +213,10 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const double& plasticStrainRate,
-				       const double& plasticStrain,
-				       double temperature,
-				       double delT,
-				       const particleIndex idx,
-				       const MPMMaterial* matl,
+				       const PlasticityState* state,
+				       const double& delT,
+                                       const MPMMaterial* matl,
+                                       const particleIndex idx,
 				       TangentModulusTensor& Ce,
 				       TangentModulusTensor& Cep);
 
@@ -232,9 +231,7 @@ namespace Uintah {
       deriv[2] = \f$d\sigma_Y/d\epsilon_p\f$)
     */
     ///////////////////////////////////////////////////////////////////////////
-    void evalDerivativeWRTScalarVars(double edot,
-                                     double ep,
-                                     double T,
+    void evalDerivativeWRTScalarVars(const PlasticityState* state,
                                      const particleIndex idx,
                                      Vector& derivs);
 
@@ -255,8 +252,22 @@ namespace Uintah {
       \return Derivative \f$ d\sigma_Y / d\epsilon_p\f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTPlasticStrain(double edot, double ep, double T,
+    double evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                           const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the shear modulus. 
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeShearModulus(const PlasticityState* state);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the melting temperature
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeMeltingTemp(const PlasticityState* state);
 
   protected:
 
@@ -295,7 +306,7 @@ namespace Uintah {
       \return Derivative \f$ d\sigma_Y / dT \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTTemperature(double edot, double ep, double T,
+    double evalDerivativeWRTTemperature(const PlasticityState* state,
 					const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -355,7 +366,7 @@ namespace Uintah {
       \return Derivative \f$ d\sigma_Y / d\dot\epsilon \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTStrainRate(double edot, double ep, double T,
+    double evalDerivativeWRTStrainRate(const PlasticityState* state,
 				       const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -375,7 +386,7 @@ namespace Uintah {
       \return Derivative \f$ d\sigma_Y / d\sigma_e\f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTSigmaE(double edot, double ep, double T,
+    double evalDerivativeWRTSigmaE(const PlasticityState* state,
 				   const particleIndex idx);
 
   };
