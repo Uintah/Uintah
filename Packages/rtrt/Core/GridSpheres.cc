@@ -1405,8 +1405,8 @@ void GridSpheres::shade(Color& result, const Ray& ray,
   int cell=*(int*)hit.scratchpad;
   int colordata=dpy->colordata;
   float* p=spheres+cell+colordata;
-  float min=dpy->min[colordata];
-  float scale=dpy->scales[colordata];
+  float min=dpy->color_begin[colordata];
+  float scale=dpy->color_scales[colordata];
   float data=*p;
   float normalized=(data-min)*scale;
   int idx=(int)(normalized*(nmatls-1));
