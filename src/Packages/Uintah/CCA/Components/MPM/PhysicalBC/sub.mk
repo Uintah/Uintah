@@ -2,6 +2,8 @@
 
 SRCDIR   := Packages/Uintah/CCA/Components/MPM/PhysicalBC
 
-SRCS     += $(SRCDIR)/MPMPhysicalBCFactory.cc \
-	$(SRCDIR)/ForceBC.cc
+SRCS     += \
+	$(SRCDIR)/MPMPhysicalBCFactory.cc \
+	$(SRCDIR)/ForceBC.cc              \
+	$(SRCDIR)/CrackBC.cc
 

@@ -87,6 +87,9 @@ WARNING
       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
       { return graph.makeVarLabelMaterialMap(); }
      
+      virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return graph.getInitialRequires(); }
+
    private:
       const VarLabel* reloc_old_posLabel;
       vector<vector<const VarLabel*> > reloc_old_labels;
@@ -111,6 +114,7 @@ WARNING
       // id of datawarehouse
       int d_generation;
    };
+
 } // End namespace Uintah
    
 #endif

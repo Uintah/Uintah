@@ -252,7 +252,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    if(matlIndex >= (int)rr->vars.size()){
       int oldSize = (int)rr->vars.size();
       rr->vars.resize(matlIndex+1);
-      for(unsigned long i=oldSize;i<matlIndex;i++)
+      for(unsigned long i=oldSize;i<(unsigned long)matlIndex;i++)
 	 rr->vars[i]=0;
    }
 
@@ -366,9 +366,7 @@ void DWDatabase<VarType>::print(std::ostream& out)
 	globaliter != globals.end(); globaliter++)
      out << (*globaliter).first->getName() << '\n';
 }
+
 } // End namespace Uintah
 
-
-
 #endif
-

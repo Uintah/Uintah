@@ -48,7 +48,9 @@ class MDInterface;
    public:
       SimulationController(const ProcessorGroup* myworld);
       virtual ~SimulationController();
-      
+
+      void doRestart(std::string restartFromDir, int timestep,
+		     bool removeOldDir);
       void run();
       
    private:
@@ -69,14 +71,17 @@ class MDInterface;
 			       DataWarehouseP& new_ds,
 			       CFDInterface*, MPMInterface*,
 			       MPMCFDInterface*, MDInterface*);
-      
+
       SimulationController(const SimulationController&);
       SimulationController& operator=(const SimulationController&);
-      
-      bool           d_restarting;
-   };
-} // End namespace Uintah
-   
 
+      /* for restarting */
+      bool           d_restarting;
+      std::string d_restartFromDir;
+      int d_restartTimestep;
+      bool d_restartRemoveOldDir;
+   };
+
+} // End namespace Uintah
 
 #endif

@@ -50,6 +50,7 @@ TaskGraph::initialize()
    d_tasks.clear();
    d_allcomps.clear();
    d_allreqs.clear();
+   d_initreqs.clear();
 }
 
 map<DependData, int> depToSN;
@@ -136,6 +137,9 @@ TaskGraph::setupTaskConnections()
    map<const VarLabel*, Task*, VarLabel::Compare> reductionTasks;
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
       Task* task = *iter;
+      if (task->isReductionTask())
+	 continue; // already a reduction task so skip it
+
       const Task::compType& comps = task->getComputes();
       for(Task::compType::const_iterator dep = comps.begin();
 	  dep != comps.end(); dep++){
@@ -150,8 +154,11 @@ TaskGraph::setupTaskConnections()
 	       it = reductionTasks.find(var);
 	       it->second->computes(dep->d_dw, var, -1, 0);
 	    }
-	    it->second->requires(dep->d_dw, var, -1, task->getPatch(),
-				 Ghost::None);
+	    if (task->getPatch())
+	       it->second->requires(dep->d_dw, var, -1, task->getPatch(),
+				    Ghost::None);
+	    else
+	       it->second->requires(dep->d_dw, var);
 	 }
       }
    }
@@ -218,28 +225,42 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
        dep != reqs.end(); dep++){
       if(!dep->d_dw->isFinalized()){
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-	 actype::const_iterator aciter = d_allcomps.find(p);
-	 Task* vtask = aciter->second->d_task;
-	 if(!vtask->sorted){
-	    if(vtask->visited){
-	       ostringstream error;
-	       error << "Cycle detected in task graph: trying to do\n\t"
-		     << task->getName();
-	       if(task->getPatch())
-		  error << " on patch " << task->getPatch()->getID();
-	       error << "\nbut already did:\n\t"
-		     << vtask->getName();
-	       if(vtask->getPatch())
-		  error << " on patch " << vtask->getPatch()->getID();
-	       error << ",\nwhile looking for variable: \n\t" 
-		     << dep->d_var->getName() << ", material " 
-		     << dep->d_matlIndex;
-	       if(dep->d_patch)
-		  error << ", patch " << dep->d_patch->getID();
-	       error << "\n";
-	       throw InternalError(error.str());
+	 pair<actype::const_iterator, actype::const_iterator> range;
+	 range = d_allcomps.equal_range(p);
+	 actype::const_iterator testiter = range.first;
+	 if ((++testiter) != range.second) {
+	    // more than one compute for a require
+	    if (!task->isReductionTask())
+	       // Only let reduction tasks require a multiple computed
+	       // variable. We may wish to change this in the future but
+	       // it isn't supported now.
+	       throw InternalError(string("Only reduction tasks may require a variable that has multiple computes.\n'") + task->getName() + "' is therefore invalid.\n");
+	 }
+	 
+	 for (actype::const_iterator aciter = range.first;
+	      aciter != range.second; aciter++) {
+	    Task* vtask = aciter->second->d_task;
+	    if(!vtask->sorted){
+	       if(vtask->visited){
+		  ostringstream error;
+		  error << "Cycle detected in task graph: trying to do\n\t"
+			<< task->getName();
+		  if(task->getPatch())
+		     error << " on patch " << task->getPatch()->getID();
+		  error << "\nbut already did:\n\t"
+			<< vtask->getName();
+		  if(vtask->getPatch())
+		     error << " on patch " << vtask->getPatch()->getID();
+		  error << ",\nwhile looking for variable: \n\t" 
+			<< dep->d_var->getName() << ", material " 
+			<< dep->d_matlIndex;
+		  if(dep->d_patch)
+		     error << ", patch " << dep->d_patch->getID();
+		  error << "\n";
+		  throw InternalError(error.str());
+	       }
+	       processTask(vtask, sortedTasks);
 	    }
-	    processTask(vtask, sortedTasks);
 	 }
       }
    }
@@ -250,6 +271,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
    if(task->getPatch())
       dbg << " on patch " << task->getPatch()->getID();
    dbg << '\n';
+
 } // end processTask()
 
 void
@@ -299,15 +321,17 @@ TaskGraph::addTask(Task* task)
    for(Task::compType::const_iterator dep = comps.begin();
        dep != comps.end(); dep++){
       TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-      actype::iterator aciter = d_allcomps.find(p);
-      if(aciter != d_allcomps.end()){
-	 cerr << "First task:\n";
-	 task->displayAll(cerr);
-	 cerr << "Second task:\n";
-	 aciter->second->d_task->displayAll(cerr);
-	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
+      if (!dep->d_var->allowsMultipleComputes()) {
+	 actype::iterator aciter = d_allcomps.find(p);
+	 if(aciter != d_allcomps.end()){
+	    cerr << "First task:\n";
+	    task->displayAll(cerr);
+	    cerr << "Second task:\n";
+	    aciter->second->d_task->displayAll(cerr);
+	    throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
+	 }
       }
-      d_allcomps[p] = dep;
+      d_allcomps.insert(actype::value_type(p, dep));
    }
 
    const Task::reqType& reqs = task->getRequires();
@@ -317,6 +341,8 @@ TaskGraph::addTask(Task* task)
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	 d_allreqs.insert(artype::value_type(p, dep));
       }
+      else
+	 d_initreqs.push_back(dep);
    }
 }
 
@@ -390,16 +416,13 @@ TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
    // materials
    for (it = d_allcomps.begin(); it != d_allcomps.end(); it++) {
       const VarLabel* label = (*it).first.getLabel();
-      pair< const VarLabel*, list<int> >& labelMatls
-         = (*result)[label->getName()];
-      labelMatls.first = label;
+      list<int>& matls = (*result)[label->getName()];
 
       // note that d_allcomps is sorted by materials first, so
       // duplicates in materials will be in order
       int material = (*it).second->d_matlIndex;
-      if (labelMatls.second.size() == 0 ||
-	  labelMatls.second.back() != material)
-         labelMatls.second.push_back(material);
+      if (matls.size() == 0 || matls.back() != material)
+         matls.push_back(material);
    }
   
    return result;

@@ -9,7 +9,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/SFCXVariableBase.cc $(SRCDIR)/SFCYVariableBase.cc \
 	$(SRCDIR)/SFCZVariableBase.cc \
 	$(SRCDIR)/FaceIterator.cc \
-	$(SRCDIR)/Grid.cc $(SRCDIR)/XFCVariableBase.cc \
+	$(SRCDIR)/Grid.cc \
 	$(SRCDIR)/YFCVariableBase.cc $(SRCDIR)/ZFCVariableBase.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/PatchRangeTree.cc \

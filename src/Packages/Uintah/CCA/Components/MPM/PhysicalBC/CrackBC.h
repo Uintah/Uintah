@@ -1,18 +1,15 @@
 #ifndef UINTAH_GRID_CrackBC_H
 #define UINTAH_GRID_CrackBC_H
 
-#include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <Uintah/Interface/ProblemSpecP.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
-using namespace Uintah;
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
-namespace MPM {
 
-  using SCICore::Geometry::Vector;
-  using SCICore::Geometry::Point;
+using namespace SCIRun;
    
 /**************************************
 
@@ -70,15 +67,6 @@ WARNING
       double d_x1,d_y1,d_x2,d_y2,d_x3,d_y3,d_x4,d_y4;
    };
    
-} // end namespace MPM
 } // end namespace Uintah
 
 #endif
-
-// $Log$
-// Revision 1.1  2001/01/17 22:41:26  dav
-// Moved to new tree
-//
-// Revision 1.1  2000/12/30 05:23:02  tan
-// Added crack boundary condition.
-//
