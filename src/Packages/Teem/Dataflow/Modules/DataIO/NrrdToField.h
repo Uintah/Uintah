@@ -1084,7 +1084,10 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
       }
     break;
     default:
-      return false;
+      cerr << "Location of data not defined.  Assuming at Nodes\n";
+      typename Fld::mesh_type::Node::size_type sz;
+      mesh->size(sz);
+      dims.push_back(sz);
     }
     
     // if vector/tensor data store 3 or 7 at the end of dims vector
