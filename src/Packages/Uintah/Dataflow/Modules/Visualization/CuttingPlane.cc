@@ -30,10 +30,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 #include <Packages/Uintah/Core/Datatypes/DispatchScalar1.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <iostream>
 using std::cerr;
 using std::cin;
