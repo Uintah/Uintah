@@ -22,7 +22,14 @@ template<> void LeastSquares<double>::solve(){
 
     solver_ = "dgelss";
     time = clock();
-//    dgelss_(&M,&N,&NRHS,A->get_p(),&LDA,B->get_p(),&LDB,S,&RCOND,&RANK,WORK,&LWORK,&INFO);  
+#if 0
+    MatrixDense<double> *MD = dynamic_cast<MatrixDense<double> *>(*A);
+    if (!MD) {
+	cerr << "Error A is wrong type.\n";
+	return;
+    }
+#endif
+    dgelss_(&M,&N,&NRHS,((MatrixDense<double>*) A)->get_p(),&LDA,B->get_p(),&LDB,S,&RCOND,&RANK,WORK,&LWORK,&INFO);  
     time = clock() - time;
     
     if (INFO == 0)
