@@ -176,11 +176,12 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			   matl->getDWIndex(),patch,Ghost::None);
 	       t->requires(old_dw,lb->press_CCLabel,
 			   matl->getDWIndex(),patch,Ghost::None);
+
 	       t->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
-	       t->computes(new_dw,lb->vol_frac_CCLabel,matl->getDWIndex(),
-			   patch);
+	       t->computes(new_dw,lb->vol_frac_CCLabel,
+				matl->getDWIndex(), patch);
 	       t->computes(new_dw,lb->speedSound_equiv_CCLabel,
-			   matl->getDWIndex(), patch);
+				matl->getDWIndex(), patch);
 	  }
 	}
 	sched->addTask(t);
@@ -261,7 +262,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->speedSound_equiv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->rho_CCLabel,
+	    t->requires(old_dw,lb->rho_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->press_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -284,7 +285,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	  if(ice_matl){
 	    t->requires(new_dw,lb->pressdP_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->rho_CCLabel,
+	    t->requires(old_dw,lb->rho_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->computes(new_dw,lb->press_FCLabel, matl->getDWIndex(),patch);
@@ -487,6 +488,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
       old_dw->get(press[m], lb->press_CCLabel, vfindex,patch,Ghost::None, 0); 
       old_dw->get(speedSound_old[m], lb->speedSound_CCLabel, vfindex,
 		  patch,Ghost::None, 0); 
+
       new_dw->allocate(press_new[m],lb->press_CCLabel,vfindex,patch);
       new_dw->allocate(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,
 		       patch);
@@ -526,6 +528,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
        Material* matl = d_sharedState->getMaterial(m);
        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
        if (ice_matl) {
+ // John, should this press be press_new???
 	 Q[m] = press[m][*iter] - press_eos[m];
 	 y[m] = rho[m][*iter]/(vol_frac[m][*iter]*vol_frac[m][*iter]) 
 	   * dp_drho[m];
@@ -637,24 +640,21 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	}
       }
     }
-      
-    // Store new pressure, speedSound,vol_frac
-    for (int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial(m);
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      if (ice_matl) {
-	int vfindex = matl->getVFIndex();
-	//	new_dw->put(press_new[m],lb->press_CCLabel,vfindex,patch);
-	//new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
-	//	new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
-      }
-    }
     
   }
-    
+  // Store new pressure, speedSound,vol_frac
+  for (int m = 0; m < numMatls; m++) {
+    Material* matl = d_sharedState->getMaterial(m);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if (ice_matl) {
+	int vfindex = matl->getVFIndex();
+	new_dw->put(press_new[m],lb->press_CCLabel,vfindex,patch);
+	new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
+	new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
+    }
+  }
     
 #endif
-
 }
 
 void ICE::actuallyStep1c(const ProcessorGroup*,
@@ -702,6 +702,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
 
+#if 0
+   // This can't be uncommented until ExtraCells are implemented
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	IntVector curcell = *iter;
 
@@ -768,6 +770,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 //	vvel_FC[curcell][top] = 0.0;
 //	wvel_FC[curcell][top] = term1- term2 + term3;
       }
+#endif
 
       // Put Boundary condition stuff in here
       //
@@ -829,61 +832,58 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
       new_dw->get(wvel_FC[vfindex], lb->wvel_FCLabel,
 				vfindex, patch, Ghost::None, 0);
 
-      new_dw->allocate(uvel_FC[vfindex], lb->uvel_FCMELabel, vfindex, patch);
-      new_dw->allocate(vvel_FC[vfindex], lb->vvel_FCMELabel, vfindex, patch);
-      new_dw->allocate(wvel_FC[vfindex], lb->wvel_FCMELabel, vfindex, patch);
+      new_dw->allocate(uvel_FCME[vfindex], lb->uvel_FCMELabel, vfindex, patch);
+      new_dw->allocate(vvel_FCME[vfindex], lb->vvel_FCMELabel, vfindex, patch);
+      new_dw->allocate(wvel_FCME[vfindex], lb->wvel_FCMELabel, vfindex, patch);
     }
   }
 
+#if 0
+   // This can't be uncommented until ExtraCells are implemented
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     IntVector curcell = *iter;
 
    // Top face
-   IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
+    IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
 
-   for(int m = 0; m < NVFs; m++){
-     for(int n = 0; n < NVFs; n++){
+    for(int m = 0; m < NVFs; m++){
+      for(int n = 0; n < NVFs; n++){
 	temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K.get(n,m);
 	betamn = delT * temp/
 		       (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
 	beta.put(m,n,betamn);
 	a.put(m,n,-beta.get(m,n));
-     }
-   }
+      }
+    }
 
-   for(int m = 0; m < NVFs; m++){
-     a.put(m,m,1.);
-     for(int n = 0; n < NVFs; n++){
+    for(int m = 0; m < NVFs; m++){
+      a.put(m,m,1.);
+      for(int n = 0; n < NVFs; n++){
 	a.put(m,m, a.get(m,m) +  beta.get(m,n));
-     }
-   }
+      }
+    }
 
-   for(int m = 0; m < NVFs; m++){
-     b[m] = 0.0;
-     for(int n = 0; n < NVFs; n++){
+    for(int m = 0; m < NVFs; m++){
+      b[m] = 0.0;
+      for(int n = 0; n < NVFs; n++){
 	b[m] += beta.get(m,n) * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
-     }
-   }
+      }
+    }
 
 //  gauss_jordan_elimination(a,  b,  nMaterials);
 //   int itworked = a.solve(b);
 
-   for(int m = 0; m < NVFs; m++){
-     vvel_FCME[m][*iter] = vvel_FCME[m][*iter] + b[m];
-   }
+    for(int m = 0; m < NVFs; m++){
+      vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
+    }
 
-    // I don't know what this is going to look like yet
-    // but the equations are right I think.
-//	uvel_FC[curcell][top] = 0.0;
-//	vvel_FC[curcell][top] = term1- term2 + term3;
-//	wvel_FC[curcell][top] = 0.0;
+   // Right face
+    adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z()); 
 
-       // Right face
-	adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z()); 
-
-       // Front face
-	adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1); 
+   // Front face
+    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1); 
   }
+#endif
 
   // Put Boundary condition stuff in here
   //
@@ -964,10 +964,10 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       new_dw->get(vvel_FC, lb->vvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(wvel_FC, lb->wvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
-      new_dw->get(rho_CC,lb->rho_CCLabel,      vfindex,patch,Ghost::None, 0);
+      old_dw->get(rho_CC,  lb->rho_CCLabel,      vfindex,patch,Ghost::None, 0);
       new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,
-					       vfindex,patch,Ghost::None, 0);
-      new_dw->get(pressure,lb->press_CCLabel,  vfindex,patch,Ghost::None, 0);
+					         vfindex,patch,Ghost::None, 0);
+      new_dw->get(pressure,lb->press_CCLabel,    vfindex,patch,Ghost::None, 0);
 
       // Create variables for the results
       CCVariable<double> div_velfc_CC;
@@ -1015,11 +1015,11 @@ void ICE::actuallyStep3(const ProcessorGroup*,
   double SMALL_NUM=1.e-12;
 
   // Get required variables for this patch
-  vector<CCVariable<double> > rho_CC;
-  vector<CCVariable<double> > press_CC;
+  vector<CCVariable<double> > rho_CC(NVFs);
+  vector<CCVariable<double> > press_CC(NVFs);
 
   // Create variables for the results
-  vector<FCVariable<double> > press_FC;
+  vector<FCVariable<double> > press_FC(NVFs);
 
   // Compute the face centered velocities
   for(int m = 0; m < numMatls; m++){
@@ -1027,7 +1027,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(rho_CC[vfindex],  lb->rho_CCLabel,
+      old_dw->get(rho_CC[vfindex],  lb->rho_CCLabel,
 				vfindex, patch, Ghost::None, 0);
       new_dw->get(press_CC[vfindex],lb->pressdP_CCLabel,
 				vfindex, patch, Ghost::None, 0);
@@ -1036,6 +1036,8 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     }
   }
 
+#if 0
+   // This can't be uncommented until ExtraCells are implemented
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     IntVector curcell = *iter;
 
@@ -1063,6 +1065,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
    // Front face
     adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
   }
+#endif
 
     /*__________________________________
     * Update the boundary conditions
@@ -1104,14 +1107,15 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   double dT = 0.0001;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
 
-  CCVariable<double> rho_micro, temp, cv, rho_CC;
-  CCVariable<double> uvel_CC,vvel_CC,wvel_CC;
+//  CCVariable<double> rho_micro, temp, cv, rho_CC;
+  CCVariable<double> temp, cv;
+  CCVariable<double> uvel_CC,vvel_CC,wvel_CC, rho_CC;
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
       int vfindex = ice_matl->getDWIndex();
-      new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+//      new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
       new_dw->allocate(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->allocate(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
@@ -1120,10 +1124,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->allocate(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
 
-      new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
-      new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
+      new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
 
       new_dw->put(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->put(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
@@ -1134,6 +1137,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.40  2000/10/17 23:05:15  guilkey
+// Fixed some computes and requires.
+//
 // Revision 1.39  2000/10/17 20:26:20  jas
 // Changed press to press_new.
 //
