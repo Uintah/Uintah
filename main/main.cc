@@ -72,6 +72,10 @@ char** global_argv;
 #error You must set a DEFAULT_PACKAGE_PATH or life is pretty dull
 #endif
 
+#ifndef ITCL_WIDGETS
+#error You must set ITCL_WIDGETS to the iwidgets/scripts path
+#endif
+
 // master creates slave by rsh "sr -slave hostname portnumber"
 int main(int argc, char** argv)
 {
@@ -91,6 +95,7 @@ int main(int argc, char** argv)
     TCL::eval("set SCICoreTCL "SCICORETCL,result);
     TCL::eval("lappend auto_path "SCICORETCL,result);
     TCL::eval("lappend auto_path "PSECORETCL,result);
+    TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
 
     // Create initial network
     // We build the Network with a 1, indicating that this is the
@@ -132,6 +137,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.8  1999/09/01 21:58:02  sparker
+// Restored the ITCL_WIDGETS configuration that somewhow got lost
+// Now the itk widgets should work
+//
 // Revision 1.7  1999/08/31 23:37:58  sparker
 // Put order of Package loading back to the way it was
 //
