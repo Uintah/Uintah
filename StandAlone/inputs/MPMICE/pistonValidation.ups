@@ -43,7 +43,7 @@
         <BCType id = "0" var = "Neumann"    label = "Pressure">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" var = "Dirichlet"label = "Velocity">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" var = "Neumann"  label = "Temperature">
