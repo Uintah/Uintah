@@ -213,9 +213,9 @@ class MaterialParticleData
 {
 public:
   MaterialParticleData()
-    : matl_(-999) {}
+    : matl_(-999), particleIDs_(0) {}
   MaterialParticleData(int matl)
-    : matl_(matl) {}
+    : matl_(matl), particleIDs_(0) {}
   MaterialParticleData(const MaterialParticleData& copy)
     : matl_(copy.matl_), vars_(copy.vars_), particleIDs_(copy.particleIDs_) {}
 
@@ -548,11 +548,11 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
       const Uintah::TypeDescription* td = types[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
       if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
-	ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);    
+	ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
 	for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
 	     matlIter != matls.end(); matlIter++){
 	  int matl = *matlIter;
-	  // At a new MaterialPatchData for each matl for this next patch.
+	  // Add a new MaterialPatchData for each matl for this next patch.
 	  MaterialParticleData& data = matlParticleDataMap[matl];
 	  data.setMatl(matl);
 	  ParticleVariableBase* pvb;
