@@ -32,17 +32,18 @@ using namespace SCIRun;
 using namespace std;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG MPMICE_NORMAL_COUT:+, MPMICE_DOING_COUT.....
+//  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT".....
 //  MPMICE_NORMAL_COUT:  dumps out during problemSetup 
 //  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
 //  default is OFF
 static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
-#define EOSCM
-//#undef EOSCM
-//#define IDEAL_GAS
-#undef IDEAL_GAS
+//#define EOSCM
+#undef EOSCM
+#define IDEAL_GAS
+//#undef IDEAL_GAS
+#define FAKE_BURN_MODEL
 
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
@@ -225,12 +226,12 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
                                                                   all_matls);
                                                                
   d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls);
-  
+
   scheduleHEChemistry(                            sched, patches, react_sub,
                                                                   prod_sub,
                                                                   press_matl,
                                                                   all_matls);
-                                                                  
+                                                                   
   d_ice->scheduleComputeDelPressAndUpdatePressCC( sched, patches, press_matl,
                                                                   ice_matls_sub, 
                                                                   mpm_matls_sub,
@@ -1184,8 +1185,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
         d_ice->printData(   patch,1, desc,"int_eng_L",  int_eng_L[m]);   
         d_ice->printData(   patch,1, desc,"mass_L",     mass_L[m]);      
         d_ice->printVector( patch,1, desc,"uvel_CC", 0, vel_CC[m]);      
-        d_ice->printVector( patch,1, desc,"uvel_CC", 1, vel_CC[m]);      
-        d_ice->printVector( patch,1, desc,"uvel_CC", 2, vel_CC[m]);      
+        d_ice->printVector( patch,1, desc,"vvel_CC", 1, vel_CC[m]);      
+        d_ice->printVector( patch,1, desc,"wvel_CC", 2, vel_CC[m]);      
       }
     }
  
@@ -2031,7 +2032,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
          /* Here is the new criterion for the surface:
             if (MnodeMax - MnodeMin) / Mcell > 0.5 - consider it a surface
          */
-         if ((MaxMass-MinMass)/MaxMass > 0.9 ){
+/*`==========TESTING==========*/
+         #ifdef FAKE_BURN_MODEL
+            MinMass = 0.0;   
+         #endif
+/*==========TESTING==========`*/
+         if ((MaxMass-MinMass)/MaxMass > 0.9){
 // && (MaxMass-MinMass)/MaxMass < 0.99999) 
 
              double gradRhoX, gradRhoY, gradRhoZ;
@@ -2090,6 +2096,13 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                                           burnedMass[m][c],
                                           sumReleasedHeat[c],
                                           delt, surfArea);
+                             
+/*`==========FAKE BURN MODEL==========*/
+      #ifdef FAKE_BURN_MODEL
+               burnedMass[m][c] = solidMass[c]/10.0;
+               sumReleasedHeat[c] = 0.0;
+      #endif
+/*===================================`*/
             
              int_eng_react[m][c] =
                       cv_solid*solidTemperature[c]*burnedMass[m][c];
