@@ -169,7 +169,7 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
   double frac = (nbuckets-1)/(sfs->max_.get() - sfs->min_.get());
   
 
-  typename FIELD::value_type sigma;
+  double sigma = 0.0;
   typename vector<typename FIELD::value_type>::iterator vit = values.begin();
   typename vector<typename FIELD::value_type>::iterator vit_end = values.end();
   for(; vit != vit_end; ++vit) {
