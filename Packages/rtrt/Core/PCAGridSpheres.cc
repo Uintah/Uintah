@@ -105,14 +105,20 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
     v=0;
 
   float luminance = interp_luminance(u, v, tex_index);
-  if (cmap && dpy->shade_method == 1) {
+  if (dpy->shade_method == 1 ) {
+    lambertianshade(result, color,
+                    Color(luminance, luminance, luminance),
+                    ray, hit, depth, cx);
+  } else if (cmap && dpy->shade_method == 2) {
     result = surface_color(hit) * luminance;
-  } else if (dpy->shade_method == 2) {
-    result = color * luminance;
   } else if (dpy->shade_method == 3) {
-    lambertianshade(result, color, Color(luminance, luminance, luminance), ray, hit, depth, cx);
-  } else {
+    result = color * luminance;
+  } else if (dpy->shade_method == 4) {
     lambertianshade(result, surface_color(hit),
+                    Color(luminance, luminance, luminance),
+                    ray, hit, depth, cx);
+  } else if (dpy->shade_method == 5) {
+    lambertianshade(result, color,
                     Color(luminance, luminance, luminance),
                     ray, hit, depth, cx);
   }

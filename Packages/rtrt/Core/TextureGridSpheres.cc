@@ -107,15 +107,20 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
   unsigned char *texture = tex_data + (tex_index * tex_res * tex_res);
 
   float luminance = interp_luminance(texture, u, v);
-  if (cmap && dpy->shade_method == 1) {
-    result = surface_color(hit) * luminance;
-  } else if (dpy->shade_method == 2) {
-    result = color * luminance;
-  } else if (dpy->shade_method == 3) {
-    lambertianshade(result, color, Color(luminance, luminance, luminance),
+  if (dpy->shade_method == 1 ) {
+    lambertianshade(result, color,
+                    Color(luminance, luminance, luminance),
                     ray, hit, depth, cx);
-  } else {
+  } else if (cmap && dpy->shade_method == 2) {
+    result = surface_color(hit) * luminance;
+  } else if (dpy->shade_method == 3) {
+    result = color * luminance;
+  } else if (dpy->shade_method == 4) {
     lambertianshade(result, surface_color(hit),
+                    Color(luminance, luminance, luminance),
+                    ray, hit, depth, cx);
+  } else if (dpy->shade_method == 5) {
+    lambertianshade(result, color,
                     Color(luminance, luminance, luminance),
                     ray, hit, depth, cx);
   }
