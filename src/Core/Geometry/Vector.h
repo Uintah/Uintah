@@ -142,7 +142,8 @@ public:
   friend SCICORESHARE inline Vector Interpolate(const Vector&, const Vector&, double);
     
   void find_orthogonal(Vector&, Vector&) const;
-    
+  bool check_find_orthogonal(Vector&, Vector&) const;
+
   friend SCICORESHARE void Pio( Piostream&, Vector& );
 
   inline Point asPoint() const;
