@@ -73,8 +73,8 @@ public:
   Transform(const Point&, const Vector&, const Vector&, const Vector&);
 
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
-  void change_basis(Transform&);
 
+  void change_basis(Transform&);
   void post_trans(Transform&);
   void pre_trans(Transform&);
     
@@ -96,8 +96,8 @@ public:
   Vector unproject(const Vector& p);
   Point project(const Point& p) const;
   Vector project(const Vector& p) const;
-  void get(double*);
-  void get_trans(double*);
+  void get(double*) const;
+  void get_trans(double*) const;
   void set(double*);
   void load_identity();
   void perspective(const Point& eyep, const Point& lookat,

@@ -352,7 +352,7 @@ Vector Transform::unproject(const Vector& p)
 }
 
 
-void Transform::get(double* gmat)
+void Transform::get(double* gmat) const
 {
   double* p=gmat;
   for(int i=0;i<4;i++){
@@ -363,7 +363,7 @@ void Transform::get(double* gmat)
 }
 
 // GL stores its matrices column-major.  Need to take the transpose...
-void Transform::get_trans(double* gmat)
+void Transform::get_trans(double* gmat) const
 {
   double* p=gmat;
   for(int i=0;i<4;i++){
