@@ -28,6 +28,12 @@
 -->
 
 <faq name="Technical FAQ">
+  <description>
+    <p>
+      For problems with building the thirdparty software or SCIRun, or 
+      for problems such as crashes during runtime such as SIGSEGV or SIGABRT.
+    </p>
+  </description>
   <entry>
     <keywords>SGI, runtime, pthreads, SIGABRT</keywords>
     <question>

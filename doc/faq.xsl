@@ -83,6 +83,12 @@
 <xsl:value-of select="@name" />
 </p>
 
+<xsl:for-each select="/faq/description/p">
+  <p class="firstpara"><xsl:apply-templates/></p>
+</xsl:for-each>
+
+<hr width="600"/>
+
 <xsl:for-each select="/faq/entry">
   <xsl:variable name="num"><xsl:number/></xsl:variable>
   <xsl:for-each select="./question">
