@@ -39,6 +39,8 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiInterface.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Util/Timer.h>
 #include <iosfwd>
 #include <string>
@@ -196,6 +198,28 @@ namespace SCIRun {
     virtual void widget_moved(bool last);
 
   protected:
+
+    template <class DC>
+    bool module_dynamic_compile(const CompileInfo &ci, DC &result)
+    {
+      DynamicAlgoHandle algo_handle;
+      if (! DynamicLoader::scirun_loader().get(ci, algo_handle))
+      {
+	error("Could not compile algorithm for '" +
+	      ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
+	return false;
+      }
+
+      result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
+      if (result.get_rep() == 0) 
+      {
+	error("Could not get algorithm for '" +
+	      ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
+	return false;
+      }
+      return true;
+    }
+
     virtual void tcl_command(GuiArgs&, void*);
 
     GuiInterface* gui;
