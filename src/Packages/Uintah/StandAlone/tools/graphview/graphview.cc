@@ -11,6 +11,7 @@
 #include "GV_TaskGraph.h"
 
 using namespace std;
+using namespace Uintah;
 
 static const char HELP_MSG[] = {
 "\nCommands\n"
@@ -75,7 +76,7 @@ main(int argc, char* argv[])
 
   udaDir = argv[1];
 
-  int timestep = 0;
+  int timestep = 1;
   float prune_percent = 0;
   bool do_exclusion = false;
   
