@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mixltm_fort.h>
+#else
       SUBROUTINE mixltm(indexLow, indexHigh, NITER, PCELL,
      &     UU, VV, WW,
      &     DEN, VIS,

@@ -1,30 +1,31 @@
 //----- ExplicitSolver.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
+#include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Core/Containers/StaticArray.h>
-#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <math.h>
 
@@ -69,7 +70,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   if (d_probe_data) {
     IntVector prbPoint;
     for (ProblemSpecP probe_db = db->findBlock("ProbePoints");
-	 probe_db != 0;
+	 probe_db;
 	 probe_db = probe_db->findNextBlock("ProbePoints")) {
       probe_db->require("probe_point", prbPoint);
       d_probePoints.push_back(prbPoint);
@@ -349,7 +350,7 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 {
   Task* tsk = scinew Task( "ExplicitSolver::probeData",
 			  this, &ExplicitSolver::probeData);
-  int numGhostCells = 1;
+  //int numGhostCells = 1;
   int zeroGhostCells = 0;
   
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
@@ -379,7 +380,7 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 void 
 ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
+				       const MaterialSubset*,
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw)
 {
@@ -516,8 +517,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 void 
 ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     const PatchSubset* patches,
-					     const MaterialSubset* matls,
-					     DataWarehouse* old_dw,
+					     const MaterialSubset*,
+					     DataWarehouse*,
 					     DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -617,7 +618,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 void 
 ExplicitSolver::probeData(const ProcessorGroup* ,
 				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
+				 const MaterialSubset*,
 				 DataWarehouse*,
 				 DataWarehouse* new_dw)
 {
@@ -680,10 +681,10 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 // compute the residual
 // ****************************************************************************
 double 
-ExplicitSolver::computeResidual(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
+ExplicitSolver::computeResidual(const LevelP&,
+				SchedulerP&,
+				DataWarehouseP&,
+				DataWarehouseP&)
 {
   double nlresidual = 0.0;
 #if 0

@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/prcf_fort.h>
+#else
       SUBROUTINE prcf(indexLow, indexHigh, PCELL,
      &     FF,
      &     DEN, DENP,

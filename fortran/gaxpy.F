@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/gaxpy_fort.h>
+#else
       SUBROUTINE gaxpy(NVAR,ALPHA,XX,INCX,YY,INCY)
 
       implicit none

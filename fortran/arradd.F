@@ -3,8 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE arradd(indexLow, indexHigh,
-     &     C,A,B,ALPHA,BETA)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/arradd_fort.h>
 c-----------------------------------------------------------------------
 c     Written by Seshadri Kumar, October 14, 1996
 c     
@@ -20,20 +19,6 @@ c     (nx,ny,nz).  (ist,jst,kst) and (iend,jend,kend) are the
 c     starting and ending locations within which the operation
 c     is to be performed
 c-----------------------------------------------------------------------
-      implicit none
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      double precision A(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision B(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision C(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision ALPHA, BETA
 
 c*********************************************************************
 c     Local Variables :

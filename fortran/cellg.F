@@ -1,132 +1,14 @@
-c*********************************************************************
-c
-c
-c*********************************************************************
+#include <Packages/Uintah/CCA/Components/Arches/fortran/cellg_fort.h>
+#include "param4.h"
 
-      SUBROUTINE cellg(domainLow, domainHigh,
-     &     indexLow, indexHigh, 
-     &     indexLowU, indexHighU, 
-     &     indexLowV, indexHighV, 
-     &     indexLowW, indexHighW, 
-     &     SEW, SNS, STB,
-     &     SEWU, SNSV, STBW,
-     &     DXEP, DYNP, DZTP,
-     &     DXEPU, DYNPV, DZTPW,
-     &     DXPW, DYPS, DZPB,
-     &     DXPWU, DYPSV, DZPBW,
-     &     CEE, CWE, CWW,
-     &     CEEU, CWEU, CWWU,
-     &     CNN, CSN, CSS,
-     &     CNNV, CSNV, CSSV,
-     &     CTT, CBT, CBB,
-     &     CTTW, CBTW, CBBW,
-c     &     RR, RA, RV, RONE,
-c     &     RCV, RCVA,
-     &     XX, XU, YY, YV, ZZ, ZW,
-     &     EFAC, WFAC, NFAC, SFAC, TFAC, BFAC,
-     &     FAC1U, FAC2U, FAC3U, FAC4U,
-     &     FAC1V, FAC2V, FAC3V, FAC4V,
-     &     FAC1W, FAC2W, FAC3W, FAC4W,
-     &     IESDU, IWSDU, JNSDV, JSSDV, KTSDW, KBSDW,
-c     &     LCORD,
-     &     ierr)
+c*********************************************************************
+c
+c
+c*********************************************************************
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     CALCULATION OF CELL GEOMETRY PARAMETERS
 C-----------------------------------------------------------------------
-
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer indexLowU(3)
-      integer indexHighU(3)
-      integer indexLowV(3)
-      integer indexHighV(3)
-      integer indexLowW(3)
-      integer indexHighW(3)
-      double precision SEW(domainLow(1):domainHigh(1))
-      double precision SNS(domainLow(2):domainHigh(2))
-      double precision STB(domainLow(3):domainHigh(3))
-      double precision SEWU(domainLow(1):domainHigh(1))
-      double precision SNSV(domainLow(2):domainHigh(2))
-      double precision STBW(domainLow(3):domainHigh(3))
-      double precision DXEP(domainLow(1):domainHigh(1))
-      double precision DYNP(domainLow(2):domainHigh(2))
-      double precision DZTP(domainLow(3):domainHigh(3))
-      double precision DXEPU(domainLow(1):domainHigh(1))
-      double precision DYNPV(domainLow(2):domainHigh(2))
-      double precision DZTPW(domainLow(3):domainHigh(3))
-      double precision DXPW(domainLow(1):domainHigh(1))
-      double precision DYPS(domainLow(2):domainHigh(2))
-      double precision DZPB(domainLow(3):domainHigh(3))
-      double precision DXPWU(domainLow(1):domainHigh(1))
-      double precision DYPSV(domainLow(2):domainHigh(2))
-      double precision DZPBW(domainLow(3):domainHigh(3))
-      double precision CEE(domainLow(1):domainHigh(1))
-      double precision CWE(domainLow(1):domainHigh(1))
-      double precision CWW(domainLow(1):domainHigh(1))
-      double precision CEEU(domainLow(1):domainHigh(1))
-      double precision CWEU(domainLow(1):domainHigh(1))
-      double precision CWWU(domainLow(1):domainHigh(1))
-      double precision CNN(domainLow(2):domainHigh(2))
-      double precision CSN(domainLow(2):domainHigh(2))
-      double precision CSS(domainLow(2):domainHigh(2))
-      double precision CNNV(domainLow(2):domainHigh(2))
-      double precision CSNV(domainLow(2):domainHigh(2))
-      double precision CSSV(domainLow(2):domainHigh(2))
-      double precision CTT(domainLow(3):domainHigh(3))
-      double precision CBT(domainLow(3):domainHigh(3))
-      double precision CBB(domainLow(3):domainHigh(3))
-      double precision CTTW(domainLow(3):domainHigh(3))
-      double precision CBTW(domainLow(3):domainHigh(3))
-      double precision CBBW(domainLow(3):domainHigh(3))
-c      double precision RR(domainLow(2):domainHigh(2))
-c      double precision RA(domainLow(2):domainHigh(2))
-c      double precision RV(domainLow(2):domainHigh(2))
-c      double precision RONE(domainLow(2):domainHigh(2))
-c      double precision RCV(domainLow(2):domainHigh(2))
-c      double precision RCVA(domainLow(2):domainHigh(2))
-      double precision XX(domainLow(1):domainHigh(1))
-      double precision XU(domainLow(1):domainHigh(1))
-      double precision YY(domainLow(2):domainHigh(2))
-      double precision YV(domainLow(2):domainHigh(2))
-      double precision ZZ(domainLow(3):domainHigh(3))
-      double precision ZW(domainLow(3):domainHigh(3))
-      double precision EFAC(domainLow(1):domainHigh(1))
-      double precision WFAC(domainLow(1):domainHigh(1))
-      double precision NFAC(domainLow(2):domainHigh(2))
-      double precision SFAC(domainLow(2):domainHigh(2))
-      double precision TFAC(domainLow(3):domainHigh(3))
-      double precision BFAC(domainLow(3):domainHigh(3))
-      double precision FAC1U(domainLow(1):domainHigh(1))
-      double precision FAC2U(domainLow(1):domainHigh(1))
-      double precision FAC3U(domainLow(1):domainHigh(1))
-      double precision FAC4U(domainLow(1):domainHigh(1))
-      double precision FAC1V(domainLow(2):domainHigh(2))
-      double precision FAC2V(domainLow(2):domainHigh(2))
-      double precision FAC3V(domainLow(2):domainHigh(2))
-      double precision FAC4V(domainLow(2):domainHigh(2))
-      double precision FAC1W(domainLow(3):domainHigh(3))
-      double precision FAC2W(domainLow(3):domainHigh(3))
-      double precision FAC3W(domainLow(3):domainHigh(3))
-      double precision FAC4W(domainLow(3):domainHigh(3))
-      integer IESDU(domainLow(1):domainHigh(1))
-      integer IWSDU(domainLow(1):domainHigh(1))
-      integer JNSDV(domainLow(2):domainHigh(2))
-      integer JSSDV(domainLow(2):domainHigh(2))
-      integer KTSDW(domainLow(3):domainHigh(3))
-      integer KBSDW(domainLow(3):domainHigh(3))
-c      logical LCORD
-      integer ierr
-
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************

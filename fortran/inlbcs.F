@@ -3,44 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE inlbcs(domLoU, domHiU,  UU,
-     &     domLoV, domHiV,  VV,
-     &     domLoW, domHiW,  WW,
-     &     domLo, domHi, idxLo, idxHi, DEN,
-     &     PCELL, PFIELD, time,
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     &     ierr)
-C-----------------------------------------------------------------------
-C     THREE-DIMENSIONAL VERSION
-C     This subroutine update inlet velocities in order to match
-C          total flow rates while inlet area densities are changing.
-C-----------------------------------------------------------------------
-
-      implicit none
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/inlbcs_fort.h>
 #include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3), domHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer PFIELD
-      double precision time
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      integer ierr
       
 c*********************************************************************
 c     Locals :

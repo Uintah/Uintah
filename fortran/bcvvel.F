@@ -3,88 +3,17 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE bcvvel(domLoV, domHiV, domLoVng, domHiVng,
-     $     idxLoV, idxHiV, VV,
-     &     AP, AE, AW, AN, AS, AT, AB,
-     &     SU, SP, 
-     &     domLoU, domHiU, idxLoU, idxHiU, UU,
-     &     domLoW, domHiW, idxLoW, idxHiW, WW,
-     &     domLo, domHi, idxLo, idxHi, PCELL, WALL, FFIELD, PBCFLD,
-     &     VISCOS, 
-     &     SEW, SNSV, STB,
-     &     X, XU, Z, ZW, 
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/bcvvel_fort.h>
+#include "param4.h"
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity
 C---------------------------------------------------------------------
 
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
-      integer domLoVng(3), domHiVng(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      double precision AP(domLoVng(1):domHiVng(1), 
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision AE(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision AW(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision AN(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision AS(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision AT(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision AB(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision SU(domLoVng(1):domHiVng(1), 
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      double precision SP(domLoVng(1):domHiVng(1), 
-     $     domLoVng(2):domHiVng(2), 
-     &     domLoVng(3):domHiVng(3))
-      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      double precision SEW(domLo(1):domHi(1))
-      double precision SNSV(domLo(2):domHi(2))
-      double precision STB(domLo(3):domHi(3))
-      double precision X(domLo(1):domHi(1))
-      double precision XU(domLo(1):domHi(1))
-      double precision Z(domLo(3):domHi(3))
-      double precision ZW(domLo(3):domHi(3))
-      double precision viscos
-      double precision const
-      
-      integer WALL
-      integer FFIELD, PBCFLD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      integer ierr
-
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
+      double precision const
       integer IST, JST, KST, IEND, JEND, KEND
       integer IBegGhost, JBegGhost, KBegGhost
       integer IEndGhost, JEndGhost, KEndGhost

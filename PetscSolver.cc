@@ -1,36 +1,41 @@
 //----- PetscSolver.cc ----------------------------------------------
 
+#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Thread/Time.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/PetscError.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Thread/Time.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#undef CHKERRQ
+#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
 
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
+
+#include <Packages/Uintah/CCA/Components/Arches/fortran/rescal_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/underelax_fort.h>
 
 // ****************************************************************************
 // Default constructor for PetscSolver
@@ -67,7 +72,8 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   //argv[1] = "-on_error_attach_debugger";
   argv[1] = "-no_signal_handler";
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
-  CHKERRQ(ierr);
+  if(ierr)
+    throw PetscError(ierr, "PetscInitialize");
 }
 
 
@@ -99,26 +105,16 @@ PetscSolver::computePressResidual(const ProcessorGroup*,
     vars->truncPress << endl;
 #endif
   // Get the patch bounds and the variable bounds
-  IntVector domLo = vars->pressure.getFortLowIndex();
-  IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-
-  FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
-		    idxLo.get_pointer(), idxHi.get_pointer(),
-		    vars->pressure.getPointer(),
-		    vars->residualPressure.getPointer(),
-		    vars->pressCoeff[Arches::AE].getPointer(), 
-		    vars->pressCoeff[Arches::AW].getPointer(), 
-		    vars->pressCoeff[Arches::AN].getPointer(), 
-		    vars->pressCoeff[Arches::AS].getPointer(), 
-		    vars->pressCoeff[Arches::AT].getPointer(), 
-		    vars->pressCoeff[Arches::AB].getPointer(), 
-		    vars->pressCoeff[Arches::AP].getPointer(), 
-		    vars->pressNonlinearSrc.getPointer(),
-		    &vars->residPress, &vars->truncPress);
+  fort_rescal(idxLo, idxHi, vars->pressure, vars->residualPressure,
+	      vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW], 
+	      vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS], 
+	      vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB], 
+	      vars->pressCoeff[Arches::AP], vars->pressNonlinearSrc,
+	      vars->residPress, vars->truncPress);
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Compute Residual : " << endl;
@@ -251,11 +247,6 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
       }
     }
 #endif
-#if 0
-    IntVector dn = highIndex-lowIndex;
-    long wantcells = dn.x()*dn.y()*dn.z();
-    ASSERTEQ(wantcells, totalCells);
-#endif
   }
   int me = d_myworld->myrank();
   int numlrows = numCells[me];
@@ -269,15 +260,24 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
 #endif
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
-  CHKERRQ(ierr);  
+  if(ierr)
+    throw PetscError(ierr, "MatCreateMPIAIJ");
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
   */
-  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);CHKERRQ(ierr);
-  ierr = VecSetFromOptions(d_x);CHKERRQ(ierr);
-  ierr = VecDuplicate(d_x,&d_b);CHKERRQ(ierr);
-  ierr = VecDuplicate(d_x,&d_u);CHKERRQ(ierr);
+  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
+  if(ierr)
+    throw PetscError(ierr, "VecCreateMPI");
+  ierr = VecSetFromOptions(d_x);
+  if(ierr)
+    throw PetscError(ierr, "VecSetFromOptions");
+  ierr = VecDuplicate(d_x,&d_b);
+  if(ierr)
+    throw PetscError(ierr, "VecDuplicate(d_b)");
+  ierr = VecDuplicate(d_x,&d_u);
+  if(ierr)
+    throw PetscError(ierr, "VecDuplicate(d_u)");
 }
 
 // ****************************************************************************
@@ -289,21 +289,12 @@ PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 				    ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
-  IntVector domLo = vars->pressure.getFortLowIndex();
-  IntVector domHi = vars->pressure.getFortHighIndex();
-  IntVector domLong = vars->pressCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHing = vars->pressCoeff[Arches::AP].getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
-		 domLong.get_pointer(), domHing.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 vars->pressure.getPointer(),
-		 vars->pressCoeff[Arches::AP].getPointer(), 
-		 vars->pressNonlinearSrc.getPointer(), 
-		 &d_underrelax);
+  fort_underelax(idxLo, idxHi, vars->pressure, vars->pressCoeff[Arches::AP],
+		 vars->pressNonlinearSrc, d_underrelax);
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Underrelax : " << endl;
@@ -351,14 +342,12 @@ void
 PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    const Patch* patch,
 			    ArchesVariables* vars,
-			    const ArchesLabel* lab)
+			    const ArchesLabel*)
 {
 #ifdef ARCHES_PETSC_DEBUG
    cerr << "in setPressMatrix on patch: " << patch->getID() << '\n';
 #endif
   // Get the patch bounds and the variable bounds
-  IntVector domLo = vars->pressure.getFortLowIndex();
-  IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -382,14 +371,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
      See the matrix chapter of the users manual for details.
   */
   int ierr;
-  int row;
   int col[7];
   double value[7];
-  //  int globalIndex = d_petscGlobalStart[patch];
-  int nnx = idxHi[0]-idxLo[0]+1;
-  int nny = idxHi[1]-idxLo[1]+1;
-  int nnz = idxHi[2]-idxLo[2]+1;
-  //  int totalrows = nnx*nny*nnz;
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
@@ -427,7 +410,9 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	     cerr << "A[" << col[3] << "][" << col[i] << "]=" << value[i] << '\n';
 #endif
 	  int row = col[3];
-	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);   CHKERRQ(ierr);
+	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
+	  if(ierr)
+	    throw PetscError(ierr, "MatSetValues");
 #ifdef ARCHES_PETSC_DEBUG
 	  cerr << "ierr=" << ierr << '\n';
 #endif
@@ -446,7 +431,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	  vecvalueb = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
 	  vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
-	  int row = l2g[IntVector(colX, colY, colZ)];
+	  int row = l2g[IntVector(colX, colY, colZ)];	  
 	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
 	  VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
 	}
@@ -469,90 +454,141 @@ PetscSolver::pressLinearSolve()
 #ifdef ARCHES_PETSC_DEBUG
   cerr << "Doing mat/vec assembly\n";
 #endif
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = VecAssemblyBegin(d_b);CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(d_b);CHKERRQ(ierr);
-  ierr = VecAssemblyBegin(d_x);CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(d_x);CHKERRQ(ierr);
+  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+  if(ierr)
+    throw PetscError(ierr, "MatAssemblyBegin");
+  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+  if(ierr)
+    throw PetscError(ierr, "MatAssemblyEnd");
+  ierr = VecAssemblyBegin(d_b);
+  if(ierr)
+    throw PetscError(ierr, "VecAssemblyBegin");
+  ierr = VecAssemblyEnd(d_b);
+  if(ierr)
+    throw PetscError(ierr, "VecAssemblyEnd");
+  ierr = VecAssemblyBegin(d_x);
+  if(ierr)
+    throw PetscError(ierr, "VecAssemblyBegin");
+  ierr = VecAssemblyEnd(d_x);
+  if(ierr)
+    throw PetscError(ierr, "VecAssemblyEnd");
   // compute the initial error
   double neg_one = -1.0;
   double init_norm;
   double sum_b;
   ierr = VecSum(d_b, &sum_b);
   Vec u_tmp;
-  ierr = VecDuplicate(d_x,&u_tmp);CHKERRQ(ierr);
-  ierr = MatMult(A, d_x, u_tmp);CHKERRQ(ierr);
-  ierr = VecAXPY(&neg_one, d_b, u_tmp); CHKERRQ(ierr);
-  ierr  = VecNorm(u_tmp,NORM_2,&init_norm);CHKERRQ(ierr);
-  ierr = VecDestroy(u_tmp);CHKERRQ(ierr);
+  ierr = VecDuplicate(d_x,&u_tmp);
+  if(ierr)
+    throw PetscError(ierr, "VecDuplicate");
+  ierr = MatMult(A, d_x, u_tmp);
+  if(ierr)
+    throw PetscError(ierr, "MatMult");
+  ierr = VecAXPY(&neg_one, d_b, u_tmp);
+  if(ierr)
+    throw PetscError(ierr, "VecAXPY");
+  ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
+  if(ierr)
+    throw PetscError(ierr, "VecNorm");
+  ierr = VecDestroy(u_tmp);
+  if(ierr)
+    throw PetscError(ierr, "VecDestroy");
   /* debugging - steve */
   double norm;
 #if 0
   // #ifdef ARCHES_PETSC_DEBUG
-  ierr = ViewerSetFormat(VIEWER_STDOUT_WORLD, VIEWER_FORMAT_ASCII_DEFAULT, 0); CHKERRQ(ierr);
-  ierr = MatNorm(A,NORM_1,&norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);CHKERRQ(ierr);
-  ierr = MatView(A, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
-  ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector x norm = %g\n",norm);CHKERRQ(ierr);
-  ierr = VecView(d_x, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
-  ierr = VecNorm(d_b,NORM_1,&norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);CHKERRQ(ierr);
-  ierr = VecView(d_b, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
+  ierr = ViewerSetFormat(VIEWER_STDOUT_WORLD, VIEWER_FORMAT_ASCII_DEFAULT, 0);
+  ierr = MatNorm(A,NORM_1,&norm);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);
+  ierr = MatView(A, VIEWER_STDOUT_WORLD);
+  ierr = VecNorm(d_x,NORM_1,&norm);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector x norm = %g\n",norm);
+  ierr = VecView(d_x, VIEWER_STDOUT_WORLD);
+  ierr = VecNorm(d_b,NORM_1,&norm);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);
+  ierr = VecView(d_b, VIEWER_STDOUT_WORLD);
 #endif
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  ierr = SLESCreate(PETSC_COMM_WORLD,&sles);CHKERRQ(ierr);
-  ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);CHKERRQ(ierr);
-  ierr = SLESGetKSP(sles,&ksp);CHKERRQ(ierr);
-  ierr = SLESGetPC(sles, &peqnpc); CHKERRQ(ierr);
+  ierr = SLESCreate(PETSC_COMM_WORLD,&sles);
+  if(ierr)
+    throw PetscError(ierr, "SLESCreate");
+  ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);
+  if(ierr)
+    throw PetscError(ierr, "SLESSetOperators");
+  ierr = SLESGetKSP(sles,&ksp);
+  if(ierr)
+    throw PetscError(ierr, "SLESGetKSP");
+  ierr = SLESGetPC(sles, &peqnpc);
+  if(ierr)
+    throw PetscError(ierr, "SLESGetPC");
   if (d_pcType == "jacobi") {
-    ierr = PCSetType(peqnpc, PCJACOBI); CHKERRQ(ierr);
+    ierr = PCSetType(peqnpc, PCJACOBI);
+    if(ierr)
+      throw PetscError(ierr, "PCSetType");
   }
   else if (d_pcType == "asm") {
-    ierr = PCSetType(peqnpc, PCASM); CHKERRQ(ierr);
-    ierr = PCASMSetOverlap(peqnpc, d_overlap); CHKERRQ(ierr);
+    ierr = PCSetType(peqnpc, PCASM);
+    if(ierr)
+      throw PetscError(ierr, "PCSetType");
+    ierr = PCASMSetOverlap(peqnpc, d_overlap);
+    if(ierr)
+      throw PetscError(ierr, "PCASMSetOverlap");
   }
   else {
-    ierr = PCSetType(peqnpc, PCBJACOBI); CHKERRQ(ierr);
+    ierr = PCSetType(peqnpc, PCBJACOBI);
+    if(ierr)
+      throw PetscError(ierr, "PCSetType");
   }
   ierr = KSPSetTolerances(ksp, 1.e-7, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-  CHKERRQ(ierr);
+  if(ierr)
+    throw PetscError(ierr, "KSPSetTolerances");
 
   // set null space for preconditioner
   // change for a newer version
 #ifdef NULL_MATRIX
   PCNullSpace nullsp;
   ierr = PCNullSpaceCreate(PETSC_COMM_WORLD, 1, 0, PETSC_NULL, &nullsp); 
-  CHKERRQ(ierr);
-  ierr = PCNullSpaceAttach(peqnpc, nullsp); CHKERRQ(ierr);
-  ierr = PCNullSpaceDestroy(nullsp); CHKERRQ(ierr);
+  ierr = PCNullSpaceAttach(peqnpc, nullsp);
+  ierr = PCNullSpaceDestroy(nullsp);
 #endif
-  ierr = KSPSetInitialGuessNonzero(ksp);CHKERRQ(ierr);
+  ierr = KSPSetInitialGuessNonzero(ksp);
+  if(ierr)
+    throw PetscError(ierr, "KSPSetInitialGuessNonzero");
   
-  ierr = SLESSetFromOptions(sles);CHKERRQ(ierr);
+  ierr = SLESSetFromOptions(sles);
+  if(ierr)
+    throw PetscError(ierr, "SLESSetFromOptions");
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                       Solve the linear system
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   int its;
-  ierr = SLESSolve(sles,d_b,d_x,&its);CHKERRQ(ierr);
+  ierr = SLESSolve(sles,d_b,d_x,&its);
+  if(ierr)
+    throw PetscError(ierr, "SLESSolve");
   int me = d_myworld->myrank();
 
-  ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
-  double tsolve = Time::currentSeconds()-solve_start;
+  ierr = VecNorm(d_x,NORM_1,&norm);
+  if(ierr)
+    throw PetscError(ierr, "VecNorm");
 #ifdef ARCHES_PETSC_DEBUG
-  ierr = VecView(d_x, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
+  ierr = VecView(d_x, VIEWER_STDOUT_WORLD);
 #endif
 
   // check the error
-  ierr = MatMult(A, d_x, d_u);CHKERRQ(ierr);
-  ierr = VecAXPY(&neg_one, d_b, d_u); CHKERRQ(ierr);
-  ierr  = VecNorm(d_u,NORM_2,&norm);CHKERRQ(ierr);
+  ierr = MatMult(A, d_x, d_u);
+  if(ierr)
+    throw PetscError(ierr, "MatMult");
+  ierr = VecAXPY(&neg_one, d_b, d_u);
+  if(ierr)
+    throw PetscError(ierr, "VecAXPY");
+  ierr  = VecNorm(d_u,NORM_2,&norm);
+  if(ierr)
+    throw PetscError(ierr, "VecNorm");
   if(me == 0) {
      cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
      cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/init_norm << endl;
@@ -573,7 +609,9 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   IntVector idxHi = patch->getCellFORTHighIndex();
   double* xvec;
   int ierr;
-  ierr = VecGetArray(d_x, &xvec); CHKERRQ(ierr);
+  ierr = VecGetArray(d_x, &xvec);
+  if(ierr)
+    throw PetscError(ierr, "VecGetArray");
   Array3<int> l2g = d_petscLocalToGlobal[patch];
   int rowinit = l2g[IntVector(idxLo.x(), idxLo.y(), idxLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -588,7 +626,9 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   cerr << "Print computed pressure" << endl;
   vars->pressure.print(cerr);
 #endif
-  ierr = VecRestoreArray(d_x, &xvec); CHKERRQ(ierr);
+  ierr = VecRestoreArray(d_x, &xvec);
+  if(ierr)
+    throw PetscError(ierr, "VecRestoreArray");
 }
   
 void
@@ -599,23 +639,33 @@ PetscSolver::destroyMatrix()
      are no longer needed.
   */
   int ierr;
-  ierr = SLESDestroy(sles);CHKERRQ(ierr); 
-  ierr = VecDestroy(d_u);CHKERRQ(ierr);
-  ierr = VecDestroy(d_b);CHKERRQ(ierr);
-  ierr = VecDestroy(d_x);CHKERRQ(ierr);
-  ierr = MatDestroy(A);CHKERRQ(ierr);
+  ierr = SLESDestroy(sles);
+  if(ierr)
+    throw PetscError(ierr, "SLESDestroy");
+  ierr = VecDestroy(d_u);
+  if(ierr)
+    throw PetscError(ierr, "VecDestroy");
+  ierr = VecDestroy(d_b);
+  if(ierr)
+    throw PetscError(ierr, "VecDestroy");
+  ierr = VecDestroy(d_x);
+  if(ierr)
+    throw PetscError(ierr, "VecDestroy");
+  ierr = MatDestroy(A);
+  if(ierr)
+    throw PetscError(ierr, "MatDestroy");
 }
 
 // ****************************************************************************
 // Actual linear solve for pressure
 // ****************************************************************************
 void 
-PetscSolver::pressLisolve(const ProcessorGroup* pc,
-			 const Patch* patch,
-			 DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw,
-			 ArchesVariables* vars,
-			 const ArchesLabel* lab)
+PetscSolver::pressLisolve(const ProcessorGroup*,
+			 const Patch*,
+			 DataWarehouseP&,
+			 DataWarehouseP&,
+			 ArchesVariables*,
+			 const ArchesLabel*)
 {
 
 }
@@ -624,7 +674,9 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
 // Shutdown PETSc
 void PetscSolver::finalizeSolver()
 {
-  int ierr = PetscFinalize(); CHKERRQ(ierr);
+  int ierr = PetscFinalize();
+  if(ierr)
+    throw PetscError(ierr, "PetscFinalize");
 }
 
 //****************************************************************************
@@ -652,20 +704,16 @@ PetscSolver::computeVelResidual(const ProcessorGroup* ,
     idxHi = patch->getSFCXFORTHighIndex();
     //fortran call
 
-    FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
-		      idxLo.get_pointer(), idxHi.get_pointer(),
-		      vars->uVelocity.getPointer(),
-		      vars->residualUVelocity.getPointer(),
-		      vars->uVelocityCoeff[Arches::AE].getPointer(), 
-		      vars->uVelocityCoeff[Arches::AW].getPointer(), 
-		      vars->uVelocityCoeff[Arches::AN].getPointer(), 
-		      vars->uVelocityCoeff[Arches::AS].getPointer(), 
-		      vars->uVelocityCoeff[Arches::AT].getPointer(), 
-		      vars->uVelocityCoeff[Arches::AB].getPointer(), 
-		      vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		      vars->uVelNonlinearSrc.getPointer(),
-		      &vars->residUVel, &vars->truncUVel);
-
+  fort_rescal(idxLo, idxHi, vars->uVelocity, vars->residualUVelocity,
+	      vars->uVelocityCoeff[Arches::AE], 
+	      vars->uVelocityCoeff[Arches::AW], 
+	      vars->uVelocityCoeff[Arches::AN], 
+	      vars->uVelocityCoeff[Arches::AS], 
+	      vars->uVelocityCoeff[Arches::AT], 
+	      vars->uVelocityCoeff[Arches::AB], 
+	      vars->uVelocityCoeff[Arches::AP], 
+	      vars->uVelNonlinearSrc, vars->residUVel,
+	      vars->truncUVel);
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After U Velocity Compute Residual : " << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
@@ -690,19 +738,16 @@ PetscSolver::computeVelResidual(const ProcessorGroup* ,
     idxHi = patch->getSFCYFORTHighIndex();
     //fortran call
 
-    FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
-		      idxLo.get_pointer(), idxHi.get_pointer(),
-		      vars->vVelocity.getPointer(),
-		      vars->residualVVelocity.getPointer(),
-		      vars->vVelocityCoeff[Arches::AE].getPointer(), 
-		      vars->vVelocityCoeff[Arches::AW].getPointer(), 
-		      vars->vVelocityCoeff[Arches::AN].getPointer(), 
-		      vars->vVelocityCoeff[Arches::AS].getPointer(), 
-		      vars->vVelocityCoeff[Arches::AT].getPointer(), 
-		      vars->vVelocityCoeff[Arches::AB].getPointer(), 
-		      vars->vVelocityCoeff[Arches::AP].getPointer(), 
-		      vars->vVelNonlinearSrc.getPointer(),
-		      &vars->residVVel, &vars->truncVVel);
+  fort_rescal(idxLo, idxHi, vars->vVelocity, vars->residualVVelocity,
+	      vars->vVelocityCoeff[Arches::AE], 
+	      vars->vVelocityCoeff[Arches::AW], 
+	      vars->vVelocityCoeff[Arches::AN], 
+	      vars->vVelocityCoeff[Arches::AS], 
+	      vars->vVelocityCoeff[Arches::AT], 
+	      vars->vVelocityCoeff[Arches::AB], 
+	      vars->vVelocityCoeff[Arches::AP], 
+	      vars->vVelNonlinearSrc, vars->residVVel,
+	      vars->truncVVel);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After V Velocity Compute Residual : " << endl;
@@ -728,19 +773,16 @@ PetscSolver::computeVelResidual(const ProcessorGroup* ,
     idxHi = patch->getSFCYFORTHighIndex();
     //fortran call
 
-    FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
-		      idxLo.get_pointer(), idxHi.get_pointer(),
-		      vars->wVelocity.getPointer(),
-		      vars->residualWVelocity.getPointer(),
-		      vars->wVelocityCoeff[Arches::AE].getPointer(), 
-		      vars->wVelocityCoeff[Arches::AW].getPointer(), 
-		      vars->wVelocityCoeff[Arches::AN].getPointer(), 
-		      vars->wVelocityCoeff[Arches::AS].getPointer(), 
-		      vars->wVelocityCoeff[Arches::AT].getPointer(), 
-		      vars->wVelocityCoeff[Arches::AB].getPointer(), 
-		      vars->wVelocityCoeff[Arches::AP].getPointer(), 
-		      vars->wVelNonlinearSrc.getPointer(),
-		      &vars->residWVel, &vars->truncWVel);
+  fort_rescal(idxLo, idxHi, vars->wVelocity, vars->residualWVelocity,
+	      vars->wVelocityCoeff[Arches::AE], 
+	      vars->wVelocityCoeff[Arches::AW], 
+	      vars->wVelocityCoeff[Arches::AN], 
+	      vars->wVelocityCoeff[Arches::AS], 
+	      vars->wVelocityCoeff[Arches::AT], 
+	      vars->wVelocityCoeff[Arches::AB], 
+	      vars->wVelocityCoeff[Arches::AP], 
+	      vars->wVelNonlinearSrc, vars->residWVel,
+	      vars->truncWVel);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After W Velocity Compute Residual : " << endl;
@@ -807,13 +849,9 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
     domHing = vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-    FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
-		   domLong.get_pointer(), domHing.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   vars->uVelocity.getPointer(),
-		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->uVelNonlinearSrc.getPointer(),
-		   &d_underrelax);
+    fort_underelax(idxLo, idxHi, vars->uVelocity,
+		   vars->uVelocityCoeff[Arches::AP], vars->uVelNonlinearSrc,
+		   d_underrelax);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After U Vel Underrelax : " << endl;
@@ -859,13 +897,9 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
     domHing = vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-    FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
-		   domLong.get_pointer(), domHing.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   vars->vVelocity.getPointer(),
-		   vars->vVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->vVelNonlinearSrc.getPointer(),
-		   &d_underrelax);
+    fort_underelax(idxLo, idxHi, vars->vVelocity,
+		   vars->vVelocityCoeff[Arches::AP], vars->vVelNonlinearSrc,
+		   d_underrelax);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After V Vel Underrelax : " << endl;
@@ -911,13 +945,9 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
     domHing = vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
-    FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
-		   domLong.get_pointer(), domHing.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   vars->wVelocity.getPointer(),
-		   vars->wVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->wVelNonlinearSrc.getPointer(),
-		   &d_underrelax);
+    fort_underelax(idxLo, idxHi, vars->wVelocity,
+		   vars->wVelocityCoeff[Arches::AP], vars->wVelNonlinearSrc,
+		   d_underrelax);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After W Vel Underrelax : " << endl;
@@ -966,12 +996,12 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 // Velocity Solve
 //****************************************************************************
 void 
-PetscSolver::velocityLisolve(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     int index, double delta_t,
-			     ArchesVariables* vars,
-			     CellInformation* cellinfo,
-			     const ArchesLabel* lab)
+PetscSolver::velocityLisolve(const ProcessorGroup*,
+			     const Patch*,
+			     int, double,
+			     ArchesVariables*,
+			     CellInformation*,
+			     const ArchesLabel*)
 {
   // Get the patch bounds and the variable bounds
 #if 0
@@ -1050,22 +1080,16 @@ PetscSolver::velocityLisolve(const ProcessorGroup* pc,
     cerr << "After u Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
 #else
-    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->uVelocity.getPointer(),
-		  vars->old_uVelocity.getPointer(),
-		  vars->uVelocityCoeff[Arches::AE].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AW].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AN].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AS].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AT].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AB].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		  vars->uVelNonlinearSrc.getPointer(),
-		  domLoDen.get_pointer(), domHiDen.get_pointer(),
-		  vars->old_density.getPointer(), 
-		  cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
-		  cellinfo->stb.get_objs(), &delta_t);
+    fort_explicit(idxLo, idxHi, vars->uVelocity, vars->old_uVelocity,
+		  vars->uVelocityCoeff[Arches::AE], 
+		  vars->uVelocityCoeff[Arches::AW], 
+		  vars->uVelocityCoeff[Arches::AN], 
+		  vars->uVelocityCoeff[Arches::AS], 
+		  vars->uVelocityCoeff[Arches::AT], 
+		  vars->uVelocityCoeff[Arches::AB], 
+		  vars->uVelocityCoeff[Arches::AP], 
+		  vars->uVelNonlinearSrc, vars->old_density,
+		  cellinfo->sewu, cellinfo->sns, cellinfo->stb, delta_t);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After U Vel Explicit solve : " << endl;
@@ -1131,22 +1155,16 @@ PetscSolver::velocityLisolve(const ProcessorGroup* pc,
     cerr << "After v Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After v Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
-    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->vVelocity.getPointer(),
-		  vars->old_vVelocity.getPointer(),
-		  vars->vVelocityCoeff[Arches::AE].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AW].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AN].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AS].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AT].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AB].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AP].getPointer(), 
-		  vars->vVelNonlinearSrc.getPointer(),
-		  domLoDen.get_pointer(), domHiDen.get_pointer(),
-		  vars->old_density.getPointer(), 
-		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
-		  cellinfo->stb.get_objs(), &delta_t);
+    fort_explicit(idxLo, idxHi, vars->vVelocity, vars->old_vVelocity,
+		  vars->vVelocityCoeff[Arches::AE], 
+		  vars->vVelocityCoeff[Arches::AW], 
+		  vars->vVelocityCoeff[Arches::AN], 
+		  vars->vVelocityCoeff[Arches::AS], 
+		  vars->vVelocityCoeff[Arches::AT], 
+		  vars->vVelocityCoeff[Arches::AB], 
+		  vars->vVelocityCoeff[Arches::AP], 
+		  vars->vVelNonlinearSrc, vars->old_density,
+		  cellinfo->sew, cellinfo->snsv, cellinfo->stb, delta_t);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After V Vel Explicit solve : " << endl;
@@ -1211,22 +1229,16 @@ PetscSolver::velocityLisolve(const ProcessorGroup* pc,
     cerr << "After w Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After w Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
-    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->wVelocity.getPointer(),
-		  vars->old_wVelocity.getPointer(),
-		  vars->wVelocityCoeff[Arches::AE].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AW].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AN].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AS].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AT].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AB].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AP].getPointer(), 
-		  vars->wVelNonlinearSrc.getPointer(),
-		  domLoDen.get_pointer(), domHiDen.get_pointer(),
-		  vars->old_density.getPointer(), 
-		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
-		  cellinfo->stbw.get_objs(), &delta_t);
+    fort_explicit(idxLo, idxHi, vars->wVelocity, vars->old_wVelocity,
+		  vars->wVelocityCoeff[Arches::AE], 
+		  vars->wVelocityCoeff[Arches::AW], 
+		  vars->wVelocityCoeff[Arches::AN], 
+		  vars->wVelocityCoeff[Arches::AS], 
+		  vars->wVelocityCoeff[Arches::AT], 
+		  vars->wVelocityCoeff[Arches::AB], 
+		  vars->wVelocityCoeff[Arches::AP], 
+		  vars->wVelNonlinearSrc, vars->old_density,
+		  cellinfo->sew, cellinfo->sns, cellinfo->stbw, delta_t);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After W Vel Explicit solve : " << endl;
@@ -1260,30 +1272,17 @@ PetscSolver::computeScalarResidual(const ProcessorGroup* ,
 				  const Patch* patch,
 				  DataWarehouseP& ,
 				  DataWarehouseP& , 
-				  int index,
+				  int,
 				  ArchesVariables* vars)
 {
-  // Get the patch bounds and the variable bounds
-  IntVector domLo = vars->scalar.getFortLowIndex();
-  IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-
-  //fortran call
-
-  FORT_COMPUTERESID(domLo.get_pointer(), domHi.get_pointer(),
-		    idxLo.get_pointer(), idxHi.get_pointer(),
-		    vars->scalar.getPointer(),
-		    vars->residualScalar.getPointer(),
-		    vars->scalarCoeff[Arches::AE].getPointer(), 
-		    vars->scalarCoeff[Arches::AW].getPointer(), 
-		    vars->scalarCoeff[Arches::AN].getPointer(), 
-		    vars->scalarCoeff[Arches::AS].getPointer(), 
-		    vars->scalarCoeff[Arches::AT].getPointer(), 
-		    vars->scalarCoeff[Arches::AB].getPointer(), 
-		    vars->scalarCoeff[Arches::AP].getPointer(), 
-		    vars->scalarNonlinearSrc.getPointer(),
-		    &vars->residScalar, &vars->truncScalar);
+  fort_rescal(idxLo, idxHi, vars->scalar, vars->residualScalar,
+	      vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW], 
+	      vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS], 
+	      vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB], 
+	      vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
+	      vars->residScalar, vars->truncScalar);
 }
 
 
@@ -1307,37 +1306,29 @@ PetscSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
 void 
 PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
-				    int index,
+				    int,
 				    ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
-  IntVector domLo = vars->scalar.getFortLowIndex();
-  IntVector domHi = vars->scalar.getFortHighIndex();
-  IntVector domLong = vars->scalarCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHing = vars->scalarCoeff[Arches::AP].getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
-		 domLong.get_pointer(), domHing.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 vars->scalar.getPointer(),
-		 vars->scalarCoeff[Arches::AP].getPointer(), 
-		 vars->scalarNonlinearSrc.getPointer(),
-		 &d_underrelax);
+  fort_underelax(idxLo, idxHi, vars->scalar,
+		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
+		 d_underrelax);
 }
 
 //****************************************************************************
 // Scalar Solve
 //****************************************************************************
 void 
-PetscSolver::scalarLisolve(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  int index, double delta_t,
-			  ArchesVariables* vars,
-			  CellInformation* cellinfo,
-			  const ArchesLabel* lab)
+PetscSolver::scalarLisolve(const ProcessorGroup*,
+			  const Patch*,
+			  int, double,
+			  ArchesVariables*,
+			  CellInformation*,
+			  const ArchesLabel*)
 {
 #if 0
   // Get the patch bounds and the variable bounds
@@ -1400,21 +1391,17 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
   cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
-     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   vars->scalar.getPointer(), vars->old_scalar.getPointer(),
-		   vars->scalarCoeff[Arches::AE].getPointer(), 
-		   vars->scalarCoeff[Arches::AW].getPointer(), 
-		   vars->scalarCoeff[Arches::AN].getPointer(), 
-		   vars->scalarCoeff[Arches::AS].getPointer(), 
-		   vars->scalarCoeff[Arches::AT].getPointer(), 
-		   vars->scalarCoeff[Arches::AB].getPointer(), 
-		   vars->scalarCoeff[Arches::AP].getPointer(), 
-		   vars->scalarNonlinearSrc.getPointer(),
-		   domLoDen.get_pointer(), domHiDen.get_pointer(),
-		   vars->old_density.getPointer(), 
-		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
-		   cellinfo->stb.get_objs(), &delta_t);
+    fort_explicit(idxLo, idxHi, vars->scalar, vars->old_scalar,
+		  vars->scalarCoeff[Arches::AE], 
+		  vars->scalarCoeff[Arches::AW], 
+		  vars->scalarCoeff[Arches::AN], 
+		  vars->scalarCoeff[Arches::AS], 
+		  vars->scalarCoeff[Arches::AT], 
+		  vars->scalarCoeff[Arches::AB], 
+		  vars->scalarCoeff[Arches::AP], 
+		  vars->scalarNonlinearSrc, vars->old_density,
+		  cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
+
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After Scalar Explicit solve : " << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
@@ -1442,32 +1429,24 @@ PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
 				       ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
-  IntVector domLo = vars->enthalpy.getFortLowIndex();
-  IntVector domHi = vars->enthalpy.getFortHighIndex();
-  IntVector domLong = vars->scalarCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHing = vars->scalarCoeff[Arches::AP].getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
-		 domLong.get_pointer(), domHing.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 vars->enthalpy.getPointer(),
-		 vars->scalarCoeff[Arches::AP].getPointer(), 
-		 vars->scalarNonlinearSrc.getPointer(),
-		 &d_underrelax);
+  fort_underelax(idxLo, idxHi, vars->enthalpy,
+		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
+		 d_underrelax);
 }
 
 //****************************************************************************
 // Scalar Solve
 //****************************************************************************
 void 
-PetscSolver::enthalpyLisolve(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  double delta_t,
-			  ArchesVariables* vars,
-			  CellInformation* cellinfo,
-			  const ArchesLabel* lab)
+PetscSolver::enthalpyLisolve(const ProcessorGroup*,
+			     const Patch*,
+			     double,
+			     ArchesVariables*,
+			     CellInformation*,
+			     const ArchesLabel*)
 {
 }

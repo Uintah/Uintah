@@ -3,45 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE wallbc(domLo, domHi, domLong, domHing, idxLo, idxHi,
-     &     AE,AW,AN,AS,AT,AB,
-     &     PCELL, WALL,
-     $     xminus, xplus, yminus, yplus, zminus, zplus)
-*--------------------------------------------------------------------
-*     This subroutine handles intrusion boundary conditions
-*          for ETA, F, GETA, GF, HCN, NO, P, PP, and YFU.
-*          ALSO NOTE: some of the boundary condition for walls is
-*                     handled in the calc routines themselves.  
-*                     This happens in TWO places:
-*                            1) CP at the boundary
-*                            2) GREAT in the intrusion
-*--------------------------------------------------------------------
-      implicit none
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/wallbc_fort.h>
 #include "param4.h"
-c #include "pcell.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3), domHi(3), domLong(3), domHing(3)
-      integer idxLo(3), idxHi(3)
-      double precision AE(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      double precision AW(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      double precision AN(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      double precision AS(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      double precision AT(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      double precision AB(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer WALL
-      integer xminus, xplus, yminus, yplus, zminus, zplus
 
 c*********************************************************************
 c     Local Variables :

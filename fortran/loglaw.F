@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/loglaw_fort.h>
+#else
       SUBROUTINE loglaw(I,J,K,DY,U,AKVIS,UFRIC)
 
       implicit none

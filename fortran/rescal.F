@@ -3,10 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE rescal(domLo, domHi, idxLo, idxHi,
-     &     PHI,RES,
-     &     AE,AW,AN,AS,AT,AB,AP,SU,
-     &     RESPHI, TRUNCPHI)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/rescal_fort.h>
 C-----------------------------------------------------------------------
 C     WRITTEN BY: SESHADRI KUMAR, OCTOBER 14, 1996
 C     Modified, December 11, 1996, to isolate TRNC calculation from
@@ -39,40 +36,6 @@ c       TRUNCPHI L1 norm of order of magnitude terms in the PHI-equation
 C	SU	Source term for the PHI-momentum equation,
 C		excluding the pressure gradient (i/p)
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3)
-      integer domHi(3)
-      integer idxLo(3)
-      integer idxHi(3)
-      double precision PHI(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision RES(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AP(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AE(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AW(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AN(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AS(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AT(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AB(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision SU(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision RESPHI
-      double precision TRUNCPHI
-
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
@@ -109,8 +72,10 @@ c-----calculate residual------------------------------------------------
  200     continue
  300  continue
 
-      call arrl1(resphi,resave,res,
-     $     domLo, domHi, idxLo, idxHi)
+      call arrl1(resphi,resave,
+     & PASS3A(res)
+     & PASS3B(res),
+     $     idxLo, idxHi)
 
 C-----------------------------------------------------------------------
       RETURN

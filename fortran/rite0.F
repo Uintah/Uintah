@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/rite0_fort.h>
+#else
       SUBROUTINE rite0(X,Y,NVAR,IJKST,
      $     IST,JST,KST,IEND,JEND,KEND,
      $     ISTR,JSTR,KSTR,IENDR,JENDR,KENDR, IJ, IK)

@@ -2,24 +2,12 @@
 #ifndef Uintah_Components_Arches_BoundaryCondition_h
 #define Uintah_Components_Arches_BoundaryCondition_h
 
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Core/Containers/Array1.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <vector>
 
 /**************************************
@@ -56,13 +44,18 @@ none
 namespace Uintah {
 
 using namespace SCIRun;
-
+  class ArchesVariables;
+  class CellInformation;
 class VarLabel;
 class GeometryPiece;
 class TurbulenceModel;
 class Properties;
 class Stream;
 class InletStream;
+  class ArchesLabel;
+  class MPMArchesLabel;
+  class ProcessorGroup;
+  class DataWarehouse;
 
 class BoundaryCondition {
 
@@ -272,7 +265,7 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
       void uVelocityBC(const Patch* patch,
-		       const double* VISCOS,
+		       double VISCOS,
 		       CellInformation* cellinfo,
 		       ArchesVariables* vars);
 		      
@@ -280,14 +273,14 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute v velocity BC terms
       void vVelocityBC(const Patch* patch,
-		       const double* VISCOS,
+		       double VISCOS,
 		       CellInformation* cellinfo,
 		       ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute w velocity BC terms
       void wVelocityBC(const Patch* patch,
-		       const double* VISCOS,
+		       double VISCOS,
 		       CellInformation* cellinfo,
 		        ArchesVariables* vars);
 

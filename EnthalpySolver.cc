@@ -1,29 +1,30 @@
 //----- EnthalpySolver.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Source.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 using namespace std;
@@ -190,7 +191,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched, const PatchSet* pat
 void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const PatchSubset* patches,
 				     const MaterialSubset*,
-				     DataWarehouse* old_dw,
+				     DataWarehouse*,
 				     DataWarehouse* new_dw,
 				     double delta_t)
 {
@@ -302,7 +303,7 @@ void
 EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse* old_dw,
+				DataWarehouse*,
 				DataWarehouse* new_dw,
 				double delta_t)
 {
@@ -635,7 +636,7 @@ void
 EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
                                 const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse* old_dw,
+				DataWarehouse*,
 				DataWarehouse* new_dw,
 				double delta_t)
 {
@@ -774,7 +775,7 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 					 const PatchSubset* patches,
 					 const MaterialSubset*,
-					 DataWarehouse* old_dw,
+					 DataWarehouse*,
 					 DataWarehouse* new_dw,
 					 double delta_t)
 {
@@ -921,7 +922,7 @@ void
 EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse* old_dw,
+				DataWarehouse*,
 				DataWarehouse* new_dw,
 				double delta_t)
 {

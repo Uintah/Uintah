@@ -3,10 +3,9 @@
 #ifndef Uintah_Components_Arches_ArchesLabel_h
 #define Uintah_Components_Arches_ArchesLabel_h
 
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 
 
 /**************************************
@@ -36,15 +35,13 @@ WARNING
 ************************************************************************/
 
 namespace Uintah {
-
+  class VarLabel;
     class ArchesLabel {
     public:
 
       ArchesLabel();
       ~ArchesLabel();
-      inline void setSharedState(SimulationStateP& sharedState) {
-	d_sharedState = sharedState;
-      }
+      void setSharedState(SimulationStateP& sharedState);
      
       SimulationStateP d_sharedState;
 

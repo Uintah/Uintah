@@ -3,12 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE linegs(domLo, domHi, idxLo, idxHi,
-     &     PHI,
-     &     AE,AW,AN,AS,AT,AB,AP,SU,
-     $     e1, f1, e2, f2, e3, f3,
-     $     theta)
-c     &     lswpwe, lswpsn, lswpbt)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/linegs_fort.h>
+#include "param4.h"
 C-----------------------------------------------------------------------
 *
 *     This routine is a relaxation operation on x, given the linear
@@ -51,52 +47,13 @@ C-----------------------------------------------------------------------
 *	IEND,JEND,KEND
 *		Ending indices for calculation (i/p)
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3)
-      integer domHi(3)
-      integer idxLo(3)
-      integer idxHi(3)
-      double precision PHI(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AP(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AE(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AW(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AN(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AS(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AT(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AB(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision SU(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-
-      double precision e1(domLo(1):domHi(1))
-      double precision f1(domLo(1):domHi(1))
-      double precision e2(domLo(2):domHi(2))
-      double precision f2(domLo(2):domHi(2))
-      double precision e3(domLo(3):domHi(3))
-      double precision f3(domLo(3):domHi(3))
-
-      double precision theta
-
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      logical lswpwe
-      logical lswpsn
-      logical lswpbt
+      logical*1 lswpwe
+      logical*1 lswpsn
+      logical*1 lswpbt
       
 
       integer i,j,k, ii, jj, kk, nkused

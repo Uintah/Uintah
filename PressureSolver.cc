@@ -1,37 +1,43 @@
 //----- PressureSolver.cc ----------------------------------------------
 
+#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Source.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
-#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 using namespace std;
+
+#include <Packages/Uintah/CCA/Components/Arches/fortran/add_hydrostatic_term_topressure_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/normpress_fort.h>
 
 // ****************************************************************************
 // Default constructor for PressureSolver
@@ -391,7 +397,7 @@ void
 PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  const PatchSubset* patches,
 				  const MaterialSubset* /*matls*/,
-				  DataWarehouse* old_dw,
+				  DataWarehouse*,
 				  DataWarehouse* new_dw,
 				  double delta_t)
 {
@@ -936,7 +942,7 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
 void 
 PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 					     const PatchSubset* patches,
-					     const MaterialSubset* matls,
+					     const MaterialSubset*,
 					     DataWarehouse* old_dw,
 					     DataWarehouse* new_dw)
 
@@ -985,36 +991,16 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel,
 		     matlIndex, patch);
 
-    IntVector dim_lo = cellType.getFortLowIndex();
-    IntVector dim_hi = cellType.getFortHighIndex();
-
-    IntVector dim_lo_ph = pPlusHydro.getFortLowIndex();
-    IntVector dim_hi_ph = pPlusHydro.getFortHighIndex();
-
-    IntVector dim_lo_prel = prel.getFortLowIndex();
-    IntVector dim_hi_prel = prel.getFortHighIndex();
-
-    IntVector dim_lo_den = denMicro.getFortLowIndex();
-    IntVector dim_hi_den = denMicro.getFortHighIndex();
-
     IntVector valid_lo = patch->getCellFORTLowIndex();
     IntVector valid_hi = patch->getCellFORTHighIndex();
 
     int mmwallid = d_boundaryCondition->getMMWallId();
 
-    FORT_ADD_HYDRO_TO_PRESSURE(
-			       dim_lo.get_pointer(), dim_hi.get_pointer(),
-			       dim_lo_ph.get_pointer(), dim_hi_ph.get_pointer(),
-			       dim_lo_prel.get_pointer(), dim_hi_prel.get_pointer(),
-			       dim_lo_den.get_pointer(), dim_hi_den.get_pointer(),
-			       pPlusHydro.getPointer(), prel.getPointer(),
-			       denMicro.getPointer(), 
-			       &gx, &gy, &gz,
-			       cellinfo->xx.get_objs(), 
-			       cellinfo->yy.get_objs(),
-			       cellinfo->zz.get_objs(),
-			       valid_lo.get_pointer(), valid_hi.get_pointer(),
-			       cellType.getPointer(), &mmwallid);
+    fort_add_hydrostatic_term_topressure(pPlusHydro, prel, denMicro,
+					 gx, gy, gz, cellinfo->xx,
+					 cellinfo->yy, cellinfo->zz,
+					 valid_lo, valid_hi,
+					 cellType, mmwallid);
 		
     new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel,
 		matlIndex, patch);
@@ -1031,16 +1017,11 @@ PressureSolver::normPressure(const ProcessorGroup*,
 			     const Patch* patch,
 			     ArchesVariables* vars)
 {
-  IntVector domLo = vars->pressure.getFortLowIndex();
-  IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   //  double pressref = vars->press_ref;
   double pressref = 0.0;
-  FORT_NORMPRESS(domLo.get_pointer(),domHi.get_pointer(),
-		idxLo.get_pointer(), idxHi.get_pointer(),
-		vars->pressure.getPointer(), 
-		&pressref);
+  fort_normpress(idxLo, idxHi, vars->pressure, pressref);
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Normalization : " << endl;
@@ -1197,7 +1178,7 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 			     &PressureSolver::buildLinearMatrixPressPred, delta_t);
     
     int numGhostCells = 1;
-    int zeroGhostCells = 0;
+    //int zeroGhostCells = 0;
 
     // int matlIndex = 0;
     // Requires
@@ -1294,7 +1275,7 @@ void
 PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
 				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
+				      DataWarehouse*,
 				      DataWarehouse* new_dw,
 				      double delta_t)
 {
@@ -1973,7 +1954,7 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 			     &PressureSolver::buildLinearMatrixPressCorr, delta_t);
     
     int numGhostCells = 1;
-    int zeroGhostCells = 0;
+    //int zeroGhostCells = 0;
 
     // int matlIndex = 0;
     // Requires

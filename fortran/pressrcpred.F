@@ -1,48 +1,7 @@
 c
 c
-      subroutine pressrcpred(domLo, domHi, domLong, domHing, 
-     $     idxLo, idxHi, 
-     $     su,  
-     &     domLoDen, domHiDen, den,
-     &     domLoDenO, domHiDenO, den_old,
-     &     domLoU, domHiU, uhat,
-     &     domLoV, domHiV, vhat,
-     &     domLoW, domHiW, what,
-     &     delta_t,
-     &     sew, sns, stb)
-
-
-      implicit none
-      INCLUDE 'param4.h'
-
-*     passed variables
-
-      integer domLo(3), domHi(3)
-      integer domLong(3), domHing(3)
-      integer idxLo(3), idxHi(3)
-      double precision su(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      integer domLoDen(3), domHiDen(3)
-      double precision den(domLoDen(1):domHiDen(1), 
-     $     domLoDen(2):domHiDen(2),
-     $     domLoDen(3):domHiDen(3))
-      integer domLoDenO(3), domHiDenO(3)
-      double precision den_old(domLoDenO(1):domHiDenO(1), 
-     $     domLoDenO(2):domHiDenO(2),
-     $     domLoDenO(3):domHiDenO(3))
-      integer domLoU(3), domHiU(3)
-      double precision uhat(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
-     $     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision vhat(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
-     $     domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3)
-      double precision what(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
-     $     domLoW(3):domHiW(3))
-      double precision delta_t
-      double precision sew(domLo(1):domHi(1))
-      double precision sns(domLo(2):domHi(2))
-      double precision stb(domLo(3):domHi(3))
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#include "param4.h"
 
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k

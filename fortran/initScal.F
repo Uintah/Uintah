@@ -24,28 +24,11 @@ c    Other variables initialized in init.F
 c   
 c*********************************************************************
 
-      SUBROUTINE initscal(domainLow, domainHigh, 
-     &     indexLow, indexHigh, 
-     &     SCALAR, SVAL)
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/initScal_fort.h>
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     INITIALIZATION ROUTINE     
 C-----------------------------------------------------------------------
-
-      implicit none
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      double precision SCALAR(domainLow(1):domainHigh(1),
-     &     domainLow(2):domainHigh(2),
-     &     domainLow(3):domainHigh(3))
-      double precision SVAL
 
 c*********************************************************************
 c     Locals :

@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/geomin_fort.h>
+#else
       SUBROUTINE geomin(indexLow, indexHigh, PCELL, 
      &     XX, YY, ZZ, 
      &     NSUBD, NDDMN, IDDMAP,

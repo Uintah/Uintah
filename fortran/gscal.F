@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/gscal_fort.h>
+#else
       SUBROUTINE gscal(NVAR,ALPHA,XX,INCX)
 
       implicit none

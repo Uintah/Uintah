@@ -2,14 +2,9 @@ c*********************************************************************
 c
 c
 c*********************************************************************
-      SUBROUTINE prescoef(domLo, domHi, domLong, domHing, 
-     $     idxLo, idxHi, DEN,
-     &     AE, AW, AN, AS, AT, AB,
-     &     SEW, SNS, STB,
-     &     SEWU, DXEP, DXPW, 
-     &     SNSV, DYNP, DYPS, 
-     &     STBW, DZTP, DZPB)
 
+#include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_fort.h>
+#include "param4.h"
 *----------------------------------------------------------------------- 
 *     Written by Seshadri Kumar, August 4, 1995
 *     Last modified, September 16, 1998
@@ -19,42 +14,6 @@ c*********************************************************************
 *	ILCNT	Total number of calls to subroutine linegs in the
 *		entire calculation (i/p and o/p)
 *-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3), domHi(3)
-      integer domLong(3), domHing(3)
-      integer idxLo(3), idxHi(3)
-      double precision DEN(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
-      double precision AE(domLong(1):domHing(1),
-     &     domLong(2):domHing(2),domLong(3):domHing(3))
-      double precision AW(domLong(1):domHing(1),
-     &     domLong(2):domHing(2),domLong(3):domHing(3))
-      double precision AN(domLong(1):domHing(1),
-     &     domLong(2):domHing(2),domLong(3):domHing(3))
-      double precision AS(domLong(1):domHing(1),
-     &     domLong(2):domHing(2),domLong(3):domHing(3))
-      double precision AT(domLong(1):domHing(1),
-     &     domLong(2):domHing(2),domLong(3):domHing(3))
-      double precision AB(domLong(1):domHing(1),
-     &     domLong(2):domHing(2),domLong(3):domHing(3))
-      double precision SEWU(domLo(1):domHi(1))
-      double precision SEW(domLo(1):domHi(1))
-      double precision SNSV(domLo(2):domHi(2))
-      double precision SNS(domLo(2):domHi(2))
-      double precision STBW(domLo(3):domHi(3))
-      double precision STB(domLo(3):domHi(3))
-      double precision DXEP(domLo(1):domHi(1))
-      double precision DXPW(domLo(1):domHi(1))
-      double precision DYNP(domLo(2):domHi(2))
-      double precision DYPS(domLo(2):domHi(2))
-      double precision DZTP(domLo(3):domHi(3))
-      double precision DZPB(domLo(3):domHi(3))
 
 c*********************************************************************
 c     Locals :

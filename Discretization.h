@@ -15,6 +15,7 @@
 #include <Core/Containers/Array1.h>
 
 namespace Uintah {
+  class ProcessorGroup;
 
 //class StencilMatrix;
 using namespace SCIRun;
