@@ -24,19 +24,22 @@ br {page-break-after:always}
 
 .psubtitle {font-family:times; text-align:center; font-weight:bold; font-size:0.80em}
 
+.fineprint {margin:0px; font-family:times; font-size:10.0}
+
 .head {color:#000000; margin:0px; margin-top:25px; border:none; font-size:large; font-family:"arial", "helvetica", "sans-serif"}
 
-.phead {color:#000000; margin:0px; margin-top:25px; border:none; font-family:"arial", "helvetica", "sans-serif"}
+.phead {color:#000000; margin:0px; margin-top:25px; border:none;
+font-family:"arial", "helvetica", "sans-serif"; font-size:.90em}
 
 .subhead {margin-left:10px; font-style:italic; font-size:1.15em; font-family:"arial", "helvetica", "sans-serif"}
 
-.psubhead {margin-left:10px; font-style:italic; font-size:0.85em; font-family:"arial", "helvetica", "sans-serif"}
+.psubhead {margin-left:10px; font-style:italic; font-size:0.80em; font-family:"arial", "helvetica", "sans-serif"}
 
 .subsubhead {margin-left:10px; font-weight:bold; font-family:"arial", "helvetica", "sans-serif"}
 
 .firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"}
 
-.pfirstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; font-size:0.72em}
+.pfirstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; font-size:0.70em}
 
 .nextpara {margin-left:20px; margin-right:10px; text-align:left; text-indent:2em;  font-family:"serif"}
 
@@ -56,9 +59,12 @@ td {font-family:"arial", "helvetica", "sans-serif"}
 
 .question {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; color:#660000}
 
+div {page-break-inside:avoid}
+
 .box  {border-width: thin;
 	border-style: solid;
 	border-color: #000000;
 	background-color: #CCCCCC;
 	margin-left: 50px;
-	margin-right: 50px}
+	margin-right: 50px;
+        page-break-inside:avoid}

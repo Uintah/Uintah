@@ -220,7 +220,7 @@ python install 32 12
          above.  Note that the <term>INST_DIR</term>
          does not have to be the same for each distribution, but can be if it
          is desired as is demonstrated in the example.
-       </para>
+       </para><beginpage/>
 
        <para>
          <emphasis>For Tcl, Tk and [incr Tcl/Tk]</emphasis>
@@ -276,9 +276,11 @@ CC = cc
 CXX = CC 
 LDFLAGS = " -n32 "
 LIBS = " -n32 "
-CXXFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER -n32 -DAPP_NO_THREADS"
-CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER -n32 -DAPP_NO_THREADS"
-       </computeroutput>
+CXXFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER \
+            -n32 -DAPP_NO_THREADS"
+CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER \
+          -n32 -DAPP_NO_THREADS"
+       </computeroutput><beginpage/>
 
        <para>
          On Linux machines:

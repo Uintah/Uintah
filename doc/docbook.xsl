@@ -134,6 +134,10 @@
 <!-- *********************** printable templates **************** -->
 <!-- ************************************************************ -->
 
+<xsl:template match="beginpage" mode="print">
+  <br/>
+</xsl:template>
+
 <xsl:template match="table" mode="print">
   <center>
     <table border="1"><xsl:apply-templates mode="print"/></table>
@@ -389,9 +393,13 @@
 
 <!-- ************** Print all ************** -->
 
-<p class="ptitle">
+<p class="title">
   <xsl:value-of select="./title" />
 </p>
+
+<center>
+  <img src="http://www.sci.utah.edu/sci_images/SCI_logo.jpg" vspace="50"/>
+</center>
 
 <p class="psubtitle">
   <xsl:value-of select="./subtitle" />
@@ -405,7 +413,7 @@
 
 <hr size="1"/>
 
-<p class="firstpara">
+<p class="fineprint">
   Copyright (c)
   <xsl:value-of select="./bookinfo/copyright/year"/>
   <xsl:value-of select="concat(' ',' ')"/>
@@ -428,6 +436,10 @@
   <p class="pfirstpara">
     <xsl:value-of select="./sect1/para" />
   </p>
+
+  <xsl:for-each select="./sect1">
+    <p class="psubhead"><xsl:value-of select="./title"/></p>
+  </xsl:for-each>
 
 </xsl:for-each>
 

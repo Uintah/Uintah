@@ -7,6 +7,7 @@
 <!ENTITY chapter3 SYSTEM "chapter3.xml">
 <!ENTITY requirements SYSTEM "requirements.xml">
 <!ENTITY recommendations SYSTEM "recommendations.xml">
+<!ENTITY appendix SYSTEM "appendix.xml">
 ]>
 
 
@@ -68,5 +69,7 @@
   &chapter2;
 
   &chapter3;
+
+  &appendix;
 
 </book>
