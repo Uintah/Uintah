@@ -550,6 +550,8 @@ const TypeDescription* get_type_description(LatVolMesh::Edge *);
 const TypeDescription* get_type_description(LatVolMesh::Face *);
 const TypeDescription* get_type_description(LatVolMesh::Cell *);
 
+const TypeDescription* get_type_description(LatVolMesh::CellIndex *);
+
 } // namespace SCIRun
 
 #endif // SCI_project_LatVolMesh_h
