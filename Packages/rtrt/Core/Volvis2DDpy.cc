@@ -76,6 +76,7 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
     } // for(j)
 
   hist_changed = true;
+  redraw = true;
 } // createBGText()
 
 
@@ -156,6 +157,7 @@ Volvis2DDpy::drawBackground( void ) {
   glBindTexture( GL_TEXTURE_2D, bgTextName );
 
   if( hist_changed ) {
+    cerr << "hist has changed\n";
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		  textureHeight, 0, GL_RGBA, GL_FLOAT, bgTextImage );
     hist_changed = false;
@@ -179,6 +181,7 @@ Volvis2DDpy::drawBackground( void ) {
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
   if( transFunc_changed ) {
+    cerr << "transfunc has changed\n";
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		  textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture1 );
     transFunc_changed = false;
@@ -517,6 +520,7 @@ void
 Volvis2DDpy::display() {
   glClear( GL_COLOR_BUFFER_BIT );
   loadCleanTexture();
+  if( cut ) { display_cp_voxels(); }
   display_controls();
   drawBackground();
   drawWidgets( GL_RENDER );
@@ -1075,6 +1079,55 @@ Volvis2DDpy::skip_opacity( Voxel2D<float> v1, Voxel2D<float> v2,
 }
 
 
+// removes all cutplane voxel data
+void
+Volvis2DDpy::delete_voxel_storage( void )
+{
+  while( cp_voxels.size() > 0 )
+    cp_voxels.pop_back();
+}
+
+// Displays cutplane voxels on the histogram
+void
+Volvis2DDpy::display_cp_voxels( void )
+{
+  for( int i = 0; i < cp_voxels.size(); i++ ) {
+    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][0]=0.0;
+    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][1]=0.2;
+    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][2]=0.9;
+    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][3]=1.0;
+      }
+//    for( int i = 1; i < cp_voxels.size(); i++ ) {
+//      glColor4f( 0.0, 0.2, 0.9, 1.0 );
+//      glBegin( GL_LINES );
+//      float x = (float)cp_voxels[i]->value * 500.0 / 256.0 + 5.0;
+//      float y = (float)cp_voxels[i]->value * 330.0 / 256.0 + 85.0;
+//      cerr << "x = " << x << ", y = " << y << "\n";
+//      glVertex2f( (float)cp_voxels[i]->value * 500.0 / 256.0 + 5.0,
+//  		(float)cp_voxels[i]->gradient * 330.0 / 256.0 + 85.0 );
+//      glVertex2f( (float)cp_voxels[i-1]->value * 500.0 / 256.0 + 5.0,
+//  		(float)cp_voxels[i-1]->gradient * 330.0 / 256.0 + 85.0 );
+//      glEnd();
+//    }
+}
+
+
+// stores a voxel's gradient/value pair
+void
+Volvis2DDpy::store_voxel( Voxel2D<float> voxel )
+{
+  if( voxel.g() < current_gmax && voxel.v() < current_vmax &&
+      voxel.g() > current_gmin && voxel.v() > current_vmin ) {
+    int x_index = (int)((voxel.v()-current_vmin)*text_x_convert);
+    int y_index = (int)((voxel.g()-current_gmin)*text_y_convert);
+    voxel_valuepair *vvp = new voxel_valuepair;
+    vvp->value = x_index;
+    vvp->gradient = y_index;
+    cp_voxels.push_back(vvp);
+    redraw = true;
+  }
+}
+
 
 // retrieves RGBA values from a voxel
 // template<class T>
@@ -1088,7 +1141,7 @@ Volvis2DDpy::voxel_lookup(Voxel2D<float> voxel, Color &color, float &opacity) {
       opacity = 0.0f;
     else {
       opacity = 1-powf( 1-transTexture1->textArray[y_index][x_index][3],
-		      t_inc_diff );
+			t_inc_diff );
       color = Color( transTexture1->textArray[y_index][x_index][0],
 		     transTexture1->textArray[y_index][x_index][1],
 		     transTexture1->textArray[y_index][x_index][2] );
