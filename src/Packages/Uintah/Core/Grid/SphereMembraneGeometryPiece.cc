@@ -57,17 +57,28 @@ int SphereMembraneGeometryPiece::returnParticleCount(const Patch* patch)
 
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);
-  double dphi   = 2.0*PI/((double) d_numLong);
-
   double theta = dtheta/2.;
-  double phi   = dphi/2.;
+  // Figure out the average area of each particle based on the total number
+  // of particles available and the size of the sphere
+  double dA     = (4.*PI*d_radius*d_radius)/
+                  (((double) d_numLat)*((double) d_numLong));
+
   double x,y,z;
   
   int count = 0;
 
   for(int i_theta=0;i_theta<d_numLat;i_theta++){
-    phi   = dphi/2.;
-    for(int i_phi=0;i_phi<d_numLong;i_phi++){
+    // compute a different dphi for each theta to keep the particle size
+    // approximately constant
+    double dphi   = dA/(d_radius*d_radius*sin(theta)*dtheta);
+    double numLong = ((int)(2*PI/dphi));
+    // adjust the number of particle circumferentially so that the number
+    // of particles around is always divisible by four.  This makes using
+    // symmetry BCs possible.
+    numLong = numLong + (4-((int) numLong)%4);
+    dphi = (2*PI)/numLong;
+    double phi   = dphi/2.;
+    for(int i_phi=0;i_phi<numLong;i_phi++){
       x = d_origin.x() + d_radius*sin(theta)*cos(phi);
       y = d_origin.y() + d_radius*sin(theta)*sin(phi);
       z = d_origin.z() + d_radius*cos(theta);
@@ -96,17 +107,28 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
 
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);
-  double dphi   = 2.0*PI/((double) d_numLong);
-
   double theta = dtheta/2.;
-  double phi   = dphi/2.;
+  // Figure out the average area of each particle based on the total number
+  // of particles available and the size of the sphere
+  double dA     = (4.*PI*d_radius*d_radius)/
+                  (((double) d_numLat)*((double) d_numLong));
+
   double x,y,z;
-
+  
   int count = 0;
-
+  
   for(int i_theta=0;i_theta<d_numLat;i_theta++){
-    phi   = dphi/2.;
-    for(int i_phi=0;i_phi<d_numLong;i_phi++){
+    // compute a different dphi for each theta to keep the particle size
+    // approximately constant
+    double dphi   = dA/(d_radius*d_radius*sin(theta)*dtheta);
+    double numLong = ((int)(2*PI/dphi));
+    // adjust the number of particle circumferentially so that the number
+    // of particles around is always divisible by four.  This makes using
+    // symmetry BCs possible.
+    numLong = numLong + (4-((int) numLong)%4);
+    dphi = (2*PI)/numLong;
+    double phi   = dphi/2.;
+    for(int i_phi=0;i_phi<numLong;i_phi++){
       x = d_origin.x() + d_radius*sin(theta)*cos(phi);
       y = d_origin.y() + d_radius*sin(theta)*sin(phi);
       z = d_origin.z() + d_radius*cos(theta);
@@ -122,10 +144,9 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
         count++;
       }
       phi += dphi;
-    }
+    } 
     theta += dtheta;
   }
-
+  
   return count;
-
 }
