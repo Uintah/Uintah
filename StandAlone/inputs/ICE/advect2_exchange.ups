@@ -222,8 +222,8 @@
 	</ICE>	
 	<exchange_properties>
 	  <exchange_coefficients>
-	     <momentum>	[ 1e10 , 10000000000] </momentum>
-	     <heat>     [10000000000.  , 10000000000]  </heat>
+	     <momentum>	[ 1e10 ] </momentum>
+	     <heat>     [10000000000. ]  </heat>
 	 </exchange_coefficients>
 	</exchange_properties>
     </MaterialProperties>               

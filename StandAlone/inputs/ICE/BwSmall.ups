@@ -241,8 +241,8 @@
 	
 	<exchange_properties> 
 	  <exchange_coefficients>
-	     <momentum>	        [0.0]               </momentum>
-	     <heat>                  [0.0]               </heat>
+	     <momentum>	        []               </momentum>
+	     <heat>                  []               </heat>
 	  </exchange_coefficients>
 	</exchange_properties> 
 

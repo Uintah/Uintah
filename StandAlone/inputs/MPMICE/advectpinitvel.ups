@@ -257,8 +257,8 @@
        
     	<exchange_properties>  
          <exchange_coefficients>
-	       <momentum>	        [1e15, 1e15]         </momentum>
-	       <heat>                  [0.0, 0.0]           </heat>
+	       <momentum>	        [1e15]         </momentum>
+	       <heat>                  [0.0]           </heat>
 	 </exchange_coefficients>
     	</exchange_properties>  
     </MaterialProperties>
