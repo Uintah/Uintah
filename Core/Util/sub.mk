@@ -32,7 +32,7 @@ SRCS     += \
 	$(SRCDIR)/MacroSubstitute.cc \
         $(SRCDIR)/Signals.cc \
 
-PSELIBS := Core/Containers Core/Exceptions
+PSELIBS := Core/Containers Core/Exceptions Core/Thread
 LIBS := $(DL_LIBRARY) $(THREAD_LIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
