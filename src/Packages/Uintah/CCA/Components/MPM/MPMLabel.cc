@@ -567,6 +567,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTang2Label_preReloc);
   VarLabel::destroy(pNormLabel);
   VarLabel::destroy(pNormLabel_preReloc);
+  VarLabel::destroy(pFiberDirLabel_preReloc);
+  VarLabel::destroy(pFiberDirLabel);
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gMomExedAccelerationLabel);
