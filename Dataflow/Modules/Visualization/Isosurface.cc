@@ -321,7 +321,9 @@ Isosurface::execute()
 	error( "Marching Cubes can not work with this field.");
 	return;
       }
-      const int np = gui_np_.get();
+      int np = gui_np_.get();
+      if (np < 1 ) { np = 1; gui_np_.set(np); }
+      if (np > 32 ) { np = 32; gui_np_.set(np); }
       mc_alg->set_np(np);
       mc_alg->set_field( field.get_rep() );
       for (unsigned int iv=0; iv<isovals.size(); iv++)
