@@ -279,7 +279,7 @@ EOF
           if test "$_CHECK_PATH_" = ""; then
              AC_MSG_RESULT(yes)
           else
-             if test -e "$_CHECK_PATH_/lib$2.$SO_OR_ARCHIVE_EXTENSION"; then
+             if test -f "$_CHECK_PATH_/lib$2.a" -o -f "$_CHECK_PATH_/lib$2.so"; then
                 AC_MSG_RESULT($_CHECK_PATH_)
              else
                 # Even though the compilation was successful,
@@ -1069,17 +1069,16 @@ echo
 AC_CANONICAL_HOST
 
 unset NUM_CPUS
+AC_MSG_CHECKING(physical processor count)
 case $host in
   *-irix*)
     SCI_CHECK_OS_VERSION(6.5,,
       configure: error: wrong Irix version. exiting.;exit)
-    AC_MSG_CHECKING(physical processor count)
     NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"    
     ;;
   *linux*)
     SCI_CHECK_OS_VERSION(2.2.17,,
       configure: error: wrong Linux version. exiting.;exit)
-    AC_MSG_CHECKING(physical processor count)
     NUM_CPUS="`cat /proc/cpuinfo | fgrep processor | wc | cut -c1-7`"
     ;;
   *-dec*)
@@ -1092,7 +1091,6 @@ case $host in
     echo
     AC_MSG_WARN( !!!!!! This system is untested - You are on your own !!!!!!)
     echo
-    AC_MSG_CHECKING(physical processor count)
     NUM_CPUS="1"
     ;;
 esac
@@ -1115,8 +1113,6 @@ else
     MAKE_PARALLELISM=8
   fi
 fi
-
-export MAKE_PARALLELISM
 
 AC_MSG_CHECKING(host system word length)
 if test "$is_64bit" = "yes"; then
@@ -1164,7 +1160,7 @@ if test "$path_to_src" = "./"; then
 fi
 
 for i in $package; do
-   if ! test -d "$path_to_src/Packages/$i"; then
+   if test ! -d "$path_to_src/Packages/$i"; then
       AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src"Packages")!)
    fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
@@ -2142,7 +2138,10 @@ all:
 	$(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INCLUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
 EOF
 
-    if ! (make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1 ; then
+    ac_try="make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1"
+    (eval $ac_try) 2>&5
+    ac_status=$?
+    if $ac_status; then
       rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
       SCI_MSG_ERROR(TAU libraries not working. Bye!)
     fi
@@ -2580,7 +2579,7 @@ AC_SUBST(BUILD_SCIRUN2)
 
 ##  --  search for gzopen (and related)  ----------------------------------
 
-dirs="$with_compression/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+dirs="$with_zlib/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,z,main,,,not-optional)
 SCI_CHECK_HEADERS($LIBZ/../include,zlib.h,,,not-optional)
@@ -2660,6 +2659,13 @@ case $host in
     ;;
   *linux*)
     PETSC_ARCH=linux
+    ;;
+  *-dec*)
+    if test "$petsc"; then
+      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
+    else
+      PETSC_ARCH=dec
+    fi
     ;;
   *-aix*)
     # The following if/else is a hack... it needs to be done correctly when
