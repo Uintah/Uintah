@@ -99,18 +99,18 @@ public:
   virtual void allocate(ParticleSubset*);
   virtual void allocate(const Patch*)
   { throw InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead."); }
-
+  
   virtual void gather(ParticleSubset* dest,
 		      std::vector<ParticleSubset*> subsets,
 		      std::vector<ParticleVariableBase*> srcs,
 		      particleIndex extra = 0);
   virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
-			 const ProcessorGroup* pg, int start, int n);
+			 const ProcessorGroup* pg, ParticleSubset* pset);
   virtual void packMPI(void* buf, int bufsize, int* bufpos,
-		       const ProcessorGroup* pg, int start, int n);
+		       const ProcessorGroup* pg, ParticleSubset* pset);
   virtual void packsizeMPI(int* bufpos,
-			   const ProcessorGroup* pg, int start, int n);
-
+			   const ProcessorGroup* pg,
+			   ParticleSubset* pset);
   virtual void emitNormal(ostream& out, DOM_Element varnode);
   virtual void emitRLE(ostream& out, DOM_Element varnode);
   
@@ -237,13 +237,12 @@ private:
   void
   ParticleVariable<T>::copyPointer(const ParticleVariableBase& copy)
   {
-    const ParticleVariable<T>* c =
-      dynamic_cast<const ParticleVariable<T>* >(&copy);
+    const ParticleVariable<T>* c = dynamic_cast<const ParticleVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in particle variable");
     *this = *c;
   }
-
+  
   template<class T>
   void
   ParticleVariable<T>::gather(ParticleSubset* pset,
@@ -262,8 +261,7 @@ private:
     ASSERTEQ(subsets.size(), srcs.size());
     ParticleSubset::iterator dstiter = pset->begin();
     for(int i=0;i<(int)subsets.size();i++){
-      ParticleVariable<T>* srcptr =
-	dynamic_cast<ParticleVariable<T>*>(srcs[i]);
+      ParticleVariable<T>* srcptr = dynamic_cast<ParticleVariable<T>*>(srcs[i]);
       if(!srcptr)
 	throw TypeMismatchException("Type mismatch in ParticleVariable::gather");
       ParticleVariable<T>& src = *srcptr;
@@ -275,6 +273,77 @@ private:
       }
     }
     ASSERT(dstiter+extra == pset->end());
+  }
+  
+  template<class T>
+  void*
+  ParticleVariable<T>::getBasePointer()
+  {
+    return &d_pdata->data[0];
+  }
+  
+  template<class T>
+  const TypeDescription*
+  ParticleVariable<T>::virtualGetTypeDescription() const
+  {
+    return getTypeDescription();
+  }
+  
+  template<class T>
+  void
+  ParticleVariable<T>::unpackMPI(void* buf, int bufsize, int* bufpos,
+				 const ProcessorGroup* pg,
+				 ParticleSubset* pset)
+  {
+    // This should be fixed for variable sized types!
+    const TypeDescription* td = getTypeDescription()->getSubType();
+    if(td->isFlat()){
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	MPI_Unpack(buf, bufsize, bufpos,
+		   &d_pdata->data[*iter], 1, td->getMPIType(),
+		   pg->getComm());
+      }
+    } else {
+      throw InternalError("packMPI not finished\n");
+    }
+  }
+  
+  template<class T>
+  void
+  ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
+			       const ProcessorGroup* pg,
+			       ParticleSubset* pset)
+  {
+    // This should be fixed for variable sized types!
+    const TypeDescription* td = getTypeDescription()->getSubType();
+    if(td->isFlat()){
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	MPI_Pack(&d_pdata->data[*iter], 1, td->getMPIType(),
+		 buf, bufsize, bufpos, pg->getComm());
+      }
+    } else {
+      throw InternalError("packMPI not finished\n");
+    }
+  }
+
+  template<class T>
+  void
+  ParticleVariable<T>::packsizeMPI(int* bufpos,
+				   const ProcessorGroup* pg,
+				   ParticleSubset* pset)
+  {
+    // This should be fixed for variable sized types!
+    const TypeDescription* td = getTypeDescription()->getSubType();
+    int n = pset->numParticles();
+    if(td->isFlat()){
+      int size;
+      MPI_Pack_size(n, td->getMPIType(), pg->getComm(), &size);
+      (*bufpos)+= size;
+    } else {
+      throw InternalError("packsizeMPI not finished\n");
+    }
   }
 
   template<class T>
@@ -370,76 +439,6 @@ private:
 
       if ((rle_iter != rle.end()) || (iter != d_pset->end()))
 	throw InternalError("ParticleVariable::read RLE data is not consistent with the particle subset size");
-    }
-  }
-
-  template<class T>
-  void*
-  ParticleVariable<T>::getBasePointer()
-  {
-    return &d_pdata->data[0];
-  }
-
-  template<class T>
-  const TypeDescription*
-  ParticleVariable<T>::virtualGetTypeDescription() const
-  {
-    return getTypeDescription();
-  }
-   
-  template<class T>
-  void
-  ParticleVariable<T>::unpackMPI(void* buf, int bufsize, int* bufpos,
-				 const ProcessorGroup* pg,
-				 int start, int n)
-  {
-    // This should be fixed for variable sized types!
-    const TypeDescription* td = getTypeDescription()->getSubType();
-    if(td->isFlat()){
-      ParticleSubset::iterator beg = d_pset->seek(start);
-      ParticleSubset::iterator end = d_pset->seek(start+n);
-      for(ParticleSubset::iterator iter = beg; iter != end; iter++){
-	MPI_Unpack(buf, bufsize, bufpos,
-		   &d_pdata->data[*iter], 1, td->getMPIType(),
-		   pg->getComm());
-      }
-    } else {
-      throw InternalError("packMPI not finished\n");
-    }
-  }
-
-  template<class T>
-  void
-  ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
-			       const ProcessorGroup* pg, particleIndex start, int n)
-  {
-    // This should be fixed for variable sized types!
-    const TypeDescription* td = getTypeDescription()->getSubType();
-    if(td->isFlat()){
-      ParticleSubset::iterator beg = d_pset->seek(start);
-      ParticleSubset::iterator end = d_pset->seek(start+n);
-      for(ParticleSubset::iterator iter = beg; iter != end; iter++){
-	MPI_Pack(&d_pdata->data[*iter], 1, td->getMPIType(),
-		 buf, bufsize, bufpos, pg->getComm());
-      }
-    } else {
-      throw InternalError("packMPI not finished\n");
-    }
-  }
-
-  template<class T>
-  void
-  ParticleVariable<T>::packsizeMPI(int* bufpos,
-				   const ProcessorGroup* pg, int, int n)
-  {
-    // This should be fixed for variable sized types!
-    const TypeDescription* td = getTypeDescription()->getSubType();
-    if(td->isFlat()){
-      int size;
-      MPI_Pack_size(n, td->getMPIType(), pg->getComm(), &size);
-      (*bufpos)+= size;
-    } else {
-      throw InternalError("packsizeMPI not finished\n");
     }
   }
 } // End namespace Uintah
