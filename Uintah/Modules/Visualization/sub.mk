@@ -19,6 +19,7 @@ SRCS     += $(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/EigenEvaluator.cc \
 	$(SRCDIR)/ParticleEigenEvaluator.cc \
 	$(SRCDIR)/InPlaneEigenEvaluator.cc \
+	$(SRCDIR)/ParticleInPlaneEigenEvaluator.cc \
 	$(SRCDIR)/TensorElementExtractor.cc \
 	$(SRCDIR)/ParticleTensorElementExtractor.cc
 
@@ -37,6 +38,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/10/18 20:19:32  witzel
+# Added ParticleInPlaneEigenEvaluator
+#
 # Revision 1.9  2000/10/18 19:09:47  witzel
 # Added ParticleTensorElementExtractor
 #
