@@ -235,6 +235,8 @@ itcl_class ViewWindow {
 #		-command "$this makeSaveObjectsPopup"
 	$w.menu.file.menu add command -label "Save image file..." \
 	    -underline 0 -command "$this makeSaveImagePopup"
+	$w.menu.file.menu add command -label "Record Movie..." \
+	    -underline 0 -command "$this makeSaveMoviePopup"
 
 
 	# Get the list of supported renderers for the pulldown
@@ -648,46 +650,6 @@ itcl_class ViewWindow {
 	    #make_labeled_radio $m.shade "Shading:" $r top $this-global-type {Wire Flat Gouraud}
 	    #pack $m.shade -in $m.eframe -side top -anchor w
 
-        frame $m.eframe.f -relief groove -borderwidth 2
-        pack $m.eframe.f -side top -anchor w
-        label $m.eframe.f.l -text "Record Movie as:"
-        pack $m.eframe.f.l -side top 
-	checkbutton $m.eframe.f.resize -text "Resize: " \
-	    -variable $this-global-resize \
-	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
-	entry $m.eframe.f.e1 -textvariable $this-x-resize -width 4
-	label $m.eframe.f.x -text x
-	entry $m.eframe.f.e2 -textvariable $this-y-resize -width 4
-#         checkbutton $m.eframe.f.resize -text "Resize 352x240" \
-# 	    -variable $this-global-resize \
-# 	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
-#         checkbutton $m.eframe.f.resize2 -text "Resize 1024x768" \
-# 	    -variable $this-global-resize \
-# 	    -offvalue 0 -onvalue 2 -command "$this resize; $this-c redraw"
-#         checkbutton $m.eframe.f.resize3 -text "Resize 1600x1024" \
-# 	    -variable $this-global-resize \
-# 	    -offvalue 0 -onvalue 3 -command "$this resize; $this-c redraw"
-        radiobutton $m.eframe.f.none -text "Stop Recording" \
-            -variable $this-global-movie -value 0 -command "$this-c redraw"
-	radiobutton $m.eframe.f.raw -text "Raw Frames" \
-            -variable $this-global-movie -value 1 -command "$this-c redraw"
-	if { [$this-c have_mpeg] } {
-	    radiobutton $m.eframe.f.mpeg -text "Mpeg" -variable \
-		    $this-global-movie -value 2 -command "$this-c redraw"
-	} else {
-	    radiobutton $m.eframe.f.mpeg -text "Mpeg" \
-		    -variable $this-global-movie -value 2 \
-		    -state disabled -disabledforeground "" \
-		    -command "$this-c redraw"
-	}
-        entry $m.eframe.f.moviebase -relief sunken -width 12 \
-	    -textvariable "$this-global-movieName" 
-        pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
-            -side top  -anchor w
-        pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
-	pack $m.eframe.f.resize $m.eframe.f.e1 \
-	    $m.eframe.f.x $m.eframe.f.e2 -side left  -anchor w
-
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
@@ -753,37 +715,29 @@ itcl_class ViewWindow {
 #	    puts "Non-existing frame to initialize!"
 #	}
 
-	bind $m.eframe.f.e1 <Return> "$this resize"
-	bind $m.eframe.f.e2 <Return> "$this resize"
-	if {[set $this-global-resize] == 0} {
-	    set color "#505050"
-	    $m.eframe.f.x configure -foreground $color
-	    $m.eframe.f.e1 configure -state disabled -foreground $color
-	    $m.eframe.f.e2 configure -state disabled -foreground $color
-	}
     }
 
     method resize { } {
 	set w .ui[modname]
+	set wmovie .ui[modname]-saveMovie
+
 	if { [set $this-global-resize] == 0 } {
 	    wm geometry $w "="
 	    pack configure $w.wframe -expand yes -fill both
 
 	    set color "#505050"
 	    if { $IsAttached == 1 } {
-		set m $w.mframe.f
-		$m.eframe.f.x configure -foreground $color
-		$m.eframe.f.e1 configure -state disabled -foreground $color
-		$m.eframe.f.e2 configure -state disabled -foreground $color
+		$wmovie.x configure -foreground $color
+		$wmovie.e1 configure -state disabled -foreground $color
+		$wmovie.e2 configure -state disabled -foreground $color
 	    } else {
 		set m $w.detached.f
-		$m.eframe.f.x configure -foreground $color
-		$m.eframe.f.e1 configure -state disabled -foreground $color
-		$m.eframe.f.e2 configure -state disabled -foreground $color
+		$wmovie.x configure -foreground $color
+		$wmovie.e1 configure -state disabled -foreground $color
+		$wmovie.e2 configure -state disabled -foreground $color
 	    }
 	} else {
 	    if { $IsAttached == 1 } { $this switch_frames }
-	    set m $w.detached.f
 	    set xsize [set $this-x-resize]
 	    set ysize [set $this-y-resize]
 	    set size "$xsize\x$ysize"
@@ -793,9 +747,9 @@ itcl_class ViewWindow {
 	    wm geometry $w "=$geomsize"
 	    pack configure $w.wframe -expand no -fill none
 	    $w.wframe.draw configure -geometry $size
-	    $m.eframe.f.x configure -foreground black
-	    $m.eframe.f.e1 configure -state normal -foreground black
-	    $m.eframe.f.e2 configure -state normal -foreground black
+	    $wmovie.x configure -foreground black
+	    $wmovie.e1 configure -state normal -foreground black
+	    $wmovie.e2 configure -state normal -foreground black
 	}
     }
 
@@ -1773,6 +1727,57 @@ itcl_class ViewWindow {
 	global $this-saveType
 	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType] [set $this-resx] [set $this-resy]
 	$this-c redraw
+    }
+    method makeSaveMoviePopup {} {
+	set w .ui[modname]-saveMovie
+
+	if {[winfo exists $w]} {
+	   raise $w
+           return
+        }
+
+	toplevel $w
+
+        wm title $w "Record Movie"
+
+	label $w.l -text "Record Movie as:"
+        pack $w.l -side top 
+	checkbutton $w.resize -text "Resize: " \
+	    -variable $this-global-resize \
+	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
+	entry $w.e1 -textvariable $this-x-resize -width 4
+	label $w.x -text x
+	entry $w.e2 -textvariable $this-y-resize -width 4
+
+        radiobutton $w.none -text "Stop Recording" \
+            -variable $this-global-movie -value 0 -command "$this-c redraw"
+	radiobutton $w.raw -text "Raw Frames" \
+            -variable $this-global-movie -value 1 -command "$this-c redraw"
+	if { [$this-c have_mpeg] } {
+	    radiobutton $w.mpeg -text "Mpeg" -variable \
+		    $this-global-movie -value 2 -command "$this-c redraw"
+	} else {
+	    radiobutton $w.mpeg -text "Mpeg" \
+		    -variable $this-global-movie -value 2 \
+		    -state disabled -disabledforeground "" \
+		    -command "$this-c redraw"
+	}
+        entry $w.moviebase -relief sunken -width 16 \
+	    -textvariable "$this-global-movieName" 
+        pack $w.none $w.raw $w.mpeg \
+            -side top  -anchor w
+        pack $w.moviebase -side top -anchor w -padx 2 -pady 2
+	pack $w.resize $w.e1 \
+	    $w.x $w.e2 -side left  -anchor w
+
+	bind $w.e1 <Return> "$this resize"
+	bind $w.e2 <Return> "$this resize"
+	if {[set $this-global-resize] == 0} {
+	    set color "#505050"
+	    $w.x configure -foreground $color
+	    $w.e1 configure -state disabled -foreground $color
+	    $w.e2 configure -state disabled -foreground $color
+	}
     }
 }
 
