@@ -2,6 +2,8 @@
 #ifndef SHAREDMEMORY_H_
 #define SHAREDMEMORY_H_
 
+#ifdef __sgi
+
 #include <ulocks.h>
 
 namespace PSECommon {
@@ -33,5 +35,7 @@ public:
 };
 
 }}
+
+#endif
 
 #endif /* SHAREDMEMORY_H_ */
