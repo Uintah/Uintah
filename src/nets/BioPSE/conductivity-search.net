@@ -191,7 +191,7 @@ set $m22-ViewWindow_0-view-up-y ${view-up-y}
 set $m22-ViewWindow_0-view-up-z ${view-up-z}
 set $m22-ViewWindow_0-view-fov ${view-fov}
 set $m23-interp_op_gui {}
-$m1 initialize_initialize_ui
+$m1 initialize_ui
 $m3 initialize_ui
 $m4 initialize_ui
 $m9 initialize_ui
