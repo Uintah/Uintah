@@ -62,3 +62,11 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/SwapFaces
 SRCS := $(SRCDIR)/SwapFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/AddTri
+SRCS := $(SRCDIR)/AddTri.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/RemoveFaces
+SRCS := $(SRCDIR)/RemoveFaces.cc
+include $(SCIRUN_SCRIPTS)/program.mk
