@@ -59,7 +59,7 @@ PSELIBS := \
 #	Dataflow/Network Dataflow/XMLUtil
 
 
-LIBS := $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 #LIBS := $(LINK) $(XML_LIBRARY) $(GL_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 ifeq ($(OS_NAME),Darwin)
