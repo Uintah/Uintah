@@ -232,9 +232,9 @@ DataArchive::queryGrid( double time )
 	  long totalCells;
 	  if(!get(r, "totalCells", totalCells))
 	    throw InternalError("Error parsing patch total cells");
-	  Patch* r = level->addPatch(lowIndex, highIndex,lowIndex,
+	  Patch* patch = level->addPatch(lowIndex, highIndex,lowIndex,
 				     highIndex,id);
-	  ASSERTEQ(r->totalCells(), totalCells);
+	  ASSERTEQ(patch->totalCells(), totalCells);
 	} else if(r.getNodeName().equals("anchor")
 		  || r.getNodeName().equals("cellspacing")){
 	  // Nothing - handled above
@@ -368,7 +368,8 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
        scinew ParticleSubset(scinew ParticleSet(numParticles), true,
 			     matlIndex, patch);
     }
-    (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
+    (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
+//      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
   else if (td->getType() != TypeDescription::ReductionVariable)
     var.allocate(patch);
