@@ -18,7 +18,7 @@
 #include <NetSolve/share/share.h>
 
 #include <stdio.h>
-#include <netsolveclient.h>
+#include <netsolve/netsolveclient.h>
 
 namespace Netsolve {
 
