@@ -208,7 +208,7 @@ void setBC(CCVariable<double>& press_CC,
     //__________________________________
     //  -Set the LODI BC's first, then let the other BC's wipe out what
     //   was set in the corners and edges. 
-    //  -Ignore lodi bcs during intialization phase and when
+    //  -Ignore lodi bcs during intialization phase AND when
     //   lv->setLodiBcs = false
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
@@ -238,42 +238,45 @@ void setBC(CCVariable<double>& press_CC,
         if( bc_kind == "symmetric"){
           bc_kind = "zeroNeumann";
         }
-        int p_dir = patch->faceAxes(face)[0];     // principal  face direction
         
-        if (gravity[p_dir] == 0) { 
-          IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound, 
+        IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound, 
 						  bc_kind, bc_value, cell_dx,
 						  mat_id,child);
-        }
-        //__________________________________
-        // With gravity
-        // change gravity sign according to the face direction
-        if (gravity[p_dir] != 0) {
+        //__________________________________________________________
+        // Tack on hydrostatic pressure after Dirichlet or Neumann BC
+        // has been applied.  Note, during the intializaton phase the 
+        // hydrostatic pressure adjustment is  handled by a completely
+        // separate task, therefore don't do this on the first DW
+        // 
+        //  Change gravity sign according to the face direction
+        int p_dir = patch->faceAxes(face)[0];     // principal  face direction
+        
+        if (gravity[p_dir] != 0 && topLevelTimestep > 0) {
           Vector faceDir = patch->faceDirection(face).asVector();
           double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
           IntVector oneCell = patch->faceDirection(face);
           vector<IntVector>::const_iterator iter;
-          
+
           for (iter=bound.begin();iter != bound.end(); iter++) { 
             IntVector L = *iter - oneCell;
             IntVector R = *iter;
             double rho_R = rho_micro[surroundingMatl_indx][R];
             double rho_L = rho_micro[surroundingMatl_indx][L];
             double rho_micro_brack = 2.*(rho_L * rho_R)/(rho_L + rho_R);
-            press_CC[R] = press_CC[L] + grav * dx * rho_micro_brack; 
+            press_CC[R] += grav * dx * rho_micro_brack; 
           }
           IveSetBC = true;
         }  // with gravity 
-        //__________________________________
-        //  debugging
-        if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
-	        << endl;
-        }
       }  // if bcKind != notSet
+      //__________________________________
+      //  debugging
+      if( BC_dbg.active() ) {
+        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+             <<"\t child " << child  <<" NumChildren "<<numChildren 
+             <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+             <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	      << endl;
+      }
     }  // child loop
   }  // faces loop
 }
@@ -409,7 +412,7 @@ void setBC(CCVariable<Vector>& var_CC,
     
     if( desc == "Velocity"      && is_velBC_lodi 
         && topLevelTimestep > 0 && lv->setLodiBcs) {
-      FaceVel_LODI( patch, face, var_CC, lv, cell_dx);
+      FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
     }
     
     //__________________________________
