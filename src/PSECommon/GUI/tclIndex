@@ -50,6 +50,7 @@ set auto_index(PSECommon_Fields_GenScalarField) [list source [file join $dir Gen
 set auto_index(TYPEReader) [list source [file join $dir Reader.tcl]]
 set auto_index(PSECommon_Matrix_EditMatrix) [list source [file join $dir EditMatrix.tcl]]
 set auto_index(PSECommon_Readers_GeometryReader) [list source [file join $dir GeometryReader.tcl]]
+set auto_index(PSECommon_Matrix_VecVec) [list source [file join $dir VecVec.tcl]]
 set auto_index(PSECommon_Writers_PathWriter) [list source [file join $dir PathWriter.tcl]]
 set auto_index(PSECommon_Visualization_VolVis) [list source [file join $dir VolVis.tcl]]
 set auto_index(PSECommon_Visualization_IsoMask) [list source [file join $dir IsoMask.tcl]]

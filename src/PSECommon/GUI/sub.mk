@@ -44,6 +44,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TetraWriter.tcl $(SRCDIR)/TiffWriter.tcl \
 	$(SRCDIR)/TracePath.tcl $(SRCDIR)/TrainSeg2.tcl \
 	$(SRCDIR)/TrainSegment.tcl $(SRCDIR)/TranslateSurface.tcl \
+	$(SRCDIR)/VecVec.tcl \
 	$(SRCDIR)/VectorFieldReader.tcl $(SRCDIR)/VectorFieldWriter.tcl \
 	$(SRCDIR)/VectorSeg.tcl $(SRCDIR)/VisualizeMatrix.tcl \
 	$(SRCDIR)/VoidStarReader.tcl $(SRCDIR)/VoidStarWriter.tcl \
@@ -62,6 +63,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.8  2000/11/02 21:43:01  dmw
+# added VecVec GUI and fixed some bugs in GenTransferFunc
+#
 # Revision 1.7  2000/10/24 05:57:28  moulding
 # new module maker Phase 2: new module maker goes online
 #
