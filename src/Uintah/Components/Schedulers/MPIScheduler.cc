@@ -176,6 +176,8 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    set<VarDestType> varsent;
    // send initial data from old datawarehouse
    vector<MPI_Request> send_ids;
+   vector<MPI_Status> send_statii;
+   vector<int> indices;
    for(vector<Task*>::iterator iter = presort_tasks.begin();
        iter != presort_tasks.end(); iter++){
       Task* task = *iter;
@@ -197,7 +199,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		     throw InternalError("Wrong Datawarehouse?");
 		  MPI_Request requestid;
 		  ASSERT(dep->d_serialNumber >= 0);
-		  //cerr << me << " sending initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << '\n';
+		  dbg << me << " --> sending initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << '\n';
 		  dw->sendMPI(dep->d_var, dep->d_matlIndex,
 			      dep->d_patch, d_myworld,
 			      dep->d_task->getAssignedResourceIndex(),
@@ -209,9 +211,17 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	 }
       }
    }
-   {
-      vector<MPI_Status> statii(send_ids.size());
-      MPI_Waitall((int)send_ids.size(), &send_ids[0], &statii[0]);
+   if(send_ids.size() > 0){
+      send_statii.resize(send_ids.size());
+      indices.resize(send_ids.size());
+      dbg << me << " Calling send Testsome with " << send_ids.size() << " waiters\n";
+      int donecount;
+      MPI_Testsome((int)send_ids.size(), &send_ids[0], &donecount,
+		   &indices[0], &send_statii[0]);
+      dbg << me << " Done calling send Testsome with " << send_ids.size() << " waiters and got " << donecount << " done\n";
+      if(donecount == send_ids.size() || donecount == MPI_UNDEFINED){
+	 send_ids.clear();
+      }
    }
 
    // recv initial data from old datawarhouse
@@ -235,7 +245,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  throw InternalError("Wrong Datawarehouse?");
 	       MPI_Request requestid;
 	       ASSERT(dep->d_serialNumber >= 0);
-	       //cerr << me << " receiving initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << '\n';
+	       dbg << me << " <-- receiving initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << '\n';
 	       dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
 			   dep->d_patch, d_myworld,
 			   MPI_ANY_SOURCE,
@@ -245,8 +255,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	 }
       }
    }
-   vector<MPI_Status> statii(recv_ids.size());
-   MPI_Waitall((int)recv_ids.size(), &recv_ids[0], &statii[0]);
+   if(recv_ids.size() > 0){
+      vector<MPI_Status> statii(recv_ids.size());
+      dbg << me << " Calling recv waitall with " << recv_ids.size() << " waiters\n";
+      MPI_Waitall((int)recv_ids.size(), &recv_ids[0], &statii[0]);
+      dbg << me << " Done calling recv waitall with " << recv_ids.size() << " waiters\n";
+   }
 
    vector<Task*> tasks;
    graph.topologicalSort(tasks);
@@ -319,17 +333,22 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			   throw InternalError("Wrong Datawarehouse?");
 			MPI_Request requestid;
 			ASSERT(req->d_serialNumber >= 0);
-			//cerr << me << " receiving " << req->d_var->getName() << " serial " << req->d_serialNumber << '\n';
+			dbg << me << " <-- receiving " << req->d_var->getName() << " serial " << req->d_serialNumber << ' ' << *req << '\n';
 			dw->recvMPI(old_dw, req->d_var, req->d_matlIndex,
 				    req->d_patch, d_myworld,
 				    MPI_ANY_SOURCE,
 				    req->d_serialNumber, &requestid);
-			recv_ids.push_back(requestid);
+			recv_ids.push_back(requestid);	
+			dbg << "there are now " << recv_ids.size() << " waiters\n";
 		     }
 		  }
 	       }
 	       vector<MPI_Status> statii(recv_ids.size());
-	       MPI_Waitall((int)recv_ids.size(), &recv_ids[0], &statii[0]);
+	       if(recv_ids.size() > 0){
+		  dbg << me << " Calling recv(2) waitall with " << recv_ids.size() << " waiters\n";
+		  MPI_Waitall((int)recv_ids.size(), &recv_ids[0], &statii[0]);
+		  dbg << me << " Done calling recv(2) waitall with " << recv_ids.size() << " waiters\n";
+	       }
 	    }
 
 	    if(task->getType() == Task::Scatter){
@@ -361,6 +380,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       sgargs.tags.resize(0);
 	    }
 
+	    dbg << me << " Starting task: " << task->getName();
+	    if(task->getPatch())
+	       dbg << " on patch " << task->getPatch()->getID() << '\n';
 	    double taskstart = Time::currentSeconds();
 	    task->doit(pc);
 	    double sendstart = Time::currentSeconds();
@@ -370,7 +392,6 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       //cerr << me << " !scatter\n";
 	       // Send all of the productions
 	       const vector<Task::Dependency*>& comps = task->getComputes();
-	       vector<MPI_Request> send_ids;
 	       //cerr << me << " comps.size=" << comps.size() << '\n';
 	       for(int c=0;c<comps.size();c++){
 		  //cerr << me << " c=" << c << '\n';
@@ -394,7 +415,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			      throw InternalError("Wrong Datawarehouse?");
 			   MPI_Request requestid;
 			   ASSERT(dep->d_serialNumber >= 0);
-			   //cerr << me << " sending " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << '\n';
+			   dbg << me << " --> sending " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << " " << *dep << '\n';
 			   dw->sendMPI(dep->d_var, dep->d_matlIndex,
 				       dep->d_patch, d_myworld,
 				       dep->d_task->getAssignedResourceIndex(),
@@ -405,9 +426,17 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		     }
 		  }
 	       }
-	       {
-		  vector<MPI_Status> statii(send_ids.size());
-		  MPI_Waitall((int)send_ids.size(), &send_ids[0], &statii[0]);
+	       if(send_ids.size() > 0){
+		  send_statii.resize(send_ids.size());
+		  indices.resize(send_ids.size());
+		  dbg << me << " Calling send Testsome(2) with " << send_ids.size() << " waiters\n";
+		  int donecount;
+		  MPI_Testsome((int)send_ids.size(), &send_ids[0], &donecount,
+			       &indices[0], &send_statii[0]);
+		  dbg << me << " Done calling send Testsome with " << send_ids.size() << " waiters and got " << donecount << " done\n";
+		  if(donecount == send_ids.size() || donecount == MPI_UNDEFINED){
+		     send_ids.clear();
+		  }
 	       }
 	    }
 
@@ -427,6 +456,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       }
    }
 
+   if(send_ids.size() > 0){
+      vector<MPI_Status> statii(send_ids.size());
+      dbg << me << " Calling send(2) waitall with " << send_ids.size() << " waiters\n";
+      MPI_Waitall((int)send_ids.size(), &send_ids[0], &statii[0]);
+      dbg << me << " Done calling send(2) waitall with " << send_ids.size() << " waiters\n";
+   }
    dw->finalize();
    finalizeNodes(me);
 }
@@ -790,6 +825,11 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.17  2000/09/13 14:00:48  sparker
+// Changed the MPI_Send behaviour - use MPI_Testsome instead of
+// MPI_Waitall after sends.
+// Added other debugging output
+//
 // Revision 1.16  2000/09/08 17:49:53  witzel
 // Adding taskgraph output support for multiple processors
 // (so that it actually works):

@@ -65,6 +65,17 @@ TaskGraph::assignSerialNumbers()
 	 dep->d_serialNumber = num++;
       }
    }
+   if(dbg.active()){
+      for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
+	 Task* task = *iter;
+	 const vector<Task::Dependency*>& reqs = task->getRequires();
+	 for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
+	     iter != reqs.end(); iter++){
+	    Task::Dependency* dep = *iter;
+	    cerr << dep->d_serialNumber << ": " << *dep << '\n';
+	 }
+      }
+   }
 }
 
 void
@@ -284,6 +295,11 @@ Task* TaskGraph::getTask(int idx)
 
 //
 // $Log$
+// Revision 1.7  2000/09/13 14:00:48  sparker
+// Changed the MPI_Send behaviour - use MPI_Testsome instead of
+// MPI_Waitall after sends.
+// Added other debugging output
+//
 // Revision 1.6  2000/08/09 03:18:04  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
