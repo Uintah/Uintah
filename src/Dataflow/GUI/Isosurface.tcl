@@ -37,6 +37,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-type
 	global $this-gen
 	global $this-build_trisurf
+	global $this-np
 	
 	set $this-isoval-min 0
 	set $this-isoval-max 4095
@@ -46,6 +47,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-type ""
 	set $this-gen 0
 	set $this-build_trisurf 0
+	set $this-np 1
 
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
@@ -150,6 +152,15 @@ itcl_class SCIRun_Visualization_Isosurface {
 	#  Method:
 
 	set alg [$mf.tabs add -label "MC" -command "$this select-alg 0"]
+ 
+        scale $alg.np -label "np:" \
+            -variable $this-np \
+            -from 1 -to 8 \
+            -showvalue true \
+            -orient horizontal
+ 
+        pack $alg.np -side left -fill x
+
 	set alg [$mf.tabs add -label "NOISE"  -command "$this select-alg 1"]
 	set alg [$mf.tabs add -label "SAGE"  -command "$this select-alg 2"]
 
