@@ -183,20 +183,18 @@ void Scene::refill_work(int which, int nworkers)
 
 void Scene::add_light(Light* light)
 {
-    lightsGroup_->add( light->getSphere() );
-    lights.add(light);
+  if( light->isMoodLight() ) light->turnOff();
+
+  lightsGroup_->add( light->getSphere() );
+  lights.add(light);
 }
 
-void Scene::add_per_matl_light(Light* light)
+void Scene::add_per_matl_light( Light* light )
 {
-    lightsGroup_->add( light->getSphere() );
-    per_matl_lights.add(light);
-}
-void Scene::add_per_matl_mood_light(Light* light)
-{
-    lightsGroup_->add( light->getSphere() );
-    per_matl_mood_lights.add(light);
-    light->updateIntensity(0);
+  if( light->isMoodLight() ) light->turnOff();
+
+  lightsGroup_->add( light->getSphere() );
+  per_matl_lights.add(light);
 }
 
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
@@ -274,104 +272,63 @@ void Scene::show_auxiliary_displays() {
 }
 
 void
-Scene::turnOffAllLights( Light * exceptThisLight )
-{
-  int numLights = lights.size();
-
-  for( int cnt = numLights-1; cnt >= 0; cnt-- )
-    {
-      Light * light = lights[cnt];
-      if( light == exceptThisLight )
-	continue;
-      light->turnOff();
-      nonActiveLights_.add( light );
-      lights.remove( cnt );
-    }
-}
-void
 Scene::turnOffAllLights( double left )
 {
-  if (left == 1.0) orig_ambientScale_ = ambientScale_;
+  static double beginScale;
+  if (left == 1.0) beginScale = ambientScale_;
+
   int numLights = lights.size();
+  int numAllLights = numLights + per_matl_lights.size();
 
-  for( int cnt = numLights-1; cnt >= 0; cnt-- )
-    {
-      Light * light = lights[cnt];
+  for( int cnt = 0; cnt < numAllLights; cnt++ ) {
+    Light * light;
+    if( cnt < numLights )
+      light = lights[cnt];
+    else
+      light = per_matl_lights[cnt-numLights];
 
-      if (left>0.0) {
-	light->updateIntensity(left);
+    if (left>0.0) {
+
+      if( light->isMoodLight() ) {
+	light->updateIntensity( 1.0 - left );
+	light->turnOn();
       } else {
-	light->updateIntensity(1.0);
+	light->modifyCurrentIntensity( left );
+      }
+    } else {
+      if( !light->isMoodLight() ){
 	light->turnOff();
-	nonActiveLights_.add( light );
-	lights.remove( cnt );
       }
     }
-
-  for(int i=0; i<per_matl_mood_lights.size(); i++){
-    Light* light = per_matl_mood_lights[i];    
-    light->updateIntensity(1-left);
   }
-
-  setAmbientLevel(orig_ambientScale_*(0.25*left+0.85));
+  // Scale down from current ambient level to minimum ambient of
+  // 1/4th of original ambient.
+  setAmbientLevel( (beginScale*left) + (orig_ambientScale_ / 4.0) );
 }
 
 void
 Scene::turnOnAllLights()
 {
-  int numLights = nonActiveLights_.size();
+  int numLights = lights.size();
+  int numAllLights = numLights + per_matl_lights.size();
 
-  for( int cnt = numLights-1; cnt >= 0; cnt-- )
-    {
-      Light * light = nonActiveLights_[ cnt ];
-      lights.add( light );
+  for( int cnt = 0; cnt < numAllLights; cnt++ ) {
+    Light * light;
+    if( cnt < numLights )
+      light = lights[cnt];
+    else
+      light = per_matl_lights[cnt-numLights];
+
+    if( light->isMoodLight() ) {
+      light->turnOff();
+      lights[cnt]->reset(); 
+    } else {
+      lights[cnt]->reset(); 
       light->turnOn();
-      nonActiveLights_.remove( cnt );
     }
-
-  for(int i=0; i<per_matl_mood_lights.size(); i++){
-    Light* light = per_matl_mood_lights[i];    
-    light->updateIntensity(0);
   }
 
   setAmbientLevel(orig_ambientScale_);
-
-}
-
-void
-Scene::turnOffLight( Light * light )
-{
-  if( light->isOn() )
-    {
-      for( int cnt = 0; cnt < lights.size(); cnt++ )
-	{
-	  if( lights[cnt] == light )
-	    {
-	      lights.remove( cnt );
-	      light->turnOff();
-	      nonActiveLights_.add( light );
-	      return;
-	    }
-	}
-    }
-}
-
-void
-Scene::turnOnLight( Light * light )
-{
-  if( !light->isOn() )
-    {
-      for( int cnt = 0; cnt < nonActiveLights_.size(); cnt++ )
-	{
-	  if( nonActiveLights_[cnt] == light )
-	    {
-	      nonActiveLights_.remove( cnt );
-	      light->turnOn();
-	      lights.add( light );
-	      return;
-	    }
-	}
-    }
 }
 
 void

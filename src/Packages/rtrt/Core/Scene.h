@@ -176,13 +176,10 @@ public:
   
   // Render a sphere in the scene for each light.
   void renderLights( bool on ); 
-  // Remove lights from active light list.
-  void turnOffAllLights( Light * exceptThisLight = NULL ); 
+
+  // left is % left on... ranging from 1.0 to 0.0 to turn it off.
   void turnOffAllLights( double left ); 
-  // Put all lights back in the active light list.
-  void turnOnAllLights();
-  void turnOffLight( Light * light );
-  void turnOnLight( Light * light );
+  void turnOnAllLights(); // Put all lights back in the active light list.
 
   inline int nlights() {
     return lights.size();
@@ -211,7 +208,7 @@ public:
   
   void add_light(Light*);
   void add_per_matl_light(Light*);
-  void add_per_matl_mood_light(Light*);
+
   int nprims();
   
   WorkQueue work;
@@ -338,7 +335,6 @@ private:
   // Lights that are on.
   Array1<Light*> lights;
   Array1<Light*> per_matl_lights;
-  Array1<Light*> per_matl_mood_lights; //these increase intesity when it gets dark
 
   // Lights that have been turned off.
   Array1<Light*> nonActiveLights_;
