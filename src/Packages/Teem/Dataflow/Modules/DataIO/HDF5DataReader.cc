@@ -92,8 +92,6 @@ void HDF5DataReader::execute() {
   bool updateAll  = false;
   bool updateFile = false;
 
-  int ndims;
-
   filename_.reset();
   datasets_.reset();
 
@@ -174,27 +172,25 @@ void HDF5DataReader::execute() {
     vector< string > paths;
     vector< string > datasets;
 
-    remark( new_datasets );
-
     parseDatasets( new_datasets, paths, datasets );
 
     vector< vector<NrrdDataHandle> > nHandles;
 
-    for( int ic=0; ic< paths.size(); ic++ ) {
+    for( int ic=0; ic<paths.size(); ic++ ) {
 
       NrrdDataHandle handle =
 	readDataset( new_filename, paths[ic], datasets[ic]);
 
-      int ic = 0;
+      int jc = 0;
 
-      while( ic<nHandles.size() ) {
-	if( handle->nrrd->type == nHandles[ic][0]->nrrd->type ) {
-	  nHandles[ic].push_back( handle );
+      while( jc<nHandles.size() ) {
+	if( handle->nrrd->type == nHandles[jc][0]->nrrd->type ) {
+	  nHandles[jc].push_back( handle );
 	  
 	  break;
 
 	} else
-	  ++ic;
+	  ++jc;
       }
 
       if( nHandles.size() == 0 || ic<nHandles.size() ) {
@@ -229,7 +225,6 @@ void HDF5DataReader::execute() {
 
 	      new_label += string(nrrdData->nrrd->axis[0].label);
 	    } else {
-
 	      bool merge = true;
 
 	      if( dim == nrrdData->nrrd->dim ) {
@@ -392,17 +387,27 @@ vector<int> HDF5DataReader::getDatasetDims( string filename, string group, strin
   herr_t status;
 
   /* Open the file using default properties. */
-  hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t file_id, ds_id, g_id, file_space_id;
 
+  if( (file_id = H5Fopen(filename.c_str(),
+			 H5F_ACC_RDONLY, H5P_DEFAULT)) < 0 ) {
+    error( "Error opening file. " );
+  }
 
   /* Open the group in the file. */
-  hid_t g_id = H5Gopen(file_id, group.c_str());
+  if( (g_id = H5Gopen(file_id, group.c_str())) < 0 ) {
+    error( "Error opening group. " );
+  }
 
   /* Open the dataset in the file. */
-  hid_t ds_id = H5Dopen(g_id, dataset.c_str() );
+  if( (ds_id = H5Dopen(g_id, dataset.c_str())) < 0 ) {
+    error( "Error opening file space. " );
+  }
 
   /* Open the coordinate space in the file. */
-  hid_t file_space_id = H5Dget_space( ds_id );
+  if( (file_space_id = H5Dget_space( ds_id )) < 0 ) {
+    error( "Error opening file space. " );
+  }
     
   /* Get the rank (number of dims) in the space. */
   int ndims = H5Sget_simple_extent_ndims(file_space_id);
@@ -412,14 +417,29 @@ vector<int> HDF5DataReader::getDatasetDims( string filename, string group, strin
   /* Get the dims in the space. */
   int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
 
+  if( ndim != ndims ) {
+    error( "Data dimensions not match. " );
+    error_ = true;
+    return idims;
+  }
+
   /* Terminate access to the data space. */ 
-  status = H5Sclose(file_space_id);
+  if( (status = H5Sclose(file_space_id)) < 0 ) {
+    error( "Error closing file space. " );
+  }
+
   /* Terminate access to the dataset. */
-  status = H5Dclose(ds_id);
+  if( (status = H5Dclose(ds_id)) < 0 ) {
+    error( "Error closing data set. " );
+  }
   /* Terminate access to the group. */ 
-  status = H5Gclose(g_id);
+  if( (status = H5Gclose(g_id)) < 0 ) {
+    error( "Error closing group. " );
+  }
   /* Terminate access to the group. */ 
-  status = H5Fclose(file_id);
+  if( (status = H5Fclose(file_id)) < 0 ) {
+    error( "Error closing file. " );
+  }
 
 
   for( int ic=0; ic<ndims; ic++ )
@@ -439,13 +459,50 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   herr_t  status;
  
   /* Open the file using default properties. */
-  hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t file_id, g_id, ds_id, file_space_id;
+
+  if( (file_id = H5Fopen(filename.c_str(),
+			 H5F_ACC_RDONLY, H5P_DEFAULT)) < 0 ) {
+    error( "Error opening file. " );
+  }
 
   /* Open the group in the file. */
-  hid_t g_id = H5Gopen(file_id, group.c_str() );
+  if( (g_id = H5Gopen(file_id, group.c_str())) < 0 ) {
+    error( "Error opening group. " );
+  }
 
   /* Open the dataset in the file. */
-  hid_t ds_id = H5Dopen(g_id, dataset.c_str() );
+  if( (ds_id = H5Dopen(g_id, dataset.c_str())) < 0 ) {
+    error( "Error opening file space. " );
+  }
+
+  /* Open the coordinate space in the file. */
+  if( (file_space_id = H5Dget_space( ds_id )) < 0 ) {
+    error( "Error opening file space. " );
+  }
+    
+  /* Get the rank (number of dims) in the space. */
+  int ndims = H5Sget_simple_extent_ndims(file_space_id);
+
+  hsize_t *dims = new hsize_t[ndims];
+
+  /* Get the dims in the space. */
+  int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+
+  if( ndim != ndims ) {
+    error( "Data dimensions not match. " );
+    error_ = true;
+    return NULL;
+  }
+
+  for( int ic=0; ic<nDims_.get(); ic++ ) {
+    if( dims_[ic] != dims[ic] ) {
+      error( "Data do not have the same number of elements. " );
+      error_ = true;
+      return NULL;
+    }
+  }
+
 
   hid_t type_id = H5Dget_type(ds_id);
 
@@ -490,24 +547,6 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
   H5Tclose(type_id);
  
-  /* Open the dataset space in the file. */
-  hid_t file_space_id = H5Dget_space( ds_id );
-
-  /* Get the rank (number of dims) in the space. */
-  int ndims = H5Sget_simple_extent_ndims(file_space_id);
-
-  hsize_t *dims = new hsize_t[ndims];
-
-  /* Get the dims in the space. */
-  int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
-
-  for( int ic=0; ic<nDims_.get(); ic++ ) {
-    if( dims_[ic] != dims[ic] ) {
-      error( "Data do not have the same number of elements. " );
-      error_ = true;
-      return NULL;
-    }
-  }
 
   hssize_t *start = new hssize_t[ndims];
   hsize_t *stride = new hsize_t[ndims];
@@ -640,7 +679,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   for( int ic=0; ic<ndims; ic++ ) {
     char tmpstr[16];
 
-    sprintf( tmpstr, "%d", count[ic] );
+    sprintf( tmpstr, "%d", (int) (count[ic]) );
     nout->nrrd->axis[ic+1].label = strdup(tmpstr);
   }
 
@@ -777,7 +816,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
       parseDatasets( new_datasets, paths, datasets );
 
-      int ndims = 0;
+      unsigned long ndims = 0;
 
       for( int ic=0; ic<MAX_DIMS; ic++ )
 	dims_[ic] = 1;
