@@ -59,12 +59,6 @@ namespace Kurt {
 namespace Modules {
 
 using SCICore::Containers::to_string;
-using Uintah::DataArchive;
-using Uintah::TypeDescription;
-using Uintah::Level;
-using Uintah::Patch;
-using Uintah::Grid;
-using Uintah::GridP;
 using namespace SCICore::TclInterface;
 using Kurt::Datatypes::VisParticleSet;
 using PSECore::Datatypes::VisParticleSetOPort;
@@ -72,6 +66,8 @@ using PSECore::Datatypes::VisParticleSetIPort;
 using SCICore::Geometry::BBox;
 using SCICore::Datatypes::VectorFieldRG;
 using SCICore::Datatypes::ScalarFieldRGdouble;
+using namespace Uintah;
+using namespace Uintah::Datatypes;
 
 extern "C" Module* make_VisControl( const clString& id ) {
   return scinew VisControl( id ); 
@@ -84,6 +80,7 @@ VisControl::VisControl(const clString& id)
     gvVar("gvVar", id, this), psVar("psVar", id, this),
     pvVar("pvVar", id, this), ptVar("ptVar", id, this),
     gtVar("gtVar", id, this), time("time", id, this),
+    timeval("timeval", id, this),
     gsMatNum("gsMatNum", id, this),
     gvMatNum("gvMatNum", id, this),
     pNMaterials("pNMaterials", id, this),
@@ -110,56 +107,7 @@ VisControl::VisControl(const clString& id)
 VisControl::~VisControl(){} 
 
 //------------------------------------------------------------- 
-/*
-void VisControl::tcl_command( TCLArgs& args, void* userdata)
-{
 
-  int i,j;
-  clString result;
-  std::cerr<<"tcl_command arg: "<< args[1]<<endl;
-  
-  if( args[1] == "getParticleSetScalarNames"){
-    if(args.count() != 3 ) {
-      args.error("VisControl--getParticleSetScalarNames");
-      return;
-    }
-
-
-  } else if( args[1] == "getParticleSetVectorNames"){
-    if(args.count() != 3 ) {
-      args.error("VisControl--getParticleSetVectorNames");
-      return;
-    }
-
-  } else if( args[1] == "getGridScalarNames"){
-    if(args.count() != 3 ) {
-      args.error("VisControl--getGridScalarNames");
-      return;
-    }
-  } else if( args[1] == "getGridVectorNames"){
-    if(args.count() != 3 ) {
-      args.error("VisControl--getGridVectorNames");
-      return;
-    }
-  } else if (args[1] == "graph" ) {
-    clString var = args[3];
-    clString idx = args[2];
-    //    graph(idx, var);
-  } else {
-    Module::tcl_command(args, userdata);
-  }
-}
-*/
-
-//////////
-// If receiving data for the first time, this function selects
-// the first variable in each catagory.  If a previously save script
-// has been loaded, the first data to be recieved will appear new even
-// though the data being viewed is probably the same as that being 
-// viewed at some previous time.  Several "if" statements are used
-// to determine if the previously selected variables can still be 
-// used.
-//
   void VisControl::setVars(ArchiveHandle ar)
 {
   string command;
@@ -238,9 +186,7 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
     TCL::execute(id + " buildGsGvMaterials " 
 		 + to_string(numgsMatls) + " " + to_string(numgvMatls));
 
-    TCL::execute(id + " SetTimeRange " + to_string( times[0] )
-		 + " " + to_string(times[times.size()-1])
-		 + " " + to_string((int)times.size()));
+    TCL::execute(id + " SetTimeRange " + to_string((int)times.size()));
     TCL::execute(id + " setParticleScalars " + psNames.c_str());
     TCL::execute(id + " setParticleVectors " + pvNames.c_str());
     TCL::execute(id + " buildVarList particleSet");
@@ -344,17 +290,20 @@ void VisControl::execute()
    VisParticleSet* vps;
 
    // what time is it?
-   double t = time.get();
+   
+   int t = time.get();
 
    // set the index for the correct timestep.
    int idx = 0;
    vector< double > times;
    vector< int > indices;
    archive.queryTimesteps( indices, times );
-   while(t>times[idx] && idx < times.size())
-     idx++;
-   if(idx >= times.size())
+   if(t < times.size())
+     idx = t;
+   if(t >= times.size())
      idx=times.size()-1;
+
+   timeval.set(times[idx]);
 
    if( animate.get() ){
      while( animate.get() && idx < times.size() - 1){
@@ -388,21 +337,21 @@ VisControl::buildData(DataArchive& archive, vector< double >& times,
   LevelP level = grid->getLevel( 0 );
 
   // get index and spatial ranges 
-  BBox indexbox;
   BBox spatialbox;
-  level->getIndexRange(indexbox);
+  IntVector minIV, maxIV;
+  level->getIndexRange(minIV, maxIV);
   level->getSpatialRange(spatialbox);
 
   vf = new VectorFieldRG();
   sf = new ScalarFieldRGdouble();
 
   // resize and set bounds
-  vf->resize(indexbox.max().x() - indexbox.min().x(),
-	     indexbox.max().y() - indexbox.min().y(),
-	     indexbox.max().z() - indexbox.min().z());
-  sf->resize(indexbox.max().x() - indexbox.min().x(),
-	     indexbox.max().y() - indexbox.min().y(),
-	     indexbox.max().z() - indexbox.min().z());
+  vf->resize(maxIV.x() - minIV.x(),
+	     maxIV.y() - minIV.y(),
+	     maxIV.z() - minIV.z());
+  sf->resize(maxIV.x() - minIV.x(),
+	     maxIV.y() - minIV.y(),
+	     maxIV.z() - minIV.z());
   vf->set_bounds(spatialbox.min(), spatialbox.max());
   sf->set_bounds(spatialbox.min(), spatialbox.max());
   std::cerr<< "Bounds = ( "<<spatialbox.min()<<", "<<spatialbox.max()<<

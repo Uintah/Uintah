@@ -75,7 +75,8 @@ Roe::Roe(Salmon* s, const clString& id)
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
-  id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
+  id(id),doingMovie(false),makeMPEG(false),
+  curFrame(0),curName("movie")
   {
     inertia_mode=0;
     bgcolor.set(Color(0,0,0));
@@ -585,7 +586,7 @@ void Roe::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 				       pick_obj, pick_pick, pick_n); 
 	    if (pick_obj){
 		update_mode_string(pick_obj);
-		pick_pick->set_index(pick_n);
+		pick_pick->set_picked_obj(pick_obj);
 		pick_pick->pick(this,bs);
 		total_x=0;
 		total_y=0;
@@ -664,7 +665,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 
 	    if (pick_obj){
 		update_mode_string(pick_obj);
-		pick_pick->set_index(pick_n);
+		pick_pick->set_picked_obj(pick_obj);
 		pick_pick->pick(this,bs);
 
 		need_redraw=1;
@@ -752,9 +753,21 @@ void Roe::tcl_command(TCLArgs& args, void*)
     return;
   }
   
-  if (args[1] == "dump_roe") {
-    if (args.count() != 3) {
-      args.error("Roe::dump_roe needs an output file name!");
+  if (args[1] == "sgi_defined") {
+    clString result("");
+#ifdef __sgi
+#if (_MIPS_SZPTR == 64)
+    result += "2";
+#else
+    result += "1";
+#endif
+#else
+    result += "0";
+#endif
+    args.result( result );
+  } else if (args[1] == "dump_roe") {
+    if (args.count() != 4) {
+      args.error("Roe::dump_roe needs an output file name and type");
       return;
     }
 				// We need to dispatch this one to the
@@ -763,10 +776,8 @@ void Roe::tcl_command(TCLArgs& args, void*)
 				// roe gets killed by the time the
 				// redraw message gets dispatched.
     manager->mailbox.send(scinew
-      SalmonMessage(MessageTypes::RoeDumpImage, id, args[2]));
-  }
-  else if (args[1] == "startup") {
-    
+	     SalmonMessage(MessageTypes::RoeDumpImage, id, args[2], args[3]));
+  }else if (args[1] == "startup") {
 				// Fill in the visibility database...
     GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
     
@@ -1235,6 +1246,19 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.14.2.1  2000/09/28 03:16:06  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.17  2000/08/11 15:51:22  bigler
+// Removed set_index(int) calls to GeomPick class and replaced them with
+// set_picked_obj(GeomObj*).
+//
+// Revision 1.16  2000/06/09 17:50:18  kuzimmer
+// Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
+//
+// Revision 1.15  2000/06/07 20:59:26  kuzimmer
+// Modifications to make the image save menu item work on SGIs
+//
 // Revision 1.14  2000/03/17 09:27:17  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

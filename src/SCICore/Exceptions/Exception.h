@@ -25,22 +25,26 @@
 #endif
 
 namespace SCICore {
-    namespace Exceptions {
-	class Exception {
-	public:
-	    Exception();
-	    Exception(const Exception&);
-	    virtual ~Exception();
-	    virtual const char* message() const=0;
-	    virtual const char* type() const=0;
+   namespace Exceptions {
+      class Exception {
+      public:
+	 Exception();
+	 Exception(const Exception&);
+	 virtual ~Exception();
+	 virtual const char* message() const=0;
+	 virtual const char* type() const=0;
+	 const char* stackTrace() const {
+	    return d_stacktrace;
+	 }
 
-	    static void sci_throw(const Exception& exc);
-	    static bool alwaysFalse();
-	protected:
-	private:
-	    Exception& operator=(const Exception&);
-	};
-    }
+	 static void sci_throw(const Exception& exc);
+	 static bool alwaysFalse();
+      protected:
+      private:
+	 Exception& operator=(const Exception&);
+	 const char* d_stacktrace;
+      };
+   }
 }
 
 #endif

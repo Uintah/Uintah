@@ -13,7 +13,7 @@
 #include "RescaleColorMapForParticles.h"
 #include <SCICore/Datatypes/ColorMap.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <Kurt/DataArchive/VisParticleSet.h>
+#include <Kurt/Datatypes/VisParticleSet.h>
 #include <Uintah/Grid/ParticleSubset.h>
 
 namespace Kurt{
@@ -89,12 +89,10 @@ void RescaleColorMapForParticles::execute()
 	min -= 0.001;
       }
 	
-      cmap.detach();
       cmap->Scale( min, max);
       minVal.set( min );
       maxVal.set( max );
     } else {
-      cmap.detach();
       cmap->Scale( minVal.get(), maxVal.get());
     }
     omap->send(cmap);

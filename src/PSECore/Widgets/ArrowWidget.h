@@ -50,22 +50,26 @@ public:
    void SetPosition( const Point& );
    Point GetPosition() const;
    
+   void SetLength( double );
+   double GetLength();
+   
    void SetDirection( const Vector& v );
-   const Vector& GetDirection() const;
+   const Vector& GetDirection();
 
    virtual void widget_tcl( TCLArgs& );
 
-   // Variable indexs
-   enum { PointVar };
+   // Variable indexs         
+   enum { PointVar, HeadVar, DistVar };
 
    // Material indexs
-   enum { PointMatl, ShaftMatl, HeadMatl };
+   enum { PointMatl, ShaftMatl, HeadMatl, ResizeMatl };
 
 protected:
    virtual clString GetMaterialName( const Index mindex ) const;   
    
 private:
    Vector direction;
+   double length;
 };
 
 } // End namespace Widgets
@@ -77,6 +81,16 @@ private:
 
 //
 // $Log$
+// Revision 1.3.2.1  2000/09/28 03:14:24  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.5  2000/06/27 07:57:48  samsonov
+// Added Get/SetLength member function
+//
+// Revision 1.4  2000/06/22 22:39:48  samsonov
+// Added resizing mode
+// Added rotational functionality in respect to base point
+//
 // Revision 1.3  1999/10/07 02:07:23  sparker
 // use standard iostreams and complex type
 //

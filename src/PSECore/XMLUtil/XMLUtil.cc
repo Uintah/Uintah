@@ -68,6 +68,8 @@ DOM_Node findTextNode(DOM_Node node)
 string toString(const XMLCh* const str)
 {
     char* s = XMLString::transcode(str);
+    if(!s)
+       return "";
     string ret = string(s);
     delete[] s;
     return ret;
@@ -76,6 +78,8 @@ string toString(const XMLCh* const str)
 string toString(const DOMString& str)
 {
     char* s = str.transcode();
+    if(!s)
+       return "";
     string ret = string(s);
     delete[] s;
     return ret;
@@ -295,6 +299,14 @@ void appendElement(DOM_Element& root, const DOMString& name,
 }
       
 void appendElement(DOM_Element& root, const DOMString& name,
+		   const Vector& value)
+{
+   ostringstream val;
+   val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
+   appendElement(root, name, val.str());
+}
+      
+void appendElement(DOM_Element& root, const DOMString& name,
 		   long value)
 {
    ostringstream val;
@@ -310,5 +322,193 @@ void appendElement(DOM_Element& root, const DOMString& name,
    appendElement(root, name, val.str());
 }
       
+bool get(const DOM_Node& node, int &value)
+{
+   for (DOM_Node child = node.getFirstChild(); child != 0;
+	child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	 DOMString val = child.getNodeValue();
+	 char* s = val.transcode();
+	 value = atoi(s);
+	 delete[] s;
+	 return true;
+      }
+   }
+   return false;
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, int &value)
+{
+   DOM_Node found_node = findNode(name, node);
+   if(found_node.isNull())
+      return false;
+   return get(found_node, value);
+}
+
+bool get(const DOM_Node& node, long &value)
+{
+   for (DOM_Node child = node.getFirstChild(); child != 0;
+	child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	 DOMString val = child.getNodeValue();
+	 char* s = val.transcode();
+	 value = atoi(s);
+	 delete[] s;
+	 return true;
+      }
+   }
+   return false;
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, long &value)
+{
+   DOM_Node found_node = findNode(name, node);
+   if(found_node.isNull())
+      return false;
+   return get(found_node, value);
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, double &value)
+{
+   DOM_Node found_node = findNode(name, node);
+   if(found_node.isNull())
+      return false;
+   for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	 DOMString val = child.getNodeValue();
+	 char* s = val.transcode();
+	 value = atof(s);
+	 delete[] s;
+	 return true;
+      }
+   }
+   return false;
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, std::string &value)
+{
+   DOM_Node found_node = findNode(name, node);
+   if(found_node.isNull())
+      return false;
+   for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	 DOMString val = child.getNodeValue();
+	 char *s = val.transcode();
+	 value = std::string(s);
+	 delete[] s;
+	 return true;
+      }
+   }
+   return false;
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, 
+		Vector& value)
+{
+   DOM_Node found_node = findNode(name, node);
+   if(found_node.isNull())
+      return false;
+   for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	 DOMString val = child.getNodeValue();
+	 char *s = val.transcode();
+	 string string_value = std::string(s);
+	 delete[] s;
+	 // Parse out the [num,num,num]
+	 // Now pull apart the string_value
+	 std::string::size_type i1 = string_value.find("[");
+	 std::string::size_type i2 = string_value.find_first_of(",");
+	 std::string::size_type i3 = string_value.find_last_of(",");
+	 std::string::size_type i4 = string_value.find("]");
+	
+	 std::string x_val(string_value,i1+1,i2-i1-1);
+	 std::string y_val(string_value,i2+1,i3-i2-1);
+	 std::string z_val(string_value,i3+1,i4-i3-1);
+
+	 value.x(atof(x_val.c_str()));
+	 value.y(atof(y_val.c_str()));
+	 value.z(atof(z_val.c_str()));	
+	 return true;
+      }
+   }
+   return false;
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, 
+		Point& value)
+{
+   Vector v;
+   bool status=get(node, name, v);
+   value=Point(v);
+   return status;
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, 
+		IntVector &value)
+{
+   DOM_Node found_node = findNode(name, node);
+   if(found_node.isNull())
+      return false;
+   for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	 DOMString val = child.getNodeValue();
+	 char *s = val.transcode();
+	 string string_value = std::string(s);
+	 delete[] s;
+	 // Parse out the [num,num,num]
+	 // Now pull apart the string_value
+	 std::string::size_type i1 = string_value.find("[");
+	 std::string::size_type i2 = string_value.find_first_of(",");
+	 std::string::size_type i3 = string_value.find_last_of(",");
+	 std::string::size_type i4 = string_value.find("]");
+	
+	 std::string x_val(string_value,i1+1,i2-i1-1);
+	 std::string y_val(string_value,i2+1,i3-i2-1);
+	 std::string z_val(string_value,i3+1,i4-i3-1);
+			
+	 value.x(atoi(x_val.c_str()));
+	 value.y(atoi(y_val.c_str()));
+	 value.z(atoi(z_val.c_str()));	
+	 return true;
+      }
+   }
+   return false;
+}
+
+bool get(const DOM_Node& node,
+		const std::string& name, bool &value)
+{
+   DOM_Node found_node = findNode(name, node);
+   if(found_node.isNull())
+      return false;
+   for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	 DOMString val = child.getNodeValue();
+	 char *s = val.transcode();
+	 std::string cmp(s);
+	 delete[] s;
+	 if (cmp == "false")
+	    value = false;
+	 else if (cmp == "true")
+	    value = true;
+	
+	 return true;
+      }
+   }
+   return false;
+}
+
 }
 }

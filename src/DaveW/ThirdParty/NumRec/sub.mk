@@ -9,6 +9,7 @@ SRCDIR   := DaveW/ThirdParty/NumRec
 
 SRCS     += $(SRCDIR)/amoeba.cc $(SRCDIR)/amotry.cc $(SRCDIR)/banbks.cc \
 	$(SRCDIR)/bandec.cc $(SRCDIR)/banmprv.cc $(SRCDIR)/banmul.cc \
+	$(SRCDIR)/protozoa.cc \
 	$(SRCDIR)/dpythag.cc $(SRCDIR)/dsvbksb.cc $(SRCDIR)/dsvdcmp.cc \
 	$(SRCDIR)/linbcg.cc $(SRCDIR)/nrutil.cc $(SRCDIR)/plgndr.cc
 
@@ -19,6 +20,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.1  2000/09/28 03:19:38  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.3  2000/09/20 21:27:27  zyp
+# Added protozoa
+#
 # Revision 1.2  2000/03/20 19:36:31  sparker
 # Added VPATH support
 #

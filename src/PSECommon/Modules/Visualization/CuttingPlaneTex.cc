@@ -118,6 +118,11 @@ CuttingPlaneTex::~CuttingPlaneTex()
 {
 }
 
+	
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1184
+#endif
+
 void CuttingPlaneTex::execute()
 {
   int old_grid_id = grid_id;
@@ -264,7 +269,6 @@ void CuttingPlaneTex::execute()
 	  alpha=0.0;
 #endif
 	}
-	
 	grid->set(i, j, matl,sval);
 //	grid->set(i, j, matl,alpha);
       }
@@ -327,6 +331,12 @@ void CuttingPlaneTex::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.8.2.1  2000/09/28 03:15:32  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.9  2000/06/15 19:50:28  sparker
+// Fixed warnings
+//
 // Revision 1.8  2000/03/17 09:27:30  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

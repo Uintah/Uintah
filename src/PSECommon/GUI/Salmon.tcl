@@ -12,9 +12,6 @@ itcl_class PSECommon_Salmon_Salmon {
     constructor {config} {
 	set name Salmon
 	set_defaults
-	set make_progress_graph 0
-	set make_time 0
-	set roe ""
     }
     destructor {
 	foreach rid $roe {
@@ -25,6 +22,10 @@ itcl_class PSECommon_Salmon_Salmon {
     }
 
     method set_defaults {} {
+	set make_progress_graph 0
+	set make_time 0
+	set roe ""
+	
     }
 
     method makeRoeID {} {
@@ -50,13 +51,21 @@ catch {rename Roe ""}
 
 itcl_class Roe {
     public salmon
-	method modname {} {
-	   set n $this
-	   if {[string first "::" "$n"] == 0} {
-	       set n "[string range $n 2 end]"
-	   }
-	   return $n
+    
+    # parameters to hold current state of detachable part
+    protected IsAttached 
+    protected IsDisplayed
+    # hold names of detached and attached windows
+    protected detachedFr
+    protected attachedFr
+
+    method modname {} {
+	set n $this
+	if {[string first "::" "$n"] == 0} {
+	    set n "[string range $n 2 end]"
 	}
+	return $n
+    }
 
     destructor {
     }
@@ -68,6 +77,12 @@ itcl_class Roe {
 	wm title $w "Roe"
 	wm iconname $w "Roe"
 	wm minsize $w 100 100
+	
+	global $this-saveFile
+	global $this-saveType
+	set $this-saveFile "out.raw"
+	set $this-saveType "raw"
+
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
 	menubutton $w.menu.file -text "File" -underline 0 \
@@ -197,12 +212,8 @@ itcl_class Roe {
 	$w.dialbox2 wrapped_dial 2 "Tilt" 0.0 0.0 360.0 1.0 "$this tilt"
 	$w.dialbox2 bounded_dial 3 "FOV" 0.0 0.0 180.0 1.0 "$this fov"
 
-	frame $w.mframe
-	frame $w.mframe.f
-	pack $w.mframe -side bottom -fill x
-	
 	frame $w.bframe
-	pack $w.bframe -side bottom -fill x
+	pack $w.bframe -side top -fill x
 	frame $w.bframe.pf
 	pack $w.bframe.pf -side left -anchor n
 	label $w.bframe.pf.perf1 -width 32 -text "100000 polygons in 12.33 seconds"
@@ -251,102 +262,36 @@ itcl_class Roe {
 		-command "$this addMFrame $w"
 	pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
 
-	set m $w.mframe.f
-	set r "$this-c redraw"
+# AS: initialization of attachment
+	toplevel $w.detached
+	frame $w.detached.f
+	pack $w.detached.f -side top -anchor w -fill x
 	
-	frame $m.eframe
-	checkbutton $m.eframe.light -text Lighting -variable $this-global-light \
-		-command "$this-c redraw"
-	checkbutton $m.eframe.fog -text Fog -variable $this-global-fog \
-		-command "$this-c redraw"
-	checkbutton $m.eframe.bbox -text BBox -variable $this-global-debug \
-		-command "$this-c redraw"
-	checkbutton $m.eframe.clip -text "Use Clip" -variable $this-global-clip \
-		-command "$this-c redraw"
-	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
-		-command "$this-c redraw"
-	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
-	frame $m.eframe.mf
-	label $m.eframe.mf.lf -text "  Frame: "
-	entry $m.eframe.mf.vf -relief sunken -width 4 -textvariable $this-global-movieFrame
-	pack $m.eframe.mf.lf $m.eframe.mf.vf -side left
+	wm title $w.detached "ROE settings"
+	update
+
+	wm sizefrom  $w.detached user
+	wm positionfrom  $w.detached user
+
+	wm protocol $w.detached WM_DELETE_WINDOW "$this removeMFrame $w"
+	wm withdraw $w.detached
 	
-	frame $m.eframe.mn
-	label $m.eframe.mn.ln -text "  Name: "
-	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
-	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
+	frame $w.mframe
+	frame $w.mframe.f
+	pack $w.mframe.f -side top -fill x
+
+	set IsAttached 1
+	set IsDisplayed 0
 	
-	pack $m.eframe -anchor w -padx 2 -side left
-	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
-		-in $m.eframe -side top -anchor w
+	set att_msg "Double-click here to detach - - - - - - - - - - - - - - - - - - - - -"
+	set det_msg "Double-click here to attach - - - - - - - - - - - - - - - - - - - - -"
+	set detachedFr $w.detached
+	set attachedFr $w.mframe
+	init_frame $detachedFr.f $det_msg
+	init_frame $attachedFr.f $att_msg
 
-	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
-		{Wire Flat Gouraud}
-	pack $m.shade -in $m.eframe -side top -anchor w
+# AS: end initialization of attachment
 
-	global "$this-global-light"
-	global "$this-global-fog"
-	global "$this-global-psize"
-	global "$this-global-type"
-	global "$this-global-debug"
-	global "$this-global-clip"
-	global "$this-global-cull"
-	global "$this-global-movie"
-	global "$this-global-movieName"
-	global "$this-global-movieFrame"
-
-	set "$this-global-light" 1
-	set "$this-global-fog" 0
-	set "$this-global-psize" 1
-	set "$this-global-type" Gouraud
-	set "$this-global-debug" 0
-	set "$this-global-clip" 0
-	set "$this-global-cull" 0
-	set "$this-global-movie" 0
-	set "$this-global-movieName" "/tmp/movie"
-	set "$this-global-movieFrame" 0
-
-	frame $m.objlist -relief groove -borderwidth 2
-	pack $m.objlist -side left -padx 2 -pady 2 -fill y
-	label $m.objlist.title -text "Objects:"
-	pack $m.objlist.title -side top
-	canvas $m.objlist.canvas -width 400 -height 100 \
-	        -scrollregion "0 0 400 100" \
-		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0 -yscrollincrement 10
-	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
-	
-	frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
-	pack $m.objlist.canvas.frame
-	$m.objlist.canvas create window 0 1 -window $m.objlist.canvas.frame \
-		-anchor nw
-	
-	scrollbar $m.objlist.scroll -relief sunken \
-		-command "$m.objlist.canvas yview"
-	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
-	
-	global $this-do_stereo
-	set $this-do_stereo 0
-	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
-		-command "$this-c redraw"
-	pack $m.stereo -side top
-
-	global $this-tracker_state
-	set $this-tracker_state 0
-	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
-		-command "$this-c tracker"
-	pack $m.tracker -side top
-
-	global $this-do_bawgl 
-        set $this-do_bawgl 0
-	checkbutton $m.bench -text "SCIBench" -variable $this-do_bawgl \
-                -command "$this bench $this-do_bawgl"
-        pack $m.bench -side top
-
-	button $m.tracker_reset -text " Reset\nTracker" \
-		-command "$this-c reset_tracker"
-	pack $m.tracker_reset -side top
-	
 	switchvisual 0
 	$this-c startup
     }
@@ -381,15 +326,224 @@ itcl_class Roe {
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
     }
+
     method removeMFrame {w} {
-	pack forget $w.mframe.f
-	$w.mframe config -height 1
+
+	if { $IsAttached!=0 } {
+	    pack forget $attachedFr
+	    append geom [winfo width $w] x [expr [winfo height $w]-[winfo height $w.mframe]]
+	    wm geometry $w $geom
+	    update
+	} else { 
+	    wm withdraw $detachedFr
+	}
+	
 	$w.bframe.more configure -command "$this addMFrame $w" -text "+"
+	set IsDisplayed 0
+    }
+    
+    method addMFrame {w} {
+
+	if { $IsAttached!=0} {
+	    pack $attachedFr -anchor w -side top -after $w.bframe
+	    append geom [expr [winfo width $w]>[winfo width $w.mframe] ?[winfo width $w]:[winfo width $w.mframe]] x [expr [winfo height $w]+[winfo reqheight $w.mframe]]
+	    wm geometry $w $geom
+	    update
+	} else {
+	    wm deiconify $detachedFr
+	}
+	$w.bframe.more configure -command "$this removeMFrame $w" -text "-"
+	set IsDisplayed 1
     }
 
-    method addMFrame {w} {
-	pack $w.mframe.f -anchor w
-	$w.bframe.more configure -command "$this removeMFrame $w" -text "-"
+    method init_frame {m msg} {
+	if { [winfo exists $m] } {
+	puts "Initializing frame ... "
+	global "$this-global-light"
+	global "$this-global-fog"
+	global "$this-global-psize"
+	global "$this-global-type"
+	global "$this-global-debug"
+	global "$this-global-clip"
+	global "$this-global-cull"
+	global "$this-global-dl"
+	global "$this-global-movie"
+	global "$this-global-movieName"
+	global "$this-global-movieFrame"
+	
+	global $this-do_stereo
+	global $this-do_bawgl
+	global $this-tracker_state
+	
+	set "$this-global-light" 1
+	set "$this-global-fog" 0
+	set "$this-global-psize" 1
+	set "$this-global-type" Gouraud
+	set "$this-global-debug" 0
+	set "$this-global-clip" 0
+	set "$this-global-cull" 0
+	set "$this-global-dl" 0
+	set "$this-global-movie" 0
+	set "$this-global-movieName" "movie"
+	set "$this-global-movieFrame" 0
+	    
+	set $this-do_stereo 0
+	set $this-do_bawgl 0
+	set $this-tracker_state 0
+	
+	set r "$this-c redraw"
+	bind $m <Double-ButtonPress-1> "$this switch_frames"
+
+	label $m.cut -anchor w -text $msg -font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*"
+	pack $m.cut -side top -anchor w -pady 5 -padx 5
+	bind $m.cut <Double-ButtonPress-1> "$this switch_frames"
+	
+	frame $m.eframe
+	
+	checkbutton $m.eframe.light -text Lighting -variable $this-global-light \
+	    -command "$this-c redraw"
+	checkbutton $m.eframe.fog -text Fog -variable $this-global-fog \
+	    -command "$this-c redraw"
+	checkbutton $m.eframe.bbox -text BBox -variable $this-global-debug \
+	    -command "$this-c redraw"
+	checkbutton $m.eframe.clip -text "Use Clip" -variable $this-global-clip \
+	    -command "$this-c redraw"
+	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
+	    -command "$this-c redraw"
+	checkbutton $m.eframe.dl -text "Display List" \
+	    -variable $this-global-dl -command "$this-c redraw"
+	
+# 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
+# 	frame $m.eframe.mf
+# 	label $m.eframe.mf.lf -text "  Frame: "
+# 	entry $m.eframe.mf.vf -relief sunken -width 4 -textvariable $this-global-movieFrame
+# 	pack $m.eframe.mf.lf $m.eframe.mf.vf -side left
+	
+# 	frame $m.eframe.mn
+# 	label $m.eframe.mn.ln -text "  Name: "
+# 	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
+# 	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
+	
+# 	pack $m.eframe -anchor w -padx 2 -side left
+# 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
+# 		$m.eframe.cull $m.eframe.dl $m.eframe.movie $m.eframe.mf \
+#	         $m.eframe.mn -in $m.eframe -side top -anchor w
+	
+	pack $m.eframe -anchor w -padx 2 -side left
+	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
+		$m.eframe.cull $m.eframe.dl -in $m.eframe -side top -anchor w
+
+        frame $m.eframe.f -relief groove -borderwidth 2
+        pack $m.eframe.f -side top -anchor w
+        label $m.eframe.f.l -text "Record Movie as:"
+        pack $m.eframe.f.l -side top 
+        radiobutton $m.eframe.f.none -text "Stop Recording" \
+            -variable $this-global-movie -value 0 -command "$this-c redraw"
+        radiobutton $m.eframe.f.raw -text "Raw Frames" \
+            -variable $this-global-movie -value 1 -command "$this-c redraw"
+	set sgi [$this-c sgi_defined]
+	if { $sgi == 1 } {
+        radiobutton $m.eframe.f.mpeg -text "Mpeg" \
+            -variable $this-global-movie -value 2 -command "$this-c redraw"
+	} else {
+        radiobutton $m.eframe.f.mpeg -text "Mpeg" \
+            -variable $this-global-movie -value 2 \
+	    -state disabled -disabledforeground "" \
+	    -command "$this-c redraw"
+	}
+        entry $m.eframe.f.moviebase -relief sunken -width 12 \
+	    -textvariable "$this-global-movieName" 
+        pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
+            -side top  -anchor w
+        pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
+
+
+	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
+		{Wire Flat Gouraud}
+	pack $m.shade -in $m.eframe -side top -anchor w
+
+	frame $m.objlist -relief groove -borderwidth 2
+	pack $m.objlist -side left -padx 2 -pady 2 -fill y
+	label $m.objlist.title -text "Objects:"
+	pack $m.objlist.title -side top
+	canvas $m.objlist.canvas -width 400 -height 100 \
+	        -scrollregion "0 0 400 100" \
+		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0 -yscrollincrement 10
+	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
+	
+	frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
+	pack $m.objlist.canvas.frame
+	$m.objlist.canvas create window 0 1 -window $m.objlist.canvas.frame \
+		-anchor nw
+	
+	scrollbar $m.objlist.scroll -relief sunken \
+		-command "$m.objlist.canvas yview"
+	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
+	
+	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
+		-command "$this-c redraw"
+	pack $m.stereo -side top
+
+	# the stuff below doesn't have corresponding c-functions
+	
+	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
+		-command "$this-c tracker"
+	pack $m.tracker -side top
+
+	
+	checkbutton $m.bench -text "SCIBench" -variable $this-do_bawgl \
+                -command "$this bench $this-do_bawgl"
+        pack $m.bench -side top
+
+	button $m.tracker_reset -text " Reset\nTracker" \
+		-command "$this-c reset_tracker"
+	pack $m.tracker_reset -side top
+        } else {
+	    puts "Non-existing frame to initialize!"
+	}
+    }
+
+    method switch_frames {} {
+	set w .ui[modname]
+	if {$IsDisplayed!=0} {
+#	    update
+# getting current window position
+#	    set geom [wm geometry $w]
+#	    set f [string first "+" $geom]
+#	    set s [string first "-" $geom]
+#	    if { [expr $f >= 0 && $s>=0] } {    
+#		set ind [expr $f>$s ? $s:$f]
+#	    } else {
+#		set ind [expr $f>$s ? $f:$s]
+#	    }
+		
+#	    if {$ind >=0} {
+#		set pos [string range $geom $ind [expr [string length $geom]-1]]
+#	    } else {
+#		set pos ""
+#	    }
+
+#	    set geom ""
+
+	    # handling main window resizing by hand
+  	    
+	    if { $IsAttached!=0} {
+		pack forget $attachedFr
+		
+		append geom [winfo width $w] x [expr [winfo height $w]-[winfo reqheight $w.mframe]]
+		wm geometry $w $geom
+		wm deiconify $detachedFr
+		set IsAttached 0
+	    } else {
+		wm withdraw $detachedFr
+		
+		pack $attachedFr -anchor w -side top -after $w.bframe
+		append geom [winfo width $w] x [expr [winfo height $w]+[winfo reqheight $w.mframe]]
+		wm geometry $w $geom
+		set IsAttached 1
+	    }
+	    update
+	}
     }
 
     method switchRenderer {renderer} {
@@ -480,9 +634,9 @@ itcl_class Roe {
 		-digits 3 \
 		-command $c
 	pack $w.f.fov -expand yes -fill x
-# 	entry $w.f.fove -textvariable $view-fov
-# 	pack $w.f.fove -side top -expand yes -fill x
-# 	bind $w.f.fove <Return> "$command $view-fov"
+#  	entry $w.f.fove -textvariable $view-fov
+#  	pack $w.f.fove -side top -expand yes -fill x
+#  	bind $w.f.fove <Return> "$command $view-fov"
     }
 
     method makeBackgroundPopup {} {
@@ -502,8 +656,13 @@ itcl_class Roe {
     }   
 
     method addObject {objid name} {
+	addObjectToFrame $objid $name $detachedFr
+	addObjectToFrame $objid $name $attachedFr
+    }
+
+    method addObjectToFrame {objid name frame} {
 	set w .ui[modname]
-	set m $w.mframe.f
+	set m $frame.f
 	frame  $m.objlist.canvas.frame.objt$objid
 	checkbutton $m.objlist.canvas.frame.obj$objid -text $name \
 		-relief flat -variable "$this-$name" -command "$this-c redraw"
@@ -525,6 +684,8 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	$menun add checkbutton -label "Back Cull" -variable $this-$objid-cull \
 		-command "$this-c redraw"
+	$menun add checkbutton -label "Display List" -variable $this-$objid-dl\
+		-command "$this-c redraw"
 
 	global "$this-$objid-light"
 	global "$this-$objid-fog"
@@ -532,6 +693,7 @@ itcl_class Roe {
 	global "$this-$objid-debug"
 	global "$this-$objid-clip"
 	global "$this-$objid-cull"
+	global "$this-$objid-dl"
 
 	set "$this-$objid-type" Default
 	set "$this-$objid-light" 1
@@ -539,6 +701,7 @@ itcl_class Roe {
 	set "$this-$objid-debug" 0
 	set "$this-$objid-clip" 0
 	set "$this-$objid-cull" 0
+	set "$this-$objid-dl" 0
 
 	set menuvar  $m.objlist.canvas.frame.menu2_$objid
 	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]
@@ -562,17 +725,28 @@ itcl_class Roe {
 	set view [$m.objlist.canvas yview]
 	$m.objlist.scroll set [lindex $view 0] [lindex $view 1]
     }
-    
+
     method addObject2 {objid} {
+	addObjectToFrame_2 $objid $detachedFr
+	addObjectToFrame_2 $objid $attachedFr
+    }
+    
+    method addObjectToFrame_2 {objid frame} {
 	set w .ui[modname]
-	set m $w.mframe.f
+	set m $frame.f
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
 	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
+
     method removeObject {objid} {
+	removeObjectFromFrame $objid $detachedFr
+	removeObjectFromFrame $objid $attachedFr
+    }
+
+    method removeObjectFromFrame {objid frame} {
 	set w .ui[modname]
-	set m $w.mframe.f
+	set m $frame.f
 	pack forget $m.objlist.canvas.frame.objt$objid
     }
 
@@ -924,5 +1098,64 @@ itcl_class Roe {
     method doSaveObjects {} {
 	global $this-saveobjfile $this-saveformat
 	$this-c saveobj [set $this-saveobjfile] [set $this-saveformat]
+    }
+    method makeSaveImagePopup {} {
+	global $this-saveFile
+	global $this-saveType
+	toplevel .ui[modname]-saveImage
+	set w .ui[modname]-saveImage
+	makeFilebox $w \
+	    $this-saveFile "$this doSaveImage" \
+	    "destroy $w"
+	#$w.f.sel.sel configure -textvariable $saveFile
+	set ex $w.f.extra
+	radiobutton $ex.raw -variable $this-saveType \
+	    -text "Raw File" -value "raw" \
+	    -command "$this changeName $w raw"
+	pack $ex.raw -side top -anchor w
+	set sgi [$this-c sgi_defined]
+	if { $sgi == 1 || $sgi == 2 } {
+	    radiobutton $ex.rgb -variable $this-saveType \
+		-text "SGI RGB File" -value "rgb" \
+	    -command "$this changeName $w rgb"
+	    radiobutton $ex.ppm -variable $this-saveType \
+		-text "PPM File" -value "ppm" \
+	    -command "$this changeName $w ppm"
+	    radiobutton $ex.jpg -variable $this-saveType \
+		-text "JPEG File" -value "jpg" \
+	    -command "$this changeName $w jpg"
+	} else {
+	    radiobutton $ex.rgb -variable $this-saveType \
+		-text "SGI RGB File" -value "rgb" \
+		-state disabled -disabledforeground ""
+	    radiobutton $ex.ppm -variable $this-saveType \
+		-text "PPM File" -value "ppm" \
+		-state disabled -disabledforeground ""
+
+	    radiobutton $ex.jpg -variable $this-saveType \
+		-text "JPEG File" -value "jpg" \
+		-state disabled -disabledforeground ""
+	}
+
+	if { [set $this-saveType] == "rgb" } { 
+	    $ex.rgb select 
+	} elseif { [set $this-saveType] == "ppm" } {
+	    $ex.ppm select
+	} elseif { [set $this-saveType] == "jpg" } {
+	    $ex.jpg select
+	} else { $ex.raw select }
+	pack $ex.rgb $ex.ppm $ex.jpg -side top -anchor w
+    }
+
+    method changeName { w type} {
+	global $this-saveFile
+	set name [split [set $this-saveFile] .]
+	set newname [lreplace $name end end $type]
+	set $this-saveFile [join $newname .]
+    }
+    method doSaveImage {} {
+	global $this-saveFile
+	global $this-saveType
+	$this-c dump_roe [set $this-saveFile] [set $this-saveType]
     }
 }

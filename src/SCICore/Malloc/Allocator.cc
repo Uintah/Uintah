@@ -32,6 +32,9 @@
     #include <bstring.h>
   #endif
 #endif
+#ifdef __linux
+#include <string.h>
+#endif
 
 #include <stdio.h>
 #include <sci_config.h>
@@ -339,7 +342,7 @@ Allocator* MakeAllocator()
     int nmedium=NMEDIUM_BINS;
     size+=nmedium*sizeof(AllocBin);
 
-    OSHunk* alloc_hunk=OSHunk::alloc(size);
+    OSHunk* alloc_hunk=OSHunk::alloc(size, false);
     Allocator* a=(Allocator*)alloc_hunk->data;
     alloc_hunk->spaceleft=0;
     alloc_hunk->next=0;
@@ -386,30 +389,10 @@ Allocator* MakeAllocator()
 
     // Setup the lock...
     a->initlock();
-    if(getenv("MALLOC_STATS")){
-	// Set the default allocator, since the fopen below may
-	// call malloc.
-	if(!default_allocator)
-	    default_allocator=a;
-	char* file=getenv("MALLOC_STATS");
-	if(strlen(file) == 0){
-	    a->stats_out=stderr;
-	} else {
-	    a->stats_out=fopen(file, "w");
-	    setvbuf(a->stats_out, (char*)a->alloc(4096+BUFSIZ, "Malloc stats buffer"), _IOFBF, 4096+BUFSIZ);
-	    if(!a->stats_out){
-		perror("fopen");
-		fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
-			file);
-		a->stats_out=0;
-	    }
-	}
-	if(a->stats_out){
-	    atexit(shutdown);
-	}
-    } else {
-	a->stats_out=0;
-    }
+
+    // Must run this block of code before the MALLOC_STATS code
+    // because the "alloc" in the MALLOC_STATS block uses the
+    // "trace_out" var that is set here.
     if(getenv("MALLOC_TRACE")){
 	// Set the default allocator, since the fopen below may
 	// call malloc.
@@ -436,6 +419,31 @@ Allocator* MakeAllocator()
 	}
     } else {
 	a->trace_out=0;
+    }
+
+    if(getenv("MALLOC_STATS")){
+	// Set the default allocator, since the fopen below may
+	// call malloc.
+	if(!default_allocator)
+	    default_allocator=a;
+	char* file=getenv("MALLOC_STATS");
+	if(strlen(file) == 0){
+	    a->stats_out=stderr;
+	} else {
+	    a->stats_out=fopen(file, "w");
+	    setvbuf(a->stats_out, (char*)a->alloc(4096+BUFSIZ, "Malloc stats buffer"), _IOFBF, 4096+BUFSIZ);
+	    if(!a->stats_out){
+		perror("fopen");
+		fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
+			file);
+		a->stats_out=0;
+	    }
+	}
+	if(a->stats_out){
+	    atexit(shutdown);
+	}
+    } else {
+	a->stats_out=0;
     }
 
     return a;
@@ -558,7 +566,7 @@ void* Allocator::alloc_big(size_t size, const char* tag)
 	size_t npages=(tsize+4095)/4096;
 	tsize=npages*4096;
 	tsize-=sizeof(OSHunk);
-	OSHunk* hunk=OSHunk::alloc(tsize);
+	OSHunk* hunk=OSHunk::alloc(tsize, true);
 	nmmap++;
 	sizemmap+=tsize+sizeof(OSHunk);
 	size_t diffmmap=sizemmap-sizemunmap;
@@ -829,7 +837,7 @@ void Allocator::fill_bin(AllocBin* bin)
 	OSHunk* hunk;
 	void* p;
 	get_hunk(reqsize, hunk, p);
-	for(int i=0;i<nalloc;i++){
+	for(int i=0;i<(int)nalloc;i++){
 	    Tag* t=(Tag*)p;
 	    t->bin=bin;
 	    t->tag="never used";
@@ -993,7 +1001,7 @@ void Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
     if(!hunk){
 	// Always request big chunks
 	size_t s=reqsize>NORMAL_OS_ALLOC_SIZE?reqsize:NORMAL_OS_ALLOC_SIZE;
-	hunk=OSHunk::alloc(s);
+	hunk=OSHunk::alloc(s, false);
 	hunk->next=hunks;
 	hunks=hunk;
 	hunk->spaceleft=s;
@@ -1192,6 +1200,23 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.10.2.1  2000/09/28 03:12:24  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.14  2000/09/25 19:47:33  sparker
+// Quiet warnings under g++
+//
+// Revision 1.13  2000/09/25 18:00:42  sparker
+// Added throw() to C declarations
+// Find bzero in string.h for linux
+//
+// Revision 1.12  2000/08/08 22:03:21  dav
+// moved the MALLOC_TRACE code block above the MALLOC_STATS block because it sets a var used by MALLOC_STATS
+//
+// Revision 1.11  2000/07/27 07:41:48  sparker
+// Distinguish between "returnable" chunks and non-returnable chucks of memory
+// Make malloc get along with SGI's MPI
+//
 // Revision 1.10  2000/02/24 06:04:54  sparker
 // 0xffff5a5a (NaN) is now the fill pattern
 // Added #if 1 to malloc/new.cc to make it easier to turn them on/off

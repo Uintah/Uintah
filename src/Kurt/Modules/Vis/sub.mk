@@ -10,21 +10,22 @@ SRCDIR   := Kurt/Modules/Vis
 SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/TextureVolVis.cc \
 		$(SRCDIR)/TexCuttingPlanes.cc \
-		$(SRCDIR)/VolVis.cc \
-		$(SRCDIR)/ArchiveReader.cc \
-		$(SRCDIR)/KurtScalarFieldReader.cc \
-		$(SRCDIR)/VisControl.cc \
+		$(SRCDIR)/ParticleColorMapKey.cc \
 		$(SRCDIR)/RescaleColorMapForParticles.cc \
-		$(SRCDIR)/ParticleVis.cc
-
+		$(SRCDIR)/AnimatedStreams.cc 
+#		$(SRCDIR)/VolVis.cc \
+#		$(SRCDIR)/KurtScalarFieldReader.cc \
+#		$(SRCDIR)/VisControl.cc \
+#		$(SRCDIR)/ParticleVis.cc \
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Thread SCICore/Persistent SCICore/Exceptions \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
-        SCICore/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
-	SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
-	Kurt/Datatypes Kurt/DataArchive Kurt/Geom 
+        SCICore/Geom SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
+	Kurt/Datatypes SCICore/Util \
+	Uintah/Datatypes Uintah/Grid Uintah/Interface Uintah/Exceptions 
+
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -33,6 +34,39 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4.2.1  2000/09/28 03:18:07  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.14  2000/09/27 16:24:08  kuzimmer
+# changes made to reflect the moved VisParticleSet files
+#
+# Revision 1.13  2000/09/26 19:02:45  kuzimmer
+# to remove dependency on libKurt_Geom.so
+#
+# Revision 1.12  2000/09/26 18:24:39  kuzimmer
+# to remove dependency on libKurt_DataArchive.so
+#
+# Revision 1.11  2000/09/21 22:22:49  kuzimmer
+# some lines that weren't supposed to be commented out were.  fixed.
+#
+# Revision 1.10  2000/09/20 22:47:13  kuzimmer
+# changes so that the Kurt subtree can be compiled without Uintah by commenting out a few lines.
+#
+# Revision 1.9  2000/09/17 16:05:07  kuzimmer
+# C++ code for animated streams
+#
+# Revision 1.8  2000/06/21 04:14:16  kuzimmer
+# removed unneeded dependencies on Kurt
+#
+# Revision 1.7  2000/06/15 19:49:39  sparker
+# Link against SCICore/Util
+#
+# Revision 1.6  2000/06/13 20:28:16  kuzimmer
+# Added a colormap key sticky for particle sets
+#
+# Revision 1.5  2000/06/05 21:10:31  bigler
+# Added new module to visualize UINTAH grid
+#
 # Revision 1.4  2000/05/25 18:24:24  kuzimmer
 # removing old volvis directory
 #

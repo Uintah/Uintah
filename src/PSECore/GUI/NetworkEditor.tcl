@@ -19,6 +19,15 @@ set SCALEY [expr $mainCanvasHeight/$miniCanvasHeight]
 set mouseX 0
 set mouseY 0
 
+global maincanvas
+set maincanvas ".bot.neteditFrame.canvas"
+global minicanvs
+set minicanvas ".top.globalViewFrame.canvas"
+
+global loading
+set loading 0
+
+
 proc resource {} {
 }
 
@@ -29,12 +38,11 @@ proc makeNetworkEditor {} {
 
     frame .main_menu -relief raised -borderwidth 3
     pack .main_menu -fill x
+    
     menubutton .main_menu.file -text "File" -underline 0 \
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu -tearoff false
     menu .main_menu.file.menu.new -tearoff false
-    .main_menu.file.menu.new add command -label "Package..." \
-        -underline 0 -command "CreateNewPackage"
     .main_menu.file.menu.new add command -label "Module..." \
         -underline 0 -command "CreateNewModule"
     .main_menu.file.menu add command -label "Save..." -underline 0 \
@@ -50,6 +58,7 @@ proc makeNetworkEditor {} {
 
     .main_menu.file.menu add command -label "Quit" -underline 0 \
 	    -command "netedit quit"
+
 
     menubutton .main_menu.stats -text "Statistics" -underline 0 \
 	-menu .main_menu.stats.menu
@@ -426,12 +435,16 @@ proc addModuleAtMouse { package category module } {
 
 proc addModuleAtPosition {package category module xpos ypos} {
     global mainCanvasWidth mainCanvasHeight
+    global loading
+
     set mainCanvasWidth 4500
     set mainCanvasHeight 4500
-        set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
     
-    set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
-
+    # create the modules at their relative positions only when not loading from a script.
+    
+	set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
+	set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+    
     set modid [netedit addmodule "$package" "$category" "$module"]
     # Create the itcl object
     set className [removeSpaces "${package}_${category}_${module}"]
@@ -451,6 +464,11 @@ proc addModuleAtPosition {package category module xpos ypos} {
 proc addConnection {omodid owhich imodid iwhich} {
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
+    
+    global connection_list
+    set connection_list "$connection_list {$omodid $owhich $imodid $iwhich\
+	    $portcolor}"
+    
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
     configureOPorts $omodid
     configureIPorts $imodid
@@ -484,6 +502,7 @@ proc popupSaveMenu {} {
 			       -filetypes $types ]
 
     if { $netedit_savefile != "" } {
+	saveMacroModules
 	netedit savenetwork  $netedit_savefile
     }
 }
@@ -499,45 +518,185 @@ proc popupLoadMenu {} {
     set netedit_loadfile [tk_getOpenFile -filetypes $types ]
     
     if { [file exists $netedit_loadfile] } {
-	source $netedit_loadfile
+	loadfile $netedit_loadfile
     }
 }
 
-proc CreateNewPackage {} {
-    set w .newpackagedialog
+proc CreateNewModule {} {
+    set w .newmoduledialog
     if {[winfo exists $w]} {
 	destroy $w
     }
 
     toplevel $w
-    wm title $w "Create a new module package"
+    wm title $w "Create New Module"
     frame $w.ftop
+    frame $w.ftop.row1
+    frame $w.ftop.row2
+    frame $w.ftop.row3
     frame $w.fbot
-    label $w.ftop.namelabel -text "New package name:"
-    entry $w.ftop.name -width 30 -background grey90 -relief sunken 
-    button $w.fbot.ok -text "Ok" -command CreateNewPackageOk
-    button $w.fbot.cancel -text "Cancel" -command CreateNewPackageCancel
-    pack $w.ftop $w.fbot -side top
-    pack $w.ftop.namelabel $w.ftop.name \
-         $w.fbot.ok $w.fbot.cancel -side left -padx 5 -pady 5
-
-    focus $w.ftop.name
+    label $w.ftop.row1.namelabel -text "New module name:"
+    entry $w.ftop.row1.name -width 30 -background grey90 -relief sunken
+    label $w.ftop.row2.packagelabel -text "Insert into package:"
+    entry $w.ftop.row2.package -width 30 -background grey90 -relief sunken
+    label $w.ftop.row3.categorylabel -text "Insert into category:"
+    entry $w.ftop.row3.category -width 30 -background grey90 -relief sunken
+    button $w.fbot.ok -text "Ok" -command CreateNewModuleOk
+    button $w.fbot.cancel -text "Cancel" -command CreateNewModuleCancel
+    pack $w.ftop $w.ftop.row1 $w.ftop.row2 $w.ftop.row3 $w.fbot
+    pack $w.ftop.row1.namelabel $w.ftop.row1.name -side left -padx 5 -pady 5
+    pack $w.ftop.row2.packagelabel $w.ftop.row2.package \
+         -side left -padx 5 -pady 5
+    pack $w.ftop.row3.categorylabel $w.ftop.row3.category \
+         -side left -padx 5 -pady 5
+    pack $w.fbot.ok $w.fbot.cancel -side left -padx 5 -pady 5
+    bind $w <KeyPress-Return> CreateNewModuleOk
+    focus $w.ftop.row1.name
+    grab set $w
     tkwait window $w
 }
 
-proc CreateNewPackageOk {} {
-    set w .newpackagedialog
-    set name [$w.ftop.name get]
-    netedit create_new_package $name
-    CreateNewPackageCancel
+proc CreateNewModuleOk {} {
+    set w .newmoduledialog
+    set module [$w.ftop.row1.name get]
+    set package [$w.ftop.row2.package get]
+    set category [$w.ftop.row3.category get]
+
+    if {$module=="" || $package=="" || $category==""} {
+	messagedialog "ERROR"\
+                      "One or more of the entries was left blank.\
+                       All entries must be filled in."
+	return
+    }
+
+    if {![file exists ./$package]} {
+	yesnodialog "PACKAGE NAME WARNING" \
+                    "Package \"$package\" does not exist. \
+                     Create it now? \n \
+                     (If yes, the category \"$category\"\
+                     will also be created.)" \
+		    "netedit create_pac_cat_mod $package $category $module;\
+                     destroy $w;\
+                     newpackagemessage $package"
+	return
+    }
+
+    if {![file isdirectory ./$package]} {
+	messagedialog "PACKAGE NAME ERROR" \
+                      "The name \"./$package\" is already in use\
+                       by a non-package file"
+	return
+    }
+
+    if {![expr [file exists ./$package/Modules] && \
+               [file isdirectory ./$package/Modules] && \
+               [file exists ./$package/components.xml] && \
+               ![file isdirectory ./$package/components.xml] && \
+               [file exists ./$package/sub.mk] && \
+               ![file isdirectory ./$package/sub.mk]]} {
+	messagedialog "PACKAGE ERROR" \
+                      "The file \"./$package\" does not appear\
+                       to be a valid package or is somehow corrupt.\
+                       The module \"$module\" will not be added.\n\n\
+                       See the \"Create A New Module\" documentation for\
+                       more information."
+	return
+    }
+             
+    if {![file exists ./$package/Modules/$category]} {
+	yesnodialog "CATEGORY NAME WARNING" \
+                    "Category \"$category\" does not exist.\
+                     Create it now?" \
+		    "netedit create_cat_mod $package $category $module;\
+                     destroy $w;\
+		     newmodulemessage $module"
+	return
+    }
+
+    if {![file isdirectory ./$package/Modules/$category]} {
+	messagedialog "CATEGORY NAME ERROR" \
+                      "The name \"./$package/Modules/$category\"\
+                       is already in use by a non-category file"
+	return	
+    }
+
+    if {![file exists ./$package/Modules/$category/sub.mk]} {
+	messagedialog "CATEGORY ERROR" \
+                      "The file \"./$package/Modules/$category\"\
+                       does not appear to be a valid category or is\
+                       somehow corrupt.  The Module \"$module\" will\
+                       not be added.\n\n\
+                       See the \"Create A New Module\" documentation for\
+                       more information."
+	return
+    }
+
+    if {[file exists ./$package/Modules/$category/$module.cc]} {
+	messagedialog "MODULE NAME ERROR" \
+		      "The name \"./$package/Modules/$category/$module\"\
+                       is already in use by another file"
+	return
+    }
+
+    netedit create_mod $package $category $module
+    destroy $w
+    newmodulemessage $module
 }
 
-proc CreateNewPackageCancel {} {
-    destroy .newpackagedialog
+proc newpackagemessage {pac} {
+    messagedialog "FINISHED CREATING NEW MODULE"\
+                  "In order to use the newly created package \
+                   you will first have to close, \
+                   reconfigure (i.e. configure --enable-package=\"$pac\"), \
+                   and rebuild the PSE."
 }
-    
-proc CreateNewModule {} {
-    puts "Create New Module: Not yet implemented."
+
+proc newmodulemessage {mod} {
+    messagedialog "FINISHED CREATING NEW MODULE"\
+	          "In order to use \"$mod\" you will first have to\
+                   close, and then rebuild, the PSE."
+}
+                   
+proc CreateNewModuleCancel {} {
+    destroy .newmoduledialog
+}
+
+proc messagedialog {title message} {
+    set w .errordialog
+    if {[winfo exists $w]} {
+	destroy $w
+    }
+
+    toplevel $w 
+    wm title $w $title
+    text $w.message -width 60 -height 10 -wrap word -relief flat
+    $w.message insert 0.1 $message
+    button $w.ok -text "Ok" -command "destroy $w"
+    pack $w.message $w.ok -side top -padx 5 -pady 5
+    focus $w.ok
+    grab set $w
+    tkwait window $w
+}
+
+proc yesnodialog {title message command} {
+    set w .yesnodialog
+    if {[winfo exists $w]} {
+	destroy $w
+    }
+
+    toplevel $w
+    wm title $w $title
+    frame $w.top
+    frame $w.bot
+    label $w.top.message -width 60 -text $message
+    button $w.bot.yes -text "Yes" -command "$command;destroy $w"
+    button $w.bot.no -text "no" -command "destroy $w"
+    pack $w.top $w.bot
+    pack $w.top.message -padx 5 -pady 5
+    pack $w.bot.yes $w.bot.no -side left -padx 5 -pady 5 
+    focus $w
+    grab set $w
+    tkwait window $w
 }
 
 # This proc was added by Mohamed Dekhil to save some info about the net
@@ -654,3 +813,263 @@ proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toMod
     set toClassName [removeSpaces "${toPackage}_${toCategory}_${toModule}"]
     itcl_class $toClassName "inherit $fromClassName"
 }
+
+proc loadfile {netedit_loadfile} {
+    global loading
+    set loading 0
+    set group_info [sourcefile $netedit_loadfile]
+    set loading 1
+
+    if { ! [string match $group_info ""] } {
+	[loadMacroModules $group_info]
+    }
+}
+
+proc sourcefile {netedit_loadfile} {
+    # set loading to 1
+    global loading
+    set loading 1
+
+    # Check to see of the file exists; exit if it doesn't
+    if { ! [file exists $netedit_loadfile] } {
+	puts "$netedit_loadfile: no such file"
+	return
+    }
+    
+    set fchannel [open $netedit_loadfile]
+    
+    set curr_line ""
+    set stage 1
+
+    global info_list
+    set info_list ""
+
+    # Used in tracking modnames
+    set curr_modname ""
+    set counter -1
+
+    # read in the first line of the file
+    set curr_line [gets $fchannel]
+    
+    set group_info ""
+    
+    while { ! [eof $fchannel] } {
+	# Stage 1: Source basic variables
+	if { $stage == 1 } {
+	    if { [string match "set m*" $curr_line] } {
+		# Go on to stage 2, not moving on to the next line of the file
+		set stage 2
+		continue
+	    } elseif { [string match "loadfile *" $curr_line] } {
+		# do nothing
+	    } elseif { [string match "return" $curr_line] } {
+		# do nothing
+	    } elseif { [string match "puts *" $curr_line] } {
+		# do nothing
+	    } else {
+		# Execute the line (comments and/or blank lines are ignored)
+		eval $curr_line
+	    }
+	}
+	
+	# Stage 2: Create Modules
+	if { $stage == 2 } {
+	    if { [string match "set m*" $curr_line] } {
+		# build the module
+		eval $curr_line
+	    } elseif { [string match $curr_line "addConnection*"] } {
+		# add connections
+		eval $curr_line
+	    } elseif { [string match $curr_line ""] } {
+		# do nothing
+	    } elseif { [string match "addConnection*" $curr_line] } {
+		eval $curr_line
+	    } else {
+		# Move on to the next stage
+		set stage 3
+		continue
+	    }
+	}
+
+	# Stage 3: do some stuff
+	if { $stage == 3 } {
+	    if { [string match "set ::*" $curr_line] } {
+		set curr_string $curr_line
+		set var [string trimleft $curr_string "set :"]
+
+		set c 0
+		set t 0
+		set pram ""
+		set modname ""
+		while { 1 } {
+		    set char [string index $var $c]
+		    
+		    # Check for -'s; if one is found, begin getting
+		    # the variable name
+		    
+		    if { [string match $char "-"] } {
+			set t 1
+		    }
+		    
+		    # Break if there is a space
+		    
+		    if { [string match $char " "] } {
+			break
+		    }
+
+		    # If the dash has been seen, begin getting the
+		    # variable name...
+
+		    if { $t == 1 } {
+			set pram "$pram$char"
+		    } else {
+			set modname "$modname$char"
+		    }
+		    
+		    # increment the counter...
+		    incr c
+		}
+		
+		set value [list [lindex $var 1]]
+		# Increment the counter each time the modname changes
+		
+		if { ! [string match $modname $curr_modname] } {
+		    incr counter
+		    set curr_modname $modname
+		}
+		
+		if { [string match $value ""] } {
+		    set value "{}"
+		}
+		
+		set mvar "m$counter"
+		set m [expr $$mvar]
+		
+		set command "set ::$m"
+		append command "$pram $value"
+		
+		# Execute the "real" command
+		eval $command
+		
+		if { [string match "*-group*" $command] } {
+		    global $m-group
+		    set grp [lindex [set $m-group] 0]
+		    if { ! [string match $grp ""] } {
+			set group_info "$group_info {$m $grp}"
+		    }
+		}
+
+
+	    } elseif { [string match $curr_line ""] } {
+		# do nothing
+	    } else {
+		set stage 4
+		continue
+	    }
+	}
+	
+	# one last source (this will need to be changed)
+	if { $stage == 4 } {
+	    eval $curr_line
+	}
+	
+	# Read the next line of the file
+	set curr_line [gets $fchannel]
+	
+	# break out of loop, if at end of file
+	if { [eof $fchannel] } {
+	    break
+	}
+    }
+    
+    # close the file
+    close $fchannel
+
+
+    # set loading back to 0
+    set loading 0
+
+    return $group_info
+}
+
+proc loadMacroModules {group_info} {
+    # Generate group lists
+    set mmlist ""
+    foreach ginf $group_info {
+	set num [lindex $ginf 1]
+	set mod [lindex $ginf 0]
+	if { [string match "*group$num*" $mmlist] } {
+	    set group$num "[set group$num] $mod"
+	} else {
+	    set group$num $mod
+	    set mmlist "$mmlist group$num"
+	}
+    }
+
+
+    if { ! [string match $mmlist ""] } {
+	# move the modules into their correct positions
+	global maincanvas
+	global minicanvas
+
+	set mainCanvasWidth 4500
+	set mainCanvasHeight 4500
+
+	
+	foreach l $mmlist {
+	    foreach mod [set $l] {
+		global $mod-lastpos
+		set lastpos [set $mod-lastpos]
+		
+		set lastx [lindex $lastpos 0]
+		set lasty [lindex $lastpos 1]
+
+		
+		set movx [$mod get_x]
+		set movy [$mod get_y]
+		
+		
+
+		set mx [expr -$movx+$lastx]
+		set my [expr -$movy+$lasty]
+		
+		$maincanvas move $mod $mx $my
+		
+
+		# account for any scrolling...
+		
+		set xv [lindex [$maincanvas xview] 0]
+		set yv [lindex [$maincanvas yview] 0]
+
+		set xs [expr $xv*$mainCanvasWidth]
+		set ys [expr $yv*$mainCanvasWidth]
+
+		$maincanvas move $mod $xs $ys
+		
+
+		
+		
+
+	    }
+	}
+	
+
+	foreach l $mmlist {
+	    global CurrentlySelectedModules
+	    set temp $CurrentlySelectedModules
+	    set CurrentlySelectedModules "[set $l]"
+	    set curr_mod [lindex $CurrentlySelectedModules 0]
+	    set macro [makeMacroModule $maincanvas $minicanvas $curr_mod]
+	    rebuildMModuleConnections $macro
+	    set CurrentlySelectedModules $temp
+	}
+    }   
+}
+
+
+
+
+
+
+
+

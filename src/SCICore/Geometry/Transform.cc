@@ -13,8 +13,6 @@
  */
 
 #include <SCICore/Geometry/Transform.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/Trig.h>
 #include <iostream>
@@ -39,6 +37,10 @@ Transform::Transform(const Transform& copy)
 	}
     }
     inverse_valid=copy.inverse_valid;
+}
+
+Transform::Transform(const Point& p, const Vector& i, const Vector& j, const Vector& k){
+  load_frame(p, i, j, k);
 }
 
 Transform::~Transform()
@@ -147,30 +149,37 @@ void Transform::post_scale(const Vector& v)
     inverse_valid=0;
 }
 
-void Transform::build_shear(double mat[4][4], Vector n, 
-			    const Vector& s, double d) {
+// rotate into a new frame (z=shear-fixed-plane, y=projected shear vector),
+//    shear in y (based on value of z), rotate back to original frame
+void Transform::build_shear(double mat[4][4], const Vector& s, const Plane& p) 
+{    
     load_identity(mat);
-    Vector u, v;
-    if (n.length() == 0) n.x(1.);
-    n.normalize();
-    n.find_orthogonal(u, v);
-    v=-v; u=-u;
-    Point p;
-    Transform b;
-    b.load_frame(p, n, u, v);
-    double projN=Dot(s,n);
-    if (projN==0) return;
-    double projU=Dot(s,u);
-    double projV=Dot(s,v);
+    Vector sv(p.project(s));	// s projected onto p
+    Vector dn(s-sv);	// difference (in normal direction) btwn s and sv
+    double d=Dot(dn,p.normal());
+    if (fabs(d)<0.00001) {
+	cerr << "Error - shear vector lies in shear fixed plane.  Returning identity.\n";
+	return;
+    }
+    double yshear=sv.length()/d; // compute the length of the shear vector,
+ 	                         // after the normal-to-shear-plane component
+                                 // has been made unit-length.
+    Vector svn(sv);
+    svn.normalize();	// normalized vector for building orthonormal basis
+//    Vector su(Cross(sv,p.normal()));
+    Vector su(Cross(p.normal(),sv));
+    Transform r;	// the rotation to take the z-axis to the shear normal
+                        // and the y-axis to the projected shear vector
+    Point dummy;
+    r.load_frame(dummy, su, sv, p.normal());
+//    r.invert();
     Transform sh;
     double a[16];
     sh.get(a);
-    a[4]=projU/projN;
-    a[8]=projV/projN;
+    a[6]=yshear;
+    a[7]=-yshear*p.eval_point(Point(0,0,0));  // this last piece is "d" from the plane
     sh.set(a);
-    sh.change_basis(b);
-    Vector t(u*(Dot(s,u)*-d)+v*(Dot(s,v)*-d));
-    sh.post_translate(t);
+    sh.change_basis(r);
     sh.get(a);
     double *ptr=&(a[0]);
     for (int i=0; i<4; i++)
@@ -178,18 +187,18 @@ void Transform::build_shear(double mat[4][4], Vector n,
 	    mat[i][j]=*ptr++;
 }
 
-void Transform::pre_shear(const Vector& n, const Vector& s, double d)
+void Transform::pre_shear(const Vector& s, const Plane& p)
 {
     double m[4][4];
-    build_shear(m,n,s,d);
+    build_shear(m,s,p);
     pre_mulmat(m);
     inverse_valid=0;
 }
 
-void Transform::post_shear(const Vector& n, const Vector& s, double d)
+void Transform::post_shear(const Vector& s, const Plane& p)
 {
     double m[4][4];
-    build_shear(m,n,s,d);
+    build_shear(m,s,p);
     post_mulmat(m);
     inverse_valid=0;
 }
@@ -394,8 +403,8 @@ void Transform::invert() {
     for (int i=0; i<4; i++)
 	for (int j=0; j<4; j++) {
 	    tmp=mat[i][j];
-	    mat[i][j]=imat[j][i];
-	    imat[j][i]=tmp;
+	    mat[i][j]=imat[i][j];
+	    imat[i][j]=tmp;
 	}
 }
 
@@ -600,6 +609,18 @@ Transform& Transform::operator=(const Transform& copy)
 
 //
 // $Log$
+// Revision 1.5.2.1  2000/09/28 03:12:21  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.8  2000/08/13 04:44:06  dmw
+// fixed bug in invert()
+//
+// Revision 1.7  2000/08/04 19:09:25  dmw
+// fixed shear
+//
+// Revision 1.6  2000/07/27 05:23:23  samsonov
+// Added implementation of Transform(const Point&, const Vector&, const Vector&, const Vector&)
+//
 // Revision 1.5  2000/03/13 05:05:12  dmw
 // Added Transform::permute for swapping axes, and fixed compute_imat
 //

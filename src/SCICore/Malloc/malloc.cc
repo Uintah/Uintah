@@ -14,6 +14,7 @@
 
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Malloc/AllocPriv.h>
+#include <sci_defs.h>
 
 // irix64 KCC stuff
 #include <strings.h>
@@ -27,32 +28,38 @@
   #endif
 #endif
 
+#ifdef __GNUG__
+#define THROWCLAUSE throw()
+#else
+#define THROWCLAUSE
+#endif
+
 extern "C" {
-void* malloc(size_t size);
-void free(void* ptr);
-void* calloc(size_t, size_t);
-void* realloc(void* p, size_t s);
-void* memalign(size_t, size_t);
-void* valloc(size_t);
+void* malloc(size_t size) THROWCLAUSE;
+void free(void* ptr) THROWCLAUSE;
+void* calloc(size_t, size_t) THROWCLAUSE;
+void* realloc(void* p, size_t s) THROWCLAUSE;
+void* memalign(size_t, size_t) THROWCLAUSE;
+void* valloc(size_t) THROWCLAUSE;
 }
 
 using namespace SCICore::Malloc;
 
-#if 1
+#ifndef DISABLE_SCI_MALLOC
 
-void* malloc(size_t size)
+void* malloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
     return default_allocator->alloc(size, "Unknown - malloc");
 }
 
-void free(void* ptr)
+void free(void* ptr) THROWCLAUSE
 {
     default_allocator->free(ptr);
 }
 
-void* calloc(size_t n, size_t s)
+void* calloc(size_t n, size_t s) THROWCLAUSE
 {
     size_t tsize=n*s;
     void* p=malloc(tsize);
@@ -60,19 +67,19 @@ void* calloc(size_t n, size_t s)
     return p;
 }
 
-void* realloc(void* p, size_t s)
+void* realloc(void* p, size_t s) THROWCLAUSE
 {
     return default_allocator->realloc(p, s);
 }
 
-void* memalign(size_t alignment, size_t size)
+void* memalign(size_t alignment, size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
     return default_allocator->memalign(alignment, size, "Unknown - memalign");
 }
 
-void* valloc(size_t size)
+void* valloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
@@ -84,6 +91,22 @@ void* valloc(size_t size)
 
 //
 // $Log$
+// Revision 1.6.2.1  2000/09/28 03:12:25  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.10  2000/09/25 18:39:10  sparker
+// Only use throw() for g++
+//
+// Revision 1.9  2000/09/25 18:00:42  sparker
+// Added throw() to C declarations
+// Find bzero in string.h for linux
+//
+// Revision 1.8  2000/09/14 15:51:02  sparker
+// Include sci_defs.h for DISABLE_SCI_MALLOC
+//
+// Revision 1.7  2000/09/14 15:34:21  sparker
+// Use --disable-sci-malloc configure flag
+//
 // Revision 1.6  2000/02/24 06:04:55  sparker
 // 0xffff5a5a (NaN) is now the fill pattern
 // Added #if 1 to malloc/new.cc to make it easier to turn them on/off

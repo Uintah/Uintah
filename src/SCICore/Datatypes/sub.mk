@@ -10,6 +10,7 @@ SRCDIR   := SCICore/Datatypes
 
 GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
 	$(SRCDIR)/ScalarFieldRGuchar.cc $(SRCDIR)/ScalarFieldRGshort.cc \
+	$(SRCDIR)/ScalarFieldRGushort.cc \
 	$(SRCDIR)/ScalarFieldRGint.cc $(SRCDIR)/ScalarFieldRGfloat.cc \
 	$(SRCDIR)/ScalarFieldRGdouble.cc
 
@@ -40,7 +41,9 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/StructuredGeom.cc $(SRCDIR)/UnstructuredGeom.cc \
 	$(SRCDIR)/MeshGeom.cc $(SRCDIR)/PointCloudGeom.cc \
 	$(SRCDIR)/ContourGeom.cc $(SRCDIR)/TetMeshGeom.cc \
-	$(SRCDIR)/SurfaceGeom.cc $(SRCDIR)/TriSurfaceGeom.cc
+	$(SRCDIR)/SurfaceGeom.cc $(SRCDIR)/TriSurfaceGeom.cc \
+	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc
+
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
@@ -53,6 +56,9 @@ $(SRCDIR)/ScalarFieldRGuchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 
 $(SRCDIR)/ScalarFieldRGshort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/short/g' < $< > $@
+
+$(SRCDIR)/ScalarFieldRGushort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/ushort/g' < $< > $@
 
 $(SRCDIR)/ScalarFieldRGint.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/int/g' < $< > $@
@@ -78,6 +84,9 @@ $(SRCDIR)/ScalarFieldRGuchar.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/Scalar
 $(SRCDIR)/ScalarFieldRGshort.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGshort.h
 	sed 's/TYPE/short/g' < $< >$@
 
+$(SRCDIR)/ScalarFieldRGushort.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGushort.h
+	sed 's/TYPE/ushort/g' < $< >$@
+
 $(SRCDIR)/ScalarFieldRGint.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGint.h
 	sed 's/TYPE/int/g' < $< > $@
 
@@ -100,6 +109,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.10  2000/09/28 03:13:32  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
 # Revision 1.3.2.9  2000/09/25 21:52:08  yarden
 # move GenSField.cc into GenSField.h
 # (template implementation should be in .h file
@@ -128,6 +140,24 @@ clean::
 #
 # Revision 1.3.2.1  2000/06/07 17:42:25  kuehne
 # Added datastructures used by the new fields
+#
+# Revision 1.9  2000/08/20 04:19:50  samsonov
+# path to CameraView.cc
+#
+# Revision 1.8  2000/08/09 07:15:55  samsonov
+# final version and Cocoon comments
+#
+# Revision 1.7  2000/07/19 06:39:38  samsonov
+# Path datatype moved form DaveW
+#
+# Revision 1.6  2000/07/17 18:33:38  dmw
+# deleted ushort and added it to sub.mk
+#
+# Revision 1.5  2000/07/17 16:29:40  bigler
+# Removed reference to ScalarFieldRGushort.cc which did not exist.
+#
+# Revision 1.4  2000/07/12 15:45:11  dmw
+# Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
 #
 # Revision 1.3  2000/03/21 03:01:28  sparker
 # Partially fixed special_get method in SimplePort

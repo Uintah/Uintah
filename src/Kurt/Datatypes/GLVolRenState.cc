@@ -1,16 +1,21 @@
 #include "GLVolRenState.h"
 #include "GLVolumeRenderer.h"
+#include "GLTexture3D.h"
 #include "Brick.h"
 #include "Polygon.h"
 #include <GL/gl.h>
 #include <vector>
 #include <stdlib.h>
+#include <iostream>
 namespace SCICore {
 namespace GeomSpace  {
 
 using SCICore::Geometry::Polygon;
 using namespace Kurt::Datatypes;
 using std::vector;
+using std::cerr;
+using std::endl;
+
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
     : volren( glvr ), texName(0), reload((unsigned char *)1)
@@ -57,7 +62,7 @@ void
 GLVolRenState::drawPolys( vector<Polygon *> polys )
 {
   int i,j,k;
-
+  
   for(i = 0; i < polys.size(); i++){
     switch( polys[i]->size() ) {
     case 1:
@@ -97,6 +102,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
     }
   }
 }
+
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
@@ -107,8 +113,14 @@ GLVolRenState::loadTexture(Brick& brick)
 
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if( volren->_interp ){
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    } else {
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    }
+
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,
@@ -161,11 +173,11 @@ GLVolRenState::makeTextureMatrix( const Brick& brick)
 
   diag = brick[7] - brick[0];
 
+
   glTexGend(GL_S,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
   glTexGend(GL_T,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
   glTexGend(GL_R,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
   glTexGend(GL_Q,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
-
 
   //  This code is for render overlapping bricks.  The plane equations
   //  for s are  (Nx * Pxmin) + d = aX/2  and
@@ -208,6 +220,17 @@ GLVolRenState::disableTexCoords()
   glDisable(GL_TEXTURE_GEN_T);
   glDisable(GL_TEXTURE_GEN_R);
   glDisable(GL_TEXTURE_GEN_Q);
+}
+
+void 
+GLVolRenState::enableBlend()
+{
+  glEnable(GL_BLEND);
+}
+void 
+GLVolRenState::disableBlend()
+{
+  glDisable(GL_BLEND);
 }
 
 void

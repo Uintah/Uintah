@@ -74,22 +74,26 @@ public:
   virtual void drawWireFrame() = 0;
   
   void Reload(){reload = (unsigned char *)1;}
+
   
 protected:
 
   virtual void setAlpha(const Brick& brick) = 0;
-  
   void computeView(Ray&);
   void loadTexture( Brick& brick);
   void makeTextureMatrix(const Brick& brick);
   void enableTexCoords();
+  void enableBlend();
   void drawPolys( vector<Polygon *> polys);
   void disableTexCoords();
+  void disableBlend();
   void drawWireFrame(const Brick& brick);
   const GLVolumeRenderer*  volren;
 
   GLuint* texName;
   unsigned char* reload;
+
+
 };
 
 } // end namespace GeomSpace

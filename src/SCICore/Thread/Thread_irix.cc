@@ -275,7 +275,7 @@ Thread::initialize()
     int nullfd=open("/dev/null", O_WRONLY);
     if(nullfd != 2)
 	throw ThreadError("Wrong FD returned from open");
-    reservoir=atomic_alloc_reservoir(USE_DEFAULT_PM, 100, NULL);
+    reservoir=atomic_alloc_reservoir(USE_DEFAULT_PM, 500, NULL);
     close(2);
     int newfd=dup(tmpfd);
     if(newfd != 2)
@@ -1001,6 +1001,7 @@ AtomicCounter::AtomicCounter(const char* name)
 					  +strerror(errno));
     } else {
 	d_priv=new AtomicCounter_private;
+	d_priv->value=0;
     }
 }
 
@@ -1324,6 +1325,16 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.22.2.1  2000/09/28 03:11:47  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.24  2000/08/29 19:25:55  jas
+// Increased the number of atomic_alloc_reservoir from 100 to 500.  Needed
+// for running at LANL.
+//
+// Revision 1.23  2000/06/22 21:38:59  sparker
+// Initialize AtomicCounter to zero for non-fetchop implementation
+//
 // Revision 1.22  2000/04/11 06:47:44  sparker
 // Commented out print statement for fetchop_alloc calls
 //

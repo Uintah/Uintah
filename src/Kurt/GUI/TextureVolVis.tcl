@@ -16,6 +16,8 @@ itcl_class Kurt_Vis_TextureVolVis {
 	set $this-alpha_scale 0.075
 	global $this-render_style
 	set $this-render_style 0
+	global $this-interp_mode 
+	set $this-interp_mode 1
     }
     method ui {} {
 	set w .ui[modname]
@@ -67,7 +69,20 @@ itcl_class Kurt_Vis_TextureVolVis {
 		-side top -fill x
 
 
+	frame $w.f3 -relief groove -borderwidth 2
+	pack $w.f3 -padx 2 -pady 2 -fill x
 
+	label $w.f3.l -text "Interpolation Mode"
+	radiobutton $w.f3.interp -text "Interpolate" -relief flat \
+		-variable $this-interp_mode -value 1 \
+		-anchor w -command $n
+
+	radiobutton $w.f3.near -text "Nearest" -relief flat \
+		-variable $this-interp_mode -value 0 \
+		-anchor w -command $n
+
+	pack $w.f3.l $w.f3.interp $w.f3.near \
+		-side top -fill x
 
 	global $this-num_slices
 	scale $w.nslice -variable $this-num_slices \

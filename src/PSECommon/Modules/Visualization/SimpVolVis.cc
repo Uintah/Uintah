@@ -290,7 +290,7 @@ void SimpVolVis::execute(void)
     //ogeom->addObj(triangles,"Cutting Planes TransParent");
   }
 
-  int nx,ny,nz;
+  int nx=0,ny=0,nz=0;
 
 //  if (!get_tcl_intvar(base,clString("nx"),nx) ||
 //      !get_tcl_intvar(base,clString("ny"),ny) ||
@@ -417,6 +417,12 @@ void SimpVolVis::widget_moved(int /*last*/)
 
 //
 // $Log$
+// Revision 1.9.2.1  2000/09/28 03:15:32  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.10  2000/06/15 19:50:28  sparker
+// Fixed warnings
+//
 // Revision 1.9  2000/03/17 09:27:35  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

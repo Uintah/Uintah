@@ -59,12 +59,10 @@ public:
   // draw Wireframe
   virtual void drawWireFrame();
   
-  static GLVolRenState* Instance(const GLVolumeRenderer* glvr);
-
 protected:
   virtual void setAlpha(const Brick& brick);
   void draw(Brick&, Polygon*);
-  static GLVolRenState* _instance;
+
 };
 
 }  // namespace GeomSpace

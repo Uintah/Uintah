@@ -1,5 +1,17 @@
 <?xml version='1.0' encoding='us-ascii' ?>
 
+<!-- *** NOTE ***
+ 
+ Do not remove or modify the comment lines that contain:
+
+    INSERT NEW ??????? HERE 
+ 
+ They are required by the module maker to properly edit this file.
+ if you want to edit this file by hand, see the "Create A New Module"
+ documentation on how to do it correctly.
+
+-->
+
 <!-- description of the DaveW package -->
 
 <package name="DaveW">
@@ -202,6 +214,7 @@
       <creationFunction>make_BldEEGMesh</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW EEG COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="EGI">
   <soNames>
@@ -241,6 +254,7 @@
       <creationFunction>make_Anneal</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW EGI COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="FDM">
   <soNames>
@@ -280,6 +294,7 @@
       <creationFunction>make_BuildFDMatrix</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW FDM COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="FEM">
   <soNames>
@@ -431,6 +446,7 @@
       <creationFunction>make_ErrorMetric</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW FEM COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="ISL">
   <soNames>
@@ -518,6 +534,7 @@
       <creationFunction>make_OptDip</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW ISL COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="MEG">
   <soNames>
@@ -637,33 +654,11 @@
       <creationFunction>make_FieldCurl</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW MEG COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Path">
   <soNames>
     <soName>libDaveW_Modules_Path.so</soName>
-    <soName>libDaveW.so</soName>
-  </soNames>
-
-  <dataflow-component name="EditPath">
-    <meta>
-      <authors>
-        <author>David Weinstein</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_EditPath</creationFunction>
-    </implementation>
-  </dataflow-component>
-  </scirun-library>
-  <scirun-library category="SiRe">
-  <soNames>
-    <soName>libDaveW_Modules_SiRe.so</soName>
     <soName>libDaveW.so</soName>
   </soNames>
 
@@ -731,6 +726,7 @@
       <creationFunction>make_SiReCrunch</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW SiRe COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Readers">
   <soNames>
@@ -738,22 +734,6 @@
     <soName>libDaveW.so</soName>
   </soNames>
 
-  <dataflow-component name="PathReader">
-    <meta>
-      <authors>
-        <author>Steven G. Parker</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_PathReader</creationFunction>
-    </implementation>
-  </dataflow-component>
   <dataflow-component name="SegFldReader">
     <meta>
       <authors>
@@ -818,6 +798,7 @@
       <creationFunction>make_SigmaSetReader</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW Readers COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="CS684">
   <soNames>
@@ -937,6 +918,7 @@
       <creationFunction>make_XYZtoRGB</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW CS684 COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Tensor">
   <soNames>
@@ -1008,6 +990,7 @@
       <creationFunction>make_Flood</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW Tensor COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Writers">
   <soNames>
@@ -1015,22 +998,6 @@
     <soName>libDaveW.so</soName>
   </soNames>
 
-  <dataflow-component name="PathWriter">
-    <meta>
-      <authors>
-        <author>Steven G. Parker</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_PathWriter</creationFunction>
-    </implementation>
-  </dataflow-component>
   <dataflow-component name="SegFldWriter">
     <meta>
       <authors>
@@ -1095,5 +1062,7 @@
       <creationFunction>make_SigmaSetWriter</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW Writers COMPONENT HERE -->
   </scirun-library>
+  <!-- INSERT NEW CATEGORY HERE -->
 </package>
