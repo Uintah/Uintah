@@ -737,6 +737,12 @@ class BioFEMApp {
 	    puts $fileid "set app_version 1.0"
 
 	    save_module_variables $fileid
+	    # ShowDipoles uses the position of the input dipole
+	    # regardless of what was saved out. By setting 
+	    # num-dipoles to 0, instead of 1, the
+	    # module will disregard the position values that cause
+	    # a saved session to get degenerate cylinders and hang.
+	    puts $fileid "set \$mods(ShowDipole)-num-dipoles {0}"
 	    save_class_variables $fileid
 
 	    close $fileid
