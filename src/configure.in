@@ -1394,7 +1394,10 @@ if test "$perfex" != "no"; then
 fi
 
 # Most fortran compilers need an "_" for C function names.
-FORTRAN_UNDERSCORE=1
+# Some have strange underscore needs.  This flag is used in the
+# Packages/Uintah/tools/fspec.pl.in file to generate the correct
+# cname of the fortran function.
+FORTRAN_UNDERSCORE=end
 
 if test ! -e "`type $CC | sed 's%^.* %%'`"; then
   SCI_MSG_ERROR(Could not find the specified C compiler ($CC))
@@ -1410,11 +1413,6 @@ case $host in
   *-irix*)
     AC_MSG_WARN(Configure script only allows SGI compilers on IRIX.)
     AC_MSG_WARN(If this is a problem email scirun-develop@cs.utah.edu.)
-
-    # doesn't not need/want an "_" on the names of fortran  
-    # functions.  This var is used in fspec.pl.in in order not to
-    # add the _ to the cname of the function.
-    FORTRAN_UNDERSCORE=0
 
     ac_objext=o
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
@@ -1493,7 +1491,7 @@ case $host in
     # Xlf does not need/want an "_" on the names of fortran  
     # functions.  This var is used in fspec.pl.in in order not to
     # add the _ to the cname of the function.
-    FORTRAN_UNDERSCORE=0
+    FORTRAN_UNDERSCORE=none
 
     # The IBM compilers don't use LDRUN_PREFIX.  By making it "-L"
     # The lib path with be repeated twice, but since the makefile
@@ -1537,6 +1535,9 @@ case $host in
     ;;
 
   *)
+    # put '_' at end and two '_'s if there is a '_' in name. 
+    FORTRAN_UNDERSCORE=linux
+
     BASE_LIB_DIR=lib
     CFLAGS=" -Wall"
     SCI_CHECK_VERSION($CC,--version,2.95.3,,
