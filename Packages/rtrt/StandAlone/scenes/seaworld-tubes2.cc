@@ -97,7 +97,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *craters = new Group;
   Group *rock_tower = new Group;
 
-  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("caustics/caust%d.pgm", 32,
+  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/usr/sci/data/Geometry/textures/caustics/caust%d.pgm", 32,
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
@@ -105,9 +105,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //Material* water_to_glass = new DielectricMaterial(1.5, 1.3, 0.04, 400.0, Color(.80, .84 , .93), Color(1,1,1), false);
 
 //  Material* glass_to_air   = new DielectricMaterial(1.0, 1.0, 0.01, 400.0, Color(1, 1, 1), Color(1,1,1), false);
-//  Material* water_to_glass = new DielectricMaterial(1.0, 1.0, 0.004, 400.0, Color(.9, .93, 1), Color(1,1,1), false, 1);
+  Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.004, 400.0, Color(.9, .93, 1), Color(1,1,1), false, 1);
   Material* air_bubble     = new DielectricMaterial(1.0, 1.1, 0.004, 400.0, Color(1, 1, 1), Color(1.01,1.01,1.01), false);
-  Material* water_to_glass   = new PhongMaterial(Color(.5, .5, .5), .2, 0.8, 20, true); 
+//  Material* water_to_glass   = new PhongMaterial(Color(.5, .5, .5), .2, 0.8, 20, true); 
 //  Material* water_to_glass   = new InvisibleMaterial(); 
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
   Material* red = new LambertianMaterial(Color(1,0,0));
@@ -675,6 +675,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   Group *shark1 = new Group;
   Group *shell1 = new Group;
+  Group *shell2 = new Group;
   Group *anker = new Group;
   Group *krabbe = new Group;
   Group *school1 = new Group;
@@ -682,6 +683,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *school3 = new Group;
   Group *school4 = new Group;
   Group *tiger = new Group;
+  Group *pot1 = new Group;
   
   t3.load_identity();
   t3.pre_scale(Vector(.0001, .0001, .0001));
@@ -752,8 +754,37 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    t3, shell1))
       exit(-1);
 
+  t3.pre_translate(Vector(-23, 4.5, 0));
+  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.obj",
+	           "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.mtl",
+	           t3, shell1))
+      exit(-1);
 
+  t.load_identity();
+  t.pre_scale(Vector(.15, .15, .15));
+  //t.pre_rotate(-1.3, Vector(0, 1, 0));
+  t.pre_rotate(-1.1, Vector(1, 0, 0));
+  t.pre_translate(Vector(-14, -.5, -.3));
+  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.obj",
+                   "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.mtl",
+                   t,shell2))
+        exit(1);
+
+  // columns by west tube
+  t.load_identity();
+  t.pre_scale(Vector(.03, .03, .03));
+  t.pre_translate(Vector(0, 0, -8));
+  t.pre_rotate(.352, Vector(1, 0, 0));
+  t.pre_rotate(.2, Vector(0, 1, 0));
+  t.pre_translate(Vector(-14.5, 2.8, -2.6));
+  if (!readObjFile("/usr/sci/data/Geometry/models/oceanpots_obj/pot3.obj",
+                   "/usr/sci/data/Geometry/models/oceanpots_obj/pot3.mtl",
+                   t,pot1))
+        exit(1);
+   
   all_tubes->add(new Grid (shell1, 15));
+  all_tubes->add(new Grid (shell2, 15));
+  all_tubes->add(new Grid (pot1, 15));
   all_tubes->add(new Grid (tiger, 10));
   all_tubes->add(new Grid (school1, 10));
   all_tubes->add(new Grid (school2, 10));
