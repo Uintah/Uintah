@@ -93,11 +93,13 @@ Module* ViewHist::clone(int deep)
 
 void ViewHist::do_ViewHist(int proc)    
 {
-  int start = (rg->grid.dim2()-1)*proc/np;
-  int end   = (proc+1)*(rg->grid.dim2()-1)/np;
+  int start = (rg->grid.dim2())*proc/np;
+  int end   = (proc+1)*(rg->grid.dim2())/np;
 
   for(int x=start; x<end; x++) {
-    for(int y=0; y<((rg->grid(0,x,0)/max)*500); y++) {
+    for(int y=0; y<rg->grid.dim1(); y++)
+     newgrid->grid(y,x,0)=0;
+    for(y=0; y<((rg->grid(0,x,0)/max)*500); y++) {
       newgrid->grid(y,x,0)=255;
     }
   }
@@ -132,9 +134,10 @@ void ViewHist::execute()
     }
     newgrid=new ScalarFieldRG;
 
+    rg->compute_minmax();
     rg->get_minmax(min,max);
 
-    cerr << "min/max : " << min << " " << max << "\n";
+    cerr << "ViewHist min/max : " << min << " " << max << "\n";
     
     newgrid->resize(500,rg->grid.dim2(),1);
 
