@@ -12,7 +12,8 @@ SRCS     += \
 	$(SRCDIR)/PetscError.cc             \
 	$(SRCDIR)/ProblemSetupException.cc  \
 	$(SRCDIR)/TypeMismatchException.cc  \
-	$(SRCDIR)/VariableNotFoundInGrid.cc
+	$(SRCDIR)/VariableNotFoundInGrid.cc \
+	$(SRCDIR)/OutFluxVolume.cc
 
 PSELIBS := \
 	Core/Exceptions \
