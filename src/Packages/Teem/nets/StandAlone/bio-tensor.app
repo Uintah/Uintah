@@ -2040,7 +2040,7 @@ class BioTensorApp {
 	
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
-	$eviewer setWindow $win.viewer $viewer_width $viewer_height
+	$eviewer setWindow $win.viewer
 	
 	
 	### Processing Part
