@@ -38,29 +38,31 @@ namespace Insight {
 
 using std::string;
 using namespace SCIRun;
-using namespace itk;
 
 template<class T> class ITKFData3d;
 template<class T> void Pio(Piostream& stream, ITKFData3d<T>& array);
 
 template <class Data>
-class ITKConstIterator : public ImageRegionIterator<Image<Data,3> > {
+class ITKConstIterator : public itk::ImageRegionIterator<itk::Image<Data,3> > {
 public:
-  typedef Image<Data, 3> ImageType;
-  typedef ImageType::RegionType Region;
+  typedef itk::Image<Data, 3> ImageType;
+  typedef typename ImageType::RegionType RegionType;
 
-  ITKConstIterator() : ImageRegionConstIterator< ImageType >() {}
-  ITKConstIterator(ImageType* ptr, Region &region) : ImageRegionConstIterator< ImageType >(ptr, region) { }
+  ITKConstIterator() : itk::ImageRegionConstIterator< ImageType >() {}
+  ITKConstIterator(const ImageType* ptr, const RegionType &region) : itk::ImageRegionConstIterator< ImageType >(ptr, region) { }
   virtual ~ITKConstIterator() {}
-  const Data &operator*() { return ImageRegionConstIteraror::Value();}
+  const Data &operator*() { return itk::ImageRegionConstIterator<ImageType>::Value();}
 };
 
 
 template <class Data>
-class ITKIterator : public ITKConstIterator {
+class ITKIterator : public ITKConstIterator<Data> {
 public:
-  ITKIterator() : ITKConstIterator { }
-  ITKIterator(ImageType* ptr, Region &region) : ITKConstIterator(ptr, region) { }
+  typedef itk::Image<Data, 3> ImageType;
+  typedef typename ImageType::RegionType RegionType;
+
+  ITKIterator() : ITKConstIterator<Data>() { }
+  ITKIterator(const ImageType* ptr, const RegionType &region) : ITKConstIterator<Data>(ptr, region) { }
   virtual ~ITKIterator() {}
   Data &operator*() { return Value();}
 };
@@ -70,18 +72,18 @@ template <class Data>
 class ITKFData3d {
 public:
   typedef Data value_type;
-  typedef Image<Data, 3> image_type;
-  typedef typename ITKIterator<Data> iterator;
-  typedef typename ITKConstIterator<Data> const_iterator;
+  typedef itk::Image<Data, 3> image_type;
+  typedef ITKIterator<Data> iterator;
+  typedef ITKConstIterator<Data> const_iterator;
   
-  iterator _begin;
-  iterator _end;
+  iterator *_begin;
+  iterator *_end;
 
-  const iterator &begin() { return _begin; }
-  const iterator &end() { return _end; }
+  const iterator &begin() { return *_begin; }
+  const iterator &end() { return *_end; }
 
-  const const_iterator &begin() const { return _begin; }
-  const const_iterator &end() const { return _end; }
+  const const_iterator &begin() const { return *_begin; }
+  const const_iterator &end() const { return *_end; }
 
 
   ITKFData3d();
@@ -190,8 +192,14 @@ public:
     }
   }
   
-  void set_image(Image<Data, 3>* img) {
+  void set_image(itk::Image<Data, 3>* img) {
     image_ = img;
+    if ( _begin ) delete _begin;
+    _begin = new iterator(image_, image_->GetRequestedRegion());
+    _begin->GoToBegin();
+    if ( _end ) delete _end;
+    _end = new iterator(image_, image_->GetRequestedRegion());
+    _end->GoToEnd();
   }
   
   unsigned int size() { return (dim1() * dim2() * dim3()); }
@@ -238,29 +246,36 @@ template <class Data>
 ITKFData3d<Data>::ITKFData3d()
 {
   image_ = image_type::New(); 
+  _begin = 0;
+  _end = 0;
 }
 
 template <class Data>
 ITKFData3d<Data>::ITKFData3d(int a)
 {
-  image_ = image_type::New(); 
+  //image_ = image_type::New(); 
+  _begin = 0;
+  _end = 0;
 }
 
 template <class Data>
 ITKFData3d<Data>::ITKFData3d(const ITKFData3d& data) {
-  std::cerr << "IN COPY CONSTRUCTOR\n";
   image_ = image_type::New();
   image_ = data.image_;
 
-  _begin = iterator(image_, image_->GetRequestedRegion());
-  _begin.GoToBegin();
-  _end = iterator(image_, image_->GetRequestedRegion());
-  _end.GoToEnd();
+  _begin = 0;
+  _end = 0;
+//   _begin = new iterator(image_, image_->GetRequestedRegion());
+//   _begin->GoToBegin();
+//   _end = new iterator(image_, image_->GetRequestedRegion());
+//   _end->GoToEnd();
 }
 
 template <class Data>
 ITKFData3d<Data>::~ITKFData3d()
 {
+  if ( _begin ) delete _begin;
+  if ( _end) delete _end;
 }
   
 template <class Data>
@@ -315,11 +330,11 @@ public:
   ITKLatVolField();
   ITKLatVolField(Field::data_location data_at);
   ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at);
-  ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at, Object* img);
+  ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at, itk::Object* img);
   virtual ITKLatVolField<Data> *clone() const;
   virtual ~ITKLatVolField();
 
-  void SetImage(Object*);
+  void SetImage(itk::Object*);
 
   //! Persistent IO
   static PersistentTypeID type_id;
@@ -329,7 +344,7 @@ public:
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
   // LatVolField Specific methods.
-  bool get_gradient(Vector &, const Point &);
+  bool get_gradient(SCIRun::Vector &, const Point &);
 
 private:
   static Persistent* maker();
@@ -361,17 +376,17 @@ ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
 
 template <class Data>
 ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
-			     Field::data_location data_at, Object* img)
+			     Field::data_location data_at, itk::Object* img)
   : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, data_at)
 {
   this->SetImage(img);
 }
 
 template <class Data>
-void ITKLatVolField<Data>::SetImage(Object* img)
+void ITKLatVolField<Data>::SetImage(itk::Object* img)
 {
-  if(dynamic_cast<Image<Data, 3>* >(img)) {
-    fdata().set_image(dynamic_cast<Image<Data, 3>* >(img));
+  if(dynamic_cast<itk::Image<Data, 3>* >(img)) {
+    fdata().set_image(dynamic_cast<itk::Image<Data, 3>* >(img));
   }
   else {
     ASSERT(0);
