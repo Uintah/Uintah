@@ -23,24 +23,28 @@
 #define SCI_project_FieldInterface_h 1
 
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore{
 namespace Datatypes{
 
 using SCICore::Geometry::Point;
-
+using SCICore::Geometry::Vector;
 //////////
 // The base classes for all field interfaces
 class SCICORESHARE FieldInterface{
 public:
 };
 
-template <class T> class SInterpolate:public FieldInterface{
+class SLInterpolate:public FieldInterface{
 public:
-  virtual int sinterpolate(const Point&, T&) = 0; 
+  virtual int slinterpolate(const Point&, double&, double eps=1.e-6) = 0; 
 };
 
-
+class Gradient:public FieldInterface{
+public:
+  virtual Vector gradient(const Point&) = 0;
+};
 
 } // end namespace Datatypes
 } // end namespace SCICore
