@@ -45,6 +45,7 @@ class SCICORESHARE GeomPoints : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
+  vector<float> indices_;
 
   bool pickable;  // hack so we don't draw non-pickable pts during a pick
 
@@ -64,6 +65,11 @@ public:
   }
 
   void add(const Point& p, MaterialHandle c);
+  void add(const Point& p, double index)
+  {
+    add(p);
+    indices_.push_back(index);
+  }
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
