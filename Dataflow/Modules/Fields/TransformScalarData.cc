@@ -29,6 +29,7 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/TransformScalarData.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
@@ -37,7 +38,12 @@
 namespace SCIRun {
 
 class TransformScalarData : public Module {
+  GuiString method_;
   GuiString function_;
+  GuiDouble imin_;
+  GuiDouble imax_;
+  GuiDouble omin_;
+  GuiDouble omax_;
 public:
   TransformScalarData(GuiContext* ctx);
   virtual ~TransformScalarData();
@@ -50,7 +56,12 @@ DECLARE_MAKER(TransformScalarData)
 
   TransformScalarData::TransformScalarData(GuiContext* ctx)
     : Module("TransformScalarData", ctx, Filter,"Fields", "SCIRun"),
-      function_(ctx->subVar("function"))
+      method_(ctx->subVar("method")),
+      function_(ctx->subVar("function")),
+      imin_(ctx->subVar("imin")),
+      imax_(ctx->subVar("imax")),
+      omin_(ctx->subVar("omin")),
+      omax_(ctx->subVar("omax"))
 {
 }
 
@@ -76,25 +87,48 @@ TransformScalarData::execute()
     return;
   }
   
-  if (ifieldhandle->query_scalar_interface(this) == 0)
+  ScalarFieldInterface *sfi;
+  if ((sfi = ifieldhandle->query_scalar_interface(this)) == 0)
   {
     error("This module only works on scalar fields.");
     return;
   }
 
-  Function *function = new Function(1);
-  fnparsestring(function_.get().c_str(), &function);
-
+  pair<double, double> minmax;
+  sfi->compute_min_max(minmax.first, minmax.second);
+  double imin=minmax.first;
+  double imax=minmax.second;
+  imin_.set(imin);
+  imax_.set(imax);
+  
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
   CompileInfoHandle ci = TransformScalarDataAlgo::get_compile_info(ftd, ltd);
   Handle<TransformScalarDataAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return;
 
-  FieldHandle ofieldhandle(algo->execute(ifieldhandle, function));
-
-  delete function;
-
+  FieldHandle ofieldhandle;
+  if (method_.get() == "function") {
+    Function *function = new Function(1);
+    fnparsestring(function_.get().c_str(), &function);
+    ofieldhandle=algo->execute(ifieldhandle, function);
+    delete function;
+  } else if (method_.get() == "minmax") {
+    double omin=omin_.get();
+    double omax=omax_.get();
+    if ((imin == imax) && (omin != omax)) {
+      error("Input min/max are equal, unable to rescale");
+      return;
+    }
+    double scale=1.0;
+    if (imin != imax) 
+      scale=(omax-omin)/(imax-imin);
+    double trans=omin-(imin*scale);
+    ofieldhandle=algo->execute(ifieldhandle, scale, trans);
+  } else {
+    error("Unrecognized method");
+    return;
+  }
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   if (!ofield_port) {
     error("Unable to initialize oport 'Output Field'.");

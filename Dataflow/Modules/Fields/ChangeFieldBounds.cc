@@ -49,8 +49,6 @@ public:
   ChangeFieldBounds(GuiContext* ctx);
   virtual ~ChangeFieldBounds();
 
-  GuiDouble		outputdatamin_;    // the out data min
-  GuiDouble		outputdatamax_;    // the out data max
   GuiDouble		outputcenterx_;	// the out geometry (center point and size)
   GuiDouble		outputcentery_;
   GuiDouble		outputcenterz_;
@@ -59,7 +57,6 @@ public:
   GuiDouble		outputsizez_;
   GuiInt		useoutputcenter_;   // center checkbox
   GuiInt		useoutputsize_;   // size checkbox
-  GuiInt		useoutputminmax_;   // minmax checkbox
 
   CrowdMonitor		widget_lock_;
   BoxWidget *		box_;
@@ -68,8 +65,6 @@ public:
   BBox			box_initial_bounds_;
   int			generation_;
   int			widgetid_;
-  pair<double,double>	minmax_;
-
 
   void clear_vals();
   void update_input_attributes(FieldHandle);
@@ -83,8 +78,6 @@ public:
 
 ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   : Module("ChangeFieldBounds", ctx, Source, "Fields", "SCIRun"),
-    outputdatamin_(ctx->subVar("outputdatamin")),
-    outputdatamax_(ctx->subVar("outputdatamax")),
     outputcenterx_(ctx->subVar("outputcenterx")),
     outputcentery_(ctx->subVar("outputcentery")),
     outputcenterz_(ctx->subVar("outputcenterz")),
@@ -93,11 +86,9 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     outputsizez_(ctx->subVar("outputsizez")),
     useoutputcenter_(ctx->subVar("useoutputcenter")),
     useoutputsize_(ctx->subVar("useoutputsize")),
-    useoutputminmax_(ctx->subVar("useoutputminmax")),
     widget_lock_("ChangeFieldBounds widget lock"),
     generation_(-1),
-    widgetid_(0),
-    minmax_(1,0)
+    widgetid_(0)
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
 }
@@ -123,8 +114,6 @@ ChangeFieldBounds::~ChangeFieldBounds()
 void
 ChangeFieldBounds::clear_vals() 
 {
-  gui->execute(string("set ")+id+"-inputdatamin \"---\"");
-  gui->execute(string("set ")+id+"-inputdatamax \"---\"");
   gui->execute(string("set ")+id+"-inputcenterx \"---\"");
   gui->execute(string("set ")+id+"-inputcentery \"---\"");
   gui->execute(string("set ")+id+"-inputcenterz \"---\"");
@@ -157,16 +146,6 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
   gui->execute(string("set ")+id+"-inputsizex "+to_string(size.x()));
   gui->execute(string("set ")+id+"-inputsizey "+to_string(size.y()));
   gui->execute(string("set ")+id+"-inputsizez "+to_string(size.z()));
-
-  ScalarFieldInterface *sdi = f->query_scalar_interface(this);
-  if (sdi && f->data_at() != Field::NONE) {
-    sdi->compute_min_max(minmax_.first,minmax_.second);
-    gui->execute(string("set ")+id+"-inputdatamin "+to_string(minmax_.first));
-    gui->execute(string("set ")+id+"-inputdatamax "+to_string(minmax_.second));
-  } else {
-    gui->execute(string("set ")+id+"-inputdatamin \"--- N/A ---\"");
-    gui->execute(string("set ")+id+"-inputdatamax \"--- N/A ---\"");
-  }
 
   gui->execute(id+" update_multifields");
 }
@@ -351,24 +330,6 @@ ChangeFieldBounds::execute()
     box_->SetPosition(center,right,down,in);
   }
 
-  // Setup data transform.
-  bool transform_p = useoutputminmax_.get();
-  double scale = 1.0;
-  double translate = 0.0;
-  if (transform_p)
-  {
-    if (fh->query_scalar_interface(this))
-    {
-      scale = (outputdatamax_.get() - outputdatamin_.get()) /
-	(minmax_.second - minmax_.first);
-      translate = outputdatamin_.get() - minmax_.first * scale;
-    }
-    else
-    {
-      transform_p = false;
-    }
-  }
-
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
   CompileInfoHandle ci = ChangeFieldBoundsAlgoCreate::get_compile_info
@@ -379,21 +340,6 @@ ChangeFieldBounds::execute()
   gui->execute(id + " set_state Executing 0");
   bool same_value_type_p = false;
   FieldHandle ef(algo->execute(fh, fh->data_at(), same_value_type_p));
-
-  // Do any necessary data transforms here.
-  const bool both_scalar_p =
-    ef->query_scalar_interface(this) && fh->query_scalar_interface(this);
-  if (both_scalar_p || same_value_type_p)
-  {
-    const TypeDescription *fdst_td = ef->get_type_description();
-    CompileInfoHandle ci =
-      ChangeFieldBoundsAlgoCopy::get_compile_info(fsrc_td, fdst_td);
-    Handle<ChangeFieldBoundsAlgoCopy> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
-
-    gui->execute(id + " set_state Executing 0");
-    algo->execute(fh, ef, scale, translate);
-  }
 
   // Transform the mesh if necessary.
   // Translate * Rotate * Scale.
@@ -475,30 +421,4 @@ ChangeFieldBoundsAlgoCreate::get_compile_info(const TypeDescription *field_td,
   field_td->fill_compile_info(rval);
   return rval;
 }
-
-
-CompileInfoHandle
-ChangeFieldBoundsAlgoCopy::get_compile_info(const TypeDescription *fsrctd,
-					    const TypeDescription *fdsttd)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class("ChangeFieldBoundsAlgoCopyT");
-  static const string base_class_name("ChangeFieldBoundsAlgoCopy");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class + "." +
-		       fsrctd->get_filename() + "." +
-		       fdsttd->get_filename() + ".",
-                       base_class_name, 
-		       template_class,
-                       fsrctd->get_name() + "," + fdsttd->get_name() + " ");
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  fsrctd->fill_compile_info(rval);
-  return rval;
-}
-
-
 } // End namespace SCIRun

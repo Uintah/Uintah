@@ -76,59 +76,6 @@ ChangeFieldBoundsAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
 
   return fout;
 }
-
-
-
-
-class ChangeFieldBoundsAlgoCopy : public DynamicAlgoBase
-{
-public:
-
-  virtual void execute(FieldHandle fsrc_h, FieldHandle fout_h,
-		       double scale, double translate) = 0;
-
-  //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const TypeDescription *fdst);
-};
-
-
-template <class FSRC, class FOUT>
-class ChangeFieldBoundsAlgoCopyT : public ChangeFieldBoundsAlgoCopy
-{
-public:
-
-  //! virtual interface. 
-  virtual void execute(FieldHandle fsrc_h, FieldHandle fout_h,
-		       double scale, double translate);
-};
-
-
-template <class FSRC, class FOUT>
-void
-ChangeFieldBoundsAlgoCopyT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
-						FieldHandle fout_h,
-						double scale,
-						double translate)
-{
-  FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
-  FOUT *fout = dynamic_cast<FOUT *>(fout_h.get_rep());
-
-  typename FSRC::fdata_type::iterator in = fsrc->fdata().begin();
-  typename FOUT::fdata_type::iterator out = fout->fdata().begin();
-  typename FSRC::fdata_type::iterator end = fsrc->fdata().end();
-  if (fout->data_at() == fsrc->data_at())
-  {
-    while (in != end)
-    {
-      *out = (typename FOUT::value_type)(*in * scale + translate);
-      ++in; ++out;
-    }
-  }
-}
-
-
-
 } // end namespace SCIRun
 
 #endif // ChangeFieldBounds_h

@@ -32,6 +32,7 @@ class TransformScalarDataAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle src, Function *f) = 0;
+  virtual FieldHandle execute(FieldHandle src, double scale, double trans)=0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -45,6 +46,7 @@ class TransformScalarDataAlgoT : public TransformScalarDataAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, Function *f);
+  virtual FieldHandle execute(FieldHandle src, double scale, double trans);
 };
 
 
@@ -74,6 +76,31 @@ TransformScalarDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
   return ofield;
 }
 
+template <class FIELD, class LOC>
+FieldHandle
+TransformScalarDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
+					      double scale, double trans)
+{
+  FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
+  FIELD *ofield = ifield->clone();
+
+  typename FIELD::fdata_type::iterator ibi, iei, obi;
+  ibi = ifield->fdata().begin();
+  iei = ifield->fdata().end();
+  obi = ofield->fdata().begin();
+
+  while (ibi != iei)
+  {
+    typename FIELD::value_type val = *ibi;
+    double tmp = (double)val;
+    *obi = (typename FIELD::value_type)(tmp*scale+trans);
+    ++ibi;
+    ++obi;
+
+  }
+
+  return ofield;
+}
 
 } // end namespace SCIRun
 
