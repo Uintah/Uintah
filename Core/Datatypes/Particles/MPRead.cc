@@ -238,9 +238,9 @@ MPRead::GetGridPoints( double& o_x, double& o_y, double& o_z,
   in >> o_x >> o_y >> o_z >> dx >> dy >> dz;
   
   minPt = Point(o_x, o_y, o_z);
-  maxPt = Point(o_x + dx*x_size,
-		   o_y + dy*y_size,
-		   o_z + dz*z_size);
+  maxPt = Point(o_x + dx*(x_size-1),
+		   o_y + dy*(y_size-1),
+		   o_z + dz*(z_size-1));
   
 
   gridState = Scalars;
@@ -398,9 +398,9 @@ MPRead::GetVectorField( VectorFieldHandle& vf )
 	      is >> x >> y >> z;
 	      vfrg->grid(i,j,k) = Vector(x,y,z);
 	    }
-      
-      vf = VectorFieldHandle(vfrg);
     }
+    vf = VectorFieldHandle(vfrg);
+
   } else {
     NOT_FINISHED("MPRead::GetVectorField( VectorFieldHandle& vf )");
     return 0;
