@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Thread/Barrier.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/WorkQueue.h>
@@ -18,19 +19,9 @@ public:
   float distance;
   bool update;
 
-  NearestNeighbor(void) {
-    nearest=-1;
-    distance=FLT_MAX;
-    update=false;
-  }
+  NearestNeighbor(void);
 
-  NearestNeighbor& operator=(const NearestNeighbor& nn) {
-    nearest=nn.nearest;
-    distance=nn.distance;
-    update=nn.update;
-
-    return *this;
-  }
+  NearestNeighbor& operator=(const NearestNeighbor& nn);
 };
 
 class Cluster {
@@ -39,52 +30,29 @@ public:
   float* v;
   int nmap;
 
-  Cluster(void) {
-    v=new float[ndims];
-    if (!v) {
-      cerr<<"Cluster::Cluster - error allocating memory for vector"<<endl;
-      return;
-    }
-    
-    nmap=0;
-  }
+  Cluster(void);
+  Cluster(float* in_v);
+
+  Cluster& operator=(const Cluster c);
+  void vec(float* in_v);
+};
+
+class ParallelVQ {
+public:
+  ParallelVQ(void);
+  ~ParallelVQ(void);
   
-  Cluster(float* in_v) {
-    if (!in_v) {
-      cerr<<"Cluster::Cluster - input vector is null"<<endl;
-      return;
-    }
-    
-    v=new float[ndims];
-    if (!v) {
-      cerr<<"Cluster::Cluster - error allocating memory for vector"<<endl;
-      return;
-    }
+  void initNearestNeighbors(int proc);
+  void initMerge(int i1, int i2);
+  void mergeClusters(int proc);
 
-    for (int i=0; i<ndims; i++)
-      v[i]=in_v[i];
-    
-    nmap=1;
-  }
+private:
+  int idx1;
+  int idx2;
+  int last;
+  Barrier* barrier;
 
-  Cluster& operator=(const Cluster c) {
-    for (int i=0; i<ndims; i++)
-      v[i]=c.v[i];
-
-    nmap=c.nmap;
-
-    return *this;
-  }
-
-  void vec(float* in_v) {
-    if (!in_v) {
-      cerr<<"Cluster::vec - new vector is null"<<endl;
-      return;
-    }
-    
-    for (int i=0; i<ndims; i++)
-      v[i]=in_v[i];
-  }
+  void range(int rank, int total, int* start, int* end);
 };
 
 // Declare necessary functions
@@ -93,14 +61,10 @@ Nrrd* convertNrrdToFloat(Nrrd* nin);
 int saveNrrd(Nrrd* nin, char* type, char* ext);
 NearestNeighbor findNearestNeighbor(int idx);
 int findMinDistance(void);
-int mergeClusters(int idx1, int idx2);
 float computeDistortion(Cluster c1, Cluster c2, float min);
 float* computeCentroid(Cluster c1, Cluster c2);
-void parallelMerge(int idx1, int idx2, int last);
-void serialMerge(int idx1, int idx2, int last);
 
 // Declare global variables
-WorkQueue work("Parallel VQ (PNN) Work Queue");
 int Cluster::ndims=0;
 float* vec=0;
 int* index=0;
@@ -112,100 +76,6 @@ char* outbasename=0;
 int nt=1;
 char* nrrd_ext=".nhdr";
 int verbose=0;
-
-// Parallel junk
-class ParallelHelper {
-public:
-  int idx1;
-  int idx2;
-  int last;
-
-  ParallelHelper(void) {
-    idx1=idx2=last=-1;
-  }
-
-  ParallelHelper(int idx1, int idx2, int last) :
-    idx1(idx1), idx2(idx2), last(last) {
-
-  }
-  
-  void pInitNearestNeighbor(int /*proc*/) {
-    int start=0;
-    int end=0;
-    while(work.nextAssignment(start, end)) {
-      for(int i=start; i<end; i++) {
-	nnt[i]=findNearestNeighbor(i);
-	if (nnt[i].nearest<0) {
-	  cerr<<"pInitNearestNeighbor:  error finding nearest neighbor"
-	      <<" for cluster["<<i<<"]"<<endl;
-	  exit(1);
-	}
-	
-	if (verbose>4 && i%100==0 && i!=0)
-	  cout<<"Completed "<<i<<" of "<<nvecs<<endl;
-      }
-    }
-  }
-
-  void pMarkCluster(int /*proc*/) {
-    int start=0;
-    int end=0;
-    while(work.nextAssignment(start, end)) {
-      for (int i=start; i<end; i++) {
-	if (nnt[i].nearest==idx1 || nnt[i].nearest==idx2)
-	  nnt[i].update=true;
-	else
-	  nnt[i].update=false;
-      }
-    }
-  }
-
-  void pAdjustMapping(int /*proc*/) {
-    int start=0;
-    int end=0;
-    while(work.nextAssignment(start, end)) {
-      for(int i=start; i<end; i++) {
-	if (index[i]==idx2)
-	  index[i]=idx1;
-      }
-    }
-  }
-  
-  void pUpdateNearestNeighborTable(int /*proc*/) {
-    int start=0;
-    int end=0;
-    while(work.nextAssignment(start, end)) {
-      for(int i=start; i<end; i++) {
-	if (nnt[i].nearest==last)
-	  nnt[i].nearest=idx2;
-      }
-    }
-  }
-  
-  void pUpdateMapping(int /*proc*/) {
-    int start=0;
-    int end=0;
-    while(work.nextAssignment(start, end)) {
-      for(int i=start; i<end; i++) {
-	if (index[i]==last)
-	  index[i]=idx2;
-      }
-    }
-  }
-  
-  void pUpdateNearestNeighbor(int /*proc*/) {
-    int start=0;
-    int end=0;
-    while(work.nextAssignment(start, end)) {
-      for(int i=start; i<end; i++) {
-	if (nnt[i].update) {
-	  nnt[i]=findNearestNeighbor(i);
-	  nnt[i].update=false;
-	}
-      }
-    }
-  }
-};
 
 int main(int argc, char* argv[]) {
   char* me=argv[0];
@@ -324,14 +194,14 @@ int main(int argc, char* argv[]) {
   if (verbose)
     cout<<"Initializing codebook and index array"<<endl;
   
-  cb_size=nvecs;
   float* vec_data=(float*)(vec->data);
-  for (int i=0; i<cb_size; i++) {
+  for (int i=0; i<nvecs; i++) {
     cluster[i]=Cluster(vec_data);
     index[i]=i;
     
     vec_data+=Cluster::ndims;
   }
+  cb_size=nvecs;
 
   if (verbose>4) {
     cout<<endl;
@@ -342,23 +212,12 @@ int main(int argc, char* argv[]) {
   if (verbose)
     cout<<"Finding nearest neighbors"<<endl;
 
+  ParallelVQ pvq;
   if (nt>1) {
-    ParallelHelper phelper;
-    
-    work.refill(nvecs, nt);
-    Parallel<ParallelHelper> pinit(&phelper, &ParallelHelper::pInitNearestNeighbor);
-    Thread::parallel(pinit, nt, true);
+    Parallel<ParallelVQ> nearest(&pvq, &ParallelVQ::initNearestNeighbors);
+    Thread::parallel(nearest, nt, true);
   } else {
-    for (int i=0; i<nvecs; i++) {
-      nnt[i]=findNearestNeighbor(i);
-      if (nnt[i].nearest<0) {
-	cerr<<me<<":  error finding nearest neighbor for cluster["<<i<<"]"<<endl;
-	exit(1);
-      }
-      
-      if (verbose>4 && i%100==0 && i!=0)
-	cout<<"Completed "<<i<<" of "<<nvecs<<endl;
-    }
+    pvq.initNearestNeighbors(0);
   }
 
   if (verbose>4) {
@@ -379,13 +238,15 @@ int main(int argc, char* argv[]) {
       cerr<<me<<":  error finding cluster with minimum distance"<<endl;
       exit(1);
     }
-    
-    if (mergeClusters(idx1, nnt[idx1].nearest)) {
-      cerr<<me<<":  error merging cluster["<<idx1
-	  <<"] and cluster["<<nnt[idx1].nearest<<"]"<<endl;
-      exit(1);
-    }
 
+    pvq.initMerge(idx1, nnt[idx1].nearest);
+    if (nt>1) {
+      Parallel<ParallelVQ> merge(&pvq, &ParallelVQ::mergeClusters);
+      Thread::parallel(merge, nt, true);
+    } else {
+      pvq.mergeClusters(0);
+    }
+    
     if (verbose>4) {
       int diff=cb_size-ncwords;
       if (diff%100==0 && diff!=0)
@@ -594,25 +455,6 @@ int findMinDistance(void) {
   return min_idx;
 }
 
-int mergeClusters(int idx1, int idx2) {
-  // Ensure idx1 is smaller than idx2
-  if (idx1>idx2) {
-    int tmp=idx1;
-    idx1=idx2;
-    idx2=tmp;
-  }
-
-  if (verbose>9)
-    cout<<"Merging cluster["<<idx2<<"] into cluster["<<idx1<<"]"<<endl;
-
-  if (nt>1)
-    parallelMerge(idx1, idx2, cb_size-1);
-  else
-    serialMerge(idx1, idx2, cb_size-1);
-  
-  return 0;
-}
-
 float computeDistortion(Cluster c1, Cluster c2, float min) {
   float weight=(c1.nmap*c2.nmap)/(float)(c1.nmap + c2.nmap);
   float distance=0;
@@ -643,132 +485,207 @@ float* computeCentroid(Cluster c1, Cluster c2) {
   return centroid;
 }
 
-void parallelMerge(int idx1, int idx2, int last) {
-  ParallelHelper phelper(idx1, idx2, last);
-
-  // Mark clusters for update
-  nnt[idx1].update=true;
-    
-  work.refill(cb_size, nt);
-  Parallel<ParallelHelper> pmark(&phelper, &ParallelHelper::pMarkCluster);
-  Thread::parallel(pmark, nt, true);
-
-  // Join nearest clusters
-  float *centroid=computeCentroid(cluster[idx1], cluster[idx2]);
-  cluster[idx1].vec(centroid);
-  
-  delete [] centroid;
-
-  // Adjust vector-cluster mappings
-  work.refill(nvecs, nt);
-  Parallel<ParallelHelper> padjust(&phelper, &ParallelHelper::pAdjustMapping);
-  Thread::parallel(padjust, nt, true);
-    
-  if (verbose>9) {
-    for (int i=0; i<nvecs; i++)
-      cout<<"vector["<<i<<"] maps to cluster["<<index[i]<<"]"<<endl;
-    cout<<endl;
-  }
-  
-  cluster[idx1].nmap+=cluster[idx2].nmap;
-
-  // Fill empty position in codebook
-  if (idx2!=last) {
-    if (verbose>9) {
-      cout<<"Moving cluster["<<last<<"] to cluster["<<idx2<<"]"<<endl;
-      cout<<"-------------------"<<endl;
-      cout<<endl;
-    }
-    
-    cluster[idx2]=cluster[last];
-    nnt[idx2]=nnt[last];
-
-    // Update nearest neighbor table
-    work.refill(cb_size, nt);
-    Parallel<ParallelHelper> pupdate_nnt(&phelper, &ParallelHelper::pUpdateNearestNeighborTable);
-    Thread::parallel(pupdate_nnt, nt, true);
-    
-    // Update vector-cluster mappings
-    work.refill(nvecs, nt);
-    Parallel<ParallelHelper> pupdate_idx(&phelper, &ParallelHelper::pUpdateNearestNeighborTable);
-    Thread::parallel(pupdate_idx, nt, true);
-  }
-
-  // Decrement codebook size
-  cb_size--;
-
-  // Find new nearest neighbors, if necessary
-  work.refill(cb_size, nt);
-  Parallel<ParallelHelper> pupdate_nearest(&phelper, &ParallelHelper::pUpdateNearestNeighbor);
-  Thread::parallel(pupdate_nearest, nt, true);
+NearestNeighbor::NearestNeighbor(void) {
+  nearest=-1;
+  distance=FLT_MAX;
+  update=false;
 }
 
-void serialMerge(int idx1, int idx2, int last) {
-  char* me="serialMerge";
+NearestNeighbor& NearestNeighbor::operator=(const NearestNeighbor& nn) {
+  nearest=nn.nearest;
+  distance=nn.distance;
+  update=nn.update;
+
+  return *this;
+}
+
+Cluster::Cluster(void) {
+  v=new float[ndims];
+  if (!v) {
+    cerr<<"Cluster::Cluster - error allocating memory for vector"<<endl;
+    return;
+  }
   
-  // Mark clusters for update
-  nnt[idx1].update=true;
+  nmap=0;
+}
+  
+Cluster::Cluster(float* in_v) {
+  if (!in_v) {
+    cerr<<"Cluster::Cluster - input vector is null"<<endl;
+    return;
+  }
+  
+  v=new float[ndims];
+  if (!v) {
+    cerr<<"Cluster::Cluster - error allocating memory for vector"<<endl;
+    return;
+  }
+  
+  for (int i=0; i<ndims; i++)
+    v[i]=in_v[i];
+  
+  nmap=1;
+}
+
+Cluster& Cluster::operator=(const Cluster c) {
+  for (int i=0; i<ndims; i++)
+    v[i]=c.v[i];
+  
+  nmap=c.nmap;
+  
+  return *this;
+}
+
+void Cluster::vec(float* in_v) {
+  if (!in_v) {
+    cerr<<"Cluster::vec - new vector is null"<<endl;
+    return;
+  }
+  
+  for (int i=0; i<ndims; i++)
+    v[i]=in_v[i];
+}
+
+ParallelVQ::ParallelVQ(void) {
+  idx1=idx2=last=-1;
+  barrier=new Barrier("ParallelVQ barrier");
+}
+
+ParallelVQ::~ParallelVQ(void) {
+  if (barrier)
+    delete barrier;
+}
+
+void ParallelVQ::initNearestNeighbors(int proc) {
+  // Determine ranges of parallel calculations
+  int start=0;
+  int end=0;
+  range(proc, nvecs, &start, &end);
     
-  for (int i=0; i<cb_size; i++) {
+  for(int i=start; i<end; i++) {
+    nnt[i]=findNearestNeighbor(i);
+    if (nnt[i].nearest<0) {
+      cerr<<"ParallelVQ::initNearestNeighbor:  error finding nearest neighbor"
+	  <<" for cluster["<<i<<"]"<<endl;
+      exit(1);
+    }
+      
+    if (verbose>4 && i%100==0 && i!=0)
+      cout<<"Completed "<<i<<" of "<<nvecs<<endl;
+  }
+}
+
+void ParallelVQ::initMerge(int i1, int i2) {
+  idx1=i1;
+  idx2=i2;
+    
+  // Ensure idx1 is smaller than idx2
+  if (idx1>idx2) {
+    int tmp=idx1;
+    idx1=idx2;
+    idx2=tmp;
+  }
+
+  last=cb_size-1;
+    
+  if (verbose>9)
+    cout<<"Merging cluster["<<idx2<<"] into cluster["<<idx1<<"]"<<endl;
+}
+  
+void ParallelVQ::mergeClusters(int proc) {
+  // Determine ranges of parallel calculations
+  int cb_start=0;
+  int cb_end=0;
+  range(proc, cb_size, &cb_start, &cb_end);
+    
+  int vec_start=0;
+  int vec_end=0;
+  range(proc, nvecs, &vec_start, &vec_end);
+    
+  // Mark clusters for update
+  if (proc==0)
+    nnt[idx1].update=true;
+
+  barrier->wait(nt);
+
+  for (int i=cb_start; i<cb_end; i++) {
     if (nnt[i].nearest==idx1 || nnt[i].nearest==idx2)
       nnt[i].update=true;
     else
       nnt[i].update=false;
-  }      
+  }
+
+  barrier->wait(nt);
 
   // Join nearest clusters
-  float *centroid=computeCentroid(cluster[idx1], cluster[idx2]);
-  cluster[idx1].vec(centroid);
-  
-  delete [] centroid;
+  if (proc==0) {
+    float *centroid=computeCentroid(cluster[idx1], cluster[idx2]);
+    cluster[idx1].vec(centroid);
+    cluster[idx1].nmap+=cluster[idx2].nmap;
+      
+    delete [] centroid;
+  }
+
+  barrier->wait(nt);
 
   // Adjust vector-cluster mappings
-  for (int i=0; i<nvecs; i++) {
+  for (int i=cb_start; i<vec_end; i++) {
     if (index[i]==idx2)
       index[i]=idx1;
   }
 
   if (verbose>9) {
-    for (int i=0; i<nvecs; i++)
+    for (int i=vec_start; i<vec_end; i++)
       cout<<"vector["<<i<<"] maps to cluster["<<index[i]<<"]"<<endl;
     cout<<endl;
   }
   
-  cluster[idx1].nmap+=cluster[idx2].nmap;
+  barrier->wait(nt);
 
   // Fill empty position in codebook
   if (idx2!=last) {
-    if (verbose>9) {
-      cout<<"Moving cluster["<<last<<"] to cluster["<<idx2<<"]"<<endl;
-      cout<<"-------------------"<<endl;
-      cout<<endl;
+    if (proc==0) {
+      if (verbose>9) {
+	cout<<"Moving cluster["<<last<<"] to cluster["<<idx2<<"]"<<endl;
+	cout<<"-------------------"<<endl;
+	cout<<endl;
+      }
+	
+      cluster[idx2]=cluster[last];
+      nnt[idx2]=nnt[last];
     }
-    
-    cluster[idx2]=cluster[last];
-    nnt[idx2]=nnt[last];
+
+    barrier->wait(nt);
 
     // Update nearest neighbor table
-    for (int i=0; i<cb_size-1; i++) {
+    for (int i=cb_start; i<cb_end; i++) {
       if (nnt[i].nearest==last)
 	nnt[i].nearest=idx2;
     }
 
     // Update vector-cluster mappings
-    for (int i=0; i<nvecs; i++) {
+    for (int i=vec_start; i<vec_end; i++) {
       if (index[i]==last)
 	index[i]=idx2;
     }
   }
 
+  barrier->wait(nt);
+
   // Decrement codebook size
-  cb_size--;
+  if (proc==0)
+    cb_size--;
+
+  barrier->wait(nt);
 
   // Find new nearest neighbors, if necessary
-  for (int i=0; i<cb_size; i++) {
+  range(proc, cb_size, &cb_start, &cb_end);
+  for (int i=cb_start; i<cb_end; i++) {
     if (nnt[i].update) {
       nnt[i]=findNearestNeighbor(i);
       if (nnt[i].nearest<0) {
-	cerr<<me<<":  error finding nearest neighbor for cluster["
+	cerr<<"ParallelVQ::mergeClusters:  error finding nearest"
+	    <<" neighbor for cluster["
 	    <<i<<"]"<<endl;
 	return;
       }
@@ -776,4 +693,22 @@ void serialMerge(int idx1, int idx2, int last) {
       nnt[i].update=false;
     }
   }
+
+  barrier->wait(nt);
+}
+
+void ParallelVQ::range(int rank, int total, int* start, int* end) {
+  // Determine start and end of range
+  int size=total/nt;
+  int r=total%nt;
+  *start=0;
+  if (r!=0) {
+    if (rank<r)
+      size++;
+    else
+      *start=r;
+  }
+    
+  *start+=rank*size;
+  *end=*start + size;
 }
