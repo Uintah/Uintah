@@ -3,13 +3,10 @@
 
 LOCALINCLUDES = -I.. -I../../project
 
-<<<<<<< Imakefile
-OBJS = ContourSetReader.o  ScalarFieldReader.o  SurfaceReader.o
-SRCS = ContourSetReader.cc ScalarFieldReader.cc SurfaceReader.cc
-=======
-OBJS = ScalarFieldReader.o  SurfaceReader.o  VectorFieldReader.o
-SRCS = ScalarFieldReader.cc SurfaceReader.cc VectorFieldReader.cc
->>>>>>> 1.3
+OBJS = ContourSetReader.o  ScalarFieldReader.o  SurfaceReader.o \
+	VectorFieldReader.o
+SRCS = ContourSetReader.cc ScalarFieldReader.cc SurfaceReader.cc \
+	VectorFieldReader.cc
 
 .cc.o:
 	$(CCC) $(CCFLAGS) -c $<
