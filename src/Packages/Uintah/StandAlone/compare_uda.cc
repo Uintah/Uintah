@@ -399,7 +399,8 @@ void MaterialParticleData::sort()
   }
 
   ParticleSet* set = scinew ParticleSet((particleIndex)subsetIndices.size());
-  ParticleSubset* subset = scinew ParticleSubset(set, false, matl_, 0);
+  ParticleSubset* subset = scinew ParticleSubset(set, false, matl_, 0,
+						 subsetIndices.size());
   for (unsigned int i = 0; i < subsetIndices.size(); i++) {
     subset->addParticle(subsetIndices[i]);
   }
