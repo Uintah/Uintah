@@ -110,7 +110,7 @@ template<class T>
 void Array1<T>::insert(int idx, const T& obj)
 {
     grow(1, default_grow_size);
-    for(int i=idx;i<_size-1;i++)objs[i+1]=objs[i];
+    for(int i=_size-1;i>idx;i--)objs[i]=objs[i-1];
     objs[idx]=obj;
 }
 
