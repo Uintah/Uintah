@@ -80,6 +80,16 @@ public:
     void set(int);
 };
 
+class TCLvarintp : public TCLvar {
+    int* value;
+public:
+    TCLvarintp(int*, const clString& name, const clString& id, TCL* tcl);
+    ~TCLvarintp();
+
+    int get();
+    void set(int);
+};
+
 class Point;
 class TCLPoint : public TCLvar {
     TCLdouble x;

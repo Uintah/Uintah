@@ -201,6 +201,33 @@ void TCLvarint::set(int nv)
     value=nv;
 }
 
+TCLvarintp::TCLvarintp(int* value,
+		       const clString& name, const clString& id, TCL* tcl)
+: TCLvar(name, id, tcl), value(value)
+{
+    TCLTask::lock();
+    char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
+    if(Tcl_LinkVar(the_interp, varname(), (char*)value, TCL_LINK_INT) != TCL_OK){
+	cerr << "Error linking variable: " << varname << endl;
+    }
+    TCLTask::unlock();
+}
+
+TCLvarintp::~TCLvarintp()
+{
+    Tcl_UnlinkVar(the_interp, varname());
+}
+
+int TCLvarintp::get()
+{
+    return *value;
+}
+
+void TCLvarintp::set(int nv)
+{
+    *value=nv;
+}
+
 TCLPoint::TCLPoint(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl), x("x", str(), tcl), y("y", str(), tcl),
   z("z", str(), tcl)
