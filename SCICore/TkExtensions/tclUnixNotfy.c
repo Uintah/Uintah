@@ -14,7 +14,7 @@
  * RCS: @(#) $Id$
  */
 
-#include <config.h>
+#include <sci_config.h>
 #include "tclInt.h"
 #include "tclPort.h"
 #include <signal.h> 

@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <config.h>
+#include <sci_config.h>
 #undef SCI_ASSERTION_LEVEL_3
 #define SCI_ASSERTION_LEVEL_2
 #include <SCICore/Containers/Array1.h>
@@ -282,6 +282,18 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 05:30:54  sparker
+// Configuration updates:
+//  - renamed config.h to sci_config.h
+//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
+//    sci_config.h
+//  - Added flags for --enable-scirun, --enable-uintah, and
+//    --enable-davew, to build the specific package set.  More than one
+//    can be specified, and at least one must be present.
+//  - Added a --enable-parallel, to build the new parallel version.
+//    Doesn't do much yet.
+//  - Made construction of config.h a little bit more general
+//
 // Revision 1.3  1999/08/18 20:20:12  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

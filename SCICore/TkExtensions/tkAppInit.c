@@ -13,7 +13,7 @@
  * SCCS: @(#) tkAppInit.c 1.22 96/05/29 09:47:08
  */
 
-#include <config.h>
+#include <sci_config.h>
 #include <tk.h>
 #include <itk.h>
 

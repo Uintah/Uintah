@@ -15,7 +15,7 @@
 #ifndef SCI_Containers_HashTable_h
 #define SCI_Containers_HashTable_h 1
 
-#include <config.h>
+#include <sci_config.h>
 
 #include <SCICore/share/share.h>
 
@@ -537,6 +537,18 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 05:30:54  sparker
+// Configuration updates:
+//  - renamed config.h to sci_config.h
+//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
+//    sci_config.h
+//  - Added flags for --enable-scirun, --enable-uintah, and
+//    --enable-davew, to build the specific package set.  More than one
+//    can be specified, and at least one must be present.
+//  - Added a --enable-parallel, to build the new parallel version.
+//    Doesn't do much yet.
+//  - Made construction of config.h a little bit more general
+//
 // Revision 1.3  1999/08/18 18:56:16  sparker
 // Use 64 bit mmap
 // Incorporated missing Hashtable Pio function

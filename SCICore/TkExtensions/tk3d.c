@@ -13,7 +13,7 @@
  * RCS: @(#) $Id$
  */
 
-#include <config.h>
+#include <sci_config.h>
 #include <tk3d.h>
 
 /*

@@ -14,7 +14,7 @@
 #ifndef SCI_Containers_LockingHandle_h
 #define SCI_Containers_LockingHandle_h 1
 
-#include <config.h>
+#include <sci_config.h>
 
 #include <SCICore/Util/Assert.h>
 
@@ -191,6 +191,18 @@ void Pio(Piostream& stream, LockingHandle<T>& data)
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 05:30:55  sparker
+// Configuration updates:
+//  - renamed config.h to sci_config.h
+//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
+//    sci_config.h
+//  - Added flags for --enable-scirun, --enable-uintah, and
+//    --enable-davew, to build the specific package set.  More than one
+//    can be specified, and at least one must be present.
+//  - Added a --enable-parallel, to build the new parallel version.
+//    Doesn't do much yet.
+//  - Made construction of config.h a little bit more general
+//
 // Revision 1.2  1999/08/17 06:38:36  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -1,9 +1,58 @@
 ## XXX: Should probably set AC_PREFIX_DEFUALT to something good some day.
+## TODO:
+##  - Automatically detect TEMPLATE_BOX and TEMPLATE_TAG variables
 
 AC_INIT(README.PSE)
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(sci_config.h)
 
-##-- Canonical Host Type ------------------------------------------------------
+##-- Check for different versions --------------------------------------------
+
+AC_ARG_ENABLE(scirun,
+	[  --enable-scirun		Build the SCIRun modules],
+	[scirun="$enableval"],
+	[scirun=${scirun='no'}])
+AC_ARG_ENABLE(uintah,
+	[  --enable-uintah		Build the Uintah modules],
+	[uintah="$enableval"],
+	[uintah=${uintah='no'}])
+AC_ARG_ENABLE(davew,
+	[  --enable-davew		Build the Dave Weinstein modules],
+	[davew="$enableval"],
+	[davew=${davew='no'}])
+
+if test "$scirun" = "no" -a "$uintah" = "no" -a "$davew" = "no"; then
+  echo "Please at least use one of:"
+  echo "  --enable-scirun"
+  echo "  --enable-uintah"
+  echo "  --enable-davew"
+  exit 1
+fi
+
+PACKAGE_DIRS=""
+PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/libPSECommon.so\(\$(SRCTOP_ABS)/PSECommon/TCL\)"
+
+if test "$scirun" = "yes"; then
+# No specific SCIRun directory yet...
+#  PACKAGE_DIRS=$PACKAGE_DIRS" SCIRun"
+#  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/TCL\)"
+  EXENAME="scirun"
+fi
+if test "$uintah" = "yes"; then
+  PACKAGE_DIRS=$PACKAGE_DIRS" Uintah"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Uintah/libUintah.so\(\$(SRCTOP_ABS)/Uintah/TCL\)"
+  EXENAME="uintah"
+fi
+if test "$davew" = "yes"; then
+  PACKAGE_DIRS=$PACKAGE_DIRS" DaveW"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/TCL\)"
+  EXENAME="davew"
+fi
+
+AC_SUBST(PACKAGE_DIRS)
+AC_SUBST(PACKAGE_PATH)
+AC_SUBST(EXENAME)
+
+##-- Canonical Host Type -----------------------------------------------------
 
 # We pull a little trick here, pointing srcdir at ./scripts so that when it
 # looks for and constructs the canonical path for "install-sh", it picks it
@@ -15,7 +64,7 @@ srcdir="${srcdir}/scripts"
 AC_CANONICAL_HOST
 srcdir="${oldSrcDir}"
 
-##-- Host-Specific Defaults ---------------------------------------------------
+##-- Host-Specific Defaults --------------------------------------------------
 
 AC_SUBST(CC)
 AC_SUBST(CXX)
@@ -29,8 +78,8 @@ AC_SUBST(BINARYFLAGS)
 
 AC_ARG_ENABLE(64bit,
 	[  --enable-64bit		Compile in 64 bit mode],
-	[is_64bit="$enableval"]
-	[is_64bit=${is_64bit='no'}])
+	[is_64bit="$enableval"],
+	[is_64bit=$i{is_64bit='no'}])
 
 case $host in
   *-irix*) echo -n "Checking for /opt/MIPSpro/bin/cc... "
@@ -63,40 +112,19 @@ case $host in
                echo "Using C compiler ${CC}"
              fi
            fi
-
-           # XXX: A Crock
-
-           rm -f config.h
-           echo "#ifndef SCI_CONFIG_H" >> config.h
-           echo "#define SCI_CONFIG_H" >> config.h
-           echo "#define SCI_MACHINE_SGI" >> config.h
-           echo "#define SCI_VARIANT_Debug" >> config.h
-           echo "#define SCI_ASSERTION_LEVEL_3" >> config.h
-           echo "#define SCI_OPENGL" >> config.h
-           echo "#define SCI_NORM_OGL" >> config.h
-	   if test "$is_64bit" = "yes" ; then
-             echo "#define SCI_IRIX_BIN_n64_mips4" >> config.h
-	     echo "#define SCI_64BIT" >> config.h
-	   else
-             echo "#define SCI_IRIX_BIN_n32_mips4" >> config.h
-	   fi	
-
-           echo "#define TEMPLATE_TAG" >> config.h
-           echo "#define TEMPLATE_BOX" >> config.h
-
-           echo "#endif" >> config.h
+	   TEMPLATE_TAG=
+	   TEMPLATE_BOX=
            ;;
   *) AC_PROG_CC
      AC_PROG_CXX
      ;;
 esac
 
-##-- Find a C Compiler --------------------------------------------------------
-
+##-- Find a C Compiler -------------------------------------------------------
 ## AC_PROG_CC
 ## AC_PROG_CXX
 
-##-- Find Perl ----------------------------------------------------------------
+##-- Find Perl ---------------------------------------------------------------
 
 AC_PATH_PROG(PERL, perl, none)
 if test "${PERL}" = "none" ; then
@@ -104,7 +132,7 @@ if test "${PERL}" = "none" ; then
   exit 1
 fi
 
-##-- Twitty SGI License Chatter -----------------------------------------------
+##-- Twitty SGI License Chatter ----------------------------------------------
 
 echo -n "Checking if ${CC} talks too much... "
 touch wow.c
@@ -132,12 +160,12 @@ rm -f wow.c wow.o
 
 ## AC_PROG_INSTALL
 
-##-- One Rarely Finds This ----------------------------------------------------
+##-- One Rarely Finds This ---------------------------------------------------
 
 AC_CHECK_LIB(Kenny,life_signs,true,
              echo "  Oh my God!  They killed Kenny!  You bastards!")
 
-##-- Dependency Regen Switch --------------------------------------------------
+##-- Dependency Regen Switch -------------------------------------------------
 
 echo -n "Determining cc dependency regen switch: "
 rm -f configure-test.*
@@ -170,7 +198,7 @@ else
 fi
 AC_SUBST(CC_DEPEND_REGEN)
 
-##-- How Many Processors ------------------------------------------------------
+##-- How Many Processors -----------------------------------------------------
 
 unset NUM_CPUS
 echo -n "Determining physical processor count: "
@@ -191,7 +219,7 @@ MAKE_PARALLELISM="`expr ${NUM_CPUS} \* 2`"
 export MAKE_PARALLELISM
 AC_SUBST(MAKE_PARALLELISM)
 
-##-- Find TCL -----------------------------------------------------------------
+##-- Find TCL ----------------------------------------------------------------
 
 echo -n "Looking for Pre-built TCL 8.0.4... "
 unset Wish80
@@ -225,7 +253,7 @@ AC_SUBST(TCL_INCLUDE_DIR)
 AC_SUBST(TCL_LIB_DIR)
 AC_SUBST(TCL_LIB_FLAG)
 
-##-- Find Tk ------------------------------------------------------------------
+##-- Find Tk -----------------------------------------------------------------
 
 echo -n "Looking for Pre-built Tk 8.0.4... "
 unset Wish80
@@ -269,7 +297,7 @@ AC_SUBST(TK_INCLUDE_DIR)
 AC_SUBST(TK_LIB_DIR)
 AC_SUBST(TK_LIB_FLAG)
 
-##-- Find iTcl ----------------------------------------------------------------
+##-- Find iTcl ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built iTk 3.0... "
 if test "$BUILDING_TK" = "" ; then
@@ -300,11 +328,43 @@ AC_SUBST(ITCL_INCLUDE_DIR)
 AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 
-##-- Check for header files ---------------------------------------------------
+##-- Check for option to build new parallel (distributed memory) SCIRun ------
+
+AC_ARG_ENABLE(enable_parallel,
+	[  --enable-parallel		Compile experimental distributed memory version],
+	[enable_parallel="$enableval"],
+	[enable_parallel=${enable_parallel='no'}])
+if test "$enable_parallel" = "yes"; then
+  PARALLEL_DEFINE="#define SCI_PARALLEL"
+else
+  PARALLEL_DEFINE=""
+fi
+AC_SUBST(PARALLEL_DEFINE)
+
+##-- Emit local configuration file -------------------------------------------
+
+if test "$is_64bit" = "yes"; then
+  NBITS=64
+else
+  NBITS=32
+fi
+AC_SUBST(NBITS)
+
+AC_ARG_ENABLE(assertion-level,
+	[  --enable-assertion-level=N   Use assertion level N (0-3)],
+	[enable_assertion_level="$enableval"],
+	[enable_assertion_level=${enable_assertion_level=3}])
+ASSERTION_LEVEL=$enable_assertion_level
+AC_SUBST(ASSERTION_LEVEL)
+
+AC_SUBST(TEMPLATE_BOX)
+AC_SUBST(TEMPLATE_TAG)
+
+##-- Check for header files --------------------------------------------------
 
 AC_ARG_ENABLE(enterleave,
 	[  --enable-enterleave		Make gmake print out entering/leaving statements],
-	[enterleave="$enableval"]
+	[enterleave="$enableval"],
 	[enterleave=${enterleave='no'}])
 
 if test "$enterleave" = "yes" ; then
@@ -314,17 +374,17 @@ else
 fi
 AC_SUBST(NOPRINTDIR)
 
-
-##-- Check for header files ---------------------------------------------------
+##-- Check for header files --------------------------------------------------
 
 AC_CHECK_HEADERS(limits.h)
 AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(sys/time.h)
 
-##-- Generate Output Files ----------------------------------------------------
+##-- Generate Output Files ---------------------------------------------------
 
 AC_OUTPUT(Makefile \
+	  sci_defs.h \
             scripts/compile.mk \
 	    scripts/recurse.mk \
             scripts/targets.mk \

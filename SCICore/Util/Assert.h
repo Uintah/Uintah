@@ -14,7 +14,7 @@
 #ifndef SCI_Containers_Assert_h
 #define SCI_Containers_Assert_h 1
 
-#include <config.h>
+#include <sci_config.h>
 #ifdef SCI_ASSERTION_LEVEL_0
 #define SCI_ASSERTION_LEVEL 0
 #endif
