@@ -44,6 +44,7 @@ using std::cout;
 using namespace SCIRun;
 using namespace Uintah;
 
+static DebugStream amrout("AMR", false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld) :
   SimulationController(myworld)
@@ -148,13 +149,12 @@ void AMRSimulationController::run()
    SchedulerP scheduler(sched);
 
    if(d_myworld->myrank() == 0){
-     cout << "Compiling taskgraph...";
-     cout.flush();
+     cout << "Compiling initialization taskgraph...\n";
    }
    double start = Time::currentSeconds();
-   scheduler->advanceDataWarehouse(grid);
    
-   scheduler->initialize();
+   scheduler->initialize(1, 1);
+   scheduler->advanceDataWarehouse(grid);
 
    double t;
 
@@ -173,41 +173,42 @@ void AMRSimulationController::run()
 
       double delt = 0;
       archive.restartInitialize(d_restartTimestep, grid,
-				scheduler->get_new_dw(), &t, &delt);
+				scheduler->get_dw(1), &t, &delt);
       
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			   d_restartFromScratch, d_restartRemoveOldDir);
-      scheduler->get_new_dw()->finalize();
+      scheduler->get_dw(1)->finalize();
       sim->restartInitialize();
    } else {
       // Initialize the CFD and/or MPM data
-      for(int i = 0; i < grid->numLevels(); i++){
-	 LevelP level = grid->getLevel(i);
-	 sim->scheduleInitialize(level, scheduler);
-      }
+     LevelP level = grid->getLevel(0);
+     sim->scheduleInitialize(level, scheduler);
+     for(int i=1;i<grid->numLevels();i++){
+       LevelP fineLevel = grid->getLevel(i);
+       sim->scheduleRefine(fineLevel, scheduler);
+     }
    }
    
-   // Parse time struct
-   /* SimulationTime timeinfo(ups); */
-
    double start_time = Time::currentSeconds();
 
-
-   LevelP level = grid->getLevel(0);
    if (!d_restarting){
      t = timeinfo.initTime;
-     sim->scheduleComputeStableTimestep(level,scheduler);
+     for(int i=0;i<grid->numLevels();i++)
+       sim->scheduleComputeStableTimestep(grid->getLevel(i),scheduler);
    }
 
    if(output)
-      output->finalizeTimestep(t, 0, level, scheduler);
+      output->finalizeTimestep(t, 0, grid, scheduler);
 
-   scheduler->compile(d_myworld, false, false);
+   amrout << "Compiling initial schedule\n";
+   scheduler->compile(d_myworld);
    
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
      cout << "done taskgraph compile (" << dt << " seconds)\n";
-   scheduler->executeTimestep(d_myworld);
+   // No scrubbing for initial step
+   scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+   scheduler->execute(d_myworld);
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
@@ -215,223 +216,224 @@ void AMRSimulationController::run()
    double prevWallTime;
 #endif
 
-   std::vector<SchedulerP> schedulers;
-   schedulers.push_back(scheduler);
+   std::vector<int> levelids;
 
    ////////////////////////////////////////////////////////////////////////////
    // The main time loop; here the specified problem is actually getting solved
    
-   bool first=true;
    int  iterations = 0;
+   int new_dwidx = 1;
    while( ( t < timeinfo.maxTime ) && 
 	  ( iterations < timeinfo.num_time_steps ) ) {
 
-      iterations ++;
-      double wallTime = Time::currentSeconds() - start_time;
+     iterations ++;
+     double wallTime = Time::currentSeconds() - start_time;
  
-      delt_vartype delt_var;
-      scheduler->get_new_dw()->get(delt_var, sharedState->get_delt_label());
+     delt_vartype delt_var;
+     DataWarehouse* newDW = scheduler->get_dw(new_dwidx);
+     newDW->get(delt_var, sharedState->get_delt_label());
 
-      double delt = delt_var;
-      delt *= timeinfo.delt_factor;
+     double delt = delt_var;
+     delt *= timeinfo.delt_factor;
       
-      if(delt < timeinfo.delt_min){
-	 if(d_myworld->myrank() == 0)
-	    cerr << "WARNING: raising delt from " << delt
-		 << " to minimum: " << timeinfo.delt_min << '\n';
-	 delt = timeinfo.delt_min;
-      }
-      if(delt > timeinfo.delt_max){
-	 if(d_myworld->myrank() == 0)
-	    cerr << "WARNING: lowering delt from " << delt 
-		 << " to maxmimum: " << timeinfo.delt_max << '\n';
-	 delt = timeinfo.delt_max;
-      }
-      scheduler->get_new_dw()->override(delt_vartype(delt),
-					sharedState->get_delt_label());
-
-      // After one step (either timestep or initialization) and correction
-      // the delta we can finally, finalize our old timestep, eg. 
-      // finalize and advance the Datawarehouse
-      scheduler->finalizeTimestep(grid);
-
+     if(delt < timeinfo.delt_min){
+       if(d_myworld->myrank() == 0)
+	 cerr << "WARNING: raising delt from " << delt
+	      << " to minimum: " << timeinfo.delt_min << '\n';
+       delt = timeinfo.delt_min;
+     }
+     if(delt > timeinfo.delt_max){
+       if(d_myworld->myrank() == 0)
+	 cerr << "WARNING: lowering delt from " << delt 
+	      << " to maxmimum: " << timeinfo.delt_max << '\n';
+       delt = timeinfo.delt_max;
+     }
+     newDW->override(delt_vartype(delt), sharedState->get_delt_label());
+     
 #ifndef DISABLE_SCI_MALLOC
-      size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
-	nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-	highwater_mmap;
+     size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
+       nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
+       highwater_mmap;
       
-      GetGlobalStats(DefaultAllocator(),
-		     nalloc, sizealloc, nfree, sizefree,
-		     nfillbin, nmmap, sizemmap, nmunmap,
-		     sizemunmap, highwater_alloc, highwater_mmap);
-      unsigned long memuse = sizealloc - sizefree;
-      unsigned long highwater = highwater_mmap;
+     GetGlobalStats(DefaultAllocator(),
+		    nalloc, sizealloc, nfree, sizefree,
+		    nfillbin, nmmap, sizemmap, nmunmap,
+		    sizemunmap, highwater_alloc, highwater_mmap);
+     unsigned long memuse = sizealloc - sizefree;
+     unsigned long highwater = highwater_mmap;
 #else
-      unsigned long memuse = (char*)sbrk(0)-start_addr;
-      unsigned long highwater = 0;
+     unsigned long memuse = (char*)sbrk(0)-start_addr;
+     unsigned long highwater = 0;
 #endif
 
-      unsigned long avg_memuse = memuse;
-      unsigned long max_memuse = memuse;
-      unsigned long avg_highwater = highwater;
-      unsigned long max_highwater = highwater;
-      if (d_myworld->size() > 1) {
-	MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
-		   d_myworld->getComm());
-	if(highwater){
-	  MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
-		     MPI_SUM, 0, d_myworld->getComm());
-	}
-	avg_memuse /= d_myworld->size(); // only to be used by processor 0
-	avg_highwater /= d_myworld->size();
-	MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
-		   d_myworld->getComm());
-	if(highwater){
-	  MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
-		     MPI_MAX, 0, d_myworld->getComm());
-	}
-      }
-      
-      if(log_dw_mem){
-	scheduler->logMemoryUse();
-	ostringstream fn;
-	fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
-	string filename(fn.str());
-	DumpAllocator(DefaultAllocator(), filename.c_str());
-      }
-
-      if(d_myworld->myrank() == 0){
-	cout << "Time=" << t << ", delT=" << delt 
-	     << ", elap T = " << wallTime 
-	     << ", DW: " << scheduler->get_new_dw()->getID() << ", Mem Use = ";
-	if (avg_memuse == max_memuse && avg_highwater == max_highwater){
-	  cout << avg_memuse;
-	  if(avg_highwater)
-	    cout << "/" << avg_highwater;
-	} else {
-	  cout << avg_memuse;
-	  if(avg_highwater)
-	    cout << "/" << avg_highwater;
-	  cout << " (avg), " << max_memuse;
-	  if(max_highwater)
-	    cout << "/" << max_highwater;
-	  cout << " (max)";
-	}
-	cout << endl;
-
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
-	if (n > 1) // ignore first set of elapsed times
-	  wallTimes.push_back(wallTime - prevWallTime);
-
-	if (wallTimes.size() > 1) {
-	  double stdDev, mean;
-	  stdDev = stdDeviation(wallTimes, mean);
-	  ofstream timefile("avg_elapsed_walltime.txt");
-	  timefile << mean << " +- " << stdDev << endl;
-	}
-	prevWallTime = wallTime;
-	n++;
-#endif
-      }
-
-      // put the current time into the shared state so other components
-      // can access it
-      sharedState->setElapsedTime(t);
-
-
-      // LevelP level = grid->getLevel(0); // dumb hack
-      if(need_recompile(t, delt, level, sim, output) || first){
-	 first=false;
-	 if(d_myworld->myrank() == 0)
-	   cout << "Compiling taskgraph for level 0...";
-	 double start = Time::currentSeconds();
-	 scheduler->initialize();
-
-	 sim->scheduleTimeAdvance(level, scheduler);
-
-	 if(output)
-	   output->finalizeTimestep(t, delt, level, scheduler);
+     unsigned long avg_memuse = memuse;
+     unsigned long max_memuse = memuse;
+     unsigned long avg_highwater = highwater;
+     unsigned long max_highwater = highwater;
+     if (d_myworld->size() > 1) {
+       MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
+		  d_myworld->getComm());
+       if(highwater){
+	 MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
+		    MPI_SUM, 0, d_myworld->getComm());
+       }
+       avg_memuse /= d_myworld->size(); // only to be used by processor 0
+       avg_highwater /= d_myworld->size();
+       MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
+		  d_myworld->getComm());
+       if(highwater){
+	 MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
+		    MPI_MAX, 0, d_myworld->getComm());
+       }
+     }
+     
+     if(log_dw_mem){
+       scheduler->logMemoryUse();
+       ostringstream fn;
+       fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
+       string filename(fn.str());
+       DumpAllocator(DefaultAllocator(), filename.c_str());
+     }
+     
+     if(d_myworld->myrank() == 0){
+       cout << "Time=" << t << ", delT=" << delt 
+	    << ", elap T = " << wallTime 
+	    << ", DW: " << newDW->getID() << ", Mem Use = ";
+       if (avg_memuse == max_memuse && avg_highwater == max_highwater){
+	 cout << avg_memuse;
+	 if(avg_highwater)
+	   cout << "/" << avg_highwater;
+       } else {
+	 cout << avg_memuse;
+	 if(avg_highwater)
+	   cout << "/" << avg_highwater;
+	 cout << " (avg), " << max_memuse;
+	 if(max_highwater)
+	   cout << "/" << max_highwater;
+	 cout << " (max)";
+       }
+       cout << endl;
        
-	 // Begin next time step...
-	 sim->scheduleComputeStableTimestep(level, scheduler);
-	 scheduler->compile(d_myworld, false, false);
+#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
+       if (n > 1) // ignore first set of elapsed times
+	 wallTimes.push_back(wallTime - prevWallTime);
 
-	 double dt=Time::currentSeconds()-start;
-	 if(d_myworld->myrank() == 0)
-	   cout << "DONE TASKGRAPH RE-COMPILE FOR LEVEL 0 (" << dt << " seconds)\n";
-      }
-      // Execute the current timestep
-      scheduler->executeTimestep(d_myworld);
-      if(output)
-          output->executedTimestep();
-      // remesh here!
+       if (wallTimes.size() > 1) {
+	 double stdDev, mean;
+	 stdDev = stdDeviation(wallTimes, mean);
+	 ofstream timefile("avg_elapsed_walltime.txt");
+	 timefile << mean << " +- " << stdDev << endl;
+       }
+       prevWallTime = wallTime;
+       n++;
+#endif
+     }
 
-      // subcycles in time on the finer levels
-      if(grid->numLevels() > 1)
-	 subCycle(schedulers, grid, sharedState, 1, sim);
+     // Compute number of dataWarehouses
+     int totalFine=1;
+     for(int i=1;i<grid->numLevels();i++)
+       totalFine *= grid->getLevel(i)->timeRefinementRatio();
+     
+     // After one step (either timestep or initialization) and correction
+     // the delta we can finally, finalize our old timestep, eg. 
+     // finalize and advance the Datawarehouse
+     scheduler->advanceDataWarehouse(grid);
 
+     // put the current time into the shared state so other components
+     // can access it
+     sharedState->setElapsedTime(t);
 
-      t += delt;
-      TAU_DB_DUMP();
+     if(need_recompile(t, delt, grid, sim, output, levelids)){
+       if(d_myworld->myrank() == 0)
+	 cout << "Compiling taskgraph...\n";
+       double start = Time::currentSeconds();
+       
+       scheduler->initialize(1, totalFine);
+       scheduler->fillDataWarehouses(grid);
+       new_dwidx = totalFine;
+
+       // Set up new DWs, DW mappings.
+       scheduler->clearMappings();
+       scheduler->mapDataWarehouse(Task::OldDW, 0);
+       scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+       
+       sim->scheduleTimeAdvance(grid->getLevel(0), scheduler);
+       
+       if(grid->numLevels() > 1)
+	 subCycle(grid, scheduler, sharedState, 0, totalFine, 1, sim);
+	
+       scheduler->clearMappings();
+       scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+       if(output)
+	 output->finalizeTimestep(t, delt, grid, scheduler);
+       
+       // CST might need an old DW
+       scheduler->mapDataWarehouse(Task::OldDW, 0);
+       for(int i=0;i<grid->numLevels();i++)
+	 sim->scheduleComputeStableTimestep(grid->getLevel(i), scheduler);
+
+       scheduler->compile(d_myworld);
+
+       double dt=Time::currentSeconds()-start;
+       if(d_myworld->myrank() == 0)
+	 cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
+       levelids.resize(grid->numLevels());
+       for(int i=0;i<grid->numLevels();i++)
+	 levelids[i]=grid->getLevel(i)->getID();
+     }
+
+     // Execute the current timestep
+     for(int i=0;i<totalFine;i++)
+       scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubComplete);
+     scheduler->get_dw(totalFine)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+     scheduler->execute(d_myworld);
+     if(output)
+       output->executedTimestep();
+     // remesh here!
+
+     t += delt;
+     TAU_DB_DUMP();
    }
-   scheduler->get_new_dw()->scrubExtraneous();
+   amrout << "ALL DONE\n";
 }
 
 
-void AMRSimulationController::subCycle(std::vector<SchedulerP>& schedulers, GridP& grid, SimulationStateP& sharedState, 
-                                       int numLevel, SimulationInterface* sim)
+void AMRSimulationController::subCycle(GridP& grid, SchedulerP& scheduler,
+				       SimulationStateP& sharedState,
+				       int startDW, int dwStride, int numLevel,
+				       SimulationInterface* sim)
 {
-   // We are on (the fine) level numLevel
-   LevelP fineLevel = grid->getLevel(numLevel);
-   // The previous coarse level is numLevel-1
-   LevelP coarseLevel = grid->getLevel(numLevel-1);
+  amrout << "Start AMRSimulationController::subCycle, level=" << numLevel << '\n';
+  // We are on (the fine) level numLevel
+  LevelP fineLevel = grid->getLevel(numLevel);
+  LevelP coarseLevel = grid->getLevel(numLevel-1);
 
-   // Check if we need a new scheduler for that level
-   SchedulerP coarseSched = schedulers[numLevel-1];
-   if(static_cast<int>(schedulers.size()) >= numLevel)
-      schedulers.push_back(coarseSched->createSubScheduler());
+  int numSteps = 2; // Make this configurable - Steve
+  int newDWStride = dwStride/numSteps;
 
-   SchedulerP fineSched = schedulers[numLevel];
-   fineSched->initialize();
+  ASSERT((newDWStride > 0 && numLevel+1 < grid->numLevels()) || (newDWStride == 0 || numLevel+1 == grid->numLevels()));
+  int curDW = startDW;
+  for(int step=0;step < numSteps;step++){
+    scheduler->clearMappings();
+    scheduler->mapDataWarehouse(Task::OldDW, curDW);
+    scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
+    scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
+    scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
 
-   // Get the Datawarehouses
-   //DataWarehouse* coarseDW = coarseSched->get_new_dw(); 
-   DataWarehouse* fineDW = fineSched->get_new_dw(); 
-
-   // halve the delta
-   delt_vartype delt_var;
-   fineDW->get(delt_var, sharedState->get_delt_label());
-   double delt = delt_var;
-   fineDW->put(delt_vartype(delt*0.5), sharedState->get_delt_label());
-
-   // schedule the interpolation
-   sim->scheduleRefine(coarseLevel, fineLevel, fineSched);
-   // For now don't scrap anything
-   fineSched->compile(d_myworld, false, false);
-   fineSched->executeRefine(d_myworld);
-   fineSched->finalizeTimestep(grid);
-
-   // Prepare the actual timestep;
-   sim->scheduleTimeAdvance(fineLevel, fineSched);
-   sim->scheduleComputeStableTimestep(fineLevel, fineSched);
-   fineSched->compile(d_myworld, false, false);
-
-   int i;
-   for(i = 0; i < 2; ++i)
-   {
-      fineSched->executeTimestep(d_myworld);
-      if(grid->numLevels() > numLevel)
-	 subCycle(schedulers, grid, sharedState, numLevel+1, sim);
-      fineSched->finalizeTimestep(grid);
-   }
-
-   // remesh here!
-
-   // schedule the interpolation
-   sim->scheduleCoarsen(coarseLevel, fineLevel, fineSched);
-   // For now don't scrap anything
-   fineSched->compile(d_myworld, false, false);
-   fineSched->executeCoarsen(d_myworld);
+    sim->scheduleRefineInterface(fineLevel, scheduler, step, numSteps);
+    sim->scheduleTimeAdvance(fineLevel, scheduler);
+    if(numLevel+1 < grid->numLevels()){
+      ASSERT(newDWStride > 0);
+      subCycle(grid, scheduler, sharedState, curDW, newDWStride,
+	       numLevel+1, sim);
+    }
+    curDW += newDWStride;
+  }
+  // Coarsening always happens at the final timestep, completely within the
+  // last DW
+  scheduler->clearMappings();
+  scheduler->mapDataWarehouse(Task::NewDW, curDW);
+  sim->scheduleCoarsen(coarseLevel, scheduler);
 }
 
 
@@ -442,6 +444,8 @@ void AMRSimulationController::problemSetup(const ProblemSpecP& params,
    if(!grid_ps)
       return;
    
+   Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
+   int levelIndex=0;
    for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
        level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
       // Make two passes through the patches.  The first time, we
@@ -450,7 +454,6 @@ void AMRSimulationController::problemSetup(const ProblemSpecP& params,
       // on the level, or with a resolution on the patch.  If a
       // resolution is used on a problem with more than one patch,
       // the resulting grid spacing must be consistent.
-      Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
       Vector spacing;
       bool have_levelspacing=false;
       if(level_ps->get("spacing", spacing))
@@ -463,7 +466,8 @@ void AMRSimulationController::problemSetup(const ProblemSpecP& params,
 	 box_ps->require("lower", lower);
 	 Point upper;
 	 box_ps->require("upper", upper);
-	 anchor=Min(lower, anchor);
+	 if(levelIndex == 0)
+	   anchor=Min(lower, anchor);
 
 	 IntVector resolution;
 	 if(box_ps->get("resolution", resolution)){
@@ -530,9 +534,11 @@ void AMRSimulationController::problemSetup(const ProblemSpecP& params,
 	IntVector patches;
 	if(box_ps->get("patches", patches)){
 	  level->setPatchDistributionHint(patches);
+#if 0
 	  if (d_myworld->size() > 1 &&
 	      (patches.x() * patches.y() * patches.z() < d_myworld->size()))
 	    throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run");
+#endif
 	  for(int i=0;i<patches.x();i++){
 	    for(int j=0;j<patches.y();j++){
 	      for(int k=0;k<patches.z();k++){
@@ -573,18 +579,26 @@ void AMRSimulationController::problemSetup(const ProblemSpecP& params,
 	level->finalizeLevel();
       }
       level->assignBCS(grid_ps);
+      levelIndex++;
    }
 }
 
 bool
 AMRSimulationController::need_recompile(double time, double delt,
-				     const LevelP& level,
-				     SimulationInterface* /*sim*/,
-				     Output* output)
+					const GridP& grid,
+					SimulationInterface* /*sim*/,
+					Output* output,
+					vector<int>& levelids)
 {
   // Currently, nothing but output can request a recompile.  This
   // should be fixed - steve
-  if(output && output->need_recompile(time, delt, level))
+  if(output && output->need_recompile(time, delt, grid))
     return true;
+  if(static_cast<int>(levelids.size()) != grid->numLevels())
+    return true;
+  for(int i=0;i<grid->numLevels();i++){
+    if(grid->getLevel(i)->getID() != levelids[i])
+      return true;
+  }
   return false;
 }

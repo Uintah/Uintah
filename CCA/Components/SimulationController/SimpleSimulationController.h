@@ -55,7 +55,7 @@ class SimulationInterface;
 
    private:
       void problemSetup(const ProblemSpecP&, GridP&);
-      bool need_recompile(double t, double delt, const LevelP& level,
+      bool need_recompile(double t, double delt, const GridP& grid,
 			  SimulationInterface* cfd, Output* output);
       SimpleSimulationController(const SimpleSimulationController&);
       SimpleSimulationController& operator=(const SimpleSimulationController&);
