@@ -24,6 +24,8 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
+INCLUDES += $(HDF5_INCLUDE) -DHDF5_PATH='"$(HDF5_LIB_DIR)/../bin"'
+
 SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 
@@ -34,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/NrrdReader.cc\
 	$(SRCDIR)/NrrdWriter.cc\
 	$(SRCDIR)/NrrdToField.cc\
+	$(SRCDIR)/HDF5DataReader.cc\
 
 #[INSERT NEW CODE FILE HERE]
 
@@ -44,6 +47,6 @@ PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Core/TkExtensions 
 
-LIBS := $(TEEM_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(HDF5_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
