@@ -170,7 +170,7 @@ itcl_class TrainSegment {
 	toplevel $w
 	wm geometry $w =290x265+300-200
 	wm minsize $w 290 265
-	wm maxsize $w 290 265
+#	wm maxsize $w 290 265
 	frame $w.f
 	frame $w.f.sc -relief sunken -bd 1
 	global $this-bias
