@@ -105,6 +105,9 @@ namespace  Uintah {
     virtual void computeRxnStateSpace(const Stream& unreactedMixture, 
 				      const std::vector<double>& mixRxnVar, 
 				      Stream& equilStateSpace) = 0;
+    virtual double computeTemperature(const double absEnthalpy, 
+				      const std::vector<double>& massFract, 
+				      double initTemp) = 0;   
 
 
       
@@ -127,6 +130,9 @@ namespace  Uintah {
 
 //
 // $Log$
+// Revision 1.10  2003/01/22 00:43:04  spinti
+// Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
+//
 // Revision 1.9  2002/05/31 22:04:45  spinti
 // *** empty log message ***
 //

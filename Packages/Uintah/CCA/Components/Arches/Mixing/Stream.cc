@@ -13,8 +13,6 @@ using namespace std;
 
 Stream::Stream()
 {
-  d_CO2index = 0;
-  d_H2Oindex = 0;
 }
 
 Stream::Stream(int numSpecies,  int numElements)
@@ -80,7 +78,6 @@ Stream::Stream(int numSpecies, int numElements, int numMixVars,
     + 3*d_numRxnVars;
   d_CO2index = 0;
   d_H2Oindex = 0;
-  
 }
 
 
@@ -218,10 +215,9 @@ Stream::speciesIndex(const ChemkinInterface* chemInterf, const char* speciesName
 }
 
 double
-Stream::getValue(int count, bool lfavre) 
+Stream::getValue(int count) 
 {
   int sumVars = NUM_DEP_VARS + d_speciesConcn.size();
-  //Need to work on how to handle soot here ****
   if ((d_numRxnVars > 0)&&(count >= sumVars))
     {
       if (count < (sumVars + d_numRxnVars))
@@ -229,7 +225,7 @@ Stream::getValue(int count, bool lfavre)
       else if (count < (sumVars + 3*d_numRxnVars))
 	return d_rxnVarNorm[count-NUM_DEP_VARS-d_speciesConcn.size()-
 			   d_numRxnVars];
-      else if (count < d_depStateSpaceVars)
+      else if ((count < d_depStateSpaceVars)&&d_lsoot)
 	return d_sootData[count-NUM_DEP_VARS-d_speciesConcn.size()-
 			 3*d_numRxnVars];
       else {
@@ -243,16 +239,14 @@ Stream::getValue(int count, bool lfavre)
     {
       switch (count) {
       case 0:
-	return d_pressure;
+	//return d_density;
+	return 1.0/d_density;
       case 1:
-	return d_density;
+	return d_pressure;
       case 2:
-	if (lfavre){
-	  cout<<"Stream::lfavre is true"<<endl;
-	  return d_temperature/d_density;
-	}
-	else
-	  return d_temperature;
+	//return d_temperature;
+	return d_temperature/d_density; //To satisfy argument that T measurements in 
+	// flames are Reynolds-averaged while other measurements are favre-averaged
       case 3:
 	return d_enthalpy;
       case 4:
@@ -284,15 +278,12 @@ Stream::normalizeStream() {
 }  
 	
 void
-Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
+Stream::convertVecToStream(const vector<double>& vec_stateSpace,
                            int numMixVars, int numRxnVars, bool lsoot) {
   d_depStateSpaceVars = vec_stateSpace.size();
-  d_pressure = vec_stateSpace[0];
-  d_density = vec_stateSpace[1];
-  if (lfavre) 
-    d_temperature = d_density*vec_stateSpace[2];
-  else
-    d_temperature = vec_stateSpace[2];
+  d_density = vec_stateSpace[0];
+  d_pressure = vec_stateSpace[1];
+  d_temperature = vec_stateSpace[2];
   d_enthalpy = vec_stateSpace[3];
   d_sensibleEnthalpy = vec_stateSpace[4];
   d_moleWeight = vec_stateSpace[5];
@@ -313,8 +304,6 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
 				    vec_stateSpace.end()-2*d_numRxnVars-incSoot);
     d_rxnVarNorm = vector<double> (vec_stateSpace.end()-2*d_numRxnVars-incSoot, 
 				   vec_stateSpace.end()-incSoot);
-    //cerr << "Stream::rate = " << d_rxnVarRates[0] << endl;
-    //cerr << "Stream::norm = " << d_rxnVarNorm[0] << " " << d_rxnVarNorm[1] << endl;
   } 
   if (lsoot) {
     d_sootData = vector<double> (vec_stateSpace.end()-2, 
@@ -344,8 +333,8 @@ vector<double>
 Stream::convertStreamToVec()
 {
   vector<double> vec_stateSpace;
-  vec_stateSpace.push_back(d_pressure);
   vec_stateSpace.push_back(d_density);
+  vec_stateSpace.push_back(d_pressure);
   vec_stateSpace.push_back(d_temperature);
   vec_stateSpace.push_back(d_enthalpy);
   vec_stateSpace.push_back(d_sensibleEnthalpy);
@@ -354,7 +343,6 @@ Stream::convertStreamToVec()
   vec_stateSpace.push_back(d_drhodf);
   vec_stateSpace.push_back(d_drhodh);
   // copy d_speciesConcn to rest of the vector
-  //int jj = 0;
   for (vector<double>::iterator iter = d_speciesConcn.begin(); 
        iter != d_speciesConcn.end(); ++iter) {
     vec_stateSpace.push_back(*iter);
@@ -426,6 +414,7 @@ Stream::print(std::ostream& out) const {
     out.width(10);
     out << d_speciesConcn[ii] << " " ; 
     if (!(ii % 10)) out << endl; 
+    out << endl;
   }
   if (d_lsoot) {
     out << "Soot Data: " << endl;
@@ -472,6 +461,9 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.22  2003/01/22 00:43:04  spinti
+// Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
+//
 // Revision 1.21  2002/11/11 18:36:00  rawat
 // Added intrusion boundary conditions. Also, added radaition to work with intrusion and ArchesMPM.
 //

@@ -47,6 +47,9 @@ namespace Uintah {
   class MixRxnTableInfo;
   class Integrator;
   class InletStream;
+  class ChemkinInterface;
+  //Limit of variance for which integration will be performed
+  const double VARLIMIT = 0.7;
   
 class PDFMixingModel: public MixingModel, public DynamicTable {
 
@@ -114,6 +117,9 @@ public:
       inline int getTableDimension() const{
 	return d_tableDimension;
       }
+      inline int getStoicPt() const{ 
+	return d_stoicValue; 
+      }
       inline std::string getMixTableType() const{
 	return d_tableType;
       }
@@ -160,11 +166,17 @@ private:
       void tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars);
       // Reads static data files created by James' tableGenerator program
       void readStaticTable();
-
+      // Read static data files created by createBetaTable function
+      void readBetaTable();
+      // Creates static table upon call to problemSetup; hrad coded for one f, gf
+      void createBetaTable();
+      void convertKeyToFloatValues(int tableKeyIndex[], std::vector<double>& indepVars);
+     
       MixRxnTableInfo* d_tableInfo;
       int d_numMixingVars;
       int d_numMixStatVars;
       int d_numRxnVars;
+      double d_stoicValue;
       std::string d_pdfShape;
       int d_CO2index;
       int d_H2Oindex;
@@ -181,6 +193,7 @@ private:
       MixRxnTable* d_mixTable;
       Integrator* d_integrator;
       ReactionModel* d_rxnModel;
+      ChemkinInterface* d_chemInterf; 
       
 
 }; // end class PDFMixingModel

@@ -45,6 +45,9 @@ POSSIBLE REVISIONS
 #endif
 
 namespace Uintah {
+ const double SMALL_VARIANCE = 1e-12;
+ static const double CLOSETOZERO = 0.001;
+ static const double CLOSETOONE = 0.999;
 
 class BetaPDFShape: public PDFShape {
 
@@ -58,6 +61,7 @@ public:
   // PRECONDITIONS
   //  meanMixVar varies from 0 to 1.
   //  statVar is positive and varies between 0 to meanMixVar*(1.0 - meanMixVar)
+  //  normStatVar = statVar/maxVar is actually passed in to computePDFFunction
   // POSTCONDITIONS
   //  This is a properly constructed instance of a BetaPDFShape
   //
@@ -87,7 +91,7 @@ public:
   // Parameters: 
   // 
   virtual void computePDFFunction(double* meanMixVar,
-				  double statVar);
+				  double normStatVar);
   // GROUP: Manipulators
   //////////////////////////////////////////////////////////////////////
   // computeShapeFunction returns the value of PDF computed at var.
@@ -107,11 +111,10 @@ public:
   int d_dimPDF; // dimensionality of the PDF
   bool d_validGammaValue;
   double d_gammafnValue;
+  std::vector<double> d_vars; // Needed by computePDFFunction
   std::vector<double> d_coef;
+
 }; // end class BetaPDFShape
- const double SMALL_VARIANCE = 1e-06;
- const double SMALL = 1e-15;
- const double ZERO = 1e-40;
 
  extern "C" {double dgammaln(double* x); }
 } // end namespace Uintah

@@ -73,9 +73,8 @@ namespace Uintah {
       //std::vector<double> convertStreamToVec(bool lsoot);
       std::vector<double> convertStreamToVec();
       void convertVecToStream(const std::vector<double>& vec_stateSpace, 
-			      bool flag, int numMixVars, 
-                              int numRxnVars, bool lsoot);
-      double getValue(int count, bool flag);
+			      int numMixVars, int numRxnVars, bool lsoot);
+      double getValue(int count);
       void normalizeStream();
       inline double getDensity() const {
 	return d_density;
@@ -99,45 +98,39 @@ namespace Uintah {
       inline bool getMoleBool() const {
 	return d_mole;
       }
-      inline double getCP() const {
-	return d_cp;
+     inline double getCP() const {
+        return d_cp;
       }
       inline double getCO2() const {
-	if (d_CO2index != 0)
-	  return d_speciesConcn[d_CO2index];
-	else
-	  return d_co2;
+	return d_co2;
       }
       inline double getH2O() const {
-	if (d_H2Oindex != 0)
-	  return d_speciesConcn[d_H2Oindex];
-	else
-	  return d_h2o;
+	return d_h2o;
       }
       inline bool getSootBool() const {
-        return d_lsoot;
+	return d_lsoot;
       }
       inline double getSootFV() const {
-	//	return d_sootData[1];
+	//return d_sootData[1];
 	return d_sootFV;
       }
       inline double getfvtfive() const {
 	return d_fvtfive;
       }
       inline double gettfour() const {
-	return d_tfour;
+        return d_tfour;
       }
       inline double gettfive() const {
-	return d_tfive;
+        return d_tfive;
       }
       inline double gettnine() const {
-	return d_tnine;
+        return d_tnine;
       }
       inline double getqrg() const {
-	return d_qrg;
+        return d_qrg;
       }
       inline double getqrs() const {
-	return d_qrs;
+        return d_qrs;
       }
       inline double getRxnSource() const {
 	return d_rxnVarRates[0];
@@ -182,7 +175,7 @@ namespace Uintah {
       int d_CO2index; //Set to 0 in constructor.
                       //Value changed in ***MixingModel::computeProps
       int d_H2Oindex; //Set to 0 in constructor.
-                      //Value changed in ***MixingModel::computeProps
+                      //Value changed in ***MixingModel::computeProps     
     private:
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables

@@ -21,7 +21,6 @@ StanjanEquilibriumReactionModel::StanjanEquilibriumReactionModel(bool adiabatic)
   ReactionModel(), DynamicTable(), d_adiabatic(adiabatic)
 {
   d_reactionData = new ChemkinInterface();
-  
 }
 
 StanjanEquilibriumReactionModel::~StanjanEquilibriumReactionModel() 
@@ -36,7 +35,8 @@ StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& params,
   d_mixModel = mixModel;
   int numMixVars = d_mixModel->getNumMixVars();
   int numRxnVars =  d_mixModel->getNumRxnVars();
-  d_depStateSpaceVars = NUM_DEP_VARS + d_reactionData->getNumSpecies();
+  //d_depStateSpaceVars = NUM_DEP_VARS + d_reactionData->getNumSpecies();
+  d_depStateSpaceVars = NUM_DEP_VARS + 4; // Only printing out four species
   d_lsoot = false;
   d_rxnTableDimension = numMixVars + numRxnVars + !(d_adiabatic);
   d_indepVars = vector<double>(d_rxnTableDimension);
@@ -91,7 +91,6 @@ void
 StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilStateSpace) 
 {
   vector<double> vec_stateSpaceVars;
-  bool flag = false;
 #if 0
   cout << "Stanjan::tableKeyIndex = " << endl;
   for (int ii = 0; ii < d_rxnTableDimension; ii++) {
@@ -137,12 +136,12 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
       vec_stateSpaceVars = equilStateSpace.convertStreamToVec();
       // defined in KDTree or VectorTable
       d_rxnTable->Insert(tableKeyIndex, vec_stateSpaceVars);
+      //cout << " Table entry for f = " << mixVars[0] << endl;
       //equilStateSpace.print(cerr);
     }
   else {
     //cout<<"Stanjan::entry exists"<<endl;
-    bool flag = false;
-    equilStateSpace.convertVecToStream(vec_stateSpaceVars, flag, 
+    equilStateSpace.convertVecToStream(vec_stateSpaceVars, 
 				       d_mixModel->getNumMixVars(),
 				       d_mixModel->getNumRxnVars(), d_lsoot);
   }
@@ -170,7 +169,14 @@ StanjanEquilibriumReactionModel::computeRxnStateSpace(const Stream& unreactedMix
 						      const vector<double>& mixRxnVar,
 						      Stream& equilStateSpace)
 {
-  equilStateSpace = unreactedMixture;
+  equilStateSpace.d_depStateSpaceVars = unreactedMixture.d_depStateSpaceVars;
+  equilStateSpace.d_numMixVars =  unreactedMixture.d_numMixVars;
+  equilStateSpace.d_numRxnVars =  unreactedMixture.d_numRxnVars;
+  equilStateSpace.d_drhodf =  unreactedMixture.d_drhodf;
+  equilStateSpace.d_drhodh =  unreactedMixture.d_drhodh;
+  equilStateSpace.d_CO2index = 0;
+  equilStateSpace.d_H2Oindex = 1;
+  //equilStateSpace = unreactedMixture;
   double adiabaticEnthalpy = unreactedMixture.getEnthalpy();
   double initTemp = unreactedMixture.getTemperature();
   double initPress = unreactedMixture.getPressure();
@@ -287,8 +293,8 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
 	&nofElements, &nofSpecies, d_reactionData->d_elementNames[0], 
 	d_reactionData->d_speciesNames[0], &nop, &kmon, &Xequil[0], &initTemp, 
 	&test, &patm, &pest, &ncon, kcon, xcon, &ierr); 
-
-  if (ierr == 0) {
+ equilSoln.d_speciesConcn = vector<double> (4); // Return only four species 
+ if (ierr == 0) {
     // If no error detected in equilibrium solution, call eqsol, which
     // returns equilibrium solution in cgs units
     double *xeq = new double[nofSpecies]; // Equilibrium mole fractions
@@ -303,13 +309,24 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     // require any units conversion)
     //?? put zeros in vector if mass fractions 
     // within ATOL of zero??
-    equilSoln.d_speciesConcn = yeq;
+    //Kluge to print out only 4 species to table: CO2, H2O, O2, CO
+    int index;
+    index = d_reactionData->getSpeciesIndex("CO2");
+    equilSoln.d_speciesConcn[0] = xeq[index]; // CO2 concentration
+    index = d_reactionData->getSpeciesIndex("H2O");
+    equilSoln.d_speciesConcn[1] = xeq[index]; // H2O concentration
+    index = d_reactionData->getSpeciesIndex("O2");
+    equilSoln.d_speciesConcn[2] = xeq[index];
+    index = d_reactionData->getSpeciesIndex("CO");
+    equilSoln.d_speciesConcn[3] = xeq[index];
+
+    //equilSoln.d_speciesConcn = yeq;
     equilSoln.d_pressure *= 1.01325e+05; // atm -> Pa
     equilSoln.d_enthalpy *= 1.e-4; // Units of J/kg
     equilSoln.d_density = 1./equilVol*1.e+3; // Units of kg/m^3
     equilSoln.d_cp = d_reactionData->getMixSpecificHeat(equilSoln.getTemperature(), 
-							equilSoln.d_speciesConcn); 
-                                                        // Units of J/(kg-K)
+							yeq); // Units of J/(kg-K)
+    //equilSoln.d_cp = 1.0;
     // store mass fraction
     equilSoln.d_mole = false;
    
@@ -319,13 +336,26 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     equilSoln.d_pressure = initPress;
     equilSoln.d_temperature = initTemp;
     equilSoln.d_mole = false;
-    equilSoln.d_speciesConcn = initMassFract;
+    //Kluge to print out only 4 species to table: CO2, H2O, O2, CO
+    int index;
+    index = d_reactionData->getSpeciesIndex("CO2");
+    equilSoln.d_speciesConcn[0] = initMassFract[index]; // CO2 concentration
+    index = d_reactionData->getSpeciesIndex("H2O");
+    equilSoln.d_speciesConcn[1] = initMassFract[index]; // H2O concentration
+    index = d_reactionData->getSpeciesIndex("O2");
+    equilSoln.d_speciesConcn[2] = initMassFract[index];
+    index = d_reactionData->getSpeciesIndex("CO");
+    equilSoln.d_speciesConcn[3] = initMassFract[index];
+
+    //equilSoln.d_speciesConcn = initMassFract;
     equilSoln.d_density = d_reactionData->getMassDensity(initPress, initTemp,
 							 initMassFract);
     equilSoln.d_enthalpy = d_reactionData->getMixEnthalpy(initTemp, 
 							  initMassFract);
     equilSoln.d_moleWeight = d_reactionData->getMixMoleWeight(initMassFract);
     equilSoln.d_cp = d_reactionData->getMixSpecificHeat(initTemp, initMassFract);
+    //equilSoln.d_cp = 1.0;
+#if 0
     cerr << "equilibrium failed for: " << endl;
     for (int ii = 0; ii < initMassFract.size(); ii++) {
       cerr << "  " << initMassFract[ii];
@@ -338,6 +368,7 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     cerr << "print Temperature" << equilSoln.getTemperature() << endl;
     cerr << "nofspecies "<< nofSpecies << endl;
     cerr << "nofelements "<< nofElements << endl;
+#endif
   }
 
   delete[] ieqwrk;
