@@ -23,10 +23,12 @@ SRCS     += \
 	$(SRCDIR)/ParticleVariable_special.cc \
 	$(SRCDIR)/ComputeSet.cc \
 	$(SRCDIR)/ComputeSet_special.cc \
-	$(SRCDIR)/ParticleVariable_templates.cc \
-	$(SRCDIR)/NCVariable_templates.cc \
-	$(SRCDIR)/CCVariable_templates.cc \
-	$(SRCDIR)/SFCXVariable_templates.cc \
-	$(SRCDIR)/SFCYVariable_templates.cc \
-	$(SRCDIR)/SFCZVariable_templates.cc 
+	$(SRCDIR)/ugc_templates.cc 
 
+#
+#         $(SRCDIR)/ParticleVariable_templates.cc \
+#         $(SRCDIR)/NCVariable_templates.cc \
+#         $(SRCDIR)/CCVariable_templates.cc \
+#         $(SRCDIR)/SFCXVariable_templates.cc \
+#         $(SRCDIR)/SFCYVariable_templates.cc \
+#         $(SRCDIR)/SFCZVariable_templates.cc
