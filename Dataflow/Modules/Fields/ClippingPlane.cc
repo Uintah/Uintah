@@ -46,7 +46,11 @@ public:
   virtual void execute();
 
 private:
-  
+
+  GuiInt size_x_;
+  GuiInt size_y_;
+  GuiInt axis_;
+
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
   DataTypeEnum datatype_;
 };
@@ -58,7 +62,10 @@ extern "C" Module* make_ClippingPlane(const string& id) {
 
 
 ClippingPlane::ClippingPlane(const string& id)
-  : Module("ClippingPlane", id, Filter, "Fields", "SCIRun")
+  : Module("ClippingPlane", id, Filter, "Fields", "SCIRun"),
+    size_x_("sizex", id, this),
+    size_y_("sizey", id, this),
+    axis_("axis", id, this)
 {
 }
 
@@ -71,7 +78,7 @@ ClippingPlane::~ClippingPlane()
 void
 ClippingPlane::execute()
 {
-  const int axis = 2;  // x y z planes
+  const int axis = Min(2, Max(0, axis_.get()));
   Transform trans;
   trans.load_identity();
 
@@ -150,8 +157,8 @@ ClippingPlane::execute()
   //trans.pre_rotate(angle, axis_vector);
   
   // Create blank mesh.
-  unsigned int sizex = 20;
-  unsigned int sizey = 20;
+  unsigned int sizex = Max(2, size_x_.get());
+  unsigned int sizey = Max(2, size_y_.get());
   const Point minb(0.0, 0.0, 0.0);
   const Point maxb(1.0, 1.0, 1.0);
   ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
