@@ -93,37 +93,40 @@ public:
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib() :
-  DiscreteAttrib<T>(), iattrib()
+  DiscreteAttrib<T>(),
+  iattrib(),
+  index(sizeof(I) * 256, I())
 {
-  index.reserve(sizeof(I) * 256);
 }
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib(int ix) :
-  DiscreteAttrib<T>(ix), iattrib(ix)
+  DiscreteAttrib<T>(ix),
+  iattrib(ix),
+  index(sizeof(I) * 256, I())
 {
-  index.reserve(sizeof(I) * 256);
 }
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib(int ix, int iy) :
-  DiscreteAttrib<T>(ix, iy), iattrib(ix, iy)
+  DiscreteAttrib<T>(ix, iy),
+  iattrib(ix, iy),
+  index(sizeof(I) * 256, I())
 {
-  index.reserve(sizeof(I) * 256);
 }
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib(int ix, int iy, int iz) :
-  DiscreteAttrib<T>(ix, iy, iz), iattrib(ix, iy, iz)
+  DiscreteAttrib<T>(ix, iy, iz),
+  iattrib(ix, iy, iz),
+  index(sizeof(I) * 256, I())
 {
-  index.reserve(sizeof(I) * 256);
 }
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib(const IndexAttrib& copy) :
   DiscreteAttrib<T>(copy), iattrib(copy.iattrib), index(copy.index)
 {
-  index.reserve(sizeof(I) * 256);
 }
 
 
@@ -321,6 +324,7 @@ IndexAttrib<T, I, A>::get_info()
     "Type = IndexAttrib" << endl <<
     "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
     "Size = " << size() << endl <<
+    "Datasize = " << index.size() << endl <<
     "Data = ";
   vector<T>::iterator itr = index.begin();
   int i = 0;
