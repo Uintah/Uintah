@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-class DOM_Document;
+class DOMDocument;
 
 class Edge;
 class GV_TaskGraph;
@@ -160,10 +160,10 @@ private:
   GV_TaskGraph();
 
   // read the nodes from the xml document and create them in the graph
-  void readNodes(DOM_Document xmlDoc);
+  void readNodes(DOMDocument* xmlDoc);
 
   // read the edges from the xml document and create them in the graph
-  void readEdges(DOM_Document xmlDoc);
+  void readEdges(DOMDocument* xmlDoc);
 
   // Compute the maximum paths above and below each
   // node as well as the critical path cost.

@@ -8,7 +8,7 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
 
-class DOM_Document;
+class DOMDocument;
 
 namespace Uintah {
 
@@ -164,7 +164,7 @@ using std::pair;
       };
 
    private:
-      DOM_Document loadDocument(std::string xmlName);     
+      DOMDocument* loadDocument(std::string xmlName);     
 
       void initSaveLabels(SchedulerP& sched);
       void initCheckpoints(SchedulerP& sched);
@@ -185,7 +185,7 @@ using std::pair;
       void createIndexXML(Dir& dir);
 
       // helpers for restartSetup
-      void addRestartStamp(DOM_Document indexDoc, Dir& fromDir,
+      void addRestartStamp(DOMDocument* indexDoc, Dir& fromDir,
 			   int timestep);
 
       void copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,

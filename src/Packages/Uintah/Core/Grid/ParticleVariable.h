@@ -137,8 +137,8 @@ public:
   virtual void packsizeMPI(int* bufpos,
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
-  virtual void emitNormal(ostream& out, DOM_Element varnode);
-  virtual bool emitRLE(ostream& out, DOM_Element varnode);
+  virtual void emitNormal(ostream& out, DOMElement* varnode);
+  virtual bool emitRLE(ostream& out, DOMElement* varnode);
   
   virtual void readNormal(istream& in, bool swapBytes);
   virtual void readRLE(istream& in, bool swapBytes, int nByteMode);
@@ -444,13 +444,15 @@ template<class T>
 
   template<class T>
   void
-  ParticleVariable<T>::emitNormal(ostream& out, DOM_Element varnode)
+  ParticleVariable<T>::emitNormal(ostream& out, DOMElement* varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
 
-    if (findNode("numParticles", varnode) == 0)
-      appendElement(varnode, "numParticles", d_pset->numParticles());
-      
+    if (findNode("numParticles", varnode) == 0) {
+      DOMText* text = varnode->getOwnerDocument()->createTextNode(XMLString::transcode("numParticles"));
+      //appendElement(varnode, "numParticles", d_pset->numParticles());
+      appendElement(varnode, text, d_pset->numParticles());
+    }
     if(!td->isFlat()){
       SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
@@ -473,11 +475,14 @@ template<class T>
 
   template<class T>
   bool
-  ParticleVariable<T>::emitRLE(ostream& out, DOM_Element varnode)
+  ParticleVariable<T>::emitRLE(ostream& out, DOMElement* varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
-    if (findNode("numParticles", varnode) == 0)
-      appendElement(varnode, "numParticles", d_pset->numParticles());
+    if (findNode("numParticles", varnode) == 0) {
+      DOMText* text = varnode->getOwnerDocument()->createTextNode(XMLString::transcode("numParticles"));
+      //appendElement(varnode, "numParticles", d_pset->numParticles());
+      appendElement(varnode, text, d_pset->numParticles());
+    }
     if(!td->isFlat()){
       SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }

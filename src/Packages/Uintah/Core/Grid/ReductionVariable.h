@@ -28,7 +28,7 @@ namespace SCIRun {
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <dom/DOM_Element.hpp>
+#include <dom/DOMElement.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
@@ -86,7 +86,7 @@ WARNING
     virtual void reduce(const ReductionVariableBase&);
     virtual void print(ostream& out)
     { out << value; }
-    virtual void emitNormal(ostream& out, DOM_Element /*varnode*/)
+    virtual void emitNormal(ostream& out, DOMElement* /*varnode*/)
     { out.write((char*)&value, sizeof(double)); }
     virtual void readNormal(istream& in, bool swapBytes)
     {

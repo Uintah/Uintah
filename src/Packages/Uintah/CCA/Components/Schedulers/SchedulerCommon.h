@@ -10,8 +10,8 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <iosfwd>
 
-class DOM_Document;
-class DOM_Element;
+class DOMDocument;
+class DOMElement;
 
 namespace Uintah {
   using namespace std;
@@ -142,8 +142,8 @@ WARNING
     SchedulerCommon(const SchedulerCommon&);
     SchedulerCommon& operator=(const SchedulerCommon&);
 
-    DOM_Document* m_graphDoc;
-    DOM_Element* m_nodes;
+    DOMDocument* m_graphDoc;
+    DOMElement* m_nodes;
     ofstream* memlogfile;
     bool emit_taskgraph;
     GhostOffsetVarMap m_ghostOffsetVarMap;

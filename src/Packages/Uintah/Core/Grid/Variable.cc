@@ -130,8 +130,10 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
       compressionMode = "";
   }
 
+  DOMText* text = oc.varnode->getOwnerDocument()->createTextNode(XMLString::transcode("compression"));
   if (compressionMode != "" && compressionMode != "none")
-    appendElement(oc.varnode, "compression", compressionMode);
+    //appendElement(oc.varnode, "compression", compressionMode);
+    appendElement(oc.varnode, text, compressionMode);
 }
 
 string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
@@ -239,7 +241,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
 #endif
 }
 
-bool Variable::emitRLE(ostream& /*out*/, DOM_Element /*varnode*/)
+bool Variable::emitRLE(ostream& /*out*/, DOMElement* /*varnode*/)
 {
   return false; // not supported by default
 }

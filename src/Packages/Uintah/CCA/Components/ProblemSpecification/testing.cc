@@ -2,16 +2,16 @@
 
 #include <util/PlatformUtils.hpp>
 #include <parsers/DOMParser.hpp>
-#include <dom/DOM_Node.hpp>
-#include <dom/DOM_NamedNodeMap.hpp>
+#include <dom/DOMNode.hpp>
+#include <dom/DOMNamedNodeMap.hpp>
 #include "DOMTreeErrorReporter.hpp"
 #include <string>
 #include <stdlib.h>
 
 void outputContent(ostream& target, const DOMString &s);
 ostream& operator<<(ostream& target, const DOMString& toWrite);
-ostream& operator<<(ostream& target, DOM_Node& toWrite);
-void processNode(DOM_Node &node,DOMString name);
+ostream& operator<<(ostream& target, DOMNode& toWrite);
+void processNode(DOMNode &node,DOMString name);
 
 static bool     doEscapes       = true;
 
@@ -41,9 +41,9 @@ int main(int argc, char *argv[]){
 
   parser.parse(xmlFile.c_str());
 
-  DOM_Document doc = parser.getDocument();
+  DOMDocument doc = parser.getDocument();
  
-  DOM_NodeList node_list = doc.getElementsByTagName("Uintah_specification");
+  DOMNodeList node_list = doc.getElementsByTagName("Uintah_specification");
 
   int nlist = node_list.getLength();
   cout << "Number of items in list " << nlist << endl;
@@ -52,12 +52,12 @@ int main(int argc, char *argv[]){
   // Process all of the nodes in the document
 
   for (int i = 0; i < nlist; i++) {
-    DOM_Node n_child = node_list.item(i);
+    DOMNode n_child = node_list.item(i);
     cout << "First node in tree: " << n_child.getNodeName() << endl;
     cout << "Type " << n_child.getNodeType() << endl;
     cout << "Contents " << n_child.getNodeValue() << endl;
    
-    for (DOM_Node sibling = n_child.getFirstChild(); sibling != 0;
+    for (DOMNode sibling = n_child.getFirstChild(); sibling != 0;
 	 sibling = sibling.getNextSibling()) {
       cout << "Sibling node in tree: " << sibling.getNodeName() << endl;
       cout << "Type " << sibling.getNodeType() << endl;
@@ -72,9 +72,9 @@ int main(int argc, char *argv[]){
   //  title and return its contents.
   
  
-  DOM_NodeList top_node_list = doc.getElementsByTagName("Time");
+  DOMNodeList top_node_list = doc.getElementsByTagName("Time");
   cout << "Processing doc nodes" << endl;
-  DOM_Node tmp = doc.cloneNode(true);
+  DOMNode tmp = doc.cloneNode(true);
   string search("initTime");
   DOMString dsearch(search.c_str());
   processNode(tmp,dsearch);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
 }
 
 
-void processNode(DOM_Node &node,DOMString name)
+void processNode(DOMNode &node,DOMString name)
 {
   //  Process the node
 
@@ -99,7 +99,7 @@ void processNode(DOM_Node &node,DOMString name)
   cout << "Type = " <<  node.getNodeType() << endl;
   cout << "Value = " << node.getNodeValue() << endl;
       
-  DOM_Node child = node.getFirstChild();
+  DOMNode child = node.getFirstChild();
     
   while (child != 0) {
     DOMString child_name = child.getNodeName();
@@ -120,12 +120,12 @@ void processNode(DOM_Node &node,DOMString name)
   
 
 // ---------------------------------------------------------------------------
-//  ostream << DOM_Node   
+//  ostream << DOMNode   
 //                Stream out a DOM node, and, recursively, all of its children.
 //                This function is the heart of writing a DOM tree out as
 //                XML source.  Give it a document node and it will do the whole thing.
 // ---------------------------------------------------------------------------
-ostream& operator<<(ostream& target, DOM_Node& toWrite)
+ostream& operator<<(ostream& target, DOMNode& toWrite)
 {
     // Get the name and value out for convenience
     DOMString   nodeName = toWrite.getNodeName();
@@ -133,13 +133,13 @@ ostream& operator<<(ostream& target, DOM_Node& toWrite)
 
 	switch (toWrite.getNodeType())
     {
-		case DOM_Node::TEXT_NODE:
+		case DOMNode::TEXT_NODE:
         {
             outputContent(target, nodeValue);
             break;
         }
 
-        case DOM_Node::PROCESSING_INSTRUCTION_NODE :
+        case DOMNode::PROCESSING_INSTRUCTION_NODE :
         {
             target  << "<?"
                     << nodeName
@@ -149,14 +149,14 @@ ostream& operator<<(ostream& target, DOM_Node& toWrite)
             break;
         }
 
-        case DOM_Node::DOCUMENT_NODE :
+        case DOMNode::DOCUMENT_NODE :
         {
             // Bug here:  we need to find a way to get the encoding name
             //   for the default code page on the system where the
             //   program is running, and plug that in for the encoding
             //   name.  
             target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
-            DOM_Node child = toWrite.getFirstChild();
+            DOMNode child = toWrite.getFirstChild();
             while( child != 0)
             {
                 target << child << endl;
@@ -166,17 +166,17 @@ ostream& operator<<(ostream& target, DOM_Node& toWrite)
             break;
         }
 
-        case DOM_Node::ELEMENT_NODE :
+        case DOMNode::ELEMENT_NODE :
         {
             // Output the element start tag.
             target << '<' << nodeName;
 
             // Output any attributes on this element
-            DOM_NamedNodeMap attributes = toWrite.getAttributes();
+            DOMNamedNodeMap attributes = toWrite.getAttributes();
             int attrCount = attributes.getLength();
             for (int i = 0; i < attrCount; i++)
             {
-                DOM_Node  attribute = attributes.item(i);
+                DOMNode  attribute = attributes.item(i);
 
                 target  << ' ' << attribute.getNodeName()
                         << " = \"";
@@ -187,7 +187,7 @@ ostream& operator<<(ostream& target, DOM_Node& toWrite)
 
             //  Test for the presence of children, which includes both
             //  text content and nested elements.
-            DOM_Node child = toWrite.getFirstChild();
+            DOMNode child = toWrite.getFirstChild();
             if (child != 0)
             {
                 // There are children. Close start-tag, and output children.
@@ -210,21 +210,21 @@ ostream& operator<<(ostream& target, DOM_Node& toWrite)
             break;
         }
 
-        case DOM_Node::ENTITY_REFERENCE_NODE:
+        case DOMNode::ENTITY_REFERENCE_NODE:
         {
-            DOM_Node child;
+            DOMNode child;
             for (child = toWrite.getFirstChild(); child != 0; child = child.getNextSibling())
                 target << child;
             break;
         }
 
-        case DOM_Node::CDATA_SECTION_NODE:
+        case DOMNode::CDATA_SECTION_NODE:
         {
             target << "<![CDATA[" << nodeValue << "]]>";
             break;
         }
 
-        case DOM_Node::COMMENT_NODE:
+        case DOMNode::COMMENT_NODE:
         {
             target << "<!--" << nodeValue << "-->";
             break;
