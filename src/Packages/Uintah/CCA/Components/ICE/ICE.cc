@@ -945,6 +945,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
       cv[m] = ice_matl->getSpecificHeat();
       setBC(rho_top_cycle[m], "Density",      patch, d_sharedState, indx);
+      setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
 
