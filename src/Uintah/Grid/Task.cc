@@ -56,6 +56,7 @@ void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype, int numGhostCells)
 {
+   ASSERT(ds.get_rep() != 0);
    const TypeDescription* td = var->typeDescription();
    int l,h;
    switch(gtype){
@@ -121,14 +122,16 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_comps.push_back(scinew Dependency(ds, var, -1, d_patch, this));
+   ASSERT(ds.get_rep() != 0);
+   d_comps.push_back(scinew Dependency(ds, var, -1, d_patch, this));
 }
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	       const Patch*)
 {
-  d_comps.push_back(scinew Dependency(ds, var, matlIndex, d_patch, this));
+   ASSERT(ds.get_rep() != 0);
+   d_comps.push_back(scinew Dependency(ds, var, matlIndex, d_patch, this));
 }
 
 void
@@ -208,6 +211,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.18  2000/09/12 15:11:35  sparker
+// Added assertions to ensure we have a valid data warehouse for computes/requires
+//
 // Revision 1.17  2000/08/23 22:33:40  dav
 // added an output operator for task
 //
