@@ -77,8 +77,12 @@ WARNING
       
       // Get all of the requires needed from the old data warehouse
       // (carried forward).
-      const set<const VarLabel*, VarLabel::Compare>& getInitialRequires() const
-      { return d_initreqs; }
+      const vector<const Task::Dependency*>& getInitialRequires() const
+      { return d_initRequires; }
+
+      const set<const VarLabel*, VarLabel::Compare>&
+      getInitialRequiredVars() const
+      { return d_initRequiredVars; }
 
       int getNumTasks() const;
       Task* getTask(int i);
@@ -123,8 +127,8 @@ WARNING
      vector<Task::Edge*> edges;
 
       // data required from old data warehouse
-     set<const VarLabel*, VarLabel::Compare> d_initreqs;
-      
+     set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
+     vector<const Task::Dependency*> d_initRequires;
    };
 
 } // End namespace Uintah
