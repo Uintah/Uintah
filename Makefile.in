@@ -22,8 +22,12 @@ _distcleanHere::
 	rm -f scripts/compile.mk scripts/targets.mk
 	rm -f config.cache config.log config.status
 
+ifeq (,$(findstring reportObjs,$(MAKECMDGOALS)))
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 ${SRCDIR}/configure: ${SRCDIR}/configure.in ${SRCDIR}/scripts/aclocal.m4
 	cd ${SRCDIR} && autoconf
+endif
+endif
 
 sci_config.h: stamp-h
 stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \

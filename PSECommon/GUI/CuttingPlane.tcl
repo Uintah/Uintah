@@ -87,7 +87,7 @@ itcl_class PSECommon_Visualization_CuttingPlane {
 
 	expscale $w.scale -orient horizontal -label "Scale:" \
 		-variable $this-scale -command $n
-	$w.scale-win- configure
+#	$w.scale-win- configure
 	pack $w.scale -fill x -pady 2
 	expscale $w.offset -orient horizontal -label "Offset:" \
 		-variable $this-offset -command $n

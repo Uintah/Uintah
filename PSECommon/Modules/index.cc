@@ -181,7 +181,7 @@ void initPackage(const clString& tcl) {
   RM("Visualization", "Cutting Plane Tex",       make_CuttingPlaneTex,      tcl+"/CuttingPlaneTex.tcl");
   RM("Visualization", "FieldCage",               make_FieldCage,            tcl+"/FieldCage.tcl");
   RM("Visualization", "Gen Axes",                make_GenAxes,              tcl+"/GenAxes.tcl");
-  RM("Visualization", "Gen Color Map",           make_GenColorMap,          tcl+"/GenColorMap.tcl");
+  RM("Visualization", "Gen Color Map",           make_GenColorMap,          "");
   RM("Visualization", "Gen Transfer Func",       make_GenTransferFunc,      tcl+"/GenTransferFunc.tcl");
   RM("Visualization", "Gen Field Edges",         make_GenFieldEdges,        "");
   RM("Visualization", "Gen Standard Color Maps", make_GenStandardColorMaps, tcl+"/GenStandardColorMaps.tcl");

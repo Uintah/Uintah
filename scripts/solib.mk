@@ -11,6 +11,7 @@ all:: $(SOLIB)
 ifeq (,$(findstring reportObjs,$(MAKECMDGOALS)))
 ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 $(SOLIB): $(SUBOBJS)
+	rm -f $(SOLIB)
 	$(CXX) $(SOFLAGS) -o $(SOLIB) $(SUBOBJS) $(SOLIBRARIES)
 endif
 endif
