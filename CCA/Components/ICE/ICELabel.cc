@@ -25,8 +25,6 @@ ICELabel::ICELabel()
     VarLabel::create("delP_MassX",   CCVariable<double>::getTypeDescription()); 
   rho_CCLabel       = 
     VarLabel::create("rho_CC",       CCVariable<double>::getTypeDescription());
-  rho_CC_top_cycleLabel       = 
-    VarLabel::create("rho_top_cycle",CCVariable<double>::getTypeDescription());
   temp_CCLabel      = 
     VarLabel::create("temp_CC",      CCVariable<double>::getTypeDescription());
   vel_CCLabel       = 
@@ -168,7 +166,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(delP_DilatateLabel);
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);
-    VarLabel::destroy(rho_CC_top_cycleLabel);
     VarLabel::destroy(temp_CCLabel);
     VarLabel::destroy(vel_CCLabel);
     VarLabel::destroy(cv_CCLabel);
