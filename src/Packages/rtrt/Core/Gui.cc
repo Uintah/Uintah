@@ -17,10 +17,10 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/params.h>
-
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/CutGroup.h>
+#include <Packages/rtrt/Sound/Sound.h>
 
 #include <Core/Math/Trig.h>
 #include <Core/Thread/Time.h>
@@ -32,6 +32,8 @@
 #include <unistd.h>  // for sleep
 #include <strings.h> // for bzero
 #include <errno.h>
+
+#include <vector>
 
 extern "C" Display *__glutDisplay;
 
@@ -77,8 +79,11 @@ static Transform prev_trans;
 
 #define OBJECT_LIST_ID           140
 #define OBJECTS_BUTTON_ID        141
-#define ATTACH_KEYPAD_BTN_ID     142
-#define SICYCLE_BTN_ID     143
+#define SOUNDS_BUTTON_ID         142
+#define ATTACH_KEYPAD_BTN_ID     143
+#define SICYCLE_BTN_ID           144
+
+#define SOUND_LIST_ID            150
 
 #define TOGGLE_HOTSPOTS_ID          190
 #define TOGGLE_TRANSMISSION_MODE_ID 191
@@ -105,9 +110,10 @@ static int routeNumber = 0;
 
 Gui::Gui() :
   selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
+  selectedSoundId_(0), soundsWindowVisible(false),
   routeWindowVisible(false), lightsWindowVisible(false),
   objectsWindowVisible(false), mainWindowVisible(true),
-  lightList(NULL), routeList(NULL), objectList(NULL),
+  lightList(NULL), routeList(NULL), objectList(NULL), soundList_(NULL),
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
   lightIntensity_(NULL),
   lightBrightness_(1.0), ambientBrightness_(1.0),
@@ -261,7 +267,7 @@ Gui::idleFunc()
       }
     if( activeGui->displayPStats_ )
       {
-	Stats * mystats = dpy->drawstats[priv->showing_scene];
+	Stats * mystats = dpy->drawstats[!priv->showing_scene];
 	activeGui->drawpstats(mystats, dpy->nworkers, dpy->workers_, 
 			      /*draw_framerate*/true, priv->showing_scene,
 			      fontbase, lasttime, cum_ttime,
@@ -809,15 +815,22 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 void
 Gui::handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z )
 {
-  cout << "spaceball motion: " << sbm_x << ", " << sbm_y << ", "
-       << sbm_z << ", " << "\n"; 
+  if( abs(sbm_x) > 10 )
+    activeGui->camera_->moveLaterally( sbm_x/50.0 );
+  if( abs(sbm_y) > 10 )
+    activeGui->camera_->moveVertically( sbm_y/50.0 );
+  if( abs(sbm_z) > 10 )
+    activeGui->camera_->moveForwardOrBack( sbm_z/50.0 );
 }
 
 void
 Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z )
 {
-  cout << "spaceball rotate: " << sbr_x << ", " << sbr_y << ", "
-       << sbr_z << ", " << "\n"; 
+  if( abs(sbr_x) > 20 )
+    activeGui->camera_->changePitch( sbr_x/1000.0 );
+  if( abs(sbr_y) > 20 )
+    activeGui->camera_->changeFacing( sbr_y/500.0 );
+  // Don't allow roll (at least for now)
 }
 
 void
@@ -855,6 +868,16 @@ Gui::toggleObjectsWindowCB( int /*id*/ )
   else
     activeGui->objectsWindow->show();
   activeGui->objectsWindowVisible = !activeGui->objectsWindowVisible;
+}
+
+void
+Gui::toggleSoundWindowCB( int /*id*/ )
+{
+  if( activeGui->soundsWindowVisible )
+    activeGui->soundsWindow->hide();
+  else
+    activeGui->soundsWindow->show();
+  activeGui->soundsWindowVisible = !activeGui->soundsWindowVisible;
 }
 
 void
@@ -899,6 +922,11 @@ void
 Gui::updateObjectCB( int /*id*/ )
 {
   resetObjSelection();
+}
+
+void
+Gui::updateSoundCB( int /*id*/ )
+{
 }
 
 void
@@ -1082,10 +1110,36 @@ Gui::createObjectWindow( GLUI * window )
   CutToggleButton_ = window->add_button_to_panel( moreControls, "N/A",
 						  0,
 						  CutToggleCB );
+} // end createObjectWindow()
 
+void
+Gui::createSoundsWindow( GLUI * window )
+{
+  GLUI_Panel * panel = window->add_panel( "Sounds" );
+
+  soundList_ = window->add_listbox_to_panel( panel, "Selected Sound",
+					     &selectedSoundId_,
+					     SOUND_LIST_ID, updateSoundCB );
+
+  GLUI_Panel * volumePanel = window->add_panel_to_panel( panel, "Volume" );
+
+  const vector<Sound*> & sounds = dpy_->scene->getSounds();
+  for( int num = 0; num < sounds.size(); num++ )
+    {
+      char name[ 1024 ];
+      sprintf( name, "%s", sounds[ num ]->getName().c_str() );
+      soundList_->add_item( num, name );
+    }
+
+  activeGui->leftVolume_ = window->
+    add_edittext_to_panel( volumePanel, "Left:", GLUI_EDITTEXT_FLOAT );
+
+  activeGui->rightVolume_ = window->
+    add_edittext_to_panel( volumePanel, "Right:", GLUI_EDITTEXT_FLOAT );
 }
 
-void Gui::resetObjSelection() {
+void
+Gui::resetObjSelection() {
   activeGui->stealth_ = activeGui->dpy_->stealth_;
   activeGui->keypadAttached_ = 0;
   activeGui->attachKeypadBtn_->set_name( "Attach Keypad" );
@@ -1332,6 +1386,7 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
   activeGui->routeWindow = GLUI_Master.create_glui( "Route", 0, 400, 400 );
   activeGui->lightsWindow = GLUI_Master.create_glui( "Lights", 0, 500, 400 );
   activeGui->objectsWindow = GLUI_Master.create_glui( "Objects", 0, 600, 400 );
+  activeGui->soundsWindow = GLUI_Master.create_glui( "Sounds", 0, 700, 400 );
 
   activeGui->getStringWindow = 
                     GLUI_Master.create_glui( "Input Request", 0, 400, 400 );
@@ -1344,12 +1399,14 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
   activeGui->routeWindow->hide();
   activeGui->lightsWindow->hide();
   activeGui->objectsWindow->hide();
+  activeGui->soundsWindow->hide();
 
   activeGui->getStringWindow->hide();
 
   activeGui->createRouteWindow( activeGui->routeWindow );
   activeGui->createLightWindow( activeGui->lightsWindow );
   activeGui->createObjectWindow( activeGui->objectsWindow );
+  activeGui->createSoundsWindow( activeGui->soundsWindow );
   activeGui->createGetStringWindow( activeGui->getStringWindow );
 
   /////////////////////////////////////////////////////////
@@ -1494,7 +1551,7 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
 			  SOUND_VOLUME_SPINNER_ID );
   activeGui->soundVolumeSpinner_->set_speed( 0.01 );
   activeGui->soundVolumeSpinner_->set_int_limits( 0, 100 );
-#if defined(linux) || defined(SCI_64BITS)
+#if defined(linux)
   activeGui->soundVolumeSpinner_->disable();
 #else
   if( activeGui->dpy_->scene->getSounds().size() == 0 )
@@ -1511,7 +1568,7 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
   depthSpinner->set_speed( 0.1 );
 
   /////////////////////////////////////////////////////////
-  // Route/Light/Objects Window Buttons
+  // Route/Light/Objects/Sounds Window Buttons
   //
 
   activeGui->mainWindow->
@@ -1525,7 +1582,10 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Objects",
 			 OBJECTS_BUTTON_ID, toggleObjectsWindowCB );
-
+  activeGui->mainWindow->add_column_to_panel( button_panel );
+  activeGui->mainWindow->
+    add_button_to_panel( button_panel, "Sounds",
+			 OBJECTS_BUTTON_ID, toggleSoundWindowCB );
   printf("done createmenus\n");
 }
 
@@ -1632,6 +1692,10 @@ Gui::update()
   sprintf( status, "%d of %d", pos+1, numPts );
   routePositionET->set_text( status );
 
+  // Update Sound Panel
+  leftVolume_->set_float_val( 0.0 );
+  rightVolume_->set_float_val( 0.0 );
+
 } // end update()
 
 // Display image as a "transmission".  Ie: turn off every other scan line.
@@ -1655,12 +1719,14 @@ Gui::toggleGui()
   if( mainWindowVisible ) {
     routeWindow->hide();
     objectsWindow->hide();
+    soundsWindow->hide();
     lightsWindow->hide();
     mainWindow->hide();
     
     lightsWindowVisible = false;
     routeWindowVisible = false;
     objectsWindowVisible = false;
+    soundsWindowVisible = false;
 
     activeGui->dpy_->scene->hide_auxiliary_displays();
   } else {

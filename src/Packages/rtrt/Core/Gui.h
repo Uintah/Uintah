@@ -37,9 +37,9 @@ class  Worker;
 class  DepthStats;
 class  Stats;
 class  Light;
-class SelectableGroup;
-class SpinningInstance;
-class CutGroup;
+class  SelectableGroup;
+class  SpinningInstance;
+class  CutGroup;
 
 class Gui {
 
@@ -93,22 +93,23 @@ private:
   int selectedLightId_;
   int selectedRouteId_;
   int selectedObjectId_;
+  int selectedSoundId_;
 
   char inputString_[ 1024 ];
-
-  GLUI_Listbox * objectList;
 
   GLUI         * mainWindow;
 
   GLUI         * routeWindow;
   GLUI         * lightsWindow;
   GLUI         * objectsWindow;
+  GLUI         * soundsWindow;
 
   GLUI         * getStringWindow;
 
   bool routeWindowVisible;
   bool lightsWindowVisible;
   bool objectsWindowVisible;
+  bool soundsWindowVisible;
   bool mainWindowVisible;
 
   // Last x/y of a mouse down/move:
@@ -211,8 +212,9 @@ private:
   // objectWindow GLUI elements:
   //
 
-  GLUI_Button * attachKeypadBtn_;
-  int          keypadAttached_;
+  GLUI_Listbox * objectList;
+  GLUI_Button  * attachKeypadBtn_;
+  int            keypadAttached_;
 
 
   SelectableGroup * attachedSG_;
@@ -227,6 +229,15 @@ private:
   GLUI_Button * SIUpButton_;
   GLUI_Button * SIDownButton_;
   GLUI_Button * CutToggleButton_;
+
+  ////////////////////////////////////////////////////////////////
+  //
+  // soundsWindow GLUI elements:
+  //
+
+  GLUI_Listbox  * soundList_;
+  GLUI_EditText * leftVolume_;
+  GLUI_EditText * rightVolume_;
 
   ////////////////////////////////////////////////////////////////
 
@@ -282,6 +293,11 @@ private:
   static void SGChangeCB( int id );
   static void SIChangeCB( int id );
   static void CutToggleCB( int id );
+
+  // Sounds Window Callbacks
+  void createSoundsWindow( GLUI * window );
+  static void updateSoundCB( int id );
+  static void toggleSoundWindowCB( int id );
 
   ////////////////////////////////////////////////////////////////
 
