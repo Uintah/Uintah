@@ -38,16 +38,10 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Math/MinMax.h>
 #include <sci_hash_set.h>
 #include <sci_hash_map.h>
 #include <set>
-
-#define MIN(a, b)     ((a < b) ? a : b) 
-#define MAX(a, b)     ((a > b) ? a : b)
-#define MIN3(a, b, c) ((a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c)) 
-#define MAX3(a, b, c) ((a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c ))
-#define MID3(a, b, c) ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
-		                 ((b < c) ? b : ((a > c) ? a : c)))
 
 
 
@@ -121,10 +115,10 @@ public:
       bool operator()(index_type ei1, index_type ei2) const
       {
 	const pair<index_type, index_type> e1 = edgei(ei1), e2 = edgei(ei2);
-	return (MAX(cells_[e1.first], cells_[e1.second]) == 
-		MAX(cells_[e2.first], cells_[e2.second]) &&
-		MIN(cells_[e1.first], cells_[e1.second]) == 
-		MIN(cells_[e2.first], cells_[e2.second]));
+	return (Max(cells_[e1.first], cells_[e1.second]) == 
+		Max(cells_[e2.first], cells_[e2.second]) &&
+		Min(cells_[e1.first], cells_[e1.second]) == 
+		Min(cells_[e2.first], cells_[e2.second]));
       };
     };
       
@@ -145,7 +139,7 @@ public:
 	pair<index_type,index_type> e = edgei(cell);
 	const int n0 = cells_[e.first] & mask;
 	const int n1 = cells_[e.second] & mask;
-	return MIN(n0, n1) << size | MAX(n0, n1);
+	return Min(n0, n1) << size | Max(n0, n1);
       }
     };   
 
@@ -184,9 +178,9 @@ public:
 	const under_type f2_n1 = cells_[f2_base + (f2_offset < 2 ? 2 : 1)];
 	const under_type f2_n2 = cells_[f2_base + (f2_offset < 3 ? 3 : 2)];
 
-	return (MAX3(f1_n0, f1_n1, f1_n2) == MAX3(f2_n0, f2_n1, f2_n2) &&
-		MID3(f1_n0, f1_n1, f1_n2) == MID3(f2_n0, f2_n1, f2_n2) &&
-		MIN3(f1_n0, f1_n1, f1_n2) == MIN3(f2_n0, f2_n1, f2_n2));
+	return (Max(f1_n0, f1_n1, f1_n2) == Max(f2_n0, f2_n1, f2_n2) &&
+		Mid(f1_n0, f1_n1, f1_n2) == Mid(f2_n0, f2_n1, f2_n2) &&
+		Min(f1_n0, f1_n1, f1_n2) == Min(f2_n0, f2_n1, f2_n2));
       }
     };
     
@@ -206,7 +200,7 @@ public:
 	const under_type n0 = cells_[base + (offset < 1 ? 1 : 0)] & mask;
 	const under_type n1 = cells_[base + (offset < 2 ? 2 : 1)] & mask;
 	const under_type n2 = cells_[base + (offset < 3 ? 3 : 2)] & mask;      
-	return MIN3(n0,n1,n2)<<size*2 | MID3(n0,n1,n2)<<size | MAX3(n0,n1,n2);
+	return Min(n0,n1,n2)<<size*2 | Mid(n0,n1,n2)<<size | Max(n0,n1,n2);
       }
     };
     typedef hash_multiset<index_type, CellFaceHasher,eqFace> HalfFaceSet;
