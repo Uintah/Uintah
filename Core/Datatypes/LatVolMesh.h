@@ -405,6 +405,7 @@ public:
   friend class FaceIter;
 
   friend class RangeCellIter;
+  friend class RangeNodeIter;
   
   LatVolMesh()
     : min_x_(0), min_y_(0), min_z_(0),
