@@ -163,8 +163,8 @@ Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
   }
 
   // Get the data and values and place into the matrix.
-  for (unsigned int i=0; i<onx; i++) {
-    for (unsigned int j=0; j<ony; j++) {
+  for (unsigned int j=0; j<ony; j++) {
+    for (unsigned int i=0; i<onx; i++) {
 
       ifield->value(v, *nodeItr);
       p2Dv->dMat_v_->put( i, j, v );
