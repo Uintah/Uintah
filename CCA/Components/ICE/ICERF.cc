@@ -77,22 +77,22 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     //__________________________________
     // which dimensions are relevant
     int mat_id = 0;
-    if ( patch->getBCValues(mat_id,"Symmetric",Patch::xminus) || 
-         patch->getBCValues(mat_id,"Symmetric",Patch::xplus)  || 
+    if ( patch->haveBC(Patch::xminus,mat_id,"symmetry","Symmetric") || 
+	 patch->haveBC(Patch::xplus,mat_id,"symmetry","Symmetric")  || 
          numCells(0) >3 ) {
      include_delT[0] = 1.0;
     }
-    if ( patch->getBCValues(mat_id,"Symmetric",Patch::yminus) || 
-         patch->getBCValues(mat_id,"Symmetric",Patch::yplus)  || 
+    if ( patch->haveBC(Patch::yminus,mat_id,"symmetry","Symmetric") || 
+         patch->haveBC(Patch::yplus,mat_id,"symmetry","Symmetric")  || 
          numCells(1) >3 ) {
      include_delT[1] = 1.0;
     }
-    if ( patch->getBCValues(mat_id,"Symmetric",Patch::zminus) || 
-         patch->getBCValues(mat_id,"Symmetric",Patch::zplus)  || 
+    if ( patch->haveBC(Patch::zminus,mat_id,"symmetry","Symmetric") || 
+         patch->haveBC(Patch::zplus,mat_id,"symmetry","Symmetric")  || 
          numCells(2) >3 ) {
      include_delT[2] = 1.0;
-    }   
-      
+    }
+ 
     for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
       Material* matl = d_sharedState->getMaterial(m);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
