@@ -15,9 +15,9 @@ Instance::io(SCIRun::Piostream &str)
   str.begin_class("Instance", UVSPHERE_VERSION);
   Object::io(str);
   Material::io(str);
-  //Pio(str, o);
-  //Pio(str, currentTransform);
-  //Pio(str, bbox);
+  SCIRun::Pio(str, o);
+  SCIRun::Pio(str, currentTransform);
+  SCIRun::Pio(str, bbox);
   str.end_class();
 }
 

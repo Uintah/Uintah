@@ -16,10 +16,10 @@ void
 InstanceWrapperObject::io(SCIRun::Piostream &str)
 {
   str.begin_class("InstanceWrapperObject", INSTANCEWRAPPEROBJECT_VERSION);
-  //Pio(str, obj);
-  //Pio(str, bb);
-  //Pio(str, was_processed);
-  //Pio(str, computed_bbox);
+  SCIRun::Pio(str, obj);
+  SCIRun::Pio(str, bb);
+  SCIRun::Pio(str, was_processed);
+  SCIRun::Pio(str, computed_bbox);
   str.end_class();
 }
 
