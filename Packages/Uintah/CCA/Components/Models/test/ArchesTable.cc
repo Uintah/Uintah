@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 
+#define MAXINDEPENDENTS 100
+
 // TODO:  Interpolation could be a lot faster
 using namespace std;
 
@@ -353,9 +355,10 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
 {
   Dep* dep = deps[index];
   int ni = inds.size();
-  double* w = new double[ni];
-  long* idx0 = new long[ni];
-  long* idx1 = new long[ni];
+  ASSERT(ni < MAXINDEPENDENTS);
+  double w[MAXINDEPENDENTS];
+  long idx0[MAXINDEPENDENTS];
+  long idx1[MAXINDEPENDENTS];
   long ninterp = 1<<ni;
 
   for(CellIterator iter = in_iter; !iter.done(); iter++){
@@ -410,10 +413,73 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
     }
     result[*iter] = sum;
   }
+}
+
+double ArchesTable::interpolate(int index, vector<double>& independents)
+{
+  Dep* dep = deps[index];
+  int ni = inds.size();
+  ASSERT(ni < MAXINDEPENDENTS);
+  double w[MAXINDEPENDENTS];
+  long idx0[MAXINDEPENDENTS];
+  long idx1[MAXINDEPENDENTS];
+  long ninterp = 1<<ni;
+
+  for(int i=0;i<ni;i++){
+    Ind* ind = inds[i];
+    double value = independents[i];
+    if(ind->uniform){
+      double index = (value-ind->weights[0])/ind->dx;
+      if(index < 0 || index >= ind->weights.size()){
+        cerr << "value=" << value << ", start=" << ind->weights[0] << ", dx=" << ind->dx << '\n';
+        cerr << "index=" << index << '\n';
+        throw InternalError("Interpolate outside range of table");
+      }
+      int idx = (int)idx;
+      w[i] = index-idx;
+      idx0[i] = ind->offset[idx];
+      idx1[i] = ind->offset[idx+1];
+    } else {
+      int l=0;
+      int h=ind->weights.size()-1;
+      if(value < ind->weights[l] || value > ind->weights[h])
+        throw InternalError("Interpolate outside range of table");
+      while(h > l+1){
+        int m = (h+l)/2;
+        if(value < ind->weights[m])
+          h=m;
+        else
+          l=m;
+      }
+      idx0[i] = ind->offset[l];
+      idx1[i] = ind->offset[h];
+      w[i] = (value-ind->weights[l])/(ind->weights[h]-ind->weights[l]);
+    }
+  }
+  // Do the interpolation
+  double sum = 0;
+  for(long i=0;i<ninterp;i++){
+    double weight = 1;
+    long index = 0;
+    for(int j=0;j<ni;j++){
+      long mask = 1<<j;
+      if(i & mask){
+        index += idx1[j];
+        weight *= (1-w[j]);
+      } else {
+        index += idx0[j];
+        weight *= w[j];
+      }
+    }
+    double value = dep->data[index] * weight;
+    sum += value;
+  }
   delete[] idx0;
   delete[] idx1;
   delete[] w;  
+  return sum;
 }
+
 
 void ArchesTable::error(istream& in)
 {
