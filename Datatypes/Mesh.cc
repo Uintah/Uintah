@@ -16,7 +16,7 @@
 #include <Classlib/String.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Datatypes/ColumnMatrix.h>
-#include <Datatypes/DenseMatrix.h>
+#include <Math/Mat.h>
 #include <iostream.h>
 
 static TrivialAllocator Element_alloc(sizeof(Element));
@@ -205,7 +205,7 @@ void Element::get_sphere2(Point& cen, double& rad2)
     double c1=(p1-Point(0,0,0)).length2();
     double c2=(p2-Point(0,0,0)).length2();
     double c3=(p3-Point(0,0,0)).length2();
-    DenseMatrix mat(3,3);
+    double mat[3][3];
     mat[0][0]=v1.x();
     mat[0][1]=v1.y();
     mat[0][2]=v1.z();
@@ -215,11 +215,11 @@ void Element::get_sphere2(Point& cen, double& rad2)
     mat[2][0]=v3.x();
     mat[2][1]=v3.y();
     mat[2][2]=v3.z();
-    ColumnMatrix rhs(3);
+    double rhs[3];
     rhs[0]=(c1-c0)*0.5;
     rhs[1]=(c2-c0)*0.5;
     rhs[2]=(c3-c0)*0.5;
-    mat.solve(rhs);
+    matsolve3by3(mat, rhs);
     cen=Point(rhs[0], rhs[1], rhs[2]);
     rad2=(p0-cen).length2();
 }
@@ -404,13 +404,71 @@ double Mesh::get_grad(Element* elem, const Point&,
 
 int Mesh::locate(const Point& p, int& ix)
 {
-    for(int i=0;i<elems.size();i++){
-	if(elems[i] && inside(p, elems[i])){
-	    ix=i;
-	    return 1;
+    int i=0;
+    while(!elems[i])i++;
+    while(1){
+	Element* elem=elems[i];
+	Point p1(nodes[elem->n[0]]->p);
+	Point p2(nodes[elem->n[1]]->p);
+	Point p3(nodes[elem->n[2]]->p);
+	Point p4(nodes[elem->n[3]]->p);
+	double x1=p1.x();
+	double y1=p1.y();
+	double z1=p1.z();
+	double x2=p2.x();
+	double y2=p2.y();
+	double z2=p2.z();
+	double x3=p3.x();
+	double y3=p3.y();
+	double z3=p3.z();
+	double x4=p4.x();
+	double y4=p4.y();
+	double z4=p4.z();
+	double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+	double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+	double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+	double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+	double iV6=1./(a1+a2+a3+a4);
+
+	double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+	double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+	double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+	double s1=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
+	if(s1<-1.e-6){
+	    i=elem->face(0);
+	    continue;
 	}
+
+	double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+	double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+	double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+	double s2=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
+	if(s2<-1.e-6){
+	    i=elem->face(1);
+	    continue;
+	}
+
+	double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+	double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+	double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+	double s3=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
+	if(s3<-1.e-6){
+	    i=elem->face(2);
+	    continue;
+	}
+
+	double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+	double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+	double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+	double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+	if(s4<-1.e-6){
+	    i=elem->face(3);
+	    continue;
+	}
+	ix=i;
+	return 1;
     }
-    return 0;
+//    return 0;
 }
 
 void* Element::operator new(size_t)
