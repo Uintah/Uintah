@@ -25,7 +25,7 @@ NullGeometryPiece::~NullGeometryPiece()
 
 bool NullGeometryPiece::inside(const Point& p) const
 {
-  return false;
+  return true;
 }
 
 Box NullGeometryPiece::getBoundingBox() const
