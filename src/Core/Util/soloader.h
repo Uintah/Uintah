@@ -4,6 +4,8 @@
 // accessing shared libraries (.so for unix and .dll for windows)
 //
 
+#include <SCICore/share/share.h>
+
 #ifdef _WIN32
 #include <afxwin.h> // for LoadLibrary(), GetProcAddress() and HINSTANCE
 typedef HINSTANCE LIBRARY_HANDLE;
@@ -20,7 +22,7 @@ typedef void* LIBRARY_HANDLE;
 // from within the shared library called "libname"
 //
 
-void* GetLibrarySymbolAddress(const char* libname, const char* symbolname);
+SCICORESHARE void* GetLibrarySymbolAddress(const char* libname, const char* symbolname);
 
 
 /////////////////////////////////////////////////////////////////
@@ -31,7 +33,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname);
 // called "libname"
 //
 
-LIBRARY_HANDLE GetLibraryHandle(const char* libname);
+SCICORESHARE LIBRARY_HANDLE GetLibraryHandle(const char* libname);
 
 
 /////////////////////////////////////////////////////////////////
@@ -42,7 +44,7 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname);
 // from within the shared library with handle "handle"
 //
 
-void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname);
+SCICORESHARE void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname);
 
 
 /////////////////////////////////////////////////////////////////
@@ -54,4 +56,4 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname);
 // functions
 //
 
-void CloseLibraries();
+SCICORESHARE void CloseLibraries();
