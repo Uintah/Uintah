@@ -88,15 +88,6 @@ public:
       virtual void set3dPeriodic(bool periodic) = 0;
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-      // Interface for Schedule the computation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-      virtual void sched_computeTurbSubmodel(const LevelP&, 
-					     SchedulerP&, const PatchSet* patches,
-					     const MaterialSet* matls) = 0;
-
-
-      ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 

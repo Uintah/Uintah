@@ -64,7 +64,8 @@ namespace Uintah {
     bool use_old_values;
     bool recursion;
     double time_multiplier;
-    double time_position_multiplier;
+    double time_position_multiplier_before_average;
+    double time_position_multiplier_after_average;
     double factor_old;
     double factor_new;
     double factor_divide;
@@ -102,7 +103,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = true;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.0;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -135,7 +137,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.0;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -168,7 +171,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.0;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -201,7 +205,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 0.5;
-            time_position_multiplier = 0.5;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -234,7 +239,8 @@ namespace Uintah {
 	    use_old_values = false;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 2.0;
+            time_position_multiplier_before_average = 2.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
 	    factor_divide = 2.0;
@@ -267,7 +273,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.0;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -300,7 +307,8 @@ namespace Uintah {
 	    use_old_values = false;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.5;
+            time_position_multiplier_before_average = 1.5;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 2.0;
 	    factor_divide = 3.0;
@@ -333,7 +341,8 @@ namespace Uintah {
 	    use_old_values = false;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 2.0;
+            time_position_multiplier_before_average = 2.0;
+            time_position_multiplier_after_average = 0.5;
 	    factor_old = 3.0;
 	    factor_new = 1.0;
 	    factor_divide = 4.0;
@@ -366,7 +375,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.0;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -399,7 +409,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.0;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;
@@ -432,7 +443,8 @@ namespace Uintah {
 	    use_old_values = true;
 	    recursion = false;
             time_multiplier = 1.0;
-            time_position_multiplier = 1.0;
+            time_position_multiplier_before_average = 1.0;
+            time_position_multiplier_after_average = 1.0;
 	    factor_old = 0.0;
 	    factor_new = 1.0;
 	    factor_divide = 1.0;

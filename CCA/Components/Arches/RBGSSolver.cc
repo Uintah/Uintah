@@ -1064,10 +1064,14 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
        for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
 	for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 	  IntVector currCell(ii,jj,kk);
-	  if (vars->scalar[currCell] > 1.0)
+	  if (vars->scalar[currCell] > 1.0) {
 	    vars->scalar[currCell] = 1.0;
-	  else if (vars->scalar[currCell] < 0.0)
+	    cout << "scalar got clipped to 1 at " << currCell << endl;
+	  }  
+	  else if (vars->scalar[currCell] < 0.0) {
 	    vars->scalar[currCell] = 0.0;
+	    cout << "scalar got clipped to 0 at " << currCell << endl;
+	  }
 	}
       }
     }

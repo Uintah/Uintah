@@ -83,6 +83,7 @@ namespace Uintah {
   class BoundaryCondition;
   class MPMArchesLabel;
   class ArchesLabel;
+  class TimeIntegratorLabel;
 #ifdef PetscFilter
   class Filter;
 #endif
@@ -278,6 +279,8 @@ private:
 
     bool d_set_initial_condition;
     std::string d_init_inputfile;
+    TimeIntegratorLabel* init_timelabel;
+    bool init_timelabel_allocated;
 
 }; // end class Arches
 

@@ -111,6 +111,9 @@ ArchesLabel::ArchesLabel()
   d_scalarTempLabel = VarLabel::create("scalarTemp",
 				   CCVariable<double>::getTypeDescription() );
 
+  d_scalarFELabel = VarLabel::create("scalarFE",
+				   CCVariable<double>::getTypeDescription() );
+
   // scalar variance
 
   d_scalarVarSPLabel = VarLabel::create("scalarVarSP", 
@@ -133,6 +136,9 @@ ArchesLabel::ArchesLabel()
 				   CCVariable<double>::getTypeDescription() );
 
   d_reactscalarTempLabel = VarLabel::create("reactscalarTemp",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarFELabel = VarLabel::create("reactscalarFE",
 				   CCVariable<double>::getTypeDescription() );
 
   // reactscalar variance
@@ -354,6 +360,9 @@ ArchesLabel::ArchesLabel()
   d_enthalpyTempLabel = VarLabel::create("enthalpyTemp",
 				   CCVariable<double>::getTypeDescription() );
 
+  d_enthalpyFELabel = VarLabel::create("enthalpyFE",
+				   CCVariable<double>::getTypeDescription() );
+
   d_enthalpyRXNLabel = VarLabel::create("enthalpyRXN",
 				   CCVariable<double>::getTypeDescription() );
 
@@ -573,12 +582,14 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_wVelocitySPBCLabel);
   VarLabel::destroy(d_scalarSPLabel);
   VarLabel::destroy(d_scalarTempLabel);
+  VarLabel::destroy(d_scalarFELabel);
   VarLabel::destroy(d_scalarVarSPLabel);
   VarLabel::destroy(d_scalarDissSPLabel);
   VarLabel::destroy(d_scalCoefSBLMLabel);
   VarLabel::destroy(d_scalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_reactscalarSPLabel);
   VarLabel::destroy(d_reactscalarTempLabel);
+  VarLabel::destroy(d_reactscalarFELabel);
   VarLabel::destroy(d_reactscalarVarSPLabel);
   VarLabel::destroy(d_reactscalCoefSBLMLabel);
   VarLabel::destroy(d_reactscalNonLinSrcSBLMLabel);
@@ -643,6 +654,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_pressurePredLabel);
   VarLabel::destroy(d_enthalpySPLabel);
   VarLabel::destroy(d_enthalpyTempLabel);
+  VarLabel::destroy(d_enthalpyFELabel);
   VarLabel::destroy(d_enthalpyRXNLabel);
   VarLabel::destroy(d_enthCoefSBLMLabel);
   VarLabel::destroy(d_enthNonLinSrcSBLMLabel);
