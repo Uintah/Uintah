@@ -37,7 +37,7 @@ using std::vector;
 #pragma reset woff 1375
 #endif
 
-#define NEW_MODULE_MAKER 1
+#define NEW_MODULE_MAKER 0
 typedef std::map<int,char*>::iterator char_iter;
 
 namespace PSECore {
@@ -582,6 +582,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.21  2000/10/21 18:46:06  moulding
+// turned new module maker off ... again.
+//
 // Revision 1.20  2000/10/21 18:33:44  moulding
 // removed the PackageDBHandler and StrX classes from PackageDB.cc and put them
 // into their own files.  This allows other pieces of code to use those classes.
