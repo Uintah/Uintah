@@ -31,28 +31,27 @@ static Piostream::MapClStringPersistentTypeID* table = 0;
 
 //////////
 // Constructors/Destructor
-PersistentTypeID::PersistentTypeID(const char* type, 
-				   const char* parent,
+PersistentTypeID::PersistentTypeID(const char* typeName, 
+				   const char* parentName,
 				   Persistent* (*maker)()) :
-  type(type), parent(parent), maker(maker)
+  type(typeName), parent(parentName), maker(maker)
 {
-
   if (!table) {
     table = scinew Piostream::MapClStringPersistentTypeID;
   }
   
-  clString typestring(type);
+  clString typestring(type.c_str());
   
   Piostream::MapClStringPersistentTypeID::iterator dummy;
 
   dummy = table->find(typestring);
   if (dummy != table->end()) {
-    if ((*dummy).second->maker != maker ||
-      clString((*dummy).second->parent) != clString(parent))
-      {
- 	cerr << "WARNING: duplicate type in Persistent "
-	     << "Object Type Database: " << typestring << endl;
-      }
+    if ((*dummy).second->maker != maker 
+	|| ((*dummy).second->parent != parent))
+    {
+      cerr << "WARNING: duplicate type in Persistent "
+	   << "Object Type Database: " << typestring << endl;
+    }
   }
   
 				// should this be else { ?
@@ -64,23 +63,25 @@ PersistentTypeID::PersistentTypeID(const char* type,
 PersistentTypeID::PersistentTypeID(string typeName, 
 				   string parentName,
 				   Persistent* (*maker)())
+  :  type(typeName), parent(parentName), maker(maker)
 {
   if (!table) {
     table = scinew Piostream::MapClStringPersistentTypeID;
   }
   
-  clString typestring(typeName.c_str());
+  clString typestring(type.c_str());
   
   Piostream::MapClStringPersistentTypeID::iterator dummy;
-
+  
   dummy = table->find(typestring);
+
   if (dummy != table->end()) {
-    if ((*dummy).second->maker != maker ||
-      clString((*dummy).second->parent) != clString(parentName.c_str()))
-      {
- 	cerr << "WARNING: duplicate type in Persistent "
-	     << "Object Type Database: " << typestring << endl;
-      }
+    if ((*dummy).second->maker != maker 
+	|| ((*dummy).second->parent != parentName))
+    {
+      cerr << "WARNING: duplicate type in Persistent "
+	   << "Object Type Database: " << typestring << endl;
+    }
   }
   
   (*table)[typestring] = this;
@@ -136,11 +137,16 @@ static PersistentTypeID* find_derived(const clString& classname,
   
   iter = table->find(classname);
   if(iter == table->end()) return 0;
-  
+  cerr << "Name " << classname << " found" << endl;
   pid = (*iter).second;
-  if (!pid->parent) return 0;
-  if (basename == pid->parent) return pid;
-  if (find_derived(pid->parent, basename)) return pid;
+  if (!pid->parent.size()) {
+    cerr << "parent is not found" << endl;
+    return 0;
+  }
+  cerr << "About to seek up from " << pid->parent << endl;
+  if (basename == pid->parent.c_str()) return pid;
+  cerr << "LOoking further up... " << endl;
+  if (find_derived(pid->parent.c_str(), basename)) return pid;
   
   return 0;
 }
@@ -162,13 +168,15 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 				// from pid->type, then read it in
 				// Otherwise, it is an error...
       clString in_name(peek_class());
-      clString want_name(pid.type);
+      clString want_name(pid.type.c_str());
+      cerr << "Want name: " << want_name << endl;
       Persistent* (*maker)() = 0;
       if (in_name == want_name) {
 	maker=pid.maker;
       }
       else {
 	PersistentTypeID* found_pid = find_derived(in_name, want_name);
+	cerr << "Want name found: " << want_name << endl;
 	if (found_pid) {
 	  maker=found_pid->maker;
 	}
@@ -209,7 +217,7 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
   else {			// dir == Write
     int have_data;
     int pointer_id;
-
+    
     MapPersistentInt::iterator outiter;
     if (outpointers) {
       outiter = outpointers->find(data);
@@ -220,12 +228,11 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       have_data=0;
       pointer_id=0;
     }
-    else if (outpointers && outiter != outpointers->end())
-      {
+    else if (outpointers && outiter != outpointers->end()){
 				// Already emitted, pointer id fetched
 				// from hashtable
-	have_data=0;
-      }
+      have_data=0;
+    }
     else {
 				// Emit it..
       have_data=1;
