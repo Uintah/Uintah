@@ -38,13 +38,6 @@
 #  Copyright (C) 2003 SCI Group
 #
 
-
-
-proc setGlobal { name val } {
-    upvar \#0 $name var
-    set var $val
-}
-
 proc updatedPercentage { first second absolute relative name1 name2 op } {
     upvar $first min
     upvar $second max
@@ -136,10 +129,17 @@ proc labeledSlider { w text var from to res {width 13}} {
     return $frame.scale
 }
 
+setGlobal SKIP_setVars 0
 proc setVars { tovar name1 name2 op} {
-    upvar \#0 $name1 var
-    setGlobal $tovar $var
+    upvar \#0 SKIP_setVars skip $name1 var
+    if {!$skip} {
+	setGlobal $tovar $var
+    }
     return 1
+}
+
+proc auto_needexecute { this args } {
+    $this-c needexecute
 }
 
 
@@ -178,73 +178,111 @@ itcl_class SCIRun_Visualization_GenAxes {
 	return $ret
     }
 
-
+    method createGlobal { var val } {
+	setGlobal $var $val
+	uplevel \#0 trace variable \"$var\" w \"auto_needexecute $this\"
+    }
+    
     method createDefaultPlaneAxisVariables { varPrefix } {
-
-	setGlobal $varPrefix-divisions		"10"
-	setGlobal $varPrefix-percent		"10"
-	setGlobal $varPrefix-absolute		""
-	setGlobal $varPrefix-offset		"1"
-
-	setGlobal $varPrefix-range-first	"0.0"
-	setGlobal $varPrefix-range-second	"1.0"
-	setGlobal $varPrefix-min-percent	"0"
-	setGlobal $varPrefix-max-percent	"100"
-	setGlobal $varPrefix-min-absolute	"0.0"
-	setGlobal $varPrefix-max-absolute	"1.0"
-
-
-	setGlobal $varPrefix-minplane		"2"
-	setGlobal $varPrefix-maxplane		"2"
-	setGlobal $varPrefix-lines		"2"
-	setGlobal $varPrefix-minticks		"2"
-	setGlobal $varPrefix-maxticks		"2"
-	setGlobal $varPrefix-minlabel		"2"
-	setGlobal $varPrefix-maxlabel		"2"
-	setGlobal $varPrefix-minvalue		"2"
-	setGlobal $varPrefix-maxvalue		"2"
-
-	setGlobal $varPrefix-width		"1"
-	setGlobal $varPrefix-tickangle		"0"
-	setGlobal $varPrefix-ticktilt 		"0"
-	setGlobal $varPrefix-labelangle		"0"
-	setGlobal $varPrefix-labelheight	"6"
-	setGlobal $varPrefix-ticksize		"5"
-	setGlobal $varPrefix-valuesquash	"1.0"	
-	setGlobal $varPrefix-valuesize		"3"	
+	
+	createGlobal $varPrefix-divisions		"10"
+	createGlobal $varPrefix-percent		"10"
+	createGlobal $varPrefix-absolute		""
+	createGlobal $varPrefix-offset		"1"
+	
+	createGlobal $varPrefix-range-first	"0.0"
+	createGlobal $varPrefix-range-second	"1.0"
+	createGlobal $varPrefix-min-percent	"0"
+	createGlobal $varPrefix-max-percent	"100"
+	createGlobal $varPrefix-min-absolute	"0.0"
+	createGlobal $varPrefix-max-absolute	"1.0"
+	
+	
+	createGlobal $varPrefix-minplane		"2"
+	createGlobal $varPrefix-maxplane		"2"
+	createGlobal $varPrefix-lines		"2"
+	createGlobal $varPrefix-minticks		"2"
+	createGlobal $varPrefix-maxticks		"2"
+	createGlobal $varPrefix-minlabel		"2"
+	createGlobal $varPrefix-maxlabel		"2"
+	createGlobal $varPrefix-minvalue		"2"
+	createGlobal $varPrefix-maxvalue		"2"
+	
+	createGlobal $varPrefix-width		"1"
+	createGlobal $varPrefix-tickangle		"0"
+	createGlobal $varPrefix-ticktilt 		"0"
+	createGlobal $varPrefix-labelangle		"0"
+	createGlobal $varPrefix-labelheight	"6"
+	createGlobal $varPrefix-ticksize		"5"
+	createGlobal $varPrefix-valuesquash	"1.0"	
+	createGlobal $varPrefix-valuesize		"3"
     }
 
-    method linkVars { allaxes args } {
+    method linkVars { allaxes vars } {
 	set fromPre "[modname]-all-[join [join $allaxes ""] ""]"
 	createDefaultPlaneAxisVariables $fromPre
-	foreach varName $args {
+	foreach varName $vars {
 	    foreach axes $allaxes  {
 		foreach axis $axes {
 		    set planeName [join "Plane-$axes" ""]
 		    set axisName [join "$axis-Axis" ""]
-		    set toVar "$this-$planeName-$axisName-$varName"
+		    set toVar "[modname]-$planeName-$axisName-$varName"
 		    set fromVar "$fromPre-$varName"
 		    global $toVar $fromVar
-		    set command "trace variable $fromVar w \"setVars $toVar\""
-		    uplevel \#0 $command
+		    uplevel \#0 trace variable \"$fromVar\" w \"setVars \{$toVar\}\"
 		}
 	    }
 	}
 	return $fromPre
     }
 
+    method compute_all_values { allaxes vars } {
+	set fromPre "[modname]-all-[join [join $allaxes ""] ""]"
+	foreach varName $vars {
+	    set fromVar "$fromPre-$varName"
+	    set done 0
+	    unsetIfExists val
+	    foreach axes $allaxes  {
+		foreach axis $axes {
+		    if {!$done} {
+			set planeName [join "Plane-$axes" ""]
+			set axisName [join "$axis-Axis" ""]
+			set toVar "[modname]-$planeName-$axisName-$varName"
+			upvar \#0 $toVar tovar
+			if { ![info exists val] } {
+			    set val $tovar
+			} elseif { ![string equal $val $tovar] } {
+			    set val ""
+			    set done 1
+			} 
+		    }
+		}
+	    }
+	    if { [info exists val] } {
+		setGlobal SKIP_setVars 1
+		catch "setGlobal \"$fromVar\" \{$val\}"
+		setGlobal SKIP_setVars 0
+	    }
+	    
+	}
+	return $fromPre
+    }
+
+	
+			       
+
 
     method build_all_tab { tabs } {
-
-	set fromPre [linkVars {"0 1" "0 2" "1 2"} lines divisions percent absolute offset range-frist range-second min-percent max-percent min-absolute max-absolute minplane maxplane lines minticks maxticks minlabel maxlabel minvalue maxvalue width tickangle ticktilt labelangle lableheight ticksize valuesquash valuesize]
-
+	set vars [list lines divisions percent absolute offset range-first range-second min-percent max-percent min-absolute max-absolute minplane maxplane lines minticks maxticks minlabel maxlabel minvalue maxvalue width tickangle ticktilt labelangle labelheight ticksize valuesquash valuesize]
+	set planes {"0 1" "0 2" "1 2"}
+	set fromPre [linkVars $planes $vars]
 	set tab [$tabs add -label "All"]
 	set tabframe $tab.frame
 	frame $tabframe
 	pack $tabframe -expand 1 -fill both
-	
+	set command [list $this compute_all_values $planes $vars]
+	bind $tabframe <Map> $command
 	build_plane_dir_ui $tabframe $fromPre "0 1 2" "0 1 2"
-
     }
 
 
@@ -413,7 +451,6 @@ itcl_class SCIRun_Visualization_GenAxes {
     
 
     method build_plane_tab { tabs axes { text "" }} {
-
 	set tab [$tabs add -label "[axisName $axes] Plane"]
 	set tabframe $tab.frame
 	frame $tabframe
@@ -422,12 +459,15 @@ itcl_class SCIRun_Visualization_GenAxes {
 	    -tabpos n -backdrop gray -equaltabs 0 -bevelamount 5
 	pack $tabframe.tabs -expand 1 -fill both
 
-	set fromPre [linkVars [list $axes] lines divisions percent absolute offset range-frist range-second min-percent max-percent min-absolute max-absolute minplane maxplane lines minticks maxticks minlabel maxlabel minvalue maxvalue width tickangle ticktilt labelangle lableheight ticksize valuesquash valuesize]
+	set vars [list lines divisions percent absolute offset range-first range-second min-percent max-percent min-absolute max-absolute minplane maxplane lines minticks maxticks minlabel maxlabel minvalue maxvalue width tickangle ticktilt labelangle labelheight ticksize valuesquash valuesize]
+	set fromPre [linkVars [list $axes] $vars]
 
 	set frame [$tabframe.tabs add -label "Both"].frame
 	frame $frame
 	pack $frame -expand 1 -fill both
-
+	
+	set command [list $this compute_all_values [list $axes] $vars]
+	bind $frame <Map> $command
 	build_plane_dir_ui $frame $fromPre $axes $axes
 
 	foreach axis $axes {	   
@@ -471,7 +511,7 @@ itcl_class SCIRun_Visualization_GenAxes {
 	labeledSlider $valueframe "Value Precision:" $this-precision 1 12 1 14
 	labeledSlider $valueframe "Value Squash:" $this-squash 0 2 .1 14
 	set rez [labeledSlider $valueframe "Value Resolution:" $this-valuerez 1 500 1 14]
-	bind $rez <ButtonRelease> "$this-c valueFontChanged"
+	bind $rez <ButtonRelease> "$this-c needexecute"
 
 	set labelframe $options.labelfont
 	frame $labelframe -borderwidth 2 -relief groove
@@ -491,7 +531,7 @@ itcl_class SCIRun_Visualization_GenAxes {
 	    -relief raised -bd 2 -anchor w
 
 	set rez [labeledSlider $labelframe "Label Resolution:" $this-labelrez 1 500 1 14]
-	bind $rez <Button> "$this-c labelFontChanged"
+	bind $rez <Button> "$this-c needexecute"
 
 	set dir [file join [netedit getenv SCIRUN_SRCDIR] Fonts]
 	set files [glob -nocomplain -dir $dir *.ttf]
@@ -505,16 +545,14 @@ itcl_class SCIRun_Visualization_GenAxes {
 	    if [string equal SCIRun $filename] { set def $i }
 	    $frame.menu.m add command -label $filename \
 		-command "$frame.menu configure -text \"$filename\"; \
-			  setGlobal $this-labelfont \"$font\"; \
-                          $this-c labelFontChanged"
-
+		          setGlobal $this-labelfont \"$font\""
 	    $frame2.menu.m add command -label $filename \
 		-command "$frame2.menu configure -text \"$filename\"; \
-		          setGlobal $this-valuefont \"$font\"; \
-                          $this-c valueFontChanged"
-
+		          setGlobal $this-valuefont \"$font\""
 	    incr i
 	}
+	trace variable $this-valuefont w "auto_needexecute $this"
+	trace variable $this-labelfont w "auto_needexecute $this"
 
 	if $i {
 	    $frame.menu.m invoke $def
@@ -563,8 +601,10 @@ proc showOptions {this} {
     foreach frame [set $this-displayFrames] {
 	pack $frame -side top -fill x -expand 0 -pady 0 -ipady 0
     }
+    set w .ui[$this modname]
+    wm geometry $w ""
     
-#    set w .ui[$this modname]
+#    
 #    set x [lindex [split [wm geometry $w] x] 0]
 #    wm geometry $w ${x}x800
 }
@@ -579,7 +619,9 @@ proc hideOptions {this} {
     foreach button [set $this-displayButtons] {
 	pack $button -side top -expand 0 -pady 0 -ipady 0
     }
-#    set w .ui[$this modname]
+    set w .ui[$this modname]
+    wm geometry $w ""
+#    
 #    set x [lindex [split [wm geometry $w] x] 0]
 #    wm geometry $w ${x}x400
 
