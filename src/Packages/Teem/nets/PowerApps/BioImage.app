@@ -1516,7 +1516,7 @@ class BioImageApp {
 		      -command "$this set_cur_data_tab Analyze; $this configure_readers Analyze"]
 	
 	button $page.load -text "Analyze Loader" \
-	    -command "$this check_crop; $$this enable_update 1 2 3; this analyze_ui"
+	    -command "$this check_crop; $this enable_update 1 2 3; $this analyze_ui"
 	Tooltip $page.load "Open Dicom Load user interface"
 	
 	pack $page.load -side top -anchor n \
@@ -2714,6 +2714,8 @@ class BioImageApp {
 
     method execute_Data {} {
 	# execute the appropriate reader
+	# and verify valid loading file
+	set valid_data 0
 	
 	set ChooseNrrd  [lindex [lindex $filters(0) $modules] $load_choose_input]
         global [set ChooseNrrd]-port-index
@@ -2722,19 +2724,44 @@ class BioImageApp {
         if {$port == 0} {
 	    # Nrrd
             set mod [lindex [lindex $filters(0) $modules] $load_nrrd]
+            global $mod-filename
+            if {[info exists $mod-filename] && [file exists [set $mod-filename]]} {
+		set valid_data 1
+	    }  
 	} elseif {$port == 1} {
 	    # Dicom
             set mod [lindex [lindex $filters(0) $modules] $load_dicom]
+            global $mod-entry-dir0
+            global $mod-series-files
+            if {[info exists $mod-entry-dir0] && [file isdirectory [set $mod-entry-dir0]] && \
+                [info exists $mod-series-files] && [llength $mod-series-files] > 0 && \
+                [file exists [file join [set $mod-entry-dir0] [lindex [set $mod-series-files] 0]]]} {
+		set valid_data 1
+            }  
+          
 	} elseif {$port == 2} {
 	    # Analyze
             set mod [lindex [lindex $filters(0) $modules] $load_analyze]
+	    global $mod-filenames0
+            if {[info exists $mod-filenames0] && [file exists [set $mod-filenames0]]} {
+		set valid_data 1
+	    }  
 	} else {
 	    #Field
             set mod [lindex [lindex $filters(0) $modules] $load_field]
+            global $mod-filename
+            if {[info exists $mod-filename] && [file exists [set $mod-filename]]} {
+		set valid_data 1
+	    } 
 	}
 
-	$mod-c needexecute
-        set has_executed 1
+	if {$valid_data == 1} {
+	    $mod-c needexecute
+	    set has_executed 1
+	} else {
+	    tk_messageBox -message "Invalid filename specified.  Please select a valid filename\nand click the Update button." -type ok -icon info -parent .standalone
+	    return
+        } 
     }
 
 
@@ -4122,14 +4149,15 @@ class BioImageApp {
                 }
 		$mod-c needexecute
             }
+           set has_executed 1
 	} else {
             $this set_viewer_position
             $this execute_Data
 	}
 
-        set has_executed 1
-
-        $this disable_update
+        if {$has_executed == 1} {
+            $this disable_update
+        }
     }
 
     method disable_update {} {
