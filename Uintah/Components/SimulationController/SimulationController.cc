@@ -157,12 +157,12 @@ void SimulationController::run()
       if(delt > timeinfo.delt_max){
 	 cerr << "WARNING: lowering delt from " << delt 
 	      << " to maxmimum: " << timeinfo.delt_max << '\n';
-	 cerr << "AND IT DOESN'T WORK";
+//	 cerr << "AND IT DOESN'T WORK";
 	 delt = timeinfo.delt_max;
       }
       
       // Needs to be fixed - steve
-      //old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
+      old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
       cout << "Time=" << t << ", delt=" << delt 
 	   << ", elapsed time = " << wallTime << '\n';
 
@@ -424,6 +424,11 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.23  2000/05/26 18:58:15  guilkey
+// Uncommented code to allow a maximum timestep to be set and effectively
+// used.  The minimum time step still doesn't work, but for an explicit
+// code, who cares?
+//
 // Revision 1.22  2000/05/20 08:09:18  sparker
 // Improved TypeDescription
 // Finished I/O
