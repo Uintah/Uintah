@@ -52,7 +52,6 @@ MPMArches::MPMArches(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
   Mlb  = scinew MPMLabel();
-  d_fracture = false;
   d_MAlb = scinew MPMArchesLabel();
   d_mpm      = scinew SerialMPM(myworld);
   d_arches      = scinew Arches(myworld);
@@ -178,11 +177,6 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
-  if(d_fracture) {
-    d_mpm->scheduleSetPositions(sched, patches, mpm_matls);
-    d_mpm->scheduleComputeBoundaryContact(sched, patches, mpm_matls);
-    d_mpm->scheduleComputeConnectivity(sched, patches, mpm_matls);
-  }
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
 
   d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
@@ -234,12 +228,6 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
-
-  if(d_fracture) {
-    d_mpm->scheduleComputeFracture(sched, patches, mpm_matls);
-    d_mpm->scheduleComputeCrackExtension(sched, patches, mpm_matls);
-  }
-  d_mpm->scheduleCarryForwardVariables(sched, patches, mpm_matls);
 
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,

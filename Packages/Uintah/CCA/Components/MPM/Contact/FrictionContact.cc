@@ -28,8 +28,10 @@ using std::string;
 
 using namespace std;
 
-FrictionContact::FrictionContact(ProblemSpecP& ps,
-				 SimulationStateP& d_sS, MPMLabel* Mlb)
+#define MAX_BASIS 27
+
+FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
+                                 MPMLabel* Mlb,int n8or27)
 {
   // Constructor
   IntVector v_f;
@@ -39,6 +41,7 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,
 
   d_sharedState = d_sS;
   lb = Mlb;
+  d_8or27=n8or27;
 }
 
 FrictionContact::~FrictionContact()
@@ -355,25 +358,34 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                                                Ghost::AroundNodes, 1,
                                                lb->pXLabel);
       constParticleVariable<Matrix3> pstress;
+      constParticleVariable<Point> px;
       NCVariable<Matrix3>       gstress;
-      new_dw->get(pstress, lb->pStressLabel_afterStrainRate, pset);
+      new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
+      old_dw->get(px, lb->pXLabel, pset);
       new_dw->allocate(gstress, lb->gStressLabel, matlindex, patch);
       gstress.initialize(Matrix3(0.0));
       
-      constParticleVariable<Point> px;
-      old_dw->get(px, lb->pXLabel, pset);
+      if(d_8or27==MAX_BASIS){
+        constParticleVariable<Vector> psize;
+        old_dw->get(psize, lb->pSizeLabel, pset);
+      }
 
+      IntVector ni[MAX_BASIS];
+      double S[MAX_BASIS];
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
          particleIndex idx = *iter;
 
          // Get the node indices that surround the cell
-         IntVector ni[8];
-	 double S[8];
-         patch->findCellAndWeights(px[idx], ni, S);
+         if(d_8or27==8){
+            patch->findCellAndWeights(px[idx], ni, S);
+         }
+         else if(d_8or27==27){
+            patch->findCellAndWeights27(px[idx], ni, S);
+         }
          // Add each particles contribution to the local mass & velocity
          // Must use the node indices
-         for(int k = 0; k < 8; k++) {
+         for(int k = 0; k < d_8or27; k++) {
 	   if (patch->containsNode(ni[k]))
 	     gstress[ni[k]] += pstress[idx] * S[k];
          }
@@ -539,10 +551,12 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 {
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, 1);      
-  t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,
-	      Ghost::AroundNodes, 1);
-  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::AroundNodes, 1);
+  t->requires(Task::OldDW, lb->pXLabel,              Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW,lb->pStressLabel_preReloc, Ghost::AroundNodes, 1);
+  if(d_8or27==27){
+    t->requires(Task::OldDW, lb->pSizeLabel,         Ghost::AroundNodes, 1);
+  }
+  t->requires(Task::NewDW, lb->gMassLabel,           Ghost::AroundNodes, 1);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->gAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);

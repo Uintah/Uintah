@@ -92,15 +92,15 @@ public:
 	d_with_arches = true;
   };
 
+  int get8or27()
+  {
+       return d_8or27;
+  };
+
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
-
-  bool withFracture() const
-  {
-    return d_fracture;
-  };
 
 private:
   //////////
@@ -119,63 +119,6 @@ private:
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
-
-  void interpolateParticlesForSaving(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
-
-
-  //////////
-  // Insert Documentation Here:
-  void computeCrackExtension(
-                   const ProcessorGroup*,
-		   const PatchSubset* patches,
-		   const MaterialSubset* ,
-		   DataWarehouse* old_dw,
-		   DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  void computeFracture(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw,
-		       DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  void stressRelease(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw,
-		     DataWarehouse* new_dw);
-
-
-  //////////
-  // Insert Documentation Here:
-  void computeConnectivity(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  void computeBoundaryContact(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  void carryForwardVariables( const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -199,23 +142,6 @@ private:
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
-
-  //////////
-  // Check to see if any particles are ready to burn
-  void checkIfIgnited(const ProcessorGroup*,
-		      const PatchSubset* patches,
-		      const MaterialSubset* matls,
-		      DataWarehouse* old_dw,
-		      DataWarehouse* new_dw);
-
-  //////////
-  // Compute the amount of mass of each particle that burns
-  // up in a given timestep
-  void computeMassRate(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw,
-		       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -279,38 +205,6 @@ private:
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
-  void setPositions( const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw,
-		     DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  void checkLeave(const ProcessorGroup*,
-		  const PatchSubset* patches,
-		  const MaterialSubset* matls,
-		  DataWarehouse* /*old_dw*/,
-		  DataWarehouse* new_dw);
-
-  void scheduleSetPositions(SchedulerP&, const PatchSet*, const MaterialSet*);
-
-  void scheduleComputeCrackExtension(SchedulerP&, const PatchSet*,
-			       const MaterialSet*);
-
-  void scheduleComputeFracture(SchedulerP&, const PatchSet*,
-			       const MaterialSet*);
-
-  void scheduleComputeConnectivity(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
-
-  void scheduleComputeBoundaryContact(SchedulerP&, const PatchSet*,
-				      const MaterialSet*);
-
-  void scheduleCarryForwardVariables(SchedulerP&, const PatchSet*,
-				     const MaterialSet*);
 
   void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
 					  const MaterialSet*);
@@ -346,14 +240,11 @@ private:
 			       const MaterialSet*);
 
   void scheduleSetGridBoundaryConditions(SchedulerP& sched,
-						       const PatchSet* patches,
-						       const MaterialSet* matls);
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls);
                                                  
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
-
-  void scheduleComputeMassRate(SchedulerP&, const PatchSet*,
-			       const MaterialSet*);
 
   void scheduleInterpolateParticlesForSaving(SchedulerP&, const PatchSet*,
 					     const MaterialSet*);
@@ -367,6 +258,8 @@ private:
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
+  int              d_8or27;  // Number of nodes that particles interact with
+  int              d_NGC;    // Number of ghost cells of data needed.
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;

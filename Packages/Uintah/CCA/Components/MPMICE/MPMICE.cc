@@ -39,6 +39,7 @@ using namespace std;
 static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
+#define MAX_BASIS 27
 #define EOSCM
 //#undef EOSCM
 //#define IDEAL_GAS
@@ -78,6 +79,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
+  d_8or27 = d_mpm->get8or27();
   
   //__________________________________
   //  I C E
@@ -209,11 +211,6 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   }
  //__________________________________
  // Scheduling
-  if( d_mpm->withFracture() ) {
-    d_mpm->scheduleSetPositions(                  sched, patches, mpm_matls);
-    d_mpm->scheduleComputeBoundaryContact(        sched, patches, mpm_matls);
-    d_mpm->scheduleComputeConnectivity(           sched, patches, mpm_matls);
-  }
   d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, mpm_matls);
 
   d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
@@ -292,14 +289,6 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
-
-
-  if( d_mpm->withFracture() ) {
-    d_mpm->scheduleComputeFracture(               sched, patches, mpm_matls);
-    d_mpm->scheduleComputeCrackExtension(         sched, patches, mpm_matls);
-  }
-
-  d_mpm->scheduleCarryForwardVariables(           sched, patches, mpm_matls);
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
@@ -364,6 +353,10 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                                     Ghost::AroundCells, 1);
    t->requires(Task::NewDW, MIlb->cMassLabel,       mpm_matl,
                                                     Ghost::AroundCells, 1);
+   if(d_8or27==27){
+     t->requires(Task::OldDW, Mlb->pSizeLabel,      mpm_matl,    
+                                                    Ghost::None);
+   }
 
    t->computes(Mlb->pPressureLabel,   mpm_matl);
    t->computes(Mlb->gradPAccNCLabel,  mpm_matl);
@@ -729,7 +722,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 //
 void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
                                   const PatchSubset* patches,
-                              const MaterialSubset* ,
+                                  const MaterialSubset* ,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
@@ -740,8 +733,8 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       patch->getID()<<"\t\t MPMICE" << endl;
 
     constNCVariable<double> pressNC;
-    IntVector ni[8];
-    double S[8];
+    IntVector ni[MAX_BASIS];
+    double S[MAX_BASIS];
     IntVector cIdx[8];
     double p_ref = d_sharedState->getRefPress();
     new_dw->get(pressNC,MIlb->press_NCLabel,0,patch,Ghost::AroundCells,1);
@@ -755,6 +748,10 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
       ParticleVariable<double> pPressure;
       constParticleVariable<Point> px;
+      if(d_8or27==27){
+        constParticleVariable<Vector> psize;
+        old_dw->get(psize,        Mlb->pSizeLabel,          pset);
+      }
 
       new_dw->allocate(pPressure, Mlb->pPressureLabel,      pset);
       old_dw->get(px,             Mlb->pXLabel,             pset);
@@ -766,8 +763,13 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
         double press = 0.;
 
         // Get the node indices that surround the cell
-        patch->findCellAndWeights(px[idx], ni, S);
-        for (int k = 0; k < 8; k++) {
+        if(d_8or27==8){
+          patch->findCellAndWeights(px[idx], ni, S);
+        }
+        else if(d_8or27==27){
+          patch->findCellAndWeights27(px[idx], ni, S);
+        }
+        for (int k = 0; k < d_8or27; k++) {
           press += pressNC[ni[k]] * S[k];
         }
         pPressure[idx] = press-p_ref;

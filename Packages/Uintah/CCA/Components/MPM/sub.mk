@@ -9,12 +9,9 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/MPMLabel.cc 
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
-	$(SRCDIR)/Fracture \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
-
-#	$(SRCDIR)/Util <- Not used any more... 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

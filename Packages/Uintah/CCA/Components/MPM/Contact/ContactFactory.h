@@ -17,7 +17,7 @@ namespace Uintah {
     // and calls the proper class' readParameters()
     // addMaterial() calls this
     static Contact* create(const ProblemSpecP& ps,SimulationStateP& ss,
-								MPMLabel* lb);
+                                              MPMLabel* lb, int n8or27);
   };
 } // End namespace Uintah
   

@@ -13,12 +13,6 @@ GeometryObject::GeometryObject(MPMMaterial* mpm_matl,
    ps->require("res", d_resolution);
    ps->require("velocity", d_initialVel);
    ps->require("temperature", d_initialTemperature);
-   
-   if(mpm_matl->getFractureModel()) {
-     ps->require("toughness_min", d_toughnessMin);
-     ps->require("toughness_max", d_toughnessMax);
-     ps->require("toughness_variation", d_toughnessVariation);
-   }
 }
 
 GeometryObject::~GeometryObject()

@@ -3,6 +3,9 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <vector>
+#include <Core/Containers/StaticArray.h>
+
+#define MAX_BASIS 27
 
 namespace Uintah {
 
