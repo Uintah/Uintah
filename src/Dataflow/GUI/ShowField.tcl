@@ -42,7 +42,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-node_scale
 	global $this-edge_scale
 	global $this-vectors_scale
-	global $this-resolution
+	global $this-edge-resolution
+	global $this-node-resolution
 	global $this-active_tab
 	global $this-has_vec_data
 	global $this-interactive_mode
@@ -68,7 +69,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-on 0
 	set $this-vectors-on 0
 	set $this-normalize_vectors 0
-	set $this-resolution 4
+	set $this-node-resolution 6
+	set $this-edge-resolution 6
 	set $this-has_vec_data 0
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
@@ -156,10 +158,10 @@ itcl_class SCIRun_Visualization_ShowField {
     # Nodes Tab
     method add_nodes_tab {dof} {
 	
-	set nodes [$dof.tabs add -label "Nodes" \
+	set node [$dof.tabs add -label "Nodes" \
 		-command "$this set_active_tab \"Nodes\""]
 	
-	checkbutton $nodes.show_nodes \
+	checkbutton $node.show_nodes \
 		-text "Show Nodes" \
 		-command "$this-c toggle_display_nodes" \
 		-variable $this-nodes-on
@@ -167,24 +169,34 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-node_display_type
 	
 	if {[set $this-nodes-as-disks] == 1} {
-	    make_labeled_radio $nodes.radio \
+	    make_labeled_radio $node.radio \
 		    "Node Display Type" "$this-c node_display_type" top \
 		    $this-node_display_type \
 		    {{Spheres Spheres} {Axes Axes} {Point Points} {Disks Disks}}
 	} else {
-	    make_labeled_radio $nodes.radio \
+	    make_labeled_radio $node.radio \
 		    "Node Display Type" "$this-c node_display_type" top \
 		    $this-node_display_type \
 		    {{Spheres Spheres} {Axes Axes} {Point Points}}
 	}
 
-	pack $nodes.show_nodes $nodes.radio -fill y -anchor w
+	pack $node.show_nodes $node.radio -fill y -anchor w
 
-	expscale $nodes.slide -label NodeScale \
+	expscale $node.slide -label NodeScale \
 		-orient horizontal \
 		-variable $this-node_scale
 
-	bind $nodes.slide.scale <ButtonRelease> "$this-c node_scale"
+	bind $node.slide.scale <ButtonRelease> "$this-c node_scale"
+
+	iwidgets::labeledframe $node.resolution \
+	    -labelpos nw -labeltext "Sphere and Disk Resolution"
+	pack $node.resolution -side top -fill x -expand 1
+
+	set res [$node.resolution childsite]
+	scale $res.scale -orient horizontal -variable $this-node-resolution \
+	    -from 3 -to 20 -showvalue true -resolution 1
+	bind $res.scale <ButtonRelease> "$this-c node_resolution_scale"
+	pack $res.scale -side top -fill both -expand 1
     }
 
     # Edges Tab
@@ -210,6 +222,16 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-edge_scale
 
 	bind $edge.slide.scale <ButtonRelease> "$this-c edge_scale"
+
+	iwidgets::labeledframe $edge.resolution \
+	    -labelpos nw -labeltext "Cylinder Resolution"
+	pack $edge.resolution -side top -fill x -expand 1
+
+	set res [$edge.resolution childsite]
+	scale $res.scale -orient horizontal -variable $this-edge-resolution \
+	    -from 3 -to 20 -showvalue true -resolution 1
+	bind $res.scale <ButtonRelease> "$this-c edge_resolution_scale"
+	pack $res.scale -side top -fill both -expand 1
     }
 
     # Faces Tab
@@ -324,7 +346,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	    return;
 	}
 	toplevel $window
-	wm minsize $window 380 548
+	#wm minsize $window 380 548
 
 	#frame for all options to live
 	frame $window.options
@@ -339,7 +361,8 @@ itcl_class SCIRun_Visualization_ShowField {
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook  $dof.tabs -height 250 -raiseselect true 
+	#iwidgets::tabnotebook  $dof.tabs -height 250 -raiseselect true 
+	iwidgets::tabnotebook  $dof.tabs -height 300 -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
 	add_nodes_tab $dof
@@ -372,15 +395,16 @@ itcl_class SCIRun_Visualization_ShowField {
 	button $window.def_col.calcdefs -text "Calculate Defaults" \
 		-command "$this-c calcdefs"
 	pack $window.def_col.calcdefs -padx 20
-	# Cylinder and Sphere Resolution
-	iwidgets::labeledframe $window.resolution \
-		-labelpos nw -labeltext "Cylinder and Sphere Resolution"
-	set res [$window.resolution childsite]
 
-	scale $res.scale -orient horizontal -variable $this-resolution \
-		-from 3 -to 20 -showvalue true -resolution 1
-	
-	bind $res.scale <ButtonRelease> "$this-c resolution_scale"
+	## Cylinder and Sphere Resolution
+	#iwidgets::labeledframe $window.resolution \
+	#	-labelpos nw -labeltext "Cylinder and Sphere Resolution"
+	#set res [$window.resolution childsite]
+	#
+	#scale $res.scale -orient horizontal -variable $this-resolution \
+	#	-from 3 -to 20 -showvalue true -resolution 1
+	#
+	#bind $res.scale <ButtonRelease> "$this-c resolution_scale"
 
 	# execute policy
 	make_labeled_radio $window.control.exc_policy \
@@ -389,10 +413,10 @@ itcl_class SCIRun_Visualization_ShowField {
 		{{"Interactively update" Interactive} \
 		{"Execute button only" OnExecute}}
 
-	pack $res.scale -side top -fill both -expand 1
+	#pack $res.scale -side top -fill both -expand 1
 
 	pack $window.options -padx 2 -pady 2 -side top -fill x -expand 1
-	pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
+	#pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
 	pack $window.def_col $window.control -padx 2 -pady 2 -side top
 
 	pack $window.control.exc_policy -side top -fill both
