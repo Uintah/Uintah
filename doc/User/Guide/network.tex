@@ -30,7 +30,7 @@ This section describes how to create, save, open, execute, and edit
 networks.
 
 When started with no arguments the \command{scirun} command will create a
-main window with a blank network pane.  The goal then is to create and
+main window with a blank NetEdit frame.  The goal then is to create and
 connect modules to form a network.
 
 
@@ -39,10 +39,10 @@ connect modules to form a network.
 
 To create a module select its name from one of the package (\eg{} \sr)
 menus' category sub-menus.  The package menus may be accessed from the main
-window's menu bar and from the network pane's pop-up menu.
+window's menu bar and from the NetEdit frame's pop-up menu.
 
-You may activate the network pane's pop-up menu by clicking mouse button 3
-while the mouse pointer is in the network pane (but not over a module or
+You may activate the NetEdit frame's pop-up menu by clicking mouse button 3
+while the mouse pointer is in the NetEdit frame (but not over a module or
 connection).  
 
 The pop-up menu contains a list of category sub-menus from the \sr{} package
@@ -50,12 +50,12 @@ and other installed packages.  And each category sub-menu provides
 access to the modules within the category.
 
 After creating a module its graphic ``front end'' will be created and
-placed in the network pane.
+placed in the NetEdit frame.
 
 \subsection{Anatomy of a Module}
 \label{sec:modanatomy}
 
-All modules are represented similarly by a graphic within the network pane.
+All modules are represented similarly by a graphic within the NetEdit frame.
 See Figure~\ref{fig:modgraphic}. This graphical ``front end'' is the same
 for all modules and consists of the following components:
 
@@ -253,7 +253,7 @@ A few operations (see \secref{Moving Module(s)}{sec:movemod} and
 modules.  There are 2 ways to create a group of modules.
 
 \begin{enumerate}
-\item Press mouse button 2 while the pointer is in the network pane but not over
+\item Press mouse button 2 while the pointer is in the NetEdit frame but not over
 a module or a connection.  Then drag the mouse.  This will draw a box
 outline.  Modules intersecting the box will be part of the group.  Release
 button 2 to complete your selection.
@@ -272,7 +272,7 @@ forgotten and a new one will be created.
 \subsection{Moving Module(s)}
 \label{sec:movemod}
 
-Modules may be moved around in the network pane.  To move a module simply
+Modules may be moved around in the NetEdit frame.  To move a module simply
 press button 1 while the pointer is over a module and drag the module to
 its new location.
 
@@ -343,22 +343,22 @@ window's \menu{File} menu.   A file browser dialog will prompt you for the
 name (and location) of the network file.
 
 Note that opening a network file merges the network in the file with the
-network in the network pane.  There is currently no way to ``close'' a
+network in the NetEdit frame.  There is currently no way to ``close'' a
 network and then open a new one -- you must quit and restart \sr\ to do
 this.
 
 \subsection{Navigating a Network}
 \label{sec:navnetwork}
 
-A complex network may not be entirely visible in the network pane.  You may
-use the network pane's scroll bars to bring other parts of a network into
+A complex network may not be entirely visible in the NetEdit frame.  You may
+use the NetEdit frame's scroll bars to bring other parts of a network into
 view.  Or you may use the navigation tool to view complex networks.
 
 The navigation pane shows the entire ``network world.''  The small
 rectangular region (outlined in black) within the navigation pane is the
 network navigation tool and it is a window on the network world.  The
 position of the navigation tool determines the part of the network that is
-visible in the network pane.  To view other parts of the network, press
+visible in the NetEdit frame.  To view other parts of the network, press
 button 1 while the pointer is anywhere in the navigation pane -- this will
 move the tool to the location of the pointer --  then drag the tool to the
 new location.
