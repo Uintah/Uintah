@@ -3779,7 +3779,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
           setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
 
           // multiply by mass so advection is conserved
-          for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){ 
+          for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
             IntVector c = *iter;                            
             q_L_CC[c] *= mass_L[m][c];
           }
