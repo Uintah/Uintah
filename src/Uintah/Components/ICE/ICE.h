@@ -45,35 +45,35 @@ namespace Uintah {
       void scheduleStep1a(const Patch* patch, SchedulerP&, DataWarehouseP&,
 			  DataWarehouseP&);
       
-      void scheduleStep1b(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			  DataWarehouseP&);
+      void scheduleComputeEquilibrationPressure(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep1c(const Patch* patch, SchedulerP&,DataWarehouseP&,
-			  DataWarehouseP&);
+      void scheduleComputeFaceCenteredVelocities(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep1d(const Patch* patch, SchedulerP&,DataWarehouseP&,
-			  DataWarehouseP&);
+      void scheduleAddExchangeContributionToFCVel(
+            const Patch* patch, SchedulerP&,DataWarehouseP&,  DataWarehouseP&);
       
-      void scheduleStep2(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			 DataWarehouseP&);
+      void scheduleComputeDelPressAndUpdatePressCC(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep3(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			 DataWarehouseP&);
+      void scheduleComputePressFC(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep4a(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			  DataWarehouseP&);
+      void scheduleAccumulateMomentumSourceSinks(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep4b(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			  DataWarehouseP&);
+      void scheduleAccumulateEnergySourceSinks(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep5a(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			  DataWarehouseP&);
+      void  scheduleComputeLagrangianValues(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep5b(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			  DataWarehouseP&);
+      void  scheduleAddExchangeToMomentumAndEnergy(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
-      void scheduleStep6and7(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			     DataWarehouseP&);
+      void scheduleAdvectAndAdvanceInTime(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
 
       void setICELabel(ICELabel* Ilb) {
 	lb = Ilb;
@@ -93,39 +93,49 @@ namespace Uintah {
 			   DataWarehouseP&,  DataWarehouseP&);
       
       // calculateEquilibrationPressure
-      void actuallyStep1b(const ProcessorGroup*, const Patch* patch,
-			  DataWarehouseP&, DataWarehouseP&);
+      void computeEquilibrationPressure(
+            const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
+            DataWarehouseP&);
       
       // computeFCVelocity
-      void actuallyStep1c(const ProcessorGroup*, const Patch* patch,
-			  DataWarehouseP&, DataWarehouseP&);
+      void computeFaceCenteredVelocities(
+            const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
+            DataWarehouseP&);
       
       // momentumExchangeFCVelocity
-      void actuallyStep1d(const ProcessorGroup*, const Patch* patch,
-			  DataWarehouseP&, DataWarehouseP&);
+      void addExchangeContributionToFCVel(
+            const ProcessorGroup*, const Patch* patch,  DataWarehouseP&, 
+            DataWarehouseP&);
       
       // computeExplicitDelPress
-      void actuallyStep2(const ProcessorGroup*,const Patch* patch,
-			 DataWarehouseP&, DataWarehouseP&);
+      void computeDelPressAndUpdatePressCC(
+            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&, 
+            DataWarehouseP&);
       
       // computeFaceCenteredPressure
-      void actuallyStep3(const ProcessorGroup*, const Patch* patch,
-			 DataWarehouseP&, DataWarehouseP&);
+      void computePressFC(
+            const ProcessorGroup*, const Patch* patch,  DataWarehouseP&,
+            DataWarehouseP&);
       
-      void actuallyStep4a(const ProcessorGroup*,const Patch* patch,
-			  DataWarehouseP&, DataWarehouseP&);
+      void accumulateMomentumSourceSinks(
+            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
+             DataWarehouseP&);
       
-      void actuallyStep4b(const ProcessorGroup*,const Patch* patch,
-			  DataWarehouseP&, DataWarehouseP&);
+      void accumulateEnergySourceSinks(
+            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
+            DataWarehouseP&);
       
-      void actuallyStep5a( const ProcessorGroup*, const Patch* patch,
-			   DataWarehouseP&, DataWarehouseP&);
+      void computeLagrangianValues( 
+            const ProcessorGroup*, const Patch* patch,  DataWarehouseP&,
+            DataWarehouseP&);
       
-      void actuallyStep5b(const ProcessorGroup*,const Patch* patch,
-			  DataWarehouseP&, DataWarehouseP&);
+      void addExchangeToMomentumAndEnergy(
+            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
+            DataWarehouseP&);
       
-      void actuallyStep6and7(const ProcessorGroup*,const Patch* patch,
-			     DataWarehouseP&, DataWarehouseP&);
+      void advectAndAdvanceInTime(
+            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
+            DataWarehouseP&);
       
       
     private:
@@ -307,6 +317,18 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.52  2001/01/11 14:13:12  harman
+// -changed step names:
+//     step1b  ComputeEquilibrationPressure
+//     step1c  ComputeFaceCenteredVelocities
+//     step1d  AddExchangeContributionToFCVel
+//     step2   ComputeDelPressAndUpdatePressCC
+//     step3   ComputePressFC
+//     step4a  AccumulateMomentumSourceSinks
+//     step4b  AccumulateEnergySourceSinks
+//     step5b  ComputeLagrangianValues
+//     step6&7 AdvectAndAdvanceInTime
+//
 // Revision 1.51  2001/01/10 00:47:18  harman
 // ICE.cc ICELabel.h ICELabel.cc ICE.h
 // -changed how vol_frac is computed in actuallyStep1b
