@@ -40,6 +40,8 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
     data_min = temp;
   }
 
+  cerr << "VolumeVis::data_min = "<<data_min<<", data_max = "<<data_max<<endl;
+  
   data.share(_data);
   delta_x2 = 2 * (max.x() - min.x())/nx;
   delta_y2 = 2 * (max.y() - min.y())/ny;
@@ -274,6 +276,12 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       
       //cout << "value = " << value << endl;
 
+#if 0
+      if (value < data_min || value > data_max) {
+	cerr << "value is bad!! value = "<<value<<", data_min = "<<data_min<<", data_max = "<<data_max<<endl;
+	flush(cerr);
+      }
+#endif
       float alpha_factor = dpy->alpha_transform.lookup(value) * (1-alpha);
       if (alpha_factor > 0.001) {
 	//      if (true) {
