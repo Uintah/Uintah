@@ -513,21 +513,11 @@ case $1 in
     sci_check_glui=yes
     sci_check_oogl=yes
     sci_check_audio=yes 
-
-    # WARNING... You must add scripting to configure.ac to handle an "optional"
-    # test.  This has ONLY BEEN DONE FOR teem so far.  (It is fairly straightforward,
-    # taking about 3 or so lines.  See the "search for teem" section
-    # of configure.ac to see how it is done.  Dd.
-    #
-    # (We should make a function that does the following test for yes before
-    # setting to 'optional' so that you don't have to put in all three of these
-    # lines for each library that you want to be optional:)
-    if test "$sci_check_teem" != "yes"; then
-      sci_check_teem=optional
-    fi
+    sci_check_teem=yes
   ;;
   Insight)
     sci_check_insight=yes
+    sci_check_xalan=yes
   ;;
   *)
     AC_MSG_WARN(No known dependencies for Package $1)
