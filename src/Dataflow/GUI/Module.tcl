@@ -937,14 +937,12 @@ proc disableConnection { conn } {
     if {$disabled} {
 	set Disabled($connid) 0
 	foreach conn [findRealConnections $conn] {
-# MCKAY: FIXME	    eval netedit addconnection $conn
-	    netedit unblockconnection [makeConnID $conn]
+	    eval netedit addconnection $conn
 	}
     } else {
 	set Disabled($connid) 1
 	foreach conn [findRealConnections $conn] {
-# MCKAY: FIXME	    netedit deleteconnection [makeConnID $conn]
-	    netedit blockconnection [makeConnID $conn]
+	    netedit deleteconnection [makeConnID $conn] 1
 	}
     }
 
@@ -1038,9 +1036,15 @@ proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 
 proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } { 
     global Subnet Color Disabled Notes undoList redoList
+    set connid [makeConnID $conn]
+    setIfExists disabled Disabled($connid) 0
+    if $disabled {
+	createConnection $conn 0
+    }
+
     networkHasChanged
     deleteTraces
-    set connid [makeConnID $conn]
+
     set subnet $Subnet([oMod conn])
     set canvas $Subnet(Subnet${subnet}_canvas)
     set minicanvas $Subnet(Subnet${subnet}_minicanvas)
@@ -1048,7 +1052,7 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
     $minicanvas delete $connid $connid-notes $connid-notes-shadow
 
     listFindAndRemove Subnet([oMod conn]_connections) $conn
-    listFindAndRemove Subnet([iMod conn]_connections) $conn
+    listFindAndRemove Subnet([iMod conn]_connections) $conn 
 
     array unset Disabled $connid
     array unset Color $connid
