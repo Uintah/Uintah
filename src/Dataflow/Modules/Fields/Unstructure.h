@@ -53,7 +53,7 @@ public:
 };
 
 
-struct SpecialNodeHash
+struct SpecialUnstructuredHash
 {
   size_t operator()(const LatVolMesh::Node::index_type &n) const
   { return n.i_ * ((1 << 20) - 1) + n.j_ * ((1 << 10) - 1) + n.k_; }
@@ -63,9 +63,18 @@ struct SpecialNodeHash
 
   size_t operator()(const ScanlineMesh::Node::index_type &n) const
   { return n; }
+
+  size_t operator()(const LatVolMesh::Elem::index_type &n) const
+  { return n.i_ * ((1 << 20) - 1) + n.j_ * ((1 << 10) - 1) + n.k_; }
+
+  size_t operator()(const ImageMesh::Elem::index_type &n) const
+  { return n.i_ * ((1 << 10) - 1) + n.j_; }
+
+  size_t operator()(const ScanlineMesh::Elem::index_type &n) const
+  { return n; }
 };
 
-struct SpecialNodeEqual
+struct SpecialUnstructuredEqual
 {
   bool operator()(const LatVolMesh::Node::index_type &a,
 		  const LatVolMesh::Node::index_type &b) const
@@ -77,6 +86,18 @@ struct SpecialNodeEqual
 
   bool operator()(const ScanlineMesh::Node::index_type &a,
 		  const ScanlineMesh::Node::index_type &b) const
+  { return a == b; }
+
+  bool operator()(const LatVolMesh::Elem::index_type &a,
+		  const LatVolMesh::Elem::index_type &b) const
+  { return a.i_ == b.i_ && a.j_ == b.j_ && a.k_ == b.k_; }
+
+  bool operator()(const ImageMesh::Elem::index_type &a,
+		  const ImageMesh::Elem::index_type &b) const
+  { return a.i_ == b.i_ && a.j_ == b.j_; }
+
+  bool operator()(const ScanlineMesh::Elem::index_type &a,
+		  const ScanlineMesh::Elem::index_type &b) const
   { return a == b; }
 };
 
@@ -92,11 +113,15 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
 
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
     typename FDST::mesh_type::Node::index_type,
-    SpecialNodeHash, SpecialNodeEqual> hash_type;
-  
-  hash_type nodemap;
+    SpecialUnstructuredHash, SpecialUnstructuredEqual> node_hash_type;
 
-  vector<typename FDST::mesh_type::Elem::index_type> elemmap;
+  node_hash_type nodemap;
+
+  typedef hash_map<typename FSRC::mesh_type::Elem::index_type,
+    typename FDST::mesh_type::Elem::index_type,
+    SpecialUnstructuredHash, SpecialUnstructuredEqual> elem_hash_type;
+  
+  elem_hash_type elemmap;
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
@@ -118,18 +143,17 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
       nnodes[i] = nodemap[onodes[i]];
     }
 
-    outmesh->add_elem(nnodes);
-    elemmap.push_back(*bi);
+    elemmap[*bi] = outmesh->add_elem(nnodes);
     ++bi;
   }
 
   outmesh->flush_changes();  // Really should copy normals
 
-  FieldHandle ofield = scinew FDST(outmesh, field_h->data_at());
+  FDST *ofield = scinew FDST(outmesh, field_h->data_at());
 
   if (field_h->data_at() == Field::NODE)
   {
-    hash_type::iterator hitr = nodemap.begin();
+    node_hash_type::iterator hitr = nodemap.begin();
 
     while (hitr != nodemap.end())
     {
@@ -143,12 +167,15 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
   else if (field_h->data_at_type_description()->get_name() ==
 	   get_type_description((typename FSRC::mesh_type::Elem *)0)->get_name())
   {
-    for (unsigned int i=0; i < elemmap.size(); i++)
+    elem_hash_type::iterator hitr = elemmap.begin();
+
+    while (hitr != elemmap.end())
     {
       typename FSRC::value_type val;
-      ifield->value(val,
-		    (typename FSRC::mesh_type::Elem::index_type)elemmap[i]);
-      ofield->set_value(val, (typename FDST::mesh_type::Elem::index_type)i);
+      ifield->value(val, (typename FSRC::mesh_type::Elem::index_type)((*hitr).first));
+      ofield->set_value(val, (typename FDST::mesh_type::Elem::index_type)((*hitr).second));
+
+      ++hitr;
     }
   }
   else
