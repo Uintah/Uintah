@@ -17,6 +17,10 @@ public:
      append(); 
      return string(ostrstream::str(), ostrstream::pcount());
    }
+   void str( const string &str) {
+	ostream::seekp(0);
+	(*this) <<  str;
+   }
 };
 
 class istringstream : public istrstream {
