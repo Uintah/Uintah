@@ -41,8 +41,8 @@ using SCICore::Math::Max;
 using namespace std;
 
 
-SerialMD::SerialMD( int MpiRank, int MpiProcesses ) :
-  UintahParallelComponent( MpiRank, MpiProcesses )
+SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
+  UintahParallelComponent(myworld)
 {
 }
 
@@ -53,6 +53,13 @@ SerialMD::~SerialMD()
 void SerialMD::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     SimulationStateP& sharedState)
 {
+   d_sharedState = sharedState;
+
+   Problem prob_description;
+   prob_description.preProcessor(prob_spec, grid, d_sharedState);
+
+   cerr << "Number of velocity fields = " << d_sharedState->getNumVelFields()
+	<< std::endl;
 }
 
 void SerialMD::scheduleInitialize(const LevelP& level,
@@ -76,6 +83,9 @@ void SerialMD::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 }
 
 // $Log$
+// Revision 1.3  2000/06/20 01:56:27  tan
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.2  2000/06/10 04:09:52  tan
 // Added MDLabel class.
 //
