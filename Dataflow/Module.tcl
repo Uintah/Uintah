@@ -11,7 +11,7 @@ proc makeModule {modid name canvas} {
     set p $modframe.ff
     global ui_font
     global sci_root
-    set script_name [glob -nocomplain $sci_root/modules/*/$name.tcl]
+    set script_name [glob -nocomplain $sci_root/Modules/*/$name.tcl]
     if {$script_name != ""} {
 	button $p.ui -text "UI" -borderwidth 2 -font $ui_font -anchor center \
 		-command "source $script_name ; ui$name $modid"
