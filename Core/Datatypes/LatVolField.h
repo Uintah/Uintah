@@ -75,7 +75,6 @@ public:
   { newsize(size.k_, size.j_, size.i_); }
 
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
 };
 
 
@@ -107,15 +106,6 @@ FData3d<Data>::type_name(int n)
 
 
 template <class Data>
-const string
-FData3d<Data>::get_type_name(int n) const
-{
-  return type_name(n);
-}
-
-
-
-template <class Data>
 class LatVolField : public GenericField< LatVolMesh, FData3d<Data> >
 {
 public:
@@ -140,7 +130,6 @@ public:
   virtual void io(Piostream &stream);
 
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
   // LatVolField Specific methods.

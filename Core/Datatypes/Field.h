@@ -64,7 +64,7 @@ public:
   virtual void io(Piostream &stream);
 
   //! All instantiable classes need to define this.
-  virtual const string get_type_name(int n = -1) const = 0;
+  virtual const string get_type_name(int n = -1) const;
   virtual bool is_scalar() const = 0;
 
 protected:
