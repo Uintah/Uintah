@@ -1,0 +1,12 @@
+
+The stateTables (stateTable, stateTable_hept, stateTable_meth) are
+compressed data files.  Before they can be used, they must be unzipped
+using the commands:
+
+> gunzip stateTable.gz
+> gunzip stateTable_hept.gz
+> gunzip stateTable_meth.gz
+
+!!! NOTE: The Uintah/SCIRun make system should unzip them
+          automatically for you.
+ 
