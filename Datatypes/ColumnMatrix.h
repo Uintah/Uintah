@@ -29,7 +29,7 @@ public:
   double* get_rhs() const {return data;}
   void put_lhs(double* lhs) {data = lhs;}
   
-    ColumnMatrix(int);
+    ColumnMatrix(int rows=0);
     ~ColumnMatrix();
     ColumnMatrix(const ColumnMatrix&);
     virtual ColumnMatrix* clone() const;
