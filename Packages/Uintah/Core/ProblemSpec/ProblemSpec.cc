@@ -505,7 +505,7 @@ bool ProblemSpec::getAttribute(const string& attribute, string& result)
   return true;
 }
 
-const TypeDescription* ProblemSpec::getTypeDescription()
+const Uintah::TypeDescription* ProblemSpec::getTypeDescription()
 {
     //cerr << "ProblemSpec::getTypeDescription() not done\n";
     return 0;
