@@ -72,6 +72,9 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         set $this-shine 30.0
         global $this-light
         set $this-light 0
+	global $this-shading_tab
+	global $this-sampling_tab
+	global $this-multires_tab
 
 	# For backwards compatability
 	global $this-contrast
@@ -120,154 +123,104 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	wm minsize $w 250 300
 	frame $w.main -relief flat
 	pack $w.main -fill both -expand yes
-	frame $w.main.f -relief groove -borderwidth 2 
-	pack $w.main.f -padx 2 -pady 2 -fill x
+
+	#frame for tabs
+	frame $w.main.options
+	pack $w.main.options -padx 2 -pady 2 -side top -fill x -expand 1
+	#frame for display
+	frame $w.main.options.disp -borderwidth 2
+	pack $w.main.options.disp -padx 2 -pady 2 -side left \
+	    -fill both -expand 1
+
+	# Tabs
+	iwidgets::labeledframe $w.main.options.disp.frame_title \
+	    -labelpos nw -labeltext "Display Options"
+	set dof [$w.main.options.disp.frame_title childsite]
+
+	iwidgets::tabnotebook $dof.tabs -height 320  -width 300 \
+	    -raiseselect true
+	pack $dof.tabs -side top -fill x -expand yes
+
+	add_default_tab $dof
+	add_sampling_tab $dof
+	add_shading_tab $dof
+	$dof.tabs view 0
+	$dof.tabs configure -tabpos "n"
+	
+	pack $w.main.options.disp.frame_title -side top -expand yes -fill x
+	
+	if { [set $this-multi_level] > 1 } {
+	    add_multires_tab $dof
+	}
+ 
+	makeSciButtonPanel $w.main $w $this
+        $this state
+	moveToCursor $w
+
+    }
+    method add_default_tab { dof } {
+        #-----------------------------------------------------------
+        # Standard controls
+        #-----------------------------------------------------------
+	set tab [$dof.tabs add -label "Basic"]
+
+	frame $tab.f -relief groove -borderwidth 2 
+	pack $tab.f -padx 2 -pady 2 -fill x
 	set n "$this-c needexecute"
         set s "$this state"
 
 	global $this-render_style
-	label $w.main.f.l -text "Blending Mode"
-	pack $w.main.f.l -side top -fill x
+	label $tab.f.l -text "Blending Mode"
+	pack $tab.f.l -side top -fill x
 
-        frame $w.main.f.fmode
-        pack $w.main.f.fmode -padx 2 -pady 2 -fill x
-	radiobutton $w.main.f.fmode.modeo -text "Over Operator" -relief flat \
+        frame $tab.f.fmode
+        pack $tab.f.fmode -padx 2 -pady 2 -fill x
+	radiobutton $tab.f.fmode.modeo -text "Over Operator" -relief flat \
 		-variable $this-render_style -value 0 \
 		-anchor w -command $n
-	radiobutton $w.main.f.fmode.modem -text "MIP" -relief flat \
+	radiobutton $tab.f.fmode.modem -text "MIP" -relief flat \
 		-variable $this-render_style -value 1 \
 		-anchor w -command $n
-	pack $w.main.f.fmode.modeo $w.main.f.fmode.modem \
+	pack $tab.f.fmode.modeo $tab.f.fmode.modem \
             -side left -fill x -padx 4 -pady 4
-	pack $w.main.f.fmode.modeo $w.main.f.fmode.modem \
+	pack $tab.f.fmode.modeo $tab.f.fmode.modem \
             -side left -fill x -padx 10 -pady 4 -expand y
 
-        frame $w.main.f.fres
-        pack $w.main.f.fres -padx 2 -pady 2 -fill x
-        label $w.main.f.fres.res -text "Resolution (bits)"
-	radiobutton $w.main.f.fres.b0 -text 8 -variable $this-blend_res -value 8 \
+        frame $tab.f.fres
+        pack $tab.f.fres -padx 2 -pady 2 -fill x
+        label $tab.f.fres.res -text "Resolution (bits)"
+	radiobutton $tab.f.fres.b0 -text 8 -variable $this-blend_res -value 8 \
 	    -command $n
-	radiobutton $w.main.f.fres.b1 -text 16 -variable $this-blend_res -value 16 \
+	radiobutton $tab.f.fres.b1 -text 16 -variable $this-blend_res -value 16 \
 	    -command $n
-	radiobutton $w.main.f.fres.b2 -text 32 -variable $this-blend_res -value 32 \
+	radiobutton $tab.f.fres.b2 -text 32 -variable $this-blend_res -value 32 \
 	    -command $n
-	pack $w.main.f.fres.res $w.main.f.fres.b0 $w.main.f.fres.b1 $w.main.f.fres.b2 \
+	pack $tab.f.fres.res $tab.f.fres.b0 $tab.f.fres.b1 $tab.f.fres.b2 \
             -side left -fill x -padx 4 -pady 4
 
-	frame $w.main.f3 -relief flat -borderwidth 0
-	pack $w.main.f3 -fill x
-	if { [set $this-multi_level] > 1 } {
-	    $this build_multi_level
-	}
- 
-        #-----------------------------------------------------------
-        # Shading
-        #-----------------------------------------------------------
-	frame $w.main.f4 -relief groove -borderwidth 2
-	pack $w.main.f4 -padx 2 -pady 2 -fill x
-	checkbutton $w.main.f4.shading -text "Shading" -relief flat \
-            -variable $this-shading -onvalue 1 -offvalue 0 \
-            -anchor w -command "$s; $n"
-        pack $w.main.f4.shading -side top -fill x -padx 4
-
-        #-----------------------------------------------------------
-        # Light
-        #-----------------------------------------------------------
- 	frame $w.main.f5
- 	pack $w.main.f5 -padx 2 -pady 2 -fill x
- 	label $w.main.f5.light -text "Attach Light to"
- 	radiobutton $w.main.f5.light0 -text "Light 0" -relief flat \
-            -variable $this-light -value 0 \
-            -anchor w -command $n
- 	radiobutton $w.main.f5.light1 -text "Light 1" -relief flat \
-            -variable $this-light -value 1 \
-            -anchor w -command $n
-#  	radiobutton $w.f5.light2 -text "Light 2" -relief flat \
-#             -variable $this-light -value 2 \
-#             -anchor w -command $n
-#  	radiobutton $w.f5.light3 -text "Light 3" -relief flat \
-#             -variable $this-light -value 3 \
-#             -anchor w -command $n
-        pack $w.main.f5.light $w.main.f5.light0 $w.main.f5.light1 \
-            -side left -fill x -padx 4
-
-        #-----------------------------------------------------------
-        # Material
-        #-----------------------------------------------------------
-	frame $w.main.f6 -relief groove -borderwidth 2
-	pack $w.main.f6 -padx 2 -pady 2 -fill x
- 	label $w.main.f6.material -text "Material"
-	global $this-ambient
-	scale $w.main.f6.ambient -variable $this-ambient \
-            -from 0.0 -to 1.0 -label "Ambient" \
-            -showvalue true -resolution 0.001 \
-            -orient horizontal
-	global $this-diffuse
-	scale $w.main.f6.diffuse -variable $this-diffuse \
-		-from 0.0 -to 1.0 -label "Diffuse" \
-		-showvalue true -resolution 0.001 \
-		-orient horizontal
-	global $this-specular
-	scale $w.main.f6.specular -variable $this-specular \
-		-from 0.0 -to 1.0 -label "Specular" \
-		-showvalue true -resolution 0.001 \
-		-orient horizontal
-	global $this-shine
-	scale $w.main.f6.shine -variable $this-shine \
-		-from 1.0 -to 128.0 -label "Shine" \
-		-showvalue true -resolution 1.0 \
-		-orient horizontal
-        pack $w.main.f6.material $w.main.f6.ambient $w.main.f6.diffuse \
-            $w.main.f6.specular $w.main.f6.shine \
-            -side top -fill x -padx 4
-
-
- 	frame $w.main.interp -relief groove -borderwidth 2
- 	label $w.main.interp.l -text "Interpolation Mode"
-	frame $w.main.interp.f
- 	radiobutton $w.main.interp.f.interp -text "Trilinear" -relief flat \
+  	frame $tab.interp -relief groove -borderwidth 2
+ 	label $tab.interp.l -text "Interpolation Mode"
+	frame $tab.interp.f
+ 	radiobutton $tab.interp.f.interp -text "Trilinear" -relief flat \
  		-variable $this-interp_mode -value 1 \
  		-anchor w -command $n
- 	radiobutton $w.main.interp.f.near -text "Nearest" -relief flat \
+ 	radiobutton $tab.interp.f.near -text "Nearest" -relief flat \
  		-variable $this-interp_mode -value 0 \
  		-anchor w -command $n
- 	pack $w.main.interp -padx 2 -pady 2 -fill x -side top
- 	pack $w.main.interp.l $w.main.interp.f -side top -fill x -padx 4
-	pack $w.main.interp.f.interp $w.main.interp.f.near -side left -fill x \
+ 	pack $tab.interp -padx 2 -pady 2 -fill x -side top
+ 	pack $tab.interp.l $tab.interp.f -side top -fill x -padx 4
+	pack $tab.interp.f.interp $tab.interp.f.near -side left -fill x \
 	    -padx 10 -expand y
 
-        #-----------------------------------------------------------
-        # Sampling
-        #-----------------------------------------------------------
-        frame $w.main.sampling -relief groove -borderwidth 2
-        pack $w.main.sampling -padx 2 -pady 2 -fill x
-        label $w.main.sampling.l -text "Sampling"
-
-	scale $w.main.sampling.srate_hi -variable $this-sampling_rate_hi \
-            -from 0.5 -to 10.0 -label "Sampling Rate" \
-            -showvalue true -resolution 0.1 \
-            -orient horizontal \
-
-	checkbutton $w.main.sampling.adaptive -text "Adaptive Sampling" -relief flat \
-            -variable $this-adaptive -onvalue 1 -offvalue 0 \
-            -anchor w -command "$s; $n"
-
-	scale $w.main.sampling.srate_lo -variable $this-sampling_rate_lo \
-            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
-            -showvalue true -resolution 0.1 \
-            -orient horizontal \
-
-	pack $w.main.sampling.l $w.main.sampling.srate_hi $w.main.sampling.adaptive \
-            $w.main.sampling.srate_lo -side top -fill x -padx 4 -pady 2
         
         #-----------------------------------------------------------
         # Transfer Function
         #-----------------------------------------------------------
-        frame $w.main.tf -relief groove -borderwidth 2
-        pack $w.main.tf -padx 2 -pady 2 -fill x
-        label $w.main.tf.l -text "Transfer Function"
+        frame $tab.tf -relief groove -borderwidth 2
+        pack $tab.tf -padx 2 -pady 2 -fill x
+        label $tab.tf.l -text "Transfer Function"
 
-	scale $w.main.tf.stransp -variable $this-alpha_scale \
+	scale $tab.tf.stransp -variable $this-alpha_scale \
 		-from -1.0 -to 1.0 -label "Global Opacity" \
 		-showvalue true -resolution 0.001 \
 		-orient horizontal 
@@ -277,59 +230,160 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 # 		-showvalue true -resolution 1 \
 # 		-orient horizontal \
 
-	checkbutton $w.main.tf.sw -text "Software Rasterization" -relief flat \
+	checkbutton $tab.tf.sw -text "Software Rasterization" -relief flat \
             -variable $this-sw_raster -onvalue 1 -offvalue 0 \
             -anchor w -command "$n"
 
-	pack $w.main.tf.l $w.main.tf.stransp $w.main.tf.sw \
+	pack $tab.tf.l $tab.tf.stransp $tab.tf.sw \
             -side top -fill x -padx 4 -pady 2
 
-        bind $w.main.f6.ambient <ButtonRelease> $n
-        bind $w.main.f6.diffuse <ButtonRelease> $n
-        bind $w.main.f6.specular <ButtonRelease> $n
-        bind $w.main.f6.shine <ButtonRelease> $n
 
-	bind $w.main.sampling.srate_hi <ButtonRelease> $n
-	bind $w.main.sampling.srate_lo <ButtonRelease> $n
+#	bind $tab.tf.cmap_size <ButtonRelease> $n
+	bind $tab.tf.stransp <ButtonRelease> $n
+   }	
+    
+    method add_sampling_tab { dof } {
+	set n "$this-c needexecute"
+        set s "$this state"
+        #-----------------------------------------------------------
+        # Sampling
+        #-----------------------------------------------------------
+	set $this-sampling_tab [$dof.tabs add -label "Sampling"]
+	set tab [set $this-sampling_tab]
+#          frame $w.main.sampling -relief groove -borderwidth 2
+#          pack $w.main.sampling -padx 2 -pady 2 -fill x
+          label $tab.l -text "Sampling"
 
-#	bind $w.main.tf.cmap_size <ButtonRelease> $n
-	bind $w.main.tf.stransp <ButtonRelease> $n
 
-	makeSciButtonPanel $w.main $w $this
-        $this state
-	moveToCursor $w
+	scale $tab.srate_hi -variable $this-sampling_rate_hi \
+            -from 0.5 -to 10.0 -label "Sampling Rate" \
+            -showvalue true -resolution 0.1 \
+            -orient horizontal \
+
+	checkbutton $tab.adaptive -text "Adaptive Sampling" -relief flat \
+            -variable $this-adaptive -onvalue 1 -offvalue 0 \
+            -anchor w -command "$s; $n"
+
+	scale $tab.srate_lo -variable $this-sampling_rate_lo \
+            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
+            -showvalue true -resolution 0.1 \
+            -orient horizontal \
+
+	pack $tab.l $tab.srate_hi $tab.adaptive \
+            $tab.srate_lo -side top -fill x -padx 4 -pady 2
+	
+	bind $tab.srate_hi <ButtonRelease> $n
+	bind $tab.srate_lo <ButtonRelease> $n
+	
+    }
+    method add_shading_tab { dof } {
+	set n "$this-c needexecute"
+        set s "$this state"
+	#-----------------------------------------------------------
+	# Shading
+	#-----------------------------------------------------------
+	set $this-shading_tab [$dof.tabs add -label "Shading"]
+	set tab [set $this-shading_tab]
+	#	frame $w.main.f4 -relief groove -borderwidth 2
+	#	pack $w.main.f4 -padx 2 -pady 2 -fill x
+	checkbutton $tab.shading -text "Shading" -relief flat \
+	    -variable $this-shading -onvalue 1 -offvalue 0 \
+	    -anchor w -command "$s; $n"
+	pack $tab.shading -side top -fill x -padx 4
+
+	#-----------------------------------------------------------
+	# Light
+	#-----------------------------------------------------------
+	frame $tab.f0
+	pack $tab.f0 -padx 2 -pady 2 -fill x
+	label $tab.f0.light -text "Attach Light to"
+	radiobutton $tab.f0.light0 -text "Light 0" -relief flat \
+	    -variable $this-light -value 0 \
+	    -anchor w -command $n
+	radiobutton $tab.f0.light1 -text "Light 1" -relief flat \
+	    -variable $this-light -value 1 \
+	    -anchor w -command $n
+	#  	radiobutton $w.f5.light2 -text "Light 2" -relief flat \
+	    #             -variable $this-light -value 2 \
+	    #             -anchor w -command $n
+	#  	radiobutton $w.f5.light3 -text "Light 3" -relief flat \
+	    #             -variable $this-light -value 3 \
+	    #             -anchor w -command $n
+	pack $tab.f0.light $tab.f0.light0 $tab.f0.light1 \
+	    -side left -fill x -padx 4
+
+	#-----------------------------------------------------------
+	# Material
+	#-----------------------------------------------------------
+	frame $tab.f1 -relief groove -borderwidth 2
+	pack $tab.f1 -padx 2 -pady 2 -fill x
+	label $tab.f1.material -text "Material"
+	global $this-ambient
+	scale $tab.f1.ambient -variable $this-ambient \
+	    -from 0.0 -to 1.0 -label "Ambient" \
+	    -showvalue true -resolution 0.001 \
+	    -orient horizontal
+	global $this-diffuse
+	scale $tab.f1.diffuse -variable $this-diffuse \
+	    -from 0.0 -to 1.0 -label "Diffuse" \
+	    -showvalue true -resolution 0.001 \
+	    -orient horizontal
+	global $this-specular
+	scale $tab.f1.specular -variable $this-specular \
+	    -from 0.0 -to 1.0 -label "Specular" \
+	    -showvalue true -resolution 0.001 \
+	    -orient horizontal
+	global $this-shine
+	scale $tab.f1.shine -variable $this-shine \
+	    -from 1.0 -to 128.0 -label "Shine" \
+	    -showvalue true -resolution 1.0 \
+	    -orient horizontal
+	pack $tab.f1.material $tab.f1.ambient $tab.f1.diffuse \
+	    $tab.f1.specular $tab.f1.shine \
+	    -side top -fill x -padx 4
+
+        bind $tab.f1.ambient <ButtonRelease> $n
+        bind $tab.f1.diffuse <ButtonRelease> $n
+        bind $tab.f1.specular <ButtonRelease> $n
+        bind $tab.f1.shine <ButtonRelease> $n
 
     }
+
 
     method state {} {
 	set w .ui[modname]
 	if {[set $this-shading] == 1} {
-            $this activate $w.main.f6.ambient
-            $this activate $w.main.f6.diffuse
-            $this activate $w.main.f6.specular
-            $this activate $w.main.f6.shine
-            $this activate $w.main.f5.light
-            $this activate $w.main.f5.light0
-            $this activate $w.main.f5.light1
+	    set tab [set $this-shading_tab]
+            $this activate $tab.f1.ambient
+            $this activate $tab.f1.diffuse
+            $this activate $tab.f1.specular
+            $this activate $tab.f1.shine
+            $this activate $tab.f0.light
+            $this activate $tab.f0.light0
+            $this activate $tab.f0.light1
 #             $this activate $w.f5.light2
 #             $this activate $w.f5.light3
 	} else {
-            $this deactivate $w.main.f6.ambient
-            $this deactivate $w.main.f6.diffuse
-            $this deactivate $w.main.f6.specular
-            $this deactivate $w.main.f6.shine
-            $this deactivate $w.main.f5.light
-            $this deactivate $w.main.f5.light0
-            $this deactivate $w.main.f5.light1
+	    set tab [set $this-shading_tab]
+            $this deactivate $tab.f1.ambient
+            $this deactivate $tab.f1.diffuse
+            $this deactivate $tab.f1.specular
+            $this deactivate $tab.f1.shine
+            $this deactivate $tab.f0.light
+            $this deactivate $tab.f0.light0
+            $this deactivate $tab.f0.light1
 #             $this deactivate $w.f5.light2
 #             $this deactivate $w.f5.light3
 	}
 	if {[set $this-adaptive] == 1} {
-            $this activate $w.main.sampling.srate_lo
+	    set tab [set $this-sampling_tab]
+            $this activate $tab.srate_lo
         } else {
-            $this deactivate $w.main.sampling.srate_lo
+	    set tab [set $this-sampling_tab]
+            $this deactivate $tab.srate_lo
         }
     }
+
     method activate { w } {
 	if {[winfo exists $w]} {
 	    $w configure -state normal -foreground black
@@ -341,53 +395,62 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	}
     }
 
+    method add_multires_tab { dof } {
+	set $this-multires_tab [$dof.tabs add -label "Multires"]
+	set tab [set $this-multires_tab]
+
+	frame $tab.f -relief groove -borderwidth 2
+	pack $tab.f -padx 2 -pady 2 -fill x -expand yes	
+	frame $tab.f.f1 -relief flat -borderwidth 2
+	pack $tab.f.f1 -padx 2 -pady 2 -fill x -expand yes
+	checkbutton $tab.f.f1.stencil -text "Use Stencil" \
+	    -variable $this-use_stencil -command "$this-c needexecute"
+	checkbutton $tab.f.f1.opacity -text "Highlight Levels" \
+	    -variable $this-invert_opacity -command "$this-c needexecute"
+	pack $tab.f.f1.stencil $tab.f.f1.opacity -side left
+	
+	frame $tab.f.f2 -relief flat -borderwidth 2
+	pack $tab.f.f2 -padx 2 -pady 2 -fill x -expand yes
+	label $tab.f.f2.l -text "Show level"
+	pack $tab.f.f2.l -side left
+	frame $tab.f.f2.f -relief flat -borderwidth 2
+	pack $tab.f.f2.f -side right
+	set selected 0
+	for { set i 0 } { $i < [set $this-multi_level] } { incr i } {
+	    frame $tab.f.f2.f.f$i -relief flat
+	    pack $tab.f.f2.f.f$i -fill x -expand yes -side top
+	    checkbutton $tab.f.f2.f.f$i.b -text $i  \
+		-variable $this-l$i -command "$this-c needexecute" 
+	    scale $tab.f.f2.f.f$i.s -variable $this-s$i \
+		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01
+
+	    pack $tab.f.f2.f.f$i.b $tab.f.f2.f.f$i.s -side left
+	    if { [isOn l$i] } {
+		set selected 1
+	    }
+	    bind $tab.f.f2.f.f$i.s <ButtonRelease> "$this-c needexecute" 
+	}
+	if { !$selected && [winfo exists $tab.f.f2.f.f0.b] } {  
+	    $tab.f.f2.f.f0.b select 
+	}
+    }
+
     method build_multi_level { } {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    puts -nonewline "building ml frame"
-	    frame $w.main.f3.f -relief groove -borderwidth 2
-	    pack $w.main.f3.f -padx 2 -pady 2 -fill x -expand yes	
-	    frame $w.main.f3.f.f1 -relief flat -borderwidth 2
-	    pack $w.main.f3.f.f1 -padx 2 -pady 2 -fill x -expand yes
-	    checkbutton $w.main.f3.f.f1.stencil -text "Use Stencil" \
-		-variable $this-use_stencil -command "$this-c needexecute"
-	    checkbutton $w.main.f3.f.f1.opacity -text "Highlight Levels" \
-		-variable $this-invert_opacity -command "$this-c needexecute"
-	    pack $w.main.f3.f.f1.stencil $w.main.f3.f.f1.opacity -side left
-	    
-	    frame $w.main.f3.f.f2 -relief flat -borderwidth 2
-	    pack $w.main.f3.f.f2 -padx 2 -pady 2 -fill x -expand yes
-	    label $w.main.f3.f.f2.l -text "Show level"
-	    pack $w.main.f3.f.f2.l -side left
-	    frame $w.main.f3.f.f2.f -relief flat -borderwidth 2
-	    pack $w.main.f3.f.f2.f -side right
-	    set selected 0
-	    for { set i 0 } { $i < [set $this-multi_level] } { incr i } {
-		frame $w.main.f3.f.f2.f.f$i -relief flat
-		pack $w.main.f3.f.f2.f.f$i -fill x -expand yes -side top
-		checkbutton $w.main.f3.f.f2.f.f$i.b -text $i  \
-		-variable $this-l$i -command "$this-c needexecute" 
-		scale $w.main.f3.f.f2.f.f$i.s -variable $this-s$i \
-		    -from -1.0 -to 1.0 -orient horizontal -resolution 0.01
-
-		pack $w.main.f3.f.f2.f.f$i.b $w.main.f3.f.f2.f.f$i.s -side left
-		if { [isOn l$i] } {
-		    set selected 1
-		}
-		bind $w.main.f3.f.f2.f.f$i.s <ButtonRelease> "$this-c needexecute" 
-	    }
-	    if { !$selected && [winfo exists $w.main.f3.f.f2.f.f0.b] } {  
-		$w.main.f3.f.f2.f.f0.b select 
-	    }
+	    set dof [$w.main.options.disp.frame_title childsite]
+	    add_multires_tab $dof
 	}
+
     }
     
     method destroy_multi_level { } {
 	set w .ui[modname]
 	if {[winfo exists $w.main]} {
-	    destroy $w.main
+	    set dof [$w.main.options.disp.frame_title childsite]
+	    $dof.tabs delete 3
 	}
-	build_ui
+#	build_ui
     }
 
     method hasUI {} {
