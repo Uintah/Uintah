@@ -1099,7 +1099,7 @@ void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
     // cf.matXXX.timestepYYYYY (crack front nodes)
     char matbuf[10], timebuf[10];
     sprintf(matbuf,"%d",matIdx);
-    sprintf(timebuf,"%d",timestepIdx+1);
+    sprintf(timebuf,"%d",timestepIdx);
 
     // Task 1: Create output directories
     string cdDir=udaDir+"/crackGeometryData/";
