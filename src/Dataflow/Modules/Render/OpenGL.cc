@@ -602,7 +602,16 @@ OpenGL::render_and_save_image(int x, int y,
 
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
-    Thread::exitAll(0);
+    static int regressioncounter = 1;
+    regressioncounter--;
+    if (regressioncounter <= 0)
+    {
+      Thread::exitAll(0);
+    }
+    else
+    {
+      gui_->execute("updateRunDateAndTime 0; netedit scheduleall");
+    }
   }
 }
 
