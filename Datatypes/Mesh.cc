@@ -132,11 +132,13 @@ void Pio(Piostream& stream, Element*& data)
     stream.end_cheap_delim();
 }
 
+#define NODE_VERSION 2
+
 void Node::io(Piostream& stream)
 {
-    stream.begin_cheap_delim();
+    /* int version= */ stream.begin_class("Node", NODE_VERSION);
     Pio(stream, p);
-    stream.end_cheap_delim();
+    stream.end_class();
 }
 
 Node::~Node()
