@@ -676,6 +676,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *shark1 = new Group;
   Group *shell1 = new Group;
   Group *shell2 = new Group;
+  Group *shell3 = new Group;
   Group *anker = new Group;
   Group *krabbe = new Group;
   Group *school1 = new Group;
@@ -754,29 +755,28 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    t3, shell1))
       exit(-1);
 
-  t3.pre_translate(Vector(-23, 4.5, 0));
+  t3.pre_translate(Vector(-23, -4.5, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.obj",
 	           "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.mtl",
-	           t3, shell1))
+	           t3, shell2))
       exit(-1);
 
   t.load_identity();
   t.pre_scale(Vector(.15, .15, .15));
   //t.pre_rotate(-1.3, Vector(0, 1, 0));
   t.pre_rotate(-1.1, Vector(1, 0, 0));
-  t.pre_translate(Vector(-14, -.5, -.3));
+  t.pre_translate(Vector(14, -.5, -.3));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.mtl",
-                   t,shell2))
+                   t,shell3))
         exit(1);
 
-  // columns by west tube
   t.load_identity();
   t.pre_scale(Vector(.03, .03, .03));
   t.pre_translate(Vector(0, 0, -8));
   t.pre_rotate(.352, Vector(1, 0, 0));
   t.pre_rotate(.2, Vector(0, 1, 0));
-  t.pre_translate(Vector(-14.5, 2.8, -2.6));
+  t.pre_translate(Vector(-14, 1.8, -2.6));
   if (!readObjFile("/usr/sci/data/Geometry/models/oceanpots_obj/pot3.obj",
                    "/usr/sci/data/Geometry/models/oceanpots_obj/pot3.mtl",
                    t,pot1))
@@ -784,6 +784,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
    
   all_tubes->add(new Grid (shell1, 15));
   all_tubes->add(new Grid (shell2, 15));
+  all_tubes->add(new Grid (shell3, 15));
   all_tubes->add(new Grid (pot1, 15));
   all_tubes->add(new Grid (tiger, 10));
   all_tubes->add(new Grid (school1, 10));
@@ -889,7 +890,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // ocean floor
   
   // add a plane for the ocean floor base
-  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "ocean_floor", 3, 8));
+  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "/usr/sci/data/Geometry/models/ocean_floor", 3, 8));
   all_tubes->add(east_tube);
 
   all_tubes->add(new Rect(tan, Point(-100, 0, -1.5), Vector(50, 0, 0), Vector(0, 150, 0)));  
