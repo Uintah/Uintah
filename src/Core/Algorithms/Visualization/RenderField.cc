@@ -57,11 +57,18 @@ RenderFieldBase::get_compile_info(const TypeDescription *ftd,
   static const string template_class_name("RenderField");
   static const string base_class_name("RenderFieldBase");
 
+  string template_class_name0 = template_class_name;
+  const string fldname = ftd->get_name();
+  if (fldname.size() > 10 && fldname.substr(0, 10) == "ImageField")
+  {
+    template_class_name0 += "Image";
+  }
+
   CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
 					 ftd->get_filename() + "." +
 					 ltd->get_filename() + ".",
 					 base_class_name, 
-					 template_class_name, 
+					 template_class_name0, 
 					 ftd->get_name() + ", " +
 					 ltd->get_name());
 
