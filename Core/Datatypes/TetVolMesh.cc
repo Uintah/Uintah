@@ -1447,13 +1447,15 @@ TetVolMesh::circumsphere(const Cell::index_type cell)
 
 
 // Bowyer-Watson Node insertion for Delaunay Tetrahedralization
-void
-TetVolMesh::insert_node_watson(const Point &p)
+TetVolMesh::Node::index_type
+TetVolMesh::insert_node_watson(const Point &p, Cell::array_type *new_cells, Cell::array_type *mod_cells)
 {
   Cell::index_type cell;
   synchronize(LOCATE_E | FACE_NEIGHBORS_E);
-  if (!locate(cell,p)) { cerr << "Watson outside volume: " << p.x() << ", " << p.y() << ", " << p.z() << endl;
-  return; }
+  if (!locate(cell,p)) { 
+    cerr << "Watson outside volume: " << p.x() << ", " << p.y() << ", " << p.z() << endl;
+    return (TetVolMesh::Node::index_type)(-1); 
+  }
 
   Node::index_type new_point_index = add_point(p);
 
@@ -1462,7 +1464,7 @@ TetVolMesh::insert_node_watson(const Point &p)
   cells_removed.insert(cell);
   cells_checked.insert(cell);
   
-  unsigned int face;
+  int face;
   // set of faces that need to be checked for neighboring tet removal
   set<Face::index_type> faces_todo;
   for (face = cell*4; face < cell*4+4; ++face)
@@ -1538,8 +1540,11 @@ TetVolMesh::insert_node_watson(const Point &p)
 			 hull_nodes[face][1],
 			 hull_nodes[face][2],
 			 new_point_index);
+    if (mod_cells) mod_cells->push_back(tets[face]);
     ++cells_removed_iter;
   }
+  
+
 
   for (face = num_cells_removed; face < num_hull_faces; face++)
   {
@@ -1547,7 +1552,10 @@ TetVolMesh::insert_node_watson(const Point &p)
 			 hull_nodes[face][1],
 			 hull_nodes[face][2],
 			 new_point_index);
+    if (new_cells) new_cells->push_back(tets[face]);
   }
+
+  return new_point_index;
 }
 
 
