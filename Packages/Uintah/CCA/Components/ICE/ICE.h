@@ -205,6 +205,9 @@ namespace Uintah {
       void scheduleModelMomentumAndEnergyExchange(SchedulerP& sched,
 						  const LevelP& level,
 						  const MaterialSet* matls);
+      void scheduleUpdateVolumeFraction(SchedulerP& sched,
+				     const LevelP& level,
+				     const MaterialSet* matls);
 
 
       void setICELabel(ICELabel* Ilb) {
@@ -460,10 +463,16 @@ namespace Uintah {
 //   M O D E L S
                                
       void zeroModelSources(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse*,
-			    DataWarehouse*);
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse*,
+                            DataWarehouse*);
+
+      void updateVolumeFraction(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse*,
+                                DataWarehouse*);
 
 //__________________________________ 
 //   O T H E R                            

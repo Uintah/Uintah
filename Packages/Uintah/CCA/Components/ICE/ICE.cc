@@ -528,6 +528,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                                  
   scheduleModelMassExchange(               sched, level,   all_matls);
 
+  scheduleUpdateVolumeFraction(            sched, level,   all_matls);
+
   if(d_impICE) {        //  I M P L I C I T
     scheduleImplicitPressureSolve(         sched, level,   patches,       
                                                            one_matl,      
@@ -800,6 +802,26 @@ void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
       ModelInterface* model = *iter;
       model->scheduleMassExchange(sched, level, d_modelInfo);
     }
+  }
+}
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleUpdateVolumeFraction--
+_____________________________________________________________________*/
+void ICE::scheduleUpdateVolumeFraction(SchedulerP& sched, const LevelP& level,
+                                const MaterialSet* matls)
+{
+  if(d_models.size() != 0){
+    cout_doing << "ICE::scheduleUpdateVolumeFraction" << endl;
+    Task* task = scinew Task("ICE::updateVolumeFraction",
+                          this, &ICE::updateVolumeFraction);
+    Ghost::GhostType  gn = Ghost::None;  
+    task->requires( Task::NewDW, lb->sp_vol_CCLabel,     gn);
+    task->requires( Task::NewDW, lb->rho_CCLabel,        gn);    
+    task->requires( Task::NewDW, lb->modelVol_srcLabel,  gn);    
+    task->modifies(lb->vol_frac_CCLabel);
+
+    sched->addTask(task, level->eachPatch(), matls);
   }
 }
 
@@ -2638,16 +2660,14 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       
       //__________________________________
       //   NO Models   MODEL REMOVE
-      if(d_models.size() == 0){
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-          IntVector c = *iter;
-          term1[c] = 0.;
-          term3[c] += vol_frac[c]*sp_vol_CC[m][c]/(speedSound[c]*speedSound[c]);
-        }  //iter loop 
-      }  // models
+      // term3 is the same now with or without models
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        term3[c] += vol_frac[c]*sp_vol_CC[m][c]/(speedSound[c]*speedSound[c]);
+      }  //iter loop 
       
       //__________________________________
-      //   Contributions from models
+      //   term1 contribution from models
       if(d_models.size() > 0){
         constCCVariable<double> modelMass_src, modelVol_src;
         new_dw->get(modelMass_src, lb->modelMass_srcLabel, indx, patch, gn, 0);
@@ -2656,8 +2676,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
          IntVector c = *iter;
          term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]/vol);
-         term3[c] += (vol_frac[c] + modelVol_src[c]/vol)*sp_vol_CC[m][c]/
-                                             (speedSound[c]*speedSound[c]);
         }
       }
          
@@ -2834,6 +2852,54 @@ void ICE::zeroModelSources(const ProcessorGroup*,
 	}
       }
     }
+  }
+}
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::updateVolumeFraction
+ Purpose~   Update the volume fraction to reflect the mass exchange done
+            by models
+ ---------------------------------------------------------------------  */
+void ICE::updateVolumeFraction(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* /*old_dw*/,
+                               DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    Ghost::GhostType  gn = Ghost::None;
+    int numALLMatls = d_sharedState->getNumMatls();
+    StaticArray<CCVariable<double> > vol_frac(numALLMatls);
+    StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
+    StaticArray<constCCVariable<double> > sp_vol(numALLMatls);
+    StaticArray<constCCVariable<double> > modVolSrc(numALLMatls);
+    Vector dx     = patch->dCell();
+    double vol     = dx.x() * dx.y() * dx.z();
+
+
+    for(int m=0;m<matls->size();m++){
+      Material* matl        = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      new_dw->getModifiable(vol_frac[m], lb->vol_frac_CCLabel, indx,patch);
+      new_dw->get(rho_CC[m],      lb->rho_CCLabel,             indx,patch,gn,0);
+      new_dw->get(sp_vol[m],      lb->sp_vol_CCLabel,          indx,patch,gn,0);
+      new_dw->get(modVolSrc[m],   lb->modelVol_srcLabel,       indx,patch,gn,0);
+    }
+
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      double total_vol=0.;
+      for(int m=0;m<matls->size();m++){
+        total_vol+=(rho_CC[m][c]*vol)*sp_vol[m][c];
+      }
+      for(int m=0;m<matls->size();m++){
+        double new_vol = vol_frac[m][c]*total_vol+modVolSrc[m][c];
+        vol_frac[m][c] = max(new_vol/total_vol,0.);
+      }
+    }
+
   }
 }
 /* ---------------------------------------------------------------------
@@ -3640,9 +3706,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         ostringstream desc;
         desc<<"TOP_addExchangeToMomentumAndEnergy_"<<indx<<"_patch_"
             <<patch->getID();
-        printData(   indx, patch,1, desc.str(),"Temp_CC",    Temp_CC[m]);     
-        printData(   indx, patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);   
-        printData(   indx, patch,1, desc.str(),"mass_L",     mass_L[m]);      
+        printData(   indx, patch,1, desc.str(),"Temp_CC",    Temp_CC[m]);
+        printData(   indx, patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);
+        printData(   indx, patch,1, desc.str(),"mass_L",     mass_L[m]);
+        printData(   indx, patch,1, desc.str(),"vol_frac_CC",vol_frac_CC[m]);
+        printVector( indx, patch,1, desc.str(),"mom_L", 0,   mom_L[m]);
         printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);
       }
     }
@@ -3858,6 +3926,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         desc<<"addExchangeToMomentumAndEnergy_"<<indx<<"_patch_"
             <<patch->getID();
         printVector(indx, patch,1, desc.str(), "mom_L_ME", 0,mom_L_ME[m]);
+        printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);
         printData(  indx, patch,1, desc.str(),"int_eng_L_ME",int_eng_L_ME[m]);
         printData(  indx, patch,1, desc.str(),"Tdot",        Tdot[m]);
         printData(  indx, patch,1, desc.str(),"Temp_CC",     Temp_CC[m]);
