@@ -392,22 +392,24 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $w.dm -fill x -expand yes -side top
 
 
+	iwidgets::labeledframe $w.sample -labeltext "Data Sampling"
+	set sample [$w.sample childsite]
 
-	frame $w.l
-	label $w.l.direction -text "Index"  -width 5 -anchor w -just left
-	label $w.l.start     -text "Start"  -width 5 -anchor w -just left
-	label $w.l.count     -text "Count"  -width 6 -anchor w -just left
-	label $w.l.stride    -text "Stride" -width 6 -anchor w -just left
+	frame $sample.l
+	label $sample.l.direction -text "Index"  -width 5 -anchor w -just left
+	label $sample.l.start     -text "Start"  -width 5 -anchor w -just left
+	label $sample.l.count     -text "Count"  -width 6 -anchor w -just left
+	label $sample.l.stride    -text "Stride" -width 6 -anchor w -just left
 
-	pack $w.l.direction -side left
-	pack $w.l.start     -side left -padx 100
-	pack $w.l.count     -side left -padx 110
-	pack $w.l.stride    -side left -padx  50
+	pack $sample.l.direction -side left
+	pack $sample.l.start     -side left -padx 100
+	pack $sample.l.count     -side left -padx 110
+	pack $sample.l.stride    -side left -padx  50
 
-	frame $w.msg
-	label $w.msg.text -text "Data selections do not have the same dimensions" -width 50 -anchor w -just center
+	frame $sample.msg
+	label $sample.msg.text -text "Data selections do not have the same dimensions" -width 50 -anchor w -just center
 
-	pack $w.msg.text -side top
+	pack $sample.msg.text -side top
 
 
 	for {set i 0} {$i < $max_dims} {incr i 1} {
@@ -437,41 +439,42 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set count_val  [expr [set $this-$i-dim] ]
 	    set count_val1 [expr [set $this-$i-dim] - 1 ]
 
-	    frame $w.$i
+	    frame $sample.$i
 
-	    label $w.$i.l -text " $index :" -width 3 -anchor w -just left
+	    label $sample.$i.l -text " $index :" -width 3 -anchor w -just left
 
-	    pack $w.$i.l -side left
+	    pack $sample.$i.l -side left
 
 
-	    scaleEntry2 $w.$i.start \
+	    scaleEntry2 $sample.$i.start \
 		0 $count_val1 200 \
 		$this-$i-start $this-$i-start2
 
-	    scaleEntry2 $w.$i.count \
+	    scaleEntry2 $sample.$i.count \
 		1 $count_val  200 \
 		$this-$i-count $this-$i-count2
 
-	    scaleEntry2 $w.$i.stride \
+	    scaleEntry2 $sample.$i.stride \
 		1 [expr [set $this-$i-dim] - 1] 100 \
 		$this-$i-stride $this-$i-stride2
 
-	    pack $w.$i.l $w.$i.start $w.$i.count \
-		    $w.$i.stride -side left
-#	    grid $w.$i.l $w.$i.start $w.$i.count 
-#		    $w.$i.stride
+	    pack $sample.$i.l $sample.$i.start $sample.$i.count \
+		    $sample.$i.stride -side left
+#	    grid $sample.$i.l $sample.$i.start $sample.$i.count 
+#		    $sample.$i.stride
 	}
 
-	pack $w.l -side top -padx 10 -pady 5
+	pack $sample.l -side top -padx 10 -pady 5
 
 	if { [set $this-ndims] == 0 } {
-	    pack $w.msg -side top -pady 5
+	    pack $sample.msg -side top -pady 5
 	} else {
 	    for {set i 0} {$i < [set $this-ndims]} {incr i 1} {
-		pack $w.$i
+		pack $sample.$i
 	    }
 	}
 
+	pack $w.sample -fill x -expand yes -side top
 
 	# When building the UI prevent the selection from taking place
 	# since it is not valid.
@@ -782,26 +785,24 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	if [ expr [winfo exists $w] ] {
 
+	    set sample [$w.sample childsite]
+
 	    global max_dims
 
-	    pack forget $w.msg
+	    pack forget $sample.msg
 
 	    for {set i 0} {$i < $max_dims} {incr i 1} {
-		pack forget $w.$i
+		pack forget $sample.$i
 	    }
 
-	    pack forget $w.misc
-
 	    if { [set $this-ndims] == 0 } {
-		pack $w.msg -side top -pady 5
+		pack $sample.msg -side top -pady 5
 	    } else {
 		for {set i 0} {$i < [set $this-ndims]} {incr i 1} {
-		    pack $w.$i -side top -padx 10 -pady 5
+		    pack $sample.$i -side top -padx 10 -pady 5
 		}
 	    }
 	    
-	    pack $w.misc -side top -padx 10 -pady 5	    
-
 	    for {set i 0} {$i < [set $this-ndims]} {incr i 1} {
 		global $this-$i-start
 		global $this-$i-start2
@@ -816,15 +817,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		if [ expr [winfo exists $w] ] {
 
 		    # Update the sliders to the new bounds.
-		    $w.$i.start.s  configure -from 0 -to $count_val1
-		    $w.$i.count.s  configure -from 1 -to $count_val
-		    $w.$i.stride.s configure -from 1 -to $count_val
+		    $sample.$i.start.s  configure -from 0 -to $count_val1
+		    $sample.$i.count.s  configure -from 1 -to $count_val
+		    $sample.$i.stride.s configure -from 1 -to $count_val
 
-		    bind $w.$i.start.e <Return> \
+		    bind $sample.$i.start.e <Return> \
 			"$this manualSliderEntry 0 $count_val1 $this-$i-start $this-$i-start2 $i"
-		    bind $w.$i.count.e  <Return> \
+		    bind $sample.$i.count.e  <Return> \
 			"$this manualSliderEntry 1 $count_val $this-$i-count $this-$i-count2"
-		    bind $w.$i.stride.e  <Return> \
+		    bind $sample.$i.stride.e  <Return> \
 			"$this manualSliderEntry 1 $count_val $this-$i-stride $this-$i-stride2"
 		}
 
@@ -1246,16 +1247,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	frame $w.execmode   -relief groove -borderwidth 2
 
         scale $w.loc.min -variable $this-range_min -label "Start " \
-		-showvalue true -orient horizontal -relief groove -length 200
+	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
+	    -showvalue true -orient horizontal -relief groove -length 200
         scale $w.loc.max -variable $this-range_max -label "End " \
-		-showvalue true -orient horizontal -relief groove -length 200
+	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
+	    -showvalue true -orient horizontal -relief groove -length 200
 
-	frame $w.loc.e
+	frame $w.loc.e   -relief groove -borderwidth 2
 	frame $w.loc.e.l
 	frame $w.loc.e.r
 
 	label $w.loc.e.l.curlabel -text "Current Value" -just left
-	entry $w.loc.e.r.curentry -width 10 -textvariable $this-current
+	entry $w.loc.e.r.curentry -width 8 -textvariable $this-current
 
 	label $w.loc.e.l.inclabel -text "Increment" -justify left
 	entry $w.loc.e.r.incentry -width 8 -textvariable $this-inc-amount
@@ -1317,7 +1320,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
         pack $w.execmode.play $w.execmode.stop $w.execmode.step \
 		-side left -fill both -expand yes
 
-        pack $w.loc $w.playmode $w.dependence $w.execmode \
+#        pack $w.loc $w.playmode w.dependence $w.execmode
+        pack $w.loc $w.playmode $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
 
 	update_animate_range [set $this-selectable_min] [set $this-selectable_max]
