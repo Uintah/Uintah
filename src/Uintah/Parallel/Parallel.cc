@@ -47,6 +47,13 @@ Parallel::getMaxThreads()
 }
 
 void
+Parallel::setMaxThreads( int maxNumThreads )
+{
+   ::maxThreads = maxNumThreads;
+   ::allowThreads = true;
+}
+
+void
 Parallel::noThreading()
 {
   ::allowThreads = false;
@@ -135,6 +142,9 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.15  2000/09/29 20:43:42  dav
+// Added setMaxThreads()
+//
 // Revision 1.14  2000/09/29 19:52:56  dav
 // Added cerr and cout flushes and a sleep before the abort... In the past
 // print statements have been lost because of the abort.  Hopefully this
