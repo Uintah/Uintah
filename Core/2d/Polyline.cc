@@ -46,7 +46,7 @@ Persistent* make_Polyline()
   return scinew Polyline;
 }
 
-PersistentTypeID Polyline::type_id("polyline", "DrawObj", make_Polyline);
+PersistentTypeID Polyline::type_id("Polyline", "DrawObj", make_Polyline);
 
 
 Polyline::Polyline( const vector<double> &data, const string &name )
