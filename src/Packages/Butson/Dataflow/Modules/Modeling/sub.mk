@@ -27,7 +27,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Butson/Dataflow/Modules/Modeling
 
 
-SRCS     += $(SRCDIR)/GenDistanceField.cc\
+SRCS     += $(SRCDIR)/AppendSparse.cc\
+	    $(SRCDIR)/GenDistanceField.cc\
 	    $(SRCDIR)/MapDistanceField.cc\
 #[INSERT NEW CODE FILE HERE]	
 
