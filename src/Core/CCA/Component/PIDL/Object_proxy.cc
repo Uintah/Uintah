@@ -41,8 +41,11 @@ Object_proxy::Object_proxy(const Reference& ref)
 
 Object_proxy::Object_proxy(const URL& url)
 {
-  rm.d_ref[0]->chan->openConnection(url);
-  rm.d_ref[0]->d_vtable_base=TypeInfo::vtable_methods_start;
+  Reference *ref=new Reference();
+  ref->chan->openConnection(url);
+  ref->d_vtable_base=TypeInfo::vtable_methods_start;
+  rm.insertReference(ref);
+
   rm.localSize = 1;
   rm.localRank = 0;
   rm.intracomm = NULL;

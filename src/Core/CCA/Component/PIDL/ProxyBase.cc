@@ -40,8 +40,6 @@ using namespace SCIRun;
 ProxyBase::ProxyBase() 
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE") 
 {
-  Reference *ref=new Reference();
-  rm.insertReference(ref);
 }
 
 //remove it later
