@@ -188,6 +188,9 @@
                 <burn>
                   <type>null</type>
                 </burn>
+	        <ideal_gas>
+		    <gas_constant>      287             </gas_constant>
+	        </ideal_gas>
                 <density>   1.1792946927374306000e+00   </density>
                 <comp_neo_hook>
                     <bulk_modulus>      2000.0          </bulk_modulus>
