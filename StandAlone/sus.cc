@@ -1,5 +1,5 @@
 /* REFERENCED */
-//static char *id="$Id$;
+//static char *id="$Id$";
 
 /*
  *  sus.cc: Standalone Uintah Simulation - a bare-bones uintah simulation
@@ -15,6 +15,7 @@
  */
 
 #include <Uintah/Parallel/Parallel.h>
+#include <Uintah/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Uintah/Components/SimulationController/SimulationController.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/ThreadedMPM.h>
@@ -61,6 +62,7 @@ int main(int argc, char** argv)
     bool do_arches=false;
     bool do_ice=false;
     bool numThreads = 0;
+    string filename;
 
     /*
      * Parse arguments
@@ -80,8 +82,16 @@ int main(int argc, char** argv)
 	    }
 	    numThreads = atoi(argv[i]);
 	} else {
-	    usage(s, argv[0]);
+	    if(filename!="")
+		usage(s, argv[0]);
+	    else
+		filename = argv[i];
 	}
+    }
+
+    if(filename == ""){
+	cerr << "No input file specified\n";
+	usage("", argv[0]);
     }
 
     /*
@@ -119,30 +129,36 @@ int main(int argc, char** argv)
      */
     try {
 	SimulationController* sim = new SimulationController();
+
+	// Reader
+	ProblemSpecInterface* reader = new ProblemSpecReader(filename);
+	sim->attachPort("problem spec", reader);
+
 	// Connect a MPM module if applicable
 	if(do_mpm){
 	    MPMInterface* mpm;
-#ifdef WONT_COMPILE_YET
 	    if(numThreads == 0){
 		mpm = new SerialMPM();
 	    } else {
+#ifdef WONT_COMPILE_YET
 		mpm = new ThreadedMPM();
-	    }
 #else
-	    mpm = 0;
+		mpm = 0;
 #endif
-	    sim->setPort("MPM", mpm);
+	    }
+	    sim->attachPort("MPM", mpm);
 	}
 
 	// Connect a CFD module if applicable
-	CFDInterface* cfd;
+	CFDInterface* cfd = 0;
 	if(do_arches){
 	    cfd = new Arches();
 	}
 	if(do_ice){
 	    cfd = new ICE();
 	}
-	sim->setPort("CFD", cfd);
+	if(cfd)
+	    sim->attachPort("CFD", cfd);
 
 	// Output
 
@@ -150,7 +166,7 @@ int main(int argc, char** argv)
 	// Scheduler
 	BrainDamagedScheduler* sched = new BrainDamagedScheduler();
 	sched->setNumThreads(numThreads);
-	sim->setPort("Scheduler", sched);
+	sim->attachPort("Scheduler", sched);
 
 	/*
 	 * Start the simulation controller
@@ -172,6 +188,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.4  2000/04/11 07:10:29  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.3  2000/03/20 17:17:03  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

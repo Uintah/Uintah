@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_MAPPER_H
 
 #include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <string>
 
@@ -86,6 +85,10 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/04/11 07:10:54  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.4  2000/03/17 21:02:08  dav
 // namespace mods
 //
