@@ -201,6 +201,11 @@
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
+        <ADD_HEAT>
+          <add_heat_matls>   [2]      </add_heat_matls>
+          <add_heat_coeff>   [8.0e10] </add_heat_coeff>
+          <add_heat_n_iters> 4000     </add_heat_n_iters>
+        </ADD_HEAT>
       </ICE>        
     </CFD>
 
