@@ -10,6 +10,9 @@
 #include <Packages/rtrt/Core/Context.h>
 #include <math.h>
 #include <iostream>
+#ifdef __GNUG__
+#define fsqrt sqrt
+#endif
 
 using namespace rtrt;
 
