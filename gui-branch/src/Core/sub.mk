@@ -22,7 +22,6 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Disclosure \
@@ -38,10 +37,11 @@ SUBDIRS := \
 	$(SRCDIR)/Process \
 	$(SRCDIR)/Tester \
 	$(SRCDIR)/Thread \
-	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
-	$(SRCDIR)/2d \
-#	$(SRCDIR)/Parts \
+	$(SRCDIR)/Framework \
+	$(SRCDIR)/Parts \
+	$(SRCDIR)/Algorithms \
+#	$(SRCDIR)/2d \
 #	$(SRCDIR)/PartsGui
 
 ifeq ($(BUILD_PARALLEL),yes)
@@ -53,9 +53,8 @@ endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := 
-LIBS := $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
-	$(ITK_LIBRARY) $(GL_LIBS) $(GLOBUS_COMMON) $(THREAD_LIBS) \
+PSELIBS := Framework/Framework 
+LIBS := $$(GL_LIBS) $(GLOBUS_COMMON) $(THREAD_LIBS) \
 	$(GZ_LIBRARY) -lm 
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
