@@ -41,7 +41,11 @@ namespace Uintah {
 		   const IntVector& lowIndex, const IntVector& highIndex);
       virtual ~Array3Window();
       
-      inline Array3Data<T>* getData() const {
+      inline const Array3Data<T>* getData() const {
+	 return data;
+      }
+     
+      inline Array3Data<T>* getData() {
 	 return data;
       }
       

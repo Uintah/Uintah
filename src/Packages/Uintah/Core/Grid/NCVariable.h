@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/NCVariableBase.h>
+#include <Packages/Uintah/Core/Grid/constGridVariable.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
@@ -51,6 +52,7 @@ WARNING
 
   template<class T>
   class NCVariable : public Array3<T>, public NCVariableBase {
+    friend class constVariable<NCVariableBase, NCVariable<T>, T, const IntVector&>;
   public:
      
     NCVariable();
@@ -60,15 +62,23 @@ WARNING
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
     
+    inline void copyPointer(NCVariable<T>& copy)
+    { Array3<T>::copyPointer(copy); }
+
     virtual void copyPointer(NCVariableBase&);
 
-    virtual void rewindow(const IntVector& low, const IntVector& high)
-    { Array3<T>::rewindow(low, high); }    
+    virtual bool rewindow(const IntVector& low, const IntVector& high)
+    { return Array3<T>::rewindow(low, high); }    
      
     //////////
     // Insert Documentation Here:
-    virtual NCVariableBase* clone() const;
-     
+    virtual NCVariableBase* clone();
+    virtual const NCVariableBase* clone() const;    
+    virtual NCVariableBase* cloneType() const
+    { return scinew NCVariable<T>(); }
+    virtual constNCVariableBase* cloneConstType() const
+    { return scinew constGridVariable<NCVariableBase, NCVariable<T>, T>(); }
+
     //////////
     // Insert Documentation Here:
     virtual void allocate(const IntVector& lowIndex,
@@ -76,13 +86,24 @@ WARNING
      
     virtual void allocate(const Patch* patch)
     { allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex()); }
+    virtual void allocate(const NCVariable<T>& src)
+    { allocate(src.getLowIndex(), src.getHighIndex()); }
+    virtual void allocate(const NCVariableBase* src)
+    { allocate(castFromBase(src)); }
 
+    void copyPatch(const NCVariable<T>& src,
+		   const IntVector& lowIndex,
+		   const IntVector& highIndex);
     virtual void copyPatch(const NCVariableBase* src,
 			   const IntVector& lowIndex,
-			   const IntVector& highIndex);
-    void copyPatch(const NCVariable<T>& src)
-    { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
-     
+			   const IntVector& highIndex)
+    { copyPatch(castFromBase(src), lowIndex, highIndex); }
+    
+    void copyData(const NCVariable<T>& src)
+    { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
+    virtual void copyData(const NCVariableBase* src)
+    { copyData(castFromBase(src)); }
+    
     virtual void* getBasePointer() const;
     virtual const TypeDescription* virtualGetTypeDescription() const;
 
@@ -310,10 +331,12 @@ WARNING
       return getWindow();
     }
 
+  protected:
+    NCVariable(const NCVariable<T>&);
   private:
     NCVariable<T>& operator=(const NCVariable<T>&);
-    NCVariable(const NCVariable<T>&);
-    
+
+    static const NCVariable<T>& castFromBase(const NCVariableBase* srcptr);
     static Variable* maker();
   };
    
@@ -347,6 +370,14 @@ WARNING
    
   template<class T>
   NCVariableBase*
+  NCVariable<T>::clone()
+  {
+    NCVariable<T>* tmp=scinew NCVariable<T>(*this);
+    return tmp;
+  }
+
+  template<class T>
+  const NCVariableBase*
   NCVariable<T>::clone() const
   {
     NCVariable<T>* tmp=scinew NCVariable<T>(*this);
@@ -357,10 +388,10 @@ WARNING
   void
   NCVariable<T>::copyPointer(NCVariableBase& copy)
   {
-    const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(&copy);
+    NCVariable<T>* c = dynamic_cast<NCVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in NC variable");
-    Array3<T>::copyPointer(*c);
+    copyPointer(*c);
   }
 
   template<class T>
@@ -373,7 +404,7 @@ WARNING
     : Array3<T>(copy)
   {
   }
-   
+
   template<class T>
   void
   NCVariable<T>::allocate(const IntVector& lowIndex,
@@ -384,16 +415,22 @@ WARNING
 			  "is apparently already allocated!");
     resize(lowIndex, highIndex);
   }
+
   template<class T>
-  void
-  NCVariable<T>::copyPatch(const NCVariableBase* srcptr,
-			   const IntVector& lowIndex,
-			   const IntVector& highIndex)
+  const NCVariable<T>& NCVariable<T>::castFromBase(const NCVariableBase* srcptr)
   {
     const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(srcptr);
     if(!c)
       throw TypeMismatchException("Type mismatch in NC variable");
-    const NCVariable<T>& src = *c;
+    return *c;
+  }
+
+  template<class T>
+  void
+  NCVariable<T>::copyPatch(const NCVariable<T>& src,
+			   const IntVector& lowIndex,
+			   const IntVector& highIndex)
+  {
     for(int i=lowIndex.x();i<highIndex.x();i++)
       for(int j=lowIndex.y();j<highIndex.y();j++)
 	for(int k=lowIndex.z();k<highIndex.z();k++)
@@ -427,7 +464,17 @@ WARNING
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			(int)(sizeof(T)*siz.y()*siz.x()));
   }
-   
-} // end namespace Uintah
 
+  template <class T>
+  class constNCVariable : public constGridVariable<NCVariableBase, NCVariable<T>, T>
+  {
+  public:
+    constNCVariable()
+      : constGridVariable<NCVariableBase, NCVariable<T>, T>() {}
+    
+    constNCVariable(const NCVariable<T>& copy)
+      : constGridVariable<NCVariableBase, NCVariable<T>, T>(copy) {}
+  };
+
+} // end namespace Uintah
 #endif
