@@ -248,7 +248,7 @@ class BioFEMApp {
 	set viewer_width 640
 	set viewer_height 670
 	
-	set vis_width [expr $notebook_width + 40]
+	set vis_width [expr $notebook_width + 60]
 	set vis_height $viewer_height
 
         set initialized 0
@@ -752,7 +752,15 @@ class BioFEMApp {
 	}	
     }
 
-
+    ##############################
+    ### save_image
+    ##############################
+    # To be filled in by child class. It should save out the
+    # viewer image.
+    method save_image {} {
+	global mods
+	$mods(Viewer)-ViewWindow_0 makeSaveImagePopup
+    }
     
     
     method show_help {} {
@@ -1253,4 +1261,3 @@ bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
 }
-
