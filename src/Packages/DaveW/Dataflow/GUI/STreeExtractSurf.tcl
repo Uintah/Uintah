@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.3  1999/09/02 21:30:45  moulding
+ #  took out the modname method; it's in the base itcl clase module (module.tcl)
+ #
  #  Revision 1.2  1999/08/29 01:02:20  dmw
  #  updated module names to be consistent with new loading mechanism
  #
@@ -33,13 +36,6 @@ catch {rename DaveW_EEG_STreeExtractSurf ""}
 
 itcl_class DaveW_EEG_STreeExtractSurf {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
         set name STreeExtractSurf
         set_defaults

@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.3  1999/09/02 21:30:42  moulding
+ #  took out the modname method; it's in the base itcl clase module (module.tcl)
+ #
  #  Revision 1.2  1999/08/29 01:02:19  dmw
  #  updated module names to be consistent with new loading mechanism
  #
@@ -54,13 +57,6 @@ itcl_class DaveW_EEG_Coregister {
     constructor {config} {
         set name Coregister
         set_defaults
-    }
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
     }
     method set_defaults {} {
         global $this-rot_r_x
