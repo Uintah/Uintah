@@ -41,7 +41,6 @@
   
 // SCIRun includes
 //#include <Core/Util/Comm/NetConnection.h>
-#include <sci_defs.h>
 #ifdef HAVE_SCISOCK
 
 #include "NetConnection.h"
