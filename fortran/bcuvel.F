@@ -114,7 +114,7 @@ C--------------------------------------------------------------------
         DO 300 J = jst, jend
            IF ((PCELL(iEndGhost, J, K).EQ.PBCFLD).or.
      $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
-              UU(iEndGhost+1,J,K) = UU(iEndGhost,J,K)
+c              UU(iEndGhost+1,J,K) = UU(iEndGhost,J,K)
 c              AE(iend,J,K) = 2.0D0*TINY
           END IF
           IF (PCELL(iBegGhost,J,K).EQ.PBCFLD) THEN
@@ -130,13 +130,15 @@ C--------------------------------------------------------------------
           IF ((PCELL(I,jEndGhost, K).EQ.PBCFLD)) then
 c .AND.
 c     $        (VV(I,jEndGhost+1,K).GT.0.0D0)) THEN
+c             UU(I,jEndGhost,K) = UU(I,jend,K)
+c             AN(I,jend,K) = 2.0D0*TINY
              UU(I,jEndGhost,K) = UU(I,jend,K)
 c             AN(I,jend,K) = 2.0D0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD) then
 c.AND.
 c     $         VV(I,jBegGhost,K).LT.0.0D0) THEN
-            UU(I,jBegGhost, K) = UU(I,jst,K)
+c            UU(I,jBegGhost, K) = UU(I,jst,K)
 c            AS(I,jst,K) = 2.0D0*TINY
             END IF
   400   CONTINUE
@@ -151,13 +153,13 @@ C--------------------------------------------------------------------
           IF ((PCELL(I,J,kEndGhost).EQ.PBCFLD)) then
 c.AND.
 c     $        (WW(I,J,kEndGhost+1).GT.0.0D0)) THEN
-             UU(I,J,kEndGhost) = UU(I,J,kend)
+c             UU(I,J,kEndGhost) = UU(I,J,kend)
 c             AT(I,J,kend) = 2.0D0*TINY
           END IF
           IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) then
 c.AND.
 c     $         WW(I,J,kBegGhost).LT.0.0D0) THEN
-            UU(I,J,kBegGhost) = UU(I,J,kst)
+c            UU(I,J,kBegGhost) = UU(I,J,kst)
 c            AB(I,J,kst) = 2.0D0*TINY
             END IF
   500   CONTINUE

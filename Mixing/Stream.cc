@@ -418,7 +418,6 @@ Stream::print(std::ostream& out) const {
     out.width(10);
     out << d_speciesConcn[ii] << " " ; 
     if (!(ii % 10)) out << endl; 
-    out << endl;
   }
   if (d_lsoot) {
     out << "Soot Data: " << endl;
@@ -465,6 +464,9 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.18  2002/07/16 23:03:15  rawat
+// Implemented Dynamic Procedure and filter operation using PETSc.
+//
 // Revision 1.17  2002/05/31 22:04:45  spinti
 // *** empty log message ***
 //

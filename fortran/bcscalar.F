@@ -195,12 +195,14 @@ c----------------------------------------------------------------------
      $                 ((pcell(idxHi(1)+1,j,k).eq.presstype).and.
      $                 (uu(idxHi(1)+2,j,k).gt.0.0D0))) then
                      if  (pcell(idxHi(1)+1,j,k).eq.outletfield) then
-                        ae(idxHi(1),j,k) = two*tiny
+c                        ae(idxHi(1),j,k) = two*tiny
+                         ae(idxHi(1),j,k) =  ae(idxHi(1),j,k) - 
+     $                                        decoef(idxHi(1),j,k)
                         decoef(idxHi(1),j,k) = 0.0D0
                      else if ((loutsf).or.
      $                    (pcell(idxHi(1)+1,j,k).eq.presstype)) then
                         f(idxHi(1)+1,j,k) = f(idxHi(1),j,k)
-                        ae(idxHi(1),j,k) = two*tiny
+c                        ae(idxHi(1),j,k) = two*tiny
                         decoef(idxHi(1),j,k) = 0.0D0
                      else
                         f(idxHi(1)+1,j,k) = fmixin

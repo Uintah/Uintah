@@ -336,6 +336,8 @@ Source::calculatePressureSourcePred(const ProcessorGroup*,
 		   vars->old_density, vars->old_old_density, vars->uVelRhoHat,
                    vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
+#if 0
+  // added to correct uvel hat at the boundary
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   if (xplus) {
     int ii = idxHi.x();
@@ -350,6 +352,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup*,
       }
     }
   }
+#endif
 #endif
 }
 
@@ -500,7 +503,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
 void 
 Source::addReactiveScalarSource(const ProcessorGroup*,
 				const Patch* patch,
-				double delta_t,
+				double,
 				int, 
 				CellInformation* cellinfo,
 				ArchesVariables* vars) 
@@ -1311,9 +1314,9 @@ Source::computemmMomentumSource(const ProcessorGroup*,
 //****************************************************************************
 
 void 
-Source::addMMEnthalpySource(const ProcessorGroup* pc,
+Source::addMMEnthalpySource(const ProcessorGroup* ,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
+			    CellInformation* ,
 			    ArchesVariables* vars)
 {
 

@@ -31,6 +31,12 @@ ArchesLabel::ArchesLabel()
     d_stressTensorMatl->add(i);
   d_stressTensorMatl->addReference();
 
+  int noSymStressComp = 6;
+  d_stressSymTensorMatl = scinew MaterialSubset();
+  for (int i = 0; i < noSymStressComp; i++)
+    d_stressSymTensorMatl->add(i);
+  d_stressSymTensorMatl->addReference();
+
   int noScalarFluxComp = 3;
   d_scalarFluxMatl = scinew MaterialSubset();
   for (int i = 0; i < noScalarFluxComp; i++)
@@ -423,6 +429,9 @@ ArchesLabel::ArchesLabel()
   d_scalDiffCoefPredLabel = VarLabel::create("scalDiffCoefPred",
 				   CCVariable<double>::getTypeDescription() );
 
+  d_scalDiffCoefSrcPredLabel = VarLabel::create("scalDiffCoefSrcPred",
+				   CCVariable<double>::getTypeDescription() );
+
   d_scalDiffCoefCorrLabel = VarLabel::create("scalDiffCoefCorr",
 				   CCVariable<double>::getTypeDescription() );
 
@@ -723,8 +732,21 @@ ArchesLabel::ArchesLabel()
   d_stressTensorCompLabel = VarLabel::create("stressTensorComp",
 					     CCVariable<double>::getTypeDescription() );
 
+  d_strainTensorCompLabel = VarLabel::create("strainTensorComp",
+					     CCVariable<double>::getTypeDescription() );
+
   d_scalarFluxCompLabel = VarLabel::create("scalarFluxComp",
 					     CCVariable<double>::getTypeDescription() );
+  // required for dynamic procedure
+  d_strainMagnitudeLabel = VarLabel::create("strainMagnitudeLabel",
+					     CCVariable<double>::getTypeDescription() );
+  d_strainMagnitudeMLLabel = VarLabel::create("strainMagnitudeMLLabel",
+					     CCVariable<double>::getTypeDescription() );
+  d_strainMagnitudeMMLabel = VarLabel::create("strainMagnitudeMMLabel",
+					     CCVariable<double>::getTypeDescription() );
+
+  d_CsLabel = VarLabel::create("CsLabel",
+			       CCVariable<double>::getTypeDescription() );
 
 
   
@@ -841,9 +863,16 @@ ArchesLabel::~ArchesLabel()
   if (d_stressTensorMatl->removeReference())
     delete d_stressTensorMatl;
 
+  if (d_stressSymTensorMatl->removeReference())
+    delete d_stressSymTensorMatl;
+
   if (d_scalarFluxMatl->removeReference())
     delete d_scalarFluxMatl;
 
+  VarLabel::destroy(d_strainMagnitudeLabel);
+  VarLabel::destroy(d_strainMagnitudeMLLabel);
+  VarLabel::destroy(d_strainMagnitudeMMLabel);
+  VarLabel::destroy(d_CsLabel);
   VarLabel::destroy(d_cellInfoLabel);
   VarLabel::destroy(d_cellTypeLabel);
   VarLabel::destroy(d_totalflowINLabel);
@@ -977,6 +1006,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalarOUTBCLabel);
   VarLabel::destroy(d_scalCoefPredLabel);
   VarLabel::destroy(d_scalDiffCoefPredLabel);
+  VarLabel::destroy(d_scalDiffCoefSrcPredLabel);
   VarLabel::destroy(d_scalDiffCoefCorrLabel);
   VarLabel::destroy(d_enthDiffCoefPredLabel);
   VarLabel::destroy(d_enthDiffCoefCorrLabel);
@@ -1119,6 +1149,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_vVelocityIntermLabel);
   VarLabel::destroy(d_wVelocityIntermLabel);
   VarLabel::destroy(d_stressTensorCompLabel);
+  VarLabel::destroy(d_strainTensorCompLabel);
   VarLabel::destroy(d_scalarFluxCompLabel);
 //  VarLabel::destroy(d_velocityDivergenceLabel);
 //  VarLabel::destroy(d_velocityDivergenceBCLabel);

@@ -4,7 +4,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
@@ -1161,6 +1160,8 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefPredLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefSrcPredLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 #endif
 
     // for multi-material
@@ -1362,6 +1363,8 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       new_dw->getCopy(pressureVars.scalarDiffusionCoeff[ii], 
 		      d_lab->d_scalDiffCoefPredLabel, 
 		      ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(pressureVars.scalarDiffNonlinearSrc, d_lab->d_scalDiffCoefSrcPredLabel,
+		    matlIndex, patch);
     new_dw->allocateAndPut(pressureVars.divergence, d_lab->d_divConstraintLabel,
 		     matlIndex, patch);
     pressureVars.divergence.initialize(0.0);
@@ -2907,7 +2910,7 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     
     }
     d_boundaryCondition->newrecomputePressureBC(pc, patch,
-    						cellinfo, &pressureVars); 
+						cellinfo, &pressureVars); 
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
     d_discretize->computeDivergence(pc, patch, &pressureVars);
@@ -3829,7 +3832,7 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     
     }
     d_boundaryCondition->newrecomputePressureBC(pc, patch,
-						cellinfo, &pressureVars); 
+    						cellinfo, &pressureVars); 
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
     d_discretize->computeDivergence(pc, patch, &pressureVars);

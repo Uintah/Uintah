@@ -447,6 +447,9 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   tsk->computes(d_lab->d_scalDiffCoefPredLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
   tsk->computes(d_lab->d_scalNonLinSrcPredLabel);
+#ifdef divergenceconstraint
+  tsk->computes(d_lab->d_scalDiffCoefSrcPredLabel);
+#endif
 
   sched->addTask(tsk, patches, matls);
 }
@@ -462,7 +465,6 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					 DataWarehouse* new_dw,
 					 int index)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
 
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
@@ -550,7 +552,10 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     }
     new_dw->allocateTemporary(scalarVars.scalarLinearSrc,  patch);
     new_dw->allocateAndPut(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcPredLabel, matlIndex, patch);
- 
+#ifdef divergenceconstraint
+    new_dw->allocateAndPut(scalarVars.scalarDiffNonlinearSrc, d_lab->d_scalDiffCoefSrcPredLabel, matlIndex, patch);
+    (scalarVars.scalarDiffNonlinearSrc).initialize(0.0);
+#endif
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
@@ -606,6 +611,9 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 	      ((scalarFlux[2])[currCell]+ (scalarFlux[2])[prevZCell]);
 #if 1
 	    scalarVars.scalarNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+#ifdef divergenceconstraint
+	    scalarVars.scalarDiffNonlinearSrc[currCell] = suw-sue+sus-sun+sub-sut;
+#endif
 #endif
 	  }
 	}

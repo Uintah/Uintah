@@ -27,6 +27,9 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#ifdef PetscFilter
+#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#endif
 
 #include <math.h>
 
@@ -174,6 +177,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   // compute drhophidt, compute dphidt and using both of them compute
   // compute drhodt
 
+  // check if filter is defined...only required if using dynamic or scalesimilarity models
+#ifdef PetscFilter
+  if (d_turbModel->getFilter()) {
+    // if the matrix is not initialized
+    if (!d_turbModel->getFilter()->isInitialized()) 
+      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+  }
+#endif
   for (int index = 0;index < nofScalars; index ++) {
     // in this case we're only solving for one scalar...but
     // the same subroutine can be used to solve multiple scalars

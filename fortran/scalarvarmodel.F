@@ -4,6 +4,7 @@ c
 c*********************************************************************
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalarvarmodel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/param4.h>
 
 c*********************************************************************
 c     Locals
@@ -42,17 +43,17 @@ C     width in the input file as PRLS.  Note the discussion in
 C     Mason (1994) Q.J.R. Meteorol. Soc., 120, pp. 1-26
 C     The filter length will become the cell size if it is very small
 C--------------------------------------------------------------------
-               DMESH = ((SNS(J)*SEW(I)*STB(K))**(1.0D0/3.0D0))
+               DMESH = ((SNS(J)*SEW(I)*STB(K))**(one/three))
                PMIXL = MAX(FILTERL,FAC_MESH*DMESH)
 C--------------------------------------------------------------------
 C     CALCULATE GENERATION OF TURBULENCE
 C--------------------------------------------------------------------
-               scale = 0.5D0*(Scalar(i,j,k)+Scalar(i+1,j,k))
-               scalw = 0.5D0*(Scalar(i,j,k)+Scalar(i-1,j,k))
-               scaln = 0.5D0*(Scalar(i,j,k)+Scalar(i,j+1,k))
-               scals = 0.5D0*(Scalar(i,j,k)+Scalar(i,j-1,k))
-               scalt = 0.5D0*(Scalar(i,j,k)+Scalar(i,j,k+1))
-               scalb = 0.5D0*(Scalar(i,j,k)+Scalar(i,j,k-1))
+               scale = pt5*(Scalar(i,j,k)+Scalar(i+1,j,k))
+               scalw = pt5*(Scalar(i,j,k)+Scalar(i-1,j,k))
+               scaln = pt5*(Scalar(i,j,k)+Scalar(i,j+1,k))
+               scals = pt5*(Scalar(i,j,k)+Scalar(i,j-1,k))
+               scalt = pt5*(Scalar(i,j,k)+Scalar(i,j,k+1))
+               scalb = pt5*(Scalar(i,j,k)+Scalar(i,j,k-1))
                dfdx = (scale - scalw)/sew(I)
                dfdy = (scaln - scals)/sns(J)
                dfdz = (scalt - scalb)/stb(K)
