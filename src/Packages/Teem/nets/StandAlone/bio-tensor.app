@@ -3620,7 +3620,7 @@ class BioTensorApp {
 	    
 	    # Bring images into view
 	    global $mods(ShowField-Orig)-faces-on
-	    if {[set $mods(ShowField-Orig)-faces-on] == 1} {
+	    if {[set $mods(ShowField-Orig)-faces-on] == 1 && !$loading} {
 		after 100 "$mods(Viewer)-ViewWindow_0-c autoview; global $mods(Viewer)-ViewWindow_0-pos; set $mods(Viewer)-ViewWindow_0-pos \"z0_y0\"; $mods(Viewer)-ViewWindow_0-c Views;"
 	    }
 	} elseif {$which == $mods(TendEpireg) && $state == "JustStarted"} {
@@ -3647,7 +3647,7 @@ class BioTensorApp {
 	    
 	    # Bring images into view
 	    global $mods(ShowField-Reg)-faces-on
-	    if {[set $mods(ShowField-Reg)-faces-on] == 1} {
+	    if {[set $mods(ShowField-Reg)-faces-on] == 1 && !$loading} {
 		after 100 "$mods(Viewer)-ViewWindow_0-c autoview; global $mods(Viewer)-ViewWindow_0-pos; set $mods(Viewer)-ViewWindow_0-pos \"z0_y0\"; $mods(Viewer)-ViewWindow_0-c Views"
 	    }
         } elseif {$which == $mods(TendEstim) && $state == "JustStarted"} {
