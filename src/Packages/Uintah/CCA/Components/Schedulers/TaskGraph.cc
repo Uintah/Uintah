@@ -894,6 +894,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	patch->computeVariableExtents(req->var->typeDescription()->getType(),
 				      req->gtype, req->numGhostCells,
 				      neighbors, low, high);
+	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
+			 Patch::Compare()));
 	if(dbg.active()){
 	  dbg << "Creating dependency on " << neighbors.size() << " neighbors\n";
 	  dbg << "Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
