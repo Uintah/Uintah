@@ -1,0 +1,128 @@
+\documentclass[fleqn]{article}
+\usepackage{amsmath}
+\usepackage[dvips]{graphicx}
+\usepackage{vmargin}
+%\setpapersize{USletter}
+\setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0pt}{0mm}
+%...................................................
+\usepackage{pslatex}
+%.....................................................
+% This command is necessary so that the subscripts, some of which are
+% in capital letters come out
+\DeclareMathSizes{10}{10}{6}{5}
+
+
+\begin{document}
+%__________________________________
+% Shock Tube
+%__________________________________
+\section{Rieman Shock Tube Problem}
+\begin{enumerate}
+    \item{$P_R = 100kPa$, $P_L = 10kPa$}
+    \item{$\rho_R = 1.0$, $\rho_L = 0.125$}
+    \item{$u_R = 0.0$, $u_L = 0.0$}
+    \item{CFL = 0.9, based on $|\vec {U}|_{max} + c$}
+    \item{$t_{max} = 0.0045$ sec}
+\end{enumerate}
+
+
+\begin{figure}[h]
+\includegraphics[angle = 270, scale=.7]{Rieman_2.ps}
+\caption{Rieman Shock tube problem, 1st order advection.  Green symbols = exact solution, red symbols = ICE results}
+\label{fig:p_eq}
+\end{figure}
+%
+\begin{figure}[h]
+\includegraphics[angle = 270, scale=.7]{Rieman_3.ps}
+\caption{Rieman Shock tube problem, 2nd order advection, NO flux limiter.  Green symbols = exact solution, red symbols = ICE results}
+\label{fig:p_eq}
+\end{figure}
+%
+\begin{figure}[h]
+\includegraphics[angle = 270, scale=.7]{Rieman_1.ps}
+\caption{Rieman Shock tube problem, 2nd order advection, compatible flux limiter.  Green symbols = exact solution, red symbols = ICE results}
+\label{fig:p_eq}
+\end{figure}
+\clearpage
+%__________________________________
+% Expansion Fan
+%__________________________________
+% \section{Inviscid Burgers Equation: Expansion fan}
+% See page 202 of Numerical Computation of Internal and External Flow vol 2, C. Hirsch for details on the problem setup\\
+% \begin{enumerate}
+%     \item{$P_R = 100kPa$, $P_L = 100kPa$}
+%     \item{$\rho_R = 1.0$, $\rho_L = 1.0$}
+%     \item{$u_R = 0.0$, $u_L = 0.0$}
+%     \item{CFL = 0.9, based on $|\vec {U}|_{max} + c$}
+%     \item{$t_{max} = 0.175$ sec}
+% \end{enumerate}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{ExpansionFan_1.ps}
+% \caption{Expansion Fan, 1st order advection.  Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{ExpansionFan_3.ps}
+% \caption{Expansion Fan, 2nd order advection, NO flux limiter.  Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{ExpansionFan_2.ps}
+% \caption{Expansion Fan, 2nd order advection, compatible flux limiter.  Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+
+%__________________________________
+% Sinusoidal Wave Profile
+%__________________________________
+% \clearpage
+% \section{Inviscid Burgers Equation: Sinusoidal wave profile}
+% See page 199 of Numerical Computation of Internal and External Flow vol 2, C. Hirsch for details on the problem setup\\
+% \begin{enumerate}
+%     \item{$P = 1 Pa$}
+%     \item{$\rho = 1.0$}
+%     \item{$u0 = 0.0, A = 50 m/s$}
+%     \item{CFL = 0.9, based on $|\vec {U}|_{max} + c$}
+%     \item{$t_{max} = 1.5$ sec}
+% \end{enumerate}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{Sinusoidal_1.ps}
+% \caption{Sinusoidal wave, 1st order advection,  Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{Sinusoidal_2.ps}
+% \caption{Sinusoidal wave, 2nd order advection, with compatible flux limiter.  Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+
+%__________________________________
+% Initial shock discontinuity
+%__________________________________
+% \clearpage
+% \section{Inviscid Burgers Equation: Initial shock discontinuity}
+% See page 200 of Numerical Computation of Internal and External Flow vol 2, C. Hirsch for details on the problem setup\\
+% \begin{enumerate}
+%     \item{$P = 1 Pa$}
+%     \item{$\rho = 1.0$}
+%     \item{$u_L = 100.0, u_R = 50 m/s$}
+%     \item{CFL = 0.9, based on $|\vec {U}|_{max} + c$}
+%     \item{$t_{max} = 0.75$ sec}
+% \end{enumerate}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{Shock_1.ps}
+% \caption{Initial shock discontinuity at cell 50, 1st order advection,  Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{Shock_2.ps}
+% \caption{Initial shock discontinuity at cell 50, 2nd order advection, no limiter, Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+% 
+% \begin{figure}[h]
+% \includegraphics[angle = 270, scale=.7]{Shock_3.ps}
+% \caption{Initial shock discontinuity at cell 50, 2nd order advection, compatible flux limiter, Green symbols = exact solution, red symbols = ICE results}
+% \end{figure}
+
+\end{document}
