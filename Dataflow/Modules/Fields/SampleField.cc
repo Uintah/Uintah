@@ -162,16 +162,14 @@ SampleField::generate_widget_seeds(Field *field)
 
   if (!rake_)
   {
-    rake_ = scinew GaugeWidget(this,&widget_lock_,1);
-    rake_->SetScale(widgetscale_);
-    
+    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_, true);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
   }
 
   GeomGroup *widget_group = scinew GeomGroup;
   widget_group->add(rake_->GetWidget());
   
-  rake_->GetEndpoints(min,max);
+  rake_->GetEndpoints(min, max);
   
   int max_seeds = maxSeeds_.get();
 
