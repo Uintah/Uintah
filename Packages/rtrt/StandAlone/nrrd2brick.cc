@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits.h>
-#include <nrrd.h>
+#include <teem/nrrd.h>
 //#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
   // Do the nrrd stuff
   Nrrd *n = nrrdNew();
   // load the nrrd in
-  if (nrrdLoad(n,nrrdname)) {
+  if (nrrdLoad(n,nrrdname,NULL)) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd "<< nrrdname <<": "<<err<<"\n";
     free(err);
