@@ -32,10 +32,8 @@ itcl_class WidgetTest {
 		{ {PointWidget 0} {ArrowWidget 1} \
 		{CrossHairWidget 2} {GuageWidget 3} \
 		{RingWidget 4} {FixedFrameWidget 5} {FrameWidget 6} \
-		{ScaledFrameWidget 7} {SquareWidget 8} \
-		{ScaledSquareWidget 9} {BoxWidget 10} \
-		{ScaledBoxWidget 11} {CubeWidget 12} \
-		{ScaledCubeWidget 13} }
+		{ScaledFrameWidget 7} {BoxWidget 8} \
+		{ScaledBoxWidget 9} {ViewWidget 10} }
 	pack $w.f.wids
     }
 }

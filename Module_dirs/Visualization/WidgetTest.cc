@@ -25,19 +25,15 @@
 #include <Widgets/FixedFrameWidget.h>
 #include <Widgets/FrameWidget.h>
 #include <Widgets/ScaledFrameWidget.h>
-#include <Widgets/SquareWidget.h>
-#include <Widgets/ScaledSquareWidget.h>
 #include <Widgets/BoxWidget.h>
 #include <Widgets/ScaledBoxWidget.h>
-#include <Widgets/CubeWidget.h>
-#include <Widgets/ScaledCubeWidget.h>
+#include <Widgets/ViewWidget.h>
 
 #include <iostream.h>
 
-const Index NumWidgetTypes = 14;
+const Index NumWidgetTypes = 11;
 enum WidgetTypes { WT_Point, WT_Arrow, WT_Cross, WT_Guage, WT_Ring,
-		   WT_FFrame, WT_Frame, WT_SFrame, WT_Square, WT_SSquare,
-		   WT_Box, WT_SBox, WT_Cube, WT_SCube };
+		   WT_FFrame, WT_Frame, WT_SFrame, WT_Box, WT_SBox, WT_View };
 
 class WidgetTest : public Module {
    GeometryOPort* ogeom;
@@ -87,12 +83,9 @@ WidgetTest::WidgetTest(const clString& id)
    widgets[WT_FFrame] = new FixedFrameWidget(this, &widget_lock, .1);
    widgets[WT_Frame] = new FrameWidget(this, &widget_lock, .1);
    widgets[WT_SFrame] = new ScaledFrameWidget(this, &widget_lock, .1);
-   widgets[WT_Square] = new SquareWidget(this, &widget_lock, .1);
-   widgets[WT_SSquare] = new ScaledSquareWidget(this, &widget_lock, .1);
    widgets[WT_Box] = new BoxWidget(this, &widget_lock, .1);
    widgets[WT_SBox] = new ScaledBoxWidget(this, &widget_lock, .1);
-   widgets[WT_Cube] = new CubeWidget(this, &widget_lock, .1);
-   widgets[WT_SCube] = new ScaledCubeWidget(this, &widget_lock, .1);
+   widgets[WT_View] = new ViewWidget(this, &widget_lock, .1);
 
    widget_scale.set(.1);
    init = 1;
@@ -142,8 +135,8 @@ void WidgetTest::geom_moved(int axis, double dist, const Vector& delta,
 			    void* cbdata)
 {
     widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
-    cout << "Gauge ratio " << ((GuageWidget*)widgets[Guage])->GetRatio() << endl;
-    cout << "Ring angle " << ((RingWidget*)widgets[Ring])->GetRatio() << endl;
+    cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
+    cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
     
     widgets[widget_type.get()]->execute();
     ogeom->flushViews();
