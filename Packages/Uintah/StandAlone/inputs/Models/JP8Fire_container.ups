@@ -23,6 +23,9 @@
     <!--    c) turn off ICE's implicit pressure solver and run explicit     -->
     <!--        delete the section  enclosed by  (A)                        -->
     <!--    d) turn down the CFL                                            -->
+    <!--    e) turn all the viscosities and thermal conductivities to 0     -->
+    <!--    f) set advection to SecondOrder if it isn't already             -->
+    <!--    g) change the nodes8or27 flag to 27                             -->
     <!--                                                                    -->
     <!-- 4) Edit the DataArchiver section to:
             a)  Lower the outputInterval to reflect the faster rate at
@@ -34,13 +37,6 @@
     <!--____________________________________________________________________-->
    
     <!--____________________________________________________________________-->
-    <!--  Other Instructions                                                -->
-    <!--    You can turn this into a JP8 fire by uncommenting out three     -->
-    <!--    different things: the inlet density, the inlet temperature      -->
-    <!--    and the JP8 table.  You must also comment out the corresponding -->
-    <!--    items for CH4.                                                  -->
-   
-    <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
@@ -50,7 +46,8 @@
        <delt_max>           1.0e-4      </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  0.15        </max_delt_increase>
-       <timestep_multiplier>0.5         </timestep_multiplier>
+       <timestep_multiplier>0.4         </timestep_multiplier>
+       <override_restart_delt> 2.5e-10   </override_restart_delt>
        <!--<max_iterations>      10         </max_iterations>-->
    </Time>
    
@@ -60,7 +57,7 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-<!-- 3D
+<!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE STUFF BELOW
          <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
 -->
@@ -236,7 +233,7 @@
               <upper>        [0.1, 0.3,0.1]     </upper>
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [4,8,4]            </patches>
-              <resolution>   [80,320,80]        </resolution>
+              <resolution>   [100,400,100]        </resolution>
            </Box> 
 -->       
        </Level>
@@ -247,8 +244,11 @@
    <DataArchiver>
       <filebase>JP8_2D_annulus.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
+      <!--
+      use the following for the explicit phase
+      <outputInterval> 0.0000025 </outputInterval>
+       -->
       <compression>gzip</compression>
-      <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
       <save label="vol_frac_CC"/>
       <save label="press_CC"/>
       <save label="temp_CC"/>
