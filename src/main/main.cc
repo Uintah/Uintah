@@ -98,15 +98,15 @@ int main(int argc, char** argv)
     // should read the command line specified files (if any)
     Network* net=new Network(1);
 
+    // Fork off task for the network editor.  It is a detached
+    // task, and the Task* will be deleted by the task manager
+    NetworkEditor* gui_task=new NetworkEditor(net);
+
     // Load in the default packages
     if(getenv("PACKAGE_PATH")!=NULL)
       packageDB.loadPackage(getenv("PACKAGE_PATH"));
     else
       packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
-
-    // Fork off task for the network editor.  It is a detached
-    // task, and the Task* will be deleted by the task manager
-    NetworkEditor* gui_task=new NetworkEditor(net);
 
     // Activate the network editor and scheduler.  Arguments and return
     // values are meaningless
@@ -132,6 +132,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.7  1999/08/31 23:37:58  sparker
+// Put order of Package loading back to the way it was
+//
 // Revision 1.6  1999/08/31 23:26:51  sparker
 // Removed extraneous character in Makefile.in
 // Loaded packages before instantiating NetworkEditor
