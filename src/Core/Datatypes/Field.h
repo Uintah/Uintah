@@ -13,13 +13,13 @@ class  SCICORESHARE Field: public PropertyManager {
 
 public:
   //! Possible data associations.
-  enum data_location {
+  typedef enum {
     NODE,
     EDGE,
     FACE,
     CELL,
     NONE
-  };
+  } data_location;
 
 
   Field();
