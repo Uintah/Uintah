@@ -83,7 +83,7 @@ static Persistent* make_TriSurface()
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
 
 TriSurface::TriSurface(Representation r)
-: Surface(r, 0), empty_index(-1), directed(1), haveNodeInfo(0), normType(NrmlsNone)
+  : Surface(r, 0), empty_index(-1), directed(1), haveNodeInfo(0), normType(NrmlsNone), valType(NodeType)
 {
 }
 
@@ -100,6 +100,7 @@ TriSurface::TriSurface(const TriSurface& copy, Representation)
     haveNodeInfo=copy.haveNodeInfo;
     nodeNbrs=copy.nodeNbrs;
     normType=copy.normType;
+    valType=copy.valType;
     normals=copy.normals;
 }
 
@@ -114,6 +115,7 @@ TriSurface& TriSurface::operator=(const TriSurface& t)
     haveNodeInfo=t.haveNodeInfo;
     nodeNbrs=t.nodeNbrs;
     normType=t.normType;
+    valType=t.valType;
     normals=t.normals;
     return *this;
 }
@@ -140,6 +142,9 @@ void TriSurface::add_point(const Point& p) {
 }
 
 void TriSurface::bldNormals(NormalsType nt) {
+
+  normals.resize(0);
+  normType=NrmlsNone;
 
     // build per vertex, per point or per element normals
 
@@ -179,7 +184,7 @@ void TriSurface::bldNormals(NormalsType nt) {
 	return;
     }
     if (normType==ElementType && nt==VertexType) {			// 4
-	// we went normals at the vertices, we have them at the elements...
+	// we want normals at the vertices, we have them at the elements...
 	normals.resize(elements.size()*3);
 	for (int i=normals.size()/3; i>=0; i--) {
 	    normals[i]=normals[i/3];
@@ -201,6 +206,7 @@ void TriSurface::bldNormals(NormalsType nt) {
 	    TSElement *e=elements[i];
 	    Vector v(Cross((points[e->i1]-points[e->i2]), 
 			   (points[e->i1]-points[e->i3])));
+	    v.normalize();
 	    tmp[i*3]=tmp[i*3+1]=tmp[i*3+2]=v;
 	}
     }
@@ -966,7 +972,7 @@ void TriSurface::remove_triangle(int i) {
     }
 }
 
-#define TRISURFACE_VERSION 4
+#define TRISURFACE_VERSION 5
 
 void TriSurface::io(Piostream& stream) {
 
@@ -980,6 +986,11 @@ void TriSurface::io(Piostream& stream) {
 	Pio(stream, bcIdx);
 	Pio(stream, bcVal);
     }
+    if (version >= 5) {
+      int *flag=(int*)&valType;
+      Pio(stream, *flag);
+    } else valType=NodeType;
+
     if (version >= 4) {
 	int* flag=(int*)&normType;
 	Pio(stream, *flag);
@@ -1167,6 +1178,12 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.13.2.1  2000/10/31 02:36:26  dmw
+// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
+//
+// Revision 1.14  2000/10/29 04:46:18  dmw
+// changed private/public status, added a flag for whether datavalues were associate with elements or nodes
+//
 // Revision 1.13  2000/03/13 04:47:53  dmw
 // SurfTree and TriSurface - made get_surfnodes and set_surfnodes work
 // ScalarFieldRG - interpolate uses epsilon bounds, so interpolate on
