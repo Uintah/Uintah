@@ -330,6 +330,58 @@ void HypoElastic::carryForward(const PatchSubset* patches,
   }
 }
 
+// Convert J-integral into stress intensity factors for hypoelastic materials
+void 
+HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
+                     const Vector& C,const Vector& V,Vector& SIF)
+{                    
+  /* J--J integral, C--Crack velocity, V--COD near crack tip
+     in local coordinates. */ 
+     
+  double J1,C1,C2,CC,V1,V2;
+  
+  J1=J.x();                           // total energy release rate
+  V1=V.y();  V2=V.x();                // V1--opening COD, V2--sliding COD
+  C1=C.x();  C2=C.y();                
+  CC=C1*C1+C2*C2;                     // square of crack propagating velocity
+  
+  // get material properties
+  double rho_orig,G,K,v,k;
+  rho_orig=matl->getInitialDensity();
+  G=d_initialData.G;                  // shear modulus
+  K=d_initialData.K;                  // bulk modulus
+  v=0.5*(3.*K-2.*G)/(3*K+G);          // Poisson ratio
+  k=(3.-v)/(1.+v);                    // plane stress
+  //k=3.-4*v;                           // plane strain
+
+  double Cs2,Cd2,D,B1,B2,A1,A2;
+  if(sqrt(CC)<1.e-16) {               // for static crack
+    B1=B2=1.;
+    A1=A2=(k+1.)/4.;
+  }
+  else {                              // for dynamic crack
+    Cs2=G/rho_orig;
+    Cd2=(k+1.)/(k-1.)*Cs2;
+    B1=sqrt(1.-CC/Cd2);
+    B2=sqrt(1.-CC/Cs2);
+    D=4.*B1*B2-(1.+B2*B2)*(1.+B2*B2);
+    A1=B1*(1.-B2*B2)/D;
+    A2=B2*(1.-B2*B2)/D;
+  }
+
+  double COD2,KI,KII;
+  COD2=V1*V1*B2+V2*V2*B1;
+  if(sqrt(COD2)<1.e-32) {            // COD=0
+    KI  = 0.;
+    KII = 0.;
+  }
+  else {
+    KI =V1*sqrt(2.*G*B2*fabs(J1)/A1/COD2);
+    KII=V2*sqrt(2.*G*B1*fabs(J1)/A2/COD2);
+  }
+  SIF=Vector(KI,KII,0.);
+}
+
 void 
 HypoElastic::computeStressTensor(const PatchSubset* ,
 				const MPMMaterial* ,
