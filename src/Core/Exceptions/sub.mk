@@ -9,7 +9,7 @@ SRCDIR   := SCICore/Exceptions
 
 SRCS     += $(SRCDIR)/ArrayIndexOutOfBounds.cc \
 	$(SRCDIR)/AssertionFailed.cc $(SRCDIR)/ErrnoException.cc \
-	$(SRCDIR)/Exception.cc \
+	$(SRCDIR)/Exception.cc $(SRCDIR)/FileNotFound.cc \
 	$(SRCDIR)/InternalError.cc
 
 PSELIBS := 
@@ -19,6 +19,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/05/20 08:06:14  sparker
+# New exception classes
+#
 # Revision 1.4  2000/05/15 19:25:57  sparker
 # Exception class for system calls (ones that use the errno variable)
 #
