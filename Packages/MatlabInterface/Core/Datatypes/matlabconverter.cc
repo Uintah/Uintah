@@ -35,7 +35,9 @@
 #include "matlabconverter.h"
 
 
-namespace MatlabIO {
+using namespace MatlabIO;
+using namespace std;
+using namespace SCIRun;
 
 // Currently the property converter only manages strings
 // all other data is ignored both on matlabside as well
@@ -108,13 +110,13 @@ void matlabconverter::setdisabletranspose(bool dt)
 
 
 
-void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,SCIRun::PropertyManager *handle)
+void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *handle)
 {
   long numfields;
   matlabarray::mlclass mclass;
   matlabarray subarray;
-  std::string propname;
-  std::string propval;
+  string propname;
+  string propval;
   matlabarray proparray;
 
   // properties are stored in field property
@@ -142,18 +144,18 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,SCIRun::PropertyMa
   }
 }
 
-void matlabconverter::sciPropertyTOmlProperty(SCIRun::PropertyManager *handle,matlabarray &ma)
+void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarray &ma)
 {
-  long numfields;
+  size_t numfields;
   matlabarray proparray;
-  std::string propname;
-  std::string propvalue;
+  string propname;
+  string propvalue;
   matlabarray subarray;
 	
   proparray.createstructarray();
   numfields = handle->nproperties();
 	
-  for (long p=0;p<numfields;p++)
+  for (size_t p=0;p<numfields;p++)
   {
     propname = handle->get_property_name(p);
     if (handle->get_property(propname,propvalue))
@@ -170,25 +172,24 @@ void matlabconverter::sciPropertyTOmlProperty(SCIRun::PropertyManager *handle,ma
 // the program knows how to convert 
 // the matlabarray into a scirun matrix
 
-long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext, SCIRun::Module *module)
+long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Module *module)
 {
   infotext = "";
 
   matlabarray::mlclass mclass;
   mclass = ma.getclass();
 	
-  switch (mclass)
-  {
+  switch (mclass) {
   case matlabarray::mlDENSE:
   case matlabarray::mlSPARSE:
     {
       // check whether the data is of a proper format
 	
-      std::vector<long> dims;	
+      vector<long> dims;	
       dims = ma.getdims();
       if (dims.size() > 2)
       {   
-	postmsg(module,std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
+	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
 	return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
       }
 	
@@ -227,7 +228,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
       if (index == -1) index = ma.getfieldnameindexCI("tensorfield");
       if (index == -1) 
       {
-	postmsg(module,std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (cannot find a field with data: create a .data field)"));
+	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (cannot find a field with data: create a .data field)"));
 	return(0); // incompatible
       }
 		
@@ -235,7 +236,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
       numel = ma.getnumelements();
       if (numel > 1) 
       {
-	postmsg(module,std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (the struct matrix is not 1x1: do not define more than one matrix)"));
+	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (the struct matrix is not 1x1: do not define more than one matrix)"));
 	return(0); // incompatible	
       }
       matlabarray subarray;
@@ -245,14 +246,14 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
 	
       if (subarray.isempty()) 
       {
-	postmsg(module,std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (no data: matrix is empty)"));
+	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (no data: matrix is empty)"));
 	return(0); // not compatible
       }
-      std::vector<long> dims;	
+      vector<long> dims;	
       dims = subarray.getdims();
       if (dims.size() > 2)
       {   
-	postmsg(module,std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
+	postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
 	return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
       }
 	
@@ -273,17 +274,17 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
       return(1);			
     } 
     break;
-	default:
-	break;
+  default:
+    break;
   }
-  postmsg(module,std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (matrix is not struct, dense or sparse array)"));
+  postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (matrix is not struct, dense or sparse array)"));
   return (0);
 }
 		
 
 
 
-void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &handle, SCIRun::Module *module)
+void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, Module *module)
 {
   matlabarray::mlclass mclass = ma.getclass();
 	
@@ -294,29 +295,29 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 			
       if (disable_transpose_)
       {
-	SCIRun::DenseMatrix* dmptr;							// pointer to a new dense matrix
+	DenseMatrix* dmptr;							// pointer to a new dense matrix
 						
 	int m = static_cast<int>(ma.getm());
 	int n = static_cast<int>(ma.getn());
 					
-	dmptr = new SCIRun::DenseMatrix(n,m);   // create dense matrix
+	dmptr = new DenseMatrix(n,m);   // create dense matrix
 						// copy and cast elements:
 						// getnumericarray is a templated function that casts the data to the supplied pointer
 						// type. It needs the dimensions of the memory block (in elements) to make sure
 						// everything is still OK. 
 	ma.getnumericarray(dmptr->getData(),(dmptr->nrows())*(dmptr->ncols()));  
 					
-	handle = static_cast<SCIRun::Matrix *>(dmptr); // cast it to a general matrix pointer
+	handle = static_cast<Matrix *>(dmptr); // cast it to a general matrix pointer
       }
       else
       {
 				
-	SCIRun::DenseMatrix* dmptr;							// pointer to a new dense matrix
+	DenseMatrix* dmptr;							// pointer to a new dense matrix
 					
 	int m = static_cast<int>(ma.getm());
 	int n = static_cast<int>(ma.getn());
 					
-	SCIRun::DenseMatrix  dm(n,m);   // create dense matrix
+	DenseMatrix  dm(n,m);   // create dense matrix
 	// copy and cast elements:
 	// getnumericarray is a templated function that casts the data to the supplied pointer
 	// type. It needs the dimensions of the memory block (in elements) to make sure
@@ -327,7 +328,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 	// Hence, it is a little memory inefficient.
 					
 	dmptr = dm.transpose();	// SCIRun has a C++-style matrix and matlab a FORTRAN-style matrix
-	handle = static_cast<SCIRun::Matrix *>(dmptr); // cast it to a general matrix pointer
+	handle = static_cast<Matrix *>(dmptr); // cast it to a general matrix pointer
       }
     }
     break;
@@ -336,7 +337,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
     {
       if (disable_transpose_)
       {
-	SCIRun::SparseRowMatrix* smptr;
+	SparseRowMatrix* smptr;
 					
 	// Since the SparseRowMatrix does not allocate memory but on the 
 	// otherhand frees it in the destructor. The memory needs to be
@@ -357,13 +358,13 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 	ma.getrowsarray(rows,nnz); // automatically casts longs to ints
 	ma.getcolsarray(cols,(n+1));
 					
-	smptr = new SCIRun::SparseRowMatrix(n,m,cols,rows,nnz,values);
+	smptr = new SparseRowMatrix(n,m,cols,rows,nnz,values);
 					
-	handle = static_cast<SCIRun::Matrix *>(smptr); // cast it to a general matrix pointer
+	handle = static_cast<Matrix *>(smptr); // cast it to a general matrix pointer
       }
       else
       {
-	SCIRun::SparseRowMatrix* smptr;
+	SparseRowMatrix* smptr;
 					
 	// Since the SparseRowMatrix does not allocate memory but on the 
 	// otherhand frees it in the destructor. The memory needs to be
@@ -384,10 +385,10 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 	ma.getrowsarray(rows,nnz); // automatically casts longs to ints
 	ma.getcolsarray(cols,(n+1));
 					
-	SCIRun::SparseRowMatrix  sm(n,m,cols,rows,nnz,values);
+	SparseRowMatrix  sm(n,m,cols,rows,nnz,values);
 					
 	smptr = sm.transpose(); // SCIRun uses Row sparse matrices and matlab Column sparse matrices
-	handle = static_cast<SCIRun::Matrix *>(smptr); // cast it to a general matrix pointer
+	handle = static_cast<Matrix *>(smptr); // cast it to a general matrix pointer
       }
     }
     break;
@@ -420,7 +421,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 				
       if (propertyindex != -1)
       {
-	mlPropertyTOsciProperty(ma,static_cast<SCIRun::PropertyManager *>(handle.get_rep()));
+	mlPropertyTOsciProperty(ma,static_cast<PropertyManager *>(handle.get_rep()));
       }
 				
     }
@@ -433,7 +434,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 }
 
 
-void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarray &mlmat)
+void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlmat)
 {
   // Get the format for exporting data
   matlabarray::mitype dataformat = datatype_;
@@ -443,12 +444,12 @@ void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarr
 	
   if (scimat->is_dense())
   {
-    SCIRun::DenseMatrix* dmatrix;
-    SCIRun::DenseMatrix* tmatrix;
+    DenseMatrix* dmatrix;
+    DenseMatrix* tmatrix;
     dmatrix = scimat->as_dense();
     tmatrix = dmatrix->transpose();
 		
-    std::vector<long> dims(2);
+    vector<long> dims(2);
     dims[1] = tmatrix->nrows();
     dims[0] = tmatrix->ncols();
     mlmat.createdensearray(dims,dataformat);
@@ -456,8 +457,8 @@ void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarr
   }
   if (scimat->is_column())
   {
-    SCIRun::ColumnMatrix* cmatrix;
-    std::vector<long> dims(2);
+    ColumnMatrix* cmatrix;
+    vector<long> dims(2);
     cmatrix = scimat->as_column();
     dims[0] = cmatrix->nrows();
     dims[1] = cmatrix->ncols();
@@ -466,12 +467,12 @@ void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarr
   }
   if (scimat->is_sparse())
   {
-    SCIRun::SparseRowMatrix* smatrix;
-    SCIRun::SparseRowMatrix* tmatrix;
+    SparseRowMatrix* smatrix;
+    SparseRowMatrix* tmatrix;
     smatrix = scimat->as_sparse();
     tmatrix = smatrix->transpose();
 		
-    std::vector<long> dims(2);
+    vector<long> dims(2);
     dims[1] = tmatrix->nrows();
     dims[0] = tmatrix->ncols();
     mlmat.createsparsearray(dims,dataformat);
@@ -483,7 +484,7 @@ void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarr
 }
 
 
-void matlabconverter::sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::Module *module)
+void matlabconverter::sciMatrixTOmlArray(MatrixHandle &scimat,matlabarray &mlmat, Module *module)
 {
   if (numericarray_ == true)
   {
@@ -495,7 +496,7 @@ void matlabconverter::sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarra
     mlmat.createstructarray();
     sciMatrixTOmlMatrix(scimat,dataarray);
     mlmat.setfield(0,"data",dataarray);
-    sciPropertyTOmlProperty(static_cast<SCIRun::PropertyManager *>(scimat.get_rep()),mlmat);
+    sciPropertyTOmlProperty(static_cast<PropertyManager *>(scimat.get_rep()),mlmat);
   }
 }
 
@@ -503,10 +504,10 @@ void matlabconverter::sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarra
 // rules that matlab allows. Otherwise we could save the file, but matlab 
 // would complain it could not read the file.
 
-bool matlabconverter::isvalidmatrixname(std::string name)
+bool matlabconverter::isvalidmatrixname(string name)
 {
-  const std::string validchar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
-  const std::string validstartchar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+  const string validchar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
+  const string validstartchar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 
   bool valid = true;
@@ -541,7 +542,7 @@ bool matlabconverter::isvalidmatrixname(std::string name)
 // in case it is compatible return a positive value and write
 // out an infostring with a summary of the contents of the matrix
 
-long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module)
+long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infostring, Module *module)
 {
   matlabarray::mlclass mclass;
   mclass = mlarray.getclass();
@@ -566,7 +567,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &i
 
     if (fieldnameindex == -1) 
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (cannot find field with data: create a .data field)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (cannot find field with data: create a .data field)"));
       return(0);
     }
 		
@@ -574,7 +575,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &i
 	
     if (subarray.isempty()) 
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (field with data is empty)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (field with data is empty)"));
       return(0);
     }
 				
@@ -587,7 +588,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &i
 		
     if ((mclass != matlabarray::mlDENSE)&&(mclass != matlabarray::mlSPARSE)) 
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is not dense or structured array)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is not dense or structured array)"));
       return(0);
     }
 		
@@ -606,7 +607,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &i
 	
   if ((mclass != matlabarray::mlDENSE))
   {
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (the data is not dense matrix or a structured array)"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (the data is not dense matrix or a structured array)"));
     return(0); // incompatible for the moment, no converter written for this type yet
   }
 
@@ -617,7 +618,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &i
 	
   if (mlarray.isempty()) 
   {
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is empty)"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is empty)"));
     return(0);
   }
 	
@@ -680,7 +681,7 @@ matlabarray::mitype matlabconverter::convertnrrdtype(int type)
   }
 }
 
-void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdDataHandle &scinrrd, SCIRun::Module *module)
+void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &scinrrd, Module *module)
 {
   // Depending on the matlabclass there are several converters
   // for converting the data from matlab into a SCIRun Nrrd object
@@ -694,7 +695,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
   scinrrd = 0; 
 	
   // Pointer to a new SCIRun Nrrd Data object
-  SCIRun::NrrdData* nrrddataptr = 0;
+  NrrdData* nrrddataptr = 0;
 					
   switch(mclass)
   {
@@ -704,7 +705,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
       try
       {
 	// new nrrd data handle
-	nrrddataptr = new SCIRun::NrrdData(); // nrrd is owned by the object
+	nrrddataptr = new NrrdData(); // nrrd is owned by the object
 	nrrddataptr->nrrd = nrrdNew();
 				
 	// obtain the type of the new nrrd
@@ -715,9 +716,11 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 				
 	// obtain the dimensions of the new nrrd
 	int nrrddims[NRRD_DIM_MAX];
-	std::vector<long> dims = mlarray.getdims();
-	long nrrddim = dims.size();
-	for (long p=0;p<nrrddim;p++) nrrddims[p] = dims[p];
+	vector<long> dims = mlarray.getdims();
+	int nrrddim = static_cast<int>(dims.size());
+        ASSERT(nrrddim <= NRRD_DIM_MAX);
+	for (int p=0;p<nrrddim;p++)
+          nrrddims[p] = dims[p];
 				
 	nrrdAlloc_nva(nrrddataptr->nrrd,nrrdtype,nrrddim,nrrddims);
 					
@@ -767,13 +770,13 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 	// The following C++ code does this without the need of the need for
 	// explicit dynamic memory allocation.
 					
-	std::vector<std::string> labels;
+	vector<string> labels;
 	labels.resize(nrrddim);
 	const char *labelptr[NRRD_DIM_MAX];
 					
 	for (long p=0;p<nrrddim;p++)
 	{
-	  std::ostringstream oss; 
+	  ostringstream oss; 
 	  oss << "dimension " << (p+1);
 	  labels[p] = oss.str();
 	  labelptr[p] = labels[p].c_str();
@@ -802,7 +805,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 			
     if (scinrrd != 0)
     {
-      std::string str = mlarray.getname();
+      string str = mlarray.getname();
       scinrrd->set_filename(str);
     }
 			
@@ -884,7 +887,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 						
 	  if (fnindex != -1)
 	  {
-	    std::vector<std::string> labels(NRRD_DIM_MAX);
+	    vector<string> labels(NRRD_DIM_MAX);
 	    const char *clabels[NRRD_DIM_MAX];
 					
 	    // Set some default values in case the
@@ -892,7 +895,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 						
 	    for (long p=0;p<NRRD_DIM_MAX;p++)
 	    {
-	      std::ostringstream oss; 
+	      ostringstream oss; 
 	      oss << "dimension " << (p+1);
 	      labels[p] = oss.str();
 	      clabels[p] = labels[p].c_str();
@@ -921,7 +924,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 	  fnindex = axisarray.getfieldnameindexCI("unit");
 	  if (fnindex != -1)
 	  {
-	    std::vector<std::string> units(NRRD_DIM_MAX);
+	    vector<string> units(NRRD_DIM_MAX);
 	    const char *cunits[NRRD_DIM_MAX];
 					
 	    // Set some default values in case the
@@ -955,7 +958,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 	  if (fnindex != -1)
 	  {
 	    double spacing[NRRD_DIM_MAX];
-	    std::vector<double> data(1);
+	    vector<double> data(1);
 						
 	    // Set some default values in case the
 	    // spacing is not defined by the matlabarray
@@ -984,7 +987,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 	  if (fnindex != -1)
 	  {
 	    double mindata[NRRD_DIM_MAX];
-	    std::vector<double> data;
+	    vector<double> data;
 						
 	    // Set some default values in case the
 	    // minimum is not defined by the matlabarray
@@ -1014,7 +1017,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 	  if (fnindex != -1)
 	  {
 	    double maxdata[NRRD_DIM_MAX];
-	    std::vector<double> data;
+	    vector<double> data;
 						
 	    // Set some default values in case the
 	    // maximum is not defined by the matlabarray
@@ -1043,7 +1046,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 	  if (fnindex != -1)
 	  {
 	    long centerdata[NRRD_DIM_MAX];
-	    std::vector<long> data;
+	    vector<long> data;
 						
 	    // Set some default values in case the
 	    // maximum is not defined by the matlabarray
@@ -1074,7 +1077,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 				
       if (propertyindex != -1)
       {
-	mlPropertyTOsciProperty(mlarray,static_cast<SCIRun::PropertyManager *>(scinrrd.get_rep()));
+	mlPropertyTOsciProperty(mlarray,static_cast<PropertyManager *>(scinrrd.get_rep()));
       }
 
       if (mlarray.isfieldCI("name"))
@@ -1083,7 +1086,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 	{	
 	  matlabarray matname;
 	  matname = mlarray.getfieldCI(0,"name");
-	  std::string str = matname.getstring();
+	  string str = matname.getstring();
 	  if (matname.isstring())	scinrrd->set_filename(str);
 	}
 		
@@ -1092,7 +1095,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
       {
 	if (scinrrd != 0)
 	{
-	  std::string str = mlarray.getname();
+	  string str = mlarray.getname();
 	  scinrrd->set_filename(str);
 	}
       }
@@ -1109,7 +1112,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
 }
 
 
-void matlabconverter::sciNrrdDataTOmlMatrix(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlarray)
+void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray &mlarray)
 {
 
   Nrrd	    *nrrdptr;
@@ -1118,7 +1121,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(SCIRun::NrrdDataHandle &scinrrd, mat
   mlarray.clear();
 
   // first determine the size of a nrrd
-  std::vector<long> dims;
+  vector<long> dims;
 	
   nrrdptr = scinrrd->nrrd;
 
@@ -1166,7 +1169,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(SCIRun::NrrdDataHandle &scinrrd, mat
 }
 
 
-void matlabconverter::sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlarray, SCIRun::Module *module)
+void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray &mlarray, Module */*module*/)
 {
 
   if (numericarray_ == true)
@@ -1182,7 +1185,7 @@ void matlabconverter::sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matl
   mlarray.setfield(0,"data",matrix);
 		
   // Set the properies of the axis
-  std::vector<std::string> axisfieldnames(7);
+  vector<string> axisfieldnames(7);
   axisfieldnames[0] = "size";
   axisfieldnames[1] = "spacing";
   axisfieldnames[2] = "min";
@@ -1195,7 +1198,7 @@ void matlabconverter::sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matl
   nrrdptr = scinrrd->nrrd;
 				
   matlabarray axisma;
-  std::vector<long> dims(2);
+  vector<long> dims(2);
   dims[0] = nrrdptr->dim;
   dims[1] = 1;
   axisma.createstructarray(dims,axisfieldnames);
@@ -1242,7 +1245,7 @@ void matlabconverter::sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matl
   }
 	
   mlarray.setfield(0,"axis",axisma);
-  sciPropertyTOmlProperty(static_cast<SCIRun::PropertyManager *>(scinrrd.get_rep()),mlarray);
+  sciPropertyTOmlProperty(static_cast<PropertyManager *>(scinrrd.get_rep()),mlarray);
 }
 
 
@@ -1267,7 +1270,7 @@ void matlabconverter::sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matl
 //   LatVol
 //   any suggestions for other types that need support ??
 
-long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infostring, SCIRun::Module *module)
+long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring, Module *module)
 {
 
   // If it is regular matrix translate it to a image or a latvol
@@ -1282,7 +1285,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     {
       matlabarray ml;
       matlabarray dimsarray;
-      std::vector<long> d = mlarray.getdims();
+      vector<long> d = mlarray.getdims();
       if ((d[0]==1)||(d[1]==1))
       {
 	if (d[0]==1) d[0] = d[1];
@@ -1301,7 +1304,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 
   if (!mlarray.isstruct())
   { 
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the matrix is not structured nor dense (2D or 3D))"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the matrix is not structured nor dense (2D or 3D))"));
     return(0); // not compatible if it is not structured data
   }
   fieldstruct fs = analyzefieldstruct(mlarray); // read the main structure of the object
@@ -1310,7 +1313,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 	
   // The fieldtype string, contains the type of field, so it can be listed in the
   // infostring. Just to supply the user with a little bit more data.
-  std::string fieldtype;
+  string fieldtype;
   fieldtype = "NO FIELD DATA";
 	
   // The next step will incorporate a new way of dealing with fields
@@ -1351,12 +1354,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
   {
     if (fs.transform.getnumdims() != 2) 
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 2D)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 2D)"));
       return(0);
     }
     if ((fs.transform.getn() != 4)&&(fs.transform.getm() != 4))
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 4x4)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 4x4)"));
       return(0);
     }
   }
@@ -1366,22 +1369,22 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
   if (((fs.transform.isdense())||(fs.meshclass.compareCI("scanline"))||(fs.meshclass.compareCI("image"))||(fs.meshclass.compareCI("latvol")))&&(fs.dims.isempty()))
   {
     if (fs.scalarfield.isdense()) 
-    {  std::vector<long> dims = fs.scalarfield.getdims();
+    {  vector<long> dims = fs.scalarfield.getdims();
     fs.dims.createlongvector(dims);
     }
     if (fs.vectorfield.isdense()) 
-    {  std::vector<long> dims = fs.vectorfield.getdims();
+    {  vector<long> dims = fs.vectorfield.getdims();
     // remove the vector dimension from the array
     fs.dims.createlongvector((dims.size()-1),&(dims[1]));
     }
     if (fs.tensorfield.isdense()) 
-    {  std::vector<long> dims = fs.tensorfield.getdims();
+    {  vector<long> dims = fs.tensorfield.getdims();
     // remove the tensor dimension from the array
     fs.dims.createlongvector((dims.size()-1),&(dims[1]));
     }
     if (fs.basis_order == 0)
     {
-      std::vector<long> dims = fs.scalarfield.getdims();
+      vector<long> dims = fs.scalarfield.getdims();
       // dimensions need to be one bigger
       for (long p = 0; p<static_cast<long>(dims.size()); p++) dims[p] = dims[p]+1;
       fs.dims.createlongvector(dims);
@@ -1399,18 +1402,18 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
   //{
   //  if ((fs.dims.getnumelements()==1) && (fs.basis_order != 1))
   //  {
-  //    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for scanline)"));
+  //    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for scanline)"));
   //    return(0);
   //  }
   //  if ((fs.dims.getnumelements()==2) && (fs.basis_order!=1))
   //  {
-  //   postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for image)"));
+  //   postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for image)"));
   //    return(0);
   //  }
   //  if ((fs.dims.getnumelements()==3) && (fs.basis_order != 1) &&
   //	(fs.basis_order != 0))
   //  {
-  //    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for latvol)"));
+  //    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for latvol)"));
   //    return(0);
   //  }
   // }
@@ -1423,27 +1426,27 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 		
     if ((size > 0)&&(size < 4))
     {
-      std::ostringstream oss;
-      std::string name = mlarray.getname();
+      ostringstream oss;
+      string name = mlarray.getname();
       oss << name << " ";
-      if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing		
+      if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing		
 		
       if (fs.meshclass.isstring())
       {   // explicitly stated type: (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
 	if ((fs.meshclass.compareCI("scanline"))&&(size!=1))
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (scanline needs only one dimension)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (scanline needs only one dimension)"));
 	  return(0);
 	}
 	if ((fs.meshclass.compareCI("image"))&&(size!=2)) 
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (an image needs two dimensions)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (an image needs two dimensions)"));
 	  return(0);
 	}
 
 	if ((fs.meshclass.compareCI("latvolmesh"))&&(size!=3))
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (a latvolmesh needs three dimensions)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (a latvolmesh needs three dimensions)"));
 	  return(0);
 	}
 
@@ -1466,7 +1469,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     }
     else
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of dimensions (.dims field) needs to 1, 2, or 3)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of dimensions (.dims field) needs to 1, 2, or 3)"));
       return(0);
     }
 	
@@ -1483,39 +1486,39 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     long numdims = fs.x.getnumdims();
     if (fs.y.getnumdims() != numdims) 
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
       return(0);
     }
     if (fs.z.getnumdims() != numdims) 
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
       return(0);
     }
 		
-    std::vector<long> dimsx = fs.x.getdims();
-    std::vector<long> dimsy = fs.y.getdims();
-    std::vector<long> dimsz = fs.z.getdims();
+    vector<long> dimsx = fs.x.getdims();
+    vector<long> dimsy = fs.y.getdims();
+    vector<long> dimsz = fs.z.getdims();
 		
     // Check dimension by dimension for any problems
     for (long p=0 ; p < numdims ; p++)
     {
       if(dimsx[p] != dimsy[p]) 
       {
-	postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
+	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
 	return(0);
       }
       if(dimsx[p] != dimsz[p]) 
       {
-	postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
+	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
 	return(0);
       }
     }
 
 		
-    std::ostringstream oss;
-    std::string name = mlarray.getname();
+    ostringstream oss;
+    string name = mlarray.getname();
     oss << name << " ";
-    if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing		
+    if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing		
 		
     // Minimum number of dimensions is in matlab is 2 and hence detect any empty dimension
     if (numdims == 2)
@@ -1534,17 +1537,17 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 
     //if ((numdims==1) && (fs.basis_order!=1))
     //{
-    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured curvemesh)"));
+    //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured curvemesh)"));
     //  return(0);
     //}
     //if ((numdims==2)&&(fs.basis_order!= 1))
     //{
-    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured quadsurfmesh)"));
+    //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured quadsurfmesh)"));
     //  return(0);
     //}
     //if ((numdims==3)&&(fs.basis_order!=1)&&(fs.basis_order!=0))
     //{
-    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured hexvolmesh)"));
+    //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured hexvolmesh)"));
     //  return(0);
     //}
 	
@@ -1552,17 +1555,17 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     {   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
       if ((fs.meshclass.compareCI("structcurve"))&&(numdims!=1))
       {
-	postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
 	return(0);
       }
       if ((fs.meshclass.compareCI("structquadsurf"))&&(numdims!=2)) 
       {
-	postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
 	return(0);
       }
       if ((fs.meshclass.compareCI("structhexvol"))&&(numdims!=3)) 
       {
-	postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
 	return(0);
       }
     }		
@@ -1579,7 +1582,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       oss << "[STRUCTURED HEXVOLMESH (" << dimsx[0] << "x" << dimsx[1] << "x" << dimsx[2] << " nodes) - " << fieldtype << "]";
       break;
     default:
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions)"));
       return(0);  // matrix is not compatible
     }
     infostring = oss.str();
@@ -1590,13 +1593,13 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 
   if (fs.node.isempty()) 
   {
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (no node matrix for unstructured mesh, create a .node field)"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (no node matrix for unstructured mesh, create a .node field)"));
     return(0); // a node matrix is always required
   }
 	
   if (fs.node.getnumdims() > 2) 
   {
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for node matrix)"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for node matrix)"));
     return(0); // Currently N dimensional arrays are not supported here
   }
   // Check the dimensions of the NODE array supplied only [3xM] or [Mx3] are supported
@@ -1609,12 +1612,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 	
   if ((n==0)||(m==0)) 
   {
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (node matrix is empty)"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (node matrix is empty)"));
     return(0); //empty matrix, no nodes => no mesh => no field......
   }
   if ((n != 3)&&(m != 3)) 
   {
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of node matrix needs to be 3)"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of node matrix needs to be 3)"));
     return(0); // SCIRun is ONLY 3D data, no 2D, or 1D
   }
   numpoints = n;
@@ -1630,7 +1633,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     {   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
       if (!(fs.meshclass.compareCI("pointcloud"))) 
       {
-	postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data has to be of the pointcloud class)"));
+	postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data has to be of the pointcloud class)"));
 	return(0);
       }
     }
@@ -1639,15 +1642,15 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 	// THIS ONE IS STILL VALID, BUT -1 NEEDS TO BE ADDED FOR FUTURE ENHANCEMENTS
     if ((fs.basis_order!=1)&&(fs.basis_order!=-1))
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data can only be located at the nodes of a pointcloud)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data can only be located at the nodes of a pointcloud)"));
       return(0);
     }
 		
     // Create an information string for the GUI
-    std::ostringstream oss;
-    std::string name = mlarray.getname();	
+    ostringstream oss;
+    string name = mlarray.getname();	
     oss << name << "  ";
-    if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+    if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
     oss << "[POINTCLOUD (" << numpoints << " nodes) - " << fieldtype << "]";
     infostring = oss.str();
     return(1);
@@ -1667,7 +1670,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 	// WE CAN DISREGARD THE NEXT TEST NOW, IT IS OBSOLETE
     //if (fs.basis_order!=1)
     //{
-    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data cannot be located at faces or cells for a curvemesh)"));
+    //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data cannot be located at faces or cells for a curvemesh)"));
     //  return(0);
     //}	
 
@@ -1676,7 +1679,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     // we do not allow them to be used, hence they are not compatible
     if ((!fs.face.isempty())||(!fs.cell.isempty()))
     {   // a matrix with multiple connectivities is not yet allowed
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (multiple connectivity matrices defined)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (multiple connectivity matrices defined)"));
       return(0);
     }
 		  
@@ -1684,7 +1687,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     // Connectivity should be 2D
     if (fs.edge.getnumdims() > 2)
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (edge connectivity matrix should be 2D)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (edge connectivity matrix should be 2D)"));
       return(0);		
     } 
 		 		
@@ -1695,7 +1698,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 		
     if ((n!=2)&&(m!=2))
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of edge needs to be of size 2)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of edge needs to be of size 2)"));
       return(0);		
     } 
 
@@ -1704,10 +1707,10 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     if ((m!=2)&&(n==2)) numel = m;
 
     // Create an information string for the GUI				
-    std::ostringstream oss;	
-    std::string name = mlarray.getname();
+    ostringstream oss;	
+    string name = mlarray.getname();
     oss << name << "  ";
-    if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+    if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
     oss << "[CURVEFIELD (" << numpoints << " nodes, " << numel << " edges) - " << fieldtype << "]";
     infostring = oss.str();
     return(1);
@@ -1721,7 +1724,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     // The connectivity data should be 2D
     if (fs.face.getnumdims() > 2)
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the face connection matrix needs to be 2D)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the face connection matrix needs to be 2D)"));
       return(0);		
     } 
 		
@@ -1732,7 +1735,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     // we do not support at the moment.
     if((!fs.cell.isempty()))
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (both a face and a cell matrix are defined)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (both a face and a cell matrix are defined)"));
       return(0);		
     } 
 
@@ -1740,7 +1743,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     // THIS TEST IS OBSOLETE NOW
 	//if (fs.basis_order!=1)
     //{
-    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the field is at the cell location for a surface mesh)"));
+    //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the field is at the cell location for a surface mesh)"));
     //  return(0);		
     //}
 
@@ -1751,7 +1754,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       {   // explicitly stated type 
 	if (!(fs.meshclass.compareCI("trisurf")))
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be trisurf)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be trisurf)"));
 	  return(0);
 	}
       }
@@ -1761,10 +1764,10 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 
 							
       // Generate an output string describing the field we just recognized
-      std::ostringstream oss;	
-      std::string name = mlarray.getname();
+      ostringstream oss;	
+      string name = mlarray.getname();
       oss << name << "  ";
-      if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+      if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
       oss << "[TRISURFFIELD (" << numpoints << " nodes, " << numel << " faces) - " << fieldtype << "]";
       infostring = oss.str();		
       return(1);
@@ -1777,7 +1780,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       {   // explicitly stated type 
 	if (!(fs.meshclass.compareCI("quadsurf"))) 
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be quadsurf)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be quadsurf)"));
 	  return(0);
 	}
       }
@@ -1787,16 +1790,16 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 			
 			
       // Generate an output string describing the field we just recognized
-      std::ostringstream oss;	
-      std::string name = mlarray.getname();
+      ostringstream oss;	
+      string name = mlarray.getname();
       oss << name << "  ";
-      if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+      if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
       oss << "[QUADSURFFIELD (" << numpoints << "nodes , " << numel << " faces) - " << fieldtype << "]";
       infostring = oss.str();		
       return(1);
     }
 		
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (matrix is of an unknown surface mesh class: the .face field does not have a dimension of size 3 or 4)"));
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (matrix is of an unknown surface mesh class: the .face field does not have a dimension of size 3 or 4)"));
     return(0);
   }
 
@@ -1808,7 +1811,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
 		
     if (fs.cell.getnumdims() > 2)
     {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the cell connection matrix should be 2D)"));
+      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the cell connection matrix should be 2D)"));
       return(0);
     }
     m = fs.cell.getm();
@@ -1822,7 +1825,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       {   // explicitly stated type 
 	if (!(fs.meshclass.compareCI("tetvol")))
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be tetvol)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be tetvol)"));
 	  return(0);
 	}
       }	
@@ -1831,10 +1834,10 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       if ((m!=4)&&(n==4)) numel = m;
 
 			
-      std::ostringstream oss;	
-      std::string name = mlarray.getname();			
+      ostringstream oss;	
+      string name = mlarray.getname();			
       oss << name << "  ";
-      if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+      if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
       oss << "[TETVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
       infostring = oss.str();		
       return(1);
@@ -1846,7 +1849,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       {   // explicitly stated type 
 	if (!(fs.meshclass.compareCI("hexvol"))) 
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be hexvol)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be hexvol)"));
 	  return(0);			
 	}
       }	
@@ -1854,10 +1857,10 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       numel = n;
       if ((m!=8)&&(n==8)) numel = m;
 			
-      std::ostringstream oss;	
-      std::string name = mlarray.getname();		
+      ostringstream oss;	
+      string name = mlarray.getname();		
       oss << name << "  ";
-      if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+      if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
       oss << "[HEXVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
       infostring = oss.str();		
       return(1);		
@@ -1869,7 +1872,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       {   // explicitly stated type 
 	if (!(fs.meshclass.compareCI("prismvol"))) 
 	{
-	  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be prismvol)"));
+	  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be prismvol)"));
 	  return(0);			
 	}
       }	
@@ -1878,26 +1881,26 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
       if ((m!=6)&&(n==6)) numel = m;
 
 			
-      std::ostringstream oss;	
-      std::string name = mlarray.getname();		
+      ostringstream oss;	
+      string name = mlarray.getname();		
       oss << name << "  ";
-      if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+      if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
       oss << "[PRISMVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
       infostring = oss.str();		
       return(1);		
     }
 		
-    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cell connection matrix dimensions do not match any of the supported mesh classes: the .cell field does not have a dimension of size 4, 6, or 8)"));		
+    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cell connection matrix dimensions do not match any of the supported mesh classes: the .cell field does not have a dimension of size 4, 6, or 8)"));		
     return(0);
   }
 	
-  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cannot match the matlab structure with any of the supported mesh classes)"));
+  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cannot match the matlab structure with any of the supported mesh classes)"));
   return(0);
 }
 
 
 
-void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield,SCIRun::Module *module)
+void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifield,Module *module)
 {
   // The first part of the converter is NOT dynamic and is concerned with figuring out what the data
   // represents. We construct information string for the final dynamic phase 
@@ -1918,7 +1921,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
     {
       matlabarray ml;
       matlabarray dimsarray;
-      std::vector<long> d = mlarray.getdims();
+      vector<long> d = mlarray.getdims();
       if ((d[0]==1)||(d[1]==1))
       {
 	// Squeeze out a dimension if it has a size of one
@@ -1954,8 +1957,8 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
 	
   // The fieldtype string, contains the type of field
   // This piece of information is used in the dynamic compilation
-  std::string valuetype = "double"; // default type even if there is no data
-  std::string fieldtype  = "";
+  string valuetype = "double"; // default type even if there is no data
+  string fieldtype  = "";
 	
   if (fs.fieldtype.compareCI("vector")) { fs.field = fs.scalarfield; valuetype = "Vector";}
   if (fs.fieldtype.compareCI("tensor")) { fs.field = fs.scalarfield; valuetype = "Tensor";} 
@@ -1986,7 +1989,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
 	
   if (((fs.transform.isdense())||(fs.meshclass.compareCI("scanline"))||(fs.meshclass.compareCI("image"))||(fs.meshclass.compareCI("latvol")))&&(fs.dims.isempty()))
   {
-    std::vector<long> dims = fs.field.getdims();
+    vector<long> dims = fs.field.getdims();
     if ((valuetype == "Vector")||(valuetype == "Tensor"))
     {	
       fs.dims.createlongvector((dims.size()-1),&(dims[1])); 
@@ -2000,7 +2003,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
 	// WE PROBABLY NEED TO ADD STUFF HERE FOR HIGHER ORDER ELEMENTS	
     if (fs.basis_order == 0)
     {
-      std::vector<long> dims;
+      vector<long> dims;
       fs.dims.getnumericarray(dims);
       for (long p = 0; p<static_cast<long>(dims.size()); p++) dims[p] = dims[p]+1;
       fs.dims.setnumericarray(dims);
@@ -2009,12 +2012,12 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
 	
   // Complete a structured mesh
 	
-  if ((fs.x.isempty())&&(fs.y.isdense())) { std::vector<long> dims = fs.y.getdims(); fs.x.createdensearray(dims,matlabarray::miDOUBLE); }
-  if ((fs.x.isempty())&&(fs.z.isdense())) { std::vector<long> dims = fs.z.getdims(); fs.x.createdensearray(dims,matlabarray::miDOUBLE); }
-  if ((fs.y.isempty())&&(fs.x.isdense())) { std::vector<long> dims = fs.x.getdims(); fs.y.createdensearray(dims,matlabarray::miDOUBLE); }
-  if ((fs.y.isempty())&&(fs.z.isdense())) { std::vector<long> dims = fs.z.getdims(); fs.y.createdensearray(dims,matlabarray::miDOUBLE); }
-  if ((fs.z.isempty())&&(fs.x.isdense())) { std::vector<long> dims = fs.x.getdims(); fs.z.createdensearray(dims,matlabarray::miDOUBLE); }
-  if ((fs.z.isempty())&&(fs.y.isdense())) { std::vector<long> dims = fs.y.getdims(); fs.z.createdensearray(dims,matlabarray::miDOUBLE); }
+  if ((fs.x.isempty())&&(fs.y.isdense())) { vector<long> dims = fs.y.getdims(); fs.x.createdensearray(dims,matlabarray::miDOUBLE); }
+  if ((fs.x.isempty())&&(fs.z.isdense())) { vector<long> dims = fs.z.getdims(); fs.x.createdensearray(dims,matlabarray::miDOUBLE); }
+  if ((fs.y.isempty())&&(fs.x.isdense())) { vector<long> dims = fs.x.getdims(); fs.y.createdensearray(dims,matlabarray::miDOUBLE); }
+  if ((fs.y.isempty())&&(fs.z.isdense())) { vector<long> dims = fs.z.getdims(); fs.y.createdensearray(dims,matlabarray::miDOUBLE); }
+  if ((fs.z.isempty())&&(fs.x.isdense())) { vector<long> dims = fs.x.getdims(); fs.z.createdensearray(dims,matlabarray::miDOUBLE); }
+  if ((fs.z.isempty())&&(fs.y.isdense())) { vector<long> dims = fs.y.getdims(); fs.z.createdensearray(dims,matlabarray::miDOUBLE); }
 	
   // One of thee next ones is always required to make a regular, structured or an unstructured mesh
   if ((fs.node.isempty())&&(fs.x.isempty())&&(fs.dims.isempty())) throw matlabconverter_error(); 
@@ -2302,29 +2305,30 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
   // for managing this. It's ugly.... 
 
 
-  std::string fielddesc = "SCIRun::" + fieldtype +"<" + valuetype + "> ";
-  std::string fieldname = SCIRun::DynamicAlgoBase::to_filename(fielddesc);
-  //SCIRun::TypeDescription scifieldtype(fdesc,SCIRun::TypeDescription::cc_to_h(__FILE__),"SCIRun");
+  string fielddesc = "" + fieldtype +"<" + valuetype + "> ";
+  string fielddesc2 = fieldtype +"<" + valuetype + "> ";
+  string fieldname = DynamicAlgoBase::to_filename(fielddesc2);
+  //TypeDescription scifieldtype(fdesc,TypeDescription::cc_to_h(__FILE__),"SCIRun");
 	
-  static const std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  static const std::string template_class_name("MatlabFieldReaderAlgoT");
-  static const std::string base_class_name("MatlabFieldReaderAlgo");
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("MatlabFieldReaderAlgoT");
+  static const string base_class_name("MatlabFieldReaderAlgo");
   
   // Everything we did is in the MatlabIO namespace so we need to add this
   // Otherwise the dynamically code generator will not generate a "using namespace ...."
-  static const std::string name_space_name("MatlabIO");
-  static const std::string name_space_name2("SCIRun");
+  static const string name_space_name("MatlabIO");
+  static const string name_space_name2("SCIRun");
 
-  std::string filename = template_class_name + "." + fieldname + ".";
+  string filename = template_class_name + "." + fieldname + ".";
   // Supply the dynamic compiler with enough information to build a file in the
   // on-the-fly libs which will have the templated function in there
-  SCIRun::CompileInfoHandle cinfo = 
-    scinew SCIRun::CompileInfo(filename,base_class_name, template_class_name, fielddesc);
+  CompileInfoHandle cinfo = 
+    scinew CompileInfo(filename,base_class_name, template_class_name, fielddesc);
   cinfo->add_namespace(name_space_name2);
   cinfo->add_namespace(name_space_name);
   cinfo->add_include(include_path);
 
-  SCIRun::Handle<MatlabFieldReaderAlgo> algo;
+  Handle<MatlabFieldReaderAlgo> algo;
 	
   // A placeholder for the dynamic code
 	
@@ -2358,7 +2362,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
   {
     if (scifield != 0)
     {
-      mlPropertyTOsciProperty(mlarray,static_cast<SCIRun::PropertyManager *>(scifield.get_rep()));
+      mlPropertyTOsciProperty(mlarray,static_cast<PropertyManager *>(scifield.get_rep()));
     }
   }
 
@@ -2490,7 +2494,7 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	{
 		if ((fs.fieldlocation.getm()*fs.fieldlocation.getn())==1)
 		{
-			std::vector<int> mat;
+			vector<int> mat;
 			ma.getnumericarray(mat);
 			fs.basis_order = mat[0];
 			if (fs.basis_order < -1) fs.basis_order = -1;
@@ -2503,9 +2507,9 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 }
 
 
-bool matlabconverter::addfield(std::vector<SCIRun::Vector> &fdata,matlabarray mlarray)
+bool matlabconverter::addfield(vector<Vector> &fdata,matlabarray mlarray)
 {
-  std::vector<double> fielddata;
+  vector<double> fielddata;
   mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 	
   unsigned int numdata = fielddata.size();
@@ -2521,15 +2525,15 @@ bool matlabconverter::addfield(std::vector<SCIRun::Vector> &fdata,matlabarray ml
   return(true);
 }
 
-bool matlabconverter::addfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray)
+bool matlabconverter::addfield(FData2d<Vector> &fdata,matlabarray mlarray)
 {
-  std::vector<double> fielddata;
+  vector<double> fielddata;
   mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 
   unsigned int numdata = fielddata.size();
   if (numdata > (3*fdata.size())) numdata = (3*fdata.size()); // make sure we do not copy more data than there are elements
 	
-  SCIRun::Vector **data = fdata.get_dataptr();
+  Vector **data = fdata.get_dataptr();
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
 	
@@ -2545,15 +2549,15 @@ bool matlabconverter::addfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarra
 }
 
 
-bool matlabconverter::addfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray)
+bool matlabconverter::addfield(FData3d<Vector> &fdata,matlabarray mlarray)
 {
-  std::vector<double> fielddata;
+  vector<double> fielddata;
   mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 	
   unsigned int numdata = fielddata.size();
   if (numdata > (3*fdata.size())) numdata = (3*fdata.size()); // make sure we do not copy more data than there are elements
 	
-  SCIRun::Vector ***data = fdata.get_dataptr();
+  Vector ***data = fdata.get_dataptr();
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
   unsigned int dim3 = fdata.dim3();
@@ -2571,13 +2575,13 @@ bool matlabconverter::addfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarra
 }
 
 
-bool matlabconverter::addfield(std::vector<SCIRun::Tensor> &fdata,matlabarray mlarray)
+bool matlabconverter::addfield(vector<Tensor> &fdata,matlabarray mlarray)
 {
-  std::vector<double> fielddata;
+  vector<double> fielddata;
   mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 
   unsigned int numdata = fielddata.size();
-  SCIRun::Tensor tensor;
+  Tensor tensor;
 
   if (mlarray.getm() == 6)
   { // Compressed tensor data : xx,yy,zz,xy,xz,yz
@@ -2596,15 +2600,15 @@ bool matlabconverter::addfield(std::vector<SCIRun::Tensor> &fdata,matlabarray ml
 
 
 
-bool matlabconverter::addfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray)
+bool matlabconverter::addfield(FData2d<Tensor> &fdata,matlabarray mlarray)
 {
-  std::vector<double> fielddata;
+  vector<double> fielddata;
   mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 	
   unsigned int numdata = fielddata.size();
 
-  SCIRun::Tensor tens;
-  SCIRun::Tensor **data = fdata.get_dataptr();
+  Tensor tens;
+  Tensor **data = fdata.get_dataptr();
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
 
@@ -2628,13 +2632,13 @@ bool matlabconverter::addfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarra
 }
 
 
-bool matlabconverter::addfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray)
+bool matlabconverter::addfield(FData3d<Tensor> &fdata,matlabarray mlarray)
 {
-  std::vector<double> fielddata;
+  vector<double> fielddata;
   mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 
-  SCIRun::Tensor tens;
-  SCIRun::Tensor ***data = fdata.get_dataptr();
+  Tensor tens;
+  Tensor ***data = fdata.get_dataptr();
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
   unsigned int dim3 = fdata.dim3();
@@ -2662,73 +2666,73 @@ bool matlabconverter::addfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarra
 }
 
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<PointCloudMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new SCIRun::PointCloudMesh;
+  meshH = new PointCloudMesh;
   addnodes(meshH,fs.node);
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<CurveMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new SCIRun::CurveMesh;
+  meshH = new CurveMesh;
   addnodes(meshH,fs.node);
   addedges(meshH,fs.edge);
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<TriSurfMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new SCIRun::TriSurfMesh;
+  meshH = new TriSurfMesh;
   addnodes(meshH,fs.node);
   addfaces(meshH,fs.face);
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<QuadSurfMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new SCIRun::QuadSurfMesh;
+  meshH = new QuadSurfMesh;
   addnodes(meshH,fs.node);
   addfaces(meshH,fs.face);
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<TetVolMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new SCIRun::TetVolMesh;
+  meshH = new TetVolMesh;
   addnodes(meshH,fs.node);
   addcells(meshH,fs.cell);
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<HexVolMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new SCIRun::HexVolMesh;
+  meshH = new HexVolMesh;
   addnodes(meshH,fs.node);
   addcells(meshH,fs.cell);
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<PrismVolMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new SCIRun::PrismVolMesh;
+  meshH = new PrismVolMesh;
   addnodes(meshH,fs.node);
   addcells(meshH,fs.cell);
   return(true);
 }
 
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<ScanlineMesh> &meshH,fieldstruct &fs)
 {
-  std::vector<long> dims; 
+  vector<long> dims; 
   fs.dims.getnumericarray(dims);
 
-  SCIRun::Point PointO(0.0,0.0,0.0);
-  SCIRun::Point PointP(static_cast<double>(dims[0]),0.0,0.0);
-  meshH = new SCIRun::ScanlineMesh(static_cast<unsigned int>(dims[0]),PointO,PointP);
+  Point PointO(0.0,0.0,0.0);
+  Point PointP(static_cast<double>(dims[0]),0.0,0.0);
+  meshH = new ScanlineMesh(static_cast<unsigned int>(dims[0]),PointO,PointP);
   if (fs.transform.isdense())
   {
-    SCIRun::Transform T;
+    Transform T;
     double trans[16];
     fs.transform.getnumericarray(trans,16);
     T.set_trans(trans);
@@ -2737,17 +2741,17 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh> &me
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<ImageMesh> &meshH,fieldstruct &fs)
 {
-  std::vector<long> dims; 
+  vector<long> dims; 
   fs.dims.getnumericarray(dims);
 
-  SCIRun::Point PointO(0.0,0.0,0.0);
-  SCIRun::Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),0.0);
-  meshH = new SCIRun::ImageMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),PointO,PointP);
+  Point PointO(0.0,0.0,0.0);
+  Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),0.0);
+  meshH = new ImageMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),PointO,PointP);
   if (fs.transform.isdense())
   {
-    SCIRun::Transform T;
+    Transform T;
     double trans[16];
     fs.transform.getnumericarray(trans,16);
     T.set_trans(trans);
@@ -2756,17 +2760,17 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> &meshH
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<LatVolMesh> &meshH,fieldstruct &fs)
 {
-  std::vector<long> dims; 
+  vector<long> dims; 
   fs.dims.getnumericarray(dims);
 
-  SCIRun::Point PointO(0.0,0.0,0.0);
-  SCIRun::Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),static_cast<double>(dims[2]));
-  meshH = new SCIRun::LatVolMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),static_cast<unsigned int>(dims[2]),PointO,PointP);
+  Point PointO(0.0,0.0,0.0);
+  Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),static_cast<double>(dims[2]));
+  meshH = new LatVolMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),static_cast<unsigned int>(dims[2]),PointO,PointP);
   if (fs.transform.isdense())
   {
-    SCIRun::Transform T;
+    Transform T;
     double trans[16];
     fs.transform.getnumericarray(trans,16);
     T.set_trans(trans);
@@ -2775,10 +2779,10 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> &mesh
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<StructCurveMesh> &meshH,fieldstruct &fs)
 {
-  std::vector<long> dims;
-  std::vector<unsigned int> mdims;
+  vector<long> dims;
+  vector<unsigned int> mdims;
   long numdim = fs.x.getnumdims();
   dims = fs.x.getdims();
 	
@@ -2792,12 +2796,12 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> 
     mdims[0] = fs.x.getm();
   }
 
-  meshH = new SCIRun::StructCurveMesh;
+  meshH = new StructCurveMesh;
   long numnodes =fs.x.getnumelements();
 	
-  std::vector<double> X;
-  std::vector<double> Y;
-  std::vector<double> Z;
+  vector<double> X;
+  vector<double> Y;
+  vector<double> Z;
   fs.x.getnumericarray(X);
   fs.y.getnumericarray(Y);
   fs.z.getnumericarray(Z);
@@ -2806,27 +2810,27 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> 
   long p;
   for (p = 0; p < numnodes; p++)
   {
-    meshH->set_point(SCIRun::Point(X[p],Y[p],Z[p]),static_cast<SCIRun::StructCurveMesh::Node::index_type>(p));
+    meshH->set_point(Point(X[p],Y[p],Z[p]),static_cast<StructCurveMesh::Node::index_type>(p));
   }
 					
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<StructQuadSurfMesh> &meshH,fieldstruct &fs)
 {
-  std::vector<long> dims;
-  std::vector<unsigned int> mdims;
+  vector<long> dims;
+  vector<unsigned int> mdims;
   long numdim = fs.x.getnumdims();
   dims = fs.x.getdims();
 	
   mdims.resize(numdim);	
   for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
-  meshH = new SCIRun::StructQuadSurfMesh;
+  meshH = new StructQuadSurfMesh;
  	
-  std::vector<double> X;
-  std::vector<double> Y;
-  std::vector<double> Z;
+  vector<double> X;
+  vector<double> Y;
+  vector<double> Z;
   fs.x.getnumericarray(X);
   fs.y.getnumericarray(Y);
   fs.z.getnumericarray(Z);
@@ -2838,28 +2842,28 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMes
   for (r = 0; r < mdims[1]; r++)
     for (p = 0; p < mdims[0]; p++)
     {
-      meshH->set_point(SCIRun::Point(X[q],Y[q],Z[q]),SCIRun::StructQuadSurfMesh::Node::index_type(static_cast<SCIRun::ImageMesh *>(meshH.get_rep()),p,r));
+      meshH->set_point(Point(X[q],Y[q],Z[q]),StructQuadSurfMesh::Node::index_type(static_cast<ImageMesh *>(meshH.get_rep()),p,r));
       q++;
     }
 					
   return(true);
 }
 
-bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> &meshH,fieldstruct &fs)
+bool matlabconverter::createmesh(LockingHandle<StructHexVolMesh> &meshH,fieldstruct &fs)
 {
-  std::vector<long> dims;
-  std::vector<unsigned int> mdims;
+  vector<long> dims;
+  vector<unsigned int> mdims;
   long numdim = fs.x.getnumdims();
   dims = fs.x.getdims();
 	
   mdims.resize(numdim);	
   for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
-  meshH = new SCIRun::StructHexVolMesh;
+  meshH = new StructHexVolMesh;
 	
-  std::vector<double> X;
-  std::vector<double> Y;
-  std::vector<double> Z;
+  vector<double> X;
+  vector<double> Y;
+  vector<double> Z;
   fs.x.getnumericarray(X);
   fs.y.getnumericarray(Y);
   fs.z.getnumericarray(Z);
@@ -2872,7 +2876,7 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh>
     for (r = 0; r < mdims[1]; r++)
       for (p = 0; p < mdims[0]; p++)
       {
-	meshH->set_point(SCIRun::Point(X[q],Y[q],Z[q]),SCIRun::StructHexVolMesh::Node::index_type(static_cast<SCIRun::LatVolMesh *>(meshH.get_rep()),p,r,s));
+	meshH->set_point(Point(X[q],Y[q],Z[q]),StructHexVolMesh::Node::index_type(static_cast<LatVolMesh *>(meshH.get_rep()),p,r,s));
 	q++;
       }
 	
@@ -2883,22 +2887,22 @@ bool matlabconverter::createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh>
 // This function generates a structure, so SCIRun can generate a temporaly file
 // containing a call to the dynamic call, which can subsequently be compiled
 // See the on-the-fly-libs directory for the files it generated
-SCIRun::CompileInfoHandle
-MatlabFieldReaderAlgo::get_compile_info(const SCIRun::TypeDescription *fieldTD)
+CompileInfoHandle
+MatlabFieldReaderAlgo::get_compile_info(const TypeDescription *fieldTD)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  static const std::string template_class_name("MatlabFieldReaderAlgoT");
-  static const std::string base_class_name("MatlabFieldReaderAlgo");
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("MatlabFieldReaderAlgoT");
+  static const string base_class_name("MatlabFieldReaderAlgo");
   
   // Everything we did is in the MatlabIO namespace so we need to add this
   // Otherwise the dynamically code generator will not generate a "using namespace ...."
-  static const std::string name_space_name("MatlabIO");
+  static const string name_space_name("MatlabIO");
 
   // Supply the dynamic compiler with enough information to build a file in the
   // on-the-fly libs which will have the templated function in there
-  SCIRun::CompileInfoHandle cinfo = 
-    scinew SCIRun::CompileInfo(template_class_name + "." +
+  CompileInfoHandle cinfo = 
+    scinew CompileInfo(template_class_name + "." +
 			       fieldTD->get_filename() + ".",
 			       base_class_name, 
 			       template_class_name, 
@@ -2945,7 +2949,7 @@ MatlabFieldReaderAlgo::get_compile_info(const SCIRun::TypeDescription *fieldTD)
 // the on-the-fly-libs. The current compromise should minimise disk space usage and have
 // fast dynamic compiles at the cost at a longer compilation time when SCIRun is first built.
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<TetVolMesh> meshH,matlabarray mlarray)
 {
   mladdnodesfield(meshH,mlarray);
   mladdcellsfield(meshH,mlarray,4);
@@ -2953,7 +2957,7 @@ bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh> meshH,
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<HexVolMesh> meshH,matlabarray mlarray)
 {
   mladdnodesfield(meshH,mlarray);
   mladdcellsfield(meshH,mlarray,8);
@@ -2961,7 +2965,7 @@ bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh> meshH,
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<PrismVolMesh> meshH,matlabarray mlarray)
 {
   mladdnodesfield(meshH,mlarray);
   mladdcellsfield(meshH,mlarray,6);
@@ -2969,7 +2973,7 @@ bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh> mesh
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<QuadSurfMesh> meshH,matlabarray mlarray)
 {
   mladdnodesfield(meshH,mlarray);
   mladdfacesfield(meshH,mlarray,4);
@@ -2977,7 +2981,7 @@ bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh> mesh
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<TriSurfMesh> meshH,matlabarray mlarray)
 {
   mladdnodesfield(meshH,mlarray);
   mladdfacesfield(meshH,mlarray,3);
@@ -2985,7 +2989,7 @@ bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh> meshH
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<CurveMesh> meshH,matlabarray mlarray)
 {
   mladdnodesfield(meshH,mlarray);
   mladdedgesfield(meshH,mlarray,2);
@@ -2993,47 +2997,47 @@ bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> meshH,m
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<PointCloudMesh> meshH,matlabarray mlarray)
 {
   mladdnodesfield(meshH,mlarray);
   mladdmeshclass("pointcloud",mlarray);
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<StructHexVolMesh> meshH,matlabarray mlarray)
 {
   mladdxyznodes(meshH,mlarray);
   mladdmeshclass("structhexvol",mlarray);
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<StructQuadSurfMesh> meshH,matlabarray mlarray)
 {
   mladdxyznodes(meshH,mlarray);
   mladdmeshclass("structquadsurf",mlarray);
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<StructCurveMesh> meshH,matlabarray mlarray)
 {
   mladdxyznodes(meshH,mlarray);
   mladdmeshclass("structcurve",mlarray);
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<ScanlineMesh> meshH,matlabarray mlarray)
 {
   mladdmeshclass("scanline",mlarray);
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<ImageMesh> meshH,matlabarray mlarray)
 {
   mladdmeshclass("image",mlarray);
   return(true);
 }
 
-bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> meshH,matlabarray mlarray)
+bool matlabconverter::mladdmesh(LockingHandle<LatVolMesh> meshH,matlabarray mlarray)
 {
   mladdmeshclass("latvol",mlarray);
   return(true);
@@ -3046,7 +3050,7 @@ bool matlabconverter::mladdmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> meshH,
 // For convienence every mesh tyoe is listed as a string array in the final matlabarray.
 // Hence the user can check whether the expected mesh class was used
 // The following function just attaches this information onto the mlarray
-void matlabconverter::mladdmeshclass(std::string meshclass,matlabarray mlarray)
+void matlabconverter::mladdmeshclass(string meshclass,matlabarray mlarray)
 {
   matlabarray meshcls;
   meshcls.createstringarray(meshclass);
@@ -3056,26 +3060,26 @@ void matlabconverter::mladdmeshclass(std::string meshclass,matlabarray mlarray)
 // A couple of specialised functions for structured grids
 // They use different iterators etc. hence they need a separate treatment
 
-void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray)
+void matlabconverter::mladdxyznodes(LockingHandle<StructCurveMesh> meshH,matlabarray mlarray)
 {
   matlabarray x,y,z;
 	
-  meshH->synchronize(SCIRun::Mesh::NODES_E);
-  SCIRun::StructCurveMesh::Node::size_type size;
+  meshH->synchronize(Mesh::NODES_E);
+  StructCurveMesh::Node::size_type size;
   meshH->size(size);
   unsigned int numnodes = static_cast<unsigned int>(size);
   x.createdensearray(numnodes,1,matlabarray::miDOUBLE);
   y.createdensearray(numnodes,1,matlabarray::miDOUBLE);
   z.createdensearray(numnodes,1,matlabarray::miDOUBLE);
 	
-  std::vector<double> xbuffer(numnodes);
-  std::vector<double> ybuffer(numnodes);
-  std::vector<double> zbuffer(numnodes);
+  vector<double> xbuffer(numnodes);
+  vector<double> ybuffer(numnodes);
+  vector<double> zbuffer(numnodes);
 	
-  SCIRun::Point P;
+  Point P;
   for (unsigned int p = 0; p < numnodes ; p++)
   {
-    meshH->get_point(P,SCIRun::StructCurveMesh::Node::index_type(p));
+    meshH->get_point(P,StructCurveMesh::Node::index_type(p));
     xbuffer[p] = P.x();
     ybuffer[p] = P.y();
     zbuffer[p] = P.z();
@@ -3090,11 +3094,11 @@ void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructCurveMes
   mlarray.setfield(0,"z",z);
 }
 
-void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray)
+void matlabconverter::mladdxyznodes(LockingHandle<StructQuadSurfMesh> meshH,matlabarray mlarray)
 {
   matlabarray x,y,z;
 	
-  meshH->synchronize(SCIRun::Mesh::NODES_E);
+  meshH->synchronize(Mesh::NODES_E);
   // Get the dimensions of the mesh
   unsigned int dim1 = static_cast<unsigned int>(meshH->get_ni());
   unsigned int dim2 = static_cast<unsigned int>(meshH->get_nj());
@@ -3109,16 +3113,16 @@ void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructQuadSurf
   // We use temp buffers to store all the values before committing them to the matlab
   // classes, this takes up more memory, but should decrease the number of actual function
   // calls, which should be boost performance 
-  std::vector<double> xbuffer(numnodes);
-  std::vector<double> ybuffer(numnodes);
-  std::vector<double> zbuffer(numnodes);
+  vector<double> xbuffer(numnodes);
+  vector<double> ybuffer(numnodes);
+  vector<double> zbuffer(numnodes);
 	
-  SCIRun::Point P;
+  Point P;
   unsigned int r = 0;
   for (unsigned int p = 0; p < dim1 ; p++)
     for (unsigned int q = 0; q < dim2 ; q++)
     {   
-      meshH->get_point(P,SCIRun::StructQuadSurfMesh::Node::index_type(static_cast<SCIRun::ImageMesh *>(meshH.get_rep()),p,q));
+      meshH->get_point(P,StructQuadSurfMesh::Node::index_type(static_cast<ImageMesh *>(meshH.get_rep()),p,q));
       xbuffer[r] = P.x();
       ybuffer[r] = P.y();
       zbuffer[r] = P.z();
@@ -3137,11 +3141,11 @@ void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructQuadSurf
 
 // StructhexVolMesh is to specialized to fit in any template
 
-void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> meshH,matlabarray mlarray)
+void matlabconverter::mladdxyznodes(LockingHandle<StructHexVolMesh> meshH,matlabarray mlarray)
 {
   matlabarray x,y,z;
 	
-  meshH->synchronize(SCIRun::Mesh::NODES_E);
+  meshH->synchronize(Mesh::NODES_E);
   // get the dimensions of the mesh
   unsigned int dim1 = static_cast<unsigned int>(meshH->get_ni());
   unsigned int dim2 = static_cast<unsigned int>(meshH->get_nj());
@@ -3151,7 +3155,7 @@ void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructHexVolMe
 	
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
-  std::vector<long> dims(3); dims[0] = dim3; dims[1] = dim2; dims[2] = dim1;
+  vector<long> dims(3); dims[0] = dim3; dims[1] = dim2; dims[2] = dim1;
   x.createdensearray(dims,matlabarray::miDOUBLE);
   y.createdensearray(dims,matlabarray::miDOUBLE);
   z.createdensearray(dims,matlabarray::miDOUBLE);
@@ -3159,17 +3163,17 @@ void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructHexVolMe
   // We use temp buffers to store all the values before committing them to the matlab
   // classes, this takes up more memory, but should decrease the number of actual function
   // calls, which should be boost performance 
-  std::vector<double> xbuffer(numnodes);
-  std::vector<double> ybuffer(numnodes);
-  std::vector<double> zbuffer(numnodes);
+  vector<double> xbuffer(numnodes);
+  vector<double> ybuffer(numnodes);
+  vector<double> zbuffer(numnodes);
 	
-  SCIRun::Point P;
+  Point P;
   unsigned int r = 0;
   for (unsigned int p = 0; p < dim1 ; p++)
     for (unsigned int q = 0; q < dim2 ; q++)
       for (unsigned int s = 0; s < dim3 ; s++)
       {   
-	meshH->get_point(P,SCIRun::StructHexVolMesh::Node::index_type(static_cast<SCIRun::LatVolMesh *>(meshH.get_rep()),p,q,s));
+	meshH->get_point(P,StructHexVolMesh::Node::index_type(static_cast<LatVolMesh *>(meshH.get_rep()),p,q,s));
 	xbuffer[r] = P.x();
 	ybuffer[r] = P.y();
 	zbuffer[r] = P.z();
@@ -3191,7 +3195,7 @@ void matlabconverter::mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructHexVolMe
 // SCIRun special classes. Hence a overloaded version of the mladdfield function is
 // given for both these objects
 
-bool matlabconverter::mladdfield(std::vector<SCIRun::Vector> &fdata,matlabarray mlarray)
+bool matlabconverter::mladdfield(vector<Vector> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
@@ -3201,7 +3205,7 @@ bool matlabconverter::mladdfield(std::vector<SCIRun::Vector> &fdata,matlabarray 
 		
   unsigned int size = fdata.size();
   unsigned int p,q;
-  std::vector<double> data(size*3);
+  vector<double> data(size*3);
   for (p = 0, q = 0; p < size; p++) 
   { 
     data[q++] = fdata[p][0];
@@ -3214,7 +3218,7 @@ bool matlabconverter::mladdfield(std::vector<SCIRun::Vector> &fdata,matlabarray 
   return(true);
 }
 
-bool matlabconverter::mladdfield(std::vector<SCIRun::Tensor> &fdata,matlabarray mlarray)
+bool matlabconverter::mladdfield(vector<Tensor> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
@@ -3224,7 +3228,7 @@ bool matlabconverter::mladdfield(std::vector<SCIRun::Tensor> &fdata,matlabarray 
 	
   unsigned int size = fdata.size();
   unsigned int p,q;
-  std::vector<double> data(size*9);
+  vector<double> data(size*9);
   for (p = 0, q = 0; p < size; p++) 
   {   // write an uncompressed tensor by default
     data[q++] = fdata[p].mat_[0][0];
@@ -3250,14 +3254,14 @@ bool matlabconverter::mladdfield(std::vector<SCIRun::Tensor> &fdata,matlabarray 
 // given for both FData2d and FData3d. The Vectors SCIRun uses are not STL objects
 // and are not recognized by any of the matlabclasses
 
-bool mladdfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray)
+bool mladdfield(FData2d<Vector> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
 
   fieldtype.createstringarray("vector");
 	
-  std::vector<long> dims(2);
+  vector<long> dims(2);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
   dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
@@ -3266,9 +3270,9 @@ bool mladdfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray)
   unsigned int p,q,r;
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
-  SCIRun::FData2d<SCIRun::Vector>::value_type **dataptr = fdata.get_dataptr();
+  FData2d<Vector>::value_type **dataptr = fdata.get_dataptr();
 	
-  std::vector<double> data(dim1*dim2*3);
+  vector<double> data(dim1*dim2*3);
   for (p=0,q=0;q<dim1;q++)
     for (r=0;r<dim2;r++)
     {
@@ -3283,14 +3287,14 @@ bool mladdfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray)
   return(true);
 }	
 
-bool mladdfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray)
+bool mladdfield(FData3d<Vector> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
 
   fieldtype.createstringarray("vector");
 	
-  std::vector<long> dims(3);
+  vector<long> dims(3);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
   dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
@@ -3302,9 +3306,9 @@ bool mladdfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray)
   unsigned int dim2 = fdata.dim2();
   unsigned int dim3 = fdata.dim3();
 
-  SCIRun::FData3d<SCIRun::Vector>::value_type ***dataptr = fdata.get_dataptr();
+  FData3d<Vector>::value_type ***dataptr = fdata.get_dataptr();
 
-  std::vector<double> data(dim1*dim2*dim3*3);
+  vector<double> data(dim1*dim2*dim3*3);
   for (p=0,q=0;q<dim1;q++)
     for (r=0;r<dim2;r++)
       for (s=0;s<dim3;s++)
@@ -3326,14 +3330,14 @@ bool mladdfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray)
 // SCIRun special classes. Hence a overloaded version of the mladdfield function is
 // given for both FData2d and FData3d
 
-bool mladdfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray)
+bool mladdfield(FData2d<Tensor> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
 
   fieldtype.createstringarray("tensor");
 	
-  std::vector<long> dims(2);
+  vector<long> dims(2);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
   dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
@@ -3343,9 +3347,9 @@ bool mladdfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray)
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
 
-  SCIRun::FData2d<SCIRun::Tensor>::value_type **dataptr = fdata.get_dataptr();
+  FData2d<Tensor>::value_type **dataptr = fdata.get_dataptr();
 
-  std::vector<double> data(dim1*dim2*9);
+  vector<double> data(dim1*dim2*9);
   for (p=0,q=0;q<dim1;q++)
     for (r=0;r<dim2;r++)
     {
@@ -3366,14 +3370,14 @@ bool mladdfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray)
   return(true);
 }
 
-bool mladdfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray)
+bool mladdfield(FData3d<Tensor> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
 
   fieldtype.createstringarray("tensor");
 	
-  std::vector<long> dims(3);
+  vector<long> dims(3);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering	
   dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
@@ -3384,9 +3388,9 @@ bool mladdfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray)
   unsigned int dim2 = fdata.dim2();
   unsigned int dim3 = fdata.dim3();
 
-  SCIRun::FData3d<SCIRun::Tensor>::value_type ***dataptr = fdata.get_dataptr();
+  FData3d<Tensor>::value_type ***dataptr = fdata.get_dataptr();
 	
-  std::vector<double> data(dim1*dim2*dim3*9);
+  vector<double> data(dim1*dim2*dim3*9);
   for (p=0,q=0;q<dim1;q++)
     for (r=0;r<dim2;r++)
       for (s=0;s<dim3;s++)
@@ -3412,23 +3416,23 @@ bool mladdfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray)
 // This function generates a structure, so SCIRun can generate a temporaly file
 // containing a call to the dynamic call, which can subsequently be compiled
 // See the on-the-fly-libs directory for the files it generated
-SCIRun::CompileInfoHandle
-MatlabFieldWriterAlgo::get_compile_info(const SCIRun::TypeDescription *fieldTD)
+CompileInfoHandle
+MatlabFieldWriterAlgo::get_compile_info(const TypeDescription *fieldTD)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  static const std::string template_class_name("MatlabFieldWriterAlgoT");
-  static const std::string base_class_name("MatlabFieldWriterAlgo");
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("MatlabFieldWriterAlgoT");
+  static const string base_class_name("MatlabFieldWriterAlgo");
   
   // Everything we did is in the MatlabIO namespace so we need to add this
   // Otherwise the dynamically code generator will not generate a "using namespace ...."
-  static const std::string name_space_name("MatlabIO");
+  static const string name_space_name("MatlabIO");
 
   // Supply the dynamic compiler with enough information to build a file in the
   // on-the-fly libs which will have the templated function in there
-  std::string filename = template_class_name + "." + fieldTD->get_filename() + ".";
-  SCIRun::CompileInfo *rval = 
-    scinew SCIRun::CompileInfo(filename,
+  string filename = template_class_name + "." + fieldTD->get_filename() + ".";
+  CompileInfo *rval = 
+    scinew CompileInfo(filename,
 			       base_class_name, 
 			       template_class_name, 
 			       fieldTD->get_name());
@@ -3447,14 +3451,14 @@ MatlabFieldWriterAlgo::get_compile_info(const SCIRun::TypeDescription *fieldTD)
 // functionality gets called to report compilation progress and as well reports
 // errors directly to the user
 
-void matlabconverter::sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray,SCIRun::Module *module)
+void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarray,Module *module)
 {
   // Get the type information of the field for which we have to compile a converter
-  const SCIRun::TypeDescription *fieldTD = scifield->get_type_description();
+  const TypeDescription *fieldTD = scifield->get_type_description();
   // Get all the filenames etc.
-  SCIRun::CompileInfoHandle cinfo = MatlabFieldWriterAlgo::get_compile_info(fieldTD);
+  CompileInfoHandle cinfo = MatlabFieldWriterAlgo::get_compile_info(fieldTD);
   // A placeholder for the dynamic code
-  SCIRun::Handle<MatlabFieldWriterAlgo> algo;
+  Handle<MatlabFieldWriterAlgo> algo;
   // Do the magic, internally algo will now refer to the proper dynamic class, which will be
   // loaded by this function as well
   if (!module->module_dynamic_compile(cinfo, algo)) 
@@ -3504,13 +3508,13 @@ void matlabconverter::sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarra
   // add the properties
   if (scifield != 0)
   {
-    sciPropertyTOmlProperty(static_cast<SCIRun::PropertyManager *>(scifield.get_rep()),mlarray);
+    sciPropertyTOmlProperty(static_cast<PropertyManager *>(scifield.get_rep()),mlarray);
   }
 	
   // Parse the namefield separately
   if (scifield->is_property("name"))
   {
-    std::string name;
+    string name;
     matlabarray namearray;
     scifield->get_property("name",name);
     namearray.createstringarray(name);
@@ -3522,7 +3526,7 @@ void matlabconverter::sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarra
 // Bundle code
 #ifdef HAVE_BUNDLE
 
-long matlabconverter::sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module)
+long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostring, Module *module)
 {
   if (!mlarray.isstruct()) return(0);
   if (mlarray.getnumelements()==0) return(0);
@@ -3530,12 +3534,12 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, std::string &inf
 	
 }
 
-void matlabconverter::mlArrayTOsciBundle(matlabarray &mlmat,CardioWave::BundleHandle &scibundle, SCIRun::Module *module)
+void matlabconverter::mlArrayTOsciBundle(matlabarray &mlmat,CardioWave::BundleHandle &scibundle, Module *module)
 {
 
 }
 
-void matlabconverter::sciBundleTOmlArray(CardioWave::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::Module *module)
+void matlabconverter::sciBundleTOmlArray(CardioWave::BundleHandle &scibundle, matlabarray &mlmat,Module *module)
 {
 
 }
@@ -3545,19 +3549,16 @@ void matlabconverter::sciBundleTOmlArray(CardioWave::BundleHandle &scibundle, ma
 
 // FUNCTIONS FOR RETURNING MESSAGES TO THE USER FOR DEBUGGING PURPOSES
 
-void	matlabconverter::postmsg(SCIRun::Module *ptr,std::string msg)
+void matlabconverter::postmsg(Module *ptr,string msg)
 {
-  if (ptr)
-  {
-    if (postmsg_) ptr->remark(msg);
+  if (ptr) {
+    if (postmsg_)
+      ptr->remark(msg);
   }
 }
 
-void	matlabconverter::setpostmsg(bool val)
+void matlabconverter::setpostmsg(bool val)
 {
   postmsg_ = val;
 }
-
-} // end namespace
-
 
