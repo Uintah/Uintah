@@ -19,14 +19,17 @@
 -->
 
 <filter-gui name="Yarden-DiscreteGaussianImageFilterGui">
-  <parameters>
+
     <param name="variance">
-      <gui>text-entry</gui>
-      <default>10</default>
+      <text-entry>
+        <default>10</default>
+      </text-entry>
     </param>
+
     <param name="maximum_error">
-      <gui>text-entry</gui>
-      <default>0.001</default>
+      <text-entry>
+        <default>0.001</default>
+      </text-entry>
     </param>
-  </parameters>
+
 </filter-gui>

@@ -19,53 +19,65 @@
 -->
 
 <filter-gui name="CannySegmentationLevelSetImageFilterGui">
-  <parameters>
     <param name="iterations">
-      <gui>text-entry</gui>
-      <default>10</default>
+      <text-entry>
+         <default>10</default>
+      </text-entry>
     </param>
     <param name="reverse_expansion_direction">
-      <gui>checkbutton</gui>
-      <default>1</default>
+      <checkbutton>
+        <default>1</default>
+      </checkbutton>
     </param>
     <param name="max_rms_change">
-      <gui>text-entry</gui>
-      <default>0.001</default>
+      <text-entry>
+         <default>0.001</default>
+      </text-entry>
     </param>
     <param name="threshold">
-      <gui>text-entry</gui>
-      <default>0.001</default>
+      <text-entry>
+        <default>0.001</default>
+      </text-entry>
     </param>
     <param name="variance">
-      <gui>scrollbar</gui>
-      <min>0</min>
-      <max>100</max>
-      <default>10</default>
+      <scrollbar>
+        <min>0</min>
+        <max>100</max>
+        <default>10</default>
+      </scrollbar>
     </param>
     <param name="propagation_scaling">
-      <gui>text-entry</gui>
-      <default>1.0</default>
+      <text-entry>
+        <default>1.0</default>
+      </text-entry>
     </param>
     <param name="advection_scaling">
-      <gui>text-entry</gui>
-      <default>1.0</default>
+      <text-entry>
+        <default>1.0</default>
+      </text-entry>
     </param>
     <param name="curvature_scaling">
-      <gui>radiobutton</gui>
-      <values>
-      <val>0.0</val>
-      <val>0.5</val>
-      <val>1.0</val>
-      </values>
-      <default>1.0</default>
+      <radiobutton>
+        <button>
+          <label>Zero</label>
+          <value>0.0</value>
+        </button>
+        <button>
+          <label>Point Five</label>
+          <value>0.5</value>
+        </button>
+        <button>
+          <label>One</label>
+          <value>1.0</value>
+        </button>
+        <default>1.0</default>
+      </radiobutton>
     </param>
     <param name="isovalue">
-      <gui>scrollbar</gui>
-      <min>0</min>
-      <max>255</max>
-      <default>0.5</default>
+      <scrollbar>
+        <min>0</min>
+        <max>255</max>
+        <default>0.5</default>
+      </scrollbar>
     </param>
-  </parameters>
-
-
 </filter-gui>

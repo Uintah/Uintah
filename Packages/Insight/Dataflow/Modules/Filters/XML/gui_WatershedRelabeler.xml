@@ -19,11 +19,11 @@
 -->
 
 <filter-gui name="WatershedRelabelerGui_Darby">
-  <parameters>
+
     <param name="flood_level">
-      <gui>text-entry</gui>
-      <default>0.25</default>
+      <text-entry>
+        <default>0.25</default>
+      </text-entry>
     </param>
-  </parameters>
 
 </filter-gui>

@@ -19,8 +19,17 @@
 -->
 
 <filter-gui name="GradientRecursiveGaussianImageFilterGui">
-  <parameters>
+
     <param name="normalize_across_scale">
-      <gui>checkbutton</gui>
-      <default>0</default>
+      <checkbutton>
+        <default>0</default>
+      </checkbutton>
     </param>
+
+    <param name="sigma">
+      <text-entry>
+        <default>0</default>
+      </text-entry>
+    </param>
+
+</filter-gui>

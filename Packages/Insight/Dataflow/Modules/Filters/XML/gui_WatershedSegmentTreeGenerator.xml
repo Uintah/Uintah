@@ -19,15 +19,16 @@
 -->
 
 <filter-gui name="WatershedSegmenterTreeGeneratorGui_Darby">
-  <parameters>
+
     <param name="flood_level">
-      <gui>text-entry</gui>
-      <default>0.25</default>
+      <text-entry>
+        <default>0.25</default>
+      </text-entry>
     </param>
     <param name="merge">
-      <gui>checkbutton</gui>
-      <default>0</default>
+      <checkbutton>
+        <default>0</default>
+      </checkbutton>
     </param>
-  </parameters>
 
 </filter-gui>

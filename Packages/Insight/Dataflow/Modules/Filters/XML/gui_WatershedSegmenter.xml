@@ -19,12 +19,11 @@
 -->
 
 <filter-gui name="WatershedSegmenterGui_Darby">
-  <parameters>
-    <param name="threshold">
-      <gui>text-entry</gui>
-      <default>0.25</default>
-    </param>
 
-  </parameters>
+    <param name="threshold">
+      <text-entry>
+        <default>0.25</default>
+      </text-entry>
+    </param>
 
 </filter-gui>

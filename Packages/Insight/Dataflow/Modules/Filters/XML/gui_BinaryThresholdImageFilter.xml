@@ -19,27 +19,29 @@
 -->
 
 <filter-gui name="BinaryThresholdImageFilterGui">
-  <parameters>
+
     <param name="lower_threshold">
-      <gui>text-entry</gui>
-      <default>0.0</default>
+      <text-entry>
+        <default>5.0</default>
+      </text-entry>
     </param>
 
     <param name="upper_threshold">
-      <gui>text-entry</gui>
-      <default>1.0</default>
+      <text-entry>
+        <default>1.0</default>
+      </text-entry>
     </param>
 
     <param name="inside_value">
-      <gui>text-entry</gui>
-      <default>1</default>
+      <text-entry>
+        <default>1</default>
+      </text-entry>
     </param>
 
     <param name="outside_value">
-      <gui>text-entry</gui>
-      <default>0</default>
+      <text-entry>
+        <default>0</default>
+      </text-entry>
     </param>
 
-
-  </parameters>
 </filter-gui>
