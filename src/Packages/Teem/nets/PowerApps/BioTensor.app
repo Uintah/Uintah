@@ -1973,7 +1973,7 @@ class BioTensorApp {
 	set vis_activated 0
 
 	set c_procedure_tab "Load Data"
-	set c_data_tab "Nrrd"
+	set c_data_tab "Generic"
 	set c_left_tab "Vis Options"
 	set c_vis_tab "Variance"
 
@@ -2543,7 +2543,7 @@ class BioTensorApp {
 	    
 	    
             ### Nrrd
-            set page [$step_tab.tnb add -label "Nrrd" -command {app configure_readers Nrrd}]
+            set page [$step_tab.tnb add -label "Generic" -command {app configure_readers Nrrd}]
 
 	    #Tooltip $page $tips(NrrdTab)
 
@@ -2553,7 +2553,7 @@ class BioTensorApp {
             label $page.dwil -text "DWI Volume:"
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
 
-            iwidgets::entryfield $page.file -labeltext "Nrrd File:" -labelpos w \
+            iwidgets::entryfield $page.file -labeltext ".vol/.vff/.nrrd file:" -labelpos w \
                 -textvariable $mods(NrrdReader1)-filename \
                 -command "$this execute_Data"
 	    Tooltip $page.file $tips(NrrdFile1)
@@ -2571,7 +2571,7 @@ class BioTensorApp {
             label $page.t2l -text "T2 Reference Image:"
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
 
-            iwidgets::entryfield $page.file2 -labeltext "Nrrd File:" -labelpos w \
+            iwidgets::entryfield $page.file2 -labeltext ".vol/.vff/.nrrd file:" -labelpos w \
                 -textvariable $mods(NrrdReader-T2)-filename 
 	    Tooltip $page.file2 $tips(NrrdFile1)
             pack $page.file2 -side top -padx 3 -pady 3 -anchor n \
@@ -2647,7 +2647,7 @@ class BioTensorApp {
             
 
 	    # Set default view to be Nrrd
-            $step_tab.tnb view "Nrrd"
+            $step_tab.tnb view "Generic"
 	    
 	    
 	    # Execute and Next buttons
@@ -3848,6 +3848,9 @@ class BioTensorApp {
 	$proc_tab1 view $c_procedure_tab
 	$proc_tab2 view $c_procedure_tab
 
+	if {$c_data_tab == "Nrrd"} {
+	    set c_data_tab "Generic"
+	}
 	$data_tab1 view $c_data_tab
 	$data_tab2 view $c_data_tab
 
@@ -4858,7 +4861,7 @@ class BioTensorApp {
 	global $mods(ChooseNrrd-ToProcess)-port-index
         global data_mode
 
-	if {$which == "Nrrd"} {
+	if {$which == "Generic"} {
 	    set $mods(ChooseNrrd1)-port-index 0
 	    set $mods(ChooseNrrd-T2)-port-index 0
 	    set last_B0_port 0	    
@@ -4881,9 +4884,9 @@ class BioTensorApp {
 	    }
 
 	    if {$initialized != 0} {
-		$data_tab1 view "Nrrd"
-		$data_tab2 view "Nrrd"
-		set c_data_tab "Nrrd"
+		$data_tab1 view "Generic"
+		$data_tab2 view "Generic"
+		set c_data_tab "Generic"
 	    }
         } elseif {$which == "Dicom"} {
 	    set $mods(ChooseNrrd1)-port-index 1
@@ -6128,7 +6131,7 @@ class BioTensorApp {
 	    set plane_type "Fractional Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    disableModule $mods(ChooseColorMap-Planes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 0
 	    enable_planes_colormaps

@@ -222,12 +222,19 @@ NrrdSetupTexture::execute()
   }
 
   bool valuesonly = valuesonly_.get();
-  if (valuesonly == false && !ShaderProgramARB::shaders_supported())
+  bool compute_gradmag = true;
+  if (!ShaderProgramARB::shaders_supported())
   {
-    warning("No shader support on this machine.  No normals generated.");
-    valuesonly = true;
+    remark("No shader support on this machine.");
+    remark(" No gradient magnitude generated.");
+    compute_gradmag = false;
+    if (valuesonly == false)
+    {
+      warning(" No normals generated.");
+      valuesonly = true;
+    }
   }
-
+      
   if (last_generation_ != nin_handle->generation)
   {
     // Set default values for min,max
@@ -244,7 +251,6 @@ NrrdSetupTexture::execute()
   const double minf = useinputmin_.get()?realmin_.get():minf_.get();
   const double maxf = useinputmax_.get()?realmax_.get():maxf_.get();
   
-  bool compute_gradmag = true;
   if (last_generation_ == nin_handle->generation &&
       last_minf_ == minf &&
       last_maxf_ == maxf &&
@@ -354,11 +360,39 @@ NrrdSetupTexture::execute()
   } 
   else
   {
-    // Reconstruct the axis aligned transform.
-    const Point nmin(nin->axis[0].min, nin->axis[1].min, nin->axis[2].min);
-    const Point nmax(nin->axis[0].max, nin->axis[1].max, nin->axis[2].max);
-    transform.pre_scale(nmax - nmin);
-    transform.pre_translate(nmin.asVector());
+    transform.load_identity();
+    if (nin->axis[0].min == AIR_NAN || nin->axis[0].max == AIR_NAN ||
+        nin->axis[1].min == AIR_NAN || nin->axis[1].max == AIR_NAN ||
+        nin->axis[2].min == AIR_NAN || nin->axis[2].max == AIR_NAN)
+    {
+      if (nin->axis[0].spacing == AIR_NAN ||
+          nin->axis[1].spacing == AIR_NAN ||
+          nin->axis[2].spacing == AIR_NAN)
+      {
+        warning("No spacing available, using unit spacing.");
+        remark("Use UnuAxisInfo or similar to change spacing if desired.");
+
+        const Vector scale(nin->axis[0].size - 1.0,
+                           nin->axis[1].size - 1.0,
+                           nin->axis[2].size - 1.0);
+        transform.pre_scale(scale);
+      }
+      else
+      {
+        const Vector scale((nin->axis[0].size - 1.0) * nin->axis[0].spacing,
+                           (nin->axis[1].size - 1.0) * nin->axis[1].spacing,
+                           (nin->axis[2].size - 1.0) * nin->axis[2].spacing);
+        transform.pre_scale(scale);
+      }
+    }
+    else
+    {
+      // Reconstruct the axis aligned transform.
+      const Point nmin(nin->axis[0].min, nin->axis[1].min, nin->axis[2].min);
+      const Point nmax(nin->axis[0].max, nin->axis[1].max, nin->axis[2].max);
+      transform.pre_scale(nmax - nmin);
+      transform.pre_translate(nmin.asVector());
+    }
   }
 
   // Add the matrix size into the canonical transform.

@@ -122,8 +122,8 @@ void
   NrrdRange *range = 0;
 
   int rescale = rescale_.get();
-  if (!( airExists_d(lut->axis[lut->dim - 1].min) && 
-	 airExists_d(lut->axis[lut->dim - 1].max) )) {
+  if (!( airExists(lut->axis[lut->dim - 1].min) && 
+	 airExists(lut->axis[lut->dim - 1].max) )) {
     rescale = AIR_TRUE;
   }
 

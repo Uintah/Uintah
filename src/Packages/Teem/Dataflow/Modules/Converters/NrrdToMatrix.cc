@@ -349,7 +349,7 @@ NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH) {
   DenseMatrix* matrix = scinew DenseMatrix(rows,cols);
   
   PTYPE *val = (PTYPE*)dataH->nrrd->data;
-  double *data = matrix->getData();
+  double *data = matrix->get_data_pointer();
 
   for(int r=0; r<rows; r++) {
     for(int c=0; c<cols; c++) {
