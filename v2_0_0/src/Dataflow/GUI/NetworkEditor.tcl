@@ -1074,7 +1074,7 @@ proc licenseDialog { {firsttime 0} } {
     }
     raise .license
     grab .license
-    tkwait window .license
+    if { $firsttime } { tkwait window .license }
     return $licenseResult
 }
 
