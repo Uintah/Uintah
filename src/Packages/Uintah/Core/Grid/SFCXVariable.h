@@ -5,8 +5,10 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariableBase.h>
 #include <Packages/Uintah/Core/Grid/constGridVariable.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>
+#include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
@@ -272,9 +274,15 @@ WARNING
       }
 
     };
+
+    // Use to apply symmetry boundary conditions.  On the
+    // indicated face, replace the component of the vector
+    // normal to the face with 0.0
+    void fillFaceNormal(Patch::FaceType face, 
+			IntVector offset = IntVector(0,0,0));
      
     virtual void emitNormal(ostream& out, DOM_Element /*varnode*/)
-    {
+      {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
 	Array3<T>::write(out);
@@ -344,6 +352,21 @@ WARNING
     return td;
   }
    
+
+  // Use to apply symmetry boundary conditions.  On the
+  // indicated face, replace the component of the vector
+  // normal to the face with 0.0
+  template<>
+  void
+  SFCXVariable<Vector>::fillFaceNormal(Patch::FaceType face, 
+				       IntVector offset);
+  template<class T>
+  void
+  SFCXVariable<T>::fillFaceNormal(Patch::FaceType, IntVector)
+  {
+    return;
+  }
+
   template<class T>
   Variable*
   SFCXVariable<T>::maker()
