@@ -118,19 +118,15 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("TableType")) {
     // d_tableType must be class variable because of inline function
     db->require("TableType", d_tableType);
-    if (d_tableType == "static") {
-      cerr << "Ignore static table type; mean value table is dynamic" << endl;
-      cerr << "Dynamic table will be computed" << endl;
+    if (d_tableType != "dynamic") {
+      cerr << "MeanMixing TABLE TYPE is dynamic" << endl;
       d_tableType = "dynamic";
-    }
-    else if (d_tableType != "dynamic") {
-      throw InvalidValue("Table type not supported" + d_tableType);
     }
   }
   else {
     d_tableType = "dynamic";
     // Default tableType is dynamic
-    cout << "TABLE TYPE is dynamic" << endl;
+    cout << "MeanMixing TABLE TYPE is dynamic" << endl;
   }
   // Call reaction model constructor, get total number of dependent  vars;
   // can't call it sooner because d_numMixingVars and mixTableType are needed
@@ -144,12 +140,14 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
     else if (tableStorage == "2DVector")
       d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
     else {
-      throw InvalidValue("Table storage not supported" + tableStorage);
+      d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
+      cerr << "MeanMixing TABLE STORAGE is vectorTable" << endl;
+      //throw InvalidValue("Table storage not supported" + tableStorage);
     }
   }
   else {
     d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
-    cout << "TABLE STORAGE is vectorTable" << endl;
+    cout << "MeanMixing TABLE STORAGE is vectorTable" << endl;
   }
   // tableSetup is a function in DynamicTable; it allocates memory for 
   // table functions
@@ -311,7 +309,7 @@ void
 MeanMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
   TAU_PROFILE("lookup", "[Properties::lookup]" , TAU_USER);
   TAU_PROFILE_TIMER(compute, "Compute", "[Mixing::compute]" , TAU_USER);
-  vector<double> vec_stateSpaceVars;
+  //vector<double> vec_stateSpaceVars;
   bool lsoot = d_rxnModel->getSootBool();
 #if 0
   cout << "Mean::tableKeyIndex = " << endl;
@@ -322,27 +320,30 @@ MeanMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
   }
   cout << endl;
 #endif
-  if (!(d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
+  //if (!(d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
+  if (!(d_mixTable->Lookup(tableKeyIndex, stateSpaceVars))) 
     {
   TAU_PROFILE_START(compute);
       computeMeanValues(tableKeyIndex, stateSpaceVars);
-      vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
+      //vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
       // defined in K-D tree or 2D vector implementation
-      d_mixTable->Insert(tableKeyIndex, vec_stateSpaceVars);
+      //d_mixTable->Insert(tableKeyIndex, vec_stateSpaceVars);
+      d_mixTable->Insert(tableKeyIndex, stateSpaceVars);
       //stateSpaceVars.print(cerr);
   TAU_PROFILE_STOP(compute);
     }
   else {
-    stateSpaceVars.convertVecToStream(vec_stateSpaceVars, d_numMixingVars,
-				      d_numRxnVars, lsoot);
+    //stateSpaceVars.convertVecToStream(vec_stateSpaceVars, d_numMixingVars,
+    //			      d_numRxnVars, lsoot);
 #if 0
     cout<<"Mean::entry exists"<<endl;
     for (int ii = 0; ii < vec_stateSpaceVars.size(); ii++) {
       cout.width(10);
       cout << vec_stateSpaceVars[ii] << " " ; 
-      if (!(ii % 10)) cout << endl; 
+      if (!(ii % 10)) cout << endl;
     }
     cout << endl;
+    stateSpaceVars.print(cerr);
 #endif
   }
 

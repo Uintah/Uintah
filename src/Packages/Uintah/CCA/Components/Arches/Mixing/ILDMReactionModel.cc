@@ -80,12 +80,11 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
     //tableType is always static
     if (rxn_db->findBlock("TableType")) {
       rxn_db->require("TableType", tableType);
-      if (tableType == "dynamic")
-	cerr << "ILDM table is static" << endl;
-      else if (tableType != "static") {
-	throw InvalidValue("Table type not supported" + tableType);
-      }
+      if (tableType != "static") 
+	cerr << "ILDM table is static; must have file named ILDMData!!!" << endl;
     }
+    else
+      cerr << "ILDM table is static; must have file named ILDMData!!!" << endl;
     if (rxn_db->findBlock("TableStorage")) {
       rxn_db->require("TableStorage", tableStorage);
       if (tableStorage == "KDTree")
@@ -93,12 +92,14 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
       else if (tableStorage == "2DVector")
 	d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
       else {
-	throw InvalidValue("Table storage not supported" + tableStorage);
+	d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
+	cerr << "ILDM TABLE STORAGE is vectorTable" << endl;
+	//throw InvalidValue("Table storage not supported" + tableStorage);
       }
     }
     else {
       d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
-      cout << "TABLE STORAGE is vectorTable" << endl;
+      cout << "ILDM TABLE STORAGE is vectorTable" << endl;
     }
     // tableSetup is a function in DynamicTable; it allocates memory for 
     // table functions
@@ -106,7 +107,7 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
 
     // Read table in from data file
     readStaticTable();   
-  } // If mixTableType = "dynamic"
+  } // IfmixTableType = "dynamic"
 }
 
 void 
@@ -126,7 +127,7 @@ ILDMReactionModel::readStaticTable()
       d_rxnTableInfo->getNumDivsAbove(ii) + 1;
  
   // Fill in table entries not included in Diem's data file
-  vector<double> vec_stateSpaceVars(d_depStateSpaceVars, 0.0);
+  //vector<double> vec_stateSpaceVars(d_depStateSpaceVars, 0.0);
   int *tableIndex = new int[d_rxnTableDimension];
   vector<int> numEntries(d_rxnTableDimension, 0.0);
   Stream stateSpaceVars;
@@ -204,8 +205,9 @@ ILDMReactionModel::readStaticTable()
 		  reactedStream.d_lsoot = true;
 		  reactedStream.d_sootData[0] = 0.0;
 		  reactedStream.d_sootData[1] = 0.0;
-		  vec_stateSpaceVars = reactedStream.convertStreamToVec();
-		  d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		  //vec_stateSpaceVars = reactedStream.convertStreamToVec();
+		  //d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		  d_rxnTable->Insert(tableIndex, stateSpaceVars);
 		  tableInsert = true;
 		  cout << "tableIndex = " << tableIndex[0] << " " << tableIndex[1] << " " 
 		       << tableIndex[2] << endl;
@@ -231,8 +233,9 @@ ILDMReactionModel::readStaticTable()
 		      reactedStream.d_lsoot = true; 
 		      reactedStream.d_sootData[0] = 0.0;
 		      reactedStream.d_sootData[1] = 0.0;
-		      vec_stateSpaceVars = reactedStream.convertStreamToVec();
-		      d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		      //vec_stateSpaceVars = reactedStream.convertStreamToVec();
+		      //d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		      d_rxnTable->Insert(tableIndex, stateSpaceVars);
 		      cout << "tableIndex = " << tableIndex[0] << " " << tableIndex[1] << " " 
 			   << tableIndex[2] << endl;
 		      tableInsert = true;
@@ -246,8 +249,9 @@ ILDMReactionModel::readStaticTable()
 		      reactedStream.d_speciesConcn[1] = mixedStream.d_speciesConcn[H2Oindex];
 		      reactedStream.d_speciesConcn[2] = mixedStream.d_speciesConcn[COindex];
 		      reactedStream.d_speciesConcn[3] = mixedStream.d_speciesConcn[O2index];
-		      vec_stateSpaceVars = reactedStream.convertStreamToVec();
-		      d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		      //vec_stateSpaceVars = reactedStream.convertStreamToVec();
+		      //d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		      d_rxnTable->Insert(tableIndex, stateSpaceVars);
 		      cout << "tableIndex = " << tableIndex[0] << " " << tableIndex[1] << " " 
 			   << tableIndex[2] << endl;
 		      tableInsert = true;
@@ -257,8 +261,9 @@ ILDMReactionModel::readStaticTable()
 		      reactedStream.d_lsoot = true;
 		      reactedStream.d_sootData[0] = 0.0;
 		      reactedStream.d_sootData[1] = 0.0;
-		      vec_stateSpaceVars = reactedStream.convertStreamToVec();
-		      d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		      //vec_stateSpaceVars = reactedStream.convertStreamToVec();
+		      //d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+		      d_rxnTable->Insert(tableIndex, stateSpaceVars);
 		      cout << "tableIndex = " << tableIndex[0] << " " << tableIndex[1] << " " 
 			   << tableIndex[2] << endl;
 		      tableInsert = true;
@@ -313,19 +318,27 @@ ILDMReactionModel::readStaticTable()
 				d_rxnTableInfo->getNumDivsAbove(rxnCount)+1); ii++)
 	    {
 	      double ignore, rxnParam;
-	      int vecCount = 0;
+	      //int vecCount = 0;
 	      entryCount++;
 	      // First two entries are unnormalized value of parameter and entropy
 	      ildmfile>>rxnParam>>ignore;
 	      ildmfile>>value; //Read pressure in atm
 	      double temp = value*101325; //Convert pressure to Pa
 	      ildmfile>>value; //Read density in g/cm^3
+#if 0
 	      vec_stateSpaceVars[vecCount++] = value*1.e+3;// Units of kg/m^3
 	      vec_stateSpaceVars[vecCount++] = temp; //Pressure, density switched places
 	      ildmfile>>value; //Read in temperature in K
 	      vec_stateSpaceVars[vecCount++] = value;
 	      ildmfile>>value; //Read in enthalpy in ergs/g
 	      vec_stateSpaceVars[vecCount++] = value*1.e-4; // Units of J/kg
+#endif
+	      stateSpaceVars.d_density = value*1.e+3; // Units of kg/m^3
+	      stateSpaceVars.d_pressure = temp;
+	      ildmfile>>value; //Read in temperature in K
+	      stateSpaceVars.d_temperature = value;
+	      ildmfile>>value; //Read in enthalpy in ergs/g
+	      stateSpaceVars.d_enthalpy = value*1.e-4; // Units of J/kg
 	      
 	      // Sensible enthalpy not included in data file, so compute it 
 	      // here
@@ -354,7 +367,8 @@ ILDMReactionModel::readStaticTable()
 		//cout<<"ILDM::adH = "<<adiabaticEnthalpy<<endl;
 		sensibleEnthalpy =  adiabaticEnthalpy - trefEnthalpy;
 		//cout<<"ILDM::sensH = "<<sensibleEnthalpy<<endl;
-	      }	      
+	      }
+#if 0	      
 	      vec_stateSpaceVars[vecCount++] = sensibleEnthalpy;
 	      ildmfile>>value; //Read in mix MW
 	      vec_stateSpaceVars[vecCount++] = value;
@@ -364,19 +378,26 @@ ILDMReactionModel::readStaticTable()
 	      //vec_stateSpaceVars[vecCount++] = 1.0; // Test for BetaPDF model
 	      vec_stateSpaceVars[vecCount++] = 0.0; // Placeholder for d_drhodf
 	      vec_stateSpaceVars[vecCount++] = 0.0; // Placeholder for d_drhodh
+#endif
+	      stateSpaceVars.d_sensibleEnthalpy = sensibleEnthalpy;
+	      ildmfile>>value; //Read in mix MW
+	      stateSpaceVars.d_moleWeight = value;
+	      ildmfile>>value; //Read in mix heat capacity in ergs/(g-K)
+	      stateSpaceVars.d_cp = value/1e+7*1000; //Convert from
+	      // erg/(gm K) to J/(kg K)
+	      stateSpaceVars.d_drhodf = 0.0; // Placeholder for d_drhodf
+	      stateSpaceVars.d_drhodh = 0.0; // Placeholder for d_drhodh      
 	      // Read in species mass fractions
               //Kluge to write only 4 species to table: CO2, H2O, O2, CO
-	      for (int jj = 0; jj < d_numSpecInTbl; jj++) {
-		ildmfile>>value;
-                if (jj == CO2index)
-		  vec_stateSpaceVars[vecCount++] = value;
-                if (jj == H2Oindex)
-                  vec_stateSpaceVars[vecCount++] = value;
-                if (jj == O2index)
-                  vec_stateSpaceVars[vecCount++] = value;	      
-                if (jj == COindex)
-                  vec_stateSpaceVars[vecCount++] = value;
-              }
+	      ildmfile >> value;
+	      stateSpaceVars.d_speciesConcn[0] = value; //CO2
+              ildmfile >> value;
+              stateSpaceVars.d_speciesConcn[1] = value; //H2O
+	      ildmfile >> value;
+              stateSpaceVars.d_speciesConcn[2] = value; //O2
+	      ildmfile >> value;
+              stateSpaceVars.d_speciesConcn[3] = value; //CO
+              
 	      // Not all species in chem.inp are included in data file;
 	      // set those species conc to zero.
 	      //for (int jj =  NUM_DEP_VARS + d_numSpecInTbl; jj < NUM_DEP_VARS 
@@ -387,14 +408,18 @@ ILDMReactionModel::readStaticTable()
 	      ildmfile>>sootDiam>>sootFV;
 	      // Read in rxn rate of parameter
 	      ildmfile>>value;
-	      vec_stateSpaceVars[vecCount++] = value;
+	      //vec_stateSpaceVars[vecCount++] = value;
+	      stateSpaceVars.d_rxnVarRates[0] = value;
 	      // Now assign min, max values of parameter to proper vector location
-	      vec_stateSpaceVars[vecCount++] = minParamValue;
-	      vec_stateSpaceVars[vecCount++] = maxParamValue;
+	      //vec_stateSpaceVars[vecCount++] = minParamValue;
+	      //vec_stateSpaceVars[vecCount++] = maxParamValue;
+	      stateSpaceVars.d_rxnVarNorm[0] = minParamValue;
+	      stateSpaceVars.d_rxnVarNorm[1] = maxParamValue;
 	      // Assign soot data to end of vector
-	      vec_stateSpaceVars[vecCount++] = sootDiam;
-	      vec_stateSpaceVars[vecCount++] = sootFV;
-	      //ildmfile.ignore(200,'\n');    //Move to next line
+	      //vec_stateSpaceVars[vecCount++] = sootDiam;
+	      //vec_stateSpaceVars[vecCount++] = sootFV;
+	      stateSpaceVars.d_sootData[0] = sootDiam;
+	      stateSpaceVars.d_sootData[1] = sootFV;
 	      indepVars[rxnCount] = (rxnParam - minParamValue)/
 		(maxParamValue - minParamValue);
 #if 0
@@ -404,6 +429,7 @@ ILDMReactionModel::readStaticTable()
 	      	if (!(kk % 10)) cout << endl; 
 	      }
 	      cout << endl;
+	      stateSpaceVars.print(cerr);
 #endif
 	      ildmfile.ignore(200,'\n');    //Move to next line
 	      
@@ -431,7 +457,8 @@ ILDMReactionModel::readStaticTable()
 		      (tableIndex[i] < 0))	
 		    cerr<<"Index value out of range in RxnTable"<<endl;		   
 		}
-	      d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+	      //d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+	      d_rxnTable->Insert(tableIndex, stateSpaceVars);
 	      cout << "ILDMData table index = " << tableIndex[0] << " " << 
 		tableIndex[1] << " " << tableIndex[2] << endl;
 	      //delete [] tableIndex;
@@ -464,12 +491,13 @@ ILDMReactionModel::getRxnStateSpace(const Stream& unreactedMixture,
 void
 ILDMReactionModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) 
 {
-  vector<double> vec_stateSpaceVars;
-   if (d_rxnTable->Lookup(tableKeyIndex, vec_stateSpaceVars)) 
+  //vector<double> vec_stateSpaceVars;
+  //if (d_rxnTable->Lookup(tableKeyIndex, vec_stateSpaceVars)) 
+  if (d_rxnTable->Lookup(tableKeyIndex, stateSpaceVars)) 
     {
-      stateSpaceVars.convertVecToStream(vec_stateSpaceVars, 
-					d_numMixVars, d_numRxnVars, 
-					d_lsoot);
+      //stateSpaceVars.convertVecToStream(vec_stateSpaceVars, 
+      //				d_numMixVars, d_numRxnVars, 
+      //					d_lsoot);
       //stateSpaceVars.print(cout);   
     } 
    else
