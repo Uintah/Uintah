@@ -260,7 +260,7 @@ template<class T>
     int j = Sign(dist.y());
     int k = Sign(dist.z());
     
-   // cout << " c_cell " << c_cell << " offset ["<<i<<","<<j<<","<<k<<endl;
+    cout << " c_cell " << c_cell << " f_cell " << f_cell << " offset ["<<i<<","<<j<<","<<k<<endl;
     
     dist = Abs(dist);  
     //__________________________________
@@ -402,6 +402,7 @@ template<class T>
  Function~  AMRICE::interpolationInterface--
  Purpose:    depending on which 
 _____________________________________________________________________*/
+#if 0
 template<class T>
   void interpolationInterface(constCCVariable<T>& q_CL,// course level
                               DataWarehouse* coarse_new_dw,
@@ -413,7 +414,7 @@ template<class T>
                               CCVariable<T>& q_FineLevel)
 {
 
-#if 0
+
   //__________________________________
   //  Initialize test data
   cout.setf(ios::scientific,ios::floatfield);
@@ -442,7 +443,7 @@ template<class T>
     }
     testData = tmp;
   }
-#endif
+
   
   linearInterpolation<T>(testData, coarseLevel, fineLevel,
                           refineRatio, fl,fh, q_FineLevel); 
@@ -450,6 +451,7 @@ template<class T>
   quadraticInterpolation<T>(testData, coarseLevel, fineLevel,
                             refineRatio, fl,fh, q_FineLevel);
 }
+#endif
 
 /*___________________________________________________________________
  Function~  AMRICE::refine_CF_interfaceOperator-- 
