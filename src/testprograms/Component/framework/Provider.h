@@ -1,6 +1,6 @@
 
-#ifndef ProviderImpl_h
-#define ProviderImpl_h
+#ifndef Provider_h
+#define Provider_h
 
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
@@ -8,18 +8,18 @@
 
 namespace sci_cca {
 
-class ProviderImpl : virtual public Provider_interface, 
-		     virtual public ComponentImpl 
+class Provider : virtual public ComponentImpl 
 {
 private:
   TestPort test_port_;
 
 public:
-  ProviderImpl();
-  ~ProviderImpl();
+  Provider();
+  ~Provider();
 
   virtual void setServices( const Services &);
-  virtual ComponentID getComponentID() { return services_->getComponentID(); }
+
+  ComponentID getComponentID() { return services_->getComponentID(); }
 
 };
 

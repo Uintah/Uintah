@@ -28,7 +28,8 @@ PortInfoImpl::getName()
 string
 PortInfoImpl::getProperty( const string & name )
 {
-  for( int i=0; i < properties_.size(); i += 2 ) {
+  // Dd: Why is this +2?
+  for( unsigned int i=0; i < properties_.size(); i += 2 ) {
     if( properties_[i] == name ) 
       return properties_[i+1];
   }

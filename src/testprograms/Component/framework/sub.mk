@@ -19,6 +19,7 @@ PROGRAM := $(SRCDIR)/main
 SRCS    := $(SRCDIR)/cca_sidl.cc \
 	$(SRCDIR)/main.cc \
 	$(SRCDIR)/cca.cc \
+	$(SRCDIR)/scr.cc \
 	$(SRCDIR)/Registry.cc \
 	$(SRCDIR)/ComponentIdImpl.cc \
 	$(SRCDIR)/ComponentImpl.cc \
@@ -29,9 +30,10 @@ SRCS    := $(SRCDIR)/cca_sidl.cc \
 	$(SRCDIR)/ConnectionServicesImpl.cc \
 	$(SRCDIR)/RegistryServicesImpl.cc \
 	$(SRCDIR)/LocalFramework.cc \
-	$(SRCDIR)/BuilderImpl.cc \
-	$(SRCDIR)/SenderImpl.cc \
-	$(SRCDIR)/ProviderImpl.cc \
+	$(SRCDIR)/Builder.cc \
+	$(SRCDIR)/Sender.cc \
+	$(SRCDIR)/scrInterfaceImpl.cc \
+	$(SRCDIR)/Provider.cc \
 	$(SRCDIR)/TestPortImpl.cc \
 
 GENHDRS := $(SRCDIR)/cca_sidl.h

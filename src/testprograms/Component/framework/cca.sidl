@@ -89,28 +89,41 @@ package sci_cca {
     void getActiveComponentList( out array<string> components );
   };
 
-
+  ////////////////////////////////////////////////////////////
+  //
+  // Component Interfaces
   // 
-  // builer component
-  // 
 
-  interface Builder extends Component {
-  };
-
-  interface Sender extends Component {
-    ComponentID getComponentID();
-    void go();
-  };
-
-  interface Provider extends Component {
-    ComponentID getComponentID();
-  };
-   
   interface TestPort extends Port {
     void test();
   };
 
+  ////////////////////////////////////////////////////////////
+  //
+  // REI Interfaces
+  // 
+
+  //// Selective Catalytic Reduction Component
+  interface scrInterface {
+
+    void exec(in     int  cells,      // changed from long...
+	      in     double pressure, 
+	      in     double kgcat,
+	      in     double NH3ratio,
+	      in     double NH3,
+	      inout  double flow,
+	      in     double temp,
+	      in     double NO,
+	      in     double N2,
+	      in     double H2O,
+	      in     double O2,
+	      in     double sum_of_all_others,
+	      in     double heat_loss,
+	      inout  array<double> kmol_s,
+	      inout  double noreduction,
+	      inout  double new_temp,
+	      inout  double kmol_s_tot);
+  };
+
 }; // package sci_cca
-
-
 
