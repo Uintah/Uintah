@@ -21,7 +21,7 @@
 -->
 
 
-<component name="MapScalarData" category="Fields">
+<component name="ReplaceScalarDataValue" category="Fields">
   <overview>
     <authors>
       <author>David Weinstein</author>

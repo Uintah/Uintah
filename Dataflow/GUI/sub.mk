@@ -67,7 +67,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ManipFields.tcl \
         $(SRCDIR)/ManipMatrix.tcl \
 	$(SRCDIR)/MapDataToMeshCoord.tcl \
-	$(SRCDIR)/MapScalarData.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixSelectVector.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
@@ -80,6 +79,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Probe.tcl \
 	$(SRCDIR)/PromptedText.tcl \
 	$(SRCDIR)/PromptedEntry.tcl \
+	$(SRCDIR)/ReplaceScalarDataValue.tcl \
 	$(SRCDIR)/Rescale.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \

@@ -15,10 +15,10 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_MapScalarData {
+itcl_class SCIRun_Fields_ReplaceScalarDataValue {
     inherit Module
     constructor {config} {
-        set name MapScalarData
+        set name ReplaceScalarDataValue
         set_defaults
     }
     method set_defaults {} {
