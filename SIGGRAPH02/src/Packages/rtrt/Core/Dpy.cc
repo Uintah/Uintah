@@ -165,7 +165,8 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
     turnOnLight_( false ), turnOffLight_( false ),
     attachedObject_(NULL), turnOnTransmissionMode_(false), 
     numThreadsRequested_(nworkers), changeNumThreads_(false),
-    pp_size_(pp_size), scratchsize_(scratchsize)
+    pp_size_(pp_size), scratchsize_(scratchsize),
+    toggleRenderWindowSize_(false), renderWindowSize_(0)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
@@ -183,10 +184,16 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   drawstats[1]=new Stats(1000);
   priv = new DpyPrivate;
 
-  //priv->waitDisplay = new Mutex( "wait for display" );
-  //priv->waitDisplay->lock();
+  priv->waitDisplay = new Mutex( "wait for display" );
+  priv->waitDisplay->lock();
 
   priv->followPath = false;
+
+  shadowMode_ = scene->shadow_mode;
+  ambientMode_ = scene->ambient_mode;
+
+  obj=scene->get_object();
+  priv->maxdepth=scene->maxdepth;
 
   workers_.resize( nworkers );
 
@@ -254,13 +261,8 @@ Dpy::run()
 
   priv->last_time = 0;
 
-  shadowMode_ = scene->shadow_mode;
-  ambientMode_ = scene->ambient_mode;
-  obj=scene->get_object();
-
   priv->showing_scene=1;
   priv->animate=true;
-  priv->maxdepth=scene->maxdepth;
   priv->base_threshold=0.005;
   priv->full_threshold=0.01;
   priv->left=0;
@@ -330,6 +332,19 @@ Dpy::checkGuiFlags()
   if( turnOffLight_ ) {
     scene->turnOffLight( turnOffLight_ );
     turnOffLight_ = NULL;
+  }
+
+  if( toggleRenderWindowSize_ ){ 
+    toggleRenderWindowSize_ = false;
+    if( renderWindowSize_ == 0 ) { // was full, go to medium
+      priv->xres = 512;
+      priv->yres = 288;
+      renderWindowSize_ = 1;
+    } else {
+      priv->xres = 1024;
+      priv->yres = 600;
+      renderWindowSize_ = 0;
+    }
   }
 
   if( doJitter_ ) { scene->rtrt_engine->do_jitter = true; }
@@ -510,7 +525,7 @@ Dpy::renderFrame() {
   counter--;
 
   // Wait until the Gui (main) thread has displayed this image...
-  // priv->waitDisplay->lock();
+  //priv->waitDisplay->lock();
 
   if( displayedImage->get_xres() != priv->xres ||
       displayedImage->get_yres() != priv->yres ) {
@@ -553,14 +568,6 @@ Dpy::renderFrame() {
   //      st->add(SCIRun::Time::currentSeconds(), Color(0.4,0.2,1));
 
   if (display_frames) {
-    // color 
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,0));
-    // color light blue
-    st->add(SCIRun::Time::currentSeconds(), Color(0.5,0.5,1));
-    // color grey
-    st->add(SCIRun::Time::currentSeconds(), Color(0.5,0.5,0.5));
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0,1));
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,0.3));
       
     double curtime=SCIRun::Time::currentSeconds();
     double dt=curtime-scene->lasttime;
@@ -586,16 +593,16 @@ Dpy::renderFrame() {
 					   viewpoint );
     }
 
+    st->add(SCIRun::Time::currentSeconds(), Color(1,1,0));
     if (display_frames) {
       if( !priv->followPath ) {
 	guiCam_->updatePosition( *stealth_, scene, ppc );
       } else {
 	guiCam_->followPath( *stealth_ );
       }
-
     }
+    st->add(SCIRun::Time::currentSeconds(), Color(0,1,1));
 
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
     rendering_scene=1-rendering_scene;
     showing_scene=1-showing_scene;
   }

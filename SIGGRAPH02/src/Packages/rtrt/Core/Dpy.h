@@ -61,6 +61,9 @@ class Dpy : public Runnable {
   Light    * turnOffLight_;
   Light    * turnOnLight_;
 
+  bool       toggleRenderWindowSize_;
+  int        renderWindowSize_; // 0 == full, 1 == med
+
   bool       turnOnTransmissionMode_;
 
   int        numThreadsRequested_;
