@@ -56,28 +56,34 @@ GLVolRenState::computeView(Ray& ray)
        2  6 10 14
        3  7 11 15 */
 
-//   cerr<<mvmat[0]<<" "<<mvmat[4]<<" "<<mvmat[8]<<" "<<mvmat[12]<<endl;
-//   cerr<<mvmat[1]<<" "<<mvmat[5]<<" "<<mvmat[9]<<" "<<mvmat[13]<<endl;
-//   cerr<<mvmat[2]<<" "<<mvmat[6]<<" "<<mvmat[10]<<" "<<mvmat[14]<<endl;
-//   cerr<<mvmat[3]<<" "<<mvmat[7]<<" "<<mvmat[11]<<" "<<mvmat[15]<<endl;
- 
-  view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
-  view.normalize();
-  viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
-    
-  /* set the translation to zero */
-  //  mvmat[12] = mvmat[13] = mvmat[14] = 0;
-  /* Because of the order of the glmatrix we are storing as a transpose.
-       if there is not use of scale then the transpose is the  inverse */
-  //  mat.set( mvmat );
-    
-  /* project view info into object space */
-  //   view = mat.project( view );
-  //   viewPt = mat.project( viewPt );
+   // this is the world space view direction
+   view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
 
+   // but this is the view space viewPt
+   viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
+
+  /* set the translation to zero */
+   mvmat[12]=mvmat[13] = mvmat[14]=0;
+   
+
+  /* The Transform stores it's matrix as
+     0  1  2  3
+     4  5  6  7
+     8  9 10 11
+    12 13 14 15
+
+    Because of this order, simply setting the tranform with the glmatrix 
+    causes our tranform matrix to be the transpose of the glmatrix
+    ( assuming no scaling ) */
+   mat.set( mvmat );
+    
+  /* Since mat is the transpose, we then multiply the view space viewPt
+     by the mat to get the world or model space viewPt, which we need
+     for calculations */
+
+  viewPt = mat.project( viewPt );
 
   ray =  Ray(viewPt, view);
-//   cerr<<"GLVolRenState::ComputeView: viewpt = "<<ray.origin()<<", viewdir = "<<ray.direction()<<endl;
 }
 
 void
