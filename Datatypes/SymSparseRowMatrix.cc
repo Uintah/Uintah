@@ -35,17 +35,25 @@ double& SymSparseRowMatrix::get(int i, int j)
 {
     int row_idx=rows[i];
     int next_idx=rows[i+1];
-    for(int idx=row_idx;idx<next_idx;idx++){
-	if(columns[idx] == j)
-	    return a[idx];
+    int l=row_idx;
+    int h=next_idx-1;
+    while(1){
+	int m=(l+h)/2;
+	if(j<columns[m]){
+	    h=m-1;
+	} else if(j>columns[m]){
+	    l=m+1;
+	} else {
+	    return a[m];
+	}
+	if(h<l){
+	    cerr << "column " << j << " not found in row: ";
+	    for(int idx=row_idx;idx<next_idx;idx++)
+		cerr << columns[idx] << " ";
+	    cerr << endl;
+	    ASSERT(0);
+	}
     }
-    cerr << "column " << j << " not found in row: ";
-    for(idx=row_idx;idx<next_idx;idx)
-	cerr << columns[idx] << " ";
-    cerr << endl;
-    ASSERT(0);
-    dummy=0;
-    return dummy;
 }
 
 void SymSparseRowMatrix::put(int i, int j, const double& d)
