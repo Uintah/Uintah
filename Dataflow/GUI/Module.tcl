@@ -269,11 +269,10 @@ itcl_class Module {
 	# Stick it in the canvas
 	$canvas create window [lindex $pos 0] [lindex $pos 1] -anchor nw \
 	    -window $modframe -tags "module [modname]"
-
 	set pos [scalePath $pos]
 	$minicanvas create rectangle [lindex $pos 0] [lindex $pos 1] \
-	    [expr [lindex $pos 0]+4] [expr [lindex $pos 1]+2] \
-	    -outline "" -fill $Color(Basecolor) -tags "module [modname]"
+	    [expr [lindex $pos 0]+6] [expr [lindex $pos 1]+2] \
+	    -outline {} -fill $Color(Basecolor) -tags "[modname] module"
 
 	# Create, draw, and bind all input and output ports
 	drawPorts [modname]
@@ -976,7 +975,6 @@ proc do_moduleDrag {modid x y} {
 	}
 	if { [expr $modx+$dx] <= 0 } {
 	    $canvas move $modid [expr -$modx] 0
-	    $minicanvas move $modid [expr (-$modx)/$SCALEX] 0
 	    set dx 0
 	}
     }
@@ -990,7 +988,6 @@ proc do_moduleDrag {modid x y} {
 	}
 	if { [expr $modx+$dx] >= $canWidth } {
 	    $canvas move $modid [expr $canWidth-$modx] 0
-	    $minicanvas move $modid [expr ($canWidth-$modx)/$SCALEX] 0
 	    set dx 0
 	} 
     }
@@ -1004,7 +1001,6 @@ proc do_moduleDrag {modid x y} {
 	}    
 	if { [expr $mody+$dy] <= 0 } {
 	    $canvas move $modid 0 [expr -$mody]
-	    $minicanvas move $modid 0 [expr (-$mody)/$SCALEY]
 	    set dy 0
 	}
     }
@@ -1018,7 +1014,6 @@ proc do_moduleDrag {modid x y} {
 	}	
 	if { [expr $mody+$dy] >= $canHeight } {
 	    $canvas move $modid 0 [expr $canHeight-$mody]
-	    $minicanvas move $modid 0 [expr ($canHeight-$mody)/$SCALEY]
 	    set dy 0
 	}
     }
@@ -1057,7 +1052,7 @@ proc do_moduleDrag {modid x y} {
     
     # Perform the actual move of the module window
     $canvas move $modid $dx $dy
-    $minicanvas move $modid [expr $dx / $SCALEX ] [expr $dy / $SCALEY ]
+    eval $minicanvas coords $modid [scalePath [$canvas bbox $modid]]
     
     drawNotes $modid
 }
@@ -1069,7 +1064,7 @@ proc drawNotes { args } {
 
     foreach id $args {
 	setIfExists position Notes($id-Position) def	
-	setIfExists color Color($id) white
+	setIfExists color Color($id) red
 	setIfExists color Notes($id-Color) $color
 	setIfExists text Notes($id) ""
 
@@ -1157,6 +1152,33 @@ proc moduleEndDrag {modid x y} {
     # If only one module was selected and moved, then unselect when done
     if {([expr abs($startX-$x)] > 2 || [expr abs($startY-$y)] > 2) && \
 	    [llength $CurrentlySelectedModules] == 1} unselectAll    
+}
+
+proc htmlHelp {modid} {
+    set path [modulePath $modid]
+    set htmlpath Dataflow/XML/[lindex $path 2].html
+    if { ![string equal [lindex $path 0] SCIRun] } { 
+	set htmlpath Packages/[lindex $path 0]/$htmlpath
+    }
+    
+    set usehtml 0
+    set localhtml [netedit getenv SCIRUN_SRCDIR]/$htmlpath
+    if { [file exists $localhtml] && [file readable $localhtml] } {
+	set url file://$localhtml
+	set usehtml 1
+    } elseif { ![netedit sci_system echo a | telnet -e a software.sci.utah.edu 80 2> /dev/null > /dev/null] } {
+	set url http://software.sci.utah.edu/src/$htmlpath
+	set usehtml 1
+    }
+    
+    if { $usehtml } {
+	set ping [netedit sci_system /scratch/firefox/firefox -remote 'ping()']
+	if {!$ping} {
+	    netedit sci_system /scratch/firefox/firefox $url &
+	} else {
+	    netedit sci_system /scratch/firefox/firefox -remote 'openurl($url)' &
+	}
+    }
 }
 
 proc moduleHelp {modid} {

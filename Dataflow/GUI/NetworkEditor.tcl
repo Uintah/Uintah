@@ -33,11 +33,11 @@ source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Port.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Subnet.tcl
 
-set smallIcon [image create photo -file "[netedit getenv SCIRUN_SRCDIR]/pixmaps/scirun-icon-small.ppm"]
-set splashImageFile "[netedit getenv SCIRUN_SRCDIR]/main/scisplash.ppm"
-set bioTensorSplashImageFile "[netedit getenv SCIRUN_SRCDIR]/Packages/Teem/Dataflow/GUI/splash-tensor.ppm"
-set bioFEMSplashImageFile "[netedit getenv SCIRUN_SRCDIR]/Packages/BioPSE/Dataflow/GUI/splash-biofem.ppm"
-
+set SCIRUN_SRCDIR [netedit getenv SCIRUN_SRCDIR]
+set smallIcon [image create photo -file "$SCIRUN_SRCDIR/pixmaps/scirun-icon-small.ppm"]
+set splashImageFile "$SCIRUN_SRCDIR/main/scisplash.ppm"
+set bioTensorSplashImageFile "$SCIRUN_SRCDIR/Packages/Teem/Dataflow/GUI/splash-tensor.ppm"
+set bioFEMSplashImageFile "$SCIRUN_SRCDIR/Packages/BioPSE/Dataflow/GUI/splash-biofem.ppm"
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
@@ -45,45 +45,27 @@ set time_font "-Adobe-Courier-Medium-R-Normal-*-12-120-75-*"
 
 set mainCanvasWidth    4500.0
 set mainCanvasHeight   4500.0
-
-set miniCanvasWidth    150.0
-set miniCanvasHeight   150.0
-
-set SCALEX [expr $mainCanvasWidth/$miniCanvasWidth]
-set SCALEY [expr $mainCanvasHeight/$miniCanvasHeight]
-
-
-# Records where the mouse was pressed to bring up the Modules Menu,
-# thus allowing the module to be create at (or near) that location.
-global mouseX
-set mouseX 0
-global mouseY
-set mouseY 0
-
 set maincanvas .topbot.pane1.childsite.frame.canvas
 set minicanvas .topbot.pane0.childsite.panes.pane0.childsite.pad.frame.canvas
 
-global Subnet
+# Records mouse position at button press to bring up menus at 
+set mouseX 0
+set mouseY 0
+
 set Subnet(Subnet0_minicanvas) $minicanvas
-set Subnet(num) 0
 set Subnet(Subnet0_canvas) $maincanvas
-set Subnet(Subnet0_Name) "Main"
+set Subnet(Subnet0_Name) Main
 set Subnet(Subnet0_Modules) ""
 set Subnet(Subnet0_connections) ""
 set Subnet(Subnet0) 0
 set Subnet(Loading) 0
+set Subnet(num) 0
 
-
-global inserting
 set inserting 0
-
-global netedit_savefile
 set netedit_savefile ""
-
-global NetworkChanged
 set NetworkChanged 0
-
 set CurrentlySelectedModules ""
+
 
 proc setIcons { { w . } { size small } } {
     set srcdir [netedit getenv SCIRUN_SRCDIR]
@@ -94,7 +76,6 @@ proc setIcons { { w . } { size small } } {
 	wm iconmask $w @$bitmap
     }
 }
-
 
 rename toplevel __TCL_toplevel__
 proc toplevel { args } {
@@ -342,10 +323,10 @@ proc activate_file_submenus { } {
 
     ###################################################################
     # Bind all the actions after SCIRun has loaded everything...
-    updateViewAreaBox
+    redrawMinicanvas
     bind $minicanvas <B1-Motion> "updateCanvases %x %y"
     bind $minicanvas <1> "updateCanvases %x %y"
-    bind $minicanvas <Configure> "handleResize"
+    bind $minicanvas <Configure> "redrawMinicanvas"
     $maincanvas bind bgRect <3> "modulesMenu 0 %x %y"
     $maincanvas bind bgRect <1> "startBox $maincanvas %X %Y 0"
     $maincanvas bind bgRect <Control-Button-1> "startBox $maincanvas %X %Y 1"
@@ -382,17 +363,26 @@ proc modulesMenu { subnet x y } {
 	[expr $y + [winfo rooty $canvas]]
 }
 
-proc handleResize { } {
+proc redrawMinicanvas {} {
     global SCALEX SCALEY minicanvas maincanvas mainCanvasWidth mainCanvasHeight
     set w [expr [winfo width $minicanvas]-2]
     set h [expr [winfo height $minicanvas]-2]
     set SCALEX [expr $mainCanvasWidth/$w]
     set SCALEY [expr $mainCanvasHeight/$h]
     updateViewAreaBox
+    global Subnet
+    set connections ""
+    $minicanvas raise module
+    foreach module $Subnet(Subnet0_Modules) {
+	set coords [scalePath [$maincanvas bbox $module]]
+	after 1 $minicanvas coords $module $coords	
+	eval lappend connections $Subnet(${module}_connections)
+    }
+    after 1 drawConnections \{[lsort -unique $connections]\}
 }
 
-proc updateViewAreaBox { } {
-    global minicanvas maincanvas SCALEX SCALEY mainCanvasHeight mainCanvasWidth
+proc updateViewAreaBox {} {
+    global minicanvas maincanvas
     set w [expr [winfo width $minicanvas]-2]
     set h [expr [winfo height $minicanvas]-2]
     set ulx [expr [lindex [$maincanvas xview] 0] * $w]
@@ -822,7 +812,7 @@ proc popupLoadMenu {} {
 proc ClearCanvas { {confirm 1} {subnet 0} } {
     # destroy all modules
     global NetworkChanged
-    if !$NetworkChanged { set confirm 0 }
+    if { !$NetworkChanged } { set confirm 0 }
     set result "ok"    
     if { $confirm } {
 	set result \
@@ -1096,7 +1086,7 @@ proc loadnet { netedit_loadfile } {
     if { !$PowerApp } {
 	hideProgress
     }
-    
+    redrawMinicanvas
     set Subnet(Subnet$Subnet(Loading)_Filename) $netedit_loadfile
     if { !$inserting } { setGlobal NetworkChanged 0 }
 }
