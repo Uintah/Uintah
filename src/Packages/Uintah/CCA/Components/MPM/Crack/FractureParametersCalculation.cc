@@ -93,7 +93,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
     // or if propagating crack (If yes, set doCrackPropagation=YES) 
     // at this time step
     DetectIfDoingFractureAnalysisAtThisTimeStep(time);
-
+    
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -671,8 +671,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   // Crack opening displacements
                   Vector D = disp_a_prime - disp_b_prime;
 
-                  // Task 12: Get crack propagating velocity, currently just set it to zero
-                  Vector C=Vector(0.,0.,0.);
+                  // Task 12: Get crack propagating velocity
+                  double C=cfSegVel[m][idx];
 
                   // Convert J-integral into stress intensity factors
                   Vector SIF;
@@ -702,14 +702,11 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
             delete [] cfK;
           } // End if(num>0)
         } // End of loop over ranks (i)
-
-        // Output fracture parameters and crack-front position
-	if(pid==0) { 
-          if(calFractParameters || doCrackPropagation)
-	    OutputCrackFrontResults(m);
-        }
-
       } // End if(calFractParameters || doCrackPropagation)
+   
+      // Output fracture parameters and crack-front position
+      if(pid==0) OutputCrackFrontResults(m);
+      
     } // End of loop over matls
   } // End of loop patches
 }
@@ -730,9 +727,21 @@ void Crack::OutputCrackFrontResults(const int& m)
 	                 	
     ofstream outCrkFrt(outFileName, ios::app);
 
-    // Output crack-front parameters at the scheduled time steps
+    // Scheduled time steps for dumping
     bool timeToDump = dataArchiver->wasOutputTimestep();
-    if(timeToDump) {
+
+    // Detect if doing output at this time step
+    short outputJKThisStep=NO; 
+        if(d_calFractParameters=="every_time_step" || 
+       d_doCrackPropagation=="every_time_step") {
+      if(timeToDump) outputJKThisStep=YES;
+    }
+    else {
+      if(calFractParameters || doCrackPropagation) 
+	outputJKThisStep=YES;
+    }    
+     
+    if(outputJKThisStep) {
       double time=d_sharedState->getElapsedTime();
       int timestep=d_sharedState->getCurrentTopLevelTimeStep();
 
