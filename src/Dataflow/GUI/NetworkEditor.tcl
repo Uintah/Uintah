@@ -1276,6 +1276,16 @@ proc loadMacroModules {group_info} {
 }
 
 #
+# Ask the user to select a data directory (because the enviroment variable 
+# SCIRUN_DATA was not set.)
+#
+proc getDataDirectory { dataset } {
+    tk_messageBox -type ok -parent . -message \
+         "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.10.0).  Note, this directory must have the '$dataset' subdirectory in it." 
+   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]
+}
+
+#
 # Tell the user the reason that they are being asked for the data, and
 # then ask for the data.  If "warn_user" is "true", warning is displayed,
 # otherwise we bring up the choose directory dialog directly.  "warn_user"
@@ -1285,9 +1295,9 @@ proc getSettingsDirectory { warn_user } {
 
    if { "$warn_user" == "true" } {
       tk_messageBox -type ok -parent . -message \
-         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.8.0/sphere) (FYI, if you set these environment variables, you will not need to select a directory manually when you load this network.)" 
+         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.10.0/sphere) (FYI, if you set these environment variables, you will not need to select a directory manually when you load this network.)" 
    }
-   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.8.0]
+   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]
 }
 
 #
@@ -1299,11 +1309,11 @@ proc getSettingsDirectory { warn_user } {
 proc verifyFile { file_name } {
   if {![file isfile $file_name]} {
 
-     set message "Error: $file_name is not a valid file.  Please select a valid directory (eg: /usr/sci/data/SCIRunData/1.8.0/sphere)"
+     set message "Error: $file_name is not a valid file.  Please select a valid directory (eg: /usr/sci/data/SCIRunData/1.10.0/sphere)"
 
      # This occurs if the user presses "cancel".
      if { "$file_name" == "//.settings" } {
-        set message "You must select a data set directory for use with this network. Eg: /usr/sci/data/SCIRunData/1.8.0/sphere"
+        set message "You must select a data set directory for use with this network. Eg: /usr/sci/data/SCIRunData/1.10.0/sphere"
      }
 
      tk_messageBox -type ok -parent . -message "$message" -icon warning
@@ -1333,7 +1343,13 @@ proc sourceSettingsFile {} {
    set DATASET [lindex [array get env SCIRUN_DATASET] 1]
 
    if { [string compare "$DATASET" ""] == 0 } {
+       # if env var SCIRUN_DATASET not set... default to sphere:
        set DATASET "sphere"
+   } else {
+       if { [string compare "$DATADIR" ""] == 0 } {
+          # DATASET specified, but not DATADIR.  Ask for DATADIR
+          set DATADIR [getDataDirectory $DATASET]
+       }
    }
 
    if { [string compare "$DATADIR" ""] != 0 && \
