@@ -108,7 +108,7 @@ private:
   GuiString				guimatrixname_;		// the name of the matrix that has been selected
 
   // Ports (We only use one output port)
-  SCITeem::NrrdOPort*			omatrix_[NUMPORTS];
+  SCIRun::NrrdOPort*			omatrix_[NUMPORTS];
   
   // Class for translating matlab objects into SCIRun objects
   matlabconverter		translate_;
@@ -160,7 +160,7 @@ void MatlabNrrdsReader::execute()
 		{
 	
 			// Find the output port the scheduler has created 
-			omatrix_[p] = static_cast<SCITeem::NrrdOPort *>(get_oport(static_cast<int>(p)));
+			omatrix_[p] = static_cast<SCIRun::NrrdOPort *>(get_oport(static_cast<int>(p)));
 
 			if(!omatrix_[p]) 
 			{
@@ -190,7 +190,7 @@ void MatlabNrrdsReader::execute()
 			// The data is still in matlab format and the next function
 			// creates a SCIRun matrix object
 	
-			SCITeem::NrrdDataHandle mh;
+			SCIRun::NrrdDataHandle mh;
 			translate_.mlArrayTOsciNrrdData(ma,mh,static_cast<SCIRun::Module *>(this));
 			
 			// Put the SCIRun matrix in the hands of the scheduler

@@ -143,7 +143,7 @@ void MatlabDataWriter::execute()
 	bool porthasdata[NUMPORTS];
 	SCIRun::FieldHandle fieldhandle[3];
 	SCIRun::MatrixHandle matrixhandle[3];
-	SCITeem::NrrdDataHandle nrrdhandle[3];
+	SCIRun::NrrdDataHandle nrrdhandle[3];
 
 	
 	// find and evaluate which ports have been used
@@ -191,8 +191,8 @@ void MatlabDataWriter::execute()
 	
 	for (long p=0; p<3; p++)
 	{
-		SCITeem::NrrdIPort *iport;
-  		iport = static_cast<SCITeem::NrrdIPort *>(getIPort(p+6));
+		SCIRun::NrrdIPort *iport;
+  		iport = static_cast<SCIRun::NrrdIPort *>(getIPort(p+6));
 		if (!iport) 
 		{
 			error("MatlabDataWriter: Unable to initialize field input port");

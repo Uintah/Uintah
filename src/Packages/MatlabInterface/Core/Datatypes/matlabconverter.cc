@@ -537,8 +537,6 @@ bool matlabconverter::isvalidmatrixname(std::string name)
 }
 
 
-#ifdef HAVE_TEEM_PACKAGE
-
 // Test the compatibility of the matlabarray witha nrrd structure
 // in case it is compatible return a positive value and write
 // out an infostring with a summary of the contents of the matrix
@@ -682,7 +680,7 @@ matlabarray::mitype matlabconverter::convertnrrdtype(int type)
   }
 }
 
-void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDataHandle &scinrrd, SCIRun::Module *module)
+void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdDataHandle &scinrrd, SCIRun::Module *module)
 {
   // Depending on the matlabclass there are several converters
   // for converting the data from matlab into a SCIRun Nrrd object
@@ -696,7 +694,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDat
   scinrrd = 0; 
 	
   // Pointer to a new SCIRun Nrrd Data object
-  SCITeem::NrrdData* nrrddataptr = 0;
+  SCIRun::NrrdData* nrrddataptr = 0;
 					
   switch(mclass)
   {
@@ -706,7 +704,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDat
       try
       {
 	// new nrrd data handle
-	nrrddataptr = new SCITeem::NrrdData(true); // nrrd is owned by the object
+	nrrddataptr = new SCIRun::NrrdData(true); // nrrd is owned by the object
 	nrrddataptr->nrrd = nrrdNew();
 				
 	// obtain the type of the new nrrd
@@ -1111,7 +1109,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDat
 }
 
 
-void matlabconverter::sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlarray)
+void matlabconverter::sciNrrdDataTOmlMatrix(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlarray)
 {
 
   Nrrd	    *nrrdptr;
@@ -1168,7 +1166,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, ma
 }
 
 
-void matlabconverter::sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlarray, SCIRun::Module *module)
+void matlabconverter::sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlarray, SCIRun::Module *module)
 {
 
   if (numericarray_ == true)
@@ -1246,9 +1244,6 @@ void matlabconverter::sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, mat
   mlarray.setfield(0,"axis",axisma);
   sciPropertyTOmlProperty(static_cast<SCIRun::PropertyManager *>(scinrrd.get_rep()),mlarray);
 }
-
-#endif
-
 
 
 // Routine for discovering which kind of mesh is being supplied

@@ -136,14 +136,14 @@ void MatlabNrrdsWriter::execute()
 {
 
 	bool porthasdata[NUMPORTS];
-	SCITeem::NrrdDataHandle matrixhandle[NUMPORTS];
+	SCIRun::NrrdDataHandle matrixhandle[NUMPORTS];
 	
 	// find and evaluate which ports have been used
-	SCITeem::NrrdIPort *iport;	
+	SCIRun::NrrdIPort *iport;	
 	
 	for (long p=0; p<NUMPORTS; p++)
 	{
-		iport = static_cast<SCITeem::NrrdIPort *>(getIPort(p));
+		iport = static_cast<SCIRun::NrrdIPort *>(getIPort(p));
 		if (!iport) 
 		{
 			error("MatlabNrrdsWriter: Unable to initialize iport");
