@@ -140,6 +140,17 @@ float Galpha=1.0; // doh!  global variable...  probably should be moved...
 //static double    eye_dist = 0;
 //static double    prev_time[3]; // history for quaternions and time
 //static HVect     prev_quat[3];
+
+
+/////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////
+///
+///
+/// NONE OF THESE SHOULD BE STATIC.  Each Dpy should get their own set
+/// of these variables.
+///
+///
 static Transform prev_trans;
 
 static double   last_frame = SCIRun::Time::currentSeconds();
@@ -149,6 +160,9 @@ static MusilRNG rng;
 //static Object * obj;
 
 static double   lightoff_frame = -1.0;
+/////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////
 
 namespace rtrt {
   double _HOLO_STATE_=1;
@@ -175,7 +189,8 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
   stealth_(NULL), attachedObject_(NULL), holoToggle_(false),
   scene(scene), criteria1(criteria1), criteria2(criteria2),
   nworkers(nworkers), pp_size_(pp_size), scratchsize_(scratchsize),
-  bench(bench), ncounters(ncounters),
+  bench(bench), bench_warmup(10), bench_num_frames(110),
+  exit_after_bench(true), ncounters(ncounters),
   c0(c0), c1(c1),
   frameless(frameless),synch_frameless(0), display_frames(display_frames),
   releaseSema("Dpy window wait", 0)
@@ -325,29 +340,32 @@ Dpy::run()
   priv->exposed=true;
 
   double benchstart=0;
-  int frame=0;
   for(;;)
     {
       if (frameless) { renderFrameless(); }
       else           { renderFrame();     }
+      frame++;
 
       //cerr << "xres = "<<xres<<", yres = "<<yres<<'\n';
       //cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
-      
+
       if(bench){
-	if(frame==10){
+	if(frame==bench_warmup){
 	  cerr << "Warmup done, starting bench\n";
 	  benchstart=SCIRun::Time::currentSeconds();
-	} else if(frame == 110){
+	} else if(frame == bench_num_frames){
 	  double dt=SCIRun::Time::currentSeconds()-benchstart;
 	  cerr << "Benchmark completed in " <<  dt << " seconds ("
-	       << (frame-10)/dt << " frames/second)\n";
-	  Thread::exitAll(0);
+	       << (frame-bench_warmup)/dt << " frames/second)\n";
+          if (exit_after_bench)
+            Thread::exitAll(0);
+          else
+            bench = false;
 	}
       }
 
       // dump the frame and quit for now
-      if (frame == 2) {
+      if (frame == 3) {
 	if (!display_frames) {
 	  scene->get_image(priv->showing_scene)->save_ppm("displayless");
 	  Thread::exitAll(0);
@@ -359,7 +377,6 @@ Dpy::run()
 	cout << "Dpy going down\n";
 	Thread::exit();
       }
-      frame++;
       // Slurp up X events...
       if(!rserver){
 	while (XEventsQueued(dpy, QueuedAfterReading)){
@@ -539,6 +556,32 @@ Dpy::checkGuiFlags()
   return changed;
 }
 
+// Call this function when you want to start a benchmark
+void
+Dpy::start_bench(int num_frames, int warmup) {
+  // Since this is most likely being called during rendering, we don't
+  // want to kill rtrt.
+  exit_after_bench = false;
+
+  // Reset the number of frames.  We must do this so, we know how many
+  // frames were rendered. (simply adding frame to bench_num_frames
+  // would lose the num_frames).
+  frame = 0;
+  
+  // Set the bench flags
+  bench_warmup = warmup;
+  bench_num_frames = warmup + num_frames;
+
+  // Turn on bench marking
+  bench = true;
+}
+
+// Call this to stop the currently in progress benchmark
+void
+Dpy::stop_bench() {
+  bench = false;
+}
+
 void
 Dpy::renderFrameless() {
   cout << "can't do frameless right now.\n";
@@ -551,8 +594,6 @@ Dpy::renderFrame() {
   bool  & stereo        = priv->stereo;  
   int   & showing_scene = priv->showing_scene;
 
-  frame++;
-    
   // If we need to change the number of worker threads:
   if( changeNumThreads_ ) {
     cout << "changeNumThreads\n";
