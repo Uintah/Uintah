@@ -100,21 +100,46 @@ private:
   // - containing data for each time step.
   class TimeHashMaps {
   public:
-    TimeHashMaps(const vector<double>& tsTimes,
+    TimeHashMaps(DataArchive* archive, const vector<double>& tsTimes,
 		 const vector<XMLURL>& tsUrls,
 		 const vector<ProblemSpecP>& tsTopNodes,
 		 int processor, int numProcessors);
     
-    inline ProblemSpecP findVariable(const string& name, const Patch* patch,
-				     int matl, double time, XMLURL& foundUrl);
+    ProblemSpecP findVariable(const string& name, const Patch* patch,
+                              int matl, double time, XMLURL& foundUrl);
     
-    inline PatchHashMaps* findTimeData(double time);
-    void purgeTimeData(double time); // purge some caching
+    PatchHashMaps* findTimeData(double time);
     
     MaterialHashMaps* findPatchData(double time, const Patch* patch);
+
+    // This will purge the cache to the point where
+    // d_lasNtimesteps.size() <= new_size.
+    void updateCacheSize(int new_size);
+
+    // Sets the cache size back to the default.
+    void useDefaultCacheSize() { updateCacheSize(default_cache_size); }
+
   private:
+    // Pointer back to the parent DataArchive.
+    DataArchive *archive;
+
+    // Patch data for each timestep.
     map<double, PatchHashMaps> d_patchHashMaps;
     map<double, PatchHashMaps>::iterator d_lastFoundIt;
+
+    // This is a list of the last n timesteps accessed.  Data from
+    // only the last timestep_cache_size timesteps is stored, unless
+    // timestep_cache_size is less than or equal to zero then the size
+    // is unbounded.
+    list<map<double, PatchHashMaps>::iterator> d_lastNtimesteps;
+
+    // Tells you the number of timesteps to cache. Less than or equal to
+    // zero means to cache all of them.
+    int timestep_cache_size;
+
+    // This will be the default number of timesteps cached, determined
+    // by the number of processors.
+    int default_cache_size;
   };
   
   // Second layer of data structure for storing hash maps of variable data
@@ -132,6 +157,10 @@ private:
     MaterialHashMaps* findPatchData(const Patch* patch);
 
     void setTime(double t) { time = t; }
+
+    // This returns the number of simulation processors that stored
+    // data in this timestep.  This is only valid after you call init.
+    size_t numSimProcessors() { return d_xmlUrls.size(); }
   private:
     double time;
     void parseProc(int proc);
@@ -139,7 +168,8 @@ private:
     void add(const string& name, int patchid, int matl,
 	     ProblemSpecP varNode, XMLURL url)
     { d_matHashMaps[patchid].add(name, matl, varNode, url); }
-    
+
+    // The index into this map is the patchid
     map<int, MaterialHashMaps> d_matHashMaps;
     map<int, MaterialHashMaps>::iterator d_lastFoundIt;
     vector<XMLURL> d_xmlUrls;
@@ -199,9 +229,6 @@ public:
 		       vector<double>& times );
   GridP queryGrid( double time );
 
-  void purgeTimestepCache(double time)
-  { if (d_varHashMaps) d_varHashMaps->purgeTimeData(time); }
-  
 #if 0
   //////////
   // Does a variable exist in a particular patch?
@@ -279,24 +306,15 @@ public:
 			     const Patch* patch, cellIndex min, cellIndex max);
 #endif
 
-public:
-  // When true, only the current timestep XML information is cached.
-  // For archives with many patch files and timesteps, Xerces data can
-  // gobble up tons of memory.
-  //
-  // I had wanted to not make this variable static, but the hash maps
-  // that make use of it would need a pointer to the DataArchive they
-  // reference.  I'm not about to make that change just as yet.
-  //
-  // Note: There could be problems with multithreaded code when the
-  // caching is turned off.  Currently there are no guards agains
-  // deleting the cache while another thread is accessing data.  For
-  // maximum thread safety, leave caching on (cacheOnlyCurrentTimestep
-  // = false).
-  static bool cacheOnlyCurrentTimestep;
+  // Only cache a single timestep
+  void turnOnXMLCaching();
+  // Cache the default number of timesteps
+  void turnOffXMLCaching();
+  // Cache new_size number of timesteps.  Calls the
+  // TimeHashMaps::updateCacheSize function with new_size.  See
+  // corresponding documentation.
+  void setTimestepCacheSize(int new_size);
 
-  static void turnOnXMLCaching() { cacheOnlyCurrentTimestep = false; }
-  static void turnOffXMLCaching() { cacheOnlyCurrentTimestep = true; }
 protected:
   DataArchive();
   
@@ -320,7 +338,7 @@ private:
       vector<int> indices;
       vector<double> times;
       queryTimesteps(indices, times);
-      d_varHashMaps = scinew TimeHashMaps(times, d_tsurl, d_tstop,
+      d_varHashMaps = scinew TimeHashMaps(this, times, d_tsurl, d_tstop,
 					  d_processor, d_numProcessors);
     }
     return d_varHashMaps;
