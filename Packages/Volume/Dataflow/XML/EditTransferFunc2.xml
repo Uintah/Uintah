@@ -18,16 +18,21 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="GenTransferFunc2" category="Visualization">
+<component name="EditTransferFunc2" category="Visualization">
   <overview>
     <authors>
-      <author>Cookie Monster</author>
+      <author>Milan Ikits</author>
+      <author>Michael Callahan</author>
     </authors>
   </overview>
   <implementation>
   </implementation>
   <io>
     <inputs lastportdynamic="no">
+      <port>
+	<name>TransferFunction</name>
+	<datatype>Volume::ColorMap2</datatype>
+      </port>
       <port>
 	<name>Histogram</name>
 	<datatype>Teem::Nrrd</datatype>

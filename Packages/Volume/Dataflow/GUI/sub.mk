@@ -3,11 +3,11 @@
 SRCDIR := Packages/Volume/Dataflow/GUI
 
 SRCS := \
-        $(SRCDIR)/TextureBuilder.tcl \
+	$(SRCDIR)/EditTransferFunc2.tcl \
         $(SRCDIR)/NrrdTextureBuilder.tcl \
+        $(SRCDIR)/TextureBuilder.tcl \
         $(SRCDIR)/VolumeSlicer.tcl \
         $(SRCDIR)/VolumeVisualizer.tcl \
-	$(SRCDIR)/GenTransferFunc2.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

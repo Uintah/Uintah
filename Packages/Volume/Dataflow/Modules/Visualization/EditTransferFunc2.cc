@@ -25,8 +25,9 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : GenTransferFunc2.cc
+//    File   : EditTransferFunc2.cc
 //    Author : Milan Ikits
+//    Author : Michael Callahan
 //    Date   : Thu Jul  8 01:50:58 2004
 
 #include <Dataflow/Network/Module.h>
@@ -504,7 +505,7 @@ RectangleWidget::draw()
 }
 
 
-class GenTransferFunc2 : public Module {
+class EditTransferFunc2 : public Module {
 
   GLXContext ctx_;
   Display* dpy_;
@@ -526,8 +527,8 @@ class GenTransferFunc2 : public Module {
   GLuint cmap_tex_;
   
 public:
-  GenTransferFunc2(GuiContext* ctx);
-  virtual ~GenTransferFunc2();
+  EditTransferFunc2(GuiContext* ctx);
+  virtual ~EditTransferFunc2();
 
   virtual void execute();
 
@@ -543,9 +544,9 @@ public:
   void release(int x, int y, int button);
 };
 
-DECLARE_MAKER(GenTransferFunc2)
-GenTransferFunc2::GenTransferFunc2(GuiContext* ctx)
-  : Module("GenTransferFunc2", ctx, Filter, "Visualization", "Volume"),
+DECLARE_MAKER(EditTransferFunc2)
+EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
+  : Module("EditTransferFunc2", ctx, Filter, "Visualization", "Volume"),
     ctx_(0), dpy_(0), win_(0), button_(0), pbuffer_(0), use_pbuffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
     cmap_(new Colormap2),
@@ -555,14 +556,14 @@ GenTransferFunc2::GenTransferFunc2(GuiContext* ctx)
   widget_[1] = new RectangleWidget();
 }
 
-GenTransferFunc2::~GenTransferFunc2()
+EditTransferFunc2::~EditTransferFunc2()
 {}
 
 void
-GenTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
+EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
-    args.error("No command for GenTransferFunc");
+    args.error("No command for EditTransferFunc");
     return;
   }
 
@@ -603,7 +604,7 @@ GenTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 }
 
 void
-GenTransferFunc2::motion(int x, int y)
+EditTransferFunc2::motion(int x, int y)
 {
   //cerr << "motion: " << x << " " << y << endl;
   update();
@@ -611,7 +612,7 @@ GenTransferFunc2::motion(int x, int y)
 }
 
 void
-GenTransferFunc2::push(int x, int y, int button)
+EditTransferFunc2::push(int x, int y, int button)
 {
   //cerr << "push: " << x << " " << y << " " << button << endl;
   button_ = button;
@@ -620,7 +621,7 @@ GenTransferFunc2::push(int x, int y, int button)
 }
 
 void
-GenTransferFunc2::release(int x, int y, int button)
+EditTransferFunc2::release(int x, int y, int button)
 {
   //cerr << "release: " << x << " " << y << " " << button << endl;
   button_ = 0;
@@ -629,7 +630,7 @@ GenTransferFunc2::release(int x, int y, int button)
 }
 
 void
-GenTransferFunc2::execute()
+EditTransferFunc2::execute()
 {
   //cerr << "execute" << endl;
   
@@ -666,7 +667,7 @@ GenTransferFunc2::execute()
 }
 
 void
-GenTransferFunc2::update()
+EditTransferFunc2::update()
 {
   //cerr << "update" << endl;
 
@@ -835,7 +836,7 @@ GenTransferFunc2::update()
 
 
 void
-GenTransferFunc2::redraw()
+EditTransferFunc2::redraw()
 {
   //cerr << "redraw" << endl;
 
