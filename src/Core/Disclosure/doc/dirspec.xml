@@ -95,8 +95,8 @@
        An example of a templated get_type_description function.
     </p>
     <code>
-       template &ltclass T&gt
-       const TypeDescription* get_type_description(vector&ltT&gt*)
+       template &lt class T &gt
+       const TypeDescription* get_type_description(vector &lt T &gt *)
        {
          static TypeDescription* td = 0;
          static string v("vector");
