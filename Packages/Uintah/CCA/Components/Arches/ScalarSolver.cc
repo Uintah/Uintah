@@ -504,6 +504,15 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
+  Task::WhichDW old_values_dw;
+  if (timelabels->use_old_values) old_values_dw = Task::OldDW;
+  else old_values_dw = Task::NewDW;
+
+   tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,
+		 Ghost::None, Arches::ZEROGHOSTCELLS);
+   tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
+		 Ghost::None, Arches::ZEROGHOSTCELLS);
+
   tsk->requires(Task::NewDW, d_lab->d_scalCoefSBLMLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -600,6 +609,15 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     else
       old_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    DataWarehouse* old_values_dw;
+    if (timelabels->use_old_values) old_values_dw = old_dw;
+    else old_values_dw = new_dw;
+    
+    old_values_dw->get(constScalarVars.old_old_scalar, d_lab->d_scalarSPLabel, 
+		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    old_values_dw->get(constScalarVars.old_old_density, d_lab->d_densityCPLabel, 
+		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // for explicit calculation
     new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel, 
