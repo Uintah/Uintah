@@ -43,3 +43,12 @@
   &userfaq;
   &devfaq;
 </faqbook>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file: "../../doc/Utilities/XML/faqbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
