@@ -40,12 +40,14 @@ GeomTriangles::~GeomTriangles() {
 
 void GeomTriangles::add(const Point& p1, const Point& p2, const Point& p3) {
     Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
     if(n.length2() > 0){
 	n.normalize();
     } else {
 	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
 	return;
     }
+#endif
     normals.add(n);
     GeomVertexPrim::add(p1);
     GeomVertexPrim::add(p2);
@@ -61,12 +63,14 @@ void GeomTriangles::add(const Point& p1, const Vector& v1,
 			const Point& p2, const Vector& v2,
 			const Point& p3, const Vector& v3) {
     Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
     if(n.length2() > 0){
 	n.normalize();
     } else {
 	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", v1, " << p2 << ", v2, " << p3 << ", v3)" << endl;
 	return;
     }
+#endif
     normals.add(n);
     GeomVertexPrim::add(p1, v1);
     GeomVertexPrim::add(p2, v2);
@@ -77,12 +81,14 @@ void GeomTriangles::add(const Point& p1, const MaterialHandle& m1,
 			const Point& p2, const MaterialHandle& m2,
 			const Point& p3, const MaterialHandle& m3) {
     Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
     if(n.length2() > 0){
 	n.normalize();
     } else {
 	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", m1, " << p2 << ", m2, " << p3 << ", m3)" << endl;
 	return;
     }
+#endif
     normals.add(n);
     GeomVertexPrim::add(p1, m1);
     GeomVertexPrim::add(p2, m2);
@@ -93,12 +99,14 @@ void GeomTriangles::add(const Point& p1, const Color& c1,
 			const Point& p2, const Color& c2,
 			const Point& p3, const Color& c3) {
     Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
     if(n.length2() > 0){
 	n.normalize();
     } else {
 	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", c1, " << p2 << ", c2, " << p3 << ", c3)" << endl;
 	return;
     }
+#endif
     normals.add(n);
     GeomVertexPrim::add(p1, c1);
     GeomVertexPrim::add(p2, c2);
@@ -111,12 +119,14 @@ void GeomTriangles::add(const Point& p1, const Vector& v1,
 			const Point& p3, const Vector& v3, 
 			const MaterialHandle& m3) {
     Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
     if(n.length2() > 0){
 	n.normalize();
     } else {
 	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", v1, m1, " << p2 << ", v2, m2, " << p3 << ", v3, m3)" << endl;
 	return;
     }
+#endif
     normals.add(n);
     GeomVertexPrim::add(p1, v1, m1);
     GeomVertexPrim::add(p2, v2, m2);
@@ -125,6 +135,7 @@ void GeomTriangles::add(const Point& p1, const Vector& v1,
 
 void GeomTriangles::add(GeomVertex* v1, GeomVertex* v2, GeomVertex* v3) {
     Vector n(Cross(v3->p - v1->p, v2->p - v1->p));
+#ifndef SCI_NORM_OGL
     if(n.length2() > 0){
 	n.normalize();
     } else {
@@ -132,6 +143,7 @@ void GeomTriangles::add(GeomVertex* v1, GeomVertex* v2, GeomVertex* v3) {
 	cerr << "Degenerate triangle!!!\n" << endl;
 	return;
     }
+#endif
     normals.add(n);
     GeomVertexPrim::add(v1);
     GeomVertexPrim::add(v2);
@@ -202,6 +214,7 @@ void GeomTrianglesP::reserve_clear(int n)
 int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
 {
     Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
     if(n.length2() > 0){
         n.normalize();
     }   	
@@ -209,6 +222,7 @@ int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
 	cerr << "degenerate triangle!!!\n" << endl;
 	return 0;
     }
+#endif
 
     normals.add(n.x());
     normals.add(n.y());

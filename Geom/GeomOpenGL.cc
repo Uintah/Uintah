@@ -1161,7 +1161,11 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 	return;
     di->polycount+=verts.size()/3;
     if (di->currently_lit) {
+#ifdef SCI_NORM_OGL
+	glEnable(GL_NORMALIZE);
+#else
 	glDisable(GL_NORMALIZE);
+#endif
 	switch(di->get_drawtype()){
 	case DrawInfoOpenGL::WireFrame:
 	    {
@@ -1255,7 +1259,11 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->polycount += size();
 
     if (di->currently_lit) {
+#ifdef SCI_NORM_OGL
+	glEnable(GL_NORMALIZE);
+#else
 	glDisable(GL_NORMALIZE);
+#endif
 	switch(di->get_drawtype()){
 	case DrawInfoOpenGL::WireFrame:
 	case DrawInfoOpenGL::Flat:
