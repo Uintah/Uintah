@@ -324,6 +324,13 @@ void GenTransferFunc::DrawGraphs()
 
   glXSwapBuffers(dpy[0],win0);
 
+  // clear the middle window (why not?)
+  
+  glXMakeCurrent(dpy[1],win1,ctxs[1]);
+  glDrawBuffer(GL_BACK);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glXSwapBuffers(dpy[1],win1);
+
   // go to the last window...
 
   glXMakeCurrent(dpy[2],win2,ctxs[2]);
@@ -435,7 +442,7 @@ void GenTransferFunc::tcl_command( TCLArgs& args, void* userdata)
     int whichwin;
     args[2].get_int(whichwin);
     Resize(whichwin); // just sets up OGL stuff...
-    
+    DrawGraphs();
   }else {
     Module::tcl_command(args, userdata);
   }
@@ -665,7 +672,7 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
 
   DoMotion(win,x,y);
 
-  printf("%d Button!\n",button);
+//  printf("%d Button!\n",button);
 
   switch(button) {
   case 1:
