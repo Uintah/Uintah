@@ -31,7 +31,9 @@
 #ifndef SCI_project_NotFinished_h
 #define SCI_project_NotFinished_h
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #define NOT_FINISHED(what) std::cerr << "Not finished: " << what << " (" << __FILE__ << ", line " << __LINE__ << ") " << std::endl
 
