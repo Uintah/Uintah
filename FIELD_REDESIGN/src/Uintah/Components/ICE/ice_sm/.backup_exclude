@@ -1,0 +1,14 @@
+Uintah_cfd_code/ice
+Uintah_cfd_code/Libraries/tecio_platforms
+Uintah_cfd_code/Results
+Uintah_cfd_code/*.o
+Uintah_cfd_code/core*
+Uintah_cfd_code/cv*
+Uintah_cfd_code/test*
+
+./Plot_routines/multifile_edit_orgs
+./multifile_edit_orgs
+./Equation_of_state/multifile_edit_orgs
+./Header_files/multifile_edit_orgs
+./Advection_2D/multifile_edit_orgs
+./Source_Sinks/multifile_edit_orgs
