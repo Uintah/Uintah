@@ -29,14 +29,16 @@
 //    Author : Milan Ikits
 //    Date   : Mon Jul  5 18:33:29 2004
 
-#include <sci_gl.h>
+#include <Core/Volume/CM2Widget.h>
+
 #include <Core/Volume/ShaderProgramARB.h>
 #include <Core/Volume/CM2Shader.h>
-#include <Core/Volume/CM2Widget.h>
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
+
+#include <sci_gl.h>
 
 #include <iostream>
 #include <sstream>
@@ -44,8 +46,7 @@
 #include <math.h>
 
 using namespace std;
-
-namespace SCIRun {
+using namespace SCIRun;
 
 PersistentTypeID CM2Widget::type_id("CM2Widget", "Datatype", 0);
 
@@ -411,7 +412,7 @@ TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh, int m)
 
 
 void
-TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
+TriangleCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
@@ -457,8 +458,10 @@ TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
 
 
 void
-TriangleCM2Widget::release (int obj, int x, int y, int w, int h)
+TriangleCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/, 
+                            int /*w*/, int /*h*/)
 {
+  printf("TriangleCM2Widget::release NOT IMPLEMENTED!\n");
 }
 
 
@@ -504,7 +507,8 @@ RectangleCM2Widget::io(Piostream &stream)
 {
   stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
   
-  Pio(stream, (int)type_);
+  Pio(stream, (int&)type_);
+
   Pio(stream, left_x_);
   Pio(stream, left_y_);
   Pio(stream, width_);
@@ -837,7 +841,7 @@ RectangleCM2Widget::pick2 (int ix, int iy, int w, int h, int m)
 
 
 void
-RectangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
+RectangleCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
@@ -898,8 +902,10 @@ RectangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
 
 
 void
-RectangleCM2Widget::release (int obj, int x, int y, int w, int h)
+RectangleCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/,
+                             int /*w*/, int /*h*/)
 {
+  printf("RectangleCM2Widget::release NOT IMPLEMENTED!\n");
 }
 
 
@@ -933,5 +939,3 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
   s >> offset_;
 }
 
-
-} // End namespace SCIRun
