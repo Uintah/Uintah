@@ -24,12 +24,12 @@ SRCDIR   := Core/Math
 FNSRCDIR	:= $(SRCTOP)/$(SRCDIR)
 
 $(FNSRCDIR)/fnparser.cc \
-$(FNSRCDIR)/fnparser.h:	$(SRCDIR)/fnparser.y;
-	$(YACC) -p fn $(SRCDIR)/fnparser.y -o $(FNSRCDIR)/fnparser.cc
+$(FNSRCDIR)/fnparser.h:	$(FNSRCDIR)/fnparser.y;
+	$(YACC) -p fn $(FNSRCDIR)/fnparser.y -o $(FNSRCDIR)/fnparser.cc
 	mv -f $(FNSRCDIR)/fnparser.cc.h $(FNSRCDIR)/fnparser.h
 
-$(FNSRCDIR)/fnscanner.cc: $(SRCDIR)/fnscanner.l $(FNSRCDIR)/fnparser.cc;
-	$(LEX) -Pfn -o$(FNSRCDIR)/fnscanner.cc $(SRCDIR)/fnscanner.l
+$(FNSRCDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(FNSRCDIR)/fnparser.cc;
+	$(LEX) -Pfn -o$(FNSRCDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
 
 SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/LinAlg.c		       \
@@ -39,8 +39,8 @@ SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/PiecewiseInterp.cc       \
             $(SRCDIR)/TrigTable.cc	       \
             $(SRCDIR)/fft.c		       \
-            $(FNSRCDIR)/fnparser.cc	       \
-            $(FNSRCDIR)/fnscanner.cc	       \
+            $(SRCDIR)/fnparser.cc	       \
+            $(SRCDIR)/fnscanner.cc	       \
             $(SRCDIR)/function.cc	       \
             $(SRCDIR)/hf.c                     \
             $(SRCDIR)/ssmult.c
