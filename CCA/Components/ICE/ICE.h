@@ -29,24 +29,18 @@ using namespace SCIRun;
       struct fflux { double d_fflux[6]; };          //face flux
       struct eflux { double d_eflux[12]; };         //edge flux
       struct cflux { double d_cflux[8]; };          //corner flux
-
-      virtual void problemSetup(const ProblemSpecP& params, 
-				GridP& grid,
+      
+      virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 				SimulationStateP&);
       
-      virtual void scheduleInitialize(const LevelP& level,
-				      SchedulerP&,
+      virtual void scheduleInitialize(const LevelP& level, SchedulerP&,
 				      DataWarehouseP&);
       
-      virtual void scheduleComputeStableTimestep(const LevelP&,
-						 SchedulerP&,
+      virtual void scheduleComputeStableTimestep(const LevelP&,SchedulerP&,
 						 DataWarehouseP&);
       
-      virtual void scheduleTimeAdvance(double t,
-				       double dt,
-				       const LevelP&,
-				       SchedulerP&,
-				       DataWarehouseP&,
+      virtual void scheduleTimeAdvance(double t, double dt,const LevelP&,
+				       SchedulerP&, DataWarehouseP&,
 				       DataWarehouseP&);
       
       void scheduleComputeEquilibrationPressure(
@@ -85,15 +79,13 @@ using namespace SCIRun;
       
     public:
       
-      void actuallyInitialize(const ProcessorGroup*,
-			      const Patch* patch,
-			      DataWarehouseP&  old_dw,
-			      DataWarehouseP& new_dw);
+      void actuallyInitialize(const ProcessorGroup*, const Patch* patch,
+			      DataWarehouseP&  old_dw, DataWarehouseP& new_dw);
       
       void actuallyComputeStableTimestep(const ProcessorGroup*,
-					 const Patch* patch,
-					 DataWarehouseP&,
+					 const Patch* patch, DataWarehouseP&,
 					 DataWarehouseP&);
+      
       // calculateEquilibrationPressure
       void computeEquilibrationPressure(
             const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
