@@ -128,6 +128,15 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   quitAction->addTo(file);
   exitAction->addTo(file);
 
+  menuBar()->insertSeparator();
+  QPopupMenu * help = new QPopupMenu( this );
+  help->insertTearOffHandle();
+  menuBar()->insertItem( "&Help", help );
+  help->insertItem( "&About", this, SLOT(about()), Key_F1 );
+  help->insertSeparator();
+  help->insertItem( "What's &This", this, SLOT(whatsThis()),
+		    SHIFT+Key_F1 );
+
   QColor bgcolor(0, 51, 102);
   QSplitter* vsplit = new QSplitter(Qt::Vertical, this);
   QSplitter* hsplit = new QSplitter(Qt::Horizontal, vsplit);
@@ -165,15 +174,6 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   statusBar()->message( "SCIRun 2.0.0 Ready");
 
   buildPackageMenus();
-
-  menuBar()->insertSeparator();
-  QPopupMenu * help = new QPopupMenu( this );
-  help->insertTearOffHandle();
-  menuBar()->insertItem( "&Help", help );
-  help->insertItem( "&About", this, SLOT(about()), Key_F1 );
-  help->insertSeparator();
-  help->insertItem( "What's &This", this, SLOT(whatsThis()),
-		    SHIFT+Key_F1 );
 
   gov::cca::ports::ComponentEventService::pointer ces = pidl_cast<gov::cca::ports::ComponentEventService::pointer>(services->getPort("cca.ComponentEventService"));
   if(ces.isNull()){
@@ -368,9 +368,13 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
 
   gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0));
 
+  CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+  CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+
   services->releasePort("cca.BuilderService");
   if(cd->getClassName()!="SCIRun.Builder"){
-    big_canvas_view->addModule(cd->getClassName(), cid);
+    big_canvas_view->addModule(cd->getClassName(), usesPorts, providesPorts,
+			       cid);
   }
 }
 
