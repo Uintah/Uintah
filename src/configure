@@ -2860,7 +2860,7 @@ if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-      ac_ext=C
+  ac_ext=C
 # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
@@ -2886,24 +2886,21 @@ else
 fi
 rm -f conftest*
   ac_cv_prog_CXXCPP="$CXXCPP"
-  ac_ext=c
+ac_ext=c
 # CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
 ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
 cross_compiling=$ac_cv_prog_cc_cross
-
 fi
-  CXXCPP="$ac_cv_prog_CXXCPP"
-else
-  ac_cv_prog_CXXCPP=$CXXCPP
 fi
+CXXCPP="$ac_cv_prog_CXXCPP"
 echo "$ac_t""$CXXCPP" 1>&6
 
     # Extract the first word of "as", so it can be a program name with args.
 set dummy as; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2907: checking for $ac_word" >&5
+echo "configure:2904: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_AS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2932,7 +2929,7 @@ fi
     # Extract the first word of "ld", so it can be a program name with args.
 set dummy ld; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2936: checking for $ac_word" >&5
+echo "configure:2933: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LD'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2969,7 +2966,7 @@ fi
 esac
 
 echo $ac_n "checking $CC dependency regen switch""... $ac_c" 1>&6
-echo "configure:2973: checking $CC dependency regen switch" >&5
+echo "configure:2970: checking $CC dependency regen switch" >&5
 rm -f configure-test.*
 rm -rf configure-test-dir
 echo "#include <stdio.h>" > configure-test.c
@@ -3017,7 +3014,7 @@ F77_DEPEND_REGEN=$CC_DEPEND_REGEN
 # Extract the first word of "gmake", so it can be a program name with args.
 set dummy gmake; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3021: checking for $ac_word" >&5
+echo "configure:3018: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3054,7 +3051,7 @@ if test "$MAKE" = "NOT_FOUND"; then
   # Extract the first word of "make", so it can be a program name with args.
 set dummy make; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3058: checking for $ac_word" >&5
+echo "configure:3055: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3101,7 +3098,7 @@ fi
     _CUR_2_=""
 
     echo $ac_n "checking for $MAKE version 3.78.1""... $ac_c" 1>&6
-echo "configure:3105: checking for $MAKE version 3.78.1" >&5
+echo "configure:3102: checking for $MAKE version 3.78.1" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -3154,7 +3151,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3158: checking for $ac_word" >&5
+echo "configure:3155: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_AWK'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3188,7 +3185,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3192: checking for $ac_word" >&5
+echo "configure:3189: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_YACC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3221,7 +3218,7 @@ test -n "$YACC" || YACC="yacc"
 # Extract the first word of "flex", so it can be a program name with args.
 set dummy flex; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3225: checking for $ac_word" >&5
+echo "configure:3222: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LEX'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3255,7 +3252,7 @@ then
   *) ac_lib=l ;;
   esac
   echo $ac_n "checking for yywrap in -l$ac_lib""... $ac_c" 1>&6
-echo "configure:3259: checking for yywrap in -l$ac_lib" >&5
+echo "configure:3256: checking for yywrap in -l$ac_lib" >&5
 ac_lib_var=`echo $ac_lib'_'yywrap | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3263,7 +3260,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-l$ac_lib  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3267 "configure"
+#line 3264 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3274,7 +3271,7 @@ int main() {
 yywrap()
 ; return 0; }
 EOF
-if { (eval echo configure:3278: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3275: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3300,7 +3297,7 @@ if test "$uintah" = "yes" ; then
   # Extract the first word of "perl", so it can be a program name with args.
 set dummy perl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3304: checking for $ac_word" >&5
+echo "configure:3301: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_PERL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3331,7 +3328,7 @@ else
   # Extract the first word of "perl", so it can be a program name with args.
 set dummy perl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3335: checking for $ac_word" >&5
+echo "configure:3332: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_PERL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3361,7 +3358,7 @@ fi
 # Extract the first word of "etags", so it can be a program name with args.
 set dummy etags; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3365: checking for $ac_word" >&5
+echo "configure:3362: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_ETAGS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3467,7 +3464,7 @@ cross_compiling=$ac_cv_prog_cxx_cross
 
 echo 
 echo "checking for required standard components..." 1>&6
-echo "configure:3471: checking for required standard components..." >&5
+echo "configure:3468: checking for required standard components..." >&5
 echo
 
 ##  --  search for the math library  -------------------------------------
@@ -3493,10 +3490,10 @@ echo
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lm""... $ac_c" 1>&6
-echo "configure:3497: checking for -lm" >&5
+echo "configure:3494: checking for -lm" >&5
     else
       echo $ac_n "checking for main in -lm""... $ac_c" 1>&6
-echo "configure:3500: checking for main in -lm" >&5
+echo "configure:3497: checking for main in -lm" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -3511,6 +3508,13 @@ echo "configure:3500: checking for main in -lm" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L/usr/lib -lm  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -3559,7 +3563,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:3563: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:3567: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -3614,7 +3618,7 @@ fi
 # Uses ac_ vars as temps to allow command line to override cache and checks.
 # --without-x overrides everything else, but does not touch the cache.
 echo $ac_n "checking for X""... $ac_c" 1>&6
-echo "configure:3618: checking for X" >&5
+echo "configure:3622: checking for X" >&5
 
 # Check whether --with-x or --without-x was given.
 if test "${with_x+set}" = set; then
@@ -3676,12 +3680,12 @@ if test "$ac_x_includes" = NO; then
 
   # First, try using that file with no special directory specified.
 cat > conftest.$ac_ext <<EOF
-#line 3680 "configure"
+#line 3684 "configure"
 #include "confdefs.h"
 #include <$x_direct_test_include>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3685: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3689: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -3750,14 +3754,14 @@ if test "$ac_x_libraries" = NO; then
   ac_save_LIBS="$LIBS"
   LIBS="-l$x_direct_test_library $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3754 "configure"
+#line 3758 "configure"
 #include "confdefs.h"
 
 int main() {
 ${x_direct_test_function}()
 ; return 0; }
 EOF
-if { (eval echo configure:3761: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3765: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   LIBS="$ac_save_LIBS"
 # We can link X programs with no special library path.
@@ -3863,17 +3867,17 @@ else
     case "`(uname -sr) 2>/dev/null`" in
     "SunOS 5"*)
       echo $ac_n "checking whether -R must be followed by a space""... $ac_c" 1>&6
-echo "configure:3867: checking whether -R must be followed by a space" >&5
+echo "configure:3871: checking whether -R must be followed by a space" >&5
       ac_xsave_LIBS="$LIBS"; LIBS="$LIBS -R$x_libraries"
       cat > conftest.$ac_ext <<EOF
-#line 3870 "configure"
+#line 3874 "configure"
 #include "confdefs.h"
 
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:3877: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3881: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_R_nospace=yes
 else
@@ -3889,14 +3893,14 @@ rm -f conftest*
       else
 	LIBS="$ac_xsave_LIBS -R $x_libraries"
 	cat > conftest.$ac_ext <<EOF
-#line 3893 "configure"
+#line 3897 "configure"
 #include "confdefs.h"
 
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:3900: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3904: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_R_space=yes
 else
@@ -3928,7 +3932,7 @@ rm -f conftest*
     # libraries were built with DECnet support.  And karl@cs.umb.edu says
     # the Alpha needs dnet_stub (dnet does not exist).
     echo $ac_n "checking for dnet_ntoa in -ldnet""... $ac_c" 1>&6
-echo "configure:3932: checking for dnet_ntoa in -ldnet" >&5
+echo "configure:3936: checking for dnet_ntoa in -ldnet" >&5
 ac_lib_var=`echo dnet'_'dnet_ntoa | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3936,7 +3940,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldnet  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3940 "configure"
+#line 3944 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -3950,7 +3954,7 @@ int main() {
 dnet_ntoa()
 ; return 0; }
 EOF
-if { (eval echo configure:3954: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3958: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3972,7 +3976,7 @@ fi
 
     if test $ac_cv_lib_dnet_dnet_ntoa = no; then
       echo $ac_n "checking for dnet_ntoa in -ldnet_stub""... $ac_c" 1>&6
-echo "configure:3976: checking for dnet_ntoa in -ldnet_stub" >&5
+echo "configure:3980: checking for dnet_ntoa in -ldnet_stub" >&5
 ac_lib_var=`echo dnet_stub'_'dnet_ntoa | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3980,7 +3984,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldnet_stub  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3984 "configure"
+#line 3988 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -3994,7 +3998,7 @@ int main() {
 dnet_ntoa()
 ; return 0; }
 EOF
-if { (eval echo configure:3998: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4002: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4023,12 +4027,12 @@ fi
     # The nsl library prevents programs from opening the X display
     # on Irix 5.2, according to dickey@clark.net.
     echo $ac_n "checking for gethostbyname""... $ac_c" 1>&6
-echo "configure:4027: checking for gethostbyname" >&5
+echo "configure:4031: checking for gethostbyname" >&5
 if eval "test \"`echo '$''{'ac_cv_func_gethostbyname'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4032 "configure"
+#line 4036 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char gethostbyname(); below.  */
@@ -4054,7 +4058,7 @@ gethostbyname();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4058: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4062: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_gethostbyname=yes"
 else
@@ -4075,7 +4079,7 @@ fi
 
     if test $ac_cv_func_gethostbyname = no; then
       echo $ac_n "checking for gethostbyname in -lnsl""... $ac_c" 1>&6
-echo "configure:4079: checking for gethostbyname in -lnsl" >&5
+echo "configure:4083: checking for gethostbyname in -lnsl" >&5
 ac_lib_var=`echo nsl'_'gethostbyname | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4083,7 +4087,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4087 "configure"
+#line 4091 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4097,7 +4101,7 @@ int main() {
 gethostbyname()
 ; return 0; }
 EOF
-if { (eval echo configure:4101: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4105: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4127,12 +4131,12 @@ fi
     # -lsocket must be given before -lnsl if both are needed.
     # We assume that if connect needs -lnsl, so does gethostbyname.
     echo $ac_n "checking for connect""... $ac_c" 1>&6
-echo "configure:4131: checking for connect" >&5
+echo "configure:4135: checking for connect" >&5
 if eval "test \"`echo '$''{'ac_cv_func_connect'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4136 "configure"
+#line 4140 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char connect(); below.  */
@@ -4158,7 +4162,7 @@ connect();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4162: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4166: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_connect=yes"
 else
@@ -4179,7 +4183,7 @@ fi
 
     if test $ac_cv_func_connect = no; then
       echo $ac_n "checking for connect in -lsocket""... $ac_c" 1>&6
-echo "configure:4183: checking for connect in -lsocket" >&5
+echo "configure:4187: checking for connect in -lsocket" >&5
 ac_lib_var=`echo socket'_'connect | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4187,7 +4191,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket $X_EXTRA_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4191 "configure"
+#line 4195 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4201,7 +4205,7 @@ int main() {
 connect()
 ; return 0; }
 EOF
-if { (eval echo configure:4205: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4209: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4225,12 +4229,12 @@ fi
 
     # gomez@mi.uni-erlangen.de says -lposix is necessary on A/UX.
     echo $ac_n "checking for remove""... $ac_c" 1>&6
-echo "configure:4229: checking for remove" >&5
+echo "configure:4233: checking for remove" >&5
 if eval "test \"`echo '$''{'ac_cv_func_remove'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4234 "configure"
+#line 4238 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char remove(); below.  */
@@ -4256,7 +4260,7 @@ remove();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4260: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4264: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_remove=yes"
 else
@@ -4277,7 +4281,7 @@ fi
 
     if test $ac_cv_func_remove = no; then
       echo $ac_n "checking for remove in -lposix""... $ac_c" 1>&6
-echo "configure:4281: checking for remove in -lposix" >&5
+echo "configure:4285: checking for remove in -lposix" >&5
 ac_lib_var=`echo posix'_'remove | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4285,7 +4289,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lposix  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4289 "configure"
+#line 4293 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4299,7 +4303,7 @@ int main() {
 remove()
 ; return 0; }
 EOF
-if { (eval echo configure:4303: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4307: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4323,12 +4327,12 @@ fi
 
     # BSDI BSD/OS 2.1 needs -lipc for XOpenDisplay.
     echo $ac_n "checking for shmat""... $ac_c" 1>&6
-echo "configure:4327: checking for shmat" >&5
+echo "configure:4331: checking for shmat" >&5
 if eval "test \"`echo '$''{'ac_cv_func_shmat'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4332 "configure"
+#line 4336 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char shmat(); below.  */
@@ -4354,7 +4358,7 @@ shmat();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4358: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4362: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_shmat=yes"
 else
@@ -4375,7 +4379,7 @@ fi
 
     if test $ac_cv_func_shmat = no; then
       echo $ac_n "checking for shmat in -lipc""... $ac_c" 1>&6
-echo "configure:4379: checking for shmat in -lipc" >&5
+echo "configure:4383: checking for shmat in -lipc" >&5
 ac_lib_var=`echo ipc'_'shmat | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4383,7 +4387,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lipc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4387 "configure"
+#line 4391 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4397,7 +4401,7 @@ int main() {
 shmat()
 ; return 0; }
 EOF
-if { (eval echo configure:4401: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4405: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4430,7 +4434,7 @@ fi
   # libraries we check for below, so use a different variable.
   #  --interran@uluru.Stanford.EDU, kb@cs.umb.edu.
   echo $ac_n "checking for IceConnectionNumber in -lICE""... $ac_c" 1>&6
-echo "configure:4434: checking for IceConnectionNumber in -lICE" >&5
+echo "configure:4438: checking for IceConnectionNumber in -lICE" >&5
 ac_lib_var=`echo ICE'_'IceConnectionNumber | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4438,7 +4442,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lICE $X_EXTRA_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4442 "configure"
+#line 4446 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4452,7 +4456,7 @@ int main() {
 IceConnectionNumber()
 ; return 0; }
 EOF
-if { (eval echo configure:4456: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4460: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4519,10 +4523,10 @@ case $host in
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lftn""... $ac_c" 1>&6
-echo "configure:4523: checking for -lftn" >&5
+echo "configure:4527: checking for -lftn" >&5
     else
       echo $ac_n "checking for main in -lftn""... $ac_c" 1>&6
-echo "configure:4526: checking for main in -lftn" >&5
+echo "configure:4530: checking for main in -lftn" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -4537,6 +4541,13 @@ echo "configure:4526: checking for main in -lftn" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lftn  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -4585,10 +4596,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lg2c""... $ac_c" 1>&6
-echo "configure:4589: checking for -lg2c" >&5
+echo "configure:4600: checking for -lg2c" >&5
     else
       echo $ac_n "checking for main in -lg2c""... $ac_c" 1>&6
-echo "configure:4592: checking for main in -lg2c" >&5
+echo "configure:4603: checking for main in -lg2c" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -4603,6 +4614,13 @@ echo "configure:4592: checking for main in -lg2c" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lg2c  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -4651,10 +4669,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lF77""... $ac_c" 1>&6
-echo "configure:4655: checking for -lF77" >&5
+echo "configure:4673: checking for -lF77" >&5
     else
       echo $ac_n "checking for main in -lF77""... $ac_c" 1>&6
-echo "configure:4658: checking for main in -lF77" >&5
+echo "configure:4676: checking for main in -lF77" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -4669,6 +4687,13 @@ echo "configure:4658: checking for main in -lF77" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lF77  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -4731,10 +4756,10 @@ case $host in
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lfetchop""... $ac_c" 1>&6
-echo "configure:4735: checking for -lfetchop" >&5
+echo "configure:4760: checking for -lfetchop" >&5
     else
       echo $ac_n "checking for main in -lfetchop""... $ac_c" 1>&6
-echo "configure:4738: checking for main in -lfetchop" >&5
+echo "configure:4763: checking for main in -lfetchop" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -4749,6 +4774,13 @@ echo "configure:4738: checking for main in -lfetchop" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lfetchop  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -4808,10 +4840,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpthread""... $ac_c" 1>&6
-echo "configure:4812: checking for -lpthread" >&5
+echo "configure:4844: checking for -lpthread" >&5
     else
       echo $ac_n "checking for main in -lpthread""... $ac_c" 1>&6
-echo "configure:4815: checking for main in -lpthread" >&5
+echo "configure:4847: checking for main in -lpthread" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -4826,6 +4858,13 @@ echo "configure:4815: checking for main in -lpthread" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lpthread  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -4894,10 +4933,10 @@ THREAD_IMPL="Thread_$threads.cc"
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lGL""... $ac_c" 1>&6
-echo "configure:4898: checking for -lGL" >&5
+echo "configure:4937: checking for -lGL" >&5
     else
       echo $ac_n "checking for main in -lGL""... $ac_c" 1>&6
-echo "configure:4901: checking for main in -lGL" >&5
+echo "configure:4940: checking for main in -lGL" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -4912,6 +4951,13 @@ echo "configure:4901: checking for main in -lGL" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L/usr/lib -lGL  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -4958,10 +5004,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lGLU""... $ac_c" 1>&6
-echo "configure:4962: checking for -lGLU" >&5
+echo "configure:5008: checking for -lGLU" >&5
     else
       echo $ac_n "checking for main in -lGLU""... $ac_c" 1>&6
-echo "configure:4965: checking for main in -lGLU" >&5
+echo "configure:5011: checking for main in -lGLU" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -4976,6 +5022,13 @@ echo "configure:4965: checking for main in -lGLU" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L/usr/lib -lGLU -lGL >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5024,7 +5077,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:5028: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:5081: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -5085,8 +5138,8 @@ fi
     _SCI_VAR_NAME_=LIB`echo c | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
     _SCI_VAR_HAVE_="HAVE_$_SCI_VAR_NAME_"
 
-    if test "HAVE_LIBDL=yes;DL_LIBRARY="; then
-      _SCI_FOUND_='HAVE_LIBDL=yes;DL_LIBRARY='
+    if test "HAVE_LIBDL=yes;LIBDL_FLAG="; then
+      _SCI_FOUND_='HAVE_LIBDL=yes;LIBDL_FLAG='
     fi
 
     if test ""; then
@@ -5097,10 +5150,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lc""... $ac_c" 1>&6
-echo "configure:5101: checking for -lc" >&5
+echo "configure:5154: checking for -lc" >&5
     else
       echo $ac_n "checking for dlopen in -lc""... $ac_c" 1>&6
-echo "configure:5104: checking for dlopen in -lc" >&5
+echo "configure:5157: checking for dlopen in -lc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -5115,6 +5168,13 @@ echo "configure:5104: checking for dlopen in -lc" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lc  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5150,8 +5210,8 @@ if test -z "$HAVE_LIBDL"; then
     _SCI_VAR_NAME_=LIB`echo dl | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
     _SCI_VAR_HAVE_="HAVE_$_SCI_VAR_NAME_"
 
-    if test "HAVE_LIBDL=yes; DL_LIBRARY="-ldl""; then
-      _SCI_FOUND_='HAVE_LIBDL=yes; DL_LIBRARY="-ldl"'
+    if test "HAVE_LIBDL=yes; LIBDL_FLAG="-ldl""; then
+      _SCI_FOUND_='HAVE_LIBDL=yes; LIBDL_FLAG="-ldl"'
     fi
 
     if test ""; then
@@ -5162,10 +5222,10 @@ if test -z "$HAVE_LIBDL"; then
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -ldl""... $ac_c" 1>&6
-echo "configure:5166: checking for -ldl" >&5
+echo "configure:5226: checking for -ldl" >&5
     else
       echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:5169: checking for dlopen in -ldl" >&5
+echo "configure:5229: checking for dlopen in -ldl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -5180,6 +5240,13 @@ echo "configure:5169: checking for dlopen in -ldl" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -ldl  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5210,17 +5277,17 @@ for ac_hdr in dlfcn.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:5214: checking for $ac_hdr" >&5
+echo "configure:5281: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5219 "configure"
+#line 5286 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5224: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5291: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5251,13 +5318,9 @@ if (test -z "$HAVE_LIBDL" &&
     test -z "$HAVE_LIBC") ||
     test -z "$HAVE_DLFCN_H"; then
   { echo "configure: error: couldn't find the required dynamic library components. exiting." 1>&2; exit 1; }
-else
-  LIBDL_FLAG=-ldl
 fi
 
-PLATFORM_LDFLAGS="-ldl"
-
-
+PLATFORM_LDFLAGS=$LIBDL_FLAG
 
 
 
@@ -5275,17 +5338,17 @@ for ac_hdr in stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:5279: checking for $ac_hdr" >&5
+echo "configure:5342: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5284 "configure"
+#line 5347 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5289: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5352: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5320,17 +5383,17 @@ if test "$host" = "irix"; then
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:5324: checking for $ac_hdr" >&5
+echo "configure:5387: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5329 "configure"
+#line 5392 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5334: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5397: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5365,17 +5428,17 @@ for ac_hdr in algorithm vector map iostream string
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:5369: checking for $ac_hdr" >&5
+echo "configure:5432: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5374 "configure"
+#line 5437 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5379: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5442: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5407,7 +5470,7 @@ done
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
 echo "checking for required Tcl components..." 1>&6
-echo "configure:5411: checking for required Tcl components..." >&5
+echo "configure:5474: checking for required Tcl components..." >&5
 echo
 
 FOUND_ALL_TCL=no
@@ -5416,7 +5479,7 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   echo "checking in $i..." 1>&6
-echo "configure:5420: checking in $i..." >&5
+echo "configure:5483: checking in $i..." >&5
   
     ##  SCI_CHECK_LIB
     _SCI_FOUND_='echo -n ""'
@@ -5438,10 +5501,10 @@ echo "configure:5420: checking in $i..." >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -ltcl""... $ac_c" 1>&6
-echo "configure:5442: checking for -ltcl" >&5
+echo "configure:5505: checking for -ltcl" >&5
     else
       echo $ac_n "checking for main in -ltcl""... $ac_c" 1>&6
-echo "configure:5445: checking for main in -ltcl" >&5
+echo "configure:5508: checking for main in -ltcl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -5456,6 +5519,13 @@ echo "configure:5445: checking for main in -ltcl" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -ltcl  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5504,7 +5574,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:5508: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:5578: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -5560,10 +5630,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -ltk""... $ac_c" 1>&6
-echo "configure:5564: checking for -ltk" >&5
+echo "configure:5634: checking for -ltk" >&5
     else
       echo $ac_n "checking for main in -ltk""... $ac_c" 1>&6
-echo "configure:5567: checking for main in -ltk" >&5
+echo "configure:5637: checking for main in -ltk" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -5578,6 +5648,13 @@ echo "configure:5567: checking for main in -ltk" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -ltk -L$LIBTCL -ltcl >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5626,7 +5703,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:5630: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:5707: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -5682,10 +5759,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -litcl""... $ac_c" 1>&6
-echo "configure:5686: checking for -litcl" >&5
+echo "configure:5763: checking for -litcl" >&5
     else
       echo $ac_n "checking for main in -litcl""... $ac_c" 1>&6
-echo "configure:5689: checking for main in -litcl" >&5
+echo "configure:5766: checking for main in -litcl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -5700,6 +5777,13 @@ echo "configure:5689: checking for main in -litcl" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -litcl -L$LIBTCL -ltcl >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5732,7 +5816,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo itcl.h | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
 
     echo $ac_n "checking for itcl.h""... $ac_c" 1>&6
-echo "configure:5736: checking for itcl.h" >&5
+echo "configure:5820: checking for itcl.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -5792,10 +5876,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -litk""... $ac_c" 1>&6
-echo "configure:5796: checking for -litk" >&5
+echo "configure:5880: checking for -litk" >&5
     else
       echo $ac_n "checking for main in -litk""... $ac_c" 1>&6
-echo "configure:5799: checking for main in -litk" >&5
+echo "configure:5883: checking for main in -litk" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -5810,6 +5894,13 @@ echo "configure:5799: checking for main in -litk" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -litk -L$LIBITCL -litcl -L$LIBTK -ltk -L$LIBTCL -ltcl >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5842,7 +5933,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo itk.h | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
 
     echo $ac_n "checking for itk.h""... $ac_c" 1>&6
-echo "configure:5846: checking for itk.h" >&5
+echo "configure:5937: checking for itk.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -5902,10 +5993,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lBLT""... $ac_c" 1>&6
-echo "configure:5906: checking for -lBLT" >&5
+echo "configure:5997: checking for -lBLT" >&5
     else
       echo $ac_n "checking for main in -lBLT""... $ac_c" 1>&6
-echo "configure:5909: checking for main in -lBLT" >&5
+echo "configure:6000: checking for main in -lBLT" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -5920,6 +6011,13 @@ echo "configure:5909: checking for main in -lBLT" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lBLT -L$LIBTK -ltk -L$LIBTCL -ltcl >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -5952,7 +6050,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo blt.h | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
 
     echo $ac_n "checking for blt.h""... $ac_c" 1>&6
-echo "configure:5956: checking for blt.h" >&5
+echo "configure:6054: checking for blt.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -6014,7 +6112,7 @@ EOF
     _CUR_2_=""
 
     echo $ac_n "checking for Tcl version 8.3.2""... $ac_c" 1>&6
-echo "configure:6018: checking for Tcl version 8.3.2" >&5
+echo "configure:6116: checking for Tcl version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -6071,7 +6169,7 @@ echo "configure:6018: checking for Tcl version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for Tk version 8.3.2""... $ac_c" 1>&6
-echo "configure:6075: checking for Tk version 8.3.2" >&5
+echo "configure:6173: checking for Tk version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -6128,7 +6226,7 @@ echo "configure:6075: checking for Tk version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL""... $ac_c" 1>&6
-echo "configure:6132: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
+echo "configure:6230: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -6211,7 +6309,7 @@ fi
 ##  --  search for xerces-c++ stuff  --------------------------------------
 echo
 echo "checking for required Xerces-C++ components..." 1>&6
-echo "configure:6215: checking for required Xerces-C++ components..." >&5
+echo "configure:6313: checking for required Xerces-C++ components..." >&5
 echo
 
 FOUND_ALL_XERCESC=no
@@ -6220,7 +6318,7 @@ for i in $xercesc $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   echo "checking in $i..." 1>&6
-echo "configure:6224: checking in $i..." >&5
+echo "configure:6322: checking in $i..." >&5
   
     ##  SCI_CHECK_LIB
     _SCI_FOUND_='echo -n ""'
@@ -6242,10 +6340,10 @@ echo "configure:6224: checking in $i..." >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lxerces-c""... $ac_c" 1>&6
-echo "configure:6246: checking for -lxerces-c" >&5
+echo "configure:6344: checking for -lxerces-c" >&5
     else
       echo $ac_n "checking for main in -lxerces-c""... $ac_c" 1>&6
-echo "configure:6249: checking for main in -lxerces-c" >&5
+echo "configure:6347: checking for main in -lxerces-c" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6260,6 +6358,13 @@ echo "configure:6249: checking for main in -lxerces-c" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lxerces-c  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -6312,7 +6417,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:6316: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:6421: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -6368,12 +6473,12 @@ fi
 if test "$uintah" = "yes"; then
   echo
   echo "checking for required MPI components..." 1>&6
-echo "configure:6372: checking for required MPI components..." >&5
+echo "configure:6477: checking for required MPI components..." >&5
   echo
 else
   echo
   echo "checking for optional components..." 1>&6
-echo "configure:6377: checking for optional components..." >&5
+echo "configure:6482: checking for optional components..." >&5
   echo
 fi
 
@@ -6404,10 +6509,10 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lmpi""... $ac_c" 1>&6
-echo "configure:6408: checking for -lmpi" >&5
+echo "configure:6513: checking for -lmpi" >&5
     else
       echo $ac_n "checking for main in -lmpi""... $ac_c" 1>&6
-echo "configure:6411: checking for main in -lmpi" >&5
+echo "configure:6516: checking for main in -lmpi" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6422,6 +6527,13 @@ echo "configure:6411: checking for main in -lmpi" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lmpi  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -6469,10 +6581,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lmpich""... $ac_c" 1>&6
-echo "configure:6473: checking for -lmpich" >&5
+echo "configure:6585: checking for -lmpich" >&5
     else
       echo $ac_n "checking for main in -lmpich""... $ac_c" 1>&6
-echo "configure:6476: checking for main in -lmpich" >&5
+echo "configure:6588: checking for main in -lmpich" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6487,6 +6599,13 @@ echo "configure:6476: checking for main in -lmpich" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lmpich  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -6520,7 +6639,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo mpi.h | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
 
     echo $ac_n "checking for mpi.h""... $ac_c" 1>&6
-echo "configure:6524: checking for mpi.h" >&5
+echo "configure:6643: checking for mpi.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -6630,7 +6749,7 @@ fi
 if test "$uintah" = "yes"; then
   echo
   echo "checking for optional components..." 1>&6
-echo "configure:6634: checking for optional components..." >&5
+echo "configure:6753: checking for optional components..." >&5
   echo
 fi
 
@@ -6661,10 +6780,10 @@ for i in $teem $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lair""... $ac_c" 1>&6
-echo "configure:6665: checking for -lair" >&5
+echo "configure:6784: checking for -lair" >&5
     else
       echo $ac_n "checking for main in -lair""... $ac_c" 1>&6
-echo "configure:6668: checking for main in -lair" >&5
+echo "configure:6787: checking for main in -lair" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6679,6 +6798,13 @@ echo "configure:6668: checking for main in -lair" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lair  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -6725,10 +6851,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lbiff""... $ac_c" 1>&6
-echo "configure:6729: checking for -lbiff" >&5
+echo "configure:6855: checking for -lbiff" >&5
     else
       echo $ac_n "checking for main in -lbiff""... $ac_c" 1>&6
-echo "configure:6732: checking for main in -lbiff" >&5
+echo "configure:6858: checking for main in -lbiff" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6743,6 +6869,13 @@ echo "configure:6732: checking for main in -lbiff" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lbiff -lair >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -6789,10 +6922,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lnrrd""... $ac_c" 1>&6
-echo "configure:6793: checking for -lnrrd" >&5
+echo "configure:6926: checking for -lnrrd" >&5
     else
       echo $ac_n "checking for main in -lnrrd""... $ac_c" 1>&6
-echo "configure:6796: checking for main in -lnrrd" >&5
+echo "configure:6929: checking for main in -lnrrd" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6807,6 +6940,13 @@ echo "configure:6796: checking for main in -lnrrd" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lnrrd -lbiff -lair >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -6853,10 +6993,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lell""... $ac_c" 1>&6
-echo "configure:6857: checking for -lell" >&5
+echo "configure:6997: checking for -lell" >&5
     else
       echo $ac_n "checking for main in -lell""... $ac_c" 1>&6
-echo "configure:6860: checking for main in -lell" >&5
+echo "configure:7000: checking for main in -lell" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6871,6 +7011,13 @@ echo "configure:6860: checking for main in -lell" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lell -lair -lbiff -lnrrd >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -6903,7 +7050,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo nrrd.h | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
 
     echo $ac_n "checking for nrrd.h""... $ac_c" 1>&6
-echo "configure:6907: checking for nrrd.h" >&5
+echo "configure:7054: checking for nrrd.h" >&5
 
     if test "LIBTEEM=$i/lib;INCTEEM_H=$i/include;break"; then
       _SCI_FOUND_='LIBTEEM=$i/lib;INCTEEM_H=$i/include;break'
@@ -6980,10 +7127,10 @@ for i in $mpeg $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lmpege""... $ac_c" 1>&6
-echo "configure:6984: checking for -lmpege" >&5
+echo "configure:7131: checking for -lmpege" >&5
     else
       echo $ac_n "checking for main in -lmpege""... $ac_c" 1>&6
-echo "configure:6987: checking for main in -lmpege" >&5
+echo "configure:7134: checking for main in -lmpege" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6998,6 +7145,13 @@ echo "configure:6987: checking for main in -lmpege" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lmpege  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7030,7 +7184,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo mpege.h | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
 
     echo $ac_n "checking for mpege.h""... $ac_c" 1>&6
-echo "configure:7034: checking for mpege.h" >&5
+echo "configure:7188: checking for mpege.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -7109,10 +7263,10 @@ for i in $libimage $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -limage""... $ac_c" 1>&6
-echo "configure:7113: checking for -limage" >&5
+echo "configure:7267: checking for -limage" >&5
     else
       echo $ac_n "checking for main in -limage""... $ac_c" 1>&6
-echo "configure:7116: checking for main in -limage" >&5
+echo "configure:7270: checking for main in -limage" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7127,6 +7281,13 @@ echo "configure:7116: checking for main in -limage" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -limage  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7159,7 +7320,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo image.h | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
 
     echo $ac_n "checking for image.h""... $ac_c" 1>&6
-echo "configure:7163: checking for image.h" >&5
+echo "configure:7324: checking for image.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -7237,10 +7398,10 @@ for i in $perfex $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lperfex""... $ac_c" 1>&6
-echo "configure:7241: checking for -lperfex" >&5
+echo "configure:7402: checking for -lperfex" >&5
     else
       echo $ac_n "checking for main in -lperfex""... $ac_c" 1>&6
-echo "configure:7244: checking for main in -lperfex" >&5
+echo "configure:7405: checking for main in -lperfex" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7255,6 +7416,13 @@ echo "configure:7244: checking for main in -lperfex" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lperfex  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7313,10 +7481,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lssl""... $ac_c" 1>&6
-echo "configure:7317: checking for -lssl" >&5
+echo "configure:7485: checking for -lssl" >&5
     else
       echo $ac_n "checking for main in -lssl""... $ac_c" 1>&6
-echo "configure:7320: checking for main in -lssl" >&5
+echo "configure:7488: checking for main in -lssl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7331,6 +7499,13 @@ echo "configure:7320: checking for main in -lssl" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lssl  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7388,10 +7563,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lcrypto""... $ac_c" 1>&6
-echo "configure:7392: checking for -lcrypto" >&5
+echo "configure:7567: checking for -lcrypto" >&5
     else
       echo $ac_n "checking for main in -lcrypto""... $ac_c" 1>&6
-echo "configure:7395: checking for main in -lcrypto" >&5
+echo "configure:7570: checking for main in -lcrypto" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7406,6 +7581,13 @@ echo "configure:7395: checking for main in -lcrypto" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lcrypto  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7463,10 +7645,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lifl""... $ac_c" 1>&6
-echo "configure:7467: checking for -lifl" >&5
+echo "configure:7649: checking for -lifl" >&5
     else
       echo $ac_n "checking for main in -lifl""... $ac_c" 1>&6
-echo "configure:7470: checking for main in -lifl" >&5
+echo "configure:7652: checking for main in -lifl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7481,6 +7663,13 @@ echo "configure:7470: checking for main in -lifl" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lifl  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7539,10 +7728,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lcl""... $ac_c" 1>&6
-echo "configure:7543: checking for -lcl" >&5
+echo "configure:7732: checking for -lcl" >&5
     else
       echo $ac_n "checking for main in -lcl""... $ac_c" 1>&6
-echo "configure:7546: checking for main in -lcl" >&5
+echo "configure:7735: checking for main in -lcl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7557,6 +7746,13 @@ echo "configure:7546: checking for main in -lcl" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lcl  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7616,10 +7812,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lexc""... $ac_c" 1>&6
-echo "configure:7620: checking for -lexc" >&5
+echo "configure:7816: checking for -lexc" >&5
     else
       echo $ac_n "checking for main in -lexc""... $ac_c" 1>&6
-echo "configure:7623: checking for main in -lexc" >&5
+echo "configure:7819: checking for main in -lexc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7634,6 +7830,13 @@ echo "configure:7623: checking for main in -lexc" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lexc  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7705,10 +7908,10 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lglobus_utp""... $ac_c" 1>&6
-echo "configure:7709: checking for -lglobus_utp" >&5
+echo "configure:7912: checking for -lglobus_utp" >&5
     else
       echo $ac_n "checking for main in -lglobus_utp""... $ac_c" 1>&6
-echo "configure:7712: checking for main in -lglobus_utp" >&5
+echo "configure:7915: checking for main in -lglobus_utp" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7723,6 +7926,13 @@ echo "configure:7712: checking for main in -lglobus_utp" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib$NBITS -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7769,10 +7979,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lglobus_mp""... $ac_c" 1>&6
-echo "configure:7773: checking for -lglobus_mp" >&5
+echo "configure:7983: checking for -lglobus_mp" >&5
     else
       echo $ac_n "checking for main in -lglobus_mp""... $ac_c" 1>&6
-echo "configure:7776: checking for main in -lglobus_mp" >&5
+echo "configure:7986: checking for main in -lglobus_mp" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7787,6 +7997,13 @@ echo "configure:7776: checking for main in -lglobus_mp" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib$NBITS -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7833,10 +8050,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lglobus_gss_assist""... $ac_c" 1>&6
-echo "configure:7837: checking for -lglobus_gss_assist" >&5
+echo "configure:8054: checking for -lglobus_gss_assist" >&5
     else
       echo $ac_n "checking for main in -lglobus_gss_assist""... $ac_c" 1>&6
-echo "configure:7840: checking for main in -lglobus_gss_assist" >&5
+echo "configure:8057: checking for main in -lglobus_gss_assist" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7851,6 +8068,13 @@ echo "configure:7840: checking for main in -lglobus_gss_assist" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib$NBITS -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7897,10 +8121,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lglobus_gss""... $ac_c" 1>&6
-echo "configure:7901: checking for -lglobus_gss" >&5
+echo "configure:8125: checking for -lglobus_gss" >&5
     else
       echo $ac_n "checking for main in -lglobus_gss""... $ac_c" 1>&6
-echo "configure:7904: checking for main in -lglobus_gss" >&5
+echo "configure:8128: checking for main in -lglobus_gss" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7915,6 +8139,13 @@ echo "configure:7904: checking for main in -lglobus_gss" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib$NBITS -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -7961,10 +8192,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lglobus_gaa""... $ac_c" 1>&6
-echo "configure:7965: checking for -lglobus_gaa" >&5
+echo "configure:8196: checking for -lglobus_gaa" >&5
     else
       echo $ac_n "checking for main in -lglobus_gaa""... $ac_c" 1>&6
-echo "configure:7968: checking for main in -lglobus_gaa" >&5
+echo "configure:8199: checking for main in -lglobus_gaa" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7979,6 +8210,13 @@ echo "configure:7968: checking for main in -lglobus_gaa" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib$NBITS -lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -8068,10 +8306,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lz""... $ac_c" 1>&6
-echo "configure:8072: checking for -lz" >&5
+echo "configure:8310: checking for -lz" >&5
     else
       echo $ac_n "checking for main in -lz""... $ac_c" 1>&6
-echo "configure:8075: checking for main in -lz" >&5
+echo "configure:8313: checking for main in -lz" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8086,6 +8324,13 @@ echo "configure:8075: checking for main in -lz" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$thirdparty/lib -lz  >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -8134,7 +8379,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:8138: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:8383: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -8208,10 +8453,10 @@ for i in $blas $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lblas""... $ac_c" 1>&6
-echo "configure:8212: checking for -lblas" >&5
+echo "configure:8457: checking for -lblas" >&5
     else
       echo $ac_n "checking for main in -lblas""... $ac_c" 1>&6
-echo "configure:8215: checking for main in -lblas" >&5
+echo "configure:8460: checking for main in -lblas" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8226,6 +8471,13 @@ echo "configure:8215: checking for main in -lblas" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lblas $FLIBS >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -8287,10 +8539,10 @@ for i in $lapack `dirname $LIBBLAS` $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -llapack""... $ac_c" 1>&6
-echo "configure:8291: checking for -llapack" >&5
+echo "configure:8543: checking for -llapack" >&5
     else
       echo $ac_n "checking for main in -llapack""... $ac_c" 1>&6
-echo "configure:8294: checking for main in -llapack" >&5
+echo "configure:8546: checking for main in -llapack" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8305,6 +8557,13 @@ echo "configure:8294: checking for main in -llapack" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -llapack -L$LIBBLAS -lblas $FLIBS >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -8367,10 +8626,10 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:8371: checking for -lpetsc" >&5
+echo "configure:8630: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:8374: checking for main in -lpetsc" >&5
+echo "configure:8633: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8385,6 +8644,13 @@ echo "configure:8374: checking for main in -lpetsc" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lpetsc -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
     -lpetscts -lpetscvec -L$LIBLAPACK -llapack -L$LIBBLAS -lblas -L$LIBX \
     -lX11 -L$LIBMPI $MPI $FLIBS -lm >/dev/null 2>conftest.out"
@@ -8435,7 +8701,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:8439: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:8705: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -8533,10 +8799,10 @@ for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:8537: checking for -lpetsc" >&5
+echo "configure:8803: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:8540: checking for main in -lpetsc" >&5
+echo "configure:8806: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8551,6 +8817,13 @@ echo "configure:8540: checking for main in -lpetsc" >&5
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$i/lib -lpetsc -lpetscsles -lpetscmat -lpetscvec \
       -lpetscdm -lpetsccontrib -L$LIBLAPACK -llapack \
       -L$LIBBLAS -lblas -L$LIBX -lX11 -lmpiuni $FLIBS -lm >/dev/null 2>conftest.out"
@@ -8601,7 +8874,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:8605: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:8878: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -8678,17 +8951,17 @@ fi
 ##  --  search for optional headers  ------------------------------------
 ac_safe=`echo "sstream" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sstream""... $ac_c" 1>&6
-echo "configure:8682: checking for sstream" >&5
+echo "configure:8955: checking for sstream" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 8687 "configure"
+#line 8960 "configure"
 #include "confdefs.h"
 #include <sstream>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:8692: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:8965: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
