@@ -10,134 +10,134 @@ using namespace Uintah;
 ICELabel::ICELabel()
 {
   delTLabel
-    = scinew VarLabel("delT",      delt_vartype::getTypeDescription());
+    = VarLabel::create("delT",      delt_vartype::getTypeDescription());
   doMechLabel
-    = scinew VarLabel("doMech",    delt_vartype::getTypeDescription());
+    = VarLabel::create("doMech",    delt_vartype::getTypeDescription());
   press_CCLabel     =
-    scinew VarLabel("press_CC",    CCVariable<double>::getTypeDescription());
+    VarLabel::create("press_CC",    CCVariable<double>::getTypeDescription());
   press_equil_CCLabel   =
-    scinew VarLabel("press_equil_CC",CCVariable<double>::getTypeDescription());
+    VarLabel::create("press_equil_CC",CCVariable<double>::getTypeDescription());
   delP_DilatateLabel  =
-    scinew VarLabel("delP_Dilatate",CCVariable<double>::getTypeDescription());
+    VarLabel::create("delP_Dilatate",CCVariable<double>::getTypeDescription());
   delP_MassXLabel  =
-    scinew VarLabel("delP_MassX",   CCVariable<double>::getTypeDescription()); 
+    VarLabel::create("delP_MassX",   CCVariable<double>::getTypeDescription()); 
   rho_CCLabel       = 
-    scinew VarLabel("rho_CC",       CCVariable<double>::getTypeDescription());
+    VarLabel::create("rho_CC",       CCVariable<double>::getTypeDescription());
   rho_CC_top_cycleLabel       = 
-    scinew VarLabel("rho_top_cycle",CCVariable<double>::getTypeDescription());
+    VarLabel::create("rho_top_cycle",CCVariable<double>::getTypeDescription());
   temp_CCLabel      = 
-    scinew VarLabel("temp_CC",      CCVariable<double>::getTypeDescription());
+    VarLabel::create("temp_CC",      CCVariable<double>::getTypeDescription());
   vel_CCLabel       = 
-    scinew VarLabel("vel_CC",       CCVariable<Vector>::getTypeDescription());
+    VarLabel::create("vel_CC",       CCVariable<Vector>::getTypeDescription());
   cv_CCLabel        = 
-    scinew VarLabel("cv_CC",        CCVariable<double>::getTypeDescription());
+    VarLabel::create("cv_CC",        CCVariable<double>::getTypeDescription());
   rho_micro_CCLabel = 
-    scinew VarLabel("rho_micro_CC", CCVariable<double>::getTypeDescription());
+    VarLabel::create("rho_micro_CC", CCVariable<double>::getTypeDescription());
   sp_vol_CCLabel =
-    scinew VarLabel("sp_vol_CC",    CCVariable<double>::getTypeDescription());
+    VarLabel::create("sp_vol_CC",    CCVariable<double>::getTypeDescription());
   sp_vol_equilLabel =
-    scinew VarLabel("sp_vol_equil", CCVariable<double>::getTypeDescription());
+    VarLabel::create("sp_vol_equil", CCVariable<double>::getTypeDescription());
 
   mass_CCLabel =
-    scinew VarLabel("mass_CC",      CCVariable<double>::getTypeDescription());
+    VarLabel::create("mass_CC",      CCVariable<double>::getTypeDescription());
   speedSound_CCLabel =
-    scinew VarLabel("speedSound_CC",CCVariable<double>::getTypeDescription());
+    VarLabel::create("speedSound_CC",CCVariable<double>::getTypeDescription());
   div_velfc_CCLabel =
-    scinew VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription());
+    VarLabel::create("div_velfc_CC", CCVariable<double>::getTypeDescription());
   vol_frac_CCLabel =
-    scinew VarLabel("vol_frac_CC",  CCVariable<double>::getTypeDescription());
+    VarLabel::create("vol_frac_CC",  CCVariable<double>::getTypeDescription());
   viscosity_CCLabel =
-    scinew VarLabel("viscosity_CC", CCVariable<double>::getTypeDescription());
+    VarLabel::create("viscosity_CC", CCVariable<double>::getTypeDescription());
   mom_source_CCLabel = 
-    scinew VarLabel("mom_source_CC",CCVariable<Vector>::getTypeDescription());
+    VarLabel::create("mom_source_CC",CCVariable<Vector>::getTypeDescription());
   int_eng_source_CCLabel = 
-    scinew VarLabel("intE_source_CC",CCVariable<double>::getTypeDescription());
+    VarLabel::create("intE_source_CC",CCVariable<double>::getTypeDescription());
   mom_L_CCLabel = 
-    scinew VarLabel("mom_L_CC",     CCVariable<Vector>::getTypeDescription());
+    VarLabel::create("mom_L_CC",     CCVariable<Vector>::getTypeDescription());
   int_eng_L_CCLabel = 
-    scinew VarLabel("int_eng_L_CC", CCVariable<double>::getTypeDescription());
+    VarLabel::create("int_eng_L_CC", CCVariable<double>::getTypeDescription());
   mass_L_CCLabel = 
-    scinew VarLabel("mass_L_CC",    CCVariable<double>::getTypeDescription());
+    VarLabel::create("mass_L_CC",    CCVariable<double>::getTypeDescription());
   mom_L_ME_CCLabel = 
-    scinew VarLabel("mom_L_ME_CC",  CCVariable<Vector>::getTypeDescription());
+    VarLabel::create("mom_L_ME_CC",  CCVariable<Vector>::getTypeDescription());
   int_eng_L_ME_CCLabel = 
-    scinew VarLabel("int_eng_L_ME_CC",CCVariable<double>::getTypeDescription());
+    VarLabel::create("int_eng_L_ME_CC",CCVariable<double>::getTypeDescription());
   q_CCLabel = 
-    scinew VarLabel("q_CC",         CCVariable<double>::getTypeDescription());
+    VarLabel::create("q_CC",         CCVariable<double>::getTypeDescription());
   q_advectedLabel = 
-    scinew VarLabel("q_advected",   CCVariable<double>::getTypeDescription());
+    VarLabel::create("q_advected",   CCVariable<double>::getTypeDescription());
   qV_CCLabel = 
-    scinew VarLabel("qV_CC",        CCVariable<Vector>::getTypeDescription());
+    VarLabel::create("qV_CC",        CCVariable<Vector>::getTypeDescription());
   qV_advectedLabel = 
-    scinew VarLabel("qV_advected",  CCVariable<Vector>::getTypeDescription());
+    VarLabel::create("qV_advected",  CCVariable<Vector>::getTypeDescription());
   burnedMass_CCLabel =
-    scinew VarLabel("burnedMass",   CCVariable<double>::getTypeDescription());
+    VarLabel::create("burnedMass",   CCVariable<double>::getTypeDescription());
   releasedHeat_CCLabel =
-    scinew VarLabel("releasedHeat", CCVariable<double>::getTypeDescription());
+    VarLabel::create("releasedHeat", CCVariable<double>::getTypeDescription());
   created_vol_CCLabel =
-    scinew VarLabel("created_vol",  CCVariable<double>::getTypeDescription());
+    VarLabel::create("created_vol",  CCVariable<double>::getTypeDescription());
 
   term1Label = 
-    scinew VarLabel("term1",        CCVariable<double>::getTypeDescription());
+    VarLabel::create("term1",        CCVariable<double>::getTypeDescription());
   term2Label = 
-    scinew VarLabel("term2",        CCVariable<double>::getTypeDescription());
+    VarLabel::create("term2",        CCVariable<double>::getTypeDescription());
   term3Label = 
-    scinew VarLabel("term3",        CCVariable<double>::getTypeDescription());
+    VarLabel::create("term3",        CCVariable<double>::getTypeDescription());
   
   // Face centered variables
   uvel_FCLabel       = 
-    scinew VarLabel("uvel_FC",   SFCXVariable<double>::getTypeDescription() );
+    VarLabel::create("uvel_FC",   SFCXVariable<double>::getTypeDescription() );
   vvel_FCLabel       = 
-    scinew VarLabel("vvel_FC",   SFCYVariable<double>::getTypeDescription() );
+    VarLabel::create("vvel_FC",   SFCYVariable<double>::getTypeDescription() );
   wvel_FCLabel       = 
-    scinew VarLabel("wvel_FC",   SFCZVariable<double>::getTypeDescription() );
+    VarLabel::create("wvel_FC",   SFCZVariable<double>::getTypeDescription() );
   uvel_FCMELabel       = 
-    scinew VarLabel("uvel_FCME", SFCXVariable<double>::getTypeDescription() );
+    VarLabel::create("uvel_FCME", SFCXVariable<double>::getTypeDescription() );
   vvel_FCMELabel       = 
-    scinew VarLabel("vvel_FCME", SFCYVariable<double>::getTypeDescription() );
+    VarLabel::create("vvel_FCME", SFCYVariable<double>::getTypeDescription() );
   wvel_FCMELabel       = 
-    scinew VarLabel("wvel_FCME", SFCZVariable<double>::getTypeDescription() );
+    VarLabel::create("wvel_FCME", SFCZVariable<double>::getTypeDescription() );
   pressX_FCLabel     = 
-    scinew VarLabel("pressX_FC", SFCXVariable<double>::getTypeDescription() );
+    VarLabel::create("pressX_FC", SFCXVariable<double>::getTypeDescription() );
   pressY_FCLabel     =
-    scinew VarLabel("pressY_FC", SFCYVariable<double>::getTypeDescription() );
+    VarLabel::create("pressY_FC", SFCYVariable<double>::getTypeDescription() );
   pressZ_FCLabel     =
-    scinew VarLabel("pressZ_FC", SFCZVariable<double>::getTypeDescription() );
+    VarLabel::create("pressZ_FC", SFCZVariable<double>::getTypeDescription() );
   tau_X_FCLabel       =
-    scinew VarLabel("tau_X_FC",  SFCXVariable<Vector>::getTypeDescription() );
+    VarLabel::create("tau_X_FC",  SFCXVariable<Vector>::getTypeDescription() );
   tau_Y_FCLabel       =
-    scinew VarLabel("tau_Y_FC",  SFCYVariable<Vector>::getTypeDescription() );
+    VarLabel::create("tau_Y_FC",  SFCYVariable<Vector>::getTypeDescription() );
   tau_Z_FCLabel       =
-    scinew VarLabel("tau_Z_FC",  SFCZVariable<Vector>::getTypeDescription() );
+    VarLabel::create("tau_Z_FC",  SFCZVariable<Vector>::getTypeDescription() );
     
     // Misc labels
     scratchLabel     =
-     scinew VarLabel("scratch",  CCVariable<double>::getTypeDescription() );
+     VarLabel::create("scratch",  CCVariable<double>::getTypeDescription() );
     scratch_FCXLabel   =
-     scinew VarLabel("scratch_FCX",SFCXVariable<double>::getTypeDescription());
+     VarLabel::create("scratch_FCX",SFCXVariable<double>::getTypeDescription());
 
     scratch_FCYLabel   =
-     scinew VarLabel("scratch_FCY",SFCYVariable<double>::getTypeDescription());
+     VarLabel::create("scratch_FCY",SFCYVariable<double>::getTypeDescription());
 
     scratch_FCZLabel   =
-     scinew VarLabel("scratch_FCZ",SFCZVariable<double>::getTypeDescription());
+     VarLabel::create("scratch_FCZ",SFCZVariable<double>::getTypeDescription());
 
     scratch_FCVectorLabel   =
-     scinew VarLabel("scratch_FCVector",
+     VarLabel::create("scratch_FCVector",
 		     SFCXVariable<Vector>::getTypeDescription());
     IveBeenHereLabel     =
-     scinew VarLabel("IveBeenHere",CCVariable<int>::getTypeDescription() );
+     VarLabel::create("IveBeenHere",CCVariable<int>::getTypeDescription() );
      
  //Reduction labels (The names must be identical to those in MPMLabel.cc)
   KineticEnergyLabel = 
-    scinew VarLabel( "KineticEnergy", sum_vartype::getTypeDescription() );
+    VarLabel::create( "KineticEnergy", sum_vartype::getTypeDescription() );
   CenterOfMassVelocityLabel = 
-    scinew VarLabel( "CenterOfMassVelocity",
+    VarLabel::create( "CenterOfMassVelocity",
                                       sumvec_vartype::getTypeDescription() );
   TotalMassLabel = 
-    scinew VarLabel( "TotalMass",     sum_vartype::getTypeDescription() );  
+    VarLabel::create( "TotalMass",     sum_vartype::getTypeDescription() );  
   TotalIntEngLabel = 
-    scinew VarLabel( "TotalIntEng",   sum_vartype::getTypeDescription() );  
+    VarLabel::create( "TotalIntEng",   sum_vartype::getTypeDescription() );  
 
        
 } 
