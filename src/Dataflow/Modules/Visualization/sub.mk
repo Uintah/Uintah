@@ -44,19 +44,24 @@ SRCS     += \
 	$(SRCDIR)/AddLight.cc\
 	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/GLTextureBuilder.cc\
+	$(SRCDIR)/EditTransferFunc2.cc\
 	$(SRCDIR)/GenAxes.cc\
 	$(SRCDIR)/GenClock.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTitle.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/Isosurface.cc\
+	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowColorMap.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowMatrix.cc\
 	$(SRCDIR)/StreamLines.cc\
+	$(SRCDIR)/TextureBuilder.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
+	$(SRCDIR)/VolumeSlicer.cc\
+	$(SRCDIR)/VolumeVisualizer.cc\
 #[INSERT NEW CODE FILE HERE]
 
 
@@ -67,7 +72,7 @@ PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Core/Exceptions Core/Thread Core/GuiInterface Core/Geom \
 	Core/Persistent Core/Geometry Core/Util \
 	Core/TkExtensions Core/Algorithms/Visualization \
-	Core/GLVolumeRenderer Core/GeomInterface
+	Core/GLVolumeRenderer Core/GeomInterface Core/Volume
 
 LIBS := $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

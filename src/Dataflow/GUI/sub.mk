@@ -70,6 +70,7 @@ SRCS := \
 	$(SRCDIR)/CrosshairWidget.tcl \
 	$(SRCDIR)/DirectInterpolate.tcl \
 	$(SRCDIR)/EditPath.tcl \
+	$(SRCDIR)/EditTransferFunc2.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
 	$(SRCDIR)/FieldCage.tcl\
 	$(SRCDIR)/FieldInfo.tcl\
@@ -101,6 +102,7 @@ SRCS := \
 	$(SRCDIR)/MatrixWriter.tcl \
 	$(SRCDIR)/Module.tcl \
 	$(SRCDIR)/NetworkEditor.tcl \
+	$(SRCDIR)/NrrdTextureBuilder.tcl \
 	$(SRCDIR)/PathReader.tcl \
 	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \
@@ -134,6 +136,7 @@ SRCS := \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
 	$(SRCDIR)/SciTclStream.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
+	$(SRCDIR)/TextureBuilder.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/Tooltips.tcl \
 	$(SRCDIR)/TransformData.tcl \
@@ -141,6 +144,8 @@ SRCS := \
 	$(SRCDIR)/TransformData3.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
+	$(SRCDIR)/VolumeSlicer.tcl \
+	$(SRCDIR)/VolumeVisualizer.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

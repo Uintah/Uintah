@@ -54,6 +54,7 @@ SUBDIRS := \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
+	$(SRCDIR)/Volume \
 #	$(SRCDIR)/Util/Comm \
 	$(SRCDIR)/2d \
 #	$(SRCDIR)/Parts \

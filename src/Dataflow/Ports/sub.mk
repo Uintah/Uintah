@@ -34,12 +34,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Ports
 
 SRCS     += $(SRCDIR)/ColorMapPort.cc             \
+	    $(SRCDIR)/Colormap2Port.cc            \
             $(SRCDIR)/FieldPort.cc                \
             $(SRCDIR)/GeometryPort.cc             \
 	    $(SRCDIR)/GLTexture3DPort.cc          \
 	    $(SRCDIR)/ImagePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
             $(SRCDIR)/PathPort.cc                 \
+            $(SRCDIR)/TexturePort.cc              \
             $(SRCDIR)/templates.cc		  \
 
 
