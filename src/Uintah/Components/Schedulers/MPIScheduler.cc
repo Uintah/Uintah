@@ -212,8 +212,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			      dep->d_patch, d_myworld,
 			      dep->d_task->getAssignedResourceIndex(),
 			      dep->d_serialNumber, &size, &requestid);
-		  log.logSend(dep, size);
-		  send_ids.push_back(requestid);
+		  if(size != -1){
+		     log.logSend(dep, size);
+		     send_ids.push_back(requestid);
+		  }
 		  varsent.insert(ddest);
 	       }
 	    }
@@ -260,8 +262,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			   dep->d_patch, d_myworld,
 			   MPI_ANY_SOURCE,
 			   dep->d_serialNumber, &size, &requestid);
-	       log.logRecv(dep, size);
-	       recv_ids.push_back(requestid);
+	       if(size != -1){
+		  log.logRecv(dep, size);
+		  recv_ids.push_back(requestid);
+	       }
 	    }
 	 }
       }
@@ -870,6 +874,10 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.20  2000/09/22 19:32:07  sparker
+// Do not send/recv particle variables when there are no particles on the
+//   patch
+//
 // Revision 1.19  2000/09/20 18:29:52  jas
 // Removed the && totalParticles condition in the gatherParticles.
 // Added packing info when 0 particles needed to be sent.
