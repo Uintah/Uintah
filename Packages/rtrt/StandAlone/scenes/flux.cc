@@ -113,7 +113,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     spline.add(Color(1,0,0));
     int ncolors=5000;
     matls.resize(ncolors);
-    float Ka=.8;
     float Kd=.8;
     float Ks=.8;
     float refl=0;
