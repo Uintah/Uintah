@@ -25,7 +25,9 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
   //__________________________________
   //  Temperature, pressure and other CCVariables
   void setBC(CCVariable<double>& var,     
-            const std::string& type, 
+            const std::string& type,
+            const CCVariable<double>&gamma,
+            const CCVariable<double>&cv, 
             const Patch* patch,  
             SimulationStateP& sharedState,
             const int mat_id,
