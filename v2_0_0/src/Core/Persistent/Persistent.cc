@@ -30,6 +30,8 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Mutex.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
@@ -38,10 +40,23 @@
 
 using namespace std;
 
+#define DEBUG 0
+
 namespace SCIRun {
 
 static Piostream::MapStringPersistentTypeID* table = 0;  
 
+#ifdef __APPLE__
+  // On the Mac, this comes from Core/Util/DynamicLoader.cc because
+  // the constructor will actually fire from there.  When it is declared
+  // in this file, it does not "construct" and thus causes seg faults.
+  // (Yes, this is a hack.  Perhaps this problem will go away in later
+  // OSX releases, but probably not as it has something to do with the
+  // Mac philosophy on when to load dynamic libraries.)
+  extern Mutex persistentTypeIDMutex;
+#else
+  Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");  
+#endif
 
 //----------------------------------------------------------------------
 PersistentTypeID::PersistentTypeID(const string& typeName, 
@@ -49,8 +64,15 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 				   Persistent* (*maker)())
   :  type(typeName), parent(parentName), maker(maker)
 {
+#if DEBUG
+  cerr << "PersistentTypeID constructor: " << typeName << " " << parentName << ", maker: " << maker << "\n";
+#endif
+  persistentTypeIDMutex.lock();
   if (!table) {
     table = scinew Piostream::MapStringPersistentTypeID;
+#if DEBUG
+    cerr << "table " << &table << ", pointer is " << table << "\n";
+#endif
   }
   
   Piostream::MapStringPersistentTypeID::iterator dummy;
@@ -66,8 +88,11 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     }
   }
   
-  //  cerr << "PersistentTypeID: " << typeName << " " << parentName << endl;
+#if DEBUG
+  cerr << "putting in table: PersistentTypeID: " << typeName << " " << parentName << endl;
+#endif
   (*table)[type] = this;
+  persistentTypeIDMutex.unlock();
 }
 
 PersistentTypeID::~PersistentTypeID()
@@ -113,37 +138,55 @@ Piostream::~Piostream()
 }
 
 //----------------------------------------------------------------------
-int Piostream::reading()
+int
+Piostream::reading()
 {
     return dir==Read;
 }
 
 //----------------------------------------------------------------------
-int Piostream::writing()
+int
+Piostream::writing()
 {
     return dir==Write;
 }
 
 //----------------------------------------------------------------------
-int Piostream::error()
+int
+Piostream::error()
 {
     return err;
 }
 
 //----------------------------------------------------------------------
-static PersistentTypeID* find_derived(const string& classname,
-				      const string& basename)
+static
+PersistentTypeID*
+find_derived( const string& classname, const string& basename )
 {
+  persistentTypeIDMutex.lock();
+#if DEBUG
+  cout << "table is: " << table << "\n";
+#endif
   if (!table) return 0;
   PersistentTypeID* pid;
   
   Piostream::MapStringPersistentTypeID::iterator iter;
   
   iter = table->find(classname);
-  if(iter == table->end()) return 0;
+  if(iter == table->end()) {
+#if DEBUG
+    cerr << "not found in table " << &table << ", pointer is " << table << "\n";
+#endif
+    persistentTypeIDMutex.unlock();
+    return 0;
+  }
+  persistentTypeIDMutex.unlock();
   
   pid = (*iter).second;
-  if (!pid->parent.size()) {
+  if( pid->parent.size() == 0 ) {
+#if DEBUG
+    cout << "size is 0\n";
+#endif
     return 0;
   }
   
@@ -155,7 +198,9 @@ static PersistentTypeID* find_derived(const string& classname,
 }
 
 //----------------------------------------------------------------------
-void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
+
+void
+Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 {
   if (err) {
     return;
@@ -166,10 +211,9 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
     data=0;			// In case anything goes wrong...
     emit_pointer(have_data, pointer_id);
     if (have_data) {
-				// See what type comes next in the
-				// stream.  If it Is a type derived
-				// from pid->type, then read it in
-				// Otherwise, it is an error...
+      // See what type comes next in the stream.  If it is a type
+      // derived from pid->type, then read it in, otherwise it is an
+      // error...
       string in_name(peek_class());
       string want_name(pid.type);
       
@@ -182,10 +226,15 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	
 	if (found_pid) {
 	  maker=found_pid->maker;
+	} else {
+#if DEBUG
+	  cerr << "Did not find a pt_id.\n";
+#endif
 	}
       }
       if (!maker) {
 	cerr << "Maker not found? (class=" << in_name << ")\n";
+	cerr << "want_name: " << want_name << "\n";
 	err=1;
 	return;
       }
@@ -257,7 +306,9 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 }
 
 //----------------------------------------------------------------------
-Piostream* auto_istream(const string& filename)
+
+Piostream*
+auto_istream(const string& filename)
 {
   std::ifstream in(filename.c_str());
   if (!in) {
@@ -295,8 +346,9 @@ Piostream* auto_istream(const string& filename)
 }
 
 //----------------------------------------------------------------------
-bool Piostream::readHeader(const string& filename, char* hdr,
-  const char* filetype, int& version)
+bool
+Piostream::readHeader( const string & filename, char * hdr,
+		       const char   * filetype, int  & version )
 {
   char m1=hdr[0];
   char m2=hdr[1];
