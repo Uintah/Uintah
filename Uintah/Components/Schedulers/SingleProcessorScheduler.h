@@ -75,6 +75,10 @@ WARNING
 					      const VarLabel* new_posLabel,
 					      const vector<vector<const VarLabel*> >& new_labels,
 					      int numMatls);
+
+       virtual LoadBalancer* getLoadBalancer();
+       virtual void releaseLoadBalancer();
+       
    private:
       const VarLabel* reloc_old_posLabel;
       vector<vector<const VarLabel*> > reloc_old_labels;
@@ -103,6 +107,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/09/20 16:00:28  sparker
+// Added external interface to LoadBalancer (for per-processor tasks)
+// Added message logging functionality. Put the tag <MessageLog/> in
+//    the ups file to enable
+//
 // Revision 1.6  2000/07/28 22:45:15  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in

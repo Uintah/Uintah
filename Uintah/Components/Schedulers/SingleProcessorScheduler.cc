@@ -51,8 +51,8 @@ SingleProcessorScheduler::initialize()
 
 void
 SingleProcessorScheduler::execute(const ProcessorGroup * pc,
-			             DataWarehouseP   &,
-			             DataWarehouseP   & dw )
+				  DataWarehouseP   &,
+				  DataWarehouseP   & dw )
 {
    UintahParallelPort* lbp = getPort("load balancer");
    LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
@@ -331,8 +331,27 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
    }
 }
 
+LoadBalancer*
+SingleProcessorScheduler::getLoadBalancer()
+{
+   UintahParallelPort* lbp = getPort("load balancer");
+   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+   return lb;
+}
+
+void
+SingleProcessorScheduler::releaseLoadBalancer()
+{
+   releasePort("load balancer");
+}
+
 //
 // $Log$
+// Revision 1.17  2000/09/20 16:00:28  sparker
+// Added external interface to LoadBalancer (for per-processor tasks)
+// Added message logging functionality. Put the tag <MessageLog/> in
+//    the ups file to enable
+//
 // Revision 1.16  2000/08/28 17:48:39  sparker
 // Fixed delete for multi-material problems
 //

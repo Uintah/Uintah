@@ -188,11 +188,11 @@ public:
 
    void sendMPI(const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
-		int dest, int tag, MPI_Request* requestid);
+		int dest, int tag, int* size, MPI_Request* requestid);
    void recvMPI(DataWarehouseP& old_dw, 
 		const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
-		int dest, int tag, MPI_Request* requestid);
+		int dest, int tag, int* size, MPI_Request* requestid);
    void reduceMPI(const VarLabel* label, const ProcessorGroup* world);
 private:
 
@@ -248,6 +248,11 @@ private:
 
 //
 // $Log$
+// Revision 1.37  2000/09/20 16:00:28  sparker
+// Added external interface to LoadBalancer (for per-processor tasks)
+// Added message logging functionality. Put the tag <MessageLog/> in
+//    the ups file to enable
+//
 // Revision 1.36  2000/08/24 21:04:33  dav
 // Removed DWMpiHandler Stuff
 //

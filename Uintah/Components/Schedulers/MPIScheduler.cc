@@ -80,7 +80,7 @@ struct VarDestType {
 static const TypeDescription* specialType;
 
 MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
-   : UintahParallelComponent(myworld), Scheduler(oport)
+   : UintahParallelComponent(myworld), Scheduler(oport), log(myworld, oport)
 {
   d_generation = 0;
    myrank = myworld->myrank(); // For debug only...
@@ -89,7 +89,13 @@ MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
 				       "DataWarehouse::specialInternalScatterGatherType", false, -1);
   scatterGatherVariable = scinew VarLabel("DataWarehouse::scatterGatherVariable",
 				       specialType, VarLabel::Internal);
+}
 
+
+void
+MPIScheduler::problemSetup(const ProblemSpecP& prob_spec)
+{
+   log.problemSetup(prob_spec);
 }
 
 MPIScheduler::~MPIScheduler()
@@ -140,6 +146,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  int numParticles = pset->numParticles();
 		  ASSERT(dep->d_serialNumber >= 0);
 		  MPI_Bsend(&numParticles, 1, MPI_INT, dest, PARTICLESET_TAG|dep->d_serialNumber, d_myworld->getComm());
+		  log.logSend(dep, sizeof(int), "particleSet size");
 		  sent.insert(ddest);
 	       }
 	    }
@@ -200,10 +207,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  MPI_Request requestid;
 		  ASSERT(dep->d_serialNumber >= 0);
 		  dbg << me << " --> sending initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << '\n';
+		  int size;
 		  dw->sendMPI(dep->d_var, dep->d_matlIndex,
 			      dep->d_patch, d_myworld,
 			      dep->d_task->getAssignedResourceIndex(),
-			      dep->d_serialNumber, &requestid);
+			      dep->d_serialNumber, &size, &requestid);
+		  log.logSend(dep, size);
 		  send_ids.push_back(requestid);
 		  varsent.insert(ddest);
 	       }
@@ -246,10 +255,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       MPI_Request requestid;
 	       ASSERT(dep->d_serialNumber >= 0);
 	       dbg << me << " <-- receiving initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << '\n';
+	       int size;
 	       dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
 			   dep->d_patch, d_myworld,
 			   MPI_ANY_SOURCE,
-			   dep->d_serialNumber, &requestid);
+			   dep->d_serialNumber, &size, &requestid);
+	       log.logRecv(dep, size);
 	       recv_ids.push_back(requestid);
 	    }
 	 }
@@ -334,10 +345,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			MPI_Request requestid;
 			ASSERT(req->d_serialNumber >= 0);
 			dbg << me << " <-- receiving " << req->d_var->getName() << " serial " << req->d_serialNumber << ' ' << *req << '\n';
+			int size;
 			dw->recvMPI(old_dw, req->d_var, req->d_matlIndex,
 				    req->d_patch, d_myworld,
 				    MPI_ANY_SOURCE,
-				    req->d_serialNumber, &requestid);
+				    req->d_serialNumber, &size, &requestid);
+			log.logRecv(req, size);
 			recv_ids.push_back(requestid);	
 			dbg << "there are now " << recv_ids.size() << " waiters\n";
 		     }
@@ -416,10 +429,13 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			   MPI_Request requestid;
 			   ASSERT(dep->d_serialNumber >= 0);
 			   dbg << me << " --> sending " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << " " << *dep << '\n';
+			   int size;
 			   dw->sendMPI(dep->d_var, dep->d_matlIndex,
 				       dep->d_patch, d_myworld,
 				       dep->d_task->getAssignedResourceIndex(),
-				       dep->d_serialNumber, &requestid);
+				       dep->d_serialNumber,
+				       &size, &requestid);
+			   log.logSend(dep, size);
 			   send_ids.push_back(requestid);
 			   varsent.insert(ddest);
 			}
@@ -464,6 +480,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    }
    dw->finalize();
    finalizeNodes(me);
+   log.finishTimestep();
 }
 
 void
@@ -643,6 +660,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	    }
 	    MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
 		     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG, pc->getComm());
+	    log.logSend(0, sizeof(int), "sg_buffersize");
 	    char* buf = scinew char[sendsize];
 	    int position = 0;
 	    for(int j=0;j<sr[i]->matls.size();j++){
@@ -653,6 +671,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		for(int v=0;v<mr->vars.size();v++){
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
+		  int numP = mr->relocset->numParticles();
 		  var2->packMPI(buf, sendsize, &position, pc, 0, numP);
 		  delete var2;
 		}
@@ -661,12 +680,14 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	    ASSERTEQ(position, sendsize);
 	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i], sgargs.tags[i],
 		     pc->getComm());
+	    log.logSend(0, sizeof(int), "scatter");
 	    delete[] buf;
 	 } else {
 	    int sendsize = 0;
 	    MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
 		     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG,
 		     pc->getComm());
+	    log.logSend(0, sizeof(int), "sg_buffersize(0)");
 	 }
       }
    }
@@ -707,12 +728,14 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	    MPI_Recv(&recvsize[i], 1, MPI_INT,
 		     sgargs.dest[i], sgargs.tags[i]|RECV_BUFFER_SIZE_TAG,
 		     pc->getComm(), &stat);
+	    log.logRecv(0, sizeof(int), "sg_buffersize");
 	    recvpos[i] = 0;
 	    if(recvsize[i]){
 	       recvbuf[i] = scinew char[recvsize[i]];
 	       MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
 			sgargs.dest[i], sgargs.tags[i],
 			pc->getComm(), &stat);
+	       log.logRecv(0, recvsize[i], "gather");
 	    }
 	 }
       }
@@ -823,8 +846,28 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
    }
 }
 
+LoadBalancer*
+MPIScheduler::getLoadBalancer()
+{
+   UintahParallelPort* lbp = getPort("load balancer");
+   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+   return lb;
+}
+
+void
+MPIScheduler::releaseLoadBalancer()
+{
+   releasePort("load balancer");
+}
+
+
 //
 // $Log$
+// Revision 1.18  2000/09/20 16:00:28  sparker
+// Added external interface to LoadBalancer (for per-processor tasks)
+// Added message logging functionality. Put the tag <MessageLog/> in
+//    the ups file to enable
+//
 // Revision 1.17  2000/09/13 14:00:48  sparker
 // Changed the MPI_Send behaviour - use MPI_Testsome instead of
 // MPI_Waitall after sends.

@@ -7,9 +7,10 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/Schedulers
 
-SRCS     += $(SRCDIR)/MPIScheduler.cc \
+SRCS     += $(SRCDIR)/MPIScheduler.cc $(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
+	$(SRCDIR)/SimpleLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
 	$(SRCDIR)/TaskGraph.cc
@@ -22,6 +23,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/09/20 16:00:29  sparker
+# Added external interface to LoadBalancer (for per-processor tasks)
+# Added message logging functionality. Put the tag <MessageLog/> in
+#    the ups file to enable
+#
 # Revision 1.9  2000/07/27 22:39:47  sparker
 # Implemented MPIScheduler
 # Added associated support

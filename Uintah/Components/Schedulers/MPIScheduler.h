@@ -3,6 +3,7 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Components/Schedulers/TaskGraph.h>
+#include <Uintah/Components/Schedulers/MessageLog.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/TaskProduct.h>
@@ -48,9 +49,12 @@ WARNING
 	 vector<int> tags;
       };
       SGArgs sgargs; // THIS IS UGLY - Steve
+      MessageLog log;
    public:
       MPIScheduler(const ProcessorGroup* myworld, Output* oport);
       virtual ~MPIScheduler();
+      
+      virtual void problemSetup(const ProblemSpecP& prob_spec);
       
       //////////
       // Insert Documentation Here:
@@ -65,7 +69,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void addTask(Task* t);
-      
+
       //////////
       // Insert Documentation Here:
       virtual DataWarehouseP createDataWarehouse( DataWarehouseP& parent);
@@ -81,6 +85,10 @@ WARNING
 					      const vector<vector<const VarLabel*> >& new_labels,
 					      int numMatls);
 
+
+       virtual LoadBalancer* getLoadBalancer();
+       virtual void releaseLoadBalancer();
+       
    private:
       void scatterParticles(const ProcessorGroup*,
 			    const Patch* patch,
@@ -108,6 +116,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/09/20 16:00:28  sparker
+// Added external interface to LoadBalancer (for per-processor tasks)
+// Added message logging functionality. Put the tag <MessageLog/> in
+//    the ups file to enable
+//
 // Revision 1.6  2000/07/28 22:45:14  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in
