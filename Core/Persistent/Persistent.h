@@ -81,6 +81,7 @@ public:
   virtual void begin_cheap_delim()=0;
   virtual void end_cheap_delim()=0;
 
+  virtual void io(bool&)=0;
   virtual void io(char&)=0;
   virtual void io(unsigned char&)=0;
   virtual void io(short&)=0;
@@ -108,6 +109,7 @@ public:
 };
 
 //----------------------------------------------------------------------
+SCICORESHARE inline void Pio(Piostream& stream, bool& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, char& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, unsigned char& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, short& data) { stream.io(data); }
