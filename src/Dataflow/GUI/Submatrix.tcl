@@ -87,9 +87,10 @@ itcl_class SCIRun_Math_Submatrix {
 
 	pack $w.col.label $w.col.min $w.col.max -side left -anchor n -expand yes -fill x
 	
-	button $w.execute -text "Execute" -command "$this-c needexecute"
+	pack $w.info $w.row $w.col -side top -expand yes -fill x
 
-	pack $w.info $w.row $w.col $w.execute -side top -expand yes -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 
