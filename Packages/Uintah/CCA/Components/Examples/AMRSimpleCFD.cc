@@ -121,6 +121,9 @@ void AMRSimpleCFD::scheduleRefineInterface(const LevelP& /*fineLevel*/,
 }
 //______________________________________________________________________
 //
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // Template parameter not used in declaring arguments.
+#endif                // This turns off SGI compiler warning.
 template<class ArrayType, class constArrayType>
 void refineFaces(const Patch* patch, 
                  const Level* level,
@@ -434,6 +437,9 @@ void refineFaces(const Patch* patch,
   }
   //  cout << "RANDY: AMRSimpleCFD::refineFaces() END" << endl;
 }
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif
 //______________________________________________________________________
 //
 void AMRSimpleCFD::addRefineDependencies(Task* task, 
@@ -924,7 +930,7 @@ void AMRSimpleCFD::refine ( const ProcessorGroup*,
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   IntVector rr(coarseLevel->getRefinementRatio());
-  double ratio = 1./(rr.x()*rr.y()*rr.z());
+  //double ratio = 1./(rr.x()*rr.y()*rr.z());
 
   //  IntVector rr(fineLevel->getRefinementRatio());
   //  double ratio = 1./(rr.x()*rr.y()*rr.z());

@@ -573,7 +573,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
-  Task* t;
+  Task* t = NULL;
   if (d_ice->d_RateForm) {     // R A T E   F O R M
     cout_doing << "MPMICE::scheduleComputeRateFormPressure" << endl;
     t = scinew Task("MPMICE::computeRateFormPressure",

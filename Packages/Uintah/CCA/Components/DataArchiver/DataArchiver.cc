@@ -914,7 +914,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
 
 void DataArchiver::outputTimestep(Dir& baseDir,
 				  vector<DataArchiver::SaveItem>&,
-				  double time, double delt,
+				  double /*time*/, double delt,
 				  const GridP& grid,
 				  string* pTimestepDir /* passed back */,
 				  bool hasGlobals /* = false */)
@@ -1061,7 +1061,8 @@ void DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_del
 }
 
       
-void DataArchiver::executedTimestep(double delt)
+void
+DataArchiver::executedTimestep(double /*delt*/)
 {
   // double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -1699,7 +1700,7 @@ void DataArchiver::output(const ProcessorGroup*,
 	  long pad = PADSIZE-cur%PADSIZE;
 	  char* zero = scinew char[pad];
 	  bzero(zero, pad);
-	  int err = write(fd, zero, pad);
+	  int err = (int)write(fd, zero, pad);
           if (err != pad) {
             cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
             SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno));

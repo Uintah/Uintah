@@ -32,7 +32,7 @@ namespace Uintah
   }
 
   // Interface inherited from Simulation Interface
-  void RegridderTest::problemSetup ( const ProblemSpecP& params, GridP& grid, SimulationStateP& state )
+  void RegridderTest::problemSetup ( const ProblemSpecP& /*params*/, GridP& /*grid*/, SimulationStateP& state )
   {
     d_sharedState = state;
     d_material = new SimpleMaterial();
@@ -53,7 +53,7 @@ namespace Uintah
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
-  void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps )
+  void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler, int /*step*/, int /*nsteps*/ )
   {
     Task* task = scinew Task( "timeAdvance", this, &RegridderTest::timeAdvance );
     task->requires( Task::OldDW, d_examplesLabel->density, Ghost::AroundCells, 1 );
@@ -81,9 +81,8 @@ namespace Uintah
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
-  void RegridderTest::scheduleCoarsen ( const LevelP& level, SchedulerP& scheduler )
+  void RegridderTest::scheduleCoarsen ( const LevelP& /*level*/, SchedulerP& /*scheduler*/ )
   {
-
   }
 
   void RegridderTest::scheduleRefine ( const LevelP& level, SchedulerP& scheduler )
@@ -95,13 +94,14 @@ namespace Uintah
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
-  void RegridderTest::scheduleRefineInterface ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps )
+  void RegridderTest::scheduleRefineInterface ( const LevelP& /*level*/, SchedulerP& /*scheduler*/, 
+                                                int /*step*/, int /*nsteps*/ )
   {
   }
 
   void RegridderTest::initialize (const ProcessorGroup*,
 				  const PatchSubset* patches, const MaterialSubset* matls,
-				  DataWarehouse* old_dw, DataWarehouse* new_dw)
+				  DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
   {
     //    cerr << "RANDY: RegridderTest::initialize()" << endl;
     BBox gridBoundingBox;
@@ -138,9 +138,9 @@ namespace Uintah
 
 
   void RegridderTest::computeStableTimestep (const ProcessorGroup*,
-					     const PatchSubset* patches,
-					     const MaterialSubset* matls,
-					     DataWarehouse* old_dw, DataWarehouse* new_dw)
+					     const PatchSubset* /*patches*/,
+					     const MaterialSubset* /*matls*/,
+					     DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
   {
     new_dw->put(delt_vartype(1), d_sharedState->get_delt_label());
   }
@@ -148,7 +148,7 @@ namespace Uintah
   void RegridderTest::timeAdvance ( const ProcessorGroup*,
 				    const PatchSubset* patches,
 				    const MaterialSubset* matls,
-				    DataWarehouse* old_dw, DataWarehouse* new_dw )
+				    DataWarehouse* /*old_dw*/, DataWarehouse* new_dw )
   {
     //    cerr << "RANDY: RegridderTest::timeAdvance()" << endl;
     
@@ -175,7 +175,7 @@ namespace Uintah
   void RegridderTest::errorEstimate ( const ProcessorGroup*,
 				      const PatchSubset* patches,
 				      const MaterialSubset* matls,
-				      DataWarehouse*, DataWarehouse* new_dw, bool initial )
+				      DataWarehouse*, DataWarehouse* new_dw, bool /*initial*/ )
   {
     double pi = 3.141592653589;
     if ( getLevel(patches)->getIndex() == 0 ) {

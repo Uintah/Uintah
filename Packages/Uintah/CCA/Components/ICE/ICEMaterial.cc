@@ -150,8 +150,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
-   Box b1 = piece->getBoundingBox();
-   Box b2 = patch->getBox();
+   // Box b1 = piece->getBoundingBox();
+   // Box b2 = patch->getBox();
     
    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/ppc;
