@@ -29,13 +29,13 @@
 	 <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
 			       <value> 4000000.0   </value>
 	 </BCType>
-	 <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+	 <BCType id = "1" label = "Velocity"     var = "Dirichlet">
 			       <value> [209.,0.,0.] </value>
 	 </BCType>
-	 <BCType id = "all" label = "Temperature"  var = "Dirichlet">
+	 <BCType id = "1" label = "Temperature"  var = "Dirichlet">
 			       <value> 1000.0  </value>
 	 </BCType>
-	 <BCType id = "all" label = "Density"	   var = "Dirichlet">
+	 <BCType id = "1" label = "Density"	   var = "Dirichlet">
 			       <value> 13.937 </value>
 	 </BCType>
        </Face>
