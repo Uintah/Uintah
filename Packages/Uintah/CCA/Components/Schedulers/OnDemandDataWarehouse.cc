@@ -663,8 +663,8 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 }
 
 void
-OnDemandDataWarehouse::saveParticleSubset(int matlIndex, const Patch* patch,
-                                          ParticleSubset* psubset)
+OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
+                                          int matlIndex, const Patch* patch)
 {
   ASSERTEQ(psubset->getPatch(), patch);
   ASSERTEQ(psubset->getMatlIndex(), matlIndex);
