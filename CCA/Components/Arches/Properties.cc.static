@@ -1188,23 +1188,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	  }
-	  if(colX==10 && colY==10 && colZ==10){
-		cout<<"--------------------------"<<endl;
-		cout<<"Mixture fraction at [10 10 10] is:"<<inStream.d_mixVars[0]<<endl;
-		cout<<"Variance at [10 10 10] is:"<<inStream.d_mixVarVariance[0]<<endl;
-		cout<<"Temperature at [10 10 10] is:"<<temperature[currCell]<<endl;
-	  }
-	  if(colX==20 && colY==12 && colZ==13){
-		cout<<"Mixture fraction at [20 12 13] is:"<<inStream.d_mixVars[0]<<endl;
-		cout<<"Variance at [20 12 13] is:"<<inStream.d_mixVarVariance[0]<<endl;
-		cout<<"Temperature at [20 12 13] is:"<<temperature[currCell]<<endl;
-	  }
-	  if(colX==25 && colY==15 && colZ==13){
-		cout<<"Mixture fraction at [25 15 13] is:"<<inStream.d_mixVars[0]<<endl;
-		cout<<"Variance at [25 15 13] is:"<<inStream.d_mixVarVariance[0]<<endl;
-		cout<<"Temperature at [25 15 13] is:"<<temperature[currCell]<<endl;
-		cout<<"----------------------------"<<endl;
-	  }
 
 	  if (d_radiationCalc) {
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
