@@ -245,9 +245,9 @@ MeanMixingModel::computeProps(const InletStream& inStream,
     double adiabaticEnthalpy = normStream.getEnthalpy();
     double sensEnthalpy = normStream.getSensEnthalpy();
     double normEnthalpy;
-    if (Abs(absEnthalpy) < 1e-10)
+    if (inStream.d_initEnthalpy)
       normEnthalpy = 0.0;
-    else 
+    else
       normEnthalpy = (absEnthalpy - adiabaticEnthalpy)/sensEnthalpy;
     if (normEnthalpy < d_tableInfo->getMinValue(0))
       normEnthalpy =  d_tableInfo->getMinValue(0);
