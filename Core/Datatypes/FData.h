@@ -16,10 +16,7 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Exceptions/DimensionMismatch.h>
-#include <Core/Util/FancyAssert.h>
 #include <Core/Datatypes/TypeName.h>
-#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
@@ -42,8 +39,8 @@ public:
   //
   void    io(Piostream&);
   static  PersistentTypeID type_id;
-  static  string typeName(int);
-  virtual string getTypeName(int n) = 0;
+  static  const string type_name(int);
+  virtual const string get_type_name(int n) = 0;
 
 protected:
 };
