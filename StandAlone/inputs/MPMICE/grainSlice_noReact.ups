@@ -185,7 +185,7 @@
               </geom_object>
          </material>
        
-         <material  Rx = "reactant" name = "HMX Grain">
+         <material name = "HMX Grain">
                 <EOS type = "ideal_gas">
                     <gas_constant>       0.0          </gas_constant>
                 </EOS>
@@ -228,7 +228,7 @@
       </MPM>
       <!--__________________________________ -->   
        <ICE>
-         <material Rx = "product" name = "Inside air">
+         <material name = "Inside air">
             <burn type = "null"/>
             <EOS type = "ideal_gas">
                  <gas_constant>         0.0              </gas_constant>
@@ -309,4 +309,3 @@
     </PhysicalBC>
     
 </Uintah_specification>
-
