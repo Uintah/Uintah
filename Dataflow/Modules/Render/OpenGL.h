@@ -42,7 +42,6 @@
 #include <Core/Datatypes/Image.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Render/Ball.h>
-#include <Dataflow/Modules/Render/MpegEncoder.h>
 #include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
@@ -55,6 +54,10 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geom/GeomText.h>
+
+#ifdef MPEG
+#include <mpege.h>
+#endif // MPEG
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -136,8 +139,12 @@ protected:
   ofstream os;
 #endif
 #endif
-  MpegEncoder mpEncoder;
+
   bool encoding_mpeg;
+#ifdef MPEG
+  FILE *output;
+  MPEGe_options options;
+#endif // MPEG
 
 public:
     OpenGL();
