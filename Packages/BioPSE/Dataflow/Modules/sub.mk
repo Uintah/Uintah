@@ -27,6 +27,7 @@ SRCDIR := Packages/BioPSE/Dataflow/Modules
 SUBDIRS := \
 	$(SRCDIR)/Forward\
 	$(SRCDIR)/Inverse\
+	$(SRCDIR)/Visualization\
 #	$(SRCDIR)/LeadField\
 #[INSERT NEW CATEGORY DIR HERE]
 
