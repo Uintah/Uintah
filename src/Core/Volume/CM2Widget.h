@@ -32,6 +32,8 @@
 #ifndef CM2Widget_h
 #define CM2Widget_h
 
+#include "CM2Shader.h"
+
 #include <Core/Datatypes/Color.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/NrrdData.h>
@@ -58,6 +60,8 @@ public:
   virtual void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer) = 0;
   virtual void rasterize(SCIRun::Array3<float>& array, bool faux) = 0;
   virtual CM2Widget* clone() = 0;
+  virtual int  get_shadeType() = 0;
+  virtual int  get_onState() = 0;
   
   virtual bool is_empty() { return false; }
   // behavior
@@ -75,7 +79,8 @@ public:
   void set_color(const SCIRun::Color &c) { color_ = c; }
   float alpha() const { return alpha_; }
   void set_alpha(float a);
-
+  virtual void set_shadeType(int type);
+  virtual void set_onState(int state);
   virtual void io(SCIRun::Piostream &stream) = 0;
   static SCIRun::PersistentTypeID type_id;
 
@@ -92,6 +97,8 @@ protected:
   SCIRun::Color color_;
   float alpha_;
   int selected_;
+  int shadeType_;
+  int onState_;
   SCIRun::HSVColor last_hsv_;
 };
 
@@ -113,6 +120,8 @@ public:
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
+  int  get_shadeType() {return shadeType_;}
+  int  get_onState() {return onState_;}
   
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
@@ -158,7 +167,9 @@ public:
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
-  
+  int  get_shadeType() {return shadeType_;}
+  int  get_onState() {return onState_;}
+
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
   virtual int pick2 (int x, int y, int w, int h, int m);
@@ -196,6 +207,8 @@ public:
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
+  int  get_shadeType() {return shadeType_;}
+  int  get_onState() {return onState_;}
   
   bool is_empty() { return ! pixels_.get_rep(); }
   // behavior

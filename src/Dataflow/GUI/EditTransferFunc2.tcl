@@ -47,6 +47,12 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	
 	global $this-marker
 	trace variable $this-marker w "$this unpickle"
+
+        global $this-filename
+        set $this-filename "MyTransferFunction"
+
+        global $this-filetype
+        set $this-filetype Binary
     }
 
     method unpickle {a b c} {
@@ -118,9 +124,16 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 			-textvariable $this-name-$i -width 16
 		    set cmmd "$this raise_color $widgets.e-$i.color $this-$i-color color_change-$i"
 		    button $widgets.e-$i.color -width 8 \
-			-command $cmmd 
-		    pack $widgets.e-$i.name $widgets.e-$i.color \
-			-side left
+			-command $cmmd
+                    checkbutton $widgets.e-$i.shade -text "" -padx 26 -justify center \
+                        -relief flat -variable $this-shadeType-$i -onvalue 1 -offvalue 0 \
+                        -anchor w -command "$this-c shadewidget-$i"
+                    checkbutton $widgets.e-$i.on -text "" -padx 6 -justify center \
+                        -relief flat -variable $this-on-$i -onvalue 1 -offvalue 0 \
+                        -anchor w -command "$this-c toggleon-$i"
+                    $widgets.e-$i.on select;   # set it to on.
+		    pack $widgets.e-$i.name $widgets.e-$i.color $widgets.e-$i.shade \
+			$widgets.e-$i.on -side left
 		    pack $widgets.e-$i 
 		}
 
@@ -140,7 +153,100 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	}
     }
 
+    method file_save {} {
+	global $this-filename
+        set ws [format "%s-fbs" .ui[modname]]
+
+        if {[winfo exists $ws]} { 
+          if {[winfo ismapped $ws] == 1} {
+            raise $ws
+          } else {
+            wm deiconify $ws
+          }
+          return 
+        }
+
+        toplevel $ws -class TkFDialog
+        set initdir "~/"
+
+        # place to put preferred data directory
+        # it's used if $this-filename is empty
+    
+        #######################################################
+        # to be modified for particular reader
+
+        # extansion to append if no extension supplied by user
+        set defext ".xff"
+
+        # name to appear initially
+        set defname "TransferFunc01"
+        set title "Save Transfer Function"
+
+        # file types to appers in filter box
+        set types {
+            {{All Files}       {.xff}   }
+        }
+
+        ######################################################
+
+        makeSaveFilebox \
+                -parent $ws \
+                -filevar $this-filename \
+                -setcmd "wm withdraw $ws" \
+                -command "$this-c save; wm withdraw $ws" \
+                -cancel "wm withdraw $ws" \
+                -title $title \
+                -filetypes $types \
+                -initialfile $defname \
+                -initialdir $initdir \
+                -defaultextension $defext \
+                -formatvar $this-filetype
+                #-splitvar $this-split
+
+    }
+    
+    method file_load {} {
+        global $this-filename
+
+        set wl [format "%s-fbl" .ui[modname]]
+        if {[winfo exists $wl]} {
+            if {[winfo ismapped $wl] == 1} {
+                raise $wl
+            } else {
+                wm deiconify $wl
+            }
+            return
+        }
+        toplevel $wl -class TkFDialog
+        set initdir "~/"
+        #######################################################
+        # to be modified for particular reader
+
+        # extansion to append if no extension supplied by user
+        set defext ".xff"
+        set title "Open SCIRun Transfer Function file"
+
+        # file types to appers in filter box
+        set types {
+            {{SCIRun Transfer Function}     {.xff}      }
+            {{All Files} {.*}   }
+        }
+
+        ######################################################
+
+        makeOpenFilebox \
+                -parent $wl \
+                -filevar $this-filename \
+                -command "$this-c load;  wm withdraw $wl" \
+                -cancel "wm withdraw $wl" \
+                -title $title \
+                -filetypes $types \
+                -initialdir $initdir \
+                -defaultextension $defext
+    }
+
     method ui {} {
+        global $this-filename
 	global $this-num-entries
 	trace vdelete $this-num-entries w "$this unpickle"
 
@@ -160,22 +266,28 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	label $w.title.name -text "Widget Name" \
 	    -width 16 -relief groove
 	label $w.title.color -text "Color" -width 8 -relief groove
+	label $w.title.shade -text "Flat Shaded" -width 10 -relief groove
+        label $w.title.onoff -text "On" -width 4 -relief groove
 	label $w.title.empty -text "" -width 3
-	pack $w.title.name $w.title.color $w.title.empty \
+	pack $w.title.name $w.title.color $w.title.shade $w.title.onoff $w.title.empty \
 	    -side left 
 
 	frame $w.controls
 	button $w.controls.addtriangle -text "Add Triangle" \
-	    -command "$this-c addtriangle" -width 14
+	    -command "$this-c addtriangle" -width 11
 	button $w.controls.addrectangle -text "Add Rectangle" \
-	    -command "$this-c addrectangle" -width 14
+	    -command "$this-c addrectangle" -width 11
 	button $w.controls.delete -text "Delete" \
-	    -command "$this-c deletewidget" -width 14
+	    -command "$this-c deletewidget" -width 11
 	button $w.controls.undo -text "Undo" \
-	    -command "$this-c undowidget" -width 14
+	    -command "$this-c undowidget" -width 11
+        button $w.controls.load -text "Load" \
+            -command "$this file_load" -width 11
+        button $w.controls.save -text "Save" \
+            -command "$this file_save" -width 11
 	pack $w.controls.addtriangle $w.controls.addrectangle \
-	    $w.controls.delete $w.controls.undo \
-	    -padx 10 -pady 4 -fill x -expand yes -side left
+	    $w.controls.delete $w.controls.undo $w.controls.load $w.controls.save \
+	    -padx 8 -pady 4 -fill x -expand yes -side left
 
 	pack $w.title  -fill x -padx 2 -pady 2
 	pack $w.widgets -side top -fill both -expand yes -padx 2
