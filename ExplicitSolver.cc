@@ -579,6 +579,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_totalflowOUTLabel);
   tsk->computes(d_lab->d_netflowOUTBCLabel);
   tsk->computes(d_lab->d_denAccumLabel);
+  tsk->computes(d_lab->d_carbonEfficiencyLabel);
 
   tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
   tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
@@ -1769,6 +1770,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double flowOUT = 0.0;
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
+    double carbon_efficiency = 0.0;
 
 
     new_dw->put(delt_vartype(uvwout), d_lab->d_uvwoutLabel);
@@ -1776,6 +1778,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(flowOUT), d_lab->d_totalflowOUTLabel);
     new_dw->put(delt_vartype(flowOUToutbc), d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum), d_lab->d_denAccumLabel);
+    new_dw->put(delt_vartype(carbon_efficiency), d_lab->d_carbonEfficiencyLabel);
 
   }
 }
