@@ -622,7 +622,6 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 	
     case DrawInfoOpenGL::WireFrame:
-
 	double srx=tab1.sin(0);
 	double sry=tab1.cos(0);
 	glBegin(GL_LINE_LOOP);
