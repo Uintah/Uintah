@@ -327,8 +327,14 @@ proc routeConnection {omodid owhich imodid iwhich} {
     } elseif {[expr $oy+2*$minextend] < $iy} {
 	set my [expr ($oy+$iy)/2]
 	return [list $ox $oy $ox $my $ix $my $ix $iy]
+    } else {
+	set mx $ox
+	if {$ix < $mx} {
+	    set mx $ix
+	}
+	return [list $ox $oy $ox [expr $oy+10] [expr $mx-50] [expr $oy+10] \
+		[expr $mx-50] [expr $iy-10] $ix [expr $iy-10] $ix $iy]
     }
-    return "oops"
 }
 
 proc computeIPortCoords {modid which} {
