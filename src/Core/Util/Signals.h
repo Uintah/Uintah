@@ -31,7 +31,10 @@
 #ifndef Signals_h
 #define Signals_h
 
+
 #include <vector>
+
+namespace SCIRun {
 
 /*
  * SlotBase
@@ -90,11 +93,11 @@ private:
 public:
   void add( SlotBase *s) { slot.push_back(s); }
 
-  void operator()() { for (int i=0; i<slot.size(); i++) slot[i]->send(); }
+  void operator()() { for (unsigned i=0; i<slot.size(); i++) slot[i]->send(); }
 
   template<class Slot>
   bool rem( const Slot &r) { 
-    for (int i=0; i<slot.size(); i++) {
+    for (unsigned i=0; i<slot.size(); i++) {
       Slot *s = dynamic_cast<Slot *>(slot[i]);
       if ( s && (*s) == r ) {
 	delete slot[i];
@@ -189,7 +192,8 @@ private:
   vector<SlotBase1<Arg> *> slot;
 public:
   void add( SlotBase1<Arg> *s) { slot.push_back(s); }
-  void operator()( Arg a) {for (int i=0; i<slot.size(); i++) slot[i]->send(a);}
+  void operator()( Arg a) 
+    { for (unsigned i=0; i<slot.size(); i++) slot[i]->send(a);}
   template<class Slot>
   bool rem( const Slot &r) { 
     for (int i=0; i<slot.size(); i++) {
@@ -326,5 +330,7 @@ bool disconnect( Signal2<Arg1, Arg2> &s, void (*fun)(Arg1, Arg2) )
 {
   return s.rem( StaticSlot2<Arg1, Arg2>( fun ) );
 }
+
+}; // namespace SCIRun
 
 #endif // Signals_h
