@@ -29,7 +29,6 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/DenseMatrix.cc	    	\
 	$(SRCDIR)/Field.cc		    	\
 	$(SRCDIR)/FieldInterfaceAux.cc	    	\
-	$(SRCDIR)/GenFunction.cc	    	\
 	$(SRCDIR)/HexVolMesh.cc			\
 	$(SRCDIR)/Image.cc		    	\
 	$(SRCDIR)/ImageMesh.cc		    	\
