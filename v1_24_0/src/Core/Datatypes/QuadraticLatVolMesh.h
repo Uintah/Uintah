@@ -198,9 +198,9 @@ public:
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
-    typedef SequentialIndex<NodeIndex, EdgeIndex<unsigned int> > index_type;
-    typedef SequentialIter<NodeIter, EdgeIterator<unsigned int>, index_type> iterator;
-    typedef SequentialSize<NodeSize, EdgeIndex<unsigned int> >   size_type;
+    typedef SequentialIndex<LatVolMeshNodeIndex, EdgeIndex<unsigned int> > index_type;
+    typedef SequentialIter<LatVolMeshNodeIter, EdgeIterator<unsigned int>, index_type> iterator;
+    typedef SequentialSize<LatVolMeshNodeSize, EdgeIndex<unsigned int> >   size_type;
     typedef vector<index_type> array_type;
   };			
 
