@@ -1190,9 +1190,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->computes(lb->temp_CCLabel,  ice_matls);
   task->computes(lb->vel_CCLabel,   ice_matls);
   task->computes(lb->machLabel,     ice_matls);  
-/*`==========TESTING==========*/
- task->computes(lb->scratchLabel,     ice_matls);
-/*==========TESTING==========`*/
+  
   //__________________________________
   // Model Variables.
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
