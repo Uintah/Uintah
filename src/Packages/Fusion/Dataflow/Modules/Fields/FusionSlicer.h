@@ -96,8 +96,8 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
   typename FIELD<TYPE>::mesh_type::Node::index_type node;
   Point p;
 
-  for (unsigned int i = 0; i < nx; i++) {
-    for (unsigned int j = 0; j < ny; j++) {
+  for (unsigned int j = 0; j < ny; j++) {
+    for (unsigned int i = 0; i < nx; i++) {
       if (axis == 0) {
 	node.i_ = index;
 	node.j_ = i;
@@ -121,12 +121,12 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
 
   typename QuadSurfField<TYPE>::mesh_type::Node::index_type a, b, c, d;
 
-  for (unsigned int i=1, i0=0, i1=ny; i<nx; i++, i0+=ny, i1+=ny) {
-    for (unsigned int j0=0, j1=1; j1<ny; j0++, j1++) {
-      a = i0 + j0;
-      b = i1 + j0;
-      c = i1 + j1;
-      d = i0 + j1;
+  for (unsigned int j=1, j0=0, j1=nx; j<ny; j++, j0+=nx, j1+=nx) {
+    for (unsigned int i0=0, i1=1; i1<nx; i0++, i1++) {
+      a = j0 + i0;
+      b = j0 + i1;
+      c = j1 + i1;
+      d = j1 + i0;
 
       omesh->add_quad(a, b, c, d);
     }
@@ -139,8 +139,8 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
   typename QuadSurfField<TYPE>::mesh_type::Node::index_type onode = 0;
   unsigned int counter = 0;
   
-  for (unsigned int i = 0; i < nx; i++) {
-    for (unsigned int j = 0; j < ny; j++) {
+  for (unsigned int j = 0; j < ny; j++) {
+    for (unsigned int i = 0; i < nx; i++) {
       if (axis == 0) {
 	node.i_ = index;
 	node.j_ = i;
@@ -160,7 +160,7 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
       ifield->value(v, node);
       ofield->set_value(v, onode);
 
-      onode = counter++;
+      onode = ++counter;
     }
   }
 
