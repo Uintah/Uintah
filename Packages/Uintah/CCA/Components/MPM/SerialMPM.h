@@ -62,19 +62,19 @@ public:
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			    SimulationStateP&);
 	 
-  virtial void scheduleInitialize(const LevelP& level,
+  virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 	 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
   //////////
   // Insert Documentation Here:
-  virtial void scheduleComputeStableTimestep(const LevelP& level,
+  virtual void scheduleComputeStableTimestep(const LevelP& level,
 					     SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
-  virtial void scheduleTimeAdvance(const LevelP& level, 
+  virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
   void setSharedState(SimulationStateP& ssp);
