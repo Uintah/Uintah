@@ -73,7 +73,7 @@ public:
     points_.resize(dims[0]);
   }
 
-  bool get_dim(vector<unsigned int>&) const { return false;  }
+  bool get_dim(vector<unsigned int>&) const;
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;

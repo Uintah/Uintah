@@ -58,6 +58,16 @@ StructCurveMesh::StructCurveMesh(const StructCurveMesh &copy)
   points_ = copy.points_;
 }
 
+bool
+StructCurveMesh::get_dim(vector<unsigned int> &array) const
+{
+  array.resize(1);
+  array.clear();
+
+  array.push_back(ni_);
+
+  return true;
+}
 BBox
 StructCurveMesh::get_bounding_box() const
 {
