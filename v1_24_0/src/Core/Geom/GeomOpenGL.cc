@@ -6249,7 +6249,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_FLAT);
 
-    glAlphaFunc(GL_GREATER, float(4/256.0));
+    glAlphaFunc(GL_GEQUAL, alpha_cutoff_);
     glEnable(GL_ALPHA_TEST);
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
