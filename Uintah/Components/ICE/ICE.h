@@ -2,8 +2,13 @@
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
+#include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
-#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
+//#include <Uintah/Components/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/FCVariable.h>
 #include <SCICore/Geometry/Vector.h>
@@ -11,14 +16,11 @@
 using SCICore::Geometry::Vector;
 
 namespace Uintah {
-class Patch;
-class ProcessorGroup;
-
 namespace ICESpace {
 
-class ICE : public CFDInterface {
+class ICE : public UintahParallelComponent, public CFDInterface {
 public:
-   ICE();
+   ICE(const ProcessorGroup* myworld);
    virtual ~ICE();
    
    virtual void problemSetup(
@@ -207,7 +209,7 @@ void after_each_step_wrapper(
  // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
  
  // Cell centered variables
-
+#if 0
     const VarLabel* delTLabel;
 
     const VarLabel* press_CCLabel;
@@ -253,7 +255,7 @@ void after_each_step_wrapper(
     const VarLabel* vel_FCLabel;
     const VarLabel* press_FCLabel;
     const VarLabel* tau_FCLabel;
-
+#endif
    int  i,j,k,m,   
         xLoLimit,                       /* x array lower limits             */
         yLoLimit,                       /* y array lower limits             */
@@ -406,3 +408,13 @@ void after_each_step_wrapper(
 }
 
 #endif
+
+// $Log$
+// Revision 1.21  2000/10/04 19:26:46  jas
+// Changes to get ICE into UCF conformance.  Only skeleton for now.
+//
+
+
+
+
+
