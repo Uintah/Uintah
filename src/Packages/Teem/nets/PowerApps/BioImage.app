@@ -316,9 +316,23 @@ class BioImageApp {
 
 	    }
 
+	    global $mods(ViewImage)-axial-viewport0-slab_width
+	    global $mods(ViewImage)-sagittal-viewport0-slab_width
+	    global $mods(ViewImage)-coronal-viewport0-slab_width
+
+
   	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizez
+
+	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.mip.s configure -from 1 -to $sizez
   	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slice.s configure -from 0 -to $sizex
+  	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.mip.s configure -from 1 -to $sizex
  	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizey
+ 	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.mip.s configure -from 1 -to $sizey
+
+	    set $mods(ViewImage)-axial-viewport0-slab_width $sizez
+	    set $mods(ViewImage)-sagittal-viewport0-slab_width $sizex
+	    set $mods(ViewImage)-coronal-viewport0-slab_width $sizey
+
 
 
 	    if {!$loading} {
@@ -644,6 +658,26 @@ class BioImageApp {
 	Tooltip $topr.modes.mip.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
 	pack $topr.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
 
+
+	global $mods(ViewImage)-axial-viewport0-slab_width
+ 	scale $topr.modes.mip.s \
+ 	    -from 1 -to 20 \
+ 	    -orient horizontal -showvalue false \
+ 	    -length 110 \
+	    -variable $mods(ViewImage)-axial-viewport0-slab_width
+
+	entry $topr.modes.mip.l -textvariable $mods(ViewImage)-axial-viewport0-slab_width \
+	    -width 6 -relief flat
+	bind $topr.modes.mip.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+ 	pack $topr.modes.mip.s $topr.modes.mip.l -side left -anchor n -padx 0
+
+        bind $topr.modes.mip.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+
+	Tooltip $topr.modes.mip.s "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
+	Tooltip $topr.modes.mip.l "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
+
+
+
 	set img [image create photo -width 1 -height 1]
 	button $topr.modes.expand -height 4 -bd 2 -relief raised -image $img \
 	    -cursor based_arrow_down -command "$this hide_control_panel $topr.modes"
@@ -678,11 +712,31 @@ class BioImageApp {
 
         bind $botl.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
 
-	radiobutton $botl.modes.mip -text "MIP Mode" \
+	frame $botl.modes.mip
+	pack $botl.modes.mip -side top -pady 0 -anchor nw -expand yes -fill x
+
+	radiobutton $botl.modes.mip.b -text "MIP Mode" \
 	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 1 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
-	Tooltip $botl.modes.mip "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $botl.modes.mip -side top -padx 0 -pady 0 -anchor nw
+	Tooltip $botl.modes.mip.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
+	pack $botl.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
+
+	global $mods(ViewImage)-sagittal-viewport0-slab_width
+ 	scale $botl.modes.mip.s \
+ 	    -from 1 -to 20 \
+ 	    -orient horizontal -showvalue false \
+ 	    -length 110 \
+	    -variable $mods(ViewImage)-sagittal-viewport0-slab_width
+
+	entry $botl.modes.mip.l -textvariable $mods(ViewImage)-sagittal-viewport0-slab_width \
+	    -width 6 -relief flat
+	bind $botl.modes.mip.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+ 	pack $botl.modes.mip.s $botl.modes.mip.l -side left -anchor n -padx 0
+
+        bind $botl.modes.mip.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+
+	Tooltip $botl.modes.mip.s "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
+	Tooltip $botl.modes.mip.l "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
 
 	set img [image create photo -width 1 -height 1]
 	button $botl.modes.expand -height 4 -bd 2 -relief raised -image $img \
@@ -719,11 +773,31 @@ class BioImageApp {
 
         bind $botr.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
 
-	radiobutton $botr.modes.mip -text "MIP Mode" \
+	frame $botr.modes.mip
+	pack $botr.modes.mip -side top -pady 0 -anchor nw -expand yes -fill x
+
+	radiobutton $botr.modes.mip.b -text "MIP Mode" \
 	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
-	Tooltip $botr.modes.mip "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $botr.modes.mip -side top -padx 0 -pady 0 -anchor nw
+	Tooltip $botr.modes.mip.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
+	pack $botr.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
+
+	global $mods(ViewImage)-coronal-viewport0-slab_width
+ 	scale $botr.modes.mip.s \
+ 	    -from 1 -to 20 \
+ 	    -orient horizontal -showvalue false \
+ 	    -length 110 \
+	    -variable $mods(ViewImage)-coronal-viewport0-slab_width
+
+	entry $botr.modes.mip.l -textvariable $mods(ViewImage)-coronal-viewport0-slab_width \
+	    -width 6 -relief flat
+	bind $botr.modes.mip.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+ 	pack $botr.modes.mip.s $botr.modes.mip.l -side left -anchor n -padx 0
+
+        bind $botr.modes.mip.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+
+	Tooltip $botr.modes.mip.s "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
+	Tooltip $botr.modes.mip.l "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
 
 	set img [image create photo -width 1 -height 1]
 	button $botr.modes.expand -height 4 -bd 2 -relief raised -image $img \
