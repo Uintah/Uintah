@@ -283,6 +283,7 @@ void SimulationController::run()
 	  MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
 		     MPI_MAX, 0, d_myworld->getComm());
 	}
+	avg_highwater /= d_myworld->size();
       }
       
       
@@ -437,24 +438,18 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	// different limits so that we can develop a CellIterator that will
 	// use only the interior cells instead of including the extraCell
 	// limits.
-	IntVector inLowCell = lowCell;
-	IntVector inHighCell = highCell;
-	
 	IntVector extraCells(0,0,0);
 	if(box_ps->get("extraCells", extraCells)){
-	  lowCell = lowCell-extraCells;
-	  highCell = highCell+extraCells;
+	  lowCell -= extraCells;
+	  highCell += extraCells;
 	}
 	level->setExtraCells(extraCells);
 	
 	IntVector resolution(highCell-lowCell);
-	IntVector inResolution(inHighCell-inLowCell);
-
 	if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
 	  throw ProblemSetupException("Degenerate patch");
 	
 	IntVector patches;
-	IntVector inLowIndex,inHighIndex;
 	if(box_ps->get("patches", patches)){
 	  level->setPatchDistributionHint(patches);
 	  if (d_myworld->size() > 1 &&
@@ -463,17 +458,29 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	  for(int i=0;i<patches.x();i++){
 	    for(int j=0;j<patches.y();j++){
 	      for(int k=0;k<patches.z();k++){
-		IntVector startcell = resolution*IntVector(i,j,k)/patches;
-		IntVector inStartCell=inResolution*IntVector(i,j,k)/patches;
-		IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches;
-		IntVector inEndCell=inResolution*IntVector(i+1,j+1,k+1)/patches;
-		level->addPatch(startcell+lowCell, endcell+lowCell,
-				inStartCell+inLowCell,inEndCell+inLowCell);
+		IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
+		IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
+		IntVector inStartCell = startcell;
+		IntVector inEndCell = endcell;
+		if(i==0)
+		  inStartCell+=IntVector(extraCells.x(), 0, 0);
+		else if(i==patches.x()-1)
+		  inEndCell-=IntVector(extraCells.x(), 0, 0);
+		if(j==0)
+		  inStartCell+=IntVector(0, extraCells.y(), 0);
+		else if(j==patches.y()-1)
+		  inEndCell-=IntVector(0, extraCells.y(), 0);
+		if(k==0)
+		  inStartCell+=IntVector(0, 0, extraCells.z());
+		else if(k==patches.z()-1)
+		  inEndCell-=IntVector(0, 0, extraCells.z());
+		level->addPatch(startcell, endcell,
+				inStartCell, inEndCell);
 	      }
 	    }
 	  }
 	} else {
-	  level->addPatch(lowCell, highCell,inLowCell,inHighCell);
+	  level->addPatch(lowCell, highCell, lowCell+extraCells, highCell-extraCells);
 	}
       }
       level->finalizeLevel();
