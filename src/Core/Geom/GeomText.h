@@ -42,7 +42,7 @@
 #include <GL/gl.h>
 #include <Core/Datatypes/Color.h>
 
-#define HAVE_FTGL
+//#define HAVE_FTGL
 
 class FTGLTextureFont;
 
