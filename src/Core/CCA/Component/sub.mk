@@ -20,7 +20,7 @@
 SRCDIR := Core/CCA/Component
 
 SUBDIRS := \
-	$(SRCDIR)/CIA \
+	$(SRCDIR)/SIDL \
 	$(SRCDIR)/PIDL \
 	$(SRCDIR)/Comm
 
