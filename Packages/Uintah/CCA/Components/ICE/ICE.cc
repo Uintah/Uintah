@@ -89,6 +89,8 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
   d_modelSetup = 0;
+  
+  d_usingLODI = false;
 }
 
 ICE::~ICE()
@@ -1177,12 +1179,12 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);  
 /*`==========TESTING==========*/
 #ifdef LODI_BCS  
-  task->requires(Task::OldDW, lb->press_CCLabel,    press_matl, gn, 0);      
-  task->requires(Task::OldDW, lb->temp_CCLabel,     ice_matls,  gn, 0);      
-  task->requires(Task::OldDW, lb->rho_CCLabel,      ice_matls,  gn, 0);      
-  task->requires(Task::OldDW, lb->vel_CCLabel,      ice_matls,  gn, 0);      
-  task->requires(Task::OldDW, lb->sp_vol_CCLabel,   ice_matls,  gn, 0);      
-  task->requires(Task::OldDW, lb->vol_frac_CCLabel, ice_matls,  gn, 0);
+  task->requires(Task::OldDW, lb->press_CCLabel,    press_matl, gac, 2);      
+  task->requires(Task::OldDW, lb->temp_CCLabel,     ice_matls,  gac, 1);      
+  task->requires(Task::OldDW, lb->rho_CCLabel,      ice_matls,  gac, 1);      
+  task->requires(Task::OldDW, lb->vel_CCLabel,      ice_matls,  gac, 1);      
+  task->requires(Task::OldDW, lb->sp_vol_CCLabel,   ice_matls,  gac, 1);      
+  task->requires(Task::OldDW, lb->vol_frac_CCLabel, ice_matls,  gac, 1);
 #endif
 /*==========TESTING==========`*/
   task->modifies(lb->rho_CCLabel,   ice_matls);
@@ -1488,6 +1490,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
+      
+      d_usingLODI = are_We_Using_LODI_BC(patch,d_is_LODI_face, indx);
+          
       setBC(press_CC,   rho_micro[SURROUND_MAT], "rho_micro","Pressure", 
                                               patch, d_sharedState, 0, new_dw);
       setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
@@ -4172,7 +4177,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 //______________________ L O D I__________________________________
 #ifdef LODI_BCS  
 cout << "using LODI BCS" <<endl;
-      Ghost::GhostType  gn  = Ghost::None;  
       constCCVariable<double> press_old, rho_old, temp_old, sp_vol_old;
       constCCVariable<double> vol_frac_old;
       constCCVariable<Vector> vel_old;
@@ -4181,16 +4185,16 @@ cout << "using LODI BCS" <<endl;
       double gamma = ice_matl->getGamma();
 
                                 //  O L D   D W
-      old_dw->get(press_old,    lb->press_CCLabel,    0,   patch,gn,0);
-      old_dw->get(temp_old,     lb->temp_CCLabel,     indx,patch,gn,0);
-      old_dw->get(rho_old,      lb->rho_CCLabel,      indx,patch,gn,0);
-      old_dw->get(vel_old,      lb->vel_CCLabel,      indx,patch,gn,0);
-      old_dw->get(sp_vol_old,   lb->sp_vol_CCLabel,   indx,patch,gn,0);
-      old_dw->get(vol_frac_old, lb->vol_frac_CCLabel, indx,patch,gn,0);
+      old_dw->get(press_old,    lb->press_CCLabel,    0,   patch,gac,2);
+      old_dw->get(temp_old,     lb->temp_CCLabel,     indx,patch,gac,1);
+      old_dw->get(rho_old,      lb->rho_CCLabel,      indx,patch,gac,1);
+      old_dw->get(vel_old,      lb->vel_CCLabel,      indx,patch,gac,1);
+      old_dw->get(sp_vol_old,   lb->sp_vol_CCLabel,   indx,patch,gac,1);
+      old_dw->get(vol_frac_old, lb->vol_frac_CCLabel, indx,patch,gac,1);
  
-      new_dw->allocateTemporary(press_tmp,  patch);
-      new_dw->allocateTemporary(nu, patch);
-      new_dw->allocateTemporary(e,   patch);
+      new_dw->allocateTemporary(press_tmp,  patch, gac, 2);
+      new_dw->allocateTemporary(nu, patch, gac, 1);
+      new_dw->allocateTemporary(e,  patch, gac, 1);
      
       nu.initialize(Vector(0,0,0)); 
       press_tmp.initialize(0.0);  
@@ -4198,24 +4202,29 @@ cout << "using LODI BCS" <<endl;
       
       StaticArray<CCVariable<Vector> > di(6);
       for (int i = 0; i <= 5; i++){
-        new_dw->allocateTemporary(di[i], patch);
+        new_dw->allocateTemporary(di[i], patch, gac, 1);
         di[i].initialize(Vector(0,0,0));
       }    
 
-      //   T O   D O :  change to faceCellIterator
-      for(CellIterator iter = patch->getExtraCellIterator();
-                                     !iter.done();iter++){
+
+      //__________________________________
+      //  At patch boundaries you need to extend
+      // the computational footprint by one cell in ghostCells
+      CellIterator tmp = patch->getExtraCellIterator();
+      CellIterator iterPlusGhost = patch->addGhostCell_Iter(tmp,1);
+
+      for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
         IntVector c = *iter;
         e[c] = rho_old[c] * (cv * temp_old[c] +  0.5 * vel_old[c].length2() );                                                 
         press_tmp[c] = vol_frac_old[c] * press_old[c];        
       } 
 
       //compute dissipation coefficients
-      computeNu(nu, press_tmp, patch);
+      computeNu(nu, d_is_LODI_face, press_tmp, patch);
       
       //compute Di at boundary cells
-      computeDi(di,rho_old,  press_tmp, vel_old, 
-                            speedSound, patch, indx);  
+      computeDi(di, d_is_LODI_face, rho_old,  press_tmp, vel_old, 
+                speedSound, patch, indx);  
     #if 0
       //--------------------TESTING---------------------//    
       ostringstream desc;
