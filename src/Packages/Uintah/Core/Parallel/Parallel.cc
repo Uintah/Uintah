@@ -21,6 +21,7 @@ using std::ostringstream;
 #define THREADED_MPI_AVAILABLE
 
 static bool            allowThreads;
+static bool            determinedIfUsingMPI = false;
 static bool            usingMPI = false;
 static int             maxThreads = 1;
 static MPI_Comm        worldComm = MPI_Comm(-1);
@@ -42,6 +43,11 @@ MpiError(char* what, int errorcode)
 bool
 Parallel::usingMPI()
 {
+   if( !determinedIfUsingMPI ) {
+      cerr << "Must call determineIfRunningUnderMPI() before usingMPI().\n";
+      throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
+			   " before usingMPI()" );
+   }
    return ::usingMPI;
 }
 
@@ -66,42 +72,52 @@ Parallel::noThreading()
 }
 
 void
+Parallel::determineIfRunningUnderMPI( int argc, char** argv )
+{
+  if( char * max = getenv( "PSE_MAX_THREADS" ) ){
+    ::maxThreads = atoi( max );
+    ::allowThreads = true;
+    cerr << "PSE_MAX_THREADS set to " << ::maxThreads << "\n";
+
+    if( ::maxThreads <= 0 || ::maxThreads > 16 ){
+      // Empirical evidence points to 16 being the most threads
+      // that we should use... (this isn't conclusive evidence)
+      cerr << "PSE_MAX_THREADS is out of range 1..16\n";
+      throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n" );
+    }
+  }
+  
+  // Look for SGI MPI
+  if(getenv("MPI_ENVIRONMENT")){
+    ::usingMPI=true;
+  } else {
+    // Look for mpich
+    for(int i=0;i<argc;i++){
+      string s = argv[i];
+      if(s.substr(0,3) == "-p4")
+	::usingMPI=true;
+    }
+  }
+  determinedIfUsingMPI = true;
+}
+
+void
 Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 {
-   if( worldRank != -1 ) {
+   if( !determinedIfUsingMPI ) {
+      cerr << "Must call determineIfRunningUnderMPI() " 
+	   << "before initializeManager().\n";
+      throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
+			   " before initializeManager()" );
+   }
+
+   if( worldRank != -1 ) { // IF ALREADY INITIALIZED, JUST RETURN...
+      return;
       // If worldRank is not -1, then we have already been initialized..
       // This only happens (I think) if usage() is called (due to bad
       // input parameters (to sus)) and usage() needs to init mpi so that
       // it only displays the usage to the root process.
-      return;
    }
-
-   if( char * max = getenv( "PSE_MAX_THREADS" ) ){
-      ::maxThreads = atoi( max );
-      ::allowThreads = true;
-      cerr << "PSE_MAX_THREADS set to " << ::maxThreads << "\n";
-
-      if( ::maxThreads <= 0 || ::maxThreads > 16 ){
-         // Empirical evidence points to 16 being the most threads
-         // that we should use... (this isn't conclusive evidence)
-         cerr << "PSE_MAX_THREADS is out of range 1..16\n";
-         throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n" );
-      }
-   }
-  
-   ::usingMPI=false;
-   // Look for SGI MPI
-   if(getenv("MPI_ENVIRONMENT")){
-      ::usingMPI=true;
-   } else {
-      // Look for mpich
-      for(int i=0;i<argc;i++){
-	 string s = argv[i];
-	 if(s.substr(0,3) == "-p4")
-	    ::usingMPI=true;
-      }
-   }
-
 #ifdef THREADED_MPI_AVAILABLE
    int provided = -1;
    int required = MPI_THREAD_SINGLE;
