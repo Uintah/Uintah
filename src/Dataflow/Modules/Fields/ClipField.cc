@@ -52,6 +52,7 @@ private:
   GuiString clip_location_;
   GuiString clip_mode_;
   GuiInt    autoexec_;
+  GuiInt    autoinvert_;
   GuiString exec_mode_;
   int  last_input_generation_;
   int  last_clip_generation_;
@@ -80,6 +81,7 @@ ClipField::ClipField(const string& id)
     clip_location_("clip-location", id, this),
     clip_mode_("clipmode", id, this),
     autoexec_("autoexec", id, this),
+    autoinvert_("autoinvert", id, this),
     exec_mode_("execmode", id, this),
     last_input_generation_(0),
     last_clip_generation_(0)
@@ -306,18 +308,27 @@ ClipField::execute()
       error("Could not get algorithm.");
       return;
     }
+
+    // Maybe invert the clipper again.
+    ClipperHandle clipper(clipper_);
+    if (autoinvert_.get())
+    {
+      clipper = scinew InvertClipper(clipper_);
+    }
+
+    // Do the clip, dispatch based on which clip location test we are using.
     FieldHandle ofield = 0;
     if (clip_location_.get() == "nodeone")
     {
-      ofield = algo->execute_node(ifieldhandle, clipper_, true);
+      ofield = algo->execute_node(ifieldhandle, clipper, true);
     }
     else if (clip_location_.get() == "nodeall")
     {
-      ofield = algo->execute_node(ifieldhandle, clipper_, false);
+      ofield = algo->execute_node(ifieldhandle, clipper, false);
     }
     else // 'cell' and default
     {
-      ofield = algo->execute_cell(ifieldhandle, clipper_);
+      ofield = algo->execute_cell(ifieldhandle, clipper);
     }
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
