@@ -38,6 +38,9 @@ namespace rtrt {
 
     int show_frame_rate;
 
+    // Writes the image to a file after the image is rendered
+    bool dumpFrame;
+
   };
 
 } // end namespace rtrt
