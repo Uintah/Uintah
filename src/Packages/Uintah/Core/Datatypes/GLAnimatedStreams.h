@@ -52,10 +52,9 @@ class GLAnimatedStreams : public GeomObj
 {
 public:
 
-  GLAnimatedStreams(int id);
+  GLAnimatedStreams();
 
-  GLAnimatedStreams(int id, FieldHandle tex,
-		   ColorMapHandle map);
+  GLAnimatedStreams(FieldHandle tex, ColorMapHandle map);
 
 
   void SetVectorField( FieldHandle vfh );

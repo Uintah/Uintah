@@ -31,8 +31,8 @@ inline double dRANDOM() {
 }
 
 
-GLAnimatedStreams::GLAnimatedStreams(int id) 
-  : GeomObj( id ), mutex("GLAnimatedStreams Mutex"),
+GLAnimatedStreams::GLAnimatedStreams() 
+  : GeomObj(), mutex("GLAnimatedStreams Mutex"),
     vfh_(0), _cmapH(0), _pause(false), _normalsOn(false), _lighting(false),
     _use_dt(false), _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
     _linewidth(2), flow(0), _delta_T(-1), _normal_method(STREAM_LIGHT_WIRE),
@@ -43,10 +43,8 @@ GLAnimatedStreams::GLAnimatedStreams(int id)
 }
 
 
-GLAnimatedStreams::GLAnimatedStreams(int id, 
-				   FieldHandle vfh,
-				   ColorMapHandle map)
-  : GeomObj( id ),  mutex("GLAnimatedStreams Mutex"),
+GLAnimatedStreams::GLAnimatedStreams(FieldHandle vfh, ColorMapHandle map)
+  : GeomObj(),  mutex("GLAnimatedStreams Mutex"),
     vfh_(vfh), _cmapH(map), _pause(false), _normalsOn(false), _lighting(false),
     _use_dt(false), _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
     _linewidth(2), flow(0), _delta_T(-1), _normal_method(STREAM_LIGHT_WIRE),
@@ -56,7 +54,7 @@ GLAnimatedStreams::GLAnimatedStreams(int id,
 }
 
 GLAnimatedStreams::GLAnimatedStreams(const GLAnimatedStreams& copy)
-  : GeomObj( copy.id ), mutex("GLAnimatedStreams Mutex"),
+  : GeomObj( copy ), mutex("GLAnimatedStreams Mutex"),
     vfh_(copy.vfh_), _cmapH(copy._cmapH),
     _pause(copy._pause), _normalsOn(copy._normalsOn),
     _lighting(copy._lighting), _use_dt(copy._use_dt),

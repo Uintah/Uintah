@@ -446,15 +446,16 @@ void ParticleVis::execute()
 }
 
 
-void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
+void ParticleVis::geom_pick(GeomPickHandle pick,
+			    void* userdata, GeomHandle picked_obj)
 {
   cerr << "Caught stray pick event in ParticleVis!\n";
-  cerr << "this = "<< this <<", pick = "<<pick<<endl;
+  cerr << "this = "<< this <<", pick = "<<pick.get_rep()<<endl;
   cerr << "User data = "<<userdata<<endl;
   //  cerr << "sphere index = "<<index<<endl<<endl;
   long long id(-1);
   if ( picked_obj->getId(id)) {
-    cerr<<"Id = "<< id.val_ <<endl;
+    cerr<<"Id = "<< id <<endl;
   } else {
     cerr<<"Not getting the correct data\n";
   }
