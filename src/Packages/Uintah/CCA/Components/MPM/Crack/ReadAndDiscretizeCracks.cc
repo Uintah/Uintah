@@ -552,6 +552,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
     ce.resize(numMPMMatls);
     cfSegNodes.resize(numMPMMatls);
     cfSegPreIdx.resize(numMPMMatls);
+    cfSegMinIdx.resize(numMPMMatls);
+    cfSegMaxIdx.resize(numMPMMatls);
     cfSegPtsT.resize(numMPMMatls);
     cfSegV1.resize(numMPMMatls);
     cfSegV2.resize(numMPMMatls);
@@ -588,9 +590,6 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           cmax[m]=Max(cmax[m],cx[m][i]);
         }
 
-        // Get crack-front-node previous index
-        FindCrackFrontNodePreIdx(m);
-
         // Get average length of crack-front segs
         cs0[m]=0.;
         int ncfSegs=(int)cfSegNodes[m].size()/2;
@@ -601,13 +600,18 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         }
         cs0[m]/=ncfSegs;
 
-        // Get normals of crack plane at crack-front nodes
         if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
-          if(!CalculateCrackFrontNormals(m)) {
-            if(pid==0) cout << " ! Crack front is not smoothed successfully."
+          // Get crack-front-node previous index, and sub-crack extent
+          FindCrackFrontNodeIndexes(m);
+
+          // Get normals of crack plane at crack-front nodes
+          short smoothSuccessfully=CalculateCrackFrontNormals(m);
+          if(!smoothSuccessfully) {
+            if(pid==0) cout << " ! Crack-front normals are obtained "
+                            << "by raw crack-front points."
                             << endl;
           }
-        }
+        } // End of if(..) 
          
         // Output crack mesh information
         OutputCrackPlaneMesh(m);
