@@ -24,6 +24,9 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
+#define IMPLICIT
+#undef IMPLICIT
+
 CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
@@ -31,7 +34,7 @@ CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 
-#if 0
+#ifdef IMPLICIT
   bElBarLabel = VarLabel::create("bElBar",
 		       ParticleVariable<Matrix3>::getTypeDescription());
   bElBarLabel_preReloc = VarLabel::create("bElBar_preReloc",
@@ -43,7 +46,7 @@ CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 
 CompNeoHook::~CompNeoHook()
 {
-#if 0
+#ifdef IMPLICIT
   VarLabel::destroy(bElBarLabel);  
   VarLabel::destroy(bElBarLabel_preReloc);  
 #endif
@@ -80,13 +83,13 @@ void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
-#if 0
+#ifdef IMPLICIT
    from.push_back(bElBarLabel);
 #endif
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
-#if 0
+#ifdef IMPLICIT
    to.push_back(bElBarLabel_preReloc);
 #endif
 }
@@ -273,7 +276,8 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 					      const MPMMaterial* matl,
 					      DataWarehouse* old_dw,
 					      DataWarehouse* new_dw,
-					      SparseMatrix<double,int>& KK)
+					      SparseMatrix<double,int>& KK,
+					      const bool recursion)
 
 {
   for(int pp=0;pp<patches->size();pp++){
@@ -307,7 +311,11 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(bElBar_old, bElBarLabel, pset);
     old_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::AroundCells,1);
 
-    new_dw->allocate(pstress,        lb->pStressLabel_preReloc, pset);
+    if (recursion)
+      new_dw->allocate(pstress,        lb->pStressLabel_preReloc, pset);
+    else
+      new_dw->allocate(pstress,        lb->pStressLabel, pset);
+
     new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
     new_dw->allocate(deformationGradient_new,
 		     lb->pDeformationMeasureLabel_preReloc, pset);
@@ -499,8 +507,10 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       
 
     }
-
-    new_dw->put(pstress,                lb->pStressLabel_preReloc);
+    if (recursion)
+      new_dw->put(pstress,                lb->pStressLabel_preReloc);
+    else
+      new_dw->put(pstress,                lb->pStressLabel);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
     new_dw->put(bElBar_new,             bElBarLabel_preReloc);
@@ -620,10 +630,6 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*p + shrTrl/J;
 
-      // Compute the strain energy for all the particles
-      double strainEnergyDensity = .5*(bulk*(pow(log(J),2.)) + 
-				shear*(bElBar_new[idx].Trace() - 3.));
-
 
       DenseMatrix sig(3,3);
       for (int i = 0; i < 3; i++) {
@@ -654,13 +660,7 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						 matlset, Ghost::None);
-#if 0
-   task->requires(Task::OldDW,bElBarLabel,matlset,Ghost::None);
-#endif
    task->requires(Task::NewDW,lb->gVelocityLabel,matlset,Ghost::AroundCells,1);
-#if 0
-   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
-#endif
    
    task->requires(Task::OldDW, lb->delTLabel);
 
@@ -671,9 +671,42 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
    task->computes(lb->pVolumeDeformedLabel,              matlset);
-#if 0
+
+   
+}
+
+
+void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
+						 const MPMMaterial* matl,
+						 const PatchSet*,
+						 const bool recursion)
+{
+   const MaterialSubset* matlset = matl->thisMaterial();
+   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
+   task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
+   task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
+   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
+						 matlset, Ghost::None);
+
+   task->requires(Task::OldDW,bElBarLabel,matlset,Ghost::None);
+   task->requires(Task::NewDW,lb->gVelocityLabel,matlset,Ghost::AroundCells,1);
+   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+   
+   task->requires(Task::OldDW, lb->delTLabel);
+
+   if(d_8or27==27){
+     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+   }
+
+   if (recursion)
+     task->modifies(lb->pStressLabel_preReloc);
+   else
+     task->computes(lb->pStressLabel,matlset);
+
+
+   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+   task->computes(lb->pVolumeDeformedLabel,              matlset);
    task->computes(bElBarLabel_preReloc,matlset);
-#endif
    
 }
 

@@ -57,7 +57,8 @@ namespace Uintah {
 						  const MPMMaterial* matl,
 						  DataWarehouse* old_dw,
 						  DataWarehouse* new_dw,
-						  SparseMatrix<double,int>& KK);
+						  SparseMatrix<double,int>& KK,
+						  const bool recursion);
 
          virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
 						      const MPMMaterial* matl,
@@ -72,6 +73,11 @@ namespace Uintah {
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
                                              const PatchSet* patches) const;
+
+         virtual void addComputesAndRequiresImplicit(Task* task,
+                                             const MPMMaterial* matl,
+                                             const PatchSet* patches,
+					     const bool recursion);
 
          virtual double computeRhoMicroCM(double pressure,
                                           const double p_ref,
