@@ -49,9 +49,9 @@ void ScalarFieldAverage::execute(void) {
   string vname;
   double t;
   
-  if( !hTF->get( "variable", vname )){
+  if( !hTF->get_property( "variable", vname )){
     cerr<<"No variable in database"<<endl; }
-  if ( !hTF->get( "time", t ) ){
+  if ( !hTF->get_property( "time", t ) ){
     cerr<<"No time in database"<<endl; }
 
   if(aveField == 0) {
