@@ -201,13 +201,11 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
 }
 
 
-
-
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField() : 
   Field(),
   mesh_(mesh_handle_type(scinew mesh_type())),
-  fdata_() //needed to instantiate constructor on sgi.
+  fdata_(0) //workaround for default variable bug on sgi.
 {
   if (data_at() != NONE && mesh_.get_rep())
   {
@@ -219,7 +217,7 @@ template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField(data_location data_at) : 
   Field(data_at),
   mesh_(mesh_handle_type(scinew mesh_type())),
-  fdata_() //needed to instantiate constructor on sgi.
+  fdata_(0) //workaround for default variable bug on sgi.
 {
   if (data_at != NONE && mesh_.get_rep())
   { 
@@ -232,7 +230,7 @@ GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh,
 					data_location data_at) : 
   Field(data_at),
   mesh_(mesh),
-  fdata_() //needed to instantiate constructor on sgi.
+  fdata_(0) //workaround for default variable bug on sgi.
 {
   if (data_at != NONE && mesh_.get_rep())
   {
