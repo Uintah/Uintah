@@ -80,7 +80,7 @@ setGlobal $m0-data-at {Cells}
 setGlobal $m1-isoval {1.4334}
 setGlobal $m1-isoval-min {1.9259299443872359e-34}
 setGlobal $m1-isoval-max {2.6133333333333337}
-setGlobal $m1-isoval-list {1.4}
+setGlobal $m1-isoval-list {0.8 1.4}
 setGlobal $m1-active-isoval-selection-tab {2}
 setGlobal $m1-active_tab {}
 
