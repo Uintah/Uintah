@@ -28,7 +28,7 @@ namespace rtrt {
   // whether transfer function is horizontally or vertically aligned
   enum TextureAlign { Horizontal, Vertical };
   // how the widget is being manipulated
-  enum DrawFlag { Null, Opacity, LBound, Focus, Resize, Width, Shear,
+  enum DrawFlag { Null, Opacity, LBound, Focus, ResizeL, ResizeR, Width, Shear,
 		  Translate, Cmap, Probe };
 
   // base class
@@ -168,14 +168,20 @@ namespace rtrt {
 
     GLStar *focusStar;
     GLStar *translateStar;
-    GLStar *resizeStar;
+    GLStar *leftResizeStar;
+    GLStar *rightResizeStar;
     GLStar *barRounder;
     GLStar *opacityStar;
     GLBar *translateBar;
 
+    RectWidget( float x, float y, float w, float h, float c[3] );
+    RectWidget( Widget* old_wid );
+    RectWidget( float x, float y, float w, float h, float o_x, float foc_x,
+		float foc_y, int cmap_x, int cmap_y, TextureAlign tA );
     virtual void draw( void );
     virtual void translate( float x, float y );
-    virtual void resize( float x, float y );
+    virtual void resizeLeft( float x, float y );
+    virtual void resizeRight( float x, float y );
     virtual void manipulate( float x, float y );
     virtual bool insideWidget( float x, float y );
     virtual void changeColor( float r, float g, float b );
