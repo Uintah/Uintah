@@ -523,7 +523,7 @@ void* Allocator::alloc_big(size_t size, const char* tag)
 		Tag* next=obj->next;
 		OSHunk* hunk=obj->hunk;
 		nmunmap++;
-		sizemunmap+=hunk->len;
+		sizemunmap+=hunk->len+sizeof(OSHunk);
 		OSHunk::free(hunk);
 		obj=next;
 		big_bin.ntotal--;
@@ -771,7 +771,7 @@ void Allocator::free(void* dobj)
       // Go ahead and unmap this segment...
       OSHunk* hunk=obj->hunk;
       nmunmap++;
-      sizemunmap+=hunk->len;
+      sizemunmap+=hunk->len+sizeof(OSHunk);
       OSHunk::free(hunk);
       big_bin.ntotal--;
     } else {
