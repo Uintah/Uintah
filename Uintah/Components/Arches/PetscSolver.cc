@@ -184,8 +184,8 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
      int globalIndex = startIndex[proc];
      d_petscGlobalStart[patch]=globalIndex;
 
-    IntVector plowIndex = patch->getCellLowIndex();
-    IntVector phighIndex = patch->getCellHighIndex();
+    IntVector plowIndex = patch->getCellFORTLowIndex();
+    IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
      int nc = (phighIndex[0]-plowIndex[0])*
 	      (phighIndex[1]-plowIndex[1])*
 	      (phighIndex[2]-plowIndex[2]);
@@ -201,6 +201,7 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	IntVector lowIndex = patch->getGhostCellLowIndex(1);
 	IntVector highIndex = patch->getGhostCellHighIndex(1);
 	Array3<int> l2g(lowIndex, highIndex);
+	l2g.initialize(-1234);
 	long totalCells=0;
 	const Level* level = patch->getLevel();
 	std::vector<const Patch*> neighbors;
@@ -210,8 +211,8 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	   using SCICore::Geometry::Max;
 	   using SCICore::Geometry::Min;
 
-	   IntVector plow = neighbor->getCellLowIndex();
-	   IntVector phigh = neighbor->getCellHighIndex();
+	   IntVector plow = neighbor->getCellFORTLowIndex();
+	   IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
 	   IntVector low = Max(lowIndex, plow);
 	   IntVector high= Min(highIndex, phigh);
 
@@ -258,10 +259,11 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	      }
 	   }
 	}
-
+#if 0
 	IntVector dn = highIndex-lowIndex;
 	long wantcells = dn.x()*dn.y()*dn.z();
 	ASSERTEQ(wantcells, totalCells);
+#endif
      }
   }
   int numlrows = numCells[me];
@@ -1829,6 +1831,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.12  2000/09/26 22:08:19  sparker
+// Fixed array indexing in face of extra cells around edges
+//
 // Revision 1.11  2000/09/26 19:59:17  sparker
 // Work on MPI petsc
 //
