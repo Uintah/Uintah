@@ -119,7 +119,7 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	global $this-isFixed
 	set w .ui[modname]
 	
-	set lightgray "#999999"
+	set lightgray "#444444"
 
 	$w.bf.f1.sas    configure -state normal
 	$w.bf.f3.min.l1 configure -foreground $lightgray
