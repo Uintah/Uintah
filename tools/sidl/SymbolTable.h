@@ -8,6 +8,8 @@
 class Definition;
 class Method;
 class ScopedName;
+class SymbolTable;
+class EmitState;
 
 class Symbol {
 public:
@@ -28,9 +30,13 @@ public:
     Method* getMethod() const;
     void setMethod(Method*);
     std::string fullname() const;
+    std::string cppfullname(SymbolTable* forstab=0) const;
+    bool emitted_forward;
+    void emit_forward(EmitState& e);
 protected:
     friend class SymbolTable;
     void setSymbolTable(SymbolTable*);
+    void emit(EmitState& e);
 private:
     Type type;
     std::string name;
@@ -52,13 +58,20 @@ public:
     Symbol* lookupScoped(const std::string& name) const;
     void insert(Symbol*);
 
-    std::string fullname(const std::string& name) const;
+    SymbolTable* getParent() const;
+    std::string getName() const;
+
     std::string fullname() const;
+    std::string cppfullname() const;
+    void emit(EmitState& e) const;
 };
 
 #endif
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:07:26  sparker
+// Added nexus code generation capability
+//
 // Revision 1.2  1999/08/30 17:39:54  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

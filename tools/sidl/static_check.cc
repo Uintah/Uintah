@@ -7,10 +7,11 @@ using std::vector;
 using std::cerr;
 using std::map;
 
-void Specification::staticCheck(SymbolTable* names) const
+void Specification::staticCheck()
 {
+    globals=new SymbolTable(0, "Global Symbols");
     for(vector<DefinitionList*>::const_iterator iter=list.begin();iter != list.end(); iter++){
-	(*iter)->staticCheck(names);
+	(*iter)->staticCheck(globals);
     }
 }
 
@@ -45,13 +46,13 @@ void Interface::staticCheck(SymbolTable* names)
 	case Symbol::PackageType:
 	case Symbol::MethodType:
 	    cerr << curfile << ':' << lineno 
-		 << ": (100) Re-definition of " << names->fullname(name) << " as interface\n";
+		 << ": (100) Re-definition of " << names->fullname()+"."+name << " as interface\n";
 	    exit(1);
 	    break;
 	case Symbol::InterfaceType:
-	    if(((Interface*)n->getDefinition())->methods){
+	    if(((Interface*)n->getDefinition())->mymethods){
 		cerr << curfile << ':' << lineno
-		     << ": (101) Re-definition of interface " << names->fullname(name) << '\n';
+		     << ": (101) Re-definition of interface " << names->fullname()+"."+name << '\n';
 		exit(1);
 	    }
 	    break;
@@ -69,7 +70,7 @@ void Interface::staticCheck(SymbolTable* names)
     n->setDefinition(this);
 
     /* Handle builtin types - Object  */
-    if(methods && !interface_extends && fullname() != ".CIA.Interface"){
+    if(mymethods && !interface_extends && fullname() != ".CIA.Interface"){
 	if(!interface_extends)
 	    interface_extends=new ScopedNameList();
 	interface_extends->prepend(new ScopedName("CIA", "Interface"));
@@ -101,14 +102,14 @@ void Interface::staticCheck(SymbolTable* names)
 		     << (*iter)->getName() << '\n';
 		exit(1);
 	    }
-	    parent_interfaces.push_back(i);
+	    parent_ifaces.push_back(i);
 	}
     }
 
     /* Check methods */
-    if(methods){
-	methods->setInterface(this);
-	methods->staticCheck(symbols);
+    if(mymethods){
+	mymethods->setInterface(this);
+	mymethods->staticCheck(symbols);
 	vector<Method*> allmethods;
 	gatherMethods(allmethods);
 	checkMethods(allmethods);
@@ -124,13 +125,13 @@ void Class::staticCheck(SymbolTable* names)
 	case Symbol::PackageType:
 	case Symbol::MethodType:
 	    cerr << curfile << ':' << lineno 
-		 << ": (105) Re-definition of " << names->fullname(name) << " as class\n";
+		 << ": (105) Re-definition of " << names->fullname()+"."+name << " as class\n";
 	    exit(1);
 	    break;
 	case Symbol::ClassType:
-	    if(((Class*)n->getDefinition())->methods){
+	    if(((Class*)n->getDefinition())->mymethods){
 		cerr << curfile << ':' << lineno
-		     << ": (106) Re-definition of class " << names->fullname(name) << '\n';
+		     << ": (106) Re-definition of class " << names->fullname()+"."+name << '\n';
 		exit(1);
 		break;
 	    }
@@ -148,7 +149,7 @@ void Class::staticCheck(SymbolTable* names)
     n->setDefinition(this);
 
     /* Handle builtin types - Object  */
-    if(methods && !class_extends && fullname() != ".CIA.Object"){
+    if(mymethods && !class_extends && fullname() != ".CIA.Object"){
 	class_extends=new ScopedName("CIA", "Object");
     }
 
@@ -170,12 +171,12 @@ void Class::staticCheck(SymbolTable* names)
 	class_extends->bind(s);
 	Definition* d=s->getDefinition();
 	Class* c=(Class*)d;
-	if(!c->methods){
+	if(!c->mymethods){
 	    cerr << curfile << ':' << lineno
 		 << ": (109) Class extends a class with no declaration (forward declaration only): " << class_extends->getName() << '\n';
 	    exit(1);
 	}
-	parent_class=c;
+	parentclass=c;
     }
     /* Check implements list */
     if(class_implements){
@@ -203,14 +204,14 @@ void Class::staticCheck(SymbolTable* names)
 		     << (*iter)->getName() << '\n';
 		exit(1);
 	    }
-	    parent_interfaces.push_back(i);
+	    parent_ifaces.push_back(i);
 	}
     }
 
     /* Check methods */
-    if(methods){
-	methods->setClass(this);
-	methods->staticCheck(symbols);
+    if(mymethods){
+	mymethods->setClass(this);
+	mymethods->staticCheck(symbols);
 	vector<Method*> allmethods;
 	gatherMethods(allmethods);
 	checkMethods(allmethods);
@@ -219,10 +220,10 @@ void Class::staticCheck(SymbolTable* names)
 
 Method* Class::findMethod(const Method* match, bool recurse) const
 {
-    Method* m=methods->findMethod(match);
+    Method* m=mymethods->findMethod(match);
     if(!m && recurse){
-	if(parent_class)
-	    return parent_class->findMethod(match, recurse);
+	if(parentclass)
+	    return parentclass->findMethod(match, recurse);
 	else
 	    return 0;
     } else
@@ -231,7 +232,7 @@ Method* Class::findMethod(const Method* match, bool recurse) const
 
 Method* Interface::findMethod(const Method* match) const
 {
-    Method* m=methods->findMethod(match);
+    Method* m=mymethods->findMethod(match);
     return m;
 }
 
@@ -298,7 +299,7 @@ void Method::staticCheck(SymbolTable* names)
 	case Symbol::PackageType:
 	case Symbol::ClassType:
 	    cerr << curfile << ':' << lineno
-		 << ": (113) Internal error - Re-definition of " << names->fullname(name) << " as a method\n";
+		 << ": (113) Internal error - Re-definition of " << names->fullname()+"."+name << " as a method\n";
 	    exit(1);
 	    break;
 	case Symbol::MethodType:
@@ -317,7 +318,7 @@ void Method::staticCheck(SymbolTable* names)
 	Method* meth=myclass->findMethod(this, false);
 	if(meth){
 	    cerr << curfile << ':' << lineno
-		 << ": (114) Re-definition of method " << names->fullname(name) << '\n';
+		 << ": (114) Re-definition of method " << names->fullname()+"."+name << '\n';
 	    exit(1);
 	}
     }
@@ -325,7 +326,7 @@ void Method::staticCheck(SymbolTable* names)
 	Method* meth=myinterface->findMethod(this);
 	if(meth){
 	    cerr << curfile << ':' << lineno
-		 << ": (115) Re-definition of method " << names->fullname(name) << '\n';
+		 << ": (115) Re-definition of method " << names->fullname()+"."+name << '\n';
 	    exit(1);
 	}
     }
@@ -477,7 +478,7 @@ bool Argument::matches(const Argument* a, bool checkmode) const
     return type->matches(a->type);
 }
 
-void BuiltinType::staticCheck(SymbolTable* names) const
+void BuiltinType::staticCheck(SymbolTable*) const
 {
     // Nothing to be done...
 }
@@ -565,6 +566,9 @@ void ScopedName::bind(Symbol* s)
 }
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:07:27  sparker
+// Added nexus code generation capability
+//
 // Revision 1.2  1999/08/30 17:39:55  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

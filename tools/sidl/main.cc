@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "Spec.h"
 #include "SymbolTable.h"
+#include <fstream>
 
 extern int yyparse();
 extern FILE* yyin;
@@ -18,7 +19,10 @@ char* find_cpp()
 
 char* find_builtin()
 {
-    return "cia.sidl";
+#ifndef SIDL_BUILTINS
+#error SIDL_BUILTINS should point to the directory containing cia.sidl
+#endif
+    return SIDL_BUILTINS "cia.sidl";
 }
 
 int main(int argc, char* argv[])
@@ -47,13 +51,27 @@ int main(int argc, char* argv[])
 	perror("pclose");
 	failed=true;
     }
+    std::string outfile;
+    bool emit_header=false;
 
     for(int i=1;i<argc;i++){
 	if(strcmp(argv[i], "-yydebug") == 0){
 	    yydebug=1;
 	} else if(argv[i][0]=='-'){
-	    cerr << "Unknown option: " << argv[i] << endl;
-	    exit(1);
+	    std::string arg(argv[i]);
+	    if(arg == "-o") {
+		i++;
+		if(i>=argc){
+		    cerr << "No file specified for -o\n";
+		    exit(1);
+		}
+		outfile=argv[i];
+	    } else if(arg == "-h") {
+		emit_header=true;
+	    } else {
+		cerr << "Unknown option: " << argv[i] << endl;
+		exit(1);
+	    }
 	} else {
 	    nfiles++;
 	    char* buf=new char[strlen(cpp)+strlen(argv[i])+10];
@@ -81,20 +99,38 @@ int main(int argc, char* argv[])
 	cerr << "Must specify a file to parse\n";
     }
 
-    cerr << "Parsing done\n";
     /*
      * Static checking
      */
-    SymbolTable globals(0, "Global Symbols");
-    specs.staticCheck(&globals);
+    specs.staticCheck();
 
     /*
-     * Emit Ports
+     * Emit code
      */
+    std::ofstream devnull("/dev/null");
+    if(outfile != ""){
+	std::ofstream out(outfile.c_str());
+	if(!out){
+	    cerr << "Error opening output file: " << outfile << '\n';
+	    exit(1);
+	}
+	if(emit_header)
+	    specs.emit(devnull, out);
+	else
+	    specs.emit(out, devnull);
+    } else {
+	if(emit_header)
+	    specs.emit(devnull, std::cout);
+	else
+	    specs.emit(std::cout, devnull);
+    }
     return 0;
 }
 //
 // $Log$
+// Revision 1.5  1999/09/17 05:07:27  sparker
+// Added nexus code generation capability
+//
 // Revision 1.4  1999/09/04 06:00:43  sparker
 // Changed place to find cpp
 // Updates to cca spec
