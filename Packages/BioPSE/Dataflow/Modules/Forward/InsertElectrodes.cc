@@ -12,11 +12,14 @@
  */
 
 #include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Plane.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Containers/Array1.h>
 #include <iostream>
 #include <sstream>
 
@@ -25,11 +28,18 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class InsertElectrodes : public Module {
+  bool inside4_p(TetVolMeshHandle tet_mesh, 
+		 const TetVolMesh::Node::array_type &nodes,
+		 const Point &p);
+  void insertNodesIntoTetMesh(vector<pair<int, double> > &dirichlet,
+			      TetVolField<int> *tet_fld,
+			      Array1<Point> &new_points,
+			      Array1<double> &new_values);
   void insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet,
 				TetVolMeshHandle mesh,
 				const vector<Point> &inner,
 				const vector<Point> &outer,
-				int both_sides_active,
+				const string &active_side,
 				double voltage,
 				TetVolMesh* electrodeElements);
   bool point_in_loop(const Point &pt, 
@@ -90,14 +100,167 @@ InsertElectrodes::point_in_loop(const Point &pt,
   }
 }
 
+bool
+InsertElectrodes::inside4_p(TetVolMeshHandle tet_mesh, 
+			    const TetVolMesh::Node::array_type &nodes,
+			    const Point &p) {
+  Point p0, p1, p2, p3;
+  tet_mesh->get_point(p0, nodes[0]);
+  tet_mesh->get_point(p1, nodes[1]);
+  tet_mesh->get_point(p2, nodes[2]);
+  tet_mesh->get_point(p3, nodes[3]);
+  const double x0 = p0.x();
+  const double y0 = p0.y();
+  const double z0 = p0.z();
+  const double x1 = p1.x();
+  const double y1 = p1.y();
+  const double z1 = p1.z();
+  const double x2 = p2.x();
+  const double y2 = p2.y();
+  const double z2 = p2.z();
+  const double x3 = p3.x();
+  const double y3 = p3.y();
+  const double z3 = p3.z();
 
+  const double a0 = + x1*(y2*z3-y3*z2) + x2*(y3*z1-y1*z3) + x3*(y1*z2-y2*z1);
+  const double a1 = - x2*(y3*z0-y0*z3) - x3*(y0*z2-y2*z0) - x0*(y2*z3-y3*z2);
+  const double a2 = + x3*(y0*z1-y1*z0) + x0*(y1*z3-y3*z1) + x1*(y3*z0-y0*z3);
+  const double a3 = - x0*(y1*z2-y2*z1) - x1*(y2*z0-y0*z2) - x2*(y0*z1-y1*z0);
+  const double iV6 = 1.0 / (a0+a1+a2+a3);
+
+  const double b0 = - (y2*z3-y3*z2) - (y3*z1-y1*z3) - (y1*z2-y2*z1);
+  const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
+  const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
+  const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
+  if (s0 < -1.e-6)
+    return false;
+
+  const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
+  const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
+  const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
+  const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
+  if (s1 < -1.e-6)
+    return false;
+
+  const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
+  const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
+  const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
+  const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
+  if (s2 < -1.e-6)
+    return false;
+
+  const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
+  const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
+  const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
+  const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
+  if (s3 < -1.e-6)
+    return false;
+
+  return true;
+}
+
+void
+InsertElectrodes::insertNodesIntoTetMesh(vector<pair<int, double> > &dirichlet,
+					 TetVolField<int>* tet_fld,
+					 Array1<Point> &new_points,
+					 Array1<double> &new_values) {
+  TetVolMeshHandle tet_mesh=tet_fld->get_typed_mesh();
+  int np=new_points.size();
+  tet_mesh->synchronize(Mesh::LOCATE_E);
+  Array1<TetVolMesh::Cell::index_type> split_elems;
+  Array1<int> new_fdata;
+  Array1<Array1<int> > split_elem_nodes;
+  TetVolMesh::Cell::index_type cidx;
+  Array1<TetVolMesh::Node::index_type> node_map(np); // where do new nodes get
+                                                     //  added to TetVolMesh
+  for (int i=0; i<np; i++) {
+    if (tet_mesh->locate(cidx, new_points[i])) {
+      node_map[i]=tet_mesh->add_point(new_points[i]);
+      dirichlet.push_back(pair<int,double>(node_map[i], new_values[i]));
+      int already_split_elem=0;
+      for (int j=0; j<split_elems.size() && !already_split_elem; j++) {
+	if (cidx == split_elems[j]) {
+	  already_split_elem=1;
+	  split_elem_nodes[j].add(i);
+	}
+      }
+      if (!already_split_elem) {
+	split_elems.add(cidx);
+	int sz=split_elem_nodes.size();
+	split_elem_nodes.resize(sz+1);
+	split_elem_nodes[sz].add(i);
+      }
+    } // else outside mesh, so ignore it
+  }
+
+  // split_elems now contains the list of all the elements to be split
+  // and split_elem_nodes contains the list of new nodes for each element
+  // build up a list of new elems -- we'll just keep modifying this list
+  Array1<TetVolMesh::Node::array_type> new_tets;
+  Array1<int> new_vals;
+  TetVolMesh::Node::array_type nodes;
+  TetVolMesh::Node::index_type tmp;
+  TetVolMesh::Node::index_type nidx;
+  for (int e=0; e<split_elems.size(); e++) {
+    tet_mesh->get_nodes(nodes, split_elems[e]);
+    int val=tet_fld->value(split_elems[e]);
+    nidx=node_map[split_elem_nodes[e][0]];
+    for (int ii=0; ii<4; ii++) {
+      tmp=nodes[ii]; 
+      nodes[ii]=nidx;
+      new_tets.add(nodes);
+      new_vals.add(val);
+      nodes[ii]=tmp;
+    }
+    // find which tet from new_tets this node is in -- then split it
+    for (int n=1; n<split_elem_nodes[e].size(); n++) {
+      Point p(new_points[split_elem_nodes[e][n]]);
+      nidx=node_map[split_elem_nodes[e][n]];
+      bool located=false;
+      for (int k=0; k<new_tets.size() && !located; k++) {
+	if (inside4_p(tet_mesh, new_tets[k], p)) {
+	  located=true;
+	  nodes=new_tets[k];
+	  for (int ii=0; ii<4; ii++) {
+	    tmp=nodes[ii];
+	    nodes[ii]=nidx;
+	    if (ii==0) {
+	      new_tets[k]=nodes;
+	    } else {
+	      new_tets.add(nodes);
+	      new_vals.add(new_vals[k]);
+	    }
+	    nodes[ii]=tmp;
+	  }
+	}
+      }
+      if (!located) {
+	cerr << "ERROR -- COULDN'T FIND NODE!!!!\n";
+      }
+    }
+  }
+  int e;
+  int num_old_tets=tet_fld->fdata().size();
+//  cerr << "Num old tets="<<num_old_tets<<"\n";
+  tet_fld->fdata().resize(num_old_tets+new_tets.size()-split_elems.size());
+//  cerr << "  num new tets="<<new_tets.size()-split_elems.size()<<"\n";
+  for (e=0; e<split_elems.size(); e++) {
+    tet_mesh->set_nodes(new_tets[e], split_elems[e]);
+    tet_fld->set_value(new_vals[e], split_elems[e]);
+  }
+  for (; e<new_tets.size(); e++) {
+    TetVolMesh::Cell::index_type tet = tet_mesh->add_elem(new_tets[e]);
+    tet_fld->set_value(new_vals[e], tet);
+  }
+}
+			   
 
 void
 InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet,
 					   TetVolMeshHandle tet_mesh,
 					   const vector<Point> &inner,
 					   const vector<Point> &outer,
-					   int both_sides_active,
+					   const string &active_side,
 					   double voltage,
 					   TetVolMesh* electrodeElements)
 {
@@ -115,6 +278,7 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
     error("First four inner nodes of the elec are colinear.");
     return;
   }
+  if (active_side == "back") electrode_plane.flip();
 
   TetVolMesh::Cell::size_type ncells;
   tet_mesh->size(ncells);
@@ -203,8 +367,12 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
     {
       dirichlet.push_back(pair<int,double>(electrode_node_split_idx[ni], 
 					   voltage));
-      if (both_sides_active)
+//      cerr << "node: " << (unsigned int)(electrode_node_split_idx[ni]);
+//      cerr << "  val=:" << voltage << "\n";
+      if (active_side == "both") {
 	dirichlet.push_back(pair<int,double>(ni, voltage));
+//	cerr << "   also node: "<<(unsigned int)(ni)<<"  val=:"<<voltage<<"\n";
+      }
     }
   }
 
@@ -250,7 +418,6 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
     }
     ++ci;
   }
-  //  tet_mesh->recompute_connectivity();
 }
 
 
@@ -291,7 +458,10 @@ InsertElectrodes::execute()
     error("Input FEM wasn't a TetVolField<int>.");
     return;
   }
-
+  if (imeshH->data_at() != Field::CELL) {
+    error("Input FEM didn't have data at CELL\n");
+    return;
+  }
   vector<pair<int, double> > dirichlet_nodes;
   imeshH->get_property("dirichlet", dirichlet_nodes);
   vector<pair<string, Tensor> > conds;
@@ -304,44 +474,63 @@ InsertElectrodes::execute()
   if (range.first != range.second)
   {
     // get our own local copy of the Field and mesh
-
     imeshH.detach();
     imeshH->mesh_detach();
 
-    TetVolField<int> *field = dynamic_cast<TetVolField<int>*>(imeshH.get_rep());
+    TetVolField<int> *field = 
+      dynamic_cast<TetVolField<int>*>(imeshH.get_rep());
     TetVolMeshHandle mesh = field->get_typed_mesh();
     TetVolMeshHandle elecElemsH;
-    port_map_type::iterator pi = range.first;
-    while (pi != range.second)
-    {
-      FieldIPort *ielec = (FieldIPort *)get_iport(pi->second);
-      if (!ielec->get(ielecH) || !ielecH.get_rep())
-      {
-	++pi;
-	continue;
-      }
+    port_map_type::iterator pi;
 
-      CurveField<double> *elecFld = 
-	dynamic_cast<CurveField<double>*>(ielecH.get_rep());
-      if (!elecFld)
-      {
-	warning("Input electrode wasn't a CurveField<double>.");
-	++pi;
-	continue;
-      }
-      double voltage = elecFld->fdata()[0];
-      CurveMeshHandle elecMesh(elecFld->get_typed_mesh());
-      vector<Point> outer;
-      vector<Point> inner;
-      CurveMesh::Node::iterator ni, ne;
+    // first add in any wire electrodes
+    Array1<FieldHandle> ielecH;
+    for (pi=range.first; pi != range.second; ++pi) {
+      FieldIPort *ielec = (FieldIPort *)get_iport(pi->second);
+      FieldHandle ieH;
+      if (ielec->get(ieH) && ieH.get_rep())
+	ielecH.add(ieH);
+    }
+      
+    Array1<Point> new_points;
+    Array1<double> new_values;
+    for (int h=0; h<ielecH.size(); h++) {
+      QuadSurfField<double> *elecFld = 
+	dynamic_cast<QuadSurfField<double>*>(ielecH[h].get_rep());
+      if (!elecFld) continue;
+      QuadSurfMeshHandle elecMesh(elecFld->get_typed_mesh());
+      QuadSurfMesh::Node::iterator ni, ne;
       elecMesh->begin(ni);
       elecMesh->end(ne);
+      while(ni != ne) {
+	Point p;
+	elecMesh->get_center(p, *ni);
+	new_points.add(p);
+	new_values.add(elecFld->value(*ni));
+	++ni;
+      }
+    }
+    if (new_points.size()) 
+      insertNodesIntoTetMesh(dirichlet_nodes, field, new_points, new_values);
+    
+    // now add in the surface electrodes
+    for (int h=0; h<ielecH.size(); h++) {
+      CurveField<double> *elecFld = 
+	dynamic_cast<CurveField<double>*>(ielecH[h].get_rep());
+      if (!elecFld) continue;
+      CurveMesh::Node::iterator ni, ne;
+      CurveMeshHandle elecMesh(elecFld->get_typed_mesh());
+      elecMesh->begin(ni);
+      elecMesh->end(ne);
+      double voltage = elecFld->value(*ni);
+      vector<Point> outer;
+      vector<Point> inner;
       for (int i=0; i<6; i++) ++ni; // the first six nodes are the handle
       while(ni != ne)
       {
 	Point p;
 	elecMesh->get_center(p, *ni);
-	if (elecFld->fdata()[*ni] == 0) inner.push_back(p);
+	if (elecFld->value(*ni) == 0) inner.push_back(p);
 	else outer.push_back(p);
 	++ni;
       }
@@ -351,17 +540,21 @@ InsertElectrodes::execute()
       TetVolMesh* electrodeElements = 0;
       if (pi == range.first) electrodeElements = scinew TetVolMesh;
 
-      int both_sides_active=0;
-      elecFld->get_property("both-sides-active", both_sides_active);
-
+      string active_side;
+      elecFld->get_property("active_side", active_side);
+      
       // modify mergedDirichletNodes, and mergedMesh to have new nodes
       insertContourIntoTetMesh(dirichlet_nodes, mesh,
-			       inner, outer, both_sides_active,
+			       inner, outer, active_side,
 			       voltage, electrodeElements);
       
       if (pi == range.first) elecElemsH = electrodeElements;
-      ++pi;
     }
+    
+    Transform t;
+    t.load_identity();
+    mesh->transform(t); // really just want to invalidate mesh->grid_
+                        //  because nodes have been moved
     imeshH->set_property("dirichlet", dirichlet_nodes, false);
     imeshH->set_property("conductivity_table", conds, false);
     if (have_units) imeshH->mesh()->set_property("units", units, false);

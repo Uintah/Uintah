@@ -22,7 +22,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ConfigureElectrode : public Module {
-  GuiInt flip_;
+  GuiString active_;
   GuiDouble voltage_;
 public:
   ConfigureElectrode(GuiContext *context);
@@ -34,8 +34,7 @@ DECLARE_MAKER(ConfigureElectrode)
 
 ConfigureElectrode::ConfigureElectrode(GuiContext *context)
   : Module("ConfigureElectrode", context, Filter, "Forward", "BioPSE"),
-    flip_(context->subVar("flip")),
-    voltage_(context->subVar("voltage"))
+    active_(context->subVar("active")), voltage_(context->subVar("voltage"))
 {
 }
 
@@ -71,34 +70,13 @@ void ConfigureElectrode::execute() {
   }
 
   double voltage = voltage_.get();
-  int flip = flip_.get();
+  string active = active_.get();
+
   CurveMesh::Node::iterator ni, ne;
   elecFld->get_typed_mesh()->begin(ni);
   elecFld->fdata()[*ni]=voltage;
 
-  if (!flip) {
-    oelec->send(ielecH);
-    return;
-  }
-
-  CurveMeshHandle elecMesh(scinew CurveMesh(*(elecFld->get_typed_mesh().get_rep())));
-  CurveField<double>* elecFldFlip = scinew CurveField<double>(elecMesh, Field::NODE);
-
-  elecMesh->begin(ni);
-  elecMesh->end(ne);
-  Point pt;
-  elecMesh->get_center(pt, *ni);
-  double midX = pt.x();
-  double midY = pt.y();
-  while(ni != ne) {
-    Point pt;
-    elecMesh->get_center(pt, *ni);
-    pt.x(2*midX-pt.x());
-    pt.y(2*midY-pt.y());
-    elecMesh->set_point(pt, *ni);
-    elecFldFlip->fdata()[*ni] = elecFld->fdata()[*ni];
-    ++ni;
-  }
-  oelec->send(elecFldFlip);
+  elecFld->set_property("active_side", active, false);
+  oelec->send(elecFld);
 }
 } // End namespace BioPSE

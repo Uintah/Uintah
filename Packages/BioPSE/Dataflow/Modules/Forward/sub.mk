@@ -32,6 +32,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/BuildFEMatrixQuadratic.cc\
 	    $(SRCDIR)/ComputeCurrent.cc\
 	    $(SRCDIR)/ConfigureElectrode.cc\
+	    $(SRCDIR)/ConfigureWireElectrode.cc\
 	    $(SRCDIR)/DipoleInSphere.cc\
 	    $(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
 	    $(SRCDIR)/FDMtoFEM.cc\
