@@ -22,7 +22,7 @@
 
 catch {rename ScalarFieldExtractor ""}
 
-itcl_class Packages/Uintah_Visualization_ScalarFieldExtractor { 
+itcl_class Uintah_Visualization_ScalarFieldExtractor { 
     inherit Module 
 
     protected sVarList ""
