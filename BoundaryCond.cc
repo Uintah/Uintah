@@ -1610,7 +1610,7 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
     }
  
     if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "LODI"){ 
-      fillFaceDensityLODI(rho_CC, di, nu, rho_tmp, vel,  
+      fillFaceDensityLODI(patch, rho_CC, di, nu, rho_tmp, vel,  
                           face, delT, dx); 
     }
   }  
@@ -1862,15 +1862,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
     L_Offset[Patch::yplus]  = IntVector(0,-1, 0);
     L_Offset[Patch::zminus] = IntVector(0, 0, 0);
     L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
-    
-    vector<IntVector> gradientDir(6);
-    gradientDir[Patch::xminus] = IntVector(0, 1, 2);
-    gradientDir[Patch::xplus]  = IntVector(0, 1, 2);
-    gradientDir[Patch::yminus] = IntVector(1, 0, 2);
-    gradientDir[Patch::yplus]  = IntVector(1, 0, 2);
-    gradientDir[Patch::zminus] = IntVector(2, 0, 1);
-    gradientDir[Patch::zplus]  = IntVector(2, 0, 1);    
-  
+
  /*`==========TESTING==========*/
  // TO DO: ONLY COMPUTE DI ON LODI FACES NOT ALL FACES
 /*==========TESTING==========`*/    
@@ -1878,10 +1870,12 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
         face=Patch::nextFace(face)){
 
       //_____________________________________
-      //Compute Di at xplus plane
-      int dir0 = gradientDir[face][0];
-      int dir1 = gradientDir[face][1];
-      int dir2 = gradientDir[face][2];        
+      //Compute Di at
+      IntVector axes = patch->faceAxes(face);
+      int dir0 = axes[0]; // find the principal dir and other 2 directions
+      int dir1 = axes[1]; 
+      int dir2 = axes[2];    
+  
       double delta = dx[dir0];
 
       IntVector normal = patch->faceDirection(face);
