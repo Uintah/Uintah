@@ -38,8 +38,8 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
+#include <sci_hash_set.h>
 #include <sci_hash_map.h>
-#include <hash_set>
 #include <set>
 
 #define MIN(a, b)     ((a < b) ? a : b) 
@@ -55,6 +55,8 @@ namespace SCIRun {
 
 
 using std::hash_map;
+using std::hash_multimap;
+using std::hash_multiset;
 
 class SCICORESHARE TetVolMesh : public Mesh
 {
