@@ -51,15 +51,15 @@ public:
    Point GetPosition() const;
    
    void SetDirection( const Vector& v );
-   const Vector& GetDirection() const;
+   const Vector& GetDirection();
 
    virtual void widget_tcl( TCLArgs& );
 
-   // Variable indexs
-   enum { PointVar };
+   // Variable indexs         
+   enum { PointVar, HeadVar, DistVar };
 
    // Material indexs
-   enum { PointMatl, ShaftMatl, HeadMatl };
+   enum { PointMatl, ShaftMatl, HeadMatl, ResizeMatl };
 
 protected:
    virtual clString GetMaterialName( const Index mindex ) const;   
@@ -77,6 +77,10 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/06/22 22:39:48  samsonov
+// Added resizing mode
+// Added rotational functionality in respect to base point
+//
 // Revision 1.3  1999/10/07 02:07:23  sparker
 // use standard iostreams and complex type
 //
