@@ -1961,8 +1961,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
-      setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
+        setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
         new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   indx, patch);
         new_dw->put(sumReleasedHeat, Ilb->int_eng_comb_CCLabel,indx, patch); 
         new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, indx, patch);
