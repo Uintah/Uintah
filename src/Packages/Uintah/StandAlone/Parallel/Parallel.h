@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_PARALLEL_H
 
 namespace Uintah {
+   class ProcessorGroup;
 
 /**************************************
 
@@ -34,34 +35,56 @@ WARNING
 
    class Parallel {
    public:
+      enum Circumstances {
+	 NormalShutdown,
+	 Abort
+      };
+
       //////////
       // Insert Documentation Here:
-      static void initializeManager(int argc, char** argv);
+      static void initializeManager(int& argc, char**& argv);
       
       //////////
       // Insert Documentation Here:
-      static void finalizeManager();
+      static void finalizeManager(Circumstances cirumstances = NormalShutdown);
+
+      //////////
+      // Insert Documenatation here:
+      static ProcessorGroup* getRootProcessorGroup();
       
       //////////
-      // Returns the Number of MPI Processes in this simulation...
-      static int getSize();
-      
+      // Returns true if this process is using MPI
+      static bool usingMPI();
+
       //////////
-      // Returns the MPI Rank of this process
-      static int getRank();
+      // Returns the number of threads that a processing element is
+      // allowed to use to compute its tasks.  
+      static int getMaxThreads();
       
    private:
       Parallel();
       Parallel(const Parallel&);
       ~Parallel();
       Parallel& operator=(const Parallel&);
-      
    };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/09/26 21:42:25  dav
+// added getMaxThreads
+//
+// Revision 1.7  2000/09/25 18:13:51  sparker
+// Correctly handle mpich
+//
+// Revision 1.6  2000/07/27 22:39:54  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
+// Revision 1.5  2000/06/17 07:06:48  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.4  2000/04/26 06:49:15  sparker
 // Streamlined namespaces
 //
