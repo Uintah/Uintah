@@ -88,16 +88,16 @@ linkend="tbl.disk_space"/>.
 <para>Mac OS X 10.2.6 or Mac OS X 10.3</para>
 </listitem>
 <listitem>
-<para>December 2002 developer tools for &osx; 10.2.6</para>
+<para>December 2002 developer tools for &osx; 10.2</para>
 <para>&osx; 10.3 compatible developer tools for &osx; 10.3</para>
 </listitem>
 <listitem>
 <para>Apple's <ulink url="http://www.apple.com/macosx/x11/">X11
 Public Beta 3</ulink> and X11 <acronym>SDK</acronym> for &osx;
-10.2.6</para> 
+10.2</para> 
 
-<para>Apple's X11 and X11 <acronym>SDK</acronym>
-are distributed with &osx; 10.3 but must be installed separately</para>
+<para>Apple's X11 and X11 <acronym>SDK</acronym> for &osx; 10.3.
+X11 is distributed with &osx; 10.3 but must be installed separately</para>
 </listitem>
 <listitem>
 <para>G4 processor</para>
