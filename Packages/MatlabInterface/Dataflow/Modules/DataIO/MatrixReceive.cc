@@ -37,11 +37,10 @@
 
 #include <Packages/MatlabInterface/share/share.h>
 
+#include <Packages/MatlabInterface/Core/Util/bring.h>
+
 namespace MatlabInterface
 {
-      char *bring(int wordy,int flag,char *hostport,int lbuf,char *buf);
-      void endiswap(int lbuf, char *buf,int num);
-      int  endian(void);
 
 using namespace SCIRun;
 
@@ -90,7 +89,9 @@ void MatrixReceive::execute()
   }
 /* OBTAIN HOST:PORT INFORMATION */
 
- const char *hport=hpTCL.get().c_str();
+ hpTCL.reset();
+ string ss=hpTCL.get();
+ const char *hport=ss.c_str();
  DenseMatrix     *matr;
  MatrixHandle    mIH;
  SparseRowMatrix *smatr;
@@ -123,7 +124,7 @@ void MatrixReceive::execute()
   MatrixHandle mm;
   char cb[128];
   int  lcb=sizeof(cb);
-  int  endi,wordy=2;
+  int  endi,wordy=6;
   ColumnMatrix *ccc;
 
 

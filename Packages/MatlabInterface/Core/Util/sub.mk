@@ -15,19 +15,25 @@
 #  University of Utah. All Rights Reserved.
 #
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+# *** NOTE ***
+#
+# Do not remove or modify the comment line:
+#
+# #[INSERT NEW ?????? HERE]
+#
+# It is required by the Component Wizard to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Component"
+# documentation on how to do it correctly.
 
-SRCDIR := Packages/MatlabInterface/Core
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := \
-        $(SRCDIR)/Datatypes \
-        $(SRCDIR)/Util \
+SRCDIR   := Packages/MatlabInterface/Core/Util
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCS     += $(SRCDIR)/bring.c \
+#[INSERT NEW CODE FILE HERE]
 
-PSELIBS := 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+PSELIBS :=
+LIBS :=
 
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
