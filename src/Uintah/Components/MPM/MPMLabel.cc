@@ -96,8 +96,8 @@ MPMLabel::MPMLabel()
 				NCVariable<double>::getTypeDescription());
   
   // I'm not sure about this one:
-  deltLabel = 
-    new VarLabel( "delt", delt_vartype::getTypeDescription() );
+  delTLabel = 
+    new VarLabel( "delT", delt_vartype::getTypeDescription() );
 } 
 
 const MPMLabel* MPMLabel::getLabels()

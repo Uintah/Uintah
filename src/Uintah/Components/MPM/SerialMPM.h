@@ -171,38 +171,6 @@ WARNING
 	 Contact*         d_contactModel;
 	 Fracture*        d_fractureModel;
 	 bool             d_heatConductionInvolved;
-	 /*
-	 const VarLabel* deltLabel;
-	 
-	 const VarLabel* pDeformationMeasureLabel;
-	 const VarLabel* pStressLabel;
-	 const VarLabel* pVolumeLabel;
-	 const VarLabel* pMassLabel;
-	 const VarLabel* pVelocityLabel;
-	 const VarLabel* pExternalForceLabel;
-	 const VarLabel* pXLabel;
-	 const VarLabel* pSurfLabel;
-	 const VarLabel* pSurfaceNormalLabel; //for fracture
-	 const VarLabel* pTemperatureLabel; //for heat conduction
-	 const VarLabel* pTemperatureGradientLabel; //for heat conduction
-	 
-	 const VarLabel* gMassLabel;
-	 const VarLabel* gAccelerationLabel;
-	 const VarLabel* gMomExedAccelerationLabel;
-	 const VarLabel* gVelocityLabel;
-	 const VarLabel* gMomExedVelocityLabel;
-	 const VarLabel* gVelocityStarLabel;
-	 const VarLabel* gMomExedVelocityStarLabel;
-	 const VarLabel* gExternalForceLabel;
-	 const VarLabel* gInternalForceLabel;
-	 const VarLabel* gSelfContactLabel; //for fracture
-	 const VarLabel* gTemperatureRateLabel; //for heat conduction
-	 const VarLabel* gInternalHeatRateLabel; //for heat conduction
-	 const VarLabel* gExternalHeatRateLabel; //for heat conduction
-	 
-	 const VarLabel* cSelfContactLabel; //for fracture, CCVariable
-	 const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
-	 */
       };
       
    } // end namespace MPM
@@ -210,6 +178,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.34  2000/05/30 17:07:34  dav
+// Removed commented out labels.  Other MPI fixes.  Changed delt to delT so I would stop thinking of it as just delta.
+//
 // Revision 1.33  2000/05/26 21:37:30  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //

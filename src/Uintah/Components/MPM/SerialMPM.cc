@@ -1,9 +1,9 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
+#include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Components/MPM/Contact/ContactFactory.h>
 #include <Uintah/Components/MPM/Fracture/FractureFactory.h>
@@ -51,85 +51,6 @@ using namespace std;
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
-
-  //   pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
-//  			    ParticleVariable<Matrix3>::getTypeDescription());
-
-//     pStressLabel = new VarLabel( "p.stress",
-//  			     ParticleVariable<Matrix3>::getTypeDescription() );
-
-//     pVolumeLabel = new VarLabel( "p.volume",
-//  			     ParticleVariable<double>::getTypeDescription());
-
-//     pMassLabel = new VarLabel( "p.mass",
-//  			ParticleVariable<double>::getTypeDescription() );
-
-//     pVelocityLabel = new VarLabel( "p.velocity", 
-//  			     ParticleVariable<Vector>::getTypeDescription() );
-
-//     pExternalForceLabel = new VarLabel( "p.externalforce",
-//  			     ParticleVariable<Vector>::getTypeDescription() );
-
-//     pXLabel = new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
-//  			     VarLabel::PositionVariable);
-
-//     pTemperatureLabel = new VarLabel( "p.temperature",
-//                             ParticleVariable<double>::getTypeDescription() );
-
-//     pTemperatureGradientLabel = new VarLabel( "p.temperatureGradient",
-//  			     ParticleVariable<Vector>::getTypeDescription() );
-
-//     //tan:
-//     //  pSurfaceNormalLabel is used to define the surface normal of a boundary particle.
-//     //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
-//     //  in this way we can distinguish boundary particles to interior particles
-//     //
-//     pSurfaceNormalLabel = new VarLabel( "p.surfaceNormal",
-//  			     ParticleVariable<Vector>::getTypeDescription() );
-
-//     gAccelerationLabel = new VarLabel( "g.acceleration",
-//  			      NCVariable<Vector>::getTypeDescription() );
-
-//     gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
-//  			      NCVariable<Vector>::getTypeDescription() );
-
-//     gMassLabel = new VarLabel( "g.mass",
-//  			      NCVariable<double>::getTypeDescription() );
-
-//     gVelocityLabel = new VarLabel( "g.velocity",
-//  				  NCVariable<Vector>::getTypeDescription() );
-
-//     gMomExedVelocityLabel = new VarLabel( "g.momexedvelocity",
-//  				NCVariable<Vector>::getTypeDescription() );
-
-//     gExternalForceLabel = new VarLabel( "g.externalforce",
-//  			      NCVariable<Vector>::getTypeDescription() );
-
-//     gInternalForceLabel = new VarLabel( "g.internalforce",
-//  			      NCVariable<Vector>::getTypeDescription() );
-
-//     gVelocityStarLabel = new VarLabel( "g.velocity_star",
-//  			      NCVariable<Vector>::getTypeDescription() );
-
-//     gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
-//  			      NCVariable<Vector>::getTypeDescription() );
-
-//     gSelfContactLabel = new VarLabel( "g.selfContact",
-//  			      NCVariable<bool>::getTypeDescription() );
-
-//     cSelfContactLabel = new VarLabel( "c.selfContact",
-//  			      CCVariable<bool>::getTypeDescription() );
-
-//     cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
-//  			      CCVariable<Vector>::getTypeDescription() );
-
-
-//     // I'm not sure about this one:
-//     deltLabel = 
-//       new VarLabel( "delt", delt_vartype::getTypeDescription() );
-
-   //tan:
-   //temporary set to false, underconstruction.
    d_heatConductionInvolved = false;
 }
 
@@ -467,7 +388,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::None);
 	    t->requires(new_dw, lb->gMomExedVelocityLabel, idx, region,
 			Ghost::None);
-	    t->requires(old_dw, lb->deltLabel );
+	    t->requires(old_dw, lb->delTLabel );
 		     
 	    t->computes(new_dw, lb->gVelocityStarLabel, idx, region );
 	 }
@@ -557,7 +478,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			
 	    t->requires(old_dw, lb->pMassLabel, idx, region, Ghost::None);
 	    t->requires(old_dw, lb->pExternalForceLabel, idx, region, Ghost::None);
-	    t->requires(old_dw, lb->deltLabel );
+	    t->requires(old_dw, lb->delTLabel );
 	    t->computes(new_dw, lb->pVelocityLabel, idx, region );
 	    t->computes(new_dw, lb->pXLabel, idx, region );
 	    t->computes(new_dw, lb->pMassLabel, idx, region);
@@ -1111,14 +1032,14 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       // Get required variables for this region
       NCVariable<Vector>        acceleration;
       NCVariable<Vector>        velocity;
-      delt_vartype delt;
+      delt_vartype delT;
 
       new_dw->get(acceleration, lb->gAccelerationLabel, vfindex, region,
 		  Ghost::None, 0);
       new_dw->get(velocity, lb->gMomExedVelocityLabel, vfindex, region,
 		  Ghost::None, 0);
 
-      old_dw->get((ReductionVariableBase&)delt, lb->deltLabel);
+      old_dw->get((ReductionVariableBase&)delT, lb->delTLabel);
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
@@ -1127,7 +1048,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       // Do the computation
 
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
-	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delt;
+	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delT;
       }
 
 
@@ -1190,7 +1111,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
-      delt_vartype delt;
+      delt_vartype delT;
 
       new_dw->get(gvelocity_star,lb->gMomExedVelocityStarLabel, vfindex, region,
 		  Ghost::AroundCells, 1);
@@ -1234,7 +1155,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       }
 #endif
 
-      old_dw->get(delt, lb->deltLabel);
+      old_dw->get(delT, lb->delTLabel);
 
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == pvelocity.getParticleSubset());
@@ -1264,11 +1185,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
         }
 
         // Update the particle's position and velocity
-        px[idx]        += vel * delt;
-        pvelocity[idx] += acc * delt;
+        px[idx]        += vel * delT;
+        pvelocity[idx] += acc * delT;
         if(d_heatConductionInvolved) {
           pTemperatureRate[idx] = temp;
-          pTemperature[idx] += temp * delt;
+          pTemperature[idx] += temp * delT;
         }
         
         ke += .5*pmass[idx]*pvelocity[idx].length2();
@@ -1376,6 +1297,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.69  2000/05/30 17:07:34  dav
+// Removed commented out labels.  Other MPI fixes.  Changed delt to delT so I would stop thinking of it as just delta.
+//
 // Revision 1.68  2000/05/30 04:26:17  tan
 // Heat conduction algorithm integrated into scheduleTimeAdvance().
 //
