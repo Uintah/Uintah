@@ -36,6 +36,7 @@
 #include <vector>
 
 #include <Core/Thread/Thread.h>
+#include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomObj.h>
 
 namespace SCIRun {
