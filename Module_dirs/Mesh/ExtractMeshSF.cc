@@ -10,13 +10,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ExtractMeshSF/ExtractMeshSF.h>
-#include <MeshPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <ScalarFieldPort.h>
-#include <ScalarFieldUG.h>
+#include <Modules/Mesh/ExtractMeshSF.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/MeshPort.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldUG.h>
 #include <Geometry/Point.h>
+
 #include <iostream.h>
 #include <fstream.h>
 

@@ -11,33 +11,35 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundReader/SoundReader.h>
+#include <Modules/Sound/SoundReader.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
-#include <ModuleList.h>
-#include <MUI.h>
-#include <NotFinished.h>
-#include <SoundPort.h>
+
 #include <iostream.h>
 #include <audiofile.h>
 #include <fstream.h>
 
-static Module* make_SoundReader()
+static Module* make_SoundReader(const clString& id)
 {
-    return new SoundReader;
+    return new SoundReader(id);
 }
 
 static RegisterModule db1("Sound", "SoundReader", make_SoundReader);
 
-SoundReader::SoundReader()
-: Module("SoundReader", Source)
+SoundReader::SoundReader(const clString& id)
+: Module("SoundReader", id, Source)
 {
     // Create the output data handle and port
     osound=new SoundOPort(this, "Sound", SoundIPort::Stream);
     add_oport(osound);
 
     // Set up the interface
+#ifdef OLDUI
     add_ui(new MUI_file_selection("Sound File", &filename,
 				  MUI_widget::NotExecuting));
+#endif
 }
 
 SoundReader::SoundReader(const SoundReader& copy, int deep)
@@ -172,8 +174,10 @@ void SoundReader::execute()
     delete sampc;
 }
 
+#ifdef OLDUI
 void SoundReader::mui_callback(void*, int)
 {
     want_to_execute();
 }
 
+#endif

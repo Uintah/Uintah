@@ -10,37 +10,33 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dialbox.h>
-#include <DBContext.h>
-#include <NetworkEditor.h>
+#include <Modules/Contours/TransformCS.h>
 
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/ContourSet.h>
+#include <Devices/Dialbox.h>
+#include <Devices/DBContext.h>
 #include <Geometry/Vector.h>
-#include <ContourSet.h>
-#include <NotFinished.h>
-#include <TransformCS/TransformCS.h>
-#include <ModuleList.h>
-#include <MUI.h>
-#include <TransformCS/TransformCS.h>
 #include <Math/Expon.h>
 #include <Math/Trig.h>
 
-static Module* make_TransformCS()
+static Module* make_TransformCS(const clString& id)
 {
-    return new TransformCS;
+    return new TransformCS(id);
 }
 
 static RegisterModule db1("Contours", "Transform Contour Set", make_TransformCS);
 static RegisterModule db2("Visualization", "Transform Contour Set", make_TransformCS);
 
-TransformCS::TransformCS()
-: UserModule("TransformCS", Filter)
+TransformCS::TransformCS(const clString& id)
+: Module("TransformCS", id, Filter)
 {
     // Create the input port
     icontour=new ContourSetIPort(this, "ContourSet", ContourSetIPort::Atomic);
     add_iport(icontour);
     ocontour=new ContourSetOPort(this, "ContourSet", ContourSetIPort::Atomic);
     add_oport(ocontour);
-    enable_ui_button();
     abort_flag=0;
     spacing=0;
     dbcontext_st=0;
@@ -54,7 +50,7 @@ void TransformCS::ui_button() {
 }
 
 TransformCS::TransformCS(const TransformCS&copy, int deep)
-: UserModule(copy, deep)
+: Module(copy, deep)
 {
     NOT_FINISHED("TransformCS::TransformCS");
 }
@@ -88,6 +84,7 @@ void TransformCS::transform_cs() {
 }
 
 void TransformCS::initDB() {
+#ifdef OLDUI
     dbcontext_st=new DBContext(clString("TransformCS"));
     dbcontext_st->set_knob(0, "Scale",
 			   new DBCallback<TransformCS>
@@ -131,6 +128,7 @@ void TransformCS::initDB() {
 			   FIXCB2(&netedit->mailbox, this,
 				  &TransformCS::DBCallBack, 0));
     dbcontext_st->set_wraprange(3, 0, 10);
+#endif
 }   	 
 void TransformCS::execute()
 {

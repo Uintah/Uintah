@@ -11,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <VoiceRemover/VoiceRemover.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SoundPort.h>
+#include <Modules/Sound/VoiceRemover.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <iostream.h>
 
 static Module* make_VoiceRemover(const clString& id)

@@ -14,7 +14,7 @@
 #ifndef SCI_project_module_GenSurface_h
 #define SCI_project_module_GenSurface_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 
 class GenSurface : public Module {
 public:

@@ -10,11 +10,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <GenSurface/GenSurface.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SurfacePort.h>
+#include <Modules/Surface/GenSurface.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+
 #include <iostream.h>
 #include <fstream.h>
 

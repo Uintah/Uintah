@@ -11,33 +11,27 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#undef SCI_ASSERTION_LEVEL
-#define SCI_ASSERTION_LEVEL 3
+#include <Modules/Surface/ContoursToSurf.h>
 #include <Classlib/Array1.h>
-#undef SCI_ASSERTION_LEVEL
-#define SCI_ASSERTION_LEVEL 2
-#undef ASSERTL3
-#define ASSERTL3(condition)
-#include <ContoursToSurf/ContoursToSurf.h>
-#include <ContourSet.h>
-#include <Surface.h>
-#include <SurfacePort.h>
-#include <ContourSetPort.h>
-#include <ModuleList.h>
-#include <MUI.h>
-#include <NotFinished.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <Classlib/Assert.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/ContourSetPort.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
+#include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
 #include <Math/MinMax.h>
 #include <Math/Expon.h>
-#include <Grid.h>
-#include <Classlib/Assert.h>
+
+#include <iostream.h>
+#include <fstream.h>
 
 #define Sqr(x) ((x)*(x))
-static Module* make_ContoursToSurf()
+static Module* make_ContoursToSurf(const clString& id)
 {
-    return new ContoursToSurf;
+    return new ContoursToSurf(id);
 }
 
 static RegisterModule db1("Contours", "Contours To Surface", make_ContoursToSurf);
@@ -45,8 +39,8 @@ static RegisterModule db2("Visualization", "Contours To Surface", make_ContoursT
 static RegisterModule db3("Surfaces", "Contours To Surface", make_ContoursToSurf);
 static RegisterModule db4("Dave", "Contours To Surface", make_ContoursToSurf);
 
-ContoursToSurf::ContoursToSurf()
-: UserModule("ContoursToSurf", Filter)
+ContoursToSurf::ContoursToSurf(const clString& id)
+: Module("ContoursToSurf", id, Filter)
 {
     // Create the input port
     incontours.add(new ContourSetIPort(this, "ContourSet", 
@@ -74,7 +68,7 @@ void ContoursToSurf::connection(ConnectionMode mode, int which_port,
 }
 	
 ContoursToSurf::ContoursToSurf(const ContoursToSurf&copy, int deep)
-: UserModule(copy, deep)
+: Module(copy, deep)
 {
     NOT_FINISHED("ContoursToSurf::ContoursToSurf");
 }

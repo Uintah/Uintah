@@ -14,7 +14,7 @@
 #ifndef SCI_project_module_MakeScalarField_h
 #define SCI_project_module_MakeScalarField_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 
 class MakeScalarField : public Module {
 public:

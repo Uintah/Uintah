@@ -10,13 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Gradient/Gradient.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <ScalarFieldPort.h>
-#include <SurfacePort.h>
-#include <VectorFieldPort.h>
+#include <Modules/Fields/Gradient.h>
+
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/SurfacePort.h>
+#include <Datatypes/VectorFieldPort.h>
 #include <Geometry/Point.h>
+
 #include <iostream.h>
 #include <fstream.h>
 

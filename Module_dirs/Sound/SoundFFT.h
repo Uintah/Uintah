@@ -14,15 +14,15 @@
 #ifndef SCI_project_module_SoundFFT_h
 #define SCI_project_module_SoundFFT_h
 
-#include <Module.h>
-#include <SoundData.h>
+#include <Dataflow/Module.h>
+class SoundIPort;
+class SoundOPort;
 
 class SoundFFT : public Module {
-    OutSoundData outsound;
-    InSoundData isound;
-
+    SoundOPort* outsound;
+    SoundIPort* insound;
 public:
-    SoundFFT();
+    SoundFFT(const clString& id);
     SoundFFT(const SoundFFT&, int deep);
     virtual ~SoundFFT();
     virtual Module* clone(int deep);

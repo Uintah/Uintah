@@ -10,11 +10,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ApplyBC/ApplyBC.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SurfacePort.h>
+#include <Modules/FEM/ApplyBC.h>
+
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+
 #include <iostream.h>
 #include <fstream.h>
 

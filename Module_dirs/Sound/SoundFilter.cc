@@ -11,19 +11,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundFilter/SoundFilter.h>
-// Work around clashes with X.
-#ifdef Complex
-#undef Complex
-#endif
+#include <Modules/Sound/SoundFilter.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <Math/Complex.h>
 #include <Math/Expon.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
 #include <Math/Trig.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SoundPort.h>
 #include <iostream.h>
 #include <fstream.h>
 

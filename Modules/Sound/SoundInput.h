@@ -14,7 +14,7 @@
 #ifndef SCI_project_module_SoundInput_h
 #define SCI_project_module_SoundInput_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 class SoundOPort;
 
 class SoundInput : public Module {
@@ -22,7 +22,7 @@ class SoundInput : public Module {
     int onoff;
     double rate;
 public:
-    SoundInput();
+    SoundInput(const clString& id);
     SoundInput(const SoundInput&, int deep);
     virtual ~SoundInput();
     virtual Module* clone(int deep);

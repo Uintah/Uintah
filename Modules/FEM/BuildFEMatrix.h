@@ -14,7 +14,7 @@
 #ifndef SCI_project_module_BuildFEMatrix_h
 #define SCI_project_module_BuildFEMatrix_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 
 class BuildFEMatrix : public Module {
 public:

@@ -14,9 +14,9 @@
 #ifndef SCI_project_module_ExtractMeshSF_h
 #define SCI_project_module_ExtractMeshSF_h
 
-#include <Module.h>
-#include <ScalarFieldPort.h>
-#include <MeshPort.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/MeshPort.h>
 
 class ExtractMeshSF : public Module {
     ScalarFieldIPort* inport;

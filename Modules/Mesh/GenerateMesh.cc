@@ -10,24 +10,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <GenerateMesh/GenerateMesh.h>
-#include <MeshPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SurfacePort.h>
+#include <Modules/Mesh/GenerateMesh.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/MeshPort.h>
+#include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+
 #include <iostream.h>
 #include <fstream.h>
 
-static Module* make_GenerateMesh()
+static Module* make_GenerateMesh(const clString& id)
 {
-    return new GenerateMesh;
+    return new GenerateMesh(id);
 }
 
 static RegisterModule db1("Unfinished", "GenerateMesh", make_GenerateMesh);
 
-GenerateMesh::GenerateMesh()
-: Module("GenerateMesh", Filter)
+GenerateMesh::GenerateMesh(const clString& id)
+: Module("GenerateMesh", id, Filter)
 {
     add_iport(new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));
     add_iport(new SurfaceIPort(this, "Geometry", SurfaceIPort::Atomic));

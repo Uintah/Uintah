@@ -1,6 +1,6 @@
 
-#include <Salmon/Renderer.h>
-#include <NotFinished.h>
+#include <Modules/Salmon/Renderer.h>
+#include <Classlib/NotFinished.h>
 
 class Postscript : public Renderer {
 public:

@@ -11,17 +11,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SurfToGeom/SurfToGeom.h>
-#include <Geom.h>
-#include <GeometryPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <ScalarFieldPort.h>
-#include <Surface.h>
-#include <SurfacePort.h>
+#include <Modules/Surface/SurfToGeom.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
+#include <Geom/Color.h>
+#include <Geom/Geom.h>
 #include <iostream.h>
 #include <fstream.h>
-#include <Color.h>
 
 static Module* make_SurfToGeom(const clString& id)
 {

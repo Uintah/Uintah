@@ -16,7 +16,7 @@
 #include <Classlib/Array1.h>
 #include <Geometry/BBox.h>
 #include <GL/glx.h>
-#include <TCL.h>
+#include <TCL/TCL.h>
 
 class BBox;
 class DBContext;

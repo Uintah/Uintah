@@ -14,17 +14,16 @@
 #ifndef SCI_project_module_ContoursToSurf_h
 #define SCI_project_module_ContoursToSurf_h
 
-#include <UserModule.h>
-#include <ContourSet.h>
-#include <Surface.h>
-#include <SurfacePort.h>
-#include <ContourSetPort.h>
+#include <Dataflow/Module.h>
 #include <Classlib/Array1.h>
-#include <Classlib/Array3.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
+#include <Datatypes/ContourSetPort.h>
 
 class Grid;
 
-class ContoursToSurf : public UserModule {
+class ContoursToSurf : public Module {
     Array1<ContourSetIPort*> incontours;
     SurfaceOPort* osurface;
     BBox bbox;
@@ -39,10 +38,8 @@ class ContoursToSurf : public UserModule {
     void contours_to_surf(const Array1<ContourSetHandle> &contours, TriSurface*);
     Array1<int>* get_cubes_at_distance(int dist, int i, int j, int k, int imax,
 				       int jmax, int kmax);
-
-
 public:
-    ContoursToSurf();
+    ContoursToSurf(const clString&);
     ContoursToSurf(const ContoursToSurf&, int deep);
     virtual ~ContoursToSurf();
     virtual Module* clone(int deep);

@@ -1,17 +1,17 @@
 
-#include <Salmon/Renderer.h>
-#include <Salmon/Salmon.h>
-#include <Salmon/Roe.h>
-#include <NotFinished.h>
-#include <X11/Xlib.h>
-#include <TCLTask.h>
-#include <tcl.h>
-#include <tk.h>
+#include <Modules/Salmon/Renderer.h>
+#include <Modules/Salmon/Salmon.h>
+#include <Modules/Salmon/Roe.h>
 #include <Classlib/Array1.h>
 #include <Classlib/AVLTree.h>
 #include <Classlib/HashTable.h>
+#include <Classlib/NotFinished.h>
 #include <Geometry/Transform.h>
-#include <Geom.h>
+#include <Geom/Geom.h>
+#include <TCL/TCLTask.h>
+#include <X11/Xlib.h>
+#include <tcl/tcl7.3/tcl.h>
+#include <tcl/tk3.6/tk.h>
 
 extern Tcl_Interp* the_interp;
 

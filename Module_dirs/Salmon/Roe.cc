@@ -11,21 +11,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DBCallback.h>
-#include <DBContext.h>
-#include <Dialbox.h>
-#include <Geom.h>
-#include <NotFinished.h>
-#include <Salmon/Salmon.h>
-#include <Salmon/Roe.h>
-#include <Salmon/Renderer.h>
-#include <iostream.h>
-#include <Geometry/Vector.h>
-#include <GL/glu.h>
+#include <Modules/Salmon/Salmon.h>
+#include <Modules/Salmon/Roe.h>
+#include <Modules/Salmon/Renderer.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/Timer.h>
+#include <Devices/DBCallback.h>
+#include <Devices/DBContext.h>
+#include <Devices/Dialbox.h>
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
+#include <Geometry/Vector.h>
+#include <Geom/Geom.h>
+#include <GL/glu.h>
+#include <iostream.h>
 #include <stdio.h>
 #include <string.h>
 

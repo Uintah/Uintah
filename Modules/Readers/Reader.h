@@ -14,10 +14,10 @@
 #ifndef SCI_project_TYPEReader_h
 #define SCI_project_TYPEReader_h 1
 
-#include <Module.h>
-#include <TCLvar.h>
-#include <TYPEPort.h>
-#include <TYPE.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/TYPEPort.h>
+#include <Datatypes/TYPE.h>
+#include <TCL/TCLvar.h>
 
 class TYPEReader : public Module {
     TYPEOPort* outport;

@@ -14,8 +14,8 @@
 #ifndef SCI_project_module_MeshView_h
 #define SCI_project_module_MeshView_h
 
-#include <Module.h>
-#include <MeshPort.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/MeshPort.h>
 #include <Geometry/Point.h>
 #include "connect.h"
 

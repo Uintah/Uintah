@@ -1,0 +1,12 @@
+
+#include <config/sci.cf>
+
+OBJS = ExtractMeshSF.o  GenerateMesh.o  MakeScalarField.o  \
+	MeshView.o
+SRCS = ExtractMeshSF.cc GenerateMesh.cc MakeScalarField.cc \
+	MeshView.cc
+
+LIBNAME = Mesh
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))

@@ -12,7 +12,7 @@
  */
 
 
-#include <Salmon/Renderer.h>
+#include <Modules/Salmon/Renderer.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/String.h>
 #include <iostream.h>

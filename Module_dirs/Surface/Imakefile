@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = ContoursToSurf.o  GenSurface.o  SurfToGeom.o
+SRCS = ContoursToSurf.cc GenSurface.cc SurfToGeom.cc
+
+LIBNAME = Surface
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))

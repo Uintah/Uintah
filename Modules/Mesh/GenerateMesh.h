@@ -14,11 +14,11 @@
 #ifndef SCI_project_module_GenerateMesh_h
 #define SCI_project_module_GenerateMesh_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 
 class GenerateMesh : public Module {
 public:
-    GenerateMesh();
+    GenerateMesh(const clString& id);
     GenerateMesh(const GenerateMesh&, int deep);
     virtual ~GenerateMesh();
     virtual Module* clone(int deep);

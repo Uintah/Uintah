@@ -14,7 +14,7 @@
 #ifndef SCI_project_module_SoundFilter_h
 #define SCI_project_module_SoundFilter_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 class SoundIPort;
 class SoundOPort;
 

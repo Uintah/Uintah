@@ -9,19 +9,15 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
+#include <Modules/Visualization/Streamsurf.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldUG.h>
+#include <Geom/Geom.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
-#undef SCI_ASSERTION_LEVEL
-#define SCI_ASSERTION_LEVEL 3
-
-#include <Streamsurf/Streamsurf.h>
-#include <ScalarFieldRG.h>
-#include <ScalarFieldUG.h>
-#include <Geom.h>
-#include <GeometryPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <Geometry/Point.h>
 #include <Math/Trig.h>
 #include <iostream.h>
 #include <fstream.h>

@@ -1,9 +1,10 @@
- TODO:
+/* TODO:
   FFT should FFT the whole thing or packetize - a switch
     UI for packet length
   Multiple output ports.
     1 - Graph - or SoundSpectrum2Graph module???
     2 - SoundSpectrum.
+ */
 /*
  *  SoundFFT.cc:
  *
@@ -16,28 +17,26 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundFFT/SoundFFT.h>
-#include <ModuleList.h>
-#include <MUI.h>
-#include <Port.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
+#include <Modules/Sound/SoundFFT.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
 #include <Math/MinMax.h>
 #include <Math/Trig.h>
 #include <iostream.h>
 #include <fstream.h>
 
-static Module* make_SoundFFT()
+static Module* make_SoundFFT(const clString& id)
 {
-    return new SoundFFT;
+    return new SoundFFT(id);
 }
 
 static RegisterModule db1("Sound", "SoundFFT", make_SoundFFT);
 
-SoundFFT::SoundFFT()
-: Module("SoundFFT")
+SoundFFT::SoundFFT(const clString& id)
+: Module("SoundFFT", id, Filter)
 {
     // Create the output data handle and port
+#if 0
     add_oport(&outsound, "Sound", SoundData::Stream|SoundData::Atomic);
 
     // Create the input port
@@ -45,6 +44,8 @@ SoundFFT::SoundFFT()
 
     // Setup the execute condtion...
     execute_condition(NewDataOnAllConnectedPorts);
+#endif
+    NOT_FINISHED("SoundFFT::SoundFFT");
 }
 
 SoundFFT::SoundFFT(const SoundFFT& copy, int deep)
@@ -64,6 +65,7 @@ Module* SoundFFT::clone(int deep)
 
 void SoundFFT::execute()
 {
+#if 0
     double rate=isound.sample_rate();
     int nsamples;
     if(isound.using_protocol() == SoundData::Atomic){
@@ -98,4 +100,5 @@ void SoundFFT::execute()
 	// Tell everyone how we are doing...
 	update_progress(wp, window);
     }
+#endif
 }

@@ -14,12 +14,12 @@
 #ifndef SCI_project_module_SurfToGeom_h
 #define SCI_project_module_SurfToGeom_h
 
-#include <Module.h>
-#include <ContourSet.h>
-#include <Surface.h>
-#include <SurfacePort.h>
-#include <Geom.h>
-#include <GeometryPort.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
+#include <Geom/Geom.h>
 
 class SurfToGeom : public Module {
     SurfaceIPort* isurface;

@@ -11,19 +11,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <IsoSurface/IsoSurface.h>
-#include <ScalarFieldRG.h>
-#include <ScalarFieldUG.h>
-#include <Geom.h>
-#include <GeometryPort.h>
-#include <Mesh.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <Modules/Visualization/IsoSurface.h>
 #include <Classlib/BitArray1.h>
 #include <Classlib/HashTable.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/Mesh.h>
+#include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldUG.h>
+#include <Geom/Geom.h>
+#include <iostream.h>
+#include <fstream.h>
 
 #define FACE1 8
 #define FACE2 4

@@ -14,11 +14,11 @@
 #ifndef SCI_project_module_LaceContours_h
 #define SCI_project_module_LaceContours_h
 
-#include <Module.h>
-#include <ContourSet.h>
-#include <Surface.h>
-#include <SurfacePort.h>
-#include <ContourSetPort.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/ContourSetPort.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
 
 class LaceContours : public Module {
     ContourSetIPort* incontour;

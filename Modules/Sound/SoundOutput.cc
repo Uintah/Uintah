@@ -11,12 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundOutput/SoundOutput.h>
+#include <Modules/Sound/SoundOutput.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
-#include <ModuleList.h>
-#include <MUI.h>
-#include <NotFinished.h>
-#include <SoundPort.h>
+
 #include <iostream.h>
 #include <fstream.h>
 #include <audio.h>
@@ -24,15 +24,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static Module* make_SoundOutput()
+static Module* make_SoundOutput(const clString& id)
 {
-    return new SoundOutput;
+    return new SoundOutput(id);
 }
 
 static RegisterModule db1("Sound", "SoundOutput", make_SoundOutput);
 
-SoundOutput::SoundOutput()
-: Module("SoundOutput", Sink)
+SoundOutput::SoundOutput(const clString& id)
+: Module("SoundOutput", id, Sink)
 {
     // Create the input data handle and port
     isound=new SoundIPort(this, "Input",

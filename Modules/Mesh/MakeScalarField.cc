@@ -10,12 +10,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <MakeScalarField/MakeScalarField.h>
-#include <MatrixPort.h>
-#include <MeshPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <ScalarFieldPort.h>
+#include <Modules/Mesh/MakeScalarField.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/MatrixPort.h>
+#include <Datatypes/MeshPort.h>
+#include <Datatypes/ScalarFieldPort.h>
 #include <Geometry/Point.h>
 #include <iostream.h>
 #include <fstream.h>

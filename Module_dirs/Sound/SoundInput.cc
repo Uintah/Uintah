@@ -11,28 +11,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundInput/SoundInput.h>
+#include <Modules/Sound/SoundInput.h>
+
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
-#include <ModuleList.h>
-#include <MUI.h>
-#include <NotFinished.h>
-#include <Port.h>
-#include <SoundPort.h>
+
 #include <iostream.h>
 #include <fstream.h>
 #include <audio.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-static Module* make_SoundInput()
+static Module* make_SoundInput(const clString& id)
 {
-    return new SoundInput;
+    return new SoundInput(id);
 }
 
 static RegisterModule db1("Sound", "SoundInput", make_SoundInput);
 
-SoundInput::SoundInput()
-: Module("SoundInput", Source)
+SoundInput::SoundInput(const clString& id)
+: Module("SoundInput", id, Source)
 {
     // Create the output data handle and port
     osound=new SoundOPort(this, "Sound Output", SoundIPort::Stream);
