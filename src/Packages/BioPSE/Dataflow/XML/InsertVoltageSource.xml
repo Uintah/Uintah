@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/component.dtd">
 
-<component name="InsertVoltageSources" category="Forward">
+<component name="InsertVoltageSource" category="Forward">
   <overview>
     <authors>
       <author>David Weinstein</author>
