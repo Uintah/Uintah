@@ -117,7 +117,9 @@ public:
     void set_pick(GeomPick*);
 };
 
-inline int Hash(const GeomObj*& k, int hash_size)
+typedef GeomObj* GeomObjPointer;
+
+inline int Hash(const GeomObjPointer& k, int hash_size)
 {
    return ((int)k^(3*hash_size+1))%hash_size;
 }

@@ -6,30 +6,36 @@ OBJS = CallbackCloners.o \
 	Color.o ColorManager.o  Connection.o  \
 	ContourSet.o  ContourSetPort.o  DBContext.o  Datatype.o  Dialbox.o  \
 	Geom.o  GeometryPort.o  \
-	HelpUI.o  MemStats.o  MessageBase.o  MenuBar.o  ModuleHelper.o  \
+	HelpUI.o  MemStats.o  Mesh.o  \
+	MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
 	MtXEventLoop.o \
 	Network.o  NetworkEditor.o  PopupMenu.o  Port.o  \
-	ScalarField.o  ScalarFieldRG.o  ScalarFieldPort.o  \
+	ScalarField.o  ScalarFieldRG.o  ScalarFieldUG.o  \
+	ScalarFieldPort.o  \
 	SoundPort.o  Surface.o  SurfacePort.o \
 	ThreadStats.o  UserModule.o  \
-	VectorField.o  VectorFieldPort.o  VectorFieldRG.o  \
+	VectorField.o  VectorFieldPort.o  VectorFieldRG.o \
+	VectorFieldUG.o \
 	XFont.o  XQColor.o \
 	main.o  tmpl_hack.o
 SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
 	ContourSet.cc ContourSetPort.cc DBContext.cc Datatype.cc Dialbox.cc \
 	Geom.cc GeometryPort.cc \
-	HelpUI.cc MemStats.cc MessageBase.cc MenuBar.cc ModuleHelper.cc \
+	HelpUI.cc MemStats.cc Mesh.cc \
+	MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
 	MtXEventLoop.cc \
 	Network.cc NetworkEditor.cc PopupMenu.cc Port.cc \
 	ScalarField.cc ScalarFieldRG.cc ScalarFieldPort.cc \
+	ScalarFieldUG.cc\
 	SoundPort.cc Surface.cc SurfacePort.cc \
 	ThreadStats.cc UserModule.cc \
 	VectorField.cc VectorFieldPort.cc VectorFieldRG.cc \
+	VectorFieldUG.cc \
 	XFont.cc XQColor.cc \
 	main.cc tmpl_hack.cc 
 TARGET = project

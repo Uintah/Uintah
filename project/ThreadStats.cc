@@ -47,6 +47,7 @@ ThreadStats::ThreadStats(NetworkEditor* netedit)
     evl->lock();
     stats_font=new XFont(THREADSTATS_FONTSIZE, THREADSTATS_FONTFACE, 1);
     dialog=new DialogShellC;
+    dialog->SetAllowShellResize(True);
     dialog->Create("Thread Stats", "Thread Stats", evl->get_display());
     int dir;
     XCharStruct dim;
