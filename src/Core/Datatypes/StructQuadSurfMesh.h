@@ -69,8 +69,8 @@ public:
 
   void set_dim(Array1<unsigned int> dims) {
     ImageMesh::set_dim(dims);
-    points_.newsize(dims[0], dims[1]);
-    normals_.newsize(dims[0], dims[1]);
+    points_.resize(dims[0], dims[1]);
+    normals_.resize(dims[0], dims[1]);
   }
 
   //! get the child elements of the given index

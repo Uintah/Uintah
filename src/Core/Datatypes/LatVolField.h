@@ -71,13 +71,13 @@ public:
   { return operator()(idx.k_,idx.j_,idx.i_); }    
 
   void resize(const LatVolMesh::Node::size_type &size)
-  { newsize(size.k_, size.j_, size.i_); }
+  { Array3<Data>::resize(size.k_, size.j_, size.i_); }
   void resize(const LatVolMesh::Edge::size_type &size)
-  { newsize(1, 1, size); }
+  { Array3<Data>::resize(1, 1, size); }
   void resize(const LatVolMesh::Face::size_type &size)
-  { newsize(1, 1, size); }
+  { Array3<Data>::resize(1, 1, size); }
   void resize(const LatVolMesh::Cell::size_type &size)
-  { newsize(size.k_, size.j_, size.i_); }
+  { Array3<Data>::resize(size.k_, size.j_, size.i_); }
 
   static const string type_name(int n = -1);
 };

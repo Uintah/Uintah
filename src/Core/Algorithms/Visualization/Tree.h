@@ -95,7 +95,7 @@ void Tree<Cell>::init( Field *field, int levels, int rx, int ry, int rz )
 
   for ( int l = 0; l<levels; l++ ) {
     cerr << "allocate tree["<<l<<"] :" << lx << " " << ly << " " << lz << endl;
-    tree[l].newsize( lx, ly, lz );
+    tree[l].resize( lx, ly, lz );
     lx *= rx; if ( lx >= nx_ ) lx = nx_-1;
     ly *= ry; if ( ly >= ny_ ) ly = ny_-1;
     lz *= rz; if ( lz >= nz_ ) lz = nz_-1;

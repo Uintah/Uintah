@@ -63,7 +63,7 @@ public:
     inline int dim1() const {return dm1;}
     inline int dim2() const {return dm2;}
     inline int dim3() const {return dm3;}
-    void newsize(int, int, int);
+    void resize(int, int, int);
     void initialize(const T&);
 
     T* get_onedim();
@@ -114,7 +114,7 @@ void LockArray3<T>::allocate()
 }
 
 template<class T>
-void LockArray3<T>::newsize(int d1, int d2, int d3)
+void LockArray3<T>::resize(int d1, int d2, int d3)
 {
     if(objs && dm1==d2 && dm2==d2 && dm3==d3)return;
     dm1=d1;
@@ -211,7 +211,7 @@ void Pio(Piostream& stream, LockArray3<T>& data)
 	Pio(stream, d1);
 	Pio(stream, d2);
 	Pio(stream, d3);
-	data.newsize(d1, d2, d3);
+	data.resize(d1, d2, d3);
     } else {
 	Pio(stream, data.dm1);
 	Pio(stream, data.dm2);
