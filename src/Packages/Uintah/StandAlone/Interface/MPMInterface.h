@@ -55,7 +55,7 @@ public:
     //////////
     // Insert Documentation Here:
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      const SimulationStateP& state) = 0;
+			      SimulationStateP& state) = 0;
    
    //////////
    // Insert Documentation Here:
@@ -84,6 +84,9 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/04/24 21:04:40  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.10  2000/04/20 18:56:36  sparker
 // Updates to MPM
 //
