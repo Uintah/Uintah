@@ -298,7 +298,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 
   CCVariable<double> vol_frac;
   CCVariable<double> rho;
-  CCVariable<double> rho_micro_old,rho_micro_new;
+ 
   CCVariable<double> temp;
   CCVariable<double> cv;
   CCVariable<double> speedSound;
@@ -314,14 +314,56 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   new_dw->get(speedSound,lb->speedSound_CCLabel,vfindex,patch,Ghost::None, 0); 
   old_dw->get(press,lb->press_CCLabel,vfindex,patch,Ghost::None, 0); 
 
+  vector<CCVariable<double> > rho_micro;
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = matl->getVFIndex();
+      new_dw->allocate(rho_micro[vfindex], lb->rho_micro_CCLabel,vfindex , patch);
+    }
+  }
+
+
   new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
-  new_dw->allocate(rho_micro_new,lb->rho_micro_CCLabel,vfindex,patch);
+  new_dw->allocate(rho_micro_new[,lb->rho_micro_CCLabel,vfindex,patch);
+
+
+  
+  matl->getEOS()->computeRhoMicro(patch,old_dw,new_dw);
+  
+  // Need to pull out all of the material's data just like in contact::exMomInterpolated
+  // store in a vector<CCVariable<double>>
 
  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-   rho_micro_new[*iter] = press[*iter]/(gamma - 1.)*cv[*iter]*temp[*iter];
-   double v_f = rho[*iter]/rho_micro_new[*iter];
+   // vol fraction
+ }
+
+ for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+   while( !converged) {
+
+     // loop over materials
+     EOS->computePressEOS(double);
+     
+     // compute delPress over materials
+
+      rho_micro[*iter] = EOS->computeRhoMicro();
+
+      // compute speed of sound mm
 
    }
+
+    
+ }
+     
+
+
+     
+       
+
+ 
+
+ 
 
 #endif
 
@@ -403,6 +445,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.29  2000/10/11 00:15:50  jas
+// Sketched out the compute equilibration pressure.
+//
 // Revision 1.28  2000/10/10 20:35:07  jas
 // Move some stuff around.
 //
