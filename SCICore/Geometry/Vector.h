@@ -56,6 +56,11 @@ public:
 	return (&_x)[idx];
     }
 
+    inline double operator()(int idx) const {
+	// Ugly, but works
+	return (&_x)[idx];
+    }
+
     // checks if one vector is exactly the same as another
     int operator==(const Vector&) const;
 
@@ -368,6 +373,9 @@ inline Point Vector::asPoint() const {
 
 //
 // $Log$
+// Revision 1.9  2000/07/06 00:05:06  tan
+// Made const works for operator()
+//
 // Revision 1.8  2000/07/05 21:38:47  tan
 // Added /= operator.
 //
