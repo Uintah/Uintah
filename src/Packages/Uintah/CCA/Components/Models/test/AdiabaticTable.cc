@@ -33,11 +33,10 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "SIMPLE_RXN_DOING_COUT:+,SIMPLE_RXN_DBG_COUT:+"
-//  SIMPLE_RXN_DBG:  dumps out during problemSetup 
-//  SIMPLE_RXN_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("SIMPLE_RXN_DOING_COUT", false);
-static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
+//  setenv SCI_DEBUG "MODELS_DOING_COUT:+,ADIABATIC_TABLE_DBG_COUT:+"
+//  ADIABATIC_TABLE_DBG:  dumps out during problemSetup
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 /*`==========TESTING==========*/
 static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
 /*==========TESTING==========`*/
@@ -99,7 +98,7 @@ if (!oldStyleAdvect.active()){
 /*==========TESTING==========`*/
 
 
-  cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
+  cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
   sharedState = in_state;
   d_matl = sharedState->parseAndLookupMaterial(params, "material");
 
@@ -210,7 +209,7 @@ void AdiabaticTable::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level,
                                    const ModelInfo*)
 {
-  cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
+  cout_doing << "ADIABATIC_TABLE::scheduleInitialize " << endl;
   Task* t = scinew Task("AdiabaticTable::initialize", this, &AdiabaticTable::initialize);
 
   t->modifies(lb->sp_vol_CCLabel);
@@ -233,7 +232,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
 {
-  cout_doing << "Doing Initialize \t\t\t\t\tSIMPLE_RXN" << endl;
+  cout_doing << "Doing Initialize \t\t\t\t\tADIABATIC_TABLE" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int indx = d_matl->getDWIndex();
@@ -312,7 +311,7 @@ void AdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                                                    const MaterialSet* /*ice_matls*/)
 {
 
-  cout_doing << "SIMPLE_RXN::scheduleModifyThermoTransportProperties" << endl;
+  cout_doing << "ADIABATIC_TABLE::scheduleModifyThermoTransportProperties" << endl;
 
   Task* t = scinew Task("AdiabaticTable::modifyThermoTransportProperties", 
                    this,&AdiabaticTable::modifyThermoTransportProperties);
@@ -337,7 +336,7 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+    cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()<< "\t ADIABATIC_TABLE" << endl;
    
     int indx = d_matl->getDWIndex();
     CCVariable<double> diffusionCoeff, gamma, cv, thermalCond, viscosity;
@@ -378,7 +377,7 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
                                     DataWarehouse* new_dw,
                                     const int indx)
 { 
-  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t ADIABATIC_TABLE" << endl;
 
   int test_indx = d_matl->getDWIndex();
   //__________________________________
@@ -395,49 +394,13 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
 } 
 
 //______________________________________________________________________
-void AdiabaticTable::scheduleMassExchange(SchedulerP& sched,
-                              const LevelP& level,
-                              const ModelInfo* mi)
+void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
+                                                 const LevelP& level,
+                                                 const ModelInfo* mi)
 {
-  cout_doing << "SIMPLE_RXN::scheduleMassExchange" << endl;
-  Task* t = scinew Task("AdiabaticTable::massExchange", 
-                   this,&AdiabaticTable::massExchange, mi);
-
-  t->requires(Task::OldDW, mi->density_CCLabel,  Ghost::None);
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->sp_vol_source_CCLabel);
-  sched->addTask(t, level->eachPatch(), d_matl_set);
-}
-//______________________________________________________________________
-void AdiabaticTable::massExchange(const ProcessorGroup*, 
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const ModelInfo* mi)
-{
-  delt_vartype delT;
-  const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label,level);
-  
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    int indx = d_matl->getDWIndex();
-    cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t SIMPLERXN" << endl;
-    CCVariable<double> mass_src, sp_vol_src;
-    new_dw->getModifiable(mass_src,   mi->mass_source_CCLabel,  indx,patch);
-    new_dw->getModifiable(sp_vol_src, mi->sp_vol_source_CCLabel,indx,patch);
-    // current does nothing.
-  }
-}
-//______________________________________________________________________
-void AdiabaticTable::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
-                                          const LevelP& level,
-                                          const ModelInfo* mi)
-{
-  cout_doing << "SIMPLE_RXN::scheduleMomentumAndEnergyExchange " << endl;
-  Task* t = scinew Task("AdiabaticTable::momentumAndEnergyExchange", 
-                   this,&AdiabaticTable::momentumAndEnergyExchange, mi);
+  cout_doing << "ADIABATIC_TABLE::scheduleComputeModelSources " << endl;
+  Task* t = scinew Task("AdiabaticTable::computeModelSources", 
+                   this,&AdiabaticTable::computeModelSources, mi);
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -468,22 +431,22 @@ void AdiabaticTable::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-void AdiabaticTable::momentumAndEnergyExchange(const ProcessorGroup*, 
-                                            const PatchSubset* patches,
-                                            const MaterialSubset* matls,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw,
-                                            const ModelInfo* mi)
+void AdiabaticTable::computeModelSources(const ProcessorGroup*, 
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw,
+                                         const ModelInfo* mi)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
   old_dw->get(delT, mi->delT_Label, level);
-  Ghost::GhostType gn = Ghost::None;         
-  Ghost::GhostType gac = Ghost::AroundCells; 
-  
+  Ghost::GhostType gn = Ghost::None;
+    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()<< "\t\tSIMPLERXN" << endl;
+    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()
+               << "\t\tADIABATIC_TABLE" << endl;
 
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);

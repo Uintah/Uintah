@@ -16,9 +16,9 @@
 using namespace Uintah;
 using namespace std;
 //__________________________________
-//  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
-//  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+//  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
+//  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 IandG::IandG(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
@@ -118,12 +118,13 @@ void IandG::scheduleComputeStableTimestep(SchedulerP&,
 
 //______________________________________________________________________
 //     
-void IandG::scheduleMassExchange(SchedulerP& sched,
-                                 const LevelP& level,
-                                 const ModelInfo* mi)
+void IandG::scheduleComputeModelSources(SchedulerP& sched,
+                                        const LevelP& level,
+                                        const ModelInfo* mi)
 {
-  Task* t = scinew Task("IandG::massExchange", this, &IandG::massExchange, mi);
-  cout_doing << "IandG::scheduleMassExchange "<<  endl;  
+  Task* t = scinew Task("IandG::computeModelSources", this, 
+                        &IandG::computeModelSources, mi);
+  cout_doing << "IandG::scheduleComputeModelSources "<<  endl;  
   t->requires( Task::OldDW, mi->delT_Label);
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
@@ -163,7 +164,7 @@ void IandG::scheduleMassExchange(SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void IandG::massExchange(const ProcessorGroup*, 
+void IandG::computeModelSources(const ProcessorGroup*, 
                          const PatchSubset* patches,
                          const MaterialSubset*,
                          DataWarehouse* old_dw,
@@ -179,7 +180,7 @@ void IandG::massExchange(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing massExchange on patch "<< patch->getID()
+    cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  IandG" << endl;
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
@@ -290,12 +291,6 @@ void IandG::massExchange(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void IandG::scheduleMomentumAndEnergyExchange(SchedulerP&,
-				       const LevelP&,
-				       const ModelInfo*)
-{
-  // None
-}
 void IandG::scheduleModifyThermoTransportProperties(SchedulerP&,
                                                     const LevelP&,         
                                                     const MaterialSet*)    
