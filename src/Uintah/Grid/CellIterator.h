@@ -83,7 +83,7 @@ WARNING
       }
       inline CellIterator(const CellIterator& copy)
 	 : d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz),
-	   d_sx(copy.d_sx), d_sy(copy.d_sx), d_sz(copy.d_sz),
+	   d_sx(copy.d_sx), d_sy(copy.d_sy), d_sz(copy.d_sz),
 	   d_ex(copy.d_ex), d_ey(copy.d_ey), d_ez(copy.d_ez) {
       }
 
@@ -107,6 +107,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
 
 //
 // $Log$
+// Revision 1.5  2000/06/13 21:28:30  jas
+// Added missing TypeUtils.h for fun_forgottherestofname and copy constructor
+// was wrong for CellIterator.
+//
 // Revision 1.4  2000/05/30 20:19:28  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

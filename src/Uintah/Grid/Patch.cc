@@ -312,6 +312,7 @@ Patch::getCellIterator(const Box& b) const
    Vector diag = d_box.upper()-d_box.lower();
    Vector l = (b.lower() - d_box.lower())*d_res/diag;
    Vector u = (b.upper() - d_box.lower())*d_res/diag;
+   
    return CellIterator((int)l.x(), (int)l.y(), (int)l.z(),
 		       RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
 }
@@ -406,6 +407,10 @@ Patch::determineGhostPatches( int numGhostCells )
      
 //
 // $Log$
+// Revision 1.9  2000/06/13 21:28:30  jas
+// Added missing TypeUtils.h for fun_forgottherestofname and copy constructor
+// was wrong for CellIterator.
+//
 // Revision 1.8  2000/06/08 17:47:47  dav
 // longer error message
 //
