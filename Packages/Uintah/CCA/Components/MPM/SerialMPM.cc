@@ -3179,6 +3179,7 @@ SerialMPM::refine(const ProcessorGroup*,
                    << patch->getID() << " material # = " << dwi << endl;
       }
 
+      // this is a new patch, so create empty particle variables.
       if (!new_dw->haveParticleSubset(dwi, patch)) {
         ParticleSubset* pset = new_dw->createParticleSubset(0, dwi, patch);
 
