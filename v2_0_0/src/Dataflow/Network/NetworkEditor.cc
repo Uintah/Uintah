@@ -112,7 +112,6 @@ emit_tclstyle_copyright(ostream &out)
     "source $DATADIR/$DATASET/$DATASET.settings\n";
 }
 
-
 void NetworkEditor::save_network(const string& filename, 
 				 const string &subnet_num)
 {
@@ -146,11 +145,13 @@ void NetworkEditor::save_network(const string& filename,
       out << "global notes\nset notes \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-   
     gui->unlock();
+   
 
     out.close();
-    gui->execute("writeSubnetModulesAndConnections "+filename+" "+subnet_num);
+    net->read_unlock();
+    gui->execute("writeSubnetModulesAndConnections {"+filename+"} "+subnet_num);
+    net->read_lock();
     out.open(filename.c_str(), ofstream::out | ofstream::app);
 
     int i;
@@ -322,73 +323,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	return;
       }
       args.result(packageDB->getCategoryName(args[2], args[3], args[4]));
-    } else if(args[1] == "findiports" || args[1] == "find.i.ports"){
-	// Find all of the iports in the network that have the same type
-	// As the specified one...
-	if(args.count() < 4){
-	    args.error("netedit findiports needs a module name and port number");
-	    return;
-	}
-	Module* mod=net->get_module_by_id(args[2]);
-	if(!mod){
-	    args.error("cannot find module "+args[2]);
-	    return;
-	}
-	int which;
-	if(!string_to_int(args[3], which) ||
-	   which < 0 || which >= mod->numOPorts())
-	{
-	    args.error("bad port number");
-	    return;
-	}
-	OPort* oport=mod->getOPort(which);
-	vector<string> iports;
-	for(int i=0;i<net->nmodules();i++){
-	    Module* m=net->module(i);
-	    for(int j=0;j<m->numIPorts();j++){
-		IPort* iport=m->getIPort(j);
-		if(iport->nconnections() == 0 && 
-		   oport->get_typename() == iport->get_typename()){
-		    iports.push_back(args.make_list(m->id, to_string(j)));
-		}
-	    }
-	}
-	args.result(args.make_list(iports));
-    } else if(args[1] == "findoports" || args[1] == "find.o.ports"){
-	// Find all of the oports in the network that have the same type
-	// As the specified one...
-	if(args.count() < 4){
-	    args.error("netedit findoports needs a module name and port number");
-	    return;
-	}
-	Module* mod=net->get_module_by_id(args[2]);
-	if(!mod){
-	    args.error("cannot find module "+args[2]);
-	    return;
-	}
-	int which;
-	if(!string_to_int(args[3], which) || which<0 || which>=mod->numIPorts())
-	{
-	    args.error("bad port number");
-	    return;
-	}
-	IPort* iport=mod->getIPort(which);
-	if(iport->nconnections() > 0){
-	    // Already connected - none
-	    args.result("");
-	    return;
-	}
-	vector<string> oports;
-	for(int i=0;i<net->nmodules();i++){
-	    Module* m=net->module(i);
-	    for(int j=0;j<m->numOPorts();j++){
-		OPort* oport=m->getOPort(j);
-		if(oport->get_typename() == iport->get_typename()){
-		    oports.push_back(args.make_list(m->id, to_string(j)));
-		}
-	    }
-	}
-	args.result(args.make_list(oports));
     } else if(args[1] == "dontschedule"){
     } else if(args[1] == "scheduleok"){
 	net->schedule();
@@ -408,12 +342,10 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("savenetwork needs a filename");
 	    return;
 	}
-	if (args.count() >=4) { 
-	  save_network(args[2],args[3]);
-	} else {
-	  save_network(args[2],"0");
-	}
-	  
+	string filename = args[2];
+	for (int i = 3; i < args.count() - 1; i++)
+	  filename = filename +" "+args[i];
+	save_network(filename,args[args.count()-1]);
     } else if(args[1] == "packageName"){
         if(args.count() != 3){
 	    args.error("packageName needs a module id");
