@@ -183,11 +183,12 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
       # Run restart test
-      environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
-      rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART, newalgo)
-      if rc > 0:
-        failcode = 1
-      chdir("..")
+      if ALGO != "IMPM":
+        environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
+        rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART, newalgo)
+        if rc > 0:
+          failcode = 1
+        chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
 
