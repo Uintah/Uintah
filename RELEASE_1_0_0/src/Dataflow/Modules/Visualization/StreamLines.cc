@@ -201,12 +201,6 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
   double err;
   Vector xv;
 
-  typedef typename VectorField::mesh_type     mesh_type;
-  typedef typename mesh_type::cell_index      cell_index;
-
-  mesh_type *mesh = 
-    dynamic_cast<mesh_type*>(vf->get_typed_mesh().get_rep());
-
   terms.resize(6,0);
 
   // add the initial point to the list of points found.
