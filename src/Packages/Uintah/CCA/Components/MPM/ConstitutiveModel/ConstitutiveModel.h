@@ -199,6 +199,7 @@ namespace Uintah {
 
     virtual void getDamageParameter(const Patch* patch, 
 				    ParticleVariable<int>& damage, int dwi,
+				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw);
 
     inline void setWorld(const ProcessorGroup* myworld)
