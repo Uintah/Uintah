@@ -15,11 +15,15 @@ SRCS     += $(SRCDIR)/GeometryGrid.cc $(SRCDIR)/GeometryObject.cc \
 	$(SRCDIR)/TriGeometryObject.cc \
 	$(SRCDIR)/UnionGeometryObject.cc \
 	$(SRCDIR)/DifferenceGeometryObject.cc \
-	$(SRCDIR)/IntersectionGeometryObject.cc 
+	$(SRCDIR)/IntersectionGeometryObject.cc \
+	$(SRCDIR)/GeometryObjectFactory.cc
 
 
 #
 # $Log$
+# Revision 1.4  2000/04/20 15:09:27  jas
+# Added factory methods for GeometryObjects.
+#
 # Revision 1.3  2000/04/19 21:31:09  jas
 # Revamping of the way objects are defined.  The different geometry object
 # subtypes only do a few simple things such as testing whether a point

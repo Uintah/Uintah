@@ -4,6 +4,7 @@
 #include "GeometryObject.h"
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Grid/Box.h>
+#include <string>
 
 using SCICore::Geometry::Point;
 using Uintah::Grid::Box;
@@ -15,12 +16,13 @@ class TriGeometryObject : public GeometryObject {
  public:
 
   TriGeometryObject();
+  TriGeometryObject(std::string file);
   virtual ~TriGeometryObject();
-
-  virtual void add(TriGeometryObject* go);
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
+
+  virtual GeometryObject* readParameters(ProblemSpecP &ps);
 
  private:
   
@@ -33,6 +35,9 @@ class TriGeometryObject : public GeometryObject {
 #endif // __TRI_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.2  2000/04/20 15:09:26  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.1  2000/04/19 21:31:09  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point

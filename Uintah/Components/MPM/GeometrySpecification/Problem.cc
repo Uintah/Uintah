@@ -55,7 +55,7 @@ void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
   Point lo,hi;
   Vector dx;
   
-
+  cerr << "In the preprocessor . . ." << endl;
     
   // Search for the MaterialProperties block and then get the MPM section
   
@@ -164,6 +164,9 @@ vector<GeometryObject> * Problem::getObjects()
 
 
 // $Log$
+// Revision 1.8  2000/04/20 15:09:26  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.7  2000/04/19 05:26:08  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

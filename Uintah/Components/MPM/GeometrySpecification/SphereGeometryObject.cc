@@ -1,5 +1,6 @@
 #include "SphereGeometryObject.h"
 #include <SCICore/Geometry/Vector.h>
+#include "GeometryObjectFactory.h"
 
 using namespace Uintah::Components;
 using SCICore::Geometry::Vector;
@@ -15,10 +16,6 @@ SphereGeometryObject::SphereGeometryObject(const double r, const  Point o):
 }
 
 SphereGeometryObject::~SphereGeometryObject()
-{
-}
-
-void SphereGeometryObject::add(SphereGeometryObject* go)
 {
 }
 
@@ -45,8 +42,24 @@ Box SphereGeometryObject::getBoundingBox() const
 
 }
 
+GeometryObject* SphereGeometryObject::readParameters(ProblemSpecP &ps)
+{
+  Point orig;
+  double rad;
+
+  ps->require("origin",orig);
+  ps->require("radius",rad);
+
+  return (new SphereGeometryObject(rad,orig));
+  
+
+}
+
 
 // $Log$
+// Revision 1.2  2000/04/20 15:09:26  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.1  2000/04/19 21:31:08  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point

@@ -22,10 +22,10 @@ class CylinderGeometryObject : public GeometryObject {
   CylinderGeometryObject(AXIS axis, Point origin, double len, double rad);
   virtual ~CylinderGeometryObject();
 
-  virtual void add(const CylinderGeometryObject* go);
-
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
+
+  virtual GeometryObject* readParameters(ProblemSpecP &ps);
  
  private:
   AXIS  d_axis;
@@ -43,6 +43,9 @@ class CylinderGeometryObject : public GeometryObject {
 #endif // __CYLINDER_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.2  2000/04/20 15:09:25  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.1  2000/04/19 21:31:07  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point

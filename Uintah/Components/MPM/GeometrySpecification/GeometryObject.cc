@@ -36,7 +36,7 @@ bool GeometryObject::inside(const Point &p) const
 {
 }
 
-void GeometryObject::add(GeometryObject* go)
+GeometryObject* GeometryObject::readParamaters(ProblemSpecP &ps)
 {
 }
 
@@ -484,6 +484,9 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 
   
 // $Log$
+// Revision 1.6  2000/04/20 15:09:25  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.5  2000/04/19 21:31:08  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point

@@ -18,10 +18,10 @@ class SphereGeometryObject : public GeometryObject {
   SphereGeometryObject(const double r, const Point o);
   virtual ~SphereGeometryObject();
  
-  virtual void add(SphereGeometryObject* go);
-
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
+
+  virtual GeometryObject* readParameters(ProblemSpecP &ps);
 
  private:
  
@@ -35,6 +35,9 @@ class SphereGeometryObject : public GeometryObject {
 #endif // __SPHERE_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.2  2000/04/20 15:09:26  jas
+// Added factory methods for GeometryObjects.
+//
 // Revision 1.1  2000/04/19 21:31:08  jas
 // Revamping of the way objects are defined.  The different geometry object
 // subtypes only do a few simple things such as testing whether a point
