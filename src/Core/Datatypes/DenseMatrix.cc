@@ -206,16 +206,16 @@ DenseMatrix::get_data_size()
 //! destructor
 DenseMatrix::~DenseMatrix()
 {
-  delete[] dataptr;
-  delete[] data;
+  if (dataptr) delete[] dataptr;
+  if (data) delete[] data;
 }
 
 //! assignment operator
 DenseMatrix&
 DenseMatrix::operator=(const DenseMatrix& m)
 {
-  delete[] dataptr;
-  delete[] data;
+  if (dataptr) delete[] dataptr;
+  if (data) delete[] data;
   nrows_ = m.nrows_;
   ncols_ = m.ncols_;
   data = scinew double*[nrows_];
