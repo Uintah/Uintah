@@ -484,49 +484,6 @@ void ImpMPM::scheduleComputeInternalForceR(SchedulerP& sched,
   
 }
 
-void ImpMPM::scheduleMoveData(SchedulerP& sched,const LevelP& level,
-			     const PatchSet* patches, const MaterialSet* matls)
-{
-
-  Task* task = scinew Task("moveData",this,&ImpMPM::moveData);
-
-#if 0
-  task->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->pVolumeOldLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel_preReloc,
-		 Ghost::None,0);
-  task->requires(Task::OldDW,lb->bElBarLabel_preReloc,Ghost::None,0);
-#endif
-#if 0
-  task->requires(Task::OldDW,lb->gMassLabel,Ghost::None,0);
-  //task->requires(Task::OldDW,lb->gVelocityOldLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->gExternalForceLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->gAccelerationLabel,Ghost::None,0);
-#endif
-
-  task->requires(Task::OldDW,d_sharedState->get_delt_label());
-#if 0
-  task->computes(lb->pXLabel);
-  task->computes(lb->pVolumeLabel);
-  task->computes(lb->pVolumeOldLabel);
-  task->modifies(lb->pDeformationMeasureLabel_preReloc);
-  task->modifies(lb->bElBarLabel_preReloc);
-#endif
-
-#if 0
-  task->computes(lb->gMassLabel);
-  task->computes(lb->gExternalForceLabel);
-  //task->computes(lb->gVelocityOldLabel);
-  task->computes(lb->gAccelerationLabel);
-#endif
-  task->computes(d_sharedState->get_delt_label());
-
-
-  sched->addTask(task,patches,d_sharedState->allMPMMaterials());
-
-}
-
 void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 			     const PatchSet* patches, const MaterialSet* matl)
 {
@@ -625,10 +582,6 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   scheduleCheckConvergenceR(subsched,level,level->eachPatch(),
 			       d_sharedState->allMPMMaterials(), true);
-
-  scheduleMoveData(subsched,level,level->eachPatch(),
-		   d_sharedState->allMPMMaterials());
-
  
   subsched->compile(d_myworld);
 
@@ -870,124 +823,6 @@ void ImpMPM::iterate(const ProcessorGroup*,
   old_dw->setScrubbing(old_dw_scrubmode);
   new_dw->setScrubbing(new_dw_scrubmode);
 }
-
-void ImpMPM::moveData(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset*,
-		       DataWarehouse* old_dw,
-		       DataWarehouse* new_dw)
-{
-  // It appears like the purpose of moveData is to take any particle
-  // variables that are in the old_dw and move them to the new_dw
-  for (int p = 0; p < patches->size();p++){
-    const Patch* patch = patches->get(p);
-    cout_doing <<"Doing moveData on patch " << patch->getID()
-	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
-      ParticleSubset* pset = 
-	old_dw->getParticleSubset(matlindex, patch);
-      cerr << "number of particles in move = " << pset->numParticles() << "\n";
-
-#if 0 
-      // Like gVelocityOld
-      constParticleVariable<Point> px_old;
-      old_dw->get(px_old,lb->pXLabel,pset);
-      constParticleVariable<double> pvol_old,pvol_old_old;
-      old_dw->get(pvol_old,lb->pVolumeLabel,pset);
-      old_dw->get(pvol_old_old,lb->pVolumeOldLabel,pset);
-#endif
-
-#if 0
-      constParticleVariable<Matrix3> deformationGradient,bElBar;
-
-      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel_preReloc, 
-		  pset);
-
-      old_dw->get(bElBar, lb->bElBarLabel_preReloc, pset);
-#endif
-
-      delt_vartype dt;
-      old_dw->get(dt,d_sharedState->get_delt_label());
-      constNCVariable<Vector> dispInc;
-#if 0
-      constNCVariable<double> gmass;
-      old_dw->get(gmass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
-      constNCVariable<Vector> ext_force,acc,velocity_old;
-      old_dw->get(ext_force,lb->gExternalForceLabel,matlindex,patch,
-		  Ghost::None,0);
-      old_dw->get(acc,lb->gAccelerationLabel,matlindex,patch,Ghost::None,0);
-      //old_dw->get(velocity_old,lb->gVelocityOldLabel,matlindex,patch,
-      //		  Ghost::None,0);
-#endif
-      
-#if 0
-      // Like gVelocityOld
-      ParticleVariable<Point> newpx;
-      ParticleVariable<double> newpvol,newpvolold;
-#endif
-#if 0
-      ParticleVariable<Matrix3> newdefGrad,newbElBar;
-#endif
-      NCVariable<Vector> newdispInc;
-#if 0
-      NCVariable<double> newgmass;
-      NCVariable<Vector> newext_force,newacc;
-      // ,newvelocity_old;
-#endif
-      
-      double newdt = dt;
-#if 0
-      // Like gVelocityOld
-      new_dw->allocateAndPut(newpx,lb->pXLabel,pset);
-      new_dw->allocateAndPut(newpvol,lb->pVolumeLabel,pset);
-      new_dw->allocateAndPut(newpvolold,lb->pVolumeOldLabel,pset);
-
-#endif
-#if 0
-      new_dw->getModifiable(newdefGrad,lb->pDeformationMeasureLabel_preReloc,
-			    pset);
-
-      new_dw->getModifiable(newbElBar,lb->bElBarLabel_preReloc,pset);
-#endif
-#if 0
-      new_dw->allocateAndPut(newgmass,lb->gMassLabel,matlindex,patch);
-      //new_dw->allocateAndPut(newvelocity_old,lb->gVelocityOldLabel,
-      //                       matlindex, patch);
-      new_dw->allocateAndPut(newext_force,lb->gExternalForceLabel,matlindex,
-			     patch);
-      new_dw->allocateAndPut(newacc,lb->gAccelerationLabel,matlindex,patch);
-#endif
-      
-      // We need to copy the old data, since the computation of the 
-      // deformation gradient and bElBar in computeStressTensorImplicit
-      // updates these values and according to Jim's algorithm, the values
-      // aren't updated until computeStressTensorImplicitOnly.
-#if 0
-      // Like gVelocityOld
-      newpx.copyData(px_old);
-      newpvol.copyData(pvol_old);
-      newpvolold.copyData(pvol_old_old);
-#endif
-#if 0
-      newdefGrad.copyData(deformationGradient);
-      newbElBar.copyData(bElBar);
-#endif
-#if 0
-      newgmass.copyData(gmass);
-      newext_force.copyData(ext_force);
-      newacc.copyData(acc);
-      //newvelocity_old.copyData(velocity_old);
-#endif
-      new_dw->saveParticleSubset(matlindex,patch,pset);
-      new_dw->put(delt_vartype(newdt), d_sharedState->get_delt_label());
-    }
-  }
-  
-  
-}
-
 
 void ImpMPM::scheduleFormQI(SchedulerP& sched,const PatchSet* patches,
 			   const MaterialSet* matls, const bool recursion)
