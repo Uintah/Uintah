@@ -9,9 +9,13 @@ using namespace Uintah;
 
 SimulationState::SimulationState(ProblemSpecP &ps)
 {
-   delt_label = new VarLabel("delT", ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
+   delt_label = new VarLabel("delT",
+    ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
 
    strain_energy_label = new VarLabel("StrainEnergy",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+
+   kinetic_energy_label = new VarLabel("KineticEnergy",
     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
 
   // Get the physical constants that are shared between codes.
@@ -30,6 +34,9 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.10  2000/05/31 22:27:52  guilkey
+// Added stuff for integrated quanities.
+//
 // Revision 1.9  2000/05/31 20:25:32  guilkey
 // Added the beginnings of a Sum reduction, which would take data from
 // multiple patches, materials, etc. and add them together.  The immediate
