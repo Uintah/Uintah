@@ -32,13 +32,14 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 
+/*
 extern "C"{
 void PSLDLT_Preprocess (int token,int n,int pointers[],int indices[],int *nonz,double *ops);
  void PSLDLT_Factor (int token,int n,int pointers[],int indices[],double values[]);
 
   void PSLDLT_Ordering (int token,int method);
 }
-
+*/
 
 class SGI_LU : public Module {
 
@@ -155,14 +156,14 @@ for (i=0;i<nrows+1;i++){
  
  cerr<<"Odering ...";
  start = time(0);
- PSLDLT_Ordering(token,method);
+// PSLDLT_Ordering(token,method);
  end = time(0); 
  cerr<<"...Done!  Time = "<<(end-start)<<" s"<<endl;
 
  
  cerr<<"Preprocess ...";
  start = time(0);
- PSLDLT_Preprocess(token,nrows,pointers,indices,&nnz,&nfpo);
+// PSLDLT_Preprocess(token,nrows,pointers,indices,&nnz,&nfpo);
  end = time(0); 
  cerr<<"...Done!  Time = "<<(end-start)<<" s"<<endl;
 
@@ -170,7 +171,7 @@ for (i=0;i<nrows+1;i++){
 
  cerr<<"Factor ...";
  start = time(0); 
- PSLDLT_Factor(token,nrows,pointers,indices, values);
+// PSLDLT_Factor(token,nrows,pointers,indices, values);
  end = time(0); 
  cerr<<"...Done!  Time = "<<(end-start)<<" s"<<endl;
 
@@ -193,6 +194,9 @@ for (i=0;i<nrows+1;i++){
 
 //
 // $Log$
+// Revision 1.3  1999/11/09 08:35:20  dmw
+// took out complibsgimath references, so this will compile on machines other than just rapture - as a result, SGI_LU and SGI_Solve don't work anymore
+//
 // Revision 1.2  1999/10/07 02:06:37  sparker
 // use standard iostreams and complex type
 //

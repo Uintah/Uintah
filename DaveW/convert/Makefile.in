@@ -7,6 +7,9 @@ LIBRARIES = -L$(OBJTOP)/SCICore -lSCICore
 
 all:: prog-SurfToJAS
 
+prog-CVRTItoMesh:
+	@$(MAKE) --no-print-directory SRCS=CVRTItoMesh.cc PROGRAM=CVRTItoMesh CVRTItoMesh
+
 prog-JAStoSurf:
 	@$(MAKE) --no-print-directory SRCS=JAStoSurf.cc PROGRAM=JAStoSurf JAStoSurf
 
