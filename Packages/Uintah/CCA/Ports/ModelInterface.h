@@ -138,6 +138,10 @@ WARNING
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched) =0;                                  
     
+     virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
+                                               const LevelP& level,
+                                               const ModelInfo*);
+
     bool computesThermoTransportProps() const;
     bool d_modelComputesThermoTransportProps;
     Output* d_dataArchiver;
