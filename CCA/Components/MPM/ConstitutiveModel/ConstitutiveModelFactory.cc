@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
@@ -21,7 +22,8 @@ using std::ofstream;
 using namespace Uintah;
 
 ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
-						 MPMLabel* lb, int n8or27)
+						    MPMLabel* lb, int n8or27,
+						    string integrator)
 {
    ProblemSpecP child = ps->findBlock("constitutive_model");
    if(!child)
@@ -33,8 +35,12 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    if (mat_type == "comp_mooney_rivlin")
       return(scinew CompMooneyRivlin(child,lb,n8or27));
    
-   else if (mat_type ==  "comp_neo_hook")
+   else if (mat_type ==  "comp_neo_hook") {
+     if (integrator == "explicit")
       return(scinew CompNeoHook(child,lb,n8or27));
+     else if (integrator == "implicit") 
+      return(scinew CompNeoHookImplicit(child,lb,n8or27));
+   }
       
    else if (mat_type ==  "ideal_gas")
       return(scinew IdealGasMP(child,lb,n8or27));
