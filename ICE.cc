@@ -37,6 +37,12 @@ static int iterNum = 0;
  
 //#define DOING
 #undef DOING
+/*`==========TESTING==========*/ 
+// KEEP THIS AROUND UNTIL
+// I'M SURE OF THE NEW STYLE OF SETBC -Todd
+#define oldStyle_setBC 1
+#define newStyle_setBC 0
+ /*==========TESTING==========`*/
 //#define ANNULUSICE
 #undef ANNULUSICE
 
@@ -312,6 +318,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   scheduleAddExchangeContributionToFCVel(sched, patches, all_matls);    
 
   scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
+                                                          ice_matls_sub,
                                                           all_matls);
 
   scheduleComputePressFC(sched, patches, press_matl,
@@ -354,7 +361,7 @@ void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
   task->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
   task->requires(Task::OldDW,lb->rho_CC_top_cycleLabel,     Ghost::None);
   task->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None);
-  
+
   task->computes(lb->speedSound_CCLabel);
   task->computes(lb->vol_frac_CCLabel);
   task->computes(lb->rho_micro_CCLabel);
@@ -428,6 +435,7 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 						  const PatchSet* patches,
                                             const MaterialSubset* press_matl,
+                                            const MaterialSubset* ice_matls,
 						  const MaterialSet* matls)
 {
 #ifdef DOING
@@ -445,7 +453,10 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 
   task->requires( Task::NewDW, lb->speedSound_CCLabel,Ghost::None);
   task->requires( Task::NewDW, lb->rho_micro_CCLabel, Ghost::None);
-  
+  task->requires( Task::NewDW, lb->rho_CCLabel,       Ghost::None);
+  task->requires( Task::OldDW, lb->vel_CCLabel,       ice_matls, 
+                                                      Ghost::None);
+      
   task->computes(lb->press_CCLabel,    press_matl);
   task->computes(lb->delPress_CCLabel, press_matl);
   
@@ -826,7 +837,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         double gamma = ice_matl->getGamma();
-        ice_matl->getEOS()->computeTempCC(patch, press_CC,   gamma,   cv[m],
+        ice_matl->getEOS()->computeTempCC(patch, "WholeDomain",
+                                     press_CC,   gamma,   cv[m],
 					  rho_micro[m],    Temp_CC[m]);
       }
 
@@ -938,7 +950,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       old_dw->get(Temp[m],  lb->temp_CCLabel,         indx,patch,
                                                     Ghost::None, 0);
       old_dw->get(rho_CC[m],lb->rho_CC_top_cycleLabel,indx,patch,
-		  Ghost::None,0);
+		                                      Ghost::None,0);
 
       new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,indx, patch);
       new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel, indx, patch);
@@ -1129,8 +1141,10 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }     // end of cell interator
 
     fprintf(stderr, "\n max. iterations in any cell %i\n", test_max_iter); 
-    setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch,0);
-
+    //__________________________________
+    //  press_CC boundary conditions are updated in
+    //  ICE::ComputeDelPressAndUpdateCC()
+    
     //__________________________________
     // carry rho_cc forward 
     // In MPMICE was compute rho_CC_new and 
@@ -1329,9 +1343,9 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
         }
       }
 
-      setBC(uvel_FC,"Velocity","x",patch,indx);
-      setBC(vvel_FC,"Velocity","y",patch,indx);
-      setBC(wvel_FC,"Velocity","z",patch,indx);
+      //__________________________________
+      // (*)vel_FC BC are updated in 
+      // ICE::addExchangeContributionToFCVel()
 
       new_dw->put(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->put(vvel_FC, lb->vvel_FCLabel, indx, patch);
@@ -1647,6 +1661,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> delPress;
     CCVariable<double> press_CC;
     vector<CCVariable<double>   > rho_micro_CC(numMatls);
+    vector<CCVariable<double>   > vol_frac(numMatls);
+    vector<CCVariable<Vector>   > vel_CC(numMatls);
+    vector<CCVariable<double>   > rho_CC(numMatls);
     const IntVector gc(1,1,1);
 
     new_dw->get(pressure,       lb->press_equil_CCLabel,0,patch,Ghost::None,0);
@@ -1663,6 +1680,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->allocate(term2, lb->term2Label, 0, patch);
     new_dw->allocate(term3, lb->term3Label, 0, patch);
 
+
     term1.initialize(0.);
     term2.initialize(0.);
     term3.initialize(0.);
@@ -1671,7 +1689,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      CCVariable<double>   vol_frac;
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       CCVariable<double>   speedSound;
       SFCXVariable<double> uvel_FC;
       SFCYVariable<double> vvel_FC;
@@ -1682,11 +1700,19 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 		  Ghost::AroundCells, 2);
       new_dw->get(wvel_FC, lb->wvel_FCMELabel, indx,  patch,
 		  Ghost::AroundCells, 2);
-      new_dw->get(vol_frac,lb->vol_frac_CCLabel,indx, patch,
-		  Ghost::AroundCells,1);
-      new_dw->get(rho_micro_CC[m], lb->rho_micro_CCLabel,indx,patch,
+      new_dw->get(rho_CC[m],lb->rho_CCLabel,   indx,  patch,
 		  Ghost::None,0);
-      new_dw->get(speedSound,   lb->speedSound_CCLabel,indx,patch,
+ /*`==========TESTING==========*/ 
+  if(ice_matl) {
+     old_dw->get(vel_CC[m],lb->vel_CCLabel,   indx,  patch,
+  		  Ghost::None,0);
+  }
+ /*==========TESTING==========`*/
+      new_dw->get(vol_frac[m],    lb->vol_frac_CCLabel,  indx,patch,
+		  Ghost::AroundCells,1);
+      new_dw->get(rho_micro_CC[m],lb->rho_micro_CCLabel, indx,patch,
+		  Ghost::None,0);
+      new_dw->get(speedSound,     lb->speedSound_CCLabel,indx,patch,
 		  Ghost::None,0);
       //__________________________________
       // Advection preprocessing
@@ -1696,7 +1722,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
 	  iter++) {
-        q_CC[*iter] = vol_frac[*iter] * invvol;
+        q_CC[*iter] = vol_frac[m][*iter] * invvol;
       }
       //__________________________________
       //   First order advection of q_CC
@@ -1731,17 +1757,26 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //  190 of my Journal
         term2[*iter] -= q_advected[*iter];
 
-        term3[*iter] += vol_frac[*iter] /(rho_micro_CC[m][*iter] *
+        term3[*iter] += vol_frac[m][*iter] /(rho_micro_CC[m][*iter] *
 				speedSound[*iter]*speedSound[*iter]);
       }  //iter loop
     }  //matl loop
-
+    press_CC = pressure;
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
 
       delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
       press_CC[*iter]  = pressure[*iter] + delPress[*iter];    
     }
+/*`==========TESTING==========*/ 
+  #if oldStyle_setBC
     setBC(press_CC, rho_micro_CC[SURROUND_MAT], "Pressure",patch,0);
+  #endif
+  #if newStyle_setBC
+    setBC(press_CC,     rho_micro_CC,   rho_CC,
+          vol_frac,     vel_CC,         old_dw,
+          "Pressure",   patch,0);
+    #endif
+ /*==========TESTING==========`*/
 
     new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
     new_dw->put(press_CC, lb->press_CCLabel,    0, patch);
@@ -2320,7 +2355,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       if (switchDebugLagrangianValues ) {
         if(mpm_matl) {
           new_dw->get(int_eng_L,lb->int_eng_L_CCLabel,indx,patch,Ghost::None,0);
-          new_dw->get(mom_L,  lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
+          new_dw->get(mom_L,    lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
         }
         char description[50];
         sprintf(description, "Bot_Lagrangian_Values_Mat_%d ",indx);
@@ -2742,7 +2777,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       printVector( patch,1, description, "vvel_CC", 1, vel_CC);
       printVector( patch,1, description, "wvel_CC", 2, vel_CC);
       }
-
       new_dw->put(rho_CC,   lb->rho_CC_top_cycleLabel, indx,patch);
       new_dw->put(mass_CC,  lb->mass_CCLabel,          indx,patch);
       new_dw->put(sp_vol_CC,lb->sp_vol_CCLabel,        indx,patch);
@@ -2753,6 +2787,53 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 }
 
 
+/* --------------------------------------------------------------------- 
+ Function~  ICE::setBC--
+ Purpose~   Takes care Pressure_CC
+ ---------------------------------------------------------------------  */
+void ICE::setBC(CCVariable<double>& press_CC, 
+                vector<CCVariable<double> >& rho_micro_CC,
+                vector<CCVariable<double> >& rho_CC,
+                vector<CCVariable<double> >& vol_frac_CC,
+                vector<CCVariable<Vector> >& vel_CC,
+                DataWarehouse* old_dw,
+                const string& kind, 
+                const Patch* patch, const int mat_id)
+{
+  
+  Vector dx = patch->dCell();
+  Vector gravity = d_sharedState->getGravity();
+  
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
+      face=Patch::nextFace(face)){
+    BoundCondBase* bcs;
+    BoundCond<double>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+      new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
+    }
+    else
+      continue;
+
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") 
+	press_CC.fillFace(face,new_bcs->getValue());
+      //__________________________________
+      //  This automatically takes care of the
+      //  hydrostatic pressure gradient.
+      if (new_bcs->getKind() == "Neumann") 
+        backoutGCPressFromVelFC(patch, face, old_dw,
+                              press_CC, rho_micro_CC, rho_CC,
+                              vol_frac_CC,  vel_CC);
+   
+    }
+  }
+}
+/*`==========TESTING==========*/ 
+// KEEP THIS AROUND UNTIL
+// I'M SURE OF THE NEW STYLE OF SETBC
+// FOR PRESSURE -Todd
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
  Purpose~   Takes care Pressure_CC
@@ -2790,7 +2871,7 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
     }
   }
 }
-
+ /*==========TESTING==========`*/
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
  Purpose~   Takes care of Density_CC and Temperature_CC
@@ -2802,7 +2883,7 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
   cerr << "Setting BC " << kind << " for material " << mat_id << endl;
 #endif
   Vector dx = patch->dCell();
-  
+  Vector grav = d_sharedState->getGravity();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     BoundCondBase* bcs;
@@ -2812,16 +2893,44 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
       new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
     } else
       continue;
-
+ 
     if (new_bcs != 0) {
-      if (new_bcs->getKind() == "Dirichlet") 
-	variable.fillFace(face,new_bcs->getValue());
-      
-      if (new_bcs->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,new_bcs->getValue(),dx);
-    
-    }
-  }
+      //__________________________________
+      //  Density_CC
+      if (kind == "Density") {
+        if (new_bcs->getKind() == "Dirichlet") 
+	  variable.fillFace(face,new_bcs->getValue());
+
+        if (new_bcs->getKind() == "Neumann") 
+	  variable.fillFaceFlux(face,new_bcs->getValue(),dx);
+      }
+ 
+      //__________________________________
+      // Temperature_CC
+      if (kind == "Temperature" ){ 
+        if (new_bcs->getKind() == "Dirichlet") 
+	    variable.fillFace(face,new_bcs->getValue());
+           
+         // Neumann && gravity                 
+        if (new_bcs->getKind() == "Neumann") {  
+          variable.fillFaceFlux(face,new_bcs->getValue(),dx);
+            
+          if(fabs(grav.x()) >0.0 ||fabs(grav.y()) >0.0 ||fabs(grav.z()) >0.0) {
+            Material *matl = d_sharedState->getMaterial(mat_id);
+            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+            if(ice_matl) {
+              double cv     = ice_matl->getSpecificHeat();
+              double gamma  = ice_matl->getGamma();
+                    
+              ice_matl->getEOS()->hydrostaticTempAdjustment(face, 
+                                  patch,  grav, gamma,
+                                  cv,     dx,   variable);
+            }  // if(ice_matl) 
+          }  // if(gravity)
+        }  // if(Neumann)
+      }  //  if(Temperature)
+    }  // if(new_bc)
+  }  // Patch loop
 }
 
 
@@ -2857,6 +2966,7 @@ void ICE::setBC(CCVariable<Vector>& variable, const string& kind,
     }  // end velocity loop
   }  // end face loop
 }
+
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--      
  Purpose~   Takes care of vel_FC.x()
@@ -2973,9 +3083,7 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
       }
     }
   }
-
 }
-
 
 /* ---------------------------------------------------------------------
  Function~  influxOutfluxVolume--
@@ -3567,8 +3675,9 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
  set the ghostcell pressure so there is flow out of a solid boundary.
  Currently this computes the pressure based on ice_matl[0] which
  is the surrounding matl.
- Note: this function doesn't set the pressure in either the edges or 
-       corners of the domain. 
+ Note: this function doesn't set the pressure in either the edge or 
+       corners cell of the domain.  There isn't a normal component of 
+       velocity that we can use to compute it.   
        
   W A R N I N G:
   This is only setup for ice_matls.  I need to modify this 
@@ -3591,7 +3700,7 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
   double grav, del_Q;
   double rho_FC, rho_micro_FC;
   double plus_minus_one;
-  int m = 0;          /*   H A R D W I R E   */
+ 
   double tmp, beta;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -3616,14 +3725,17 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
 
   Vector gravity = d_sharedState->getGravity();
   Vector dx = patch->dCell();
+  int m = SURROUND_MAT;          /*   H A R D W I R E   */
   
   if (face == Patch::xplus) {           //  X P L U S
     offset = IntVector(-1,0,0);
     grav   = gravity.x();
     del_Q  = dx.x();
     plus_minus_one  = -1.0;
-    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-      vel_FC[m][*iter] = vel_CC[m][*iter].x();
+    for(int m = 0; m < numICEMatls; m++) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter] = vel_CC[m][*iter].x();
+      }
     }
     //cout << "XPLUS:" <<endl;
   }
@@ -3632,8 +3744,10 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.x();
     del_Q  = dx.x();
     plus_minus_one  = 1.0;
-    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-       vel_FC[m][*iter] = vel_CC[m][*iter].x();
+    for(int m = 0; m < numICEMatls; m++) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+         vel_FC[m][*iter] = vel_CC[m][*iter].x();
+      }
     }
     //cout << "XMINUS:" <<endl;
   }
@@ -3642,8 +3756,10 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.y();
     del_Q  = dx.y();
     plus_minus_one  = -1.0;
-    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-       vel_FC[m][*iter] = vel_CC[m][*iter].y();
+    for(int m = 0; m < numICEMatls; m++) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+         vel_FC[m][*iter] = vel_CC[m][*iter].y();
+      }
     }
     //cout << "YPLUS:" <<endl;
   }
@@ -3652,8 +3768,10 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.y();
     del_Q  = dx.y();
     plus_minus_one  = 1.0;
-    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-      vel_FC[m][*iter] = vel_CC[m][*iter].y();
+    for(int m = 0; m < numICEMatls; m++) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter] = vel_CC[m][*iter].y();
+      }
     }
     //cout << "YMINUS:" <<endl;
   }
@@ -3662,8 +3780,10 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.z();
     del_Q  = dx.z();
     plus_minus_one  = -1.0;
-    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-      vel_FC[m][*iter] = vel_CC[m][*iter].z();
+    for(int m = 0; m < numICEMatls; m++) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter] = vel_CC[m][*iter].z();
+      }
     }
     //cout << "ZPLUS:" <<endl;
   } 
@@ -3672,12 +3792,14 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
     grav   = gravity.z();
     del_Q  = dx.z();
     plus_minus_one  = 1.0;
-    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
-      vel_FC[m][*iter] = vel_CC[m][*iter].z();
+    for(int m = 0; m < numICEMatls; m++) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter] = vel_CC[m][*iter].z();
+      }
     }
     //cout << "ZMINUS:" <<endl;
   }
-  
+   
   //__________________________________
   // Now loop over the ghostcells in that face
   // and backout the pressure this doesn't include 
@@ -3715,6 +3837,21 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
    // cout<< *iter<<adjcell<<" "<<term1<<" "<<term2<<" " <<term3<<" "<<term4<<" "<<term5<<endl;
     press_CC[gcell]  = press_CC[adjcell] + plus_minus_one * del_Q * 
                       (term1- term2 - term3 - term4)/term5;
+                      
+    //__________________________________
+    //  Bulletproofing
+    if (press_CC[gcell] < 0.0) {
+     int i,j,k;
+     i   = gcell.x();
+     j   = gcell.y();
+     k   = gcell.z();
+     char warning[100];
+     double stupid = delT;
+     sprintf(warning, " cell[%d][%d][%d]  delT = %e",i,j,k, stupid);
+     Message(1,"ICE::backoutGCPressFromVelFC(): negative pressure detected",
+             " This is usually caused by delT being too small. Now exiting..."
+             , warning);
+    }
   }
    //---- P R I N T   D A T A ------ 
  #if 0
