@@ -18,7 +18,7 @@ PSELIBS := \
 	Dataflow/XMLUtil \
 	Core/Util
 
-LIBS := $(XML_LIBRARY) -lmpi
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
