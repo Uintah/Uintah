@@ -27,9 +27,20 @@
     </authors>
     <summary>
       <p>
+      ChangeFieldDataAt will modifiy the data locations of the values
+  of the input field.
       </p>
     </summary>
     <description>
+      <p>
+      Upon execution the UI will display the input field name and the
+      current location the data values for the field are located.  
+
+      The output field's data value location is selected from a list
+      of available locations.  The output field will contain the same
+      geometry as the input field with the data value storage at the
+      newly specified location.  All data values are reset to 0.
+      </p>
     </description>
   </overview>
   <implementation>
