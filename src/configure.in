@@ -899,6 +899,41 @@ AC_SUBST(MPEG_LIBRARY)
 AC_SUBST(MPEG_DEF_FLAG)
 
 
+##-- Find libimage -----------------------------------------------------------
+
+LIBIMAGE_DEF_FLAG=""
+LIBIMAGE_PREFIX=""
+if test "${with_libimage+set}" = set; then
+  withval="$with_libimage"
+  if test "$withval" != "yes" ; then
+    if test -e "${withval}/include/image.h"; then
+      LIBIMAGE_PREFIX="$withval"
+    else
+      echo "\n*** Error - could not find libimage at ${withval}/include/image.h\n"
+    fi
+  else
+    if test -e "$thirdparty/include/image.h" ; then
+      LIBIMAGE_PREFIX=$thirdparty
+    else
+      echo "\n*** Error - could not find libimage in $thirdparty/include/image.h\n";
+    fi
+  fi
+fi
+
+if test "$LIBIMAGE_PREFIX" != "" ; then
+  echo -n "checking for libimage... "
+  LIBIMAGE_DEF_FLAG="-DLIBIMAGE"
+  LIBIMAGE_INCLUDE="-I${LIBIMAGE_PREFIX}/include"
+  LIBIMAGE_LIBRARY="-L${LIBIMAGE_PREFIX}/lib -limage"
+  echo "${LIBIMAGE_PREFIX}"
+fi
+
+AC_SUBST(LIBIMAGE_INCLUDE)
+AC_SUBST(LIBIMAGE_LIBRARY)
+AC_SUBST(LIBIMAGE_DEF_FLAG)
+
+
+
 ##-- Find Nektar--------------------------------------------------------------
 
 AC_ARG_WITH(with_nektar,
