@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<appendix id="sec.hdf5_inst">
+<section id="sec.hdf5_inst">
   <title>HDF5 Installation</title>
 
   <para>The <ulink url="http://hdf.ncsa.uiuc.edu">Hierarchicial Data
@@ -173,4 +173,4 @@ make install
     </para>
   </section>
 
-</appendix>
+</section>

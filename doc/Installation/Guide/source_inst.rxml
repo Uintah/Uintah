@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <section id="sec.source_inst">
-  <title id="title.source_inst">&sr; Installation from Source Code</title>
+  <title id="title.source_inst">Installation from Source Code</title>
   <section>
     <title>Introduction</title>
 

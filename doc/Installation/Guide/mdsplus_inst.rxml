@@ -26,7 +26,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-<appendix id="sec.mdsplus_inst">
+<section id="sec.mdsplus_inst">
   <title>MDSplus Installation</title>
 
   <para><acronym>MDSplus</acronym> libraries gives modules of &sr;'s DataIO
@@ -105,4 +105,4 @@ rpm -ivh mdsplus-redhat9.x-1.6-2.i386.rpm
     </para>
   </section>
 
-</appendix>
+</section>
