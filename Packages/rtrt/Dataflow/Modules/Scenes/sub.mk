@@ -16,7 +16,8 @@ PSELIBS := \
         Core/Geom \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \
-	Packages/rtrt/Core
+	Packages/rtrt/Core \
+	Packages/rtrt/Dataflow/Ports
 
 LIBS := -lm
 
