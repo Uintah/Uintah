@@ -1,0 +1,15 @@
+
+#include <config/sci.cf>
+
+OBJS = MPM.o  mpmParticleSet.o
+SRCS = MPM.cc mpmParticleSet.cc
+
+LIBNAME = CD
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom \
+	-lGeometry -lMath -lTCL -lClasslib -lMultitask -lMalloc -lm \
+	-lC -lc
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
