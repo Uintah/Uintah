@@ -138,7 +138,7 @@
 
 		<cal_pressure>true</cal_pressure>
 		<PressureSolver>
-		    <ref_point>[5,5,5]</ref_point>
+		    <ref_point>[3,3,3]</ref_point>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
