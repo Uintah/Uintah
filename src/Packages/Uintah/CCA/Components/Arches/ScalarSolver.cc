@@ -269,7 +269,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       new_dw->get(mxAbsW, timelabels->maxabsw_in);
     }
     maxAbsU = mxAbsU;
-    maxAbsV = mxAbsW;
+    maxAbsV = mxAbsV;
     maxAbsW = mxAbsW;
   }
 
@@ -598,7 +598,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
   }
   maxAbsU = mxAbsU;
-  maxAbsV = mxAbsW;
+  maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
   
   for (int p = 0; p < patches->size(); p++) {
@@ -685,7 +685,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 					maxAbsU, maxAbsV, maxAbsW);
     
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
-				  	  &scalarVars, &constScalarVars);
+				  	  &scalarVars, &constScalarVars, delta_t);
 
   }
 }

@@ -409,11 +409,13 @@ ArchesLabel::ArchesLabel()
   // Runge-Kutta 3d order pressure and momentum labels
   d_pressureIntermLabel = VarLabel::create("pressureInterm", 
 				    CCVariable<double>::getTypeDescription() );
-/*  d_velocityDivergenceLabel = VarLabel::create("velocityDivergence", 
+  d_velocityDivergenceLabel = VarLabel::create("velocityDivergence", 
 				   CCVariable<double>::getTypeDescription() );
   d_velocityDivergenceBCLabel = VarLabel::create("velocityDivergenceBC", 
 				   CCVariable<double>::getTypeDescription() );
-*/
+  d_continuityResidualLabel = VarLabel::create("continuityResidual", 
+				   CCVariable<double>::getTypeDescription() );
+
 
   d_InitNormLabel = VarLabel::create("initNorm",
 				       max_vartype::getTypeDescription() );
@@ -618,8 +620,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_stressTensorCompLabel);
   VarLabel::destroy(d_strainTensorCompLabel);
   VarLabel::destroy(d_scalarFluxCompLabel);
-//  VarLabel::destroy(d_velocityDivergenceLabel);
-//  VarLabel::destroy(d_velocityDivergenceBCLabel);
+  VarLabel::destroy(d_velocityDivergenceLabel);
+  VarLabel::destroy(d_velocityDivergenceBCLabel);
+  VarLabel::destroy(d_continuityResidualLabel);
 
   VarLabel::destroy(d_InitNormLabel);
 // labels for max(abs(velocity)) for Lax-Friedrichs flux

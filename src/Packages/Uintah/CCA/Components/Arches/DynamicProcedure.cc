@@ -329,10 +329,9 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     int endX = indexHigh.x()+1;
 
 #ifdef use_fortran
-    IntVector start(startX, startY, startZ);
-    IntVector end(endX - 1, endY - 1, endZ -1);
     fort_dynamic_3loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
-	uVel,vVel,wVel,cellinfo->sew,cellinfo->sns,cellinfo->stb,start,end);
+	uVel,vVel,wVel,cellinfo->sew,cellinfo->sns,cellinfo->stb,
+	indexLow,indexHigh);
 #else
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
@@ -860,6 +859,12 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     Array3<double> VV(idxLo, idxHi);
     Array3<double> VW(idxLo, idxHi);
     Array3<double> WW(idxLo, idxHi);
+    UU.initialize(0.0);
+    UV.initialize(0.0);
+    UW.initialize(0.0);
+    VV.initialize(0.0);
+    VW.initialize(0.0);
+    WW.initialize(0.0);
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1964,7 +1969,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  //     calculate the local Smagorinsky coefficient
 	  //     perform "clipping" in case MLij is negative...
     double factor = 1.0;
-#if 0
+#if 1
     if (time < 2.0)
       factor = (time+0.000001)*0.5;
 #endif
@@ -1977,7 +1982,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  if (MMHatI[currCell] < 1.0e-20)
 	    value = 0.0;
 	  else
-	    value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
+	    value = MLHatI[currCell]/MMHatI[currCell];
 	  tempCs[currCell] = value;
 	}
       }
@@ -2005,8 +2010,8 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	    double filter = pow(delta, 1.0/3.0);
 	    if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
 	    else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
-	    Cs[currCell] = sqrt(Cs[currCell]);
-	    viscosity[currCell] =  Cs[currCell]* filter * filter *
+	    Cs[currCell] = factor * sqrt(Cs[currCell]);
+	    viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
 	      IsI[currCell] * den[currCell] + viscos*voidFraction[currCell];
 	  }
 	}
@@ -2021,8 +2026,8 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	    double filter = pow(delta, 1.0/3.0);
 	    if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
 	    else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
-	    Cs[currCell] = sqrt(Cs[currCell]);
-	    viscosity[currCell] =  Cs[currCell]* filter * filter *
+	    Cs[currCell] = factor * sqrt(Cs[currCell]);
+	    viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
 	      IsI[currCell] * den[currCell] + viscos;
 	  }
 	}

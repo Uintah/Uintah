@@ -161,7 +161,7 @@ namespace Uintah {
 	    maxabsw_in = lab->d_maxAbsW_label;
 	    ref_density = lab->d_refDensityPred_label;
 	    pressure_out = lab->d_pressurePredLabel;
-	    pressure_guess = lab->d_pressurePredLabel;
+	    pressure_guess = lab->d_pressurePSLabel;
 	    maxabsu_out = lab->d_maxAbsUPred_label;
 	    maxabsv_out = lab->d_maxAbsVPred_label;
 	    maxabsw_out = lab->d_maxAbsWPred_label;
@@ -189,7 +189,7 @@ namespace Uintah {
 	    maxabsw_in = lab->d_maxAbsW_label;
 	    ref_density = lab->d_refDensityPred_label;
 	    pressure_out = lab->d_pressurePredLabel;
-	    pressure_guess = lab->d_pressurePredLabel;
+	    pressure_guess = lab->d_pressurePSLabel;
 	    maxabsu_out = lab->d_maxAbsUPred_label;
 	    maxabsv_out = lab->d_maxAbsVPred_label;
 	    maxabsw_out = lab->d_maxAbsWPred_label;
@@ -217,7 +217,7 @@ namespace Uintah {
 	    maxabsw_in = lab->d_maxAbsWPred_label;
 	    ref_density = lab->d_refDensity_label;
 	    pressure_out = lab->d_pressurePSLabel;
-	    pressure_guess = lab->d_pressurePSLabel;
+	    pressure_guess = lab->d_pressurePredLabel;
 	    maxabsu_out = lab->d_maxAbsU_label;
 	    maxabsv_out = lab->d_maxAbsV_label;
 	    maxabsw_out = lab->d_maxAbsW_label;
@@ -245,7 +245,7 @@ namespace Uintah {
 	    maxabsw_in = lab->d_maxAbsWPred_label;
 	    ref_density = lab->d_refDensity_label;
 	    pressure_out = lab->d_pressurePSLabel;
-	    pressure_guess = lab->d_pressurePSLabel;
+	    pressure_guess = lab->d_pressurePredLabel;
 	    maxabsu_out = lab->d_maxAbsU_label;
 	    maxabsv_out = lab->d_maxAbsV_label;
 	    maxabsw_out = lab->d_maxAbsW_label;
@@ -273,7 +273,7 @@ namespace Uintah {
 	    maxabsw_in = lab->d_maxAbsWInterm_label;
 	    ref_density = lab->d_refDensity_label;
 	    pressure_out = lab->d_pressurePSLabel;
-	    pressure_guess = lab->d_pressurePSLabel;
+	    pressure_guess = lab->d_pressureIntermLabel;
 	    maxabsu_out = lab->d_maxAbsU_label;
 	    maxabsv_out = lab->d_maxAbsV_label;
 	    maxabsw_out = lab->d_maxAbsW_label;
@@ -301,7 +301,7 @@ namespace Uintah {
 	    maxabsw_in = lab->d_maxAbsWPred_label;
 	    ref_density = lab->d_refDensityInterm_label;
 	    pressure_out = lab->d_pressureIntermLabel;
-	    pressure_guess = lab->d_pressureIntermLabel;
+	    pressure_guess = lab->d_pressurePredLabel;
 	    maxabsu_out = lab->d_maxAbsUInterm_label;
 	    maxabsv_out = lab->d_maxAbsVInterm_label;
 	    maxabsw_out = lab->d_maxAbsWInterm_label;

@@ -1937,7 +1937,7 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
   }
   maxAbsU = mxAbsU;
-  maxAbsV = mxAbsW;
+  maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
 
   for (int p = 0; p < patches->size(); p++) {
@@ -2308,7 +2308,7 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
 		  	     density[currCell];
           if (scalar[currCell] > 1.0)
               scalar[currCell] = 1.0;
-          else if (scalar[currCell] < 1e-7)
+          else if (scalar[currCell] < 0.0)
               scalar[currCell] = 0.0;
 
           if (d_reactingScalarSolve) {
@@ -2316,7 +2316,7 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
 		  	     density[currCell];
             if (reactscalar[currCell] > 1.0)
                 reactscalar[currCell] = 1.0;
-            else if (reactscalar[currCell] < 1e-7)
+            else if (reactscalar[currCell] < 0.0)
                 reactscalar[currCell] = 0.0;
           }
           if (d_enthalpySolve)

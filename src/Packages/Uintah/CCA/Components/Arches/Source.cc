@@ -340,7 +340,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	IntVector currcell(ii,jj,kk);
-	vars->pressNonlinearSrc[currcell] -= constvars->filterdrhodt[currcell];
+	vars->pressNonlinearSrc[currcell] -= constvars->filterdrhodt[currcell]/delta_t;
       }
     }
   }
