@@ -4,13 +4,18 @@
 #include <Packages/rtrt/Core/Checker.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Phong.h>
+#include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
+
 #include <dlfcn.h>
-#include <iostream>
 #include <math.h>
 #include <string.h>
+
+#include <iostream>
+#include <vector>
+
 #include <sys/param.h>
 
 using namespace rtrt;
@@ -23,9 +28,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 {
   int nscenes = atoi(argv[1]);
   cerr << "multi-scene will read "<<nscenes<<" scenes (argc="<<argc<<").\n";
-  Array1<Scene *> scene(nscenes);
-  Array1<int> scene_argc(nscenes);
-  Array1<int> scene_first_arg(nscenes);
+  rtrt::Array1<Scene *> scene(nscenes);
+  rtrt::Array1<int> scene_argc(nscenes);
+  rtrt::Array1<int> scene_first_arg(nscenes);
   int curr_arg=2;
   int s;
   for (s=-1; s<nscenes && curr_arg<argc; curr_arg++) {
@@ -61,6 +66,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   }
 
   Group *g = new Group;
+  vector<Trigger*> allTriggers;
+
   for (s=0; s<nscenes; s++) {
      std::cerr << "\n\n\n\n==========================================================\n"
                << "Creating scene " << argv[scene_first_arg[s]] 
@@ -85,6 +92,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr << "Scene creation failed!\n";
       exit(1);
     }
+
+    vector<Trigger*> & triggers = scene[s]->getTriggers();
+
+    for( int cnt = 0; cnt < triggers.size(); cnt++ )
+      {
+	allTriggers.push_back( triggers[cnt] );
+      }
+
     g->objs.add(scene[s]->get_object());
     if (s!=0)
       for (int l=0; l<scene[s]->nlights(); l++)
