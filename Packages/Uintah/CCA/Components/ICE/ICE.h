@@ -335,29 +335,23 @@ using namespace SCIRun;
 			  CCVariable<eflux>& r_out_z_CF,
 			  const Vector& dx);
 
-      void computeTauX_LeftandRightCellFace( const CCVariable<Vector> vel_CC,
-                          const IntVector curcell,
+      void computeTauX_Components( const Patch* patch,
+                          const CCVariable<Vector> vel_CC,
                           const double viscosity,
                           const Vector dx,
-                          StaticArray<double>& tau_XX,
-                          StaticArray<double>& tau_XY,
-                          StaticArray<double>& tau_XZ);
+                          SFCXVariable<Vector>& tau_X_FC);
                           
-      void computeTauY_BottomandTopCellFace( const CCVariable<Vector> vel_CC,
-                          const IntVector curcell,
+      void computeTauY_Components( const Patch* patch,
+                          const CCVariable<Vector> vel_CC,
                           const double viscosity,
                           const Vector dx,
-                          StaticArray<double>& tau_YX,
-                          StaticArray<double>& tau_YY,
-                          StaticArray<double>& tau_YZ);
+                          SFCYVariable<Vector>& tau_Y_FC);
                           
-      void computeTauZ_BackandFrontCellFace( const CCVariable<Vector> vel_CC,
-                          const IntVector curcell,
+      void computeTauZ_Components( const Patch* patch,
+                          const CCVariable<Vector> vel_CC,
                           const double viscosity,
                           const Vector dx,
-                          StaticArray<double>& tau_ZY,
-                          StaticArray<double>& tau_ZX,
-                          StaticArray<double>& tau_ZZ);
+                          SFCZVariable<Vector>& tau_Z_FC);
                    
        void printData_FC(const  Patch* patch,int include_GC,char message1[],
 		      char message2[], const SFCXVariable<double>& q_FC);
