@@ -2,7 +2,7 @@
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Interface/Scheduler.h>
-#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 

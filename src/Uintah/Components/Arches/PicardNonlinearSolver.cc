@@ -3,7 +3,7 @@
 #include <Uintah/Components/Arches/PressureSolver.h>
 #include <Uintah/Components/Arches/MomentumSolver.h>
 #include <Uintah/Components/Arches/ScalarSolver.h>
-#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <SCICore/Util/NotFinished.h>
 #include <math.h>
