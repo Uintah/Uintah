@@ -25,6 +25,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
@@ -140,11 +141,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
   d_integrator = Explicit;
   if (mpm_soln_ps ) {
     mpm_soln_ps->get("time_integrator",integrator_type);
-    if (integrator_type == "implicit"){
-      d_integrator = Implicit;
-    }
     if (integrator_type == "explicit") {
       d_integrator = Explicit;
+    }
+    if (integrator_type == "implicit"){
+      throw ProblemSetupException("Can't use implicit integration with -mpm");
     }
   }
    
@@ -313,6 +314,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
+  scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
@@ -325,7 +327,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleIntegrateTemperatureRate(       sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
-  scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleAddNewParticles(                sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
@@ -334,6 +335,31 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 				    lb->d_particleState_preReloc,
 				    lb->pXLabel, lb->d_particleState,
 				    lb->pParticleIDLabel, matls);
+}
+
+void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
+ /*
+  * applyExternalLoads
+  *   in(p.externalForce, p.externalheatrate)
+  *   out(p.externalForceNew, p.externalheatrateNew) */
+  Task* t=scinew Task("MPM::applyExternalLoads",
+		    this, &SerialMPM::applyExternalLoads);
+                  
+  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
+  t->computes(             lb->pExtForceLabel_preReloc);
+  if (d_useLoadCurves) {
+    t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
+    t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
+    t->computes(             lb->pLoadCurveIDLabel_preReloc);
+  }
+
+//  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+
 }
 
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
@@ -352,10 +378,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
-  
   t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,    gan,NGP);
+  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::OldDW, lb->pSp_volLabel,           gan,NGP); 
   
@@ -702,32 +727,6 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
   sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls)
-
-{
- /*
-  * applyExternalLoads
-  *   in(p.externalForce, p.externalheatrate)
-  *   out(p.externalForceNew, p.externalheatrateNew) */
-  Task* t=scinew Task("MPM::applyExternalLoads",
-		    this, &SerialMPM::applyExternalLoads);
-                  
-  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
-  t->computes(             lb->pExtForceLabel_preReloc);
-  if (d_useLoadCurves) {
-    t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
-    t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
-    t->computes(             lb->pLoadCurveIDLabel_preReloc);
-  }
-
-//  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
-
-  sched->addTask(t, patches, matls);
-
 }
 
 void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
@@ -1103,17 +1102,16 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
-      old_dw->get(px,             lb->pXLabel,             pset);
-      old_dw->get(pmass,          lb->pMassLabel,          pset);
-      old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
-      old_dw->get(pSp_vol,        lb->pSp_volLabel,        pset);
-      old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
-      old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
-      old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
+      old_dw->get(px,             lb->pXLabel,                 pset);
+      old_dw->get(pmass,          lb->pMassLabel,              pset);
+      old_dw->get(pvolume,        lb->pVolumeLabel,            pset);
+      old_dw->get(pSp_vol,        lb->pSp_volLabel,            pset);
+      old_dw->get(pvelocity,      lb->pVelocityLabel,          pset);
+      old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
+      new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
       if(d_8or27==27){
-        old_dw->get(psize,        lb->pSizeLabel,          pset);
+        old_dw->get(psize,        lb->pSizeLabel,              pset);
       }
-
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -1975,9 +1973,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 
 	// Get the external force data and allocate new space for
 	// external force
-	ParticleVariable<Vector> pExternalForce;
+	constParticleVariable<Vector> pExternalForce;
 	ParticleVariable<Vector> pExternalForce_new;
-	old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+	old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
 	new_dw->allocateAndPut(pExternalForce_new, 
 			       lb->pExtForceLabel_preReloc,  pset);
 
@@ -2004,9 +2002,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 
 	// Get the external force data and allocate new space for
 	// external force and copy the data
-	ParticleVariable<Vector> pExternalForce;
+	constParticleVariable<Vector> pExternalForce;
 	ParticleVariable<Vector> pExternalForce_new;
-	old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+	old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
 	new_dw->allocateAndPut(pExternalForce_new, 
 			       lb->pExtForceLabel_preReloc,  pset);
 
