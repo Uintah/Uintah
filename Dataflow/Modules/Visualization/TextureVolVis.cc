@@ -128,10 +128,10 @@ void TextureVolVis::execute(void)
   //AuditAllocator(default_allocator);
   if( !volren ){
     volren = new GLVolumeRenderer(0x12345676, tex, cmap);
-    if(tex->CC()){
-      volren->SetInterp(false);
-      interp_mode.set(0);
-    }
+//     if(tex->CC()){
+//       volren->SetInterp(false);
+//       interp_mode.set(0);
+//     }
     //    ogeom->delAll();
     ogeom->addObj( volren, "VolumeRenderer TransParent");
   } else {
