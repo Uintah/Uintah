@@ -49,9 +49,9 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
     d_serverContext->d_objptr=this;
     d_serverContext->d_objid=-1;
   } else if(d_serverContext->d_endpoint_active){
-    throw InternalError("Server re-initialized while endpoint already active?");
+    throw InternalError("Server reinitialized while endpoint already active?");
   } else if(d_serverContext->d_objptr != this){
-    throw InternalError("Server re-initialized with a differe`nt base class ptr?");
+    throw InternalError("Server reinitialized with a different base class ptr?");
   }
   // This may happen multiple times, due to multiple inheritance.  It
   // is a "last one wins" approach - the last CTOR to call this function

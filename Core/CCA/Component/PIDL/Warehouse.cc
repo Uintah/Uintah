@@ -99,8 +99,7 @@ Object* Warehouse::lookupObject(int id)
 
 Object* Warehouse::lookupObject(const std::string& str)
 {
-  string temp = str;
-  std::istringstream i(temp);
+  std::istringstream i(str);
   int objid;
   i >> objid;
   if(!i)
