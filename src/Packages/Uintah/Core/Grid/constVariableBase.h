@@ -67,7 +67,7 @@ WARNING
     */
   protected:
     constVariableBase() {}
-    constVariableBase(const constVariableBase&);    
+    constVariableBase(const constVariableBase&) {}
   private:
   };
 
