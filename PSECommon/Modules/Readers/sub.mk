@@ -32,6 +32,7 @@ SRCS     += \
 	$(SRCDIR)/SurfaceReader.cc\
 	$(SRCDIR)/VectorFieldReader.cc\
 	$(SRCDIR)/VoidStarReader.cc\
+	$(SRCDIR)/PathReader.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Datatypes \
@@ -43,6 +44,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/18 23:12:57  samsonov
+# Added PathReader module
+#
 # Revision 1.4  2000/06/08 22:46:28  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
