@@ -199,6 +199,8 @@ static void handle_console_input()
   case 't': {
     int timestep;
     ostringstream timedir;
+    if (cin.peek() == 't' || cin.peek() == 'T')
+      cin.get();
     cin >> timestep;
     timedir << "/t" << setw(4) << setfill('0') << timestep;
     cout << "Loading timestep " << timestep << "...\n";
@@ -217,12 +219,16 @@ static void handle_console_input()
   } break;
 
   case 'l':
-    system((string("ls -d ") + udaDir + "/t*").c_str());
+    system((string("find ") +  udaDir + " -name 'taskgraph_00000.xml' | sed -e \"s/\\/taskgraph_00000\\.xml//g\" | sed -e \"s/.*\\///g\"").c_str());
     break;
     
   default:
     cerr << "Unknown command: " << cmd << endl;
     break;
   }
+  
+  // clear is an easy way to prevent an error flag in cin from
+  // causing the program to get caught in a loop saying "Unknown command"
+  cin.clear(); 
 }
 
