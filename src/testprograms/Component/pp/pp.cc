@@ -34,6 +34,7 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
 
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
@@ -63,11 +64,9 @@ void usage(char* progname)
 int main(int argc, char* argv[])
 {
     using std::string;
-
-    SocketEpChannel *sep=new SocketEpChannel();
-    cerr<<"Server URL="<<sep->getUrl()<<endl;
+    //delete sep;
     try{
-      PIDL::initialize(argc,argv);
+      //      PIDL::initialize(argc,argv);
       bool client=false;
       bool server=false;
       bool stop=false;
@@ -87,16 +86,33 @@ int main(int argc, char* argv[])
 	usage(argv[0]);
       
       if(server) {
-	PingPong_impl::pointer pp=PingPong_impl::pointer(new PingPong_impl);
+	/*PingPong_impl::pointer pp=PingPong_impl::pointer(new PingPong_impl);
 	pp->addReference();
 	cerr << "Waiting for pp connections...\n";
 	ofstream f("pp.url");
 	std::string s;
 	f<<pp->getURL().getString();
 	f.close();
+	*/
+	EpChannel *sep=new SocketEpChannel();
+	sep->openConnection();
+	cerr<<"Server URL="<<sep->getUrl()<<endl;
+	ofstream sockf("socket.url");
+	std::string socks;
+	sockf<<sep->getUrl();
+	sockf.close();
+	sep->activateConnection(NULL);
       } 
 
       else if(client){
+	ifstream sockf("socket.url");
+	std::string socks;
+	sockf>>socks;
+	sockf.close();
+	SpChannel *ssp=new SocketSpChannel();
+	ssp->openConnection(socks);
+
+	/*
 	ifstream f("pp.url");
 	std::string s;
 	f>>s;
@@ -120,7 +136,7 @@ int main(int argc, char* argv[])
 	else{
 	  cerr << "Successful\n";
 	}
-	
+	*/
       }
       else if(stop){
 	ifstream f("pp.url");
@@ -150,9 +166,9 @@ int main(int argc, char* argv[])
 	  }*/
       }
 
-      PIDL::serveObjects();
+      //PIDL::serveObjects();
       cerr << "exits\n";
-      PIDL::finalize();
+      //PIDL::finalize();
 
     } catch(const MalformedURL& e) {
 	cerr << "pp.cc: Caught MalformedURL exception:\n";
