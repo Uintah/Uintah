@@ -264,101 +264,39 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
   imesh->begin( inodeItr );
   omesh->begin( onodeItr );
 
-  Point o, p1, p2, p;
+  Point p;
   typename IFIELD::value_type v;
  
   unsigned int i, j;
   unsigned int it, jt, kt;
 
+#ifndef SET_POINT_DEFINED
   // For structured geometery we need to set the correct plane.
   if( ifield->get_type_description(0)->get_name() == "LatVolField" ||
       ifield->get_type_description(0)->get_name() == "ImageField" ||
-      ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
-
-    imesh->begin( inodeItr );
-
-    // Get the orgin of mesh. */
-    imesh->get_center(o, *inodeItr);    
-
-    // Get the first point being copied.
-    if (axis == 0) {
-      // Set the iterator to the correct column (i) .
-      for (it=0; it<index; it++)
-	++inodeItr;
-    } else if(axis == 1) {
-      // Set the iterator to the correct row (j).
-      for (jt=0; jt<index; jt++)
-	for (it=0; it<old_i; it++) 
-	  ++inodeItr;
-    } else if(axis == 2) {
-      // Set the iterator to the correct slice (k).
-      for (kt=0; kt<index; kt++)
-	for (j=0; j<old_j; j++)
-	  for (i=0; i<old_i; i++)
-	    ++inodeItr;
+      ifield->get_type_description(0)->get_name() == "ScanlineField" )
+  {
+    Transform trans = imesh->get_transform();
+    double offset = 0.0;
+    if (axis == 0)
+    {
+      trans.post_permute(2, 3, 1);
+      offset = index / (double)old_i;
     }
-  
-    // Get the point.
-    imesh->get_center(p, *inodeItr);
-
-    // Set the orginal transform.
-    omesh->set_transform( imesh->get_transform() );
-
-    // Put the new field into the correct location.
-    Transform trans;
-
-
-    imesh->begin( inodeItr );
-
-    if( dim.size() == 3 && axis == 0 ) {
-
-      // Get two points that along with the origin define the "Y" plane.
-      ++inodeItr;
-      imesh->get_center(p1, *inodeItr);
-
-      for (it=0; it<old_i*old_j-1; it++)
-	++inodeItr;
-      imesh->get_center(p2, *inodeItr);
-
-    } else if( dim.size() == 3 && axis == 1 ) {
-
-      // Get two points that along with the origin define the "X" plane.
-      for (it=0; it<old_i; it++)
-	++inodeItr;
-      
-      imesh->get_center(p1, *inodeItr);
-      
-      for (it=0; it<old_i*(old_j-1); it++)
-	++inodeItr;
-      imesh->get_center(p2, *inodeItr);
-
-    } else if( dim.size() == 2 && axis == 0 ) {
-
-      // Get two points that along with the origin define the "Z" plane.
-      ++inodeItr;
-      imesh->get_center(p1, *inodeItr);
-
-      for (it=0; it<old_i-1; it++)
-	++inodeItr;
-      imesh->get_center(p2, *inodeItr);
+    else if (axis == 1)
+    {
+      trans.post_permute(1, 3, 2);
+      offset = index / (double)old_j;
     }
-
-    if( axis < dim.size() - 1 ) { 
-      // Get the plane the data is in.
-      Vector normal = Cross( Vector(p1-o).normal(), Vector(p2-o).normal() );
-
-      trans.pre_translate( (Vector) (-o) );
-
-      // Rotate around the orgin.
-      trans.pre_rotate( PI/2.0, normal.normal() );
-
-      trans.pre_translate( (Vector) (o) );
+    else
+    {
+      offset = index / (double)old_k;
     }
+    trans.post_translate(Vector(0.0, 0.0, index));
 
-    trans.pre_translate( (Vector) (p-o) );
-      
     omesh->transform( trans );
   }
+#endif
 
   imesh->begin( inodeItr );
 
