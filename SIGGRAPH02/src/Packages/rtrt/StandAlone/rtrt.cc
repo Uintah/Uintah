@@ -85,6 +85,7 @@ using SCIRun::Thread;
 using SCIRun::ThreadGroup;
 
 bool use_pm = false;
+bool pin = false;
 #ifdef __sgi
 #include <sys/types.h>
 #include <sys/pmo.h>
@@ -207,12 +208,20 @@ namespace rtrt {
 
 //extern int do_jitter;
 
+#if HAVE_IEEEFP_H
+#include <ieeefp.h>
+#endif
+
 bool fullscreen = false;
 bool demo = false;
 
 int
 main(int argc, char* argv[])
 {
+#if HAVE_IEEEFP_H
+    fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
+#endif
+
   RTRT* rtrt_engine = new RTRT();
 
   int xres=360;
@@ -261,6 +270,8 @@ main(int argc, char* argv[])
       rtrt_engine->np = rtrt_engine->nworkers;
     } else if(strcmp(argv[i], "-mempolicy") == 0){
       use_pm=true;
+    } else if(strcmp(argv[i], "-pin") == 0){
+      pin=true;
     } else if(strcmp(argv[i], "-nobv")==0){
       use_bv=0;
     } else if(strcmp(argv[i], "-bv")==0){
