@@ -33,7 +33,6 @@ PersistentTypeID Field::type_id("Field", "Datatype", maker);
 void Field::io(Piostream& stream){
   
   stream.begin_class("Field", FIELD_VERSION);
-  cout << "Starting io: " << endl;
   Pio(stream, d_attribHandles);
   Pio(stream, d_geomHandle);
   Pio(stream, d_currAttrib);
@@ -68,6 +67,7 @@ const AttribHandle Field::getAttrib() const{
 
 const AttribHandle Field::getAttrib(string aName) const{
   AttribMap::const_iterator ii=d_attribHandles.find(aName);
+ 
   if (ii!=d_attribHandles.end()){
     return (*ii).second;
   }
@@ -100,7 +100,7 @@ const GeomHandle Field::getGeom() const{
 void Field::addAttribute(const AttribHandle& hAttrib){
   string aName = hAttrib->getName();
   AttribMap::const_iterator ii=d_attribHandles.find(aName);
-  if (ii!=d_attribHandles.end()){
+  if (ii==d_attribHandles.end()){
     d_attribHandles[aName]=hAttrib;
   }
 }
