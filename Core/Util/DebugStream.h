@@ -50,6 +50,11 @@
 #ifndef SCI_project_DebugStream_h
 #define SCI_project_DebugStream_h 1
 
+// temp fix to get pg compilers to resolve symbols
+#ifdef __PGI
+#define __mbstate_t mbstate_t
+#endif
+
 #include <Core/share/share.h>
 
 #include <stdlib.h> // for getenv()
