@@ -20,6 +20,7 @@
 #include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
+#include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <fstream>
 #include <iostream>
@@ -28,6 +29,8 @@
 using namespace SCIRun;
 using namespace rtrt;
 using namespace std;
+
+static LambertianMaterial magenta(Color(1,0,1));
 
 bool
 degenerate(const Point &p0, const Point &p1, const Point &p2) 
@@ -144,11 +147,9 @@ void processGEOMOBJECT(token_list* children1, unsigned loop1,
             if (check) mat = check;            
           }
 
-          bool valid = false;
           ImageMaterial *img = dynamic_cast<ImageMaterial*>(mat);
-          if (img && img->valid()) valid=true;
           
-          if (v3 && v3->size() && v4 && v4->size() && valid){
+          if (v3 && v3->size() && v4 && v4->size() && img && img->valid()){
             index   = loop4*3;
             findex4 = (*v4)[index++]*3;
             findex5 = (*v4)[index++]*3;
@@ -218,9 +219,9 @@ void processGEOMOBJECT(token_list* children1, unsigned loop1,
                                               (*v5)[loop4*9+7],
                                               (*v5)[loop4*9+8]));
                 
-                tri = new Tri(mat,p0,p1,p2,vn0,vn1,vn2);
+                tri = new Tri(&magenta,p0,p1,p2,vn0,vn1,vn2);
               } else {
-                tri = new Tri(mat,p0,p1,p2);
+                tri = new Tri(&magenta,p0,p1,p2);
               }
               group->add(tri);
             }
