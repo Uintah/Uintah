@@ -97,6 +97,12 @@ MPMLabel::MPMLabel()
   pSizeLabel_preReloc = VarLabel::create( "p.size+",
 			ParticleVariable<Vector>::getTypeDescription());
   
+  pFiberDirLabel  = VarLabel::create( "p.fiberdir",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pFiberDirLabel_preReloc  = VarLabel::create( "p.fiberdir+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
   // Particle Variables 
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
