@@ -139,7 +139,6 @@ void TetVolCellToNode::execute()
   for (int loop=0;loop<nodes_size;++loop) {
     curvec = vector_sums[loop];
     double h = 1./(curvec.length2()/(mag_sums[loop]/ref_counts[loop]));
-    cerr << "h = " << h << endl;
     fdata[loop] = curvec * h;
   }
 
