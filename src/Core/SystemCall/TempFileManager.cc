@@ -47,6 +47,8 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h> 
+#include <Core/OS/Dir.h> // for LSTAT, MKDIR
+#include <Core/Thread/Time.h>
 #include <sys/time.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -59,9 +61,13 @@ using namespace std;
  
 TempFileManager::TempFileManager()
 {
-  struct timeval  tv;
-  gettimeofday(&tv,0);
-  rand_ = MusilRNG(static_cast<int>(tv.tv_usec));
+#ifndef _WIN32
+    struct timeval  tv;
+    ::gettimeofday(&tv,0);
+    rand_ = MusilRNG(static_cast<int>(tv.tv_usec));
+#else
+    rand_ = MusilRNG(static_cast<int>(Time::currentTicks()));
+#endif
 }
 
 
@@ -124,10 +130,9 @@ TempFileManager::create_tempdir(string pattern,string &dirname)
       newtempdir = tempdir + ranfilename;
     
       struct stat buf;
-      if( lstat(newtempdir.c_str(),&buf) < 0 )
+      if (::LSTAT(newtempdir.c_str(),&buf) < 0)
         {
-          string cmd = string("mkdir ")+ newtempdir;
-          int exitcode = sci_system(cmd.c_str());
+          int exitcode = MKDIR(newtempdir.c_str(), 0777);
           if (exitcode == 0) { done = true; break; }
         }        
       else
@@ -177,7 +182,7 @@ TempFileManager::create_tempfile(string dir,string pattern,string &filename)
       newtempfile = dir + ranfilename;
     
       struct stat buf;
-      if( lstat(newtempfile.c_str(),&buf) < 0 )
+      if (LSTAT(newtempfile.c_str(),&buf) < 0)
         {
           int fd = open(newtempfile.c_str(),O_EXCL|O_CREAT,0700);
           if (fd > -1)
@@ -241,17 +246,20 @@ bool TempFileManager::create_tempfifo(string dir,string pattern,string &fifoname
     {
       string ranfilename = create_randname(pattern);
       newfifo = dir + ranfilename;
-    
       struct stat buf;
-      if( lstat(newfifo.c_str(),&buf) < 0 )
+
+      if ( LSTAT(newfifo.c_str(),&buf) < 0 )
         {
-          if( mkfifo(newfifo.c_str(),0600) == 0 )
+#ifndef _WIN32
+          // this is not supported on win32
+          if ( mkfifo(newfifo.c_str(),0600) == 0 )
             {
               // We were successful in creating a new fifo
               // with a unique filename
               done = true;
 
-            }            
+            } 
+#endif
           // An error occured: file already existed/ could not be opened etc...
         }        
       attempts++;
@@ -273,7 +281,7 @@ bool
 TempFileManager::delete_tempdir(string dirname)
 {
   struct stat buf;
-  if( lstat(dirname.c_str(),&buf) < 0 )
+  if( LSTAT(dirname.c_str(),&buf) < 0 )
     {
       return(false);
     }
@@ -290,7 +298,7 @@ bool
 TempFileManager::delete_tempfile(string filename)
 {
   struct stat buf;
-  if( lstat(filename.c_str(),&buf) < 0 )
+  if( LSTAT(filename.c_str(),&buf) < 0 )
     {
       return(false);
     }
@@ -321,7 +329,7 @@ TempFileManager::get_scirun_tmp_dir(string subdir)
     {
       string dirname = string(TMPDIR);
     
-      if( lstat(dirname.c_str(),&buf) < 0 )
+      if ( LSTAT(dirname.c_str(),&buf) < 0 )
         {
           cout << "could not locate the directory called '" << dirname << "', using default temp directory" << endl;
         }
@@ -336,10 +344,9 @@ TempFileManager::get_scirun_tmp_dir(string subdir)
 
               string subdirname = dirname + subdir + string("/");
             
-              if( lstat(dirname.c_str(),&buf) < 0)
+              if( LSTAT(dirname.c_str(),&buf) < 0)
                 {
-                  string cmd = string("mkdir ")+ subdirname;
-                  sci_system(cmd.c_str());
+                  MKDIR(subdirname.c_str(), 0700);
                   direxists = true;
                 }
               else
@@ -367,10 +374,9 @@ TempFileManager::get_scirun_tmp_dir(string subdir)
     
   string dirname = HOME+string("/SCIRun");
     
-  if( lstat(dirname.c_str(),&buf) < 0 )
+  if ( LSTAT(dirname.c_str(),&buf) < 0 )
     {
-      string cmd = string("mkdir ")+ string(HOME) + string("/SCIRun/");
-      sci_system(cmd.c_str());
+      MKDIR(dirname.c_str(), 0700);
       direxists = true;        
     }
   else
@@ -383,10 +389,9 @@ TempFileManager::get_scirun_tmp_dir(string subdir)
   direxists = false;
   dirname = HOME+string("/SCIRun/tmp/");
     
-  if( lstat(dirname.c_str(),&buf) < 0 )
+  if( LSTAT(dirname.c_str(),&buf) < 0 )
     {
-      string cmd = string("mkdir ")+ string(HOME) + string("/SCIRun/tmp/");
-      sci_system(cmd.c_str());
+      MKDIR(dirname.c_str(), 0700);
       direxists = true;
     }
   else
@@ -402,10 +407,9 @@ TempFileManager::get_scirun_tmp_dir(string subdir)
       direxists = false;
       dirname = HOME+string("/SCIRun/tmp/") + subdir + string("/");
     
-      if( lstat(dirname.c_str(),&buf) < 0 )
+      if( LSTAT(dirname.c_str(),&buf) < 0 )
         {
-          string cmd = string("mkdir ")+ string(HOME) + string("/SCIRun/tmp/")+subdir;
-          sci_system(cmd.c_str());
+          MKDIR(dirname.c_str(), 0700);
           direxists = true;
         }
       else
@@ -428,7 +432,7 @@ TempFileManager::get_homedirID()
   struct stat buf;
   string filename = tempdir+string("homeid");
     
-  if (lstat(filename.c_str(),&buf) < 0 )
+  if (LSTAT(filename.c_str(),&buf) < 0 )
     {
       ofstream IDfile(filename.c_str(),ios::out);
       string ranid = create_randname("homeid=XXXXXX");
