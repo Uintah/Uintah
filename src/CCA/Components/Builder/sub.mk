@@ -38,7 +38,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 PROGRAM := builder
 SRCS := $(SRCDIR)/builder.cc
 PSELIBS := CCA/Components/Builder Core/CCA/Component/SSIDL \
-	Core/CCA/Component/PIDL Core/Exceptions Core/CCA/spec
+	Core/CCA/Component/PIDL Core/Exceptions Core/CCA/spec SCIRun
 LIBS := 
 
 include $(SCIRUN_SCRIPTS)/program.mk

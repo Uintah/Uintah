@@ -55,6 +55,7 @@ namespace SCIRun {
 	     const std::string& fullname);
     void coalesce();
     void populateMenu(QPopupMenu*);
+    void clear();
   private:
     std::map<std::string, MenuTree*> child;
     BuilderWindow* builder;
@@ -88,12 +89,14 @@ namespace SCIRun {
     void performance_tau_add();
     void demos();
     void about();
-
+    void addCluster();
+    void rmCluster();
+    void refresh();
   public:
     BuilderWindow(const sci::cca::Services::pointer& services);
     virtual ~BuilderWindow();
 
-    void instantiateComponent(const sci::cca::ComponentClassDescription::pointer&, const std::string &url="");
+    void instantiateComponent(const sci::cca::ComponentClassDescription::pointer&);
 
     // From sci::cca::ComponentEventListener
     void componentActivity(const sci::cca::ports::ComponentEvent::pointer& e);
@@ -101,6 +104,9 @@ namespace SCIRun {
     void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg, const std::string &frameworkURL);
 
     std::vector<Module*> updateMiniView_modules;
+    std::vector<int> packageMenuIDs;
+
+    void insertHelpMenu();
 
   private:
     QString filename;
