@@ -561,6 +561,8 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   }    
 
   tsk->modifies(d_lab->d_scalarSPLabel);
+  if (timelabels->recursion)
+    tsk->computes(d_lab->d_ScalarClippedLabel);
   
   
   sched->addTask(tsk, patches, matls);
@@ -662,6 +664,30 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
 				    &scalarVars, &constScalarVars,
 				    cellinfo);
+
+  double scalar_clipped = 0.0;
+  // Get the patch bounds and the variable bounds
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+	IntVector currCell(ii,jj,kk);
+	if (scalarVars.scalar[currCell] > 1.0) {
+	  scalarVars.scalar[currCell] = 1.0;
+	  scalar_clipped = 1.0;
+	  cout << "scalar got clipped to 1 at " << currCell << endl;
+	}  
+	else if (scalarVars.scalar[currCell] < 0.0) {
+	  scalarVars.scalar[currCell] = 0.0;
+	  scalar_clipped = 1.0;
+	  cout << "scalar got clipped to 0 at " << currCell << endl;
+	}
+      }
+    }
+  }
+  if (timelabels->recursion)
+    new_dw->put(max_vartype(scalar_clipped), d_lab->d_ScalarClippedLabel);
 
 // Outlet bc is done here not to change old scalar
     if (d_boundaryCondition->getOutletBC())

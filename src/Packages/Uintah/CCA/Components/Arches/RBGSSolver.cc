@@ -1060,21 +1060,6 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
 		  constvars->scalarNonlinearSrc, constvars->density_guess,
 		  cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
-     for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-       for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-	for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-	  IntVector currCell(ii,jj,kk);
-	  if (vars->scalar[currCell] > 1.0) {
-	    vars->scalar[currCell] = 1.0;
-	    cout << "scalar got clipped to 1 at " << currCell << endl;
-	  }  
-	  else if (vars->scalar[currCell] < 0.0) {
-	    vars->scalar[currCell] = 0.0;
-	    cout << "scalar got clipped to 0 at " << currCell << endl;
-	  }
-	}
-      }
-    }
 #ifdef ARCHES_DEBUG
     cerr << " After Scalar Explicit solve : " << endl;
     cerr << "Print Scalar: " << endl;

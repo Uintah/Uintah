@@ -88,6 +88,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (d_radiationCalc) {
     db->getWithDefault("radiationCalcFreq",d_radCalcFreq,3);
     db->getWithDefault("radCalcForAllRKSteps",d_radRKsteps,true);
+    db->getWithDefault("radCalcForAllImplicitSteps",d_radImpsteps,true);
 //    if (db->findBlock("radiationCalcFreq"))
 //      db->require("radiationCalcFreq",d_radCalcFreq);
 //    else
@@ -140,6 +141,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   d_linearSolver->problemSetup(db);
   d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
   d_dynScalarModel = d_turbModel->getDynScalarModel();
+  d_iteration_number = 0;
 }
 
 //****************************************************************************
@@ -678,7 +680,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       bool first_step = 
 	(timelabels->integrator_step_number == TimeIntegratorStepNumber::First);
       if (d_radCounter%d_radCalcFreq == 0)
-        if (first_step || (!first_step && d_radRKsteps)) {
+        if ((first_step&&(!(timelabels->recursion)))
+	    ||(!first_step && d_radRKsteps)
+	    ||((timelabels->recursion)&&((d_iteration_number == 0)||
+	       (!(d_iteration_number == 0) && d_radImpsteps))))	{
 	enthalpyVars.src.initialize(0.0);
 	enthalpyVars.qfluxe.initialize(0.0);
 	enthalpyVars.qfluxw.initialize(0.0);
