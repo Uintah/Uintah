@@ -25,8 +25,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-puts "\nLoading BioTensor (this may take a minute)...\n"
+setProgressText "Loading BioTensor Modules, Please Wait..."
 
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
@@ -34,8 +33,6 @@ puts "\nLoading BioTensor (this may take a minute)...\n"
 set DATADIR [netedit getenv SCIRUN_DATA]
 set DATASET brain-dt
 #######################################################################
-
-
 
 ############# NET ##############
 ::netedit dontschedule
@@ -178,7 +175,7 @@ set m134 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1068 128
 set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 1358]
 set m136 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 204 392]
 
-
+setProgressText "Loading BioTensor Connections, Please Wait..."
 # Create the Connections between Modules
 set c0 [addConnection $m119 0 $m40 0]
 set c1 [addConnection $m94 1 $m93 0]
@@ -363,6 +360,7 @@ set c179 [addConnection $m136 0 $m103 0]
 set c180 [addConnection $m105 0 $m136 1]
 set c181 [addConnection $m102 0 $m111 3]
 
+setProgressText "Loading BioTensor Settings, Please Wait..."
 
 set $m0-notes {}
 #set $m0-add {0}
@@ -1839,6 +1837,8 @@ set exec_fibers(ChooseField-Fibers) 0
 set exec_fibers(ShowField-Fibers) 0
 set exec_fibers(GenStandardColorMaps-Fibers) 0
 
+
+setProgressText "Loading BioTensor Application, Please Wait..."
                                                                                
 #######################################################
 # Build up a simplistic standalone application.
@@ -9129,9 +9129,12 @@ class BioTensorApp {
 
 }
 
-BioTensorApp app
+setProgressText "Building BioTensor Window..."
 
+BioTensorApp app
 app build_app
+
+hideProgress
 
 
 ### Bind shortcuts - Must be after instantiation of App
