@@ -1125,7 +1125,6 @@ class FusionViewerApp {
 	trace variable $mods(HDF5-Vector)-filename w \
 	    "$this update_hdf5_callback"
 
-
 	global $mods(MDSPlus-Points)-num-entries
 	global $mods(MDSPlus-Connections)-num-entries
 	global $mods(MDSPlus-Scalar)-num-entries
@@ -1859,8 +1858,7 @@ class FusionViewerApp {
 
 	bind $slider.isoval.s <ButtonRelease> "$this $cmd"
 
-	entry $slider.isoval.val -width 5 -relief flat \
-	    -textvariable $isomod-isoval
+	entry $slider.isoval.val -width 5 -textvariable $isomod-isoval
 
 	bind $slider.isoval.val <Return> "$this $cmd"
 
@@ -1883,13 +1881,16 @@ class FusionViewerApp {
 	    -labeltext "No. evenly-spaced $suffix values: " \
 	    -width 5 -fixed 5 \
 	    -validate "$this set-quantity %P $isomod-isoval-quantity]" \
-	    -decrement "$this spin-quantity -1 $quantity.isoquant $isomod-isoval-quantity" \
-	    -increment "$this spin-quantity  1 $quantity.isoquant $isomod-isoval-quantity" 
+	    -decrement "$this spin-quantity -1 \
+                        $quantity.isoquant $isomod-isoval-quantity; \
+                        $this $cmd" \
+	    -increment "$this spin-quantity  1 \
+                        $quantity.isoquant $isomod-isoval-quantity; \
+                        $this $cmd" 
 
 	$quantity.isoquant insert 1 [set $isomod-isoval-quantity]
 
 	pack $quantity.isoquant -side top -anchor nw -padx 3 -pady 3
-
 
 ########### Isovalue List
 	set list [$f.tnb add -label "List" \
@@ -1904,7 +1905,7 @@ class FusionViewerApp {
 
 	label $list.isolist.l -text "List of $suffix values:"
 	entry $list.isolist.e -width 40 -text $isomod-isoval-list
-	bind $list.isolist.e <Return> "$this update_isovals"
+	bind $list.isolist.e <Return> "$this $cmd"
 	pack $list.isolist.l $list.isolist.e \
 	    -side left -anchor nw -padx 3 -fill both -expand 1
 	pack $list.isolist -side top -anchor nw -padx 3 -pady 3
@@ -2361,7 +2362,6 @@ class FusionViewerApp {
 
 
     method toggle_isosurfaces { } {
-	update_isovals
 	toggle_isocontours 1
 
 	global mods connections
@@ -2374,7 +2374,6 @@ class FusionViewerApp {
 
 	if {[set $mods(ShowField-Isosurface-Surface)-faces-on] == 1} {
 	    set disable 0
-	    set cmd "$this update_isovals"
 
 	    foreach w [winfo children $isosurfaces_frame0] {
 		enable_widget $w
@@ -2404,7 +2403,6 @@ class FusionViewerApp {
 
 	} else {
 	    set disable 1
-	    set cmd "$this update_isovals"
 
 	    foreach w [winfo children $isosurfaces_frame0] {
 		disable_widget $w
@@ -2428,13 +2426,9 @@ class FusionViewerApp {
 	disableConnectionID $connections(scalar_to_choose_iso) $disable
 	disableConnectionID $connections(choose_to_iso)        $disable
 	disableConnectionID $connections(iso_to_showfield)     $disable
-	#       Disconnecting a dynamic port causes a hang
-	#	disableConnectionID $connections(showfield_isosurfaces_to_sync)  $disable
+#       Disconnecting a dynamic port causes a hang
+#	disableConnectionID $connections(showfield_isosurfaces_to_sync)  $disable
 
-	#	bind $iso_slider_tab0.isoval.s <ButtonRelease> $cmd
-	#	bind $iso_slider_tab1.isoval.s <ButtonRelease> $cmd
-	#	bind $iso_slider_tab0.isoval.val <Return> $cmd
-	#	bind $iso_slider_tab1.isoval.val <Return> $cmd
 
 	enable_widget $isosurfaces_frame0.show
 	enable_widget $isosurfaces_frame1.show
@@ -3878,6 +3872,7 @@ class FusionViewerApp {
     
     
     method execute_Data {} {
+#	update_isovals
 	update_point_modules
 	update_connection_modules
 	update_scalar_modules
