@@ -323,11 +323,12 @@ SynchronizeGeometry::forward_saved_msg()
     }
     if (some) { ogeom_->flush(); }
 
+    update_progress(1.0);
     update_state(Completed);
   }
   else
   {
-    update_progress(num_flush / (numIPorts() - 1.0));
+    update_progress(num_flush, numIPorts() - 1);
   }
 }
 
@@ -422,6 +423,7 @@ SynchronizeGeometry::flush_all_msgs()
     ogeom_->flush();
   }
 
+  update_progress(1.0);
   update_state(Completed);
 }
 
