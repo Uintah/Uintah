@@ -133,6 +133,7 @@ private:
 
 private:
       
+      int d_tableDimension;
       ReactionModel* d_rxnModel;
       MixRxnTableInfo* d_tableInfo;
       PDFShape* d_mixingPDF;
@@ -140,7 +141,6 @@ private:
       std::vector<double> d_keyValues;
       //Vector of all independent variables, excluding variance
       std::vector<double> d_varsHFPi;
-      int d_tableDimension;
       int d_count;
       Stream d_unreactedStream;
       Stream d_meanSpaceVars;
