@@ -26,48 +26,91 @@
     <authors>
       <author>Yarden Livnat</author>
     </authors>
-    <summary>Isosurface allows visualization of an isopotential
-     surface within a model. IsoSurface also allows interactive extraction of isosurfaces in the voltage field.  
-     </summary>
-     <description>
-      <p>A small sphere controls the starting point of the isosurface alogorithm, and an attached 3D arrow widget may be moved using the mouse, allowing interactive exploration of the voltage field.  Dragging on the arrow allows the the user to move the widget along the line defined by the gradient; dragging on the sphere allows unconstrained movement of the seed point.</p>
 
-<p>In the Isosurface module GUI, changing the Iso Value allows visualization of any isopotential surface. The Update options are: On Release, Manual and Auto.  On Release will not re-execute the module until the user releases the Iso Value scroll bar. If the user selects the Manual option, the module will not re-execute until they press the Extract button.  The Auto option re-executes the module every time the Iso Value scroll bar moves. If the user selects the Auto Extract from New Field option and a new Field comes in, the module completely re-executes, calculating a new Isosurface.  The Build TriSurfField check box allows the user to pass the generated Isosurface downstream. If the ColorMap does not pass in to the Isosurface module, the user can specify the Default Color. </p>
-      <p>The Isosurface can be calculated using the Marching Cubes method (MC), which examines the isopotential at the
-      corners of every cell.  For this method, the user can specify the number of Threads
-     .</p>
-      <p> The Noise method stores the minimum and maximum values of all cells into a
-      table.
-      </p>
-      <p>The Isosurface module is used to visualize surfaces or lines
-        of constant value within a scalar field.  The Iso Value slider in the GUI determines which value is used to generate the
-        isopotential surface.  The Update options are: On Release,
-        Manual and Auto.  On Release will not re-execute the
-        module until the user releases the Iso Value scroll bar. If
-        manual is selected, the module will not re-execute until the
-	Extract button is pressed.  The Auto option re-executes the modul eevery time the Iso Value scroll bar moves. If the user selects the Auto Extract from New Field option and a new Field comes in, the
-	module completely re-executes, calculating a new Isosurface.  The Build Output Field check box allows the user to pass the generated Isosurface downstream as a field. If there is no ColorMap passed in to the module, the user can specify the Default Color to
-        use instead.</p>
-      <p> The Isosurface can be calculated using the Marching Cubes
-method, which examines the isopotential at the corners of every
-element within the input field.  This operation may be parallelized, and allows the user to specify how many threads are used to do the
-computation.  This is a good choice if examining only a few isovalues.      </p>
-      <p>
-	The NOISE method computes and stores a table containing all of the input field elements and their values.  Then when the isovalue is specified the surface can be extracted more quickly by looking in the table for the appropriate values.  This gives better interactive
-performance at the cost of some setup time and space.  
-      </p>
-      <p>
-        As of September 2002, this module can manage scalar fields of the following geometry type: LatVolField, StructHexVolField, TetVolField,HexVolField, TriSurfField, QuadSurfField and ImageField.
-Isocontours are generated for the surface input fields, and
-Isosurfaces are generated for the volume input fields.
-      </p>
-      <p>
-        As of Febuary 2003, this module can handle scalar fields that
-        contain cell-centered data.  If the data is located at the
-        cells, then the surfaces are created along the appropriate
-        cell faces rather than using interpolated values from the
-        nodes.
-      </p>
+    <summary>Isosurface extracts an isopotential surface from a scalar
+    field.</summary>
+
+    <description>
+
+      <p>The Isosurface module is used to extract one or more
+      isopotential surfaces from a scalar field.  The isopotential
+      surfaces are surfaces for which the scalar value would
+      interpolate to a constant isovalue.  The isovalues can be
+      specified in one of several ways.</p>
+
+      <p>Isovalues can be passed into the field in the 'Optional
+      Isovalues' port.  A surface will be created for each value in
+      that matrix.  The Isosurface-probe.net example network
+      demonstrates using the Probe and ManageFieldData modules to
+      interactively select the isosurface with a probe using this
+      port.</p>
+
+      <p>Slider allows the user to select one isovalue using a slider
+      bar or to type in one isovalue manually.  The slider bar ranges
+      from the minimum and maximum values of the input field.  This
+      can be used with great effect to interactively move the
+      isosurface around when the Update: Auto option is specified.</p>
+
+      <p>Quantity allows for the selection of several regularly spaced
+      isosurfaces.  This is particularly useful for isocontouring as
+      it gives a contour-map effect for where the isosurfaces would be
+      located.</p>
+
+      <p>List allows the user to type in an arbitrary list of
+      isovalues to be used.  The numbers should be space separated.
+      In addition to hard numbers, percentages relative to the field
+      minimum and maximum may be specified as well.  For instance,
+      '50%' would specify the isovalue in the center of the min-max
+      range, whereas '50.0' would isosurface at a value of 50.0.</p>
+
+      <p>This module supports several other options.  The Update:
+      options are On Release, Manual and Auto.  On Release will not
+      re-execute the module until the user releases the Iso Value
+      scroll bar. If the user selects the Manual option, the module
+      will not re-execute until they press the Execute button.  The
+      Auto option re-executes the module every time the Iso Value
+      scroll bar moves. If the user selects the Auto Extract from New
+      Field option and a new Field comes in, the module completely
+      re-executes, calculating a new Isosurface.  The Build Output
+      Field determines whether or not a surface field is created.  If
+      it is turned off then only the Geometry output port will contain
+      anything.  If there is no ColorMap present then the Default
+      Color is used for the output geometry.</p>
+
+      <p>The Isosurface can be computed using either the Marching Cubes
+      or NOISE method.  Marching cubes requires each element in the
+      field to be examined for those containing the isovalues used to
+      extrac the isosurface.  NOISE builds a search structure and then
+      uses that to construct the isosurface.</p>
+
+      <p>The Marching Cubes method examines the isopotential at the
+      corners of every element within the input field to compute where
+      the isosurface should be located.  This operation may be
+      parallelized, and allows the user to specify how many threads
+      are used to do the computation.  This is a good choice if
+      examining only a few isovalues.</p>
+
+      <p>NOISE builds a search structure for the field, and then uses
+      that stucture to more quickly compute isosurfaces.  This search
+      structure takes longer to create than extracting one Marching
+      Cubes surface, however once the structure is built NOISE can
+      extract subsequent surfaces more quickly.  This is a good choice
+      if multiple isosurfaces are to be computed for each field, and
+      can offer better interactive performance than Marching Cubes.
+      Only one thread is used for this method.</p>
+
+      <p>As of September 2002, this module can manage scalar fields of
+      the following geometry type: LatVolField, StructHexVolField,
+      TetVolField,HexVolField, TriSurfField, QuadSurfField and
+      ImageField.  Isocontours are generated for the surface input
+      fields, and Isosurfaces are generated for the volume input
+      fields.</p>
+
+      <p>As of Febuary 2003, this module can handle scalar fields that
+      contain cell-centered data.  If the data is located at the
+      cells, then the surfaces are created along the appropriate cell
+      faces rather than using interpolated values from the nodes.</p>
+
     </description>
   </overview>
   <io>
