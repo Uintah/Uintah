@@ -46,7 +46,7 @@ SRCS     += \
 	$(SRCDIR)/NrrdSetProperty.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Persistent Core/Containers Core/Util \
+PSELIBS := Core/Datatypes Core/Persistent Core/Containers Core/Util \
 	Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/GeomInterface Core/Geometry \
         Core/TkExtensions Dataflow/Network Dataflow/Ports
