@@ -241,7 +241,227 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 
 
 class VectorFieldInterface {
+public:
+  VectorFieldInterface() {}
+  VectorFieldInterface(const VectorFieldInterface&) {}
+  virtual ~VectorFieldInterface() {}
+
+  virtual bool compute_min_max(Vector &minout, Vector &maxout) const = 0;
+  virtual bool interpolate(Vector &result, const Point &p) const = 0;
 };
+
+
+
+//! Should only be instantiated for fields with scalar data.
+template <class F>
+class VFInterface : public VectorFieldInterface {
+public:
+  VFInterface(const F *fld) :
+    fld_(fld)
+  {}
+  
+  virtual bool compute_min_max(Vector  &minout, Vector  &maxout) const;
+  virtual bool interpolate(Vector  &result, const Point &p) const;
+
+private:
+
+  const F        *fld_;
+};
+
+
+template <class F>
+bool
+VFInterface<F>::interpolate(Vector  &result, const Point &p) const
+{
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch(fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::NONE:
+    return false;
+  }
+  return true;
+}
+
+
+template <class F>
+bool
+VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
+{
+  bool result = false;
+  minout = 1.0e6;
+  maxout = -1.0e6;
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch (fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::iterator bi = mesh->node_begin();
+      typename F::mesh_type::Node::iterator ei = mesh->node_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val.x() < minout.x()) minout.x(val.x());
+	  if (val.y() < minout.y()) minout.y(val.y());
+	  if (val.z() < minout.z()) minout.z(val.z());
+
+	  if (val.x() > maxout.x()) maxout.x(val.x());
+	  if (val.y() > maxout.y()) maxout.y(val.y());
+	  if (val.z() > maxout.z()) maxout.z(val.z());
+	  result = true;
+	}
+      }      
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::iterator bi = mesh->edge_begin();
+      typename F::mesh_type::Edge::iterator ei = mesh->edge_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val.x() < minout.x()) minout.x(val.x());
+	  if (val.y() < minout.y()) minout.y(val.y());
+	  if (val.z() < minout.z()) minout.z(val.z());
+
+	  if (val.x() > maxout.x()) maxout.x(val.x());
+	  if (val.y() > maxout.y()) maxout.y(val.y());
+	  if (val.z() > maxout.z()) maxout.z(val.z());
+	  result = true;
+	}
+      }      
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::iterator bi = mesh->face_begin();
+      typename F::mesh_type::Face::iterator ei = mesh->face_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val.x() < minout.x()) minout.x(val.x());
+	  if (val.y() < minout.y()) minout.y(val.y());
+	  if (val.z() < minout.z()) minout.z(val.z());
+
+	  if (val.x() > maxout.x()) maxout.x(val.x());
+	  if (val.y() > maxout.y()) maxout.y(val.y());
+	  if (val.z() > maxout.z()) maxout.z(val.z());
+	  result = true;
+	}
+      }      
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::iterator bi = mesh->cell_begin();
+      typename F::mesh_type::Cell::iterator ei = mesh->cell_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val.x() < minout.x()) minout.x(val.x());
+	  if (val.y() < minout.y()) minout.y(val.y());
+	  if (val.z() < minout.z()) minout.z(val.z());
+
+	  if (val.x() > maxout.x()) maxout.x(val.x());
+	  if (val.y() > maxout.y()) maxout.y(val.y());
+	  if (val.z() > maxout.z()) maxout.z(val.z());
+	  result = true;
+	}
+      }      
+    }
+    break;
+    
+  case F::NONE:
+    break;
+  }
+  return result;
+}
+
+
+
+
 
 
 class TensorFieldInterface {
