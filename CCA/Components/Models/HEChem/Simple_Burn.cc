@@ -389,3 +389,10 @@ void Simple_Burn::scheduleModifyThermoTransportProperties(SchedulerP&,
 {
   // do nothing      
 }
+void Simple_Burn::computeSpecificHeat(CCVariable<double>&,
+                                      const Patch*,   
+                                      DataWarehouse*, 
+                                      const int)      
+{
+  //do nothing
+}
