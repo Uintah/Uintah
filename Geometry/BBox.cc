@@ -52,8 +52,10 @@ void BBox::extend(const Point& p, double radius)
 
 void BBox::extend(const BBox& b)
 {
-    extend(b.min());
-    extend(b.max());
+    if(b.valid()){
+	extend(b.min());
+	extend(b.max());
+    }
 }
 
 void BBox::extend_cyl(const Point& cen, const Vector& normal, double r)
