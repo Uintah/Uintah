@@ -54,6 +54,7 @@ namespace SSIDL {
 	array1(const array1<T>& copy) : std::vector<T>(copy) {}
 	array1(const std::vector<T>& copy) : std::vector<T>(copy) {}
 	array1(unsigned long s) : std::vector<T>(s) {}
+	const T* buffer() const{return &(*this)[0];}
     };
     template<class T> class array2 {
     public:
@@ -101,10 +102,10 @@ namespace SSIDL {
 	}
 
 	pointer operator[](int row) {
-	    return rows[row];
+	  return rows[row];
 	}
 	const_pointer operator[](int row) const {
-	    return rows[row];
+	  return rows[row];
 	}
 
 	iterator begin() { return data.begin(); }
@@ -112,6 +113,7 @@ namespace SSIDL {
 
 	iterator end() { return data.end(); }
 	const_iterator end() const { return data.end(); }
+	T* buffer(){return &data[0];}
     private:
 	size_type s1;
 	size_type s2;
