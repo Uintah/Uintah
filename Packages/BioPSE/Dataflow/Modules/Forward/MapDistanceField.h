@@ -76,6 +76,11 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
   mdst->begin(itr);
   mdst->end(end_itr);
 
+  
+  typename LSRC::size_type msrcsize;
+  msrc->size(msrcsize);
+  vector<int> edgecounts((unsigned int)msrcsize, 0);
+
   while (itr != end_itr)
   {
     Point location;
@@ -86,7 +91,7 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
     typename LSRC::iterator citr, citr_end;
     msrc->begin(citr);
     msrc->end(citr_end);
-    typename LSRC::index_type edge= *citr;
+    typename LSRC::index_type edge = *citr;
     while (citr != citr_end)
     {
       typename FSRC::value_type val;
@@ -112,6 +117,8 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
     vector<pair<typename LSRC::index_type, double> > svec;
     svec.push_back(pair<typename LSRC::index_type, double>(edge, 1.0));
     foutdst->set_value(svec, *itr);
+
+    edgecounts[(unsigned int)edge]++;
 
     // push face onto edge in foutsrc
     vector<pair<typename LDST::index_type, double> > dvec;
@@ -143,6 +150,19 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
     foutsrc->set_value(dvec, *citr);
 
     ++citr;
+  }
+
+  // Normalize the values at the edges
+  mdst->begin(itr);
+  mdst->end(end_itr);
+  while (itr != end_itr)
+  {
+    vector<pair<typename LSRC::index_type, double> > svec;
+    foutdst->value(svec, *itr);
+    svec[0].second = 1.0 / edgecounts[(unsigned int)(svec[0].first)];
+    foutdst->set_value(svec, *itr);
+
+    ++itr;
   }
 
   return pair<FieldHandle, FieldHandle>(foutsrc, foutdst);
