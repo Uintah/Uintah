@@ -63,7 +63,8 @@ TriSurfMesh::~TriSurfMesh()
 }
 
 
-void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const
+void
+TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const
 {
   static MusilRNG rng(1249);
   Node::array_type ra;
@@ -83,6 +84,7 @@ void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const
   p = p0+(v0*t)+(v1*u);
 }
 
+
 BBox
 TriSurfMesh::get_bounding_box() const
 {
@@ -97,12 +99,26 @@ TriSurfMesh::get_bounding_box() const
 }
 
 
+void
+TriSurfMesh::transform(Transform &t)
+{
+  vector<Point>::iterator itr = points_.begin();
+  vector<Point>::iterator eitr = points_.end();
+  while (itr != eitr)
+  {
+    *itr = t.project(*itr);
+    ++itr;
+  }
+}
+
+
 template <>
 TriSurfMesh::Node::iterator
 TriSurfMesh::tbegin(TriSurfMesh::Node::iterator *) const
 {
   return 0;
 }
+
 
 template <>
 TriSurfMesh::Node::iterator

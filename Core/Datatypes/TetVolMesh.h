@@ -89,6 +89,7 @@ public:
   virtual ~TetVolMesh();
 
   virtual BBox get_bounding_box() const;
+  virtual void transform(Transform &t);
 
   template <class I> I tbegin(I*) const;
   template <class I> I tend(I*) const;
@@ -124,10 +125,10 @@ public:
   void get_center(Point &result, Cell::index_type idx) const;
 
   //! return false if point is out of range.
-  bool locate(Node::index_type &loc, const Point &p) const;
-  bool locate(Edge::index_type &loc, const Point &p) const;
-  bool locate(Face::index_type &loc, const Point &p) const;
-  bool locate(Cell::index_type &loc, const Point &p) const;
+  bool locate(Node::index_type &loc, const Point &p);
+  bool locate(Edge::index_type &loc, const Point &p);
+  bool locate(Face::index_type &loc, const Point &p);
+  bool locate(Cell::index_type &loc, const Point &p);
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w) {}
   void get_weights(const Point &p, Edge::array_type &l, vector<double> &w) {}

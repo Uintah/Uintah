@@ -65,6 +65,14 @@ ScanlineMesh::get_bounding_box() const
   return result;
 }
 
+
+void
+ScanlineMesh::transform(Transform &t)
+{
+  transform_.pre_trans(t);
+}
+
+
 void
 ScanlineMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {

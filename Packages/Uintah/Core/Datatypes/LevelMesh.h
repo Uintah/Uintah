@@ -330,6 +330,7 @@ public:
   Point get_max() const { return max_; }
   Vector diagonal() const { return max_ - min_; }
   virtual BBox get_bounding_box() const;
+  virtual void transform(Transform &t);
 
   //! set the mesh statistics
   void set_nx(int x) { nx_ = x; }

@@ -325,6 +325,7 @@ public:
   Point get_max() const { return max_; }
   Vector diagonal() const { return max_-min_; }
   virtual BBox get_bounding_box() const;
+  virtual void transform(Transform &t);
   double get_volume(const Cell::index_type &) { return cell_volume_; }
   double get_area(const Face::index_type &) { return 0; }
   double get_element_size(const Elem::index_type &) { return cell_volume_; }

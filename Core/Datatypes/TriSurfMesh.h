@@ -88,6 +88,7 @@ public:
   virtual ~TriSurfMesh();
 
   virtual BBox get_bounding_box() const;
+  virtual void transform(Transform &t);
 
   template <class I> I tbegin(I*) const;
   template <class I> I tend(I*) const;

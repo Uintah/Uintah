@@ -70,6 +70,15 @@ ImageMesh::get_bounding_box() const
   return result;
 }
 
+
+void
+ImageMesh::transform(Transform &t)
+{
+  transform_.pre_trans(t);
+}
+
+
+
 void
 ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {

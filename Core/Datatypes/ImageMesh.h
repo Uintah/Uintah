@@ -32,7 +32,6 @@
 #define SCI_project_ImageMesh_h 1
 
 #include <Core/Geometry/Point.h>
-#include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/share/share.h>
@@ -307,6 +306,7 @@ public:
   unsigned get_ny() const { return ny_; }
   Vector diagonal() const { return get_bounding_box().diagonal(); }
   virtual BBox get_bounding_box() const;
+  virtual void transform(Transform &t);
 
   //! set the mesh statistics
   void set_min_x(unsigned x) {min_x_ = x; }

@@ -56,6 +56,20 @@ ContourMesh::get_bounding_box() const
   return result;
 }
 
+
+void
+ContourMesh::transform(Transform &t)
+{
+  vector<Point>::iterator itr = nodes_.begin();
+  vector<Point>::iterator eitr = nodes_.end();
+  while (itr != eitr)
+  {
+    *itr = t.project(*itr);
+    ++itr;
+  }
+}
+
+
 bool
 ContourMesh::locate(Node::index_type &idx, const Point &p) const
 {

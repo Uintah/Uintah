@@ -74,6 +74,15 @@ LatVolMesh::get_bounding_box() const
   return result;
 }
 
+
+// TODO: Fix this
+void
+LatVolMesh::transform(Transform &t)
+{
+  ASSERTFAIL("Fix this when latvolmesh is transformable");
+}
+
+
 void
 LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
