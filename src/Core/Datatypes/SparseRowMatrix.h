@@ -76,6 +76,7 @@ public:
   int get_nnz() { return nnz; }
   
   //! 
+  virtual string type_name() { return "SparseRowMatrix"; }
   virtual int nrows() const;
   virtual int ncols() const;
   

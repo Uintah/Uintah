@@ -68,6 +68,8 @@ public:
   friend SCICORESHARE Matrix *Add(Matrix *, Matrix *);
   friend SCICORESHARE Matrix *Mult(Matrix *, Matrix *);
 
+  virtual string type_name() { return "Matrix"; }
+
   virtual void zero()=0;
   virtual int nrows() const=0;
   virtual int ncols() const=0;
