@@ -61,13 +61,22 @@ itcl_class SCIRun_Render_Viewer {
     method addViewer { { old_vw "" } } {
 	set i 0
 	set rid [makeViewWindowID]
+
 	$this-c addviewwindow $rid
-	ViewWindow $rid -viewer $this 
+	ViewWindow $rid -viewer $this
 	lappend openViewersList $rid
-	if { [string length $old_vw] } { ;# set view to same view as old_vw
-	    set $rid-pos ViewWindow[$old_vw number]
-	    $rid-c Views
+
+	if { [string length $old_vw] } {
+	    set oldvars [uplevel \#0 info vars $old_vw-view-*]
+	    foreach oldvar $oldvars {
+		set pieces [split $oldvar -]
+		set newvar [join [lreplace $pieces 0 1 $rid] -]
+		upvar \#0 $newvar newView $oldvar oldView
+		set newView $oldView
+	    }
 	}
+	$rid-c redraw
+
 	return $rid
     }
 
