@@ -197,6 +197,10 @@ WARNING
 	 double evaluateFlowStress(double& ep, 
 				   double& epdot,
 				   double& T);
+
+         double calcStrainAtFracture(double& sig, 
+                                     double& epdot,
+                                     double& T);
       };
 
 } // End namespace Uintah

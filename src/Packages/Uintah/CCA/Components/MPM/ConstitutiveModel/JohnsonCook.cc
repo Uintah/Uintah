@@ -407,9 +407,10 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 
         // Compute the deformation gradient increment 
         // get the volumetric part of the deformation
-        Matrix3 deformationGradientInc = tensorF_new - tensorF;
-        double Jinc = deformationGradientInc.Determinant();
-        pVolume_deformed[idx]=Jinc*pVolume[idx];
+        //tensorF = pDeformGrad[idx];
+        //Matrix3 deformationGradientInc = tensorF_new*(tensorF.Inverse());
+        //double Jinc = deformationGradientInc.Determinant();
+        //pVolume_deformed[idx]=Jinc*pVolume[idx];
 
       } else {
 
@@ -495,10 +496,14 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         pStress_new[idx] = tensorSig;
         pPlasticStrain_new[idx] = plasticStrain;
 
-        // No volume change due to plastic deformation
-        pVolume_deformed[idx]=pVolume[idx];
-
+        // No volume change ???
+        //pVolume_deformed[idx]=pVolume[idx];
       }
+
+      tensorF = pDeformGrad[idx];
+      Matrix3 deformationGradientInc = tensorF_new*(tensorF.Inverse());
+      double Jinc = deformationGradientInc.Determinant();
+      pVolume_deformed[idx]=Jinc*pVolume[idx];
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
@@ -714,6 +719,22 @@ JohnsonCook::evaluateFlowStress(double& ep,
   double tempPart = 1 - pow((T-d_initialData.TRoom)/
                    (d_initialData.TMelt-d_initialData.TRoom),d_initialData.m);
   return (strainPart*strainRatePart*tempPart);
+}
+
+double 
+JohnsonCook::calcStrainAtFracture(double& sig, 
+                                  double& epdot,
+                                  double& T)
+{
+  double stressPart = d_initialData.D1 + d_initialData.D2*exp(d_initialData.D3*sig);
+  double strainRatePart = 1.0;
+  if (epdot < 1.0) 
+    strainRatePart = pow((1.0 + epdot),d_initialData.D4);
+  else
+    strainRatePart = 1 + d_initialData.D4*log(epdot);
+  double tempPart = 1 + d_initialData.D5*(T-d_initialData.TRoom)/
+                   (d_initialData.TMelt-d_initialData.TRoom);
+  return (stressPart*strainRatePart*tempPart);
 }
 
 double JohnsonCook::computeRhoMicroCM(double pressure,
