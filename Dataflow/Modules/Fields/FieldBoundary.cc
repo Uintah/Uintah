@@ -115,14 +115,16 @@ FieldBoundary::execute()
 
 
 bool
-FieldBoundaryAlgoAux::determine_tri_order(const Point p[3],
+FieldBoundaryAlgoAux::determine_tri_order(const Point &p0,
+					  const Point &p1,
+					  const Point &p2,
 					  const Point &inside)
 {
-  const Vector v1 = p[1] - p[0];
-  const Vector v2 = p[2] - p[1];
+  const Vector v1 = p1 - p0;
+  const Vector v2 = p2 - p1;
   const Vector norm = Cross(v1, v2);
 
-  const Vector tmp = inside - p[0];
+  const Vector tmp = inside - p0;
   const double val = Dot(norm, tmp);
   if (val > 0.0L) {
     // normal points inside, reverse the order.
