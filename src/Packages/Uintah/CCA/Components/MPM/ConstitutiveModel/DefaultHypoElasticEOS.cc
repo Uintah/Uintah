@@ -23,11 +23,18 @@ DefaultHypoElasticEOS::computePressure(const MPMMaterial* ,
 				       const Matrix3& rateOfDeformation,
 				       const double& delT)
 {
-
   // Get the state data
   double K = state->bulkModulus;
+  double G = state->shearModulus;
+  double p_n = state->pressure;
+
+  // Calculate lambda
+  double lambda = K - (2.0/3.0)*G;
+
+  // Calculate pressure increment
+  double delp = rateOfDeformation.Trace()*(lambda*delT);
 
   // Calculate pressure
-  double p = rateOfDeformation.Trace()*(K*delT);
+  double p = p_n + delp;
   return p;
 }
