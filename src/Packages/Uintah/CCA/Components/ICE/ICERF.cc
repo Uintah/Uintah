@@ -301,11 +301,11 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
 //WARNING: We're currently using the 
 // isentropic compressibility instead of 
 // its cousin the isothermal compressiblity.  
-          double kappa_R = ( speedSound[m][R] * speedSound[m][R] )/
-                           ( sp_vol_CC[m][R]);
-          double kappa_L = ( speedSound[m][L] * speedSound[m][L] )/
-                           ( sp_vol_CC[m][L]);
-
+          double kappa_R = sp_vol_CC[m][R]/
+                          ( speedSound[m][R] * speedSound[m][R] );
+          double kappa_L = sp_vol_CC[m][L]/
+                          ( speedSound[m][L] * speedSound[m][L] );
+                          
           double rho_brack = (rho_CC[m][R]*rho_CC[m][L])/
                              (rho_CC[m][R]+rho_CC[m][L]);           
           
