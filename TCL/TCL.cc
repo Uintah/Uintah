@@ -216,28 +216,32 @@ void TCL::unregister_var(TCLvar* v)
     }
 }
 
-clString TCL::get_tcl_stringvar(const clString& base, const clString& name)
+int TCL::get_tcl_stringvar(const clString& base, const clString& name,
+			   clString& value)
 {
     clString n(base+"-"+name);
     TCLTask::lock();
     char* l=Tcl_GetVar(the_interp, n(), TCL_GLOBAL_ONLY);
     if(!l){
-	l="";
+	TCLTask::unlock();
+	return 0;
     }
-    clString value(l);
+    value=l;
     TCLTask::unlock();
-    return value;
+    return 1;
 }
 
-int TCL::get_tcl_boolvar(const clString& base, const clString& name)
+int TCL::get_tcl_boolvar(const clString& base, const clString& name,
+			 int& value)
 {
     clString n(base+"-"+name);
     TCLTask::lock();
     char* l=Tcl_GetVar(the_interp, n(), TCL_GLOBAL_ONLY);
     if(!l){
-	l="";
+	TCLTask::unlock();
+	return 0;
     }
-    int value=0;
+    value=0;
     if(!strcmp(l, "yes")){
 	value=1;
     } else if(!strcmp(l, "true")){
@@ -246,7 +250,52 @@ int TCL::get_tcl_boolvar(const clString& base, const clString& name)
 	value=1;
     }
     TCLTask::unlock();
-    return value;
+    return 1;
+}
+
+int TCL::get_tcl_doublevar(const clString& base, const clString& name,
+			   double& value)
+{
+    clString n(base+"-"+name);
+    TCLTask::lock();
+    char* l=Tcl_GetVar(the_interp, n(), TCL_GLOBAL_ONLY);
+    if(!l){
+	TCLTask::unlock();
+	return 0;
+    }
+    char* end;
+    value=strtod(l, &end);
+    if(*end != 0){
+	// Error reading the double....
+	TCLTask::unlock();
+	return 0;
+    } else {
+	TCLTask::unlock();
+	return 1;
+    }
+}
+
+int TCL::get_tcl_intvar(const clString& base, const clString& name,
+			 int& value)
+{
+    clString n(base+"-"+name);
+    TCLTask::lock();
+    char* l=Tcl_GetVar(the_interp, n(), TCL_GLOBAL_ONLY);
+    if(!l){
+	cerr << "TCL error: " << the_interp->result << endl;
+	TCLTask::unlock();
+	return 0;
+    }
+    char* end;
+    value=(int)strtol(l, &end, 10);
+    if(*end != 0){
+	// Error reading the double....
+	TCLTask::unlock();
+	return 0;
+    } else {
+	TCLTask::unlock();
+	return 1;
+    }
 }
 
 void TCL::set_tclvar(const clString& base, const clString& name,

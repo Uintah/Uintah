@@ -61,8 +61,14 @@ public:
     void reset_vars();
 
     // To get at tcl variables
-    clString get_tcl_stringvar(const clString& base, const clString& name);
-    int get_tcl_boolvar(const clString& base, const clString& name);
+    int get_tcl_stringvar(const clString& base, const clString& name,
+			  clString& value);
+    int get_tcl_boolvar(const clString& base, const clString& name,
+			int& value);
+    int get_tcl_doublevar(const clString& base, const clString& name,
+			  double& value);
+    int get_tcl_intvar(const clString& base, const clString& name,
+		       int& value);
 
     void set_tclvar(const clString& base, const clString& name,
 		    const clString& value);
