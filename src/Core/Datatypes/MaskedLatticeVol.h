@@ -86,25 +86,25 @@ public:
   void resize_fdata() {
     if (data_at() == NODE)
     {
-      LatticeVol<T>::mesh_type::Node::size_type ssize;
+      typename LatticeVol<T>::mesh_type::Node::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == EDGE)
     {
-      LatticeVol<T>::mesh_type::Edge::size_type ssize;
+      typename LatticeVol<T>::mesh_type::Edge::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == FACE)
     {
-      LatticeVol<T>::mesh_type::Face::size_type ssize;
+      typename LatticeVol<T>::mesh_type::Face::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == CELL)
     {
-      LatticeVol<T>::mesh_type::Cell::size_type ssize;
+      typename LatticeVol<T>::mesh_type::Cell::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
