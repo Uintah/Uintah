@@ -31,6 +31,7 @@ LOG
 ----------------------------------------------------------------------*/
     
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Core/Util/NotFinished.h> 
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
@@ -53,6 +54,7 @@ public:
 protected:
 private:
   ArchiveOPort *out;
+  ArchiveHandle archiveH;
   DataArchive *reader;
   
 }; //class ParticleGrid
