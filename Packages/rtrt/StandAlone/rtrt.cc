@@ -993,8 +993,12 @@ main(int argc, char* argv[])
   //  group->join();
   //  cout << "Threads exited" << endl;
 
-  printf("start main loop\n");
-  glutMainLoop();
+  if (!bench && display_frames) {
+    printf("start main loop\n");
+    glutMainLoop();
+  } else {
+    dpy->release(0);
+  }
  
 }
 
