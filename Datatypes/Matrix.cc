@@ -46,3 +46,8 @@ double& MatrixRow::operator[](int col)
 {
     return matrix->get(row, col);
 }
+
+MatrixRow Matrix::operator[](int row)
+{
+    return MatrixRow(this, row);
+}

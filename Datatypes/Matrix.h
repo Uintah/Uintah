@@ -35,6 +35,7 @@ public:
     virtual ~Matrix();
     virtual Matrix* Matrix::clone();
     virtual double& get(int, int)=0;
+    MatrixRow operator[](int r);
 
     // Persistent representation...
     virtual void io(Piostream&);
