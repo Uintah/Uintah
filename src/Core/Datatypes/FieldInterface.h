@@ -21,12 +21,19 @@
 
 namespace SCIRun {
 
-class InterpolateToScalar {
+//! base class for interpolation objects
+class InterpBase {
+};  
+
+//! generic interpolation class
+template <class Data>
+class GenericInterpolate : public InterpBase {
 public:
-  virtual bool interpolate(const Point& p, double& value) const = 0;
-  
-  // TODO: Memory management of queried interfaces
+  virtual bool interpolate(const Point& p, Data &value) const = 0;
 };
+
+//! type needed to support query_interpolate_to_scalar() interface
+typedef GenericInterpolate<double> InterpolateToScalar;
 
 } // end namespace SCIRun
 

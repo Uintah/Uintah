@@ -34,6 +34,7 @@ public:
   typedef Mesh                            mesh_type;
   typedef LockingHandle<mesh_type>        mesh_handle_type;
   typedef FData                           fdata_type;
+  typedef GenericInterpolate<value_type>  interp_type;
 
   GenericField() : 
     Field(),
@@ -56,6 +57,7 @@ public:
   { return MeshBaseHandle(mesh_.get_rep()); }
 
   //! Required interfaces from field base.
+  virtual interp_type* query_interpolate() const;
   virtual InterpolateToScalar* query_interpolate_to_scalar() const;
   bool get_minmax( double &, double &);
   bool compute_minmax();
@@ -92,11 +94,13 @@ public:
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
 private:
-  //! generic interpolate object.
-  struct GInterp : public InterpolateToScalar {
+
+  //! generic interpolate object, using linear interpolation.
+  template <class Data>
+  struct GInterp : public GenericInterpolate<Data> {
     GInterp(const GenericField<Mesh, FData> *f) :
       f_(f) {}
-    bool interpolate(const Point& p, double& value) const;
+    bool interpolate(const Point& p, Data &value) const;
     const GenericField<Mesh, FData> *f_;
   };
 
@@ -111,12 +115,12 @@ private:
   double min_, max_;
 }; 
 
-// Virtual interface.
-// internal interp object 
-template <class Mesh, class FData>
+//! Virtual interface.
+//! internal interp object
+template <class Mesh, class FData> template <class Data>
 bool 
-GenericField<Mesh, FData>::GInterp::interpolate(const Point& p, 
-						double& value) const
+GenericField<Mesh, FData>::GInterp<Data>::interpolate(const Point& p, 
+						      Data& value) const
 {
   bool rval = false;
   switch (f_->data_at()) {
@@ -142,10 +146,17 @@ GenericField<Mesh, FData>::GInterp::interpolate(const Point& p,
 }
 
 template <class Mesh, class FData>
+GenericField<Mesh, FData>::interp_type* 
+GenericField<Mesh, FData>::query_interpolate() const
+{
+  return new GInterp<value_type>(this); 
+}
+
+template <class Mesh, class FData>
 InterpolateToScalar* 
 GenericField<Mesh, FData>::query_interpolate_to_scalar() const
 {
-  return new GInterp(this);
+  return new GInterp<double>(this);
 }
    
 template <class Mesh, class FData>
