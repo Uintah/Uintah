@@ -42,14 +42,14 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
   if [ $? != "0" ]; then
     echo "No restart_malloc_stats -- ok"
   fi
-  echo "/bin/chgrp -Rh csafe $replacement_dir/$testname"
-  /bin/chgrp -Rh csafe "$gold_standard_dir/$testname"
+  echo "chgrp -Rh csafe $gold_standard_dir/$testname"
+  /usr/local/gnu/bin/chgrp -Rh csafe "$gold_standard_dir/$testname"
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
   fi
-  echo "/bin/chmod -R g+ws $replacement_dir/$testname"
-  /bin/chmod -R g+ws "$gold_standard_dir/$testname"
+  echo "chmod -R g+ws $gold_standard_dir/$testname"
+  /usr/local/gnu/bin/chmod -R g+ws "$gold_standard_dir/$testname"
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
