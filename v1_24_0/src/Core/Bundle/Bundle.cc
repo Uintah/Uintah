@@ -501,8 +501,11 @@ Bundle::getMatrixName(int index)
   for (int p=0;p < numnrrd; p++)
     {
       string name = getName<NrrdData>(p);
-      if (isMatrix(name)) nummat++;
-      if (index == nummat-1) return name;
+      if (isMatrix(name))
+      {
+        if (index == nummat) return name;
+        nummat++;
+      }
     }
   return "";
 }
@@ -526,5 +529,79 @@ Bundle::getHandleType(int index)
 
   return "unknown";
 }
+
+
+LockingHandle<NrrdData>
+Bundle::getNrrd(string name) 
+{ 
+  NrrdDataHandle nrrd;
+  nrrd = get<NrrdData>(name);
+  if (nrrd.get_rep() == 0)
+    {
+      MatrixHandle matrix;
+      matrix = get<Matrix>(name);
+      if (matrix.get_rep())
+        {
+          if (MatrixToNrrdConvertible(matrix))
+            MatrixToNrrd(matrix,nrrd);
+        }
+    }
+  return(nrrd);
+}
+
+bool
+Bundle::isNrrd(string name)  
+{ 
+  bool isnrrd;
+  isnrrd = is<NrrdData>(name);
+  if (!isnrrd)
+    {
+      if (is<Matrix>(name))
+        {
+          MatrixHandle matrixH = get<Matrix>(name);
+          if (MatrixToNrrdConvertible(matrixH)) isnrrd = true;
+        }
+    } 
+  return(isnrrd);
+}
+
+int
+Bundle::numNrrds() 
+{ 
+  int numnrrd;
+  numnrrd = num<NrrdData>();
+    
+  int nummat; 
+  nummat = num<Matrix>();
+  string name;
+  for (int p=0;p < nummat; p++)
+    {
+      name = getName<Matrix>(p);
+      if (isNrrd(name)) numnrrd++;
+    }
+  return numnrrd;
+}
+
+string
+Bundle::getNrrdName(int index) 
+{
+  int numnrrd = num<NrrdData>();
+  if (index < numnrrd) return getName<NrrdData>(index);
+
+  int nummat; 
+  nummat = num<Matrix>();
+  for (int p=0;p < nummat; p++)
+    {
+      string name = getName<Matrix>(p);
+      if (isNrrd(name))
+      {
+        if (index == numnrrd) return name;
+        numnrrd++;
+      }
+    }
+  return "";
+}
+
+
 
 
