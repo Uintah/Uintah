@@ -1,14 +1,7 @@
 
-#include <Packages/rtrt/Core/CutGroup.h>
-#include <Packages/rtrt/Core/CutPlaneDpy.h>
-#include <Packages/rtrt/Core/CutMaterial.h>
-#include <Packages/rtrt/Core/ColorMap.h>
-#include <Packages/rtrt/Core/CutVolumeDpy.h>
-
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Group.h>
-#include <Packages/rtrt/Core/Checker.h>
 #include <Packages/rtrt/Core/HVolumeBrick16.h>
 #include <Packages/rtrt/Core/HVolumeBrickColor.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -145,47 +138,32 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	matl0=new HVolumeBrickColor(texfile, nworkers,
 				    .1, .5, .6, 50, 0);
     }
-
-
-
-
-    CutPlaneDpy* pdpy=new CutPlaneDpy(Vector(0,1,0), Point(0,0,0));
-    scene->attach_display(pdpy);
-
-    ColorMap *cmap = new ColorMap("map");
-    Material * matlin=new CutMaterial(matl0, cmap, pdpy);
-
-    CutVolumeDpy* dpy=new CutVolumeDpy(use_iso?isoval:bone?1224.5:600.5, cmap);
+    VolumeDpy* dpy=new VolumeDpy(use_iso?isoval:bone?1224.5:600.5);
     scene->attach_display(dpy);
-
-    HVolumeBrick16* obj0=new HVolumeBrick16(matlin, dpy,
+    HVolumeBrick16* obj0=new HVolumeBrick16(matl0, dpy,
 					    "vfem/vfem16_0",
 					    depth, nworkers);
-    HVolumeBrick16* obj1=new HVolumeBrick16(matlin, dpy,
+    HVolumeBrick16* obj1=new HVolumeBrick16(matl0, dpy,
 					    "vfem/vfem16_1",
 					    depth, nworkers);
-    HVolumeBrick16* obj2=new HVolumeBrick16(matlin, dpy,
+    HVolumeBrick16* obj2=new HVolumeBrick16(matl0, dpy,
 					    "vfem/vfem16_2",
 					    depth, nworkers);
-    HVolumeBrick16* obj3=new HVolumeBrick16(matlin, dpy,
+    HVolumeBrick16* obj3=new HVolumeBrick16(matl0, dpy,
 					    "vfem/vfem16_3",
 					    depth, nworkers);
-    HVolumeBrick16* obj4=new HVolumeBrick16(matlin, dpy,
+    HVolumeBrick16* obj4=new HVolumeBrick16(matl0, dpy,
 					    "vfem/vfem16_4",
 					    depth, nworkers);
-    HVolumeBrick16* obj5=new HVolumeBrick16(matlin, dpy,
+    HVolumeBrick16* obj5=new HVolumeBrick16(matl0, dpy,
 					    "vfem/vfem16_5",
 					    depth, nworkers);
-    HVolumeBrick16* obj6=new HVolumeBrick16(matlin, dpy,
+    HVolumeBrick16* obj6=new HVolumeBrick16(matl0, dpy,
 					    "vfem/vfem16_6",
 					    depth, nworkers);
-
     (new Thread(dpy, "Volume GUI thread"))->detach();
 
-
-    (new Thread(pdpy, "Cuttplane GUI thread"))->detach();
-
-    CutGroup* group=new CutGroup(pdpy);
+    Group* group=new Group();
     group->add(obj0);
     group->add(obj1);
     group->add(obj2);
@@ -193,7 +171,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     group->add(obj4);
     group->add(obj5);
     group->add(obj6);
-
     if(transp){
 	Material* matl1;
 	if(!tex){
@@ -232,31 +209,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 			    Vector(1732/2.,0,0), Vector(0,0,250)));
     }
 
+    BV1* obj=new BV1(group);
 
-    Group* sgroup=new Group();
-
-    sgroup->add(group);
-
-
-
-
-    Material* matl1=new Checker(new Phong(Color(.05,.05,.05), Color(.2,.2,.5), Color(.1,.1,.1), 0, .1),
-				new Phong(Color(.05,.0,0), Color(.2,.2,.2), Color(.1,.1,.1), 0, .1),
-				Vector(1,0,0), Vector(0,1,0));
-
-    Object* floor=new Rect(matl1, Point(-1000,-1000,-1000), Vector(0,500,0), Vector(0,0,500));    
-    sgroup->add(floor);
-
-
-
-
-
-    //BV1* obj=new BV1(sgroup);
-    
-    scene->set_object(sgroup);
-
-
-
-
+    scene->set_object(obj);
     return scene;
 }
