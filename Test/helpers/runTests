@@ -159,7 +159,7 @@ EOF
 	echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
 	echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
     fi
-    /usr/lib/sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+    sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
     rm -f "$BUILDROOT"/mail.msg
 fi
 
@@ -181,7 +181,7 @@ $remake_file:
 EOF
     cat $remake_file >> "$BUILDROOT"/mail.msg
 
-    /usr/lib/sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/mail.msg
+    sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/mail.msg
     rm -f "$BUILDROOT"/mail.msg
 fi
 
