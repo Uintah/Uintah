@@ -19,6 +19,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
@@ -193,9 +194,6 @@ int main(int argc, char** argv)
     /*
      * Check for valid argument combinations
      */
-    if(do_mpm && do_arches){
-	usage( "MPM doesn't yet work with ICE/Arches", "", argv[0]);
-    }
     if(do_ice && do_arches){
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
@@ -239,6 +237,10 @@ int main(int argc, char** argv)
 	MPMCFDInterface* mpmcfd = 0;
 	if(do_mpm && do_ice){
 	    mpmcfd = scinew MPMICE(world);
+	    sim->attachPort("mpmcfd", mpmcfd);
+	}
+	if(do_mpm && do_arches){
+	    mpmcfd = scinew MPMArches(world);
 	    sim->attachPort("mpmcfd", mpmcfd);
 	}
 
