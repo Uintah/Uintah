@@ -259,13 +259,14 @@ void OpenGL::redraw_loop()
 	    
       tmpview.up(y_a.vector());
 
-      // DMW: this was Alexei's new inertia-mode code:
-      // if (roe->inertia_mode == 1)
-      tmpview.eyep((z_a*(viewwindow->eye_dist)) + tmpview.lookat().vector());
-      // else if (roe->inertia_mode == 2)
-      //   tmpview.lookat(tmpview.eyep()-(z_a*(roe->eye_dist)).vector());
+      if (viewwindow->inertia_mode == 1) {
+	tmpview.eyep((z_a*(viewwindow->eye_dist)) + tmpview.lookat().vector());
+	viewwindow->view.set(tmpview);      
+      } else if (viewwindow->inertia_mode == 2) {
+	tmpview.lookat(tmpview.eyep()-(z_a*(viewwindow->eye_dist)).vector());
+	viewwindow->view.set(tmpview);      
+      }
 
-      viewwindow->view.set(tmpview);	    
     } else {
       for (;;) {
 	int r=send_mb.receive();

@@ -328,13 +328,20 @@ void ViewWindow::scale(Vector /*v*/, Point /*c*/)
 
 void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
 {
+
   switch(action){
   case MouseStart:
-    last_x=x;
-    last_y=y;
-    total_x = 0;
-    total_y = 0;
-    update_mode_string("translate: ");
+    {
+      if (inertia_mode) {
+	inertia_mode=0;
+	redraw();
+      }
+      last_x=x;
+      last_y=y;
+      total_x = 0;
+      total_y = 0;
+      update_mode_string("translate: ");
+    }
     break;
   case MouseMove:
     {
@@ -395,6 +402,10 @@ void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
   switch(action){
   case MouseStart:
     {
+      if (inertia_mode) {
+	inertia_mode=0;
+	redraw();
+      }
       if (dolly_throttle == 0) {
 	BBox bbox;
 	get_bounds(bbox);
@@ -472,6 +483,10 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
   switch(action){
   case MouseStart:
     {
+      if (inertia_mode) {
+	inertia_mode=0;
+	redraw();
+      }
       update_mode_string("scale: ");
       last_x=x;
       last_y=y;
@@ -938,6 +953,10 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
   switch(action){
   case MouseStart:
     {
+      if (inertia_mode) {
+	inertia_mode=0;
+	redraw();
+      }
       extern int CAPTURE_Z_DATA_HACK;
       CAPTURE_Z_DATA_HACK = 1;
       redraw();
@@ -1214,7 +1233,189 @@ void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
 	ball->qNorm.y *= c;
 	ball->qNorm.z *= c;
 	angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
-	cerr << dt << endl;
+//	cerr << dt << endl;
+      }
+    } else {
+      inertia_mode=0;
+    }
+    ball->EndDrag();
+    rot_point_valid = 0; // so we don't have to draw this...
+    need_redraw = 1;     // always update this...
+    update_mode_string("");
+    break;
+  }
+}
+
+void ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
+{
+  switch(action){
+  case MouseStart:
+    {
+      if(inertia_mode){
+	inertia_mode=0;
+	redraw();
+      }
+      update_mode_string("rotate lookatp:");
+      last_x=x;
+      last_y=y;
+
+      // Find the center of rotation...
+      View tmpview(view.get());
+      int xres=current_renderer->xres;
+      int yres=current_renderer->yres;
+
+      rot_point_valid=0;
+
+      rot_point = tmpview.eyep();
+      rot_view=tmpview;
+      rot_point_valid=1;
+      
+      double rad = 12;
+      HVect center(0,0,0,1.0);
+	
+      // we also want to keep the old transform information
+      // around (so stuff correlates correctly)
+      // OGL uses left handed coordinate system!
+	
+      Vector z_axis,y_axis,x_axis;
+
+      y_axis = tmpview.up();
+      z_axis = tmpview.eyep() - tmpview.lookat();
+      eye_dist = z_axis.normalize();
+      x_axis = Cross(y_axis,z_axis);
+      x_axis.normalize();
+      y_axis = Cross(z_axis,x_axis);
+      y_axis.normalize();
+      tmpview.up(y_axis); // having this correct could fix something?
+
+      prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+
+      ball->Init();
+      ball->Place(center,rad);
+      HVect mouse(2.0*(xres-x)/xres - 1.0, 2.0*y/yres - 1.0, 0.0, 1.0);
+      ball->Mouse(mouse);
+      ball->BeginDrag();
+
+      prev_time[0] = time;
+      prev_quat[0] = mouse;
+      prev_time[1] = prev_time[2] = -100;
+      ball->Update();
+      last_time=time;
+      inertia_mode=0;
+      need_redraw = 1;
+    }
+    break;
+  case MouseMove:
+    {
+      int xres=current_renderer->xres;
+      int yres=current_renderer->yres;
+
+      if(!rot_point_valid)
+	break;
+
+      HVect mouse(2.0*(xres-x)/xres - 1.0, 2.0*y/yres - 1.0, 0.0, 1.0);
+      prev_time[2] = prev_time[1];
+      prev_time[1] = prev_time[0];
+      prev_time[0] = time;
+      ball->Mouse(mouse);
+      ball->Update();
+
+      prev_quat[2] = prev_quat[1];
+      prev_quat[1] = prev_quat[0];
+      prev_quat[0] = mouse;
+
+      // now we should just sendthe view points through
+      // the rotation (after centerd around the ball)
+      // eyep lookat and up
+
+      View tmpview(rot_view);
+
+      Transform tmp_trans;
+      HMatrix mNow;
+      ball->Value(mNow);
+      tmp_trans.set(&mNow[0][0]);
+
+      Transform prv = prev_trans;
+      prv.post_trans(tmp_trans);
+
+      HMatrix vmat;
+      prv.get(&vmat[0][0]);
+
+      Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+      Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+
+      tmpview.up(y_a.vector());
+      tmpview.lookat(tmpview.eyep()-(z_a*(eye_dist)).vector());
+      view.set(tmpview);
+      need_redraw=1;
+      update_mode_string("rotate lookatp:");
+
+      last_time=time;
+      inertia_mode=0;
+    }
+    break;
+  case MouseEnd:
+    if(time-last_time < 20){
+      // now setup the normalized quaternion
+      View tmpview(rot_view);
+	    
+      Transform tmp_trans;
+      HMatrix mNow;
+      ball->Value(mNow);
+      tmp_trans.set(&mNow[0][0]);
+	    
+      Transform prv = prev_trans;
+      prv.post_trans(tmp_trans);
+	    
+      HMatrix vmat;
+      prv.get(&vmat[0][0]);
+	    
+      Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+      Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+	    
+      tmpview.up(y_a.vector());
+      tmpview.lookat(tmpview.eyep()-(z_a*(eye_dist)).vector());
+      view.set(tmpview);
+      prev_trans = prv;
+
+      // now you need to use the history to 
+      // set up the arc you want to use...
+
+      ball->Init();
+      double rad = 12;
+      HVect center(0,0,0,1.0);
+
+      ball->Place(center,rad);
+
+      int index=2;
+
+      if (prev_time[index] == -100)
+	index = 1;
+
+      ball->vDown = prev_quat[index];
+      ball->vNow  = prev_quat[0];
+      ball->dragging = 1;
+      ball->Update();
+	    
+      ball->qNorm = ball->qNow.Conj();
+      double mag = ball->qNow.VecMag();
+
+      // Go into inertia mode...
+      inertia_mode=2;
+      need_redraw=1;
+
+      if (mag < 0.00001) { // arbitrary ad-hoc threshold
+	inertia_mode = 0;
+	need_redraw = 1;
+      }
+      else {
+	double c = 1.0/mag;
+	double dt = prev_time[0] - prev_time[index];// time between last 2 events
+	ball->qNorm.x *= c;
+	ball->qNorm.y *= c;
+	ball->qNorm.z *= c;
+	angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
+//	cerr << dt << endl;
       }
     } else {
       inertia_mode=0;
@@ -1309,6 +1510,10 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
   switch(action){
   case MouseStart:
     {
+      if (inertia_mode) {
+	inertia_mode=0;
+	redraw();
+      }
       total_x=0;
       total_y=0;
       total_z=0;
@@ -1511,6 +1716,8 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     do_mouse(&ViewWindow::mouse_dolly, args);
   } else if(args[1] == "mrotate"){
     do_mouse(&ViewWindow::mouse_rotate, args);
+  } else if(args[1] == "mrotate_eyep"){
+    do_mouse(&ViewWindow::mouse_rotate_eyep, args);
   } else if(args[1] == "mscale"){
     do_mouse(&ViewWindow::mouse_scale, args);
   } else if(args[1] == "municam"){
@@ -1520,13 +1727,16 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
   } else if(args[1] == "sethome"){
     homeview=view.get();
   } else if(args[1] == "gohome"){
+    inertia_mode=0;
     view.set(homeview);
     manager->mailbox.send(scinew ViewerMessage(id)); // Redraw
   } else if(args[1] == "autoview"){
     BBox bbox;
+    inertia_mode=0;
     get_bounds(bbox);
     autoview(bbox);
   } else if(args[1] == "Snap") {
+    inertia_mode=0;
     View sv(view.get());
     
     // determine closest eyep position
@@ -1727,38 +1937,6 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
       df.up(v);
     }
     animate_to_view(df, 2.0);
-  } else if(args[1] == "dolly"){
-    if(args.count() != 3){
-      args.error("dolly needs an amount");
-      return;
-    }
-    double amount;
-    if(!args[2].get_double(amount)){
-      args.error("Can't figure out amount");
-      return;
-    }
-    View cv(view.get());
-    Vector lookdir(cv.eyep()-cv.lookat());
-    lookdir*=amount;
-    cv.eyep(cv.lookat()+lookdir);
-    animate_to_view(cv, 1.0);
-  } else if(args[1] == "dolly2"){
-    if(args.count() != 3){
-      args.error("dolly2 needs an amount");
-      return;
-    }
-    double amount;
-    if(!args[2].get_double(amount)){
-      args.error("Can't figure out amount");
-      return;
-    }
-    View cv(view.get());
-    Vector lookdir(cv.eyep()-cv.lookat());
-    amount = amount-1;
-    lookdir*=amount;
-    cv.eyep(cv.eyep()+lookdir);
-    cv.lookat(cv.lookat()+lookdir);
-    animate_to_view(cv, 1.0);
   } else if(args[1] == "saveobj") {
     if(args.count() != 4){
       args.error("ViewWindow::dump_viewwindow needs an output file name and format!");

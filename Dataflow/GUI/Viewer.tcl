@@ -113,13 +113,13 @@ itcl_class ViewWindow {
 
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
-	menubutton $w.menu.file -text "File" -underline 0 \
-		-menu $w.menu.file.menu
-	menu $w.menu.file.menu
-	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
-		-command "$this makeSaveObjectsPopup"
-	$w.menu.file.menu add command -label "Save image file..." -underline 0 \
-		-command "$this makeSaveImagePopup"
+#	menubutton $w.menu.file -text "File" -underline 0 \
+#		-menu $w.menu.file.menu
+#	menu $w.menu.file.menu
+#	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
+#		-command "$this makeSaveObjectsPopup"
+#	$w.menu.file.menu add command -label "Save image file..." -underline 0 \
+#		-command "$this makeSaveImagePopup"
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
 		-menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
@@ -151,30 +151,30 @@ itcl_class ViewWindow {
 	menubutton $w.menu.edit -text "Edit" -underline 0 \
 		-menu $w.menu.edit.menu
 	menu $w.menu.edit.menu
-	$w.menu.edit.menu add command -label "View/Camera..." -underline 0 \
-		-command "$this makeViewPopup"
-	$w.menu.edit.menu add command -label "Renderer..." -underline 0
-	$w.menu.edit.menu add command -label "Materials..." -underline 0
-	$w.menu.edit.menu add command -label "Light Sources..." -underline 0
+#	$w.menu.edit.menu add command -label "View/Camera..." -underline 0 \
+#		-command "$this makeViewPopup"
+#	$w.menu.edit.menu add command -label "Renderer..." -underline 0
+#	$w.menu.edit.menu add command -label "Materials..." -underline 0
+#	$w.menu.edit.menu add command -label "Light Sources..." -underline 0
 	$w.menu.edit.menu add command -label "Background..." -underline 0 \
 		-command "$this makeBackgroundPopup"
 	$w.menu.edit.menu add command -label "Clipping Planes..." -underline 0 -command "$this makeClipPopup"
-	$w.menu.edit.menu add command -label "Animation..." -underline 0 \
-		-command "$this makeAnimationPopup"
+#	$w.menu.edit.menu add command -label "Animation..." -underline 0 \
+#		-command "$this makeAnimationPopup"
 	$w.menu.edit.menu add command -label "Point Size..." -underline 0 \
 		-command "$this makePointSizePopup"
-	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
-		-menu $w.menu.spawn.menu
-	menu $w.menu.spawn.menu
-	$w.menu.spawn.menu add command -label "Spawn Independent..." -underline 6
-	$w.menu.spawn.menu add command -label "Spawn Child..." -underline 6
-	menubutton $w.menu.dialbox -text "Dialbox" -underline 0 \
-		-menu $w.menu.dialbox.menu
-	menu $w.menu.dialbox.menu
-	$w.menu.dialbox.menu add command -label "Translate/Scale..." -underline 0 \
-		-command "$w.dialbox connect"
-	$w.menu.dialbox.menu add command -label "Camera..." -underline 0 \
-		-command "$w.dialbox2 connect"
+#	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
+#		-menu $w.menu.spawn.menu
+#	menu $w.menu.spawn.menu
+#	$w.menu.spawn.menu add command -label "Spawn Independent..." -underline 6
+#	$w.menu.spawn.menu add command -label "Spawn Child..." -underline 6
+#	menubutton $w.menu.dialbox -text "Dialbox" -underline 0 \
+#		-menu $w.menu.dialbox.menu
+#	menu $w.menu.dialbox.menu
+#	$w.menu.dialbox.menu add command -label "Translate/Scale..." -underline 0 \
+#		-command "$w.dialbox connect"
+#	$w.menu.dialbox.menu add command -label "Camera..." -underline 0 \
+#		-command "$w.dialbox2 connect"
 
 	menubutton $w.menu.visual -text "Visual" -underline 0 \
 	    -menu $w.menu.visual.menu
@@ -192,11 +192,11 @@ itcl_class ViewWindow {
 	    incr i
 	}
 
-	pack $w.menu.file -side left
+#	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
-	pack $w.menu.renderer -side left
-	pack $w.menu.spawn -side left
-	pack $w.menu.dialbox -side left
+#	pack $w.menu.renderer -side left
+#	pack $w.menu.spawn -side left
+#	pack $w.menu.dialbox -side left
 	pack $w.menu.visual -side left
 #	tk_menuBar $w.menu $w.menu.edit $w.menu.renderer \
 #		$w.menu.spawn $w.menu.dialbox $w.menu.visual
@@ -238,119 +238,101 @@ itcl_class ViewWindow {
 		-text " Current Mouse Mode " \
 		-anchor w
 
-	frame $w.bframe.v
-	pack $w.bframe.v -side left
-	button $w.bframe.v.autoview -text "Autoview" -command "$this-c autoview"
-	pack $w.bframe.v.autoview -fill x -pady 2
-	button $w.bframe.v.sethome -text "Set Home View" -padx 2 \
-		-command "$this-c sethome"
-	pack $w.bframe.v.sethome -fill x -pady 2
-	button $w.bframe.v.gohome -text "Go home" -command "$this-c gohome"
-	pack $w.bframe.v.gohome -fill x -pady 2
+	frame $w.bframe.v1
+	pack $w.bframe.v1 -side left
+	button $w.bframe.v1.autoview -text "Autoview" -command "$this-c autoview"
+	pack $w.bframe.v1.autoview -fill x -pady 2 -padx 2
 
-	frame $w.bframe.dolly
-	pack $w.bframe.dolly -side left -anchor nw 
-
-	frame $w.bframe.dolly.i
-	button $w.bframe.dolly.i.b -text "++" -command "$this-c dolly2 .8"
-	button $w.bframe.dolly.i.o -text "In" -command "$this-c dolly .95"
-	button $w.bframe.dolly.i.s -text "+" -command "$this-c dolly2 .96"
-	pack $w.bframe.dolly.i.b $w.bframe.dolly.i.o $w.bframe.dolly.i.s \
-                                                		-fill x -padx 2 -pady 2 -side left -expand 1
-
-	frame $w.bframe.dolly.o
-	button $w.bframe.dolly.o.b -text "--" -command "$this-c dolly2 1.2"
-	button $w.bframe.dolly.o.o -text "Out" -command "$this-c dolly 1.05"
-	button $w.bframe.dolly.o.s -text "-" -command "$this-c dolly2 1.04"
-	pack $w.bframe.dolly.o.b $w.bframe.dolly.o.o $w.bframe.dolly.o.s \
-		-fill x -padx 2 -pady 2 -side left -expand 1
-	pack $w.bframe.dolly.i $w.bframe.dolly.o -fill x -anchor nw
-
-	# button $w.bframe.dolly.snap -text Snap -command "$this-c Snap" 
-	# pack $w.bframe.dolly.snap -pady 2 -padx 2 -anchor se -side left
+	frame $w.bframe.v1.views             
+	pack $w.bframe.v1.views -side left -anchor nw -fill x -expand 1
 	
-	frame $w.bframe.dolly.views             
-	pack $w.bframe.dolly.views -side left -anchor nw
+	menubutton $w.bframe.v1.views.def -text "   Views   " -menu $w.bframe.v1.views.def.m -relief raised -padx 2 -pady 2
 	
-	menubutton $w.bframe.dolly.views.def -text Views -menu $w.bframe.dolly.views.def.m -relief raised -padx 2 -pady 2 
-	
-	menu $w.bframe.dolly.views.def.m
-	$w.bframe.dolly.views.def.m add cascade -label "Look down +X Axis" \
-		-menu $w.bframe.dolly.views.def.m.posx
-	$w.bframe.dolly.views.def.m add cascade -label "Look down +Y Axis" \
-		-menu $w.bframe.dolly.views.def.m.posy
-        $w.bframe.dolly.views.def.m add cascade -label "Look down +Z Axis" \
-		-menu $w.bframe.dolly.views.def.m.posz
-	$w.bframe.dolly.views.def.m add separator
-	$w.bframe.dolly.views.def.m add cascade -label "Look down -X Axis" \
-		-menu $w.bframe.dolly.views.def.m.negx
-	$w.bframe.dolly.views.def.m add cascade -label "Look down -Y Axis" \
-		-menu $w.bframe.dolly.views.def.m.negy
-        $w.bframe.dolly.views.def.m add cascade -label "Look down -Z Axis" \
-		-menu $w.bframe.dolly.views.def.m.negz
+	menu $w.bframe.v1.views.def.m
+	$w.bframe.v1.views.def.m add cascade -label "Look down +X Axis" \
+		-menu $w.bframe.v1.views.def.m.posx
+	$w.bframe.v1.views.def.m add cascade -label "Look down +Y Axis" \
+		-menu $w.bframe.v1.views.def.m.posy
+        $w.bframe.v1.views.def.m add cascade -label "Look down +Z Axis" \
+		-menu $w.bframe.v1.views.def.m.posz
+	$w.bframe.v1.views.def.m add separator
+	$w.bframe.v1.views.def.m add cascade -label "Look down -X Axis" \
+		-menu $w.bframe.v1.views.def.m.negx
+	$w.bframe.v1.views.def.m add cascade -label "Look down -Y Axis" \
+		-menu $w.bframe.v1.views.def.m.negy
+        $w.bframe.v1.views.def.m add cascade -label "Look down -Z Axis" \
+		-menu $w.bframe.v1.views.def.m.negz
 
-	pack $w.bframe.dolly.views.def -side left -pady 2 -padx 2 -fill x
+	pack $w.bframe.v1.views.def -side left -pady 2 -padx 2 -fill x
 
-	menu $w.bframe.dolly.views.def.m.posx
-	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector +Y" \
+	menu $w.bframe.v1.views.def.m.posx
+	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value x1_y1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector -Y" \
+	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value x1_y0 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector +Z" \
+	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value x1_z1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector -Z" \
+	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value x1_z0 -command "$this-c Views"
 
-	menu $w.bframe.dolly.views.def.m.posy
-	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector +X" \
+	menu $w.bframe.v1.views.def.m.posy
+	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value y1_x1 -command "$this-c Views" 
-	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector -X" \
+	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value y1_x0 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector +Z" \
+	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value y1_z1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector -Z" \
+	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value y1_z0 -command "$this-c Views"
 
-	menu $w.bframe.dolly.views.def.m.posz
-	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector +X" \
+	menu $w.bframe.v1.views.def.m.posz
+	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value z1_x1 -command "$this-c Views" 
-	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector -X" \
+	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value z1_x0 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector +Y" \
+	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value z1_y1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector -Y" \
+	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value z1_y0 -command "$this-c Views"
 
-	menu $w.bframe.dolly.views.def.m.negx
-	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector +Y" \
+	menu $w.bframe.v1.views.def.m.negx
+	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value x0_y1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector -Y" \
+	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value x0_y0 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector +Z" \
+	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value x0_z1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector -Z" \
+	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value x0_z0 -command "$this-c Views"
 
-	menu $w.bframe.dolly.views.def.m.negy
-	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector +X" \
+	menu $w.bframe.v1.views.def.m.negy
+	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value y0_x1 -command "$this-c Views" 
-	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector -X" \
+	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value y0_x0 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector +Z" \
+	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value y0_z1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector -Z" \
+	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value y0_z0 -command "$this-c Views"
 
-	menu $w.bframe.dolly.views.def.m.negz
-	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector +X" \
+	menu $w.bframe.v1.views.def.m.negz
+	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value z0_x1 -command "$this-c Views" 
-	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector -X" \
+	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value z0_x0 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector +Y" \
+	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value z0_y1 -command "$this-c Views"
-	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector -Y" \
+	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value z0_y0 -command "$this-c Views"
 
+	frame $w.bframe.v2
+	pack $w.bframe.v2 -side left -padx 2 -pady 2
+	button $w.bframe.v2.sethome -text "Set Home View" -padx 2 \
+		-command "$this-c sethome"
+	pack $w.bframe.v2.sethome -fill x -pady 2
+	button $w.bframe.v2.gohome -text "Go home" -command "$this-c gohome"
+	pack $w.bframe.v2.gohome -fill x -pady 2
+	
 	button $w.bframe.more -text "+" -padx 3 \
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
 		-command "$this addMFrame $w"
@@ -597,32 +579,33 @@ itcl_class ViewWindow {
 	
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
+	pack $m.stereo -side top
 	
-	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 10 \
-		-resolution 0.1 -orient horizontal -label "Base Scale:"
-	checkbutton $m.sr -text "Rot. Shift" -variable $this-sr -anchor w
-	pack $m.stereo $m.sbase $m.sr -side top
-	$m.sbase set 1
+#	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 10 \
+#		-resolution 0.1 -orient horizontal -label "Base Scale:"
+#	checkbutton $m.sr -text "Rot. Shift" -variable $this-sr -anchor w
+#	pack $m.sbase $m.sr -side top
+#	$m.sbase set 1
 	
 	# the stuff below doesn't have corresponding c-functions
 	
-	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
-		-command "$this-c tracker"
-	pack $m.tracker -side top
+#	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
+#		-command "$this-c tracker"
+#	pack $m.tracker -side top
 
 	
-	checkbutton $m.bench -text "SCIBench" -variable $this-do_bawgl \
-                -command "$this bench $this-do_bawgl"
-        pack $m.bench -side top
+#	checkbutton $m.bench -text "SCIBench" -variable $this-do_bawgl \
+#                -command "$this bench $this-do_bawgl"
+#        pack $m.bench -side top
 
-	button $m.tracker_reset -text " Reset\nTracker" \
-		-command "$this-c reset_tracker"
-	pack $m.tracker_reset -side top
-        } else {
-	    puts "Non-existing frame to initialize!"
-	}
+#	button $m.tracker_reset -text " Reset\nTracker" \
+#		-command "$this-c reset_tracker"
+#	pack $m.tracker_reset -side top
+#        } else {
+#	    puts "Non-existing frame to initialize!"
+#	}
 
-        checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
+        checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
 	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
 	# pack $m.caxes $m.iaxes -side top
 	pack $m.caxes -side top
