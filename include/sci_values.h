@@ -1,3 +1,4 @@
+/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -25,6 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+/*
  *  File   : sci_values.h
  *  Author : J. Davison de St. Germain
  *  Date   : Dec. 9, 2003
