@@ -61,8 +61,8 @@ private:
   LevelP _level;
   string _varname;
   int _matIndex;
-  IntVector low;
   IntVector high;
+  IntVector low;
 };
 
 template <class T>

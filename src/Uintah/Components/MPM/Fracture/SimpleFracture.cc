@@ -163,7 +163,7 @@ crackGrow(const Patch* patch,
 	 fabs(maxStress));
 
       //cout<<"eigenVectorsSize: "<<eigenVectors.size()<<endl;
-      for(int i=0;i<eigenVectors.size();++i) {
+      for(int i=0;i<(int)eigenVectors.size();++i) {
         //cout<<"eigenVectors: "<<eigenVectors[i]<<endl;
         eigenVectors[i].normalize();
       }
@@ -332,6 +332,9 @@ SimpleFracture(ProblemSpecP& ps)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.6  2001/01/04 00:18:05  jas
+// Remove g++ warnings.
+//
 // Revision 1.5  2000/12/30 05:08:11  tan
 // Fixed a problem concerning patch and ghost in fracture computations.
 //

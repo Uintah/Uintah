@@ -11,6 +11,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <SCICore/Geometry/IntVector.h>
+#include <SCICore/Math/MiscMath.h>
 #include <values.h>
 #include <vector>
 
@@ -20,6 +21,7 @@ namespace SCICore {
 using namespace SCICore::Geometry;
 using namespace Uintah;
 using std::vector;
+ using SCICore::Math::Interpolate;
 
 template <class T>
 class SCICORESHARE NCScalarField : public ScalarFieldRGBase {
@@ -65,8 +67,8 @@ private:
   LevelP _level;
   string _varname;
   int _matIndex;
-  IntVector low;
   IntVector high;
+  IntVector low;
 };
 
 
@@ -86,7 +88,7 @@ NCScalarField<T>::NCScalarField(const NCScalarField<T>& copy)
    high(-MAXINT,-MAXINT,-MAXINT),
    low(MAXINT,MAXINT,MAXINT)
 {
-  for(int i = 0; i < copy._vars.size(); i++){
+  for(int i = 0; i < (int)copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
   }
   computeHighLowIndices();
@@ -283,7 +285,7 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double,
     for(i = 0, r = _level->patchesBegin();
 	r != _level->patchesEnd(); r++, i++){
       
-      if (i >= _vars.size()){
+      if (i >= (int)_vars.size()){
 	patch = 0;
 	return 0;
       }
@@ -332,7 +334,7 @@ Vector NCScalarField<T>::gradient(const Point& p)
     }
   }
 
-  if (i >= _vars.size())
+  if (i >= (int)_vars.size())
     return Vector(0,0,0);
   
   IntVector index;
