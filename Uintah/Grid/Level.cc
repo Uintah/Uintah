@@ -206,28 +206,18 @@ void Level::finalizeLevel()
 {
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
     Patch* patch = *iter;
-    cout << "Box : " << patch->getBox() << endl;
     // See if there are any neighbors on the 6 faces
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
       IntVector l,h;
       patch->getFace(face, 1, l, h);
-      cout << "low = " << l << " high = " << h << endl;
       std::vector<const Patch*> neighbors;
       selectPatches(l, h, neighbors);
       if(neighbors.size() == 0){
 	patch->setBCType(face, Patch::None);
-	cout << "Patch ID: " << patch->getID() << " face: " << face << 
-	  " has no neighbors. "   << endl;
       }
       else {
 	patch->setBCType(face, Patch::Neighbor);
-	cout << "Patch ID: " << patch->getID() << " face: " << face <<
-	  " has neighbors:  " ;
-	  for (int n = 0; n < neighbors.size(); n++ )
-	    cout <<  neighbors[n]->getID() << " " ;
-	cout << endl;
-
       }
     }
   }
@@ -248,7 +238,6 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
     // 
     map<string,string> values;
     face_ps->getAttributes(values);
-    //    std::cerr << "face side = " << values["side"] << std::endl;
 
     Patch::FaceType face_side;
     std::string fc = values["side"];
@@ -265,12 +254,9 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
     if (fc == "z+")
       face_side = Patch::zplus;
 
-    
-    //    std::cerr << "face_side = " << face_side << std::endl;
     vector<BoundCond *> bcs;
     BoundCondFactory::create(face_ps,bcs);
 
-    //    cout << "Number of patches: " << numPatches() << endl;
     for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
 	iter++){
       Patch* patch = *iter;
@@ -280,8 +266,6 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
       }
       vector<BoundCond* > new_bcs;
       new_bcs = patch->getBCValues(face_side);
-      //      cout << "number of bcs on face " << face_side << " = " 
-      //   << new_bcs.size() << endl;
     }  // end of patch iterator
   } // end of face_ps
 
@@ -289,6 +273,10 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.20  2000/08/08 01:32:46  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.19  2000/08/02 03:29:33  jas
 // Fixed grid bcs problem.
 //

@@ -228,7 +228,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
       Variable*
       NCVariable<T>::maker()
       {
-	 return new NCVariable<T>();
+	 return scinew NCVariable<T>();
       }
    
    template<class T>
@@ -373,6 +373,10 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 
 //
 // $Log$
+// Revision 1.28  2000/08/08 01:32:46  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.27  2000/07/31 17:45:44  kuzimmer
 // Added files and modules for Field Extraction from uda
 //

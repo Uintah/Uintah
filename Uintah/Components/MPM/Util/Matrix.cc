@@ -61,6 +61,7 @@
 
 
 #include "Matrix.h"
+#include <SCICore/Malloc/Allocator.h>
 
 template<class T> Matrix<T>::Matrix()
 {
@@ -82,7 +83,7 @@ template<class T> Matrix<T>::Matrix( int numberOfRows,
   // now allocate each row of data
 
   for ( int i = 1; i <= numberOfRows; i++) {
-    rows[i]= new BoundedArray<T>(1,numberOfColumns,initialValue);
+    rows[i]= scinew BoundedArray<T>(1,numberOfColumns,initialValue);
     // Check that allocation was successful
     assert(rows[i] != 0);
   }
@@ -100,7 +101,7 @@ template<class T> Matrix<T>::Matrix( int numberOfRows,
   // now allocate each row of data
 
   for (int i = 1; i <= numberOfRows; i++) {
-    rows[i]= new BoundedArray<T>(1,numberOfColumns);
+    rows[i]= scinew BoundedArray<T>(1,numberOfColumns);
     // Check that allocation was successful
     assert(rows[i] != 0);
   }
@@ -117,7 +118,7 @@ template<class T> Matrix<T>::Matrix(const Matrix<T> &source)
  
 
   for ( int i = 1; i<= source.numberRows(); i++) {
-    rows[i] = new BoundedArray<T>(1,source.numberColumns());
+    rows[i] = scinew BoundedArray<T>(1,source.numberColumns());
     assert(rows[i] != 0);
   }
 
@@ -149,7 +150,7 @@ template <class T> Matrix<T>  & Matrix<T>::operator =
 
   
   for ( int i = 1; i<= source.numberRows(); i++) {
-    rows[i] = new BoundedArray<T>(1,source.numberColumns());
+    rows[i] = scinew BoundedArray<T>(1,source.numberColumns());
     assert(rows[i] != 0);
   }
  
@@ -181,7 +182,7 @@ template <class T> Matrix<T>  & Matrix<T>::operator =
 
   
   for ( int i = 1; i<= source.numberRows(); i++) {
-    rows[i] = new BoundedArray<T>(1,source.numberColumns());
+    rows[i] = scinew BoundedArray<T>(1,source.numberColumns());
     assert(rows[i] != 0);
   }
  
@@ -233,7 +234,7 @@ template <class T> void Matrix<T>::resize( int num_rows,  int num_columns)
 
   for ( int i = 1; i <= num_rows; i++) {
     if (i > o_rows) {
-      rows[i] = new BoundedArray<T>(1,num_columns,0.0);
+      rows[i] = scinew BoundedArray<T>(1,num_columns,0.0);
       assert(rows[i] != 0);
     }
     rows[i]->setSize(num_columns);
@@ -909,6 +910,10 @@ template<class T> Matrix<T>  operator * (const Matrix<T> &left,
 #endif // __Matrix_cc__
 
 // $Log$
+// Revision 1.4  2000/08/08 01:32:44  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.3  2000/05/26 22:28:44  tan
 // include the template implementations into the head file.
 //

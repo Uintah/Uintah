@@ -4,12 +4,13 @@
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/Material.h>
 #include <Uintah/Grid/Reductions.h>
+#include <SCICore/Malloc/Allocator.h>
 
 using namespace Uintah;
 
 SimulationState::SimulationState(ProblemSpecP &ps)
 {
-   delt_label = new VarLabel("delT",
+   delt_label = scinew VarLabel("delT",
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
 
   // Get the physical constants that are shared between codes.
@@ -28,6 +29,10 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.12  2000/08/08 01:32:47  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.11  2000/06/27 20:14:09  guilkey
 // Removed Kinetic and Strain energy labels and associated stuff.
 //

@@ -226,7 +226,7 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
       Variable*
       SFCZVariable<T>::maker()
       {
-	 return new SFCZVariable<T>();
+	 return scinew SFCZVariable<T>();
       }
    
    template<class T>
@@ -362,6 +362,10 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
 
 //
 // $Log$
+// Revision 1.3  2000/08/08 01:32:47  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.2  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

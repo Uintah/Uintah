@@ -87,7 +87,7 @@ WARNING
       Variable*
       ReductionVariable<T, Op>::maker()
       {
-	 return new ReductionVariable<T, Op>();
+	 return scinew ReductionVariable<T, Op>();
       }
    
    template<class T, class Op>
@@ -149,6 +149,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.12  2000/08/08 01:32:46  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.11  2000/07/28 22:45:16  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in

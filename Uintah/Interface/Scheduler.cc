@@ -12,6 +12,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include "Scheduler.h"
+#include <SCICore/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace PSECore::XMLUtil;
@@ -39,7 +40,7 @@ Scheduler::emitEdges(const vector<Task*>& tasks)
     	return;
     
     DOM_DOMImplementation impl;
-    m_graphDoc = new DOM_Document();
+    m_graphDoc = scinew DOM_Document();
     *m_graphDoc = impl.createDocument(0, "Uintah_TaskGraph", DOM_DocumentType());
     DOM_Element root = m_graphDoc->getDocumentElement();
     
@@ -52,7 +53,7 @@ Scheduler::emitEdges(const vector<Task*>& tasks)
     DOM_Element edges = m_graphDoc->createElement("Edges");
     root.appendChild(edges);
 
-    m_nodes = new DOM_Element(m_graphDoc->createElement("Nodes"));
+    m_nodes = scinew DOM_Element(m_graphDoc->createElement("Nodes"));
     root.appendChild(*m_nodes);
 
     // Now that we've build the XML structure, we can add the actual edges
@@ -152,6 +153,10 @@ Scheduler::finalizeNodes()
 
 //
 // $Log$
+// Revision 1.8  2000/08/08 01:32:48  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.7  2000/07/26 20:14:13  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers

@@ -11,6 +11,7 @@
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Util/DebugStream.h>
 #include <SCICore/Util/FancyAssert.h>
+#include <SCICore/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace std;
@@ -26,9 +27,9 @@ SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld
 {
   d_generation = 0;
   if(!specialType)
-     specialType = new TypeDescription(TypeDescription::ScatterGatherVariable,
+     specialType = scinew TypeDescription(TypeDescription::ScatterGatherVariable,
 				       "DataWarehouse::specialInternalScatterGatherType", false, -1);
-  scatterGatherVariable = new VarLabel("DataWarehouse::scatterGatherVariable",
+  scatterGatherVariable = scinew VarLabel("DataWarehouse::scatterGatherVariable",
 				       specialType, VarLabel::Internal);
 
   reloc_old_posLabel = reloc_new_posLabel = 0;
@@ -36,6 +37,20 @@ SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld
 
 SingleProcessorScheduler::~SingleProcessorScheduler()
 {
+  delete reloc_old_posLabel;
+  delete reloc_new_posLabel;
+  delete scatterGatherVariable;
+
+  for (int i = 0; i < reloc_old_labels.size(); i++) {
+    for (int j = 0; j < reloc_old_labels[i].size(); j++ ) {
+      delete reloc_old_labels[i][j];
+    }
+  }
+  for (int i = 0; i < reloc_new_labels.size(); i++) {
+    for (int j = 0; j < reloc_new_labels[i].size(); j++ ) {
+      delete reloc_new_labels[i][j];
+    }
+  }
 }
 
 void
@@ -182,7 +197,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
       ParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
 
-      ParticleSubset* relocset = new ParticleSubset(pset->getParticleSet(),
+      ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						    false, -1, 0);
 
       for(ParticleSubset::iterator iter = pset->begin();
@@ -211,19 +226,19 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
 		  throw InternalError("Particle fell through the cracks!");
 	    } else {
 	       if(!sr[i]){
-		  sr[i] = new ScatterRecord();
-		  sr[i]->matls.resize(reloc_numMatls);
-		  for(int m=0;m<reloc_numMatls;m++){
-		     sr[i]->matls[m]=0;
-		  }
+		 sr[i] = scinew ScatterRecord();
+		 sr[i]->matls.resize(reloc_numMatls);
+		 for(int m=0;m<reloc_numMatls;m++){
+		   sr[i]->matls[m]=0;
+		 }
 	       }
 	       if(!sr[i]->matls[m]){
-		  ScatterMaterialRecord* smr=new ScatterMaterialRecord();
+		  ScatterMaterialRecord* smr=scinew ScatterMaterialRecord();
 		  sr[i]->matls[m]=smr;
 		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
 		  for(int v=0;v<reloc_old_labels[m].size();v++)
 		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
-		  smr->relocset = new ParticleSubset(pset->getParticleSet(),
+		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
 	       }
 	       sr[i]->matls[m]->relocset->addParticle(idx);
@@ -236,7 +251,23 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
    for(int i=0;i<sr.size();i++){
       new_dw->scatter(sr[i], patch, neighbors[i]);
    }
+
+   for (int i = 0; i<sr.size(); i++) {
+     if (sr[i] != 0) {
+       for (int j = 0; j<sr[i]->matls.size(); j++ ) {
+	 if (sr[i]->matls[j] != 0) {
+	   delete sr[i]->matls[j]->relocset;
+	   for (int k = 0; k<sr[i]->matls[j]->vars.size(); k++) {
+	     delete sr[i]->matls[j]->vars[k];
+	   }
+	 }
+	 delete sr[i]->matls[j];
+       }
+     }
+     delete sr[i];
+   }
 }
+
 
 void
 SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
@@ -273,7 +304,7 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
       ParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
 
-      ParticleSubset* keepset = new ParticleSubset(pset->getParticleSet(),
+      ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
 						   false, -1, 0);
 
       for(ParticleSubset::iterator iter = pset->begin();
@@ -317,10 +348,29 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
    }
+
+   for (int i = 0; i<sr.size(); i++) {
+     if (sr[i] != 0) {
+       for (int j = 0; j<sr[i]->matls.size(); j++ ) {
+	 if (sr[i]->matls[j] != 0) {
+	   delete sr[i]->matls[j]->relocset;
+	   for (int k = 0; k<sr[i]->matls[j]->vars.size(); k++) {
+	     delete sr[i]->matls[j]->vars[k];
+	   }
+	 }
+	 delete sr[i]->matls[j];
+       }
+     }
+     delete sr[i];
+   }
 }
 
 //
 // $Log$
+// Revision 1.11  2000/08/08 01:32:45  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.10  2000/07/28 22:45:15  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in

@@ -240,7 +240,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       Variable*
       CCVariable<T>::maker()
       {
-	 return new CCVariable<T>();
+	 return scinew CCVariable<T>();
       }
    
    template<class T>
@@ -364,6 +364,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.20  2000/08/08 01:32:46  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.19  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -6,6 +6,7 @@
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/PerPatch.h>
+#include <SCICore/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace Uintah::MPM;
@@ -13,40 +14,40 @@ using namespace Uintah::MPM;
 MPMLabel::MPMLabel()
 {
   // Particle Variables
-  pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
+  pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
-  pStressLabel = new VarLabel( "p.stress",
+  pStressLabel = scinew VarLabel( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
-  pVolumeLabel = new VarLabel( "p.volume",
+  pVolumeLabel = scinew VarLabel( "p.volume",
 			ParticleVariable<double>::getTypeDescription());
   
-  pVolumeDeformedLabel = new VarLabel( "p.volumedeformed",
+  pVolumeDeformedLabel = scinew VarLabel( "p.volumedeformed",
 			ParticleVariable<double>::getTypeDescription());
   
-  pMassLabel = new VarLabel( "p.mass",
+  pMassLabel = scinew VarLabel( "p.mass",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pVelocityLabel = new VarLabel( "p.velocity", 
+  pVelocityLabel = scinew VarLabel( "p.velocity", 
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pExternalForceLabel = new VarLabel( "p.externalforce",
+  pExternalForceLabel = scinew VarLabel( "p.externalforce",
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pXLabel = new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
+  pXLabel = scinew VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
 			VarLabel::PositionVariable);
   
-  pTemperatureLabel = new VarLabel( "p.temperature",
+  pTemperatureLabel = scinew VarLabel( "p.temperature",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pTemperatureGradientLabel = new VarLabel( "p.temperatureGradient",
+  pTemperatureGradientLabel = scinew VarLabel( "p.temperatureGradient",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pTemperatureRateLabel  = new VarLabel( "p.temperatureRate",
+  pTemperatureRateLabel  = scinew VarLabel( "p.temperatureRate",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pExternalHeatRateLabel = new VarLabel( "p.externalHeatRate",
+  pExternalHeatRateLabel = scinew VarLabel( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
   
   //tan:
@@ -55,53 +56,53 @@ MPMLabel::MPMLabel()
   //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
   //  in this way we can distinguish boundary particles to interior particles
   //
-  pSurfLabel = new VarLabel( "p.surface",
+  pSurfLabel = scinew VarLabel( "p.surface",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pSurfaceNormalLabel = new VarLabel( "p.surfaceNormal",
+  pSurfaceNormalLabel = scinew VarLabel( "p.surfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pParticleIDLabel = new VarLabel("p.particleID",
+  pParticleIDLabel = scinew VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
 
-  pIsIgnitedLabel  = new VarLabel( "p.isIgnited",
+  pIsIgnitedLabel  = scinew VarLabel( "p.isIgnited",
 			ParticleVariable<int>::getTypeDescription() );
   
-  pMassRateLabel  = new VarLabel( "p.massRate",
+  pMassRateLabel  = scinew VarLabel( "p.massRate",
 			ParticleVariable<double>::getTypeDescription() );
   
   // Particle Variables 
-  pDeformationMeasureLabel_preReloc = new VarLabel("p.deformationMeasure+",
+  pDeformationMeasureLabel_preReloc = scinew VarLabel("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
-  pStressLabel_preReloc = new VarLabel( "p.stress+",
+  pStressLabel_preReloc = scinew VarLabel( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
-  pVolumeLabel_preReloc = new VarLabel( "p.volume+",
+  pVolumeLabel_preReloc = scinew VarLabel( "p.volume+",
 			ParticleVariable<double>::getTypeDescription());
   
-  pMassLabel_preReloc = new VarLabel( "p.mass+",
+  pMassLabel_preReloc = scinew VarLabel( "p.mass+",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pVelocityLabel_preReloc = new VarLabel( "p.velocity+", 
+  pVelocityLabel_preReloc = scinew VarLabel( "p.velocity+", 
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pExternalForceLabel_preReloc = new VarLabel( "p.externalforce+",
+  pExternalForceLabel_preReloc = scinew VarLabel( "p.externalforce+",
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pXLabel_preReloc = new VarLabel( "p.x+", ParticleVariable<Point>::getTypeDescription(),
+  pXLabel_preReloc = scinew VarLabel( "p.x+", ParticleVariable<Point>::getTypeDescription(),
 			VarLabel::PositionVariable);
   
-  pTemperatureLabel_preReloc = new VarLabel( "p.temperature+",
+  pTemperatureLabel_preReloc = scinew VarLabel( "p.temperature+",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pTemperatureGradientLabel_preReloc = new VarLabel( "p.temperatureGradient+",
+  pTemperatureGradientLabel_preReloc = scinew VarLabel( "p.temperatureGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pTemperatureRateLabel_preReloc  = new VarLabel( "p.temperatureRate+",
+  pTemperatureRateLabel_preReloc  = scinew VarLabel( "p.temperatureRate+",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pExternalHeatRateLabel_preReloc = new VarLabel( "p.externalHeatRate+",
+  pExternalHeatRateLabel_preReloc = scinew VarLabel( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
   //tan:
@@ -110,69 +111,69 @@ MPMLabel::MPMLabel()
   //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
   //  in this way we can distinguish boundary particles to interior particles
   //
-  pSurfLabel_preReloc = new VarLabel( "p.surface+",
+  pSurfLabel_preReloc = scinew VarLabel( "p.surface+",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pSurfaceNormalLabel_preReloc = new VarLabel( "p.surfaceNormal+",
+  pSurfaceNormalLabel_preReloc = scinew VarLabel( "p.surfaceNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pParticleIDLabel_preReloc = new VarLabel("p.particleID+",
+  pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
 			ParticleVariable<long>::getTypeDescription() );
 
-  pIsIgnitedLabel_preReloc  = new VarLabel( "p.isIgnited+",
+  pIsIgnitedLabel_preReloc  = scinew VarLabel( "p.isIgnited+",
 			ParticleVariable<int>::getTypeDescription() );
   
-  pMassRateLabel_preReloc  = new VarLabel( "p.massRate+",
+  pMassRateLabel_preReloc  = scinew VarLabel( "p.massRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
   // Node Centered Variables
   
-  gAccelerationLabel = new VarLabel( "g.acceleration",
+  gAccelerationLabel = scinew VarLabel( "g.acceleration",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
+  gMomExedAccelerationLabel = scinew VarLabel( "g.momexedacceleration",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMassLabel = new VarLabel( "g.mass",
+  gMassLabel = scinew VarLabel( "g.mass",
 			NCVariable<double>::getTypeDescription() );
   
-  gVelocityLabel = new VarLabel( "g.velocity",
+  gVelocityLabel = scinew VarLabel( "g.velocity",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedVelocityLabel = new VarLabel( "g.momexedvelocity",
+  gMomExedVelocityLabel = scinew VarLabel( "g.momexedvelocity",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gExternalForceLabel = new VarLabel( "g.externalforce",
+  gExternalForceLabel = scinew VarLabel( "g.externalforce",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gInternalForceLabel = new VarLabel( "g.internalforce",
+  gInternalForceLabel = scinew VarLabel( "g.internalforce",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gVelocityStarLabel = new VarLabel( "g.velocity_star",
+  gVelocityStarLabel = scinew VarLabel( "g.velocity_star",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
+  gMomExedVelocityStarLabel = scinew VarLabel( "g.momexedvelocity_star",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gSelfContactLabel = new VarLabel( "g.selfContact",
+  gSelfContactLabel = scinew VarLabel( "g.selfContact",
 			NCVariable<bool>::getTypeDescription() );
   
-  gTemperatureLabel = new VarLabel("g.temperature",
+  gTemperatureLabel = scinew VarLabel("g.temperature",
 			NCVariable<double>::getTypeDescription());
 
-  gTemperatureStarLabel = new VarLabel("g.temperatureStar",
+  gTemperatureStarLabel = scinew VarLabel("g.temperatureStar",
 			NCVariable<double>::getTypeDescription());
 
-  gTemperatureRateLabel = new VarLabel("g.temperatureRate",
+  gTemperatureRateLabel = scinew VarLabel("g.temperatureRate",
 			NCVariable<double>::getTypeDescription());
 
-  gInternalHeatRateLabel = new VarLabel("g.internalHeatRate",
+  gInternalHeatRateLabel = scinew VarLabel("g.internalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
-  gExternalHeatRateLabel = new VarLabel("g.externalHeatRate",
+  gExternalHeatRateLabel = scinew VarLabel("g.externalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
-  gThermalContactHeatExchangeRateLabel = new 
+  gThermalContactHeatExchangeRateLabel = scinew 
      VarLabel("g.thermalContactHeatExchangeRate",
      NCVariable<double>::getTypeDescription());
 
@@ -187,48 +188,107 @@ MPMLabel::MPMLabel()
 
   // Cell centered variables
 
-  cSelfContactLabel = new VarLabel( "c.selfContact",
+  cSelfContactLabel = scinew VarLabel( "c.selfContact",
 			CCVariable<bool>::getTypeDescription() );
   
-  cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
+  cSurfaceNormalLabel = scinew VarLabel( "c.surfaceNormalLabel",
 			CCVariable<Vector>::getTypeDescription() );
   
-  cBurnedMassLabel = new VarLabel( "c.burnedMass",
+  cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
 			CCVariable<double>::getTypeDescription() );
 
   // Reduction variables
 
-  delTLabel = new VarLabel( "delT", delt_vartype::getTypeDescription() );
+  delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
 
-  StrainEnergyLabel = new VarLabel( "StrainEnergy",
+  StrainEnergyLabel = scinew VarLabel( "StrainEnergy",
 			sum_vartype::getTypeDescription() );
 
-  KineticEnergyLabel = new VarLabel( "KineticEnergy",
+  KineticEnergyLabel = scinew VarLabel( "KineticEnergy",
 			sum_vartype::getTypeDescription() );
 
-  TotalMassLabel = new VarLabel( "TotalMass",
+  TotalMassLabel = scinew VarLabel( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
-  CenterOfMassPositionLabel = new VarLabel( "CenterOfMassPosition",
+  CenterOfMassPositionLabel = scinew VarLabel( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
 
-  CenterOfMassVelocityLabel = new VarLabel( "CenterOfMassVelocity",
+  CenterOfMassVelocityLabel = scinew VarLabel( "CenterOfMassVelocity",
 				 sumvec_vartype::getTypeDescription() );
 
   // PerPatch variables
 
-  ppNAPIDLabel = new VarLabel("NAPID",PerPatch<long>::getTypeDescription() );
+  ppNAPIDLabel = scinew VarLabel("NAPID",PerPatch<long>::getTypeDescription() );
 
 } 
-#if 0
-const MPMLabel* MPMLabel::getLabels()
+
+MPMLabel::~MPMLabel()
 {
-  static MPMLabel* instance=0;
-  if(!instance)
-    instance=new MPMLabel();
-  return instance;
+  delete pDeformationMeasureLabel;
+  delete pStressLabel;
+  delete pVolumeLabel;
+  delete pVolumeDeformedLabel;
+  delete pMassLabel;
+  delete pVelocityLabel;
+  delete pExternalForceLabel;
+  delete pXLabel;
+  delete pTemperatureLabel;
+  delete pTemperatureGradientLabel;
+  delete pTemperatureRateLabel;
+  delete pExternalHeatRateLabel;
+  delete pSurfLabel;
+  delete pSurfaceNormalLabel;
+  delete pParticleIDLabel;
+  delete pIsIgnitedLabel;
+  delete pMassRateLabel;
+  delete pDeformationMeasureLabel_preReloc;
+  delete pStressLabel_preReloc;
+  delete pVolumeLabel_preReloc;
+  delete pVolumeLabel_preReloc;
+  delete pMassLabel_preReloc;
+  delete pMassLabel_preReloc;
+  delete pVelocityLabel_preReloc;
+  delete pExternalForceLabel_preReloc;
+  delete pXLabel_preReloc;
+  delete pTemperatureLabel_preReloc;
+  delete pTemperatureGradientLabel_preReloc;
+  delete pTemperatureRateLabel_preReloc;
+  delete pExternalHeatRateLabel_preReloc;
+  delete pSurfLabel_preReloc;
+  delete pSurfaceNormalLabel_preReloc;
+  delete pParticleIDLabel_preReloc;
+  delete pIsIgnitedLabel_preReloc;
+  delete pMassRateLabel_preReloc;
+  delete gAccelerationLabel;
+  delete gMomExedAccelerationLabel;
+  delete gMassLabel;
+  delete gVelocityLabel;
+  delete gMomExedVelocityLabel;
+  delete gExternalForceLabel;
+  delete gInternalForceLabel;
+  delete gVelocityStarLabel;
+  delete gMomExedVelocityStarLabel;
+  delete gSelfContactLabel;
+  delete gTemperatureLabel;
+  delete gTemperatureStarLabel;
+  delete gTemperatureRateLabel;
+  delete gInternalHeatRateLabel;
+  delete gExternalHeatRateLabel;
+  delete gThermalContactHeatExchangeRateLabel;
+  delete cSelfContactLabel;
+  delete cSurfaceNormalLabel;
+  delete cBurnedMassLabel;
+  delete delTLabel;
+  delete StrainEnergyLabel;
+  delete KineticEnergyLabel;
+  delete TotalMassLabel;
+  delete CenterOfMassPositionLabel;
+  delete CenterOfMassVelocityLabel;
+  delete ppNAPIDLabel;
+
+
 }
-#endif
+
 void MPMLabel::registerPermanentParticleState(int i,
 					      const VarLabel* label,
 					      const VarLabel* preReloc_label)
@@ -239,6 +299,10 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.23  2000/08/08 01:32:41  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.22  2000/08/04 16:42:43  guilkey
 // Added VarLabels specific to FrictionContact so that those variables
 // can be pleaseSaved.

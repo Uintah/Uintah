@@ -9,6 +9,7 @@
 #include <Uintah/Grid/GeometryPieceFactory.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/SimulationState.h>
+#include <SCICore/Malloc/Allocator.h>
 
 using SCICore::Geometry::Point;
 
@@ -41,7 +42,7 @@ void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP&,
        ps = ps->findNextBlock("material") ) {
     // Extract out the type of constitutive model and the 
     // associated parameters
-     MPMMaterial *mat = new MPMMaterial(ps);
+     MPMMaterial *mat = scinew MPMMaterial(ps);
      sharedState->registerMaterial(mat);
   }                                                                
       
@@ -86,6 +87,10 @@ void Problem::createParticles(const Patch* patch, DataWarehouseP& dw)
 #endif
 
 // $Log$
+// Revision 1.17  2000/08/08 01:32:43  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.16  2000/06/09 18:45:19  jas
 // Moved GeometryPiece stuff to Grid/.
 //

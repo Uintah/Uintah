@@ -51,6 +51,8 @@ ElasticConstitutiveModel::~ElasticConstitutiveModel()
   // Destructor
 
   //cout << "Calling ElasticConstitutiveModel destructor . . . " << endl;
+  delete p_cmdata_label;
+  delete p_cmdata_label_preReloc;
  
 }
 
@@ -518,6 +520,10 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.20  2000/08/08 01:32:42  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.19  2000/07/27 22:39:44  sparker
 // Implemented MPIScheduler
 // Added associated support

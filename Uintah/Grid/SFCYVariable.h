@@ -226,7 +226,7 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
       Variable*
       SFCYVariable<T>::maker()
       {
-	 return new SFCYVariable<T>();
+	 return scinew SFCYVariable<T>();
       }
    
    template<class T>
@@ -362,6 +362,10 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 
 //
 // $Log$
+// Revision 1.3  2000/08/08 01:32:47  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.2  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

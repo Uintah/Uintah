@@ -10,6 +10,7 @@
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 #include <fstream>
@@ -55,7 +56,7 @@ void GeometryObject::addPieces(ProblemSpecP prob_spec)
     prob_spec->require("min",min);
     prob_spec->require("max",max);
   
-    geom_piece = new BoxGeometryPiece(min,max);
+    geom_piece = scinew BoxGeometryPiece(min,max);
 
   }
 
@@ -70,7 +71,7 @@ void GeometryObject::addPieces(ProblemSpecP prob_spec)
     if (ax == "Y") axis = CylinderGeometryPiece::Y;
     if (ax == "Z") axis = CylinderGeometryPiece::Z;
 
-    geom_piece = new CylinderGeometryPiece(axis,origin,length,radius);
+    geom_piece = scinew CylinderGeometryPiece(axis,origin,length,radius);
 
   }
 
@@ -78,13 +79,13 @@ void GeometryObject::addPieces(ProblemSpecP prob_spec)
     prob_spec->require("origin",origin);
     prob_spec->require("radius",radius);
 
-    geom_piece = new SphereGeometryPiece(radius,origin);
+    geom_piece = scinew SphereGeometryPiece(radius,origin);
     
   }
 
   else if (type == "tri") {
 
-    geom_piece = new TriGeometryPiece;
+    geom_piece = scinew TriGeometryPiece;
 
   }
     
@@ -390,6 +391,10 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 
   
 // $Log$
+// Revision 1.3  2000/08/08 01:32:46  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.2  2000/06/27 23:18:17  rawat
 // implemented Staggered cell variables. Modified Patch.cc to get ghostcell
 // and staggered cell indexes.

@@ -52,6 +52,32 @@ OnDemandDataWarehouse::setGrid(const GridP& grid)
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
+
+  for (reductionDBtype::const_iterator iter = d_reductionDB.begin(); 
+       iter != d_reductionDB.end(); iter++) {
+    delete iter->second->var;
+    delete iter->second;
+  }
+  d_reductionDB.clear();
+
+  for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
+       iter != d_dataLocation.end(); iter++) {
+    for (int i = 0; i<iter->second->size(); i++ )
+      delete &(iter->second[i]);
+    delete iter->second;
+  }
+  d_dataLocation.clear();
+
+  for (std::map<pair<const Patch*, const Patch*>, ScatterGatherBase* >::const_iterator iter = d_sgDB.begin(); iter != d_sgDB.end(); iter++) 
+    delete iter->second;
+  d_sgDB.clear();
+#if 0
+  for (psetDBType::const_iterator iter = d_psetDB.begin();
+       iter != d_psetDB.end(); iter++) 
+    delete iter->second;
+  d_psetDB.clear();
+#endif
+
 }
 
 bool OnDemandDataWarehouse::isFinalized() const
@@ -309,7 +335,7 @@ OnDemandDataWarehouse::sendMpiDataRequest( const string & /*varName*/,
 
   cerr << "                       Data request sent\n";
 
-  char       * buffer = new char[ DWMpiHandler::MAX_BUFFER_SIZE ];
+  char       * buffer = scinew char[ DWMpiHandler::MAX_BUFFER_SIZE ];
   MPI_Status   status;
 
   cerr << "OnDemandDataWarehouse: waiting for data response from "
@@ -332,12 +358,13 @@ ParticleSubset*
 OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 					    int matlIndex, const Patch* patch)
 {
-   ParticleSet* pset = new ParticleSet(numParticles);
-   ParticleSubset* psubset = new ParticleSubset(pset, true, matlIndex, patch);
+   ParticleSet* pset = scinew ParticleSet(numParticles);
+   ParticleSubset* psubset = scinew ParticleSubset(pset, true, matlIndex, patch);
    psetDBType::key_type key(matlIndex, patch);
    if(d_psetDB.find(key) != d_psetDB.end())
       throw InternalError("createParticleSubset called twice for patch");
    d_psetDB[key]=psubset;
+
    return psubset;
 }
 
@@ -425,6 +452,11 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 						     matlIndex, patch,
 						     gtype, numGhostCells,
 						     neighbors, subsets);
+   for (int i = 0; i<subsets.size(); i++ ) {
+     delete subsets[i];
+   }
+
+
    return newsubset;
 }
 
@@ -1378,6 +1410,10 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.43  2000/08/08 01:32:45  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.42  2000/07/28 03:01:54  rawat
 // modified createDatawarehouse and added getTop()
 //
