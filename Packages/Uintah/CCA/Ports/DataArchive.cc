@@ -214,7 +214,7 @@ DataArchive::queryGrid( double time )
 	} else if(r.getNodeName().equals("anchor")
 		  || r.getNodeName().equals("cellspacing")){
 	  // Nothing - handled above
-	} else if(r.getNodeName().equals("periodic") {
+	} else if(r.getNodeName().equals("periodic")) {
 	  if(!get(r, periodicBoundaries))
 	    throw InternalError("Error parsing peridoc");
 	} else if(r.getNodeType() != DOM_Node::TEXT_NODE){
