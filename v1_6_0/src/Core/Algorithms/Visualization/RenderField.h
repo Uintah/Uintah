@@ -275,11 +275,12 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
       mesh->begin(niter);  
       typename Fld::mesh_type::Node::iterator niter_end;  
       mesh->end(niter_end);
-      
+      const bool disks_p = node_display_type == "Disks";
+
       while (niter != niter_end) {
 	typename Fld::value_type tmp;
 
-	if (node_display_type == "Disks") {
+	if (disks_p) {
 	  if (sfld->value(tmp, *niter) && (to_vector(tmp, vec))) { 
 	    val = vec.length();
 	  } else {
@@ -438,7 +439,14 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   node_switch_ = scinew GeomSwitch(nodes);
   GeomPts *pts = 0;
 
-  if (node_display_type == "Points") {
+  // 0 Points 1 Spheres 2 Axes 3 Disks
+  int mode = 0;
+  if (node_display_type == "Points")       { mode = 0; }
+  else if (node_display_type == "Spheres") { mode = 1; }
+  else if (node_display_type == "Axes")    { mode = 2; }
+  else if (node_display_type == "Disks")   { mode = 3; }
+
+  if (mode == 0) { // Points
     typename Fld::mesh_type::Node::size_type nsize;
     mesh->size(nsize);
     pts = scinew GeomPts((unsigned int)(nsize));
@@ -456,17 +464,17 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 
     // val is double because the color index field must be scalar.
     Vector vec(0,0,0);
-    switch (sfld->data_at()) {
+
+    switch (sfld->data_at())
+    {
     case Field::NODE:
       {
 	typename Fld::value_type tmp;
 	// color was selected in the render_materials pass.
-	if (node_display_type == "Disks") {
-	  if (sfld->value(tmp, *niter) && (to_vector(tmp, vec))) {
-	  }
-	} 
+	if (mode == 3 && sfld->value(tmp, *niter) && (to_vector(tmp, vec))) {}
       }
       break;
+
     case Field::EDGE:
     case Field::FACE:
     case Field::CELL:
@@ -474,19 +482,29 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       def_color = true;
       break;
     }
-    if (node_display_type == "Spheres") {
-      add_sphere(p, node_scale, nodes, 
-		 choose_mat(def_color, *niter));
-    } else if (node_display_type == "Axes") {
-      add_axis(p, node_scale, nodes, choose_mat(def_color, *niter));
-    } else if (node_display_type == "Disks") {
-      add_disk(p, vec, node_scale, nodes, choose_mat(def_color, *niter));
-    } else {
+
+    switch (mode)
+    {
+    case 0: // Points
       add_point(p, pts, choose_mat(def_color, *niter));
+      break;
+
+    case 1: // Spheres
+      add_sphere(p, node_scale, nodes, choose_mat(def_color, *niter));
+      break;
+
+    case 2: // Axes
+      add_axis(p, node_scale, nodes, choose_mat(def_color, *niter));
+      break;
+
+    case 3: // Disks
+    default:
+      add_disk(p, vec, node_scale, nodes, choose_mat(def_color, *niter));
+      break;
     }
     ++niter;
   }
-  if (node_display_type == "Points") {
+  if (mode == 0) { // Points
     nodes->add(pts);
   }
 }
@@ -498,10 +516,24 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 				    const string &edge_display_type,
 				    double edge_scale) 
 {
-  //cerr << "rendering edges" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-  GeomGroup* edges = scinew GeomGroup;
-  edge_switch_ = scinew GeomSwitch(edges);
+
+  const bool cyl = edge_display_type == "Cylinders";
+
+  GeomCLines* cedges = NULL;
+  GeomGroup* edges = NULL;
+  if (!cyl && sfld->data_at() == Field::NODE)
+  {
+    cedges = scinew GeomCLines;
+    cedges->setLineWidth(edge_scale);
+    edge_switch_ = scinew GeomSwitch(cedges);
+  }
+  else
+  {
+    edges = scinew GeomGroup;
+    edge_switch_ = scinew GeomSwitch(edges);
+  }
+
   // Second pass: over the edges
   mesh->synchronize(Mesh::EDGES_E);
   typename Fld::mesh_type::Edge::iterator eiter; mesh->begin(eiter);  
@@ -513,14 +545,21 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     Point p1, p2;
     mesh->get_point(p1, nodes[0]);
     mesh->get_point(p2, nodes[1]);
-    bool cyl = false;
-    if (edge_display_type == "Cylinders") { cyl = true; }
     switch (sfld->data_at()) {
     case Field::NODE:
       {
-	// does not average anymore, so that switching color maps is fast.
-	MaterialHandle m1 = choose_mat(false, nodes[0]);
-	add_edge(p1, p2, edge_scale, edges, m1, cyl);
+	if (cyl)
+	{
+	  MaterialHandle m1 = choose_mat(false, nodes[0]);
+	  add_edge(p1, p2, edge_scale, edges, m1, cyl);
+	}
+	else
+	{
+	  // does not average anymore, so that switching color maps is fast.
+	  MaterialHandle m1 = choose_mat(false, nodes[0]);
+	  MaterialHandle m2 = choose_mat(false, nodes[1]);
+	  cedges->add(p1, m1->diffuse, p2, m2->diffuse);
+	}
       }
       break;
     case Field::EDGE:
