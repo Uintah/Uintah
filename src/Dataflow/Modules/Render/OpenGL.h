@@ -147,7 +147,8 @@ public:
   bool			compute_depth(const View& view,
 				      double& near, double& far);
   bool			compute_fog_depth(const View& view,
-					  double& near, double& far);
+					  double& near, double& far,
+					  bool visible_only);
   void			saveImage(const string& fname,
 				  const string& type = "ppm",
 				  int x=640, int y=512);

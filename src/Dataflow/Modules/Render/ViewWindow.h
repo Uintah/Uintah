@@ -177,6 +177,7 @@ public:
   GuiColor              gui_fogcolor_;
   GuiDouble             gui_fog_start_;
   GuiDouble             gui_fog_end_;
+  GuiInt                gui_fog_visibleonly_;
 
 private:
   ViewWindow(const ViewWindow&); // Should not be called
