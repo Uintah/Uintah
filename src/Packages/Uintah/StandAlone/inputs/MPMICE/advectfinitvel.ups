@@ -205,7 +205,7 @@
                 </comp_neo_hook>
                 <toughness>             10.e6           </toughness>
                 <thermal_conductivity>  1.0             </thermal_conductivity>
-                <specific_heat>         5               </specific_heat>
+                <specific_heat>         716.0           </specific_heat>
                 <geom_object>
                     <box label="gpmpm">
                         <min>           [1.0,1.0,1.0]   </min>
