@@ -37,11 +37,19 @@ namespace Uintah {
      ****************************************/
 
    typedef ReductionVariable<double, Reductions::Min<double> > delt_vartype;
+
+   typedef ReductionVariable<double, Reductions::Sum<double> > sum_vartype;
     
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/05/31 20:25:33  guilkey
+// Added the beginnings of a Sum reduction, which would take data from
+// multiple patches, materials, etc. and add them together.  The immediate
+// application is for computing the strain energy and storing it.  I'm
+// going to need some help with this.
+//
 // Revision 1.1  2000/05/02 06:07:24  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
