@@ -1284,7 +1284,7 @@ Gui::createLightWindow( GLUI * window )
 
 
 void
-Gui::createMenus( int winId )
+Gui::createMenus( int winId, bool show_gui )
 {
   printf("createmenus\n");
 
@@ -1306,6 +1306,10 @@ Gui::createMenus( int winId )
 
   // Build GLUI Windows
   activeGui->mainWindow = GLUI_Master.create_glui( "SIGGRAPH", 0, 400, 20 );
+  if (!show_gui) {
+    activeGui->mainWindow->hide();
+    activeGui->mainWindowVisible = false;
+  }
 
   activeGui->routeWindow = GLUI_Master.create_glui( "Route", 0, 400, 400 );
   activeGui->lightsWindow = GLUI_Master.create_glui( "Lights", 0, 500, 400 );

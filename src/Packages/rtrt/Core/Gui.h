@@ -70,10 +70,9 @@ public:
   static void handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z );
   static void handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z );
   static void handleSpaceballButtonCB( int button, int state );
-  static void createMenus( int winId ); // Call after glutInit(...)!
+  static void createMenus( int winId, bool show_gui); // Call after glutInit(...)!
 
   static void idleFunc();
-
 private:
 
   friend class Dpy;
