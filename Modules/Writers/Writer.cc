@@ -85,7 +85,7 @@ void TYPEWriter::execute()
 	stream=scinew BinaryPiostream(fn, Piostream::Write);
     } else if (ft=="ASCII"){
 	stream=scinew TextPiostream(fn, Piostream::Write);
-    } else {	// GUNZIP!
+    } else {	// GZIP!
 	stream=scinew GzipPiostream(fn, Piostream::Write);
     }
     // Write the file
