@@ -3,15 +3,15 @@
 // Symbol:        who.UIPort-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030305 18:50:50 MST
-// Generated:     20030305 18:50:56 MST
+// SIDL Created:  20030227 01:19:51 MST
+// Generated:     20030227 01:19:55 MST
 // Description:   Server-side implementation for who.UIPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 10
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/who/who.sidl
+// source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/who/who.sidl
 // 
 #include "who_UIPort_Impl.hh"
 
@@ -38,9 +38,7 @@ void who::UIPort_impl::_dtor() {
 
 // user defined non-static methods:
 /**
- * Execute some encapsulated functionality on the component. 
- * @return 0 if ok, -1 if internal error but component may be used further,
- * -2 if error so severe that component cannot be further used safely.
+ * Method:  ui[]
  */
 int32_t
 who::UIPort_impl::ui () 

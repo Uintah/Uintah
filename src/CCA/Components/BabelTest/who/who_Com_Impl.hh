@@ -3,15 +3,15 @@
 // Symbol:        who.Com-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030305 18:50:50 MST
-// Generated:     20030305 18:50:56 MST
+// SIDL Created:  20030227 01:19:51 MST
+// Generated:     20030227 01:19:55 MST
 // Description:   Server-side implementation for who.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 13
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/who/who.sidl
+// source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/who/who.sidl
 // 
 
 #ifndef included_who_Com_Impl_hh
@@ -29,8 +29,8 @@
 #ifndef included_SIDL_BaseInterface_hh
 #include "SIDL_BaseInterface.hh"
 #endif
-#ifndef included_govcca_Services_hh
-#include "govcca_Services.hh"
+#ifndef included_gov_cca_Services_hh
+#include "gov_cca_Services.hh"
 #endif
 #ifndef included_who_Com_hh
 #include "who_Com.hh"
@@ -84,12 +84,14 @@ namespace who {
 
 
     /**
-     * Obtain Services handle, through which the component communicates with the
-     * framework. This is the one method that every CCA Component must implement. 
+     * Obtain Services handle, through which the 
+     * component communicates with the framework. 
+     * This is the one method that every CCA Component
+     * must implement. 
      */
     void
     setServices (
-      /*in*/ ::govcca::Services svc
+      /*in*/ ::gov::cca::Services services
     )
     throw () 
     ;
