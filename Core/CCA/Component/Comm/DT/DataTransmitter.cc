@@ -107,7 +107,7 @@ DataTransmitter::~DataTransmitter(){
 
 void 
 DataTransmitter::putMessage(DTMessage *msg){
-  cerr<<"putMessage to point="<<(long)msg->recver<<endl;
+  //cerr<<"putMessage to point="<<(long)msg->recver<<endl;
   msg->fr_addr=addr;
   //need synchronization
   sendQ_mutex->lock();
@@ -186,12 +186,7 @@ DataTransmitter::runListeningThread(){
       newAddr.ip=their_addr.sin_addr.s_addr;
       short listPort;
       newAddr.port=ntohs(their_addr.sin_port);
-      try{
-	recvall(new_fd, &(newAddr.port), sizeof(short));
-      }
-      catch(DTException){
-	cerr<<"DTException thrown in the wrong place\n";
-      }
+      recvall(new_fd, &(newAddr.port), sizeof(short));
       sockmap[newAddr]=new_fd;
       cerr<<"Accept connection from port"<<newAddr.port<<"  sockmap.size="<<sockmap.size()<<endl;
     }
@@ -255,8 +250,7 @@ DataTransmitter::runSendingThread(){
     sendall(new_fd, &(msg->fr_addr), sizeof(DTAddress));
     sendall(new_fd, &(msg->length), sizeof(long));
     sendall(new_fd, msg->buf, msg->length);
-    cerr<<"sendMessage to point="<<(long)msg->recver<<endl;
-    //cerr<<"Sending Message...";
+    cerr<<"Message is sent to point="<<(long)msg->recver<<endl;
     msg->display();
     delete msg;
 
@@ -309,8 +303,6 @@ DataTransmitter::runRecvingThread(){
 	  recvQ_mutex->unlock();
 	  recvQ_cond->conditionSignal();
 	  
-	  //cerr<<"Recved Message="<< msg->buf<<endl;
-	
 	  SemaphoreMap::iterator found=semamap.find(msg->recver);
 	  if(found!=semamap.end()){
 	    found->second->up();
