@@ -52,6 +52,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
 {
    d_wasOutputTimestep = false;
+   d_wereSavesAndCheckpointsInitialized = false;
 }
 
 DataArchiver::~DataArchiver()
@@ -102,16 +103,6 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       attrib = attributes["cycle"];
       if (attrib != "")
 	d_checkpointCycle = atoi(attrib.c_str());
-
-      // checkpoint saves
-      save = checkpoint->findBlock("save");
-      d_checkpointCycle = 2;
-      while (save != 0) {
-         attributes.clear();
-	 save->getAttributes(attributes);
-	 d_checkpointLabelNames.push_back(attributes["label"]);
-	 save = save->findNextBlock("save");
-      }
    }
    
    d_currentTimestep = 0;
@@ -390,14 +381,23 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 				    const LevelP& level, SchedulerP& sched,
 				    DataWarehouseP& new_dw)
 {
-   if (d_saveLabelNames.size() > 0 &&
+   if (!d_wereSavesAndCheckpointsInitialized &&
        !(delt == 0) /* skip the initialization timestep for this
 		       because it needs all computes to be set
 		       to find the save labels */) {
-      initSaveLabels(sched);
-      if (d_outputInterval != 0.0)
+
+      // This assumes that the TaskGraph doesn't change after the second
+      // timestep and will need to change if the TaskGraph becomes dynamic. 
+      d_wereSavesAndCheckpointsInitialized = true;
+      
+      if (d_outputInterval != 0.0) {
+	 initSaveLabels(sched);
 	 indexAddGlobals(); /* add saved global (reduction)
 			       variables to index.xml */
+      }
+      
+      if (d_checkpointInterval != 0)
+	 initCheckpoints(sched);
    }
   
    if (d_outputInterval != 0.0) {
@@ -1074,39 +1074,52 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
          d_saveLabels.push_back(saveItem);
    }
    d_saveLabelNames.clear();
+}
 
-   // handle checkpoint labels similarly
-   d_checkpointLabels.reserve(d_checkpointLabelNames.size());
-   for (list<string>::iterator it = d_checkpointLabelNames.begin();
-        it != d_checkpointLabelNames.end(); it++) {
 
-      VarLabel* var = VarLabel::find(*it);
+void  DataArchiver::initCheckpoints(SchedulerP& sched)
+{
+   typedef vector<const Task::Dependency*> dep_vector;
+   const dep_vector& initreqs = sched->getInitialRequires();
+   SaveItem saveItem;
+
+   // Not the most efficient, but it only happens once.
+   // When and if we start using dynamic task graphs, this should be made
+   // more efficient.
+   
+   map< string, list<int> > label_matl_map;
+
+   for (dep_vector::const_iterator iter = initreqs.begin();
+	iter != initreqs.end(); iter++) {
+      const Task::Dependency* dep = *iter;
+      label_matl_map[dep->d_var->getName()].push_back(dep->d_matlIndex);
+   }
+         
+   d_checkpointLabels.reserve(label_matl_map.size());
+   map< string, list<int> >::iterator mapIter;
+   for (mapIter = label_matl_map.begin();
+        mapIter != label_matl_map.end(); mapIter++) {
+      VarLabel* var = VarLabel::find((*mapIter).first);
       if (var == NULL)
-         throw ProblemSetupException((*it) +
+         throw ProblemSetupException((*mapIter).first +
 				  " variable label not found to checkpoint.");
 
-      Scheduler::VarLabelMaterialMap::iterator found =
-	 pLabelMatlMap->find(var->getName());
-
-      if (found == pLabelMatlMap->end())
-         throw ProblemSetupException((*it) +
-			  " variable label not computed for checkpointing.");
-      
       saveItem.label = var;
-      saveItem.matls = ConsecutiveRangeSet((*found).second);
+      saveItem.matls = ConsecutiveRangeSet((*mapIter).second);
 
       if (saveItem.label->typeDescription()->isReductionVariable())
          d_checkpointReductionLabels.push_back(saveItem);
       else
          d_checkpointLabels.push_back(saveItem);
    }
-   d_checkpointLabelNames.clear();
-
-   delete pLabelMatlMap;
 }
 
 //
 // $Log$
+// Revision 1.30  2001/01/09 00:57:52  witzel
+// Automated checkpointing so you don't have to specify what variables you
+// want to save.
+//
 // Revision 1.29  2001/01/06 02:32:13  witzel
 // Added checkpoint/restart capabilities
 //
