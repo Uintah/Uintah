@@ -64,6 +64,11 @@ public:
 		    int matlIndex, const Region*, int numGhostCells) const;
    virtual void put(const NCVariableBase&, const VarLabel*,
 		    int matlIndex, const Region*);
+
+   //////////
+   // Insert Documentation Here:
+   virtual void carryForward(const DataWarehouseP& from);
+       
 private:
    DWDatabase<NCVariableBase> ncdb;
    DWDatabase<ParticleVariableBase> particledb;
@@ -86,6 +91,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/05/02 17:54:29  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.13  2000/05/02 06:07:16  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

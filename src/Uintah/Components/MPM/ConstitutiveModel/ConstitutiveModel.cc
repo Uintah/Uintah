@@ -28,8 +28,8 @@ ConstitutiveModel::ConstitutiveModel()
 
    pVolumeLabel = new VarLabel("p.volume",
                                  ParticleVariable<double>::getTypeDescription());
-   gVelocityLabel = new VarLabel("g.velocity",
-                                   NCVariable<Vector>::getTypeDescription());
+   gInterpVelocityLabel = new VarLabel("g.interpvelocity",
+				       NCVariable<Vector>::getTypeDescription());
    deltLabel = new VarLabel("delt", delt_vartype::getTypeDescription());
 }
 

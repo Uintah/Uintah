@@ -74,7 +74,7 @@ WARNING
          const VarLabel* pMassLabel;
          const VarLabel* pXLabel;
 
-         const VarLabel* gVelocityLabel;
+         const VarLabel* gInterpVelocityLabel;
 	 
       };
       
@@ -82,6 +82,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.11  2000/05/02 17:54:25  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.10  2000/05/01 17:25:00  jas
 // Changed the var labels to be consistent with SerialMPM.
 //

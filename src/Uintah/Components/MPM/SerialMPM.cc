@@ -73,6 +73,8 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
 			      NCVariable<double>::getTypeDescription() );
    gVelocityLabel = new VarLabel( "g.velocity",
 				  NCVariable<Vector>::getTypeDescription() );
+   gInterpVelocityLabel = new VarLabel( "g.interpvelocity",
+					NCVariable<Vector>::getTypeDescription() );
    gExternalForceLabel =
                 new VarLabel( "g.externalforce",
 			      NCVariable<Vector>::getTypeDescription() );
@@ -182,7 +184,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 t->requires( new_dw, gMassLabel, region, 0 );
 	 t->requires( new_dw, gVelocityLabel, region, 0 );
 
-	 t->computes( new_dw, gVelocityLabel, region );
+	 t->computes( new_dw, gInterpVelocityLabel, region );
 
 	 sched->addTask(t);
       }
@@ -202,7 +204,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::computeStressTensor",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::computeStressTensor);
-	 t->requires(new_dw, gVelocityLabel, region, 0);
+	 t->requires(new_dw, gInterpVelocityLabel, region, 0);
 	 /*
 	   #warning
 	   t->requires(old_dw, "p.cmdata", region, 0,
@@ -269,7 +271,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::integrateAcceleration);
 	 t->requires(new_dw, gAccelerationLabel, region, 0 );
-	 t->requires(new_dw, gVelocityLabel, region, 0 );
+	 t->requires(new_dw, gInterpVelocityLabel, region, 0 );
 	 t->requires(old_dw, deltLabel );
 		     
 	 t->computes(new_dw, gVelocityStarLabel, region );
@@ -583,7 +585,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       delt_vartype delt;
 
       new_dw->get(acceleration, gAccelerationLabel, vfindex, region, 0);
-      new_dw->get(velocity, gVelocityLabel, vfindex, region, 0);
+      new_dw->get(velocity, gInterpVelocityLabel, vfindex, region, 0);
 
       old_dw->get(delt, deltLabel);
 
@@ -703,6 +705,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.37  2000/05/02 17:54:21  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.36  2000/05/02 06:07:08  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

@@ -7,6 +7,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Exceptions/UnknownVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/Level.h>
 #include <SCICore/Thread/Guard.h>
 #include <SCICore/Geometry/Point.h>
 #include <iostream>
@@ -97,7 +98,6 @@ void OnDemandDataWarehouse::allocate(int numParticles,
    var.allocate(psubset);
 
    // Put it in the database
-   particledb.put(label, matlIndex, region, var, false);
    particledb.put(position_label, matlIndex, region, var, false);
 }
 
@@ -118,9 +118,6 @@ void OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
 
    // Allocate the variable
    var.allocate(pos.getParticleSubset());
-
-   // Put it in the database
-   particledb.put(label, matlIndex, region, var, false);
 }
 
 void OnDemandDataWarehouse::put(const ParticleVariableBase& var,
@@ -129,8 +126,8 @@ void OnDemandDataWarehouse::put(const ParticleVariableBase& var,
 				const Region* region)
 {
    // Error checking
-   if(!particledb.exists(label, matlIndex, region))
-      throw InternalError("Position variable does not exist: "+position_label->getName());
+   if(particledb.exists(label, matlIndex, region))
+      throw InternalError("Variable already exists: "+label->getName());
 
    // Put it in the database
    particledb.put(label, matlIndex, region, var, true);
@@ -158,9 +155,6 @@ void OnDemandDataWarehouse::allocate(NCVariableBase& var,
 
    // Allocate the variable
    var.allocate(region);
-
-   // Put it in the database
-   ncdb.put(label, matlIndex, region, var, false);
 }
 
 void OnDemandDataWarehouse::put(const NCVariableBase& var,
@@ -168,11 +162,29 @@ void OnDemandDataWarehouse::put(const NCVariableBase& var,
 				int matlIndex, const Region* region)
 {
    // Error checking
-   if(!ncdb.exists(label, matlIndex, region))
-      throw InternalError("Variable does not exist: "+position_label->getName());
+   if(ncdb.exists(label, matlIndex, region))
+      throw InternalError("NC variable already exists: "+label->getName());
 
    // Put it in the database
    ncdb.put(label, matlIndex, region, var, true);
+}
+
+void OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
+{
+   OnDemandDataWarehouse* from = dynamic_cast<OnDemandDataWarehouse*>(fromp.get_rep());
+   grid=from->grid;
+
+   for(int l=0;l<grid->numLevels();l++){
+      const LevelP& level = grid->getLevel(l);
+      for(Level::const_regionIterator iter = level->regionsBegin();
+	  iter != level->regionsEnd(); iter++){
+	 const Region* region = *iter;
+	 ParticleVariable<Point> pos;
+	 from->particledb.get(position_label, 0, region, pos);
+
+	 particledb.put(position_label, 0, region, pos, false);
+      }
+   }
 }
 
 OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
@@ -183,6 +195,9 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.16  2000/05/02 17:54:29  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.15  2000/05/02 06:07:16  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

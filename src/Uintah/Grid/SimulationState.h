@@ -60,7 +60,7 @@ namespace Uintah {
 	for (int i = 0; i < (int)matls.size(); i++) {
 	  num_vf = Max(num_vf,matls[i]->getVFIndex());
 	}
-	return num_vf;
+	return num_vf+1;
       }
       Material* getMaterial(int idx) const {
 	 return matls[idx];
@@ -77,6 +77,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.6  2000/05/02 17:54:32  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.5  2000/04/28 20:24:44  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly

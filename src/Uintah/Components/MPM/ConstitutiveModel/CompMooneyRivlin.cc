@@ -133,11 +133,11 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  new_dw->get(pstress, pStressLabel, matlindex, region, 0);
+  new_dw->allocate(pstress, pStressLabel, matlindex, region);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
+  old_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
   ParticleVariable<double> pmass;
   old_dw->get(pmass, pMassLabel, matlindex, region, 0);
   ParticleVariable<double> pvolume;
@@ -145,7 +145,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, gVelocityLabel, matlindex,region, 0);
+  new_dw->get(gvelocity, gInterpVelocityLabel, matlindex,region, 0);
   delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
@@ -317,6 +317,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.17  2000/05/02 17:54:24  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.16  2000/05/02 06:07:11  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
