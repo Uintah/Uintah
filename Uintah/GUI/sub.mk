@@ -18,7 +18,8 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/TensorFieldExtractor.tcl \
 	$(SRCDIR)/ParticleFieldExtractor.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
-	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl
+	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
+	$(SRCDIR)/GridVisualizer.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 
@@ -26,6 +27,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.6  2000/08/14 17:31:15  bigler
+# Added GridVisualizer UI code
+#
 # Revision 1.5  2000/07/31 17:45:43  kuzimmer
 # Added files and modules for Field Extraction from uda
 #
