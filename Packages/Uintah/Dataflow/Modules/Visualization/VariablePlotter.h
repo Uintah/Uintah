@@ -28,7 +28,7 @@ public:
 
 protected:
   bool getGrid();
-  void add_type(string &type_list,const TypeDescription *subtype);
+  int add_type(string &type_list,const TypeDescription *subtype);
   void setVars(GridP grid);
   void extract_data(string display_mode, string varname,
 		    vector<string> mat_list, vector<string> type_list,
