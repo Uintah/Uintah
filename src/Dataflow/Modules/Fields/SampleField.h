@@ -210,7 +210,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(ModuleReporter *mod,
   for (i=0; i < num_seeds; i++)
   {
     Point p;
-    vector<weight_type>::iterator loc;
+    typename vector<weight_type>::iterator loc;
     do {
       loc =
 	std::lower_bound(table.begin(), table.end(),
