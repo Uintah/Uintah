@@ -171,7 +171,7 @@ void AnisoSphereModel::execute() {
 	mesh_->get_point(p, *nii);
 	electrodePositions.push_back(p);
   }
-  int numElectrodes = electrodePositions.size();
+  int numElectrodes = (int)electrodePositions.size();
 
   // get size of the spheres
   radii = scinew ColumnMatrix(4);
