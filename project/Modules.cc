@@ -16,6 +16,8 @@
 
 void ModuleList::initialize_list()
 {
+    Module* make_FieldReader();
+    ModuleList::insert("FieldReader", make_FieldReader);
     Module* make_IsoSurface();
     ModuleList::insert("IsoSurface", make_IsoSurface);
     Module* make_Salmon();

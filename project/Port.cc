@@ -23,7 +23,8 @@ Port::Port(Module* module, const clString& typename,
 	   int protocols)
 : module(module), typename(typename),
   portname(portname), colorname(colorname),
-  protocols(protocols), u_proto(0)
+  protocols(protocols), u_proto(0), bgcolor(0), top_shadow(0),
+  bottom_shadow(0)
 {
 }
 

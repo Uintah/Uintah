@@ -510,12 +510,16 @@ XQColor_named_colors.insert("maroon2", RGBColor(0.933333,0.188235,0.654902));
 XQColor_named_colors.insert("maroon3", RGBColor(0.803922,0.160784,0.564706));
 XQColor_named_colors.insert("maroon4", RGBColor(0.545098,0.109804,0.384314));
 XQColor_named_colors.insert("VioletRed1", RGBColor(1,0.243137,0.588235));
+#endif
 XQColor_named_colors.insert("VioletRed2", RGBColor(0.933333,0.227451,0.54902));
+#if 0
 XQColor_named_colors.insert("VioletRed3", RGBColor(0.803922,0.196078,0.470588));
 XQColor_named_colors.insert("VioletRed4", RGBColor(0.545098,0.133333,0.321569));
 XQColor_named_colors.insert("magenta1", RGBColor(1,0,1));
 XQColor_named_colors.insert("magenta2", RGBColor(0.933333,0,0.933333));
+#endif
 XQColor_named_colors.insert("magenta3", RGBColor(0.803922,0,0.803922));
+#if 0
 XQColor_named_colors.insert("magenta4", RGBColor(0.545098,0,0.545098));
 XQColor_named_colors.insert("orchid1", RGBColor(1,0.513725,0.980392));
 XQColor_named_colors.insert("orchid2", RGBColor(0.933333,0.478431,0.913725));

@@ -13,6 +13,7 @@
 
 #include <Field3DPort.h>
 #include <Connection.h>
+#include <Field3D.h>
 #include <NotFinished.h>
 #include <Port.h>
 #include <Classlib/Assert.h>
@@ -20,7 +21,7 @@
 #include <iostream.h>
 
 static clString Field3D_type("Field3D");
-static clString Field3D_color("aquamarine4");
+static clString Field3D_color("VioletRed2");
 
 Field3DIPort::Field3DIPort(Module* module, const clString& portname, int protocol)
 : IPort(module, Field3D_type, portname, Field3D_color, protocol)
@@ -60,24 +61,9 @@ void Field3DOPort::finish()
     NOT_FINISHED("Field3DOPort::reset()");
 }
 
-int Field3D::get_nx()
+void Field3DOPort::send_field(const Field3DHandle& field)
 {
-    return nx;
-}
-
-int Field3D::get_ny()
-{
-    return ny;
-}
-
-int Field3D::get_nz()
-{
-    return nz;
-}
-
-Field3D::Representation Field3D::get_rep()
-{
-    return rep;
+    NOT_FINISHED("send_field");
 }
 
 Field3DHandle Field3DIPort::get_field()
@@ -85,22 +71,3 @@ Field3DHandle Field3DIPort::get_field()
     NOT_FINISHED("Field3DIPort::get_field");
     return Field3DHandle(0);
 }
-
-Field3DHandle::Field3DHandle(Field3D* rep)
-: rep(rep)
-{
-    if(rep)
-	rep->ref_cnt++;
-}
-
-Field3DHandle::~Field3DHandle()
-{
-    if(rep && --rep->ref_cnt==0)
-	delete rep;
-}
-
-Field3D* Field3DHandle::operator->() const
-{
-    return rep;
-}
-

@@ -23,6 +23,7 @@ class CallbackCloners {
     CallbackCloners();
 public:
     static CallbackData* input_clone(void*);
+    static CallbackData* scale_clone(void*);
 };
 
 #endif

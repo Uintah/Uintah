@@ -20,7 +20,7 @@
 #include <iostream.h>
 
 static clString Geometry_type("Geometry");
-static clString Geometry_color("aquamarine4");
+static clString Geometry_color("magenta3");
 
 GeometryIPort::GeometryIPort(Module* module, const clString& portname, int protocol)
 : IPort(module, Geometry_type, portname, Geometry_color, protocol)

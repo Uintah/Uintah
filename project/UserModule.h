@@ -49,7 +49,7 @@ public:
     void update_progress(int, int);
 
     // Callbacks...
-    virtual void create_widget();
+    virtual void create_interface();
     void redraw_widget(CallbackData*, void*);
     void input_widget(CallbackData*, void*);
     void widget_button(CallbackData*, void*);

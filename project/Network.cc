@@ -107,10 +107,13 @@ void Network::initialize(NetworkEditor* _netedit)
     connect(modules[0], 0, modules[1], 0);
     connect(modules[1], 0, modules[2], 0);
 #endif
-    modules.add((*ModuleList::lookup("IsoSurface"))());
+    modules.add((*ModuleList::lookup("FieldReader"))());
     modules[0]->set_context(netedit, this);
-    modules.add((*ModuleList::lookup("Salmon"))());
+    modules.add((*ModuleList::lookup("IsoSurface"))());
     modules[1]->ypos=110;
     modules[1]->set_context(netedit, this);
+    modules.add((*ModuleList::lookup("Salmon"))());
+    modules[2]->ypos=210;
+    modules[2]->set_context(netedit, this);
     connect(modules[0], 0, modules[1], 0);
 }

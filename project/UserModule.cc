@@ -21,6 +21,7 @@
 #include <UserModule.h>
 #include <CallbackCloners.h>
 #include <Connection.h>
+#include <HelpUI.h>
 #include <MUI.h>
 #include <MotifCallback.h>
 #include <MtXEventLoop.h>
@@ -104,8 +105,9 @@ void UserModule::error(const clString& string)
 }
 
 
-void UserModule::create_widget()
+void UserModule::create_interface()
 {
+    // Make the network icon..
     evl->lock();
     // Create the GC
     gc=XCreateGC(netedit->display, XtWindow(*netedit->drawing_a), 0, 0);
@@ -206,6 +208,10 @@ void UserModule::create_widget()
     completed_color=new XQColor(netedit->color_manager, MODULE_COMPLETEDCOLOR);
     completed_color_top=completed_color->top_shadow();
     completed_color_bot=completed_color->bottom_shadow();
+
+    // Create the window
+    if(window)
+	window->activate();
     evl->unlock();
 }
 
@@ -330,24 +336,6 @@ void UserModule::redraw_widget(CallbackData*, void*)
     update_module(0);
 
     evl->unlock();
-}
-
-void UserModule::draw_button(Display* dpy, Window win, GC gc, int which)
-{
-    int xbleft=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+MODULE_BUTTON_BORDER;
-    int xbsize=MODULE_BUTTON_BORDER+MODULE_BUTTON_SIZE+2*MODULE_BUTTON_EDGE;
-    int x=xbleft+which*xbsize;
-    int xbsize2=xbsize-MODULE_BUTTON_BORDER;
-    int ybtop=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE+MODULE_PORT_SPACE+MODULE_BUTTON_BORDER;
-    int ybbot=ybtop+MODULE_BUTTON_BORDER+MODULE_BUTTON_EDGE+MODULE_BUTTON_SIZE
-	+MODULE_BUTTON_EDGE-2*MODULE_BUTTON_BORDER;
-    draw_shadow(dpy, win, gc, x, ybtop, x+xbsize2-1, ybbot,
-		MODULE_BUTTON_EDGE, top_shadow->pixel(), bottom_shadow->pixel());
-    switch(which){
-    default:
-	NOT_FINISHED("Drawing buttons...");
-	break;
-    }
 }
 
 void UserModule::update_module(int clear_first)
@@ -533,7 +521,6 @@ void UserModule::input_widget(CallbackData*, void*)
 void UserModule::widget_button(CallbackData*, void* data)
 {
     int which=(int)data;
-    cerr << "Button " << which << " pushed...\n";
     switch(which){
     case 0:
 	// User interface...
@@ -541,6 +528,13 @@ void UserModule::widget_button(CallbackData*, void* data)
 	    window->popup();
 	else
 	    popup_on_create=1;
+	break;
+    case 3:
+	// Help...
+	HelpUI::load(name);
+	break;
+    default:
+	cerr << "Button " << which << " pushed...\n";
+	break;
     }
 }
-

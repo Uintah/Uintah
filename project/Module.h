@@ -109,7 +109,7 @@ public:
     SchedClass sched_class;
     virtual int should_execute()=0;
 private:
-    virtual void create_widget()=0;
+    virtual void create_interface()=0;
 };
 
 #endif /* SCI_project_Module_h */

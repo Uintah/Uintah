@@ -14,61 +14,10 @@
 #ifndef SCI_project_Field3DPort_h
 #define SCI_project_Field3DPort_h 1
 
-#include <Persistent.h>
 #include <Port.h>
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
 
-class Field3D : public Persistent {
-protected:
-    friend class Field3DHandle;
-    int ref_cnt;
-private:
-    int nx, ny, nz;
-    int ntetra;
-public:
-    Field3D();
-    ~Field3D();
-    enum Representation {
-	RegularGrid,
-	TetraHedra,
-    };
-    enum FieldType {
-	ScalarField,
-	VectorField,
-    };
-private:
-    Representation rep;
-public:
-
-    Representation get_rep();
-
-    // These methods work for all types of representations
-    Vector interp_vector(Point&);
-    double interp_scalar(Point&);
-
-    // Only for regular grids
-    int get_nx();
-    int get_ny();
-    int get_nz();
-    void get_n(int&, int&, int&);
-
-    // Only for tetrahedra
-    int get_ntetra();
-};
-
-class Field3DHandle {
-    Field3D* rep;
-public:
-    Field3DHandle();
-    Field3DHandle(Field3D*);
-    Field3DHandle(const Field3DHandle&);
-    Field3DHandle& operator=(const Field3DHandle&);
-    Field3DHandle& operator=(Field3D*);
-    ~Field3DHandle();
-    Field3D* operator->() const;
-    Field3D* get_rep() const;
-};
+class Field3D;
+class Field3DHandle;
 
 class Field3DIPort : public IPort {
 public:
@@ -95,6 +44,8 @@ public:
 
     virtual void reset();
     virtual void finish();
+
+    void send_field(const Field3DHandle&);
 };
 
 #endif /* SCI_project_Field3DPort_h */

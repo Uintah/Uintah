@@ -19,7 +19,7 @@
 
 #define DEFAULT_MODULE_PRIORITY 90
 ModuleHelper::ModuleHelper(Module* module)
-: Task("ModuleHelper", 1, DEFAULT_MODULE_PRIORITY),
+: Task(module->name, 1, DEFAULT_MODULE_PRIORITY),
   module(module)
 {
 }
@@ -112,7 +112,7 @@ void Module::set_context(NetworkEditor* _netedit, Network* _network)
 {
     netedit=_netedit;
     network=_network;
-    create_widget();
+    create_interface();
 }
 
 OPort* Module::oport(int i)

@@ -2,19 +2,25 @@
 #include <config/sci.cf>
 
 LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrapper/libMInT
-OBJS = ColorManager.o  Connection.o  Field3DPort.o  GeometryPort.o  \
+OBJS = CallbackCloners.o \
+	ColorManager.o  Connection.o  \
+	Field3D.o  Field3DPort.o  GeometryPort.o  \
+	HelpUI.o  \
 	Module.o  Modules.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
 	MtXEventLoop.o \
-	Network.o  NetworkEditor.o  Port.o  \
+	Network.o  NetworkEditor.o  Persistent.o  Port.o  \
 	SoundPort.o \
 	UserModule.o  XQColor.o \
 	main.o
-SRCS = ColorManager.cc Connection.cc Field3DPort.cc GeometryPort.cc \
+SRCS = CallbackCloners.cc \
+	ColorManager.cc Connection.cc \
+	Field3D.cc Field3DPort.cc GeometryPort.cc \
+	HelpUI.cc \
 	Module.cc Modules.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
 	MtXEventLoop.cc \
-	Network.cc NetworkEditor.cc Port.cc \
+	Network.cc NetworkEditor.cc Persistent.cc Port.cc \
 	SoundPort.cc \
 	UserModule.cc XQColor.cc \
 	main.cc
@@ -26,8 +32,9 @@ SCI_LIBS = \
 	SCI_ClassLib \
 	../../wrapper/libMInT/libMInT.a
 
-SCI_LDFLAGS = -L../../audio -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF \
-	SCI_LX11 -lgen -lGLw -lGL
+SCI_LDFLAGS = ../../templates/fast_templates.a \
+	-L../../audio -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF \
+	SCI_LX11 -lgen -lGLw -lGL -ptv
 
 depend:: XQColorDB.h
 
