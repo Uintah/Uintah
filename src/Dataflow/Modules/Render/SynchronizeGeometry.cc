@@ -279,11 +279,9 @@ SynchronizeGeometry::append_msg(GeometryComm* gmsg)
 void
 SynchronizeGeometry::forward_saved_msg()
 {
-  {
-    ostringstream str;
-    str << " Checking " << max_portno_ << " ports.";
-    remark( str.str() );
-  }
+  ostringstream str;
+  str << " Checking " << max_portno_ << " ports.";
+  remark( str.str() );
 
   int i, num_flush, valid;
 
@@ -324,7 +322,7 @@ SynchronizeGeometry::forward_saved_msg()
       }
     }
     if (some) { ogeom_->flush(); }
-    
+
     update_state(Completed);
   }
   else
@@ -395,6 +393,12 @@ SynchronizeGeometry::flush_port(int portno, int count)
     GeometryComm *next = gmsg->next;
     delete gmsg;
     gmsg = next;
+  }
+
+  if (gmsg == NULL)
+  {
+    msg_heads_[portno] = NULL;
+    msg_tails_[portno] = NULL;
   }
 
   return some;
