@@ -96,14 +96,16 @@ int SphereMembraneGeometryPiece::returnParticleCount(const Patch* patch)
 }
 
 int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
-                                                  ParticleVariable<Point>&  pos,
-                                                  ParticleVariable<double>& vol,
-                                                  ParticleVariable<Vector>& pt1,
-                                                  ParticleVariable<Vector>& pt2,
-                                                  ParticleVariable<Vector>& pn,
-                                                  particleIndex start)
+                                                 ParticleVariable<Point>&  pos,
+                                                 ParticleVariable<double>& vol,
+                                                 ParticleVariable<Vector>& pt1,
+                                                 ParticleVariable<Vector>& pt2,
+                                                 ParticleVariable<Vector>& pn,
+                                                 ParticleVariable<Vector>& psiz,
+                                                 particleIndex start)
 {
   Box b = patch->getBox();
+  Vector dx = patch->dCell();
 
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);
@@ -141,6 +143,18 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
         pt2[start+count] = Vector(-sin(phi),cos(phi),0);
         pn[start+count]  = Vector(sin(theta)*cos(phi),sin(theta)*sin(phi),
                                                                  cos(theta));
+        psiz[start+count] = Vector(.5,.5,.5);
+
+//        psiz[start+count]= Vector(fabs(-d_radius*sin(theta)*dphi*sin(phi)
+//                                +       d_radius*dtheta*cos(theta)*cos(phi)
+//                                +       dx.x()*sin(theta)*cos(phi))/dx.x(),
+//
+//                                  fabs(d_radius*sin(theta)*dphi*cos(phi)
+//                                +      d_radius*dtheta*cos(theta)*sin(phi)
+//                                +      dx.x()*sin(theta)*sin(phi))/dx.x(),
+//                                  fabs(-d_radius*dtheta*sin(theta)
+//                                +       dx.x()*cos(theta))/dx.x());
+
         count++;
       }
       phi += dphi;

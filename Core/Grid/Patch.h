@@ -134,16 +134,16 @@ WARNING
      // These are for higher order (27 node) interpolation
      void findCellAndWeights27(const Point& pos,
                                      IntVector ni[27],
-                                     double S[27]) const;
+                                     double S[27],const Vector& size) const;
      
      void findCellAndShapeDerivatives27(const Point& pos,
 			                IntVector ni[27],
-				        Vector S[27]) const;
+				        Vector S[27], const Vector& size) const;
 
      void findCellAndWeightsAndShapeDerivatives27(const Point& pos,
                                                   IntVector ni[27], 
-                                                  double S[27],
-                                                  Vector d_S[27]) const;
+                                                  double S[27], Vector d_S[27],
+                                                  const Vector& size) const;
      //////////
      //////////
      // Insert Documentation Here:

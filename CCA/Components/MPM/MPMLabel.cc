@@ -15,13 +15,16 @@ MPMLabel::MPMLabel()
   // Particle Variables
 
   //non PermanentParticleState
-  pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
-			ParticleVariable<Matrix3>::getTypeDescription());
-
   pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
   
+  pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
+			ParticleVariable<Vector>::getTypeDescription() );
+
   //PermanentParticleState
+  pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
   pStressLabel = VarLabel::create( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
@@ -49,9 +52,6 @@ MPMLabel::MPMLabel()
   pTemperatureLabel = VarLabel::create( "p.temperature",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
-			ParticleVariable<Vector>::getTypeDescription() );
-
   pExternalHeatRateLabel = VarLabel::create( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -232,7 +232,7 @@ MPMLabel::MPMLabel()
   pCellNAPIDLabel =
     VarLabel::create("cellNAPID", CCVariable<short int>::getTypeDescription());
 
-  doMechLabel = VarLabel::create( "doMech", delt_vartype::getTypeDescription() );
+  doMechLabel = VarLabel::create( "doMech", delt_vartype::getTypeDescription());
 
   // Implicit MPM labels
 
@@ -366,5 +366,4 @@ void MPMLabel::registerPermanentParticleState(int i,
 {
   d_particleState[i].push_back(label);
   d_particleState_preReloc[i].push_back(preReloc_label);
-  
 }
