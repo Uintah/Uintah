@@ -32,6 +32,9 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
     method create_entries {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+
+	    set tensors [$w.tensors childsite]
+
 	    # Create the new variables and entries if needed.
 	    for {set i 0} {$i < [set $this-num-entries]} {incr i} {
 		
@@ -69,7 +72,6 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 		    set $this-m22-$i 1.0
 		}
 
-		set tensors [$w.tensors childsite]
 		if {![winfo exists $tensors.e-$i]} {
 		    frame $tensors.e-$i
 		    entry $tensors.e-$i.name \
@@ -127,9 +129,6 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
         toplevel $w
 
 	iwidgets::scrolledframe $w.tensors -hscrollmode none
-	set tensors [$w.tensors childsite]
-
-	#scrollbar $w.vscroll -orient vertical -command "$w.tensors yview"
 
 	frame $w.title
 	label $w.title.name -text "Material Name" \
