@@ -417,10 +417,10 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
   int maxi = (int)floor(maxp.x());
   int maxj = (int)floor(maxp.y());
   int maxk = (int)floor(maxp.z());
-  if (maxi >= (int)(ni_ - 1)) { maxi = ni_ - 1; }
-  if (maxj >= (int)(nj_ - 1)) { maxj = nj_ - 1; }
-  if (maxk >= (int)(nk_ - 1)) { maxk = nk_ - 1; }
-  
+  if (maxi >= (int)(ni_ - 1)) { maxi = ni_ - 2; }
+  if (maxj >= (int)(nj_ - 1)) { maxj = nj_ - 2; }
+  if (maxk >= (int)(nk_ - 1)) { maxk = nk_ - 2; }
+
   int i, j, k;
   for (i = mini; i <= maxi; i++) {
     for (j = minj; j <= maxj; j++) {
