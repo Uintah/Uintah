@@ -1513,6 +1513,8 @@ Gui::updateLightPanelCB( int /*id*/ )
 
   activeGui->lightIntensity_->set_float_val( light->get_intensity() );
 
+  activeGui->light_radius_spinner->set_float_val( light->radius );
+
   activeGui->lightPosX_->set_float_val( pos.x() );
   activeGui->lightPosY_->set_float_val( pos.y() );
   activeGui->lightPosZ_->set_float_val( pos.z() );
@@ -2176,6 +2178,10 @@ Gui::createLightWindow( GLUI * window )
   toggleShowLightsBtn_ = 
     window->add_button_to_panel(moreControls, "Show Lights",
 				TOGGLE_SHOW_LIGHTS_ID, toggleShowLightsCB );
+  light_radius_spinner =
+    window->add_spinner_to_panel(moreControls, "Radius", GLUI_SPINNER_FLOAT,
+				 &light_radius, -1, updateLightRadiusCB );
+  
   GLUI_Button * gotoLightBtn =
     window->add_button_to_panel(moreControls, "Goto Light" );
   gotoLightBtn->disable();
@@ -3106,6 +3112,25 @@ Gui::updateLightPositionCB( int id )
     break;
   }
   cout << "pos is " << pos << "\n";
+}
+
+void
+Gui::updateLightRadiusCB( int id )
+{
+  if (activeGui->light_radius < 0) {
+    // This is a no no
+    cerr << "light_radius cannot be less than zero...Fixing.\n";
+    activeGui->light_radius_spinner->set_float_val( 0 );
+  }
+
+  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  double radius = light->radius;
+
+  cout << "updating light radius for light : " << light->name_ << "\n";
+
+  light->updateRadius(activeGui->light_radius);
+
+  cout << "radius was " << radius << " now is "<<activeGui->light_radius<<"\n";
 }
 
 void
