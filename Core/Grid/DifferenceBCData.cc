@@ -73,3 +73,8 @@ bool DifferenceBCData::inside(const Point &p) const
   return (left->inside(p) && !right->inside(p));
 }
 
+void DifferenceBCData::print()
+{
+  left->print();
+  right->print();
+}

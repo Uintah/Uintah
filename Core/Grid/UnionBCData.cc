@@ -92,3 +92,9 @@ bool UnionBCData::inside(const Point &p) const
   return false;
 }
 
+void UnionBCData::print()
+{
+  for (int i = 0; i < (int)child.size(); i++)
+    child[i]->print();
+
+}

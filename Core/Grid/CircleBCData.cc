@@ -57,3 +57,7 @@ bool CircleBCData::inside(const Point &p) const
     return true;
 }
 
+void CircleBCData::print()
+{
+  d_bc.print();
+}

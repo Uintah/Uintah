@@ -57,6 +57,7 @@ WARNING
     void getNBoundaryIterator(std::vector<IntVector>& b) const;
     void getInteriorIterator(std::vector<IntVector>& i) const;
     virtual bool inside(const Point& p) const = 0;
+    virtual void print() = 0;
 
   protected:
     std::vector<IntVector> boundary,interior,nboundary;

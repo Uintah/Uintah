@@ -31,7 +31,7 @@ using namespace Uintah;
 
 BCReader::BCReader() 
 {
-  d_bcs.resize(6);
+  //  d_bcs.resize(6);
 }
 
 BCReader::~BCReader()
@@ -165,11 +165,15 @@ BCReader::read(ProblemSpecP& bc_ps)
 	BoundCondBase* bc;
 	BoundCondFactory::create(child,bc,mat_id);
 #ifdef PRINT
-	cout << "Inserting into mat_id = " << mat_id << " bc = " <<
-	  bc->getType() << " bctype = " << typeid(*bc).name() << endl;
+	cout << "Inserting into mat_id = " << mat_id << " bc = " 
+	     <<  bc->getType() << " bctype = " << typeid(*bc).name() <<  " "  
+	     << bc  << endl;
 #endif
 	// This is for the old boundary conditions.
-	d_bcs[face_side].setBCValues(mat_id,bc);
+	if (d_bcs.size() < face_side + 1) {
+	  d_bcs.resize(face_side + 1);
+	  d_bcs[face_side].setBCValues(mat_id,bc);
+	}
 	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
 	delete bc;
       }
@@ -181,6 +185,9 @@ BCReader::read(ProblemSpecP& bc_ps)
 	     << it->second->getType() << " bctype = " 
 	     << typeid(*(it->second)).name() << endl;
       }
+
+      cout << endl << "Old BCs just created" << endl;
+      d_bcs[face_side].print();
 #endif
 
       // Search through the newly created boundary conditions and create
@@ -204,7 +211,7 @@ BCReader::read(ProblemSpecP& bc_ps)
 #ifdef PRINT
 	cout << "Storing in  = " << typeid(bcgeom_data[itr->first]).name()
 	     << " " << bcgeom_data[itr->first] << " " 
-	     << typeid(*(itr->second)).name()
+	     << typeid(*(itr->second)).name() << " " << (itr->second)
 	     << endl;
 #endif
 	bcgeom_data[itr->first]->addBC(itr->second);
@@ -273,6 +280,12 @@ BCReader::read(ProblemSpecP& bc_ps)
     cout << "After Face . . .  " << face << endl;
     d_BCReaderData[face].print();
   } 
+
+  cout << endl << "Old Style BCs . . " << endl;
+  for (vector<BoundCondData>::iterator i = d_bcs.begin();
+       i != d_bcs.end(); ++i) 
+    (*i).print();
+
 #endif
 
 }

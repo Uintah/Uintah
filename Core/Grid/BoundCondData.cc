@@ -200,3 +200,17 @@ int BoundCondData::getMatID() const
   return mat_id;
 
 }
+
+void BoundCondData::print()
+{
+  boundcondDataType::const_iterator i;
+  for (i = d_data.begin(); i != d_data.end(); ++i) {
+    map<string,BoundCondBase*>::const_iterator it;
+    for (it = i->second.begin(); it != i->second.end(); ++it) {
+      cerr << "mat id: " << i->first << " BC " << it->first << " " 
+	   << it->second << endl;
+    }
+  }
+
+
+}
