@@ -105,11 +105,10 @@ public:
 		   int xres, int yres);
   void compute_imat();
   void invert();
+  
+  //! support dynamic compilation
+  static const string& get_h_file_path();
 
-  static const string get_h_file_path() {
-    static string path(__FILE__);
-    return path;
-  }
   friend void SCICORESHARE Pio(Piostream&, Transform&);
 };
 

@@ -80,10 +80,8 @@ public:
     
   string get_string() const;
 
-  static const string get_h_file_path() {
-    static string path(__FILE__);
-    return path;
-  }
+  //! support dynamic compilation
+  static const string& get_h_file_path();
     
   friend SCICORESHARE class Vector;
   friend SCICORESHARE inline double Dot(const Point&, const Point&);

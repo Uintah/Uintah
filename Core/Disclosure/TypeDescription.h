@@ -61,7 +61,10 @@ public:
   };
 
   void fill_compile_info(CompileInfo *ci) const;
-  
+
+  //! convert a string that ends in .cc to end in .h
+  static string cc_to_h(const string &dot_cc);
+
   static const TypeDescription* lookup_type(const string&);
 
 private:

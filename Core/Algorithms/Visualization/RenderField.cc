@@ -35,6 +35,11 @@ RenderFieldBase::get_compile_info(const TypeDescription *td) {
   return rval;
 }
 
+const string& 
+RenderFieldBase::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
 
 template <>
 bool

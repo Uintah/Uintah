@@ -51,10 +51,7 @@ public:
 
   virtual ~RenderFieldBase();
 
-  static const string get_h_file_path() {
-    static string path(__FILE__);
-    return path;
-  }
+  static const string& get_h_file_path();
 
   static string dyn_file_name(const TypeDescription *td) {
     return template_class_name() + "." + 
