@@ -1137,7 +1137,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }     // end of cell interator
 
-    cerr << " max. iterations in any cell" << test_max_iter << "\t"; 
+    cerr << " max. iterations in any cell " << test_max_iter << "\t"; 
     //__________________________________
     // update Boundary conditions
     setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch,0);    
@@ -1652,6 +1652,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     double invvol = 1./vol;
 
     CCVariable<double> q_CC,      q_advected;
+    Advector* advector = d_advector->clone(new_dw,patch);
 
     constCCVariable<double> pressure;
     CCVariable<double> delP_Dilatate;
@@ -1718,7 +1719,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       // Advection preprocessing
       // - divide vol_frac_cc/vol
 
-      Advector* advector = d_advector->clone(new_dw,patch);
+
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
 
       for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
@@ -1729,7 +1730,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //__________________________________
       //   First order advection of q_CC
       advector->advectQ(q_CC,patch,q_advected);
-      delete advector;
+
 
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
@@ -1766,6 +1767,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 				speedSound[c]*speedSound[c]);
       }  //iter loop
     }  //matl loop
+    delete advector;
     press_CC.copyData(pressure);
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
@@ -2716,6 +2718,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     CCVariable<double> q_CC, q_advected;
     const IntVector gc(1,1,1);
     CCVariable<Vector> qV_CC, qV_advected;
+    Advector* advector = d_advector->clone(new_dw,patch);
 
     new_dw->allocate(q_CC,       lb->q_CCLabel,       0, patch,
 		     Ghost::AroundCells,1);
@@ -2769,7 +2772,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //__________________________________
       //   Advection preprocessing
 
-      Advector* advector = d_advector->clone(new_dw,patch);
+
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
 
       //__________________________________
@@ -2856,8 +2859,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         }
       }
 
-      delete advector;
-
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
 	ostringstream description;
@@ -2881,6 +2882,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
 
     }
+    delete advector;
   }  // patch loop 
 }
 
