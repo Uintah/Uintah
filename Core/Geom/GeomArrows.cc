@@ -54,7 +54,7 @@ GeomArrows::GeomArrows(double headwidth, double headlength, int cyl, double r,
     normalize_headsize(normhead)
 {
     shaft_matls.add(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10));
-    head_matls.add(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10));
+    head_matls.add(new Material(Color(0,0,0), Color(1,0,0), Color(.6, .6, .6), 10));
     back_matls.add(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10));
 }
 
