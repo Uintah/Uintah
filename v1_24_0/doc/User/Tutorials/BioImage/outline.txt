@@ -14,11 +14,11 @@ BioImage Tutorial
 
 ---------------------------------------------------------------------------
 
-1. Introduction
+1. Introduction DARBY
 	a. goal of BioImage (data inspection, pre-processing, visualization)
 	b. explain tutorial will walk users through loading, pre-processing, and volume rendering a volume
 
-2. Getting Started
+2. Getting Started DARBY
 	a. Preparations
 		1. environment variables and sample data
 		2. unlimit command 
