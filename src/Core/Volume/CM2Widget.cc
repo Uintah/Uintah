@@ -106,10 +106,23 @@ CM2Widget::set_alpha(float a)
   alpha_ = Clamp((double)a, 0.0, 1.0);
 }
 
+int
+CM2Widget::get_shadeType()
+{
+    return shadeType_;
+}
+
 void
 CM2Widget::set_shadeType(int type)
 {
+    //ASSERT(type >= 0 && type <= 3);
     shadeType_ = type;
+}
+
+int
+CM2Widget::get_onState()
+{
+    return onState_;
 }
 
 void
