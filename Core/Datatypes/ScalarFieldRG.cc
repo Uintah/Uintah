@@ -44,7 +44,7 @@ ScalarFieldRGT<short>::ScalarFieldRGT()
 
 template <>
 ScalarFieldRGT<unsigned short>::ScalarFieldRGT()
-  : ScalarFieldRGBase("unsigned short")
+  : ScalarFieldRGBase("ushort")
 {
 }
 
@@ -56,67 +56,31 @@ ScalarFieldRGT<char>::ScalarFieldRGT()
 
 template <>
 ScalarFieldRGT<unsigned char>::ScalarFieldRGT()
-  : ScalarFieldRGBase("unsigned char")
+  : ScalarFieldRGBase("uchar")
 {
-}
-
-
-Persistent* ScalarFieldRGmaker_double()
-{
-  return scinew ScalarFieldRGT<double>;
-}
-
-Persistent* ScalarFieldRGmaker_float()
-{
-  return scinew ScalarFieldRGT<float>;
-}
-
-Persistent* ScalarFieldRGmaker_int()
-{
-  return scinew ScalarFieldRGT<int>;
-}
-
-Persistent* ScalarFieldRGmaker_short()
-{
-  return scinew ScalarFieldRGT<short>;
-}
-
-Persistent* ScalarFieldRGmaker_ushort()
-{
-  return scinew ScalarFieldRGT<unsigned short>;
-}
-
-Persistent* ScalarFieldRGmaker_char()
-{
-  return scinew ScalarFieldRGT<char>;
-}
-
-Persistent* ScalarFieldRGmaker_uchar()
-{
-  return scinew ScalarFieldRGT<unsigned char>;
 }
 
 
 template <>
-PersistentTypeID ScalarFieldRGT<double>::type_id("ScalarFieldRGdouble", "ScalarField", ScalarFieldRGmaker_double);
+PersistentTypeID ScalarFieldRGT<double>::type_id("ScalarFieldRGdouble", "ScalarField", maker);
 
 template <>
-PersistentTypeID ScalarFieldRGT<float>::type_id("ScalarFieldRGfloat", "ScalarField", ScalarFieldRGmaker_float);
+PersistentTypeID ScalarFieldRGT<float>::type_id("ScalarFieldRGfloat", "ScalarField", maker);
 
 template <>
-PersistentTypeID ScalarFieldRGT<int>::type_id("ScalarFieldRGint", "ScalarField", ScalarFieldRGmaker_int);
+PersistentTypeID ScalarFieldRGT<int>::type_id("ScalarFieldRGint", "ScalarField", maker);
 
 template <>
-PersistentTypeID ScalarFieldRGT<short>::type_id("ScalarFieldRGshort", "ScalarField", ScalarFieldRGmaker_short);
+PersistentTypeID ScalarFieldRGT<short>::type_id("ScalarFieldRGshort", "ScalarField", maker);
 
 template <>
-PersistentTypeID ScalarFieldRGT<ushort>::type_id("ScalarFieldRGushort", "ScalarField", ScalarFieldRGmaker_ushort);
+PersistentTypeID ScalarFieldRGT<ushort>::type_id("ScalarFieldRGushort", "ScalarField", maker);
 
 template <>
-PersistentTypeID ScalarFieldRGT<char>::type_id("ScalarFieldRGchar", "ScalarField", ScalarFieldRGmaker_char);
+PersistentTypeID ScalarFieldRGT<char>::type_id("ScalarFieldRGchar", "ScalarField", maker);
 
 template <>
-PersistentTypeID ScalarFieldRGT<uchar>::type_id("ScalarFieldRGuchar", "ScalarField", ScalarFieldRGmaker_uchar);
+PersistentTypeID ScalarFieldRGT<uchar>::type_id("ScalarFieldRGuchar", "ScalarField", maker);
 
 
 

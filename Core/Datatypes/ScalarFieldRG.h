@@ -53,6 +53,9 @@ public:
   // this has to be called before augmented stuff (base class)
     
   virtual void fill_gradmags();
+
+private:
+  static Persistent *maker();
 };
 
 
@@ -73,6 +76,14 @@ template <> PersistentTypeID ScalarFieldRGT<unsigned short>::type_id;
 template <> PersistentTypeID ScalarFieldRGT<char>::type_id;
 template <> PersistentTypeID ScalarFieldRGT<unsigned char>::type_id;
 
+
+
+template <class T>
+Persistent *
+ScalarFieldRGT<T>::maker()
+{
+  return scinew ScalarFieldRGT<T>();
+}
 
 template <class T>
 ScalarFieldRGT<T>::ScalarFieldRGT(const ScalarFieldRGT<T>& copy)
