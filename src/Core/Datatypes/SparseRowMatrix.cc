@@ -354,10 +354,16 @@ void SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
     memrefs+=2*sizeof(int)*nr+nnz*sizeof(int)+2*nnz*sizeof(double)+nr*sizeof(double);
 }
 
-void SparseRowMatrix::print()
+void SparseRowMatrix::print() const
 {
     cerr << "Sparse RowMatrix: " << endl;
 }
+
+void SparseRowMatrix::print(std::ostream&) const
+{
+  
+}
+
 
 #define SPARSEROWMATRIX_VERSION 1
 

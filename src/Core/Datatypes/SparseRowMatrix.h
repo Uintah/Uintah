@@ -40,56 +40,73 @@ namespace SCIRun {
 
 class AddMatrices;
 class SCICORESHARE SparseRowMatrix : public Matrix {
-    int nnrows;
-    int nncols;
-    double dummy;
-    double minVal;
-    double maxVal;
+  int nnrows;
+  int nncols;
+  double dummy;
+  double minVal;
+  double maxVal;
 protected:
 public:
-    int* rows;
-    int* columns;
-    int nnz;
-    double* a;
-    SparseRowMatrix();
-    SparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
-    SparseRowMatrix(int, int, int*, int*, int, double*);
-    SparseRowMatrix(int, int, int*, int*, int);
-    virtual ~SparseRowMatrix();
-    SparseRowMatrix(const SparseRowMatrix&);
-    SparseRowMatrix& operator=(const SparseRowMatrix&);
+  //! Public data
+  int* rows;
+  int* columns;
+  int nnz;
+  double* a;
 
-    void transpose( SparseRowMatrix &);
-    virtual double& get(int, int);
-    int getIdx(int, int);
-    virtual void put(int, int, const double&);
-    virtual void add(int, int, const double&);
-    virtual int nrows() const;
-    virtual int ncols() const;
-    virtual double minValue();
-    virtual double maxValue();
-    double density();
-    virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
-    virtual void solve(ColumnMatrix&);
-    virtual void zero();
-    virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1,
-		      int spVec=0) const;
-    virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				int& flops, int& memrefs, int beg=-1, 
-				int end=-1, int spVec=0);
-    virtual void print();
-    MatrixRow operator[](int r);
-    friend class AddMatrices;
-    virtual double* get_val(){return a;}
-    virtual int* get_row(){return rows;}
-    virtual int* get_col(){return columns;}
+  //! Constructors
+  SparseRowMatrix();
+  SparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
+  SparseRowMatrix(int, int, int*, int*, int, double*);
+  SparseRowMatrix(int, int, int*, int*, int);
+  SparseRowMatrix(const SparseRowMatrix&);
+
+  //! Destructor
+  virtual ~SparseRowMatrix();
+
+  //! Assignement operator
+  SparseRowMatrix& operator=(const SparseRowMatrix&);
+
+
+  virtual double& get(int, int);
+  virtual void put(int, int, const double&);
+  virtual void add(int, int, const double&);
+
+  void transpose( SparseRowMatrix &);  
+  int getIdx(int, int);
+  double density();
   int get_nnz() { return nnz; }
   
+  //! 
+  virtual int nrows() const;
+  virtual int ncols() const;
+  virtual double minValue();
+  virtual double maxValue();
+
+  
+  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
+  virtual void solve(ColumnMatrix&);
+  virtual void zero();
+  virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
+		    int& flops, int& memrefs, int beg=-1, int end=-1,
+		    int spVec=0) const;
+  virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+			      int& flops, int& memrefs, int beg=-1, 
+			      int end=-1, int spVec=0);
+  virtual void print() const;
+  virtual void print(std::ostream&) const;
+ 
+  virtual double* get_val(){return a;}
+  virtual int*    get_row(){return rows;}
+  virtual int*    get_col(){return columns;}
+  
   virtual SparseRowMatrix* clone();
-    // Persistent representation...
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
+
+  //! Persistent representation...
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
+  //! Friends
+  friend class AddMatrices;
 };
 
 } // End namespace SCIRun
