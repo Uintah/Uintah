@@ -97,11 +97,15 @@ private:
   static Mutex module_lock;
 
   GuiString tcl_status;
+  int generation;
+  int timestep;
+  int material;
+  int levelnum;
   GuiInt level_;
   GuiString psVar;
   GuiString pvVar;
   GuiString ptVar;
-  
+  GuiString onMaterials;
   GuiInt pNMaterials;
 
 
@@ -117,7 +121,7 @@ private:
   struct VarInfo
   {
      VarInfo()
-	: name(""), matls() {}
+	: name(""), matls(), wasShown(false) {}
      VarInfo(std::string name, ConsecutiveRangeSet matls)
 	: name(name), matls(matls), wasShown(false) { }
      VarInfo& operator=(const VarInfo& v)
@@ -126,6 +130,7 @@ private:
      ConsecutiveRangeSet matls;
      bool wasShown;
   };
+
   std::list<VarInfo> scalarVars;
   std::list<VarInfo> vectorVars;
   std::list<VarInfo> tensorVars;

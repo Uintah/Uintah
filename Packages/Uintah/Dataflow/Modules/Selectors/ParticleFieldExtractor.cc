@@ -74,10 +74,12 @@ Mutex ParticleFieldExtractor::module_lock("PFEMutex");
   ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx)
   : Module("ParticleFieldExtractor", ctx, Filter, "Selectors", "Uintah"),
     tcl_status(ctx->subVar("tcl_status")),
+    generation(-1),  timestep(-1), material(-1), levelnum(0),
     level_(ctx->subVar("level")),
     psVar(ctx->subVar("psVar")),
     pvVar(ctx->subVar("pvVar")),
     ptVar(ctx->subVar("ptVar")),
+    onMaterials(ctx->subVar("onMaterials")),
     pNMaterials(ctx->subVar("pNMaterials")),
     positionName(""), particleIDs(""), archiveH(0),
     num_materials(0)
@@ -138,15 +140,23 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
   
   //  string ptNames;
   
-  // reset the vars
-  psVar.set("");
-  pvVar.set("");
-  ptVar.set("");
+//   // reset the vars
+//   psVar.set("");
+//   pvVar.set("");
+//   ptVar.set("");
 
   ostringstream os;
   os << levels;
 
-  
+  string psNames("");
+  string pvNames("");
+  string ptNames("");
+  int psIndex = -1;
+  int pvIndex = -1;
+  int ptIndex = -1;
+  bool psMatches = false;
+  bool pvMatches = false;
+  bool ptMatches = false;
   // get all of the NC and Particle Variables
   const TypeDescription *td;
   bool found = false;
@@ -162,14 +172,41 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
       case TypeDescription::int_type:
         scalarVars.push_back(VarInfo(names[i], matls));
 	found = true;
+	if( psNames.size() != 0 )
+	  psNames += " ";
+	psNames += names[i];
+	if(psVar.get() == ""){ psVar.set(names[i].c_str()); }
+	if(psVar.get() == names[i].c_str()){
+	  psMatches = true;
+	} else {
+	  if( psIndex == -1){ psIndex = i; }
+	}
 	break;
       case  TypeDescription::Vector:
         vectorVars.push_back(VarInfo(names[i], matls));
 	found = true;
+	if( pvNames.size() != 0 )
+	  pvNames += " ";
+	pvNames += names[i];
+	if(pvVar.get() == ""){ pvVar.set(names[i].c_str()); }
+	if(pvVar.get() == names[i].c_str()){
+	  pvMatches = true;
+	} else {
+	  if( pvIndex == -1){ pvIndex = i; }
+	}
 	break;
       case  TypeDescription::Matrix3:
 	tensorVars.push_back(VarInfo(names[i], matls));
 	found = true;
+	if( ptNames.size() != 0 )
+	  ptNames += " ";
+	ptNames += names[i];
+	if(ptVar.get() == ""){ ptVar.set(names[i].c_str()); }
+	if(ptVar.get() == names[i].c_str()){
+	  ptMatches = true;
+	} else {
+	  if( ptIndex == -1){ ptIndex = i; }
+	}
 	break;
       case  TypeDescription::Point:
         pointVars.push_back(VarInfo(names[i], matls));
@@ -186,6 +223,20 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
     }
   }
   
+  if( !psMatches && psIndex != -1 ) {
+    psVar.set(names[psIndex].c_str());
+  } 
+  if( !pvMatches && pvIndex != -1 ) {
+    pvVar.set(names[pvIndex].c_str());
+  }
+  if( !ptMatches && ptIndex != -1 ) {
+    ptVar.set(names[ptIndex].c_str());
+  }
+
+//   cerr<<"selected variables in setVar() are "<<
+//     psVar.get()<<" (index "<<psIndex<<"), "<<
+//     pvVar.get()<<" (index "<<pvIndex<<"), "<<
+//     ptVar.get()<<" (index "<<ptIndex<<")\n";
   // get the number of materials for the NC & particle Variables
   num_materials = archive.queryNumMaterials(r, times[0]);
 //   cerr << "Number of Materials " << num_materials << endl;
@@ -196,9 +247,13 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
      gui->execute(id + " destroyFrames");
      gui->execute(id + " build");
      gui->execute(id + " buildLevels "+ os.str());
+//      gui->execute(id + " setParticleScalars " + psNames.c_str());
+//      gui->execute(id + " setParticleVectors " + pvNames.c_str());
+//      gui->execute(id + " setParticleTensors " + ptNames.c_str());
      gui->execute(id + " buildPMaterials " + to_string(num_materials));
-     gui->execute(id + " buildVarList");    
+//      gui->execute(id + " buildVarList");    
   }
+
   return found;
 }
 
@@ -219,6 +274,10 @@ void ParticleFieldExtractor::showVarsForMatls()
   string vpNames = getVarsForMaterials(vectorVars, onMaterials, needToUpdate);
   string tpNames = getVarsForMaterials(tensorVars, onMaterials, needToUpdate);
 
+//   cerr<<"selected variables in showVarsForMatls() are "<<
+//     psVar.get()<<" (psVarlist: "<<spNames<<"), "<<
+//     pvVar.get()<<" (pvVarlist: "<<vpNames<<"), "<<
+//     ptVar.get()<<" (ptVarlist: "<<tpNames<<")\n";
   
   if (needToUpdate) {
     string visible;
@@ -382,7 +441,7 @@ void ParticleFieldExtractor::execute()
 
    if ( handle.get_rep() != archiveH.get_rep() ) {
      // we have a different archive
-     
+     cerr<<"new DataArchive ... \n";
      // empty the cache of stored variables
      material_data_list.clear();
      

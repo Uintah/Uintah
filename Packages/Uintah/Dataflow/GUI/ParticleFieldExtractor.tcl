@@ -199,15 +199,15 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 
     method setParticleScalars { args } {
 	set psVarList $args;
-#	puts "psVarList is now $psVarList";
+# 	puts "psVarList is now $psVarList";
     }
     method setParticleVectors { args } {
 	set pvVarList $args;
-#	puts "pvVarList is now $pvVarList";
+# 	puts "pvVarList is now $pvVarList";
     }    
     method setParticleTensors { args } {
 	set ptVarList $args;
-#	puts "ptVarList is now $ptVarList";
+# 	puts "ptVarList is now $ptVarList";
     }    
  
     method buildLevels { levels } {
@@ -247,16 +247,20 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	pack $parent.m.l -side top
 	frame $parent.m.m -relief flat 
 	pack $parent.m.m  -side top -expand yes -fill both
+	
+	set selected 0;
 	for {set i 0} { $i < $ns} {incr i} {
 	    $buttontype $parent.m.m.p$i -text $i \
 		-offvalue 0 -onvalue 1 -command $c \
 		-variable $this-p$i
 	    pack $parent.m.m.p$i -side left
-	    if { $i == 0 } {
-		$parent.m.m.p$i select
-	    }
 	    #puts [$parent.m.p$i configure -variable]
+	    if { [isOn p$i] } {
+		set selected 1;
+	    }
 	}
+	
+	if { !$selected } { $parent.m.m.p0 select }
 	set num_materials $ns
     }
 
@@ -269,7 +273,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	set sv ""
 	set vv ""
 	set c "$this-c needexecute"
-	puts "... buildControlFrame $pf.1"
+# 	puts "... buildControlFrame $pf.1"
 
 	if { [set $this-psVar] != ""  } {
 	    if { [lsearch $psVarList [set $this-psVar]] == -1 } {
@@ -295,7 +299,6 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    }
 	    set lvar [string tolower $newvar]
 	    regsub \\. $lvar _ lvar
-	    puts "button $pf.1.1.$lvar"
 	    radiobutton $pf.1.1.$lvar -text $newvar \
 		-variable $this-psVar -command $c -value $newvar
 	    pack $pf.1.1.$lvar -side top -anchor w
