@@ -100,7 +100,6 @@ field_minmax( Field &field, pair<T,T>& minmax )
 
   return true;
 }
-    
 
 template <class Field, class Functor>
 bool
@@ -173,6 +172,7 @@ struct LinearInterp : public InterpFunctor<Field> {
       (field.value(idx) * weights_[widx]);
   }
 };
+
 
 } // end namespace SCIRun
 #endif //Datatypes_FieldAlgo_h

@@ -67,7 +67,9 @@ TetVolMesh::TetVolMesh() :
   edges_(0),
   edge_table_(0),
   edge_table_lock_("TetVolMesh edge_ fill lock"),
-  node_nbor_lock_("TetVolMesh node_neighbors__ fill lock")
+  node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
+  grid_(0),
+  grid_lock_("TetVolMesh grid_ fill lock")
 {
 }
 
@@ -84,7 +86,9 @@ TetVolMesh::TetVolMesh(const TetVolMesh &copy):
   edges_(copy.edges_),
   edge_table_(copy.edge_table_),
   edge_table_lock_("TetVolMesh edge_ fill lock"),
-  node_nbor_lock_("TetVolMesh node_neighbors__ fill lock")
+  node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
+  grid_(copy.grid_),
+  grid_lock_("TetVolMesh grid_ fill lock")
 {
 }
 
@@ -211,6 +215,7 @@ TetVolMesh::finish_mesh() {
   compute_edges();
   compute_faces();
   compute_node_neighbors();
+  compute_grid();
 }
 
 
@@ -455,21 +460,46 @@ distance2(const Point &p0, const Point &p1)
 bool
 TetVolMesh::locate(node_index &loc, const Point &p) const
 {
-  node_iterator ni = node_begin();
-  if (ni == node_end()) { return false; }
-
-  double min_dist = distance2(p, points_[*ni]);
-  loc = *ni;
-  ++ni;
-
-  while (ni != node_end()) {
-    const double dist = distance2(p, points_[*ni]);
-    if (dist < min_dist) {
-      loc = *ni;
+  cell_index ci;
+  if (locate(ci, p)) { // first try the fast way.
+    node_array nodes;
+    get_nodes(nodes, ci);
+    
+    double d0 = distance2(p, points_[nodes[0]]);
+    double d = d0;
+    loc = nodes[0];
+    double d1 = distance2(p, points_[nodes[1]]);
+    if (d1 < d) {
+      d = d1;
+      loc = nodes[1];
     }
+    double d2 = distance2(p, points_[nodes[2]]);
+    if (d2 < d) {
+      d = d2;
+      loc = nodes[2];
+    }
+    double d3 = distance2(p, points_[nodes[3]]);
+    if (d3 < d)  {
+       loc = nodes[3];
+    }
+    return true;
+  } else {  // do exhaustive search.
+    node_iterator ni = node_begin();
+    if (ni == node_end()) { return false; }
+    
+    double min_dist = distance2(p, points_[*ni]);
+    loc = *ni;
     ++ni;
+    
+    while (ni != node_end()) {
+      const double dist = distance2(p, points_[*ni]);
+      if (dist < min_dist) {
+	loc = *ni;
+      }
+      ++ni;
+    }
+    return true;
   }
-  return true;
 }
 
 
@@ -492,17 +522,69 @@ TetVolMesh::locate(face_index &/*face*/, const Point & /* p */) const
 bool
 TetVolMesh::locate(cell_index &cell, const Point &p) const
 {
+  if (grid_.get_rep() == 0) {
+    ASSERTFAIL("Call compute_grid before calling locate!");
+  }
+
   bool found_p = false;
-  cell_iterator ci = cell_begin();
-  while (ci != cell_end()) {
-    if (inside4_p((*ci) * 4, p)) {
+  LatVolMeshHandle mesh = grid_->get_typed_mesh();
+  LatVolMesh::cell_index ci;
+  mesh->locate(ci, p);
+  vector<cell_index> v = grid_->value(ci);
+  vector<cell_index>::iterator iter = v.begin();
+  while (iter != v.end()) {
+    if (inside4_p((*iter) * 4, p)) {
       found_p = true;
       break;     
     }
+    ++iter;
+  }
+  cell = *iter;
+  return found_p;
+}
+
+
+void
+TetVolMesh::compute_grid()
+{
+  if (grid_.get_rep() != 0) return; // only create once.
+
+  grid_lock_.lock();
+  BBox bb = get_bounding_box();
+  // cubed root of number of cells to get a subdivision ballpark
+  const double one_third = 1.L/3.L;
+  int s = (int)ceil(pow((double)cells_.size(), one_third));
+  
+  LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
+  grid_ = scinew LatticeVol<vector<cell_index> >(mesh, Field::CELL);
+  grid_->resize_fdata();
+  LatticeVol<vector<cell_index> >::fdata_type &fd = grid_->fdata();
+  
+  BBox box;
+  node_array nodes;  
+  cell_iterator ci = cell_begin();
+  while(ci != cell_end()) {
+    box.reset();
+    get_nodes(nodes, *ci);
+    box.extend(points_[nodes[0]]);
+    box.extend(points_[nodes[1]]);
+    box.extend(points_[nodes[2]]);
+    box.extend(points_[nodes[3]]);
+
+    // add this cell index to all overlapping cells in grid_
+    LatVolMesh::cell_array carr;
+    mesh->get_cells(carr, box);
+    LatVolMesh::cell_array::iterator giter = carr.begin();
+    while (giter != carr.end()) {
+      // Would like to just get a reference to the vector at the cell 
+      // but can't from value. Bypass the interface.
+      vector<cell_index> &v = fd[*giter];
+      v.push_back(*ci);
+      ++giter;
+    }
     ++ci;
   }
-  cell = *ci;
-  return found_p;
+  grid_lock_.unlock();
 }
 
 bool

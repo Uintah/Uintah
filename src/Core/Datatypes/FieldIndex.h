@@ -31,8 +31,12 @@
 #ifndef Datatypes_FieldIndex_h
 #define Datatypes_FieldIndex_h
 
+#include <vector>
+#include <Core/Persistent/Persistent.h>
+
 namespace SCIRun {
 
+using std::vector;
 
 //! Base type for index types.
 template <class T>
@@ -47,6 +51,8 @@ struct FieldIndexBase {
   
   T index_;
 };
+
+
 
 //! Distinct type for node index.
 template <class T>
@@ -84,6 +90,29 @@ struct CellIndex : public FieldIndexBase<T> {
     FieldIndexBase<T>(index) {}
 };
 
+// the following operators only exist to get the generic interpolate to compile
+// 
+template <class T>
+vector<CellIndex<T> >
+operator*(const vector<CellIndex<T> >& r, double &) {
+  ASSERTFAIL("FieldIndex.h Bogus operator");
+  return r;
+}
+
+template <class T>
+vector<CellIndex<T> >
+operator+=(const vector<CellIndex<T> >& l, const vector<CellIndex<T> >& r) {
+  ASSERTFAIL("FieldIndex.h Bogus operator");
+  return l;
+}
+
+#define FIELDINDEXBASE_VERSION 1
+
+template<class T>
+void Pio(Piostream& stream, FieldIndexBase<T>& data)
+{
+  Pio(stream, data.index_);
+}
 
 }
 

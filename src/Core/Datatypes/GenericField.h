@@ -122,6 +122,7 @@ private:
   fdata_type                   fdata_;
 }; 
 
+
 //! Virtual interface.
 //! internal interp object
 template <class Mesh, class FData> template <class Data>

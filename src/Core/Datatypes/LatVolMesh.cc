@@ -65,6 +65,30 @@ LatVolMesh::get_nodes(node_array &array, cell_index idx) const
   array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
 }
 
+//! return all cell_indecies that overlap the BBox in arr.
+void 
+LatVolMesh::get_cells(cell_array &arr, const BBox &bbox) const
+{
+  arr.clear();
+  cell_index min;
+  locate(min, bbox.min());
+  cell_index max;
+  locate(max, bbox.max());
+  
+  if (max.i_ >= nx_ - 1) max.i_ = nx_ - 2;
+  if (max.j_ >= ny_ - 1) max.j_ = ny_ - 2;
+  if (max.k_ >= nz_ - 1) max.k_ = nz_ - 2;
+
+  for (unsigned i = min.i_; i <= max.i_; i++) {
+    for (unsigned j = min.j_; j <= max.j_; j++) {
+      for (unsigned k = min.k_; k <= max.k_; k++) {
+	arr.push_back(cell_index(i,j,k));
+      }
+    }
+  }
+}
+
+
 void 
 LatVolMesh::get_center(Point &result, node_index idx) const
 {
@@ -110,7 +134,7 @@ LatVolMesh::locate(cell_index &cell, const Point &p) const
   za = (nz_-1)/(max_.z()-min_.z());
   zb = -(min_.z()*(nz_-1))/(max_.z()-min_.z());
 
-  // convert from object space to cell_index space
+  // convertg from object space to cell_index space
   cell.i_ = (unsigned)(p.x()*xa+xb);
   cell.j_ = (unsigned)(p.y()*ya+yb);
   cell.k_ = (unsigned)(p.z()*za+zb);

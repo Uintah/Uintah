@@ -269,7 +269,8 @@ public:
 
   LatVolMesh()
     : nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {}
-  LatVolMesh(unsigned x, unsigned y, unsigned z, Point &min, Point &max) 
+  LatVolMesh(unsigned x, unsigned y, unsigned z, 
+	     const Point &min, const Point &max) 
     : nx_(x),ny_(y),nz_(z),min_(min),max_(max) {}
   LatVolMesh(const LatVolMesh &copy)
     : nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
@@ -310,6 +311,7 @@ public:
   void set_min(Point p) { min_ = p; }
   void set_max(Point p) { max_ = p; }
 
+
   //! get the child elements of the given index
   void get_nodes(node_array &, edge_index) const {}
   void get_nodes(node_array &, face_index) const {}
@@ -325,6 +327,9 @@ public:
   unsigned get_cells(cell_array &, node_index) const { return 0; }
   unsigned get_cells(cell_array &, edge_index) const { return 0; }
   unsigned get_cells(cell_array &, face_index) const { return 0; }
+
+  //! return all cell_indecies that overlap the BBox in arr.
+  void get_cells(cell_array &arr, const BBox &box) const;
 
   //! similar to get_cells() with face_index argument, but
   //  returns the "other" cell if it exists, not all that exist
@@ -347,6 +352,7 @@ public:
   { get_center(p, i); }
     
 
+  
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
