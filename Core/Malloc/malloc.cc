@@ -93,6 +93,8 @@ void* calloc(size_t n, size_t s) THROWCLAUSE
 
 void* realloc(void* p, size_t s) THROWCLAUSE
 {
+    if(!default_allocator)
+	MakeDefaultAllocator();
     return default_allocator->realloc(p, s);
 }
 
