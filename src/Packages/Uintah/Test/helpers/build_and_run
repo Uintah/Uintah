@@ -157,16 +157,29 @@ rm -f $summary_log
 
 
 cd TestScripts
-TestDir=TestScripts
-
-# go to dir of weekly tests if WEEKLY set to 1
-if [ $WEEKLY == "1" ]; then
-    echo "Weekly tests running!"
-    cd Weekly
-    TestDir=TestScripts/Weekly
-fi
 
 for test in *; do
+
+# match this test to being run in a daily or weekly context
+    runThisTest=0;
+    if [ "$WEEKLY" == "1" ]; then
+      case "$test" in
+        *.wk) runThisTest=1
+              ;;
+        *)    runThisTest=0
+              ;;
+      esac
+    else
+      case "$test" in
+        *.wk) runThisTest=0
+              ;;
+        *)    runThisTest=1
+              ;;
+      esac
+    fi
+    if [ "$runThisTest" == "0" ]; then
+      continue
+    fi
     if [ -f "$test" -a -x "$test" ]; then
 	if [ $WithArches == "no" -a $test == "ARCHES" ]; then
 	    echo ""
@@ -183,7 +196,7 @@ for test in *; do
 	echo "#!/bin/tcsh" > "$doTestScript"
 	echo "setenv PATH $PATH" >> "$doTestScript"
         echo "setenv OS $OS" >> "$doTestScript"
-	echo "python $TestDir/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+	echo "python $TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
 	nice "$doTestScript" > "${test}.log"  2>&1
 	retval=$?
