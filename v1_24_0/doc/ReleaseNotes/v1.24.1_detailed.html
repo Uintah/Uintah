@@ -92,6 +92,9 @@ DEALINGS IN THE SOFTWARE.
       <li>Viewer (Render) - Check for stereo support before using it in the viewer, bug #2478.</li>
       <li>Viewer (Render) - Fix 'Use Global Controls' button on Viewer items, bug #2431.</li>
       <li>Isosurface (Visualization) - Filter out degenerate output elements when isosurfacing, bug #2468.</li>
+      <li>EditColorMap2D (Visualization) - load/save use cmap2 format, not .xff files
+      <li>EditColorMap2D (Visualization) - fix endian bug in ppm thumbnail images on macs
+      <li>TransformMesh (modules with scrolling text dialog) - UI comes back to the size the user specifies
     </ul>
 
     <h2>Teem Modules (Category in parentheses)</h2>
@@ -147,7 +150,8 @@ DEALINGS IN THE SOFTWARE.
       <li>BioImage (Teem) - Now handles loading different datasets.</li>
       <li>BioImage (Teem) - Allows user to turn 2D text on or off.</li>
       <li>BioImage (Teem) - Updated tutorial figures.</li>
-      
+      <li>All PowerApps (Teem) - changed the label of Nrrd file reader to reflect ability to read in generic raster data, such as .vff and .vol       
+
     </ul>
 
     <h1>Infrastructure Enhancements</h1>
@@ -188,7 +192,16 @@ DEALINGS IN THE SOFTWARE.
 
     <h1>Documentation</h1>
     <ul>
-      <li></li>
+      <li>Added a Graphics Card and Accelerated Driver section to the FAQ</li>
+    </ul>
+
+    <h1>Data Sets</h1>
+    <ul>
+      <li>There is .cmap2 file for each dataset in the volume/
+      directory, which are the default cmap in BioImage when viewing
+      the respective datasets.</li>
+      <li>There are .jpg files for each dataset in the volume/
+      directory that show a screenshot of the volume rendered in BioImage.</li> 
     </ul>
 
     <h1>Known Bugs</h1>
