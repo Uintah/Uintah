@@ -38,12 +38,16 @@ using namespace SCIRun;
 
 //! Constructor
 // -- it's private, no occasional object creation
-BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hField,
+BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hFieldInt,
+			     TetVolFieldTensorHandle hFieldTensor,
+			     bool index_based,
 			     vector<pair<string, Tensor> >& tens,
 			     MatrixHandle& hA, 
 			     int np, double unitsScale):
   // ---------------------------------------------
-  hField_(hField),
+  hFieldInt_(hFieldInt),
+  hFieldTensor_(hFieldTensor),
+  index_based_(index_based),
   hA_(hA),
   np_(np),
   barrier_("BuildFEMatrix barrier"),
@@ -51,7 +55,9 @@ BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hField,
   tens_(tens),
   unitsScale_(unitsScale)
 {
-  hMesh_=hField->get_typed_mesh();
+  if (index_based_) hMesh_ = hFieldInt->get_typed_mesh();
+  else hMesh_ = hFieldTensor->get_typed_mesh();
+
   TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
@@ -59,7 +65,9 @@ BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hField,
 }
 BuildFEMatrix::~BuildFEMatrix(){}
 
-bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
+bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hFieldInt,
+				   TetVolFieldTensorHandle hFieldTensor,
+				   bool index_based,
 				   vector<pair<string, Tensor> >& tens,
 				   MatrixHandle& hA, double unitsScale,
 				   int num_procs)
@@ -79,7 +87,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
   hA = 0;
 
   BuildFEMatrixHandle hMaker =
-    new BuildFEMatrix(hField, tens, hA, np, unitsScale);
+    new BuildFEMatrix(hFieldInt, hFieldTensor, index_based, tens, 
+		      hA, np, unitsScale);
 //  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
@@ -212,10 +221,10 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::ind
   Vector grad1, grad2, grad3, grad4;
   double vol = hMesh_->get_gradient_basis(c_ind, grad1, grad2, grad3, grad4);
  
-  int  ind = hField_->value(c_ind);
+  double el_cond[3][3];
+  if (index_based_) el_cond = tens_[hFieldInt_->value(c_ind)].second.mat_;
+  else el_cond = hFieldTensor_->value(c_ind).mat_;
 
-  double (&el_cond)[3][3] = tens_[ind].second.mat_;
- 
   if(fabs(vol) < 1.e-10){
     for(int i = 0; i<4; i++)
       for(int j = 0; j<4; j++)

@@ -34,12 +34,15 @@ using namespace SCIRun;
 class BuildHexFEMatrix;
 
 typedef LockingHandle<HexVolField<int> > HexVolFieldIntHandle;
+typedef LockingHandle<HexVolField<Tensor> > HexVolFieldTensorHandle;
 typedef LockingHandle<BuildHexFEMatrix> BuildHexFEMatrixHandle;
 
 class BuildHexFEMatrix {
 
   // private stuff
-  HexVolFieldIntHandle hField_;
+  HexVolFieldIntHandle hFieldInt_;
+  HexVolFieldTensorHandle hFieldTensor_;
+  bool index_based_;
   HexVolMeshHandle hMesh_;
   vector<pair<string, Tensor> >& tens_;
   MatrixHandle hA_;
@@ -49,16 +52,19 @@ class BuildHexFEMatrix {
   ReferenceElement *rE_;
   SparseRowMatrix *dA_;
 
-  void buildLocalMatrix(double localMatrix[8][8], int ci, HexVolMesh::Node::array_type& cell_nodes);
+  void buildLocalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type ci, HexVolMesh::Node::array_type& cell_nodes);
   void addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMesh::Node::array_type& cell_nodes);
-  double getLocalMatrixEntry(int ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes);
+  double getLocalMatrixEntry(HexVolMesh::Cell::index_type ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes);
   int getAllNeighbors(HexVolMesh::Node::index_type nii, int *index);
   void sortNodes(int *index, int length);
 
  public:
   
   // Constructor
-  BuildHexFEMatrix(HexVolFieldIntHandle hField, vector<pair<string, Tensor> > &tens, double unitsScale);
+  BuildHexFEMatrix(HexVolFieldIntHandle hFieldInt, 
+		   HexVolFieldTensorHandle hFieldTensor, 
+		   bool index_based,
+		   vector<pair<string, Tensor> > &tens, double unitsScale);
 
   // Destructor
   virtual ~BuildHexFEMatrix();
