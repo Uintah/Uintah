@@ -279,10 +279,13 @@ WARNING
    
 } // end namespace Uintah
 
-std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
+std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.16  2000/08/23 22:32:07  dav
+// changed output operator to use a reference, and not a pointer to a patch
+//
 // Revision 1.15  2000/08/22 18:36:40  bigler
 // Added functionality to get a cell's position with the index.
 //
