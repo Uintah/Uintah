@@ -57,37 +57,38 @@ int ply_type_size[] = {
 #define OTHER_PROP       0
 #define NAMED_PROP       1
 
-static inline void SWAP2(char* item)
-{
-  char tmp = item[0];
-  item[0] = item[1];
-  item[1] = tmp;
+/* item needs to be a char* */
+#define SWAP2(item)   \
+{                     \
+  char tmp = item[0]; \
+  item[0] = item[1];  \
+  item[1] = tmp;      \
 }
 
-static inline void SWAP4(char* item)
-{
-  char tmp = item[0];
-  item[0] = item[3];
-  item[3] = tmp;
-  tmp = item[1];
-  item[1] = item[2];
-  item[2] = tmp;
+#define SWAP4(item)   \
+{                     \
+  char tmp = item[0]; \
+  item[0] = item[3];  \
+  item[3] = tmp;      \
+  tmp = item[1];      \
+  item[1] = item[2];  \
+  item[2] = tmp;      \
 }
 
-static inline void SWAP8(char* item)
-{
-  char tmp = item[0];
-  item[0] = item[7];
-  item[7] = tmp;
-  tmp = item[1];
-  item[1] = item[6];
-  item[6] = tmp;
-  tmp = item[2];
-  item[2] = item[5];
-  item[5] = tmp;
-  tmp = item[3];
-  item[3] = item[4];
-  item[4] = tmp;
+#define SWAP8(item)   \
+{                     \
+  char tmp = item[0]; \
+  item[0] = item[7];  \
+  item[7] = tmp;      \
+  tmp = item[1];      \
+  item[1] = item[6];  \
+  item[6] = tmp;      \
+  tmp = item[2];      \
+  item[2] = item[5];  \
+  item[5] = tmp;      \
+  tmp = item[3];      \
+  item[3] = item[4];  \
+  item[4] = tmp;      \
 }
 
 
@@ -139,9 +140,11 @@ void ascii_get_element(PlyFile *, char *);
 void binary_get_element(PlyFile *, char *);
 
 /* memory allocation */
-char *my_alloc(int, int, char *);
+char *my_alloc(size_t, int, char *);
 
 /* To test endianness */
+static int machineIsBigEndian();
+
 static int machineIsBigEndian()
 {
   short i = 0x4321;
@@ -199,15 +202,15 @@ PlyFile *ply_write(
 
   /* Let's make sure if we are writing a binary format, that it
      matches the endianness of the machine we are on. */
-  if (plyfile->filetype == PLY_BINARY_BE) {
-    if (!machineIsBigEndian) {
+  if (plyfile->file_type == PLY_BINARY_BE) {
+    if (!machineIsBigEndian()) {
       fprintf(stderr, "ply_write: Specified Big Endian binary format on a little endian machine.  Switching to little endian format.\n");
-      plyfile->filetype = PLY_BINARY_LE;
+      plyfile->file_type = PLY_BINARY_LE;
     }
-  } else if (plyfile->filetype == PLY_BINARY_LE) {
-    if (machineIsBigEndian) {
+  } else if (plyfile->file_type == PLY_BINARY_LE) {
+    if (machineIsBigEndian()) {
       fprintf(stderr, "ply_write: Specified Little Endian binary format on a big endian machine.  Switching to big endian format.\n");
-      plyfile->filetype = PLY_BINARY_BE;
+      plyfile->file_type = PLY_BINARY_BE;
     }
   }
   /* tuck aside the names of the elements */
@@ -749,7 +752,7 @@ PlyFile *ply_read(FILE *fp, int *nelems, char ***elem_names)
   PlyFile *plyfile;
   int nwords;
   char **words;
-  int found_format = 0;
+/*   int found_format = 0; */
   char **elist;
   PlyElement *elem;
   char *orig_line;
@@ -797,7 +800,7 @@ PlyFile *ply_read(FILE *fp, int *nelems, char ***elem_names)
       } else
         return (NULL);
       plyfile->version = atof (words[2]);
-      found_format = 1;
+      /*      found_format = 1;*/
     }
     else if (equal_strings (words[0], "element"))
       add_element (plyfile, words, nwords);
@@ -858,7 +861,6 @@ Exit:
 
 PlyFile *ply_open_for_reading(
   char *filename,
-  int endianness,
   int *nelems,
   char ***elem_names,
   int *file_type,
@@ -1792,7 +1794,6 @@ Exit:
 char **get_words(FILE *fp, int *nwords, char **orig_line)
 {
 #define BIG_STRING 4096
-  int i,j;
   static char str[BIG_STRING];
   static char str_copy[BIG_STRING];
   char **words;
@@ -1935,6 +1936,8 @@ double get_item_value(char *item, int type, int swap_endian)
       fprintf (stderr, "get_item_value: bad type = %d\n", type);
       exit (-1);
   }
+  /* Should never reach here */
+  return 0;
 }
 
 
@@ -2112,6 +2115,8 @@ double old_write_ascii_item(FILE *fp, char *item, int type)
       fprintf (stderr, "old_write_ascii_item: bad type = %d\n", type);
       exit (-1);
   }
+  /* Should never reach here. */
+  return 0;
 }
 
 
@@ -2230,42 +2235,42 @@ void get_binary_item(
       break;
     case PLY_SHORT:
       fread (ptr, 2, 1, fp);
-      if (swap_endian) SWAP2(ptr);
+      if (swap_endian) SWAP2(((char*)ptr));
       *int_val = *((short int *) ptr);
       *uint_val = *int_val;
       *double_val = *int_val;
       break;
     case PLY_USHORT:
       fread (ptr, 2, 1, fp);
-      if (swap_endian) SWAP2(ptr);
+      if (swap_endian) SWAP2(((char*)ptr));
       *uint_val = *((unsigned short int *) ptr);
       *int_val = *uint_val;
       *double_val = *uint_val;
       break;
     case PLY_INT:
       fread (ptr, 4, 1, fp);
-      if (swap_endian) SWAP4(ptr);
+      if (swap_endian) SWAP4(((char*)ptr));
       *int_val = *((int *) ptr);
       *uint_val = *int_val;
       *double_val = *int_val;
       break;
     case PLY_UINT:
       fread (ptr, 4, 1, fp);
-      if (swap_endian) SWAP4(ptr);
+      if (swap_endian) SWAP4(((char*)ptr));
       *uint_val = *((unsigned int *) ptr);
       *int_val = *uint_val;
       *double_val = *uint_val;
       break;
     case PLY_FLOAT:
       fread (ptr, 4, 1, fp);
-      if (swap_endian) SWAP4(ptr);
+      if (swap_endian) SWAP4(((char*)ptr));
       *double_val = *((float *) ptr);
       *int_val = *double_val;
       *uint_val = *double_val;
       break;
     case PLY_DOUBLE:
       fread (ptr, 8, 1, fp);
-      if (swap_endian) SWAP8(ptr);
+      if (swap_endian) SWAP8(((char*)ptr));
       *double_val = *((double *) ptr);
       *int_val = *double_val;
       *uint_val = *double_val;
@@ -2311,7 +2316,7 @@ void get_ascii_item(
       break;
 
     case PLY_UINT:
-      *uint_val = strtoul (word, (char **) NULL, 10);
+      *uint_val = (unsigned int)strtoul (word, (char **) NULL, 10);
       *int_val = *uint_val;
       *double_val = *uint_val;
       break;
@@ -2465,8 +2470,8 @@ Entry:
 
 void add_property (PlyFile *plyfile, char **words, int nwords)
 {
-  int prop_type;
-  int count_type;
+/*   int prop_type; */
+/*   int count_type; */
   PlyProperty *prop;
   PlyElement *elem;
 
@@ -2570,7 +2575,7 @@ Entry:
   fname - file name from which memory was requested
 ******************************************************************************/
 
-static char *my_alloc(int size, int lnum, char *fname)
+static char *my_alloc(size_t size, int lnum, char *fname)
 {
   char *ptr;
 
