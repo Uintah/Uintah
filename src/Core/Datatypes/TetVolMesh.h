@@ -14,17 +14,16 @@
 #ifndef SCI_project_TetVolMesh_h
 #define SCI_project_TetVolMesh_h 1
 
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/FieldIterator.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/MeshBase.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/FieldIterator.h>
+#include <Core/Containers/Array1.h>
 
 
 namespace SCIRun {
 
 
-class SCICORESHARE TetVolMesh : public Datatype
+class SCICORESHARE TetVolMesh : public MeshBase
 {
 public:
   typedef int index_type;
@@ -73,10 +72,10 @@ public:
   void get_center(Point &result, face_index idx) const;
   void get_center(Point &result, cell_index idx) const;
 
-  void locate(node_index &node, const Point &p);
-  //void locate_edge(edge_index &edge, const Point &p);
-  //void locate_face(face_index &face, const Point &p);
-  void locate(cell_index &cell, const Point &p);
+  void locate(node_iterator &loc, const Point &p);
+  void locate(edge_iterator &loc, const Point &p);
+  void locate(face_iterator &loc, const Point &p);
+  void locate(cell_iterator &loc, const Point &p);
 
   void unlocate(Point &result, const Point &p);
 

@@ -14,17 +14,16 @@
 #ifndef SCI_project_LatVolMesh_h
 #define SCI_project_LatVolMesh_h 1
 
-#include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/FieldIterator.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/MeshBase.h>
 #include <Core/Datatypes/Octree.h>
 
 
 namespace SCIRun {
 
-class SCICORESHARE LatVolMesh : public Datatype
+class SCICORESHARE LatVolMesh : public MeshBase
 {
 public:
 
@@ -70,6 +69,7 @@ public:
   int get_nz() { return nz_; }
   Point get_min() { return min_; }
   Point get_max() { return max_; }
+
   virtual BBox get_bounding_box() const;
 
   //! get the child elements of the given index
@@ -110,6 +110,9 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static  const string type_name(int);
+  virtual const string get_type_name(int n) const { return type_name(n); }
+
 
 private:
 

@@ -19,7 +19,7 @@
 namespace SCIRun {
 
 
-PersistentTypeID LatVolMesh::type_id("LatVolMesh", "Datatype", maker);
+PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
 
 
 Persistent *

@@ -14,9 +14,7 @@
 #ifndef SCI_project_TriSurfMesh_h
 #define SCI_project_TriSurfMesh_h 1
 
-#include <Core/Containers/Handle.h>
-//#include <Core/Datatypes/Datatype.h>
-//#include <Core/Geometry/BBox.h>
+#include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/Array1.h>
@@ -77,8 +75,8 @@ public:
   edge_iterator edge_end() const;
   face_iterator face_begin() const;
   face_iterator face_end() const;
-  //cell_iterator cell_begin() const;
-  //cell_iterator cell_end() const;
+  cell_iterator cell_begin() const;
+  cell_iterator cell_end() const;
 
   void get_nodes(node_array &array, edge_index idx) const;
   void get_nodes(node_array &array, face_index idx) const;
@@ -89,10 +87,10 @@ public:
 
   void get_neighbor(face_index &neighbor, edge_index idx) const;
 
-  void locate_node(node_index &node, const Point &p);
-  //void locate_edge(edge_index &edge, const Point &p);
-  //void locate_face(face_index &face, const Point &p);
-  //void locate_cell(cell_index &cell, const Point &p);
+  void locate(node_iterator &loc, const Point &p);
+  void locate(edge_iterator &loc, const Point &p);
+  void locate(face_iterator &loc, const Point &p);
+  void locate(cell_iterator &loc, const Point &p);
 
   void unlocate(Point &result, const Point &p);
 
@@ -101,6 +99,8 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static  const string type_name(int);
+  virtual const string get_type_name(int n) const { return type_name(n); }
 
   // Extra functionality needed by this specific geometry.
   node_index add_find_point(const Point &p, double err = 1.0e-3);
@@ -127,7 +127,7 @@ private:
 };
 
 
-typedef Handle<TriSurfMesh> TriSurfMeshHandle;
+typedef LockingHandle<TriSurfMesh> TriSurfMeshHandle;
 
 } // namespace SCIRun
 

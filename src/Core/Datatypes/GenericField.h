@@ -41,11 +41,15 @@ public:
   //virtual InterpolateToScalar* query_interpolate_to_scalar() const {};
 
   //! Required interface to support Field Concept.
-  value_type &operator[] (typename Mesh::node_index i) {return fdata_[i];};
-  value_type &operator[] (typename Mesh::edge_index i) {return fdata_[i];};
-  value_type &operator[] (typename Mesh::face_index i) {return fdata_[i];};
-  value_type &operator[] (typename Mesh::cell_index i) {return fdata_[i];};
-  
+  bool value(value_type &val, typename mesh_type::node_index i)
+  { val = fdata_[i]; return true; }
+  bool value(value_type &val, typename mesh_type::edge_index i)
+  { val = fdata_[i]; return true; }
+  bool value(value_type &val, typename mesh_type::face_index i)
+  { val = fdata_[i]; return true; }
+  bool value(value_type &val, typename mesh_type::cell_index i)
+  { val = fdata_[i]; return true; }
+
   mesh_handle_type get_typed_mesh() { return mesh_; };
 
   //! Persistent I/O.
