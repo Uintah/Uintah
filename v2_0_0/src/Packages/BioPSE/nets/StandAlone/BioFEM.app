@@ -235,7 +235,6 @@ set mods(GenStandardColorMaps) $m8
 
 set mods(ShowDipole) $m6
 
-
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
@@ -474,14 +473,48 @@ class BioFEMApp {
     }
 
 
+    method update_local_filenames { junk0 junk1 junk2 } {
+	global mods
+	global $mods(FieldReader-conductivities)-filename
+	global $mods(FieldReader-electrodes)-filename
+	global $mods(FieldReader-probe)-filename
+	global filenameconductivities filenameelectrodes filenameprobe
+
+	set tmp [set $mods(FieldReader-conductivities)-filename]
+	set pos [expr [string last "/" $tmp] + 1]
+	if {$pos != -1} {
+	    set filenameconductivities [string range $tmp $pos end]
+	} else {
+	    set filenameconductivities $tmp
+	}
+
+	set tmp [set $mods(FieldReader-electrodes)-filename]
+	set pos [expr [string last "/" $tmp] + 1]
+	if {$pos != -1} {
+	    set filenameelectrodes [string range $tmp $pos end]
+	} else {
+	    set filenameelectrodes $tmp
+	}
+
+	set tmp [set $mods(FieldReader-probe)-filename]
+	set pos [expr [string last "/" $tmp] + 1]
+	if {$pos != -1} {
+	    set filenameprobe [string range $tmp $pos end]
+	} else {
+	    set filenameprobe $tmp
+	}
+    }
+
     method init_data_selection_frame { f } {
         global mods
 
-	frame $f.datadir
-	label $f.datadir.l -text "DATADIR ="
-	entry $f.datadir.e -textvar DATADIR -width 120 -relief flat
-	pack $f.datadir.l $f.datadir.e -side left -anchor nw
-	pack $f.datadir -side top -anchor w -pady 10
+	$this update_local_filenames junk junk junk
+	global $mods(FieldReader-conductivities)-filename
+	trace variable $mods(FieldReader-conductivities)-filename w "$this update_local_filenames"
+	global $mods(FieldReader-electrodes)-filename
+	trace variable $mods(FieldReader-electrodes)-filename w "$this update_local_filenames"
+	global $mods(FieldReader-probe)-filename
+	trace variable $mods(FieldReader-probe)-filename w "$this update_local_filenames"
 
 	iwidgets::labeledframe $f.dataset \
 	    -labelpos n -labeltext "DATASET" 
@@ -497,28 +530,34 @@ class BioFEMApp {
 
 	pack $dataset.brain-eg $dataset.cyl3 $dataset.sphere $dataset.utahtorso-lowres $dataset.utahtorso -anchor w -side top
 
+	frame $f.datadir
+	label $f.datadir.l -text "DATADIR:" -width 11 -anchor w
+	entry $f.datadir.e -textvar DATADIR -width 120 -relief flat
+	pack $f.datadir.l $f.datadir.e -side left
+	pack $f.datadir -padx 5 -anchor w
+
 	frame $f.cond
-	label $f.cond.l -text "Conductivity File:"
-	entry $f.cond.e -textvar $mods(FieldReader-conductivities)-filename -width 100
+	label $f.cond.l -text "Conductivity:" -width 11 -anchor w
+	label $f.cond.e -textvar filenameconductivities -width 28 -anchor w
 	button $f.cond.b -text Browse -command "$mods(FieldReader-conductivities) ui"
-	pack $f.cond.l $f.cond.e $f.cond.b
-	pack $f.cond
+	pack $f.cond.l $f.cond.e $f.cond.b -side left
+	pack $f.cond -padx 5 -anchor w
 
 
 	frame $f.elec
-	label $f.elec.l -text "Electrode File:"
-	entry $f.elec.e -textvar $mods(FieldReader-electrodes)-filename -width 100
+	label $f.elec.l -text "Electrodes:" -width 11 -anchor w
+	label $f.elec.e -textvar filenameelectrodes -width 28 -anchor w
 	button $f.elec.b -text Browse -command "$mods(FieldReader-electrodes) ui"
-	pack $f.elec.l $f.elec.e $f.elec.b
-	pack $f.elec
+	pack $f.elec.l $f.elec.e $f.elec.b -side left
+	pack $f.elec -padx 5 -anchor w
 
 
 	frame $f.probe
-	label $f.probe.l -text "Probe File:"
-	entry $f.probe.e -textvar $mods(FieldReader-probe)-filename -width 100
+	label $f.probe.l -text "Probe:" -width 11 -anchor w
+	label $f.probe.e -textvar filenameprobe -width 28 -anchor w
 	button $f.probe.b -text Browse -command "$mods(FieldReader-probe) ui"
-	pack $f.probe.l $f.probe.e $f.probe.b
-	pack $f.probe
+	pack $f.probe.l $f.probe.e $f.probe.b -side left
+	pack $f.probe -padx 5 -anchor w
     }
     
     
@@ -1915,7 +1954,7 @@ class BioFEMApp {
     variable i_back
     variable error_module
 
-
+    
     # Visualiztion frame tabnotebook
     variable vis_frame_tab1
     variable vis_frame_tab2
