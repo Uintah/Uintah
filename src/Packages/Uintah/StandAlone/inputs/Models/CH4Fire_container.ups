@@ -136,8 +136,8 @@
       </Face>   
       <!--__________________________________-->               
       <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
         </BCType>
 
         <BCType id = "all" label = "Velocity"     var = "Neumann">
@@ -265,7 +265,7 @@
        
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" />
         <solution technique = "EqForm" />
 
 
