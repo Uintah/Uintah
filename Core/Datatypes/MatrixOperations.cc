@@ -47,22 +47,19 @@ operator+(MatrixHandle A, MatrixHandle B)
   ASSERTEQ(A->ncols(), B->ncols());
   ASSERTEQ(A->nrows(), B->nrows());
 
-  if (A->ncols() == 1)
+  if (A->as_column() && B->as_column())
   {
-    ColumnMatrix *ac = A->column();
-    ColumnMatrix *bc = B->column();
+    ColumnMatrix *ac = A->as_column();
+    ColumnMatrix *bc = B->as_column();
     ColumnMatrix *cc = scinew ColumnMatrix(ac->nrows());
     Add(*cc, *ac, *bc);
-    // TODO: clean up leaked objects here and in LinAlgBinary
     return cc;
   }
-  else if (dynamic_cast<SparseRowMatrix *>(A.get_rep()) &&
-	   dynamic_cast<SparseRowMatrix *>(B.get_rep()))
+  else if (A->is_sparse() && B->is_sparse())
   {
-    SparseRowMatrix *as = A->sparse();
-    SparseRowMatrix *bs = B->sparse();
+    SparseRowMatrix *as = A->as_sparse();
+    SparseRowMatrix *bs = B->as_sparse();
     SparseRowMatrix *cs = AddSparse(*as, *bs);
-    // TODO: clean up leaked objects here and in LinAlgBinary
     return cs;
   }
   else
@@ -71,7 +68,8 @@ operator+(MatrixHandle A, MatrixHandle B)
     DenseMatrix *bd = B->dense();
     DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
     Add(*cd, *ad, *bd);
-    // TODO: clean up leaked objects here and in LinAlgBinary
+    if (!(A->is_dense())) { delete ad; }
+    if (!(B->is_dense())) { delete bd; }
     return cd;
   }
 }
@@ -89,8 +87,9 @@ operator*(MatrixHandle A, MatrixHandle B)
   DenseMatrix *ad = A->dense();
   DenseMatrix *bd = B->dense();
   DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
-    // TODO: clean up leaked objects here and in LinAlgBinary
   Mult(*cd, *ad, *bd);
+  if (!(A->is_dense())) { delete ad; }
+  if (!(B->is_dense())) { delete bd; }
   return cd;
 }
 
