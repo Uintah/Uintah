@@ -278,12 +278,83 @@ LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 void
 LatVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
-  
-}
+  array.resize(4);
+  const unsigned int num_i_faces = (ni_-1)*(nj_-1)*nk_;  // lie in ij plane ijk
+  const unsigned int num_j_faces = ni_*(nj_-1)*(nk_-1);  // lie in jk plane jki
+  const unsigned int num_k_faces = (ni_-1)*nj_*(nk_-1);  // lie in ki plane kij
 
+  const unsigned int num_i_edges = (ni_-1)*nj_*nk_; // ijk
+  const unsigned int num_j_edges = ni_*(nj_-1)*nk_; // jki
+  //  const unsigned int num_k_edges = ni_*nj_*(nk_-1); // kij
+
+  unsigned int facei, facej, facek;
+  unsigned int face = idx;
+  
+  if (face < num_i_faces)
+  {
+    facei = face % (ni_-1);
+    facej = (face / (ni_-1)) % (nj_-1);
+    facek = face / ((ni_-1)*(nj_-1));
+    array[0] = facei+facej*(ni_-1)+facek*(ni_-1)*(nj_);
+    array[1] = facei+(facej+1)*(ni_-1)+facek*(ni_-1)*(nj_);
+    array[2] = num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1);
+    array[3] = num_i_edges + (facei+1)*(nj_-1)*(nk_)+facej+facek*(nj_-1);    
+  }
+  else if (face - num_i_faces < num_j_faces)
+  {
+    face -= num_i_faces;
+    facei = face / ((nj_-1) *(nk_-1));
+    facej = face % (nj_-1);
+    facek = (face / (nj_-1)) % (nk_-1);
+    array[0] = num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1);
+    array[1] = num_i_edges + facei*(nj_-1)*(nk_)+facej+(facek+1)*(nj_-1);    
+    array[2] = (num_i_edges + num_j_edges + 
+		facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek);
+    array[3] = (num_i_edges + num_j_edges + 
+		facei*(nk_-1)+(facej+1)*(ni_)*(nk_-1)+facek);
+
+  }
+  else if (face - num_i_faces - num_j_faces < num_k_faces)
+  {
+    face -= (num_i_faces + num_j_faces);
+    facei = (face / (nk_-1)) % (ni_-1);
+    facej = face / ((ni_-1) * (nk_-1));
+    facek = face % (nk_-1);
+    array[0] = facei+facej*(ni_-1)+facek*(ni_-1)*(nj_);
+    array[1] = facei+facej*(ni_-1)+(facek+1)*(ni_-1)*(nj_);
+    array[2] = (num_i_edges + num_j_edges + 
+		facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek);
+    array[3] = (num_i_edges + num_j_edges + 
+		(facei+1)*(nk_-1)+facej*(ni_)*(nk_-1)+facek);
+  }
+  else ASSERTFAIL("LatVolMesh::get_edges(Edge, Face) Face idx out of bounds"); 
+
+}
+  
+  
+    
 void
 LatVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
-{  
+{
+  array.resize(12);
+  const unsigned int j_start= (ni_-1)*nj_*nk_; 
+  const unsigned int k_start = ni_*(nj_-1)*nk_ + j_start; 
+
+  array[0] = idx.i_ + idx.j_*(ni_-1)     + idx.k_*(ni_-1)*(nj_);
+  array[1] = idx.i_ + (idx.j_+1)*(ni_-1) + idx.k_*(ni_-1)*(nj_);
+  array[2] = idx.i_ + idx.j_*(ni_-1)     + (idx.k_+1)*(ni_-1)*(nj_);
+  array[3] = idx.i_ + (idx.j_+1)*(ni_-1) + (idx.k_+1)*(ni_-1)*(nj_);
+
+  array[4] = j_start + idx.i_*(nj_-1)*(nk_)     + idx.j_ + idx.k_*(nj_-1);
+  array[5] = j_start + (idx.i_+1)*(nj_-1)*(nk_) + idx.j_ + idx.k_*(nj_-1);
+  array[6] = j_start + idx.i_*(nj_-1)*(nk_)     + idx.j_ + (idx.k_+1)*(nj_-1);
+  array[7] = j_start + (idx.i_+1)*(nj_-1)*(nk_) + idx.j_ + (idx.k_+1)*(nj_-1);
+
+  array[8] =  k_start + idx.i_*(nk_-1)     + idx.j_*(ni_)*(nk_-1)     + idx.k_;
+  array[9] =  k_start + (idx.i_+1)*(nk_-1) + idx.j_*(ni_)*(nk_-1)     + idx.k_;
+  array[10] = k_start + idx.i_*(nk_-1)     + (idx.j_+1)*(ni_)*(nk_-1) + idx.k_;
+  array[11] = k_start + (idx.i_+1)*(nk_-1) + (idx.j_+1)*(ni_)*(nk_-1) + idx.k_;
+  
 }
 
 
