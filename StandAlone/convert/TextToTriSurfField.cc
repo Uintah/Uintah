@@ -128,7 +128,7 @@ main(int argc, char **argv) {
 
   if (argc < 4 || argc > 9) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
 #if defined(__APPLE__)  
@@ -145,12 +145,16 @@ main(int argc, char **argv) {
   char *fieldName = argv[3];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (ptsCountHeader) ptsstream >> npts;
   cerr << "number of points = "<< npts <<"\n";
   int i;
@@ -166,6 +170,10 @@ main(int argc, char **argv) {
   int ntris;
   if (!elementsCountHeader) ntris = getNumNonEmptyLines(trisName);
   ifstream trisstream(trisName);
+  if (trisstream.fail()) {
+    cerr << "Error -- Could not open file " << trisName << "\n";
+    return 2;
+  }
   if (elementsCountHeader) trisstream >> ntris;
   cerr << "number of tris = "<< ntris <<"\n";
   for (i=0; i<ntris; i++) {
@@ -176,15 +184,15 @@ main(int argc, char **argv) {
     n3-=baseIndex; 
     if (n1<0 || n1>=npts) { 
       cerr << "Error -- n1 ("<<i<<") out of bounds: "<<n1<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n2<0 || n2>=npts) { 
       cerr << "Error -- n2 ("<<i<<") out of bounds: "<<n2<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n3<0 || n3>=npts) { 
       cerr << "Error -- n3 ("<<i<<") out of bounds: "<<n3<<"\n"; 
-      return 0; 
+      return 2; 
     }
     tsm->add_triangle(n1, n2, n3);
     if (debugOn) 

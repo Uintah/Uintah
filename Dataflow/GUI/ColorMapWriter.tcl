@@ -105,6 +105,7 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
 		-initialdir $initdir \
 		-defaultextension $defext \
 		-formatvar $this-filetype \
+	        -formats {None} \
 	        -confirmvar $this-confirm \
 	        -selectedfiletype $this-exporttype
 

@@ -112,7 +112,7 @@ public:
   SampleField(GuiContext* ctx);
   virtual ~SampleField();
   virtual void execute();
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
 };
 
 
@@ -161,7 +161,7 @@ SampleField::~SampleField()
 
 
 void
-SampleField::widget_moved(bool last)
+SampleField::widget_moved(bool last, BaseWidget*)
 {
   if (last)
   {

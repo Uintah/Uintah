@@ -151,6 +151,7 @@ public:
 
   // LatVolField Specific methods.
   bool get_gradient(Vector &, const Point &);
+  Vector cell_gradient(const LatVolMesh::Cell::index_type &ci) const;
 
 private:
   static Persistent* maker();
@@ -301,18 +302,17 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
   {
     if( data_at() == Field::NODE)
     {
-      mesh_handle_type mesh = get_typed_mesh();
-      const Point r = mesh->get_transform().unproject(p);
+      const Point r = mesh_->get_transform().unproject(p);
       double x = r.x();
       double y = r.y();
       double z = r.z();
       
 #if 0
-      Vector pn=p-mesh->get_min();
-      Vector diagonal = mesh->diagonal();
-      int ni=mesh->get_ni();
-      int nj=mesh->get_nj();
-      int nk=mesh->get_nk();
+      Vector pn=p-mesh_->get_min();
+      Vector diagonal = mesh_->diagonal();
+      int ni=mesh_->get_ni();
+      int nj=mesh_->get_nj();
+      int nk=mesh_->get_nk();
       double diagx=diagonal.x();
       double diagy=diagonal.y();
       double diagz=diagonal.z();
@@ -321,9 +321,9 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
       double z=pn.z()*(nk-1)/diagz;
 #endif
 
-      int ni=mesh->get_ni();
-      int nj=mesh->get_nj();
-      int nk=mesh->get_nk();
+      int ni=mesh_->get_ni();
+      int nj=mesh_->get_nj();
+      int nk=mesh_->get_nk();
       int ix0 = (int)x;
       int iy0 = (int)y;
       int iz0 = (int)z;
@@ -336,7 +336,7 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
       double fx = x-ix0;
       double fy = y-iy0;
       double fz = z-iz0;
-      LatVolMesh *mp = mesh.get_rep();
+      LatVolMesh *mp = mesh_.get_rep();
       double d000 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
       double d100 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
       double d010 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
@@ -362,13 +362,64 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
       double z0 = Interpolate(x00, x01, fz);
       double z1 = Interpolate(x10, x11, fz);
       double dy = (z1-z0);
-      g = mesh->get_transform().unproject(Vector(dx, dy, dz));
+      g = mesh_->get_transform().unproject(Vector(dx, dy, dz));
       return true;
     }
   }
   return false;
 }
 
+
+//! Compute the gradient g in cell ci.
+template <>
+Vector
+LatVolField<Vector>::cell_gradient(const LatVolMesh::Cell::index_type &ci) const;
+
+template <>
+Vector
+LatVolField<Tensor>::cell_gradient(const LatVolMesh::Cell::index_type &ci) const;
+
+template <class T>
+Vector
+LatVolField<T>::cell_gradient(const LatVolMesh::Cell::index_type &ci) const
+{
+  ASSERT(data_at() == Field::NODE);
+
+  const unsigned int ix0 = ci.i_;
+  const unsigned int iy0 = ci.j_;
+  const unsigned int iz0 = ci.k_;
+  const unsigned int ix1 = ix0+1;
+  const unsigned int iy1 = iy0+1;
+  const unsigned int iz1 = iz0+1;
+
+  LatVolMesh *mp = mesh_.get_rep();
+  double d000 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
+  double d100 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
+  double d010 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
+  double d110 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
+  double d001 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
+  double d101 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
+  double d011 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
+  double d111 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
+  const double z00 = Interpolate(d000, d001, 0.5);
+  const double z01 = Interpolate(d010, d011, 0.5);
+  const double z10 = Interpolate(d100, d101, 0.5);
+  const double z11 = Interpolate(d110, d111, 0.5);
+  const double yy0 = Interpolate(z00, z01, 0.5);
+  const double yy1 = Interpolate(z10, z11, 0.5);
+  const double dx = (yy1-yy0);
+  const double x00 = Interpolate(d000, d100, 0.5);
+  const double x01 = Interpolate(d001, d101, 0.5);
+  const double x10 = Interpolate(d010, d110, 0.5);
+  const double x11 = Interpolate(d011, d111, 0.5);
+  const double y0 = Interpolate(x00, x10, 0.5);
+  const double y1 = Interpolate(x01, x11, 0.5);
+  const double dz = (y1-y0);
+  const double z0 = Interpolate(x00, x01, 0.5);
+  const double z1 = Interpolate(x10, x11, 0.5);
+  const double dy = (z1-z0);
+  return mesh_->get_transform().unproject(Vector(dx, dy, dz));
+}
 
 } // end namespace SCIRun
 

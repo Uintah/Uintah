@@ -65,7 +65,7 @@ DECLARE_MAKER(FieldReader)
 
 FieldReader::FieldReader(GuiContext* ctx)
   : GenericReader<FieldHandle>("FieldReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_filetype_(ctx->subVar("filetype"))
 {
   FieldIEPluginManager mgr;

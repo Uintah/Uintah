@@ -74,4 +74,16 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="AttractNormals">
+<title>AttractNormals Regression Test</title>
+
+<p>Use AttractNormals to make a vector field all point to the same
+location.  The location in this network is determined by a probe, but
+it could be the first point of any input field.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/AttractNormals.net.</p>
+
+</net>
+</nets>
 </component>

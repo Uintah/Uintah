@@ -94,7 +94,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Datatypes Core/Math Core/Containers Core/Thread \
-	Core/GuiInterface
+	Core/GuiInterface Core/Util
 
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(FTGL_LIBRARY)

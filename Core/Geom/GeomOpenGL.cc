@@ -52,6 +52,7 @@
 
 
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/Environment.h>
 
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomText.h>
@@ -1201,7 +1202,7 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
       di->using_cmtexture_ && indices_.size() == points_.size() / 2;
     if (texturing)
     {
-      glColor4d(1.0, 1.0, 1.0, 1.0);
+      glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
       glEnable(GL_TEXTURE_1D);
       glDisable(GL_TEXTURE_2D);
@@ -1315,7 +1316,7 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       di->using_cmtexture_ && indices_.size() == points_.size();
     if (texturing)
     {
-      glColor4d(1.0, 1.0, 1.0, 1.0);
+      glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
       glEnable(GL_TEXTURE_1D);
       glDisable(GL_TEXTURE_2D);
@@ -1324,13 +1325,15 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     const bool coloring = colors_.size() == points_.size() * 4;
 
-    float tabx[40];
-    float taby[40];
+    float tabx[41];
+    float taby[41];
     for (int j=0; j<nu_; j++)
     {
       tabx[j] = sin(2.0 * M_PI * j / nu_);
       taby[j] = cos(2.0 * M_PI * j / nu_);
     }
+    tabx[nu_] = tabx[0];
+    taby[nu_] = taby[0];
     
     for (unsigned int i=0; i < points_.size(); i+=2)
     {
@@ -1367,15 +1370,15 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBegin(GL_QUAD_STRIP);
       for (int k=0; k<nu_+1; k++)
       {
-	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glNormal3f(tabx[k], taby[k], 0.0);
 
- 	if (coloring) { glColor3ubv(&(colors_[i*4])); }
- 	if (texturing) { glTexCoord1f(indices_[i]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	if (coloring) { glColor3ubv(&(colors_[i*4])); }
+	if (texturing) { glTexCoord1f(indices_[i]); }
+	glVertex3f(tabx[k], taby[k], 0.0);
 
- 	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
- 	if (texturing) { glTexCoord1f(indices_[i+1]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
+	if (texturing) { glTexCoord1f(indices_[i+1]); }
+	glVertex3f(tabx[k], taby[k], 1.0);
       }
       glEnd();
       
@@ -1399,7 +1402,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       di->using_cmtexture_ && indices_.size() == points_.size();
     if (texturing)
     {
-      glColor4d(1.0, 1.0, 1.0, 1.0);
+      glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
       glEnable(GL_TEXTURE_1D);
       glDisable(GL_TEXTURE_2D);
@@ -1409,13 +1412,15 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
     const bool coloring = colors_.size() == points_.size() * 4;
     const bool use_local_radii = radii_.size() == points_.size()/2;
 
-    float tabx[40];
-    float taby[40];
+    float tabx[41];
+    float taby[41];
     for (int j=0; j<nu_; j++)
     {
       tabx[j] = sin(2.0 * M_PI * j / nu_);
       taby[j] = cos(2.0 * M_PI * j / nu_);
     }
+    tabx[nu_] = tabx[0];
+    taby[nu_] = taby[0];
     
     for (unsigned int i=0; i < points_.size(); i+=2)
     {
@@ -1458,15 +1463,15 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBegin(GL_QUAD_STRIP);
       for (k=0; k<nu_+1; k++)
       {
-	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glNormal3f(tabx[k], taby[k], 0.0);
 
 	if (coloring) { glColor3ubv(&(colors_[i*4])); }
 	if (texturing) { glTexCoord1f(indices_[i]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glVertex3f(tabx[k], taby[k], 0.0);
 
 	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
 	if (texturing) { glTexCoord1f(indices_[i+1]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+	glVertex3f(tabx[k], taby[k], 1.0);
       }
       glEnd();
 
@@ -1478,7 +1483,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glVertex3f(0.0, 0.0, 0.0);
       for (k = 0; k < nu_+1; k++)
       {
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glVertex3f(tabx[k], taby[k], 0.0);
       }
       glEnd();
 
@@ -1490,7 +1495,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glVertex3f(0.0, 0.0, 1.0);
       for (k = nu_; k >= 0; k--)
       {
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+	glVertex3f(tabx[k], taby[k], 1.0);
       }
       glEnd();
 
@@ -2427,7 +2432,7 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -2438,16 +2443,19 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
-#ifdef NEED_ATI_CARD_FIX
-  glBegin(GL_LINES);
-  for (unsigned int i = 0; i < points_.size()/3; i++)
+  if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
   {
-    glArrayElement(i);
+    glBegin(GL_LINES);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
   }
-  glEnd();
-#else
-  glDrawArrays(GL_LINES, 0, points_.size()/3);
-#endif
+  else
+  {
+    glDrawArrays(GL_LINES, 0, points_.size()/3);
+  }
 
   glLineWidth(di->line_width_);
 
@@ -2531,7 +2539,7 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -2573,22 +2581,26 @@ GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnableClientState(GL_COLOR_ARRAY);
 
   const int n_strips = points_.size();
-  for (int i = 0; i < n_strips; i++) {
+  for (int i = 0; i < n_strips; i++)
+  {
     const int n_points = points_[i].size()/3;
     di->polycount += n_points-1;
     glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
 
-#ifdef NEED_ATI_CARD_FIX
-    glBegin(GL_LINE_STRIP);
-    for (int j = 0; j < n_points; j++)
+    if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
     {
-      glArrayElement(j);
+      glBegin(GL_LINE_STRIP);
+      for (int j = 0; j < n_points; j++)
+      {
+	glArrayElement(j);
+      }
+      glEnd();
     }
-    glEnd();
-#else
-    glDrawArrays(GL_LINE_STRIP, 0, n_points);
-#endif
+    else
+    {
+      glDrawArrays(GL_LINE_STRIP, 0, n_points);
+    }
   }
 
   glLineWidth(di->line_width_);
@@ -3051,7 +3063,7 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
       glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-      glColor4d(1.0, 1.0, 1.0, 1.0);
+      glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
       glEnable(GL_TEXTURE_1D);
       glDisable(GL_TEXTURE_2D);
@@ -3062,16 +3074,19 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
       glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
 
-#ifdef NEED_ATI_CARD_FIX
-    glBegin(GL_POINTS);
-    for (unsigned int i = 0; i < points_.size()/3; i++)
+    if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
     {
-      glArrayElement(i);
+      glBegin(GL_POINTS);
+      for (unsigned int i = 0; i < points_.size()/3; i++)
+      {
+	glArrayElement(i);
+      }
+      glEnd();
     }
-    glEnd();
-#else
-    glDrawArrays(GL_POINTS, 0, points_.size()/3);
-#endif
+    else
+    {
+      glDrawArrays(GL_POINTS, 0, points_.size()/3);
+    }
   }
 
   glDisable(GL_TEXTURE_1D);
@@ -3138,7 +3153,7 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -3474,7 +3489,7 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->using_cmtexture_ && indices_.size() == centers_.size();
   if (using_texture)
   {
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -4002,7 +4017,7 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -4016,16 +4031,19 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
   glEnableClientState(GL_VERTEX_ARRAY);
 
-#ifdef NEED_ATI_CARD_FIX
-  glBegin(GL_TRIANGLES);
-  for (unsigned int i = 0; i < points_.size()/3; i++)
+  if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
   {
-    glArrayElement(i);
+    glBegin(GL_TRIANGLES);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
   }
-  glEnd();
-#else
-  glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
-#endif
+  else
+  {
+    glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
+  }
 
   glDisableClientState(GL_NORMAL_ARRAY);
   glEnable(GL_NORMALIZE);
@@ -4119,7 +4137,7 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -4204,7 +4222,7 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -4228,16 +4246,19 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glShadeModel(GL_SMOOTH);
   }
 
-#ifdef NEED_ATI_CARD_FIX
-  glBegin(GL_QUADS);
-  for (unsigned int i = 0; i < points_.size()/3; i++)
+  if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
   {
-    glArrayElement(i);
+    glBegin(GL_QUADS);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
   }
-  glEnd();
-#else
-  glDrawArrays(GL_QUADS, 0, points_.size()/3);
-#endif
+  else
+  {
+    glDrawArrays(GL_QUADS, 0, points_.size()/3);
+  }
 
   glDisableClientState(GL_NORMAL_ARRAY);
 
@@ -4325,7 +4346,7 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -5063,7 +5084,7 @@ GeomBoxes::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->using_cmtexture_ && indices_.size() == centers_.size();
   if (using_texture)
   {
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -5981,7 +6002,7 @@ void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (di->using_cmtexture_ && index_.size() == location_.size())
   {
     indexing = true;
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -6024,7 +6045,7 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (di->using_cmtexture_ && index_.size() == location_.size())
   {
     indexing = true;
-    glColor4d(1.0, 1.0, 1.0, 1.0);
+    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
 
     glEnable(GL_TEXTURE_1D);
     glDisable(GL_TEXTURE_2D);
@@ -6063,6 +6084,22 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 void GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di,matl,0)) return;
+
+#if 0
+  //used for debugging to indicate left and up directions
+  glColor4d(1.0,0.0,0.0,1.0);
+  glBegin(GL_LINE_STRIP);
+  glVertex3d(origin_.x(), origin_.y(), origin_.z());
+  glVertex3d(origin_.x()+up_.x(), origin_.y()+up_.y(), origin_.z()+up_.z());
+  glEnd();
+
+  glColor4d(1.0,1.0,0.0,1.0);
+  glBegin(GL_LINE_STRIP);
+  glVertex3d(origin_.x(), origin_.y(), origin_.z());
+  glVertex3d(origin_.x()+left_.x(), origin_.y()+left_.y(), origin_.z()+left_.z());
+  glEnd();
+#endif
+
   glColor4d(1.0,1.0,1.0,1.0);
   glEnable(GL_BLEND);
   glDepthMask(GL_FALSE);

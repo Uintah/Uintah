@@ -533,6 +533,10 @@ Thread::detach()
 void
 Thread::exitAll(int code)
 {
+  if (getenv("SCIRUN_EXIT_CRASH_WORKAROUND"))
+  {
+    raise(SIGKILL);
+  }
   if(initialized && !exiting){
     exiting=true;
     lock_scheduler();

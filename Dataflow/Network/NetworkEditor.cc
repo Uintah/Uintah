@@ -117,8 +117,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("netedit deletemodule needs a module name");
 	    return;
 	}
-	Module* mod=net->get_module_by_id(args[2]);
-	gui->delete_command( mod->id+"-c" );
 	if(!net->delete_module(args[2])){
 	    args.error("Cannot delete module "+args[2]);
 	}
@@ -365,6 +363,9 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	result += (*ip).second->datatype + " ";
       }
       args.result(result);
+    } else if (args[1] == "presave") {
+      for(int i=0;i<net->nmodules();i++)
+	net->module(i)->presave();
     } else {
 	args.error("Unknown minor command for netedit");
     }

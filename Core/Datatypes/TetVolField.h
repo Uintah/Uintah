@@ -209,7 +209,7 @@ TetVolField<T>::get_type_description(int n) const
 template <class T>
 bool TetVolField<T>::get_gradient(Vector &g, Point &p) {
   TetVolMesh::Cell::index_type ci;
-  if (get_typed_mesh()->locate(ci, p)) {
+  if (mesh_->locate(ci, p)) {
     g = cell_gradient(ci);
     return true;
   } else {
@@ -232,9 +232,9 @@ Vector TetVolField<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
 
   // load up the indices of the nodes for this cell
   TetVolMesh::Node::array_type nodes;
-  get_typed_mesh()->get_nodes(nodes, ci);
+  mesh_->get_nodes(nodes, ci);
   Vector gb0, gb1, gb2, gb3;
-  get_typed_mesh()->get_gradient_basis(ci, gb0, gb1, gb2, gb3);
+  mesh_->get_gradient_basis(ci, gb0, gb1, gb2, gb3);
 
   // we really want this for all scalars... 
   //  but for now, we'll just make doubles work
@@ -257,7 +257,7 @@ TetVolField<T>::insert_node_watson(Point &p)
 
   if (data_at() == CELL) {  
     TetVolMesh::Cell::array_type new_cells, mod_cells;
-    ret_val = get_typed_mesh()->insert_node_watson(p,&new_cells,&mod_cells);
+    ret_val = mesh_->insert_node_watson(p,&new_cells,&mod_cells);
     resize_fdata();
     
     T tot = value(mod_cells[0]);
@@ -272,12 +272,12 @@ TetVolField<T>::insert_node_watson(Point &p)
 
   } else if (data_at() == NODE) {
 
-    ret_val = get_typed_mesh()->insert_node_watson(p);
+    ret_val = mesh_->insert_node_watson(p);
     resize_fdata();
 
     vector<TetVolMesh::Node::index_type> nodes;
-    get_typed_mesh()->synchronize(Mesh::NODE_NEIGHBORS_E);
-    get_typed_mesh()->get_neighbors(nodes, ret_val);
+    mesh_->synchronize(Mesh::NODE_NEIGHBORS_E);
+    mesh_->get_neighbors(nodes, ret_val);
 
     T tot = value(nodes[0]);
     const unsigned int num_nodes = nodes.size();
@@ -288,7 +288,7 @@ TetVolField<T>::insert_node_watson(Point &p)
 
   } else {
 
-    ret_val = get_typed_mesh()->insert_node_watson(p);
+    ret_val = mesh_->insert_node_watson(p);
     resize_fdata();    
   }
   return ret_val;

@@ -43,6 +43,8 @@
 
 #include <Core/Util/Timer.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Math/MiscMath.h>
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/times.h>
@@ -248,6 +250,11 @@ void TimeThrottle::wait_for_time(double endtime)
     }
     sginap(nticks);
 #else
-    //NOT_FINISHED("TimeThrottle::wait_for_time");
+    timespec delay, remaining;
+    remaining.tv_sec = SCIRun::Floor(delta);
+    remaining.tv_nsec = SCIRun::Floor((delta-SCIRun::Floor(delta))*1000000000);
+    do {
+      delay = remaining;
+    } while (nanosleep(&delay,&remaining) != 0);
 #endif
 }

@@ -73,8 +73,8 @@ public:
     data.erase(data.begin(), data.end());
     if (data_at() != NODE) return false;
     HexVolMesh::Node::iterator ni, nie;
-    get_typed_mesh()->begin(ni);
-    get_typed_mesh()->end(nie);
+    mesh_->begin(ni);
+    mesh_->end(nie);
     for (; ni != nie; ++ni) { 
       if (mask_[*ni]) { 
 	pair<HexVolMesh::Node::index_type, T> p;
@@ -109,25 +109,25 @@ public:
     if (data_at() == NODE)
     {
       typename GF::mesh_type::Node::size_type ssize;
-      get_typed_mesh()->size(ssize);
+      mesh_->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == EDGE)
     {
       typename GF::mesh_type::Edge::size_type ssize;
-      get_typed_mesh()->size(ssize);
+      mesh_->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == FACE)
     {
       typename GF::mesh_type::Face::size_type ssize;
-      get_typed_mesh()->size(ssize);
+      mesh_->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == CELL)
     {
       typename GF::mesh_type::Cell::size_type ssize;
-      get_typed_mesh()->size(ssize);
+      mesh_->size(ssize);
       mask_.resize(ssize);
     }
     else

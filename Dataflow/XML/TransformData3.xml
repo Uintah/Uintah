@@ -87,4 +87,25 @@
   </gui>
   <testing>
   </testing>
+<nets>
+<net id="TransformData3">
+<title>TransformData3 Regression Test</title>
+
+<p>Use the TransformData3 to merge three scalar fields into a vector
+field.  First we create a PointCloudField by resampling a square
+lattice.  Then <modref package="SCIRun" name="TransformData"/> is used repeatedly to create three scalar
+fields, one containin the X positions, one containing the Y positions,
+and one containing the Z positions.  Then TransformData3 is used to
+merge these three scalar fields into one vector field.  Finally that
+vector field is visualized using <modref package="SCIRun" name="ShowField"/>.  Note that this
+network is meant to demonstrate useage of the TransformData3 module
+and thus is not the most efficient means of creating the final field.
+The same field would be created by running the results of <modref package="SCIRun" name="SampleField"/>
+through a <modref package="SCIRun" name="TransformData"/> module with the function set to be
+"result = Vector(x, y z);" and the output to be of type Vector.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/TransformData3.net.</p>
+
+</net>
+</nets>
 </component>

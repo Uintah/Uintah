@@ -193,6 +193,8 @@ inline SCICORESHARE int Tile(int tile, int tf)
   }
 }
 
+SCICORESHARE double MakeReal(double value);
+
 } // End namespace SCIRun
 
 

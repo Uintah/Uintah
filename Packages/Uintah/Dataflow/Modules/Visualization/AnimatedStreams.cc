@@ -59,7 +59,7 @@ AnimatedStreams::~AnimatedStreams()
 {
 
 }
-void AnimatedStreams::widget_moved(bool)
+void AnimatedStreams::widget_moved(bool,BaseWidget*)
 {
   if( anistreams ){
       anistreams->SetWidgetLocation(control_widget->ReferencePoint());

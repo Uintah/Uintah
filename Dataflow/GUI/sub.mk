@@ -46,6 +46,7 @@ SRCS := \
 	$(SRCDIR)/BuildInterpolant.tcl \
 	$(SRCDIR)/BuildNoise.tcl \
 	$(SRCDIR)/BuildTransform.tcl \
+	$(SRCDIR)/Camera.tcl \
 	$(SRCDIR)/CastTVtoMLV.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCoordinates.tcl \

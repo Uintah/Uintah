@@ -65,7 +65,7 @@ public:
 
   virtual ~AddLight();
 
-  virtual void widget_moved(bool last);   
+  virtual void widget_moved(bool last, BaseWidget*);
 
   virtual void execute();
 
@@ -271,7 +271,7 @@ AddLight::tcl_command(GuiArgs& args, void* userdata)
 }
 
 void 
-AddLight::widget_moved(bool)
+AddLight::widget_moved(bool, BaseWidget*)
 {
   if( widget_init ){
   Point w(light_widget_->ReferencePoint());

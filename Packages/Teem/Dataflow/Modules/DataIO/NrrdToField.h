@@ -248,6 +248,9 @@ execute(MeshHandle& mHandle,
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   typename MESH::Node::iterator inodeItr;
+  bool single_element = false;
+  if (connectH->nrrd->dim == 1)
+    single_element = true;
 
   imesh->begin( inodeItr );
 
@@ -271,7 +274,9 @@ execute(MeshHandle& mHandle,
     CNTYPE *cPtr = cPtr = (CNTYPE *)(connectH->nrrd->data);
 
     int nelements = 0;
-    if (which == 0) {
+    if (single_element)
+      nelements = 1;
+    else if (which == 0) {
       // p x n
       nelements = connectH->nrrd->axis[1].size;
     } else {

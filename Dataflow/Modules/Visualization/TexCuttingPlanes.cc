@@ -119,7 +119,7 @@ TexCuttingPlanes::tcl_command( GuiArgs& args, void* userdata)
 	w += view*ddview_*atof(args[3].c_str());
       }
       control_widget_->SetPosition(w);
-      widget_moved(true);
+      widget_moved(true, 0);
       control_x_.set( w.x() );
       control_y_.set( w.y() );
       control_z_.set( w.z() );
@@ -130,7 +130,7 @@ TexCuttingPlanes::tcl_command( GuiArgs& args, void* userdata)
   }
 }
 
-void TexCuttingPlanes::widget_moved(bool)
+void TexCuttingPlanes::widget_moved(bool,BaseWidget*)
 {
   if( volren_ ){
       volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));

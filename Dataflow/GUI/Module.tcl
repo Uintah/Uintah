@@ -76,6 +76,9 @@ itcl_class Module {
     
     public msgLogStream
     public name
+    protected min_text_width 0
+    protected time_mapped 0
+    protected progress_mapped 0
     protected make_progress_graph 1
     protected make_time 1
     protected graph_width 50
@@ -230,6 +233,10 @@ itcl_class Module {
 	    label $p.time -text "00.00" -font $time_font
 	    pack $p.time -side left -padx 2
 	    Tooltip $p.time $ToolTipText(ModuleTime)
+	    set time_mapped 0
+	    bind $p.time <Map> "set time_mapped 1; $this setDone"
+	} else {
+	    set time_mapped 1
 	}
 
 	# Make the progress graph
@@ -240,8 +247,11 @@ itcl_class Module {
 	    frame $p.inset.graph -relief raised \
 		-width 0 -borderwidth 2 -background green
 	    Tooltip $p.inset $ToolTipText(ModuleProgress)
+	    set progress_mapped 0
+	    bind $p.inset <Map> "set progress_mapped 1; $this setDone"
+	} else {
+	    set progress_mapped 1
 	}
-
 
 	# Make the message indicator
 	frame $p.msg -relief sunken -height 15 -borderwidth 1 \
@@ -330,7 +340,7 @@ itcl_class Module {
 	}
 	    
     }
-       
+
     method addSelected {} {
 	if {![$this is_selected]} { 
 	    global CurrentlySelectedModules
@@ -545,32 +555,60 @@ itcl_class Module {
 
 
     method resize_icon {} {
+	if { ![set $this-done_bld_icon] } return
+	global Subnet port_spacing modname_font
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+
+
+	set text_widget $canvas.module[modname].ff.title
+	$text_widget configure -text $name
+	set text_width [font measure $modname_font $name]
+	set text_diff [expr $text_width - $min_text_width]
+
+
 	set iports [portCount "[modname] 0 i"]
 	set oports [portCount "[modname] 0 o"]
 	set nports [expr $oports>$iports?$oports:$iports]
-	if {[set $this-done_bld_icon]} {
-	    global Subnet port_spacing
-	    set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	    set width [expr 8+$nports*$port_spacing] 
-	    set width [expr ($width < $initial_width)?$initial_width:$width]
-	    $canvas itemconfigure [modname] -width $width
-	    #$canvas create window [lindex $pos 0] [lindex $pos 1] -anchor
-	    #-window $m -tags "module [modname]"
+	set ports_width [expr 8+$nports*$port_spacing] 
+	set port_diff [expr $ports_width - $initial_width]
+	set diff [expr $port_diff > $text_diff ? $port_diff : $text_diff]
 
+	if { $diff > 0 } {
+	    $canvas itemconfigure [modname] -width [expr $initial_width+$diff]
+	} else {
+	    $canvas itemconfigure [modname] -width $initial_width
 	}
+	    
     }
 
+
+       
+
+
     method setDone {} {
-	#module actually mapped to the canvas
-	if ![set $this-done_bld_icon] {
-	    set $this-done_bld_icon 1	
-	    global Subnet
-	    set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	    set initial_width [winfo width $canvas.module[modname]]
-	    resize_icon
-	    drawNotes [modname]
-	    drawConnections [portConnections "[modname] all o"]
+	#module already mapped to the canvas
+	if { [set $this-done_bld_icon] } return
+	if { !$progress_mapped } return
+	if { !$time_mapped } return
+
+	set $this-done_bld_icon 1
+	    
+	global Subnet IconWidth modname_font
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set initial_width [winfo width $canvas.module[modname]]
+	set progress_width 0
+	set time_width 0
+	if {$make_progress_graph} {
+	    set progress_width [winfo width $canvas.module[modname].ff.inset]
 	}
+	if {$make_time} {
+	    set time_width [winfo width $canvas.module[modname].ff.time]
+	}
+	set min_text_width [expr $progress_width+$time_width]
+	
+	resize_icon
+	drawNotes [modname]
+	drawConnections [portConnections "[modname] all o"]
     }
 
     method execute {} {
@@ -716,7 +754,7 @@ proc regenModuleMenu { modid menu_id } {
     }
 
     # 'Fetch/Return UI' Menu Option
-    if { [envBool SCIRUN_GUI_UseGuiFetch] } {
+    if { ![$modid is_subnet] && [envBool SCIRUN_GUI_UseGuiFetch] } {
         $menu_id add separator
 	$menu_id add command -label "Fetch UI"  -command "$modid fetch_ui"
 	$menu_id add command -label "Return UI" -command "$modid return_ui"
@@ -750,11 +788,12 @@ proc notesWindow { id {done ""} } {
 
     setIfExists rgb Color($id) white
     button $w.b.reset -fg black -text "Reset Color" -command \
-	"unset Notes($id-Color); $w.b.color configure -bg $rgb"
+	"set Notes($id-Color) $rgb; $w.b.color configure -bg $rgb"
 
     setIfExists rgb Notes($id-Color) $rgb
     button $w.b.color -fg black -bg $rgb -text "Text Color" -command \
 	"colorNotes $id"
+    setIfExists Notes($id-Color) Notes($id-Color) $rgb
 
     frame $w.d -relief groove -borderwidth 2
 
@@ -783,8 +822,11 @@ proc colorNotes { id } {
     global Notes
     set w .notes$id
     networkHasChanged
-    $w.b.color configure -bg [set Notes($id-Color) \
-       [tk_chooseColor -initialcolor [$w.b.color cget -bg]]]
+    set color [tk_chooseColor -initialcolor [$w.b.color cget -bg]]
+    if { [string length $color] } { 
+	set Notes($id-Color) $color
+	$w.b.color configure -bg $color
+    }
 }
 
 proc okNotesWindow {id {done  ""}} {
@@ -1171,17 +1213,110 @@ proc htmlHelp {modid} {
 	set usehtml 1
     }
     
-    if { $usehtml } {
-	set ping [netedit sci_system /scratch/firefox/firefox -remote 'ping()']
-	if {!$ping} {
-	    netedit sci_system /scratch/firefox/firefox $url &
-	} else {
-	    netedit sci_system /scratch/firefox/firefox -remote 'openurl($url)' &
+    if { !$usehtml } { return 0 }
+
+    global tcl_platform
+    if { $tcl_platform(os) == "Darwin" } {
+	set ret_val [netedit sci_system open $url]
+	return [expr $ret_val == 0]
+    } elseif { $tcl_platform(platform) == "unix" } {
+	set browser [auto_execok [netedit getenv BROWSER]]
+	if { $browser == "" } {
+	    set browsers {mozilla firefox netscape opera galeon konqueror}
+	    foreach command $browsers {
+		set command [auto_execok $command]
+		if { $command != "" } {
+		    lappend browser $command
+		}
+	    }
+	}
+
+	if { [llength $browser] == 0 } {
+	    return 0
+	}
+
+	if { [llength $browser] == 1 } { 
+	    setBrowser $browser $url
+	    return 1
+	}
+	
+	set w .choosebrowser
+	toplevel $w
+	wm title $w "Choose Help Browser"
+	label $w.text -text "Choose Browser for HTML Help:" \
+	    -justify left -anchor w
+	pack $w.text -side top -expand 1 -fill x -ipady 5
+       	
+	listbox $w.list -selectmode single
+	
+	foreach command $browser {
+	    $w.list insert end $command
+	}
+	
+	frame $w.f
+
+	$w.list activate 0
+	global BROWSER_DONT_ASK
+	set BROWSER_DONT_ASK 1
+	checkbutton $w.f.ask -variable BROWSER_DONT_ASK \
+	    -text "Dont ask for help viewer again"
+	pack $w.f.ask -side top -ipady 5 -fill x
+	
+
+	button $w.f.cancel -text "View Help as Text" -command "textHelp $modid"
+	
+	button $w.f.ok -text "Open in HTML" \
+	    -command "setBrowser \[$w.list get active\] $url"
+
+	pack $w.f.ok $w.f.cancel -side right -ipadx 5 -ipady 5 -padx 5 -pady 5
+	pack $w.f -side bottom -expand 1 -fill x -padx 5 -pady 5
+	pack $w.list -side top -expand 1 -fill both -padx 10
+	return 1
+    }
+    return 0
+}
+
+proc textHelp { modid } {
+    if { [winfo exists .choosebrowser] } {
+	destroy .choosebrowser
+    }
+    netedit setenv BROWSER text
+    moduleHelp $modid
+    global BROWSER_DONT_ASK
+    if { !$BROWSER_DONT_ASK } {
+	netedit setenv BROWSER ""
+    }
+}
+
+proc setBrowser { browser url } {
+    if { ![openBrowser $browser $url] } { 
+	if { [winfo exists .choosebrowser] } {
+	    destroy .choosebrowser
+	}
+	global BROWSER_DONT_ASK
+	if { $BROWSER_DONT_ASK } {
+	    netedit setenv BROWSER $browser
 	}
     }
 }
 
-proc moduleHelp {modid} {
+    
+# return 0 on success, exit code otherwise
+proc openBrowser { command url } {
+    set teststring [string tolower $command]
+    if { [string match -nocase "*mozilla*" $command] || \
+	     [string match -nocase "*firefox*" $command] || \
+	     [string match -nocase "*netscape*" $command] } {
+	set ping [netedit sci_system $command -remote 'ping()' 2> /dev/null > /dev/null]
+	if {$ping} {
+	    return [netedit sci_system $command -remote 'openurl($url)' 2> /dev/null > /dev/null &]
+	}
+    } 
+    return [netedit sci_system $command $url 2> /dev/null > /dev/null &]
+}
+
+
+proc moduleHelp { modid } {
     set w .mHelpWindow[$modid name]
 	
     # does the window exist?
@@ -1189,6 +1324,8 @@ proc moduleHelp {modid} {
 	SciRaise $w
 	return
     }
+
+    if { [netedit getenv BROWSER] != "text" && [htmlHelp $modid] } return
 	
     # create the window
     toplevel $w
@@ -1246,7 +1383,8 @@ proc moduleDestroy {modid} {
 
     $modid delete
     if { ![isaSubnetIcon $modid] } {
-	after 500 "netedit deletemodule $modid"
+	proc $modid { args } { }
+	netedit deletemodule $modid
     }
     
     # Kill the modules UI if it exists

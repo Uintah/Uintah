@@ -61,27 +61,61 @@ itcl_class Teem_Tend_TendEvq {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.index \
-	    -labeltext "Evec Index:" \
-	    -textvariable $this-index
-        pack $w.f.options.index -side top -expand yes -fill x
+	iwidgets::labeledframe $w.f.options.index \
+	    -labeltext "Evec Index" \
+	    -labelpos nw
+	pack $w.f.options.index -side top -expand yes -fill x
+	
+	set index [$w.f.options.index childsite]
+	radiobutton $index.1 \
+	    -text "Largest Eigenvalue" \
+	    -variable $this-index \
+	    -value 0
 
-        iwidgets::entryfield $w.f.options.anisotropy \
+	radiobutton $index.2 \
+	    -text "Middle Eigenvalue" \
+	    -variable $this-index \
+	    -value 1
+
+	radiobutton $index.3 \
+	    -text "Smallest Eigenvalue" \
+	    -variable $this-index \
+	    -value 2
+
+	pack $index.1 $index.2 \
+	    $index.3 -side top -anchor nw -padx 3 -pady 3
+
+	iwidgets::optionmenu $w.f.options.anisotropy \
 	    -labeltext "Anisotropy Metric to Plot:" \
-	    -textvariable $this-anisotropy
-        pack $w.f.options.anisotropy -side top -expand yes -fill x
-
-
+	    -labelpos w \
+	    -command "$this update_anisotropy $w.f.options.anisotropy"
+	$w.f.options.anisotropy insert end cl1 cl2 cp1 cp2 \
+	    ca1 ca2 cs1 cs2 ct1 ct2 ra fa vf tr
+	pack $w.f.options.anisotropy -side top -anchor nw -padx 3 -pady 3
 
         checkbutton $w.f.options.ns \
 	    -text "Don't attenuate the color by Anisotropy:" \
 	    -variable $this-ns
-        pack $w.f.options.ns -side top -expand yes -fill x
+        pack $w.f.options.ns -side top -anchor nw
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
+    }
+
+    method update_anisotropy {menu} {
+	global $this-anisotropy
+	set which [$menu get]
+	set $this-anisotropy $which
+    }
+
+    method set_anisotropy { name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.f.options.anisotropy
+	if {[winfo exists $menu]} {
+	    $menu select [set $this-anisotropy]
+	}
     }
 }
 

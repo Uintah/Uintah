@@ -30,7 +30,7 @@
 itcl_class SCIRun_FieldsCreate_SampleStructHex {
     inherit Module
     constructor {config} {
-        set name SampleStructured
+        set name SampleStructHex
         set_defaults
     }
 

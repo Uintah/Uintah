@@ -35,6 +35,7 @@
 
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/StructHexVolField.h>
 
 using namespace SCIRun;
 
@@ -51,4 +52,5 @@ macForceLoad()
 
   PointCloudField<double> pcfd;
   TriSurfField<double> tsfd;
+  StructHexVolField<double> shvfd;
 }

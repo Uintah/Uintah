@@ -250,52 +250,49 @@ Module* Network::get_module_by_id(const string& id)
 namespace SCIRun {
 class DeleteModuleThread : public Runnable 
 {
-public:
-
-  DeleteModuleThread(Network* n, const string& i) :
-    net_(n),
-    id_(i),
-    status_(1)
-  {}
-
-  void run() {
-    Module* mod = net_->get_module_by_id(id_);
-    if (!mod) {
-      status_ = 0;
-      return;
-    }
-    // traverse array of ptrs to Modules in Network to find this module
-    unsigned int i;
-    for (i = 0; i < net_->modules.size(); i++)
-      if (net_->modules[i] == mod)
-	break;
-    if (i == net_->modules.size()) {
-      status_ = 0;
-      return;
-    }
-
-    // remove array element corresponding to module, remove from hash table
-    net_->modules.erase(net_->modules.begin() + i);
-    mod->kill_helper();
-    delete mod;
-  }
-  
-  int status() { return status_; }
 private:
-  Network          *net_;
-  string            id_;
-  int               status_;
+  Network *net_;
+  Module *module_;
+public:
+  DeleteModuleThread(Network *net, Module *module) :
+    net_(net),
+    module_(module)
+  {
+    ASSERT(net);
+    ASSERT(module);
+  }
+  void run() {
+    Network::MapStringModule::iterator const mpos = 
+      net_->module_ids.find(module_->getID());
+    ASSERT(mpos != net_->module_ids.end());
+    
+    unsigned int vpos = 0;
+    while (vpos<net_->modules.size() && net_->modules[vpos]!=module_) ++vpos;
+    ASSERT(vpos<net_->modules.size());
+
+    net_->module_ids.erase(mpos);
+    net_->modules.erase(net_->modules.begin()+vpos);
+
+    // The Module destructor blocks the thread until execution is complete
+    delete module_;
+  }
 };
 }
 
+
+/* delete_module will start a seperate thead that 
+   waits until a module is done executing before deleting it */
 int Network::delete_module(const string& id)
 {
-  DeleteModuleThread * dm = scinew DeleteModuleThread((Network*)this, id);
-  string tname("Delete module: " + id);
+  Module* module_ptr = get_module_by_id(id);
+  if (!module_ptr) return 0;
+
+  DeleteModuleThread * dm = scinew DeleteModuleThread(this,module_ptr);
+  const string tname("Delete module: " + id);
   Thread *mod_deleter = scinew Thread(dm, tname.c_str());
-  int rval = dm->status();
   mod_deleter->detach();
-  return rval;
+
+  return 1;
 }
 
 void Network::schedule()

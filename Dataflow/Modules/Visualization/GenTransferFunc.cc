@@ -29,7 +29,7 @@
 
 
 /*
- * This is basicaly a ColorMap, just it works...
+ * This is basicaly a ColorMap, just it works.
  * Only handles diffuse colors for now (rest is constant)
  * Peter-Pike Sloan
  */
@@ -54,7 +54,7 @@
 #undef Colormap
 
 #include <iostream>
-#include <algorithm> 
+#include <algorithm>
 #include <stdio.h>
 
 using std::sort;
@@ -73,32 +73,34 @@ struct GTF_HSV {
   float sat;
   float val;
 };
+
 struct ColorPoint {
-  float  _t;  // time - 
+  float  _t;
   Color _rgb;
-  HSVColor _hsv;  // you have both reps...
 };
+
 struct AlphaPoint {
   float _t;
   float _alpha;
 };
 
+
 class GenTransferFunc : public Module {
 
   ColorMapIPort         *inport;  // input a ColorMap
   ColorMapOPort         *outport;  // outputs a ColorMap
-  GeometryOPort         *ogeom;  
+  GeometryOPort         *ogeom;
   GuiInt		RGBorHSV; // which mode
   GuiInt		lineVSspline; // linear vs. spline interpolate
+  GuiString             rgb_points_pickle_;
+  GuiString             hsv_points_pickle_;
+  GuiString             alphas_pickle_;
 
-//   Array1< ColorPoint > points;   // actual line(s)
   vector< ColorPoint > rgb_points;   // actual line(s)
   vector< ColorPoint > hsv_points;
   vector< ColorPoint > hsv_outpts;
-  
+
   vector< AlphaPoint > alphas;
-  //vector< float >	alphas;   // alpha polyline
-  //  vector< float >       aTimes;   // alpha times
 
   Array1< Point >       otherGraph; // xyz to RGB or HSV
 
@@ -123,6 +125,10 @@ class GenTransferFunc : public Module {
 
   void updateViewHSV();
   void loadTs( double Ax, double Ay, double ax, double ay, vector<double>& t);
+
+  void tcl_pickle();
+  void tcl_unpickle();
+
 public:
   GenTransferFunc( GuiContext* ctx);
 
@@ -133,16 +139,16 @@ public:
   void DoDown(int win, int x, int y, int button);
   void DoRelease(int win, int x, int y, int button);
 
-  float GetTime(int x, int) 
-    { 
+  float GetTime(int x, int)
+    {
       float v = x/(1.0*winX[whichWin]);
       if (v > 1.0) v = 1.0;	
       if (v < 0.0) v = 0.0;
       return v;
     }
   float GetVal(int, int y)
-    { 
-      float v= (winY[whichWin]-y)/(1.0*winY[whichWin]); 
+    {
+      float v= (winY[whichWin]-y)/(1.0*winY[whichWin]);
       if (v > 1.0) v = 1.0;	
       if (v < 0.0) v = 0.0;
       return v;
@@ -158,52 +164,59 @@ public:
 
   int makeCurrent(void);
 
-
+  virtual void presave();
 };
 
+
+
 DECLARE_MAKER(GenTransferFunc)
+
 GenTransferFunc::GenTransferFunc( GuiContext* ctx)
   : Module("GenTransferFunc",ctx,Source, "Visualization", "SCIRun"),
-    inport(0), outport(0), ogeom(0),
-    RGBorHSV(ctx->subVar("rgbhsv")),lineVSspline(ctx->subVar("linespline")),
-    activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1),
+    inport(0),
+    outport(0),
+    ogeom(0),
+    RGBorHSV(ctx->subVar("rgbhsv")),
+    lineVSspline(ctx->subVar("linespline")),
+    rgb_points_pickle_(ctx->subVar("rgb_points_pickle")),
+    hsv_points_pickle_(ctx->subVar("hsv_points_pickle")),
+    alphas_pickle_(ctx->subVar("alphas_pickle")),
+    activeLine(-1),
+    selNode(-1),
+    graphStat(-1),
+    bdown(-1),
+    whichWin(-1),
     cmap_generation(-1)
 {
+  cmap = scinew ColorMap; // start as nothing.
 
-  cmap = scinew ColorMap; // start as nothing...
-  
-  // initialize the transfer function
-
+  // Initialize the transfer function.
   ColorPoint p0, p1;
 
   p0._t = 0.0;
   p0._rgb = Color(0,.05,.1);
-//   p0._hsv = HSVColor(p0._rgb);
 
   rgb_points.push_back(p0);
 
   p0._t = 1.0;
   p0._rgb = Color(1,.95,.9);
-//   p0._hsv = HSVColor(p0._rgb);
 
   rgb_points.push_back(p0);
 
   // we want a similar transfer function for the HSV points
   p0._t = 0.0;
   p0._rgb = Color(0,.05, .1);
-//  p0._hsv = HSVColor(p0._rgb);
   p1._t = 1.0;
   p1._rgb = Color(1.0,.95,.9);
-//   p1._hsv = HSVColor(p1._rgb);
   hsv_points.push_back(p0);
   hsv_points.push_back(p1);
-  
+
   updateViewHSV();
 
   AlphaPoint a;
   a._t = 0; a._alpha = 0;
   alphas.push_back(a);
-  a._t = .25; 
+  a._t = .25;
   alphas.push_back(a);
   a._t = .5; a._alpha = .5;
   alphas.push_back(a);
@@ -212,28 +225,18 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
   a._t = 1; a._alpha = .8;
   alphas.push_back(a);
 
-//   alphas.push_back(0);
-//   alphas.push_back(0);
-//   alphas.push_back(.5);
-//   alphas.push_back(.8);
-//   alphas.push_back(.8);
-//   aTimes.push_back(0);
-//   aTimes.push_back(.25);
-//   aTimes.push_back(.5);
-//   aTimes.push_back(.75);
-//   aTimes.push_back(1);
-
-
   ctxs[0] = ctxs[1] = ctxs[2] = 0;
 }
 
+
 GenTransferFunc::~GenTransferFunc()
 {
-
 }
 
-void 
-GenTransferFunc::loadTs( double Ax, double Ay, double ax, double ay, vector<double>& t)
+
+void
+GenTransferFunc::loadTs( double Ax, double Ay, double ax, double ay,
+			 vector<double>& t)
 {
   double ys[11] = { 0.8333333333, 0.1666666666, 0.249999999,
 		    0.3333333332, 0.4166666665, 0.499999998,
@@ -241,27 +244,119 @@ GenTransferFunc::loadTs( double Ax, double Ay, double ax, double ay, vector<doub
 		    0.8333333333, 0.9166666663 };
 
   int i;
-  for( i = 0; i < 11; i++ ){
-    double Bx = 0; 
+  for( i = 0; i < 11; i++ )
+  {
+    double Bx = 0;
     double By = ys[i];
     double cx = Bx - Ax;
     double cy = By - Ay;
     double bx_ = 0;
     double by_ = 1;
-    if(bx_ * ax + by_ * ay > 0 ) {
+    if(bx_ * ax + by_ * ay > 0 )
+    {
       t.push_back((bx_ * cx + by_ * cy)/(bx_ * ax + by_ * ay));
     }
   }
-  sort(t.begin(), t.end()); 
-}
-      
-    
-void GenTransferFunc::updateViewHSV(void)
-{
-//   vector< ColorPoint > hsv_points;
-//   vector< ColorPoint > hsv_outpts;
 
+  sort(t.begin(), t.end());
+}
+
+
+void
+GenTransferFunc::tcl_pickle()
+{
+  unsigned int i;
+
+  ostringstream rgbstream;
+  for (i = 0; i < rgb_points.size(); i++)
+  {
+    rgbstream << rgb_points[i]._t << " "
+	      << rgb_points[i]._rgb.r() << " "
+	      << rgb_points[i]._rgb.g() << " "
+	      << rgb_points[i]._rgb.b() << " ";
+  }
+  rgb_points_pickle_.set(rgbstream.str());
+
+  ostringstream hsvstream;
+  for (i = 0; i < hsv_points.size(); i++)
+  {
+    hsvstream << hsv_points[i]._t << " "
+	      << hsv_points[i]._rgb.r() << " "
+	      << hsv_points[i]._rgb.g() << " "
+	      << hsv_points[i]._rgb.b() << " ";
+  }
+  hsv_points_pickle_.set(hsvstream.str());
+
+  ostringstream astream;
+  for (i = 0; i < alphas.size(); i++)
+  {
+    astream << alphas[i]._t << " "
+	    << alphas[i]._alpha << " ";
+  }
+  alphas_pickle_.set(astream.str());
+}
+
+
+void
+GenTransferFunc::tcl_unpickle()
+{
+  rgb_points.clear();
+  hsv_points.clear();
+  alphas.clear();
+
+  float r, g, b;
+  istringstream rgbstream(rgb_points_pickle_.get());
+  while (!rgbstream.eof())
+  {
+    ColorPoint p;
+    rgbstream >> p._t;
+    if (rgbstream.fail()) break;
+    rgbstream >> r;
+    if (rgbstream.fail()) break;
+    rgbstream >> g;
+    if (rgbstream.fail()) break;
+    rgbstream >> b;
+    if (rgbstream.fail()) break;
+    p._rgb = Color(r, g, b);
+    rgb_points.push_back(p);
+  }
+
+  float h, s, v;
+  istringstream hsvstream(hsv_points_pickle_.get());
+  while (!hsvstream.eof())
+  {
+    ColorPoint p;
+    hsvstream >> p._t;
+    if (hsvstream.fail()) break;
+    hsvstream >> h;
+    if (hsvstream.fail()) break;
+    hsvstream >> s;
+    if (hsvstream.fail()) break;
+    hsvstream >> v;
+    if (hsvstream.fail()) break;
+    p._rgb = Color(h, s, v);
+    hsv_points.push_back(p);
+  }
+  if (hsv_points.size()) { updateViewHSV(); }
+
+  istringstream astream(alphas_pickle_.get());
+  while (!astream.eof())
+  {
+    AlphaPoint p;
+    astream >> p._t;
+    if (astream.fail()) break;
+    astream >> p._alpha;
+    if (astream.fail()) break;
+    alphas.push_back(p);
+  }
+}
+
+
+void
+GenTransferFunc::updateViewHSV()
+{
   if( hsv_points.size() < 2 ) return;
+
   unsigned int i,j;
   hsv_outpts.clear();
   ColorPoint newpt;
@@ -279,10 +374,10 @@ void GenTransferFunc::updateViewHSV(void)
 	double time = Ax + ts[i] * ax;
 	double hx   = Ay + ts[i] * ay;
 	
-	double sx = hsv_points[j]._rgb[1] + 
+	double sx = hsv_points[j]._rgb[1] +
 	  (time  - hsv_points[j]._t)/(hsv_points[j+1]._t - hsv_points[j]._t) *
 	  (hsv_points[j+1]._rgb[1] - hsv_points[j]._rgb[1]);
-	double vx = hsv_points[j]._rgb[2] + 
+	double vx = hsv_points[j]._rgb[2] +
 	  (time  - hsv_points[j]._t)/(hsv_points[j+1]._t - hsv_points[j]._t) *
 	  (hsv_points[j+1]._rgb[2] - hsv_points[j]._rgb[2]);
 	newpt._t = time;
@@ -296,9 +391,9 @@ void GenTransferFunc::updateViewHSV(void)
 
 
 
-// draws/updates the graphs...
-
-void drawBox(float x, float y, float dx, float dy)
+// Draws/updates the graphs.
+void
+drawBox(float x, float y, float dx, float dy)
 {
   glBegin(GL_LINE_LOOP);
   glVertex2f(x-dx,y-dy);
@@ -308,10 +403,11 @@ void drawBox(float x, float y, float dx, float dy)
   glEnd();
 }
 
-void GenTransferFunc::Resize(int win)
-{
 
-  // do a make current...
+void
+GenTransferFunc::Resize(int win)
+{
+  // Do a make current.
 
   if ( ! makeCurrent() )
     return;
@@ -328,17 +424,16 @@ void GenTransferFunc::Resize(int win)
     break;
   }
 
-  if (win < 2) {  // DX DY only for first 2...
+  if (win < 2)
+  {  // DX DY only for first 2.
     int sx,sy;
     sx = winX[win];
     sy = winY[win];
 
-    winDX[win] = 1.0/100.0;  // X is normaly bigger...
+    winDX[win] = 1.0/100.0;  // X is normaly bigger.
 
     winDY[win] = sx/sy*winDX[win];
   }
-
-  // make current...
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -348,7 +443,6 @@ void GenTransferFunc::Resize(int win)
   glLoadIdentity();
 
 //  gluOrtho2D(0,winX[win],0,winY[win]);
-  
 
   glEnable(GL_COLOR_MATERIAL);  // more state?
   glColorMaterial(GL_FRONT_AND_BACK,GL_DIFFUSE);
@@ -361,17 +455,16 @@ void GenTransferFunc::Resize(int win)
   glClear(GL_COLOR_BUFFER_BIT);
 
   gui->unlock();
-
 }
 
-void GenTransferFunc::DrawGraphs( int flush)
-{
 
+void
+GenTransferFunc::DrawGraphs( int flush)
+{
   static double  colors[] = { 1.,0.,0.,   0.,1.,0.,   0.,0.,1. };
 
   if (!makeCurrent())
     return; // don't care if you can't make current...
-
 
   glXMakeCurrent(dpy[0],win0,ctxs[0]);
   // other state should be fine...
@@ -386,7 +479,7 @@ void GenTransferFunc::DrawGraphs( int flush)
 	mul = 1.0;
       glBegin(GL_LINE_STRIP);
       for(j=0;j<hsv_outpts.size();j++) {
-	HSVColor hsv; 
+	HSVColor hsv;
 	Color rgb;
 	double val;
 	switch ( i ) {
@@ -424,17 +517,15 @@ void GenTransferFunc::DrawGraphs( int flush)
     }
   }
 
-  // now draw the alpha curve...
-
+  // Now draw the alpha curve.
   float mul = 0.5;
   if (activeLine == 7)
     mul = 0.7;
 
   glColor3f(mul,mul,mul);
   glBegin(GL_LINE_STRIP);
-  
+
   for(i=0;i<alphas.size();i++) {
-//     glVertex2f(aTimes[i],alphas[i]);
     glVertex2f(alphas[i]._t,alphas[i]._alpha);
   }
   glEnd();
@@ -444,18 +535,17 @@ void GenTransferFunc::DrawGraphs( int flush)
     if ((int)i == selNode)
       mul = 0.7;
     glColor3f(mul,mul,mul);
-//     drawBox(aTimes[i],alphas[i],winDX[0],winDY[0]);
     drawBox(alphas[i]._t,alphas[i]._alpha,winDX[0],winDY[0]);
   }
 
-  // now the polylines have been draw, draw the points...
+  // Now the polylines have been draw, draw the points.
   if( RGBorHSV.get() ){
     for(i=0;i<3;i++) {
       for(j=0;j<hsv_points.size();j++) {
 	float mul = 0.6;
 	if (selNode == (int)j*2)
 	  mul = 1.0;
-	HSVColor hsv; 
+	HSVColor hsv;
 	Color rgb;
 	double val;
 	switch (i ) {
@@ -478,7 +568,7 @@ void GenTransferFunc::DrawGraphs( int flush)
 	drawBox(hsv_points[j]._t,hsv_points[j]._rgb[i],winDX[0],winDY[0]);
       }
     }
-  }else {
+  } else {
     for(i=0;i<3;i++) {
       for(j=0;j<rgb_points.size();j++) {
 	float mul = 0.6;
@@ -494,20 +584,18 @@ void GenTransferFunc::DrawGraphs( int flush)
   glXSwapBuffers(dpy[0],win0);
 
   // clear the middle window (why not?)-- Because it doesn't do anything KZ
-// ****** Temporary comment out of HSV Window ******  
+// ****** Temporary comment out of HSV Window ******
 //   glXMakeCurrent(dpy[1],win1,ctxs[1]);
 //   glDrawBuffer(GL_BACK);
 //   glClear(GL_COLOR_BUFFER_BIT);
 //   glXSwapBuffers(dpy[1],win1);
 
-  // go to the last window...
-
+  // Go to the last window.
   glXMakeCurrent(dpy[2],win2,ctxs[2]);
   glDrawBuffer(GL_BACK);
   glClear(GL_COLOR_BUFFER_BIT);
 
   // 1st lay down the "pattern"
-
   glDisable(GL_BLEND);
 
   glShadeModel(GL_FLAT);
@@ -524,12 +612,9 @@ void GenTransferFunc::DrawGraphs( int flush)
   }
   glShadeModel(GL_SMOOTH);
   glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_TRUE);
-  
+
   glBegin(GL_QUAD_STRIP);
   for(i=0;i<alphas.size();i++) {
-//     glColor4f(0,0,0,alphas[i]);
-//     glVertex2f(aTimes[i],0);
-//     glVertex2f(aTimes[i],1);
     glColor4f(0,0,0,alphas[i]._alpha);
     glVertex2f(alphas[i]._t,0);
     glVertex2f(alphas[i]._t,1);
@@ -565,9 +650,8 @@ void GenTransferFunc::DrawGraphs( int flush)
   glEnd();
   glXSwapBuffers(dpy[2],win2);
 
-  
-  // here you update this ColorMap thing...
-  
+
+  // Here you update this ColorMap thing.
   if (cmap.get_rep()) {
     vector<Color> ncolors((RGBorHSV.get() ?
 			   hsv_outpts.size(): rgb_points.size()));
@@ -597,8 +681,7 @@ void GenTransferFunc::DrawGraphs( int flush)
       a[i] = alphas[i]._alpha;
       t[i] = alphas[i]._t;
     }
-    
-//     cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes,256);
+
     cmap.get_rep()->SetRaw(ncolors,times,a,t);
 
     glXMakeCurrent(dpy[0],None,NULL);
@@ -617,20 +700,20 @@ void GenTransferFunc::DrawGraphs( int flush)
   gui->unlock();
 }
 
-// this is how the gui talks with this thing
 
-void GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
+// This is how the gui talks with this thing.
+void
+GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
     args.error("No command for GenTransferFunc");
     return;
   }
 
-  // mouse commands are motion, down, release
-
+  // Mouse commands are motion, down, release.
   if (args[1] == "mouse") {
     int x,y,whichw,whichb;
-    
+
     string_to_int(args[4], x);
     string_to_int(args[5], y);
 
@@ -638,7 +721,7 @@ void GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
 
     if (args[3] == "motion") {
       if (bdown == -1) // not buttons down!
-	return; 
+	return;
       DoMotion(whichw,x,y);
     } else {
       string_to_int(args[6], whichb); // which button it was
@@ -661,19 +744,22 @@ void GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
     DrawGraphs(0);
   }else if(args[1] == "closewindow") {
      ctxs[0] = ctxs[1] = ctxs[2] = 0;
+  }else if (args[1] == "unpickle") {
+     tcl_unpickle();
   }else {
     Module::tcl_command(args, userdata);
   }
 }
 
-// you just have to find the time interval first
-// then look at the values...
 
-void GenTransferFunc::
-GetClosest(float time, float val, int& cline, int& cpoint)
+// You just have to find the time interval first
+// then look at the values.
+
+void
+GenTransferFunc::GetClosest(float time, float val, int& cline, int& cpoint)
 {
   unsigned int i;
-  
+
   float minP=10000;
 
   float d1,d2;
@@ -682,25 +768,22 @@ GetClosest(float time, float val, int& cline, int& cpoint)
       ; // do nothing - just getting index...
     }
 
-    // now i is the value 1 greater...
-
+    // Now i is the value 1 greater.
     if (i == rgb_points.size()) {
       i = rgb_points.size() -1;
-    } 
+    }
 
-    // now find the closest point
-
-
+    // Now find the closest point.
     d1 = time - rgb_points[i-1]._t;  d1 = d1*d1;
     d2 = rgb_points[i]._t - time;  d2 = d2*d2;
     float dy1,dy2;
     for(int j=0;j<3;j++) {
       dy1 = rgb_points[i-1]._rgb[j] - val;
       dy2 = rgb_points[i]._rgb[j]-val;
-    
+
       float min1 = d1 + dy1*dy1;
       float min2 = d2 + dy2*dy2;
-    
+
       if (min1 < minP) {
 	minP = min1;
 	cpoint = i-1;
@@ -722,7 +805,7 @@ GetClosest(float time, float val, int& cline, int& cpoint)
 
     if (i == hsv_points.size()) {
       i = hsv_points.size() -1;
-    } 
+    }
 
     // now find the closest point
     d1 = time - hsv_points[i-1]._t;  d1 = d1*d1;
@@ -731,10 +814,10 @@ GetClosest(float time, float val, int& cline, int& cpoint)
     for(int j=0;j<3;j++) {
       dy1 = hsv_points[i-1]._rgb[j] - val;
       dy2 = hsv_points[i]._rgb[j]-val;
-    
+
       float min1 = d1 + dy1*dy1;
       float min2 = d2 + dy2*dy2;
-    
+
       if (min1 < minP) {
 	minP = min1;
 	cpoint = i-1;
@@ -759,7 +842,7 @@ GetClosest(float time, float val, int& cline, int& cpoint)
 
   if (i == alphas.size()) {
     i = alphas.size() -1;
-  } 
+  }
 
 
 //   d1 = time - aTimes[i-1];  d1 = d1*d1;
@@ -771,7 +854,7 @@ GetClosest(float time, float val, int& cline, int& cpoint)
 //   d2 += (alphas[i]-val)*(alphas[i]-val);
   d1 += (alphas[i-1]._alpha-val)*(alphas[i-1]._alpha-val);
   d2 += (alphas[i]._alpha-val)*(alphas[i]._alpha-val);
-  
+
   if (d1 < d2) {
     if (d1 < minP) {
       cline = 7;
@@ -783,14 +866,13 @@ GetClosest(float time, float val, int& cline, int& cpoint)
       cpoint = i;
     }
   }
-
   // now it should be ok...
-
 }	
 
-// button must be down
 
-void GenTransferFunc::DoMotion(int, int x, int y)
+// Button must be down.
+void
+GenTransferFunc::DoMotion(int, int x, int y)
 {
   if ((selNode == -1) || (activeLine == -1))  // this shouldn't happen!
     return;
@@ -857,44 +939,42 @@ void GenTransferFunc::DoMotion(int, int x, int y)
     alphas[selNode]._alpha = val;
   }
 
-
-
   // now you just have to redraw this
 
   DrawGraphs(0);
-
 }
+
+
 
 // Button 1 is modify, 2 is insert, 3 is delete
 
-void GenTransferFunc::DoDown(int win, int x, int y, int button)
+void
+GenTransferFunc::DoDown(int win, int x, int y, int button)
 {
-  // you have to find the point to select...
+  // You have to find the point to select.
 
   float time,val;
-  int cline,cpoint; // closest info...
+  int cline,cpoint; // Closest info.
 
   time = GetTime(x,y);
   val  = GetVal(x,y);
 
-  whichWin = win;  // this has to be pre closest selection...
+  whichWin = win;  // This has to be pre closest selection.
   GetClosest(time,val,cline,cpoint);
-  
+
   ColorPoint p;
 
   if (button == 2) {
-    // you have to find what side of the closest point
-    // you are on...
+    // You have to find what side of the closest point
+    // you are on.
 
     activeLine = cline;
-    
+
     p._t = time;
-    
+
     p._rgb[cline>>1] = val;
     p._rgb[((cline>>1)+1)%3] = 0;
     p._rgb[((cline>>1)+2)%3] = 1;
-    
-//     p._hsv = HSVColor(p._rgb);
 
     if (cline != 7) {
       if(!RGBorHSV.get()){  // rgb
@@ -908,7 +988,7 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
 	  }
 	}
 
-	// place the added points for the two other curves exactly on their 
+	// place the added points for the two other curves exactly on their
 	// existing segments
 	double dtime1, dtime2, dsumtime;
 	dtime1=p._t-rgb_points[cpoint-1]._t;
@@ -926,7 +1006,7 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
 	idx=((cline>>1)+2)%3;
 	p._rgb[idx]=rgb_points[cpoint-1]._rgb[idx]*w1+rgb_points[cpoint]._rgb[idx]*w2;
 	rgb_points.insert(rgb_points.begin() + cpoint,p);
-	  
+	
       } else { // HSV
 	if (cpoint && cpoint != (int)hsv_points.size()-1) {
 	  if (hsv_points[cpoint]._t <= time)
@@ -938,7 +1018,7 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
 	  }
 	}
 
-	// place the added points for the two other curves exactly on their 
+	// place the added points for the two other curves exactly on their
 	// existing segments
 	double dtime1, dtime2, dsumtime;
 	dtime1=p._t-hsv_points[cpoint-1]._t;
@@ -977,21 +1057,21 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
 //       alphas.insert(alphas.begin() + cpoint, val);
 //       aTimes.insert(aTimes.begin() + cpoint, time);
     }
-
   }
 
   selNode = cpoint;
   activeLine = cline;
-  
+
   bdown = button;
 
   DrawGraphs(); // just update the display (diferent box for selected)
-
 }
 
-void GenTransferFunc::DoRelease(int win, int x, int y, int button)
+
+void
+GenTransferFunc::DoRelease(int win, int x, int y, int button)
 {
-  // just fake a move for the final posistion...
+  // Just fake a move for the final position.
 
   DoMotion(win,x,y);
 
@@ -1021,7 +1101,7 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
       }
     }
     break;
-      
+
   }
 
   selNode = -1; // leave activeLine...
@@ -1030,8 +1110,9 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
   DrawGraphs();
 }
 
+
 void
-GenTransferFunc::execute(void)
+GenTransferFunc::execute()
 {
   inport = (ColorMapIPort *)get_iport("ColorMap");
   outport = (ColorMapOPort *)get_oport("ColorMap");
@@ -1052,7 +1133,7 @@ GenTransferFunc::execute(void)
   }
 
   unsigned int i;
-  
+
   int c = inport->get(newcmap);
 
   if ( c && newcmap->generation != cmap_generation )
@@ -1071,7 +1152,7 @@ GenTransferFunc::execute(void)
 			   newcmap->rawRampAlphaT_);
 
     rgb_points.resize(newcmap->rawRampColor_.size());
-    
+
     for(i=0;i<rgb_points.size();i++){
       rgb_points[i]._t = newcmap->rawRampColorT_[i];
       rgb_points[i]._rgb = newcmap->rawRampColor_[i];
@@ -1082,8 +1163,6 @@ GenTransferFunc::execute(void)
       alphas[i]._t = newcmap->rawRampAlphaT_[i];
       alphas[i]._alpha = newcmap->rawRampAlpha_[i];
     }
-//     alphas = newcmap->rawRampAlpha;
-//     aTimes = newcmap->rawRampAlphaT;
   }
   else
   {
@@ -1094,7 +1173,7 @@ GenTransferFunc::execute(void)
     vector<float> a(alphas.size());
     vector<float> t(alphas.size());
 
-    
+
     if( RGBorHSV.get() ) {
       for(i=0;i<hsv_outpts.size();i++) {
 	double h, s, v;
@@ -1116,17 +1195,13 @@ GenTransferFunc::execute(void)
       t[i] = alphas[i]._t;
     }
 
-//     cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
-
-//     // Bad for Volume Rendering?
-//     cmap = scinew ColorMap(ncolors,times,alphas,aTimes,256);
-    cmap.get_rep()->SetRaw(ncolors,times,a,t); 
+    cmap.get_rep()->SetRaw(ncolors,times,a,t);
 
     // Bad for Volume Rendering?
     cmap = scinew ColorMap(ncolors,times,a,t);
   }
   DrawGraphs(0);
-#if 0  
+#if 0
   if (cmap.get_rep())
   {
     delete cmap.get_rep();
@@ -1137,7 +1212,8 @@ GenTransferFunc::execute(void)
 }
 
 
-int GenTransferFunc::makeCurrent(void)
+int
+GenTransferFunc::makeCurrent()
 {
   Tk_Window tkwin;
 
@@ -1185,7 +1261,7 @@ int GenTransferFunc::makeCurrent(void)
 //       gui->unlock();
 //       return 0;
 //     }
-    
+
 //     winX[1] = Tk_Width(tkwin);
 //     winY[1] = Tk_Height(tkwin);
 
@@ -1237,6 +1313,14 @@ int GenTransferFunc::makeCurrent(void)
 
   return 1;
 }
+
+
+void
+GenTransferFunc::presave()
+{
+  tcl_pickle();
+}
+
 
 
 } // End namespace SCIRun

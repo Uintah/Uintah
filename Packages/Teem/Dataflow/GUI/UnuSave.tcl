@@ -112,6 +112,9 @@ itcl_class Teem_UnuNtoZ_UnuSave {
 		-defaultextension $defext \
 		-formatvar $this-filetype 
 		#-splitvar $this-split 
+
+	moveToCursor $w
+	wm deiconify $w	
     }
 
     method ui {} {

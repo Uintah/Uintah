@@ -144,7 +144,7 @@ int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 9) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -156,10 +156,14 @@ main(int argc, char **argv) {
   char *matrixName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   ifstream matstream(textfileName);
+  if (matstream.fail()) {
+    cerr << "Error -- Could not open file " << textfileName << "\n";
+    return 2;
+  }
   if (header) matstream >> nr >> nc >> nnz;
 
   cerr << "nrows="<<nr<<" ncols="<<nc<<" # of non-zeros="<<nnz<<"\n";
@@ -183,13 +187,13 @@ main(int argc, char **argv) {
     {
       cerr << "Error: Row " << r << " at entry " << lineno << 
 	" is out of range.\n";
-      return 0;
+      return 2;
     }
     if (c < 0 || c >= nc)
     {
       cerr << "Error: Column " << c << " at entry " << lineno << 
 	" is out of range.\n";
-      return 0;
+      return 2;
     }
     columns[e]=c;
     a[e]=d;

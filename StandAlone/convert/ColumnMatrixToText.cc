@@ -96,7 +96,7 @@ int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 4) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -108,24 +108,24 @@ main(int argc, char **argv) {
   char *textfileName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   MatrixHandle handle;
   Piostream* stream=auto_istream(matrixName);
   if (!stream) {
     cerr << "Couldn't open file "<<matrixName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
   Pio(*stream, handle);
   if (!handle.get_rep()) {
     cerr << "Error reading matrix from file "<<matrixName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix *>(handle.get_rep());
   if (!cm) {
     cerr << "Error -- input field wasn't a ColumnMatrix\n";
-    exit(0);
+    return 2;
   }
 
   int nr=cm->nrows();
@@ -133,7 +133,7 @@ main(int argc, char **argv) {
   FILE *fTxt = fopen(textfileName, "wt");
   if (!fTxt) {
     cerr << "Error -- couldn't open output file "<<textfileName<<"\n";
-    exit(0);
+    return 2;
   }
   if (header) fprintf(fTxt, "%d\n", nr);
   for (int r=0; r<nr; r++)

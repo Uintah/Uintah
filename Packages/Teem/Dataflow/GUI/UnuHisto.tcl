@@ -50,6 +50,9 @@ itcl_class Teem_UnuAtoM_UnuHisto {
         global $this-max
         set $this-max 1.0
 
+	global $this-useinputmax
+	set $this-useinputmax 1
+
         global $this-type
         set $this-type "nrrdTypeUInt"
 

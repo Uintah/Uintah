@@ -177,5 +177,30 @@
   </gui>
   <testing>
   </testing>
+<nets>
+<net id="SampleField-rakestreamlines">
+<title>SampleField-rakestreamlines Regression Test</title>
+
+<p>Use the rake widget from the SampleField module to select some seed
+points for streamlines in a vector field.  The vector field is created
+by using the gradients from the sphere-voltage model.  All of the
+streamlines should pass through the rake widget at regular intervals.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleField-rakestreamlines.net.</p>
+
+</net>
+<net id="SampleField-weightedrandom">
+<title>SampleField-weightedrandom Regression Test</title>
+
+<p>Use the SampleField module to resample a point cloud field onto the
+sphere-voltage model.  In this example the density of the point cloud
+is determined by the square of the voltage magnitude in the original
+model.  This gives us a nice way to visualize the voltage magnitude of
+the original field.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleField-weightedrandom.net.</p>
+
+</net>
+</nets>
 </component>
 

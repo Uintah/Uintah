@@ -59,9 +59,16 @@ scanlines along axis 0 (color).</p>
      by the axis min,max along axis 0 or 1, or, it is implicitly defined 
      as zero to one minus the length of that axis.</p>
     <p>Min : Only used when rescaling to the Map Domain. Indicates the low 
-    end of input range. Should be a double.</p>
+    end of input range. Should be a double. To disregard
+    this value and use the lowest value of the input nrrd, check Use
+    lowest value of input nrrd as min.</p>
     <p>Max : Only used when rescaling to the Map Domain. Indicates the high 
-    end of input range. Should be a double.</p>
+    end of input range. Should be a double.To 
+    disregard this value and use the highest value of the input nrrd, check Use
+    highest value of input nrrd as max. </p>
+    <p>Type: Specify the type of the output nrrd.  If Use map's type as
+    output type is checked, this value will be disregarded and the map
+    type will be used.</p>
     </description>
   </overview>
   <implementation>

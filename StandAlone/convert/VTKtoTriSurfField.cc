@@ -188,7 +188,7 @@ main(int argc, char **argv) {
   int status = 0;
   if (argc < 3 || argc > 5) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
 #if defined(__APPLE__)  
@@ -208,6 +208,10 @@ main(int argc, char **argv) {
     return 1;
   }
   ifstream vtk(in, std::ios_base::binary);
+  if (vtk.fail()) {
+    cerr << "Error -- Could not open file " << in << "\n";
+    return 2;
+  }
 
   char id[256], header[256], format[256];
 

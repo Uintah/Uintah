@@ -51,6 +51,7 @@ namespace SCIRun {
 class PSECORESHARE ChooseMatrix : public Module {
 private:
   GuiInt port_index_;
+  GuiInt usefirstvalid_;
 public:
   ChooseMatrix(GuiContext* ctx);
   virtual ~ChooseMatrix();
@@ -60,7 +61,8 @@ public:
 DECLARE_MAKER(ChooseMatrix)
 ChooseMatrix::ChooseMatrix(GuiContext* ctx)
   : Module("ChooseMatrix", ctx, Filter, "Math", "SCIRun"),
-    port_index_(ctx->subVar("port-index"))
+    port_index_(ctx->subVar("port-index")),
+    usefirstvalid_(ctx->subVar("usefirstvalid"))
 {
 }
 
@@ -82,21 +84,48 @@ ChooseMatrix::execute()
     return;
 
   port_map_type::iterator pi = range.first;
-  int idx=port_index_.get();
-  if (idx<0) { error("Can't choose a negative port"); return; }
-  while (pi != range.second && idx != 0) { ++pi ; idx--; }
-  int port_number=pi->second;
-  if (pi == range.second || ++pi == range.second) { 
-    error("Selected port index out of range"); return; 
-  }
 
-  MatrixIPort *imatrix = (MatrixIPort *)get_iport(port_number);
-  if (!imatrix) {
-    error("Unable to initialize iport '" + to_string(port_number) + "'.");
-    return;
-  }
+  int usefirstvalid = usefirstvalid_.get();
+
+  MatrixIPort *imatrix = 0;
   MatrixHandle matrix;
-  imatrix->get(matrix);
+  
+  if (usefirstvalid) {
+    // iterate over the connections and use the
+    // first valid matrix
+    int idx = 0;
+    bool found_valid = false;
+    while (pi != range.second) {
+      imatrix = (MatrixIPort *)get_iport(idx);
+      if (imatrix->get(matrix) && matrix != 0) {
+	found_valid = true;
+	break;
+      }
+      ++idx;
+      ++pi;
+    }
+    if (!found_valid) {
+      error("Didn't find any valid matrixs\n");
+      return;
+    }
+  } else {
+    // use the index specified
+    int idx=port_index_.get();
+    if (idx<0) { error("Can't choose a negative port"); return; }
+    while (pi != range.second && idx != 0) { ++pi ; idx--; }
+    int port_number=pi->second;
+    if (pi == range.second || ++pi == range.second) { 
+      error("Selected port index out of range"); return; 
+    }
+
+    imatrix = (MatrixIPort *)get_iport(port_number);
+    if (!imatrix) {
+      error("Unable to initialize iport '" + to_string(port_number) + "'.");
+      return;
+    }
+    imatrix->get(matrix);
+  }
+  
   ofld->send(matrix);
 }
 

@@ -29,7 +29,7 @@
 
 # SCI Network 1.0
 
-if {[string length [netedit getenv SCIRUN_DATA] == 0]} {
+if {[string length [netedit getenv SCIRUN_DATA]] == 0} {
    puts ""
    puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
    puts "*** Please exit, set it in your shell, and rerun."

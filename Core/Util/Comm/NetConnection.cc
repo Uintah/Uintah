@@ -41,6 +41,9 @@
   
 // SCIRun includes
 //#include <Core/Util/Comm/NetConnection.h>
+#include <sci_defs.h>
+#ifdef HAVE_SCISOCK
+
 #include "NetConnection.h"
  
 using namespace std;
@@ -275,3 +278,5 @@ struct NetConnectionC * NetConnection::get_connection()
 }
    
 } // End namespace SCIRun
+
+#endif

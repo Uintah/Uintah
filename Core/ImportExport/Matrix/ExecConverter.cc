@@ -73,9 +73,13 @@ Exec_setup_command(const char *cfilename, const string &precommand,
   loc = basefilename.find_last_of(".");
   const string basenoext = basefilename.substr(0, loc);
 
+  // Filename with first extension removed.
+  loc = filename.find_last_of(".");
+  const string noext = filename.substr(0, loc);
+
   // Temporary filename.
   tmpfilename = "/tmp/" + basenoext + "-" +
-    to_string((unsigned int)(getpid())) + ".fld";
+    to_string((unsigned int)(getpid())) + ".mat";
 
   // Filename with first extension removed.
   loc = filename.find_last_of(".");
@@ -89,7 +93,7 @@ Exec_setup_command(const char *cfilename, const string &precommand,
   }
   while ((loc = command.find("%e")) != string::npos)
   {
-    command.replace(loc, 2, basenoext);
+    command.replace(loc, 2, noext);
   }
   while ((loc = command.find("%t")) != string::npos)
   {

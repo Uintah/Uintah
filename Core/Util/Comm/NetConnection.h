@@ -42,6 +42,9 @@
 
 #ifndef SCI_Core_Util_NetConnection_h
 #define SCI_Core_Util_NetConnection_h
+#include <sci_defs.h>
+#ifdef HAVE_SCISOCK
+
 
 // SCIRun includes
 #include <Core/Malloc/Allocator.h>
@@ -95,6 +98,7 @@ private:
 
 } // End namespace SCIRun
  
+#endif
 #endif // SCI_Core_Util_NetConnection_h
 
 
