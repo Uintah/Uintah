@@ -83,7 +83,7 @@ using namespace SCIRun;
 
 // Set defaults in the constructor
 matlabconverter::matlabconverter()
-  : numericarray_(false), indexbase_(1), datatype_(matlabarray::miSAMEASDATA), disable_transpose_(false), prefer_nrrds(false)
+  : numericarray_(false), indexbase_(1), datatype_(matlabarray::miSAMEASDATA), disable_transpose_(false), prefer_nrrds(false), prefer_bundles(false)
 {
 }
 
@@ -121,6 +121,17 @@ void matlabconverter::prefermatrices()
 {
   prefer_nrrds = false;
 }
+
+void matlabconverter::preferbundles()
+{
+  prefer_bundles = true;
+}
+
+void matlabconverter::prefersciobjects()
+{
+  prefer_bundles = false;
+}
+
 
 
 void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *handle)
@@ -3584,27 +3595,30 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
   int numfields = 0;
   int nummatrices = 0;
   int numnrrds = 0;
+  int numbundles = 0;
   
   matlabarray subarray;
   for (long p = 0; p < nfields; p++)
     {
       subarray = mlarray.getfield(0,p);
+      if (prefer_bundles)  {if (sciBundleCompatible(subarray,dummyinfo,module)) { numbundles++; continue; } }
       int score = sciFieldCompatible(subarray,dummyinfo,module);
       if (score > 1)  { numfields++; continue; }
       if (prefer_nrrds) { if (sciNrrdDataCompatible(subarray,dummyinfo,module))   { numnrrds++; continue; } }
       if (sciMatrixCompatible(subarray,dummyinfo,module)) { nummatrices++; continue; }
       if (!prefer_nrrds) { if (sciNrrdDataCompatible(subarray,dummyinfo,module))   { numnrrds++; continue; } }
       if (score) { numfields++; continue; }
+      if (sciBundleCompatible(subarray,dummyinfo,module)) { numbundles++; continue; }
     }
   
-  if (numfields+nummatrices+numnrrds == 0) 
+  if (numfields+nummatrices+numnrrds+numbundles == 0) 
     {
       postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Bundle (none of the fields matches a SCIRun object)"));
       return(0);
     }
   
   std::ostringstream oss;
-  oss << mlarray.getname() << " BUNDLE [ " << nummatrices << " MATRICES, " << numnrrds << " NRRDS, " << numfields << " FIELDS]";
+  oss << mlarray.getname() << " BUNDLE [ " << nummatrices << " MATRICES, " << numnrrds << " NRRDS, " << numfields << " FIELDS, " << numbundles << " BUNDLES]";
   infostring = oss.str();
   return(1);
 }
@@ -3629,6 +3643,20 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
     {
       subarray = mlarray.getfield(0,p);
       fname = mlarray.getfieldname(p);
+      if (mlarray.isstruct())
+      {
+        if (prefer_bundles == true)
+        {
+          if (sciBundleCompatible(subarray,dummyinfo,module))
+          {
+            BundleHandle subbundle;
+            mlArrayTOsciBundle(subarray,subbundle,module);
+            scibundle->setBundle(fname,subbundle);
+            continue;
+          }
+        }
+      }
+      
       int score = sciFieldCompatible(subarray,dummyinfo,module);
       if (score > 1)  
         { 
@@ -3671,6 +3699,13 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
           scibundle->setField(fname,field);
           continue;
         }
+      if (sciBundleCompatible(subarray,dummyinfo,module))
+      {
+        BundleHandle subbundle;
+        mlArrayTOsciBundle(subarray,subbundle,module);
+        scibundle->setBundle(fname,subbundle);
+        continue;
+      }
     }
 }
 
@@ -3682,6 +3717,7 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
   Field* field = 0;
   Matrix* matrix = 0;
   NrrdData* nrrd = 0;
+  Bundle* bundle = 0;
     
   mlmat.clear();
   mlmat.createstructarray();
@@ -3712,6 +3748,14 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
           NrrdDataHandle  fhandle = nrrd;
           matlabarray subarray;
           sciNrrdDataTOmlArray(fhandle,subarray,module);
+          mlmat.setfield(0,name,subarray);
+        }
+      bundle = dynamic_cast<Bundle *>(handle.get_rep());
+      if (bundle)
+        {
+          BundleHandle fhandle = bundle;
+          matlabarray subarray;
+          sciBundleTOmlArray(fhandle,subarray,module);
           mlmat.setfield(0,name,subarray);
         }
     }

@@ -193,8 +193,25 @@
    void setdisabletranspose(bool dt);
    void converttonumericmatrix();
    void converttostructmatrix();
+   
+   // The following options are for controlling the conversion to bundles
+   // In case prefernrrds is set, numerical data is converted into nrrds
+   // only sparse matrices become matrices. If prefermatrices is set, the
+   // behavior is opposite and only ND (N>2) matrices become nrrds.
+   
    void prefernrrds();
    void prefermatrices();
+   
+   // Since Bundles can be bundled, a choice needs to be made whether structured
+   // matlab matrices should become bundles or if possible should be converted into
+   // matrices/nrrds or fields. In case prefer bundles is set, a matlab structure will
+   // be decomposed into bundles of sub bundles and of nrrds and matrices. In case
+   // prefersciobjects is set each structure is read and if it can be translated into
+   // a sciobject it will be come a field, nrrd or matrix and only at the last
+   // resort it will be a bundle. Note that the comparison is done to see whether the
+   // required number of fields is there if so other fields are ignored.
+   void preferbundles();
+   void prefersciobjects();
 
    // SCIRun MATRICES
    long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
@@ -318,8 +335,10 @@
    // Disable transposing matrices from Fortran format to C++ format
    bool disable_transpose_;
 	
+   // Options for translation of structures into bundled objects
    bool prefer_nrrds;
-    
+   bool prefer_bundles;
+     
    // FUNCTIONS FOR CONVERTING FIELDS:
 	
    // analyse a matlab matrix and sort out all the different fieldname
