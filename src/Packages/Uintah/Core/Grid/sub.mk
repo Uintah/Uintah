@@ -65,7 +65,7 @@ PSELIBS := \
 	Core/Containers                  \
 	Core/Util
 
-LIBS := $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

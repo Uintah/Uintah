@@ -24,7 +24,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Datatypes 
 
-LIBS := 
+LIBS := $(XML_LIBRARY)
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

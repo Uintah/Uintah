@@ -14,13 +14,14 @@ PSELIBS := \
 	Packages/Uintah/Core/Math        \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Core/OS          \
 	Core/Exceptions  \
 	Core/Containers  \
 	Core/Thread      \
 	Core/Util        
 
-LIBS := $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
