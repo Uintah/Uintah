@@ -95,10 +95,10 @@ while (base != roottag && base != "") {
 }
 var inDocTree = base == roottag;
 if (inDocTree) {
-  document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+  document.write("<link href='",treetop,"doc/Utilities/HTML/moduleindex.css' rel='stylesheet' type='text/css'/>")
 }
 </script>
-<title></title>
+<title>#{packageName} Module Descriptions</title>
 </head>
 <body>
 <script type="text/javascript">
@@ -108,13 +108,11 @@ if (inDocTree) {
 </script>
 EndOfString
 
-      # Generate page title and subtitle
-      index.print("<p class=\"title\"> #{packageName} Module Descriptions</p>\n")
       version = File.open("../../edition.xml") do |f|
         /<edition>(.*)<\/edition>/.match(f.read())[1]
       end
-      index.print("<p class=\"subtitle\">(for SCIRun version #{version})</p>")
-      index.print("<hr size='1'/>")
+
+      index.print("<br/>")
 
       # Generate index of modules.  Alphabetical order in 3 columns.
       entries = []
@@ -140,7 +138,9 @@ EndOfString
       etable[0] = entries[0, numRowsArray[0]]
       etable[1] = entries[numRowsArray[0], numRowsArray[1]]
       etable[2] = entries[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
-      index.print("<table align='center' cellspacing='5'>\n")
+      index.print("<table align='center'>\n")
+      # Generate page title and subtitle
+index.print("<th colspan=\"#{numCols}\"><span class=\"title\">#{packageName} Module Descriptions</span><br/><span class=\"subtitle\">(for SCIRun version #{version})</span></th>\n")
       numRows.times do |i|
         index.print("<tr>\n")
         numCols.times do |j|
