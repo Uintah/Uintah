@@ -4,7 +4,7 @@
 #
 # Targets:
 #  all         : Make dvi, html, and ps forms of document.
-#  latex       : Make a dvi file.
+#  dvi         : Make a dvi file.
 #  html        : Make html document.
 #  ps          : Make a ps document.
 #  clean       : Remove aux, log, toc, lot, lof files
@@ -16,9 +16,12 @@
 
 .PHONY: all latex html ps installhtml installps
 
-
-# Provide name of doc without its extension.
+# Provide name of root doc without its extension.
 BN = usersguide
+
+# Provide name of other sources
+SRCS = srugmacros.tex title.tex intro.tex concepts.tex \
+running.tex network.tex viewer.tex import.tex
 
 # Latex2html options.  Change as needed.
 LATEX2HTMLOPTIONS = -split 4 -no_white -link 1 -bottom_navigation \
@@ -28,25 +31,25 @@ LATEX2HTMLOPTIONS = -split 4 -no_white -link 1 -bottom_navigation \
 HTMLINSTDIR = 
 PSINSTDIR = 
 
-LTXFILE = ${BN}.tex
+MAINFILE = ${BN}.tex
 DVIFILE = ${BN}.dvi
 PSFILE = ${BN}.ps
-HTMLDIR = ${BN}
+LDIR = ${BN}
 HTMLFILE = ${HTMLDIR}/${BN}.html
 
-all: latex html ps
+all: dvi html ps
 
-latex: ${DVIFILE}
+dvi: ${DVIFILE}
 
 html: ${HTMLFILE}
 
 ps: ${PSFILE}
 
-${DVIFILE}: ${LTXFILE}
-	for i in 1 2 3; do latex ${LTXFILE}; done
+${DVIFILE}: ${MAINFILE} ${SRCS}
+	for i in 1 2 3; do latex ${MAINFILE}; done
 
 ${HTMLFILE}: ${DVIFILE}
-	latex2html ${LATEX2HTMLOPTIONS} ${LTXFILE}
+	latex2html ${LATEX2HTMLOPTIONS} ${MAINFILE}
 
 ${PSFILE}: ${DVIFILE}
 	dvips -o ${PSFILE} ${DVIFILE}
