@@ -318,7 +318,10 @@ Gui::idleFunc()
     sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
 
     dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
-    activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
+    if( dpy->fullScreenMode_ )
+      activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
+    else
+      activeGui->displayText(fontbase, 10, 15, buf, Color(1,1,1));
 
     if( dpy->fullScreenMode_ ) {
       glutSwapBuffers();
