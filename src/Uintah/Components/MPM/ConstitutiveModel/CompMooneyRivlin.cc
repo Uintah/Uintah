@@ -34,6 +34,21 @@ CompMooneyRivlin::CompMooneyRivlin(const Region* /*region*/,
 
 }
 
+CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
+{
+  double c1,c2,c3,c4;
+  ps->require("he_constant_1",c1);
+  ps->require("he_constant_2",c2);
+  ps->require("he_constant_3",c3);
+  ps->require("he_constant_4",c4);
+  /*
+  CMData.C1 = c1;
+  CMData.C2 = c2;
+  CMData.C3 = c3;
+  CMData.C4 = c4;
+  */
+}
+
 CompMooneyRivlin::~CompMooneyRivlin()
 {
   // Destructor
@@ -266,6 +281,10 @@ ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
 }
 
 // $Log$
+// Revision 1.10  2000/04/25 18:42:33  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.9  2000/04/21 01:22:55  guilkey
 // Put the VarLabels which are common to all constitutive models in the
 // base class.  The only one which isn't common is the one for the CMData.

@@ -46,10 +46,19 @@ using std::string;
 
 using namespace Uintah::Components;
 
-ViscoElasticDamage::ViscoElasticDamage()
+ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
 {
   // Constructor
   // Initialize deformationGradient
+
+
+  ps->require("bulk_modulus",d_Bulk);
+  ps->require("shear_modulus",d_Shear);
+  ps->require("alpha",d_Alpha);
+  ps->require("beta",d_Beta);
+  ps->require("tau",d_Tau);
+  ps->require("gamma",d_Gamma);
+  ps->require("max_equiv_strain",maxEquivStrain);
 
   deformationGradient.Identity();
   bElBar.Identity();
@@ -410,7 +419,7 @@ ConstitutiveModel* ViscoElasticDamage::create(double *p_array)
 
 int ViscoElasticDamage::getType() const
 {
-  return(ConstitutiveModelFactory::CM_VISCOELASTIC_DAMAGE);
+  //  return(ConstitutiveModelFactory::CM_VISCOELASTIC_DAMAGE);
 }
 
 std::string ViscoElasticDamage::getName() const

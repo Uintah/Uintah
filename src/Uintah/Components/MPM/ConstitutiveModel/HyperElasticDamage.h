@@ -72,7 +72,7 @@ class HyperElasticDamage : public ConstitutiveModel {
 
  public:
   // constructors
-  HyperElasticDamage();
+  HyperElasticDamage(ProblemSpecP& ps);
   HyperElasticDamage(double bulk,double shear,
 			double alpha,double beta, double strainmax);
        
@@ -182,6 +182,10 @@ class HyperElasticDamage : public ConstitutiveModel {
 
 //
 // $Log$
+// Revision 1.6  2000/04/25 18:42:35  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.5  2000/04/19 21:15:56  jas
 // Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
 // functions that need access to data warehouse still have WONT_COMPILE_YET

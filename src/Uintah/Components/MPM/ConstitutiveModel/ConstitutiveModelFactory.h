@@ -22,37 +22,14 @@ class ConstitutiveModel;
 class ConstitutiveModelFactory
 {
 public:
-  enum ConstitutiveModelType { CM_NULL=0,
-			       CM_ELASTIC,
-			       CM_MOONEY_RIVLIN,
-			       CM_NEO_HOOK,
-			       CM_NEO_HOOK_PLAS,
-                               CM_HYPER_ELASTIC_DAMAGE,
-                               CM_VISCOELASTIC_DAMAGE,
-			       CM_MAX };
+ 
 
   // this function has a switch for all known mat_types
   // and calls the proper class' readParameters()
   // addMaterial() calls this
-  static void readParameters(ProblemSpecP ps, std::string mat_type, 
-			     double *p_array);
+  static ConstitutiveModel* create(ProblemSpecP ps);
 
-  
-  // this function has a switch for all known mat_types
-  // and calls the proper class' readParametersAndCreate()
-  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps,
-						    std::string mat_type);
-
-  // this function has a switch for all known mat_types
-  // and calls the proper class' readRestartParametersAndCreate()
-  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps,
-							 std::string mat_type);
-
-
-  // create the correct kind of model from the mat_type and p_array
-  static ConstitutiveModel* create(std::string mat_type, double *p_array);
-  
-  
+    
 };
 
 } // end namespace Components

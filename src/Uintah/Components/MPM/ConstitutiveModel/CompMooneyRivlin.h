@@ -67,6 +67,9 @@ class CompMooneyRivlin : public ConstitutiveModel {
   CompMooneyRivlin(const Region* region,
                    const MPMMaterial* matl);
 
+  // constructor
+  CompMooneyRivlin(ProblemSpecP& ps);
+  
   // destructor 
   virtual ~CompMooneyRivlin();
 
@@ -113,6 +116,10 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.11  2000/04/25 18:42:33  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.10  2000/04/21 01:22:55  guilkey
 // Put the VarLabels which are common to all constitutive models in the
 // base class.  The only one which isn't common is the one for the CMData.

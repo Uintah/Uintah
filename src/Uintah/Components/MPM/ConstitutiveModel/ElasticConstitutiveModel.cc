@@ -29,11 +29,11 @@ using std::cerr;
 
 using namespace Uintah::Components;
 
-ElasticConstitutiveModel::ElasticConstitutiveModel()
+ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
 {
-  // Constructor
-  // No initialization
-
+  ps->require("youngs_modulus",YngMod);
+  ps->require("poissons_ratio",PoiRat);
+  
 }
 
 
@@ -452,7 +452,7 @@ Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::create(double *
 
 int ElasticConstitutiveModel::getType() const
 {
-  return(ConstitutiveModelFactory::CM_ELASTIC);
+  //  return(ConstitutiveModelFactory::CM_ELASTIC);
 }
 
 string ElasticConstitutiveModel::getName() const
@@ -505,6 +505,10 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.7  2000/04/25 18:42:34  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.6  2000/04/19 21:15:55  jas
 // Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
 // functions that need access to data warehouse still have WONT_COMPILE_YET

@@ -9,10 +9,12 @@
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <iostream>
+#include "ConstitutiveModelFactory.h"
 using namespace std;
 using namespace Uintah::Exceptions;
 using namespace Uintah::Components;
 using namespace SCICore::Geometry;
+
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
@@ -49,9 +51,14 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    }
    // Constructor
 
-#if 0
+   ps->require("material_type", material_type);
+   cerr << "material_type is " <<  material_type << endl;
+   double den;
+   ps->require("density",den);
+   cerr << "density is " << den << endl;
+   
    d_cm = ConstitutiveModelFactory::create(ps);
-#endif
+   std::cerr << "works here after cm factory" << std::endl;
 
    ps->require("density",d_density);
    ps->require("toughness",d_toughness);

@@ -40,7 +40,7 @@ class CompNeoHook : public ConstitutiveModel {
 
  public:
   // constructors
-  CompNeoHook();
+  CompNeoHook(ProblemSpecP& ps);
   CompNeoHook(double bulk,double shear);
        
   // copy constructor
@@ -142,6 +142,10 @@ class CompNeoHook : public ConstitutiveModel {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.6  2000/04/25 18:42:33  jas
+// Revised the factory method and constructor to take a ProblemSpec argument
+// to create a new constitutive model.
+//
 // Revision 1.5  2000/04/19 21:15:54  jas
 // Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
 // functions that need access to data warehouse still have WONT_COMPILE_YET
