@@ -37,6 +37,7 @@
 #endif
 #include <Core/Util/NotFinished.h>
 
+#include <algorithm>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/BBoxCache.h>
