@@ -7,8 +7,9 @@
 
 c      logical plusX, plusY, plusZ
 
-      DATA PI/3.141593D0/,SIG/5.67D-08/
+      DATA SIG/5.67D-08/
 
+      pi = dacos(-1.0D0)
       PI1 = 1.0d0 / PI
       do 30 k=idxlo(3),idxhi(3)
       do 20 j=idxlo(2),idxhi(2)

@@ -78,7 +78,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
       if (db->findBlock("tolerance"))
 	db->require("tolerance",d_tolerance);
       else
-	d_tolerance = 1.e-06;
+	d_tolerance = 1.e-08;
       if (db->findBlock("pctype"))
 	db->require("pctype", d_pcType);
       else
@@ -93,7 +93,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
       d_maxSweeps = 75;
       d_kspType = "gmres";
       d_pcType = "blockjacobi";
-      d_tolerance = 1.0e-06;
+      d_tolerance = 1.0e-08;
     }
   }
   else  {
@@ -101,7 +101,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
     d_maxSweeps = 75;
     d_kspType = "gmres";
     d_pcType = "blockjacobi";
-    d_tolerance = 1.0e-06;
+    d_tolerance = 1.0e-08;
   }
   int argc = 4;
   char** argv;
