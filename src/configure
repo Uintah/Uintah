@@ -7785,12 +7785,14 @@ _sci_includes=''
 
 
 
-if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
   { echo "$as_me:$LINENO: WARNING: \"$X_LIB_DIR_FLAG\"" >&5
 echo "$as_me: WARNING: \"$X_LIB_DIR_FLAG\"" >&2;}
-  { echo "$as_me:$LINENO: WARNING: \"flag for OpenGL has been removed.\"" >&5
-echo "$as_me: WARNING: \"flag for OpenGL has been removed.\"" >&2;}
-  X_LIB_DIR_FLAG=""
+  { echo "$as_me:$LINENO: WARNING: \"flag for X has been changed to\"" >&5
+echo "$as_me: WARNING: \"flag for X has been changed to\"" >&2;}
+  X_LIB_DIR_FLAG="-L$LIB_DIR_X"
+  { echo "$as_me:$LINENO: WARNING: \"$X_LIB_DIR_FLAG\"" >&5
+echo "$as_me: WARNING: \"$X_LIB_DIR_FLAG\"" >&2;}
 fi
 
 
@@ -9327,6 +9329,10 @@ _sci_includes=''
 
 
 ##  --  optional stat64 headers
+# stat64 is a CC lib so it has to be checked as a CC file not C.
+ext="$ac_ext"
+ac_ext="cc"
+
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -9376,11 +9382,13 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-#include <sys/stat64.h>
+#include <sys/stat.h>
 
 int
 main ()
 {
+
+  struct stat64 buf;
 
   ;
   return 0;
@@ -9486,6 +9494,9 @@ _sci_libs=''
 _sci_includes=''
 
 
+
+# Restore the previous settings.
+ac_ext="$ext"
 
 if test "$HAVE_STAT64" = "yes"; then
   DEF_STAT64="#define HAVE_STAT64 1"

@@ -1382,10 +1382,11 @@ SCI_TRY_LINK(X,X libraries and headers, [
 ],$_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,not-optional)
 
 
-if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
   AC_MSG_WARN("$X_LIB_DIR_FLAG")
-  AC_MSG_WARN("flag for OpenGL has been removed.")
-  X_LIB_DIR_FLAG=""
+  AC_MSG_WARN("flag for X has been changed to")
+  X_LIB_DIR_FLAG="-L$LIB_DIR_X"
+  AC_MSG_WARN("$X_LIB_DIR_FLAG")
 fi
 
 AC_SUBST(X_LIB_FLAG)
