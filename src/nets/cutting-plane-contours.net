@@ -34,13 +34,16 @@ puts "*** Using SCIRUN_DATA $DATADIR"
 global notes
 set notes ""
 
-set m0 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 204 297]
-set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 144 107]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 308 202]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 308 32]
-set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 368 400]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 560 191]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 493 321]
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 222 424]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 222 11]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 12 246]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 12 163]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 442 504]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 240 92]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 222 161]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "MapDataToMeshCoord" 222 355]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Unstructure" 222 289]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 460 334]
 
 addConnection $m3 0 $m2 0
 addConnection $m2 0 $m0 1
@@ -49,7 +52,12 @@ addConnection $m1 0 $m5 0
 addConnection $m5 0 $m6 1
 addConnection $m1 0 $m6 0
 addConnection $m6 0 $m2 1
-addConnection $m6 0 $m0 0
+addConnection $m7 0 $m0 0
+addConnection $m6 0 $m8 0
+addConnection $m8 0 $m7 0
+addConnection $m6 0 $m9 0
+addConnection $m9 0 $m4 1
+addConnection $m2 0 $m9 1
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -94,16 +102,16 @@ $m4 ui
 set $m4-ViewWindow_0-pos {}
 set $m4-ViewWindow_0-caxes {1}
 set $m4-ViewWindow_0-iaxes {}
-set $m4-ViewWindow_0-view-eyep-x {          7.79424}
-set $m4-ViewWindow_0-view-eyep-y {          1.95486}
-set $m4-ViewWindow_0-view-eyep-z {          8.63993}
-set $m4-ViewWindow_0-view-lookat-x {}
-set $m4-ViewWindow_0-view-lookat-y {}
-set $m4-ViewWindow_0-view-lookat-z {}
-set $m4-ViewWindow_0-view-up-x {        -0.118947}
-set $m4-ViewWindow_0-view-up-y {         0.986123}
-set $m4-ViewWindow_0-view-up-z {        -0.115815}
-set $m4-ViewWindow_0-view-fov {          18.0624}
+set $m4-ViewWindow_0-view-eyep-x {           5.2125}
+set $m4-ViewWindow_0-view-eyep-y {          1.88035}
+set $m4-ViewWindow_0-view-eyep-z {          10.4233}
+set $m4-ViewWindow_0-view-lookat-x {         0.328577}
+set $m4-ViewWindow_0-view-lookat-y {        0.0158785}
+set $m4-ViewWindow_0-view-lookat-z {        -0.154507}
+set $m4-ViewWindow_0-view-up-x {          0.90916}
+set $m4-ViewWindow_0-view-up-y {       -0.0222251}
+set $m4-ViewWindow_0-view-up-z {        -0.415854}
+set $m4-ViewWindow_0-view-fov {          15.8887}
 set $m4-ViewWindow_0-view-eyep_offset-x {}
 set $m4-ViewWindow_0-view-eyep_offset-y {}
 set $m4-ViewWindow_0-view-eyep_offset-z {}
@@ -127,6 +135,7 @@ set $m4-ViewWindow_0-resy {}
 set $m4-ViewWindow_0-aspect {}
 set $m4-ViewWindow_0-aspect_ratio {}
 set $m4-ViewWindow_0-unused {1}
+set $m4-ViewWindow_0-unused {1}
 set $m5-notes {}
 set $m5-show_status {1}
 set $m5-sizex {20}
@@ -139,6 +148,37 @@ set $m6-show_status {1}
 set $m6-use_interp {1}
 set $m6-use_closest {1}
 set $m6-closeness_distance {1.0e15}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-coord {0}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-nodes-on {0}
+set $m9-nodes-as-disks {0}
+set $m9-edges-on {0}
+set $m9-use-normals {0}
+set $m9-use-transparency {0}
+set $m9-faces-on {1}
+set $m9-vectors-on {0}
+set $m9-normalize-vectors {}
+set $m9-has_vec_data {0}
+set $m9-bidirectional {0}
+set $m9-arrow-heads-on {1}
+set $m9-def-color-r {0.5}
+set $m9-def-color-g {0.5}
+set $m9-def-color-b {0.5}
+set $m9-def-color-a {0.5}
+set $m9-node_display_type {Spheres}
+set $m9-edge_display_type {Lines}
+set $m9-active_tab {Faces}
+set $m9-node_scale {0.03}
+set $m9-edge_scale {0.015}
+set $m9-vectors_scale {0.30}
+set $m9-show_progress {}
+set $m9-interactive_mode {Interactive}
+set $m9-resolution {4}
 $m0 initialize_ui
 
 ::netedit scheduleok
