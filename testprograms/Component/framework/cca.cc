@@ -29,10 +29,10 @@ public:
 
 
 bool CCA::initialized_ = false;
-Framework CCA::framework_;
+Framework::pointer CCA::framework_;
 Thread *CCA::framework_thread_;
 bool CCA::is_server_;
-Component CCA::local_framework_;
+Component::pointer CCA::local_framework_;
 
 string CCA::framework_url_;
 string CCA::hostname_;
@@ -89,7 +89,7 @@ CCA::init( int &argc, char *argv[] )
     if ( is_server_ ) {
       // start server
 
-      framework_ = new FrameworkImpl;
+      framework_ = Framework::pointer(new FrameworkImpl);
 
       cerr << "server = " << framework_->getURL().getString() << endl;
       framework_thread_ = new Thread( new Server,"cca server thread" );
@@ -98,7 +98,7 @@ CCA::init( int &argc, char *argv[] )
     }
     else {
       // connect to server
-      framework_ = pidl_cast<Framework>(PIDL::PIDL::objectFrom(framework_url_));
+      framework_ = pidl_cast<Framework::pointer>(PIDL::PIDL::objectFrom(framework_url_));
     }
   } catch (const Exception &e ) {
     cerr << "cca_init caught exception `" << e.message() << "'" << endl;
@@ -120,7 +120,7 @@ CCA::init( int &argc, char *argv[] )
 
 
 bool
-CCA::init( Component & component, const string & component_name /* = "" */ )
+CCA::init( Component::pointer & component, const string & component_name /* = "" */ )
 {
   if ( !initialized_ )
     return false;
@@ -137,8 +137,8 @@ CCA::done()
 {
   if ( is_server_ )
     {
-      local_framework_ = 0;
-      framework_ = 0;
+      local_framework_ = Component::pointer(0);
+      framework_ = Framework::pointer(0);
       semaphore_.down();
     }
 }

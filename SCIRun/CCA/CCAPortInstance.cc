@@ -32,18 +32,18 @@ using namespace std;
 using namespace SCIRun;
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
-			     const std::string& type,
-			     const gov::cca::TypeMap& properties,
-			     PortType porttype)
+				 const std::string& type,
+				 const gov::cca::TypeMap::pointer& properties,
+				 PortType porttype)
   : name(name), type(type), properties(properties), porttype(porttype)
 {
 }
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
-			     const std::string& type,
-			     const gov::cca::TypeMap& properties,
-			     const gov::cca::Port& port,
-			     PortType porttype)
+				 const std::string& type,
+				 const gov::cca::TypeMap::pointer& properties,
+				 const gov::cca::Port::pointer& port,
+				 PortType porttype)
   : name(name), type(type), properties(properties), port(port),
     porttype(porttype)
 {

@@ -35,7 +35,7 @@
 
 namespace PingPong_ns {
 
-    class PingPong_impl : public PingPong_interface {
+    class PingPong_impl : public PingPong {
     public:
 	PingPong_impl();
 	virtual ~PingPong_impl();

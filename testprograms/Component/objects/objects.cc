@@ -44,12 +44,12 @@ using objects_test::RingMaster;
 
 using namespace SCIRun;
 
-class RingMaster_impl : public objects_test::RingMaster_interface {
-    vector<Client> clients;
+class RingMaster_impl : public objects_test::RingMaster {
+    vector<Client::pointer> clients;
 public:
     RingMaster_impl();
     virtual ~RingMaster_impl();
-    virtual int registerClient(const Client& c);
+    virtual int registerClient(const Client::pointer& c);
 };
 
 RingMaster_impl::RingMaster_impl()
@@ -60,10 +60,10 @@ RingMaster_impl::~RingMaster_impl()
 {
 }
 
-int RingMaster_impl::registerClient(const Client& c)
+int RingMaster_impl::registerClient(const Client::pointer& c)
 {
     clients.push_back(c);
-    for(vector<Client>::iterator iter=clients.begin();
+    for(vector<Client::pointer>::iterator iter=clients.begin();
 	iter != clients.end(); iter++){
 	(*iter)->notify(c);
     }
@@ -71,12 +71,12 @@ int RingMaster_impl::registerClient(const Client& c)
     return clients.size();
 }
 
-class Client_impl : public objects_test::Client_interface {
-    vector<Client> clients;
+class Client_impl : public objects_test::Client {
+    vector<Client::pointer> clients;
 public:
     Client_impl();
     virtual ~Client_impl();
-    void notify(const Client& newclient);
+    void notify(const Client::pointer& newclient);
     int ping(int);
 };
 
@@ -88,11 +88,11 @@ Client_impl::~Client_impl()
 {
 }
 
-void Client_impl::notify(const Client& a)
+void Client_impl::notify(const Client::pointer& a)
 {
     clients.push_back(a);
     int c=1;
-    for(vector<Client>::iterator iter=clients.begin();
+    for(vector<Client::pointer>::iterator iter=clients.begin();
 	iter != clients.end(); iter++){
 	if((*iter)->ping(c) != c){
 	    cerr << "Wrong result!\n";
@@ -148,18 +148,18 @@ int main(int argc, char* argv[])
 	if(!client && !server)
 	    usage(argv[0]);
 
-	RingMaster pp;
+	RingMaster::pointer pp;
 	if(server) {
 	    cerr << "Creating objects object\n";
-	    pp=new RingMaster_impl;
+	    pp=RingMaster::pointer(new RingMaster_impl);
 	    cerr << "Waiting for objects connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
-	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
-	    RingMaster rm=pidl_cast<RingMaster>(obj);
+	    PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+	    RingMaster::pointer rm=pidl_cast<RingMaster::pointer>(obj);
 
 	    Client_impl* me=new Client_impl;
-	    int myid=rm->registerClient(me);
+	    int myid=rm->registerClient(Client::pointer(me));
 	    cerr << "nclients now " << myid << '\n';
 	}
 	PIDL::PIDL::serveObjects();

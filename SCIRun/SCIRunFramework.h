@@ -40,15 +40,24 @@ namespace SCIRun {
   class ComponentInstance;
   class InternalComponentModel;
   class CCAComponentModel;
-  class SCIRunFramework : public gov::cca::Framework_interface {
+  class SCIRunFramework : public gov::cca::AbstractFramework {
   public:
     SCIRunFramework();
     virtual ~SCIRunFramework();
-    gov::cca::Services createServices(const std::string& name);
-    gov::cca::ComponentID createComponentInstance(const std::string& name, const std::string& type);
-    gov::cca::Port getFrameworkService(const std::string& type);
+
+    virtual gov::cca::TypeMap::pointer createTypeMap();
+    virtual gov::cca::Services::pointer getServices(const ::std::string& selfInstanceName,
+						    const ::std::string& selfClassName,
+						    const gov::cca::TypeMap::pointer& selfProperties);
+    virtual void releaseServices(const gov::cca::Services::pointer& svc);
+    virtual void shutdownFramework();
+    virtual gov::cca::AbstractFramework::pointer createEmptyFramework();
+
 
     // Semi-private:
+    // Used by builderService
+    gov::cca::ComponentID::pointer createComponentInstance(const std::string& name, const std::string& type);
+    gov::cca::Port::pointer getFrameworkService(const std::string& type);
     void registerComponent(ComponentInstance* ci, const std::string& name);
     void listAllComponentTypes(std::vector<ComponentDescription*>&,
 			       bool);

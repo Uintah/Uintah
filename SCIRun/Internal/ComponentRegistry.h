@@ -36,14 +36,23 @@
 
 namespace SCIRun {
   class SCIRunFramework;
-  class ComponentRegistry : public gov::cca::ComponentRegistry_interface, public InternalComponentInstance {
+  class ComponentRegistry : public gov::cca::ports::ComponentRepository, public InternalComponentInstance {
   public:
     virtual ~ComponentRegistry();
     static InternalComponentInstance* create(SCIRunFramework* fwk,
 					     const std::string& name);
-    gov::cca::Port getService(const std::string&);
+    gov::cca::Port::pointer getService(const std::string&);
 
-    virtual CIA::array1<gov::cca::ComponentDescription> listAllComponentTypes();
+    virtual CIA::array1<gov::cca::ComponentClassDescription::pointer> getAvailableComponentClasses();
+    virtual gov::cca::TypeMap::pointer getClassProperties(const std::string& className);
+    virtual void setClassProperties(const std::string& className,
+				    const gov::cca::TypeMap::pointer& properties);
+    virtual CIA::array1<std::string> getLoadableComponentClasses();
+    virtual void loadClass(const std::string& uri, float timeout,
+			   const gov::cca::TypeMap::pointer& componentProperties);
+    virtual void unloadClass(const std::string& className);
+    virtual CIA::array1<std::string> findComponentClasses(const CIA::array1<std::string>& repositoryURIs,
+							  float timeout);
   private:
     ComponentRegistry(SCIRunFramework* fwk, const std::string& name);
   };

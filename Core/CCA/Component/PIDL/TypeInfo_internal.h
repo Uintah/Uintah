@@ -65,7 +65,7 @@ DESCRIPTION
 	    TypeInfo_internal(const std::string& fullclassname,
 			      const std::string& uuid,
 			      globus_nexus_handler_t* table, int tableSize,
-			      Object_interface* (*create_proxy)(const Reference&));
+			      Object* (*create_proxy)(const Reference&));
 
 	    //////////
 	    // The fully qualified classname for this type.
@@ -86,7 +86,7 @@ DESCRIPTION
 
 	    //////////
 	    // The function to create a new proxy to this type.
-	    Object_interface* (*create_proxy)(const Reference&);
+	    Object* (*create_proxy)(const Reference&);
 
 	    //////////
 	    // A pointer to the parent class type, if any.  If this

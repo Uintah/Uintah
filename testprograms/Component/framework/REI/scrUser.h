@@ -18,7 +18,7 @@ public:
   scrUser() {}
   ~scrUser() {}
 
-  virtual void setServices( const Services & srv );
+  virtual void setServices( const Services::pointer & srv );
 
   void go();
 

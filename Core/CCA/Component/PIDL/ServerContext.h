@@ -49,8 +49,8 @@ DESCRIPTION
    the state necessary for the PIDL internals, including the endpoint
    associated with this object, a pointer to type information, the objects
    id from the object wharehouse, a pointer to the base object class
-   (Object_interface), and to the most-derived type (a void*).  Endpoints
-   are created lazily from the Object_interface class.
+   (Object), and to the most-derived type (a void*).  Endpoints
+   are created lazily from the Object class.
 ****************************************/
   struct ServerContext {
     //////////
@@ -68,7 +68,7 @@ DESCRIPTION
 
     //////////
     // A pointer to the object base class.
-    Object_interface* d_objptr;
+    Object* d_objptr;
 
     //////////
     // A pointer to the most derived type.  This is used only by

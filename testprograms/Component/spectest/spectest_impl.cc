@@ -95,22 +95,22 @@ Services_impl::~Services_impl()
   cerr << "Services_impl destructor" << endl;
 }
 
-Port 
+Port::pointer
 Services_impl::getPort(const ::CIA::string& name)
 {
-  Port p;
+  Port::pointer p;
   cerr << "Services_impl::getPort(const ::CIA::string& name)" << endl;
   return p;
 }
-Port 
+Port::pointer
 Services_impl::getPortNonblocking(const ::CIA::string& name)
 {
-  Port p;
+  Port::pointer p;
   cerr << "Services_impl::getPortNonblocking(const ::CIA::string& name)" 
        << endl;
   return p;
 }
-PortInfo 
+PortInfo::pointer
 Services_impl::createPortInfo(const ::CIA::string& name, 
 			  const ::CIA::string& type, 
 			  const ::CIA::array1< ::CIA::string> &properties )
@@ -120,10 +120,10 @@ Services_impl::createPortInfo(const ::CIA::string& name,
   pi->setType(type);
   pi->setProperties(properties);
   cerr << "Services_impl::createPortInfo(const ::CIA::string& name, " << endl;
-  return PortInfo(pi);
+  return PortInfo::pointer(pi);
 }
 void 
-Services_impl::registerUsesPort(const PortInfo &name_and_type)
+Services_impl::registerUsesPort(const PortInfo::pointer &name_and_type)
 {
   cerr << "Services_impl::registerUsesPort(const PortInfo &name_and_type)" 
        << endl;
@@ -135,7 +135,7 @@ Services_impl::unregisterUsesPort(const ::CIA::string&name)
        << endl;
 }
 void 
-Services_impl::addProvidesPort(const Port &inPort, const PortInfo &name)
+Services_impl::addProvidesPort(const Port::pointer &inPort, const PortInfo::pointer &name)
 {
   cerr << "Services_impl::addProvidesPort" << endl;
   // store off the port.  make sure it does not already exist.
@@ -165,10 +165,10 @@ Services_impl::releasePort(const ::CIA::string&name)
 {
   cerr << "Services_impl::releasePort(const ::CIA::string&name)" << endl;
 }
-ComponentID  
+ComponentID ::pointer
 Services_impl::getComponentID()
 {
-  ComponentID cid;
+  ComponentID::pointer cid;
   cerr << "Services_impl::getComponentID()" << endl;
   return cid;
 }
@@ -184,7 +184,7 @@ Component_impl::~Component_impl()
 }
 
 void 
-Component_impl::setServices(const Services &svc)
+Component_impl::setServices(const Services::pointer &svc)
 {
   cerr << "Component_impl::setServices(const Services &svc)" << endl;
   services_ = svc;
@@ -230,7 +230,7 @@ ConnectionEventService_impl::~ConnectionEventService_impl()
 void 
 ConnectionEventService_impl::
 addConnectionEventListener(int connectionEventType, 
-			   const ConnectionEventListener &l)
+			   const ConnectionEventListener::pointer &l)
 {
   cerr << "addConnectionEventListener(int connectionEventType, " << endl;
 }
@@ -238,7 +238,7 @@ addConnectionEventListener(int connectionEventType,
 void 
 ConnectionEventService_impl::
 removeConnectionEventListener(int connectionEventType, 
-			      const ConnectionEventListener &l)
+			      const ConnectionEventListener::pointer &l)
 {
   cerr << "removeConnectionEventListener(int connectionEventType, " << endl;
 }
@@ -254,7 +254,7 @@ ConnectionEventListener_impl::~ConnectionEventListener_impl()
 }
 
 void 
-ConnectionEventListener_impl::connectionActivity(const ConnectionEvent &evt)
+ConnectionEventListener_impl::connectionActivity(const ConnectionEvent::pointer &evt)
 {
   cerr << "ConnectionEventListener_impl::connectionActivity" << endl;
 }
@@ -276,10 +276,10 @@ ConnectionEvent_impl::getEventType()
   return Error;
 }
 
-PortInfo 
+PortInfo::pointer
 ConnectionEvent_impl::getPortInfo()
 {
-  PortInfo pi;
+  PortInfo::pointer pi;
   cerr << "ConnectionEvent_impl::getPortInfo()" << endl;
   return pi;
 }
@@ -346,14 +346,14 @@ RandomInt::go()
 }
 
 void 
-RandomInt::setServices(const CCA::Services &svc)
+RandomInt::setServices(const CCA::Services::pointer &svc)
 {
   cout << "RandomInt::setServices(const CCA::Services &svc)" << endl; 
   Component_impl::setServices(svc);
 
   ::CIA::array1< ::CIA::string> prop;
   prop.push_back("property one");
-  PortInfo pi = services_->createPortInfo("RandomIntStream", 
+  PortInfo::pointer pi = services_->createPortInfo("RandomIntStream", 
 					  "IntegerStream",
 					  prop);
   services_->addProvidesPort(istr_, pi);
@@ -379,14 +379,14 @@ ConsumerInt::go()
 }
 
 void 
-ConsumerInt::setServices(const CCA::Services &svc)
+ConsumerInt::setServices(const CCA::Services::pointer &svc)
 {
   cout << "ConsumerInt::setServices(const CCA::Services &svc)" << endl; 
   Component_impl::setServices(svc);
 
   ::CIA::array1< ::CIA::string> prop;
   prop.push_back("property one");
-  PortInfo pi = services_->createPortInfo("RandomIntStream", 
+  PortInfo::pointer pi = services_->createPortInfo("RandomIntStream", 
 					  "IntegerStream",
 					  prop);
 
@@ -399,7 +399,7 @@ Framework_impl::Framework_impl() :
 Framework_impl::~Framework_impl()
 {}
 
-CCA::Services
+CCA::Services::pointer
 Framework_impl::get_services() 
 {
   cerr << "Framework_impl::get_services()" << endl;

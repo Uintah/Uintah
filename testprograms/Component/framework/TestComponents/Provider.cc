@@ -21,13 +21,13 @@ Provider::~Provider()
 }
 
 void 
-Provider::setServices( const Services &svc )
+Provider::setServices( const Services::pointer &svc )
 {
   ComponentImpl::setServices( svc );
 
-  if( svc )
+  if( !svc.isNull() )
     {
-      PortInfo info = new PortInfoImpl( "Provides", "", 0 );
+      PortInfo::pointer info (new PortInfoImpl( "Provides", "", 0 ));
       svc->addProvidesPort( test_port_, info );
     }
 }

@@ -23,7 +23,7 @@ RegistryServicesImpl::~RegistryServicesImpl()
 
 
 void 
-RegistryServicesImpl::init( const Framework &f ) 
+RegistryServicesImpl::init( const Framework::pointer &f ) 
 { 
   framework_ = f; 
   
@@ -31,7 +31,7 @@ RegistryServicesImpl::init( const Framework &f )
 }
 
 void
-RegistryServicesImpl::getActiveComponentList( array1<ComponentID> & cIds )
+RegistryServicesImpl::getActiveComponentList( array1<ComponentID::pointer> & cIds )
 {
   registry_->connections_.readLock();
   

@@ -33,19 +33,19 @@
 
 namespace SCIRun {
   class BuilderWindow;
-  class Builder : public gov::cca::Component_interface {
+  class Builder : public gov::cca::Component {
   public:
     Builder();
     virtual ~Builder();
 
-    virtual void setServices(const gov::cca::Services& svc);
+    virtual void setServices(const gov::cca::Services::pointer& svc);
   private:
 
     BuilderWindow* builder;
     Builder(const Builder&);
     Builder& operator=(const Builder&);
 
-    gov::cca::Services services;
+    gov::cca::Services::pointer services;
   };
 }
 

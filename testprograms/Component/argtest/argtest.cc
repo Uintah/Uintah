@@ -134,7 +134,7 @@ static bool test(const array1<bool>& a, int s)
   return true;
 }
 
-class ref_impl : public argtest::ref_interface {
+class ref_impl : public argtest::ref {
   int myvalue;
 public:
   ref_impl(int myvalue);
@@ -156,11 +156,11 @@ int ref_impl::test()
   return myvalue;
 }
 
-class Server_impl : public argtest::Server_interface {
+class Server_impl : public argtest::Server {
   bool success;
-  ref return_reference;
-  ref out_reference;
-  ref inout_reference_out;
+  ref::pointer return_reference;
+  ref::pointer out_reference;
+  ref::pointer inout_reference_out;
 public:
   Server_impl();
   virtual ~Server_impl();
@@ -180,10 +180,10 @@ public:
   virtual void out_string(string& a);
   virtual void inout_string(string& a);
 
-  virtual ref return_ref();
-  virtual void in_ref(const ref& a);
-  virtual void out_ref(ref& a);
-  virtual void inout_ref(ref& a);
+  virtual ref::pointer return_ref();
+  virtual void in_ref(const ref::pointer& a);
+  virtual void out_ref(ref::pointer& a);
+  virtual void inout_ref(ref::pointer& a);
 
   virtual array1<int> return_array();
   virtual void in_array(const array1<int>& a);
@@ -205,10 +205,10 @@ public:
   virtual void out_arrayarray(array1<array1<int> >& a);
   virtual void inout_arrayarray(array1<array1<int> >& a);
 
-  virtual array1<ref> return_arrayref();
-  virtual void in_arrayref(const array1<ref>& a);
-  virtual void out_arrayref(array1<ref>& a);
-  virtual void inout_arrayref(array1<ref>& a);
+  virtual array1<ref::pointer> return_arrayref();
+  virtual void in_arrayref(const array1<ref::pointer>& a);
+  virtual void out_arrayref(array1<ref::pointer>& a);
+  virtual void inout_arrayref(array1<ref::pointer>& a);
 
   bool getSuccess();
 };
@@ -295,23 +295,23 @@ void Server_impl::inout_string(string& a)
   a="inout string out";
 }
 
-ref Server_impl::return_ref()
+ref::pointer Server_impl::return_ref()
 {
   return return_reference;
 }
 
-void Server_impl::in_ref(const ref& a)
+void Server_impl::in_ref(const ref::pointer& a)
 {
   if(a->test() != 11)
     success=false;
 }
 
-void Server_impl::out_ref(ref& a)
+void Server_impl::out_ref(ref::pointer& a)
 {
   a=out_reference;
 }
 
-void Server_impl::inout_ref(ref& a)
+void Server_impl::inout_ref(ref::pointer& a)
 {
   if(a->test() != 13)
     success=false;
@@ -418,14 +418,14 @@ void Server_impl::inout_arrayarray(array1<array1<int> >& a)
   init(a, 14);
 }
 
-static void init(array1<ref>& a, int s)
+static void init(array1<ref::pointer>& a, int s)
 {
   a.resize(s);
   for(int i=0;i<s;i++)
     a[i]=new ref_impl(s+i);
 }
 
-static bool test(const array1<ref>& a, int s)
+static bool test(const array1<ref::pointer>& a, int s)
 {
   if(int(a.size()) != s)
     return false;
@@ -436,25 +436,25 @@ static bool test(const array1<ref>& a, int s)
   return true;
 }
 
-array1<ref> Server_impl::return_arrayref()
+array1<ref::pointer> Server_impl::return_arrayref()
 {
-  array1<ref> ret;
+  array1<ref::pointer> ret;
   init(ret, 10);
   return ret;
 }
 
-void Server_impl::in_arrayref(const array1<ref>& a)
+void Server_impl::in_arrayref(const array1<ref::pointer>& a)
 {
   if(!test(a, 11))
     success=false;
 }
 
-void Server_impl::out_arrayref(array1<ref>& a)
+void Server_impl::out_arrayref(array1<ref::pointer>& a)
 {
   init(a, 12);
 }
 
-void Server_impl::inout_arrayref(array1<ref>& a)
+void Server_impl::inout_arrayref(array1<ref::pointer>& a)
 {
   if(!test(a, 13))
     success=false;
@@ -522,15 +522,15 @@ int main(int argc, char* argv[])
     PIDL::PIDL::initialize(argc, argv);
     sleep( 1 ); // Give threads enough time to come up.
 
-    Server pp;
+    Server::pointer pp;
     if(server) {
-      pp=new Server_impl;
+      pp=Server::pointer(new Server_impl);
       cerr << "Waiting for argtest connections...\n";
       cerr << pp->getURL().getString() << '\n';
     } else {
       double stime=Time::currentSeconds();
-      PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
-      Server rm=pidl_cast<Server>(obj);
+      PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+      Server::pointer rm=pidl_cast<Server::pointer>(obj);
       for(int i=0;i<reps;i++){
 	if(rm->return_int() != 5)
 	  fail("return_int");
@@ -576,8 +576,8 @@ int main(int argc, char* argv[])
 	  
 	if(rm->return_ref()->test() != 10)
 	  fail("return_ref");
-	rm->in_ref(new ref_impl(11));
-	ref test_ref;
+	rm->in_ref(ref::pointer(new ref_impl(11)));
+	ref::pointer test_ref;
 	rm->out_ref(test_ref);
 	if(test_ref->test() != 12)
 	  fail("out_ref");
@@ -648,7 +648,7 @@ int main(int argc, char* argv[])
 	if(!rm->getSuccess())
 	  fail("arrayarray failure on remote side");
 	  
-	array1<ref> test_arrayref=rm->return_arrayref();
+	array1<ref::pointer> test_arrayref=rm->return_arrayref();
 	if(!test(test_arrayref, 10))
 	  fail("return_arrayref");
 	init(test_arrayref, 11);

@@ -21,10 +21,10 @@ ComponentImpl::~ComponentImpl()
 }
 
 void 
-ComponentImpl::setServices( const Services &s )
+ComponentImpl::setServices( const Services::pointer &s )
 {
-  if ( s ) {
-    services_ = pidl_cast<SciServices>(s);
+  if ( !s.isNull() ) {
+    services_ = pidl_cast<SciServices::pointer>(s);
   }
   else {
     // Component shutdown
@@ -43,7 +43,7 @@ ComponentImpl::setServices( const Services &s )
     //
     //services_->shutdown();
 
-    services_ = 0;
+    services_ = SciServices::pointer(0);
   }
 }
 

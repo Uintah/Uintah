@@ -47,11 +47,11 @@
 using namespace std;
 using namespace SCIRun;
 
-BuilderWindow::BuilderWindow(const gov::cca::Services& services)
+BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   : QMainWindow(0, "SCIRun", WDestructiveClose|WType_TopLevel),
     services(services)
 {
-  _addReference(); // Do something better than this!
+  addReference(); // Do something better than this!
 
   // Save
   QAction* saveAction = new QAction("Save", "&Save", CTRL+Key_S, this, "save");
@@ -140,12 +140,12 @@ BuilderWindow::BuilderWindow(const gov::cca::Services& services)
 
   buildPackageMenus();
 
-  gov::cca::ComponentEventService ces = pidl_cast<gov::cca::ComponentEventService>(services->getPort("cca.componentEventService"));
-  if(!ces){
+  gov::cca::ports::ComponentEventService::pointer ces = pidl_cast<gov::cca::ports::ComponentEventService::pointer>(services->getPort("cca.componentEventService"));
+  if(ces.isNull()){
     cerr << "Cannot get componentEventService!\n";
   } else {
-    gov::cca::ComponentEventListener listener(this);
-    ces->addComponentEventListener(gov::cca::AllComponentEvents,
+    gov::cca::ports::ComponentEventListener::pointer listener(this);
+    ces->addComponentEventListener(gov::cca::ports::AllComponentEvents,
 				   listener, true);
     services->releasePort("cca.ComponentEventService");
   }
@@ -192,11 +192,11 @@ MenuTree::~MenuTree()
 }
   
 void MenuTree::add(const vector<string>& name, int nameindex,
-		   const gov::cca::ComponentDescription& desc,
+		   const gov::cca::ComponentClassDescription::pointer& desc,
 		   const std::string& fullname)
 {
   if(nameindex == (int)name.size()){
-    if(cd)
+    if(!cd.isNull())
       cerr << "Duplicate component: " << fullname << '\n';
     else
       cd = desc;
@@ -234,7 +234,7 @@ void MenuTree::populateMenu(QPopupMenu* menu)
   menu->insertTearOffHandle();
   for(map<string, MenuTree*>::iterator iter = child.begin();
       iter != child.end(); iter++){
-    if(iter->second->cd){
+    if(!iter->second->cd.isNull()){
       menu->insertItem(iter->first.c_str(), iter->second, SLOT(instantiateComponent()));
     } else {
       QPopupMenu* submenu = new QPopupMenu(menu);
@@ -252,19 +252,19 @@ void MenuTree::instantiateComponent()
 
 void BuilderWindow::buildPackageMenus()
 {
-  gov::cca::ComponentRegistry reg = pidl_cast<gov::cca::ComponentRegistry>(services->getPort("cca.componentRegistry"));
-  if(!reg){
+  gov::cca::ports::ComponentRepository::pointer reg = pidl_cast<gov::cca::ports::ComponentRepository::pointer>(services->getPort("cca.componentRepository"));
+  if(reg.isNull()){
     cerr << "Cannot get component registry, not building component menus\n";
     return;
   }
-  vector<gov::cca::ComponentDescription> list = reg->listAllComponentTypes();
+  vector<gov::cca::ComponentClassDescription::pointer> list = reg->getAvailableComponentClasses();
   map<string, MenuTree*> menus;
-  for(vector<gov::cca::ComponentDescription>::iterator iter = list.begin();
+  for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
       iter != list.end(); iter++){
     string model = (*iter)->getModelName();
     if(menus.find(model) == menus.end())
       menus[model]=new MenuTree(this);
-    string name = (*iter)->getType();
+    string name = (*iter)->getClassName();
     vector<string> splitname = split_string(name, '.');
     menus[model]->add(splitname, 0, *iter, name);
   }
@@ -323,19 +323,20 @@ void BuilderWindow::about()
   cerr << "BuilderWindow::about not finished\n";
 }
 
-void BuilderWindow::instantiateComponent(const gov::cca::ComponentDescription& cd)
+void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd)
 {
   cerr << "Should wait for component to be committed...\n";
-  gov::cca::BuilderService builder = pidl_cast<gov::cca::BuilderService>(services->getPort("cca.builderService"));
-  if(!builder){
+  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
-  builder->createComponentInstance(cd->getType(), cd->getType());
+  cerr << "Should put properties on component before creating\n";
+  builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0));
   services->releasePort("cca.builderService");
 }
 
-void BuilderWindow::componentActivity(const gov::cca::ComponentEvent& e)
+void BuilderWindow::componentActivity(const gov::cca::ports::ComponentEvent::pointer& e)
 {
-  cerr << "Got component activity event " << e->getEventType() << " for " << e->getComponentID()->toString() << '\n';
+  cerr << "Got component activity event " << e->getEventType() << " for " << e->getComponentID()->getInstanceName() << '\n';
 }
 

@@ -8,16 +8,16 @@
 
 namespace sci_cca {
 
-class LocalFramework : public Component_interface {
+class LocalFramework : public Component {
 private:
-  Services services_;
+  Services::pointer services_;
 
 public:
   LocalFramework();
   virtual ~LocalFramework();
 
   // from Component
-  virtual void setServices( const Services &service );
+  virtual void setServices( const Services::pointer &service );
 };
 
 } // namespace sci_cca

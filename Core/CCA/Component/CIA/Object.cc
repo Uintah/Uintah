@@ -32,7 +32,6 @@
 
 using CIA::Class;
 using CIA::Interface;
-using CIA::Object_interface;
 using CIA::Object;
 
 /*
@@ -40,38 +39,38 @@ using CIA::Object;
  * up calls, since they will get generated from cia spec.
  */
 
-Object Object_interface::addReference()
+void Object::addReference()
 {
-    return Interface_interface::addReference();
+  Interface::addReference();
 }
 
-void Object_interface::deleteReference()
+void Object::deleteReference()
 {
-    Interface_interface::deleteReference();
+  Interface::deleteReference();
 }
 
-Class Object_interface::getClass()
+Class::pointer Object::getClass()
 {
-    return Interface_interface::getClass();
+  return Interface::getClass();
 }
 
-bool Object_interface::isSame(const Interface& i)
+bool Object::isSame(const Interface::pointer& i)
 {
-    return Interface_interface::isSame(i);
+  return Interface::isSame(i);
 }
 
-bool Object_interface::isInstanceOf(const Class& c)
+bool Object::isInstanceOf(const Class::pointer& c)
 {
-    return Interface_interface::isInstanceOf(c);
+  return Interface::isInstanceOf(c);
 }
 
-bool Object_interface::supportsInterface(const Class& c)
+bool Object::supportsInterface(const Class::pointer& c)
 {
-    return Interface_interface::supportsInterface(c);
+  return Interface::supportsInterface(c);
 }
 
-Interface Object_interface::queryInterface(const Class& c)
+Interface::pointer Object::queryInterface(const Class::pointer& c)
 {
-    return Interface_interface::queryInterface(c);
+  return Interface::queryInterface(c);
 }
 

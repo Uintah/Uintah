@@ -22,34 +22,39 @@ class Registry;
 class BuilderServicesImpl;
 class RegistryServicesImpl;
 
-class FrameworkImpl : public Framework_interface {
+class FrameworkImpl : public Framework {
 
 public:
   FrameworkImpl();
   virtual ~FrameworkImpl();
   
-  virtual bool registerComponent( const string &, const string &, Component &);
-  virtual void unregisterComponent( const ComponentID & );
+  virtual bool registerComponent(const string&, const string&,
+				 Component::pointer&);
+  virtual void unregisterComponent(const ComponentID::pointer& );
 
-  virtual Port getPort( const ComponentID &, const string &);
-  virtual void registerUsesPort( const ComponentID &, const PortInfo &);
-  virtual void unregisterUsesPort( const ComponentID &, const string & );
-  virtual void addProvidesPort( const ComponentID &, const Port &,
-				const PortInfo&);
-  virtual void removeProvidesPort( const ComponentID &, const string &);
-  virtual void releasePort( const ComponentID &, const string &);
+  virtual Port::pointer getPort(const ComponentID::pointer&, const string&);
+  virtual void registerUsesPort(const ComponentID::pointer&,
+				const PortInfo::pointer&);
+  virtual void unregisterUsesPort(const ComponentID::pointer&,
+				  const string& );
+  virtual void addProvidesPort(const ComponentID::pointer&,
+			       const Port::pointer&,
+			       const PortInfo::pointer&);
+  virtual void removeProvidesPort(const ComponentID::pointer&,
+				  const string&);
+  virtual void releasePort(const ComponentID::pointer&, const string&);
   void shutdown();
 
 private:
 
   string hostname_;
-  ComponentID id_;
+  ComponentID::pointer id_;
   Registry *registry_;
-  map<string, Port> ports_;
+  map<string, Port::pointer> ports_;
   
   CrowdMonitor ports_lock_;
 
-  typedef map<string, Port>::iterator port_iterator;
+  typedef map<string, Port::pointer>::iterator port_iterator;
 
   friend class BuilderServicesImpl;
   friend class RegistryServicesImpl;

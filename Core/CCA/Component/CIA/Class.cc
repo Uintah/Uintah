@@ -32,56 +32,55 @@
 #include <Core/Util/NotFinished.h>
 
 using CIA::Class;
-using CIA::Class_interface;
 using CIA::Method;
 using CIA::Object;
 
-Object Class_interface::newInstance()
+Object::pointer Class::newInstance()
 {
     NOT_FINISHED("final .CIA.Object .CIA.Class.newInstance()throws .CIA.InstantiationException");
-    return 0;
+    return Object::pointer(0);
 }
 
-bool Class_interface::isInterface()
+bool Class::isInterface()
 {
     NOT_FINISHED("final bool .CIA.Class.isInterface()");
     return false;
 }
 
-bool Class_interface::isArray()
+bool Class::isArray()
 {
     NOT_FINISHED("final bool .CIA.Class.isArray()");
     return false;
 }
 
-bool Class_interface::isPrimitive()
+bool Class::isPrimitive()
 {
     NOT_FINISHED("final bool .CIA.Class.isPrimitive()");
     return false;
 }
 
-::CIA::string Class_interface::getName()
+::CIA::string Class::getName()
 {
     NOT_FINISHED("final string .CIA.Class.getName()");
     return "";
 }
 
-Class Class_interface::getSuperclass()
+Class::pointer Class::getSuperclass()
 {
     NOT_FINISHED("final .CIA.Class .CIA.Class.getSuperclass()");
-    return 0;
+    return Class::pointer(0);
 }
 
-Class Class_interface::getComponentType()
+Class::pointer Class::getComponentType()
 {
     NOT_FINISHED("final .CIA.Class .CIA.Class.getComponentType()");
-    return 0;
+    return Class::pointer(0);
 }
 
-Method Class_interface::getMethod()
+Method::pointer Class::getMethod()
 {
     NOT_FINISHED("final .CIA.Method .CIA.Class.getMethod()throws .CIA.NoSuchMethodException");
-    return 0;
+    return Method::pointer(0);
 }
 
 

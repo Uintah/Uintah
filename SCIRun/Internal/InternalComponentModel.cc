@@ -41,7 +41,7 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 {
   addService(new InternalComponentDescription(this, "cca.builderService",
 					      &BuilderService::create, true));
-  addService(new InternalComponentDescription(this, "cca.componentRegistry",
+  addService(new InternalComponentDescription(this, "cca.componentRepository",
 					      &ComponentRegistry::create, true));
   addService(new InternalComponentDescription(this, "cca.componentEventService",
 					      &ComponentEventService::create, true));
@@ -57,15 +57,16 @@ InternalComponentModel::~InternalComponentModel()
 void InternalComponentModel::addService(InternalComponentDescription* svc)
 {
   if(services.find(svc->serviceType) != services.end())
-    cerr << "WARNING: duplicate service: " << svc->serviceType << '\n';
+    cerr << "WARNING: duplicate internal service: " << svc->serviceType << '\n';
   services[svc->serviceType]=svc;
 }
 
-gov::cca::Port InternalComponentModel::getFrameworkService(const std::string& type)
+gov::cca::Port::pointer InternalComponentModel::getFrameworkService(const std::string& type)
 {
   map<string, InternalComponentDescription*>::iterator iter=services.find(type);
   if(iter == services.end())
-    return 0;
+    return gov::cca::Port::pointer(0);
+
   InternalComponentDescription* cd = iter->second;
   InternalComponentInstance* ci;
   string cname = "internal: "+type;

@@ -58,11 +58,11 @@ DESCRIPTION
 
     //////////
     // Create a base Object class from the given URL
-    static Object objectFrom(const URL&);
+    static Object::pointer objectFrom(const URL&);
 
     //////////
     // Create a base Object class from the given Reference
-    static Object objectFrom(const Reference&);
+    static Object::pointer objectFrom(const Reference&);
 
     //////////
     // Go into the main loop which services requests for all

@@ -164,7 +164,8 @@ ComponentInstance* SCIRunComponentModel::createInstance(const std::string& name,
   }
   Module* (*m)(const std::string&) = (Module* (*)(const std::string&))maker;
   Module* module = (*m)(name);
-  SCIRunComponentInstance* ci = new SCIRunComponentInstance(framework, name, module);
+  SCIRunComponentInstance* ci = new SCIRunComponentInstance(framework, name,
+							    type, module);
   return ci;
 }
 

@@ -18,7 +18,7 @@ namespace sci_cca {
 using std::string;
 using CIA::array1;
 
-class PortInfoImpl : public PortInfo_interface {
+class PortInfoImpl : public PortInfo {
 public:
   PortInfoImpl( const string & name,
 		const string & type,

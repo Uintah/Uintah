@@ -11,15 +11,15 @@ namespace sci_cca {
 class Provider : virtual public ComponentImpl 
 {
 private:
-  TestPort test_port_;
+  TestPort::pointer test_port_;
 
 public:
   Provider();
   ~Provider();
 
-  virtual void setServices( const Services &);
+  virtual void setServices( const Services::pointer &);
 
-  ComponentID getComponentID() { return services_->getComponentID(); }
+  ComponentID::pointer getComponentID() { return services_->getComponentID(); }
 
 };
 

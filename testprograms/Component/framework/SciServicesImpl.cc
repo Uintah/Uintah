@@ -14,25 +14,25 @@ SciServicesImpl::SciServicesImpl()
 
 SciServicesImpl::~SciServicesImpl()
 {
-  cerr << "SciServices " << id_ << " exit\n";
+  cerr << "SciServices " << id_.getPointer() << " exit\n";
 }
 
-Port
+Port::pointer
 SciServicesImpl::getPort( const string &name )
 {
   return framework_->getPort( id_, name );
 }
 
-PortInfo
+PortInfo::pointer
 SciServicesImpl::createPortInfo( const string &name,
 			      const string &type,
 			      const array1<string> &properties )
 {
-  return new PortInfoImpl( name, type, properties );
+  return PortInfo::pointer(new PortInfoImpl( name, type, properties ));
 }
 
 void
-SciServicesImpl::registerUsesPort( const PortInfo &port_info )
+SciServicesImpl::registerUsesPort( const PortInfo::pointer &port_info )
 {
   framework_->registerUsesPort( id_, port_info );
 }
@@ -44,7 +44,8 @@ SciServicesImpl::unregisterUsesPort( const string &name )
 }
 
 void   
-SciServicesImpl::addProvidesPort( const Port &port, const PortInfo &info )
+SciServicesImpl::addProvidesPort( const Port::pointer &port,
+				  const PortInfo::pointer &info )
 {
   framework_->addProvidesPort( id_, port, info );
 }
@@ -61,14 +62,15 @@ SciServicesImpl::releasePort( const string & name )
   framework_->releasePort( id_, name );
 }
  
-ComponentID
+ComponentID::pointer
 SciServicesImpl::getComponentID()
 {
   return id_;
 }
 
 void 
-SciServicesImpl::init( const Framework &f, const ComponentID & id) 
+SciServicesImpl::init( const Framework::pointer &f,
+		       const ComponentID::pointer & id) 
 { 
   framework_ = f; 
   id_ = id; 

@@ -19,7 +19,7 @@ using CIA::array1;
 
 class Registry;
 
-class RegistryServicesImpl : public RegistryServices_interface {
+class RegistryServicesImpl : public RegistryServices {
 
 public:
   RegistryServicesImpl();
@@ -27,17 +27,17 @@ public:
   ~RegistryServicesImpl();
 
   // Framework internals
-  void init( const Framework & );
+  void init( const Framework::pointer & );
 
   // export services
-  virtual void getActiveComponentList( array1<ComponentID> & componentIds );
+  virtual void getActiveComponentList( array1<ComponentID::pointer> & componentIds );
 
   // Tells the framework to shut itself down... here for lack of better
   // place to put it currently...
   virtual void shutdown();
   
 protected:
-  Framework framework_;
+  Framework::pointer framework_;
   Registry *registry_;
 };
 

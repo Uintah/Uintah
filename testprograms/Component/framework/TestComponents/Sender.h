@@ -13,9 +13,9 @@ public:
   Sender();
   ~Sender();
 
-  virtual void setServices( const Services &);
+  virtual void setServices( const Services::pointer &);
 
-  ComponentID getComponentID() { return services_->getComponentID(); }
+  ComponentID::pointer getComponentID() { return services_->getComponentID(); }
   void        go();
 
 };

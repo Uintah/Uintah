@@ -155,21 +155,29 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
     if(iter != components.end()){
       cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
     } else {
+      cerr << "Added CCA component of type: " << cd->type << '\n';
       components[cd->type]=cd;
     }
   }
 }
 
-gov::cca::Services CCAComponentModel::createServices(const std::string& name)
+gov::cca::Services::pointer
+CCAComponentModel::createServices(const std::string& instanceName,
+				  const std::string& className,
+				  const gov::cca::TypeMap::pointer& properties)
 {
-  CCAComponentInstance* ci = new CCAComponentInstance(framework, name, 0);
-  framework->registerComponent(ci, name);
-  ci->_addReference();
-  return ci;
+  CCAComponentInstance* ci = new CCAComponentInstance(framework,
+						      instanceName, className,
+						      properties,
+						      gov::cca::Component::pointer(0));
+  framework->registerComponent(ci, instanceName);
+  ci->addReference();
+  return gov::cca::Services::pointer(ci);
 }
 
 bool CCAComponentModel::haveComponent(const std::string& type)
 {
+  cerr << "CCA looking for component of type: " << type << '\n';
   return components.find(type) != components.end();
 }
 
@@ -199,11 +207,13 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     cerr << SOError() << '\n';
     return 0;
   }
-  gov::cca::Component (*maker)() = (gov::cca::Component (*)())(maker_v);
-  gov::cca::Component component = (*maker)();
-  CCAComponentInstance* ci = new CCAComponentInstance(framework, name, component);
-  component->setServices(ci);
-  ci->_addReference();
+  gov::cca::Component::pointer (*maker)() = (gov::cca::Component::pointer (*)())(maker_v);
+  gov::cca::Component::pointer component = (*maker)();
+  CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
+						      gov::cca::TypeMap::pointer(0),
+						      component);
+  component->setServices(gov::cca::Services::pointer(ci));
+  ci->addReference();
   return ci;
 }
 

@@ -33,47 +33,45 @@
 
 using CIA::Class;
 using CIA::Interface;
-using CIA::Interface_interface;
 using CIA::Object;
 
-Object Interface_interface::addReference()
+void Interface::addReference()
 {
-    NOT_FINISHED(".CIA.Object .CIA.Interface.addReference()");
-    return 0;
+  Object::addReference();
 }
 
-void Interface_interface::deleteReference()
+void Interface::deleteReference()
 {
-    NOT_FINISHED("void .CIA.Interface.deleteReference()");
+  Object::deleteReference();
 }
 
-Class Interface_interface::getClass()
+Class::pointer Interface::getClass()
 {
-    NOT_FINISHED(".CIA.Class .CIA.Interface.getClass()");
-    return 0;
+  NOT_FINISHED(".CIA.Class .CIA.Interface.getClass()");
+  return Class::pointer(0);
 }
 
-bool Interface_interface::isSame(const Interface& object)
+bool Interface::isSame(const Interface::pointer& object)
 {
-    NOT_FINISHED("bool .CIA.Interface.isSame(in .CIA.Interface object)");
-    return false;
+  NOT_FINISHED("bool .CIA.Interface.isSame(in .CIA.Interface object)");
+  return false;
 }
 
-bool Interface_interface::isInstanceOf(const Class& type)
+bool Interface::isInstanceOf(const Class::pointer& type)
 {
-    NOT_FINISHED("bool .CIA.Interface.isInstanceOf(in .CIA.Class type)");
-    return false;
+  NOT_FINISHED("bool .CIA.Interface.isInstanceOf(in .CIA.Class type)");
+  return false;
 }
 
-bool Interface_interface::supportsInterface(const Class& type)
+bool Interface::supportsInterface(const Class::pointer& type)
 {
-    NOT_FINISHED("bool .CIA.Interface.supportsInterface(in .CIA.Class type)");
-    return false;
+  NOT_FINISHED("bool .CIA.Interface.supportsInterface(in .CIA.Class type)");
+  return false;
 }
 
-Interface Interface_interface::queryInterface(const Class& type)
+Interface::pointer Interface::queryInterface(const Class::pointer& type)
 {
-    NOT_FINISHED(".CIA.Interface .CIA.Interface.queryInterface(in .CIA.Class type)");
-    return Interface();
+  NOT_FINISHED(".CIA.Interface .CIA.Interface.queryInterface(in .CIA.Class type)");
+  return Interface::pointer(0);
 }
 

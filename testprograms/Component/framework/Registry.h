@@ -22,8 +22,8 @@ class PortRecord {
 public:
   virtual ~PortRecord() {}
 
-  ComponentID id_;
-  PortInfo info_;
+  ComponentID::pointer id_;
+  PortInfo::pointer info_;
   ConnectionRecord *connection_;
 };
 
@@ -33,7 +33,7 @@ public:
 
 class ProvidePortRecord : public PortRecord {
 public:
-  Port port_;
+  Port::pointer port_;
   bool in_use_;
 };
 
@@ -54,20 +54,20 @@ public:
   typedef map<string,ProvidePortRecord *>::iterator provide_iterator;
   typedef map<string,UsePortRecord *>::iterator use_iterator;
 
-  ComponentID id_;
-  Component component_;
-  Services services_;
+  ComponentID::pointer id_;
+  Component::pointer component_;
+  Services::pointer services_;
   map<string, ProvidePortRecord *> provides_;
   map<string, UsePortRecord *> uses_;
 
 public:
-  ComponentRecord( const ComponentID &id );
+  ComponentRecord( const ComponentID::pointer &id );
   virtual ~ComponentRecord();
 
-  virtual Port getPort( const string &);
-  virtual void registerUsesPort( const PortInfo &);
+  virtual Port::pointer getPort( const string &);
+  virtual void registerUsesPort( const PortInfo::pointer &);
   virtual void unregisterUsesPort( const string & );
-  virtual void addProvidesPort( const Port &, const PortInfo&);
+  virtual void addProvidesPort( const Port::pointer &, const PortInfo::pointer&);
   virtual void removeProvidesPort( const string &);
   virtual void releasePort( const string &);
 
@@ -88,8 +88,8 @@ public:
 public:
   Registry();
 
-  ProvidePortRecord *getProvideRecord( const ComponentID &, const string &);
-  UsePortRecord *getUseRecord( const ComponentID &, const string &);
+  ProvidePortRecord *getProvideRecord( const ComponentID::pointer &, const string &);
+  UsePortRecord *getUseRecord( const ComponentID::pointer &, const string &);
 
 };
 

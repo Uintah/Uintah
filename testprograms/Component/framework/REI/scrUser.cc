@@ -6,18 +6,18 @@ using namespace sci_cca;
 using namespace std;
 
 void
-scrUser::setServices( const Services & srv )
+scrUser::setServices( const Services::pointer & srv )
 {
   ComponentImpl::setServices( srv );
 
-  if( srv )
+  if( !srv.isNull() )
     {
       array1<string> properties;
       properties.resize( 0 );
 
       cout << "Registering scrUserIn0 uses port\n";
 
-      PortInfo pi = srv->createPortInfo( "scrUserIn0",
+      PortInfo::pointer pi = srv->createPortInfo( "scrUserIn0",
 					 "sci_cca.scrInterface",
 					 properties );
       srv->registerUsesPort( pi );
@@ -27,11 +27,11 @@ scrUser::setServices( const Services & srv )
 void
 scrUser::go()
 {
-  Port p = services_->getPort( "scrUserIn0" );
+  Port::pointer p = services_->getPort( "scrUserIn0" );
 
-  scrInterface si = pidl_cast<scrInterface>( p );
+  scrInterface::pointer si = pidl_cast<scrInterface::pointer>( p );
 
-  if( si == 0 )
+  if( si.isNull() )
     {
       cout << "scrUser::go(): Error in get port\n";
       return;

@@ -31,6 +31,8 @@
 #ifndef Component_PIDL_Object_h
 #define Component_PIDL_Object_h
 
+#include <CCALib/SmartPointer.h>
+
 namespace SCIRun {
   class MutexPool;
 }
@@ -45,7 +47,7 @@ class URL;
 /**************************************
  
 CLASS
-   Object_interface
+   Object
    
 KEYWORDS
    Object, PIDL
@@ -59,11 +61,13 @@ DESCRIPTION
 
 ****************************************/
 
-class Object_interface {
+class Object {
 public:
+  typedef CCALib::SmartPointer<Object> pointer;
+
   //////////
   // Destructor
-  virtual ~Object_interface();
+  virtual ~Object();
 
   //////////
   // Return a URL that can be used to contact this object.
@@ -77,12 +81,12 @@ public:
   //////////
   // Internal method to increment the reference count for
   // this object.
-  void _addReference();
+  void addReference();
 
   //////////
   // Internal method to decrement the reference count for
   // this object.
-  void _deleteReference();
+  void deleteReference();
 
 protected:
   //////////
@@ -90,7 +94,7 @@ protected:
   // which means that it is a proxy object.  Calls to
   // intializeServer from derived class constructors will
   // set up d_serverContext appropriately.
-  Object_interface();
+  Object();
 
   //////////
   // Set up d_serverContext with the given type information
@@ -127,81 +131,16 @@ private:
 
   //////////
   // Return the singleton Mutex pool shared by all instances
-  // of Object_interface.
+  // of Object.
   static SCIRun::MutexPool* getMutexPool();
 
   //////////
   // Private copy constructor to make copying impossible.
-  Object_interface(const Object_interface&);
+  Object(const Object&);
 
   //////////
   // Private assignment operator to make assignment impossible.
-  Object_interface& operator=(const Object_interface&);
-};
-
-/**************************************
- 
-CLASS
-   Object
-   
-KEYWORDS
-   Handle, PIDL
-   
-DESCRIPTION
-   A pointer to the base object class.  Will somebody be replaced
-   with a a smart pointer class.
-
-****************************************/
-
-class Object {
-  Object_interface* ptr;
-public:
-  static const TypeInfo* _getTypeInfo();
-  typedef Object_interface interfacetype;
-  inline Object()
-  {
-    ptr=0;
-  }
-  inline Object(Object_interface* ptr)
-    : ptr(ptr)
-  {
-    if(ptr)
-      ptr->_addReference();
-  }
-  inline ~Object()
-  {
-    if(ptr)
-      ptr->_deleteReference();
-  }
-  inline Object(const Object& copy)
-    : ptr(copy.ptr)
-  {
-    if(ptr)
-      ptr->_addReference();
-  }
-  inline Object& operator=(const Object& copy)
-  {
-    if(&copy != this){
-      if(ptr)
-	ptr->_deleteReference();
-      if(copy.ptr)
-	copy.ptr->_addReference();
-    }
-    ptr=copy.ptr;
-    return *this;
-  }
-  inline Object_interface* getPointer() const
-  {
-    return ptr;
-  }
-  inline Object_interface* operator->() const
-  {
-    return ptr;
-  }
-  inline operator bool() const
-  {
-    return ptr != 0;
-  }
+  Object& operator=(const Object&);
 };
 
 } // End namespace PIDL

@@ -40,13 +40,13 @@ using memstress::Server;
 
 using namespace SCIRun;
 
-class Server_impl : public memstress::Server_interface {
+class Server_impl : public memstress::Server {
 public:
     Server_impl();
     virtual ~Server_impl();
     virtual void ping();
-    virtual Server newObject();
-    virtual Server returnReference();
+    virtual Server::pointer newObject();
+    virtual Server::pointer returnReference();
 };
 
 Server_impl::Server_impl()
@@ -61,14 +61,14 @@ void Server_impl::ping()
 {
 }
 
-Server Server_impl::newObject()
+Server::pointer Server_impl::newObject()
 {
-    return new Server_impl();
+  return Server::pointer(new Server_impl());
 }
 
-Server Server_impl::returnReference()
+Server::pointer Server_impl::returnReference()
 {
-    return this;
+  return Server::pointer(this);
 }
 
 void usage(char* progname)
@@ -124,14 +124,14 @@ int main(int argc, char* argv[])
 	if(!client && !server)
 	    usage(argv[0]);
 
-	Server pp;
+	Server::pointer pp;
 	if(server) {
-	    pp=new Server_impl;
-	    cerr << "Waiting for memstress connections...\n";
-	    cerr << pp->getURL().getString() << '\n';
+	  pp=Server::pointer(new Server_impl);
+	  cerr << "Waiting for memstress connections...\n";
+	  cerr << pp->getURL().getString() << '\n';
 	} else {
-	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
-	    Server s=pidl_cast<Server>(obj);
+	    PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+	    Server::pointer s(pidl_cast<Server::pointer>(obj));
 
 	    if(test == "ping" || test == "all"){
 		double stime=Time::currentSeconds();
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 	    if(test == "upcast" || test == "all"){
 		double stime=Time::currentSeconds();
 		for(int i=0;i<reps;i++){
-		    Server s2=pidl_cast<Server>(obj);
+		  Server::pointer s2(pidl_cast<Server::pointer>(obj));
 		    s2->ping();
 		}
 		double dt=Time::currentSeconds()-stime;
@@ -159,8 +159,8 @@ int main(int argc, char* argv[])
 	    if(test == "urlcast"){
 		double stime=Time::currentSeconds();
 		for(int i=0;i<reps;i++){
-		    PIDL::Object obj2=PIDL::PIDL::objectFrom(client_url);
-		    Server s2=pidl_cast<Server>(obj2);
+		    PIDL::Object::pointer obj2=PIDL::PIDL::objectFrom(client_url);
+		    Server::pointer s2=pidl_cast<Server::pointer>(obj2);
 		    s2->ping();
 		}
 		double dt=Time::currentSeconds()-stime;
@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
 	    if(test == "refreturn" || test == "all"){
 		double stime=Time::currentSeconds();
 		for(int i=0;i<reps;i++){
-		    Server s2=s->returnReference();
+		    Server::pointer s2=s->returnReference();
 		    s2->ping();
 		}
 		double dt=Time::currentSeconds()-stime;
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 	    if(test == "newobject" || test == "all"){
 		double stime=Time::currentSeconds();
 		for(int i=0;i<reps;i++){
-		    Server s2=s->newObject();
+		    Server::pointer s2=s->newObject();
 		    s2->ping();
 		}
 		double dt=Time::currentSeconds()-stime;

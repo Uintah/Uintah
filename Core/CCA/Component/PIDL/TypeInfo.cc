@@ -40,7 +40,7 @@
 using std::cerr;
 
 using PIDL::GlobusError;
-using PIDL::Object_interface;
+using PIDL::Object;
 using PIDL::TypeInfo;
 
 TypeInfo::TypeInfo(TypeInfo_internal* priv)
@@ -64,7 +64,7 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
   return iter->second.second-vtable_methods_start;
 }
 
-Object_interface* TypeInfo::pidl_cast(Object_interface* obj) const
+Object* TypeInfo::pidl_cast(Object* obj) const
 {
   // If we aren't a proxy, we don't know what to do...
   PIDL::ProxyBase* p=dynamic_cast<PIDL::ProxyBase*>(obj);

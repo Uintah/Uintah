@@ -153,7 +153,6 @@ extern int lineno;
 
 specification: version_star import_star package_star
                {
-		 cerr << "$3=" << $3 << '\n';
 		 parse_spec=new Specification($1, $2, $3);
 	       }
 	       ;
