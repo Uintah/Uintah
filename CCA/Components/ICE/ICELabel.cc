@@ -110,6 +110,18 @@ ICELabel::ICELabel()
 
     IveBeenHereLabel     =
      scinew VarLabel("IveBeenHere",CCVariable<int>::getTypeDescription() );
+     
+ //Reduction labels (The names must be identical to those in MPMLabel.cc)
+  KineticEnergyLabel = 
+    scinew VarLabel( "KineticEnergy", sum_vartype::getTypeDescription() );
+  CenterOfMassVelocityLabel = 
+    scinew VarLabel( "CenterOfMassVelocity",
+                                      sumvec_vartype::getTypeDescription() );
+  TotalMassLabel = 
+    scinew VarLabel( "TotalMass",     sum_vartype::getTypeDescription() );  
+  TotalIntEngLabel = 
+    scinew VarLabel( "TotalIntEng",   sum_vartype::getTypeDescription() );  
+
        
 } 
 
@@ -163,6 +175,11 @@ ICELabel::~ICELabel()
     delete IveBeenHereLabel;
     delete scratchLabel;
     
+    // Reduction Variables
     delete delTLabel;
+    delete TotalMassLabel;
+    delete KineticEnergyLabel;
+    delete CenterOfMassVelocityLabel;
+    delete TotalIntEngLabel;    
 }
 
