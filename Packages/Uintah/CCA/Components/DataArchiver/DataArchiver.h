@@ -80,7 +80,7 @@ using std::pair;
 
       //////////
       // Call this after all other tasks have been added to the scheduler
-      virtual void finalizeTimestep(double t, double delt, const LevelP&,
+      virtual void finalizeTimestep(double t, double delt, const GridP&,
 				    SchedulerP&);
 
       //////////
@@ -92,7 +92,7 @@ using std::pair;
       virtual const string getOutputLocation() const;
 
       virtual bool need_recompile(double time, double dt,
-				  const LevelP& level);
+				  const GridP& grid);
 
       //////////
       // Insert Documentation Here:
@@ -172,14 +172,14 @@ using std::pair;
       // helper for finalizeTimestep
       void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
 			  double time, double delt,
-			  const LevelP& level,
+			  const GridP& grid,
 			  string* pTimestepDir /* passed back */,
 			  bool hasGlobals = false);
 
       void scheduleOutputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
-				  const LevelP& level, SchedulerP& sched);
+				  const GridP& grid, SchedulerP& sched);
       void beginOutputTimestep(double time, double delt,
-			       const LevelP& level);
+			       const GridP& grid);
 
       // helper for problemSetup
       void createIndexXML(Dir& dir);
