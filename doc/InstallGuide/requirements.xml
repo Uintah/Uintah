@@ -1,105 +1,222 @@
 
-<para>
-  Required OS version:
-  <itemizedlist>
-    <listitem>SGI: 
-      <ulink url="http://www.sgi.com/developers/technology/irix.html">
-      <citetitle>IRIX</citetitle></ulink> 
-      6.5
-    </listitem>
-    <listitem>Linux:
-      <ulink url="http://www.kernel.org">
-      <citetitle>Kernel</citetitle></ulink> 
-      <ulink url="http://www.kernel.org/pub/linux/kernel/v2.2/linux-2.2.14.tar.gz">
-      <citetitle>2.2.14</citetitle></ulink> 
-    </listitem>
-  </itemizedlist>
-</para>
- 
-<para>
-  Required build tools:
-  <itemizedlist>
-    <listitem>SGI:
-      <ulink url="http://www.sgi.com/developers/devtools/languages/mipspro.html">
-      <citetitle>MIPSpro compilers</citetitle></ulink> 
-      7.3.1.1m
-    </listitem>
-    <listitem>Linux:
-      <ulink url="http://www.gnu.org/software/gcc/gcc.html">
-      <citetitle>GCC</citetitle></ulink> 
-      <ulink url="ftp://gcc.gnu.org/pub/gcc/releases/gcc-2.95.3/gcc-2.95.3.tar.gz">
-      <citetitle>2.95.3</citetitle></ulink> 
-    </listitem>
-    <listitem> SGI and Linux:
-      <ulink url="http://www.gnu.org/software/make/make.html">
-      <citetitle>GNU make</citetitle></ulink> 
-      <ulink url="ftp://ftp.gnu.org/gnu/make/make-3.79.1.tar.gz">
-      <citetitle>3.79.1</citetitle></ulink> 
-    </listitem>
-  </itemizedlist>
-</para>
- 
-<para>
-  Required thirdparty software:
-  <itemizedlist>
-    <listitem>
-      <ulink url="http://dev.scriptics.com/software/tcltk/8.3.html">
-      <citetitle>Tcl</citetitle></ulink> 
-      <ulink url="http://dev.scriptics.com/download/tcl/tcl8_3/tcl8.3.2.tar.gz">
-      <citetitle>8.3.2</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://dev.scriptics.com/software/tcltk/8.3.html">
-      <citetitle>Tk</citetitle></ulink> 
-      <ulink url="http://dev.scriptics.com/download/tcl/tcl8_3/tk8.3.2.tar.gz">
-      <citetitle>8.3.2</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://www.tcltk.com/itcl">
-      <citetitle>[incr Tcl/Tk]</citetitle></ulink> 
-      <ulink url="http://dev.scriptics.com/ftp/itcl/itcl3.1.0.tar.gz">
-      <citetitle>3.1.0</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://www.tcltk.com/blt">
-      <citetitle>BLT</citetitle></ulink> 
-      <ulink url="ftp://tcltk.sourceforge.net/pub/tcltk/blt/BLT2.4u.tar.gz">
-      <citetitle>2.4u</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://xml.apache.org/xerces-c/index.html">
-      <citetitle>Xerces-C++</citetitle></ulink> 
-      1.4.0
-    </listitem>
-  </itemizedlist>
-</para>
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
 
 <para>
-  Optional thirdparty software:
-  <itemizedlist>
-    <listitem>
-      <ulink url="http://bloodyeck.com/mpegelib/">
-      <citetitle>MPEGe Lib</citetitle></ulink> 
-      0.3
-    </listitem>
-    <listitem>
-      <ulink url="http://bmrc.berkeley.edu/frame/research/mpeg/mpeg_encode.html">
-      <citetitle>Berkeley MPEG Encoder</citetitle></ulink> 
-      <ulink url="ftp://mm-ftp.cs.berkeley.edu/pub/multimedia/mpeg/encode/mpeg_encode-1.5b-src.tar.gz">
-      <citetitle>1.5b</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
-      <citetitle>libimage</citetitle></ulink> 
-      <ulink url="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
-      <citetitle>1.0</citetitle></ulink>
-    </listitem>
-    <listitem>
-      <ulink url="http://www.cs.utah.edu/~gk/teem">
-      <citetitle>teem</citetitle></ulink> 
-      <ulink url="http://software.sci.utah.edu/software/teem_download.html">
-      <citetitle>1.3</citetitle></ulink>
-    </listitem>
-  </itemizedlist>
+  <table>
+    <tgroup cols="3">
+      <thead>
+        <row>
+          <entry>Required OS and Build Tools</entry>
+          <entry>Required Thirdparty Software</entry>
+          <entry>Optional Thirdparty Software</entry>
+        </row>
+      </thead>
+      <tbody>
+        <row>
+          <entry>
+            <entrytbl cols="3">
+              <thead>
+                <row>
+                  <entry>Platforms</entry>
+                  <entry>Software</entry>
+                  <entry>Version</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry>SGI</entry>
+                  <entry>
+                    <ulink url="http://www.sgi.com/developers/technology/irix.html">
+                    <citetitle>IRIX</citetitle></ulink> 
+                  </entry>
+                  <entry>6.5</entry>
+                </row>
+                <row>
+                  <entry>SGI</entry>
+                  <entry>
+                    <ulink url="http://www.sgi.com/developers/devtools/languages/mipspro.html">
+                    <citetitle>MIPSpro compilers</citetitle></ulink> 
+                  </entry>
+                  <entry>7.3.1.1m</entry>              
+                </row>
+                <row>
+                  <entry>Linux</entry>
+                  <entry>
+                    <ulink url="http://www.kernel.org">
+                    <citetitle>Kernel</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="http://www.kernel.org/pub/linux/kernel/v2.2/linux-2.2.14.tar.gz">
+                    <citetitle>2.2.14</citetitle></ulink> 
+                  </entry>
+                </row>
+                <row>
+                  <entry>Linux</entry>
+                  <entry>
+                    <ulink url="http://www.gnu.org/software/gcc/gcc.html">
+                    <citetitle>GCC</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="ftp://gcc.gnu.org/pub/gcc/releases/gcc-2.95.3/gcc-2.95.3.tar.gz">
+                    <citetitle>2.95.3</citetitle></ulink> 
+                  </entry>              
+                </row>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://www.gnu.org/software/make/make.html">
+                    <citetitle>GNU make</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="ftp://ftp.gnu.org/gnu/make/make-3.79.1.tar.gz">
+                    <citetitle>3.79.1</citetitle></ulink> 
+                  </entry>             
+                </row>
+              </tbody>
+            </entrytbl>
+          </entry>
+          <entry>
+            <entrytbl cols="3">
+              <thead>
+                <row>
+                  <entry>Platforms</entry>
+                  <entry>Software</entry>
+                  <entry>Version</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://dev.scriptics.com/software/tcltk/8.3.html">
+                    <citetitle>Tcl</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="http://dev.scriptics.com/download/tcl/tcl8_3/tcl8.3.2.tar.gz">
+                    <citetitle>8.3.2</citetitle></ulink>
+                  </entry>
+                </row>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://dev.scriptics.com/software/tcltk/8.3.html">
+                    <citetitle>Tk</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="http://dev.scriptics.com/download/tcl/tcl8_3/tk8.3.2.tar.gz">
+                    <citetitle>8.3.2</citetitle></ulink>
+                  </entry>
+                </row>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://www.tcltk.com/itcl">
+                    <citetitle>[incr Tcl/Tk]</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="http://dev.scriptics.com/ftp/itcl/itcl3.1.0.tar.gz">
+                    <citetitle>3.1.0</citetitle></ulink>
+                  </entry>
+                </row>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://www.tcltk.com/blt">
+                    <citetitle>BLT</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="ftp://tcltk.sourceforge.net/pub/tcltk/blt/BLT2.4u.tar.gz">
+                    <citetitle>2.4u</citetitle></ulink>
+                  </entry>
+                </row>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://xml.apache.org/xerces-c/index.html">
+                    <citetitle>Xerces-C++</citetitle></ulink> 
+                  </entry>
+                  <entry>1.4.0</entry>
+                </row>
+              </tbody>
+            </entrytbl>
+          </entry>
+          <entry>
+            <entrytbl cols="3">
+              <thead>
+                <row>
+                  <entry>Platforms</entry>
+                  <entry>Software</entry>
+                  <entry>Version</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://bloodyeck.com/mpegelib/">
+                    <citetitle>MPEGe Lib</citetitle></ulink> 
+                  </entry>
+                  <entry>0.3</entry>
+                </row>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://bmrc.berkeley.edu/frame/research/mpeg/mpeg_encode.html">
+                    <citetitle>Berkeley MPEG Encoder</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="ftp://mm-ftp.cs.berkeley.edu/pub/multimedia/mpeg/encode/mpeg_encode-1.5b-src.tar.gz">
+                    <citetitle>1.5b</citetitle></ulink>
+                  </entry>
+                </row>
+                <row>
+                  <entry>SGI</entry>
+                  <entry>
+                    <ulink url="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
+                    <citetitle>libimage</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
+                    <citetitle>1.0</citetitle></ulink>
+                  </entry>
+                </row>
+                <row>
+                  <entry>All</entry>
+                  <entry>
+                    <ulink url="http://www.cs.utah.edu/~gk/teem">
+                    <citetitle>teem</citetitle></ulink> 
+                  </entry>
+                  <entry>
+                    <ulink url="http://software.sci.utah.edu/software/teem_download.html">
+                    <citetitle>1.3</citetitle></ulink>
+                  </entry>
+                </row>
+                <row>
+                  <entry> </entry>
+                  <entry> </entry>
+                  <entry> </entry>
+                </row>
+              </tbody>
+            </entrytbl>
+          </entry>
+        </row>
+      </tbody>
+    </tgroup>
+  </table>
 </para>
-
+        

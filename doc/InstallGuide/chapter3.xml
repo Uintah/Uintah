@@ -25,7 +25,7 @@
       intended to replace the installation instructions that come with
       the software, but to supplement them. Please read the install
       instructions for each software distribution before attempting to
-      use these instructions. 
+      use this information. 
     </para> 
   </sect1>
 
@@ -134,7 +134,7 @@ python install 32 12
           The install script will create a directory named
           SCIRun_Thirdparty_32 in the directory chosen in step 2
           above.  When it finishes, it will display a message
-          regarding the -=with-thirdparty SCIRun configure option.
+          regarding the --with-thirdparty SCIRun configure option.
           Cut and paste that option when running the configure command 
           for SCIRun (see step 2 of <ulink
           url="installguide.xml?dir=2&amp;cont=2#5">Building SCIRun
@@ -224,7 +224,7 @@ python install 32 12
        </para>
 
        <computeroutput>
-configure -=prefix=<term>INST_DIR</term>
+configure --prefix=<term>INST_DIR</term>
        </computeroutput>
 
        <para>
@@ -236,7 +236,7 @@ configure -=prefix=<term>INST_DIR</term>
        </para>
 
        <computeroutput>
-configure -=with-cc=cc -=prefix=<term>INST_DIR</term>
+configure --with-cc=cc --prefix=<term>INST_DIR</term>
        </computeroutput>
 
        <para>
@@ -244,7 +244,7 @@ configure -=with-cc=cc -=prefix=<term>INST_DIR</term>
        </para>
 
        <computeroutput>
-configure -=prefix=<term>INST_DIR</term>
+configure --prefix=<term>INST_DIR</term>
        </computeroutput>
 
        <para>
@@ -257,7 +257,7 @@ configure -=prefix=<term>INST_DIR</term>
        </para>
 
        <computeroutput>
-configure -=prefix=<term>INST_DIR</term>
+configure --prefix=<term>INST_DIR</term>
        </computeroutput>
 
        <para>

@@ -29,7 +29,7 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 -->
- 
+
 <book>
   <title>SCIRun Installation Guide</title>
   <subtitle>(UNIX version - Updated June 22, 2001)</subtitle>
@@ -57,8 +57,9 @@
       The <citetitle>SCIRun Installation Guide</citetitle> contains
       instructions and information for installing and building SCIRun,
       it's packages and the thirdparty libraries that it requires.
-      See the <citetitle>Technical FAQ</citetitle> for information on
-      troubleshooting these processes. 
+      See the <ulink url="../FAQ/faq.html"><citetitle>Technical FAQ
+      </citetitle></ulink> for information on troubleshooting these
+      processes.
     </para>
   </preface>
 
