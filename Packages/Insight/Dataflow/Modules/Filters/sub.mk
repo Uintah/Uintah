@@ -25,8 +25,10 @@ XMLS :=  \
 	sci_WatershedRelabeler.xml \
 	sci_WatershedSegmentTreeGenerator.xml \
 	sci_WatershedSegmenter.xml \
+	sci_CannySegmentationLevelSetImageFilter.xml \
+	sci_ThresholdSegmentationLevelSetImageFilter.xml \
 #[INSERT NEW CODE FILE HERE]
-#sci_CannySegmentationLevelSetImageFilter.xml \
+
 
 SRC_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
 
