@@ -22,7 +22,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
-#include <ios>
 #include <algorithm>
 
 using std::cerr;
