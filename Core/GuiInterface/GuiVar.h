@@ -117,6 +117,27 @@ typedef GuiTriple<Point> GuiPoint;
 typedef GuiTriple<Vector> GuiVector;
 
 
+// This class is equivalent to a GuiString, except that when
+// SCI_INSERT_NET_COPYRIGHT is set it does $SCIRUN_DATA and
+// $SCIRUN_DATASET variable substitution when writing to networks.
+//
+class SCICORESHARE GuiFilename : public GuiString
+{
+public:
+  GuiFilename(GuiContext* ctx) : GuiString(ctx)
+  {
+    ctx->setUseDatadir(true);
+  }
+
+  GuiFilename(GuiContext* ctx, const string &val) : GuiString(ctx, val)
+  {
+    ctx->setUseDatadir(true);
+  }
+
+  virtual ~GuiFilename() {}
+};
+
+
 } // End namespace SCIRun
 
 

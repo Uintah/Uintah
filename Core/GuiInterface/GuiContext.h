@@ -38,8 +38,9 @@
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
-  class GuiInterface;
-  class GuiContext {
+class GuiInterface;
+
+class GuiContext {
   public:
     GuiContext(GuiInterface* ctx, const std::string& name, bool save=true);
 
@@ -68,6 +69,8 @@ namespace SCIRun {
     GuiInterface* getInterface();
     std::string getfullname();
     void dontSave();
+    void setUseDatadir(bool flag);
+
   private:
     std::string format_varname();
     GuiInterface* gui;
@@ -75,10 +78,12 @@ namespace SCIRun {
     std::vector<GuiContext*> children;
     bool cached;
     bool save;
+    bool usedatadir;
 
     GuiContext(const GuiContext&);
     GuiContext& operator=(const GuiContext&);
-  };
+};
+
 }
 
 #endif

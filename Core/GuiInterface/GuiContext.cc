@@ -37,7 +37,7 @@ using namespace std;
 using namespace SCIRun;
 
 GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
-  : gui(gui), name(name), cached(false), save(save)
+  : gui(gui), name(name), cached(false), save(save), usedatadir(false)
 {
   gui->execute("initVar \""+name+"\""); 
 }
@@ -219,8 +219,46 @@ void GuiContext::emit(std::ostream& out, const string& midx)
   if(save){
     string result;
     gui->get(name, result);
-    out << "set " << midx << "-" << format_varname() << " {"
-	<< result << "}" << std::endl;
+    if (usedatadir && getenv("SCI_INSERT_NET_COPYRIGHT"))
+    {
+      char *tmp;
+      // Replace DATADIR
+      if (tmp = getenv("SCIRUN_DATA"))
+      {
+	const string datadir(tmp);
+	string::size_type loc = result.find(datadir);
+	if (loc != string::npos)
+	{
+	  result.replace(loc, datadir.size(), "$DATADIR");
+	}
+      }
+      
+      // Replace DATASET
+      if (tmp = getenv("SCIRUN_DATASET"))
+      {
+	const string dataset(tmp);
+	while (1)
+	{
+	  loc = result.find(dataset);
+	  if (loc != string::npos)
+	  {
+	    result.replace(loc, dataset.size(), "$DATASET");
+	  }
+	  else
+	  {
+	    break;
+	  }
+	}
+      }
+
+      out << "set " << midx << "-" << format_varname() << " \""
+	  << result << "\"" << std::endl;
+    }
+    else
+    {
+      out << "set " << midx << "-" << format_varname() << " {"
+	  << result << "}" << std::endl;
+    }
   }
   for(vector<GuiContext*>::iterator iter = children.begin();
       iter != children.end(); ++iter)
@@ -248,4 +286,11 @@ GuiInterface* GuiContext::getInterface()
 void GuiContext::dontSave()
 {
   save=false;
+}
+
+
+void
+GuiContext::setUseDatadir(bool flag)
+{
+  usedatadir = flag;
 }
