@@ -16,7 +16,7 @@ UNUSED = [ ("methane_explicit_8patch", methane8patch_ups, "", 8, "ALL","chem_met
 
 TESTS = [ ("ice_perf_test", "performanceTest.ups", "", 1, "IRIX64","","ice"),  \
           ("mpmice_perf_test", "performanceTest.ups", "", 1, "ALL","","mpmice"),\
-          ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL","","mpm"), \
+          ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "IRIX64","","mpm"), \
     	]
 
 def chemfile (test):
