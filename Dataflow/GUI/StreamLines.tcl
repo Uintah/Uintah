@@ -27,6 +27,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	global $this-color
 	global $this-remove-colinear
 	global $this-method
+	global $this-np
 
         set_defaults
     }
@@ -38,7 +39,8 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-direction 1
 	set $this-color 1
 	set $this-remove-colinear 1
-	set $this-method 4
+	set $this-method 0
+	set $this-np 1
     }
 
     method ui {} {
@@ -58,11 +60,13 @@ itcl_class SCIRun_Visualization_StreamLines {
 	entry $w.e.ents.stepsize -textvariable $this-stepsize
 	label $w.e.labs.maxsteps -text "Maximum Steps" -just left
 	entry $w.e.ents.maxsteps -textvariable $this-maxsteps
+	label $w.e.labs.nthreads -text "Number of Threads" -just left
+	entry $w.e.ents.nthreads -textvariable $this-np
 
 	pack $w.e.labs.tolerance $w.e.labs.stepsize $w.e.labs.maxsteps \
-	    -side top -anchor w
+	    $w.e.labs.nthreads -side top -anchor w
 	pack $w.e.ents.tolerance $w.e.ents.stepsize $w.e.ents.maxsteps \
-	    -side top -anchor e
+	    $w.e.ents.nthreads -side top -anchor e
 	pack $w.e.labs $w.e.ents -side left
 
 	frame $w.direction -relief groove -borderwidth 2

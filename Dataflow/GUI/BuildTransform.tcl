@@ -48,6 +48,8 @@ itcl_class SCIRun_Math_BuildTransform {
 	global $this-permute_z
 	global $this-ignoring_widget_changes
 	global $this-widgetScale
+	global $this-loginput
+	global $this-logoutput
 	set $this-rotate_x 0
 	set $this-rotate_y 0
 	set $this-rotate_z 1
@@ -72,6 +74,8 @@ itcl_class SCIRun_Math_BuildTransform {
 	set $this-widget_scale 1
 	set $this-widget_resizable 1
 	set $this-ignoring_widget_changes 1
+	set $this-loginput 100.0
+	set $this-logoutput 2.0
     }
     method ui {} {
 	set w .ui[modname]
@@ -245,8 +249,17 @@ itcl_class SCIRun_Math_BuildTransform {
 	pack $w.f.s.sy.s -side left -expand 1 -fill x
 	pack $w.f.s.sz.l -side left
 	pack $w.f.s.sz.s -side left -expand 1 -fill x
+	frame $w.f.s.e
+	label $w.f.s.e.l1 -text "Log Calculator: log("
+	global $this-loginput
+	entry $w.f.s.e.e1 -textvariable $this-loginput -width 8
+	bind $w.f.s.e.e1 <Return> "$this computelog"
+	label $w.f.s.e.l2 -text ") = "
+	global $this-logoutput
+	label $w.f.s.e.l3 -textvariable $this-logoutput -width 12
+	pack $w.f.s.e.l1 $w.f.s.e.e1 $w.f.s.e.l2 $w.f.s.e.l3 -side left
 	pack $w.f.s.g $w.f.s.sx $w.f.s.sy $w.f.s.sz -side top -fill x -expand 1
-
+	pack $w.f.s.e -side top
 	global $this-shear_plane_a
 	global $this-shear_plane_b
 	global $this-shear_plane_c
@@ -298,6 +311,13 @@ itcl_class SCIRun_Math_BuildTransform {
 	pack $w.f -fill x -expand 1 -side top
 	$this set_transform $w [set $this-which_transform]
     }	
+
+    method computelog { } {
+	global $this-loginput
+	global $this-logoutput
+	set x [set $this-loginput]
+	set $this-logoutput [ expr log10($x) ]
+    }
 
     method change_ignore { } {
 	global $this-ignoring_widget_changes
