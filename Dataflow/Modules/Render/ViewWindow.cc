@@ -115,6 +115,8 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
     gui_bgcolor_(ctx->subVar("bgcolor")), 
     gui_fogusebg_(ctx->subVar("fogusebg")),
     gui_fogcolor_(ctx->subVar("fogcolor")), 
+    gui_fog_start_(ctx->subVar("fog-start")), 
+    gui_fog_end_(ctx->subVar("fog-end")), 
 
     // Private Variables
     viewer_(viewer),

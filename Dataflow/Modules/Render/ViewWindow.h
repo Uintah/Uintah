@@ -174,6 +174,8 @@ public:
   GuiColor		gui_bgcolor_;		// Background Color
   GuiInt                gui_fogusebg_;
   GuiColor              gui_fogcolor_;
+  GuiDouble             gui_fog_start_;
+  GuiDouble             gui_fog_end_;
 
 private:
   ViewWindow(const ViewWindow&); // Should not be called
