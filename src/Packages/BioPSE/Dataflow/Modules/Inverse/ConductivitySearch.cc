@@ -136,7 +136,7 @@ void ConductivitySearch::build_basis_matrices() {
 
   double unitsScale = 1;
   string units;
-  if (mesh_in_->get("units", units)) {
+  if (mesh_in_->get_property("units", units)) {
     if (units == "mm") unitsScale = 1./1000;
     else if (units == "cm") unitsScale = 1./100;
     else if (units == "dm") unitsScale = 1./10;
@@ -186,7 +186,7 @@ void ConductivitySearch::initialize_search() {
   int c;
   for (int c=0; c<NDIM_*2; c++) (*cm)[c]=0;
   vector<pair<string, Tensor> > conds;
-  if (mesh_in_->get("conductivity_table", conds))
+  if (mesh_in_->get_property("conductivity_table", conds))
     for (c=NDIM_; c<NDIM_*2; c++) (*cm)[c]=conds[c-NDIM_].second.mat_[0][0];
 
   int seed = seed_gui_.get();
@@ -254,7 +254,7 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
     conds.push_back(pair<string, Tensor>(to_string(i), Tensor(c)));
     (*cm)[i]=c;
   }
-  mesh_out_->store("conductivity_table", conds, true);
+  mesh_out_->set_property("conductivity_table", conds, true);
 
   fem_mat_ = build_composite_matrix(which_conductivity);
   

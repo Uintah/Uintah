@@ -104,10 +104,10 @@ void Noise<Tesselator>::set_field( Field *f )
   if ( field_type *field = dynamic_cast<field_type *>(f) ) {
     if ( tess_ ) delete tess_;
     tess_ = new Tesselator( field );
-    if ( !field->get( "spanspace", space_ ) ) {
+    if ( !field->get_property( "spanspace", space_ ) ) {
       space_ = scinew SpanSpace<value_type, cell_index_type>;
       space_->init( field );
-      field->store( "spanspace", space_, true );
+      field->set_property( "spanspace", space_, true );
     }
   }
 }

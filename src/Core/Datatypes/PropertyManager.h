@@ -45,15 +45,12 @@ using namespace std;
 
 class PropertyBase : public Datatype {
 public:
-  void *obj_;
-  PropertyBase(bool trans = true) :
-    obj_(0),
-    transient_(trans)
-  {} 
-  virtual ~PropertyBase() {}
+  PropertyBase(bool trans) : transient_(trans) {} 
+  //PropertyBase(const PropertyBase &p) : transient_(p.transient_) {} 
+  virtual PropertyBase* clone() const {return 0;}
+
   virtual void io(Piostream &) {}
   static  PersistentTypeID type_id;
-  virtual PropertyBase* copy() const {return 0;}
 
   bool transient() const { return transient_; }
   void set_transient(bool t) { transient_ = t; }
@@ -64,43 +61,34 @@ private:
   static Persistent *maker();
 };
 
-template<class T>
-class Property : public T, public PropertyBase {
-public:
-  Property() {}   // only Pio should use this constructor
-  Property(T &o, bool trans = true) :
-    PropertyBase(trans)
-  { obj_ = &o; } 
 
-  virtual PropertyBase * copy() const 
-  { return scinew Property(*static_cast<T *>(obj_), transient()); }
+class PropertyManager;
+
+template<class T>
+class Property : public PropertyBase {
+public:
+  friend PropertyManager;
+
+  Property(const T &o, bool trans) :  PropertyBase(trans), obj_(o) {}
+  //Property(const Property &p) :  PropertyBase(p), obj_(p.obj_) {}
+  virtual PropertyBase *clone() const 
+  { return scinew Property(obj_, transient()); }
+
   static const string type_name(int n = -1);
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
+
+protected:
+  // Only Pio should use this constructor.
+  // Default is for objects read in to be non-transient.
+  Property() : PropertyBase(false) {}
+
 private:
+  T obj_;
+
   static Persistent *maker();
 };
 
-template<class T>
-class Property<T *> : public Property<T> {
-private:
-  bool tmp;
-public:
-  Property( T *obj, bool temp=false ) : Property<T>( *obj ), tmp(temp) {}
-
-  ~Property() { 
-    if (tmp) delete static_cast<T *>(obj_); 
-  }
-
-  virtual PropertyBase * copy() const {
-    if (tmp) { 
-      return scinew Property<T *>(static_cast<T *>(obj_)); 
-    }
-    else {
-      return scinew Property<T *>(scinew T(*static_cast<T *>(obj_)), true);
-    }
-  }
-};
 
 
 /*
@@ -136,7 +124,8 @@ template <class T>
 Persistent*
 Property<T>::maker()
 {
-  return scinew Property<T>;
+  // Properties in a file start out to be non-transient.
+  return scinew Property<T>();
 }
 
 template<class T>
@@ -144,13 +133,7 @@ void
 Property<T>::io( Piostream &stream)
 {
   stream.begin_class( type_name(-1), PROPERTY_VERSION);
-  if ( stream.reading() ) {
-    T *tmp = new T;
-    Pio(stream, *tmp );
-    obj_ = tmp;
-  }
-  else
-    Pio(stream, *static_cast<T *>(obj_));
+  Pio(stream, obj_);
   stream.end_class();
 }
 
@@ -167,24 +150,9 @@ public:
   virtual ~PropertyManager();
 
   
-  template<class T> void store(const string &, const T &, bool is_transient);
-  template<class T> void store(const string &, T &, bool is_transient); 
-
-  void store(const string &name, const char *s, bool is_transient)
-  { store(name, *scinew string(s), is_transient); }
-  void store(const string &name, const char s, bool is_transient)
-  { store(name, *scinew Char(s), is_transient); }
-  void store(const string &name, const short s, bool is_transient)
-  { store(name, *scinew Short(s), is_transient); }
-  void store(const string &name, const int s, bool is_transient)
-  { store(name, *scinew Int(s), is_transient); }
-  void store(const string &name, const float s, bool is_transient)
-  { store(name, *scinew Float(s), is_transient); }
-  void store(const string &name, const double s, bool is_transient)
-  { store(name, *scinew Double(s), is_transient); }
-
-  template<class T> bool get( const string &, T &);
-  template<class T> bool get( const string &, T *&);
+  template<class T> void set_property(const string &, const T &,
+				      bool is_transient);
+  template<class T> bool get_property( const string &, T &);
 
 
   //! -- mutability --
@@ -198,14 +166,14 @@ public:
   //! query frozen state of a PropertyManager.
   bool is_frozen() const { return frozen_; }
 
-  void remove( const string & );
-  int size() { return size_; }
+  void remove_property( const string & );
+  //int size() { return size_; }
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
 
 private:
-  template<class T> bool get_scalar( const string &, T &);
+  //template<class T> bool get_scalar( const string &, T &);
 
   typedef map<string, PropertyBase *> map_type;
 
@@ -222,27 +190,8 @@ protected:
 
 template<class T>
 void 
-PropertyManager::store(const string &name,  T& obj, bool is_transient)
-{
-  if (is_transient && (! is_frozen())) {
-    cerr << "WARNING::PropertyManager must be frozen to store transient data" 
-	 <<" freezing now!" << endl;
-    freeze();
-  }
-
-  lock.lock();
-  map_type::iterator loc = properties_.find(name);
-  if (loc != properties_.end()) 
-    delete loc->second;
-  else
-    size_++;
-  properties_[name] = new Property<T>(obj, is_transient);
-  lock.unlock();
-}
-
-template<class T>
-void 
-PropertyManager::store(const string &name,  const T& obj, bool is_transient)
+PropertyManager::set_property(const string &name,  const T& obj,
+			      bool is_transient)
 {
   if (is_transient && (! is_frozen())) {
     cerr << "WARNING::PropertyManager must be frozen to store transient data" 
@@ -255,40 +204,23 @@ PropertyManager::store(const string &name,  const T& obj, bool is_transient)
     delete loc->second;
   else
     size_++;
-  properties_[name] = new Property<T*>(scinew T(obj), is_transient);
+  properties_[name] = scinew Property<T>(obj, is_transient);
   lock.unlock();
 }
 
+
 template<class T>
 bool 
-PropertyManager::get_scalar(const string &name, T &ref)
+PropertyManager::get_property(const string &name, T &ref)
 {
   lock.lock();
 
   bool ans = false;
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) {
-    if ( dynamic_cast<Scalar *>( loc->second ) ) {
-      ref = T(*static_cast<Scalar *>(loc->second->obj_));
-      ans=true;
-    }
-  }
-  
-  lock.unlock();
-  return ans;
-}
-
-template<class T>
-bool 
-PropertyManager::get(const string &name, T &ref)
-{
-  lock.lock();
-
-  bool ans = false;
-  map_type::iterator loc = properties_.find(name);
-  if (loc != properties_.end()) {
-    if ( dynamic_cast<T *>( loc->second ) ) {
-      ref = *static_cast<T *>(loc->second->obj_);
+    const Property<T> *prop = dynamic_cast<Property<T> *>(loc->second);
+    if (prop) {
+      ref = prop->obj_;
       ans = true;
     }
   }
@@ -297,31 +229,6 @@ PropertyManager::get(const string &name, T &ref)
   return ans;
 } 
 
-template<class T>
-bool 
-PropertyManager::get(const string &name, T *&ref)
-{
-  lock.lock();
-
-  bool ans = false;
-  map_type::iterator loc = properties_.find(name);
-  if (loc != properties_.end()) {
-    if ( dynamic_cast<T *>( loc->second ) ) {
-      ref = static_cast<T *>(loc->second->obj_);
-      ans=true;
-    }
-  }
-  
-  lock.unlock();
-
-  return ans;
-} 
-
-template<> bool PropertyManager::get(const string &name, char &ref);
-template<> bool PropertyManager::get(const string &name, short &ref);
-template<> bool PropertyManager::get(const string &name, int &ref);
-template<> bool PropertyManager::get(const string &name, float &ref);
-template<> bool PropertyManager::get(const string &name, double &ref);
 
 } // namespace SCIRun
 

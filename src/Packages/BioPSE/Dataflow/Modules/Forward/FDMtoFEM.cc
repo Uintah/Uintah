@@ -111,10 +111,10 @@ void FDMtoFEM::execute() {
     return;
   }
     
-  vector<pair<string, Tensor> > *conds = scinew vector<pair<string, Tensor> >;
+  vector<pair<string, Tensor> > conds;
   if (ifdmH->get_type_name(1) == "Tensor" ||
       (ifdmH->get_type_name(1) == "unsigned_char" && 
-       ifdmH->get("conductivity_table", *conds))) {
+       ifdmH->get_property("conductivity_table", conds))) {
 
     // first check to see if it's the same field as last time, though...
     //   if so, resend old results
@@ -225,8 +225,8 @@ void FDMtoFEM::execute() {
       TetVolMesh::Cell::iterator ci_tet_end; tvm->end(ci_tet_end);
       int count=0;
       while (ci_tet != ci_tet_end) {
-	conds->push_back(pair<string, Tensor>(to_string((int)*ci_tet),
-					      lv->fdata()[*ci]));
+	conds.push_back(pair<string, Tensor>(to_string((int)*ci_tet),
+					     lv->fdata()[*ci]));
 	for (int i=0; i<5; i++, ++ci_tet) {
 	  tv->fdata()[*ci_tet]=count;
 	}
@@ -249,10 +249,10 @@ void FDMtoFEM::execute() {
 	++ci;
       }      
     }
-    cerr << "Conds->size() == "<<conds->size()<<"\n";
-    tv->store("data_storage", string("table"), false);
-    tv->store("name", string("conductivity"), false);
-    tv->store("conductivity_table", *conds, true);
+    cerr << "Conds->size() == "<<conds.size()<<"\n";
+    tv->set_property("data_storage", string("table"), false);
+    tv->set_property("name", string("conductivity"), false);
+    tv->set_property("conductivity_table", conds, true);
     ofemH_ = tv;
     ofem_->send(ofemH_);
   } else {

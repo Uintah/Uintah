@@ -187,7 +187,7 @@ const string
 ManageFieldSet::get_name(PropertyManager *pm)
 {
   string n;
-  if ( pm->get("name", n) ) {
+  if ( pm->get_property("name", n) ) {
     return n.c_str();
   }
   else
@@ -302,7 +302,7 @@ ManageFieldSet::execute()
     if (ofs != NULL)
     {
       remark("Dumping out a field set.");
-      ofs->store("name", string("glomfield"), false);
+      ofs->set_property("name", string("glomfield"), false);
       FieldSetHandle ofsh(ofs);
       FieldSetOPort *ofsp = (FieldSetOPort *)get_oport("Output FieldSet");
       if (!ofsp) {

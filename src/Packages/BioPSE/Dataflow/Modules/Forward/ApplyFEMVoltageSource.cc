@@ -129,7 +129,7 @@ void ApplyFEMVoltageSource::execute()
 //      dirBC.erase(dirBC.begin(), dirBC.end());
       dirBC.push_back(pair<int, double>(0,0.0));
     } else { // bcFlag == DirSub
-      if (!hField->get("dirichlet", dirBC)){
+      if (!hField->get_property("dirichlet", dirBC)){
 	msgStream_ << "The input field doesn't contain Dirichlet boundary conditions" << endl;
 //	return;
       }

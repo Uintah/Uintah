@@ -99,13 +99,13 @@ void ShowLeads::execute(){
   string units;
   double start;
   double end;
-  if (pm && pm->get(string("time-units"), units)) {
+  if (pm && pm->get_property(string("time-units"), units)) {
     units_.set(units.c_str());
   }  
-  if (pm && pm->get(string("time-start"), start)) {
+  if (pm && pm->get_property(string("time-start"), start)) {
     tmin_.set(start);
   }  
-  if (pm && pm->get(string("time-end"), end)) {
+  if (pm && pm->get_property(string("time-end"), end)) {
     tmax_.set(end);
   }  
 

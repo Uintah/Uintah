@@ -115,7 +115,7 @@ FieldSet::find_first_field(FieldHandle &result, const string name)
   while (fi != fields_.end())
   {
     string s;
-    if ((*fi)->get("name", s) && s == name)
+    if ((*fi)->get_property("name", s) && s == name)
     {
       result = *fi;
       return true;
