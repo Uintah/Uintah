@@ -25,7 +25,7 @@ class ParticleColorMapKey : public Module {
 
   MaterialHandle white;
 public:
-  ParticleColorMapKey(const string &id);
+  ParticleColorMapKey(GuiContext* ctx);
   virtual ~ParticleColorMapKey();
   virtual void execute();
 };

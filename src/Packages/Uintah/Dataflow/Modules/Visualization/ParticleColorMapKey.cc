@@ -21,12 +21,10 @@ using namespace SCIRun;
 #pragma set woff 1682
 #endif
 
-extern "C" Module *make_ParticleColorMapKey(const string &id) {
-  return new ParticleColorMapKey(id);
-}
+DECLARE_MAKER(ParticleColorMapKey)
 
-ParticleColorMapKey::ParticleColorMapKey(const string &id)
-  : Module("ParticleColorMapKey", id, Filter, "Visualization", "Uintah")
+  ParticleColorMapKey::ParticleColorMapKey(GuiContext* ctx)
+  : Module("ParticleColorMapKey", ctx, Filter, "Visualization", "Uintah")
 {
   white = scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20);
   

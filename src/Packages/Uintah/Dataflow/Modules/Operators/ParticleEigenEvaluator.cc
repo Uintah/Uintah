@@ -8,14 +8,12 @@
 
 namespace Uintah {
 
-extern "C" Module* make_ParticleEigenEvaluator( const string& id ) { 
-  return scinew ParticleEigenEvaluator( id );
-}
+  DECLARE_MAKER(ParticleEigenEvaluator);
 
-ParticleEigenEvaluator::ParticleEigenEvaluator(const string& id)
-  : Module("ParticleEigenEvaluator",id,Source, "Operators", "Uintah"),
-    guiEigenSelect("eigenSelect", id, this)
-    //    gui_status("gui_status", id, this),
+ParticleEigenEvaluator::ParticleEigenEvaluator(GuiContext* ctx)
+  : Module("ParticleEigenEvaluator",ctx,Source, "Operators", "Uintah"),
+    guiEigenSelect(ctx->subVar("eigenSelect"))
+    //    gui_status(ctx->subVar("gui_status")),
 {
 }
   

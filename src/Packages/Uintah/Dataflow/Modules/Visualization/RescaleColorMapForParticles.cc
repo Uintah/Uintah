@@ -20,11 +20,11 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-RescaleColorMapForParticles::RescaleColorMapForParticles(const string& id)
-: Module("RescaleColorMapForParticles", id, Filter, "Visualization", "Uintah"),
-  minVal("minVal", id, this),
-  maxVal("maxVal", id, this),
-  scaleMode("scaleMode", id, this)
+RescaleColorMapForParticles::RescaleColorMapForParticles(GuiContext* ctx)
+: Module("RescaleColorMapForParticles", ctx, Filter, "Visualization", "Uintah"),
+  minVal(ctx->subVar("minVal")),
+  maxVal(ctx->subVar("maxVal")),
+  scaleMode(ctx->subVar("scaleMode"))
 {
     //    scaleMode.set("auto");
 
@@ -74,7 +74,5 @@ void RescaleColorMapForParticles::execute()
    omap->send(cmap);
 }
   
-extern "C" Module* make_RescaleColorMapForParticles( const string& id ) {
-  return scinew RescaleColorMapForParticles( id );
-}
+DECLARE_MAKER(RescaleColorMapForParticles)
 } // End namespace Uintah

@@ -57,15 +57,13 @@ using std::ostringstream;
 
 using namespace SCIRun;
 
-extern "C" Module* make_TensorFieldExtractor( const string& id ) {
-  return scinew TensorFieldExtractor( id ); 
-}
+  DECLARE_MAKER(TensorFieldExtractor);
 
 //--------------------------------------------------------------- 
-TensorFieldExtractor::TensorFieldExtractor(const string& id) 
-  : FieldExtractor("TensorFieldExtractor", id, "Selectors", "Uintah"),
-    tcl_status("tcl_status", id, this), sVar("sVar", id, this),
-    sMatNum("sMatNum", id, this), type(0)
+TensorFieldExtractor::TensorFieldExtractor(GuiContext* ctx) 
+  : FieldExtractor("TensorFieldExtractor", ctx, "Selectors", "Uintah"),
+    tcl_status(ctx->subVar("tcl_status")), sVar(ctx->subVar("sVar")),
+    sMatNum(ctx->subVar("sMatNum")), type(0)
 { 
 } 
 

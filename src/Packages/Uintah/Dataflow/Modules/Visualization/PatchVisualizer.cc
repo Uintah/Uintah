@@ -58,10 +58,10 @@ using namespace std;
   
 class PatchVisualizer : public Module {
 public:
-  PatchVisualizer(const string& id);
+  PatchVisualizer(GuiContext* ctx);
   virtual ~PatchVisualizer();
   virtual void execute();
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
 
 private:
   void addBoxGeometry(GeomLines* edges, const Box& box,
@@ -103,26 +103,24 @@ private:
 
 static string widget_name("PatchVisualizer Widget");
  
-extern "C" Module* make_PatchVisualizer(const string& id) {
-  return scinew PatchVisualizer(id);
-}
+DECLARE_MAKER(PatchVisualizer)
 
-PatchVisualizer::PatchVisualizer(const string& id)
-: Module("PatchVisualizer", id, Filter, "Visualization", "Uintah"),
-  level0_grid_color("level0_grid_color",id, this),
-  level1_grid_color("level1_grid_color",id, this),
-  level2_grid_color("level2_grid_color",id, this),
-  level3_grid_color("level3_grid_color",id, this),
-  level4_grid_color("level4_grid_color",id, this),
-  level5_grid_color("level5_grid_color",id, this),
-  level0_color_scheme("level0_color_scheme",id, this),
-  level1_color_scheme("level1_color_scheme",id, this),
-  level2_color_scheme("level2_color_scheme",id, this),
-  level3_color_scheme("level3_color_scheme",id, this),
-  level4_color_scheme("level4_color_scheme",id, this),
-  level5_color_scheme("level5_color_scheme",id, this),
-  nl("nl",id,this),
-  patch_seperate("patch_seperate",id,this),
+  PatchVisualizer::PatchVisualizer(GuiContext* ctx)
+: Module("PatchVisualizer", ctx, Filter, "Visualization", "Uintah"),
+  level0_grid_color(ctx->subVar("level0_grid_color")),
+  level1_grid_color(ctx->subVar("level1_grid_color")),
+  level2_grid_color(ctx->subVar("level2_grid_color")),
+  level3_grid_color(ctx->subVar("level3_grid_color")),
+  level4_grid_color(ctx->subVar("level4_grid_color")),
+  level5_grid_color(ctx->subVar("level5_grid_color")),
+  level0_color_scheme(ctx->subVar("level0_color_scheme")),
+  level1_color_scheme(ctx->subVar("level1_color_scheme")),
+  level2_color_scheme(ctx->subVar("level2_color_scheme")),
+  level3_color_scheme(ctx->subVar("level3_color_scheme")),
+  level4_color_scheme(ctx->subVar("level4_color_scheme")),
+  level5_color_scheme(ctx->subVar("level5_color_scheme")),
+  nl(ctx->subVar("nl")),
+  patch_seperate(ctx->subVar("patch_seperate")),
   old_generation(-1), old_timestep(0), numLevels(0),
   grid(NULL)
 {
@@ -298,11 +296,11 @@ void PatchVisualizer::execute()
   if (new_grid) {
     nl.set(numLevels);
     string visible;
-    TCL::eval(id + " isVisible", visible);
+    gui->eval(id + " isVisible", visible);
     if ( visible == "1") {
-      TCL::execute(id + " Rebuild");
+      gui->execute(id + " Rebuild");
       
-      TCL::execute("update idletasks");
+      gui->execute("update idletasks");
       reset_vars();
     }
   }
@@ -468,7 +466,7 @@ void PatchVisualizer::execute()
 
 // This is called when the tcl code explicity calls a function besides
 // needexecute.
-void PatchVisualizer::tcl_command(TCLArgs& args, void* userdata)
+void PatchVisualizer::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");

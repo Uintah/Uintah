@@ -8,9 +8,7 @@
 
 namespace Uintah {
 
-extern "C" Module* make_EigenEvaluator( const string& id ) { 
-  return scinew EigenEvaluator( id );
-}
+  DECLARE_MAKER(EigenEvaluator);
 
 template<class TensorField, class VectorField, class ScalarField>
 void computeGridEigens(TensorField* tensorField,
@@ -18,10 +16,10 @@ void computeGridEigens(TensorField* tensorField,
 		       int chosenEValue);
  
 
-EigenEvaluator::EigenEvaluator(const string& id)
-  : Module("EigenEvaluator",id,Source, "Operators", "Uintah"),
-    guiEigenSelect("eigenSelect", id, this)
-    //    tcl_status("tcl_status", id, this),
+EigenEvaluator::EigenEvaluator(GuiContext* ctx)
+  : Module("EigenEvaluator",ctx,Source, "Operators", "Uintah"),
+    guiEigenSelect(ctx->subVar("eigenSelect"))
+    //    tcl_status(ctx->subVar("tcl_status")),
 {
 }
   

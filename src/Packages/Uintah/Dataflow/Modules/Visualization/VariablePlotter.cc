@@ -19,6 +19,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Core/Containers/StringUtil.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
@@ -48,34 +49,31 @@ namespace Uintah {
 
 static string widget_name("VariablePlotter Widget");
  
-extern "C" Module* make_VariablePlotter(const string& id) {
-  return scinew VariablePlotter(id);
-}
-
+  DECLARE_MAKER(VariablePlotter)
   
-VariablePlotter::VariablePlotter(const string& name, const string& id)
-: Module(name, id, Filter, "Visualization", "Uintah"),
-  var_orientation("var_orientation",id,this),
-  nl("nl",id,this),
-  index_x("index_x",id,this),
-  index_y("index_y",id,this),
-  index_z("index_z",id,this),
-  index_l("index_l",id,this),
-  curr_var("curr_var",id,this),
+  VariablePlotter::VariablePlotter(const string& name, GuiContext* ctx)
+: Module(name, ctx, Filter, "Visualization", "Uintah"),
+  var_orientation(ctx->subVar("var_orientation")),
+  nl(ctx->subVar("nl")),
+  index_x(ctx->subVar("index_x")),
+  index_y(ctx->subVar("index_y")),
+  index_z(ctx->subVar("index_z")),
+  index_l(ctx->subVar("index_l")),
+  curr_var(ctx->subVar("curr_var")),
   old_generation(-1), old_timestep(0), grid(NULL)
 {
 
 }
 
-VariablePlotter::VariablePlotter(const string& id)
-: Module("VariablePlotter", id, Filter, "Visualization", "Uintah"),
-  var_orientation("var_orientation",id,this),
-  nl("nl",id,this),
-  index_x("index_x",id,this),
-  index_y("index_y",id,this),
-  index_z("index_z",id,this),
-  index_l("index_l",id,this),
-  curr_var("curr_var",id,this),
+  VariablePlotter::VariablePlotter(GuiContext* ctx)
+: Module("VariablePlotter", ctx, Filter, "Visualization", "Uintah"),
+  var_orientation(ctx->subVar("var_orientation")),
+  nl(ctx->subVar("nl")),
+  index_x(ctx->subVar("index_x")),
+  index_y(ctx->subVar("index_y")),
+  index_z(ctx->subVar("index_z")),
+  index_l(ctx->subVar("index_l")),
+  curr_var(ctx->subVar("curr_var")),
   old_generation(-1), old_timestep(0), grid(NULL)
 {
 
@@ -108,7 +106,7 @@ bool VariablePlotter::getGrid()
     vector< int > indices;
     times.clear();
     archive->queryTimesteps( indices, times );
-    TCL::execute(id + " set_time " +
+    gui->execute(id + " set_time " +
 		 VariableCache::vector_to_string(indices).c_str());
     // set old_timestep to something that will cause a new grid
     // to be queried.
@@ -149,7 +147,7 @@ void VariablePlotter::setVars(GridP grid) {
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
 
   cerr << "Calling clearMat_list\n";
-  TCL::execute(id + " clearMat_list ");
+  gui->execute(id + " clearMat_list ");
   
   for(int i = 0; i< (int)names.size(); i++) {
     switch (types[i]->getType()) {
@@ -158,7 +156,7 @@ void VariablePlotter::setVars(GridP grid) {
 	varNames += " ";
 	varNames += names[i];
 	cerr << "Calling appendMat_list\n";
-	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
+	gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
       break;
@@ -167,7 +165,7 @@ void VariablePlotter::setVars(GridP grid) {
 	varNames += " ";
 	varNames += names[i];
 	cerr << "Calling appendMat_list\n";
-	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
+	gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
       break;
@@ -180,8 +178,8 @@ void VariablePlotter::setVars(GridP grid) {
   }
 
   cerr << "varNames = " << varNames << endl;
-  TCL::execute(id + " setVar_list " + varNames.c_str());
-  TCL::execute(id + " setType_list " + type_list.c_str());  
+  gui->execute(id + " setVar_list " + varNames.c_str());
+  gui->execute(id + " setType_list " + type_list.c_str());  
 }
 
 void VariablePlotter::initialize_ports() {
@@ -213,12 +211,12 @@ int VariablePlotter::initialize_grid() {
 
 void VariablePlotter::update_tcl_window() {
   string visible;
-  TCL::eval(id + " isVisible", visible);
+  gui->eval(id + " isVisible", visible);
   if ( visible == "1") {
-    TCL::execute(id + " destroyFrames");
-    TCL::execute(id + " build");
+    gui->execute(id + " destroyFrames");
+    gui->execute(id + " build");
 
-    TCL::execute("update idletasks");
+    gui->execute("update idletasks");
     reset_vars();
   }
 }
@@ -236,7 +234,7 @@ void VariablePlotter::execute()
   cerr << "VariablePlotter::execute:end\n";
 }
 
-void VariablePlotter::tcl_command(TCLArgs& args, void* userdata)
+void VariablePlotter::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");
@@ -289,7 +287,7 @@ void VariablePlotter::extract_data(string display_mode, string varname,
   pick();
   
   // clear the current contents of the ticles's material data list
-  TCL::execute(id + " reset_var_val");
+  gui->execute(id + " reset_var_val");
 
   // determine type
   const TypeDescription *td;
@@ -326,7 +324,7 @@ void VariablePlotter::extract_data(string display_mode, string varname,
       } else {
 	cerr << "Cache hit\n";
       }
-      TCL::execute(id+" set_var_val "+data.c_str());
+      gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -355,7 +353,7 @@ void VariablePlotter::extract_data(string display_mode, string varname,
       } else {
 	cerr << "Cache hit\n";
       }
-      TCL::execute(id+" set_var_val "+data.c_str());
+      gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -386,7 +384,7 @@ void VariablePlotter::extract_data(string display_mode, string varname,
 	// use cached value that was put into data by is_cached
 	cerr << "Cache hit\n";
       }
-      TCL::execute(id+" set_var_val "+data.c_str());
+      gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -396,7 +394,7 @@ void VariablePlotter::extract_data(string display_mode, string varname,
   default:
     cerr<<"Unknown var type\n";
     }// else { Tensor,Other}
-  TCL::execute(id+" "+display_mode.c_str()+"_data "+index.c_str()+" "
+  gui->execute(id+" "+display_mode.c_str()+"_data "+index.c_str()+" "
 	       +varname.c_str()+" "+currentNode_str().c_str()+" "
 	       +name_list.c_str());
   

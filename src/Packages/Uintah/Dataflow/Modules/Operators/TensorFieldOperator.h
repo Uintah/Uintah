@@ -13,15 +13,15 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <string>
 #include <iostream>
-using std::string;
-using std::cerr;
-using std::endl;
 
 namespace Uintah {
-using namespace SCIRun;
+  using std::string;
+  using std::cerr;
+  using std::endl;
+  using namespace SCIRun;
 class TensorFieldOperator: public Module, public UnaryFieldOperator {
 public:
-  TensorFieldOperator(const string& id);
+  TensorFieldOperator(GuiContext* ctx);
   virtual ~TensorFieldOperator() {}
     
   virtual void execute(void);

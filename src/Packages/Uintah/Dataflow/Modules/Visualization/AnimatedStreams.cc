@@ -35,22 +35,19 @@ using namespace SCIRun;
 
 static string control_name("Stream Control Widget");
 			 
-extern "C" Module* make_AnimatedStreams( const string& id) {
-  return new AnimatedStreams(id);
-}
+  DECLARE_MAKER(AnimatedStreams);
 
-
-AnimatedStreams::AnimatedStreams(const string& id)
-  : Module("AnimatedStreams", id, Filter, "Visualization", "Uintah"),
+AnimatedStreams::AnimatedStreams(GuiContext* ctx)
+  : Module("AnimatedStreams", ctx, Filter, "Visualization", "Uintah"),
     vf(0), anistreams(0), 
     generation(-1), timestep(-1),
-    pause("pause",id, this),
-    normals("normals", id, this),
-    lighting("lighting", id, this),
-    normal_method("normal_method", id, this),
-    use_deltat("use_deltat", id, this),
-    stepsize("stepsize", id, this),
-    linewidth("linewidth", id, this),
+    pause(ctx->subVar("pause")),
+    normals(ctx->subVar("normals")),
+    lighting(ctx->subVar("lighting")),
+    normal_method(ctx->subVar("normal_method")),
+    use_deltat(ctx->subVar("use_deltat")),
+    stepsize(ctx->subVar("stepsize")),
+    linewidth(ctx->subVar("linewidth")),
     control_lock("AnimatedStreams position lock"),
     control_widget(0), control_id(-1),
     mutex("Animated Streams")
@@ -194,7 +191,7 @@ void AnimatedStreams::execute(void)
   mutex.unlock();
 }
 
-void AnimatedStreams::tcl_command( TCLArgs& args, void* userdata) {
+void AnimatedStreams::tcl_command( GuiArgs& args, void* userdata) {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");
     return;
