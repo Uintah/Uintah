@@ -12,7 +12,8 @@ SRCS     = AddWells.cc AddWells2.cc BitVisualize.cc BoundGrid.cc \
            ImageViewer.cc IsoMask.cc IsoSurface.cc IsoSurfaceDW.cc \
            IsoSurfaceMRSG.cc IsoSurfaceSP.cc RescaleColorMap.cc SimpVolVis.cc \
            Streamline.cc VectorSeg.cc VolRendTexSlices.cc VolVis.cc \
-           WidgetTest.cc FastRender.c HedgehogLitLines.cc
+           WidgetTest.cc FastRender.c HedgehogLitLines.cc \
+	   Span.cc Noise.cc NoiseMCube.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR)
