@@ -46,8 +46,11 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pc,
       cerr << "WARNING: Scheduler executed, but no tasks\n";
    }
    dbg << "Executing " << ntasks << " tasks\n";
-   graph.dumpDependencies();
+
+   emitEdges(graph);
+
    for(int i=0;i<ntasks;i++){
+      time_t t = time(NULL);
       double start = Time::currentSeconds();
       tasks[i]->doit(pc);
       double dt = Time::currentSeconds()-start;
@@ -55,9 +58,12 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pc,
       if(tasks[i]->getPatch())
 	 dbg << " on patch " << tasks[i]->getPatch()->getID();
       dbg << " (" << dt << " seconds)\n";
+
+      emitNode(tasks[i], t, dt);
    }
 
    dw->finalize();
+   finalizeNodes();
 }
 
 void
@@ -74,6 +80,10 @@ SingleProcessorScheduler::createDataWarehouse( int generation )
 
 //
 // $Log$
+// Revision 1.4  2000/07/19 21:47:59  jehall
+// - Changed task graph output to XML format for future extensibility
+// - Added statistical information about tasks to task graph output
+//
 // Revision 1.3  2000/06/17 07:04:55  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup

@@ -6,6 +6,8 @@
 #include <vector>
 #include <map>
 
+class DOM_Element;
+
 namespace Uintah {
    class Task;
 /**************************************
@@ -60,7 +62,7 @@ WARNING
 
       //////////
       // Insert Documentation Here:
-      void dumpDependencies();
+      void dumpDependencies(DOM_Element edges) const;
 
       int getNumTasks() const;
       Task* getTask(int i);
@@ -84,6 +86,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/07/19 21:47:59  jehall
+// - Changed task graph output to XML format for future extensibility
+// - Added statistical information about tasks to task graph output
+//
 // Revision 1.1  2000/06/17 07:04:56  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup
