@@ -152,6 +152,7 @@ ICELabel::~ICELabel()
     delete sp_vol_equilLabel;
     delete mass_CCLabel;
     delete burnedMass_CCLabel;
+    delete releasedHeat_CCLabel;
     delete speedSound_CCLabel;
     delete div_velfc_CCLabel;
     delete vol_frac_CCLabel;
