@@ -305,6 +305,7 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
       ParticleSubset* newsubset = new_dw->createParticleSubset(totalParticles, m, patch);
       newpos->gather(newsubset, subsets, posvars);
       new_dw->put(*newpos, reloc_new_posLabel);
+      delete newpos;
 
       for(int v=0;v<reloc_old_labels[m].size();v++){
 	 vector<ParticleVariableBase*> gathervars;
@@ -318,16 +319,23 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 	 ParticleVariableBase* newvar = var->clone();
 	 newvar->gather(newsubset, subsets, gathervars);
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
+	 delete newvar;
       }
-#if 0
+      for(int i=0;i<sr.size();i++){
+	 if(sr[i]->matls[m])
+	    delete sr[i]->matls[m];
+	 delete sr[i];
+      }
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
-#endif
    }
 }
 
 //
 // $Log$
+// Revision 1.14  2000/08/22 20:54:49  sparker
+// Fixed memory leaks
+//
 // Revision 1.13  2000/08/21 15:36:26  jas
 // Removed the deletion of the varlabels in the destructor.
 //
