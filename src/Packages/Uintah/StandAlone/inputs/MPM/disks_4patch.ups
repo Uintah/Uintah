@@ -79,22 +79,22 @@
     <Grid>
 	<BoundaryConditions>
 		 <Face side = "x-">
-                        <BCType label = "Kinematic" var = "velocity">
-                           <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "x+">
-                        <BCType label = "Kinematic" var = "velocity">
-			     <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Velocity" var = "Dirichlet">
+			     <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "y-">
-                        <BCType label = "Kinematic" var = "velocity">
-                           <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>                  
 		<Face side = "y+">
-                        <BCType label = "Kinematic" var = "velocity">            			    <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Velocity" var = "Dirichlet">            			    <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "z-">
