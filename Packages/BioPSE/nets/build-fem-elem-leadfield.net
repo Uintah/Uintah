@@ -143,6 +143,8 @@ set $m7-notes {Build the interpolant weights for the electrodes.  For each node 
 field port), we record the single nearest node from the finite element mesh and assign it a weight of 1.
 
 }
+set $m7-use_interp {0}
+
 set $m10-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
 
 ::netedit scheduleok
