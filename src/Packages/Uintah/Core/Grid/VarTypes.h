@@ -40,6 +40,8 @@ namespace Uintah {
    typedef ReductionVariable<double, Reductions::Sum<double> > sum_vartype;
     
    typedef ReductionVariable<Vector, Reductions::Sum<Vector> > sumvec_vartype;
+
+   typedef ReductionVariable<long, Reductions::Sum<long> > sumlong_vartype;
 } // End namespace Uintah
 
 #endif
