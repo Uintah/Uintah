@@ -377,6 +377,8 @@ protected:
   bool             d_accStrainEnergy; // Flag for accumulating strain energy
   bool             d_useLoadCurves; // Flag for using load curves
   bool             d_doErosion; // Flag to decide whether to erode or not
+  bool             d_createNewParticles; // Flag to decide whether to create
+                                         // new particles after failure
   std::string      d_erosionAlgorithm; // Algorithm to erode material points
   double           d_adiabaticHeating; // Flag adiabatic plastic heating on/off
   double           d_forceIncrementFactor; // Increment in ForceBC applied force
