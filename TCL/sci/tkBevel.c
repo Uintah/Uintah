@@ -159,9 +159,9 @@ BevelCmd(clientData, interp, argc, argv)
     int argc;			/* Number of arguments. */
     char **argv;		/* Argument strings. */
 {
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window tkwin = (Tk_Window) clientData;
     Bevel *BevelPtr;
-    Tk_Window tkwin;
+    Tk_Window new;
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args:  should be \"",
@@ -169,19 +169,18 @@ BevelCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_CreateWindowFromPath(interp, main, argv[1], (char *) NULL);
-    if (tkwin == NULL) {
+    new = Tk_CreateWindowFromPath(interp, tkwin, argv[1], (char *) NULL);
+    if (new == NULL) {
 	return TCL_ERROR;
     }
-    Tk_SetClass(tkwin, "Bevel");
 
     /*
      * Allocate and initialize the widget record.
      */
 
     BevelPtr = (Bevel *) ckalloc(sizeof(Bevel));
-    BevelPtr->tkwin = tkwin;
-    BevelPtr->display = Tk_Display(tkwin);
+    BevelPtr->tkwin = new;
+    BevelPtr->display = Tk_Display(new);
     BevelPtr->interp = interp;
     BevelPtr->x = 0;
     BevelPtr->y = 0;
@@ -196,6 +195,7 @@ BevelCmd(clientData, interp, argc, argv)
     BevelPtr->doubleBuffer = 0;
     BevelPtr->updatePending = 0;
 
+    Tk_SetClass(BevelPtr->tkwin, "Bevel");
     Tk_CreateEventHandler(BevelPtr->tkwin, ExposureMask|StructureNotifyMask,
 	    BevelEventProc, (ClientData) BevelPtr);
     Tcl_CreateCommand(interp, Tk_PathName(BevelPtr->tkwin), BevelWidgetCmd,
@@ -441,22 +441,22 @@ BevelDisplay(clientData)
      * Redraw the widget's background and border.
      */
     if(!strcmp(edge, "left")){
-	Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			   0, -bw, Tk_Width(tkwin)+bw, Tk_Height(tkwin)+2*bw,
 			   BevelPtr->borderWidth, BevelPtr->relief);
 
     } else if(!strcmp(edge, "right")){
-	Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			   -bw, -bw, Tk_Width(tkwin)+bw, Tk_Height(tkwin)+2*bw,
 			   BevelPtr->borderWidth, BevelPtr->relief);
 
     } else if(!strcmp(edge, "top")){
-	Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			   -bw, 0, Tk_Width(tkwin)+2*bw, Tk_Height(tkwin)+bw,
 			   BevelPtr->borderWidth, BevelPtr->relief);
 
     } else if(!strcmp(edge, "bottom")){
-	Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			   -bw, -bw, Tk_Width(tkwin)+2*bw, Tk_Height(tkwin)+bw,
 			   BevelPtr->borderWidth, BevelPtr->relief);
     } else if(!strcmp(edge, "outtop")){
@@ -466,11 +466,11 @@ BevelDisplay(clientData)
 	int o=(bw+pborder-1)/pborder*pborder;
 	o-=pborder;
 	for(;o>=0;o-=pborder){
-	    Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	    Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			       -pborder, -pborder-o,
 			       pto+2*pborder+1, pborder+bw,
 			       pborder, opposite(BevelPtr->relief));
-	    Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	    Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			       pto+pwidth-1, -pborder-o,
 			       Tk_Width(tkwin)-pto-pwidth+2*pborder,
 			       pborder+bw,
@@ -483,11 +483,11 @@ BevelDisplay(clientData)
 	int o=(bw+pborder-1)/pborder*pborder;
 	o-=pborder;
 	for(;o>=0;o-=pborder){
-	    Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	    Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			       -pborder, Tk_Height(tkwin)-pborder+o-1,
 			       pto+2*pborder+1, pborder+bw,
 			       pborder, opposite(BevelPtr->relief));
-	    Tk_Draw3DRectangle(Tk_Display(tkwin), d, BevelPtr->bgBorder,
+	    Tk_Draw3DRectangle(tkwin, d, BevelPtr->bgBorder,
 			       pto+pwidth-1, Tk_Height(tkwin)-pborder+o-1,
 			       Tk_Width(tkwin)-pto-pwidth+2*pborder,
 			       pborder+bw,

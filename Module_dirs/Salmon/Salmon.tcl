@@ -152,7 +152,7 @@ itcl_class Roe {
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
 	canvas $m.objlist.canvas -width 400 -height 100 \
-		-yscroll "$m.objlist.scroll set" -borderwidth 0
+		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0
 	pack $m.objlist.canvas -side left -padx 2 -pady 2 -fill y
 	
 	frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
@@ -208,6 +208,7 @@ itcl_class Roe {
     }
     method removeMFrame {w} {
 	pack forget $w.mframe.f
+	$w.mframe config -height 1
 	$w.bframe.more configure -command "$this addMFrame $w" -text "+"
     }
 
