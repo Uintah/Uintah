@@ -25,6 +25,7 @@
 #include <Packages/rtrt/Core/CutPlaneDpy.h>
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/ColorMap.h>
+#include <Packages/rtrt/Core/ColorMapDpy.h>
 #include <Packages/rtrt/Core/CutMaterial.h>
 #include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/Instance.h>
@@ -39,21 +40,96 @@ using SCIRun::Thread;
 Array1<DpyBase*> dpys;
 Array1<Object*> objects_of_interest;
 
-void add_fire(Group *g, int nworkers) {
-  //82.5 for dave
-  //  CutVolumeDpy* hcvdpy = new CutVolumeDpy(11000.0, hcmap);
-  Material *firematl = new Phong(Color(1, 0.7, 0.8), Color(1,1,1), 100);
-  VolumeDpy *fire_dpy = new VolumeDpy(1000);
-  //  VolumeDpy *fire_dpy = new VolumeDpy(11000);
-  //  (new Thread(fire_dpy, "Fire VolumeDpy Thread"))->detach();
-  dpys.add(fire_dpy);
+//#define DATA_TYPE float
+//#define DATA_LOCATION "/usr/sci/data/Geometry/volumes2/CSAFE"
 
-  HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *fire =
-    new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
-    (firematl, fire_dpy,
-     "/usr/sci/data/Geometry/volumes2/CSAFE/h300_0064f.raw",
-     3, nworkers);
+typedef unsigned char datatype;
+#define DATA_LOCATION "/usr/sci/data/CSAFE/quantize"
+
+void add_fire2(Group *g, int nworkers) {
+  // Create a default color map.
+  int size = 5;
+  Array1<ColorPos> colors(size);
+  for(int i = 0; i < size; i++) {
+    colors[i].x = (float)i/(size-1);
+    colors[i].val = 1;
+  }
+  colors[0].c = Color(1,0,0);
+  colors[1].c = Color(1,1,0);
+  colors[2].c = Color(0,1,0);
+  colors[3].c = Color(0,1,1);
+  colors[4].c = Color(0,0,1);
+
+  ColorMapDpy *fcdpy = new ColorMapDpy(colors);
+  dpys.add(fcdpy);
+  Material *temp_matl = new Phong(Color(1, 0.7, 0.8), Color(1,1,1), 100);
+  VolumeDpy *temp_dpy = new VolumeDpy(1000);
+  // Don't add the display unless you plan on rendering the temperature field
+  //  dpys.add(temp_dpy);
+  VolumeDpy *vel_dpy = new VolumeDpy(5.6);
+  dpys.add(vel_dpy);
+
+  ////////////////////////////////////////////////////////////////
+  //  Load up a group
   
+  int fstart = 32;
+  int fend = 152;
+  //  int fstart = 64;
+  //  int fend = 80;
+  int finc = 8; // never less than 8, must be a multiple of 8
+  //  int finc = 16; // 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160
+  //  int finc = 24; // 0, 24, 48, 72, 96, 120, 144, 168
+  //  int finc = 32; // 0, 32, 64, 96, 128, 160
+  //  int finc = 40; // 0, 40, 80, 120, 160
+  SelectableGroup *fire_geom = new SelectableGroup(0.5);
+  fire_geom->set_name("CSAFE Fire Time Step Selector");
+  //  TimeObj *fire_time = new TimeObj(5);
+  for(int f = fstart; f <= fend; f+= finc) {
+    char buf[1000];
+    // load in the temperature field to color by
+    sprintf(buf, DATA_LOCATION"/h300_%04d.uchar.raw", f);
+    //    cout << "Reading "<<buf<<endl;
+    // Send 1 for depth since we don't need to render it and preprocess
+    // goes much quickley.
+    HVolume<datatype, BrickArray3<datatype>, BrickArray3<VMCell<datatype> > > *tempt = 
+      new HVolume<datatype, BrickArray3<datatype>, BrickArray3<VMCell<datatype> > >
+      (temp_matl, temp_dpy, buf, 1, nworkers);
+
+    // Get min and max and attach to ColorMapDpy.
+    float min, max;
+    tempt->get_minmax(min, max);
+    fcdpy->attach(min,max);
+
+    // Create the Material
+    Material *temp_color_map = new PhongColorMapMaterial
+      (tempt,
+       fcdpy->get_color_transfer_pointer(),
+       fcdpy->get_alpha_transfer_pointer());
+
+    // Load the velocity field that will be used to isosurface.
+    sprintf(buf, DATA_LOCATION"/heptane300_velmag_%04d.uchar.raw", f);
+    HVolume<datatype, BrickArray3<datatype>, BrickArray3<VMCell<datatype> > > *vel =
+      new HVolume<datatype, BrickArray3<datatype>, BrickArray3<VMCell<datatype> > >
+      (temp_color_map, vel_dpy, buf, 3, nworkers);
+
+
+    fire_geom->add(vel);
+  }
+
+#if 0
+  // Can't do cutting plane on time dependant data just yet.  There's a
+  // CycleMaterial that may be able to work, but I haven't checked it out.
+  CutPlaneDpy* pd=new CutPlaneDpy(Vector(0,1,0), Point(0,0,0));
+  dpys.add(pd);
+  //  (new Thread(pd, "Cutting plane display thread"))->detach();
+  Object *obj = new CutPlane(fire_geom, pd);
+  obj->set_matl(hmat);
+#endif
+  g->add(fire_geom);
+  objects_of_interest.add(fire_geom);
+}
+
+void add_fire(Group *g, int nworkers) {
   Array1<float> *opacity = new Array1<float>(5);
   Array1<Color> *color = new Array1<Color>(5);
   for(int i = 0; i < 5; i++)
@@ -71,6 +147,23 @@ void add_fire(Group *g, int nworkers) {
   ScalarTransform1D<float, Color> *color_transform =
     new ScalarTransform1D<float, Color>(color);
   // need to the get the min and max
+
+
+  //82.5 for dave
+  //  CutVolumeDpy* hcvdpy = new CutVolumeDpy(11000.0, hcmap);
+  Material *firematl = new Phong(Color(1, 0.7, 0.8), Color(1,1,1), 100);
+  VolumeDpy *fire_dpy = new VolumeDpy(1000);
+  //  VolumeDpy *fire_dpy = new VolumeDpy(11000);
+  //  (new Thread(fire_dpy, "Fire VolumeDpy Thread"))->detach();
+  //  dpys.add(fire_dpy);
+
+  // load the temperature field for coloring
+  HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *fire =
+    new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
+    (firematl, fire_dpy,
+     "/usr/sci/data/Geometry/volumes2/CSAFE/h300_0064f.raw",
+     1, nworkers);
+  
   float min, max;
   fire->get_minmax(min, max);
   opacity_transform->scale(min,max);
@@ -78,7 +171,7 @@ void add_fire(Group *g, int nworkers) {
   Material *hmat = new PhongColorMapMaterial(fire, color_transform,
 					     opacity_transform);
 
-  
+  // Load the velocity field that will be used to isosurface.
   VolumeDpy *vel_dpy = new VolumeDpy(1);
   dpys.add(vel_dpy);
   HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *vel =
@@ -179,7 +272,9 @@ Scene* make_scene(int /*argc*/, char* /*argv[]*/, int nworkers)
   //  g->add(new Sphere(new Phong(Color(1,0.5,0.5), Color(1,1,1), 100),
   //		    Point(0,0,0), 1));
   //  add_head(g, nworkers);
-  add_fire(g, nworkers);
+  //  add_fire(g, nworkers);
+  add_fire2(g, nworkers);
+  
   
 		    
   Color cdown(0.1, 0.1, 0.1);
@@ -207,7 +302,7 @@ Scene* make_scene(int /*argc*/, char* /*argv[]*/, int nworkers)
   
   ///////////////////////////////////////////////////////////
   // Set up the scene parameters
-  scene->select_shadow_mode( Hard_Shadows );
+  scene->select_shadow_mode( No_Shadows );
   scene->maxdepth = 8;
   Light *science_room_light0 = new Light(Point(-8, 8, 3.9), Color(.5,.5,.5), 0, .3);
   science_room_light0->name_ = "science room overhead";
