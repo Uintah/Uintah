@@ -29,7 +29,7 @@ using namespace SCIRun;
 ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
-
+  d_useModifiedEOS = false;
   ps->require("PR",d_initialData.PR);
   ps->require("CrackParameterA",d_initialData.CrackParameterA);
   ps->require("CrackPowerValue",d_initialData.CrackPowerValue);
@@ -51,6 +51,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
+  ps->get("useModifiedEOS",d_useModifiedEOS);
 
   p_statedata_label          = VarLabel::create("p.statedata_vs",
                             ParticleVariable<StateData>::getTypeDescription());
@@ -632,25 +633,14 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   double G = d_initialData.G[0] + d_initialData.G[1] +
  	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
-
-//  rho_cur = rho_orig*exp(p_gauge/bulk);
-
-  if(p_gauge > 0.){
+  
+  if(d_useModifiedEOS && p_gauge < 0.0) {
+    double A = p_ref;       // Modified EOS
+    double n = p_ref/bulk;
+    rho_cur  = rho_orig*pow(pressure/A,n);
+  }else{                    // Standard EOS
     rho_cur = rho_orig/(1-p_gauge/bulk);
   }
-  else{
-    double A = p_ref;
-    double n = p_ref/bulk;
-    rho_cur = rho_orig*pow(pressure/A,n);
-  }
-
-//  if(p_gauge < .5*bulk){
-//     rho_cur = rho_orig/(1-p_gauge/bulk);
-//  }
-//  else{
-//     rho_cur = 4.*rho_orig*p_gauge/bulk;
-//  }
-
   return rho_cur;
 
 }
@@ -665,36 +655,18 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
   double rho_orig = matl->getInitialDensity();
 
-#if 0
-  double p_g = bulk*log(rho_cur/rho_orig);
-  dp_drho    = bulk/rho_cur;
-  pressure = p_ref + p_g;
-  tmp = bulk/rho_cur;  // speed of sound squared
-#endif
-
-  if(rho_cur > rho_orig){
-    double p_g = bulk*(1.0 - rho_orig/rho_cur);
-    pressure = p_ref + p_g;
-    dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
-    tmp = dp_drho;  // speed of sound squared
-  }
-  else{
-    double A = p_ref;
+  if(d_useModifiedEOS && rho_cur < rho_orig){
+    double A = p_ref;         // MODIFIED EOS
     double n = bulk/p_ref;
     pressure = A*pow(rho_cur/rho_orig,n);
     dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
-    tmp = dp_drho;  // speed of sound squared
+    tmp      = dp_drho;       // speed of sound squared
+  }else{                       // STANDARD EOS
+    double p_g = bulk*(1.0 - rho_orig/rho_cur);
+    pressure   = p_ref + p_g;  
+    dp_drho    = bulk*rho_orig/(rho_cur*rho_cur);
+    tmp        = dp_drho;       // speed of sound squared
   }
-
-//  if(rho_cur/rho_orig < 2.0){
-//    p_g = bulk*(1.0 - rho_orig/rho_cur);
-//    dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
-//  }
-//  else {
-//    p_g = (bulk/(4*rho_orig))*rho_cur;
-//    dp_drho  = bulk/(4*rho_orig);
-//  }
-
 }
 
 double ViscoScram::getCompressibility()
