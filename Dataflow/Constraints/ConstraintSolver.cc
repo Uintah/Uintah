@@ -70,7 +70,7 @@ ConstraintSolver::ConstraintSolver()
   : Epsilon(1E-6),
     MaxDepth(25),
     changed(0),
-    stack(200),
+    stack_(),
     NumVariables(0),
     variables(0)
 {
@@ -81,7 +81,7 @@ ConstraintSolver::ConstraintSolver( const Real epsilon )
   : Epsilon(epsilon),
     MaxDepth(25),
     changed(0),
-    stack(200),
+    stack_(),
     NumVariables(0),
     variables(0)
 {
@@ -152,30 +152,32 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 
    for (index=0; index<NumVariables; index++)
       variables[index]->level = variables[index]->levellevel = 0;
-   stack.push(StackItem(var));
+   stack_.push(StackItem(var));
 
-   while (!stack.empty() && !abort) {
-       StackItem& item = stack.top();
+   while (!stack_.empty() && !abort) {
+      StackItem& item = stack_.top();
       BaseVariable (*v)(item.var);      // without the () around *v, visualC++ gets confused
 
+#if 0
       if (cs2_debug) {
-	 cout << "Stack top: (" << stack.size() << ")" << endl;
-	 for (int i=stack.size()-1;i>=0;i--)
-	    cout << stack[i] << "    " << newval << endl;
+	 cout << "Stack top: (" << stack_.size() << ")" << endl;
+	 for (int i=stack_.size()-1;i>=0;i--)
+	    cout << stack_[i] << "    " << newval << endl;
 	 cout << "Stack bottom." << endl;
       }
+#endif
 
       switch (item.rtype) {
       case RecurseInitial:
 	  {
 	      int reallynew = !(v->data.epsilonequal(Epsilon, newval));
 	      if (!reallynew) {
-		  stack.pop();
+		  stack_.pop();
 		  break;
 	      }
 	 
 	      if (cs_debug) {
-		  cout << "Recursion level = " << stack.size() << endl;
+		  cout << "Recursion level = " << stack_.size() << endl;
 	    
 		  cout << v->name << " S(" << v->levellevel << ")*";
 		  for (index=0; index<(Index)(v->level); index++)
@@ -205,12 +207,12 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 			      cout << " ";
 			  cout << "*" << endl;
 		  
-			  cout << "Recursion level = " << stack.size()-1 << endl;
+			  cout << "Recursion level = " << stack_.size()-1 << endl;
 		      }
 	       
 		      cerr << "Maximum level reached for all constraints!" << endl;
 		      cout << "Accepting current approximation." << endl;
-		      cout << "Recursion level = " << stack.size()-1 << endl;
+		      cout << "Recursion level = " << stack_.size()-1 << endl;
 	       
 		      abort = 1;	       
 		  }
@@ -224,7 +226,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	    if (v->constraints[v->constraint_order[item.iter]]
 		->Satisfy(v->constraint_indexs[v->constraint_order[item.iter]],
 			  scheme, Epsilon, v, newval)) {
-	       stack.push(StackItem(v));
+	       stack_.push(StackItem(v));
 	    }
 	    item.iter++;
 	 } else {
@@ -240,9 +242,9 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	       for (index=0; index<(Index)(v->level); index++)
 		  cout << " ";
 	       cout << "*" << endl;
-	       cout << "Recursion level = " << stack.size()-1 << endl;
+	       cout << "Recursion level = " << stack_.size()-1 << endl;
 	    }
-	    stack.pop();
+	    stack_.pop();
 	 }
 	 break;
       case RecurseMax:
@@ -251,7 +253,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	    if (v->constraints[v->constraint_order[index2]]
 		->Satisfy(v->constraint_indexs[v->constraint_order[index2]],
 			  scheme, Epsilon, v, newval)) {
-	       stack.push(StackItem(v));
+	       stack_.push(StackItem(v));
 	    }
 	    item.iter++;
 	 } else {
@@ -267,9 +269,9 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	       for (index=0; index<(Index)(v->level); index++)
 		  cout << " ";
 	       cout << "*" << endl;
-	       cout << "Recursion level = " << stack.size()-1 << endl;
+	       cout << "Recursion level = " << stack_.size()-1 << endl;
 	    }
-	    stack.pop();
+	    stack_.pop();
 	 }
 	 break;
       default:
@@ -278,8 +280,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
       }
    }
 
-   if (!stack.empty())
-      stack.remove_all();
+   while (!stack_.empty()) { stack_.pop(); }
 }
 
 void StackItem::print( ostream& os )
