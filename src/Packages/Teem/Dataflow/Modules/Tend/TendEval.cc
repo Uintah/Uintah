@@ -42,6 +42,9 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
+  GuiInt       major_;
+  GuiInt       medium_;
+  GuiInt       minor_;
   GuiDouble    threshold_;
 };
 
@@ -49,6 +52,9 @@ DECLARE_MAKER(TendEval)
 
 TendEval::TendEval(SCIRun::GuiContext *ctx) : 
   Module("TendEval", ctx, Filter, "Tend", "Teem"), 
+  major_(ctx->subVar("major")),
+  medium_(ctx->subVar("medium")),
+  minor_(ctx->subVar("minor")),
   threshold_(ctx->subVar("threshold"))
 {
 }
@@ -88,9 +94,20 @@ TendEval::execute()
   sz = nin->axis[3].size;
   N = sx*sy*sz;
 
+  int compLen=0;
+  bool useComp[3];
+  if (major_.get()) { useComp[0]=true; compLen++; } else useComp[0]=false;
+  if (medium_.get()) { useComp[1]=true; compLen++; } else useComp[1]=false;
+  if (minor_.get()) { useComp[2]=true; compLen++; } else useComp[2]=false;
+
+  if (compLen == 0) {
+    warning("No eigenvector selected");
+    return;
+  }
+
   NrrdData *nout = new NrrdData();
 
-  nrrdAlloc(nout->nrrd, nrrdTypeFloat, 4, 3, sx, sy, sz);
+  nrrdAlloc(nout->nrrd, nrrdTypeFloat, 4, compLen, sx, sy, sz);
   if (tenTensorCheck(nin, nrrdTypeFloat, AIR_TRUE)) {
     error("Input Nrrd was not a Tensor field of floats");
     return;
@@ -104,14 +121,30 @@ TendEval::execute()
   for (int I=0; I<N; I++) {
     tenEigensolve(eval, evec, tdata);
     float scl = tdata[0] >= thresh;
+    int seen=0;
     for (int cc=0; cc<3; cc++) {
-      edata[cc] = scl*eval[cc];
+      if (useComp[cc]) {
+	edata[seen] = scl*eval[cc];
+	seen++;
+      }
     }
-    edata += 3;
+    edata += compLen;
     tdata += 7;
   }
   nrrdAxisInfoCopy(nout->nrrd, nin, NULL, NRRD_AXIS_INFO_SIZE_BIT);
-  nout->nrrd->axis[0].label = "Unknown:Scalar,Unknown:Scalar,Unknown:Scalar";
+  string lname;
+  string enames[3] = {"Major", "Medium", "Minor"};
+  int init=false;
+  for (int i=2; i>=0; i--) {
+    if (useComp[i]) { 
+      if (init) 
+	lname += ",";
+      lname += enames[i];
+      lname += "Eigenvalue:Scalar";
+      init = true;
+    }
+  }
+  strcpy(nout->nrrd->axis[0].label, lname.c_str());
   onrrd_->send(NrrdDataHandle(nout));
 }
 
