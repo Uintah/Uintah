@@ -17,7 +17,6 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Exceptions/Exceptions.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Datatypes/ColumnMatrix.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -196,7 +195,7 @@ void SymSparseRowMatrix::zero()
 
 void SymSparseRowMatrix::solve(ColumnMatrix&)
 {
-    EXCEPTION(SCICore::ExceptionsSpace::General("SymSparseRowMatrix can't do a direct solve!"));
+    ASSERTFAIL("SymSparseRowMatrix can't do a direct solve!");
 }
 
 void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
@@ -322,6 +321,10 @@ void SymSparseRowMatrix::compute_upper()
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 10:29:20  sparker
+// Use new exceptions/ASSERT macros
+// Fixed compiler warnings
+//
 // Revision 1.4  1999/10/07 02:07:34  sparker
 // use standard iostreams and complex type
 //

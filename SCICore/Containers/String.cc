@@ -30,6 +30,7 @@ char *strcpy( char *, const char *);
 #include <ctype.h>
 
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Util/FancyAssert.h>
 #include <SCICore/Containers/TrivialAllocator.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
@@ -48,7 +49,7 @@ clString& clString::operator=(const char* s)
 	// Free old clString
 	if(p->s)delete [] p->s;
     }
-    int len=strlen(s);
+    unsigned long len=strlen(s);
     p->s=new char[len+1];
     strcpy(p->s,s);
     return *this;
@@ -103,7 +104,7 @@ char clString::operator()(int index) const
 
 int clString::len() const
 {
-    return p?strlen(p->s):0;
+    return p?(int)strlen(p->s):0;
 }
 
 int clString::is_alpha(int i)
@@ -123,14 +124,14 @@ int clString::is_digit(int i)
 clString::clString(const char* s)
 {
     p=scinew srep;
-    int len=strlen(s);
+    unsigned long len=strlen(s);
     p->s=scinew char[len+1];
     strcpy(p->s,s);
 }
 
 clString clString::operator+(const clString& str) const
 {
-    int newlen=(p?strlen(p->s):0) + (str.p?strlen(str.p->s):0);
+    unsigned long newlen=(p?strlen(p->s):0) + (str.p?strlen(str.p->s):0);
     char* ns=scinew char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
@@ -140,7 +141,7 @@ clString clString::operator+(const clString& str) const
 
 clString clString::operator+(const char* c) const
 {
-    int newlen=(p?strlen(p->s):0)+strlen(c);
+    unsigned long newlen=(p?strlen(p->s):0)+strlen(c);
     char* ns=scinew char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
@@ -150,7 +151,7 @@ clString clString::operator+(const char* c) const
 
 clString operator+(const char* c, const clString& str)
 {
-    int newlen=(str.p?strlen(str.p->s):0)+strlen(c);
+    unsigned long newlen=(str.p?strlen(str.p->s):0)+strlen(c);
     char* ns=scinew char[newlen+1];
     strcpy(ns, c);
     if(str.p && str.p->s)strcat(ns, str.p->s);
@@ -281,10 +282,10 @@ int clString::index(const char match) const
 clString clString::substr(int start, int length) const
 {
     ASSERT(p != 0);
-    int len=strlen(p->s);
+    unsigned long len=strlen(p->s);
     ASSERTRANGE(start, 0, len);
-    int l=length==-1?len-start:length;
-    ASSERTRANGE(start+l, 0, len+1);
+    unsigned long l=length==-1?len-start:length;
+    ASSERTRANGE((long)(start+l), 0, (long)(len+1));
     char* tmp=scinew char[l+1];
     int i;
     for(i=0;i<l;i++){
@@ -346,7 +347,7 @@ clString& clString::operator+=(char c)
 	    // detach...
 	    srep* oldp=p;
 	    p=scinew srep;
-	    int len=strlen(oldp->s);
+	    unsigned long len=strlen(oldp->s);
 	    p->s=scinew char[len+2];
 	    strcpy(p->s, oldp->s);
 	    p->s[len]=c;
@@ -355,7 +356,7 @@ clString& clString::operator+=(char c)
 	    p->n=1;
 	} else {
 	    char* olds=p->s;
-	    int len=strlen(olds);
+	    unsigned long len=strlen(olds);
 	    p->s=scinew char[len+2];
 	    strcpy(p->s, olds);
 	    p->s[len]=c;
@@ -374,7 +375,7 @@ clString& clString::operator+=(char c)
 
 clString& clString::operator+=(const clString& str)
 {
-    int newlen=(p?strlen(p->s):0)+(str.p?strlen(str.p->s):0);
+    unsigned long newlen=(p?strlen(p->s):0)+(str.p?strlen(str.p->s):0);
     char* ns=scinew char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
@@ -503,6 +504,10 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.9  2000/03/23 10:29:18  sparker
+// Use new exceptions/ASSERT macros
+// Fixed compiler warnings
+//
 // Revision 1.8  2000/03/17 08:27:51  sparker
 // Added const to substr
 //
