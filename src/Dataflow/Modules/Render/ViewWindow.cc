@@ -92,12 +92,15 @@ add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
 ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
   : gui(gui), ctx(ctx), manager(s),
     pos(ctx->subVar("pos")),
-    caxes(ctx->subVar("caxes")),iaxes(ctx->subVar("iaxes")),
+    caxes(ctx->subVar("caxes")),
+    raxes(ctx->subVar("raxes")),
+    iaxes(ctx->subVar("iaxes")),
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),
     curName("movie"),
     dolly_throttle(0),
+    show_rotation_axis(false),
     id(ctx->getfullname()),
     view(ctx->subVar("view")),
     homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
@@ -1993,6 +1996,10 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     } else {
       viewwindow_objs_draw[0] = 0;
     }
+  } else if(args[1] == "rotateGenAxes") { 
+    // have to do this here, as well as in redraw() so the axes can be
+    // turned on/off even while spinning with inertia
+    show_rotation_axis = raxes.get();
   } else if(args[1] == "iconGenAxes") {    
     if(iaxes.get() == 1) {
     } else {    
@@ -2106,6 +2113,7 @@ void ViewWindow::redraw()
   //  it's needed here (can't check it in the constructor since the variable
   //  might not exist on the tcl side yet)
   viewwindow_objs_draw[0] = caxes.get();
+  show_rotation_axis = raxes.get();
 
   current_renderer->redraw(manager, this, ct, ct, 1, 0);
 }
@@ -2303,7 +2311,7 @@ GeomHandle ViewWindow::createGenAxes() {
   GeomGroup* yn = scinew GeomGroup;
   GeomGroup* zn = scinew GeomGroup;
 
-  double sz = 1.0;
+  const double sz = 1.0;
   xp->add(scinew GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
   xp->add(scinew GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
   yp->add(scinew GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));

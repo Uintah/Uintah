@@ -119,6 +119,7 @@ public:
   typedef map<string, ObjTag*>	        MapStringObjTag;
   GuiString pos;  
   GuiInt caxes;
+  GuiInt raxes;
   GuiInt iaxes;  
 protected:
   friend class Viewer;
@@ -201,6 +202,7 @@ public:
 
   int tex_disp_list;
 
+  bool show_rotation_axis;
 
   OpenGL* current_renderer;
   string id;

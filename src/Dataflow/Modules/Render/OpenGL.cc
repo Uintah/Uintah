@@ -820,7 +820,8 @@ OpenGL::redraw_frame()
 	else
 	  //  --  BAWGL  --
 #endif
-	{  // render normal
+	{ // render normal
+	  // Setup view.
 	  glMatrixMode(GL_PROJECTION);
 	  glLoadIdentity();
 	  gluPerspective(fovy, aspect, znear, zfar);
@@ -885,7 +886,12 @@ OpenGL::redraw_frame()
 	// Draw it all...
 	current_time=modeltime;
 	viewwindow->do_for_visible(this, &OpenGL::redraw_obj);
-	
+
+	if (viewwindow->show_rotation_axis)
+	{
+	  render_rotation_axis(view, do_stereo, i, eyesep);
+	}
+
 #ifdef __sgi
 	//  --  BAWGL  --
 	if( do_bawgl ) // render stylus and pinch 'metaphores'
@@ -2365,6 +2371,137 @@ ImgReq::ImgReq()
 ImgReq::ImgReq(const string& n, const string& t, int x, int y)
   : name(n), type(t), resx(x), resy(y)
 {
+}
+
+
+static GeomHandle
+createGenAxes()
+{     
+  MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
+					  Color(.5,.5,.5), 20);
+  MaterialHandle dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
+					    Color(.5,.5,.5), 20);
+  MaterialHandle dk_blue = scinew Material(Color(0,0,0), Color(0,0,.2),
+					   Color(.5,.5,.5), 20);
+  MaterialHandle lt_red = scinew Material(Color(0,0,0), Color(.8,0,0),
+					  Color(.5,.5,.5), 20);
+  MaterialHandle lt_green = scinew Material(Color(0,0,0), Color(0,.8,0),
+					    Color(.5,.5,.5), 20);
+  MaterialHandle lt_blue = scinew Material(Color(0,0,0), Color(0,0,.8),
+					   Color(.5,.5,.5), 20);
+
+  GeomGroup* xp = scinew GeomGroup; 
+  GeomGroup* yp = scinew GeomGroup;
+  GeomGroup* zp = scinew GeomGroup;
+  GeomGroup* xn = scinew GeomGroup;
+  GeomGroup* yn = scinew GeomGroup;
+  GeomGroup* zn = scinew GeomGroup;
+
+  const double sz = 1.0;
+  xp->add(scinew GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
+  xp->add(scinew GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
+  yp->add(scinew GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));
+  yp->add(scinew GeomCone(Point(0, sz, 0), Point(0, sz+sz/5, 0), sz/10, 0));
+  zp->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, sz), sz/20));
+  zp->add(scinew GeomCone(Point(0, 0, sz), Point(0, 0, sz+sz/5), sz/10, 0));
+  xn->add(scinew GeomCylinder(Point(0,0,0), Point(-sz, 0, 0), sz/20));
+  xn->add(scinew GeomCone(Point(-sz, 0, 0), Point(-sz-sz/5, 0, 0), sz/10, 0));
+  yn->add(scinew GeomCylinder(Point(0,0,0), Point(0, -sz, 0), sz/20));
+  yn->add(scinew GeomCone(Point(0, -sz, 0), Point(0, -sz-sz/5, 0), sz/10, 0));
+  zn->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, -sz), sz/20));
+  zn->add(scinew GeomCone(Point(0, 0, -sz), Point(0, 0, -sz-sz/5), sz/10, 0));
+  GeomGroup* all=scinew GeomGroup;
+  all->add(scinew GeomMaterial(xp, lt_red));
+  all->add(scinew GeomMaterial(yp, lt_green));
+  all->add(scinew GeomMaterial(zp, lt_blue));
+  all->add(scinew GeomMaterial(xn, dk_red));
+  all->add(scinew GeomMaterial(yn, dk_green));
+  all->add(scinew GeomMaterial(zn, dk_blue));
+  
+  return all;
+}
+
+
+// i is the frame number, usually refers to left or right when do_stereo
+// is set.
+
+void
+OpenGL::render_rotation_axis(const View &view,
+			     bool do_stereo, int i, const Vector &eyesep)
+{
+  static GeomHandle axis_obj = 0;
+  if (axis_obj.get_rep() == 0) axis_obj = createGenAxes();
+
+  GLint viewport[4];
+  glGetIntegerv(GL_VIEWPORT, viewport);
+
+  const int xysize = Min(viewport[2], viewport[3]) / 4;
+  glViewport(viewport[2] - xysize, viewport[3] - xysize, xysize, xysize);
+  const double aspect = 1.0;
+
+  // fovy 16 eyedist 10 is approximately the default axis view.
+  // fovy 32 eyedist 5 gives an exagerated perspective.
+  const double fovy = 32.0;
+  const double eyedist = 5.0;
+  const double znear = eyedist - 2.0;
+  const double zfar = eyedist + 2.0;
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  gluPerspective(fovy, aspect, znear, zfar);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  Vector oldeye(view.eyep().asVector() - view.lookat().asVector());
+  oldeye.normalize();
+  Point eyep((oldeye * eyedist).asPoint());
+  Point lookat(0.0, 0.0, 0.0);
+  if(do_stereo){
+    if(i==0){
+      eyep-=eyesep;
+      if (!viewwindow->sr.get())
+	lookat-=eyesep;
+    } else {
+      eyep+=eyesep;
+      if (!viewwindow->sr.get())
+	lookat+=eyesep;
+    }
+  }
+
+  Vector up(view.up());
+  gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+	    lookat.x(), lookat.y(), lookat.z(),
+	    up.x(), up.y(), up.z());
+  if(do_hi_res)
+    setFrustumToWindowPortion();
+
+  // Set up Lighting
+  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+  const Lighting& l=viewer_->lighting_;
+  int idx=0;
+  int ii;
+  for(ii=0;ii<l.lights.size();ii++)
+  {
+    Light* light=l.lights[ii];
+    light->opengl_setup(view, drawinfo, idx);
+  }
+  for(ii=0;ii<idx && ii<maxlights;ii++)
+    glEnable((GLenum)(GL_LIGHT0+ii));
+  for(;ii<maxlights;ii++)
+    glDisable((GLenum)(GL_LIGHT0+ii));
+
+  drawinfo->viewwindow = viewwindow;
+
+  // Use depthrange to force the icon to move forward.
+  // Ideally the rest of the scene should be drawn at 0.05 1.0,
+  // so there was no overlap at all, but that would require
+  // mucking about in the picking code.
+  glDepthRange(0.0, 0.05);
+  axis_obj->draw(drawinfo, 0, current_time);
+  glDepthRange(0.0, 1.0);
+
+  glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
 } // End namespace SCIRun
