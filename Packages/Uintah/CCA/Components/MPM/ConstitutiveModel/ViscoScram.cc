@@ -359,6 +359,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   double sqrtopf=sqrt(1.5);
   double sqrtPI = sqrt(M_PI);
   Ghost::GhostType gac = Ghost::AroundCells;
+  int dwi = matl->getDWIndex();
 
   // Material constants
   double rho_0 = matl->getInitialDensity();
@@ -389,6 +390,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
   // Define particle and grid variables
   delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
   constParticleVariable<Short27>   pgCode;
   constParticleVariable<double>    pMass, pVol, pTemperature;
   constParticleVariable<double>    pCrackRadius;
@@ -404,16 +407,11 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<double>    pRand;
   ParticleVariable<StateData> pStatedata;
 
-  // Other local variables
-  Matrix3 pVelGrad(0.0), pDefGradInc; pDefGradInc.Identity();
-
-  // Define interpolation variables
+  // Define local variables
   IntVector ni[MAX_BASIS];
   Vector d_S[MAX_BASIS];
 
-  int dwi = matl->getDWIndex();
-  old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
+  // Loop thru patches
   for(int p=0;p<patches->size();p++){
 
     // initialize strain energy and wavespeed to zero
@@ -514,20 +512,37 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
         patch->findCellAndShapeDerivatives27(pX[idx], ni, d_S,pSize[idx]);
       }
 
-      Vector gvel;
-      pVelGrad.set(0.0);
+      Matrix3 pVelGrad(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
+	Vector gvel;
         if (flag->d_fracture) {
           if(pgCode[idx][k]==1) gvel = gVelocity[ni[k]];
           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-        } else 
-          gvel = gVelocity[ni[k]];
+        } else gvel = gVelocity[ni[k]];
         for (int j = 0; j<3; j++){
           for (int i = 0; i<3; i++) {
             pVelGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
           }
         }
       }
+
+      // Compute the deformation gradient increment using the time_step
+      // velocity gradient (F_n^np1 = dudx * dt + Identity)
+      Matrix3 pDefGradInc = pVelGrad * delT + Identity;
+      double Jinc = pDefGradInc.Determinant();
+
+      // Update the deformation gradient tensor to its time n+1 value.
+      pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
+      double J = pDefGrad_new[idx].Determinant();
+      if (!(J > 0.0)) {
+        cerr << getpid() 
+             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
+        throw ParameterNotFound("**ERROR**:ViscoScram");
+      }
+      double rho_cur = rho_0/J;
+
+      // Update the volume
+      pVol_new[idx] = Jinc*pVol[idx];
 
       // Calculate rate of deformation D, and deviatoric rate DPrime
       Matrix3 D = (pVelGrad + pVelGrad.Transpose())*.5;
@@ -552,6 +567,11 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // old total stress norm
       Matrix3 sig_old = pStress[idx];
       double EffStress = sqrtopf*sig_old.Norm();
+
+      dbg << "D.Norm() = " << D.Norm()
+           << " Ddev.Norm() = " << DPrime.Norm()
+           << " Sig.Norm() = " << pStress[idx].Norm()
+           << " SigDev.Norm() = " << DevStress.Norm() << endl;
 
       //old deviatoric stress norm
       double DevStressNormSq = DevStress.NormSquared();
@@ -581,7 +601,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       EffStress    = (1+compflag)*EffDevStress - compflag*EffStress;
       vres        *= ((1 + compflag) - cdot0*compflag);
       double sigmae = sqrt(DevStressNormSq - compflag*(3*sig_m*sig_m));
-      sig_m = -sig_m; // revert back to standard form
 
       // Stress intensity factor
       double crad   = pCrackRadius[idx];
@@ -590,7 +609,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Modification to include friction on crack faces
       double xmup   = (1 + compflag)*sqrt(45./(2.*(3. - 2.*cf*cf)))*cf;
-      double a      = xmup*p*sqrtc;
+      double a      = xmup*sig_m*sqrtc;
       double b      = 1. + a/K_I;
       double termm  = 1. + M_PI*a*b/K_I;
       double rko    = K_I*sqrt(termm);
@@ -600,6 +619,12 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       if(vres > d_initialData.CrackMaxGrowthRate){
         vres = d_initialData.CrackMaxGrowthRate;
       }
+
+      dbg  << "vres = " << vres << " sif = " << sif 
+	   << " sigmae = " << sigmae << endl;
+      dbg  << "crad = " << crad << " xmup = " << xmup << " a = " << a
+	   << " b = " << b << " termm = " << termm << " rko = " << rko
+	   << " skp = " << skp << " sk1 = " << sk1 << endl;
 
       double cdot,cc,rk1c,rk2c,rk3c,rk4c;
 
@@ -623,6 +648,10 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
         rk3c = cc*(1. - fac/(crad+.5*rk2c));
         rk4c = cc*(1. - fac/(crad+rk3c));
       }
+
+      dbg << "c = " << crad << " cdot = " << cdot << " cc = " << cc
+	   << " rk1c = " << rk1c << " rk2c = " << rk2c
+	   << " rk3c = " << rk3c << " rk3c = " << rk3c << endl;
 
       // Deviatoric stress integration
       for(int imw=0;imw<5;imw++){
@@ -701,6 +730,16 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                         (DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
                        *(Gmw[imw]/G))*delT;
 
+	dbg << "imw = " << imw << endl;
+	dbg << "   rk1 = [" << rk1(0,0) << " " << rk1(1,1) << " " << rk1(2,2)
+	     << rk1(1,2) << " " << rk1(2,0) << " " << rk1(0,1) << endl;
+	dbg << "   rk2 = [" << rk2(0,0) << " " << rk2(1,1) << " " << rk2(2,2)
+	     << rk2(1,2) << " " << rk2(2,0) << " " << rk2(0,1) << endl;
+	dbg << "   rk3 = [" << rk3(0,0) << " " << rk3(1,1) << " " << rk3(2,2)
+	     << rk3(1,2) << " " << rk3(2,0) << " " << rk3(0,1) << endl;
+	dbg << "   rk4 = [" << rk4(0,0) << " " << rk4(1,1) << " " << rk4(2,2)
+	     << rk4(1,2) << " " << rk4(2,0) << " " << rk4(0,1) << endl;
+
         // Update Maxwell element Deviatoric Stresses
         pStatedata[idx].DevStress[imw] +=
           (rk1 + rk4)*onesixth + (rk2 + rk3)*onethird;
@@ -720,6 +759,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
              << " delT = " << delT << endl;
       dbgSig << "  pold = " << sig_m ;
 
+      sig_m = -sig_m; // revert back to standard form
       sig_m += ekkdot*bulk*delT;
       DevStress = pStatedata[idx].DevStress[0]+pStatedata[idx].DevStress[1]+ 
                   pStatedata[idx].DevStress[2]+pStatedata[idx].DevStress[3]+ 
@@ -742,28 +782,10 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       dbgSig << " Crack Radius = " << crad << endl;
       ASSERT(crad > 0.0);
 
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient (F_n^np1 = dudx * dt + Identity)
-      pDefGradInc = pVelGrad * delT + Identity;
-      double Jinc = pDefGradInc.Determinant();
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
-      double J = pDefGrad_new[idx].Determinant();
-      if (!(J > 0.0)) {
-        cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:ViscoScram");
-      }
-
-      // Update the volume
-      pVol_new[idx] = Jinc*pVol[idx];
-
       // Update the internal heating rate 
       //double cpnew = Cp0 + d_initialData.DCp_DTemperature*pTemperature[idx];
       //double Cv = cpnew/(1+d_initialData.Beta*pTemperature[idx]);
       double Cv = Cp0;
-      double rho_cur = rho_0/J;
       double rhoCv = rho_cur*Cv;
 
       // Update the Viscoelastic work rate
