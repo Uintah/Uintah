@@ -69,8 +69,8 @@ module XML_Source
     "<!ENTITY #{entity} SYSTEM \"#{dir}/#{file}.#{ext}\">"
   end
 
-  def docType(rootElement, public, sys, entities=nil, sysentities=nil)
-    docType = "<!DOCTYPE #{rootElement} PUBLIC \"#{public}\" \"#{sys}\""
+  def docType(rootElement, dtd, entities=nil, sysentities=nil)
+    docType = "<!DOCTYPE #{rootElement} SYSTEM \"#{dtd}\""
     if entities or sysentities
       docType += " [\n"
     end
@@ -93,10 +93,9 @@ end
 
 module DocBook_Source
   include(XML_Source)
-  DB_VER = "4.1.2"
   def insertDocType(rootElement, entities=nil, sysentities=nil)
-    print(docType(rootElement, "-//OASIS//DTD DocBook XML V#{DB_VER}//EN",
-	  "http://www.oasis-open.org/docbook/xml/#{DB_VER}/docbookx.dtd", entities, sysentities))
+    dtd = ENV["DB_DTD"]
+    print(docType(rootElement, dtd, entities, sysentities))
   end
 end
 
