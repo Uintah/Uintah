@@ -10,13 +10,20 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorFieldReader.tcl \
 	$(SRCDIR)/ViewTensors.tcl \
-	$(SRCDIR)/TensorFieldWriter.tcl 
+	$(SRCDIR)/TensorFieldWriter.tcl \
+#[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Yarden/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.4  2000/10/24 05:58:00  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.3  2000/10/23 23:46:05  yarden
 # initial commit
 #

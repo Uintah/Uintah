@@ -19,7 +19,7 @@ SRCDIR   := Yarden/Modules/Readers
 
 SRCS     += \
 	$(SRCDIR)/TensorFieldReader.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Yarden/Datatypes PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Exceptions SCICore/Thread SCICore/Containers \
