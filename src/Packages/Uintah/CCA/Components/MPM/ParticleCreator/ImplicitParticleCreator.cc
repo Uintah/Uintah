@@ -17,8 +17,9 @@ using std::find;
 ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
                                                  MPMLabel* lb,
                                                  int n8or27,
-                                                 bool haveLoadCurve) 
-  :  ParticleCreator(matl,lb,n8or27,haveLoadCurve)
+                                                 bool haveLoadCurve,
+						 bool doErosion) 
+  :  ParticleCreator(matl,lb,n8or27,haveLoadCurve, doErosion)
 {
   registerPermanentParticleState(matl,lb);
 

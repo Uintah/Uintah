@@ -76,6 +76,7 @@ WARNING
 	 
     bool d_useMPMICEModifiedEOS;
     double d_tol;
+    double d_damageCutOff;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;
     MPMEquationOfState* d_eos;
@@ -84,23 +85,6 @@ WARNING
     // copy constructor
     HyperElasticPlastic(const HyperElasticPlastic &cm);
     HyperElasticPlastic& operator=(const HyperElasticPlastic &cm);
-
-    /*
-  protected:
-
-    // Calculate velocity gradient for 27 noded interpolation
-    Matrix3 computeVelocityGradient(const Patch* patch,
-				    const double* oodx, 
-				    const Point& px, 
-				    const Vector& psize, 
-				    constNCVariable<Vector>& gVelocity);
-
-    // Calculate velocity gradient for 8 noded interpolation
-    Matrix3 computeVelocityGradient(const Patch* patch,
-				    const double* oodx, 
-				    const Point& px, 
-				    constNCVariable<Vector>& gVelocity);
-    */
 
   public:
 
@@ -149,15 +133,21 @@ WARNING
 					const PatchSet* patches,
 					const bool recursion) const;
 
+    //////////
+    // Sockets for MPM-ICE
     virtual double computeRhoMicroCM(double pressure,
 				     const double p_ref,
 				     const MPMMaterial* matl);
 
+    //////////
+    // Sockets for MPM-ICE
     virtual void computePressEOSCM(double rho_m, double& press_eos,
 				   double p_ref,
 				   double& dp_drho, double& ss_new,
 				   const MPMMaterial* matl);
 
+    //////////
+    // Sockets for MPM-ICE
     virtual double getCompressibility();
 
     // class function to read correct number of parameters

@@ -330,6 +330,8 @@ private:
   double           d_artificialDampCoeff; // Artificial damping coefficient
   bool             d_accStrainEnergy; // Flag for accumulating strain energy
   bool             d_useLoadCurves; // Flag for using load curves
+  bool             d_doErosion; // Flag to decide whether to erode or not
+  std::string      d_erosionAlgorithm; // Algorithm used to erode material points
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;

@@ -24,8 +24,9 @@ using std::cerr;
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMLabel* lb,
                                  int n8or27, 
-                                 bool haveLoadCurve) 
-  : d_8or27(n8or27), d_useLoadCurves(haveLoadCurve)
+                                 bool haveLoadCurve,
+				 bool doErosion) 
+  : d_8or27(n8or27), d_useLoadCurves(haveLoadCurve), d_doErosion(doErosion)
 {
   registerPermanentParticleState(matl,lb);
 }
@@ -369,6 +370,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   if (d_useLoadCurves) {
     particle_state.push_back(lb->pLoadCurveIDLabel);
     particle_state_preReloc.push_back(lb->pLoadCurveIDLabel_preReloc);
+  }
+
+  if (d_doErosion) {
+    particle_state.push_back(lb->pErosionLabel);
+    particle_state_preReloc.push_back(lb->pErosionLabel_preReloc);
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,

@@ -34,6 +34,9 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8
   ps->require("shear_modulus",d_initialData.Shear);
   d_useMPMICEModifiedEOS = false;
   ps->get("useModifiedEOS",d_useMPMICEModifiedEOS); 
+  d_erosionAlgorithm = "none";
+  d_damageCutOff = 1.0;
+  ps->get("damage_cutoff", d_damageCutOff);
   
   d_plasticity = PlasticityModelFactory::create(ps);
   if(!d_plasticity){
@@ -109,6 +112,12 @@ HyperElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(lb->pDeformationMeasureLabel_preReloc);
   to.push_back(lb->pStressLabel_preReloc);
   to.push_back(pDamageLabel_preReloc);
+
+  // Erosion stuff
+  if (d_erosionAlgorithm != "none") {
+    from.push_back(lb->pErosionLabel);
+    to.push_back(lb->pErosionLabel_preReloc);
+  }
 
   // Add the particle state for the plasticity model
   d_plasticity->addParticleState(from, to);
@@ -207,7 +216,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 					 DataWarehouse* new_dw)
 {
   // General stuff
-  Matrix3 one; one.Identity(); 
+  Matrix3 one, zero(0.0); one.Identity(); 
 
   Matrix3 tensorL; // Velocity gradient
   Matrix3 tensorD; // Rate of deformation tensor
@@ -298,6 +307,24 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin(); 
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
+
+      // Check if the damage is greater than the cut-off value
+      // Then reset everything and return
+      if (pDamage[idx] > d_damageCutOff) {
+         pBbarElastic_new[idx] = one;
+         pDeformGrad_new[idx] = one;
+         pVolume_new[idx]=pMass[idx]/rho_0;
+         pStress_new[idx] = zero;
+         pDamage_new[idx] = pDamage[idx];
+         d_plasticity->updateElastic(idx);
+         Vector pVel = pVelocity[idx];
+         double c_dil = sqrt((bulk + 4.0*shear/3.0)*
+                              pVolume_new[idx]/pMass[idx]);
+         WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
+		       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+		       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+         continue;
+      }
 
       // Calculate the velocity gradient (L) from the grid velocity
       if (d_8or27==27) 
@@ -483,11 +510,12 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
 
 void 
 HyperElasticPlastic::addComputesAndRequires(Task* ,
-				   const MPMMaterial* ,
-				   const PatchSet* ,
-				   const bool ) const
+					    const MPMMaterial* ,
+					    const PatchSet* ,
+					    const bool ) const
 {
 }
+
 
 // Needed by MPMICE
 double 
