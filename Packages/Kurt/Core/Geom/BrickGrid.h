@@ -179,8 +179,8 @@ private:
   unsigned char SETVAL(double val);
   Point min_, max_;
   FieldHandle tex_;
-  bool is_fixed_;
   int brick_size_;
+  bool is_fixed_;
   pair<double,double> minmax_;
   Array3<GridBrick*> *bricks_;
   int tex_x_, tex_y_, tex_z_;
