@@ -26,6 +26,10 @@ class Trigger  {
 
 public:
 
+  static const double HighTriggerPriority;    // <- Gui uses.
+  static const double MediumTriggerPriority;  // <- Normal objects.
+  static const double LowTriggerPriority;     // <- Background objects.
+
   // NULL image or sound means trigger doesn't use them.  Trigger can
   // only support a sound or an image, NOT BOTH.  If both are
   // specified, the sound is disregarded.  Distance is distance from
@@ -78,6 +82,13 @@ public:
   void setDrawableInfo( BasicTexture * tex,
 			ShadedPrim   * texQuad,
 			Blend        * blend = NULL );
+
+  void   setPriority( double priority );
+  double getPriority() const { return priority_; }
+  // setBasePriority should be called once to establish a base priority
+  // for this trigger.  If not called, basePriority is 'LowTriggerPriority'.
+  void   setBasePriority( double priority ) { basePriority_ = priority; }
+
 private:
 
   string name_;
@@ -108,6 +119,11 @@ private:
 
   Trigger * next_; // If !NULL, this trigger will trigger another trigger
                    // when done.
+
+  // Priority_ is the current priority.  Base is the original.
+  // After a trigger is done, its "priority_" is reset to the original.
+  double    priority_;
+  double    basePriority_;
 };
 
 } // end namespace rtrt

@@ -16,6 +16,10 @@ using namespace std;
 
 PPMImage * blank = NULL;
 
+const double Trigger::HighTriggerPriority   = 100.0; // <- Gui uses.
+const double Trigger::MediumTriggerPriority =  50.0; // <- Normal objects.
+const double Trigger::LowTriggerPriority    =   0.0; // <- Background objects.
+
 Trigger::Trigger( const string  & name, 
 		  vector<Point> & locations,
 		  double          distance,
@@ -28,7 +32,8 @@ Trigger::Trigger( const string  & name,
   name_(name), locations_(locations), distance2_(distance*distance),
   delay_(delay), image_(image), showOnGui_(showOnGui),
   sound_(sound), timeLeft_(0.0), next_(next), fades_(fading),
-  blend_(NULL), tex_(NULL), texQuad_(NULL)
+  blend_(NULL), tex_(NULL), texQuad_(NULL), priority_(LowTriggerPriority),
+  basePriority_(LowTriggerPriority)
 {
   if( blank == NULL )
     {
@@ -53,6 +58,12 @@ Trigger::~Trigger()
 {
 }
 
+
+void
+Trigger::setPriority( double priority )
+{
+  priority_ = priority;
+}
 
 bool
 Trigger::check( const Point & eye )
@@ -160,6 +171,7 @@ Trigger::advance( Trigger *& next )
 
       if( timeLeft_ == 0 )
 	{
+	  priority_ = basePriority_;
 	  next = next_;
 	  return false;
 	}
