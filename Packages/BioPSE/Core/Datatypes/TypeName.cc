@@ -60,6 +60,14 @@
 
 #include <string>
 
+#include <iostream>
+extern "C" void* BioPSEInit(void *param) 
+{
+  std::cerr << "BioPSEInit called!: " << (int)param << std::endl;
+  return 0;
+}
+
+
 namespace BioPSE{
 class NeumannBC;
 }
