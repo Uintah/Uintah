@@ -41,7 +41,7 @@ TensorParticles::~TensorParticles()
 {
 }
 
-void TensorParticles:: AddVar( const ParticleVariable<Matrix3> parts )
+void TensorParticles:: AddVar( const ParticleVariable<Matrix3>& parts )
 {
   tensors.push_back( parts );
 }

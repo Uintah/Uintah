@@ -87,7 +87,7 @@ public:
   // Set the Vectors
   void Set(vector<ShareAssignParticleVariable<Vector> >& s){ vectors = s; }
 
-  void AddVar( const ParticleVariable<Vector> parts );
+  void AddVar( const ParticleVariable<Vector>& parts );
 
 
   void SetName( string vname ) { _varname = vname; }

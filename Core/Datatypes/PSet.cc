@@ -45,8 +45,8 @@ PSet::~PSet()
 {
 }
 
-void PSet:: AddParticles( const ParticleVariable<Point> locs,
-			  const ParticleVariable<long64>  ids,
+void PSet:: AddParticles( const ParticleVariable<Point>& locs,
+			  const ParticleVariable<long64>&  ids,
 			  const Patch* patch)
 {
   positions.push_back( locs );

@@ -45,7 +45,7 @@ VectorParticles::~VectorParticles()
 }
 
 
-void VectorParticles:: AddVar( const ParticleVariable<Vector> parts )
+void VectorParticles:: AddVar( const ParticleVariable<Vector>& parts )
 {
   vectors.push_back( parts );
 }
