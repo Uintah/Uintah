@@ -107,9 +107,6 @@ namespace Uintah {
       const VarLabel* gWeightLabel; //for who knows what?
       
       const VarLabel* cBurnedMassLabel; //for burn models
-      const VarLabel* cVelocityLabel; //for interaction with ICE
-      const VarLabel* cVelocityMELabel; //for interaction with ICE
-      const VarLabel* cMassLabel; //for interaction with ICE
 
       const VarLabel* fVelocityLabel; //for interaction with ICE
       const VarLabel* fMassLabel; //for interaction with ICE
@@ -130,6 +127,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.38  2000/12/28 20:27:12  guilkey
+// Moved some labels from MPMLabel to MPMICELabel.
+//
 // Revision 1.37  2000/12/01 22:02:47  guilkey
 // Made the scheduling of each task a function.  This was done to make
 // scheduleTimeAdvance managable, as well as to make it easier to create
