@@ -28,6 +28,8 @@ public:
 
     Colormap(int nlevels);
 
+    MaterialHandle& lookup(double value, double min, double max);
+
     virtual ~Colormap();
     virtual Colormap* Colormap::clone();
 

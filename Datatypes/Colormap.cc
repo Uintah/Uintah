@@ -34,7 +34,18 @@ Colormap* Colormap::clone()
 
 void Colormap::io(Piostream& stream)
 {
-    int version=stream.begin_class("Colormap", COLORMAP_VERSION);
+    /*int version=*/ stream.begin_class("Colormap", COLORMAP_VERSION);
     Pio(stream, colors);
     stream.end_class();
 }
+
+MaterialHandle& Colormap::lookup(double value, double min, double max)
+{
+    int idx=int((colors.size()-1)*(value-min)/(max-min));
+    if(idx<0)
+	idx=0;
+    else if(idx > colors.size()-1)
+	idx=colors.size()-1;
+    return colors[idx];
+}
+

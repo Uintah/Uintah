@@ -38,7 +38,7 @@ template<class T>
 SimpleOPort<T>::SimpleOPort(Module* module, const clString& portname,
 			    int protocol)
 : OPort(module, SimpleIPort<T>::port_type, portname,
-	SimpleIPort<T>::port_color, protocol), in(0)
+	SimpleIPort<T>::port_color, protocol)
 {
 }
 
@@ -76,12 +76,10 @@ void SimpleOPort<T>::finish()
     if(!sent_something && nconnections() > 0){
 	// Tell them that we didn't send anything...
 	turn_on(Finishing);
-	if(!in){
-	    Connection* connection=connections[0];
-	    in=(SimpleIPort<T>*)connection->iport;
+	for(int i=0;i<nconnections();i++){
+	    SimplePortComm<T>* msg=new SimplePortComm<T>();
+	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}
-	SimplePortComm<T>* msg=new SimplePortComm<T>();
-	in->mailbox.send(msg);
 	turn_off();
     }
 }
@@ -91,17 +89,15 @@ void SimpleOPort<T>::send(const T& data)
 {
     if(nconnections() == 0)
 	return;
-    if(!in){
-	Connection* connection=connections[0];
-	in=(SimpleIPort<T>*)connection->iport;
-    }
     if(sent_something){
 	cerr << "The data got sent twice - ignoring second one...\n";
 	return;
     }
     turn_on();
-    SimplePortComm<T>* msg=new SimplePortComm<T>(data);
-    in->mailbox.send(msg);
+    for(int i=0;i<nconnections();i++){
+	SimplePortComm<T>* msg=new SimplePortComm<T>(data);
+	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+    }
     sent_something=1;
     turn_off();
 }
@@ -109,6 +105,8 @@ void SimpleOPort<T>::send(const T& data)
 template<class T>
 int SimpleIPort<T>::get(T& data)
 {
+    if(nconnections()==0)
+	return 0;
     turn_on();
     SimplePortComm<T>* comm=mailbox.receive();
     recvd=1;

@@ -21,7 +21,9 @@ Surface::Surface(Representation rep)
 {
 }
 
-Surface::~Surface() {
+Surface::~Surface()
+{
+    destroy_grid();
 }
 
 Surface::Surface(const Surface& copy)
@@ -29,7 +31,8 @@ Surface::Surface(const Surface& copy)
     NOT_FINISHED("Surface::Surface");
 }
 
-void Surface::destroy_grid() {
+void Surface::destroy_grid()
+{
     if (grid) delete grid;
 }
 
