@@ -1,6 +1,5 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
-//#include <Core/Datatypes/SField.h>
 #include <iostream>
 
 using namespace SCIRun;
