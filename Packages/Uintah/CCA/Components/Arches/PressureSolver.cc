@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
@@ -1112,6 +1113,11 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
 		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+
+    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
+      tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel, d_lab->d_stressTensorMatl,
+		    Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
 #ifdef correctorstep
     tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1530,7 +1536,143 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       //      d_source->addPressureSource(pc, patch, delta_t, index,
       //				  cellinfo, &pressureVars);
       // add multimaterial momentum source term
+      // for scalesimilarity model add stress tensor to the source of velocity eqn.
+      if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+	StencilMatrix<CCVariable<double> > stressTensor; //9 point tensor
+	for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
+	  old_dw->getCopy(stressTensor[ii], 
+			  d_lab->d_stressTensorCompLabel, ii, patch,
+			  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	}
 
+	IntVector indexLow = patch->getCellFORTLowIndex();
+	IntVector indexHigh = patch->getCellFORTHighIndex();
+	
+	// set density for the whole domain
+
+
+	      // Store current cell
+	double sue, suw, sun, sus, sut, sub;
+	switch (index) {
+	case Arches::XDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             (stressTensor[0])[currCell];
+		suw = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             (stressTensor[0])[prevXCell];
+		sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[1])[currCell]+
+			      (stressTensor[1])[prevXCell]+
+			      (stressTensor[1])[IntVector(colX,colY+1,colZ)]+
+			      (stressTensor[1])[IntVector(colX-1,colY+1,colZ)]);
+		sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[1])[currCell]+
+			      (stressTensor[1])[prevXCell]+
+			      (stressTensor[1])[IntVector(colX,colY-1,colZ)]+
+			      (stressTensor[1])[IntVector(colX-1,colY-1,colZ)]);
+		sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		             ((stressTensor[2])[currCell]+
+			      (stressTensor[2])[prevXCell]+
+			      (stressTensor[2])[IntVector(colX,colY,colZ+1)]+
+			      (stressTensor[2])[IntVector(colX-1,colY,colZ+1)]);
+		sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		             ((stressTensor[2])[currCell]+
+			      (stressTensor[2])[prevXCell]+
+			      (stressTensor[2])[IntVector(colX,colY,colZ-1)]+
+			      (stressTensor[2])[IntVector(colX-1,colY,colZ-1)]);
+		pressureVars.uVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	case Arches::YDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		  ((stressTensor[3])[currCell]+
+		   (stressTensor[3])[prevYCell]+
+		   (stressTensor[3])[IntVector(colX+1,colY,colZ)]+
+		   (stressTensor[3])[IntVector(colX+1,colY-1,colZ)]);
+		suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		  ((stressTensor[3])[currCell]+
+		   (stressTensor[3])[prevYCell]+
+		   (stressTensor[3])[IntVector(colX-1,colY,colZ)]+
+		   (stressTensor[3])[IntVector(colX-1,colY-1,colZ)]);
+		sun = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		  (stressTensor[4])[currCell];
+		sus = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		  (stressTensor[4])[prevYCell];
+		sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		  ((stressTensor[5])[currCell]+
+		   (stressTensor[5])[prevYCell]+
+		   (stressTensor[5])[IntVector(colX,colY,colZ+1)]+
+		   (stressTensor[5])[IntVector(colX,colY-1,colZ+1)]);
+		sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		  ((stressTensor[5])[currCell]+
+		   (stressTensor[5])[prevYCell]+
+		   (stressTensor[5])[IntVector(colX,colY,colZ-1)]+
+		   (stressTensor[5])[IntVector(colX,colY-1,colZ-1)]);
+		pressureVars.vVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	case Arches::ZDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             ((stressTensor[6])[currCell]+
+			      (stressTensor[6])[prevZCell]+
+			      (stressTensor[6])[IntVector(colX+1,colY,colZ)]+
+			      (stressTensor[6])[IntVector(colX+1,colY,colZ-1)]);
+		suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             ((stressTensor[6])[currCell]+
+			      (stressTensor[6])[prevZCell]+
+			      (stressTensor[6])[IntVector(colX-1,colY,colZ)]+
+			      (stressTensor[6])[IntVector(colX-1,colY,colZ-1)]);
+		sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[7])[currCell]+
+			      (stressTensor[7])[prevZCell]+
+			      (stressTensor[7])[IntVector(colX,colY+1,colZ)]+
+			      (stressTensor[7])[IntVector(colX,colY+1,colZ-1)]);
+		sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[7])[currCell]+
+			      (stressTensor[7])[prevZCell]+
+			      (stressTensor[7])[IntVector(colX,colY-1,colZ)]+
+			      (stressTensor[7])[IntVector(colX,colY-1,colZ-1)]);
+		sut = cellinfo->sew[colX]*cellinfo->sns[colY]*
+		             (stressTensor[8])[currCell];
+		sub = cellinfo->sew[colX]*cellinfo->sns[colY]*
+		             (stressTensor[8])[prevZCell];
+		pressureVars.wVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+	}
+      }
+	
       if (d_MAlab)
 	d_source->computemmMomentumSource(pc, patch, index, cellinfo,
 					  &pressureVars);
@@ -1541,14 +1683,14 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
       //           [u,v,w]VelNonLinSrcPBLM
       
-    d_boundaryCondition->velocityBC(pc, patch, 
+      d_boundaryCondition->velocityBC(pc, patch, 
 				    index,
 				    cellinfo, &pressureVars);
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
 
-    if (d_MAlab)
-      d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &pressureVars);
+      if (d_MAlab)
+	d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &pressureVars);
     
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
