@@ -153,60 +153,36 @@ itcl_class SCIRun_Fields_FieldSlicer {
     }
 
 
-    method scaleEntry2 { win index stop length var1 var2 } {
+    method scaleEntry2 { win start stop length var1 var2 } {
 	frame $win 
 	pack $win -side top -padx 5
 
-	scale $win.s -from $index -to $stop -length $length \
-		-variable $var1 -orient horizontal -showvalue false -command "$this checkScale"
+	scale $win.s -from $start -to $stop -length $length \
+	    -variable $var1 -orient horizontal -showvalue false \
+	    -command "$this updateSliderEntry $var1 $var2"
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.e <Return> "$this updateScale"
+	bind $win.e <Return> "$this manualSliderEntry $start $stop $var1 $var2"
 
 	pack $win.s -side left
 	pack $win.e -side bottom -padx 5
     }
 
-    method checkScale { iTemp } {
-
-	global $this-iindex
-	global $this-jindex
-	global $this-kindex
-
-	global $this-iindex2
-	global $this-jindex2
-	global $this-kindex2
-
-	set $this-iindex2 [set $this-iindex]
-	set $this-jindex2 [set $this-jindex]
-	set $this-kindex2 [set $this-kindex]
+    method updateSliderEntry {var1 var2 someUknownVar} {
+	set $var2 [set $var1]
     }
 
-    method updateScale { } {
+    method manualSliderEntry { start stop var1 var2 } {
 
-	global $this-iindex
-	global $this-jindex
-	global $this-kindex
-
-	global $this-iindex2
-	global $this-kindex2
-	global $this-kindex2
-
-	if { [set $this-iindex2] < 0 } { set $this-iindex2 0 }
-	if { [set $this-jindex2] < 0 } { set $this-jindex2 0 }
-	if { [set $this-kindex2] < 0 } { set $this-kindex2 0 }
+	if { [set $var2] < $start } {
+	    set $var2 $start
+	}
 	
-	if { [set $this-iindex2] > [expr [set $this-idim] - 1] } {
-	    set $this-iindex2 [expr [set $this-idim] - 1] }
-	if { [set $this-jindex2] > [expr [set $this-jdim] - 1] } {
-	    set $this-jindex2 [expr [set $this-jdim] - 1] }
-	if { [set $this-kindex2] > [expr [set $this-kdim] - 1] } {
-	    set $this-kindex2 [expr [set $this-kdim] - 1] }
+	if { [set $var2] > $stop } {
+	    set $var2 $stop }
 	
-	set $this-iindex [set $this-iindex2]
-	set $this-jindex [set $this-jindex2]
-	set $this-kindex [set $this-kindex2]
+	set $var1 [set $var2]
     }
 
     method set_size {dim idim jdim kdim} {
@@ -220,10 +196,15 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	global $this-jindex
 	global $this-kindex
 
+	global $this-iindex2
+	global $this-jindex2
+	global $this-kindex2
+
 	global $this-axis
 
 	global $this-dims
 
+	set $this-dims $dim
 	set $this-idim $idim
 	set $this-jdim $jdim
 	set $this-kdim $kdim
@@ -239,8 +220,6 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	    set $this-kindex [expr [set $this-kdim]-1]
 	}
 
-	set $this-dims $dim
-
 	if { [set $this-axis] > [expr [set $this-dims]-1] } {
 	    set $this-axis [expr [set $this-dims]-1]
 	}
@@ -251,6 +230,13 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	    $w.i.index.s configure -from 0 -to [expr $idim - 1]
 	    $w.j.index.s configure -from 0 -to [expr $jdim - 1]
 	    $w.k.index.s configure -from 0 -to [expr $kdim - 1]
+
+	    bind $w.i.index.e \
+		<Return> "$this manualSliderEntry 0 [expr $idim - 1] $this-iindex $this-iindex2"
+	    bind $w.j.index.e \
+		<Return> "$this manualSliderEntry 0 [expr $jdim - 1] $this-jindex $this-jindex2"
+	    bind $w.k.index.e \
+		<Return> "$this manualSliderEntry 0 [expr $kdim - 1] $this-kindex $this-kindex2"
 	}
 
 	# Update the text values.
