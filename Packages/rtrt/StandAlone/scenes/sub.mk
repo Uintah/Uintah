@@ -68,6 +68,9 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/science-room-full.mo \
 	$(SRCDIR)/stadium.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
+	$(SRCDIR)/wine.mo \
+	$(SRCDIR)/FordField.mo \
+#	$(SRCDIR)/figure1.mo \
 #	$(SRCDIR)/dtiglyph.mo 
 #	$(SRCDIR)/ramsey.mo \
 # 	$(SRCDIR)/miptest.mo \
@@ -128,10 +131,10 @@ $(SRCDIR)/uintahisosurface.mo: $(SRCDIR)/uintahisosurface.o
 #$(SRCDIR)/uintahparticle.o: $(SRCDIR)/uintahparticle.cc
 #	$(CXX) -c $(CCFLAGS) $<
 
-$(SCENES): lib/libPackages_rtrt_Core.so lib/libCore_Persistent.so lib/libCore_Geometry.so lib/libCore_Malloc.so lib/libCore_Thread.so
+$(SCENES): lib/libPackages_rtrt_Core.so lib/libCore_Persistent.so lib/libCore_Geometry.so lib/libCore_Malloc.so lib/libCore_Thread.so lib/libCore_Math.so
 %.mo: %.o
 	rm -f $@
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lCore_Math $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 CLEANPROGS := $(CLEANPROGS) $(SCENES) 
 
