@@ -506,13 +506,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
    }
 }
 
-void CompNeoHookImplicit::addInitialComputesAndRequires(Task*,
-                                                const MPMMaterial*,
-                                                const PatchSet*) const
-{
-
-}
-
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
 						 const MPMMaterial* matl,
 						 const PatchSet* patches,

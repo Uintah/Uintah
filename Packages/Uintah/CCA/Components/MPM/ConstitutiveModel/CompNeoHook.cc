@@ -327,12 +327,6 @@ void CompNeoHook::carryForward(const PatchSubset* patches,
   }
 }
 
-void CompNeoHook::addInitialComputesAndRequires(Task*,
-                                                const MPMMaterial*,
-                                                const PatchSet*) const
-{
-}
-
 void CompNeoHook::addComputesAndRequires(Task* task,
 					  const MPMMaterial* matl,
 					  const PatchSet*) const

@@ -429,13 +429,6 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
 }
 
 	 
-void HypoElastic::addInitialComputesAndRequires(Task*,
-                                                const MPMMaterial*,
-                                                const PatchSet* ) const
-{
-
-}
-
 void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const PatchSet* ) const
