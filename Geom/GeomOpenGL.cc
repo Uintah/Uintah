@@ -16,6 +16,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/Arrows.h>
 #include <Geom/BBoxCache.h>
+#include <Geom/Box.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
@@ -37,6 +38,7 @@
 #include <Geom/Pt.h>
 #include <Geom/RenderMode.h>
 #include <Geom/Sphere.h>
+#include <Geom/Squares.h>
 #include <Geom/Switch.h>
 #include <Geom/Tetra.h>
 #include <Geom/TexSlices.h>
@@ -228,6 +230,55 @@ void DrawInfoOpenGL::set_matl(Material* matl)
         }
     }	
     current_matl=matl;
+}
+
+// this is for transparent rendering stuff...
+
+void DrawInfoOpenGL::init_view(double znear, double zfar, 
+			  Point& eyep, Point& lookat)
+{
+  double model_mat[16]; // this is the modelview matrix
+  
+  glGetDoublev(GL_MODELVIEW_MATRIX,model_mat);
+
+    
+  // this is what you rip the view vector from
+  // just use the "Z" axis, normalized
+  
+  view = Vector(model_mat[0*4+2],model_mat[1*4+2],model_mat[2*4+2]);
+  
+  view.normalize();
+  
+  // 0 is X, 1 is Y, 2 is Z
+
+  dir = 1;
+
+  if (fabs(view.x()) > fabs(view.y())) {
+    if (fabs(view.x()) > fabs(view.z())) { // use x dir
+      axis=0;
+      if (view.x() < 0) {
+	dir=-1;
+      }
+    } else { // use z dir
+      axis=2;
+      if (view.z() < 0) {
+	dir=-1;
+      }
+    }
+  } else if (fabs(view.y()) > fabs(view.z())) { // y greates
+    axis=1;
+    if (view.y() < 0) {
+      dir=-1;
+    }
+  } else { // z is the one
+    axis=2;
+    if (view.z() < 0) {
+      dir=-1;
+    }
+  }
+  
+  multiple_transp = 0;
+
 }
 
 // WARNING - doesn''t respond to lighting correctly yet!
@@ -2534,6 +2585,418 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 		    pts+=3;
 		}
 		glEnd();
+	    }
+		
+	    break;
+	}
+
+    }
+}
+
+void GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+//  return;
+  pre_draw(di,matl,1);
+  di->polycount += size();
+
+  if (cmap) { // use 1D texturing...
+#if 1
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    
+    glEnable(GL_TEXTURE_1D);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glTexImage1D(GL_TEXTURE_1D,0,4,
+		 256,0,GL_RGBA,GL_UNSIGNED_BYTE,
+		 cmap);
+    glColor4f(1,1,1,1);
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glAlphaFunc(GL_GREATER,0.0); // exactly 0 means draw nothing...
+    glEnable(GL_ALPHA_TEST);
+#endif
+  } else {
+    cerr << "No color map!\n";
+    return; // don't draw if no color map...
+  } 
+
+  if (di->currently_lit) {
+    float *pts=&points[0];
+    float *nrmls=&normals[0];
+    float *sclrs=&scalars[0];
+
+    int niter=size();
+    glBegin(GL_TRIANGLES);
+    while(niter--) {
+      glNormal3fv(nrmls);
+      nrmls+=3;
+      glTexCoord1fv(sclrs);
+      sclrs++;
+      glVertex3fv(pts);
+      pts += 3;
+      glVertex3fv(pts);
+      pts+=3;
+      glVertex3fv(pts);
+      pts+=3;      
+    }
+    glEnd();
+  } else { // no normals...
+    float *pts=&points[0];
+    float *sclrs=&scalars[0];
+
+    int niter=size();
+    glBegin(GL_TRIANGLES);
+    while(niter--) {
+      glTexCoord1fv(sclrs);
+      sclrs++;
+      glVertex3fv(pts);
+      pts += 3;
+      glVertex3fv(pts);
+      pts+=3;
+      glVertex3fv(pts);
+      pts+=3;      
+    }
+    glEnd();
+
+  }
+
+  if (cmap) {
+    glDisable(GL_ALPHA_TEST);
+    glDisable(GL_TEXTURE_1D);
+  }
+  
+}
+
+void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!size())
+    return;
+  if (di->multiple_transp) { // multiple transparent objects!!!
+    Array1<float>& check = (di->axis==0)?xc:(di->axis==1)?yc:zc;
+    
+    Array1<int> *tclist;
+    int sort_start=0; // front of list
+    int sort_dir=1;   // positive direction
+    
+    sort_dir = di->dir;
+    Vector view = di->view;
+    
+    if (!xlist.size()) {
+      SortPolys(); // sort the iso-surface...
+    }
+
+    Array1<int> &cur_list = (di->axis==0)?xlist:((di->axis==1)?ylist:zlist);
+
+    if (di->multiple_transp&MULTI_TRANSP_FIRST_PASS) {
+      list_pos=0;
+      if (sort_dir == -1) list_pos = cur_list.size()-1;
+      pre_draw(di,matl,1); // yes, this is lit...
+
+      di->polycount += size();
+    } 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
+    if (!has_color)
+      glColor4f(0,1.0,0.0,alpha);
+    else
+      glColor4f(r,g,b,alpha);
+    
+    glDepthMask(GL_FALSE); // no zbuffering for now...
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#else
+    glDisable(GL_NORMALIZE);
+#endif
+    glBegin(GL_TRIANGLES); // just spit out triangles...
+
+    if (di->currently_lit) {
+
+      if (sort_dir == -1) { // toggle based on direction...
+	while((list_pos >= 0) && (check[cur_list[list_pos]] >= di->axis_val)) {
+	  int nindex = cur_list[list_pos]*3;
+	  int pindex = nindex*3;
+	  
+	  glNormal3fv(&normals[nindex]);
+	  glVertex3fv(&points[pindex]);
+	  glVertex3fv(&points[pindex+3]);
+	  glVertex3fv(&points[pindex+6]);
+	  
+	  list_pos--;
+	}
+      } else {
+	while((list_pos < (cur_list.size())) && 
+	      (check[cur_list[list_pos]] <= di->axis_val)) {
+	  int nindex = cur_list[list_pos]*3;
+	  int pindex = nindex*3;
+	  
+	  glNormal3fv(&normals[nindex]);
+	  glVertex3fv(&points[pindex]);
+	  glVertex3fv(&points[pindex+3]);
+	  glVertex3fv(&points[pindex+6]);
+	  
+	  list_pos++;
+	}
+      }
+    } else { // don't emit the normals...
+      if (sort_dir == -1) { // toggle based on direction...
+	while((list_pos >= 0) && (check[cur_list[list_pos]] >= di->axis_val)) {
+	  int nindex = cur_list[list_pos]*3;
+	  int pindex = nindex*3;
+	  
+	  glVertex3fv(&points[pindex]);
+	  glVertex3fv(&points[pindex+3]);
+	  glVertex3fv(&points[pindex+6]);
+	  
+	  list_pos--;
+	}
+      } else {
+	while((list_pos < (cur_list.size())) && 
+	      (check[cur_list[list_pos]] <= di->axis_val)) {
+	  int nindex = cur_list[list_pos]*3;
+	  int pindex = nindex*3;
+	  
+	  glVertex3fv(&points[pindex]);
+	  glVertex3fv(&points[pindex+3]);
+	  glVertex3fv(&points[pindex+6]);
+	  
+	  list_pos++;
+	}
+      }
+    }
+    glEnd();
+
+    glDepthMask(GL_TRUE); // turn zbuff back on...
+    glDisable(GL_BLEND);
+    glEnable(GL_NORMALIZE);
+  } else {
+    pre_draw(di,matl,1); // yes, this is lit...
+
+    di->polycount += size();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
+    if (!has_color)
+      glColor4f(0,1.0,0.0,alpha);
+    else
+      glColor4f(r,g,b,alpha);
+
+    Array1<int> *tclist;
+    int sort_start=0; // front of list
+    int sort_dir=1;   // positive direction
+
+    sort_dir = di->dir;
+    Vector view = di->view;
+
+    if (!xlist.size()) {
+      SortPolys(); // sort the iso-surface...
+    }
+
+    Array1<int> &cur_list = (di->axis==0)?xlist:((di->axis==1)?ylist:zlist);
+
+    glDepthMask(GL_FALSE); // no zbuffering for now...
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#else
+    glDisable(GL_NORMALIZE);
+#endif
+    glBegin(GL_TRIANGLES); // just spit out triangles...
+
+    if (sort_dir == -1) {
+      sort_start = cur_list.size()-1; // walk backwards...
+    }
+    
+    if (di->currently_lit) {
+      int ndone=0;
+      for(int i=sort_start;ndone < cur_list.size();ndone++,i += sort_dir) {
+	int nindex = cur_list[i]*3;
+	int pindex = nindex*3;
+
+	glNormal3fv(&normals[nindex]);
+	glVertex3fv(&points[pindex]);
+	glVertex3fv(&points[pindex+3]);
+	glVertex3fv(&points[pindex+6]);
+      }  
+    } else {
+      int ndone=0;
+      for(int i=sort_start;ndone < cur_list.size();ndone++,i += sort_dir) {
+	int pindex = cur_list[i]*9;
+
+	glVertex3fv(&points[pindex]);
+	glVertex3fv(&points[pindex+3]);
+	glVertex3fv(&points[pindex+6]);
+      }
+
+    }
+    glEnd();
+
+    glDepthMask(GL_TRUE); // turn zbuff back on...
+    glDisable(GL_BLEND);
+    glEnable(GL_NORMALIZE);
+
+  }
+
+}
+
+
+void GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if ( pts.size() == 0 )
+    return;
+  
+  pre_draw(di,matl,1);
+  
+  di->polycount += pts.size()/2;
+
+  Point *p = &pts[0];
+  glBegin(GL_QUADS);
+  for (int i=0; i<pts.size(); i+=2, p++ ) {
+    glVertex3d( p[0].x(), p[0].y(), p[0].z() );
+    glVertex3d( p[0].x(), p[1].y(), p[0].z() );
+    glVertex3d( p[1].x(), p[1].y(), p[0].z() );
+    glVertex3d( p[1].x(), p[0].y(), p[0].z() );
+  }
+  glEnd();
+}
+
+void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  pre_draw(di,matl,1);
+  
+  di->polycount += 6;
+
+    if (di->currently_lit) {
+#ifdef SCI_NORM_OGL
+	glEnable(GL_NORMALIZE);
+#else
+	glDisable(GL_NORMALIZE);
+#endif
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	case DrawInfoOpenGL::Flat:
+	case DrawInfoOpenGL::Gouraud:
+	    {	
+	      glBegin(GL_QUADS);
+	      //front
+	      //	glColor4f(0.0,1.0,0.0,0.8);
+	      glVertex3d(min.x(),min.y(),max.z());
+	      glColor4f(0.0,1.0,0.0,0.2);
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      //back
+	      //	glColor4f(1.0,0.0,0.0,0.8);
+	      glVertex3d(min.x(),max.y(),min.z());
+	      glColor4f(0.0,1.0,0.0,0.2);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+	      
+	      glColor4f(1.0,0.0,0.0,0.2);
+	      
+	      //left
+	      glVertex3d(min.x(),min.y(),min.z());
+	      //	glColor4f(1.0,0.0,0.0,0.8);
+	      glVertex3d(min.x(),max.y(),min.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(min.x(),min.y(),max.z());
+	      glColor4f(1.0,0.0,0.0,0.2);
+	      
+	      //right
+	      //	glColor4f(0.0,1.0,0.0,0.8);
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glColor4f(1.0,0.0,0.0,0.2);
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      
+	      glColor4f(0.0,0.0,1.0,0.2);
+	      
+	      //top
+	      //	glColor4f(0.0,1.0,0.0,0.8);
+	      glVertex3d(min.x(),max.y(),min.z());
+	      glColor4f(0.0,0.0,1.0,0.2);
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+	      //bottom
+	      //	glColor4f(1.0,0.0,0.0,0.8);
+	      glVertex3d(min.x(),min.y(),max.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glColor4f(0.0,0.0,1.0,0.2);
+	      glVertex3d(min.x(),min.y(),min.z());
+  
+	      glEnd();
+	    }
+		
+	break;
+	}
+	glEnable(GL_NORMALIZE);
+    }
+    else { // lights are off, don't emit the normals
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	case DrawInfoOpenGL::Flat:
+	case DrawInfoOpenGL::Gouraud:
+	    {	
+	      glBegin(GL_QUADS);
+	      //front
+	      glVertex3d(max.x(),min.y(),max.z());
+	      //	glColor4f(0.0,1.0,0.0,0.8);
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glColor4f(0.0,1.0,0.0,0.2);
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(min.x(),min.y(),max.z());
+	      //back
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      //	glColor4f(1.0,0.0,0.0,0.8);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glColor4f(0.0,1.0,0.0,0.2);
+	      glVertex3d(min.x(),max.y(),min.z());
+	      
+	      glColor4f(1.0,0.0,0.0,0.2);
+	      
+	      //left
+	      glVertex3d(min.x(),min.y(),max.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(min.x(),max.y(),min.z());
+	      //	glColor4f(1.0,0.0,0.0,0.8);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glColor4f(1.0,0.0,0.0,0.2);
+	      
+	      //right
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+	      //	glColor4f(0.0,1.0,0.0,0.8);
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glColor4f(1.0,0.0,0.0,0.2);
+	      glVertex3d(max.x(),min.y(),max.z());
+	      
+	      
+	      glColor4f(0.0,0.0,1.0,0.2);
+	      
+	      //top
+	      glVertex3d(min.x(),max.y(),max.z());
+	      //	glColor4f(0.0,1.0,0.0,0.8);
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glColor4f(0.0,0.0,1.0,0.2);
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(min.x(),max.y(),min.z());
+	      //bottom
+	      //	glColor4f(1.0,0.0,0.0,0.8);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glColor4f(0.0,0.0,1.0,0.2);
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      glVertex3d(min.x(),min.y(),max.z());
+  
+	      glEnd();
 	    }
 		
 	    break;

@@ -14,6 +14,7 @@ class GeomBBoxCache: public GeomObj {
     BSphere bsphere;
 public:
     GeomBBoxCache(GeomObj*);
+    GeomBBoxCache(GeomObj*, BBox &);
 
     virtual ~GeomBBoxCache();
 

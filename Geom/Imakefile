@@ -35,7 +35,7 @@ OBJS = Arrows.o  BBoxCache.o Color.o  Cone.o  Container.o  Cylinder.o  \
 	RenderMode.o  Scene.o  Sphere.o Switch.o  \
 	Tetra.o  Torus.o  Transform.o  Tri.o  Triangles.o  TriStrip.o  \
 	Tube.o  TimeGrid.o QMesh.o \
-	VertexPrim.o  View.o  \
+	VertexPrim.o  View.o  Box.o Squares.o \
 	TCLGeom.o  TCLView.o  \
 	$(OPENGLOBJS) $(X11OBJS)
 SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
@@ -46,7 +46,7 @@ SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
 	RenderMode.cc Scene.cc Sphere.cc Switch.cc \
 	Tetra.cc Torus.cc Transform.cc Tri.cc Triangles.cc TriStrip.cc \
 	Tube.cc TimeGrid.cc QMesh.cc \
-	VertexPrim.cc View.cc \
+	VertexPrim.cc View.cc Box.cc Squares.cc \
 	TCLGeom.cc  TCLView.cc \
 	$(OPENGLSRCS) $(X11SRCS)
 LOCALINCLUDES = $(OPENGLINCS) $(XINCLUDE)

@@ -15,6 +15,8 @@
 #define SCI_Geom_GeomOpenGL_h 1
 
 #include <GL/glu.h>
+#include <Geometry/Vector.h>
+#include <Geometry/Point.h>
 class Material;
 class Roe;
 
@@ -24,6 +26,8 @@ const int CLIP_P2 = 4;
 const int CLIP_P3 = 8;
 const int CLIP_P4 = 16;
 const int CLIP_P5 = 32;
+
+const int MULTI_TRANSP_FIRST_PASS=2; // 1 is just if you are doing mpasses...
 
 struct DrawInfoOpenGL {
     DrawInfoOpenGL();
@@ -60,6 +64,19 @@ public:
     int ignore_matl;
 
     GLUquadricObj* qobj;
+
+    Vector view;  // view vector...
+    int axis;     // which axis you are working with...
+    int dir;      // direction +/- -> depends on the view...
+
+    double abs_val; // value wi/respect view
+    double axis_val; // value wi/respect axis -> pt for comparison...
+
+    double axis_delt; // delta wi/respect axis
+
+    int multiple_transp; // if you have multiple transparent objects...
+
+    void init_view(double znear, double zfar, Point& eyep, Point& lookat);
 
     Roe* roe;
     int debug;

@@ -202,6 +202,7 @@ static void _dummy_(Piostream& p1, Array2<double>& p2)
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
+#include <stdio.h>
 
 Persistent* make_GeomGrid()
 {
@@ -237,6 +238,13 @@ void GeomGrid::adjust()
 void GeomGrid::set(int i, int j, double v)
 {
     verts(i, j)=v;
+}
+
+double GeomGrid::get(int i, int j)
+{
+  double v = verts(i, j);
+  //printf("Get: %d %d = %lf\n",i,j, v);
+  return v;
 }
 
 void GeomGrid::set(int i, int j, double v, const Vector& normal)

@@ -34,7 +34,7 @@ class GeomGrid : public GeomObj {
     int nu, nv;
     Vector uu,vv;
 public:
-    enum Format {
+  enum Format {
 	Regular, WithMaterials, WithNormals, WithNormAndMatl,
     };
     Format format;
@@ -151,21 +151,23 @@ class GeomGrid : public GeomObj {
     int have_normals;
     Point corner;
     Vector u, v, w;
-    void adjust();
 
     int image;
 public:
-    GeomGrid(int, int, const Point&, const Vector&, const Vector&, 
+  GeomGrid(int, int, const Point&, const Vector&, const Vector&, 
 	     int image=0);
-    GeomGrid(const GeomGrid&);
-    virtual ~GeomGrid();
+  GeomGrid(const GeomGrid&);
+  virtual ~GeomGrid();
 
-    virtual GeomObj* clone();
+  virtual GeomObj* clone();
+  
+  void set(int, int, double);
+  void set(int, int, double, const MaterialHandle&);
+  void set(int, int, double, const Vector&);
+  void set(int, int, double, const Vector&, const MaterialHandle&);
+  double get(int, int);
 
-    void set(int, int, double);
-    void set(int, int, double, const MaterialHandle&);
-    void set(int, int, double, const Vector&);
-    void set(int, int, double, const Vector&, const MaterialHandle&);
+  void adjust();
 
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);

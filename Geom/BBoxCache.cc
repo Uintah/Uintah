@@ -19,6 +19,12 @@ GeomBBoxCache::GeomBBoxCache(GeomObj* obj)
 
 }
 
+GeomBBoxCache::GeomBBoxCache(GeomObj* obj, BBox &box)
+:child(obj),bbox_cached(1),bsphere_cached(0)
+{
+  bbox.extend( box );
+}
+
 GeomBBoxCache::~GeomBBoxCache()
 {
     if(child)
