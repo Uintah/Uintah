@@ -95,8 +95,7 @@ DEALINGS IN THE SOFTWARE.
       would produce half as many samples along the specified axis.
       After changing the axes to be resampled, the kernel, or filter
       type, must be chosen.  The possible kernel types are Gaussian,
-      which requires setting the gaussian sigma and extent to further
-      refine the filter, box, tent, Catmull-Romm, B-Spline, and Quartic.
+      box, tent, Catmull-Romm, B-Spline, and Quartic.
     </para>
   </section>
 
