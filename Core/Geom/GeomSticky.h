@@ -52,6 +52,7 @@ class SCICORESHARE GeomSticky : public GeomContainer {
 public:
   GeomSticky( GeomHandle obj);
   GeomSticky(const GeomSticky&);
+  virtual ~GeomSticky();
   virtual GeomObj* clone();
 
   virtual void get_bounds(BBox&);
