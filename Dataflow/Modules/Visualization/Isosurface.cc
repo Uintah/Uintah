@@ -511,7 +511,7 @@ Isosurface::execute()
       if( mtd->get_name() == "TriSurfField" ) {
 	vector<TriSurfField<double> *> tfields(fields.size());
 	for (unsigned int i=0; i < fields.size(); i++) {
-	  tfields[i] = dynamic_cast<TriSurfField<double> *>(fields[i].get_rep());
+	  tfields[i] = (TriSurfField<double> *)(fields[i].get_rep());
 	}
 
 	ofield->send(append_fields(tfields));
@@ -520,7 +520,7 @@ Isosurface::execute()
 
 	vector<CurveField<double> *> cfields(fields.size());
 	for (unsigned int i=0; i < fields.size(); i++) {
-	  cfields[i] = dynamic_cast<CurveField<double> *>(fields[i].get_rep());
+	  cfields[i] = (CurveField<double> *)(fields[i].get_rep());
 	}
 
 	ofield->send(append_fields(cfields));
@@ -529,7 +529,7 @@ Isosurface::execute()
 
 	vector<QuadSurfField<double> *> qfields(fields.size());
 	for (unsigned int i=0; i < fields.size(); i++) {
-	  qfields[i] = dynamic_cast<QuadSurfField<double> *>(fields[i].get_rep());
+	  qfields[i] = (QuadSurfField<double> *)(fields[i].get_rep());
 	}
 
 	ofield->send(append_fields(qfields));
