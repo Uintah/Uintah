@@ -41,7 +41,7 @@ extern "C" Module* make_AnimatedStreams( const string& id) {
 
 
 AnimatedStreams::AnimatedStreams(const string& id)
-  : Module("AnimatedStreams", id, Filter),
+  : Module("AnimatedStreams", id, Filter, "Visualization", "Uintah"),
     pause("pause",id, this),
     normals("normals", id, this),
     stepsize("stepsize", id, this),
@@ -51,19 +51,6 @@ AnimatedStreams::AnimatedStreams(const string& id)
     anistreams(0), vf(0),
     mutex("Animated Streams")
 {
-  // Create the input ports
-  infield = scinew FieldIPort( this, "VectorField",
-				     FieldIPort::Atomic);
-  add_iport(infield);
-  incolormap=scinew  
-    ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
-    
-  add_iport(incolormap);
-					
-  // Create the output port
-  ogeom = scinew GeometryOPort(this, "Geometry", 
-			       GeometryIPort::Atomic);
-  add_oport(ogeom);
 
 }
 
@@ -80,6 +67,12 @@ void AnimatedStreams::widget_moved(int)
 
 void AnimatedStreams::execute(void)
 {
+  // Create the input ports
+  infield = (FieldIPort *) get_iport("Vector Field");
+  incolormap= (ColorMapIPort *) get_iport("ColorMap");
+  // Create the output port
+  ogeom = (GeometryOPort *) get_oport("Geometry");
+
   FieldHandle field;
   if (!infield->get(field)) {
     return;

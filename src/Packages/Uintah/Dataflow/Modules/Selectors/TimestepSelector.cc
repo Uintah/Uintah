@@ -25,7 +25,7 @@ extern "C" Module* make_TimestepSelector( const string& id ) {
 
 //--------------------------------------------------------------- 
 TimestepSelector::TimestepSelector(const string& id) 
-  : Module("TimestepSelector", id, Filter),
+  : Module("TimestepSelector", id, Filter, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this), 
     time("time", id, this),
     timeval("timeval", id, this),
@@ -33,16 +33,6 @@ TimestepSelector::TimestepSelector(const string& id)
     anisleep("anisleep", id, this),
     archiveH(0)
 { 
-  //////////// Initialization code goes here
-  // Create Ports
-  in=new ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  out=new ArchiveOPort(this, "Archive Timestep",
-			       ArchiveIPort::Atomic);
-  // Add them to the Module
-  add_iport(in);
-  add_oport(out);
-
 } 
 
 //------------------------------------------------------------ 
@@ -50,6 +40,8 @@ TimestepSelector::~TimestepSelector(){}
 void TimestepSelector::execute() 
 { 
   tcl_status.set("Calling TimestepSelector!"); 
+  in = (ArchiveIPort *) get_iport("Data Archive");
+  out = (ArchiveOPort *) get_oport("Archive Timestep");
   
   ArchiveHandle handle;
    if(!in->get(handle)){

@@ -4,8 +4,8 @@
 #include "TensorOperatorFunctors.h"
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
-#include <Uintah/Core/Datatypes/TensorParticlesPort.h>
-#include <Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <string>
 

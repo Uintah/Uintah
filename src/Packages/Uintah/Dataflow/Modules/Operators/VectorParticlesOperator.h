@@ -4,8 +4,8 @@
 #include "VectorOperatorFunctors.h"
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
-#include <Uintah/Core/Datatypes/VectorParticlesPort.h>
-#include <Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <string>
 

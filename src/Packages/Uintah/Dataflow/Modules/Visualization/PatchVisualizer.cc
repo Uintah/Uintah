@@ -31,7 +31,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -107,7 +107,7 @@ extern "C" Module* make_PatchVisualizer(const string& id) {
 }
 
 PatchVisualizer::PatchVisualizer(const string& id)
-: Module("PatchVisualizer", id, Filter),
+: Module("PatchVisualizer", id, Filter, "Visualization", "Uintah"),
   level0_grid_color("level0_grid_color",id, this),
   level1_grid_color("level1_grid_color",id, this),
   level2_grid_color("level2_grid_color",id, this),
@@ -125,19 +125,6 @@ PatchVisualizer::PatchVisualizer(const string& id)
   old_generation(-1), old_timestep(0), numLevels(0),
   grid(NULL)
 {
-
-  // Create the input port
-  in=scinew ArchiveIPort(this, "Data Archive", ArchiveIPort::Atomic);
-  add_iport(in);
-
-  // color map
-  inColorMap = scinew ColorMapIPort( this, "ColorMap",
-				     ColorMapIPort::Atomic);
-  add_iport( inColorMap);
-
-  // Create the output port
-  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(ogeom);
 
   // seed the random number generator 
   time_t t;
@@ -285,6 +272,13 @@ MaterialHandle PatchVisualizer::getColor(string color, float value) {
 
 void PatchVisualizer::execute()
 {
+
+  // Create the input port
+  in= (ArchiveIPort *) get_iport("Data Archive");
+  // color map
+  inColorMap =  (ColorMapIPort *) get_iport("ColorMap");
+  // Create the output port
+  ogeom= (GeometryOPort *) get_oport("Geometry");
 
   ogeom->delAll();
 

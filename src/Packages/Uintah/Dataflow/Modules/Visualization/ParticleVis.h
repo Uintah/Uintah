@@ -1,9 +1,9 @@
 #ifndef PARTICLEVIS_H
 #define PARTICLEVIS_H
 
-#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/GuiInterface/GuiVar.h>

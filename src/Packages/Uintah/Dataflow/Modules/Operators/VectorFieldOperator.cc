@@ -19,20 +19,16 @@ extern "C" Module* make_VectorFieldOperator( const string& id ) {
 
 
 VectorFieldOperator::VectorFieldOperator(const string& id)
-  : Module("VectorFieldOperator",id,Source),
+  : Module("VectorFieldOperator",id,Source, "Operators", "Uintah"),
     guiOperation("operation", id, this)
 {
-  // Create Ports
-  in = scinew FieldIPort(this, "VectorField");
-  sfout = scinew FieldOPort(this, "ScalarField");
-
-  // Add ports to the Module
-  add_iport(in);
-  add_oport(sfout);
 }
   
 void VectorFieldOperator::execute(void) {
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
+  in = (FieldIPort *) get_iport("Vector Field");
+  sfout =  (FieldOPort *) get_oport("Scalar Field");
+
   FieldHandle hTF;
   
   if(!in->get(hTF)){

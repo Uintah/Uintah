@@ -33,11 +33,11 @@ LOG
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -65,7 +65,7 @@ extern "C" Module* make_ParticleFieldExtractor( const string& id ) {
 
 //--------------------------------------------------------------- 
 ParticleFieldExtractor::ParticleFieldExtractor(const string& id) 
-  : Module("ParticleFieldExtractor", id, Filter),
+  : Module("ParticleFieldExtractor", id, Filter, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this),
     psVar("psVar", id, this),
     pvVar("pvVar", id, this),
@@ -74,23 +74,6 @@ ParticleFieldExtractor::ParticleFieldExtractor(const string& id)
     positionName(""), particleIDs(""), archiveH(0),
     num_materials(0)
 { 
-  //////////// Initialization code goes here
-  // Create Ports
-  in=scinew ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  psout=scinew ScalarParticlesOPort(this, "ScalarParticles",
-				 ScalarParticlesIPort::Atomic);
-  pvout=scinew VectorParticlesOPort(this, "VectorParticles",
-				 VectorParticlesIPort::Atomic);
-  ptout=scinew TensorParticlesOPort(this, "TensorParticles",
-				 TensorParticlesIPort::Atomic);
-
-  // Add them to the Module
-  add_iport(in);
-  add_oport(psout);
-  add_oport(pvout);
-  add_oport(ptout);
-  //add_oport(pseout);
 
 } 
 
@@ -327,7 +310,11 @@ void ParticleFieldExtractor::graph(string idx, string var)
 void ParticleFieldExtractor::execute() 
 { 
   tcl_status.set("Calling ParticleFieldExtractor!"); 
-  
+
+  in = (ArchiveIPort *) get_iport("Data Archive");
+  psout = (ScalarParticlesOPort *) get_oport("Scalar Particles");
+  pvout = (VectorParticlesOPort *) get_oport("Vector Particles");
+  ptout = (TensorParticlesOPort *) get_oport("Tensor Particles");
   ArchiveHandle handle;
    if(!in->get(handle)){
      std::cerr<<"Didn't get a handle\n";
@@ -377,6 +364,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 				  VectorParticles*& vp,
 				  TensorParticles*& tp)
 {
+
   
   GridP grid = archive.queryGrid( time );
   LevelP level = grid->getLevel( 0 );
@@ -384,7 +372,6 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   PSet* pset = new PSet();
   pset->SetCallbackClass( this );
   
-
 
   bool have_sp = false;
   bool have_vp = false;
@@ -419,22 +406,37 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     //int numMatls = 29;
     for(int matl = 0; matl < num_materials; matl++) {
       string result;
+      ParticleSubset* source_subset;
+      bool have_subset = false;
+
       eval(id + " isOn p" + to_string(matl), result);
       if ( result == "0")
 	continue;
       if (pvVar.get() != ""){
 	have_vp = true;
 	archive.query(pvv, pvVar.get(), matl, *r, time);
+	if( !have_subset){
+	  source_subset = pvv.getParticleSubset();
+	  have_subset = true;
+	}
       }
       if( psVar.get() != ""){
 	have_sp = true;
 	switch (scalar_type) {
 	case TypeDescription::double_type:
 	  archive.query(pvs, psVar.get(), matl, *r, time);
+	  if( !have_subset){
+	    source_subset = pvs.getParticleSubset();
+	    have_subset = true;
+	  }
 	  break;
 	case TypeDescription::int_type:
 	  //cerr << "Getting data for ParticleVariable<int>\n";
 	  archive.query(pvint, psVar.get(), matl, *r, time);
+	  if( !have_subset){
+	    source_subset = pvi.getParticleSubset();
+	    have_subset = true;
+	  }
 	  //cerr << "Got data\n";
 	  break;
 	}
@@ -442,6 +444,10 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
       if (ptVar.get() != ""){
 	have_tp = true;
 	archive.query(pvt, ptVar.get(), matl, *r, time);
+	if( !have_subset){
+	  source_subset = pvt.getParticleSubset();
+	  have_subset = true;
+	}
       }
       if(positionName != "")
 	archive.query(pvp, positionName, matl, *r, time);
@@ -452,7 +458,6 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	archive.query(pvi, particleIDs, matl, *r, time);
       }
 
-      ParticleSubset* source_subset;
       switch (scalar_type) {
       case TypeDescription::double_type:
 	source_subset = pvs.getParticleSubset();
@@ -462,6 +467,8 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	break;
       }
       
+      if( !have_subset )
+	return;
       particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
       vectors.resync();
       positions.resync();

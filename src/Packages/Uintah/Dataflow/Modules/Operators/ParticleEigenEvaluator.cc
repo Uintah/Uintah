@@ -13,23 +13,20 @@ extern "C" Module* make_ParticleEigenEvaluator( const string& id ) {
 }
 
 ParticleEigenEvaluator::ParticleEigenEvaluator(const string& id)
-  : Module("ParticleEigenEvaluator",id,Source),
+  : Module("ParticleEigenEvaluator",id,Source, "Operators", "Uintah"),
     guiEigenSelect("eigenSelect", id, this)
     //    gui_status("gui_status", id, this),
 {
-  // Create Ports
-  in = scinew TensorParticlesIPort(this, "TensorParticles");
-  spout = scinew ScalarParticlesOPort(this, "EigenValueParticles");
-  vpout = scinew VectorParticlesOPort(this, "EigenVectorParticles");
-
-  // Add ports to the Module
-  add_iport(in);
-  add_oport(spout);
-  add_oport(vpout);
 }
   
 void ParticleEigenEvaluator::execute(void) {
   //  gui_status.set("Calling EigenEvaluator!"); 
+
+  in = (TensorParticlesIPort *) get_iport("Tensor Particles");
+  spout = (ScalarParticlesOPort *) get_oport("Eigenvalue Particles");
+  vpout = (VectorParticlesOPort *) get_oport("Eigenvector Particles");
+
+
   TensorParticlesHandle hTF;
   
   if(!in->get(hTF)){

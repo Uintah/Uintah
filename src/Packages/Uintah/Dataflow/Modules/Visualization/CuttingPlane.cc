@@ -161,7 +161,7 @@ extern "C" Module* make_CuttingPlane(const string& id) {
 static string widget_name("CuttingPlane Widget");
 
 CuttingPlane::CuttingPlane(const string& id) :
-  Module("CuttingPlane", id, Filter),
+  Module("CuttingPlane", id, Filter, "Visualization", "Uintah"),
   widget_lock("Cutting plane widget lock"),
   cutting_plane_type("cutting_plane_type",id, this),
   num_contours("num_contours", id, this), 
@@ -172,20 +172,6 @@ CuttingPlane::CuttingPlane(const string& id) :
   fullRezGUI("fullRezGUI", id, this),
   exhaustiveGUI("exhaustiveGUI", id, this)
 {
-    // Create the input ports
-    // Need a scalar field and a ColorMap
-    infield = scinew FieldIPort( this, "ScalarField",
-					FieldIPort::Atomic);
-    add_iport( infield);
-    inColorMap = scinew ColorMapIPort( this, "ColorMap",
-				     ColorMapIPort::Atomic);
-    add_iport( inColorMap);
-					
-    // Create the output port
-    ogeom = scinew GeometryOPort(this, "Geometry", 
-			      GeometryIPort::Atomic);
-    add_oport(ogeom);
-    init = 1;
     float INIT(.1);
 
     widget = scinew ScaledFrameWidget(this, &widget_lock, INIT);
@@ -215,6 +201,14 @@ void CuttingPlane::execute()
     int old_grid_id = grid_id;
     static int find = -1;
     int cmapmin, cmapmax;
+
+    // Create the input ports
+    // Need a scalar field and a ColorMap
+    infield = (FieldIPort *) get_iport("Scalar Field");
+    inColorMap = (ColorMapIPort *) get_iport("ColorMap");
+    // Create the output port
+    ogeom = (GeometryOPort *) get_oport("Geometry");
+    init = 1;
 
     // get the scalar field and ColorMap...if you can
     FieldHandle field;
