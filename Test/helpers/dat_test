@@ -15,6 +15,13 @@ TMPDIR=$TEST_ROOT/$TEST
 echo "Testing $TEST"
 
 if [ -d "$TEST_UDADIR" ]; then
+  if [ ! -d "$COMPARE_ROOT" ]; then
+    echo "Creating $COMPARE_ROOT directory"
+    cd $COMPARE_ROOT/..
+    COMPARE_DIR=`echo "$COMPARE_ROOT" | sed "s\.*/\\"`
+    mkdir $COMPARE_DIR
+    cvs add $COMPARE_DIR
+  fi
   if [ ! -d "$COMPARE_ROOT/$TEST" ]; then
     echo "Creating $COMPARE_ROOT/$TEST directory"
     cd $COMPARE_ROOT
