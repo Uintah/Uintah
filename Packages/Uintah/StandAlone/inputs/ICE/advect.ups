@@ -121,13 +121,9 @@
            </Box>
            <spacing>            [0.5,0.5,0.5]           </spacing>
        </Level>
-    </Grid>
-   
+    </Grid>    
     <!--____________________________________________________________________-->
-    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
-    <!--   filebase                = output file basenme                    -->
-    <!--   outputInterval          = Time between filedumps                 -->
-    <!--   outputTimestepInterval  = number of cycles between dumps         -->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect.uda</filebase>
