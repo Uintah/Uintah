@@ -11,7 +11,8 @@ OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  ColumnMatrix.o  \
 	SoundPort.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriSurface.o  \
 	VectorField.o  \
-	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o
+	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
+	ssmult.o vnorm.o
 SRCS = BasicSurfaces.cc Colormap.cc ColormapPort.cc ColumnMatrix.cc \
 	ColumnMatrixPort.cc ContourSet.cc ContourSetPort.cc \
 	Datatype.cc DenseMatrix.cc \
@@ -22,12 +23,13 @@ SRCS = BasicSurfaces.cc Colormap.cc ColormapPort.cc ColumnMatrix.cc \
 	SoundPort.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriSurface.cc \
 	VectorField.cc  \
-	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc
+	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
+	ssmult.c vnorm.c
 
 LIBNAME = Datatypes
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
-	-lClasslib -lMultitask -lMalloc -lm
+	-lClasslib -lMultitask -lMalloc -lm -lcomplib.sgimath
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))

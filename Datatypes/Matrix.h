@@ -40,10 +40,11 @@ public:
     virtual void zero()=0;
     virtual int nrows()=0;
     virtual int ncols()=0;
-    virtual int mult(ColumnMatrix& product, ColumnMatrix& multiplier,
-		     int b=-1, int e=-1)=0;
-    virtual int mult_transpose(ColumnMatrix& product, ColumnMatrix& multiplier,
-			       int b=-1, int e=-1)=0;
+    virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
+		     int& flops, int& memrefs, int beg=-1, int end=-1)=0;
+    virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+				int& flops, int& memrefs,
+				int beg=-1, int end=-1)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

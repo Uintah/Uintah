@@ -162,8 +162,8 @@ void DenseMatrix::solve(ColumnMatrix& sol)
     }
 }
 
-int DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
-		       int beg, int end)
+void DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
+		       int& flops, int& memrefs, int beg, int end)
 {
     // Compute A*x=b
     ASSERT(nr == nc);
@@ -179,11 +179,12 @@ int DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
 	}
 	b[i]=sum;
     }
-    return (end-beg)*nc;
+    flops+=(end-beg)*nc*2;
+    memrefs+=(end-beg)*nc*2*sizeof(double)+(end-beg)*sizeof(double);
 }
     
-int DenseMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
-				 int beg, int end)
+void DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+				 int& flops, int& memrefs, int beg, int end)
 {
     // Compute At*x=b
     ASSERT(nr == nc);
@@ -198,7 +199,8 @@ int DenseMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
 	}
 	b[i]=sum;
     }
-    return (end-beg)*nr;
+    flops+=(end-beg)*nr*2;
+    memrefs+=(end-beg)*nr*2*sizeof(double)+(end-beg)*sizeof(double);
 }
 
 void DenseMatrix::print()

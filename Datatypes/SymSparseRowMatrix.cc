@@ -107,8 +107,11 @@ void SymSparseRowMatrix::solve(ColumnMatrix&)
     EXCEPTION(General("SymSparseRowMatrix can't do a direct solve!"));
 }
 
-int SymSparseRowMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
-			      int beg, int end)
+extern "C" void ssmult(int beg, int end, int* rows, int* columns,
+		       double* a, double* xp, double* bp);
+
+void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
+			      int& flops, int& memrefs, int beg, int end)
 {
     // Compute A*x=b
     ASSERT(x.nrows() == nnrows);
@@ -117,20 +120,16 @@ int SymSparseRowMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
     if(end==-1)end=nnrows;
     double* xp=&x[0];
     double* bp=&b[0];
-    for(int i=beg;i<end;i++){
-	double sum=0;
-	int row_idx=rows[i];
-	int next_idx=rows[i+1];
-	for(int j=row_idx;j<next_idx;j++){
-	    sum+=a[j]*xp[columns[j]];
-	}
-	bp[i]=sum;
-   
-    }
-    return 2*(rows[end]-rows[beg]); // FLOPS
+    ssmult(beg, end, rows, columns, a, xp, bp);
+
+    int nnz=2*(rows[end]-rows[beg]);
+    flops+=2*(rows[end]-rows[beg]);
+    int nr=end-beg;
+    memrefs+=2*sizeof(int)*nr+nnz*sizeof(int)+2*nnz*sizeof(double)+nr*sizeof(double);
 }
 
-int SymSparseRowMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
+void SymSparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+					int& flops, int& memrefs,
 					int beg, int end)
 {
     // Compute At*x=b
@@ -150,7 +149,10 @@ int SymSparseRowMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
 	}
 	bp[i]=sum;
     }
-    return 2*(rows[end]-rows[beg]); // FLOPS
+    int nnz=2*(rows[end]-rows[beg]);
+    flops+=2*(rows[end]-rows[beg]);
+    int nr=end-beg;
+    memrefs+=2*sizeof(int)*nr+nnz*sizeof(int)+2*nnz*sizeof(double)+nr*sizeof(double);
 }
 
 void SymSparseRowMatrix::print()

@@ -30,12 +30,29 @@ public:
     ColumnMatrix(const ColumnMatrix&);
     virtual ColumnMatrix* clone() const;
     ColumnMatrix& operator=(const ColumnMatrix&);
-    int nrows();
-    inline double& operator[](int);
+    int nrows() const;
+    inline double& operator[](int) const;
+
     double vector_norm();
+    double vector_norm(int& flops, int& memrefs);
+
+    friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+    friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+		     int& flops, int& memrefs);
+    friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+    friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+		    int& flops, int& memrefs);
+    friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
+    friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+		      int& flops, int& memrefs);
+    friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+			   const ColumnMatrix&);
+    friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+			   const ColumnMatrix&, int& flops, int& memrefs);
 
     void zero();
     void print(ostream&);
+
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
@@ -43,7 +60,7 @@ public:
 
 #include <Classlib/Assert.h>
 
-inline double& ColumnMatrix::operator[](int i)
+inline double& ColumnMatrix::operator[](int i) const
 {
     return data[i];
 }

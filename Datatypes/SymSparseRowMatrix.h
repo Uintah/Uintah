@@ -38,10 +38,10 @@ public:
     virtual int ncols();
     virtual void solve(ColumnMatrix&);
     virtual void zero();
-    virtual int mult(ColumnMatrix& product, ColumnMatrix& multiplier,
-		     int b=-1, int e=-1);
-    virtual int mult_transpose(ColumnMatrix& product, ColumnMatrix& multiplier,
-			       int b=-1, int e=-1);
+    virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
+		      int& flops, int& memrefs, int beg=-1, int end=-1);
+    virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+				int& flops, int& memrefs, int beg=-1, int end=-1);
     virtual void print();
     MatrixRow operator[](int r);
 
