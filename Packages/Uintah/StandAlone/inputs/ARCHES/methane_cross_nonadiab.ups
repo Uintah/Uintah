@@ -33,10 +33,10 @@
 	<save label = "viscosityCTS"/>
 	<save label = "tempIN"/>
         <save label = "co2IN"/>
-        <save label = "enthalpyRXN"/>
         <save label = "enthalpySP"/>
         <save label = "absorpIN"/>
         <save label = "sootFVIN"/>
+        <save label = "radiationSRCIN"/>
 	<save label = "cellType"/>
 	<checkpoint cycle = "2" interval = "0.2"/>
    </DataArchiver>
