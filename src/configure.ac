@@ -3273,13 +3273,13 @@ if test "$sci_required_insight" = "yes"; then
 
     INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
 //'`"
-    if test "$INSIGHT_VERSION_MINOR" = "9" || test "$INSIGHT_VERSION_MINOR" = "10"; then
+    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | sed 's/
+//'`"
+    if test "$INSIGHT_VERSION_MINOR" = "9" || test "$INSIGHT_VERSION_MAJOR" = "2"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
-    fi
-    if test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
+    elif test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
-    fi
-    if test "$INSIGHT_VERSION_MINOR" = "4"; then
+    elif test "$INSIGHT_VERSION_MINOR" = "4"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
     fi
 
