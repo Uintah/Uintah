@@ -14,12 +14,12 @@
 #ifndef SCI_project_MessageTypes_h
 #define SCI_project_MessageTypes_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 
 namespace PSECore {
 namespace Comm {
 
-class SCICORESHARE MessageTypes {
+class PSECORESHARE MessageTypes {
     MessageTypes();
 public:
     void dummy(); // Keeps g++ happy...
@@ -70,6 +70,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:56:07  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:05  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -3,6 +3,8 @@
 #ifndef PSE_Dataflow_PackageDB_h
 #define PSE_Dataflow_PackageDB_h 1
 
+#include <PSECore/share/share.h>
+
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
@@ -13,7 +15,7 @@ namespace PSECore {
     using SCICore::Containers::clString;
     using SCICore::Containers::Array1;
 
-    class PackageDB {
+    class PSECORESHARE PackageDB {
       public:
         PackageDB(void);
         ~PackageDB(void);
