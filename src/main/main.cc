@@ -119,11 +119,11 @@ parse_args( int argc, char *argv[] )
     else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
 	      ( arg == "-r" ) ||  ( arg == "--r" ) )
     {
-      setenv("SCI_REGRESSION_TESTING", "TRUE", 1);
+      putenv("SCI_REGRESSION_TESTING=1");
     }
     else if ( arg == "--nosplash" )
     {
-      setenv("SCI_NOSPLASH", "TRUE", 1);
+      putenv("SCI_NOSPLASH=1");
     }
     else
     {
