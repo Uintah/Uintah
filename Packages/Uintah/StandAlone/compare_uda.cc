@@ -474,7 +474,7 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
 		   dynamic_cast<ParticleVariable<Matrix3>*>(pvb2), matl,
 		   time1, time2, abs_tolerance, rel_tolerance);
   default:
-    cerr << "ParticleVariable of unsupported type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
+    cerr << "MaterialParticleVarData::gather: ParticleVariable of unsupported type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
     Thread::exitAll(-1);
   }
   return 0;
@@ -608,7 +608,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	    pvb = scinew ParticleVariable<Matrix3>();
 	    break;
 	  default:
-	    cerr << "ParticleVariable of unsupported type: " 
+	    cerr << "addParticleData: ParticleVariable of unsupported type: " 
 		 << subtype->getName() << '\n';
 	    Thread::exitAll(-1);
 	  }
@@ -771,7 +771,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
       return scinew
 	SpecificFieldComparator<NCVariable<Matrix3>, NodeIterator>(iter);
     default:
-      cerr << "NC Variable of unsupported type: " << subtype->getName() << '\n';
+      cerr << "FieldComparator::makeFieldComparator: NC Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
     }
   }
@@ -794,7 +794,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
       return scinew
 	SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
     default:
-      cerr << "CC Variable of unsupported type: " << subtype->getName() << '\n';
+      cerr << "FieldComparator::makeFieldComparator: CC Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
     }
   }
@@ -817,7 +817,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
       return scinew
 	SpecificFieldComparator<SFCXVariable<Matrix3>, CellIterator>(iter);
     default:
-      cerr << "SFCX Variable of unsupported type: " << subtype->getName() << '\n';
+      cerr << "FieldComparator::makeFieldComparator: SFCX Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
     }
   }
@@ -840,7 +840,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
       return scinew
 	SpecificFieldComparator<SFCYVariable<Matrix3>, CellIterator>(iter);
     default:
-      cerr << "SFCY Variable of unsupported type: " << subtype->getName() << '\n';
+      cerr << "FieldComparator::makeFieldComparator: SFCY Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
     }
   }
@@ -863,12 +863,12 @@ makeFieldComparator(const Uintah::TypeDescription* td,
       return scinew
 	SpecificFieldComparator<SFCZVariable<Matrix3>, CellIterator>(iter);
     default:
-      cerr << "SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
+      cerr << "FieldComparator::makeFieldComparator: SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
     }
   }
   default:
-    cerr << "Variable of unsupported type: " << td->getName() << '\n';
+    cerr << "FieldComparator::makeFieldComparator: Variable of unsupported type: " << td->getName() << '\n';
     Thread::exitAll(-1);
   }
   return 0;
@@ -1266,6 +1266,10 @@ main(int argc, char** argv)
 		    compareParticles<double>(da1, da2, var, matl, patch, patch2,
 					     time1, time2, abs_tolerance, rel_tolerance);
 		    break;
+		  case Uintah::TypeDescription::int_type:
+		    compareParticles<int>(da1, da2, var, matl, patch, patch2,
+                                          time1, time2, abs_tolerance, rel_tolerance);
+		    break;
 		  case Uintah::TypeDescription::Point:
 		    compareParticles<Point>(da1, da2, var, matl, patch, patch2,
 					    time1, time2, abs_tolerance, rel_tolerance);
@@ -1279,7 +1283,7 @@ main(int argc, char** argv)
 					      time1, time2, abs_tolerance, rel_tolerance);
 		    break;
 		  default:
-		    cerr << "ParticleVariable of unsupported type: " << subtype->getType() << '\n';
+		    cerr << "main: ParticleVariable of unsupported type: " << subtype->getName() << '\n';
 		    Thread::exitAll(-1);
 		  }
 		}
