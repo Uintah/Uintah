@@ -59,6 +59,7 @@ protected:
 public:
     virtual ~Piostream();
     virtual clString peek_class()=0;
+    int begin_class(const char* name, int current_version);
     virtual int begin_class(const clString& name, int current_version)=0;
     virtual void end_class()=0;
 

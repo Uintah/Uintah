@@ -28,7 +28,7 @@ enum RecurseType { UnInit, RecurseInitial, RecurseNormal, RecurseMax };
 
 typedef unsigned char uchar;
 struct PSECORESHARE StackItem {
-   inline StackItem() : var(NULL), rtype(UnInit), iter(0) {}
+   inline StackItem() : var(0), rtype(UnInit), iter(0) {}
    inline StackItem( BaseVariable* v ) : var(v), rtype(RecurseInitial), iter(0) {}
    inline StackItem( BaseVariable* v, const uchar rt, const uchar i ) : var(v), rtype(rt), iter(i) {}
    inline StackItem( const StackItem& i ) : var(i.var), rtype(i.rtype), iter(i.iter) {}
@@ -37,7 +37,7 @@ struct PSECORESHARE StackItem {
    StackItem& operator=( const StackItem& i ) { var=i.var; rtype=i.rtype; iter=i.iter; return *this; }
    int operator==( const StackItem& i ) { return (var==i.var)&&(rtype==i.rtype)&&(iter==i.iter); }
 
-   void print( ostream& os=cout ) { os<<"StackItem:  "<<var->GetName()<<","<<rtype<<","<<iter<<endl; }
+   void print( ostream& os );
    
    BaseVariable* var;
    uchar rtype;
@@ -81,6 +81,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:38  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/26 23:57:02  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

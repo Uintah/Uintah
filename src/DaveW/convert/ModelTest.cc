@@ -24,11 +24,6 @@ CC -Wl,-woff -Wl,85 -o ModelTest -n32 -mips4 -r10000 ModelTest.o -L../lib -L/hom
 #include "TFace.h"
 #include "TRegion.h"
 
-#include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
-#include <stdlib.h>
-
 main(int argc, char **argv) {
     double px[8], py[8], pz[8];
     px[0]=0; py[0]=0; pz[0]=0;

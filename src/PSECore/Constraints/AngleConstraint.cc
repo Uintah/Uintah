@@ -15,8 +15,10 @@
 #include <PSECore/Constraints/AngleConstraint.h>
 #include <SCICore/Geometry/Plane.h>
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/Debug.h>
 #include <SCICore/Util/NotFinished.h>
+#include <math.h>
 
 namespace PSECore {
 namespace Constraints {
@@ -82,7 +84,7 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 
    if (ac_debug) {
       ChooseChange(index, scheme);
-      print();
+      print(cout);
    }
    
    switch (ChooseChange(index, scheme)) {
@@ -126,8 +128,9 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	    v2 = Cross(v1, v2.normal()); // Find orthogonal v2.
 	    
 	    Real x(Dot(v1, v)), y(Dot(v2, v));
-	    
-	    if ((fabs(x) > Epsilon) || (fabs(y) > Epsilon)) {
+
+	    using namespace SCICore::Math;
+	    if ((Abs(x) > Epsilon) || (Abs(y) > Epsilon)) {
 	       var = vars[4];
 	       c = atan2(y,x);
 	       return 1;
@@ -147,6 +150,9 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:37  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/19 23:18:03  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -237,6 +237,11 @@ Piostream* auto_istream(ifstream* inp, const char *name)
     }
 }
 
+int Piostream::begin_class(const char* classname, int current_version)
+{
+    return begin_class(clString(classname), current_version);
+}
+
 } // End namespace PersistentSpace
 } // End namespace SCICore
 

@@ -12,7 +12,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
 #include <SCIRun/Datatypes/Image/ImagePort.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -81,6 +80,9 @@ void IFFTImage::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:59  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/31 08:55:32  sparker
 // Bring SCIRun modules up to speed
 //

@@ -21,7 +21,6 @@
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -96,6 +95,9 @@ void GenFieldEdges::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:36  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/08/25 03:48:06  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

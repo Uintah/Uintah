@@ -12,10 +12,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include"Complex.h"
-
-// Moved to Complex.h for KCC...
-//#include<iostream.h>
+#include "Complex.h"
+#include <iostream.h>
 
 #ifndef M_PI
 #define M_PI 3.1415926535898
@@ -145,6 +143,9 @@ istream &operator>> (istream &input, Complex &C){
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:53  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:39:32  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

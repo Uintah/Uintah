@@ -15,7 +15,6 @@
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -689,6 +688,9 @@ return;
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:26  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/08/24 06:23:04  dmw
 // Added in everything for the DaveW branch
 //

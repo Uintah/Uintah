@@ -21,7 +21,6 @@
 #include <PSECommon/Datatypes/SurfacePort.h>
 #include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
 #include <SCICore/Malloc/Allocator.h>
 
 #include <GHAbstraction.h>
@@ -163,6 +162,9 @@ void SimpSurface::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:35  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/25 03:48:00  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

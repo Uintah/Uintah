@@ -10,10 +10,7 @@
 
 #include <DaveW/Datatypes/General/TensorFieldBase.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/NotFinished.h>
-
-#include <iostream.h>
 
 namespace DaveW {
 namespace Datatypes {
@@ -97,6 +94,9 @@ void TensorFieldBase::set_bounds(const Point& min, const Point& max) {
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:18  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/01 05:27:37  dmw
 // more DaveW datatypes...
 //

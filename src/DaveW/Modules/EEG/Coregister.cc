@@ -40,7 +40,6 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 
@@ -1331,6 +1330,9 @@ void Coregister::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:22  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/29 00:46:36  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

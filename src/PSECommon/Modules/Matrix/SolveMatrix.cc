@@ -15,6 +15,7 @@
 
 #include <sci_config.h>
 #include <stdio.h>
+#include <math.h>
 
 #ifdef SCI_SPARSELIB
 #include "comprow_double.h"        //compressed row matrix storage
@@ -1455,6 +1456,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.8  1999/09/08 02:26:34  sparker
+// Various #include cleanups
+//
 // Revision 1.7  1999/08/29 00:46:40  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

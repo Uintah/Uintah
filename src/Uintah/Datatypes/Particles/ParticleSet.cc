@@ -12,11 +12,7 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <iostream.h>
-
 #include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-
 #include <Uintah/Datatypes/Particles/ParticleSet.h>
 
 namespace Uintah {
@@ -49,6 +45,9 @@ void ParticleSet::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:27:07  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:40:08  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

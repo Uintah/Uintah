@@ -15,6 +15,7 @@
 #ifndef SCI_Containers_Queue_h
 #define SCI_Containers_Queue_h 1
 
+#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/Assert.h>
 
 namespace SCICore {
@@ -95,19 +96,6 @@ public:
 
 };
 
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included Queue.cc
-//
-
-#include <SCICore/Malloc/Allocator.h>
-
-namespace SCICore {
-namespace Containers {
-
 template<class T> Queue<T>::Queue()
 : head(0), tail(0), _length(0)
 {
@@ -168,6 +156,9 @@ Queue<T>::length()
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:46  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/09/04 06:01:42  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

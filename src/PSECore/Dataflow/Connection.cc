@@ -20,7 +20,6 @@
 #include <io.h>
 #endif
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Dataflow/Port.h>
@@ -101,6 +100,9 @@ Demand_Message::~Demand_Message()
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:41  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:38:21  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -30,12 +30,6 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Util/NotFinished.h>
-
-#include <iostream.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 namespace DaveW {
 namespace Modules {
@@ -100,6 +94,9 @@ void BldBRDF::tcl_command(TCLArgs& args, void* userdata) {
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:19  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/25 03:47:36  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -13,7 +13,6 @@
  */
 
 #include <SCICore/Exceptions/Exceptions.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Thread/Mutex.h>
@@ -211,6 +210,9 @@ Thread* TCLTask::get_owner()
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:55  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/09/04 06:01:55  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)
