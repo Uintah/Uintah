@@ -50,7 +50,8 @@ itcl_class SCIRun_Math_LinAlgUnary {
         global $this-op
         make_labeled_radio $w.f.r "Unary Operations:" "" \
                 top $this-op \
-		{{"Transpose" Transpose}\
+		{{"Normalize" Normalize}\
+		{"Transpose" Transpose}\
 		{"Sort" Sort}\
  		{"Subtract Mean" Subtract_Mean}\
 		{"Function" Function}}
