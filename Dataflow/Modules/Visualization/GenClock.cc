@@ -356,7 +356,7 @@ void
 GenClock::tcl_command(GuiArgs& args, void* userdata) {
 
   if(args.count() < 2) {
-    args.error("GenColor needs a minor command");
+    args.error("GenClock needs a minor command");
     return;
   }
 
@@ -373,6 +373,10 @@ GenClock::tcl_command(GuiArgs& args, void* userdata) {
       return;
     }
     
+    color_r_.reset();
+    color_g_.reset();
+    color_b_.reset();
+
     material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
     
     if (ogeom_port) ogeom_port->flushViews();
