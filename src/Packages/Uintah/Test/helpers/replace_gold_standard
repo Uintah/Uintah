@@ -11,15 +11,9 @@ if [ $# -ne 3 -o ! -d $gold_standard_dir/$testname -o ! -d $replacement_dir/$tes
   exit 1
 fi
 
-# if the YES env var is set to yes then don't prompt the user - effective for 
-# mass replaces
+echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
 
-if [ "$YES" = "y" -o "$YES" = "yes" ]; then
-  yesno="yes"
-else
-  echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
-  read yesno
-fi
+read yesno
 
 
 # remove the udas, and copy the new ones
@@ -46,51 +40,62 @@ if [ $yesno = "y" -o $yesno = "yes" ]; then
 	exit 1
     fi
   fi
-
-  # don't prompt if env var is set
-  if [ "$YES" = "y" -o "$YES" = "yes" ]; then
-    yesno="yes"
-  else
-    echo "Are you sure you want to replace the memory usage results? (Enter 'yes' or 'y' to continue.) "
-    read yesno
-  fi
-
-  # replace the memory usage (both normal and restart)
-  if [ $yesno = "y" -o $yesno = "yes" ]; then
-#    echo "rm $gold_standard_dir/$testname/*malloc*"
-    echo "Replacing $testname memory results"
-    rm $gold_standard_dir/$testname/*malloc* >& /dev/null
-#    echo "cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/."
-    cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/. >& /dev/null
-    if [ $? != "0" ]; then
-      echo "No malloc_stats -- ok"
-    fi
-#    echo "cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/."
-    cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/. >& /dev/null
-    if [ $? != "0" ]; then
-      echo "No restart_malloc_stats -- ok"
-    fi
-  else
-    echo "No memory usage results replaced"
-  fi
-
-  # change groups and permissions so (hopefully) anybody can replace them later
-#  echo "chgrp -R csafe $gold_standard_dir/$testname/*"
-  chgrp -R csafe "$gold_standard_dir/$testname"/* 
-  if [ $? != "0" ]; then
-    echo "Could not change groups"
-    exit 1
-  fi
-#  echo "chmod -R g+rwX $gold_standard_dir/$testname/*"
-  chmod -R g+rwX "$gold_standard_dir/$testname"/*
-  if [ $? != "0" ]; then
-    echo "Could not change permissions"
-    exit 1
-  fi
-
-  echo "$testname Gold Standard successfully replaced!"
-  echo
+  echo "udas successfully replaced"
 else
-  echo "$testname replacement cancelled"
+  echo "udas not replaced"
+fi
+  
+echo "Are you sure you want to replace the memory usage results? (Enter 'yes' or 'y' to continue.) "
+read yesno
+
+# replace the memory usage (both normal and restart)
+if [ $yesno = "y" -o $yesno = "yes" ]; then
+  echo "Replacing $testname memory results"
+  rm $gold_standard_dir/$testname/*malloc* >& /dev/null
+  cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/. >& /dev/null
+  if [ $? != "0" ]; then
+    echo "No malloc_stats -- ok"
+  fi
+  cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/. >& /dev/null
+  if [ $? != "0" ]; then
+    echo "No restart_malloc_stats -- ok"
+  fi
+else
+  echo "No memory usage results replaced"
+fi
+
+echo "Are you sure you want to replace the performance results? (Enter 'yes' or 'y' to continue.) "
+read yesno
+
+# replace the performance results (both normal and restart)
+if [ $yesno = "y" -o $yesno = "yes" ]; then
+  echo "Replacing $testname performance results"
+  rm "$gold_standard_dir/$testname/*timestamp" >& /dev/null
+  cp $replacement_dir/$testname/timestamp $gold_standard_dir/$testname/. >& /dev/null
+  if [ $? != "0" ]; then
+    echo "Performance results not replaced"
+  fi
+  cp $replacement_dir/$testname/restart/restart_timestamp $gold_standard_dir/$testname/. >& /dev/null
+  if [ $? != "0" ]; then
+    echo "Restart performance results not replaced"
+  fi
+else
+  echo "No performance results replaced"
+fi
+
+
+# change groups and permissions so (hopefully) anybody can replace them later
+chgrp -R csafe "$gold_standard_dir/$testname"/* >& /dev/null
+if [ $? != "0" ]; then
+  echo "Could not change groups"
   exit 1
 fi
+chmod -R g+rwX "$gold_standard_dir/$testname"/* >& /dev/null
+if [ $? != "0" ]; then
+  echo "Could not change permissions"
+  exit 1
+fi
+
+echo "$testname Gold Standard successfully replaced!"
+echo
+
