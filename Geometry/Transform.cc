@@ -216,8 +216,6 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
 			    double znear, double zfar,
 			    int xres, int yres)
 {
-    znear=-znear;
-    zfar=-zfar;
     Vector lookdir(lookat-eyep);
     Vector z(lookdir);
     z.normalize();
@@ -226,29 +224,30 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
     Vector y(Cross(x, z));
     double xviewsize=Tan(DtoR(fov/2.))*2.;
     double yviewsize=xviewsize*yres/xres;
-    double zscale=-1*znear;
+    double zscale=-znear;
     double xscale=xviewsize*0.5;
     double yscale=yviewsize*0.5;
     x*=xscale;
     y*=yscale;
     z*=zscale;
-    pre_translate(Point(0,0,0)-eyep);
+//    pre_translate(Point(0,0,0)-eyep);
     double m[4][4];
     // Viewing...
-    m[0][0]=x.x(); m[0][1]=y.x(); m[0][2]=z.x(); m[0][3]=0;
-    m[1][0]=x.y(); m[1][1]=y.y(); m[1][2]=z.y(); m[1][3]=0;
-    m[2][0]=x.z(); m[2][1]=y.z(); m[2][2]=z.z(); m[2][3]=0;
-    m[3][0]=0;     m[3][1]=y.x(); m[3][2]=0.0;   m[3][3]=1.0;
+    m[0][0]=x.x(); m[0][1]=y.x(); m[0][2]=z.x(); m[0][3]=eyep.x();
+    m[1][0]=x.y(); m[1][1]=y.y(); m[1][2]=z.y(); m[1][3]=eyep.y();
+    m[2][0]=x.z(); m[2][1]=y.z(); m[2][2]=z.z(); m[2][3]=eyep.z();
+    m[3][0]=0;     m[3][1]=0; m[3][2]=0.0;   m[3][3]=1.0;
     invmat(m);
     pre_mulmat(m);
     
     // Perspective...
     m[0][0]=1.0; m[0][1]=0.0; m[0][2]=0.0; m[0][3]=0.0;
     m[1][0]=0.0; m[1][1]=1.0; m[1][2]=0.0; m[1][3]=0.0;
-    m[2][0]=0.0; m[2][1]=0.0; m[2][2]=(zfar+1)/(1-zfar); m[2][3]=2*zfar/(1-zfar);
+    m[2][0]=0.0; m[2][1]=0.0; m[2][2]=-(zfar-1)/(1+zfar); m[2][3]=-2*zfar/(1+zfar);
     m[3][0]=0.0; m[3][1]=0.0; m[3][2]=-1.0; m[3][3]=0.0;
     pre_mulmat(m);
 
+    pre_scale(Vector(1,-1,1)); // X starts at the top...
     pre_translate(Vector(1,1,0));
     pre_scale(Vector(xres/2., yres/2., 1.0));
 }
