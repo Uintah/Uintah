@@ -2694,6 +2694,7 @@ OpenGL::render_rotation_axis(const View &view,
 
   // Disable fog for the orientation axis.
   const bool fog = drawinfo->fog;
+  if (fog) { glDisable(GL_FOG); }
   drawinfo->fog = false;
 
   // Set up Lighting
@@ -2733,6 +2734,7 @@ OpenGL::render_rotation_axis(const View &view,
   glDepthRange(0.0, 1.0);
 
   drawinfo->fog = fog;  // Restore fog state.
+  if (fog) { glEnable(GL_FOG); }
 
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
