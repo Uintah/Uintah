@@ -374,7 +374,7 @@ itcl_class Module {
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set graph $canvas.module[modname].ff.inset.graph
 	if {$width == 0} { 
-	    place forget $graph
+#	    place forget $graph
 	} else {
 	    $graph configure -width $width
 	    if {$old_width == 0} { place $graph -relheight 1 -anchor nw }
@@ -458,7 +458,7 @@ itcl_class Module {
 	set number $Subnet([modname])
 	set canvas $Subnet(Subnet${number}_canvas)
 	set indicator $canvas.module[modname].ff.msg.indicator
-	place forget $indicator
+#	place forget $indicator
 	$indicator configure -width $indicator_width -background $color
 	place $indicator -relheight 1 -anchor nw 
 
