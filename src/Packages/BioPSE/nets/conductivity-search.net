@@ -135,7 +135,7 @@ set $m4-maxiter 2000
 set $m4-use_previous_soln 1
 set $m4-emit_partial 0
 set $m4-np 1
-set $m5-interp_op_gui {}
+set $m5-use_interp {0}
 set $m7-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-electrodes.pcd.fld
 set $m9-target_error 1e-08
 set $m9-orig_error 9.65643e-09

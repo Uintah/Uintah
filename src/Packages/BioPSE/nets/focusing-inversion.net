@@ -159,7 +159,7 @@ set $m14-maxiter 2000
 set $m14-use_previous_soln 1
 set $m14-emit_partial 0
 set $m14-np 4
-set $m15-interp_op_gui {}
+set $m15-use_interp {0}
 set $m17-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
 set $m20-outside {0}
 set $m20-averaging {0}
