@@ -39,7 +39,8 @@ itcl_class PSECommon_FEM_BuildFEMatrix {
                 left $this-BCFlag \
                 {{"None" none} \
                 {"Apply Dirichlet" DirSub} \
-                {"Pin Node Zero" PinZero}}
+                {"Pin Node Zero" PinZero} \
+                {"Ground Average DC" AverageGround}}
 	global $this-UseCondTCL
 	checkbutton $w.f.b -text "Use Conductivities" -variable $this-UseCondTCL
 	pack $w.f.r $w.f.b -side top -expand 1 -fill x
