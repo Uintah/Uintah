@@ -553,19 +553,25 @@ parse_description(const string &in)
       }
       else if (c == ' ')
       {
-	out.push_back(' ');
+	// gcc-2.95.3 compiler does not support push_back
+	//out.push_back(' ');
+	out = out + ' ';
 	state.push(2);
       }
       else if (c == '.' || c == '!' || c == '?')
       {
-	out.push_back(c);
-	out.push_back(' ');
-	out.push_back(' ');
+	// gcc-2.95.3 compiler does not support push_back
+	//out.push_back(c);
+	//out.push_back(' ');
+	//out.push_back(' ');
+	out = out + c + ' ' + ' ';
 	state.push(2);
       }
       else
       {
-	out.push_back(c);
+	// gcc-2.95.3 compiler does not support push_back
+	out = out + c;
+	//out.push_back(c);
       }
     }
     else if (state.top() == 1)
@@ -574,8 +580,10 @@ parse_description(const string &in)
       {
 	if (i > 1 && in[i-2] == '/' && in[i-1] == 'p')
 	{
-	  out.push_back('\n');
-	  out.push_back('\n');
+	  // gcc-2.95.3 compiler does not support push_back
+	  //out.push_back('\n');
+	  //out.push_back('\n');
+	  out = out + '\n' + '\n';
 	  state.pop();
 	  state.push(2);
 	}

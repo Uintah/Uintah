@@ -51,7 +51,6 @@ using std::endl;
 class SCICORESHARE LatVolMesh : public Mesh
 {
 public:
-
   struct LatIndex
   {
   public:
@@ -65,7 +64,7 @@ public:
       if (mesh_ == 0) 
 	return i_*j_*k_; 
       else 
-	return i_ + mesh_->nx_ * (j_ + mesh_->ny_ * k_);
+	return i_ + mesh_->get_nx() * (j_ + mesh_->get_ny() * k_);
     }
     
     unsigned i_, j_, k_;
@@ -151,10 +150,10 @@ public:
     NodeIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->min_x_+mesh_->nx_)	{
+      if (i_ >= mesh_->min_x_+mesh_->get_nx())	{
 	i_ = mesh_->min_x_;
 	j_++;
-	if (j_ >=  mesh_->min_y_+mesh_->ny_) {
+	if (j_ >=  mesh_->min_y_+mesh_->get_ny()) {
 	  j_ = mesh_->min_y_;
 	  k_++;
 	}
@@ -184,10 +183,10 @@ public:
     CellIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->min_x_+mesh_->nx_-1) {
+      if (i_ >= mesh_->min_x_+mesh_->get_nx()-1) {
 	i_ = mesh_->min_x_;
 	j_++;
-	if (j_ >= mesh_->min_y_+mesh_->ny_-1) {
+	if (j_ >= mesh_->min_y_+mesh_->get_ny()-1) {
 	  j_ = mesh_->min_y_;
 	  k_++;
 	}

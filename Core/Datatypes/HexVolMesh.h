@@ -330,6 +330,8 @@ private:
     }
   };
 
+  friend struct FaceHash; // needed by the gcc-2.95.3 compiler
+  
   /*! hash the egde's node_indecies such that edges with the same nodes
    *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {

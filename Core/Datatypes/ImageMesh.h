@@ -71,6 +71,8 @@ public:
     const ImageMesh *mesh_;
   };
 
+  friend struct ImageIndex; // needed by the gcc-2.95.3 compiler
+
   struct IFaceIndex : public ImageIndex
   {
     IFaceIndex() : ImageIndex() {}
