@@ -45,48 +45,54 @@
    }
 
 #if SCI_ASSERTION_LEVEL >= 1
-#define IFASSERT(x) x
-#define ASSERTL1(condition) \
-   if(!(condition)){ \
-      SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
-   }
+#  define IFASSERT(x) x
+#  define ASSERTL1(condition) \
+     if(!(condition)){ \
+        SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
+     }
 #else
-#define ASSERTL1(condition)
+#  define ASSERTL1(condition)
 #endif
 
 #if SCI_ASSERTION_LEVEL >= 2
-#define ASSERTL2(condition) \
-   if(!(condition)){ \
-      SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
-   }
+#  define ASSERTL2(condition) \
+     if(!(condition)){ \
+        SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
+     }
 #else
-#define ASSERTL2(condition)
+#  define ASSERTL2(condition)
 #endif
 
 #if SCI_ASSERTION_LEVEL >= 3
-#define ASSERTL3(condition) \
-   if(!(condition)){ \
-      SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
-   }
-#define CHECKARRAYBOUNDS(value, lower, upper) \
-   if(value < lower || value >= upper){ \
-      SCI_THROW(SCIRun::ArrayIndexOutOfBounds(value, lower, upper)); \
-   }
+#  define ASSERTL3(condition) \
+     if(!(condition)){ \
+        SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
+     }
+#  define CHECKARRAYBOUNDS(value, lower, upper) \
+     if(value < lower || value >= upper){ \
+        SCI_THROW(SCIRun::ArrayIndexOutOfBounds(value, lower, upper)); \
+     }
 #else
-#define ASSERTL3(condition)
-#define CHECKARRAYBOUNDS(value, lower, upper)
+#  define ASSERTL3(condition)
+#  define CHECKARRAYBOUNDS(value, lower, upper)
 #endif
 
 #if SCI_ASSERTION_LEVEL == 0
-
-#define ASSERTL1(condition)
-#define ASSERTL2(condition)
-#define ASSERTL3(condition)
-#define ASSERTEQ(c1, c2)
-#define ASSERTRANGE(c, l, h)
-#define IFASSERT(x)
-
+#  define USE_IF_ASSERTS_ON(line)
+#  define ASSERTL1(condition)
+#  define ASSERTL2(condition)
+#  define ASSERTL3(condition)
+#  define ASSERTEQ(c1, c2)
+#  define ASSERTRANGE(c, l, h)
+#  define IFASSERT(x)
+#else
+#  define USE_IF_ASSERTS_ON(line) line
 #endif
+
+/* USE_IF_ASSERTS_ON allows us to remove lines that are necessary for
+   code that is needed if asserts are on but causes warnings if 
+   asserts are off (ie: in optimized builds).  All it does it remove
+   the line or put the line in. */
 
 #define ASSERT(condition) ASSERTL2(condition)
 
