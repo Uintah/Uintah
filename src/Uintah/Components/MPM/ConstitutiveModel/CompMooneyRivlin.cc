@@ -287,11 +287,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
 
     if(matl->getFractureModel()) {
-        cout<<"tan:"<<1<<endl;
         delete lattice;
-        cout<<"tan:"<<2<<endl;
 	delete brokenCellShapeFunction;
-        cout<<"tan:"<<3<<endl;
     }
 }
 
@@ -374,6 +371,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.57  2000/09/07 21:17:49  tan
+// Removed a debugging output.
+//
 // Revision 1.56  2000/09/07 21:11:09  tan
 // Added particle variable pMicrocrackSize for fracture.
 //
