@@ -474,7 +474,7 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
   if(d_with_ice){
-    t->requires(Task::NewDW, lb->gradPressNCLabel,  Ghost::None);
+    t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
   }
   if(d_with_arches){
     t->requires(Task::NewDW, lb->AccArchesNCLabel,  Ghost::None);
@@ -1417,7 +1417,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       // Get required variables for this patch
       NCVariable<Vector> internalforce;
       NCVariable<Vector> externalforce;
-      NCVariable<Vector> gradPressNC;  // for MPMICE
+      NCVariable<Vector> gradPAccNC;  // for MPMICE
       NCVariable<Vector> AccArchesNC;  // for MPMArches
 
       new_dw->get(internalforce, lb->gInternalForceLabel, matlindex, patch,
@@ -1432,12 +1432,12 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         new_dw->get(mass, lb->gMassLabel,       matlindex,patch, Ghost::None,0);
 
       if(d_with_ice){
-         new_dw->get(gradPressNC,lb->gradPressNCLabel,    matlindex, patch,
+         new_dw->get(gradPAccNC,lb->gradPAccNCLabel,    matlindex, patch,
 							   Ghost::None, 0);
       }
       else{
-	 new_dw->allocate(gradPressNC,lb->gradPressNCLabel, matlindex, patch);
-	 gradPressNC.initialize(Vector(0.,0.,0.));
+	 new_dw->allocate(gradPAccNC,lb->gradPAccNCLabel, matlindex, patch);
+	 gradPAccNC.initialize(Vector(0.,0.,0.));
       }
       if(d_with_arches){
          new_dw->get(AccArchesNC,lb->AccArchesNCLabel,    matlindex, patch,
@@ -1457,15 +1457,9 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       // You need if(mass>small_num) so you don't get pressure
       // acceleration where there isn't any mass. 3.30.01 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-        if(mass[*iter]>1e-10){
-          acceleration[*iter] =
-                (internalforce[*iter] + externalforce[*iter] +
-                        gradPressNC[*iter]/delT)/ mass[*iter] + gravity +
-			AccArchesNC[*iter];
-	}
-        else{
-          acceleration[*iter] = Vector(0.,0.,0.);
-        }
+         acceleration[*iter] =
+		(internalforce[*iter] + externalforce[*iter])/mass[*iter] +
+                 gravity + gradPAccNC[*iter] + AccArchesNC[*iter];
       }
    
       // Put the result in the datawarehouse

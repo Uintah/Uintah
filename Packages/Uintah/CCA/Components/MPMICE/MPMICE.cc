@@ -230,8 +230,11 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                                     Ghost::None);
    t->requires(Task::NewDW, Ilb->mom_source_CCLabel,mpm_matl, 
                                                     Ghost::AroundCells, 1);
+   t->requires(Task::NewDW, MIlb->cMassLabel,       mpm_matl,
+                                                    Ghost::AroundCells, 1);
+
    t->computes(Mlb->pPressureLabel,   mpm_matl);
-   t->computes(Mlb->gradPressNCLabel, mpm_matl);
+   t->computes(Mlb->gradPAccNCLabel,  mpm_matl);
    sched->addTask(t, patches, all_matls);
 }
 //______________________________________________________________________
@@ -525,6 +528,9 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 
     new_dw->get(pressNC,MIlb->press_NCLabel,0,patch,Ghost::AroundCells,1);
 
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -551,22 +557,25 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       }
 
       CCVariable<Vector> mom_source;
-      NCVariable<Vector> gradPressNC;
+      CCVariable<double> mass;
+      NCVariable<Vector> gradPAccNC;
       new_dw->get(mom_source,       Ilb->mom_source_CCLabel, dwindex, patch,
 							 Ghost::AroundCells, 1);
-      new_dw->allocate(gradPressNC, Mlb->gradPressNCLabel,   dwindex, patch);
+      new_dw->get(mass,             MIlb->cMassLabel,        dwindex, patch,
+							 Ghost::AroundCells, 1);
+      new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,   dwindex, patch);
 
       // Interpolate CC pressure gradient (mom_source) to nodes (gradP*dA*dt)
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-         patch->findCellsFromNode(*iter,cIdx);
-         gradPressNC[*iter] = zero;
-         for (int in=0;in<8;in++){
-	    gradPressNC[*iter]  += mom_source[cIdx[in]]*.125;
+        patch->findCellsFromNode(*iter,cIdx);
+        gradPAccNC[*iter] = zero;
+        for (int in=0;in<8;in++){
+	  gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125;
          }
       }
 
       new_dw->put(pPressure,   Mlb->pPressureLabel);
-      new_dw->put(gradPressNC, Mlb->gradPressNCLabel, dwindex, patch);
+      new_dw->put(gradPAccNC,  Mlb->gradPAccNCLabel, dwindex, patch);
     }
   } //patches
 }
