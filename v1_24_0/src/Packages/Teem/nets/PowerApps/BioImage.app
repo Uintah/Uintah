@@ -857,7 +857,8 @@ class BioImageApp {
 	    -from 0 -to 20 -width 15 \
 	    -showvalue false \
 	    -orient horizontal \
-	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis"
+	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; \
+                      $mods(ViewSlices)-c redrawall"
 	# slice value label
 	label $window.modes.slider.slice.l \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slice \
@@ -886,7 +887,8 @@ class BioImageApp {
 	    -rangecolor "#830101" -width 15 \
 	    -varmin $mods(ViewSlices)-$axis-viewport0-slab_min \
 	    -varmax $mods(ViewSlices)-$axis-viewport0-slab_max \
-	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis"
+	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; \
+                      $mods(ViewSlices)-c redrawall"
 	# max range value label
 	label $window.modes.slider.slab.max \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_max \
@@ -4618,12 +4620,10 @@ class BioImageApp {
         # forget and repack appropriate widget
 	if {$mode == 0} {
 	    # Slice mode
-            $this update_ViewSlices_slice $axis
             pack forget $w.modes.slider.slab
             pack $w.modes.slider.slice -side top -anchor n -expand 1 -fill x
 	} elseif {$mode == 1} {
 	    # Slab mode
-            $this update_ViewSlices_slab $axis
     	    pack forget $w.modes.slider.slice
             pack $w.modes.slider.slab -side top -anchor n -expand 1 -fill x
 	} else {
@@ -4632,22 +4632,8 @@ class BioImageApp {
             pack forget $w.modes.slider.slice
   	    pack forget $w.modes.slider.slab
 	}
-    }
-
-    method update_ViewSlices_slice { axis args } {
-	global mods slice_frame
-        upvar \#0 $mods(ViewSlices)-$axis-viewport0-mode mode
-	if {$mode == 0} {
-	    $mods(ViewSlices)-c rebind $slice_frame($axis).$axis
-        }
-    }
-
-    method update_ViewSlices_slab { axis args } {
-	global mods slice_frame
-        upvar \#0 $mods(ViewSlices)-$axis-viewport0-mode mode
-	if { $mode == 1 } {
-          $mods(ViewSlices)-c rebind $slice_frame($axis).$axis
-        }
+        $mods(ViewSlices)-c rebind $slice_frame($axis).$axis
+        $mods(ViewSlices)-c redrawall
     }
 
     method set_saved_class_var {var val} {
