@@ -85,7 +85,7 @@ WARNING
     protected:
     	void emitEdges(const vector<Task*>& tasks);
     	void emitNode(const Task* name, time_t start, double duration);
-    	void finalizeNodes();
+    	void finalizeNodes(int process=0);
     
     private:
        Scheduler(const Scheduler&);
@@ -94,13 +94,18 @@ WARNING
 		Output* m_outPort;
     	DOM_Document* m_graphDoc;
     	DOM_Element* m_nodes;
-    	unsigned int m_executeCount;
+      //unsigned int m_executeCount;
     };
     
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.18  2000/09/08 17:49:50  witzel
+// Changing finalizeNodes so that it outputs different taskgraphs
+// in different timestep directories and the taskgraph information
+// of different processes in different files.
+//
 // Revision 1.17  2000/07/28 22:45:17  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in
