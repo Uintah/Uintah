@@ -274,7 +274,7 @@ void
 GaugeWidget::SetEndpoints( const Point& end1, const Point& end2 )
 {
    variables[PointLVar]->Move(end1);
-   variables[PointRVar]->Set(end2);
+   variables[PointRVar]->Set(end2, Scheme3);
    
    execute(0);
 }
