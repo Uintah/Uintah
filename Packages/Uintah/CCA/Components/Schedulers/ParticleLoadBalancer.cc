@@ -503,8 +503,9 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double delt,
 				    const GridP& /*grid*/)
 {
   if (d_dynamicAlgorithm == static_lb)
-    return false;
-  //need to compensate for restarts
+    // should only happen on the first timestep, and we need to do this on a
+    // restart
+    return d_state != idle; 
   
   double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -669,13 +670,30 @@ void ParticleLoadBalancer::dynamicReallocation(const GridP& grid,
     d_oldAssignment = d_processorAssignment;
     d_state = needLoadBalance;  // l.b. on next timestep
   }
+
+  // set up on a restart when lb is static
+  else if (d_dynamicAlgorithm == static_lb) {
+    d_oldAssignment = d_processorAssignment;
+
+    for(int l=0;l<grid->numLevels();l++){
+      const LevelP& level = grid->getLevel(l);
+
+      for (Level::const_patchIterator iter = level->patchesBegin(); 
+           iter != level->patchesEnd(); iter++) {
+        Patch *patch = *iter;
+        d_processorAssignment[patch->getID()] = patch->getID() % numProcs;
+        ASSERTRANGE(patch->getID(),0,numPatches);
+      }
+    }
+    d_state = postLoadBalance;
+    
+  }
   else {
     d_oldAssignment = d_processorAssignment;
     switch (d_dynamicAlgorithm) {
     case particle_lb:  assignPatchesParticle(grid, sch); break;
     case cyclic_lb:    assignPatchesCyclic(grid, sch); break;
     case random_lb:    assignPatchesRandom(grid, sch); break;
-    // static_lb does nothing
     }
     d_state = postLoadBalance;
   }
