@@ -675,7 +675,8 @@ Thread::initialize()
   initialized=true;
   ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
   mainthread=new Thread(ThreadGroup::s_default_group, "main");
-  mainthread->priv_=new Thread_private(false);
+//  mainthread->priv_=new Thread_private(false);
+  mainthread->priv_=new Thread_private(true);
   mainthread->priv_->thread=mainthread;
   mainthread->priv_->state=RUNNING;
   mainthread->priv_->bstacksize=0;
@@ -683,7 +684,7 @@ Thread::initialize()
   mainthread->priv_->threadid=pthread_self();
   mainthread->priv_->ismain=true;
 
-  mainthread->priv_->block_sema.down();
+//  mainthread->priv_->block_sema.down();
 
   for(int i=0;i<MAXBSTACK;i++)
       mainthread->priv_->blockstack[i]=bstack_init;
@@ -942,7 +943,7 @@ void Semaphore::up(int count)
     }
 }
 
-#elif
+#else
 
 Semaphore::Semaphore(const char* name, int value)
     : name_(name)
