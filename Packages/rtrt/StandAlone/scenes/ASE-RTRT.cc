@@ -22,20 +22,29 @@ using namespace SCIRun;
 using namespace rtrt;
 using namespace std;
 
-Material *default_material = 
-(Material*) new ImageMaterial("/home/moulding/stadium.ase-dir2/textures/myimage.ppm",
-                              ImageMaterial::None,
-                              ImageMaterial::None,
-                              Color(0,0,0),
-                              1,
-                              Color(0,0,0), 0);
-
 Array1<Material*> ase_matls;
+
+bool
+degenerate(const Point &p0, const Point &p1, const Point &p2) 
+{
+  Vector v0(p0-p1);
+  Vector v1(p1-p2);
+  Vector v2(p2-p0);
+
+  double lv0 = v0.length2();
+  double lv1 = v1.length2();
+  double lv2 = v2.length2();
+
+  if (lv0<=0 || lv1<=0 || lv2<=0)
+    return true;
+  return false;
+}
 
 void
 ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 {
   token_list *children1, *children2, *children3;
+  Point p0,p1,p2;
   vector<float>    *v1=0;
   vector<float>    *v3=0;
   vector<unsigned> *v2=0;
@@ -48,6 +57,10 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
   length1 = children1->size();
   for (loop1=0; loop1<length1; ++loop1) {
     if ((*children1)[loop1]->GetMoniker() == "*GEOMOBJECT") {
+      matl_index = 
+        ((GeomObjectToken*)((*children1)[loop1]))->GetMaterialIndex();
+      if (ase_matls.size()<=matl_index)
+        matl_index = 0;
       children2 = (*children1)[loop1]->GetChildren();
       length2 = children2->size();
       for (loop2=0; loop2<length2; ++loop2) {
@@ -72,8 +85,7 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                     ((*children3)[loop3]))->GetTFaces();
             }
 	  }
-	  if (v1 && v2) {
-	    matl_index++;
+	  if (v1 && v1->size() && v2 && v2->size()) {
 	    Group *group = new Group();
 	    unsigned loop4, length4;
 	    unsigned index, findex1, findex2, findex3;
@@ -84,45 +96,31 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 	      findex2 = (*v2)[index++]*3;
 	      findex3 = (*v2)[index]*3;
 	      
-              if (v3 && v4) {
-                TexturedTri *tri = new TexturedTri( default_material,
-                                                    Point((*v1)[findex1],
-                                                          (*v1)[findex1+1],
-                                                          (*v1)[findex1+2]),
-                                                    
-                                                    Point((*v1)[findex2],
-                                                          (*v1)[findex2+1],
-                                                          (*v1)[findex2+2]),
-                                                    
-                                                    Point((*v1)[findex3],
-                                                          (*v1)[findex3+1],
-                                                          (*v1)[findex3+2]) );
+              if (v3 && v3->size() && v4 && v4->size()) {
+                p0 = Point((*v1)[findex1],(*v1)[findex1+1],(*v1)[findex1+2]);
+                p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
+                p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
 
-                tri->set_texcoords( Point((*v3)[findex1],
-                                          (*v3)[findex1+1],
-                                          (*v3)[findex1+2]),
-                                    
-                                    Point((*v3)[findex2],
-                                          (*v3)[findex2+1],
-                                          (*v3)[findex2+2]),
-                                    
-                                    Point((*v3)[findex3],
-                                          (*v3)[findex3+1],
-                                          (*v3)[findex3+2]) );
-                group->add(tri);
+                if (!degenerate(p0,p1,p2)) {
+
+                  TexturedTri *tri = new TexturedTri( ase_matls[matl_index],
+                                                      p0,p1,p2);
+ 
+                  group->add(tri);
+                  
+                  p0 = Point((*v3)[findex1],(*v3)[findex1+1],(*v3)[findex1+2]);
+                  p1 = Point((*v3)[findex2],(*v3)[findex2+1],(*v3)[findex2+2]);
+                  p2 = Point((*v3)[findex3],(*v3)[findex3+1],(*v3)[findex3+2]);
+                  
+                  tri->set_texcoords( p0, p1, p2 );
+                }
               } else {
-                Tri *tri = new Tri( ase_matls[matl_index],
-                                    Point((*v1)[findex1],
-                                          (*v1)[findex1+1],
-                                          (*v1)[findex1+2]),
-                                    
-                                    Point((*v1)[findex2],
-                                          (*v1)[findex2+1],
-                                          (*v1)[findex2+2]),
-                                    
-                                    Point((*v1)[findex3],
-                                          (*v1)[findex3+1],
-                                          (*v1)[findex3+2]) );
+                p0 = Point((*v1)[findex1],(*v1)[findex1+1],(*v1)[findex1+2]);
+                p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
+                p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
+
+                Tri *tri = new Tri( ase_matls[matl_index], p0, p1, p2);
+
                 group->add(tri);
               }
 	    }
@@ -133,6 +131,40 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
           v3 = 0;
           v4 = 0;
 	}
+      }
+    } else if ((*children1)[loop1]->GetMoniker() == "*MATERIAL_LIST") {
+      children2 = (*children1)[loop1]->GetChildren();
+      length2 = children2->size();
+      ase_matls.resize(length2*2);
+      for (loop2=0; loop2<length2; ++loop2) {
+	if ((*children2)[loop2]->GetMoniker() == "*MATERIAL") {
+          MaterialToken *token = ((MaterialToken*)((*children2)[loop2]));
+          double ambient[3];
+          double diffuse[3];
+          double specular[3];
+          token->GetAmbient(ambient);
+          token->GetDiffuse(diffuse);
+          token->GetSpecular(specular);
+          if (token->GetTMapFilename()=="") {
+            ase_matls[token->GetIndex()] = 
+              new Phong(Color(ambient),
+                        Color(diffuse),
+                        Color(specular),
+                        token->GetShine(),
+                        token->GetTransparency());
+          } else {
+            ase_matls[token->GetIndex()] = 
+              new ImageMaterial((char*)(token->GetTMapFilename().c_str()),
+                                ImageMaterial::Tile,
+                                ImageMaterial::Tile,
+                                Color(ambient),
+                                1.,
+                                Color(specular),
+                                token->GetShine(),
+                                0,
+                                token->GetTransparency());
+          }
+        }
       }
     }
   }
@@ -153,14 +185,6 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
     return 0;
   }
 
-  ase_matls.resize(100);
-
-  for (unsigned loop=0; loop<100; ++loop) {
-    ase_matls[loop] = new Phong( Color(.1,.1,.1),
-				 Color(drand48(),drand48(),drand48()),
-				 Color(1,1,1),100,0);
-  }
-  
   Group *all = new Group();
   ConvertASEFileToRTRTObject(infile,all);
   
