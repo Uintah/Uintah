@@ -1,5 +1,4 @@
 
-
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InternalError.h>
@@ -16,6 +15,8 @@ using namespace Uintah;
 using std::cerr;
 using std::cout;
 using std::string;
+
+#define THREADED_MPI_AVAILABLE
 
 static bool            allowThreads;
 static bool            usingMPI = false;
@@ -90,13 +91,13 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
       }
    }
 
-#ifdef MPI_THREAD_SINGLE
+#ifdef THREADED_MPI_AVAILABLE
    int provided = -1;
    int required = MPI_THREAD_SINGLE;
 #endif
    if(::usingMPI){	
 
-#ifdef MPI_THREAD_SINGLE
+#ifdef THREADED_MPI_AVAILABLE
      if( scheduler == "MixedScheduler" ) {
        required = MPI_THREAD_MULTIPLE;
      }
@@ -105,7 +106,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      int status;
      const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
 
-#ifdef MPI_THREAD_SINGLE
+#ifdef THREADED_MPI_AVAILABLE
      if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) )
 	                                                     != MPI_SUCCESS) {
 #else
@@ -114,7 +115,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
        MpiError("MPI_Init", status);
      }
 
-#ifdef MPI_THREAD_SINGLE
+#ifdef THREADED_MPI_AVAILABLE
      if( provided < required ){
        char msg[ 128 ];
        sprintf( msg, "Provided MPI parallel support of %d is "
@@ -146,7 +147,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
       if(::usingMPI)
 	 cerr << " (using MPI)";
       cerr << '\n';
-#ifdef MPI_THREAD_SINGLE
+#ifdef THREADED_MPI_AVAILABLE
       cerr << "Parallel: MPI Level Required: " << required << ", provided: " 
 	   << provided << "\n";
 #endif
