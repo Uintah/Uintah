@@ -17,15 +17,11 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Data Archive</name>
-        <datatype>Uintah::Archive</datatype>
-      </port>
-      <port>
-        <name>Scalar Field</name>
+        <name>Vector Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Vector Field</name>
+        <name>Scalar Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
