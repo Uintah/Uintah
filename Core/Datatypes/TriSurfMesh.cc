@@ -271,7 +271,7 @@ TriSurfMesh::get_neighbor(Face::index_type &neighbor,
   }
   if (n != -1)
   {
-    neighbor = n % 3;
+    neighbor = n / 3;
     return true;
   }
   return false;
