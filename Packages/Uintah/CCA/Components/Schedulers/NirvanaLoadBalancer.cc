@@ -37,20 +37,23 @@ static int getproc(const IntVector& l, const IntVector& d,
 void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
 					  const ProcessorGroup* group)
 {
+#if 0
   static bool first=true;
+  int me = group->myrank();
+#endif
   int nTasks = graph.numTasks();
-  for(int i=0;i<nTasks;i++){
+  const Level* level = 0;
+  for(int i=0;i<nTasks && !level;i++){
     DetailedTask* task = graph.getTask(i);
     const PatchSubset* patches = task->getPatches();
-    if(patches){
-      for(int i=0;i<patches->size();i++){
-	const Patch* patch = patches->get(i);
-	npatches = patch->getLevel()->numPatches();
-      }
+    if(patches && patches->size()){
+      const Patch* patch = patches->get(0);
+      npatches = patch->getLevel()->numPatches();
+      level = patch->getLevel();
     }
   }
   ASSERT(npatches != 0);
-  int me = group->myrank();
+  ASSERT(level != 0);
   numhosts = layout.x()*layout.y()*layout.z();
   numProcs = group->size();
   processors_per_host = numProcs/numhosts;
@@ -62,18 +65,12 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
   }
   
   IntVector max(-1,-1,-1);
-  for(int i=0;i<nTasks;i++){
-    DetailedTask* task = graph.getTask(i);
-    const PatchSubset* patches = task->getPatches();
-    if(patches){
-      for(int i=0;i<patches->size();i++){
-	const Patch* patch = patches->get(i);
-	IntVector l;
-	if(!patch->getLayoutHint(l))
-	  throw InternalError("NirvanaLoadBalancer requires layout hints");
-	max = Max(max, l);
-      }
-    }
+  for(Level::const_patchIterator iter = level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    IntVector l;
+    if(!(*iter)->getLayoutHint(l))
+      throw InternalError("NirvanaLoadBalancer requires layout hints");
+    max = Max(max, l);
   }
   max+=IntVector(1,1,1);
   d = max/layout;
@@ -115,7 +112,9 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
       }
     }
   }
+#if 0
   first=false;
+#endif
 }
 
 int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
