@@ -62,32 +62,52 @@ public:
 			      MatrixHandle &interpolant);
 private:
 
-  struct upairhash
+  struct edgepair_t
   {
-    unsigned int operator()(const pair<unsigned int, unsigned int> &a) const
+    unsigned int first;
+    unsigned int second;
+    double dfirst;
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
     {
       hash<unsigned int> h;
       return h(a.first ^ a.second);
     }
   };
+#endif
 
-  struct utripple
+  struct edgepairequal
   {
-    unsigned int first, second, third;
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
   };
 
-  struct utripplehash
+  struct facetriple_t
   {
-    unsigned int operator()(const utripple &a) const
+    unsigned int first, second, third;
+    double dfirst, dsecond, dthird;
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct facetriplehash
+  {
+    unsigned int operator()(const facetriple_t &a) const
     {
       hash<unsigned int> h;
       return h(a.first ^ a.second ^ a.third);
     }
   };
+#endif
 
-  struct utrippleequal
+  struct facetripleequal
   {
-    bool operator()(const utripple &a, const utripple &b) const
+    bool operator()(const facetriple_t &a, const facetriple_t &b) const
     {
       return a.first == b.first && a.second == b.second && a.third == b.third;
     }
@@ -100,36 +120,37 @@ private:
 		   hash<unsigned int>,
 		   equal_to<unsigned int> > node_hash_type;
 
-  typedef hash_map<pair<unsigned int, unsigned int>,
+  typedef hash_map<edgepair_t,
 		   typename FIELD::mesh_type::Node::index_type,
-		   upairhash,
-		   equal_to<pair<unsigned int, unsigned int> > > edge_hash_type;
+		   edgepairhash,
+		   edgepairequal> edge_hash_type;
 
-  typedef hash_map<utripple,
+  typedef hash_map<facetriple_t,
 		   typename FIELD::mesh_type::Node::index_type,
-		   utripplehash,
-		   utrippleequal> face_hash_type;
+		   facetriplehash,
+		   facetripleequal> face_hash_type;
 #else
   typedef map<unsigned int,
 	      typename FIELD::mesh_type::Node::index_type,
 	      equal_to<unsigned int> > node_hash_type;
 
-  typedef map<pair<unsigned int, unsigned int>,
+  typedef map<edgepair_t,
 	      typename FIELD::mesh_type::Node::index_type,
-	      equal_to<pair<unsigned int, unsigned int> > > edge_hash_type;
+	      edgepairequal> edge_hash_type;
 
-  typedef map<utripple,
+  typedef map<facetriple_t,
 	      typename FIELD::mesh_type::Node::index_type,
-	      utrippleequal> face_hash_type;
+	      facetripleequal> face_hash_type;
 #endif
 
   typename FIELD::mesh_type::Node::index_type
-  edge_lookup(unsigned int u0, unsigned int u1,
+  edge_lookup(unsigned int u0, unsigned int u1, double d0,
 	      const Point &p, edge_hash_type &edgemap,
 	      typename FIELD::mesh_type *clipped) const;
 
   typename FIELD::mesh_type::Node::index_type
   face_lookup(unsigned int u0, unsigned int u1, unsigned int u2,
+	      double d0, double d1, double d2,
 	      const Point &p, face_hash_type &facemap,
 	      typename FIELD::mesh_type *clipped) const;
 };
@@ -139,12 +160,13 @@ private:
 template <class FIELD>
 typename FIELD::mesh_type::Node::index_type
 IsoClipAlgoTet<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
+				   double d0,
 				   const Point &p, edge_hash_type &edgemap,
 				   typename FIELD::mesh_type *clipped) const
 {
-  pair<unsigned int, unsigned int> np;
-  if (u0 < u1)  { np.first = u0; np.second = u1; }
-  else { np.first = u1; np.second = u0; }
+  edgepair_t np;
+  if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
+  else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
   if (edgemap.find(np) == edgemap.end())
   {
     const typename FIELD::mesh_type::Node::index_type nodeindex =
@@ -163,24 +185,28 @@ IsoClipAlgoTet<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
 template <class FIELD>
 typename FIELD::mesh_type::Node::index_type
 IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
-				   unsigned int u2, const Point &p,
+				   unsigned int u2, double d0, double d1,
+				   double d2, const Point &p,
 				   face_hash_type &facemap,
 				   typename FIELD::mesh_type *clipped) const
 {
-  utripple nt;
+  facetriple_t nt;
   if (u0 < u1)
   {
     if (u2 < u0)
     {
       nt.first = u2; nt.second = u0; nt.third = u1;
+      nt.dfirst = d2; nt.dsecond = d0; nt.dthird = d1;
     }
     else if (u2 < u1)
     {
       nt.first = u0; nt.second = u2; nt.third = u1;
+      nt.dfirst = d0; nt.dsecond = d2; nt.dthird = d1;
     }
     else
     {
       nt.first = u0; nt.second = u1; nt.third = u2;
+      nt.dfirst = d0; nt.dsecond = d1; nt.dthird = d2;
     }
   }
   else
@@ -188,14 +214,17 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
     if (u2 > u0)
     {
       nt.first = u1; nt.second = u0; nt.third = u2;
+      nt.dfirst = d1; nt.dsecond = d0; nt.dthird = d2;
     }
     else if (u2 > u1)
     {
       nt.first = u1; nt.second = u2; nt.third = u0;
+      nt.dfirst = d1; nt.dsecond = d2; nt.dthird = d0;
     }
     else
     {
       nt.first = u2; nt.second = u1; nt.third = u0;
+      nt.dfirst = d2; nt.dsecond = d1; nt.dthird = d0;
     }
   }
   if (facemap.find(nt) == facemap.end())
@@ -299,24 +328,25 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       }
 
       const double imv = isoval - v[perm[0]];
-      const Point l1 = Interpolate(p[perm[0]], p[perm[1]],
-				   imv / (v[perm[1]] - v[perm[0]]));
-      const Point l2 = Interpolate(p[perm[0]], p[perm[2]],
-				   imv / (v[perm[2]] - v[perm[0]]));
-      const Point l3 = Interpolate(p[perm[0]], p[perm[3]],
-				   imv / (v[perm[3]] - v[perm[0]]));
+      const double dl1 = imv / (v[perm[1]] - v[perm[0]]);
+      const Point l1 = Interpolate(p[perm[0]], p[perm[1]], dl1);
+      const double dl2 = imv / (v[perm[2]] - v[perm[0]]);
+      const Point l2 = Interpolate(p[perm[0]], p[perm[2]], dl2);
+      const double dl3 = imv / (v[perm[3]] - v[perm[0]]);
+      const Point l3 = Interpolate(p[perm[0]], p[perm[3]], dl3);
+
 
       nnodes[1] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[1]],
-			      l1, edgemap, clipped);
+			      dl1, l1, edgemap, clipped);
 
       nnodes[2] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[2]],
-			      l2, edgemap, clipped);
+			      dl2, l2, edgemap, clipped);
 
       nnodes[3] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[3]],
-			      l3, edgemap, clipped);
+			      dl3, l3, edgemap, clipped);
 
       clipped->add_elem(nnodes);
     }
@@ -344,24 +374,25 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       }
 
       const double imv = isoval - v[perm[0]];
-      const Point l1 = Interpolate(p[perm[0]], p[perm[1]],
-				   imv / (v[perm[1]] - v[perm[0]]));
-      const Point l2 = Interpolate(p[perm[0]], p[perm[2]],
-				   imv / (v[perm[2]] - v[perm[0]]));
-      const Point l3 = Interpolate(p[perm[0]], p[perm[3]],
-				   imv / (v[perm[3]] - v[perm[0]]));
+      const double dl1 = imv / (v[perm[1]] - v[perm[0]]);
+      const Point l1 = Interpolate(p[perm[0]], p[perm[1]], dl1);
+      const double dl2 = imv / (v[perm[2]] - v[perm[0]]);
+      const Point l2 = Interpolate(p[perm[0]], p[perm[2]], dl2);
+      const double dl3 = imv / (v[perm[3]] - v[perm[0]]);
+      const Point l3 = Interpolate(p[perm[0]], p[perm[3]], dl3);
+				   
 
       inodes[3] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[1]],
-			      l1, edgemap, clipped);
+			      dl1, l1, edgemap, clipped);
 
       inodes[4] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[2]],
-			      l2, edgemap, clipped);
+			      dl2, l2, edgemap, clipped);
 
       inodes[5] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[3]],
-			      l3, edgemap, clipped);
+			      dl3, l3, edgemap, clipped);
 
       const Point c1 = Interpolate(l1, l2, 0.5);
       const Point c2 = Interpolate(l2, l3, 0.5);
@@ -370,14 +401,17 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       inodes[6] = face_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[1]],
 			      (unsigned int)onodes[perm[2]],
+			      (2.0 - dl1 - dl2)*0.5, dl1*0.5, dl2*0.5,
 			      c1, facemap, clipped);
       inodes[7] = face_lookup((unsigned int)onodes[perm[2]],
 			      (unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[3]],
+			      dl2*0.5, (2.0 - dl2 - dl3)*0.5, dl3*0.5,
 			      c2, facemap, clipped);
       inodes[8] = face_lookup((unsigned int)onodes[perm[3]],
 			      (unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[1]],
+			      dl3*0.5, (2.0 - dl3 - dl1)*0.5, dl1*0.5,
 			      c3, facemap, clipped);
 
       nnodes[0] = inodes[0];
@@ -446,29 +480,31 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 	}
       }
       const double imv0 = isoval - v[perm[0]];
-      const Point l02 = Interpolate(p[perm[0]], p[perm[2]],
-				    imv0 / (v[perm[2]] - v[perm[0]]));
-      const Point l03 = Interpolate(p[perm[0]], p[perm[3]],
-				    imv0 / (v[perm[3]] - v[perm[0]]));
+      const double dl02 = imv0 / (v[perm[2]] - v[perm[0]]);
+      const Point l02 = Interpolate(p[perm[0]], p[perm[2]], dl02);
+      const double dl03 = imv0 / (v[perm[3]] - v[perm[0]]);
+      const Point l03 = Interpolate(p[perm[0]], p[perm[3]], dl03);
+				    
 
       const double imv1 = isoval - v[perm[1]];
-      const Point l12 = Interpolate(p[perm[1]], p[perm[2]],
-				    imv1 / (v[perm[2]] - v[perm[1]]));
-      const Point l13 = Interpolate(p[perm[1]], p[perm[3]],
-				    imv1 / (v[perm[3]] - v[perm[1]]));
+      const double dl12 = imv1 / (v[perm[2]] - v[perm[1]]);
+      const Point l12 = Interpolate(p[perm[1]], p[perm[2]], dl12);
+      const double dl13 = imv1 / (v[perm[3]] - v[perm[1]]);
+      const Point l13 = Interpolate(p[perm[1]], p[perm[3]], dl13);
+				    
 
       inodes[2] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[2]],
-			      l02, edgemap, clipped);
+			      dl02, l02, edgemap, clipped);
       inodes[3] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[3]],
-			      l03, edgemap, clipped);
+			      dl03, l03, edgemap, clipped);
       inodes[4] = edge_lookup((unsigned int)onodes[perm[1]],
 			      (unsigned int)onodes[perm[2]],
-			      l12, edgemap, clipped);
+			      dl12, l12, edgemap, clipped);
       inodes[5] = edge_lookup((unsigned int)onodes[perm[1]],
 			      (unsigned int)onodes[perm[3]],
-			      l13, edgemap, clipped);
+			      dl13, l13, edgemap, clipped);
 
       const Point c1 = Interpolate(l02, l03, 0.5);
       const Point c2 = Interpolate(l12, l13, 0.5);
@@ -476,10 +512,16 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       inodes[6] = face_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[2]],
       			      (unsigned int)onodes[perm[3]],
+			      (2.0 - dl02 - dl03)*0.5,
+			      dl02*0.5,
+			      dl03*0.5,
       			      c1, facemap, clipped);
       inodes[7] = face_lookup((unsigned int)onodes[perm[1]],
 			      (unsigned int)onodes[perm[2]],
 			      (unsigned int)onodes[perm[3]],
+			      (2.0 - dl12 - dl13)*0.5,
+			      dl12*0.5,
+			      dl13*0.5,
       			      c2, facemap, clipped);
 
       nnodes[0] = inodes[7];
@@ -552,6 +594,83 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
     ++fmitr;
   }
+
+  // Create the interpolant matrix.
+  typename FIELD::mesh_type::Node::size_type nodesize;
+  clipped->size(nodesize);
+  const int nrows = nodesize;
+  mesh->size(nodesize);
+  const int ncols = nodesize;
+  int *rr = scinew int[nrows+1];
+  int *cctmp = scinew int[nrows*3];
+  double *dtmp = scinew double[nrows*3];
+
+  for (int i = 0; i < nrows * 3; i++)
+  {
+    cctmp[i] = -1;
+  }
+
+  int nnz = 0;
+
+  // Add the data values from the old field to the new field.
+  nmitr = nodemap.begin();
+  while (nmitr != nodemap.end())
+  {
+    cctmp[(*nmitr).second * 3] = (*nmitr).first;
+    dtmp[(*nmitr).second * 3 + 0] = 1.0;
+    nnz++;
+    ++nmitr;
+  }
+
+  // Insert the double hits into cc.
+  // Put the isovalue at the edge break points.
+  emitr = edgemap.begin();
+  while (emitr != edgemap.end())
+  {
+    cctmp[(*emitr).second * 3 + 0] = (*emitr).first.first;
+    cctmp[(*emitr).second * 3 + 1] = (*emitr).first.second;
+    dtmp[(*emitr).second * 3 + 0] = 1.0 - (*emitr).first.dfirst;
+    dtmp[(*emitr).second * 3 + 1] = (*emitr).first.dfirst;
+    nnz+=2;
+    ++emitr;
+  }
+
+  // Insert the double hits into cc.
+  // Put the isovalue at the edge break points.
+  fmitr = facemap.begin();
+  while (fmitr != facemap.end())
+  {
+    cctmp[(*fmitr).second * 3 + 0] = (*fmitr).first.first;
+    cctmp[(*fmitr).second * 3 + 1] = (*fmitr).first.second;
+    cctmp[(*fmitr).second * 3 + 2] = (*fmitr).first.third;
+    dtmp[(*fmitr).second * 3 + 0] = (*fmitr).first.dfirst;
+    dtmp[(*fmitr).second * 3 + 1] = (*fmitr).first.dsecond;
+    dtmp[(*fmitr).second * 3 + 2] = (*fmitr).first.dthird;
+    nnz+=3;
+
+    ++fmitr;
+  }
+
+  int *cc = scinew int[nnz];
+  double *d = scinew double[nnz];
+  
+  int j;
+  int counter = 0;
+  rr[0] = 0;
+  for (j = 0; j < nrows*3; j++)
+  {
+    if (j%3 == 0) { rr[j/3 + 1] = rr[j/3]; }
+    if (cctmp[j] != -1)
+    {
+      cc[counter] = cctmp[j];
+      d[counter] = dtmp[j];
+      rr[j/3 + 1]++;
+      counter++;
+    }
+  }
+  delete [] cctmp;
+  delete [] dtmp;
+  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
 
   return ofield;
 }
