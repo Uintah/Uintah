@@ -175,7 +175,7 @@ void PrintComponentNode(component_node* node);
 // copies the resulting DOM tree into "node"
 //
 
-void ReadComponentNodeFromFile(component_node* node, const char* filename);
+int ReadComponentNodeFromFile(component_node* node, const char* filename);
 
 
 //////////////////////////
