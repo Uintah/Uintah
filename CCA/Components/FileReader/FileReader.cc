@@ -27,8 +27,8 @@
  */
 
 #include <CCA/Components/FileReader/FileReader.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <CCA/Components/Builder/QtUtils.h>
 
 #include <qfiledialog.h>

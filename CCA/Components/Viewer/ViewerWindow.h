@@ -40,8 +40,8 @@
 #include <qscrollview.h>
 #include <math.h>
 #include <stdlib.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 
 #include <Core/CCA/spec/cca_sidl.h>
 

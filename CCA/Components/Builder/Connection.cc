@@ -1,6 +1,7 @@
 #include "Connection.h"
 
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 Connection::Connection(Module *pU, const std::string &portname1, Module *pP, 
 		       const std::string &portname2,

@@ -29,8 +29,9 @@
 #include "Delaunay.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <fstream.h>
+#include <fstream>
 #include <Core/CCA/spec/cca_sidl.h>
+using namespace std;
 
 Delaunay::Delaunay()
 {

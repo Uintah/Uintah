@@ -31,6 +31,7 @@
 #include <iostream>
 
 #include "Colormap.h"
+using namespace std;
 
 Colormap::Colormap( QWidget *parent, const QString &type, double min, double max) 
   : QFrame( parent )

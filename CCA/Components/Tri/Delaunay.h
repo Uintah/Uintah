@@ -94,7 +94,7 @@ public:
   Delaunay(const CIA::array1<double> &nodes1d, const CIA::array1<int> &boundaries1d);
   Delaunay();
 
-  void readNodes(istream &s);	//read nodes from a stream
+  void readNodes(std::istream &s);	//read nodes from a stream
   std::vector<vector2d> getNodes();
   std::vector<Circle> getCircles();
   std::vector<Triangle> getTriangles();
