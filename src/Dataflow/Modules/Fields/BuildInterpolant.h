@@ -57,13 +57,13 @@ typedef pair<typename LDST::index_type,
 
 #ifdef HAVE_HASH_MAP
 typedef hash_map<unsigned int,
-  dst_src_pair,
-  hash<unsigned int>, 
-  equal_to<unsigned int> > hash_type;
+		 dst_src_pair,
+		 hash<unsigned int>, 
+		 equal_to<unsigned int> > hash_type;
 #else
 typedef map<unsigned int,
-  dst_src_pair,
-  equal_to<unsigned int> > hash_type;
+	    dst_src_pair,
+	    less<unsigned int> > hash_type;
 #endif
 
 typedef struct _BIData {

@@ -75,6 +75,7 @@ struct SpecialUnstructuredHash
   { return n; }
 };
 
+#ifdef HAVE_HASH_MAP
 struct SpecialUnstructuredEqual
 {
   bool operator()(const LatVolMesh::Node::index_type &a,
@@ -101,6 +102,34 @@ struct SpecialUnstructuredEqual
 		  const ScanlineMesh::Elem::index_type &b) const
   { return a == b; }
 };
+#else
+struct SpecialUnstructuredLess
+{
+  bool operator()(const LatVolMesh::Node::index_type &a,
+		  const LatVolMesh::Node::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && ( a.j_ < b.j_ || a.j_ == b.j_ && a.k_ < b.k_); }
+
+  bool operator()(const ImageMesh::Node::index_type &a,
+		  const ImageMesh::Node::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
+
+  bool operator()(const ScanlineMesh::Node::index_type &a,
+		  const ScanlineMesh::Node::index_type &b) const
+  { return a < b; }
+
+  bool operator()(const LatVolMesh::Elem::index_type &a,
+		  const LatVolMesh::Elem::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && ( a.j_ < b.j_ || a.j_ == b.j_ && a.k_ < b.k_); }
+
+  bool operator()(const ImageMesh::Elem::index_type &a,
+		  const ImageMesh::Elem::index_type &b) const
+  { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
+
+  bool operator()(const ScanlineMesh::Elem::index_type &a,
+		  const ScanlineMesh::Elem::index_type &b) const
+  { return a < b; }
+};
+#endif
 
 
 template <class FSRC, class FDST>
@@ -117,23 +146,21 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
     typename FDST::mesh_type::Node::index_type,
     SpecialUnstructuredHash, SpecialUnstructuredEqual> node_hash_type;
-#else
-  typedef map<typename FSRC::mesh_type::Node::index_type,
-    typename FDST::mesh_type::Node::index_type,
-    SpecialUnstructuredEqual> node_hash_type;
-#endif
-  node_hash_type nodemap;
 
-#ifdef HAVE_HASH_MAP
   typedef hash_map<typename FSRC::mesh_type::Elem::index_type,
     typename FDST::mesh_type::Elem::index_type,
     SpecialUnstructuredHash, SpecialUnstructuredEqual> elem_hash_type;
 #else
+  typedef map<typename FSRC::mesh_type::Node::index_type,
+    typename FDST::mesh_type::Node::index_type,
+    SpecialUnstructuredLess> node_hash_type;
+
   typedef map<typename FSRC::mesh_type::Elem::index_type,
     typename FDST::mesh_type::Elem::index_type,
-    SpecialUnstructuredEqual> elem_hash_type;
+    SpecialUnstructuredLess> elem_hash_type;
 #endif
   
+  node_hash_type nodemap;
   elem_hash_type elemmap;
   mesh->synchronize(Mesh::ALL_ELEMENTS_E);
   typename FSRC::mesh_type::Elem::iterator bi, ei;
