@@ -158,11 +158,14 @@ public:
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
 
+#if 0
   void redistributeDragForceFromCCtoFC(const ProcessorGroup*,
 				       const PatchSubset* patches,
 				       const MaterialSubset* ,
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
+
+#endif
 
 
   double d_SMALL_NUM;

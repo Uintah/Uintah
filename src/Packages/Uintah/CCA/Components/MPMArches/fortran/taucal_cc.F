@@ -1,8 +1,8 @@
       subroutine taucal_cc(
      $     su_drag_fcy, sp_drag_fcy, 
      $     dragforcex_fcy, 
-     $     ug_cc, up_fcy, epsg, 
-     $     epsg_solid,
+     $     ug_cc, up_fcy, eps_Gas, 
+     $     eps_Solid,
      $     sew, stb, yv, yy,
      $     viscos, csmag, sign,
      $     idist, 
@@ -93,12 +93,12 @@ C--------------------------------------------------------------------
      $     dim_lo_upy(2):dim_hi_upy(2),
      $     dim_lo_upy(3):dim_hi_upy(3))
 
-      double precision epsg(
+      double precision eps_Gas(
      $     dim_lo_eps(1):dim_hi_eps(1),
      $     dim_lo_eps(2):dim_hi_eps(2),
      $     dim_lo_eps(3):dim_hi_eps(3))
 
-      double precision epsg_solid(
+      double precision eps_Solid(
      $     dim_lo_epss(1):dim_hi_epss(1),
      $     dim_lo_epss(2):dim_hi_epss(2),
      $     dim_lo_epss(3):dim_hi_epss(3))
@@ -156,7 +156,7 @@ C--------------------------------------------------------------------
       if (pcell(i,j,k).eq.ffield) then 
 
          yp = sign*(yv(idt1)-yy(idt1-idist))
-         eps = epsg(i,j,k)
+         eps = eps_Gas(i,j,k)
 
          ii = idist*iorig + (1-idist)*i
          jj = idist*jorig + (1-idist)*j
@@ -170,14 +170,14 @@ c     model
 
             tmult = eps*(csmag*yp)**2*abs((up_fcy(ii,jj,kk) - 
      $           ug_cc(i,j,k))/yp)/yp
-            tmult = tmult*epsg_solid(iorig,jorig,korig)
+            tmult = tmult*eps_Solid(iorig,jorig,korig)
 
          else
 
 c     laminar flow
 
             tmult = eps*viscos/yp
-            tmult = tmult*epsg_solid(iorig,jorig,korig)
+            tmult = tmult*eps_Solid(iorig,jorig,korig)
 
          end if
 

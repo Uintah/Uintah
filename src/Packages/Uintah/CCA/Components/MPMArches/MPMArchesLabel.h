@@ -42,26 +42,23 @@ namespace Uintah {
       const VarLabel* DragForceY_CCLabel;
       const VarLabel* DragForceZ_CCLabel;
 
-      const VarLabel* DragForceY_FCX_BRLabel; 
-      const VarLabel* DragForceZ_FCX_BRLabel; 
-
-      const VarLabel* DragForceX_FCY_BRLabel; 
-      const VarLabel* DragForceZ_FCY_BRLabel; 
-
-      const VarLabel* DragForceX_FCZ_BRLabel; 
-      const VarLabel* DragForceY_FCZ_BRLabel; 
-
+#if 0
       const VarLabel* DragForceX_FCXLabel; 
+#endif
       const VarLabel* DragForceY_FCXLabel; 
       const VarLabel* DragForceZ_FCXLabel; 
 
       const VarLabel* DragForceX_FCYLabel; 
+#if 0
       const VarLabel* DragForceY_FCYLabel; 
+#endif
       const VarLabel* DragForceZ_FCYLabel; 
 
       const VarLabel* DragForceX_FCZLabel; 
       const VarLabel* DragForceY_FCZLabel; 
+#if 0
       const VarLabel* DragForceZ_FCZLabel; 
+#endif
 
       const VarLabel* PressureForce_FCXLabel; 
       const VarLabel* PressureForce_FCYLabel; 
