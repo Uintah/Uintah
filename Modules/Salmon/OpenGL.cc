@@ -256,7 +256,7 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 	glLoadIdentity();
 	int viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
-	gluPickMatrix(x, y, pick_window, pick_window, viewport);
+	gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
 	gluPerspective(fovy, aspect, znear, zfar);
 	
 	glMatrixMode(GL_MODELVIEW);

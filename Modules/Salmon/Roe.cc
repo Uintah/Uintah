@@ -521,7 +521,7 @@ void Roe::mouse_pick(int action, int x, int y)
 	    total_y=0;
 	    total_z=0;
 	    last_x=x;
-	    last_y=y;
+	    last_y=current_renderer->yres-y;
 	    current_renderer->get_pick(manager, this, x, y,
 				       pick_obj, pick_pick);
 
@@ -536,11 +536,10 @@ void Roe::mouse_pick(int action, int x, int y)
     case MouseMove:
 	{
 	    if (!pick_obj || !pick_pick) break;
-	    double xmtn=last_x-x;
-	    double ymtn=last_y-y;
 // project the center of the item grabbed onto the screen -- take the z
 // component and unprojec the last and current x, y locations to get a 
 // vector in object space.
+	    y=current_renderer->yres-y;
 	    BBox itemBB;
 	    pick_obj->get_bounds(itemBB);
 	    View tmpview(view.get());
