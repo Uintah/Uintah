@@ -60,8 +60,7 @@ namespace Uintah {
       const VarLabel* get_delt_label() const {
 	 return delt_label;
       }
-      
-      void registerMaterial(Material*);
+
       void registerMPMMaterial(MPMMaterial*);
       void registerICEMaterial(ICEMaterial*);
       int getNumMatls() const {
@@ -98,6 +97,9 @@ namespace Uintah {
       }
 
    private:
+
+      void registerMaterial(Material*);
+
       SimulationState(const SimulationState&);
       SimulationState& operator=(const SimulationState&);
       
@@ -113,6 +115,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.15  2001/01/09 22:34:56  jas
+// Moved registerMaterial to private:.  This is called when you either
+// register a MPM or ICE material.  There is no need to call registerMaterial
+// inside the application.
+//
 // Revision 1.14  2000/11/13 21:39:57  guilkey
 // Added stuff for ICEMaterial analogous to the MPMMaterial stuff added
 // last week.

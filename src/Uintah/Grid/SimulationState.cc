@@ -33,11 +33,13 @@ void SimulationState::registerMaterial(Material* matl)
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
 {
    mpm_matls.push_back(matl);
+   registerMaterial(matl);
 }
 
 void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
    ice_matls.push_back(matl);
+   registerMaterial(matl);
 }
 
 SimulationState::~SimulationState()
@@ -52,6 +54,11 @@ SimulationState::~SimulationState()
 
 //
 // $Log$
+// Revision 1.19  2001/01/09 22:34:56  jas
+// Moved registerMaterial to private:.  This is called when you either
+// register a MPM or ICE material.  There is no need to call registerMaterial
+// inside the application.
+//
 // Revision 1.18  2001/01/05 18:57:12  witzel
 // allow delT to have multiple computes in the task graph
 //

@@ -124,7 +124,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
     // Extract out the type of EOS and the 
     // associated parameters
      ICEMaterial *mat = scinew ICEMaterial(ps);
-     sharedState->registerMaterial(mat);
      sharedState->registerICEMaterial(mat);
   }     
 
@@ -3478,6 +3477,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.83  2001/01/09 22:35:48  jas
+// Moved registerMaterial to private:.  This is called when you either
+// register a MPM or ICE material.  There is no need to call registerMaterial
+// inside the application.
+//
 // Revision 1.82  2001/01/09 21:18:04  jas
 // Moved all computations of delT to actuallyComputeStableTimestep.  This
 // includes specification of the initialDt and the one based on velocity
