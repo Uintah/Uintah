@@ -18,6 +18,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
+#include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
@@ -281,7 +282,7 @@ int main(int argc, char** argv)
     }
     if(do_listvars){
       vector<string> vars;
-      vector<const TypeDescription*> types;
+      vector<const Uintah::TypeDescription*> types;
       da->queryVariables(vars, types);
       cout << "There are " << vars.size() << " variables:\n";
       for(int i=0;i<(int)vars.size();i++){
@@ -290,7 +291,7 @@ int main(int argc, char** argv)
     }
     if(do_varsummary){
       vector<string> vars;
-      vector<const TypeDescription*> types;
+      vector<const Uintah::TypeDescription*> types;
       da->queryVariables(vars, types);
       ASSERTEQ(vars.size(), types.size());
       cout << "There are " << vars.size() << " variables:\n";
@@ -320,8 +321,8 @@ int main(int argc, char** argv)
 	GridP grid = da->queryGrid(time);
 	for(int v=0;v<(int)vars.size();v++){
 	  std::string var = vars[v];
-	  const TypeDescription* td = types[v];
-	  const TypeDescription* subtype = td->getSubType();
+	  const Uintah::TypeDescription* td = types[v];
+	  const Uintah::TypeDescription* subtype = td->getSubType();
 	  cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	  for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
@@ -336,9 +337,9 @@ int main(int argc, char** argv)
 		int matl = *matlIter;
 		cout << "\t\t\tMaterial: " << matl << "\n";
 		switch(td->getType()){
-		case TypeDescription::ParticleVariable:
+		case Uintah::TypeDescription::ParticleVariable:
 		  switch(subtype->getType()){
-		  case TypeDescription::double_type:
+		  case Uintah::TypeDescription::double_type:
 		    {
 		      ParticleVariable<double> value;
 		      da->query(value, var, matl, patch, time);
@@ -357,7 +358,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Point:
+		  case Uintah::TypeDescription::Point:
 		    {
 		      ParticleVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
@@ -376,7 +377,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Vector:
+		  case Uintah::TypeDescription::Vector:
 		    {
 		      ParticleVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
@@ -395,7 +396,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Matrix3:
+		  case Uintah::TypeDescription::Matrix3:
 		    {
 		      ParticleVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
@@ -419,9 +420,9 @@ int main(int argc, char** argv)
 		    break;
 		  }
 		  break;
-		case TypeDescription::NCVariable:
+		case Uintah::TypeDescription::NCVariable:
 		  switch(subtype->getType()){
-		  case TypeDescription::double_type:
+		  case Uintah::TypeDescription::double_type:
 		    {
 		      NCVariable<double> value;
 		      da->query(value, var, matl, patch, time);
@@ -440,7 +441,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Point:
+		  case Uintah::TypeDescription::Point:
 		    {
 		      NCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
@@ -459,7 +460,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Vector:
+		  case Uintah::TypeDescription::Vector:
 		    {
 		      NCVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
@@ -478,7 +479,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Matrix3:
+		  case Uintah::TypeDescription::Matrix3:
 		    {
 		      NCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
@@ -502,9 +503,9 @@ int main(int argc, char** argv)
 		    break;
 		  }
 		  break;
-		case TypeDescription::CCVariable:
+		case Uintah::TypeDescription::CCVariable:
 		  switch(subtype->getType()){
-		  case TypeDescription::double_type:
+		  case Uintah::TypeDescription::double_type:
 		    {
 		      CCVariable<double> value;
 		      da->query(value, var, matl, patch, time);
@@ -523,7 +524,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Point:
+		  case Uintah::TypeDescription::Point:
 		    {
 		      CCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
@@ -542,7 +543,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Vector:
+		  case Uintah::TypeDescription::Vector:
 		    {
 		      CCVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
@@ -561,7 +562,7 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Matrix3:
+		  case Uintah::TypeDescription::Matrix3:
 		    {
 		      CCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
@@ -598,7 +599,7 @@ int main(int argc, char** argv)
     
     if (do_asci){
       vector<string> vars;
-      vector<const TypeDescription*> types;
+      vector<const Uintah::TypeDescription*> types;
       da->queryVariables(vars, types);
       ASSERTEQ(vars.size(), types.size());
       int freq = 1; int ts=1;
@@ -665,14 +666,14 @@ int main(int argc, char** argv)
 	       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		   matlIter != matls.end(); matlIter++){
 		 int matl = *matlIter;
-		 const TypeDescription* td = types[v];
-		 const TypeDescription* subtype = td->getSubType();
+		 const Uintah::TypeDescription* td = types[v];
+		 const Uintah::TypeDescription* subtype = td->getSubType();
 		 switch(td->getType()){
 	        
 		   // The following only accesses particle data
-		 case TypeDescription::ParticleVariable:
+		 case Uintah::TypeDescription::ParticleVariable:
 		   switch(subtype->getType()){
-		   case TypeDescription::double_type:
+		   case Uintah::TypeDescription::double_type:
 		     {
 		       ParticleVariable<double> value;
 		       da->query(value, var, matl, patch, time);
@@ -690,7 +691,7 @@ int main(int argc, char** argv)
 		       partnum=num_of_particles;
 		     }
 		     break;
-		   case TypeDescription::Point:
+		   case Uintah::TypeDescription::Point:
 		     {
 		       ParticleVariable<Point> value;
 		       da->query(value, var, matl, patch, time);
@@ -702,7 +703,7 @@ int main(int argc, char** argv)
 		       }
 		     }
 		     break;
-		   case TypeDescription::Vector:
+		   case Uintah::TypeDescription::Vector:
 		     {
 		       ParticleVariable<Vector> value;
 		       da->query(value, var, matl, patch, time);
@@ -714,7 +715,7 @@ int main(int argc, char** argv)
 		       }
 		     }
 		     break;
-		   case TypeDescription::Matrix3:
+		   case Uintah::TypeDescription::Matrix3:
 		     {
 		       ParticleVariable<Matrix3> value;
 		       da->query(value, var, matl, patch, time);
@@ -765,14 +766,14 @@ int main(int argc, char** argv)
 		for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		    matlIter != matls.end(); matlIter++){
 		  int matl = *matlIter;
-		  const TypeDescription* td = types[v];
-		  const TypeDescription* subtype = td->getSubType();
+		  const Uintah::TypeDescription* td = types[v];
+		  const Uintah::TypeDescription* subtype = td->getSubType();
 	        
 		  // the following only accesses particle data
 		  switch(td->getType()){
-		  case TypeDescription::ParticleVariable:
+		  case Uintah::TypeDescription::ParticleVariable:
 		    switch(subtype->getType()){
-		    case TypeDescription::double_type:
+		    case Uintah::TypeDescription::double_type:
 		      {
 			ParticleVariable<double> value;
 			da->query(value, var, matl, patch, time);
@@ -786,7 +787,7 @@ int main(int argc, char** argv)
 			}
 		      }
 		      break;
-		    case TypeDescription::Point:
+		    case Uintah::TypeDescription::Point:
 		      {
 			ParticleVariable<Point> value;
 			da->query(value, var, matl, patch, time);
@@ -810,7 +811,7 @@ int main(int argc, char** argv)
 			}
 		      }
 		      break;
-		    case TypeDescription::Vector:
+		    case Uintah::TypeDescription::Vector:
 		      {
 			ParticleVariable<Vector> value;
 			da->query(value, var, matl, patch, time);
@@ -834,7 +835,7 @@ int main(int argc, char** argv)
 			}
 		      }
 		      break;
-		    case TypeDescription::Matrix3:
+		    case Uintah::TypeDescription::Matrix3:
 		      {
 			ParticleVariable<Matrix3> value;
 			da->query(value, var, matl, patch, time);
@@ -909,7 +910,7 @@ int main(int argc, char** argv)
 		
     if (do_cell_stresses){
       vector<string> vars;
-      vector<const TypeDescription*> types;
+      vector<const Uintah::TypeDescription*> types;
       da->queryVariables(vars, types);
       ASSERTEQ(vars.size(), types.size());
       
@@ -969,8 +970,8 @@ int main(int argc, char** argv)
 	  
 	  // only dumps out data if it is variable g.stressFS
 	  if (var == "g.stressFS"){
-	    const TypeDescription* td = types[v];
-	    const TypeDescription* subtype = td->getSubType();
+	    const Uintah::TypeDescription* td = types[v];
+	    const Uintah::TypeDescription* subtype = td->getSubType();
 	    cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	    for(int l=0;l<grid->numLevels();l++){
 	      LevelP level = grid->getLevel(l);
@@ -999,9 +1000,9 @@ int main(int argc, char** argv)
 		  
 		  cout << "\t\t\tMaterial: " << matl << "\n";
 		  switch(td->getType()){
-		  case TypeDescription::NCVariable:
+		  case Uintah::TypeDescription::NCVariable:
 		    switch(subtype->getType()){
-		    case TypeDescription::Matrix3:{
+		    case Uintah::TypeDescription::Matrix3:{
 		      NCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
 		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex()
@@ -1065,7 +1066,7 @@ int main(int argc, char** argv)
       }
 
       vector<string> vars;
-      vector<const TypeDescription*> types;
+      vector<const Uintah::TypeDescription*> types;
       da->queryVariables(vars, types);
       ASSERTEQ(vars.size(), types.size());
       cout << "There are " << vars.size() << " variables:\n";
@@ -1134,8 +1135,8 @@ int main(int argc, char** argv)
 	      std::string var = vars[v];
 	      //cerr << "***********Found variable " << var << "*********\n";
 	      variable_file = replaceChar(var,'.','_');
-	      const TypeDescription* td = types[v];
-	      const TypeDescription* subtype = td->getSubType();
+	      const Uintah::TypeDescription* td = types[v];
+	      const Uintah::TypeDescription* subtype = td->getSubType();
 
 	      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
 	      // loop over materials
@@ -1152,17 +1153,17 @@ int main(int argc, char** argv)
 		  material_data = material_data_list[matl];
 		
 	        switch(td->getType()){
-	        case TypeDescription::ParticleVariable:
+	        case Uintah::TypeDescription::ParticleVariable:
 		  if (do_PTvar) {
 		    switch(subtype->getType()){
-		    case TypeDescription::double_type:
+		    case Uintah::TypeDescription::double_type:
 		      {
 			ParticleVariable<double> value;
 			da->query(value, var, matl, patch, time);
 			material_data.pv_double_list.push_back(value);
 		      }
 		    break;
-		    case TypeDescription::Point:
+		    case Uintah::TypeDescription::Point:
 		      {
 			ParticleVariable<Point> value;
 			da->query(value, var, matl, patch, time);
@@ -1174,14 +1175,14 @@ int main(int argc, char** argv)
 			}
 		      }
 		    break;
-		    case TypeDescription::Vector:
+		    case Uintah::TypeDescription::Vector:
 		      {
 			ParticleVariable<Vector> value;
 			da->query(value, var, matl, patch, time);
 			material_data.pv_vector_list.push_back(value);
 		      }
 		    break;
-		    case TypeDescription::Matrix3:
+		    case Uintah::TypeDescription::Matrix3:
 		      {
 			ParticleVariable<Matrix3> value;
 			da->query(value, var, matl, patch, time);
@@ -1194,9 +1195,9 @@ int main(int argc, char** argv)
 		    }
 		    break;
 		  }
-		case TypeDescription::NCVariable:
+		case Uintah::TypeDescription::NCVariable:
 		  switch(subtype->getType()){
-		  case TypeDescription::double_type:
+		  case Uintah::TypeDescription::double_type:
 		    {
 		      if (do_NCvar_double) {
 			// setup output files
@@ -1238,21 +1239,21 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Point:
+		  case Uintah::TypeDescription::Point:
 		    {
 		      if (do_NCvar_point) {
 			// not implemented at this time
 		      }
 		    }
 		  break;
-		  case TypeDescription::Vector:
+		  case Uintah::TypeDescription::Vector:
 		    {
 		      if (do_NCvar_vector) {
 			// not implemented at this time
 		      }
 		    }
 		  break;
-		  case TypeDescription::Matrix3:
+		  case Uintah::TypeDescription::Matrix3:
 		    {
 		      if (do_NCvar_matrix3) {
 			// not implemented at this time
@@ -1264,9 +1265,9 @@ int main(int argc, char** argv)
 		    break;
 		  }
 		  break;
-		case TypeDescription::CCVariable:
+		case Uintah::TypeDescription::CCVariable:
 		  switch(subtype->getType()){
-		  case TypeDescription::double_type:
+		  case Uintah::TypeDescription::double_type:
 		    {
 		      if (do_CCvar_double) {
 			// setup output files
@@ -1308,21 +1309,21 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
-		  case TypeDescription::Point:
+		  case Uintah::TypeDescription::Point:
 		    {
 		      if (do_CCvar_point) {
 			// not implemented at this time
 		      }
 		    }
 		  break;
-		  case TypeDescription::Vector:
+		  case Uintah::TypeDescription::Vector:
 		    {
 		      if (do_CCvar_vector) {
 			// not implemented at this time
 		      }
 		    }
 		  break;
-		  case TypeDescription::Matrix3:
+		  case Uintah::TypeDescription::Matrix3:
 		    {
 		      if (do_CCvar_matrix3) {
 			// not implemented at this time
