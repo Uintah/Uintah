@@ -116,7 +116,15 @@ GenericField<Mesh, FData>::query_interpolate_to_scalar() const
 {
   return new GInterp();
 }
-   
+
+#if defined(__sgi)  
+// Turns off REMARKS like this:
+//cc-1424 CC: REMARK File = ./Core/Datatypes/TetVol.h, Line = 45
+//The template parameter "T" is not used in declaring the argument types of
+//          function template "SCIRun::make_TetVol".
+ 
+#pragma set woff 1424
+#endif
 
 // PIO
 const double GENERICFIELD_VERSION = 1.0;
@@ -164,6 +172,10 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
   Pio(stream, fdata_);
   stream.end_class();
 }
+
+#if defined(__sgi)  
+#pragma reset woff 1424
+#endif
 
 } // end namespace SCIRun
 
