@@ -301,6 +301,7 @@ SparseRowMatrix::put(int i, int j, double d)
     if (h<l)
     {
       ASSERTFAIL("SparseRowMatrix::put into invalid(dataless) location.");
+      return;
     }
     int m=(l+h)/2;
     if (j<columns[m])
@@ -314,6 +315,7 @@ SparseRowMatrix::put(int i, int j, double d)
     else
     {
       a[m] = d;
+      return;
     }
   }
 }
@@ -331,6 +333,7 @@ SparseRowMatrix::add(int i, int j, double d)
     if (h<l)
     {
       ASSERTFAIL("SparseRowMatrix::add into invalid(dataless) location.");
+      return;
     }
     int m=(l+h)/2;
     if (j<columns[m])
@@ -344,6 +347,7 @@ SparseRowMatrix::add(int i, int j, double d)
     else
     {
       a[m] += d;
+      return;
     }
   }
 }
