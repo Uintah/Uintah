@@ -6,7 +6,7 @@
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/ICE
-ICE_DIR  := Uintah/Components/ICE/ice_sm
+ICE_DIR  := $(SRCTOP)/Uintah/Components/ICE/ice_sm
 
 ifeq ($(NBITS),64)
 ICE_LIBS := $(ICE_DIR)/Libraries/64bit
@@ -14,13 +14,17 @@ else
 ICE_LIBS := $(ICE_DIR)/Libraries/n32bit
 endif
 
-SRCS	+= $(SRCDIR)/ICE.cc
+SRCS	+= $(SRCDIR)/ICE_actual.cc $(SRCDIR)/ICE_schedule.cc \
+           $(SRCDIR)/array_conversion.cc
 
 INCLUDES += -I$(ICE_DIR)/Header_files
 
 PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions 
-LIBS 	:= $(XML_LIBRARY) -L$(ICE_DIR) -lICE -L$(ICE_LIBS) -ltecio -lcpgplot -lpgplot  -lX11 -L. -lmalloc_cv \
-	 -lftn -lm
+LIBS 	:= $(XML_LIBRARY) \
+           $(SRCTOP)/Uintah/Components/ICE/ice_sm/libICE.a \
+           -L$(ICE_DIR) -lICE -L$(ICE_LIBS) -ltecio \
+           -lcpgplot -lpgplot  -lX11 -L. -lmalloc_cv \
+           -lftn -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
@@ -62,13 +66,16 @@ SRCS	:= $(ICE_DIR)/main2.c	\
         $(ICE_DIR)/Source_Sinks/shear_stress.c			\
         $(ICE_DIR)/initialize_variables.c			\
         $(ICE_DIR)/nrutil+.c
-LIBS:= -L $(ICE_LIBS) -ltecio -lcpgplot -lpgplot  -lX11 -L. -lmalloc_cv \
+LIBS:= -L$(ICE_LIBS) -ltecio -lcpgplot -lpgplot  -lX11 -L. -lmalloc_cv \
 	 -lftn -lm
 include $(SRCTOP)/scripts/program.mk
 
 
 #
 # $Log$
+# Revision 1.8  2000/06/28 00:25:28  guilkey
+# MCQ fixed this.
+#
 # Revision 1.7  2000/06/14 21:53:19  jehall
 # - Fixed typos in last commit
 #
