@@ -15,11 +15,14 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/wvelsrc.F $(SRCDIR)/arrass.F $(SRCDIR)/mascal.F \
 	$(SRCDIR)/apcal.F $(SRCDIR)/prescoef.F $(SRCDIR)/pressrc.F \
 	$(SRCDIR)/bcuvel.F $(SRCDIR)/bcvvel.F $(SRCDIR)/bcwvel.F  \
-	$(SRCDIR)/bcpress.F $(SRCDIR)/bcscalar.F $(SRCDIR)/symbcs.F \
+	$(SRCDIR)/bcpress.F $(SRCDIR)/symbcs.F \
 	$(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F $(SRCDIR)/wallbc.F \
 	$(SRCDIR)/fixval.F \
 	$(SRCDIR)/scalcoef.F $(SRCDIR)/coeffb.F $(SRCDIR)/rmean.F \
-	$(SRCDIR)/addpressgrad.F
+	$(SRCDIR)/addpressgrad.F \
+	$(SRCDIR)/bcscalar.F \
+	$(SRCDIR)/scalsrc.F
+
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -54,6 +57,9 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.30  2000/07/30 22:59:32  bbanerje
+# Added scalar source term calcs.
+#
 # Revision 1.29  2000/07/30 22:21:26  bbanerje
 # Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
 # in C++ side.
