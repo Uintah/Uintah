@@ -57,7 +57,7 @@ void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int
     Ab[i]=0;
     if (offset_by_first_row) offset[i]=A[0][i]; else offset[i]=0;
   }
-  if (offset_by_first_row) b_offset=b[0]; else b_offset=b[0];
+  if (offset_by_first_row) b_offset=b[0]; else b_offset=0;
   for (i=0; i<size; i++) {
     AtA[0][0] += (A[0][i]-offset[0])*(A[0][i]-offset[0]);
     AtA[0][1] += (A[0][i]-offset[0])*(A[1][i]-offset[1]);
