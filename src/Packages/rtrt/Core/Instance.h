@@ -111,7 +111,8 @@ public:
     o->animate(time, changed);
   }
 
-  bool interior_value(double& ret_val, const Ray &ref, const double _t) {
+  virtual bool interior_value(double& ret_val, const Ray &ref, const double _t)
+  {
     Ray tray;
 
     ref.transform(currentTransform,tray);
