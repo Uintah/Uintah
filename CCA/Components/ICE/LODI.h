@@ -101,7 +101,7 @@ namespace Uintah {
                         const Patch::FaceType face,
                         vector<Patch::FaceType>& face0);
                                  
-  int otherDirection(int dir1, int dir2);
+  int remainingVectorComponent(int dir1, int dir2);
   
   void FaceDensity_LODI(const Patch* patch,
                        const Patch::FaceType face,
