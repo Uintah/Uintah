@@ -126,10 +126,13 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     chdir(testname)
 
     # call the callback function before running each test
-    callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
+    callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
+
+    inputxml = path.basename(input(test))
+    system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
 
     # Run normal test
-    rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
+    rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism)
     if rc == 0:
       # Prepare for restart test
       mkdir("restart")
@@ -139,7 +142,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
       # Run restart test
-      rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, DO_RESTART)
+      rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART)
       if rc == 1:
         failcode = 1
       chdir("..")
@@ -172,7 +175,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   exit(failcode)
 
 
-def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, do_restart = "no"):
+def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, do_restart = "no"):
   ALGO = upper(algo)
   testname = nameoftest(test)
   np = float(num_processes(test))
@@ -200,7 +203,7 @@ def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelis
   if do_restart == "yes":
     susinput = "-restart ../*.uda.000 -t 0 -move"
   else:
-    susinput = "%s/%s" % (inputsdir, input(test))
+    susinput = "%s" % (inputxml)
 
   if mode == "dbg":
     if do_restart == "yes":
