@@ -220,7 +220,7 @@ DWDatabase<VarType, DomainType>::scrub(const VarLabel* var, int matlIndex,
   if(iter != names.end()){
     domainDBtype& domainDB = iter->second->domains;
     typename domainDBtype::iterator domainRecordIter = domainDB.find(domainid);
-    DomainRecord* domainRecord;
+    DomainRecord* domainRecord = 0;
     if (domainRecordIter != domainDB.end() &&
 	((domainRecord = domainRecordIter->second) != 0)) {
       ASSERTEQ(domainRecord->getDataItem(matlIndex)->scrubCount, 0);
