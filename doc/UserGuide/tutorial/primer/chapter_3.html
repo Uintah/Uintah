@@ -75,12 +75,12 @@
                 split into two steps.  The first step is to generate a
                 set of samples points; the second is to interpolate
                 the datavalues from the original Field onto those new
-                sample points.  In this sub-section we will describe
+                sample points.  In this section we will describe
                 some of our sample generation modules.  In the next
-                sub-section we will talk about data interpolation.
+                section we will talk about data interpolation.
                   
                 <p>To generate a cutting plane, we use a
-                SCIRun/Fields/FieldBoundary module.  This module takes
+                SCIRun/Fields/SamplePlane module.  This module takes
                 a Field as input, and sends a Field as output.  The
                 input Field is only used to specify the geometric
                 bounds for the samples.  The SamplePlane module
