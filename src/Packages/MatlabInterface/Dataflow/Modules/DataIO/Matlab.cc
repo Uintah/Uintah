@@ -32,7 +32,7 @@ class MatlabInterfaceSHARE Matlab : public Module
   int wordy;            // how wordy debug output is
   bool force_execute_;
 
-  static bool engine_running;   // ==1 if engine runs under SCIRun
+  static bool engine_running;   // == true, if engine runs under SCIRun
 
 public:
   Matlab(GuiContext *context);
@@ -62,7 +62,7 @@ Matlab::Matlab(GuiContext *context) :
 
 #include <unistd.h>
 
-bool Matlab::engine_running = 0;
+bool Matlab::engine_running = false;
 
 
 Matlab::~Matlab()
