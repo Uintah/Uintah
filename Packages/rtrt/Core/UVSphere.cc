@@ -94,6 +94,46 @@ void UVSphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
   }	
 }
 
+// Maybe this could be improved - steve
+void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
+                               DepthStats* st, PerProcessorContext*)
+{
+  Vector v=xform.project(ray.direction());
+  double dist_scale = v.normalize();
+  Ray xray(xform.project(ray.origin()), v);
+  Vector xOC=-xform.project(ray.origin()).asVector();
+  double tca=Dot(xOC, xray.direction());
+  double l2oc=xOC.length2();
+  double rad2=1;
+  st->sphere_isect++;
+  if(l2oc <= rad2){
+    // Inside the sphere
+    double t2hc=rad2-l2oc+tca*tca;
+    double thc=sqrt(t2hc);
+    double t=tca+thc;
+    hit.shadowHit(this, t);
+    st->sphere_light_hit++;
+    return;
+  } else {
+    if(tca < 0.0){
+      // Behind ray, no intersections...
+      return;
+    } else {
+      double t2hc=rad2-l2oc+tca*tca;
+      if(t2hc <= 0.0){
+	// Ray misses, no intersections
+	return;
+      } else {
+	double thc=sqrt(t2hc);
+	hit.shadowHit(this, tca-thc);
+	hit.shadowHit(this, tca+thc);
+	st->sphere_light_hit++;
+	return;
+      }
+    }
+  }	
+}
+
 Vector UVSphere::normal(const Point& hitpos, const HitInfo&)
 {
   Vector n(hitpos-cen);
@@ -113,7 +153,7 @@ void UVSphere::uv(UV& uv, const Point& hitpos, const HitInfo&)
   Vector m(xform.project(hitpos).asVector());
   double uu,vv,theta,phi;  
   theta = acos(m.z());
-  phi = -atan2(m.y(), m.x());
+  phi = atan2(m.y(), m.x());
   if(phi < 0) phi += 6.28318530718;
   uu = phi * .159154943092; // 1_pi
   vv = (M_PI - theta) * .318309886184; // 1 / ( 2 * pi )
