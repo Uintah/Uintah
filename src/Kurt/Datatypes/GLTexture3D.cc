@@ -3,6 +3,7 @@
 #include "VolumeUtils.h"
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Math/MiscMath.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Datatypes/ScalarFieldRGint.h>
@@ -18,9 +19,12 @@
 #include <GL/gl.h>
 #include <iostream>
 #include <string>
+#include <deque>
 
-
-
+using std::cerr;
+using std::endl;
+using std::string;
+using std::deque;
 
 
 namespace Kurt {
@@ -28,9 +32,6 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 using SCICore::Containers::clString;
-using std::cerr;
-using std::endl;
-using std::string;
 
 
 // NCScalarField<double> sfdr0;
@@ -77,12 +78,18 @@ GLTexture3D::GLTexture3D(ScalarFieldRGBase *tex ) :
   _tex(tex), X(tex->nx), Y(tex->ny),
   Z(tex->nz),  xmax(64), ymax(64), zmax(64), isCC(false)
 {
+
   tex->get_bounds( minP, maxP );
   tex->get_minmax( _min, _max );
   SetBounds();
   computeTreeDepth(); 
 //   bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, tex, 0);
   BuildTexture();
+}
+
+GLTexture3D::~GLTexture3D()
+{
+  delete bontree;
 }
 
 void GLTexture3D::SetBounds()
@@ -146,6 +153,8 @@ void GLTexture3D::BuildTexture()
   } else {
     cerr<<"Error: cast didn't work!\n";
   }
+  ASSERT(bontree != 0x0);
+  //  SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 }
 
 bool
@@ -247,7 +256,6 @@ bool GLTexture3D::SetMaxBrickSize(int maxBrick)
    glPrintError("glGetTexLevelParameteriv3");
    glDisable(GL_TEXTURE_3D);
    glPrintError("glDisable(GL_TEXTURE_3D)");   
-   std::cerr<<xtex<<" "<<ytex<<" "<<ztex<<std::endl;
    if( xtex && ytex) { // we can accommodate 
      xmax = ymax = zmax = maxBrick; 
      return true;
@@ -295,7 +303,7 @@ GLTexture3D::buildBonTree(Point min, Point max,
   if ( ysize <= ymax ) ytex = 1;
   if ( zsize <= zmax ) ztex = 1;
 
-  brickData = new Array3<unsigned char>();
+  brickData = scinew Array3<unsigned char>();
   int padx = 0,pady = 0,padz = 0;
 
   if( xtex && ytex && ztex) { // we can accommodate
@@ -316,9 +324,9 @@ GLTexture3D::buildBonTree(Point min, Point max,
     makeBrickData(newx,newy,newz,xsize,ysize,zsize, xoff,yoff,zoff,
 		  tex, brickData);
 
-    brick = new Brick(min, max, padx,  pady, padz, level, brickData);
+    brick = scinew Brick(min, max, padx,  pady, padz, level, brickData);
 
-    node = new Octree<Brick*>(brick, Octree<Brick *>::LEAF,
+    node = scinew Octree<Brick*>(brick, Octree<Brick *>::LEAF,
 				    parent );
   } else { // we must subdivide
 
@@ -326,9 +334,9 @@ GLTexture3D::buildBonTree(Point min, Point max,
 			xoff, yoff, zoff, level, padx, pady, padz,
 			tex, brickData);
 
-    brick = new Brick(min, max, padx, pady, padz, level, brickData);
+    brick = scinew Brick(min, max, padx, pady, padz, level, brickData);
 
-    node = new Octree<Brick*>(brick, Octree<Brick *>::PARENT,
+    node = scinew Octree<Brick*>(brick, Octree<Brick *>::PARENT,
 				    parent);
 
     int sx = xmax, sy = ymax, sz = zmax, tmp;
