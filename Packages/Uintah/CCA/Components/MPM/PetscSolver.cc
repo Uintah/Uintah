@@ -25,7 +25,6 @@ MPMPetscSolver::MPMPetscSolver()
   d_B = 0;
   d_diagonal = 0;
   d_x = 0;
-  sles = 0;
 #endif
 }
 
@@ -144,30 +143,31 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 void MPMPetscSolver::solve()
 {
 #ifdef HAVE_PETSC
-  PC          pc;           
-  KSP         ksp;
+  PC          precond;           
+  KSP         solver;
 #if 0
   PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_MATLAB);
   MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
 #endif
-  SLESCreate(PETSC_COMM_WORLD,&sles);
-  SLESSetOperators(sles,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
-  SLESGetKSP(sles,&ksp);
-  SLESGetPC(sles,&pc);
-  KSPSetType(ksp,KSPCG);
-  PCSetType(pc,PCJACOBI);
-  KSPSetTolerances(ksp,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+  KSPCreate(PETSC_COMM_WORLD,&solver);
+  KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
+  KSPGetPC(solver,&precond);
+  KSPSetType(solver,KSPCG);
+  PCSetType(precond,PCJACOBI);
+  KSPSetTolerances(solver,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
   
-  int its;
+
 #ifdef debug
   VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
 #endif
-  SLESSolve(sles,d_B,d_x,&its);
+  KSPSolve(solver,d_B,d_x);
 #ifdef LOG
-  SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
+  KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
+  int its;
+  KSPGetIterationNumber(solver,&its);
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
 #endif
-  SLESDestroy(sles);
+  KSPDestroy(solver);
 #endif
 }
 

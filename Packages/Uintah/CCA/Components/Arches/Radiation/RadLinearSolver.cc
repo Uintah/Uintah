@@ -432,7 +432,7 @@ bool
 RadLinearSolver::radLinearSolve()
 {
   double solve_start = Time::currentSeconds();
-  KSP ksp;
+  KSP solver;
   PC peqnpc; // pressure eqn pc
  
   int ierr;
@@ -500,19 +500,17 @@ RadLinearSolver::radLinearSolve()
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ierr = SLESCreate(PETSC_COMM_WORLD,&sles);
+  ierr = KSPCreate(PETSC_COMM_WORLD,&solver);
 
   if(ierr)
-    throw PetscError(ierr, "SLESCreate");
-  ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);
+    throw PetscError(ierr, "KSPCreate");
+  ierr = KSPSetOperators(solver,A,A,DIFFERENT_NONZERO_PATTERN);
   if(ierr)
-    throw PetscError(ierr, "SLESSetOperators");
-  ierr = SLESGetKSP(sles,&ksp);
+    throw PetscError(ierr, "KSPSetOperators");
+
+  ierr = KSPGetPC(solver, &peqnpc);
   if(ierr)
-    throw PetscError(ierr, "SLESGetKSP");
-  ierr = SLESGetPC(sles, &peqnpc);
-  if(ierr)
-    throw PetscError(ierr, "SLESGetPC");
+    throw PetscError(ierr, "KSPGetPC");
   if (d_pcType == "jacobi") {
     ierr = PCSetType(peqnpc, PCJACOBI);
     if(ierr)
@@ -540,34 +538,37 @@ RadLinearSolver::radLinearSolve()
       throw PetscError(ierr, "PCSetType");
   }
   if (d_kspType == "cg") {
-    ierr = KSPSetType(ksp, KSPCG);
+    ierr = KSPSetType(solver, KSPCG);
     if(ierr)
       throw PetscError(ierr, "KSPSetType");
   }
   else {
-    ierr = KSPSetType(ksp, KSPGMRES);
+    ierr = KSPSetType(solver, KSPGMRES);
     if(ierr)
       throw PetscError(ierr, "KSPSetType");
   }
-  ierr = KSPSetTolerances(ksp, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  ierr = KSPSetTolerances(solver, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   if(ierr)
     throw PetscError(ierr, "KSPSetTolerances");
 
-  ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
+  ierr = KSPSetInitialGuessNonzero(solver, PETSC_TRUE);
   if(ierr)
     throw PetscError(ierr, "KSPSetInitialGuessNonzero");
   
-  ierr = SLESSetFromOptions(sles);
+  ierr = KSPSetFromOptions(solver);
   if(ierr)
-    throw PetscError(ierr, "SLESSetFromOptions");
+    throw PetscError(ierr, "KSPSetFromOptions");
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                       Solve the linear system
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   int its;
-  ierr = SLESSolve(sles,d_b,d_x,&its);
+  ierr = KSPSolve(solver,d_b,d_x);
   if(ierr)
-    throw PetscError(ierr, "SLESSolve");
+    throw PetscError(ierr, "KSPSolve");
+  ierr = KSPGetIterationNumber(solver,&its);
+  if (ierr)
+    throw PetscError(ierr, "KSPGetIterationNumber");
   int me = d_myworld->myrank();
 
   ierr = VecNorm(d_x,NORM_1,&norm);
@@ -589,14 +590,14 @@ RadLinearSolver::radLinearSolve()
     throw PetscError(ierr, "VecNorm");
 
   if(me == 0) {
-     cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
+     cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
      cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
      cerr << "Sum of RHS vector: " << sum_b << endl;
   }
 #if 1
-  ierr = SLESDestroy(sles);
+  ierr = KSPDestroy(solver);
   if(ierr)
-    throw PetscError(ierr, "SLESDestroy");
+    throw PetscError(ierr, "KSPDestroy");
 #endif
 #if 0
   ierr = VecDestroy(d_u);
