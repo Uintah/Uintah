@@ -672,6 +672,44 @@ TriSurfMesh::size(TriSurfMesh::Cell::size_type &s) const
 }
 
 
+
+MeshHandle
+TriSurfMesh::clip(Clipper &clipper)
+{
+  TriSurfMesh *clipped = scinew TriSurfMesh();
+
+  Elem::iterator bi, ei;
+  begin(bi); end(ei);
+  while (bi != ei)
+  {
+    Point p;
+    get_center(p, *bi);
+    if (clipper.inside_p(p))
+    {
+      // Add this element to the new mesh.
+      Node::array_type nodes;
+      get_nodes(nodes, *bi);
+      
+      Point t0, t1, t2;
+      get_center(t0, nodes[0]);
+      get_center(t1, nodes[1]);
+      get_center(t2, nodes[2]);
+
+      clipped->add_triangle(clipped->add_find_point(t0),
+			    clipped->add_find_point(t1),
+			    clipped->add_find_point(t2));
+    }
+    
+    ++bi;
+  }
+
+  clipped->flush_changes();  // Really should copy normals
+  return clipped;
+}
+
+
+
+
 const TypeDescription*
 TriSurfMesh::get_type_description() const
 {
@@ -742,5 +780,6 @@ get_type_description(TriSurfMesh::Cell *)
   }
   return td;
 }
+
 
 } // namespace SCIRun

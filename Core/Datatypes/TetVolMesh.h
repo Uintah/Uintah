@@ -216,6 +216,9 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
+
+  virtual MeshHandle clip(Clipper &clipper);
+
 private:
 
   bool inside4_p(int, const Point &p) const;
