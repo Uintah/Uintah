@@ -49,6 +49,7 @@ itcl_class Teem_Unu_UnuMake {
 	global $this-val1
 	global $this-val2
 	global $this-val3
+	global $this-kind
 
 	set $this-filename ""
 	set $this-header_filename ""
@@ -69,6 +70,7 @@ itcl_class Teem_Unu_UnuMake {
 	set $this-val1 ""
 	set $this-val2 ""
 	set $this-val3 ""
+	set $this-kind "nrrdKindUnknown"
 
 	trace variable $this-data_type w "$this set_data_type"
 	trace variable $this-encoding w "$this set_encoding"
@@ -114,6 +116,7 @@ itcl_class Teem_Unu_UnuMake {
 	# file types to appers in filter box
 	set types {
 	    {{Raw File}      {.raw}           }
+	    {{ASCII Text}      {.txt}           }
 	    {{Hex File}      {.hex}           }
 	    {{Zipped File}      {.zip .gzip}           }
 	    {{All Files}          {.*}            }
@@ -264,6 +267,14 @@ itcl_class Teem_Unu_UnuMake {
 	pack $inf.h.whead  $inf.h.browse -anchor nw -side left -padx 4 -pady 4
 	Tooltip $inf.h.browse "Specify the header file to write out."
 
+	iwidgets::optionmenu $inf.kind -labeltext "nrrdKind of First Axis:" \
+	    -labelpos w -command "$this update_kind $inf.kind"
+	$inf.kind insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
+	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
+	    nrrdKind3DSymTensor nrrdKind3DMaskedSymTensor nrrdKind3DTensor
+	pack $inf.kind -side top -anchor nw -padx 3 -pady 3
+	$inf.kind select nrrdKindUnknown
+
 	frame $inf.a
 	pack $inf.a -side top -anchor nw -fill x -expand 1
 
@@ -370,6 +381,11 @@ itcl_class Teem_Unu_UnuMake {
 	grid $kv.val3 -row 3 -col 1
 	
 	pack $w -fill x -expand yes -side top
+    }
+
+    method update_kind {op} {
+	set which [$op get]
+	set $this-kind $which
     }
 
 
