@@ -16,7 +16,7 @@
 </xsl:template>
 
 <xsl:template match="pre" mode="question">
-  <div class="box">
+  <div class="box"><br/>
     <pre class="example">
       <font color="blue"><b><xsl:apply-templates/></b></font>
     </pre>
@@ -28,7 +28,7 @@
 </xsl:template>
 
 <xsl:template match="pre" mode="answer">
-  <div class="box">
+  <div class="box"><br/>
     <pre class="example">
       <font color="blue"><xsl:apply-templates/></font>
     </pre>
