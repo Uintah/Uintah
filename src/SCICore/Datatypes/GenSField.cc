@@ -13,56 +13,178 @@
 namespace SCICore{
 namespace Datatypes{
 
-template <class T> PersistentTypeID GenSField<T>::type_id("GenSField", "Datatype", 0);
+template <class T, class G, class A>
+PersistentTypeID GenSField<T,G,A>::type_id("GenSField", "Datatype", 0);
 
-template <class T> GenSField<T>::GenSField():
+template <class T, class G, class A >
+GenSField<T,G,A>::GenSField():
   SField(){
 }
 
-template <class T> GenSField<T>::~GenSField(){
+template <class T, class G, class A >
+GenSField<T,G,A>::~GenSField(){
 }
 
-template <class T> GenSField<T>::GenSField(Geom* igeom, Attrib* iattrib):
-  SField(){
-  geom = 0;
-  attrib = 0;
-  geom = igeom;
-  attrib = iattrib;
+template <class T, class G, class A >
+GenSField<T,G,A>::GenSField(G* igeom, A* iattrib):
+  SField(), geom(igeom), attrib(iattrib){
 }
 
-template <class T> GenSField<T>::GenSField(const GenSField&){
+template <class T, class G, class A >
+GenSField<T,G,A>::GenSField(const GenSField& copy){
 }
 
-template <class T> void GenSField<T>::resize(int a, int b, int c){
-}
-
-template <class T> T& GenSField<T>::grid(const Point&){
-  return *(new T);
-}
-
-template <class T> T& GenSField<T>::operator[](int){
-  return *(new T);
-}
-
-template <class T> void GenSField<T>::set_bounds(const Point&, const Point&){
-}
-
-template <class T> FieldInterface* GenSField<T>::query_interface(const string& istring){
-  if(istring == "sinterpolate"){
-    return dynamic_cast<SInterpolate<T>*>(this);
+template <class T, class G, class A >
+bool GenSField<T,G,A>::resize(int a, int b, int c){
+  LatticeGeom* lgeom = geom->get_latticegeom();
+  if(lgeom && attrib.get_rep()){
+    lgeom->resize(a, b, c);
+    attrib->resize(a, b, c);
+    return true;
   }
   else{
-    // nothing matched, call parent class
-    return Field::query_interface(istring);
+    return false;
   }
 }
 
-template <class T> int GenSField<T>::sinterpolate(const Point& ipoint, T& outval){
-
-  return 0;
+template <class T, class G, class A >
+T& GenSField<T,G,A>::grid(int x, int y, int z){
+  if(attrib.get_rep()){
+    return attrib->grid(x, y, z);
+  }
+  else{
+    ///THROW NO_ATTRIB_EXCEPTION
+  }
 }
 
-template <class T> void GenSField<T>::io(Piostream&){
+template <class T, class G, class A >
+T& GenSField<T,G,A>::operator[](int a){
+  if(attrib.get_rep()){
+    A* tmpattrib= attrib.get_rep();
+    return (*(attrib.get_rep()))[a];
+  }
+  else{
+    ///THROW NO_ATTRIB_EXCEPTION    
+  }
+}
+
+template <class T, class G, class A >
+bool GenSField<T,G,A>::set_geom_name(string iname){
+  if(geom.get_rep()){
+    geom->set_name(iname);
+    return true;
+  }
+  return false;
+}
+
+template <class T, class G, class A >
+bool GenSField<T,G,A>::set_attrib_name(string iname){
+ if(attrib.get_rep()){
+    attrib->set_name(iname);
+    return true;
+  }
+  return false;
+}
+
+template <class T, class G, class A >
+Geom* GenSField<T,G,A>::get_geom(){
+  return (Geom*) geom.get_rep();
+}
+
+template <class T, class G, class A >
+Attrib* GenSField<T,G,A>::get_attrib(){
+  return attrib.get_rep();
+}
+
+template <class T, class G, class A >
+  bool GenSField<T,G,A>::get_bbox(BBox& bbox){
+  if(geom.get_rep()){
+    if(geom->get_bbox(bbox)){
+      return 1;
+    }
+    else{
+      return 0;
+    }
+  }
+  else{
+    return 0;
+  }  
+}
+
+
+template <class T, class G, class A >
+bool GenSField<T,G,A>::set_bbox(const BBox& bbox){
+  if(geom.get_rep()){
+    if(geom->set_bbox(bbox)){
+      return 1;
+    }
+    else{
+      return 0;
+    }
+  }
+  else{
+    return 0;
+  }
+}
+
+template <class T, class G, class A >
+  bool GenSField<T,G,A>::set_bbox(const Point& p1, const Point& p2){
+  if(geom.get_rep()){
+    if(geom->set_bbox(p1, p2)){
+      return 1;
+    }
+    else{
+      return 0;
+    }
+  }
+  else{
+    return 0;
+  }
+}
+
+template <class T, class G, class A >
+bool GenSField<T,G,A>::get_minmax(double& imin, double& imax){
+  if(attrib.get_rep()){
+    return attrib->get_minmax(imin, imax);
+  }
+  else{
+    return false;
+  }
+}
+
+template <class T, class G, class A >
+bool GenSField<T,G,A>::longest_dimension(double &odouble){
+  if(geom.get_rep()){
+    return geom->longest_dimension(odouble);
+  }
+  else{
+    return false;
+  }
+}
+
+//template <class T, class G, class A >
+//BinaryFunction GenSField<T,G,A>::walk(const BBox& ibbox, BinaryFunction op){
+//  // foreach node inside ibbox
+//  op(thisnode);
+//
+//  // return the BinaryFunction
+//  return op;
+//}
+
+template <class T, class G, class A >
+int GenSField<T,G,A>::slinterpolate(const Point& p, double& outval,
+							      double eps=1.e-6 ){
+  return geom->slinterpolate<A>(attrib.get_rep(), data_loc, p, outval, eps);
+}
+
+template <class T, class G, class A >
+Vector GenSField<T,G,A>::gradient(const Point& ipoint){
+  return Vector();
+}
+
+
+template <class T, class G, class A >
+void GenSField<T,G,A>::io(Piostream&){
 }
 
 

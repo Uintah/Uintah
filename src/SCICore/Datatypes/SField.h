@@ -17,6 +17,7 @@
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/Field.h>
 #include <SCICore/Datatypes/FieldInterface.h>
+#include <SCICore/Datatypes/FlatSAttrib.h>
 
 namespace SCICore{
 namespace Datatypes{
@@ -31,7 +32,7 @@ typedef LockingHandle<SField> SFieldHandle;
 
 class SCICORESHARE SField:public Field{
 public:
-  //////////
+   //////////
   // Constructor
   SField();
 
@@ -43,12 +44,16 @@ public:
   // Used by SFieldHandle to obtain a SField*
   inline SField* get_base() {return this;};
 
+  //////////
+  // Return the min and max values
+  virtual bool get_minmax(double&, double&) = 0;
 
   //////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-private:  
+private:
+  bool has_minmax;
 };
 
 } // end SCICore

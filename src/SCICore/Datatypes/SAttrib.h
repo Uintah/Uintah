@@ -17,16 +17,10 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 
-#include <vector>
-#include <string>
-
 namespace SCICore{
 namespace Datatypes{
 
-using std::vector;
-using std::string;
 using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
@@ -34,9 +28,24 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class SAttrib:public Attrib //abstract class
 {
 public:
-  virtual ~SAttrib() { };
-protected:
+  SAttrib();
+  SAttrib(const SAttrib& copy);
+  SAttrib(int, int, int);
+  SAttrib(int, int);
+  SAttrib(int);
   
+  virtual ~SAttrib() { };
+
+  /////////
+  // Return the min and max data values;
+  virtual bool get_minmax(double&, double&);
+  virtual bool compute_minmax() = 0;
+  
+protected:
+
+  double min;
+  double max;
+  bool has_minmax;
 };
 
 

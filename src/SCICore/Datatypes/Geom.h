@@ -14,8 +14,10 @@
 
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Datatypes/Attrib.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/BBox.h>
 
 #include <vector>
 #include <string>
@@ -27,46 +29,68 @@ namespace Datatypes{
 using SCICore::Containers::LockingHandle;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
+using SCICore::Geometry::BBox;
 using std::vector;
 using std::string;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
+using SCICore::Math::Max;
 
+class LatticeGeom;
 class Geom;
 typedef LockingHandle<Geom> GeomHandle;
 
 
-// The bounding box
-struct Bbox{
-  Point min;
-  Point max;
-};
-
-// The 4 ints indicate the 4 nodes that make up an element
-struct Elem{
-  int n[4];
-};
+enum elem_t;
 
 class SCICORESHARE Geom:public Datatype{  
 public:
-  
+
+  Geom();
   virtual ~Geom(){ };
-  virtual Bbox& getBbox() {return bbox;};
-  virtual void setBbox(const Bbox& ibbox) {bbox = ibbox;};
+
+  //////////
+  // return the bounding box, if it is not allready computed 
+  virtual bool get_bbox(BBox&);
+
+  //////////
+  // Set the bounding box
+  virtual bool set_bbox(const BBox& ibbox);
+  virtual bool set_bbox(const Point& min, const Point& max);
+  
+  //////////
+  // Compute the bounding box, set has_bbox to true
+  virtual bool compute_bbox() = 0;
+
+  //////////
+  // Compute the longest dimension
+  bool longest_dimension(double&);
+
+  //////////
+  // Return the diaganol
+  bool get_diagonal(Vector&);
+  
+  //////////
+  // Return a string describing this geometry.
   virtual string get_info() = 0;
+
+
+  //////////
+  // Return a pointer to the geometry if it is of type LatticeGeom
+  // otherwise return NULL
+  LatticeGeom* get_latticegeom();
+
   
   inline void set_name(string iname) {name=iname;};
   inline string get_name() {return name;};
   
   // ...
 protected:
-  Bbox bbox;
+  BBox bbox;
   string name;
-  Point bmin, bmax;
-  Vector diagnal;
-  
+  Vector diagonal;
+  bool has_bbox;
 };
-
 
 } // end namespace Datatypes
 } // end namespace SCICore
