@@ -182,6 +182,8 @@ PointCloudMesh::Node::index_type
 EdgeMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 				      double d0, const Point &p) 
 {
+  if (d0 <= 0.0) { u1 = (unsigned int)-1; }
+  if (d0 >= 1.0) { u0 = (unsigned int)-1; }
   edgepair_t np;
   if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
   else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
