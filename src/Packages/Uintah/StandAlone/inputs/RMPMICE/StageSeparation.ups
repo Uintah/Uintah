@@ -28,11 +28,11 @@
     <Grid>
     <BoundaryConditions>
       <!--________________Inside Nozzle_______________-->
-      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.04">
-	 <BCType id = "0"   label = "Pressure"      var = "Neumann">
+      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.03875">
+	 <BCType id = "0"   label = "Pressure"      var = "Custom">
 			       <value> 0.0   </value>
 	 </BCType>
-	 <BCType id = "1" label = "Velocity"         var = "Neumann">
+	 <BCType id = "1" label = "Velocity"         var = "Custom">
 			       <value> [0.0,0.,0.] </value>
 	 </BCType>
 	 <BCType id = "1" label = "Temperature"      var = "Custom">
@@ -136,7 +136,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>StageSeparation.uda</filebase>
-      <!--<outputTimestepInterval>10</outputTimestepInterval>-->
+      <!--<outputTimestepInterval>1</outputTimestepInterval> -->
       <outputInterval>1e-4</outputInterval>
       <save label = "press_equil_CC"/>
       <save label = "vol_frac_CC"/>
@@ -147,7 +147,6 @@
       <save label = "temp_CC"/>  
       <save label = "mach"/>  
       <save label = "p.x"/>
-      <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.color"/>
       <checkpoint cycle = "2" interval = "1e-4"/>
@@ -243,7 +242,7 @@
                  <name>1stStage</name>
                </tri>         
                <res>                [2,2,1]          </res>
-               <velocity>           [9,0.,0.]      </velocity>
+               <velocity>           [0.2,0.,0.]      </velocity>
                <temperature>        224.23           </temperature>
              </geom_object>
           </material>
