@@ -86,7 +86,7 @@ void Gradient::execute()
 	Element* e=mesh->elems[i];
 	Point pt;
 	Vector grad1, grad2, grad3, grad4;
-	double vol=mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
+	/*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
 	double v1=sfield->data[e->n[0]];
 	double v2=sfield->data[e->n[1]];
 	double v3=sfield->data[e->n[2]];
@@ -98,7 +98,7 @@ void Gradient::execute()
     }
     for(i=0;i<nnodes;i++){
 	update_progress(i, nnodes);
-	Node* n=mesh->nodes[i];
+	NodeHandle& n=mesh->nodes[i];
 	gradients[i]*=1./(n->elems.size());
     }
     outfield->send(vfield);

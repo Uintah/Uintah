@@ -215,11 +215,11 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, Matrix& lcl_a,
 	  // higher order elements
      {	  
 	  int ii = mesh->elems[el]->n[i];
-	  Node* n1=mesh->nodes[ii];
+	  NodeHandle& n1=mesh->nodes[ii];
 	  if(n1->ndof > 0){
 	      for (int j=0; j<4; j++) {
 		  int jj = mesh->elems[el]->n[j];
-		  Node* n2=mesh->nodes[jj];
+		  NodeHandle& n2=mesh->nodes[jj];
 		  if(n2->ndof > 0){
 		      gbl_a[ii][jj] += lcl_a[i][j];
 		  } else {
