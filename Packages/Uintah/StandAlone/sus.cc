@@ -192,6 +192,7 @@ main( int argc, char** argv )
     bool   do_mpmf=false;      // for Fracture
     bool   do_rmpm=false;      // for rigid MPM
     bool   do_smpm=false;      // for shell MPM
+    bool   do_smpmice=false;   // for shell MPM with ICE
     bool   do_impmpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
@@ -253,8 +254,7 @@ main( int argc, char** argv )
 	} else if(s == "-smpm"){
           do_smpm=true;
 	} else if(s == "-smpmice"){
-          do_smpm=true;
-          do_ice=true;
+	  do_smpmice = true;
 	} else if(s == "-impm"){
 	  do_impmpm=true;
 	} else if(s == "-arches"){
@@ -366,7 +366,7 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
+    if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm || do_smpmice || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
 	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
     }
 
@@ -466,11 +466,11 @@ main( int argc, char** argv )
           RigidMPM* rmpm = scinew RigidMPM(world);
 	  sim = rmpm;
 	  comp = rmpm;
-	} else if(do_smpm && !do_ice){
+	} else if(do_smpm){
           ShellMPM* smpm = scinew ShellMPM(world);
 	  sim = smpm;
 	  comp = smpm;
-	} else if(do_smpm && do_ice){
+	} else if(do_smpmice){
 	  MPMICE* mpmice = scinew MPMICE(world, SHELL_MPMICE);
 	  sim = mpmice;
 	  comp = mpmice;
