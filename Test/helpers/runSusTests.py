@@ -363,9 +363,6 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     susinput = "%s" % (inputxml)
     restart_text = " "
 
-    # debug
-    system("echo startpath: %s >> /home/sci/worthen/debug" % startpath)
-
   if do_memory_test == 1:
     if restart == "yes":
       malloc_stats_file = "restart_malloc_stats"        
