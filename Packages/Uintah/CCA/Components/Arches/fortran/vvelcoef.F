@@ -46,11 +46,8 @@ c*********************************************************************
       LSMPT = .FALSE.
       LCENTRAL = .FALSE.
       filtcend = .false.
-      if (lcend) then
-         L2UP = .FALSE.
-      else
-         L2UP = .TRUE.
-      endif
+      L2UP = .FALSE.
+      
 
 c*********************************************************************
 c     Go thru all the cells
