@@ -7,6 +7,7 @@
 #include <Classlib/Timer.h>
 #include <Geom/Geom.h>
 #include <Geom/GeomOpenGL.h>
+#include <Geom/Light.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
 #include <tcl/tcl7.3/tcl.h>
@@ -14,7 +15,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <values.h>
 
 class OpenGL : public Renderer {
     Tk_Window tkwin;
@@ -22,7 +22,6 @@ class OpenGL : public Renderer {
     Display* dpy;
     GLXContext cx;
     clString myname;
-    double aspect;
 public:
     OpenGL();
     virtual ~OpenGL();
@@ -58,10 +57,8 @@ clString OpenGL::create_window(const clString& name,
 			       const clString& height)
 {
     myname=name;
-    double w,h;
-    width.get_double(w);
-    height.get_double(h);
-    aspect=(double)w/(double)h;
+    width.get_int(xres);
+    height.get_int(yres);
     return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct true -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 2";
 }
 
@@ -95,12 +92,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	TCLTask::unlock();
     }
 
-    // Setup lighting
-    NOT_FINISHED("OpenGL::setup_lighting");
-    GLfloat light_position0[] = { 500,500,-100,1};
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
-    GLfloat light_position1[] = { -50,-100,100,1};
-    glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
+    TCLTask::lock();
 
     // Clear the screen...
     glClearColor(0,0,0,1);
@@ -108,61 +100,71 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
     // Setup the view...
     View view(roe->view.get());
+    double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov/2.))));
 
     DrawInfoOpenGL drawinfo;
     drawinfo.polycount=0;
 
     // Compute znear and zfar...
-    double znear=MAXDOUBLE;
-    double zfar=-MAXDOUBLE;
-    BBox bb;
-    roe->get_bounds(bb);
-    if(bb.valid()) {
-	// We have something to draw...
-	Point min(bb.min());
-	Point max(bb.max());
-	Point eyep(view.eyep);
-	Vector dir(view.lookat-eyep);
-	dir.normalize();
-	double d=-Dot(eyep, dir);
-	for(int ix=0;ix<2;ix++){
-	    for(int iy=0;iy<2;iy++){
-		for(int iz=0;iz<2;iz++){
-		    Point p(ix?max.x():min.x(),
-			    iy?max.y():min.y(),
-			    iz?max.z():min.z());
-		    double dist=Dot(p, dir)+d;
-		    cerr << "dist=" << dist << endl;
-		    znear=Min(znear, dist);
-		    zfar=Max(zfar, dist);
-		}
-	    }
-	}
-	znear-=1;
-	zfar+=1;
-	if(znear <= 0){
-	    if(zfar <= 0){
-		// Everything is behind us - it doesn't matter what we do
-		znear=1.0;
-		zfar=2.0;
-	    } else {
-		znear=zfar*.001;
-	    }
-	}
+    double znear;
+    double zfar;
+    if(compute_depth(roe, view, znear, zfar)){
+	glViewport(0, 0, xres, yres);
+	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(fovy, aspect, znear, zfar);
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	Point eyep(view.eyep);
 	Point lookat(view.lookat);
 	Vector up(view.up);
 	gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		  lookat.x(), lookat.y(), lookat.z(),
 		  up.x(), up.y(), up.z());
-	cerr << "eyep=" << eyep << ", lookat=" << lookat << ", up=" << up.string() << endl;
-	cerr << "fov=" << fovy << endl;
-	cerr << "aspect=" << aspect << endl;
-	cerr << "znear=" << znear << endl;
-	cerr << "zfar=" << zfar << endl;
 
+	// Set up Lighting
+	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	Lighting& l=salmon->lighting;
+	int idx=0;
+	for(int i=0;i<l.lights.size();i++){
+	    Light* light=l.lights[i];
+	    light->opengl_setup(view, &drawinfo, idx);
+	}
+	for(i=0;i<idx && i<GL_MAX_LIGHTS;i++)
+	    glEnable(GL_LIGHT0+i);
+	for(;i<GL_MAX_LIGHTS;i++)
+	    glDisable(GL_LIGHT0+i);
+
+	// Set up graphics state
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_NORMALIZE);
+
+	clString shading(roe->shading.get());
+	if(shading == "wire"){
+	    drawinfo.drawtype=DrawInfoOpenGL::WireFrame;
+	    drawinfo.lighting=0;
+	} else if(shading == "flat"){
+	    drawinfo.drawtype=DrawInfoOpenGL::Flat;
+	    drawinfo.lighting=0;
+	} else if(shading == "gouraud"){
+	    drawinfo.drawtype=DrawInfoOpenGL::Gouraud;
+	    drawinfo.lighting=1;
+	} else if(shading == "phong"){
+	    drawinfo.drawtype=DrawInfoOpenGL::Phong;
+	    drawinfo.lighting=1;
+	} else {
+	    cerr << "Unknown shading(" << shading << "), defaulting to gouraud" << endl;
+	    drawinfo.drawtype=DrawInfoOpenGL::Gouraud;
+	    drawinfo.lighting=1;
+	}
+	drawinfo.currently_lit=0;
+	if(drawinfo.lighting)
+	    glEnable(GL_LIGHTING);
+	else
+	    glDisable(GL_LIGHTING);
 
 	// Draw it all...
 	drawinfo.push_matl(salmon->default_matl.get_rep());
@@ -182,7 +184,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     }
 
     // Show the pretty picture
-    TCLTask::lock();
     glXSwapBuffers(dpy, win);
     TCLTask::unlock();
 

@@ -15,6 +15,7 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
+#include <Comm/MessageBase.h>
 #include <Geom/Color.h>
 #include <Geom/View.h>
 #include <Geometry/BBox.h>
@@ -43,14 +44,27 @@ public:
     void set(const View&);
 };
 
+class Roe;
+typedef void (Roe::*MouseHandler)(int, int x, int y);
+
 class Roe : public TCL {
     Salmon* manager;
     HashTable<clString, Renderer*> renderers;
     Renderer* current_renderer;
 
+    void do_mouse(MouseHandler, TCLArgs&);
+
     BBox bb;
 
     int need_redraw;
+    int last_x, last_y;
+    double total_x, total_y;
+    Point rot_point;
+    int rot_point_valid;
+    View rot_view;
+    double total_scale;
+
+    void update_mode_string(const clString&);
 public:
     clString id;
 
@@ -69,12 +83,12 @@ public:
     void SetParent(Roe *r);
     void SetTop();
     void redrawAll();
-    void redraw_if_needed(int always);
+    void redraw_if_needed();
 
-    void mouse_translate(int, int, int, int, int);
-    void mouse_scale(int, int, int, int, int);
-    void mouse_rotate(int, int, int, int, int);
-    void mouse_pick(int, int, int, int, int);
+    void mouse_translate(int, int, int);
+    void mouse_scale(int, int, int);
+    void mouse_rotate(int, int, int);
+    void mouse_pick(int, int, int);
 
     void tcl_command(TCLArgs&, void*);
     void redraw();
@@ -88,6 +102,21 @@ public:
 
     // The Camera
     TCLView view;
+    View homeview;
+
+    // Shading parameters, etc.
+    TCLstring shading;
+};
+
+class RoeMouseMessage : public MessageBase {
+public:
+    clString rid;
+    MouseHandler handler;
+    int action;
+    int x, y;
+    RoeMouseMessage(const clString& rid, MouseHandler handler,
+		    int action, int x, int y);
+    virtual ~RoeMouseMessage();
 };
 
 #endif

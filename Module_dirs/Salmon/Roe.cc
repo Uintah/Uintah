@@ -22,79 +22,27 @@
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
+#include <Geometry/Transform.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
 #include <Geom/PointLight.h>
+#include <Math/Trig.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
 
-typedef void (Roe::*MouseHandler)(int action, int x, int y,
-				  int x_root, int y_root);
-#define BUTTON_DOWN 0
-#define BUTTON_UP 1
-#define BUTTON_MOTION 2
-#define SHIFT_MASK 1
-#define CONTROL_MASK 2
-#define META_MASK 4
+#define MouseStart 0
+#define MouseEnd 1
+#define MouseMove 2
 
 static const int pick_buffer_size = 512;
 static const double pick_window = 5.0;
 
-struct MouseHandlerData {
-    MouseHandler handler;	
-    clString title;	
-    MouseHandlerData(MouseHandler, const clString&);
-    ~MouseHandlerData();
-};
-
-MouseHandlerData::MouseHandlerData(MouseHandler handler, const clString& title)
-: handler(handler), title(title)
-{
-}
-
-MouseHandlerData::~MouseHandlerData()
-{
-}
-
-static MouseHandlerData mode_translate(&Roe::mouse_translate, "translate");
-static MouseHandlerData mode_scale(&Roe::mouse_scale, "scale");
-static MouseHandlerData mode_rotate(&Roe::mouse_rotate, "rotate");
-static MouseHandlerData mode_pick(&Roe::mouse_pick, "pick");
-
-static MouseHandlerData* mouse_handlers[8][3] = {
-    &mode_translate, 	// No modifiers, button 1
-    &mode_scale,       	// No modifiers, button 2
-    &mode_rotate,	// No modifiers, button 3
-    &mode_pick,		// Shift, button 1
-    0,			// Shift, button 2
-    0,			// Shift, button 3
-    0,			// Control, button 1
-    0,			// Control, button 2
-    0,			// Control, button 3
-    0,			// Control+Shift, button 1
-    0,			// Control+Shift, button 2
-    0,			// Control+Shift, button 3
-    0,			// Alt, button 1
-    0,			// Alt, button 2
-    0,			// Alt, button 3
-    0,			// Alt+Shift, button 1
-    0,			// Alt+Shift, button 2
-    0,			// Alt+Shift, button 3
-    0,			// Alt+Control, button 1
-    0,			// Alt+Control, button 2
-    0,			// Alt+Control, button 3
-    0,			// Alt+Control+Shift, button 1
-    0,			// Alt+Control+Shift, button 2
-    0,			// Alt+Control+Shift, button 3
-};	
-
-static total_salmon_count=1;
-
 Roe::Roe(Salmon* s, const clString& id)
-: id(id), manager(s), view("view", id, this)
+: id(id), manager(s), view("view", id, this), shading("shading", id, this),
+  homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25)
 {
-    view.set(View(Point(0,0,1), Point(0,0,0), Vector(0,1,0), 45));
+    view.set(homeview);
     TCL::add_command(id, this, 0);
     current_renderer=0;
 }
@@ -319,43 +267,6 @@ Roe::~Roe()
 }
 
 #ifdef OLDUI
-void Roe::wireCB(CallbackData*, void*)
-{
-    drawinfo->drawtype=DrawInfo::WireFrame;
-    drawinfo->current_matl=0;
-    drawinfo->lighting=0;
-    need_redraw=1;
-}
-
-void Roe::flatCB(CallbackData*, void*)
-{
-    drawinfo->drawtype=DrawInfo::Flat;
-    drawinfo->current_matl=0;
-    drawinfo->lighting=0;
-    need_redraw=1;
-}
-
-void Roe::gouraudCB(CallbackData*, void*)
-{
-    drawinfo->drawtype=DrawInfo::Gouraud;
-    drawinfo->current_matl=0;
-    drawinfo->lighting=1;
-    need_redraw=1;
-}
-
-void Roe::phongCB(CallbackData*, void*)
-{
-    drawinfo->drawtype=DrawInfo::Phong;
-    drawinfo->current_matl=0;
-    drawinfo->lighting=1;
-    need_redraw=1;
-}
-
-void Roe::ambientCB(CallbackData*, void*)
-{
-    NOT_FINISHED("Roe::ambientCB");
-}
-
 void Roe::fogCB(CallbackData*, void*) {
     evl->lock();
     make_current();
@@ -403,15 +314,6 @@ void Roe::head1CB(CallbackData*, void*)
     } else {
 	glDisable(GL_LIGHT2);
     }
-    evl->unlock();
-    need_redraw=1;
-}
-
-void Roe::goHomeCB(CallbackData*, void*)
-{
-    evl->lock();
-    make_current();
-    glLoadMatrixd(inheritMat);
     evl->unlock();
     need_redraw=1;
 }
@@ -473,14 +375,6 @@ void Roe::setHomeCB(CallbackData*, void*)
     make_current();
     glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
     evl->unlock();
-}
-#endif
-
-#ifdef OLD
-Roe::Roe(const Roe& copy)
-: view(copy.view)
-{
-    NOT_FINISHED("Roe::Roe");
 }
 #endif
 
@@ -568,245 +462,75 @@ void Roe::scale(Vector v, Point c)
     need_redraw=1;
 }
 
-#ifdef OLDUI
-void Roe::eventCB(CallbackData* cbdata, void*)
-{
-    XEvent* event=cbdata->get_event();
-    switch(event->type){
-    case EnterNotify:
-	evl->lock();
-	XmProcessTraversal(*graphics, XmTRAVERSE_CURRENT);
-	evl->unlock();
-	return;
-    case KeyPress:
-	if(event->xkey.state & (Button1Mask|Button2Mask|Button3Mask)){
-	    // Skip it...
-	} else{
-	    int mask=0;
-	    if(event->xkey.state & ControlMask)
-		mask|=CONTROL_MASK;
-	    if(event->xkey.state & ShiftMask)
-		mask|=SHIFT_MASK;
-	    if(event->xkey.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
-		mask|=META_MASK;
-	    switch(XLookupKeysym(&event->xkey, 0)){
-	    case XK_Shift_L:
-	    case XK_Shift_R:
-		mask|=SHIFT_MASK;
-		break;
-	    case XK_Control_L:
-	    case XK_Control_R:
-		mask|=CONTROL_MASK;
-		break;
-	    case XK_Meta_L:
-	    case XK_Meta_R:
-	    case XK_Alt_L:
-	    case XK_Alt_R:
-		mask|=META_MASK;
-		break;
-	    }
-	    
-	    if(mask != modifier_mask){
-		modifier_mask=mask;
-		update_modifier_widget();
-	    }
-	}
-	break;
-    case KeyRelease:
-	if(event->xkey.state & (Button1Mask|Button2Mask|Button3Mask)){
-	    // Skip it...
-	} else{
-	    int mask=0;
-	    if(event->xkey.state & ControlMask)
-		mask|=CONTROL_MASK;
-	    if(event->xkey.state & ShiftMask)
-		mask|=SHIFT_MASK;
-	    if(event->xkey.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
-		mask|=META_MASK;
-	    switch(XLookupKeysym(&event->xkey, 0)){
-	    case XK_Shift_L:
-	    case XK_Shift_R:
-		mask&=~SHIFT_MASK;
-		break;
-	    case XK_Control_L:
-	    case XK_Control_R:
-		mask&=~CONTROL_MASK;
-		break;
-	    case XK_Meta_L:
-	    case XK_Meta_R:
-	    case XK_Alt_L:
-	    case XK_Alt_R:
-		mask&=~META_MASK;
-		break;
-	    }
-	    if(mask != modifier_mask){
-		modifier_mask=mask;
-		update_modifier_widget();
-	    }
-	}
-	break;
-    case ButtonPress:
-	{
-	    switch(event->xbutton.button){
-	    case Button1:
-		last_btn=1;
-		break;
-	    case Button2:
-		last_btn=2;
-		break;
-	    case Button3:
-		last_btn=3;
-		break;
-	    default:
-		last_btn=1;
-		break;
-	    }
-	    int mask=0;
-	    if(event->xbutton.state & ControlMask)
-		mask|=CONTROL_MASK;
-	    if(event->xbutton.state & ShiftMask)
-		mask|=SHIFT_MASK;
-	    if(event->xbutton.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
-		mask|=META_MASK;
-	    if(mask != modifier_mask){
-		modifier_mask=mask;
-		update_modifier_widget();
-	    }
-	    MouseHandler handler=mouse_handlers[modifier_mask][last_btn-1]->handler;
-	    if(handler){
-		(this->*handler)(BUTTON_DOWN,
-				 event->xbutton.x, event->xbutton.y,
-				 event->xbutton.x_root, event->xbutton.y_root);
-	    }
-	}
-	break;
-    case ButtonRelease:
-	{
-	    switch(event->xbutton.button){
-	    case Button1:
-		last_btn=1;
-		break;
-	    case Button2:
-		last_btn=2;
-		break;
-	    case Button3:
-		last_btn=3;
-		break;
-	    default:
-		last_btn=1;
-		break;
-	    }
-	    MouseHandler handler=mouse_handlers[modifier_mask][last_btn-1]->handler;
-	    if(handler){
-		(this->*handler)(BUTTON_UP,
-				 event->xbutton.x, event->xbutton.y,
-				 event->xbutton.x_root, event->xbutton.y_root);
-	    }
-	    int mask=0;
-	    if(event->xbutton.state & ControlMask)
-		mask|=CONTROL_MASK;
-	    if(event->xbutton.state & ShiftMask)
-		mask|=SHIFT_MASK;
-	    if(event->xbutton.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
-		mask|=META_MASK;
-	    if(mask != modifier_mask){
-		modifier_mask=mask;
-		update_modifier_widget();
-	    }
-	}
-	break;
-    case MotionNotify:
-	{
-	    MouseHandler handler=mouse_handlers[modifier_mask][last_btn-1]->handler;
-	    if(handler){
-		(this->*handler)(BUTTON_MOTION,
-				 event->xmotion.x, event->xmotion.y,
-				 event->xmotion.x_root, event->xmotion.y_root);
-	    }
-	}
-	break;
-    default:
-	cerr << "Unknown event..\n";
-	break;
-    }
-}
-#endif
 
-void Roe::mouse_translate(int action, int x, int y, int, int)
+void Roe::mouse_translate(int action, int x, int y)
 {
-    NOT_FINISHED("Roe::mouse_translate");
-#ifdef OLDUI
     switch(action){
-    case BUTTON_DOWN:
+    case MouseStart:
 	last_x=x;
 	last_y=y;
 	total_x = 0;
 	total_y = 0;
-#ifdef OLDUI
 	update_mode_string("translate: ");
-#endif
 	break;
-    case BUTTON_MOTION:
+    case MouseMove:
 	{
-	    double xmtn=last_x-x;
-	    double ymtn=last_y-y;
-	    xmtn/=10/mtnScl;
-	    ymtn/=10/mtnScl;
+	    int xres=current_renderer->xres;
+	    int yres=current_renderer->yres;
+	    double xmtn=double(last_x-x)/double(xres);
+	    double ymtn=-double(last_y-y)/double(yres);
 	    last_x = x;
 	    last_y = y;
-	    total_x += xmtn;
-	    total_y += ymtn;
+	    // Get rid of roundoff error for the display...
 	    if (Abs(total_x) < .001) total_x = 0;
 	    if (Abs(total_y) < .001) total_y = 0;
-#ifdef OLDUI
-	    evl->lock();
-#endif
-	    make_current();
-	    double temp[16];
-	    glGetDoublev(GL_MODELVIEW_MATRIX, temp);
-	    glPopMatrix();
-	    glLoadIdentity();
-	    glTranslated(-xmtn, ymtn, 0);
-	    // post-multiply by the translate to be sure it happens last!
-	    glMultMatrixd(temp);
-	    for (int i=0; i<kids.size(); i++)
-		kids[i]->translate(Vector(-xmtn/mtnScl, ymtn/mtnScl, 0));
+
+	    View tmpview(view.get());
+	    double aspect=double(xres)/double(yres);
+	    double znear, zfar;
+	    if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+		return; // No objects...
+	    double zmid=(znear+zfar)/2.;
+	    Vector u,v;
+	    tmpview.get_viewplane(aspect, zmid, u, v);
+	    double ul=u.length();
+	    double vl=v.length();
+	    Vector trans(u*xmtn+v*ymtn);
+
+	    total_x+=ul*xmtn;
+	    total_y+=vl*ymtn;
+
+	    // Translate the view...
+	    tmpview.eyep+=trans;
+	    tmpview.lookat+=trans;
+
+	    // Put the view back...
+	    view.set(tmpview);
+
 	    need_redraw=1;
-#ifdef OLDUI
 	    update_mode_string(clString("translate: ")+to_string(total_x)
 			       +", "+to_string(total_y));
-	    evl->unlock();
-#endif
 	}
 	break;
-    case BUTTON_UP:
-#ifdef OLDUI
+    case MouseEnd:
 	update_mode_string("");
-#endif
 	break;
     }
-#endif
 }
 
-void Roe::mouse_scale(int action, int x, int y, int, int)
+void Roe::mouse_scale(int action, int x, int y)
 {
-    NOT_FINISHED("Roe::mouse_scale");
-#ifdef OLDUI
     switch(action){
-    case BUTTON_DOWN:
+    case MouseStart:
 	{
-#ifdef OLDUI
 	    update_mode_string("scale: ");
-#endif
 	    last_x=x;
 	    last_y=y;
-	    total_x=1;
-	    get_bounds(bb);
+	    total_scale=1;
 	}
 	break;
-    case BUTTON_MOTION:
+    case MouseMove:
 	{
-	    if (!bb.valid()) break;
 	    double scl;
 	    double xmtn=last_x-x;
 	    double ymtn=last_y-y;
@@ -814,118 +538,95 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    ymtn/=30;
 	    last_x = x;
 	    last_y = y;
-#ifdef OLDUI
-	    evl->lock();
-#endif
-	    make_current();
 	    if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
 	    if (scl<0) scl=1/(1-scl); else scl+=1;
-	    total_x*=scl;
-	    mtnScl*=scl;
-	    Point cntr(bb.center());
-	    // premultiplying by the scale works just fine
-	    glTranslated(cntr.x(), cntr.y(), cntr.z());
-	    glScaled(scl, scl, scl);
-	    glTranslated(-cntr.x(), -cntr.y(), -cntr.z());
-	    for (int i=0; i<kids.size(); i++) {
-		kids[i]->scale(Vector(scl, scl, scl), cntr);
-	    }
+	    total_scale*=scl;
+
+	    View tmpview(view.get());
+	    tmpview.fov=RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov/2.))));
+	    view.set(tmpview);
 	    need_redraw=1;
-#ifdef OLDUI
 	    update_mode_string(clString("scale: ")+to_string(total_x*100)+"%");
-	    evl->unlock();
-#endif 
 	}
 	break;
-    case BUTTON_UP:
-#ifdef OLDUI
+    case MouseEnd:
 	update_mode_string("");
-#endif
 	break;
     }	
-#endif
 }
 
-void Roe::mouse_rotate(int action, int x, int y, int, int)
+void Roe::mouse_rotate(int action, int x, int y)
 {
-    NOT_FINISHED("Roe::mouse_rotate");
-#ifdef OLDUI
     switch(action){
-    case BUTTON_DOWN:
+    case MouseStart:
 	{
-#ifdef OLDUI
 	    update_mode_string("rotate:");
-#endif
 	    last_x=x;
 	    last_y=y;
-	    get_bounds(bb);
+
+	    // Find the center of rotation...
+	    View tmpview(view.get());
+	    int xres=current_renderer->xres;
+	    int yres=current_renderer->yres;
+	    double aspect=double(xres)/double(yres);
+	    double znear, zfar;
+	    rot_point_valid=0;
+	    if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+		return; // No objects...
+	    double zmid=(znear+zfar)/2.;
+
+	    Point ep(0, 0, zmid);
+	    rot_point=tmpview.eyespace_to_objspace(ep, aspect);
+	    rot_view=tmpview;
+	    rot_point_valid=1;
+	    cerr << "rot_point=" << rot_point << endl;
 	}
 	break;
-    case BUTTON_MOTION:
+    case MouseMove:
 	{
-	    if (!bb.valid()) break;
-	    double xmtn=last_x-x;
-	    double ymtn=last_y-y;
-	    last_x = x;
-	    last_y = y;
-#ifdef OLDUI
-	    evl->lock();
-#endif
-	    make_current();
-	    Point cntr(bb.center());
-	    double mm[16];
-	    double pm[16];
-	    int vp[4];
-	    double trans[4];
-	    double centr[4];
-	    double cx, cy, cz;
-	    glGetDoublev(GL_MODELVIEW_MATRIX, mm);
-	    glMatrixMode(GL_PROJECTION);
-	    glPushMatrix();
-	    glLoadIdentity();
-	    gluPerspective(90,1.33, 1, 100);
-	    glGetDoublev(GL_PROJECTION_MATRIX, pm);
-	    glPopMatrix();
-	    glGetIntegerv(GL_VIEWPORT, vp);
-	    // unproject the center of the viewport, w/ z-value=.5
-	    // to find the point we want to rotate around.
-	    if (gluUnProject(vp[0]+vp[2]/2, vp[1]+vp[3]/2, .1, mm, pm, vp, 
-			 &cx, &cy, &cz) == GL_FALSE) 
-		cerr << "Error Projecting!\n";
-	    centr[0]=cx; centr[1]=cy; centr[2]=cz; centr[3]=1;
-	    // multiply that point by our current modelview matrix to get
-	    // the z-translate necessary to put that point at the origin
-	    mmult(mm, centr, trans);
-	    glMatrixMode(GL_MODELVIEW);
-	    glPopMatrix();
-	    glLoadIdentity();
-	    double totMtn=Sqrt(xmtn*xmtn+ymtn*ymtn)/5;
-	    // these also need to be post-multiplied
-	    glTranslated(0, 0, trans[2]);
-	    glRotated(totMtn,-ymtn,-xmtn,0);
-	    glTranslated(0,0, -trans[2]);
-	    glMultMatrixd(mm);
-	    for (int i=0; i<kids.size(); i++) {
-		kids[i]->rotate(totMtn,Vector(-ymtn,-xmtn,0),
-				Point(0,0,trans[2]));
-	    }
+	    int xres=current_renderer->xres;
+	    int yres=current_renderer->yres;
+	    double xmtn=double(last_x-x)/double(xres);
+	    double ymtn=double(last_y-y)/double(yres);
+
+	    double xrot=xmtn*360.0;
+	    double yrot=ymtn*360.0;
+
+	    if(!rot_point_valid)
+		break;
+	    // Rotate the scene about the rot_point
+	    Transform transform;
+	    Vector transl(Point(0,0,0)-rot_point);
+	    transform.pre_translate(transl);
+	    View tmpview(rot_view);
+	    Vector u,v;
+	    double aspect=double(xres)/double(yres);
+	    tmpview.get_viewplane(aspect, 1, u, v);
+	    u.normalize();
+	    v.normalize();
+	    transform.pre_rotate(DtoR(yrot), u);
+	    transform.pre_rotate(DtoR(xrot), v);
+	    transform.pre_translate(-transl);
+
+	    Point top(tmpview.eyep+tmpview.up);
+	    top=transform.project(top);
+	    tmpview.eyep=transform.project(tmpview.eyep);
+	    tmpview.lookat=transform.project(tmpview.lookat);
+	    tmpview.up=top-tmpview.eyep;
+
+	    view.set(tmpview);
+
 	    need_redraw=1;
-#ifdef OLDUI
 	    update_mode_string("rotate:");
-	    evl->unlock();
-#endif
 	}
 	break;
-    case BUTTON_UP:
-#ifdef OLDUI
+    case MouseEnd:
 	update_mode_string("");
-#endif
 	break;
     }
-#endif
 }
 
-void Roe::mouse_pick(int action, int x, int y, int, int)
+void Roe::mouse_pick(int action, int x, int y)
 {
     NOT_FINISHED("Roe::mouse_pick");
 #ifdef OLDUI
@@ -1103,77 +804,6 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 }
 
 #ifdef OLDUI
-void Roe::update_mode_string(const clString& ms)
-{
-    mode_string=ms;
-    update_modifier_widget();
-}
-
-void Roe::update_modifier_widget()
-{
-#ifdef OLDUI
-    evl->lock();
-#endif 
-    if(!buttons_exposed)return;
-    Window w=XtWindow(*buttons);
-    Display* dpy=XtDisplay(*buttons);
-    XClearWindow(dpy, w);
-    XSetForeground(dpy, gc, mod_colors[modifier_mask]->pixel());
-    Dimension h;
-    buttons->GetHeight(&h);
-    buttons->GetValues();
-    int fh=h/5;
-    if(fh != old_fh || modefont==0){
-	modefont=new XFont(fh, XFont::Bold);
-	XSetFont(dpy, gc, modefont->font->fid);
-	old_fh=fh;
-    }
-    int fh2=fh/2;
-    int fh4=fh2/2;
-    int wid=fh2+fh4;
-    XFillArc(dpy, w, gc, fh2,       fh2, fh2, fh2, 0, 180*64);
-    XFillArc(dpy, w, gc, fh2+wid,   fh2, fh2, fh2, 0, 180*64);
-    XFillArc(dpy, w, gc, fh2+2*wid, fh2, fh2, fh2, 0, 180*64);
-    XFillArc(dpy, w, gc, fh2,       fh,  fh2, fh2, 180*64, 180*64);
-    XFillArc(dpy, w, gc, fh2+wid,   fh,  fh2, fh2, 180*64, 180*64);
-    XFillArc(dpy, w, gc, fh2+2*wid, fh,  fh2, fh2, 180*64, 180*64);
-    XFillRectangle(dpy, w, gc, fh2,       fh2+fh4, fh2+1, fh2+2);
-    XFillRectangle(dpy, w, gc, fh2+wid,   fh2+fh4, fh2+1, fh2+2);
-    XFillRectangle(dpy, w, gc, fh2+2*wid, fh2+fh4, fh2+1, fh2+2);
-
-    int toff=wid*3+fh;
-    XDrawLine(dpy, w, gc, fh2+fh4, fh+fh4, fh2+fh4, 2*fh);
-    XDrawLine(dpy, w, gc, fh2+fh4, 2*fh  , toff-fh4, 2*fh);
-    XDrawLine(dpy, w, gc, fh2+wid+fh4, fh+fh4, fh2+wid+fh4, 3*fh);
-    XDrawLine(dpy, w, gc, fh2+wid+fh4, 3*fh,   toff-fh4, 3*fh);
-    XDrawLine(dpy, w, gc, fh2+2*wid+fh4, fh+fh4, fh2+2*wid+fh4, 4*fh);
-    XDrawLine(dpy, w, gc, fh2+2*wid+fh4, 4*fh, toff-fh4, 4*fh);
-
-    XSetForeground(dpy, gc, BlackPixelOfScreen(XtScreen(*buttons)));
-    XDrawString(dpy, w, gc, toff, fh+fh2, mode_string(), mode_string.len());
-    clString b1_string(mouse_handlers[modifier_mask][0]?
-		       mouse_handlers[modifier_mask][0]->title
-		       :clString(""));
-    clString b2_string(mouse_handlers[modifier_mask][1]?
-		       mouse_handlers[modifier_mask][1]->title
-		       :clString(""));
-    clString b3_string(mouse_handlers[modifier_mask][2]?
-		       mouse_handlers[modifier_mask][2]->title
-		       :clString(""));
-    XDrawString(dpy, w, gc, toff, 2*fh+fh2, b1_string(), b1_string.len());
-    XDrawString(dpy, w, gc, toff, 3*fh+fh2, b2_string(), b2_string.len());
-    XDrawString(dpy, w, gc, toff, 4*fh+fh2, b3_string(), b3_string.len());
-#ifdef OLDUI
-    evl->unlock();
-#endif
-}
-
-void Roe::redraw_buttons(CallbackData*, void*)
-{
-    buttons_exposed=1;
-    update_modifier_widget();
-}
-
 void Roe::attach_dials(CallbackData*, void* ud)
 {
     int which=(int)ud;
@@ -1244,17 +874,12 @@ void Roe::DBrotate(DBContext*, int, double, double delta,
 }
 #endif
 
-void Roe::redraw_if_needed(int always)
+void Roe::redraw_if_needed()
 {
-    NOT_FINISHED("Roe::redraw_if_needed");
-#ifdef OLDUI
-    if(need_redraw || always){
+    if(need_redraw){
 	need_redraw=0;
-	redrawAll();
+	redraw();
     }
-    for (int i=0; i<kids.size(); i++)
-	kids[i]->redraw_if_needed(always);
-#endif
 }
 
 #ifdef OLDUI
@@ -1274,7 +899,7 @@ void Roe::redraw_perf(CallbackData*, void*)
 }
 #endif
 
-void Roe::tcl_command(TCLArgs& args, void* userdata)
+void Roe::tcl_command(TCLArgs& args, void*)
 {
     if(args.count() < 2){
 	args.error("Roe needs a minor command");
@@ -1305,15 +930,62 @@ void Roe::tcl_command(TCLArgs& args, void* userdata)
 	// We use an ID string instead of a pointer in case this roe
 	// gets killed by the time the redraw message gets dispatched.
 	manager->mailbox.send(new RedrawMessage(id));
+    } else if(args[1] == "mtranslate"){
+	do_mouse(&Roe::mouse_translate, args);
+    } else if(args[1] == "mrotate"){
+	do_mouse(&Roe::mouse_rotate, args);
+    } else if(args[1] == "mscale"){
+	do_mouse(&Roe::mouse_scale, args);
+    } else if(args[1] == "sethome"){
+	homeview=view.get();
+    } else if(args[1] == "gohome"){
+	view.set(homeview);
+	manager->mailbox.send(new RedrawMessage(id));
     } else {
 	args.error("Unknown minor command for Roe");
     }
 }
 
+void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
+{
+    if(args.count() != 5){
+	args.error(args[1]+" needs start/move/end and x y");
+	return;
+    }
+    int action;
+    if(args[2] == "start"){
+	action=MouseStart;
+    } else if(args[2] == "end"){
+	action=MouseEnd;
+    } else if(args[2] == "move"){
+	action=MouseMove;
+    } else {
+	args.error("Unknown mouse action");
+	return;
+    }
+    int x,y;
+    if(!args[3].get_int(x)){
+	args.error("error parsing x");
+	return;
+    }
+    if(!args[4].get_int(y)){
+	args.error("error parsing y");
+	return;
+    }
+    // We have to send this to the salmon thread...
+    manager->mailbox.send(new RoeMouseMessage(id, handler, action, x, y));
+}
+
 void Roe::redraw()
 {
+    need_redraw=0;
     reset_vars();
     current_renderer->redraw(manager, this);
+}
+
+void Roe::update_mode_string(const clString& msg)
+{
+    NOT_FINISHED("Roe::update_mode_string");
 }
 
 TCLView::TCLView(const clString& name, const clString& id, TCL* tcl)
@@ -1338,4 +1010,15 @@ void TCLView::set(const View& view)
     lookat.set(view.lookat);
     up.set(view.up);
     fov.set(view.fov);
+}
+
+RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,
+				 int action, int x, int y)
+: MessageBase(MessageTypes::RoeMouse), rid(rid), handler(handler),
+  action(action), x(x), y(y)
+{
+}
+
+RoeMouseMessage::~RoeMouseMessage()
+{
 }

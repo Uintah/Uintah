@@ -18,6 +18,7 @@
 class Renderer;
 class Roe;
 class Salmon;
+class View;
 
 typedef Renderer* (*make_Renderer)();
 
@@ -31,6 +32,10 @@ public:
 				   const clString& height)=0;
     virtual void redraw(Salmon*, Roe*)=0;
     virtual void hide()=0;
+
+    int compute_depth(Roe* roe, const View& view, double& near, double& far);
+
+    int xres, yres;
 };
 
 class RegisterRenderer {
