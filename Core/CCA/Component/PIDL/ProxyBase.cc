@@ -38,16 +38,18 @@ using namespace SCIRun;
 ProxyBase::ProxyBase() 
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE") { }
 
+/*
 ProxyBase::ProxyBase(const Reference& ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  rm.insertReference(ref);
+  rm.insertReference(&ref);
 }
+*/
 
 ProxyBase::ProxyBase(Reference *ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  rm.insertReference(*ref);
+  rm.insertReference(ref);
 }
 
 ProxyBase::ProxyBase(const ReferenceMgr& refM)
@@ -58,37 +60,29 @@ ProxyBase::ProxyBase(const ReferenceMgr& refM)
 
 ProxyBase::~ProxyBase()
 {
+  /*Close all connections*/
+  refList::iterator iter = rm.d_ref.begin();
+  for(unsigned int i=0; i < rm.d_ref.size(); i++, iter++) {
+    (*iter).chan->closeConnection();
+  }
+  /*Delete intercommunicator*/
+  if((rm.localSize > 1)&&(rm.intracomm != NULL))
+    delete (rm.intracomm);
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
 {
+  /*First clean up given reference*/
+  if(ref.chan!=NULL) delete ref.chan;
+  /*...then copy*/
   if (copy) {
     Reference *d_ref;
     d_ref = rm.getIndependentReference();
     ref = *(d_ref);
-    //if(ref.chan!=NULL) delete ref.chan; 
     ref.chan = (d_ref->chan)->SPFactory(true);
   }
   else {
     ref = *(rm.getIndependentReference()); 
-  }
-}
-
-void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const 
-{
-  if (copy) {    
-    refList *d_ref;
-    d_ref = rm.getAllReferences();
-    ref = *(d_ref);
-    for(unsigned int i=0; i < d_ref->size(); i++) {      
-      //if(ref[i].chan!=NULL) delete ref[i].chan;
-      ref[i].chan = ((*d_ref)[i].chan)->SPFactory(true);
-    }
-  }
-  else {
-    refList *d_ref;
-    d_ref = rm.getAllReferences();
-    ref = *(d_ref); 
   }
 }
 

@@ -182,7 +182,7 @@ namespace SCIRun {
 
     /////////
     // Reference to a remote object (used only in caller case)
-    Reference remoteRef;   
+    Reference* remoteRef;   
 
     ////////
     // Rank of the object this representation belongs to

@@ -72,11 +72,11 @@ DESCRIPTION
 	  // Create the proxy from the given reference pointer.
 	  // the pointer is deleted inside the constructor
 	  ProxyBase(Reference*);
-	  
+/*	  
 	  ////////////
 	  // Create the proxy from the given reference list.
 	  ProxyBase(const ReferenceMgr&);	  
-
+*/
 	  ///////////
 	  // Destructor which closes connection
 	  virtual ~ProxyBase();
@@ -92,10 +92,6 @@ DESCRIPTION
 	  //////////
 	  // Return a the first internal reference or a copy of it.  
 	  void _proxyGetReference(Reference& ref, bool copy) const;
-
-	  /////////
-	  // Returns the whole reference list or a copy of it.
-	  void _proxyGetReferenceList(refList& ref, bool copy) const;
 
           //////////
 	  // Returns the reference manager 
