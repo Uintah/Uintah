@@ -106,7 +106,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	}
         break;
     case Clamp:
-	if(u>=1)
+	if(u>1)
 	    u=1;
 	else if(u<0)
 	    u=0;
@@ -126,7 +126,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	}
         break;
     case Clamp:
-	if(v>=1)
+	if(v>1)
 	    v=1;
 	else if(v<0)
 	    v=0;
