@@ -793,9 +793,11 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       
       //__________________________________
       //  User specified source/sink   
-      int n_iter = dataArchiver->getCurrentTimestep();
-      
-      if(d_add_heat && n_iter <= d_add_heat_iters){
+      double Time= dataArchiver->getCurrentTime();  
+      if (  d_add_heat &&
+            Time >= d_add_heat_t_start && 
+            Time <= d_add_heat_t_final ) { 
+        
         double vol = dx.x() * dx.y() * dx.z();
         for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
           if(m == d_add_heat_matls[i] ){
