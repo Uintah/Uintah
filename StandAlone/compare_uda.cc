@@ -1,5 +1,5 @@
 /*
- *  puda.cc: Print out a uintah data archive
+ *  compare_uda.cc: compare results of 2 uintah data archive
  *
  *  Written by:
  *   Steven G. Parker
@@ -75,8 +75,9 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -rel_tolerance [double] (allowable rel diff of any numbers)\n";
     cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
     cerr << "  -skip_unknown_types (skip variable comparisons" 
-	 << " of unknown types without error)\n";
+	  << " of unknown types without error)\n";
     cerr << "  -ignoreVariable [string] (skip this variable)\n";
+    cerr << "  -dont_sort  (don't sort the variable names before comparing them)";
     cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
 	 << "      for a comparison to fail.\n\n";
     Thread::exitAll(1);
@@ -1016,6 +1017,7 @@ main(int argc, char** argv)
   double rel_tolerance = 1e-6; // Default 
   double abs_tolerance = 1e-9; //   values...
   string ignoreVar = "none";
+  bool sortVariables = true;
 
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
@@ -1034,6 +1036,9 @@ main(int argc, char** argv)
     }
     else if(s == "-as_warnings") {
       tolerance_as_warnings = true;
+    }
+    else if(s == "-dont_sort") {
+      sortVariables = false;
     }
     else if(s == "-skip_unknown_types") {
       strict_types = false;
@@ -1119,8 +1124,10 @@ main(int argc, char** argv)
     // different orders of variables.
     // Assuming that there are no duplicates in the var names, these will
     // sort alphabetically by varname.
-    sort(vartypes1.begin(), vartypes1.end());
-    sort(vartypes2.begin(), vartypes2.end());    
+    if(sortVariables){
+      sort(vartypes1.begin(), vartypes1.end());
+      sort(vartypes2.begin(), vartypes2.end());    
+    }
     for (unsigned int i = 0; i < vars.size(); i++) {
       vars[i]   = vartypes1[i].first; 
       types[i]  = vartypes1[i].second;
