@@ -478,7 +478,7 @@ MatrixSelectVector::execute()
     const int delay = delay_.get();
     int stop;
     do {
-      int next;
+      int next = -1;
       if (playmode_.get() == "once")
       {
 	next = increment(which, lower, upper);
