@@ -86,11 +86,13 @@ WARNING
     SimpleMaterial*  d_material;
 
     // Fake cylinder
-    SCIRun::Vector d_centerOfCylinder;
-    double         d_lengthOfCylinder;
-    double         d_innerRadiusOfCylinder;
-    double         d_outerRadiusOfCylinder;
-    double         d_rateOfExpansionOfCylinder;
+    SCIRun::Vector d_centerOfBall;
+    SCIRun::Vector d_centerOfDomain;
+    SCIRun::Vector d_oldCenterOfBall;
+    double         d_radiusOfBall;
+    double         d_radiusOfOrbit;
+    double         d_currentAngle;
+    double         d_angularVelocity;
   };
 
 } // namespace Uintah
