@@ -150,12 +150,22 @@ void TCLInterface::postMessage(const string& errmsg, bool err)
   string status = "info";
   if( err ) status = "error";
 
-  string command = "displayErrorWarningOrInfo \"" + errmsg + "\" " + status;
-
+  // Replace any double quotes (") with single quote (') as they break the
+  // tcl parser.
+  string fixed_errmsg = errmsg;
+  for( int cnt = 0; cnt < fixed_errmsg.size(); cnt++ )
+    {
+      char ch = errmsg[cnt];
+      if( ch == '"' )
+	ch = '\'';
+      fixed_errmsg[cnt] = ch;
+    }
+  string command = "displayErrorWarningOrInfo \"" + fixed_errmsg + "\" " + status;
   execute( command );
 }
 
-bool TCLInterface::get(const std::string& name, std::string& value)
+bool
+TCLInterface::get(const std::string& name, std::string& value)
 {
   TCLTask::lock();
   char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
@@ -170,7 +180,8 @@ bool TCLInterface::get(const std::string& name, std::string& value)
   return true;
 }
 
-void TCLInterface::set(const std::string& name, const std::string& value)
+void
+TCLInterface::set(const std::string& name, const std::string& value)
 {
   TCLTask::lock();
   Tcl_SetVar(the_interp, ccast_unsafe(name),
