@@ -17,6 +17,7 @@
 
 namespace SCICore {
     namespace Thread {
+	class Semaphore;
 /**************************************
  
 CLASS
@@ -39,6 +40,7 @@ DESCRIPTION
 	protected:
 	    ParallelBase();
 	    virtual ~ParallelBase();
+	    mutable Semaphore* d_wait; // This may be modified by Thread::parallel
 	    friend class Thread;
 
 	private:
@@ -54,6 +56,13 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/03 19:51:15  sparker
+// Fixed bug where if Thread::parallel was called with block=false, the
+//   helper object could get destroyed before it was used.
+// Removed include of SCICore/Thread/ParallelBase and
+//  SCICore/Thread/Runnable from Thread.h to minimize dependencies
+// Fixed naming of parallel helper threads.
+//
 // Revision 1.7  1999/09/02 16:52:43  sparker
 // Updates to cocoon documentation
 //
