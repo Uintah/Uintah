@@ -30,7 +30,7 @@ TestModel::~TestModel()
 }
 
 void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup& )
+			     ModelSetup* )
 {
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
@@ -57,8 +57,9 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
   }   
 }
       
-void TestModel::scheduleInitialize(const LevelP&,
-				   SchedulerP&)
+void TestModel::scheduleInitialize(SchedulerP&,
+				   const LevelP& level,
+				   const ModelInfo*)
 {
   // None necessary...
 }
