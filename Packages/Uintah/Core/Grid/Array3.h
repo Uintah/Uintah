@@ -239,8 +239,7 @@ WARNING
     }
 
     iterator end() const {
-      iterator it(this, getHighIndex() - IntVector(1, 1, 1));
-      return ++it;
+      return iterator(this, IntVector(getLowIndex().x(), getLowIndex().y(), getHighIndex().z()));
     }
 
     ///////////////////////////////////////////////////////////////////////
