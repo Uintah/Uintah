@@ -374,12 +374,10 @@ void Module::remove_iport(int which)
   // remove the indicated port, then
   // collapse the remaining ports together
   iports.remove(which);  
-
+  gui->execute("removePort \{"+id+" "+to_string(which)+" i\}");
   // rename the collapsed ports and their connections
   // to reflect the positions they collapsed to.
   for (int port=which;port<iports.size();port++) {
-    gui->execute("shiftLeftIPort "+id+" "+
-		 to_string(iports[port]->get_which_port()));
     iports[port]->set_which_port(iports[port]->get_which_port()-1);
     for (int connNum=0;connNum<iports[port]->nconnections();connNum++)
       iports[port]->connection(connNum)->makeID();
