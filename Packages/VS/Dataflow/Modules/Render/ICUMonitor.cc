@@ -994,11 +994,10 @@ ICUMonitor::execute()
 
   nrrd2_port->get(data2_);
 
-  //if (!data2_.get_rep())
-  //{
-   // error ("Unable to get input data.");
-    //return;
-  //} 
+  if (data2_.get_rep() && data2_->nrrd->axis[1].size != data_->nrrd->axis[1].size)
+  {
+    error ("Axis 1 size for both NRRD files must be identical.");
+  } 
   
   if (!runner_) {
     runner_ = scinew RTDraw(this);
