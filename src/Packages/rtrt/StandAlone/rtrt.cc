@@ -18,8 +18,9 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
+#if !defined(linux) && !defined(SCI_64BITS)
 #include <Packages/rtrt/Sound/SoundThread.h>
-
+#endif
 #include <iostream>
 
 #include <dlfcn.h>
