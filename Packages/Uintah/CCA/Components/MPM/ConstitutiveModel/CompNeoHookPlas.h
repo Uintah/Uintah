@@ -102,6 +102,8 @@ WARNING
                                         double& dp_drho, double& ss_new,
                                         const MPMMaterial* matl);
 
+         virtual double getCompressibility();
+
  	 const VarLabel* p_statedata_label;
  	 const VarLabel* p_statedata_label_preReloc;
          const VarLabel* bElBarLabel;

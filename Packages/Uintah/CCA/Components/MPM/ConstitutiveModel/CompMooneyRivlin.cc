@@ -368,6 +368,14 @@ void CompMooneyRivlin::computePressEOSCM(const double /*rho_cur*/,double& /*pres
        << endl;
 }
 
+double CompMooneyRivlin::getCompressibility()
+{
+  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR CompMooneyRivlin"
+       << endl;
+  return 1.0;
+}
+
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209

@@ -671,6 +671,14 @@ void ViscoScram::computePressEOSCM(const double rho_cur,double& pressure,
 #endif
 }
 
+double ViscoScram::getCompressibility()
+{
+  double G = d_initialData.G[0] + d_initialData.G[1] +
+ 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
+  double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
+  return 1.0/bulk;
+}
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
