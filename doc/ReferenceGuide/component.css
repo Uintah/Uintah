@@ -16,9 +16,9 @@ BIG.HUGE		{ font-size : larger   }
 BIG.XHUGE		{ font-size : xx-large }
 
 /* heading styles */
-H1		{  }
-H2		{  }
-H3		{  }
+H1		{ color:#0000FF; font-size:1.4em; font-family:"arial", "helvetica", "sans-serif" }
+H2		{ color:#0074FF; font-size:1.2em; font-family:"arial", "helvetica", "sans-serif" }
+H3		{ color:#60979d; font-size:1.0em; font-family:"arial", "helvetica", "sans-serif" }
 H4		{  }
 H5		{  }
 
@@ -28,3 +28,4 @@ TD.eqno			{ }	/* equation-number cells */
 
 
 /* document-specific styles come next */
+body {background-color:#DDDDDD; text-color:#000000; font-family:"arial", "helvetica", "sans-serif"; margin-left:2em; margin-right:2em}
