@@ -2390,7 +2390,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->numThreadsSpinner_ = activeGui->mainWindow->
     add_spinner_to_panel( otherControls, "Number of Threads",
 			  GLUI_SPINNER_INT,
-			  &(activeGui->dpy_->numThreadsRequested_),
+			  &(activeGui->dpy_->numThreadsRequested_new),
 			  NUM_THREADS_SPINNER_ID );
   activeGui->numThreadsSpinner_->set_speed( 0.0001 );
   activeGui->numThreadsSpinner_->set_int_limits( 1, MAX_NUM_THREADS );
