@@ -15,6 +15,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Region.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <iostream>
 #include <string>
@@ -38,7 +39,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank,
   d_responseTag( 0 )
 {
   d_finalized = false;
-  d_positionLabel = new VarLabel("__internal datawarehouse position variable",
+  d_positionLabel = scinew VarLabel("__internal datawarehouse position variable",
 				ParticleVariable<Point>::getTypeDescription(),
 				VarLabel::Internal);
 }
@@ -80,7 +81,7 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
    if(iter == d_reductionDB.end()){
-      d_reductionDB[label]=new ReductionRecord(var.clone());
+      d_reductionDB[label]=scinew ReductionRecord(var.clone());
       iter = d_reductionDB.find(label);
    } else {
       iter->second->var->reduce(var);
@@ -170,10 +171,13 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 {
    if(!d_particleDB.exists(label, matlIndex, region))
       throw UnknownVariable(label->getName());
+#if 0
    if(gtype == Ghost::None){
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
       d_particleDB.get(label, matlIndex, region, var);
+#if 0
    } else {
       int l,h;
       switch(gtype){
@@ -213,7 +217,7 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 		  ParticleVariable<Point> pos;
 		  d_particleDB.get(d_positionLabel, matlIndex, neighbor, pos);
 		  ParticleSubset* pset = pos.getParticleSubset();
-		  ParticleSubset* subset = new ParticleSubset(pset->getParticleSet(), false);
+		  ParticleSubset* subset = scinew ParticleSubset(pset->getParticleSet(), false);
 		  for(ParticleSubset::iterator iter = pset->begin();
 		      iter != pset->end(); iter++){
 		     particleIndex idx = *iter;
@@ -228,10 +232,13 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 	    }
 	 }
       }
-      ParticleSet* newset = new ParticleSet(totalParticles);
-      ParticleSubset* newsubset = new ParticleSubset(newset, true);
+      ParticleSet* newset = scinew ParticleSet(totalParticles);
+      ParticleSubset* newsubset = scinew ParticleSubset(newset, true);
       var.gather(newsubset, subsets, neighborvars);
+      for(int i=0;i<subsets.size();i++)
+	 delete subsets[i];
    }
+#endif
 }
 
 void
@@ -251,8 +258,8 @@ OnDemandDataWarehouse::allocate(int numParticles,
       throw InternalError("Particle position already exists in datawarehouse");
 
    // Create the particle set and variable
-   ParticleSet* pset = new ParticleSet(numParticles);
-   ParticleSubset* psubset = new ParticleSubset(pset, true);
+   ParticleSet* pset = scinew ParticleSet(numParticles);
+   ParticleSubset* psubset = scinew ParticleSubset(pset, true);
    var.allocate(psubset);
 
    // Put it in the database
@@ -301,12 +308,15 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 			   Ghost::GhostType gtype,
 			   int numGhostCells)
 {
+#if 0
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
       if(!d_ncDB.exists(label, matlIndex, region))
 	 throw UnknownVariable(label->getName());
       d_ncDB.get(label, matlIndex, region, var);
+#if 0
    } else {
       int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
@@ -369,6 +379,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       long wantnodes = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantnodes, totalNodes);
    }
+#endif
 }
 
 void
@@ -465,7 +476,7 @@ OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
   variableListType * varList = d_dataLocation[ label ];
 
   if( varList == 0 ) {
-    varList = new variableListType();
+    varList = scinew variableListType();
     d_dataLocation[ label ] = varList;
   }
 
@@ -473,7 +484,7 @@ OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
   // this "label" with this "region" in it...  for now assuming that 
   // this doesn't happen...
 
-  dataLocation * location = new dataLocation();
+  dataLocation * location = scinew dataLocation();
 
   location->region = region;
   location->mpiNode = mpiNode;
@@ -557,6 +568,12 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.24  2000/05/21 20:10:49  sparker
+// Fixed memory leak
+// Added scinew to help trace down memory leak
+// Commented out ghost cell logic to speed up code until the gc stuff
+//    actually works
+//
 // Revision 1.23  2000/05/15 20:04:35  dav
 // Mpi Stuff
 //

@@ -6,6 +6,7 @@
 #include <SCICore/Exceptions/InternalError.h>
 #include <Uintah/Exceptions/UnknownVariable.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace Uintah {
    using SCICore::Exceptions::InternalError;
@@ -173,14 +174,14 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 {
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter == names.end()){
-      names[label] = new NameRecord(label);
+      names[label] = scinew NameRecord(label);
       nameiter = names.find(label);
    }
 
    NameRecord* nr = nameiter->second;
    regionDBtype::const_iterator regioniter = nr->regions.find(region);
    if(regioniter == nr->regions.end()) {
-      nr->regions[region] = new RegionRecord(region);
+      nr->regions[region] = scinew RegionRecord(region);
       regioniter = nr->regions.find(region);
    }
 
@@ -265,6 +266,12 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
 //
 // $Log$
+// Revision 1.8  2000/05/21 20:10:49  sparker
+// Fixed memory leak
+// Added scinew to help trace down memory leak
+// Commented out ghost cell logic to speed up code until the gc stuff
+//    actually works
+//
 // Revision 1.7  2000/05/10 20:02:52  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

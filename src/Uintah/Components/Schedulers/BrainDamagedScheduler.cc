@@ -14,6 +14,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Thread/ThreadPool.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <algorithm>
 #include <fstream>
@@ -34,8 +35,8 @@ BrainDamagedScheduler::BrainDamagedScheduler( int MpiRank, int MpiProcesses ) :
 {
     d_numThreads=0;
     d_reducer = 
-        new SimpleReducer("BrainDamagedScheduler only barrier/reducer");
-    d_pool = new ThreadPool("BrainDamagedScheduler worker threads");
+        scinew SimpleReducer("BrainDamagedScheduler only barrier/reducer");
+    d_pool = scinew ThreadPool("BrainDamagedScheduler worker threads");
 }
 
 BrainDamagedScheduler::~BrainDamagedScheduler()
@@ -221,7 +222,7 @@ BrainDamagedScheduler::addTarget(const VarLabel* target)
 void
 BrainDamagedScheduler::addTask(Task* task)
 {
-   TaskRecord* tr = new TaskRecord(task);
+   TaskRecord* tr = scinew TaskRecord(task);
    d_tasks.push_back(tr);
  
    const vector<Task::Dependency*>& comps = task->getComputes();
@@ -249,7 +250,7 @@ BrainDamagedScheduler::allDependenciesCompleted(TaskRecord*) const
 DataWarehouseP
 BrainDamagedScheduler::createDataWarehouse( int generation )
 {
-    return new OnDemandDataWarehouse( d_MpiRank, d_MpiProcesses, generation );
+    return scinew OnDemandDataWarehouse( d_MpiRank, d_MpiProcesses, generation );
 }
 
 void
@@ -327,6 +328,12 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.14  2000/05/21 20:10:48  sparker
+// Fixed memory leak
+// Added scinew to help trace down memory leak
+// Commented out ghost cell logic to speed up code until the gc stuff
+//    actually works
+//
 // Revision 1.13  2000/05/19 18:35:09  jehall
 // - Added code to dump the task dependencies to a file, which can be made
 //   into a pretty dependency graph.
