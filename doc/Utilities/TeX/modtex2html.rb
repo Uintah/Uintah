@@ -83,8 +83,9 @@ def tex2html(moduleName)
   htmlDir = moduleName
   texFile = moduleName + ".tex"
   system("rm -rf #{htmlDir}") if FileTest.exists?(htmlDir)
-  system("latex #{texFile}; latex #{texFile}")
-  system("latex2html -split 0 -no_navigation #{texFile}")
+  latexcmd = "latex -interaction=nonstopmode #{texFile}"
+  system("#{latexcmd};#{latexcmd}")
+  system("latex2html -split 0 -no_navigation -image_type gif #{texFile}")
   system("rm -f *.dvi *.log *.aux #{htmlDir}/index.html #{htmlDir}/#{moduleName}.css")
 end
 
@@ -93,14 +94,23 @@ end
 def filterHead(c)
   c.sub!("<HEAD>",<<EndOfString
 <HEAD>
-<script language="JavaScript">
+<script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-while (path.substr(path.lastIndexOf("/")+1) != "src") {
-treetop += "../";
-path = path.substr(0, path.lastIndexOf("/"));
+if (path.charAt(path.length-1) == "/") {
+  path += "bogus.html"
 }
-document.write("<link href='",treetop,"doc/Utilities/HTML/srlatex2html.css' rel='stylesheet' type='text/css'\>")
+var base = path.substr(path.lastIndexOf("/")+1);
+var roottag = "src";
+while (base != roottag && base != "") {
+  treetop += "../";
+  path = path.substr(0, path.lastIndexOf("/"));
+  base = path.substr(path.lastIndexOf("/")+1);
+}
+var inDocTree = base == roottag;
+if (inDocTree) {
+document.write("<link href='",treetop,"doc/Utilities/HTML/srlatex2html.css' rel='stylesheet' type='text/css'/>")
+}
 </script>
 EndOfString
 )
@@ -111,8 +121,10 @@ end
 def addTopBanner(c)
   c.sub!("<BODY >", <<EndOfString
 <BODY>
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\\/script>');
+<script type="text/javascript">
+if (inDocTree) {
+  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\\/script>');
+}
 </script>
 EndOfString
 )
@@ -122,8 +134,10 @@ end
 # SCIRun bottom or footer banner.
 def addBottomBanner(c)
   c.sub!("</BODY>", <<EndOfString
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\\/script>');
+<script type="text/javascript">
+if (inDocTree) {
+  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\\/script>');
+}
 </script>
 </BODY>
 EndOfString
