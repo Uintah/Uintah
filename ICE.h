@@ -691,6 +691,9 @@ namespace Uintah {
 				  int matl, double factor);
     virtual void addRefineDependencies(Task* task, const VarLabel* var,
 				       int step, int nsteps);
+
+    MaterialSubset* d_press_matl;
+
     private:
       friend class MPMICE;
       friend class AMRICE;
