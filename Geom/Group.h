@@ -29,6 +29,7 @@ public:
     void add(GeomObj*);
     int size();
 
+    virtual void reset_bbox();
     virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL

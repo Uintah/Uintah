@@ -53,10 +53,12 @@ public:
     virtual GeomObj* clone() = 0;
 
 
+    virtual void reset_bbox();
     virtual void get_bounds(BBox&) = 0;
     void set_matl(const MaterialHandle&);
     void set_pick(GeomPick*);
     GeomPick* get_pick();
+
 
     // For OpenGL
 #ifdef SCI_OPENGL

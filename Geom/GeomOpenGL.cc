@@ -12,6 +12,7 @@
  */
 
 #include <Geom/GeomOpenGL.h>
+#include <Classlib/NotFinished.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
@@ -22,6 +23,7 @@
 #include <Geom/Line.h>
 #include <Geom/PointLight.h>
 #include <Geom/Polyline.h>
+#include <Geom/RenderMode.h>
 #include <Geom/Sphere.h>
 #include <Geom/Tetra.h>
 #include <Geom/Tri.h>
@@ -179,6 +181,17 @@ void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
     }
     glEnd();
 }
+
+void GeomRenderMode::objdraw(DrawInfoOpenGL* di)
+{
+    int save_lighting=di->lighting;
+    NOT_FINISHED("GeomRenderMode");
+    if(child){
+	child->draw(di);
+	// We don't put things back if no children...
+	
+    }
+}    
 
 void GeomSphere::objdraw(DrawInfoOpenGL* di)
 {

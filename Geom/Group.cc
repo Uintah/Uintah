@@ -65,3 +65,10 @@ void GeomGroup::make_prims(Array1<GeomObj*>& free,
     for(int i=0;i<objs.size();i++)
 	objs[i]->make_prims(free, dontfree);
 }
+
+void GeomGroup::reset_bbox()
+{
+    for(int i=0;i<objs.size();i++)
+	objs[i]->reset_bbox();
+    bb.reset();
+}
