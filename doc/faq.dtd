@@ -18,7 +18,7 @@
 
 <!-- FAQ specification -->
 
-<!ELEMENT p (#PCDATA)>
+<!ELEMENT p (#CDATA)>
 <!ELEMENT pre (#CDATA)>
 <!ELEMENT img (#CDATA)>
 
@@ -30,3 +30,4 @@
 <!ELEMENT keywords (#CDATA)>
 <!ELEMENT question (p|pre|img)+>
 <!ELEMENT answer (p|pre|img)+>
+

@@ -28,9 +28,9 @@
 
 -->
 
-<faq>
+<faq name="Technical FAQ">
   <entry>
-    <keywords>SGI, runtime, pthreads, SIGABRT</context>
+    <keywords>SGI, runtime, pthreads, SIGABRT</keywords>
     <question>
       <p>
         Using an SGI machine I successfully built all the required thirdparty
@@ -128,7 +128,7 @@
         - libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared object file: No such file or directory
 
       </pre>
-    </question
+    </question>
     <answer>
       <p>
         Each module for a given package has it's own .xml file that 
@@ -157,20 +157,21 @@
     <keywords>SGI, LANG:std, MIPSpro</keywords>
     <question>
       <p>
-        When I compile SCIRun I get the following warning, and the build fails:
+        When I compile SCIRun I get the following warning, and the
+        build fails.  What is wrong:
       </p>
       <pre>
+        ...
         Warning: Option 'std' not in group 'LANG' (LANG:std)
+        ...
       </pre>
-      <p>
-        What is wrong?
-      </p>
     </question>
     <answer>
       <p>
         The MIPSpro compiler on your target install machine is too old.
         SCIRun requires version 7.3.1.1m at a minimum.
       </p>
+      <img>images/research_menuheader.gif</img>
     </answer>
   </entry>
 </faq>
