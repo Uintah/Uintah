@@ -40,10 +40,6 @@ box is used to init the transform</p>
         <name>Matrix</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
-      <port>
-        <name>Field BBox</name>
-	<datatype>SCIRun::Field</datatype>
-      </port>
     </inputs>
     <outputs>
       <port>
