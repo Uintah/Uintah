@@ -201,6 +201,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   old_dw->get(pvolume, lb->pVolumeLabel, pset);
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
+  ParticleVariable<double> ptemperature;
+  old_dw->get(ptemperature, lb->pTemperatureLabel, pset);
 
   NCVariable<Vector> gvelocity;
 
@@ -215,7 +217,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
   //  FIX  Need thermal properties
-  //  double Cp0 = matl->getSpecificHeat();
+  double Cp0 = matl->getSpecificHeat();
+  cout << "Cp0 = " << Cp0 << endl;
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -451,8 +454,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       // FIX  Need to access particle temperature, thermal constants.
 
-      //      double cpnew = Cp0 + d_intialData.DCp_DTemperature*ptemperature[idx];
-      //      double Cv = cpnew/(1+Beta*ptemperature[idx]);
+      double cpnew = Cp0 + d_initialData.DCp_DTemperature*ptemperature[idx];
+      double Cv = cpnew/(1+d_initialData.Beta*ptemperature[idx]);
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -547,6 +550,8 @@ void ViscoScram::addComputesAndRequires(Task* task,
                   Ghost::None);
    task->requires(old_dw, lb->pVolumeLabel, matl->getDWIndex(),  patch,
                   Ghost::None);
+   task->requires(old_dw, lb->pTemperatureLabel, matl->getDWIndex(),  patch,
+                  Ghost::None);
    task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), patch,
                   Ghost::AroundCells, 1);
    task->requires(old_dw, lb->delTLabel);
@@ -604,6 +609,10 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.14  2000/10/31 22:43:12  guilkey
+// Added temperature retrieval and uncommented some of the code which
+// this allowed.
+//
 // Revision 1.13  2000/10/19 22:48:14  bard
 // Fixed an initialization error.  Runs longer, but not working yet.
 //
