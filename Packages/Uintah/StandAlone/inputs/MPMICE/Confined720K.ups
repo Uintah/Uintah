@@ -35,86 +35,86 @@
     <Grid>
 		<BoundaryConditions>
 		 <Face side = "x-">
-                     <BCType var = "Neumann" label = "Pressure">
+                     <BCType id = "0" var = "Neumann" label = "Pressure">
                            <value> 0.0  </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Velocity">
+			<BCType id = "all" var = "Neumann" label = "Velocity">
                            <value> [0.,0.,0.] </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Temperature">
+			<BCType id = "all" var = "Neumann" label= "Temperature">
                            <value> 0.0  </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Density">
+			<BCType id = "all" var = "Neumann" label = "Density">
                            <value> 0.0  </value>
                         </BCType>
                 </Face>
                 <Face side = "x+">
-			<BCType var = "Neumann" label = "Pressure">
-                           <value>  0.0 </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Temperature">
+			<BCType id = "0" var = "Neumann" label = "Pressure">
                            <value> 0.0  </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Density">
+			<BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value> [0.,0.,0.] </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label= "Temperature">
+                           <value> 0.0  </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label = "Density">
                            <value> 0.0  </value>
                         </BCType>
                 </Face>
                 <Face side = "y-">
-			<BCType var = "Neumann" label = "Pressure">
-                           <value>  0.0  </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Temperature">
+			<BCType id = "0" var = "Neumann" label = "Pressure">
                            <value> 0.0  </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Density">
+			<BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value> [0.,0.,0.] </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label= "Temperature">
+                           <value> 0.0  </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label = "Density">
                            <value> 0.0  </value>
                         </BCType>
                 </Face>                  
 		<Face side = "y+">
-			<BCType var = "Neumann" label = "Pressure">
-                           <value> 0.0   </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Temperature">
+			<BCType id = "0" var = "Neumann" label = "Pressure">
                            <value> 0.0  </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Density">
+			<BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value> [0.,0.,0.] </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label= "Temperature">
+                           <value> 0.0  </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label = "Density">
                            <value> 0.0  </value>
                         </BCType>
 		</Face>
                 <Face side = "z-">
-			<BCType var = "Neumann" label = "Pressure">
-                           <value>  0.0   </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Temperature">
+			<BCType id = "0" var = "Neumann" label = "Pressure">
                            <value> 0.0  </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Density">
+			<BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value> [0.,0.,0.] </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label= "Temperature">
+                           <value> 0.0  </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label = "Density">
                            <value> 0.0  </value>
                         </BCType>
                 </Face>                  
 		<Face side = "z+">
-			<BCType var = "Neumann" label = "Pressure">
-                           <value>  0.0   </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType var = "Neumann" label = "Temperature">
+			<BCType id = "0" var = "Neumann" label = "Pressure">
                            <value> 0.0  </value>
                         </BCType>
-			<BCType var = "Neumann" label = "Density">
+			<BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value> [0.,0.,0.] </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label= "Temperature">
+                           <value> 0.0  </value>
+                        </BCType>
+			<BCType id = "all" var = "Neumann" label = "Density">
                            <value> 0.0  </value>
                         </BCType>
 		</Face>
@@ -154,6 +154,9 @@
    </DataArchiver>
 
    <Debug>
+     <dbg_timeStart>       0.00   </dbg_timeStart>
+     <dbg_timeStop>        0.1    </dbg_timeStop>
+     <dbg_outputInterval>  1e-9   </dbg_outputInterval>
      <!--
      <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebug_equilibration_press"/>

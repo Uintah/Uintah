@@ -181,6 +181,9 @@
    </DataArchiver>
 
    <Debug>
+     <dbg_timeStart>       0.00   </dbg_timeStart>
+     <dbg_timeStop>        9.0e-5 </dbg_timeStop>
+     <dbg_outputInterval>  1e-9   </dbg_outputInterval>
      <!--
      <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebugInitialize"/>
