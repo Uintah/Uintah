@@ -62,6 +62,8 @@ CrowdMonitor_private::~CrowdMonitor_private()
 CrowdMonitor::CrowdMonitor(const char* name)
   : name_(name)
 {
+  if(!Thread::isInitialized())
+    Thread::initialize();
   priv_=new CrowdMonitor_private;
 }
 

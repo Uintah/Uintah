@@ -79,7 +79,7 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::wait()
 {
-  barrier.wait(threads_.size()+1);
+  barrier.wait((int)threads_.size()+1);
 }
 
 void
@@ -89,7 +89,7 @@ ThreadPool::parallel(const ParallelBase& helper, int nthreads)
   if(nthreads >= (int)threads_.size()){
     if(!group_)
       group_=new ThreadGroup("Parallel group");
-    int oldsize = threads_.size();
+    int oldsize = (int)threads_.size();
     threads_.resize(nthreads);
     for(int i=oldsize;i<nthreads;i++){
       char buf[50];

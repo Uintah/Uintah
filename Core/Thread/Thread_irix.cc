@@ -111,7 +111,6 @@ static Thread_private* idle[MAXTHREADS];
 static int nidle;
 static Thread_private* active[MAXTHREADS];
 static int nactive;
-static bool initialized;
 static usema_t* schedlock;
 static usptr_t* arena;
 static atomic_reservoir_t reservoir;
@@ -137,7 +136,7 @@ static
 void
 lock_scheduler()
 {
-  if(!initialized)
+  if(!Thread::isInitialized())
     Thread::initialize();
   if(uspsema(schedlock) == -1)
     throw ThreadError(std::string("lock_scheduler failed")
@@ -848,7 +847,7 @@ Mutex::unlock()
 Semaphore::Semaphore(const char* name, int count)
   : name_(name)
 {
-  if(!initialized){
+  if(!Thread::isInitialized()){
     Thread::initialize();
   }
   priv_=(Semaphore_private*)usnewsema(arena, count);
@@ -941,7 +940,7 @@ Barrier_private::Barrier_private()
 Barrier::Barrier(const char* name)
   : name_(name)
 {
-  if(!initialized){
+  if(!Thread::isInitialized()){
     Thread::initialize();
   }
   priv_=new Barrier_private;
@@ -1012,7 +1011,7 @@ AtomicCounter_private::AtomicCounter_private()
 AtomicCounter::AtomicCounter(const char* name)
   : name_(name)
 {
-  if(!initialized){
+  if(!Thread::isInitialized()){
     Thread::initialize();
   }
   if(use_fetchop){
@@ -1030,7 +1029,7 @@ AtomicCounter::AtomicCounter(const char* name)
 AtomicCounter::AtomicCounter(const char* name, int value)
   : name_(name)
 {
-  if(!initialized){
+  if(!Thread::isInitialized()){
     Thread::initialize();
   }
   if(use_fetchop){

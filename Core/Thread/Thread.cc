@@ -66,6 +66,13 @@ public:
   }
 };
 
+bool Thread::initialized = false;
+
+bool Thread::isInitialized()
+{
+  return initialized;
+}
+
 Thread::~Thread()
 {
     if(runner_){
@@ -316,6 +323,8 @@ Thread::niceAbort()
 int
 Thread::couldBlock(const char* why)
 {
+  if(!initialized)
+    Thread::initialize();
   Thread_private* p=Thread::self()->priv_;
   return push_bstack(p, BLOCK_ANY, why);
 }

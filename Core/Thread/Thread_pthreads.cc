@@ -104,7 +104,6 @@ using SCIRun::Thread_private;
 
 static Thread_private* active[MAXTHREADS];
 static int numActive;
-static bool initialized;
 static pthread_mutex_t sched_lock;
 static pthread_key_t thread_key;
 static sem_t main_sema;

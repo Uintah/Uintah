@@ -63,7 +63,7 @@ ThreadGroup::numActive(bool countDaemon)
     lock_.lock();
     int total=0;
     if(countDaemon){
-        total=threads_.size();
+        total=(int)threads_.size();
     } else {
 	for(vector<Thread*>::iterator iter=threads_.begin();
 	    iter != threads_.end();iter++)

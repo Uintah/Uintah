@@ -224,7 +224,7 @@ DESCRIPTION
 	    // Mark a section as one that could block for debugging purposes.
 	    // The <b>int</b> that is returned should be passed into
 	    // <i>couldBlockDone(int)</i> when the section has completed.  This
-	    // will typically not be used outside of the thread implementation
+	    // will typically not be used outside of the thread implementation.
 	    static int couldBlock(const char* why);
 	    
 	    //////////
@@ -236,6 +236,11 @@ DESCRIPTION
 	    //////////
 	    // The calling process voluntarily gives up time to another process
 	    static void yield();
+
+	    //////////
+	    // Return true if the thread library has been initialized. This
+	    // will typically not be used outside of the thread implementation.
+	    static bool isInitialized();
 
 	    //////////
 	    // SGI (irix 6.2-6.5.6 at least) maps page 0 for some
@@ -253,10 +258,7 @@ DESCRIPTION
 	    static void allow_sgi_OpenGL_page0_sillyness();
 	    static void disallow_sgi_OpenGL_page0_sillyness();
 	private:
-	    friend class Barrier;
-	    friend class Mutex;
 	    friend class Runnable;	    
-	    friend class Semaphore;
 	    friend class Thread_private;
 	    
 	    Runnable* runner_;
@@ -269,7 +271,7 @@ DESCRIPTION
 	    void os_start(bool stopped);
 	    Thread(ThreadGroup* g, const char* name);
 
-	public:
+	    static bool initialized;
 	    static void initialize();
 	    static void checkExit();
 	    int cpu_;
@@ -292,7 +294,6 @@ DESCRIPTION
 		BLOCK_CONDITIONVARIABLE
 	    };
 
-	private:
 	    static const char* getStateString(ThreadState);
 	    static int push_bstack(Thread_private*, ThreadState s,
 				   const char* why);

@@ -54,7 +54,9 @@ AtomicCounter_private::~AtomicCounter_private()
 AtomicCounter::AtomicCounter(const char* name)
     : name_(name)
 {
-    priv_=new AtomicCounter_private;
+  if(!Thread::isInitialized())
+    Thread::initialize();
+  priv_=new AtomicCounter_private;
 }
 
 AtomicCounter::AtomicCounter(const char* name, int value)

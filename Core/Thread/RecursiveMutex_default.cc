@@ -55,6 +55,8 @@ RecursiveMutex_private::~RecursiveMutex_private()
 RecursiveMutex::RecursiveMutex(const char* name)
   : name_(name)
 {
+  if(!Thread::isInitialized())
+    Thread::initialize();
   priv_=new RecursiveMutex_private(name);
 }
 
