@@ -205,7 +205,7 @@ ScanlineMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
   if (ii<0 && ii>(-1.e-10)) ii=0;
   node0 = (unsigned int)floor(ii);
 
-  if (node0 < (ni_-1) && node0 >= 0) 
+  if (node0 < (ni_-1)) 
   {
     const double dx1 = ii - node0;
     const double dx0 = 1.0 - dx1;
