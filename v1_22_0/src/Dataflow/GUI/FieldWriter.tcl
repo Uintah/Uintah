@@ -104,6 +104,7 @@ itcl_class SCIRun_DataIO_FieldWriter {
 		-defaultextension $defext \
 	        -confirmvar $this-confirm \
 	        -formatvar $this-filetype \
+	        -formats {None} \
 	        -selectedfiletype $this-exporttype
 
 	moveToCursor $w	
