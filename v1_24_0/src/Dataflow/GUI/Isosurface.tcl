@@ -199,7 +199,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	scaleEntry2 $sel.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
-	     4c $this-isoval $this-isoval-typed
+	     4c $this-isoval $this-var2
 
 	pack $sel.isoval  -fill x
 
@@ -429,7 +429,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	bind $win.l.s <ButtonRelease> "$this set-isoval"
 
-	bind $win.r.e <Return> "$this-c needexecute"
+	bind $win.r.e <Return> "$this manualSliderEntryReturn \
+             $start $stop $var_slider $var_typed"
 	bind $win.r.e <KeyRelease> "$this manualSliderEntry \
              $start $stop $var_slider $var_typed"
 
@@ -450,31 +451,56 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    set $this-continuous 1
 	}
     }
+
+    method manualSliderEntryReturn { start stop var_slider var_typed } {
+	# Since the user has typed in a value and hit return, we know
+	# they are done and if their value is not valid or within range,
+	# we can change it to be either the old value, or the min or max
+	# depending on what is appropriate.
+  	if { ![string is double [set $var_typed]] } {
+  	    set $var_typed [set $var_slider] 
+  	}
+
+	if {[set $var_typed] < $start} {
+	    set $var_typed $start
+	} elseif {[set $var_typed] > $stop} {
+	    set $var_typed $stop
+	}
+
+	# Force the update to be manual
+	global $this-continuous
+	set continuous [set $this-continuous]
+	
+	set $this-continuous 0
+	
+	set $var_slider [set $var_typed]
+	
+	set $this-continuous $continuous
+    }
     
     method manualSliderEntry { start stop var_slider var_typed } {
-	if { ![string is double [set $var_typed]] } {
-	    set $var_typed [set $var_slider] }
+	# Evaluate as the user types in an isoval but never change the value
+	# they are typing in because they might not be done. Only update the
+	# actual isoval when user has typed in a double and it is within range.
+	
+ 	set var_new [set $var_slider]
 
-
-	if { $start <= [set $var_typed] &&
-	     [set $var_typed] <= $stop } {
-
-#	if { [set $var_typed] < $start } {
-#	    set $var_typed $start
-#	}
-#	if { [set $var_typed] > $stop } {
-#	    set $var_typed $stop 
-#	}
-
-	    # Force the update to be manual
-	    global $this-continuous
-	    set continuous [set $this-continuous]
-	    
-	    set $this-continuous 0
-	    
-	    set $var_slider [set $var_typed]
-	    
-	    set $this-continuous $continuous
-	}
+ 	# only update the value if it evaluates to a double 
+	# and is within range
+ 	if {[string is double [set $var_typed]] && 
+ 	    $start <= [set $var_typed] && 
+ 	    [set $var_typed] <= $stop} {
+ 	    set var_new [set $var_typed]
+ 	}
+	
+	# Force the update to be manual
+  	global $this-continuous
+  	set continuous [set $this-continuous]
+	
+  	set $this-continuous 0
+	
+  	set $var_slider $var_new
+	
+  	set $this-continuous $continuous
     }
 }
