@@ -254,9 +254,9 @@ proc makeNetworkEditor {} {
 	-xscrollcommand "updateCanvasX" -yscrollcommand "updateCanvasY"
 
     scrollbar $botFrame.hscroll -relief sunken -orient horizontal \
-	-command "$minicanvas xview"
+	-command "$maincanvas xview"
     scrollbar $botFrame.vscroll -relief sunken \
-	-command {/topbot.pane1.childsite.frame.canvas yview}
+	-command "$maincanvas yview"
 
 
     # Layout the scrollbars and canvas in the bottom pane
@@ -376,7 +376,8 @@ proc handleResize { w h } {
 proc updateCanvasX { beg end } {
     global maincanvas minicanvas SCALEX SCALEY miniCanvasWidth miniCanvasHeight
     # Tell the scroll bar to update
-#    .bot.neteditFrame.hscroll set $beg $end
+    global botFrame
+    $botFrame.hscroll set $beg $end
     # Update the view area box 
     set uly [lindex [$minicanvas coords viewAreaBox] 1]
     set lry [lindex [$minicanvas coords viewAreaBox] 3]
@@ -388,7 +389,8 @@ proc updateCanvasX { beg end } {
 proc updateCanvasY { beg end } {
     global maincanvas minicanvas SCALEX SCALEY miniCanvasWidth miniCanvasHeight
     # Tell the scroll bar to update
- #   .bot.neteditFrame.vscroll set $beg $end
+    global botFrame
+    $botFrame.vscroll set $beg $end
     # Update the view area box 
     set ulx [lindex [$minicanvas coords viewAreaBox] 0]
     set uly [expr $beg * $miniCanvasHeight ]
