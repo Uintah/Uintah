@@ -68,7 +68,7 @@ void FieldSetReader::execute()
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
   if (stat(fn(), &buf)) {
-    error(clString("Warning: couldn't get stats on file ")+fn);
+    error(clString("FieldSetReader error - file not found ")+fn);
     return;
   }
 
