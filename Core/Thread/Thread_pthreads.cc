@@ -621,6 +621,8 @@ struct Mutex_private {
 Mutex::Mutex(const char* name)
     : name_(name)
 {
+  if(!Thread::isInitialized())
+    Thread::initialize();
   if(this == 0){
     fprintf(stderr, "WARNING: creation of null mutex\n");
   }
@@ -635,9 +637,9 @@ Mutex::~Mutex()
 {
   pthread_mutex_unlock(&priv_->mutex);
   if(pthread_mutex_destroy(&priv_->mutex) != 0) {
-    std::cerr << "pthread_mutex_destroy() failed!!" << endl;
-	throw ThreadError(std::string("pthread_mutex_destroy: ")
-			  +strerror(errno));
+    fprintf(stderr, "pthread_mutex_destroy() failed!!\n");
+    throw ThreadError(std::string("pthread_mutex_destroy: ")
+		      +strerror(errno));
   }
   delete priv_;
   priv_=0;

@@ -298,7 +298,7 @@ Thread::niceAbort()
 #ifdef __sgi
 	sprintf(command, "winterm -c dbx -p %d &", getpid());
 #else
-	sprintf(command, "xterm -e gdb %d %p&", getpid());
+	sprintf(command, "xterm -e gdb %d &", getpid());
 #endif
       }
       system(command);

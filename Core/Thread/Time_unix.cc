@@ -35,6 +35,9 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <errno.h>
+#ifdef __linux
+#include <time.h>
+#endif
 
 static bool initialized=false;
 static struct timeval start_time;
