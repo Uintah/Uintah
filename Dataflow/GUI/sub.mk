@@ -21,7 +21,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/PatchDataVisualizer.tcl\
 	$(SRCDIR)/RescaleColorMap.tcl\
-	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/CuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
 	$(SRCDIR)/ScalarOperator.tcl\
