@@ -29,16 +29,8 @@
 
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-//#include <Core/Datatypes/TetVolMesh.h>
-//#include <Core/Datatypes/LatVolMesh.h>
-//#include <Core/Datatypes/ContourMesh.h>
-//#include <Core/Datatypes/PointCloudMesh.h>
-//#include <Core/Datatypes/TriSurf.h>
-//#include <Core/Geom/GeomTriangles.h>
-//#include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 
-//#include <Core/Datatypes/DispatchMesh1.h>
 #include <iostream>
 
 namespace SCIRun {

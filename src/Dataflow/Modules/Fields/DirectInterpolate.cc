@@ -31,16 +31,6 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-//#include <Core/Datatypes/Field.h>
-//#include <Core/Datatypes/Field.h>
-//#include <Core/Datatypes/TetVol.h>
-//#include <Core/Datatypes/LatticeVol.h>
-//#include <Core/Datatypes/TriSurf.h>
-//#include <Core/Datatypes/ContourField.h>
-//#include <Core/Datatypes/PointCloud.h>
-//#include <Core/Datatypes/ImageField.h>
-//#include <Core/Datatypes/ScanlineField.h>
-//#include <Core/Datatypes/Dispatch1.h>
 #include <Dataflow/Modules/Fields/DirectInterpolateAlgo.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
