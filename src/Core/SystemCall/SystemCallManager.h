@@ -60,11 +60,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <list>
 #include <string>
+#include <iostream>
+#include <sstream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
+#include <sys/signal.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
@@ -72,8 +78,6 @@
 #include <Core/SystemCall/SystemCallError.h>
 #include <Core/SystemCall/TempFileManager.h>
 #include <Core/Containers/LockingHandle.h>
-#include <iostream>
-#include <sstream>
 
 namespace SCIRun {
 

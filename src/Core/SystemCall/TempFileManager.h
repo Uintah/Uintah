@@ -44,8 +44,10 @@
 #ifndef CORE_SYSTEMCALL_TEMPFILE_H
 #define CORE_SYSTEMCALL_TEMPFILE_H 1
 
-
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
+
 #include <Core/Math/MusilRNG.h>
 
 

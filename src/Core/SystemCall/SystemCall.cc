@@ -188,7 +188,7 @@ void	SystemCallThread::run()
 					}
 					else
 					{	// split of the latest line read
-						newline = stdout_buffer.substr(linestart,lineend+1);
+						newline = stdout_buffer.substr(linestart,lineend) + std::string("\n");
 						stdout_buffer = stdout_buffer.substr(lineend+1);
 						need_new_read = false;
 						syscall_->insert_stdout_line(newline);
@@ -246,7 +246,7 @@ void	SystemCallThread::run()
 					}
 					else
 					{	// split of the latest line read
-						newline = stderr_buffer.substr(linestart,lineend+1);
+						newline = stderr_buffer.substr(linestart,lineend) + std::string("\n");
 						stderr_buffer = stderr_buffer.substr(lineend+1);
 						need_new_read = false;
 					}
@@ -275,9 +275,9 @@ SystemCall::SystemCall() :
 	fd_stderr_(-1),
 	fd_exit_(-1),
 	processid_(0),
+	isfile_(false),
 	stdout_eof_(false),
 	stderr_eof_(false),
-	isfile_(false),
 	iseof_(false),
 	eof_("systemcall_eof_condition"),
 	isexit_(false),
