@@ -24,6 +24,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    refineFlag_label = VarLabel::create("refineFlag",
 				       CCVariable<int>::getTypeDescription());
    d_ref_press = 0.0;
+   d_elapsed_time = 0.0;
 
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
