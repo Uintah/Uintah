@@ -2,7 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/DynamicTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTableInfo.h>
-#include <iostream>;
+#include <iostream>
 
 using namespace std;
 using namespace Uintah;
@@ -124,6 +124,9 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
 
 //
 // $Log$
+// Revision 1.2  2001/08/03 18:08:09  witzel
+// Removed an extraneous semi-colon at the end of a #include.
+//
 // Revision 1.1  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
 //
