@@ -41,7 +41,6 @@ SRCS     += \
 	$(SRCDIR)/SolveMatrix.cc\
 	$(SRCDIR)/Submatrix.cc\
 #[INSERT NEW CODE FILE HERE]
-#        $(SRCDIR)/ManipMatrix.cc\
 
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Datatypes Core/Persistent Core/Math \
