@@ -81,6 +81,7 @@ namespace rtrt {
     friend class PathTraceWorker;
   public:
     TextureSphere(const Point &cen, double radius, int tex_res=16);
+    void writeTexture(char* basename, int index);
   };
 
 } // end namespace rtrt
