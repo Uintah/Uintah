@@ -243,7 +243,6 @@ void PinTo300Test::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
-  t->requires(Task::OldDW, lb->press_CCLabel,            gn);
   t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gn );
   //t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
   //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR
