@@ -2,6 +2,7 @@
 #include "NullContact.h"
 #include "SingleVelContact.h"
 #include "FrictionContact.h"
+#include "RigidBodyContact.h"
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <Uintah/Interface/ProblemSpec.h>
@@ -31,6 +32,9 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
       else if (con_type == "friction")
 	 return(scinew FrictionContact(child,ss));
     
+      else if (con_type == "rigid")
+	 return(scinew RigidBodyContact(child,ss));
+    
       else {
 	 cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
 	 //      exit(1);
@@ -41,6 +45,9 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
 }
 
 // $Log$
+// Revision 1.7  2001/01/11 03:31:31  guilkey
+// Created new contact model for rigid bodies.
+//
 // Revision 1.6  2000/09/25 18:08:22  sparker
 // include datawarehouse.h for template instantiation
 //

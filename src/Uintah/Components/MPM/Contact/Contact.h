@@ -108,7 +108,7 @@ WARNING
       
       inline bool compare(double num1, double num2)
 	 {
-	    double EPSILON=1.e-16;
+	    double EPSILON=1.e-12;
 	    
 	    return (fabs(num1-num2) <= EPSILON);
 	 }
@@ -118,6 +118,9 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.22  2001/01/11 03:31:30  guilkey
+// Created new contact model for rigid bodies.
+//
 // Revision 1.21  2000/08/09 03:18:01  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
