@@ -2,13 +2,6 @@ catch {rename DaveW_Writers_SegFldWriter ""}
 
 itcl_class DaveW_Writers_SegFldWriter {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
 	set name SegFldWriter
 	set_defaults

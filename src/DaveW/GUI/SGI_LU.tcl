@@ -3,13 +3,6 @@ catch {rename DaveW_ISL_SGI_LU ""}
 itcl_class DaveW_ISL_SGI_LU {
 
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
 	set name SGI_LU
 	set_defaults

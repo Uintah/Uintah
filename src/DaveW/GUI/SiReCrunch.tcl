@@ -19,13 +19,6 @@ itcl_class DaveW_SiRe_SiReCrunch {
         set name SiReCrunch
         set_defaults
     }
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     method set_defaults {} {
         global $this-npts
         set $this-npts 500

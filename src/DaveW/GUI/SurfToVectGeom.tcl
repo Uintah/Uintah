@@ -14,13 +14,6 @@ catch {rename DaveW_MEG_SurfToVectGeom ""}
 
 itcl_class DaveW_MEG_SurfToVectGeom {
     inherit Module
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
     constructor {config} {
 	set name SurfToVectGeom
 	set_defaults
