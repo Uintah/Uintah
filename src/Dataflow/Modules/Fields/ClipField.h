@@ -114,7 +114,6 @@ ClipFieldAlgoT<FIELD>::execute_cell(Module *mod,
     ++bi;
   }
 
-  clipped->flush_changes();  // Really should copy normals
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
 
@@ -231,8 +230,6 @@ ClipFieldAlgoT<FIELD>::execute_node(Module *mod,
     
     ++bi;
   }
-
-  clipped->flush_changes();  // Really should copy normals
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
 
