@@ -241,7 +241,7 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     string homerc = string(HOME)+"/.scirunrc";
     string cmd;
     if (gui->eval("validFile "+homerc) == "1") {
-      string backuprc = homerc+"."+string(SCIRUN_VERSION)+
+      string backuprc = homerc+"."+string(SCIRUN_VERSION)+"."+
 	string(SCIRUN_RCFILE_SUBVERSION);
       cmd = string("cp -f ")+homerc+" "+backuprc;
       std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
