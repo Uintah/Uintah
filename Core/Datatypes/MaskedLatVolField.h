@@ -15,103 +15,115 @@
   University of Utah. All Rights Reserved.
 */
 
-/*
- *  MaskedLatVolField.h
- *
- *  Written by:
- *   Martin Cole
- *   School of Computing
- *   University of Utah
- *
- *  Copyright (C) 2001 SCI Institute
- */
 
 #ifndef Datatypes_MaskedLatVolField_h
 #define Datatypes_MaskedLatVolField_h
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Geometry/Tensor.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <vector>
+#include <Core/Containers/Array3.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
+#include <string>
 
 namespace SCIRun {
 
-template <class T> 
-class MaskedLatVolField : public LatVolField<T> {
-private:
-  FData3d<char> mask_;  // since Pio isn't implemented for bool's
+using std::string;
+
+template <class Data>
+class MFData3d : public Array3<Data> {
 public:
-  FData3d<char>& mask() { return mask_; }
+  typedef Data value_type;
+  typedef Data * iterator;
+  typedef const Data * const_iterator;
+
+  iterator begin() { return &(*this)(0,0,0); } 
+  iterator end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  const_iterator begin() const { return &(*this)(0,0,0); } 
+  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+
+    
+  MFData3d() : Array3<Data>() {}
+  MFData3d(int) : Array3<Data>() {} //default arg sgi bug workaround.
+  MFData3d(const MFData3d& data) {Array3<Data>::copy(data); }
+  virtual ~MFData3d();
   
-  bool get_valid_nodes_and_data(vector<LatVolMesh::Node::index_type> &nodes,
-				vector<T> &data) {
-    nodes.resize(0);
-    data.resize(0);
-    if (data_at() != NODE) return false;
-    LatVolMesh::Node::iterator ni, nie;
-    get_typed_mesh()->begin(ni);
-    get_typed_mesh()->end(nie);
-    for (; ni != nie; ++ni) { 
-      if (mask_[*ni]) { nodes.push_back(*ni); data.push_back(fdata()[*ni]); }
-    }
-    return true;
-  }
+  const value_type &operator[](typename MaskedLatVolMesh::Cell::index_type idx) const
+  { return operator()(idx.k_,idx.j_,idx.i_); } 
+  const value_type &operator[](typename MaskedLatVolMesh::Face::index_type idx) const
+  { return operator()(0, 0, unsigned(idx)); }
+  const value_type &operator[](typename MaskedLatVolMesh::Edge::index_type idx) const
+  { return operator()(0, 0, unsigned(idx)); }    
+  const value_type &operator[](typename MaskedLatVolMesh::Node::index_type idx) const
+  { return operator()(idx.k_,idx.j_,idx.i_); }    
 
-  MaskedLatVolField() : LatVolField<T>() {}
-  MaskedLatVolField(LatVolMeshHandle mesh, Field::data_location data_at)
-    : LatVolField<T>(mesh, data_at)
+  value_type &operator[](typename MaskedLatVolMesh::Cell::index_type idx)
+  { return operator()(idx.k_,idx.j_,idx.i_); } 
+  value_type &operator[](typename MaskedLatVolMesh::Face::index_type idx)
+  { return operator()(0, 0, unsigned(idx)); }
+  value_type &operator[](typename MaskedLatVolMesh::Edge::index_type idx)
+  { return operator()(0, 0, unsigned(idx)); }    
+  value_type &operator[](typename MaskedLatVolMesh::Node::index_type idx)
+  { return operator()(idx.k_,idx.j_,idx.i_); }    
+
+  void resize(const MaskedLatVolMesh::Node::size_type &size)
+  { Array3<Data>::resize(size.k_, size.j_, size.i_); }
+  void resize(const MaskedLatVolMesh::Edge::size_type &size)
+  { Array3<Data>::resize(1, 1, unsigned(size)); }
+  void resize(const MaskedLatVolMesh::Face::size_type &size)
+  { Array3<Data>::resize(1, 1, size); }
+  void resize(const MaskedLatVolMesh::Cell::size_type &size)
+  { Array3<Data>::resize(size.k_, size.j_, size.i_); }
+
+  static const string type_name(int n = -1);
+};
+
+
+template <class Data>
+MFData3d<Data>::~MFData3d()
+{
+}
+
+  
+template <class Data>
+const string
+MFData3d<Data>::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
   {
-    resize_fdata();
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
   }
-
-  virtual ~MaskedLatVolField() {};
-
-  bool value(T &val, typename LatVolMesh::Node::index_type idx) const
-  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
-  bool value(T &val, typename LatVolMesh::Edge::index_type idx) const
-  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
-  bool value(T &val, typename LatVolMesh::Face::index_type idx) const
-  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
-  bool value(T &val, typename LatVolMesh::Cell::index_type idx) const
-  { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
-
-  void initialize_mask(char masked) {
-    for (char *c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
+  else if (n == 0)
+  {
+    return "MFData3d";
   }
-
-  void resize_fdata() {
-    if (data_at() == NODE)
-    {
-      typename LatVolField<T>::mesh_type::Node::size_type ssize;
-      get_typed_mesh()->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == EDGE)
-    {
-      typename LatVolField<T>::mesh_type::Edge::size_type ssize;
-      get_typed_mesh()->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == FACE)
-    {
-      typename LatVolField<T>::mesh_type::Face::size_type ssize;
-      get_typed_mesh()->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == CELL)
-    {
-      typename LatVolField<T>::mesh_type::Cell::size_type ssize;
-      get_typed_mesh()->size(ssize);
-      mask_.resize(ssize);
-    }
-    else
-    {
-      ASSERTFAIL("data at unrecognized location");
-    }
-    LatVolField<T>::resize_fdata();
+  else
+  {
+    return find_type_name((Data *)0);
   }
+}
+
+
+template <class Data>
+class MaskedLatVolField : public GenericField< MaskedLatVolMesh, MFData3d<Data> >
+{
+public:
+  // Avoids a warning with g++ 3.1
+  // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: `typename 
+  // SCIRun::QuadraticTetVolField<T>::mesh_handle_type' is implicitly a typename
+  // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: implicit typename is 
+  // deprecated, please see the documentation for details
+  typedef typename GenericField<MaskedLatVolMesh, MFData3d<Data> >::mesh_handle_type mesh_handle_type;
+  MaskedLatVolField();
+  MaskedLatVolField(Field::data_location data_at);
+  MaskedLatVolField(MaskedLatVolMeshHandle mesh, Field::data_location data_at);
+  virtual MaskedLatVolField<Data> *clone() const;
+  virtual ~MaskedLatVolField();
 
   //! Persistent IO
   static PersistentTypeID type_id;
@@ -121,40 +133,50 @@ public:
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
 private:
-  static Persistent *maker();
+  static Persistent* maker();
 };
 
-// Pio defs.
-const int MASKED_LAT_VOL_FIELD_VERSION = 1;
 
-template <class T>
-Persistent*
-MaskedLatVolField<T>::maker()
+
+template <class Data>
+MaskedLatVolField<Data>::MaskedLatVolField()
+  : GenericField<MaskedLatVolMesh, MFData3d<Data> >()
 {
-  return scinew MaskedLatVolField<T>;
 }
 
-template <class T>
-PersistentTypeID 
-MaskedLatVolField<T>::type_id(type_name(-1), 
-			 LatVolField<T>::type_name(-1),
-			 maker);
 
-
-template <class T>
-void 
-MaskedLatVolField<T>::io(Piostream& stream)
+template <class Data>
+MaskedLatVolField<Data>::MaskedLatVolField(Field::data_location data_at)
+  : GenericField<MaskedLatVolMesh, MFData3d<Data> >(data_at)
 {
-  /*int version=*/stream.begin_class(type_name(-1), 
-				     MASKED_LAT_VOL_FIELD_VERSION);
-  LatVolField<T>::io(stream);
-  Pio(stream, mask_);
-  stream.end_class();
 }
 
-template <class T> 
-const string 
-MaskedLatVolField<T>::type_name(int n)
+
+template <class Data>
+MaskedLatVolField<Data>::MaskedLatVolField(MaskedLatVolMeshHandle mesh,
+			     Field::data_location data_at)
+  : GenericField<MaskedLatVolMesh, MFData3d<Data> >(mesh, data_at)
+{
+}
+
+
+template <class Data>
+MaskedLatVolField<Data> *
+MaskedLatVolField<Data>::clone() const
+{
+  return new MaskedLatVolField<Data>(*this);
+}
+  
+
+template <class Data>
+MaskedLatVolField<Data>::~MaskedLatVolField()
+{
+}
+
+
+template <class Data>
+const string
+MaskedLatVolField<Data>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -169,9 +191,9 @@ MaskedLatVolField<T>::type_name(int n)
   }
   else
   {
-    return find_type_name((T *)0);
+    return find_type_name((Data *)0);
   }
-}
+} 
 
 template <class T> 
 const TypeDescription*
@@ -201,14 +223,41 @@ MaskedLatVolField<T>::get_type_description(int n) const
   return td;
 }
 
+#define LAT_VOL_FIELD_VERSION 3
+
+template <class Data>
+Persistent* 
+MaskedLatVolField<Data>::maker()
+{
+  return scinew MaskedLatVolField<Data>;
+}
+
+template <class Data>
+PersistentTypeID
+MaskedLatVolField<Data>::type_id(type_name(-1),
+		GenericField<MaskedLatVolMesh, MFData3d<Data> >::type_name(-1),
+                maker); 
+
+template <class Data>
+void
+MaskedLatVolField<Data>::io(Piostream &stream)
+{
+  int version = stream.begin_class(type_name(-1), LAT_VOL_FIELD_VERSION);
+  GenericField<MaskedLatVolMesh, MFData3d<Data> >::io(stream);
+  stream.end_class();                                                    
+  if (version < 2) {
+    MFData3d<Data> temp;
+    temp.copy(fdata());
+    resize_fdata();
+    int i, j, k;
+    for (i=0; i<fdata().dim1(); i++)
+      for (j=0; j<fdata().dim2(); j++)
+	for (k=0; k<fdata().dim3(); k++)
+	  fdata()(i,j,k)=temp(k,j,i);
+  }
+}
+
+
 } // end namespace SCIRun
 
 #endif // Datatypes_MaskedLatVolField_h
-
-
-
-
-
-
-
-
