@@ -224,15 +224,21 @@ TriangleCM2Widget::draw()
     glVertex2f(base_+top_x_+width_/2, top_y_);
   }
   glEnd();
-  glLineWidth(thick_line_width_);
+
   const float b_x = bottom_*top_x_ + base_;
   const float b_y = bottom_*top_y_;
   const float w = bottom_*width_;
+  glLineWidth(thick_line_width_);
   glBegin(GL_LINES);
   {
     selectcolor(4);
     glVertex2f(base_+top_x_-width_/2, top_y_);
     glVertex2f(base_+top_x_+width_/2, top_y_);
+  }
+  glEnd();
+  glLineWidth(thin_line_width_);
+  glBegin(GL_LINES);
+  {
     selectcolor(1);
     glVertex2f(b_x-w/2, b_y);
     glVertex2f(b_x+w/2, b_y);
@@ -516,11 +522,6 @@ RectangleCM2Widget::draw()
     glVertex2f(left_x_+width_, left_y_+height_);
     glVertex2f(left_x_, left_y_);
     glVertex2f(left_x_, left_y_+height_);
-  }
-  glEnd();
-  glLineWidth(thick_line_width_);
-  glBegin(GL_LINES);
-  {
     glVertex2f(left_x_, left_y_+height_);
     glVertex2f(left_x_+width_, left_y_+height_);
   }
