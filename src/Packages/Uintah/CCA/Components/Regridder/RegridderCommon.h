@@ -72,6 +72,12 @@ WARNING
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() { return d_isAdaptive; }
 
+    //! Asks if we are going to do regridding
+    virtual bool flaggedCellsOnFinestLevel(const GridP& grid);
+
+    //! Returns the max number of levels this regridder will store
+    virtual int maxLevels() { return d_maxLevels; }
+
     enum {
       FILTER_STAR,
       FILTER_BOX
