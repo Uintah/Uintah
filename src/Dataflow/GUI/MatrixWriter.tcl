@@ -29,16 +29,14 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype $this-confirm $this-split env
+	global $this-filetype $this-confirm $this-split
 	set $this-filetype Binary
 	set $this-split 0
       	set $this-confirm 1
-	if { [info exists env(SCI_CONFIRM_OVERWRITE)] && 
-	     ([string equal 0 $env(SCI_CONFIRM_OVERWRITE)] ||
-	      [string equal -nocase no $env(SCI_CONFIRM_OVERWRITE)]) } {
+
+	if { ![boolToInt SCI_CONFIRM_OVERWRITE] } {
 	    set $this-confirm 0
 	}
-
     }
     method overwrite {} {
 	global $this-confirm $this-filetype
@@ -53,7 +51,6 @@ itcl_class SCIRun_DataIO_MatrixWriter {
     }
 
     method ui {} {
-	global env
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    return
@@ -64,16 +61,13 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	if {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
-	
-	if { $initdir==""} {
-	    if {[info exists env(SCI_DATA)]} {
-		set initdir $env(SCI_DATA)
-	    } elseif {[info exists env(SCIRUN_DATA)]} {
-		set initdir $env(SCIRUN_DATA)
-	    }
+	global SCIRUN_DATA SCI_DATA PSE_DATA
+	if { $SCIRUN_DATA != "" } {
+	    set initdir $SCIRUN_DATA
+	} elseif { $SCI_DATA != "" } {
+	    set initdir $SCI_DATA
+	} elseif { $PSE_DATA != "" } {
+	    set initdir PSE_DATA
 	}
 
 	#######################################################
