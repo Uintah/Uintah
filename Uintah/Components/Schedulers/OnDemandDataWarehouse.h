@@ -1,8 +1,8 @@
 #ifndef UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 #define UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 
-#include <SCICore/Thread/Runnable.h>
 #include <SCICore/Thread/CrowdMonitor.h>
+#include <SCICore/Thread/Semaphore.h>
 
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Grid.h>
@@ -14,9 +14,10 @@
 #include <vector>
 #include <mpi.h>
 
-
 using std::string;
 using std::vector;
+
+using SCICore::Thread::Semaphore;
 
 namespace Uintah {
 
@@ -62,7 +63,7 @@ public:
    
    virtual void setGrid(const GridP&);
 
-   virtual bool exists(const VarLabel*, int matIndex, const Patch*);
+   virtual bool exists(const VarLabel*, int matIndex, const Patch*) const;
 
    // Reduction Variables
    virtual void allocate(ReductionVariableBase&, const VarLabel*);
@@ -146,22 +147,6 @@ public:
    // Remove particles that are no longer relevant
    virtual void deleteParticles(ParticleSubset* delset);
 
-   //////////
-   // When the Scheduler determines that another MPI node will be
-   // creating a piece of data (ie: a sibling DataWarehouse will have
-   // this data), it uses this procedure to let this DataWarehouse
-   // know which mpiNode has the data so that if this DataWarehouse
-   // needs the data, it will know who to ask for it.
-   virtual void registerOwnership( const VarLabel * label,
-				   const Patch   * patch,
-				         int        mpiNode );
-   //////////
-   // Searches through the list containing which DataWarehouse's
-   // have which data to find the mpiNode that the requested
-   // variable (with materialIndex, and in the given patch) is on.
-   virtual int findMpiNode( const VarLabel * label,
-			    const Patch   * patch );
-
    virtual bool isFinalized() const;
    virtual bool exists(const VarLabel*, const Patch*) const;
    
@@ -238,16 +223,20 @@ private:
 
    std::vector<const VarLabel*> d_saveset;
    std::vector<const VarLabel*> d_saveset_integrated;
-   std::vector<int> d_savenumbers;
+   std::vector<int>             d_savenumbers;
 
    std::map<pair<const Patch*, const Patch*>, ScatterGatherBase* > d_sgDB;
 
+   Semaphore                  * d_semaphore;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.38  2000/09/27 02:10:48  dav
+// removed registerOwnership and findMpiNode which are nolonger used
+//
 // Revision 1.37  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in
