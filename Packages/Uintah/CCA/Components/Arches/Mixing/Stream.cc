@@ -10,7 +10,6 @@
 
 using namespace Uintah;
 using namespace std;
-const int Stream::NUM_DEP_VARS;
 
 Stream::Stream()
 {
@@ -446,6 +445,9 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.12  2002/02/21 01:55:06  dav
+// moved the definition of NUM_DEP_VARS from the .cc file into the .h file (and out of the class  declaration)
+//
 // Revision 1.11  2002/02/21 01:32:51  dav
 // there is no such thing as a const int, etc, so I removed the const.  Also, I fixed a couple of \n that had been written /n
 //
