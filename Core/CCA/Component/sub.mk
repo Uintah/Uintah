@@ -17,8 +17,6 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
-
 SRCDIR := Core/CCA/Component
 
 SUBDIRS := \
@@ -27,9 +25,3 @@ SUBDIRS := \
 	$(SRCDIR)/Comm
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := 
-LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common
-
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
-
