@@ -292,17 +292,9 @@ GLTexture3D::build_bon_tree(Point min, Point max,
     }
     brickData->newsize( newz, newy, newx);
 
-//     GLTexture3D::run_make_brick_data<T> mbd(this, 
-// 					  thread_sema,
-// 					  newx,newy,newz,
-// 					  xsize,ysize,zsize,
-// 					  xoff,yoff,zoff,
-// 					  tex, brickData);
-//     mbd.run();
 
+#ifdef __sgi
     thread_sema->down();
-
-
     //Thread *t = 
       scinew Thread(new GLTexture3D::run_make_brick_data<T>(this, 
 							    thread_sema, 
@@ -311,7 +303,15 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 							    xoff,yoff,zoff,
 							    tex, brickData),
 		    "make_brick_data worker", tg);
-    
+#else
+     GLTexture3D::run_make_brick_data<T> mbd(this, 
+ 					  thread_sema,
+ 					  newx,newy,newz,
+ 					  xsize,ysize,zsize,
+ 					  xoff,yoff,zoff,
+ 					  tex, brickData);
+     mbd.run();
+#endif      
     
     brick = scinew Brick(min, max, padx_, pady_, padz_, level, brickData);
 
@@ -475,30 +475,31 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 			  thread_sema, group);
     }
 
-//     GLTexture3D::run_make_low_res_brick_data mlrbd(this, 
-// 						   thread_sema,
-// 						   xmax_, ymax_, zmax_,
-// 						   xsize, ysize, zsize,
-// 						   xoff, yoff, zoff, 
-// 						   padx_, pady_, padz_,
-// 						   level, node, brickData);
-
-//     mlrbd.run();
+#ifdef __sgi
     group->join();
     //group->stop();
       
     thread_sema->down();
-
     //    Thread *t =
-      scinew Thread(new GLTexture3D::run_make_low_res_brick_data(this, 
-						     thread_sema,
-						     xmax_, ymax_, zmax_,
-						     xsize, ysize, zsize,
-						     xoff, yoff, zoff, 
-						     padx_, pady_, padz_,
-						     level, node, brickData),
+    scinew Thread(new GLTexture3D::run_make_low_res_brick_data(this, 
+						    thread_sema,
+						    xmax_, ymax_, zmax_,
+						    xsize, ysize, zsize,
+						    xoff, yoff, zoff, 
+						    padx_, pady_, padz_,
+						    level, node, brickData),
 		    "makeLowResBrickData worker", tg);
+#else
+      GLTexture3D::run_make_low_res_brick_data mlrbd(this, 
+ 						   thread_sema,
+ 						   xmax_, ymax_, zmax_,
+ 						   xsize, ysize, zsize,
+ 						   xoff, yoff, zoff, 
+ 						   padx_, pady_, padz_,
+ 						   level, node, brickData);
 
+     mlrbd.run();
+#endif
     if(group->numActive(false) != 0){
       cerr<<"Active Threads in thread group\n";
     }
@@ -647,7 +648,9 @@ GLTexture3D::run_make_brick_data<T>::run()
 	  ++it;
 	}
   }
+#ifdef __sgi
   thread_sema_->up();
+#endif  
 }
 
 } // End namespace SCIRun
