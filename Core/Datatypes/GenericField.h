@@ -455,6 +455,7 @@ const TypeDescription *
 GenericField<Mesh, FData>::get_type_description(int /*n*/) const
 {
   ASSERTFAIL("TD MUST BE AT LEAF LEVEL OF INHERITENCE");
+  return NULL;
 }
 
 template <class Mesh, class FData>
