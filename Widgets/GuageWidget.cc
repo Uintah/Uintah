@@ -159,7 +159,8 @@ void
 GuageWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   cerr << "Moved called..." << endl;
+   ((DistanceConstraint*)constraints[GuageW_ConstSDist])->SetDefault(GetAxis());
+   
    switch((int)cbdata){
    case GuageW_PickSphL:
       variables[GuageW_PointL]->SetDelta(delta);

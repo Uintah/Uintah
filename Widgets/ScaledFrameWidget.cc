@@ -271,9 +271,6 @@ ScaledFrameWidget::~ScaledFrameWidget()
 void
 ScaledFrameWidget::execute()
 {
-   cerr << "Execute called..." << endl;
-   cerr << "widget_scale=" << widget_scale << endl;
-   
    ((GeomSphere*)geometries[SFrameW_SphereUL])->move(variables[SFrameW_PointUL]->Get(),
 						    1*widget_scale);
    ((GeomSphere*)geometries[SFrameW_SphereUR])->move(variables[SFrameW_PointUR]->Get(),
@@ -326,42 +323,35 @@ void
 ScaledFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   Vector delt = delta;
-   cerr << "Moved called..." << endl;
+   ((DistanceConstraint*)constraints[SFrameW_ConstSDist1])->SetDefault(GetAxis1());
+   ((DistanceConstraint*)constraints[SFrameW_ConstSDist2])->SetDefault(GetAxis2());
+
    switch((int)cbdata){
    case SFrameW_PickSphUL:
-      cerr << "  SFrameW_SphereUL moved" << endl;
-      variables[SFrameW_PointUL]->SetDelta(delt);
+      variables[SFrameW_PointUL]->SetDelta(delta);
       break;
    case SFrameW_PickSphUR:
-      cerr << "  SFrameW_SphereUR moved" << endl;
-      variables[SFrameW_PointUR]->SetDelta(delt);
+      variables[SFrameW_PointUR]->SetDelta(delta);
       break;
    case SFrameW_PickSphDR:
-      cerr << "  SFrameW_SphereDR moved" << endl;
-      variables[SFrameW_PointDR]->SetDelta(delt);
+      variables[SFrameW_PointDR]->SetDelta(delta);
       break;
    case SFrameW_PickSphDL:
-      cerr << "  SFrameW_SphereDL moved" << endl;
-      variables[SFrameW_PointDL]->SetDelta(delt);
+      variables[SFrameW_PointDL]->SetDelta(delta);
       break;
    case SFrameW_PickSlider1:
-      cerr << "  SFrameW_Slider1 moved" << endl;
       variables[SFrameW_Slider1]->SetDelta(delta);
       break;
    case SFrameW_PickSlider2:
-      cerr << "  SFrameW_Slider1 moved" << endl;
       variables[SFrameW_Slider2]->SetDelta(delta);
       break;
    case SFrameW_PickCyls:
-      cerr << "  SFrameW_CylU moved" << endl;
-      cerr << "  SFrameW_CylR moved" << endl;
-      cerr << "  SFrameW_CylD moved" << endl;
-      cerr << "  SFrameW_CylL moved" << endl;
-      variables[SFrameW_PointUL]->MoveDelta(delt);
-      variables[SFrameW_PointUR]->MoveDelta(delt);
-      variables[SFrameW_PointDR]->MoveDelta(delt);
-      variables[SFrameW_PointDL]->MoveDelta(delt);
+      variables[SFrameW_PointUL]->MoveDelta(delta);
+      variables[SFrameW_PointUR]->MoveDelta(delta);
+      variables[SFrameW_PointDR]->MoveDelta(delta);
+      variables[SFrameW_PointDL]->MoveDelta(delta);
+      variables[SFrameW_Slider1]->MoveDelta(delta);
+      variables[SFrameW_Slider2]->MoveDelta(delta);
       break;
    }
 }

@@ -167,9 +167,6 @@ SquareWidget::~SquareWidget()
 void
 SquareWidget::execute()
 {
-   cerr << "Execute called..." << endl;
-   cerr << "widget_scale=" << widget_scale << endl;
-   
    ((GeomSphere*)geometries[SquareW_SphereUL])->move(variables[SquareW_PointUL]->Get(),
 						    1*widget_scale);
    ((GeomSphere*)geometries[SquareW_SphereUR])->move(variables[SquareW_PointUR]->Get(),
@@ -207,34 +204,24 @@ void
 SquareWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   Vector delt = delta;
-   cerr << "Moved called..." << endl;
    switch((int)cbdata){
    case SquareW_PickSphUL:
-      cerr << "  SquareW_SphereUL moved" << endl;
-      variables[SquareW_PointUL]->SetDelta(delt);
+      variables[SquareW_PointUL]->SetDelta(delta);
       break;
    case SquareW_PickSphUR:
-      cerr << "  SquareW_SphereUR moved" << endl;
-      variables[SquareW_PointUR]->SetDelta(delt);
+      variables[SquareW_PointUR]->SetDelta(delta);
       break;
    case SquareW_PickSphDR:
-      cerr << "  SquareW_SphereDR moved" << endl;
-      variables[SquareW_PointDR]->SetDelta(delt);
+      variables[SquareW_PointDR]->SetDelta(delta);
       break;
    case SquareW_PickSphDL:
-      cerr << "  SquareW_SphereDL moved" << endl;
-      variables[SquareW_PointDL]->SetDelta(delt);
+      variables[SquareW_PointDL]->SetDelta(delta);
       break;
    case SquareW_PickCyls:
-      cerr << "  SquareW_CylU moved" << endl;
-      cerr << "  SquareW_CylR moved" << endl;
-      cerr << "  SquareW_CylD moved" << endl;
-      cerr << "  SquareW_CylL moved" << endl;
-      variables[SquareW_PointUL]->MoveDelta(delt);
-      variables[SquareW_PointUR]->MoveDelta(delt);
-      variables[SquareW_PointDR]->MoveDelta(delt);
-      variables[SquareW_PointDL]->MoveDelta(delt);
+      variables[SquareW_PointUL]->MoveDelta(delta);
+      variables[SquareW_PointUR]->MoveDelta(delta);
+      variables[SquareW_PointDR]->MoveDelta(delta);
+      variables[SquareW_PointDL]->MoveDelta(delta);
       break;
    }
 }

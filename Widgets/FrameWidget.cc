@@ -169,9 +169,6 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::execute()
 {
-   cerr << "Execute called..." << endl;
-   cerr << "widget_scale=" << widget_scale << endl;
-   
    ((GeomSphere*)geometries[FrameW_SphereUL])->move(variables[FrameW_PointUL]->Get(),
 						    1*widget_scale);
    ((GeomSphere*)geometries[FrameW_SphereUR])->move(variables[FrameW_PointUR]->Get(),
@@ -209,34 +206,24 @@ void
 FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   Vector delt = delta;
-   cerr << "Moved called..." << endl;
    switch((int)cbdata){
    case FrameW_PickSphUL:
-      cerr << "  FrameW_SphereUL moved" << endl;
-      variables[FrameW_PointUL]->SetDelta(delt);
+      variables[FrameW_PointUL]->SetDelta(delta);
       break;
    case FrameW_PickSphUR:
-      cerr << "  FrameW_SphereUR moved" << endl;
-      variables[FrameW_PointUR]->SetDelta(delt);
+      variables[FrameW_PointUR]->SetDelta(delta);
       break;
    case FrameW_PickSphDR:
-      cerr << "  FrameW_SphereDR moved" << endl;
-      variables[FrameW_PointDR]->SetDelta(delt);
+      variables[FrameW_PointDR]->SetDelta(delta);
       break;
    case FrameW_PickSphDL:
-      cerr << "  FrameW_SphereDL moved" << endl;
-      variables[FrameW_PointDL]->SetDelta(delt);
+      variables[FrameW_PointDL]->SetDelta(delta);
       break;
    case FrameW_PickCyls:
-      cerr << "  FrameW_CylU moved" << endl;
-      cerr << "  FrameW_CylR moved" << endl;
-      cerr << "  FrameW_CylD moved" << endl;
-      cerr << "  FrameW_CylL moved" << endl;
-      variables[FrameW_PointUL]->MoveDelta(delt);
-      variables[FrameW_PointUR]->MoveDelta(delt);
-      variables[FrameW_PointDR]->MoveDelta(delt);
-      variables[FrameW_PointDL]->MoveDelta(delt);
+      variables[FrameW_PointUL]->MoveDelta(delta);
+      variables[FrameW_PointUR]->MoveDelta(delta);
+      variables[FrameW_PointDR]->MoveDelta(delta);
+      variables[FrameW_PointDL]->MoveDelta(delta);
       break;
    }
 }

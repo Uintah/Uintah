@@ -269,9 +269,6 @@ ScaledSquareWidget::~ScaledSquareWidget()
 void
 ScaledSquareWidget::execute()
 {
-   cerr << "Execute called..." << endl;
-   cerr << "widget_scale=" << widget_scale << endl;
-   
    ((GeomSphere*)geometries[SSquareW_SphereUL])->move(variables[SSquareW_PointUL]->Get(),
 						    1*widget_scale);
    ((GeomSphere*)geometries[SSquareW_SphereUR])->move(variables[SSquareW_PointUR]->Get(),
@@ -324,42 +321,35 @@ void
 ScaledSquareWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   Vector delt = delta;
-   cerr << "Moved called..." << endl;
+   ((DistanceConstraint*)constraints[SSquareW_ConstSDist1])->SetDefault(GetAxis1());
+   ((DistanceConstraint*)constraints[SSquareW_ConstSDist2])->SetDefault(GetAxis2());
+
    switch((int)cbdata){
    case SSquareW_PickSphUL:
-      cerr << "  SSquareW_SphereUL moved" << endl;
-      variables[SSquareW_PointUL]->SetDelta(delt);
+      variables[SSquareW_PointUL]->SetDelta(delta);
       break;
    case SSquareW_PickSphUR:
-      cerr << "  SSquareW_SphereUR moved" << endl;
-      variables[SSquareW_PointUR]->SetDelta(delt);
+      variables[SSquareW_PointUR]->SetDelta(delta);
       break;
    case SSquareW_PickSphDR:
-      cerr << "  SSquareW_SphereDR moved" << endl;
-      variables[SSquareW_PointDR]->SetDelta(delt);
+      variables[SSquareW_PointDR]->SetDelta(delta);
       break;
    case SSquareW_PickSphDL:
-      cerr << "  SSquareW_SphereDL moved" << endl;
-      variables[SSquareW_PointDL]->SetDelta(delt);
+      variables[SSquareW_PointDL]->SetDelta(delta);
       break;
    case SSquareW_PickSlider1:
-      cerr << "  SSquareW_Slider1 moved" << endl;
       variables[SSquareW_Slider1]->SetDelta(delta);
       break;
    case SSquareW_PickSlider2:
-      cerr << "  SSquareW_Slider1 moved" << endl;
       variables[SSquareW_Slider2]->SetDelta(delta);
       break;
    case SSquareW_PickCyls:
-      cerr << "  SSquareW_CylU moved" << endl;
-      cerr << "  SSquareW_CylR moved" << endl;
-      cerr << "  SSquareW_CylD moved" << endl;
-      cerr << "  SSquareW_CylL moved" << endl;
-      variables[SSquareW_PointUL]->MoveDelta(delt);
-      variables[SSquareW_PointUR]->MoveDelta(delt);
-      variables[SSquareW_PointDR]->MoveDelta(delt);
-      variables[SSquareW_PointDL]->MoveDelta(delt);
+      variables[SSquareW_PointUL]->MoveDelta(delta);
+      variables[SSquareW_PointUR]->MoveDelta(delta);
+      variables[SSquareW_PointDR]->MoveDelta(delta);
+      variables[SSquareW_PointDL]->MoveDelta(delta);
+      variables[SSquareW_Slider1]->MoveDelta(delta);
+      variables[SSquareW_Slider2]->MoveDelta(delta);
       break;
    }
 }

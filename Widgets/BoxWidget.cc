@@ -362,7 +362,6 @@ void
 BoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
 			void* cbdata )
 {
-   cerr << "Moved called..." << endl;
    switch((int)cbdata){
    case BoxW_PickSphIUL:
       variables[BoxW_PointIUL]->SetDelta(delta);

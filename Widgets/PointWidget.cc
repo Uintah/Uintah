@@ -74,7 +74,6 @@ void
 PointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   cerr << "Moved called... PointWidget" << endl;
    switch((int)cbdata){
    case PointW_Pick:
       variables[PointW_Point]->MoveDelta(delta);

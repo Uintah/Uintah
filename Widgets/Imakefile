@@ -10,6 +10,7 @@ OBJS = BaseWidget.o \
 	FrameWidget.o \
 	GuageWidget.o \
 	PointWidget.o \
+	RingWidget.o \
 	ScaledBoxWidget.o \
 	ScaledCubeWidget.o \
 	ScaledFrameWidget.o \
@@ -22,6 +23,7 @@ SRCS = BaseWidget.cc \
 	FrameWidget.cc \
 	GuageWidget.cc \
 	PointWidget.cc \
+	RingWidget.cc \
 	ScaledBoxWidget.cc \
 	ScaledCubeWidget.cc \
 	ScaledFrameWidget.cc \

@@ -362,7 +362,6 @@ void
 CubeWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
 			void* cbdata )
 {
-   cerr << "Moved called..." << endl;
    switch((int)cbdata){
    case CubeW_PickSphIUL:
       variables[CubeW_PointIUL]->SetDelta(delta);

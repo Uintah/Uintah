@@ -100,7 +100,6 @@ void
 ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   cerr << "Moved called... ArrowWidget" << endl;
    switch((int)cbdata){
    case ArrowW_Pick:
       variables[ArrowW_Point]->MoveDelta(delta);
