@@ -96,7 +96,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Core/Exceptions
 
-LIBS := $(SML_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
