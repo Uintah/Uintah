@@ -11,7 +11,6 @@ SUBDIRS := $(SRCDIR)/Particles
 include $(SRCTOP)/scripts/recurse.mk
 
 SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
-	$(SRCDIR)/NCScalarField.cc $(SRCDIR)/CCScalarField.cc \
 	$(SRCDIR)/NCVectorField.cc $(SRCDIR)/CCVectorField.cc \
 	$(SRCDIR)/NCTensorField.cc $(SRCDIR)/CCTensorField.cc \
 	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldPort.cc \
@@ -40,6 +39,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/12/06 21:55:49  kuzimmer
+# Moved all of the function definitions for the templated classes NCScalarField and CCScalarField into their respective header files to eliminate problems when other libraries use these classes.
+#
 # Revision 1.6  2000/12/01 20:11:54  kuzimmer
 # added PSECore/Dataflow to PSELIBS so that all Port info is defined
 #
