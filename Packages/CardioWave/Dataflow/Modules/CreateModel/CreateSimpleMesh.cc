@@ -119,7 +119,7 @@ void CreateSimpleMesh::execute(){
   Array1<Array1<Vector> > fibers;
   fibers.resize(1);
   fibers[0].add(v1); fibers[0].add(v2); fibers[0].add(v3);
-  fld->store("eigenvectors", fibers);
+  fld->store("eigenvectors", fibers, false);
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Mesh");
   if (!ofield_port) {
     postMessage("Unable to initialize "+name+"'s oport\n");
