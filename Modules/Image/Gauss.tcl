@@ -11,7 +11,8 @@ itcl_class Gauss {
 	set $this-sigma 1.0
     	global $this-size
 	set $this-size 3
-
+	global $this-hardware
+	set $this-hardware 0
     }
     method ui {} {
 	set w .ui$this
@@ -32,6 +33,11 @@ itcl_class Gauss {
 	label $w.f.lab2 -text " Kernel Size:"
 	entry $w.f.n2 -relief sunken -width 7 -textvariable $this-size
 	pack $w.f.lab $w.f.n1 $w.f.lab2 $w.f.n2 -side left
+
+	checkbutton $w.f.v1 -text "Use Hardware Convolution" -relief flat \
+		-variable $this-hardware
+	pack $w.f.v1 -side bottom
+	
 
         button $w.f.doit -text " Execute " -command "$this rflush"
 	pack $w.f.doit -side bottom

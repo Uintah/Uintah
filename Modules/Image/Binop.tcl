@@ -21,7 +21,7 @@ itcl_class Binop {
 	    return;
 	}
 	toplevel $w
-	wm minsize $w 300 30 
+	wm minsize $w 100 30 
 	frame $w.f 
 	pack $w.f -padx 2 -pady 2 -fill x
 	set n "$this-c needexecute "
@@ -29,14 +29,14 @@ itcl_class Binop {
 	frame $w.f.r4
 	pack $w.f.r4
 	
-	make_labeled_radio $w.funcname "Operation:" "" left $this-funcname \
-		{A+B A-B AorB AandB max(A,B) min(A,B)}
+	make_labeled_radio $w.funcname "Operation:" "" top $this-funcname \
+		{A+B A-B A*B A/B AorB AandB AxorB max(A,B) min(A,B)}
 	pack $w.funcname -side top
 	entry $w.f.ted -textvariable $this-funcname -width 40 \
 		-borderwidth 2 -relief sunken
 
 	button $w.f.doit -text " Execute " -command $n
-	pack $w.f.doit -side bottom
+	pack $w.f.doit -side top
 
     }
 
