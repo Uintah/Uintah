@@ -62,6 +62,8 @@ itcl_class Module {
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
 	}
+
+        set_defaults 
     }
     
     destructor {
@@ -74,6 +76,9 @@ itcl_class Module {
 	destroy $this
     }
     
+    method set_defaults {} { 
+    }
+
     public msgLogStream
     public name
     protected min_text_width 0
