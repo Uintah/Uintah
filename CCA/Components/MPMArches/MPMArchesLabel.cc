@@ -200,6 +200,8 @@ MPMArchesLabel::MPMArchesLabel()
 
   void_frac_CCLabel  = VarLabel::create("void_frac_CC",
 					CCVariable<double>::getTypeDescription() );
+  void_frac_old_CCLabel  = VarLabel::create("void_frac_CC_old",
+					CCVariable<double>::getTypeDescription() );
 
   // Stability Factor Labels
 
@@ -507,6 +509,7 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(totHtFluxZLabel);
 
   VarLabel::destroy(void_frac_CCLabel);
+  VarLabel::destroy(void_frac_old_CCLabel);
 
   VarLabel::destroy(KStabilityULabel);
   VarLabel::destroy(KStabilityVLabel);

@@ -107,6 +107,7 @@ namespace Uintah {
       // reqd by Arches
 
       const VarLabel* void_frac_CCLabel;
+      const VarLabel* void_frac_old_CCLabel;
 
       // Stability Factor Labels
       
