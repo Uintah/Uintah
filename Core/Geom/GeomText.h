@@ -32,6 +32,7 @@
 #define SCI_Geom_Text_h 1
 
 #include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Transform.h>
 #ifdef _WIN32
 #define WINGDIAPI __declspec(dllimport)
 #define APIENTRY __stdcall
@@ -40,6 +41,11 @@
 
 #include <GL/gl.h>
 #include <Core/Datatypes/Color.h>
+
+//#define HAVE_FTGL
+
+class FTGLTextureFont;
+
 namespace SCIRun {
 
 class SCICORESHARE GeomText : public GeomObj {
@@ -124,6 +130,79 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
+
+#ifdef HAVE_FTGL
+class GeomFTGLFontRenderer : public GeomObj{
+private:
+  FTGLTextureFont *font_;
+public:
+  GeomFTGLFontRenderer(const string &filename);
+  GeomFTGLFontRenderer(const GeomFTGLFontRenderer &);
+  virtual ~GeomFTGLFontRenderer();
+  virtual GeomObj *clone();
+  static PersistentTypeID type_id;
+  virtual void io(Piostream&);
+  virtual void get_bounds(BBox&);
+  virtual void get_bounds(BBox&,const string &);
+  virtual void draw(DrawInfoOpenGL*, Material*, double time){}
+  void	render(const string &text);
+};
+  
+typedef LockingHandle<GeomFTGLFontRenderer> GeomFTGLFontRendererHandle;
+
+#endif
+
+
+class SCICORESHARE GeomTextTexture : public GeomObj {
+public:
+  enum anchor_e { n, e, s, w, ne, se, sw, nw, c};
+private:
+
+  void		build_transform(Transform &);
+  void		render();
+  Transform	transform_;
+  string	text_;
+  Point		origin_;
+  Vector	up_;
+  Vector	left_;
+  Color		color_;
+  anchor_e	anchor_;
+  bool		own_font_;
+#ifdef HAVE_FTGL
+  GeomFTGLFontRendererHandle font_;
+#endif
+public:
+  GeomTextTexture(const string &fontfile);
+  GeomTextTexture(const GeomTextTexture&);
+  GeomTextTexture(const string &fontfile,
+		  const string &text, 
+		  const Point &at,
+		  const Vector &up,
+		  const Vector &left,
+		  const Color &c = Color(1.,1.,1.));
+#ifdef HAVE_FTGL
+  GeomTextTexture(GeomFTGLFontRendererHandle font,
+		  const string &text, 
+		  const Point &at,
+		  const Vector &up,
+		  const Vector &left,
+		  const Color &c = Color(1.,1.,1.));
+#endif
+
+  virtual ~GeomTextTexture();
+  virtual GeomObj* clone();
+  
+  virtual void get_bounds(BBox&);
+
+  void	set_anchor(anchor_e anchor) { anchor_ = anchor; }
+  
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  virtual void io(Piostream&);
+   static PersistentTypeID type_id;
+};
+
 
 
 } // End namespace SCIRun
