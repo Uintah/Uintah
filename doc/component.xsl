@@ -87,9 +87,11 @@
        //-->
        </SCRIPT>                                                   
          
-<SCRIPT LANGUAGE="JavaScript1.2"
-               SRC="HM_Loader.js"
-               TYPE='text/javascript'></SCRIPT>
+<SCRIPT LANGUAGE="JavaScript1.2" TYPE='text/javascript'>
+<xsl:attribute name="src">
+<xsl:value-of select="concat($swidk,'/doc/HM_Loader.js')" />
+</xsl:attribute>
+</SCRIPT>
 <!-- *************************************************************** -->
 <!-- ******************** END HEIRMENU SCRIPT ********************** -->
 <!-- *************************************************************** -->       
