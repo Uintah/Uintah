@@ -7,10 +7,15 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECommon/Modules/Surface
 
-SRCS     += $(SRCDIR)/GenSurface.cc $(SRCDIR)/LabelSurface.cc \
-	$(SRCDIR)/SFUGtoSurf.cc $(SRCDIR)/SurfGen.cc \
-	$(SRCDIR)/SurfInterpVals.cc $(SRCDIR)/SurfNewVals.cc \
-	$(SRCDIR)/SurfToGeom.cc
+SRCS     += \
+	$(SRCDIR)/GenSurface.cc\
+	$(SRCDIR)/LabelSurface.cc\
+	$(SRCDIR)/SFUGtoSurf.cc\
+	$(SRCDIR)/SurfGen.cc\
+	$(SRCDIR)/SurfInterpVals.cc\
+	$(SRCDIR)/SurfNewVals.cc\
+	$(SRCDIR)/SurfToGeom.cc\
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -22,6 +27,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 00:11:40  moulding
+# made some modifications that will allow the module make to edit and add
+# to this file
+#
 # Revision 1.2  2000/03/20 19:37:05  sparker
 # Added VPATH support
 #

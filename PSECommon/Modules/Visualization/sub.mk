@@ -7,22 +7,41 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECommon/Modules/Visualization
 
-SRCS     += $(SRCDIR)/AddWells.cc $(SRCDIR)/AddWells2.cc \
-	$(SRCDIR)/BitVisualize.cc $(SRCDIR)/BoundGrid.cc \
-	$(SRCDIR)/BoxClipSField.cc $(SRCDIR)/ColorMapKey.cc \
-	$(SRCDIR)/CuttingPlane.cc $(SRCDIR)/CuttingPlaneTex.cc \
-	$(SRCDIR)/FieldCage.cc $(SRCDIR)/GenAxes.cc \
-	$(SRCDIR)/GenColorMap.cc $(SRCDIR)/GenFieldEdges.cc \
-	$(SRCDIR)/GenStandardColorMaps.cc $(SRCDIR)/GenTransferFunc.cc \
-	$(SRCDIR)/Hedgehog.cc $(SRCDIR)/ImageViewer.cc $(SRCDIR)/IsoMask.cc \
-	$(SRCDIR)/IsoSurface.cc $(SRCDIR)/IsoSurfaceDW.cc \
-	$(SRCDIR)/IsoSurfaceMRSG.cc $(SRCDIR)/IsoSurfaceSP.cc \
-	$(SRCDIR)/RescaleColorMap.cc $(SRCDIR)/SimpVolVis.cc \
-	$(SRCDIR)/Streamline.cc $(SRCDIR)/VectorSeg.cc \
-	$(SRCDIR)/VolRendTexSlices.cc $(SRCDIR)/VolVis.cc \
-	$(SRCDIR)/WidgetTest.cc $(SRCDIR)/FastRender.c \
-	$(SRCDIR)/HedgehogLitLines.cc $(SRCDIR)/Span.cc \
-	$(SRCDIR)/Noise.cc $(SRCDIR)/NoiseMCube.cc
+SRCS     += \
+	$(SRCDIR)/AddWells.cc\
+	$(SRCDIR)/AddWells2.cc\
+	$(SRCDIR)/BitVisualize.cc\
+	$(SRCDIR)/BoundGrid.cc\
+	$(SRCDIR)/BoxClipSField.cc\
+	$(SRCDIR)/ColorMapKey.cc\
+	$(SRCDIR)/CuttingPlane.cc\
+	$(SRCDIR)/CuttingPlaneTex.cc\
+	$(SRCDIR)/FieldCage.cc\
+	$(SRCDIR)/GenAxes.cc\
+	$(SRCDIR)/GenColorMap.cc\
+	$(SRCDIR)/GenFieldEdges.cc\
+	$(SRCDIR)/GenStandardColorMaps.cc\
+	$(SRCDIR)/GenTransferFunc.cc\
+	$(SRCDIR)/Hedgehog.cc\
+	$(SRCDIR)/ImageViewer.cc\
+	$(SRCDIR)/IsoMask.cc\
+	$(SRCDIR)/IsoSurface.cc\
+	$(SRCDIR)/IsoSurfaceDW.cc\
+	$(SRCDIR)/IsoSurfaceMRSG.cc\
+	$(SRCDIR)/IsoSurfaceSP.cc\
+	$(SRCDIR)/RescaleColorMap.cc\
+	$(SRCDIR)/SimpVolVis.cc\
+	$(SRCDIR)/Streamline.cc\
+	$(SRCDIR)/VectorSeg.cc\
+	$(SRCDIR)/VolRendTexSlices.cc\
+	$(SRCDIR)/VolVis.cc\
+	$(SRCDIR)/WidgetTest.cc\
+	$(SRCDIR)/FastRender.c\
+	$(SRCDIR)/HedgehogLitLines.cc\
+	$(SRCDIR)/Span.cc\
+	$(SRCDIR)/Noise.cc\
+	$(SRCDIR)/NoiseMCube.cc\
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Containers SCICore/Exceptions SCICore/Thread \
@@ -35,6 +54,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/06/07 00:11:41  moulding
+# made some modifications that will allow the module make to edit and add
+# to this file
+#
 # Revision 1.3  2000/03/20 21:49:04  yarden
 # Linux port: link against PSECommon/Modules/Salmon too.
 #
