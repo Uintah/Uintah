@@ -880,7 +880,7 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
-#if (IS_OSX == 1)
+#if defined(__APPLE__)
   if (xdr)
     if ((xdr)->x_ops)
       if ((xdr)->x_ops->x_destroy)
