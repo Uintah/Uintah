@@ -26,7 +26,7 @@ addConnection $m4 0 $m3 0
 
 set $m0-notes {}
 set $m0-show_status 1
-set $m0-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.32.f1.hvv.fld}
+set $m0-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/2cm/0.1.32.f1.hvv.fld}
 set $m1-notes {}
 set $m1-show_status 1
 $m1 ui
@@ -123,6 +123,6 @@ set $m3-show_progress -2147483647
 set $m3-resolution 4
 set $m4-notes {}
 set $m4-show_status 1
-set $m4-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.32.f2.hvv.fld}
+set $m4-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/2cm/0.1.32.f2.hvv.fld}
 
 ::netedit scheduleok
