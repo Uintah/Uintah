@@ -268,8 +268,7 @@ void PortManager<T>::remove(int item) {
 
 template<class T>
 const T& PortManager<T>::operator[](int item) {
-  if(size()<=item) return 0;
-
+  ASSERT(size() > item);
   return ports[item];
 }
 
