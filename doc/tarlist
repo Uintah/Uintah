@@ -59,6 +59,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/Developer/Guide/srdg.pdf
 #{root}/doc/Developer/Modules/srmrg.pdf
 #{root}/doc/Developer/CodeViews/html
+#{root}/doc/Developer/Tutorials
 #{root}/doc/Utilities/Figures
 #{root}/doc/Utilities/TeX/scirun-doc.sty
 #{root}/doc/Utilities/TeX/scirun-doc.tex
