@@ -234,8 +234,7 @@ main(int argc, char *argv[] )
 
   if( !foundrc )
     {
-      cout << "not found.  (Note: This is not an error, though you\n"
-	   << "might consider putting a .scirunrc file in your home dir.)\n";
+      cout << "not found.  (Note: This is not an error.)\n";
     }
 
   // wait for the main window to display before continuing the startup.
