@@ -105,29 +105,32 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
  
   // Define mixing table, which includes call reaction model constructor
   d_tableDimension = d_numMixingVars + d_numRxnVars + !(d_adiabatic);
-  //cout << "tableDim = " << d_tableDimension << endl;
   d_tableInfo = new MixRxnTableInfo(d_tableDimension);
   bool mixTableFlag = false; //Table does not have variance
   d_tableInfo->problemSetup(db, mixTableFlag, this);
   // Define table type (static or dynamic). Set up table storage, either as 
   // vectors or as kdtree 
   if (db->findBlock("TableType")) {
+    // d_tableType must be class variable because of inline function
     db->require("TableType", d_tableType);
     if (d_tableType == "static") {
       cerr << "Ignore static table type; mean value table is dynamic" << endl;
       cerr << "Dynamic table will be computed" << endl;
       d_tableType = "dynamic";
     }
+    else if (d_tableType != "dynamic") {
+      throw InvalidValue("Table type not supported" + d_tableType);
+    }
   }
   else {
     d_tableType = "dynamic";
+    // Default tableType is dynamic
     cout << "TABLE TYPE is dynamic" << endl;
   }
   // Call reaction model constructor, get total number of dependent  vars;
   // can't call it sooner because d_numMixingVars and mixTableType are needed
   d_rxnModel->problemSetup(db, this); 
   d_depStateSpaceVars = d_rxnModel->getTotalDepVars();
-  //cout << "MeanProblemSetup: depVars = " << d_depStateSpaceVars << endl;
   string tableStorage;
   if (db->findBlock("TableStorage")) {
     db->require("TableStorage", tableStorage);
@@ -143,7 +146,6 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
     d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
     cout << "TABLE STORAGE is vectorTable" << endl;
   }
-
   // tableSetup is a function in DynamicTable; it allocates memory for 
   // table functions
   tableSetup(d_tableDimension, d_tableInfo);
@@ -151,7 +153,7 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
 }
 
 Stream
-MeanMixingModel::speciesStateSpace(const vector<double> mixVar) 
+MeanMixingModel::speciesStateSpace(const vector<double>& mixVar) 
 {
   ChemkinInterface* chemInterf = d_rxnModel->getChemkinInterface();
   int nofElements = chemInterf->getNumElements();
@@ -204,39 +206,45 @@ MeanMixingModel::computeProps(const InletStream& inStream,
     count ++;
   }
   for (int i = 0; i < d_numMixingVars; i++) {
-    mixRxnVar[count] = inStream.d_mixVars[i];
-    normVar[count] = inStream.d_mixVars[i];
+    // Check to make sure mixing vars within proper range
+    if (inStream.d_mixVars[i] < d_tableInfo->getMinValue(count)) {
+      //if (Abs(inStream.d_mixVars[i]) < 1e-10) {
+      mixRxnVar[count] = d_tableInfo->getMinValue(count);
+      normVar[count] = d_tableInfo->getMinValue(count);
+    }
+    else if (inStream.d_mixVars[i] > d_tableInfo->getMaxValue(count)) {
+      mixRxnVar[count] = d_tableInfo->getMaxValue(count);
+      normVar[count] = d_tableInfo->getMaxValue(count); 
+    }
+    else {
+      mixRxnVar[count] = inStream.d_mixVars[i];
+      normVar[count] = inStream.d_mixVars[i];
+    }
     count++;
   }
   int rxncount = count;
   for (int i = 0; i < d_numRxnVars;i++) {
     mixRxnVar[count] = inStream.d_rxnVars[i];
-    normVar[count] = 0.0; //??Or min value of rxn variable??
+    normVar[count] = 0.0;
     count++;
   }
   // count and d_tableDimension should be equal
-  //cout<<"Mean::count= "<<count<<endl;
   ASSERT(count==d_tableDimension);
-#if 0
-  cout << "Mean::getProps mixRxnVar = " << endl;
-  for (int ii = 0; ii < mixRxnVar.size(); ii++) {
-    cout.width(10);
-    cout << mixRxnVar[ii] << " " ; 
-    if (!(ii % 10)) cout << endl; 
-  }
-  cout << endl;
-#endif
   // Normalize enthalpy
   if (!(d_adiabatic)) {
     Stream normStream;
     getProps(normVar, normStream);
-    double adiabaticEnthalpy = normStream.d_enthalpy; //Use Get functions???
-    double sensEnthalpy = normStream.d_sensibleEnthalpy; 
+    double adiabaticEnthalpy = normStream.getEnthalpy();
+    double sensEnthalpy = normStream.getSensEnthalpy();
     double normEnthalpy;
     if (Abs(absEnthalpy) < 1e-10)
       normEnthalpy = 0.0;
     else 
       normEnthalpy = (absEnthalpy - adiabaticEnthalpy)/sensEnthalpy;
+    if (normEnthalpy < d_tableInfo->getMinValue(0))
+      normEnthalpy =  d_tableInfo->getMinValue(0);
+    if (normEnthalpy > d_tableInfo->getMaxValue(0))
+      normEnthalpy =  d_tableInfo->getMaxValue(0);
     mixRxnVar[0] = normEnthalpy;
     normVar[0] = normEnthalpy; //Need to normalize rxn variable next, so 
                                //normalized enthalpy must be known
@@ -247,7 +255,6 @@ MeanMixingModel::computeProps(const InletStream& inStream,
     //same for every rxn parameter entry, look up the first entry;
     Stream paramValues;
     for (int ii = 0; ii < d_numRxnVars; ii++) {
-      // ???If statement if reaction variable = 0???
       getProps(normVar, paramValues);
       double minParamValue = paramValues.d_rxnVarNorm[0];
       double maxParamValue = paramValues.d_rxnVarNorm[1];
@@ -255,7 +262,6 @@ MeanMixingModel::computeProps(const InletStream& inStream,
 	mixRxnVar[rxncount+ii] = minParamValue;
       if (mixRxnVar[rxncount+ii] > maxParamValue)
 	mixRxnVar[rxncount+ii] = maxParamValue;
-      // Kluge- fix this later***
       double normParam;
       if ((maxParamValue - minParamValue) < 1e-10)
 	normParam = 0.0;

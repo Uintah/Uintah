@@ -1,4 +1,4 @@
-//----- Stream.h -----------------------------------------------
+ //----- Stream.h -----------------------------------------------
 
 #ifndef Uintah_Components_Arches_Stream_h
 #define Uintah_Components_Arches_Stream_h
@@ -36,13 +36,16 @@ namespace Uintah {
     class ChemkinInterface;
     // Low temperature limit; used in addStream
     const double TLIM = 200.0;
+    const int NUM_DEP_VARS = 9; // includes all the vars in stateSpaceVector
+                                //except vectors...
  
     class Stream {
     public:
       Stream();
       Stream(int numSpecies, int numElements);
-      Stream(int numSpecies, int numElements,
-	     int numMixVars, int numRxnVars, bool lsoot);
+      Stream(int numSpecies, int numElements, int numMixVars,
+	     int numRxnVars, bool lsoot);
+
       ///////////////////////////////////////////////////////////////////////
       //
       // Copy Constructor
@@ -67,7 +70,7 @@ namespace Uintah {
       int speciesIndex(const ChemkinInterface* chemInterf, const char* name);
       void print(std::ostream& out) const;
       void print(std::ostream& out, ChemkinInterface* chemInterf);
-      //std::vector<double> convertStreamToVec(const bool lsoot);
+      //std::vector<double> convertStreamToVec(bool lsoot);
       std::vector<double> convertStreamToVec();
       void convertVecToStream(const std::vector<double>& vec_stateSpace, 
 			      bool flag, int numMixVars, 
@@ -84,11 +87,23 @@ namespace Uintah {
       inline double getEnthalpy() const {
 	return d_enthalpy;
       }
+      inline double getSensEnthalpy() const {
+	return d_sensibleEnthalpy;
+      }
       inline double getTemperature() const {
 	return d_temperature;
       }
+      inline double getPressure() const {
+	return d_pressure;
+      }
+      inline bool getMoleBool() const {
+	return d_mole;
+      }
       inline double getCO2() const {
 	return d_speciesConcn[3];
+      }
+      inline bool getSootBool() const {
+        return d_lsoot;
       }
       inline double getSootFV() const {
 	return d_sootData[1];
@@ -96,15 +111,12 @@ namespace Uintah {
       inline double getRxnSource() const {
 	return d_rxnVarRates[0];
       }
-
       inline double getdrhodf() const {
-	return d_drhodf;
+        return d_drhodf;
       }
-
       inline double getdrhodh() const {
-	return d_drhodh;
+        return d_drhodh;
       }
-
 
     public:
       double d_pressure; // Pa
@@ -131,8 +143,9 @@ namespace Uintah {
     private:
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables
+      // WARNING: If you change this value, you must also change it in
+      // all reaction model header files
       //
-      static const int NUM_DEP_VARS;
 
     }; // End class Stream
 

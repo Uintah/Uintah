@@ -44,8 +44,9 @@
 
   ***************************************************************************/
 #include <vector>
-using namespace std;
+
 namespace Uintah {
+  using namespace std;
   const int NAMELENGTH = 20;
   // This constant is used to dimension char arrays which will be compared to
   // the data type "CharArray" returned by some Chemkin subroutines.
