@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <Dataflow/Network/StrX.h>
+#include <Dataflow/XMLUtil/StrX.h>
 
 namespace SCIRun {
 

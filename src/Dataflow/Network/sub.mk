@@ -26,8 +26,7 @@ SRCS     += $(SRCDIR)/Connection.cc $(SRCDIR)/ModuleHelper.cc \
 	$(SRCDIR)/NetworkEditor.cc $(SRCDIR)/PackageDB.cc \
 	$(SRCDIR)/FileUtils.cc $(SRCDIR)/GenFiles.cc\
 	$(SRCDIR)/ComponentNode.cc $(SRCDIR)/SkeletonFiles.cc\
-        $(SRCDIR)/PackageDBHandler.cc\
-	$(SRCDIR)/StrX.cc
+        $(SRCDIR)/PackageDBHandler.cc
 
 PSELIBS := Dataflow/Comm Dataflow/XMLUtil Core/Exceptions Core/Thread \
 	Core/Containers Core/GuiInterface Core/Util \

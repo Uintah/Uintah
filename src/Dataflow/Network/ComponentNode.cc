@@ -28,7 +28,7 @@
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/PackageDBHandler.h>
-#include <Dataflow/Network/StrX.h>
+#include <Dataflow/XMLUtil/StrX.h>
 
 #include <iostream>
 #include <fstream>
