@@ -196,7 +196,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)nsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::NODE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::NODE);
     typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -209,7 +209,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)nsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::NODE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::NODE);
     typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -226,7 +226,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)csize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::CELL);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::CELL);
     typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -239,7 +239,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)csize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::CELL);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::CELL);
     typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -256,7 +256,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)fsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::FACE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::FACE);
     typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -269,7 +269,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)fsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::FACE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::FACE);
     typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -286,7 +286,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)esize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::EDGE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::EDGE);
     typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -299,7 +299,7 @@ ManageFieldDataAlgoMeshScalar<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)esize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::EDGE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::EDGE);
     typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -345,7 +345,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)nsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::NODE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::NODE);
     typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -362,7 +362,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)nsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::NODE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::NODE);
     typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -383,7 +383,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)csize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::CELL);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::CELL);
     typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -400,7 +400,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)csize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::CELL);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::CELL);
     typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -421,7 +421,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)fsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::FACE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::FACE);
     typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -438,7 +438,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)fsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::FACE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::FACE);
     typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -459,7 +459,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)esize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::EDGE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::EDGE);
     typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -476,7 +476,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)esize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::EDGE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::EDGE);
     typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -526,7 +526,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)nsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::NODE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::NODE);
     typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -552,7 +552,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)nsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::NODE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::NODE);
     typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -582,7 +582,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)csize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::CELL);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::CELL);
     typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -608,7 +608,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)csize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::CELL);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::CELL);
     typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -638,7 +638,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)fsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::FACE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::FACE);
     typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -664,7 +664,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)fsize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::FACE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::FACE);
     typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -694,7 +694,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (rows && rows == (unsigned int)esize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::EDGE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::EDGE);
     typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -720,7 +720,7 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ModuleReporter *mod,
   if (columns && columns == (unsigned int)esize)
   {
     int index = 0;
-    ofield = scinew FOUT(imesh, Field::EDGE);
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), Field::EDGE);
     typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
     typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
