@@ -1302,7 +1302,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
     double time_shift = 0.0;
     if (d_boundaryCondition->getInletBC()) {
-    time_shift = delta_t * timelabels->time_position_multiplier;
+    time_shift = delta_t * timelabels->time_position_multiplier_before_average;
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
 					  &velocityVars, &constVelocityVars,
 					  time_shift);

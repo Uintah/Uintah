@@ -64,10 +64,11 @@ TurbulenceModel::initFilterMatrix(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    PerPatch<CellInformationP> cellInfoP;
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     else {

@@ -276,13 +276,13 @@ void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, doubl
   outStream.d_density=(dsd_lo*s2[1]-dsd_hi*s1[1])/(dsd_lo-dsd_hi) *1000.0;  
   outStream.d_cp= 0.0; // Not in the table  
   outStream.d_enthalpy= 0.0; // Not in the table  
-  if(co2_index!=0 && co2_index < d_varcount)
+  if(co2_index!=-1)
   	outStream.d_co2= (dsd_lo*s2[co2_index]-dsd_hi*s1[co2_index])/(dsd_lo-dsd_hi);  
-  if(h2o_index!=0 && h2o_index < d_varcount)
+  if(h2o_index!=-1)
   	outStream.d_h2o= (dsd_lo*s2[h2o_index]-dsd_hi*s1[h2o_index])/(dsd_lo-dsd_hi); 
-  if(c2h2_index!=0 && c2h2_index < d_varcount)
+  if(c2h2_index!=-1)
   	outStream.d_c2h2= (dsd_lo*s2[c2h2_index]-dsd_hi*s1[c2h2_index])/(dsd_lo-dsd_hi); 
-  if(NO_index!=0 && NO_index < d_varcount)
+  if(NO_index!=-1)
   	outStream.d_noxrxnRate= (dsd_lo*s2[NO_index]-dsd_hi*s1[NO_index])/(dsd_lo-dsd_hi); 
 
 }
@@ -360,6 +360,11 @@ void SteadyFlameletsTable::readMixingTable(std::string inputfile)
   // Names of the variables 
   variables_list= vector<string>(d_varcount);
   variables_list[0]="Mixfracvariance";
+// Index = -1 means this variable doesn't exist in the table
+  co2_index = -1;
+  h2o_index = -1;
+  c2h2_index = -1;
+  NO_index = -1;
   for(int i_vc = 1; i_vc < d_varcount ; i_vc++){
 	  fd >> variables_list[i_vc];
           cout<< variables_list[i_vc]<< " ";
