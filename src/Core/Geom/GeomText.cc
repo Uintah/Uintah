@@ -186,6 +186,63 @@ bool GeomTexts::saveobj(ostream&, const string&, GeomSave*)
 }
 
 
+static Persistent* make_GeomTextsCulled()
+{
+    return scinew GeomTextsCulled;
+}
+
+PersistentTypeID GeomTextsCulled::type_id("GeomTextsCulled", "GeomTexts", make_GeomTextsCulled);
+
+
+GeomTextsCulled::GeomTextsCulled()
+  : GeomTexts()
+{
+}
+
+
+GeomTextsCulled::GeomTextsCulled(const GeomTextsCulled& copy) :
+  GeomTexts(copy),
+  normal_(copy.normal_)
+{
+}
+
+
+GeomTextsCulled::~GeomTextsCulled()
+{
+}
+
+
+GeomObj* GeomTextsCulled::clone()
+{
+    return scinew GeomTextsCulled(*this);
+}
+
+
+void
+GeomTextsCulled::add(const string &t, const Point &p,
+		     const Vector &v, const Color &c)
+{
+  text_.push_back(t);
+  location_.push_back(p);
+  color_.push_back(c);
+  normal_.push_back(v);
+}
+
+
+#define GEOMTEXTS_VERSION 1
+
+void
+GeomTextsCulled::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomTextsCulled", GEOMTEXTS_VERSION);
+    // Do the base class first...
+    GeomTexts::io(stream);
+    Pio(stream, normal_);
+    stream.end_class();
+}
+
+
 } // End namespace SCIRun
 
 

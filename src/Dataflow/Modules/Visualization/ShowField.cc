@@ -95,6 +95,7 @@ class ShowField : public Module
   GuiDouble                text_color_r_;
   GuiDouble                text_color_g_;
   GuiDouble                text_color_b_;
+  GuiInt                   text_backface_cull_;
   GuiInt                   text_show_data_;
   GuiInt                   text_show_nodes_;
   GuiInt                   text_show_edges_;
@@ -185,6 +186,7 @@ ShowField::ShowField(GuiContext* ctx) :
   text_color_r_(ctx->subVar("text-color-r")),
   text_color_g_(ctx->subVar("text-color-g")),
   text_color_b_(ctx->subVar("text-color-b")),
+  text_backface_cull_(ctx->subVar("text-backface-cull")),
   text_show_data_(ctx->subVar("text-show-data")),
   text_show_nodes_(ctx->subVar("text-show-nodes")),
   text_show_edges_(ctx->subVar("text-show-edges")),
@@ -539,13 +541,16 @@ ShowField::execute()
 					       text_color_b_.get()));
       GeomSwitch *text =
 	renderer_->render_text(fld_handle, text_use_default_color_.get(), m,
+			       text_backface_cull_.get(),
 			       text_show_data_.get(),
 			       text_show_nodes_.get(),
 			       text_show_edges_.get(),
 			       text_show_faces_.get(),
 			       text_show_cells_.get());
 
-      text_id_ = ogeom_->addObj(text, "Text Data");
+      const char *name =
+	text_backface_cull_.get()?"Culled Text Data":"Text Data";
+      text_id_ = ogeom_->addObj(text, name);
     }
   }
   if (data_at_dirty_) { data_at_dirty_ = false; }

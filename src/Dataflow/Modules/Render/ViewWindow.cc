@@ -2218,7 +2218,8 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
       if (viter != visible.end()) { // if found
 	vis = (*viter).second;
 	if (vis->visible->get()) {
-	  if (strstr(si->name_.c_str(),"TransParent")) { // delay drawing
+	  if (strstr(si->name_.c_str(),"TransParent") ||
+	      strstr(si->name_.c_str(),"Culled Text")) { // delay drawing
 	    transp_objs.push_back(si);
 	  }
 	  else {

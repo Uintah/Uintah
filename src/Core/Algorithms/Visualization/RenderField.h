@@ -72,6 +72,7 @@ public:
   virtual GeomSwitch *render_text(FieldHandle fld,
 				  bool use_default_material,
 				  MaterialHandle default_material,
+				  bool backface_cull_p,
 				  bool render_data,
 				  bool render_nodes,
 				  bool render_edges,
@@ -115,6 +116,7 @@ public:
   virtual GeomSwitch *render_text(FieldHandle fld,
 				  bool use_default_material,
 				  MaterialHandle default_material,
+				  bool backface_cull_p,
 				  bool render_data,
 				  bool render_nodes,
 				  bool render_edges,
@@ -136,10 +138,12 @@ private:
 
   GeomSwitch *render_text_data(FieldHandle fld,
 			       bool use_default_material,
-			       MaterialHandle default_material);
+			       MaterialHandle default_material,
+			       bool backface_cull_p);
   GeomSwitch *render_text_nodes(FieldHandle fld,
   				bool use_default_material,
-  				MaterialHandle default_material);
+  				MaterialHandle default_material,
+				bool backface_cull_p);
   GeomSwitch *render_text_edges(FieldHandle fld,
   				bool use_default_material,
   				MaterialHandle default_material);
@@ -840,6 +844,7 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				   bool use_default_material,
 				   MaterialHandle default_material,
+				   bool backface_cull_p,
 				   bool render_data,
 				   bool render_nodes,
 				   bool render_edges,
@@ -852,12 +857,12 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
   if (render_data)
   {
     texts->add(render_text_data(field_handle, use_default_material,
-				default_material));
+				default_material, backface_cull_p));
   }
   if (render_nodes)
   {
     texts->add(render_text_nodes(field_handle, use_default_material,
-				 default_material));
+				 default_material, backface_cull_p));
   }
   if (render_edges)
   {
@@ -882,25 +887,41 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 					bool use_default_material,
-					MaterialHandle default_material)
+					MaterialHandle default_material,
+					bool backface_cull_p)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
 
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
-  GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  GeomTexts *texts = 0;
+  GeomTextsCulled *ctexts = 0;
+  GeomSwitch *text_switch = 0;
+  const bool culling_p = backface_cull_p && mesh->has_normals();
+  if (culling_p)
+  {
+    mesh->synchronize(Mesh::NORMALS_E);
+    ctexts = scinew GeomTextsCulled();
+    text_switch = scinew GeomSwitch(ctexts);
+  }
+  else
+  {
+    texts = scinew GeomTexts();
+    text_switch = scinew GeomSwitch(texts);
+  }
+
   char buffer[256];
   char format[256];
   snprintf(format, 256, "%%%d.%df", 1, 2);
   typename Loc::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
+  Point p;
+  Vector n;
   while (iter != end) {
     typename Fld::value_type tmp;
     if (fld->value(tmp, *iter)) {
-      Point p;
       mesh->get_center(p, *iter);
       double val;
       to_double(tmp, val);
@@ -916,7 +937,15 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
       {
 	m = choose_mat(use_default_material, *iter);
       }
-      texts->add(as_str, p, m->diffuse);
+      if (culling_p)
+      {
+	mesh->get_normal(n, *iter);
+	ctexts->add(as_str, p, n, m->diffuse);
+      }
+      else
+      {
+	texts->add(as_str, p, m->diffuse);
+      }
     }
     ++iter;
   }
@@ -929,21 +958,36 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 					 bool use_default_material,
-					 MaterialHandle default_material)
+					 MaterialHandle default_material,
+					 bool backface_cull_p)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
 
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
-  mesh->synchronize(Mesh::NODES_E);
-  
-  GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  GeomTexts *texts = 0;
+  GeomTextsCulled *ctexts = 0;
+  GeomSwitch *text_switch = 0;
+
+  const bool culling_p = backface_cull_p && mesh->has_normals();
+  if (culling_p)
+  {
+    mesh->synchronize(Mesh::NORMALS_E);
+    ctexts = scinew GeomTextsCulled();
+    text_switch = scinew GeomSwitch(ctexts);
+  }
+  else
+  {
+    texts = scinew GeomTexts();
+    text_switch = scinew GeomSwitch(texts);
+  }
+
   char buffer[256];
   typename Fld::mesh_type::Node::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
   Point p;
+  Vector n;
   while (iter != end)
   {
     mesh->get_center(p, *iter);
@@ -958,7 +1002,15 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(as_str, p, m->diffuse);
+    if (culling_p)
+    {
+      mesh->get_normal(n, *iter);
+      ctexts->add(as_str, p, n, m->diffuse);
+    }
+    else
+    {
+      texts->add(as_str, p, m->diffuse);
+    }
 
     ++iter;
   }
