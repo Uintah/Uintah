@@ -12,8 +12,9 @@
 #include <Packages/Uintah/Core/Grid/BCData.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
 #include <utility>
 #include <typeinfo>
 #include <sstream>
@@ -21,25 +22,26 @@
 #include <algorithm>
 #include <string>
 #include <map>
-#include <list>
-
-#define PRINT
-#undef PRINT
+#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 using namespace Uintah;
 
-BCReader::BCReader() 
+// export SCI_DEBUG="BCR_DBG:+,OLD_BC_DBG:+"
+static DebugStream BCR_dbg ("BCR_DBG", false);
+
+
+BoundCondReader::BoundCondReader() 
 {
   d_bcs.resize(6);
 }
 
-BCReader::~BCReader()
+BoundCondReader::~BoundCondReader()
 {
 }
 
-BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
-						  Patch::FaceType& face_side)
+BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
+						    Patch::FaceType& face_side)
 {
 
   map<string,string> values;
@@ -53,18 +55,13 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   // side.  Will use the notion of a UnionBoundaryCondtion and Difference
   // BoundaryCondition.
   
-  bool IveFoundGeometry = false; 
-       
-  // Do the side case:
   std::string fc;
   BCGeomBase* bcGeom;
   if (values.find("side") != values.end()) {
     fc = values["side"];
     bcGeom = scinew SideBCData();
-    IveFoundGeometry = true;
   }
-  // Do the circle case:
-  if (values.find("circle") != values.end()) {
+  else if (values.find("circle") != values.end()) {
     fc = values["circle"];
     string origin = values["origin"];
     string radius = values["radius"];
@@ -75,19 +72,15 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
     
-    // bulletproofing
     if (origin == "" || radius == "") {
       ostringstream warn;
       warn<<"ERROR\n Circle BC geometry not correctly specified \n"
           << " you must specify origin [x,y,z] and radius [r] \n\n";
       throw ProblemSetupException(warn.str());
     }
-    
     bcGeom = scinew CircleBCData(p,r);
-    IveFoundGeometry = true;
   }
-  // Do the rectangle case:
-  if (values.find("rectangle") != values.end()) {
+  else if (values.find("rectangle") != values.end()) {
     fc = values["rectangle"];
     string low = values["lower"];
     string up = values["upper"];
@@ -97,7 +90,6 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     up_stream >> upper[0] >> upper[1] >> upper[2];
     Point l(lower[0],lower[1],lower[2]),u(upper[0],upper[1],upper[2]);
    
-    // bulletproofing
     if (low == "" || up == "") {
       ostringstream warn;
       warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
@@ -113,21 +105,18 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     }
     
     bcGeom = scinew RectangleBCData(l,u);
-    IveFoundGeometry = true;
   }
   
-  //__________________________________
-  //  bullet proofing
-  if(!IveFoundGeometry) {
+  else {
     ostringstream warn;
-    warn<<"ERROR\n Boundary condition geometry not correctly specified "
-          " Valid options (side, circle, rectangle";
+    warn << "ERROR\n Boundary condition geometry not correctly specified "
+      " Valid options (side, circle, rectangle";
     throw ProblemSetupException(warn.str());  
   }
   
-#ifdef PRINT
-  cout << "Face = " << fc << endl;      
-#endif
+
+  BCR_dbg << "Face = " << fc << endl;      
+
   if (fc ==  "x-")
     face_side = Patch::xminus;
   if (fc == "x+")
@@ -145,17 +134,30 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
 }
 
 void
-BCReader::read(ProblemSpecP& bc_ps)
+BoundCondReader::read(ProblemSpecP& bc_ps)
 {  
+  // This function first looks for the geometric specification for the 
+  // boundary condition which includes the tags side, circle and rectangle.
+  // The function createBoundaryConditionFace parses the tag and creates the
+  // appropriate class.  Once this class is created, then the actual boundary
+  // conditions are parsed from the input file (Pressure, Density, etc.).
+  // Boundary conditions can be specified for various materials within a 
+  // face.  This complicates things, so we have to check for this and then 
+  // separate them out.  Once things are separated out, we then must take
+  // all the boundary conditions for a given face and material id and combine
+  // them so that any circle or rectangles that are specified can be combined
+  // appropriately with the side case.  Multiple circle/rectangles are added
+  // together and stored in a Union class.  This union class is then subtracted
+  // off from the side class resulting in a difference class.  The difference
+  // class represents the region of the side minus any circles/rectangle.  
+  
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
        face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
 
       Patch::FaceType face_side;
       BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,face_side);
-#ifdef PRINT
-      cout << endl << endl << "Face = " << face_side << " Geometry type = " 
-	   << typeid(*bcGeom).name() << " " << bcGeom << endl;
-#endif
+      BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
+	      << typeid(*bcGeom).name() << " " << bcGeom << endl;
 	      
       multimap<int, BoundCondBase*> bctype_data;
 
@@ -164,35 +166,30 @@ BCReader::read(ProblemSpecP& bc_ps)
 	int mat_id;
 	BoundCondBase* bc;
 	BoundCondFactory::create(child,bc,mat_id);
-#ifdef PRINT
-	cout << "Inserting into mat_id = " << mat_id << " bc = " 
-	     <<  bc->getType() << " bctype = " << typeid(*bc).name() <<  " "  
-	     << bc  << endl;
-#endif
+	BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
+		<<  bc->getType() << " bctype = " << typeid(*bc).name() 
+		<<  " "  << bc  << endl;
+
 	// This is for the old boundary conditions.
 	// Can only add in boundary conditions that are using "side"
 	if (typeid(SideBCData) == typeid(*bcGeom)) {
-#if 0
-	if (int (d_bcs.size()) < face_side + 1) {
-	 d_bcs.resize(face_side + 1);
-#endif
-	 d_bcs[face_side].setBCValues(mat_id,bc);
+	  d_bcs[face_side].setBCValues(mat_id,bc);
 	}
 	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
 	delete bc;
       }
-#ifdef PRINT
+
       // Print out all of the bcs just created
       multimap<int,BoundCondBase*>::const_iterator it;
       for (it = bctype_data.begin(); it != bctype_data.end(); it++) {
-	cout << "Getting out mat_id = " << it->first << " bc = " 
-	     << it->second->getType() << " bctype = " 
-	     << typeid(*(it->second)).name() << endl;
+	BCR_dbg << "Getting out mat_id = " << it->first << " bc = " 
+		<< it->second->getType() << " bctype = " 
+		<< typeid(*(it->second)).name() << endl;
       }
 
-      cout << endl << "Old BCs just created" << endl;
+      BCR_dbg << endl << "Old BCs just created" << endl;
       d_bcs[face_side].print();
-#endif
+
 
       // Search through the newly created boundary conditions and create
       // new BCGeomBase* clones if there are multi materials specified 
@@ -212,25 +209,24 @@ BCReader::read(ProblemSpecP& bc_ps)
 	if (bc_geom_itr == bcgeom_data.end()) {
 	  bcgeom_data[itr->first] = bcGeom->clone();
 	}
-#ifdef PRINT
-	cout << "Storing in  = " << typeid(bcgeom_data[itr->first]).name()
-	     << " " << bcgeom_data[itr->first] << " " 
-	     << typeid(*(itr->second)).name() << " " << (itr->second)
-	     << endl;
-#endif
+
+	BCR_dbg << "Storing in  = " << typeid(bcgeom_data[itr->first]).name()
+		<< " " << bcgeom_data[itr->first] << " " 
+		<< typeid(*(itr->second)).name() << " " << (itr->second)
+		<< endl;
+
 	bcgeom_data[itr->first]->addBC(itr->second);
       }
       for (bc_geom_itr = bcgeom_data.begin(); bc_geom_itr != bcgeom_data.end();
 	   bc_geom_itr++) {
 	d_BCReaderData[face_side].addBCData(bc_geom_itr->first,
-					    bcgeom_data[bc_geom_itr->first]->clone());
+				    bcgeom_data[bc_geom_itr->first]->clone());
 	delete bc_geom_itr->second;
       }
 						   
-#ifdef PRINT 
-      cout << "Printing out bcDataArray . . " << endl;
+      BCR_dbg << "Printing out bcDataArray . . " << endl;
       d_BCReaderData[face_side].print();
-#endif
+
 
       delete bcGeom;
 
@@ -266,42 +262,42 @@ BCReader::read(ProblemSpecP& bc_ps)
   // rectangles.  This only happens if there are more than 1 bc_data per
   // face.
   
-#ifdef PRINT
-  cout << endl << "Before combineBCS() . . ." << endl << endl;
+
+  BCR_dbg << endl << "Before combineBCS() . . ." << endl << endl;
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
-    cout << endl << endl << "Before Face . . ." << face << endl;
+    BCR_dbg << endl << endl << "Before Face . . ." << face << endl;
     d_BCReaderData[face].print();
   } 
   
-#endif
+
   combineBCS();
 
-#ifdef PRINT
-  cout << endl << "After combineBCS() . . ." << endl << endl;
+
+  BCR_dbg << endl << "After combineBCS() . . ." << endl << endl;
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
-    cout << "After Face . . .  " << face << endl;
+    BCR_dbg << "After Face . . .  " << face << endl;
     d_BCReaderData[face].print();
   } 
 
-  cout << endl << "Old Style BCs . . " << endl;
+  BCR_dbg << endl << "Old Style BCs . . " << endl;
   for (vector<BoundCondData>::iterator i = d_bcs.begin();
        i != d_bcs.end(); ++i) 
     (*i).print();
 
-#endif
+
 
 }
 
 
 // For old boundary conditions
-void BCReader::getBC(Patch::FaceType& face, BoundCondData& bc_data)
+void BoundCondReader::getBC(Patch::FaceType& face, BoundCondData& bc_data)
 {
   bc_data = d_bcs[face];
 }
 
-const BCDataArray BCReader::getBCDataArray(Patch::FaceType& face) const
+const BCDataArray BoundCondReader::getBCDataArray(Patch::FaceType& face) const
 {
   map<Patch::FaceType,BCDataArray > m = this->d_BCReaderData;
   return m[face];
@@ -309,28 +305,27 @@ const BCDataArray BCReader::getBCDataArray(Patch::FaceType& face) const
 
 
 
-void BCReader::combineBCS()
+void BoundCondReader::combineBCS()
 {
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
-#ifdef PRINT
-    cout << endl << "Working on Face = " << face << endl;
-    cout << endl << "Original inputs" << endl;
-#endif
+    BCR_dbg << endl << "Working on Face = " << face << endl;
+    BCR_dbg << endl << "Original inputs" << endl;
+
     BCDataArray rearranged;
     BCDataArray& original = d_BCReaderData[face];
-#ifdef PRINT
+
     original.print();
-    cout << endl;
-#endif
+    BCR_dbg << endl;
+
     BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
     for (mat_id_itr = original.d_BCDataArray.begin(); 
 	 mat_id_itr != original.d_BCDataArray.end(); 
 	 ++mat_id_itr) {
       int mat_id = mat_id_itr->first;
-#ifdef PRINT
-      cout << "Mat ID = " << mat_id << endl;
-#endif
+
+      BCR_dbg << "Mat ID = " << mat_id << endl;
+
 
       // Find all of the BCData types that are in a given BCDataArray
       vector<BCGeomBase*>::const_iterator vec_itr;
@@ -345,10 +340,10 @@ void BCReader::combineBCS()
       map<BCData,vector<BCGeomBase*> >::iterator bcd_itr;
       for (bcd_itr = bcdata_bcgeom.begin(); bcd_itr != bcdata_bcgeom.end(); 
 	   ++bcd_itr) {
-#ifdef PRINT
-	cout << "Printing out the bcd types" << endl;
+
+	BCR_dbg << "Printing out the bcd types" << endl;
 	bcd_itr->first.print();
-#endif
+
 	
 	if (count_if(bcd_itr->second.begin(),
 		     bcd_itr->second.end(),
@@ -366,21 +361,17 @@ void BCReader::combineBCS()
 	
 	  
 	  if (index != bcd_itr->second.end()) {
-#ifdef PRINT
-	    cout << "Found the side bc data" << endl;
-#endif
+	    BCR_dbg << "Found the side bc data" << endl;
 	    side_bc = (*index)->clone();
 	  } else {
-#ifdef PRINT
-	    cout << "Didnt' find the side bc data" << endl;
-#endif
+	    BCR_dbg << "Didnt' find the side bc data" << endl;
+
 	    index = find_if(original.d_BCDataArray[-1].begin(),
 			    original.d_BCDataArray[-1].end(),
 			    cmp_type<SideBCData>());
+
 	    if (index != d_BCReaderData[face].d_BCDataArray[-1].end()){
-#ifdef PRINT
-	      cout << "Using the 'all' case" << endl;
-#endif
+	      BCR_dbg << "Using the 'all' case" << endl;
 	      side_bc = (*index)->clone();
 	    }
 	  }
@@ -396,22 +387,21 @@ void BCReader::combineBCS()
 		      union_bc->child.end(),
 		      cmp_type<SideBCData>());
 	  
-#ifdef PRINT
-	  cout << endl << "Before deleting" << endl;
+	  BCR_dbg << endl << "Before deleting" << endl;
 	  for_each(union_bc->child.begin(),
 		   union_bc->child.end(),
 		   Uintah::print);
-#endif
+
 	  
 	  for(itr = new_end; itr != union_bc->child.end(); ++itr)
 	    delete *itr;
 	  union_bc->child.erase(new_end,union_bc->child.end());
-#ifdef PRINT  
-	  cout << endl << "After deleting" << endl;
-	  for_each(union_bc->child.begin(),
-		   union_bc->child.end(),
+
+	  BCR_dbg << endl << "After deleting" << endl;
+
+	  for_each(union_bc->child.begin(),union_bc->child.end(),
 		   Uintah::print);
-#endif
+
 	  
 	  // Create a differencebcdata for the side and the unionbc
 	  DifferenceBCData* difference_bc = 
@@ -424,13 +414,14 @@ void BCReader::combineBCS()
 	  for (it = union_bc->child.begin(); 
 	       it != union_bc->child.end(); ++it) 
 	    rearranged.addBCData(mat_id,(*it)->clone());
-#ifdef PRINT  
-	  cout << endl << "Printing out BCGeomBase types in rearranged" 
-	       << endl;
+
+	  BCR_dbg << endl << "Printing out BCGeomBase types in rearranged" 
+		  << endl;
+
 	  for_each(rearranged.d_BCDataArray[mat_id].begin(),
 		   rearranged.d_BCDataArray[mat_id].end(),
 		   Uintah::print);
-#endif
+
 	  delete side_bc;
 	  delete union_bc;
 	  delete difference_bc;
@@ -448,44 +439,42 @@ void BCReader::combineBCS()
       
     }
 
-#ifdef PRINT
-    cout << endl << "Printing out rearranged list" << endl;
+    BCR_dbg << endl << "Printing out rearranged list" << endl;
     rearranged.print();
-#endif
+
     // Reassign the rearranged data
     d_BCReaderData[face] = rearranged;
     
-#ifdef PRINT
-    cout << endl << "Printing out rearranged from d_BCReaderData list" << endl;
+    BCR_dbg << endl << "Printing out rearranged from d_BCReaderData list" 
+	    << endl;
+
     d_BCReaderData[face].print();
-#endif
 
   }
 
-#ifdef PRINT
-  cout << endl << "Printing out in combineBCS()" << endl;
+
+  BCR_dbg << endl << "Printing out in combineBCS()" << endl;
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
-    cout << "After Face . . .  " << face << endl;
+    BCR_dbg << "After Face . . .  " << face << endl;
     d_BCReaderData[face].print();
   } 
-#endif
 
 
 }
 
 
-bool BCReader::compareBCData(BCGeomBase* b1, BCGeomBase* b2)
+bool BoundCondReader::compareBCData(BCGeomBase* b1, BCGeomBase* b2)
 {
   return false;
 }
 
 namespace Uintah {
 
-void print(BCGeomBase* p) {
-  cout << "type = " << typeid(*p).name() << endl;
-}
-
+  void print(BCGeomBase* p) {
+    BCR_dbg << "type = " << typeid(*p).name() << endl;
+  }
+  
 }
 
 
