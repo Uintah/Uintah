@@ -40,7 +40,15 @@ class Geom;
 typedef LockingHandle<Geom> GeomHandle;
 
 
-enum elem_t;
+//////////
+// Where the attribute lives in the geometry
+enum elem_t{
+  NODE,
+  EDGE,
+  FACE,
+  ELEM
+};
+
 
 class SCICORESHARE Geom:public Datatype{  
 public:
