@@ -50,20 +50,20 @@ FrictionContact::~FrictionContact()
 }
 
 void FrictionContact::initializeContact(const Patch* patch,
-                                        int vfindex,
+                                        int matlindex,
                                         DataWarehouseP& new_dw)
 {
   NCVariable<double> normtraction;
   NCVariable<Vector> surfnorm;
 
-  new_dw->allocate(normtraction,lb->gNormTractionLabel,vfindex , patch);
-  new_dw->allocate(surfnorm,lb->gSurfNormLabel,vfindex , patch);
+  new_dw->allocate(normtraction,lb->gNormTractionLabel,matlindex, patch);
+  new_dw->allocate(surfnorm,lb->gSurfNormLabel,matlindex, patch);
 
   normtraction.initialize(0.0);
   surfnorm.initialize(Vector(0.0,0.0,0.0));
 
-  new_dw->put(normtraction,lb->gNormTractionLabel,vfindex , patch);
-  new_dw->put(surfnorm,lb->gSurfNormLabel,vfindex , patch);
+  new_dw->put(normtraction,lb->gNormTractionLabel,matlindex, patch);
+  new_dw->put(surfnorm,lb->gSurfNormLabel,matlindex, patch);
 
 }
 
@@ -79,33 +79,27 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   double centerOfMassMass;
   Vector dx = patch->dCell();
 
-  int numMatls = d_sharedState->getNumMatls();
-  int NVFs = d_sharedState->getNumVelFields();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   // Need access to all velocity fields at once, so store in
   // vectors of NCVariables
-  vector<NCVariable<double> > gmass(NVFs);
-  vector<NCVariable<Vector> > gvelocity(NVFs);
-  vector<NCVariable<double> > normtraction(NVFs);
-  vector<NCVariable<Vector> > surfnorm(NVFs);
+  vector<NCVariable<double> > gmass(numMatls);
+  vector<NCVariable<Vector> > gvelocity(numMatls);
+  vector<NCVariable<double> > normtraction(numMatls);
+  vector<NCVariable<Vector> > surfnorm(numMatls);
   
-  //  const MPMLabel *lb = MPMLabel::getLabels();
-
   // Retrieve necessary data from DataWarehouse
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      new_dw->get(gmass[matlindex], lb->gMassLabel,matlindex, patch,
 		  Ghost::None, 0);
-      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
+      new_dw->get(gvelocity[matlindex], lb->gVelocityLabel, matlindex, patch,
 		  Ghost::None, 0);
-      old_dw->get(normtraction[vfindex],lb->gNormTractionLabel,vfindex , patch,
+      old_dw->get(normtraction[matlindex],lb->gNormTractionLabel,matlindex,
+	   patch, Ghost::None, 0);
+      old_dw->get(surfnorm[matlindex],lb->gSurfNormLabel,matlindex, patch,
 		  Ghost::None, 0);
-      old_dw->get(surfnorm[vfindex],lb->gSurfNormLabel,vfindex , patch,
-		  Ghost::None, 0);
-    }
   }
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
@@ -113,7 +107,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
-    for(int n = 0; n < NVFs; n++){
+    for(int n = 0; n < numMatls; n++){
       centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
       centerOfMassMass+=gmass[n][*iter]; 
     }
@@ -127,7 +121,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       // is nonzero (not numerical noise) and the difference from
       // the centerOfMassVelocity is nonzero (More than one velocity
       // field is contributing to grid vertex).
-      for(int n = 0; n < NVFs; n++){
+      for(int n = 0; n < numMatls; n++){
         Vector deltaVelocity=gvelocity[n][*iter]-centerOfMassVelocity;
         if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
 	   //           && !compare(deltaVelocity.length(),0.0)){
@@ -177,7 +171,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   }
 
   // Store new velocities in DataWarehouse
-  for(int n=0; n< NVFs; n++){
+  for(int n=0; n< numMatls; n++){
     new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, patch);
   }
 }
@@ -196,10 +190,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   typedef IntVector IV;
   Vector dx = patch->dCell();
 
-  int numMatls = d_sharedState->getNumMatls();
-  int NVFs = d_sharedState->getNumVelFields();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   // This model requires getting the normal component of the
   // surface traction.  The first step is to calculate the
@@ -209,29 +200,26 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
   // Need access to all velocity fields at once, so store in
   // vectors of NCVariables
-  vector<NCVariable<double> > gmass(NVFs);
-  vector<NCVariable<Vector> > gvelocity_star(NVFs);
-  vector<NCVariable<Vector> > gacceleration(NVFs);
-  vector<NCVariable<double> > normtraction(NVFs);
-  vector<NCVariable<Vector> > gsurfnorm(NVFs);
-
+  vector<NCVariable<double> > gmass(numMatls);
+  vector<NCVariable<Vector> > gvelocity_star(numMatls);
+  vector<NCVariable<Vector> > gacceleration(numMatls);
+  vector<NCVariable<double> > normtraction(numMatls);
+  vector<NCVariable<Vector> > gsurfnorm(numMatls);
 
   Vector surnor;
 
   // First, calculate the gradient of the mass everywhere
   // normalize it, and stick it in surfNorm
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfi = matl->getVFIndex();
-      new_dw->get(gmass[vfi], lb->gMassLabel, vfi, patch, Ghost::None, 0);
-      new_dw->allocate(gsurfnorm[vfi],lb->gSurfNormLabel, vfi, patch);
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      new_dw->get(gmass[dwi], lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->allocate(gsurfnorm[dwi],lb->gSurfNormLabel, dwi, patch);
 
-      gsurfnorm[vfi].initialize(Vector(0.0,0.0,0.0));
+      gsurfnorm[dwi].initialize(Vector(0.0,0.0,0.0));
 
-      IntVector lowi(gsurfnorm[vfi].getLowIndex());
-      IntVector highi(gsurfnorm[vfi].getHighIndex());
+      IntVector lowi(gsurfnorm[dwi].getLowIndex());
+      IntVector highi(gsurfnorm[dwi].getHighIndex());
 
 //      cout << "Low" << lowi << endl;
 //      cout << "High" << highi << endl;
@@ -241,12 +229,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         for(int j = lowi.y()+1; j < highi.y()-1; j++){
           for(int k = lowi.z()+1; k < highi.z()-1; k++){
 	     surnor = Vector(
-	        -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
-         	-(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
-	        -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	        -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
+         	-(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
+	        -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
 	     double length = surnor.length();
 	     if(length>0.0){
-	    	 gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
+	    	 gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
 	     }
           }
         }
@@ -262,20 +250,20 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
            int i=lowi.x();
 	   surnor = Vector(
 	      0.0,
-	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
-	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
 	   }
            i=highi.x()-1;
 	   surnor = Vector(
 	      0.0,
-	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
-	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
@@ -285,21 +273,21 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         for(int k = lowi.z()+1; k < highi.z()-1; k++){
            int j=lowi.y();
 	   surnor = Vector(
-	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
 	      0.0,
-	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
 	   }
            j=highi.y()-1;
 	   surnor = Vector(
-	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
 	      0.0,
-	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
@@ -309,43 +297,38 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         for(int j = lowi.y()+1; j < highi.y()-1; j++){
            int k=lowi.z();
 	   surnor = Vector(
-	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
-	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
 	      0.0);
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
 	   }
            k=highi.z()-1;
 	   surnor = Vector(
-	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
-	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
 	      0.0);
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
 
-      new_dw->put(gsurfnorm[vfi],lb->gSurfNormLabel, vfi, patch);
-
-    }
+      new_dw->put(gsurfnorm[dwi],lb->gSurfNormLabel, dwi, patch);
   }
 
   // Next, interpolate the stress to the grid
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
       // Create arrays for the particle stress and grid stress
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
       ParticleVariable<Matrix3> pstress;
       NCVariable<Matrix3>       gstress;
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
-      new_dw->allocate(gstress, lb->gStressLabel, vfindex, patch);
+      new_dw->allocate(gstress, lb->gStressLabel, matlindex, patch);
       gstress.initialize(Matrix3(0.0));
       
       ParticleVariable<Point> px;
@@ -367,54 +350,47 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 	     gstress[ni[k]] += pstress[idx] * S[k];
          }
       }
-      new_dw->put(gstress, lb->gStressLabel, vfindex, patch);
-
-    }
+      new_dw->put(gstress, lb->gStressLabel, matlindex, patch);
   }
 
   // Compute the normal component of the traction
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
-      NCVariable<Matrix3>      gstress;
-      NCVariable<double>       gnormtraction;
-      NCVariable<Vector>       surfnorm;
-      new_dw->get(gstress,lb->gStressLabel, vfindex, patch, Ghost::None, 0);
-      new_dw->get(surfnorm,lb->gSurfNormLabel, vfindex, patch, Ghost::None, 0);
-      new_dw->allocate(gnormtraction,lb->gNormTractionLabel, vfindex, patch);
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    int matlindex = mpm_matl->getDWIndex();
+    NCVariable<Matrix3>      gstress;
+    NCVariable<double>       gnormtraction;
+    NCVariable<Vector>       surfnorm;
+    new_dw->get(gstress,lb->gStressLabel, matlindex, patch, Ghost::None, 0);
+    new_dw->get(surfnorm,lb->gSurfNormLabel, matlindex, patch, Ghost::None, 0);
+    new_dw->allocate(gnormtraction,lb->gNormTractionLabel, matlindex, patch);
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	gnormtraction[*iter]=
 			Dot(surfnorm[*iter]*gstress[*iter],surfnorm[*iter]);
-      }
-
-      new_dw->put(gnormtraction,lb->gNormTractionLabel, vfindex, patch);
     }
+
+    new_dw->put(gnormtraction,lb->gNormTractionLabel, matlindex, patch);
   }
 
 
-  // FINALLY, we have all the pieces in place, compute the proper
-  // interaction
+  // FINALLY, we have all the pieces in place, compute the proper interaction
 
   // Retrieve necessary data from DataWarehouse
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch, Ghost::None, 0);
-      new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel,
-		  vfindex, patch, Ghost::None, 0);
-      new_dw->get(gacceleration[vfindex],lb->gAccelerationLabel,vfindex,patch,
-		  Ghost::None, 0);
-      new_dw->get(normtraction[vfindex],lb->gNormTractionLabel,vfindex , patch,
-		  Ghost::None, 0);
-      new_dw->get(gsurfnorm[vfindex],lb->gSurfNormLabel,vfindex , patch,
-		  Ghost::None, 0);
-    }
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      new_dw->get(gmass[matlindex], lb->gMassLabel,matlindex,
+					patch,Ghost::None, 0);
+      new_dw->get(gvelocity_star[matlindex], lb->gVelocityStarLabel,matlindex,
+					patch, Ghost::None, 0);
+      new_dw->get(gacceleration[matlindex],lb->gAccelerationLabel,matlindex,
+					patch, Ghost::None, 0);
+      new_dw->get(normtraction[matlindex],lb->gNormTractionLabel,matlindex,
+					patch, Ghost::None, 0);
+      new_dw->get(gsurfnorm[matlindex],lb->gSurfNormLabel,matlindex,
+					patch, Ghost::None, 0);
   }
+
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
   double epsilon_max_max=0.0;
@@ -422,7 +398,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
-    for(int  n = 0; n < NVFs; n++){
+    for(int  n = 0; n < numMatls; n++){
        centerOfMassMom+=gvelocity_star[n][*iter] * gmass[n][*iter];
        centerOfMassMass+=gmass[n][*iter]; 
     }
@@ -436,7 +412,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       // is nonzero (not numerical noise) and the difference from
       // the centerOfMassVelocity is nonzero (More than one velocity
       // field is contributing to grid vertex).
-      for(int n = 0; n < NVFs; n++){
+      for(int n = 0; n < numMatls; n++){
         Vector deltaVelocity=gvelocity_star[n][*iter]-centerOfMassVelocity;
         if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
 	   //           && !compare(deltaVelocity.length(),0.0)){
@@ -495,7 +471,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   //  ts++;
 
   // Store new velocities and accelerations in DataWarehouse
-  for(int n = 0; n < NVFs; n++){
+  for(int n = 0; n < numMatls; n++){
     new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, patch);
     new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, patch);
   }
@@ -509,14 +485,12 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
 {
 
   int idx = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   t->requires( old_dw, lb->gNormTractionLabel,idx , patch, Ghost::None, 0);
   t->requires( old_dw, lb->gSurfNormLabel,idx , patch, Ghost::None, 0);
   t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
   t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
   t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
-
 
 }
 
@@ -528,7 +502,6 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 {
 
   int idx = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   t->requires( new_dw, lb->pStressLabel_preReloc, idx, patch,
                          Ghost::AroundNodes, 1);
   t->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
@@ -541,10 +514,16 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
   t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
   t->computes( new_dw, lb->gStressLabel, idx, patch);
 
-
 }
 
 // $Log$
+// Revision 1.34  2000/11/07 22:52:22  guilkey
+// Changed the way that materials are looped over.  Instead of each
+// function iterating over all materials, and then figuring out which ones
+// are MPMMaterials on the fly, SimulationState now stores specific information
+// about MPMMaterials, so that for doing MPM, only those materials are returned
+// and then looped over.  This will make coupling with a cfd code easier I hope.
+//
 // Revision 1.33  2000/10/19 22:52:49  bard
 // Commented out the writing of a debugging file which crept in here.
 //

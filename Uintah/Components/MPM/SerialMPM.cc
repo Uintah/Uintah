@@ -99,7 +99,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
      MPMMaterial *mat = scinew MPMMaterial(ps);
+     //register as a generic material
      sharedState->registerMaterial(mat);
+     //register as an MPM material
+     sharedState->registerMPMMaterial(mat);
   }
 
   cerr << "Number of velocity fields = " << d_sharedState->getNumVelFields()
@@ -107,12 +110,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    // Load up all the VarLabels that will be used in each of the
    // physical models
-   lb->d_particleState.resize(d_sharedState->getNumMatls());
-   lb->d_particleState_preReloc.resize(d_sharedState->getNumMatls());
+   lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
+   lb->d_particleState_preReloc.resize(d_sharedState->getNumMPMMatls());
 
-   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
-     Material* matl = d_sharedState->getMaterial(m);
-     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
      lb->registerPermanentParticleState(m,lb->pVelocityLabel,
 					lb->pVelocityLabel_preReloc);
      lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
@@ -126,13 +128,13 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      }
      if(mpm_matl->getFractureModel()){
        lb->registerPermanentParticleState(m,lb->pCrackSurfaceNormalLabel,
-					  lb->pCrackSurfaceNormalLabel_preReloc); 
+					 lb->pCrackSurfaceNormalLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pTensileStrengthLabel,
 					  lb->pTensileStrengthLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 					  lb->pIsBrokenLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pCrackSurfaceContactForceLabel,
-					  lb->pCrackSurfaceContactForceLabel_preReloc); 
+				  lb->pCrackSurfaceContactForceLabel_preReloc); 
      }
      
      lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
@@ -169,8 +171,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
-      const Patch* patch=*iter;
-      {
+      const Patch* patch=*iter; {
 	 Task* t = scinew Task("SerialMPM::actuallyInitialize", patch, dw, dw,
 			       this, &SerialMPM::actuallyInitialize);
 	 t->computes(dw, d_sharedState->get_delt_label());
@@ -193,9 +194,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				    DataWarehouseP& old_dw, 
 				    DataWarehouseP& new_dw)
 {
-   int numMatls = d_sharedState->getNumMatls();
-
-   //   const MPMLabel* lb = MPMLabel::getLabels();
+   int numMatls = d_sharedState->getNumMPMMatls();
 
    for(Level::const_patchIterator iter=level->patchesBegin();
        iter != level->patchesEnd(); iter++){
@@ -215,7 +214,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	    patch, old_dw, new_dw,
 	    this,&SerialMPM::computeNodeVisibility);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
 	    int idx = matl->getDWIndex();
   	    t->requires(old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
@@ -242,9 +241,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    patch, old_dw, new_dw,
 			    this,&SerialMPM::interpolateParticlesToGrid);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    t->requires(old_dw, lb->pMassLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, lb->pVelocityLabel, idx, patch,
@@ -262,7 +260,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
              */
 
 	    if(mpm_matl->getFractureModel()) {
-	       t->requires(old_dw, lb->pCrackSurfaceContactForceLabel, idx, patch,
+	       t->requires(old_dw,lb->pCrackSurfaceContactForceLabel,idx, patch,
 			Ghost::AroundNodes, 1 );
 	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
@@ -295,13 +293,9 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    &ThermalContact::computeHeatExchange);
 
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-	    if(mpm_matl){
-               MPMPhysicalModules::thermalContactModel->addComputesAndRequires(
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+            MPMPhysicalModules::thermalContactModel->addComputesAndRequires(
 		 t, mpm_matl, patch, old_dw, new_dw);
-	    }
-
 	 }
 
 	 sched->addTask(t);
@@ -322,13 +316,10 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    &Contact::exMomInterpolated);
 
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-	    if(mpm_matl){
-               MPMPhysicalModules::contactModel->addComputesAndRequiresInterpolated(
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+            MPMPhysicalModules::contactModel->
+				addComputesAndRequiresInterpolated(
 					t, mpm_matl, patch, old_dw, new_dw);
-	    }
-
 	 }
 
 	 sched->addTask(t);
@@ -350,12 +341,9 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    patch, old_dw, new_dw,
 			    this, &SerialMPM::computeStressTensor);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-	    if(mpm_matl){
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
 	       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 	       cm->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
-	    }
 	 }
 	 
          t->computes(new_dw, lb->delTAfterConstitutiveModelLabel);
@@ -378,9 +366,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    patch, old_dw, new_dw,
 			    this, &SerialMPM::computeInternalForce);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    
 	    t->requires( new_dw, lb->pStressAfterStrainRateLabel, idx, patch,
 			 Ghost::AroundNodes, 1);
@@ -421,9 +408,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this, &SerialMPM::computeInternalHeatRate);
 
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 
 	    t->requires(old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
@@ -455,7 +441,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    patch, old_dw, new_dw,
 			    this, &SerialMPM::solveEquationsMotion);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, lb->gMassLabel, idx, patch,
 			 Ghost::None);
@@ -481,7 +467,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    patch, old_dw, new_dw,
 			    this, &SerialMPM::solveHeatEquations);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, lb->gMassLabel, idx, patch,
 			 Ghost::None);
@@ -516,7 +502,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    patch, old_dw, new_dw,
 			    this, &SerialMPM::integrateAcceleration);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires(new_dw, lb->gAccelerationLabel, idx, patch,
 			Ghost::None);
@@ -541,9 +527,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = scinew Task("SerialMPM::integrateTemperatureRate",
 			    patch, old_dw, new_dw,
 			    this, &SerialMPM::integrateTemperatureRate);
-	 for(int m = 0; m < numMatls; m++)
-	 {
-	    Material* matl = d_sharedState->getMaterial(m);
+	 for(int m = 0; m < numMatls; m++) {
+	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
 	    int idx = matl->getDWIndex();
 
             t->requires( new_dw, lb->gTemperatureLabel, idx, 
@@ -572,8 +557,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			   MPMPhysicalModules::contactModel,
 			   &Contact::exMomIntegrated);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
             MPMPhysicalModules::contactModel->
 				addComputesAndRequiresIntegrated(
 				t, mpm_matl, patch, old_dw, new_dw);
@@ -596,9 +580,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 		    this, &SerialMPM::interpolateToParticlesAndUpdate);
 
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    t->requires(new_dw, lb->gMomExedAccelerationLabel, idx, patch,
 			Ghost::AroundCells, 1);
 	    t->requires(new_dw, lb->gMomExedVelocityStarLabel, idx, patch,
@@ -664,14 +647,11 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
                             patch, old_dw, new_dw,
                             this, &SerialMPM::computeMassRate);
          for(int m = 0; m < numMatls; m++){
-            Material* matl = d_sharedState->getMaterial(m);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            if(mpm_matl){
-               HEBurn* heb = mpm_matl->getBurnModel();
-               heb->addComputesAndRequires
+            MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+            HEBurn* heb = mpm_matl->getBurnModel();
+            heb->addComputesAndRequires
 				(t, mpm_matl, patch, old_dw, new_dw);
-	       d_burns=heb->getBurns();
-            }
+	    d_burns=heb->getBurns();
          }
          sched->addTask(t);
 
@@ -690,9 +670,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::crackGrow);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
 			idx, patch, Ghost::None);
@@ -740,9 +719,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::stressRelease);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
@@ -771,9 +749,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	    patch, old_dw, new_dw,
 	    this,&SerialMPM::computeCrackSurfaceContactForce);
 	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    // int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
 	    if(mpm_matl->getFractureModel()) {
   	       mpm_matl->getConstitutiveModel()->
 	         addComputesAndRequiresForCrackSurfaceContact(t,mpm_matl,
@@ -798,9 +774,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::carryForwardVariables);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pStressAfterFractureReleaseLabel,
@@ -825,8 +800,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
                          patch, old_dw, new_dw,
                          this, &SerialMPM::interpolateParticlesForSaving);
          for(int m = 0; m < numMatls; m++){
-            Material* matl = d_sharedState->getMaterial(m);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+            MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+//            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
             if(mpm_matl){
 	      Material* matl = d_sharedState->getMaterial(m);
 	      int idx = matl->getDWIndex();
@@ -853,10 +828,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
     {
 	d_nextOutputTime += d_outputInterval;
     }
-
-   // Ask Jim about this.  Now since we have multiple d_particleStates,
-   // we need to possible schedule the various potentially different
-   // labels that go with each material.
 
    sched->scheduleParticleRelocation(level, old_dw, new_dw,
 				     lb->pXLabel_preReloc, 
@@ -1049,18 +1020,14 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 				   DataWarehouseP& /* old_dw */,
 				   DataWarehouseP& new_dw)
 {
-  int numMatls = d_sharedState->getNumMatls();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   PerPatch<long> NAPID(0);
   if(new_dw->exists(lb->ppNAPIDLabel, 0, patch))
       new_dw->get(NAPID,lb->ppNAPIDLabel, 0, patch);
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl)
-    {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
        particleIndex numParticles = mpm_matl->countParticles(patch);
 
        mpm_matl->createParticles(numParticles, NAPID, patch, new_dw);
@@ -1077,12 +1044,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 						mpm_matl, new_dw);
        }       
 
-       int vfindex = matl->getVFIndex();
+       int vfindex = mpm_matl->getVFIndex();
 
        MPMPhysicalModules::contactModel->
 			initializeContact(patch,vfindex,new_dw);
-       
-    }
   }
 
   new_dw->put(NAPID, lb->ppNAPIDLabel, 0, patch);
@@ -1102,16 +1067,12 @@ void SerialMPM::computeNodeVisibility(
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  int numMatls = d_sharedState->getNumMatls();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
-  for(int m = 0; m < numMatls; m++)
-  {
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl) {
-      mpm_matl->getFractureModel()->computeNodeVisibility(
+  for(int m = 0; m < numMatls; m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    mpm_matl->getFractureModel()->computeNodeVisibility(
 	  patch, mpm_matl, old_dw, new_dw);
-    }
   }
 }
 
@@ -1121,17 +1082,13 @@ void SerialMPM::computeCrackSurfaceContactForce(
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  int numMatls = d_sharedState->getNumMatls();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
-  for(int m = 0; m < numMatls; m++)
-  {
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl) {
-      if(mpm_matl->getFractureModel()) {
+  for(int m = 0; m < numMatls; m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    if(mpm_matl->getFractureModel()) {
         mpm_matl->getConstitutiveModel()->computeCrackSurfaceContactForce(
 	  patch, mpm_matl, old_dw, new_dw);
-      }
     }
   }
 }
@@ -1141,19 +1098,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 					   DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
 {
-  // This needs the datawarehouse to allow indexing by material
-  // for the particle data and velocity field by the grid data
-
-  // Dd: making this compile... don't know if this correct...
-  int numMatls = d_sharedState->getNumMatls();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      int vfindex = mpm_matl->getVFIndex();
       // Create arrays for the particle data
       ParticleVariable<Point> px;
       ParticleVariable<double> pmass;
@@ -1184,7 +1134,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<Vector> gexternalforce;
       NCVariable<double> gTemperature;
 
-//      std::cerr << "allocating grid variables" << std::endl;
       new_dw->allocate(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->allocate(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->allocate(gexternalforce, lb->gExternalForceLabel,
@@ -1288,7 +1237,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->put(gexternalforce,lb->gExternalForceLabel, vfindex, patch);
       new_dw->put(gTemperature,  lb->gTemperatureLabel, vfindex, patch);
-    }
   }
 }
 
@@ -1297,16 +1245,10 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-   // This needs the datawarehouse to allow indexing by material
-   // for both the particle and the grid data.
-  
-   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
-      Material* matl = d_sharedState->getMaterial(m);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      if(mpm_matl){
-	 ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-	 cm->computeStressTensor(patch, mpm_matl, old_dw, new_dw);
-      }
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cm->computeStressTensor(patch, mpm_matl, old_dw, new_dw);
    }
 }
 
@@ -1315,16 +1257,10 @@ void SerialMPM::computeMassRate(const ProcessorGroup*,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw)
 {
-   // This needs the datawarehouse to allow indexing by material
-   // for both the particle and the grid data.
-  
-   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
-      Material* matl = d_sharedState->getMaterial(m);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      if(mpm_matl){
-	 HEBurn* heb = mpm_matl->getBurnModel();
-	 heb->computeMassRate(patch, mpm_matl, old_dw, new_dw);
-      }
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      HEBurn* heb = mpm_matl->getBurnModel();
+      heb->computeMassRate(patch, mpm_matl, old_dw, new_dw);
    }
 }
 
@@ -1333,9 +1269,8 @@ void SerialMPM::crackGrow(const ProcessorGroup*,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
-      Material* matl = d_sharedState->getMaterial(m);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       if(mpm_matl->getFractureModel()) {
         mpm_matl->getFractureModel()->
 			crackGrow(patch, mpm_matl, old_dw, new_dw);
@@ -1348,12 +1283,10 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-  for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
-    Material* matl = d_sharedState->getMaterial(m);
-    //int idx = matl->getDWIndex();
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
 
-    int matlindex = matl->getDWIndex();
+    int matlindex = mpm_matl->getDWIndex();
     
     ParticleVariable<Matrix3> pStress;
     
@@ -1368,14 +1301,14 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 
     new_dw->put(pStress, lb->pStressLabel_preReloc);
 
-  delt_vartype delT;
-  if(d_fracture) {
-    new_dw->get(delT, lb->delTAfterCrackSurfaceContactLabel);
-  }
-  else {
-    new_dw->get(delT, lb->delTAfterConstitutiveModelLabel);
-  }
-  new_dw->put(delT, lb->delTLabel);
+    delt_vartype delT;
+    if(d_fracture) {
+      new_dw->get(delT, lb->delTAfterCrackSurfaceContactLabel);
+    }
+    else {
+      new_dw->get(delT, lb->delTAfterConstitutiveModelLabel);
+    }
+    new_dw->put(delT, lb->delTLabel);
   }
 }
 	    
@@ -1385,8 +1318,7 @@ void SerialMPM::stressRelease(const ProcessorGroup*,
 				    DataWarehouseP& new_dw)
 {
    for(int m = 0; m < d_sharedState->getNumMatls(); m++){
-      Material* matl = d_sharedState->getMaterial(m);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       if(mpm_matl->getFractureModel()) {
         mpm_matl->getFractureModel()->stressRelease(patch, mpm_matl,
 							old_dw, new_dw);
@@ -1406,19 +1338,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   oodx[1] = 1.0/dx.y();
   oodx[2] = 1.0/dx.z();
 
-  // This needs the datawarehouse to allow indexing by material
-  // for the particle data and velocity field for the grid data.
-
-  int numMatls = d_sharedState->getNumMatls();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      int vfindex = mpm_matl->getVFIndex();
       // Create arrays for the particle position, volume
       // and the constitutive model
       ParticleVariable<Point>  px;
@@ -1487,7 +1412,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       }
       new_dw->put(internalforce, lb->gInternalForceLabel, vfindex, patch);
       new_dw->put(gstress, lb->gStressForSavingLabel, vfindex, patch);
-    }
   }
 }
 
@@ -1503,15 +1427,10 @@ void SerialMPM::computeInternalHeatRate(
   oodx[1] = 1.0/dx.y();
   oodx[2] = 1.0/dx.z();
 
-  int numMatls = d_sharedState->getNumMatls();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      int vfindex = mpm_matl->getVFIndex();
       double thermalConductivity = mpm_matl->getThermalConductivity();
       
       ParticleVariable<Point>  px;
@@ -1566,7 +1485,6 @@ void SerialMPM::computeInternalHeatRate(
       }
       new_dw->put(internalHeatRate, lb->gInternalHeatRateLabel,
 							vfindex, patch);
-    }
   }
 }
 
@@ -1577,22 +1495,11 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 				     DataWarehouseP& new_dw)
 {
   Vector zero(0.,0.,0.);
-
-  // This needs the datawarehouse to allow indexing by velocity
-  // field for the grid data
-
-  int numMatls = d_sharedState->getNumMatls();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-
-  // Gravity
   Vector gravity = d_sharedState->getGravity();
 
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int vfindex = mpm_matl->getVFIndex();
       // Get required variables for this patch
       NCVariable<double> mass;
       NCVariable<Vector> internalforce;
@@ -1624,7 +1531,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 
       // Put the result in the datawarehouse
       new_dw->put(acceleration, lb->gAccelerationLabel, vfindex, patch);
-    }
   }
 }
 
@@ -1633,15 +1539,9 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 				     DataWarehouseP& /*old_dw*/,
 				     DataWarehouseP& new_dw)
 {
-  int numMatls = d_sharedState->getNumMatls();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int vfindex = mpm_matl->getVFIndex();
       double specificHeat = mpm_matl->getSpecificHeat();
      
       // Get required variables for this patch
@@ -1684,10 +1584,8 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       }
 
       // Put the result in the datawarehouse
-      new_dw->put(temperatureRate, lb->gTemperatureRateLabel,
-						vfindex, patch);
+      new_dw->put(temperatureRate, lb->gTemperatureRateLabel, vfindex, patch);
 
-    }
   }
 }
 
@@ -1697,17 +1595,9 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
-  // This needs the datawarehouse to allow indexing by material
-
-  int numMatls = d_sharedState->getNumMatls();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int vfindex = mpm_matl->getVFIndex();
       // Get required variables for this patch
       NCVariable<Vector>        acceleration;
       NCVariable<Vector>        velocity;
@@ -1725,16 +1615,12 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocate(velocity_star, lb->gVelocityStarLabel,
 						vfindex, patch);
 
-      // Do the computation
-
-      for(NodeIterator iter = patch->getNodeIterator();
-					!iter.done(); iter++){
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter]*delT;
       }
 
       // Put the result in the datawarehouse
       new_dw->put( velocity_star, lb->gVelocityStarLabel, vfindex, patch);
-    }
   }
 }
 
@@ -1743,17 +1629,9 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
-  // This needs the datawarehouse to allow indexing by material
-
-  int numMatls = d_sharedState->getNumMatls();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int vfindex = mpm_matl->getVFIndex();
 
       NCVariable<double> temperature;
       NCVariable<double> temperatureRate;
@@ -1778,7 +1656,6 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 
       new_dw->put( temperatureStar, lb->gTemperatureStarLabel,
 						vfindex, patch );
-    }
   }
 }
 
@@ -1807,25 +1684,20 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   double ke=0;
   int numPTotal = 0;
 
-  // This needs the datawarehouse to allow indexing by material
-
-  int numMatls = d_sharedState->getNumMatls();
-
-  for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      int vfindex   = mpm_matl->getVFIndex();
       // Get the arrays of particle values to be changed
       ParticleVariable<Point> px;
       ParticleVariable<Point> pxnew;
       ParticleVariable<Vector> pvelocity;
+      ParticleVariable<Vector> pvelocitynew;
       ParticleVariable<double> pmass;
       ParticleVariable<Vector> pexternalForce;
       
-      ParticleVariable<double> pTemperature; //for heat conduction
+      ParticleVariable<double> pTemperature;    //for heat conduction
+      ParticleVariable<double> pTemperatureNew; //for heat conduction
       ParticleVariable<Vector> pTemperatureGradient; //for heat conduction
       ParticleVariable<double> pTemperatureRate; //for heat conduction
       NCVariable<double> gTemperatureRate; //for heat conduction
@@ -1836,8 +1708,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(px,        lb->pXLabel, pset);
       new_dw->allocate(pxnew,lb->pXLabel_preReloc, pset);
       old_dw->get(pvelocity, lb->pVelocityLabel, pset);
+      new_dw->allocate(pvelocitynew, lb->pVelocityLabel_preReloc, pset);
       old_dw->get(pmass,     lb->pMassLabel, pset);
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
+      old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
+      new_dw->allocate(pTemperatureNew, lb->pTemperatureLabel_preReloc, pset);
+      new_dw->allocate(pTemperatureRate,lb->pTemperatureRateLabel, pset);
+      new_dw->allocate(pTemperatureGradient,lb->pTemperatureGradientLabel,
+			 pset);
 
       ParticleVariable<int> pVisibility;
       ParticleVariable<Vector> pCrackSurfaceContactForce;
@@ -1857,10 +1735,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gacceleration, lb->gMomExedAccelerationLabel,
 			vfindex, patch, Ghost::AroundCells, 1);
 		  
-      old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
-      new_dw->allocate(pTemperatureRate,lb->pTemperatureRateLabel, pset);
-      new_dw->allocate(pTemperatureGradient,lb->pTemperatureGradientLabel,
-			 pset);
       new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel,
 			vfindex, patch, Ghost::AroundCells, 1);
       new_dw->get(gTemperatureStar, lb->gTemperatureStarLabel,
@@ -1996,9 +1870,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Update the particle's position and velocity
 	if(numVisibleNodes != 0) {
           pxnew[idx]      = px[idx] + vel * delT;
-          pvelocity[idx] += acc * delT;
+          pvelocitynew[idx] = pvelocity[idx] + acc * delT;
           pTemperatureRate[idx] = tempRate;
-          pTemperature[idx] += tempRate * delT;
+          pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
 //          thermal_energy += pTemperature[idx] * Cp;
         }
 	else {        
@@ -2012,14 +1886,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 	
 	
-        ke += .5*pmass[idx]*pvelocity[idx].length2();
-	CMX = CMX + (px[idx]*pmass[idx]).asVector();
-	CMV += pvelocity[idx]*pmass[idx];
+        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
+	CMV += pvelocitynew[idx]*pmass[idx];
       }
 
       // Store the new result
       new_dw->put(pxnew,        lb->pXLabel_preReloc);
-      new_dw->put(pvelocity, lb->pVelocityLabel_preReloc);
+      new_dw->put(pvelocitynew, lb->pVelocityLabel_preReloc);
       new_dw->put(pexternalForce, lb->pExternalForceLabel_preReloc);
 
       ParticleVariable<long> pids;
@@ -2027,10 +1901,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pids, lb->pParticleIDLabel_preReloc);
 
       new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel_preReloc);
-      new_dw->put(pTemperature, lb->pTemperatureLabel_preReloc);
-      new_dw->put(pTemperatureGradient,
-			lb->pTemperatureGradientLabel_preReloc);
-    }
+      new_dw->put(pTemperatureNew, lb->pTemperatureLabel_preReloc);
+      new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel_preReloc);
   }
   // DON'T MOVE THESE!!!
   new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
@@ -2039,66 +1911,17 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 //   cout << "THERMAL ENERGY " << thermal_energy << endl;
 
-#if 0
-  static int ts=0;
-  // Code to dump out tecplot files
-  int freq = 10;
-
-  if (( ts % freq) == 0) {
-   char fnum[5];
-   string filename;
-   int stepnum=ts/freq;
-   sprintf(fnum,"%04d",stepnum);
-   string partroot("partout");
-
-   filename = partroot+fnum;
-   ofstream partfile(filename.c_str());
-
-   partfile << "TITLE = \"Time Step # " << ts <<"\"," << endl;
-   partfile << "VARIABLES = X,Y,Z,U,V,W,MATL" << endl;
-   partfile << "ZONE T=\"PARTICLES\", I= " << numPTotal;
-   partfile <<", F=POINT" << endl;
-
-   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
-      // Get the arrays of particle values to be changed
-      ParticleVariable<Point> px;
-      old_dw->get(px, lb->XLabel, matlindex, patch, Ghost::None, 0);
-      ParticleVariable<Vector> pv;
-      old_dw->get(pv, lb->pVelocityLabel, matlindex, patch, Ghost::None, 0);
-      ParticleVariable<double> pmass;
-      old_dw->get(pmass,lb-> pMassLabel, matlindex, patch, Ghost::None, 0);
-
-      ParticleSubset* pset = px.getParticleSubset();
-
-      cout << "Time step # " << ts << endl;
-
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-	 particleIndex idx = *iter;
-
-        partfile << px[idx].x() <<" "<< px[idx].y() <<" "<< px[idx].z() <<" "<<
-		    pv[idx].x() <<" "<< pv[idx].y() <<" "<< pv[idx].z() <<" "<<
-		    vfindex << endl;
-
-      }
-    }
-   }
-  }
-
-  static ofstream tmpout("tmp.out");
-//  tmpout << ts << " " << ke << " " << se << std::endl;
-  tmpout << ts << " " << ke << std::endl;
-  ts++;
-#endif
 }
 
 
 // $Log$
+// Revision 1.160  2000/11/07 22:52:15  guilkey
+// Changed the way that materials are looped over.  Instead of each
+// function iterating over all materials, and then figuring out which ones
+// are MPMMaterials on the fly, SimulationState now stores specific information
+// about MPMMaterials, so that for doing MPM, only those materials are returned
+// and then looped over.  This will make coupling with a cfd code easier I hope.
+//
 // Revision 1.159  2000/11/07 04:28:41  jas
 // Now doing Symmetry BC in interpolateParticlesToGrid.  Had them commented
 // out.
