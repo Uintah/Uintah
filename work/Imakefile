@@ -11,7 +11,8 @@ TMPL_LIB =
 
 SUBDIRS = Classlib Comm Constraints \
 	Dataflow Datatypes Devices Geom Geometry \
-	Malloc Math Modules Multitask TCL Widgets tcl $(TMPL_DIR)
+	Malloc Math Modules Multitask TCL Widgets tcl $(TMPL_DIR) \
+	convert
 
 
 SCISubdirs($(SUBDIRS))
