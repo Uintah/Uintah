@@ -249,27 +249,40 @@ cd Thirdparty_install.x.x.x
 
 <listitem>
 <para>
-Run the third party installation script:
+Run the third party installation script.
+</para>
+<para>
+The simplest invocation of the script looks like this:
 <literallayout class="monospaced">
-python install <replaceable>dir</replaceable> <replaceable>32|64</replaceable> <replaceable>jobs</replaceable>
+python install dir
 </literallayout>
-where <replaceable>dir</replaceable> is the directory in which the
-third-party software will be installed (although it is actually
-installed in a sub-directory of the specified one),
-<replaceable>32|64</replaceable> specifies
-one of 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
-is the number of jobs that make will create when building the
+where <replaceable>dir</replaceable> is the directory under which the
+third-party software will be installed.  For example:
+<literallayout class="monospaced">
+python install /usr/local/&sr;/Third_Party
+</literallayout>
+</para>
+<para>
+The script may also be invoked as follows:
+<literallayout class="monospaced">
+python install <replaceable>dir</replaceable> <replaceable>bits</replaceable> <replaceable>jobs</replaceable>
+</literallayout>
+where <replaceable>dir</replaceable> is the directory under which the
+third-party software will be installed,
+<replaceable>bits</replaceable> is one of 32 or 64 and specifies
+either 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
+is the number of process that make will use when building the
 software.  For example:
 <literallayout class="monospaced">
-python install /usr/local/SCIRun_Third_Party 64 2
+python install /usr/local/&sr;/Third_Party 64 2
 </literallayout>
 or
 <literallayout class="monospaced">
-python install /usr/local/SCIRun_Third_Party 32 1
+python install /usr/local/&sr;/Third_Party 32 1
 </literallayout>
-When finished, the installation script will display the complete name
-of the third-party software installation directory&mdash;make note of
-this value.
+When finished, the installation script will display the complete path
+name of the third-party software installation directory&mdash;make
+note of this value.
 </para>
 </listitem>
 
