@@ -29,11 +29,11 @@ itcl_class Uintah_Operators_TensorOperator {
 	global $this-tx
 	global $this-ty
 	global $this-tz
-	set $this-nx 0
+	set $this-nx 1
 	set $this-ny 0
 	set $this-nz 0
 	set $this-tx 0
-	set $this-ty 0
+	set $this-ty 1
 	set $this-tz 0
 
     }
@@ -286,6 +286,11 @@ ____________________________________________
         make_entry $w.t.tz "  " $this-tz $n
         pack $w.t.tx $w.t.ty $w.t.tz -side left
 
-	pack $w.n $w.t -anchor w -pady 5
+	label $w.l1 -text "Calculation gives traction component
+on face with outer normal n
+in direction t.
+n and t are normalized automatically."
+
+	pack $w.n $w.t $w.l1 -anchor w -pady 5
     }
 }
