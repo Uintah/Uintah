@@ -3151,7 +3151,7 @@ AC_SUBST(GLEW_LIB_DIR_FLAG)
 ##  --  search for ftgl stuff  -------------------------------------------
 if test "$sci_required_ftgl" = "yes"; then
   if test "$with_ftgl"; then
-    _sci_lib="$with_ftgl/lib"
+    _sci_lib="$with_ftgl/lib /usr/X11R6/lib"
     _sci_inc="$with_ftgl/include /usr/include/freetype2"
   else
     _sci_lib="$sci_thirdparty_libs"
