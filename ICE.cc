@@ -2719,7 +2719,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-    Vector zero(0.,0.,0.);
+    //Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
     StaticArray<CCVariable<double> > Temp_CC(numALLMatls);  
