@@ -15,6 +15,7 @@
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Datatypes/Mesh.h>
 #include <SCICore/Datatypes/LatticeGeom.h>
+#include <SCICore/Datatypes/TriSurfGeom.h>
 #include <SCICore/Datatypes/SField.h>
 #include <PSECore/Datatypes/FieldPort.h>
 #include <SCICore/Geom/GeomGroup.h>
@@ -179,6 +180,8 @@ public:
   {
     // Check for generation number. FIX_ME
 
+    d_dbg << "SHOWGEOMETRY EXECUTING" << endl;
+
     // tell module downstream to delete everything we have sent it before.
     // This is typically salmon, it owns the scene graph memory we create here.
     d_ogeom->delAll(); 
@@ -188,7 +191,7 @@ public:
     }
 
     d_dbg << d_sfield->get_attrib()->getInfo();
-  
+
     Gradient *gradient = d_sfield->query_interface((Gradient *)0);
     if(!gradient){
       error("Gradient not supported by input field");
@@ -212,8 +215,12 @@ public:
 
     GeomGroup *verts = scinew GeomGroup;
     Geom *geom = d_sfield->get_geom();
+
+    d_dbg << geom->getInfo();
+
     LatticeGeom* grid = dynamic_cast<LatticeGeom*>(geom);
     //LatticeGeom *grid = geom->get_latticegeom();
+    TriSurfGeom* tsurf = dynamic_cast<TriSurfGeom*>(geom);
 
     if (grid) {
 
@@ -244,6 +251,12 @@ public:
 	  }
 	}
       }
+    } else if (tsurf) {
+      d_dbg << "Writing out surface" << endl;
+      displaySurface(tsurf, verts);
+    } else if (true) {
+      d_dbg << "testing surface" << endl;
+      displaySurface((TriSurfGeom *)geom, verts);
     } else {
       d_dbg << "Not a LatticGeom!!" << endl;
     }
@@ -261,6 +274,40 @@ public:
     d_ogeom->flushViews();
 
   }
+
+
+  void displaySurface(TriSurfGeom *surf, GeomGroup *g)
+  {
+    BBox bbox;
+    surf->getBoundingBox(bbox);
+    
+    const double pointsize =
+      bbox.diagonal().length() / pow(surf->pointSize(), 0.33L) * 0.1;
+    
+    int i;
+    for (i = 0; i < surf->pointSize(); i++) {
+      const Point &p = surf->point(i);
+      g->add(scinew GeomSphere(p, pointsize, 8, 4));
+    }
+
+    for (i = 0; i < surf->triangleSize(); i++) {
+      const int p0i = surf->edge(i*3+0).pointIndex();
+      const int p1i = surf->edge(i*3+1).pointIndex();
+      const int p2i = surf->edge(i*3+2).pointIndex();
+
+      const Point &p0 = surf->point(p0i);
+      const Point &p1 = surf->point(p1i);
+      const Point &p2 = surf->point(p2i);
+
+      // draw three half edges
+      g->add(new GeomLine(p0, p1));
+      g->add(new GeomLine(p1, p2));
+      g->add(new GeomLine(p2, p0));
+      
+      // draw three connections.
+    }
+  }
+
 
   //////////
   // addConnections
