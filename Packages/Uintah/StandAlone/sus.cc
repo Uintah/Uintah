@@ -279,7 +279,7 @@ main(int argc, char** argv)
 
 	// Connect a MPM module if applicable
 	MPMInterface* mpm = 0;
-	if(do_mpm){
+	if(do_mpm && !do_ice){
 	  mpm = scinew SerialMPM(world);
 	  sim->attachPort("mpm", mpm);
 	}
@@ -290,7 +290,7 @@ main(int argc, char** argv)
 	if(do_arches){
 	    cfd = scinew Arches(world);
 	}
-	if(do_ice){
+	if(do_ice && !do_mpm){
 	    cfd = ice = scinew ICE(world);
 	}
 	if(cfd)
@@ -298,8 +298,9 @@ main(int argc, char** argv)
 
 	// Connect an MPMICE module if do_mpm and do_ice are both true
 	MPMCFDInterface* mpmcfd = 0;
+       MPMICE* mpmice = 0;
 	if(do_mpm && do_ice){
-	    mpmcfd = scinew MPMICE(world);
+	    mpmcfd = mpmice = scinew MPMICE(world);
 	}
 	if(do_mpm && do_arches){
 	    mpmcfd = scinew MPMArches(world);
@@ -311,9 +312,13 @@ main(int argc, char** argv)
 	sim->attachPort("output", output);
 
 	// This port is only needed for knowing when to spit out debugging
-	// information.
-	if (ice)
+	// information. 
+       if (ice)
 	  ice->attachPort("output", output);
+
+       if (mpmcfd) {
+	  mpmice->attachPort("output", output);
+       }
 
 	if(world->myrank() == 0){
 	   cerr << "Using scheduler: " << scheduler << " and load balancer: " << loadbalancer << '\n';
