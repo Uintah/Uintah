@@ -41,7 +41,8 @@ namespace rtrt {
   public:
     PathTraceContext(float luminance, const PathTraceLight &light,
 		     Object* geometry, Background *background,
-		     int num_samples, int max_depth, bool dilate,
+		     int num_samples, int num_sample_divs,
+		     int max_depth, bool dilate,
 		     int support, int use_weighted_ave,
 		     float threshold, Semaphore* sem);
 
@@ -53,9 +54,11 @@ namespace rtrt {
     Object* geometry;
     // Background
     Background *background;
+    // This is the size of num_samples and num_samples_root
+    int num_sample_divs;
     // Number of samples to perform for each texel
-    int num_samples;
-    int num_samples_root;
+    Array1<int> num_samples; 
+    Array1<int> num_samples_root;
     // Maximum ray depth
     int max_depth;
     // Stuff for texture dilation
@@ -84,7 +87,9 @@ namespace rtrt {
     // Random number generator
     MusilRNG rng;
     // Our group of random samples
-    Array1<Point2D> sample_points[NUM_SAMPLE_GROUPS];
+    // Should be of dimesntions
+    //   [NUM_SAMPLE_GROUPS, num_sample_divs, num_samples]
+    Array2<Array1<Point2D> > sample_points;
     
     // Used for rendering
     PerProcessorContext* ppc;

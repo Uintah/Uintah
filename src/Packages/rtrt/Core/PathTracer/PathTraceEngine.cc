@@ -28,19 +28,36 @@ PathTraceContext::PathTraceContext(float luminance,
 				   const PathTraceLight &light,
 				   Object* geometry,
 				   Background *background,
-                                   int num_samples, int max_depth, bool dilate,
+                                   int num_samples_in, int num_sample_divs_in,
+				   int max_depth, bool dilate,
 				   int support, int use_weighted_ave,
 				   float threshold, Semaphore *sem) :
-  light(light), luminance(luminance), geometry(geometry), background(background),
-  num_samples(num_samples), max_depth(max_depth), dilate(dilate), support(support),
+  light(light), luminance(luminance), geometry(geometry),
+  background(background), num_sample_divs(num_sample_divs_in),
+  max_depth(max_depth), dilate(dilate), support(support),
   use_weighted_ave(use_weighted_ave), threshold(threshold), sem(sem)
 {
+  if (num_sample_divs <= 0) {
+    cerr << "num_sample_divs is less than or equal to zero.  "
+	 << "Setting to one.\n";
+    num_sample_divs = 1;
+  }
+  num_samples_root.resize(num_sample_divs);
+  num_samples.resize(num_sample_divs);
+  
   // Fix num_samples to be a complete square
-  num_samples_root = (int)(ceil(sqrt((double)num_samples)));
-  int new_num_samples = num_samples_root*num_samples_root;
-  if (new_num_samples != this->num_samples) {
-    cerr << "Changing the number of samples from "<<num_samples<<" to "<<new_num_samples<<"\n";
-    this->num_samples = new_num_samples;
+  num_samples[0] = num_samples_in;
+  num_samples_root[0] = (int)(ceil(sqrt((double)num_samples[0])));
+  int new_num_samples = num_samples_root[0]*num_samples_root[0];
+  if (new_num_samples != num_samples[0]) {
+    cerr << "Changing the number of samples from "<<num_samples[0]<<" to "<<new_num_samples<<"\n";
+    num_samples[0] = new_num_samples;
+  }
+  for(int i = 1; i < num_sample_divs; i++) {
+    num_samples_root[i] = (int)ceil(num_samples_root[0] * (1 - (float)i/num_sample_divs));
+    if (num_samples_root[i] < 5) num_samples_root[i] = 5;
+    cout << "num_samples_root[i="<<i<<"] = "<<num_samples_root[i]<<"\n";
+    num_samples[i] = num_samples_root[i] * num_samples_root[i];
   }
 
   // Determine the scratch size needed
@@ -55,28 +72,30 @@ PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
   ptc(ptc), local_spheres(group), rng(10), offset(offset)
 {
   // Generate groups of random samples
-  double inc = 1./ptc->num_samples_root;
+  sample_points.resize(NUM_SAMPLE_GROUPS, ptc->num_sample_divs);
   for(int sgindex=0;sgindex<NUM_SAMPLE_GROUPS;sgindex++) {
-    // Resize our sample bucket
-    sample_points[sgindex].resize(ptc->num_samples);
-
-    // This is our sample index
-    int index=0;
-    // u and v are offsets into the texel
-    double u=0;
-    for (int i=0;i<ptc->num_samples_root;i++) {
-      ASSERT(index<ptc->num_samples);
-      double v=0;
-      for (int j=0;j<ptc->num_samples_root;j++) {
-	sample_points[sgindex][index] = Point2D(u + inc*rng(),
-						v + inc*rng());
-	
-	index++;
-        v+=inc;
+    for(int div_index=0; div_index < ptc->num_sample_divs; div_index++) {
+      double inc = 1./ptc->num_samples_root[div_index];
+      sample_points(sgindex, div_index).resize(ptc->num_samples[div_index]);
+      
+      // This is our sample index
+      int index=0;
+      // u and v are offsets into the texel
+      double u=0;
+      for (int i=0;i<ptc->num_samples_root[div_index];i++) {
+	ASSERT(index<ptc->num_samples[div_index]);
+	double v=0;
+	for (int j=0;j<ptc->num_samples_root[div_index];j++) {
+	  sample_points(sgindex, div_index)[index] = Point2D(u + inc*rng(),
+							     v + inc*rng());
+	  
+	  index++;
+	  v+=inc;
+	}
+	u+=inc;
       }
-      u+=inc;
-    }
-  }
+    } // end div_index
+  } // end sgindex
 
   // Allocate the DepthStats and PerProcessor context
   ppc = new PerProcessorContext(ptc->pp_size, ptc->pp_scratchsize);
@@ -98,7 +117,10 @@ PathTraceWorker::~PathTraceWorker() {
 }
 
 void PathTraceWorker::run() {
-  float inv_num_samples=1./ptc->num_samples;
+  Array1<float> inv_num_samples(ptc->num_sample_divs);
+  for (int i = 0; i < inv_num_samples.size(); i++) {
+    inv_num_samples[i] = 1./ptc->num_samples[i];
+  }
   
   // Iterate over our spheres
   for(int sindex = 0; sindex < local_spheres->objs.size(); sindex++) {
@@ -116,13 +138,24 @@ void PathTraceWorker::run() {
     double inv_width=1./width;
     double inv_height=1./height;
 
-    for(int v=0;v<height;v++)
+    for(int v=0;v<height;v++) {
+      // Compute which number of samples to use
+      float norm = v*2.0f/(height-1) - 1;
+      float index_thing = norm * (ptc->num_sample_divs-1);
+      if (index_thing < 0)
+	index_thing *= -1;
+      int div_index = (int)(index_thing+0.4f);
+      
       for(int u=0;u<width;u++) {
 	int sgindex = (int)(rng()*(NUM_SAMPLE_GROUPS-1));
 	int sgindex2 = (int)(rng()*(NUM_SAMPLE_GROUPS-1));
+#if 0
+	sphere->texture(u,v)+=div_index;
+	continue;
+#endif
 
-        for(int sample=0;sample<ptc->num_samples;sample++) {
-          Point2D sample_point = sample_points[sgindex][sample];
+        for(int sample=0;sample<ptc->num_samples[div_index];sample++) {
+          Point2D sample_point = sample_points(sgindex, div_index)[sample];
 	  
           // Project sample point onto sphere
 	  Point origin;
@@ -197,7 +230,7 @@ void PathTraceWorker::run() {
 	    
 	    Vector v_out;
 	    {
-	      Point2D hemi_sample=sample_points[sgindex2][sample];
+	      Point2D hemi_sample=sample_points(sgindex2, div_index)[sample];
 	      double phi=2.0*M_PI*hemi_sample.x();
 	      double r=sqrt(hemi_sample.y());
 	      double x=r*cos(phi);
@@ -253,8 +286,9 @@ void PathTraceWorker::run() {
 	} // end sample
 	
         // Normalize result
-	sphere->texture(u,v)=inv_num_samples*sphere->texture(u,v);
-      } // end texel
+	sphere->texture(u,v)=inv_num_samples[div_index]*sphere->texture(u,v);
+      } // end column of texels
+    } // end all texels
     // cout << "Finished sphere "<<sindex<<"\n";
   } // end sphere
 
