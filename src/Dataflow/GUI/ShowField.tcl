@@ -57,6 +57,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-color-b
 	global $this-text-backface-cull
 	global $this-text-fontsize
+	global $this-text-precision
+	global $this-text-render_locations
 	global $this-text-show-data
 	global $this-text-show-nodes
 	global $this-text-show-edges
@@ -94,6 +96,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-color-b 1.0
 	set $this-text-backface-cull 0
 	set $this-text-fontsize 1
+	set $this-text-precision 2
+	set $this-text-render_locations 0
 	set $this-text-show-data 1
 	set $this-text-show-nodes 0
 	set $this-text-show-edges 0
@@ -321,10 +325,6 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Show Text" \
 		-command "$this-c toggle_display_text" \
 		-variable $this-text-on
-	checkbutton $text.use_def_col \
-		-text "Use default color" \
-		-command "$this-c rerender_text" \
-		-variable $this-text-use-default-color
 
 	frame $text.def_col -borderwidth 2
 
@@ -332,6 +332,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	    -text "Cull backfacing text if possible" \
 	    -command "$this-c rerender_text" \
 	    -variable $this-text-backface-cull
+
+	checkbutton $text.locations \
+	    -text "Render indices as locations" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-render_locations
 
 	frame $text.show 
 	checkbutton $text.show.data \
@@ -356,7 +361,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	    -variable $this-text-show-cells
 
 	make_labeled_radio $text.size \
-	    "Font size:" "$this-c rerender_text" left \
+	    "Text Size:" "$this-c rerender_text" left \
 	    $this-text-fontsize \
 	    {{"T" 0} {"S" 1} {"M" 2} {"L" 3} {"XL" 4}}
 
@@ -364,12 +369,26 @@ itcl_class SCIRun_Visualization_ShowField {
 	    $text.show.faces $text.show.cells \
 	    -side top -fill y -anchor w
 	
+	checkbutton $text.use_def_col \
+		-text "Use default color" \
+		-command "$this-c rerender_text" \
+		-variable $this-text-use-default-color
+
 	addColorSelection $text.def_col "Text Color" $this-text-color \
 	    "text_color_change"
 
-	pack $text.show_text $text.use_def_col $text.def_col \
-	    $text.backfacecull $text.show $text.size \
-	    -side top -fill y -anchor w
+	frame $text.precision
+	label $text.precision.label -text "Text Precision  "
+	scale $text.precision.scale -orient horizontal \
+	    -variable $this-text-precision -from 1 -to 16 \
+	    -showvalue true -resolution 1
+	bind $text.precision.scale <ButtonRelease> "$this-c rerender_text"
+	pack $text.precision.label -side left -anchor s -fill x
+	pack $text.precision.scale -side left -anchor n -fill x
+	
+	pack $text.show_text $text.show $text.backfacecull $text.locations \
+	    $text.use_def_col $text.def_col $text.size \
+	    $text.precision -side top -fill y -anchor w
     }
 
     method disk_render_status_changed {name1 name2 op} {
