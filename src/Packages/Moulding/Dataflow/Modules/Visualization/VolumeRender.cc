@@ -27,6 +27,8 @@ public:
   virtual void execute();
 
   virtual void tcl_command(TCLArgs&, void*);
+private:
+  ScalarFieldIPort* volume_port;
 };
 
 extern "C" MouldingSHARE Module* make_VolumeRender(const clString& id) {
@@ -34,8 +36,14 @@ extern "C" MouldingSHARE Module* make_VolumeRender(const clString& id) {
 }
 
 VolumeRender::VolumeRender(const clString& id)
-  : Module("VolumeRender", id, Source,"Visualization","Moulding")
+  : Module("VolumeRender", id, Source,
+	   "Visualization","Moulding")  // <-- needed by auto port facility
 {
+  // use auto port facility to get ports.
+  ScalarFieldIPort* volume_port = (ScalarFieldIPort*)get_iport("Volume");
+
+  if (!volume_port)
+    std::cerr << "VolumeRender: unable to get port named \"Volume\"." << endl;
 }
 
 VolumeRender::~VolumeRender()
@@ -44,7 +52,6 @@ VolumeRender::~VolumeRender()
 
 void VolumeRender::execute()
 {
-  ScalarFieldIPort* volume_port = (ScalarFieldIPort*)get_iport("Volume");
   if (!volume_port) {
     std::cerr << "VolumeRender: unable to get port named \"Volume\"." << endl;
     return;
