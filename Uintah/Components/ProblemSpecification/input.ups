@@ -137,7 +137,7 @@
 		<temperature>298</temperature>
 		<enthalpy_loss>0</enthalpy_loss>
 	    </stream>
-	    <!-- boundary conditions--Not sure how these differ from below -->
+	<!-- boundary conditions, Not sure how these differ from below -->
 	    <primary_stream>
 	        <flow_rate>1</flow_rate>
 		<mixture_frac>1</mixture_frac>
