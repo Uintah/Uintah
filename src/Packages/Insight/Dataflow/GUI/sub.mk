@@ -35,7 +35,11 @@ CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) S
 
 XMLS :=  \
 	sci_DiscreteGaussianImageFilter.xml \
+	sci_GradientRecursiveGaussianImageFilter.xml \
         sci_GradientAnisotropicDiffusionImageFilter.xml \
+        sci_VectorGradientAnisotropicDiffusionImageFilter.xml \
+        sci_CurvatureAnisotropicDiffusionImageFilter.xml \
+        sci_VectorCurvatureAnisotropicDiffusionImageFilter.xml \
         sci_GradientMagnitudeImageFilter.xml \
 	sci_WatershedRelabeler.xml \
 	sci_WatershedSegmenter.xml \
@@ -46,6 +50,9 @@ XMLS :=  \
 	sci_WatershedSegmentTreeGenerator.xml \
 	sci_WatershedImageFilter.xml \
 	sci_MeanImageFilter.xml \
+	sci_UnaryFunctorImageFilter.xml \
+	sci_VectorIndexSelectionCastImageFilter.xml \
+	sci_RescaleIntensityImageFilter.xml \
 #[INSERT NEW CODE FILE HERE]
 
 INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
@@ -64,6 +71,8 @@ SRCS := \
 	$(SRCDIR)/ImageReaderUShort3D.tcl \
 	$(SRCDIR)/ImageToField.tcl \
 	$(SRCDIR)/Switch.tcl \
+	$(SRCDIR)/ColorImageReaderUChar2D.tcl\
+	$(SRCDIR)/ColorImageReaderFloat2D.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
