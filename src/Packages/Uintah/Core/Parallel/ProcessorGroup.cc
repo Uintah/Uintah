@@ -11,4 +11,7 @@ ProcessorGroup::ProcessorGroup(const ProcessorGroup* parent,
 {
 }
 
+ProcessorGroup::~ProcessorGroup()
+{
+}
 
