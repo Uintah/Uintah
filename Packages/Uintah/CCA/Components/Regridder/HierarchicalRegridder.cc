@@ -233,6 +233,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
 {
   rdbg << "HierarchicalRegridder::MarkPatches() BGN" << endl;
+  rdbg << "HierarchicalRegridder::MarkPatches() Level" << levelIdx << endl;
 
   LevelP level = oldGrid->getLevel(levelIdx);
 
@@ -245,6 +246,8 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
     IntVector latticeIdx = StartCellToLattice( startCell, levelIdx );
     IntVector realPatchSize = endCell - startCell + IntVector(1,1,1);
     IntVector realSubPatchNum = realPatchSize / subPatchSize;
+
+    rdbg << "MarkPatches() realSubPatchNum = " << realSubPatchNum << endl;
     
     for (CellIterator iter(IntVector(0,0,0), realSubPatchNum); !iter.done(); iter++) {
       IntVector idx(*iter);
@@ -253,9 +256,15 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
       IntVector latticeStartIdx = latticeIdx * d_latticeRefinementRatio[levelIdx] + idx;
       IntVector latticeEndIdx = latticeStartIdx + IntVector(1,1,1);
       
+      rdbg << "MarkPatches() idx = " << idx << endl;
+      rdbg << "MarkPatches() startCellSubPatch = " << startCellSubPatch << endl;
+      rdbg << "MarkPatches() endCellSubPatch = " << endCellSubPatch << endl;
+
       if (flaggedCellsExist(*d_dilatedCellsCreated[levelIdx], startCellSubPatch, endCellSubPatch)) {
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
         (*d_patchActive[levelIdx+1])[latticeStartIdx] = 1;
+      } else {
+        rdbg << "Not Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
       }
       else if (!flaggedCellsExist(*d_dilatedCellsDeleted[levelIdx], startCellSubPatch, endCellSubPatch)) {
         // Do we need to check for flagged cells in the children?
