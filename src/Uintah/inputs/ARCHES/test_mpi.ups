@@ -34,7 +34,7 @@
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[2,1,1]</upper>
-	        <resolution>[150,100,100]</resolution>
+	        <resolution>[200,100,100]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[10,10,10]</patches>
 	    </Box>
@@ -139,7 +139,7 @@
 
 		<cal_pressure>true</cal_pressure>
 		<PressureSolver>
-		    <ref_point>[5,5,5]</ref_point>
+		    <ref_point>[198,98,98]</ref_point>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
