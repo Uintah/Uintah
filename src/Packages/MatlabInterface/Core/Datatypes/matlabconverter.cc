@@ -3731,8 +3731,11 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
         {
           FieldHandle  fhandle = field;
           matlabarray subarray;
+          bool numericarray = numericarray_;
+          numericarray_ = false;
           sciFieldTOmlArray(fhandle,subarray,module);
           mlmat.setfield(0,name,subarray);
+          numericarray_ = numericarray;
         }
       matrix = dynamic_cast<Matrix *>(handle.get_rep());
       if (matrix)
