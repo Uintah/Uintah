@@ -91,7 +91,7 @@ public:
   bool fetch(const CompileInfo &info, DynamicAlgoHandle&);
   bool compile_and_store(const CompileInfo &info, bool maybe_compile = false,
 			 ostream &serr = std::cerr);
-  void remove_cc(const CompileInfo &info, ostream &serr);
+  void cleanup_failed_compile(CompileInfoHandle info);
 
   //! All modules should use this function to get the loader.
   static DynamicLoader& scirun_loader();
