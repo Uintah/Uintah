@@ -83,7 +83,7 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
-all:: prereqs packmaker $(ALLTARGETS)
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
@@ -111,6 +111,10 @@ packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
               -e 's,REPLACE_SCIRUN_SRCTOP,$(SRCTOP_ABS),g' \
               $(SRCTOP)/scripts/packmaker.in > packmaker
 	-@chmod a+x packmaker
+
+ontheflylibs:
+	@echo compiling on-the-fly-libs directory
+	@(cd on-the-fly-libs;$(MAKE))
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
