@@ -9,8 +9,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Dataflow/Modules/Fields/Centroids.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
@@ -31,17 +30,24 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(Centroids)
+
+DECLARE_MAKER(Centroids)
+
 
 Centroids::Centroids(GuiContext* ctx)
   : Module("Centroids", ctx, Source, "Fields", "SCIRun")
 {
 }
 
-Centroids::~Centroids(){
+
+Centroids::~Centroids()
+{
 }
 
-void Centroids::execute()
+
+
+void
+Centroids::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVolField");
@@ -50,14 +56,8 @@ void Centroids::execute()
     error("Unable to initialize iport 'TetVolField'.");
     return;
   }
-  FieldHandle ifieldH;
-  if (!ifieldPort->get(ifieldH) || !ifieldH.get_rep()) return;
-  MeshHandle ifieldMeshH = ifieldH->mesh();
-  TetVolMesh *tvm = dynamic_cast<TetVolMesh*>(ifieldMeshH.get_rep());
-  if (!tvm) {
-    error("Input data wasn't a TetVolField.");
-    return;
-  }
+  FieldHandle ifieldhandle;
+  if (!ifieldPort->get(ifieldhandle) || !ifieldhandle.get_rep()) return;
 
   FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
   if (!ofieldPort) {
@@ -65,20 +65,39 @@ void Centroids::execute()
     return;
   }
 
-  PointCloudMeshHandle pcm(scinew PointCloudMesh);
-  TetVolMesh::Cell::iterator ci, ce;
-  tvm->begin(ci); tvm->end(ce);
-  Point p;
-  while (ci != ce) {
-    tvm->get_center(p, *ci);
-    pcm->add_node(p);
-    ++ci;
-  }
-  
-  FieldHandle ofieldH(scinew PointCloudField<double>(pcm, Field::NODE));
-  ofieldPort->send(ofieldH);
+  const TypeDescription *ftd = ifieldhandle->get_type_description();
+  CompileInfoHandle ci = CentroidsAlgo::get_compile_info(ftd);
+  Handle<CentroidsAlgo> algo;
+  if (!module_dynamic_compile(ci, algo)) return;
 
+  FieldHandle ofieldhandle(algo->execute(ifieldhandle));
+  
+  ofieldPort->send(ofieldhandle);
 }
+
+
+
+CompileInfoHandle
+CentroidsAlgo::get_compile_info(const TypeDescription *field_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("CentroidsAlgoT");
+  static const string base_class_name("CentroidsAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       field_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       field_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  field_td->fill_compile_info(rval);
+  return rval;
+}
+
 } // End namespace SCIRun
 
 
