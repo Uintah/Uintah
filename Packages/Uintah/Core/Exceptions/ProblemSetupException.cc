@@ -1,7 +1,7 @@
 
 #include "ProblemSetupException.h"
 
-using Uintah::Exceptions::ProblemSetupException;
+using namespace Uintah;
 
 ProblemSetupException::ProblemSetupException(const std::string& msg)
     : d_msg(msg)

@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_PARALLEL_H
 
 namespace Uintah {
-namespace Parallel {
 
 /**************************************
 
@@ -33,37 +32,39 @@ WARNING
   
 ****************************************/
 
-class Parallel {
-public:
-    //////////
-    // Insert Documentation Here:
-    static void initializeManager(int argc, char** argv);
+   class Parallel {
+   public:
+      //////////
+      // Insert Documentation Here:
+      static void initializeManager(int argc, char** argv);
+      
+      //////////
+      // Insert Documentation Here:
+      static void finalizeManager();
+      
+      //////////
+      // Returns the Number of MPI Processes in this simulation...
+      static int getSize();
+      
+      //////////
+      // Returns the MPI Rank of this process
+      static int getRank();
+      
+   private:
+      Parallel();
+      Parallel(const Parallel&);
+      ~Parallel();
+      Parallel& operator=(const Parallel&);
+      
+   };
 
-    //////////
-    // Insert Documentation Here:
-    static void finalizeManager();
-
-    //////////
-    // Returns the Number of MPI Processes in this simulation...
-    static int getSize();
-
-    //////////
-    // Returns the MPI Rank of this process
-    static int getRank();
-
-private:
-    Parallel();
-    Parallel(const Parallel&);
-    ~Parallel();
-    Parallel& operator=(const Parallel&);
-
-};
-
-} // end namespace Parallel
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:49:15  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/19 20:58:56  dav
 // adding MPI support
 //

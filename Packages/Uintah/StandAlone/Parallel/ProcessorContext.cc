@@ -8,15 +8,10 @@ static char *id="@(#) $Id$";
 #include <SCICore/Exceptions/InternalError.h>
 #include <iostream>
 
-namespace Uintah {
-namespace Parallel {
-
-using SCICore::Thread::SimpleReducer;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Thread;
+using namespace Uintah;
+using namespace SCICore::Thread;
 using SCICore::Exceptions::InternalError;
-
-using std::cerr;
+using namespace std;
 
 static Mutex rootlock("ProcessorContext lock");
 static ProcessorContext* rootContext = 0;
@@ -70,11 +65,11 @@ ProcessorContext::reduce_min(double mymin) const
     return d_reducer->min(d_threadNumber, d_numThreads, mymin);
 }
 
-} // end namespace Parallel
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:49:15  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/03/17 09:30:21  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

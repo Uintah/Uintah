@@ -11,12 +11,6 @@
 #include <Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
-namespace Interface {
-
-using Uintah::Parallel::UintahParallelPort;
-using Uintah::Grid::LevelP;
-using Uintah::Grid::GridP;
-using Uintah::Grid::SimulationStateP;
 
 /**************************************
 
@@ -47,43 +41,45 @@ WARNING
   
 ****************************************/
 
-class MPMInterface : public UintahParallelPort {
-public:
-    MPMInterface();
-    virtual ~MPMInterface();
-
-    //////////
-    // Insert Documentation Here:
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      SimulationStateP& state) = 0;
+   class MPMInterface : public UintahParallelPort {
+   public:
+      MPMInterface();
+      virtual ~MPMInterface();
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+				SimulationStateP& state) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleInitialize(const LevelP& level,
+				      SchedulerP&,
+				      DataWarehouseP&) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleComputeStableTimestep(const LevelP& level,
+						 SchedulerP&,
+						 DataWarehouseP&) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleTimeAdvance(double t, double dt,
+				       const LevelP& level, SchedulerP&,
+				       const DataWarehouseP&, DataWarehouseP&) = 0;
+   private:
+      MPMInterface(const MPMInterface&);
+      MPMInterface& operator=(const MPMInterface&);
+   };
    
-   //////////
-   // Insert Documentation Here:
-   virtual void scheduleInitialize(const LevelP& level,
-				   SchedulerP&,
-				   DataWarehouseP&) = 0;
-	 
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&,
-					       DataWarehouseP&) = 0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleTimeAdvance(double t, double dt,
-				     const LevelP& level, SchedulerP&,
-				     const DataWarehouseP&, DataWarehouseP&) = 0;
-private:
-    MPMInterface(const MPMInterface&);
-    MPMInterface& operator=(const MPMInterface&);
-};
-
-} // end namespace Interface
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.12  2000/04/26 06:49:11  sparker
+// Streamlined namespaces
+//
 // Revision 1.11  2000/04/24 21:04:40  sparker
 // Working on MPM problem setup and object creation
 //

@@ -1,7 +1,7 @@
 
 #include "ParameterNotFound.h"
 
-using Uintah::Exceptions::ParameterNotFound;
+using namespace Uintah;
 
 ParameterNotFound::ParameterNotFound(const std::string& msg)
     : ProblemSetupException("Required parameter not found: "+msg)

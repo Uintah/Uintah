@@ -20,24 +20,25 @@
 #include <string>
 
 namespace Uintah {
-    namespace Exceptions {
-	class ParameterNotFound : public ProblemSetupException {
-	public:
-	    ParameterNotFound(const std::string&);
-	    ParameterNotFound(const ParameterNotFound&);
-	    virtual ~ParameterNotFound();
-	    virtual const char* type() const;
-	protected:
-	private:
-	    ParameterNotFound& operator=(const ParameterNotFound&);
-	};
-    }
+   class ParameterNotFound : public ProblemSetupException {
+   public:
+      ParameterNotFound(const std::string&);
+      ParameterNotFound(const ParameterNotFound&);
+      virtual ~ParameterNotFound();
+      virtual const char* type() const;
+   protected:
+   private:
+      ParameterNotFound& operator=(const ParameterNotFound&);
+   };
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:48:40  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/12 22:57:47  sparker
 // Added new exception classes
 //

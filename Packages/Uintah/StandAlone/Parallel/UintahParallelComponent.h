@@ -6,10 +6,9 @@
 #include <vector>
 
 namespace Uintah {
-namespace Parallel {
 
-using std::string;
-class UintahParallelPort;
+   using std::string;
+   class UintahParallelPort;
 
 /**************************************
 
@@ -40,33 +39,35 @@ WARNING
   
 ****************************************/
 
-class UintahParallelComponent {
-    struct PortRecord {
-	PortRecord(UintahParallelPort* conn);
-	std::vector<UintahParallelPort*> connections;
-    };
-    std::map<string, PortRecord*> portmap;
-public:
-    UintahParallelComponent( int MpiRank, int MpiProcesses );
-    virtual ~UintahParallelComponent();
-
-    //////////
-    // Insert Documentation Here:
-    void attachPort(const string& name, UintahParallelPort* port);
-
-    UintahParallelPort* getPort(const std::string& name);
-    void releasePort(const std::string& name);
-
-protected:
-    int d_MpiRank;
-    int d_MpiProcesses;
-};
-
-} // end namespace Parallel
+   class UintahParallelComponent {
+      struct PortRecord {
+	 PortRecord(UintahParallelPort* conn);
+	 std::vector<UintahParallelPort*> connections;
+      };
+      std::map<string, PortRecord*> portmap;
+   public:
+      UintahParallelComponent( int MpiRank, int MpiProcesses );
+      virtual ~UintahParallelComponent();
+      
+      //////////
+      // Insert Documentation Here:
+      void attachPort(const string& name, UintahParallelPort* port);
+      
+      UintahParallelPort* getPort(const std::string& name);
+      void releasePort(const std::string& name);
+      
+   protected:
+      int d_MpiRank;
+      int d_MpiProcesses;
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/04/26 06:49:16  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/19 21:20:05  dav
 // more MPI stuff
 //

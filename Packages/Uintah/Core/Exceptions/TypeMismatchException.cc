@@ -1,7 +1,7 @@
 
 #include "TypeMismatchException.h"
 
-using Uintah::Exceptions::TypeMismatchException;
+using namespace Uintah;
 
 TypeMismatchException::TypeMismatchException(const std::string& msg)
     : d_msg(msg)

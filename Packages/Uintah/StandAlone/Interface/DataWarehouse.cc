@@ -5,9 +5,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/Vector.h>
 #include <iostream>
 
-namespace Uintah {
-namespace Interface {
-
+using namespace Uintah;
 using std::cerr;
 using SCICore::Geometry::Vector;
 
@@ -36,11 +34,11 @@ DataWarehouse::get(CCVariable<Vector>&, const std::string& name,
 }
 #endif
 
-} // end namespace Interface
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:49:10  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/19 21:20:04  dav
 // more MPI stuff
 //
