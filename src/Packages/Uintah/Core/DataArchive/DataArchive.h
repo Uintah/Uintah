@@ -4,6 +4,9 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
@@ -477,6 +480,28 @@ private:
 	  // Unfortunately, this const cast hack is necessary.
 	  patch = ((LevelP)level)->getPatchFromPoint(level->getNodePosition(loc));
 	  break;
+	case TypeDescription::SFCXVariable:
+	  for (Level::const_patchIterator iter = level->patchesBegin();
+	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+	    if ((*iter)->containsSFCX(loc))
+	      patch = *iter;
+	  }
+	  break;
+	case TypeDescription::SFCYVariable:
+	  for (Level::const_patchIterator iter = level->patchesBegin();
+	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+	    if ((*iter)->containsSFCY(loc))
+	      patch = *iter;
+	  }
+	  break;
+	case TypeDescription::SFCZVariable:
+	  for (Level::const_patchIterator iter = level->patchesBegin();
+	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+	    if ((*iter)->containsSFCZ(loc))
+	      patch = *iter;
+	  }
+	  break;
+	  
 	default:
 	  cerr << "Variable of unsupported type for this cell-based query: " << type->getType() << '\n';
 	  break;
@@ -498,6 +523,25 @@ private:
 	query(var, name, matlIndex, patch, t);
 	values.push_back(var[loc]);
       } break;
+
+      case TypeDescription::SFCXVariable: {
+	SFCXVariable<T> var;
+	query(var, name, matlIndex, patch, t);
+	values.push_back(var[loc]);
+      } break;
+      
+      case TypeDescription::SFCYVariable: {
+	SFCYVariable<T> var;
+	query(var, name, matlIndex, patch, t);
+	values.push_back(var[loc]);
+      } break;
+      
+      case TypeDescription::SFCZVariable: {
+	SFCZVariable<T> var;
+	query(var, name, matlIndex, patch, t);
+	values.push_back(var[loc]);
+      } break;
+      
       default:
 	// Dd: Is this correct?  Error here?
 	break;
