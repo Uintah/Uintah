@@ -35,7 +35,7 @@ MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
   : name(n), scht(st), recv_sema("getCompleteArray Wait", 0), 
     arr_wait_sema("getArrayWait Semaphore", 0), meta_sema("allMetadataReceived Wait", 0), 
     arr_mutex("Distribution Array Pointer lock"), recv_mutex("Receieved Flag lock"),
-    allowArraySet(true), raiseArrSema(true)
+    allowArraySet(true)
 
 {
 }
@@ -95,10 +95,6 @@ MxNArrayRep* MxNScheduleEntry::getCalleeRep(unsigned int index)
 
 void* MxNScheduleEntry::getArray()
 {
-  //If get array gets called, this is the IN
-  //argument part so don't raise the arr sema
-  raiseArrSema = false;
-
   //If it is okay to set this array, we return NULL
   //to indicate that we want the array to be set
   if (allowArraySet) 
@@ -123,12 +119,25 @@ void MxNScheduleEntry::setArray(void** a_ptr)
   if (allowArraySet) {
     arr_ptr = (*a_ptr);
     allowArraySet = false;
-    //Raise getArrayWait's semaphore if 
-    //it is appropriate
-    if(raiseArrSema) {
-      arr_wait_sema.up((int) caller_rep.size());
-      ::std::cout << "setArray -- Raised sema +" << caller_rep.size() << "\n";
-    }
+    //Raise getArrayWait's semaphore 
+    arr_wait_sema.up((int) caller_rep.size());
+    ::std::cout << "setArray -- Raised sema +" << caller_rep.size() << "\n";
+  }
+  else { 
+    (*a_ptr) = arr_ptr;
+  }
+  arr_mutex.unlock();
+}
+
+void MxNScheduleEntry::setNewArray(void** a_ptr)
+{
+  //Make sure all the meta data arrived
+  meta_sema.down();
+  //set array
+  arr_mutex.lock();
+  if (allowArraySet) {
+    arr_ptr = (*a_ptr);
+    allowArraySet = false;
   }
   else { 
     (*a_ptr) = arr_ptr;
@@ -184,7 +193,6 @@ void* MxNScheduleEntry::waitCompleteArray()
 
   //Reset all variables to original values 
   while (arr_wait_sema.tryDown());
-  raiseArrSema = true;
   allowArraySet = true;
   meta_sema.up((int) caller_rep.size()+1);
 
