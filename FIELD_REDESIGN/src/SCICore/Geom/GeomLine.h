@@ -26,25 +26,27 @@ namespace GeomSpace {
 
 class SCICORESHARE GeomLine : public GeomObj {
 public:
-    Point p1, p2;
+  Point p1, p2;
+  float d_lineWidth;
 
-    GeomLine(const Point& p1, const Point& p2);
-    GeomLine(const GeomLine&);
-    virtual ~GeomLine();
-    virtual GeomObj* clone();
+  GeomLine(const Point& p1, const Point& p2);
+  GeomLine(const GeomLine&);
+  virtual ~GeomLine();
+  virtual GeomObj* clone();
 
-    void* operator new(size_t);
-    void operator delete(void*, size_t);
+  void* operator new(size_t);
+  void operator delete(void*, size_t);
 
-    virtual void get_bounds(BBox&);
+  virtual void get_bounds(BBox&);
+  void setLineWidth(float val);
 
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
 
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
 class SCICORESHARE GeomLines : public GeomObj {
@@ -75,7 +77,7 @@ protected:
   int tmapid;                    // id for this texture map
   int tex_per_seg;               // 0 if batched...
 
- public:
+public:
   SCICore::Thread::Mutex mutex;
   Array1<Point>   pts;
   Array1<Vector>  tangents;  // used in 1D illumination model...
@@ -119,6 +121,9 @@ protected:
 
 //
 // $Log$
+// Revision 1.5.2.1  2000/09/22 23:32:42  mcole
+// added support for local line width control
+//
 // Revision 1.5  1999/10/07 02:07:42  sparker
 // use standard iostreams and complex type
 //
