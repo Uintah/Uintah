@@ -92,6 +92,13 @@ WARNING
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
 
+         virtual double computeRhoMicroCM(double pressure,
+                                          const MPMMaterial* matl);
+
+         virtual void computePressEOSCM(double rho_m, double& press_eos,
+                                        double& dp_drho, double& ss_new,
+                                        const MPMMaterial* matl);
+
  	 const VarLabel* p_statedata_label;
  	 const VarLabel* p_statedata_label_preReloc;
          const VarLabel* bElBarLabel;
