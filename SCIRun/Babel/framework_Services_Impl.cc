@@ -3,21 +3,21 @@
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021108 00:42:45 EST
-// Generated:     20021108 00:42:50 EST
+// SIDL Created:  20021109 17:19:36 MST
+// Generated:     20021109 17:19:39 MST
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 7
-// source-url    = file:/.automount/linbox1/root/home/user2/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
 // 
 #include "framework_Services_Impl.hh"
 
 // DO-NOT-DELETE splicer.begin(framework.Services._includes)
 // Put additional includes or other arbitrary code here...
-#include <iostream.h>
+#include <iostream>
 // DO-NOT-DELETE splicer.end(framework.Services._includes)
 
 // user defined constructor
@@ -214,6 +214,7 @@ throw ()
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.createTypeMap)
   // insert implementation here
+  return 0;
   // DO-NOT-DELETE splicer.end(framework.Services.createTypeMap)
 }
 
@@ -227,6 +228,7 @@ throw ()
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.getPortProperties)
   // insert implementation here
+  return 0;
   // DO-NOT-DELETE splicer.end(framework.Services.getPortProperties)
 }
 
@@ -240,6 +242,7 @@ throw ()
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.getComponentID)
   // insert implementation here
+  return 0;
   // DO-NOT-DELETE splicer.end(framework.Services.getComponentID)
 }
 

@@ -200,7 +200,6 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
     componentDB_type::iterator iter = components.find(type);
     if(iter == components.end())
       return 0;
-    ComponentDescription* cd = iter->second;
 
     string lastname=type.substr(type.find('.')+1);  
     string so_name("lib/libBabel_Components_");
@@ -304,7 +303,6 @@ std::string BabelComponentModel::createComponent(const std::string& name,
   componentDB_type::iterator iter = components.find(type);
   if(iter == components.end())
     return "";
-    //ComponentDescription* cd = iter->second;
   
   string lastname=type.substr(type.find('.')+1);  
   string so_name("lib/libBabel_Components_");
