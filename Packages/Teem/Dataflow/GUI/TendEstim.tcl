@@ -17,9 +17,9 @@
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Tensor_TendEstim ""}
+catch {rename Teem_Tend_TendEstim ""}
 
-itcl_class Teem_Tensor_TendEstim {
+itcl_class Teem_Tend_TendEstim {
     inherit Module
     constructor {config} {
         set name TendEstim

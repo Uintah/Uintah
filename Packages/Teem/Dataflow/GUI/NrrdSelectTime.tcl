@@ -1,4 +1,3 @@
-#
 #  The contents of this file are subject to the University of Utah Public
 #  License (the "License"); you may not use this file except in compliance
 #  with the License.
@@ -11,11 +10,14 @@
 #  The Original Source Code is SCIRun, released March 12, 2001.
 #  
 #  The Original Source Code was developed by the University of Utah.
-#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
-#
+#  
+#    File   : NrrdSelectTime.tcl
+#    Author : Martin Cole
+#    Date   : Tue Sep  9 10:29:51 2003
 
-itcl_class Teem_Filters_NrrdSelectTime {
+itcl_class Teem_NrrdData_NrrdSelectTime {
     inherit Module 
 
     constructor {config} {

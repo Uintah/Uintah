@@ -56,15 +56,15 @@ set bbox {17.0 5.0 581 484}
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 268 5]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 17 84]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 35 440]
-set m3 [addModuleAtPosition "Teem" "Filters" "NrrdConvert" 101 151]
-set m4 [addModuleAtPosition "Teem" "Filters" "NrrdCrop" 245 217]
-set m5 [addModuleAtPosition "Teem" "Filters" "NrrdQuantize" 72 217]
-set m6 [addModuleAtPosition "Teem" "Filters" "NrrdResample" 268 151]
+set m3 [addModuleAtPosition "Teem" "Unu" "UnuConvert" 101 151]
+set m4 [addModuleAtPosition "Teem" "Unu" "UnuCrop" 245 217]
+set m5 [addModuleAtPosition "Teem" "Unu" "UnuQuantize" 72 217]
+set m6 [addModuleAtPosition "Teem" "Unu" "UnuResample" 268 151]
 set m7 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 268 80]
 set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 268 291]
 set m9 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 268 356]
-set m10 [addModuleAtPosition "Teem" "Filters" "NrrdPermute" 437 151]
-set m11 [addModuleAtPosition "Teem" "Filters" "NrrdPad" 413 217]
+set m10 [addModuleAtPosition "Teem" "Unu" "UnuPermute" 437 151]
+set m11 [addModuleAtPosition "Teem" "Unu" "UnuPad" 413 217]
 
 addConnection $m1 1 $m2 0
 addConnection $m0 0 $m7 0

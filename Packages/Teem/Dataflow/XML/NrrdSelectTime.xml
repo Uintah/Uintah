@@ -18,7 +18,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="NrrdSelectTime" category="Filters">
+<component name="NrrdSelectTime" category="NrrdData">
   <overview>
     <authors>
       <author>Martin Cole</author>

@@ -2,7 +2,7 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Teem" "Filters" "NrrdPad" 45 195]
+set m0 [addModuleAtPosition "Teem" "Unu" "UnuPad" 45 195]
 set m1 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 61 281]
 set m2 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 269 203]
 set m3 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 30 10]
