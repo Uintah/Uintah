@@ -109,6 +109,7 @@ MPIScheduler::verifyChecksum()
 	 << " and global is " << result_checksum << '\n';
     MPI_Abort(d_myworld->getComm(), 1);
   }
+  dbg << "Checksum succeeded\n";
 }
 
 void
@@ -354,8 +355,8 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      dbg << "Sending message number " << batch->messageTag 
-	  << " to " << to << "\n";
+      dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
+	  << " to " << to << ", length=" << count << "\n";
       if( mixedDebug.active() ) {
 	cerrLock.lock();
 	mixedDebug << "Sending message number " << batch->messageTag 
@@ -491,7 +492,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
 #endif
       int from = batch->fromTask->getAssignedResourceIndex();
       MPI_Request requestid;
-      dbg << "Posting receive for message number " << batch->messageTag << " from " << from << "\n";      
+      dbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";      
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
 		pg_->getComm(), &requestid);
       int bytes = 0;
