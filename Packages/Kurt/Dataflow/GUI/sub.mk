@@ -8,6 +8,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GridVolVis.tcl \
 	$(SRCDIR)/GridSliceVis.tcl \
 	$(SRCDIR)/SCIRex.tcl \
+	$(SRCDIR)/HarvardVis.tcl \
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Kurt/Dataflow/GUI
 
