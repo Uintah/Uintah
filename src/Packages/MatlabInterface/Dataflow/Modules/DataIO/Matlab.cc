@@ -27,6 +27,7 @@ class MatlabInterfaceSHARE Matlab : public Module
   GuiString cmdTCL;
   int ip_generations_[5];
   string last_command_;
+  string last_hport_;
 
   char hport[256];
   int wordy;            // how wordy debug output is
@@ -182,6 +183,8 @@ Matlab::execute()
   // Get the input ports.
   bool different_p = command != last_command_;
   last_command_ = command;
+  if (last_hport_ != hpTCL.get()) { different_p = true; }
+  last_hport_ = hpTCL.get();
   for(int k=0;k<5;k++)
   {
     if(ioflags[k])
@@ -197,7 +200,6 @@ Matlab::execute()
 
   // If input data and the script have not changed since last execute
   // then there is nothing to do.
-  // TODO:  Test for host/port parameter change as well.
   if (!different_p)
   {
     remark("No change in data or script.");
