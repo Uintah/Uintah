@@ -17,24 +17,11 @@
 
 puts "\nLoading BioFEM (this may take a minute)...\n"
 
+
+
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
-set results [sourceSettingsFile]
-set DATADIR [lindex $results 0]
-
-if { $results == "failed" } {
-
-    ::netedit scheduleok
-    return 
-
-} else {
-
-    set DATADIR [lindex $results 0]
-    set DATASET [lindex $results 1]
-}
-
-source $DATADIR/$DATASET/$DATASET.settings
-
+init_DATADIR_and_DATASET
 ############# NET ##############
 
 ::netedit dontschedule
@@ -240,8 +227,7 @@ set mods(ShowDipole) $m6
 #######################################################
 wm withdraw .
 
-global SCIRUN_SRCDIR
-set auto_index(::PowerAppBase) "source $SCIRUN_SRCDIR/Dataflow/GUI/PowerAppBase.app"
+set auto_index(::PowerAppBase) "source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/PowerAppBase.app"
 
 class BioFEMApp {
     inherit ::PowerAppBase
