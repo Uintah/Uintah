@@ -64,7 +64,7 @@ public:
    VarType* get(const VarLabel* label, int matlindex,
 		const Patch* patch) const;
    void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
-   void print(ostream&);
+   void print(ostream&) const;
    void cleanForeign();
    void scrub(const VarLabel* label);
 private:
@@ -383,7 +383,7 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 }
 
 template<class VarType>
-void DWDatabase<VarType>::print(std::ostream& out)
+void DWDatabase<VarType>::print(std::ostream& out) const
 {
    for(nameDBtype::const_iterator nameiter = names.begin();
        nameiter != names.end(); nameiter++){
@@ -401,7 +401,7 @@ void DWDatabase<VarType>::print(std::ostream& out)
       }
    }
 
-   for (globalDBtype::iterator globaliter = globals.begin();
+   for (globalDBtype::const_iterator globaliter = globals.begin();
 	globaliter != globals.end(); globaliter++)
      out << (*globaliter).first->getName() << '\n';
 }
