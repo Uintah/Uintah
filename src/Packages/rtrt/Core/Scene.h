@@ -207,7 +207,9 @@ public:
   }
   
   void add_light(Light*);
+  void add_permanent_light(Light*);
   void add_per_matl_light(Light*);
+  void add_perm_per_matl_light(Light*);
 
   int nprims();
   
@@ -312,9 +314,10 @@ private:
   // Points to either mainGroup_ or mainGroupWithLights_;
   Object * obj;
 
-  Object * mainGroup_;
+  Group  * mainGroup_;
   Group  * mainGroupWithLights_;
   Group  * lightsGroup_;
+  Group  * permanentLightsGroup_;
 
   // Objects that are to be presented to the GUI for user interaction.
   Array1<Object*> objectsOfInterest_;
