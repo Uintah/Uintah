@@ -137,7 +137,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	    -showvalue true -orient horizontal -relief groove -length 200 \
 	    -command "$this maybeRestart"
 
-	bind $w.cur <ButtonRelease> -command "set $this-execmode init; $this-c needexecute"
+	bind $w.cur <ButtonRelease> "set $this-execmode init; $this-c needexecute"
 	update_range
 
 	# Restore range to pre-loaded value
