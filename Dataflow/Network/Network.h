@@ -91,6 +91,8 @@ namespace SCIRun {
     Connection* connection(int);
     string connect(Module*, int, Module*, int);
     int disconnect(const string&);
+    void block_connection(const string&);
+    void unblock_connection(const string&);
     
     Module* add_module(const string& packageName,
                        const string& categoryName,

@@ -47,6 +47,11 @@ namespace SCIRun {
     IPort* iport;
     int local;
     std::string id;
+    bool blocked_;
+    
+    bool is_blocked() const { return blocked_; }
+    void block()      { blocked_ = true; }
+    void unblock()    { blocked_ = false; }
 
     void wait_ready();
 

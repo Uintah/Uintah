@@ -1349,6 +1349,9 @@ proc startOPortConnection {omodid owhich x y} {
 
 
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
+
+    puts "$connid $portcolor $omodid $owhich $imodid $iwhich"
+
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     set minipath ""
     set temp "a"
@@ -1369,22 +1372,28 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
 	-tags $connid
 
     $netedit_canvas bind $connid <ButtonPress-3> \
-	    "destroyConnection $connid $omodid $imodid"
+	"destroyConnection $connid $omodid $imodid"
 
     $netedit_canvas bind $connid <ButtonPress-1> \
-	    "lightPipe $temp $omodid $owhich $imodid $iwhich"
-    
+	"lightPipe $temp $omodid $owhich $imodid $iwhich"
+
+    global $connid-block
+    set $connid-block 0
+    $netedit_canvas bind $connid <ButtonRelease-2> \
+	"block_pipe $connid $omodid $owhich $imodid $iwhich $portcolor"
+
     $netedit_canvas bind $connid <ButtonRelease-1> \
-	    "resetPipe $temp $omodid $imodid"
-	
+	"resetPipe $temp $omodid $imodid"
+    
     $netedit_canvas bind $connid <Control-Button-1> \
-	    "raisePipe $connid"
+	"raisePipe $connid"
 
     eval $netedit_mini_canvas create line $minipath -width 1 \
 	-fill \"$portcolor\" -tags $connid
 
     $netedit_mini_canvas lower $connid
 }
+
 proc IPortTrace { imodid which temp } {
     set connInfo [netedit getconnected $imodid] 
     foreach t $connInfo {
@@ -1460,7 +1469,27 @@ proc OPortReset { temp } {
     $netedit_canvas delete $temp
     $netedit_mini_canvas delete $temp
 }
-    
+  
+
+proc block_pipe { connid omodid owhich imodid iwhich pcolor} {
+    global netedit_canvas
+    global netedit_mini_canvas
+    global $connid-block
+
+    if {[expr [set $connid-block] == 0]} {
+	eval $netedit_canvas itemconfigure $connid -width 3 -fill gray
+	eval $netedit_mini_canvas itemconfigure $connid -fill gray
+	incr $connid-block
+	netedit blockconnection $connid
+    } else {
+	eval $netedit_canvas itemconfigure $connid -width 7 -fill $pcolor
+	eval $netedit_mini_canvas itemconfigure $connid -fill $pcolor
+	set $connid-block 0
+	netedit unblockconnection $connid
+    }
+    $netedit_mini_canvas raise $connid
+ }
+
 
 proc lightPipe { temp omodid owhich imodid iwhich } {
     global netedit_canvas
@@ -1486,30 +1515,6 @@ proc lightPipe { temp omodid owhich imodid iwhich } {
     eval $netedit_mini_canvas itemconfigure $imodid -fill green
 
     $netedit_mini_canvas raise $temp
-
-    #set info_font "-Adobe-Helvetica-Medium-R-Normal-*-10-120-75-*"
-    #set connection $imodid
-    #append connection " to\n"
-    #append connection $omodid
-
-    #determine where to place connection text
-    #global mainCanvasWidth mainCanvasHeight
-    #global SCALEX SCALEY
-    #set x [expr [lindex [.bot.neteditFrame.canvas xview] 0]*\
-	    #$mainCanvasWidth]
-    #set y [expr [lindex [.bot.neteditFrame.canvas yview] 0]*\
-	    #$mainCanvasHeight] 
-    #set x [expr $x/$SCALEX]
-    #set y [expr $y/$SCALEY]
-
-        
-    #frame $netedit_mini_canvas.frame
-    #label $netedit_mini_canvas.frame.label -text $connection -font $info_font\
-	    #-foreground white -bg #036 
-    #pack $netedit_mini_canvas.frame $netedit_mini_canvas.frame.label
-    #$netedit_mini_canvas create window 0 90 -window $netedit_mini_canvas.frame \
-	    #-anchor sw -tags temp
-
 }
 
 proc resetPipe { temp omodid imodid } {
@@ -1530,303 +1535,12 @@ proc raisePipe { connid } {
 }
 
 proc destroyConnection {connid omodid imodid} { 
-    global connection_list
-
-    if { [string match [$omodid mod_type] "macromodule"] == 1 &&\
-	    [string match [$imodid mod_type] "macromodule"] == 1 } {
-	# Find MacroModule Port Numbers
-
-	# omodid port information
-	
-	for {set ctr 0} {$ctr <= {eval $ctr+1}} {incr ctr} {
-	    set b 0
-	    if { [string match "MacroModule?_p$ctr*" $connid] == 1} {
-		set mmod_oport_num $ctr
-		set b 1
-	    }
-	    if { $b == 1 } {
-		break
-	    }
-	}
-
-	set oport_mapping_info [$omodid get_oport_mapping]
-
-	foreach pmi $oport_mapping_info {
-	    set t 0
-	    if { [string match [lindex $pmi 2] $mmod_oport_num] == 1} {
-		set orci $pmi
-		set t 1
-	    }
-	    if {$t == 1} {
-		break
-	    }
-	}
-
-	set real_omodid [lindex $orci 0]
-	set real_owhich [lindex $orci 1]
-
-	# imodid port information
-			
-	for {set ctr 0} {$ctr <= 1000} {incr ctr} {
-	    set b 0
-	    if { [string match "*_to_MacroModule?_p$ctr*" $connid] == 1} {
-		set mmod_iport_num $ctr
-		set b 1
-	    }
-	    if {$b == 1} {
-		break
-	    }
-	    
-	}
-
-	set iport_mapping_info [$imodid get_iport_mapping]
-
-	
-	foreach pmi $iport_mapping_info {
-	    set t 0
-	    if { [string match [lindex $pmi 2] $mmod_iport_num] == 1 } {
-		set irci $pmi
-		set t 1
-	    }
-	    if {$t == 1} {
-		break
-	    }
-	}
-
-	set real_imodid [lindex $irci 0]
-	set real_iwhich [lindex $irci 1]
-	
-	set real_connid "$real_omodid"
-	append real_connid "_p$real_owhich"
-	append real_connid "_to_$real_imodid"
-	append real_connid "_p$real_iwhich"
-	
-	
-	set templist ""
-	
-	foreach con $connection_list {
-	    set t 0
-	    if { [string match [lindex $con 0] $real_omodid] } {
-		if { [string match [lindex $con 1] $real_owhich] } {
-		    if { [string match [lindex $con 2] $real_imodid] } {
-			if { [string match [lindex $con 3] $real_iwhich] } {
-			    set t 1
-			}
-		    }
-		}
-	    }
-	    
-	    if { $t == 0 } {
-		set templist "$templist {$con}"
-	    }
-	}
-
-	set connection_list $templist
-	
-	netedit deleteconnection $real_connid $real_omodid $real_imodid
-	global netedit_canvas netedit_mini_canvas
-	$netedit_canvas delete $connid
-	$netedit_mini_canvas delete $connid
-	configureOPorts $omodid
-	configureIPorts $imodid
-
-	set templist ""
-	foreach fc [$omodid get_FakeConnections] {
-	    if { [string match $connid [lindex $fc 0]] == 0 } {
-		set templist "$templist {$fc}"
-	    }
-	}
-	$omodid set_FakeConnections $templist
-	
-
-	set templist ""
-	foreach fc [$imodid get_FakeConnections] {
-	    if { [string match $connid [lindex $fc 0]] == 0 } {
-		set templist "$templist {$fc}"
-	    }
-	}
-	$imodid set_FakeConnections $templist
-
-    } elseif { [string match [$omodid mod_type] "macromodule"] == 1 } {
-
-	# A little trick to find the macromodule port number that we're dealing with
-
-	for {set ctr 0} {$ctr <= {eval $ctr+1}} {incr ctr} {
-	    set b 0
-	    if { [string match "MacroModule?_p$ctr*" $connid] == 1} {
-		set mmod_port_num $ctr
-		set b 1
-	    }
-	    if {$b == 1} {
-		break
-	    }
-	}
-    	
-	set port_mapping_info [$omodid get_oport_mapping]
-		
-	foreach pmi $port_mapping_info {
-	    set t 0
-	    if { [string match [lindex $pmi 2] $mmod_port_num] == 1} {
-		set rci $pmi
-		set t 1
-	    }
-	    if {$t == 1} {
-		break
-	    }
-	}
-
-	set real_omodid [lindex $rci 0]
-	set real_owhich [lindex $rci 1]
-
-	set temp_name "$omodid"
-	append temp_name "_p$mmod_port_num"
-	
-	
-	set real_con_name $connid
-	set real_con_name [string trimleft $connid $temp_name]
-
-	set new_left_name $real_omodid
-	append new_left_name "_p$real_owhich"
-	
-	append new_left_name "_$real_con_name"
-	set real_connid $new_left_name
-	
-	set templist ""
-	
-	foreach con $connection_list {
-	    set tempid "[lindex $con 0]_p[lindex $con 1]_to_[lindex $con 2]_"
-	    append tempid "p[lindex $con 3]"
-	    
-	    if { [string match $tempid $real_connid] == 0 } {
-		set templist "$templist {$con}"
-	    }
-	    
-	}
-	
-	set connection_list $templist
-	
-	netedit deleteconnection $real_connid $real_omodid $imodid
-	global netedit_canvas netedit_mini_canvas
-	$netedit_canvas delete $connid
-	$netedit_mini_canvas delete $connid
-	configureOPorts $omodid
-	configureIPorts $imodid
-	
-	set templist ""
-	foreach fc [$omodid get_FakeConnections] {
-	    if { [string match $connid [lindex $fc 0]] == 0 } {
-		set templist "$templist {$fc}"
-	    }
-	}
-
-	$omodid set_FakeConnections $templist
-	
-    } elseif { [string match [$imodid mod_type] "macromodule"] == 1 } {
-	# A little trick to find the macromodule port nmumber
-	
-	for {set ctr 0} {$ctr <= {eval $ctr+1}} {incr ctr} {
-	    set b 0
-	    if { [string match "*_to_MacroModule?_p$ctr*" $connid] == 1} {
-		set mmod_port_num $ctr
-		set b 1
-	    }
-	    if {$b == 1} {
-		break
-	    }
-	}
-
-	set port_mapping_info [$imodid get_iport_mapping]
-
-	foreach pmi $port_mapping_info {
-	    set t 0
-	    if { [string match [lindex $pmi 2] $mmod_port_num] == 1 } {
-		set rci $pmi
-		set t 1
-	    }
-	    if {$t == 1} {
-		break
-	    }
-	}
-
-	set real_imodid [lindex $rci 0]
-	set real_iwhich [lindex $rci 1]
-
-	foreach cinf [netedit getconnected $omodid] {
-	    set t 0
-	    if { [string match "*$real_imodid*$real_iwhich" [lindex $cinf 0]]\
-		    == 1 } {
-		set owhich [lindex $cinf 2]
-		set t 1
-	    }
-	    if { $t == 1 } {
-		break;
-	    }
-	}
-
-	set real_connid "$omodid"
-	append real_connid "_p$owhich"
-	append real_connid "_to_$real_imodid"
-	append real_connid "_p$real_iwhich"
-
-	
-	set templist ""
-
-		
-	global connection_list
-	foreach con $connection_list {
-	    set tempcon "[lindex $con 0]_p[lindex $con 1]_to_[lindex $con 2]"
-	    append tempcon "_p[lindex $con 3]"
-	    
-	    if { [string match $real_connid $tempcon] == 0 } {
-		set templist "$templist {$con}"
-	    }
-	}
-
-	set connection_list $templist
-
-
-
-	netedit deleteconnection $real_connid
-	global netedit_canvas netedit_mini_canvas
-	$netedit_canvas delete $connid
-	$netedit_mini_canvas delete $connid
-	
-	configureOPorts $omodid
-	configureIPorts $imodid
-	
-	set templist ""
-	foreach fc [$imodid get_FakeConnections] {
-	    if { [string match $connid [lindex $fc 0]] == 0 } {
-		set templist "$templist {$fc}"
-	    }
-	}
-
-	$imodid set_FakeConnections $templist
-		
-    } else {
-	global connection_list
-	set templist ""
-	
-	foreach con $connection_list {
-	    set tempcon "[lindex $con 0]_p[lindex $con 1]_to_[lindex $con 2]"
-	    append tempcon "_p[lindex $con 3]"
-
-	    if { [string match $tempcon $connid] == 0 } {
-		set templist "$templist {$con}"
-	    }
-	}
-
-	set connection_list $templist
-
-	
-
-	global netedit_canvas netedit_mini_canvas
-	$netedit_canvas delete $connid
-	$netedit_mini_canvas delete $connid
-	netedit deleteconnection $connid $omodid 
-	configureOPorts $omodid
-	configureIPorts $imodid
-    }
+    global netedit_canvas netedit_mini_canvas
+    $netedit_canvas delete $connid
+    $netedit_mini_canvas delete $connid
+    netedit deleteconnection $connid $omodid 
+    configureOPorts $omodid
+    configureIPorts $imodid
 }
 	
 proc rebuildConnection {connid omodid owhich imodid iwhich} {
@@ -2046,186 +1760,24 @@ proc endPortConnection {portcolor} {
     destroy $netedit_canvas.frame
     global potential_connection
     if { $potential_connection != "" } {
-	if { [string match [[lindex $potential_connection 0] mod_type]\
-		"macromodule"] == 1 } {
-	    if { [string match [[lindex $potential_connection  2] mod_type]\
-		    "macromodule"] == 1 } {
-		
-		set info1 [get_real_oport [lindex $potential_connection 0]\
-			[lindex $potential_connection 1]]
-				
-		set info2 [get_real_iport [lindex $potential_connection 2]\
-			[lindex $potential_connection 3]]
-		# The connection oport
-		set omodid [lindex $info1 0]
-		set owhich [lindex $info1 1]
 
-		# The connection iport
-		set imodid [lindex $info2 0]
-		set iwhich [lindex $info2 1]
+	set omodid [lindex $potential_connection 0]
+	set owhich [lindex $potential_connection 1]
+	set imodid [lindex $potential_connection 2]
+	set iwhich [lindex $potential_connection 3]
 
-		# Update Connection List
-		
-		global connection_list
-		set connection_list "$connection_list {$omodid $owhich\
-			$imodid $iwhich $portcolor}"
-
-
-		#The MacroModule oport aliases
-		set fake_omodid [lindex $potential_connection 0]
-		set fake_owhich [lindex $potential_connection 1]
-
-		#The MacroModule iport aliases
-		set fake_imodid [lindex $potential_connection 2]
-		set fake_iwhich [lindex $potential_connection 3]
-
-		#The aliased connection ID
-		set fake_connid $fake_omodid
-		append fake_connid "_p$fake_owhich"
-		append fake_connid "_to_$fake_imodid"
-		append fake_connid "_p$fake_iwhich"
-		
-		# Build the "fake" connection
-		buildConnection $fake_connid $portcolor $fake_omodid\
-			$fake_owhich $fake_imodid $fake_iwhich
-		
-		# Append the "fake" connections to their respective
-		# MacroModule's lists of fake connections
-
-		$fake_omodid set_FakeConnections\
-			"[$fake_omodid get_FakeConnections]\
-			{$fake_connid $fake_omodid $fake_owhich\
-			$fake_imodid $fake_iwhich}"
-		
-		$fake_imodid set_FakeConnections\
-			"[$fake_imodid get_FakeConnections]\
-			{$fake_connid $fake_omodid $fake_owhich\
-			$fake_imodid $fake_iwhich}"
-		
-
-		netedit addconnection $omodid $owhich $imodid $iwhich
-		
-		# Append connection information to a list of connections
-		# to be rebuilt when connections are destroyed
-
-		configureOPorts $fake_omodid
-		configureIPorts $fake_imodid
-	    		
-	    }  else {
-		# The output module [only] is of type macro
-		set info [get_real_oport [lindex $potential_connection 0]\
-			[lindex $potential_connection 1]]
-
-		# The connection oport
-		set omodid [lindex $info 0]
-		set owhich [lindex $info 1]
-
-		# The connection iport
-		set imodid [lindex $potential_connection 2]
-		set iwhich [lindex $potential_connection 3]
-		
-		# Update connection_list
-		global connection_list
-		set connection_list "$connection_list {$omodid $owhich $imodid\
-			$iwhich $portcolor}"
-
-		
-		# The macromodule oport aliases
-		set fake_omodid [lindex $potential_connection 0]
-		set fake_owhich [lindex $potential_connection 1]
-
-		# The aliased connection ID
-		set fake_connid \
-			"[lindex $potential_connection 0]_p[lindex $potential_connection 1]_to_[lindex $potential_connection 2]_p[lindex $potential_connection 3]"
-		
-		# Build the "fake" connection
-		buildConnection $fake_connid $portcolor $fake_omodid\
-			$fake_owhich $imodid $iwhich
-		
-		# Append the "fake" connection to its respective macromodule's
-		# list of fake connections
-		$fake_omodid set_FakeConnections\
-			"[$fake_omodid get_FakeConnections]\
-			{$fake_connid $fake_omodid $fake_owhich\
-			$imodid $iwhich}"
-		
-		netedit addconnection $omodid $owhich $imodid $iwhich
-		
-		configureOPorts $fake_omodid
-		configureIPorts $imodid
-
-	    }
-	} elseif { [string match [[lindex $potential_connection 2] mod_type]\
-		"macromodule"] == 1 } {
-	    	    
-	    # The input module [only] is of type macro
-	    set info [get_real_iport [lindex $potential_connection 2]\
-		    [lindex $potential_connection 3]]
-
-	    
-	    # The connection oport
-	    set omodid [lindex $potential_connection 0]
-	    set owhich [lindex $potential_connection 1]
-
-	    # The connection iport
-	    set imodid [lindex $info 0]
-	    set iwhich [lindex $info 1]
-
-	    # Update connection_list
-	    global connection_list
-	    set connection_list "$connection_list {$omodid $owhich $imodid\
+	# Update connection_list
+	global connection_list
+	set connection_list "$connection_list {$omodid $owhich $imodid\
 		    $iwhich $portcolor}"
+	
 
-
-	    # The macromodule iport aliases
-	    set fake_imodid [lindex $potential_connection 2]
-	    set fake_iwhich [lindex $potential_connection 3]
-
-
-	    # The aliased connection ID
-	    set fake_connid\
-		    "[lindex $potential_connection 0]_p[lindex $potential_connection 1]_to_[lindex $potential_connection 2]_p[lindex $potential_connection 3]"
-	    # Build the fake connection
-	    buildConnection $fake_connid $portcolor $omodid $owhich\
-		    [lindex $potential_connection 2]\
-		    [lindex $potential_connection 3]
-	    # As no widget exists on the canvas for the real module
-	    # at this time, place it in a list of connection icons
-	    # to be build when either the macromodule is expanded, or
-	    # the canvas is saved
-	    
-	    $fake_imodid set_FakeConnections\
-		    "[$fake_imodid get_FakeConnections]\
-		    {$fake_connid $omodid $owhich\
-		    $fake_imodid $fake_iwhich}"
-
-
-	    
-	    global MModuleFakeConnections
-	    
-	    netedit addconnection $omodid $owhich $imodid $iwhich
-	    
-	    configureOPorts $omodid
-	    configureIPorts $fake_imodid
-	} else {
-	    # Normal connection; no macromods
-	    set omodid [lindex $potential_connection 0]
-	    set owhich [lindex $potential_connection 1]
-	    set imodid [lindex $potential_connection 2]
-	    set iwhich [lindex $potential_connection 3]
-
-	    # Update connection_list
-	    global connection_list
-	    set connection_list "$connection_list {$omodid $owhich $imodid\
-		    $iwhich $portcolor}"
-	    
-
-	    set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
-	    buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
-	    
-	    configureOPorts $omodid
-	    configureIPorts $imodid
-	}
+	set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
+	buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
+	
+	configureOPorts $omodid
+	configureIPorts $imodid
+	
     }
 }
 

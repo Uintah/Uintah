@@ -299,6 +299,18 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	if (!net->disconnect(args[2])) {
 	    args.error("Cannot find connection "+args[2]+" for deletion");
 	}
+    } else if(args[1] == "blockconnection"){
+	if (args.count() < 3){
+	    args.error("netedit blockconnection needs 1 arg");
+	    return;
+	}
+	net->block_connection(args[2]);
+    } else if(args[1] == "unblockconnection"){
+	if (args.count() < 3){
+	    args.error("netedit unblockconnection needs 1 arg");
+	    return;
+	}
+	net->unblock_connection(args[2]);
     } else if(args[1] == "getconnected"){
 	if(args.count() < 3){
 	    args.error("netedit getconnections needs a module name");
