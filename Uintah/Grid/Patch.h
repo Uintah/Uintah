@@ -244,10 +244,10 @@ WARNING
      
      string toString() const;
      
-     int getID() const {
+     inline int getID() const {
        return d_id;
      }
-     const Level* getLevel() const {
+     inline const Level* getLevel() const {
        return d_level;
      }
      void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
@@ -303,6 +303,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.19  2000/09/26 21:34:05  dav
+// inlined a few things
+//
 // Revision 1.18  2000/09/25 20:58:14  sparker
 // Removed a few "if 0" statements.
 //
