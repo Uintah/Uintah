@@ -1,0 +1,139 @@
+# SCIRun Network v1.24.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+set name {Main}
+set bbox {8 14 450 498}
+set creationDate {Sat Feb 19 2005}
+set creationTime {12:53:48}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->FieldsOther->FieldMeasures Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 285 288]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 8 284]
+
+# Create a SCIRun->Render->Viewer Module
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 105 454]
+
+# Create a SCIRun->Visualization->ShowMatrix Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowMatrix" 131 380]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 97 95]
+
+# Create a SCIRun->FieldsCreate->SamplePlane Module
+set m6 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 59 14]
+
+# Create the Connections between Modules
+set c1 [addConnection $m6 0 $m5 0]
+set c2 [addConnection $m5 0 $m1 0]
+set c3 [addConnection $m2 0 $m4 0]
+set c4 [addConnection $m4 0 $m3 0]
+set c5 [addConnection $m1 0 $m4 1]
+
+# Set GUI variables for the SCIRun->FieldsOther->FieldMeasures Module
+set $m1-idxFlag {1}
+set $m1-sizeFlag {1}
+set $m1-numNbrsFlag {1}
+set $m1-normalsFlag {1}
+
+$m3 addViewer
+set $m3-ViewWindow_0-geometry 654x612+559+89
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m3-ViewWindow_0-view-eyep-x {2.69417255235}
+set $m3-ViewWindow_0-view-eyep-y {4.23472411922}
+set $m3-ViewWindow_0-view-eyep-z {1.81517184501}
+set $m3-ViewWindow_0-view-lookat-x {0.5}
+set $m3-ViewWindow_0-view-lookat-y {0.5}
+set $m3-ViewWindow_0-view-lookat-z {-0.5}
+set $m3-ViewWindow_0-view-up-x {-0.811844302629}
+set $m3-ViewWindow_0-view-up-y {0.565951947979}
+set $m3-ViewWindow_0-view-up-z {-0.143552153825}
+set $m3-ViewWindow_0-view-fov {20.0}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ortho-view {0}
+set $m3-ViewWindow_0-trackViewWindow0 {1}
+set $m3-ViewWindow_0-raxes {1}
+set $m3-ViewWindow_0-ambient-scale {1.0}
+set $m3-ViewWindow_0-diffuse-scale {1.0}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m3-ViewWindow_0-emission-scale {1.0}
+set $m3-ViewWindow_0-shininess-scale {1.0}
+set $m3-ViewWindow_0-polygon-offset-factor {1.0}
+set $m3-ViewWindow_0-polygon-offset-units {0.0}
+set $m3-ViewWindow_0-point-size {1.0}
+set $m3-ViewWindow_0-line-width {1.0}
+set $m3-ViewWindow_0-sbase {0.4}
+set $m3-ViewWindow_0-bgcolor-r {0.0}
+set $m3-ViewWindow_0-bgcolor-g {0.0}
+set $m3-ViewWindow_0-bgcolor-b {0.0}
+set $m3-ViewWindow_0-fogusebg {1}
+set $m3-ViewWindow_0-fogcolor-r {0.0}
+set $m3-ViewWindow_0-fogcolor-g {0.0}
+set $m3-ViewWindow_0-fogcolor-b {1.0}
+set $m3-ViewWindow_0-fog-start {0.0}
+set $m3-ViewWindow_0-fog-end {0.714265}
+set $m3-ViewWindow_0-fog-visibleonly {1}
+set $m3-ViewWindow_0-currentvisual {0}
+set $m3-ViewWindow_0-caxes {0}
+set $m3-ViewWindow_0-global-light0 {1}
+set $m3-ViewWindow_0-global-light1 {0}
+set $m3-ViewWindow_0-global-light2 {0}
+set $m3-ViewWindow_0-global-light3 {0}
+set $m3-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m3-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m3-ViewWindow_0-global-light {1}
+set $m3-ViewWindow_0-global-fog {0}
+set $m3-ViewWindow_0-global-debug {0}
+set $m3-ViewWindow_0-global-clip {1}
+set $m3-ViewWindow_0-global-cull {0}
+set $m3-ViewWindow_0-global-dl {0}
+set $m3-ViewWindow_0-global-type {Gouraud}
+set "$m3-ViewWindow_0-ShowMatrix Plot (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowMatrix Module
+set $m4-color_by_val {1}
+set $m4-grid_x {10}
+set $m4-grid_y {10}
+set $m4-grid_z {10}
+set $m4-xpos {0.0}
+set $m4-ypos {0.0}
+set $m4-xscale {1.0}
+set $m4-row_end {399}
+set $m4-col_end {8}
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m5-function {result = x + y + z;
+}
+
+
+::netedit scheduleok

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 21-6-9 SS - Preston,Tonks,Wallace,JAP,93(1),2003 p.219 -->
+<Uintah_Include>
+  <shear_modulus_model type="ptw_shear">
+    <mu_0> 862e8 </mu_0>
+    <alpha> 0.23 </alpha>
+    <alphap> 0.37 </alphap>
+    <slope_mu_p_over_mu0> 26.0e-12 </slope_mu_p_over_mu0>
+  </shear_modulus_model>
+</Uintah_Include>

@@ -1,0 +1,164 @@
+#!/usr/local/bin/perl -I/home/sci/butson/libs/5.005/
+
+eval 'exec perl -wS -x $0 ${1+"$@"}'
+    if $running_under_some_shell;
+
+BEGIN {
+#print STDERR $ENV{PERL_LIB_PATH}, "\n";
+if(exists $ENV{PERL_LIB_PATH}) {
+    foreach my $lib(split(/:/, $ENV{PERL_LIB_PATH})) {
+        eval "use lib '$lib'";
+    }
+}
+}
+
+print STDERR "Starting SQL...\n";
+
+use IO::Handle;
+use DBI;
+use strict;
+
+autoflush STDOUT;
+
+sub send_cmd;
+
+print STDERR join(" ", DBI->available_drivers), "\n";
+
+my ($database, $hostname, $port, $username, $password) = ('', '', '', '', '');
+my $dbh;
+
+# get starting parameters
+while(<>) {
+    chomp;
+    if(/^(database|hostname|port|username|password):\s*(.*)/) {
+        eval qq(\$$1 = "$2";);    
+    } elsif(/^connect:/) {
+        last;
+    } else {
+        die "Invalid data!";
+    }
+}
+
+print STDERR "Connecting to $database:$hostname\@$port:$username\n";
+
+# try to make a connection using all the method of connecting to all the drivers
+DRIVER: foreach my $driver(DBI->available_drivers) {
+    next if $driver eq "ExampleP";
+    print STDERR "Attempting connection using '$driver' driver:\n";
+    foreach my $connect_str(make_connect_strs()) {
+        my $data_source = "dbi:$driver:$connect_str";
+        eval {$dbh = DBI->connect($data_source, $username, $password, {
+                   PrintError => 1,
+                   AutoCommit => 1
+             }); };
+        last DRIVER if $dbh;
+    }
+}
+
+if(!$dbh) {
+    send_cmd "error: Cannot connect to database\n";
+    exit;
+} else {
+    send_cmd "ok:\n";
+}
+
+my @row;
+my $at_end = 1;
+my $sth;
+
+# handle queries here
+while(my $q = <>) {
+    trace("#$q#");
+    if($q =~ /^at_end:/) {
+        #print STDERR "AT_END\n";
+        &get_row;
+        if($at_end) {
+            send_cmd "ok: true\n";
+        } else {
+            send_cmd "ok: false\n";
+        }
+    } elsif($q =~ /^do: (.*)/) {
+        $sth = $dbh->prepare($1);
+        $sth->execute();
+        send_cmd "ok:\n";
+    } elsif($q =~ /^fetch: (\d*)/) {
+        my $col = $1;
+        &get_row;
+        if($#row < $col) {
+            send_cmd "error: out of bounds fetch ($#row < $col)\n";
+        } else {
+            send_cmd "ok: $row[$col]\n";
+        }
+    } elsif($q =~ /^is_null: (.*)/) {
+        my $col = $1;
+        &get_row;
+        if($#row > $col) {
+            send_cmd "error: out of bounds is_null\n";
+        } else {
+            if(defined $row[$col]) {
+                send_cmd "ok: false\n";
+            } else {
+                send_cmd "ok: true\n";
+            }
+        }
+    } elsif($q =~ /^next_row:/) {
+        &clear_row;
+    } elsif($q =~ /^cols:/) {
+        &get_row;
+        send_cmd "ok: ", $#row + 1, "\n";
+    } else {
+        print STDERR "$q not valid\n";
+        send_cmd "error: invalid command\n";
+    }
+}
+
+$dbh->disconnect;
+
+sub make_connect_strs {
+    return () if not defined $database;
+
+    if(!$hostname || !$port) {
+        return ("database=$database", $database, "dbname=$database");
+    }
+
+    return ("database=$database;host=$hostname;port=$port", 
+            "$database\@$hostname:$port",
+            "dbname=$database;host=$hostname;port=$port");
+}
+
+sub get_row {
+    if(!$sth) {
+        @row = ();
+        $at_end = 1;
+    } elsif(!defined @row) {
+        @row = $sth->fetchrow_array;
+        if($#row == -1) {
+            $at_end = 1;
+        } else {
+            $at_end = 0;
+            #print STDERR join(":", @row), "\n";
+        }
+    }
+}
+
+sub clear_row {
+    undef @row;
+}
+
+sub print_bool {
+    my ($flag) = @_;
+    if($flag) {
+        send_cmd "ok: true\n";
+    } else {
+        send_cmd "ok: false\n";
+    }
+}
+
+sub trace {
+    #print STDERR @_;
+}
+
+sub send_cmd {
+    #print STDERR @_;
+    print @_;
+}

@@ -1,0 +1,7 @@
+These are UNMODIFIED includes from the Tcl/Tk 8.0.4 and iTcl/iTk 3.0.1 source 
+trees.
+
+Actually, that's a lie.  I changed "tkPort.h" and "tclPort.h" to remove a
+relative path that included things from ../unix/ which are now in this dir.
+
+Now it is really a lie - these files all moved to PSE/src/include - Steve

@@ -1,0 +1,209 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+# SCIRun Network v1.22.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+#######################################################################
+
+
+set name {Main}
+set bbox {10 10 641 607}
+set creationDate {Tue Jul 06 2004}
+set creationTime {13:27:20}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a Insight->Filters->DiscreteGaussianImageFilter Module
+set m1 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 10 90]
+
+# Create a Insight->DataIO->ImageReaderFloat2D Module
+set m2 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 10]
+
+# Create a Insight->Converters->ImageToField Module
+set m3 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 170]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 394]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 209 171]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 209 248]
+
+# Create a SCIRun->Render->Viewer Module
+set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 199 563]
+
+# Create a Insight->Converters->ImageToField Module
+set m8 [addModuleAtPosition "Insight" "Converters" "ImageToField" 458 98]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 458 348]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 476 275]
+
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m11 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 10 281]
+
+# Create the Connections between Modules
+set c1 [addConnection $m3 0 $m11 0]
+set c2 [addConnection $m8 0 $m9 0]
+set c3 [addConnection $m2 0 $m8 0]
+set c4 [addConnection $m2 0 $m1 0]
+set c5 [addConnection $m1 0 $m3 0]
+set c6 [addConnection $m11 0 $m4 0]
+set c7 [addConnection $m5 0 $m6 0]
+set c8 [addConnection $m5 0 $m10 0]
+set c9 [addConnection $m9 0 $m7 0]
+set c10 [addConnection $m3 0 $m6 1]
+set c11 [addConnection $m8 0 $m10 1]
+set c12 [addConnection $m6 0 $m4 1]
+set c13 [addConnection $m10 0 $m9 1]
+set c14 [addConnection $m4 0 $m7 1]
+
+# Set GUI variables for the Insight->Filters->DiscreteGaussianImageFilter Module
+set $m1-variance {2}
+
+# Open the Insight->Filters->DiscreteGaussianImageFilter UI
+$m1 initialize_ui
+
+# Set GUI variables for the Insight->DataIO->ImageReaderFloat2D Module
+set $m2-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
+
+# Set GUI variables for the Insight->Converters->ImageToField Module
+set $m3-copy {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m4-nodes-on {0}
+set $m4-edges-on {0}
+set $m4-normalize-vectors {}
+set $m4-has_scalar_data {1}
+set $m4-node_display_type {Spheres}
+set $m4-active_tab {Edges}
+set $m4-show_progress {}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m5-width {425}
+set $m5-height {40}
+set $m5-mapType {0}
+set $m5-minRes {2}
+set $m5-resolution {255}
+set $m5-realres {255}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m6-min {4.22288990021}
+set $m6-max {238.788314819}
+
+$m7 addViewer
+set $m7-ViewWindow_0-geometry 654x646+22+150
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m7-ViewWindow_0-pos {z0_y0}
+set $m7-ViewWindow_0-caxes {0}
+set $m7-ViewWindow_0-raxes {1}
+set $m7-ViewWindow_0-have_collab_vis {0}
+set $m7-ViewWindow_0-view-eyep-x {-14.623745279}
+set $m7-ViewWindow_0-view-eyep-y {53.4825207082}
+set $m7-ViewWindow_0-view-eyep-z {-1236.87357105}
+set $m7-ViewWindow_0-view-lookat-x {100.0}
+set $m7-ViewWindow_0-view-lookat-y {0.0}
+set $m7-ViewWindow_0-view-lookat-z {0.0}
+set $m7-ViewWindow_0-view-up-x {-0.00413149}
+set $m7-ViewWindow_0-view-up-y {-0.997335}
+set $m7-ViewWindow_0-view-up-z {0.072843}
+set $m7-ViewWindow_0-view-fov {20.0}
+set $m7-ViewWindow_0-view-eyep_offset-x {}
+set $m7-ViewWindow_0-view-eyep_offset-y {}
+set $m7-ViewWindow_0-view-eyep_offset-z {}
+set $m7-ViewWindow_0-trackViewWindow0 {1}
+set $m7-ViewWindow_0-global-light0 {1}
+set $m7-ViewWindow_0-global-light1 {0}
+set $m7-ViewWindow_0-global-light2 {0}
+set $m7-ViewWindow_0-global-light3 {0}
+set $m7-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m7-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m7-ViewWindow_0-bgcolor-r {                0}
+set $m7-ViewWindow_0-bgcolor-g {                0}
+set $m7-ViewWindow_0-bgcolor-b {                0}
+set $m7-ViewWindow_0-shading {}
+set $m7-ViewWindow_0-do_stereo {0}
+set $m7-ViewWindow_0-ambient-scale {1.0}
+set $m7-ViewWindow_0-diffuse-scale {1.0}
+set $m7-ViewWindow_0-specular-scale {0.4}
+set $m7-ViewWindow_0-emission-scale {1.0}
+set $m7-ViewWindow_0-shininess-scale {1.0}
+set $m7-ViewWindow_0-polygon-offset-factor {1.0}
+set $m7-ViewWindow_0-polygon-offset-units {0.0}
+set $m7-ViewWindow_0-point-size {1.0}
+set $m7-ViewWindow_0-line-width {1.0}
+set $m7-ViewWindow_0-sbase {0.4}
+set $m7-ViewWindow_0-sr {1}
+set $m7-ViewWindow_0-do_bawgl {0}
+set $m7-ViewWindow_0-drawimg {}
+set $m7-ViewWindow_0-saveprefix {}
+set $m7-ViewWindow_0-resx {}
+set $m7-ViewWindow_0-resy {}
+set $m7-ViewWindow_0-aspect {}
+set $m7-ViewWindow_0-aspect_ratio {}
+set $m7-ViewWindow_0-global-light {1}
+set $m7-ViewWindow_0-global-fog {0}
+set $m7-ViewWindow_0-global-debug {0}
+set $m7-ViewWindow_0-global-clip {0}
+set $m7-ViewWindow_0-global-cull {0}
+set $m7-ViewWindow_0-global-dl {0}
+set $m7-ViewWindow_0-global-type {Gouraud}
+set $m7-ViewWindow_0-ortho-view {0}
+set $m7-ViewWindow_0-currentvisual {0}
+set "$m7-ViewWindow_0-Faces (1)" {1}
+set "$m7-ViewWindow_0-Faces (2)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m9-nodes-on {0}
+set $m9-edges-on {0}
+set $m9-normalize-vectors {}
+set $m9-has_scalar_data {1}
+set $m9-active_tab {Edges}
+set $m9-scalars_scale {0.3}
+set $m9-show_progress {}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m10-min {0.0}
+set $m10-max {255.0}
+
+# Set GUI variables for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set $m11-outputcenterx {200}
+set $m11-useoutputcenter {1}
+
+
+::netedit scheduleok

@@ -1,0 +1,22 @@
+
+//version NewPort 1.0;
+
+package NewPort version 1.0{
+
+  class GoPort implements-all gov.cca.ports.GoPort{
+        void setService(in gov.cca.Services svc);
+  };
+
+  interface iStringPort extends gov.cca.Port
+  {
+        string getString();
+  };
+
+  class StringPort implements-all iStringPort 
+  { };
+
+  class Com implements-all gov.cca.Component{
+
+  };
+
+};

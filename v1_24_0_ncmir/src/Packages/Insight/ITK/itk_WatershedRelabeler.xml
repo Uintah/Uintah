@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<filter-itk name="itk::watershed::Relabeler">
+  <description>
+This filter implements the final step in the watershed segmentation algorithm.  It is responsible for relabeling a segmented image according to a specified saliency level (flood level) in a merge tree.  (See itk::WatershedImageFilter for information on terminology used in this documentation.)
+  </description>
+  <templated>
+    <template>ScalarType</template>
+    <template type="unsigned int">ImageDimension</template>
+    <defaults>
+      <default>float</default>
+      <default>2</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="Labeled_Image">
+      <type>itk::Image&lt;unsigned long, ImageDimension&gt;</type>
+      <call>SetInputImage</call>
+    </input>  
+    <input name="Segment_Tree">
+      <type>itk::watershed::SegmentTree&lt;ScalarType&gt;</type>
+      <call>SetInputSegmentTree</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="Relabeled_Image">
+      <type>itk::Image&lt;unsigned long, ImageDimension&gt;</type>
+      <call>GetOutputImage</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>flood_level</name>
+      <type>double</type>
+      <call>SetFloodLevel</call>
+      <default>0.1</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkWatershedRelabeler.h</file>
+  </includes>
+</filter-itk>
+

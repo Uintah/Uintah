@@ -1,0 +1,314 @@
+/*
+ *
+ * NetInterface: Provides access to the network
+ * $Id$
+ *
+ * Written by:
+ *   Author: Eric Luke
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: January 2001
+ *
+ */
+
+#include <unistd.h>
+#include <errno.h>
+#include <Network/NetInterface.h>
+
+using namespace SemotusVisum::Logging;
+using namespace SemotusVisum::Properties;
+
+using namespace std;
+
+namespace SemotusVisum {
+namespace Network {
+
+using namespace Message;
+
+NetListener::NetListener( NetInterface &net, int port ) :
+  port(port), net(net), mbox(net.connectMBox) {
+
+  /* Create a socket */
+  listenSocket = OpenTcpPort( ANY_ADDRESS, port );
+  if ( listenSocket == ASIP_NO_SOCKET )
+    Log::log( Logging::ERROR, "Cannot open listening socket!" );
+}
+
+NetListener::~NetListener() {
+  
+  /* Close our listening socket */
+  Disconnect( &listenSocket );
+}
+
+void
+NetListener::run() {
+
+  Socket newSocket = NO_SOCKET;
+  PTPConnection *ptpc = NULL;
+  char * clientName = NULL;
+  
+  while (1) {
+    
+    /* Listen to the socket */
+    newSocket = Accept( listenSocket );
+
+    Log::log( Logging::MESSAGE, "Got a client connection." );
+    
+    if ( newSocket != NO_SOCKET ) {
+      /* When we get a connection, notify the NetInterface */
+      
+      ptpc = new PTPConnection( newSocket );
+      
+      if ( ptpc != NULL ) {
+	clientName =
+	  const_cast<char *>( AddressImage( PeerAddress( newSocket ) ) );
+	if ( clientName[0] != 0 )
+	  net.addConnection( *ptpc, clientName );
+	else
+	  Log::log( Logging::ERROR,
+		    "Could not get client host name!" );
+      }
+      else {
+	Log::log( Logging::ERROR,
+		  "Could not create new point-to-point connection!" );
+      }
+    }
+    else {
+      /* Error - log it */
+      Log::log( Logging::ERROR, "Could not accept socket connection!");
+    }
+    
+  }
+}
+
+/* The singleton Network Interface */
+NetInterface
+NetInterface::net;
+
+/* Data marker for the end of XML data and the beginning of raw data. */
+const char * const
+NetInterface::dataMarker = "\001\002\003\004\005";
+
+
+NetInterface::~NetInterface() {
+
+  /* Unlock the HaveConnections mutex... */
+  haveConnections.unlock();
+  
+  /* Take care of the network listener */
+  // Should we also explicitly stop the listener thread?
+  delete listener;
+}
+
+
+void
+NetInterface::listen(int port) {
+  
+  /* Create a network listener */
+  listener = new NetListener( *this, port );
+
+  /* Bind it to a thread */
+  SemotusVisum::Thread::Thread * t =
+    new SemotusVisum::Thread::Thread( listener, "NetListener" );
+  t->detach();
+}
+
+void   
+NetInterface::listenMulticast(int port) {
+  // Not done
+}
+
+void   
+NetInterface::sendDataToClient(const char * clientName,
+			       const char * data,
+			       const int numBytes )  {
+  
+  /* Find the client in the list of network connections */
+  list<NetConnection*>::iterator i;
+  NetConnection *connection = NULL;
+  
+  for ( i = clientConnections.begin();
+        i != clientConnections.end();
+        i++ ) {
+
+    if ( !( strcmp( clientName, (*i)->getName() ) ) ) {
+      connection = *i;
+      break;
+    }
+    
+  }
+    
+  /* If the client exists, write the data to the connection */
+  if ( connection != NULL ) {
+
+    bool result;
+    //    cerr << "\tsending data" << endl;
+    
+    result = connection->getMailbox().trySend( dataItem( data, numBytes ) );
+    //    cerr << "\tdone sending data" << endl;
+    
+    /* If the mailbox was full, log it. */
+    if ( result == false ) {
+      char *buffer = new char[ strlen(clientName) + 256 ];
+      sprintf( buffer,
+	       "Dropped data send to client: %s - Mailbox full [%d/%d]",
+	       clientName,
+	       connection->getMailbox().numItems(),
+	       connection->getMailbox().size() );
+      
+      Log::log( Logging::WARNING, buffer );
+      delete buffer;
+    }
+    
+  }
+  
+  /* Otherwise log the error */
+  else {
+    char *buffer = new char[ strlen(clientName) + 40 ];
+    sprintf( buffer, "Data sent to unknown client: %s", clientName );
+    
+    Log::log( Logging::WARNING, buffer );
+    delete buffer;
+  }
+}
+
+void
+NetInterface::sendDataToAllClients(const char * data, const int numBytes ) {
+
+  cerr << "Sending data to all clients!" << endl;
+  
+  /* Find the client in the list of network connections */
+  list<NetConnection*>::iterator i;
+
+  for ( i = clientConnections.begin();
+	i != clientConnections.end();
+	i++ ) {
+    cerr << "Sending data to " << (*i)->getName() << endl;
+    sendDataToClient( (*i)->getName(), data, numBytes );
+    cerr << "Done sending data." << endl;
+  }
+    
+}
+
+
+NetInterface&
+NetInterface::getInstance() {
+  return net;
+}
+
+char *
+NetInterface::waitForConnections() {
+  haveConnections.lock(); // This blocks until we have a connection.
+  haveConnections.unlock(); // Release our hold on this.
+
+  char * temp;
+  
+  netConnectionLock.readLock();
+  temp = (*(clientConnections.begin()))->getName();
+  netConnectionLock.readUnlock();
+  
+  return temp;
+}
+
+list<char *>*
+NetInterface::getClientNames() {
+  list<char *> *theList = new list<char *>;
+
+  if ( !theList )
+    return NULL;
+
+  
+  netConnectionLock.readLock();
+
+  // If we have no connections, return NULL.
+  if ( clientConnections.size() == 0 ) {
+    netConnectionLock.readUnlock();
+    delete theList;
+    return NULL;
+  }
+
+  char * temp;
+  
+  // For each connection in the list
+  for ( list<NetConnection *>::const_iterator i = clientConnections.begin();
+	i != clientConnections.end();
+	i++ ) {
+    
+    // Duplicate the name
+    temp = strdup( (*i)->getName() );
+    
+    // Add it to the name list.
+    theList->push_front( temp );
+  }
+  
+  
+  netConnectionLock.readUnlock();
+
+  return theList;
+}
+
+void
+NetInterface::addConnection( Connection &c, const char * hostname ) {
+
+  /* Assures all connection names are unique */
+  static int connectionNumber = 0;
+
+  char *buffer = new char[ strlen( hostname ) + 10 ];
+  if ( buffer == NULL ) {
+    perror( "Couldn't allocate buffer space!" );
+    return;
+  }
+  sprintf( buffer, "%s:%d", hostname, connectionNumber );
+  connectionNumber++;
+
+  // Log the connection
+  char *buf = new char[ strlen(buffer) + 40 ];
+  if ( buf == NULL ) {
+    perror( "Couldn't allocate buf space!" );
+    return;
+  }
+  sprintf( buf, "Adding connection to client %s", buffer );
+  
+  Log::log( Logging::MESSAGE, buf );
+  delete buf;
+  
+  /* Lock the list of client connections */
+  netConnectionLock.writeLock();
+
+  /* Add the client connection */
+  clientConnections.push_front( new NetConnection( c, buffer ) );
+  
+  /* Unlock the client list */
+  netConnectionLock.writeUnlock();
+
+  /* Send the handshake to the client. */
+  ServerProperties::sendHandshake( buffer );
+
+  /* Add a callback to get the handshake info from the client. */
+  NetDispatchManager::
+    getInstance().
+    registerCallback( Message::HANDSHAKE,
+		      NetConnection::getNetMonitor().getHandshakeBox());
+
+  if ( clientConnections.size() == 1 ) // Our first connection.
+    haveConnections.unlock();
+  
+  delete buffer;			  
+}
+
+void
+NetInterface::removeConnection( NetConnection *nc ) {
+  
+  // Deletes the connection
+  clientConnections.remove( nc );
+
+  //delete nc;
+
+  
+  if ( clientConnections.empty() )
+    haveConnections.lock(); // We have no connections.
+}
+
+
+}  
+}

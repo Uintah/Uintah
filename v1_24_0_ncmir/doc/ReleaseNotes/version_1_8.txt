@@ -1,0 +1,85 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+Release Notes - SCIRun/BioPSE Version 1.8 - Date ??
+
+* Set the SCI_EXCEPTIONMODE environment variable to "throw" in order
+to catch module exceptions.
+
+* All files from flex and bison generate in the object directory.
+
+* Now uses the 2.1.0 version of Xerces.
+
+* Users can now specify the location of on-the-fly-libs in the
+  .scirunrc or in an environment variable: SCIRUN_ON_THE_FLY_LIBS_DIR.
+
+
+* StreamLines module has new options for generating streamlines for
+  faster computation, and improved UI features.
+
+* New MapDataToCoord module maps data values from a field in to one of
+  the geometric coordinates of its mesh.
+
+* The Isosurface module now generates Isocontours on surfaces.
+
+* SampleLattice now extended to have more data-at locations.
+
+* SamplePlane updated to have the same options as SampleLattice.
+
+* New ReplaceScalarDataValue module replaces all instances of a
+  specified old data value with a specified new data value.
+
+* EditField module has been removed and replaced with four modules:
+  FieldInfo, ChangeFieldDataAt, ChangeFieldBounds, and
+  ChangeFieldDataType.
+
+* ShowField can now render the data values as text, for enhanced data
+  inspection.
+
+* Fixed race condition bug in the Viewer that sometimes caused Viewers
+  to display nothing but a gray window.
+
+* New and updated Tikhonov modules.
+
+* Now uses the fix for vdt on linux optimized builds.
+
+* New installation script and README files.
+
+* Tarballs are no longer moved out from under the installation script.
+
+* Ability to now reinstall an individual package, without reinstalling
+  all of Thirdparty. Not needed with rpm installation.
+
+* New datasets that fix a bug with properties.
+
+* Installs all of Thirdparty and the BioPSE, Teem, MatlabInterface,
+  VDT packages.
+
+
+

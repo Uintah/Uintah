@@ -1,0 +1,325 @@
+# SCIRun Network v1.24.1
+
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {2 1 804 708}
+set creationDate {Tue Mar 08 2005}
+set creationTime {14:50:59}
+set runDate {Tue Mar 08 2005}
+set runTime {14:51:16}
+set notes {}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 20 1]
+
+# Create a VS->DataFlow->HotBox Module
+set m2 [addModuleAtPosition "VS" "DataFlow" "HotBox" 20 250]
+
+# Create a SCIRun->Render->Viewer Module
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 2 664]
+
+# Create a SCIRun->Visualization->VolumeVisualizer Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 410 304]
+
+# Create a SCIRun->Visualization->TextureBuilder Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 410 179]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 609 104]
+
+# Create a SCIRun->Visualization->VolumeSlicer Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "VolumeSlicer" 580 337]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 575 1]
+
+# Create a SCIRun->FieldsOther->FieldInfo Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 205 216]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 56 531]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 234 554]
+
+# Create a SCIRun->FieldsData->ChangeFieldDataType Module
+set m12 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataType" 20 87]
+
+# Create a SCIRun->DataIO->MatrixReader Module
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 217 3]
+
+# Create a SCIRun->Math->MatrixSelectVector Module
+set m14 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 217 84]
+
+# Create a SCIRun->FieldsGeometry->TransformField Module
+set m15 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 82 416]
+
+# Create a SCIRun->Math->LinearAlgebra Module
+set m16 [addModuleAtPosition "SCIRun" "Math" "LinearAlgebra" 224 294]
+
+# Create a SCIRun->FieldsGeometry->TransformField Module
+set m17 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 234 441]
+
+# Create a SCIRun->Math->LinearAlgebra Module
+set m18 [addModuleAtPosition "SCIRun" "Math" "LinearAlgebra" 409 8]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m12 0]
+set c2 [addConnection $m13 0 $m14 0]
+set c3 [addConnection $m12 0 $m9 0]
+set c4 [addConnection $m12 0 $m5 0]
+set c5 [addConnection $m12 0 $m2 0]
+set c6 [addConnection $m15 0 $m10 0]
+set c7 [addConnection $m17 0 $m11 0]
+set c8 [addConnection $m5 0 $m7 0]
+set c9 [addConnection $m5 0 $m4 0]
+set c10 [addConnection $m2 1 $m3 0]
+set c11 [addConnection $m2 2 $m15 0]
+set c12 [addConnection $m2 5 $m17 0]
+set c13 [addConnection $m16 0 $m15 1]
+set c14 [addConnection $m16 0 $m17 1]
+set c15 [addConnection $m14 0 $m2 1]
+set c16 [addConnection $m6 0 $m7 1]
+set c17 [addConnection $m8 0 $m4 1]
+set c18 [addConnection $m4 0 $m3 1]
+set c19 [addConnection $m18 0 $m2 2]
+set c20 [addConnection $m7 0 $m3 2]
+set c21 [addConnection $m10 0 $m3 3]
+set c22 [addConnection $m2 0 $m3 4]
+set c23 [addConnection $m11 0 $m3 5]
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m1-filename "$DATADIR/$DATASET/labels-just-heart.lvs.fld"
+set $m1-filetype {SCIRun Field File (*.fld)}
+
+# Set GUI variables for the VS->DataFlow->HotBox Module
+set $m2-gui_label(1) {Left marginal vein}
+set $m2-gui_label(2) {Upper lobe of left lung}
+set $m2-gui_label(3) {Left ventricle}
+set $m2-gui_label(4) {Mediastinum}
+set $m2-gui_label(5) {Myocardial zone 12}
+set $m2-gui_label(6) {Pericardium}
+set $m2-gui_label(7) {Myocardial zone 5}
+set $m2-gui_label(8) {Myocardial zone 6}
+set $m2-gui_label(9) {Myocardial zone 1}
+set $m2-gui_is_injured(3) {1}
+set $m2-gui_name {::VS_DataFlow_HotBox_0}
+set $m2-gui_parlist_name {::VS_DataFlow_HotBox_0-gui_parent_list}
+set $m2-gui_sibling(0) {unknown}
+set $m2-gui_siblist_name {::VS_DataFlow_HotBox_0-gui_sibling_list}
+set $m2-gui_child(0) {}
+set $m2-gui_child(2) {‡(­û§B§B§B§B§B§B§B¨B}
+set $m2-gui_childlist_name {::VS_DataFlow_HotBox_0-gui_child_list}
+set $m2-querytype {3}
+set $m2-selectionsource {fromProbe}
+set $m2-anatomydatasource {/usr/local/SCIRunData/vs-data/FMAAtlas/MasterAnatomyFMA.csv}
+set $m2-adjacencydatasource {/usr/local/SCIRunData/vs-data/FMAAtlas/AdjacencyMappingFMA.csv}
+set $m2-boundingboxdatasource {/usr/local/SCIRunData/vs-data/FMAAtlas/AnatomyBoundingBoxesFMA.csv}
+set $m2-injurylistdatasource {/usr/local/SCIRunData_1.20/1.20.2/vs-data/VSKB/Zone12InjuryList.xml}
+set $m2-oqafmadatasource {http://fme.biostr.washington.edu:8082/OQAFMA_Service/services/ServiceInterface}
+set $m2-geometrypath {/usr/local/SCIRunData/vs-data/FMAAtlas/Models/decimField}
+set $m2-hipvarpath {/usr/local/SCIRunData/vs-data/VSKB}
+set $m2-currentselection {Myocardial zone 12}
+set $m2-gui_probeLocx {113.9}
+set $m2-gui_probeLocy {69.5}
+set $m2-gui_probeLocz {83.7}
+set $m2-gui_probe_scale {1.8}
+
+# Open the VS->DataFlow->HotBox UI
+$m2 initialize_ui
+
+$m3 addViewer
+set $m3-ViewWindow_0-geometry 654x632+592+311
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m3-ViewWindow_0-view-eyep-x {359.356084585}
+set $m3-ViewWindow_0-view-eyep-y {-81.9609987288}
+set $m3-ViewWindow_0-view-eyep-z {-643.988453714}
+set $m3-ViewWindow_0-view-lookat-x {115.808120285}
+set $m3-ViewWindow_0-view-lookat-y {49.4980983477}
+set $m3-ViewWindow_0-view-lookat-z {98.4973580149}
+set $m3-ViewWindow_0-view-up-x {0.890995896832}
+set $m3-ViewWindow_0-view-up-y {0.39594414697}
+set $m3-ViewWindow_0-view-up-z {0.222158826761}
+set $m3-ViewWindow_0-view-fov {20.0}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ortho-view {0}
+set $m3-ViewWindow_0-trackViewWindow0 {1}
+set $m3-ViewWindow_0-raxes {1}
+set $m3-ViewWindow_0-ambient-scale {1.0}
+set $m3-ViewWindow_0-diffuse-scale {1.0}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m3-ViewWindow_0-emission-scale {1.0}
+set $m3-ViewWindow_0-shininess-scale {1.0}
+set $m3-ViewWindow_0-polygon-offset-factor {1.0}
+set $m3-ViewWindow_0-polygon-offset-units {0.0}
+set $m3-ViewWindow_0-point-size {1.0}
+set $m3-ViewWindow_0-line-width {1.0}
+set $m3-ViewWindow_0-sbase {0.4}
+set $m3-ViewWindow_0-bgcolor-r {0.0}
+set $m3-ViewWindow_0-bgcolor-g {0.0}
+set $m3-ViewWindow_0-bgcolor-b {0.0}
+set $m3-ViewWindow_0-fogusebg {1}
+set $m3-ViewWindow_0-fogcolor-r {0.0}
+set $m3-ViewWindow_0-fogcolor-g {0.0}
+set $m3-ViewWindow_0-fogcolor-b {1.0}
+set $m3-ViewWindow_0-fog-start {0.0}
+set $m3-ViewWindow_0-fog-end {0.714265}
+set $m3-ViewWindow_0-fog-visibleonly {1}
+set $m3-ViewWindow_0-currentvisual {0}
+set $m3-ViewWindow_0-caxes {0}
+set $m3-ViewWindow_0-global-light0 {1}
+set $m3-ViewWindow_0-global-light1 {0}
+set $m3-ViewWindow_0-global-light2 {0}
+set $m3-ViewWindow_0-global-light3 {0}
+set $m3-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m3-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m3-ViewWindow_0-global-light {1}
+set $m3-ViewWindow_0-global-fog {0}
+set $m3-ViewWindow_0-global-debug {0}
+set $m3-ViewWindow_0-global-clip {1}
+set $m3-ViewWindow_0-global-cull {0}
+set $m3-ViewWindow_0-global-dl {0}
+set $m3-ViewWindow_0-global-type {Gouraud}
+set "$m3-ViewWindow_0-Volume Slicer (3)" {1}
+set "$m3-ViewWindow_0-Control Widget (3)" {1}
+set "$m3-ViewWindow_0-VolumeRenderer Transparent (2)" {1}
+set "$m3-ViewWindow_0-HotBox Sticky (5)" {1}
+set "$m3-ViewWindow_0-Probe Selection Widget (1)" {1}
+set "$m3-ViewWindow_0-Nodes (6)" {1}
+set "$m3-ViewWindow_0-Edges (6)" {1}
+set "$m3-ViewWindow_0-Faces (6)" {1}
+set "$m3-ViewWindow_0-Transparent Faces (4)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
+set $m4-sampling_rate_hi {3.8}
+set $m4-render_style {1}
+set $m4-alpha_scale {-0.19}
+set $m4-interp_mode {0}
+set $m4-ambient {0.5}
+set $m4-diffuse {0.5}
+set $m4-shine {30}
+
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m5-vmin {0.0}
+set $m5-vmax {2200.0}
+set $m5-card_mem {128}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m6-positionList {{0 40} {14 14} {112 15} {336 12} {565 13} {649 10} {749 13} {779 40}}
+set $m6-nodeList {514 9871 2856 5064 8190 5363 1651 813}
+set $m6-width {779}
+set $m6-height {40}
+set $m6-reverse {1}
+set $m6-faux {1}
+
+# Set GUI variables for the SCIRun->Visualization->VolumeSlicer Module
+set $m7-control_pos_saved {1}
+set $m7-control_x {180.217878279}
+set $m7-control_y {183.679529399}
+set $m7-control_z {82.6555796044}
+set $m7-drawX {1}
+set $m7-drawY {1}
+set $m7-drawZ {1}
+set $m7-interp_mode {0}
+set $m7-cyl_active {0}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m8-positionList {{0 40} {6 28} {779 28}}
+set $m8-nodeList {257 258 259}
+set $m8-width {779}
+set $m8-height {40}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m10-nodes-on {0}
+set $m10-edges-on {0}
+set $m10-use-transparency {1}
+set $m10-def-color-r {1.0}
+set $m10-def-color-g {1.0}
+set $m10-def-color-a {0.07}
+set $m10-active_tab {Faces}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m11-def-color-b {0.74}
+
+# Set GUI variables for the SCIRun->FieldsData->ChangeFieldDataType Module
+set $m12-outputdatatype {unsigned int}
+
+# Set GUI variables for the SCIRun->DataIO->MatrixReader Module
+set $m13-filename "$DATADIR/$DATASET/timeseries_100_SCI.mat"
+set $m13-filetype {SCIRun Matrix File (*.mat)}
+
+# Set GUI variables for the SCIRun->Math->MatrixSelectVector Module
+set $m14-selectable_max {99.0}
+set $m14-selectable_inc {100}
+set $m14-range_max {99}
+
+# Set GUI variables for the SCIRun->Math->LinearAlgebra Module
+set $m16-function {DenseMatrix *m = scinew DenseMatrix(4, 4);
+//row 0
+m->put(0, 0, 1.0);
+m->put(0, 1, 0.0);
+m->put(0, 2, 0.0);
+m->put(0, 3, -325.0);
+ 
+//row 1
+m->put(1, 0, 0.0);
+m->put(1, 1, -1.0);
+m->put(1, 2, 0.0);
+m->put(1, 3, 300.0);
+ 
+//row 2
+m->put(2, 0, 0.0);
+m->put(2, 1, 0.0);
+m->put(2, 2, 0.75);
+m->put(2, 3, -1002.0);
+ 
+//row 3
+m->put(3, 0, 0.0);
+m->put(3, 1, 0.0);
+m->put(3, 2, 0.0);
+m->put(3, 3, 1.0);
+                                                                                
+o1 = m;
+
+
+
+
+}
+
+# Set GUI variables for the SCIRun->Math->LinearAlgebra Module
+set $m18-function {DenseMatrix *m = scinew DenseMatrix(4, 4);
+//row 0
+m->put(0, 0, 0.0837954);
+m->put(0, 1, 0.0);
+m->put(0, 2, 0.0);
+m->put(0, 3, 20.0);
+ 
+//row 1
+m->put(1, 0, 0.0);
+m->put(1, 1, 0.178306);
+m->put(1, 2, 0.0);
+m->put(1, 3, -51.0);
+ 
+//row 2
+m->put(2, 0, 0.0);
+m->put(2, 1, 0.0);
+m->put(2, 2, 0.489435);
+m->put(2, 3, -20.0);
+ 
+//row 3
+m->put(3, 0, 0.0);
+m->put(3, 1, 0.0);
+m->put(3, 2, 0.0);
+m->put(3, 3, 1.0);
+                                                                                
+o1 = m;
+
+}
+
+
+::netedit scheduleok

@@ -1,0 +1,658 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.20 Release Notes</title>
+  </head>
+  
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes - SCIRun Version 1.20 - Oct 27, 2003
+    </h1>
+
+    <a id="begin-toc">Content:H1,H2</a>
+
+    <h1>
+      New Projects in Version 1.20
+    </h1>
+    <ul>
+      <li>
+	Support for the NLM Insight Segmentation and Registration
+	Toolkit (www.itk.org)!  Many Insight Filters are wrapped
+	with SCIRun modules.  SCIRun infrastructure updated to
+	easily allow wrapping of new filters.  See <a
+	href="../User/Guide/usersguide/srug8.html">Chapter 8</a> of
+	the <a href="../User/Guide/usersguide/index.html">Users Guide</a> on
+	how to use ITK Filters. For source distributions, Insight
+	must be installed separately.  See the <a
+	href="../Installation/Guide/srig.html">Installation
+	Guide</a> on how to install Insight.  The RPM distribution
+	includes Insight.
+      </li>
+      <li>
+	New stand alone SCIRun Power Apps!  These applications hide the
+	complexities of the powerful SCIRun dataflow interface, allowing the
+	user to focus on a specific task.  Currently there are two Power
+	Apps.  BioTensor and BioFEM.
+	<ul>
+	  <li>
+	    BioTensor is used for doing Diffusion Tensor Imaging.
+	    This application takes the user from data acquisition,
+	    through registration and building diffusion tensors.  In
+	    addition, several visualization techniques such as
+	    Planes, Isosurfaces, Glyphs and Fibers are provided to
+	    allow the user to investigate the data.
+	  </li>
+	  <li>
+	    BioFEM is an encapsulation of the forward-fem network
+	    that is included in the BioPSE package and described in
+	    the BioPSE Tutorial.  With BioFEM, the user can run
+	    finite element bioelectric field simulations based on
+	    volume conductor models and dipolar sources, and can
+	    interactively visualize the simulation results with
+	    electric field streamlines and isopotential surfaces.
+	  </li>
+	</ul>
+      </li>
+      <li>
+	Upgraded the Network Editor to be much more user friendly.
+	See <a href="#network_editor">Network Editor below</a> (and
+	<a href="../User/Guide/usersguide/srug5.html">Chapter 5</a>
+	of the <a href="../User/Guide/usersguide/index.html">Users Guide</a>).
+      </li>
+      <li>
+	Full support of OSX (See <a href="../Installation/Guide/srig.html">Installation Guide</a>).
+      </li>
+    </ul>
+
+    <h1>
+      Data Sets
+    </h1>
+    <ul>
+      <li>
+	New "insight" directory with sample data for Insight nets.
+      </li>
+      <li>
+	New "brain-dt" directory with sample data for the BioTensor Power App.
+      </li>
+    </ul>
+
+    <h1>
+      New Modules
+    </h1>
+
+    <h2>
+      SCIRun Modules (Category in parentheses)
+    </h2> 
+
+    <p>
+      The "Choose" modules are used to select one of many input ports
+      to pass to the single output port:
+    </p>
+    <ul>
+      <li>
+	ChooseColorMap (Visualization) 
+      </li>
+      <li>
+	ChooseField (FieldsOther) 
+      </li>
+      <li>
+	ChooseMatrix (Math) 
+      </li>
+    </ul>
+    
+    <ul>
+      <li>
+	FieldCage (FieldsOther)&#x2014;Render an rgb 'cage' around the
+	incoming field to indicate field bounding box
+      </li>
+      <li>
+	IsoClip (FieldsCreate)&#x2014;Clip a scalar field to a specified
+	isovalue.
+      </li>
+      <li>
+	LinearAlgebra (Math)&#x2014;Operations on input matrices to produce new
+	output matrices.
+      </li>
+      <li>
+	ManageFieldMesh (FieldsGeometry)&#x2014;Extract and change the
+	positions of the nodes in a mesh.
+      </li>
+      <li>
+	MoveElemToNode (FieldsData)&#x2014;Make a new field with data at
+	nodes instead of elements.
+      </li>
+      <li>
+	MoveNodeToElem (FieldsData)&#x2014;Make a new field with data
+	at elements instead of nodes.
+      </li>
+      <li>
+	SampleStructHex (FieldsCreate)&#x2014;Make a StructHexVolField
+	that fits the source field.
+      </li>
+      <li>
+	TransformData (FieldsData)&#x2014;Perform a specified
+	functional transform on all of the data in a field.
+      </li>
+      <li>
+	TransformData2 (FieldsData)&#x2014;Perform a specified
+	functional transform to each pair of data elements in the two
+	input fields.
+      </li>
+      <li>
+	TransformData3 (FieldsData)&#x2014;Perform a specified functional
+	transform to each triple of data elements in the three input
+	fields.
+      </li>
+
+    </ul>
+
+    <h2>
+      Teem Modules (Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>
+	ChooseNrrd (Teem - NrrdData)&#x2014;The "Choose" modules are
+	used to select one of many input ports to pass to the single
+	output port.
+      </li>
+      <li>
+	EditTupleAxis (Teem - NrrdData)&#x2014;Allows user to
+	re-organize the entries on the 'tuple' axis, in order to
+	group scalars into Vectors/Tensors or vice-versa.
+      </li>
+      <li>
+	TendFiber (Teem - Tend)&#x2014;Fiber tractography (streamlines
+	through Tensor fields).
+      </li>
+      <li>
+	TendAnscale&#x2014;Scale the anisotropic component of the
+	tensors. This maintains the isotropic component of the
+	tensor, and fixes either the trace or determinant, while
+	scaling up (or down) the "deviatoric" component of the
+	tensor. Good for exaggerating the shape of nearly isotropic
+	tensors.
+      </li>
+      <li>
+	TendBmat&#x2014;Calculate B-matrix given gradient directions,
+	assuming no diffusion weighting from the other imaging
+	gradients. The input is a 3-by-N array of floats or doubles,
+	each row being one of the gradient directions used for
+	diffusion-weighted imaging. A plain text file with one
+	gradient per line, no punctuation, is an easy way to specify
+	this information. The gradient vector coefficients are used
+	as is, without normalization (since different gradient
+	strengths are sometimes desired). The output has one row of
+	the B-matrix per line, with coefficient ordering Bxx, Bxy,
+	Bxz, Byy, Byz, Bzz, and with the off-diagonal elements NOT
+	pre-multiplied by 2.
+      </li>
+      <li>
+	TendEpireg&#x2014;Register diffusion-weighted echo-planar
+	images. This registration corrects the shear, scale, and
+	translate along the phase encoding direction (assumed to be
+	the Y (second) axis of the image) caused by eddy currents
+	from the diffusion-encoding gradients with echo-planar
+	imaging. The method is based on calculating moments of
+	segmented images, where the segmentation is a simple
+	procedure based on blurring (optional), thresholding and
+	connected component analysis. The registered DWIs are
+	resampled with the chosen kernel, with the separate DWIs
+	stacked along axis 0.
+      </li>
+      <li>
+	TendEstim&#x2014;Estimate tensors from a set of DW images. The
+	various DWI volumes must be stacked along axis 0 (as with
+	the output of "tend epireg"). The tensor coefficient
+	weightings associated with each of the DWIs, the B-matrix,
+	is given as a separate array, see "tend bmat" usage info for
+	details. A "confidence" value is computed with the tensor,
+	based on a soft thresholding of the sum of all the DWIs,
+	according to the threshold and softness parameters.
+      </li>
+      <li>
+	TendEvalClamp&#x2014;Modify shape by clamping eigenvalues in some
+	range. The orientation of the tensor is unchanged. Note that
+	unlike "tend anscale", this operation can completely change
+	the shape of the tensor.
+      </li>
+      <li>
+	TendEvalPow&#x2014;Modify shape by raising eigenvalues to some
+	power. The orientation of the tensor is unchanged.
+      </li>
+      <li>
+	TendEval&#x2014;Calculate one or more eigenvalues in a DT volume.
+      </li>	  
+      <li>
+	TendEvecRGB&#x2014;Make an RGB volume from an eigenvector and an
+	anisotropy.
+      </li>
+      <li>
+	TendEvec&#x2014;Calculate one or more eigenvectors in a DT volume.
+      </li>	  
+      <li>
+	TendExpand&#x2014;Converts a 7-value DT volume to a 9-value DT
+	volume. The 7-value tensor is confidence value followed by
+	the unique tensor components (Dxx, Dxy, Dxz, Dyy, Dyz,
+	Dzz). The 9-value tensor is the full matrix (Dxx, Dxy, Dxz,
+	Dxy, Dyy, Dyz, Dxz, Dyz, Dzz), which is set to all zeros
+	when the confidence is below the given threshold.
+      </li>
+      <li>
+	TendMake&#x2014;Create DT volume from confidence and
+	eigensystem. The input is in the form of three nrrds, one
+	for confidence values (3D), one for eigenvalues (4D, three
+	evals per voxel), and one for eigenvectors (4D, nine evec
+	components per voxel).
+      </li>
+      <li>
+	TendNorm&#x2014;Normalize tensor size. This operates on the
+	eigenvalues of the tensor, and allows normalizing some
+	user-defined weighting ("-w") of the eigenvalues by some
+	user-defined amount ("-a").
+      </li>
+      <li>
+	TendPoint&#x2014;Describe everything about one sample in a DT volume.
+      </li>	  
+      <li>
+	TendSatin&#x2014;Generate a pretty synthetic DT volume. The
+	surface of a sphere or tous is covered with either linear or
+	planar anisotropic tensors, or somewhere in between.
+      </li>
+      <li>
+	TendShrink&#x2014;Converts a 9-value DT volume to a 7-value DT
+	volume. The confidence value is set to 1.0 everwhere. You
+	can "unu splice" or nrrdSplice() something else in its place
+	later.
+      </li>
+      <li>
+	UnuAxmerge&#x2014;Merge two adjacent axes into one. A more general
+	version of "unu axdelete". The underlying linear ordering of
+	the samples is unchanged, and the information about the
+	other axes is shifted downwards as needed.
+      </li>
+      <li>
+	UnuAxsplit&#x2014;Split one axis into two axes. More general
+	version of "unu axinsert", since a given axis can be split
+	into fast and slow axes of arbitrary size, as long as the
+	product of the fast and slow sizes is the same as the
+	original size.
+      </li>
+      <li>
+	UnuCmedian&#x2014;Cheap histogram-based median/mode
+	filtering. Only works on 1, 2, or 3 dimensions. The window
+	over which filtering is done is always square, and only a
+	simplistic weighting scheme is available. The method is
+	cheap because it does the median or mode based on a
+	histogram, which enforces a quantization to the number of
+	bins in the histogram, which probably means a loss of
+	precision for anything except 8-bit data. Also, 8-bit
+	integer values can be recovered exactly only when the number
+	of bins is exactly min-max+1 (as reported by "Unuminmax").
+      </li>
+      <li>
+	UnudHisto&#x2014;Create (PGM) image of 1-D value histogram
+      </li>	  
+      <li>
+	UnuFlip&#x2014;Reverse order of slices along one axis. Special
+	case of "Unushuffle".
+      </li>
+      <li>
+	UnuHisto&#x2014;Create 1-D histogram of values in a nrrd
+      </li>	  
+      <li>
+	UnuPad&#x2014;Pad along each axis to make a bigger nrrd
+      </li>
+      <li>
+	UnuProject&#x2014;Collapse scanlines to scalars along some
+	axis. The scanline is reduced to a single scalar by
+	"measuring" all the values in the scanline with some
+	measure. The output nrrd has dimension one less than input;
+	the output type depends on the measure in a non-trivial way,
+	or it can be set explicitly with the "-t" option.
+      </li>
+      <li>
+	UnuSlice&#x2014;Slice at a position along an axis. Output nrrd
+	dimension is one less than input nrrd dimension. Per-axis
+	information is preserved.
+      </li>
+    </ul>
+
+    <h2>
+      BioPSE Modules&#xA0;(Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>
+	SetupBEMatrix (Forward)&#xA0;now supports an arbitrary number
+	of surfaces for BEM computations
+      </li>
+    </ul>
+    
+
+    <h1>
+      Module Enhancements
+    </h1>
+
+    <h2>
+      SCIRun Modules&#xA0;(Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>
+	FieldToCanonicalTransform (Math)
+      </li>
+      <li>
+	GenTransferFunc (Visualization)&#xA0;HSV colormap
+	construction/editing now supported
+      </li>
+      <li>
+	HexToTet (FieldsGeometry)
+      </li>
+      <li>
+	Supports LatVolMesh and StructHexVol fields
+      </li>
+      <li>
+	Isosurface (Visualization)
+      </li>
+      <li>
+	Added optional input matrix of isovalues
+      </li>
+      <li>
+	Allow List of Isovals to use percentages
+      </li>
+      <li>
+	LinAlgBinary
+      </li>
+      <li>
+	Supports SparseRowMatrix addition
+      </li>
+      <li>
+	MaskLattice (FieldsData)
+      </li>
+      <li>
+	Use dynamically compiled C++ code for clip function and copy
+	data
+      </li>
+      <li>
+	MatrixSelectVector (Math)&#xA0;modules can now be serially
+	cascaded again (used manually indicates whether there are
+	downstream inter-dependencies)
+      </li>
+      <li>
+	QuadToTri (FieldsGeometry)
+      </li>
+      <li>
+	Supports ImageMesh and StructQuadSurfMesh fields
+      </li>
+      <li>
+	ShowColorMap (Visualization)&#xA0;added support for ColorMap
+	legend units (via text entry) and scale-factor
+      </li>
+      <li>
+	ShowField (Visualization)
+      </li>
+      <li>
+	Added ability to draw scalar data (cell centers)
+      </li>
+      <li>
+	Added field name to geometry descriptions
+      </li>
+      <li>
+	Added more vector rendering options, needles
+      </li>
+      <li>
+	Added support for transparent points and lines
+      </li>
+      <li>
+	Added Vector RGB support
+      </li>
+      <li>
+	Fast colormap switching for ShowField, uses 1D textures now
+      </li>
+      <li>
+	Use Vertex Arrays for output
+      </li>
+      <li>
+	Added Teem style diffusion tensor visualization (boxes,
+	ellipsoids, and superquadric glyphs)
+      </li>
+      <li>
+	Viewer (Render)
+      </li>
+      <li>
+	Reenable GeomDL
+      </li>
+      <li>
+	Save clipping planes state
+      </li>
+      <li>
+	Use consistent Filebox for saving images
+      </li>
+      <li>
+	Use consistent Filebox for saving movies
+      </li>
+    </ul>
+
+    <h2>BioPSE Modules</h2>
+    <ul>
+      <li>
+	Finite element modules&#xA0;now support native Tensor fields
+	for conductivity specification, instead of requiring a
+	conductivity table property and index-based access
+      </li>
+      <li>
+	ForwardMagneticField - calculates the magnetic field due to given
+	dipoles at specified detector positions based on the Biot-Savart
+	law.
+      </li>
+    </ul>
+
+    <h2>
+      Teem Modules&#xA0;(Category in parentheses)
+    </h2>
+    <ul>
+      <li>
+	Reorganized the Teem package to more closely mirror Teem's Unu and
+	Tend interfaces.
+      </li>
+      <li>
+	NrrdToField (DataIO)&#xA0;GUI option added to allow user to
+	specify computation of eigen-decomposition of Tensors, which
+	can be passed into SCIRun for use with box and superquadric
+	glyph visualization.
+      </li>
+    </ul>
+
+    <h1>
+      Infrastructure Enhancements
+    </h1>
+    <ul>
+      <li>
+	SCIRun Fields Modules Categorized - The Fields modules were
+	distributed into several subcategories (FieldsData,
+	FieldsCreate, FieldsGeometry, and FieldsOther) to make finding
+	specific modules easier.  Note, current users should review this
+	distribution to find the location of their favorite modules.
+      </li>
+
+      <li>
+	ArrowWidget&#xA0;Can now be scaled. (Used in
+	BioPSE::Visualization::ShowDipoles)
+      </li>
+
+      <li>
+	Numerous example networks were created.  See
+	./src/nets/Modules/NOTES for details.
+      </li>
+
+      <li>
+	Splash screen introduced, can be disabled with --nosplash
+	option.
+      </li>
+
+      <li>
+	Display License Agreement.  Create a generic $HOME/.scirunrc if
+	one does not exist.
+      </li>
+
+      <li>
+	Add virtual destructor to Matrix&#xA0;Fixes big memory leak.
+      </li>
+
+      <li>
+	Fix crash bugs in:
+	<ul>
+	  <li>
+	    StructHexVolMesh::transform
+	  </li>
+	  <li>
+	    when np_ invalid in StreamLines
+	  </li>
+	  <li>
+	    associated with deleting widgets
+	  </li>
+	  <li>
+	    linux when viewer window closed
+	  </li>
+	</ul>
+      </li>
+
+      <li>
+	Dealt with boundary conditions in Field get_weights
+      </li>
+
+      <li>
+	Fixed boundary condition error in
+	LatVolMesh::get_cells
+      </li>
+
+      <li>
+	Fixed locate functions for ImageMesh and LatVolMesh
+      </li>
+
+      <li>
+	Fixed QuadSurfMesh::get_neighbor (wrong neighbor was
+	possible)
+      </li>
+
+      <li>
+	New get_weights for non-lattice fields
+      </li>
+
+      <li>
+	Added get_canonical_transform to Mesh Concept
+      </li>
+
+      <li>
+	Most of the documentation is available in PDF form
+      </li>
+    </ul>
+
+    <h1>
+      New Nets
+    </h1>
+    <ul>
+      <li>
+	forward-fem-multidipole (BioPSE Package)&#xA0;like forward-fem.net
+	but with multiple dipole sources so users can investigate effects
+	of changing magnitudes 
+
+      </li>
+      <li>
+	BioFEM-ch{1,2,3a,3b,3c,4,5,6,7}.net (BioPSE Package)&#xA0;nets that
+	correspond to each chapter/section of the BioPSE Tutorial
+      </li>
+    </ul>
+
+    <h1 id="network_editor">
+      Network Editor Enhancements
+    </h1>   
+    <ul>
+      <li>
+	Modules (and groups of modules) are now selectable.  Use the left
+	mouse button.  Control left click will add/remove modules from the
+	selection group.
+      </li>
+      <li>
+	All modules selected can be moved around together.
+      </li>
+      <li>
+	Menus in the Network Editor Main Window
+      </li>
+      <li>
+	Right click on Modules and Connections to bring up
+	option menus.
+      </li>
+      <li>
+	Modules and Pipes can now be disabled.  When disabled,
+	modules do not execute and pipes do not transfer data.
+      </li>
+      <li>
+	Pipes and Pipe Networks can be highlighted.
+      </li>
+      <li>
+	Left click a Pipe or Port to highlight it.
+      </li>
+      <li>
+	Control left click a Pipe or Port to highlight
+      </li>
+      <li>
+	Displaying Connection and Module Annotations
+      </li>
+      <li>
+	This feature allows the user to attach notes to each connection
+	and module on the canvas to remind the user of the purpose of
+	that connection.
+      </li>
+      <li>
+	Undo
+      </li>
+      <li>
+	Connection creations and deletions can be undone/redone.  Use
+	Control-z (undo) and Control-y (redo) to cycle through changes.
+	(In other words, if you accidentally delete a connection, you
+	can get it back!
+      </li>
+      <li>
+	Tool tips added to many widgets.
+      </li>
+    </ul>
+
+    <script type="text/javascript">new Toc().build();</script>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+
+</html>

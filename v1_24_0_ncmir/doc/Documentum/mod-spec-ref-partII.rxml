@@ -1,0 +1,1450 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<part>
+  <title>Module Description Element Reference</title>
+  <partintro>
+    <sect1>
+      <title>Organization</title>
+      <para>Each element reference is organized as follows:</para>
+      <variablelist>
+	<varlistentry>
+	  <term>Element name and short summary</term>
+	  <listitem><para>The first part of each element reference
+	  provides the name of an element and a short summary of its
+	  purpose.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Synopsis</term>
+	  <listitem><para>The synopsis consists of two parts.  The
+	  first part of the synopsis presents an element's content
+	  model using a <acronym>DTD</acronym>-like syntax.  The
+	  second part of the synopsis lists the name, type, and
+	  default value of each of the element's
+	  attributes.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Description</term>
+	  <listitem><para>Describes the element's purpose and use.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Attributes</term>
+	  <listitem><para>Describes the purpose and use of each attribute.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Parents</term>
+	  <listitem><para>Lists the element's parents.</para></listitem>
+	</varlistentry>
+      </variablelist>
+    </sect1>
+    <sect1>
+      <title>Content Models</title>
+      <para>An element's content model is the <acronym>DTD</acronym>
+      fragment describing the element's structure.  The content model
+      lists an element's children and the number and order of their
+      occurrence.  A content model may contain keywords (e.g., #PCDATA),
+      element names, and tokens that indicate child grouping
+      (<quote>(</quote> and <quote>) </quote>), sequencing
+      (<quote>,</quote> separates children occuring in sequence),
+      repetition (<quote>*</quote>, zero or more; <quote>+</quote>,
+      one or more; <quote>?</quote>, zero or one), and alternation
+      (<quote>|</quote> separates choices) of children.</para>
+    </sect1>
+    <sect1>
+      <title>Attribute Types</title>
+      <para>Attribute values are one of five types:</para>
+      <variablelist>
+	<varlistentry>
+	  <term>Enumeration</term>
+	  <listitem><para>A choice of one or more string
+	  literals.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>CDATA</term>
+	  <listitem><para>A string containing any characters except
+	  <quote>&lt;</quote> and
+	  <quote>&amp;</quote></para></listitem>
+	 </varlistentry>
+	 <varlistentry>
+	   <term>ID</term>
+	   <listitem><para>A string uniquely identifying an element.
+	   An ID string must start with a letter, underscore, or colon
+	   and may then contain any combination of letters, digits, and
+	  the characters <quote>.</quote>, <quote>-</quote>,
+	  <quote>_</quote>, <quote>:</quote></para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>IDREF</term>
+	  <listitem><para>A string matching the value of one element's <sgmltag class="element">id</sgmltag> attribute.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>NMTOKEN</term>
+	  <listitem><para>A string consisting of any combination of
+	  letters, digits, and the characters <quote>.</quote>,
+	  <quote>-</quote>, <quote>_</quote>,
+	  <quote>:</quote></para></listitem>
+	</varlistentry>
+      </variablelist>
+    </sect1>
+  </partintro>
+  <reference>
+    <title>Module Description Element Reference</title>
+
+    <!--===== author -->
+    <refentry id="refentry.author">
+      <refnamediv>
+	<refname>author</refname>
+	<refpurpose>Full name of one author</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">author</sgmltag> ::= #PCDATA</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">is the full name of
+	one author</sgmltag></para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">author</sgmltag>: <link
+	linkend="refentry.authors"><sgmltag
+	class="element">authors</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== authors -->
+    <refentry id="refentry.authors">
+      <refnamediv>
+	<refname><sgmltag class="element">authors</sgmltag></refname>
+	<refpurpose>List a module's authors</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">authors</sgmltag> ::= <link linkend="refentry.author"><sgmltag class="element">author</sgmltag></link>+</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">authors</sgmltag> lists
+	the authors of a module.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">authors</sgmltag>: <link
+	linkend="refentry.overview"><sgmltag
+	class="element">overview</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== caption -->
+    <refentry id="refentry.caption">
+      <refnamediv>
+	<refname>caption</refname>
+	<refpurpose>A description of an image</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">caption</sgmltag> ::= <link linkend="refentry.firstterm"><sgmltag class="element">firstterm</sgmltag></link>|<link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link>|<link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link>|<link linkend="abbr"><sgmltag class="element">abbr</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link>|<link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link>|<link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>|<link linkend="refentry.rlink"><sgmltag class="element">rlink</sgmltag></link>|<link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link>|<link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link>|<link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link>|<link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link>|<link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link>|<link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">caption</sgmltag>
+	is a description of an image.</para>
+	<para>Arguably, <sgmltag class="element">caption</sgmltag>
+	should allow paragraphs and other block-level
+	elements.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">caption</sgmltag>: <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link>, <link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== ccfile -->
+    <refentry id="refentry.ccfile">
+      <refnamediv>
+	<refname>ccfile</refname>
+	<refpurpose>Name of a c++ source file</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">ccfile</sgmltag> ::= #PCDATA</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">ccfile</sgmltag>
+	specifies the name of one c++ source code file.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">ccfile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
+	class="element">implementation</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== cfile -->
+    <refentry id="refentry.cfile">
+      <refnamediv>
+	<refname>cfile</refname>
+	<refpurpose>Name of a c source file</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">cfile</sgmltag> ::= #PCDATA</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">cfile</sgmltag>
+	specifies the name of one c source code file.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">cfile</sgmltag>: <link linkend="refentry.implentation"><sgmltag
+	class="element">implementation</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== component -->
+    <refentry id="refentry.component">
+      <refnamediv>
+	<refname>component</refname>
+	<refpurpose>Module description top-level element.</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">component</sgmltag> ::= <link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link>, <link linkend="refentry.implementation"><sgmltag class="element">implementation</sgmltag></link>?, <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link>, <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link>?, <link linkend="refentry.nets"><sgmltag class="element">nets</sgmltag></link>? ,<link linkend="refentry.testing"><sgmltag class="element">testing</sgmltag></link>?
+	  </synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry><sgmltag class="attribute">name</sgmltag></entry>
+		  <entry>CDATA</entry>
+		  <entry><emphasis>Required</emphasis></entry>
+		</row>
+		<row>
+		  <entry><sgmltag class="attribute">category</sgmltag></entry>
+		  <entry>CDATA</entry>
+		  <entry><emphasis>Required</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Top-level module description element.  All module
+	descriptions start with this element.  All other elements are enclosed
+	by this one.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term>name</term>
+	    <listitem>
+	      <para><sgmltag class="attribute">Name</sgmltag>
+	      specifies a module's name.  <sgmltag
+	      class="attribute">Name</sgmltag>'s value must be unique
+	      among module names in a module's category.</para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>category</term>
+	    <listitem>
+	      <para><sgmltag class="attribute">Category</sgmltag> specifies the
+	      module's category.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+    </refentry>
+
+    <!--===== datatype -->
+    <refentry id="refentry.datatype">
+      <refnamediv>
+	<refname>datatype</refname>
+	<refpurpose>Name of a SCIRun datatype</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">datatype</sgmltag> ::= (#PCDATA)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">datatype</sgmltag> is the fully qualified name of a SCIRun datatype.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">datatype</sgmltag>: <link linkend="refentry"><sgmltag class="element">file</sgmltag></link>, <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link>, <link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== description -->    
+    <refentry id="description">
+      <refnamediv>
+	<refname><sgmltag class="element">description</sgmltag></refname>
+	<refpurpose>description of some aspect of a module</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">description</sgmltag> ::= (<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
+	  <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry><sgmltag class="attribute">id</sgmltag></entry>
+		  <entry>ID</entry>
+		  <entry><emphasis>None</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">description</sgmltag>
+	is a small documentation environment.  It is used in several places to
+	document a particular aspect of a module.  It offers many markup
+	tags equivalent to those found in xhtml.  A number of tags are
+	unique to the task of writing module descriptions.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term><sgmltag class="attribute">id</sgmltag></term>
+	    <listitem>
+	      <para><sgmltag class="attribute">Id</sgmltag> is an
+	      identifying string for a <sgmltag
+	      class="element">description</sgmltag> element. It must be unique
+	      within a module description and must begin with a letter.</para>
+	      <para>Attribute <sgmltag class="attribute">id</sgmltag>
+	      is used with element <link linkend="refentry.xref"><sgmltag
+	      class="element">xref</sgmltag></link> to create cross-references
+	      within a module description document.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec;
+	<sgmltag>description</sgmltag>: <simplelist type="inline">
+	<member><link linkend="refentry.device"><sgmltag class="element">device</sgmltag></link></member>
+	<member><link linkend="refentry.file"><sgmltag class="element">file</sgmltag></link></member>
+	<member><link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link></member>
+	<member><link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link></member>
+	<member><link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link></member>
+	<member><link linkend="refentry.plan"><sgmltag class="element">plan</sgmltag></link></member>
+	<member><link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link></member>
+	</simplelist>
+	</para>
+      </refsect1>
+    </refentry>
+
+    <!--===== developer -->
+    <refentry id="refentry.developer">
+      <refnamediv>
+	<refname><sgmltag class="element">developer</sgmltag></refname>
+	<refpurpose>Documentation intended for module developers</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">developer</sgmltag> ::= (<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
+	  <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">developer</sgmltag>
+	presents information intended for module developers.  <sgmltag
+	class="element">Developer</sgmltag>'s content model is
+	similar to element <link
+	linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link>'s content
+	model, but may not be divided into sections.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">developer</sgmltag>: <link
+	linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link>, <link
+	linkend="refentry.net"><sgmltag
+	class="element">net</sgmltag></link>, <link
+	linkend="refentry.section"><sgmltag
+	class="element">section</sgmltag></link>, <link
+	linkend="refentry.step"><sgmltag
+	class="element">step</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+
+    <!--===== examplesr -->
+    <refentry id="refentry.examplesr">
+      <refnamediv>
+	<refname>examplesr</refname>
+	<refpurpose>Specifies the path of a SCIRun network file which
+	demonstrates the use of a module.
+	<emphasis>Deprecated</emphasis></refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">examplesr</sgmltag> ::= #PCDATA</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Specifies the path of a SCIRun network file which
+	demonstrates the use of a module.  Element <sgmltag
+	class="element">examplesr</sgmltag> is deprecated.  Element <link
+	linkend="refentry.nets"><sgmltag class="element">nets</sgmltag></link>
+	is now used to demonstrate the use of a module in a network.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">examplesr</sgmltag>: <link
+	linkend="refentry.overview"><sgmltag
+	class="element">overview</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== ffile -->
+    <refentry id="refentry.ffile">
+      <refnamediv>
+	<refname>ffile</refname>
+	<refpurpose>Names a fortran source file</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">ffile</sgmltag> ::= #PCDATA</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">ffile</sgmltag>
+	specifies the name of one fortran source code file.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">ffile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
+	class="element">implementation</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== figure -->
+    <refentry id="refentry.figure">
+      <refnamediv>
+	<refname>figure</refname>
+	<refpurpose>A captioned image</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">figure</sgmltag> ::= (<link linkend="refentry.img"><sgmltag class="element">img</sgmltag></link>,<link linkend="refentry.caption"><sgmltag class="element">caption</sgmltag></link>)</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry><sgmltag class="attribute">id</sgmltag></entry>
+		  <entry>ID</entry>
+		  <entry><emphasis>None</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">figure</sgmltag> is a
+	captioned image.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term><sgmltag class="attribute">id</sgmltag></term>
+	    <listitem>
+	      <para><sgmltag class="attribute">Id</sgmltag> is an
+	      identifying string for a <sgmltag class="element">figure</sgmltag>
+	      element. <sgmltag class="attribute">Id</sgmltag> must be unique within
+	      a module specification and must begin with a letter.</para>
+	      <para>Attribute <sgmltag class="attribute">id</sgmltag>
+	      is used with element <link linkend="refentry.xref"><sgmltag
+	      class="element">xref</sgmltag></link> to create cross-references
+	      within a module specification document.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">figure</sgmltag>: <link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>,<link linkend="refentry.desclistdef"><sgmltag class="element">desclistdef</sgmltag></link>,<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>,<link linkend="refentry.listitem"><sgmltag class="element">listitem</sgmltag></link>,<link linkend="refentry.net"><sgmltag class="element">net</sgmltag></link>,<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>,<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>,<link linkend="refentry.step"><sgmltag class="element">step</sgmltag></link>,<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>,<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== file -->    
+    <refentry id="refentry.file">
+      <refnamediv>
+	<refname>file</refname>
+	<refpurpose>Describe type and content of data in a file</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">file</sgmltag> ::= (<link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>,<link linkend="refentry.datatype">datatype</link>)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag>file</sgmltag> describes the type and
+	content of data in a file.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">file</sgmltag>: <link linkend="refentry.inputs"><sgmltag class="element">inputs</sgmltag></link>,<link linkend="refentry.outputs"><sgmltag class="element">outputs</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== gui -->    
+    <refentry id="refentry.gui">
+      <refnamediv>
+	<refname><sgmltag class="element">gui</sgmltag></refname>
+	<refpurpose>Documents the use of a module's graphical user interface</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">gui</sgmltag> ::= ((<link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>, <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link>+, (<link linkend="refentry.img"><sgmltag class="element">img</sgmltag></link>, <link linkend="refentry.caption"><sgmltag class="element">caption</sgmltag></link>?)*))+</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">gui</sgmltag>
+	documents the use of a module's graphical user interface.</para>
+	<para>Use of content model fragment <synopsis>(<link
+	linkend="refentry.img"><sgmltag class="element">img</sgmltag></link>,
+	<link linkend="refentry.caption"><sgmltag
+	class="element">caption</sgmltag></link>?)*</synopsis> is deprecated.
+	Instead, screenshots of a module's <acronym>GUI</acronym> should be
+	presented within the <link linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link> element using <link
+	linkend="refentry.figure"><sgmltag
+	class="element">figure</sgmltag></link>s and <link
+	linkend="refentry.xref"><sgmltag
+	class="element">xref</sgmltag></link>s.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">gui</sgmltag>: <link
+	linkend="refentry.component"><sgmltag class="element">component</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== img -->
+    <refentry id ="refentry.img">
+      <refnamediv>
+	<refname>img</refname>
+	<refpurpose>The pathname of an image file</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">img</sgmltag> ::= (#PCDATA)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">img</sgmltag> is the
+	pathname of a file containing an image suitable for online
+	presentation (e.g. <acronym>jpg</acronym>,
+	<acronym>gif</acronym>, <acronym>png</acronym>, etc.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">img</sgmltag>: <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link>, <link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== implementation -->    
+    <refentry id="refentry.implementation">
+      <refnamediv>
+	<refname><sgmltag class="element">implementation</sgmltag></refname>
+	<refpurpose>A list of a module's c++, c, and fortran source files</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">implementation</sgmltag> ::= (<link linkend="refentry.ccfile"><sgmltag class="element">ccfile</sgmltag></link>|<link linkend="refentry.cfile"><sgmltag class="element">cfile</sgmltag></link>|<link linkend="refentry.ffile"><sgmltag class="element">ffile</sgmltag></link>)+</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Lists a module's c++, c, and fortran source files. </para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec;
+	<sgmltag class="element">implementation</sgmltag>: <link
+	linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+
+    <!--===== inputs -->
+    <refentry id="refentry.inputs">
+      <refnamediv>
+	<refname>inputs</refname>
+	<refpurpose>Documents a module's inputs</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">inputs</sgmltag> ::= (<link linkend="refentry.file"><sgmltag class="element">file</sgmltag></link>|<link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link>|<link linkend="refentry.device"><sgmltag class="element">device</sgmltag></link>)+</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry>
+		    <sgmltag class="attribute">lastportdynamic</sgmltag>
+		  </entry>
+		  <entry>
+		    <emphasis>Enumeration:</emphasis>
+		    <simplelist>
+		      <member>no</member>
+		      <member>yes</member>
+		    </simplelist>
+		  </entry>
+		  <entry>no</entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">inputs</sgmltag>
+	specifies and documents a module's inputs.  An input may come
+	from a port, file, or device.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term>lastportdynamic</term>
+	    <listitem>
+	      <para>Specifies whether a new instance of a module's
+	      last port is dynamically created when a connection is
+	      made to a module's last port.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">inputs</sgmltag>: <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== label -->
+    <refentry id="refentry.label">
+      <refnamediv>
+	<refname><sgmltag class="element">label</sgmltag></refname>
+	<refpurpose>A label (text) associated with a <acronym>GUI</acronym>
+	widget.</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">label</sgmltag> ::= (#PCDATA)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">label</sgmltag>
+	specifies text associated with a <acronym>GUI</acronym>
+	widget.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">label</sgmltag>: <link
+	linkend="refentry.parameter"><sgmltag
+	class="element">parameter</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== modref -->
+    <refentry id="refentry.modref">
+      <refnamediv>
+	<refname><sgmltag class="element">modref</sgmltag></refname>
+	<refpurpose>Cross-reference to a module specification document.</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">modref</sgmltag> ::= (#PCDATA)</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry>package</entry>
+		  <entry>NMTOKEN</entry>
+		  <entry><emphasis>Required</emphasis></entry>
+		</row>
+		<row>
+		  <entry>name</entry>
+		  <entry>CDATA</entry>
+		  <entry><emphasis>Required</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">modref</sgmltag> is a
+	cross-reference to another module specification.  Attributes
+	<sgmltag class="attribute">name</sgmltag> and <sgmltag
+	class="attribute">package</sgmltag> uniquely specify the
+	referenced module.  <sgmltag class="element">Modref</sgmltag>
+	may be empty or may contain cross-reference text.  If
+	<sgmltag class="element">modref</sgmltag> is empty, suitable
+	cross-refence text will be generated.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term>name</term>
+	    <listitem>
+	      <para>Name of module to be referenced.</para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>package</term>
+	    <listitem>
+	      <para>Name of package to which the referenced module
+	      belongs.  The package name is spelled as it is in the
+	      source code tree.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">modref</sgmltag>: <link
+	linkend="refentry.title"><sgmltag
+	class="element">title</sgmltag></link>, <link
+	linkend="refentry.summary"><sgmltag
+	class="element">summary</sgmltag></link>, <link
+	linkend="refentry.author"><sgmltag
+	class="element">author</sgmltag></link>, <link
+	linkend="refentry.caption"><sgmltag
+	class="element">caption</sgmltag></link>, <link
+	linkend="refentry.p"><sgmltag
+	class="element">p</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+
+    <!--===== outputs -->
+    <refentry id="refentry.outputs">
+      <refnamediv>
+	<refname><sgmltag class="element">outputs</sgmltag></refname>
+	<refpurpose>Documents a module's outputs</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">outputs</sgmltag> ::= (<link linkend="refentry.file"><sgmltag class="element">file</sgmltag></link>|<link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link>|<link linkend="refentry.device"><sgmltag class="element">device</sgmltag></link>)+</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">outputs</sgmltag>
+	specifies and documents a module's outputs.  An output may come
+	from a port, file, or device.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">outputs</sgmltag>: <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== io -->
+    <refentry id="refentry.io">
+      <refnamediv>
+	<refname><sgmltag class="element">io</sgmltag></refname>
+	<refpurpose>Specifies a module's inputs and outputs</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">io</sgmltag> ::= <link linkend="refentry.inputs"><sgmltag class="element">inputs</sgmltag></link>, <link linkend="refentry.outputs"><sgmltag class="element">outputs</sgmltag></link></synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">io</sgmltag> is a description of data entering and leaving a module's input and output ports. </para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">io</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+
+    <!--===== net -->
+    <refentry id="refentry.net">
+      <refnamediv>
+	<refname>net</refname>
+	<refpurpose>Demonstrates the use of a module within a small network</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">net</sgmltag> := (<link linkend="refentry.title"><sgmltag class="element">title</sgmltag></link>,(<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
+	  <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*)</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry><sgmltag class="attribute">id</sgmltag></entry>
+		  <entry>ID</entry>
+		  <entry><emphasis>None</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">net</sgmltag>
+	is an environment for documenting the use of a
+	module within a SCIRun network.  Element <sgmltag
+	class="element">net</sgmltag>'s content model is identical to
+	element <link linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link>'s content model.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term><sgmltag class="attribute">id</sgmltag></term>
+	    <listitem>
+	      <para><sgmltag class="attribute">Id</sgmltag> is an
+	      identifying string for a <sgmltag
+	      class="element">description</sgmltag> element. It must be unique
+	      within a module description and must begin with a letter.</para>
+	      <para>Attribute <sgmltag class="attribute">id</sgmltag>
+	      is used with element <link linkend="refentry.xref"><sgmltag
+	      class="element">xref</sgmltag></link> to create cross-references
+	      within a module description document.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+    </refentry>
+
+    <!--===== nets -->
+    <refentry id="refentry.nets">
+      <refnamediv>
+	<refname><sgmltag class="element">nets</sgmltag></refname>
+	<refpurpose>Documents the use of a module via one or more simple networks</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">nets</sgmltag> ::= (<link linkend="refentry.net"><sgmltag class="element">net</sgmltag></link>+)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">nets</sgmltag> documents the use of a module via one or more simple networks</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">nets</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== overview -->
+    <refentry id="refentry.overview">
+      <refnamediv>
+	<refname><sgmltag class="element">overview</sgmltag></refname>
+	<refpurpose>Lists a module's authors and describes a module's
+	purpose.</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">overview</sgmltag> ::= <link linkend="refentry.authors"><sgmltag class="element">authors</sgmltag></link>, <link linkend="refentry.summary"><sgmltag class="element">summary</sgmltag></link>, <link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>, <link linkend="refentry.examplesr"><sgmltag class="element">examplesr</sgmltag></link>?</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">overview</sgmltag> lists a module's authors and describes a module's
+	purpose.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">overview</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+
+    <!--===== p -->
+    <refentry id="refentry.p">
+      <refnamediv>
+	<refname>p</refname>
+	<refpurpose>A paragraph</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<synopsis><sgmltag>p</sgmltag> ::= <link
+	linkend="refentry.firstterm"><sgmltag
+	class="element">firstterm</sgmltag></link>|<link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link>|<link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link>|<link linkend="refentry.abbr"><sgmltag class="element">abbr</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link>|<link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link>|
+	<link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>|<link linkend="refentry.link"><sgmltag class="element">rlink</sgmltag></link>|<link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link>|<link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link>|<link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link>|<link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link>|<link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link>|<link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para></para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para></para>
+      </refsect1>
+    </refentry>
+
+
+    <!--===== parameter -->
+    <refentry id="refentry.parameter">
+      <refnamediv>
+	<refname>parameter</refname>
+	<refpurpose>Describes one <acronym>GUI</acronym> <quote>parameter</quote></refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">parameter</sgmltag> ::= (<link linkend="refentry.widget"><sgmltag>widget</sgmltag></link>,<link linkend="refentry.datatype"><sgmltag>datatype</sgmltag></link>,<link linkend="refentry.label"><sgmltag>label</sgmltag></link>,<link linkend="refentry.description"><sgmltag>description</sgmltag></link>)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">parameter</sgmltag>
+	documents the purpose and use of a module <acronym>GUI</acronym>
+	<quote>parameter</quote>.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">parameter</sgmltag>: <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== plan -->
+    <refentry id="refentry.plan">
+      <refnamediv>
+	<refname>plan</refname>
+	<refpurpose>A testing plan for a module</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">plan</sgmltag> ::= (<link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>, <link linkend="refentry.step"><sgmltag class="element">step</sgmltag></link>+)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">plan</sgmltag>
+	outlines one plan for testing a module.  <sgmltag
+	class="element">Plan</sgmltag> consists of a general test plan <link
+	linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link> followed by one or more
+	specfic test plan <link linkend="refentry.step"><sgmltag
+	class="element">step</sgmltag></link>s.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; element <sgmltag
+	class="element">plan</sgmltag>: <link
+	linkend="refentry.testing"><sgmltag
+	class="element">testing</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== section -->
+    <refentry id="refentry.section">
+      <refnamediv>
+	<refname><sgmltag class="element">section</sgmltag></refname>
+	<refpurpose>A titled section sub-division</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">section</sgmltag> ::= (<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
+	  <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry><sgmltag class="attribute">id</sgmltag></entry>
+		  <entry>ID</entry>
+		  <entry><emphasis>None</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">section</sgmltag> is
+	a titled sub-division of the documentation elements <link
+	linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link>, <link
+	linkend="refentry.net"><sgmltag
+	class="element">net</sgmltag></link>, <link
+	linkend="refentry.step"><sgmltag
+	class="element">step</sgmltag></link>.  <sgmltag
+	class="element">Section</sgmltag> elements may be
+	nested.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term><sgmltag class="attribute">id</sgmltag></term>
+	    <listitem>
+	      <para><sgmltag class="attribute">Id</sgmltag> is an
+	      identifying string for a <sgmltag
+	      class="element">section</sgmltag> element. It must be unique
+	      within a module description and must begin with a letter.</para>
+	      <para>Attribute <sgmltag class="attribute">id</sgmltag>
+	      is used with element <link linkend="refentry.xref"><sgmltag
+	      class="element">xref</sgmltag></link> to create cross-references
+	      within a module description document.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">section</sgmltag>: <link
+	linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link>, <link
+	linkend="refentry.net"><sgmltag
+	class="element">net</sgmltag></link>, <link
+	linkend="refentry.section"><sgmltag
+	class="element">section</sgmltag></link>, <link
+	linkend="refentry.step"><sgmltag
+	class="element">step</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+    
+    <!--===== step -->
+    <refentry id="refentry.step">
+      <refnamediv>
+	<refname>step</refname>
+	<refpurpose>Describes one step in a module testing process</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">step</sgmltag> ::= (<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
+	  <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">step</sgmltag>
+	describes one step in a module's test plan.</para>
+	<para><sgmltag class="element">Step</sgmltag>'s content
+	model is identical to  <link linkend="refentry.description"><sgmltag
+	class="element">description</sgmltag></link>'s content model.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">step</sgmltag>: <link linkend="refentry.plan"><sgmltag
+	class="element">plan</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== summary -->
+    <refentry id="refentry.summary">
+      <refnamediv>
+	<refname><sgmltag class="element">summary</sgmltag></refname>
+	<refpurpose>summarizes a module's purpose</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">summary</sgmltag> ::= #PCDATA|<link linkend="refentry.firstterm"><sgmltag class="element">firstterm</sgmltag></link>|<link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link>|<link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link>|<link linkend="refentry.abbr"><sgmltag class="element">abbr</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link>|<link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link>|
+	  <link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>|<link linkend="refentry.rlink"><sgmltag class="element">rlink</sgmltag></link>|<link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link>|<link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link>| <link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link>|<link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link>|<link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link>|<link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">summary</sgmltag> summarizes a module's purpose.  A summary should consist of only a few sentences.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag class="element">summary</sgmltag>: <link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== testing -->
+    <refentry id="refentry.testing">
+      <refnamediv>
+	<refname><sgmltag class="element">testing</sgmltag></refname>
+	<refpurpose>Documents a plan for testing a module</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">testing</sgmltag> ::= (<link linkend="refentry.plan"><sgmltag class="element">plan</sgmltag></link>+)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">testing</sgmltag>
+	documents a plan for testing a module.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">testing</sgmltag>: <link
+	linkend="refentry.component"><sgmltag
+	class="element">component</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--=====  ulink -->
+    <refentry id="refentry.ulink">
+      <refnamediv>
+	<refname><sgmltag class="element">ulink</sgmltag></refname>
+	<refpurpose>A <acronym>URL</acronym>-based link.</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">ulink</sgmltag> ::= (#PCDATA|<link linkend="refentry.firstterm"><sgmltag class="element">firstterm</sgmltag></link>|<link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link>|<link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link>|<link linkend="refentry.abbr"><sgmltag class="element">abbr</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link>|<link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link>|<link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>)</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry>url</entry>
+		  <entry>CDATA</entry>
+		  <entry><emphasis>Required</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">ulink</sgmltag> is a
+	<acronym>URL</acronym>-based link.  Attribute <sgmltag
+	class="attribute">url</sgmltag> provides the link's target
+	address.  <sgmltag class="element">Ulink</sgmltag>'s content
+	provides the link's text.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term><sgmltag class="attribute">url</sgmltag></term>
+	    <listitem>
+	      <para>Attribute <sgmltag
+	      class="attribute">url</sgmltag>'s value is the link's
+	      target <acronym>URL</acronym>.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">ulink</sgmltag>: <link
+	linkend="refentry.title"><sgmltag
+	class="element">title</sgmltag></link>, <link
+	linkend="refentry.summary"><sgmltag
+	class="element">summary</sgmltag></link>, <link
+	linkend="refentry.author"><sgmltag
+	class="element">author</sgmltag></link>, <link
+	linkend="refentry.caption"><sgmltag
+	class="element">caption</sgmltag></link>, <link
+	linkend="refentry.p"><sgmltag
+	class="element">p</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+
+    <!--===== widget -->
+    <refentry id="refentry.widget">
+      <refnamediv>
+	<refname>widget</refname>
+	<refpurpose>The generic name of a <acronym>GUI</acronym>element (e.g. scrollbar)</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">widget</sgmltag> ::= (#PCDATA)</synopsis>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">widget</sgmltag> is
+	the generic name of an element in a <acronym>GUI</acronym>, e.g.
+	<quote>scrollbar</quote>.</para>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">widget</sgmltag>: <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link></para>
+      </refsect1>
+    </refentry>
+
+    <!--===== xref  -->
+    <refentry id="refentry.xref">
+      <refnamediv>
+	<refname><sgmltag class="element">xref</sgmltag></refname>
+	<refpurpose>An intra-document cross-reference</refpurpose>
+      </refnamediv>
+      <refsect1>
+	<title>Synopsis</title>
+	<refsect2>
+	  <title>Content Model</title>
+	  <synopsis><sgmltag class="element">xref</sgmltag> ::=
+	  (#PCDATA)</synopsis>
+	</refsect2>
+	<refsect2>
+	  <title>Attributes</title>
+	  <informaltable>
+	    <tgroup cols="3">
+	      <thead>
+		<row>
+		  <entry>Name</entry>
+		  <entry>Type</entry>
+		  <entry>Default</entry>
+		</row>
+	      </thead>
+	      <tbody>
+		<row>
+		  <entry><sgmltag class="attribute">target</sgmltag></entry>
+		  <entry>IDREF</entry>
+		  <entry><emphasis>Required</emphasis></entry>
+		</row>
+	      </tbody>
+	    </tgroup>
+	  </informaltable>
+	</refsect2>
+      </refsect1>
+      <refsect1>
+	<title>Description</title>
+	<para>Element <sgmltag class="element">xref</sgmltag> is an
+	intra-document cross-reference.  <sgmltag
+	class="element">Xref</sgmltag>'s <sgmltag
+	class="attribute">target</sgmltag> attribute provides the id
+	of the cross-referenced element.</para>
+      </refsect1>
+      <refsect1>
+	<title>Attributes</title>
+	<variablelist>
+	  <varlistentry>
+	    <term><sgmltag class="attribute">target</sgmltag></term>
+	    <listitem>
+	      <para>Attribute <sgmltag
+	      class="attribute">target</sgmltag> specifies the id of
+	      the cross-referenced element.</para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </refsect1>
+      <refsect1>
+	<title>Parents</title>
+	<para>&tfec; <sgmltag
+	class="element">modref</sgmltag>: <link
+	linkend="refentry.title"><sgmltag
+	class="element">title</sgmltag></link>, <link
+	linkend="refentry.summary"><sgmltag
+	class="element">summary</sgmltag></link>, <link
+	linkend="refentry.author"><sgmltag
+	class="element">author</sgmltag></link>, <link
+	linkend="refentry.caption"><sgmltag
+	class="element">caption</sgmltag></link>, <link
+	linkend="refentry.p"><sgmltag
+	class="element">p</sgmltag></link>.</para>
+      </refsect1>
+    </refentry>
+
+
+  </reference>
+</part>

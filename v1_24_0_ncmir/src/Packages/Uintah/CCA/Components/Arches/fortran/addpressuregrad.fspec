@@ -1,0 +1,4 @@
+void addpressuregrad(IntVector idxLoU, IntVector idxHiU,
+	Array3<double> gradP, Array3<double> su,
+	CCVariable<int> pcell, int mmwallid,
+	int ioff, int joff, int koff);

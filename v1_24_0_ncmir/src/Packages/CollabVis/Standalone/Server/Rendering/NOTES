@@ -1,0 +1,52 @@
+* A renderer can have N clients.
+* A renderer can have N groups of clients looking at the same image.
+* Each client can have its own compressor.
+
+It is the job of the uberserver to keep track of different clients per
+renderer - the renderer only knows groups. 
+
+It is the job of the renderer superclass to implement compression. The
+subclasses determine if a given compression type is allowed. The
+renderer superclass has instances of each type of compressor available
+for use. The renderer superclass has a list of clients subscribed to
+that renderer. Each client in the list also has a pointer to their
+current compressor.
+
+
+
+MULTICAST GROUPS:
+ * Global (for chat, collaboration, etc.)
+ * Per renderer group (if group membership > 2)
+
+
+=========================================================
+   GROUPS.
+
+ * Multicast is used for any groups if group size > 2.
+ * Everybody in the group must use the same compression and image format.
+   - If one changes the format, all must get a message to change.
+ 
+ Image Renderer: Default is everyone in the same group. New groups are
+		 added explicitly.
+
+ Geometry Renderer: Everyone in same group only.
+
+ ZTex Renderer: Default is everyone in the same group.  New groups are
+		added explicitly.
+
+
+ So, each renderer has a list of client groups. These groups all share the 
+	same parameters. 
+ If a client does not wish to be a part of the default group, they must
+	enter standalone mode.
+ When one client changes a parameter, the server sends a
+	setviewingmethod message to all clients in the group with the
+	details of the parameter change. (On error, the message is
+	only sent to the offending client!)
+	= LocalIUManager needs a way to change ui via function call. 
+	= Renderers must respect the contents of 'setviewingmethod'
+	  responses when in group mode. 
+ Use some sort of access control? Ie, have a master who is allowed to
+	regulate changes...?
+ We *DO* need to expose these groups to the outside world, as each
+	group (per renderer) may have different viewing parameters.

@@ -1,0 +1,247 @@
+% -*-latex-*-
+%
+%  For more information, please see: http://software.sci.utah.edu
+% 
+%  The MIT License
+% 
+%  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+%  University of Utah.
+% 
+%  License for the specific language governing rights and limitations under
+%  Permission is hereby granted, free of charge, to any person obtaining a
+%  copy of this software and associated documentation files (the "Software"),
+%  to deal in the Software without restriction, including without limitation
+%  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+%  and/or sell copies of the Software, and to permit persons to whom the
+%  Software is furnished to do so, subject to the following conditions:
+% 
+%  The above copyright notice and this permission notice shall be included
+%  in all copies or substantial portions of the Software.
+% 
+%  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+%  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+%  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+%  DEALINGS IN THE SOFTWARE.
+%
+
+
+%
+% Latex package to be used by scirun documents.  Markup commands exist
+% in two files.  This one and scirun-doc.tex.  This file contains
+% commands that are processed by both latex and by the builtin
+% capabilities of latex2html.  Scirun-doc.sty contains commands that are
+% either completely ignored by latex2html or are processed by functions in
+% the latex2html extension file scirun-doc.perl.
+%
+% Documents should include the
+% following latex commands:
+%
+% \usepackage{scirun-doc}
+% \input{scirun-doc.tex}
+%
+
+% (Mostly) Short cuts  ==============================
+\newcommand{\SCI}{{\em SCI}}
+\newcommand{\sci}{\SCI}
+\newcommand{\scii}{SCI Institute}
+\newcommand{\BIOPSE}{\textbf{BioPSE}}
+\newcommand{\biopse}{\BIOPSE}
+\newcommand{\SR}{\textbf{SCIRun}}
+\newcommand{\sr}{\SR}
+\newcommand{\eg}{{\em e.g.,}}
+\newcommand{\ie}{{\em i.e.,}}
+\newcommand{\etc}{{\em etc.}}
+\newcommand{\etal}{{\em et al.}}
+\newcommand{\degrees}{{$^{\circ}$}}
+\newcommand{\splitline}{\begin{center}\rule{\columnwidth}{.7mm}\end{center}}
+\newcommand{\X}[1]{#1\index{#1}}
+\newcommand{\srig}{\sr{} Installation Guide}
+\newcommand{\srug}{\sr{} User's Guide}
+\newcommand{\srdg}{\sr{} Developer's Guide}
+
+% Literal ~ character
+\newcommand{\ltilde}{\textasciitilde}
+
+% Encloses its argument between angle brackets.
+\newcommand{\ab}[1]{\textless{}#1\textgreater}
+
+% Inserts a left angle bracket.
+\newcommand{\la}{\textless}
+
+% Inserts a right angle bracket.
+\newcommand{\ra}{\textgreater}
+
+
+% Mark up commands =================================
+
+% Url
+%\newcommand{\url}[1]{#1}
+
+% ip address
+\newcommand{\ipaddr}[1]{#1}
+\newcommand{\localhost}{\ipaddr{127.0.0.1}}
+
+% Predefined acronyms
+\newcommand{\gui}{\acronym{GUI}}
+\newcommand{\tcl}{\acronym{TCL}}
+\newcommand{\xml}{\acronym{XML}}
+\newcommand{\pse}{\acronym{PSE}}
+
+% Markup the first time use of term that may be unfamiliar to the
+% reader. 
+\newmucmd{dfn}{emph}
+
+% In the next command #1 is the term and #2 is the shortcut or acronym that
+% will be used in the rest of the document. 
+\newcommand{\dfna}[2]{\emph{#1} (\acronym{#2})}
+
+% Markup a file name.
+\newmucmd{filename}{texttt}
+
+% Directory name markup.
+\newmucmd{directory}{texttt}
+
+% Markup text which is the name of a command.
+\newmucmd{command}{texttt} 
+
+% Command option.
+\newmucmd{option}{texttt}
+
+% Markup text typed at the keyboard.
+\newmucmd{keyboard}{texttt} 
+
+% Parameterized text - marks up text that is to be
+% substituted for by the reader.
+\newmucmd{ptext}{textit}        % Obsolete-use replaceable instead.
+\newmucmd{replaceable}{textit}
+
+% Markup text the user might see on his screen.
+\newmucmd{screen}{texttt}
+
+% Markup the name of a GUI menu.
+\newmucmd{guimenu}{textbf}
+
+% Markup the name of a GUI menu.
+\newcommand{\menu}[1]{\guimenu{#1}}
+
+% Markup a gui menu item name.
+\newmucmd{guimenuitem}{textbf}
+
+% Markup a menu item name.
+\newcommand{\menuitem}[1]{\guimenuitem{#1}}
+
+% Markup name of a ui button.
+\newmucmd{guibutton}{textbf}
+
+% Markup name of a ui button.
+\newcommand{\button}[1]{\guibutton{#1}}
+
+% Markup name of a gui text item.
+\newmucmd{guitext}{textit}
+
+% Markup name of a gui label.
+\newmucmd{guilabel}{textbf}
+
+% GUI variable
+\newmucmd{guivar}{texttt}
+
+% Scirun port
+\newmucmd{srport}{texttt}
+
+% Sockets port
+\newcommand{\port}[1]{\texttt{#1}}
+
+% Socket
+\newcommand{\socket}[2]{\texttt{#1:#2}}
+
+% Variable
+\newcommand{\variable}[1]{\texttt{#1}}
+
+% Data type
+\newcommand{\datatype}[1]{\texttt{#1}}
+
+% Function
+\newcommand{\function}[1]{\texttt{#1}}
+
+% Markup an inline code fragment.
+\newcommand{\icode}[1]{\texttt{#1}}
+
+% Markup a module name.
+\newcommand{\module}[1]{\texttt{#1}}
+
+% Markup a sr package name.
+\newcommand{\package}[1]{\texttt{#1}}
+
+% Markup a sr category name.
+\newcommand{\category}[1]{\texttt{#1}}
+
+% Env variable markup.
+\newmucmd{envvar}{texttt}
+
+% Markup for the title of a book or article or whatever.
+\newcommand{\etitle}[1]{\textit{#1}}
+
+% Markup name of a latex section.  First arg is section name.  Second arg
+% is section's label.  When processed with latex, the section
+% name is emphasized.  When processed with latex2html section name is made
+% into a link to section.
+\newcommand{\secname}[2]{\latexhtml{\emph{#1}}{\htmlref{#1}{#2}}}
+
+% Section ref command.  Use of this command
+% in place of \ref to reference sections (subsections etc.) will
+% create a more web friendly version of your document.
+% The command's first argument is the link text (used only on the html
+% page) and the second argument is the section's label
+\newcommand{\secref}[2]{\hyperref[ref]{\emph{#1}}{Section~}{}{#2}}
+\newcommand{\chref}[2]{\hyperref[ref]{\emph{#1}}{Chapter~}{}{#2}}
+
+% An alternative sec ref command.  When processed by latex, this
+% command generates text like this: #1 (Section~\ref{#2}).  When
+% processed by latex2html, this command generates a normal link using
+% #1 as the link text.
+\newcommand{\secrefalt}[2]{\latexhtml{\etitle{#1} (Section~\ref{#2})}{\htmlref{#1}{#2}}}
+
+% Create a link to a doc in the tree.  Create a relative link if processed by
+% latex2html and a footnoted http url to the sci web site when processed by
+% latex.   Note that the macro \treetop must be defined before using
+% this macro.
+\newcommand{\scidoclink}[2]{\htmladdnormallinkfoot{#1}{\latexhtml{\scisoftware/doc}{\treetop}/#2}}
+
+% A latex command
+\newcommand{\latexcommand}[1]{\texttt{\textbackslash#1}}
+
+% A latex package
+\newcommand{\latexpackage}[1]{\textit{#1}}
+
+% Use these in place of missing content.
+\newcommand{\missing}[1]{\emph{#1 - Coming Soon.}}
+
+% Use this to make note of incomplete content.
+\newcommand{\incomplete}{\emph{More Comming Soon.}}
+
+% Mark up a mail address
+\newmucmd{mailto}{texttt}
+
+% Mark up an xml attribute
+\newmucmd{xmlattrname}{texttt}
+\newmucmd{xmlattrvalue}{texttt}
+
+% Alternate item commands inside a description environment
+\newcommand{\descitem}[1]{\item[#1]\latex{\mbox{}\\}}
+\newcommand{\menudesc}[1]{\item[\menu{#1}]\latex{\mbox{}\\}}
+\newcommand{\menuitemdesc}[1]{\item[\menuitem{#1}]\latex{\mbox{}\\}}
+\newcommand{\buttondesc}[1]{\item[\button{#1}]\latex{\mbox{}\\}}
+
+% Sci Urls ========================================= 
+
+% www style urls.
+\newcommand{\scisoftware}{http://software.sci.utah.edu}
+\newcommand{\scisoftwareurl}{\scisoftware}
+\newcommand{\sciurl}{http://www.sci.utah.edu}
+\newcommand{\scidocurl}{\scisoftware{}/doc}
+\newcommand{\scidocurlplus}[1]{\scisoftware{}/doc/#1}
+\newcommand{\bugsurl}{\scisoftware{}/bugzilla}
+\newcommand{\scisoftwarearchiveurl}{\scisoftware{}/archive\_entry.html}

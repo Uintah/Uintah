@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="FieldBoundary" category="FieldsCreate">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>The FieldBoundary module extracts a boundary surface from a volume field.</summary>
+    <description>
+      <p>
+        The FieldBoundary module extracts the bounding surface of
+        the incoming field, making it into a new field that it outputs
+        through the BoundaryField port.  This module does not have a GUI.
+	It has one input port, Input, and two output ports, Boundary,
+        and Mapping.
+
+        The FieldBoundary module builds an appropriate mesh from the
+        incoming field.  FieldBoundary will build a QuadSurfMesh,
+        TriSurfMesh, or CurveMesh as appropriate for the boundary type
+        of the input field.
+
+        The Boundary output port will contain the new boundary mesh with
+        no data interpolated onto it.  If the data from the input
+        field is desired on the output field, we recommended that
+        using the Mapping output, running the results
+        through <modref package="SCIRun" name="ApplyMappingMatrix"/> in order to draw values from the input
+        field.
+       </p>
+
+      <developer>
+	<p>Any interior face should be shared by two cells.  The boundary surface is calculated as the module checks each face that is shared by two or more cells. The faces that exist in one cell only are boundary faces.  This module can be used as a debugging tool becuase errors or holes in the mesh will show up as boundary faces.</p>
+      </developer>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Field</name>
+	<description>
+	  <p>
+             Accepts any field. Only useful with fields that  
+             have faces.
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>BoundaryField</name>
+	<description>
+	  <p>A TriSurfField or QuadSurfField of doubles.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>ShowField</componentname>
+      </port>
+      <port>
+	<name>Mapping</name>
+	<description>
+	  <p>Outputs a mapping from the input volume to the BoundaryField.</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>ShowField</componentname>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+    <plan>
+      <description>
+	<p>Feed the module a volume mesh and render the output.</p>
+      </description>
+      <step>
+	<p>Load ./doc/FieldBoundary_test.net</p>
+      </step>
+      <step>
+	<p>Execute the net.</p>
+      </step>
+      <step>
+	<p>The user should see the correct Gouraud shaded faces, along with 
+           normals and edges.</p>
+      </step>
+      <step>
+	<p>Select wireframe in the viewer.  There should be no interior faces,
+           although this could be caused by bad input (unconnected volume)</p>
+      </step>
+    </plan>
+  </testing>
+<nets>
+<net id="FieldBoundary">
+<title>FieldBoundary Regression Test</title>
+
+<p>Use the FieldBoundary module to extract just the outside shell of the
+sphere module, then use <modref package="SCIRun"
+name="ApplyMappingMatrix"/> to put the values from the original field
+onto the boundary.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/FieldBoundary.net.</p>
+
+</net>
+<net id="FieldBoundary-quadtest">
+<title>FieldBoundary-quadtest Regression Test</title>
+
+<p>Convert the sphere data set into a HexVol, then test FieldBoundary on
+that HexVol to make sure that a QuadSurf is created successfully.
+Then chop a chunk of that closed QuadSurf boundary out and test
+FieldBoundary on that to make sure that the edge of the cut is
+properly clipped out.  See also FieldBoundary-tritest.net</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/FieldBoundary-quadtest.net.</p>
+
+</net>
+<net id="FieldBoundary-tritest">
+<title>FieldBoundary-tritest Regression Test</title>
+
+<p>Test out the FieldBoundary module on a TetVolMesh, then clip out a
+chunk of that closed sphere and test FieldBoundary on the resulting
+TriSurfMesh to make sure that it is detected properly.  See also
+FieldBoundary-quadtest.net</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/FieldBoundary-tritest.net.</p>
+
+</net>
+</nets>
+</component>

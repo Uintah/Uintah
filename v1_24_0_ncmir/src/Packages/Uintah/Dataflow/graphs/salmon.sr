@@ -1,0 +1,16 @@
+# SCI Network 1.0
+
+global userName
+set userName "dav"
+
+global runDate
+set runDate " Sat  Apr 10 1999"
+
+global runTime
+set runTime " 21:46:5"
+
+set m0 [addModuleAtPosition Salmon 156 66]
+
+
+set Salmon_0-notes {}
+
