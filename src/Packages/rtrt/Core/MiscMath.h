@@ -4,6 +4,20 @@
 
 //namespace rtrt {
 
+//
+///< Degrees to radians conversion...
+//
+inline double DegsToRads( double degrees )      
+{ 
+    return(degrees * ( M_PI / 180.0 ) ); 
+}
+
+///< Radians to degrees conversion...
+inline double RadsToDegs( double rads ) 
+{ 
+    return(rads * ( 180.0 / M_PI ) ); 
+}
+
 inline double Abs(double x) {
     return x<0?-x:x;
 }
