@@ -252,7 +252,6 @@ main(int argc, char* argv[])
     if(strcmp(argv[i], "-np")==0){
       i++;
       rtrt_engine->nworkers=atoi(argv[i]);
-      rtrt_engine->np = rtrt_engine->nworkers;
     } else if(strcmp(argv[i], "-nomempolicy") == 0){
       use_pm=false;
     } else if(strcmp(argv[i], "-rserver") == 0){
@@ -598,7 +597,7 @@ main(int argc, char* argv[])
 						  gridcellsizeL2,
 						  gridcellsizeL3,
 						  minObjs1, minObjs2, 
-						  rtrt_engine->np ));
+						  rtrt_engine->nworkers ));
       } else if(use_bv==5){
 	Object *obj = scene->get_object();
 	Group *g = dynamic_cast<Group *>(obj);
@@ -668,8 +667,7 @@ main(int argc, char* argv[])
 
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, rtrt_engine, criteria1, criteria2,
-                   rtrt_engine->nworkers, bench,
-		   ncounters, c0, c1, 1.0, 1.0, display_frames,
+                   bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
 		   pp_size, scratchsize, fullscreen, do_frameless==true,
                    rserver, stereo );
 
