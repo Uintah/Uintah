@@ -161,22 +161,22 @@
      </Level>
      <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "z-">
-        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
      </BoundaryConditions>
    </Grid>
