@@ -2171,7 +2171,11 @@ case $host in
 
       if (test "$HAVE_LIBMPI" || test "$HAVE_LIBMPICH") && test "$HAVE_MPI_H"; then
          FOUND_ALL_MPI=yes
-         DEF_MPI="#define HAVE_MPI 1"
+         if test "$HAVE_LIBMPICH"; then
+           DEF_MPICH="#define HAVE_MPICH 1"
+         else
+           DEF_MPI="#define HAVE_MPI 1"
+         fi
       fi
 esac
 
