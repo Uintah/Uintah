@@ -30,6 +30,10 @@
 #ifndef SCI_ENVIRONMENT_DEFS_H
 #define SCI_ENVIRONMENT_DEFS_H
 
+#ifndef SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
+#error "Don't #include this file.  #include <Core/Util/Environment.h> instead"
+#endif
+
 #define SCIRUN_SRCDIR "@scirun_src_dir@"
 #define SCIRUN_OBJDIR "@scirun_obj_dir@"
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
