@@ -320,7 +320,10 @@ void Transform::post_rotate(double angle, const Vector& axis)
 void Transform::rotate(const Vector& from, const Vector& to)
 {
   Vector axis(Cross(from, to));
-  if(axis.length2() < 0.00001) return; // Don't bother
+  if(axis.length2() < 0.00001) {
+    if (Dot(from,to) > 0.9) return; // Don't bother
+    pre_rotate(M_PI, Vector(0,1,0)); // rotate 180 degrees
+  }
   double sintheta=axis.normalize();
   if(sintheta >= 1.0){
     pre_rotate(M_PI/2, axis);
