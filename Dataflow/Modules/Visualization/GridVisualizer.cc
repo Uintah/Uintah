@@ -70,7 +70,7 @@ public:
 
   virtual void execute();
   
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
   void tcl_command(GuiArgs& args, void* userdata);
   virtual void geom_pick(GeomPickHandle pick, void* userdata, GeomHandle picked);
   
@@ -500,7 +500,7 @@ void GridVisualizer::execute()
   remark("GridVisualizer::execute:end");
 }
 
-void GridVisualizer::widget_moved(bool last)
+void GridVisualizer::widget_moved(bool last, BaseWidget*)
 {
   if(last && !abort_flag) {
     abort_flag=1;

@@ -81,7 +81,7 @@ public:
   FaceCuttingPlane( GuiContext* ctx);
 
   virtual ~FaceCuttingPlane();
-  virtual void widget_moved(bool last);    
+  virtual void widget_moved(bool last, BaseWidget*);
   virtual void execute();
   template <class MyField> void real_execute(MyField *lvf, ColorMapHandle cmh);
   void tcl_command( GuiArgs&, void* );
@@ -202,7 +202,7 @@ void FaceCuttingPlane::tcl_command(GuiArgs& args, void* userdata)
       want_to_execute();
       control_ = w;
       control_widget_->SetPosition(w);
-      widget_moved(true);
+      widget_moved(true,0);
       ogeom_->flushViews();				  
     }
   } else {
@@ -210,7 +210,7 @@ void FaceCuttingPlane::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
-void FaceCuttingPlane::widget_moved(bool last)
+void FaceCuttingPlane::widget_moved(bool last, BaseWidget*)
 {
   if( control_widget_ && mesh_ && last && !abort_flag)
   {

@@ -50,7 +50,7 @@ public:
   template <class F1, class F2>
     bool fill_histogram( F1* f1, F2* f2);
 
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
 
   MaterialHandle white;
 private:

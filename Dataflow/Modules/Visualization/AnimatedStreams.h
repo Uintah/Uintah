@@ -34,7 +34,7 @@ public:
   AnimatedStreams(GuiContext* ctx);
 
   virtual ~AnimatedStreams();
-  virtual void widget_moved(bool last);    
+  virtual void widget_moved(bool last, BaseWidget*);
   virtual void execute();
   void tcl_command( GuiArgs&, void* );
 
