@@ -30,31 +30,43 @@
 #include <string>
 
 #include <itkImage.h>
-#include <itkImageIterator.h>
-#include <itkImageConstIterator.h>
+#include <itkImageRegionIterator.h>
+#include <itkImageRegionConstIterator.h>
 
 namespace Insight {
 
 using std::string;
 using namespace SCIRun;
 
+
 template<class T> class ITKFData3d;
 template<class T> void Pio(Piostream& stream, ITKFData3d<T>& array);
-
 
 template <class Data>
 class ITKFData3d {
 public:
   typedef Data value_type;
   typedef itk::Image<Data, 3> image_type;
-  typedef itk::ImageIterator< image_type > iterator;
-  typedef itk::ImageConstIterator< image_type > const_iterator;
+  typedef typename itk::ImageRegionIterator<image_type> iterator;
+  typedef typename  itk::ImageRegionConstIterator<image_type> const_iterator;
   
-  iterator begin();
-  iterator end();
-  const_iterator begin() const;
-  const_iterator end() const; 
-    
+  iterator begin() {
+    iterator i(image_, image_->GetRequestedRegion());
+    return i.Begin();
+  }
+  iterator end() {
+    iterator i(image_, image_->GetRequestedRegion());
+    return i.End();
+  }
+  const_iterator begin() const {
+    const_iterator i(image_, image_->GetRequestedRegion());
+    return i.Begin();
+  }
+  const_iterator end() const {
+    const_iterator i(image_, image_->GetRequestedRegion());
+    return i.End();
+  }
+
   ITKFData3d();
   ITKFData3d(int); //default arg sgi bug workaround.
   ITKFData3d(const ITKFData3d& data);
@@ -62,89 +74,72 @@ public:
   
   const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const
   { 
-    std::cerr << "const operator[] for Cell\n";
     typename image_type::IndexType pixel;
     pixel[0] = idx.i_;
     pixel[1] = idx.j_;
     pixel[2] = idx.k_;
     return image_->GetPixel( pixel ); 
-    // return image_[pixel]; 
   } 
   const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
   { 
-    std::cerr << "const operator[] for Face\n";
     ASSERT(0);
     typename image_type::IndexType pixel;
     pixel[0] = 0;
     pixel[1] = 0;
     pixel[2] = 0;
     return image_->GetPixel( pixel );  
-    //return image_[pixel]; 
   }
   const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const
   { 
-    std::cerr << "const operator[] for Edge\n";
     ASSERT(0);
     typename image_type::IndexType pixel;
     pixel[0] = 0;
     pixel[1] = 0;
     pixel[2] = 0;
     return image_->GetPixel( pixel );  
-    //return image_[pixel]; 
   }
   const value_type &operator[](typename LatVolMesh::Node::index_type idx) const
   { 
-    //std::cerr << "const operator[] for Node\n";
     typename image_type::IndexType pixel;
     pixel[0] = idx.i_;
     pixel[1] = idx.j_;
     pixel[2] = idx.k_;
-    //std::cerr << idx.k_ << " " << idx.j_ << " " << idx.i_ << std::endl;
     return image_->GetPixel( pixel );  
-    //return image_[pixel]; 
   }
 
   value_type &operator[](typename LatVolMesh::Cell::index_type idx)
   { 
-    std::cerr << "operator[] for Cell\n";
     typename image_type::IndexType pixel;
     pixel[0] = idx.k_;
     pixel[1] = idx.j_;
     pixel[2] = idx.i_;
     return image_->GetPixel( pixel ); 
-    //return image_[pixel]; 
   }
   value_type &operator[](typename LatVolMesh::Face::index_type idx)
   {
-    std::cerr << "operator[] for Face\n";
     ASSERT(0);
     typename image_type::IndexType pixel;
     pixel[0] = 0;
     pixel[1] = 0;
     pixel[2] = 0;
     return image_->GetPixel( pixel );  
-    // return image_[pixel]; 
   }
   value_type &operator[](typename LatVolMesh::Edge::index_type idx)
   {
-    std::cerr << "operator[] for Edge\n";
     ASSERT(0);
     typename image_type::IndexType pixel;
     pixel[0] = 0;
     pixel[1] = 0;
     pixel[2] = 0;
     return image_->GetPixel( pixel );  
-    //return image_[pixel]; 
   }
   value_type &operator[](typename LatVolMesh::Node::index_type idx)
   {
-    std::cerr << "operator[] for Node\n";
     typename image_type::IndexType pixel;
     pixel[0] = idx.k_;
     pixel[1] = idx.j_;
     pixel[2] = idx.i_;
     return image_->GetPixel( pixel ); 
-    //return image_[pixel]; 
   }
 
   void resize(const LatVolMesh::Node::size_type &size)
@@ -195,38 +190,32 @@ private:
 };
 
 ////////////////////////////////////////////////////////
+/*
+template <class Data>
+ITKFData3d<Data>::iterator 
+ITKFData3d<Data>::begin() { 
+  iterator i = new iterator(image_, image_->GetRequestedRegion());
+  return i.GoToBegin();
+}
+
+template <class Data> 
+ITKFData3d<Data>::iterator ITKFData3d<Data>::end() { 
+  iterator i = new iterator(image_, image_->GetRequestedRegion());
+  return i.GoToEnd();
+}
 
 template <class Data>
-typename ITKFData3d<Data>::iterator ITKFData3d<Data>::begin()
-{
-  typename iterator::Pointer i = iterator::New();
-  i->SetInput( image_ );
-  return i->Begin();
+ITKFData3d<Data>::const_iterator ITKFData3d<Data>::begin() const { 
+  const_iterator i = new const_iterator(image_, image_->GetRequestedRegion());
+  return i.GoToBegin(); 
 }
 
 template <class Data>
-typename ITKFData3d<Data>::iterator ITKFData3d<Data>::end()
-{
-  typename iterator::Pointer i = iterator::New();
-  i->SetInput( image_ );
-  return i->End();
-} 
-
-template<class Data>
-typename ITKFData3d<Data>::const_iterator ITKFData3d<Data>::begin() const
-{
-  typename const_iterator::Pointer i = const_iterator::New();
-  i->SetInput( image_ );
-  return i->Begin();
+ITKFData3d<Data>::const_iterator ITKFData3d<Data>::end() const { 
+  const_iterator i = new const_iterator(image_, image_->GetRequestedRegion());
+  return i.GoToEnd(); 
 }
-
-template<class Data>
-typename ITKFData3d<Data>::const_iterator ITKFData3d<Data>::end() const
-{
-  typename const_iterator::Pointer i = const_iterator::New();
-  i->SetInput( image_ );
-  return i->End();
-}
+*/
 
 template <class Data>
 ITKFData3d<Data>::ITKFData3d()
