@@ -448,10 +448,6 @@ panels respectively.</p>
 </li>
 <li>
 <p>
-<em>The 1.20.0 version of BioTensor does <b>not</b> have support for
-loading diffusion weighted data without also specifying a B0 reference
-dataset. This will be fixed in version 1.20.1.</em>
-</p>
 </li>
 </ul>
 <br/>
@@ -672,13 +668,6 @@ scalar field that BioTensor uses for controlling visualization, but
 does not scale tensors themselves.
 </p>
 <p>
-<em>Note: The 1.20.0 version of BioTensor has a bug, which causes the
-automatic threshold button for the Masking Threshold to be
-ignored. Instead, the specified threshold is <b>always</b> used. Un-select
-the Automatic check-box and take care in specifying this value. This
-bug will be fixed in the 1.20.1 release.</em>
-</p>
-<p>
 B-Matrix: In order to estimate tensors from DWIs, the relationship
 between each DWI and the diffusion tensor must be known. The B-matrix
 is a matrix that captures the weighting that each diffusion tensor
@@ -850,13 +839,6 @@ alt="Figure: Isosurface Visualization."/>
 <b>Figure 10: Isosurface Visualization.</b>
 </center>
 
-<p>
-<em>Note: The 1.20.0 version of BioTensor renders the isosurface faces
-using a constant per-face normal. In the 1.20.1 release, the rendering
-option will be enabled to display faces with interpolated normals,
-which will produce smoother surface renderings, as demonstrated in <a
-href="#figure_10">Figure 10</a></em>.
-</p>
 <p>
 Just as planes can be used to clip the isosurface, the isosurface can
 be used to clip the planes. An example of this is shown in <a
