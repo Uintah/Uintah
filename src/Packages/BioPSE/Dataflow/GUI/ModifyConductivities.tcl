@@ -125,7 +125,6 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w -borderwidth 5
