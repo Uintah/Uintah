@@ -150,6 +150,7 @@ SOFLAGS         := @SOFLAGS@ -L$(LIBDIR)
 LDFLAGS         := @LDFLAGS@ -L$(LIBDIR)
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
+NEED_SONAME	:= @NEED_SONAME@
 
 .SUFFIXES: .cc .c .o .d .s
 
@@ -167,7 +168,6 @@ CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
 #
 ALLSUBDIRS := . 
 include $(SRCTOP)/scripts/recurse.mk
-
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 MAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
@@ -217,6 +217,9 @@ distclean:: clean
 
 #
 # $Log$
+# Revision 1.12  2000/03/20 21:43:30  yarden
+# Linux port: add NEED_SONAME
+#
 # Revision 1.11  2000/03/20 19:35:41  sparker
 # Added VPATH support
 #
