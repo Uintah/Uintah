@@ -53,32 +53,46 @@ namespace Uintah {
 
     // Create datatype for storing porosity parameters
     struct PorosityData {
-      double f0;     /*< Initial porosity */
+      double f0;     /*< Initial mean porosity */
+      double f0_std; /*< Initial standard deviation of porosity */
       double fc;     /*< Critical porosity */
       double fn;     /*< Volume fraction of void nucleating particles */
       double en;     /*< Mean strain for nucleation */
       double sn;     /*< Standard deviation of strain for nucleation */
+      std::string porosityDist; /*< Initial porosity distribution*/
+    };
+
+    // Create datatype for storing damage parameters
+    struct ScalarDamageData {
+      double D0;     /*< Initial mean scalar damage */
+      double D0_std; /*< Initial standard deviation of scalar damage */
+      double Dc;     /*< Critical scalar damage */
+      std::string scalarDamageDist; /*< Initial damage distrinution */
     };
 
     const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pStrainRateLabel;  
     const VarLabel* pDamageLabel;  
-    const VarLabel* pDamageLabel_preReloc;  
     const VarLabel* pPorosityLabel;  
-    const VarLabel* pPorosityLabel_preReloc;  
     const VarLabel* pPlasticTempLabel;  
-    const VarLabel* pPlasticTempLabel_preReloc;  
     const VarLabel* pPlasticTempIncLabel;  
-    const VarLabel* pPlasticTempIncLabel_preReloc;  
     const VarLabel* pLocalizedLabel;  
+
+    const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pStrainRateLabel_preReloc;  
+    const VarLabel* pDamageLabel_preReloc;  
+    const VarLabel* pPorosityLabel_preReloc;  
+    const VarLabel* pPlasticTempLabel_preReloc;  
+    const VarLabel* pPlasticTempIncLabel_preReloc;  
     const VarLabel* pLocalizedLabel_preReloc;  
 
   private:
 
-    CMData       d_initialData;
-    PorosityData d_porosity;
+    CMData           d_initialData;
+    PorosityData     d_porosity;
+    ScalarDamageData d_scalarDam;
     
     double d_tol;
     double d_initialMaterialTemperature;
@@ -151,16 +165,22 @@ namespace Uintah {
 				  const MPMMaterial* matl,
 				  DataWarehouse* new_dw);
 
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Put documentation here. */
+    ////////////////////////////////////////////////////////////////////////
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
 					   const PatchSet* patch, 
 					   MPMLabel* lb) const;
 
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Put documentation here. */
+    ////////////////////////////////////////////////////////////////////////
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
 				   ParticleSubset* subset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
+				   map<const VarLabel*, 
+				   ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw);
-
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */

@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Math/Gaussian.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
@@ -42,30 +43,40 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps,
                                        int n8or27)
 {
   lb = Mlb;
+  d_erosionAlgorithm = "none";
 
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
+
   ps->get("useModifiedEOS",d_useModifiedEOS);
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
-  d_erosionAlgorithm = "none";
   d_initialMaterialTemperature = 294.0;
   ps->get("initial_material_temperature",d_initialMaterialTemperature);
 
-  // Cut off values are not got from the damage models
-  // d_damageCutOff = 1.0;
-  // ps->get("damage_cutoff", d_damageCutOff);
-  
   d_porosity.f0 = 0.002;  // Initial porosity
+  d_porosity.f0_std = 0.002;  // Initial STD porosity
   d_porosity.fc = 0.5;    // Critical porosity
   d_porosity.fn = 0.1;    // Volume fraction of void nucleating particles
   d_porosity.en = 0.3;    // Mean strain for nucleation
   d_porosity.sn = 0.1;    // Standard deviation strain for nucleation
-  ps->get("initial_porosity",        d_porosity.f0);
-  ps->get("critical_porosity",       d_porosity.fc);
-  ps->get("frac_nucleation",         d_porosity.fn);
-  ps->get("meanstrain_nucleation",   d_porosity.en);
-  ps->get("stddevstrain_nucleation", d_porosity.sn);
+  d_porosity.porosityDist = "constant";
+  ps->get("initial_mean_porosity",         d_porosity.f0);
+  ps->get("initial_std_porosity",          d_porosity.f0_std);
+  ps->get("critical_porosity",             d_porosity.fc);
+  ps->get("frac_nucleation",               d_porosity.fn);
+  ps->get("meanstrain_nucleation",         d_porosity.en);
+  ps->get("stddevstrain_nucleation",       d_porosity.sn);
+  ps->get("initial_porosity_distrib",      d_porosity.porosityDist);
+
+  d_scalarDam.D0 = 0.0; // Initial scalar damage
+  d_scalarDam.D0_std = 0.0; // Initial STD scalar damage
+  d_scalarDam.Dc = 1.0; // Critical scalar damage
+  d_scalarDam.scalarDamageDist = "constant";
+  ps->get("initial_mean_scalar_damage",        d_scalarDam.D0);
+  ps->get("initial_std_scalar_damage",         d_scalarDam.D0_std);
+  ps->get("critical_scalar_damage",            d_scalarDam.Dc);
+  ps->get("initial_scalar_damage_distrib",     d_scalarDam.scalarDamageDist);
 
   d_yield = YieldConditionFactory::create(ps);
   if(!d_yield){
@@ -118,29 +129,34 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps,
 
   pLeftStretchLabel = VarLabel::create("p.leftStretch",
 	ParticleVariable<Matrix3>::getTypeDescription());
-  pLeftStretchLabel_preReloc = VarLabel::create("p.leftStretch+",
-	ParticleVariable<Matrix3>::getTypeDescription());
   pRotationLabel = VarLabel::create("p.rotation",
 	ParticleVariable<Matrix3>::getTypeDescription());
-  pRotationLabel_preReloc = VarLabel::create("p.rotation+",
-	ParticleVariable<Matrix3>::getTypeDescription());
-  pDamageLabel = VarLabel::create("p.damage",
+  pStrainRateLabel = VarLabel::create("p.strainRate",
 	ParticleVariable<double>::getTypeDescription());
-  pDamageLabel_preReloc = VarLabel::create("p.damage+",
+  pDamageLabel = VarLabel::create("p.damage",
 	ParticleVariable<double>::getTypeDescription());
   pPorosityLabel = VarLabel::create("p.porosity",
 	ParticleVariable<double>::getTypeDescription());
-  pPorosityLabel_preReloc = VarLabel::create("p.porosity+",
-	ParticleVariable<double>::getTypeDescription());
   pLocalizedLabel = VarLabel::create("p.localized",
-	ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
 	ParticleVariable<int>::getTypeDescription());
   pPlasticTempLabel = VarLabel::create("p.plasticTemp",
 	ParticleVariable<double>::getTypeDescription());
-  pPlasticTempLabel_preReloc = VarLabel::create("p.plasticTemp+",
-	ParticleVariable<double>::getTypeDescription());
   pPlasticTempIncLabel = VarLabel::create("p.plasticTempInc",
+	ParticleVariable<double>::getTypeDescription());
+
+  pLeftStretchLabel_preReloc = VarLabel::create("p.leftStretch+",
+	ParticleVariable<Matrix3>::getTypeDescription());
+  pRotationLabel_preReloc = VarLabel::create("p.rotation+",
+	ParticleVariable<Matrix3>::getTypeDescription());
+  pStrainRateLabel_preReloc = VarLabel::create("p.strainRate+",
+	ParticleVariable<double>::getTypeDescription());
+  pDamageLabel_preReloc = VarLabel::create("p.damage+",
+	ParticleVariable<double>::getTypeDescription());
+  pPorosityLabel_preReloc = VarLabel::create("p.porosity+",
+	ParticleVariable<double>::getTypeDescription());
+  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
+	ParticleVariable<int>::getTypeDescription());
+  pPlasticTempLabel_preReloc = VarLabel::create("p.plasticTemp+",
 	ParticleVariable<double>::getTypeDescription());
   pPlasticTempIncLabel_preReloc = VarLabel::create("p.plasticTempInc+",
 	ParticleVariable<double>::getTypeDescription());
@@ -150,18 +166,21 @@ HypoElasticPlastic::~HypoElasticPlastic()
 {
   // Destructor 
   VarLabel::destroy(pLeftStretchLabel);
-  VarLabel::destroy(pLeftStretchLabel_preReloc);
   VarLabel::destroy(pRotationLabel);
-  VarLabel::destroy(pRotationLabel_preReloc);
+  VarLabel::destroy(pStrainRateLabel);
   VarLabel::destroy(pDamageLabel);
-  VarLabel::destroy(pDamageLabel_preReloc);
   VarLabel::destroy(pPorosityLabel);
-  VarLabel::destroy(pPorosityLabel_preReloc);
   VarLabel::destroy(pLocalizedLabel);
-  VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pPlasticTempLabel);
-  VarLabel::destroy(pPlasticTempLabel_preReloc);
   VarLabel::destroy(pPlasticTempIncLabel);
+
+  VarLabel::destroy(pLeftStretchLabel_preReloc);
+  VarLabel::destroy(pRotationLabel_preReloc);
+  VarLabel::destroy(pStrainRateLabel_preReloc);
+  VarLabel::destroy(pDamageLabel_preReloc);
+  VarLabel::destroy(pPorosityLabel_preReloc);
+  VarLabel::destroy(pLocalizedLabel_preReloc);
+  VarLabel::destroy(pPlasticTempLabel_preReloc);
   VarLabel::destroy(pPlasticTempIncLabel_preReloc);
 
   delete d_plastic;
@@ -179,20 +198,24 @@ HypoElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
   // decomposition to get the left stretch and rotation, store 
   // these in the data warehouse and update them before updating the
   // stress (BB 11/14/02)
-  from.push_back(pLeftStretchLabel);
-  from.push_back(pRotationLabel);
   from.push_back(lb->pDeformationMeasureLabel);
   from.push_back(lb->pStressLabel);
+
+  from.push_back(pLeftStretchLabel);
+  from.push_back(pRotationLabel);
+  from.push_back(pStrainRateLabel);
   from.push_back(pDamageLabel);
   from.push_back(pPorosityLabel);
   from.push_back(pLocalizedLabel);
   from.push_back(pPlasticTempLabel);
   from.push_back(pPlasticTempIncLabel);
 
-  to.push_back(pLeftStretchLabel_preReloc);
-  to.push_back(pRotationLabel_preReloc);
   to.push_back(lb->pDeformationMeasureLabel_preReloc);
   to.push_back(lb->pStressLabel_preReloc);
+
+  to.push_back(pLeftStretchLabel_preReloc);
+  to.push_back(pRotationLabel_preReloc);
+  to.push_back(pStrainRateLabel_preReloc);
   to.push_back(pDamageLabel_preReloc);
   to.push_back(pPorosityLabel_preReloc);
   to.push_back(pLocalizedLabel_preReloc);
@@ -216,15 +239,16 @@ void HypoElasticPlastic::initializeCMData(const Patch* patch,
 
   ParticleVariable<Matrix3> pDeformGrad, pStress;
   ParticleVariable<Matrix3> pLeftStretch, pRotation;
-  ParticleVariable<double> pDamage;
-  ParticleVariable<double> pPorosity;
+  ParticleVariable<double> pDamage, pPorosity, pStrainRate;
   ParticleVariable<int> pLocalized;
   ParticleVariable<double> pPlasticTemperature, pPlasticTempInc;
 
-  new_dw->allocateAndPut(pLeftStretch, pLeftStretchLabel, pset);
-  new_dw->allocateAndPut(pRotation, pRotationLabel, pset);
   new_dw->allocateAndPut(pDeformGrad, lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress, lb->pStressLabel, pset);
+
+  new_dw->allocateAndPut(pLeftStretch, pLeftStretchLabel, pset);
+  new_dw->allocateAndPut(pRotation, pRotationLabel, pset);
+  new_dw->allocateAndPut(pStrainRate, pStrainRateLabel, pset);
   new_dw->allocateAndPut(pDamage, pDamageLabel, pset);
   new_dw->allocateAndPut(pLocalized, pLocalizedLabel, pset);
   new_dw->allocateAndPut(pPorosity, pPorosityLabel, pset);
@@ -236,15 +260,51 @@ void HypoElasticPlastic::initializeCMData(const Patch* patch,
     // To fix : For a material that is initially stressed we need to
     // modify the leftStretch and the stress tensors to comply with the
     // initial stress state
-    pLeftStretch[*iter] = one;
-    pRotation[*iter] = one;
     pDeformGrad[*iter] = one;
     pStress[*iter] = zero;
+
+    pLeftStretch[*iter] = one;
+    pRotation[*iter] = one;
+    pStrainRate[*iter] = 0.0;
     pDamage[*iter] = d_damage->initialize();
     pPorosity[*iter] = d_porosity.f0;
     pLocalized[*iter] = 0;
     pPlasticTemperature[*iter] = d_initialMaterialTemperature;
     pPlasticTempInc[*iter] = 0.0;
+  }
+
+  // Do some extra things if the porosity or the damage distribution
+  // is not uniform.  
+  // ** WARNING ** Weibull distribution needs to be implemented.
+  //               At present only Gaussian available.
+  if (d_porosity.porosityDist != "constant") {
+
+    SCIRun::Gaussian gaussGen;
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end();iter++){
+
+      // Generate a Gaussian distributed random number between 0 an 1
+      double rand = gaussGen.rand();
+
+      // Assume mean and std. dev have same value, scale the random
+      // number to the allowable range, and assign to the porosity
+      pPorosity[*iter] = 2.0*rand*d_porosity.f0;
+    }
+  }
+
+  if (d_scalarDam.scalarDamageDist != "constant") {
+
+    SCIRun::Gaussian gaussGen;
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end();iter++){
+
+      // Generate a Gaussian distributed random number between 0 an 1
+      double rand = gaussGen.rand();
+
+      // Assume mean and std. dev have same value, scale the random
+      // number to the allowable range, and assign to the damage
+      pDamage[*iter] = 2.0*rand*d_scalarDam.D0;
+    }
   }
 
   // Initialize the data for the plasticity model
@@ -258,22 +318,26 @@ void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
 						   const PatchSet* patch,
 						   MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,pLeftStretchLabel, Ghost::None);
-  task->requires(Task::OldDW,pRotationLabel, Ghost::None);
+  //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+
+  task->requires(Task::OldDW,pLeftStretchLabel, Ghost::None);
+  task->requires(Task::OldDW,pRotationLabel, Ghost::None);
+  task->requires(Task::OldDW,pStrainRateLabel, Ghost::None);
   task->requires(Task::OldDW,pDamageLabel, Ghost::None);
   task->requires(Task::OldDW,pLocalizedLabel, Ghost::None);
   task->requires(Task::OldDW,pPorosityLabel, Ghost::None);
   task->requires(Task::OldDW,pPlasticTempLabel, Ghost::None);
+  task->requires(Task::OldDW,pPlasticTempIncLabel, Ghost::None);
 
   d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
 }
 
 void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 					   ParticleSubset* addset,
-					   map<const VarLabel*, ParticleVariableBase*>* newState,
+					   map<const VarLabel*, 
+                                           ParticleVariableBase*>* newState,
 					   ParticleSubset* delset,
 					   DataWarehouse* old_dw)
 {
@@ -284,49 +348,61 @@ void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
   ParticleVariable<Matrix3> pDeformGrad, pStress;
   ParticleVariable<Matrix3> pLeftStretch, pRotation;
-  ParticleVariable<double> pDamage,pPorosity;
+  ParticleVariable<double> pDamage,pPorosity, pStrainRate;
   ParticleVariable<int> pLocalized;
   ParticleVariable<double> pPlasticTemperature, pPlasticTempInc;
 
   constParticleVariable<Matrix3> o_DeformGrad, o_Stress;
   constParticleVariable<Matrix3> o_LeftStretch, o_Rotation;
-  constParticleVariable<double> o_Damage,o_Porosity;
+  constParticleVariable<double> o_Damage,o_Porosity, o_StrainRate;
   constParticleVariable<int> o_Localized;
-  constParticleVariable<double> o_PlasticTemperature;
+  constParticleVariable<double> o_PlasticTemperature, o_PlasticTempInc;
+
+  new_dw->allocateTemporary(pDeformGrad,addset);
+  new_dw->allocateTemporary(pStress,addset);
 
   new_dw->allocateTemporary(pLeftStretch,addset);
   new_dw->allocateTemporary(pRotation,addset);
-  new_dw->allocateTemporary(pDeformGrad,addset);
-  new_dw->allocateTemporary(pStress,addset);
   new_dw->allocateTemporary(pDamage,addset);
+  new_dw->allocateTemporary(pStrainRate,addset);
   new_dw->allocateTemporary(pLocalized,addset);
   new_dw->allocateTemporary(pPorosity,addset);
   new_dw->allocateTemporary(pPlasticTemperature,addset);
+  new_dw->allocateTemporary(pPlasticTempInc,addset);
+
+  old_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_Stress,lb->pStressLabel,delset);
 
   old_dw->get(o_LeftStretch,pLeftStretchLabel,delset);
   old_dw->get(o_Rotation,pRotationLabel,delset);
-  old_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_Stress,lb->pStressLabel,delset);
+  old_dw->get(o_StrainRate,pStrainRateLabel,delset);
   old_dw->get(o_Damage,pDamageLabel,delset);
   old_dw->get(o_Localized,pLocalizedLabel,delset);
   old_dw->get(o_Porosity,pPorosityLabel,delset);
   old_dw->get(o_PlasticTemperature,pPlasticTempLabel,delset);
+  old_dw->get(o_PlasticTempInc,pPlasticTempIncLabel,delset);
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
-    pLeftStretch[*n] = o_LeftStretch[*o];
-    pRotation[*n] = o_Rotation[*o];
     pDeformGrad[*n] = o_DeformGrad[*o];
     pStress[*n] = zero;
+
+    pLeftStretch[*n] = o_LeftStretch[*o];
+    pRotation[*n] = o_Rotation[*o];
+    pStrainRate[*n] = o_StrainRate[*o];
     pDamage[*n] = o_Damage[*o];
     pLocalized[*n] = o_Localized[*o];
+    pPorosity[*n] = o_Porosity[*o];
     pPlasticTemperature[*n] = o_PlasticTemperature[*o];
+    pPlasticTempInc[*n] = o_PlasticTempInc[*o];
   }
+
+  (*newState)[lb->pDeformationMeasureLabel]=pDeformGrad.clone();
+  (*newState)[lb->pStressLabel]=pStress.clone();
 
   (*newState)[pLeftStretchLabel]=pLeftStretch.clone();
   (*newState)[pRotationLabel]=pRotation.clone();
-  (*newState)[lb->pDeformationMeasureLabel]=pDeformGrad.clone();
-  (*newState)[lb->pStressLabel]=pStress.clone();
+  (*newState)[pStrainRateLabel]=pStrainRate.clone();
   (*newState)[pDamageLabel]=pDamage.clone();
   (*newState)[pLocalizedLabel]=pLocalized.clone();
   (*newState)[pPorosityLabel]=pPorosity.clone();
@@ -335,8 +411,6 @@ void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   
   // Initialize the data for the plasticity model
   d_plastic->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
-
-
 }
 
 
@@ -429,12 +503,12 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-    // Get the deformation gradient (F), left stretch (V) and rotation (R)
+    // GET GLOBAL DATA 
+
+    // Get the deformation gradient (F)
     // Note : The deformation gradient from the old datawarehouse is no
     // longer used, but it is updated for possible use elsewhere
-    constParticleVariable<Matrix3> pLeftStretch, pRotation, pDeformGrad;
-    old_dw->get(pLeftStretch, pLeftStretchLabel, pset);
-    old_dw->get(pRotation, pRotationLabel, pset);
+    constParticleVariable<Matrix3>  pDeformGrad;
     old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
 
     // Get the particle location, particle size, particle mass, particle volume
@@ -458,18 +532,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pTemperature;
     old_dw->get(pStress, lb->pStressLabel, pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
-    constParticleVariable<double> pPlasticTemperature, pPlasticTempInc;
-    old_dw->get(pPlasticTemperature, pPlasticTempLabel, pset);
-    old_dw->get(pPlasticTempInc, pPlasticTempIncLabel, pset);
-
-    // Get the particle damage state
-    constParticleVariable<double> pDamage, pPorosity;
-    old_dw->get(pDamage, pDamageLabel, pset);
-    old_dw->get(pPorosity, pPorosityLabel, pset);
-
-    // Get the particle localization state
-    constParticleVariable<int> pLocalized;
-    old_dw->get(pLocalized, pLocalizedLabel, pset);
 
     // Get the time increment (delT)
     delt_vartype delT;
@@ -482,33 +544,60 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
 #endif
 
+    // GET LOCAL DATA 
+
+    // Get the left stretch (V) and rotation (R)
+    constParticleVariable<Matrix3> pLeftStretch, pRotation;
+    old_dw->get(pLeftStretch, pLeftStretchLabel, pset);
+    old_dw->get(pRotation, pRotationLabel, pset);
+
+    // Get the particle plastic temperature
+    constParticleVariable<double> pPlasticTemperature, pPlasticTempInc;
+    old_dw->get(pPlasticTemperature, pPlasticTempLabel, pset);
+    old_dw->get(pPlasticTempInc, pPlasticTempIncLabel, pset);
+
+    // Get the particle damage state
+    constParticleVariable<double> pDamage, pPorosity, pStrainRate;
+    old_dw->get(pDamage, pDamageLabel, pset);
+    old_dw->get(pStrainRate, pStrainRateLabel, pset);
+    old_dw->get(pPorosity, pPorosityLabel, pset);
+
+    // Get the particle localization state
+    constParticleVariable<int> pLocalized;
+    old_dw->get(pLocalized, pLocalizedLabel, pset);
+
     // Create and allocate arrays for storing the updated information
-    ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new, pDeformGrad_new;
-    ParticleVariable<Matrix3> pStress_new;
-    ParticleVariable<double> pDamage_new, pPorosity_new;
-    ParticleVariable<int> pLocalized_new;
-    ParticleVariable<double> pPlasticTemperature_new, pPlasticTempInc_new;
+    // GLOBAL
+    ParticleVariable<Matrix3> pDeformGrad_new, pStress_new;
     ParticleVariable<double> pVolume_deformed;
-    new_dw->allocateAndPut(pLeftStretch_new, 
-                           pLeftStretchLabel_preReloc,            pset);
-    new_dw->allocateAndPut(pRotation_new,    
-                           pRotationLabel_preReloc,               pset);
     new_dw->allocateAndPut(pDeformGrad_new,  
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pVolume_deformed, 
+                           lb->pVolumeDeformedLabel,              pset);
+
+    // LOCAL
+    ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new;
+    ParticleVariable<double>  pDamage_new, pPorosity_new, pStrainRate_new;
+    ParticleVariable<double>  pPlasticTemperature_new, pPlasticTempInc_new;
+    ParticleVariable<int>     pLocalized_new;
+    new_dw->allocateAndPut(pLeftStretch_new, 
+                           pLeftStretchLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pRotation_new,    
+                           pRotationLabel_preReloc,               pset);
+    new_dw->allocateAndPut(pStrainRate_new,      
+                           pStrainRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(pDamage_new,      
                            pDamageLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pPorosity_new,      
-                           pPorosityLabel_preReloc,                 pset);
+                           pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
-                           pLocalizedLabel_preReloc,                 pset);
+                           pLocalizedLabel_preReloc,              pset);
     new_dw->allocateAndPut(pPlasticTemperature_new,      
                            pPlasticTempLabel_preReloc,            pset);
     new_dw->allocateAndPut(pPlasticTempInc_new,      
-                           pPlasticTempIncLabel_preReloc,            pset);
-    new_dw->allocateAndPut(pVolume_deformed, 
-                           lb->pVolumeDeformedLabel,              pset);
+                           pPlasticTempIncLabel_preReloc,         pset);
 
     // Get the plastic strain
     d_plastic->getInternalVars(pset, old_dw);
@@ -521,16 +610,18 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // If the particle has localized, do nothing
       if (pLocalized[idx]) {
-        pLeftStretch_new[idx] = pLeftStretch[idx]; 
-        pRotation_new[idx] = pRotation[idx]; 
         pDeformGrad_new[idx] = pDeformGrad[idx];;
         pStress_new[idx] = pStress[idx];
+        pVolume_deformed[idx] = pVolume[idx];
+
+        pLeftStretch_new[idx] = pLeftStretch[idx]; 
+        pRotation_new[idx] = pRotation[idx]; 
+        pStrainRate_new[idx] = pStrainRate[idx];
         pDamage_new[idx] = pDamage[idx];
         pPorosity_new[idx] = pPorosity[idx];
         pLocalized_new[idx] = pLocalized[idx];
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx];
         pPlasticTempInc_new[idx] = 0.0;
-        pVolume_deformed[idx] = pVolume[idx];
         continue;
       }
 
@@ -589,6 +680,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // deviatoric parts
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
+      pStrainRate_new[idx] = sqrt(tensorD.NormSquared()/1.5);
 
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
@@ -807,29 +899,31 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //double C_pold = C_p;
 
         // ** WARNING ** Special for steel (remove for other materials)
-        //double T = temperature;
-        //C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
+        double T = temperature;
+        C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
 
         // Calculate Tdot (do not allow negative Tdot)
         Tdot = tensorSig.Contract(tensorD)*(taylorQuinney/(rho_cur*C_p));
         Tdot = max(Tdot, 0.0);
 
-        // Update the temperature
+        // Update the plastic temperature
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + Tdot*delT; 
         pPlasticTempInc_new[idx] = Tdot*delT; 
-        //cout << "Particle = " << idx << " T = " << temperature 
-        //     << " Tdot = " << Tdot 
-        //     << " Tp = " << pPlasticTemperature_new[idx] 
-        //     << " rho_cur = " << rho_cur << endl;
-        //cout << "tensorSig = \n" << tensorSig << endl;
-        //cout << "tensorD = \n" << tensorD << endl;
 
-
-	// Compute stability criterion
+        // Find if the particle has localized
 	pLocalized_new[idx] = pLocalized[idx];
         bool isLocalized = false;
+
+        // Check 1: Look at the temperature
+        // Check 2: Look at Jacobian
+        // Check 3: Modified Tepla rule
+        // Check 4: Stability criterion
 	double temp_new = temperature + Tdot*delT;
-	if (d_stable) {
+        double tepla = pPorosity_new[idx]/d_porosity.fc + pDamage_new[idx];
+        if (temp_new > Tm) isLocalized = true;
+        else if (J < 0.0) isLocalized = true;
+        else if (tepla > 1.0) isLocalized = true;
+	else if (d_stable) {
 
 	  // Calculate the elastic tangent modulus
 	  TangentModulusTensor Ce;
@@ -854,7 +948,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	  isLocalized = d_stable->checkStability(tensorSig, tensorD, Cep, 
                                                  direction);
 	}
-	if (temp_new > Tm || isLocalized) {
+	if (isLocalized) {
 	  cerr << " Particle " << idx << " is localized " << endl;
 
 	  // set the particle localization flag to true and set the 
@@ -929,37 +1023,48 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<double> pDamage;
-    constParticleVariable<double> pPorosity;
-    constParticleVariable<int> pLocalized;
-    constParticleVariable<Matrix3> pLeftStretch, pRotation, pDeformGrad;
-    ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new, pDeformGrad_new;
-    ParticleVariable<double> pDamage_new;
-    ParticleVariable<double> pPorosity_new;
-    ParticleVariable<int> pLocalized_new;
-    ParticleVariable<Matrix3> pdefm_new,pstress_new;
-    constParticleVariable<Matrix3> pdefm,pstress;
-    constParticleVariable<double> pmass, pPlasticTemp, pPlasticTempInc;
-    ParticleVariable<double> pvolume_deformed, pPlasticTemp_new,
-                             pPlasticTempInc_new;
 
-    old_dw->get(pDamage, pDamageLabel, pset);
-    old_dw->get(pPorosity, pPorosityLabel, pset);
-    old_dw->get(pLocalized, pLocalizedLabel, pset);
-    old_dw->get(pPlasticTemp, pPlasticTempLabel, pset);
-    old_dw->get(pPlasticTempInc, pPlasticTempIncLabel, pset);
-    old_dw->get(pLeftStretch, pLeftStretchLabel, pset);
-    old_dw->get(pRotation, pRotationLabel, pset);
+    constParticleVariable<Matrix3> pDeformGrad, pStress;
+    constParticleVariable<double>  pMass; 
+
     old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(pmass,                 lb->pMassLabel,            pset);
+    old_dw->get(pStress,     lb->pStressLabel,             pset);
+    old_dw->get(pMass,       lb->pMassLabel,               pset);
+
+    constParticleVariable<Matrix3> pLeftStretch, pRotation;
+    constParticleVariable<double>  pDamage, pPorosity, pStrainRate;
+    constParticleVariable<int>     pLocalized;
+    constParticleVariable<double>  pPlasticTemp, pPlasticTempInc;
+
+    old_dw->get(pLeftStretch,    pLeftStretchLabel,    pset);
+    old_dw->get(pRotation,       pRotationLabel,       pset);
+    old_dw->get(pStrainRate,     pStrainRateLabel,     pset);
+    old_dw->get(pDamage,         pDamageLabel,         pset);
+    old_dw->get(pPorosity,       pPorosityLabel,       pset);
+    old_dw->get(pLocalized,      pLocalizedLabel,      pset);
+    old_dw->get(pPlasticTemp,    pPlasticTempLabel,    pset);
+    old_dw->get(pPlasticTempInc, pPlasticTempIncLabel, pset);
+
+    ParticleVariable<Matrix3>      pDeformGrad_new, pStress_new;
+    ParticleVariable<double>       pVolume_new;
+
+    new_dw->allocateAndPut(pStress_new,      
+                           lb->pStressLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pDeformGrad_new,  
+                           lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pVolume_new, lb->pVolumeDeformedLabel, pset);
+
+    ParticleVariable<Matrix3>      pLeftStretch_new, pRotation_new;
+    ParticleVariable<double>       pDamage_new, pPorosity_new, pStrainRate_new;
+    ParticleVariable<int>          pLocalized_new;
+    ParticleVariable<double>       pPlasticTemp_new, pPlasticTempInc_new;
+
     new_dw->allocateAndPut(pLeftStretch_new, 
                            pLeftStretchLabel_preReloc,            pset);
     new_dw->allocateAndPut(pRotation_new,    
                            pRotationLabel_preReloc,               pset);
-    new_dw->allocateAndPut(pstress_new,      
-                           lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pDeformGrad_new,  
-                           lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pStrainRate_new,      
+                           pStrainRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(pDamage_new,      
                            pDamageLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pPorosity_new,      
@@ -970,29 +1075,29 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
                            pPlasticTempLabel_preReloc,            pset);
     new_dw->allocateAndPut(pPlasticTempInc_new,
                            pPlasticTempIncLabel_preReloc,         pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
 
     // Get the plastic strain
     d_plastic->getInternalVars(pset, old_dw);
     d_plastic->allocateAndPutInternalVars(pset, new_dw);
     //    d_plastic->initializeInternalVars(pset, new_dw);
 
-    old_dw->get(pstress,       lb->pStressLabel,                       pset);
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      pstress_new[idx] = pstress[idx];
+      pStress_new[idx] = pStress[idx];
       pDeformGrad_new[idx] = pDeformGrad[idx];
+      pVolume_new[idx]=(pMass[idx]/rho_orig);
+
       pLeftStretch_new[idx] = pLeftStretch[idx];
       pRotation_new[idx] = pRotation[idx];
+      pStrainRate_new[idx] = pStrainRate[idx];
       pDamage_new[idx] = pDamage[idx];
       pPorosity_new[idx] = pPorosity[idx];
       pLocalized_new[idx] = pLocalized[idx];
       pPlasticTemp_new[idx] = pPlasticTemp[idx];
       pPlasticTempInc_new[idx] = 0.0;
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
 
     new_dw->put(delt_vartype(1.e10), lb->delTLabel);
@@ -1113,7 +1218,8 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
     old_dw->get(pPlasticTempInc, pPlasticTempIncLabel, pset);
 
     // Get the particle damage state
-    constParticleVariable<double> pDamage, pPorosity;
+    constParticleVariable<double> pDamage, pPorosity, pStrainRate;
+    old_dw->get(pStrainRate, pStrainRateLabel, pset);
     old_dw->get(pDamage, pDamageLabel, pset);
     old_dw->get(pPorosity, pPorosityLabel, pset);
     constParticleVariable<int> pLocalized;
@@ -1126,7 +1232,7 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
     // Create and allocate arrays for storing the updated information
     ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new, pDeformGrad_new;
     ParticleVariable<Matrix3> pStress_new;
-    ParticleVariable<double> pDamage_new, pPorosity_new;
+    ParticleVariable<double> pDamage_new, pPorosity_new, pStrainRate_new;
     ParticleVariable<int> pLocalized_new;
     ParticleVariable<double> pPlasticTemperature_new, pPlasticTempInc_new;
     ParticleVariable<double> pVolume_deformed;
@@ -1138,6 +1244,8 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pStrainRate_new,     
+                           pStrainRateLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pDamage_new,     
                            pDamageLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pPorosity_new,     
@@ -1214,6 +1322,7 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
       // deviatoric parts
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
+      pStrainRate_new[idx] = sqrt(tensorD.NormSquared()/1.5);
 
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
@@ -1529,6 +1638,7 @@ HypoElasticPlastic::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pLeftStretchLabel, matlset);
   task->computes(pRotationLabel, matlset);
+  task->computes(pStrainRateLabel, matlset);
   task->computes(pDamageLabel, matlset);
   task->computes(pPorosityLabel, matlset);
   task->computes(pLocalizedLabel, matlset);
@@ -1559,29 +1669,32 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
 
+#ifdef FRACTURE
+  task->requires(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None); 
+  task->requires(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
+#endif
+
   task->requires(Task::OldDW, pLeftStretchLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pRotationLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, pStrainRateLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pDamageLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pPorosityLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pLocalizedLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pPlasticTempLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pPlasticTempIncLabel, matlset,Ghost::None);
 
-#ifdef FRACTURE
-  task->requires(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None); 
-  task->requires(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
-#endif
-
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
+
   task->computes(pLeftStretchLabel_preReloc,  matlset);
   task->computes(pRotationLabel_preReloc, matlset);
+  task->computes(pStrainRateLabel_preReloc, matlset);
   task->computes(pDamageLabel_preReloc, matlset);
   task->computes(pPorosityLabel_preReloc, matlset);
   task->computes(pLocalizedLabel_preReloc, matlset);
   task->computes(pPlasticTempLabel_preReloc, matlset);
   task->computes(pPlasticTempIncLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
 
   // Add internal evolution variables computed by plasticity model
   d_plastic->addComputesAndRequires(task, matl, patch);

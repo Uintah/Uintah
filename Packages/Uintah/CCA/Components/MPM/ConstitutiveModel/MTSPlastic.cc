@@ -94,7 +94,7 @@ MTSPlastic::allocateCMDataAddRequires(Task* task,
 				      const PatchSet* patch,
 				      MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
   task->requires(Task::OldDW,pMTSLabel, Ghost::None);
 }
@@ -213,7 +213,7 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
          << " exp(To/T) = " << exp(d_CM.T_0/T) << " D = " << d_CM.D << endl;
     throw InvalidValue(desc.str());
   }
-  double mu_mu_0 = mu/d_CM.mu_0;
+  //double mu_mu_0 = mu/d_CM.mu_0;
   //cout << "mu = " << mu << " mu/mu_0 = " << mu_mu_0 << endl;
 
   // Calculate S_i

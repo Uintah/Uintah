@@ -27,12 +27,12 @@ DruckerCheck::checkStability(const Matrix3& ,
   Matrix3 stressRate(0.0);
   Cep.contract(deformRate, stressRate);
 
-  cout << "Deform Rate = \n" << deformRate << endl;
-  cout << "Cep = \n" << Cep ;
-  cout << "Stress Rate = \n" << stressRate << endl;
+  //cout << "Deform Rate = \n" << deformRate << endl;
+  //cout << "Cep = \n" << Cep ;
+  //cout << "Stress Rate = \n" << stressRate << endl;
 
   double val = stressRate.Contract(deformRate);
-  cout << "val = " << val << endl << endl;
+  //cout << "val = " << val << endl << endl;
   if (val > 0.0) return false;
   return true;
 }

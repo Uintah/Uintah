@@ -23,7 +23,7 @@ HancockMacKenzieDamage::initialize()
 }
 
 inline bool
-HancockMacKenzieDamage:: hasFailed(double damage)
+HancockMacKenzieDamage::hasFailed(double damage)
 {
   if (damage > d_initialData.Dc) return true;
   return false;
