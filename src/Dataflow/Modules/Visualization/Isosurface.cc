@@ -472,12 +472,6 @@ Isosurface::execute()
       return;
     }
 
-    // Output geometry.
-    GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
-    if (!ogeom_port) {
-      error("Unable to initialize oport 'Geometry'.");
-      return;
-    }
 
     // Get the output field handle.
     if (build_field && fields.size() && fields[0].get_rep()) {
@@ -545,6 +539,13 @@ Isosurface::execute()
   
     // Stop showing the previous geometry.
     bool geomflush = false;
+
+    // Output geometry.
+    GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
+    if (!ogeom_port) {
+      error("Unable to initialize oport 'Geometry'.");
+      return;
+    }
 
     if ( geomID_ ) {
       ogeom_port->delObj( geomID_ );
