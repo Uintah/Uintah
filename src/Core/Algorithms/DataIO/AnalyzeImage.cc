@@ -51,6 +51,7 @@
  
 // SCIRun includes
 #include <Core/Algorithms/DataIO/AnalyzeImage.h>
+#include <teem/nrrd.h> 
 
 using namespace std;
 
@@ -97,7 +98,39 @@ AnalyzeImage::AnalyzeImage( itk::AnalyzeImageIO::Pointer io,
     pixel_buffer_[i] = *data++;
   }
 
-  // ??? data_type;
+  const std::type_info& type = io->GetPixelType();
+
+  if( type == typeid(short) )
+  {
+    data_type_ = "SHORT";
+    nrrd_type_ = nrrdTypeShort;
+  }
+  else if( type == typeid(unsigned short) )
+  {
+    data_type_ = "USHORT";
+    nrrd_type_ = nrrdTypeUShort;
+  }
+  else if( type == typeid(char) )
+  {
+    data_type_ = "CHAR";
+    nrrd_type_ = nrrdTypeChar;
+  }
+  else if( type == typeid(unsigned char) )
+  {
+    data_type_ = "UCHAR";
+    nrrd_type_ = nrrdTypeUChar;
+  }
+  else if( type == typeid(float) )
+  {
+    data_type_ = "FLOAT";
+    nrrd_type_ = nrrdTypeFloat;
+  }
+  else
+  {
+    data_type_ = "UNKNOWN";
+    nrrd_type_ = nrrdTypeUnknown;
+  }
+
 
   dim_ = region.GetImageDimension();
 
@@ -145,7 +178,8 @@ AnalyzeImage::AnalyzeImage(const AnalyzeImage& d)
     pixel_buffer_[i] = dpb[i];
   }
 
-  // ??? data_type;
+  data_type_ = d.data_type_;
+  nrrd_type_ = d.nrrd_type_;
 
   dim_ = d.dim_;
 
@@ -232,13 +266,10 @@ PixelType * AnalyzeImage::get_pixel_buffer()
 //
 // Arguments   : none
 //
-//void AnalyzeImage::get_data_type()
-//{
-  // TODO: Fix this
-  //std::type_info type = io_->GetPixelType();
-  //io_->GetPixelType();
-  //cerr << "Pixel Type: " << io_->GetPixelType();
-//}
+std::string AnalyzeImage::get_data_type()
+{
+  return data_type_;
+}
 
 /*===========================================================================*/
 // 
@@ -333,6 +364,20 @@ int AnalyzeImage::get_index( int i )
 {
   assert( i >= 0 && i < dim_ );
   return index_[i];
+}
+
+/*===========================================================================*/
+// 
+// get_nrrd_type
+//
+// Description : Returns the nrrdType for the given image
+//
+// Arguments   : 
+//
+//
+unsigned int AnalyzeImage::get_nrrd_type( )
+{
+  return nrrd_type_;
 }
 
 /*===========================================================================*/

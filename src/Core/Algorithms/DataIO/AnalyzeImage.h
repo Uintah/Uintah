@@ -92,24 +92,26 @@ public:
   std::string get_id();
   int get_num_pixels();
   PixelType * get_pixel_buffer();
-  //void get_data_type();
+  std::string get_data_type();
   int get_dimension();
   int get_size( int i );
   double get_origin( int i );
   double get_spacing( int i );
   int get_index( int i );
+  unsigned int get_nrrd_type();
   void print_image_info();
 
 private:
   unsigned long num_pixels_;
   PixelType * pixel_buffer_;
-  // ??? data_type;
+  std::string data_type_;
   int dim_;
   int * size_;
   double * origin_;
   double * spacing_;
   int * index_;
   std::string id_;
+  unsigned int nrrd_type_;
 
 protected:
 
