@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
-#include "IntraCommMPI.h"
+#include <Core/CCA/Component/Comm/Intra/IntraCommMPI.h>
 using namespace SCIRun;
 
 IntraCommMPI::IntraCommMPI()
