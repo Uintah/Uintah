@@ -24,26 +24,16 @@ extern "C" {
 #include <X11/Xlib.h>
 
 #include <stdlib.h>
+#include <fstream>
 
-#ifdef __sgi
-#include <sys/types.h>
-#include <sys/pmo.h>
-#include <sys/attributes.h>
-#include <sys/conf.h>
-#include <sys/hwgraph.h>
-#include <sys/stat.h>
-#include <invent.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
 using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
-GridTris::GridTris(Material* matl, int ncells, int depth)
+GridTris::GridTris(Material* matl, int ncells, int depth,
+		   const string& filename)
   : Object(this), fallbackMaterial(matl), ncells(ncells), depth(depth),
-    preprocessed(false)
+    preprocessed(false), filename(filename)
 {
   inv_ncells=1./ncells;
 }
@@ -132,185 +122,276 @@ void GridTris::preprocess(double, int&, int&)
 {
   if (preprocessed) return;
   preprocessed = true;
-#if 0
-  void* data = verts.begin();
-  unsigned long size = verts.size()*sizeof(Vert);
-#define NUMNODES 1024 // Optimistic :)
-  pm_pginfo_t nbuf[NUMNODES];
-  int nnodes = __pm_get_page_info(data, size, &nbuf[0], NUMNODES);
-  if(nnodes == -1){
-    perror("__pm_get_page_info");
-    exit(1);
-  }
-  for (int i = 0; i < nnodes; i++) {
-    char devname[160];
-    int length = sizeof(devname);
-    printf("Address %x devt %x node %s page size %d pm %d\n",
-	   nbuf[i].vaddr,
-	   nbuf[i].node_dev,
-	   dev_to_devname(nbuf[i].node_dev,  devname, &length),
-	   nbuf[i].page_size,
-	   nbuf[i].pm_handle);
-  }
-#endif
-
-  cerr << "Building GridTris for " << tris.size() << " triangles\n";
-  float time=SCIRun::Time::currentSeconds();
-  
-  vector<Vert>::iterator iter = verts.begin();
-  if(iter == verts.end()){
-    cerr << "No vertices!\n";
-    return;
-  }
-  min = max = Point(iter->x[0], iter->x[1], iter->x[2]);
-  for(;iter != verts.end(); iter++){
-    Point p(iter->x[0], iter->x[1], iter->x[2]);
-    min=Min(min, p);
-    max=Max(max, p);
-  }
-  min -= Vector(1.e-5, 1.e-5, 1.e-5);
-  max += Vector(1.e-5, 1.e-5, 1.e-5);
-  diag = max-min;
-  max += diag*1.e-5;
-  min -= diag*1.e-5;
-  diag = max-min;
-  inv_diag = Vector(1./diag.x(), 1./diag.y(), 1./diag.z());
-  cerr << "0/6 bounds took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
-  time=SCIRun::Time::currentSeconds();
 
   int totalcells=1;
   for(int i=0;i<=depth;i++)
     totalcells*=ncells;
   int totalsize=totalcells*totalcells*totalcells;
-  cerr << "Computing " << totalcells << 'x' << totalcells << 'x' << totalcells << " grid for " << totalsize << " cells\n";
-  
-  counts.resize(totalcells, totalcells, totalcells);
-  counts.initialize(0);
-  cerr << "1/6 allocation took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
-  time=SCIRun::Time::currentSeconds();
-  
-  double itime=time;
-  int tt=0;
-  for(int i=0;i<(int)tris.size();i++){
-    double tnow=SCIRun::Time::currentSeconds();
-    if(tnow-itime > 5.0){
-      cerr << i << "/" << tris.size() << '\n';
-      itime=tnow;
-    }
-    int sx, sy, sz, ex, ey, ez;
-    Tri& tri = tris[i];
-    calc_se(tri, totalcells, sx, sy, sz, ex, ey, ez);
-    for(int x=sx;x<=ex;x++){
-      for(int y=sy;y<=ey;y++){
-	for(int z=sz;z<=ez;z++){
-	  if(intersects(tri, totalcells, x, y, z)){
-	    counts(x,y,z)++;
-	    tt++;
-	  }
-	}
-      }
-    }
-  }
-  
-  cerr << "2/6 Counting cells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
-  time=SCIRun::Time::currentSeconds();
 
-  int total=0;
-  int* ptr = counts.get_dataptr();
-  unsigned long datasize = counts.get_datasize()/sizeof(int);
-  for(unsigned long i=0;i<datasize;i++){
-    int count=ptr[i];
-    ptr[i]=total;
-    total+=count;
-  }
-  ptr[datasize]=total;
-  cerr << "Allocating " << total << " grid indices (" << double(total)/double(tris.size()) << " per tri, " << double(total)/totalsize << " per cell)\n";
-  cells.resize(total);
-  for(int i=0;i<total;i++)
-    cells[i]=-1234;
-  cerr << "3/6 Calculating offsets took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
-  time=SCIRun::Time::currentSeconds();
-  itime=time;
-  BrickArray3<int> current(totalcells, totalcells, totalcells);
-  current.initialize(0);
-  for(int i=0;i<tris.size();i++){
-    double tnow=SCIRun::Time::currentSeconds();
-    if(tnow-itime > 5.0){
-      cerr << i << "/" << tris.size() << '\n';
-      itime=tnow;
+  // Try to read it from a file...
+  if(isCached()){
+    ostringstream fname;
+    fname << filename << ".gridtri_" << ncells << "_" << depth;
+    ifstream in(fname.str().c_str());
+    cerr << "Reading gridtris from: " << fname.str() << '\n';
+    double start = Time::currentSeconds();
+    streampos ss = in.tellg();
+    int have_fallback;
+    in.read((char*)&have_fallback, sizeof(int));
+    if(!have_fallback)
+      clearFallback();
+
+    long numVerts;
+    in.read((char*)&numVerts, sizeof(long));
+    verts.resize(numVerts);
+    cerr << "Reading verts, " << (double)numVerts*sizeof(Vert)/1024./1024. << "M\n";
+    in.read((char*)&verts[0], numVerts*sizeof(Vert));
+
+    long numTris;
+    in.read((char*)&numTris, sizeof(long));
+    tris.resize(numTris);
+    cerr << "Reading tris, " << (double)numTris*sizeof(Tri)/1024./1024. << "M\n";
+    in.read((char*)&tris[0], numTris*sizeof(Tri));
+    
+    in.read((char*)&min, sizeof(min));
+    in.read((char*)&max, sizeof(max));
+    in.read((char*)&diag, sizeof(diag));
+    inv_diag = Vector(1./diag.x(), 1./diag.y(), 1./diag.z());
+    counts.resize(totalcells, totalcells, totalcells);
+    cerr << "Reading cells, " << (double)counts.get_datasize()/1024./1024. << "M\n";
+    in.read((char*)counts.get_dataptr(), long(counts.get_datasize()+sizeof(int)));
+    long totalcells;
+    in.read((char*)&totalcells, sizeof(long));
+    cells.resize(totalcells);
+    cerr << "Reading lists, " << (double)totalcells*sizeof(long)/1024./1024. << "M\n";
+    in.read((char*)&cells[0], long(sizeof(int)*totalcells));
+    if(depth==0){
+      macrocells=0;
+    } else {
+      macrocells=new BrickArray3<bool>[depth+1];
+      int size=ncells;
+      for(int d=depth;d>=1;d--){
+	macrocells[d].resize(size, size, size);
+	cerr << "Reading macrocells for depth " << d << '\n';
+	in.read((char*)macrocells[d].get_dataptr(), long(macrocells[d].get_datasize()));
+	size*=ncells;
+      }
     }
-    int sx, sy, sz, ex, ey, ez;
-    Tri& tri = tris[i];
-    calc_se(tri, totalcells, sx, sy, sz, ex, ey, ez);
-    for(int x=sx;x<=ex;x++){
-      for(int y=sy;y<=ey;y++){
-	for(int z=sz;z<=ez;z++){
-	  if(intersects(tri, totalcells, x, y, z)){
-	    int cur=current(x,y,z)++;
-	    int pos=counts(x,y,z)+cur;
-	    cells[pos]=i;
+    if(!in){
+      cerr << "ERROR reading cached gridtri structure!\n";
+      exit(1);
+    }
+    streampos se = in.tellg();
+    double dt = Time::currentSeconds()-start;
+    double rate = double(se-ss)/dt/1024./1024.;
+    cerr << "Read file in " << dt << " seconds (" << rate << " MB/sec)\n";
+  } else {  // Not cached
+    cerr << "Building GridTris for " << tris.size() << " triangles\n";
+    float time=SCIRun::Time::currentSeconds();
+  
+    vector<Vert>::iterator iter = verts.begin();
+    if(iter == verts.end()){
+      cerr << "No vertices!\n";
+      return;
+    }
+    min = max = Point(iter->x[0], iter->x[1], iter->x[2]);
+    for(;iter != verts.end(); iter++){
+      Point p(iter->x[0], iter->x[1], iter->x[2]);
+      min=Min(min, p);
+      max=Max(max, p);
+    }
+    min -= Vector(1.e-5, 1.e-5, 1.e-5);
+    max += Vector(1.e-5, 1.e-5, 1.e-5);
+    diag = max-min;
+    max += diag*1.e-5;
+    min -= diag*1.e-5;
+    diag = max-min;
+    inv_diag = Vector(1./diag.x(), 1./diag.y(), 1./diag.z());
+    cerr << "0/6 bounds took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+    time=SCIRun::Time::currentSeconds();
+
+    cerr << "Computing " << totalcells << 'x' << totalcells << 'x' << totalcells << " grid for " << totalsize << " cells\n";
+  
+    counts.resize(totalcells, totalcells, totalcells);
+    counts.initialize(0);
+    cerr << "1/6 allocation took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+    time=SCIRun::Time::currentSeconds();
+  
+    double itime=time;
+    int tt=0;
+    for(int i=0;i<(int)tris.size();i++){
+      double tnow=SCIRun::Time::currentSeconds();
+      if(tnow-itime > 5.0){
+	cerr << i << "/" << tris.size() << '\n';
+	itime=tnow;
+      }
+      int sx, sy, sz, ex, ey, ez;
+      Tri& tri = tris[i];
+      calc_se(tri, totalcells, sx, sy, sz, ex, ey, ez);
+      for(int x=sx;x<=ex;x++){
+	for(int y=sy;y<=ey;y++){
+	  for(int z=sz;z<=ez;z++){
+	    if(intersects(tri, totalcells, x, y, z)){
+	      counts(x,y,z)++;
+	      tt++;
+	    }
 	  }
 	}
       }
     }
-  }
-  cerr << "4/6 Filling grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
-  time=SCIRun::Time::currentSeconds();
-  int* ptr2=current.get_dataptr();
-  for(int i=0;i<datasize;i++){
-    int diff = ptr[i+1]-ptr[i];
-    if(ptr2[i] != diff){
-      cerr << "OOPS!\n";
-      cerr << "current: " << ptr2[i] << '\n';
-      cerr << "counts: " << ptr[i] << '\n';
-      exit(1);
+    
+    cerr << "2/6 Counting cells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+    time=SCIRun::Time::currentSeconds();
+
+    int total=0;
+    int* ptr = counts.get_dataptr();
+    unsigned long datasize = counts.get_datasize()/sizeof(int);
+    for(unsigned long i=0;i<datasize;i++){
+      int count=ptr[i];
+      ptr[i]=total;
+      total+=count;
     }
-  }
-  for(int i=0;i<total;i++){
-    if(cells[i]==-1234){
-      cerr << "OOPS: cells[" << i << "]==-1234!\n";
-      exit(1);
-    }
-  }
-  cerr << "5/6 Verifying grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
-  time=SCIRun::Time::currentSeconds();
-  if(depth==0){
-    macrocells=0;
-  } else {
-    macrocells=new BrickArray3<bool>[depth+1];
-    int size=ncells;
-    for(int d=depth;d>=1;d--){
-      macrocells[d].resize(size, size, size);
-      macrocells[d].initialize(false);
-      size*=ncells;
-    }
-    bool haveit;
-    int ntris;
-    calc_mcell(depth, 0, 0, 0, haveit, ntris);
-    if(ntris != total || !haveit){
-      cerr << "Mcell went wrong!\n";
-      cerr << "mcell: " << ntris << '\n';
-      cerr << "total: " << total << '\n';
-      exit(1);
-    }
-    for(int d=1;d<=depth;d++){
-      BrickArray3<bool>& mcells = macrocells[depth];
-      int d1=mcells.dim1();
-      int d2=mcells.dim2();
-      int d3=mcells.dim3();
-      int haveit=0;
-      for(int x=0;x<d1;x++){
-	for(int y=0;y<d2;y++){
-	  for(int z=0;z<d3;z++){
-	    if(mcells(x,y,z))
-	      haveit++;
+    ptr[datasize]=total;
+    cerr << "Allocating " << total << " grid indices (" << double(total)/double(tris.size()) << " per tri, " << double(total)/totalsize << " per cell)\n";
+    cells.resize(total);
+    for(int i=0;i<total;i++)
+      cells[i]=-1234;
+    cerr << "3/6 Calculating offsets took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+    time=SCIRun::Time::currentSeconds();
+    itime=time;
+    BrickArray3<int> current(totalcells, totalcells, totalcells);
+    current.initialize(0);
+    for(int i=0;i<tris.size();i++){
+      double tnow=SCIRun::Time::currentSeconds();
+      if(tnow-itime > 5.0){
+	cerr << i << "/" << tris.size() << '\n';
+	itime=tnow;
+      }
+      int sx, sy, sz, ex, ey, ez;
+      Tri& tri = tris[i];
+      calc_se(tri, totalcells, sx, sy, sz, ex, ey, ez);
+      for(int x=sx;x<=ex;x++){
+	for(int y=sy;y<=ey;y++){
+	  for(int z=sz;z<=ez;z++){
+	    if(intersects(tri, totalcells, x, y, z)){
+	      int cur=current(x,y,z)++;
+	      int pos=counts(x,y,z)+cur;
+	      cells[pos]=i;
+	    }
 	  }
 	}
       }
-      int tot = d1*d2*d3;
-      cerr << "Depth " << d << " is " << 100.*double(haveit)/double(tot) << "% occupied\n";
     }
-    cerr << "6/6 Calculating macrocells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+    cerr << "4/6 Filling grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+    time=SCIRun::Time::currentSeconds();
+    int* ptr2=current.get_dataptr();
+    for(int i=0;i<datasize;i++){
+      int diff = ptr[i+1]-ptr[i];
+      if(ptr2[i] != diff){
+	cerr << "OOPS!\n";
+	cerr << "current: " << ptr2[i] << '\n';
+	cerr << "counts: " << ptr[i] << '\n';
+	exit(1);
+      }
+    }
+    for(int i=0;i<total;i++){
+      if(cells[i]==-1234){
+	cerr << "OOPS: cells[" << i << "]==-1234!\n";
+	exit(1);
+      }
+    }
+    cerr << "5/6 Verifying grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+    time=SCIRun::Time::currentSeconds();
+    if(depth==0){
+      macrocells=0;
+    } else {
+      macrocells=new BrickArray3<bool>[depth+1];
+      int size=ncells;
+      for(int d=depth;d>=1;d--){
+	macrocells[d].resize(size, size, size);
+	macrocells[d].initialize(false);
+	size*=ncells;
+      }
+      bool haveit;
+      int ntris;
+      calc_mcell(depth, 0, 0, 0, haveit, ntris);
+      if(ntris != total || !haveit){
+	cerr << "Mcell went wrong!\n";
+	cerr << "mcell: " << ntris << '\n';
+	cerr << "total: " << total << '\n';
+	exit(1);
+      }
+      for(int d=1;d<=depth;d++){
+	BrickArray3<bool>& mcells = macrocells[depth];
+	int d1=mcells.dim1();
+	int d2=mcells.dim2();
+	int d3=mcells.dim3();
+	int haveit=0;
+	for(int x=0;x<d1;x++){
+	  for(int y=0;y<d2;y++){
+	    for(int z=0;z<d3;z++){
+	      if(mcells(x,y,z))
+		haveit++;
+	    }
+	  }
+	}
+	int tot = d1*d2*d3;
+	cerr << "Depth " << d << " is " << 100.*double(haveit)/double(tot) << "% occupied\n";
+      }
+      cerr << "6/6 Calculating macrocells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+
+      if(filename.length() != 0){
+	ostringstream fname;
+	fname << filename << ".gridtri_" << ncells << "_" << depth;
+	ofstream out(fname.str().c_str());
+	if(out){
+	  cerr << "Writing gridtris to: " << fname.str() << '\n';
+	  double start = Time::currentSeconds();
+	  streampos ss = out.tellp();
+	  int have_fallback = fallbackMaterial?1:0;
+	  out.write((char*)&have_fallback, sizeof(int));
+
+	  long numVerts = (long)verts.size();
+	  out.write((char*)&numVerts, sizeof(long));
+	  cerr << "Writing verts, " << (double)numVerts*sizeof(Vert)/1024./1024. << "M\n";
+	  out.write((char*)&verts[0], numVerts*sizeof(Vert));
+
+	  long numTris = (long)tris.size();
+	  out.write((char*)&numTris, sizeof(long));
+	  cerr << "Writing tris, " << (double)numTris*sizeof(Tri)/1024./1024. << "M\n";
+	  out.write((char*)&tris[0], numTris*sizeof(Tri));
+
+	  out.write((char*)&min, sizeof(min));
+	  out.write((char*)&max, sizeof(max));
+	  out.write((char*)&diag, sizeof(diag));
+	  cerr << "Writing cells, " << (double)counts.get_datasize()/1024./1024. << "M\n";
+	  out.write((char*)counts.get_dataptr(), long(counts.get_datasize()+sizeof(int)));
+	  long totalcells = (long)cells.size();
+	  out.write((char*)&totalcells, sizeof(long));
+	  cells.resize(totalcells);
+	  cerr << "Writing lists, " << (double)totalcells*sizeof(long)/1024./1024. << "M\n";
+	  out.write((char*)&cells[0], long(sizeof(int)*totalcells));
+	  int size=ncells;
+	  for(int d=depth;d>=1;d--){
+	    cerr << "Writing macrocells for depth " << d << '\n';
+	    out.write((char*)macrocells[d].get_dataptr(), long(macrocells[d].get_datasize()));
+	    size*=ncells;
+	  }
+	  if(!out){
+	    cerr << "Error writing gridtri to file: " << fname.str() << '\n';
+	    exit(1);
+	  }
+	  streampos se = out.tellp();
+	  cerr << "Closing file\n";
+	  out.close();
+	  double dt = Time::currentSeconds()-start;
+	  double rate = double(se-ss)/dt/1024./1024.;
+	  cerr << "Wrote file in " << dt << " seconds (" << rate << " MB/sec)\n";
+	} else {
+	  cerr << "WARNING, not saving gridtri structure\n";
+	}
+      }
+    }
   }
   cerr << "Done building GridTris\n";
 }
@@ -766,4 +847,16 @@ void GridTris::transform(Transform& T)
     v.normalize();
     tri.n[0] = v.x(); tri.n[1] = v.y(); tri.n[2] = v.z();
   }
+}
+
+bool GridTris::isCached()
+{
+  if(filename.length() != 0){
+    ostringstream fname;
+    fname << filename << ".gridtri_" << ncells << "_" << depth;
+    ifstream in(fname.str().c_str());
+    if(in)
+      return true;
+  }
+  return false;
 }

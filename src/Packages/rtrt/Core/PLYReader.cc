@@ -262,6 +262,12 @@ rtrt::read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g)
 void
 rtrt::read_ply(char *fname, GridTris* gt)
 {
+  if(gt->isCached()){
+    cerr << "Skipping read_ply for: " << fname << ", thinking that it is cached\n";
+    return;
+  } else {
+    cerr << fname << " is not cached by gridtri, reading it\n";
+  }
   int i,j,k;
   PlyFile *ply;
   int nelems;
@@ -405,6 +411,12 @@ rtrt::read_ply(char *fname, GridTris* gt)
 void
 rtrt::read_ply(char *fname, GridTris* gt, Transform* t)
 {
+  if(gt->isCached()){
+    cerr << "Skipping read_ply for: " << fname << ", thinking that it is cached\n";
+    return;
+  } else {
+    cerr << fname << " is not cached by gridtri, reading it\n";
+  }
   int i,j,k;
   PlyFile *ply;
   int nelems;

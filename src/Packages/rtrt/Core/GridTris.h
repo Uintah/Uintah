@@ -41,6 +41,7 @@ class GridTris : public Object, public Material {
   int ncells;
   int depth;
   bool preprocessed;
+  string filename;
 
   void isect(int depth, double t,
 	     double dtdx, double dtdy, double dtdz,
@@ -60,7 +61,8 @@ class GridTris : public Object, public Material {
     int idx;
   };
 public:
-  GridTris(Material* matl, int nsides, int depth);
+  GridTris(Material* matl, int nsides, int depth,
+	   const std::string& filename);
   void addVertex(float x[3], unsigned char c[3]);
   void addTri(int v1, int v2, int v3);
   inline void clearFallback() {fallbackMaterial=0;}
@@ -80,6 +82,7 @@ public:
 		     double atten, const Color& accumcolor,
 		     Context* cx);
 
+  bool isCached();
 };
 
 } // end namespace rtrt
