@@ -73,6 +73,9 @@ using namespace SCIRun;
       void scheduleAdvectAndAdvanceInTime(
             const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
 
+      void schedulePrintConservedQuantities(
+            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+            
       void setICELabel(ICELabel* Ilb) {
 	lb = Ilb;
       };
@@ -85,28 +88,23 @@ using namespace SCIRun;
       void actuallyComputeStableTimestep(const ProcessorGroup*,
 					 const Patch* patch, DataWarehouseP&,
 					 DataWarehouseP&);
-                                    
-      // calculateEquilibrationPressure
+
       void computeEquilibrationPressure(
             const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
             DataWarehouseP&);
       
-      // computeFCVelocity
       void computeFaceCenteredVelocities(
             const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
             DataWarehouseP&);
-      
-      // momentumExchangeFCVelocity
+
       void addExchangeContributionToFCVel(
             const ProcessorGroup*, const Patch* patch,  DataWarehouseP&, 
             DataWarehouseP&);
-      
-      // computeExplicitDelPress
+
       void computeDelPressAndUpdatePressCC(
             const ProcessorGroup*,const Patch* patch,   DataWarehouseP&, 
             DataWarehouseP&);
-      
-      // computeFaceCenteredPressure
+
       void computePressFC(
             const ProcessorGroup*, const Patch* patch,  DataWarehouseP&,
             DataWarehouseP&);
@@ -131,23 +129,33 @@ using namespace SCIRun;
             const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
             DataWarehouseP&);
 
+      void printConservedQuantities(
+            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
+            DataWarehouseP&);
+            
       void setBC(CCVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
+               
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p);
+               
       void setBC(SFCXVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
+               
       void setBC(SFCXVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
+               
       void setBC(SFCYVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
+               
       void setBC(SFCYVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
+               
       void setBC(SFCZVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
+               
       void setBC(SFCZVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);      
-
 
       void printData(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], const  CCVariable<int>& q_CC);
@@ -168,6 +176,7 @@ using namespace SCIRun;
                 const CCVariable<double>& rho_micro_CC, 
                       CCVariable<double>& press_CC);
       
+      
       // Debugging switches
       bool switchDebugInitialize;
       bool switchDebug_equilibration_press;
@@ -180,6 +189,7 @@ using namespace SCIRun;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
       bool switchDebug_advectQFirst;
+      bool switchTestConservation;
       
       int d_max_iter_equilibration;
      
