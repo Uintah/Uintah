@@ -29,9 +29,22 @@
 #include <sgi_stl_warnings_on.h>
 
 
+// We are now using Tcl itself to manage the environment variables and
+// to keep things consistent between the TCL and the C sides.  These
+// routines/variable come from TCL:
+#include <tcl.h>
+extern char **_environ;
+extern "C" void TclSetEnv(char * name, char * value);
+extern "C" char * TclGetEnv(char * name, Tcl_DString * value);
+
 namespace SCIRun {
 
 using namespace std;
+
+// According to other software (tcl) you should lock before 
+// messing with the environment.  Since we are now using Tcl
+// to manage the environment, tcl takes care of the locking.
+// If we ever again do it ourself, we need to consider locking.
 
 // MacroSubstitute takes var_val returns a string with the environment
 // variables expanded out.  Performs one level of substitution
@@ -59,10 +72,11 @@ MacroSubstitute( char * var_val )
 	  var_val[cur]='\0';
 	  macro = new char[end-start+1];
 	  sprintf(macro,"%s",&var_val[start]);
-	  char *env = getenv(macro);
+	  char *env = sci_getenv(macro);
 	  delete[] macro;
 	  if (env) 
 	    newstring += string(env);
+	  delete[] env; // Free memory allocated in sci_getenv.
 	  var_val[cur]=')';
 	  cur++;
 	  break;
@@ -84,41 +98,34 @@ MacroSubstitute( char * var_val )
   return retval;
 }
 
-// This set stores all of the environemnt keys that were set when scirun was
-// started.  Its checked by sci_putenv to ensure we don't overwrite env variables
-set<string> existing_env;
+// You must delete the char* returned or you will leak memory
+char *
+sci_getenv( const string & key )
+{
+  char keya[1024];
+  sprintf( keya, "%s", key.c_str() );
+  Tcl_DString tclvalue;
+  char * value = TclGetEnv( keya, &tclvalue );
 
-// get_existing_env() will fill up the SCIRun::existing_env string set
-// with all the currently set environment variable keys, but not their values
-void store_existing_environment(char **environ) 
-{  
-  char **environment = environ;
-  existing_env.clear();
-  while (*environment) {
-    const string str(*environment);
-    environment++;
-    existing_env.insert(str.substr(0,str.find("=")));
-  }
+  if( value == NULL )
+    return NULL;
+
+  char * result = new char[ tclvalue.length + 1 ];
+  sprintf( result, "%s", value );
+
+  return result;
 }
 
-// sci_putenv will check the existing_env set string (filled in store_existing_env)
-// If the environment key existed when the program was run, then  it will not
-// be overwritten.  This follows the Unix convention of using environment 
-// variables to supercede default program settings and .rc files.
 void
-sci_putenv( const string &key, const string &val,  bool force )
+sci_putenv( const string &key, const string &val )
 {
-  // Check the environment as it existed when SCIRun was started,
-  // return without owerwriting the varabile if the key is in our set
-  if (!force && (existing_env.find(key) != existing_env.end())) return;
+  // Can't pass const char* to TclSetEnv, so have to copy them into
+  // a temp location.
+  char keya[1024], vala[1024];
+  sprintf( keya, "%s", key.c_str() );
+  sprintf( vala, "%s", val.c_str() );
 
-  // Use the old way of setting environment variables.
-  // Because we need to remain compatible with old Unix's (namely SGI)
-  const string envarstr = key+"="+val;
-  char *envar = scinew char[envarstr.size()+1];
-  memcpy(envar, envarstr.c_str(), envarstr.size());
-  envar[envarstr.size()] = '\0';
-  putenv(envar);
+  TclSetEnv( keya, vala );
 }  
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -239,13 +246,18 @@ find_and_parse_scirunrc()
 // returns true otherwise.  Case insensitive.
 bool
 sci_getenv_p(const string &key) {
-  char *value = getenv(key.c_str());
+
+  char *value = sci_getenv( key );
+
   if (!value || !(*value)) return false;
   string str;
   while (*value) {
     str += toupper(*value);
     value++;
   }
+
+  delete[] value;
+
   // Only return false if value is zero (or equivalant)
   if (str == "FALSE" || str == "NO" || str == "OFF" || str == "0")
     return false;
