@@ -48,7 +48,7 @@ class MultiMaterial : public Material {
   {
     // this can be really inefficient, should be improved
     unsigned loop,length;
-    Color final;
+    Color final,original=result;
     double percent;
     length = material_stack_.size();
     if (length>0) {
@@ -57,12 +57,14 @@ class MultiMaterial : public Material {
       percent = material_stack_[0]->percent;
       final = result*percent;
       for (loop=1; loop<length; ++loop) {
+        result = original;
         material_stack_[loop]->material->shade(result,ray,hit,depth,
                                                atten,accumcolor,cx);
         percent = (1-percent)*material_stack_[loop]->percent;
         final += result*percent;
       }
     }
+    result = final;
   }
 };
 
