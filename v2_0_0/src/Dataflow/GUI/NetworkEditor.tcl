@@ -1105,7 +1105,8 @@ proc licenseAccept { } {
 	$w.text insert end "E-Mail:  $userData(email)\n"
 	$w.text insert end "Affiliation:  $userData(aff)\n"
 	pack $w.text -expand 1 -fill both -side top
-	checkbutton $w.check -text \
+	set check 1
+	checkbutton $w.check -variable check -text  \
 	    "Register \($userData(email)\) for the SCIRun Users' Mailing List"
 	$w.check select
 
@@ -1115,7 +1116,7 @@ proc licenseAccept { } {
 	button $w.b.ok -text OK -width 12 -command \
 	    "set licenseResult accept; catch {destroy .license.confirm}"
 	pack $w.b.ok $w.b.cancel -padx 5 -pady 5 -side left -padx 20
-	pack $w.b $w.check -side bottom
+	pack $w.b $w.check -side bottom 
 
 	grab $w
 	wm deiconify $w
