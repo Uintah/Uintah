@@ -19,12 +19,12 @@
 
 #define SELECT_RANGETREE
 
+namespace Uintah {
+
 #ifdef SELECT_RANGETREE
 class PatchRangeTree;
 #endif
-
-namespace Uintah {
-
+  
 using namespace SCIRun;
 
 class Patch;
