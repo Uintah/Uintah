@@ -3,11 +3,14 @@
 
 #include <string>
 #include <iosfwd>
+#include <Core/Geometry/IntVector.h>
+
 class DOM_Element;
 
 namespace Uintah {
 
    using namespace std;
+   using namespace SCIRun;
    class TypeDescription;
    class InputContext;
    class OutputContext;
@@ -65,6 +68,9 @@ public:
   virtual void readRLE(istream& /*in*/);
   
   virtual void allocate(const Patch* patch) = 0;
+
+  // Only affects grid variables
+  virtual void offsetGrid(IntVector /*offset*/) {}
 
   void setAllocationLabel(const VarLabel* label)
   { allocationLabel_ = label; }
