@@ -191,7 +191,9 @@ void
       data_generation_ = -1;
       do_execute = true;
     }
-  }
+  } else if (!dataH.get_rep()) {
+    error("No data in the Data nrrd.");
+  } 
   
   if (!npoints_->get(pointsH)) {
     pointsH = 0;
@@ -199,7 +201,9 @@ void
       points_generation_ = -1;
       do_execute = true;
     }
-  }
+  } else if (!pointsH.get_rep()) {
+    error("No data in the Points nrrd.");
+  } 
   
   if (!nconnect_->get(connectH)) {
     connectH = 0;
@@ -207,7 +211,9 @@ void
       connect_generation_ = -1;
       do_execute = true;
     }
-  }
+  } else if (!connectH.get_rep()) {
+    error("No data in the Connections nrrd.");
+  } 
   
   if (!ifield_->get(origfieldH)) {
     origfieldH = 0;
@@ -215,7 +221,9 @@ void
       origfield_generation_ = -1;
       do_execute = true;
     }
-  }
+  } else if (!origfieldH.get_rep()) {
+    error("No data in the Originating Field.");
+  } 
   
   // check the generations to see if we need to re-execute
   if (dataH != 0 && data_generation_ != dataH->generation) {
@@ -461,29 +469,38 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   if (has_connect_) {
     if (has_points_) {
       Nrrd* connect = connectH->nrrd;
+      int which = 0; // which index contains p
+      bool single_element = false;
       // Look at connections nrrd's 2nd dimension
       // account for vector/scalar data
-      if (connect->dim != 2) {
+      if (connect->dim == 1 && connect->axis[0].size <= 8) {
+	// single element
+	which = 0;
+	single_element = true;
+      }
+      else if (connect->dim != 2) {
 	error("Connections Nrrd must be two dimensional (number of points in each connection by the number of elements)");
 	has_error_ = true;
 	return 0;
       }
       
       // check if connect array is p x n or n x p
-      int which = 0; // which index contains p
-      if (connect->axis[1].size <= 8 && connect->axis[0].size <= 8) {
+      if (!single_element && connect->axis[1].size <= 8 && 
+	  connect->axis[0].size <= 8) {
 	warning("Connections nrrd might be in the wrong order.  Assuming p x n where p is the number of points in each connection and n is the number of elements.");
       }
-      if (connect->axis[1].size <= 8) {
-	// p x n
-	which = 1;
-      } else if (connect->axis[0].size <= 8) {
-	// p x n
-	which = 0;
-      } else { 
-	error("Connections nrrd must have one axis with a size less than or equal to 8.");
-	has_error_ = true;
-	return 0;
+      if (!single_element) {
+	if ( connect->axis[1].size <= 8) {
+	  // p x n
+	  which = 1;
+	} else if (connect->axis[0].size <= 8) {
+	  // p x n
+	  which = 0;
+	} else { 
+	  error("Connections nrrd must have one axis with a size less than or equal to 8.");
+	  has_error_ = true;
+	  return 0;
+	}
       }
 
       int pts = connect->axis[which].size;
