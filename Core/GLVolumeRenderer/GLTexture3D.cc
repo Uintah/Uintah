@@ -75,7 +75,8 @@ GLTexture3D::GLTexture3D() :
   xmax_(0), 
   ymax_(0), 
   zmax_(0), 
-  isCC_(false)
+  isCC_(false),
+  reuse_bricks(false)
 {
 }
 
@@ -90,50 +91,77 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   xmax_(0), 
   ymax_(0), 
   zmax_(0),
-  isCC_(false)
+  isCC_(false),
+  reuse_bricks(false)
 {
   if (texfld_->get_type_name(0) != "LatVolField") {
     cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatVolField\n";
     return;
   }
 
+  init(min, max, use_minmax);
+  set_bounds();
+  compute_tree_depth(); 
+  build_texture();
+}
+
+GLTexture3D::~GLTexture3D()
+{
+  delete bontree_;
+}
+
+void GLTexture3D::init(double& min, double &max, bool use_minmax)
+{
   pair<double,double> minmax;
   LatVolMeshHandle mesh;
   const string type = texfld_->get_type_name(1);
   if (type == "double") {
     LatVolField<double> *fld =
       dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax )
+      field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else if (type == "int") {
     LatVolField<int> *fld =
       dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax )
+      field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else if (type == "short") {
     LatVolField<short> *fld =
       dynamic_cast<LatVolField<short>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax )
+      field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else if (type == "unsigned_char") {
     LatVolField<unsigned char> *fld =
       dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax )
+      field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else {
     cerr << "GLTexture3D constructor error - unknown LatVolField type: " << type << endl;
     return;
   }
   transform_ = mesh->get_transform();
-  texfld_=texfld;
-  xmax_=ymax_=zmax_=128;
+
+  if (xmax_ == 0 && ymax_ ==0 && zmax_== 0){
+    xmax_=ymax_=zmax_=64;
+  }
+
   if( texfld_->data_at() == Field::CELL ){
     isCC_=true;
+    reuse_bricks = ( X_ == mesh->get_nx()-1 &&
+		     Y_ == mesh->get_ny()-1 &&
+		     Z_ == mesh->get_nz()-1);
     X_ = mesh->get_nx()-1;
     Y_ = mesh->get_ny()-1;
     Z_ = mesh->get_nz()-1;
   } else {
     isCC_=false;
+    reuse_bricks = ( X_ == mesh->get_nx() &&
+		     Y_ == mesh->get_ny() &&
+		     Z_ == mesh->get_nz());
     X_ = mesh->get_nx();
     Y_ = mesh->get_ny();
     Z_ = mesh->get_nz();
@@ -148,7 +176,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
       cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
     }
   }
-
+  
   BBox bbox = mesh->get_bounding_box();
   minP_ = Point(0,0,0); //bbox.min();
   maxP_ = Point(mesh->get_nx(), mesh->get_ny(), mesh->get_nz()); //bbox.max();
@@ -163,16 +191,21 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
     max = max_ = minmax.second;
   }
   cerr << "    texture: min="<<min<<"  max="<<max<<"\n";
-  set_bounds();
-  compute_tree_depth(); 
-  build_texture();
 }
 
-GLTexture3D::~GLTexture3D()
+bool GLTexture3D::replace_data(FieldHandle texfld, 
+		  double &min, double &max,
+		  int use_minmax)
 {
-  delete bontree_;
+  texfld_ = texfld;
+  init( min, max, use_minmax );
+  if( reuse_bricks ){
+    replace_texture();
+    return true;
+  } else {
+    return false;
+  }
 }
-
 
 
 
@@ -229,6 +262,48 @@ void GLTexture3D::build_texture()
   delete tg;
   thread_sema->down(max_workers);
   ASSERT(bontree_ != 0x0);
+}
+
+void GLTexture3D::replace_texture()
+{
+#ifdef __sgi
+  max_workers = Max(Thread::numProcessors()/2, 2);
+#else
+  max_workers = 1;
+#endif
+  Semaphore* thread_sema = scinew Semaphore( "worker count semaphore",
+					  max_workers);  
+
+  string  group_name =  "thread group ";
+  group_name = group_name + "0";
+  tg = scinew ThreadGroup( group_name.c_str());
+
+  string type = texfld_->get_type_name(1);
+  cerr << "Type = " << type << endl;
+  
+  if (type == "double") {
+    replace_bon_tree_data(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+		  dynamic_cast<LatVolField<double>*>(texfld_.get_rep()),
+		  bontree_,  thread_sema, tg);
+  } else if (type == "int") {
+    replace_bon_tree_data(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+	       dynamic_cast<LatVolField<int>*>(texfld_.get_rep()),
+	       bontree_, thread_sema, tg);
+  } else if (type == "short") {
+    replace_bon_tree_data(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+	       dynamic_cast<LatVolField<short>*>(texfld_.get_rep()),
+	       bontree_, thread_sema, tg);
+  } else if (type == "unsigned_char") {
+    replace_bon_tree_data(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
+	       dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep()),
+	       bontree_,  thread_sema, tg);
+  } else {
+    cerr<<"Error: cast didn't work!\n";
+  }
+
+  tg->join();
+  delete tg;
+  thread_sema->down(max_workers);
 }
 
 

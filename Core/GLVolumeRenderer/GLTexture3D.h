@@ -99,6 +99,11 @@ public:
   //////////
   // Change the BrickSize
   virtual bool set_brick_size( int brickSize );
+  //////////
+  // Just reuse the allocated Bricks
+  bool replace_data(FieldHandle texfld, 
+		    double &min, double &max,
+		    int use_minmax);
   
 
   // GROUP: Access
@@ -145,7 +150,10 @@ protected:
   int xmax_, ymax_, zmax_;
   double dx_, dy_, dz_;
   bool isCC_;
+  bool reuse_bricks;
   virtual void build_texture();
+  virtual void replace_texture();
+  void init(double& min, double &max, bool use_minmax);
   void set_bounds();
   void compute_tree_depth();
   template <class Mesh>
@@ -156,7 +164,14 @@ protected:
 				   int xsize, int ysize, int zsize,
 				   int level, T *tex,
 				   Octree<Brick*>* parent,
-				   Semaphore* thread_sema, ThreadGroup* tg);
+				  Semaphore* thread_sema, ThreadGroup* tg);
+  template <class T>
+    void replace_bon_tree_data(Point min, Point max,
+			       int xoff, int yoff, int zoff,
+			       int xsize, int ysize, int zsize,
+			       int level, T *tex,
+			       Octree<Brick*>* parent,
+			       Semaphore* thread_sema, ThreadGroup* tg);
 private:
 
   Transform transform_;
@@ -167,6 +182,13 @@ private:
 
   template <class T>
     void build_child(int i, Point min, Point mid, Point max,
+		     int xoff, int yoff, int zoff,
+		     int xsize, int ysize, int zsize,
+		     int X2, int Y2, int Z2,
+		     int level,  T* tex, Octree<Brick*>* node,
+		     Semaphore* thread_sema, ThreadGroup* tg);
+  template <class T>
+    void fill_child(int i, Point min, Point mid, Point max,
 		     int xoff, int yoff, int zoff,
 		     int xsize, int ysize, int zsize,
 		     int X2, int Y2, int Z2,
@@ -233,6 +255,236 @@ GLTexture3D::get_dimensions(Mesh, int&, int&, int&)
 {
   return false;
 }
+
+template <class T>
+void 
+GLTexture3D::replace_bon_tree_data(Point min, Point max,
+				   int xoff, int yoff, int zoff,
+				   int xsize, int ysize, int zsize,
+				   int level, T *tex, Octree<Brick*>* parent,
+				   Semaphore* thread_sema, ThreadGroup *tg)
+{
+  Octree<Brick *> *node = parent;
+
+  Brick* brick = (*parent)();
+  Array3<unsigned char> *brickData = brick->texture();
+  int padx_ = 0,pady_ = 0,padz_ = 0;
+  
+  if( parent->type() == Octree<Brick *>::LEAF ){
+    int newx = xsize, newy = ysize, newz = zsize;
+    if (xsize < xmax_){
+      padx_ = xmax_ - xsize;
+      newx = xmax_;
+    }
+    if (ysize < ymax_){
+      pady_ = ymax_ - ysize;
+      newy = ymax_;
+    }
+    if (zsize < zmax_){
+      padz_ = zmax_ - zsize;
+      newz = zmax_;
+    }
+    
+#ifdef 0 //__sgi
+    thread_sema->down();
+    //Thread *t = 
+      scinew Thread(new GLTexture3D::run_make_brick_data<T>(this, 
+                                                            thread_sema, 
+                                                            newx,newy,newz,
+                                                            xsize,ysize,zsize,
+                                                            xoff,yoff,zoff,
+                                                            tex, brickData),
+                    "make_brick_data worker", tg);
+#else
+     GLTexture3D::run_make_brick_data<T> mbd(this, 
+                                          thread_sema,
+                                          newx,newy,newz,
+                                          xsize,ysize,zsize,
+                                          xoff,yoff,zoff,
+                                          tex, brickData);
+     mbd.run();
+#endif      
+     
+  } else {
+    double stepx, stepy, stepz;
+    stepx = pow(2.0, levels_ - level);
+    if( xmax_ > xsize ) {
+      padx_=(int)((xmax_ - xsize)*stepx);
+    } else {
+      if( xmax_ * stepx > xsize){
+	padx_ = (int)((xmax_*stepx - xsize)/stepx);
+      }
+    }
+    stepy = pow(2.0, levels_ - level);
+    if( ymax_ > ysize ) {
+      pady_ = (int)((ymax_ - ysize)*stepy);
+    } else {
+      if( ymax_ * stepy > ysize){
+	pady_ = (int)((ymax_*stepy - ysize)/stepy);
+      }
+    }
+    stepz = pow(2.0, levels_ - level);
+    if( zmax_ > zsize ) {
+      stepz = 1; padz_ = (int)((zmax_ - zsize)*stepz);
+    } else {
+      if( zmax_ * stepz > zsize){
+	padz_ = (int)((zmax_*stepz - zsize)/stepz);
+      }
+    }
+    string  group_name("thread group ");
+    ostrstream osstr;
+    osstr << level + 1;
+    group_name = group_name + osstr.str();
+    ThreadGroup *group = scinew ThreadGroup( group_name.c_str() );
+    int sx = xmax_, sy = ymax_, sz = zmax_, tmp;
+    tmp = xmax_;
+    while( tmp < xsize){
+      sx = tmp;
+      tmp = tmp*2 -1;
+    }
+    tmp = ymax_;
+    while( tmp < ysize){
+      sy = tmp;
+      tmp = tmp*2 -1;
+    }
+    tmp = zmax_;
+    while( tmp < zsize){
+      sz = tmp;
+      tmp = tmp*2 -1;
+    }   
+
+    int X2, Y2, Z2;
+    X2 = largestPowerOf2( xsize -1);
+    Y2 = largestPowerOf2( ysize -1);
+    Z2 = largestPowerOf2( zsize -1);
+
+
+      
+    Vector diag = max - min;
+    Point mid;
+    if( Z2 == Y2 && Y2 == X2 ){
+      mid = min + Vector(dx_* (sx-1), dy_* (sy-1),
+			 dz_* (sz-1));
+      for(int i = 0; i < 8; i++){
+	fill_child(i, min, mid, max, xoff, yoff, zoff,
+		   xsize, ysize, zsize, sx, sy, sz,level+1,tex, node, 
+		   thread_sema, group);
+      }
+    } else if( Z2 > Y2 && Z2 > X2 ) {
+      mid = min + Vector(diag.x(),
+                         diag.y(),
+                         dz_*(sz-1));
+      
+      fill_child(0, min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, ysize, sz, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(1, min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, ysize, sz, level+1, tex, node, 
+                          thread_sema, group);
+    } else  if( Y2 > Z2 && Y2 > X2 ) {
+      mid = min + Vector(diag.x(),
+                         dy_*(sy - 1),
+                         diag.z());
+      fill_child(0, min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, sy, zsize, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(2, min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, sy, zsize, level+1, tex, node, 
+                          thread_sema, group);
+    } else  if( X2 > Z2 && X2 > Y2 ) {
+      mid = min + Vector(dx_*(sx-1),
+                         diag.y(),
+                         diag.z());
+      fill_child(0, min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, ysize, zsize, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(4,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, ysize, zsize, level+1, tex, node, 
+                          thread_sema, group);
+    } else if( Z2 == Y2 ){
+      mid = min + Vector(diag.x(),
+                         dy_ * (sy - 1),
+                         dz_* (sz - 1));
+      fill_child(0,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(1,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(2,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(3,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
+                          thread_sema, group);
+    } else if( X2 == Y2 ){
+      mid = min + Vector(dx_*(sx - 1), dy_*(sy-1),
+                         diag.z());
+      fill_child(0,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(2,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(4,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(6,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
+                          thread_sema, group);
+    } else if( Z2 == X2 ){
+      mid = min + Vector(dx_*(sx-1),
+                         diag.y(),
+                         dz_*(sz-1));
+      fill_child(0,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(1,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(4,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
+                          thread_sema, group);
+      fill_child(5,min, mid, max, xoff, yoff, zoff,
+                 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
+                          thread_sema, group);
+    }
+
+#ifdef 0 // __sgi
+    group->join();
+    //group->stop();
+      
+    thread_sema->down();
+    //    Thread *t =
+    scinew Thread(new GLTexture3D::run_make_low_res_brick_data(this, 
+                                                    thread_sema,
+                                                    xmax_, ymax_, zmax_,
+                                                    xsize, ysize, zsize,
+                                                    xoff, yoff, zoff, 
+                                                    padx_, pady_, padz_,
+                                                    level, node, brickData),
+                    "makeLowResBrickData worker", tg);
+#else
+      GLTexture3D::run_make_low_res_brick_data mlrbd(this, 
+                                                   thread_sema,
+                                                   xmax_, ymax_, zmax_,
+                                                   xsize, ysize, zsize,
+                                                   xoff, yoff, zoff, 
+                                                   padx_, pady_, padz_,
+                                                   level, node, brickData);
+
+     mlrbd.run();
+#endif
+    if(group->numActive(false) != 0){
+      cerr<<"Active Threads in thread group\n";
+    }
+    delete group;
+  }
+}
+
+      
+
+  
 
 
 template <class T>
@@ -606,13 +858,108 @@ void GLTexture3D::build_child(int i, Point min, Point mid, Point max,
 }
 
 template <class T>
+void GLTexture3D::fill_child(int i, Point min, Point mid, Point max,
+			      int xoff, int yoff, int zoff,
+			      int xsize, int ysize, int zsize,
+			      int X2, int Y2, int Z2,
+			      int level,  T* tex, Octree<Brick*>* node,
+			      Semaphore* thread_sema, ThreadGroup *tg)
+{
+  Point pmin, pmax;
+
+  switch( i ) {
+  case 0:
+    pmin = min;
+    pmax = mid;
+    replace_bon_tree_data(pmin, pmax, xoff, yoff, zoff,
+			  X2, Y2, Z2, level, tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  case 1:
+    pmin = min;
+    pmax = mid;
+    pmin.z(mid.z());
+    pmax.z(max.z());
+    replace_bon_tree_data(pmin, pmax,
+			  xoff, yoff, zoff + Z2 -1,
+			  X2, Y2, zsize-Z2+1, level, tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  case 2:
+    pmin = min;
+    pmax = mid;
+    pmin.y(mid.y());
+    pmax.y(max.y());
+    replace_bon_tree_data(pmin, pmax,
+			  xoff, yoff + Y2 - 1, zoff,
+			  X2, ysize - Y2 + 1, Z2, level, tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  case 3:
+    pmin = mid;
+    pmax = max;
+    pmin.x(min.x());
+    pmax.x(mid.x());
+    replace_bon_tree_data(pmin, pmax,
+			  xoff, yoff + Y2 - 1 , zoff + Z2 - 1,
+			  X2, ysize - Y2 + 1, zsize - Z2 + 1, level, 
+			  tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  case 4:
+    pmin = min;
+    pmax = mid;
+    pmin.x(mid.x());
+    pmax.x(max.x());
+    replace_bon_tree_data(pmin, pmax,
+			  xoff + X2 - 1, yoff, zoff,
+			  xsize - X2 + 1, Y2, Z2, level, tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  case 5:
+    pmin = mid;
+    pmax = max;
+    pmin.y(min.y());
+    pmax.y(mid.y());
+    replace_bon_tree_data(pmin, pmax,
+			  xoff + X2 - 1, yoff, zoff +  Z2 - 1,
+			  xsize - X2 + 1, Y2, zsize - Z2 + 1, level, 
+			  tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  case 6:
+    pmin = mid;
+    pmax = max;
+    pmin.z(min.z());
+    pmax.z(mid.z());
+    replace_bon_tree_data(pmin, pmax,
+			  xoff + X2 - 1, yoff + Y2 - 1, zoff,
+			  xsize - X2 + 1, ysize - Y2 + 1, Z2, level, 
+			  tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  case 7:
+    pmin = mid;
+    pmax = max;
+    replace_bon_tree_data(pmin, pmax,  xoff + X2 - 1,
+			  yoff + Y2 - 1, zoff +  Z2 - 1,
+			  xsize - X2 + 1, ysize - Y2 + 1,
+			  zsize - Z2 + 1, level, tex, (*node)[i], 
+			  thread_sema, tg);
+    break;
+  default:
+    break;
+  }
+}
+
+template <class T>
 GLTexture3D::run_make_brick_data<T>::run_make_brick_data(
-				GLTexture3D* tex3D,
-			        Semaphore *thread,
-				int newx, int newy, int newz,
-				int xsize, int ysize, int zsize,
-				int xoff, int yoff, int zoff, T *tex,
-				Array3<unsigned char>*& bd) :
+				 GLTexture3D* tex3D,
+				 Semaphore *thread,
+				 int newx, int newy, int newz,
+				 int xsize, int ysize, int zsize,
+				 int xoff, int yoff, int zoff, T *tex,
+				 Array3<unsigned char>*& bd) :
   tex3D_(tex3D),
   thread_sema_( thread ),
   newx_(newx), newy_(newy), newz_(newz),
@@ -657,3 +1004,4 @@ GLTexture3D::run_make_brick_data<T>::run()
 
 } // End namespace SCIRun
 #endif
+
