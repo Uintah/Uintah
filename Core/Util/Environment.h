@@ -33,27 +33,23 @@
 
 namespace SCIRun {
   using std::string;
-
+  void create_sci_environment(char **environ);
   bool find_and_parse_scirunrc();
-  bool parse_scirunrc( const string filename );
+  bool parse_scirunrc( const string &filename );
 
-  // sci_putenv will check the existing_env set string (filled in
-  // store_existing_env) If the environment key existed when the
-  // program was run, then it will not be overwritten.  This follows
-  // the Unix convention of using environment variables to supercede
-  // default program settings and .rc files. It is HIGHLY RECOMMENDED
-  // that you use the sci versions of putenv and getenv to keep things
-  // consistent.
-  int sci_putenv( const string & key, const string & val );
+  // Use the following functions to get/put environment variables.
+  void sci_putenv( const string & key, const string & val );
+  const char *sci_getenv( const string & key );
 
-  // sci_getenv_p will lookup the value of the environment variable
-  // 'key' and returns false if the variable is equal to 'false',
-  // 'no', 'off', or '0', it returns true otherwise.  (Case
-  // insensitive)
+  // sci_getenv_p
+  // will return a bool representing the value of environment variable 'key'
+  // returns FALSE if and only if:
+  //   the variable does not exist, is empty,
+  //   is equal (Case insensitive) to 'false', 'no', 'off', or '0' 
+  // returns TRUE:
+  //   otherwise.
   bool sci_getenv_p( const string & key );
-
-  // Use the following function to get environment variables.
-  char *sci_getenv( const string & key );
 }
+
 
 #endif // #ifndef Core_Util_Environment_h

@@ -24,13 +24,33 @@
 #include <sgi_stl_warnings_off.h>
 #include <Core/Util/Environment.h> // includes <string>
 #include <iostream>
-#include <stdio.h>
-#include <set>
+#include <map>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 
 using namespace std;
+
+// This set stores all of the environemnt keys that were set when scirun was
+// started.  Its checked by sci_putenv to ensure we don't overwrite env variables
+map<string,string> scirun_env;
+
+// get_existing_env() will fill up the SCIRun::existing_env string set
+// with all the currently set environment variable keys, but not their values
+void create_sci_environment(char **environ)
+{
+  char **environment = environ;
+  scirun_env.clear();
+  while (*environment) {
+    const string str(*environment);
+    const size_t pos = str.find("=");
+    scirun_env[str.substr(0,pos)] = str.substr(pos+1, str.length());
+    environment++;
+  }
+}
+
+
+
 
 // WARNING: According to other software (tcl) you should lock before
 // messing with the environment.
@@ -62,11 +82,10 @@ MacroSubstitute( char * var_val )
 	  var_val[cur]='\0';
 	  macro = new char[end-start+1];
 	  sprintf(macro,"%s",&var_val[start]);
-	  char *env = sci_getenv(macro);
+	  const char *env = sci_getenv(macro);
 	  delete[] macro;
 	  if (env) 
 	    newstring += string(env);
-	  delete[] env; // Free memory allocated in sci_getenv.
 	  var_val[cur]=')';
 	  cur++;
 	  break;
@@ -88,43 +107,18 @@ MacroSubstitute( char * var_val )
   return retval;
 }
 
-char *
+const char *
 sci_getenv( const string & key )
 {
-  char keya[1024];
-  sprintf( keya, "%s", key.c_str() );
-
-  char * value = getenv( keya );
-
-  return value;
+  if (scirun_env.find(key) == scirun_env.end()) return 0;
+  return scirun_env[key].c_str();
 }
 
-#if defined(__sgi) || defined(__alpha)
-// SGI doesn't have setenv so we make our own...
-int
-setenv(const char * name, const char * value, int overwrite )
-{
-  printf("pid is %d\n",getpid());
-  if( sci_getenv( name ) && !overwrite ) {
-    return 0;
-  }
-  char input[2048];
-  sprintf( input, "%s=%s", name, value );
 
-  int rv = putenv( input );
-
-  return rv;
-}
-#endif
-
-int
+void
 sci_putenv( const string &key, const string &val )
 {
-  char keya[1024], vala[1024];
-  sprintf( keya, "%s", key.c_str() );
-  sprintf( vala, "%s", val.c_str() );
-
-  return setenv( keya, vala, 1 );
+  scirun_env[key] = val;
 }  
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -150,7 +144,7 @@ emptyOrComment( const char * line )
 // It uses sci_putenv to set variables in the environment. 
 // Returns true if the file was opened and parsed.  False otherwise.
 bool
-parse_scirunrc( const string rcfile )
+parse_scirunrc( const string &rcfile )
 {
   FILE* filein = fopen(rcfile.c_str(),"r");
   if (!filein) return false;
@@ -190,9 +184,6 @@ parse_scirunrc( const string rcfile )
 	if( !sci_getenv( var ) ) {
 	  sci_putenv(var,sub);
 	} 
-	// begin DEBUGGING
-	else { printf("not putting %s into the environment as it is already there\n", var); }
-	// end   DEBUGGING
 
 	delete[] sub;
       }
@@ -254,9 +245,9 @@ find_and_parse_scirunrc()
 // returns true otherwise.  Case insensitive.
 bool
 sci_getenv_p(const string &key) {
+  const char *value = sci_getenv( key );
 
-  char *value = sci_getenv( key );
-
+  // If the environment variable does NOT EXIST OR is EMPTY then return FASE
   if (!value || !(*value)) return false;
   string str;
   while (*value) {
@@ -264,7 +255,6 @@ sci_getenv_p(const string &key) {
     value++;
   }
 
-  delete[] value;
 
   // Only return false if value is zero (or equivalant)
   if (str == "FALSE" || str == "NO" || str == "OFF" || str == "0")
