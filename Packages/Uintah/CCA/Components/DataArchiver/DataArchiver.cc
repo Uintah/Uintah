@@ -50,12 +50,10 @@ using namespace SCIRun;
 
 static Dir makeVersionedDir(const std::string nameBase);
 static DebugStream dbg("DataArchiver", false);
-static DOM_Document loadDocument(std::string xmlName);
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld),
-    d_outputLock("DataArchiver output lock"),
-    d_outputReductionLock("DataArchiver reduction output lock")
+    d_outputLock("DataArchiver output lock")
 {
   d_wasOutputTimestep = false;
   d_wasCheckpointTimestep = false;
@@ -954,7 +952,7 @@ void DataArchiver::scheduleOutputTimestep(Dir& baseDir,
   dbg << "Created " << n << " output tasks\n";
 }
 
-DOM_Document loadDocument(string xmlName)
+DOM_Document DataArchiver::loadDocument(string xmlName)
 {
    // Instantiate the DOM parser.
    DOMParser parser;
@@ -962,7 +960,7 @@ DOM_Document loadDocument(string xmlName)
    
    SimpleErrorHandler handler;
    parser.setErrorHandler(&handler);
-   
+
    parser.parse(xmlName.c_str());
    
    if(handler.foundError)
@@ -1065,7 +1063,6 @@ void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
 {
   dbg << "DataArchiver::outputCheckpointReduction called\n";
   // Dump the stuff in the reduction saveset into files in the uda
-
   for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
     SaveItem& saveItem = d_checkpointReductionLabels[i];
     const VarLabel* var = saveItem.label_;
@@ -1117,7 +1114,6 @@ void DataArchiver::output(const ProcessorGroup*,
   string xmlFilename;
   string dataFilebase;
   string dataFilename;
-  Mutex* pLock = 0;
   if (!isReduction) {
     ostringstream lname;
     lname << "l0"; // Hard coded - steve
@@ -1128,18 +1124,18 @@ void DataArchiver::output(const ProcessorGroup*,
     xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
     dataFilebase = pname.str() + ".data";
     dataFilename = ldir.getName() + "/" + dataFilebase;
-    pLock = &d_outputLock;
   }
   else {
     xmlFilename =  tdir.getName() + "/global.xml";
     dataFilebase = "global.data";
     dataFilename = tdir.getName() + "/" + dataFilebase;
-    pLock = &d_outputReductionLock;
   }
 
- pLock->lock();
-  
-  DOM_Document doc;
+  // Not only lock to prevent multiple threads from writing over the same
+  // file, but also lock because xerces (DOM..) has thread-safety issues.
+ d_outputLock.lock(); 
+ { // make sure doc's constructor is called after the lock.
+  DOM_Document doc; 
   ifstream test(xmlFilename.c_str());
   if(test){
     // Instantiate the DOM parser.
@@ -1296,12 +1292,12 @@ void DataArchiver::output(const ProcessorGroup*,
       DOM_Text trailer = indexDoc.createTextNode("\n");
       vs.appendChild(trailer);
     }
-      
-    ofstream indexOut(iname.c_str());
-    indexOut << indexDoc << endl;
-  }
 
- pLock->unlock();  
+    ofstream indexOut(iname.c_str());
+    indexOut << indexDoc << endl;  
+  }
+ }
+ d_outputLock.unlock(); 
 }
 
 static
