@@ -38,26 +38,54 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Due to course current dipoles, the ApplyFEMCurrentSource module changes and recreates the right-hand side (RHS) for the Finite
-    Elements discretization approach.</summary>
+    <summary>The ApplyFEMCurrentSource module builds the right-hand
+    side (ColumnMatrix) to reflect monopolar and dipolar current sources
+    for finite-element based bioelectric field problems.</summary>
     <description>
       <p>Version Date: March 2001</p><p>Version: 1.0</p>
       <orderedlist>
 	<listitem>
-	  <p>The ApplyFEMCurrentSource module creates and fills a new ColumnMatrix,
-	  according to mesh and dipole parameters in situations where it does not locate a ColumnMatrix on its input
-	  that contains an RHS to modify, or when the module finds a ColumnMatrix of a 
-	  different size than the number of nodes in the mesh.</p>
+	  <p>If an input RHS ColumnMatrix is present, this module adds
+	  the contributions for the current sources into that matrix
+	  (i.e. multiple ApplyFEMCurrentSource modules can be cascaded
+	  together).  If no RHS is present, this module will generate
+	  one.  The RHS ColumnMatrix will be of length n, where n is
+	  the number of nodes in the finite element mesh.</p>
 	</listitem>
 	<listitem>
-	  <p>We assume the mesh to be a TetVolField(int) type,
-	  containing indices to the conductivity tensor lookup table.
-	  The documentation for the <modref package="BioPSE" name="SetupFEMatrix"/> module provides further documentation about this mesh.</p>
+	  <p>We assume the mesh will be stored in a TetVolMesh, a
+	  HexVolMesh, or a TriSurfMesh.</p>
 	</listitem>
 	<listitem>
-	  <p>Dipoles are represented as nodes in TetVolMesh. The
-	  corresponding value are vectors representing dipole
-	  moments. Thus, the module expects dipoles as TetVolField(Vector) field</p>
+	  <p>There are two types of current sources supported by this
+	  module: dipoles, and sources-and-sinks.  With dipoles, the
+	  user must pass in a PointCloudFieldd&lt;Vector> into the
+	  Sources input port.  The position of each PointCloud node
+	  corresponds to the location of the dipole, and the
+	  corresponding Vector corresponds to the moment of the
+	  dipole.  If the user wishes to use dipolar sources, they
+	  must pass in a PointCloudField&lt;Vector> AND they must
+	  select "dipole" for the Source Model on the UI window.  In
+	  contrast to the dipole model, the sources-and-sinks option
+	  has several sub-models.  To activate any of these, the user
+	  must select the "sources and sinks" option from the UI.
+	  The values that are used for sources-and-sinks are a
+	  combination of: the source and sink indices entered in the
+	  UI; a PointCloudField&lt;double> passed into the Source
+	  port; and a MappingMatrix.  Here is the logic for how those
+	  values are used: 1) if we don't have a Mapping matrix, we
+	  use the source/sink indices from the UI as node indices from
+	  the volume mesh between which one unit of current is passed;
+	  2) if we have a Mapping matrix, but we don't have a Source
+	  field, then the source/sink indices refer to the PointCloud
+	  and we use the Mapping matrix to get their corresponding
+	  volume node indices, and we then pass one unit of current
+	  between them; 3) if we have a Mapping matrix AND a Source
+	  field, then ignore the source/sink indices from the UI, and
+	  assume that the Mapping matrix maps the PointCloud nodes to
+	  Volume mesh nodes and that the data values (doubles) from
+	  the PointCloud indicate the strength (current density) for
+	  each point source.</p>
 	</listitem>
       </orderedlist>
     </description>
@@ -68,16 +96,16 @@
       <port>
 	<name>Mesh</name>
 	<description>
-	  <p>Takes handle to the field containing condictivity mesh</p>
+	  <p>Field containing the volume mesh</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
       </port>
       <port>
-	<name>Dipole Sources</name>
+	<name>Sources</name>
 	<description>
-	  <p>Takes handle to the field containing dipole positions and
-	  their moment values</p>
+	  <p>Either a PointCloudField&lt;Vector> (for dipoles) or a
+	  PointCloudField&lt;double> for current densities.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
@@ -85,7 +113,7 @@
       <port>
 	<name>Mapping</name>
 	<description>
-	  <p>Maps electrode indices to mesh indices</p>
+	  <p>Maps source nodes indicies to volume mesh nodes indices.</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>MatrixReader</componentname>
@@ -93,8 +121,8 @@
       <port>
 	<name>Input RHS</name>
 	<description>
-	  <p>Takes handle to the matrix containing RHS for FE
-	  discretization obtained from SetupFEMatrix</p>
+	  <p>(Optional) Handle to the matrix containing RHS for FE
+	  discretization obtained from SetupFEMatrix.</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>SetupFEMatrix</componentname>
