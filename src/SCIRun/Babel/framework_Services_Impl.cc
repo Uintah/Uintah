@@ -3,15 +3,15 @@
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030428 21:05:32 MDT
-// Generated:     20030428 21:05:39 MDT
+// SIDL Created:  20030611 14:24:29 MDT
+// Generated:     20030611 14:24:35 MDT
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 7
-// source-url    = file:/home/sci/kzhang/testSCIRun/SCIRun/debug/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/testSCIRun/SCIRun/sdebug/../src/SCIRun/Babel/framework.sidl
 // 
 #include "framework_Services_Impl.hh"
 

@@ -38,8 +38,8 @@ namespace SCIRun {
     virtual ~PortInstance();
 
     enum PortType {
-      From,
-      To
+      From=0,
+      To=1
     };
 
     virtual bool connect(PortInstance*) = 0;
