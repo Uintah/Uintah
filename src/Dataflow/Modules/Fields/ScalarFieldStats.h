@@ -141,15 +141,20 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     }
     mean = value/double(counter);
     sfs->mean_.set( mean );
+
+    
     sfs->min_.set( double( min ) );
     sfs->max_.set( double( max ) );
+    if (fabs(sfs->max_.get() - sfs->min_.get()) < 0.000001)
+      {
+	sfs->min_.set(sfs->min_.get() - 1.0);
+	sfs->max_.set(sfs->max_.get() + 1.0);
+      }
   }
   
   int nbuckets = sfs->nbuckets_.get();
-  vector<int> hits(nbuckets+1, 0);
-  double range = sfs->max_.get() - sfs->min_.get();
-  if (range < 0.00001 || range > -0.00001) range = 1.0;
-  double frac = (nbuckets-1)/range;
+  vector<int> hits(nbuckets, 0);
+  double frac = (nbuckets-1)/(sfs->max_.get() - sfs->min_.get());
   
 
   typename FIELD::value_type sigma;
