@@ -257,16 +257,10 @@ public:
 
   Node::index_type add_point(const Point &p);
 
-
-
-
   //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
   //		 Face::index_type &face, double &u, double &v);
 
-
-  const Point &point(Node::index_type i) { return points_[i]; }
   virtual bool		synchronize(unsigned int);
-
 
   double pyramid_volume(const Node::array_type &, const Point &) const;
   double polygon_area(const Node::array_type &, const Vector) const;
@@ -277,6 +271,9 @@ private:
   void compute_faces();
   void compute_node_neighbors();
   void compute_grid();
+  void get_face_weights(vector<double> &w, const Node::array_type &nodes,
+			const Point &p, int i0, int i1, int i2, int i3);
+  const Point &point(Node::index_type i) { return points_[i]; }
 
 
   bool inside8_p(Cell::index_type i, const Point &p) const;

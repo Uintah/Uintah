@@ -801,7 +801,7 @@ tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
   return fabs(a1+a2+a3+a4);
 }
 
-
+#if 0
 // Tet inside test, cut and pasted from TetVolMesh.cc
 static bool
 tet_inside_p(const Point &p, const Point &p0, const Point &p1,
@@ -857,6 +857,7 @@ tet_inside_p(const Point &p, const Point &p0, const Point &p1,
   return true;
 }
 
+
 static void
 tetinterp(const Point &p, Point nodes[8],
 	  vector<double> &w, int a, int b, int c, int d)
@@ -880,6 +881,8 @@ tetinterp(const Point &p, Point nodes[8],
   w[c] = wc * sum;
   w[d] = wd * sum;
 }
+#endif
+
 
 //===================================================================
 
@@ -956,18 +959,99 @@ HexVolMesh::pyramid_volume(const Node::array_type &face, const Point &p) const
   Vector e2(points_[face[1]]-points_[face[2]]);
   if (Cross(e1,e2).length2()>0.0) {
     Plane plane(points_[face[0]], points_[face[1]], points_[face[2]]);
-    double dist = plane.eval_point(p);
+    //double dist = plane.eval_point(p);
     return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
   }
   Vector e3(points_[face[3]]-points_[face[2]]);
   if (Cross(e2,e3).length2()>0.0) {
     Plane plane(points_[face[1]], points_[face[2]], points_[face[3]]);
-    double dist = plane.eval_point(p);
+    //double dist = plane.eval_point(p);
     return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
   }
   return 0.0;
 }
-  
+
+
+static unsigned int wtable[8][6] =
+  {{1, 3, 4,  2, 7, 5},
+   {2, 0, 5,  3, 4, 6},
+   {3, 1, 6,  0, 5, 7},
+   {0, 2, 7,  1, 6, 4},
+   {5, 7, 0,  6, 3, 1},
+   {6, 4, 1,  5, 0, 2},
+   {7, 5, 2,  4, 1, 3},
+   {4, 6, 3,  5, 2, 4}};
+
+
+static double
+tri_area(const Point &a, const Point &b, const Point &c)
+{
+  return Cross(b-a, c-a).length();
+}
+
+
+void
+HexVolMesh::get_face_weights(vector<double> &w, const Node::array_type &nodes,
+			     const Point &p, int i0, int i1, int i2, int i3)
+{
+  for (unsigned int j = 0; j < 8; j++)
+  {
+    w[j] = 0.0;
+  }
+
+  const Point &p0 = point(nodes[i0]);
+  const Point &p1 = point(nodes[i1]);
+  const Point &p2 = point(nodes[i2]);
+  const Point &p3 = point(nodes[i3]);
+
+  const double a0 = tri_area(p, p0, p1);
+  if (a0 < 1.0e-6)
+  {
+    const Vector v0 = p0 - p1;
+    const Vector v1 = p - p1;
+    w[i0] = Dot(v0, v1) / Dot(v0, v0);
+    w[i1] = 1.0 - w[i0];
+    return;
+  }
+  const double a1 = tri_area(p, p1, p2);
+  if (a1 < 1.0e-6)
+  {
+    const Vector v0 = p1 - p2;
+    const Vector v1 = p - p2;
+    w[i1] = Dot(v0, v1) / Dot(v0, v0);
+    w[i2] = 1.0 - w[i1];
+    return;
+  }
+  const double a2 = tri_area(p, p2, p3);
+  if (a2 < 1.0e-6)
+  {
+    const Vector v0 = p2 - p3;
+    const Vector v1 = p - p3;
+    w[i2] = Dot(v0, v1) / Dot(v0, v0);
+    w[i3] = 1.0 - w[i2];
+    return;
+  }
+  const double a3 = tri_area(p, p3, p0);
+  if (a3 < 1.0e-6)
+  {
+    const Vector v0 = p3 - p0;
+    const Vector v1 = p - p0;
+    w[i3] = Dot(v0, v1) / Dot(v0, v0);
+    w[i0] = 1.0 - w[i3];
+    return;
+  }
+
+  w[i0] = tri_area(p0, p1, p2) / (a0 * a3);
+  w[i1] = tri_area(p1, p2, p0) / (a1 * a0);
+  w[i2] = tri_area(p2, p3, p1) / (a2 * a1);
+  w[i3] = tri_area(p3, p0, p2) / (a3 * a2);
+
+  const double suminv = 1.0 / (w[i0] + w[i1] + w[i2] + w[i3]);
+  w[i0] *= suminv;
+  w[i1] *= suminv;
+  w[i2] *= suminv;
+  w[i3] *= suminv;
+}
   
 
 void
@@ -979,35 +1063,50 @@ HexVolMesh::get_weights(const Point &p,
   if (locate(cell, p))
   {
     get_nodes(nodes,cell);
-    unsigned int nnodes = nodes.size();
+    const unsigned int nnodes = nodes.size();
     ASSERT(nnodes == 8);
     w.resize(nnodes);
       
-    Face::array_type faces;
-    get_faces(faces, cell);
-    unsigned int nfaces = faces.size();
-    vector<double> face_point_volume(nfaces);
-    double total_volume = 0.0;
-    map<Node::index_type, map<Face::index_type,bool> > attached;
-    int f, n;
-      
-    for (f = 0; f < nfaces; f++)
+    double sum = 0.0;
+    unsigned int i;
+    for (i=0; i < nnodes; i++)
     {
-      Node::array_type face_nodes;
-      get_nodes(face_nodes, faces[f]);
-      face_point_volume[f] = pyramid_volume(face_nodes, p);
-      total_volume += face_point_volume[f];
-      unsigned int n_face_nodes = face_nodes.size();
-      for (n = 0; n < n_face_nodes; n++)
-	attached[face_nodes[n]][faces[f]] = true;
+      const double a0 =
+	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][0]]),
+		 point(nodes[wtable[i][1]]));
+      if (a0 < 1.0e-6)
+      {
+	get_face_weights(w, nodes, p, i, wtable[i][0],
+			 wtable[i][3], wtable[i][1]);
+	return;
+      }
+      const double a1 =
+	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][1]]),
+		 point(nodes[wtable[i][2]]));
+      if (a1 < 1.0e-6)
+      {
+	get_face_weights(w, nodes, p, i, wtable[i][1],
+			 wtable[i][4], wtable[i][2]);
+	return;
+      }
+      const double a2 =
+	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][2]]),
+		 point(nodes[wtable[i][0]]));
+      if (a2 < 1.0e-6)
+      {
+	get_face_weights(w, nodes, p, i, wtable[i][2],
+			 wtable[i][5], wtable[i][0]);
+	return;
+      }
+      w[i] = tet_vol6(point(nodes[i]), point(nodes[wtable[i][0]]),
+		      point(nodes[wtable[i][1]]), point(nodes[wtable[i][2]]))
+	/ (a0 * a1 * a2);
+      sum += w[i];
     }
-    for (n = 0; n < nnodes; n++)
+    const double suminv = 1.0 / sum;
+    for (i = 0; i < nnodes; i++)
     {
-      double unattached_volume = 0.0;
-      for (f = 0; f < nfaces; f++)
-	if (!attached[nodes[n]][faces[f]])
-	  unattached_volume += face_point_volume[f];
-      w[n] = unattached_volume / total_volume;
+      w[i] *= suminv;
     }
   }
 }

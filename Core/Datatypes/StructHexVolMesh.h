@@ -130,8 +130,11 @@ private:
   double inside8_p(Cell::index_type i, const Point &p) const;
   double polygon_area(const Node::array_type &, const Vector) const;
   double pyramid_volume(const Node::array_type &, const Point &) const;
-  Point get_point(const Node::index_type &i) const 
+  void get_face_weights(vector<double> &w, const Node::array_type &nodes,
+			const Point &p, int i0, int i1, int i2, int i3);
+  const Point &point(const Node::index_type &i) const 
   { return points_(i.i_, i.j_, i.k_); }
+  
 
   Array3<Point> points_;
 
