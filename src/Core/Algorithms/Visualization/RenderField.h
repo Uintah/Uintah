@@ -36,6 +36,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <sci_hash_map.h>
+#include <Core/Datatypes/TetVolMesh.h>
 
 namespace SCIRun {
 
@@ -313,6 +314,9 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
 
   case Field::EDGE:
     {
+      Mesh::synchronized_t sync;
+      sync.set(Mesh::EDGES_E);
+      mesh->synchronize(sync);
       typename Fld::mesh_type::Edge::iterator eiter;  
       mesh->begin(eiter);  
       typename Fld::mesh_type::Edge::iterator eiter_end;  
@@ -442,6 +446,9 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     pts = scinew GeomPts((unsigned int)(nsize));
   }
   // First pass: over the nodes
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::NODES_E);
+  mesh->synchronize(sync);
   typename Fld::mesh_type::Node::iterator niter;  mesh->begin(niter);  
   typename Fld::mesh_type::Node::iterator niter_end;  mesh->end(niter_end);  
   while (niter != niter_end) {
@@ -500,6 +507,9 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   GeomGroup* edges = scinew GeomGroup;
   edge_switch_ = scinew GeomSwitch(edges);
   // Second pass: over the edges
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::EDGES_E);
+  mesh->synchronize(sync);
   typename Fld::mesh_type::Edge::iterator eiter; mesh->begin(eiter);  
   typename Fld::mesh_type::Edge::iterator eiter_end; mesh->end(eiter_end);  
   while (eiter != eiter_end) {  
@@ -558,6 +568,9 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
 
   face_switch_ = scinew GeomSwitch(faces);
   // Third pass: over the faces
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::FACES_E);
+  mesh->synchronize(sync);
   typename Fld::mesh_type::Face::iterator fiter; mesh->begin(fiter);  
   typename Fld::mesh_type::Face::iterator fiter_end; mesh->end(fiter_end);  
   typename Fld::mesh_type::Node::array_type nodes;
