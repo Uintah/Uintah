@@ -1,7 +1,7 @@
 #include "GLPlanes.h"
 #include <GL/gl.h>
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 
@@ -22,5 +22,5 @@ void GLPlanes::postDraw()
   glDisable(GL_ALPHA_TEST);
 }
 
-} // end namespace Datatypes
+} // end namespace GeomSpace
 } // end namespace Kurt

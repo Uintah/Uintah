@@ -1,7 +1,7 @@
 #include "GLTexRenState.h"
 
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 GLTexRenState::GLTexRenState(const GLVolumeRenderer* glvr)
@@ -11,6 +11,6 @@ GLTexRenState::GLTexRenState(const GLVolumeRenderer* glvr)
   // computation.
 }
 
-} // end namespace Datatypes
+} // end namespace GeomSpace
 } // end namespace Kurt
 

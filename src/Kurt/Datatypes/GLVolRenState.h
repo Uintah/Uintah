@@ -6,17 +6,17 @@
 #include <vector>
 #include <GL/glu.h>
 
-namespace Kurt {
-  namespace Datatypes {
-  class Brick;
-  }
-}
-
 namespace SCICore {
   namespace Geometry {
   class Polygon;
   }
-  namespace GeomSpace {
+}
+
+namespace Kurt {
+  namespace Datatypes {
+    class Brick;
+  } 
+namespace GeomSpace {
   
 
   using SCICore::Geometry::Ray;
@@ -98,5 +98,5 @@ protected:
 };
 
 } // end namespace GeomSpace
-} // end namespace SCICore
+} // end namespace Kurt
 #endif

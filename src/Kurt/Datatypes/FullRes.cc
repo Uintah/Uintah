@@ -8,7 +8,7 @@
 #include "GLVolumeRenderer.h"
 #include "VolumeUtils.h"
 #include <iostream>
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace {
 
 using SCICore::Geometry::Ray;
@@ -120,6 +120,6 @@ FullRes::drawWireFrame()
   }
 }
 
-} // end namespace Datatypes
+} // end namespace GeomSpace
 } // end namespace Kurt
 

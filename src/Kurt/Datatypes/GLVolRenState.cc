@@ -7,8 +7,9 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
+
 
 using SCICore::Geometry::Polygon;
 using namespace Kurt::Datatypes;
@@ -159,7 +160,7 @@ GLVolRenState::loadTexture(Brick& brick)
 
   if( !brick.texName() || reload ) {
     if( !brick.texName() )
-      glGenTextures(1, brick.texNameP());
+      glGenTexturesEXT(1, brick.texNameP());
 
     glBindTexture(GL_TEXTURE_3D, brick.texName());
 
@@ -357,6 +358,6 @@ GLVolRenState::drawWirePolys( const vector<Polygon *>& polys )
 }
 
 }  // namespace GeomSpace
-} // namespace SCICore
+} // namespace Kurt
 
 

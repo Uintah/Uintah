@@ -7,7 +7,7 @@
 #include "GLVolumeRenderer.h"
 #include "VolumeUtils.h"
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 using SCICore::Geometry::Ray;
@@ -88,5 +88,5 @@ LOS::drawWireFrame()
 }
 
 }  // namespace GeomSpace
-} // namespace SCICore
+} // namespace Kurt
 

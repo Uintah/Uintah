@@ -35,7 +35,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
+using namespace Kurt::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
 using SCICore::Datatypes::ScalarFieldRGBase;
@@ -173,6 +173,8 @@ void TexCuttingPlanes::execute(void)
     ogeom->addObj( volren, "Volume Slicer");
     volren->GLPlanes();
     volren->DrawPlanes();
+    if(control_widget)
+      volren->SetControlPoint(control_widget->ReferencePoint());
   } else {    
     if( tex.get_rep() != oldtex.get_rep() ){
       oldtex = tex;
