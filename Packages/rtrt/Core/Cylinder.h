@@ -10,11 +10,11 @@
 #include <stdlib.h>
 
 namespace rtrt {
-class Cylinder;
+  class Cylinder;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Cylinder*&);
+  void Pio(Piostream&, rtrt::Cylinder*&);
 }
 
 namespace rtrt {

@@ -10,11 +10,11 @@
 #include <Core/Persistent/Persistent.h>
 
 namespace rtrt {
-class Light;
+  class Light;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Light*&);
+  void Pio(Piostream&, rtrt::Light*&);
 }
 
 namespace rtrt {

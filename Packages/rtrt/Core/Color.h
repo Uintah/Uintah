@@ -7,15 +7,14 @@
 #include <iostream>
 
 namespace rtrt {
-class Color;
-
+  class Color;
 }
 namespace SCIRun {
-void Pio(Piostream& stream, rtrt::Color& p);
+  void Pio(Piostream& stream, rtrt::Color& p);
 }
 namespace rtrt {
 
-using namespace std;
+using std::ostream;
 
 // This gets rid of compiler warnings on the SGI.
 #if defined(__sgi)

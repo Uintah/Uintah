@@ -3,11 +3,12 @@
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Ray.h>
-#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
+
+#include <Core/Geometry/Vector.h>
 
 // Known problems:
 // Scales may not work because ray parameter isn't transformed --
@@ -16,11 +17,11 @@
 //  very own .cc file
 
 namespace rtrt {
-class Instance;
+  class Instance;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Instance*&);
+  void Pio(Piostream&, rtrt::Instance*&);
 }
 
 namespace rtrt {

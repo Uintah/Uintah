@@ -12,14 +12,12 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 namespace rtrt {
-class InstanceWrapperObject ;
+  class InstanceWrapperObject;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::InstanceWrapperObject*&);
+  void Pio(Piostream&, rtrt::InstanceWrapperObject*&);
 }
-
-using namespace rtrt;
 
 namespace rtrt {
 

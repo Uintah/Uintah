@@ -1,12 +1,15 @@
 #include <Packages/rtrt/Core/ColorMap.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
+
 #include <stdio.h>
-#include <fstream>
 #include <unistd.h>
+
+#include <fstream>
 #include <iostream>
 
 using namespace rtrt;
+using namespace std;
 
 ColorMap::ColorMap() {
   //default, black to white

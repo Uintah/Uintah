@@ -7,11 +7,11 @@
 #include <Core/Geometry/Point.h>
 
 namespace rtrt {
-class Disc;
+  class Disc;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Disc*&);
+  void Pio(Piostream&, rtrt::Disc*&);
 }
 
 namespace rtrt {

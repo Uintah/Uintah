@@ -6,11 +6,11 @@
 #include <Packages/rtrt/Core/Color.h>
 
 namespace rtrt {
-class DielectricMaterial;
+  class DielectricMaterial;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::DielectricMaterial*&);
+  void Pio(Piostream&, rtrt::DielectricMaterial*&);
 }
 
 namespace rtrt {

@@ -5,11 +5,11 @@
 #include <Packages/rtrt/Core/FastNoise.h>
 
 namespace rtrt {
-class FastTurbulence;
+  class FastTurbulence;
 }
 namespace SCIRun {
-class Point;
-void Pio(Piostream& stream, rtrt::FastTurbulence &obj);
+  class Point;
+  void Pio(Piostream& stream, rtrt::FastTurbulence &obj);
 }
 
 namespace rtrt {

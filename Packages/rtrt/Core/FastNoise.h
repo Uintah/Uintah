@@ -5,11 +5,11 @@
 #include <Packages/rtrt/Core/Noise.h>
 
 namespace rtrt {
-class FastNoise;
+  class FastNoise;
 }
 
 namespace SCIRun {
-void Pio(Piostream& stream, rtrt::FastNoise &obj);
+  void Pio(Piostream& stream, rtrt::FastNoise &obj);
 }
 
 namespace rtrt {

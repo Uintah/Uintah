@@ -1,5 +1,8 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
+using namespace rtrt;
+using namespace SCIRun;
+
 SCIRun::Persistent* instanceWrapperObject_maker() {
   return new InstanceWrapperObject();
 }
@@ -24,13 +27,14 @@ InstanceWrapperObject::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void Pio(SCIRun::Piostream& stream, rtrt::InstanceWrapperObject*& obj)
-{
-  SCIRun::Persistent* pobj=obj;
-  stream.io(pobj, rtrt::InstanceWrapperObject::type_id);
-  if(stream.reading()) {
-    obj=dynamic_cast<rtrt::InstanceWrapperObject*>(pobj);
-    ASSERT(obj != 0)
+
+  void Pio(Piostream& stream, rtrt::InstanceWrapperObject*& obj)
+  {
+    Persistent* pobj=obj;
+    stream.io(pobj, rtrt::InstanceWrapperObject::type_id);
+    if(stream.reading()) {
+      obj=dynamic_cast<rtrt::InstanceWrapperObject*>(pobj);
+      ASSERT(obj != 0);
+    }
   }
-}
 } // end namespace SCIRun

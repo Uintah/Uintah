@@ -36,8 +36,7 @@
 
 using namespace rtrt;
 using namespace SCIRun;
-using std::cerr;
-using std::endl;
+using namespace std;
 
 extern void run_gl_test();
 

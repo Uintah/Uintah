@@ -1,10 +1,13 @@
 
 #include <Packages/rtrt/Core/Image.h>
+
 #include <GL/gl.h>
+
 #include <fstream>
 #include <stdio.h>
 
 using namespace rtrt;
+using namespace std;
 
 Image::Image(int xres, int yres, bool stereo)
     : xres(xres), yres(yres), stereo(stereo)

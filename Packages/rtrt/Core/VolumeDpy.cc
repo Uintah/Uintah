@@ -3,18 +3,22 @@
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/VolumeBase.h>
 #include <Packages/rtrt/Core/DpyBase.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+#include <Packages/rtrt/Core/FontString.h>
 #include <Core/Math/MinMax.h>
+
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
+
 #include <iostream>
+
 #include <stdlib.h>
 #include <values.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <Packages/rtrt/Core/FontString.h>
 
 using namespace rtrt;
+using namespace std;
 using namespace SCIRun;
 
 VolumeDpy::VolumeDpy(float isoval)

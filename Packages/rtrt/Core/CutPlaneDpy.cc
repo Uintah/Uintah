@@ -4,23 +4,27 @@
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
 #include <Packages/rtrt/Core/MiscMath.h>
-#include <Core/Geometry/Transform.h>
+#include <Packages/rtrt/Core/FontString.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
 
+#include <Core/Geometry/Transform.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
+
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
+
 #include <iostream>
+
 #include <stdlib.h>
 #include <values.h>
 #include <stdio.h>
-#include "FontString.h"
 
 using namespace rtrt;
+using namespace std;
 using namespace SCIRun;
 
 namespace rtrt {

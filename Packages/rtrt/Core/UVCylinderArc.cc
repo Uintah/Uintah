@@ -1,15 +1,19 @@
 
 #include <Packages/rtrt/Core/UVCylinderArc.h>
+
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/TrivialAllocator.h>
+
 #include <iostream>
 #include <math.h>
 
 using namespace rtrt;
+using namespace std;
+
 SCIRun::Persistent* uvca_maker() {
   return new UVCylinderArc();
 }
