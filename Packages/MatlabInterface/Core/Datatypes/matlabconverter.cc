@@ -26,7 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
  * FILE: matlabconverter.cc
  * AUTH: Jeroen G Stinstra
@@ -2497,6 +2496,8 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	
 	// FIELDNODE MATRIX
 	index = ma.getfieldnameindexCI("field");
+	if (index > -1) fs.scalarfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("data");
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("scalarfield");
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
