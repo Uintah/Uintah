@@ -885,9 +885,9 @@ case $host in
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
     CPPFLAGS=""
-    FFLAGS="$extra_cflags"
-    CFLAGS="$extra_cflags -D__USE_STD_IOSTREAM"
-    CXXFLAGS="-model ansi $extra_cflags -D__USE_STD_IOSTREAM"
+    FFLAGS="$extra_cflags $FFLAGS"
+    CFLAGS="$extra_cflags -D__USE_STD_IOSTREAM $CFLAGS"
+    CXXFLAGS="-model ansi $extra_cflags -D__USE_STD_IOSTREAM $CXXFLAGS"
     if test "$threads" != "none"; then
       CFLAGS="$CFLAGS -pthread"
       CXXFLAGS="$CXXFLAGS -pthread"
@@ -1559,8 +1559,13 @@ fi
   
 case $host in
   *linux*)
-  GLU_OTHERS="pthread"
-  GLU_OTHERS_FLAG="-lpthread"
+    if test "$threads" != "none"; then
+      GLU_OTHERS="pthread"
+      GLU_OTHERS_FLAG="-lpthread"
+    else
+      GLU_OTHERS=""
+      GLU_OTHERS_FLAG=""
+    fi
   ;;
   *)
   GLU_OTHERS=""
