@@ -30,6 +30,9 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   
 #ifdef _WIN32
   LibraryHandle = LoadLibrary(libname);
+#elif defined(__APPLE__)
+  string name = string("lib/")+libname;
+  LibraryHandle = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 #else
   LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
@@ -49,7 +52,7 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32
   return GetProcAddress(handle,symbolname);
-#elif defined(__APPLE__) && __GNUC__ >= 3 && __GNUC_MINOR == 1 
+#elif defined(__APPLE__) && __GNUC__ == 3 && __GNUC_MINOR == 1 
   string name("_");
   name += symbolname;
   return dlsym(handle, name.c_str());
@@ -62,9 +65,11 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 {
 #ifdef _WIN32
   return LoadLibrary(libname);
+#elif defined(__APPLE__)
+  string name = string("lib/") + libname;
+  return dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 #else
-  void *lib = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
-  return lib;
+  return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
 }
 

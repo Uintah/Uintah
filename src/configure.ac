@@ -475,7 +475,7 @@ fi
 
 echo 
 AC_CANONICAL_HOST
-HAVE_OSX="no"
+IS_OSX="no"
 unset NUM_CPUS
 case $host in
   *-irix*)
@@ -493,7 +493,7 @@ case $host in
     ;;
   *-darwin*)
     NUM_CPUS=2
-    HAVE_OSX="yes"
+    IS_OSX="yes"
     ;;
   *-aix*)
     NUM_CPUS=4
@@ -505,6 +505,8 @@ case $host in
     NUM_CPUS="1"
     ;;
 esac
+
+AC_SUBST(IS_OSX)
 
 AC_MSG_CHECKING(physical processor count)
 if test -z "$NUM_CPUS"; then
@@ -1450,7 +1452,7 @@ SCI_TRY_LINK(DL,dlopen in libc,[
 
 if test "$HAVE_DL" = "yes"; then
    HAVE_LIB_DL="yes"
-elif test "$HAVE_OSX" = "no"; then
+elif test "$IS_OSX" = "no"; then
   SCI_TRY_LINK(DL,dlopen in libdl,[
   #include <dlfcn.h>
   ],,dl,,,[
@@ -2320,7 +2322,7 @@ if test "$sci_check_insight" = "yes"; then
    if test -a "$dir/ITKConfig.cmake"; then
 	INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`" 
         INSIGHT_LIB_DIR_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS "/;/' | sed 's/")//' | sed 's/;/ -L/g'`"
-	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -litkpng -litkzlib -litkvnl -litkvnl_algo -litknetlib -litksys"
+	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -litkpng  -litkvnl -litkvnl_algo -litknetlib -litksys -lz"
 #	INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
 
       DEF_INSIGHT="#define HAVE_INSIGHT"
@@ -3042,7 +3044,7 @@ AC_SUBST(UUID_LIB_FLAG)
 
 if test "$enable_scirun2" = "yes"; then
   ## For now, don't check for uuid if on macintosh.
-  if test "$have_uuid" != "yes" && test "$HAVE_OSX" != "yes"; then
+  if test "$have_uuid" != "yes" && test "$IS_OSX" != "yes"; then
     case $host in
       *linux*)
         SCI_MSG_ERROR(uuid_generate function and libuuid not found, must install ext2fs development tools)
