@@ -239,9 +239,26 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
       void* buf;
       int count;
       MPI_Datatype datatype;
+      bool free_datatype = false;
+      var->getMPIBuffer(buf, count, datatype, free_datatype,
+			dep->d_lowIndex, dep->d_highIndex);
+      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
+
+      // This is just FYI for the caller
+      MPI_Pack_size(count, datatype, world->getComm(), size);
+#if 0
+      cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" 
+	   << dest << ", tag=" << tag << ", comm=" << world->getComm() 
+	   << ", req=" << requestid << ", size=" << *size << ", low=" << dep->d_lowIndex << ", high=" << dep->d_highIndex << '\n';
+#endif
+      if(free_datatype)
+	 MPI_Type_free(&datatype);
+  d_lock.readUnlock();
+#if 0
       var->getMPIBuffer(buf, count, datatype);
 
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
+
       
 #if 0 //DAV_DEBUG
       cerr << "ISend Particle: buf=" << buf << ", count=" << count 
@@ -251,6 +268,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
   d_lock.readUnlock();
+#endif
 
       return;
    }
@@ -259,7 +277,12 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
       void* buf;
       int count;
       MPI_Datatype datatype;
+      bool free_datatype = false;
+      var->getMPIBuffer(buf, count, datatype, free_datatype,
+			dep->d_lowIndex, dep->d_highIndex);
+#if 0
       var->getMPIBuffer(buf, count, datatype);
+#endif
       //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
 
@@ -273,7 +296,12 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
       void* buf;
       int count;
       MPI_Datatype datatype;
+      bool free_datatype = false;
+      var->getMPIBuffer(buf, count, datatype, free_datatype,
+			dep->d_lowIndex, dep->d_highIndex);
+#if 0
       var->getMPIBuffer(buf, count, datatype);
+#endif
       //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
 
@@ -287,7 +315,12 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
       void* buf;
       int count;
       MPI_Datatype datatype;
+      bool free_datatype = false;
+      var->getMPIBuffer(buf, count, datatype, free_datatype,
+			dep->d_lowIndex, dep->d_highIndex);
+#if 0
       var->getMPIBuffer(buf, count, datatype);
+#endif
       //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
 
@@ -393,16 +426,27 @@ OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
   d_lock.writeUnlock();
 	 CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
 	 ASSERT(var != 0);
+#if 0
 	 var->allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+#endif
+	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
 	 var->setForeign();
 
 	 void* buf;
 	 int count;
 	 MPI_Datatype datatype;
+	 bool free_datatype = false;
+	 var->getMPIBuffer(buf, count, datatype, free_datatype,
+			   dep->d_lowIndex, dep->d_highIndex);
+#if 0
 	 var->getMPIBuffer(buf, count, datatype);
+#endif
 	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 if(free_datatype) 
+	   MPI_Type_free(&datatype);
+	
 	 d_ccDB.put(label, matlIndex, patch, var, false);
       }
    break;
@@ -415,16 +459,26 @@ OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
   d_lock.writeUnlock();
 	 SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
 	 ASSERT(var != 0);
+#if 0
 	 var->allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+#endif
+	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
 	 var->setForeign();
 
 	 void* buf;
 	 int count;
 	 MPI_Datatype datatype;
+	 bool free_datatype = false;
+	 var->getMPIBuffer(buf, count, datatype, free_datatype,
+			   dep->d_lowIndex, dep->d_highIndex);
+#if 0
 	 var->getMPIBuffer(buf, count, datatype);
+#endif
 	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 if(free_datatype) 
+	   MPI_Type_free(&datatype);
 	 d_sfcxDB.put(label, matlIndex, patch, var, false);
       }
    break;
@@ -437,16 +491,26 @@ OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
   d_lock.writeUnlock();
 	 SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
 	 ASSERT(var != 0);
+#if 0
 	 var->allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
+#endif
+	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
 	 var->setForeign();
 
 	 void* buf;
 	 int count;
 	 MPI_Datatype datatype;
+	 bool free_datatype = false;
+	 var->getMPIBuffer(buf, count, datatype, free_datatype,
+			   dep->d_lowIndex, dep->d_highIndex);
+#if 0
 	 var->getMPIBuffer(buf, count, datatype);
+#endif
 	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 if(free_datatype) 
+	   MPI_Type_free(&datatype);
 	 d_sfcyDB.put(label, matlIndex, patch, var, false);
       }
    break;
@@ -459,16 +523,26 @@ OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
   d_lock.writeUnlock();
 	 SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
 	 ASSERT(var != 0);
+#if 0
 	 var->allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
+#endif
+	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
 	 var->setForeign();
 
 	 void* buf;
 	 int count;
 	 MPI_Datatype datatype;
+	 bool free_datatype = false;
+	 var->getMPIBuffer(buf, count, datatype, free_datatype,
+			   dep->d_lowIndex, dep->d_highIndex);
+#if 0
 	 var->getMPIBuffer(buf, count, datatype);
+#endif
 	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 if(free_datatype) 
+	   MPI_Type_free(&datatype);
 	 d_sfczDB.put(label, matlIndex, patch, var, false);
       }
    break;
@@ -912,10 +986,35 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       d_ccDB.get(label, matlIndex, patch, var);
    } else {
       Level::selectType neighbors;
+#if 1
       IntVector lowIndex, highIndex;
-      patch->computeVariableExtents(Patch::CellBased, gtype, numGhostCells,
+      patch->computeVariableExtents(Patch::CellFaceBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
       var.allocate(lowIndex, highIndex);
+#else
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	throw InternalError("Around Nodes not defined for CCVariable");
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // All 6 faces
+	 lowIndex = patch->getGhostCellLowIndex(numGhostCells);
+	 highIndex = patch->getGhostCellHighIndex(numGhostCells);
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      const Level* level = patch->getLevel();
+      IntVector low = lowIndex;
+      IntVector high = highIndex;
+      level->selectPatches(low, high, neighbors);
+#endif
       long totalCells=0;
       for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
@@ -945,7 +1044,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 0
+#if 1
       cerr << "lowIndex=" << lowIndex << ", highIndex=" << highIndex << '\n';
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
@@ -1091,11 +1190,39 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 			       patch->toString(), matlIndex);
       d_sfcxDB.get(label, matlIndex, patch, var);
    } else {
-      Level::selectType neighbors;
+     Level::selectType neighbors;
+#if 1
+
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::XFaceBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
       var.allocate(lowIndex, highIndex);
+#else
+
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCX Variable");
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // Upper neighbors
+	 lowIndex = patch->getGhostSFCXLowIndex(numGhostCells);
+         highIndex = patch->getGhostSFCXHighIndex(numGhostCells);
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
+      IntVector high = patch->getGhostCellHighIndex(numGhostCells);
+      const Level* level = patch->getLevel();
+      level->selectPatches(low, high, neighbors);
+
+#endif
       long totalCells=0;
       // modify it to only ignore corner nodes
       for(int i=0;i<(int)neighbors.size();i++){
@@ -1122,7 +1249,7 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 0
+#if 1
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
@@ -1192,10 +1319,35 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
       d_sfcyDB.get(label, matlIndex, patch, var);
    } else {
       Level::selectType neighbors;
+#if 1
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::YFaceBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
       var.allocate(lowIndex, highIndex);
+#else
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCY Variable");
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // Upper neighbors
+	 lowIndex = patch->getGhostSFCYLowIndex(numGhostCells);
+         highIndex = patch->getGhostSFCYHighIndex(numGhostCells);
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
+      IntVector high = patch->getGhostCellHighIndex(numGhostCells);
+      const Level* level = patch->getLevel();
+      level->selectPatches(low, high, neighbors);
+#endif
       long totalCells=0;
       for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
@@ -1221,7 +1373,7 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 0
+#if 1
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
@@ -1290,11 +1442,36 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 			       patch->toString(), matlIndex);
       d_sfczDB.get(label, matlIndex, patch, var);
    } else {
-      Level::selectType neighbors;
+     Level::selectType neighbors;
+#if 1
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::ZFaceBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
       var.allocate(lowIndex, highIndex);
+#else
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCZ Variable");
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // Upper neighbors
+	 lowIndex = patch->getGhostSFCZLowIndex(numGhostCells);
+         highIndex = patch->getGhostSFCZHighIndex(numGhostCells);
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
+      IntVector high=patch->getGhostCellHighIndex(numGhostCells);
+      const Level* level = patch->getLevel();
+      level->selectPatches(low, high, neighbors);
+#endif
       long totalCells=0;
       for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
@@ -1320,7 +1497,7 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 0
+#if 1
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
@@ -1540,6 +1717,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
 
 //
 // $Log$
+// Revision 1.52.4.6  2000/10/20 02:08:30  rawat
+// modified sendMPI and recvMPI for staggered and cell centered variables
+//
 // Revision 1.52.4.5  2000/10/19 05:17:55  sparker
 // Merge changes from main branch into csafe_risky1
 //
