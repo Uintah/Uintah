@@ -73,7 +73,8 @@ Group *make_geometry(char* tex_names[NUM_TEXTURES])
     return 0;
 }
 
-Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res) {
+Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
+			int nsides, int depth) {
   Group* group = new Group();
   
   float* spheres = new float[NUM_TEXTURES*3];
@@ -122,7 +123,7 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res) {
   group->add(new 
 	     TextureGridSphere(spheres, nspheres, radius, tex_indices,
 		    tex_data, nspheres, tex_res,
-		    6, 2));
+		    nsides, depth));
 
   return group;
 }
@@ -180,7 +181,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
     }
   
     if (tex_res > 0)
-      group = make_geometry_tg(tex_names, tex_res);
+      group = make_geometry_tg(tex_names, tex_res, nsides, depth);
     else
       group = make_geometry(tex_names);
   }
