@@ -47,12 +47,15 @@ proc ComponentWizard { {window .componentWizard} } {
     set tab1 [$w.tabs add -label "I/O and GUI"]
     canvas $tab1.c -relief sunken -borderwidth 3 -background #038
     place $tab1.c -x .25i -y .25i -width 5i -height 3.5i
-    make_icon $tab1.c 2.5i 1.75i
 
-    checkbutton $tab1.hasgui -text "Has GUI"
+    global $tab1.hasgui_value 0
+    checkbutton $tab1.hasgui -text "Has GUI" -variable $tab1.hasgui_value\
+        -command "eval gui $tab1.c \[set $tab1.hasgui_value\]"
     place $tab1.hasgui -x .25i -y 3.95i -width 1i -height .33i
     checkbutton $tab1.dynamicport -text "Last port is dynamic"
     place $tab1.dynamicport -x 1.5i -y 3.95i -width 2i -height .33i
+
+    make_icon $tab1.c 2.5i 1.75i [set $tab1.hasgui_value]
 
     set tab2 [$w.tabs add -label "Overview"]
     frame $tab2.f
@@ -72,7 +75,44 @@ proc ComponentWizard { {window .componentWizard} } {
     $w.tabs view "I/O and GUI"
 }
 
-proc make_icon {canvas modx mody} {
+proc gui {canvas has} {
+    set modframe $canvas.moduleFakeModule
+    global $modframe.ff.ui
+    set p $modframe.ff
+    if $has {
+        unpack_icon $p
+        make_ui_button $p
+        pack_icon $p $has
+    } else {
+        destroy $p.ui
+        pack forget $p.ui
+    }
+}
+
+proc make_ui_button {p} {
+    global ui_font
+    button $p.ui -text "UI" -borderwidth 2 \
+       -anchor center \
+          -font $ui_font
+}
+
+proc pack_icon {p gui} {
+    if $gui {
+        pack $p.ui -side left -ipadx 5 -ipady 2
+    }
+    pack $p.title -side top -padx 2 -anchor w 
+    pack $p.time -side left -padx 2
+    pack $p.inset -side left -fill y -padx 2 -pady 2
+}
+
+proc unpack_icon {p} {
+    pack forget $p.ui
+    pack forget $p.title
+    pack forget $p.time
+    pack forget $p.inset
+}
+
+proc make_icon {canvas modx mody {gui 0} } {
     
     lappend canvases $canvas
     set modframe $canvas.moduleFakeModule
@@ -82,35 +122,33 @@ proc make_icon {canvas modx mody} {
     pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
     
     set p $modframe.ff
-    global ui_font
-    global sci_root
-    button $p.ui -text "UI" -borderwidth 2 \
-	   -anchor center \
-          -font $ui_font
-    pack $p.ui -side left -ipadx 5 -ipady 2
-
     global modname_font
     global time_font
     
     # Make the title
     entry $p.title -relief flat -justify center -width 16 \
          -font $modname_font 
-    pack $p.title -side top -padx 2 -anchor w 
     
     # Make the time label
     label $p.time -text "00.00" \
          -font $time_font
-    pack $p.time -side left -padx 2
     
     # Make the progress graph
     frame $p.inset -relief sunken -height 4 -borderwidth 2 \
 	    -width .5i
-    pack $p.inset -side left -fill y -padx 2 -pady 2
     frame $p.inset.graph -relief raised -width .5i -borderwidth 2 \
 	    -background green
     # Don't pack it in yet - the width is zero... 
     pack $p.inset.graph -fill y -expand yes -anchor nw
 
+    # make a UI button if necessary
+    if {$gui} {
+        make_ui_button $p
+    }
+
+    # pack the stuff now
+    pack_icon $p $gui
+    
     # Stick it in the canvas
     
     $canvas create window $modx $mody -window $modframe \
