@@ -50,8 +50,10 @@
 		<burn type = "null" />
 		<fracture type = "normal">
 		  <constraint> 0 </constraint>
-		  <pressure_rate> 0. </pressure_rate>
 		</fracture>
+		<pressure_rate> 0. </pressure_rate>
+		<explosive_pressure> 0 </explosive_pressure>
+		<initial_pressure> 0. </initial_pressure>
                 <density>1000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
