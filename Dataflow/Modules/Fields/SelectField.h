@@ -65,7 +65,8 @@ SelectFieldCreateAlgoT<MESH, FIELD>::execute(MeshHandle mesh_h,
 class SelectFieldFillAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(FieldHandle src, ScaledBoxWidget *box, int value) = 0;
+  virtual void execute(FieldHandle src, ScaledBoxWidget *box, int value,
+		       bool replace_p, int replace_value) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *fld,
@@ -78,7 +79,8 @@ class SelectFieldFillAlgoT : public SelectFieldFillAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(FieldHandle src, ScaledBoxWidget *box, int value);
+  virtual void execute(FieldHandle src, ScaledBoxWidget *box, int value,
+		       bool replace_p, int replace_value);
 };
 
 
@@ -86,7 +88,8 @@ template <class FIELD, class LOC>
 void
 SelectFieldFillAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 					  ScaledBoxWidget *box,
-					  int value)
+					  int value, bool replace_p,
+					  int replace_value)
 {
   FIELD *field = dynamic_cast<FIELD *>(field_h.get_rep());
 
@@ -123,9 +126,9 @@ SelectFieldFillAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     {
       field->set_value(value, *iter);
     }
-    else
+    else if (replace_p)
     {
-      field->set_value(0, *iter);
+      field->set_value(replace_value, *iter);
     }
     ++iter;
   }

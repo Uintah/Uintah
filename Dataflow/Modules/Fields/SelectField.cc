@@ -38,6 +38,9 @@ private:
   CrowdMonitor widget_lock_;
   ScaledBoxWidget *box_;
 
+  GuiInt value_;
+  GuiInt mode_;  // 0 nothing 1 accumulate 2 replace
+
 public:
   SelectField(const string& id);
   virtual ~SelectField();
@@ -52,7 +55,9 @@ extern "C" Module* make_SelectField(const string& id)
 
 SelectField::SelectField(const string& id)
   : Module("SelectField", id, Filter, "Fields", "SCIRun"),
-    widget_lock_("SelectField widget lock")
+    widget_lock_("SelectField widget lock"),
+    value_("stampvalue", id, this),
+    mode_("runmode", id, this)
 {
   box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 1);
 }
@@ -140,11 +145,8 @@ SelectField::execute()
     forward_p = true;
   }
 
-  bool stamping_p = true;
-  if (stamping_p)
+  if (mode_.get() == 1 || mode_.get() == 2)
   {
-    int value = 200;
-
     const TypeDescription *oftd = output_field_->get_type_description();
     const TypeDescription *oltd = output_field_->data_at_type_description();
     CompileInfo *ci = SelectFieldFillAlgo::get_compile_info(oftd, oltd);
@@ -161,7 +163,9 @@ SelectField::execute()
       cout << "Could not get algorithm." << std::endl;
       return;
     }
-    algo->execute(output_field_, box_, value);
+    bool replace_p = false;
+    if (mode_.get() == 2) { replace_p = true; }
+    algo->execute(output_field_, box_, value_.get(), replace_p, 0);
 
     forward_p = true;
   }
