@@ -8,8 +8,8 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/GeometryObject2.h>
-#include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/Grid/UnionGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <iostream>
