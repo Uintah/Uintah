@@ -1,6 +1,8 @@
 #ifndef GLANIMATEDSTREAMS_H
 #define GLANIMATEDSTREAMS_H
 
+#include <sci_defs.h>
+
 #include <Core/Thread/Mutex.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Ray.h>
@@ -10,8 +12,13 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
+
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
 
 namespace Uintah {
 
