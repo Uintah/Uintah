@@ -636,10 +636,10 @@ HypreSolver::pressLinearSolve()
   }
   if(me == 0) {
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
-    cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/init_norm << endl;
+    cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }
-  if ((final_res_norm/init_norm < 1.0) && (final_res_norm < 2.0))
+  if ((final_res_norm/(init_norm+1.0e-20) < 1.0) && (final_res_norm < 2.0))
     return true;
   else
     return false;
