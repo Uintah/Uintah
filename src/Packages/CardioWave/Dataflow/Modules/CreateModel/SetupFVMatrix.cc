@@ -35,6 +35,7 @@ class CardioWaveSHARE SetupFVMatrix : public Module {
   GuiString	sprbwfile_;
   GuiString	sprfile_;
   GuiString	volumefile_;
+  GuiString	visfile_;
   GuiInt		BW_;
   
 public:
@@ -58,6 +59,7 @@ SetupFVMatrix::SetupFVMatrix(const string& id)
     sprfile_("sprfile", id, this),
     sprbwfile_("sprbwfile", id, this),
     volumefile_("volumefile", id, this),
+    visfile_("visfile", id, this),
     BW_("BW", id, this)
   
 {
@@ -76,6 +78,7 @@ void SetupFVMatrix::execute(){
   string sprfile = sprfile_.get();
   string sprbwfile = sprbwfile_.get();
   string volumefile = volumefile_.get();
+  string visfile = visfile_.get();
   int BW = BW_.get();
   
   // must find ports and have valid data on inputs
@@ -241,6 +244,7 @@ void SetupFVMatrix::execute(){
     
   compute_volumes(mesh, volumefile.c_str());
   compute_matrix(mesh, sprfile.c_str());
+  dump_vis(mesh, visfile.c_str());
 
   // bandwidth minimization -- get back the permutation vector
   //   from the permutation vector, reorder the nodes and fix the cells

@@ -1258,12 +1258,12 @@ void normals(float *Xbox,float *Ybox,float *Zbox,float D[][9],float normal[][12]
 }
 
 
-void dump_vis(MESH *mesh){
+void dump_vis(MESH *mesh, const char *fname){
 int i,x;
 double temp;
 FILE *nodesout;
 
-nodesout = fopen("Vis.vxp", "w" );
+nodesout = fopen(fname, "w" );
 fwrite(&mesh->numelement,sizeof(int),1,nodesout);
 fseek( nodesout, 128, SEEK_SET );
 fwrite(&mesh->numvtx,sizeof(int),1,nodesout);
