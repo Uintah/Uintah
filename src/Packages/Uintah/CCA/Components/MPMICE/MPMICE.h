@@ -173,14 +173,13 @@ protected:
   ICELabel* Ilb;
   MPMICELabel* MIlb;
   bool             d_burns;
-  double           d_nextOutputTime;
-  double           d_outputInterval;
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   vector<double>   d_K_mom, d_K_heat;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
+  double d_SMALL_NUM;
 };
       
 } // End namespace Uintah
