@@ -347,7 +347,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   double dT = 0.0001;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
 
-  CCVariable<double> rho_micro, temp, cv, rho_CC;
+  CCVariable<double> rho_micro, temp, cv, rho_CC,press,speedSound;
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC;
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
@@ -358,6 +358,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocate(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->allocate(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
+      new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
+      new_dw->allocate(speedSound,lb->speedSound_CCLabel,vfindex,patch);
 
       new_dw->allocate(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
@@ -367,6 +369,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
+      new_dw->put(press,lb->press_CCLabel,vfindex,patch);
+      new_dw->put(speedSound,lb->speedSound_CCLabel,vfindex,patch);
       new_dw->put(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->put(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->put(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
@@ -380,7 +384,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
 {
-  cout << "Doing acutally Compute Stable Timestep " << endl;
+  cout << "Doing actually Compute Stable Timestep " << endl;
 }
 
 
@@ -1127,6 +1131,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.38  2000/10/17 18:35:20  guilkey
+// Added some computes to actuallyInitialize.
+//
 // Revision 1.37  2000/10/17 04:33:35  jas
 // Copied grid bcs into ice for initial testing.
 //
