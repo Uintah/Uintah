@@ -17,28 +17,20 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component
+SRCDIR := testprograms/Component/subsetter
 
-SUBDIRS := \
-	$(SRCDIR)/argtest	\
-	$(SRCDIR)/framework	\
-	$(SRCDIR)/memstress	\
-	$(SRCDIR)/mitest	\
-	$(SRCDIR)/objects	\
-	$(SRCDIR)/pingpong	\
-	$(SRCDIR)/spectest      \
-        $(SRCDIR)/pp            
-
-ifeq ($(HAVE_MPI),yes)
-SUBDIRS += \
-	$(SRCDIR)/pingpongArr   \
-	$(SRCDIR)/mxn  	        \
-	$(SRCDIR)/mxnargtest    \
-	$(SRCDIR)/Jacobi        \
-	$(SRCDIR)/LUFactor      \
-	$(SRCDIR)/OESort        \
-	$(SRCDIR)/subsetter	
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
+	Core/Exceptions Core/globus_threads Core/CCA/Component/Comm
 endif
+LIBS := $(MPI_LIBRARY) 
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+PROGRAM := $(SRCDIR)/pingpong
+SRCS := $(SRCDIR)/pingpong.cc $(SRCDIR)/PingPong_sidl.cc \
+	$(SRCDIR)/PingPong_impl.cc
+GENHDRS := $(SRCDIR)/PingPong_sidl.h
+
+include $(SCIRUN_SCRIPTS)/program.mk
 
