@@ -40,7 +40,7 @@
 
     <para>
       Dataflow programming essentially provides coarse grained, configurable
-      algorithms that, when tied together, can be thought of as a program for
+      algorithms that, when tied together, act as a program for
       solving a problem.  A dataflow programmer needs to know very little about
       how to program a parallel super computer, or how to use the latest
       graphics hardware to generate a visualization, in order to use those
@@ -62,22 +62,26 @@
     <para>
       There are several pre-implemented modules and ports in SCIRun that
       allow a dataflow network programmer to build networks that solve a
-      variety of novel problems.  However, the the real power of SCIRun is the
+      variety of novel problems.  However, the the real power of SCIRun is in
       it's ability to be extended through the development of new modules and
       new ports which expand the number of types of solvable problems.
+    </para>
+
+    <para>
       The development of a new module or port requires a working knowledge
-      of C++ programming.
+      of C++ programming, and may require knowledge of Tcl/Tk
+      scripting as well.
     </para>
   </sect1>
 
   <sect1>
-    <title>Developing SCIRun dataflow elements</title>
+    <title>Developing with SCIRun</title>
 
     <sect2>
       <title>Module</title>
 
       <para>
-        From the most abstract perspective, a module is considered one or more
+        From the most abstract perspective, a module is one or more
         algorithms that solves a single, specific and coarse grained, problem.
         For example, suppose you have a large list of english words that you
         want to sort.  There are several algorithms that you may employ to
@@ -87,15 +91,16 @@
       </para>
 
       <para>
-        On a slightly more concrete level, a module can be compared 
+        On a more concrete level, a module is comparable
         to a function or procedure (of a high level text based
-        programming language) that also implements one or more
+        programming language like C) that also implements one or more
         algorithms to solve a specific problem.  The prototype for
         such a function that solves the sort problem might look like this:
       </para>
 
       <computeroutput>
-        void Sort(string *words_to_sort, int alg_to_use);
+
+void Sort(string *words_to_sort, int alg_to_use);
       </computeroutput>
 
       <para>
@@ -111,10 +116,7 @@
         can both be used modularly in any program.
         The ports of a module serve some of the same functions as the
         formal parameters to a function: they can accept and relay data
-        from/to their callers and they enforce type matching.
-      </para>
-
-      <para>
+        and they enforce type matching.
         One important difference is that the Sort module seperates
         the mode for communicating inputs of different kinds, i.e. data
         is treated differently and seperately from control.
@@ -130,24 +132,25 @@
         functionality, with one caveat: the module does not pass 
         data or control to the execute function through formal parameters,
         like the C function.  Instead, the execute function acquires the data
-        and control by using addition function calls:
+        and control by using additional function calls:
       </para>
     
       <computeroutput>
-        void Sort::execute() 
-        {
-          string *words = get_data();    // get the data from the input port
-	  int alg       = get_control(); // get the control from the GUI
 
-	  //
-          //  one can either paste the contents of the sort
-          //  function here, or simply call it:
-          //
-          
-          sort(words,alg);
+void Sort::execute() 
+{
+  string *words = get_data();    // get the data from the input port
+  int alg       = get_control(); // get the control from the GUI
+
+  //
+  //  one can either paste the contents of the sort
+  //  function here, or simply call it:
+  //
+  
+  if (words) sort(words,alg);
 	
-	  send_data(words);  // send the result to the output port
-        }
+  send_data(words);  // send the result to the output port
+}
       </computeroutput>
 
       <para>
@@ -157,97 +160,110 @@
         be done by hand.  The Module Wizard will be discussed in greater detail
         later in this chapter.  Regardless of how the new module is created,
         there are some conventions that must be followed in order to have the
-        new module be usable from within SCIRun.  Let's build the example
-        module, Sort, by hand as an example.
+        new module be usable from within SCIRun, for example, the
+        class needs to inherit from the Module base class, and it needs to
+        implement a specific set of functions.  Let's build the Sort
+        module by hand as an example.  By convention, a module is
+        declared and defined in a single C++ file (.cc extension) with
+        the base name of the module i.e. Sort will be completely
+        implemented in the single file "Sort.cc".
       </para>
 
       <para>
-        To get started, we need to declare a skeleton class that will
-        eventually become the Sort module:
+        To get started, we need to declare a class that will
+        become the Sort module:
       </para>
 
       <computeroutput>
-        #include <Dataflow/Network/Module.h>     // module base class
-        #include <Dataflow/Ports/WordListPort.h> // wordlist port classes 
-        #include <Core/GuiInterface/GuiVar.h>    // GUI data interface
 
-        class Sort : public Module
-        {
-        protected:
+#include &lt;Dataflow/Network/Module.h>     // module base class
+#include &lt;Dataflow/Ports/WordListPort.h> // wordlist port classes 
+#include &lt;Core/GuiInterface/GuiVar.h>    // GUI data interface
 
-          // port and control data members
-          WordListIPort *iport_;
-          WordListOPort *oport_;
-          GuiInt algo_;
+class Sort : public Module
+{
+protected:
 
-          // Sort specific member functions
-          string* get_data();
-          int get_control();
-          void send_data();
+  // each module usually has unique ports, gui elements and
+  // member functions.
 
-        public:
+  // Sort specific port and gui data members
+  WordListIPort *iport_;
+  WordListOPort *oport_;
+  GuiInt algo_;
 
-          // all modules need to declare and implement these
-          Sort(const string& id) :
-            Module("Sort", id, Source),
-            algo_("alg_to_use", id, this),
-            iport_(0),
-            oport_(0),
-            algo_(0) { /* do nothing */ }
+  // Sort specific member functions
+  string* get_data();
+  int get_control();
+  void send_data();
 
-          virtual ~Sort() { /* do nothing */ };
+public:
 
-          virtual void execute();
+  // all modules need to declare and implement these
+
+  // constructor (with appropriate initializers)
+  Sort(const string&amp; id) :
+    Module("Sort", id, Source),
+    algo_("alg_to_use", id, this),
+    iport_(0),
+    oport_(0),
+    algo_(0) { /* do nothing */ }
+
+  // virtual destructor
+  virtual ~Sort() { /* do nothing */ };
+
+  // virtual execute function
+  virtual void execute();
         
-        };
+};
       </computeroutput>
 
       <para>
         We've already implemented the execute function, but it depends on
         get_data(), get_control() and send_data().  Let's write those now.
-        Assuming that our module actually has the ports we need, we now 
+        Assuming that our module actually has the ports we need (how
+        to give ports to a module will be discussed later on), we 
         need to be able to get the data from the input port:
       </para>
 
       <computeroutput>
-        string *Sort::get_data()
-        {
-          // data is passed between modules as handles
-          WordListHandle wlh;
 
-          // first get a pointer to the input port named "InList"
-          iport_ = (WordListIPort*)get_iport("InList");
+string *Sort::get_data()
+{
+  // data is passed between modules as handles
+  WordListHandle wlh;
 
-          // verify that the port was found
-          if (!iport_) return 0;
+  // first get a pointer to the input port named "InList"
+  iport_ = (WordListIPort*)get_iport("InList");
 
-          // verify that the port is connected and has data (blocking call!)
-          // if so, the handle will be associated with the data
-          if (!iport_->get(wlh)) return 0;
+  // verify that the port was found
+  if (!iport_) return 0;
 
-          // verify that the data pointer associated with the handle 
-          // is not NULL
-          if (!wlh.get_rep()) return 0;
+  // verify that the port is connected and has data (blocking call!)
+  // if so, the handle will be associated with the data
+  if (!iport_->get(wlh)) return 0;
 
-          return wlh.get_rep();
-        }
+  // return the data pointer associated with the handle (may be NULL!)
+  return wlh.get_rep();
+}
       </computeroutput>
 
       <para>
-        Now we can get the data, but we can't call the sort function until
+        Now we have the data, but we can't call the sort function until
         we know which sort algorithm to use, so we have to query the state 
         of the GUI:
       </para>
 
       <computeroutput>
-        int Sort::get_control()
-        {
-          // prep the GUI element associated with algo_
-          algo_.reset();
 
-          // return the state of algo_'s GUI element
-          return algo_.get();
-        }
+int Sort::get_control()
+{
+  // prep the GUI element associated with algo_
+  algo_.reset();
+
+  // return the state of algo_'s GUI element
+  return algo_.get();
+}
       </computeroutput>
 
       <para>
@@ -258,15 +274,258 @@
       </para>
 
       <computeroutput>
-        void Sort::send_data(string *list)
-        {
-          // get a pointer to the output port name "OutList"
-          oport_ = (WorldListOPort*)get_oport("OutList");
 
-          // send the data to the port.  the pointer is automatically
-          // wrapped into a WordListHandle by the send
-          oport_->send(list);
-        }
+void Sort::send_data(string *list)
+{
+  // get a pointer to the output port named "OutList"
+  oport_ = (WorldListOPort*)get_oport("OutList");
+
+  // send the data to the port.  the pointer is automatically
+  // wrapped into a WordListHandle by the send
+  oport_->send(list);
+}
+      </computeroutput>
+
+      <para>
+        We have now implmented a new module.  But it isn't quite
+        complete.  We made a couple assumptions while writing the
+        class: the module has one input port and one output port and the
+        module has a GUI with one element capable of representing an
+        integer.  This leads us to the next point.  A module is not 
+        just a C++ file which defines a new module class.  A module
+        needs at least one, and possibly two, more files: an
+        XML file and a TCL file.
+      </para>
+    
+      <para>
+        The XML file is used to describe how many and what type of
+        ports a module has, which category it belongs to and much
+        more.  The TCL file describes the GUI of a module, if it has
+        one.  Let's create these files for the Sort module.  Also by
+        convention, these files have the base name of the module.
+      </para>
+
+      <para>
+        First, the XML file Sort.xml:
+      </para>
+
+      <computeroutput>
+
+&lt;component name="Sort" category="WordList">
+  &lt;overview>
+    &lt;authors>
+      &lt;author>
+        Eddie Murphy
+      &lt;/author>
+    &lt;/authors>
+    &lt;summary>
+      &lt;p>
+        This module sorts a word list
+      &lt;/p>
+    &lt;/summary>
+  &lt;/overview>
+  &lt;io>
+    &lt;inputs lastportdynamic="no">
+      &lt;port>
+        &lt;name>InList&lt;/name>
+        &lt;datatype>SCIRun::WordList&lt;/datatype>
+      &lt;/port>
+    &lt;/inputs>
+    &lt;outputs>
+      &lt;port>
+        &lt;name>OutList&lt;/name>
+        &lt;datatype>SCIRun::WordList&lt;/datatype>
+      &lt;/port>
+    &lt;/outputs>
+  &lt;/io>
+&lt;component>
+      </computeroutput> 
+
+      <para>
+        And the TCL file Sort.tcl:
+      </para>
+
+      <computeroutput>
+
+itcl_class SCIRun_WordList_Sort {
+  inherit Module
+  
+  constructor { config } {
+    set name Sort
+    
+    set_defaults
+  }
+
+  method set_defaults {} {
+    global $this-alg_to_use
+    set $this-alg_to_use 1
+  }
+
+  method ui {} {
+    set w .ui[modname]
+    if { [winfo exists $w] } {
+      raise $w
+      return
+    }
+
+    toplevel $w
+
+    label $w.title -text "Sort Algorithms"
+    label $w.option1 -text "1. Quick Sort"
+    label $w.option2 -text "2. Bubble Sort"
+    label $w.option3 -text "3. Insertion Sort"
+
+    entry $w.choice -textvar $this-alg_to_use
+
+    pack $w.title $w.option1 $w.option2 $w.option3 $w.choice -side top
+  }
+}
+      </computeroutput>
+
+      <para>
+        Now that we have all the files needed for a new module, we
+        need a place to put them all.  All SCIRun modules are
+        are members of groups - categories and packages - which are
+        directory structures for organizing modules.  These directory
+        structures are converted to .so libraries at build time by
+        compiling and linking the files within them.  Packages,
+        categories and the modules inside them are only usable by
+        SCIRun in their .so form, so let's put the Sort module into a
+        category and a package. 
+      </para>
+
+      <para>
+        All SCIRun packages have the same basic directory structure:
+      </para>
+
+      <computeroutput>
+
+PACKAGE_NAME ---+- Core ------+- Datatypes
+                |             +- Algorithms
+                |
+                +- Dataflow --+- Ports
+                              +- Modules
+                              +- GUI
+                              +- XML
+      </computeroutput>
+
+      <para>
+        In fact, that directory structure is required in order for
+        a package to be considered valid.  It is possible for a
+        package to have more directories, but generally not fewer.        
+        Even the main SCIRun source tree, which is a package in
+        itself, exhibits this structure.  Each package has two sides
+        in it's source tree.  Core defines datatypes and algorithms,
+        which are not necessarily associated with dataflow programming.
+        Dataflow defines ports and modules, which are based on datatypes
+        and algorithms found in the Core side.
+      </para>
+
+      <para>
+        Packages contain one or more categories, which reside
+        inside the Dataflow/Modules directory.  Each category contains
+        one or more modules: 
+      </para>
+          
+      <computeroutput>
+
+Modules ---+- Category1 ---+- Module1.cc
+           |               +- Module2.cc
+           |               +- ...
+           |               +- ModuleX.cc
+           |
+           +- Category2 ---+- Module1.cc
+           |               +- Module2.cc
+           |               +- ...
+           |               +- ModuleY.cc
+           +- ...
+           |
+           +- CategoryZ
+      </computeroutput>
+
+      <para>
+        Suppose we would like to put Sort inside the WordList category
+        of the SCIRun package.  If the package and category already
+        exist, then we just need to copy the files we made into the
+        appropriate directories:
+      </para>
+
+      <computeroutput>
+
+cp Sort.cc SCIRun/src/Dataflow/Modules/WordList
+cp Sort.xml SCIRun/src/Dataflow/XML
+cp Sort.tcl SCIRun/src/Dataflow/GUI
+      </computeroutput>
+
+      <para>
+        If, on the other hand, we wanted to put it into a package
+        other than SCIRun, we would do the following:
+      </para>
+
+      <computeroutput>
+
+cp Sort.cc PACKAGE_NAME/Dataflow/Modules/WordList
+cp Sort.xml PACKAGE_NAME/Dataflow/XML
+cp Sort.tcl PACKAGE_NAME/Dataflow/GUI
+      </computeroutput>
+
+      <para>
+        If the package and/or category does not already exist, then
+        we would first have to build the appropriate directory structure
+        to put the files into.
+      </para>
+
+      <para>
+        Recall that any given package is only useful to SCIRun in it's
+        .so form.  In order to use Sort, we'll have to make sure that
+        it gets included into the building of the SCIRun package.
+        Fortunately, SCIRun comes with a makefile system
+        that knows how to build all the .so's for itself and all
+        external packages.  The makefile system is composed of
+        makefile fragments found in EVERY directory within the SCIRun
+        source tree and it's packages.  The fragments all live in
+        files named "sub.mk".  The contents of a sub.mk file depend on
+        which directory it lives in.  The following are sub.mk files
+        for the SCIRun Modules directory (SCIRun/src/Dataflow/Modules)
+        and the WordList Category directory
+        (SCIRun/src/Dataflow/Modules/WordList), respectively:
+      </para>
+
+      <computeroutput>
+
+SRCDIR := Dataflow/Modules
+ 
+SUBDIRS := \
+        $(SRCDIR)/DataIO\
+        $(SRCDIR)/Fields\
+        $(SRCDIR)/Math\
+        $(SRCDIR)/Render\
+        $(SRCDIR)/Visualization\
+#[INSERT NEW CATEGORY DIR HERE]
+ 
+include $(SCIRUN_SCRIPTS)/recurse.mk
+      </computeroutput>
+
+      <computeroutput>
+
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+ 
+SRCDIR   := Dataflow/Modules/WordList
+ 
+SRCS     += \
+#[INSERT NEW CODE FILE HERE]
+ 
+ 
+ 
+ 
+PSELIBS := Dataflow/Network Dataflow/Ports \
+        Core/Datatypes Core/GuiInterface \
+        Core/Persistent Core/Util \
+        Core/TkExtensions
+ 
+LIBS := -lm
+ 
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
       </computeroutput>
 
     </sect2>
@@ -313,6 +572,7 @@
       </para>
     
       <computeroutput>
+
         #include &lt;Dataflow/Ports/MatrixPort.h&gt;
 
         ...
