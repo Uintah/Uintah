@@ -45,6 +45,25 @@ using namespace std;
 PersistentTypeID StructHexVolMesh::type_id("StructHexVolMesh", "Mesh", maker);
 
 
+StructHexVolMesh::StructHexVolMesh():
+  grid_lock_("StructHexVolMesh grid lock")
+{}
+
+StructHexVolMesh::StructHexVolMesh(unsigned int x,
+				   unsigned int y,
+				   unsigned int z) :
+  LatVolMesh(x, y, z, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
+  points_(x, y, z),
+  grid_lock_("StructHexVolMesh grid lock")
+{}
+
+StructHexVolMesh::StructHexVolMesh(const StructHexVolMesh &copy) :
+  LatVolMesh(copy),
+  grid_lock_("StructHexVolMesh grid lock")
+{
+  points_.copy( copy.points_ );
+}
+
 bool
 StructHexVolMesh::get_dim(vector<unsigned int> &array) const
 {
@@ -552,7 +571,7 @@ StructHexVolMesh::get_size(Cell::index_type idx) const
 
 
 void
-StructHexVolMesh::set_point(const Node::index_type &i, const Point &p)
+StructHexVolMesh::set_point(const Point &p, const Node::index_type &i)
 {
   points_(i.i_, i.j_, i.k_) = p;
 }

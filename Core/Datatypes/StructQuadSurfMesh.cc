@@ -294,7 +294,7 @@ StructQuadSurfMesh::get_weights(const Point &p,
 }
 
 void
-StructQuadSurfMesh::set_point(const Node::index_type &index, const Point &point)
+StructQuadSurfMesh::set_point(const Point &point, const Node::index_type &index)
 {
   points_(index.i_, index.j_) = point;
 }

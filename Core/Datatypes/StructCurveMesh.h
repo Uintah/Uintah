@@ -136,7 +136,7 @@ public:
   {ASSERTFAIL("StructCurveMesh::get_weights for cells isn't supported");}
 
   void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
-  void set_point(Node::index_type i, const Point &p) { points_[i] = p; }
+  void set_point(const Point &p, Node::index_type i) { points_[i] = p; }
 
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
