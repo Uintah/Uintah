@@ -40,7 +40,7 @@ SRCDIR := Packages/DataIO/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Readers\
-	$(SRCDIR)/Writers\
+#	$(SRCDIR)/Writers\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
