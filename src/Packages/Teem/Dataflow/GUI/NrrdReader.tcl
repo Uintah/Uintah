@@ -21,7 +21,7 @@
 
 catch {rename Teem_DataIO_NrrdReader ""}
 
-itcl_class SCIRun_DataIO_NrrdReader {
+itcl_class Teem_DataIO_NrrdReader {
     inherit Module
     constructor {config} {
 	set name NrrdReader
