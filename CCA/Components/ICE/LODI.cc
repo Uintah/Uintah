@@ -1164,7 +1164,6 @@ void FaceTemp_LODI(const Patch* patch,
     for(int dir = 0; dir <3; dir ++ ) { 
       gravityTerm += rho_old[c] * vel_old[c][dir] * gravity[dir]; 
     }
-    gravityTerm = 0.0;
                                                                                  
     double E_new = E[c] - delT * (term1 + term2 + term3 + conv_dir1 + conv_dir2
                                   - gravityTerm);               
@@ -1244,7 +1243,6 @@ void FaceTemp_LODI(const Patch* patch,
       for(int dir = 0; dir <3; dir ++ ) { 
         gravityTerm += rho_old[c] * vel_old[c][dir] * gravity[dir]; 
       }
-      gravityTerm = 0.0;
       
       double E_new = E[c] - delT * ( term1 + term2 + term3 + conv - gravityTerm);
       double vel_new_sqr = vel_new[c].length2();
@@ -1273,14 +1271,13 @@ void FaceTemp_LODI(const Patch* patch,
       + rho_old[c] * vel_old[c].y() * (d[4][c].x() + d[3][c].y() + d[4][c].z())  
       + rho_old[c] * vel_old[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z()); 
 
-      //__________________________________
-      //  See Thompson II, pg 451, eq 56
-      double gravityTerm = 0.0;
-      for(int dir = 0; dir <3; dir ++ ) { 
-        gravityTerm += rho_old[c] * vel_old[c][dir] * gravity[dir]; 
-      }
+    //__________________________________
+    //  See Thompson II, pg 451, eq 56
+    double gravityTerm = 0.0;
+    for(int dir = 0; dir <3; dir ++ ) { 
+      gravityTerm += rho_old[c] * vel_old[c][dir] * gravity[dir]; 
+    }
 
-    gravityTerm = 0.0;
     double E_new = E[c] - delT * ( term1 + term2 + term3 - gravityTerm);
 
     temp_CC[c] = E_new/(rho_new[c] * cv[c]) - 0.5 * vel_new_sqr/cv[c]; 
