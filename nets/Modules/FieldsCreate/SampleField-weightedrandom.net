@@ -85,7 +85,8 @@ setGlobal $m2-widgetscale {        0.0501864}
 setGlobal $m2-ringstate {}
 setGlobal $m2-framestate {}
 setGlobal $m2-numseeds {5000}
-setGlobal $m2-rngseed {7}
+setGlobal $m2-rngseed {6}
+setGlobal $m2-rnginc {0}
 setGlobal $m2-dist {impscat}
 setGlobal $m2-whichtab {Random}
 $m2 initialize_ui

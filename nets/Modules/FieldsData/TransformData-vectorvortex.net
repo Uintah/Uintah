@@ -215,7 +215,8 @@ setGlobal $m8-widgetscale {}
 setGlobal $m8-ringstate {}
 setGlobal $m8-framestate {}
 setGlobal $m8-numseeds {2500}
-setGlobal $m8-rngseed {8}
+setGlobal $m8-rngseed {7}
+setGlobal $m8-rnginc {0}
 setGlobal $m8-dist {uniscat}
 setGlobal $m8-whichtab {Random}
 
