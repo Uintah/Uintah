@@ -351,10 +351,7 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
       CCVariable<double> fvar;
       new_dw->allocateAndPut(fvar, s->scalarVariance, matl, patch);
 
-      CellIterator iter = patch->getCellIterator();
-      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);  
-    
-      for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {   
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         const IntVector& c = *iter;
 
         double sum_f = 0;
