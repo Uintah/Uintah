@@ -113,14 +113,20 @@ namespace Uintah {
                               const CCVariable<double>& q_CC) 
   {
     double d_SMALL_NUM = 1e-100;
-    q_XFC[c] = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + d_SMALL_NUM);
-    q_YFC[c] = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + d_SMALL_NUM);
-    q_ZFC[c] = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + d_SMALL_NUM);
+    double tmp_XFC, tmp_YFC, tmp_ZFC, q_tmp;
+    q_tmp = q_CC[c];
+    tmp_XFC = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + d_SMALL_NUM);
+    tmp_YFC = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + d_SMALL_NUM);
+    tmp_ZFC = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + d_SMALL_NUM);
     
     // if q_(X,Y,Z)FC = 0.0 then set it equal to q_CC[c]
-    q_XFC[c] = equalZero(q_face_flux[LEFT],   q_CC[c], q_XFC[c]);
-    q_YFC[c] = equalZero(q_face_flux[BOTTOM], q_CC[c], q_YFC[c]);
-    q_ZFC[c] = equalZero(q_face_flux[BACK],   q_CC[c], q_ZFC[c]);
+    tmp_XFC = equalZero(q_face_flux[LEFT],   q_tmp, tmp_XFC);
+    tmp_YFC = equalZero(q_face_flux[BOTTOM], q_tmp, tmp_YFC);
+    tmp_ZFC = equalZero(q_face_flux[BACK],   q_tmp, tmp_ZFC);
+    
+    q_XFC[c] = tmp_XFC;
+    q_YFC[c] = tmp_YFC;
+    q_ZFC[c] = tmp_ZFC;    
   }  
 
   struct fflux { double d_fflux[6]; };          //face flux
