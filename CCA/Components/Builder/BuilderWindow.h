@@ -34,9 +34,13 @@
 #include <vector>
 #include <qcanvas.h>
 #include <qtextedit.h>
+#include <qmainwindow.h>
+#include "Module.h"
+
 class QPopupMenu;
 class NetworkCanvasView;
-#include <qmainwindow.h>
+
+using namespace std;
 
 namespace SCIRun {
   class BuilderWindow;
@@ -55,6 +59,7 @@ namespace SCIRun {
     std::map<std::string, MenuTree*> child;
     BuilderWindow* builder;
     std::string url;
+
   private slots:
     void instantiateComponent();
     
@@ -63,6 +68,10 @@ namespace SCIRun {
     Q_OBJECT
   protected:
     void closeEvent( QCloseEvent* );
+
+  public slots:
+    void updateMiniView();
+
 
   private slots:
     void save();
@@ -86,6 +95,9 @@ namespace SCIRun {
     void displayMsg(const char *); 
     void buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
 				 const std::string &frameworkURL);
+
+    std::vector<Module*> updateMiniView_modules;
+
   private:
     gov::cca::Services::pointer services;
     void buildPackageMenus();
@@ -93,7 +105,16 @@ namespace SCIRun {
     BuilderWindow& operator=(const BuilderWindow&);
     NetworkCanvasView* big_canvas_view;
     QTextEdit *e;	
+
+    QCanvas* miniCanvas;
+    QCanvas* big_canvas;
+    QCanvasItemList tempQCL;
+
+    std::vector<QCanvasRectangle*> miniRect;
+
   };
 }
 
 #endif
+
+

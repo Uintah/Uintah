@@ -31,6 +31,9 @@
 #ifndef SCIRun_Framework_NetworkCanvas_h
 #define SCIRun_Framework_NetworkCanvas_h
 
+#define BOOL int
+
+#include <CCA/Components/Builder/BuilderWindow.h>
 #include <qcanvas.h>
 #include "Module.h"
 #include "Connection.h"
@@ -42,7 +45,7 @@ class NetworkCanvasView:public QCanvasView
 {
   Q_OBJECT
 public:
-  NetworkCanvasView(QCanvas* canvas, QWidget* parent=0);
+  NetworkCanvasView(BuilderWindow* p2BuilderWindow, QCanvas* canvas, QWidget* parent=0);
   void setServices(const gov::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
   void addModule(const std::string& name, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
@@ -53,6 +56,10 @@ public:
 			       const std::string &protname, Module::PortType);
   void clearPossibleConnections();
   void removeAllConnections(Module *module);
+
+  std::vector<Module*> getModules();
+  BuilderWindow* p2BuilderWindow;
+
 public slots:
   void removeModule(Module *);
 protected:
@@ -60,6 +67,7 @@ protected:
   void contentsMouseMoveEvent(QMouseEvent*);
   void contentsMouseReleaseEvent(QMouseEvent*);
   //void contentsMouseDoubleClickEvent( QMouseEvent * );
+  void NetworkCanvasView::viewportResizeEvent( QResizeEvent* );
 private:
   Module* moving;
   Module* connecting;
@@ -72,10 +80,8 @@ private:
   Connection *highlightedConnection;
   NetworkCanvasView(const NetworkCanvasView&);
   NetworkCanvasView& operator=(const NetworkCanvasView&);
-  
   gov::cca::Services::pointer services;
 };
-//}
 #endif
 
 

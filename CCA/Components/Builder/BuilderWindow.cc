@@ -49,16 +49,15 @@
 #include <qiconset.h> 
 #include <qtoolbutton.h> 
 
-
 using namespace std;
 using namespace SCIRun;
 using namespace gov::cca;
-
 
 BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   : QMainWindow(0, "SCIRun", WDestructiveClose|WType_TopLevel),
     services(services)
 {
+
   addReference(); // Do something better than this!
 
   // Save
@@ -142,14 +141,14 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   QColor bgcolor(0, 51, 102);
   QSplitter* vsplit = new QSplitter(Qt::Vertical, this);
   QSplitter* hsplit = new QSplitter(Qt::Horizontal, vsplit);
-  QCanvas* minicanvas = new QCanvas(100, 100);
-  minicanvas->setBackgroundColor(bgcolor);
-  QCanvasView* miniview = new QCanvasView(minicanvas, hsplit);
-  miniview->setFixedHeight(200);
-  miniview->setFixedWidth(200);
-  QCanvasRectangle* minirect = new QCanvasRectangle( 10,10,10,10,minicanvas );
+  miniCanvas = new QCanvas(200,200);
+  miniCanvas->setBackgroundColor(bgcolor);
+  QCanvasView* miniview = new QCanvasView(miniCanvas, hsplit);
+  miniview->setFixedHeight(204);
+  miniview->setFixedWidth(204);
+  //  minirect = new QCanvasRectangle( 10,10,10,10,miniCanvas );
   //QCanvasPolygonalItem minirect = new QCanvasPolygonalItem( minicanvas );
-  minirect->show();
+  //  minirect->show();
 
   /*QCanvasView* miniview = new QCanvasView(minicanvas, hsplit);*/
   QVBox* layout3 = new QVBox(hsplit);
@@ -173,9 +172,9 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   displayMsg("\n");  
   services->releasePort("cca.BuilderService");
 
-  QCanvas *big_canvas = new QCanvas(2000,2000);
+  big_canvas = new QCanvas(2000,2000);
   big_canvas->setBackgroundColor(bgcolor);
-  big_canvas_view = new NetworkCanvasView(big_canvas, vsplit);
+  big_canvas_view = new NetworkCanvasView(this,big_canvas, vsplit);
 
   big_canvas_view->setServices(services);
 
@@ -439,6 +438,42 @@ void BuilderWindow::displayMsg(const char *msg)
 {
   e->insert(msg);
 } 	
+
+void BuilderWindow::updateMiniView()
+{
+  QScrollBar* p2big_canvas_view_horizontalScrollBar = big_canvas_view->horizontalScrollBar();
+  QScrollBar* p2big_canvas_view_verticalScrollBar = big_canvas_view->verticalScrollBar();
+  
+  QCanvasRectangle* viewableRect = new QCanvasRectangle( 10, 10, 10, 10, miniCanvas );
+  viewableRect->show();
+  miniCanvas->update();
+  
+  // assign the temporary list
+  // needed for coordinates of each module
+  QCanvasItemList tempQCL = miniCanvas->allItems();
+
+  for(int i=0;i<tempQCL.size();i++){
+    delete tempQCL[i];
+  }
+  
+  // assign modules to local variable
+  updateMiniView_modules = big_canvas_view->getModules();
+
+  for( int i = 0; i < updateMiniView_modules.size(); i++ ) 
+  {
+  QCanvasRectangle* viewableRect = new QCanvasRectangle( ( int )p2big_canvas_view_horizontalScrollBar->value() / 10,( int )p2big_canvas_view_verticalScrollBar->value() / 10,( int )(big_canvas_view->visibleWidth() / 10 ), ( int )(big_canvas_view->visibleHeight() / 10 ), miniCanvas );
+  viewableRect->show();
+
+    QCanvasRectangle *rect=new QCanvasRectangle( ( int )updateMiniView_modules[i]->x() / 10 , ( int )updateMiniView_modules[i]->y() / 10, 6, 4, miniCanvas );
+    rect->setBrush( Qt::white );
+    //miniRect.push_back(rect );
+    rect->show();
+    miniCanvas->update();
+  }
+}
+
+
+
 
 
 
