@@ -38,6 +38,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Math/Rand48.h>
 #include <vector>
 #include <sstream>
 #include <iostream>
