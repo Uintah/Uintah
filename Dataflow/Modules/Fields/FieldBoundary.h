@@ -26,6 +26,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Containers/Handle.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/CurveField.h>
@@ -41,7 +42,7 @@ class FieldBoundaryAlgoAux : public DynamicAlgoBase
 public:
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &bndry,
-		       FieldHandle &intrp) = 0;
+		       MatrixHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh,
@@ -61,7 +62,7 @@ public:
   //! virtual interface. 
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
-		       FieldHandle &interp);
+		       MatrixHandle &interp);
 
 };
 
@@ -70,7 +71,7 @@ template <class Msh>
 void 
 FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 				    FieldHandle &boundary_fh,
-				    FieldHandle &interp_fh)
+				    MatrixHandle &interp)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
@@ -148,13 +149,30 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
     }
   }
   TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, Field::NODE);
-  TriSurfField<vector<pair<typename Msh::Node::index_type, double> > >* interp =
-    scinew TriSurfField<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
-  for (unsigned int i=0; i<reverse_map.size(); i++)
-    interp->fdata()[i].push_back(pair<typename Msh::Node::index_type, double>(reverse_map[i], 1.0));
-
   boundary_fh = ts;
-  interp_fh = interp;
+
+  typename Msh::Node::size_type nodesize;
+  mesh->size(nodesize);
+  const int nrows = reverse_map.size();
+  const int ncols = nodesize;
+  int *rr = scinew int[nrows+1];
+  int *cc = scinew int[nrows];
+  double *d = scinew double[nrows];
+
+  for (unsigned int i = 0; i < reverse_map.size(); i++)
+  {
+    cc[i] = reverse_map[i];
+  }
+
+  int j;
+  for (j = 0; j < nrows; j++)
+  {
+    rr[j] = j;
+    d[j] = 1.0;
+  }
+  rr[j] = j; // An extra entry goes on the end of rr.
+
+  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
 }
 
 
@@ -167,7 +185,7 @@ public:
   //! virtual interface. 
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
-		       FieldHandle &interp);
+		       MatrixHandle &interp);
 
 };
 
@@ -177,7 +195,7 @@ template <class Msh>
 void 
 FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 				     FieldHandle &boundary_fh,
-				     FieldHandle &interp_fh)
+				     MatrixHandle &interp)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename QuadSurfMesh::Node::index_type> vertex_map;
@@ -254,13 +272,30 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
     }
   }
   QuadSurfField<double> *ts = scinew QuadSurfField<double>(tmesh, Field::NODE);
-  QuadSurfField<vector<pair<typename Msh::Node::index_type, double> > >* interp =
-    scinew QuadSurfField<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
-  for (unsigned int i=0; i<reverse_map.size(); i++)
-    interp->fdata()[i].push_back(pair<typename Msh::Node::index_type, double>(reverse_map[i], 1.0));
-
   boundary_fh = ts;
-  interp_fh = interp;
+
+  typename Msh::Node::size_type nodesize;
+  mesh->size(nodesize);
+  const int nrows = reverse_map.size();
+  const int ncols = nodesize;
+  int *rr = scinew int[nrows+1];
+  int *cc = scinew int[nrows];
+  double *d = scinew double[nrows];
+
+  for (unsigned int i = 0; i < reverse_map.size(); i++)
+  {
+    cc[i] = reverse_map[i];
+  }
+
+  int j;
+  for (j = 0; j < nrows; j++)
+  {
+    rr[j] = j;
+    d[j] = 1.0;
+  }
+  rr[j] = j; // An extra entry goes on the end of rr.
+
+  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
 }
 
 
@@ -273,7 +308,7 @@ public:
   //! virtual interface. 
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
-		       FieldHandle &interp);
+		       MatrixHandle &interp);
 
 };
 
@@ -282,7 +317,7 @@ template <class Msh>
 void 
 FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 				      FieldHandle &boundary_fh,
-				      FieldHandle &interp_fh)
+				      MatrixHandle &interp)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type> vertex_map;
@@ -351,13 +386,30 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
     }
   }
   CurveField<double> *ts = scinew CurveField<double>(tmesh, Field::NODE);
-  CurveField<vector<pair<typename Msh::Node::index_type, double> > >* interp =
-    scinew CurveField<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
-  for (unsigned int i=0; i<reverse_map.size(); i++)
-    interp->fdata()[i].push_back(pair<typename Msh::Node::index_type, double>(reverse_map[i], 1.0));
-
   boundary_fh = ts;
-  interp_fh = interp;
+
+  typename Msh::Node::size_type nodesize;
+  mesh->size(nodesize);
+  const int nrows = reverse_map.size();
+  const int ncols = nodesize;
+  int *rr = scinew int[nrows+1];
+  int *cc = scinew int[nrows];
+  double *d = scinew double[nrows];
+
+  for (unsigned int i = 0; i < reverse_map.size(); i++)
+  {
+    cc[i] = reverse_map[i];
+  }
+
+  int j;
+  for (j = 0; j < nrows; j++)
+  {
+    rr[j] = j;
+    d[j] = 1.0;
+  }
+  rr[j] = j; // An extra entry goes on the end of rr.
+
+  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
 }
 
 
@@ -368,7 +420,7 @@ class FieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
   virtual void execute(ProgressReporter *m, const MeshHandle mesh,
-		       FieldHandle &bndry, FieldHandle &intrp) = 0;
+		       FieldHandle &bndry, MatrixHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh);
@@ -381,14 +433,14 @@ class FieldBoundaryAlgoT : public FieldBoundaryAlgo
 public:
   //! virtual interface. 
   virtual void execute(ProgressReporter *m, const MeshHandle mesh,
-		       FieldHandle &boundary, FieldHandle &interp);
+		       FieldHandle &boundary, MatrixHandle &interp);
 };
 
 
 template <class Msh>
 void 
 FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
-				 FieldHandle &boundary, FieldHandle &interp)
+				 FieldHandle &boundary, MatrixHandle &interp)
 {
   if (get_type_description((typename Msh::Elem *)0)->get_name() ==
       get_type_description((typename Msh::Cell *)0)->get_name())
