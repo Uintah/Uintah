@@ -38,7 +38,7 @@ StandardTable::problemSetup(const ProblemSpecP& params)
   db->require("adiabatic",d_adiabatic);
   db->require("rxnvars",d_numRxnVars);
   db->require("mixstatvars",d_numMixStatVars);
-  if ((db->findBlock("h_fuel"))&&(db->findBlock("h_fuel"))) {
+  if ((db->findBlock("h_fuel"))&&(db->findBlock("h_air"))) {
     db->require("h_fuel",d_H_fuel);
     db->require("h_air",d_H_air);
     d_adiab_enth_inputs = true;
