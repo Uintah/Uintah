@@ -69,6 +69,11 @@ TexCuttingPlanes::TexCuttingPlanes(GuiContext* ctx) :
   phi0_(ctx->subVar("phi_0")),
   phi1_(ctx->subVar("phi_1")),
   cyl_active_(ctx->subVar("cyl_active")),
+  old_tex_(0),
+  old_cmap_(0),
+  old_min_(Point(0,0,0)),
+  old_max_(Point(0,0,0)),
+  geom_id_( -1 ),
   volren_(0)
 {
 }
@@ -147,7 +152,6 @@ void TexCuttingPlanes::execute(void)
   }
   
   //AuditAllocator(default_allocator);
-  static GLTexture3DHandle oldtex = 0;
   if (!intexture_->get(tex_)) {
     return;
   }
@@ -176,11 +180,11 @@ void TexCuttingPlanes::execute(void)
     } else {
       int nx, ny, nz;
       Transform t(tex_->get_field_transform());
-      dmin_=t.project(Point(0,0,0));
-      ddx_=t.project(Point(1,0,0))-dmin_;
-      ddy_=t.project(Point(0,1,0))-dmin_;
-      ddz_=t.project(Point(0,0,1))-dmin_;
       tex_->get_dimensions(nx,ny,nz);
+      dmin_=t.project(Point(0,0,0));
+      ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
+      ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
+      ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
       ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
       control_widget_->SetScale(dv.length()/80.0);
@@ -192,16 +196,7 @@ void TexCuttingPlanes::execute(void)
     volren_ = scinew GLVolumeRenderer(tex_, cmap);
     
     volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
-    volren_->SetInterp( bool(interp_mode_.get()));
-    
-//     if(tex_->CC()){
-//       volren_->SetInterp(false);
-//       interp_mode_.set(0);
-//     } else {
-      volren_->SetInterp(interp_mode_.get());
-//     }
-
-    ogeom_->addObj( volren_, "Volume Slicer");
+    geom_id_ = ogeom_->addObj( volren_, "Volume Slicer");
     volren_->set_tex_ren_state(GLVolumeRenderer::TRS_GLPlanes);
     volren_->DrawPlanes();
     cyl_active_.reset();
@@ -211,32 +206,50 @@ void TexCuttingPlanes::execute(void)
     phi1_.reset();
     volren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
 			     draw_phi1_.get(), phi1_.get());
+    old_tex_ = tex_;
+    old_cmap_ = cmap;
+    BBox b;
+    tex_->get_bounds(b);
+    old_min_ = b.min();
+    old_max_ = b.max();
   } else {    
-    if( tex_.get_rep() != oldtex.get_rep() ){
-      oldtex = tex_;
-      BBox b;
-      tex_->get_bounds(b);
+
+    BBox b;
+    tex_->get_bounds(b);
+    reset_vars();
+    if( tex_.get_rep() != old_tex_.get_rep() ||
+	b.min() != old_min_ || b.max() != old_max_){
+      old_tex_ = tex_;
+      old_min_ = b.min();
+      old_max_ = b.max();
+      if( geom_id_ != -1 ){
+	ogeom_->delObj( geom_id_ );
+	geom_id_ = ogeom_->addObj( volren_, "Volume Slicer");
+      }
       Vector dv(b.diagonal());
       int nx, ny, nz;
       Transform t(tex_->get_field_transform());
-      dmin_=t.project(Point(0,0,0));
-      ddx_=t.project(Point(1,0,0))-dmin_;
-      ddy_=t.project(Point(0,1,0))-dmin_;
-      ddz_=t.project(Point(0,0,1))-dmin_;
       tex_->get_dimensions(nx,ny,nz);
+      dmin_=t.project(Point(0,0,0));
+      ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
+      ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
+      ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
       ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       if (!b.inside(control_widget_->GetPosition())) {
 	control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
-	control_widget_->SetScale(dv.length()/80.0);
       }
+      control_widget_->SetScale(dv.length()/80.0);
       volren_->SetVol( tex_.get_rep() );
       volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     }
-
-    volren_->SetInterp( bool(interp_mode_.get()));
-    volren_->SetColorMap( cmap.get_rep() );
+    
+    if( cmap != old_cmap_ ){
+      volren_->SetColorMap( cmap.get_rep() );
+      old_cmap_ = cmap;
+    }
   }
  
+  volren_->SetInterp( bool(interp_mode_.get()));
   //AuditAllocator(default_allocator);
   if(drawX_.get() || drawY_.get() || drawZ_.get()){
     if( control_id_ == -1 ){

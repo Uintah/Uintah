@@ -67,6 +67,10 @@ private:
   GuiDouble		  phi0_;
   GuiDouble		  phi1_;
   GuiInt                  cyl_active_;
+  GLTexture3DHandle       old_tex_;
+  ColorMapHandle          old_cmap_;
+  Point                   old_min_, old_max_;
+  GeomID                  geom_id_;
   GLVolumeRenderer       *volren_;
   Point                   dmin_;
   Vector                  ddx_;
