@@ -9,6 +9,8 @@
 #include <SCICore/Geometry/BBox.h>
 #include "Octree.h"
 #include <iostream>
+#include <deque>
+using std::deque;
 namespace Kurt {
 namespace Datatypes {
 
@@ -71,7 +73,7 @@ public:
   // GROUP: Destructors
   //////////
   // Destructor
-  ~GLTexture3D(){}
+  ~GLTexture3D();
  
   // GROUP: Modify
   //////////  
@@ -109,8 +111,10 @@ public:
   static PersistentTypeID type_id;
 
   bool CC() const {return isCC;}
+  void get_minmax( double& min, double& max) const { min = _min, max = _max;}
 
 private:
+
 
   Octree<Brick*>* bontree;
   ScalarFieldRGBase *_tex;
