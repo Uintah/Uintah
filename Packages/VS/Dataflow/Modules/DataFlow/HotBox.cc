@@ -1799,7 +1799,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
       else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "probability") &&
          !strcmp(to_char_ptr(elem->getNodeName()), "prop"))
       {
-        (*injuryPtr)->probability = atoi(to_char_ptr(elem->getNodeValue()));
+        (*injuryPtr)->probability = atof(to_char_ptr(elem->getNodeValue()));
       }
       else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") &&
               !strcmp(to_char_ptr(elem->getNodeName()), "FMAname"))
