@@ -248,13 +248,13 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::long_type:
 	{
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<long int> *sfd =
-	    scinew LevelField<long int>( mesh, Field::NODE );
-	  LevelField<long int>::fdata_type &data = sfd->fdata();
+	  LevelField<long> *sfd =
+	    scinew LevelField<long>( mesh, Field::NODE );
+	  LevelField<long>::fdata_type &data = sfd->fdata();
 
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
-	    NCVariable< long int > sv;
+	    NCVariable< long > sv;
 	    archive.query(sv, var, mat, *r, time);
 	    data.push_back( sv );
 	  }
@@ -303,13 +303,13 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::long_type:
 	{
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<long int> *sfd =
-	    scinew LevelField<long int>( mesh, Field::CELL );
-	  LevelField<long int>::fdata_type &data = sfd->fdata();
+	  LevelField<long> *sfd =
+	    scinew LevelField<long>( mesh, Field::CELL );
+	  LevelField<long>::fdata_type &data = sfd->fdata();
 	
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
-	    CCVariable< long int > sv;
+	    CCVariable<long> sv;
 	    archive.query(sv, var, mat, *r, time);
 	    data.push_back( sv );
 	  }
