@@ -89,25 +89,35 @@ namespace SCIRun {
 "PARAM color = program.local[0]; \n" \
 "TEMP c, p, t;"
 
+#define CM2_PAINT_BASE \
+"!!ARBfp1.0 \n" \
+"PARAM color = program.local[0]; \n" \
+"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
+"TEMP c, p, t; \n" \
+"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
+"MOV t.w, fragment.color.a; \n" \
+
 #define CM2_REGULAR \
 "MUL c.w, color.w, t.w; \n" \
 "MOV c.xyz, color.xyzz; \n"
+
 #define CM2_FAUX \
 "MUL c, color, t.w; \n"
 
 #define CM2_FLAT \
-"MOV c.w, color.w; \n" \
-"MOV c.xyz, color.xyzz; \n"
+"MOV c, color; \n"
 
 #define CM2_RASTER_BLEND \
 "MOV result.color, c; \n" \
 "END"
+
 #define CM2_FRAGMENT_BLEND_ATI \
 "MUL p.xy, fragment.position.xyyy, program.local[4].xyyy; \n" \
 "TEX t, p.xyyy, texture[0], 2D; \n" \
 "SUB p.w, 1.0, c.w; \n" \
 "MAD_SAT result.color, t, p.w, c; \n" \
 "END"
+
 #define CM2_FRAGMENT_BLEND_NV \
 "TEX t, fragment.position.xyyy, texture[0], RECT; \n" \
 "SUB p.w, 1.0, c.w; \n" \
@@ -152,10 +162,13 @@ CM2Shader::emit(string& s)
   case CM2_SHADER_RECTANGLE_ELLIPSOID:
     z << CM2_RECTANGLE_ELLIPSOID_BASE;
     break;
+  case CM2_SHADER_PAINT:
+    z << CM2_PAINT_BASE;
+    break;
   default:
     break;
   }
-  if(faux_) {
+  if(faux_ || type_ == CM2_SHADER_PAINT) {
     z << CM2_FAUX;
   } else {
     z << CM2_REGULAR;
