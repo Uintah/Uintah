@@ -72,6 +72,9 @@ void SynchronizeGeometry::do_execute() {
 
   ogeom_ = (GeometryOPort*)getOPort("OutputGeometry");
 
+  if(ogeom_ == NULL) 
+    cout << "ogeom_ is NULL" <<endl;cout.flush();
+
   for(;;){
     msg = mailbox.receive();
     if(enforce_barrier(msg) == 86) {
@@ -154,6 +157,7 @@ int SynchronizeGeometry::enforce_barrier(MessageBase* message) {
   default:
     break;
   }
+
   if(msg)
     delete msg;
 
@@ -164,7 +168,12 @@ inline bool SynchronizeGeometry::init_ports() {
   if(init_ports_ == 0)
     return true;
 
-  Connection* connection = ogeom_->connection(0);
+  Connection* connection;
+  if(ogeom_->nconnections()==0)
+    return false;
+  else
+    connection = ogeom_->connection(0);
+
   if(connection == NULL)
     return false;
 
