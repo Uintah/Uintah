@@ -92,6 +92,7 @@ SRCS := \
 	$(SRCDIR)/SampleLattice.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/SetProperty.tcl \
+	$(SRCDIR)/ShowColorMap.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/ShowMatrix.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
