@@ -44,7 +44,7 @@ WARNING
 // Choices for time advance methods
 
 //#define correctorstep
-
+//#define FILTER_DRHODT
 //#define Runge_Kutta_2nd
 #ifdef Runge_Kutta_2nd
   #define correctorstep
@@ -74,7 +74,7 @@ WARNING
 
 //#define Scalar_ENO
 
-// #define Scalar_WENO
+//#define Scalar_WENO
 #ifdef Scalar_WENO
   #define Scalar_ENO
 #endif

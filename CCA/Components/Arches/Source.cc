@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -316,16 +317,40 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 // Pressure source calculation
 //****************************************************************************
 void 
-Source::calculatePressureSourcePred(const ProcessorGroup*,
+Source::calculatePressureSourcePred(const ProcessorGroup* pc,
 				    const Patch* patch,
 				    double delta_t,
 				    CellInformation* cellinfo,
+				    Filter* boxFilter,
 				    ArchesVariables* vars)
 {
 
   // Get the patch and variable indices
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  // compute drhodt and add a filtered value to the RHS of the pressure equation
+  vars->drhodt.resize(patch->getLowIndex(), patch->getHighIndex());
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+	IntVector currcell(ii,jj,kk);
+	double vol = cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+	vars->drhodt[currcell] = (vars->old_density[currcell] -
+				  vars->density[currcell])*vol/delta_t;
+      }
+    }
+  }
+
+#ifdef FILTER_DRHODT
+#ifdef PetscFilter
+  vars->filterdrhodt.initialize(0.0);
+  boxFilter->applyFilter(pc, patch,vars->drhodt, vars->filterdrhodt);
+#endif
+#else
+  vars->filterdrhodt.copy(vars->drhodt,
+			  vars->filterdrhodt.getLowIndex(),
+			  vars->filterdrhodt.getHighIndex());
+#endif
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc, vars->divergence,
 		       vars->uVelRhoHat,
@@ -336,8 +361,18 @@ Source::calculatePressureSourcePred(const ProcessorGroup*,
 		   vars->old_density, vars->old_old_density, vars->uVelRhoHat,
                    vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+	IntVector currcell(ii,jj,kk);
+	vars->pressNonlinearSrc[currcell] += vars->filterdrhodt[currcell];
+      }
+    }
+  }
+  
+
 #if 0
-  // added to correct uvel hat at the boundary
+  // correct uvel hat at the boundary
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   if (xplus) {
     int ii = idxHi.x();
@@ -347,7 +382,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup*,
 	IntVector nextcell(ii+1,jj,kk);
 	double avgden = (vars->density[currcell]+vars->density[nextcell])/0.5;
 	double area = cellinfo->sns[jj]*cellinfo->stb[kk]/cellinfo->sew[ii];
-	vars->pressNonlinearSrc[currcell] -= 2.0*delta_t*avgden*area*
+	vars->pressNonlinearSrc[currcell] -= 2.0*delta_t*area*
 	                                     vars->pressure[currcell];
       }
     }
