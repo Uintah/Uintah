@@ -632,8 +632,13 @@ class BioFEMApp {
             pack $vis.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
 	    
-	    set indicator$case $vis.indicator.canvas
-	    set indicatorL$case $vis.indicatorL
+	    if {$case == 1} {
+		set indicator0 $vis.indicator.canvas
+		set indicatorL0 $vis.indicatorL
+	    } else {
+		set indicator1 $vis.indicator.canvas
+		set indicatorL1 $vis.indicatorL
+	    }
 	    
             construct_indicator $vis.indicator.canvas
 	    
