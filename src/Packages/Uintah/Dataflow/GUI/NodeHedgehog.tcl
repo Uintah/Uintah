@@ -22,8 +22,6 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	set $this-width_scale 0.1
 	global $this-type
 	set $this-type 2D
-	global $this-exhaustive_flag
-	set $this-exhaustive_flag 0
 	global $this-skip_node
 	set $this-skip_node 1
 	$this-c needexecute
@@ -73,10 +71,6 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 		-command $n -text "Cell Centered" -value 1
 	pack $w.f.var.cell -side top -anchor w -pady 2 -ipadx 3
 	
-	radiobutton $w.f.var.face -variable $this-var_orientation \
-		-command $n -text "Face Centered" -value 2
-	pack $w.f.var.face -side top -anchor w -pady 2 -ipadx 3
-
 	button $w.f.findxy -text "Find XY" -command "$this-c findxy"
 	pack $w.f.findxy -pady 2 -side top -ipadx 3 -anchor e
 	
@@ -88,11 +82,6 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 
 	frame $w.fskip
 	pack $w.fskip -side top -fill x
-
-	global $this-exhaustive_flag
-	checkbutton $w.fskip.exh -text "Exhaustive search?" -variable \
-		$this-exhaustive_flag
-	pack $w.fskip.exh -pady 2 -side right -ipadx 3 -anchor e
 
 	make_entry $w.fskip.skip "Node Skip:" $this-skip_node $n
 	pack $w.fskip.skip -side left -padx 5 -anchor w
