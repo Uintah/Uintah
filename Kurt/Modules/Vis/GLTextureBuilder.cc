@@ -12,7 +12,7 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
 #include <SCICore/Datatypes/ScalarField.h>
 
 
@@ -45,6 +45,7 @@ using namespace SCICore::TclInterface;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Datatypes::ScalarFieldHandle;
+using SCICore::Datatypes::ScalarFieldRGBase;
 using PSECore::Datatypes::GLTexture3DOPort;
 using PSECore::Datatypes::GLTexture3DIPort;
 using PSECore::Datatypes::ScalarFieldOPort;
@@ -64,8 +65,11 @@ extern "C" Module* make_GLTextureBuilder( const clString& id) {
 
 GLTextureBuilder::GLTextureBuilder(const clString& id)
   : Module("GLTextureBuilder", id, Filter), 
-  max_brick_dim("max_brick_dim", id, this),
-  tex(0) 
+    max_brick_dim("max_brick_dim", id, this),
+    min("min", id, this),
+    max("max", id, this),
+    isFixed("isFixed", id, this),
+    tex(0) 
 {
   // Create the input ports
   inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
@@ -140,16 +144,30 @@ void GLTextureBuilder::execute(void)
     return;
   }
   
-  if( ScalarFieldRGuchar *rgchar =
-      dynamic_cast<ScalarFieldRGuchar *> (sfield.get_rep()) ){
+  if( isFixed.get() ){
+      sfield->set_minmax(min.get(), max.get());
+    } else {
+      double min;
+      double max;
+      sfield->get_minmax(min, max);
+      this->min.set( min );
+      this->max.set( max );
+    }
+
+  if( ScalarFieldRGBase *rgchar =
+      dynamic_cast<ScalarFieldRGBase *> (sfield.get_rep()) ){
     
-    if( sfield.get_rep() != sfrg.get_rep() || !tex.get_rep() ){
+    if( sfield.get_rep() != sfrg.get_rep()  && !tex.get_rep() ){
       sfrg = sfield;
       tex = scinew GLTexture3D( rgchar);
       TCL::execute(id + " SetDims " + to_string( tex->getBrickSize()));
       max_brick_dim.set( tex->getBrickSize() );
       oldBrickSize = tex->getBrickSize();
-    } else if(oldBrickSize != max_brick_dim.get()){
+    } else if( sfield.get_rep() != sfrg.get_rep()){
+      sfrg = sfield;
+      tex = scinew GLTexture3D( rgchar);
+      tex->SetBrickSize( max_brick_dim.get() );
+    } else if (oldBrickSize != max_brick_dim.get()){
       tex->SetBrickSize( max_brick_dim.get() );
       oldBrickSize = max_brick_dim.get();
     }
@@ -158,7 +176,8 @@ void GLTextureBuilder::execute(void)
       otexture->send( tex );
     
   } else {
-    cerr << "Not a char field!\n";
+    cerr << "Not an rg field!\n";
+    otexture->send( 0 );
   }
 }
 

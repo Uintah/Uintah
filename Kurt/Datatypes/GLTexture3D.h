@@ -4,7 +4,7 @@
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Containers/Array3.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/BBox.h>
 #include "Octree.h"
@@ -12,7 +12,7 @@
 namespace Kurt {
 namespace Datatypes {
 
-using SCICore::Datatypes::ScalarFieldRGuchar;
+using SCICore::Datatypes::ScalarFieldRGBase;
 using SCICore::Datatypes::Datatype;
 using SCICore::Containers::LockingHandle;
 using SCICore::Containers::Array3;
@@ -64,7 +64,7 @@ public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  GLTexture3D(ScalarFieldRGuchar *tex);
+  GLTexture3D(ScalarFieldRGBase *tex);
   //////////
   // Constructor
   GLTexture3D();
@@ -76,7 +76,7 @@ public:
   // GROUP: Modify
   //////////  
   // Set a new scalarField
-  void SetField( ScalarFieldRGuchar *tex);
+  void SetField( ScalarFieldRGBase *tex);
   //////////
   // Change the BrickSize
   bool SetBrickSize( int brickSize );
@@ -100,7 +100,7 @@ public:
   int getBrickSize(){ return xmax; }
   /////////
   // Get field size
-  ScalarFieldRGuchar* getField(){ return tex; }
+  ScalarFieldRGBase* getField(){ return _tex; }
 
   // GROUP: io
   /////////
@@ -108,45 +108,53 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
+  bool CC() const {return isCC;}
+
 private:
 
   Octree<Brick*>* bontree;
-  ScalarFieldRGuchar *tex;
+  ScalarFieldRGBase *_tex;
   int levels;
   Point minP;
   Point maxP;
+  double _min, _max;
   int X, Y, Z;
   //  int maxBrick;  // max brick dimension
   int xmax, ymax, zmax;
   double dx,dy,dz;
-
+  bool isCC;
+  double SETVAL(double);
+  void SetBounds();
   void computeTreeDepth();
+  void BuildTexture();
   bool SetMaxBrickSize(int maxBrick);
-  Octree<Brick*>* buildBonTree(Point min, Point max,
-				     int xoff, int yoff, int zoff,
-				     int xsize, int ysize, int zsize,
-				     int level, Octree<Brick*>* parent);
+
+  template <class T>
+    Octree<Brick*>* buildBonTree(Point min, Point max,
+				 int xoff, int yoff, int zoff,
+				 int xsize, int ysize, int zsize,
+				 int level, T *tex,
+				 Octree<Brick*>* parent);
+  template <class T>
+    void BuildChild(int i, Point min, Point mid, Point max,
+		    int xoff, int yoff, int zoff,
+		    int xsize, int ysize, int zsize,
+		    int X2, int Y2, int Z2,
+		    int level,  T* tex, Octree<Brick*>* node);
   
-  void BuildChild(int i, Point min, Point mid, Point max,
-		  int xoff, int yoff, int zoff,
-		  int xsize, int ysize, int zsize,
-		  int X2, int Y2, int Z2,
-		  int level,  Octree<Brick*>* node);
+  template <class T>
+    void makeBrickData(int newx, int newy, int newz,
+		       int xsize, int ysize, int zsize,
+		       int xoff, int yoff, int zoff,
+		       T* tex, Array3<unsigned char>*& bd);
   
-  void makeBrickData(int newx, int newy, int newz,
-		     int xsize, int ysize, int zsize,
-		     int xoff, int yoff, int zoff,
-		     Array3<unsigned char>*& bd);
-
-  void makeLowResBrickData(int xmax, int ymax, int zmax,
-			   int xsize, int ysize, int zsize,
-			   int xoff, int yoff, int zoff,
-			   int level, int& padx, int& pady,
-			   int& padz, Array3<unsigned char>*& bd);
-
-
-
-  
+  template <class T>
+    void makeLowResBrickData(int xmax, int ymax, int zmax,
+			     int xsize, int ysize, int zsize,
+			     int xoff, int yoff, int zoff,
+			     int level, int& padx, int& pady,
+			     int& padz, T* tex,
+			     Array3<unsigned char>*& bd);
   
 };
 

@@ -31,14 +31,21 @@ SRCS     += $(SRCDIR)/Brick.cc \
 
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
-	SCICore/Containers  SCICore/Geom SCICore/Thread
+	SCICore/Containers  SCICore/Geom SCICore/Thread \
+	Uintah/Grid Uintah/Datatypes Uintah/Exceptions \
+	Uintah/Modules/Visualization
 
-LIBS :=  $(LINK) $(GL_LIBS) -lm
+
+
+LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/08/29 21:19:43  kuzimmer
+# Added some 3D texture mapping functionality
+#
 # Revision 1.3  2000/05/29 22:24:49  kuzimmer
 # A bunch of fixes, including making volumes work with udas, transforming volumes properly without copying data, and fixing coredumps when changing udas
 #

@@ -1,5 +1,6 @@
 #include "GLVolRenState.h"
 #include "GLVolumeRenderer.h"
+#include "GLTexture3D.h"
 #include "Brick.h"
 #include "Polygon.h"
 #include <GL/gl.h>
@@ -109,8 +110,14 @@ GLVolRenState::loadTexture(Brick& brick)
 
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if( volren->_interp ){
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    } else {
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    }
+
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,
@@ -163,11 +170,11 @@ GLVolRenState::makeTextureMatrix( const Brick& brick)
 
   diag = brick[7] - brick[0];
 
+
   glTexGend(GL_S,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
   glTexGend(GL_T,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
   glTexGend(GL_R,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
   glTexGend(GL_Q,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
-
 
   //  This code is for render overlapping bricks.  The plane equations
   //  for s are  (Nx * Pxmin) + d = aX/2  and

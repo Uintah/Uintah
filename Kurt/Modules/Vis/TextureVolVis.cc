@@ -56,6 +56,7 @@ TextureVolVis::TextureVolVis(const clString& id)
   draw_mode("draw_mode", id, this),
   render_style("render_style", id, this),
   control_lock("TextureVolVis resolution lock"),
+  interp_mode("interp_mode", id, this),
   control_widget(0), control_id(-1),
   volren(0), tex(0)
 {
@@ -143,12 +144,19 @@ void TextureVolVis::execute(void)
     volren = new GLVolumeRenderer(0x12345676,
 				  tex,
 				  cmap);
+    if(tex->CC()){
+      volren->SetInterp(false);
+      interp_mode.set(0);
+    }
     //    ogeom->delAll();
     ogeom->addObj( volren, "VolumeRenderer TransParent");
   } else {
     volren->SetVol( tex );
     volren->SetColorMap( cmap );
   }
+
+  volren->SetInterp( bool(interp_mode.get()));
+    
 
   switch( render_style.get() ) {
   case 0:

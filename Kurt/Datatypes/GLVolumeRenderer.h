@@ -78,6 +78,8 @@ public:
   void GLAttenuate(){ _gl_state = GLAttenuate::Instance( this ); }
   void GLPlanes(){ _gl_state = GLPlanes::Instance(this);}
 
+  void SetInterp( bool i) { _interp = i; }
+
   GLVolumeRenderer(const GLVolumeRenderer&);
   ~GLVolumeRenderer();
 
@@ -102,9 +104,10 @@ public:
 
 protected:
   int slices;
+  const GLTexture3D *tex;
+
 private:
 
-  const GLTexture3D *tex;
   unsigned char* cmap;
   Point controlPoint;
   
@@ -115,6 +118,9 @@ private:
   
   GLVolRenState* _state;
   GLTexRenState* _gl_state;
+
+  bool _interp;
+  
   static double swapMatrix[16];
   
 };
