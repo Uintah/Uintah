@@ -20,6 +20,15 @@ namespace Uintah {
 	low(low), high(high), matl(matl)
     {
     }
+
+    // As an arbitrary convention, non-data dependency have a NULL fromPatch.
+    // These types of dependency exist between a modifying task and any task
+    // that requires the data (from ghost cells in particular) before it is
+    // modified preventing the possibility of modifying data while it is being
+    // used.
+    bool isNonDataDependency() const
+    { return (fromPatch == NULL); }
+    
     DetailedDep* next;
     Task::Dependency* comp;
     Task::Dependency* req;

@@ -175,8 +175,13 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   if(!dep){
     dep = scinew DetailedDep(batch->head, comp, req, fromPatch, matl, low, high);
     batch->head = dep;
-    if(dbg.active())
-      dbg << "ADDED " << low << " " << high << ", fromPatch = " << fromPatch->getID() << '\n';
+    if(dbg.active()) {
+      dbg << "ADDED " << low << " " << high << ", fromPatch = ";
+      if (fromPatch)
+	dbg << fromPatch->getID() << '\n';
+      else
+	dbg << "NULL\n";	
+    }
   } else {
     IntVector l = Min(low, dep->low);
     IntVector h = Max(high, dep->high);
@@ -265,8 +270,12 @@ ostream& operator<<(ostream& out, const DetailedTask& task)
 
 ostream& operator<<(ostream& out, const DetailedDep& dep)
 {
-  out << dep.req->var->getName() << " on patch " << dep.fromPatch->getID() 
-      << ", matl " << dep.matl << ", low=" << dep.low << ", high=" << dep.high;
+  out << dep.req->var->getName();
+  if (dep.isNonDataDependency())
+    out << " non-data dependency";
+  else
+    out << " on patch " << dep.fromPatch->getID();
+  out << ", matl " << dep.matl << ", low=" << dep.low << ", high=" << dep.high;
   return out;
 }
 
