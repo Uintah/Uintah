@@ -64,7 +64,8 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   char** argv;
   argv = new char*[2];
   argv[0] = "PetscSolver::problemSetup";
-  argv[1] = "-on_error_attach_debugger";
+  //argv[1] = "-on_error_attach_debugger";
+  argv[1] = "-no_signal_handler";
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   CHKERRQ(ierr);
 }
@@ -1899,6 +1900,10 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.20  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.19  2000/10/13 19:48:45  sparker
 // Cleaned up petsc printouts, added timing information for petsc solve
 //

@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/MomentumSolver.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/RBGSSolver.h>
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/Source.h>
@@ -326,7 +327,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   new_dw->get(velocityVars.viscosity, d_lab->d_viscosityINLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   // get old_dw from getTop function
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -336,7 +337,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
   sum_vartype den_ref_var;
   old_dw->get(den_ref_var, d_lab->d_refDensity_label);
   velocityVars.den_Ref = den_ref_var;
@@ -586,7 +587,7 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   int nofStencils = 7;
   //  DataWarehouseP old_dw = new_dw->getTop();
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   // get old_dw from getTop function
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -596,7 +597,7 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
   old_dw->get(velocityVars.old_density, d_lab->d_densityCPLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   switch (index) {
@@ -728,6 +729,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.37  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.36  2000/10/12 20:08:33  sparker
 // Made multipatch work for several timesteps
 // Cleaned up print statements
