@@ -360,5 +360,3 @@ NrrdScalar::~NrrdScalar()
 }
 
 } // end namespace
- 
- 

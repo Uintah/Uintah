@@ -90,6 +90,7 @@ bool NrrdString::setstring(std::string str)
             return(true);
         }
     }
+    return (false);
 }
 
 std::string NrrdString::getstring()
@@ -181,5 +182,3 @@ NrrdString::~NrrdString()
 }
 
 } // end namespace
- 
- 

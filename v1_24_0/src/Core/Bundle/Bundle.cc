@@ -56,7 +56,7 @@ Bundle* Bundle::clone()
 
 int Bundle::findname(std::deque<std::string> &deq,std::string name)
 {
-	for (int p =0;p<deq.size(); p++)
+	for (unsigned int p = 0; p<deq.size(); p++)
 	{
 		if (cmp_nocase(name,deq[p]) == 0) return(p);
 	}
@@ -108,8 +108,9 @@ void Bundle::merge(LockingHandle<Bundle> C)
 
 //////////
 // PIO for NrrdData objects
-void Bundle::io(Piostream& stream) {
-  int version =  stream.begin_class("Bundle", CLUSTER_VERSION);
+void Bundle::io(Piostream& stream)
+{
+  stream.begin_class("Bundle", CLUSTER_VERSION);
   // Do the base class first...
  
   PropertyManager::io(stream);
@@ -492,7 +493,8 @@ std::string Bundle::getmatrixname(int index)
         std::string name = getname<NrrdData>(p);
         if (ismatrix(name)) nummat++;
         if (index == nummat-1) return(name);
-    }   
+    }
+    return "";
 }
 
 std::string Bundle::gethandletype(int index)
