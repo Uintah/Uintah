@@ -38,6 +38,7 @@ namespace PSECore {
       clString uiFile;
       std::map<int,IPortInfo*>* iports;
       std::map<int,OPortInfo*>* oports;
+      char lastportdynamic;
     } ModuleInfo;
 
     typedef AVLTree<clString,ModuleInfo*> Category;

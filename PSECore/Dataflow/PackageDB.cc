@@ -144,6 +144,7 @@ void PackageDB::loadPackage(const clString& packPath)
 	info->uiFile = "not currently used";
 	info->iports = scinew std::map<int,IPortInfo*>;
 	info->oports = scinew std::map<int,OPortInfo*>;
+	info->lastportdynamic = node->io->lastportdynamic;
 	for (inport_iter i1 = node->io->inports->begin();
 	     i1!=node->io->inports->end();
 	     i1++) {
@@ -308,6 +309,9 @@ Module* PackageDB::instantiateModule(const clString& packageName,
     module->packageName=packageName;
   if (unknown == module->categoryName)
     module->categoryName=categoryName;
+
+  // copy other fields 
+  module->lastportdynamic = moduleInfo->lastportdynamic;
   
   return module;
 }
@@ -383,6 +387,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.30  2000/12/05 19:03:38  moulding
+// added lastportdynamic to module_info struct
+//
 // Revision 1.29  2000/12/01 23:17:09  moulding
 // Added comments explaining the last commit.
 //
