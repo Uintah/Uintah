@@ -235,9 +235,6 @@ set mods(GenStandardColorMaps) $m8
 
 set mods(ShowDipole) $m6
 
-global data_mode
-set data_mode "DWI"
-
 
 #######################################################
 # Build up a simplistic standalone application.
@@ -275,29 +272,21 @@ class BioFEMApp {
         set indicatorL2 ""
         set indicate 0
         set cycle 0
+	set executing_queue 0
         set i_width 300
         set i_height 20
         set stripes 10
         set i_move [expr [expr $i_width/double($stripes)]/2.0]
         set i_back [expr $i_move*-3]
-
-        set proc_tab1 ""
-        set proc_tab2 ""
+	set indicatorID 0
 
         set vis_frame_tab1 ""
         set vis_frame_tab2 ""
-
-        set data_tab1 ""
-        set data_tab2 ""
+	set c_left_tab ""
 
         set vis_tab1 ""
         set vis_tab2 ""
      
-	set volumes 0
-        set size_x 0
-        set size_y 0
-        set size_z 0
-
         set error_module ""
 
         set isosurface_tab1 ""
@@ -305,11 +294,6 @@ class BioFEMApp {
 
         set streamlines_tab1 ""
         set streamlines_tab2 ""
-
-	set data_next_button1 ""
-	set data_next_button2 ""
-	set data_ex_button1 ""
-	set data_ex_button2 ""
 
         set proc_color "dark red"
 	set next_color "#cdc858"
@@ -660,7 +644,7 @@ class BioFEMApp {
 	    
             bind $vis.indicator <Button> {app display_module_error} 
 	    
-            label $vis.indicatorL -text "Data Acquisition..."
+            label $vis.indicatorL -text "Select Execute to start..."
             pack $vis.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
 	    
@@ -690,6 +674,8 @@ class BioFEMApp {
 		    Tooltip $m.d.cut$i $tips(VAttachedMsg)
 		}
             }
+
+	    wm protocol .standalone WM_DELETE_WINDOW { NiceQuit }  
 	}
     }
     
@@ -909,12 +895,10 @@ class BioFEMApp {
 	    
 	    # Save out data information 
 	    puts $fileid "# BioFEM Session\n"
-	    puts $fileid "set version 1.0"
+	    puts $fileid "set app_version 1.0"
 
 	    save_module_variables $fileid
 	    save_class_variables $fileid
-	    save_global_variables $fileid
-	    save_disabled_modules $fileid
 
 	    close $fileid
 	}
@@ -986,8 +970,6 @@ class BioFEMApp {
 	
 	# Save out my globals by hand because otherwise they conflict with
 	# the module variables
-	global data_mode
-	puts $fileid "set data_mode $data_mode"
     }
     
     
@@ -1019,15 +1001,17 @@ class BioFEMApp {
 	    
 	    source $file
 	    
-	    # configure attach/detach
+
+	    # set a few variables that need to be reset
+	    set indicate 0
+	    set cycle 0
+	    set IsVAttached 1
 	    
 	    # configure all tabs by calling all configure functions
-	    
-	    # activate proper step tabs
-	    
-            # fix next buttons
-	    
-	    # execute?
+	    $vis_frame_tab1 view $c_left_tab
+	    $vis_frame_tab2 view $c_left_tab
+
+	    change_indicator_labels "Select Execute to start..."
 	}	
     }
 
@@ -1067,67 +1051,37 @@ class BioFEMApp {
     }
     
     method indicate_dynamic_compile { which mode } {
+	global mods
+
 	if {$mode == "start"} {
+	    change_indicate_val 1
 	    change_indicator_labels "Dynamically Compiling Code..."
+        } else {
+	    change_indicate_val 2
+	    
+	    change_indicator_labels "Visualization..."
 	}
     }
     
     
     method update_progress { which state } {
 	global mods
-	global $mods(ShowField-Isosurface)-faces-on
 	
-	return
-	
-	if {$which == $mods(FieldReader-conductivities) && $state == "NeedData"} {
-	    change_indicator_labels "Data Acquisition..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(FieldReader-conductivities) && $state == "Completed"} {
-	    change_indicate_val 2
-	} elseif {$which == $mods(FieldReader-electrodes) && $state == "NeedData"} {
-	    change_indicator_labels "Data Acquisition..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(FieldReader-electrodes) && $state == "Completed"} {
-	    change_indicate_val 2
-	} elseif {$which == $mods(ShowField-Orig) && $state == "Completed"} {
-	    after 100
-	    # Bring images into view
-	    $mods(Viewer)-ViewWindow_0-c autoview
-	    global $mods(Viewer)-ViewWindow_0-pos 
-	    set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
-	    $mods(Viewer)-ViewWindow_0-c Views
-	} elseif {$which == $mods(ShowField-Reg) && $state == "Completed"} {
-	    after 100
-	    # Bring images into view
-	    $mods(Viewer)-ViewWindow_0-c autoview
-	    global $mods(Viewer)-ViewWindow_0-pos 
-	    set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
-	    $mods(Viewer)-ViewWindow_0-c Views
-        } elseif {$which == $mods(TendEstim) && $state == "NeedData"} {
-	    change_indicator_labels "Building Diffusion Tensors..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(TendEstim) && $state == "Completed"} {
-	    change_indicate_val 2
-	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
-	    global $mods(NrrdInfo1)-size1
-	    
-            global data_mode
-	    if {[info exists $mods(NrrdInfo1)-size1]} {
-		global $mods(NrrdInfo1)-size0
-		global $mods(NrrdInfo1)-size1
-		global $mods(NrrdInfo1)-size2
-		global $mods(NrrdInfo1)-size3
-		
-		set volumes [set $mods(NrrdInfo1)-size0]
-		set size_x [expr [set $mods(NrrdInfo1)-size1] - 1]
-		set size_y [expr [set $mods(NrrdInfo1)-size2] - 1]
-		set size_z [expr [set $mods(NrrdInfo1)-size3] - 1]
-	    }
-	} elseif {$which == $mods(Isosurface) && $state == "NeedData" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
+	if {$which == $mods(ShowField-StreamLines) && $state == "JustStarted"} {
 	    change_indicator_labels "Visualization..."
 	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Isosurface) && $state == "Completed" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
-	    change_indicate_val 0
+	} elseif {$which == $mods(ShowField-StreamLines) && $state == "Completed"} {
+	    change_indicate_val 2
+	} elseif {$which == $mods(ShowField-Isosurface) && $state == "JustStarted"} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Isosurface) && $state == "Completed"} {
+	    change_indicate_val 2
+	} elseif {$which == $mods(ShowField-Electrodes) && $state == "JustStarted"} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Electrodes) && $state == "Completed"} {
+	    change_indicate_val 2
 	}
     }
 
@@ -1143,7 +1097,7 @@ class BioFEMApp {
 	} else {
 	    if {$which == $error_module} {
 		set error_module ""
-		change_indicator_labels "Data Acquisition..."
+		change_indicator_labels "Visualization..."
 		change_indicate_val 0
 	    }
 	}
@@ -1152,8 +1106,6 @@ class BioFEMApp {
 	
     method execute_Data {} {
 	global mods 
-	global data_mode
-	
 	
 	$mods(FieldReader-conductivities)-c needexecute
 	$mods(FieldReader-electrodes)-c needexecute
@@ -1706,34 +1658,21 @@ class BioFEMApp {
 	    if {$which == 0} {
 		$vis_frame_tab1 view "Data Selection"
 		$vis_frame_tab2 view "Data Selection"
+		set c_left_tab "Data Selection"
 	    } elseif {$which == 1} {
 		# Data Vis
 		$vis_frame_tab1 view "Vis Options"
 		$vis_frame_tab2 view "Vis Options"
+		set c_left_tab "Vis Options"
 	    } else {
  		$vis_frame_tab1 view "Viewer Options"
  		$vis_frame_tab2 view "Viewer Options"
+		set c_left_tab "Viewer Options"
 	    }
 	}
     }
     
 
-    method change_processing_tab { which } {
-	global mods
-
-	change_indicate_val 0
-	if {$initialized} {
-	    if {$which == "Data"} {
-		# Data Acquisition step
-		$proc_tab1 view "Data"
-		$proc_tab2 view "Data"
-		change_indicator_labels "Data Acquisition..."
-	    }
-	    set indicator 0
-	}
-    }
-	
-	
     method change_indicator {} {
        if {[winfo exists $indicator2] == 1} {
 	   
@@ -1789,6 +1728,8 @@ class BioFEMApp {
 	
 
     method construct_indicator { canvas } {
+	global tips
+
        # make image swirl
        set dx [expr $i_width/double($stripes)]
        set x 0
@@ -1819,7 +1760,7 @@ class BioFEMApp {
           }
        }
 
-       set i_font "-Adobe-Helvetica-Bold-R-Normal-*-16-120-75-*"
+       set i_font "-Adobe-Helvetica-Bold-R-Normal-*-14-120-75-*"
 
        # make completed
        set s [expr $i_width/2]
@@ -1893,19 +1834,47 @@ class BioFEMApp {
 	   0 0 $i_width $i_height -fill $c -outline $c -tags res
        
        bind $canvas <ButtonPress> {app display_module_error}
-       Tooltip $canvas $tips(Indicator)
+
    }
     
     
     method change_indicate_val { v } {
+	# only change an error state if it has been cleared (error_module empty)
+	# it will be changed by the indicate_error method when fixed
 	if {$indicate != 3 || $error_module == ""} {
-	    # only change an error state if it has been cleared (error_module empty)
-	    # it will be changed by the indicate_error method when fixed
-	    set indicate $v
-	    change_indicator
+	    if {$v == 3} {
+		# Error
+		set cycle 0
+		set indicate 3
+		change_indicator
+	    } elseif {$v == 0} {
+		# Reset
+		set cycle 0
+		set indicate 0
+		change_indicator
+	    } elseif {$v == 1} {
+		# Start
+		set executing_queue [expr $executing_queue + 1]
+		set indicate 1
+		change_indicator
+	    } elseif {$v == 2} {
+		# Complete
+		set executing_queue [expr $executing_queue - 1]
+		if {$executing_queue == 0} {
+		    # only change indicator if progress isn't running
+		    set indicate 2
+		    change_indicator
+		} elseif {$executing_queue < 0} {
+		    # something wasn't caught, reset
+		    set executing_queue 0
+		    set indicate 2
+		    change_indicator
+		}
+	    }
 	}
     }
     
+
     method change_indicator_labels { msg } {
 	$indicatorL1 configure -text $msg
 	$indicatorL2 configure -text $msg
@@ -1921,20 +1890,10 @@ class BioFEMApp {
     # Standalone
     variable win
 
-    # Data size variables
-    variable volumes
-    variable size_x
-    variable size_y
-    variable size_z
-
     # Flag to indicate whether entire gui has been built
     variable initialized
 
     # State
-    variable IsPAttached
-    variable detachedPFr
-    variable attachedPFr
-
     variable IsVAttached
     variable detachedVFr
     variable attachedVFr
@@ -1948,6 +1907,7 @@ class BioFEMApp {
     variable indicatorL2
     variable indicate
     variable cycle
+    variable executing_queue
     variable i_width
     variable i_height
     variable stripes
@@ -1955,23 +1915,11 @@ class BioFEMApp {
     variable i_back
     variable error_module
 
-    # Procedures frame tabnotebook
-    variable proc_tab1
-    variable proc_tab2
-
-    # Procedures
-    variable data_tab1
-    variable data_tab2
-
-    # Data tabs
-    variable data_next_button1
-    variable data_next_button2
-    variable data_ex_button1
-    variable data_ex_button2
 
     # Visualiztion frame tabnotebook
     variable vis_frame_tab1
     variable vis_frame_tab2
+    variable c_left_tab
 
     # Vis tabs notebook
     variable vis_tab1
@@ -2030,7 +1978,7 @@ bind all <Control-q> {
     app exit_app
 }
 
-bind all <Control-a> {
+bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
 }
