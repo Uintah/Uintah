@@ -62,7 +62,7 @@ public:
     void share(const BrickArray3<T>& copy);
 };
 
-#include "BrickArray3.cc"
+#include <Packages/rtrt/Core/BrickArray3.cc>
 
 } // end namespace rtrt
 

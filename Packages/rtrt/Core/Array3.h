@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_Classlib_Array3_h
-#define SCI_Classlib_Array3_h 1
+#ifndef Packages_rtrt_Core_Array3_h
+#define Packages_rtrt_Core_Array3_h 1
 
 #include <iostream>
 
@@ -53,7 +53,9 @@ public:
     void share(const Array3<T>& copy);
 };
 
-
+#include <Packages/rtrt/Core/Array3.cc>
+  
 } // end namespace rtrt
 
-#endif
+#endif // Packages_rtrt_Core_Array3_h
+

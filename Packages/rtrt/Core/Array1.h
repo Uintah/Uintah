@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_Classlib_Array1_h
-#define SCI_Classlib_Array1_h 1
+#ifndef Packages_rtrt_Core_Array1_h
+#define Packages_rtrt_Core_Array1_h 1
 
 #include <Packages/rtrt/Core/Assert.h>
 //#include <Core/Util/Assert.h>
@@ -84,8 +84,8 @@ public:
 template<class T> void Pio(Piostream&, Array1<T>&);
 template<class T> void Pio(Piostream&, Array1<T>*&);
 
+#include <Packages/rtrt/Core/Array1.cc>
+
 } // end namespace rtrt
 
-#include "Array1.cc"
-
-#endif /* SCI_Classlib_Array1_h */
+#endif // Packages_rtrt_Core_Array1_h

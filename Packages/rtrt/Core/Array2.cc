@@ -10,10 +10,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Packages/rtrt/Core/Array2.h>
-
-namespace rtrt {
-
 template<class T>
 Array2<T>::Array2()
 {
@@ -105,4 +101,3 @@ void Array2<T>::share(const Array2<T>& copy)
     (*refcnt)++;
 }
 
-} // end namespace rtrt
