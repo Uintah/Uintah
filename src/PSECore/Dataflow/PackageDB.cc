@@ -10,7 +10,27 @@
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/PackageDB.h>
 #include <iostream>
+#include <ctype.h>
 using std::cerr;
+using std::ostream;
+using std::endl;
+using std::cout;
+#include <vector>
+using std::vector;
+
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <util/PlatformUtils.hpp>
+#include <sax/SAXException.hpp>
+#include <sax/SAXParseException.hpp>
+#include <parsers/DOMParser.hpp>
+#include <dom/DOM_NamedNodeMap.hpp>
+#include <sax/ErrorHandler.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
 
 namespace PSECore {
 namespace Dataflow {
@@ -46,90 +66,398 @@ PackageDB::~PackageDB(void)
 
 typedef void (*pkgInitter)(const clString& tclPath);
 
-void PackageDB::loadPackage(const clString& packPath) {
+static void postMessage(const clString& errmsg, bool err=true)
+{
+    clString tag;
+    if(err)
+	tag += " errtag";
+    TCL::execute(clString(".top.errorFrame.text insert end \"")+errmsg+"\\n\""+tag);
+    TCL::execute(".top.errorFrame.text see end");
+}
 
-  // The format of a package path element is either "soLib" or "soLib(tclPath)"
-  // where soLib is the name of a package .so file, and tclPath is the path
-  // to use to locate that package's tcl files.  If the first form is used,
-  // the tclPath is constructed by substituting "TCL" for everything in the
-  // soLib string after the final "/".
-  //
-  // A package path is a colon-separated list of package path elements.
+class PackageDBHandler : public ErrorHandler
+{
+public:
+    bool foundError;
 
-  clString packagePath(packPath);     // Copy to deal with non-const methods
+    PackageDBHandler();
+    ~PackageDBHandler();
 
-  while(packagePath!="") {
+    void warning(const SAXParseException& e);
+    void error(const SAXParseException& e);
+    void fatalError(const SAXParseException& e);
+    void resetErrors();
 
-    // Strip off the first element, leave the rest in the path for the next
-    // iteration.
+private :
+    PackageDBHandler(const PackageDBHandler&);
+    void operator=(const PackageDBHandler&);
+};
 
-    clString packageElt;
-    int firstColon=packagePath.index(':');
-    if(firstColon!=-1) {
-      packageElt=packagePath.substr(0,firstColon);
-cerr << "Before '" << packagePath << "'\n";
-      packagePath=packagePath.substr(firstColon+1,-1);
-cerr << "After '" << packagePath << "'\n";
-    } else {
-      packageElt=packagePath;
-      packagePath="";
-    }
-
-    // Parse the element apart into soName and tclPath, using the default
-    // tclpath (soName's directory + "/GUI") if there isn't one specified.
-
-    clString soName;
-    clString tclPath;
-
-    int openParen=packageElt.index('(');
-    if(openParen!=-1) {
-      int closeParen=packageElt.index(')');
-      soName=packageElt.substr(0,openParen);
-      tclPath=packageElt.substr(openParen+1,closeParen-openParen-1);
-    } else {
-      soName=packageElt;
-      if(pathname(packageElt)!="")
-        tclPath=pathname(packageElt)+"/GUI";
-      else
-        tclPath=pathname(packageElt)+"GUI";
-    }
-
-    // Load the package
+// ---------------------------------------------------------------------------
+//  This is a simple class that lets us do easy (though not terribly efficient)
+//  trancoding of XMLCh data to local code page for display.
+// ---------------------------------------------------------------------------
+class StrX
+{
+public :
+    // -----------------------------------------------------------------------
+    //  Constructors and Destructor
+    // -----------------------------------------------------------------------
+    StrX(const XMLCh* const toTranscode)
     {
-      clString result;
-      TCL::eval(clString(".top.errorFrame.text insert end \"Loading package '")
-                +soName+"' with TCLPath '"+tclPath+"'\\n\"",result);
-
-      // Tell Tcl where to find the .tcl files...
-      TCL::eval(clString("lappend auto_path ") + tclPath, result);
+        // Call the private transcoding method
+        fLocalForm = XMLString::transcode(toTranscode);
     }
 
-    //void* so=dlopen(soName(),RTLD_NOW);
-	LIBRARY_HANDLE so = GetLibraryHandle(soName());
-    if(!so) {
-	  //cerr << dlerror() << '\n';
-      cerr << "ERROR: Can't open package '" << soName << "'\n";
-      continue;
+    StrX(const DOMString& str)
+    {
+        // Call the transcoding method
+        fLocalForm = str.transcode();
     }
-    //pkgInitter initFn=(pkgInitter)dlsym(so,"initPackage");
-	pkgInitter initFn=(pkgInitter)GetHandleSymbolAddress(so,"initPackage");
-    if(!initFn) {
-      cerr << "ERROR: Package '" << soName << "' has no initPackage(...)\n";
-      continue;
+
+    ~StrX()
+    {
+        delete [] fLocalForm;
     }
-    initFn(tclPath);
 
-    // You can't close the sofile; it loads more stuff in when you instantiate
-    // a module -- all the linking does not occur here.
 
-    // XXX: We need to keep the handle around to avoid opening the same one
-    //      a zillion times, and to close them off when you're in a development
-    //      cycle so the old inodes can get freed.
+    // -----------------------------------------------------------------------
+    //  Getter methods
+    // -----------------------------------------------------------------------
+    const char* localForm() const
+    {
+        return fLocalForm;
+    }
 
+private :
+    // -----------------------------------------------------------------------
+    //  Private data members
+    //
+    //  fLocalForm
+    //      This is the local code page form of the string.
+    // -----------------------------------------------------------------------
+    char*   fLocalForm;
+};
+
+inline ostream& operator<<(ostream& target, const StrX& toDump)
+{
+    target << toDump.localForm();
+    return target;
+}
+
+clString xmlto_string(const DOMString& str)
+{
+    char* s = str.transcode();
+    clString ret = clString(s);
+    delete[] s;
+    return ret;
+}
+
+clString xmlto_string(const XMLCh* const str)
+{
+    char* s = XMLString::transcode(str);
+    clString ret = clString(s);
+    delete[] s;
+    return ret;
+}
+
+PackageDBHandler::PackageDBHandler()
+{
+    foundError=false;
+}
+
+PackageDBHandler::~PackageDBHandler()
+{
+}
+
+void PackageDBHandler::error(const SAXParseException& e)
+{
+    foundError=true;
+    postMessage(clString("Error at (file ")+xmlto_string(e.getSystemId())
+		+", line "+to_string((int)e.getLineNumber())
+		+", char "+to_string((int)e.getColumnNumber())
+		+"): "+xmlto_string(e.getMessage()));
+}
+
+void PackageDBHandler::fatalError(const SAXParseException& e)
+{
+    foundError=true;
+    postMessage(clString("Fatal Error at (file ")+xmlto_string(e.getSystemId())
+		+", line "+to_string((int)e.getLineNumber())
+		+", char "+to_string((int)e.getColumnNumber())
+		+"): "+xmlto_string(e.getMessage()));
+}
+
+void PackageDBHandler::warning(const SAXParseException& e)
+{
+    postMessage(clString("Warning at (file ")+xmlto_string(e.getSystemId())
+		+", line "+to_string((int)e.getLineNumber())
+		+", char "+to_string((int)e.getColumnNumber())
+		+"): "+xmlto_string(e.getMessage()));
+}
+
+void PackageDBHandler::resetErrors()
+{
+}
+
+static void invalidNode(const DOM_Node& n, const clString& filename)
+{
+    if(n.getNodeType() == DOM_Node::COMMENT_NODE)
+	return;
+    if(n.getNodeType() == DOM_Node::TEXT_NODE){
+	DOMString s = n.getNodeValue();
+	char* str = s.transcode();
+	bool allwhite=true;
+	for(char* p = str; *p != 0; p++){
+	    if(!isspace(*p))
+		allwhite=false;
+	}
+	if(!allwhite){
+	    postMessage(clString("Extraneous text: ")+str+"after node: "+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+	}
+	delete[] str;
+	return;
+    }
+    postMessage(clString("Do not understand node: ")+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+}
+
+static DOMString findText(DOM_Node& node)
+{
+    for(DOM_Node n = node.getFirstChild();n != 0; n = n.getNextSibling()){
+	if(n.getNodeType() == DOM_Node::TEXT_NODE)
+	    return n.getNodeValue();
+    }
+    return 0;
+}
+
+static void processDataflowComponent(PackageDB* db, const DOMString& pkgname,
+				     const DOMString& catname,
+				     LIBRARY_HANDLE so,
+				     const DOM_Node& libNode,
+				     const clString& filename)
+{
+    DOM_NamedNodeMap attr = libNode.getAttributes();
+    DOM_Node modname = attr.getNamedItem("name");
+    if(modname == 0){
+	postMessage("Warning: Module does not have a name, skipping (in package "+xmlto_string(pkgname)+", category "+xmlto_string(catname)+")");
+	return;
+    }
+    DOMString modname_str = modname.getNodeValue();
+    ModuleMaker create = 0;
+    bool havename=false;
+    for(DOM_Node n = libNode.getFirstChild();n != 0; n = n.getNextSibling()){
+	DOMString name = n.getNodeName();
+	if(name.equals("meta")){
+	} else if(name.equals("inputs")){
+	} else if(name.equals("outputs")){
+	} else if(name.equals("parameters")){
+	} else if(name.equals("implementation")){
+	    for(DOM_Node nn = n.getFirstChild(); nn != 0; nn = nn.getNextSibling()){
+		DOMString nname = nn.getNodeName();
+		if(nname.equals("creationFunction")){
+		    havename=true;
+		    if(create)
+			postMessage("Warning: Module specified creationFunction twice: "+xmlto_string(modname_str));
+		    DOMString createfn_str = findText(nn);
+		    char* createfn = createfn_str.transcode();
+		    clString cfn = clString(createfn);
+		    create = (ModuleMaker)GetHandleSymbolAddress(so, cfn());
+		    if(!create)
+			postMessage(clString("Warning: creationFunction not found for module: ")+cfn);
+		    delete[] createfn;
+		} else {
+		    invalidNode(nn, filename);
+		}
+	    }
+	} else {
+	    invalidNode(n, filename);
+	}
+    }
+    if(!create || !havename){
+	postMessage(clString("Warning: Module did not specify a creationFunction, skipping: ")+xmlto_string(modname_str));
+	return;
+    }
+    char* packageName = pkgname.transcode();
+    char* categoryName = catname.transcode();
+    char* moduleName = modname_str.transcode();
+    db->registerModule(packageName, categoryName, moduleName, create, "not currently used");
+    delete[] packageName;
+    delete[] categoryName;
+    delete[] moduleName;
+}
+
+static void processLibrary(PackageDB* db, const DOMString& pkgname,
+			   const DOM_Node& libNode, const clString& filename)
+{
+    DOM_NamedNodeMap attr = libNode.getAttributes();
+    DOM_Node catname = attr.getNamedItem("category");
+    if(catname == 0){
+	postMessage("Warning: Category does not have a name, skipping (in package "+xmlto_string(pkgname)+")");
+	return;
+    }
+    DOMString catname_str = catname.getNodeValue();
+    vector<DOMString> sonames;
+    for(DOM_Node n = libNode.getFirstChild();n != 0; n = n.getNextSibling()){
+	DOMString name = n.getNodeName();
+	if(name.equals("soNames")){
+	    sonames.clear();
+	    for(DOM_Node nn = n.getFirstChild(); nn != 0; nn = nn.getNextSibling()){
+		DOMString nname = nn.getNodeName();
+		if(nname.equals("soName")){
+		    sonames.push_back(findText(nn));
+		} else {
+		    invalidNode(nn, filename);
+		}
+	    }
+	} else if(name.equals("dataflow-component")){
+	    LIBRARY_HANDLE so = 0;
+	    for(vector<DOMString>::iterator iter = sonames.begin();
+		iter != sonames.end(); iter++){
+		char* str = iter->transcode();
+		so = GetLibraryHandle(str);
+		if(so)
+		    break;
+	    }
+	    if(!so){
+		clString libs = "";
+		for(vector<DOMString>::iterator iter = sonames.begin();
+		    iter != sonames.end(); iter++){
+		    if(iter != sonames.begin())
+			libs += ", ";
+		    libs += xmlto_string(*iter);
+		}
+		postMessage("Warning: library not found, looked in these names: "+libs);
+	    } else {
+		processDataflowComponent(db, pkgname, catname_str, so, n, filename);
+	    }
+	} else if(name.equals("alias")){
+	    DOM_NamedNodeMap attr = n.getAttributes();
+	    DOM_Node fromPackage = attr.getNamedItem("package");
+	    DOM_Node fromCategory = attr.getNamedItem("category");
+	    DOM_Node fromModule = attr.getNamedItem("module");
+	    DOMString toModule = findText(n);
+	    if(fromPackage == 0 || fromCategory == 0 || fromModule == 0){
+		postMessage("Warning: Alias did not specify package, category and module: "+xmlto_string(toModule));
+		continue;
+	    }
+
+	    DOMString fromPackageString = fromPackage.getNodeValue();
+	    DOMString fromCategoryString = fromCategory.getNodeValue();
+	    DOMString fromModuleString = fromModule.getNodeValue();
+
+	    char* toPackageName = pkgname.transcode();
+	    char* toCategoryName = catname_str.transcode();
+	    char* toModuleName = toModule.transcode();
+	    char* fromPackageName = fromPackageString.transcode();
+	    char* fromCategoryName = fromCategoryString.transcode();
+	    char* fromModuleName = fromModuleString.transcode();
+	    db->createAlias(fromPackageName, fromCategoryName, fromModuleName,
+			    toPackageName, toCategoryName, toModuleName);
+	    TCL::execute(clString("createAlias ")+fromPackageName+" "+fromCategoryName+" "+fromModuleName+" "+toPackageName+" "+toCategoryName+" "+toModuleName);
+	} else {
+	    invalidNode(n, filename);
+	}
+    }
+}
+
+static void processPackage(PackageDB* db, const DOM_Node& pkgNode,
+			   const clString& filename)
+{
+    DOM_NamedNodeMap attr = pkgNode.getAttributes();
+    DOM_Node pkgname = attr.getNamedItem("name");
+    if(pkgname == 0){
+	postMessage("Warning: Package does not have a name, skipping (in"+filename+")");
+	return;
+    }
+    DOMString pkgname_str = pkgname.getNodeValue();
+    for(DOM_Node n = pkgNode.getFirstChild();n != 0; n = n.getNextSibling()){
+	DOMString name = n.getNodeName();
+	if(name.equals("scirun-library")){
+	    processLibrary(db, pkgname_str, n, filename);
+	} else if(name.equals("guiPath")){
+	    DOMString p = findText(n);
+	    clString path = xmlto_string(p);
+	    if(path(0) != '/')
+		path = pathname(filename)+"/"+path;
+	    TCL::execute(clString("lappend auto_path ")+path);
+	} else {
+	    invalidNode(n, filename);
+	}
+    }
+}
+
+void PackageDB::loadPackage(const clString& packPath)
+{
+    // Initialize the XML4C system
+    try {
+        XMLPlatformUtils::Initialize();
+    } catch (const XMLException& toCatch) {
+	cerr << "Error during initialization! :\n"
+	     << StrX(toCatch.getMessage()) << endl;
+	return;
+    }
+
+    // The format of a package path element is either URL,URL,...
+    // Where URL is a filename or a url to an XML file that
+    // describes the components in the package.
+    clString packagePath = packPath;
+    while(packagePath!="") {
+
+	// Strip off the first element, leave the rest in the path for the next
+	// iteration.
+
+	clString packageElt;
+	int firstComma=packagePath.index(',');
+	if(firstComma!=-1) {
+	    packageElt=packagePath.substr(0,firstComma);
+	    packagePath=packagePath.substr(firstComma+1,-1);
+	} else {
+	    packageElt=packagePath;
+	    packagePath="";
+	}
+
+	// Load the package
+	postMessage(clString("Loading package '")+packageElt+"'", false);
+	
+	// Instantiate the DOM parser.
+	DOMParser parser;
+	parser.setDoValidation(false);
+
+	PackageDBHandler handler;
+	parser.setErrorHandler(&handler);
+
+	//
+	//  Get the starting time and kick off the parse of the indicated
+	//  file. Catch any exceptions that might propogate out of it.
+	//
+	try {
+	    parser.parse(packageElt());
+	}  catch (const XMLException& toCatch) {
+	    postMessage(clString("Error during parsing: '")+packageElt+"'\nException message is:  "+xmlto_string(toCatch.getMessage()));
+	    handler.foundError=true;
+	    continue;
+	}
+
+	if(handler.foundError){
+	    TCL::execute("tk_dialog .errorPopup {Parse Error} {Error parsing package file, see message window for more information} error 0 Ok");
+	    continue;
+	}
+	//
+	//  Extract the components from the DOM tree
+	//
+	DOM_Document doc = parser.getDocument();
+	DOM_NodeList list = doc.getElementsByTagName("package");
+	int nlist = list.getLength();
+	for(int i=0;i<nlist;i++){
+	    DOM_Node n = list.item(i);
+	    processPackage(this, n, packageElt);
+	}
+	if(handler.foundError){
+	    TCL::execute("tk_dialog .errorPopup {Processing Error} {Error processing package file, see message window for more information} error 0 Ok");
+	}
   }
 
-  clString result;
-  TCL::eval("createCategoryMenu",result);
+  TCL::execute("createCategoryMenu");
 }
 
 void PackageDB::registerModule(const clString& packageName,
@@ -160,6 +488,36 @@ void PackageDB::registerModule(const clString& packageName,
 
   moduleInfo->maker=moduleMaker;
   moduleInfo->uiFile=tclUIFile;
+}
+
+void PackageDB::createAlias(const clString& fromPackageName,
+			    const clString& fromCategoryName,
+			    const clString& fromModuleName,
+			    const clString& toPackageName,
+			    const clString& toCategoryName,
+			    const clString& toModuleName)
+{
+    Packages* db=(Packages*)d_db;
+
+    Package* package;
+    if(!db->lookup(fromPackageName,package)) {
+	postMessage("Warning: creating an alias from a nonexistant package "+fromPackageName+" (ignored)");
+	return;
+    }
+
+    Category* category;
+    if(!package->lookup(fromCategoryName,category)) {
+	postMessage("Warning: creating an alias from a nonexistant category "+fromPackageName+"."+fromCategoryName+" (ignored)");
+	return;
+    }
+
+    ModuleInfo* moduleInfo;
+    if(!category->lookup(fromModuleName,moduleInfo)) {
+	postMessage("Warning: creating an alias from a nonexistant module "+fromPackageName+"."+fromCategoryName+"."+fromModuleName+" (ignored)");
+	return;
+    }
+    registerModule(toPackageName, toCategoryName, toModuleName,
+		   moduleInfo->maker, moduleInfo->uiFile);
 }
 
 Module* PackageDB::instantiateModule(const clString& packageName,
@@ -302,6 +660,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.15  2000/03/17 08:24:52  sparker
+// Added XML parser for component repository
+//
 // Revision 1.14  1999/10/07 02:07:20  sparker
 // use standard iostreams and complex type
 //
