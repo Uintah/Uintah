@@ -15,6 +15,8 @@
 #include <Packages/rtrt/Core/ppm.h>
 #endif
 
+#include <stdlib.h>
+
 float *ConvertUBTYEtoFLOAT( char *s, int len )
 {
   float *ptr = (float *)malloc( len * sizeof( float ) );

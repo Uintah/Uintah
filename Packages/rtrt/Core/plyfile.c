@@ -191,9 +191,7 @@ PlyFile *ply_open_for_writing(
   float *version
 )
 {
-  int i;
   PlyFile *plyfile;
-  PlyElement *elem;
   char *name;
   FILE *fp;
 
@@ -395,9 +393,7 @@ void ply_element_count(
   int nelems
 )
 {
-  int i;
   PlyElement *elem;
-  PlyProperty *prop;
 
   /* look for appropriate element */
   elem = find_element (plyfile, elem_name);
@@ -517,7 +513,7 @@ Entry:
 
 void ply_put_element(PlyFile *plyfile, void *elem_ptr)
 {
-  int i,j,k;
+  int j,k;
   FILE *fp = plyfile->fp;
   PlyElement *elem;
   PlyProperty *prop;
@@ -1215,7 +1211,6 @@ PlyOtherElems *ply_get_other_element (
   PlyElement *elem;
   PlyOtherElems *other_elems;
   OtherElem *other;
-  int num_elems;
 
   /* look for appropriate element */
   elem = find_element (plyfile, elem_name);
@@ -1397,8 +1392,6 @@ Compare two strings.  Returns 1 if they are the same, 0 if not.
 
 int equal_strings(char *s1, char *s2)
 {
-  int i;
-
   while (*s1 && *s2)
     if (*s1++ != *s2++)
       return (0);
@@ -1470,14 +1463,13 @@ Entry:
 
 void ascii_get_element(PlyFile *plyfile, char *elem_ptr)
 {
-  int i,j,k;
+  int j,k;
   PlyElement *elem;
   PlyProperty *prop;
   char **words;
   int nwords;
   int which_word;
-  FILE *fp = plyfile->fp;
-  char *elem_data,*item;
+  char *elem_data,*item=NULL;
   char *item_ptr;
   int item_size;
   int int_val;
@@ -1487,7 +1479,7 @@ void ascii_get_element(PlyFile *plyfile, char *elem_ptr)
   int store_it;
   char **store_array;
   char *orig_line;
-  char *other_data;
+  char *other_data=NULL;
   int other_flag;
 
   /* the kind of element we're reading currently */
@@ -1592,7 +1584,7 @@ Entry:
 
 void binary_get_element(PlyFile *plyfile, char *elem_ptr)
 {
-  int i,j,k;
+  int j,k;
   PlyElement *elem;
   PlyProperty *prop;
   FILE *fp = plyfile->fp;
