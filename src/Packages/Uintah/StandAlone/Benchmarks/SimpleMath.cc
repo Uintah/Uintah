@@ -34,6 +34,30 @@ void usage ( void )
   cerr << "  <loop>  The above operation will be repeated <loop> times." << endl;
 }
 
+void bench1(int loop, const IntVector& low, const IntVector& high,
+	   CCVariable<double>& result, double a,
+	   CCVariable<double>& x, CCVariable<double>& b)
+{
+  for ( int i = 0; i < loop; i++ )
+    for ( CellIterator iter(low, high); !iter.done(); iter++ )
+      result[*iter] = a * x[*iter] + b[*iter];
+}
+
+void bench2(int loop, const IntVector& low, const IntVector& high,
+	   CCVariable<double>& result, double a,
+	   CCVariable<double>& x, CCVariable<double>& b)
+{
+  for ( int i = 0; i < loop; i++ ){
+    IntVector d(high-low);
+    int size = d.x()*d.y()*d.z();
+    double* rr = &result[low];
+    const double* xx = &x[low];
+    const double* bb = &b[low];
+    for(int i = 0; i < size; i++)
+      rr[i] = a * xx[i] + bb[i];
+  }
+}
+
 int main ( int argc, char** argv )
 {
   int size = SIZE_DEFAULT;
@@ -44,6 +68,7 @@ int main ( int argc, char** argv )
    */
   if ( argc > 1 ) {
      size = atoi( argv[1] );
+
 
      if (size <= 0) {
        usage();
@@ -71,28 +96,39 @@ int main ( int argc, char** argv )
   IntVector low ( 0,0,0 );
   IntVector high( size,size,size );
 
-  CCVariable<double> result, a, x, b;
+  CCVariable<double> result, x, b;
+  double a = 5;
 
   result.allocate( low, high );
-  a.allocate( low, high );
+  //  a.allocate( low, high );
   x.allocate( low, high );
   b.allocate( low, high );
   
-  a.initialize( 5 );
+  //a.initialize( 5 );
   x.initialize( 6 );
   b.initialize( 2 );
 
-  double startTime = Time::currentSeconds();
+  {
+    double startTime = Time::currentSeconds();
+    bench1(loop, low, high, result, a, x, b);
 
-  for ( int i = 0; i < loop; i++ )
-    for ( CellIterator iter(low, high); !iter.done(); iter++ )
-      result[*iter] = a[*iter] * x[*iter] + b[*iter];
+    double deltaTime = Time::currentSeconds() - startTime;
+    double megaFlops = (loop * size * size * size * 2.0) / 1000000.0 / deltaTime;
 
-  double deltaTime = Time::currentSeconds() - startTime;
-  double megaFlops = (loop * size * size * size * 2.0) / 1000000.0 / deltaTime;
+    cout << "Completed in " << deltaTime << " seconds.";
+    cout << " (" << megaFlops << " MFLOPS)" << endl;
+  }
+  {
+    double startTime = Time::currentSeconds();
+    bench2(loop, low, high, result, a, x, b);
 
-  cout << "Completed in " << deltaTime << " seconds.";
-  cout << " (" << megaFlops << " MFLOPS)" << endl;
+    double deltaTime = Time::currentSeconds() - startTime;
+    double megaFlops = (loop * size * size * size * 2.0) / 1000000.0 / deltaTime;
 
+    cout << "Completed in " << deltaTime << " seconds.";
+    cout << " (" << megaFlops << " MFLOPS)" << endl;
+  }
+ 
   return EXIT_SUCCESS;
 }
+
