@@ -885,10 +885,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
   case 'w':
     cerr << "Saving ppm image file\n";
-    if (activeGui->dpy_->scene->display_depth)
-      activeGui->dpy_->scene->get_image(showing_scene)->save_depth("images/depth");
-    else
-      activeGui->dpy_->scene->get_image(showing_scene)->save_ppm("images/image", activeGui->scene()->display_sils, activeGui->scene()->max_depth);
+    activeGui->dpy_->priv->dumpFrame = true;
     break;
   case 'd':
     {
