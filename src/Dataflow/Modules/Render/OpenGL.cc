@@ -1907,7 +1907,7 @@ OpenGL::setFrustumToWindowPortion()
 	      frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
 	      frustum_.bottom + frustum_.height / hi_res_.nrows* hi_res_.row,
 	      frustum_.bottom + frustum_.height /hi_res_.nrows*(hi_res_.row+1),
-	      frustum_.znear_, frustum_.zfar_);
+	      frustum_.znear, frustum_.zfar);
   }
 }
 
