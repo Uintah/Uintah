@@ -46,6 +46,23 @@ SRCS := \
 	$(SRCDIR)/BuildInterpolant.tcl \
 	$(SRCDIR)/BuildNoise.tcl \
 	$(SRCDIR)/BuildTransform.tcl \
+	$(SRCDIR)/bundleSetBundle.tcl \
+	$(SRCDIR)/bundleSetColorMap.tcl \
+	$(SRCDIR)/bundleSetColorMap2.tcl \
+	$(SRCDIR)/bundleSetField.tcl \
+	$(SRCDIR)/bundleSetMatrix.tcl \
+	$(SRCDIR)/bundleSetNrrd.tcl \
+	$(SRCDIR)/bundleSetPath.tcl \
+    $(SRCDIR)/bundleInfo.tcl \
+	$(SRCDIR)/bundleGetBundle.tcl \
+	$(SRCDIR)/bundleGetColorMap.tcl \
+	$(SRCDIR)/bundleGetColorMap2.tcl \
+	$(SRCDIR)/bundleGetField.tcl \
+	$(SRCDIR)/bundleGetMatrix.tcl \
+	$(SRCDIR)/bundleGetNrrd.tcl \
+	$(SRCDIR)/bundleGetPath.tcl \
+	$(SRCDIR)/bundleReader.tcl \
+	$(SRCDIR)/bundleWriter.tcl \
 	$(SRCDIR)/Camera.tcl \
 	$(SRCDIR)/CastTVtoMLV.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
