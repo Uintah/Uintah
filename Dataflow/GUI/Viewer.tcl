@@ -1083,6 +1083,12 @@ itcl_class ViewWindow {
 	menubutton $m.objlist.canvas.frame.menu$objid -text "Options..." \
 		-relief raised -menu $menun
 	menu $menun
+
+	$menun add radiobutton -label "Use Global Controls" \
+	    -variable $this-$objid-type -value "Default"\
+	    -command "$this-c redraw"
+	$menun add separator
+
 	$menun add checkbutton -label Lighting -variable $this-$objid-light \
 		-command "$this-c redraw"
 	$menun add checkbutton -label BBox -variable $this-$objid-debug \
@@ -1097,8 +1103,6 @@ itcl_class ViewWindow {
 		-command "$this-c redraw"
 
 	$menun add separator
-	$menun add radiobutton -label Default -variable $this-$objid-type \
-	    -command "$this-c redraw"
 	$menun add radiobutton -label Wire -variable $this-$objid-type \
 	    -command "$this-c redraw"	    
 	$menun add radiobutton -label Flat -variable $this-$objid-type \
