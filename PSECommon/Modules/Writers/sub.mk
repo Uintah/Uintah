@@ -29,6 +29,7 @@ SRCS     += \
 	$(SRCDIR)/TetraWriter.cc\
 	$(SRCDIR)/VectorFieldWriter.cc\
 	$(SRCDIR)/VoidStarWriter.cc\
+	$(SRCDIR)/PathWriter.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Persistent \
@@ -40,6 +41,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/18 23:14:13  samsonov
+# PathWriter module is transfered from DaveW package
+#
 # Revision 1.4  2000/06/08 22:46:32  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
