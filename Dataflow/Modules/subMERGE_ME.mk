@@ -17,13 +17,19 @@ SRCDIR := SCIRun/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Image\
-	 $(SRCDIR)/Mesh\
-#[INSERT NEW SUBDIRS HERE]
+	$(SRCDIR)/Mesh\
+#[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.5  2000/10/24 05:57:51  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.4  2000/06/08 22:46:34  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.

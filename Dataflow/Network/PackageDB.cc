@@ -37,7 +37,6 @@ using std::vector;
 #pragma reset woff 1375
 #endif
 
-#define NEW_MODULE_MAKER 0
 typedef std::map<int,char*>::iterator char_iter;
 
 namespace PSECore {
@@ -75,177 +74,8 @@ PackageDB::~PackageDB(void)
 
 typedef void (*pkgInitter)(const clString& tclPath);
 
-#if !NEW_MODULE_MAKER
-static void processDataflowComponent(PackageDB* db, const DOMString& pkgname,
-				     const DOMString& catname,
-				     LIBRARY_HANDLE so,
-				     const DOM_Node& libNode,
-				     const clString& filename)
-{
-  DOM_NamedNodeMap attr = libNode.getAttributes();
-  DOM_Node modname = attr.getNamedItem("name");
-  if(modname == 0){
-    postMessage("Warning: Module does not have a name, skipping (in package "+xmlto_string(pkgname)+", category "+xmlto_string(catname)+")");
-    return;
-  }
-  DOMString modname_str = modname.getNodeValue();
-  ModuleMaker create = 0;
-  bool havename=false;
-  for(DOM_Node n = libNode.getFirstChild();n != 0; n = n.getNextSibling()){
-    DOMString name = n.getNodeName();
-    if(name.equals("meta")){
-    } else if(name.equals("inputs")){
-    } else if(name.equals("outputs")){
-    } else if(name.equals("parameters")){
-    } else if(name.equals("implementation")){
-      for(DOM_Node nn = n.getFirstChild(); nn != 0; nn = nn.getNextSibling()){
-	DOMString nname = nn.getNodeName();
-	if(nname.equals("creationFunction")){
-	  havename=true;
-	  if(create)
-	    postMessage("Warning: Module specified creationFunction twice: "+xmlto_string(modname_str));
-	  DOMString createfn_str = findText(nn);
-	  char* createfn = createfn_str.transcode();
-	  clString cfn = clString(createfn);
-	  create = (ModuleMaker)GetHandleSymbolAddress(so, cfn());
-	  if(!create)
-	    postMessage(clString("Warning: creationFunction not found for module: ")+cfn);
-	  delete[] createfn;
-	} else {
-	  invalidNode(nn, filename);
-	}
-      }
-    } else {
-      invalidNode(n, filename);
-    }
-  }
-  if(!create || !havename){
-    postMessage(clString("Warning: Module did not specify a creationFunction, skipping: ")+xmlto_string(modname_str));
-    return;
-  }
-  char* packageName = pkgname.transcode();
-  char* categoryName = catname.transcode();
-  char* moduleName = modname_str.transcode();
-  db->registerModule(packageName, categoryName, moduleName, create, "not currently used");
-  delete[] packageName;
-  delete[] categoryName;
-  delete[] moduleName;
-}
-
-static void processLibrary(PackageDB* db, const DOMString& pkgname,
-			   const DOM_Node& libNode, const clString& filename)
-{
-  DOM_NamedNodeMap attr = libNode.getAttributes();
-  DOM_Node catname = attr.getNamedItem("category");
-  if(catname == 0){
-    postMessage("Warning: Category does not have a name, skipping (in package "+xmlto_string(pkgname)+")");
-    return;
-  }
-  DOMString catname_str = catname.getNodeValue();
-  vector<DOMString> sonames;
-  for(DOM_Node n = libNode.getFirstChild();n != 0; n = n.getNextSibling()){
-    DOMString name = n.getNodeName();
-    if(name.equals("soNames")){
-      sonames.clear();
-      for(DOM_Node nn = n.getFirstChild(); nn != 0; nn = nn.getNextSibling()){
-	DOMString nname = nn.getNodeName();
-	if(nname.equals("soName")){
-	  sonames.push_back(findText(nn));
-	} else {
-	  invalidNode(nn, filename);
-	}
-      }
-    } else if(name.equals("dataflow-component")){
-      LIBRARY_HANDLE so = 0;
-      for(vector<DOMString>::iterator iter = sonames.begin();
-	  iter != sonames.end(); iter++){
-	char* str = iter->transcode();
-	so = GetLibraryHandle(str);
-	if(so)
-	  break;
-      }
-      if(!so){
-	clString libs = "";
-	for(vector<DOMString>::iterator iter = sonames.begin();
-	      iter != sonames.end(); iter++){
-	  if(iter != sonames.begin())
-	    libs += ", ";
-	  libs += xmlto_string(*iter);
-	}
-	postMessage("Warning: library not found, looked in these names: "+libs);
-      } else {
-	processDataflowComponent(db, pkgname, catname_str, so, n, filename);
-      }
-    } else if(name.equals("alias")){
-      DOM_NamedNodeMap attr = n.getAttributes();
-      DOM_Node fromPackage = attr.getNamedItem("package");
-      DOM_Node fromCategory = attr.getNamedItem("category");
-      DOM_Node fromModule = attr.getNamedItem("module");
-      DOMString toModule = findText(n);
-      if(fromPackage == 0 || fromCategory == 0 || fromModule == 0){
-	postMessage("Warning: Alias did not specify package, category and module: "+xmlto_string(toModule));
-	continue;
-      }
-      
-      DOMString fromPackageString = fromPackage.getNodeValue();
-      DOMString fromCategoryString = fromCategory.getNodeValue();
-      DOMString fromModuleString = fromModule.getNodeValue();
-      
-      char* toPackageName = pkgname.transcode();
-      char* toCategoryName = catname_str.transcode();
-      char* toModuleName = toModule.transcode();
-      char* fromPackageName = fromPackageString.transcode();
-      char* fromCategoryName = fromCategoryString.transcode();
-      char* fromModuleName = fromModuleString.transcode();
-      db->createAlias(fromPackageName, fromCategoryName, fromModuleName,
-		      toPackageName, toCategoryName, toModuleName);
-      TCL::execute(clString("createAlias ")+fromPackageName+" "+fromCategoryName+" "+fromModuleName+" "+toPackageName+" "+toCategoryName+" "+toModuleName);
-    } else {
-      invalidNode(n, filename);
-    }
-  }
-}
-
-static void processPackage(PackageDB* db, const DOM_Node& pkgNode,
-			   const clString& filename)
-{
-  DOM_NamedNodeMap attr = pkgNode.getAttributes();
-  DOM_Node pkgname = attr.getNamedItem("name");
-  if(pkgname == 0){
-    postMessage("Warning: Package does not have a name, skipping (in"+filename+")");
-    return;
-  }
-  DOMString pkgname_str = pkgname.getNodeValue();
-  for(DOM_Node n = pkgNode.getFirstChild();n != 0; n = n.getNextSibling()){
-    DOMString name = n.getNodeName();
-    if(name.equals("scirun-library")){
-      processLibrary(db, pkgname_str, n, filename);
-    } else if(name.equals("guiPath")){
-      DOMString p = findText(n);
-      clString path = xmlto_string(p);
-      if(path(0) != '/')
-	path = pathname(filename)+"/"+path;
-      TCL::execute(clString("lappend auto_path ")+path);
-    } else {
-      invalidNode(n, filename);
-    }
-  }
-}
-#endif
-
 void PackageDB::loadPackage(const clString& packPath)
 {
-#if !NEW_MODULE_MAKER
-  // Initialize the XML4C system
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch (const XMLException& toCatch) {
-    cerr << "Error during initialization! :\n"
-	 << StrX(toCatch.getMessage()) << endl;
-    return;
-  }
-#endif
-  
   // The format of a package path element is either URL,URL,...
   // Where URL is a filename or a url to an XML file that
   // describes the components in the package.
@@ -268,7 +98,6 @@ void PackageDB::loadPackage(const clString& packPath)
     // Load the package
     postMessage(clString("Loading package '")+packageElt+"'", false);
 
-#if NEW_MODULE_MAKER    
     // The GUI path is hard-wired to be "PACKAGENAME/GUI""
     TCL::execute(clString("lappend auto_path ")+packageElt+"/GUI");
 
@@ -280,93 +109,41 @@ void PackageDB::loadPackage(const clString& packPath)
     for (char_iter i=files->begin();
 	 i!=files->end();
 	 i++) {
-#endif
-
-#if !NEW_MODULE_MAKER
-    // Instantiate the DOM parser.
-    DOMParser parser;
-    parser.setDoValidation(false);
+      if (node) DestroyComponentNode(node);
+      node = CreateComponentNode(3);
+      ReadComponentNodeFromFile(node,(packageElt+"/XML/"+(*i).second)());
       
-    PackageDBHandler handler;
-    parser.setErrorHandler(&handler);
-    
-    //
-    //  Get the starting time and kick off the parse of the indicated
-    //  file. Catch any exceptions that might propogate out of it.
-    //
-    try {
-      parser.parse(packageElt());
-    }  catch (const XMLException& toCatch) {
-      postMessage(clString("Error during parsing: '")+
-		  packageElt+"'\nException message is:  "+
-		  xmlto_string(toCatch.getMessage()));
-      handler.foundError=true;
-      continue;
-    }
-    
-    if(handler.foundError){
-      TCL::execute("tk_dialog .errorPopup"
-		   " {Parse Error}"
-		   " {Error parsing package file,"
-		   " see message window for more information} error 0 Ok");
-      continue;
-    }
-
-    //
-    //  Extract the components from the DOM tree
-    //
-    DOM_Document doc = parser.getDocument();
-    DOM_NodeList list = doc.getElementsByTagName("package");
-    int nlist = list.getLength();
-    for(int i=0;i<nlist;i++){
-      DOM_Node n = list.item(i);
-      processPackage(this, n, packageElt);
-    }
-
-    if(handler.foundError){
-      TCL::execute("tk_dialog .errorPopup"
-		   " {Processing Error}"
-		   " {Error processing package file,"
-		   " see message window for more information} error 0 Ok");
-    }
-#else
-        if (node) DestroyComponentNode(node);
-	node = CreateComponentNode(3);
-	ReadComponentNodeFromFile(node,(packageElt+"/XML/"+(*i).second)());
-
-	// find the .so for this component
-	LIBRARY_HANDLE so;
-	ModuleMaker makeaddr = 0;
-	clString libname(clString("lib")+basename(packageElt)+"_Modules_"+
-			 node->category+".so");
+      // find the .so for this component
+      LIBRARY_HANDLE so;
+      ModuleMaker makeaddr = 0;
+      clString libname(clString("lib")+basename(packageElt)+"_Modules_"+
+		       node->category+".so");
+      so = GetLibraryHandle(libname());
+      if (!so) {
+	clString firsterror(SOError());
+	libname = clString("lib")+basename(packageElt)+".so";
 	so = GetLibraryHandle(libname());
-	if (!so) {
-	  clString firsterror(SOError());
-	  libname = clString("lib")+basename(packageElt)+".so";
-	  so = GetLibraryHandle(libname());
-	  if (!so)
-	    postMessage("Couldn't load all of package \\\""+
-			basename(packageElt)+"\\\"\n  "+
-			firsterror()+"\n  "+SOError());
-	}
-
-	if (so) {
-	  clString make(clString("make_")+node->name);
-	  makeaddr = (ModuleMaker)GetHandleSymbolAddress(so,make());
-	  if (!makeaddr)
-	    postMessage(clString("Couldn't find component \\\"")+
-			node->name+"\\\"\n  "+
-			SOError());
-	}
-	    
-	if (makeaddr)
-	  registerModule(basename(packageElt()),node->category,
-			 node->name,makeaddr,"not currently used");
+	if (!so)
+	  postMessage("PackageDB: Couldn't load all of package \\\""+
+		      basename(packageElt)+"\\\"\n  "+
+		      firsterror()+"\n  "+SOError());
       }
-#endif
-
+      
+      if (so) {
+	clString make(clString("make_")+node->name);
+	makeaddr = (ModuleMaker)GetHandleSymbolAddress(so,make());
+	if (!makeaddr)
+	  postMessage(clString("PackageDB: Couldn't find component \\\"")+
+		      node->name+"\\\"\n  "+
+		      SOError());
+      }
+      
+      if (makeaddr)
+	registerModule(basename(packageElt()),node->category,
+		       node->name,makeaddr,"not currently used");
+    }
   }
-    
+  
   TCL::execute("createCategoryMenu");
 }
   
@@ -572,6 +349,12 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.23  2000/10/24 05:57:41  moulding
+// new module maker Phase 2: new module maker goes online
+//
+// These changes clean out the last remnants of the old module maker and
+// bring the new module maker online.
+//
 // Revision 1.22  2000/10/22 21:27:09  moulding
 // cleaned up code associated with the new module maker
 //
