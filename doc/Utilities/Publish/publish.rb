@@ -28,11 +28,42 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+
 #
 # Update, build, and deliver scirun docs.
 #
 
 require 'net/smtp'
+require 'getoptlong'
+
+class CmdLine
+  attr_reader :checkSyntax, :confFile
+  
+  class UsageError < RuntimeError
+    def initialize(msg)
+      msg = msg + "\nUsage: #{File.basename($0)} [-c] [config-file]"
+      super(msg)
+    end
+  end
+
+  def initialize
+    @confFile = "publish.conf"
+    @checkSyntax = false
+    checkSyntaxOpt = "--check-syntax"
+    opts = GetoptLong.new ([ checkSyntaxOpt, "-c", GetoptLong::NO_ARGUMENT ])
+    opts.quiet = true;
+    opts.each do |opt, arg|
+      case opt
+      when checkSyntaxOpt
+	@checkSyntax = true
+      else
+	raise(UsageError, "Unrecognized option")
+      end
+    end
+    raise(UsageError, "Wrong number of arguments") if ARGV.length > 1
+    @confFile = ARGV[0] if ARGV.length == 1
+  end
+end
 
 class Log
   def initialize(obj=nil)
@@ -137,6 +168,12 @@ class ConfHash < Hash
   def errorIfNotArray(key)
     confError("Not an array \"#{key}\"") if not array?(key)
   end
+  def errorIfNotEnum(key, enum)
+    enum.each do |v|
+      return if v == self[key]
+    end
+    confError("\"#{self[key]}\" is an invalid enumeration value")
+  end
 end
 
 class Dest < ConfHash
@@ -172,6 +209,11 @@ end
 
 class Configuration < ConfHash
   attr_reader :groupDirs
+
+  NO_UPDATE = 0
+  LOCAL_UPDATE = 1
+  REMOTE_UPDATE = 2
+  UPDATE_ENUM = [NO_UPDATE, LOCAL_UPDATE, REMOTE_UPDATE]
 
   LogFile = "logFile"
   Group = "group"
@@ -222,7 +264,7 @@ class Configuration < ConfHash
     self[Build] = true if missing?(Build)
     self[ToolsPath] = "" if missing?(ToolsPath)
     self[Make] = "/usr/bin/gnumake" if missing?(Make)
-    self[Update] = true if missing?(Update)
+    self[Update] = REMOTE_UPDATE if missing?(Update)
     self[LogFile] = $stderr if missing?(LogFile)
     self[Clean] = false if missing?(Clean)
     self[DB_DTD] = "/usr/local/share/sgml/dtd/docbook/4.1/docbook.dtd" if missing?(DB_DTD)
@@ -235,7 +277,7 @@ class Configuration < ConfHash
       @groupDirs = @groupsDB[self[Group]]
     end
 
-    if self[Deliver] == true
+    if self[Deliver] == true || self[Update] == REMOTE_UPDATE
       self[Dests].each do |d|
 	if d.remote
 	  ENV["CVS_RSH"] = "ssh"
@@ -299,7 +341,7 @@ class Configuration < ConfHash
     errorIfNotString(Catalog)
     errorIfNotString(Make)
     errorIfEmpty(Make)
-    errorIfNotBoolean(Update)
+    errorIfNotEnum(Update, UPDATE_ENUM)
     errorIfNotBoolean(Clean)
     errorIfNotString(DB_DTD)
     if self[SendMailOnError] == true
@@ -329,21 +371,8 @@ end
 
 class Docs
 
-  def initialize()
-    file = nil
-    case ARGV.length
-    when 0
-      file = "publish.conf"
-    when 1
-      file = ARGV[0]
-    else
-      raise("Usage: #{File.basename($0)} [config-file]")
-    end
-    begin
-      @conf = Configuration.new(file)
-    rescue => oops
-      raise("Error reading configuration file: #{$!}\n")
-    end
+  def initialize(conf)
+    @conf = conf
     @treeRoot = @conf[Configuration::BuildDir] + '/' + @conf[Configuration::Tree]
     @redirect = "2>&1"
   end
@@ -401,7 +430,7 @@ class Docs
 	clean("#{@treeRoot}/doc/")
       end
     end
-    if @conf[Configuration::Update] == true
+    if @conf[Configuration::Update] != Configuration::NO_UPDATE
       if @conf[Configuration::PwdOnly] == true
 	updateOne(Dir.pwd())
       else
@@ -552,12 +581,33 @@ INSTALL_SCRIPT
 end
 
 def main
+  
   begin
-    docs = Docs.new
-    docs.publish
+    cmdLine = CmdLine.new
   rescue => oops
     $stderr.print(oops.message, "\n")
+    return 1
   end
+
+  begin
+    @conf = Configuration.new(cmdLine.confFile)
+    $stdout.print("Syntax OK\n") if cmdLine.checkSyntax
+  rescue => oops
+    $stderr.print("Error reading configuration file: #{$!}\n")
+    return 2
+  end
+
+  if !cmdLine.checkSyntax
+    begin
+      docs = Docs.new(@conf)
+      docs.publish
+    rescue => oops
+      $stderr.print(oops.message, "\n")
+      return 3
+    end
+  end
+
+  return 0
 end
 
 main
