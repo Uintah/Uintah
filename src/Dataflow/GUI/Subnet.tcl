@@ -1062,6 +1062,16 @@ proc subDATADIRandDATASET { val } {
 	    set tmpval [string replace $tmpval $first $last "\$DATADIR"]
 	}
     }
+
+    set tmp [netedit getenv SCIRUN_DATAFILE]
+    if { [string length $tmp] } {
+	set first [string first $tmp $tmpval]
+	set last [expr $first+[string length $tmp]-1]
+	if { $first != -1 } {
+	    set tmpval [string replace $tmpval $first $last "\$DATAFILE"]
+	}
+    }
+
     set tmp [netedit getenv SCIRUN_DATASET]
     if { [string length $tmp] } {
 	set first [string first $tmp $tmpval]
