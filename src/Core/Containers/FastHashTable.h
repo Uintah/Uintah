@@ -97,8 +97,16 @@ public:
   // Returns 1, and places the data item in data if it is found.
   // If more than one of "key" exist, it is undefined which it
   // will return.
-  inline int lookup(const Key* key, Key*& data);
+  inline Key* lookup(const Key* key) const;
 
+  //////////
+  // Counts the number of matches for Key
+  inline int nmatches(const Key* key) const;
+
+  //////////
+  // Looks up key in the FastHashtable.
+  // Returns the data if it is found, 0 otherwise.
+  inline Key* nextMatch(const Key* key, const Key* from) const;
 
   //////////
   // Removes all items with key "key" from the FastHash table.
@@ -159,21 +167,39 @@ void FastHashTable<Key>::insert(Key* k)
 
 // Return an item from the FastHashTable
 template<class Key>
-inline int FastHashTable<Key>::lookup(const Key* k, Key*& d)
+inline Key* FastHashTable<Key>::lookup(const Key* key) const
 {
   if(table){
-    int h=k->hash%hash_size;
-    int count=0;
-    for(Key* p=table[h];p!=0;p=p->next){
-      count++;
-      if((*p) == (*k)){
-	d=p;
-	return 1;
-      }
-    }
+    int h=key->hash%hash_size;
+    for(Key* p=table[h];p!=0;p=p->next)
+      if(*p == *key)
+	return p;
   }
-  d=0;
   return 0;
+}
+
+template<class Key>
+inline Key* FastHashTable<Key>::nextMatch(const Key* key, const Key* from) const
+{
+  for(Key* p=from->next;p != 0; p=p->next)
+    if(*p == *key)
+      return p;
+  return 0;
+}
+
+// Return an item from the FastHashTable
+template<class Key>
+inline int FastHashTable<Key>::nmatches(const Key* k) const
+{
+  if(!table)
+    return 0;
+  int h=k->hash%hash_size;
+  int count=0;
+  for(Key* p=table[h];p!=0;p=p->next){
+    if((*p) == (*k))
+      count++;
+  }
+  return count;
 }
 
 // Remove an item from the FastHashTable
