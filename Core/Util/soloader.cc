@@ -66,7 +66,11 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 #ifdef _WIN32
   return LoadLibrary(libname);
 #elif defined(__APPLE__)
-  string name = string("lib/") + libname;
+  string name;
+  if ( libname[0] == '/' )
+    name = libname;
+  else
+    name = string("lib/") + libname;
   return dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 #else
   return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
