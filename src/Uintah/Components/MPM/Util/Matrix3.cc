@@ -27,7 +27,7 @@ using std::ostream;
 
 // Anything with absolute value < NEAR_ZERO may be considered
 // zero, assuming error is caused by round-off.
-#define NEAR_ZERO 1e-8
+#define NEAR_ZERO 1e-5
 
 void Matrix3::set(const int i, const int j, const double value)
 {
@@ -468,6 +468,12 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.9  2000/09/18 16:28:52  witzel
+//Increased NEAR_ZERO from 1e-8 to 1e-5 because some of the matrices
+//were unable to yield eigen-vectors due to precision errors.  There is
+//probably a better way of doing this (i.e. check precision relative
+//to the norm of the matrix or something), but for now we'll try this.
+//
 //Revision 1.8  2000/08/24 21:18:27  witzel
 //Added sub-matrix eigen value solving methods
 //
