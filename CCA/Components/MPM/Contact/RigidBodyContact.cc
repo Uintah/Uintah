@@ -59,7 +59,7 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 					 DataWarehouse*,
 					 DataWarehouse* new_dw)
 {
-  Vector zero(0.0,0.0,0.0);
+  //  Vector zero(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
   double centerOfMassMass;
 
