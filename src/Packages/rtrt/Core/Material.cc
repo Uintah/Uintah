@@ -25,96 +25,8 @@ Material::~Material()
 {
 }
 
-#if 0
-Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& normal) const
-{
-    if(scene->ambient_hack){
-#if 0
-	Color B(scene->get_cup() );
-	Color C(scene->get_cdown());
-#endif
-
-        float cosine = scene->get_groundplane().cos_angle( normal );
-        float sine = fsqrt ( 1.F - cosine*cosine );
-        //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
-        float w0, w1;
-	if(cosine > 0){
-             w0= sine/2.F;
-	     w1= (1.F -  sine/2.F);
-	} else {
-             w1= sine/2.F;
-	     w0= (1.F -  sine/2.F);
-	}
-/*
-        double cons =  scene->get_groundplane().scaled_distance( p );
-        cons += 0.5*(1+cosine);
-        if (cons > 1) cons = 1;
-*/
-#if 0
-        double cons = 1;
-        Color D = B*C;
-        Color E = B*(1.F-w) + C*(w);
-        return cons*E + (1-cons)*D;
-#else
-        return scene->get_cup()*w1 + scene->get_cdown()*w0;
-#endif
-    } else {
-	return scene->get_average_bg( ) ;
-    }
-#if 0
-    if(scene->ambient_hack){
-      
-      float cosine = scene->get_groundplane().cos_angle( normal );
-      if (cosine < 0)
-	cosine *= -1;
-      float angle = acos(cosine);
-      float t = angle/M_PI_2;
-      
-      return scene->get_cup()*(1.-t) + scene->get_cdown()*t;
-    } else {
-      return scene->get_average_bg( ) ;
-    }
-#endif
-} 
-#endif
-
-//  Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& normal) const
-//  {
-//      if(scene->ambient_hack){
-//  #if 0
-//  	Color B(scene->get_cup() );
-//  	Color C(scene->get_cdown());
-//  #endif
-
-//          float cosine = scene->get_groundplane().cos_angle( normal );
-//          float sine = fsqrt ( 1.F - cosine*cosine );
-//          //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
-//          float w0, w1;
-//  	if(cosine > 0){
-//               w0= sine/2.F;
-//  	     w1= (1.F -  sine/2.F);
-//  	} else {
-//               w1= sine/2.F;
-//  	     w0= (1.F -  sine/2.F);
-//  	}
-//  /*
-//          double cons =  scene->get_groundplane().scaled_distance( p );
-//          cons += 0.5*(1+cosine);
-//          if (cons > 1) cons = 1;
-//  */
-//  #if 0
-//          double cons = 1;
-//          Color D = B*C;
-//          Color E = B*(1.F-w) + C*(w);
-//          return cons*E + (1-cons)*D;
-//  #else
-//          return scene->get_cup()*w1 + scene->get_cdown()*w0;
-//  #endif
-//      } else {
-//  	return scene->get_average_bg( ) ;
-//      }
-//  } 
-
+// A bunch of ambient_hack code was here... check previous version if
+// you want it.
 
 Vector Material::reflection(const Vector& v, const Vector n) const {
      return v - n * (2*Dot(v, n));
@@ -132,7 +44,6 @@ double Material::phong_term( const Vector& E, const Vector& L, const Vector& n, 
 }
 
 void Material::phongshade(Color& result,
-			  const Color& amb,
 			  const Color& diffuse,
 			  const Color& specular,
 			  double spec_coeff,
@@ -161,11 +72,13 @@ void Material::phongshade(Color& result,
   int nlights=ngloblights+nloclights;
   cx->stats->ds[depth].nshadow+=nlights;
   for(int i=0;i<nlights;i++){
+
     Light* light;
     if (i<ngloblights)
       light=cx->scene->light(i);
     else 
       light=my_lights[i-ngloblights];
+
     Vector light_dir=light->get_pos()-hitpos;
     if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
       cx->stats->ds[depth].inshadow++;
@@ -173,6 +86,7 @@ void Material::phongshade(Color& result,
     }
     double dist=light_dir.normalize();
     Color shadowfactor(1,1,1);
+
     if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
       double cos_theta=Dot(light_dir, normal);
       if(cos_theta < 0){
@@ -181,6 +95,7 @@ void Material::phongshade(Color& result,
       }
       //difflight+=light->get_color()*(cos_theta*shadowfactor);
       difflight+=light->get_color()*cos_theta;
+
       if(spec_coeff > 0.0){
 	Vector H=light_dir-ray.direction();
 	H.normalize();
@@ -193,7 +108,9 @@ void Material::phongshade(Color& result,
     }
   }
     
-  Color surfcolor = amb+diffuse*difflight+specular*speclight;
+  const Color & amb = ambient_hack( cx->scene, normal );
+
+  Color surfcolor = diffuse*(amb+difflight) + (specular*speclight);
   if (depth < cx->scene->maxdepth && (refl>0 )){
     
     double thresh=cx->scene->base_threshold;
