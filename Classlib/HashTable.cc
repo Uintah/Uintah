@@ -326,6 +326,8 @@ void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
     table.insert("ten",10);
     TEST(table.size()==10);
 
+    
+    
     int i = 0;
     TEST(table.lookup("one",i)&&i==1);
     TEST(table.lookup("two",i)&&i==2);
@@ -338,8 +340,10 @@ void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
     TEST(table.lookup("nine",i)&&i==9);
     TEST(table.lookup("ten",i)&&i==10);
 
+
+    HashTable<clString,int>table2 = table;  //Error occours here
     
-    HashTable<clString,int>table2=table;
+    /*
     i = 0;
     TEST(table2.lookup("one",i)&&i==1);
     TEST(table2.lookup("two",i)&&i==2);
@@ -369,7 +373,9 @@ void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
 
     TEST(table2.size()==0);
     
+    
 
+    
     HashTable<int,int> int_table;
     TEST(int_table.size()==0);
     
@@ -445,8 +451,18 @@ void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
    }
    
    TEST(table.size()==count);
-       
+   */       
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

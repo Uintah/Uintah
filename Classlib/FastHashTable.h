@@ -16,7 +16,6 @@
 #define SCI_Classlib_FastHashTable_h 1
 
 #include <Classlib/Assert.h>
-#include <Tester/RigorousTest.h>
 
 #ifdef __GNUG__
 #pragma interface
@@ -38,10 +37,6 @@ public:
     // Inserts the key into the FastHash table
     inline void insert(Key* key);
 
-    // conditionaly inserts the key into the FastHash table
-    // returns a 0 if it was already inserted, 1 if otherwise
-    inline int cond_insert(Key* key); 
-
     // Looks up key in the FastHashtable.  Returns 0 if not found.
     // Returns 1, and places the data item in data if it is found.
     // If more than one of "key" exist, it is undefined which it
@@ -58,10 +53,9 @@ public:
     // Returns how many items are stored in the FastHash table
     int size() const;
 
-
-    //////////
     //Rigorous Tests
     static void test_rigorous(RigorousTest* __test);
+
 };
 
 // Use this class for walking through a FastHashtable
@@ -99,34 +93,6 @@ void FastHashTable<Key>::insert(Key* k)
     Key* bin=table[h];
     k->next=bin;
     table[h]=k;
-}
-
-
-// conditionaly Insert an item into a FastHashTable
-// 0 if it wasn't inserted, 1 if it was
-
-template<class Key>
-int FastHashTable<Key>::cond_insert(Key* k)
-{
-    nelems++;
-    if(3*nelems >= 2*hash_size){
-        /* Build a new table... */
-        rehash(2*hash_size+1);
-    }
-
-    int h=k->hash%hash_size;
-    if (table) {
-      for(Key* p=table[h];p!=0;p=p->next){
-        if ((*p) == (*k)) {
-	  --nelems; // take it out...
-          return 0;  // a match was found
-	}
-      }
-    }
-    Key* bin=table[h];
-    k->next=bin;
-    table[h]=k;
-    return 1;  // it was inserted...
 }
 
 // Return an item from the FastHashTable
@@ -180,3 +146,11 @@ inline int FastHashTable<Key>::remove(const Key* k)
 }
 
 #endif
+
+
+
+
+
+
+
+
