@@ -196,6 +196,7 @@ void JWLpp::scheduleCheckNeedAddMaterial(SchedulerP& sched,
     one_matl->addReference();
 
     t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl->getUnion(),gn);
+    t->computes(Ilb->NeedAddIceMaterialLabel);
 
     sched->addTask(t, level->eachPatch(), one_matl);
 
@@ -222,6 +223,8 @@ JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
     constCCVariable<double> press_CC;
     new_dw->get(press_CC,   Ilb->press_equil_CCLabel,0,  patch,gn, 0);
 
+    double need_add=0.;
+
     if(!d_active){
       bool add = false;
       for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
@@ -232,15 +235,16 @@ JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
       }
 
       if(add){
-        d_sharedState->setNeedAddMaterial(true);
+        need_add=1.;
       }
       else{
-        d_sharedState->setNeedAddMaterial(false);
+        need_add=0.;
       }
     }  //only add a new material once
     else{
-      d_sharedState->setNeedAddMaterial(false);
+      need_add=0.;
     }
+    new_dw->put(sum_vartype(need_add),     Ilb->NeedAddIceMaterialLabel);
   }
 }
 //______________________________________________________________________
