@@ -41,6 +41,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/NrrdData
 
 SRCS     += \
 	$(SRCDIR)/ChooseNrrd.cc\
+	$(SRCDIR)/NrrdGradient.cc\
 	$(SRCDIR)/NrrdInfo.cc\
 	$(SRCDIR)/NrrdSelectTime.cc\
 	$(SRCDIR)/NrrdSetProperty.cc\
@@ -48,7 +49,7 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers Core/Util \
 	Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/GeomInterface Core/Geometry \
+        Core/Datatypes Core/Geom Core/GeomInterface Core/Geometry \
         Core/TkExtensions Dataflow/Network Dataflow/Ports
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
