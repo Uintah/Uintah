@@ -217,6 +217,7 @@ public:
 private:
   void			compute_normals();
   void			compute_node_neighbors();  
+  void			compute_edges();
   void			compute_edge_neighbors(double err = 1.0e-8);
 
   bool inside3_p(int, const Point &p) const;
@@ -225,6 +226,7 @@ private:
   int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
 
   vector<Point>		points_;
+  vector<int>		edges_;
   vector<int>		faces_;
   vector<int>		edge_neighbors_;
   vector<Vector>	normals_;   //! normalized per node normal.
