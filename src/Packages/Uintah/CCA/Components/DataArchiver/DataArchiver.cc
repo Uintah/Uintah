@@ -660,10 +660,10 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	  saveIter++) {
 	 ConsecutiveRangeSet::iterator matlIter = (*saveIter).matls.begin();
 	 for ( ; matlIter != (*saveIter).matls.end(); matlIter++) {
-	    pair<const VarLabel*, int> labelMatl((*saveIter).label, *matlIter);
 	    Task* t = scinew Task("DataArchiver::output", patch, new_dw,
 				  new_dw, this, &DataArchiver::output,
-				  &baseDir, timestep, labelMatl);
+				  &baseDir, timestep, (*saveIter).label,
+				  *matlIter);
 	    t->requires(new_dw, (*saveIter).label, *matlIter, patch,
 			Ghost::None);
 	    sched->addTask(t);
@@ -785,7 +785,7 @@ void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
 	   matIt != saveItem.matls.end(); matIt++) {
          int matlIndex = *matIt;
 	 output(world, NULL, old_dw, new_dw, &d_checkpointsDir, timestep,
-		std::pair<const VarLabel*, int>(var, matlIndex));
+		var, matlIndex);
       }
    }
 }
@@ -795,10 +795,8 @@ void DataArchiver::output(const ProcessorGroup*,
 			  DataWarehouseP& /*old_dw*/,
 			  DataWarehouseP& new_dw,
 			  Dir* p_dir, int timestep,
-			  std::pair<const VarLabel*, int> labelMatl)
+			  const VarLabel* var, int matlIndex)
 {
-   const VarLabel* var = labelMatl.first;
-   int matlIndex = labelMatl.second;
    int patchID = (patch ? patch->getID() : -1);
    bool isReduction = var->typeDescription()->isReductionVariable();
 
