@@ -42,7 +42,7 @@ SRCS     += \
 	$(SRCDIR)/WhiteNoiseImage.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := SCIRun/Datatypes/Image Dataflow/Network Core/Datatypes \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/Datatypes Core/Persistent Core/Exceptions \
 	Core/TclInterface Core/Containers Core/Thread \
 	Core/Math Core/TkExtensions

@@ -26,7 +26,7 @@
 #include <iostream>
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 using std::cerr;
 

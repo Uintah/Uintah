@@ -44,8 +44,8 @@
 using std::cerr;
 
 namespace DaveW {
-using DaveW::Datatypes::ManhattanDist;
-using DaveW::Datatypes::ScalarTriSurface;
+using DaveW::ManhattanDist;
+using DaveW::ScalarTriSurface;
 
 using namespace SCIRun;
 

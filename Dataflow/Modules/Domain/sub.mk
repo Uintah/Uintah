@@ -9,7 +9,7 @@ SRCS     += \
         $(SRCDIR)/Register.cc\
 #	$(SRCDIR)/DomainManager.cc\
 
-PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Widgets \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Dataflow/Widgets \
 	Core/Persistent Core/Exceptions Core/Thread \
 	Core/Containers Core/TclInterface Core/Geom \
 	Core/Datatypes Core/Geometry Core/TkExtensions \

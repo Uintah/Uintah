@@ -103,7 +103,7 @@ VoidStar* SiReData::clone()
 
 #define SiReData_VERSION 1
 void SiReData::io(Piostream& stream) {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
 
     /* int version=*/stream.begin_class("SiReData", SiReData_VERSION);
     VoidStar::io(stream);
@@ -121,7 +121,7 @@ void Pio(Piostream& stream, SIRE_DIRINFO& d) {
 }
 
 void Pio(Piostream& stream, SIRE_FLAGS& f) {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, f.ReconType);
@@ -169,7 +169,7 @@ void Pio(Piostream& stream, SIRE_IMGINFO& i) {
 }
 
 void Pio(Piostream& stream, SIRE_FILTERINFO& f) {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, f.Type);
@@ -178,7 +178,7 @@ void Pio(Piostream& stream, SIRE_FILTERINFO& f) {
 }
 
 void Pio(Piostream& stream, SIRE_SIGNA_IMGINFO& s) {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, s.ImgAxis);
@@ -200,9 +200,9 @@ void Pio(Piostream& stream, SIRE_SIGNA_IMGINFO& s) {
     stream.end_cheap_delim();
 }
 
-void Pio(Piostream& stream, Packages/DaveW::Datatypes::SiReDataS& s)
+void Pio(Piostream& stream, DaveW::SiReDataS& s)
 {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
 
     stream.begin_cheap_delim();
     int i;

@@ -20,14 +20,14 @@ SRCS     += \
 	$(SRCDIR)/MeshBoundary.cc\
 	$(SRCDIR)/MeshFindSurfNodes.cc\
 	$(SRCDIR)/MeshInterpVals.cc\
-	$(SRCDIR)/MeshNodeCore/CCA/Component.cc\
+	$(SRCDIR)/MeshNodeComponent.cc\
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
 	$(SRCDIR)/MeshView.cc\
 	$(SRCDIR)/TransformMesh.cc
 #[INSERT NEW MODULE HERE]
 
-PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Widgets \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Dataflow/Widgets \
 	Core/Geom Core/Thread Core/Exceptions \
 	Core/Containers Core/Geometry Core/Datatypes \
 	Core/Persistent Core/TclInterface Core/Math

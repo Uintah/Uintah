@@ -16,7 +16,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Core/Datatypes Core/Containers \
-	Core/Thread Core/Geom Core/TclInterface
+	Dataflow/Ports Core/Thread Core/Geom Core/TclInterface
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

@@ -35,7 +35,7 @@ using std::cerr;
 
 namespace DaveW {
 using namespace SCIRun;
-using DaveW::Datatypes::VectorFieldMI;
+using DaveW::VectorFieldMI;
 
 class MagneticScalarField : public Module {
   VectorFieldHandle vfh;

@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using std::cerr;
 
 #define SWAP(a,b) {int dum=(a);(a)=(b);(b)=dum;}

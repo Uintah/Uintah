@@ -36,10 +36,10 @@ SegFld::SegFld()
 {
 }
 
-void SegFld::printCore/CCA/Components() {
+void SegFld::printComponents() {
     for (int i=0; i<comps.size(); i++) {
 	if (comps[i] != 0)
-	    cerr << "Core/CCA/Component "<<i<<": size="<<get_size(comps[i])<<" type="<<get_type(comps[i])<<"\n";
+	    cerr << "Component "<<i<<": size="<<get_size(comps[i])<<" type="<<get_type(comps[i])<<"\n";
     }
 }
 
@@ -213,7 +213,7 @@ ScalarFieldRG* SegFld::getBitFld() {
 //   }
 //}
 
-void SegFld::annexCore/CCA/Component(int old_comp, int new_comp) {
+void SegFld::annexComponent(int old_comp, int new_comp) {
 //    cerr << "setting component "<<old_comp<<" to new comp:"<<new_comp<<"\n";
     int i;
     tripleInt idx;
@@ -417,7 +417,7 @@ void SegFld::bldFromChar(ScalarFieldRGchar* ch) {
 	    comps.add(get_index(WorkingMatls[i]-'0', 
 				compMembers[FinalLabels[i]]->size()));
 
-    printCore/CCA/Components();
+    printComponents();
 }
 
 void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
@@ -494,11 +494,11 @@ void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
 	}
     }
     cerr << "\n";
-    printCore/CCA/Components();
+    printComponents();
     cerr << "DONE!\n";
 }
 
-void SegFld::killSmallCore/CCA/Components(int min) {
+void SegFld::killSmallComponents(int min) {
     int i;
     int ii,jj,kk;
     tripleInt idx;
@@ -593,12 +593,12 @@ void SegFld::killSmallCore/CCA/Components(int min) {
 		    (ii != max_comp)) {
 //		    cerr << "annexing comp: "<<ii<<" (was "<<get_size(comps[ii])<<")  ";
 		    comps[ii]=0;
-		    annexCore/CCA/Component(ii, max_comp);
+		    annexComponent(ii, max_comp);
 		}
 	    }
 	cerr << " -- annexed by "<<max_comp<<", newsize="<<min_sz+max_sz<<"\n";
 	comps[min_comp]=0;
-	annexCore/CCA/Component(min_comp, max_comp);
+	annexComponent(min_comp, max_comp);
 	comps[max_comp] = get_index(max_type, max_sz+min_sz);
     }
     compress();

@@ -26,7 +26,7 @@ using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 class RescaleSegFld : public Module {

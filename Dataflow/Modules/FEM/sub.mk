@@ -20,7 +20,7 @@ SRCS     += \
         $(SRCDIR)/MeshRefiner.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Core/Datatypes Core/Datatypes \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Datatypes \
 	Core/Persistent Core/Thread Core/Containers \
 	Core/Exceptions Core/TclInterface Core/Geometry
 LIBS := 

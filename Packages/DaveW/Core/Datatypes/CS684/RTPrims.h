@@ -1,5 +1,5 @@
-#ifndef SCI_Packages/DaveW_Datatypes_RTPrims_h
-#define SCI_Packages/DaveW_Datatypes_RTPrims_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_RTPrims_h
+#define SCI_Packages_DaveW_Datatypes_RTPrims_h 1
 
 #include <Packages/DaveW/Core/Datatypes/CS684/Pixel.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
@@ -327,7 +327,7 @@ int Snell(const RTRay& I, const Vector& N, RTRay& T);
 double Fres(const RTRay& I, Vector N, double nu_trans);
 RTRay Reflect(const RTRay& I, const Vector& N);
 
-} // End namespace DaveW
 void Pio(Piostream&, RTLight&);
+} // End namespace DaveW
 
 #endif

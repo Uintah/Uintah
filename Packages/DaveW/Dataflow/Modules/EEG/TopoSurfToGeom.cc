@@ -26,7 +26,7 @@
 using std::cerr;
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 class TopoSurfToGeom : public Module {

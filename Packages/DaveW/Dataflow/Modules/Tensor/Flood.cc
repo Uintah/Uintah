@@ -36,7 +36,7 @@ using std::cerr;
 #include <values.h>
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 #define CURVMIN 1.4

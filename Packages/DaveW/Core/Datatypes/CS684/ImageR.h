@@ -13,8 +13,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_ImageR_h
-#define SCI_Packages/DaveW_Datatypes_ImageR_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_ImageR_h
+#define SCI_Packages_DaveW_Datatypes_ImageR_h 1
 
 #include <Packages/DaveW/Core/Datatypes/CS684/Pixel.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>

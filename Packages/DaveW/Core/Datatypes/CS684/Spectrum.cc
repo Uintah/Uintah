@@ -17,6 +17,8 @@
 using std::cerr;
 
 namespace DaveW {
+using DaveW::Pio;
+using SCIRun::Pio;
 Spectrum::Spectrum()
 {
 }
@@ -167,30 +169,32 @@ Color XYZ_to_RGB(const Point& p) {
     c.b(NTSC_rgb[2][0]*p.x()+NTSC_rgb[2][1]*p.y()+NTSC_rgb[2][2]*p.z());
     return c;
 }
+} // End namespace DaveW
 
+namespace SCIRun {
+using namespace DaveW;
 void Pio(Piostream& stream, Spectrum& s)
 {
-using namespace SCIRun;
-
-    stream.begin_cheap_delim();
-    Pio(stream, s.amplitude);
-    Pio(stream, s.wavelength);
-    stream.end_cheap_delim();
+  stream.begin_cheap_delim();
+  Pio(stream, s.amplitude);
+  Pio(stream, s.wavelength);
+  stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, LiteSpectrum& s)
 {
 
-    stream.begin_cheap_delim();
-    Pio(stream, s.min);
-    Pio(stream, s.max);
-    Pio(stream, s.num);
-    Pio(stream, s.spacing);
-    if (stream.reading()) s.vals=new double[s.num];
-    for (int i=0; i<s.num; i++)
-	Pio(stream, s.vals[i]);
-    stream.end_cheap_delim();
+  stream.begin_cheap_delim();
+  Pio(stream, s.min);
+  Pio(stream, s.max);
+  Pio(stream, s.num);
+  Pio(stream, s.spacing);
+  if (stream.reading()) s.vals=new double[s.num];
+  for (int i=0; i<s.num; i++)
+    Pio(stream, s.vals[i]);
+  stream.end_cheap_delim();
 }
-} // End namespace DaveW
+
+} //End namespace SCIRun
 
 

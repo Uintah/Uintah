@@ -9,7 +9,7 @@
 
 namespace DaveW {
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 
 class TensorAnisotropy : public Module 
 { 

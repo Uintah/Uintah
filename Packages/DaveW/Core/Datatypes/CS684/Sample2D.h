@@ -10,8 +10,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_Sample2D_h
-#define SCI_Packages/DaveW_Datatypes_Sample2D_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_Sample2D_h
+#define SCI_Packages_DaveW_Datatypes_Sample2D_h 1
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>

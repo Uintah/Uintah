@@ -329,29 +329,31 @@ void ImageXYZ::io(Piostream& stream) {
 
     /* int version=*/stream.begin_class("ImageXYZ", ImageXYZ_VERSION);
     VoidStar::io(stream);
-    Pio(stream, xyz);
+    SCIRun::Pio(stream, xyz);
     stream.end_class();
 }
 
 #define ImageRM_VERSION 1
-void ImageRM::io(Piostream& stream) {
-    using DaveW::Datatypes::Pio;
+void ImageRM::io(SCIRun::Piostream& stream) {
+  using SCIRun::Pio;
+  using DaveW::Pio;
+  /* int version=*/stream.begin_class("ImageRM", ImageRM_VERSION);
+  VoidStar::io(stream);
+  Pio(stream, pix);
+  Pio(stream, lightSpec);
+  Pio(stream, lightName);
+  Pio(stream, matlSpec);
+  Pio(stream, matlName);
+  Pio(stream, kd);
+  Pio(stream, ks);
+  Pio(stream, ka);
+  Pio(stream, min);
+  Pio(stream, max);
+  Pio(stream, num);
+  Pio(stream, spacing);
+  stream.end_class();
+} 
 
-    /* int version=*/stream.begin_class("ImageRM", ImageRM_VERSION);
-    VoidStar::io(stream);
-    Pio(stream, pix);
-    Pio(stream, lightSpec);
-    Pio(stream, lightName);
-    Pio(stream, matlSpec);
-    Pio(stream, matlName);
-    Pio(stream, kd);
-    Pio(stream, ks);
-    Pio(stream, ka);
-    Pio(stream, min);
-    Pio(stream, max);
-    Pio(stream, num);
-    Pio(stream, spacing);
-    stream.end_class();
-} // End namespace DaveW
-}
+}// End namespace DaveW
+
 

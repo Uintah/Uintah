@@ -4,8 +4,8 @@
  *  Eric Lundberg 1998
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_TensorField_h
-#define SCI_Packages/DaveW_Datatypes_TensorField_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_TensorField_h
+#define SCI_Packages_DaveW_Datatypes_TensorField_h 1
 
 #include <Packages/DaveW/Core/Datatypes/General/TensorFieldBase.h>
 #include <Core/Containers/Array1.h>

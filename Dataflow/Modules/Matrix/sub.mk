@@ -25,7 +25,7 @@ SRCS     += \
 	$(SRCDIR)/cPhase.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Core/Datatypes Core/Persistent \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
 	Core/Exceptions Core/Thread Core/Containers \
 	Core/TclInterface Core/Geometry Core/Datatypes \
 	Core/Util Core/Geom Core/TkExtensions \

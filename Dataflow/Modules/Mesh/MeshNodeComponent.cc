@@ -1,5 +1,5 @@
 /*
- *  MeshNodeCore/CCA/Component.cc:  Unfinished modules
+ *  MeshNodeComponent.cc:  Unfinished modules
  *
  *  Written by:
  *   David Weinstein
@@ -19,36 +19,36 @@ using std::cerr;
 namespace SCIRun {
 
 
-class MeshNodeCore/CCA/Component : public Module {
+class MeshNodeComponent : public Module {
     MeshIPort* iport;
     ColumnMatrixOPort* oport;
     TCLstring compTCL;
 public:
-    MeshNodeCore/CCA/Component(const clString& id);
-    virtual ~MeshNodeCore/CCA/Component();
+    MeshNodeComponent(const clString& id);
+    virtual ~MeshNodeComponent();
     virtual void execute();
 };
 
-extern "C" Module* make_MeshNodeCore/CCA/Component(const clString& id)
+extern "C" Module* make_MeshNodeComponent(const clString& id)
 {
-    return scinew MeshNodeCore/CCA/Component(id);
+    return scinew MeshNodeComponent(id);
 }
 
-MeshNodeCore/CCA/Component::MeshNodeCore/CCA/Component(const clString& id)
-: Module("MeshNodeCore/CCA/Component", id, Filter), compTCL("compTCL", id, this)
+MeshNodeComponent::MeshNodeComponent(const clString& id)
+: Module("MeshNodeComponent", id, Filter), compTCL("compTCL", id, this)
 {
    // Create the input port
     iport=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(iport);
-    oport=scinew ColumnMatrixOPort(this, "Core/CCA/Component", ColumnMatrixIPort::Atomic);
+    oport=scinew ColumnMatrixOPort(this, "Component", ColumnMatrixIPort::Atomic);
     add_oport(oport);
 }
 
-MeshNodeCore/CCA/Component::~MeshNodeCore/CCA/Component()
+MeshNodeComponent::~MeshNodeComponent()
 {
 }
 
-void MeshNodeCore/CCA/Component::execute()
+void MeshNodeComponent::execute()
 {
     MeshHandle mesh;
     if (!iport->get(mesh))

@@ -11,8 +11,8 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_SegFld_h
-#define SCI_Packages/DaveW_Datatypes_SegFld_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_SegFld_h
+#define SCI_Packages_DaveW_Datatypes_SegFld_h 1
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
@@ -54,7 +54,7 @@ public:
     inline int get_index(int type, int size) {return ((type<<28)+size);}
 
     void audit();
-    void printCore/CCA/Components();
+    void printComponents();
     void compress();
 
     ScalarFieldRGchar* getTypeFld();
@@ -63,8 +63,8 @@ public:
     void bldFromCharOld(ScalarFieldRGchar*);
 //    void setCompsFromGrid();
 //    void setGridFromComps();
-    void annexCore/CCA/Component(int old_comp, int new_comp);
-    void killSmallCore/CCA/Components(int min);
+    void annexComponent(int old_comp, int new_comp);
+    void killSmallComponents(int min);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };

@@ -37,7 +37,7 @@
 namespace DaveW {
 
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 
 class ForwardMEG : public Module {
   VectorFieldIPort* electricFieldP;

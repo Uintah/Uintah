@@ -33,7 +33,7 @@ using std::cerr;
 #include <values.h>
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 MusilRNG *mr=0;

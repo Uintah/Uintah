@@ -119,9 +119,11 @@ void PackageDB::loadPackage(const clString& packPath)
       ModuleMaker makeaddr = 0;
       
       clString bname = basename(packageElt);
+      clString pname = basename(packageElt);
 
       if(bname == "src") {
 	bname = "";
+	pname = "SCIRun";
       }
 
       clString libname(clString("lib")+bname+"Dataflow_Modules_"+
@@ -129,11 +131,11 @@ void PackageDB::loadPackage(const clString& packPath)
       so = GetLibraryHandle(libname());
       if (!so) {
 	clString firsterror(SOError());
-	libname = clString("lib")+basename(packageElt)+".so";
+	libname = clString("lib")+pname+".so";
 	so = GetLibraryHandle(libname());
 	if (!so) {
 	  postMessage("PackageDB: Couldn't load all of package \\\""+
-		      basename(packageElt)+"\\\"\n  "+
+		      pname+"\\\"\n  "+
 		      firsterror()+"\n  "+SOError());
 	  TCL::eval("update idletasks",result);
 	}
@@ -154,7 +156,7 @@ void PackageDB::loadPackage(const clString& packPath)
 	IPortInfo* ipinfo;
 	OPortInfo* opinfo;
 	ModuleInfo* info = scinew ModuleInfo;
-	info->packageName = basename(packageElt());
+	info->packageName = pname;
 	info->categoryName = node->category;
 	info->moduleName = node->name;
 	info->maker = (ModuleMaker)makeaddr;
@@ -230,9 +232,9 @@ void PackageDB::registerModule(ModuleInfo* info) {
 void PackageDB::createAlias(const clString& fromPackageName,
 			    const clString& fromCategoryName,
 			    const clString& fromModuleName,
-			    const clString& toPackageName,
-			    const clString& toCategoryName,
-			    const clString& toModuleName)
+			    const clString&,// toPackageName,
+			    const clString&,// toCategoryName,
+			    const clString&)// toModuleName)
 {
   Packages* db=(Packages*)d_db;
   

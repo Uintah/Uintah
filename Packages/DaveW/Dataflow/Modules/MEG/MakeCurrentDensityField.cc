@@ -26,7 +26,7 @@
 
 namespace DaveW {
 using namespace SCIRun;
-using DaveW::Datatypes::VectorFieldMI;
+using DaveW::VectorFieldMI;
 
 class MakeCurrentDensityField : public Module {
   TCLint interpolate;

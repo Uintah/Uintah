@@ -23,7 +23,7 @@ SRCS     += \
 	$(SRCDIR)/TransformSurface.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Widgets \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Dataflow/Widgets \
 	Core/Persistent Core/Exceptions Core/Thread \
 	Core/Containers Core/TclInterface Core/Geometry \
 	Core/Datatypes Core/Geom

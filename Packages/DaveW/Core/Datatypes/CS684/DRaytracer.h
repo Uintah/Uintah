@@ -10,8 +10,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_DRaytracer_h
-#define SCI_Packages/DaveW_Datatypes_DRaytracer_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_DRaytracer_h
+#define SCI_Packages_DaveW_Datatypes_DRaytracer_h 1
 
 #include <Packages/DaveW/Core/Datatypes/CS684/ImageR.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
@@ -75,7 +75,8 @@ public:
     virtual VoidStar* clone();
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-} // End namespace DaveW
 };
+
+} // End namespace DaveW
 
 #endif

@@ -17,6 +17,7 @@ SRCS     += $(SRCDIR)/AttribPort.cc               \
 	    $(SRCDIR)/GLTexture3DPort.cc          \
             $(SRCDIR)/HexMeshPort.cc              \
             $(SRCDIR)/IntervalPort.cc             \
+	    $(SRCDIR)/ImagePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
             $(SRCDIR)/MeshPort.cc                 \
             $(SRCDIR)/PathPort.cc                 \
