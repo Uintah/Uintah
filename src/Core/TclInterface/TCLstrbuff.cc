@@ -71,7 +71,9 @@ TCLstrbuff& TCLstrbuff::flush(){
   // reinitializing the stream
   ostringstream::clear();
   ostringstream::seekp(0);
+#ifdef __sgi
   ostringstream::str("");
+#endif
   return *this;
 }
 
