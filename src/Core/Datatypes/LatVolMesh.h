@@ -338,7 +338,7 @@ public:
   bool locate(cell_index &, const Point &) const;
 
   void get_point(Point &p, node_index i) const
-  { return get_center(p, i); }
+  { get_center(p, i); }
     
 
   virtual void io(Piostream&);
