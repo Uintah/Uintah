@@ -177,10 +177,12 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
 
-#if 0 
+#ifdef HAVE_PETSC
   int numlcolumns = numlrows;
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes; 
+#endif
+#if 0 
   cerr << "me = " << me << endl;
   cerr << "numlrows = " << numlrows << endl;
   cerr << "numlcolumns = " << numlcolumns << endl;
