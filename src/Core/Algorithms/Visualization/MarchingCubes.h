@@ -145,7 +145,7 @@ MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
 		      false ); // for now build_trisurf is off for parallel mc
     GeomGroup *group = new GeomGroup;
     for (int i=0; i<np_; i++) {
-      Geom *obj = tess_[i]->get_geom();
+      GeomObj *obj = tess_[i]->get_geom();
       if ( obj ) 
 	group->add( obj );
     }
@@ -153,7 +153,7 @@ MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
       geom_ = group;
     else {
       delete group;
-      geom = 0;
+      geom_ = 0;
     }
   }
 }
