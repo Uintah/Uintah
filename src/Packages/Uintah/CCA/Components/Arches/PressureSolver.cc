@@ -623,6 +623,8 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 
     int mmwallid = d_boundaryCondition->getMMWallId();
 
+    pPlusHydro.initialize(0.0);
+
     fort_add_hydrostatic_term_topressure(pPlusHydro, prel, denMicro,
 					 gx, gy, gz, cellinfo->xx,
 					 cellinfo->yy, cellinfo->zz,
