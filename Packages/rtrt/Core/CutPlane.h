@@ -17,6 +17,8 @@ class CutPlane : public Object {
     double d;
     PlaneDpy* dpy;
   BBox child_bbox;
+  bool active;
+  bool use_material;
 public:
     CutPlane(Object* child, const Point& cen, const Vector& n);
     CutPlane(Object* child, PlaneDpy* dpy);
