@@ -36,8 +36,6 @@ LOG
 #include <Core/Geometry/BBox.h>
 #include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -169,7 +167,7 @@ void TensorFieldExtractor::execute()
 		  LatVolField<Matrix3> *tfd =
 	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
 	  // set the generation and timestep in the field
-	  build_field2( archive, level, low, var, mat, time, gridVar,
+	  build_field( archive, level, low, var, mat, time, gridVar,
 			tfd, need_byte_swap);
 	  // send the field out to the port
 	  tfout->send(tfd);
@@ -190,7 +188,7 @@ void TensorFieldExtractor::execute()
 	  LatVolField<Matrix3> *tfd =
 	    scinew LatVolField<Matrix3>( mesh_handle_, Field::CELL );
 	  // set the generation and timestep in the field
-	  build_field2( archive, level, low, var, mat, time, gridVar,
+	  build_field( archive, level, low, var, mat, time, gridVar,
 			tfd, need_byte_swap);
 	  // send the field out to the port
 	  tfout->send(tfd);

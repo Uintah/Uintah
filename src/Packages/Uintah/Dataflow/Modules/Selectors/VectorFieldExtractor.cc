@@ -36,8 +36,6 @@ LOG
 #include <Core/Geometry/BBox.h>
 #include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -173,9 +171,6 @@ void VectorFieldExtractor::execute()
       case TypeDescription::Vector:
 	{	
 	  NCVariable<Vector> gridVar;
-//  	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-//  	  LevelField<Vector> *vfd =
-//  	    scinew LevelField<Vector>( mesh, Field::NODE );
 	  LatVolField<Vector> *vfd =
 	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
 	  // set the generation and timestep in the field
@@ -183,10 +178,9 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
 	  vfd->set_property("delta_t",dt, true);
-//  	  build_field( archive, level, var, mat, time, gridVar, vfd);
-	  build_field2( archive, level, low, var, mat, time, gridVar,
+	  build_field( archive, level, low, var, mat, time, gridVar,
 			vfd, need_byte_swap);
-  // send the field out to the port
+	  // send the field out to the port
 	  vfout->send(vfd);
 	  return;
 	}
@@ -201,9 +195,6 @@ void VectorFieldExtractor::execute()
       case TypeDescription::Vector:
 	{	
 	  CCVariable<Vector> gridVar;
-//  	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-//  	  LevelField<Vector> *vfd =
-//  	    scinew LevelField<Vector>( mesh, Field::CELL );
 	  LatVolField<Vector> *vfd =
 	    scinew LatVolField<Vector>( mesh_handle_, Field::CELL );
 	  // set the generation and timestep in the field
@@ -211,8 +202,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
 	  vfd->set_property("delta_t",dt, true);
-//  	  build_field(archive, level, var, mat, time, gridVar, vfd);
-	  build_field2( archive, level, low, var, mat, time, gridVar,
+	  build_field( archive, level, low, var, mat, time, gridVar,
 			vfd, need_byte_swap);
 	  // send the field out to the port
 	  vfout->send(vfd);

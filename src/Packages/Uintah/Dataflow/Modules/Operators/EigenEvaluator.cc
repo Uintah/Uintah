@@ -2,8 +2,6 @@
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
