@@ -25,6 +25,9 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	set name ShowLeads
 	set_defaults
     }
+    
+    protected range_selected false
+
     method set_defaults {} {
 	#current color
 	global $this-r
@@ -34,7 +37,8 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	#position of range lines
 	global $this-range1
 	global $this-range2
-	global $this-range-height
+	global $this-range-top
+	global $this-range-bot
 
 	#stored vals
 	global $this-xvals
@@ -55,7 +59,8 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	set $this-b 100
 	set $this-range1 0
 	set $this-range2 0
-	set $this-range-height 10
+	set $this-range-top 10
+	set $this-range-bot -1
 	set $this-xvals {}
 	set $this-yvals {}
 	set $this-vscale 0.125
@@ -67,6 +72,7 @@ itcl_class BioPSE_Visualization_ShowLeads {
 
     }
     
+
     method scale_graph {val} {
 	global $this-vscale
 	global $this-min
@@ -76,12 +82,11 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	set min [set $this-min]
 	set max [set $this-max]
 	if {$min >= $max} {
-	    set min [expr $max - 1.0]
+	    set $this-min [expr $max - 1.0]
 	}
 
-	set min [expr [set $this-vscale] * $min]
-	set max [expr [set $this-vscale] * $max]
-	$w.graph axis configure y -min $min -max $max
+	clear_graph
+	draw_leads
     }
     
     method min_changed {} {
@@ -127,7 +132,10 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	scale $w.np.max -label "to:" \
 		-orient horizontal -variable $this-max \
 		-command "$this scale_graph"
-	
+
+	$w.np.min configure  -from 0 -to [expr [set $this-max] - 1]
+	$w.np.max configure -from  [expr [set $this-min] + 1] \
+	    -to [expr [set $this-max] - 1]
 	
 	bind $w.np.min <ButtonRelease-1> "$this min_changed"
 	bind $w.np.max <ButtonRelease-1> "$this max_changed"
@@ -136,7 +144,7 @@ itcl_class BioPSE_Visualization_ShowLeads {
 
 	expscale $w.slide -label "Vertical Scale" \
 		-orient horizontal -variable $this-vscale	
-	bind $w.slide.scale <ButtonRelease-1> "$this redraw_leads"
+	bind $w.slide.scale <ButtonRelease-1> "$this draw_leads"
 
 	blt::graph $w.graph -title "Leads" -height 450 \
 		-plotbackground black
@@ -146,19 +154,9 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	bind $w.graph <Button1-Motion> "$this move_range %x %y"
 	bind $w.graph <ButtonRelease-1> "$this deselect_range %x %y"
 
-	#puts [$w.graph axis names]
+	##puts [$w.graph axis names]
 	$w.graph axis configure y  -command "$this draw_yaxis"
 	$w.graph axis configure x  -command "$this draw_xaxis"
-
-	set r1 [set $this-range1]
-	set r2 [set $this-range2]
-	if {! [$w.graph element exists "range1"]} {
-	    $w.graph element create "range1" -linewidth 1 -color yellow\
-		    -data {$r1 -1 $r1 10} -pixels 3 -label ""
-	
-	    $w.graph element create "range2" -linewidth 1 -color yellow\
-		    -data {$r2 -1 $r2 10} -pixels 3 -label ""
-	}
 
 	draw_leads
 	pack $w.graph
@@ -172,10 +170,11 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	set t [expr ($arg1 * ($t1-$t0)) + $t0]
 	return [format "%.2f%s" $t $units]
     }
+
     method draw_yaxis {arg arg1} {
-	set l [expr $arg1 / [set $this-vscale]]
-	return [format "%.1f" $l]
+	return "$arg1"
     }
+
     method get_color {} {
 	global $this-r
 	global $this-g
@@ -200,139 +199,147 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	return [format "#%02x%02x%02x" $r $g $b]
     }
 
-    method redraw_leads {} {
-	global $this-xvals
-	global $this-yvals
-	global $this-vscale
+    method set_min_max {min max} {
 	set w .ui[modname]
-	
-	set ydat [set $this-yvals]
-	set leads [llength $ydat]
-	set xvals [lindex [set $this-xvals] 0]
 
-	for {set ind 0} {$ind < $leads} {incr ind} {
-	    set yvals [lindex $ydat $ind]
-	    # offest the values so that they fit in their own space in the graph
-	    set offset [expr [set $this-vscale] * $ind]
-	    set ovals {}
-	    set zlvals {}
-	    #puts [lindex $yvals 0]
-	    #return
-	    for {set i 0} { $i < [llength $yvals] } { incr i } {
-		lappend ovals [expr [lindex $yvals $i] + $offset] 
-		lappend zlvals $offset
-	    }
-
-	    # add the element to the graph
-	    set name [format "%s%d" "lead-" $ind]
-	    blt::vector xvec yvec zlvec
-	    set xvec $xvals
-	    set yvec $ovals
-	    set zlvec $zlvals
-	    $w.graph element configure $name -linewidth 1 -label ""\
-		    -xdata $xvec -ydata $yvec -symbol ""
-	    # add 0 line
-	    set zl [format "%s%s" $name "-zl"]
-	    $w.graph element configure $zl -linewidth .5 \
-		    -xdata $xvec -ydata $zlvals -symbol "" -label "" \
-		    -color #414141 -dashes { 10 2 1 2 }
-	    
-	    #add markers [lindex $yvals 0] 
-	    set mk [format "%s%s" $name "-mk"]
-	    set v 0.05
-	    set t [format "     %+.2f" [lindex $yvals 0]]
-	    $w.graph marker configure $mk -coords {$v $offset} \
-		    -text $t
+	if {[winfo exists $w.np.min]} {
+	    #configure the min and max sliders
+	    $w.np.min configure  -from 0 -to [expr $max - 1]
+	    $w.np.max configure -from  [expr $min + 1] -to [expr $max - 1]
 	}
-	#add the range bars
-	set $this-range-height [expr [set $this-vscale] * [expr $leads + 2]]
-	set top [set $this-range-height]
-	set bot [expr [set $this-vscale] * -1.0]
-	set r1 [set $this-range1]
-	set r2 [set $this-range2]
-	$w.graph element configure "range1" -data {$r1 $bot $r1 $top} 
-	$w.graph element configure "range2" -data {$r2 $bot $r2 $top} 
 
-	#configure the min and max sliders
-	$w.np.min configure  -to [expr [set $this-max] - 1]
-	$w.np.max configure -from  [expr [set $this-min] + 1] -to $leads
-	#force a redraw
-	$this scale_graph 1.
+	set $this-min $min
+	set $this-max $max
     }
 
     method draw_leads {} {
+	set w .ui[modname]
+	if {! [winfo exists $w]} {
+	    return;
+	}
+	
 	global $this-xvals
 	global $this-yvals
 	global $this-vscale
 	set w .ui[modname]
 	set ydat [set $this-yvals]
 	set leads [llength $ydat]
-	set xvals [lindex [set $this-xvals] 0]
+	if {$leads <= 0} { return }
 
-	for {set ind 0} {$ind < $leads} {incr ind} {
+
+	set xvals [lindex [set $this-xvals] 0]
+	set begin [expr int([set $this-min])]
+	set end [expr int([set $this-max])]
+	set absmin [lindex [lindex $ydat $begin] 0]
+	set absmax [lindex [lindex $ydat $begin] 0]
+	set offset_idx 0
+	for {set ind $begin} {$ind <= $end} {incr ind} {
+	    #puts $ind
 	    set yvals [lindex $ydat $ind]
-	    # offest the values so that they fit in their own space in the graph
-	    set offset [expr [set $this-vscale] * $ind]
+	    #puts $yvals
+	    # offest the values so that they fit in their own 
+	    # space in the graph
+	    
+	    set offset [expr [set $this-vscale] * $offset_idx]
+
 	    set ovals {}
 	    set zlvals {}
-	    #puts [lindex $yvals 0]
+	    ##puts [lindex $yvals 0]
 	    #return
 	    for {set i 0} { $i < [llength $yvals] } { incr i } {
-		lappend ovals [expr [lindex $yvals $i] + $offset] 
+		set val [expr [lindex $yvals $i] + $offset]
+		lappend ovals $val
 		lappend zlvals $offset
+		#puts $val
+		if {$val > $absmax} { set absmax $val } 
+		if {$val < $absmin} { set absmin $val } 
 	    }
 	    set col [get_color]
 	    # add the element to the graph
 	    set name [format "%s%d" "lead-" $ind]
-	    blt::vector xvec yvec zlvec
-	    set xvec $xvals
-	    set yvec $ovals
-	    set zlvec $zlvals
+	    blt::vector create xvec$ind 
+	    blt::vector create yvec$ind
+	    blt::vector create zlvec$ind
+
+	    xvec$ind set $xvals
+	    yvec$ind set $ovals
+	    zlvec$ind set $zlvals
 	    if {[$w.graph element exists $name]} {
-		$w.graph element delete $name
+		$w.graph element configure $name -linewidth 1 -label ""\
+		    -xdata xvec$ind -ydata yvec$ind -symbol ""
+	    } else {
+		$w.graph element create $name -linewidth 1 -label ""\
+		    -xdata xvec$ind -ydata yvec$ind -symbol "" -color $col
 	    }
-	    $w.graph element create $name -linewidth 1 -label ""\
-		    -xdata $xvec -ydata $yvec -symbol "" -color $col
 	    # add 0 line
 	    set zl [format "%s%s" $name "-zl"]
 	    if {[$w.graph element exists $zl]} {
-		$w.graph element delete $zl
-	    }
-	    $w.graph element create $zl -linewidth .5 \
-		    -xdata $xvec -ydata $zlvals -symbol "" -label "" \
+		$w.graph element configure $zl -linewidth .5 \
+		    -xdata xvec$ind -ydata zlvec$ind -symbol "" -label ""
+	    } else {
+		$w.graph element create $zl -linewidth .5 \
+		    -xdata xvec$ind -ydata zlvec$ind -symbol "" -label "" \
 		    -color #414141 -dashes { 10 2 1 2 }
-	    
+	    }
 	    #add markers [lindex $yvals 0] 
 	    set mk [format "%s%s" $name "-mk"]
 	    set v 0.05
-	    set t [format "     %+.2f" [lindex $yvals 0]]
-	    $w.graph marker create text -name $mk \
+	    set val [lindex $yvals 0]
+	    if {$val == ""} { set val "0.0" }
+	    set t [format "     %+.2f" $val]
+	    if {[$w.graph marker exists $mk]} {
+		$w.graph marker configure $mk -coords {$v $offset} -text $t
+	    } else {
+		$w.graph marker create text -name $mk \
 		    -coords {$v $offset} \
 		    -text $t -background "" -foreground $col
+	    }
+	    incr offset_idx
 	}
+
+	#set yscale to the appropriate extents
+	if {$absmax == ""} {
+	    set min -1
+	    set max 10
+	} else {
+	    set pad [expr ( $absmax - $absmin ) * 0.1] 
+	    set min [expr $absmin - $pad]
+	    set max [expr $absmax + $pad]
+	}
+	#puts "min $min max $max"
+	if {$max <= $min} {set max [expr $min + 1]}
+	$w.graph axis configure y -min $min -max $max
+
 	#add the range bars
-	set $this-range-height [expr [set $this-vscale] * [expr $leads + 2]]
-	set top [set $this-range-height]
-	set bot [expr [set $this-vscale] * -1.0]
+	set $this-range-top $max
+	set $this-range-bot $min
+	set top [set $this-range-top]
+	set bot [set $this-range-bot]
 	set r1 [set $this-range1]
 	set r2 [set $this-range2]
 
-	$w.graph element configure "range1" -data {$r1 $bot $r1 $top} 
-	$w.graph element configure "range2" -data {$r2 $bot $r2 $top} 
-
-	#configure the min and max sliders
-	$w.np.min configure  -to [expr [set $this-max] - 1]
-	$w.np.max configure -from  [expr [set $this-min] + 1] -to $leads
+	if {[$w.graph element exists "range1"]} {
+	    $w.graph element configure "range1" -data {$r1 $bot $r1 $top} 
+	    $w.graph element configure "range2" -data {$r1 $bot $r1 $top} 
+	} else {
+	    $w.graph element create "range1" -data {$r1 $bot $r1 $top} \
+		-color yellow -pixels 3 -label ""
+	    $w.graph element create "range2" -data {$r2 $bot $r2 $top} \
+		-color yellow -pixels 3 -label ""
+	}
     }
 
     method add_lead {ind xvals yvals} {
 	global $this-xvals
 	global $this-yvals
 	set w .ui[modname]
-	
+
 	# cache off vals
 	if {[llength [set $this-xvals]] == 0} {lappend $this-xvals $xvals}
 	lappend $this-yvals $yvals
+
+	#puts [set $this-xvals]
+	#puts [set $this-yvals]
 
     }
 
@@ -344,26 +351,75 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	global $this-yvals
 	set w .ui[modname]
 	set yvals [set $this-yvals]
-	for {set i 0} { $i < [llength $yvals] } { incr i } {
+
+	set begin [expr int([set $this-min])]
+	set end [expr int([set $this-max])]
+	for {set i $begin} {$i <= $end} {incr i} {
 	    set curyvals [lindex $yvals $i]
 	    set marker [format "lead-%d-mk" $i]
 	    set t [format "     %+.2f" [lindex $curyvals $ind]]
 	    $w.graph marker configure $marker -text $t
 	}
     }
-    
-    protected range_selected false
 
+    method clear_graph {} {
+
+	set w .ui[modname]
+	set yvals [set $this-yvals]
+	set leads [llength $yvals]
+	
+	if {[winfo exists $w.graph]} {
+	    for {set i 0} {$i < $leads} {incr i} {
+		if {[winfo exists xvec$i]} {
+		    blt::vector destroy xvec$i
+		}
+		if {[winfo exists yvec$i]} {
+		    blt::vector destroy yvec$i
+		}
+		if {[winfo exists zlvec$i]} {
+		    blt::vector destroy zlvec$i
+		}
+		set name [format "%s%d" "lead-" $i]
+		
+		if {[$w.graph element exists $name]} {
+		    $w.graph element delete $name
+		}
+		set zl [format "%s%s" $name "-zl"]
+		
+		if {[$w.graph element exists $zl]} {
+		    $w.graph element delete $zl
+		}
+		
+		set mk [format "%s%s" $name "-mk"]
+		
+		if {[$w.graph marker exists $mk]} {
+		    $w.graph marker delete $mk
+		}
+	    }
+	}
+    }
+
+    method clear {} {
+	set_defaults
+	clear_graph
+    }
+       
+    
     method select_range {wx wy} {
 	global $this-range1
 	global $this-range2
 	set w .ui[modname]
-	
+	#puts select_range 
+	#puts $range_selected
 	#transform current index for range into window coordinates
 	set pos [$w.graph transform [set $this-range1] 0]
 	set r1posx [lindex $pos 0]
 	set pos [$w.graph transform [set $this-range2] 0]
 	set r2posx [lindex $pos 0]
+	
+	#puts "r1x is $r1posx"
+	#puts "r2x is $r2posx"
+	#puts "wx is $wx"
 
 	if {abs($wx - $r2posx) < 5} {
 	    $w.graph element configure "range2" -color red
@@ -372,6 +428,8 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	    if {abs($wx - $r1posx) < 5} {
 		$w.graph element configure "range1" -color red
 		set range_selected range1
+	    } else {
+		set range_selected false
 	    }
 	}
     }
@@ -380,6 +438,7 @@ itcl_class BioPSE_Visualization_ShowLeads {
     # that value.
     method get_xind {val} {
 	global $this-xvals
+	if { [set $this-xvals] == "" } { return 0 }
 	set xvals [lindex [set $this-xvals] 0]
 	set closest 0
 	set closestval [expr abs($val - [lindex $xvals 0])]
@@ -397,10 +456,12 @@ itcl_class BioPSE_Visualization_ShowLeads {
     }
     
     method move_range {wx wy} {
+	#puts move_range 
+	#puts $range_selected
 	if {$range_selected != "false"} {
-
-	    set top [set $this-range-height]
-	    set bot [expr [set $this-vscale] * -1.0]
+	    #puts "move_range doing work"
+	    set top [set $this-range-top]
+	    set bot [set $this-range-bot]
 	    set w .ui[modname]
 	    set newindex [lindex [$w.graph invtransform $wx $wy] 0]
 	    set n [get_xind $newindex]
@@ -411,26 +472,30 @@ itcl_class BioPSE_Visualization_ShowLeads {
     }
     
     method deselect_range {wx wy} {
+	#puts deselect_range
+	#puts $range_selected
 	if {$range_selected != "false"} {
+	    #puts "deselect_range doin work"
 	    set w .ui[modname]
-	    set top [set $this-range-height]
-	    set bot [expr [set $this-vscale] * -1.0]
+	    set top [set $this-range-top]
+	    set bot [set $this-range-bot]
 	    $w.graph element configure $range_selected -color yellow
 	    set newindex [lindex [$w.graph invtransform $wx $wy] 0]
 	    set n [get_xind $newindex]
 	    set x [lindex $n 1]
+	    #puts "setting new range index to $x"
 	    $w.graph element configure $range_selected -data {$x $bot $x $top}
 	    update_markers [lindex $n 0]
 
 	    if {$range_selected == "range1"} {
 		global $this-range1
-		set $this-range1 $newindex
+		set $this-range1 $x
 	    } else {
 		global $this-range2
-		set $this-range2 $newindex
+		set $this-range2 $x
 	    }
-	    set range_selected false
 	}
+	set range_selected false
     }
 
 }
