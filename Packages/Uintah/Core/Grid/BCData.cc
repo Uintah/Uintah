@@ -1,11 +1,21 @@
 #include <Packages/Uintah/Core/Grid/BCData.h>
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+#include <Core/Util/DebugStream.h>
 
-using namespace Uintah;
+
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <algorithm>
+#include <sgi_stl_warnings_on.h>
+
+using namespace Uintah;
+using namespace SCIRun;
 using std::cerr;
 using std::endl;
+
+// export SCI_DEBUG="BCDA_DBG:+"
+static DebugStream BCData_dbg("BCData_DBG",false);
 
 #define PRINT
 #undef PRINT
@@ -139,9 +149,9 @@ void BCData::print() const
 {
   bcDataType::const_iterator itr;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
-    cerr << "BC = " << itr->first << " actual name = " 
-	 << itr->second->getType() << " bctype = " 
-	 << typeid(*(itr->second)).name() << " " << itr->second << endl;
+    BCData_dbg << "BC = " << itr->first << " actual name = " 
+	       << itr->second->getType() << " bctype = " 
+	       << typeid(*(itr->second)).name() << " " << itr->second << endl;
   }
   
 }

@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
+#include <iostream>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -60,4 +61,22 @@ bool CircleBCData::inside(const Point &p) const
 void CircleBCData::print()
 {
   d_bc.print();
+}
+
+void CircleBCData::determineIteratorLimits(Patch::FaceType face, 
+					   const Patch* patch, 
+					   vector<Point>& test_pts)
+{
+#if 0
+  cout << "Circle determineIteratorLimits()" << endl;
+#endif
+  BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+}
+
+void CircleBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
+{
+#if 0
+  cout << "Circle determineSFLimits()" << endl;
+#endif
+  BCGeomBase::determineSFLimits(face,patch);
 }

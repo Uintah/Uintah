@@ -11,56 +11,69 @@
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-using namespace SCIRun;
 
-/**************************************
+  /*!
 
-CLASS
-   RectangleBCData
-   
-   
-GENERAL INFORMATION
-
-   RectangleBCData.h
-
-   John A. Schmidt
-   Department of Mechanical Engineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  \class RectangleBCData
   
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   RectangleBCData
-
-DESCRIPTION
-   Long description...
+  \ brief Defines a rectangular geometry for a boundary condition.
   
-WARNING
+  \author John A. Schmidt \n
+  Department of Mechanical Engineering \n
+  University of Utah \n
+  Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
+
+  */
   
-****************************************/
+  using namespace SCIRun;
 
-   class RectangleBCData : public BCGeomBase  {
-   public:
-     RectangleBCData();
-     RectangleBCData(BCData& bc);
-     RectangleBCData(const std::string& type);
-     RectangleBCData(ProblemSpecP& ps);
-     RectangleBCData(Point& low, Point& up);
-     virtual ~RectangleBCData();
-     RectangleBCData* clone();
-     void addBCData(BCData& bc);
-     void addBC(BoundCondBase* bc);
-     void getBCData(BCData& bc) const;
-     bool inside(const Point& p) const;
-     virtual void print();
+  class RectangleBCData : public BCGeomBase  {
+    
+  public:
+    /// Constructor
+    RectangleBCData();
 
-   private:
-     BCData d_bc;
-     Point d_min,d_max;
-   };
+    /// Constructor with boundary condition data.
+    RectangleBCData(BCData& bc);
 
+    /// Constructor used with a point defining the lower and upper corners 
+    /// of the rectangle.
+    RectangleBCData(Point& low, Point& up);
+
+    /// Destructor
+    virtual ~RectangleBCData();
+
+    /// Clone the boundary condition geometry -- allocates memory.
+    RectangleBCData* clone();
+
+    /// Add the boundary condition data
+    void addBCData(BCData& bc);
+
+    /// Add the old boundary condition data -- no longer used.
+    void addBC(BoundCondBase* bc);
+
+    /// Get the boundary condition data
+    void getBCData(BCData& bc) const;
+
+    /// Determines if a point is inside the rectangle.
+    bool inside(const Point& p) const;
+
+    /// Print out the boundary condition geometry type.
+    virtual void print();
+
+    /// Determine the cell and node centered iterators
+    virtual void determineIteratorLimits(Patch::FaceType face,
+					 const Patch* patch, 
+					 vector<Point>& test_pts);
+
+    /// Determine the face centered iterators
+    virtual void determineSFLimits(Patch::FaceType face, const Patch* patch);
+    
+  private:
+    BCData d_bc;
+    Point d_min,d_max;
+  };
+  
 } // End namespace Uintah
 
 #endif
