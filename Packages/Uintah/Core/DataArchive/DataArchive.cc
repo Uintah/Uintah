@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
@@ -543,8 +544,8 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 }
 
 void
-DataArchive::restartInitialize(int& timestep, const GridP& grid,
-			       DataWarehouse* dw, double* pTime, double* pDelt)
+DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw, 
+                               LoadBalancer* lb, double* pTime, double* pDelt)
 {
   unsigned int i = 0;  
   vector<int> indices;
@@ -612,28 +613,32 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
 	 patchIter != patches.end(); patchIter++)
       {
 	Patch* patch = *patchIter;
-	const MaterialHashMaps* matlMap = patchMap.findPatchData(patch);
-	if (matlMap != NULL) {
-	  const vector<VarHashMap>& matVec = matlMap->getVarHashMaps();
-	  for (int matl = -1; matl < (int)matVec.size()-1; matl++) {
-	    const VarHashMap& hashMap = matVec[matl+1];
-	    VarHashMapIterator varIter(const_cast<VarHashMap*>(&hashMap));
-	    for (varIter.first(); varIter.ok(); ++varIter) {
-	      // skip if the variable isn't in the top level variable list
-	      // (this is useful for manually editting the index.xml to
-	      // remove variables when combining patches)
-	      labelIter = varMap.find(varIter.get_key());
-	      if (labelIter != varMap.end()) {
-		VarLabel* label = labelIter->second;
-		if (label == 0) {
-		  throw UnknownVariable(varIter.get_key(), dw->getID(), patch, matl,
-					"on DataArchive::scheduleRestartInitialize");
-		}
-		else {
-		  initVariable(patch, dw, labelIter->second,
-			       matl, varIter.get_data());
-		}
-	      }
+        // Check the load balancer to see if this patch's data belongs on this proc.
+        // if patch is null, it is global data, and if lb is null, load the data anyway.
+        if (!patch || !lb || lb->getPatchwiseProcessorAssignment(patch) == d_processor) {
+          const MaterialHashMaps* matlMap = patchMap.findPatchData(patch);
+          if (matlMap != NULL) {
+            const vector<VarHashMap>& matVec = matlMap->getVarHashMaps();
+            for (int matl = -1; matl < (int)matVec.size()-1; matl++) {
+              const VarHashMap& hashMap = matVec[matl+1];
+              VarHashMapIterator varIter(const_cast<VarHashMap*>(&hashMap));
+              for (varIter.first(); varIter.ok(); ++varIter) {
+                // skip if the variable isn't in the top level variable list
+                // (this is useful for manually editting the index.xml to
+                // remove variables when combining patches)
+                labelIter = varMap.find(varIter.get_key());
+                if (labelIter != varMap.end()) {
+                  VarLabel* label = labelIter->second;
+                  if (label == 0) {
+                    throw UnknownVariable(varIter.get_key(), dw->getID(), patch, matl,
+                                          "on DataArchive::scheduleRestartInitialize");
+                  }
+                  else {
+                    initVariable(patch, dw, labelIter->second,
+                                 matl, varIter.get_data());
+                  }
+                }
+              }
 	    }
 	  }
 	}
@@ -880,12 +885,15 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
       map<string,string> attributes;
       n->getAttributes(attributes);
       string proc = attributes["proc"];
+      /* - Remove this check for restarts.  We need to accurately
+         determine which patch goes on which proc, and for the moment
+         we need to be able to parse all pxxxx.xml files.  --BJW
       if (proc != "") {
 	int procnum = atoi(proc.c_str());
 	if ((procnum % numProcessors) != processor)
 	  continue;
       }
-	 
+      */ 
       string datafile = attributes["href"];
       if(datafile == "")
 	throw InternalError("timestep href not found");
@@ -1033,8 +1041,8 @@ DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
       // have only one patch per processor, so this is a reasonable
       // first attempt.  Future attemps could perhaps be smarter.
       int proc_guess = patchid;
-      // Only look for it if we actually parse a new file
-      if (!d_xmlParsed[proc_guess]) {
+      // Only look for it if we actually parse a new file, and if the file exists
+      if (!d_xmlParsed[proc_guess] && proc_guess >= 0 && proc_guess < d_xmlUrls.size()) {
         //        cerr << "proc_guess =  "<<proc_guess<<"\n";
         parseProc(proc_guess);
         // Look for it again
