@@ -20,13 +20,13 @@
 #include <Geom/Group.h>
 #include <Geom/Material.h>
 #include <Geom/Line.h>
-#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/HexMeshPort.h>
 #include <Datatypes/ScalarFieldHUG.h>
 #include <Datatypes/HexMesh.h>
 #include <Malloc/Allocator.h>
 
 class HexMeshToGeom : public Module {
-    ScalarFieldIPort* iHUG;
+    HexMeshIPort* imesh;
     GeometryOPort* ogeom;
 
     void mesh_to_geom(const HexMeshHandle&, GeomGroup*);
@@ -49,8 +49,8 @@ HexMeshToGeom::HexMeshToGeom(const clString& id)
 : Module("HexMeshToGeom", id, Filter)
 {
     // Create the input port
-    iHUG=scinew ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
-    add_iport(iHUG);
+    imesh=scinew HexMeshIPort(this, "HexMesh", HexMeshIPort::Atomic);
+    add_iport(imesh);
     ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
@@ -77,11 +77,10 @@ inline int Hash(const unsigned long long& k, int hash_size)
 
 void HexMeshToGeom::execute()
 {
-    ScalarFieldHandle HUG;
-    if (!iHUG->get(HUG))
+    HexMeshHandle mesh;    
+    if (!imesh->get(mesh))
 	return;
 
-    HexMesh * mesh = ((ScalarFieldHUG *) HUG.get_rep())->mesh;    
     int index, t, p1, p2;
     unsigned long long l;    
     HexFace * f;
