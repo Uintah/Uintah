@@ -1,21 +1,10 @@
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/HitInfo.h>
-
 #include <iostream>
-
 #include <values.h>
 
 using namespace rtrt;
-using namespace std;
-
-SCIRun::Persistent* group_maker() {
-  return new Group();
-}
-
-// initialize the static member type_id
-SCIRun::PersistentTypeID Group::type_id("Group", "Object", group_maker);
-
 
 Group::Group()
     : Object(0)
@@ -27,7 +16,7 @@ Group::~Group()
 {
 }
 
-void Group::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
+void Group::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
   for(int i=0;i<objs.size();i++){
@@ -35,7 +24,7 @@ void Group::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
   }
 }
 
-void Group::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
+void Group::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
 			    DepthStats* st, PerProcessorContext* ppc)
 {
   for(int i=0;i<objs.size();i++){
@@ -45,7 +34,7 @@ void Group::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
   }
 }
 
-void Group::softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
+void Group::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
 				 double dist, Color& atten, DepthStats* st,
 				 PerProcessorContext* ppc)
 {
@@ -79,6 +68,16 @@ Vector Group::normal(const Point&, const HitInfo&)
 void Group::add(Object* obj)
 {
     objs.add(obj);
+}
+
+int Group::add2(Object* obj)
+{
+    return objs.add2(obj);
+}
+
+void Group::remove2(int idx)
+{
+    objs.remove(idx);
 }
 
 void Group::animate(double t, bool& changed)
@@ -132,38 +131,4 @@ void Group::transform(Transform& T)
     objs[i]->transform(T);
   }
 
-}
-
-const int GROUP_VERSION = 1;
-
-void 
-Group::io(SCIRun::Piostream &str)
-{
-  str.begin_class("Group", GROUP_VERSION);
-  Object::io(str);
-  SCIRun::Pio(str, was_processed);
-  SCIRun::Pio(str, bbox);
-  SCIRun::Pio(str, all_children_are_groups);
-  SCIRun::Pio(str, objs);
-  str.end_class();
-}
-
-namespace SCIRun {
-void Pio(SCIRun::Piostream& stream, rtrt::Group*& obj)
-{
-  SCIRun::Persistent* pobj=obj;
-  stream.io(pobj, rtrt::Group::type_id);
-  if(stream.reading()) {
-    obj=dynamic_cast<rtrt::Group*>(pobj);
-    ASSERT(obj != 0)
-  }
-}
-} // end namespace SCIRun
-
-bool Group::interior_value(double& ret_val, const Ray &ref, const double t)
-{
-  for(int i=0;i<objs.size();i++){
-    if (objs[i]->interior_value(ret_val, ref, t)) return true;
-  }
-  return false;
 }
