@@ -19,7 +19,7 @@
 -->
 
 
-<component name="AssignLeadField" category="LeadField">
+<component name="AssignLeadFieldSources" category="LeadField">
   <overview>
     <authors>
       <author>David Weinstein</author>
