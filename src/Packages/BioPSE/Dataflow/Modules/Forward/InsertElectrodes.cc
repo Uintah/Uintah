@@ -16,6 +16,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Plane.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>
 
@@ -84,7 +85,7 @@ InsertElectrodes::point_in_loop(const Point &pt,
   else if (sum < 0.2 || sum > 1.8) return false;
   else
   {
-    cerr << "Error -- point in loop was: "<<sum<<"\n";
+    error("Point in loop was: " + to_string(sum) + ".");
     return false;
   }
 }
@@ -100,7 +101,6 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
 					   double voltage,
 					   TetVolMesh* electrodeElements)
 {
-  //  cerr << "entering insertCountourIntoTetMesh\n";
   Plane electrode_plane;
   if (Cross(inner[1]-inner[0], inner[1]-inner[2]).length2()>1.e-5)
   {
@@ -112,7 +112,7 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
   }
   else
   {
-    cerr << "InsertElectrode ERROR - FIRST FOUR INNER NODES OF THE ELEC ARE COLINEAR!\n";
+    error("First four inner nodes of the elec are colinear.");
     return;
   }
 
@@ -191,7 +191,6 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
 
   // project electrode nodes to plane, split them, and set Dirichlet
   unsigned int i;
-  //  cerr << "Electrode nodes: \n";
   for (i=0; i<electrode_nodes.size(); i++)
   {
     Point pt;
@@ -200,7 +199,6 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
     Point proj_pt = electrode_plane.project(pt);
     tet_mesh->set_point(proj_pt, ni);
     electrode_node_split_idx[ni] = tet_mesh->add_point(proj_pt);
-    //    cerr << "  "<<i<<" index="<<(int)(ni) <<" (copy index="<<(int)(electrode_node_split_idx[ni])<<"), is_elec_nodes="<<is_electrode_node[electrode_nodes[i]]<<"\n";
     if (is_electrode_node[electrode_nodes[i]] == 2)
     {
       dirichlet.push_back(pair<int,double>(electrode_node_split_idx[ni], 
@@ -223,13 +221,11 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
     }
     if (have_any)
     {
-      //      cerr << "Touching element ("<<(int)(*ci)<<") ";
       Point centroid;
       tet_mesh->get_center(centroid, *ci);
       double centroid_dist = electrode_plane.eval_point(centroid);
       if (centroid_dist>0)
       {
-	//	cerr << "above plane";
 	if (electrodeElements)
 	{
 	  Point pts[4];
@@ -245,10 +241,8 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
 	    tet_nodes[i] = electrode_node_split_idx[tet_nodes[i]];
 	  }
 	}
-	//	cerr << " ("<<remap<<")";
 	tet_mesh->set_nodes(tet_nodes, *ci);
       }
-      //      cerr << "\n";
     }
     ++ci;
   }
@@ -285,12 +279,12 @@ InsertElectrodes::execute()
     return;
   if (!imeshH.get_rep())
   {
-    cerr << "InsertElectrodes: error - empty input mesh.\n";
+    error("Empty input mesh.");
     return;
   }
   if (!(dynamic_cast<TetVolField<int>*>(imeshH.get_rep())))
   {
-    cerr << "InsertElectrodes: error - input FEM wasn't a TetVolField<int>\n";
+    error("Input FEM wasn't a TetVolField<int>.");
     return;
   }
 
@@ -302,23 +296,13 @@ InsertElectrodes::execute()
   string units;
   if (imeshH->mesh()->get_property("units", units)) have_units=1;
 
-  for (unsigned int ii=0; ii<conds.size(); ii++)
-  {
-    //    cerr << "New conds ["<<ii<<"] = "<<(*newConds)[ii].first<<" , "<<(*newConds)[ii].second<<"\n";
-  }
-
   port_range_type range = get_iports("Electrodes");
   if (range.first != range.second)
   {
-    //    cerr << "Cloning data...\n";
     // get our own local copy of the Field and mesh
 
-    //    cerr << "Mesh pointer before = "<<imeshH->mesh().get_rep()<<"\n";
     imeshH.detach();
-    //    cerr << "Cloning mesh...\n";
     imeshH->mesh_detach();
-    //    cerr << "Done cloning!\n";
-    //    cerr << "Mesh pointer after = "<<imeshH->mesh().get_rep()<<"\n";
 
     TetVolField<int> *field = dynamic_cast<TetVolField<int>*>(imeshH.get_rep());
     TetVolMeshHandle mesh = field->get_typed_mesh();
@@ -337,7 +321,7 @@ InsertElectrodes::execute()
 	dynamic_cast<CurveField<double>*>(ielecH.get_rep());
       if (!elecFld)
       {
-	cerr << "InsertElectrodes: error - input electrode wasn't a CurveField<double>\n";
+	warning("Input electrode wasn't a CurveField<double>.");
 	++pi;
 	continue;
       }
@@ -387,7 +371,7 @@ InsertElectrodes::execute()
   }
   else
   {
-    cerr << "Error - unable to get electrode.\n";
+    error("Unable to get electrode.");
     omesh->send(imeshH);
   }
 }

@@ -34,7 +34,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 #include <math.h>
 
@@ -251,7 +250,7 @@ void FDMtoFEM::execute() {
 	++ci;
       }      
     }
-    cerr << "Conds->size() == "<<conds.size()<<"\n";
+    msgStream_ << "Conds->size() == "<<conds.size()<<"\n";
     tv->set_property("data_storage", string("table"), false);
     tv->set_property("name", string("conductivity"), false);
     tv->set_property("conductivity_table", conds, false);

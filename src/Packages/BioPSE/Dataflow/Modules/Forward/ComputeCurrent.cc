@@ -65,43 +65,43 @@ ComputeCurrent::execute()
   FieldHandle efieldH, sigmasH, trisurfH;
 
   if (!efield_port->get(efieldH) || !efieldH.get_rep()) {
-    cerr << "ComputeCurrent: error - empty input E Field.\n";
+    error("Empty input E Field.");
     return;
   }
   if (!sigmas_port->get(sigmasH) || !sigmasH.get_rep()) {
-    cerr << "ComputeCurrent: error - empty input Sigmas.\n";
+    error("Empty input Sigmas.");
     return;
   }
   if (!trisurf_port->get(trisurfH) || !trisurfH.get_rep()) {
-    cerr << "ComputeCurrent: error - empty input trisurf.\n";
+    error("Empty input trisurf.");
     return;
   }
   if (efieldH->mesh().get_rep() != sigmasH->mesh().get_rep()) {
-    cerr << "ComputeCurrent: error - EField and Sigma Field need to have the same mesh.\n";
+    error("EField and Sigma Field need to have the same mesh.");
     return;
   }
 
   TetVolField<Vector> *efield = 
     dynamic_cast<TetVolField<Vector>*>(efieldH.get_rep());
   if (!efield) {
-    cerr << "ComputeCurrent: error - EField isn't a TetVolField<Vector>.\n";
+    error("EField isn't a TetVolField<Vector>.");
     return;
   }
   TetVolField<int> *sigmas = 
     dynamic_cast<TetVolField<int>*>(sigmasH.get_rep());
   if (!sigmas) {
-    cerr << "ComputeCurrent: error - Sigmas isn't a TetVolField<int>.\n";
+    error("Sigmas isn't a TetVolField<int>.");
     return;
   }
   TriSurfMesh *tris = dynamic_cast<TriSurfMesh*>(trisurfH->mesh().get_rep());
   if (!tris) {
-    cerr << "ComputeCurrent: error - not a TriSurf.\n";
+    error("Not a TriSurf.");
     return;
   }
 
   vector<pair<string, Tensor> > conds;
   if (!sigmasH->get_property("conductivity_table", conds)) {
-    cerr << "ComputeCurrent: error - no conductivity_table found in Sigmas.\n";
+    error("No conductivity_table found in Sigmas.");
     return;
   }
   int have_units = 0;
@@ -133,7 +133,7 @@ ComputeCurrent::execute()
     normal.normalize();
     TetVolMesh::Cell::index_type tet;
     if (!efield->get_typed_mesh()->locate(tet, center)) {
-      cerr << "ComputeCurrent: error - trisurf centroid was not located in tetvolmesh.\n";
+      error("Trisurf centroid was not located in tetvolmesh.");
       return;
     }
     Vector e = efield->value(tet);
@@ -145,15 +145,13 @@ ComputeCurrent::execute()
 	     s.mat_[1][0]*e.x()+s.mat_[1][1]*e.y()+s.mat_[1][2]*e.z(),
 	     s.mat_[2][0]*e.x()+s.mat_[2][1]*e.y()+s.mat_[2][2]*e.z());
     current += fabs(Dot(c,normal)) * area;
-//    cerr << (int) *fi << ": c="<<c<<" n="<<normal<<" (c.n)="<<Dot(c,normal)<<" (a="<<area<<")   ";
     ++fi;
   }
-//  cerr << "\n\ntotal area = "<<total_area<<"\n";
   if (have_units) {
     if (units == "mm") current/=1000;
     else if (units == "cm") current/=100;
     else if (units == "dm") current/=10;
-    else cerr << "ComputeCurrent: warning - unrecognized units "<<units<<" will be ignored.\n";
+    else warning("Unrecognized units '"  + units +"' will be ignored.");
   }
   current_.set(current);
 }

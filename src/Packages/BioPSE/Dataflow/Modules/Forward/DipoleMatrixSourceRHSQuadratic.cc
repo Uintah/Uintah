@@ -147,61 +147,43 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
 
        if (qtvm_->locate(loc,p)) {
 
-	 msgStream_ << "Source p="<<p<<" dir="<<dir<<" found in elem "<<loc<<endl;
-	 
-	 cerr << "DipoleMatrixSourceRHS: Found Dipole in element "<<loc<<"\n";
+	 msgStream_ << "Source p="<<p<<" dir="<<dir<<
+	   " found in elem "<<loc<<endl;
 
 	 // use these next six lines if we're using a dipole
 	 vector<Vector> g(10);
-	 cerr << "Getting Gradient Basis\n";
 	 qtvm_->get_gradient_basis(loc,p,g[0],g[1],g[2],g[3],g[4],
 				   g[5],g[6],g[7],g[8],g[9]);
 	 vector<int> s(10);
 	 TetVolMesh::Node::array_type cell_nodes(10);
-	 cerr << "Getting nodes\n";
 	 qtvm_->get_nodes(cell_nodes, loc);
-	 cerr << "Got Nodes\n";
 
 	 for (int k = 0; k < 10; k++)
 	   (*rhs)[cell_nodes[k]] += Dot(dir,g[k]);
 
-	 
-	 //	 Point centroid = mesh->elems[loc]->centroid();
-//	 cerr << centroid << "\n";
-//	 mesh->get_gradQuad(loc,centroid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10);
-	
-	 //	 	 cerr << "DipoleMatrixSourceRHS :: p="<<p<<"  dir="<<dir<<"\n";
-	 //	 cerr << "Dir="<<dir<<"  g1="<<g1<<"  g2="<<g2<<"\n";
-	 //	 cerr << "g3="<<g3<<"  g4="<<g4<<"  g5="<<g5<<"  g6="<<g6<<"  g7="<<g7<<"  g8="<<g8<<"  g9="<<g9<<"  g10="<<g10<<"\n";
-	 //
-
-	
 #if 0
-	 cerr << "DipoleMatrixSourceRHS :: Here's the RHS vector: ";
+	 msgStream_ << "DipoleMatrixSourceRHS :: Here's the RHS vector: ";
 	 for (int ii=0; ii<nnodes; ii++) 
-	   cerr << (*rhs)[ii]<<" ";
-	 cerr << "\n";
-	 cerr << "DipoleMatrixSourceRHS :: Here's the dipole: ";
+	   msgStream_ << (*rhs)[ii]<<" ";
+	 msgStream_ << "\n";
+	 msgStream_ << "DipoleMatrixSourceRHS :: Here's the dipole: ";
 	 for (int ii=0; ii<6; ii++) 
-	   cerr << col[ii]<<" ";
-	 cerr << "\n";
+	   msgStream_ << col[ii]<<" ";
+	 msgStream_ << "\n";
 #endif
  	 
        } 
        else 
        {
-	 cerr << "Dipole: "<<p<<" not located within mesh!\n";
+	 msgStream_ << "Dipole: "<<p<<" not located within mesh!\n";
        }
 
        gen=rhsh->generation;
      }
-     //     cerr << "DipoleMatrixSourceRHS: about to send result...\n";
      orhs = (MatrixOPort *)get_oport("OutPut RHS");
      orhs->send(rhsh);
-     //     cerr << "DipoleMatrixSourceRHS: sent result!\n";
-
-
 }
+
 
 } // End namespace BioPSE
 

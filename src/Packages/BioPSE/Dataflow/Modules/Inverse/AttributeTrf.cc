@@ -184,14 +184,10 @@ DenseMatrix *AttributeTrf::calc_laplacian(Array1<Point> &pts, Array2<int> &tris)
     // Delete current node number from the matrix
     nNbours = find_not_equal(sub_tri_union, node, rowI2);
 
-    //cerr << "node " << node << " nNbours: " << nNbours << " Nodes of nbrs: \n";
-
     node_nbours.resize(0);
     for (int i=0; i<nNbours; i++){
       node_nbours.add(sub_tri_union[rowI2[i]]);
-      //cerr << node_nbours[i] << " ";
     }
-    //cerr << "\n";
 
     double sum1 = 0;
     double sum2 = 0;
@@ -207,11 +203,8 @@ DenseMatrix *AttributeTrf::calc_laplacian(Array1<Point> &pts, Array2<int> &tris)
       sum2 += 1/d;
     }
 
-    //cerr << "hpar[" << node << "] ";
     double avg_dist = sum1/nNbours; // hpar
-    //cerr << avg_dist << " hopar[" << node << "] ";
     double avg_odist = sum2/nNbours; // hopar
-    //cerr << avg_odist << "\n";
 
     (*laplacian)[node][node] = -4.0 * avg_odist / avg_dist;
     for (int nbrNo=0; nbrNo<nNbours; nbrNo++){
@@ -262,8 +255,6 @@ void AttributeTrf::execute(){
   TriSurfMesh::Node::size_type nsize; 
   tsm->size(nsize);
 
-  //cerr << "Reading "<< ((unsigned int)nsize) << " points "<< "\n";
-
   Array1<Point> pts;
   while(niter != niter_end) {
     Point p;
@@ -274,7 +265,6 @@ void AttributeTrf::execute(){
 
   TriSurfMesh::Face::size_type nfaces;
   tsm->size(nfaces);
-  //  cerr << "Reading "<< ((unsigned int)nfaces)<<" faces "<< "\n";
   Array2<int> tris(nfaces, 3);
   TriSurfMesh::Face::iterator fiter;
   tsm->begin(fiter);
