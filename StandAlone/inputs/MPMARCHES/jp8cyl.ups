@@ -203,12 +203,14 @@
                 <discrete_ordinates>true</discrete_ordinates>
 	        <mixing_model>StaticMixingTable</mixing_model>
 
-		<StaticMixingTable>
-		  <adiabatic>false</adiabatic>
-		  <mixstatvars>1</mixstatvars>
-		  <rxnvars>0</rxnvars>
-		  <inputfile>nonadeqlb.tbl</inputfile>
-		</StaticMixingTable>
+	        <StaticMixingTable>
+                  <adiabatic>false</adiabatic>
+                  <mixstatvars>0</mixstatvars>
+                  <rxnvars>0</rxnvars>
+                  <inputfile>NAE.rxn.new</inputfile>
+                  <h_fuel>-1566119.0</h_fuel>
+                  <h_air>-125.3610</h_air>
+                </StaticMixingTable>
 
 	    </Properties>
 
