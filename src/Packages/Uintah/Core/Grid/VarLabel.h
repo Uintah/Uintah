@@ -51,9 +51,12 @@ class Patch;
 	 Internal,
 	 PositionVariable
       };
+
+
+      // Ensure the uniqueness of VarLabel names (same name, same object).
+      static VarLabel* create(const string&, const TypeDescription*,
+			      VarType vartype = Normal);
      
-      VarLabel(const string&, const TypeDescription*,
-	       VarType vartype = Normal);
 
       ~VarLabel();
 
@@ -81,18 +84,26 @@ class Patch;
       class Compare {
       public:
 	 inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
+	   // because of uniqueness, we can use pointer comparisons
+	   return v1 < v2;
+	   /* old way
 	    if(v1 == v2)
 	       return false;
 	    return v1->getName() < v2->getName();
+	   */
 	 }
       private:
       };
 
      bool equals(const VarLabel* v2) const
      {
+       // because of uniqueness, we can use pointer comparisons
+       return this == v2;
+       /* old way
        if(this == v2)
 	 return true;
        return getName() == v2->getName();
+       */
      }
 
       void setCompressionMode(string compressionMode)
@@ -109,6 +120,10 @@ class Patch;
      
       string                 d_name;
    private:
+      // You must use VarLabel::create.
+      VarLabel(const string&, const TypeDescription*,
+	       VarType vartype = Normal);
+     
       const TypeDescription* d_td;
       VarType                d_vartype;
       mutable string                 d_compressionMode;

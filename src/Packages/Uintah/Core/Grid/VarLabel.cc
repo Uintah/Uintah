@@ -14,21 +14,30 @@ using std::ostringstream;
 map<string, VarLabel*> VarLabel::allLabels;
 string VarLabel::defaultCompressionMode = "none";
 
-VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
-		   VarType vartype)
-   : d_name(name), d_td(td), d_vartype(vartype),
-     d_compressionMode("default"), d_allowMultipleComputes(false) 
+
+VarLabel* VarLabel::create(const string& name,
+			   const TypeDescription* td,
+			   VarType vartype /*= Normal*/)
 {
   map<string, VarLabel*>::iterator iter = allLabels.find(name);
   if(iter != allLabels.end()){
     // two labels with the same name -- make sure they are the same type
     VarLabel* dup = iter->second;
-    if (d_td != dup->d_td || d_vartype != dup->d_vartype)
+    if (td != dup->d_td || vartype != dup->d_vartype)
       throw InternalError(string("VarLabel with same name exists, '")
 			  + name + "', but with different type");
-  } else {
-    allLabels[name]=this;
+    return dup;
   }
+  return scinew VarLabel(name, td, vartype);
+}
+
+
+VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
+		   VarType vartype)
+   : d_name(name), d_td(td), d_vartype(vartype),
+     d_compressionMode("default"), d_allowMultipleComputes(false) 
+{
+  allLabels[name]=this;
 }
 
 VarLabel::~VarLabel()
