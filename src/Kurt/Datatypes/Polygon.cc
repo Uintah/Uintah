@@ -12,25 +12,31 @@ namespace Geometry {
 
 Polygon::Polygon(const Polygon& p)
   {
-  vector<Point>::const_iterator i;
-  for( i = p.vertices.begin(); i != p.vertices.end(); i++ ){
+  vector<Point>::const_iterator i,j;
+  for( i = p.vertices.begin(), j = p.texcoords.begin();
+       i != p.vertices.end(); i++, j++){
     vertices.push_back(*i);
+    texcoords.push_back(*j);
+    
   }
 }
 
-Polygon::Polygon(const vector<Point>& p)
+Polygon::Polygon(const vector<Point>& p, const vector<Point>& t)
   {
-  vector<Point>::const_iterator i;
-  for( i = p.begin(); i != p.end(); i++ ){
+  vector<Point>::const_iterator i,j;
+  for( i = p.begin(), j = t.begin(); i != p.end(); i++, j++ ){
     vertices.push_back(*i);
+    texcoords.push_back(*j);
   }
 }
 
-Polygon::Polygon(const Point *p, int nPoints)
+Polygon::Polygon(const Point *p, const Point *t, int nPoints)
 {
   int i;
-  for( i = 0; i < nPoints; i++)
+  for( i = 0; i < nPoints; i++){
     vertices.push_back(p[i]);
+    texcoords.push_back(t[i]);
+  }
 }
 
 bool 
@@ -70,6 +76,19 @@ Polygon::operator[](int i) const
 {
   return vertices[i];
 }
+
+const Point&
+Polygon::getVertex(int i) const
+{
+  return vertices[i];
+}
+const Point&
+Polygon::getTexCoord(int i) const
+{
+  return texcoords[i];
+}
+
+
 
 clString
 Polygon::string() const

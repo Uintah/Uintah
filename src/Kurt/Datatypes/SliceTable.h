@@ -56,7 +56,7 @@ public:
   //////////
   // Consructor
   SliceTable( const Point& min,  const Point& max, const  Ray& view,
-	      int slices);
+	      int slices, int treedepth );
 
   // GROUP: Destructors
   //////////
@@ -72,6 +72,7 @@ public:
 private:
   Ray view;
   int slices;
+  int treedepth;
   int order[8];
   double minT, maxT, DT;
 };

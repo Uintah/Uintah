@@ -47,6 +47,11 @@ Brick::Brick(const Point& min, const Point& max,
                         z  
   */
 
+  // These will be used to create the texture Matrix
+  aX = ( 1.0/tex->dim1() == 1.0 ) ? 2.0 : 1.0/tex->dim1();
+  aY = ( 1.0/tex->dim2() == 1.0 ) ? 2.0 : 1.0/tex->dim2();
+  aZ = ( 1.0/tex->dim3() == 1.0 ) ? 2.0 : 1.0/tex->dim3();
+  
   // set up vertices
   corner[0] = min;
   corner[1] = Point(min.x(), min.y(), max.z());
@@ -57,26 +62,49 @@ Brick::Brick(const Point& min, const Point& max,
   corner[6] = Point(max.x(), max.y(), min.z());
   corner[7] = max;
 
+  Point texture[8];
+  // set up texture vertices
+  texture[0] = Point(0 + 0.5*aX, 0 + 0.5*aY, 0 + 0.5*aZ);
+  texture[1] = Point(0 + 0.5*aX, 0 + 0.5*aY, 1 - 0.5*aZ);
+  texture[2] = Point(0 + 0.5*aX, 1 - 0.5*aY, 0 + 0.5*aZ);
+  texture[3] = Point(0 + 0.5*aX, 1 - 0.5*aY, 1 - 0.5*aZ);
+  texture[4] = Point(1 - 0.5*aX, 0 + 0.5*aY, 0 + 0.5*aZ);
+  texture[5] = Point(1 - 0.5*aX, 0 + 0.5*aY, 1 - 0.5*aZ);
+  texture[6] = Point(1 - 0.5*aX, 1 - 0.5*aY, 0 + 0.5*aZ);
+  texture[7] = Point(1 - 0.5*aX, 1 - 0.5*aY, 1 - 0.5*aZ);
+
+  
+
   // set up edges
   edge[0] = Ray(corner[0], corner[2] - corner[0]);
   edge[1] = Ray(corner[2], corner[6] - corner[2]);
-  edge[2] = Ray(corner[6], corner[4] - corner[6]);
-  edge[3] = Ray(corner[4], corner[0] - corner[4]);
+  edge[2] = Ray(corner[4], corner[6] - corner[4]);
+  edge[3] = Ray(corner[0], corner[4] - corner[0]);
   edge[4] = Ray(corner[1], corner[3] - corner[1]);
   edge[5] = Ray(corner[3], corner[7] - corner[3]);
-  edge[6] = Ray(corner[7], corner[5] - corner[7]);
-  edge[7] = Ray(corner[5], corner[1] - corner[5]);
+  edge[6] = Ray(corner[5], corner[7] - corner[5]);
+  edge[7] = Ray(corner[1], corner[5] - corner[1]);
   edge[8] = Ray(corner[0], corner[1] - corner[0]);
   edge[9] = Ray(corner[2], corner[3] - corner[2]);
   edge[10] = Ray(corner[6], corner[7] - corner[6]);
   edge[11] = Ray(corner[4], corner[5] - corner[4]);
 
-
-  // These will be used to create the texture Matrix
-  aX = ( 1.0/tex->dim1() == 1.0 ) ? 2.0 : 1.0/tex->dim1();
-  aY = ( 1.0/tex->dim2() == 1.0 ) ? 2.0 : 1.0/tex->dim2();
-  aZ = ( 1.0/tex->dim3() == 1.0 ) ? 2.0 : 1.0/tex->dim3();
+  // set up texture coordinate edges
+  texEdge[0] = Ray(texture[0], texture[2] - texture[0]);
+  texEdge[1] = Ray(texture[2], texture[6] - texture[2]);
+  texEdge[2] = Ray(texture[4], texture[6] - texture[4]);
+  texEdge[3] = Ray(texture[0], texture[4] - texture[0]);
+  texEdge[4] = Ray(texture[1], texture[3] - texture[1]);
+  texEdge[5] = Ray(texture[3], texture[7] - texture[3]);
+  texEdge[6] = Ray(texture[5], texture[7] - texture[5]);
+  texEdge[7] = Ray(texture[1], texture[5] - texture[1]);
+  texEdge[8] = Ray(texture[0], texture[1] - texture[0]);
+  texEdge[9] = Ray(texture[2], texture[3] - texture[2]);
+  texEdge[10] = Ray(texture[6], texture[7] - texture[6]);
+  texEdge[11] = Ray(texture[4], texture[5] - texture[4]);
   
+
+
 }
  
 Brick::~Brick()
@@ -100,7 +128,9 @@ void Brick::ComputePoly(Ray r, double t, Polygon*& p) const
   int i,j,k, tIndex = 1;
   Point p0, p1;
   Ray edgeList[6];
+  Ray texEdgeList[6];
   Point intersects[6];
+  Point texcoords[6];
   Vector view = r.direction();
   bool buildEdgeList = true;
   RayStep dts[6];
@@ -112,16 +142,19 @@ void Brick::ComputePoly(Ray r, double t, Polygon*& p) const
     t1 = intersectParam(-view, p1, edge[j] );
     if(t0 > 0.0 && t0 < 1.0 ) {
       intersects[nIntersects] = edge[j].parameter(t0);
+      texcoords[nIntersects] = texEdge[j].parameter(t0);
       edgeList[nIntersects] = edge[j];
+      texEdgeList[nIntersects] = texEdge[j];
       dts[nIntersects].base = t0;
       dts[nIntersects++].step = t1 - t0;
     }
   }
   if(nIntersects > 3) {
-    OrderIntersects( intersects, edgeList, dts, nIntersects );
+    OrderIntersects( intersects, texcoords, edgeList, texEdgeList,
+		     dts, nIntersects );
   }
   
-  p = scinew Polygon( intersects, nIntersects );
+  p = scinew Polygon( intersects, texcoords, nIntersects );
 
 }
 
@@ -142,7 +175,9 @@ Brick::ComputePolys(Ray r, double tmin, double tmax,
   Point p0, p1;
 
   Ray edgeList[6];
+  Ray texEdgeList[6];
   Point intersects[6];
+  Point texcoords[6];
   Vector view = r.direction();
   bool buildEdgeList = true;
   RayStep dts[6];
@@ -168,24 +203,28 @@ Brick::ComputePolys(Ray r, double tmin, double tmax,
 	t1 = intersectParam(-view, p1, edge[j] );
 	if(t0 > 0.0 && t0 < 1.0 ) {
 	  intersects[nIntersects] = edge[j].parameter(t0);
+	  texcoords[nIntersects] = texEdge[j].parameter(t0);
 	  edgeList[nIntersects] = edge[j];
+	  texEdgeList[nIntersects] = texEdge[j];
 	  dts[nIntersects].base = t0;
 	  dts[nIntersects++].step = t1 - t0;
 	}
       }
       if(nIntersects > 3) {
-	OrderIntersects( intersects, edgeList, dts, nIntersects );
+	OrderIntersects( intersects, texcoords, edgeList, texEdgeList,
+			 dts, nIntersects );
       }
 
     } else {
       for( j = 0; j < nIntersects; j++ ){
 	dts[j].base += dts[j].step;
 	intersects[j] = edgeList[j].parameter(dts[j].base);
+	texcoords[j] = texEdgeList[j].parameter(dts[j].base);
 	if (dts[j].base < 0.0 ||  dts[j].base > 1.0)
 	  buildEdgeList = true;
       }
     }
-    Polygon *poly = scinew Polygon( intersects, nIntersects );
+    Polygon *poly = scinew Polygon( intersects, texcoords, nIntersects );
     polys.push_back( poly );
     t -= dt;
 
@@ -193,14 +232,17 @@ Brick::ComputePolys(Ray r, double tmin, double tmax,
 }
 
 void
-Brick::OrderIntersects(Point *p, Ray *r, RayStep *dt, int n) const
+Brick::OrderIntersects(Point *p, Point *t, Ray *r, Ray *te,
+		       RayStep *dt, int n) const
 { 
   // We have a series of points, p, that intesect the edges, r, of the 
   // texture cube.  We know that these points will make a convex hull
   // so lets sort the points, rays, and raysteps so that when the points
   // are connected they create and convex polygon.
   Point sorted[6]; 
+  Point sortedT[6];
   Ray sortedE[6];
+  Ray sortedTE[6];
   RayStep sortedDt[6];
   Vector v0, v1;
   int nSorted = 3;
@@ -210,6 +252,8 @@ Brick::OrderIntersects(Point *p, Ray *r, RayStep *dt, int n) const
 
   for(i = 0; i < nSorted;  i++){
       sorted[i] = p[i];
+      sortedT[i] = t[i];
+      sortedTE[i] = te[i];      
       sortedE[i] = r[i];
       sortedDt[i] = dt[i];
   }
@@ -236,16 +280,22 @@ Brick::OrderIntersects(Point *p, Ray *r, RayStep *dt, int n) const
     // of the sorted list. 
     if( i0 == 0 && i1 == nSorted - 1 ){
       sorted[nSorted] = p[k];
+      sortedT[nSorted] = t[k];
+      sortedTE[nSorted] = te[k];
       sortedE[nSorted] = r[k];
       sortedDt[nSorted] = dt[k];
       nSorted++;
     } else { // move everything to the right of i0 and insert p[k] at i1. 
       for( i = nSorted; i > i0; i-- ){
 	sorted[i] = sorted[i-1];
+	sortedT[i] = sortedT[i-1];
+	sortedTE[i] = sortedTE[i-1];
 	sortedE[i] = sortedE[i-1];
 	sortedDt[i] = sortedDt[i-1];
       }
       sorted[i1] = p[k];
+      sortedT[i1] = t[k];
+      sortedTE[i1] = te[k];
       sortedE[i1] = r[k];
       sortedDt[i1] = dt[k];
       nSorted++;
@@ -254,6 +304,8 @@ Brick::OrderIntersects(Point *p, Ray *r, RayStep *dt, int n) const
   // put the sorted points back in p
   for(i = 0; i < n; i++){
     p[i] = sorted[i];
+    t[i] = sortedT[i];
+    te[i] = sortedTE[i];
     r[i] = sortedE[i];
     dt[i] = sortedDt[i];    
   }

@@ -58,33 +58,65 @@ GLVolRenState::computeView(Ray& ray)
   ray =  Ray(viewPt, view);
 }
 
+//#define TCOORD
+
 void
-GLVolRenState::drawPolys( vector<Polygon *> polys )
+GLVolRenState::drawPolys( const vector<Polygon *>& polys )
 {
-  int i,j,k;
+  int i,k;
   
   for(i = 0; i < polys.size(); i++){
     switch( polys[i]->size() ) {
     case 1:
       glBegin(GL_POINTS);
+#ifdef TCOORD
+      glTexCoord3f(polys[i]->getTexCoord(0).x(),
+		   polys[i]->getTexCoord(0).y(),
+		   polys[i]->getTexCoord(0).z());
+#endif
       glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
 		 (*(polys[i]))[0].z());
       glEnd();
       break;
     case 2:
       glBegin(GL_LINES);
+#ifdef TCOORD
+      glTexCoord3f(polys[i]->getTexCoord(0).x(),
+		   polys[i]->getTexCoord(0).y(),
+		   polys[i]->getTexCoord(0).z());
+#endif
       glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
 		 (*(polys[i]))[0].z());
+#ifdef TCOORD
+      glTexCoord3f(polys[i]->getTexCoord(1).x(),
+		   polys[i]->getTexCoord(1).y(),
+		   polys[i]->getTexCoord(1).z());
+#endif
       glVertex3f((*(polys[i]))[1].x(), (*(polys[i]))[1].y(),
 		 (*(polys[i]))[1].z());
       glEnd();
       break;
     case 3:
       glBegin(GL_TRIANGLES);
+#ifdef TCOORD
+      glTexCoord3f(polys[i]->getTexCoord(0).x(),
+		   polys[i]->getTexCoord(0).y(),
+		   polys[i]->getTexCoord(0).z());
+#endif
       glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
 		 (*(polys[i]))[0].z());
+#ifdef TCOORD
+      glTexCoord3f(polys[i]->getTexCoord(1).x(),
+		   polys[i]->getTexCoord(1).y(),
+		   polys[i]->getTexCoord(1).z());
+#endif
       glVertex3f((*(polys[i]))[1].x(), (*(polys[i]))[1].y(),
 		 (*(polys[i]))[1].z());
+#ifdef TCOORD
+      glTexCoord3f(polys[i]->getTexCoord(2).x(),
+		   polys[i]->getTexCoord(2).y(),
+		   polys[i]->getTexCoord(2).z());
+#endif
       glVertex3f((*(polys[i]))[2].x(),(*(polys[i]))[2].y(),
 		 (*(polys[i]))[2].z());
       glEnd();
@@ -94,6 +126,11 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
     case 6:
       glBegin(GL_POLYGON);
       for(k =0; k < polys[i]->size(); k++){
+#ifdef TCOORD
+	glTexCoord3f(polys[i]->getTexCoord(k).x(),
+		     polys[i]->getTexCoord(k).y(),
+		     polys[i]->getTexCoord(k).z());
+#endif
 	glVertex3f((*(polys[i]))[k].x(),(*(polys[i]))[k].y(),
 		   (*(polys[i]))[k].z());
       }
@@ -103,36 +140,55 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
   }
 }
 
+void
+GLVolRenState::loadColorMap(Brick& brick)
+{
+  
+  glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
+	       GL_RGBA,
+	       256, // try larger sizes?
+	       GL_RGBA,  // need an alpha value...
+	       GL_UNSIGNED_BYTE, // try shorts...
+	       volren->TransferFunctions[brick.level()]);
+}
+
+
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
-  int i;
+
   if( !brick.texName() || reload ) {
     if( !brick.texName() )
       glGenTextures(1, brick.texNameP());
 
-    glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
+    glBindTexture(GL_TEXTURE_3D, brick.texName());
 
     if( volren->_interp ){
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     } else {
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
 
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
+//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S,
+// 		    GL_CLAMP_TO_EDGE);
+//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T,
+// 		    GL_CLAMP_TO_EDGE);
+//     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R,
+// 		    GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T,
 		    GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT,
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R,
 		    GL_CLAMP);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // set up the texture
-    glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
-		    GL_INTENSITY8_EXT,
+    glTexImage3D(GL_TEXTURE_3D, 0,
+		    GL_INTENSITY8,
 		    (brick.texture())->dim1(), 
 		    (brick.texture())->dim2(), 
 		    (brick.texture())->dim3(), 0,
@@ -140,7 +196,7 @@ GLVolRenState::loadTexture(Brick& brick)
 		    &(*(brick.texture()))(0,0,0));
 
   } else {
-    glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
+    glBindTexture(GL_TEXTURE_3D, brick.texName());
   }
 }
 void 
@@ -170,7 +226,7 @@ GLVolRenState::makeTextureMatrix( const Brick& brick)
   */
 
 
-
+#ifndef TCOORD
   diag = brick[7] - brick[0];
 
 
@@ -188,38 +244,48 @@ GLVolRenState::makeTextureMatrix( const Brick& brick)
   //  Nx = (1 - aX)/(Pxmax - Pxmin) and
   //  d = aX/2 - (Pxmin *(1 - aX))/(Pxmax - Pxmin)
 
+
   splane[0] = (1 - brick.aX * (brick.padx + 1))/diag.x();
-  splane[3] = brick.aX * 0.5 - (brick[0].x() *
-				(1 - brick.aX * (brick.padx+1))/diag.x());
+  splane[3] = brick.aX * 0.5 - (brick[0].x() * splane[0]);
   tplane[1] = (1 - brick.aY * (brick.pady + 1))/diag.y();
-  tplane[3] = brick.aY * 0.5 - (brick[0].y() *
-				(1 - brick.aY * (brick.pady+1))/diag.y());
+  tplane[3] = brick.aY * 0.5 - (brick[0].y() * tplane[1]);
   rplane[2] = (1 - brick.aZ * (brick.padz + 1))/diag.z();
-  rplane[3] = brick.aZ * 0.5 - (brick[0].z() *
-				(1 - brick.aZ * (brick.padz+1))/diag.z());
+  rplane[3] = brick.aZ * 0.5 - (brick[0].z() * rplane[2]);
+//   splane[0] = (1 - 2*brick.aX*(1 + brick.padx))/diag.x();
+//   splane[3] = brick.aX * (1 + brick.padx) - brick[0].x() * splane[0];
+//   tplane[1] = (1 - 2*brick.aY*(1 + brick.pady))/diag.y();
+//   tplane[3] = brick.aY * (1 + brick.pady) - brick[0].y() * tplane[1];
+//   rplane[2] = (1 - 2*brick.aZ*(1 + brick.padz))/diag.z();
+//   rplane[3] = brick.aZ * (1 + brick.padz) - brick[0].z() * rplane[2];
 
   
   glTexGendv(GL_S,GL_OBJECT_PLANE,splane);
   glTexGendv(GL_T,GL_OBJECT_PLANE,tplane);
   glTexGendv(GL_R,GL_OBJECT_PLANE,rplane);
   glTexGendv(GL_Q,GL_OBJECT_PLANE,qplane);
+#endif
+
 }
 
 void 
 GLVolRenState::enableTexCoords()
 {
+#ifndef TCOORD
   glEnable(GL_TEXTURE_GEN_S);
   glEnable(GL_TEXTURE_GEN_T);
   glEnable(GL_TEXTURE_GEN_R);
   glEnable(GL_TEXTURE_GEN_Q);
+#endif
 }
 void 
 GLVolRenState::disableTexCoords()
 {
+#ifndef TCOORD
   glDisable(GL_TEXTURE_GEN_S);
   glDisable(GL_TEXTURE_GEN_T);
   glDisable(GL_TEXTURE_GEN_R);
   glDisable(GL_TEXTURE_GEN_Q);
+#endif
 }
 
 void 
@@ -238,7 +304,6 @@ GLVolRenState::drawWireFrame(const Brick& brick)
 {
   int i;
   glEnable(GL_DEPTH_TEST);
-  double r,g,b;
 //   char c;
 //   r = drand48();
 //   g = drand48();
@@ -270,6 +335,25 @@ GLVolRenState::drawWireFrame(const Brick& brick)
   glPopMatrix();
   glDisable(GL_DEPTH_TEST);
 
+}
+
+void
+GLVolRenState::drawWirePolys( const vector<Polygon *>& polys )
+{
+  int i,k;
+  glEnable(GL_DEPTH_TEST);
+  glColor4f(0.8,0.8,0.8,1.0);
+  glPushMatrix();
+  for(i = 0; i < polys.size(); i++){
+    glBegin(GL_LINE_LOOP);
+    for(k =0; k < polys[i]->size(); k++){
+      glVertex3f((*(polys[i]))[k].x(),(*(polys[i]))[k].y(),
+		 (*(polys[i]))[k].z());
+    }
+    glEnd();
+  }
+  glPopMatrix();
+  glDisable(GL_DEPTH_TEST);
 }
 
 }  // namespace GeomSpace

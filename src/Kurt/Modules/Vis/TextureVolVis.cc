@@ -62,6 +62,7 @@ TextureVolVis::TextureVolVis(const clString& id)
   interp_mode("interp_mode", id, this),
   control_widget(0), control_id(-1),
   volren(0), tex(0)
+  
 {
   // Create the input ports
   intexture = scinew GLTexture3DIPort( this, "GL Texture",
@@ -199,6 +200,7 @@ void TextureVolVis::execute(void)
   //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   volren->SetNSlices( num_slices.get() );
   volren->SetSliceAlpha( alpha_scale.get() );
+  volren->BuildTransferFunctions();
   //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   ogeom->flushViews();				  
   //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);

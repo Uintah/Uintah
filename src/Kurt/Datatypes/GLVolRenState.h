@@ -18,7 +18,7 @@ namespace SCICore {
   }
   namespace GeomSpace {
   
-  //using namespace Kurt::Datatypes;
+
   using SCICore::Geometry::Ray;
   using SCICore::Geometry::Polygon;
   using std::vector;
@@ -78,16 +78,17 @@ public:
   
 protected:
 
-  virtual void setAlpha(const Brick& brick) = 0;
   void computeView(Ray&);
+  void loadColorMap( Brick& brick );
   void loadTexture( Brick& brick);
   void makeTextureMatrix(const Brick& brick);
   void enableTexCoords();
   void enableBlend();
-  void drawPolys( vector<Polygon *> polys);
+  void drawPolys( const vector<Polygon *>& polys);
   void disableTexCoords();
   void disableBlend();
   void drawWireFrame(const Brick& brick);
+  void drawWirePolys( const vector<Polygon *>& polys );
   const GLVolumeRenderer*  volren;
 
   GLuint* texName;

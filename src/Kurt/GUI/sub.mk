@@ -15,6 +15,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl \
 	$(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/AnimatedStreams.tcl \
+	$(SRCDIR)/SFRG.tcl
+
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
@@ -22,7 +24,12 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.12  2000/12/07 20:33:47  kuzimmer
+# VolumeRendering updates
+#
 # Revision 1.11  2000/10/24 05:57:20  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and

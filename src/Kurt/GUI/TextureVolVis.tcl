@@ -11,13 +11,17 @@ itcl_class Kurt_Vis_TextureVolVis {
 	global $this-draw_mode
 	set $this-draw_mode 0
 	global $this-num_slices
-	set $this-num_slices 32
+	set $this-num_slices 64
 	global $this-alpha_scale
-	set $this-alpha_scale 0.075
+	set $this-alpha_scale 0
 	global $this-render_style
 	set $this-render_style 0
 	global $this-interp_mode 
 	set $this-interp_mode 1
+	global $this-contrast
+	set $this-contrast 0.5
+	global $this-contrastfp
+	set $this-contrastfp 0.5
     }
     method ui {} {
 	set w .ui[modname]
@@ -86,16 +90,17 @@ itcl_class Kurt_Vis_TextureVolVis {
 
 	global $this-num_slices
 	scale $w.nslice -variable $this-num_slices \
-		-from 4 -to 1024 -label "Number of Slices" \
+		-from 64 -to 1024 -label "Number of Slices" \
 		-showvalue true \
 		-orient horizontal \
 
 
 	global $this-alpha_scale
+	
 	scale $w.stransp -variable $this-alpha_scale \
-		-from 0.0 -to 1.0 -label "Slice Transparency" \
-		-showvalue true -resolution 0.000001\
-		-orient horizontal \
+		-from -1.0 -to 1.0 -label "Slice Transparency" \
+		-showvalue true -resolution 0.001 \
+		-orient horizontal 
 
 	pack $w.stransp $w.nslice  -side top -fill x
 

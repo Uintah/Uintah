@@ -3,6 +3,7 @@
 
 #include "GLVolRenState.h"
 
+
 namespace SCICore {
 namespace GeomSpace  {
 
@@ -56,7 +57,8 @@ public:
   virtual void drawWireFrame();
   
 protected:
-  virtual void setAlpha(const Brick& brick);
+  void drawBrick( Brick& b, const vector<Polygon *>& polys);
+  void setAlpha(const Brick& brick);
 
 };
 
