@@ -46,11 +46,11 @@ ProblemSpecP ProblemSpecReader::readInputFile()
       // Parse the input file
       // No exceptions just yet, need to add
 
-      //cerr << "Parsing " << filename << endl;
       parser.parse(filename.c_str());
 
-      if(handler.foundError)
-	  throw ProblemSetupException("Error reading file: "+filename);
+      if(handler.foundError){
+	throw ProblemSetupException("Error reading file: "+filename);
+      }
 
       // Add the parser contents to the ProblemSpecP d_doc
 
