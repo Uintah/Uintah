@@ -119,7 +119,7 @@ ManageFieldMesh::execute()
     CompileInfoHandle ci_insert =
       ManageFieldMeshAlgoInsert::get_compile_info(ftd);
     Handle<ManageFieldMeshAlgoInsert> algo_insert;
-    if (!DynamicCompilation::compile(ci_insert, algo_insert, false, this))
+    if (!DynamicCompilation::compile(ci_insert, algo_insert, true, this))
     {
       error("Could not compile insertion algorithm.");
       error("Input field probably not of editable type.");
