@@ -77,7 +77,7 @@ namespace Uintah {
     //KD_Node(int dim, int Phi_dim, int Key[],std::vector<double> Phi, KD_Node *left=0,
     KD_Node(int dim, int Phi_dim, int Key[], Stream Phi, KD_Node *left=0,
             KD_Node *right=0):   
-      dim(dim), Phi_dim(Phi_dim),Phi(Phi),left(left),right(right){
+      left(left),right(right), dim(dim), Phi_dim(Phi_dim),Phi(Phi){
         keys = new int[dim];
         for(int i=0;i< dim; i++){
           keys[i] = Key[i];
