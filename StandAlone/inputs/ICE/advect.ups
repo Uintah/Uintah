@@ -143,17 +143,20 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>advect.uda</filebase>
-	<outputInterval>.0</outputInterval>
+	<outputInterval>.001</outputInterval>
+        <save label="vel_CC"/>
+        <save label="press_CC"/>
+        <save label="rho_CC"/>
    </DataArchiver>
 
   <Debug>
        <debug label = "switchDebug_equilibration_press"/>
-   <!--<debug label = "switchDebug_vel_FC"/>            -->
-   <!--<debug label = "switchDebug_explicit_press"/>    -->
-   <!--<debug label = "switchDebug_PressFC"/>           -->
-   <!--<debug label = "switchDebugLagrangianValues"/>   -->
-   <!--<debug label = "switchDebugSource_Sink"/>        -->
-       <debug label = "switchDebug_advance_advect"/>
+       <debug label = "switchDebug_vel_FC"/>            
+       <debug label = "switchDebug_explicit_press"/>   
+       <debug label = "switchDebug_PressFC"/>         
+       <debug label = "switchDebugLagrangianValues"/>   
+       <debug label = "switchDebugSource_Sink"/>     
+       <debug label = "switchDebug_advance_advect"/> 
     </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -172,6 +175,7 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
+	<reference_pressure>101325.0</reference_pressure>	
     </PhysicalConstants>
     
     <!--____________________________________________________________________-->
