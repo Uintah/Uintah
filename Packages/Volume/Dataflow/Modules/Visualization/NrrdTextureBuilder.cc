@@ -44,6 +44,7 @@ public:
 
 private:
   GuiInt gui_card_mem_;
+  GuiInt gui_card_mem_auto_;
   int card_mem_;
   
   int nvfield_last_generation_;
@@ -62,6 +63,7 @@ DECLARE_MAKER(NrrdTextureBuilder)
 NrrdTextureBuilder::NrrdTextureBuilder(GuiContext* ctx)
   : Module("NrrdTextureBuilder", ctx, Source, "Visualization", "Volume"),
     gui_card_mem_(ctx->subVar("card_mem")),
+    gui_card_mem_auto_(ctx->subVar("card_mem_auto")),
     nvfield_last_generation_(-1), gmfield_last_generation_(-1),
     texture_(0)
 {
@@ -74,6 +76,16 @@ NrrdTextureBuilder::~NrrdTextureBuilder() {
 void
 NrrdTextureBuilder::execute()
 {
+  if(card_mem_ != 0 && gui_card_mem_auto_.get()) {
+    ostringstream cmd;
+    cmd << id << " set_card_mem " << card_mem_ << "; " <<  id << " state";
+    gui->execute(cmd.str().c_str());
+  } else if(card_mem_ == 0) {
+    ostringstream cmd;
+    cmd << id << " set_card_mem_auto 0; " << id << " state";
+    gui->execute(cmd.str().c_str());
+  }
+
   NrrdIPort* ivfield = (NrrdIPort*)get_iport("Value / Normal-Value Nrrd");
   NrrdIPort* igfield = (NrrdIPort*)get_iport("Gradmag Nrrd");
   TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
@@ -126,11 +138,6 @@ bool
 NrrdTextureBuilder::build_texture(Reporter* reporter,
                                   NrrdDataHandle nvfield, NrrdDataHandle gmfield)
 {
-  if(card_mem_ != 0) {
-    ostringstream set_mem;
-    set_mem << id << " set_card_mem " << card_mem_;
-    gui->execute(set_mem.str().c_str());
-  }
   texture_ = TextureHandle(builder_.build(nvfield, gmfield, gui_card_mem_.get()));
   return true;
 }
