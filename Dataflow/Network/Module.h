@@ -295,9 +295,13 @@ Module::module_dynamic_compile(const CompileInfo &ci, DC &result)
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().fetch(ci, algo_handle))
   {
-    // Turn on indicator here.
-    bool status = DynamicLoader::scirun_loader().compile_and_store(ci);
-    // Turn off indicator here.
+    remark("Dynamically compiling some code.");
+    light_module();
+    const bool status =
+      DynamicLoader::scirun_loader().compile_and_store(ci, false, msgStream_);
+    reset_module_color();
+    msgStream_.flush();
+    remark("Dynamic compilation completed.");
 
     if (! (status && DynamicLoader::scirun_loader().fetch(ci, algo_handle)))
     {
