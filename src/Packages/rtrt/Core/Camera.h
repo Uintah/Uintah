@@ -47,12 +47,15 @@ protected:
   Vector uhat, vhat, what;
   Vector direction;
   double eyesep;
+
+  // This is the ammount that the primary rays will be offset.
+  double ray_offset;
   
   char pad2[128];
   
 public:
   Camera(const Point& eye, const Point& lookat,
-	 const Vector& up, double fov);
+	 const Vector& up, double fov, double ray_offset = 0);
   Camera();
   virtual ~Camera();
 
@@ -76,7 +79,7 @@ public:
   void get_ears( Point & left, Point & right, double separation ) const;
 
   inline bool operator != (const Camera& c) const {
-    return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov || verticalFov_ != c.verticalFov_ || eyesep != c.eyesep;
+    return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov || verticalFov_ != c.verticalFov_ || ray_offset != c.ray_offset || eyesep != c.eyesep;
   }
 
   void set_lookat(const Point&);
@@ -100,6 +103,8 @@ public:
   void followPath( Stealth & stealth );
   void flatten(); // reset pitch to 0 and roll to 0.(note: no roll currently)
 
+  void set_ray_offset(double off) { ray_offset = off; }
+  double get_ray_offset() { return ray_offset; }
 
   // Location/Look At update functions that most likely will
   // (should) be called by the spaceball input:
