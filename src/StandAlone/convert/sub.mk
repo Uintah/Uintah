@@ -39,6 +39,10 @@ PROGRAM := $(SRCDIR)/RawToHexVol
 SRCS := $(SRCDIR)/RawToHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/RawToStructHexVol
+SRCS := $(SRCDIR)/RawToStructHexVol.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/CVRTItoTetVolDirichlet
 SRCS := $(SRCDIR)/CVRTItoTetVolDirichlet.cc
 include $(SCIRUN_SCRIPTS)/program.mk
