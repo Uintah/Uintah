@@ -170,7 +170,7 @@ ConsecutiveRangeSet::iterator& ConsecutiveRangeSet::iterator::operator++()
 {
   // check to see if it is already at the end
   CHECKARRAYBOUNDS(d_range, 0, (long)d_set->d_rangeSet.size());
-  if (d_set->d_rangeSet[d_range].d_extent > d_offset)
+  if (d_set->d_rangeSet[d_range].d_extent > (unsigned long)d_offset)
     d_offset++;
   else {
     d_range++;

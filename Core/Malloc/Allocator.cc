@@ -523,7 +523,8 @@ void* Allocator::alloc(size_t size, const char* tag)
     }
 
     if(trace_out)
-	fprintf(trace_out, "A %08p %d (%s)\n", d, size, tag);
+	fprintf(trace_out, "A %08x %d (%s)\n", (unsigned)d, size, tag);
+
     return (void*)d;
 }
 
@@ -660,7 +661,8 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     }
 
     if(trace_out)
-	fprintf(trace_out, "A %08p %d (%s)\n", d, size, tag);
+	fprintf(trace_out, "A %08x %d (%s)\n", (unsigned)d, size, tag);
+
     return (void*)d;
 }
 
@@ -702,7 +704,8 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 		*p++=i;
 	}
 	if(trace_out)
-	    fprintf(trace_out, "R %08p %d %08p %d (%s)\n", dobj, oldsize, dobj, newsize, oldobj->tag);
+	    fprintf(trace_out, "R %08x %d %08x %d (%s)\n", (unsigned)dobj, oldsize, (unsigned)dobj, newsize, oldobj->tag);
+
 	return dobj;
     }
 
@@ -714,7 +717,8 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     bcopy(dobj, nobj, minsize);
     free(dobj);
     if(trace_out)
-	fprintf(trace_out, "R %08p %d %08p %d (%s)\n", dobj, oldsize, nobj, newsize, oldobj->tag);
+	fprintf(trace_out, "R %08x %d %08x %d (%s)\n", (unsigned)dobj, oldsize, (unsigned)nobj, newsize, oldobj->tag);
+
     return nobj;
 }
 
@@ -764,7 +768,8 @@ void Allocator::free(void* dobj)
 
     // Make sure that it is still intact...
     if(trace_out)
-	fprintf(trace_out, "F %08p %d (%s)\n", dobj, obj->reqsize, obj->tag);
+	fprintf(trace_out, "F %08x %d (%s)\n", (unsigned)dobj, obj->reqsize, obj->tag);
+
     if(!lazy)
 	audit(obj, OBJFREEING);
 
@@ -925,7 +930,7 @@ void Allocator::audit(Tag* obj, int what)
 	if(sent1->first_word != SENT_VAL_INUSE || sent1->second_word != SENT_VAL_INUSE){
 	    if(sent1->first_word == SENT_VAL_FREE){
 		if(what == OBJFREEING){
-		    fprintf(stderr, "Pointer (%x) was freed twice!\n", d);
+		    fprintf(stderr, "Pointer (%p) was freed twice!\n", d);
 		    fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
 		    AllocError("Freeing pointer twice");
 		} else {
@@ -943,7 +948,7 @@ void Allocator::audit(Tag* obj, int what)
 	    if(sent2->first_word != SENT_VAL_INUSE || sent2->second_word != SENT_VAL_INUSE){
 		if(sent2->first_word == SENT_VAL_FREE){
 		    if(what == OBJFREEING){
-			fprintf(stderr, "Pointer (%x) was freed twice! (tail only?)\n", d);
+			fprintf(stderr, "Pointer (%p) was freed twice! (tail only?)\n", d);
 			fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
 			AllocError("Freeing pointer twice");
 		    } else {
@@ -1028,13 +1033,13 @@ void PrintTag(void* dobj)
     dd-=sizeof(Tag);
     Tag* obj=(Tag*)dd;
 
-    fprintf(stderr, "tag %x: allocated by: %s\n", obj, obj->tag);
+    fprintf(stderr, "tag %p: allocated by: %s\n", obj, obj->tag);
     fprintf(stderr, "requested object size: %d bytes\n", obj->reqsize);
     fprintf(stderr, "maximum bin size: %d bytes\n", obj->bin->maxsize);
-    fprintf(stderr, "range of object: %x - %x\n", dobj, (char*)dobj+obj->reqsize);
-    fprintf(stderr, "range of object with overhead and sentinels: %x - %x\n",
-	    obj, (char*)obj+OVERHEAD);
-    fprintf(stderr, "range of hunk: %x - %x\n", obj->hunk->data, (char*)obj->hunk->data+obj->hunk->len);
+    fprintf(stderr, "range of object: %x - %x\n", (unsigned)dobj, (unsigned)dobj+obj->reqsize);
+    fprintf(stderr, "range of object with overhead and sentinels: %p - %p\n",
+	    obj, obj+OVERHEAD);
+    fprintf(stderr, "range of hunk: %x - %x\n", (unsigned)obj->hunk->data, (unsigned)obj->hunk->data+obj->hunk->len);
     fprintf(stderr, "pre-sentinels: %x %x\n",
 	    sent1->first_word, sent1->second_word);
     if(sent1->first_word == SENT_VAL_FREE && sent1->second_word == SENT_VAL_FREE){
@@ -1177,7 +1182,7 @@ void AuditDefaultAllocator()
 static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
 {
     for(Tag* p=bin->inuse;p!=0;p=p->next){
-	fprintf(fp, "%x %d %s\n", (char*)p+sizeof(Tag)+sizeof(Sentinel),
+	fprintf(fp, "%p %d %s\n", (p+sizeof(Tag)+sizeof(Sentinel)),
 		p->reqsize, p->tag);
     }
 }
