@@ -57,6 +57,7 @@ GraphGui::~GraphGui()
 {
 }
 
+#ifdef CHRIS
 void
 GraphGui::reset( const vector<DrawObj*> &objs)
 {
@@ -86,14 +87,44 @@ GraphGui::reset( const vector<DrawObj*> &objs)
     }
   }
 }
+#else
+void
+GraphGui::reset( int n )
+{
+  int i;
+  int size = int(poly_.size());
+  for ( i=0; i<size; i++) 
+    poly_[i]->clear();
 
+  for (; i <n; i++) {
+    LockedPolyline *p = scinew LockedPolyline(i);
+    p->set_lock( monitor_ );
+    p->set_color( Color( drand48(), drand48(), drand48() ) );
+    poly_.push_back( p );
+    diagram_->add( p );
+  } 
+}
+#endif
+
+#ifdef CHRIS
 void
 GraphGui::add_values( unsigned item, const vector<double> &v )
 {
   poly_[item]->add(v);
 
+  if ( item == poly_.size()-1 )
+    graph_->need_redraw();
+}
+#else
+void
+GraphGui::add_values( const vector<double> &v )
+{
+  for (unsigned i=0; i<v.size(); i++)
+    poly_[i]->add(v[i]);
+
   graph_->need_redraw();
 }
+#endif
 
 void 
 GraphGui::attach( PartInterface *interface )
