@@ -33,10 +33,10 @@ using std::ostringstream;
 #include <Core/Geom/Material.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/MaskedTetVolField.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
+//#include <Core/Datatypes/TetVolField.h>
+//#include <Core/Datatypes/MaskedTetVolField.h>
+//#include <Core/Datatypes/LatVolField.h>
+//#include <Core/Datatypes/MaskedLatVolField.h>
 
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
@@ -45,6 +45,10 @@ using std::ostringstream;
 #include <Core/Algorithms/Visualization/Sage.h>
 
 #include <Dataflow/Network/Module.h>
+
+// Temporaries
+#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/CurveField.h>
 
 namespace SCIRun {
 
@@ -92,6 +96,76 @@ Isosurface::~Isosurface()
     geom_id_ = 0;
   }
 }
+
+
+template <class FIELD>
+FieldHandle append_fields(vector<FIELD *> fields)
+{
+  typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
+
+  unsigned int offset = 0;
+  unsigned int i;
+  for (i=0; i < fields.size(); i++)
+  {
+    typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
+    typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
+    imesh->begin(nitr);
+    imesh->end(nitr_end);
+    while (nitr != nitr_end)
+    {
+      Point p;
+      imesh->get_center(p, *nitr);
+      omesh->add_point(p);
+      ++nitr;
+    }
+
+    typename FIELD::mesh_type::Elem::iterator eitr, eitr_end;
+    imesh->begin(eitr);
+    imesh->end(eitr_end);
+    while (eitr != eitr_end)
+    {
+      typename FIELD::mesh_type::Node::array_type nodes;
+      imesh->get_nodes(nodes, *eitr);
+      unsigned int j;
+      for (j = 0; j < nodes.size(); j++)
+      {
+	nodes[j] = ((unsigned int)nodes[j]) + offset;
+      }
+      omesh->add_elem(nodes);
+      ++eitr;
+    }
+    
+    typename FIELD::mesh_type::Node::size_type size;
+    imesh->size(size);
+    offset += (unsigned int)size;
+  }
+
+  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  offset = 0;
+  for (i=0; i < fields.size(); i++)
+  {
+    typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
+    typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
+    imesh->begin(nitr);
+    imesh->end(nitr_end);
+    while (nitr != nitr_end)
+    {
+      double val;
+      fields[i]->value(val, *nitr);
+      typename FIELD::mesh_type::Node::index_type
+	new_index(((unsigned int)(*nitr)) + offset);
+      ofield->set_value(val, new_index);
+      ++nitr;
+    }
+
+    typename FIELD::mesh_type::Node::size_type size;
+    imesh->size(size);
+    offset += (unsigned int)size;
+  }
+
+  return ofield;
+}
+
 
 
 void
@@ -160,8 +234,8 @@ Isosurface::execute()
   }
 
   bool build_field = gui_build_field_.get();
-  vector<GeomObj *> surface_geometries;
-  FieldHandle surface_fields = 0;
+  vector<GeomObj *> geometries;
+  vector<FieldHandle> fields;
   const TypeDescription *td = field->get_type_description();
   switch (gui_use_algorithm_.get()) {
   case 0:  // Marching Cubes
@@ -182,10 +256,9 @@ Isosurface::execute()
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
 	mc_alg->search( isovals[iv], build_field);
-	surface_geometries.push_back( mc_alg->get_geom() );
+	geometries.push_back( mc_alg->get_geom() );
+	fields.push_back( mc_alg->get_field() );
       }
-      // If multiple isosurfaces, just send last one for Field output.
-      surface_fields = mc_alg->get_field();
     }
     break;
   case 1:  // Noise
@@ -203,11 +276,9 @@ Isosurface::execute()
       }
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	surface_geometries.push_back(noise_alg->search(isovals[iv],
-						       build_field));
+	geometries.push_back(noise_alg->search(isovals[iv], build_field));
+	fields.push_back(noise_alg->get_field());
       }
-      // If multiple isosurfaces, just send last one for Field output.
-      surface_fields = noise_alg->get_field();
     }
     break;
 
@@ -228,7 +299,7 @@ Isosurface::execute()
 	GeomGroup *group = new GeomGroup;
 	GeomPts *points = new GeomPts(1000);
 	sage_alg->search(isovals[0], group, points);
-	surface_geometries.push_back( group );
+	geometries.push_back( group );
       }
     }
     break;
@@ -264,9 +335,9 @@ Isosurface::execute()
 				   gui_color_g_.get(),
 				   gui_color_b_.get()));
     }
-    if (surface_geometries[iv]) 
+    if (geometries[iv]) 
     {
-      geom->add(scinew GeomMaterial( surface_geometries[iv] , matl ));
+      geom->add(scinew GeomMaterial( geometries[iv] , matl ));
     }
   }
 
@@ -293,7 +364,7 @@ Isosurface::execute()
   geom_id_ = ogeom->addObj( geom, surface_name);
 
   // Output surface.
-  if (build_field && surface_fields.get_rep())
+  if (build_field && fields.size() && fields[0].get_rep())
   {
     FieldOPort *osurf = (FieldOPort *)get_oport("Surface");
     if (!osurf)
@@ -301,7 +372,39 @@ Isosurface::execute()
       error("Unable to initialize oport 'Surface'.");
       return;
     }
-    osurf->send(surface_fields);
+
+    if (fields.size() == 1)
+    {
+      osurf->send(fields[0]);
+    }
+    else
+    {
+      vector<TriSurfField<double> *> tfields(fields.size());
+      unsigned int i;
+      for (i=0; i < fields.size(); i++)
+      {
+	tfields[i] = dynamic_cast<TriSurfField<double> *>(fields[i].get_rep());
+      }
+
+      vector<CurveField<double> *> cfields(fields.size());
+      for (i=0; i < fields.size(); i++)
+      {
+	cfields[i] = dynamic_cast<CurveField<double> *>(fields[i].get_rep());
+      }
+
+      if (tfields[0])
+      {
+	osurf->send(append_fields(tfields));
+      }
+      else if (cfields[0])
+      {
+	osurf->send(append_fields(cfields));
+      }
+      else
+      {
+	osurf->send(fields[0]);
+      }
+    }
   }
 }
 
