@@ -604,6 +604,10 @@ ArchesLabel::ArchesLabel()
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_carbonEfficiencyLabel = VarLabel::create("carbonEfficiency",
 	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
+  d_scalarFlowRateLabel = VarLabel::create("scalarFlowRate",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_scalarEfficiencyLabel = VarLabel::create("scalarEfficiency",
+	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
 }
 
 //****************************************************************************
@@ -838,6 +842,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_ShRFLabel);
   VarLabel::destroy(d_CO2FlowRateLabel);
   VarLabel::destroy(d_carbonEfficiencyLabel);
+  VarLabel::destroy(d_scalarFlowRateLabel);
+  VarLabel::destroy(d_scalarEfficiencyLabel);
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)
