@@ -254,6 +254,7 @@ private:
       IntVector d_denRef;
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
+      bool d_empirical_soot;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
