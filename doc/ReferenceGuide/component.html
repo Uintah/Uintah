@@ -386,11 +386,56 @@ element, which is used in several contexts, is not described in detail here
 <DT><STRONG><TT>&lt;/overview&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><TT>&lt;io&gt;</TT></STRONG></DT>
-<DD>Component's inputs and outputs.  Contains 2 elements,
-    &lt;<TT>inputs</TT>&gt; followed by &lt;<TT>outputs</TT>&gt;.
+<DT><STRONG><TT>&lt;implementation&gt;</TT></STRONG></DT>
+<DD>Lists the names of
+    a component's source code files <I>excluding</I> the component's
+    primary source file (which is implied by the &lt;<TT>component</TT>&gt;
+    element's <TT>name</TT> attribute).
+
+<P>
+The need for an implementation section is rare - the source code for
+    most components is contained entirely within a component's primary
+    source code file.
+
+<P>
+The subelements &lt;<TT>ccfile</TT>&gt;, &lt;<TT>cfile</TT>&gt;, and &lt;<TT>ffile</TT>&gt;
+    list the names of c++, c, and fortran source code files respectively.
+    These elements may occur multiple times and in any order.
+    Note that file name extensions are omitted.
     <DL>
-<DT><STRONG><TT>&lt;inputs&gt;</TT></STRONG></DT>
+<DT><STRONG><TT>&lt;ccfile&gt;</TT></STRONG></DT>
+<DD>Names 1 c++ file, e.g. &lt;<TT>ccfile</TT>&gt;foo&lt;<TT>/ccfile</TT>&gt;.
+      
+</DD>
+<DT><STRONG><TT>&lt;/ccfile&gt;</TT></STRONG></DT>
+<DD>
+</DD>
+<DT><STRONG><TT>&lt;cfile&gt;</TT></STRONG></DT>
+<DD>Names 1 c file.
+      
+</DD>
+<DT><STRONG><TT>&lt;/cfile&gt;</TT></STRONG></DT>
+<DD>
+</DD>
+<DT><STRONG><TT>&lt;ffile&gt;</TT></STRONG></DT>
+<DD>Names 1 fortran file.
+      
+</DD>
+<DT><STRONG><TT>&lt;/ffile&gt;</TT></STRONG></DT>
+<DD>
+</DD>
+</DL>
+    
+</DD>
+<DT><STRONG><TT>&lt;/implementation&gt;</TT></STRONG></DT>
+<DD>
+</DD>
+<DT><STRONG><TT>&lt;io&gt;</TT></STRONG></DT>
+<DD>Component's inputs and
+    outputs.  Contains 2 elements, &lt;<TT>inputs</TT>&gt; followed by
+    &lt;<TT>outputs</TT>&gt;.
+    <DL>
+<DT><STRONG><TT>&lt;inputs lastportdynamic="(yes | no)"&gt;</TT></STRONG></DT>
 <DD>Describes the component's inputs. Inputs may
       come from a port, a file, or a device.  Zero or more &lt;<TT>port</TT>&gt;
       elements are used to describe inputs from ports.  Zero or more
@@ -398,11 +443,25 @@ element, which is used in several contexts, is not described in detail here
       or more &lt;<TT>device</TT>&gt; elements are used to describe inputs from
       devices.  There must be at least 1 &lt;<TT>port</TT>&gt; element or 1
       &lt;<TT>file</TT>&gt; element or 1 &lt;<TT>device</TT>&gt; element.
+
+<P>
+If your component's last port is dynamic then the
+      <TT>lastportdynamic</TT> attribute should be set to <TT>yes</TT>
+      (<TT>lastportdynamic="yes"</TT>).  If your component's last port
+        is not dynamic then you may omit this attribute or set its value to
+        <TT>no</TT>.
       <DL>
 <DT><STRONG><TT>&lt;port&gt;</TT></STRONG></DT>
 <DD>States that input data comes from a port. 
         Sub-elements describe the data further.
         <DL>
+<DT><STRONG><TT>&lt;name&gt;</TT></STRONG></DT>
+<DD>The port's name.
+          
+</DD>
+<DT><STRONG><TT>&lt;/name&gt;</TT></STRONG></DT>
+<DD>
+</DD>
 <DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the data 
           accepted by the port, e.g. ``These are potential data from body 
@@ -676,7 +735,10 @@ element, which is used in several contexts, is not described in detail here
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;step&gt;</TT></STRONG></DT>
-<DD><I>Yet to be done</I>
+<DD>Detailed description of 1 step in the testing
+      procedure.   The content model of the &lt;<TT>step</TT>&gt; element is the
+      same as the that of the &lt;<TT>description</TT>&gt; element (i.e., see
+      section&nbsp;<A HREF="component.html#A_Description_of_the__SPMlt_description_SPMgt__Element"><I>A Description of the &lt;description&gt; Element</I></A> for details).
       
 </DD>
 <DT><STRONG><TT>&lt;/step&gt;</TT></STRONG></DT>
@@ -1350,11 +1412,11 @@ Mathematics Department, Macquarie University, Sydney.
 The command line arguments were: <BR>
  <STRONG>latex2html</STRONG> <TT>-split 0 -no_navigation component.tex</TT>
 <P>
-The translation was initiated by Ted Dustman on 2000-10-06
+The translation was initiated by Ted Dustman on 2000-10-19
 <BR><HR>
 <ADDRESS>
 Ted Dustman
-2000-10-06
+2000-10-19
 </ADDRESS>
 </BODY>
 </HTML>
