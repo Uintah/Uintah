@@ -13,6 +13,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/6.mo \
 	$(SRCDIR)/7.mo \
 	$(SRCDIR)/3ds.mo \
+	$(SRCDIR)/3dsm_ase.mo \
 	$(SRCDIR)/bunny.mo \
 	$(SRCDIR)/bunnyteapot.mo \
 	$(SRCDIR)/galleon.mo \
@@ -37,8 +38,28 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/t0.mo \
 	$(SRCDIR)/uintahparticle.mo
 
+RTRT_DATA_DIR_DEST := $(OBJTOP)/$(SRCDIR)/data
+RTRT_DATA_DIR_SRC := $(SRCTOP)/$(SRCDIR)/data
+
 #add the scenes to the targets
+#ALLTARGETS := $(ALLTARGETS) $(SCENES) $(RTRT_DATA_DIR_DEST) $(SRCTOP)/blah.data
 ALLTARGETS := $(ALLTARGETS) $(SCENES)
+
+#Now we need to create a link to the data directory so that we don't have 
+#to copy the data.
+
+#james:
+#	@echo "SRCTOP = " $(SRCTOP)
+#	@echo "SRCDIR = " $(SRCDIR)
+#	@echo "OBJTOP = " $(OBJTOP)
+#	@echo "RTRT_DATA_DIR_DEST = " $(RTRT_DATA_DIR_DEST)
+#	@echo "RTRT_DATA_DIR_SRC = " $(RTRT_DATA_DIR_SRC)
+
+# $(RTRT_DATA_DIR_DEST): $(RTRT_DATA_DIR_SRC)
+# 	ln -s $(shell echo $(foreach t,$(subst /," ",$(SRCDIR))) | sed -e 's,../ ,../,g')$(SRCDIR)/data $@
+
+# $(SRCDIR)/blah.data: $(SRCTOP)/$(SRCDIR)/blah.data
+# 	@echo $@
 
 RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_CCA_Components_DataArchiver -lPackages_Uintah_CCA_Components_MPM -lPackages_Uintah_Core_Grid -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc
 
@@ -108,3 +129,6 @@ CLEANPROGS := $(CLEANPROGS) $(SCENES)
 #include $(SCIRUN_SCRIPTS)/rtrt_module.mk
 
 
+#SUBDIRS := \
+#	Packages/rtrt/StandAlone/scenes/data
+#include $(SCIRUN_SCRIPTS)/recurse.mk
