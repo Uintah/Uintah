@@ -282,12 +282,19 @@ void setBC(CCVariable<double>& press_CC,
   BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
            << " mat_id = " << mat_id << endl;
 
-  int numMatls = sharedState->getNumMatls();  
+  int numMatls = sharedState->getNumMatls();
+  int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();  
   Vector gravity = sharedState->getGravity();
   StaticArray<CCVariable<double> > rho_micro(numMatls);
 
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
                 patch, which_Var, sharedState,  new_dw, lv);
+                
+  //__________________________________
+  //  -Set the LODI BC's first, then let the other BC's wipe out what
+  //   was set in the corners and edges. 
+  //  -Ignore lodi bcs during intialization phase AND when
+  //   lv->setLodiBcs = false              
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
@@ -295,12 +302,7 @@ void setBC(CCVariable<double>& press_CC,
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
-    bool IveSetBC = false;
-    //__________________________________
-    //  -Set the LODI BC's first, then let the other BC's wipe out what
-    //   was set in the corners and edges. 
-    //  -Ignore lodi bcs during intialization phase AND when
-    //   lv->setLodiBcs = false
+    
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
 
@@ -308,9 +310,17 @@ void setBC(CCVariable<double>& press_CC,
        && topLevelTimestep > 0 && lv->setLodiBcs){
        FacePress_LODI(patch, press_CC, rho_micro, sharedState,face,lv);
     }
+  }
 
-    //__________________________________
-    //  N O N  -  L O D I
+  //__________________________________
+  //  N O N  -  L O D I
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+    bool IveSetBC = false;
+   
     IntVector dir= patch->faceAxes(face);
     Vector cell_dx = patch->dCell();
     double dx = cell_dx[dir[0]];
@@ -386,24 +396,22 @@ void setBC(CCVariable<double>& var_CC,
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
   Vector cell_dx = patch->dCell();
-  
+  int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
+
+  //__________________________________
+  //  -Set the LODI BC's first, then let the other BC's wipe out what
+  //   was set in the corners and edges. 
+  //  -Ignore lodi bcs during intialization phase and when
+  //   lv->setLodiBcs = false
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
-          
-    bool IveSetBC = false;
-    
-    //__________________________________
-    //  -Set the LODI BC's first, then let the other BC's wipe out what
-    //   was set in the corners and edges. 
-    //  -Ignore lodi bcs during intialization phase and when
-    //   lv->setLodiBcs = false
+
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
-    bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");   
-    int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();   
+    bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
     if( desc == "Temperature"  && is_tempBC_lodi 
         && topLevelTimestep >0 && lv->setLodiBcs ){
@@ -413,9 +421,17 @@ void setBC(CCVariable<double>& var_CC,
         && topLevelTimestep >0 && lv->setLodiBcs){
       FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
     }
-    
-    //__________________________________
-    //  N O N  -  L O D I
+  }
+  //__________________________________
+  //  N O N  -  L O D I
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+          
+    bool IveSetBC = false;
+
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
     for (int child = 0;  child < numChildren; child++) {
@@ -484,20 +500,17 @@ void setBC(CCVariable<Vector>& var_CC,
 {
   BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
   Vector cell_dx = patch->dCell();
-  
+  //__________________________________
+  //  -Set the LODI BC's first, then let the other BC's wipe out what
+  //   was set in the corners and edges. 
+  //  -Ignore lodi bcs during intialization phase and when
+  //   lv->setLodiBcs = false
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
-    bool IveSetBC = false;
-    
-    //__________________________________
-    //  -Set the LODI BC's first, then let the other BC's wipe out what
-    //   was set in the corners and edges. 
-    //  -Ignore lodi bcs during intialization phase and when
-    //   lv->setLodiBcs = false
     bool is_velBC_lodi   =  patch->haveBC(face,mat_id,"LODI","Velocity");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
     
@@ -505,9 +518,17 @@ void setBC(CCVariable<Vector>& var_CC,
         && topLevelTimestep > 0 && lv->setLodiBcs) {
       FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
     }
+  }
+  //__________________________________
+  //  N O N  -  L O D I
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+    bool IveSetBC = false;
     
-    //__________________________________
-    //  N O N  -  L O D I
+
     IntVector oneCell = patch->faceDirection(face);
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
