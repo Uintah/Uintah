@@ -28,28 +28,28 @@
 		<p>In Chapters 1-4, we learned about deataflow
                 programming, and constructed visualization networks
                 for exploring datasets.  But where did the Field
-                voltage datavalues come from?  In this chapter we will
+                voltage datavalues come from?  In this chapter, we will
                 construct a simulation network that computes simulated
                 voltages for a realistic volume conductor problem.
 
-		<p>In the preceeding chapters, we used modules from
+		<p>In preceeding chapters, we used modules from
                 the central SCIRun package.  Those modules have been
                 general purpose tools--not targeted towards
                 any specific application.  By contrast, in this
                 chapter we begin using modules from the BioPSE
-                package, a set of tools that have been specifically
+                package, a set of tools specifically
                 written for the modeling, simulation, and
                 visualization of bioelectric field problems.
 
-		<p>Packages (<b>Figure 5.1</b>) are typically logically grouped                sets of modulues
-		and supporting code for those modules. They can be created by
-	        anyone, and compiled into SCIRun. Packages can be wholly
-		dependent upon SCIRun code, or can depend upon any additional
-		third party code, in fact can simply be a wrapper around third
-		party code, such that SCIRun can use Dataflow
-		functionality. Packages are a major mechanism to bridging in
-		SCIRun. Bridging is the concept that SCIRun can be used in
-	        conjunction with other useful software such as Matlab or Teem.
+		<p>Typically, Packages (<b>Figure 5.1</b>) are logically
+	        grouped sets of modules and the supporting code for those
+	        modules. They can be created by anyone, and compiled into
+	        SCIRun. Packages can be wholly dependent upon SCIRun code,
+	        or can depend upon any additional third party code.
+	        Packages can, in fact, simply wrap around third party code,
+	        such that SCIRun can use Dataflow functionality. Packages
+	        are a major mechanism to bridging in SCIRun. Bridging is
+	        the concept that SCIRun can be used in conjunction with other useful software such as Matlab or Teem.
 
 </div>
 									<center>
@@ -63,7 +63,7 @@
 
 		<p>Given a volume conductor model and an equivalent
 		dipole source, we would like to compute the potentials
-		and electric field that the source induces through the
+		and electric field induced by the source through the
 		domain. An analytic solution exists for problems of some
 		very specific geometric models (e.g., analytic cylinders or
 		spheres). However, for most real-world problems, we can
