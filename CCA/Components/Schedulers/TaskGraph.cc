@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabelLevelDW.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/ProgressiveWarning.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
@@ -31,6 +32,7 @@ using namespace SCIRun;
 using namespace std;
 
 static DebugStream dbg("TaskGraph", false);
+static DebugStream compdbg("FindComp", false);
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
@@ -60,7 +62,7 @@ TaskGraph::initialize()
     delete *iter;
 
   d_tasks.clear();
-  d_oldInitRequires = d_initRequires;
+
   d_initRequires.clear();
   d_initRequiredVars.clear();
   edges.clear();
@@ -729,25 +731,25 @@ bool CompTable::findcomp(Task::Dependency* req, const Patch* patch,
 			 int matlIndex, DetailedTask*& dt,
 			 Task::Dependency*& comp, const ProcessorGroup *pg)
 {
-  if (dbg.active())
-    dbg << pg->myrank() << "         Finding comp of req: " << *req << " for task: " << *req->task << "/" << '\n';
+  if (compdbg.active())
+    compdbg << pg->myrank() << "        Finding comp of req: " << *req << " for task: " << *req->task << "/" << '\n';
   Data key(0, req, patch, matlIndex);
   Data* result = 0;
   for(Data* p = data.lookup(&key); p != 0; p = data.nextMatch(&key, p)){
-    if (dbg.active())
-      dbg << pg->myrank() << "         Examining comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << '\n';
+    if (compdbg.active())
+      compdbg << pg->myrank() << "          Examining comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << '\n';
     ASSERT(!result || p->comp->task->getSortedOrder() != result->comp->task->getSortedOrder());
     if(p->comp->task->getSortedOrder() < req->task->getSortedOrder()){
       if(!result || p->comp->task->getSortedOrder() > result->comp->task->getSortedOrder()){
-	if (dbg.active())
-          dbg << pg->myrank() << "         New best is comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << '\n';
+	if (compdbg.active())
+          compdbg << pg->myrank() << "          New best is comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << '\n';
 	result = p;
       }
     }
   }
   if(result){
-    if (dbg.active())
-      dbg << pg->myrank() << "         Found comp at: " << result->comp->task->getName() << ", order=" << result->comp->task->getSortedOrder() << '\n';
+    if (compdbg.active())
+      compdbg << pg->myrank() << "          Found comp at: " << result->comp->task->getName() << ", order=" << result->comp->task->getSortedOrder() << '\n';
     dt=result->task;
     comp=result->comp;
     return true;
@@ -886,8 +888,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
 			 Patch::Compare()));
 	if(dbg.active()){
-	  dbg << d_myworld->myrank() << "      Creating dependency on " << neighbors.size() << " neighbors\n";
-	  dbg << d_myworld->myrank() << "        Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
+	  dbg << d_myworld->myrank() << "    Creating dependency on " << neighbors.size() << " neighbors\n";
+	  dbg << d_myworld->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
 	}
         
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
@@ -920,6 +922,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
             IntVector from_l = Max(fromNeighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l);
             IntVector from_h = Min(fromNeighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h);
             
+            dbg << d_myworld->myrank() << "        Neighbor: patch " << fromNeighbor->getID() << " low= " << from_l 
+                << ", high=" << from_h << '\n';
 
 	    if(!(lb->inNeighborhood(neighbor) || lb->inNeighborhood(fromNeighbor)))
               continue;
@@ -940,11 +944,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	        comp=0;
 	      } else {
 	        if (!ct.findcomp(req, neighbor, matl, creator, comp, d_myworld)){
-		  cerr << "Failure finding " << *req << " for " << *task
+		  cout << "Failure finding " << *req << " for " << *task
 		      << "\n";
-		  cerr << "creator=" << *creator << '\n';
-		  cerr << "neighbor=" << *neighbor << ", matl=" << matl << '\n';
-		  cerr << "me=" << me << '\n';
+		  cout << "creator=" << *creator << '\n';
+		  cout << "neighbor=" << *neighbor << ", matl=" << matl << '\n';
+		  cout << "me=" << me << '\n';
 		  SCI_THROW(InternalError("Failed to find comp for dep!"));
 	        }
 	      }
@@ -964,7 +968,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		  DetailedTask* prevReqTask = *reqTaskIter;
 		  if(prevReqTask->task == task->task){
 		    if(!task->task->getHasSubScheduler()) {
-		      cerr << "\n\n\nWARNING - task that requires with Ghost cells *and* modifies may not be correct\n";
+                      static ProgressiveWarning warn("WARNING - task that requires with Ghost cells *and* modifies may not be correct",4);
+                      warn.invoke();
                       dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
                     }
 		  } else if(prevReqTask != task){

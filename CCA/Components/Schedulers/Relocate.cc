@@ -31,6 +31,7 @@ using namespace Uintah;
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
+extern DebugStream mpidbg;
 
 Relocate::Relocate()
 {
@@ -862,8 +863,10 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     // Send (isend) the message
     MPI_Request rid;
     int to=iter->first;
+    mpidbg << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
     MPI_Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG,
 	      pg->getComm(), &rid);
+    mpidbg << pg->myrank() << " done Sending relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
     sendbuffers.push_back(buf);
     sendrequests.push_back(rid);
   }
@@ -892,9 +895,11 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
+    mpidbg << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
     MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first,
 	     RELOCATE_TAG, pg->getComm(), &status);
 
+    mpidbg << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
     // Partially unpack
     int position=0;
     int numrecords;
@@ -1098,8 +1103,11 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 
     // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
     if (getLevel(patches)->numPatches() >= pg->size()) {
+      mpidbg << pg->myrank() << " Relocate reduce\n";
+
       MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
                  pg->getComm());
+      mpidbg << pg->myrank() << " Done Relocate reduce\n";
       if(pg->myrank() == 0){
         ASSERTEQ(alltotal[1], alltotal[2]);
         if(alltotal[0] != 0)
