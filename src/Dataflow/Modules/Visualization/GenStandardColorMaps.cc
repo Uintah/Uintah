@@ -118,7 +118,9 @@ GenStandardColorMaps::GenStandardColorMaps(const string& id)
     height("height", id, this),
     mapType("mapType", id, this),
     minRes("minRes", id, this),
-    resolution("resolution", id, this)
+    resolution("resolution", id, this),
+    realres("realres", id, this),
+    gamma("gamma", id, this)
 { 
  } 
 
