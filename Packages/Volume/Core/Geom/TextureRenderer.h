@@ -74,7 +74,8 @@ public:
   void set_slice_alpha(double alpha);
   void set_sw_raster(bool b);
   bool use_pbuffer() { return use_pbuffer_; }
-  void set_blend_numbits(int b);
+  void set_blend_num_bits(int b);
+  bool use_blend_buffer();
   inline void set_interp(bool i) { interp_ = i; }
   
   enum RenderMode { MODE_NONE, MODE_OVER, MODE_MIP, MODE_SLICE };
@@ -128,11 +129,12 @@ protected:
   FragmentProgramARB* cmap2_shader_ati_;
   VolShaderFactory* vol_shader_factory_;
   Pbuffer* blend_buffer_;
-  int blend_numbits_;
+  int blend_num_bits_;
+  bool use_blend_buffer_;
   
   void compute_view(Ray& ray);
   void load_brick(Brick& b);
-  void draw_polys(vector<Polygon *> polys, bool z);
+  void draw_polys(vector<Polygon *> polys, bool z, Pbuffer* buffer);
   void build_colormap1();
   void build_colormap2();
   void bind_colormap1();

@@ -169,8 +169,76 @@ VolumeRenderer::draw()
   int nb0 = (*bricks.begin())->data()->nb(0);
   bool use_cmap2 = cmap2_.get_rep() && nc == 2;
   bool use_shading = shading_ && nb0 == 4;
-  GLboolean use_fog;
-  glGetBooleanv(GL_FOG, &use_fog);
+  GLboolean use_fog = glIsEnabled(GL_FOG);
+  // glGetBooleanv(GL_FOG, &use_fog);
+  GLfloat light_pos[4];
+  glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
+  GLfloat clear_color[4];
+  glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
+  
+  //--------------------------------------------------------------------------
+  // set up blending
+
+  int vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  int psize[2];
+  psize[0] = isPowerOf2(vp[2]) ? vp[2] : nextPowerOf2(vp[2]);
+  psize[1] = isPowerOf2(vp[3]) ? vp[3] : nextPowerOf2(vp[3]);
+    
+  if(blend_num_bits_ != 8) {
+    if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
+       || psize[0] != blend_buffer_->width()
+       || psize[1] != blend_buffer_->height()) {
+      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, blend_num_bits_, true,
+                                  GL_FALSE, GL_DONT_CARE, 24);
+      if(blend_buffer_->create()) {
+        blend_buffer_->destroy();
+        delete blend_buffer_;
+        blend_buffer_ = 0;
+        blend_num_bits_ = 8;
+        use_blend_buffer_ = false;
+      } else {
+        blend_buffer_->set_use_default_shader(false);
+        blend_buffer_->set_use_texture_matrix(false);
+      }
+    }
+  }
+  
+  if(blend_num_bits_ == 8) {
+    glEnable(GL_BLEND);
+    switch(mode_) {
+    case MODE_OVER:
+      glBlendEquation(GL_FUNC_ADD);
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      break;
+    case MODE_MIP:
+      glBlendEquation(GL_MAX);
+      glBlendFunc(GL_ONE, GL_ONE);
+      break;
+    default:
+      break;
+    }
+  } else {
+    double mv[16], pr[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, mv);
+    glGetDoublev(GL_PROJECTION_MATRIX, pr);
+
+    blend_buffer_->activate();
+    glDrawBuffer(GL_FRONT);
+    float* cc = clear_color;
+    glClearColor(cc[0], cc[1], cc[2], cc[3]);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    blend_buffer_->swapBuffers();
+
+    glViewport(vp[0], vp[1], vp[2], vp[3]);
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixd(pr);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixd(mv);
+  }
+  
+  glColor4f(1.0, 1.0, 1.0, 1.0);
+  glDepthMask(GL_FALSE);
 
   //--------------------------------------------------------------------------
   // load colormap texture
@@ -191,73 +259,24 @@ VolumeRenderer::draw()
   glEnable(GL_TEXTURE_3D);
 
   //--------------------------------------------------------------------------
-  // now set up blending
-
-//   int vp[4];
-//   glGetIntegerv(GL_VIEWPORT, vp);
-//   int psize[2];
-//   psize[0] = isPowerOf2(vp[2]) ? vp[2] : nextPowerOf2(vp[2]);
-//   psize[1] = isPowerOf2(vp[3]) ? vp[3] : nextPowerOf2(vp[3]);
-    
-//   if(num_bits_ != 8) {
-//     if(!comp_buffer_ || num_bits_ != comp_buffer_->num_color_bits()
-//        || psize[0] != comp_buffer_->width()
-//        || psize[1] != comp_buffer_->height()) {
-//       comp_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, num_bits_, true,
-//                                  GL_FALSE, GL_DONT_CARE, 24);
-//       if(comp_buffer_->create()) {
-//         comp_buffer_->destroy();
-//         delete comp_buffer_;
-//         comp_buffer_ = 0;
-//         num_bits = 8;
-//       }
-//     }
-//   }
-  
-//   if(num_bits_ == 8) {
-  glEnable(GL_BLEND);
-  switch(mode_) {
-  case MODE_OVER:
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    break;
-  case MODE_MIP:
-    glBlendEquation(GL_MAX);
-    glBlendFunc(GL_ONE, GL_ONE);
-    break;
-  default:
-    break;
-  }
-//    } else {
-//      glActiveTexture(GL_TEXTURE3);
-//      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-//      comp_buffer->bind();
-     
-//      glActiveTexture(GL_TEXTURE0);
-//   }
-  
-  glColor4f(1.0, 1.0, 1.0, 1.0);
-  glDepthMask(GL_FALSE);
-
-  //--------------------------------------------------------------------------
   // set up shaders
   FragmentProgramARB* shader = 0;
   int blend_mode = 0;
-//   if(blend_numbits != 8) {
-//     if(mode_ = MODE_OVER) {
-//       if(blend_buffer->need_shader()) {
-//         blend_mode = 1;
-//       } else {
-//         blend_mode = 3;
-//       }
-//     } else {
-//       if(blend_buffer->need_shader()) {
-//         blend_mode = 2;
-//       } else {
-//         blend_mode = 4;
-//       }
-//     }
-//   }
+  if(blend_num_bits_ != 8) {
+    if(mode_ == MODE_OVER) {
+      if(blend_buffer_->need_shader()) {
+        blend_mode = 1;
+      } else {
+        blend_mode = 3;
+      }
+    } else {
+      if(blend_buffer_->need_shader()) {
+        blend_mode = 2;
+      } else {
+        blend_mode = 4;
+      }
+    }
+  }
   shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, use_shading, false,
                                        use_fog, blend_mode);
   if(shader) {
@@ -269,9 +288,7 @@ VolumeRenderer::draw()
   
   if(use_shading) {
     // set shader parameters
-    GLfloat pos[4];
-    glGetLightfv(GL_LIGHT0+light_, GL_POSITION, pos);
-    Vector l(pos[0], pos[1], pos[2]);
+    Vector l(light_pos[0], light_pos[1], light_pos[2]);
     //cerr << "LIGHTING: " << pos << endl;
     double m[16], m_tp[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, m);
@@ -303,8 +320,10 @@ VolumeRenderer::draw()
     st.getParameters(b, tmin, tmax, dt);
     b.ComputePolys(viewRay, tmin, tmax, dt, ts, polys);
     load_brick(b);
-    draw_polys(polys, use_fog);
+    draw_polys(polys, use_fog, blend_num_bits_ > 8 ? blend_buffer_ : 0);
   }
+
+  glDepthMask(GL_TRUE);
 
   //--------------------------------------------------------------------------
   // release shader
@@ -312,12 +331,6 @@ VolumeRenderer::draw()
   if(shader && shader->valid())
     shader->release();
   
-  //--------------------------------------------------------------------------
-
-  glDisable(GL_BLEND);
-  glDepthMask(GL_TRUE);
-  // glEnable(GL_DEPTH_TEST);  
-
   //--------------------------------------------------------------------------
   // release textures
   if(use_cmap2) {
@@ -329,6 +342,62 @@ VolumeRenderer::draw()
   glDisable(GL_TEXTURE_3D);
   glBindTexture(GL_TEXTURE_3D, 0);
 
+  //--------------------------------------------------------------------------
+
+  if(blend_num_bits_ == 8) {
+    glDisable(GL_BLEND);
+  } else {
+    blend_buffer_->deactivate();
+    blend_buffer_->set_use_default_shader(true);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(-1.0, -1.0, 0.0);
+    glScalef(2.0, 2.0, 2.0);
+
+    GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
+    GLboolean lighting = glIsEnabled(GL_LIGHTING);
+    GLboolean cull_face = glIsEnabled(GL_CULL_FACE);
+    
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    blend_buffer_->bind(GL_FRONT);
+
+    glBegin(GL_QUADS);
+    {
+      glTexCoord2f(0.0,  0.0);
+      glVertex2f( 0.0,  0.0);
+      glTexCoord2f(vp[2],  0.0);
+      glVertex2f( 1.0,  0.0);
+      glTexCoord2f(vp[2],  vp[3]);
+      glVertex2f( 1.0,  1.0);
+      glTexCoord2f( 0.0,  vp[3]);
+      glVertex2f( 0.0,  1.0);
+    }
+    glEnd();
+    
+    blend_buffer_->release(GL_FRONT);
+
+    if(depth_test) glEnable(GL_DEPTH_TEST);
+    if(lighting) glEnable(GL_LIGHTING);
+    if(cull_face) glEnable(GL_CULL_FACE);
+    
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    blend_buffer_->set_use_default_shader(false);
+  }
+  
 
   // Look for errors
   GLenum errcode;
@@ -353,8 +422,7 @@ VolumeRenderer::draw_wireframe()
   glPushMatrix();
   glMultMatrixd(mvmat);
   glEnable(GL_DEPTH_TEST);
-  int lighting;
-  glGetIntegerv(GL_LIGHTING, &lighting);
+  GLboolean lighting = glIsEnabled(GL_LIGHTING);
   glDisable(GL_LIGHTING);
   vector<Brick*> bricks;
   tex_->get_sorted_bricks(bricks, viewRay);
@@ -382,8 +450,7 @@ VolumeRenderer::draw_wireframe()
     glVertex3d(brick[6].x(), brick[6].y(), brick[6].z());
     glEnd();
   }
-  if(lighting)
-    glEnable(GL_LIGHTING);
+  if(lighting) glEnable(GL_LIGHTING);
   //glDisable(GL_DEPTH_TEST);
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();

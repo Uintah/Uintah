@@ -105,7 +105,8 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   cmap2_shader_ati_(new FragmentProgramARB(Cmap2ShaderStringATI)),
   vol_shader_factory_(new VolShaderFactory()),
   blend_buffer_(0),
-  blend_numbits_(8)
+  blend_num_bits_(8),
+  use_blend_buffer_(true)
 {}
 
 TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
@@ -135,7 +136,8 @@ TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   cmap2_shader_ati_(copy.cmap2_shader_ati_),
   vol_shader_factory_(copy.vol_shader_factory_),
   blend_buffer_(copy.blend_buffer_),
-  blend_numbits_(copy.blend_numbits_)
+  blend_num_bits_(copy.blend_num_bits_),
+  use_blend_buffer_(copy.use_blend_buffer_)
 {}
 
 TextureRenderer::~TextureRenderer()
@@ -207,11 +209,17 @@ TextureRenderer::set_sw_raster(bool b)
 
 
 void
-TextureRenderer::set_blend_numbits(int b)
+TextureRenderer::set_blend_num_bits(int b)
 {
   mutex_.lock();
-  blend_numbits_ = b;
+  blend_num_bits_ = b;
   mutex_.unlock();
+}
+
+bool
+TextureRenderer::use_blend_buffer()
+{
+  return use_blend_buffer_;
 }
 
 #define TEXTURERENDERER_VERSION 1
@@ -394,7 +402,7 @@ TextureRenderer::load_brick(Brick& brick)
 }
 
 void
-TextureRenderer::draw_polys(vector<Polygon *> polys, bool z)
+TextureRenderer::draw_polys(vector<Polygon *> polys, bool z, Pbuffer* buffer)
 {
   double mvmat[16];
   TextureHandle tex = tex_;
@@ -408,12 +416,20 @@ TextureRenderer::draw_polys(vector<Polygon *> polys, bool z)
   glMultMatrixd(mvmat);
 
   glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
+
+  if(buffer) {
+    glActiveTexture(GL_TEXTURE3);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  }
   
   Point p0, t0;
   unsigned int i;
   unsigned int k;
   di_->polycount += polys.size();
   for (i = 0; i < polys.size(); i++) {
+    if(buffer) {
+      buffer->bind(GL_FRONT);
+    }
     switch (polys[i]->size() ) {
     case 1:
       t0 = polys[i]->getTexCoord(0);
@@ -488,9 +504,16 @@ TextureRenderer::draw_polys(vector<Polygon *> polys, bool z)
 	break;
       }
     }
+    if(buffer) {
+      buffer->release(GL_FRONT);
+      buffer->swapBuffers();
+    }
   }
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+  if(buffer) {
+    glActiveTexture(GL_TEXTURE0);
+  }
 }
 
 void

@@ -291,7 +291,7 @@ SliceRenderer::draw(Brick& b, Polygon* poly, bool use_fog)
   vector<Polygon *> polys;
   polys.push_back(poly);
   load_brick(b);
-  draw_polys(polys, use_fog);
+  draw_polys(polys, use_fog, 0);
 }
 
 void 

@@ -35,6 +35,7 @@
 
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 //#include <Core/Exceptions/InternalError.h>
+#include <Core/Util/DebugStream.h>
 
 #include <iostream>
 using std::cerr;
@@ -111,6 +112,8 @@ static PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB = 0;
 
 namespace Volume {
 
+static SCIRun::DebugStream dbg("ShaderProgramARB", false);
+
 static bool mInit = false;
 static bool mSupported = false;
 
@@ -171,7 +174,7 @@ ShaderProgramARB::create()
   }
 
   if(mSupported) {
-    //cerr << mProgram << endl;
+    dbg << mProgram << endl;
     glGenProgramsARB(1, &mId);
     glBindProgramARB(mType, mId);
     glProgramStringARB(mType, GL_PROGRAM_FORMAT_ASCII_ARB,
