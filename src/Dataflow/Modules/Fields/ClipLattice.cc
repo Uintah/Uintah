@@ -54,7 +54,7 @@ private:
   GuiDouble text_max_x_;
   GuiDouble text_max_y_;
   GuiDouble text_max_z_;
-
+  int init;
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
 public:
@@ -83,7 +83,8 @@ ClipLattice::ClipLattice(const string& id)
     text_min_z_("text-min-z", id, this),
     text_max_x_("text-max-x", id, this),
     text_max_y_("text-max-y", id, this),
-    text_max_z_("text-max-z", id, this)
+    text_max_z_("text-max-z", id, this),
+    init(0)
 {
   widget_ = scinew BoxWidget(this, &widget_lock_, 1.0, true, false);
 }
@@ -156,12 +157,12 @@ ClipLattice::execute()
   // Update the widget.
   const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
   if (!bbox_similar_to(last_bounds_, bbox) || 
-      use_text_bbox_.get())
+      use_text_bbox_.get() || !init)
   {
     Point center, right, down, in, bmin, bmax;
-    if (use_text_bbox_.get()) {
-      bmin = Point(text_min_x_.get(), text_min_y_.get(), text_min_z_.get());
-      bmax = Point(text_max_x_.get(), text_max_y_.get(), text_max_z_.get());
+    bmin = Point(text_min_x_.get(), text_min_y_.get(), text_min_z_.get());
+    bmax = Point(text_max_x_.get(), text_max_y_.get(), text_max_z_.get());
+    if (use_text_bbox_.get() || (!init && bmin!=bmax)) {
       center = bmin + Vector(bmax-bmin) * 0.5;
       right = center + Vector(bmax.x()-bmin.x()/2.0, 0, 0);
       down = center + Vector(0, bmax.x()-bmin.x()/2.0, 0);
@@ -243,7 +244,8 @@ ClipLattice::execute()
 
     // Get widget bounds.
     Point center, r, d, i, top, bottom;
-    if (use_text_bbox_.get()) {
+    if (use_text_bbox_.get() || !init) {
+      init=1;
       top = Point(text_max_x_.get(), text_max_y_.get(), text_max_z_.get());
       bottom = Point(text_min_x_.get(), text_min_y_.get(), text_min_z_.get());
       center = bottom + Vector(top-bottom)/2.;
