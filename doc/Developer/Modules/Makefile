@@ -207,14 +207,12 @@ endif
 
 # ########## Primary targets
 
-.PHONY: all no-pdf dvi pdf
+.PHONY: all dvi pdf
 .PHONY: SCIRun BioPSE Teem Insight Fusion DataIO MatlabInterface clean veryclean
 
 .DELETE_ON_ERROR:
 
 all: index.html ${packages} dvi pdf
-
-no-pdf: index.html ${packages}
 
 index.html : index.rhtml ${edition} 
 	eruby --delimiters html $< > $@
