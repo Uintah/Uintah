@@ -39,6 +39,21 @@ MUL c, c, fc; \n\
 MOV_SAT result.color, c; \n\
 END";
 
+// static const char* ShaderString =
+// "!!ARBfp1.0 \n\
+// TEMP c0, c; \n\
+// PARAM p = state.fog.params; \n\
+// PARAM fogColor = state.fog.color; \n\
+// TEMP fogFactor; \n\
+// ATTRIB fogCoord = fragment.fogcoord; \n\
+// MAD_SAT fogFactor.x, p.y, fogCoord.x, p.z; \n\
+// ATTRIB fc = fragment.color; \n\
+// ATTRIB tf = fragment.texcoord[0]; \n\
+// TEX c0, tf, texture[0], 3D; \n\
+// TEX c, c0, texture[1], 1D; \n\
+// MUL c, c, fc; \n\
+// LRP result.color, fogFactor.x, c, fogColor; \n\
+// END";
 
 
 #if ! defined(__sgi)
@@ -288,6 +303,15 @@ GLVolRenState::loadTexture(Brick& brick)
 //   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 #endif
+  if(volren->interp()){
+    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //        glCheckForError("glTexParameteri GL_LINEAR");
+  } else {
+    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //        glCheckForError("glTexParameteri GL_NEAREST");
+  }
   if( !brick.texName() || reload_ ) {
     if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
@@ -297,15 +321,6 @@ GLVolRenState::loadTexture(Brick& brick)
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 //      glCheckForError("After glBindTexture");
 
-    if(volren->interp()){
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//        glCheckForError("glTexParameteri GL_LINEAR");
-    } else {
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//        glCheckForError("glTexParameteri GL_NEAREST");
-    }
 
 #if defined( GL_ARB_fragment_program )  && defined(GL_ARB_multitexture)  && defined(__APPLE__)
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
