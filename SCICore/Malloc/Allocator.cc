@@ -105,22 +105,22 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
 static void shutdown()
 {
     Allocator* a=DefaultAllocator();
-    if(a->trace){
+    if(a->stats_out){
 	// Just in case...
 	a->lock();
 
-	fprintf(a->trace_out, "Unfreed objects:\n");
+	fprintf(a->stats_out, "Unfreed objects:\n");
 	// Full accounting - go through each bin...
 	size_t bytes_overhead=0, bytes_free=0, bytes_fragmented=0,
 	    bytes_inuse=0, bytes_inhunks=0;
 	int i;
 	for(i=0;i<NSMALL_BINS;i++)
-	    account_bin(a, &a->small_bins[i], a->trace_out, bytes_overhead,
+	    account_bin(a, &a->small_bins[i], a->stats_out, bytes_overhead,
 			bytes_free, bytes_fragmented, bytes_inuse);
 	for(i=0;i<NMEDIUM_BINS;i++)
-	    account_bin(a, &a->medium_bins[i], a->trace_out, bytes_overhead,
+	    account_bin(a, &a->medium_bins[i], a->stats_out, bytes_overhead,
 			bytes_free, bytes_fragmented, bytes_inuse);
-	account_bin(a, &a->big_bin, a->trace_out, bytes_overhead, bytes_free,
+	account_bin(a, &a->big_bin, a->stats_out, bytes_overhead, bytes_free,
 		    bytes_fragmented, bytes_inuse);
 
 	// Count hunks...
@@ -136,35 +136,35 @@ static void shutdown()
 	    bytes_overhead+=sizeof(OSHunk);
 	bytes_overhead+=a->mysize;
 	if(bytes_inuse == 0)
-	    fprintf(a->trace_out, "None\n");
+	    fprintf(a->stats_out, "None\n");
 
-        fprintf(a->trace_out, "statistics:\n");
-	fprintf(a->trace_out, "alloc:\t\t\t%d calls\n", a->nalloc);
-	fprintf(a->trace_out, "alloc:\t\t\t%d bytes\n", a->sizealloc);
-	fprintf(a->trace_out, "free:\t\t\t%d calls\n", a->nfree);
-	fprintf(a->trace_out, "free:\t\t\t%d bytes\n", a->sizefree);
-	fprintf(a->trace_out, "fillbin:\t\t%d calls\n", a->nfillbin);
-	fprintf(a->trace_out, "mmap:\t\t\t%d calls\n", a->nmmap);
-	fprintf(a->trace_out, "mmap:\t\t\t%d bytes\n", a->sizemmap);
-	fprintf(a->trace_out, "munmap:\t\t\t%d calls\n", a->nmunmap);
-	fprintf(a->trace_out, "munmap:\t\t\t%d bytes\n", a->sizemunmap);
-	fprintf(a->trace_out, "highwater alloc:\t%d bytes\n", a->highwater_alloc);
-	fprintf(a->trace_out, "highwater mmap:\t\t%d bytes\n", a->highwater_mmap);
-	fprintf(a->trace_out, "long locks:\t\t%d times\n", a->nlonglocks);
-	fprintf(a->trace_out, "naps:\t\t\t%d times\n", a->nnaps);
-	fprintf(a->trace_out, "\n");
-	fprintf(a->trace_out, "breakdown of total bytes:\n");	
-	fprintf(a->trace_out, "in use:\t\t\t%d bytes\n", bytes_inuse);
-	fprintf(a->trace_out, "free:\t\t\t%d bytes\n", bytes_free);
-	fprintf(a->trace_out, "fragmentation:\t\t%d bytes\n", bytes_fragmented);
-	fprintf(a->trace_out, "left in mmap hunks:\t%d\n", bytes_inhunks);
-	fprintf(a->trace_out, "per object overhead:\t%d bytes\n", bytes_overhead);
-	fprintf(a->trace_out, "\n");
-	fprintf(a->trace_out, "%d bytes missing (%d memory objects)\n",
+        fprintf(a->stats_out, "statistics:\n");
+	fprintf(a->stats_out, "alloc:\t\t\t%d calls\n", a->nalloc);
+	fprintf(a->stats_out, "alloc:\t\t\t%d bytes\n", a->sizealloc);
+	fprintf(a->stats_out, "free:\t\t\t%d calls\n", a->nfree);
+	fprintf(a->stats_out, "free:\t\t\t%d bytes\n", a->sizefree);
+	fprintf(a->stats_out, "fillbin:\t\t%d calls\n", a->nfillbin);
+	fprintf(a->stats_out, "mmap:\t\t\t%d calls\n", a->nmmap);
+	fprintf(a->stats_out, "mmap:\t\t\t%d bytes\n", a->sizemmap);
+	fprintf(a->stats_out, "munmap:\t\t\t%d calls\n", a->nmunmap);
+	fprintf(a->stats_out, "munmap:\t\t\t%d bytes\n", a->sizemunmap);
+	fprintf(a->stats_out, "highwater alloc:\t%d bytes\n", a->highwater_alloc);
+	fprintf(a->stats_out, "highwater mmap:\t\t%d bytes\n", a->highwater_mmap);
+	fprintf(a->stats_out, "long locks:\t\t%d times\n", a->nlonglocks);
+	fprintf(a->stats_out, "naps:\t\t\t%d times\n", a->nnaps);
+	fprintf(a->stats_out, "\n");
+	fprintf(a->stats_out, "breakdown of total bytes:\n");	
+	fprintf(a->stats_out, "in use:\t\t\t%d bytes\n", bytes_inuse);
+	fprintf(a->stats_out, "free:\t\t\t%d bytes\n", bytes_free);
+	fprintf(a->stats_out, "fragmentation:\t\t%d bytes\n", bytes_fragmented);
+	fprintf(a->stats_out, "left in mmap hunks:\t%d\n", bytes_inhunks);
+	fprintf(a->stats_out, "per object overhead:\t%d bytes\n", bytes_overhead);
+	fprintf(a->stats_out, "\n");
+	fprintf(a->stats_out, "%d bytes missing (%d memory objects)\n",
 		a->sizealloc-a->sizefree, a->nalloc-a->nfree);
 
-	if(a->trace_out != stderr)
-	    fclose(a->trace_out);
+	if(a->stats_out != stderr)
+	    fclose(a->stats_out);
 	a->unlock();
     }
 }
@@ -379,6 +379,30 @@ Allocator* MakeAllocator()
 
     // Setup the lock...
     a->initlock();
+    if(getenv("MALLOC_STATS")){
+	// Set the default allocator, since the fopen below may
+	// call malloc.
+	if(!default_allocator)
+	    default_allocator=a;
+	char* file=getenv("MALLOC_STATS");
+	if(strlen(file) == 0){
+	    a->stats_out=stderr;
+	} else {
+	    a->stats_out=fopen(file, "w");
+	    setvbuf(a->stats_out, (char*)a->alloc(4096+BUFSIZ, "Malloc stats buffer"), _IOFBF, 4096+BUFSIZ);
+	    if(!a->stats_out){
+		perror("fopen");
+		fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
+			file);
+		a->stats_out=0;
+	    }
+	}
+	if(a->stats_out){
+	    atexit(shutdown);
+	}
+    } else {
+	a->stats_out=0;
+    }
     if(getenv("MALLOC_TRACE")){
 	// Set the default allocator, since the fopen below may
 	// call malloc.
@@ -387,7 +411,6 @@ Allocator* MakeAllocator()
 	char* file=getenv("MALLOC_TRACE");
 	if(strlen(file) == 0){
 	    a->trace_out=stderr;
-	    a->trace=1;
 	} else {
 	    a->trace_out=fopen(file, "w");
 	    setvbuf(a->trace_out, (char*)a->alloc(4096+BUFSIZ, "Malloc trace buffer"), _IOFBF, 4096+BUFSIZ);
@@ -396,15 +419,15 @@ Allocator* MakeAllocator()
 		fprintf(stderr, "cannot open trace file: %s, not tracing\n",
 			file);
 		a->trace_out=0;
-		a->trace=0;
-	    } else {
-		a->trace=1;
 	    }
 	}
-	if(a->trace)
-	    atexit(shutdown);
+	if(a->trace_out){
+	    if(!a->stats_out){
+		a->stats_out=a->trace_out;
+		atexit(shutdown);
+	    }
+	}
     } else {
-	a->trace=0;
 	a->trace_out=0;
     }
 
@@ -480,7 +503,7 @@ void* Allocator::alloc(size_t size, char* tag)
 	    *p++=i++;
     }
 
-    if(trace)
+    if(trace_out)
 	fprintf(trace_out, "A %08p %d (%s)\n", d, size, tag);
     return (void*)d;
 }
@@ -616,7 +639,7 @@ void* Allocator::alloc_big(size_t size, char* tag)
 	    *p++=i++;
     }
 
-    if(trace)
+    if(trace_out)
 	fprintf(trace_out, "A %08p %d (%s)\n", d, size, tag);
     return (void*)d;
 }
@@ -656,7 +679,7 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 	    for(char* p=d+oldobj->reqsize;p<(char*)sent2;p++)
 		*p++=i++;
 	}
-	if(trace)
+	if(trace_out)
 	    fprintf(trace_out, "R %08p %d %08p %d (%s)\n", dobj, oldsize, dobj, newsize, oldobj->tag);
 	return dobj;
     }
@@ -668,7 +691,7 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 	minsize=oldsize;
     bcopy(dobj, nobj, minsize);
     free(dobj);
-    if(trace)
+    if(trace_out)
 	fprintf(trace_out, "R %08p %d %08p %d (%s)\n", dobj, oldsize, nobj, newsize, oldobj->tag);
     return nobj;
 }
@@ -684,7 +707,7 @@ void Allocator::free(void* dobj)
     Tag* obj=(Tag*)dd;
 
     // Make sure that it is still intact...
-    if(trace)
+    if(trace_out)
 	fprintf(trace_out, "F %08p %d (%s)\n", dobj, obj->reqsize, obj->tag);
     if(!lazy)
 	audit(obj, OBJFREEING);
@@ -1123,6 +1146,12 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.6  1999/09/25 08:30:54  sparker
+// Added support for MALLOC_STATS environment variable.  If set, it will
+//   send statistics about malloc and a list of all unfreed objects at
+//   program shutdown.  It isn't perfect yet - I need to figure out how
+//   to make it run after the C++ dtors.
+//
 // Revision 1.5  1999/09/17 05:04:43  sparker
 // Enhanced malloc tracing facility.  You can now set the environment
 // variable MALLOC_TRACE to a filename, where the allocator will dump
