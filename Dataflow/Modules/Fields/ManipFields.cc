@@ -24,11 +24,16 @@ namespace SCIRun {
 
 using namespace std;
 
-#ifndef FM_COMP_PATH
-#error main/sub.mk needs to define FM_COMP_PATH
+#ifndef FM_SRC
+#error sub.mk needs to define FM_SRC
 #endif
 
-const char* FIELD_MANIP_COMPILATION_PATH = FM_COMP_PATH;
+#ifndef FM_OBJ
+#error sub.mk needs to define FM_OBJ
+#endif
+
+const char* FIELD_MANIP_SRC = FM_SRC;
+const char* FIELD_MANIP_OBJ = FM_OBJ;
 
 typedef void (*FieldManipFunction)(vector<FieldHandle>& in, vector<FieldHandle>& out);
 
@@ -204,7 +209,7 @@ ManipFields::tcl_command(TCLArgs& args, void* userdata)
   }  
   else if( args[1] == "launch-editor" )
   {
-    string ecmd = string( args[2]() ) + " " + FIELD_MANIP_COMPILATION_PATH
+    string ecmd = string( args[2]() ) + " " + FIELD_MANIP_SRC
       + "/" + name_.get()() + ".cc &";
     
     cout << "Launch Editor: " << ecmd << endl;
@@ -266,12 +271,12 @@ ManipFields::change_md_data(StringVector &v, const string& arg)
 
 bool ManipFields::save_xml() const
 {
-  ofstream f( ( string(FIELD_MANIP_COMPILATION_PATH) + "/srcs.xml").c_str() );
+  ofstream f( ( string(FIELD_MANIP_SRC) + "/srcs.xml").c_str() );
   bool ret = f.is_open();
   
   if( !ret )
   { 
-     cerr << "Could not open: " << FIELD_MANIP_COMPILATION_PATH << "/srcs.xml"
+     cerr << "Could not open: " << FIELD_MANIP_SRC << "/srcs.xml"
           << endl;
   }
   else
@@ -324,7 +329,7 @@ ManipFields::getFunctionFromDL(const string& f)
   if( compileFile(f) ) 
   {
     // Load the dl.
-    string dynamicLibrary = string( FIELD_MANIP_COMPILATION_PATH ) + "/" 
+    string dynamicLibrary = string( FIELD_MANIP_OBJ ) + "/" 
       + f + ".so";
 
     void *h = dlopen( dynamicLibrary.c_str(), RTLD_NOW );
@@ -332,6 +337,7 @@ ManipFields::getFunctionFromDL(const string& f)
     {
       cerr << "ManipFields::getFunctionFromDL() error:"
 	   << " dlopen failed" << endl;
+      cerr << "Reported Error: " << dlerror() << endl;
     }
     else
     {
@@ -340,6 +346,7 @@ ManipFields::getFunctionFromDL(const string& f)
       {
         cerr << "ManipFields::getFunctionFromDL() error: "
              << "dlsym failed" << endl;
+	cerr << "Reported Error: " << dlerror() << endl;
       }
     }
   }
@@ -357,7 +364,7 @@ ManipFields::getFunctionFromDL(const string& f)
 bool 
 ManipFields::compileFile(const string& file)
 {
-  string command = string("cd ") + FIELD_MANIP_COMPILATION_PATH 
+  string command = string("cd ") + FIELD_MANIP_OBJ 
           + "; gmake " + file + ".so";
 
   cout << "Executing: " << command << endl;
@@ -503,7 +510,7 @@ ManipFields::ReadNodeFromFile(const string& filename)
 bool ManipFields::create_dummy_cc( const string& filename )
 {
   cout << "Accessing " << filename << endl;
-  ifstream f( ( FIELD_MANIP_COMPILATION_PATH 
+  ifstream f( ( FIELD_MANIP_SRC 
           + ( "/" + filename + ".cc" ) ).c_str() );
   bool ret = f.is_open();
 
@@ -516,8 +523,8 @@ bool ManipFields::create_dummy_cc( const string& filename )
      cout << "Creating " + filename + ".cc";
      f.close();
      string command = string("cp ") 
-          + FIELD_MANIP_COMPILATION_PATH + "/template.cc "
-          + FIELD_MANIP_COMPILATION_PATH + "/" + filename + ".cc"; 
+          + FIELD_MANIP_SRC + "/template.cc "
+          + FIELD_MANIP_SRC + "/" + filename + ".cc"; 
      ret = sci_system( command.c_str() );
      if( !ret )
        cerr << "Could not execute: " << command << endl;
@@ -532,7 +539,7 @@ bool ManipFields::create_dummy_cc( const string& filename )
 bool
 ManipFields::write_sub_mk() const
 {
-  ofstream f( ( string(FIELD_MANIP_COMPILATION_PATH) + "/sub.mk").c_str() );
+  ofstream f( ( string(FIELD_MANIP_SRC) + "/sub.mk").c_str() );
 
   bool ret( f.is_open() );
 
@@ -580,6 +587,10 @@ ManipFields::write_sub_mk() const
       f << "\t\t" << m->first << ".cc \\\n";
     }
     f << "\n"; 
+  } else {
+
+    cerr << "could not open file for writing: " 
+	 << ( string(FIELD_MANIP_SRC) + "/sub.mk").c_str() << endl;
   }
   return ret;
 }
@@ -654,7 +665,7 @@ ManipFields::getManips()
   {
     beenHere = true;
     string xmlFile
-        = string( FIELD_MANIP_COMPILATION_PATH ) + "/srcs.xml";
+        = string( FIELD_MANIP_SRC ) + "/srcs.xml";
     int check = ReadNodeFromFile(xmlFile);
     if( check != 1 ) 
     {

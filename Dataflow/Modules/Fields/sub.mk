@@ -26,7 +26,7 @@ SRCS     += \
 #	$(SRCDIR)/ChangeCellType.cc\
 
 
-CFLAGS   := $(CFLAGS) -DFM_COMP_PATH=\"$(SRCTOP_ABS)/Dataflow/Modules/Fields/Manip\"
+CFLAGS   := $(CFLAGS) -DFM_SRC=\"$(SRCTOP_ABS)/Dataflow/Modules/Fields/Manip\" -DFM_OBJ=\"$(OBJTOP_ABS)/Dataflow/Modules/Fields/Manip\"
 
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Datatypes Dataflow/Widgets Core/Persistent Core/Exceptions \
