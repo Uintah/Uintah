@@ -74,30 +74,24 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
   Vector centerOfMassMom(0.0,0.0,0.0);
   double centerOfMassMass;
 
-  int numMatls = d_sharedState->getNumMatls();
-  int NVFs = d_sharedState->getNumVelFields();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   // Retrieve necessary data from DataWarehouse
-  vector<NCVariable<double> > gmass(NVFs);
-  vector<NCVariable<Vector> > gvelocity(NVFs);
+  vector<NCVariable<double> > gmass(numMatls);
+  vector<NCVariable<Vector> > gvelocity(numMatls);
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    int vfindex = mpm_matl->getVFIndex();
+    new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
 		  Ghost::None, 0);
-      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
+    new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
 		  Ghost::None, 0);
-    }
   }
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
-    for(int n = 0; n < NVFs; n++){
+    for(int n = 0; n < numMatls; n++){
       centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
       centerOfMassMass+=gmass[n][*iter]; 
     }
@@ -105,14 +99,14 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     // Set each field's velocity equal to the center of mass velocity
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for(int n = 0; n < NVFs; n++){
+      for(int n = 0; n < numMatls; n++){
 	gvelocity[n][*iter] = centerOfMassVelocity;
       }
     }
   }
 
   // Store new velocities in DataWarehouse
-  for(int n=0; n< NVFs; n++){
+  for(int n=0; n< numMatls; n++){
     new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, patch);
   }
 }
@@ -128,34 +122,29 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
   Vector Dvdt;
   double centerOfMassMass;
 
-  int numMatls = d_sharedState->getNumMatls();
-  int NVFs = d_sharedState->getNumVelFields();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   // Retrieve necessary data from DataWarehouse
-  vector<NCVariable<double> > gmass(NVFs);
-  vector<NCVariable<Vector> > gvelocity_star(NVFs);
-  vector<NCVariable<Vector> > gacceleration(NVFs);
+  vector<NCVariable<double> > gmass(numMatls);
+  vector<NCVariable<Vector> > gvelocity_star(numMatls);
+  vector<NCVariable<Vector> > gacceleration(numMatls);
   for(int m = 0; m < numMatls; m++){
-    Material* matl = d_sharedState->getMaterial( m );
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch, Ghost::None, 0);
-      new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel, vfindex,
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    int vfindex = mpm_matl->getVFIndex();
+    new_dw->get(gmass[vfindex],lb->gMassLabel,vfindex ,patch, Ghost::None, 0);
+    new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel, vfindex,
 		  patch, Ghost::None, 0);
-      new_dw->get(gacceleration[vfindex], lb->gAccelerationLabel, vfindex,
+    new_dw->get(gacceleration[vfindex], lb->gAccelerationLabel, vfindex,
 		  patch, Ghost::None, 0);
-    }
   }
+
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
-    for(int  n = 0; n < NVFs; n++){
+    for(int  n = 0; n < numMatls; n++){
        centerOfMassMom+=gvelocity_star[n][*iter] * gmass[n][*iter];
        centerOfMassMass+=gmass[n][*iter]; 
     }
@@ -164,7 +153,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     // and adjust the acceleration of each field to account for this
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for(int  n = 0; n < NVFs; n++){
+      for(int  n = 0; n < numMatls; n++){
         Dvdt = (centerOfMassVelocity - gvelocity_star[n][*iter])/delT;
 	gvelocity_star[n][*iter] = centerOfMassVelocity;
 	gacceleration[n][*iter]+=Dvdt;
@@ -173,7 +162,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
   }
 
   // Store new velocities and accelerations in DataWarehouse
-  for(int n = 0; n < NVFs; n++){
+  for(int n = 0; n < numMatls; n++){
     new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, patch);
     new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, patch);
   }
@@ -185,13 +174,11 @@ void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
   t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
   t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
   t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
-
 
 }
 
@@ -203,18 +190,23 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 {
 
   int idx = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-  t->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires(new_dw, lb->gMassLabel,         idx, patch, Ghost::None);
   t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
   t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
 
   t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
   t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
 
-
 }
 
 // $Log$
+// Revision 1.25  2000/11/07 22:52:22  guilkey
+// Changed the way that materials are looped over.  Instead of each
+// function iterating over all materials, and then figuring out which ones
+// are MPMMaterials on the fly, SimulationState now stores specific information
+// about MPMMaterials, so that for doing MPM, only those materials are returned
+// and then looped over.  This will make coupling with a cfd code easier I hope.
+//
 // Revision 1.24  2000/09/25 20:23:20  sparker
 // Quiet g++ warnings
 //
