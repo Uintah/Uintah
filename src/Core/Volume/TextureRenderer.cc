@@ -369,6 +369,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
       }
       // download texture data
 #if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
+      std::cerr << "TextureRenderer::load_brick SGI compiled.\n";
       if (reuse)
       {
         glTexSubImage3DEXT(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, GL_RED,
@@ -381,8 +382,10 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 			brick->tex_type(), brick->tex_data(c));
       }
 #elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+      std::cerr << "TextureRenderer::load_brick shaders compiled.\n";
       if (ShaderProgramARB::shaders_supported())
       {
+	std::cerr << "TextureRenderer::load_brick shaders running.\n";
 	unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
 	if (reuse)
 	{
@@ -400,6 +403,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 #ifndef __sgi
 #ifdef GL_EXT_shared_texture_palette
       {
+	std::cerr << "TextureRenderer::load_brick texture palette running.\n";
 	if (reuse)
 	{
 	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
@@ -415,6 +419,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
       }
 #else
       {
+	std::cerr << "TextureRenderer::load_brick default running.\n";
 	if (reuse)
 	{
 	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
@@ -591,10 +596,12 @@ TextureRenderer::build_colormap1(Array2<float>& cmap_array,
       break;
     }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+    std::cerr << "TextureRenderer::build_colormap1 shader compiled.";
     // This texture is not used if there is no shaders.
     // glColorTable is used instead.
     if (ShaderProgramARB::shaders_supported())
     {
+      std::cerr << "TextureRenderer::build_colormap1 shader running.";
       // Update 1D texture.
       if (cmap_tex == 0 || size_dirty)
       {
@@ -832,6 +839,7 @@ void
 TextureRenderer::bind_colormap1(unsigned int cmap_tex)
 {
 #if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
+  std::cerr << "TextureRenderer::bind_colormap1 SGI compiled\n";
   glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
   glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
@@ -840,8 +848,10 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                GL_FLOAT,
                &(cmap1_array_(0, 0)));
 #elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+  std::cerr << "TextureRenderer::bind_colormap1 shaders compiled\n";
   if (ShaderProgramARB::shaders_supported())
   {
+    std::cerr << "TextureRenderer::bind_colormap1 shaders running\n";
     glActiveTexture(GL_TEXTURE2_ARB);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_1D);
@@ -857,6 +867,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
 #ifndef __sgi
 #ifdef GL_EXT_shared_texture_palette
   {
+    std::cerr << "TextureRenderer::bind_colormap1 texture palette running\n";
     glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
     glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
 		 GL_RGBA,
