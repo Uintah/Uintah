@@ -12,8 +12,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/SFCXVariableBase.cc $(SRCDIR)/SFCYVariableBase.cc \
 	$(SRCDIR)/SFCZVariableBase.cc \
 	$(SRCDIR)/FaceIterator.cc \
-	$(SRCDIR)/Grid.cc $(SRCDIR)/XFCVariableBase.cc \
-	$(SRCDIR)/YFCVariableBase.cc $(SRCDIR)/ZFCVariableBase.cc \
+	$(SRCDIR)/Grid.cc  \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/PatchRangeTree.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
@@ -41,7 +40,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/TemperatureBoundCond.cc \
 	$(SRCDIR)/PressureBoundCond.cc \
 	$(SRCDIR)/DensityBoundCond.cc \
-	$(SRCDIR)/BoundCondFactory.cc
+	$(SRCDIR)/BoundCondFactory.cc 
 
 
 
@@ -53,6 +52,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.29  2000/12/22 00:10:31  jas
+# Got rid of the X,Y,Z FCVariable and friends.
+#
 # Revision 1.28  2000/12/10 09:06:18  sparker
 # Merge from csafe_risky1
 #

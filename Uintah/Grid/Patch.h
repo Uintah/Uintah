@@ -175,19 +175,6 @@ WARNING
        return d_inHighIndex;
      }
 
-     IntVector getXFaceLowIndex() const {
-       return d_lowIndex;
-     }
-     IntVector getYFaceLowIndex() const {
-       return d_lowIndex;
-     }
-     IntVector getZFaceLowIndex() const {
-       return d_lowIndex;
-     }
-
-     IntVector getXFaceHighIndex() const;
-     IntVector getYFaceHighIndex() const;
-     IntVector getZFaceHighIndex() const;
      // required for fortran interface
      IntVector getSFCXFORTLowIndex() const;
      IntVector getSFCXFORTHighIndex() const;
@@ -217,7 +204,6 @@ WARNING
      
      inline IntVector getNFaces() const {
        // not correct
-       return getXFaceHighIndex()-getXFaceLowIndex();
      }
      
      inline IntVector getNNodes() const {
@@ -345,6 +331,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.27  2000/12/22 00:10:30  jas
+// Got rid of the X,Y,Z FCVariable and friends.
+//
 // Revision 1.26  2000/12/20 20:45:12  jas
 // Added methods to retriever the interior cell index and use those for
 // filling in the bcs for either the extraCells layer or the regular
