@@ -16,7 +16,13 @@ using namespace std;
 
 MPMPetscSolver::MPMPetscSolver()
 {
+#ifdef HAVE_PETSC
   d_A = 0;
+  d_B = 0;
+  d_diagonal = 0;
+  d_x = 0;
+  sles = 0;
+#endif
 }
 
 MPMPetscSolver::~MPMPetscSolver()
