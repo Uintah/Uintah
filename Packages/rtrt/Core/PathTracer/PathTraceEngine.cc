@@ -26,7 +26,7 @@ PathTraceContext::PathTraceContext(const Color &color,
 				   const PathTraceLight &light,
 				   Object* geometry,
                                    int num_samples, int max_depth):
-  color(color), light(light), geometry(geometry), num_samples(num_samples),
+  light(light), color(color), geometry(geometry), num_samples(num_samples),
   max_depth(max_depth)
 {
   // Fix num_samples to be a complete square
@@ -114,40 +114,63 @@ void PathTraceWorker::run() {
           // Project sample point onto sphere
 	  Point origin;
 	  Vector normal;
+	  double reflected_surface_dot = 1;
 	  {
-	    // range of (u*sx)/w [0,1]
-	    // range of 2*M_PI * (u*sx)/w [0, 2*M_PI]
+	    // range of (u+sx)/w [0,1]
+	    // range of 2*M_PI * (u+sx)/w [0, 2*M_PI]
 	    double phi=2*M_PI*inv_width*((u+sample_point.x()));
-	    // range of (v*sy)/h [0,1]
-	    // range of M_PI * (v*sy)/h [0, M_PI]
+	    // range of (v+sy)/h [0,1]
+	    // range of M_PI * (v+sy)/h [0, M_PI]
 	    double theta=M_PI*inv_height*((v+sample_point.y()));
 	    double x=cos(phi)*sin(theta);
 	    double z=sin(phi)*sin(theta);
 	    double y=cos(theta);
 	    
 	    origin=sphere->cen + sphere->radius*Vector(x,y,z);
-	    normal=Vector(x,y,z);
+	    normal=Vector(x,y,z).normal();
 	  }
 
 	  Color result(0,0,0);
 	  PathTraceLight* light=&(ptc->light);
 	  for (int depth=0;depth<=ptc->max_depth;depth++) {
 	    // Compute direct illumination (assumes one light source)
-            Point random_point=light->random_point(rng(),rng(),rng());
-
+            Vector random_dir=light->random_vector(rng(),rng(),rng());
+	    Point random_point = light->point_from_normal(random_dir);
+	    
 	    // Shadow ray
 	    Vector sr_dir=random_point-origin;
+
+	    // Let's make sure the point on our light source is facing us
+
+	    // Compute the dot product of the shadow ray and light normal
+	    double light_norm_dot_sr = SCIRun::Dot(random_dir, -sr_dir);
+	    if (light_norm_dot_sr < 0) {
+	      // flip our random direction
+	      random_dir = -random_dir;
+	      // Update all the stuff that depended on it
+	      random_point = light->point_from_normal(random_dir);
+	      sr_dir = random_point - origin;
+	      light_norm_dot_sr = SCIRun::Dot(random_dir, -sr_dir);
+	    }
+	    
 	    double distance=sr_dir.normalize();
-	    double cosine=SCIRun::Dot(sr_dir, normal);
-            if(cosine>0.0) {
+	    double normal_dot_sr=SCIRun::Dot(sr_dir, normal);
+            if(normal_dot_sr>0.0) {
 	      Ray s_ray(origin, sr_dir);
 	      HitInfo s_hit;
 	      s_hit.min_t=distance;
 	      Color s_color(1,1,1);
 	      
-	      ptc->geometry->light_intersect(s_ray, s_hit, s_color, depth_stats, ppc);
+	      ptc->geometry->light_intersect(s_ray, s_hit, s_color,
+					     depth_stats, ppc);
 	      if (!s_hit.was_hit)
-		result+=ptc->color*light->color*light->area*(cosine/(distance*distance*M_PI));
+		result +=
+		  ptc->color *
+		  reflected_surface_dot *
+		  light->color *
+		  light_norm_dot_sr *
+		  light->area *
+		  (normal_dot_sr/(distance*distance*M_PI));
 	    }
 			      
 	    if (depth==ptc->max_depth)
@@ -157,7 +180,9 @@ void PathTraceWorker::run() {
 	    Vector v0(Cross(normal, Vector(1,0,0)));
 	    if(v0.length2()==0)
 	      v0=Cross(normal, Vector(0,1,0));
+	    v0.normalize();
 	    Vector v1=Cross(normal, v0);
+	    v1.normalize();
 	    
 	    Vector v_out;
 	    {
@@ -167,39 +192,40 @@ void PathTraceWorker::run() {
 	      double x=r*cos(phi);
 	      double y=r*sin(phi);
 	      double z=sqrt(1.0-x*x-y*y);
-	      v_out=Vector(x,y,z);
+	      v_out=Vector(x,y,z).normal();
 	    }
 	    Vector dir=v0*v_out.x()+v1*v_out.y()+normal*v_out.z();
+	    dir.normalize();
 	    
 	    Ray ray(origin, dir);
-#if 0          
-	    // Trace ray into our local spheres
-	    HitInfo local_hit;
-	    local_spheres->intersect(ray, local_hit, depth_stats, ppc);
-	    
+
 	    // Trace ray into geometry
 	    HitInfo global_hit;
 	    ptc->geometry->intersect(ray, global_hit, depth_stats, ppc);
-	    
-	    // Resolve next sphere
-	    //  if local, set flag to indicate that we can accumulate
-	    //    the next result in its texture (?)
-	    //  etc., etc.
-#else
-	    // Trace ray into geometry
-	    HitInfo global_hit;
-	    ptc->geometry->intersect(ray, global_hit, depth_stats, ppc);
-	    
+
 	    if (global_hit.was_hit) {
-	      // Set next origin/normal
-	      origin=origin+global_hit.min_t*dir;
-	      normal=global_hit.hit_obj->normal(origin, global_hit);
+	      // Set next origin/normal/reflected_surface_dot
+	      origin = ray.origin()+global_hit.min_t*ray.direction();
+	      normal = global_hit.hit_obj->normal(origin, global_hit);
+	      reflected_surface_dot = SCIRun::Dot(normal, -ray.direction());
+ 	      if (reflected_surface_dot < 0) {
+		// This could be due to two reasons.
+		//
+		// 1.  The surface point is inside another sphere and
+		// we hit the inside of it.  If were inside another
+		// sphere we aren't going to get any more light.
+		//
+		// 2.  Some really weird case where the point on our
+		// sphere happens to be coincident with a neighboring
+		// sphere and you somehow do some crazy math.  We
+		// don't like negative dot products, so we kill it.
+		break;
+	      }
 	    }
 	    else {
 	      // Accumulate bg color?
 	      break;
 	    }
-#endif
 	  } // end depth
 	  
           // Store result
@@ -278,15 +304,25 @@ PathTraceLight::PathTraceLight(const Point &cen, double radius,
   area = 2.*M_PI*radius;
 }
 
-Point PathTraceLight::random_point(double r1, double r2, double r3)
+Vector PathTraceLight::random_vector(double r1, double r2, double r3)
 {
-  return center;
-
   double theta = 2.*M_PI*r1;
   double alpha = 2.*M_PI*r2;
   double weight1 = sqrt(r3);
   double weight2 = sqrt(1.0 - r3);
   return Vector(weight2*sin(theta),
 		weight2*cos(theta),
-		weight1*sin(alpha)).normal().asPoint();
+		weight1*sin(alpha)).normal();
+}
+
+Point PathTraceLight::random_point(double r1, double r2, double r3) {
+  return point_from_normal(random_vector(r1, r2, r3));
+}
+
+Point PathTraceLight::point_from_normal(const Vector &dir) {
+  return (center + dir*radius);
+}
+
+Vector PathTraceLight::normal(const Point &point) {
+  return (point-center)/radius;
 }
