@@ -128,6 +128,7 @@ public:
   void store( const string &name, const double s ) { store(name,Double(s));}
   
   template<class T> bool get( const string &, T &);
+  template<class T> bool get( const string &, T *&);
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -188,6 +189,22 @@ PropertyManager::get(const string &name, T &ref)
   if (loc != properties_.end()) {
     if ( dynamic_cast<T *>( loc->second ) ) {
       ref = *static_cast<T *>(loc->second->obj_);
+      return true;
+    }
+  }
+  
+  // either property not found, or it can not be cast to T
+  return false;
+} 
+
+template<class T>
+bool 
+PropertyManager::get(const string &name, T *&ref)
+{
+  map_type::iterator loc = properties_.find(name);
+  if (loc != properties_.end()) {
+    if ( dynamic_cast<T *>( loc->second ) ) {
+      ref = static_cast<T *>(loc->second->obj_);
       return true;
     }
   }
