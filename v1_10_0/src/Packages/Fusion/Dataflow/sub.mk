@@ -27,7 +27,7 @@ SUBDIRS := \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := Packages/Fusion/Core
+PSELIBS := Packages/Fusion/Core Packages/Teem/Core
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

@@ -26,7 +26,8 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions \
-	Packages/Fusion/Core/ThirdParty
+	Packages/Fusion/Core/ThirdParty \
+	Packages/Teem/Core/Datatypes
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) $(M_LIBRARY)
 
