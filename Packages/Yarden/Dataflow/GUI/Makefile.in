@@ -1,0 +1,13 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+include $(OBJTOP)/scripts/targets.mk
+
+VPATH = $(SRCDIR)
+
+all:: tclIndex
+
+tclIndex : Hase.tcl Sage.tcl
+	$(SRCTOP)/scripts/createTclIndex  $(SRCDIR)
+
