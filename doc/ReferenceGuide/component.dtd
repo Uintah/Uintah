@@ -43,6 +43,8 @@ Component  specification dtd.
 <!-- Top level -->
 <!ELEMENT component (overview, io, gui?, testing)>
 <!ATTLIST component name CDATA #REQUIRED>
+<!ATTLIST component package CDATA #REQUIRED>
+<!ATTLIST component category CDATA #REQUIRED>
 
 <!--  Overview of component's purpose  -->
 <!ELEMENT overview (authors, summary, description, examplesr)>
