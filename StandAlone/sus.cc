@@ -95,9 +95,7 @@ usage( const std::string & message,
   /* Initialize MPI so that "usage" is only printed by proc 0. */
   Uintah::Parallel::initializeManager( argc, argv, "" );
 
-  if( !Uintah::Parallel::usingMPI() || 
-      ( Uintah::Parallel::usingMPI() &&
-	Uintah::Parallel::getRootProcessorGroup()->myrank() == 0 ) )
+  if( Uintah::Parallel::getMPIRank() == 0 )
     {
       cerr << message << "\n";
       if(badarg != "")
@@ -130,11 +128,15 @@ main(int argc, char** argv)
 {
 
 #ifdef USE_TAU_PROFILING
-  cout << "about to call tau_profile... if it dies now, it is in "
-       << "sus.cc at the TAU_PROFILE() call.  This has only been "
-       << "happening in 32 bit tau use.";  
+
+  // WARNING:
+  //cout << "about to call tau_profile... if it dies now, it is in "
+  //       << "sus.cc at the TAU_PROFILE() call.  This has only been "
+  //       << "happening in 32 bit tau use.";  
+  //
+  // Got rid of this print as it appears 100s of times when 100s of procs.
 #endif
-  // Causes buserr for some reason:
+  // Causes buserr for some reason in 32 bit mode... may be fixed now:
   TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
 
   TAU_PROFILE_INIT(argc,argv);
@@ -469,18 +471,14 @@ main(int argc, char** argv)
 				      Uintah::Parallel::NormalShutdown);
 
     if (thrownException) {
-      if( !Uintah::Parallel::usingMPI() || 
-	  ( Uintah::Parallel::usingMPI() &&
-	    Uintah::Parallel::getRootProcessorGroup()->myrank() == 0 ) )
+      if( Uintah::Parallel::getMPIRank() == 0 )
 	{
 	  cout << "An exception was thrown... Goodbye.\n";
 	}
       Thread::exitAll(1);
     }
 
-    if( !Uintah::Parallel::usingMPI() || 
-	( Uintah::Parallel::usingMPI() &&
-	  Uintah::Parallel::getRootProcessorGroup()->myrank() == 0 ) )
+    if( Uintah::Parallel::getMPIRank() == 0 )
       {
 	cout << "Sus: going down successfully\n";
       }
