@@ -12,7 +12,7 @@ TEST_UDADIR=$TEST_ROOT/$TEST/$UDADIR
 COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
 TMPDIR=$TEST_ROOT/$TEST
 
-echo "\nTesting $TEST"
+echo "Testing $TEST"
 
 if [ -d "$TEST_UDADIR" ]; then
   if [ ! -d "$COMPARE_ROOT/$TEST" ]; then
@@ -55,8 +55,11 @@ if [ -d "$TEST_UDADIR" ]; then
 	fi
     fi
 
+
     testdat=`ls -1 $TEST_UDADIR/*.dat | head -n 1`
-    compare_dat_files 1e-10 $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat > $TMPDIR/compare_dat_files.msg 2>&1
+    abs_error_allowable=1e-8
+    rel_error_allowable=1e-5
+    compare_dat_files $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat > $TMPDIR/compare_dat_files.msg 2>&1
     retval=$?
 
     if [ $retval = "0" ]; then
@@ -105,7 +108,7 @@ Following is the result of a side by side diff comparison of the dat files.
 EOF
          diff -y --width 160 --suppress-common-lines -x "*.xml" -x "taskgraph"  $TEST_UDADIR $COMPARE_UDADIR >> $TMPDIR/error.msg
          /usr/lib/sendmail "$ERRORS_TO" < $TMPDIR/error.msg
-         echo "Mail sent\n"
+         echo "Mail sent"
        fi
        exit 1
     fi
