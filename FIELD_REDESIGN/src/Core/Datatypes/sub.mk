@@ -33,7 +33,7 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
 	$(SRCDIR)/Geom.cc $(SRCDIR)/Attrib.cc \
 	$(SRCDIR)/Field.cc $(SRCDIR)/SField.cc \
-	$(SRCDIR)/GenSField.cc $(SRCDIR)/GenFunction.cc\
+	$(SRCDIR)/GenSField.cc \ #$(SRCDIR)/GenFunction.cc\
 	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
 	$(SRCDIR)/SField.cc $(SRCDIR)/VField.cc \
 	$(SRCDIR)/TField.cc $(SRCDIR)/LatticeGeom.cc \
@@ -98,6 +98,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.5  2000/08/24 16:36:57  mcole
+# remove GenFunction from build until it compiles
+#
 # Revision 1.3.2.4  2000/08/22 20:32:30  samsonov
 # *** empty log message ***
 #
