@@ -147,7 +147,8 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	 if (v->level++ == MaxDepth) {
 	    v->level = 0;
 	    if (++(v->levellevel) < v->numconstraints) {
-	       cerr << "Maximum recursion level reached..." << endl;
+	       if (cs_debug)
+		   cerr << "Maximum recursion level reached..." << endl;
 	       item.rtype = RecurseMax;
 	    } else {
 	       if (cs_debug) {
