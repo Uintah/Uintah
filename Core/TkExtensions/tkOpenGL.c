@@ -34,7 +34,7 @@
  *
  */
 
-#include <include/sci_defs/ogl_defs.h>
+#include <sci_defs/ogl_defs.h>
 
 #include <Core/share/share.h>
 

@@ -53,7 +53,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-#include <include/sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
+#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
 
 #include "tkPort.h"
 #include "tkInt.h"
