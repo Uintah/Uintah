@@ -40,6 +40,7 @@ class SCICORESHARE GeomFastQuads : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
+  vector<float> indices_;
   vector<float> normals_;
   MaterialHandle material_;
 
@@ -50,14 +51,29 @@ public:
   virtual GeomObj* clone();
 
   int size(void);
-  void add(const Point&, const MaterialHandle&,
-	   const Point&, const MaterialHandle&,
-	   const Point&, const MaterialHandle&,
-	   const Point&, const MaterialHandle&);
-  void add(const Point&, const Vector&, const MaterialHandle&,
-	   const Point&, const Vector&, const MaterialHandle&,
-	   const Point&, const Vector&, const MaterialHandle&,
-	   const Point&, const Vector&, const MaterialHandle&);
+  void add(const Point &p0, const Point &p1,
+	   const Point &p2, const Point &p3);
+  void add(const Point &p0, const Vector &n0,
+	   const Point &p1, const Vector &n1,
+	   const Point &p2, const Vector &n2,
+	   const Point &p3, const Vector &n3);
+  void add(const Point &p0, const MaterialHandle &m0,
+	   const Point &p1, const MaterialHandle &m1,
+	   const Point &p2, const MaterialHandle &m2,
+	   const Point &p3, const MaterialHandle &m3);
+  void add(const Point &p0, double cindex0,
+	   const Point &p1, double cindex1,
+	   const Point &p2, double cindex2,
+	   const Point &p3, double cindex3);
+  void add(const Point &p0, const Vector &n0, const MaterialHandle &m0,
+	   const Point &p1, const Vector &n1, const MaterialHandle &m1,
+	   const Point &p2, const Vector &n2, const MaterialHandle &m2,
+	   const Point &p3, const Vector &n3, const MaterialHandle &m3);
+  void add(const Point &p0, const Vector &n0, double cindex0,
+	   const Point &p1, const Vector &n1, double cindex1,
+	   const Point &p2, const Vector &n2, double cindex2,
+	   const Point &p3, const Vector &n3, double cindex3);
+
 
   virtual void get_bounds(BBox& bb);
 

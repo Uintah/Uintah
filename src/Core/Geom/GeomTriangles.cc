@@ -309,9 +309,9 @@ COLOR_FTOB(double v)
 }
 
 void
-GeomFastTriangles::add(const Point &p0, const MaterialHandle &m0,
-		       const Point &p1, const MaterialHandle &m1,
-		       const Point &p2, const MaterialHandle &m2)
+GeomFastTriangles::add(const Point &p0,
+		       const Point &p1,
+		       const Point &p2)
 {
   Vector n(Cross(p1-p0, p2-p0));
 #ifndef SCI_NORM_OGL
@@ -338,6 +338,48 @@ GeomFastTriangles::add(const Point &p0, const MaterialHandle &m0,
   points_.push_back(p2.y());
   points_.push_back(p2.z());
 
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+}
+
+
+void
+GeomFastTriangles::add(const Point &p0, const Vector &n0,
+		       const Point &p1, const Vector &n1,
+		       const Point &p2, const Vector &n2)
+{
+  add(p0, p1, p2);
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+}
+
+
+void
+GeomFastTriangles::add(const Point &p0, const MaterialHandle &m0,
+		       const Point &p1, const MaterialHandle &m1,
+		       const Point &p2, const MaterialHandle &m2)
+{
+  add(p0, p1, p2);
+
   colors_.push_back(COLOR_FTOB(m0->diffuse.r()));
   colors_.push_back(COLOR_FTOB(m0->diffuse.g()));
   colors_.push_back(COLOR_FTOB(m0->diffuse.b()));
@@ -356,19 +398,20 @@ GeomFastTriangles::add(const Point &p0, const MaterialHandle &m0,
   colors_.push_back(COLOR_FTOB(m2->transparency * m2->transparency *
 			       m2->transparency * m2->transparency));
 
-  face_normals_.push_back(n.x());
-  face_normals_.push_back(n.y());
-  face_normals_.push_back(n.z());
-
-  face_normals_.push_back(n.x());
-  face_normals_.push_back(n.y());
-  face_normals_.push_back(n.z());
-
-  face_normals_.push_back(n.x());
-  face_normals_.push_back(n.y());
-  face_normals_.push_back(n.z());
-
   material_ = m0;
+}
+
+
+void
+GeomFastTriangles::add(const Point &p0, double i0,
+		       const Point &p1, double i1,
+		       const Point &p2, double i2)
+{
+  add(p0, p1, p2);
+
+  indices_.push_back(i0);
+  indices_.push_back(i1);
+  indices_.push_back(i2);
 }
 
 
@@ -396,6 +439,27 @@ GeomFastTriangles::add(const Point &p0, const Vector &n0,
 }
 
 
+void
+GeomFastTriangles::add(const Point &p0, const Vector &n0, double i0,
+		       const Point &p1, const Vector &n1, double i1,
+		       const Point &p2, const Vector &n2, double i2)
+{
+  add(p0, i0, p1, i1, p2, i2);
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+}
+
+
 #define GEOMFASTTRIANGLES_VERSION 1
 
 void GeomFastTriangles::io(Piostream& stream)
@@ -404,6 +468,7 @@ void GeomFastTriangles::io(Piostream& stream)
     stream.begin_class("GeomFastTriangles", GEOMFASTTRIANGLES_VERSION);
     Pio(stream, points_);
     Pio(stream, colors_);
+    Pio(stream, indices_);
     Pio(stream, normals_);
     stream.end_class();
 }
