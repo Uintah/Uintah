@@ -71,7 +71,8 @@ using namespace SCIRun;
 				 const string& cat,
 				 const string& pack)
   : Module(name, ctx, Filter, cat, pack),
-    generation(-1),  timestep(-1), material(-1), grid(0), archiveH(0)
+    generation(-1),  timestep(-1), material(-1), grid(0), 
+    archiveH(0), mesh_handle_(0)
 { 
 
 } 
@@ -116,6 +117,8 @@ double FieldExtractor::update()
    if (timestep != new_timestep) {
      time = times[new_timestep];
      grid = archive.queryGrid(time);
+     BBox gbox; grid->getSpatialRange(gbox);
+     //     cerr<<"box: min("<<gbox.min()<<"), max("<<gbox.max()<<")\n";
      timestep = new_timestep;
    } else {
      time = times[timestep];
