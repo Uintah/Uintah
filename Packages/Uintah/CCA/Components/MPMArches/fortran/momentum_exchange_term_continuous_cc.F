@@ -495,73 +495,79 @@ c
 
 c     lower and upper faces of intrusion for transverse 
 c     direction 1 (i.e., south and north faces)
+c     
+c     note: SK, February 2, 2002.  I have moved the calls
+c     to the extreme left because if I properly indent them,
+c     the expansion of PASS3A and PASS3B causes the lines to
+c     go out of the 72 character limit in the linux compile,
+c     causing the build to fail on linux.
 
-                  call walmom_cc(
-     $                 PASS3A(sux_fcy)
-     $                 PASS3B(sux_fcy), 
-     $                 PASS3A(spx_fcy)
-     $                 PASS3B(spx_fcy), 
-     $                 PASS3A(dfx_fcy)
-     $                 PASS3B(dfx_fcy), 
-     $                 PASS3A(ug_cc)
-     $                 PASS3B(ug_cc), 
-     $                 PASS3A(up_fcy)
-     $                 PASS3B(up_fcy), 
-     $                 PASS3A(epsg)
-     $                 PASS3B(epsg), 
-     $                 PASS3A(epss)
-     $                 PASS3B(epss),
-     $                 PASS1(sew), 
-     $                 PASS1(stb), 
-     $                 PASS1(yv), 
-     $                 PASS1(yy),
-     $                 viscos, csmag,
-     $                 idf, idt1, idt2, 
-     $                 i, j, k, 
-     $                 ioff, joff, koff,
-     $                 koff, ioff, joff,
-     $                 indexflo, indext1, indext2,
-     $                 valid_lo_ext, valid_hi_ext, 
-     $                 valid_lo, valid_hi,
-     $                 lmltm,
-     $                 PASS3A(pcell)
-     $                 PASS3B(pcell), 
-     $                 ffield)
+      call walmom_cc(
+     $     PASS3A(sux_fcy)
+     $     PASS3B(sux_fcy), 
+     $     PASS3A(spx_fcy)
+     $     PASS3B(spx_fcy), 
+     $     PASS3A(dfx_fcy)
+     $     PASS3B(dfx_fcy), 
+     $     PASS3A(ug_cc)
+     $     PASS3B(ug_cc), 
+     $     PASS3A(up_fcy)
+     $     PASS3B(up_fcy), 
+     $     PASS3A(epsg)
+     $     PASS3B(epsg), 
+     $     PASS3A(epss)
+     $     PASS3B(epss),
+     $     PASS1(sew), 
+     $     PASS1(stb), 
+     $     PASS1(yv), 
+     $     PASS1(yy),
+     $     viscos, csmag,
+     $     idf, idt1, idt2, 
+     $     i, j, k, 
+     $     ioff, joff, koff,
+     $     koff, ioff, joff,
+     $     indexflo, indext1, indext2,
+     $     valid_lo_ext, valid_hi_ext, 
+     $     valid_lo, valid_hi,
+     $     lmltm,
+     $     PASS3A(pcell)
+     $     PASS3B(pcell), 
+     $     ffield)
 
 c     lower and upper faces of intrusion for transverse 
 c     direction 2 (i.e., bottom and top faces)
 
-                  call walmom_cc(
-     $                 PASS3A(sux_fcz)
-     $                 PASS3B(sux_fcz), 
-     $                 PASS3A(spx_fcz)
-     $                 PASS3B(spx_fcz),
-     $                 PASS3A(dfx_fcz)
-     $                 PASS3B(dfx_fcz), 
-     $                 PASS3A(ug_cc)
-     $                 PASS3B(ug_cc), 
-     $                 PASS3A(up_fcz)
-     $                 PASS3B(up_fcz), 
-     $                 PASS3A(epsg)
-     $                 PASS3B(epsg), 
-     $                 PASS3A(epss)
-     $                 PASS3B(epss),
-     $                 PASS1(sew), 
-     $                 PASS1(sns), 
-     $                 PASS1(zw), 
-     $                 PASS1(zz),
-     $                 viscos, csmag,
-     $                 idf, idt2, idt1, 
-     $                 i, j, k, 
-     $                 ioff, joff, koff,
-     $                 joff, koff, ioff,
-     $                 indexflo, indext2, indext1,
-     $                 valid_lo_ext, valid_hi_ext,
-     $                 valid_lo, valid_hi,
-     $                 lmltm,
-     $                 PASS3A(pcell)
-     $                 PASS3B(pcell), 
-     $                 ffield)
+      call walmom_cc(
+     $     PASS3A(sux_fcz)
+     $     PASS3B(sux_fcz), 
+     $     PASS3A(spx_fcz)
+     $     PASS3B(spx_fcz),
+     $     PASS3A(dfx_fcz)
+     $     PASS3B(dfx_fcz), 
+     $     PASS3A(ug_cc)
+     $     PASS3B(ug_cc), 
+     $     PASS3A(up_fcz)
+     $     PASS3B(up_fcz), 
+     $     PASS3A(epsg)
+     $     PASS3B(epsg), 
+     $     PASS3A(epss)
+     $     PASS3B(epss),
+     $     PASS1(sew), 
+     $     PASS1(sns), 
+     $     PASS1(zw), 
+     $     PASS1(zz),
+     $     viscos, csmag,
+     $     idf, idt2, idt1, 
+     $     i, j, k, 
+     $     ioff, joff, koff,
+     $     joff, koff, ioff,
+     $     indexflo, indext2, indext1,
+     $     valid_lo_ext, valid_hi_ext,
+     $     valid_lo, valid_hi,
+     $     lmltm,
+     $     PASS3A(pcell)
+     $     PASS3B(pcell), 
+     $     ffield)
 
                endif
 
