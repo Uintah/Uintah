@@ -25,6 +25,10 @@ namespace Uintah {
       const VarLabel* press_NCLabel;
       const VarLabel* velInc_CCLabel;
       const VarLabel* velInc_NCLabel;
+
+      const VarLabel* burnedMass_CCLabel;
+      const VarLabel* releasedHeat_CCLabel;  // for computeMassBurnRate
+
     };
 
 } // end namespace Uintah
