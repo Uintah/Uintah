@@ -248,8 +248,8 @@ void processdata(vector<MaterialData> material_data_list,
       ParticleSubset::iterator iter = pset->begin();
       for(;iter != pset->end(); iter++){
 	// p_x
-	min=Min(min, md.p_x[*iter]);
-	max=Max(max, md.p_x[*iter]);
+	min=SCIRun::Min(min, md.p_x[*iter]);
+	max=SCIRun::Max(max, md.p_x[*iter]);
 	float temp_value = (float)(md.p_x[*iter]).x();
 	*p++=temp_value;
 	//fwrite(&temp_value, sizeof(float), 1, datafile);
@@ -704,8 +704,8 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
   for (int g = 0; g < data_group.size(); g++) {
     // compute the mins and maxs
     for (int i = 0; i < numvars; i++) {
-      mins[i] = Min(mins[i], data_group[g].mins[i]);
-      maxs[i] = Max(maxs[i], data_group[g].maxs[i]);
+      mins[i] = SCIRun::Min(mins[i], data_group[g].mins[i]);
+      maxs[i] = SCIRun::Max(maxs[i], data_group[g].maxs[i]);
     }
     // copy the data
     // this may be done more efficient using mcopy or something like it.
