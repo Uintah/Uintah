@@ -328,7 +328,7 @@ void ParticleVis::execute()
 	}
  	if( drawVectors.get() == 1 && hasVectors){
  	  Vector V = (*v_it)[*iter];
- 	  if(V.length2() * length_scale.get() > 1e-3 )
+ 	  if(V.length2() * length_scale.get() > 1e-12 )
  	    arrows->add( (*p_it)[*iter],
  			 V*length_scale.get(),
  			 outcolor, outcolor, outcolor);
@@ -364,7 +364,7 @@ void ParticleVis::execute()
 	}
  	if( drawVectors.get() == 1 && hasVectors){
  	  Vector V = (*v_it)[*iter];
- 	  if(V.length2() * length_scale.get() > 1e-3 )
+ 	  if(V.length2() * length_scale.get() > 1e-12 )
  	    arrows->add( (*p_it)[*iter],
  			 V*length_scale.get(),
  			 outcolor, outcolor, outcolor);
