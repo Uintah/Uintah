@@ -82,8 +82,8 @@
 #endif //LIBIMAGE
 #include <X11/extensions/SGIStereo.h>
 #if (_MIPS_SZPTR == 64)
-#else
-#include <dmedia/cl.h>
+//#else
+//#include <dmedia/cl.h>
 #endif
 #endif
 
@@ -149,10 +149,10 @@ protected:
 #ifdef __sgi
 #if (_MIPS_SZPTR == 64)
 #else
-  CLhandle compressorHdl;
-  int compressedBufferSize;
-  CLbufferHdl compressedBufferHdl;
-  ofstream os;
+  //CLhandle compressorHdl;
+  //int compressedBufferSize;
+  //CLbufferHdl compressedBufferHdl;
+  //ofstream os;
 #endif
 #endif
 
