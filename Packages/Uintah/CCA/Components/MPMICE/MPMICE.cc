@@ -1075,7 +1075,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         double one_or_zero = (cmass[c] - very_small_mass)/cmass[c];
 
         Temp_CC[c]  =(1.0-one_or_zero)*Temp_CC_ice[c]  +one_or_zero*Temp_CC_mpm;
-        vel_CC[c]   =(1.0-one_or_zero)*vel_CC_ice[c]   +one_or_zero*vel_CC_mpm;
+//      This allows propagation of messed up solid matl velocities,
+//      and has thus been abandoned for now.
+//      vel_CC[c]   =(1.0-one_or_zero)*vel_CC_ice[c]   +one_or_zero*vel_CC_mpm;
+        vel_CC[c]   =vel_CC_mpm;
         sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;
         rho_CC[c]    = cmass[c]/cell_vol;
       }
