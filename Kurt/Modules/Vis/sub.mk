@@ -15,6 +15,7 @@ SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/KurtScalarFieldReader.cc \
 		$(SRCDIR)/VisControl.cc \
 		$(SRCDIR)/RescaleColorMapForParticles.cc \
+		$(SRCDIR)/ParticleColorMapKey.cc \
 		$(SRCDIR)/ParticleVis.cc \
 		$(SRCDIR)/GridVisualizer.cc
 
@@ -34,6 +35,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/06/13 20:28:16  kuzimmer
+# Added a colormap key sticky for particle sets
+#
 # Revision 1.5  2000/06/05 21:10:31  bigler
 # Added new module to visualize UINTAH grid
 #
