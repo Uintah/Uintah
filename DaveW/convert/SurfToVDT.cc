@@ -40,10 +40,11 @@ main(int argc, char **argv) {
 	printf("Need the file name!\n");
 	exit(0);
     }
-    sprintf(name, "%s.st", argv[1]);
-    Piostream* stream=auto_istream(name);
+
+    Piostream* stream=auto_istream(clString(clString(argv[1])+".st"));
+    if (!stream) stream=auto_istream(clString(clString(argv[1])+".stree"));
     if (!stream) {
-	printf("Couldn't open file %s.  Exiting...\n", name);
+	printf("Couldn't open file %s.st of %s.stree.  Exiting...\n", argv[1], argv[1]);
 	exit(0);
     }
     Pio(*stream, handle);
