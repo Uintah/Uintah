@@ -6,6 +6,7 @@
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
+#include <Core/Thread/Thread.h>
 
 namespace rtrt {
 
@@ -14,14 +15,25 @@ class PortalMaterial : public Material
 
  protected:
 
-  Transform portal_;
-  bool      valid_;
+  // local end basis
+  Point     p_;
+  Vector    u_;
+  Vector    v_;
+
+  // other end basis
+  Point     oe_p_;
+  Vector    oe_u_;
+  Vector    oe_v_;
+
+  Transform portal_,other_end_;
+
   bool      attached_;
 
  public:
 
-  PortalMaterial() : valid_(false), attached_(false) 
-    { portal_.load_identity(); }
+  PortalMaterial(const Point &p, const Vector &u, const Vector &v) 
+    : Material(), p_(p), u_(u), v_(v), attached_(false) 
+    { portal_.load_basis(p_,u_,v_,Cross(u_,v_)); }
   virtual ~PortalMaterial() {}
 
   virtual void shade(Color& result, const Ray& ray,
@@ -31,14 +43,22 @@ class PortalMaterial : public Material
   {
     UVMapping* map=hit.hit_obj->get_uvmapping();
     UV uv;
+    // hitpos is global hit coords
     Point hitpos(ray.origin()+ray.direction()*hit.min_t);
     map->uv(uv, hitpos, hit);
     Color diffuse;
+    // (u,v) is local hit coords
     double u=uv.u();
     double v=uv.v();
     if (attached_ && (u>.02 && u<.98) && (v>.02 && v<.98)) {
-      Ray pray(portal_.project(hitpos), portal_.project(ray.direction()));
+
+      Point p2(oe_p_+oe_u_*u+oe_v_*v);
       
+      Vector v1(portal_.unproject(ray.direction()));
+      Vector v2(other_end_.project(v1));
+
+      Ray pray(p2,v2);
+
       cx->worker->traceRay(result, pray, depth+1,  atten,
                            accumcolor, cx);
     } else {
@@ -46,46 +66,18 @@ class PortalMaterial : public Material
     }
   }
 
-  Transform *get_portal() { return &portal_; }
-  bool valid() { return valid_; }
   bool attached() { return attached_; }
-  void attached(bool a) { attached_ = a; }
-
-  Point project(const Point &p) 
-  {
-    return Point(portal_.project(p));
-  }
-
-  Vector project(const Vector &v)
-  {
-    return Vector(portal_.project(v));
-  }
 
   void print() { portal_.print(); }
 
-  void set(const Point &a, const Vector &au, const Vector &av)
+  void attach(const Point &b, const Vector &bu, const Vector &bv)
   {
-    portal_.load_identity();
-    Vector aw(Cross(au,av));
-    portal_.load_basis(a,au,av,aw/aw.length());
-    valid_ = true;
-    attached_ = false;
-  }
+    oe_p_ = b;
+    oe_u_ = bu;
+    oe_v_ = bv;
+    other_end_.load_basis(oe_p_,oe_u_,oe_v_,Cross(oe_u_,oe_v_));
 
-  void attach(PortalMaterial *mat)
-  {
-    if (mat->valid()) {
-      Transform temp(portal_);
-      Transform *other_end = mat->get_portal();
-      portal_.change_basis(*other_end);
-      other_end->change_basis(temp);
-
-      portal_.print();
-      other_end->print();
-      
-      mat->attached(true);
-      attached_ = true;
-    }
+    attached_ = true;
   }
 };
 
