@@ -725,4 +725,41 @@ FrameWidget::GetMaterialName( const Index mindex ) const
   }
 }
 
+string
+FrameWidget::GetStateString()
+{
+  string base = BaseWidget::GetStateString();
+
+  Point c, r, d;
+  GetPosition(c, r, d);
+
+  ostringstream os;
+  os << " " << c.x() << " " << c.y() << " " << c.z();
+  os << " " << r.x() << " " << r.y() << " " << r.z();
+  os << " " << d.x() << " " << d.y() << " " << d.z();
+
+  return base + os.str();
+}
+
+
+int
+FrameWidget::SetStateString(const string &str)
+{
+  const int offset = BaseWidget::SetStateString(str);
+  istringstream is(str.substr(offset));
+
+  double cx, cy, cz;
+  double rx, ry, rz;
+  double dx, dy, dz;
+  is >> cx >> cy >> cz;
+  is >> rx >> ry >> rz;
+  is >> dx >> dy >> dz;
+  if (!is.fail())
+  {
+    SetPosition(Point(cx, cy, cz), Point(rx, ry, rz), Point(dx, dy, dz));
+  }
+
+  return offset + is.tellg();
+}
+
 } // End namespace SCIRun

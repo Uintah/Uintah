@@ -634,6 +634,49 @@ RingWidget::GetMaterialName( const Index mindex ) const
   }
 }
 
+
+string
+RingWidget::GetStateString()
+{
+  string base = BaseWidget::GetStateString();
+
+  Point center;
+  Vector normal;
+  double radius;
+  GetPosition(center, normal, radius);
+
+  ostringstream os;
+  os << " " << center.x() << " " << center.y() << " " << center.z();
+  os << " " << normal.x() << " " << normal.y() << " " << normal.z();
+  os << " " << radius;
+
+  return base + os.str();
+}
+
+
+int
+RingWidget::SetStateString(const string &str)
+{
+  const int offset = BaseWidget::SetStateString(str);
+  istringstream is(str.substr(offset));
+
+  double centerx, centery, centerz;
+  double normalx, normaly, normalz;
+  double radius;
+  is >> centerx >> centery >> centerz;
+  is >> normalx >> normaly >> normalz;
+  is >> radius;
+  if (!is.fail())
+  {
+    SetPosition(Point(centerx, centery, centerz),
+		Vector(normalx, normaly, normalz),
+		radius);
+  }
+
+  return offset + is.tellg();
+}
+
+
 } // End namespace SCIRun
 
 

@@ -123,7 +123,10 @@ public:
    
   // Use this to pop up the widget ui.
   void ui() const;
-   
+
+  virtual string GetStateString();
+  virtual int SetStateString(const string &str);
+
 protected:
   Module*       module_;
   CrowdMonitor* lock_;
