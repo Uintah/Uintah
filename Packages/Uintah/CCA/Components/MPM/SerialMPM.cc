@@ -157,7 +157,6 @@ SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
 			        string integrator, bool haveLoadCurve,
 			        bool doErosion)
 {
-  cerr << "Using SerialMPM material problem setup" << endl;
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
@@ -917,7 +916,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
       // Get the material points per load curve
       sumlong_vartype numPart = 0;
       new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
-                                                           0, nofPressureBCs++);
+                  0, nofPressureBCs++);
 
       // Save the material points per load curve in the PressureBC object
       PressureBC* pbc =
