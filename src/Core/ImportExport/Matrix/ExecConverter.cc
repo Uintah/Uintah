@@ -237,7 +237,7 @@ TextColumnMatrix_writer(ProgressReporter *pr,
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
-    "ColumnMatrixToText %f %t";
+    "ColumnMatrixToText %t %f";
   return Exec_writer(pr, matrix, filename, command);
 }
 
@@ -269,7 +269,7 @@ TextDenseMatrix_writer(ProgressReporter *pr,
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
-    "DenseMatrixToText %f %t";
+    "DenseMatrixToText %t %f";
   return Exec_writer(pr, matrix, filename, command);
 }
 
@@ -299,7 +299,7 @@ TextSparseRowMatrix_writer(ProgressReporter *pr,
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
-    "SparseRowMatrixToText %f %t";
+    "SparseRowMatrixToText %t %f";
   return Exec_writer(pr, matrix, filename, command);
 }
 
