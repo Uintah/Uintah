@@ -63,7 +63,7 @@ GLTexture3D::GLTexture3D(ScalarFieldRGuchar *tex ) :
   int size = std::max(X,Y);
   size = std::max(size,Z);
   tex->get_bounds( minP, maxP );
-
+  std::cerr<<"Bounds = "<<minP<<", "<<maxP<<std::endl;
   Vector diag = maxP - minP;
 
   dx = diag.x()/(X-1);
