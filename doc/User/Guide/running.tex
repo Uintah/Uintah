@@ -89,7 +89,7 @@ and type:
 \end{alltt}
 
 \note{Do not start \sr{} in the background, \ie do not type
-  \keyboard{scirun \&}.}
+  \keyboard{scirun~\&}.}
 
 The \command{scirun} command may take 1 argument, the name of a
 \dfn{\sr{} network file} (network files have a \filename{.net} extension)
@@ -237,9 +237,9 @@ optional.
   dynamically generated code (see \secref{Dynamic
   Compilation}{sec:dyncomp} for details on the meaning and use of
   this variable).  Typically, a user should create directory
-  \directory{~/on\_the\_fly}, and then, in his login script or
+  \directory{\ltilde{}/on\_the\_fly}, and then, in his login script or
   \filename{.scirunrc} file set the value of 
-  \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} to \directory{~/on\_the\_fly}.
+  \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} to \directory{\ltilde{}/on\_the\_fly}.
   
   \envitem{SCI\_CONFIRM\_OVERWRITE} determines the default behavior of
   file saving operations.  If set to 1, the user is always
