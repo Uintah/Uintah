@@ -157,25 +157,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //__________________________________
   //  M P M I C E
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
-  if (debug_ps) {
-    d_dbgStartTime = 0.;
-    d_dbgStopTime = 1.;
-    d_dbgOutputInterval = 0.0;
-    d_dbgBeginIndx = IntVector(0,0,0);
-    d_dbgEndIndx   = IntVector(0,0,0); 
-    d_dbgSigFigs   = 5;
-    
-    debug_ps->get("dbg_timeStart",     d_dbgStartTime);
-    debug_ps->get("dbg_timeStop",      d_dbgStopTime);
-    debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
-    debug_ps->get("d_dbgBeginIndx",    d_dbgBeginIndx);
-    debug_ps->get("d_dbgEndIndx",      d_dbgEndIndx );
-    debug_ps->get("dbg_SigFigs",       d_dbgSigFigs );
-    debug_ps->get("dbg_Matls",         d_dbgMatls);
-
-    d_dbgOldTime = -d_dbgOutputInterval;
-    d_dbgNextDumpTime = 0.0;
-    
+  if (debug_ps) {   
     for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
         child = child->findNextBlock("debug")) {
       map<string,string> debug_attr;
