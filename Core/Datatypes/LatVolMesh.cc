@@ -637,9 +637,10 @@ LatVolMesh::get_center(Point &result, Face::index_type idx) const
   Node::array_type::iterator nai = nodes.begin();
   get_point(result, *nai);
   ++nai;
+  Point pp;
   while (nai != nodes.end())
   {
-    Point pp;
+    get_point(pp, *nai);
     result.asVector() += pp.asVector();
     ++nai;
   }

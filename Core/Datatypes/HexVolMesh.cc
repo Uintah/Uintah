@@ -593,9 +593,10 @@ HexVolMesh::get_center(Point &p, Face::index_type idx) const
   Node::array_type::iterator nai = nodes.begin();
   get_point(p, *nai);
   ++nai;
+  Point pp;
   while (nai != nodes.end())
   {
-    Point pp;
+    get_point(pp, *nai);
     p.asVector() += pp.asVector();
     ++nai;
   }
@@ -611,9 +612,10 @@ HexVolMesh::get_center(Point &p, Cell::index_type idx) const
   Node::array_type::iterator nai = nodes.begin();
   get_point(p, *nai);
   ++nai;
+  Point pp;
   while (nai != nodes.end())
   {
-    Point pp;
+    get_point(pp, *nai);
     p.asVector() += pp.asVector();
     ++nai;
   }
