@@ -26,56 +26,60 @@
         <p>&nbsp; </p>
         </center>
         <div align="left">
-
+	<p><b><H4><A href="#section 1">ManageFieldData</H4></b></A>
+	<p><b><H4><A href="#section 2">Combining simulation and visualization</H4></b></A>
         <p><b>Chapter Overview</b><br>
 
-        <p>In the previous chapter, we implemented a network to solve
-	a bioelectric finite element problem.  The output of that
-	network was a solution vector, <img height="16" width="13"
+        <p>In Chapters 1-4, we constructed a set of visualization
+	networks to explore scalar and vector Fields. In the previous chapter, 
+	we implemented a network to solve a bioelectric finite element problem.  
+	The output of that network was a solution vector, <img height="16" width="13"
 	src="images/phi.gif">, containing the potential at each of the
 	nodes in the finite element mesh.
-
-	<p>In Chapters 1-4, we constructed a set of visualization
-	networks to explore scalar and vector Fields.
 
 	<p>In this chapter, we will put these two pieces together.  We
 	will reuse the finite element simulation network from Chapter
 	5, as well as the visualization network from Chapter 4.  The
 	only missing piece is a module that can connect the solution
 	vector of scalar values to the nodes of the tetrahedral finite
-	element mesh.  The module that does this is ManageFieldData,
-	described below.
+	element mesh.  The module ManageFieldData accomplishes this task,
+	as described below.
 
-        <p><b>ManageFieldData</b><br>
+        <p><b><A name="section 1">ManageFieldData</b><br></A>
 
-        <p>This module performs two simultaneous operations.  First,
-        the &quot;Input Field&quot; split into its mesh part and its
+        <p>The ManageFieldData module performs two simultaneous operations.  
+	<ul>
+	<li>First, the &quot;Input Field&quot; splits into its mesh part and its
         data values.  The data values are packaged up and passed to
-        the &quot;Output Matrix&quot; port. Second, the input field
-        geometry joins with the data from the Input Matrix, and the
-        result passes out on the &quot;Output Field&quot; port.  If
-        the input matrix is absent, then the second operation is not
-        performed, and the Output Field is the same as the Input
-        Field.  The format of the &quot;Output Matrix&quot; will be a
-        column matrix if the input field was a scalar type.  It will
-        be an Nx3 matrix if the input field contained vectors.  If the
-        field contained tensors it will be Nx9 matrix, where the
-        tensor is flattened out in left to right, top to bottom order.
-        The &quot;Input Matrix&quot; should have the same number of
-        values as the field where the values are to be stored.  The
-        type of the Input Field is preserved in the Output field as
+        the &quot;Output Matrix&quot; port. 
+	<li>Second, the input field geometry joins with the data from the Input Matrix, 
+	and the result passes out on the &quot;Output Field&quot; port.  
+	</ul>
+	<p>If the input matrix is absent, then the second operation does not
+        perform, and the Output Field is the same as the Input
+        Field.  
+	<ul><li>If the input field was a scalar type, the format of the 
+	&quot;Output Matrix&quot; will be a column matrix. 
+	<li>If the input field contained vectors, the format will be an Nx3 matrix.
+	<li>If the field contained tensors it will be Nx9 matrix, where the
+        tensor is flattened out in a left-to-right, top-to-bottom order.
+        <li>The &quot;Input Matrix&quot; should have the same number of
+        values as the field where the values are to be stored.</ul>  
+	
+	<p>The type of the Input Field is preserved in the Output field as
         well.  For instance, if the input field is a vector field, the
         Output Field will also be a vector field, and the input matrix
         should be an Nx3 matrix where N is equal to the number of
         elements to be filled in.
 
-        <p><b>Combining simulation and visualization</b><br>
+        <p><b><A name="section 2">Combining simulation and visualization</b><br></A>
 
 	<p>Combining the finite element simulation net from Chapter 5
 	(Figure 5.2) with the visualization net from Chapter 4 (Figure
 	4.1), and adding a ManageFieldData module between them, you
-	should have a net that looks like <b>Figure 6.1</b>.  Executing the
-	network, you should have an image in your ViewWindow that
+	should have a net that looks like <b>Figure 6.1</b>. 
+
+	<p> Executing the network, you should have an image in your ViewWindow that
 	looks like <b>Figure 6.2</b>.
 
       </div>
@@ -93,7 +97,8 @@
 	</center>
 	<div align="left">
 	<p><br>
-
+	<p><H4><b>Summary</H4></b>
+	needs content
 	<br>
 	<br>
         </div>
