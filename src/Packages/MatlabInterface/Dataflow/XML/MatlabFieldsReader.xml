@@ -343,7 +343,7 @@
    </p>
   
   <figure id="network">
-  <img>Example_Network.tiff</img>
+  <img>../Modules/DataIO/doc/Example_Network.jpg</img>
   <caption>Network for displaying epicardial potentials</caption>
   </figure>
   
@@ -352,12 +352,12 @@
   in the MatrixSelectVector GUI different time instances of a heatbeat can be depicted in the epicardial surface.</p>
   
   <figure id="GUI1">
-  <img>MatlabFieldsReaderGUI.tiff</img>
+  <img>../Modules/DataIO/doc/MatlabFieldsReaderGUI.jpg</img>
   <caption>MatlabFieldsReader GUI showing the selection of the "geometry.mat" file</caption>
   </figure>
 
   <figure id="GUI2">
-  <img>MatlabMatricesReaderGUI.tiff</img>
+  <img>../Modules/DataIO/doc/MatlabMatricesReaderGUI.jpg</img>
   <caption>MatlabMatricesReader GUI showing the selection of the "timeseries.mat" file</caption>
   </figure>
   
