@@ -236,7 +236,7 @@ SCGPlastic::computeShearModulus(const PlasticityState* state)
   double eta = state->density/state->initialDensity;
   ASSERT(eta > 0.0);
   eta = pow(eta, 1.0/3.0);
-  double mu = d_CM.mu_0*(1.0 + d_CM.A*state->pressure/eta + 
+  double mu = d_CM.mu_0*(1.0 + d_CM.A*state->pressure/eta - 
               d_CM.B*(state->temperature - 300.0));
   return mu;
 }
@@ -266,7 +266,7 @@ SCGPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
   ASSERT(Ya >= 0.0);
   double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
 
-  return Y*d_CM.B;
+  return -Y*d_CM.B;
 }
 
 double
