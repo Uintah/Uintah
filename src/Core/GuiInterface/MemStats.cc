@@ -46,7 +46,7 @@ MemStats::MemStats()
 		       old_nfillbin,
 		       old_nmmap, old_sizemmap, old_nmunmap, old_sizemunmap,
 		       old_highwater_alloc, old_highwater_mmap,
-		       old_nlonglocks, old_nnaps, old_bytes_overhead,
+		       old_bytes_overhead,
 		       old_bytes_free, old_bytes_fragmented, old_bytes_inuse,
 		       old_bytes_inhunks);
 
@@ -138,13 +138,13 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 	size_t nalloc, sizealloc, nfree, sizefree, nmmap, sizemmap;
 	size_t nfillbin;
 	size_t nmunmap, sizemunmap, highwater_alloc, highwater_mmap;
-	size_t nlonglocks, nnaps, bytes_overhead, bytes_free;
+	size_t bytes_overhead, bytes_free;
 	size_t bytes_fragmented, bytes_inuse, bytes_inhunks;
 	GetGlobalStats(a, nalloc, sizealloc, nfree, sizefree,
 		       nfillbin,
 		       nmmap, sizemmap, nmunmap, sizemunmap,
 		       highwater_alloc, highwater_mmap,
-		       nlonglocks, nnaps, bytes_overhead,
+		       bytes_overhead,
 		       bytes_free, bytes_fragmented, bytes_inuse,
 		       bytes_inhunks);
 	if(nalloc != old_nalloc || nfree != old_nfree){
@@ -160,15 +160,12 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 	    old_sizemunmap=sizemunmap;
 	    old_highwater_alloc=highwater_alloc;
 	    old_highwater_mmap=highwater_mmap;
-	    old_nlonglocks=nlonglocks;
-	    old_nnaps=nnaps;
 	    old_bytes_overhead=bytes_overhead;
 	    old_bytes_free=bytes_free;
 	    old_bytes_fragmented=bytes_fragmented;
 	    old_bytes_inuse=bytes_inuse;
 	    old_bytes_inhunks=bytes_inhunks;
 
-	    size_t ncalls=nalloc+nfree;
 	    size_t total=bytes_overhead+bytes_free+bytes_fragmented+bytes_inuse+bytes_inhunks;
 	    char buf[1000];
 	    sprintf(buf,
@@ -180,8 +177,6 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 		    "Requests from system: %ld (%ld bytes)\n"
 		    "Returned to system: %ld (%ld bytes)\n"
 		    "System highwater mark: %ld bytes\n"
-		    "Long locks: %ld (%.2f%%)\n"
-		    "Naps: %ld (%.2f%%)\n"
 		    "\nBreakdown:\n"
 		    "Inuse: %d bytes (%.2f%%)\n"
 		    "Free: %d bytes (%.2f%%)\n"
@@ -198,8 +193,6 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 		    (long)nmmap, (long)sizemmap,
 		    (long)nmunmap, (long)sizemunmap,
 		    (long)highwater_mmap,
-		    (long)nlonglocks, 100.*(double)nlonglocks/(double)ncalls,
-		    (long)nnaps, 100.*(double)nnaps/(double)ncalls,
 		    bytes_inuse, 100.*(double)bytes_inuse/(double)total,
 		    bytes_free, 100.*(double)bytes_free/(double)total,
 		    bytes_overhead, 100.*(double)bytes_overhead/(double)total,
