@@ -67,6 +67,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomSwitch.cc		                \
 	$(SRCDIR)/GeomTetra.cc		                \
 	$(SRCDIR)/GeomTexSlices.cc	                \
+	$(SRCDIR)/GeomTexRectangle.cc	    		\
 	$(SRCDIR)/GeomText.cc		                \
 	$(SRCDIR)/GeomTimeGroup.cc	                \
 	$(SRCDIR)/GeomTorus.cc		                \
@@ -89,6 +90,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/SpotLight.cc		    		\
+	$(SRCDIR)/ShaderProgramARB.cc                   \
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
 	$(SRCDIR)/TkOpenGLContext.cc	    		\
