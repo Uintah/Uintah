@@ -19,6 +19,6 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions Packages/Nrrd/Core/Datatypes
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(NRRD_LIBRARY) -lnrrd -lbiff -lair -lm
 
 include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
