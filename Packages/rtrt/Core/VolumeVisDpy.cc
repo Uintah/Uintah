@@ -32,7 +32,7 @@ VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
   hist(0), xres(500), yres(500), colors_index(matls), alpha_list(alphas),
   ncolors(ncolors), nalphas(ncolors),
   original_t_inc(0.01), current_t_inc(t_inc), t_inc(t_inc),
-  in_file(in_file), selected_point(-1)
+  in_file(in_file)
 {
   // need to allocate memory for alpha_transform and color_transform
   Array1<Color*> *c = new Array1<Color*>(ncolors);
@@ -54,7 +54,7 @@ void VolumeVisDpy::attach(VolumeVis *volume) {
 }
 
 void VolumeVisDpy::setup_vars() {
-  cerr << "VolumeVisDpy::setup_vars:start\n";
+  //  cerr << "VolumeVisDpy::setup_vars:start\n";
   if (volumes.size() > 0) {
     data_min = MAXFLOAT;
     data_max = -MAXFLOAT;
@@ -108,7 +108,9 @@ void VolumeVisDpy::run() {
   }
   int screen=DefaultScreen(dpy);
   
-  char* criteria="sb, max rgb";
+  // sb - single buffered
+  // db - double buffered
+  char* criteria="db, max rgb";
   if(!visPixelFormat(criteria)){
     cerr << "Error setting pixel format for visinfo\n";
     cerr << "Syntax error in criteria: " << criteria << '\n';
@@ -178,8 +180,6 @@ void VolumeVisDpy::run() {
 
   int selected_point = -1;
   // these are used to keep the points from moving too much
-  int min_x;
-  int max_x;
   
   for(;;){
     //cerr << "GridSpheresDpy:run:eventloop\n";
@@ -192,6 +192,8 @@ void VolumeVisDpy::run() {
       draw_hist(fontbase, fontInfo);
       draw_alpha_curve(fontbase, fontInfo);
       glFinish();
+      glXSwapBuffers(dpy, win);
+      XFlush(dpy);
       redraw=false;
     }
     XEvent e;
@@ -213,12 +215,12 @@ void VolumeVisDpy::run() {
       switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
       case XK_Control_L:
       case XK_Control_R:
-	cerr << "Pressed control\n";
+	//cerr << "Pressed control\n";
 	control_pressed = true;
 	break;
       case XK_Shift_L:
       case XK_Shift_R:
-	cerr << "Pressed shift\n";
+	//cerr << "Pressed shift\n";
 	shift_pressed = true;
 	break;
       case XK_Page_Up:
@@ -241,11 +243,11 @@ void VolumeVisDpy::run() {
       case XK_Control_L:
       case XK_Control_R:
 	control_pressed = false;
-	cerr << "Releassed control\n";
+	//cerr << "Releassed control\n";
 	break;
       case XK_Shift_L:
       case XK_Shift_R:
-	cerr << "Releassed shift\n";
+	//cerr << "Releassed shift\n";
 	shift_pressed = false;
       }
       break;
@@ -275,7 +277,7 @@ void VolumeVisDpy::run() {
 	switch(e.xbutton.button){
 	case Button1:
 	  if (shift_pressed) {
-	    cerr << "Left button pressed with shift\n";
+	    //cerr << "Left button pressed with shift\n";
 	    selected_point = -1;
 	    // create a point at the location of the click
 	    AlphaPos new_guy((xpos-(float)5)/(xres-10),
@@ -291,7 +293,7 @@ void VolumeVisDpy::run() {
 	    // make it selected for movement
 	    selected_point = index;
 	  } else if (control_pressed) {
-	    cerr << "Left button pressed with control\n";
+	    //cerr << "Left button pressed with control\n";
 	    selected_point = -1;
 	    // find the point closest and delete it
 	    // can't remove the end points
@@ -307,17 +309,17 @@ void VolumeVisDpy::run() {
 	  break;
 	case Button2:
 	  if (shift_pressed) {
-	    cerr << "Middle button pressed with shift\n";
+	    //cerr << "Middle button pressed with shift\n";
 	  } else if (control_pressed) {
-	    cerr << "Middle button pressed with control\n";
+	    //cerr << "Middle button pressed with control\n";
 	  } else {
 	  }
 	  break;
 	case Button3:
 	  if (shift_pressed) {
-	    cerr << "Right button pressed with shift\n";
+	    //cerr << "Right button pressed with shift\n";
 	  } else if (control_pressed) {
-	    cerr << "Right button pressed with control\n";
+	    //cerr << "Right button pressed with control\n";
 	  } else {
 	  }
 	  break;
@@ -349,6 +351,8 @@ void VolumeVisDpy::run() {
 	      ynorm = (ypos - (float)5)/(yres/2-10);
 	    
 	    alpha_list[selected_point] = AlphaPos(xnorm,ynorm);
+
+	    redraw = true;
 	  }
 	  break;
 	case Button2Mask:
@@ -469,7 +473,7 @@ void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
   while((errcode=glGetError()) != GL_NO_ERROR){
     cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
   }
-  cerr << "VolumeVisDpy:draw_hist:end\n";
+  //cerr << "VolumeVisDpy:draw_hist:end\n";
 }
 
 // displays the alpha transfer curve as well as a representation of the colors
@@ -538,7 +542,7 @@ void VolumeVisDpy::rescale_alphas(float new_t_inc) {
   float d2_div_d1 = new_t_inc/current_t_inc;
   for(unsigned int i = 0; i < alpha_transform.size(); i++) {
     alpha_transform[i] = 1 - powf(1 - alpha_transform[i], d2_div_d1);
-    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<", ";
+    //    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<", ";
   }
   cout << endl;
   current_t_inc = new_t_inc;
