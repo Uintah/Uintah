@@ -114,7 +114,8 @@ public:
 				double delta_t,
 				int Index,
 				CellInformation* cellinfo,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+				int conv_scheme);
 
       ////////////////////////////////////////////////////////////////////////
       // Documentation here

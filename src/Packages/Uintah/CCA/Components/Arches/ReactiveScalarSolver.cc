@@ -75,6 +75,16 @@ ReactiveScalarSolver::problemSetup(const ProblemSpecP& params)
     //throw InvalidValue("Finite Differencing scheme "
 	//	       "not supported: " + finite_diff, db);
   }
+  if (db->findBlock("convection_scheme")) {
+    string conv_scheme;
+    db->require("convection_scheme",conv_scheme);
+    if (conv_scheme == "l2up") d_conv_scheme = 0;
+    else if (conv_scheme == "eno") d_conv_scheme = 1;
+         else if (conv_scheme == "weno") d_conv_scheme = 2;
+	      else throw InvalidValue("Convection scheme "
+		       "not supported: " + conv_scheme);
+  } else
+    d_conv_scheme = 0;
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
   string linear_sol;
@@ -152,11 +162,11 @@ ReactiveScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
-#ifdef Scalar_ENO
+  if (d_conv_scheme > 0) {
     tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
     tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
     tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
-#endif
+  }
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_reactscalCoefPredLabel, d_lab->d_stencilMatl,
@@ -200,17 +210,20 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
 #endif
   
-#ifdef Scalar_ENO
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  if (d_conv_scheme > 0) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
     old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
     old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
     old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
-    double maxAbsU = mxAbsU;
-    double maxAbsV = mxAbsW;
-    double maxAbsW = mxAbsW;
-#endif
+    maxAbsU = mxAbsU;
+    maxAbsV = mxAbsW;
+    maxAbsW = mxAbsW;
+  }
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -276,7 +289,7 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   // outputs: reactscalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &reactscalarVars);
+				       &reactscalarVars, d_conv_scheme);
 
     // Calculate reactscalar source terms
     // inputs : [u,v,w]VelocityMS, reactscalarSP, densityCP, viscosityCTS
@@ -287,18 +300,17 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &reactscalarVars );
-#ifdef Scalar_ENO
-    int wallID = d_boundaryCondition->wallCellType();
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars, wallID);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars, wallID);
-#endif
-#endif
+    if (d_conv_scheme > 0) {
+      int wallID = d_boundaryCondition->wallCellType();
+      if (d_conv_scheme == 2)
+        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					        maxAbsU, maxAbsV, maxAbsW, 
+				  	        &reactscalarVars, wallID);
+      else
+        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					       maxAbsU, maxAbsV, maxAbsW, 
+				  	       &reactscalarVars, wallID);
+    }
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, reactscalCoefSBLM
     // outputs: reactscalCoefSBLM
@@ -312,7 +324,8 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &reactscalarVars);
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+				     &reactscalarVars, d_conv_scheme);
     
     // Calculate the reactscalar diagonal terms
     // inputs : reactscalCoefSBLM, scalLinSrcSBLM
@@ -363,6 +376,12 @@ ReactiveScalarSolver::sched_reactscalarLinearSolvePred(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 #ifdef correctorstep
   tsk->computes(d_lab->d_reactscalarPredLabel);
 #else
@@ -500,6 +519,16 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
 #endif
 #endif
 
+// Outlet bc is done here not to change old scalar
+    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
+				  &reactscalarVars, delta_t);
+
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
 				  &reactscalarVars);
 #ifdef correctorstep
@@ -604,7 +633,7 @@ ReactiveScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
 
-#ifdef Scalar_ENO
+  if (d_conv_scheme > 0) {
   #ifdef Runge_Kutta_3d
     tsk->requires(Task::NewDW, d_lab->d_maxAbsUInterm_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsVInterm_label);
@@ -614,7 +643,7 @@ ReactiveScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
   #endif
-#endif
+  }
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_reactscalCoefCorrLabel, d_lab->d_stencilMatl,
@@ -649,7 +678,10 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
 #endif
   
-#ifdef Scalar_ENO
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  if (d_conv_scheme > 0) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
@@ -662,10 +694,10 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
     new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
 #endif
-    double maxAbsU = mxAbsU;
-    double maxAbsV = mxAbsW;
-    double maxAbsW = mxAbsW;
-#endif
+    maxAbsU = mxAbsU;
+    maxAbsV = mxAbsW;
+    maxAbsW = mxAbsW;
+  }
 
   
   for (int p = 0; p < patches->size(); p++) {
@@ -768,7 +800,7 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &reactscalarVars);
+				       &reactscalarVars, d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -779,18 +811,17 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &reactscalarVars );
-#ifdef Scalar_ENO
-    int wallID = d_boundaryCondition->wallCellType();
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars, wallID);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars, wallID);
-#endif
-#endif
+    if (d_conv_scheme > 0) {
+      int wallID = d_boundaryCondition->wallCellType();
+      if (d_conv_scheme == 2)
+        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					        maxAbsU, maxAbsV, maxAbsW, 
+				  	        &reactscalarVars, wallID);
+      else
+        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					       maxAbsU, maxAbsV, maxAbsW, 
+				  	       &reactscalarVars, wallID);
+    }
 
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
@@ -805,7 +836,8 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &reactscalarVars);
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+				     &reactscalarVars, d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
@@ -852,6 +884,12 @@ ReactiveScalarSolver::sched_reactscalarLinearSolveCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_reactscalarIntermLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   #ifndef Runge_Kutta_3d_ssp
   tsk->requires(Task::NewDW, d_lab->d_reactscalarTempLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -861,18 +899,18 @@ ReactiveScalarSolver::sched_reactscalarLinearSolveCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_reactscalarPredLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
   tsk->requires(Task::NewDW, d_lab->d_reactscalCoefCorrLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_reactscalNonLinSrcCorrLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #ifdef Runge_Kutta_3d_ssp
-  tsk->requires(Task::NewDW, d_lab->d_reactscalarOUTBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #endif
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_reactscalarSPLabel);
@@ -994,39 +1032,25 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
     }
   #endif
   #endif
-  #ifdef Runge_Kutta_3d_ssp
-    constCCVariable<double> old_reactscalar;
-    constCCVariable<double> old_density;
-    constCCVariable<double> new_density;
 
-    new_dw->get(old_reactscalar, d_lab->d_reactscalarOUTBCLabel, 
+// Outlet bc is done here not to change old scalar
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, d_lab->d_densityIntermLabel, 
+    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-            IntVector currCell(colX, colY, colZ);
-
-            reactscalarVars.scalar[currCell] = 
-	    (2.0*reactscalarVars.scalar[currCell]+
-            old_density[currCell]/new_density[currCell]*
-	    old_reactscalar[currCell])/3.0;
-            if (reactscalarVars.scalar[currCell] > 1.0) 
-		reactscalarVars.scalar[currCell] = 1.0;
-            else if (reactscalarVars.scalar[currCell] < 0.0)
-            	reactscalarVars.scalar[currCell] = 0.0;
-        }
-      }
-    }
+  #else
+    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+    d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
+				  &reactscalarVars, delta_t);
 
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
 				  &reactscalarVars);
@@ -1100,11 +1124,11 @@ ReactiveScalarSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_reactscalarSRCINPredLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-#ifdef Scalar_ENO
+  if (d_conv_scheme > 0) {
     tsk->requires(Task::NewDW, d_lab->d_maxAbsUPred_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
-#endif
+  }
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_reactscalCoefIntermLabel, d_lab->d_stencilMatl,
@@ -1136,17 +1160,20 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   delta_t *= gamma_2; 
 #endif
   
-#ifdef Scalar_ENO
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  if (d_conv_scheme > 0) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
     new_dw->get(mxAbsU, d_lab->d_maxAbsUPred_label);
     new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
     new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
-    double maxAbsU = mxAbsU;
-    double maxAbsV = mxAbsW;
-    double maxAbsW = mxAbsW;
-#endif
+    maxAbsU = mxAbsU;
+    maxAbsV = mxAbsW;
+    maxAbsW = mxAbsW;
+  }
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1211,7 +1238,7 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &reactscalarVars);
+				       &reactscalarVars, d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -1222,18 +1249,17 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &reactscalarVars );
-#ifdef Scalar_ENO
-    int wallID = d_boundaryCondition->wallCellType();
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars, wallID);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars, wallID);
-#endif
-#endif
+    if (d_conv_scheme > 0) {
+      int wallID = d_boundaryCondition->wallCellType();
+      if (d_conv_scheme == 2)
+        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					        maxAbsU, maxAbsV, maxAbsW, 
+				  	        &reactscalarVars, wallID);
+      else
+        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					       maxAbsU, maxAbsV, maxAbsW, 
+				  	       &reactscalarVars, wallID);
+    }
 
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
@@ -1248,7 +1274,8 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &reactscalarVars);
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+				     &reactscalarVars, d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
@@ -1298,14 +1325,14 @@ ReactiveScalarSolver::sched_reactscalarLinearSolveInterm(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_reactscalNonLinSrcIntermLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   #ifndef Runge_Kutta_3d_ssp
   tsk->modifies(d_lab->d_reactscalarTempLabel);
-  #endif
-  #ifdef Runge_Kutta_3d_ssp
-  tsk->requires(Task::NewDW, d_lab->d_reactscalarOUTBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1419,40 +1446,17 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
     } 
 //  new_dw->put(temp_reactscalar, d_lab->d_reactscalarTempLabel, matlIndex, patch);
   #endif
-  #ifdef Runge_Kutta_3d_ssp
-    constCCVariable<double> old_reactscalar;
-    constCCVariable<double> old_density;
-    constCCVariable<double> new_density;
-
-    new_dw->get(old_reactscalar, d_lab->d_reactscalarOUTBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-            IntVector currCell(colX, colY, colZ);
-
-            reactscalarVars.scalar[currCell] =
-	    (reactscalarVars.scalar[currCell]+
-            old_density[currCell]/new_density[currCell]*
-	    3.0*old_reactscalar[currCell])/4.0;
-            if (reactscalarVars.scalar[currCell] > 1.0) 
-		reactscalarVars.scalar[currCell] = 1.0;
-            else if (reactscalarVars.scalar[currCell] < 0.0)
-            	reactscalarVars.scalar[currCell] = 0.0;
-        }
-      }
-    }
-  #endif
   
+// Outlet bc is done here not to change old scalar
+    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
+				  &reactscalarVars, delta_t);
+
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
 				  &reactscalarVars);
     // put back the results

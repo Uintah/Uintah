@@ -272,6 +272,7 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // physical constants
       PhysicalConstants* d_physicalConsts;
+      int d_conv_scheme;
 
 #ifdef multimaterialform
       // set the values in problem setup

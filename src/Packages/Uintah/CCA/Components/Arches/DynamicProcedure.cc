@@ -2055,18 +2055,56 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     if (time < 2.0)
       factor = (time+0.000001)*0.5;
 #endif
+  if (Runge_Kutta_last_step) {
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+
+	  double value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
+	  if (MMHatI[currCell] < 1.0e-20) value = 0.0;
+	  tempCs[currCell] = value;
+	}
+      }
+    }
+#define FILTER_Cs_squared
+#ifdef FILTER_Cs_squared
+#ifdef PetscFilter
+    d_filter->applyFilter(pc, patch, tempCs, Cs);
+#else
+    Cs.copy(tempCs, tempCs.getLowIndex(),
+		      tempCs.getHighIndex());
+#endif
+#else
+    Cs.copy(tempCs, tempCs.getLowIndex(),
+		      tempCs.getHighIndex());
+#endif
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
 	  double filter = pow(delta, 1.0/3.0);
-	  if (MLHatI[currCell] < 0.0)
-	    MLHatI[currCell] = 0.0;
+	  if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
+	  else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
+	  Cs[currCell] = sqrt(Cs[currCell]);
+	  viscosity[currCell] =  Cs[currCell]* filter * filter *
+				  IsI[currCell] * den[currCell] + viscos;
+	}
+      }
+    }
+  }
+  else {
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  if (MLHatI[currCell] < 0.0) MLHatI[currCell] = 0.0;
 
 	  //     calculate the effective viscosity
 
 	  //     handle the case where we divide by zero
+
 	  double value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
 	  if (MMHatI[currCell] < 1.0e-20) value = 0.0;
 	  else if (value > 100.0) value = 100.0;
@@ -2086,7 +2124,6 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     Cs.copy(tempCs, tempCs.getLowIndex(),
 		      tempCs.getHighIndex());
 #endif
-    
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -2098,7 +2135,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	}
       }
     }
-
+  }
 
     // boundary conditions...make a separate function apply Boundary
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;

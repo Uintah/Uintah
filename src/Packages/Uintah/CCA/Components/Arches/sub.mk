@@ -79,6 +79,7 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/addpressuregrad_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcenthalpy_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcinout_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlpresbcinout_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcpress_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcscalar_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcuvel_fort.h
