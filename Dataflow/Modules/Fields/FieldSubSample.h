@@ -241,8 +241,6 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     omesh->transform( trans );
   }
 
-  bool last_node;
-
   // Index based on the old mesh so that we are assured of getting the last
   // node even if it forms a "partial" cell.
   for( k=kstart; k<kstop_stride; k+=kstride ) {
