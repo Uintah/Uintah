@@ -90,6 +90,8 @@ class MPMMaterial;
       void finalizeMaterials();
       const MaterialSet* allMPMMaterials() const;
       const MaterialSet* allICEMaterials() const;
+      const MaterialSet* allMaterials() const;
+
       double getRefPress() const {
 	return d_ref_press;
       }
@@ -116,6 +118,7 @@ class MPMMaterial;
       Vector d_gravity;
       MaterialSet* all_mpm_matls;
       MaterialSet* all_ice_matls;
+      MaterialSet* all_matls;
       double d_ref_press;
       double d_elapsed_time;
    };
