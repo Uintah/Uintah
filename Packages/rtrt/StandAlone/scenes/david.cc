@@ -51,10 +51,15 @@ Scene* make_scene(int argc, char* argv[])
     }
   }
 
-  Point Eye(-1329.7, 333.468, -8572.81);
-  Point Lookat(79.9753, 34.1933, -13346.8);
-  Vector Up(-0.168284, 0.979459, -0.111091);
-  double fov=60;
+//  Point Eye(-1329.7, 333.468, -8572.81);
+//  Point Lookat(79.9753, 34.1933, -13346.8);
+//  Vector Up(-0.168284, 0.979459, -0.111091);
+//  double fov=60;
+
+  Point Eye(-21.8836, -27.799, 2.6983);
+  Point Lookat(-14.0788, -19.9292, 3.48102);
+  Vector Up(0, 0, 1);
+  double fov=30;
 
   Camera cam(Eye,Lookat,Up,fov);
 
@@ -120,7 +125,7 @@ Scene* make_scene(int argc, char* argv[])
 						  Vector(0,0,1)) );
   
   scene->select_shadow_mode(Hard_Shadows);
-  Light *david_light = new Light(Point(3,3,10), Color(1,1,1), 0);
+  Light *david_light = new Light(Point(3,-40,10), Color(1,1,1), 0);
 
   david_light->name_ = "david_light";
 
