@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Grid/FileGeometryPiece.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <fstream>
 
 using namespace Uintah;
@@ -10,7 +11,7 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
 {
   string file_name,var_name;
   ps->require("name",file_name);
-
+  
   if (ps->get("var",var_name))
     readPoints(file_name,true);
   else
@@ -45,6 +46,9 @@ Box FileGeometryPiece::getBoundingBox() const
 void FileGeometryPiece::readPoints(const string& f_name, bool var)
 {
   ifstream source(f_name.c_str());
+  if (!source ){
+    throw ProblemSetupException("ERROR: opening MPM geometry file: \n The file must be in the same directory as sus");
+  }
 
   double x,y,z,vol;
   if (var == false) {
