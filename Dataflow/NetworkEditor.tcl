@@ -25,6 +25,8 @@ proc makeNetworkEditor {} {
     menubutton .main_menu.stats -text "Statistics" -underline 0 \
 	-menu .main_menu.stats.menu
     menu .main_menu.stats.menu
+    .main_menu.stats.menu add command -label "Debug..." -underline 0 \
+	    -command showDebugSettings
     .main_menu.stats.menu add command -label "Memory..." -underline 0 \
 	    -command showMemStats
     .main_menu.stats.menu add command -label "Threads..." -underline 0 \
@@ -205,5 +207,6 @@ proc itemDrag {c x y} {
 source $sci_root/TCL/Filebox.tcl
 source $sci_root/TCL/PointVector.tcl
 source $sci_root/Dataflow/MemStats.tcl
+source $sci_root/Dataflow/DebugSettings.tcl
 source $sci_root/Dataflow/ThreadStats.tcl
 source $sci_root/Dataflow/Module.tcl

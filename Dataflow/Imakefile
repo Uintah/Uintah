@@ -1,10 +1,10 @@
 
 #include <config/sci.cf>
 
-OBJS = Connection.o  HelpUI.o  MemStats.o  Module.o  \
+OBJS = Connection.o  DebugSettings.o HelpUI.o  MemStats.o  Module.o  \
 	ModuleHelper.o  ModuleList.o  Network.o  NetworkEditor.o  \
 	Port.o  ThreadStats.o
-SRCS = Connection.cc HelpUI.cc MemStats.cc Module.cc \
+SRCS = Connection.cc DebugSettings.cc HelpUI.cc MemStats.cc Module.cc \
 	ModuleHelper.cc ModuleList.cc Network.cc NetworkEditor.cc \
 	Port.cc ThreadStats.cc
 
