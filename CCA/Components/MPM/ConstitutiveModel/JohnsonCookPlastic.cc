@@ -116,6 +116,16 @@ JohnsonCookPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
   new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
 }
 
+void 
+JohnsonCookPlastic::allocateAndPutRigid(ParticleSubset* pset,
+                                        DataWarehouse* new_dw) 
+{
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
+  // Initializing to zero for the sake of RigidMPM's carryForward
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++) pPlasticStrain_new[*iter] = 0.0;
+}
+
 void
 JohnsonCookPlastic::updateElastic(const particleIndex idx)
 {

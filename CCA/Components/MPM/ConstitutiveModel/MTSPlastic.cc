@@ -161,6 +161,19 @@ MTSPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
 }
 
 void
+MTSPlastic::allocateAndPutRigid(ParticleSubset* pset,
+                                DataWarehouse* new_dw)
+{
+  new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++){
+     pPlasticStrain_new[*iter] = 0.0;
+     pMTS_new[*iter] = 0.0;
+  }
+}
+
+void
 MTSPlastic::updateElastic(const particleIndex idx)
 {
   pMTS_new[idx] = pMTS[idx];
