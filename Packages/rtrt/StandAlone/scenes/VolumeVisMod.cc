@@ -30,6 +30,7 @@ using SCIRun::Thread;
 // Whether or not to use the HVolumeVis code
 static bool use_hvolume = false;
 static int np = 1;
+static int depth = 3;
 
 void get_material(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
 
@@ -330,7 +331,7 @@ VolumeVisBase *create_volume_from_nrrd(char *filename,
 				specular, dpy);
   else
     return new HVolumeVis<float,VMCell<float> >(data, data_min, data_max,
-						2, minP, maxP, dpy,
+						depth, minP, maxP, dpy,
 						spec_coeff, ambient, diffuse,
 						specular, np);
 }  
@@ -423,7 +424,7 @@ VolumeVisBase *create_volume_default(int scene_type, double val,
 				specular, dpy);
   else
     return new HVolumeVis<float,VMCell<float> >(data, data_min, data_max,
-						2, minP, maxP, dpy,
+						depth, minP, maxP, dpy,
 						spec_coeff, ambient, diffuse,
 						specular, np);
 }
@@ -547,6 +548,16 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       bgcolor = Color(r,g,b);
     } else if(strcmp(argv[i], "-usehv")==0){
       use_hvolume = true;
+    } else if(strcmp(argv[i], "-depth")==0) {
+      depth = atoi(argv[++i]);
+      if (depth < 2) {
+	cerr << "depth should be greater than 1\n";
+	return 0;
+      }
+      if (depth > 5) {
+	cerr << "depth is larger than 5 which it really too much for most applications.  If you want more than 5 recompile this scene file. :)\n";
+	return 0;
+      }
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -573,6 +584,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr << " -alpha [filename.nrrd] - read in a nrrd with just the alpha transfer function\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
       cerr << " -usehv - use the HVolumeVis code instead of VolumeVis.\n";
+      cerr << " -depth - the number of depths to use for the HVolumeVis.\n";
+      cerr << "          [defaults to "<<depth<<"]\n";
       return 0;
     }
   }
