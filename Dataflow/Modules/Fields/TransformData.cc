@@ -81,6 +81,12 @@ TransformData::execute()
     return;
   }
 
+  if (ifieldhandle->data_at() == Field::NONE)
+  {
+    warning("Field contains no data to transform.");
+    return;
+  }
+
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
   int hoffset = 0;
