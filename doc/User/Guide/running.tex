@@ -20,10 +20,64 @@
 %
 % This is the `Running SCIRun' main section.
 
-\chapter{Starting \sr{}}
+\chapter{Starting \sr{} and Power Apps}
 \label{ch:startingup}
 
-\section{The \command{scirun} Command}
+
+\section{Preparation}
+\label{sec:prepare}
+
+Preparations must be made before starting \sr{} and its Power Apps.
+Commands below are typed in a terminal emulation application (\eg{}
+\command{xterm}).
+
+Create an ``on the fly libs'' directory and a \sr{}
+initialization file:
+
+\begin{alltt}
+  mkdir ~/on-the-fly-libs
+  echo "SCIRUN_ON_THE_FLY_LIBS_DIR=~/on-the-fly-libs" >> .scirunrc
+\end{alltt}
+
+See \secref{Environment Variables}{sec:environ}, \secref{\sr{}'s
+  Initialization File---\filename{.scirunrc}}{sec:scirunrc},  and \secref{Dynamic
+  Compilation}{sec:dyncomp} for more information on \sr{}'s
+  environment variables, initialization file, and ``on the fly libs.''
+
+Mac OSX users must increase the limit on the number of open files:
+
+Users of csh-type shells must type:
+
+\begin{alltt}
+  limit descriptors unlimited
+\end{alltt}
+
+and users of sh-type shells must type:
+
+\begin{alltt}
+  ulimit -n unlimited
+\end{alltt}
+
+\section{Starting Power Apps}
+\label{sec:startpa}
+
+To start a Power App, change your current working directory to \sr{}'s
+build directory (for an installation from source code) or to
+\filename{/usr/local/SCIRun/bin} (for an installation from an RPM):
+
+\begin{alltt}
+  cd /usr/local/SCIRun/bin
+\end{alltt}
+
+and type, for example:
+
+\begin{alltt}
+  ./BioTensor
+\end{alltt}
+
+to start the BioTensor application.
+
+\section{Starting \sr}
 \label{sec:sciruncmd}
 
 %begin{latexonly}
@@ -37,15 +91,31 @@
     {../Figures/srwindow-1.gif}}
 \end{htmlonly}
 
+Change your current working directory to \sr{}'s
+build directory (for an installation from source code) or to
+\filename{/usr/local/SCIRun/bin} (for an installation from an RPM):
 
-Start \sr{} by typing \keyboard{scirun} in a terminal (\eg \command{xterm})
-window.  \note{Do not start \sr{} in the background, \ie do not type
+\begin{alltt}
+  cd /usr/local/SCIRun/bin
+\end{alltt}
+
+and type:
+
+\begin{alltt}
+  ./scirun \replaceable{network_file}
+\end{alltt}
+
+\note{Do not start \sr{} in the background, \ie do not type
   \keyboard{scirun \&}}.
 
-The \command{scirun} command is located in \sr{}'s build directory
-(see the
-\htmladdnormallinkfoot{\srig}{\htmlurl{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/ch.inst.html}}
-for details).
+The \command{scirun} command may take 1 argument, the name of a
+\dfn{\sr{} network file} (network files have a \filename{.net} extension)
+for \sr{} to load.  Network files are discussed in a later section.
+
+If the name of a network file is not provided, \sr{} starts with a
+blank window as shown in Figure~\ref{fig:srwindow}.  \secref{Anatomy
+  of the Main Window}{sec:windowanatomy} discusses the main features
+of Main Window window.
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -53,16 +123,6 @@ for details).
   \srwindow
   \caption{\label{fig:srwindow} \sr{} Main Window}
 \end{figure}
-
-
-The \command{scirun} command may take 1 argument, the name of a
-\dfn{\sr{} network file} (these files use a \filename{.net} extension)
-for \sr{} to load.  Network files are discussed in a later section.
-
-If the name of a network file is not provided, \sr{} starts with
-a blank window as shown in Figure~\ref{fig:srwindow}.
-Section~\ref{sec:windowanatomy} discusses the main features of this
-window.
 
 \sr{} may encounter errors during start up.  Errors, warnings, and
 other messages are displayed in
