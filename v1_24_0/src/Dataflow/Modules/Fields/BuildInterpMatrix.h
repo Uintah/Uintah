@@ -177,6 +177,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
 {
   unsigned int i, j;
 
+  // Set up the data for the parallel run.
   BIData d;
   d.src_meshH = src_meshH;
   d.dst_meshH = dst_meshH;
@@ -188,7 +189,6 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   MSRC *src_mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
 
-  // output here
   typename LSRC::size_type src_size0;
   src_mesh->size(src_size0);
   typename LDST::size_type dst_size0;
@@ -197,6 +197,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   const unsigned int src_size = (unsigned int)src_size0;
   const unsigned int dst_size = (unsigned int)dst_size0;
 
+  // Divide up the data amongst the processors in contiguous blocks.
   d.rowdata = scinew int[(dst_size)+1];
   d.rowdata[0] = 0;
   d.coldatav = scinew vector<int>[np];
@@ -210,7 +211,8 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
     d.dstmap = scinew vector<unsigned int>[dst_size];
   }
 
-#if 1  
+  // Do the execute.
+#if 1
   if (np==1)
     parallel_execute(0, &d);
   else
@@ -224,6 +226,8 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   }
 #endif
 
+  // Collect the data back into a sparse row matrix.
+  // This is for source_to_single_dest.
   if ((interp_basis == 0) && source_to_single_dest)
   {
     for (i = 0; i < dst_size; i++)
@@ -254,10 +258,12 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
     return matrix;
   }
 
+  // Collect the data back into a sparse row matrix.
+  // All but source_to_single_dest go through here.
   unsigned int dsize = 0;
   for (j = 0; j < (unsigned int)np; j++)
   {
-    dsize = d.coldatav[j].size();
+    dsize += d.coldatav[j].size();
   }
   
   int *coldata = scinew int[dsize];
@@ -266,17 +272,6 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   for (j = 0; j < (unsigned int)np; j++)
   {
     for (i = 0; i < d.coldatav[j].size(); i++)
-    {
-      coldata[c] = d.coldatav[j][i];
-      data[c] = d.datav[j][i];
-      ++c;
-    }
-  }
-
-  c = 0;
-  for (j = 0; j < (unsigned int)np; j++)
-  {
-    for (i=0; i < d.coldatav[j].size(); i++)
     {
       coldata[c] = d.coldatav[j][i];
       data[c] = d.datav[j][i];

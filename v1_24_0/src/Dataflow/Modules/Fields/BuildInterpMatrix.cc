@@ -142,7 +142,7 @@ BuildInterpMatrix::execute()
   omp->send(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), interp_basis,
 			  map_source_to_single_dest_.get(),
 			  exhaustive_search_.get(),
-			  exhaustive_search_max_dist_.get(), 1));//np_.get()));
+			  exhaustive_search_max_dist_.get(), np_.get()));
 }
 
 CompileInfoHandle
