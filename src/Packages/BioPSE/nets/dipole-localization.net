@@ -270,9 +270,9 @@ set $m6-text-show-nodes {0}
 set $m6-text-show-edges {0}
 set $m6-text-show-faces {0}
 set $m6-text-show-cells {0}
-set $m6-def-color-r {0.5}
-set $m6-def-color-g {0.5}
-set $m6-def-color-b {0.5}
+set $m6-def-color-r {0.3}
+set $m6-def-color-g {0.7}
+set $m6-def-color-b {0.3}
 set $m6-def-color-a {0.5}
 set $m6-node_display_type {Spheres}
 set $m6-edge_display_type {Lines}
@@ -280,8 +280,8 @@ set $m6-data_display_type {Arrows}
 set $m6-tensor_display_type {Boxes}
 set $m6-scalar_display_type {Points}
 set $m6-active_tab {Nodes}
-set $m6-node_scale [expr 0.035 * ${global-scale}]
-set $m6-edge_scale [expr 0.03 * ${global-scale}]
+set $m6-node_scale [expr 0.036 * ${global-scale}]
+set $m6-edge_scale {0.03}
 set $m6-vectors_scale {0.03}
 set $m6-tensors_scale {0.30}
 set $m6-scalars_scale {0.300}
@@ -341,9 +341,9 @@ set $m9-data_display_type {Disks}
 set $m9-tensor_display_type {Boxes}
 set $m9-scalar_display_type {Points}
 set $m9-active_tab {Vectors}
-set $m9-node_scale [expr 0.05 * ${global-scale}]
-set $m9-edge_scale [expr 0.03 * ${global-scale}]
-set $m9-vectors_scale [expr 0.03 * ${global-scale}]
+set $m9-node_scale {0.03}
+set $m9-edge_scale {0.03}
+set $m9-vectors_scale [expr 0.06 * ${global-scale}]
 set $m9-tensors_scale {0.30}
 set $m9-scalars_scale {0.300}
 set $m9-show_progress {-2147483647}
@@ -413,13 +413,13 @@ set $m12-tensor_display_type {Boxes}
 set $m12-scalar_display_type {Points}
 set $m12-active_tab {Nodes}
 set $m12-node_scale [expr 0.05 * ${global-scale}]
-set $m12-edge_scale [expr 0.03 * ${global-scale}]
-set $m12-vectors_scale [expr 0.03 * ${global-scale}]
+set $m12-edge_scale {0.03}
+set $m12-vectors_scale {0.03}
 set $m12-tensors_scale {0.30}
 set $m12-scalars_scale {0.300}
 set $m12-show_progress {-2147483647}
 set $m12-interactive_mode {Interactive}
-set $m12-node-resolution {6}
+set $m12-node-resolution {20}
 set $m12-edge-resolution {6}
 set $m12-data-resolution {6}
 set $m13-notes {}
