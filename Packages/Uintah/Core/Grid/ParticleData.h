@@ -4,8 +4,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 
-#include <Core/Containers/Array1.h>
-
 namespace Uintah {
 
 template<class T>
@@ -42,59 +40,54 @@ WARNING
    public:
       ParticleData();
       ParticleData(particleIndex size);
-      ParticleData(const ParticleData<T>&);
-      ParticleData<T>& operator=(const ParticleData<T>&);
       virtual ~ParticleData();
-      
-      //////////
-      // Insert Documentation Here:
-      void add(particleIndex idx, const T& value);
-      
+
       //////////
       // Insert Documentation Here:
       void resize(int newSize) {
-	 data.resize(newSize);
+	if(data)
+	  delete[] data;
+	data = new T[newSize];
       }
 
    private:
+      ParticleData(const ParticleData<T>&);
+      ParticleData<T>& operator=(const ParticleData<T>&);
       friend class ParticleVariable<T>;
       
       //////////
       // Insert Documentation Here:
-      Array1<T> data;
+      T* data;
+      particleIndex size;
    };
    
    template<class T>
       ParticleData<T>::ParticleData()
       {
+	data=0;
       }
    
    template<class T>
-      ParticleData<T>::ParticleData(particleIndex size)
-      : data(size)
+     ParticleData<T>::ParticleData(particleIndex size)
+     : size(size)
       {
+	data = new T[size];
       }
-   
-   template<class T>
-      void ParticleData<T>::add(particleIndex idx, const T& value)
-      {
-	 if(idx != data.size())
-	   SCI_THROW(ParticleException("add, not at the end"));
-	 data.add(value);
-      }
-   
+      
    template<class T>
       ParticleData<T>::~ParticleData()
       {
+	if(data)
+	  delete[] data;
       }
 
    template<class T>
-   ParticleData<T>& ParticleData<T>::operator=(const ParticleData<T>& copy)
-   {
-     data = copy.data;
-     return *this;
-   }
-
+     ParticleData<T>& ParticleData<T>::operator=(const ParticleData<T>& copy)
+     {
+       for(particleIndex i=0;i<size;i++)
+	 data[i] = copy.data[i];
+       return *this;
+     }
 } // End namespace Uintah
    
 #endif
