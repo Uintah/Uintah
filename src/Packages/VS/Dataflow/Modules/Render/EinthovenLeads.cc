@@ -128,17 +128,32 @@ EinthovenLeads::execute()
 			nrrdCenterNode);
 	ndata->nrrd->axis[0].label = strdup("leads");
 	ndata->nrrd->axis[1].label = strdup("time");
-	nrrdAlloc(ndata->nrrd, nrrdTypeDouble, 2, 3, sz);
+	nrrdAlloc(ndata->nrrd, nrrdTypeFloat, 2, 3, sz);
+	memset(ndata->nrrd->data, 0, count_ * 3 * sizeof(float));
 	if (nrrd_out_.get_rep()) {
 	  memcpy(ndata->nrrd->data, nrrd_out_->nrrd->data, 
-		 count_ * 3 * sizeof(double));
+		 count_ * 3 * sizeof(float));
+	  
 	}
 	nrrd_out_ = ndata;
       }
+      float last[3];
+
       float *dat = (float*)nrrd_out_->nrrd->data;
-      dat[3 * count_] = values[0] - values[1];
-      dat[3 * count_ + 1] = values[2] - values[1];
-      dat[3 * count_ + 2] = values[2] - values[0];
+      
+      if (count_) {
+	last[0] = dat[3 * (count_ - 1)];
+	last[1] = dat[3 * (count_ - 1) + 1];
+	last[2] = dat[3 * (count_ - 1) + 2];
+	dat[3 * count_] = (values[0] - values[1])*0.7 + last[0]*0.3;
+	dat[3 * count_ + 1] = (values[2] - values[1])*0.7 + last[1]*0.3;
+	dat[3 * count_ + 2] = (values[2] - values[0])*0.7 + last[2]*0.3;
+      
+      } else {
+	dat[3 * count_] = values[0] - values[1];
+	dat[3 * count_ + 1] = values[2] - values[1];
+	dat[3 * count_ + 2] = values[2] - values[0];
+      }
       ++count_;      
       // build the nrrd output.
     } else {
