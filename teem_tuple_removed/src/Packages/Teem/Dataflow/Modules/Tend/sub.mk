@@ -40,6 +40,7 @@ SRCS     += \
 	$(SRCDIR)/TendEvecRGB.cc\
 	$(SRCDIR)/TendFiber.cc\
 	$(SRCDIR)/TendNorm.cc\
+	$(SRCDIR)/TendPoint.cc\
 	$(SRCDIR)/TendSim.cc\
 	$(SRCDIR)/TendSten.cc\
 	$(SRCDIR)/TendAnplot.cc\
