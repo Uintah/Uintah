@@ -97,7 +97,7 @@ public:
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,
 			    Vector& g2, Vector& g3, Vector& g4,
 			    Vector& g5, Vector& g6, Vector& g7)
-  { ASSERTFAIL("not implemented"); return 1; }
+  { ASSERTFAIL("not implemented") }
 
   //virtual void flush_changes();
   //void compute_edges();
