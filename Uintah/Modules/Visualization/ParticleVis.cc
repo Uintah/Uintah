@@ -36,6 +36,7 @@
 #include <Uintah/Datatypes/ScalarParticlesPort.h>
 #include <Uintah/Datatypes/VectorParticlesPort.h>
 #include <Uintah/Datatypes/TensorParticlesPort.h>
+#include <Uintah/Datatypes/PSet.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <iostream>
 #include <stdio.h>
@@ -138,7 +139,6 @@ void ParticleVis::execute()
   
   if(part.get_rep() == 0) return;
 
-  cbClass = part->getCallbackClass();
 
   // grap the color map from the input port
   ColorMapHandle cmh;
@@ -168,7 +168,11 @@ void ParticleVis::execute()
 
   // All three particle variables use the same particle subset
   // so just grab one
-  vector<ParticleVariable<Point> >& points = part->getPositions();
+  PSet *pset = part->getParticleSet();
+  cbClass = pset->getCallBackClass();
+  vector<ParticleVariable<Point> >& points = pset->getPositions();
+  vector<ParticleVariable<long> >& ids = pset->getIDs();
+  vector<ParticleVariable<long> >::iterator id_it = ids.begin();
   vector<ParticleVariable<double> >& values = part->get();
   vector<ParticleVariable<Point> >::iterator p_it;
   vector<ParticleVariable<double> >::iterator s_it = values.begin();
@@ -181,7 +185,7 @@ void ParticleVis::execute()
   if( hasTensors ) t_it = tens->get().begin();
   
 
-  for(p_it = points.begin(); p_it != points.end(); p_it++, s_it++){
+  for(p_it = points.begin(); p_it != points.end(); p_it++, s_it++, id_it++){
     ParticleSubset *ps = (*p_it).getParticleSubset();
 
 
@@ -244,7 +248,7 @@ void ParticleVis::execute()
 	      if(!hasTensors){
 		sp = scinew GeomSphere( (*p_it)[*iter],
 					scalefactor * radius.get(),
-					nu, nv, *iter);
+					nu, nv, (*id_it)[*iter]);
 	      } else { // make an ellips
 		double matrix[16];
 		Matrix3 M = (*t_it)[*iter];
@@ -259,13 +263,14 @@ void ParticleVis::execute()
 		
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  scalefactor * radius.get(),
-					  nu, nv, &(matrix[0]), 2, *iter);
+					  nu, nv, &(matrix[0]), 2,
+					  (*id_it)[*iter]);
 	      }
 	    }
 	  } else {
 	    if(!hasTensors){
 	      sp = scinew GeomSphere( (*p_it)[*iter],
-				      radius.get(), nu, nv, *iter);
+				      radius.get(), nu, nv, (*id_it)[*iter]);
 	    } else {
 	      double matrix[16];
 	      Matrix3 M = (*t_it)[*iter];
@@ -285,7 +290,7 @@ void ParticleVis::execute()
 		
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  radius.get(), nu, nv, &(matrix[0]),
-					  2, *iter);
+					  2, (*id_it)[*iter]);
 	      }
 	    }
 	  }
@@ -371,7 +376,7 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
     cerr<<"Id = "<< id <<endl;
   else
     cerr<<"Not getting the correct data\n";
-  if( cbClass != 0 )
+  if( cbClass != 0 && id != -1 )
     ((ParticleFieldExtractor *)cbClass)->callback( id );
   // Now modify so that points and spheres store index.
 }
