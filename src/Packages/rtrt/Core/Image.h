@@ -7,6 +7,9 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 
+
+#if defined(HAVE_OOGL)
+
 ///////////////////////////////////////////
 // OOGL stuff
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -42,12 +45,20 @@ protected:
   virtual void releaseDef() {
     glDisable(GL_BLEND);
   }
-//
-///////////////////////////////////////////
 
 private:
   Vec4f m_color;
 };
+//
+///////////////////////////////////////////
+
+#else
+
+class BasicTexture {};
+class ShadedPrim {};
+class Blend {};
+
+#endif // HAVE_OOGL
 
 namespace rtrt {
   class Image;

@@ -1,6 +1,8 @@
 
 #include <Packages/rtrt/Core/Image.h>
 
+#include <sci_defs.h> // For HAVE_OOGL
+
 #include <GL/gl.h>
 
 #include <fstream>
@@ -77,6 +79,7 @@ void Image::resize_image(const int new_xres, const int new_yres) {
 
 void Image::draw( int window_size, bool fullscreen )
 {
+#if defined(HAVE_OOGL)
   if( fullscreen ) {
     if( window_size == 0 ) {
       // Because textures must be powers of 2 in size, we have broken
@@ -94,7 +97,9 @@ void Image::draw( int window_size, bool fullscreen )
       rtrtMidTopTex->reset( GL_UNSIGNED_BYTE, &image[256][0] );
       rtrtMidTopTexQuad->draw();
     }
-  } else {
+  } else 
+#endif
+    {
     if(stereo){
       glDrawBuffer(GL_BACK_LEFT);
       glRasterPos2i(0,0);
