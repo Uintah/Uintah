@@ -38,6 +38,8 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/TetVolField.h>
