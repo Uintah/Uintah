@@ -32,7 +32,7 @@ namespace SCIRun {
 class BuildInterpAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshBaseHandle src, MeshBaseHandle dst,
+  virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
 			      Field::data_location loc) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -49,7 +49,7 @@ class BuildInterpAlgoT : public BuildInterpAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshBaseHandle src, MeshBaseHandle dst,
+  virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
 			      Field::data_location loc);
 
 private:
@@ -84,7 +84,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::inde
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 FieldHandle
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshBaseHandle src_meshH, MeshBaseHandle dst_meshH, Field::data_location loc)
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc)
 {
   MSRC *src_mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());

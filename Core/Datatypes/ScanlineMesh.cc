@@ -39,7 +39,7 @@ namespace SCIRun {
 using namespace std;
 
 
-PersistentTypeID ScanlineMesh::type_id("ScanlineMesh", "MeshBase", maker);
+PersistentTypeID ScanlineMesh::type_id("ScanlineMesh", "Mesh", maker);
 
 
 ScanlineMesh::ScanlineMesh(unsigned int length,
@@ -197,7 +197,7 @@ ScanlineMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
 
-  MeshBase::io(stream);
+  Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream, length_);

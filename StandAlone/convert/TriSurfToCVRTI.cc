@@ -62,7 +62,7 @@ main(int argc, char **argv) {
     exit(0);
   }
 
-  MeshBaseHandle mb = handle->mesh();
+  MeshHandle mb = handle->mesh();
   TriSurfMesh *tsm = dynamic_cast<TriSurfMesh *>(mb.get_rep());
   
   char fname[200];

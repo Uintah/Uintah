@@ -16,15 +16,15 @@
 */
 
 
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 
 namespace SCIRun{
 
 // initialize the static member type_id
-PersistentTypeID MeshBase::type_id(type_name(), "MeshBaseData", NULL);
+PersistentTypeID Mesh::type_id(type_name(-1), "PropertyManager", NULL);
 
 
-MeshBase::~MeshBase() 
+Mesh::~Mesh() 
 {
 }
 
@@ -32,7 +32,7 @@ MeshBase::~MeshBase()
 const int MESHBASE_VERSION = 1;
 
 void 
-MeshBase::io(Piostream& stream) {
+Mesh::io(Piostream& stream) {
 
   stream.begin_class(type_name(-1), MESHBASE_VERSION);
   PropertyManager::io(stream);
@@ -40,10 +40,10 @@ MeshBase::io(Piostream& stream) {
 }
 
 const string 
-MeshBase::type_name(int n)
+Mesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
-  static const string name = "MeshBase";
+  static const string name = "Mesh";
   return name;
 }
 

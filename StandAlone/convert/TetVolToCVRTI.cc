@@ -62,7 +62,7 @@ main(int argc, char **argv) {
     exit(0);
   }
 
-  MeshBaseHandle mb = handle->mesh();
+  MeshHandle mb = handle->mesh();
   TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(mb.get_rep());
   
   char fname[200];

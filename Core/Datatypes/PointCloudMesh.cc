@@ -41,7 +41,7 @@ namespace SCIRun {
 using namespace std;
 
 
-PersistentTypeID PointCloudMesh::type_id("PointCloudMesh", "MeshBase", maker);
+PersistentTypeID PointCloudMesh::type_id("PointCloudMesh", "Mesh", maker);
 
 BBox
 PointCloudMesh::get_bounding_box() const
@@ -120,7 +120,7 @@ PointCloudMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name(-1), PointCloudMESH_VERSION);
 
-  MeshBase::io(stream);
+  Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream,points_);

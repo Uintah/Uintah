@@ -13,7 +13,7 @@ namespace Uintah {
 
 using SCIRun::IntVector;
 
-PersistentTypeID LevelMesh::type_id("LevelMesh", "MeshBase", maker);
+PersistentTypeID LevelMesh::type_id("LevelMesh", "Mesh", maker);
 LevelMesh:: LevelMesh( LevelMesh* mh, int mx, int my, int mz,
 	     int x, int y, int z) :
   grid_(mh->grid_), level_(mh->level_), 

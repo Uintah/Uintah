@@ -34,6 +34,7 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>

@@ -32,8 +32,8 @@ namespace SCIRun {
 class StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshBaseHandle vmesh,
-		       MeshBaseHandle smesh,
+  virtual void execute(MeshHandle vmesh,
+		       MeshHandle smesh,
 		       VectorFieldInterface *vfi,
 		       double tolerance,
 		       double stepsize,
@@ -64,8 +64,8 @@ class StreamLinesAlgoT : public StreamLinesAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshBaseHandle vmesh,
-		       MeshBaseHandle smesh,
+  virtual void execute(MeshHandle vmesh,
+		       MeshHandle smesh,
 		       VectorFieldInterface *vfi,
 		       double tolerance,
 		       double stepsize,
@@ -77,8 +77,8 @@ public:
 
 template <class VMESH, class SMESH, class SLOC>
 void 
-StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshBaseHandle vmesh_h,
-					      MeshBaseHandle smesh_h,
+StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
+					      MeshHandle smesh_h,
 					      VectorFieldInterface *vfi,
 					      double tolerance,
 					      double stepsize,

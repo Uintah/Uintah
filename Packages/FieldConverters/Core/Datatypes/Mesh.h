@@ -61,7 +61,7 @@ typedef Handle<Node> NodeHandle;
 
 class RPoint;
 class BigRational;
-class Mesh;
+class OMesh;
 
 struct Element {
   int faces[4];
@@ -78,9 +78,9 @@ struct Element {
 
   void compute_basis();
 
-  Mesh* mesh;
-  Element(Mesh*, int, int, int, int);
-  Element(const Element&, Mesh* mesh);
+  OMesh* mesh;
+  Element(OMesh*, int, int, int, int);
+  Element(const Element&, OMesh* mesh);
   void* operator new(size_t);
   void operator delete(void*, size_t);
   inline int face(int);
@@ -162,7 +162,7 @@ struct MeshGrid {
   Point min, max;
   int nx, ny, nz;
   Array3<Array1<int> > elems;
-  int locate(Mesh* mesh, const Point& p, double epsilon);
+  int locate(OMesh* mesh, const Point& p, double epsilon);
 };
 
 struct Octree{
@@ -172,13 +172,13 @@ struct Octree{
   Octree();
   ~Octree();
 
-  int locate(Mesh* mesh, const Point& p, double epsilon);
+  int locate(OMesh* mesh, const Point& p, double epsilon);
 };
 
-class Mesh;
-typedef LockingHandle<Mesh> MeshHandle;
+class OMesh;
+typedef LockingHandle<OMesh> OMeshHandle;
 
-class SCICORESHARE Mesh : public Datatype {
+class SCICORESHARE OMesh : public Datatype {
   MeshGrid grid;
   Octree* octree;
 public:
@@ -189,11 +189,11 @@ public:
   Array1<Array1<double> > cond_tensors;
   int have_all_neighbors;
   void compute_face_neighbors();
-  Mesh();
-  Mesh(const Mesh&);
-  Mesh(int nnodes, int nelems);
-  virtual Mesh* clone();
-  virtual ~Mesh();
+  OMesh();
+  OMesh(const OMesh&);
+  OMesh(int nnodes, int nelems);
+  virtual OMesh* clone();
+  virtual ~OMesh();
 
   int current_generation;
 

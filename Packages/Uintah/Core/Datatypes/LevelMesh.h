@@ -16,7 +16,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
@@ -30,7 +30,7 @@ using std::endl;
 
 using SCIRun::Point;
 using SCIRun::LockingHandle;
-using SCIRun::MeshBase;
+using SCIRun::Mesh;
 using SCIRun::IntVector;
 using SCIRun::BBox;
 using SCIRun::Piostream;
@@ -45,7 +45,7 @@ namespace Uintah {
 class LevelMesh;
 typedef LockingHandle<LevelMesh> LevelMeshHandle;
   
-class SCICORESHARE LevelMesh : public MeshBase
+class SCICORESHARE LevelMesh : public Mesh
 {
 public:
   struct LevelIndex

@@ -111,9 +111,9 @@ struct DFace {
   }
 };
 
-static Persistent* make_Mesh()
+static Persistent* make_OMesh()
 {
-  return scinew Mesh;
+  return scinew OMesh;
 }
 
 static Persistent* make_Node()
@@ -121,10 +121,10 @@ static Persistent* make_Node()
   return new Node(Point(0,0,0));
 }
 
-PersistentTypeID Mesh::type_id("Mesh", "Datatype", make_Mesh);
+PersistentTypeID OMesh::type_id("Mesh", "Datatype", make_OMesh);
 PersistentTypeID Node::type_id("Node", "0", make_Node);
 
-Mesh::Mesh()
+OMesh::OMesh()
   : bld_grid(0), have_all_neighbors(0), current_generation(2)
 {
   octree=0;
@@ -139,7 +139,7 @@ Mesh::Mesh()
   cond_tensors[0][5]=1;
 }
 
-Mesh::Mesh(int nnodes, int nelems)
+OMesh::OMesh(int nnodes, int nelems)
   : bld_grid(0), nodes(nnodes), elems(nelems),
     have_all_neighbors(0), current_generation(2)
 {
@@ -155,7 +155,7 @@ Mesh::Mesh(int nnodes, int nelems)
   cond_tensors[0][5]=1;
 }
 
-Mesh::Mesh(const Mesh& copy)
+OMesh::OMesh(const OMesh& copy)
   : bld_grid(0), nodes(copy.nodes.size()), elems(copy.elems.size()),
     cond_tensors(copy.cond_tensors), have_all_neighbors(0),
     current_generation(2)
@@ -175,14 +175,14 @@ Mesh::Mesh(const Mesh& copy)
   }
 }
 
-Mesh::~Mesh()
+OMesh::~OMesh()
 {
   if (octree)
     delete octree;
   remove_all_elements();
 }
 
-void Mesh::remove_all_elements()
+void OMesh::remove_all_elements()
 {
   for(int i=0;i<elems.size();i++)
     if(elems[i])
@@ -190,14 +190,14 @@ void Mesh::remove_all_elements()
   elems.remove_all();
 }
 
-Mesh* Mesh::clone()
+OMesh* OMesh::clone()
 {
-  return scinew Mesh(*this);
+  return scinew OMesh(*this);
 }
 
 #define MESH_VERSION 5
 
-void Mesh::io(Piostream& stream)
+void OMesh::io(Piostream& stream)
 {
 
   int version=stream.begin_class("Mesh", MESH_VERSION);
@@ -293,7 +293,7 @@ Node::~Node()
     delete bc;
 }
 
-Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
+Element::Element(OMesh* mesh, int n1, int n2, int n3, int n4)
   : generation(0), cond(0), mesh(mesh)
 {
   n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
@@ -357,7 +357,7 @@ void Element::compute_basis()
 #endif
 }
 
-Element::Element(const Element& copy, Mesh* mesh)
+Element::Element(const Element& copy, OMesh* mesh)
   : generation(0), cond(copy.cond), mesh(mesh)
 {
   faces[0]=copy.faces[0];
@@ -399,7 +399,7 @@ Node* Node::clone()
   return new Node(*this);
 }
 
-int Mesh::unify(Element* not_,
+int OMesh::unify(Element* not_,
 		const Array1<int>& n1, const Array1<int>& n2,
 		const Array1<int>& n3)
 {
@@ -492,14 +492,14 @@ Point Element::centroid()
   return AffineCombination(p0, .25, p1, .25, p2, .25, p3, .25);
 }
 
-void Mesh::detach_nodes()
+void OMesh::detach_nodes()
 {
   for(int i=0;i<nodes.size();i++)
     if(nodes[i].get_rep())
       nodes[i].detach();
 }
 
-void Mesh::get_elem_nbrhd(int eidx, Array1<int> &nbrs, int dupsOk) {
+void OMesh::get_elem_nbrhd(int eidx, Array1<int> &nbrs, int dupsOk) {
   if (!have_all_neighbors) {compute_neighbors(); compute_face_neighbors();}
   Element *e=elems[eidx];
   if (dupsOk) {
@@ -525,7 +525,7 @@ void Mesh::get_elem_nbrhd(int eidx, Array1<int> &nbrs, int dupsOk) {
   }
 }
 
-void Mesh::get_node_nbrhd(int nidx, Array1<int> &nbrs, int dupsOk) {
+void OMesh::get_node_nbrhd(int nidx, Array1<int> &nbrs, int dupsOk) {
   if (!have_all_neighbors) {compute_neighbors(); compute_face_neighbors();}
   NodeHandle n=nodes[nidx];
   if (dupsOk) {
@@ -551,7 +551,7 @@ void Mesh::get_node_nbrhd(int nidx, Array1<int> &nbrs, int dupsOk) {
   }
 }
 
-void Mesh::compute_neighbors()
+void OMesh::compute_neighbors()
 {
   // Clear old neighbors...
   int i;
@@ -588,7 +588,7 @@ void Mesh::compute_neighbors()
 // Electromagnetic Devices
 // S. Ranajeeven & H. Hoole
 
-int Mesh::inside(const Point& p, Element* elem)
+int OMesh::inside(const Point& p, Element* elem)
 {
   //    cerr << "inside called...\n";
 #ifndef STORE_ELEMENT_BASIS
@@ -659,7 +659,7 @@ int Mesh::inside(const Point& p, Element* elem)
   return 1;
 }
 
-void Mesh::get_interp(Element* elem, const Point& p,
+void OMesh::get_interp(Element* elem, const Point& p,
 		      double& s0, double& s1, double& s2, double& s3)
 {
 #ifndef STORE_ELEMENT_BASIS
@@ -709,7 +709,7 @@ void Mesh::get_interp(Element* elem, const Point& p,
 #endif
 }
 
-double Mesh::get_grad(Element* elem, const Point&,
+double OMesh::get_grad(Element* elem, const Point&,
 		      Vector& g0, Vector& g1, Vector& g2, Vector& g3)
 {
 #ifndef STORE_ELEMENT_BASIS
@@ -763,7 +763,7 @@ double Mesh::get_grad(Element* elem, const Point&,
 #endif
 }
 
-void print_element(Element* e, Mesh* mesh)
+void print_element(Element* e, OMesh* mesh)
 {
   cerr << "Element is composed of nodes: " << e->n[0] << ", " << e->n[1] << ", " << e->n[2] << ", " << e->n[3] << endl;
   for(int i=0;i<4;i++){
@@ -773,7 +773,7 @@ void print_element(Element* e, Mesh* mesh)
   }
 }
 
-void dump_mesh(Mesh* mesh)
+void dump_mesh(OMesh* mesh)
 {
   ofstream out("mesh.dump");
   out << "Nodes:" << endl;
@@ -795,7 +795,7 @@ void dump_mesh(Mesh* mesh)
   }
 }
 
-int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
+int OMesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
 {
   // Start with the initial element
   int i=ix;
@@ -922,7 +922,7 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
   return locate2(p, ix, epsilon1);
 }
 
-bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
+bool OMesh::tetra_edge_in_box(const Point&  min, const Point&  max,
 			     const Point& orig, const Vector& dir)
 {
 
@@ -975,7 +975,7 @@ bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
 
 }
 
-bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
+bool OMesh::overlaps(Element* e, const Point& v0, const Point& v1)
 {
   //Point& p0(e->mesh->nodes[e->n[0]]->p);
   //Point& p1(e->mesh->nodes[e->n[1]]->p);
@@ -1013,7 +1013,7 @@ bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
   return false;  
 }
 
-void Mesh::make_octree(int level, Octree*& octree,
+void OMesh::make_octree(int level, Octree*& octree,
 		       const Point& min, const Point& max,
 		       const Array1<int>& inelems)
 {
@@ -1091,7 +1091,7 @@ void Mesh::make_octree(int level, Octree*& octree,
   //cerr << "done building octree at level " << level << '\n';
 }
 
-int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
+int Octree::locate(OMesh* mesh, const Point& p, double epsilon1)
 {
   for(int i=0;i<elems.size();i++){
     Element* elem=mesh->elems[elems[i]];
@@ -1109,7 +1109,7 @@ int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
     return -1;
 }
 
-void Mesh::make_grid(int nx, int ny, int nz, const Point &min, 
+void OMesh::make_grid(int nx, int ny, int nz, const Point &min, 
 		     const Point &max, double eps) {
   long int count=0;
   grid.nx=nx;
@@ -1149,7 +1149,7 @@ void Mesh::make_grid(int nx, int ny, int nz, const Point &min,
   cerr << "Count="<<count<<" nelems="<<elems.size()<<" cells="<<nx*ny*nz<<"  cnt/ncells="<<count*1./(nx*ny*nz)<<" cnt/nelems="<<count*1./elems.size()<<"\n";
 }
 
-int MeshGrid::locate(Mesh* mesh, const Point& p, double)
+int MeshGrid::locate(OMesh* mesh, const Point& p, double)
 {
   Vector d(max-min);
   double dx=d.x()/nx;
@@ -1169,7 +1169,7 @@ int MeshGrid::locate(Mesh* mesh, const Point& p, double)
   return -1;
 }
 
-int Mesh::locate2(const Point& p, int& ix, double epsilon1)
+int OMesh::locate2(const Point& p, int& ix, double epsilon1)
 {
   if (grid.nx==0) {
     cerr << "creating grid\n";
@@ -1345,7 +1345,7 @@ double Element::volume()
   return (a1+a2+a3+a4)/6.;
 }
 
-void Mesh::get_bounds(Point& min, Point& max)
+void OMesh::get_bounds(Point& min, Point& max)
 {
   min=nodes[0]->p;
   max=nodes[0]->p;
@@ -1419,7 +1419,7 @@ int Edge::operator<(const Edge& e) const
   return ((n[0] + n[1]) < (e.n[0] + e.n[1]));
 }
 
-int Mesh::face_idx(int p, int f)
+int OMesh::face_idx(int p, int f)
 {
   Element* e=elems[p];
   int n=e->faces[f];
@@ -1440,7 +1440,7 @@ int Mesh::face_idx(int p, int f)
 }
 
 int
-Mesh::insert_delaunay( const Point& p )
+OMesh::insert_delaunay( const Point& p )
 {
   int idx=nodes.size();
   nodes.add(new Node(p));
@@ -1455,7 +1455,7 @@ MaterialHandle circummatl(scinew Material(Color(0,0,0), Color(0, 1, 1), Color(.6
 MaterialHandle lamatl(scinew Material(Color(0,0,0), Color(0, 0, 1), Color(.6, .6, .6), 10));
 
 
-void Mesh::draw_element(Element* e, GeomGroup* group)
+void OMesh::draw_element(Element* e, GeomGroup* group)
 {
   Point p1(nodes[e->n[0]]->p);
   Point p2(nodes[e->n[1]]->p);
@@ -1473,14 +1473,14 @@ void Mesh::draw_element(Element* e, GeomGroup* group)
   group->add(poly);
 }
 
-void Mesh::draw_element(int in_element, GeomGroup* group)
+void OMesh::draw_element(int in_element, GeomGroup* group)
 {
   Element* e=elems[in_element];
   draw_element(e, group);
 }
 
 int
-Mesh::insert_delaunay( int node )
+OMesh::insert_delaunay( int node )
 {
   if(!have_all_neighbors)
     compute_face_neighbors();
@@ -1798,7 +1798,7 @@ Mesh::insert_delaunay( int node )
   return 1;
 }
 
-void Mesh::pack_elems()
+void OMesh::pack_elems()
 {
   // Pack the elements...
   int nelems=elems.size();
@@ -1842,7 +1842,7 @@ void Mesh::pack_elems()
   }
 }
 
-void Mesh::pack_nodes()
+void OMesh::pack_nodes()
 {
   // Pack the elements...
   int nnodes=nodes.size();
@@ -1872,14 +1872,14 @@ void Mesh::pack_nodes()
   }
 }
 
-void Mesh::pack_all()
+void OMesh::pack_all()
 {
   compute_neighbors();
   pack_nodes();
   pack_elems();
 }
 
-void Mesh::remove_delaunay(int node, int fill)
+void OMesh::remove_delaunay(int node, int fill)
 {
   if(!fill){
     NodeHandle& n=nodes[node];
@@ -1895,7 +1895,7 @@ void Mesh::remove_delaunay(int node, int fill)
   }
 }
 
-void Mesh::compute_face_neighbors()
+void OMesh::compute_face_neighbors()
 {
   // This could probably be done much faster...
   for(int i=0;i<elems.size();i++){
@@ -1925,7 +1925,7 @@ static void heapify(int* data, int n, int i)
   }
 }
 
-void Mesh::add_node_neighbors(int node, Array1<int>& idx, int apBC)
+void OMesh::add_node_neighbors(int node, Array1<int>& idx, int apBC)
 {
   NodeHandle& n=nodes[node];
   int ne=n->elems.size();
@@ -1975,7 +1975,7 @@ PotentialDifferenceBC::PotentialDifferenceBC(int diffNode, double diffVal)
 {
 }
 
-void Mesh::get_boundary_nodes(Array1<int> &pts)
+void OMesh::get_boundary_nodes(Array1<int> &pts)
 {
   pts.resize(0); // clear it out for now...
 #if 0
@@ -2001,7 +2001,7 @@ void Mesh::get_boundary_nodes(Array1<int> &pts)
   //cerr << "We have: " << pts.size() << " Boundary points.\n";
 }
 
-void Mesh::get_boundary_lines(Array1<Point>&)
+void OMesh::get_boundary_lines(Array1<Point>&)
 {
   NOT_FINISHED("Mesh::get_boundary_lines");
 }

@@ -33,7 +33,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <string>
 #include <vector>
@@ -43,7 +43,7 @@ namespace SCIRun {
 using std::string;
 using std::vector;
 
-class SCICORESHARE PointCloudMesh : public MeshBase
+class SCICORESHARE PointCloudMesh : public Mesh
 {
 public:
   typedef unsigned int under_type;

@@ -36,6 +36,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>

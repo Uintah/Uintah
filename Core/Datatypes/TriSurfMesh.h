@@ -32,7 +32,7 @@
 #define SCI_project_TriSurfMesh_h 1
 
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Math/MusilRNG.h>
@@ -43,7 +43,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class SCICORESHARE TriSurfMesh : public MeshBase
+class SCICORESHARE TriSurfMesh : public Mesh
 {
 public:
 

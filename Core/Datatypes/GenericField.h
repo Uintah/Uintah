@@ -62,7 +62,7 @@ public:
   virtual GenericField<Mesh, FData> *clone() const;
 
   //! Required virtual functions from field base.
-  virtual MeshBaseHandle mesh() const;
+  virtual MeshHandle mesh() const;
   virtual void mesh_detach();
 
   virtual bool is_scalar() const;
@@ -243,10 +243,10 @@ GenericField<Mesh, FData>::clone() const
 }
 
 template <class Mesh, class FData>
-MeshBaseHandle
+MeshHandle
 GenericField<Mesh, FData>::mesh() const
 {
-  return MeshBaseHandle(mesh_.get_rep());
+  return MeshHandle(mesh_.get_rep());
 }
 
 template <class Mesh, class FData>

@@ -41,7 +41,7 @@ namespace SCIRun {
 using namespace std;
 
 
-PersistentTypeID ContourMesh::type_id("ContourMesh", "MeshBase", maker);
+PersistentTypeID ContourMesh::type_id("ContourMesh", "Mesh", maker);
 
 BBox
 ContourMesh::get_bounding_box() const
@@ -180,7 +180,7 @@ ContourMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name(), CONTOURMESH_VERSION);
 
-  MeshBase::io(stream);
+  Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream,nodes_);

@@ -32,7 +32,7 @@
 #define SCI_project_TetVolMesh_h 1
 
 #include <Core/Thread/Mutex.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Datatypes/LatticeVol.h>
@@ -44,7 +44,7 @@ namespace SCIRun {
 
 using std::hash_map;
 
-class SCICORESHARE TetVolMesh : public MeshBase
+class SCICORESHARE TetVolMesh : public Mesh
 {
 public:
   typedef int under_type;

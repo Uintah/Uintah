@@ -22,7 +22,7 @@
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
@@ -48,7 +48,7 @@ public:
   virtual const TypeDescription *data_at_type_description() = 0;
 
   //! Required virtual functions
-  virtual MeshBaseHandle mesh() const = 0;
+  virtual MeshHandle mesh() const = 0;
   virtual void mesh_detach() = 0;
   virtual const TypeDescription* get_type_description() const = 0; 
   

@@ -33,7 +33,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
@@ -46,7 +46,7 @@ using std::string;
 using std::cerr;
 using std::endl;
 
-class SCICORESHARE LatVolMesh : public MeshBase
+class SCICORESHARE LatVolMesh : public Mesh
 {
 public:
 

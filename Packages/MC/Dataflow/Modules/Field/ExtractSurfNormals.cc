@@ -67,7 +67,7 @@ void ExtractSurfNormals::execute()
     error("ExtractSurfNormals Error: No input data.");
     return;
   }
-  MeshBaseHandle mesh = input->mesh();
+  MeshHandle mesh = input->mesh();
   
   // must be trisurface
   TriSurfMesh *tmesh = 0;

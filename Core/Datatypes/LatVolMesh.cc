@@ -39,7 +39,7 @@ namespace SCIRun {
 using namespace std;
 
 
-PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
+PersistentTypeID LatVolMesh::type_id("LatVolMesh", "Mesh", maker);
 
 void LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
 				  int seed) const
@@ -353,7 +353,7 @@ LatVolMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
 
-  MeshBase::io(stream);
+  Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream, nx_);

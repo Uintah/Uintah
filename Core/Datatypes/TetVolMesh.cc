@@ -44,7 +44,7 @@ Persistent* make_TetVolMesh() {
   return scinew TetVolMesh;
 }
 
-PersistentTypeID TetVolMesh::type_id("TetVolMesh", "MeshBase",
+PersistentTypeID TetVolMesh::type_id("TetVolMesh", "Mesh",
 				     make_TetVolMesh);
 
 const string
@@ -1008,7 +1008,7 @@ void
 TetVolMesh::io(Piostream &stream)
 {
   stream.begin_class(type_name(-1), TETVOLMESH_VERSION);
-  MeshBase::io(stream);
+  Mesh::io(stream);
 
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
