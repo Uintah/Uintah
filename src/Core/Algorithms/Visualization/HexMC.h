@@ -30,12 +30,12 @@
 #ifndef HexMC_h
 #define HexMC_h
 
-#include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Algorithms/Visualization/mcube2.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -64,11 +64,52 @@ private:
   bool build_field_;
   TriSurfMeshHandle trisurf_;
   QuadSurfMeshHandle quadsurf_;
-  map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   int nx_, ny_, nz_;
-  vector<long int> node_vector_;
-  TriSurfMesh::Node::index_type find_or_add_edgepoint(node_index_type, node_index_type, const Point &);
+
+  struct edgepair_t
+  {
+    unsigned int first;
+    unsigned int second;
+    double dfirst;
+  };
+
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
+    {
+      hash<unsigned int> h;
+      return h(a.first ^ a.second);
+    }
+  };
+
+  typedef hash_map<edgepair_t,
+		   TriSurfMesh::Node::index_type,
+		   edgepairhash,
+		   edgepairequal> edge_hash_type;
+#else
+  typedef map<edgepair_t,
+	      TriSurfMesh::Node::index_type,
+	      edgepairequal> edge_hash_type;
+#endif
+
+  edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data
+  vector<long int> node_map_;  // Unique nodes when surfacing cell data.
+
+  TriSurfMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
+						      unsigned int n1,
+						      double d0,
+						      const Point &p);
   QuadSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
+
   void extract_c( const cell_index_type &, double);
   void extract_n( const cell_index_type &, double);
 
@@ -95,7 +136,7 @@ void HexMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
   build_field_ = build_field;
 
-  vertex_map_.clear();
+  edge_map_.clear();
   nx_ = mesh_->get_ni();
   ny_ = mesh_->get_nj();
   nz_ = mesh_->get_nk();
@@ -103,7 +144,7 @@ void HexMC<Field>::reset( int n, bool build_field, bool build_geom )
   {
     mesh_->synchronize(Mesh::FACES_E);
     mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
-    if (build_field) { node_vector_ = vector<long int>(nx_ * ny_ * nz_, -1); }
+    if (build_field) { node_map_ = vector<long int>(nx_ * ny_ * nz_, -1); }
   }
 
   triangles_ = 0;
@@ -129,34 +170,23 @@ void HexMC<Field>::reset( int n, bool build_field, bool build_geom )
 
 template<class Field>
 TriSurfMesh::Node::index_type
-HexMC<Field>::find_or_add_edgepoint(node_index_type n0, node_index_type n1, const Point &p)
+HexMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
+				    double d0, const Point &p) 
 {
-  map<long int, TriSurfMesh::Node::index_type>::iterator node_iter;
-  long int key0 = 
-    (long int) n0.i_ + nx_ * ((long int) n0.j_ + (ny_ * (long int) n0.k_));
-  long int key1 = 
-    (long int) n1.i_ + nx_ * ((long int) n1.j_ + (ny_ * (long int) n1.k_));
-  long int small_key;
-  int dir;
-  if (n0.k_ != n1.k_) dir=2;
-  else if (n0.j_ != n1.j_) dir=1;
-  else dir=0;
-  if (n0.k_ < n1.k_) small_key = key0;
-  else if (n0.k_ > n1.k_) small_key = key1;
-  else if (n0.j_ < n1.j_) small_key = key0;
-  else if (n0.j_ > n1.j_) small_key = key1;
-  else if (n0.i_ < n1.i_) small_key = key0;
-  else small_key = key1;
-  long int key = (small_key * 4) + dir;
-  TriSurfMesh::Node::index_type node_idx;
-  node_iter = vertex_map_.find(key);
-  if (node_iter == vertex_map_.end()) { // first time to see this node
-    node_idx = trisurf_->add_point(p);
-    vertex_map_[key] = node_idx;
-  } else {
-    node_idx = (*node_iter).second;
+  edgepair_t np;
+  if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
+  else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
+  const typename edge_hash_type::iterator loc = edge_map_.find(np);
+  if (loc == edge_map_.end())
+  {
+    const TriSurfMesh::Node::index_type nodeindex = trisurf_->add_point(p);
+    edge_map_[np] = nodeindex;
+    return nodeindex;
   }
-  return node_idx;
+  else
+  {
+    return (*loc).second;
+  }
 }
 
 
@@ -165,13 +195,13 @@ QuadSurfMesh::Node::index_type
 HexMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx)
 {
   QuadSurfMesh::Node::index_type surf_node_idx;
-  long int i = node_vector_[(long int)(tet_node_idx)];
+  long int i = node_map_[(long int)(tet_node_idx)];
   if (i != -1) surf_node_idx = (QuadSurfMesh::Node::index_type) i;
   else {
     Point p;
     mesh_->get_point(p, tet_node_idx);
     surf_node_idx = quadsurf_->add_point(p);
-    node_vector_[(long int)tet_node_idx] = (long int)surf_node_idx;
+    node_map_[(long int)tet_node_idx] = (long int)surf_node_idx;
   }
   return surf_node_idx;
 }
@@ -266,11 +296,11 @@ void HexMC<Field>::extract_n( const cell_index_type& cell, double iso )
     visited[i]=true;
     int v1 = edge_tab[i][0];
     int v2 = edge_tab[i][1];
-    q[i] = Interpolate(p[v1], p[v2], 
-		       (value[v1]-iso)/double(value[v1]-value[v2]));
+    const double d = (value[v1]-iso) / double(value[v1]-value[v2]);
+    q[i] = Interpolate(p[v1], p[v2], d);
     if (build_field_)
     {
-      surf_node[i] = find_or_add_edgepoint(node[v1], node[v2], q[i]);
+      surf_node[i] = find_or_add_edgepoint(node[v1], node[v2], d, q[i]);
     }
   }    
   
@@ -324,8 +354,40 @@ template<class Field>
 MatrixHandle
 HexMC<Field>::get_interpolant()
 {
-  return 0;
+  if (field_->data_at() == Field::NODE)
+  {
+    const int nrows = edge_map_.size();
+    const int ncols = nx_ * ny_ * nz_;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows*2];
+    double *dd = scinew double[nrows*2];
+
+    typename edge_hash_type::iterator eiter = edge_map_.begin();
+    while (eiter != edge_map_.end())
+    {
+      const int ei = (*eiter).second;
+
+      cc[ei * 2 + 0] = (*eiter).first.first;
+      cc[ei * 2 + 1] = (*eiter).first.second;
+      dd[ei * 2 + 0] = 1.0 - (*eiter).first.dfirst;
+      dd[ei * 2 + 1] = (*eiter).first.dfirst;
+      
+      ++eiter;
+    }
+
+    for (int i = 0; i <= nrows; i++)
+    {
+      rr[i] = i * 2;
+    }
+
+    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows*2, dd);
+  }
+  else
+  {
+    return 0;
+  }
 }
+
      
 } // End namespace SCIRun
 
