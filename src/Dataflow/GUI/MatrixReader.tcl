@@ -78,7 +78,7 @@ itcl_class SCIRun_DataIO_MatrixReader {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-filename \
 		-command "$this-c needexecute; destroy" \
 		-cancel "destroy" \

@@ -75,7 +75,7 @@ itcl_class SCIRun_DataIO_ColorMapReader {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-filename \
 		-command "$this-c needexecute; destroy" \
 		-cancel "destroy" \
