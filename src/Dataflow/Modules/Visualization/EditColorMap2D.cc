@@ -163,7 +163,7 @@ private:
   GuiDouble			scale_;
 
   bool				updating_; // updating the tf or not
-
+  int				execute_count_;
   GuiDouble			gui_histo_;
 
   // The currently selected widget
@@ -228,6 +228,7 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     pan_y_(ctx->subVar("pany")),
     scale_(ctx->subVar("scale_factor")),
     updating_(false),
+    execute_count_(0),
     gui_histo_(ctx->subVar("histo")),
     gui_selected_widget_(ctx->subVar("selected_widget"), -1),
     gui_selected_object_(ctx->subVar("selected_object"), -1),
@@ -417,7 +418,6 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
   } else if (!args[1].compare(0, 13, "color_change-")) {
     int n;
     string_to_int(args[1].substr(13), n);
-    gui_num_entries_.reset();
     resize_gui();
     if (n < 0 || n >= gui_num_entries_.get()) return;
 
@@ -441,9 +441,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     int n;
     string_to_int(args[1].substr(12), n);
     resize_gui();  // make sure the guivar vector exists
-    gui_num_entries_.reset();
     if (n < 0 || n >= gui_num_entries_.get()) return;
-
     // Toggle the shading type from flat to normal and vice-versa
     gui_sstate_[n]->reset();
     widgets_[n]->set_shadeType(gui_sstate_[n]->get());
@@ -454,12 +452,9 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     int n;
     string_to_int(args[1].substr(9), n);
     resize_gui();  // make sure the guivar vector exists
-    gui_num_entries_.reset();
     if (n < 0 || n >= gui_num_entries_.get()) return;
-
     gui_onstate_[n]->reset();
     widgets_[n]->set_onState(gui_onstate_[n]->get());  // toggle on/off state.
-    
     cmap_dirty_ = true;
     redraw();
     want_to_execute();
@@ -926,7 +921,11 @@ EditColorMap2D::motion(int x, int y)
   }
   cmap_dirty_ = true;
   updating_ = true;
-  want_to_execute();
+  if (execute_count_ == 0) {
+    ++execute_count_;
+    icmap_generation_ = -1;
+    want_to_execute();
+  }
 }
 
 
@@ -942,6 +941,7 @@ EditColorMap2D::release(int x, int y)
   {
     widgets_[selected]->release(x, height_-1-y, width_, height_);
     updating_ = false;
+    icmap_generation_ = -1;
     want_to_execute();
   }
 }
@@ -949,14 +949,19 @@ EditColorMap2D::release(int x, int y)
 void
 EditColorMap2D::execute()
 {
-  ASSERTMSG(cmap_iport_, "EditColorMap2D: cant find input CM2 port");  
-  ASSERTMSG(cmap_oport_, "EditColorMap2D: cant find output CM2 port");
-  ASSERTMSG(hist_iport_, "EditColorMap2D: cant find input histo port");
-
   update_from_gui();
+
   ColorMap2Handle icmap = 0;
+  NrrdDataHandle h = 0;
+
   cmap_iport_->get(icmap);
-  
+  hist_iport_->get(h);
+
+  if (icmap.get_rep() && icmap->generation == icmap_generation_) {
+    if (!h.get_rep() || h->generation == hist_generation_) 
+      return;
+  }
+
   if (icmap.get_rep() && icmap->generation != icmap_generation_) {
     widgets_ = icmap->widgets();
     icmap_generation_ = icmap->generation;
@@ -967,9 +972,6 @@ EditColorMap2D::execute()
 
   update_to_gui();
 
-  NrrdDataHandle h = 0;
-  hist_iport_->get(h);
-
   if (h.get_rep() && h->generation != hist_generation_) {
     hist_generation_ = h->generation;
     if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
@@ -978,7 +980,7 @@ EditColorMap2D::execute()
     histo_ = h->nrrd;
     histo_dirty_ = true;
   } else if (!h.get_rep()) {
-    if(histo_ != 0)
+    if (histo_ != 0)
       histo_dirty_ = true;
     histo_ = 0;
   }
@@ -992,8 +994,10 @@ EditColorMap2D::execute()
     sent_cmap2_ = scinew ColorMap2(widgets_, updating_, 
 				   gui_selected_widget_.get(),
 				   value_range_);
+  sent_cmap2_->selected() = gui_selected_widget_.get();
   just_resend_selection_ = false;
   icmap_generation_ = sent_cmap2_->generation;
+  if (execute_count_ > 0) --execute_count_;
   cmap_oport_->send(sent_cmap2_);
 
 }
