@@ -549,8 +549,8 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
-                                            const MaterialSubset* ice_matls,
-                                            const MaterialSubset* mpm_matls,
+                                            const MaterialSubset* /*ice_matls*/,
+                                            const MaterialSubset* /*mpm_matls*/,
                                             const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
@@ -657,6 +657,9 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->speedSound_CCLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
+  if (d_RateForm) {     //RATE FORM
+    t->requires(Task::NewDW, lb->matl_press_CCLabel,           Ghost::None);
+  }
 
 #ifdef ANNULUSICE
   t->requires(Task::NewDW, lb->rho_CCLabel,                  Ghost::None);
@@ -1774,8 +1777,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       constCCVariable<double> speedSound;
       constCCVariable<double> vol_frac;
       constCCVariable<double> rho_CC;
@@ -1800,8 +1801,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       // - divide vol_frac_cc/vol
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
 
-      for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
-         iter++) {
+      for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
        IntVector c = *iter;
         q_CC[c] = vol_frac[c] * invvol;
       }
@@ -2315,6 +2315,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     constCCVariable<double> vol_frac;
     constCCVariable<double> press_CC;
     constCCVariable<double> delP_Dilatate;
+    constCCVariable<double> matl_press;
 
     new_dw->get(press_CC,     lb->press_CCLabel,      0, patch,Ghost::None, 0);
     new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,Ghost::None, 0);
@@ -2326,6 +2327,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,   lb->sp_vol_CCLabel,    indx,patch,Ghost::None,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
       new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,Ghost::None,0);
+      if (d_RateForm) {     //RATE FORM
+        new_dw->get(matl_press,lb->matl_press_CCLabel,indx,patch,Ghost::None,0);
+      }
 
 #ifdef ANNULUSICE
       CCVariable<double> rho_CC;
@@ -2337,11 +2341,22 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //   Compute source from volume dilatation
       //   Exclude contribution from delP_MassX
       int_eng_source.initialize(0.);
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
-        B = speedSound[c] * speedSound[c];
-        int_eng_source[c] = (A/B) * delP_Dilatate[c];
+      if (d_EqForm) {     //EQ FORM
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
+          B = speedSound[c] * speedSound[c];
+          int_eng_source[c] = (A/B) * delP_Dilatate[c];
+        }
+      }
+
+      if (d_RateForm) {     //RATE FORM
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          A = vol * vol_frac[c] * (matl_press[c]+delP_Dilatate[c])*sp_vol_CC[c];
+          B = speedSound[c] * speedSound[c];
+          int_eng_source[c] = (A/B) * delP_Dilatate[c];
+        }
       }
 
 #ifdef ANNULUSICE
