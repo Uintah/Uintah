@@ -1,4 +1,6 @@
 
+catch {rename MorphMesher3d ""}
+
 itcl_class MorphMesher3d {
     inherit Module
     constructor {config} {

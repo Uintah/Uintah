@@ -1,4 +1,6 @@
 
+catch {rename MeshView ""}
+
 itcl_class MeshView {
     inherit Module
     constructor {config} {
