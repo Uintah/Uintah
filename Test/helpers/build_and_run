@@ -31,7 +31,7 @@ if [ "$COMPILE" = "yes" ]; then
   chgrp -R csafe .
   chmod -R g+rwX . 
 
-  chmod -R a+r "$HTMLLOG"-"$mode"
+  chmod -R a+rX "$HTMLLOG"-"$mode"
 
 fi
 
