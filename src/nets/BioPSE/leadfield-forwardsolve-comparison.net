@@ -119,7 +119,7 @@ set $m6-haveUI 1
 set $m6-methodTCL {CCinv}
 set $m6-pTCL {1}
 set $m7-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
-set $m8-widgetSizeGui_ {0.05}
+set $m8-widgetSizeGui_ [expr 0.05 * ${global-scale}]
 set $m8-scaleModeGui_ {normalize}
 set $m8-showLastVecGui_ 1
 set $m8-showLinesGui_ 1
