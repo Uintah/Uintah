@@ -233,9 +233,9 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <iostream>\n";
   out << "#include <vector>\n";
   out << "#include <sci_config.h>\n";
-  out << "#if HAVE_MPI || HAVE_MPICH\n";
+#ifdef MxNDEBUG 
   out << "#include <mpi.h> //Debugging purposes\n";
-  out << "#endif\n";
+#endif
   out << "using namespace std;\n";
   out << "\n"; 
   out << e.proxy.str();
@@ -781,6 +781,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "//Unmarshal distribution flag\n";
     e.out << leader2 << "::SCIRun::callType _flag;\n";
     e.out << leader2 << "message->unmarshalInt((int*)&_flag);\n";
+#ifdef HAVE_MPI
     e.out << leader2 << "if (_flag != ::SCIRun::REDIS) {\n"; 
     e.out << leader2 << "  //Unmarshal sessionID and number of calls\n";
     e.out << leader2 << "  ::std::string _sessionID(36, ' ');\n";
@@ -790,6 +791,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "  //Check if it's the right session for this request to be satisfied\n";
     e.out << leader2 << "  _sc->gatekeeper->getTickets(" << e.handlerNum << ",_sessionID,_numCalls);\n";
     e.out << leader2 << "}\n";
+#endif
   }
 
   /***********************************/
@@ -1009,12 +1011,14 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out.pop_leader(f_leader);
   }
 
+#ifdef HAVE_MPI
   if(isCollective) {
     e.out << leader2 << "if(_flag != ::SCIRun::REDIS) {\n";
     e.out << leader2 << "  //Release a ticket from the gatekeeper object\n";
     e.out << leader2 << "  _sc->gatekeeper->releaseOneTicket(" << e.handlerNum << ");\n";
     e.out << leader2 << "}\n";
   }
+#endif
 
   e.out.pop_leader(oldleader);
   e.out << "}\n\n";
@@ -1283,7 +1287,9 @@ void CI::emit_proxy(EmitState& e)
   e.out << "\n// subsetting proxy method\n";
   e.out << "void " << fn << "::createSubset(int localsize, int remotesize)\n"; 
   e.out << "{\n";
+#ifdef HAVE_MPI
   e.out << "  _proxycreateSubset(localsize, remotesize);\n";
+#endif
   e.out << "}\n\n";
 
   // Emit setCallerDistribution proxy
@@ -1421,6 +1427,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "// this message is NOCALLRET:\n";
     e.out << leader2 << "_flag = ::SCIRun::NOCALLRET;\n";
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
+#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
 e.out << leader2 << "//::std::cout << \" NOCALLRET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
@@ -1428,6 +1435,7 @@ e.out << leader2 << "//::std::cout << \" NOCALLRET sending _sessionID = '\" << _
     e.out << leader2 << "int _numCalls = (_rm->getSize() / remoteSize);\n";
     e.out << leader2 << "((_rm->getSize() % remoteSize) > _rm->getRank()) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
+#endif 
     e.out << leader2 << "// Send the message\n";
     e.out << leader2 << "int _handler=(_ref[0])->getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
@@ -1489,6 +1497,7 @@ e.out << leader2 << "//::std::cout << \" NOCALLRET sending _sessionID = '\" << _
     e.out << leader2 << "// this message is CALLNORET\n";
     e.out << leader2 << "_flag = ::SCIRun::CALLNORET;\n";
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
+#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
 e.out << leader2 << "//::std::cout << \"CALLNORET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
@@ -1496,7 +1505,8 @@ e.out << leader2 << "//::std::cout << \"CALLNORET sending _sessionID = '\" << _s
     e.out << leader2 << "//CALLNORET always sends 1 call per callee proc.\n";
     e.out << leader2 << "int _numCalls = 1;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
-    
+#endif
+
     if(list.size() != 0)
       e.out << leader2 << "// Marshal the arguments\n";
     int argNum=0;
@@ -1542,6 +1552,7 @@ e.out << leader2 << "//::std::cout << \"CALLNORET sending _sessionID = '\" << _s
     e.out << leader2 << "// this message is CALLONLY:\n";
     e.out << leader2 << "_flag = ::SCIRun::CALLONLY;\n";
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
+#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
 e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
@@ -1549,6 +1560,7 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
     e.out << leader2 << "int _numCalls = (_rm->getSize() / remoteSize);\n";
     e.out << leader2 << "((_rm->getSize() % remoteSize) > _rm->getRank()) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
+#endif
   }
 
   if(list.size() != 0)
@@ -2192,7 +2204,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
-    e.out << leader2 << "  ::SCIRun::Reference _ref;\n";
+    e.out << leader2 << "  ::SCIRun::Reference _ref(::SCIRun::PIDL::getSpChannel());\n";
     e.out << leader2 << "  _ref.d_vtable_base=" << arg << "_vtable_base;\n";
     e.out << leader2 << "  message->unmarshalSpChannel(_ref.chan);\n";
     e.out << leader2 << "  ::SCIRun::Message* spmsg = (_ref.chan)->getMessage();\n";
@@ -2371,7 +2383,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "//Test\n";
 	e.out << leader2 << "if (1) {\n";
 	e.out << leader2 << "std::ostringstream fname;\n";
-	e.out << leader2 << "int rank;\n";
+	e.out << leader2 << "int rank = 0;\n";
 	e.out << leader2 << "MPI_Comm_rank(MPI_COMM_WORLD,&rank);\n";
 	e.out << leader2 << "fname << \"" << Dname << "\" << \"_\" << rank << \".callee.out\";\n";
 	e.out << leader2 << "_sc->d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
@@ -2491,7 +2503,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
     e.out << leader2 << "  int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref;\n";
+    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref(::SCIRun::PIDL::getSpChannel());\n";
     e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
     e.out << leader2 << "  int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
     e.out << leader2 << "  message->marshalInt(&_vtable_base);\n";
