@@ -889,6 +889,7 @@ case $host in
     LDRUN_PREFIX="-L"
     CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
     CXXFLAGS="$CXXFLAGS $CFLAGS"
+    BASE_LIB_DIR=lib
 
     if test $NEED_OSX_HACK == yes; then
 	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
