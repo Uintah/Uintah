@@ -89,6 +89,10 @@ void FieldToNrrd::execute()
   NrrdData *nout=scinew NrrdData;
   Field *field = fieldH.get_rep();
   const string data = field->get_type_name(1);
+  if (field->data_at() != Field::NODE) {
+    cerr << "Error - can only build a nrrd from data at nodes.\n";
+    return;
+  }
   LatVolMeshHandle lvm;
   if (data == "double") { 
     LatticeVol<double> *f = 
@@ -210,6 +214,44 @@ void FieldToNrrd::execute()
 	for (int k=0; k<nz; k++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeChar, 3);
+  } else if (data == "Vector") {
+    LatticeVol<Vector> *f = 
+      dynamic_cast<LatticeVol<Vector>*>(field);
+    lvm = f->get_typed_mesh();
+    nx = lvm->get_nx();
+    ny = lvm->get_ny();
+    nz = lvm->get_nz();
+    double *data=new double[nx*ny*nz*3];
+    double *p=&(data[0]);
+    for (int i=0; i<nx; i++)
+      for (int j=0; j<ny; j++)
+	for (int k=0; k<nz; k++) {
+	  *p++=f->fdata()(i,j,k).x();
+	  *p++=f->fdata()(i,j,k).y();
+	  *p++=f->fdata()(i,j,k).z();
+	}
+    nout->nrrd=nrrdNewWrap(data, nx*ny*nz*3, nrrdTypeDouble, 4);
+  } else if (data == "Tensor") {
+    LatticeVol<Tensor> *f = 
+      dynamic_cast<LatticeVol<Tensor>*>(field);
+    lvm = f->get_typed_mesh();
+    nx = lvm->get_nx();
+    ny = lvm->get_ny();
+    nz = lvm->get_nz();
+    double *data=new double[nx*ny*nz*7];
+    double *p=&(data[0]);
+    for (int i=0; i<nx; i++)
+      for (int j=0; j<ny; j++)
+	for (int k=0; k<nz; k++) {
+	  *p++=1;  // should use mask if present
+	  *p++=f->fdata()(i,j,k).mat_[0][0];
+	  *p++=f->fdata()(i,j,k).mat_[0][1];
+	  *p++=f->fdata()(i,j,k).mat_[0][2];
+	  *p++=f->fdata()(i,j,k).mat_[1][1];
+	  *p++=f->fdata()(i,j,k).mat_[1][2];
+	  *p++=f->fdata()(i,j,k).mat_[2][2];
+	}
+    nout->nrrd=nrrdNewWrap(data, nx*ny*nz*3, nrrdTypeDouble, 4);
   } else {
     cerr << "Error - unknown LatticeVol data type " << data << endl;
     free(nout);
@@ -218,8 +260,10 @@ void FieldToNrrd::execute()
 
   Point minP = lvm->get_min();
   Point maxP = lvm->get_max();
-  nout->nrrd->min=minmax.first;
-  nout->nrrd->max=minmax.second;
+  if (data != "Vector" && data != "Tensor") {
+    nout->nrrd->min=minmax.first;
+    nout->nrrd->max=minmax.second;
+  }
   nout->nrrd->encoding=nrrdEncodingRaw;
   nout->nrrd->size[0]=nx;
   nout->nrrd->size[1]=ny;
@@ -236,6 +280,19 @@ void FieldToNrrd::execute()
   nout->nrrd->label[1][1]='\0';
   nout->nrrd->label[2][0]='z';
   nout->nrrd->label[2][1]='\0';
+  if (data == "Vector") {
+    nout->nrrd->size[3]=3;
+    nout->nrrd->axisMin[3]=0;
+    nout->nrrd->axisMax[3]=3;
+    nout->nrrd->label[3][0]='v';
+    nout->nrrd->label[3][1]='\0';
+  } else if (data == "Tensor") {
+    nout->nrrd->size[3]=6;
+    nout->nrrd->axisMin[3]=0;
+    nout->nrrd->axisMax[3]=6;
+    nout->nrrd->label[3][0]='t';
+    nout->nrrd->label[3][1]='\0';
+  }
 
   NrrdDataHandle noutH(nout);
   onrrd->send(noutH);
