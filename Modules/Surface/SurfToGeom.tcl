@@ -9,6 +9,8 @@ itcl_class SurfToGeom {
 	global $this-range_max
 	global $this-best
 	global $this-invert
+	global $this-nodes
+	global $this-named
 	global $this-ntype
 	global $this-rad
 	global $this-clr-r
