@@ -164,15 +164,15 @@ BaseWidget::~BaseWidget()
 void
 BaseWidget::init_tcl()
 {
-  tcl_add_command(id_ + "-c", this, 0);
-  tcl_execute(name_ + " " + id_);
+//   module_->tcl_add_command(id_ + "-c", this, 0);
+//   module_->command(name_ + " " + id_);
 }
 
 
 void
 BaseWidget::ui() const
 {
-  tcl_execute(id_ + " ui");
+//   module->tcl_execute(id_ + " ui");
 }
 
 

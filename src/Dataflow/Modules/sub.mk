@@ -29,9 +29,9 @@ SRCDIR := Dataflow/Modules
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
-	$(SRCDIR)/Math\
-	$(SRCDIR)/Render\
-        $(SRCDIR)/Visualization\
+#	$(SRCDIR)/Render\
+#        $(SRCDIR)/Visualization\
+#	$(SRCDIR)/Math\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

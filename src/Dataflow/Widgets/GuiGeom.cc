@@ -37,9 +37,13 @@ using std::ostream;
 
 namespace SCIRun {
 
+GuiColor::GuiColor(const string& name, Part* part)
+: GuiVar(name, part),  r("r", part), g("g", part),  b("b", part)
+{
+}
+
 GuiColor::GuiColor(const string& name, const string& id, Part* part)
-: GuiVar(name, id, part), r("r", str(), part), g("g", str(), part),
-  b("b", str(), part)
+: GuiVar(name, part),  r("r", part), g("g", part),  b("b", part)
 {
 }
 
@@ -48,9 +52,6 @@ GuiColor::~GuiColor()
 }
 
 void GuiColor::reset() {
-  r.reset();
-  g.reset();
-  b.reset();
 }
 
 Color GuiColor::get()
@@ -73,12 +74,12 @@ void GuiColor::emit(ostream& out, string& midx)
 }
 
 GuiMaterial::GuiMaterial(const string& name, const string& id, Part* part)
-: GuiVar(name, id, part), ambient("ambient", str(), part),
-  diffuse("diffuse", str(), part), specular("specular", str(), part),
-  shininess("shininess", str(), part), emission("emission", str(), part),
-  reflectivity("reflectivity", str(), part),
-  transparency("transparency", str(), part),
-  refraction_index("refraction_index", str(), part)
+: GuiVar(name, part), ambient("ambient", part),
+  diffuse("diffuse", part), specular("specular", part),
+  shininess("shininess", part), emission("emission", part),
+  reflectivity("reflectivity", part),
+  transparency("transparency", part),
+  refraction_index("refraction_index", part)
 {
 }
 

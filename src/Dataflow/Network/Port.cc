@@ -132,7 +132,7 @@ void IPort::update_light()
     }
     char str[1000];
     sprintf(str,"%s lightIPort %d %s",module->id.c_str(),which_port,color);
-    Part::tcl_execute(str);
+    module->command(str);
 }
 
 void OPort::update_light()
@@ -159,7 +159,7 @@ void OPort::update_light()
     }
     char str[1000];
     sprintf(str,"%s lightOPort %d %s",module->id.c_str(),which_port,color);
-    Part::tcl_execute(str);
+    module->command(str);
 }
 
 void IPort::turn_on(PortState st)

@@ -180,8 +180,8 @@ void Scheduler::do_scheduling(Module* exclude)
     needexecute.pop();
     // Add oports
     int no=module->noports();
-    unsigned i;
-    for(i=0;i<no;i++){
+
+    for(int i=0;i<no;i++){
       OPort* oport=module->oport(i);
       int nc=oport->nconnections();
       for(int c=0;c<nc;c++){
@@ -197,7 +197,7 @@ void Scheduler::do_scheduling(Module* exclude)
     
     // Now, look upstream...
     int ni=module->niports();
-    for(i=0;i<ni;i++){
+    for(int i=0;i<ni;i++){
       IPort* iport=module->iport(i);
       if(iport->nconnections()){
 	Connection* conn=iport->connection(0);
@@ -223,7 +223,7 @@ void Scheduler::do_scheduling(Module* exclude)
   }
   
   // Trigger the ports in the trigger list...
-  for(i=0;i<to_trigger.size();i++){
+  for(unsigned i=0;i<to_trigger.size();i++){
     Connection* conn=to_trigger[i];
     OPort* oport=conn->oport;
     Module* module=oport->get_module();
