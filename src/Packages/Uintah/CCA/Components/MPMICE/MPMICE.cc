@@ -1736,11 +1736,9 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      if (ice_matl->getIsProductOfReaction()) {
-  #if 1
+      if (ice_matl && ice_matl->getIsProductOfReaction()) {
         new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   dwindex, patch);
         new_dw->put(sumReleasedHeat,MIlb->releasedHeatCCLabel, dwindex, patch);
-  #endif
       }
       else{
         new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  dwindex, patch);
