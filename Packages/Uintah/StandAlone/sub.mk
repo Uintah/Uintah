@@ -364,7 +364,8 @@ uintah: sus \
         gambitFileReader \
         lineextract \
         timeextract \
-        link_inputs
+        link_inputs \
+        link_regression_tester
                 
 ###############################################
 # pfs
@@ -395,6 +396,9 @@ include $(SCIRUN_SCRIPTS)/program.mk
             
 link_inputs: 
 	@( ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs )
+        
+link_regression_tester: 
+	@( ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT )
 
 TOP_ABS:= $(SRCTOP_ABS)/..
 faster_gmake: 
@@ -403,6 +407,8 @@ faster_gmake:
 sus: prereqs Packages/Uintah/StandAlone/sus
 
 puda: prereqs Packages/Uintah/StandAlone/puda
+
+dumpfields: prereqs Packages/Uintah/StandAlone/dumpfields
 
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 
