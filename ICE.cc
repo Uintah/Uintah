@@ -2171,7 +2171,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 // float.   Backing out rho_micro at the new pressure will eventually
 // cause vol_frac to != 1.0.
 // 
-#if 1
+#if 0
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       
       // only hit boundary faces  
