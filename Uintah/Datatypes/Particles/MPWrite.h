@@ -28,11 +28,14 @@ LOG
 #include <SCICore/Containers/String.h>
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
+#include <SCICore/Geometry/Point.h>
 namespace Uintah {
 namespace Datatypes {  
 
 using namespace SCICore::Containers;
 using namespace SCICore::Datatypes;
+using SCICore::Geometry::Point;
+//using SCICore::Geometry::Vector;
   
 class MPWrite {
  public:
@@ -165,8 +168,8 @@ class MPWrite {
 
  private:
   enum FileType { BIN, ASCII };
+  enum GridType{ NoGrid, NC, CC, FC, NC_i, CC_i, FC_i };
   enum State{ Open, Closed, Header, Grid, Particles };
-  enum GridType{ None, NC, CC, FC, NC_i, CC_i, FC_i };
   State state;
   FileType fileType;
   GridType currentGrid;
