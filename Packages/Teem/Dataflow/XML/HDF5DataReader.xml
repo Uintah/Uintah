@@ -119,6 +119,10 @@ NrrdSelectTime. If it is not selected data will be assumed to be
     </inputs>
     <outputs>
       <port>
+	<name>Output 0 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
 	<name>Output 1 Nrrd</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
@@ -140,6 +144,10 @@ NrrdSelectTime. If it is not selected data will be assumed to be
       </port>
       <port>
 	<name>Output 6 Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Output 7 Nrrd</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
      </outputs>
