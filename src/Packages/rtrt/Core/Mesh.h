@@ -430,9 +430,10 @@ public:
       // Calculate the Jacobian for the -1th iteration
       Fu(Su,p1,p2,Bi_1[0][0],Bi_1[1][0]);
       Fv(Sv,p1,p2,Bi_1[0][1],Bi_1[1][1]);
-      
-      invdetJ =
-	1./(Bi_1[0][0]*Bi_1[1][1]-Bi_1[0][1]*Bi_1[1][0]);
+
+      double denom=(Bi_1[0][0]*Bi_1[1][1]-Bi_1[0][1]*Bi_1[1][0]);
+      if (denom*denom<0.0000001) return 0;
+      invdetJ =	1./denom;
       
       u -= invdetJ*(Bi_1[1][1]*f_1[0]-Bi_1[0][1]*f_1[1]);
       v -= invdetJ*(Bi_1[0][0]*f_1[1]-Bi_1[1][0]*f_1[0]);
@@ -454,7 +455,9 @@ public:
 	
 	// We move on to Broyden's method.
 	for (; i<MAXITER; i++) {
-	  invdx2 = 1./((u-u_1)*(u-u_1)+(v-v_1)*(v-v_1));
+	  denom=((u-u_1)*(u-u_1)+(v-v_1)*(v-v_1));
+	  if (denom*denom<0.0000001) return 0;	  
+	  invdx2 = 1./denom;
 	  
 	  df[0] = f[0]-f_1[0];
 	  df[1] = f[1]-f_1[1];
@@ -472,8 +475,10 @@ public:
 	  Bi[0][1] = Bi[0][1]*dx[1] + Bi_1[0][1];
 	  Bi[1][0] = Bi[1][0]*dx[0] + Bi_1[1][0];
 	  Bi[1][1] = Bi[1][1]*dx[1] + Bi_1[1][1];
-	  
-	  invdetJ = 1./(Bi[0][0]*Bi[1][1]-Bi[0][1]*Bi[1][0]);
+
+	  denom=(Bi[0][0]*Bi[1][1]-Bi[0][1]*Bi[1][0]);
+	  if (denom*denom<0.0000001) return 0;
+	  invdetJ = 1./denom;
 	  
 	  u_1 = u;
 	  v_1 = v;

@@ -756,12 +756,25 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 	activeGui->camera_->setup();
 	activeGui->fovSpinner_->set_float_val( FOVtry );
 
+	Point origin;
+	Vector lookdir2;
+	Vector up;
+	Vector side;
+	double fov;
+	activeGui->camera_->getParams(origin, lookdir2, up, side, fov);
+	lookdir.normalize();
+	up.normalize();
+	side.normalize();
 	// Move the lights that are fixed to the eye
 	for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
 	  Light *light = activeGui->dpy_->scene->light(i);
 	  if (light->fixed_to_eye) {
 	    //	    light->updatePosition(light->get_pos() + dir*scl);
-	    light->updatePosition(activeGui->camera_->get_eye());
+	    light->updatePosition(origin, 
+				  Vector(side*light->eye_offset_basis.x()+
+					 up*light->eye_offset_basis.y()+
+					 lookdir2*light->eye_offset_basis.z()),
+				  lookdir2);
 	  }
 	}
       }
@@ -1012,12 +1025,25 @@ Gui::handleMouseRelease(int button, int /*mouse_x*/, int /*mouse_y*/)
 	activeGui->camera_->setup();
 	prev_trans = prv;
 
+	Point origin;
+	Vector lookdir;
+	Vector up;
+	Vector side;
+	double fov;
+	activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+	lookdir.normalize();
+	up.normalize();
+	side.normalize();
 	// Move the lights that are fixed to the eye
 	for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
 	  Light *light = activeGui->dpy_->scene->light(i);
 	  if (light->fixed_to_eye) {
 	    //	    light->updatePosition(light->get_pos() + dir*scl);
-	    light->updatePosition(activeGui->camera_->eye);
+	    light->updatePosition(origin, 
+				  Vector(side*light->eye_offset_basis.x()+
+					 up*light->eye_offset_basis.y()+
+					 lookdir*light->eye_offset_basis.z()),
+				  lookdir);
 	  }
 	}
 	// now you need to use the history to 
@@ -1144,12 +1170,26 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
 	  Vector dir = activeGui->camera_->lookat - activeGui->camera_->eye;
 	  activeGui->camera_->eye += dir*scl;
+
+	  Point origin;
+	  Vector lookdir;
+	  Vector up;
+	  Vector side;
+	  double fov;
+	  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+	  lookdir.normalize();
+	  up.normalize();
+	  side.normalize();
 	  // Move the lights that are fixed to the eye
 	  for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
 	    Light *light = activeGui->dpy_->scene->light(i);
 	    if (light->fixed_to_eye) {
 	      //light->updatePosition(light->get_pos() + dir*scl);
-	      light->updatePosition(activeGui->camera_->eye);
+	    light->updatePosition(origin, 
+				  Vector(side*light->eye_offset_basis.x()+
+					 up*light->eye_offset_basis.y()+
+					 lookdir*light->eye_offset_basis.z()),
+				  lookdir);
 	    }
 	  }
 	} else {
@@ -1188,12 +1228,25 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
       activeGui->camera_->lookat+=trans;
       activeGui->camera_->setup();
 
+      Point origin;
+      Vector lookdir;
+      Vector up;
+      Vector side;
+      double fov;
+      activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+      lookdir.normalize();
+      up.normalize();
+      side.normalize();
       // Move the lights that are fixed to the eye
       for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
 	Light *light = activeGui->dpy_->scene->light(i);
 	if (light->fixed_to_eye) {
 	  //	  light->updatePosition(light->get_pos() + trans);
-	  light->updatePosition(activeGui->camera_->eye);
+	  light->updatePosition(origin, 
+				Vector(side*light->eye_offset_basis.x()+
+				       up*light->eye_offset_basis.y()+
+				       lookdir*light->eye_offset_basis.z()),
+				lookdir);
 	}
       }
     }
@@ -1237,12 +1290,25 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
       activeGui->camera_->eye = activeGui->camera_->lookat+z_a*eye_dist;
       activeGui->camera_->setup();
 			
+      Point origin;
+      Vector lookdir;
+      Vector up;
+      Vector side;
+      double fov;
+      activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+      lookdir.normalize();
+      up.normalize();
+      side.normalize();
       // Move the lights that are fixed to the eye
       for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
 	Light *light = activeGui->dpy_->scene->light(i);
 	if (light->fixed_to_eye) {
 	  //	    light->updatePosition(light->get_pos() + dir*scl);
-	  light->updatePosition(activeGui->camera_->eye);
+	  light->updatePosition(origin, 
+				Vector(side*light->eye_offset_basis.x()+
+				       up*light->eye_offset_basis.y()+
+				       lookdir*light->eye_offset_basis.z()),
+				lookdir);
 	}
       }
 
@@ -2727,12 +2793,25 @@ Gui::goToNextMarkerCB( int /*id*/ )
   activeGui->camera_->set_lookat( look_at );
   activeGui->camera_->setup();
 
+  Point origin;
+  Vector lookdir;
+  Vector up;
+  Vector side;
+  double fov;
+  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+  lookdir.normalize();
+  up.normalize();
+  side.normalize();
   // Move the lights that are fixed to the eye
   for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
     Light *light = activeGui->dpy_->scene->light(i);
     if (light->fixed_to_eye) {
       //	    light->updatePosition(light->get_pos() + dir*scl);
-      light->updatePosition(pos);
+      light->updatePosition(origin, 
+			    Vector(side*light->eye_offset_basis.x()+
+				   up*light->eye_offset_basis.y()+
+				   lookdir*light->eye_offset_basis.z()),
+			    lookdir);
     }
   }
 }
@@ -2749,11 +2828,24 @@ Gui::goToPrevMarkerCB( int /*id*/ )
   activeGui->camera_->set_lookat( look_at );
   activeGui->camera_->setup();
 
+  Point origin;
+  Vector lookdir;
+  Vector up;
+  Vector side;
+  double fov;
+  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+  lookdir.normalize();
+  up.normalize();
+  side.normalize();
   // Move the lights that are fixed to the eye
   for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
     Light *light = activeGui->dpy_->scene->light(i);
     if (light->fixed_to_eye) {
-      light->updatePosition(pos);
+      light->updatePosition(origin, 
+			    Vector(side*light->eye_offset_basis.x()+
+				   up*light->eye_offset_basis.y()+
+				   lookdir*light->eye_offset_basis.z()),
+			    lookdir);
     }
   }
 }
@@ -2770,11 +2862,24 @@ Gui::goToRouteBeginningCB( int /*id*/ )
   activeGui->camera_->set_lookat( look_at );
   activeGui->camera_->setup();
 
+  Point origin;
+  Vector lookdir;
+  Vector up;
+  Vector side;
+  double fov;
+  activeGui->camera_->getParams(origin, lookdir, up, side, fov);
+  lookdir.normalize();
+  up.normalize();
+  side.normalize();
   // Move the lights that are fixed to the eye
   for(int i = 0; i < activeGui->dpy_->scene->nlights(); i++) {
     Light *light = activeGui->dpy_->scene->light(i);
     if (light->fixed_to_eye) {
-      light->updatePosition(pos);
+      light->updatePosition(origin, 
+			    Vector(side*light->eye_offset_basis.x()+
+				   up*light->eye_offset_basis.y()+
+				   lookdir*light->eye_offset_basis.z()),
+			    lookdir);
     }
   }
 }

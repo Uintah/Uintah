@@ -42,8 +42,9 @@ public:
   inline const Color& get_color() const { return currentColor_; }
   inline       float  get_intensity() const { return intensity_; }
   inline Array1<Vector>& get_beamdirs() { return beamdirs; }
-
   void modifyCurrentIntensity( double scale );
+
+  virtual Color get_color(const Vector &/*v*/) { return currentColor_; }
 
   void updateIntensity( double toIntensity );
   inline const Color& getOrigColor() const { return origColor_; }
@@ -60,12 +61,15 @@ public:
   inline void reset() { updateIntensity( origIntensity_ ); }
 
   void updatePosition( const Point & newPos );
+  virtual void updatePosition( const Point & newPos, const Vector &offset, const Vector &fwd );
 
   virtual Object *getSphere() const { return sphere_; }
 
   // This is the directional offset from the eye where
   bool fixed_to_eye;
-  float light_dist;
+  Vector eye_offset_basis;
+  Vector last_offset;
+//  float light_dist;
   
 protected:
   //! finish construction.

@@ -64,7 +64,7 @@ void Speckle::shade(Color& result, const Ray& ray,
 		cos_theta=-cos_theta;
 		light_dir=-light_dir;
 	    }
-	    difflight+=light->get_color()*shadowfactor;
+	    difflight+=light->get_color(light_dir)*shadowfactor;
 	} else {
 	    cx->stats->ds[depth].inshadow++;
 	}
