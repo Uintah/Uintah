@@ -39,6 +39,10 @@ done
 
 ##-- check for user supplied tcl paths --------------------------------------
 
+AC_ARG_WITH(thirdparty,
+	[  --with-thirdparty=<path-to-thirdparty>    <path-to-thirdparty>/{itcltk-8.3.2,xerces-1.3.0,...}"],
+	[thirdparty="$withval"],
+	[thirdparty="/res/sci/data1"])
 AC_ARG_WITH(tcl,
         [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.?],
         [tcl="$withval"],
