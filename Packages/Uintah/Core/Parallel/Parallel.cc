@@ -23,7 +23,7 @@ using std::ostringstream;
 static bool            allowThreads;
 static bool            usingMPI = false;
 static int             maxThreads = 1;
-static MPI_Comm        worldComm = -1;
+static MPI_Comm        worldComm = MPI_Comm(-1);
 static int             worldRank = -1;
 static ProcessorGroup* rootContext = 0;
 
