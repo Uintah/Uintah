@@ -28,7 +28,7 @@ public:
     int nz;
     Array3<Vector> grid;
     virtual Point get_point(int, int, int);
-    virtual void locate(const Point&, int&, int&, int&);
+    bool locate(int *loc, const Point &p);
 
     void set_bounds(const Point&, const Point&);
 

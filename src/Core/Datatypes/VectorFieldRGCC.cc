@@ -41,13 +41,23 @@ Point VectorFieldRGCC::get_point(int i, int j, int k)
     return Point(x,y,z);
 }
 
-void VectorFieldRGCC::locate(const Point& p, int& ix, int& iy, int& iz)
+bool VectorFieldRGCC::locate(int *loc, const Point& p)
 {
     Vector pn=p-bmin;
-    ix=(int)(pn.x()*nx/diagonal.x());
-    iy=(int)(pn.y()*ny/diagonal.y());
-    iz=(int)(pn.z()*nz/diagonal.z());
+    loc[0] = (int)(pn.x()*nx/diagonal.x());
+    loc[1] = (int)(pn.y()*ny/diagonal.y());
+    loc[2] = (int)(pn.z()*nz/diagonal.z());
 
+    if (loc[0] < 0 || loc[0] >= nx ||
+	loc[1] < 0 || loc[1] >= ny ||
+	loc[2] < 0 || loc[2] >= nz)
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
 }
 
 #define VectorFIELDRGCC_VERSION 1

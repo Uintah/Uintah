@@ -67,7 +67,8 @@ public:
   // Transform from world space to attribute space.
   inline void fitransform(const Point &p, Point &r);
   virtual void itransform(const Point &p, Point &r);
-  virtual bool locate(const Point &p, int &i, int &j, int &k);
+  virtual bool locate(int *loc, const Point &p);
+
 
   // TODO: This needs to be tested.
   template <class T>

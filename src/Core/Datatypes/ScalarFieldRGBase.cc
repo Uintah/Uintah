@@ -165,7 +165,7 @@ void ScalarFieldRGBase::set_bounds(const Point &min, const Point &max) {
     diagonal=max-min;
 }
     
-void ScalarFieldRGBase::locate(const Point& p, int& ix, int& iy, int& iz)
+bool ScalarFieldRGBase::locate(int *loc, const Point& p)
 {
     Vector pn=p-bmin;
     double dx=diagonal.x();
@@ -174,10 +174,22 @@ void ScalarFieldRGBase::locate(const Point& p, int& ix, int& iy, int& iz)
     double x=pn.x()*(nx-1)/dx;
     double y=pn.y()*(ny-1)/dy;
     double z=pn.z()*(nz-1)/dz;
-    ix=(int)x;
-    iy=(int)y;
-    iz=(int)z;
+    loc[0]=(int)x;
+    loc[1]=(int)y;
+    loc[2]=(int)z;
+    
+    if (loc[0] < 0 || loc[0] >= nx ||
+	loc[1] < 0 || loc[1] >= ny ||
+	loc[2] < 0 || loc[2] >= nz)
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
 }
+
 
 void ScalarFieldRGBase::midLocate(const Point& p, int& ix, int& iy, int& iz)
 {
