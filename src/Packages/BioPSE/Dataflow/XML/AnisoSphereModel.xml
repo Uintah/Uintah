@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="AnisoSphereModel" category="Forward">
+  <overview>
+
+    <authors>
+      <author>Sascha Moehrs</author>
+    </authors>
+
+    <description>
+      <p>Date: February 2003;   Version 1.0</p>
+	  <p>Input module for all specifications for a 4-layer anisotropic spherical volume conductor:</p>
+	  <p>radii for scalp, skull, cerebrospinal fluid and brain;</p>
+	  <p>radial and tangential conductivities for the various compartments;</p>
+	  <p>elelctrode positions (will be projected on the scalp) where the potential should be measured;</p>
+    </description>
+
+  </overview>
+
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>ElectrodePositions</name>
+		<description> electrodes will be projected on the scalp</description>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  <port>
+		<name>AnisoConductivities</name>
+		<description> the conductivities can be supplied via this port or via the gui </description>
+		<datatype>SCIRun::Matrix</datatype>
+	  </port>
+    </inputs>
+
+    <outputs>
+      <port>
+        <name>ElectrodePositions</name>
+		<description> electrodes projected on the outer sphere (scalp)</description>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+
+	  <port>
+		<name>SphereRadii</name>
+		<description>matrix containing the radii of scalp, skull, cbsf, brain used in the computation of the potentials</description>
+		<datatype>SCIRun::Matrix</datatype>
+	  </port>
+	  
+	  <port>
+		<name>AnisoConductivities</name>
+		<description>matrix containing the anisotropic conductivities used in the computation of the potentials</description>
+		<datatype>SCIRun::Matrix</datatype>
+	  </port>
+	  
+    </outputs>
+
+  </io>
+
+  <gui>
+
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>scalp radius</label>
+	  <description> </description>
+	</parameter>
+
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>skull radius</label>
+	  <description> </description>
+	</parameter>
+	
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>radius of cerebrospinal fluid</label>
+	  <description> </description>
+	</parameter>
+
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>brain radius</label>
+	  <description> </description>
+	</parameter>
+
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>unit</label>
+	  <description> </description>
+	</parameter>
+	
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>radial scalp conductivity</label>
+	  <description> </description>
+	</parameter>
+	
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>tangential scalp conductivity</label>
+	  <description> </description>
+	</parameter>
+
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>radial skull conductivity</label>
+	  <description> </description>
+	</parameter>
+	
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>tangential skull conductivity</label>
+	  <description> </description>
+	</parameter>
+
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>radial cbsf conductivity</label>
+	  <description> </description>
+	</parameter>
+	
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>tangential cbsf conductivity</label>
+	  <description> </description>
+	</parameter>
+
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>radial brain conductivity</label>
+	  <description> </description>
+	</parameter>
+	
+	<parameter>
+	  <widget>entry</widget>
+	  <datatype>float</datatype>
+	  <label>tangential brain conductivity</label>
+	  <description> </description>
+	</parameter>
+
+  </gui>
+  
+</component>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="CreateDisAnisoSpheres" category="Forward">
+  <overview>
+
+    <authors>
+      <author>Sascha Moehrs</author>
+    </authors>
+
+    <description>
+      <p>Date: January 2003; Version: 1.0</p>
+	  <p>Each element (hex or tet) is assigned a conudctivity tensor, based on the distance to the origin</p>
+    </description>
+
+  </overview>
+
+  <io>
+
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Mesh</name>
+		<description> The port takes a handle of the Hex / or Tet Field</description>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  <port>
+		<name>SphereRadii</name>
+		<description>Radii of the brain, cbsf, skull, scalp</description>
+		<datatype>SCIRun::Matrix</datatype>
+	  </port>
+	  <port>
+		<name>AnisoConductivities</name>
+		<description> The port takes a matrix containing radial and tangential conductivities of all 4 layers.</description>
+		<datatype>SCIRun::Matrix</datatype>
+	  </port>
+    </inputs>
+
+    <outputs>
+      <port>
+        <name>Mesh</name>
+		<description>Hex Field with conductivities assigned to each element</description>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  
+    </outputs>
+  </io>
+
+  <gui>
+	
+  </gui>
+  
+</component>
