@@ -617,11 +617,6 @@ const LevelP& Level::getFinerLevel() const
   return getRelativeLevel(1);
 }
 
-IntVector Level::mapCellToCoarser(const IntVector& idx) const
-{
-  return idx/refinementRatio;
-}
-
 IntVector Level::interpolateCellToCoarser(const IntVector& idx, Vector& weight) const
 {
   IntVector i(idx-(refinementRatio-IntVector(1,1,1)));
@@ -670,9 +665,42 @@ IntVector Level::interpolateToCoarser(const IntVector& idx, const IntVector& dir
   return i/refinementRatio;
 }
 
+IntVector Level::mapCellToCoarser(const IntVector& idx) const
+{ 
+  IntVector ratio = idx/refinementRatio;
+  
+
+  // If the fine cell index is negative
+  // you must add an offset to get the right
+  // coarse cell. -Todd
+  IntVector offset(0,0,0);
+  if (idx.x()< 0){
+    offset.x((int)fmod((double)idx.x(),(double)refinementRatio.x()));
+  }
+  if (idx.y()< 0){
+    offset.y((int)fmod((double)idx.y(),(double)refinementRatio.y()));
+  }  
+  if (idx.z()< 0){
+    offset.z((int)fmod((double)idx.z(),(double)refinementRatio.z()));
+  }
+  return ratio + offset;
+}
+
 IntVector Level::mapCellToFiner(const IntVector& idx) const
 {
-  return idx*grid->getLevel(d_index+1)->refinementRatio;
+  IntVector fineCell = idx*grid->getLevel(d_index+1)->refinementRatio;
+ 
+  IntVector offset(0,0,0);
+  if (idx.x()< 0){
+    offset.x(1);
+  }
+  if (idx.y()< 0){      // If the coarse cell index is negative
+    offset.y(1);        // you must add an offset to get the right
+  }                     // fine cell. -Todd
+  if (idx.z()< 0){
+    offset.z(1);
+  }    
+  return fineCell + offset;
 }
 
 IntVector Level::mapNodeToCoarser(const IntVector& idx) const
