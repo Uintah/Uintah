@@ -44,6 +44,28 @@ template class LockingHandle<Surface>;
 
 //template class MinMaxFunctor<double>;
 
+#include <Core/Datatypes/TypedFData.h>
+#include <functional>
+template class TypedFData<double>;
+template class FData1D<double>;
+
+class add5 : public std::binary_function<int &, double, void>
+{
+public:
+  void operator()(int &result, double d) { result = int(d) + 5; }
+};
+
+template class FDataUnOp<int, FData1D<double>, add5>;
+
+
+class minwrap
+{
+public:
+  void operator()(double &result, double a, double b) { result = Min(a, b); }
+};
+
+template class FDataBinOp<double, FData1D<double>, FData1D<double>, minwrap>;
+
 #ifdef __sgi
 #pragma reset woff 1468
 #endif
