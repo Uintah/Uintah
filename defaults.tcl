@@ -15,6 +15,7 @@ option add *selector red
 option add *font "-Adobe-Helvetica-bold-R-Normal--*-120-75-*"
 option add *Button*padX 1
 option add *Button*padY 1
+option add *highlightThickness 0
 
 set tcl_prompt1 "puts -nonewline \"scirun> \""
 set tcl_prompt2 "puts -nonewline \"scirun>> \""
