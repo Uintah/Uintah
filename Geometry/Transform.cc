@@ -27,7 +27,7 @@ Transform::~Transform()
 }
 
 
-void Transform::scale(const Vector& v)
+void Transform::pre_scale(const Vector& v)
 {
     for(int i=0;i<4;i++){
 	mat[0][i]*=v.x();
@@ -37,7 +37,17 @@ void Transform::scale(const Vector& v)
     inverse_valid=0;
 }
 
-void Transform::translate(const Vector& v)
+void Transform::post_scale(const Vector& v)
+{
+    for(int i=0;i<4;i++){
+	mat[i][0]*=v.x();
+	mat[i][1]*=v.y();
+	mat[i][2]*=v.z();
+    }
+    inverse_valid=0;
+}
+
+void Transform::pre_translate(const Vector& v)
 {
     double dmat[4][4];
     dmat[0][0]=mat[0][0]+v.x()*mat[3][0];
@@ -60,7 +70,16 @@ void Transform::translate(const Vector& v)
     inverse_valid=0;
 }
 
-void Transform::rotate(double angle, const Vector& axis)
+void Transform::post_translate(const Vector& v)
+{
+    mat[0][3]+=mat[0][0]*v.x()+mat[0][1]*v.y()+mat[0][2]*v.z()+mat[0][3];
+    mat[1][3]+=mat[1][0]*v.x()+mat[1][1]*v.y()+mat[1][2]*v.z()+mat[1][3];
+    mat[2][3]+=mat[2][0]*v.x()+mat[2][1]*v.y()+mat[2][2]*v.z()+mat[2][3];
+    mat[3][3]+=mat[3][0]*v.x()+mat[3][1]*v.y()+mat[3][2]*v.z()+mat[3][3];
+    inverse_valid=0;
+}
+
+void Transform::pre_rotate(double angle, const Vector& axis)
 {
     // From Foley and Van Dam, Pg 227
     // NOTE: Element 0,1 is wrong in the text!
@@ -90,7 +109,7 @@ void Transform::rotate(double angle, const Vector& axis)
     newmat[3][2]=0;
     newmat[3][3]=1;
 
-    mulmat(newmat);
+    pre_mulmat(newmat);
     inverse_valid=0;
 }	
 
@@ -150,11 +169,6 @@ void Transform::load_identity()
     inverse_valid=0;
 }
 
-void Transform::lookat(const Point&, const Point&, const Vector&)
-{
-    cerr << "Transform::lookat not finished\n";
-}
-
 void Transform::install_mat(double m[4][4])
 {
     for(int i=0;i<4;i++){
@@ -169,7 +183,7 @@ void Transform::compute_imat()
     cerr << "Transform::compute_imat not finished\n";
 }
 
-void Transform::mulmat(double mmat[4][4])
+void Transform::post_mulmat(double mmat[4][4])
 {
     double newmat[4][4];
     for(int i=0;i<4;i++){
@@ -183,30 +197,125 @@ void Transform::mulmat(double mmat[4][4])
     install_mat(newmat);
 }
 
-PTransform::PTransform()
+void Transform::pre_mulmat(double mmat[4][4])
 {
+    double newmat[4][4];
+    for(int i=0;i<4;i++){
+	for(int j=0;j<4;j++){
+	    newmat[i][j]=0.0;
+	    for(int k=0;k<4;k++){
+		newmat[i][j]+=mmat[i][k]*mat[k][j];
+	    }
+	}
+    }
+    install_mat(newmat);
 }
 
-PTransform::~PTransform()
+void Transform::perspective(const Point& eyep, const Point& lookat,
+			    const Vector& up, double fov,
+			    double znear, double zfar,
+			    int xres, int yres)
 {
+    Vector lookdir(lookat-eyep);
+    Vector z(lookdir);
+    z.normalize();
+    Vector x(Cross(z, up));
+    x.normalize();
+    Vector y(Cross(x, z));
+    double xviewsize=Tan(DtoR(fov/2.))*2.;
+    double yviewsize=xviewsize*yres/xres;
+    double zscale=-1*znear;
+    double xscale=xviewsize*0.5;
+    double yscale=yviewsize*0.5;
+    x*=xscale;
+    y*=yscale;
+    z*=zscale;
+    double m[4][4];
+    // Viewing...
+    m[0][0]=x.x(); m[0][1]=y.x(); m[0][2]=z.x(); m[0][3]=-eyep.x();
+    m[1][0]=x.y(); m[1][1]=y.y(); m[1][2]=z.y(); m[1][3]=-eyep.y();
+    m[2][0]=x.z(); m[2][1]=y.z(); m[2][2]=z.z(); m[2][3]=-eyep.z();
+    m[3][0]=0;     m[3][1]=y.x(); m[3][2]=0.0;   m[3][3]=1.0;
+    invmat(m);
+    pre_mulmat(m);
+    
+    // Perspective...
+    m[0][0]=1.0; m[0][1]=0.0; m[0][2]=0.0; m[0][3]=0.0;
+    m[1][0]=0.0; m[1][1]=1.0; m[1][2]=0.0; m[1][3]=0.0;
+    m[2][0]=0.0; m[2][1]=0.0; m[2][2]=(zfar+1)/(1-zfar); m[2][3]=2*zfar/(1-zfar);
+    m[3][0]=0.0; m[3][1]=0.0; m[3][2]=-1.0; m[3][3]=0.0;
+    pre_mulmat(m);
+
+    post_translate(Vector(1,1,0));
+    post_scale(Vector(xres/2., yres/2., 1.0));
 }
 
-void PTransform::perspective(double, double, double, double)
+void Transform::invmat(double m[4][4])
 {
-    cerr << "PTransform::perspective not finished\n";
+    double imat[4][4];
+    for(int i=0;i<4;i++){
+        for(int j=0;j<4;j++){
+            imat[i][j]=0.0;
+        }
+        imat[i][i]=1.0;
+    }
+
+    // Gauss-Jordan with partial pivoting
+    for(i=0;i<4;i++){
+        double max=Abs(m[i][i]);
+        int row=i;
+        for(int j=i+i;j<4;j++){
+            if(Abs(m[j][i]) > max){
+                max=Abs(m[j][i]);
+                row=j;
+            }
+        }
+        ASSERT(max!=0);
+        if(row!=i){
+            switch_rows(m, i, row);
+            switch_rows(imat, i, row);
+        }
+        double denom=1./m[i][i];
+        for(j=i+1;j<4;j++){
+            double factor=m[j][i]*denom;
+            sub_rows(m, j, i, factor);
+            sub_rows(imat, j, i, factor);
+        }
+    }
+
+    // Jordan
+    for(i=1;i<4;i++){
+        ASSERT(m[i][i]!=0);
+        double denom=1./m[i][i];
+        for(int j=0;j<i;j++){
+            double factor=m[j][i]*denom;
+            sub_rows(m, j, i, factor);
+            sub_rows(imat, j, i, factor);
+        }
+    }
+
+    // Normalize
+    for(i=0;i<4;i++){
+        ASSERT(m[i][i]!=0);
+        double factor=1./m[i][i];
+        for(int j=0;j<4;j++)
+            imat[i][j] *= factor;
+    }
 }
 
-void PTransform::ortho(const Point& min, const Point& max)
+void Transform::switch_rows(double m[4][4], int r1, int r2) const
 {
-    Vector d(max-min);
-    d.x(1/d.x());
-    d.y(1/d.y());
-    d.z(1/d.z());
-    scale(d);
-    translate(Point(0,0,0)-min);
+    for(int i=0;i<4;i++){
+        double tmp=m[r1][i];
+        m[r1][i]=m[r2][i];
+        m[r2][i]=tmp;
+    }
 }
 
-PTransform::PTransform(const PTransform& copy)
-: Transform(copy)
+
+void Transform::sub_rows(double m[4][4], int r1, int r2, double mul) const
 {
+    for(int i=0;i<4;i++)
+        m[r1][i] -= m[r2][i]*mul;
 }
+

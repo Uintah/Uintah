@@ -11,33 +11,35 @@ class Transform {
     int inverse_valid;
     void install_mat(double[4][4]);
     void compute_imat();
-    void mulmat(double[4][4]);
+    void pre_mulmat(double[4][4]);
+    void post_mulmat(double[4][4]);
+    void invmat(double[4][4]);
+    void switch_rows(double m[4][4], int row1, int row2) const;
+    void sub_rows(double m[4][4], int row1, int row2, double mul) const;
 public:
     Transform();
     Transform(const Transform&);
     Transform& operator=(const Transform&);
     ~Transform();
+    Transform(const Point&, const Vector&, const Vector&, const Vector&);
 
-    void scale(const Vector&);
-    void rotate(double, const Vector& axis);
-    void translate(const Vector&);
+    void pre_scale(const Vector&);
+    void post_scale(const Vector&);
+    void pre_rotate(double, const Vector& axis);
+    void post_rotate(double, const Vector& axis);
+    void pre_translate(const Vector&);
+    void post_translate(const Vector&);
     Point unproject(const Point& p);
     Point project(const Point& p);
     Vector project(const Vector& p);
     void get(double*);
     void set(double*);
     void load_identity();
-    void lookat(const Point&, const Point&, const Vector&);
-};
-
-class PTransform : public Transform {
-public:
-    PTransform();
-    PTransform(const PTransform&);
-    PTransform& operator=(const PTransform&);
-    ~PTransform();
-    void perspective(double, double, double, double);
-    void ortho(const Point&, const Point&);
+    void perspective(const Point& eyep, const Point& lookat,
+		     const Vector& up, double fov,
+		     double znear, double zfar,
+		     int xres, int yres);
+    void invert();
 };
 
 #endif
