@@ -101,6 +101,7 @@ public:
   virtual int dimension() const { return d_dim; }
 
 protected:
+
   // GROUP: Protected member functions
   //////////
   // -- returns size of validBits array in number of int's
@@ -116,8 +117,12 @@ protected:
   // GROUP: protected data
   //////////
   // 
+#ifdef __sgi
   static const int nbits = sizeof(unsigned int)*numeric_limits<unsigned char>::digits;
-  
+#else
+  static const int nbits = sizeof(unsigned int)*8;
+#endif
+
   /////////
   // Sizes and dimensionality
   int d_nx, d_ny, d_nz;

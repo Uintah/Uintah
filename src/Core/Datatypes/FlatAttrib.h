@@ -22,7 +22,9 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Persistent/PersistentSTL.h>
 
+#ifdef __sgi
 #include <limits>
+#endif
 #include <sstream>
 #include <memory.h>
 
