@@ -967,7 +967,7 @@ case $host in
     CPP="$CC"
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
-    WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
+    WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     CPPFLAGS=" $WOFF -LANG:std"
     if test "$enable_64bit" = "yes"; then
       BINARYFLAGS="-64 -mips4"
