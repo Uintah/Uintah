@@ -44,7 +44,7 @@ PSELIBS := Uintah
 else
 PSELIBS := Uintah/Exceptions Uintah/Grid Uintah/Interface \
 	PSECore/XMLUtil SCICore/Exceptions SCICore/Geometry \
-	SCICore/Thread SCICore/Util SCICore/OS
+	SCICore/Thread SCICore/Util SCICore/OS Uintah/Components/MPM
 endif
 LIBS 	:= $(XML_LIBRARY)
 
@@ -52,6 +52,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.14  2000/07/11 20:00:11  kuzimmer
+# Modified so that CCVariables and Matrix3 are recognized
+#
 # Revision 1.13  2000/06/17 07:06:21  sparker
 # Changed ProcessorContext to ProcessorGroup
 #
