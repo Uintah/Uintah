@@ -15,6 +15,7 @@ SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/NrrdFieldConverter.cc\
 	$(SRCDIR)/NIMRODConverter.cc\
+	$(SRCDIR)/VULCANConverter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

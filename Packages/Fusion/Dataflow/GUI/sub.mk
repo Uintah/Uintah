@@ -11,8 +11,9 @@
 SRCDIR := Packages/Fusion/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/NIMRODConverter.tcl\
 	$(SRCDIR)/NrrdFieldConverter.tcl\
+	$(SRCDIR)/NIMRODConverter.tcl\
+	$(SRCDIR)/VULCANConverter.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
