@@ -870,6 +870,7 @@ bool are_We_Using_LODI_BC(const Patch* patch,
         usingLODI = true;
         is_LODI_face[face] = true;
       }
+      delete new_bcs;
     }
     //__________________________________
     //  check if velocity is using LODI
@@ -884,6 +885,7 @@ bool are_We_Using_LODI_BC(const Patch* patch,
       is_LODI_face[face] = true;
     }
     BC_dbg  <<" using LODI on face "<<  is_LODI_face[face]<<endl;
+    delete new_bcs;
   }
   return usingLODI;
 }
