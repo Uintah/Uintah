@@ -50,7 +50,7 @@ AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld,
 {
   d_matl_set = 0;
   lb  = scinew ICELabel();
-  cumulativeEnergyReleased_CCLabel = VarLabel::create("scalar-cumulativeEnergyReleased", CCVariable<double>::getTypeDescription());
+  cumulativeEnergyReleased_CCLabel = VarLabel::create("cumulativeEnergyReleased", CCVariable<double>::getTypeDescription());
   cumulativeEnergyReleased_src_CCLabel = VarLabel::create("cumulativeEnergyReleased_src", CCVariable<double>::getTypeDescription());
 }
 
@@ -310,8 +310,8 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     new_dw->allocateTemporary(ref_cv, patch);
     new_dw->allocateTemporary(ref_gamma, patch);
     new_dw->allocateTemporary(ref_temp, patch);
-    table->interpolate(d_ref_cv_index,    ref_cv, extraCellIterator, ind_vars);
-    table->interpolate(d_ref_gamma_index, ref_gamma, extraCellIterator, ind_vars);
+    table->interpolate(d_ref_cv_index,    ref_cv,   extraCellIterator, ind_vars);
+    table->interpolate(d_ref_gamma_index, ref_gamma,extraCellIterator, ind_vars);
     table->interpolate(d_ref_temp_index,  ref_temp, extraCellIterator, ind_vars);
     
     Vector dx = patch->dCell();
@@ -321,9 +321,9 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       rho_micro[c] = rho_CC[c];
       sp_vol[c] = 1./rho_CC[c];
       thermalCond[c] = 0;
-      double mass      = rho_CC[c]*volume;
-      double cp        = gamma[c] * cv[c];
-      double icp = ref_gamma[c] * ref_cv[c];
+      double mass  = rho_CC[c]*volume;    
+      double cp    = gamma[c] * cv[c];    
+      double icp   = ref_gamma[c] * ref_cv[c];
       eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
     setBC(f,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
