@@ -45,6 +45,10 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
   compare_root = "%s/%s-%s" % (environ['TEST_DATA'], ALGO, datmode)
 
   rc = system("%s %s > %s 2>&1" % (command, susinput, log))
+
+  if datmode == "dbg":
+    environ['MALLOC_STATS'] = ""
+
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if do_restart == "yes":
