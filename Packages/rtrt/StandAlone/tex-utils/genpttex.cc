@@ -508,27 +508,34 @@ int main(int argc, char** argv)
   // Create the context for rendering
   Semaphore sem("genpttex::Semaphore", nworkers);
 
-  PathTraceContext ptcontext;
+  PathTraceContext* ptcontext;
   if (nldivs<=0) {
     // Sample the sphere of light positions
-    ptcontext=PathTraceContext(luminance, nldivs, ldistance, geometry, emap,
-			       nsamples, num_sample_divs, depth,
-			       dilate, support, use_weighted_ave,
-			       threshold, &sem);
+    cerr << "genpttex::There's no constructure for this yet\n";
+    return 0;
+    //    ptcontext = new PathTraceContext(luminance, nldivs, ldistance,
+    ptcontext = new PathTraceContext(luminance, ptlight,
+                                     geometry, emap,
+                                     nsamples, num_sample_divs,
+                                     depth, dilate,
+                                     support, use_weighted_ave,
+                                     threshold, &sem);
     
   } else {
     // Single, fixed light source
-    ptcontext=PathTraceContext(luminance, ptlight, geometry, emap,
-			       nsamples, num_sample_divs, depth,
-			       dilate, support, use_weighted_ave,
-			       threshold, &sem);
+    ptcontext = new PathTraceContext(luminance, ptlight,
+                                     geometry, emap,
+                                     nsamples, num_sample_divs,
+                                     depth, dilate,
+                                     support, use_weighted_ave,
+                                     threshold, &sem);
   }
   
   if (outfile==0)
     outfile="particle";
   
-  if (noShadows) ptcontext.shadowsOff();
-  if (noDirectL) ptcontext.directLightingOff();
+  if (noShadows) ptcontext->shadowsOff();
+  if (noDirectL) ptcontext->directLightingOff();
   
   // Partition the spheres out and generate textures
   if (nworkers<=1) {
@@ -539,7 +546,7 @@ int main(int argc, char** argv)
     else
       texture_spheres=dynamic_cast<Group*>(geometry);
     
-    PathTraceWorker ptworker(texture_spheres, &ptcontext, outfile);
+    PathTraceWorker ptworker(texture_spheres, ptcontext, outfile);
     
     ptworker.run();
   } else {
@@ -558,7 +565,7 @@ int main(int argc, char** argv)
       Group *work_unit=get_next_sphere_set(work_load);
       
       // Create a thread
-      PathTraceWorker *ptworker=new PathTraceWorker(work_unit, &ptcontext,
+      PathTraceWorker *ptworker=new PathTraceWorker(work_unit, ptcontext,
 						      outfile, last_work);
       Thread *thread=new Thread(ptworker, "PathTraceWorker");
       thread->detach();
