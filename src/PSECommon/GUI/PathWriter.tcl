@@ -43,10 +43,6 @@ itcl_class PSECommon_Writers_PathWriter {
 	    }
 	}
 
-	# if no initial file specified, the box will look for it
-	# in $this-filename
-	set initfile ""
-
 	#######################################################
 	# to be modified for particular reader
 
@@ -73,10 +69,9 @@ itcl_class PSECommon_Writers_PathWriter {
 		-cancel "destroy $w" \
 		-title $title \
 		-filetypes $types \
-	        -initialfile $initfile \
+	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
-		-defaultname $defname \
 		-formatvar $this-filetype 
 		#-splitvar $this-split
     }
