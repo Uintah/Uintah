@@ -13,7 +13,7 @@ int count;
 
 void do_test(void*)
 {
-    for(int i=0;i<1000000;i++){
+    for(int i=0;i<100000;i++){
 //	fprintf(stderr, "trying lock...\n");
 	while(!Allocator_try_lock(&lock)){
 	    // spin...

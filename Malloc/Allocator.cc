@@ -70,9 +70,8 @@ void Allocator::initlock()
 inline void Allocator::lock()
 {
     // Simple try first...
-    if(Allocator_try_lock(&the_lock) == 0)
-	return;
-    longlock();
+    if(Allocator_try_lock(&the_lock) != 0)
+       longlock();
 }
 
 void Allocator::longlock()
@@ -100,6 +99,11 @@ inline void Allocator::unlock()
 }
 
 #endif
+
+inline size_t Allocator::obj_maxsize(Tag* t)
+{
+    return (t->bin == &big_bin)?(t->hunk->len-OVERHEAD):t->bin->maxsize;
+}
 
 void MakeDefaultAllocator()
 {
@@ -171,6 +175,7 @@ Allocator* MakeAllocator()
 
 void* Allocator::alloc(size_t size, char* tag)
 {
+//    fprintf(stderr, "Allocating: %d bytes (%s)\n", size, tag);
     if(size > MEDIUM_THRESHOLD)
 	return alloc_big(size, tag);
 
@@ -189,13 +194,18 @@ void* Allocator::alloc(size_t size, char* tag)
 	fill_bin(obj_bin);
     Tag* obj=obj_bin->free;
     obj_bin->free=obj->next;
+    if(obj_bin->free)
+	obj_bin->free->prev=0;
 
     // Tell the hunk that we are using this one...
     obj->hunk->ninuse++;
     obj->tag=tag;
     obj->next=obj_bin->inuse;
-    obj->reqsize=size;
+    if(obj_bin->inuse)
+	obj_bin->inuse->prev=obj;
+    obj->prev=0;
     obj_bin->inuse=obj;
+    obj->reqsize=size;
     obj_bin->ninuse++;
 
     nalloc++;
@@ -218,7 +228,7 @@ void* Allocator::alloc(size_t size, char* tag)
     Sentinel* sent1=(Sentinel*)data;
     data+=sizeof(Sentinel);
     char* d=data;
-    data+=obj->size;
+    data+=obj_maxsize(obj);
     Sentinel* sent2=(Sentinel*)data;
 
     sent1->first_word=sent1->second_word=
@@ -231,6 +241,7 @@ void* Allocator::alloc(size_t size, char* tag)
 	    *p++=i++;
     }
 
+//    fprintf(stderr, "result is %x\n", d);
     return (void*)d;
 }
 
@@ -240,12 +251,10 @@ void* Allocator::alloc_big(size_t size, char* tag)
 
     Tag* obj=big_bin.free;
     size_t maxsize=size+(size>>4);
-    Tag* prev=0;
     for(;obj!=0;obj=obj->next){
 	// See if this object is within .0625% of the right size...
-	if(obj->size > size && obj->size <= maxsize)
+	if(obj->hunk->len > size && obj->hunk->len <= maxsize)
 	    break;
-	prev=obj;
     }
     if(!obj){
 	// First, see if we need to clean out the list.
@@ -283,14 +292,15 @@ void* Allocator::alloc_big(size_t size, char* tag)
 	if(diffmmap > highwater_mmap)
 	    highwater_mmap=diffmmap;
 	obj=(Tag*)hunk->data;
-	obj->allocator=this;
+	obj->bin=&big_bin;
 	obj->tag="never used (big object)";
 	obj->next=big_bin.free;
+	if(big_bin.free)
+	    big_bin.free->prev=obj;
+	obj->prev=0;
 	big_bin.free=obj;
 	obj->hunk=hunk;
-	obj->size=tsize-OVERHEAD;
 	big_bin.ntotal++;
-	prev=0;
 
 	// Fill in sentinel info...
 	char* data=(char*)obj;
@@ -298,7 +308,7 @@ void* Allocator::alloc_big(size_t size, char* tag)
 	Sentinel* sent1=(Sentinel*)data;
 	data+=sizeof(Sentinel);
 	char* d=(char*)data;
-	data+=obj->size;
+	data+=obj_maxsize(obj);
 	Sentinel* sent2=(Sentinel*)data;
 	    
 	sent1->first_word=sent1->second_word=
@@ -314,17 +324,22 @@ void* Allocator::alloc_big(size_t size, char* tag)
     }
 
     // Have obj now...
-    if(prev)
-	prev->next=obj->next;
+    if(obj->prev)
+	obj->prev->next=obj->next;
     else
 	big_bin.free=obj->next;
+    if(obj->next)
+	obj->next->prev=obj->prev;
 
     // Tell the hunk that we are using this one...
     obj->hunk->ninuse++;
     obj->tag=tag;
     obj->next=big_bin.inuse;
-    obj->reqsize=size;
+    obj->prev=0;
+    if(big_bin.inuse)
+       big_bin.inuse->prev=obj;
     big_bin.inuse=obj;
+    obj->reqsize=size;
     big_bin.ninuse++;
 
     nalloc++;
@@ -347,7 +362,7 @@ void* Allocator::alloc_big(size_t size, char* tag)
     Sentinel* sent1=(Sentinel*)data;
     data+=sizeof(Sentinel);
     char* d=data;
-    data+=obj->size;
+    data+=obj_maxsize(obj);
     Sentinel* sent2=(Sentinel*)data;
 
     sent1->first_word=sent1->second_word=
@@ -377,15 +392,15 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 	audit(oldobj, OBJFREEING);
 
     // Check the simple case first...
-    AllocBin* oldbin=get_bin(oldobj->size);
-    if(newsize <= oldbin->maxsize && newsize >= oldbin->minsize){
+    AllocBin* oldbin=get_bin(oldobj->bin->maxsize);
+    if(newsize <= obj_maxsize(oldobj) && newsize >= oldbin->minsize){
 	oldobj->reqsize=newsize;
 	// Setup the new sentinels...
 	char* data=(char*)oldobj;
 	data+=sizeof(Tag);
 	data+=sizeof(Sentinel);
 	char* d=data;
-	data+=oldobj->size;
+	data+=obj_maxsize(oldobj);
 	Sentinel* sent2=(Sentinel*)data;
 
 	// Fill in the region between the end of the allocation and the
@@ -400,8 +415,8 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 
     void* nobj=malloc(newsize);
     size_t minsize=newsize;
-    if(newsize > oldbin->maxsize)
-	minsize=oldbin->maxsize;
+    if(newsize > oldobj->reqsize)
+	minsize=oldobj->reqsize;
     bcopy(dobj, nobj, minsize);
     free(dobj);
     return nobj;
@@ -409,6 +424,7 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 
 void Allocator::free(void* dobj)
 {
+//    fprintf(stderr, "Freeing %x\n", dobj);
     char* dd=(char*)dobj;
     dd-=sizeof(Sentinel);
     dd-=sizeof(Tag);
@@ -418,7 +434,7 @@ void Allocator::free(void* dobj)
     if(!lazy)
 	audit(obj, OBJFREEING);
 
-    AllocBin* obj_bin=get_bin(obj->size);
+    AllocBin* obj_bin=get_bin(obj->bin->maxsize);
 
 
     lock();
@@ -427,21 +443,20 @@ void Allocator::free(void* dobj)
     obj_bin->nfree++;
 
     // Remove it from the inuse list...
-    if(obj_bin->inuse == obj){
-	obj_bin->inuse=obj->next;
+    if(obj->next)
+	obj->next->prev=obj->prev;
+    if(obj->prev){
+	obj->prev->next=obj->next;
     } else {
-	// This is O(n) - yuck
-	for(Tag* p=obj_bin->inuse;p!= 0 && p->next != obj;p=p->next)
-	    { }
-	if(p){
-	    p->next=obj->next;
-	} else {
-	    AllocError("Inuse list corrupt!");
-	}
+	obj_bin->inuse=obj->next;
     }
+
     obj_bin->ninuse--;
     // Put it in the free list...
     obj->next=obj_bin->free;
+    if(obj_bin->free)
+	obj_bin->free->prev=obj;
+    obj->prev=0;
     obj_bin->free=obj;
 
 
@@ -451,7 +466,7 @@ void Allocator::free(void* dobj)
     Sentinel* sent1=(Sentinel*)data;
     data+=sizeof(Sentinel);
     char* d=(char*)data;
-    data+=obj->size;
+    data+=obj_maxsize(obj);
     Sentinel* sent2=(Sentinel*)data;
 
     sent1->first_word=sent1->second_word=
@@ -466,14 +481,12 @@ void Allocator::free(void* dobj)
 	    *p++=i++;
     }
     unlock();
-
 }
 
 void Allocator::fill_bin(AllocBin* bin)
 {
     nfillbin++;
     if (bin->maxsize <= MEDIUM_THRESHOLD){
-//	fprintf(stderr, "fillbin - %d\n", bin->maxsize);
 	size_t tsize;
 	tsize=bin->maxsize+OVERHEAD;
 	unsigned int nalloc=SMALLEST_ALLOCSIZE/tsize;
@@ -486,10 +499,12 @@ void Allocator::fill_bin(AllocBin* bin)
 	get_hunk(reqsize, hunk, p);
 	for(int i=0;i<nalloc;i++){
 	    Tag* t=(Tag*)p;
-	    t->allocator=this;
-	    t->size=bin->maxsize;
+	    t->bin=bin;
 	    t->tag="never used";
 	    t->next=bin->free;
+	    if(bin->free)
+		bin->free->prev=t;
+	    t->prev=0;
 	    bin->free=t;
 	    t->hunk=hunk;
 	    p=(void*)((char*)p+tsize);
@@ -498,7 +513,7 @@ void Allocator::fill_bin(AllocBin* bin)
 	    Sentinel* sent1=(Sentinel*)data;
 	    data+=sizeof(Sentinel);
 	    char* d=(char*)data;
-	    data+=t->size;
+	    data+=t->bin->maxsize;
 	    Sentinel* sent2=(Sentinel*)data;
 	    
 	    sent1->first_word=sent1->second_word=
@@ -535,7 +550,7 @@ void Allocator::audit(Tag* obj, int what)
     Sentinel* sent1=(Sentinel*)data;
     data+=sizeof(Sentinel);
     char* d=data;
-    data+=obj->size;
+    data+=obj_maxsize(obj);
     Sentinel* sent2=(Sentinel*)data;
 
 //    fprintf(stderr, "sentinels: %x %x %x %x\n", sent1->first_word, sent1->second_word, sent2->first_word, sent2->second_word);
@@ -671,7 +686,7 @@ void PrintTag(void* dobj)
 
     fprintf(stderr, "tag %x: allocated by: %s\n", obj, obj->tag);
     fprintf(stderr, "requested object size: %d bytes\n", obj->reqsize);
-    fprintf(stderr, "maximum bin size: %d bytes\n", obj->size);
+    fprintf(stderr, "maximum bin size: %d bytes\n", obj->bin->maxsize);
     fprintf(stderr, "range of object: %x - %x\n", dobj, (char*)dobj+obj->reqsize);
     fprintf(stderr, "range of object with overhead and sentinels: %x - %x\n",
 	    obj, (char*)obj+OVERHEAD);
@@ -687,7 +702,7 @@ void PrintTag(void* dobj)
     }
 }
 
-static void account_bin(AllocBin* bin,
+static void account_bin(Allocator* a, AllocBin* bin,
 		    size_t& bytes_overhead,
 		    size_t& bytes_free,
 		    size_t& bytes_fragmented,
@@ -695,12 +710,12 @@ static void account_bin(AllocBin* bin,
 {
     for(Tag* p=bin->free;p!=0;p=p->next){
 	bytes_overhead+=OVERHEAD;
-	bytes_free+=p->size;
+	bytes_free+=a->obj_maxsize(p);
     }
     for(p=bin->inuse;p!=0;p=p->next){
 	bytes_overhead+=OVERHEAD;
 	bytes_inuse+=p->reqsize;
-	bytes_fragmented+=p->size-p->reqsize;
+	bytes_fragmented+=a->obj_maxsize(p)-p->reqsize;
     }
 }
 
@@ -736,12 +751,12 @@ void GetGlobalStats(Allocator* a,
     // Full accounting - go through each bin...
     bytes_overhead=bytes_free=bytes_fragmented=bytes_inuse=bytes_inhunks=0;
     for(int i=0;i<NSMALL_BINS;i++)
-	account_bin(&a->small_bins[i], bytes_overhead, bytes_free,
+	account_bin(a, &a->small_bins[i], bytes_overhead, bytes_free,
 		    bytes_fragmented, bytes_inuse);
     for(i=0;i<NMEDIUM_BINS;i++)
-	account_bin(&a->medium_bins[i], bytes_overhead, bytes_free,
+	account_bin(a, &a->medium_bins[i], bytes_overhead, bytes_free,
 		    bytes_fragmented, bytes_inuse);
-    account_bin(&a->big_bin, bytes_overhead, bytes_free,
+    account_bin(a, &a->big_bin, bytes_overhead, bytes_free,
 		    bytes_fragmented, bytes_inuse);
 
     // Count hunks...
@@ -793,9 +808,13 @@ Allocator* DefaultAllocator()
 static void audit_bin(Allocator* a, AllocBin* bin)
 {
     for(Tag* p=bin->free;p!=0;p=p->next){
+	if(p->next && p->next->prev != p)
+	    AllocError("Free list confused");
 	a->audit(p, OBJFREE);
     }
     for(p=bin->inuse;p!=0;p=p->next){
+	if(p->next && p->next->prev != p)
+	    AllocError("Inuse list confused");
 	a->audit(p, OBJINUSE);
     }
 }
@@ -810,3 +829,26 @@ void AuditAllocator(Allocator* a)
     audit_bin(a, &a->big_bin);
     a->unlock();
 }
+
+static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
+{
+    for(Tag* p=bin->inuse;p!=0;p=p->next){
+	fprintf(fp, "%x %d %s\n", (char*)p+sizeof(Tag)+sizeof(Sentinel),
+		p->reqsize, p->tag);
+    }
+}
+
+void DumpAllocator(Allocator* a)
+{
+    FILE* fp=fopen("alloc.dump", "w");
+    fprintf(fp, "\n");
+    a->lock();
+    for(int i=0;i<NSMALL_BINS;i++)
+	dump_bin(a, &a->small_bins[i], fp);
+    for(i=0;i<NMEDIUM_BINS;i++)
+	dump_bin(a, &a->medium_bins[i], fp);
+    dump_bin(a, &a->big_bin, fp);
+    a->unlock();
+    fclose(fp);
+}
+

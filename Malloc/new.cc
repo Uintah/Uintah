@@ -13,3 +13,9 @@ void operator delete(void* ptr)
 {
     default_allocator->free(ptr);
 }
+
+void* operator new(size_t size, Allocator* a, char* tag)
+{
+    return a->alloc(size, tag);
+}
+

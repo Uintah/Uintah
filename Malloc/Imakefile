@@ -13,7 +13,7 @@ OBJS = new.o  malloc.o  Allocator.o  AllocOS.o   $(LOCKS)
 SRCS = new.cc malloc.cc Allocator.cc AllocOS.cc \
 	test1.cc test2.cc test3.cc test4.cc test5.cc test6.cc \
 	test7.cc test8.cc test9.cc test10.cc test11.cc test12.cc \
-	test13.cc
+	test13.cc test14.cc
 
 LIBNAME = Malloc
 
@@ -39,6 +39,7 @@ SCIProgramTarget(test10, test10.o, libMalloc.a, $(LDFLAGS))
 SCIProgramTarget(test11, test11.o, libMalloc.a, $(LDFLAGS))
 SCIProgramTarget(test12, test12.o, libMalloc.a, $(LDFLAGS))
 SCIProgramTarget(test13, test13.o, libMalloc.a, $(LDFLAGS))
+SCIProgramTarget(test14, test14.o, libMalloc.a, $(LDFLAGS))
 
 #else
 all:

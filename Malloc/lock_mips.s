@@ -6,6 +6,7 @@
 	.ent	Allocator_try_lock 2
 Allocator_try_lock:
 	.frame	$sp, 0, $31
+	.set noreorder
 again:	
 	ll	$2, 0($4)
 	li	$5, 10

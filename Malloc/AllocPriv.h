@@ -8,11 +8,15 @@ struct Sentinel {
     unsigned long second_word;
 };
 
+struct AllocBin;
+
 struct Tag {
-    Allocator* allocator;
-    size_t size;
+//    Allocator* allocator;
+//    size_t size;
+    AllocBin* bin;
     char* tag;
     Tag* next;
+    Tag* prev;
     OSHunk* hunk;
     size_t reqsize;
 };
@@ -56,6 +60,7 @@ struct Allocator {
     void init_bin(AllocBin*, size_t maxsize, size_t minsize);
 
     void audit(Tag*, int);
+    size_t obj_maxsize(Tag*);
 
     // Statistics...
     size_t nalloc;
