@@ -14,7 +14,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
-#include <Classlib/Timer.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Datatypes/ColumnMatrix.h>
 #include <Datatypes/DenseMatrix.h>
@@ -70,13 +69,9 @@ Mesh* Mesh::clone()
 void Mesh::io(Piostream& stream)
 {
     int version=stream.begin_class("Mesh", MESH_VERSION);
-    CPUTimer t1;
-    t1.start();
     Pio(stream, nodes);
     Pio(stream, elems);
     stream.end_class();
-    t1.stop();
-    cerr << "Read time: " << t1.time() << endl;
     if(stream.reading()){
 	for(int i=0;i<elems.size();i++)
 	    elems[i]->mesh=this;
@@ -235,9 +230,6 @@ void Mesh::compute_neighbors()
     for(int i=0;i<nodes.size();i++)
 	nodes[i]->elems.remove_all();
     // Compute element info for nodes
-    cerr << "Computing element info...\n";
-    CPUTimer t1;
-    t1.start();
     for(i=0;i<elems.size();i++){
 	Element* elem=elems[i];
 	if(elem){
@@ -251,12 +243,7 @@ void Mesh::compute_neighbors()
 	    n4->elems.add(i);
 	}
     }
-    t1.stop();
-    cerr << "Element info time: " << t1.time() << endl;
-    t1.clear();
-    t1.start();
-    cerr << "Computing face neighbors...\n";
-    // Compute face neighbors
+    // Reset face neighbors
     for(i=0;i<elems.size();i++){
 	if(elems[i]){
 	    elems[i]->faces[0]=-2;
@@ -265,22 +252,6 @@ void Mesh::compute_neighbors()
 	    elems[i]->faces[3]=-2;
 	}
     }
-#if 0
-    for(i=0;i<elems.size();i++){
-	Element* elem=elems[i];
-	Node* n1=nodes[elem->n[0]];
-	Node* n2=nodes[elem->n[1]];
-	Node* n3=nodes[elem->n[2]];
-	Node* n4=nodes[elem->n[3]];
-	elem->faces[0]=unify(i, n2->elems, n3->elems, n4->elems);
-	elem->faces[1]=unify(i, n1->elems, n3->elems, n4->elems);
-	elem->faces[2]=unify(i, n1->elems, n2->elems, n4->elems);
-	elem->faces[3]=unify(i, n1->elems, n2->elems, n3->elems);
-    }
-#endif
-    t1.stop();
-    cerr << "Face neighbors time: " << t1.time() << endl;
-    cerr << "compute_neighbors done\n";
 }
 
 // Barycentric coordinate computation from 

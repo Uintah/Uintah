@@ -31,8 +31,7 @@ public:
     GeometryComm(Mailbox<GeomReply>*);
     GeometryComm(int, GeomID, GeomObj*, const clString&);
     GeometryComm(int, GeomID);
-    GeometryComm(int);
-    GeometryComm();
+    GeometryComm(MessageTypes::MessageType, int);
     virtual ~GeometryComm();
 
     Mailbox<GeomReply>* reply;
@@ -40,6 +39,8 @@ public:
     GeomID serial;
     GeomObj* obj;
     clString name;
+
+    GeometryComm* next;
 };
 
 #endif /* SCI_Datatypes_GeometryComm_h */

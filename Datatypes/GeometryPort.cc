@@ -78,7 +78,7 @@ void GeometryOPort::finish()
 {
     if(dirty){
 	turn_on(Finishing);
-	outbox->send(new GeometryComm);
+	outbox->send(new GeometryComm(MessageTypes::GeometryFlush, portid));
 	turn_off();
     }
 }
@@ -104,7 +104,7 @@ void GeometryOPort::delObj(GeomID id)
 void GeometryOPort::delAll()
 {
     turn_on();
-    outbox->send(new GeometryComm(portid));
+    outbox->send(new GeometryComm(MessageTypes::GeometryDelAll, portid));
     dirty=1;
     turn_off();
 }
@@ -112,7 +112,7 @@ void GeometryOPort::delAll()
 void GeometryOPort::flushViews()
 {
     turn_on();
-    outbox->send(new GeometryComm);
+    outbox->send(new GeometryComm(MessageTypes::GeometryFlush, portid));
     dirty=0;
     turn_off();
 }
@@ -140,14 +140,8 @@ GeometryComm::GeometryComm(int portno, GeomID serial)
 {
 }
 
-GeometryComm::GeometryComm(int portno)
-: MessageBase(MessageTypes::GeometryDelAll),
-  portno(portno)
-{
-}
-
-GeometryComm::GeometryComm()
-: MessageBase(MessageTypes::GeometryFlush)
+GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno)
+: MessageBase(type), portno(portno)
 {
 }
 
