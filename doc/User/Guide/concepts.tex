@@ -367,26 +367,60 @@ Future releases will include more extensive tools for building modules
 and wrapping existing codes within \SR{} module wrappers, to maximize
 intellectual investment in legacy code.
 
+\subsection{\sr{} Objects}
+\label{sec:sr-objects}
 
-\subsection{Field Types}
-\label{sec:field-types}
 
+\sr{}'s \datatype{Field}, \datatype{Mesh}, \datatype{Matrix}, and
+\datatype{ColorMap} objects are used frequently in networks.  These
+objects are described in sections that follow.
 
-A \sr{} field is an object that contains a geometric mesh and a
-collection of data values mapped to the nodes, edges, faces, or cells
-of the mesh.
+\subsubsection{Field}
 
-The following C++/SCI data types may be stored in a Field:
+A \sr{} \datatype{Field} consists of a geometric \datatype{Mesh} and a
+set of data values.  Data values can be located at the nodes, edges,
+faces, or cells of a mesh.  A \datatype{Field} can consist of a
+\datatype{Mesh} component only (no associated data).
+
+\subsubsection{Field Data}
+
+The following C++/SCI data types can be associated with a \datatype{Field}:
 
 \begin{itemize}
-\item double, float
-\item int, short, unsigned, unsigned short
-\item char, unsigned char
-\item Tensor
-\item Vector
+\item \datatype{double}, \datatype{float}
+\item \datatype{int}, \datatype{short}, \datatype{unsigned}, \datatype{unsigned short}
+\item \datatype{char}, \datatype{unsigned char}
+\item \datatype{Tensor}
+\item \datatype{Vector}
 \end{itemize}
 
-The following mesh types may be stored in a field:
+C++ data types are \datatype{double}, \datatype{float},
+\datatype{int}, \datatype{short}, \datatype{unsigned},
+\datatype{unsigned short}, \datatype{char}, and \datatype{unsigned
+  char}.  \sr{} data types are \datatype{Tensor} and \datatype{Vector}.
+
+\subsubsection{Meshes}
+
+\sr{} meshes are classified as \dfn{unstructured}, \dfn{structured}, or
+\dfn{regular}.  In general, a mesh consists of nodes (data value location
+data) and node connectivity data.
+
+Node locations and connectivities for unstructured meshs are specified
+explicitly.  The unstructured mesh types are:
+\datatype{PointCloudMesh}, \datatype{CurveMesh},
+\datatype{TriSurfMesh}, \datatype{QuadSurfMesh},
+\datatype{TetVolMesh}, \datatype{HexVolMesh}.
+
+Node locations are specified explicitly and connectivities are known
+implicitly for structured meshes.  The structured meshes are
+\datatype{StructCurveMesh}, \datatype{StructQuadSurfMesh}, and
+\datatype{StructHexVolMesh}.
+
+Node locations and connectivities are known implicitly for regular
+meshes.  The regular mesh types are \datatype{ScanlineMesh},
+\datatype{ImageMesh}, \datatype{LatVolMesh}.
+
+Below are figures of some mesh types:
 
 %begin{latexonly}
 \newcommand{\meshdoc}[4]{%
@@ -425,6 +459,30 @@ The following mesh types may be stored in a field:
 \meshdoc{60}{tetvol}{Tet Vol Mesh}{A Tet Volume mesh is a subdivision of space into tetrahedral elements.}
 
 \meshdoc{84}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision of space into hexagonal elements.}
+
+
+\subsubsection{Matrices}
+
+\sr{} supports three matrix types: 
+
+\begin{description}
+\descitem{\datatype{ColumnMatrix}} An \(Mx1\) matrix using \(M\)
+storage units.
+
+\descitem{\datatype{DenseMatrix}} An \(MxN\) matrix using \(MxN\)
+storage units.
+
+\descitem{\datatype{SparseRowMatrix}} A \(MxN\) matrix where most
+elements are zero and no storage is allocated for zero valued
+elements.
+\end{description}
+
+\datatype{ColumnMatrix},
+\datatype{DenseMatrix}, and \datatype{SparseRowMatrix}.
+
+\subsubsection{Color Map}
+
+\sr{} \datatype{ColorMap} type is a mapping of color values to data values.
 
 %%% Local Variables: 
 %%% mode: latex
