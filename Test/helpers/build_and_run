@@ -57,7 +57,7 @@ while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
     if [ $retval != "0" ]; then
 	nice gmake -k -j$MAKE_PARALLELISM > ../remake.log 2>&1
 	
-	if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ];
+	if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
 	    echo "*** Make failed, but sus was compiled successfully"
 	    echo "A log of build errors can be found in"
 	    echo "${BUILDROOT}/${mode}/remake.log"
