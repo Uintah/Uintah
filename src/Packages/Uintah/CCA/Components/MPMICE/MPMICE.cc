@@ -25,6 +25,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
+//#define EOSCM
+//#undef EOSCM
+#define IDEAL_GAS
+//#undef IDEAL_GAS
 
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
@@ -1145,75 +1149,53 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     // This is where I interpolate the CC 
     // changes to NCs for the MPMMatls
 
-    int numALLMatls = d_sharedState->getNumMPMMatls() + 
-      d_sharedState->getNumICEMatls();
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
 
-    vector<CCVariable<Vector> > dvdt_CC(numALLMatls);
-    vector<CCVariable<double> > dTdt_CC(numALLMatls);
-    vector<NCVariable<Vector> > gacceleration(numALLMatls);
-    vector<NCVariable<Vector> > gvelocity(numALLMatls);
+    for (int m = 0; m < numMPMMatls; m++) {
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = mpm_matl->getDWIndex();
+      CCVariable<Vector> dvdt_CC;
+      CCVariable<double> dTdt_CC;
+      NCVariable<Vector> gacceleration, gvelocity;
 
-    vector<NCVariable<Vector> > gMEacceleration(numALLMatls);
-    vector<NCVariable<Vector> > gMEvelocity(numALLMatls);
-    vector<NCVariable<double> > dTdt_NC(numALLMatls);
+      NCVariable<Vector> gMEacceleration, gMEvelocity;
+      NCVariable<double> dTdt_NC;
 
-    for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int dwindex = matl->getDWIndex();
-      if(mpm_matl){
-        new_dw->get(gvelocity[m],Mlb->gVelocityStarLabel, dwindex, patch,
+      new_dw->get(gvelocity,    Mlb->gVelocityStarLabel,dwindex, patch,
 		    Ghost::None, 0);
-        new_dw->get(gacceleration[m],Mlb->gAccelerationLabel,dwindex, patch,
+      new_dw->get(gacceleration,Mlb->gAccelerationLabel,dwindex, patch,
 		    Ghost::None, 0);
-        new_dw->get(dvdt_CC[m], MIlb->dvdt_CCLabel,dwindex, patch,
+      new_dw->get(dvdt_CC,      MIlb->dvdt_CCLabel,     dwindex, patch,
 		    Ghost::AroundCells,1);
-        new_dw->get(dTdt_CC[m], MIlb->dTdt_CCLabel,dwindex, patch,
+      new_dw->get(dTdt_CC,      MIlb->dTdt_CCLabel,     dwindex, patch,
 		    Ghost::AroundCells,1);      
-        new_dw->allocate(gMEvelocity[m], Mlb->gMomExedVelocityStarLabel,
-		         dwindex, patch);
-        new_dw->allocate(gMEacceleration[m], Mlb->gMomExedAccelerationLabel,
-		         dwindex, patch);
-        new_dw->allocate(dTdt_NC[m], Mlb->dTdt_NCLabel,        dwindex, patch);
 
+      new_dw->allocate(gMEvelocity, Mlb->gMomExedVelocityStarLabel,
+							  dwindex, patch);
+      new_dw->allocate(gMEacceleration, Mlb->gMomExedAccelerationLabel,
+							  dwindex, patch);
+      new_dw->allocate(dTdt_NC, Mlb->dTdt_NCLabel,        dwindex, patch);
+
+      IntVector cIdx[8];
+
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        patch->findCellsFromNode(*iter,cIdx);
+	gMEvelocity[*iter]     = gvelocity[*iter];
+	gMEacceleration[*iter] = gacceleration[*iter];
+	dTdt_NC[*iter]         = 0.0;
+	for(int in=0;in<8;in++){
+	   gMEvelocity[*iter]     +=  dvdt_CC[cIdx[in]]*.125;
+	   gMEacceleration[*iter] += (dvdt_CC[cIdx[in]]/delT)*.125;
+	   dTdt_NC[*iter]         += (dTdt_CC[cIdx[in]]/delT)*.125;
+        }
       }
-    }
 
-
-    IntVector cIdx[8];
-
-    for(int m = 0; m < numALLMatls; m++){
-       Material* matl = d_sharedState->getMaterial( m );
-       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-       if(mpm_matl){
-         for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-           patch->findCellsFromNode(*iter,cIdx);
-	   gMEvelocity[m][*iter]     = gvelocity[m][*iter];
-	   gMEacceleration[m][*iter] = gacceleration[m][*iter];
-	   dTdt_NC[m][*iter]         = 0.0;
-	   for (int in=0;in<8;in++){
-	     gMEvelocity[m][*iter]     +=  dvdt_CC[m][cIdx[in]]*.125;
-	     gMEacceleration[m][*iter] += (dvdt_CC[m][cIdx[in]]/delT)*.125;
-	     dTdt_NC[m][*iter]         += (dTdt_CC[m][cIdx[in]]/delT)*.125;
-           }
-         }
-       }
-    }
-    //__________________________________
-    //    Put into new_dw
-    for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int dwindex = matl->getDWIndex();
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      if(mpm_matl){
-        new_dw->put(gMEvelocity[m],Mlb->gMomExedVelocityStarLabel,dwindex,patch);
-        new_dw->put(gMEacceleration[m],Mlb->gMomExedAccelerationLabel,dwindex,
-		    patch);
-        new_dw->put(dTdt_NC[m],Mlb->dTdt_NCLabel, dwindex,patch);
-      }
+      new_dw->put(gMEvelocity,Mlb->gMomExedVelocityStarLabel,    dwindex,patch);
+      new_dw->put(gMEacceleration,Mlb->gMomExedAccelerationLabel,dwindex,patch);
+      new_dw->put(dTdt_NC,Mlb->dTdt_NCLabel,                     dwindex,patch);
     }  
   }  //patches
 }
@@ -1337,6 +1319,38 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
   #endif
     //__________________________________
+#if 0
+    // THIS IS A HACK I HAD TO ADD TO GET THE BCS STRAIGHTENED OUT
+    // FOR DOING THE FULL HEATED INFLOW.  I KNOW THERE'S A BETTER WAY,
+    // AND I WILL IMPLEMENT THAT IN TIME, BUT I WANTED TO GET THIS
+    // CODE IN THE REPOSITORY BEFORE I FORGET.  JIM
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        if(ice_matl){                // I C E
+	  rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+        }
+      }
+    }
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        if(ice_matl){                // I C E
+          d_ice->setBC(rho_micro[m],   "Density" ,patch);
+        }
+      }
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        if(ice_matl){                // I C E
+	  sp_vol_CC[m][*iter] = 1.0/rho_micro[m][*iter];
+        }
+      }
+    }
+#endif
+
     // Compute rho_micro, speedSound, volfrac, rho_CC
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       double total_mat_vol = 0.0;
@@ -1359,7 +1373,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         } 
 
         if(mpm_matl){                //  M P M
-  #if 0
+  #ifdef EOSCM
 	  rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
 	    computeRhoMicroCM(press_new[*iter],mpm_matl);
 
@@ -1370,7 +1384,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 	  mat_volume[m] = mat_vol[m][*iter];
 
   //    This is the IDEAL GAS stuff
-  #if 1
+  #ifdef IDEAL_GAS
 	  double gamma   = mpm_matl->getGamma(); 
 	  rho_micro[m][*iter] = mpm_matl->
 	    getConstitutiveModel()->computeRhoMicro(press_new[*iter],gamma,
@@ -1450,13 +1464,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          if(mpm_matl){
           //__________________________________
           //  Hardwire for an ideal gas
-  #if 0
+  #ifdef EOSCM
             mpm_matl->getConstitutiveModel()->
                  computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								  tmp,mpm_matl);
   #endif
   //    This is the IDEAL GAS stuff
-  #if 1
+  #ifdef IDEAL_GAS
             double gamma = mpm_matl->getGamma();
             mpm_matl->getConstitutiveModel()->
               computePressEOS(rho_micro[m][*iter],gamma, cv[m],Temp[m][*iter],
@@ -1496,13 +1510,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                cv[m],Temp[m][*iter]);
          }
          if(mpm_matl){
-  #if 0
+  #ifdef EOSCM
            rho_micro[m][*iter] =  
              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
 						press_new[*iter], mpm_matl);
   #endif
   //    This is the IDEAL GAS stuff
-  #if 1
+  #ifdef IDEAL_GAS
            double gamma = mpm_matl->getGamma();
            rho_micro[m][*iter] = 
            mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],
@@ -1534,13 +1548,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                       (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
          }
          if(mpm_matl){
-  #if 0
+  #ifdef EOSCM
             mpm_matl->getConstitutiveModel()->
                  computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								  tmp,mpm_matl);
   #endif
   //    This is the IDEAL GAS stuff
-  #if 1
+  #ifdef IDEAL_GAS
            double gamma = mpm_matl->getGamma();
            mpm_matl->getConstitutiveModel()->
                computePressEOS(rho_micro[m][*iter],gamma,
@@ -1626,7 +1640,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
    /*==========TESTING==========`*/
 
      for (int m = 0; m < numALLMatls; m++)   {
-       d_ice->setBC(rho_CC[m],   "Density" ,patch);
+       Material* matl = d_sharedState->getMaterial( m );
+       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+       if(ice_matl){
+         d_ice->setBC(rho_CC[m],   "Density" ,patch);
+       }  
     }  
 
     d_ice->setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch);
