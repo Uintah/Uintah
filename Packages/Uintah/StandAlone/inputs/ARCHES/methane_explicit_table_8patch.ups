@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-	<maxTime>1.0</maxTime>
+	<maxTime>10.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
@@ -84,8 +84,8 @@
 		<denUnderrelax>0.9</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>true</radiation>
-	        <mixing_model>meanMixingModel</mixing_model>
-	        <MeanMixingModel>
+	        <mixing_model>pdfMixingModel</mixing_model>
+	        <PDFMixingModel>
 		  <TableType>dynamic</TableType>
                   <TableStorage>KDTree</TableStorage>
                   <adiabatic>false</adiabatic>
@@ -158,7 +158,7 @@
                        </MixtureFraction>
                     </MixRxnTableInfo>
                   </EquilibriumReactionModel>
-                </MeanMixingModel>
+                </PDFMixingModel>
 	    </Properties>
 
 	    <BoundaryConditions>
