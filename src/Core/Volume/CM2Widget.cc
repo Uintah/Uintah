@@ -1335,7 +1335,7 @@ const float trans = 1.0/255.0;
 void
 ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* pbuffer)
 {
-  CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - start")
+  CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - start");
   //assume images draw first.
   
   if (! pixels_.get_rep()) return;
@@ -1351,23 +1351,19 @@ ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* pbuffer)
 
 
   Nrrd *nout = pixels_->nrrd;
-  if (pbuffer) {
-    if (pbuffer->width() != nout->axis[1].size || 
-	pbuffer->height() != nout->axis[2].size) 
-    {
-      nout = resize(pbuffer->width(), pbuffer->height());
-    }
-    if (! nout) return;
-  }
-  int w = nout->axis[1].size;
-  int h = nout->axis[2].size;
-    
-  glDrawPixels(w, h, GL_RGBA, GL_FLOAT, (float*)nout->data);
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
 
-  if (nout != pixels_->nrrd) {
-    nrrdNuke(nout);
+  if (vp[2] != nout->axis[1].size || vp[3] != nout->axis[2].size) 
+  {
+    nout = resize(vp[2], vp[3]);
   }
-  
+  if (!nout) return;
+
+  glDrawPixels(vp[2], vp[3], GL_RGBA, GL_FLOAT, (float*)nout->data);
+
+  if (nout != pixels_->nrrd)
+    nrrdNuke(nout);
 
   // restore default values
   glPixelTransferf(GL_RED_SCALE, 1.0);
@@ -1376,8 +1372,8 @@ ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* pbuffer)
   glPixelTransferf(GL_ALPHA_SCALE, 1.0);
 
   glEnable(GL_BLEND);
-  CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - end") 
-    }
+  CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - end");
+}
 
 Nrrd*
 ImageCM2Widget::resize(int width, int height) 
@@ -1611,14 +1607,6 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
 }
 
 void
-PaintCM2Widget::draw_point(Array3<float> &data, int x0, int y0) {
-  data(x0, y0, 0) = color_.r();
-  data(x0, y0, 1) = color_.g();
-  data(x0, y0, 2) = color_.b();
-  data(x0, y0, 3) = alpha_;
-}
-
-void
 PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
   const int wid = Round(data.dim2()/35.0);
   float r = color_.r();
@@ -1628,31 +1616,26 @@ PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
   float oma = 1.0 - a;
   const bool flat = shadeType_ == CM2_SHADE_FLAT;
   for (int y = y0-wid; y <= y0+wid; ++y)
-    if (y >= 0 && y < data.dim2()) {
-      
-      if (!flat) {
-	a = float(alpha_*(wid-fabs(float(y-y0)))/wid);
-	oma = 1.0 - a;
-      }
-
-      if (!flat) {
-	data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 0.0, 1.0);
-	data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 0.0, 1.0);
-	data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 0.0, 1.0);
-	data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
-      } else {
+    if (y >= 0 && y < data.dim2())
+      if (flat) {
 	data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r, 0.0, 1.0);
 	data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g, 0.0, 1.0);
 	data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b, 0.0, 1.0);
 	data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
-      }
-    }
+      } else {
+	a = float(alpha_*(wid-fabs(float(y-y0)))/wid);
+	oma = 1.0 - a;
+	data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 0.0, 1.0);
+	data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 0.0, 1.0);
+	data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 0.0, 1.0);
+	data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
+      }  
 }
 
-
-
+// Bressenhams line algorithm modified to only draw when the x pos changes
 void 
-PaintCM2Widget::line(Array3<float> &data, int x0, int y0, int x1, int y1, bool first)
+PaintCM2Widget::line(Array3<float> &data, 
+		     int x0, int y0, int x1, int y1, bool first)
 {
   if (x0 < 0 || x0 >= data.dim1() || 
       x1 < 0 || x1 >= data.dim1() || 
@@ -1660,46 +1643,42 @@ PaintCM2Widget::line(Array3<float> &data, int x0, int y0, int x1, int y1, bool f
       y1 < 0 || y1 >= data.dim2()) return;
   int dy = y1 - y0;
   int dx = x1 - x0;
-  int stepx;
-  int stepy;
+  int sx = 1;
+  int sy = 1;
+  int frac = 0;
   bool do_splat = false;
   if (dy < 0) { 
     dy = -dy;
-    stepy = -1; 
-  } else { 
-    stepy = 1; 
-  }
+    sy = -1; 
+  } 
   if (dx < 0) { 
     dx = -dx;  
-    stepx = -1;
-  } else { 
-    stepx = 1;
-  }
+    sx = -1;
+  } 
   dy <<= 1;
   dx <<= 1;
-  if (first)
-    splat(data, x0, y0);
+  if (first) splat(data, x0, y0);
   if (dx > dy) {
-    int fraction = dy - (dx >> 1);
+    frac = dy - (dx >> 1);
     while (x0 != x1) {
-      if (fraction >= 0) {
-	y0 += stepy;
-	fraction -= dx;
+      if (frac >= 0) {
+	y0 += sy;
+	frac -= dx;
       }
-      x0 += stepx;
-      fraction += dy;
+      x0 += sx;
+      frac += dy;
       splat(data, x0, y0);
     }
   } else {
-    int fraction = dx - (dy >> 1);
+    frac = dx - (dy >> 1);
     while (y0 != y1) {
-      if (fraction >= 0) {
-	x0 += stepx;
-	fraction -= dy;
+      if (frac >= 0) {
+	x0 += sx;
+	frac -= dy;
 	do_splat = true;
       }
-      y0 += stepy;
-      fraction += dx;
+      y0 += sy;
+      frac += dx;
       if (do_splat) {
 	splat(data, x0, y0);
 	do_splat = false;

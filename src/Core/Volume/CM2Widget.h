@@ -277,7 +277,6 @@ protected:
   void			normalize();
   void			un_normalize();  
   void			line(Array3<float> &, int, int, int, int, bool first);
-  void			draw_point(Array3<float> &, int, int);
   void			splat(Array3<float> &, int, int);
   Strokes		strokes_;
   Array3<float>		pixels_;
