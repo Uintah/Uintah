@@ -116,6 +116,8 @@ using std::vector;
 
 
       // Implicit MPM labels
+      const VarLabel* gVelocityOldLabel;
+      const VarLabel* pVolumeOldLabel;
       const VarLabel* dispNewLabel;
       const VarLabel* dispIncLabel;
       const VarLabel* pAccelerationLabel;
@@ -127,6 +129,7 @@ using std::vector;
       const VarLabel* bElBarLabel;
       const VarLabel* bElBarLabel_preReloc;
       const VarLabel* pAccelerationLabel_preReloc;
+      const VarLabel* pVolumeOldLabel_preReloc;
     };
 } // End namespace Uintah
 

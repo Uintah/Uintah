@@ -257,6 +257,12 @@ MPMLabel::MPMLabel()
 
   // Implicit MPM labels
 
+  gVelocityOldLabel = VarLabel::create("gVelocityOld",
+				    NCVariable<Vector>::getTypeDescription()); 
+
+  pVolumeOldLabel = VarLabel::create("pVolumeOld",
+			       ParticleVariable<double>::getTypeDescription()); 
+
   dispNewLabel = VarLabel::create("dispNew",
 				  NCVariable<Vector>::getTypeDescription()); 
 
@@ -287,7 +293,8 @@ MPMLabel::MPMLabel()
   bElBarLabel_preReloc = VarLabel::create("bElBar_preReloc",
 			 ParticleVariable<Matrix3>::getTypeDescription());
 
-
+  pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld_preReloc",
+			       ParticleVariable<double>::getTypeDescription()); 
 } 
 
 MPMLabel::~MPMLabel()
@@ -378,6 +385,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(CenterOfMassVelocityLabel);
   VarLabel::destroy(pCellNAPIDLabel);
 
+  VarLabel::destroy(gVelocityOldLabel);
+  VarLabel::destroy(pVolumeOldLabel);
   VarLabel::destroy(dispNewLabel);
   VarLabel::destroy(dispIncLabel);
   VarLabel::destroy(pAccelerationLabel);
@@ -388,6 +397,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pAccelerationLabel_preReloc);
   VarLabel::destroy(bElBarLabel);
   VarLabel::destroy(bElBarLabel_preReloc);
+  VarLabel::destroy(pVolumeOldLabel_preReloc);
 
 }
 
