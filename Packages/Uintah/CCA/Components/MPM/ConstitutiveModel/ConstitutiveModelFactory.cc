@@ -35,7 +35,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for constitutive_model");
    
-   if (integrator != "implicit" && integrator != "explicit"){
+   if (integrator != "implicit" && integrator != "explicit" 
+		   	&& integrator != "fracture"){
      string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
     throw ProblemSetupException(txt);
    }   

@@ -180,6 +180,8 @@ using std::vector;
       const VarLabel* GAccelerationLabel;
       const VarLabel* gDisplacementLabel;
       const VarLabel* GDisplacementLabel;
+      const VarLabel* GSp_volLabel;      
+      const VarLabel* GSp_vol_srcLabel; 
       // --------------------------------------------------------
 
     };
