@@ -42,6 +42,24 @@ proc makeNetworkEditor {} {
 
     tk_menuBar .main_menu .main_menu.file .main_menu.stats .main_menu.help
 
+    frame .all_lists -relief groove -borderwidth 0
+    pack .all_lists -side left -padx 5 -pady 5 -ipadx 2 -ipady 2
+    frame .all_lists.l
+    pack .all_lists.l -side left -padx 2 -pady 2
+    label .all_lists.l.title -text "Complete List:"
+    frame .all_lists.l.f
+    pack .all_lists.l.title .all_lists.l.f -anchor w
+    
+    scrollbar .all_lists.l.f.scroll -relief sunken \
+	-command ".all_lists.l.f.list yview" \
+	-foreground plum2 -activeforeground SteelBlue2
+    listbox .all_lists.l.f.list -yscroll ".all_lists.l.f.scroll set" \
+	-relief sunken -geometry 20x40 -exportselection false
+    pack .all_lists.l.f.scroll -side right -fill y -padx 2
+    pack .all_lists.l.f.list -side left -expand yes -fill both
+    global netedit_completelist
+    set netedit_completelist .all_lists.l.f.list
+    
     frame .l
     pack .l -anchor w
     
@@ -78,24 +96,6 @@ proc makeNetworkEditor {} {
     pack .l.lists.l2.f.list -side left -expand yes -fill both
     global netedit_modulelist
     set netedit_modulelist .l.lists.l2.f.list
-    
-    frame .l.all_lists -relief groove -borderwidth 4
-    pack .l.all_lists -side top -padx 5 -pady 5 -ipadx 2 -ipady 2
-    frame .l.all_lists.l
-    pack .l.all_lists.l -side left -padx 2 -pady 2
-    label .l.all_lists.l.title -text "Complete List:"
-    frame .l.all_lists.l.f
-    pack .l.all_lists.l.title .l.all_lists.l.f -anchor w
-    
-    scrollbar .l.all_lists.l.f.scroll -relief sunken \
-	-command ".l.all_lists.l.f.list yview" \
-	-foreground plum2 -activeforeground SteelBlue2
-    listbox .l.all_lists.l.f.list -yscroll ".l.all_lists.l.f.scroll set" \
-	-relief sunken -geometry 20x4 -exportselection false
-    pack .l.all_lists.l.f.scroll -side right -fill y -padx 2
-    pack .l.all_lists.l.f.list -side left -expand yes -fill both
-    global netedit_completelist
-    set netedit_completelist .l.all_lists.l.f.list
     
     frame .t -borderwidth 5
     pack .t
