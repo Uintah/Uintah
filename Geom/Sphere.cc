@@ -21,7 +21,7 @@
 #include <Math/Trig.h>
 
 GeomSphere::GeomSphere(int nu, int nv)
-: GeomObj(1), nu(nu), nv(nv)
+: GeomObj(1), nu(nu), nv(nv), cen(0,0,0), rad(1)
 {
 }
 

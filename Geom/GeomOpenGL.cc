@@ -27,6 +27,7 @@
 #include <Geom/Polyline.h>
 #include <Geom/RenderMode.h>
 #include <Geom/Sphere.h>
+#include <Geom/Switch.h>
 #include <Geom/Tetra.h>
 #include <Geom/Tri.h>
 #include <Geom/Tube.h>
@@ -110,6 +111,7 @@ void GeomObj::draw(DrawInfoOpenGL* di, Material* matl)
 
 void GeomCone::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
+    if(height < 1.e-6)return;
     di->set_matl(matl);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
@@ -126,6 +128,7 @@ void GeomContainer::objdraw(DrawInfoOpenGL* di, Material* matl)
 
 void GeomCylinder::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
+    if(height < 1.e-6)return;
     di->set_matl(matl);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
@@ -249,6 +252,12 @@ void GeomSphere::objdraw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
+void GeomSwitch::objdraw(DrawInfoOpenGL* di, Material* matl)
+{
+   if(state)
+      child->draw(di, matl);
+}
+
 void GeomTetra::objdraw(DrawInfoOpenGL* di, Material* matl) {
     di->set_matl(matl);
     di->polycount+=4;
@@ -292,30 +301,30 @@ void GeomTetra::objdraw(DrawInfoOpenGL* di, Material* matl) {
     case DrawInfoOpenGL::Phong:
 	// this should be made into a tri-strip, but I couldn;t remember how...
 	{
-	    Plane PL1(p1,p2,p3); 
+	    Vector n1(Plane(p1, p2, p3).normal());
 	    glBegin(GL_TRIANGLES);
-	    glNormal3d(PL1.a, PL1.b, PL1.c);
+	    glNormal3d(n1.x(), n1.y(), n1.z());
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
 	    glVertex3d(p3.x(), p3.y(), p3.z());
 	    glEnd();
-	    Plane PL2(p1,p2,p4); 
+	    Vector n2(Plane(p1, p2, p4).normal());
 	    glBegin(GL_TRIANGLES);
-	    glNormal3d(PL2.a, PL2.b, PL2.c);
+	    glNormal3d(n2.x(), n2.y(), n2.z());
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
 	    glVertex3d(p4.x(), p4.y(), p4.z());
 	    glEnd();
-	    Plane PL3(p4,p2,p3); 
+	    Vector n3(Plane(p4, p2, p3).normal());
 	    glBegin(GL_TRIANGLES);
-	    glNormal3d(PL3.a, PL3.b, PL3.c);
+	    glNormal3d(n3.x(), n3.y(), n3.z());
 	    glVertex3d(p4.x(), p4.y(), p4.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
 	    glVertex3d(p3.x(), p3.y(), p3.z());
 	    glEnd();
-	    Plane PL4(p1,p4,p3); 
+	    Vector n4(Plane(p1, p4, p3).normal());
 	    glBegin(GL_TRIANGLES);
-	    glNormal3d(PL4.a, PL4.b, PL4.c);
+	    glNormal3d(n4.x(), n4.y(), n4.z());
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p4.x(), p4.y(), p4.z());
 	    glVertex3d(p3.x(), p3.y(), p3.z());

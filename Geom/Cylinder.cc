@@ -21,7 +21,7 @@
 #include <Classlib/String.h>
 
 GeomCylinder::GeomCylinder(int nu, int nv)
-: GeomObj(1), nu(nu), nv(nv)
+: GeomObj(1), nu(nu), nv(nv), top(0,0,1), bottom(0,0,0), rad(1)
 {}
 
 GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,

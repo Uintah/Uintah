@@ -18,14 +18,14 @@ OBJS = Color.o  Cone.o  Container.o  Cylinder.o  Disc.o  \
 	Geom.o  GeomRaytracer.o  Group.o  \
 	HeadLight.o  Light.o  Lighting.o  Line.o  Material.o  \
 	Pick.o  PickMessage.o  PointLight.o  Polyline.o  \
-	RenderMode.o  Sphere.o \
+	RenderMode.o  Sphere.o Switch.o  \
 	Tetra.o  Tri.o  TriStrip.o  Tube.o  VCTri.o  VCTriStrip.o  View.o  \
 	$(OPENGLOBJS) $(X11OBJS)
 SRCS = Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc \
 	Geom.cc GeomRaytracer.cc Group.cc \
 	HeadLight.cc Light.cc Lighting.cc Line.cc Material.cc \
 	Pick.cc PickMessage.cc PointLight.cc Polyline.cc \
-	RenderMode.cc Sphere.cc \
+	RenderMode.cc Sphere.cc Switch.cc \
 	Tetra.cc Tri.cc TriStrip.cc Tube.cc VCTri.cc VCTriStrip.cc View.cc \
 	$(OPENGLSRCS) $(X11SRCS)
 

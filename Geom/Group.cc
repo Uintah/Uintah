@@ -58,7 +58,7 @@ GeomObj* GeomGroup::clone()
 
 void GeomGroup::get_bounds(BBox& in_bb)
 {
-    if(!bb.valid()){
+    if(1 || !bb.valid()){
 	for(int i=0;i<objs.size();i++)
 	    objs[i]->get_bounds(bb);
     }
