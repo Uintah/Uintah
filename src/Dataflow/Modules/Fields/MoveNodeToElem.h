@@ -27,12 +27,12 @@
 */
 
 
-//    File   : ClipField.h
+//    File   : MoveNodeToElem.h
 //    Author : Michael Callahan
-//    Date   : August 2001
+//    Date   : September 2003
 
-#if !defined(ClipField_h)
-#define ClipField_h
+#if !defined(MoveNodeToElem_h)
+#define MoveNodeToElem_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -184,4 +184,4 @@ MoveNodeToElemAlgoImg<FIELD>::execute(ProgressReporter *mod,
 
 } // end namespace SCIRun
 
-#endif // ClipField_h
+#endif // MoveNodeToElem_h
