@@ -76,8 +76,24 @@ Parallel::noThreading()
 }
 
 void
+Parallel::forceMPI()
+{
+  determinedIfUsingMPI=true;
+  ::usingMPI=true;
+}
+
+void
+Parallel::forceNoMPI()
+{
+  determinedIfUsingMPI=true;
+  ::usingMPI=false;
+}
+
+void
 Parallel::determineIfRunningUnderMPI( int argc, char** argv )
 {
+  if(determinedIfUsingMPI)
+    return;
   if( char * max = getenv( "PSE_MAX_THREADS" ) ){
     ::maxThreads = atoi( max );
     //::allowThreads = true;
