@@ -83,6 +83,7 @@ RoundRobinLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
     PatchSubset* subset = patches->getSubset(proc);
     subset->add(patch);
   }
+  patches->sortSubsets();
   return patches;
 }
 
