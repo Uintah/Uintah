@@ -259,8 +259,8 @@
                   <res>                 [2,2,1]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300             </temperature>
-                    <toughness_min>  1e6.0 </toughness_min>
-		    <toughness_max>  1e6.0 </toughness_max>
+                    <toughness_min>  20 </toughness_min>
+		    <toughness_max>  20 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
                 </geom_object>
             </material>
@@ -301,8 +301,8 @@
                   <res>                 [2,2,1]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300             </temperature>
-                  <toughness_min>  1e6.0 </toughness_min>
-		  <toughness_max>  1e6.0 </toughness_max>
+                  <toughness_min>  1 </toughness_min>
+		  <toughness_max>  1 </toughness_max>
 		  <toughness_variation>1</toughness_variation>
                 </geom_object>
             </material>
