@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = Color.o  Geom.o
+SRCS = Color.cc Geom.cc
+
+LIBNAME = Geom
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))
