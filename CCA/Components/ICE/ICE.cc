@@ -823,8 +823,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::NewDW, lb->f_theta_CCLabel,         gn);      
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,          gn);      
     t->requires(Task::NewDW, lb->rho_CCLabel,             gn);      
-    t->requires(Task::NewDW, lb->speedSound_CCLabel,      gn);         
-    t->requires(Task::NewDW, lb->int_eng_source_CCLabel,  gn);        
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,      gn);        
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn);  
     t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl, gn);
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn);   
