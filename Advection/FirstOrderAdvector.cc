@@ -64,24 +64,25 @@ See schematic diagram at bottom of ice.cc for del* definitions
  ---------------------------------------------------------------------  */
 
 void FirstOrderAdvector::inFluxOutFluxVolume(
-                           const SFCXVariable<double>& uvel_FC,
+                        const SFCXVariable<double>& uvel_FC,
                         const SFCYVariable<double>& vvel_FC,
                         const SFCZVariable<double>& wvel_FC,
                         const double& delT, 
-                        const Patch* patch)
+                        const Patch* patch,
+                        const int& indx)
 
 {
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
   double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
-  double delX_tmp, delY_tmp,   delZ_tmp;
+  double delX_tmp, delY_tmp, delZ_tmp;
+  double delX = dx.x(), delY = dx.y(), delZ = dx.z();
 
   // Compute outfluxes 
   const IntVector gc(1,1,1);
-  bool err=false;
-  IntVector err_cell(0,0,0);
-  double err_total_fluxout = 0;
-  double err_vol = 0;
+  double error_test = 0.0;
+  int    num_cells = 0;
+  
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
     IntVector curcell = *iter;
     delY_top    = std::max(0.0, (vvel_FC[curcell+IntVector(0,1,0)] * delT));
@@ -91,45 +92,51 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     delZ_front  = std::max(0.0, (wvel_FC[curcell+IntVector(0,0,1)] * delT));
     delZ_back   = std::max(0.0,-(wvel_FC[curcell+IntVector(0,0,0)] * delT));
     
-    delX_tmp    = dx.x() - delX_right - delX_left;
-    delY_tmp    = dx.y() - delY_top   - delY_bottom;
-    delZ_tmp    = dx.z() - delZ_front - delZ_back;
-    
+    delX_tmp    = delX - delX_right - delX_left;
+    delY_tmp    = delY - delY_top   - delY_bottom;
+    delZ_tmp    = delZ - delZ_front - delZ_back;     
+
     //__________________________________
     //   SLAB outfluxes
-    d_OFS[curcell].d_fflux[TOP]   = delY_top   * delX_tmp * delZ_tmp;
-    d_OFS[curcell].d_fflux[BOTTOM]= delY_bottom* delX_tmp * delZ_tmp;
-    d_OFS[curcell].d_fflux[RIGHT] = delX_right * delY_tmp * delZ_tmp;
-    d_OFS[curcell].d_fflux[LEFT]  = delX_left  * delY_tmp * delZ_tmp;
-    d_OFS[curcell].d_fflux[FRONT] = delZ_front * delX_tmp * delY_tmp;
-    d_OFS[curcell].d_fflux[BACK]  = delZ_back  * delX_tmp * delY_tmp;
+    double delX_Z_tmp = delX_tmp * delZ_tmp;
+    double delX_Y_tmp = delX_tmp * delY_tmp;
+    double delY_Z_tmp = delY_tmp * delZ_tmp;
+    d_OFS[curcell].d_fflux[TOP]   = delY_top   * delX_Z_tmp;
+    d_OFS[curcell].d_fflux[BOTTOM]= delY_bottom* delX_Z_tmp;
+    d_OFS[curcell].d_fflux[RIGHT] = delX_right * delY_Z_tmp;
+    d_OFS[curcell].d_fflux[LEFT]  = delX_left  * delY_Z_tmp;
+    d_OFS[curcell].d_fflux[FRONT] = delZ_front * delX_Y_tmp;
+    d_OFS[curcell].d_fflux[BACK]  = delZ_back  * delX_Y_tmp; 
 
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
-#if 0
-    for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += d_OFS[curcell].d_fflux[face];
-    }
-#endif
-
-      total_fluxout  += d_OFS[curcell].d_fflux[TOP];
-      total_fluxout  += d_OFS[curcell].d_fflux[BOTTOM];
-      total_fluxout  += d_OFS[curcell].d_fflux[RIGHT];
-      total_fluxout  += d_OFS[curcell].d_fflux[LEFT];
-      total_fluxout  += d_OFS[curcell].d_fflux[FRONT];
-      total_fluxout  += d_OFS[curcell].d_fflux[BACK];
-
-    if (total_fluxout > vol) {
-      err_cell = *iter;
-      err_total_fluxout = total_fluxout;
-      err_vol = vol;
-      err=true;
-    }
-  }
-  if(err)
-    throw OutFluxVolume(err_cell,err_total_fluxout,err_vol);
-
+    total_fluxout  += d_OFS[curcell].d_fflux[TOP];
+    total_fluxout  += d_OFS[curcell].d_fflux[BOTTOM];
+    total_fluxout  += d_OFS[curcell].d_fflux[RIGHT];
+    total_fluxout  += d_OFS[curcell].d_fflux[LEFT];
+    total_fluxout  += d_OFS[curcell].d_fflux[FRONT];
+    total_fluxout  += d_OFS[curcell].d_fflux[BACK];
+    
+    num_cells++;
+    error_test +=(vol - total_fluxout)/fabs(vol- total_fluxout);
+  }  //cell iterator
+  
+  //__________________________________
+  // if total_fluxout > vol then 
+  // find the cell and throw an exception.  
+  if (fabs(error_test - num_cells) > 1.0e-2) {
+    for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
+      IntVector curcell = *iter; 
+      double total_fluxout = 0.0;
+      for(int face = TOP; face <= BACK; face++ )  {
+        total_fluxout  += d_OFS[curcell].d_fflux[face];
+      }
+      if (vol - total_fluxout < 0.0) {
+        throw OutFluxVolume(*iter,total_fluxout, vol, indx);
+      }
+    }  // cell iter
+  }  // if total_fluxout > vol
 }
 
 
@@ -187,21 +194,12 @@ template <class T> void FirstOrderAdvector::advect(const CCVariable<T>& q_CC,
     sum_q_influx       = zero;
     
     //__________________________________
-    //  OUTFLUX: SLAB 
-#if 0
-    for(int face = TOP; face <= BACK; face++ )  {
-      sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[face];
-    }
-#endif
-
-    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[BOTTOM];
-    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[TOP];
-    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[LEFT];
-    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[RIGHT];
-    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[BACK];
-    sum_q_outflux  += q_CC[curcell] * d_OFS[curcell].d_fflux[FRONT];
-
-    
+    //  OUTFLUX: SLAB  
+    sum_q_outflux  = (d_OFS[curcell].d_fflux[BOTTOM] + d_OFS[curcell].d_fflux[TOP]
+                   +  d_OFS[curcell].d_fflux[LEFT]   + d_OFS[curcell].d_fflux[RIGHT]  
+                   +  d_OFS[curcell].d_fflux[BACK]   + d_OFS[curcell].d_fflux[FRONT]) 
+                   *  q_CC[curcell];
+                   
     //__________________________________
     //  INFLUX: SLABS
     adjcell = IntVector(i, j+1, k);       // TOP
@@ -222,7 +220,6 @@ template <class T> void FirstOrderAdvector::advect(const CCVariable<T>& q_CC,
     q_advected[curcell] = sum_q_influx - sum_q_outflux;
 
   }
-
 }
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
