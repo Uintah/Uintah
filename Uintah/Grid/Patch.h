@@ -89,6 +89,10 @@ WARNING
       //////////
       // Insert Documentation Here:
       void findCell(const Point& pos, int& ix, int& iy, int& iz) const;
+
+      //////////
+      // Insert Documentation Here:
+      IntVector findCell(const Point& pos) const;
       
       //////////
       // Insert Documentation Here:
@@ -260,6 +264,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.2  2000/06/01 22:13:54  tan
+// Added findCell(const Point& pos).
+//
 // Revision 1.1  2000/05/30 20:19:32  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
