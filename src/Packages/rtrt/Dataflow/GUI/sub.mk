@@ -5,7 +5,8 @@ SRCDIR := Packages/rtrt/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/RTRTViewer.tcl
+	$(SRCDIR)/RTRTViewer.tcl \
+	$(SRCDIR)/VolumeVisScene.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/rtrt/Dataflow/GUI

@@ -6,6 +6,7 @@ SRCDIR   := Packages/rtrt/Dataflow/Modules/Scenes
 
 SRCS     += \
 	$(SRCDIR)/Scene0.cc \
+	$(SRCDIR)/VolumeVisScene.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
