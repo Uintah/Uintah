@@ -291,16 +291,16 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   glDrawBuffer(GL_BACK);
   glClear(GL_COLOR_BUFFER_BIT);
-  unsigned int i;
+  unsigned int i,j;
   for(i=0;i<3;i++) {
 
     float mul=0.5;
-    if (activeLine == i*2)
+    if (activeLine == (int) i*2)
       mul = 1.0;
 
     glColor3f(colors[i*3 + 0]*mul,colors[i*3 + 1]*mul,colors[i*3 + 2]*mul);
     glBegin(GL_LINE_STRIP);
-    for(int j=0;j<points.size();j++) {
+    for(j=0;j<points.size();j++) {
       glVertex2f(points[j]._t,points[j]._rgb[i]);
     }
     glEnd();
@@ -323,7 +323,7 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   for(i=0;i<alphas.size();i++) {
     mul = 0.5;
-    if (i == selNode)
+    if ((int)i == selNode)
       mul = 0.7;
     glColor3f(mul,mul,mul);
 //     drawBox(aTimes[i],alphas[i],winDX[0],winDY[0]);
@@ -332,11 +332,10 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   // now the polylines have been draw, draw the points...
 
-  int j;
   for(i=0;i<3;i++) {
     for(j=0;j<points.size();j++) {
       float mul = 0.6;
-      if (selNode == j*2)
+      if (selNode == (int)j*2)
 	mul = 1.0;
 
       glColor3f(colors[i*3 + 0]*mul,colors[i*3 + 1]*mul,colors[i*3 + 2]*mul);
@@ -411,11 +410,11 @@ void GenTransferFunc::DrawGraphs( int flush)
     vector<float> a(alphas.size());
     vector<float> t(alphas.size());
 
-    for(int i=0;i<points.size();i++) {
+    for(i=0;i<points.size();i++) {
       ncolors[i] = points[i]._rgb;
       times[i] = points[i]._t;
     }
-    for (int i=0; i < alphas.size(); i++){
+    for (i=0; i < alphas.size(); i++){
       a[i] = alphas[i]._alpha;
       t[i] = alphas[i]._t;
     }
@@ -494,7 +493,7 @@ void GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
 void GenTransferFunc::
 GetClosest(float time, float val, int& cline, int& cpoint)
 {
-  int i;
+  unsigned int i;
   
   float minP=10000;
 
@@ -596,7 +595,7 @@ void GenTransferFunc::DoMotion(int, int x, int y)
   // End conditions are special cases - can't change x!
 
   if (activeLine == 7) {
-    if (selNode && selNode < alphas.size()-1) {
+    if (selNode && selNode < (int)alphas.size()-1) {
 //       if (aTimes[selNode-1] > time)
 // 	time = aTimes[selNode-1];
 //       if (aTimes[selNode+1] < time)
@@ -612,7 +611,7 @@ void GenTransferFunc::DoMotion(int, int x, int y)
 //     aTimes[selNode] = time;
     alphas[selNode]._t = time;
   } else {
-    if (selNode && selNode < points.size()-1) {
+    if (selNode && selNode < (int)points.size()-1) {
       if (points[selNode-1]._t > time)
 	time = points[selNode-1]._t;
       if (points[selNode+1]._t < time)
@@ -680,7 +679,7 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
     p._hsv = HSVColor(p._rgb);
 
     if (cline != 7) {
-      if (cpoint && cpoint != points.size()-1) {
+      if (cpoint && cpoint != (int)points.size()-1) {
 	if (points[cpoint]._t <= time)
 	  cpoint = cpoint+1;
 	
@@ -710,7 +709,7 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
       points.insert(points.begin() + cpoint,p);
 	  
     } else { // this is the alpha curve...
-      if (cpoint && cpoint != alphas.size()-1) {
+      if (cpoint && cpoint != (int)alphas.size()-1) {
 // 	if (aTimes[cpoint] <= time)
 	if (alphas[cpoint]._t <= time)
 	  cpoint = cpoint+1;
@@ -752,13 +751,13 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
     break;
   case 3:
     if (activeLine == 7) {
-      if (selNode && (selNode != alphas.size()-1)) {
+      if (selNode && (selNode != (int)alphas.size()-1)) {
 	alphas.erase(alphas.begin() + selNode);
 // 	aTimes.erase(alphas.begin() + selNode);
       }
 
     }  else {
-      if (selNode && (selNode != points.size()-1))
+      if (selNode && (selNode != (int)points.size()-1))
 //	points.remove(selNode);
 	points.erase(points.begin() + selNode);
     }
@@ -792,6 +791,8 @@ GenTransferFunc::execute(void)
     error("Unable to initialize oport 'Geometry'.");
     return;
   }
+
+  unsigned int i;
   
   int c = inport->get(newcmap);
 
@@ -812,16 +813,15 @@ GenTransferFunc::execute(void)
 
     points.resize(newcmap->rawRampColor_.size());
     
-    for(int i=0;i<points.size();i++)
-    {
-      points[i]._t = newcmap->rawRampColorT_[i];
-      points[i]._rgb = newcmap->rawRampColor_[i];
+    for(i=0;i<points.size();i++){
+      points[i]._t = newcmap->rawRampColorT[i];
+      points[i]._rgb = newcmap->rawRampColor[i];
     }
 
-    alphas.resize(newcmap->rawRampAlpha_.size());
-    for(int i = 0; i < alphas.size(); i++ ){
-      alphas[i]._t = newcmap->rawRampAlphaT_[i];
-      alphas[i]._alpha = newcmap->rawRampAlpha_[i];
+    alphas.resize(newcmap->rawRampAlpha.size());
+    for(i = 0; i < alphas.size(); i++ ){
+      alphas[i]._t = newcmap->rawRampAlphaT[i];
+      alphas[i]._alpha = newcmap->rawRampAlpha[i];
     }
 //     alphas = newcmap->rawRampAlpha;
 //     aTimes = newcmap->rawRampAlphaT;
@@ -834,12 +834,11 @@ GenTransferFunc::execute(void)
     vector<float> t(alphas.size());
 
     
-    for(int i=0;i<points.size();i++)
-    {
+    for(i=0;i<points.size();i++){
       ncolors[i] = points[i]._rgb;
       times[i] = points[i]._t;
     }
-    for (int i=0; i < alphas.size(); i++){
+    for(i=0;i<alphas.size();i++){
       a[i] = alphas[i]._alpha;
       t[i] = alphas[i]._t;
     }
