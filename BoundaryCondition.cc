@@ -2905,13 +2905,13 @@ BoundaryCondition::FlowInlet::FlowInlet():
 }
 
 BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
-  d_area_label(copy.d_area_label),
   d_cellTypeID (copy.d_cellTypeID),
   flowRate(copy.flowRate),
   streamMixturefraction(copy.streamMixturefraction),
   turb_lengthScale(copy.turb_lengthScale),
   calcStream(copy.calcStream),
-  d_geomPiece(copy.d_geomPiece)
+  d_geomPiece(copy.d_geomPiece),
+  d_area_label(copy.d_area_label)
 {
   d_area_label->addReference();
 }

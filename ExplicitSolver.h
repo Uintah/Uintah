@@ -153,13 +153,23 @@ private:
 		     DataWarehouse* new_dw);
 
 private:
+      // const VarLabel*
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+      // generation variable for DataWarehouse creation
 
       // Total number of nonlinear iterates
       int d_nonlinear_its;
       // for probing data for debuging or plotting
       bool d_probe_data;
-      bool d_enthalpySolve;
+      // properties...solves density, temperature and specie concentrations
+      Properties* d_props;
+      // Boundary conditions
+      BoundaryCondition* d_boundaryCondition;
+      // Turbulence Model
+      TurbulenceModel* d_turbModel;
       bool d_reactingScalarSolve;
+      bool d_enthalpySolve;
       vector<IntVector> d_probePoints;
       // nonlinear residual tolerance
       double d_resTol;
@@ -175,18 +185,7 @@ private:
       EnthalpySolver* d_enthalpySolver;
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
-      // properties...solves density, temperature and specie concentrations
-      Properties* d_props;
-      // Turbulence Model
-      TurbulenceModel* d_turbModel;
-      // Boundary conditions
-      BoundaryCondition* d_boundaryCondition;
 
-      // const VarLabel*
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
-      // generation variable for DataWarehouse creation
-  
 }; // End class ExplicitSolver
 } // End namespace Uintah
 

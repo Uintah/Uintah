@@ -215,6 +215,11 @@ private:
 				      int index);
 
 private:
+
+      // const VarLabel* (required)
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+
       ArchesVariables* d_reactscalarVars;
       // computes coefficients
       Discretization* d_discretize;
@@ -228,10 +233,6 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // physical constants
       PhysicalConstants* d_physicalConsts;
-
-      // const VarLabel* (required)
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
 #ifdef multimaterialform
       // set the values in problem setup
       MultiMaterialInterface* d_mmInterface;
