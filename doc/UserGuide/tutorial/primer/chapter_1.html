@@ -5,12 +5,33 @@
 <title>Geometry Visualization</title>
 <!-- Changed by: Ted Dustman, 22-Feb-2002 -->
 <!-- Changed by: TjD, 24-Feb-2002 -->
+<!-- Last update: Sun Feb 24 22:10:47 2002 by Rob MacLeod
+     - lots of little fixes and some restructuring -->
 </head>
 
 <body bgcolor="#a9a9a9">
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
 <tr>
-<td><img height="92" width="600" src="images/sub-banner.jpg" border="0" usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area coords="581,65,598,84" shape="rect" title nohref><area href="chapter_7.html" coords="557,64,575,83" shape="rect" title="Feedback"><area href="chapter_6.html" coords="532,64,550,82" shape="rect" title="Putting Simulation and Visualization Together"><area href="chapter_5.html" coords="508,64,527,83" shape="rect" title="Bioelectric Field Simulation"><area href="chapter_4.html" coords="483,64,502,83" shape="rect" title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83" shape="rect" title="Derived Fields"><area href="chapter_2.html" coords="436,64,454,83" shape="rect" title="Looking at the Data"><area href="chapter_1.html" coords="412,64,430,81" shape="rect" title="Geometry Visualization"><area href="Intro.html" coords="354,64,406,84" shape="rect" title="Introduction"><area href="http://software.sci.utah.edu/doc/index.html" coords="205,63,343,83" shape="rect" title="Documentation"><area href="http://software.sci.utah.edu/" coords="103,63,195,82" shape="rect" title="Software"><area href="index.html" coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="http://software.sci.utah.edu/doc/index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
 </tr>
 
 <tr>
@@ -24,6 +45,7 @@
 <font size="4"
 face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" 
 color="maroon">
+<a NAME=chapter1>    
 <b>Chapter 1: Geometry Visualization</b></font> </p>
 <p>&nbsp; </p>
 </center>
@@ -33,7 +55,7 @@ color="maroon">
 <p><b><H4><A href="#section 3">ShowField module</H4></b></A>
 <p><b><H4><A href="#section 4">Hooking modules together</H4></b></A>
 <p><b><H4><A href="#section 5">Viewer module</H4></b></A>
-<p><b><H4><A href="#section 6">Navigating the ViewWindow</H4></b></A>
+<p><b><H4><A href="#section 6">Navigating the Viewer Window</H4></b></A>
 <p><b><H4><A href="#section 7">Mouse controls</H4></b></A>
 <p><b><H4><A href="#section 8">Setting visualization parameters</H4></b></A>
 <p><b><H4><A href="#section 9">Controlling widgets</H4></b></A>
@@ -52,7 +74,7 @@ color="maroon">
     <p>We will read the <dfn>Field</dfn> data from a file, set some rendering
     properties for the nodes, edges, and faces (the
     nodes will be rendered as blue spheres), and render the
-    geometry to the screen in an interactive viewing window.<br>  
+    geometry to the screen in an interactive Viewer window.<br>  
     
     <p>To begin, we will construct a net from scratch (as shown,
     completed, in <b>Figure 1.1</b>). In the chapters that follow, we will
@@ -61,6 +83,7 @@ color="maroon">
     
     </div>
     <center>
+    <a NAME=figure-1.1>
     <p><img height="461" width="450" src="images/figures/1_1.gif"><br>
     <b>Figure 1.1</b></p>
     </center>
@@ -178,7 +201,7 @@ interest.<br>
     a collection of data values mapped onto that mesh.  In this case,
     we use a tetrahedral mesh with voltages defined at the nodes of the
     mesh.  The brief overview below describes the various types
-    of geometric meshes, datavalues, and mappings that SCIRun
+    of geometric meshes, data values, and mappings that SCIRun
     supports.
     
     <p><A name="#section 2"><b>Overview of field types</A></b><br>
@@ -192,7 +215,7 @@ interest.<br>
       <LI> ContourField: a segmented curve.
       <LI> ImageField: a regular 2D grid.
       <LI> TriSurf: a surface made of connected triangles.
-      <LI> QuadSurf: a surface make of connected quadrillaterals.
+      <LI> QuadSurf: a surface make of connected quadrilaterals.
       <LI> LatticeVol: a regular 3D grid.
       <LI> TetVol: a subdivision of space into tetrahedral elements.
       <LI> HexVol: a subdivision of space into hexagonal elements.
@@ -201,23 +224,23 @@ interest.<br>
     <p>In a field, there are, at most, four different places in which
     data can be stored: nodes, edges, faces, and cells.  The
     dimensionality of the mesh type limits
-    the available storage locations. For instance, a TriSurf does
-    not have three dimensional 
-    cell elements, thus, data cannot be stored in cells of that
-    field type.
+    the available storage locations. For instance, a TriSurf has nodes,
+    edges, and planar faces, but not cells, which we assume to be
+    three-dimensional elements.  As a result, a TriSurf cannot store any
+    data in cells--but it can store data in edges or faces.
     
     <p>The following data types can be stored in a field:<br>
     </p>
     <ul>
       <li>Tensor
       <li>Vector
-      <li>double
-      <li>float
-      <li>int
-      <li>short
+      <li>double precision
+      <li>float(ing point)
+      <li>int(eger)
+      <li>short (integer)
       <li>char
-      <li>unsigned int
-      <li>unsigned short
+      <li>unsigned int(eger)
+      <li>unsigned short (integer)
       <li>unsigned char<br>
     </ul>
     <p><br>
@@ -225,47 +248,14 @@ interest.<br>
     <p><b><A name="#section 3">ShowField module</b><br></A>
     
     <p>We will now add a second module to our network.  
-    <ol>
-      <li value="1.">Select ShowField from the SCIRun/Visualization menu. 
-      (Use this module to visualize various field types).
-    </ol> 
-    <p>ShowField has a User Interface (UI) option for rendering a field's
-    geometery, and special options for rendering vector data.
-    ShowField can use color to represent data within
-    the geometry, if desired.  For now, we will 
-    render blue spheres as the nodes of the geometry.
-    <ol><li value="2.">Select the UI button on the ShowField
-      module(<b>Figure 1.6</b>).
-    </ol> 
-    </div>
-    <center>
-    <p><img height="512" width="500" src="images/figures/1_6.gif"><br>
-    <b>Figure 1.6</b></p>
-    </center>
-    <div align="left">
-    
-    <p>We will display the Field's nodes as
-    spheres and set their color to blue:<br>
-    
-    <ol>
-      <li value= "3.">Select the Default Color button
-      near the bottom of the dialogue to change the default color.    
-      <li value="4.">When a new dialogue with red, green, and blue sliders
-      appears,  
-      set red and green to 0.0, and blue to 1.00.  
-      <li value="5.">Select the &quot;OK&quot; button in this color dialogue.  
-      <li value="6.">Select &quot;Cancel&quot; to remove the dialogue from
-      view. 
-      <li>Change the Node Scale to 2 and set the Sphere Resolution
-	  to 5. 
-      <li>Turn off the display of edges and faces.  
-      <li>Select the Edges tab in the ShowField dialogue.  
-      <li>Turn off Show Edges.
-      <li>Select the Faces tab.  
-      <li>Turn off Show Faces.  
-      <li>The ShowField module is now ready to render the nodes as blue
-	  spheres. 
-    </ol>
+
+    Select ShowField from the SCIRun/Visualization menu. 
+    (Use this module to visualize various field types).
+
+<!-- [|<Here we need an image, number 1.6, of the network with the two -->
+<!-- modules in the network editor, but not connected. -->
+
+
     <p><b><A name="#section 4">Hooking modules together</b><br></A>
     
     <p>You will now connect the two modules in your canvas so that data can 
@@ -288,7 +278,7 @@ interest.<br>
 	  button. 
       <li>You should see a yellow bar showing a data flow connection
 	  between FieldReader and ShowField (<b>Figure 1.7.3</b>).
-      <LI>If you ever make an incorrect connetion, just click on that
+      <LI>If you ever make an incorrect connection, just click on that
 	  connection with the right mouse button and start again.
     </ol>
     </div>
@@ -312,10 +302,52 @@ interest.<br>
     </center>
     <div align="left">
     <p><br>
+
+    <p><b><A name="#section 3">Setting the ShowField User Interface</b><br></A>
+
+    
+    <p>ShowField has a User Interface (UI) option for rendering a field's
+    geometer, and special options for rendering vector data.
+    ShowField can use color to represent data within
+    the geometry, if desired.  For now, we will 
+    render blue spheres as the nodes of the geometry.
+    <ol><li value="1.">Select the UI button on the ShowField
+      module(<b>Figure 1.8</b>).
+    </ol>
+
+    <!-- [|<We need to make a new figure 1.8 with the connection in place, -->
+    <!-- or perhaps better, just add the connection to the image>] -->
+    
+    </div>
+    <center>
+    <p><img height="512" width="500" src="images/figures/1_6.gif"><br>
+    <b>Figure 1.8</b></p>
+    </center>
+    <div align="left">
+    
+    <p>We will display the Field's nodes as
+    spheres and set their color to blue:<br>
+    
     <ol>
-      <li value="5.">Next, press the "Execute" button on the ShowField UI
-      that forces the 
-      module to execute its algorithm.
+      <li value= "2.">Select the Default Color button
+      near the bottom of the dialogue to change the default color.    
+      <li >When a new dialogue with red, green, and blue sliders
+      appears,  
+      set red and green to 0.0, and blue to 1.00.  
+      <li>Select the &quot;OK&quot; button in this color dialogue.  
+      <li >Select &quot;Cancel&quot; to remove the dialogue from
+      view. 
+      <li>Change the Node Scale to 2 and set the Sphere Resolution
+	  to 5. 
+      <li>Turn off the display of edges and faces.  
+      <li>Select the Edges tab in the ShowField dialogue.  
+      <li>Turn off Show Edges.
+      <li>Select the Faces tab.  
+      <li>Turn off Show Faces.  
+      <li>The ShowField module is now ready to render the nodes as blue
+	  spheres. 
+      <li> Next, press the "Execute" button on the ShowField UI
+      that forces the module to execute its algorithm.
     </ol><br>
 
     <p>ShowField works with any of the SCIRun Field data types.
@@ -324,7 +356,7 @@ interest.<br>
     the data type must be first compiled into a shared library (which
     is saved for future runs of SCIRun).  See <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-    Compilation</a> for more information.<br>
+    Compilation</a> for more information.
 
     <!--
     <p>Since we have compiled only algorithms with an
@@ -343,25 +375,28 @@ interest.<br>
 
     <p>ShowField will then execute the newly loaded algorithm
     passing its results to downstream modules.
+
+    [|<I think this is redundant and too deep the tutorial, Rob>]--->
     
     <p><b><A name="#section 5">Viewer module</b><br></A>
     
-    <p>The viewer module is the last that we will add to our
+    <p>The Viewer module is the last that we will add to our
     network. 
     <ol>
-      <li value="1.">Locate the viewer under the SCIRun/Render
-      menu.  
-      <li value="2.">Connect the output port from ShowField into the Viewer
-      input port.  
+      <li>Locate the Viewer under the SCIRun/Render
+	  menu.  
+      <li>Connect the output port from ShowField into the Viewer
+	  input port.   As a result, the Viewer module has generated a new
+	  input port. The Viewer provides an example of SCIRun modules that
+	  have dynamic input ports.
+      <LI> To generate a Viewer window press the Viewer's UI button.
+      <LI> In the Viewer window, you will see a set of orthogonal axes as
+	  arrows.  Now look for the button near the bottom called
+	  Autoview; press that and you should see the points of the
+	  geometry, something like in <b>Figure 1.10</b>  
+      <LI> Things may not look quite like should, so see the next section
+	  for directions on manipulating the Viewer.
     </ol> 
-
-    <p>As a result, the Viewer module has generated a new input port. The
-    Viewer provides an example of SCIRun modules that have dynamic input 
-    ports.
-    
-    <p>To render the data press the Viewer's UI button. See <b>Figure
-    1.10</b><br> 
-
 		
     </div>
     <center>
@@ -375,11 +410,11 @@ interest.<br>
     
     <p><b><A name="#section 6">Navigating the Viewer Window</b><br></A>
     
-    <p>Since the viewer is one of the most important modules of SCIRun,
+    <p>Since the Viewer is one of the most important modules of SCIRun,
     you may want to know more about its functionality.  The User's Guide 
     [link to UG 5.0 Viewer] provides a full description of the Viewer.  
     
-    <p> <b>Figure 1.10</b> shows the Viewer window with the
+    <p> <b>Figure 1.10</b> shows the Viewer window from the
     network you have built earlier in this chapter. In the lower right
     corner of the Viewer's window you will 
     find buttons for controlling the display.  However, the controls you will 
@@ -442,6 +477,11 @@ interest.<br>
     <div align="left">
     <p><br>
     
+    
+ 
+
+    <p><b><A name="section 8">Setting Visualization Parameters</b><br></A>
+    
     </div>
     <center>
     <p><img height="64" width="500" src="images/figures/1_10_2.gif"><br>
@@ -450,32 +490,27 @@ interest.<br>
     <div align="left">
     <p><br>
     
-    
- 
-
-    <p><b><A name="section 8">Setting Visualization Parameters</b><br></A>
-    
     <p>Now we will use the controls in the Viewer
     window below the objects <b>(Figure 1.10.2)</b>. Here, you see buttons
     for the 
     following functions:
     <br>
     <ul>
-      <li>Autoview:	restores the display back to its default
-	  condition; very useful when some combination of
-	  settings results in objects disappearing from the
+      <li>Autoview: restores the display back to its default
+	  condition; very useful when first viewing an object or when some
+	  combination of settings results in objects disappearing from the
 	  view window.  
-      <li>Set Home View:	captures the setting of the current view so you
+      <li>Set Home View: captures the setting of the current view so you
 	  can return to it later by clicking the ``Go home'' 
 	  button.
-      <li>Go home:	restores the current home view.  
-      <li>Views:	lists a number of standard viewing angles and
+      <li>Go home: restores the current home view.  
+      <li>Views: lists a number of standard viewing angles and
 	  orientations for you to select.
     </ul>
  
     <p>See the User's Guide [link UG 5.0]for more details on these functions.
     
-    <p>For more display options:
+    <p>To access even more display options:
     <ul>
       <li>Locate the "+" button in the lower right corner of the Viewer
 	  window.   
@@ -506,55 +541,29 @@ interest.<br>
     settings to see their possible effects, and consult the
     User's Guide for a more complete description.
     
-    <p><b><A name="section 9">Controlling Widgets</b><br></A>
-    
-    <p>Widgets are graphical elements, objects in the Viewer that allow the
-    interactive user 
-    to control the display.  SCIRun supports a family of widgets 
-    that have a similar look and feel, but manipulate different
-    aspects of the display [link to UG 5.5 Control Widgets].
-    
-    <p>In order to include a widget in the display, its associated 
-    widget module must be present in the network.<br> 
-    
-    <p>You can control widgets by:
-    <ol>
-      <li value="1.">Shift-click and drag on different parts of a widget.  
-      <li value="2.">Select a neutral spot on the widget.
-      <li>Move the widget around the screen to choose the display region
-	  where it should act.
-      <li>Select spheres and cylinders on the widget to alter either its 
-	  orientation, or parameters (<i>e.g.,</i>density of streamlines).
-      <li>Select and move the widget in your network by
-	  making sure it is visible (via the extended control window).
-      <li>Shift-click the left mouse button on any part of the widget.  
-      <li>Move the mouse to move the widget around.  
-      <li>Shift-click the widget's spheres (control points), and the widget 
-	  rotates around its center.
-    </ol>
  
     <p>Learn more about the Viewer's components in the User's Guide.[link
     to UG 5.0 Visualization with the Viewer]<br> 
  
-    <p><b><A name="section 10">Saving and reloading networks[link to Ug
+    <p><b><A name="section 10">Saving and reloading networks[link to UG
     4.13]</b><br></A> 
 
     <p>The three-module network that we created earlier provides the
     foundation
-    for the nets we create through the rest of this tutorial.  As such, we
+    for the nets we create through the rest of this tutorial.  Now we
     will  
-    examine how nets can be saved to disk and reloaded in a future SCIRun
+    examine how to save nets to disk and reload them in a future SCIRun
     session. 
 
     <p>To save a SCIRun network (<b>Figure 1.11</b>):
     <ol>
       <li value="1.">Pull down the File menu from the top of the SCIRun window.
-      <li value="2.">Select &quot;Save&quot;.  
+      <li>Select &quot;Save&quot;.  
       <li>When the file browser appears, follow the prompt to choose a
 	  location and filename for your net (by convention, we keep most
 	  nets in the SCIRun/src/nets/ directory, but you can store them in
 	  whatever location you wish). 
-      <li>For this example,store the net as
+      <li>For this example, store the net as
 	  SCIRun/src/nets/show-torso-mesh.net (we use the .net suffix for
 	  SCIRun network files).
     </ol><br> 
@@ -567,8 +576,8 @@ interest.<br>
     <div align="left">
     <p><br>
     <ol>
-      <li value="5.">Quit out of SCIRun and restart the program.  
-      <li value="6.">To load the saved net (<b>Figure 1.12</b>), pulldown the
+      <li value="5.">Now exit SCIRun and restart the program.  
+      <li>To load the saved net (<b>Figure 1.12</b>), pull down the
       &quot;Load...&quot; option from the File menu bar.
       <li>Select SCIRun/src/nets/show-torso-mesh.net 
     </ol><br>
@@ -583,13 +592,13 @@ interest.<br>
     </div>
     
     <p>The net should reload into SCIRun, where it was when you saved it.   
-    If we change something (<i>e.g.</i>, rotate your view in the
-    ViewWindow or change 
-    the rendering color of the nodes in ShowField), then we have
-    two options if we want to re-save our net:
+    After changing anything in the display (<i>e.g.</i>, rotating the view
+    in the Viewer Window or changing
+    the rendering color of the nodes in ShowField), then there are
+    two options to re-save the net:
     <ul>
       <li>Overwrite the existing show-torso-mesh.net file by simply
-	  pulling down File > Save.  
+	  pulling down File > Save from the menu.  
       <li>Alternatively, save it to a new file using File > Save As...  
     </ul>
     
@@ -599,7 +608,7 @@ interest.<br>
     <p><b><H4>Summary</b></H4>
     
     <p>In this chapter, we created a three module network to visualize the
-    goemetry  
+    geometry  
     of a mesh.  We rendered that mesh to the viewing window, and practiced
     saving  
     and reloading networks.
