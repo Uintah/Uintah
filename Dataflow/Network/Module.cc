@@ -46,8 +46,6 @@ extern PackageDB packageDB;
 
 typedef std::map<int,IPortInfo*>::iterator iport_iter;
 typedef std::map<int,OPortInfo*>::iterator oport_iter;
-typedef std::map<clString,IPort*>::iterator auto_iport_iter;
-typedef std::map<clString,OPort*>::iterator auto_oport_iter;
 
 ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
 			  const clString& packname)
@@ -176,11 +174,8 @@ Module::Module(const clString& name, const clString& id,
 	maker = FindOPort(package,datatype);	
       if (maker && package[0]!='*') {
 	oport = maker(this,((*i2).second)->name);
-	if (oport) {
+	if (oport)
 	  add_oport(oport);
-	  auto_oports.insert(std::pair<clString,
-			     OPort*>(((*i2).second)->name,oport));
-	}
       }
       delete[] package;
       delete[] datatype;
@@ -199,9 +194,8 @@ Module::Module(const clString& name, const clString& id,
       if (dynamic_port_maker && package[0]!='*') {
 	iport = dynamic_port_maker(this,((*i1).second)->name);
 	if (iport) {
+	  lastportname = clString(((*i1).second)->name);
 	  add_iport(iport);
-	  auto_iports.insert(std::pair<clString,
-			     IPort*>(((*i1).second)->name,iport));
 	}
       } else
 	dynamic_port_maker = 0;
@@ -365,22 +359,24 @@ void Module::rename_iport(int, const clString&)
     NOT_FINISHED("Module::rename_iport");
 }
 
-IPort* Module::get_iport(char* portname)
+dynamic_port_range* Module::get_iport(char* portname)
 {
-  auto_iport_iter i;
-  i = auto_iports.find(clString(portname));
-  if (i!=auto_iports.end())
-    return (*i).second;
-  return 0;
+  return iports[portname];
 }
 
-OPort* Module::get_oport(char* portname)
+dynamic_port_range* Module::get_oport(char* portname)
 {
-  auto_oport_iter i;
-  i = auto_oports.find(clString(portname));
-  if (i!=auto_oports.end())
-    return (*i).second;
-  return 0;
+  return oports[portname];
+}
+
+IPort* Module::get_iport(int item)
+{
+  return iports[item];
+}
+
+OPort* Module::get_oport(int item)
+{
+  return oports[item];
 }
 
 void Module::connection(ConnectionMode mode, int which_port, int is_oport)
@@ -389,7 +385,7 @@ void Module::connection(ConnectionMode mode, int which_port, int is_oport)
     if(mode == Disconnected) {
       remove_iport(which_port);
     } else {
-      add_iport(dynamic_port_maker(this,"dynamic"));
+      add_iport(dynamic_port_maker(this,lastportname));
     }
   }
   
@@ -703,6 +699,43 @@ void Module::multisend(OPort* p1, OPort* p2)
 {
     //cerr << "Module: " << name << " called multisend on port " << p1 << endl;
     netedit->mailbox.send(new Module_Scheduler_Message(p1, p2));
+}
+
+template<class T>
+int PortManager<T>::size() { 
+  return ports.size(); 
+}
+
+template<class T>
+void PortManager<T>::add(T item) { 
+  namemap.insert(port_pair(item->get_portname(),ports.size())); 
+  ports.add(item);
+}
+
+template<class T>
+void PortManager<T>::remove(int item) {
+  clString name = ports[item]->get_portname();
+  port_iter erase_me;
+
+  dynamic_port_range p = namemap.equal_range(name);
+  for (port_iter i=p.first;i!=p.second;i++)
+    if ((*i).second>item)
+      (*i).second--;
+    else if ((*i).second==item)
+      erase_me = i;
+
+  ports.remove(item);
+  namemap.erase(erase_me);
+}
+
+template<class T>
+const T& PortManager<T>::operator[](int item) {
+  return ports[item];
+}
+
+template<class T>
+dynamic_port_range* PortManager<T>::operator[](clString item) {
+  return new dynamic_port_range(namemap.equal_range(item));
 }
 
 } // End namespace SCIRun
