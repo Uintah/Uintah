@@ -62,6 +62,7 @@ public:
   // TetVolField specific methods.
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::Cell::index_type);
+  TetVolMesh::Node::index_type insert_node_watson(Point &);
 
 private:
   static Persistent *maker();
@@ -219,6 +220,57 @@ Vector TetVolField<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
 		gb2 * value(nodes[2]) + gb3 * value(nodes[3]));
 }
 
+
+
+
+template <>
+TetVolMesh::Node::index_type
+TetVolField<Tensor>::insert_node_watson(Point &);
+
+template <class T>
+TetVolMesh::Node::index_type
+TetVolField<T>::insert_node_watson(Point &p) 
+{
+  TetVolMesh::Node::index_type ret_val;
+
+  if (data_at() == CELL) {  
+    TetVolMesh::Cell::array_type new_cells, mod_cells;
+    ret_val = get_typed_mesh()->insert_node_watson(p,&new_cells,&mod_cells);
+    resize_fdata();
+    
+    T tot = value(mod_cells[0]);
+    const unsigned int num_mod = mod_cells.size();
+    for (unsigned int c = 1; c < num_mod; ++c)
+      tot += value(mod_cells[c]);
+    tot /= num_mod;
+    for (unsigned int c = 0; c < num_mod; ++c)
+      set_value(tot,mod_cells[c]);
+    for (unsigned int c = 0; c < new_cells.size(); ++c)
+      set_value(tot,new_cells[c]);
+
+  } else if (data_at() == NODE) {
+
+    ret_val = get_typed_mesh()->insert_node_watson(p);
+    resize_fdata();
+
+    TetVolMesh::Node::array_type nodes;
+    get_typed_mesh()->synchronize(Mesh::NODE_NEIGHBORS_E);
+    get_typed_mesh()->get_neighbors(nodes, ret_val);
+
+    T tot = value(nodes[0]);
+    const unsigned int num_nodes = nodes.size();
+    for (unsigned int n = 1; n < num_nodes; ++n)
+      tot += value(nodes[n]);
+    tot /= num_nodes;
+    set_value(tot, ret_val);
+
+  } else {
+
+    ret_val = get_typed_mesh()->insert_node_watson(p);
+    resize_fdata();    
+  }
+  return ret_val;
+}
 
 } // end namespace SCIRun
 
