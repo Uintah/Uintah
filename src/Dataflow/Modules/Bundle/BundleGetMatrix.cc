@@ -138,7 +138,7 @@ BundleGetMatrix::execute()
       return; 
     }
  
-  NrrdIPort *niport = static_cast<NrrdIPort *>(get_iport("name1"));
+  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
   if (niport)
     {
       NrrdDataHandle nrrdH;
@@ -169,7 +169,7 @@ BundleGetMatrix::execute()
       return; 
     }
  
-  niport = static_cast<NrrdIPort *>(get_iport("name2"));
+  niport = static_cast<NrrdIPort *>(getIPort("name2"));
   if (niport)
     {
       NrrdDataHandle nrrdH;
@@ -200,7 +200,7 @@ BundleGetMatrix::execute()
     }
  
      
-  niport = static_cast<NrrdIPort *>(get_iport("name3"));
+  niport = static_cast<NrrdIPort *>(getIPort("name3"));
   if (niport)
     {
       NrrdDataHandle nrrdH;
