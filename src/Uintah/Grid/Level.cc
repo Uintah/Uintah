@@ -2,6 +2,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
@@ -10,7 +11,8 @@ using namespace Uintah;
 using namespace SCICore::Geometry;
 using namespace std;
 
-Level::Level()
+Level::Level(Grid* grid)
+   : grid(grid)
 {
 }
 
@@ -85,8 +87,17 @@ long Level::totalCells() const
   return total;
 }
 
+GridP Level::getGrid() const
+{
+   return grid;
+}
+
 //
 // $Log$
+// Revision 1.7  2000/05/15 19:39:47  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.6  2000/05/10 20:02:59  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

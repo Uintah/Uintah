@@ -5,13 +5,13 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MinMax.h>
 
 #include <math.h>
 
-class SimulationStateP;
 namespace Uintah {
    using SCICore::Geometry::Vector;
    using SCICore::Math::Min;
@@ -127,6 +127,10 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.14  2000/05/15 19:39:41  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.13  2000/05/11 20:10:16  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

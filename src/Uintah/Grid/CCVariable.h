@@ -84,7 +84,6 @@ WARNING
       const TypeDescription*
       CCVariable<T>::getTypeDescription()
       {
-	 //cerr << "CCVariable::getTypeDescription not done\n";
 	 return 0;
       }
    
@@ -155,6 +154,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/05/15 19:39:46  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.9  2000/05/15 19:09:43  tan
 // CCVariable<T>::operator[] is needed.
 //

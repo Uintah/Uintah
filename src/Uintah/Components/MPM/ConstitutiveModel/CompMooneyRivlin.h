@@ -48,6 +48,7 @@ WARNING
 	    double C3;
 	    double C4;
 	 };
+	 friend bool isFlat(const CMData&);
 
 	 CMData d_initialData;
 	 
@@ -116,6 +117,10 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.19  2000/05/15 19:39:39  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.18  2000/05/11 20:10:13  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

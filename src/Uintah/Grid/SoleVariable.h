@@ -3,7 +3,6 @@
 
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
-#include <iostream> // TEMPORARY
 
 namespace Uintah {
    class TypeDescription;
@@ -61,7 +60,6 @@ WARNING
       const TypeDescription*
       SoleVariable<T>::getTypeDescription()
       {
-	 //cerr << "SoleVariable::getTypeDescription not done\n";
 	 return 0;
       }
    
@@ -106,6 +104,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/05/15 19:39:49  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.6  2000/04/26 06:48:57  sparker
 // Streamlined namespaces
 //

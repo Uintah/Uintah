@@ -5,7 +5,6 @@
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
-#include <iostream> // TEMPORARY
 
 namespace Uintah {
    class TypeDescription;
@@ -114,6 +113,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/05/15 19:39:49  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.4  2000/05/07 06:02:12  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

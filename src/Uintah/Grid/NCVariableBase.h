@@ -9,7 +9,7 @@ namespace SCICore {
 }
 
 namespace Uintah {
-
+   class OutputContext;
    class Region;
    using SCICore::Geometry::IntVector;
 
@@ -58,6 +58,7 @@ WARNING
       virtual void copyRegion(NCVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
+      virtual void emit(OutputContext&) = 0;
    protected:
       NCVariableBase(const NCVariableBase&);
       NCVariableBase();
@@ -70,6 +71,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/05/15 19:39:48  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.4  2000/05/10 20:03:00  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

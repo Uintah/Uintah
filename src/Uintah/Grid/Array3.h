@@ -3,7 +3,6 @@
 
 #include "Array3Window.h"
 #include <SCICore/Geometry/IntVector.h>
-#include <iostream> // TEMPORARY
 
 /**************************************
 
@@ -78,7 +77,6 @@ namespace Uintah {
       void resize(const IntVector& lowIndex, const IntVector& highIndex) {
 	 if(d_window && d_window->removeReference())
 	    delete d_window;
-	 //std::cerr << "Creating array: " << size1 << "x" << size2 << "x" << size3 << " (size " << sizeof(T) << ")\n";
 	 IntVector size = highIndex-lowIndex;
 	 d_window=new Array3Window<T>(new Array3Data<T>(size), lowIndex, highIndex);
 	 d_window->addReference();
@@ -117,6 +115,10 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.10  2000/05/15 19:39:46  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.9  2000/05/10 20:02:57  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -3,15 +3,21 @@
 
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/NCVariableBase.h>
+#include <Uintah/Grid/EmitUtils.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Interface/OutputContext.h>
+#include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/Region.h>
+#include <unistd.h>
+#include <errno.h>
 
 using namespace Uintah;
 
 namespace Uintah {
+   using SCICore::Exceptions::ErrnoException;
    using SCICore::Exceptions::InternalError;
    using SCICore::Geometry::Vector;
 
@@ -128,6 +134,7 @@ WARNING
      // normal to the face with 0.0
      void fillFaceNormal(Region::FaceType) {};
      
+      virtual void emit(OutputContext&);
    private:
    };
    
@@ -209,10 +216,36 @@ WARNING
 		  (*this)[IntVector(i, j, k)] = src[IntVector(i,j,k)];
       }
    
+   template<class T>
+      void
+      NCVariable<T>::emit(OutputContext& oc)
+      {
+	 T* t=0;
+	 if(isFlat(*t)){
+	    // This could be optimized...
+	    IntVector l(getLowIndex());
+	    IntVector h(getHighIndex());
+	    for(int x=l.x();x<h.x();x++){
+	       for(int y=l.y();y<h.y();y++){
+		  size_t size = sizeof(T)*(h.z()-l.z());
+		  ssize_t s=write(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  if(size != s)
+		     throw ErrnoException("NCVariable::emit (write call)", errno);
+		  oc.cur+=size;
+	       }
+	    }
+	 } else {
+	    throw InternalError("Cannot yet write non-flat objects!\n");
+	 }
+      }
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.17  2000/05/15 19:39:48  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.16  2000/05/10 20:03:00  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

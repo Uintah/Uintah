@@ -69,7 +69,6 @@ WARNING
       const TypeDescription*
       FCVariable<T>::getTypeDescription()
       {
-	 //cerr << "FCVariable::getTypeDescription not done\n";
 	 return 0;
       }
    
@@ -127,6 +126,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/05/15 19:39:47  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.2  2000/04/26 06:48:47  sparker
 // Streamlined namespaces
 //

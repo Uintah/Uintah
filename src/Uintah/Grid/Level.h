@@ -3,6 +3,7 @@
 
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Handle.h>
 #include <SCICore/Geometry/Point.h>
@@ -47,7 +48,7 @@ WARNING
 
    class Level : public RefCounted {
    public:
-      Level();
+      Level(Grid* grid);
       virtual ~Level();
       
       typedef std::vector<Region*>::iterator regionIterator;
@@ -66,17 +67,23 @@ WARNING
       long totalCells() const;
       
       void performConsistencyCheck() const;
+      GridP getGrid() const;
    private:
       Level(const Level&);
       Level& operator=(const Level&);
       
       std::vector<Region*> d_regions;
+      Grid* grid;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.10  2000/05/15 19:39:47  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.9  2000/05/10 20:02:59  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)
