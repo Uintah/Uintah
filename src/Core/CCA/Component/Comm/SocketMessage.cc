@@ -19,6 +19,7 @@
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/PIDL/URL.h>
 
 #include <string>
 
