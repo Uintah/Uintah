@@ -496,7 +496,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    throw InternalError("X faces around z faces not implemented");
 	case Ghost::AroundAllFaces: // X faces around all faces
 	    throw InternalError("X faces around all faces not implemented");
-	    break;
 	}
 	break;
     case YFaceBased:
@@ -568,7 +567,9 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	}
 	break;
     }
-    d_level->selectPatches(l, h, neighbors);
+    low=l;
+    high=h;
+    d_level->selectPatches(low, high, neighbors);
 }
 
 void Patch::computeVariableExtents(TypeDescription::Type basis,
@@ -677,6 +678,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.24  2000/10/11 21:39:59  sparker
+// Added rewindow to CCVariable - just copies the array to a different window
+//
 // Revision 1.23  2000/10/11 17:39:38  sparker
 // Added copy with range
 // Fixed bug in Array3Data::copy

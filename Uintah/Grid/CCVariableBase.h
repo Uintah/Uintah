@@ -52,6 +52,8 @@ WARNING
       
       virtual void copyPointer(const CCVariableBase&) = 0;
       
+      virtual void rewindow(const IntVector& low, const IntVector& high) = 0;
+
       //////////
       // Insert Documentation Here:
       virtual CCVariableBase* clone() const = 0;
@@ -78,6 +80,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/10/11 21:39:59  sparker
+// Added rewindow to CCVariable - just copies the array to a different window
+//
 // Revision 1.5  2000/09/25 14:41:32  rawat
 // added mpi support for cell centered and staggered cell variables
 //
