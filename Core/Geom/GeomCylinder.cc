@@ -201,13 +201,13 @@ GeomCylinders::get_bounds(BBox& bb)
   }
 }
 
-#define GEOMLINES_VERSION 1
+#define GEOMCYLINDERS_VERSION 1
 
 void
 GeomCylinders::io(Piostream& stream)
 {
 
-  stream.begin_class("GeomCylinders", GEOMLINES_VERSION);
+  stream.begin_class("GeomCylinders", GEOMCYLINDERS_VERSION);
   GeomObj::io(stream);
   Pio(stream, radius_);
   Pio(stream, nu_);
