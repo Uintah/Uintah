@@ -8670,22 +8670,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" math.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested M include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested M include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested M include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested M include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" m; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested M library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested M library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested M library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested M library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -9195,22 +9202,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" X11/Xlib.h; do
-#echo looking for $_x_inc_dir/$i
+    #echo looking for $_x_inc_dir/$i
     if test ! -e $_x_inc_dir/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested X include file '$_x_inc_dir/$i' was not found" >&5
-echo "$as_me: error: Specificly requested X include file '$_x_inc_dir/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested X include file '$_x_inc_dir/$i' was not found" >&5
+echo "$as_me: error: Specifically requested X include file '$_x_inc_dir/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" X11 Xext Xaw Xi Xt Xmu; do
-#echo looking for $_x_lib_dir/$i
-    if test -n "$i" && test ! -e $_x_lib_dir/lib$i.so && test ! -e $_x_lib_dir/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested X library file '$_x_lib_dir/$i' was not found" >&5
-echo "$as_me: error: Specificly requested X library file '$_x_lib_dir/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_x_lib_dir/$i
+    if test ! -e $_x_lib_dir/lib$i.so && test ! -e $_x_lib_dir/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested X library file '$_x_lib_dir/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested X library file '$_x_lib_dir/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -9721,22 +9735,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested FETCHOP include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested FETCHOP include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested FETCHOP include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested FETCHOP include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" fetchop; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested FETCHOP library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested FETCHOP library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested FETCHOP library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested FETCHOP library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -10159,22 +10180,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" pthread.h semaphore.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PTHREAD include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PTHREAD include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PTHREAD include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PTHREAD include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" pthread; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PTHREAD library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PTHREAD library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PTHREAD library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PTHREAD library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -10858,22 +10886,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" GL/gl.h GL/glu.h GL/glx.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GL include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GL include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested GL include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested GL include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" GLU GL $GLU_OTHERS; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested GL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested GL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -11979,22 +12014,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" dlfcn.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested DL include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested DL include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested DL include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested DL include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" c; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested DL library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested DL library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -12458,22 +12500,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" dlfcn.h; do
-#echo looking for $sci_thirdparty_include/$i
+    #echo looking for $sci_thirdparty_include/$i
     if test ! -e $sci_thirdparty_include/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested DL include file '$sci_thirdparty_include/$i' was not found" >&5
-echo "$as_me: error: Specificly requested DL include file '$sci_thirdparty_include/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested DL include file '$sci_thirdparty_include/$i' was not found" >&5
+echo "$as_me: error: Specifically requested DL include file '$sci_thirdparty_include/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" dl; do
-#echo looking for $sci_thirdparty_lib/$i
-    if test -n "$i" && test ! -e $sci_thirdparty_lib/lib$i.so && test ! -e $sci_thirdparty_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested DL library file '$sci_thirdparty_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested DL library file '$sci_thirdparty_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $sci_thirdparty_lib/$i
+    if test ! -e $sci_thirdparty_lib/lib$i.so && test ! -e $sci_thirdparty_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested DL library file '$sci_thirdparty_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested DL library file '$sci_thirdparty_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -12893,22 +12942,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" dlfcn.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested DL include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested DL include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested DL include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested DL include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" dl; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested DL library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested DL library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -13340,22 +13396,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" sys/stat.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STAT64 include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STAT64 include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested STAT64 include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested STAT64 include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STAT64 library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STAT64 library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested STAT64 library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested STAT64 library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -13783,22 +13846,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h unistd.h netdb.h ctype.h signal.h locale.h dirent.h assert.h sys/select.h sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STD_HDRS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STD_HDRS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested STD_HDRS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STD_HDRS library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STD_HDRS library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -14221,22 +14291,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ieeefp.h ulocks.h values.h malloc.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STD_HDRS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STD_HDRS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested STD_HDRS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STD_HDRS library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STD_HDRS library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -14655,22 +14732,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" values.h malloc.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STD_HDRS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STD_HDRS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested STD_HDRS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STD_HDRS library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STD_HDRS library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -15105,22 +15189,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" algorithm vector map iostream string; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STL_HEADERS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STL_HEADERS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested STL_HEADERS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested STL_HEADERS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested STL_HEADERS library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested STL_HEADERS library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested STL_HEADERS library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested STL_HEADERS library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -15754,22 +15845,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" tcl.h tclPort.h tclMath.h tclInt.h; do
-#echo looking for $_sci_tcl_inc/$i
+    #echo looking for $_sci_tcl_inc/$i
     if test ! -e $_sci_tcl_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TCL include file '$_sci_tcl_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TCL include file '$_sci_tcl_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested TCL include file '$_sci_tcl_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested TCL include file '$_sci_tcl_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" tcl; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TCL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TCL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested TCL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested TCL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -16281,22 +16379,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" tk.h tk3d.h tkPort.h; do
-#echo looking for $_x_inc_dir $_sci_tk_inc/$i
+    #echo looking for $_x_inc_dir $_sci_tk_inc/$i
     if test ! -e $_x_inc_dir $_sci_tk_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TK include file '$_x_inc_dir $_sci_tk_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TK include file '$_x_inc_dir $_sci_tk_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested TK include file '$_x_inc_dir $_sci_tk_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested TK include file '$_x_inc_dir $_sci_tk_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" tk $TCL_LIB_FLAG; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TK library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TK library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested TK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested TK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -16787,22 +16892,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" itcl.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested ITCL include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested ITCL include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested ITCL include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested ITCL include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" itcl; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested ITCL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested ITCL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested ITCL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested ITCL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -17308,22 +17420,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" itk.h; do
-#echo looking for $_x_inc_dir $_sci_inc/$i
+    #echo looking for $_x_inc_dir $_sci_inc/$i
     if test ! -e $_x_inc_dir $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested ITK include file '$_x_inc_dir $_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested ITK include file '$_x_inc_dir $_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested ITK include file '$_x_inc_dir $_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested ITK include file '$_x_inc_dir $_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" itk; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested ITK library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested ITK library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested ITK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested ITK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -17814,22 +17933,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" blt.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLT include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLT include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLT include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLT include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" BLT; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLT library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLT library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLT library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLT library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -18530,22 +18656,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" xercesc/dom/DOMNamedNodeMap.hpp xercesc/util/PlatformUtils.hpp xercesc/parsers/XercesDOMParser.hpp xercesc/dom/DOMNode.hpp xercesc/util/XMLUni.hpp xercesc/sax/SAXException.hpp xercesc/sax/SAXParseException.hpp xercesc/sax/ErrorHandler.hpp; do
-#echo looking for $_xer_inc/$i
+    #echo looking for $_xer_inc/$i
     if test ! -e $_xer_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested XERCES_C include file '$_xer_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested XERCES_C include file '$_xer_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested XERCES_C include file '$_xer_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested XERCES_C include file '$_xer_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" $_xer_lib; do
-#echo looking for $_xer_lib_path/$i
-    if test -n "$i" && test ! -e $_xer_lib_path/lib$i.so && test ! -e $_xer_lib_path/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested XERCES_C library file '$_xer_lib_path/$i' was not found" >&5
-echo "$as_me: error: Specificly requested XERCES_C library file '$_xer_lib_path/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_xer_lib_path/$i
+    if test ! -e $_xer_lib_path/lib$i.so && test ! -e $_xer_lib_path/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested XERCES_C library file '$_xer_lib_path/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested XERCES_C library file '$_xer_lib_path/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -19001,22 +19134,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" sstream; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested SSTREAM include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested SSTREAM include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested SSTREAM include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested SSTREAM include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested SSTREAM library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested SSTREAM library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested SSTREAM library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested SSTREAM library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -19494,22 +19634,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" libexc.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested EXC include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested EXC include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested EXC include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested EXC include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" exc; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested EXC library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested EXC library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested EXC library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested EXC library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -20003,22 +20150,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" zlib.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested Z include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested Z include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested Z include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested Z include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" z; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested Z library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested Z library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested Z library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested Z library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -20468,22 +20622,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested JPEG include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested JPEG include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested JPEG include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested JPEG include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" jpeg; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested JPEG library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested JPEG library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested JPEG library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested JPEG library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -20916,22 +21077,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TIFF include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TIFF include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested TIFF include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested TIFF include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" tiff; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TIFF library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TIFF library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested TIFF library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested TIFF library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -21447,22 +21615,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" png.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PNG include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PNG include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PNG include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PNG include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" png; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PNG library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PNG library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PNG library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PNG library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -22003,22 +22178,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" png.h; do
-#echo looking for /usr/sci/local/include/$i
+    #echo looking for /usr/sci/local/include/$i
     if test ! -e /usr/sci/local/include/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PNG include file '/usr/sci/local/include/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PNG include file '/usr/sci/local/include/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PNG include file '/usr/sci/local/include/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PNG include file '/usr/sci/local/include/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" png; do
-#echo looking for $png_lib_dir/$i
-    if test -n "$i" && test ! -e $png_lib_dir/lib$i.so && test ! -e $png_lib_dir/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PNG library file '$png_lib_dir/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PNG library file '$png_lib_dir/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $png_lib_dir/$i
+    if test ! -e $png_lib_dir/lib$i.so && test ! -e $png_lib_dir/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PNG library file '$png_lib_dir/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PNG library file '$png_lib_dir/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -22042,6 +22224,8 @@ _sci_includes=''
   fi
 else
   if test "$_sci_optional" = "specific"; then
+       echo "$as_me:$LINENO: checking that PNG is in requestion location '$with_png/lib'" >&5
+echo $ECHO_N "checking that PNG is in requestion location '$with_png/lib'... $ECHO_C" >&6
        # verify that it was found in the location requested.
        if test ! -e $with_png/lib/libpng.so &&
           test ! -e $with_png/lib/libpng.a &&
@@ -22051,6 +22235,8 @@ else
 echo "$as_me: error: Found libpng but not in requested directory: $with_png/lib" >&2;}
    { (exit 1); exit 1; }; }
        fi
+       echo "$as_me:$LINENO: result: yes." >&5
+echo "${ECHO_T}yes." >&6
     fi
 fi
 
@@ -22472,22 +22658,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPEGE include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPEGE include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MPEGE include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPEGE include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" mpege; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPEGE library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPEGE library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPEGE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPEGE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -23052,22 +23245,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" magick/magick.h; do
-#echo looking for $includes/$i
+    #echo looking for $includes/$i
     if test ! -e $includes/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MAGICK include file '$includes/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MAGICK include file '$includes/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MAGICK include file '$includes/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MAGICK include file '$includes/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" $MAGICK_LIB_FLAG; do
-#echo looking for $MAGICK_LIB_DIR_FLAG/$i
-    if test -n "$i" && test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.so && test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $MAGICK_LIB_DIR_FLAG/$i
+    if test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.so && test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -23612,22 +23812,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" extern_C unpv12e/unp.h unpv12e/unpthread.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested UNP include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested UNP include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested UNP include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested UNP include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" unp scisock; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested UNP library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested UNP library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested UNP library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested UNP library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -24071,22 +24278,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested F include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested F include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ftn fortran; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -24505,22 +24719,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested F include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested F include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" xlf90; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -24940,22 +25161,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested F include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested F include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" pgftnrtl; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -25372,22 +25600,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested F include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested F include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" g2c; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -25806,22 +26041,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested F include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested F include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" for Ufor; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -26280,22 +26522,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested F include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested F include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" g2c; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -26713,22 +26962,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested F include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested F include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" F77; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested F library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -27248,22 +27504,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested CAMAL include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested CAMAL include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested CAMAL include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested CAMAL include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" CMLTet202; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested CAMAL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested CAMAL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested CAMAL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested CAMAL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -27765,22 +28028,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" vecLib/cblas.h; do
-#echo looking for -faltivec/$i
+    #echo looking for -faltivec/$i
     if test ! -e -faltivec/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '-faltivec/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '-faltivec/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '-faltivec/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '-faltivec/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -28238,22 +28508,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" cblas.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" cblas f77blas atlas; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -28699,22 +28976,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" essl; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -29132,22 +29416,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" cxml; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -29607,22 +29898,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" cblas.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" cblas blas; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -30084,22 +30382,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" cblas.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" blas; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -30521,22 +30826,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" blas; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -30953,22 +31265,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" fblas; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -31387,22 +31706,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "specific" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested BLAS include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" blas; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested BLAS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -31867,22 +32193,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" vecLib/clapack.h; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ; do
-#echo looking for /$i
-    if test -n "$i" && test ! -e /lib$i.so && test ! -e /lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK library file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK library file '/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK library file '/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -32303,22 +32636,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" lapack; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -32738,22 +33078,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" flapack; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -33181,22 +33528,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" complib.sgimath; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACK library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACK library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -33615,22 +33969,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACKMP include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACKMP include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACKMP include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested LAPACKMP include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" complib.sgimath_mp; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested LAPACKMP library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested LAPACKMP library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested LAPACKMP library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested LAPACKMP library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -34159,22 +34520,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" mpi.h; do
-#echo looking for $_sci_inc /usr/include/mpi/$i
+    #echo looking for $_sci_inc /usr/include/mpi/$i
     if test ! -e $_sci_inc /usr/include/mpi/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" mpi lam util pmpi; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -34645,22 +35013,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" mpi.h; do
-#echo looking for $_sci_inc /usr/include/mpi/$i
+    #echo looking for $_sci_inc /usr/include/mpi/$i
     if test ! -e $_sci_inc /usr/include/mpi/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" mpi lam util pthread; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -35128,22 +35503,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" mpi.h; do
-#echo looking for $_sci_inc /usr/include/mpi/$i
+    #echo looking for $_sci_inc /usr/include/mpi/$i
     if test ! -e $_sci_inc /usr/include/mpi/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" mpi; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -35611,22 +35993,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" mpi.h; do
-#echo looking for $_sci_inc /usr/include/mpi/$i
+    #echo looking for $_sci_inc /usr/include/mpi/$i
     if test ! -e $_sci_inc /usr/include/mpi/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/include/mpi/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" mpich pmpich; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -36281,22 +36670,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" mpi.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI_UNI include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI_UNI include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI_UNI include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPI_UNI include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" mpiuni; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI_UNI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI_UNI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPI_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -36754,22 +37150,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI_UNICH include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI_UNICH include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI_UNICH include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MPI_UNICH include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" mpiunich pmpiunich; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MPI_UNICH library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MPI_UNICH library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MPI_UNICH library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MPI_UNICH library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -37302,22 +37705,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" petsc.h; do
-#echo looking for $_sci_inc /usr/include/petsc/$i
+    #echo looking for $_sci_inc /usr/include/petsc/$i
     if test ! -e $_sci_inc /usr/include/petsc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
-#echo looking for $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i
-    if test -n "$i" && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i
+    if test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -37779,22 +38189,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" petsc.h; do
-#echo looking for $_sci_inc /usr/include/petsc/$i
+    #echo looking for $_sci_inc /usr/include/petsc/$i
     if test ! -e $_sci_inc /usr/include/petsc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
-#echo looking for $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i
-    if test -n "$i" && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i
+    if test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -38280,22 +38697,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" petsc.h; do
-#echo looking for $_sci_inc /usr/include/petsc/$i
+    #echo looking for $_sci_inc /usr/include/petsc/$i
     if test ! -e $_sci_inc /usr/include/petsc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC_UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC_UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC_UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PETSC_UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC_UNI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC_UNI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -38756,22 +39180,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" petsc.h; do
-#echo looking for $_sci_inc /usr/include/petsc/$i
+    #echo looking for $_sci_inc /usr/include/petsc/$i
     if test ! -e $_sci_inc /usr/include/petsc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC-UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC-UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC-UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PETSC-UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscfortran; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PETSC-UNI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PETSC-UNI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC-UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC-UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -39561,22 +39992,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" sidl.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested SIDL include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested SIDL include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested SIDL include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested SIDL include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" sidl; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested SIDL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested SIDL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested SIDL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested SIDL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -40069,22 +40507,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested NETSOLVE include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested NETSOLVE include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested NETSOLVE include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested NETSOLVE include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" netsolve; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested NETSOLVE library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested NETSOLVE library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested NETSOLVE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested NETSOLVE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -40683,22 +41128,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" GL/glut.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLUT include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLUT include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested GLUT include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested GLUT include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" glut; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLUT library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLUT library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested GLUT library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested GLUT library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -41347,22 +41799,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" GL/glut.h glui.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLUI include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLUI include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested GLUI include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested GLUI include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" glui; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLUI library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLUI library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested GLUI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested GLUI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -41857,22 +42316,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" oogl/basicTexture.h oogl/shadedPrim.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested OOGL include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested OOGL include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested OOGL include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested OOGL include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" oogl; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested OOGL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested OOGL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested OOGL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested OOGL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -42390,22 +42856,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" GL/glew.h GL/glxew.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLEW include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLEW include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested GLEW include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested GLEW include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" GLEW; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLEW library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLEW library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested GLEW library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested GLEW library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -42925,22 +43398,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ft2build.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested FREETYPE include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested FREETYPE include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested FREETYPE include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested FREETYPE include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" $FREETYPE_LIB_FLAG; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested FREETYPE library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested FREETYPE library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested FREETYPE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested FREETYPE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -43442,22 +43922,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" FTGLTextureFont.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested FTGL include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested FTGL include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested FTGL include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested FTGL include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ftgl; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested FTGL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested FTGL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested FTGL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested FTGL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -43898,22 +44385,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested AUDIO include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested AUDIO include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested AUDIO include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested AUDIO include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" audio audiofile; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested AUDIO library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested AUDIO library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested AUDIO library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested AUDIO library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -44470,22 +44964,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" teem/nrrd.h teem/ten.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TEEM include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TEEM include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested TEEM include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested TEEM include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm; do
-#echo looking for $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i
-    if test -n "$i" && test ! -e $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested TEEM library file '$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i' was not found" >&5
-echo "$as_me: error: Specificly requested TEEM library file '$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i
+    if test ! -e $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested TEEM library file '$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested TEEM library file '$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -45018,22 +45519,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" mdslib.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MDSPLUS include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MDSPLUS include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested MDSPLUS include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested MDSPLUS include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" MdsLib_client; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested MDSPLUS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested MDSPLUS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested MDSPLUS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested MDSPLUS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -45530,22 +46038,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" hdf5.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested HDF5 include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested HDF5 include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested HDF5 include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested HDF5 include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" hdf5; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested HDF5 library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested HDF5 library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested HDF5 library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested HDF5 library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -45982,22 +46497,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PERFEX include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PERFEX include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PERFEX include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PERFEX include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" perfex; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested PERFEX library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested PERFEX library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PERFEX library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PERFEX library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -46433,22 +46955,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested CRYPTO include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested CRYPTO include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested CRYPTO include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested CRYPTO include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" crypto; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested CRYPTO library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested CRYPTO library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested CRYPTO library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested CRYPTO library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -46895,22 +47424,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for /$i
+    #echo looking for /$i
     if test ! -e /$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested SSL include file '/$i' was not found" >&5
-echo "$as_me: error: Specificly requested SSL include file '/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested SSL include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested SSL include file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ssl crypto; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested SSL library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested SSL library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested SSL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested SSL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -47410,22 +47946,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLOBUS include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLOBUS include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested GLOBUS include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested GLOBUS include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" globus_dc pthread; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested GLOBUS library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested GLOBUS library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested GLOBUS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested GLOBUS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -48185,22 +48728,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" qcanvas.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested QT_MT include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested QT_MT include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested QT_MT include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested QT_MT include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" qt-mt; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested QT_MT library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested QT_MT library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested QT_MT library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested QT_MT library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -48739,22 +49289,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" ruby.h; do
-#echo looking for $_ruby_inc/$i
+    #echo looking for $_ruby_inc/$i
     if test ! -e $_ruby_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested RUBY include file '$_ruby_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested RUBY include file '$_ruby_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested RUBY include file '$_ruby_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested RUBY include file '$_ruby_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" ruby-static; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested RUBY library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested RUBY library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested RUBY library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested RUBY library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -49243,22 +49800,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" vtkImageData.h; do
-#echo looking for $_vtk_inc/$i
+    #echo looking for $_vtk_inc/$i
     if test ! -e $_vtk_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested VTK include file '$_vtk_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested VTK include file '$_vtk_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested VTK include file '$_vtk_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested VTK include file '$_vtk_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested VTK library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested VTK library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested VTK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested VTK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -49772,22 +50336,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "required" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" vdt.h; do
-#echo looking for $_vdt_inc/$i
+    #echo looking for $_vdt_inc/$i
     if test ! -e $_vdt_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested VDT include file '$_vdt_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested VDT include file '$_vdt_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested VDT include file '$_vdt_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested VDT include file '$_vdt_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" $_vdt_libs; do
-#echo looking for $_vdt_lib_path/$i
-    if test -n "$i" && test ! -e $_vdt_lib_path/lib$i.so && test ! -e $_vdt_lib_path/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested VDT library file '$_vdt_lib_path/$i' was not found" >&5
-echo "$as_me: error: Specificly requested VDT library file '$_vdt_lib_path/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_vdt_lib_path/$i
+    if test ! -e $_vdt_lib_path/lib$i.so && test ! -e $_vdt_lib_path/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested VDT library file '$_vdt_lib_path/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested VDT library file '$_vdt_lib_path/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -50279,22 +50850,29 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
 if test "$_sci_optional" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" HYPRE.h; do
-#echo looking for $_sci_inc/$i
+    #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested HYPRE include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested HYPRE include file '$_sci_inc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested HYPRE include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested HYPRE include file '$_sci_inc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
   for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI; do
-#echo looking for $_sci_lib/$i
-    if test -n "$i" && test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested HYPRE library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested HYPRE library file '$_sci_lib/$i' was not found" >&2;}
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested HYPRE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested HYPRE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
