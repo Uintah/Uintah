@@ -605,10 +605,8 @@ LatVolMesh::get_nodes(Node::index_type &begin, Node::index_type &end,
   bool max_located = locate(max_index, max);
   if (!min_located && !max_located) {
     // first check to see if there is a bbox overlap
-    BBox box;
-    box.extend(min);
-    box.extend(max);
-    if ( box.Overlaps(mesh_boundary) ){
+    BBox box(min, max);
+    if ( box.overlaps(mesh_boundary) ){
       Point r = transform_.unproject(min);
       double rx = floor(r.x());
       double ry = floor(r.y());
