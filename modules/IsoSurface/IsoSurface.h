@@ -16,7 +16,7 @@
 
 #include <UserModule.h>
 #include <Geometry/Point.h>
-class Field3DHandle;
+#include <Field3D.h>
 class Field3DIPort;
 class GeometryOPort;
 

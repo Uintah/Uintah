@@ -60,7 +60,9 @@ Module* IsoSurface::clone(int deep)
 
 void IsoSurface::execute()
 {
-    Field3DHandle field(infield->get_field());
+    Field3DHandle field;
+    if(!infield->get_field(field))
+	return;
     switch(field->get_rep()){
     case Field3D::RegularGrid:
 	if(have_seedpoint){

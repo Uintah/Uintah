@@ -15,7 +15,6 @@
 #define SCI_project_module_FieldReader_h
 
 #include <UserModule.h>
-class Field3DHandle;
 class Field3DOPort;
 
 class FieldReader : public UserModule {
