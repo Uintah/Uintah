@@ -204,28 +204,29 @@ itcl_class SCIRun_Visualization_Isosurface {
 	bind $sel.f.e <Return> "$this-c needexecute"
 	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
 	frame $sel.m -relief groove -borderwidth 2
-	label $sel.m.l -text "MinMax of isovals:"
-	radiobutton $sel.m.f -text "Field MinMax" \
-		-variable $this-quantity-range -value "field" \
-		-command "$this-c needexecute"
+	label $sel.m.l -text "MinMax Determination"
 	radiobutton $sel.m.c -text "ColorMap MinMax" \
 		-variable $this-quantity-range -value "colormap" \
 		-command "$this-c needexecute"
-	radiobutton $sel.m.m -text "Manual MinMax" \
+	radiobutton $sel.m.f -text "Field MinMax" \
+		-variable $this-quantity-range -value "field" \
+		-command "$this-c needexecute"
+	radiobutton $sel.m.m -text "Manual" \
 		-variable $this-quantity-range -value "manual" \
 		-command "$this-c needexecute"
 
 	frame $sel.m.t 
-	label $sel.m.t.minl -text "Manual Min:"
+	label $sel.m.t.minl -text "Min"
 	entry $sel.m.t.mine -width 6 -text $this-quantity-min
-	label $sel.m.t.maxl -text "Max:"
+	label $sel.m.t.maxl -text "Max"
 	entry $sel.m.t.maxe -width 6 -text $this-quantity-max
 	bind $sel.m.t.mine <Return> "$this-c needexecute"
 	bind $sel.m.t.maxe <Return> "$this-c needexecute"
 	pack $sel.m.t.minl $sel.m.t.mine $sel.m.t.maxl $sel.m.t.maxe \
 		-side left -fill x -expand 1
-	pack $sel.m.l $sel.m.f $sel.m.c $sel.m.m $sel.m.t \
-	    -side top -fill both -expand 1
+	pack $sel.m.l -side top
+	pack $sel.m.c $sel.m.f -side top -anchor w
+	pack $sel.m.m $sel.m.t -side left -anchor w
 
 	button $sel.extract -text "Extract" -command "$this-c needexecute"
 	pack $sel.f $sel.m $sel.extract -side top -expand 1 -fill x
