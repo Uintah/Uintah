@@ -1463,7 +1463,7 @@ public:
 protected:
 
   void add_item(GeomHandle glyph, const Point &p, Tensor &t,
-		double scale, int resolution, GeomGroup *g);
+		double scale, int resolution, GeomGroup *g, bool colorize);
 };
 
 
@@ -1514,13 +1514,10 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
     glyph = scinew GeomCBox(Point(-1.0, -1.0, -1.0),
 			    Point(1.0, 1.0, 1.0));
   }
-  if (!cmap.get_rep() && !cbox_p)
-  {
-    glyph = scinew GeomMaterial(glyph, def_mat);
-  }
 
   GeomGroup *objs = scinew GeomGroup(); 
-  GeomSwitch *data_switch = scinew GeomSwitch(scinew GeomDL(objs));
+  GeomSwitch *data_switch =
+    scinew GeomSwitch(scinew GeomMaterial(scinew GeomDL(objs), def_mat));
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
 
@@ -1541,14 +1538,14 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       double ctmpd;
       to_double(ctmp, ctmpd);
 
-      if (cmap.get_rep())
+      if (cmap.get_rep() && !cbox_p)
       {
 	add_item(scinew GeomMaterial(glyph, cmap->lookup(ctmpd)),
-		 p, tmp, scale, resolution, objs);
+		 p, tmp, scale, resolution, objs, false);
       }
       else
       {
-	add_item(glyph, p, tmp, scale, resolution, objs);
+	add_item(glyph, p, tmp, scale, resolution, objs, !cbox_p);
       }
     }
     ++iter;
