@@ -95,9 +95,6 @@ public:
   GeomHandle               face_switch_;
 
 protected:
-
-  void add_disk(const Point &p, const Vector& v, double scale, 
-		int resolution, GeomGroup *g, MaterialHandle m0);
   void add_axis(const Point &p, double scale, GeomLines *lines);
   void add_axis(const Point &p, double scale, GeomLines *lines, double val);
 };
@@ -302,7 +299,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 				    bool use_transparency)
 {
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-  GeomGroup *nodes = 0;
+  GeomCappedCylinders *discs = 0;
   GeomPoints *points = 0;
   GeomSpheres *spheres = 0;
   GeomLines *lines = 0;
@@ -349,8 +346,12 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   }
   else if (mode == 3)
   {
-    nodes = scinew GeomGroup();
-    display_list = scinew GeomDL(nodes);
+    discs = scinew GeomCappedCylinders(node_resolution, node_scale);
+    spheres = scinew GeomSpheres(node_scale, node_resolution, node_resolution);
+    GeomGroup *grp = scinew GeomGroup();
+    grp->add(discs);
+    grp->add(spheres);
+    display_list = scinew GeomDL(grp);
   }
 
   // First pass: over the nodes
@@ -424,14 +425,28 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 
     case 3: // Disks
     default:
-      if (def_color)
+      if (vec.safe_normalize() < 1.0e-6)
       {
-	add_disk(p, vec, node_scale, node_resolution, nodes, 0);
+	if (def_color)
+	{
+	  spheres->add(p);
+	}
+	else
+	{
+	  spheres->add(p, val);
+	}
       }
       else
       {
-	add_disk(p, vec, node_scale, node_resolution,
-		 nodes, color_handle->lookup(val));
+	vec *= node_scale/6.0;
+	if (def_color)
+	{
+	  discs->add(p-vec, p+vec);
+	}
+	else
+	{
+	  discs->add(p-vec, val, p+vec, val);
+	}
       }
       break;
     }
@@ -458,13 +473,11 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   const bool cyl = edge_display_mode == "Cylinders";
 
   GeomLines* lines = NULL;
-  GeomColoredCylinders* cylinders = NULL;
+  GeomCylinders* cylinders = NULL;
   GeomHandle display_list;
   if (cyl)
   {
-    cylinders = scinew GeomColoredCylinders;
-    cylinders->set_radius(edge_scale);
-    cylinders->set_nu_nv(cylinder_resolution, 1);
+    cylinders = scinew GeomCylinders(cylinder_resolution, edge_scale);
     display_list = scinew GeomDL(cylinders);
   }
   else

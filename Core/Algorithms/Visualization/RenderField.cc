@@ -57,43 +57,6 @@ RenderFieldBase::get_compile_info(const TypeDescription *ftd,
 
 
 void 
-RenderFieldBase::add_disk(const Point &p, const Vector &vin,
-			  double scale, int resolution,
-			  GeomGroup *g, MaterialHandle mh)
-{
-  Vector v = vin;
-  if (v.length2() * scale > 1.0e-10)
-  {
-    v.safe_normalize();
-    v*=scale/6;
-    GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
-						      resolution, 1, 1);
-    if (mh.get_rep())
-    {
-      g->add(scinew GeomMaterial(d, mh));
-    }
-    else
-    {
-      g->add(d);
-    }
-  }
-  else
-  {
-    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-    if (mh.get_rep())
-    {
-      g->add(scinew GeomMaterial(s, mh));
-    }
-    else
-    {
-      g->add(s);
-    }
-  }
-}
-
-
-
-void 
 RenderFieldBase::add_axis(const Point &p0, double scale, GeomLines *lines)
 {
   static const Vector x(1., 0., 0.);

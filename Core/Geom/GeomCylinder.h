@@ -77,19 +77,18 @@ public:
 };
 
 
-class SCICORESHARE GeomColoredCylinders : public GeomObj {
+class SCICORESHARE GeomCylinders : public GeomObj {
 protected:
   double radius_;
   int  nu_;
-  int  nv_;
   vector<Point> points_;
   vector<MaterialHandle> colors_;
   vector<float> indices_;
 
 public:
-  GeomColoredCylinders();
-  GeomColoredCylinders(const GeomColoredCylinders &copy);
-  virtual ~GeomColoredCylinders();
+  GeomCylinders(int nu = 8, double radius = 1.0);
+  GeomCylinders(const GeomCylinders &copy);
+  virtual ~GeomCylinders();
 
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
@@ -127,6 +126,25 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
+
+
+class SCICORESHARE GeomCappedCylinders : public GeomCylinders {
+public:
+  GeomCappedCylinders(int nu = 8, double radius = 1.0);
+  GeomCappedCylinders(const GeomCappedCylinders &copy);
+  virtual ~GeomCappedCylinders();
+
+  virtual GeomObj* clone();
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+};
+
+
     
 } // End namespace SCIRun
 
