@@ -415,7 +415,7 @@ void StreamLines::execute()
       }
     }
   }
-
+  cf_->resize_fdata();
   oport_->send(cf_);
   cerr << "done with everything." << endl;
 }
