@@ -242,7 +242,9 @@ protected:
   double d_dbgOutputInterval;
   double d_dbgNextDumpTime;
   double d_dbgOldTime;
-  
+  IntVector d_dbgBeginIndx;
+  IntVector d_dbgEndIndx; 
+
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
   
