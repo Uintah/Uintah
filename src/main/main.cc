@@ -272,6 +272,10 @@ main( int argc, char *argv[] ) {
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
 
+  // At this point it is safe to init the environment variables on the
+  // TCL side.  (Note, this must be done before a net is loaded.)
+  gui->execute("initEnviroVars");
+
   char * doing_regressions = sci_getenv("SCI_REGRESSION_TESTING");
 
   if (startnetno)
