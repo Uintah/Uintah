@@ -73,8 +73,6 @@ TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
 TCL_VERSION    := @TCL_VERSION@
 LIB_DIR_ITCL   := @LIB_DIR_ITCL@
 
-MATLAB_ENGINE_FILES := @MATLAB_ENG@
-
 # etags generation
 TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
 C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
@@ -91,16 +89,11 @@ SCIRUN_APP_DIR := $(OBJTOP_ABS)/../$(SCIRUN_APP_NAME).app/Contents
 all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer
 
 .PHONY: prereqs
-prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
+prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
 
 $(MAKEFILEDIRS):
 	@echo creating directory $@
 	@mkdir -p $@
-
-$(MATLAB_ENGINE_FILES):
-	@echo creating engine files for MatlabInterface package.
-	mkdir -p $@
-	cp -r $(SRCTOP)/Packages/MatlabInterface/matlab/engine ./$@
 
 $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
 	@echo creating createTclIndex
