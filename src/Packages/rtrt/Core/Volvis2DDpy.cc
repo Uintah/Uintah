@@ -166,8 +166,12 @@ void
 Volvis2DDpy::setupAccGrid( void )
 {
   // initialize grid
-  for( int i = 0; i < gridsize; i++ )
-    UIgridblock[i] = false;
+  for( int i = 0; i < gridsize; i++ ) {
+    UIgridblock1[i] = false;
+    UIgridblock2[i] = false;
+    UIgridblock3[i] = false;
+    UIgridblock4[i] = false;
+  }
 
   // Divide up transfer function into rows and columns.
   // Force height and width to be legitimate values.
@@ -176,20 +180,76 @@ Volvis2DDpy::setupAccGrid( void )
     gridHeight--;
   int gridWidth = gridsize/gridHeight;
 
-  float heightConvert = (float)gridHeight/(float)textureHeight;
-  float widthConvert = (float)gridWidth/(float)textureWidth;
-  // set up the grid
-  for(int i = 0; i < textureHeight; i++ ) {
-    int grid_y = (int)((float)i*heightConvert);
-    for(int j = 0; j < textureWidth; j++ ) {
+  float heightConvert = (float)gridHeight/(float)textureHeight*2.0;
+  float widthConvert = (float)gridWidth/(float)textureWidth*2.0;
+  // set up the grid one block at a time
+
+  // set up the upper half
+  for(int i = textureHeight/2; i < textureHeight; i++) {
+    int grid_y = (int)((float)(i-textureHeight/2)*heightConvert);
+    for(int j = 0; j < textureWidth/2; j++) {
       int grid_x = (int)((float)j*widthConvert);
       int grid_elem = grid_y*gridWidth + grid_x;
-      // if any part of this transfer function block contains opacity > 0,
-      //  set the acceleration grid to true
-      if( transTexture1->textArray[i][j][3] > 0 )
-	UIgridblock[grid_elem] = true;
+      if(transTexture1->textArray[i][j][3] > 0)
+	UIgridblock3[grid_elem] = true;
+    }
+    for(int j = textureWidth/2; j < textureWidth; j++) {
+      int grid_x = (int)((float)(j-textureWidth/2)*widthConvert);
+      int grid_elem = grid_y*gridWidth + grid_x;
+      if(transTexture1->textArray[i][j][3] > 0)
+	UIgridblock4[grid_elem] = true;
     }
   }
+
+  // set up the lower half
+  for(int i = 0; i < textureHeight/2; i++) {
+    int grid_y = (int)((float)i*heightConvert);
+    for(int j = 0; j < textureWidth/2; j++) {
+      int grid_x = (int)((float)j*widthConvert);
+      int grid_elem = grid_y*gridWidth + grid_x;
+      if(transTexture1->textArray[i][j][3] > 0)
+	UIgridblock1[grid_elem] = true;
+    }
+    for(int j = textureWidth/2; j < textureWidth; j++) {
+      int grid_x = (int)((float)(j-textureWidth/2)*widthConvert);
+      int grid_elem = grid_y*gridWidth + grid_x;
+      if(transTexture1->textArray[i][j][3] > 0)
+	UIgridblock2[grid_elem] = true;
+    }
+  }
+
+//    for(int i = 0; i < textureHeight; i++ ) {
+//      int grid_y = (int)((float)i*heightConvert);
+//      int dummy = 0;
+//      for(int j = 0; j < textureWidth; j++ ) {
+//        int grid_x = (int)((float)j*widthConvert);
+//        int grid_elem = grid_y*gridWidth + grid_x;
+//        // if any part of this transfer function block contains opacity > 0,
+//        //  set the acceleration grid to true
+//        if( transTexture1->textArray[i][j][3] > 0 ) {
+//  	dummy++;
+//  	int gridNum = (grid_x+grid_y*2)%4;
+//  	if(gridNum == 0)
+//  	  UIgridblock1[grid_elem] = true;
+//  	else if(gridNum == 1)
+//  	  UIgridblock2[grid_elem] = true;
+//  	else if(gridNum == 2)
+//  	  UIgridblock3[grid_elem] = true;
+//  	else
+//  	  UIgridblock4[grid_elem] = true;
+//        } else {
+//        }
+//        if (j%4 == 3) {
+//  	if (dummy)
+//  	  cerr << dummy;
+//  	else
+//  	  cerr << "_";
+//  	dummy = 0;
+//        }
+//      }
+//      cerr << "\n";
+//    }
+//    cerr << "\n";
 }
 
 // converts a boolean grid to an integer
@@ -197,12 +257,161 @@ void
 Volvis2DDpy::AccGridToInt( void )
 {
   // use a temporary variable to prevent the used value from being wiped clean
-  unsigned long long temp = 0;
+  unsigned long long temp1 = 0;
+  unsigned long long temp2 = 0;
+  unsigned long long temp3 = 0;
+  unsigned long long temp4 = 0;
   // turn on bits in UIgrid that correspond to UIgridblock indeces
-  for( int index = 0; index < gridsize; index++ )
-    temp |= (unsigned long long)(UIgridblock[index]) << index;
-  // resulting UIgrid value used for volume rendering acceleration method
-  UIgrid = temp;
+  for( int index = 0; index < gridsize; index++ ) {
+    temp1 |= (unsigned long long)(UIgridblock1[index]) << index;
+    temp2 |= (unsigned long long)(UIgridblock2[index]) << index;
+    temp3 |= (unsigned long long)(UIgridblock3[index]) << index;
+    temp4 |= (unsigned long long)(UIgridblock4[index]) << index;
+  }
+
+//    for( int i = 7; i >= 0; i-- ) {
+//      for( int j = 0; j < 8; j++ )
+//        if(temp3 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      for( int j = 0; j < 8; j++ )
+//        if(temp4 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      cerr << endl;
+//    }
+//    for( int i = 7; i >= 0; i-- ) {
+//      for( int j = 0; j < 8; j++ )
+//        if(temp1 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      for( int j = 0; j < 8; j++ )
+//        if(temp2 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      cerr << endl;
+//    }
+//    cerr << endl;
+
+//    // scramble the bits to increase chance of short-circuiting conditionals
+//    unsigned long long scr_temp1 = 0;
+//    unsigned long long scr_temp2 = 0;
+//    unsigned long long scr_temp3 = 0;
+//    unsigned long long scr_temp4 = 0;
+//    for(int i = 0; i < 8; i++)
+//      for(int j = 0; j < 8; j++) {
+//        int hashNum = (j+i*2)%4;
+//        if(hashNum == 0) {
+//  	if(temp1 & (1ULL << (j/4+i*2)))
+//  	  scr_temp1 |= 1ULL << (i*8+j);
+//        } else if(hashNum == 1) {
+//  	if(temp2 & (1ULL << (j/4+i*2)))
+//  	  scr_temp1 |= 1ULL << (i*8+j);
+//        } else if(hashNum == 2) {
+//  	if(temp3 & (1ULL << (j/4+i*2)))
+//  	  scr_temp1 |= 1ULL << (i*8+j);
+//        } else {
+//  	if(temp4 & (1ULL << (j/4+i*2)))
+//  	  scr_temp1 |= 1ULL << (i*8+j);
+//        }
+//      }
+  
+//      for(int i = 0; i < 8; i++)
+//        for(int j = 0; j < 8; j++) {
+//  	int hashNum = (j+i*2)%4;
+//  	if(hashNum == 0) {
+//  	  if(temp1 & (1ULL << (j/4+i*2 + 16)))
+//  	    scr_temp2 |= 1ULL << (i*8+j);
+//  	} else if(hashNum == 1) {
+//  	  if(temp2 & (1ULL << (j/4+i*2 + 16)))
+//  	    scr_temp2 |= 1ULL << (i*8+j);
+//  	} else if(hashNum == 2) {
+//  	  if(temp3 & (1ULL << (j/4+i*2 + 16)))
+//  	    scr_temp2 |= 1ULL << (i*8+j);
+//  	} else {
+//  	  if(temp4 & (1ULL << (j/4+i*2 + 16)))
+//  	    scr_temp2 |= 1ULL << (i*8+j);
+//  	}
+//        }
+
+//      for(int i = 0; i < 8; i++)
+//        for(int j = 0; j < 8; j++) {
+//  	int hashNum = (j+i*2)%4;
+//  	if(hashNum == 0) {
+//  	  if(temp1 & (1ULL << (j/4+i*2 + 32)))
+//  	    scr_temp3 |= 1ULL << (i*8+j);
+//  	} else if(hashNum == 1) {
+//  	  if(temp2 & (1ULL << (j/4+i*2 + 32)))
+//  	    scr_temp3 |= 1ULL << (i*8+j);
+//  	} else if(hashNum == 2) {
+//  	  if(temp3 & (1ULL << (j/4+i*2 + 32)))
+//  	    scr_temp3 |= 1ULL << (i*8+j);
+//  	} else {
+//  	  if(temp4 & (1ULL << (j/4+i*2 + 32)))
+//  	    scr_temp3 |= 1ULL << (i*8+j);
+//  	}
+//        }
+
+//      for(int i = 0; i < 8; i++)
+//        for(int j = 0; j < 8; j++) {
+//  	int hashNum = (j+i*2)%4;
+//  	if(hashNum == 0) {
+//  	  if(temp1 & (1ULL << (j/4+i*2 + 48)))
+//  	    scr_temp4 |= 1ULL << (i*8+j);
+//  	} else if(hashNum == 1) {
+//  	  if(temp2 & (1ULL << (j/4+i*2 + 48)))
+//  	    scr_temp4 |= 1ULL << (i*8+j);
+//  	} else if(hashNum == 2) {
+//  	  if(temp3 & (1ULL << (j/4+i*2 + 48)))
+//  	    scr_temp4 |= 1ULL << (i*8+j);
+//  	} else {
+//  	  if(temp4 & (1ULL << (j/4+i*2 + 48)))
+//  	    scr_temp4 |= 1ULL << (i*8+j);
+//  	}
+//        }
+
+//    // resulting UIgrid value used for volume rendering acceleration method
+//    UIgrid1 = scr_temp1;
+//    UIgrid2 = scr_temp2;
+//    UIgrid3 = scr_temp3;
+//    UIgrid4 = scr_temp4;
+
+  UIgrid1 = temp1;
+  UIgrid2 = temp2;
+  UIgrid3 = temp3;
+  UIgrid4 = temp4;
+
+//    for( int i = 7; i >= 0; i-- ) {
+//      for( int j = 0; j < 8; j++ )
+//        if(UIgrid3 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      for( int j = 0; j < 8; j++ )
+//        if(UIgrid4 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      cerr << endl;
+//    }
+//    for( int i = 7; i >= 0; i-- ) {
+//      for( int j = 0; j < 8; j++ )
+//        if(UIgrid1 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      for( int j = 0; j < 8; j++ )
+//        if(UIgrid2 & (1ULL << i*8+j))
+//  	cerr << "1";
+//        else
+//  	cerr << "0";
+//      cerr << endl;
+//    }
+//    cerr << endl << endl;
 }
 
 
@@ -1940,7 +2149,10 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
   set_resolution( worldWidth, worldHeight );
   lastSaveState = "none";
   lastLoadState = "none";
-  UIgrid = 0;
+  UIgrid1 = 0;
+  UIgrid2 = 0;
+  UIgrid3 = 0;
+  UIgrid4 = 0;
   subT_left = 0;
   subT_top = textureHeight-1;
   subT_right = textureWidth-1;
