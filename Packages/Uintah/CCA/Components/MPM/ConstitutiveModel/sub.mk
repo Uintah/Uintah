@@ -32,7 +32,12 @@ SRCS     += \
 	$(SRCDIR)/MieGruneisenEOS.cc \
 	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/PlasticityModel.cc \
-	$(SRCDIR)/PlasticityModelFactory.cc 
+	$(SRCDIR)/PlasticityModelFactory.cc \
+	$(SRCDIR)/GursonYield.cc \
+	$(SRCDIR)/RousselierYield.cc \
+	$(SRCDIR)/VonMisesYield.cc \
+	$(SRCDIR)/YieldCondition.cc \
+	$(SRCDIR)/YieldConditionFactory.cc \
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \
