@@ -45,16 +45,8 @@ LIBDIR := ../lib/
 
 SOFLAGS         := @SOFLAGS@  $(CFLAGS)
 
-#include $(OTF_SRC)/sub.mk
-PSELIBS := -lCore_Datatypes -lCore_Persistent -lCore_Exceptions \
-	-lCore_Thread -lCore_Containers -lCore_GuiInterface -lCore_Geom \
-	-lCore_Datatypes -lCore_Geometry -lCore_TkExtensions \
-	-lCore_Math -lCore_Util
-
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(FLEX_LIBS) -lm $(XML_LIBRARY) $(THREAD_LIBS)
-
-CURRENT_LIBS := $(wildcard ../lib/*.so)
 SRCS = $(wildcard *.cc)
+OTF_OBJS := $(patsubst %.cc,%.o, $(SRCS))
 OTF_LIBS := $(patsubst %.cc,%.so, $(SRCS))
 
 ifeq ($(NEED_SONAME),yes)
@@ -63,16 +55,26 @@ else
 SONAMEFLAG = 
 endif
 
+ifneq ($(MAKECMDGOALS),)
+include $(MAKECMDGOALS:so=d)
+else
+include $(SRCS:.cc=.d)
+endif
+.SECONDARY:
 
-.SUFFIXES: .so .cc
-
-Makefile: $(OTF_SRC)/Makefile.in $(SCIRUN_OBJTOP)/config.status
-	@( Here="`pwd`" ; cd $(OTF_SRCTOP_ABS) ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
-
-%.so : %.cc $(CURRENT_LIBS)
-	rm -f $@
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $(CURRENT_LIBS)
-
-$(OTF_LIBS) : $(patsub %.cc,%.so, $@) $(CURRENT_LIBS)
-
+.PHONY: all
 all: $(OTF_LIBS)
+
+%.d: %.cc
+	set -e; $(CXX) -M $(CFLAGS) $(INCLUDES) $< \
+          | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
+          [ -s $@ ] || rm -f $@
+
+%.o : %.cc %.d
+	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
+
+%.so : %.o 
+	rm -f $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ 
+
+

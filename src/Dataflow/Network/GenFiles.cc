@@ -198,8 +198,8 @@ int GenComponent(component_node* n, char* packname, char* psepath)
 	  getenv("USER"),"TODAY'S DATE HERE",
 	  packname,packname,
 	  packname,n->name,n->name,n->name,
-	  packname,n->name,n->name,n->name,
-	  n->name,n->name,n->category,packname,n->name,n->name,
+	  n->name,n->name,n->name,n->name,
+	  n->category,packname,n->name,n->name,
 	  n->name,n->name,packname);
   fclose(file);
   delete[] filename;

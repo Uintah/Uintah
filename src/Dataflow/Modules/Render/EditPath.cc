@@ -97,9 +97,9 @@ namespace SCIRun {
     
     GuiInt    tcl_curr_viewwindow;   
     GuiDouble tcl_step_size, tcl_acc_val, tcl_rate;
-    GuiVardouble tcl_speed_val;
+    GuiDouble tcl_speed_val;
     GuiInt    UI_Init, tcl_send_dir;
-    GuiVarint tcl_msg_box, tcl_intrp_type, tcl_acc_mode, tcl_widg_show, tcl_curr_view, tcl_is_new, tcl_stop;
+    GuiInt    tcl_msg_box, tcl_intrp_type, tcl_acc_mode, tcl_widg_show, tcl_curr_view, tcl_is_new, tcl_stop;
     GuiString tcl_info;
     
     double       acc_val, speed_val, rate;

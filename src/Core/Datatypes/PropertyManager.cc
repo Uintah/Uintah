@@ -68,11 +68,29 @@ PropertyManager::PropertyManager(const PropertyManager &copy) :
   map_type::const_iterator pi = copy.properties_.begin();
   while (pi != copy.properties_.end()) {
     if (! pi->second->transient()) {
-      properties_[pi->first]=pi->second->clone();
+      properties_[pi->first] = pi->second->clone();
       ++size_;
     }
     ++pi;
   }
+}
+
+PropertyManager & 
+PropertyManager::operator=(const PropertyManager &copy)
+{
+  thaw();
+  map_type::const_iterator pi = copy.properties_.begin();
+  while (pi != copy.properties_.end()) {
+    if (! pi->second->transient()) {
+      PropertyBase *pb = pi->second->clone();
+      ASSERT(pb != pi->second);
+      properties_[pi->first] = pi->second->clone();
+      ++size_;
+    }
+    ++pi;
+  }
+  freeze();
+  return *this;
 }
 
 

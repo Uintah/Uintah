@@ -63,8 +63,6 @@ itcl_class Module {
 	# messages should be accumulating
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
-	} else {
-	    puts "No stream buffer variable exists"
 	}
 
 	set MacroModule ""
@@ -302,7 +300,7 @@ itcl_class Module {
 		-tags [modname]
 
 	# Make the title
-	label $p.title -text $name -font $modname_font -anchor w
+	label $p.title -text "$name" -font $modname_font -anchor w
 	pack $p.title -side top -padx 2 -anchor w
 	bind $p.title <Map> "$this setDone"
 	
@@ -808,7 +806,7 @@ itcl_class Module {
 
 	    
 	    # add "Dynamically Compiling" text
-	    $modframe.ff.title configure -text "$name\nCompiling" -justify left
+	    $modframe.ff.title configure -text "COMPILING" -justify left
 	}
 
     }
@@ -826,7 +824,7 @@ itcl_class Module {
 	    $modframe.ff.time configure -background grey75
 	    
 	    # add "Dynamically Compiling" text
-	    $modframe.ff.title configure -text $name
+	    $modframe.ff.title configure -text "$name"
 	}
     }
     

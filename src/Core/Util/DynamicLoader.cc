@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <sstream>
 
@@ -46,7 +47,6 @@ const string OTF_SRC_DIR(ON_THE_FLY_SRC);
 const string OTF_OBJ_DIR(ON_THE_FLY_OBJ);
 
 DynamicLoader* DynamicLoader::scirun_loader_ = 0;
-Mutex DynamicLoader::scirun_loader_lock_("DynamicLoader: static instance");
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -112,17 +112,22 @@ DynamicLoader::~DynamicLoader()
 
 //! DynamicLoader::scirun_loader
 //! 
+//! Create and initialize this before the threads are started,
+//!  for performance reasons.
+void
+DynamicLoader::init_scirun_loader()
+{
+  scirun_loader_ = new DynamicLoader;
+}
+
+
+//! DynamicLoader::scirun_loader
+//! 
 //! How to get at the global loader for scirun.
 DynamicLoader& 
 DynamicLoader::scirun_loader()
 {
-  scirun_loader_lock_.lock();
-  if (scirun_loader_ == 0)
-  {
-    scirun_loader_ = new DynamicLoader;
-  }
-  scirun_loader_lock_.unlock();
-
+  ASSERT(scirun_loader_);
   return *scirun_loader_;
 }
 
@@ -268,18 +273,51 @@ bool
 DynamicLoader::compile_so(const string& file, ostream &serr)
 {
   string command = "cd " + OTF_OBJ_DIR + "; gmake " + file + "so";
-  command += " > " + file + "log 2>&1";
 
   serr << "DynamicLoader - Executing: " << command << endl;
-  bool compiled =  sci_system(command.c_str()) == 0; 
-  if(!compiled) {
-    serr << "DynamicLoader::compile_so() Error: "
-	 << "system call failed:" << endl << command << endl;
-  } else {
-    serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
+
+  FILE *pipe = 0;
+  bool result = true;
+#ifdef __sgi
+  //if (serr == cerr)
+  //{
+  //command += " >> " + file + "log 2>&1";
+  //}
+  command += " 2>&1";
+  pipe = popen(command.c_str(), "r");
+  if (pipe == NULL)
+  {
+    serr << "DynamicLoader::compile_so() syscal error unable to make.\n";
+    result = false;
+  }
+#else
+  command += " > " + file + "log 2>&1";
+  const int status = sci_system(command.c_str());
+  if(status != 0) {
+    serr << "DynamicLoader::compile_so() syscal error " << status << ": "
+	 << "command was '" << command << "'\n";
+    result = false;
+  }
+  pipe = fopen((OTF_OBJ_DIR + "/" + file + "log").c_str(), "r");
+#endif
+
+  char buffer[256];
+  while (pipe && fgets(buffer, 256, pipe) != NULL)
+  {
+    serr << buffer;
   }
 
-  return compiled;
+#ifdef __sgi
+  if (pipe) { pclose(pipe); }
+#else
+  if (pipe) { fclose(pipe); }
+#endif
+
+  if (result)
+  {
+    serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
+  }
+  return result;
 }
 
 
@@ -409,6 +447,8 @@ DynamicLoader::create_empty_cc(const CompileInfo &info, ostream &serr)
 
   fstr << "extern \"C\" {"  << endl
        << info.base_class_name_ << "* maker() {" << endl
+       << "//  return scinew "<< info.template_class_name_ << "<" 
+       << info.template_arg_ << ">;" << endl
        << "  return 0;" << endl
        << "}" << endl << "}" << endl;
 

@@ -92,7 +92,7 @@
       We are working on a <I>BioPSE</I> coding standard that will replace
       the one that we currently share with the C-SAFE/Uintah group.  As
       soon as it is ready, we will add it to the <A NAME="tex2html7"
-      HREF="http://www.sci.utah.edu/scirun_docs/doc/">documentation</A>.
+      HREF="../Developer/Guide/index.html">developer documentation</A>.
       </para>
     </answer>
   </entry>
@@ -173,13 +173,13 @@
         Each module in <I>BioPSE</I> requires an XML format description of
         its functionality.  The information in the XML specification
         provides information to assist the <A NAME="tex2html11"
-        HREF="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/create_modules.html">
+        HREF="../Developer/Guide/create_module.html">
         module-maker</A> do its job and help create the template for a
         module.  It also forms the basis of a Reference Manual of all
         modules.  And it even provides information to <I>SCIRun</I> about
         the number of type of ports that the module needs when it appears
-        in a network diagram.  There is addition <A NAME="tex2html12"
-        HREF="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/component.html">        documentation</A> that describes the format and content of the XML
+        in a network diagram.  There is additional <A NAME="tex2html12"
+        HREF="../Developer/Guide/module-xml.html">documentation</A> that describes the format and content of the XML
         spec.
       </para>
     </answer>
@@ -201,7 +201,7 @@
         ensure that an XML specification for <I>BioPSE</I> adheres to
         specifications, there is a document description that the <A
         NAME="tex2html13"
-        HREF="http://www.stg.brown.edu/service/xmlvalid/">online validation
+        HREF="http://eegah.cvrti.utah.edu/srvalidate.html">online validation
         tool</A> requires against which to test the XML file.  This
         document description describes all the legal tags and other
         elements of the document structure.
@@ -314,3 +314,12 @@ Unmap failed - leaking memory
     </answer>
   </entry>
 </faq>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/faq.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

@@ -60,7 +60,7 @@ public:
   MaterialHandle greenMatl_;
   MaterialHandle deflMatl_;
 
-  virtual void widget_moved(int last);
+  virtual void widget_moved(bool last);
   unsigned int nDips_;
 };
 
@@ -252,7 +252,7 @@ ShowDipoles::execute()
 
 
 void
-ShowDipoles::widget_moved(int last)
+ShowDipoles::widget_moved(bool last)
 {
   if(last && !abort_flag)
   {
