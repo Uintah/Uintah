@@ -177,21 +177,38 @@ DEALINGS IN THE SOFTWARE.
   <section id="sec.osx_notes">
     <title>&osx; Prerequisites</title>
 
-    <para>&sr; is supported on &osx; 10.3 (Panther).</para>
-    <para>Apple's X11 server software, Xcode developer tools, and X11
-    software development kit must be installed before installing &sr;.
-    Apple's X11 server software, Xcode developer tools, and X11 SDK
-    are distributed with &osx; but are not part of the &osx; default
-    installation.  They are installed by double-clicking, in turn, the
-    files <filename>X11User.pkg</filename>,
-    <filename>Developer.mpkg</filename>, and
-    <filename>X11SDK.pkg</filename>.  These files may be present on
-    the hard drive, the &osx; installation CDs or DVD.
-    <filename>Developer.mpkg</filename> and
-    <filename>X11SDK.pkg</filename> are part of the Xcode
-    distribution.</para> <para>To use &sr;'s MatlabInterface package,
-    Matlab version Matlab 6.5.1 (MathWorks Relase 13, Service Pack
-    1) must be installed.</para>
+    <para>Observe the following when installing &sr; on &osx;:</para>
+
+    <itemizedlist>
+      <listitem>
+	<para>&sr; is supported on &osx; 10.3 (Panther).</para>
+      </listitem>
+      <listitem>
+	<para>Apple's X11 server software, Xcode developer tools, and X11
+	software development kit must be installed before installing &sr;.
+	Apple's X11 server software, Xcode developer tools, and X11 SDK
+	are distributed with &osx; but are not part of the &osx; default
+	installation.  They are installed by double-clicking, in turn, the
+	files <filename>X11User.pkg</filename>,
+	<filename>Developer.mpkg</filename>, and
+	<filename>X11SDK.pkg</filename>.  These files may be present on
+	the hard drive, the &osx; installation CDs, or DVD.
+	<filename>Developer.mpkg</filename> and
+	<filename>X11SDK.pkg</filename> are part of the Xcode
+	distribution.</para>
+      </listitem>
+      <listitem>
+	<para>&sr;'s MatlabInterface package requires Matlab version
+	Matlab 6.5.1 (MathWorks Relase 13, Service Pack 1).</para>
+      </listitem>
+      <listitem>
+	<para>&sr;'s TEEM package supports PNG images if PNG libraries
+	are installed.  PNG libraries can be installed via the <ulink
+	url="http://fink.sourceforge.net/">fink</ulink>
+	software distribution system.</para>
+      </listitem>
+    </itemizedlist>
+
   </section>
 
   <section id="intro.nvidia_notes">
