@@ -625,7 +625,7 @@ void Thread::initialize() {
 
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 3*1024*1024);
-    usconfig(CONF_INITUSERS, (unsigned int)70);
+    usconfig(CONF_INITUSERS, (unsigned int)110);
     poolmutex_arena=usinit("/dev/zero");
     if(!poolmutex_arena){
 	perror("usinit 1");
@@ -655,7 +655,7 @@ void Thread::initialize() {
 
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 3*1024*1024);
-    usconfig(CONF_INITUSERS, (unsigned int)70);
+    usconfig(CONF_INITUSERS, (unsigned int)110);
     //char* lockfile=tempnam(NULL, "sci");
     //arena=usinit(lockfile);
     //free(lockfile);
