@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/MaterialSetP.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Thread/Mutex.h>
 
 namespace Uintah {
 
@@ -55,11 +56,12 @@ using std::pair;
       //////////
       // Call this when restarting from a checkpoint after calling
       // problemSetup.  This will copy timestep directories and dat
-      // files up to the specified timestep from restartFromDir and
-      // will set time and timestep variables appropriately to
-      // continue smoothly from that timestep.
+      // files up to the specified timestep from restartFromDir if
+      // fromScratch is false and will set time and timestep variables
+      // appropriately to continue smoothly from that timestep.
       virtual void restartSetup(Dir& restartFromDir, int timestep,
-				double time, bool removeOldDir);
+				double time, bool fromScratch,
+				bool removeOldDir);
       //////////
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
@@ -191,6 +193,9 @@ using std::pair;
       Dir d_checkpointsDir;
       list<string> d_checkpointTimestepDirs;
       double d_nextCheckpointTime;
+
+      Mutex d_outputLock;
+      Mutex d_outputReductionLock;
 
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);

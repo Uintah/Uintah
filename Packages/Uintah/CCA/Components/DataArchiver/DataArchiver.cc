@@ -50,7 +50,9 @@ static DebugStream dbg("DataArchiver", false);
 static DOM_Document loadDocument(std::string xmlName);
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld)
-   : UintahParallelComponent(myworld)
+  : UintahParallelComponent(myworld),
+    d_outputLock("DataArchiver output lock"),
+    d_outputReductionLock("DataArchiver reduction output lock")
 {
   d_wasOutputTimestep = false;
   d_wasCheckpointTimestep = false;
@@ -242,9 +244,10 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 
 // to be called after problemSetup gets called
 void DataArchiver::restartSetup(Dir& restartFromDir, int timestep,
-				double time, bool removeOldDir)
+				double time, bool fromScratch,
+				bool removeOldDir)
 {
-   if (d_writeMeta) {
+   if (d_writeMeta && !fromScratch) {
       // partial copy of dat files
       copyDatFiles(restartFromDir, d_dir, timestep, removeOldDir);
 
@@ -888,6 +891,7 @@ void DataArchiver::output(const ProcessorGroup*,
   string xmlFilename;
   string dataFilebase;
   string dataFilename;
+  Mutex* pLock = 0;
   if (!isReduction) {
     ostringstream lname;
     lname << "l0"; // Hard coded - steve
@@ -898,12 +902,16 @@ void DataArchiver::output(const ProcessorGroup*,
     xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
     dataFilebase = pname.str() + ".data";
     dataFilename = ldir.getName() + "/" + dataFilebase;
+    pLock = &d_outputLock;
   }
   else {
     xmlFilename =  tdir.getName() + "/global.xml";
     dataFilebase = "global.data";
     dataFilename = tdir.getName() + "/" + dataFilebase;
+    pLock = &d_outputReductionLock;
   }
+
+ pLock->lock();
   
   DOM_Document doc;
   ifstream test(xmlFilename.c_str());
@@ -1062,6 +1070,8 @@ void DataArchiver::output(const ProcessorGroup*,
     ofstream indexOut(iname.c_str());
     indexOut << indexDoc << endl;
   }
+
+ pLock->unlock();  
 }
 
 static Dir makeVersionedDir(const std::string nameBase)
