@@ -21,6 +21,7 @@ namespace PSECore {
 namespace Datatypes {
 
 using namespace SCICore::Datatypes;
+using SCICore::Datatypes::ColorMapHandle;
 
 typedef SimpleIPort<ColorMapHandle> ColorMapIPort;
 typedef SimpleOPort<ColorMapHandle> ColorMapOPort;
@@ -30,6 +31,10 @@ typedef SimpleOPort<ColorMapHandle> ColorMapOPort;
 
 //
 // $Log$
+// Revision 1.4  1999/11/17 23:17:41  moulding
+// added using SCICore::Datatypes::*Handle; to help the vc++ compiler
+// and added <iostream> and using std::cerr and using std::endl (to SimplePort.h)
+//
 // Revision 1.3  1999/08/25 03:48:19  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

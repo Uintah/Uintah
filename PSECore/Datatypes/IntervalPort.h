@@ -21,6 +21,7 @@ namespace PSECore {
 namespace Datatypes {
 
 using namespace SCICore::Datatypes;
+using SCICore::Datatypes::IntervalHandle;
 
 typedef SimpleIPort<IntervalHandle> IntervalIPort;
 typedef SimpleOPort<IntervalHandle> IntervalOPort;
@@ -30,6 +31,10 @@ typedef SimpleOPort<IntervalHandle> IntervalOPort;
 
 //
 // $Log$
+// Revision 1.4  1999/11/17 23:17:42  moulding
+// added using SCICore::Datatypes::*Handle; to help the vc++ compiler
+// and added <iostream> and using std::cerr and using std::endl (to SimplePort.h)
+//
 // Revision 1.3  1999/08/25 03:48:21  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
