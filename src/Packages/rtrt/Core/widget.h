@@ -41,6 +41,16 @@ namespace rtrt {
     float width;
     float color[3];
     float opac_x;
+    float offset_x;
+    float offset_y;
+
+    GLStar* opacityStar;
+
+    // texture coordinates
+    Vertex* uboundLeft;
+    Vertex* uboundRight;
+    Vertex* lboundLeft;
+    Vertex* lboundRight;
 
     // moves a widget around the UI window
     virtual void translate( float x, float y ) = 0;
@@ -53,12 +63,14 @@ namespace rtrt {
 				 float master_opacity ) = 0;
     // determines whether or not a point is inside of a widget
     virtual bool insideWidget( float x, float y ) = 0;
-    // adjusts the overall opacity
-    virtual void adjustOpacity( float x ) = 0;
     // makes the focusStar more visible by inverting its color
     virtual void invertFocus( void ) = 0;
     // changes the widget's frame's color
     virtual void changeColor( float r, float g, float b ) = 0;
+    // adjusts the overall opacity
+    void adjustOpacity( float x );
+    // works with paintTransFunc() to "paint" onto another texture properly
+    void blend( GLfloat dest[4], float r, float g, float b, float o, float m );
     // changes the alignment of the transfer function
     void changeTextureAlignment( void ) {
       if( textureAlign == Horizontal ) {textureAlign = Vertical;}
@@ -66,33 +78,11 @@ namespace rtrt {
     }
     // generates an appropriate transfer function
     virtual void genTransFunc( void ) = 0;
-    // works with paintTransFunc() to "paint" onto another texture properly
-    void blend( GLfloat dest[4], float r, float g, float b, float o, float m ){
-      if( o < 0 )
-	o = 0;
-      else if( o > 1 )
-	o = 1;
-      o *= m;
-      if( o > 1 )
-	o = 1;
-      dest[0] = o*r + (1-o)*dest[0];
-      dest[1] = o*g + (1-o)*dest[1];
-      dest[2] = o*b + (1-o)*dest[2];
-      dest[3] = o + (1-o)*dest[3];
-    } // blend()
 
     virtual Vertex* getBase( void ) = 0;
-    virtual Vertex* getTextULBound( void ) = 0;
-    virtual Vertex* getTextURBound( void ) = 0;
-    virtual Vertex* getTextLLBound( void ) = 0;
-    virtual Vertex* getTextLRBound( void ) = 0;
     virtual float getCenterX( void ) = 0;
     virtual float getCenterY( void ) = 0;
     virtual Vertex* getFocus( void ) = 0;
-
-    // value set functions
-    void setTextureAlign( TextureAlign tA ) { this->textureAlign = tA; }
-    void setDrawFlag( DrawFlag dF ) { this->drawFlag = dF; }
 
     // widget's transfer function
     Texture<GLfloat> *transText;
@@ -109,18 +99,11 @@ namespace rtrt {
   public:
     // widget base
     Vertex *base;
-    // transfer function lower bound
-    Vertex *lboundLeft;
-    Vertex *lboundRight;
-    // transfer function upper bound
-    Vertex *uboundLeft;
-    Vertex *uboundRight;
 
     GLStar *translateStar;
     GLStar *lowerBoundStar;
     GLStar *widthStar;
     GLStar *barRounder;
-    GLStar *opacityStar;
     GLBar *shearBar;
 
     TriWidget( float x, float w, float h );
@@ -133,21 +116,13 @@ namespace rtrt {
     virtual void manipulate( float x, float y );
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity );
-    virtual void adjustOpacity( float x );
     virtual bool insideWidget( float x, float y );
     virtual void changeColor( float r, float g, float b );
     virtual void invertFocus( void ) {}
     virtual void genTransFunc( void );
-    virtual Vertex* getTextLLBound( void ) { return lboundLeft; }
-    virtual Vertex* getTextLRBound( void ) { return lboundRight; }
-    virtual Vertex* getTextULBound( void ) { return uboundLeft; }
-    virtual Vertex* getTextURBound( void ) { return uboundRight; }
     virtual float getCenterX( void ) { return base->x; }
     virtual float getCenterY( void ) { return 0.5*(uboundLeft->y+base->y); }
-    virtual Vertex* getFocus( void ) {
-      Vertex *v = new Vertex;
-      return v;
-    }
+    virtual Vertex* getFocus( void ) { Vertex *v = new Vertex;  return v; }
     virtual Vertex* getBase( void ) { return base; }
 
     void adjustShear( float x, float y );
@@ -161,17 +136,12 @@ namespace rtrt {
   public:
     float focus_x;
     float focus_y;
-    Vertex *topLeft;
-    Vertex *bottomRight;
-    Vertex *topRight;
-    Vertex *bottomLeft;
 
     GLStar *focusStar;
     GLStar *translateStar;
     GLStar *leftResizeStar;
     GLStar *rightResizeStar;
     GLStar *barRounder;
-    GLStar *opacityStar;
     GLBar *translateBar;
 
     RectWidget( float x, float y, float w, float h, float c[3] );
@@ -185,24 +155,19 @@ namespace rtrt {
     virtual void manipulate( float x, float y );
     virtual bool insideWidget( float x, float y );
     virtual void changeColor( float r, float g, float b );
-    virtual void adjustOpacity( float x );
-    void invertFocus( void );
+    virtual void invertFocus( void );
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity ) = 0;
     virtual void genTransFunc( void ) = 0;
-    virtual Vertex* getTextLLBound( void ) { return bottomLeft; }
-    virtual Vertex* getTextLRBound( void ) { return bottomRight; }
-    virtual Vertex* getTextULBound( void ) { return topLeft; }
-    virtual Vertex* getTextURBound( void ) { return topRight; }
-    virtual float getCenterX(void) { return (topLeft->x+bottomRight->x)*0.5; }
-    virtual float getCenterY(void) { return 0.5*(topLeft->y+bottomRight->y); }
-    Vertex* getFocus(void) {
+    virtual float getCenterX(void) {return (uboundLeft->x+uboundRight->x)*0.5;}
+    virtual float getCenterY(void) {return (uboundLeft->y+lboundLeft->y)*0.5;}
+    virtual Vertex* getBase( void ) { return uboundLeft; }
+    virtual Vertex* getFocus( void ) {
       Vertex *v = new Vertex;
       v->x = focus_x;
       v->y = focus_y;
       return v;
     }
-    virtual Vertex* getBase( void ) { return topLeft; }
     void adjustFocus( float x, float y );
     void reposition( float x, float y, float w, float h );
   };
