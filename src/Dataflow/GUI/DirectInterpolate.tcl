@@ -42,7 +42,7 @@ itcl_class SCIRun_FieldsData_DirectInterpolate {
 	global $this-np
 	set $this-interpolation_basis linear
 	set $this-map_source_to_single_dest 0
-	set $this-exhaustive_search 0
+	set $this-exhaustive_search 1
 	set $this-exhaustive_search_max_dist -1
 	set $this-np 1
     }
