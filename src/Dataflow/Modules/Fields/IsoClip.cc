@@ -122,9 +122,9 @@ void
 IsoClip::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
+    error("Unable to initialize iport 'Input'.");
     return;
   }
   FieldHandle ifieldhandle;
@@ -222,19 +222,19 @@ IsoClip::execute()
 				     isoval, gui_lte_.get(),
 				     interp);
   
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
   if (!ofield_port)
   {
-    error("Unable to initialize oport 'Output Field'.");
+    error("Unable to initialize oport 'Clipped'.");
     return;
   }
 
   ofield_port->send(ofield);
 
-  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Interpolant");
+  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
   if (!omatrix_port)
   {
-    error("Unable to initialize oport 'Interpolant'.");
+    error("Unable to initialize oport 'Mapping'.");
     return;
   }
 

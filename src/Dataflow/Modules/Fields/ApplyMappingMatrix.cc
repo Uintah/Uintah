@@ -45,7 +45,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/MatrixOperations.h>
-#include <Dataflow/Modules/Fields/ApplyInterpMatrix.h>
+#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
@@ -53,7 +53,7 @@
 
 namespace SCIRun {
 
-class ApplyInterpMatrix : public Module
+class ApplyMappingMatrix : public Module
 {
 private:
   FieldHandle  fHandle_;
@@ -63,16 +63,16 @@ private:
   int mGeneration_;
 
 public:
-  ApplyInterpMatrix(GuiContext* ctx);
+  ApplyMappingMatrix(GuiContext* ctx);
 
   virtual void execute();
 };
 
 
-DECLARE_MAKER(ApplyInterpMatrix)
+DECLARE_MAKER(ApplyMappingMatrix)
 
-ApplyInterpMatrix::ApplyInterpMatrix(GuiContext* ctx)
-  : Module("ApplyInterpMatrix", ctx, Filter, "FieldsData", "SCIRun"),
+ApplyMappingMatrix::ApplyMappingMatrix(GuiContext* ctx)
+  : Module("ApplyMappingMatrix", ctx, Filter, "FieldsData", "SCIRun"),
   sfGeneration_(-1),
   dfGeneration_(-1),
   mGeneration_(-1)
@@ -81,7 +81,7 @@ ApplyInterpMatrix::ApplyInterpMatrix(GuiContext* ctx)
 
 
 void
-ApplyInterpMatrix::execute()
+ApplyMappingMatrix::execute()
 {
   // Get source field.
   FieldIPort *sfp = (FieldIPort *)get_iport("Source");
@@ -107,11 +107,11 @@ ApplyInterpMatrix::execute()
     return;
   }
 
-  // Get the interpolant matrix.
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Interpolant");
+  // Get the mapping matrix.
+  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Mapping");
   MatrixHandle imatrix;
   if (!imatrix_port) {
-    error("Unable to initialize iport 'Interpolant'.");
+    error("Unable to initialize iport 'Mapping'.");
     return;
   }
   if (!(imatrix_port->get(imatrix) && imatrix.get_rep())) {
@@ -131,12 +131,12 @@ ApplyInterpMatrix::execute()
     if (sfield->query_scalar_interface(this) != NULL) { accumtype = "double"; }
 
     CompileInfoHandle ci =
-      ApplyInterpMatrixAlgo::get_compile_info(sfield->get_type_description(),
+      ApplyMappingMatrixAlgo::get_compile_info(sfield->get_type_description(),
 					      sfield->order_type_description(),
 					      dfield->get_type_description(),
 					      dfield->order_type_description(),
 					      accumtype, true);
-    Handle<ApplyInterpMatrixAlgo> algo;
+    Handle<ApplyMappingMatrixAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
     fHandle_ = algo->execute(sfield, dfield->mesh(),
@@ -161,7 +161,7 @@ ApplyInterpMatrix::execute()
 
 
 CompileInfoHandle
-ApplyInterpMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
+ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
 					const TypeDescription *lsrc,
 					const TypeDescription *fdst,
 					const TypeDescription *ldst,
@@ -170,8 +170,8 @@ ApplyInterpMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("ApplyInterpMatrixAlgoT");
-  static const string base_class_name("ApplyInterpMatrixAlgo");
+  static const string template_class_name("ApplyMappingMatrixAlgoT");
+  static const string base_class_name("ApplyMappingMatrixAlgo");
 
   const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
   const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');

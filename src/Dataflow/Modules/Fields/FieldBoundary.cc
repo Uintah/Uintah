@@ -42,7 +42,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
-#include <Dataflow/Modules/Fields/ApplyInterpMatrix.h>
+#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 
 #include <iostream>
 
@@ -92,7 +92,7 @@ FieldBoundary::execute()
 {
   infield_ = (FieldIPort *)get_iport("Field");
   osurf_ = (FieldOPort *)get_oport("BoundaryField");
-  ointerp_ = (MatrixOPort *)get_oport("Interpolant");
+  ointerp_ = (MatrixOPort *)get_oport("Mapping");
   FieldHandle input;
   if (!infield_) {
     error("Unable to initialize iport 'Field'.");
@@ -103,7 +103,7 @@ FieldBoundary::execute()
     return;
   }
   if(!ointerp_) {
-    error("Unable to initialize oport 'Interpolant'.");
+    error("Unable to initialize oport 'Mapping'.");
     return;
   }
 
@@ -134,10 +134,10 @@ FieldBoundary::execute()
       const TypeDescription *oftd = tri_fh_->get_type_description();
       const TypeDescription *oltd = tri_fh_->order_type_description();
       CompileInfoHandle ci =
-	ApplyInterpMatrixAlgo::get_compile_info(iftd, iltd,
-						oftd, oltd,
-						actype, false);
-      Handle<ApplyInterpMatrixAlgo> algo;
+	ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd,
+                                                 oftd, oltd,
+                                                 actype, false);
+      Handle<ApplyMappingMatrixAlgo> algo;
       if (module_dynamic_compile(ci, algo))
       {
 	tri_fh_ = algo->execute(input, tri_fh_->mesh(),

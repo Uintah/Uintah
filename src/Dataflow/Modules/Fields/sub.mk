@@ -41,11 +41,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/ApplyInterpMatrix.cc\
 	$(SRCDIR)/ApplyInterpolant.cc\
+	$(SRCDIR)/ApplyMappingMatrix.cc\
 	$(SRCDIR)/AttractNormals.cc\
-	$(SRCDIR)/BuildInterpMatrix.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
+	$(SRCDIR)/BuildMappingMatrix.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
@@ -60,7 +60,7 @@ SRCS     += \
 	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/CreateMesh.cc\
-	$(SRCDIR)/DirectInterpolate.cc\
+	$(SRCDIR)/DirectMapping.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
 	$(SRCDIR)/FieldInfo.cc\

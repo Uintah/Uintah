@@ -28,7 +28,7 @@
 
 
 /*
- *  DirectInterpolate.cc:  Build an interpolant field -- a field that says
+ *  DirectMapping.cc:  Build an interpolant field -- a field that says
  *         how to project the data from one field onto the data of a second
  *         field.
  *
@@ -46,7 +46,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Modules/Fields/DirectInterpolate.h>
+#include <Dataflow/Modules/Fields/DirectMapping.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
@@ -57,11 +57,11 @@ using std::vector;
 using std::pair;
 
 
-class DirectInterpolate : public Module
+class DirectMapping : public Module
 {
 public:
-  DirectInterpolate(GuiContext* ctx);
-  virtual ~DirectInterpolate();
+  DirectMapping(GuiContext* ctx);
+  virtual ~DirectMapping();
   virtual void execute();
 
 private:
@@ -85,9 +85,9 @@ private:
   bool error_;
 };
 
-DECLARE_MAKER(DirectInterpolate)
-DirectInterpolate::DirectInterpolate(GuiContext* ctx) : 
-  Module("DirectInterpolate", ctx, Filter, "FieldsData", "SCIRun"),
+DECLARE_MAKER(DirectMapping)
+DirectMapping::DirectMapping(GuiContext* ctx) : 
+  Module("DirectMapping", ctx, Filter, "FieldsData", "SCIRun"),
   gInterpolation_basis_(ctx->subVar("interpolation_basis")),
   gMap_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
   gExhaustive_search_(ctx->subVar("exhaustive_search")),
@@ -99,12 +99,12 @@ DirectInterpolate::DirectInterpolate(GuiContext* ctx) :
 {
 }
 
-DirectInterpolate::~DirectInterpolate()
+DirectMapping::~DirectMapping()
 {
 }
 
 void
-DirectInterpolate::execute()
+DirectMapping::execute()
 {
   update_state(NeedData);
 
@@ -202,7 +202,7 @@ DirectInterpolate::execute()
   // Get a handle to the output field port.
   if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Interpolant");
+      (FieldOPort *) get_oport("Remapped Destination");
 
     if (!ofield_port) {
       error("Unable to initialize "+name+"'s oport\n");

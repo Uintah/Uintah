@@ -370,7 +370,7 @@ Isosurface::execute()
 
   // Decide if an interpolant will be computed for the output field.
   MatrixOPort *omatrix_port = 
-    (MatrixOPort *) get_oport("Interpolant");
+    (MatrixOPort *) get_oport("Mapping");
 
   if (!omatrix_port) {
     error("Unable to initialize "+name+"'s oport\n");

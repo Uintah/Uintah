@@ -43,8 +43,8 @@ SRCS := \
         $(SRCDIR)/ArrowWidget.tcl \
         $(SRCDIR)/BaseWidget.tcl \
         $(SRCDIR)/BoxWidget.tcl \
-        $(SRCDIR)/BuildInterpMatrix.tcl \
         $(SRCDIR)/BuildInterpolant.tcl \
+        $(SRCDIR)/BuildMappingMatrix.tcl \
         $(SRCDIR)/BuildNoise.tcl \
         $(SRCDIR)/BuildTransform.tcl \
         $(SRCDIR)/BundleSetBundle.tcl \
@@ -88,7 +88,7 @@ SRCS := \
         $(SRCDIR)/CreateMesh.tcl \
         $(SRCDIR)/CriticalPointWidget.tcl \
         $(SRCDIR)/CrosshairWidget.tcl \
-        $(SRCDIR)/DirectInterpolate.tcl \
+        $(SRCDIR)/DirectMapping.tcl \
         $(SRCDIR)/EditColorMap.tcl \
         $(SRCDIR)/EditPath.tcl \
         $(SRCDIR)/EditColorMap2D.tcl \

@@ -33,7 +33,7 @@
 
 
 
-<component name="BuildInterpMatrix" category="FieldsData">
+<component name="BuildMappingMatrix" category="FieldsData">
   <overview>
     <authors>
       <author>Peter-Pike Sloan</author>
@@ -41,33 +41,33 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>
-      Build an interpolant field -- a field that says how to project
+      Build a mapping matrix -- a matrix that says how to project
       the data from one field onto the data of a second field.
     </summary>
     <description>
       <p>
-        This module builds an interpolant field which contains data
+        This module builds a mapping matrix which contains information
         about how to interpolate the data from the source field onto
         the geometry of the destination field.  The resulting
-        interpolant field can then be used by the <modref package="SCIRun" name="ApplyInterpolant"/>
-        module to interpolate the values from a field similar to the
+        mapping matrix can then be used by the <modref package="SCIRun" name="ApplyMappingMatrix"/>
+        module to map the values from a field similar to the
         source field onto the destination field.
       </p>
       <p>
-        The source field for BuildInterpMatrix and <modref package="SCIRun" name="ApplyInterpolant"/>
+        The source field for BuildMappingMatrix and <modref package="SCIRun" name="ApplyMappingMatrix"/>
         must contain the same geometry and data locations.  However
         they do not have to contain the same data values or value
         types.  For instance, a TetVolField of doubles with data at the
-        nodes can be passed into the Source port of BuildInterpMatrix,
+        nodes can be passed into the Source port of BuildMappingMatrix,
         and a TetVolField of Vectors with data also at the nodes and with
         the same mesh can be passed into the source port of
-        <modref package="SCIRun" name="ApplyInterpolant"/>.
+        <modref package="SCIRun" name="ApplyMappingMatrix"/>.
       </p>
       <p>
-        <modref package="SCIRun" name="DirectInterpolate"/> should be used instead of BuildInterpMatrix
-        and <modref package="SCIRun" name="ApplyInterpolant"/> if the Interpolant is not to be reused,
+        <modref package="SCIRun" name="DirectMapping"/> should be used instead of BuildMappingMatrix
+        and <modref package="SCIRun" name="ApplyMappingMatrix"/> if the mapping is not to be reused,
         as it does the same interpolation without building the
-        intermediate interpolant field.  This should be used if the
+        intermediate mapping matrix.  This should be used if the
         source field changes much more often than the destination field.
       </p> 
     </description>
@@ -85,7 +85,7 @@
     </inputs>
     <outputs>
       <port>
-	<name>Interpolant</name>
+	<name>Mapping</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
@@ -93,22 +93,22 @@
   <testing>
   </testing>
 <nets>
-<net id="BuildInterpMatrix">
-<title>BuildInterpMatrix Regression Test</title>
+<net id="BuildMappingMatrix">
+<title>BuildMappingMatrix Regression Test</title>
 
 <p>Build an interpolant from an input field onto a plane using
-BuildInterpMatrix, and then apply the data from the input field back to
+BuildMappingMatrix, and then apply the data from the input field back to
 the interpolant field.</p>
 
 <p>Note that the same thing could be done by replacing both
-BuildInterpMatrix and <modref package="SCIRun" name="ApplyInterpolant"/> with a <modref package="SCIRun" name="DirectInterpolate"/> module.
-ApplyInterpolate was meant primarily to be used in conjunction with
+BuildMappingMatrix and <modref package="SCIRun" name="ApplyMappingMatrix"/> with a <modref package="SCIRun" name="DirectMapping"/> module.
+ApplyMappingMatrix was meant primarily to be used in conjunction with
 loops and time dependent data, such that the interpolant field could
 be computed once and then applied multiple times.</p>
 
-<p>See also <modref package="SCIRun" name="ApplyInterpolant"/>, <modref package="SCIRun" name="DirectInterpolate"/>, <modref package="SCIRun" name="ApplyInterpMatrix"/>.</p>
+<p>See also <modref package="SCIRun" name="ApplyMappingMatrix"/>, <modref package="SCIRun" name="DirectMappingMatrix"/>, <modref package="SCIRun" name="ApplyMappingMatrix"/>.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsData/BuildInterpMatrix.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsData/BuildMappingMatrix.net.</p>
 
 </net>
 </nets>
