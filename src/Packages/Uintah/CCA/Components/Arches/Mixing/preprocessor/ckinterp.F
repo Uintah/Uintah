@@ -318,7 +318,7 @@ C
      3           NLAR=2, NSIDIM=MAXSP*IDIM, NTIDIM=MAXTB*IDIM,
      4           NLIDIM=NLAR*IDIM, NFAR=8, NFIDIM=NFAR*IDIM,
      5           NTDIM=KDIM*MAXTP, NIDIM=11*IDIM, LIN=15, LOUT=16,
-     6           LTHRM=17, LINC=25, CKMIN=1.0E-3, MAXORD=10, 
+     6           LTHRM=17, LINC=25, CKMIN=1.0D-3, MAXORD=10, 
      7           NOIDIM=MAXORD*IDIM)
 C
       CHARACTER KNAME(KDIM)*(LSYM), ENAME(MDIM)*(LSYM), SUB(80)*80,
@@ -344,18 +344,18 @@ C
       DATA KEY/'ELEM','SPEC','THER','REAC','END'/, KERR/.FALSE./,
      1     ITASK,NCHRG,MM,KK,II,NLAN,NFAL,NTHB,NREV,NRLT,NWL,
      *     NRNU,NORD/13*0/,
-     2     ENAME,AWT/MDIM*' ',MDIM*0.0/, THERMO/.TRUE./,
-     3     T/NTDIM*-1.0/, KNAME,WTM,NT,KPHSE,KCHRG,ITHRM
-     4     /KDIM*' ', KDIM*0.0, KDIM*3, KDIM*0, KDIM*0, KDIM*.FALSE./,
-     5     WL,IFOP,NTBS,IDUP /IDIM*0.0, IDIM*-1, IDIM*0, IDIM*0/,
+     2     ENAME,AWT/MDIM*' ',MDIM*0.0D0/, THERMO/.TRUE./,
+     3     T/NTDIM*-1.0D0/, KNAME,WTM,NT,KPHSE,KCHRG,ITHRM
+     4     /KDIM*' ', KDIM*0.0D0, KDIM*3, KDIM*0, KDIM*0, KDIM*.FALSE./,
+     5     WL,IFOP,NTBS,IDUP /IDIM*0.0D0, IDIM*-1, IDIM*0, IDIM*0/,
      6     NSPEC,NREAC,IREV,ILAN,IRLT,IWL,IFAL,KFAL,ITHB,IRNU,IORD
      7     /NIDIM*0/
 C
-      DATA NUNK,NU/NSIDIM*0, NSIDIM*0/, NKTB,AIK/NTIDIM*0,NTIDIM*-1.0/
-      DATA RNU/NSIDIM*0.0/, KORD/NOIDIM*0/, RORD/NOIDIM*0.0/
-      DATA PAR,RPAR/NPIDIM*0.0, NPIDIM*0.0/
-      DATA PLAN,RLAN/NLIDIM*0.0, NLIDIM*0.0/
-      DATA PFAL/NFIDIM*0.0/, KNCF/MKDIM*0.0/, A/NKTDIM*0.0/
+      DATA NUNK,NU/NSIDIM*0, NSIDIM*0/, NKTB,AIK/NTIDIM*0,NTIDIM*-1.0D0/
+      DATA RNU/NSIDIM*0.0D0/, KORD/NOIDIM*0/, RORD/NOIDIM*0.0D0/
+      DATA PAR,RPAR/NPIDIM*0.0D0, NPIDIM*0.0D0/
+      DATA PLAN,RLAN/NLIDIM*0.0D0, NLIDIM*0.0D0/
+      DATA PFAL/NFIDIM*0.0D0/, KNCF/MKDIM*0.0D0/, A/NKTDIM*0.0D0/
 C----------------------------------------------------------------------C
 C
       OPEN (LOUT, FORM='FORMATTED', STATUS='UNKNOWN', FILE='chem.out')
@@ -733,7 +733,8 @@ C
  1800 FORMAT (///54X, '(k = A T**b exp(-E/RT))',/,
      1        6X,'REACTIONS CONSIDERED',30X,'A',8X,'b',8X,'E',/)
 C
-      STOP
+C      STOP
+      RETURN
       END
 C----------------------------------------------------------------------C
       SUBROUTINE CKCHAR (SUB, NSUB, NDIM, STRAY, RAY, NN, KERR, LOUT)
@@ -842,36 +843,61 @@ C
       CHARACTER ENAME*(*), IATOM(NATOM)*2, UPCASE*2
 C
       DATA (IATOM(I),ATOM(I),I=1,40) /
-     *'H ',  1.00797, 'HE',  4.00260, 'LI',  6.93900, 'BE',  9.01220,
-     *'B ', 10.81100, 'C ', 12.01115, 'N ', 14.00670, 'O ', 15.99940,
-     *'F ', 18.99840, 'NE', 20.18300, 'NA', 22.98980, 'MG', 24.31200,
-     *'AL', 26.98150, 'SI', 28.08600, 'P ', 30.97380, 'S ', 32.06400,
-     *'CL', 35.45300, 'AR', 39.94800, 'K ', 39.10200, 'CA', 40.08000,
-     *'SC', 44.95600, 'TI', 47.90000, 'V ', 50.94200, 'CR', 51.99600,
-     *'MN', 54.93800, 'FE', 55.84700, 'CO', 58.93320, 'NI', 58.71000,
-     *'CU', 63.54000, 'ZN', 65.37000, 'GA', 69.72000, 'GE', 72.59000,
-     *'AS', 74.92160, 'SE', 78.96000, 'BR', 79.90090, 'KR', 83.80000,
-     *'RB', 85.47000, 'SR', 87.62000, 'Y ', 88.90500, 'ZR', 91.22000/
+     *'H ',  1.00797D0, 'HE',  4.00260D0, 'LI',  6.93900D0,
+     *'BE',  9.01220D0,
+     *'B ', 10.81100D0, 'C ', 12.01115D0, 'N ', 14.00670D0,
+     *'O ', 15.99940D0,
+     *'F ', 18.99840D0, 'NE', 20.18300D0, 'NA', 22.98980D0,
+     *'MG', 24.31200D0,
+     *'AL', 26.98150D0, 'SI', 28.08600D0, 'P ', 30.97380D0,
+     *'S ', 32.06400D0,
+     *'CL', 35.45300D0, 'AR', 39.94800D0, 'K ', 39.10200D0, 
+     *'CA', 40.08000D0,
+     *'SC', 44.95600D0, 'TI', 47.90000D0, 'V ', 50.94200D0,
+     *'CR', 51.99600D0,
+     *'MN', 54.93800D0, 'FE', 55.84700D0, 'CO', 58.93320D0,
+     *'NI', 58.71000D0,
+     *'CU', 63.54000D0, 'ZN', 65.37000D0, 'GA', 69.72000D0,
+     *'GE', 72.59000D0,
+     *'AS', 74.92160D0, 'SE', 78.96000D0, 'BR', 79.90090D0,
+     *'KR', 83.80000D0,
+     *'RB', 85.47000D0, 'SR', 87.62000D0, 'Y ', 88.90500D0,
+     *'ZR', 91.22000D0/
 C
       DATA (IATOM(I),ATOM(I),I=41,80) /
-     *'NB', 92.90600, 'MO', 95.94000, 'TC', 99.00000, 'RU',101.07000,
-     *'RH',102.90500, 'PD',106.40000, 'AG',107.87000, 'CD',112.40000,
-     *'IN',114.82000, 'SN',118.69000, 'SB',121.75000, 'TE',127.60000,
-     *'I ',126.90440, 'XE',131.30000, 'CS',132.90500, 'BA',137.34000,
-     *'LA',138.91000, 'CE',140.12000, 'PR',140.90700, 'ND',144.24000,
-     *'PM',145.00000, 'SM',150.35000, 'EU',151.96000, 'GD',157.25000,
-     *'TB',158.92400, 'DY',162.50000, 'HO',164.93000, 'ER',167.26000,
-     *'TM',168.93400, 'YB',173.04000, 'LU',174.99700, 'HF',178.49000,
-     *'TA',180.94800, 'W ',183.85000, 'RE',186.20000, 'OS',190.20000,
-     *'IR',192.20000, 'PT',195.09000, 'AU',196.96700, 'HG',200.59000/
+     *'NB', 92.90600D0, 'MO', 95.94000D0, 'TC', 99.00000D0,
+     *'RU',101.07000D0,
+     *'RH',102.90500D0, 'PD',106.40000D0, 'AG',107.87000D0,
+     *'CD',112.40000D0,
+     *'IN',114.82000D0, 'SN',118.69000D0, 'SB',121.75000D0,
+     *'TE',127.60000D0,
+     *'I ',126.90440D0, 'XE',131.30000D0, 'CS',132.90500D0,
+     *'BA',137.34000D0,
+     *'LA',138.91000D0, 'CE',140.12000D0, 'PR',140.90700D0,
+     *'ND',144.24000D0,
+     *'PM',145.00000D0, 'SM',150.35000D0, 'EU',151.96000D0,
+     *'GD',157.25000D0,
+     *'TB',158.92400D0, 'DY',162.50000D0, 'HO',164.93000D0,
+     *'ER',167.26000D0,
+     *'TM',168.93400D0, 'YB',173.04000D0, 'LU',174.99700D0,
+     *'HF',178.49000D0,
+     *'TA',180.94800D0, 'W ',183.85000D0, 'RE',186.20000D0,
+     *'OS',190.20000D0,
+     *'IR',192.20000D0, 'PT',195.09000D0, 'AU',196.96700D0,
+     *'HG',200.59000D0/
 C
       DATA (IATOM(I),ATOM(I),I=81,NATOM) /
-     *'TL',204.37000, 'PB',207.19000, 'BI',208.98000, 'PO',210.00000,
-     *'AT',210.00000, 'RN',222.00000, 'FR',223.00000, 'RA',226.00000,
-     *'AC',227.00000, 'TH',232.03800, 'PA',231.00000, 'U ',238.03000,
-     *'NP',237.00000, 'PU',242.00000, 'AM',243.00000, 'CM',247.00000,
-     *'BK',249.00000, 'CF',251.00000, 'ES',254.00000, 'FM',253.00000,
-     *'D ',002.01410, 'E',5.45E-4/
+     *'TL',204.37000D0, 'PB',207.19000D0, 'BI',208.98000D0,
+     *'PO',210.00000D0,
+     *'AT',210.00000D0, 'RN',222.00000D0, 'FR',223.00000D0,
+     *'RA',226.00000D0,
+     *'AC',227.00000D0, 'TH',232.03800D0, 'PA',231.00000D0,
+     *'U ',238.03000D0,
+     *'NP',237.00000D0, 'PU',242.00000D0, 'AM',243.00000D0,
+     *'CM',247.00000D0,
+     *'BK',249.00000D0, 'CF',251.00000D0, 'ES',254.00000D0,
+     *'FM',253.00000D0,
+     *'D ',002.01410D0, 'E',5.45D-4/
 C
       CALL CKCOMP ( UPCASE(ENAME, 2), IATOM, NATOM, L)
       IF (L .GT. 0) AWT = ATOM(L)
@@ -1314,8 +1340,8 @@ C
                   LWL = .TRUE.
                   NWL = NWL + 1
                   IWL(NWL) = II
-                  WL(NWL) = 1.0
-                  IF (J .EQ. 1) WL(NWL) = -1.0
+                  WL(NWL) = 1.0D0
+                  IF (J .EQ. 1) WL(NWL) = -1.0D0
                   IF (N .EQ. NPLUS) GO TO 600
                   NSTART = N
                   GO TO 505
@@ -1337,7 +1363,7 @@ C
   334       CONTINUE
   335       CONTINUE
 C
-            RVAL = 1.0
+            RVAL = 1.0D0
             IVAL = 1
             IF (IND .GT. 0) THEN
                IF (LRSTO) THEN
@@ -1378,7 +1404,7 @@ C
                IF (LRSTO) THEN
                   DO 110 K = 1, NS
                      IF (KNUM.EQ.NUNK(K,II) .AND.
-     1                   RNU(K,NRNU)/RVAL.GT.0) THEN
+     1                   RNU(K,NRNU)/RVAL.GT.0D0) THEN
                          NNUM = K
                          RNU(NNUM,NRNU) = RNU(NNUM,NRNU) + RVAL
                      ENDIF
@@ -1386,7 +1412,7 @@ C
                ELSE
                   DO 111 K = 1, NS
                      IF (KNUM.EQ.NUNK(K,II) .AND.
-     1                   NU(K,II)/IVAL.GT.0) THEN
+     1                   NU(K,II)/IVAL.GT.0D0) THEN
                         NNUM=K
                         NU(NNUM,II) = NU(NNUM,II) + IVAL
                      ENDIF
@@ -1665,8 +1691,8 @@ C
                      IFOP(NFAL) = 2*IFOP(NFAL)
                      CALL IPPARR (RSTR,1,-5,PFAL(4,NFAL),NVAL,IER,LOUT)
                      IF (NVAL .EQ. 3) THEN
-                        PFAL(7,NFAL) = 1.0
-                        PFAL(8,NFAL) = 0.0
+                        PFAL(7,NFAL) = 1.0D0
+                        PFAL(8,NFAL) = 0.0D0
                         WRITE (LOUT, 3060) (PFAL(L,NFAL),L=4,6)
                      ELSEIF (NVAL .EQ. 5) THEN
                         WRITE (LOUT, 3070) (PFAL(L,NFAL),L=4,8)
@@ -1766,7 +1792,7 @@ C
                    DO 111 L = 1, 6
                       IF (NUNK(L,II) .NE. 0) THEN
                          NKORD = NKORD + 1
-                         IF (RNU(L,NRNU) .LT. 0.0) THEN
+                         IF (RNU(L,NRNU) .LT. 0.0D0) THEN
                             KORD(NKORD,NORD) = -NUNK(L,II)
                             RORD(NKORD,NORD) = ABS(RNU(L,NRNU))
                          ELSE
@@ -1924,9 +1950,9 @@ C
 C
       DO 100 K = 1, KK
 C
-         IF (T(1,K) .LT. 0.0) T(1,K) = TLO
-         IF (T(2,K) .LT. 0.0) T(2,K) = TMID
-         IF (T(3,K) .LT. 0.0) T(NT(K),K) = THI
+         IF (T(1,K) .LT. 0.0D0) T(1,K) = TLO
+         IF (T(2,K) .LT. 0.0D0) T(2,K) = TMID
+         IF (T(3,K) .LT. 0.0D0) T(NT(K),K) = THI
          WRITE (LOUT, 500) K, KNAME(K), IPHSE(KPHSE(K)+2), KCHRG(K),
      1                    WTM(K), T(1,K), T(NT(K),K), (KNCF(M,K),M=1,MM)
          IF (T(1,K) .GE. T(NT(K),K)) THEN
@@ -2181,29 +2207,39 @@ C
       ENDIF
 C
       IF (EUNITS .EQ. 'KELV') THEN
-         EFAC = 1.0
+c         EFAC = 1.0D0
+         emfac = 1.0D0
+         edfac = 1.0D0
       ELSEIF (EUNITS .EQ. 'CAL/') THEN
 C        convert E from cal/mole to Kelvin
-         EFAC = 1.0 / 1.987
+c         EFAC = 1.0D0 / 1.987D0
+         emfac = 1.0D0
+         edfac = 1.987D0
       ELSEIF (EUNITS .EQ. 'KCAL') THEN
 C        convert E from kcal/mole to Kelvin
-         EFAC = 1000.0 / 1.987
+c         EFAC = 1000.0D0 / 1.987D0
+         emfac = 1000.0D0
+         edfac = 1.987D0
       ELSEIF (EUNITS .EQ. 'JOUL') THEN
 C        convert E from Joules/mole to Kelvin
-         EFAC = 1.0 / 8.314
+c         EFAC = 1.0D0 / 8.314D0
+         emfac = 1.0D0
+         edfac = 8.314D0
       ELSEIF (EUNITS .EQ. 'KJOU') THEN
 C        convert E from Kjoules/mole to Kelvin
-         EFAC = 1000.0 / 8.314
+c         EFAC = 1000.0D0 / 8.314D0
+         emfac = 1000.0D0
+         edfac = 8.314D0
       ENDIF
-      PAR(3,II) = PAR(3,II) * EFAC
+      PAR(3,II) = PAR(3,II) * emfac / edfac
 C
 C      IF (NREV.GT.0 .AND. IREV(NREV).EQ.II) RPAR(3,II)=RPAR(3,II)*EFAC
 C      IF (NFAL.GT.0 .AND. IFAL(NFAL).EQ.II) PFAL(3,II)=PFAL(3,II)*EFAC
 C
       IF (NREV.GT.0 .AND. IREV(NREV).EQ.II)
-     1    RPAR(3,NREV) = RPAR(3,NREV) * EFAC
+     1    RPAR(3,NREV) = RPAR(3,NREV) * emfac / edfac
       IF (NFAL.GT.0 .AND. IFAL(NFAL).EQ.II)
-     1    PFAL(3,NFAL) = PFAL(3,NFAL) * EFAC
+     1    PFAL(3,NFAL) = PFAL(3,NFAL) * emfac / edfac
 C
       IF (AUNITS .EQ. 'MOLC') THEN
          NSTOR = 0
@@ -2218,7 +2254,7 @@ C              sum of stoichiometric coefficients of products
             ENDIF
    50    CONTINUE
 C
-         AVAG = 6.023E23
+         AVAG = 6.023D23
 C
          IF (NFAL.GT.0 .AND. IFAL(NFAL).EQ.II) THEN
 C
