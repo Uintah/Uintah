@@ -56,7 +56,7 @@ using std::endl;
 
 // This needs to be synced with the contents of
 // SCIRun/doc/edition.xml
-#define VERSION "1.22"                         
+#define VERSION "1.22.0"
 
 using namespace SCIRun;
 
