@@ -74,6 +74,7 @@ PressureBC::flagMaterialPoint(const Point& p,
     GeometryPiece* volume = new BoxGeometryPiece(box.lower()-dxpp, 
                                                  box.upper()+dxpp);
     if (volume->inside(p)) flag = true;
+    delete volume;
 
   } else if (d_surfaceType == "cylinder") {
     // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
@@ -87,6 +88,7 @@ PressureBC::flagMaterialPoint(const Point& p,
 						     cgp->radius()-tol);
     GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
+    delete volume;
 
   } else if (d_surfaceType == "sphere") {
     // Create a spherical shell with radius-|dxpp|, radius+|dxpp|
@@ -98,6 +100,7 @@ PressureBC::flagMaterialPoint(const Point& p,
 						   sgp->radius()-tol);
     GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
+    delete volume;
 
   } else {
     throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC");
