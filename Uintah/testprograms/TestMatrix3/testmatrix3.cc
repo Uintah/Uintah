@@ -2,6 +2,7 @@
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 #include <iostream>
 
 using namespace std;
@@ -14,37 +15,65 @@ void addSolveTests(Suite& suite, const string& test_name,
 	       const Matrix3& M, const Vector& rhs, bool exp_return,
 	       int exp_xg_basis_size);
 
-bool testEigenValue(const Matrix3& M, double eigen_value);
+//bool testEigenValue(const Matrix3& M, double eigen_value);
+bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value);
 
 void randomlyMixup(Matrix3& M, Vector& rhs);
 
-bool equal_enough(double x1, double x2);
-bool equal_enough(Vector v1, Vector v2);
+bool equal_enough(double x1, double x2, double rel_scale);
+bool equal_enough(Vector v1, Vector v2, double rel_scale);
 
-double getRandom(); // returns a random number between -100.00 and 100.00
+double getRandom(); // returns a random number between -100.000 and 100.000
 
 // returns 0 with the given probability or a random number
-// between -100.00 and 100.00 otherwise.
+// between -100.000 and 100.000 otherwise.
 double getRandomOrZero(float probability_for_zero); 
 
 Vector randomVector();
 Matrix3 randomMatrix();
 
+#define NEAR_ZERO 1e-7
+
+void displayEigen(Matrix3 M);
 
 SuiteTree* matrix3TestTree()
 {
   srand(getpid());  
   SuiteTreeNode* matrix3Tests = new SuiteTreeNode("Matrix3");
+    
   Suite* solvingTests = new Suite("Solving Ax=b");
   Suite* eigenTests = new Suite("Eigen values/vectors");
   Suite* eigenPlaneTests = new Suite("Eigen plane values");
   doMatrixSolvingTests(*solvingTests);
+
   doEigenTests(*eigenTests);
   doEigenPlaneTests(*eigenPlaneTests);
   matrix3Tests->addSuite(solvingTests);
   matrix3Tests->addSuite(eigenTests);
   matrix3Tests->addSuite(eigenPlaneTests);
+
+  //Matrix3 matrix(1e-10, 0, 0, 0, 1e-10, 0, 0, 0, 1e-10);
+  //Matrix3 matrix(1e6, 0, 0, 0, 1e6, 0, 0, 0, 1e6);
+  Matrix3 M = randomMatrix();
+  displayEigen(M);
+  displayEigen(M*.0001);
+
   return matrix3Tests;
+
+}
+
+void displayEigen(Matrix3 M)
+{
+  double e[3];
+  int n = M.getEigenValues(e[0], e[1], e[2]);
+  for (int i = 0; i < n; i++) {
+    cout << "Eigen value: " << e[i] << endl;
+    std::vector<Vector> eigenVectors = M.getEigenVectors(e[i], M.MaxAbsElem());
+    cout << "Eigen vectors:\n";
+    for (int j = 0; j < eigenVectors.size(); j++)
+      cout << eigenVectors[j] << endl;
+  }
+  cout << endl;
 }
 
 void doMatrixSolvingTests(Suite& suite)
@@ -109,7 +138,6 @@ void doMatrixSolvingTests(Suite& suite)
     randomlyMixup(M, rhs); // this is what will really test it
     addSolveTests(suite, test_name_base, M, rhs, has_solution, 1);
   }
-
   test_name_base = "Plane: {{a, b, c} {0, 0, 0} {0, 0, 0}}";
   for (i = 0; i < 100; i++) {
     M.Identity();
@@ -125,7 +153,6 @@ void doMatrixSolvingTests(Suite& suite)
     randomlyMixup(M, rhs); // this is what will really test it
     addSolveTests(suite, test_name_base, M, rhs, has_solution, 2);
   }
-
   test_name_base = "All Space: {{0, 0, 0} {0, 0, 0} {0, 0, 0}}";
   M = Matrix3();
   rhs = Vector(0, 0, 0);
@@ -153,21 +180,21 @@ void doEigenTests(Suite& suite)
     M = randomMatrix();
     num_eigen_values = M.getEigenValues(e1, e2, e3);
     if (num_eigen_values == 1) {
-      oneEigenTest->setResults(testEigenValue(M, e1));
+      oneEigenTest->setResults(testEigenValue(M, e1, e1));
     }
     else if (num_eigen_values == 3) {
-      threeEigenTestA->setResults(testEigenValue(M, e1));
-      threeEigenTestB->setResults(testEigenValue(M, e2));
-      threeEigenTestC->setResults(testEigenValue(M, e3));
-      eigenValueOrderTest->setResults((e1 < e2) && (e2 < e3));
+      threeEigenTestA->setResults(testEigenValue(M, e1, e1));
+      threeEigenTestB->setResults(testEigenValue(M, e2, e1));
+      threeEigenTestC->setResults(testEigenValue(M, e3, e1));
+      eigenValueOrderTest->setResults((e1 > e2) && (e2 > e3));
     }
     else if (num_eigen_values == 2) {
       // two eigen values are the same
       // just treat this under the three eigen test case since
       // this is rare on random data
-      threeEigenTestA->setResults(testEigenValue(M, e1));
-      threeEigenTestB->setResults(testEigenValue(M, e2));
-      eigenValueOrderTest->setResults(e1 < e2);    
+      threeEigenTestA->setResults(testEigenValue(M, e1, e1));
+      threeEigenTestB->setResults(testEigenValue(M, e2, e1));
+      eigenValueOrderTest->setResults(e1 > e2);    
     }
     else {
       suite.addTest("Bad number of eigen values", false);
@@ -178,7 +205,7 @@ void doEigenTests(Suite& suite)
 
 void doEigenPlaneTests(Suite& suite)
 {  
-  Test* eigenValueOrderTest = suite.addTest("e1 < e2");
+  Test* eigenValueOrderTest = suite.addTest("e1 > e2");
   Test* eigenTestA[3];
   Test* eigenTestB[3];
 
@@ -192,7 +219,6 @@ void doEigenPlaneTests(Suite& suite)
   Matrix3 M;
   Matrix3 planeM; // 3d version of sub-matrix (with zeroes at bottom and right)
   double e1, e2;
-  double tste1, tste2, tste3;
   int num_eigen_values;
   
   for (int i = 0; i < 5; i++) {
@@ -219,12 +245,12 @@ void doEigenPlaneTests(Suite& suite)
       
       if (num_eigen_values == 1) {
 	// two eigen values are the same
-	eigenTestA[plane-1]->setResults(testEigenValue(planeM, e1));
+	eigenTestA[plane-1]->setResults(testEigenValue(planeM, e1, e1));
       }
       else if (num_eigen_values == 2) {
-	eigenTestA[plane-1]->setResults(testEigenValue(planeM, e1));
-	eigenTestB[plane-1]->setResults(testEigenValue(planeM, e2));
-	eigenValueOrderTest->setResults(e1 < e2);    
+	eigenTestA[plane-1]->setResults(testEigenValue(planeM, e1, e1));
+	eigenTestB[plane-1]->setResults(testEigenValue(planeM, e2, e1));
+	eigenValueOrderTest->setResults(e2 < e1);    
       }
       else if (num_eigen_values != 0) {
 	suite.addTest("Bad number of eigen values", false);
@@ -234,16 +260,19 @@ void doEigenPlaneTests(Suite& suite)
 
 }
 
-bool testEigenValue(const Matrix3& M, double eigen_value)
+bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value)
 {
-  std::vector<Vector> eigenVectors = M.getEigenVectors(eigen_value);
+  double rel_scale = fabs(max_eigen_value); //M.MaxAbsElem(); //M.Norm();
+  std::vector<Vector> eigenVectors = M.getEigenVectors(eigen_value, rel_scale);
 
   if (eigenVectors.size() == 0) {
+    cout << "oh shit!\n";
     return false; // should have at least one Vector for an eigen_value
   }
   else if (eigenVectors.size() == 1) {
     // only a line of eigenVectors -- just test the one vector
-    return equal_enough(M*eigenVectors[0], eigenVectors[0]*eigen_value);
+    return equal_enough(M*eigenVectors[0], eigenVectors[0]*eigen_value,
+			rel_scale);
   }
   else {
     // try different random linear combinations of eigenVectors
@@ -253,7 +282,7 @@ bool testEigenValue(const Matrix3& M, double eigen_value)
       for (int i = 0; i < eigenVectors.size(); i++) {
 	x = x + eigenVectors[i] * getRandom();
       }
-      if (!equal_enough(M*x, x*eigen_value))
+      if (!equal_enough(M*x, x*eigen_value, rel_scale))
 	success = false;
     }
     return success;
@@ -265,13 +294,20 @@ void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
 {
   Vector xp;
   std::vector<Vector> xg_basis;
-  bool result = M.solve(rhs, xp, xg_basis);
+  double rel_scale = M.MaxAbsElem();
+  bool result = M.solve(rhs, xp, xg_basis, rel_scale);
 
   suite.findOrAddTest(test_name + ", existence", exp_return == result);
 
   if (result == true) {
     // this other stuff is only relevent if result == true
-    suite.findOrAddTest(test_name + ", xp", equal_enough(M * xp, rhs));
+    suite.findOrAddTest(test_name + ", xp", equal_enough(M * xp, rhs,
+							 rel_scale));
+    /*    if (!equal_enough(M * xp, rhs, rel_scale)) {
+      cout << rel_scale << endl;
+      cout << xp << " != " << rhs << endl;
+    }*/
+	
 
     if (exp_xg_basis_size != xg_basis.size()) {
       suite.findOrAddTest(test_name + ", xg size", false);
@@ -286,7 +322,7 @@ void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
 	for (int i = 0; i < xg_basis.size(); i++) {
 	  x = x + xg_basis[i] * getRandom();
 	}
-	if (!equal_enough(M*x, Vector(0, 0, 0)))
+	if (!equal_enough(M*x, Vector(0, 0, 0), rel_scale))
 	  success = false;
       }
       suite.findOrAddTest(test_name + ", xg_basis", success);
@@ -294,10 +330,10 @@ void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
   }
 }
 
-// returns a random number between -100.00 to 100.00
+// returns a random number between -100.000 to 100.000
 double getRandom()
 {
-  return (rand() % 20000 - 10000) / 100.0;
+  return (rand() % 200000 - 100000)/1000.0;
 }
 
 double getRandomOrZero(float probability_for_zero)
@@ -357,18 +393,18 @@ Matrix3 randomMatrix()
   for (int i = 1; i <= 3; i++)
     for (int j = 1; j <= 3; j++)
       M(i, j) = getRandom();
-  return M;
+  return M * pow(10.0, rand() % 10 - 3);
 }
 
-bool equal_enough(double x1, double x2)
+bool equal_enough(double x1, double x2, double rel_scale)
 {
-  return fabs(x2 - x1) < 1e-6;//1e-8;
+  return fabs(x2 - x1) <= NEAR_ZERO * (rel_scale > 1 ? rel_scale : 1);
 }
 
-bool equal_enough(Vector v1, Vector v2)
+bool equal_enough(Vector v1, Vector v2, double rel_scale)
 {
   for (int i = 0; i < 3; i++) {
-    if (!equal_enough(v1(i), v2(i)))
+    if (!equal_enough(v1(i), v2(i), rel_scale))
       return false;
   }
   return true;
