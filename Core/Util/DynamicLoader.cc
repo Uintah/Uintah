@@ -325,7 +325,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 }
 
 
-bool
+void
 DynamicLoader::remove_cc(const CompileInfo &info, ostream &serr)
 {
   string full = get_compile_dir() + "/" + info.filename_ + "cc";
