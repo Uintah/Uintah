@@ -503,38 +503,52 @@ BBox::TestTz( const Point& e, const Vector& v, double tz, Point& hitNear )
 }
 
 
-void BBox::test_rigorous(RigorousTest* __test){
+#include <Math/MusilRNG.h>
 
-  Point p;
+void BBox::test_rigorous(RigorousTest* __test){
   BBox b;
 
-  b.extend(Point(0,0,1));
-  b.extend(Point(0,1,2));
-  b.extend(Point(3,3,3));
-  TEST(b.max()==Point(3,3,3));
+  int Mx,My,Mz,mx,my,mz;
+  Mx=My=Mz=0;
+  mx=my=mz=1;
 
-  TEST(maxint(1,2)==2);
-
-  /*  4(int x=0;x<=10;++x){
-    for(int y=0;y<=10;++y){
-      for(int z=0;z<=10;++z){
-	p.x(x);
-	p.y(y);
-	p.z(z);
-
-	b.extend(p);
-
-	TEST(b.min()==Point(0,0,0));
-	TEST(b.max()==p);
-
-	cout << "Min: " << b.min() << "\tMax: " << b.max() << endl;
-	b.reset();
-       }
-    }
-  }
+  MusilRNG r(23423);
   
-  */
- 
 
+  int t=1;
+
+  for (int i=1;i<=100;++i){
+   
+    
+    int x = int(r()*1000);
+    int y = int(r()*1000);
+    int z = int(r()*1000);
+    
+    if(t){
+      mx=x;
+      my=y;
+      mz=z;
+      t=0;
+    }
+
+    //Keep track of the Min and Max points
+
+    
+    Mx=Max(Mx,x);
+    mx=Min(mx,x);
+    
+    My=Max(My,y);
+    my=Min(my,y);
+    
+    Mz=Max(Mz,z);
+    mz=Min(mz,z);
+
+    b.extend(Point(x,y,z));
+
+    
+    TEST(b.max()==Point(Mx,My,Mz));
+    TEST(b.min()==Point(mx,my,mz));
+  }
+       
 
 }

@@ -33,6 +33,7 @@ public:
     //////////
     //Is the BBox valid?
     inline int valid() const {return have_some;}
+
     void reset();
     void extend(const Point& p);
     void extend(const Point& p, double radius);
@@ -62,7 +63,8 @@ public:
     //Returns the diagonal vector of the BBox
     Vector diagonal() const;
     //////////
-    //Return the greater of two integers
+
+  //Return the greater of two integers
     inline friend int maxint(int a, int b){
       if(a>b)
         return a;

@@ -140,41 +140,40 @@ Point::InInterval( Point a, double epsilon )
 void Point::test_rigorous(RigorousTest* __test)
 {	
 
-
     //Basic Point Tests
 
     Point P(0,0,0);
     Point Q(0,0,0);
 
-    for(int x=0;x<=100;++x){
-	for(int y=0;y<=100;++y){
-	    for(int z=0;z<=100;++z){
-		P.x(x);
-		P.y(y);
-		P.z(z);
+    for(int x=-100;x<=100;++x){
+	for(int y=-100;y<=100;++y){
+	    for(int z=-100;z<=100;++z){
+	      P.x(x);
+	      P.y(y);
+	      P.z(z);
 		
-		TEST(P.x()==x);
-		TEST(P.y()==y);
-		TEST(P.z()==z);
+	      TEST(P.x()==x);
+	      TEST(P.y()==y);
+	      TEST(P.z()==z);
 		
-		Q=P;	
-		TEST(Q.x()==x);
-		TEST(Q.y()==y);
-		TEST(Q.z()==z);
-		TEST(P==Q);
-		Q.x(x+1);
-		Q.y(y+1);
-		Q.z(z+1);
-		TEST(P!=Q);
+	      Q=P;	
+	      TEST(Q.x()==x);
+	      TEST(Q.y()==y);
+	      TEST(Q.z()==z);
+	      TEST(P==Q);
+	      Q.x(x+1);
+	      Q.y(y+1);
+	      Q.z(z+1);
+	      TEST(P!=Q);
 	    }
 	}
     }
     
     //with doubles
 
-    for(x=0;x<=100;++x){
-	for(int y=0;y<=100;++y){
-	    for(int z=0;z<=100;++z){
+    for(x=-100;x<=100;++x){
+	for(int y=-100;y<=100;++y){
+	    for(int z=-100;z<=100;++z){
 		P.x((double)x-.00007);
 		P.y((double)y-.00007);
 		P.z((double)z-.00007);
@@ -210,9 +209,11 @@ void Point::test_rigorous(RigorousTest* __test)
     const double cnst = 1234.5678;      
     Point m_A(1,2,3);
     Point m_A_prime(1,2,3);
-    for (x=0;x<10;++x){
-	for (int y=0;y<10;++y){
-	    for (int z=0;z<10;++z){
+
+    
+    for (x=-10;x<10;++x){
+	for (int y=-10;y<10;++y){
+	    for (int z=-10;z<10;++z){
 		p1.x(x);
 		p1.y(y);
 		p1.z(z);
@@ -544,9 +545,9 @@ void Point::test_rigorous(RigorousTest* __test)
     //Vector Tests
 
     
-    for(x=0;x<=100;++x){
-	for(int y=0;y<=100;++y){
-	    for(int z=0;z<=100;++z){
+    for(x=-100;x<=100;++x){
+	for(int y=-100;y<=100;++y){
+	    for(int z=-100;z<=100;++z){
 	      Vector v1(x,y,z);
 	      TEST(v1.x()==x);
 	      TEST(v1.y()==y);
@@ -572,10 +573,11 @@ void Point::test_rigorous(RigorousTest* __test)
     }
 		
     //Dot() is tested above.
+   
     
-    for(x=1;x<=10;++x){
-      for(int y=0;y<=10;++y){
-	for(int z=0;z<=10;++z){
+    for(x=-10;x<=10;++x){
+      for(int y=-10;y<=10;++y){
+	for(int z=-10;z<=10;++z){
 	  Vector v1(x,y,z);
 	  TEST((v1.length())==(sqrt(x*x+y*y+z*z)));
 	  TEST((v1.length2())==(x*x+y*y+z*z));
@@ -664,19 +666,6 @@ void Point::test_rigorous(RigorousTest* __test)
 	  TEST(v1.y()==v3.y()-v2.y());
 	  TEST(v1.z()==v3.z()-v2.z());
 				      
-	  //Vector.normal() and Vector.normalize() Tests
-	  v1.x(x);
-	  v1.y(y);
-	  v1.z(z);
-	  v2=v1;
-
-	  double l=v2.normalize();
-	  TEST(l==v1.length());
-	  Vector vec3(v1.normal());
-	  TEST(vec3==v2);
-	  TEST(vec3.length() > .999999 && vec3.length() < 1.0000001);
-	  
-
 	  //Cross-Product Tests
 	  v1.x(x);
 	  v1.y(y);
@@ -765,22 +754,7 @@ void Point::test_rigorous(RigorousTest* __test)
 	    TEST(v3.z()==(Abs(v2.z()-v1.z())*c));
 	  }
 
-	  //find_orthogonal() Tests
-
-	  Vector va(x,y,z);
-
-	  va.normalize();
-
-	  Vector vb,vc;
-	  va.find_orthogonal(vb,vc);
-
-	  TEST(Abs(Dot(va,vb)) < 1.e-6);
-	  TEST(Abs(Dot(va,vc)) < 1.e-6);
-	  TEST(Abs(Dot(vb,vc)) < 1.e-6);
-
-	  TEST(vb.length()>.999999 && vb.length() < 1.0000001);
-	  TEST(vc.length()>.999999 && vc.length() < 1.0000001);
-	       
+	
 	  //asPoint() Tests
 	  v1.x(x);
 	  v1.y(y);
@@ -816,7 +790,36 @@ void Point::test_rigorous(RigorousTest* __test)
 	}
       }
     } 
+           
+    //(+,+,+) octant only tests
 
+    //Vector.normal() and Vector.normalize() Tests
+    
+    for(x=1;x<=10;++x){
+      for(int y=1;y<=10;++y){
+	for(int z=1;z<=10;++z){
+
+	  Vector va(x,y,z);
+	  va.normalize();
+	  Vector vb,vc;
+	  va.find_orthogonal(vb,vc);
+	  TEST(Abs(Dot(va,vb)) <1.e-6);
+	  TEST(Abs(Dot(va,vc)) < 1.e-6);
+	  TEST(Abs(Dot(vb,vc)) < 1.e-6);
+
+	  TEST(vb.length()>.999999 && vb.length() < 1.0000001);
+	  TEST(vc.length()>.999999 && vc.length() < 1.0000001);
+
+	  
+
+	  
+	}
+      }
+    }    
+
+
+
+    
     //Point.string() Tests
     Point pst1(1,2,3);
     TEST(pst1.string()=="[1, 2, 3]");
