@@ -270,23 +270,23 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 					      const bool recursion)
 
 {
-#if DEBUG
+
   IntVector nodes(0,0,0);
   int num_nodes(0);
-#if 0 
+#if DEBUG 
   cerr << "nodes = " << nodes << endl;
   cerr << "number of patches = " << patches->size() << endl;
 #endif
+
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
-#if 0
+#if DEBUG
     cerr << "num_nodes = " << num_nodes << "\n";
 #endif
   }
 
-#endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     cerr <<"Doing computeStressTensor on " << patch->getID()
