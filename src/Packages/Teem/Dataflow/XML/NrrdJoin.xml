@@ -26,8 +26,14 @@
     </authors>
     <summary>module interface for nrrdJoin function.</summary>
     <description>
-      <p>The number of input nrrds vary.  Attempt to join all the nrrds along the user specified axis.</p>
+      <p>The number of input nrrds vary.  Attempt to join all the
+nrrds along the user specified axis, and output that NrrdData. This
+module can be used to create sets of data.  Join the sets along the
+tuple axis, to create such a nrrd.  Or you can use this module like
+unu_join <slink
+path="http://www.cs.utah.edu/~gk/teem/unrrdu/join.html"></slink></p>
     </description>
+    <examplesr>Teem/nets/test/field_set.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="yes">
