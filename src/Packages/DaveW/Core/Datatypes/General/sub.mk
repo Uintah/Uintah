@@ -25,8 +25,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.4  2000/10/31 02:14:33  dmw
-# merging DaveW HEAD changes into FIELD_BRANCH
+# Revision 1.2.2.5  2000/11/01 23:02:15  mcole
+# Fix for previous merge from trunk
+#
+# Revision 1.2.2.3  2000/10/26 14:01:51  moulding
+# merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.3  2000/07/19 00:24:52  samsonov
 # *** empty log message ***
