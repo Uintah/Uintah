@@ -39,7 +39,8 @@ itcl_class SCIRun_Math_LinAlgUnary {
         global $this-op
         make_labeled_radio $w.f.r "Unary Operations:" "" \
                 top $this-op \
-		{{"Transpose" Transpose}}
+		{{"Transpose" Transpose}\
+		{"Sort" Sort}}
 
 	pack $w.f.r -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
