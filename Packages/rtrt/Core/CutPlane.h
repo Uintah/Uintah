@@ -22,6 +22,7 @@ class CutPlane : public Object {
 public:
     CutPlane(Object* child, const Point& cen, const Vector& n);
     CutPlane(Object* child, PlaneDpy* dpy);
+    CutPlane(Object* child, const Vector& n, const double d);
     virtual ~CutPlane();
     virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
@@ -31,6 +32,10 @@ public:
     virtual void compute_bounds(BBox&, double offset);
     virtual void animate(double t, bool& changed);
     virtual void preprocess(double radius, int& pp_offset, int& scratchsize);
+  void update_displacement(double newd) { d = newd; }
+  void update_normal(const Vector &newn) { n = newn; }
+  void update_active_state(const bool newstate) { active = newstate; }
+  void update_usemat_state(const bool newstate) { use_material = newstate; }
 };
 
 } // end namespace rtrt
