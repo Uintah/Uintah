@@ -36,6 +36,8 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geom/ShaderProgramARB.h>
+
 
 namespace SCITeem {
 
@@ -219,6 +221,13 @@ NrrdSetupTexture::execute()
     return;
   }
 
+  bool valuesonly = valuesonly_.get();
+  if (valuesonly == false && !ShaderProgramARB::shaders_supported())
+  {
+    warning("No shader support on this machine.  No normals generated.");
+    valuesonly = true;
+  }
+
   if (last_generation_ != nin_handle->generation)
   {
     // Set default values for min,max
@@ -239,7 +248,7 @@ NrrdSetupTexture::execute()
   if (last_generation_ == nin_handle->generation &&
       last_minf_ == minf &&
       last_maxf_ == maxf &&
-      last_valuesonly_ == valuesonly_.get())
+      last_valuesonly_ == valuesonly)
   {
     // Don't need to do anything.
     return;
@@ -252,7 +261,7 @@ NrrdSetupTexture::execute()
 
   bool compute_justvalue = false;
   if (last_generation_ == nin_handle->generation &&
-      last_valuesonly_ == valuesonly_.get() &&
+      last_valuesonly_ == valuesonly &&
       last_nvnrrd_.get_rep())
   {
     // Compute just value
@@ -263,7 +272,7 @@ NrrdSetupTexture::execute()
   last_generation_ = nin_handle->generation;
   last_minf_ = minf;
   last_maxf_ = maxf;
-  last_valuesonly_ = valuesonly_.get();
+  last_valuesonly_ = valuesonly;
 
   int nvsize[NRRD_DIM_MAX];
   int gmsize[NRRD_DIM_MAX];
@@ -275,7 +284,7 @@ NrrdSetupTexture::execute()
     gmsize[dim] = nin->axis[dim].size;
     nvsize[dim+1]=nin->axis[dim].size;
   }
-  nvsize[0] = valuesonly_.get()?1:4;
+  nvsize[0] = valuesonly?1:4;
 
   // Allocate the nrrd's data, set the size of each axis
   Nrrd *nvout = 0;
@@ -290,7 +299,7 @@ NrrdSetupTexture::execute()
     nrrdAlloc_nva(nvout, nrrdTypeUChar, nin->dim+1, nvsize);
 
     // Set axis info for (new) axis 0
-    nvout->axis[0].kind = valuesonly_.get()?nrrdKindScalar:nrrdKind4Vector;
+    nvout->axis[0].kind = valuesonly?nrrdKindScalar:nrrdKind4Vector;
     nvout->axis[0].center=nin->axis[0].center;
     nvout->axis[0].spacing=AIR_NAN;
     nvout->axis[0].min=AIR_NAN;
@@ -364,56 +373,56 @@ NrrdSetupTexture::execute()
     compute_data((char *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else if (nin->type == nrrdTypeUChar)
   {
     compute_data((unsigned char *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else if (nin->type == nrrdTypeShort)
   {
     compute_data((short *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else if (nin->type == nrrdTypeUShort)
   {
     compute_data((unsigned short *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else if (nin->type == nrrdTypeInt)
   {
     compute_data((int *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else if (nin->type == nrrdTypeUInt)
   {
     compute_data((unsigned int *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else if (nin->type == nrrdTypeFloat)
   {
     compute_data((float *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else if (nin->type == nrrdTypeDouble)
   {
     compute_data((double *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmoutdata,
                  nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly_.get(), compute_justvalue);
+                 transform, minf, maxf, valuesonly, compute_justvalue);
   }
   else
   {
