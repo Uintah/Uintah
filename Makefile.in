@@ -101,6 +101,7 @@ LEX := @LEX@
 YACC := @YACC@ -d -v
 
 MAKE_PARALLELISM := @MAKE_PARALLELISM@
+NBITS := @NBITS@
 
 LARGESOS := @LARGESOS@
 
@@ -316,6 +317,9 @@ endif
 
 #
 # $Log$
+# Revision 1.29  2000/06/14 22:06:58  jehall
+# - Made 32bit/64bit configure setting available to makefiles
+#
 # Revision 1.28  2000/06/12 18:39:00  sparker
 # Added F77 configuration
 #
