@@ -444,7 +444,7 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl, Ghost::None);
   t->requires(Task::NewDW, Ilb->rho_micro_CCLabel,   ice_matls,  Ghost::None);
   t->requires(Task::OldDW, Ilb->temp_CCLabel,        ice_matls,  Ghost::None);
-  t->requires(Task::OldDW, Ilb->vol_frac_CCLabel,    ice_matls,  Ghost::None);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,    ice_matls,  Ghost::None);
 
   t->requires(Task::NewDW, MIlb->temp_CCLabel, mpm_matls, Ghost::None);
   t->requires(Task::NewDW, MIlb->cMassLabel,   mpm_matls, Ghost::None);
@@ -1764,15 +1764,22 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
-      new_dw->allocate(burnedMass[m],  MIlb->burnedMassCCLabel, dwindex, patch);
+      new_dw->allocate(burnedMass[m],  MIlb->burnedMassCCLabel,  dwindex,patch);
       new_dw->allocate(releasedHeat[m],MIlb->releasedHeatCCLabel,dwindex,patch);
       new_dw->allocate(createdVol[m],   Ilb->created_vol_CCLabel,dwindex,patch);
       burnedMass[m].initialize(0.0);
       releasedHeat[m].initialize(0.0);
       createdVol[m].initialize(0.0);
-
+      //__________________________________
+      // Pull out products data
       if (matl->getRxProduct() == Material::product){
         product_indx = matl->getDWIndex();
+        new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
+					         product_indx,patch,Ghost::None,0);
+        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,
+					         product_indx,patch,Ghost::None,0);
+        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,
+                                            0,patch,Ghost::None,0);
       }
     }
     new_dw->allocate(sumBurnedMass,  MIlb->sumBurnedMassLabel,   0,patch);
@@ -1782,13 +1789,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     sumBurnedMass.initialize(0.0);
     sumReleasedHeat.initialize(0.0);
     sumCreatedVol.initialize(0.0);
-    //__________________________________
-    // Pull out ICE data
-    old_dw->get(gasVolumeFraction, Ilb->vol_frac_CCLabel, 
-					      product_indx,patch,Ghost::None,0);
-    old_dw->get(gasTemperature, Ilb->temp_CCLabel,
-					      product_indx,patch,Ghost::None,0);
-    new_dw->get(gasPressure,    Ilb->press_equil_CCLabel,0,patch,Ghost::None,0);
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1796,9 +1796,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     double surfArea, delX, delY, delZ;
     Vector dx;
     dx = patch->dCell();
-    delX      = dx.x();
-    delY      = dx.y();
-    delZ      = dx.z();
+    delX = dx.x();
+    delY = dx.y();
+    delZ = dx.z();
 
     IntVector nodeIdx[8];
 
@@ -1816,7 +1816,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         CCVariable<double> solidTemperature;
         CCVariable<double> solidMass;
         CCVariable<double> rho_micro_CC;
-	NCVariable<double> NCsolidMass;  
+	 NCVariable<double> NCsolidMass;  
 
         new_dw->get(solidTemperature, MIlb->temp_CCLabel,      dwindex, patch, 
 							 Ghost::None, 0);
@@ -1824,7 +1824,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 							 Ghost::None, 0);
         new_dw->get(rho_micro_CC,      Ilb->rho_micro_CCLabel, dwindex, patch,
 							 Ghost::None, 0);
-	new_dw->get(NCsolidMass,       Mlb->gMassLabel,        dwindex, patch, 
+	 new_dw->get(NCsolidMass,       Mlb->gMassLabel,        dwindex, patch, 
 							 Ghost::AroundCells, 1);
 
         double delt = delT;
@@ -1938,9 +1938,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 	     releasedHeat[m][*iter]    = 0.0;
 	     createdVol[m][*iter]      = 0.0;
 	  }
-	}
-      }
-    }
+	}  // if (maxMass-MinMass....)
+      }  // cell iterator
+    }  // if(mpm_matl == reactant)
 
 //    cout << "TCV = " << total_created_vol << endl;
 
@@ -1951,12 +1951,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
         new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   dwindex, patch);
         new_dw->put(sumReleasedHeat,MIlb->releasedHeatCCLabel, dwindex, patch);
-	new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, dwindex, patch);
+	 new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, dwindex, patch);
       }
       else{
         new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  dwindex, patch);
         new_dw->put(releasedHeat[m], MIlb->releasedHeatCCLabel,dwindex, patch);
-	new_dw->put(createdVol[m],    Ilb->created_vol_CCLabel,dwindex, patch);
+	 new_dw->put(createdVol[m],    Ilb->created_vol_CCLabel,dwindex, patch);
       }
     }
     //---- P R I N T   D A T A ------ 
