@@ -1,0 +1,295 @@
+<?xml version="1.0"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!DOCTYPE article 
+  PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+  "Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!ENTITY edition SYSTEM "edition.xml">
+]>
+
+<article class="techreport">
+<articleinfo>
+<author>
+<firstname>Ted</firstname>
+<surname>Dustman</surname>
+<affiliation>
+<orgname>Scientific Computing and Imaging Institute</orgname>
+<address>
+<street>50 S. Central Campus Dr.</street>
+<city>Salt Lake City</city>
+<state>UT</state>
+<postcode>84112</postcode>
+</address>
+</affiliation>
+</author>
+</articleinfo>
+<title>The Doc Tree</title>
+
+<section>
+<title id="overview">Overview</title>
+<para><xref linkend="tbl.doc-tree"/> shows the organization of the
+doc tree.  It  shows only those files that are part of CVS.
+Generated files (aka products) are discussed in a later section.</para>
+<para>
+<table id="tbl.doc-tree">
+<title>Doc Tree Organization (edition &edition;)</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Directory</entry>
+<entry>Description of Content</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry><filename>doc</filename></entry>
+<entry><para>Root of doc tree.  <filename>index.html</filename> is the main
+cover page for the documentation tree.  <filename>Makefile</filename>
+invokes sub-make files.</para></entry>
+</row>
+<row>
+<entry><filename>doc/Utilities/XML</filename></entry>
+<entry>
+<para>XSL style files, DTDs and CEDs (precompiled dtds for use with PSGML
+mode), and XML related scripts.</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Utilities/TeX</filename></entry>
+<entry>
+<para>Latex related style files, macros files, and scripts.
+</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Utilities/HTML</filename></entry>
+<entry><para>CSS style files, javascript sources, ans HTML related
+scripts.</para></entry>
+</row>
+<row>
+<entry><filename>doc/Utilities/Figures</filename></entry>
+<entry><para>Shared figures (e.g. page header and footer banners).</para></entry>
+</row>
+<row>
+<entry><filename>doc/User</filename></entry>
+<entry>
+<para>User documentation root.  <filename>index.html</filename> is the
+cover page for SCIRun user documentation.  <filename>Makefile</filename>
+invokes sub-make files.
+</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/User/Tutorial</filename></entry>
+<entry><para>HTML sources and figures for the SCIRun Tutorial</para></entry>
+</row>
+<row>
+<entry><filename>doc/User/Guide</filename></entry>
+<entry><para>Latex sources for the SCIRun users guide.
+<filename>Makefile</filename> for generating users guide.</para></entry>
+</row>
+<row>
+<entry><filename>doc/User/FAQ</filename></entry>
+<entry><para>XML sources for the user FAQ.</para></entry>
+</row>
+<row>
+<entry><filename>doc/Developer/</filename></entry>
+<entry>
+<para>
+Developer documentation root. <filename>index.html</filename> is the cover
+page for SCIRun developer documentation.
+</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Developer/Guide</filename></entry>
+<entry>
+<para>XML and HTML sources for the SCIRun developers
+guide. <filename>Makefile</filename> for generating developers guide.</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Developer/FAQ</filename></entry>
+<entry>
+<para>XML sources for developer FAQ.</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Developer/CodeViews</filename></entry>
+<entry>
+<para>Tools (Makefile, configuration file, and script) for building source
+code (C++) based documentation using doxygen.
+</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Developer/Modules</filename></entry>
+<entry>
+<para>
+<filename>Makefile</filename> for building XML and Latex based module
+descriptions.  <filename>index.html</filename> is cover page for module
+descriptions. 
+</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Installation/</filename></entry>
+<entry>
+<para>Installation documentation root.  <filename>Makefile</filename>
+invokes sub-makes.  <filename>index.html</filename> is the cover page for
+SCIRun installation documentation.</para>
+</entry>
+</row>
+
+<row>
+<entry><filename>doc/Installation/Guide</filename></entry>
+<entry>
+<para>XML sources for installation guide and
+<filename>Makefile</filename> for generating the guide.</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/Installation/FAQ</filename></entry>
+<entry>
+<para>XML sources for installation FAQ.</para>
+</entry>
+</row>
+<row>
+<entry><filename>doc/FAQ</filename></entry>
+<entry>
+<para>XML source (<filename>faqbook.xml</filename>) for the SCIRun FAQ book
+(it merely assembles FAQ sources into book form).</para>
+<para><filename>Makefile</filename> generates the FAQ book.</para>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</para>
+</section>
+
+<section>
+<title id="tools">Tools</title>
+<para>
+The following tools are needed for building SCIRun documentation:
+<variablelist>
+<varlistentry>
+<term><ulink url="http://www.gnu.org/software/make/make.html">GNU Make</ulink></term>
+<listitem>
+<para>GNU's version of the make utility.  Makefiles in the doc tree are
+incompatible with other versions of the make utility.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.gnu.org/software/tar/tar.html">GNU Tar</ulink></term>
+<listitem>
+<para>GNU's version of tar.  Tar is used to package the documentation into
+a single file (tarball) for distribution.  GNU tar must be used to extract
+documentation from its tarball.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Java</term>
+<listitem>
+<para>Java is, of course, a programming language.  Saxon (see below)
+requires Java.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://saxon.sourceforge.net/">Saxon</ulink></term>
+<listitem>
+<para>Saxon is an XSLT processor which applies XSL stylesheets to XML
+sources to translate them to other forms (e.g. HTML).  Saxon is written in
+Java.  Saxon is used to translate the Developers guide, the Installation
+guide, the FAQ book, and the XML based module descriptions to HTML.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.latex-project.org/">Latex</ulink></term>
+<listitem>
+<para>Latex is a document markup language and typesetting system.  The Users
+guide and some module descriptions require latex.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.latex2html.org">Latex2Html</ulink></term>
+<listitem>
+<para>The latex2html tool translates latex documents to HTML.  It is used to
+translate the Users guide and latex module descriptions to HTML.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.stack.nl/~dimitri/doxygen/">Doxygen</ulink></term>
+<listitem>
+<para>Doxygen is a documentation system for C++.  It both generates and extracts
+documentation from C++ source files.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://docbook.sourceforge.net/">DocBook Style Sheets</ulink></term>
+<listitem>
+<para>The DocBook stylesheets translate DocBook XML documents (Developers guide and
+Installation guide) to HTML.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.pragmaticprogrammer.com/ruby/">Ruby</ulink></term>
+<listitem>
+<para>A number of scripts in the doc tree are written in the programming language
+Ruby.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</para>
+
+</section>
+
+<section>
+<title id="makedocs">Making Docs</title>
+<para>Present recipie for building docs.</para>
+
+<section>
+<title>Sources</title>
+<para>Discuss sources: XML, tex, HTML.</para>
+</section>
+
+<section>
+<title id="products">Products</title>
+<para>Discuss doc products, where they reside, etc.</para>
+</section>
+
+<section>
+<title id="makefiles">Makefiles</title>
+<para>Discuss Makefile strategy.</para>
+</section>
+
+<section>
+<title id="publishing">Publishing to Internal Web Site</title>
+<para>
+Discuss how docs are published on the internal web site.
+</para>
+</section>
+
+</section>
+
+<section>
+<title>Details</title>
+</section>
+</article>
