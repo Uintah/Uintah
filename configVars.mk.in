@@ -47,6 +47,9 @@ LIBDIR := $(OBJTOP_ABS)/lib/
 endif
 LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
 
+SCIRUN_LIBDIR := $(LIBDIR)
+SCIRUN_LIBDIR_ABS := $(shell cd $(SCIRUN_LIBDIR); pwd)
+
 VPATH := $(SRCTOP)
 
 # Optional pieces

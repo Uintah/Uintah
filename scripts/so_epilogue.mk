@@ -41,8 +41,9 @@ PSELIBS := $(subst /,_,$(PSELIBS))
 ALLTARGETS := $(ALLTARGETS) $(LIBNAME)
 ALLSRCS := $(ALLSRCS) $(SRCS)
 
-# Tuck the value of $(LIBS) away in a mangled variable
-$(LIBNAME)_LIBS := $(LIBS)
+# At recurse.mk time all sub.mk files are included, so we need to 
+# tuck the value of $(LIBS) away in a mangled variable name
+$(notdir $(LIBNAME)_LIBS) := $(LIBS)
 
 # The dependencies can be either .o files or .so files.  The .so
 # files are other shared libraries within the PSE.  This allows
@@ -57,9 +58,18 @@ SONAMEFLAG = -Wl,-soname,$(notdir $@)
 else
 SONAMEFLAG = 
 endif
-$(LIBNAME): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
+
+TMPPSELIBS = $(patsubst %,lib%.so,$(PSELIBS)) 
+TMPP = $(patsubst libPackages_%,PACKAGE%,$(TMPPSELIBS))
+TMP = $(patsubst lib%,SCIRUN%,$(TMPP))
+TMP_CORE_PSELIBS = $(patsubst SCIRUN%,lib%,$(TMP))
+CORE_PSELIBS = $(patsubst PACKAGE%,,$(TMP_CORE_PSELIBS))
+TMP_PACK_PSELIBS = $(patsubst PACKAGE%,libPackages_%,$(TMP))
+PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
+
+$(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)%,$(PACK_PSELIBS))
 	rm -f $@
-	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
 
 #  These will get removed on make clean
 CLEANLIBS := $(CLEANLIBS) $(LIBNAME)

@@ -23,16 +23,6 @@
 # Default target
 default: all
 
-
-SCIRUN_SRCTOP = <path to SCIRUN/src>
-SCIRUN_OBJTOP = <path to the binary directory>
-SCIRUN_SCRIPTS = $(SCIRUN_SRCTOP)/scripts
-
-SRCTOP     = <path to local Package/mypackage>
-SRCTOP_ABS = <path to local Package/mypackage>
-OBJTOP     = <path to local Package/mypackage>
-OBJTOP_ABS = <path to local Package/mypackage>
-
 include $(SCIRUN_OBJTOP)/configVars.mk
 
 INCLUDES += -I$(SRCTOP) -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP)  -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES) $(TAU_INCLUDE)
@@ -43,12 +33,17 @@ INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
 endif
 INCLUDES := $(sort $(INCLUDES))
 
-SUBDIRS := Packages/Teem
+SUBDIRS := $(MYPKG)
 
-LIBDIR = $(SCIRUN_OBJTOP)/lib/
-LIBDIR_ABS = $(SCIRUN_OBJTOP)/lib/
-SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
-LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CFLAGS)
+LIBDIR = $(OBJTOP)lib/
+LIBDIR_ABS = $(OBJTOP)lib/
+SCIRUN_LIBDIR = $(SCIRUN_OBJTOP)/lib/
+SCIRUN_LIBDIR_ABS = $(shell cd $(SCIRUN_LIBDIR); pwd)
+
+SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) -L$(SCIRUN_LIBDIR) $(CFLAGS)
+LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) -L$(SCIRUN_LIBDIR) $(CFLAGS)
+
+include localdefs.mk
 
 # Actually include the module makefile fragments
 ALLSUBDIRS := . 
