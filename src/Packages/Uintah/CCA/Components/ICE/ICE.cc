@@ -2174,9 +2174,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[*iter];
 
-        viscous_source = tau_X_FC[right].x() - tau_X_FC[left].x()  *delY*delZ +
-                         tau_Y_FC[top].x()   - tau_Y_FC[bottom].x()*delX*delZ +
-                         tau_Z_FC[front].x() - tau_Z_FC[back].x()  *delX*delY;
+        viscous_source = (tau_X_FC[right].x() - tau_X_FC[left].x())  *delY*delZ +
+                         (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())*delX*delZ +
+                         (tau_Z_FC[front].x() - tau_Z_FC[back].x())  *delX*delY;
                                  
         mom_source[*iter].x( (-pressure_source * delY * delZ +
                                viscous_source +
@@ -2185,9 +2185,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    Y - M O M E N T U M
          pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[*iter];
 
-        viscous_source = tau_X_FC[right].y() - tau_X_FC[left].y()  *delY*delZ +
-                         tau_Y_FC[top].y()   - tau_Y_FC[bottom].y()*delX*delZ +
-                         tau_Z_FC[front].y() - tau_Z_FC[back].y()  *delX*delY;
+        viscous_source = (tau_X_FC[right].y() - tau_X_FC[left].y())  *delY*delZ +
+                         (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())*delX*delZ +
+                         (tau_Z_FC[front].y() - tau_Z_FC[back].y())  *delX*delY;
 
         mom_source[*iter].y( (-pressure_source * delX * delZ +
                                viscous_source +
@@ -2196,9 +2196,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    Z - M O M E N T U M
         pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[*iter];
         
-        viscous_source = tau_X_FC[right].z() - tau_X_FC[left].z()  *delY*delZ +
-                         tau_Y_FC[top].z()   - tau_Y_FC[bottom].z()*delX*delZ +
-                         tau_Z_FC[front].z() - tau_Z_FC[back].z()  *delX*delY;
+        viscous_source = (tau_X_FC[right].z() - tau_X_FC[left].z())  *delY*delZ +
+                         (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())*delX*delZ +
+                         (tau_Z_FC[front].z() - tau_Z_FC[back].z())  *delX*delY;
 
         mom_source[*iter].z( (-pressure_source * delX * delY +
 			          viscous_source + 
