@@ -672,7 +672,8 @@ main(int argc, char* argv[])
 
   //// BLEND QUAD STUFF
 
-  ppm1 = new PPMImage( "dav.ppm", true );
+  string path = "/usr/sci/data/Geometry/interface/photos/";
+  ppm1 = new PPMImage( path+"dav.ppm", true );
 
   blend = new Blend( Vec4f(1.0, 1.0, 1.0, 0.5) );
 
