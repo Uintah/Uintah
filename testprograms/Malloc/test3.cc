@@ -3,7 +3,8 @@
 #include <stdio.h>
 
 
-main()
+int
+main(char **, int )
 {
     fprintf(stderr, "This should fail - wrote before object\n\n\n");
     void* p=malloc(20);

@@ -3,7 +3,8 @@
 #include <stdio.h>
 
 
-main()
+int
+main(char **, int )
 {
     fprintf(stderr, "This should fail - freeing a pointer twice...\n\n\n");
     void* p=malloc(20);

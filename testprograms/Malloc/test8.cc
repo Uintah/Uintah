@@ -38,7 +38,8 @@ main()
 #include <iostream>
 using std::cerr;
 
-main()
+int
+main(char **, int )
 {
     cerr << "This test not available\n";
     return 0;

@@ -27,7 +27,8 @@ void* operator new(size_t, SCIRun::Allocator*, const char*);
 void* operator new[](size_t, SCIRun::Allocator*, const char*);
 #endif
 
-main()
+int
+main(char **, int )
 {
 #if 0
     char* p=new char[100];

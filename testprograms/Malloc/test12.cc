@@ -11,7 +11,8 @@
   #endif
 #endif
 
-main()
+int
+main(char **, int )
 {
     for(int i=0;i<50;i++){
 	int n=rand()%1000+1;
