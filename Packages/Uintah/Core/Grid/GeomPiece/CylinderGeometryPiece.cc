@@ -1,5 +1,4 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/CylinderGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
