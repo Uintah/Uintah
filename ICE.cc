@@ -2301,6 +2301,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     //  For LODI, How to do ?	                             			
     //    Boundary Conditons for Dirichlet and Neumann ONLY
     //    For LODI they are computed above.
+/*`==========TESTING==========*/
+#ifdef JOHNS_BC
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -2308,7 +2310,17 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity","z",patch,indx);
     }
-
+#endif
+#ifdef ORG_BCS
+    for (int m = 0; m < numMatls; m++)  {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      setBC(uvel_FCME[m],"Velocity","x",patch,indx); 
+      setBC(vvel_FCME[m],"Velocity","y",patch,indx);
+      setBC(wvel_FCME[m],"Velocity","z",patch,indx);
+    }
+#endif 
+/*==========TESTING==========`*/
    //---- P R I N T   D A T A ------ 
     if (switchDebug_Exchange_FC ) {
       for (int m = 0; m < numMatls; m++)  {
