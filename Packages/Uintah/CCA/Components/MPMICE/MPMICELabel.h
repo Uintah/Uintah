@@ -28,6 +28,7 @@ namespace Uintah {
       const VarLabel* scratch1Label;
       const VarLabel* scratch2Label;
       const VarLabel* scratch3Label; 
+      const VarLabel* scratchVecLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* rho_CCScratchLabel;
     };
