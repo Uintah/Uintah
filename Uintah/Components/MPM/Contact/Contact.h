@@ -58,6 +58,8 @@ WARNING
 			      NCVariable<double>::getTypeDescription() );
 	 gVelocityLabel     = new VarLabel( "g.velocity",
                               NCVariable<Vector>::getTypeDescription() );
+	 gInterpVelocityLabel     = new VarLabel( "g.interpvelocity",
+                              NCVariable<Vector>::getTypeDescription() );
 	 gVelocityStarLabel = new VarLabel( "g.velocity_star",
                               NCVariable<Vector>::getTypeDescription() );
 	 gAccelerationLabel = new VarLabel( "g.acceleration",
@@ -99,6 +101,7 @@ WARNING
          const VarLabel* gMassLabel;
          const VarLabel* gAccelerationLabel;
          const VarLabel* gVelocityLabel;
+         const VarLabel* gInterpVelocityLabel;
          const VarLabel* gVelocityStarLabel;
       };
       
@@ -114,6 +117,9 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.10  2000/05/02 17:54:27  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.9  2000/05/02 06:07:14  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

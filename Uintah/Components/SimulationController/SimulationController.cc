@@ -145,6 +145,7 @@ void SimulationController::run()
 
       scheduler->initialize();
       DataWarehouseP new_ds = scheduler->createDataWarehouse();
+      new_ds->carryForward(old_ds);
       scheduleTimeAdvance(t, delt, level, scheduler, old_ds, new_ds,
 			  cfd, mpm);
       if(output)
@@ -364,6 +365,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.13  2000/05/02 17:54:30  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.12  2000/05/02 06:07:18  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

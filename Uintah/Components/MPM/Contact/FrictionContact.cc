@@ -90,7 +90,7 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
 
   // Store new velocities in DataWarehouse
   for(int n=0; n< NVFs; n++){
-    new_dw->put(gvelocity[n], gVelocityLabel, n, region);
+    new_dw->put(gvelocity[n], gInterpVelocityLabel, n, region);
   }
 }
 
@@ -153,6 +153,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.5  2000/05/02 17:54:27  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.4  2000/05/02 06:07:14  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

@@ -151,6 +151,12 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position,
 			       pvelocity,pexternalforce,pmass,pvolume, region);
+
+   new_dw->put(position, pXLabel, getDWIndex(), region);
+   new_dw->put(pvelocity, pVelocityLabel, getDWIndex(), region);
+   new_dw->put(pexternalforce, pExternalForceLabel, getDWIndex(), region);
+   new_dw->put(pmass, pMassLabel, getDWIndex(), region);
+   new_dw->put(pvolume, pVolumeLabel, getDWIndex(), region);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,

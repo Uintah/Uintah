@@ -135,6 +135,7 @@ WARNING
 	 const VarLabel* gMassLabel;
 	 const VarLabel* gAccelerationLabel;
 	 const VarLabel* gVelocityLabel;
+	 const VarLabel* gInterpVelocityLabel;
 	 const VarLabel* gVelocityStarLabel;
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
@@ -146,6 +147,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.17  2000/05/02 17:54:21  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.16  2000/04/26 06:48:12  sparker
 // Streamlined namespaces
 //

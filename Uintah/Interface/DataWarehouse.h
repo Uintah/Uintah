@@ -78,6 +78,10 @@ WARNING
       virtual void put(const NCVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
       
+      //////////
+      // Insert Documentation Here:
+      virtual void carryForward(const DataWarehouseP& from) = 0;
+       
    protected:
       DataWarehouse( int MpiRank, int MpiProcesses );
       int d_MpiRank, d_MpiProcesses;
@@ -92,6 +96,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.17  2000/05/02 17:54:34  sparker
+// Implemented more of SerialMPM
+//
 // Revision 1.16  2000/04/28 07:35:39  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works
