@@ -41,18 +41,20 @@ Volvis2DDpy::createBGText( void )
 	    {
 	      Voxel2D<float> data = volumes[n]->data(x,y,z);
 	      
-	      int y_index = (int)((data.g()-gmin)*textureHeight/(gmax-gmin));
+	      int y_index = (int)((data.g()-gmin)/(gmax-gmin)*textureHeight);
 	      if( y_index >= textureHeight )
 		y_index = textureHeight-1;
 	      else if( y_index < 0 )
 		y_index = 0;
 
-	      int x_index = (int)((data.v()-vmin)*textureWidth/(vmax-vmin));
+	      int x_index = (int)((data.v()-vmin)/(vmax-vmin)*textureWidth);
 	      if( x_index >= textureWidth )
 		x_index = textureWidth-1;
 	      else if( x_index < 0 )
 		x_index = 0;
-	      hist[y_index][x_index] += 1.0f;
+
+	      float hist_elem = hist[y_index][x_index];
+	      hist[y_index][x_index] += 0.1f;
 	      data_max = max( data_max, hist[y_index][x_index] );
 	    } // for()
 
@@ -62,10 +64,14 @@ Volvis2DDpy::createBGText( void )
 	for( j = 0; j < textureWidth; j++ )
 	  {
 	    c = log10f( 1.0f + hist[i][j])*logmax;
-	    transTexture->textArray[i][j][0] =       bgTextImage->textArray[i][j][0] = c;
-	    transTexture->textArray[i][j][1] =       bgTextImage->textArray[i][j][1] = c;
-	    transTexture->textArray[i][j][2] =       bgTextImage->textArray[i][j][2] = c;
-	    transTexture->textArray[i][j][3] = 0.0f; bgTextImage->textArray[i][j][3] = 1.0f;
+	    transTexture1->textArray[i][j][0] = 
+	      bgTextImage->textArray[i][j][0] = c;
+	    transTexture1->textArray[i][j][1] =  
+	      bgTextImage->textArray[i][j][1] = c;
+	    transTexture1->textArray[i][j][2] =       
+	      bgTextImage->textArray[i][j][2] = c;
+	    transTexture1->textArray[i][j][3] = 0.0f; 
+	    bgTextImage->textArray[i][j][3] = 1.0f;
 	  } // for()
     } // for()
 } // createBGText()
@@ -79,10 +85,24 @@ Volvis2DDpy::loadCleanTexture( void )
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ )
       {
-	transTexture->textArray[i][j][0] = 0.0;
-	transTexture->textArray[i][j][1] = 0.0;
-	transTexture->textArray[i][j][2] = 0.0;
-	transTexture->textArray[i][j][3] = 0.0;
+	transTexture2->textArray[i][j][0] =
+	  transTexture1->textArray[i][j][0];
+	transTexture2->textArray[i][j][1] =
+	  transTexture1->textArray[i][j][1];
+	transTexture2->textArray[i][j][2] =
+	  transTexture1->textArray[i][j][2];
+	transTexture2->textArray[i][j][3] =
+	  transTexture1->textArray[i][j][3];
+      }
+  whichTexture = 2;
+
+  for( int i = 0; i < textureHeight; i++ )
+    for( int j = 0; j < textureWidth; j++ )
+      {
+	transTexture1->textArray[i][j][0] = 0.0;
+	transTexture1->textArray[i][j][1] = 0.0;
+	transTexture1->textArray[i][j][2] = 0.0;
+	transTexture1->textArray[i][j][3] = 0.0;
       }
 } // loadCleanTexture()
 
@@ -105,7 +125,7 @@ Volvis2DDpy::drawBackground( void )
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
-  glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture );
+  glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture1 );
   glBegin( GL_QUADS );        // maps the entire background to the entire worldspace
   glTexCoord2f( 0.0, 0.0 );	glVertex2i( 0, 0 );
   glTexCoord2f( 0.0, 1.0 );	glVertex2i( 0, 250 );
@@ -197,8 +217,8 @@ Volvis2DDpy::drawWidgets( GLenum mode )
 void
 Volvis2DDpy::bindWidgetTextures( void )
 {
-  for( int i = 0; i < widgets.size(); i++ )
-    widgets[i]->paintTransFunc( transTexture->textArray );
+    for( int i = 0; i < widgets.size(); i++ )
+      widgets[i]->paintTransFunc( transTexture1->textArray, master_alpha );
   redraw = true;
 } // bindWidgetTextures()
 
@@ -304,25 +324,25 @@ Volvis2DDpy::init()
   glDisable( GL_DEPTH_TEST );
 
   createBGText();
-  glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+  glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
   glGenTextures( 1, &bgTextName );
   glBindTexture( GL_TEXTURE_2D, bgTextName );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA,
 		GL_FLOAT, bgTextImage->textArray ); 
 
-  glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+  glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
   glGenTextures( 1, &transFuncTextName );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA,
-		GL_FLOAT, transTexture->textArray ); 
+		GL_FLOAT, transTexture1->textArray ); 
   glEnd();
 } // init()
 
@@ -335,6 +355,7 @@ Volvis2DDpy::display()
   glClear( GL_COLOR_BUFFER_BIT );
   loadCleanTexture();
   bindWidgetTextures();
+  whichTexture = 1;
   drawBackground();
   drawWidgets( GL_RENDER );
   glFlush();
@@ -393,7 +414,12 @@ Volvis2DDpy::key_pressed(unsigned long key)
       close_display();
       exit(0);
       break;
-      case XK_Delete:
+    case XK_s:
+    case XK_S:
+      if( pickedIndex >= 0 )
+	widgets[pickedIndex]->reflectTrans();
+      break;
+    case XK_Delete:
       if( widgets.size() != 0 )
 	{
 	  widgets.pop_back();
@@ -499,6 +525,9 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y)
 	    widgets[pickedIndex]->invertColor( widgets[pickedIndex]->transText->current_color );
 	} // if()
       
+      else if( y > 520 )
+      	adjustMasterAlpha( (float)(x/x_pixel_width) );
+
       else if( pickedIndex < 0 ) // if no widget was selected
 	return;
       
@@ -507,13 +536,23 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y)
 					  250.0-y/y_pixel_width, (old_y-y)/y_pixel_width );
       
       for( int i = 0; i < widgets.size(); i++ )  // paint widget textures onto the background
-	widgets[i]->paintTransFunc( transTexture->textArray );
+      	widgets[i]->paintTransFunc( transTexture1->textArray, master_alpha );
       
       old_x = x;       // updates old_x
       old_y = y;       // updates old_y
       redraw = true;
     }
 } // button_motion
+
+
+
+// adjusts the master alpha control located below the histogram scatter plot
+void
+Volvis2DDpy::adjustMasterAlpha( float dx )
+{
+  master_alpha += dx/100.0f;
+  redraw = true;
+}
 
 
 
@@ -543,8 +582,16 @@ Volvis2DDpy::lookup( Voxel2D<float> voxel, Color &color, float &alpha )
       int x_index = (int)((voxel.v()-vmin)*linear_factor*(textureWidth-1));
       linear_factor = 1.0f/(gmax-gmin);
       int y_index = (int)((voxel.g()-gmin)*linear_factor*(textureHeight-1));
-      color = Color( transTexture->textArray[y_index][x_index][0], transTexture->textArray[y_index][x_index][1],transTexture->textArray[y_index][x_index][2] );
-      alpha = (1-powf(1-transTexture->textArray[y_index][x_index][3], t_inc/original_t_inc));
+      if( whichTexture == 1 )
+	{
+	  color = Color( transTexture1->textArray[y_index][x_index][0], transTexture1->textArray[y_index][x_index][1], transTexture1->textArray[y_index][x_index][2] );
+	  alpha = 1-powf( 1-transTexture1->textArray[y_index][x_index][3], t_inc/original_t_inc );
+	}
+      else if( whichTexture == 2 )
+	{
+	  color = Color( transTexture2->textArray[y_index][x_index][0], transTexture2->textArray[y_index][x_index][1], transTexture2->textArray[y_index][x_index][2] );
+	  alpha = 1-powf( 1-transTexture2->textArray[y_index][x_index][3], t_inc/original_t_inc );
+	}
     }
   else
     alpha = 0.0f;
@@ -752,8 +799,10 @@ Volvis2DDpy::loadUIState( unsigned long key )
       // if widget is a TriWidget...
       if( token == "TriWidget" )
 	{
-	  float lV0, lV1, mLV0, mLV1, mRV0, mRV1, uLV0, uLV1, uRV0, uRV1, red, green, blue, alpha, opac_x, opac_y, text_red, text_green, text_blue, text_x_off, text_y_off;
-	  lV0 = lV1 = mLV0 = mLV1 = mRV0 = mRV1 = uLV0 = uLV1 = uRV0 = uRV1 = red = green = blue = alpha = opac_x = opac_y = text_red = text_green = text_blue = text_x_off = text_y_off = -1.0f;
+	  float lV0, lV1, mLV0, mLV1, mRV0, mRV1, uLV0, uLV1, uRV0, uRV1, red, green, blue, alpha, opac_x, opac_y, text_red, text_green, text_blue;
+	  int text_x_off, text_y_off;
+	  lV0 = lV1 = mLV0 = mLV1 = mRV0 = mRV1 = uLV0 = uLV1 = uRV0 = uRV1 = red = green = blue = alpha = opac_x = opac_y = text_red = text_green = text_blue = 0.0f;
+	  text_x_off = text_y_off = 0;
 	  while( token != "//TriWidget" )
 	    {
 	      infile >> token;
@@ -812,8 +861,10 @@ Volvis2DDpy::loadUIState( unsigned long key )
       else if( token == "RectWidget" )
 	{
 	  int type = -1;
-	  float left, top, width, height, red, green, blue, alpha, focus_x, focus_y, opac_x, opac_y, text_red, text_green, text_blue, text_x_off, text_y_off;
-	  left = top = width = height = red = green = blue = alpha = focus_x = focus_y = opac_x = opac_y = text_red = text_green = text_blue = text_x_off = text_y_off = -1.0f;	  
+	  float left, top, width, height, red, green, blue, alpha, focus_x, focus_y, opac_x, opac_y, text_red, text_green, text_blue;
+	  int text_x_off, text_y_off;
+	  left = top = width = height = red = green = blue = alpha = focus_x = focus_y = opac_x = opac_y = text_red = text_green = text_blue = 0.0f;
+	  text_x_off = text_y_off = 0;
 	  while( token != "//RectWidget" )
 	    {
 	      infile >> token;
@@ -883,7 +934,8 @@ Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
   master_alpha = 1.0f;
   original_t_inc = t_inc;
   bgTextImage = new Texture<GLfloat>();
-  transTexture = new Texture<GLfloat>();
+  transTexture1 = new Texture<GLfloat>();
+  transTexture2 = new Texture<GLfloat>();
   set_resolution( 500, 250 );
 } // Volvis2DDpy()
 
