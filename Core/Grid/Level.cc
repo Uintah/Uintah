@@ -7,7 +7,7 @@
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/BoundaryConditions/BoundCondReader.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondReader.h>
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
