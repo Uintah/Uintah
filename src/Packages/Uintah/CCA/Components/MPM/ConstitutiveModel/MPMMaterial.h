@@ -101,6 +101,8 @@ WARNING
 
    bool getIsRigid() const;
 
+   int nullGeomObject() const;
+
    // For MPMICE
    double getGamma() const;
    void initializeCCVariables(CCVariable<double>& rhom,

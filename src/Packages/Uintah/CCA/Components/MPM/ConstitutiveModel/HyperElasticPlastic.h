@@ -105,13 +105,6 @@ WARNING
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
 
-    virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw,
-				     Solver* solver,
-				     const bool recursion);
-
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,
                               const MPMMaterial* matl,
@@ -162,23 +155,6 @@ WARNING
     // Sockets for MPM-ICE
     virtual double getCompressibility();
 
-    // class function to read correct number of parameters
-    // from the input file
-    static void readParameters(ProblemSpecP ps, double *p_array);
-
-    // class function to write correct number of parameters
-    // from the input file, and create a new object
-    static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
-
-    // member function to read correct number of parameters
-    // from the input file, and any other particle information
-    // need to restart the model for this particle
-    // and create a new object
-    static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-
-    // class function to create a new object from parameters
-    static ConstitutiveModel* create(double *p_array);
-  
   };
 } // End namespace Uintah
 

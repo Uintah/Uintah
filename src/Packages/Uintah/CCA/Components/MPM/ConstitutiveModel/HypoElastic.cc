@@ -428,15 +428,6 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
   SIF=Vector(KI,KII,0.);
 }
 
-void 
-HypoElastic::computeStressTensor(const PatchSubset* ,
-				const MPMMaterial* ,
-				DataWarehouse* ,
-				DataWarehouse* ,
-				Solver* ,
-				const bool )
-{
-}
 	 
 void HypoElastic::addInitialComputesAndRequires(Task*,
                                                 const MPMMaterial*,

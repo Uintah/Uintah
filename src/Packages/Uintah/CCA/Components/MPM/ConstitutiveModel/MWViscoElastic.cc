@@ -354,16 +354,6 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void 
-MWViscoElastic::computeStressTensor(const PatchSubset* ,
-				    const MPMMaterial* ,
-				    DataWarehouse* ,
-				    DataWarehouse* ,
-				    Solver* ,
-				    const bool )
-{
-}
-	 
 void MWViscoElastic::addInitialComputesAndRequires(Task* ,
                                                    const MPMMaterial* ,
                                                    const PatchSet* ) const

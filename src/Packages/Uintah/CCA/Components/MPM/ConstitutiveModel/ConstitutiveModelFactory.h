@@ -15,8 +15,7 @@ namespace Uintah {
   {
   public:
     // this function has a switch for all known mat_types
-    // and calls the proper class' readParameters()
-    // addMaterial() calls this
+    
     static ConstitutiveModel* create(ProblemSpecP& ps, MPMLabel* lb,int n8or27,
 				     std::string integrator);
   };

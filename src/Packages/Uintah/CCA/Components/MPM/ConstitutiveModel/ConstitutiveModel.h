@@ -10,7 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
-
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 
 #define MAX_BASIS 27
 
@@ -24,6 +24,7 @@ namespace Uintah {
   class DataWarehouse;
   class ParticleSubset;
   class ParticleVariableBase;
+
 
 
   /**************************************
@@ -157,6 +158,14 @@ WARNING
     // Convert J-integral into stress intensity factors for hypoelastic materials 
     virtual void ConvertJToK(const MPMMaterial* matl,const Vector& J,
                              const Vector& C,const Vector& V,Vector& SIF);
+
+    virtual void addRequiresDamageParameter(Task* task,
+					    const MPMMaterial* matl,
+					    const PatchSet* patches) const;
+
+    virtual void getDamageParameter(const Patch* patch, 
+				    ParticleVariable<int>& damage, int dwi,
+				    DataWarehouse* new_dw);
 
   protected:
 

@@ -283,15 +283,6 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void 
-IdealGasMP::computeStressTensor(const PatchSubset* ,
-				const MPMMaterial* ,
-				DataWarehouse* ,
-				DataWarehouse* ,
-				Solver* ,
-				const bool )
-{
-}
 	 
 void IdealGasMP::addInitialComputesAndRequires(Task*,
                                                const MPMMaterial*,

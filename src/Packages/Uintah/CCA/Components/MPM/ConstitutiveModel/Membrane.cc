@@ -490,16 +490,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void 
-Membrane::computeStressTensor(const PatchSubset* ,
-			      const MPMMaterial* ,
-			      DataWarehouse* ,
-			      DataWarehouse* ,
-			      Solver* ,
-			      const bool )
-{
-}
-	 
 void Membrane::addInitialComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
                                              const PatchSet*) const
