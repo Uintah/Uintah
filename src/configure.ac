@@ -1916,6 +1916,48 @@ AC_SUBST(MAGICK_EXTRA_LIB_DIR_FLAG)
 AC_SUBST(INC_MAGICK_H)
 AC_SUBST(DEF_MAGICK)
 
+##  --  search for png --------------------------------------
+
+
+if test "$with_png"; then
+  _sci_lib="$with_png/lib"
+else
+  _sci_lib="$sci_thirdparty_dir"
+fi
+
+for i in $_sci_lib; do
+  if test ! -d "$i"; then
+    continue
+  fi
+
+  #this is where the lib actually lives
+  if test ! -d "$i/lib"; then
+    continue
+  fi
+
+
+  SCI_TRY_LINK(PNG,optional png library and headers,[
+  #include <png.h>
+  ],$i/include,png,$i/lib,,,optional)
+
+  if test "$HAVE_PNG"; then
+    DEF_PNG="#define HAVE_PNG 1"
+    break
+  fi
+done
+ 
+if test "$with_png" && test ! "$DEF_PNG"; then
+  echo
+  AC_MSG_ERROR(One or more of the png components is missing.)
+  echo
+fi
+
+AC_SUBST(PNG_LIB_FLAG)
+AC_SUBST(PNG_LIB_DIR_FLAG)
+AC_SUBST(INC_PNG_H)
+AC_SUBST(DEF_PNG)
+
+
 ##  --  search for gzopen (and related)  ----------------------------------
 
 if test "$with_zlib"; then
