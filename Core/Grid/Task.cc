@@ -582,44 +582,9 @@ void
 Task::display( ostream & out ) const
 {
   out << getName() << " (" << d_tasktype << "): [";
-  if( patch_set != 0 ){
-    out << "Patches: {";
-    for(int i=0;i<patch_set->size();i++){
-      const PatchSubset* ps = patch_set->getSubset(i);
-      if(i != 0)
-	out << ", ";
-      out << "{";
-      for(int j=0;j<ps->size();j++){
-	if(j != 0)
-	  out << ",";
-	const Patch* patch = ps->get(j);
-	out << patch->getID();
-      }
-      out << "}";
-    }
-    out << "}";
-  } else {
-    out << "(No Patches)";
-  }
+  out << *patch_set;
   out << ", ";
-  if( matl_set != 0 ){
-    out << "Matls: {";
-    for(int i=0;i< matl_set->size();i++){
-      const MaterialSubset* ms = matl_set->getSubset(i);
-      if(i != 0)
-	out << ", ";
-      out << "{";
-      for(int j=0;j<ms->size();j++){
-	if(j != 0)
-	  out << ",";
-	out << ms->get(j);
-      }
-      out << "}";
-    }
-    out << "}";
-  } else {
-    out << "(No Matls)";
-  }
+  out << *matl_set;
   out << ", DWs: ";
   for(int i=0;i<TotalDWs;i++){
     if(i != 0)
