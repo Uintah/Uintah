@@ -55,7 +55,7 @@ namespace rtrt {
 
     // This return the enum of the type based on the input string
     // passed in.
-    int parseType(const char* type);
+    static int parseType(const char* type);
     
     enum {
       RegCMap_Unknown,
