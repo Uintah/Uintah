@@ -12,6 +12,7 @@
 #include <Packages/rtrt/Core/shape.h>
 #include <Packages/rtrt/Core/texture.h>
 #include <Packages/rtrt/Core/widget.h>
+#include <Packages/rtrt/Core/Array2.h>
 
 using std::vector;
 using namespace rtrt;
@@ -23,19 +24,16 @@ using namespace SCIRun;
 void
 Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   // declare/initialize histogram array
-  GLfloat hist[textureHeight][textureWidth];
-  for( int y = 0; y < textureHeight; y++ )
-    for( int x = 0; x < textureWidth; x++ )
-      hist[y][x] = 0.0f;
-    
+  Array2<GLfloat> hist(textureHeight, textureWidth);
+  hist.initialize(0);
   float data_max = 0;  // used to scale histogram to be more readable
 
   // creates volume-data scatter plot
   for( int n = 0; n < volumes.size(); n++ ) {
 
     // precomputed values to speed up histogram creation
-    float g_textureFactor = textureHeight/(gmax-gmin);
-    float v_textureFactor = textureWidth/(vmax-vmin);
+    float g_textureFactor = (textureHeight-1)/(gmax-gmin);
+    float v_textureFactor = (textureWidth-1)/(vmax-vmin);
     // create histogram scatter plot
     for( int z = 0; z < volumes[n]->nz; z++ )
       for( int y = 0; y < volumes[n]->ny; y++ )
@@ -53,8 +51,8 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
 	    continue;
 
 	  // increment texture coordinate value, reassign max value if needed
-	  hist[y_index][x_index] += 0.1f;
-	  data_max = max( data_max, hist[y_index][x_index] );
+	  hist(y_index, x_index) += 0.1f;
+	  data_max = max( data_max, hist(y_index, x_index) );
 	} // for(x)
   } // for( number of volumes )
 
@@ -64,7 +62,7 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ ) {
       // rescale value to make more readable and clamp large values
-      c = log10f( 1.0f + hist[i][j])*logmax;
+      c = log10f( 1.0f + hist(i, j))*logmax;
       transTexture2->textArray[i][j][0] = c;
       bgTextImage->textArray[i][j][0] = c;
       transTexture2->textArray[i][j][1] = c;
@@ -860,10 +858,14 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     float fx = ((float)x/pixel_width-UIwind->border)/
       (UIwind->width - 2*UIwind->border);
     selected_vmax = fx*(current_vmax-current_vmin)+current_vmin;
+    if( selected_vmax > current_vmax ) { selected_vmax = current_vmax; }
+    else if( selected_vmax < current_vmin ) { selected_vmax = current_vmin; }
     float fy = ((height-(float)y)/pixel_height - UIwind->menu_height -
 		UIwind->border)/(UIwind->height - UIwind->menu_height -
 				 2*UIwind->border);
     selected_gmax = fy*(current_gmax-current_gmin)+current_gmin;
+    if( selected_gmax > current_gmax ) { selected_gmax = current_gmax; }
+    else if( selected_gmax < current_gmin ) { selected_gmax = current_gmin; }
     redraw = true;
     return;
   }
@@ -1091,12 +1093,20 @@ Volvis2DDpy::delete_voxel_storage( void )
 void
 Volvis2DDpy::display_cp_voxels( void )
 {
-  for( int i = 0; i < cp_voxels.size(); i++ ) {
-    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][0]=0.0;
-    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][1]=0.2;
-    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][2]=0.9;
-    bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][3]=1.0;
-      }
+//    for( int i = 0; i < cp_voxels.size(); i++ ) {
+//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][0]=0.0;
+//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][1]=0.2;
+//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][2]=0.9;
+//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][3]=1.0;
+//        }
+  glColor3f( 0.0, 0.4, 0.7 );
+
+  glColor3f( 0.0, 0.2, 0.9 );
+  glBegin( GL_POINT );
+  for( int i = 0; i < cp_voxels.size(); i++ )
+    glVertex2f( cp_voxels[i]->value, cp_voxels[i]->gradient );
+  glEnd();
+
 //    for( int i = 1; i < cp_voxels.size(); i++ ) {
 //      glColor4f( 0.0, 0.2, 0.9, 1.0 );
 //      glBegin( GL_LINES );
@@ -1118,11 +1128,16 @@ Volvis2DDpy::store_voxel( Voxel2D<float> voxel )
 {
   if( voxel.g() < current_gmax && voxel.v() < current_vmax &&
       voxel.g() > current_gmin && voxel.v() > current_vmin ) {
-    int x_index = (int)((voxel.v()-current_vmin)*text_x_convert);
-    int y_index = (int)((voxel.g()-current_gmin)*text_y_convert);
+//      int x_index = (int)((voxel.v()-current_vmin)*text_x_convert);
+//      int y_index = (int)((voxel.g()-current_gmin)*text_y_convert);
+    float x = ((voxel.v()-current_vmin)/(current_vmax-current_vmin)*
+	       UIwind->width - 2*UIwind->border) + UIwind->border;
+    float y = ((voxel.g()-current_gmin)/(current_gmax-current_gmin)*
+	       UIwind->height - 2*UIwind->border - UIwind->menu_height) +
+      UIwind->menu_height + UIwind->border;
     voxel_valuepair *vvp = new voxel_valuepair;
-    vvp->value = x_index;
-    vvp->gradient = y_index;
+    vvp->value = x;
+    vvp->gradient = y;
     cp_voxels.push_back(vvp);
     redraw = true;
   }
