@@ -2791,9 +2791,11 @@ GeomHandle ViewWindow::createGenAxes() {
   return all;
 }
 
-void ViewWindow::emit_vars(std::ostream& out, const std::string& midx)
+void ViewWindow::emit_vars(std::ostream& out,
+			   const std::string& midx,
+			   const std::string& prefix)
 {
-  ctx->emit(out, midx);
+  ctx->emit(out, midx, prefix);
 }
 
 } // End namespace SCIRun

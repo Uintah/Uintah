@@ -403,7 +403,9 @@ public:
   void getData(int datamask, FutureValue<GeometryData*>* result);
   void setView(View view);
   GeomHandle createGenAxes();   
-  void emit_vars(std::ostream& out, const std::string& midx);
+  void emit_vars(std::ostream& out,
+		 const std::string& midx, 
+		 const std::string &prefix="");
 
   bool ortho_view() { return gui_ortho_view_.get(); }
 

@@ -95,7 +95,8 @@ private:
   void tcl_command(GuiArgs&, void*);
 
   virtual void emit_vars(std::ostream& out,
-			 const string& midx); // Override from class Module
+			 const string& midx,
+			 const string& prefix=""); // Override from class Module
   int process_event();
 
   vector<ViewWindow*> view_window_;
