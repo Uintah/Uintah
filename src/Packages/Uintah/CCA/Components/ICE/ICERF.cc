@@ -319,6 +319,11 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
   scheduleComputeEquilibrationPressure(sched, patches, press_matl,
                                                        all_matls);
 
+  scheduleComputeFCPressDiff(          sched, patches, ice_matls_sub,
+                                                       mpm_matls_sub,
+                                                       press_matl,
+                                                       all_matls);
+                                                                  
   scheduleComputeFaceCenteredVelocities(sched, patches, ice_matls_sub,
                                                         mpm_matls_sub,
                                                         press_matl, 
@@ -378,6 +383,68 @@ void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
   task->computes(lb->rho_CCLabel);
   task->computes(lb->press_equil_CCLabel, press_matl);
   sched->addTask(task, patches, ice_matls);
+}
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleComputeNonEquilibrationPressure--
+ Note:  This similar to ICE::scheduleComputeEquilibrationPressure
+         with the addition of MPM matls
+_____________________________________________________________________*/
+void ICE::scheduleComputeNonEquilibrationPressure(SchedulerP& sched,
+					         const PatchSet* patches,
+                                            const MaterialSubset* ice_matls,
+                                            const MaterialSubset* press_matl,
+					         const MaterialSet*    all_matls)
+{
+  cout_doing << "ICE::scheduleComputeNonEquilibrationPressure" << endl;
+
+  Task* t = scinew Task("ICE::computeNonEquilibrationPressure",
+                     this, &ICE::computeNonEquilibrationPressure);
+
+  t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
+  t->requires(Task::OldDW,lb->temp_CCLabel,  ice_matls,  Ghost::None);
+  t->requires(Task::OldDW,lb->mass_CCLabel,  ice_matls,  Ghost::None);
+  t->requires(Task::OldDW,lb->sp_vol_CCLabel,ice_matls,  Ghost::None);
+
+
+  t->computes(lb->speedSound_CCLabel);
+  t->computes(lb->rho_micro_CCLabel);
+  t->computes(lb->vol_frac_CCLabel);
+  t->computes(lb->rho_CCLabel);
+  t->computes(lb->matl_press_CCLabel);
+  t->computes(lb->f_theta_CCLabel);
+  t->computes(lb->press_equil_CCLabel, press_matl);
+
+  sched->addTask(t, patches, all_matls);
+}
+/* ---------------------------------------------------------------------
+ Function~ ICE::scheduleComputeFCPressDiff
+_____________________________________________________________________*/
+void ICE::scheduleComputeFCPressDiff(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSubset* ice_matls,
+                                        const MaterialSubset* mpm_matls,
+                                        const MaterialSubset* press_matl,
+                                        const MaterialSet* matls)
+{
+  cout_doing << "ICE::scheduleComputeFCPressDiff" << endl;
+  Task* task = scinew Task("ICE::computeFCPressDiff",
+                     this, &ICE::computeFCPressDiff);
+
+  task->requires(Task::OldDW,lb->delTLabel);
+  task->requires(Task::NewDW,lb->rho_CCLabel,            Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->rho_micro_CCLabel,      Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->matl_press_CCLabel,     Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->vel_CCLabel,mpm_matls,  Ghost::AroundCells,1);
+  task->requires(Task::OldDW,lb->vel_CCLabel,ice_matls,  Ghost::AroundCells,1);
+
+  task->requires(Task::NewDW,lb->press_equil_CCLabel,press_matl,
+							  Ghost::AroundCells,1);
+
+  task->computes(lb->press_diffX_FCLabel);
+  task->computes(lb->press_diffY_FCLabel);
+  task->computes(lb->press_diffZ_FCLabel);
+
+  sched->addTask(task, patches, matls);
 }
 
 /* ---------------------------------------------------------------------
@@ -1192,7 +1259,272 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
   }  // patch loop
 }
+/* --------------------------------------------------------------------- 
+ Function~  ICE::computeNonEquilibrationPressure-- 
+ Reference: A Multifield Model and Method for Fluid Structure
+            Interaction Dynamics
+_____________________________________________________________________*/
+void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
+			 		     const PatchSubset* patches,
+					     const MaterialSubset* ,
+					     DataWarehouse* old_dw,
+					     DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 
+    cout_doing<<"Doing computeNonEquilibrationPressure on patch "
+              << patch->getID() <<"\t\t MPMICE" << endl;
+
+    double    tmp;
+    double press_ref= d_sharedState->getRefPress();
+    int numMatls = d_sharedState->getNumICEMatls();
+
+    Vector dx       = patch->dCell(); 
+    double cell_vol = dx.x()*dx.y()*dx.z();
+
+    StaticArray<double> delVol_frac(numMatls),press_eos(numMatls);
+    StaticArray<double> dp_drho(numMatls),dp_de(numMatls);
+    StaticArray<double> mat_volume(numMatls);
+    StaticArray<double> mat_mass(numMatls);
+    StaticArray<double> cv(numMatls);
+    StaticArray<double> compressibility(numMatls);
+    StaticArray<CCVariable<double> > vol_frac(numMatls);
+    StaticArray<CCVariable<double> > rho_micro(numMatls);
+    StaticArray<CCVariable<double> > rho_CC(numMatls);
+    StaticArray<CCVariable<double> > speedSound_new(numMatls);
+    StaticArray<CCVariable<double> > speedSound(numMatls);
+    StaticArray<CCVariable<double> > f_theta(numMatls);
+    StaticArray<CCVariable<double> > matl_press(numMatls);
+
+    StaticArray<constCCVariable<double> > Temp(numMatls);
+    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    StaticArray<constCCVariable<double> > mat_vol(numMatls);
+    StaticArray<constCCVariable<double> > mass_CC(numMatls);
+    constCCVariable<double> press;
+    CCVariable<double> press_new; 
+
+    old_dw->get(press,         lb->press_CCLabel, 0,patch,Ghost::None, 0); 
+    new_dw->allocate(press_new,lb->press_equil_CCLabel, 0,patch);
+    
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+      int indx = matl->getDWIndex();
+      old_dw->get(Temp[m],   lb->temp_CCLabel,  indx,patch,Ghost::None,0);
+      old_dw->get(mass_CC[m],lb->mass_CCLabel,  indx,patch,Ghost::None,0);
+      old_dw->get(sp_vol_CC[m],
+                             lb->sp_vol_CCLabel,indx,patch,Ghost::None,0);
+      
+      new_dw->allocate(rho_CC[m],    lb->rho_CCLabel,       indx, patch);
+      new_dw->allocate(vol_frac[m],  lb->vol_frac_CCLabel,  indx, patch);
+      new_dw->allocate(f_theta[m],   lb->f_theta_CCLabel,   indx, patch);
+      new_dw->allocate(matl_press[m],lb->matl_press_CCLabel,indx, patch);
+      new_dw->allocate(rho_micro[m], lb->rho_micro_CCLabel, indx, patch);
+      new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,indx,patch);
+      speedSound_new[m].initialize(0.0);
+      cv[m] = matl->getSpecificHeat();
+    }
+    
+    press_new.initialize(0.0);
+
+    //__________________________________
+    // Compute matl_press, speedSound, total_mat_vol
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      double total_mat_vol = 0.0;
+      for (int m = 0; m < numMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+
+	 rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+	 double gamma   = ice_matl->getGamma(); 
+	 ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+					     cv[m],Temp[m][*iter],
+					     press_eos[m],dp_drho[m],dp_de[m]);
+
+	 compressibility[m]=
+		      ice_matl->getEOS()->getCompressibility(press_eos[m]);
+
+	 mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
+
+	 tmp = dp_drho[m] + dp_de[m] * 
+	   (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));               
+
+	 matl_press[m][*iter] = press_eos[m];
+        total_mat_vol += mat_volume[m];
+        speedSound_new[m][*iter] = sqrt(tmp);
+       } 
+      //__________________________________
+      // Compute 1/f_theta, rho_CC, 
+       double f_theta_denom = 0.0;
+       for (int m = 0; m < numMatls; m++) {
+         vol_frac[m][*iter] = mat_volume[m]/total_mat_vol;
+         rho_CC[m][*iter]   = vol_frac[m][*iter]*rho_micro[m][*iter];
+	 f_theta_denom += vol_frac[m][*iter]*compressibility[m];
+       }
+       //__________________________________
+       // Compute press_new, mat_mass, rho_CC
+       for (int m = 0; m < numMatls; m++) {
+	f_theta[m][*iter] = vol_frac[m][*iter]*compressibility[m]/f_theta_denom;
+	press_new[*iter] += f_theta[m][*iter]*matl_press[m][*iter];
+	mat_mass[m]       = mass_CC[m][*iter];
+	rho_CC[m][*iter]  = mat_mass[m]/cell_vol;
+       }
+    } // for(CellIterator...)
+
+    //__________________________________
+    //  Set BCs on density, matl_press, press
+    for (int m = 0; m < numMatls; m++)   {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      setBC(rho_CC[m],   "Density" ,patch, indx);
+      setBC(matl_press[m],rho_micro[SURROUND_MAT],"Pressure",patch,indx);
+    }  
+    setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch,0);
+
+    //__________________________________
+    //    Put all matls into new dw
+    for (int m = 0; m < numMatls; m++)   {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      new_dw->put( vol_frac[m],      lb->vol_frac_CCLabel,   indx, patch);
+      new_dw->put( f_theta[m],       lb->f_theta_CCLabel,    indx, patch);
+      new_dw->put( matl_press[m],    lb->matl_press_CCLabel, indx, patch);
+      new_dw->put( speedSound_new[m],lb->speedSound_CCLabel, indx, patch);
+      new_dw->put( rho_micro[m],     lb->rho_micro_CCLabel,  indx, patch);
+      new_dw->put( rho_CC[m],        lb->rho_CCLabel,        indx, patch);
+    }
+    new_dw->put(press_new,lb->press_equil_CCLabel,0,patch);
+
+  } // patches
+
+}
+/* --------------------------------------------------------------------- 
+ Function~  ICE::computeFCPressDiff-- 
+ Reference: A Multifield Model and Method for Fluid Structure
+            Interaction Dynamics
+_____________________________________________________________________*/
+void ICE::computeFCPressDiff(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* /*matls*/,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing << "Doing computeFCPressDiff on patch " << patch->getID()
+         << "\t\t\t\t MPMICE" << endl;
+
+    int numMatls = d_sharedState->getNumMatls();
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+    Vector dx      = patch->dCell();
+
+    StaticArray<constCCVariable<double> > rho_CC(numMatls);
+    StaticArray<constCCVariable<double> > rho_micro(numMatls);
+    StaticArray<constCCVariable<double> > matl_press(numMatls);
+    StaticArray<constCCVariable<Vector> > vel_CC(numMatls);
+    StaticArray<SFCXVariable<double>    > press_diffX_FC(numMatls);
+    StaticArray<SFCYVariable<double>    > press_diffY_FC(numMatls);
+    StaticArray<SFCZVariable<double>    > press_diffZ_FC(numMatls);
+    constCCVariable<double> press_CC;
+    new_dw->get(press_CC,lb->press_equil_CCLabel,0,patch,Ghost::AroundCells,1);
+
+    for(int m = 0; m < numMatls; m++)  {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      new_dw->get(rho_CC[m],       lb->rho_CCLabel,       indx,patch,
+                                                          Ghost::AroundCells,1);
+      new_dw->get(rho_micro[m],    lb->rho_micro_CCLabel, indx,patch,
+                                                          Ghost::AroundCells,1);
+      new_dw->get(matl_press[m],   lb->matl_press_CCLabel,indx,patch,
+                                                          Ghost::AroundCells,1);
+      if(ice_matl){
+        old_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,Ghost::AroundCells,1);      }
+      if(mpm_matl){
+        new_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,Ghost::AroundCells,1);      }
+      new_dw->allocate(press_diffX_FC[m],lb->press_diffX_FCLabel, indx, patch);
+      new_dw->allocate(press_diffY_FC[m],lb->press_diffY_FCLabel, indx, patch);
+      new_dw->allocate(press_diffZ_FC[m],lb->press_diffZ_FCLabel, indx, patch);
+    }
+    //______________________________________________________________________
+    for(int m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      double Kcur, Kadj;
+      if(mpm_matl){
+        Kcur = mpm_matl->getConstitutiveModel()->getCompressibility();
+        Kadj = mpm_matl->getConstitutiveModel()->getCompressibility();
+      }
+      //__________________________________
+      //  B O T T O M   F A C E
+      for(CellIterator iter=patch->getSFCYIterator();!iter.done();iter++){
+        IntVector curcell = *iter;
+        IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
+        double rho_brack     = (rho_CC[m][curcell]*rho_CC[m][adjcell])/
+                               (rho_CC[m][curcell]+rho_CC[m][adjcell]);
+        if(ice_matl){
+          Kcur = ice_matl->getEOS()->getCompressibility(press_CC[curcell]);
+          Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adjcell]);
+        }
+        double deltaP = 2.*delT*(vel_CC[m][adjcell].y()-vel_CC[m][curcell].y())/
+                        ((Kcur + Kadj)*dx.y());
+        press_diffY_FC[m][*iter] = rho_brack*
+             ((matl_press[m][curcell]-press_CC[curcell])/rho_micro[m][curcell] +
+              (matl_press[m][adjcell]-press_CC[adjcell])/rho_micro[m][adjcell] +
+              (1./rho_micro[m][curcell] + 1./rho_micro[m][adjcell])*deltaP);
+      }
+      //__________________________________
+      //  L E F T   F A C E
+      for(CellIterator iter=patch->getSFCXIterator();!iter.done();iter++){
+        IntVector curcell = *iter;
+        IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
+
+        double  rho_brack   = (rho_CC[m][curcell]*rho_CC[m][adjcell])/
+                              (rho_CC[m][curcell]+rho_CC[m][adjcell]);
+        if(ice_matl){
+          Kcur = ice_matl->getEOS()->getCompressibility(press_CC[curcell]);
+          Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adjcell]);
+        }
+        double deltaP = 2.*delT*(vel_CC[m][adjcell].x()-vel_CC[m][curcell].x())/
+                        ((Kcur + Kadj)*dx.x());
+        press_diffX_FC[m][*iter] = rho_brack*
+             ((matl_press[m][curcell]-press_CC[curcell])/rho_micro[m][curcell] +
+              (matl_press[m][adjcell]-press_CC[adjcell])/rho_micro[m][adjcell] +
+              (1./rho_micro[m][curcell] + 1./rho_micro[m][adjcell])*deltaP);
+      }
+      //__________________________________
+      //     B A C K   F A C E
+      for(CellIterator iter=patch->getSFCZIterator();!iter.done();iter++){
+        IntVector curcell = *iter;
+        IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
+        double rho_brack     = (rho_CC[m][curcell]*rho_CC[m][adjcell])/
+                               (rho_CC[m][curcell]+rho_CC[m][adjcell]);
+        if(ice_matl){
+          Kcur = ice_matl->getEOS()->getCompressibility(press_CC[curcell]);
+          Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adjcell]);
+        }
+        double deltaP = 2.*delT*(vel_CC[m][adjcell].z()-vel_CC[m][curcell].z())/
+                        ((Kcur + Kadj)*dx.z());
+        press_diffZ_FC[m][*iter] = rho_brack*
+             ((matl_press[m][curcell]-press_CC[curcell])/rho_micro[m][curcell] +
+              (matl_press[m][adjcell]-press_CC[adjcell])/rho_micro[m][adjcell] +
+              (1./rho_micro[m][curcell] + 1./rho_micro[m][adjcell])*deltaP);
+      }
+    }
+    for(int m = 0; m < numMatls; m++)  {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      new_dw->put(press_diffX_FC[m],lb->press_diffX_FCLabel, indx, patch);
+      new_dw->put(press_diffY_FC[m],lb->press_diffY_FCLabel, indx, patch);
+      new_dw->put(press_diffZ_FC[m],lb->press_diffZ_FCLabel, indx, patch);
+    }
+  } // patches
+}
 /* ---------------------------------------------------------------------
  Function~  ICE::computeFaceCenteredVelocities--
  Purpose~   compute the face centered velocities minus the exchange
