@@ -2,8 +2,21 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-SRCS     = JAStoSurf.cc SFRGfile.cc SurfToJAS.cc
-
 INCLUDES = -I$(SRCTOP) -I$(SRCTOP)/DaveW/ThirdParty/Nrrd/include/ -I$(OBJTOP)
+LIBRARIES = -L$(OBJTOP)/SCICore -lSCICore
 
-include $(SRCTOP)/scripts/objs.mk
+all:: prog-SurfToJAS
+
+prog-JAStoSurf:
+	@$(MAKE) --no-print-directory SRCS=JAStoSurf.cc PROGRAM=JAStoSurf JAStoSurf
+
+prog-SFRGfile:
+	@$(MAKE) --no-print-directory SRCS=SFRGfile.cc PROGRAM=SFRGfile SFRGfile
+
+prog-SurfToJAS:
+	@$(MAKE) --no-print-directory SRCS=SurfToJAS.cc PROGRAM=SurfToJAS SurfToJAS
+
+_cleanHere::
+	rm -f *.o *.d
+
+include $(SRCTOP)/scripts/program.mk
