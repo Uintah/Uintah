@@ -143,11 +143,15 @@ void VolumeVisDpy::run() {
       break;
   }
   XFontStruct* fontInfo = XLoadQueryFont(dpy, 
-		       "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
+        "-adobe-helvetica-bold-r-normal--17-120-100-100-p-88-iso8859-1");
 
   if (fontInfo == NULL) {
-    cerr << "no font found\n";
-    Thread::exitAll(1);
+    fontInfo = XLoadQueryFont(dpy, 
+		       "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
+    if (fontInfo == NULL) {
+      cerr << "no font found\n";
+      Thread::exitAll(1);
+    }
   }
   Font id = fontInfo->fid;
   unsigned int first = fontInfo->min_char_or_byte2;
