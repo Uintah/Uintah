@@ -468,7 +468,7 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
       
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
-  if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
+  if(d_with_ice){
     t->requires(Task::NewDW, lb->gradPressNCLabel,  Ghost::None);
   }
 
@@ -1420,7 +1420,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       else
         new_dw->get(mass, lb->gMassLabel,       matlindex,patch, Ghost::None,0);
 
-      if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
+      if(d_with_ice){
          new_dw->get(gradPressNC,lb->gradPressNCLabel,    matlindex, patch,
 							   Ghost::None, 0);
       }
