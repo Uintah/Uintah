@@ -110,7 +110,7 @@ bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
     return true;
 }
 
-bool compare(long a, long b, double /* abs_tolerance */,
+bool compare(long64 a, long64 b, double /* abs_tolerance */,
 	     double /* rel_tolerance */)
 {
   return (a == b); // longs should use an exact comparison
@@ -181,7 +181,7 @@ public:
   const vector<ParticleVariableBase*>& getParticleVars()
   { return particleVars_; }
 
-  long getParticleID(particleIndex index);
+  long64 getParticleID(particleIndex index);
   const Patch* getPatch(particleIndex index);
 private:
   template <class T> bool 
@@ -197,7 +197,7 @@ private:
   vector<const Patch*> patches_;
 
   MaterialParticleVarData* particleIDData_;
-  map<long, const Patch*>* patchMap_;
+  map<long64, const Patch*>* patchMap_;
 };
 
 class MaterialParticleData
@@ -264,14 +264,14 @@ void MaterialParticleVarData::createPatchMap()
   ASSERT(name_ == "p.particleID");
   if (patchMap_)
     delete patchMap_;
-  patchMap_ = scinew map<long, const Patch*>();
+  patchMap_ = scinew map<long64, const Patch*>();
   for (int patch = 0; patch < particleVars_.size(); patch++) {
     particleIndex count =
       particleVars_[patch]->getParticleSet()->numParticles();
-    ParticleVariable<long>* particleID =
-      dynamic_cast< ParticleVariable<long>* >(particleVars_[patch]);
+    ParticleVariable<long64>* particleID =
+      dynamic_cast< ParticleVariable<long64>* >(particleVars_[patch]);
     if (particleID == 0) {
-      cerr << "p.particleID must be a ParticleVariable<long>\n";
+      cerr << "p.particleID must be a ParticleVariable<long64>\n";
       abort_uncomparable();
     }
     for (int i = 0; i < count; i++) {
@@ -320,10 +320,10 @@ void MaterialParticleData::compare(MaterialParticleData& data2, double time1,
   ASSERT((varIter == vars_.end()) && (varIter2 == data2.vars_.end()));
 }
 
-struct ID_Index : public pair<long, particleIndex>
+struct ID_Index : public pair<long64, particleIndex>
 {
-  ID_Index(long l, particleIndex i)
-    : pair<long, particleIndex>(l, i) {}
+  ID_Index(long64 l, particleIndex i)
+    : pair<long64, particleIndex>(l, i) {}
   bool operator<(ID_Index id2)
   { return first < id2.first; }
 };
@@ -333,16 +333,16 @@ void MaterialParticleData::sort()
   // should have made this check earlier -- particleIDs not output
   ASSERT(particleIDs_->getParticleVars().size() != 0);
 
-  vector< pair<long, int> > idIndices;
+  vector< pair<long64, int> > idIndices;
   
   for (int i = 0; i < particleIDs_->getParticleVars().size(); i++) {
-    ParticleVariable<long>* pIDs = dynamic_cast<ParticleVariable<long>*>(particleIDs_->getParticleVars()[i]);
+    ParticleVariable<long64>* pIDs = dynamic_cast<ParticleVariable<long64>*>(particleIDs_->getParticleVars()[i]);
     if (pIDs == 0) {
-      cerr << "p.particleID must be a ParticleVariable<long>\n";
+      cerr << "p.particleID must be a ParticleVariable<long64>\n";
       abort_uncomparable();
     }
 
-    long* pID = (long*)pIDs->getBasePointer();
+    long64* pID = (long64*)pIDs->getBasePointer();
     ParticleSubset* subset = pIDs->getParticleSubset();
     for (ParticleSubset::iterator iter = subset->begin();
 	 iter != subset->end(); iter++) {
@@ -411,9 +411,9 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
     return compare(data2, dynamic_cast<ParticleVariable<double>*>(pvb1),
 		   dynamic_cast<ParticleVariable<double>*>(pvb2), matl,
 		   time1, time2, abs_tolerance, rel_tolerance);
-  case Uintah::TypeDescription::long_type:
-    return compare(data2, dynamic_cast<ParticleVariable<long>*>(pvb1),
-		   dynamic_cast<ParticleVariable<long>*>(pvb2), matl,
+  case Uintah::TypeDescription::long64_type:
+    return compare(data2, dynamic_cast<ParticleVariable<long64>*>(pvb1),
+		   dynamic_cast<ParticleVariable<long64>*>(pvb2), matl,
 		   time1, time2, abs_tolerance, rel_tolerance);
   case Uintah::TypeDescription::Point:
     return compare(data2, dynamic_cast<ParticleVariable<Point>*>(pvb1),
@@ -477,12 +477,12 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
   return passes;
 }
 
-long MaterialParticleVarData::getParticleID(particleIndex index)
+long64 MaterialParticleVarData::getParticleID(particleIndex index)
 {
   ASSERT(particleIDData_ != 0);
   ASSERT(particleIDData_->particleVars_.size() == 1);
-  ParticleVariable<long>* particleIDs =
-    dynamic_cast<ParticleVariable<long>*>(particleIDData_->particleVars_[0]);
+  ParticleVariable<long64>* particleIDs =
+    dynamic_cast<ParticleVariable<long64>*>(particleIDData_->particleVars_[0]);
   ASSERT(particleIDs != 0);
   
   return (*particleIDs)[index];
@@ -543,8 +543,8 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	  case Uintah::TypeDescription::double_type:
 	    pvb = scinew ParticleVariable<double>();
 	    break;
-	  case Uintah::TypeDescription::long_type:
-	    pvb = scinew ParticleVariable<long>();
+	  case Uintah::TypeDescription::long64_type:
+	    pvb = scinew ParticleVariable<long64>();
 	    break;
 	  case Uintah::TypeDescription::Point:
 	    pvb = scinew ParticleVariable<Point>();

@@ -367,12 +367,12 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
 
 void 
 DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-			       long particleID, int matlIndex,
+			       long64 particleID, int matlIndex,
 			       double time)
 {
   Patch *local = patch;
   if( patch != NULL ){
-    ParticleVariable<long> var;
+    ParticleVariable<long64> var;
     query(var, "p.particleID", matlIndex, patch, time);
     //  cerr<<"var["<<idx<<"] = "<<var[idx]<<endl;
     if( var[idx] == particleID )
@@ -397,7 +397,7 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
     for (Level::const_patchIterator iter = level->patchesBegin();
 	 (iter != level->patchesEnd()) && (patch == NULL); iter++) {
       if( *iter == local ) continue;
-      ParticleVariable<long> var;
+      ParticleVariable<long64> var;
       query(var, "p.particleID", matlIndex, *iter, time);
       ParticleSubset* subset = var.getParticleSubset();
       for(ParticleSubset::iterator p_iter = subset->begin();

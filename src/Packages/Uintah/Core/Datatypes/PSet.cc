@@ -30,7 +30,7 @@ PSet::PSet()
 }
 
 PSet::PSet( const vector <ShareAssignParticleVariable<Point> >& positions,
-	    const vector <ShareAssignParticleVariable<long> >& ids,
+	    const vector <ShareAssignParticleVariable<long64> >& ids,
 	    const vector <const Patch *> patches,
 	    void* callbackClass):
   have_bounds( false ),
@@ -46,7 +46,7 @@ PSet::~PSet()
 }
 
 void PSet:: AddParticles( const ParticleVariable<Point> locs,
-			  const ParticleVariable<long>  ids,
+			  const ParticleVariable<long64>  ids,
 			  const Patch* patch)
 {
   positions.push_back( locs );

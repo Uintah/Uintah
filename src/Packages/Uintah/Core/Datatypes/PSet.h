@@ -62,7 +62,7 @@ class PSet : public Datatype {
   //////////
   // Constructor
   PSet( const vector <ShareAssignParticleVariable<Point> >& positions,
-	const vector <ShareAssignParticleVariable<long> >& ids,
+	const vector <ShareAssignParticleVariable<long64> >& ids,
 	const vector <const Patch *> patches,
 	void* callbackClass);
   // GROUP: Destructors
@@ -76,7 +76,7 @@ class PSet : public Datatype {
   { return positions;}
   //////////
   // return the ids
-  vector<ShareAssignParticleVariable<long> >&  getIDs()
+  vector<ShareAssignParticleVariable<long64> >&  getIDs()
   { return particle_ids;}
   //////////
   // return the patches
@@ -95,7 +95,7 @@ class PSet : public Datatype {
   //////////  
   // add a particle
   void AddParticles( const ParticleVariable<Point> locs,
-		     const ParticleVariable<long> ids,
+		     const ParticleVariable<long64> ids,
 		     const Patch* p);
   //////////  
   // associate a grid
@@ -126,7 +126,7 @@ class PSet : public Datatype {
   LevelP _level;
 
   vector< ShareAssignParticleVariable<Point> >  positions;
-  vector< ShareAssignParticleVariable<long> >  particle_ids;
+  vector< ShareAssignParticleVariable<long64> >  particle_ids;
   vector< const Patch* >  patches;
 };
 
