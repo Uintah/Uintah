@@ -227,6 +227,11 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     return -1; 
 
   extra_flags = extra_sus_flags(test)
+  output_to_browser=1
+  try:
+    blah = environ['HTMLLOG']
+  except Exception:
+    output_to_browser=0
 
   # set where to view the log files
   logpath = environ['WEBLOG']
@@ -255,6 +260,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     else:
       malloc_stats_file = "malloc_stats"
     environ['MALLOC_STATS'] = malloc_stats_file
+    environ['MALLOC_STRICT'] = "blah"
 
   rc = system("nice %s %s > sus.log.txt 2>&1" % (command, susinput))
   print "Command Line: %s %s" % (command, susinput)
