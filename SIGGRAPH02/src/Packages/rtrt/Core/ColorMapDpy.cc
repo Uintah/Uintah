@@ -30,7 +30,7 @@ namespace rtrt {
 static void draw_circle(int radius, int x_center, int y_center);
 static void circle_points(int x, int y, int x_center, int y_center);
 
-ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins=256):
+ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins):
   DpyBase("ColorMap GUI"), colors_index(matls),
   data_min(MAXFLOAT), data_max(-MAXFLOAT),
   selected_point(-1)
@@ -43,7 +43,7 @@ ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins=256):
   create_transfer();
 }
 
-ColorMapDpy::ColorMapDpy(char *filebase, int num_bins=256):
+ColorMapDpy::ColorMapDpy(char *filebase, int num_bins):
   DpyBase("ColorMap GUI"), data_min(MAXFLOAT), data_max(-MAXFLOAT),
   selected_point(-1)
 {
@@ -53,14 +53,14 @@ ColorMapDpy::ColorMapDpy(char *filebase, int num_bins=256):
   // Open the file
   char buf[1000];
   sprintf(buf, "%s.cmp", filebase);
-  strdup(this->filebase, filebase);
+  this->filebase = strdup(filebase);
   ifstream in(buf);
   if(in){
     float x, val, r,g,b;
     while (!in.eof()) {
       in >> x >> val >> r >> g >> b;
       if (!in.eof()) {
-	colors_index.add(new ColorPos(x, val, Color(r,g,b)));
+	colors_index.add(ColorPos(x, val, Color(r,g,b)));
       }
     }
     colors_index[0].x = 0;
@@ -68,8 +68,8 @@ ColorMapDpy::ColorMapDpy(char *filebase, int num_bins=256):
   } else {
     cerr << "ColorMapDpy::ERROR " << filebase << ".cmp NO SUCH FILE!" << "\n";
     cerr << "Creating default color map.\n";
-    ColorCells.add(new ColorPos(0.0, 1, Color(0.0,0.0,0.0)));
-    ColorCells.add(new ColorPos(1.0, 1, Color(1.0,1.0,1.0)));
+    colors_index.add(ColorPos(0, 1, Color(0.0,0.0,0.0)));
+    colors_index.add(ColorPos(1, 1, Color(1.0,1.0,1.0)));
   } 
   // Allocate memory for the color and alpha transform
   color_transform.set_results_ptr(new Array1<Color>(num_bins));
@@ -84,9 +84,9 @@ ColorMapDpy::~ColorMapDpy()
     free(filebase);
 }
 
-void ColorMapDpy::attach(float min, float max) {
-  data_min = min(data_min, min);
-  data_max = max(data_max, max);
+void ColorMapDpy::attach(float min_in, float max_in) {
+  data_min = min(data_min, min_in);
+  data_max = max(data_max, max_in);
   scale = 1/(data_max - data_min);
 
   color_transform.scale(data_min,data_max);
@@ -355,9 +355,9 @@ void ColorMapDpy::draw_transform() {
   // Draw the circles around the end points
   glColor3f(1.0, 0.5, 1.0);
   int radius = (width/100)*3;
-  for(unsigned int k = 0; k < alpha_list.size(); k++) {
-    draw_circle(radius, (int)(alpha_list[k].x*width),
-		(int)(alpha_list[k].val*h));
+  for(unsigned int k = 0; k < colors_index.size(); k++) {
+    draw_circle(radius, (int)(colors_index[k].x*width),
+		(int)(colors_index[k].val*h));
   }
 }
 
@@ -379,8 +379,8 @@ void ColorMapDpy::create_transfer() {
     end = (int)(colors_index[index+1].x * nindex);
     Color color = colors_index[index].c;
     Color color_inc = (colors_index[index+1].c - color) * (1.0f/(end - start));
-    Color val = colors_index[index].val;
-    Color val_inc = (colors_index[index+1].val - val) * (1.0f/(end - start));
+    float val = colors_index[index].val;
+    float val_inc = (colors_index[index+1].val - val) * (1.0f/(end - start));
     for (int i = start; i <= end; i++) {
       //    cout << "val = "<<val<<", ";
       color_transform[i] = color;
@@ -430,7 +430,7 @@ int ColorMapDpy::select_point(int xpos, int ypos) {
   return index;
 }
 
-void write_data_file(char *out_file) {
+void ColorMapDpy::write_data_file(char *out_file) {
   char buf[1000];
   if (out_file == 0)
     // so that the one read in isn't written over
@@ -445,7 +445,7 @@ void write_data_file(char *out_file) {
 
   for(int i = 0; i < colors_index.size(); i++) {
     ColorPos c = colors_index[i];
-    fprintf("%g %g %g %g %g\n",c.x, c.val, c.c.red(), c.c.green(), c.c.blue());
+    fprintf(out, "%g %g %g %g %g\n",c.x, c.val, c.c.red(), c.c.green(), c.c.blue());
   }
   fclose(out);
 }
