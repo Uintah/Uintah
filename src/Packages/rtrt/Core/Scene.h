@@ -5,7 +5,6 @@
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BBox.h>
@@ -38,6 +37,7 @@ class ShadowBase;
 class Group;
 class Scene;
 class Trigger;
+class RTRT;
 #if !defined(linux) && !defined(__APPLE__)
 class SoundThread;
 class Sound;
@@ -273,12 +273,6 @@ public:
   int ref_cnt;
   SCIRun::Mutex lock;
 
-  inline int getHotSpotsMode() const { return hotSpotMode_; }
-
-  // Display image as a "transmission".  Ie: turn off every other scan line.
-  // (Net effect of this is to double the frame rate.)
-  inline bool doTransmissionMode() const { return transmissionMode_; }
-
   // These objects will have animate called on them.  They will not be
   // added to the gui.  Use addGuiObject instead.
   void addAnimateObject( Object* obj );
@@ -426,9 +420,6 @@ private:
   
   Color  ambientColor_;
   Color  origAmbientColor_;
-
-  int  hotSpotMode_; // 0 == off, 1 == normal, 2 == half screen
-  bool transmissionMode_;
 
   Array1<Material*> materials;
 
