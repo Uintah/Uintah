@@ -237,103 +237,38 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
   L_Offset[Patch::zminus] = IntVector(0, 0, 0);
   L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
   
-  for (int i = 1; i<= 5; i++ ) {    // don't initialize inside main loop
-    d[i].initialize(Vector(0.0,0.0,0.0));          // you'll overwrite previously compute di
+  for (int i = 1; i<= 5; i++ ) {           // don't initialize inside main loop
+    d[i].initialize(Vector(0.0,0.0,0.0));  // you'll overwrite previously compute di
   }
   // Iterate over the faces encompassing the domain
-  // only set DI on Boundariesfaces that are LODI
   vector<Patch::FaceType>::const_iterator iter;
   
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
  
-    if (is_LODI_face(patch,face, sharedState) ) {
-      cout_dbg << " computing DI on face " << face 
-               << " patch " << patch->getID()<<endl;
-      //_____________________________________
-      // S I D E   M I N U S   E D G E S
-      IntVector axes = patch->faceAxes(face);
-      int P_dir = axes[0]; // find the principal dir
-      double delta = dx[P_dir];
+    cout_dbg << " computing DI on face " << face 
+             << " patch " << patch->getID()<<endl;
+    //_____________________________________
+    // S I D E S
+    IntVector axes = patch->faceAxes(face);
+    int P_dir = axes[0]; // find the principal dir
+    double delta = dx[P_dir];
 
-      for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
-          !iter.done();iter++) {
-        IntVector c = *iter;
-        IntVector r = c + R_Offset[face];
-        IntVector l = c + L_Offset[face];
+    for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+        !iter.done();iter++) {
+      IntVector c = *iter;
+      IntVector r = c + R_Offset[face];
+      IntVector l = c + L_Offset[face];
 
-        double drho_dx = (rho[r] - rho[l])/delta; 
-        double dp_dx   = (press[r] - press[l])/delta;
-        Vector dVel_dx = (vel[r] - vel[l])/delta;
-                
-        Di(d, P_dir, c,
-           speedSound_[c], rho[c], vel[c][P_dir], drho_dx, dp_dx, dVel_dx); 
-           
-      }  // faceCelliterator
-      //__________________________________
-      //    E D G E S  -- on boundaryFaces only
-      vector<Patch::FaceType> b_faces;
-      getBoundaryEdges(patch,face,b_faces);
+      double drho_dx = (rho[r]   - rho[l])/delta; 
+      double dp_dx   = (press[r] - press[l])/delta;
+      Vector dVel_dx = (vel[r]   - vel[l])/delta;
 
-      vector<Patch::FaceType>::const_iterator iter;  
-      for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
-        Patch::FaceType face0 = *iter;
+      Di(d, P_dir, c,
+         speedSound_[c], rho[c], vel[c][P_dir], drho_dx, dp_dx, dVel_dx); 
 
-        //__________________________________
-        //  Find the offset for the r and l cells
-        //  and the Vector components Edir1 and Edir2
-        //  for this particular edge
-        IntVector offset = patch->faceDirection(face0);
-
-        IntVector axes = patch->faceAxes(face0);
-        int Edir1 = axes[0];
-        double delta = dx[Edir1];
-        
-        CellIterator iterLimits =  
-                    patch->getEdgeCellIterator(face, face0, "plusCornerCells");
-
-        for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-          IntVector c = *iter;
-          IntVector interior = c - offset;
-          
-          // One sided derivatives
-          double nan = -9e1000;
-          double drho_dx= nan, dp_dx = nan;
-          Vector dVel_dx(Vector(nan,nan,nan));
-          if (offset[Edir1] > 0 ) { // right, top, front edges
-            drho_dx = (rho[c]   - rho[interior])/delta; 
-            dp_dx   = (press[c] - press[interior])/delta;
-            dVel_dx = (vel[c]   - vel[interior])/delta;
-          }else{                    // left, bottom, back edges
-            drho_dx = (rho[interior]   - rho[c])/delta; 
-            dp_dx   = (press[interior] - press[c])/delta;
-            dVel_dx = (vel[interior]   - vel[c])/delta;
-          }
-          
-/*`==========TESTING==========*/
-#if 0
-          vector<IntVector> dbgCells;
-          dbgCells.push_back(IntVector(50,15,-1));
-          dbgCells.push_back(IntVector(15,50,-1));
-          dbgCells.push_back(IntVector(-1,15,50));
-          for (int i = 0; i<(int) dbgCells.size(); i++) {
-            if (c == dbgCells[i]) {
-              cout.setf(ios::scientific,ios::floatfield);
-              cout.precision(10);
-              cout << " --------------------- Base Face " << face << endl;
-              cout << "face0 " << face0 << " Edir " << Edir1 << endl;
-            }
-          }
-#endif 
-/*===========TESTING==========`*/
-          
-          Di(d, Edir1, c,
-             speedSound_[c], rho[c], vel[c][Edir1], drho_dx, dp_dx, dVel_dx);
-             
-        }  // edgeCellIterator loop
-      }  // edgeloop
-    }  // if(onEdgeOfDomain) 
+    }  // faceCelliterator 
   }  // loop over faces
 }// end of function
 
@@ -704,6 +639,7 @@ void FaceDensity_LODI(const Patch* patch,
     l2[dir2] -= offset[dir2];
     
     q_R = rho_old[r2] * vel_old[r2][dir2];
+    q_C = rho_old[c]  * vel_old[c][dir2];
     q_L = rho_old[l2] * vel_old[l2][dir2];
     double conv_dir2 = computeConvection(nu[r2], nu[c], nu[l2],
                                          rho_old[r2], rho_old[c], rho_old[l2], 
@@ -741,7 +677,7 @@ void FaceDensity_LODI(const Patch* patch,
       IntVector r = c + offset;  
       IntVector l = c - offset;
       double q_R = rho_old[r] * vel_old[r][Edir2];
-      double q_C = rho_old[c] * vel_old[r][Edir2];
+      double q_C = rho_old[c] * vel_old[c][Edir2];
       double q_L = rho_old[l] * vel_old[l][Edir2];
       double conv = computeConvection(nu[r], nu[c], nu[l],
                                       rho_old[r], rho_old[c], rho_old[l], 
@@ -785,11 +721,12 @@ void FaceVel_LODI(const Patch* patch,
 /*`==========TESTING==========*/
 // hardCode the cells you want to intergate;
 vector<IntVector> dbgCells;
-#if 1
-  dbgCells.push_back(IntVector(50,-1,2));
-  dbgCells.push_back(IntVector(50, 0,2));      
-  dbgCells.push_back(IntVector(50,-1,-1));        
-  dbgCells.push_back(IntVector(50,-1,5)); 
+#if 0
+  dbgCells.push_back(IntVector(-1,-1,2));
+  dbgCells.push_back(IntVector(0,-1,2));      
+  dbgCells.push_back(IntVector(1,-1,2));        
+  dbgCells.push_back(IntVector(2,-1,2));
+  dbgCells.push_back(IntVector(3,-1,2));
 #endif
 /*===========TESTING==========`*/
      
@@ -815,7 +752,7 @@ vector<IntVector> dbgCells;
                                                       !iter.done();iter++) {
     IntVector c = *iter;
     //__________________________________
-    // convective terms
+    // Transverse convection terms
     IntVector r1 = c;
     IntVector l1 = c;
     r1[dir1] += offset[dir1];  // tweak the r and l cell indices
@@ -859,20 +796,22 @@ vector<IntVector> dbgCells;
     pressGradient[dir2]  = 0.5 * (p[r2] - p[l2])/dx[dir2];  //  ---//---- 
     
     //__________________________________
-    // Equation 9.9 - 9.10
-    Vector mom, term2; // momentum
-    
-    Vector term1 = vel_old[c] * d[1][c];
-    term2.x( d[3][c].x()); 
-    term2.y( d[4][c].y()); 
-    term2.z( d[5][c].z()); 
-    term2 *= rho_old[c];
-    
-    mom  = rho_old[c] * vel_old[c]                                
-         - delT * ( term1 +  term2 + convect1 + convect2 + pressGradient )  
-         + delT *rho_old[c] * gravity;                     
-              
-    vel_CC[c] = mom/rho_new[c];
+    // Boundary normal convection Terms
+    // See Sutherland Table 8
+    Vector BN_convect;
+    BN_convect.x( vel_old[c].x() * d[1][c][P_dir] + rho_old[c] *d[3][c][P_dir] );
+    BN_convect.y( vel_old[c].y() * d[1][c][P_dir] + rho_old[c] *d[4][c][P_dir] );
+    BN_convect.z( vel_old[c].z() * d[1][c][P_dir] + rho_old[c] *d[5][c][P_dir] );
+     
+    //__________________________________
+    //  Equations 9.9-9.10
+    Vector momOld, momChange;
+    momOld    = rho_old[c] * vel_old[c];
+                         
+    momChange =  - delT * ( BN_convect + convect1 + convect2 + pressGradient )  
+                 + delT *rho_old[c] * gravity;
+         
+    vel_CC[c] = (momOld + momChange)/rho_new[c];
 
 #if 0
     //__________________________________
@@ -883,14 +822,12 @@ vector<IntVector> dbgCells;
         cout.precision(10);
         cout << " \n c " << c << "--------------------------  F A C E " << face << " P_dir " << P_dir << endl;
         cout << c <<" P_dir " << P_dir << " dir1 " << dir1 << "dir2 " << dir2 << endl;
-        cout << " rho_old[c] * vel_old[c] " << rho_old[c] * vel_old[c] << endl;
-        cout << " term1                   " << term1 << endl;
-        cout << " term2                   " << term2 << endl;
+        cout << " rho_old[c] * vel_old[c] " << momOld << endl;
         cout << " convect1                " << convect1 << endl;
         cout << " convect2                " << convect2 << endl;
+        cout << " BN_convect              " << BN_convect<< " term1 " << term1 << " term2 " << term2 <<endl;
         cout << " pressGradient           " << pressGradient << endl;
         cout << " rho_old * gravity       " << rho_old[c] * gravity << endl;
-        cout << " mom                     " << mom << endl;
         cout << " vel                     " << vel_CC[c] << "\n"<<endl;
         cout << " convect1: rho_old, vel_old["<<dir1<<"], vel_old["<<dir1<<"], dx["<<dir1<<"]" << endl;
         cout << " convect2: rho_old, vel_old["<<dir1<<"], vel_old["<<dir2<<"], dx["<<dir2<<"]" << endl;
@@ -958,14 +895,13 @@ vector<IntVector> dbgCells;
       Vector weight(1,1,1);
       weight[Edir1] = 0.0;  // so you don't double count di values
       
-      term1.x(  (d[1][c].x() + weight.x() * d[1][c][Edir1]) );
-      term1.y(  (d[1][c].y() + weight.y() * d[1][c][Edir1]) );
-      term1.z(  (d[1][c].z() + weight.z() * d[1][c][Edir1]) );
-      term1 *= vel_old[c];
+      term1.x(vel_old[c].x() * (d[1][c][P_dir] + weight.x() * d[1][c][Edir1]) );
+      term1.y(vel_old[c].y() * (d[1][c][P_dir] + weight.y() * d[1][c][Edir1]) );
+      term1.z(vel_old[c].z() * (d[1][c][P_dir] + weight.z() * d[1][c][Edir1]) );   
       
-      term2.x( (d[3][c].x() + weight.x() * d[3][c][Edir1]) );        
-      term2.y( (d[4][c].y() + weight.y() * d[4][c][Edir1]) );       
-      term2.z( (d[5][c].z() + weight.z() * d[5][c][Edir1]) );
+      term2.x( (d[3][c][P_dir] + weight.x() * d[3][c][Edir1]) );        
+      term2.y( (d[4][c][P_dir] + weight.y() * d[4][c][Edir1]) );       
+      term2.z( (d[5][c][P_dir] + weight.z() * d[5][c][Edir1]) );
       term2 *= rho_old[c];
       
       mom  = rho_old[c] * vel_old[c]                                
@@ -1111,6 +1047,7 @@ void FaceTemp_LODI(const Patch* patch,
     l2[dir2] -= offset[dir2];
     
     q_R = vel_old[r2][dir2] * (E[r2] + press_tmp[r2]);
+    q_C = vel_old[c][dir2]  * (E[c]  + press_tmp[c]);
     q_L = vel_old[l2][dir2] * (E[l2] + press_tmp[l2]);
     double conv_dir2 = computeConvection(nu[r2], nu[c], nu[l2],
                                          E[r2], E[c], E[l2], 
