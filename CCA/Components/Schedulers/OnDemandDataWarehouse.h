@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
 
 #include <map>
 #include <iosfwd>
@@ -217,8 +218,19 @@ public:
    void reduceMPI(const VarLabel* label, const MaterialSubset* matls,
 		  const ProcessorGroup* world);
 
-   void scrub(const VarLabel*);
+   // Scrub counter manipulator functions -- when the scrub count goes to
+   // zero, the data is scrubbed.
+   virtual void setScrubCountIfZero(const VarLabel* label, int matlIndex,
+				    const Patch* patch, int count)
+   { addScrubCount(label, matlIndex, patch, 0, count); }
+   virtual void decrementScrubCount(const VarLabel* label, int matlIndex,
+				    const Patch* patch, int count = 1,
+				    unsigned int addIfZero = 0)
+   { addScrubCount(label, matlIndex, patch, -count, addIfZero); }
 
+   // scrub everything with a scrubCount of zero
+   virtual void scrubExtraneous();
+  
    void logMemoryUse(ostream& out, unsigned long& total, const string& tag);
 
    // must be called by the thread that will run the test
@@ -230,27 +242,13 @@ public:
    virtual void checkTasksAccesses(const PatchSubset* patches,
 				   const MaterialSubset* matls);
 private:
+   void addScrubCount(const VarLabel* label, int matlIndex,
+		      const Patch* patch, int count = 1,
+		      unsigned int addIfZero = 0);
+  
    enum AccessType {
      NoAccess = 0, PutAccess, GetAccess, ModifyAccess
    };
-
-   struct SpecificVarLabel {
-     SpecificVarLabel(const VarLabel* label, int matlIndex, const Patch* patch)
-       : label_(label), matlIndex_(matlIndex), patch_(patch) {}
-     SpecificVarLabel(const SpecificVarLabel& copy)
-       : label_(copy.label_), matlIndex_(copy.matlIndex_), patch_(copy.patch_)
-     {}
-     SpecificVarLabel& operator=(const SpecificVarLabel& copy)
-     {
-       label_=copy.label_; matlIndex_=copy.matlIndex_; patch_=copy.patch_;
-       return *this;
-     }
-    
-     bool operator<(const SpecificVarLabel& other) const;
-     const VarLabel* label_;
-     int matlIndex_;
-     const Patch* patch_;    
-   };  
 
    struct AccessInfo {
      AccessInfo()
@@ -265,7 +263,7 @@ private:
      IntVector highOffset;
    };
   
-   typedef map<SpecificVarLabel, AccessInfo> VarAccessMap;
+   typedef map<VarLabelMatlPatch, AccessInfo> VarAccessMap;
 
    struct RunningTaskInfo {
      RunningTaskInfo()
@@ -279,7 +277,7 @@ private:
      const Task* d_task;
      VarAccessMap d_accesses;
    };  
-  
+
    // Generic get function used by the get functions for grid-based
    // (node or cell) variables to avoid code duplication.
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

@@ -353,21 +353,13 @@ void SchedulerCommon::doEmitTaskGraphDocs()
   emit_taskgraph=true;
 }
 
-void SchedulerCommon::scrub(const DetailedTask* task)
+void SchedulerCommon::compile( const ProcessorGroup * pg, bool scrub_new)
 {
-  for(const ScrubItem* s=task->getScrublist();s!=0;s=s->next){
-    if(dws_[s->dw])
-      dws_[s->dw]->scrub(s->var);
-  }
-}
-
-void SchedulerCommon::compile( const ProcessorGroup * pg, bool scrub_new,
-			       bool scrub_old)
-{
-  actuallyCompile(pg);
+  bool needScrubExtraneous = dts_ ? !dts_->doScrubNew() : false;
+  
+  actuallyCompile(pg, scrub_new);
   if (dts_ != 0) {
     dts_->computeLocalTasks(pg->myrank());
-    dts_->createScrublists(scrub_new, scrub_old);
     
     // figure out the locally computed patches for each variable.
     for (int i = 0; i < dts_->numLocalTasks(); i++) {
@@ -380,5 +372,11 @@ void SchedulerCommon::compile( const ProcessorGroup * pg, bool scrub_new,
 							 patches.get_rep());
       }
     }
+  }
+
+  if (needScrubExtraneous) {
+    // The last one was compiled with no new scrubbing (i.e. initialization);
+    // now scrub the OldDW data that won't be required by this new taskgraph.
+    dts_->scrubExtraneousOldDW();
   }
 }

@@ -107,7 +107,7 @@ MPIScheduler::verifyChecksum()
 }
 
 void
-MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
+MPIScheduler::actuallyCompile(const ProcessorGroup* pg, bool scrubNew)
 {
   TAU_PROFILE("MPIScheduler::compile()", " ", TAU_USER); 
 
@@ -123,9 +123,9 @@ MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   if( useInternalDeps() )
-    dts_ = graph.createDetailedTasks( pg, lb, true );
+    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, true );
   else
-    dts_ = graph.createDetailedTasks( pg, lb, false );
+    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, false );
 
   if(dts_->numTasks() == 0)
     cerr << "WARNING: Scheduler executed, but no tasks\n";
@@ -210,9 +210,7 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
 
   double sendstart = Time::currentSeconds();
   sendMPIData( pg, task, mpi_info, sends, ss, dws, reloc_label );
-  task->done();
-  
-  scrub( task );
+  task->done(dws[Task::OldDW].get_rep(), dws[Task::NewDW].get_rep());  
 
   double start = Time::currentSeconds();
 
@@ -626,7 +624,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	mpi_info.totalreduce += reduceend-reducestart;
 	mpi_info.totalreducempi += reduceend-reducestart;
       }
-      task->done();
+      task->done(dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
       break;
     case Task::Normal:
     case Task::InitialSend:

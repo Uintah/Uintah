@@ -61,7 +61,7 @@ WARNING
     // Insert Documentation Here:
     virtual void initialize();
 
-    void compile( const ProcessorGroup * pg,  bool scrub_new, bool scrub_old=true );
+    void compile( const ProcessorGroup * pg,  bool scrub_new );
 
     //////////
     // Insert Documentation Here:
@@ -102,13 +102,15 @@ WARNING
 			 IntVector& requiredHigh, IntVector& requestedLow,
 			 IntVector& requestedHigh) const;
     
+
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
     typedef map< string, list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap();
   protected:
-    virtual void actuallyCompile( const ProcessorGroup * pc ) = 0;
+    virtual void actuallyCompile( const ProcessorGroup * pc,
+				  bool scrubNew ) = 0;
     
     void makeTaskGraphDoc(const DetailedTasks* dt,
 			  int rank = 0);
@@ -117,7 +119,6 @@ WARNING
 		  long long execution_flops,
 		  long long communication_flops = 0);
     void finalizeNodes(int process=0);
-    void scrub(const DetailedTask* dt);
     
     virtual void verifyChecksum() = 0;
     virtual bool useInternalDeps();

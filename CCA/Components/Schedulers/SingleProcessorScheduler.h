@@ -69,7 +69,7 @@ WARNING
 					    const MaterialSet* matls);
 
   protected:
-    virtual void actuallyCompile(const ProcessorGroup* pg);
+    virtual void actuallyCompile(const ProcessorGroup* pg, bool scrubNew);
   private:
     SPRelocate reloc;
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);

@@ -66,6 +66,7 @@ WARNING
 
      DetailedTasks* createDetailedTasks( const ProcessorGroup* pg,
 					 LoadBalancer* lb,
+					 bool scrubNew,
 					 bool useInternalDeps );
      void createDetailedDependencies(DetailedTasks*, LoadBalancer* lb,
 				     const ProcessorGroup* pg);

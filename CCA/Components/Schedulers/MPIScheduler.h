@@ -99,7 +99,8 @@ WARNING
 			     const VarLabel        * reloc_label );
 
   protected:
-    virtual void actuallyCompile( const ProcessorGroup * pg );
+    virtual void actuallyCompile( const ProcessorGroup * pg,
+				  bool scrubNew );
     
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( const ProcessorGroup  * pg,

@@ -205,7 +205,8 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
        d_particleDB.exists(label, matlIndex, patch) ||
        d_sfcxDB.exists(label,matlIndex,patch) ||
        d_sfcyDB.exists(label,matlIndex,patch) ||
-       d_sfczDB.exists(label,matlIndex,patch) ) {
+       d_sfczDB.exists(label,matlIndex,patch) ||
+       d_reductionDB.exists(label, matlIndex, NULL) ) {
      d_lock.readUnlock();
      return true;
    } else {
@@ -1312,38 +1313,57 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 }
 
 void
-OnDemandDataWarehouse::scrub(const VarLabel* var)
+OnDemandDataWarehouse::addScrubCount(const VarLabel* var, int matlIndex,
+				     const Patch* patch, int count,
+				     unsigned int addIfZero)
 {
   d_lock.writeLock();
 
   switch(var->typeDescription()->getType()){
   case TypeDescription::NCVariable:
-    d_ncDB.scrub(var);
+    d_ncDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::CCVariable:
-    d_ccDB.scrub(var);
+    d_ccDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::SFCXVariable:
-    d_sfcxDB.scrub(var);
+    d_sfcxDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::SFCYVariable:
-    d_sfcyDB.scrub(var);
+    d_sfcyDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::SFCZVariable:
-    d_sfczDB.scrub(var);
+    d_sfczDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::ParticleVariable:
-    d_particleDB.scrub(var);
+    d_particleDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::PerPatch:
-    d_perpatchDB.scrub(var);
+    d_perpatchDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::ReductionVariable:
-    d_reductionDB.scrub(var);
+    d_reductionDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   default:
-    throw InternalError("Scrubbing variable of unknown type: "+var->getName());
+    throw InternalError("addScrubCount for variable of unknown type: "+var->getName());
   }
+  d_lock.writeUnlock();
+}
+
+void
+OnDemandDataWarehouse::scrubExtraneous()
+{
+  d_lock.writeLock();
+
+  d_ncDB.scrubExtraneous();
+  d_ccDB.scrubExtraneous();
+  d_sfcxDB.scrubExtraneous();
+  d_sfcyDB.scrubExtraneous();
+  d_sfczDB.scrubExtraneous();
+  d_particleDB.scrubExtraneous();
+  d_perpatchDB.scrubExtraneous();  
+  d_reductionDB.scrubExtraneous();
+
   d_lock.writeUnlock();
 }
 
@@ -1739,8 +1759,8 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
       // If it was accessed by the current task already, then it should
       // have get access (i.e. if you put it in, you should be able to get it
       // right back out).
-      map<SpecificVarLabel, AccessInfo>::iterator findIter;
-      findIter = runningTaskAccesses.find(SpecificVarLabel(label, matlIndex,
+      map<VarLabelMatlPatch, AccessInfo>::iterator findIter;
+      findIter = runningTaskAccesses.find(VarLabelMatlPatch(label, matlIndex,
 							   patch));
       if (findIter != runningTaskAccesses.end() &&
 	  lowOffset == IntVector(0, 0, 0) && highOffset == IntVector(0, 0, 0)){
@@ -1771,7 +1791,7 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
 	// access granted
 	if (findIter == runningTaskAccesses.end()) {
 	  AccessInfo& accessInfo =
-	    runningTaskAccesses[SpecificVarLabel(label, matlIndex, patch)];
+	    runningTaskAccesses[VarLabelMatlPatch(label, matlIndex, patch)];
 	  accessInfo.accessType = GetAccess;
 	  accessInfo.encompassOffsets(lowOffset, highOffset);
 	}
@@ -1818,7 +1838,7 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
 	}
       }
       else {
-	runningTaskAccesses[SpecificVarLabel(label, matlIndex, patch)].accessType = replace ? ModifyAccess : PutAccess;
+	runningTaskAccesses[VarLabelMatlPatch(label, matlIndex, patch)].accessType = replace ? ModifyAccess : PutAccess;
       }
     }
   }
@@ -1979,8 +1999,8 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
       for (int p = 0; p < patches->size(); p++) {
 	const Patch* patch = patches->get(p);
 	
-	SpecificVarLabel key(label, matl, patch);
-	map<SpecificVarLabel, AccessInfo>::iterator find_iter;
+	VarLabelMatlPatch key(label, matl, patch);
+	map<VarLabelMatlPatch, AccessInfo>::iterator find_iter;
 	find_iter = currentTaskAccesses.find(key);
 	if (find_iter == currentTaskAccesses.end() ||
 	    (*find_iter).second.accessType != accessType) {
@@ -2043,21 +2063,5 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
 	}
       }
     }
-  }
-}
-
-
-bool OnDemandDataWarehouse::SpecificVarLabel::
-operator<(const SpecificVarLabel& other) const
-{
-  if (label_->equals(other.label_)) {
-    if (matlIndex_ == other.matlIndex_)
-      return patch_ < other.patch_;
-    else
-      return matlIndex_ < other.matlIndex_;
-  }
-  else {
-    VarLabel::Compare comp;
-    return comp(label_, other.label_);
   }
 }
