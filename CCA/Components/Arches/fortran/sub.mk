@@ -24,7 +24,8 @@ SRCS += \
 	$(SRCDIR)/mmcelltypeinit.F $(SRCDIR)/mmmomsrc.F \
 	$(SRCDIR)/mmwallbc.F $(SRCDIR)/normpress.F $(SRCDIR)/outarea.F \
 	$(SRCDIR)/outletbc.F $(SRCDIR)/outletbcenth.F $(SRCDIR)/prescoef.F \
-	$(SRCDIR)/pressrc.F $(SRCDIR)/pressrcpred.F $(SRCDIR)/profscalar.F \
+	$(SRCDIR)/pressrc.F $(SRCDIR)/pressrcpred.F $(SRCDIR)/pressrccorr.F \
+	$(SRCDIR)/profscalar.F \
 	$(SRCDIR)/profv.F $(SRCDIR)/rescal.F $(SRCDIR)/scalarvarmodel.F \
 	$(SRCDIR)/scalcoef.F $(SRCDIR)/scalsrc.F $(SRCDIR)/smagmodel.F \
 	$(SRCDIR)/symbcs.F $(SRCDIR)/underelax.F $(SRCDIR)/uvelcoef.F \
@@ -92,6 +93,7 @@ $(SRCDIR)/outletbc.o: $(SRCDIR)/outletbc_fort.h
 $(SRCDIR)/computeVel.o: $(SRCDIR)/computeVel_fort.h
 $(SRCDIR)/explicit_vel.o: $(SRCDIR)/explicit_vel_fort.h
 $(SRCDIR)/pressrcpred.o: $(SRCDIR)/pressrcpred_fort.h
+$(SRCDIR)/pressrccorr.o: $(SRCDIR)/pressrccorr_fort.h
 $(SRCDIR)/outletbcenth.o: $(SRCDIR)/outletbcenth_fort.h
 $(SRCDIR)/bcenthalpy.o: $(SRCDIR)/bcenthalpy_fort.h
 $(SRCDIR)/enthalpyradsrc.o: $(SRCDIR)/enthalpyradsrc_fort.h

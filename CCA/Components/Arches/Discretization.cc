@@ -96,7 +96,7 @@ Discretization::calculateVelRhoHat(const ProcessorGroup* /*pc*/,
 		      vars->uVelocityCoeff[Arches::AB], 
 		      vars->uVelocityCoeff[Arches::AP], 
 		      vars->uVelNonlinearSrc,
-		      vars->density,
+		      vars->new_density,
 		      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
 		      delta_t, ioff, joff, koff);
     break;
@@ -122,7 +122,7 @@ Discretization::calculateVelRhoHat(const ProcessorGroup* /*pc*/,
 		      vars->vVelocityCoeff[Arches::AB], 
 		      vars->vVelocityCoeff[Arches::AP], 
 		      vars->vVelNonlinearSrc,
-		      vars->density,
+		      vars->new_density,
 		      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
 		      delta_t, ioff, joff, koff);
 
@@ -149,7 +149,7 @@ Discretization::calculateVelRhoHat(const ProcessorGroup* /*pc*/,
 		      vars->wVelocityCoeff[Arches::AB], 
 		      vars->wVelocityCoeff[Arches::AP], 
 		      vars->wVelNonlinearSrc,
-		      vars->density,
+		      vars->new_density,
 		      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
 		      delta_t, ioff, joff, koff);
 

@@ -1096,7 +1096,9 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
-
+#ifdef correctorstep
+  delta_t /= 2.0;
+#endif
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -1112,14 +1114,18 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(velocityVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
 #else
     new_dw->getCopy(velocityVars.pressure, d_lab->d_pressureSPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(velocityVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-#endif
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
+#endif
 
     // Get the PerPatch CellInformation data
 
@@ -1326,7 +1332,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
 		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
 		Ghost::AroundCells, numGhostCells);
 
   if (d_MAlab)
@@ -1337,7 +1343,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 
   case Arches::XDIR:
 
-    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
+    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatCorrLabel,
 		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
 
@@ -1347,7 +1353,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 
     // use new uvelocity for v coef calculation
     
-    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel, 
+    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatCorrLabel, 
 		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
 
@@ -1357,7 +1363,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 
     // use new uvelocity for v coef calculation
 
-    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel, 
+    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatCorrLabel, 
 		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
 
@@ -1403,7 +1409,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(velocityVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
     // Get the PerPatch CellInformation data
@@ -1430,7 +1436,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       {
       new_dw->allocate(velocityVars.uVelRhoHat, 
 		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
-      new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
+      new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatCorrLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
 
@@ -1443,7 +1449,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       {
       new_dw->allocate(velocityVars.vVelRhoHat, 
 		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
-      new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
+      new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatCorrLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
 
@@ -1456,7 +1462,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       {
       new_dw->allocate(velocityVars.wVelRhoHat,
 		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
-      new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
+      new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatCorrLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
       break;

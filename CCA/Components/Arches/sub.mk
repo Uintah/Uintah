@@ -101,6 +101,7 @@ $(SRCDIR)/Source.o: $(SRCDIR)/fortran/vvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/wvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrcpred_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrccorr_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/computeVel_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradflux_fort.h
