@@ -3,7 +3,6 @@
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Ray.h>
-#include <Packages/rtrt/Core/Light.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
@@ -18,108 +17,110 @@
 
 namespace rtrt {
 
-  class Instance: public Object, public Material
+class Instance: public Object, public Material
 {
 public:
   struct InstanceHit {
     Vector normal;
     Object* obj;
   };
-    InstanceWrapperObject *o;
-    Transform *t;
-    BBox bbox;
 
-    Instance(InstanceWrapperObject* o, Transform* trans) 
-	: Object(this), o(o), t(trans) 
-	{
-	    if (!t->inv_valid())
-		t->compute_imat();
+  InstanceWrapperObject * o;
+  Transform             * currentTransform;
+  BBox                    bbox;
 
-	    o->compute_bounds(bbox,1E-5);
+  Instance(InstanceWrapperObject* o, Transform* trans) 
+    : Object(this), o(o), currentTransform(trans)
+  {
+    if( !currentTransform->inv_valid() ) 
+      currentTransform->compute_imat();
 
-	    bbox.transform_inplace(t);
+    o->compute_bounds(bbox,1E-5);
 
-	}
+    bbox.transform_inplace(currentTransform);
+  }
 
-    Instance(InstanceWrapperObject* o, Transform* trans, BBox& b) 
-	: Object(this), o(o), t(trans)
-	{
-	    if (!t->inv_valid())
-		t->compute_imat();
+  Instance(InstanceWrapperObject* o, Transform* trans, BBox& b) 
+    : Object(this), o(o), currentTransform(trans)
+  {
+    if (!currentTransform->inv_valid())
+      currentTransform->compute_imat();
 
-	    bbox = b.transform(t);
-	}
-	    
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
-			   PerProcessorContext* ppc)
-	{
-	  double min_t = hit.min_t;
-	  if (!bbox.intersect(ray, min_t)) return;	  
-	  min_t = hit.min_t;
+    bbox = b.transform(currentTransform);
+  }
 
-	  Ray tray;
+  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+			 PerProcessorContext* ppc)
+  {
+    double min_t = hit.min_t;
+    if (!bbox.intersect(ray, min_t)) return;	  
+    min_t = hit.min_t;
 
-	  ray.transform(t,tray);
-	  //double scale = tray.direction().length() / ray.direction().length();
+    Ray tray;
 
-	  HitInfo thit;
-	  if (hit.was_hit) thit.min_t = hit.min_t;// * scale;
+    ray.transform(currentTransform,tray);
+    //double scale = tray.direction().length() / ray.direction().length();
 
-	  o->intersect(tray,thit,st,ppc);
+    HitInfo thit;
+    if (hit.was_hit) thit.min_t = hit.min_t;// * scale;
+
+    o->intersect(tray,thit,st,ppc);
 	  
-	  // if the ray hit one of our objects....
-	  if (thit.was_hit)
-	    {
-	      min_t = thit.min_t;// / scale;
-	      if(hit.hit(this, min_t)){
-		InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-		Point p = ray.origin() + min_t*ray.direction();
-		i->normal = thit.hit_obj->normal(p,thit);
-		i->obj = thit.hit_obj;
-	      }
-	    }	      
-	}
-    
-    virtual Vector normal(const Point&, const HitInfo& hit)
-	{
+    // if the ray hit one of our objects....
+    if (thit.was_hit)
+      {
+	min_t = thit.min_t;// / scale;
+	if(hit.hit(this, min_t)){
 	  InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-	  Vector n;
-	  t->project_normal(i->normal, n);
-	  n.normalize();
-	  return n;
+	  Point p = ray.origin() + min_t*ray.direction();
+	  i->normal = thit.hit_obj->normal(p,thit);
+	  i->obj = thit.hit_obj;
 	}
+      }	      
+  }
+    
+  virtual Vector normal(const Point&, const HitInfo& hit)
+  {
+    InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+    Vector n;
+    currentTransform->project_normal(i->normal, n);
+    n.normalize();
+    return n;
+  }
 
-    virtual void compute_bounds(BBox& b, double /*offset*/)
-	{
-	    b.extend(bbox);
-	}
+  virtual void compute_bounds(BBox& b, double /*offset*/)
+  {
+    b.extend(bbox);
+  }
 
-    virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize)
-	{
-	  o->preprocess(maxradius,pp_offset,scratchsize);
-	}
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize)
+  {
+    o->preprocess(maxradius,pp_offset,scratchsize);
+  }
 
-    virtual void shade(Color& result, const Ray& ray,
-		       const HitInfo& hit, int depth,
-		       double atten, const Color& accumcolor,
-		       Context* cx) {
-      InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-      Material *mat = i->obj->get_matl();
-      mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
-    }
+  virtual void shade(Color& result, const Ray& ray,
+		     const HitInfo& hit, int depth,
+		     double atten, const Color& accumcolor,
+		     Context* cx) {
+    InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+    Material *mat = i->obj->get_matl();
+    mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
+  }
 
-    virtual void animate(double time, bool& changed) {
-      o->animate(time, changed);
-    }
+  virtual void animate(double time, bool& changed) {
+    o->animate(time, changed);
+  }
 
-    bool interior_value(double& ret_val, const Ray &ref, const double _t) {
-      Ray tray;
+  bool interior_value(double& ret_val, const Ray &ref, const double _t) {
+    Ray tray;
 
-      ref.transform(t,tray);
+    ref.transform(currentTransform,tray);
 
-      return o->interior_value(ret_val, tray, _t);
-    }
+    return o->interior_value(ret_val, tray, _t);
+  }
 
-  };
-}
+}; // end class Instance
+
+} // end namespace rtrt
+
 #endif
