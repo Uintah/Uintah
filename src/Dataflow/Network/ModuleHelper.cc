@@ -21,6 +21,7 @@
 #include <Dataflow/Network/Port.h>
 
 #include <iostream>
+#include <unistd.h>
 using std::cerr;
 using std::endl;
 
@@ -43,6 +44,7 @@ void ModuleHelper::run()
     if(module->have_own_dispatch){
 	module->do_execute();
     } else {
+        module->pid_.set(getpid());
 	for(;;){
 	    MessageBase* msg=module->mailbox.receive();
 	    switch(msg->type){

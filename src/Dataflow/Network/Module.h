@@ -79,7 +79,7 @@ protected:
   //////////
   // Log stream for the module
   TCLstrbuff msgStream_;
-
+  GuiInt pid_;
 public:
   enum State {
     NeedData,

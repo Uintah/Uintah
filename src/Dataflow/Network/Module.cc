@@ -141,6 +141,7 @@ Module::Module(const clString& name, const clString& id,
   : notes("notes", id, this),
     show_status("show_status", id, this),
     msgStream_("msgStream", id, this),
+    pid_("pid", id, this),
     state(NeedData),
     helper(0),
     have_own_dispatch(0),
@@ -389,7 +390,7 @@ void Module::set_context(NetworkEditor* _netedit, Network* _network)
 {
     netedit=_netedit;
     network=_network;
-
+    
     // Start up the event loop
     helper=scinew ModuleHelper(this);
     Thread* t=new Thread(helper, name(), 0, Thread::NotActivated);
