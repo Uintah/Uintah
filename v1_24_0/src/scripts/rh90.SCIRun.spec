@@ -36,7 +36,7 @@
 %undefine	__check_files
 %define thirdpartydotver 0
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
-%define insightver  1.6.0
+%define insightver  1.8.1
 
 
 Name:		%{defname}
