@@ -1330,8 +1330,11 @@ void OpenGL::real_getData(int datamask, AsyncReply<GeometryData*>* result)
 	Image* img=res->colorbuffer=new Image(xres, yres);
 	float* data=new float[xres*yres*3];
 	cerr << "xres=" << xres << ", yres=" << yres << endl;
+	WallClockTimer timer;
+	timer.start();
 	glReadPixels(0, 0, xres, yres, GL_RGB, GL_FLOAT, data);
-	cerr << "Read done...\n";
+	timer.stop();
+	cerr << "done in " << timer.time() << " seconds\n";
 	float* p=data;
 	for(int y=0;y<yres;y++){
 	    for(int x=0;x<xres;x++){
@@ -1343,14 +1346,17 @@ void OpenGL::real_getData(int datamask, AsyncReply<GeometryData*>* result)
     }
     if(datamask&GEOM_DEPTHBUFFER){
 	DepthImage* img=res->depthbuffer=new DepthImage(xres, yres);
-	float* data=new float[xres*yres*3];
+	unsigned int* data=new unsigned int[xres*yres*3];
 	cerr << "reading depth...\n";
-	glReadPixels(0, 0, xres, yres, GL_DEPTH_COMPONENT, GL_FLOAT, data);
-	cerr << "done\n";
-	float* p=data;
+	WallClockTimer timer;
+	timer.start();
+	glReadPixels(0, 0, xres, yres, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data);
+	timer.stop();
+	cerr << "done in " << timer.time() << " seconds\n";
+	unsigned int* p=data;
 	for(int y=0;y<yres;y++){
 	    for(int x=0;x<xres;x++){
-		img->put_pixel(x, y, *p++);
+		img->put_pixel(x, y, (*p++)*(1./4294967295.));
 	    }
 	}
 	delete[] data;
