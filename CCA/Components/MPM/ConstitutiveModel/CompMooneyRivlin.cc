@@ -1,3 +1,4 @@
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -26,9 +27,6 @@ using std::cerr;
 
 using namespace Uintah;
 using namespace SCIRun;
-
-#define FRACTURE
-#undef FRACTURE
 
 // Material Constants are C1, C2 and PR (poisson's ratio).  
 // The shear modulus = 2(C1 + C2).

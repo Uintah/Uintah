@@ -1,3 +1,4 @@
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -24,9 +25,6 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
-
-#define FRACTURE
-#undef FRACTURE
 
 CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
