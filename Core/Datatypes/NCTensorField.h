@@ -2,7 +2,7 @@
 #define SCI_project_NCTensorField_h 1
 
 #include <Packages/Uintah/Core/Datatypes/TensorField.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
