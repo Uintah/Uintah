@@ -38,6 +38,11 @@ GeomSphere::GeomSphere(int nu, int nv, int id)
 {
     adjust();
 }
+GeomSphere::GeomSphere(int nu, int nv, IntVector id)
+: GeomObj(id), cen(0,0,0), rad(1), nu(nu), nv(nv)
+{
+    adjust();
+}
 
 GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv, int id)
 : GeomObj( id ), cen(cen), rad(rad), nu(nu), nv(nv)
@@ -80,6 +85,17 @@ GeomSphere::getId( int& id )
     return false;
   else {
     id = this->id;
+    return true;
+  }
+}
+
+bool
+GeomSphere::getId( IntVector& id )
+{
+  if ( _id == IntVector(0x1234567,0x1234567,0x1234567) )
+    return false;
+  else {
+    id = this->_id;
     return true;
   }
 }
@@ -135,6 +151,9 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.8  2000/08/09 18:21:14  kuzimmer
+// Added IntVector indexing to GeomObj & GeomSphere
+//
 // Revision 1.7  2000/01/03 20:12:37  kuzimmer
 //  Forgot to check in these files for picking spheres
 //

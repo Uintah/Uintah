@@ -16,9 +16,12 @@
 
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/IntVector.h>
 
 namespace SCICore {
 namespace GeomSpace {
+
+using SCICore::Geometry::IntVector;
 
 class SCICORESHARE GeomSphere : public GeomObj {
 public:
@@ -30,6 +33,7 @@ public:
     void adjust();
     void move(const Point&, double, int nu=20, int nv=10);
 
+    GeomSphere(int nu, int nv, IntVector id);
     GeomSphere(int nu=20, int nv=10, int id = 0x1234567);
     GeomSphere(const Point&, double, int nu=20, int nv=10, int id = 0x1234567);
     GeomSphere(const GeomSphere&);
@@ -47,6 +51,7 @@ public:
     static PersistentTypeID type_id;
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
   virtual bool getId( int& id );
+  virtual bool getId( IntVector& id);
   
 };
 
@@ -55,6 +60,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/08/09 18:21:15  kuzimmer
+// Added IntVector indexing to GeomObj & GeomSphere
+//
 // Revision 1.5  2000/01/03 20:12:37  kuzimmer
 //  Forgot to check in these files for picking spheres
 //
