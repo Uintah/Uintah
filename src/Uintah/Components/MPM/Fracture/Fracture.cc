@@ -71,12 +71,12 @@ crackGrow(const Patch* patch,
       
       if(!pIsBroken[idx]) {
         //crack initiation
-	
+	/*
 	double sig[3];
 	ASSERT( pStress[idx].getEigenValues(sig[0],sig[1],sig[3]) == 3);
-	
-	inline std::vector<Vector> Matrix3::getEigenVectors(double eigen_value) const
-	
+	Vector dir = std::vector<Vector> pStress[idx].getEigenVectors(
+	   double eigen_value) const
+	*/
 
       }
       else {
@@ -104,7 +104,7 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
-// Revision 1.31  2000/09/07 00:38:06  tan
+// Revision 1.32  2000/09/07 00:39:25  tan
 // Fixed a bug in ForceBC.
 //
 // Revision 1.30  2000/09/05 19:38:19  tan
