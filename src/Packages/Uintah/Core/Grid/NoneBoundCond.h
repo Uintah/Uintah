@@ -41,8 +41,10 @@ WARNING
       virtual ~NoneBoundCond() {};
                
    private:
+#if 0
       NoneBoundCond(const NoneBoundCond&);
       NoneBoundCond& operator=(const NoneBoundCond&);
+#endif
       
      
    };

@@ -41,8 +41,10 @@ WARNING
       virtual ~NeighBoundCond() {};
 
    private:
+#if 0
       NeighBoundCond(const NeighBoundCond&);
       NeighBoundCond& operator=(const NeighBoundCond&);
+#endif
       
      
    };

@@ -55,8 +55,10 @@ WARNING
 	std::string d_kind;
          
    private:
+#if 0
       BoundCond(const BoundCond<T>&);
       BoundCond& operator=(const BoundCond<T>&);
+#endif
       
      
    };

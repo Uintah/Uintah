@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <map>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
+#include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 
 #ifdef SELECT_RANGETREE
 #include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
@@ -39,9 +40,10 @@ Level::~Level()
   // Delete all of the patches managed by this level
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++)
     delete *iter;
-
+#if 0
   for(int i=0;i<(int)allbcs.size();i++)
     delete allbcs[i];
+#endif
 
 #ifdef SELECT_RANGETREE
   delete d_rangeTree;
@@ -468,20 +470,27 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
     else if (fc == "z+")
       face_side = Patch::zplus;
 
-    vector<BoundCondBase*> bcs;
-    BoundCondFactory::create(face_ps,bcs);
+    BCData bc_data;
+    BoundCondFactory::create(face_ps,bc_data);
+#if 0
     for(int i=0;i<(int)bcs.size();i++)
       allbcs.push_back(bcs[i]);
+#endif
 
     for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
 	iter++){
       Patch* patch = *iter;
       Patch::BCType bc_type = patch->getBCType(face_side);
       if (bc_type == Patch::None) {
-	patch->setBCValues(face_side,bcs);
+	patch->setBCValues(face_side,bc_data);
       }
-      vector<BoundCondBase*> new_bcs;
-      new_bcs = patch->getBCValues(face_side);
+#if 0
+      if (bc_type == Patch::None) {
+	cerr << "face side = " << face_side << endl;
+	BoundCondBase* new_bcs = patch->getBCValues(0,"Pressure",face_side);
+	cerr << "BC = " << new_bcs->getType() << endl;
+      }
+#endif
     }  // end of patch iterator
   } // end of face_ps
 

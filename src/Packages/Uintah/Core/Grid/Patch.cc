@@ -39,15 +39,12 @@ Patch::Patch(const Level* level,
     }
     patches[d_id]=this;
     in_database=true;
-  } else {
-    in_database=false;
-  }
-
-   d_bcs = vector<vector<BoundCondBase*> >(numFaces);
-   for (int i = 0; i<numFaces; i++ ) {
-     vector<BoundCondBase*> a;
-     d_bcs[i] = a;
+   } else {
+     in_database=false;
    }
+
+   d_bcs.resize(numFaces);
+
    d_nodeHighIndex = d_highIndex+
 	       IntVector(getBCType(xplus) == Neighbor?0:1,
 			 getBCType(yplus) == Neighbor?0:1,
@@ -270,19 +267,19 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 }
 
 void 
-Patch::setBCValues(Patch::FaceType face, vector<BoundCondBase*>& bc)
+Patch::setBCValues(Patch::FaceType face, BCData& bc)
 {
   d_bcs[face] = bc;
-   d_nodeHighIndex = d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1);
+  d_nodeHighIndex = d_highIndex+
+    IntVector(getBCType(xplus) == Neighbor?0:1,
+	      getBCType(yplus) == Neighbor?0:1,
+	      getBCType(zplus) == Neighbor?0:1);
 }
 
-vector<BoundCondBase*>
-Patch::getBCValues(Patch::FaceType face) const
+BoundCondBase*
+Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
 {
-  return d_bcs[face];
+  return d_bcs[face].getBCValues(mat_id,type);
 }
 
 
