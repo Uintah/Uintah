@@ -1240,10 +1240,13 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 		    set varname \"${varname}\"
 		}
 
-		if { $sub_datadir_p && \
-		     [info exists ModuleSubstitutedVars($module)] && \
+		if { [info exists ModuleSubstitutedVars($module)] && \
 		     [lsearch $ModuleSubstitutedVars($module) $var] != -1 } {
-		    set tmpval [subDATADIRandDATASET $val]
+		    if { $sub_datadir_p } {
+			set tmpval [subDATADIRandDATASET $val]
+		    } else {
+			set tmpval $val
+		    }
 		    append script "${tab}set $varname \"${tmpval}\"\n"
 		} else {
 		    if { [llength $val] == 1 && ![string is integer $val] } {
