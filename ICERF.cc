@@ -16,9 +16,6 @@ using namespace Uintah;
 
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
-/*`==========TESTING==========*/
-#define KE_switch 1
-/*==========TESTING==========`*/
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDiv_vol_frac_vel_CC--
@@ -179,6 +176,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
        int indx = matl->getDWIndex(); 
        ostringstream desc;
        desc << "BOT_computeRFPress_Mat_" << indx << "_patch_"<< patch->getID();
+       printData( patch, 1, desc.str(), "matl_press",   matl_press[m]);
        printData( patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
        printData( patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]);
        printData( patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
@@ -454,7 +452,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       //---- P R I N T   D A T A ------
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc << "bottom_of_vel_FC_Mat_"<< indx <<"_patch_"<< patch->getID();
+        desc << "BOT_vel_FC_Mat_"<< indx <<"_patch_"<< patch->getID();
         printData_FC( patch,1, desc.str(), "uvel_FC",       uvel_FC);
         printData_FC( patch,1, desc.str(), "vvel_FC",       vvel_FC);
         printData_FC( patch,1, desc.str(), "wvel_FC",       wvel_FC);
@@ -642,7 +640,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         ostringstream desc;
-        desc <<  "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
         if (m == 0 ){
           printData_FC( patch,1, desc.str(), "pressX_FC",     pressX_FC);
@@ -706,7 +704,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     double cell_vol = dx.x()*dx.y()*dx.z();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-//    Vector zero(0.,0.,0.);
+
     // Create arrays for the grid data
     constCCVariable<double>  press_CC, delP_Dilatate;
     StaticArray<CCVariable<double> > Temp_CC(numALLMatls);  
@@ -718,7 +716,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     // Create variables for the results
     StaticArray<CCVariable<Vector> > mom_L_ME(numALLMatls);
     StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
-    StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
+    StaticArray<CCVariable<double> > tot_eng_L_ME(numALLMatls);
     StaticArray<CCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > mass_L(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
@@ -736,7 +734,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     vector<Vector> del_vel_CC(numALLMatls, Vector(0,0,0));
     vector<double> if_mpm_matl_ignore(numALLMatls);
     
-    double tmp, alpha, KE;
+    double tmp, alpha;
 /*`==========TESTING==========*/
 // I've included this term but it's turned off -Todd
     double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
@@ -786,10 +784,11 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
                                                            indx, patch,gn, 0);  
       new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx, patch);          
       new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx, patch);         
-      new_dw->allocateAndPut(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,
+      new_dw->allocateAndPut(tot_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,
                                                                   indx,patch);
       e_prime_v[m] = Joule_coeff * cv[m];
       Tdot[m].initialize(0.0);
+      tot_eng_L_ME[m].initialize(0.0);
     }
     new_dw->get(press_CC,           lb->press_CCLabel,     0,  patch,gn, 0);
     new_dw->get(delP_Dilatate,      lb->delP_DilatateLabel,0,  patch,gn, 0);       
@@ -799,17 +798,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m]);
-        vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
-        
-/*`==========TESTING==========*/
-#if KE_switch        
-        KE = 0.5 * mass_L[m][c] * old_vel_CC[m][c].length() * old_vel_CC[m][c].length();       
-        int_eng_L_ME[m][c] = KE;
-#endif
-#if (KE_switch == 0)  
-      int_eng_L_ME[m][c] = 0.0;
-#endif 
-/*==========TESTING==========`*/      
+        vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c]; 
       }
     }
     //---- P R I N T   D A T A ------ 
@@ -921,18 +910,35 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
-/*`==========TESTING==========*/
-#if KE_switch 
-        int_eng_L_ME[m][c] += Temp_CC[m][c] * cv[m] * mass_L[m][c]; 
-#endif
-#if (KE_switch == 0)                                             
-        int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c]; 
-#endif
-/*==========TESTING==========`*/
         mom_L_ME[m][c]     = vel_CC[m][c]  * mass_L[m][c];
         Tdot[m][c]         = (Temp_CC[m][c] - old_Temp[m][c])/delT; 
       }
     }
+    
+    //__________________________________
+    //  Add on the KE
+    // For total energy conservation use old_vel_CC
+    // for a single matl or vel_CC_ME for multiple matls. -bak. 
+    double KE;
+    if (numALLMatls == 1 ){
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        for (int m = 0; m < numALLMatls; m++) {     
+          KE = 0.5 * mass_L[m][c] * old_vel_CC[m][c].length() * old_vel_CC[m][c].length();
+          tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c] + KE;
+        }
+      }    
+    } else {
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        for (int m = 0; m < numALLMatls; m++) {
+          KE = 0.5 * mass_L[m][c] * vel_CC[m][c].length() * vel_CC[m][c].length(); 
+          tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c] + KE;
+        }
+      }    
+    }
+   
+    
     //---- P R I N T   D A T A ------ 
     if (switchDebugMomentumExchange_CC ) {
       for(int m = 0; m < numALLMatls; m++) {
@@ -941,8 +947,8 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         ostringstream desc;
         desc<<"addExchangeToMomentumAndEnergy_RF"<<indx<<"_patch_"
             <<patch->getID();
-        printVector(patch,1, desc.str(), "mom_L_ME", 0,mom_L_ME[m]);
-        printData(  patch,1, desc.str(),"int_eng_L_ME",int_eng_L_ME[m]);
+        printVector(patch,1, desc.str(),"mom_L_ME", 0, mom_L_ME[m]);
+        printData(  patch,1, desc.str(),"tot_eng_L_ME",tot_eng_L_ME[m]);
         printData(  patch,1, desc.str(),"Tdot",        Tdot[m]);
         printData(  patch,1, desc.str(),"Temp_CC",     Temp_CC[m]); 
       }
@@ -1045,7 +1051,6 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
 
-        double vol_frac_CC =  vol_frac[m][c];
         IntVector right, left, top, bottom, front, back;
         right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
         top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
@@ -1105,7 +1110,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
         ostringstream desc;
-        desc <<"BOT_Lagrangian_VolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
+        desc <<"BOT_Lagrangian_spVolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
         printData(  patch,1, desc.str(), "Temp",          Temp_CC[m]);
         printData(  patch,1, desc.str(), "vol_frac[m]",   vol_frac[m]);
         printData(  patch,1, desc.str(), "rho_CC",        rho_CC);
