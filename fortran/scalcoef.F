@@ -99,7 +99,7 @@ C-----------------------------------------------------------------------
       integer IEND, JEND, KEND
 *-----------------------------------------------------------------------
 
-      prinv = 0.01
+      prinv = 0.01D0
       crn = zero
 c      l2up = .false.
       l2up = .true.
@@ -110,7 +110,7 @@ c      lcend = .true.
 c      leno = .true.
       leno = .false.
       vol = zero
-      prandtlno = 0.9
+      prandtlno = 0.9D0
 
       IST = idxLo(1)
       JST = idxLo(2)
@@ -133,12 +133,12 @@ c-----compute areas and volume------------------------------------------
 C-----------------------------------------------------------------------
 C     CALCULATE CONVECTION COEFFICIENTS
 C-----------------------------------------------------------------------
-               DENE = 0.5*(DEN(I,J,K)+DEN(I+1,J,K))
-               DENW = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
-               DENN = 0.5*(DEN(I,J,K)+DEN(I,J+1,K))
-               DENS = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))
-               DENT = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))
-               DENB = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))
+               DENE = 0.5D0*(DEN(I,J,K)+DEN(I+1,J,K))
+               DENW = 0.5D0*(DEN(I,J,K)+DEN(I-1,J,K))
+               DENN = 0.5D0*(DEN(I,J,K)+DEN(I,J+1,K))
+               DENS = 0.5D0*(DEN(I,J,K)+DEN(I,J-1,K))
+               DENT = 0.5D0*(DEN(I,J,K)+DEN(I,J,K+1))
+               DENB = 0.5D0*(DEN(I,J,K)+DEN(I,J,K-1))
                CEO = DENE*UU(I+1,J,K)*AREAEW
                CWO = DENW*UU(I,J,K)*AREAEW
                CNO = DENN*VV(I,J+1,K)*AREAN
@@ -190,12 +190,12 @@ C-----------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C--------------------------------------------------------------------
-               GAME = 0.5*(VIS(I,J,K)+VIS(I+1,J,K))/prandtlno
-               GAMW = 0.5*(VIS(I,J,K)+VIS(I-1,J,K))/prandtlno
-               GAMN = 0.5*(VIS(I,J,K)+VIS(I,J+1,K))/prandtlno
-               GAMS = 0.5*(VIS(I,J,K)+VIS(I,J-1,K))/prandtlno
-               GAMT = 0.5*(VIS(I,J,K)+VIS(I,J,K+1))/prandtlno
-               GAMB = 0.5*(VIS(I,J,K)+VIS(I,J,K-1))/prandtlno
+               GAME = 0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))/prandtlno
+               GAMW = 0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))/prandtlno
+               GAMN = 0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))/prandtlno
+               GAMS = 0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))/prandtlno
+               GAMT = 0.5D0*(VIS(I,J,K)+VIS(I,J,K+1))/prandtlno
+               GAMB = 0.5D0*(VIS(I,J,K)+VIS(I,J,K-1))/prandtlno
                DEO = GAME*AREAEW/DXEP(I)
                DWO = GAMW*AREAEW/DXPW(I)
                DNO = GAMN*AREAN/DYNP(J)
@@ -220,25 +220,25 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------
-               COEFE = DE - 0.5*ABS(CE)
-               COEFW = DW - 0.5*ABS(CW)
-               COEFN = DN - 0.5*ABS(CN)
-               COEFS = DS - 0.5*ABS(CS)
-               COEFT = DT - 0.5*ABS(CT)
-               COEFB = DB - 0.5*ABS(CB)
-               TEW = 1.0
-               TNS = 1.0
-               TTB = 1.0
-               IF (COEFE.LT.0.0 .OR. COEFW.LT.0.0) TEW = 0.0
-               IF (COEFN.LT.0.0 .OR. COEFS.LT.0.0) TNS = 0.0
-               IF (COEFT.LT.0.0 .OR. COEFB.LT.0.0) TTB = 0.0
+               COEFE = DE - 0.5D0*ABS(CE)
+               COEFW = DW - 0.5D0*ABS(CW)
+               COEFN = DN - 0.5D0*ABS(CN)
+               COEFS = DS - 0.5D0*ABS(CS)
+               COEFT = DT - 0.5D0*ABS(CT)
+               COEFB = DB - 0.5D0*ABS(CB)
+               TEW = 1.0D0
+               TNS = 1.0D0
+               TTB = 1.0D0
+               IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
+               IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
+               IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
 c === double precision stuff for aix ==               
-               AEC = -0.5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
-               AWC = 0.5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
-               ANC = -0.5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
-               ASC = 0.5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
-               ATC = -0.5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
-               ABC = 0.5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
+               AEC = -0.5D0*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
+               AWC = 0.5D0*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
+               ANC = -0.5D0*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
+               ASC = 0.5D0*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
+               ATC = -0.5D0*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
+               ABC = 0.5D0*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
 c === original code ===
 c               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
 c               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
@@ -271,24 +271,24 @@ c                  AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
                   CTSAV(I,J,K) = 0.0D0
                   CBSAV(I,J,K) = 0.0D0
                ELSE IF (LCEND) THEN
-                  AE(I,J,K) = DE-CE*0.5
-                  AW(I,J,K) = DW+CW*0.5
-                  AN(I,J,K) = DN-CN*0.5
-                  AS(I,J,K) = DS+CS*0.5
-                  AT(I,J,K) = DT-CT*0.5
-                  AB(I,J,K) = DB+CB*0.5
+                  AE(I,J,K) = DE-CE*0.5D0
+                  AW(I,J,K) = DW+CW*0.5D0
+                  AN(I,J,K) = DN-CN*0.5D0
+                  AS(I,J,K) = DS+CS*0.5D0
+                  AT(I,J,K) = DT-CT*0.5D0
+                  AB(I,J,K) = DB+CB*0.5D0
 c                  AC(I,J,K) = 0.0
                ELSE IF (LCENTRAL) THEN
-                  AE(I,J,K) = DE-CE*0.5
-                  AW(I,J,K) = DW+CW*0.5
-                  AN(I,J,K) = DN-CN*0.5
-                  AS(I,J,K) = DS+CS*0.5
-                  AT(I,J,K) = DT-CT*0.5
-                  AB(I,J,K) = DB+CB*0.5
-c                  AC(I,J,K) = 0.0
+                  AE(I,J,K) = DE-CE*0.5D0
+                  AW(I,J,K) = DW+CW*0.5D0
+                  AN(I,J,K) = DN-CN*0.5D0
+                  AS(I,J,K) = DS+CS*0.5D0
+                  AT(I,J,K) = DT-CT*0.5D0
+                  AB(I,J,K) = DB+CB*0.5D0
+c                  AC(I,J,K) = 0.0D0
                ELSE IF (L2UP) THEN
 c === double precision stuff for aix                  
-                  AE(I,J,K) = DE*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
+                  AE(I,J,K) = DE*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
      &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)
                   AW(I,J,K) = DW*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFW)))
      &                 + dMAX1(0.0D0,COEFW) + dMAX1(0.0D0,CW)

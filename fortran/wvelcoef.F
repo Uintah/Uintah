@@ -71,28 +71,28 @@ c              VOL = RA(J)*SEW(I)*SNS(J)*STBW(K)
 C-----------------------------------------------------------------------
 C     CALCULATE CONVECTION COEFFICIENTS
 C-----------------------------------------------------------------------
-               GE = 0.5*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
-               GEB = 0.5*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
-               GW = 0.5*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
-               GWB = 0.5*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
-               GN = 0.5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
-               GNB = 0.5*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
-               GS = 0.5*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
-               GSB = 0.5*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
-               GT = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))*WW(I,J,K+1)
-               GPB = 0.5*(DEN(I,J,K-1)+DEN(I,J,K))*WW(I,J,K)
-               GB = 0.5*(DEN(I,J,K-1)+DEN(I,J,K-2))*WW(I,J,K-1)
+               GE = 0.5D0*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
+               GEB = 0.5D0*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
+               GW = 0.5D0*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
+               GWB = 0.5D0*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
+               GN = 0.5D0*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
+               GNB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
+               GS = 0.5D0*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
+               GSB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
+               GT = 0.5D0*(DEN(I,J,K)+DEN(I,J,K+1))*WW(I,J,K+1)
+               GPB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J,K))*WW(I,J,K)
+               GB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J,K-2))*WW(I,J,K-1)
 c ****
 c ** WARNING ** Rawat, what does k == 2 mean in this context ?
 c ****
 c used for perodic bc               
 c               IF (K.EQ.2) GB = DEN(I,J,K-1)*WW(I,J,K-1)
-               CEO = (0.5*GE+0.5*GEB)*AREAEW
-               CWO = (0.5*GW+0.5*GWB)*AREAEW
-               CNO = (0.5*GN+0.5*GNB)*AREAN
-               CSO = (0.5*GS+0.5*GSB)*AREAS
-               CTO = 0.5*(GT+GPB)*AREATB
-               CBO = 0.5*(GPB+GB)*AREATB
+               CEO = (0.5D0*GE+0.5D0*GEB)*AREAEW
+               CWO = (0.5D0*GW+0.5D0*GWB)*AREAEW
+               CNO = (0.5D0*GN+0.5D0*GNB)*AREAN
+               CSO = (0.5D0*GS+0.5D0*GSB)*AREAS
+               CTO = 0.5D0*(GT+GPB)*AREATB
+               CBO = 0.5D0*(GPB+GB)*AREATB
 C-----------------------------------------------------------------------
 C      NEW DIFFERENCING STUFF
 C-----------------------------------------------------------------------
@@ -110,24 +110,24 @@ C-----------------------------------------------------------------------
                CBSAV(I,J,K) = CB
 
                if (LCENTRAL) then
-                  GE = 0.5*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
-                  GEB = 0.5*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
-                  GW = 0.5*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
-                  GWB = 0.5*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
-                  GN = 0.5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
-                  GNB = 0.5*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
-                  GS = 0.5*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
-                  GSB = 0.5*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
+                  GE = 0.5D0*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
+                 GEB = 0.5D0*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
+                  GW = 0.5D0*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
+                  GWB = 0.5D0*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
+                  GN = 0.5D0*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
+                 GNB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
+                  GS = 0.5D0*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
+                  GSB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
                   GT = DEN(I,J,K)*WW(I,J,K+1)
                   GTP =  DEN(I,J,K)*WW(I,J,K)
                   GB = DEN(I,J,K-1)*WW(I,J,K-1)
                   GBP = DEN(I,J,K-1)*WW(I,J,K)
-                  CEO = (0.5*GE+0.5*GEB)*AREAEW
-                  CWO = (0.5*GW+0.5*GWB)*AREAEW
-                  CNO = (0.5*GN+0.5*GNB)*AREAN
-                  CSO = (0.5*GS+0.5*GSB)*AREAS
-                  CTO = 0.5*(GT+GTP)*AREATB
-                  CBO = 0.5*(GBP+GB)*AREATB
+                  CEO = (0.5D0*GE+0.5D0*GEB)*AREAEW
+                  CWO = (0.5D0*GW+0.5D0*GWB)*AREAEW
+                  CNO = (0.5D0*GN+0.5D0*GNB)*AREAN
+                  CSO = (0.5D0*GS+0.5D0*GSB)*AREAS
+                  CTO = 0.5D0*(GT+GTP)*AREATB
+                  CBO = 0.5D0*(GBP+GB)*AREATB
 C-----------------------------------------------------------------------
 C      NEW DIFFERENCING STUFF
 C-----------------------------------------------------------------------
@@ -148,10 +148,10 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
-               GUP = EFAC(I)*(0.5*GE+0.5*GEB)+WFAC(I)*(0.5*GW+0.5*GWB)
+         GUP = EFAC(I)*(0.5D0*GE+0.5D0*GEB)+WFAC(I)*(0.5D0*GW+0.5D0*GWB)
                CPE = GUP*VOL/DXEP(I)
                CPW = GUP*VOL/DXPW(I)
-               GVP = ENFAC(J)*(0.5*GN+0.5*GNB)+SFAC(J)*(0.5*GS+0.5*GSB)
+        GVP = ENFAC(J)*(0.5D0*GN+0.5D0*GNB)+SFAC(J)*(0.5D0*GS+0.5D0*GSB)
                CPN = GVP*VOL/DYNP(J)
                CPS = GVP*VOL/DYPS(J)
 c              CPT = GPB*VOL/(RA(J)*STB(K))
@@ -161,26 +161,26 @@ c              CPB = GPB*VOL/(RA(J)*STB(K-1))
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
-               VISE = 0.5*(0.5*(VIS(I,J,K)+VIS(I+1,J,K))+
-     &              0.5*(VIS(I,J,K-1)+VIS(I+1,J,K-1)))
-               VISW = 0.5*(0.5*(VIS(I,J,K)+VIS(I-1,J,K))+
-     &              0.5*(VIS(I,J,K-1)+VIS(I-1,J,K-1)))  
+               VISE = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))+
+     &              0.5D0*(VIS(I,J,K-1)+VIS(I+1,J,K-1)))
+               VISW = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))+
+     &              0.5D0*(VIS(I,J,K-1)+VIS(I-1,J,K-1)))  
 c ****
 c ** WARNING ** Rawat, why are visn, viss, vist, visb arrays here while they
 c               are not in uvelcoef ?
 c ****
-c              VISN(I) = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J+1,K))+
-c    &              0.5*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
-c              VISS(I) = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J-1,K))+
-c    &              0.5*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
+c              VISN(I) = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))+
+c    &              0.5D0*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
+c              VISS(I) = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))+
+c    &              0.5D0*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
 c              VIST(I) = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*
 c    &              VIS(I,J,K+KTSDW(K))
 c              VISB(I) = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*
 c    &              VIS(I,J,K+KBSDW(K))
-               VISN = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J+1,K))+
-     &              0.5*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
-               VISS = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J-1,K))+
-     &              0.5*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
+               VISN = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))+
+     &              0.5D0*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
+               VISS = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))+
+     &              0.5D0*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
                VIST = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*
      &              VIS(I,J,K+KTSDW(K))
                VISB = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*
@@ -207,25 +207,25 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------
-               COEFE = DE - 0.5*ABS(CE)
-               COEFW = DW - 0.5*ABS(CW)
-               COEFN = DN - 0.5*ABS(CN)
-               COEFS = DS - 0.5*ABS(CS)
-               COEFT = DT - 0.5*ABS(CT)
-               COEFB = DB - 0.5*ABS(CB)
-               TEW = 1.0
-               TNS = 1.0
-               TTB = 1.0
-               IF (COEFE.LT.0.0 .OR. COEFW.LT.0.0) TEW = 0.0
-               IF (COEFN.LT.0.0 .OR. COEFS.LT.0.0) TNS = 0.0
-               IF (COEFT.LT.0.0 .OR. COEFB.LT.0.0) TTB = 0.0
+               COEFE = DE - 0.5D0*ABS(CE)
+               COEFW = DW - 0.5D0*ABS(CW)
+               COEFN = DN - 0.5D0*ABS(CN)
+               COEFS = DS - 0.5D0*ABS(CS)
+               COEFT = DT - 0.5D0*ABS(CT)
+               COEFB = DB - 0.5D0*ABS(CB)
+               TEW = 1.0D0
+               TNS = 1.0D0
+               TTB = 1.0D0
+               IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
+               IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
+               IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
 c Explicit double precision stuff for the aix
-               AEC = -0.5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
-               AWC = 0.5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
-               ANC = -0.5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
-               ASC = 0.5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
-               ATC = -0.5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
-               ABC = 0.5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
+               AEC = -0.5D0*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
+               AWC = 0.5D0*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
+               ANC = -0.5D0*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
+               ASC = 0.5D0*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
+               ATC = -0.5D0*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
+               ABC = 0.5D0*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
 c               DDW(I,J,K) = VOL/DZPB(K)
 
 C----------------------------------------------------------------------
@@ -243,12 +243,12 @@ c                 SU(I,J,K) = AEC*W(I+1,J,K)+AWC*W(I-1,J,K) +
 c    &                 ANC*W(I,J+1,K)+ASC*W(I,J-1,K) +
 c    &                 ATC*W(I,J,K+1)+ABC*W(I,J,K-1)
                ELSE IF (LCEND) THEN
-                  AE(I,J,K) = DE-CE*0.5
-                  AW(I,J,K) = DW+CW*0.5
-                  AN(I,J,K) = DN-CN*0.5
-                  AS(I,J,K) = DS+CS*0.5
-                  AT(I,J,K) = DT-CT*0.5
-                  AB(I,J,K) = DB+CB*0.5
+                  AE(I,J,K) = DE-CE*0.5D0
+                  AW(I,J,K) = DW+CW*0.5D0
+                  AN(I,J,K) = DN-CN*0.5D0
+                  AS(I,J,K) = DS+CS*0.5D0
+                  AT(I,J,K) = DT-CT*0.5D0
+                  AB(I,J,K) = DB+CB*0.5D0
 c                 AC(I,J,K) = 0.0
 c                 SU(I,J,K) = 0.0
                ELSE IF (LCENTRAL) THEN
@@ -259,7 +259,7 @@ c                 SU(I,J,K) = 0.0
                   AT(I,J,K) = DT
                   AB(I,J,K) = DB
                ELSE IF (L2UP) THEN
-                  AE(I,J,K) = DE*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
+                  AE(I,J,K) = DE*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
      &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)
                   AW(I,J,K) = DW*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFW)))
      &                 + dMAX1(0.0D0,COEFW) + dMAX1(0.0D0,CW)
