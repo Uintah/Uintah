@@ -10,6 +10,7 @@ namespace Uintah {
   typedef int particleId;
 
   class GeometryObject;
+  class GeometryPiece;
   class Patch;
   class DataWarehouse;
   class MPMLabel;
@@ -38,13 +39,15 @@ namespace Uintah {
     virtual particleIndex countParticles(GeometryObject* obj,
 				 const Patch*) const;
 
-    
   protected:
     
     void applyForceBC(const Vector& dxpp, 
                       const Point& pp,
                       const double& pMass, 
 		      Vector& pExtForce);
+    
+    int checkForSurface(const GeometryPiece* piece, const Point p,
+                        const Vector dxpp);
     
     ParticleSubset* allocateVariables(particleIndex numParticles,
 				      int dwi, MPMLabel* lb, 
