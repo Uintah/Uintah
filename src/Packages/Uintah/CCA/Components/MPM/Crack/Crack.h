@@ -36,7 +36,7 @@ using std::string;
 class Crack
 {
  public:
-    double d_outputInterval;
+    double d_outputCFInterval;
 
     // Constructor
     Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
