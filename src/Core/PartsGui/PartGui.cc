@@ -28,6 +28,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <iostream>
 
 #include <Core/Parts/GraphPart.h>
 #include <Core/Parts/PartInterface.h>
@@ -38,6 +39,7 @@
 #include <Core/PartsGui/NullGui.h>
 
 namespace SCIRun {
+using std::cerr;
 
 void
 PartGui::add_child( PartInterface *child )
