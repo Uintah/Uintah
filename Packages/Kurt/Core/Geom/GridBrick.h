@@ -83,7 +83,7 @@ public:
   // GROUP: Destructors
   //////////
   // Destructor
-  //  virtual ~GridBrick(){}
+  virtual ~GridBrick(){}
 
   IntVector& get_min_index(){ return i_min_; }
   IntVector& get_max_index(){ return i_max_; }

@@ -61,8 +61,9 @@ public:
 
   VolumeRenderer(int id);
 
-  VolumeRenderer(int id, FieldHandle tex,
-		   ColorMapHandle map);
+  VolumeRenderer(int id, GridVolRen* gvr, FieldHandle tex,
+		 ColorMapHandle map, 
+		 bool fixed, double min, double max);
 
   void SetNSlices(int s) { slices_ = s; cmapHasChanged = true;}
   void SetSliceAlpha( double as){ slice_alpha = as; cmapHasChanged = true; }
@@ -73,13 +74,22 @@ public:
   void attenuate(){ rs_ = ATTENUATE; }
 
 
-  void SetVol( FieldHandle tex ){ 
-    mutex.lock(); this->tex_ = tex; buildBrickGrid(); mutex.unlock();}
-  void SetColorMap( ColorMapHandle map){
-    mutex.lock(); this->cmap = map;   cmapHasChanged = true;  mutex.unlock();}
-  void Reload() { gvr_.Reload(); }
+  void Build(){ mutex.lock();buildBrickGrid(); mutex.unlock();}
+  // if the SetVol and or SetBrickSize SetRange are called, Build must 
+  // be called before any other operations.
+  void SetRange( double min, double max ){ min_val_ = min; max_val_ = max;}
+  void FixedRange( bool fixed ){ is_fixed_ = fixed; };
+  void SetVol( FieldHandle tex ){ this->tex_ = tex;}
+  void SetBrickSize( int bs) {brick_size_ = bs;}
 
-  void SetInterp( bool i) { gvr_.SetInterp( i ); }
+
+  void GetRange( double& min, double& max);
+  int  get_brick_size() { return brick_size_; }
+  void SetColorMap( ColorMapHandle map){mutex.lock();
+    this->cmap = map;   cmapHasChanged = true;  mutex.unlock();}
+  void Reload() { gvr_->Reload(); }
+
+  void SetInterp( bool i) { gvr_->SetInterp( i ); }
 
   VolumeRenderer(const VolumeRenderer&);
   ~VolumeRenderer();
@@ -96,13 +106,13 @@ public:
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 
   void setup();
-  void preDraw();
-  void draw(){ gvr_.draw(*(bg_.get_rep()), slices_); }
-  void postDraw();
+  virtual void preDraw();
+  virtual void draw(){ gvr_->draw(*(bg_.get_rep()), slices_); }
+  virtual void postDraw();
   void cleanup();
 
   void drawWireFrame(){ glColor4f(0.8,0.8,0.8,1.0);
-  gvr_.drawWireFrame(*(bg_.get_rep())); }
+                        gvr_->drawWireFrame(*(bg_.get_rep())); }
   void buildBrickGrid();
 
 protected:
@@ -111,18 +121,21 @@ protected:
   int slices_;
   FieldHandle tex_;
   BrickGridHandle bg_;
-  GridVolRen gvr_;
+  GridVolRen* gvr_;
+  int lighting_;
 private:
 
   Mutex mutex;
   ColorMapHandle cmap;
   
+  int brick_size_;
   double slice_alpha;
-
+  bool is_fixed_;
+  double min_val_;
+  double max_val_;
   DrawInfoOpenGL* di_;
  
   
-  int lighting_;
 
   bool cmapHasChanged;
   unsigned char TransferFunction[1024];

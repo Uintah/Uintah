@@ -5,9 +5,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Packages/Kurt/Core/Geom
 SRCS   += \
 	$(SRCDIR)/VolumeRenderer.cc \
+	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/BrickGrid.cc \
 	$(SRCDIR)/GridBrick.cc \
 	$(SRCDIR)/GridVolRen.cc \
+	$(SRCDIR)/GridSliceRen.cc \
 #[INSERT NEW CODE FILE HERE]
 
 

@@ -21,7 +21,13 @@ using SCIRun::Cross;
 
 
 GridVolRen::GridVolRen()
-  : reload_((unsigned char *)1), cmap_(0), interp_(true) {}
+  : reload_((unsigned char *)1), cmap_(0), interp_(true),
+    drawX(false),
+    drawY(false),
+    drawZ(false),
+    drawView(false)
+
+ {}
 
 void GridVolRen::draw(const BrickGrid& bg, int slices )
 {
@@ -33,7 +39,6 @@ void GridVolRen::draw(const BrickGrid& bg, int slices )
   double tmin, tmax, dt;
   double ts[8];
   int i;
-
   BrickGrid::iterator it = bg.begin(viewRay);
   BrickGrid::iterator it_end = bg.end(viewRay);
   for(; it != it_end; ++it) {
@@ -66,7 +71,6 @@ void GridVolRen::drawWireFrame(const BrickGrid& bg )
   BrickGrid::iterator it = bg.begin(viewRay);
   BrickGrid::iterator it_end = bg.end(viewRay);
   
-  int ii,jj,kk;
   for(; it != it_end; ++it) {
     Brick& b = *(*it);
     drawWireFrame( b );
@@ -349,6 +353,8 @@ GridVolRen::drawWireFrame(const Brick& brick)
   glEnd();
   glPopMatrix();
   glDisable(GL_DEPTH_TEST);
+  
+  //  sginap(10);
 }
 
 
