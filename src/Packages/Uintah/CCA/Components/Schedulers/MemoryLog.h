@@ -3,6 +3,7 @@
 #define Uintah_MemoryLog_h
 
 #include <iosfwd>
+#include <string>
 
 namespace Uintah {
   class Patch;
