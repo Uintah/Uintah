@@ -2136,6 +2136,10 @@ class BioTensorApp {
         disableModule $mods(TendEpireg) 1
 	disableModule $mods(UnuJoin) 1
         disableModule $mods(ChooseNrrd-ToReg) 1
+
+	# DT Smoothing is intially turned off
+	disableModule $mods(UnuResample-XY) 1
+	disableModule $mods(UnuResample-Z) 1
   
         # Building Diffusion Tensors
         disableModule $mods(NrrdReader-BMatrix) 1
@@ -4811,6 +4815,10 @@ class BioTensorApp {
            $dt_tab1.blur.childsite.rad2.v configure -state disabled
            $dt_tab2.blur.childsite.rad2.v configure -state disabled
 
+	   # disable resample modules
+	   disableModule $mods(UnuResample-XY) 1
+	   disableModule $mods(UnuResample-Z) 1
+
            set $mods(ChooseNrrd-ToSmooth)-port-index 1
         } else {
            # disable smoothing scrollbar
@@ -4831,6 +4839,10 @@ class BioTensorApp {
 
            $dt_tab1.blur.childsite.rad2.v configure -state normal
            $dt_tab2.blur.childsite.rad2.v configure -state normal
+
+	   # enable resample modules
+	   disableModule $mods(UnuResample-XY) 0
+	   disableModule $mods(UnuResample-Z) 0
 
            set $mods(ChooseNrrd-ToSmooth)-port-index 0
 
