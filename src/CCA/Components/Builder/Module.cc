@@ -24,15 +24,14 @@
 using namespace std;
 
 Module::Module(QWidget *parent, const string& moduleName,
-	       CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
 	       const gov::cca::Services::pointer& services,
 	       const gov::cca::ComponentID::pointer& cid)
-  :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), up(up), services(services), cid(cid)
+  :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), services(services), cid(cid)
 {
   pd=10; //distance between two ports
   pw=10; //port width
   ph=4; //prot height
-		
+
   int dx=5;
   // int dy=10;
   //  int d=5;
@@ -55,39 +54,39 @@ Module::Module(QWidget *parent, const string& moduleName,
     cerr << "Fatal Error: Cannot find builder service\n";
   } 
   else {
+    up=builder->getUsedPortNames(cid);
     CIA::array1<string> ports = builder->getProvidedPortNames(cid);
     for(unsigned int i=0; i < ports.size(); i++){
       if(ports[i]=="ui") hasUIPort=true;
       else if(ports[i]=="go") hasGoPort=true;
-      else this->pp.push_back(ports[i]); 
+      else pp.push_back(ports[i]); 
     }
   }
 
+  menu=new QPopupMenu(this);
   if(hasUIPort){
-      QPushButton *ui=new QPushButton("UI", this,"ui");
-      //	ui->setDefault(false);
-      ui->setGeometry(QRect(dx,h-dx-20,20,20));
-      connect(ui,SIGNAL(clicked()), this, SLOT(ui()));
-
-      string instanceName = cid->getInstanceName();
-      string uiPortName = instanceName+" uiPort";
-      services->registerUsesPort(uiPortName, "gov.cca.UIPort",
-				 gov::cca::TypeMap::pointer(0));
-      builder->connect(services->getComponentID(), uiPortName, cid, "ui");
+    QPushButton *ui=new QPushButton("UI", this,"ui");
+    //	ui->setDefault(false);
+    ui->setGeometry(QRect(dx,h-dx-20,20,20));
+    connect(ui,SIGNAL(clicked()), this, SLOT(ui()));
+    
+    string instanceName = cid->getInstanceName();
+    string uiPortName = instanceName+" uiPort";
+    services->registerUsesPort(uiPortName, "gov.cca.UIPort",
+			       gov::cca::TypeMap::pointer(0));
+    builder->connect(services->getComponentID(), uiPortName, cid, "ui");
   }
 
-  menu=new QPopupMenu(this);
-
   if(hasGoPort){
-      menu->insertItem("Go",this, SLOT(go()) );
-      menu->insertItem("Stop",this,  SLOT(stop()) );
-      menu->insertSeparator();	
-
-      string instanceName = cid->getInstanceName();
-      string goPortName = instanceName+" goPort";
-      services->registerUsesPort(goPortName, "gov.cca.GoPort",
-				 gov::cca::TypeMap::pointer(0));
-      builder->connect(services->getComponentID(), goPortName, cid, "go");
+    menu->insertItem("Go",this, SLOT(go()) );
+    menu->insertItem("Stop",this,  SLOT(stop()) );
+    menu->insertSeparator();	
+    
+    string instanceName = cid->getInstanceName();
+    string goPortName = instanceName+" goPort";
+    services->registerUsesPort(goPortName, "gov.cca.GoPort",
+			       gov::cca::TypeMap::pointer(0));
+    builder->connect(services->getComponentID(), goPortName, cid, "go");
   }
 
   menu->insertItem("Destroy",this,  SLOT(destroy()) );

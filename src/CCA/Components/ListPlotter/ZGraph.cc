@@ -1,5 +1,5 @@
 #include <vector>
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <qwidget.h>
 #include <qpainter.h>

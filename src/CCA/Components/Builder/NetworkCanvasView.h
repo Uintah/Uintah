@@ -44,7 +44,7 @@ public:
   NetworkCanvasView(QCanvas* canvas, QWidget* parent=0);
   void setServices(const gov::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
-  void addModule(const std::string& name, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
+  void addModule(const std::string& name, const gov::cca::ComponentID::pointer &cid);
   void addConnection(Module *m1, const std::string & portname1, Module *m2, const std::string & portname2);	
   void removeConnection(QCanvasItem *c);
   void highlightConnection(QCanvasItem *c);

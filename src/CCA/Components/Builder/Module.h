@@ -30,7 +30,6 @@ class Module:public QFrame
 public:
   enum PortType{USES, PROVIDES}; 
   Module(QWidget *parent, const std::string& name,
-	 CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
 	 const gov::cca::Services::pointer& services,
 	 const gov::cca::ComponentID::pointer &cid);
   QPoint usePortPoint(int num);

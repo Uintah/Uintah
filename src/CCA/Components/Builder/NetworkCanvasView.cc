@@ -213,11 +213,9 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 }
 
 void NetworkCanvasView::addModule(const string& name,
-				  CIA::array1<std::string> & up,
-				  CIA::array1<std::string> &pp ,
 				  const gov::cca::ComponentID::pointer &cid)
 {
-  Module *module=new Module(this,name,up,pp, services, cid);
+  Module *module=new Module(this,name, services, cid);
   addChild(module,20, 20);
   modules.push_back(module);
   module->show();		
