@@ -943,8 +943,10 @@ BoundaryCondition::computeOMB(const ProcessorGroup* pc,
       if (totalAreaOUT > 0.0)
 	d_uvwout = (totalFlowIN - denAccum - totalFlowOUT)/
 	            totalAreaOUT;
+#if 0
       if (d_uvwout < 0.0) 
 	d_uvwout = 0.0;
+#endif
     }
     else
       d_uvwout = 0.0;

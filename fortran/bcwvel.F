@@ -152,12 +152,12 @@ C--------------------------------------------------------------------
             IF (PCELL(iEndGhost,J,K).EQ.PBCFLD
      &           .AND. UU(iEndGhost+1,J,K).GT.0.0) THEN
                WW(iEndGhost,J,K) = WW(iend,J,K)
-               AE(iend,J,K) = 2.0*TINY
+c               AE(iend,J,K) = 2.0*TINY
             END IF
             IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
      &           .AND. UU(iBegGhost,J,K).LT.0.0) THEN
                WW(iBegGhost,J,K) = WW(ist,J,K)
-               AW(ist,J,K) = 2.0*TINY
+c               AW(ist,J,K) = 2.0*TINY
             END IF
  200     CONTINUE
  210  CONTINUE
@@ -169,12 +169,12 @@ C-------------------------------------------------------------------
           IF (PCELL(I,jEndGhost,K).EQ.PBCFLD
      &          .AND. VV(I,jEndGhost+1,K).GT.0.0) THEN
              WW(I,jEndGhost,K) = WW(I,jend,K)
-             AN(I,jend,K) = 2.0*TINY
+c             AN(I,jend,K) = 2.0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD
      &         .AND. VV(I,jBegGhost,K).LT.0.0) THEN
             WW(I,jBegGhost,K) = WW(I,jst,K)
-            AS(I,jst,K) = 2.0*TINY
+c            AS(I,jst,K) = 2.0*TINY
           END IF
   300   CONTINUE
   310 CONTINUE
