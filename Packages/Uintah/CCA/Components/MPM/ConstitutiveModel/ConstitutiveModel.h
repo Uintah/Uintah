@@ -79,15 +79,13 @@ WARNING
 
          virtual double getCompressibility() = 0;
 
-/*`==========TESTING==========*/ 
-	 double computeRhoMicro(double& press,double& gamma,
-				        double& cv, double& Temp);
+	 double computeRhoMicro(double press,double gamma,
+				        double cv, double Temp);
 	 
-	 void computePressEOS(double& rhoM, double& gamma,
-				      double& cv, double& Temp,
+	 void computePressEOS(double rhoM, double gamma,
+				      double cv, double Temp,
 				      double& press, double& dp_drho,
 				      double& dp_de);
- /*==========TESTING==========`*/
 
         protected:
 
