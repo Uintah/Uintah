@@ -40,7 +40,7 @@
       Interactive Matlab Interface: This module accomplishes a number of steps to integrate MATLAB code into
       SCIRun, (1) it translates a SCIRun object (field/matrix/nrrd) into a matlabarray and puts the object in
       the current workspace of matlab, (2) it executes MATLAB code that can be provided within the interface, 
-      (3) it translates back matlabarrays in MATLAB's workspace into SCIRun objects.
+      (3) it translates back the matlabarrays in MATLAB's workspace into SCIRun objects.
     </summary>
     <description>
 
