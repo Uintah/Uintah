@@ -327,3 +327,8 @@ void VolumeVis::shade(Color& result, const Ray& ray,
   result = total;
 }
 
+void VolumeVis::animate(double, bool& changed)
+{
+  dpy->animate(changed);
+}
+
