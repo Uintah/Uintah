@@ -117,7 +117,7 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
       new_dw->allocate(newphi, lb_->phi, matl, patch);
-      newphi.copyData(phi);
+      newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
       double residual=0;
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex(); 
