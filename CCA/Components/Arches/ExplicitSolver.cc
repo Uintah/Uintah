@@ -254,6 +254,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_enthalpySolver->solve(level, sched, patches, matls,
 			      d_timeIntegratorLabels[curr_level]);
 
+    if (nofScalarVars > 0) {
+      for (int index = 0;index < nofScalarVars; index ++) {
+        // in this case we're only solving for one scalarVar...but
+        // the same subroutine can be used to solve multiple scalarVars
+        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+					   d_timeIntegratorLabels[curr_level]);
+      }
+    d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+					   d_timeIntegratorLabels[curr_level]);
+    }
+
 //    d_props->sched_reComputeProps(sched, patches, matls,
 //				  d_timeIntegratorLabels[curr_level], false);
 //    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
@@ -272,17 +283,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 				      d_timeIntegratorLabels[curr_level]);
     sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 
-    if (nofScalarVars > 0) {
-      for (int index = 0;index < nofScalarVars; index ++) {
-        // in this case we're only solving for one scalarVar...but
-        // the same subroutine can be used to solve multiple scalarVars
-        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-					   d_timeIntegratorLabels[curr_level]);
-      }
-    d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-					   d_timeIntegratorLabels[curr_level]);
-    }
-
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
@@ -294,9 +294,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			   	    d_timeIntegratorLabels[curr_level]);
       d_props->sched_saveTempDensity(sched, patches, matls,
 			   	     d_timeIntegratorLabels[curr_level]);
-      d_props->sched_reComputeProps(sched, patches, matls,
-				    d_timeIntegratorLabels[curr_level], false);
-      sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       if (nofScalarVars > 0) {
         for (int index = 0;index < nofScalarVars; index ++) {
         // in this case we're only solving for one scalarVar...but
@@ -307,6 +304,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
       }
+      d_props->sched_reComputeProps(sched, patches, matls,
+				    d_timeIntegratorLabels[curr_level], false);
+      sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
     } 
