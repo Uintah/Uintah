@@ -59,6 +59,9 @@ void create_sci_environment(char **environ)
     scirun_env[str.substr(0,pos)] = str.substr(pos+1, str.length());
     environment++;
   }
+  sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
+  sci_putenv("SCIRUN_OBJDIR", SCIRUN_OBJDIR);
+  sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
 }
 
 
