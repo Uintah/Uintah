@@ -93,7 +93,10 @@ public:
 protected:
 };
 
-
+template <class T> T* Field::query_interface(T *)
+{
+  return dynamic_cast<T*>(this);
+}
 
 } // end namespace Datatypes
 } // end namespace SCICore
