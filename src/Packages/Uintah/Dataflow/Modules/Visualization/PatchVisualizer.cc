@@ -122,8 +122,8 @@ PatchVisualizer::PatchVisualizer(const string& id)
   level5_color_scheme("level5_color_scheme",id, this),
   nl("nl",id,this),
   patch_seperate("patch_seperate",id,this),
-  grid(NULL),
-  old_generation(-1), old_timestep(0), numLevels(0)
+  old_generation(-1), old_timestep(0), numLevels(0),
+  grid(NULL)
 {
 
   // Create the input port
@@ -375,10 +375,10 @@ void PatchVisualizer::execute()
   //////////////////////////////////////////////////////////////////
   
   // loops over all the levels
-  for(int l = 0;l<patches.size();l++){
+  for(unsigned int l = 0;l<patches.size();l++){
     // there can be up to 6 levels only, after that the value of the last
     // level is used.
-    int level_index = l;
+    unsigned int level_index = l;
     if (level_index >= 6)
       level_index = 5;
 
@@ -403,7 +403,7 @@ void PatchVisualizer::execute()
       
       //---------------------------------------
       // for each patch in the level
-      for(int i = 0; i < patches[l].size(); i++){
+      for(unsigned int i = 0; i < patches[l].size(); i++){
 	addBoxGeometry(edges, patches[l][i], change_v);
       }
       
@@ -415,7 +415,7 @@ void PatchVisualizer::execute()
 
       //---------------------------------------
       // for each patch in the level
-      for(int i = 0; i < patches[l].size(); i++){
+      for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
 	addBoxGeometry(edges, patches[l][i], change_v);
 	level_geom->add(scinew GeomMaterial(edges,
@@ -428,7 +428,7 @@ void PatchVisualizer::execute()
 
       //---------------------------------------
       // for each patch in the level
-      for(int i = 0; i < patches[l].size(); i++){
+      for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
 	addBoxGeometry(edges, patches[l][i], change_v);
 	level_geom->add(scinew GeomMaterial(edges,
@@ -441,7 +441,7 @@ void PatchVisualizer::execute()
 
       //---------------------------------------
       // for each patch in the level
-      for(int i = 0; i < patches[l].size(); i++){
+      for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
 	addBoxGeometry(edges, patches[l][i], change_v);
 	level_geom->add(scinew GeomMaterial(edges,
@@ -455,7 +455,7 @@ void PatchVisualizer::execute()
 
       //---------------------------------------
       // for each patch in the level
-      for(int i = 0; i < patches[l].size(); i++){
+      for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
 	addBoxGeometry(edges, patches[l][i], change_v);
 	level_geom->add(scinew GeomMaterial(edges, cmap->lookup(drand48())));
