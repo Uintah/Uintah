@@ -31,6 +31,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
 
 #include <iostream>
@@ -39,14 +40,14 @@
 
 
 namespace SCIRun {
-vector<pair<int, double> > 
-operator*(const vector<pair<int, double> >&r, double &) {
+vector<pair<TetVolMesh::Cell::index_type, double> > 
+operator*(const vector<pair<TetVolMesh::Cell::index_type, double> >&r, double &) {
   ASSERTFAIL("BuildLeadField.cc Bogus operator");
   return r;
 }
-vector<pair<int, double> > 
-operator+=(const vector<pair<int, double> >&r, 
-	   const vector<pair<int, double> >&) {
+vector<pair<TetVolMesh::Cell::index_type, double> > 
+operator+=(const vector<pair<TetVolMesh::Cell::index_type, double> >&r, 
+	   const vector<pair<TetVolMesh::Cell::index_type, double> >&) {
   ASSERTFAIL("BuildLeadField.cc Bogus operator");
   return r;
 }
@@ -124,17 +125,22 @@ void BuildLeadField::execute() {
     cerr << "BuildLeadField -- couldn't get interp.  Returning.\n";
     return;
   }
-  if (!interp_in.get_rep() || interp_in->get_type_name(0)!="TetVol") {
-    cerr << "Error - BuildLeadField didn't get a TetVol for interp" << "\n";
+  if (!interp_in.get_rep() || interp_in->get_type_name(0)!="PointCloud") {
+    cerr << "Error - BuildLeadField didn't get a PointCloud for interp" << "\n";
     return;
   }
-  TetVolMesh* interp_mesh = 
-    (TetVolMesh*)dynamic_cast<TetVolMesh*>(interp_in->mesh().get_rep());
+  PointCloudMesh* interp_mesh = 
+    (PointCloudMesh*)dynamic_cast<PointCloudMesh*>(interp_in->mesh().get_rep());
+  cerr << "field type is: "<<interp_in->get_type_name()<<"\n";
 
-  TetVol<vector<pair<int,double> > >* interp = 
-    (TetVol<vector<pair<int,double> > >*)
-    dynamic_cast<TetVol<vector<pair<int,double> > >*>(interp_in.get_rep());
-  
+  PointCloud<vector<pair<TetVolMesh::Cell::index_type, double> > >* interp = 
+    dynamic_cast<PointCloud<vector<pair<TetVolMesh::Cell::index_type, double> > > *>(interp_in.get_rep());
+
+  if (!interp) {
+    cerr << "Error - Interp Field wasn't a PointCloud<vector<pair<TetVolMesh::Cell::index_type,double>>>\n";
+    return;
+  }
+
   if (leadfield_.get_rep() && 
       mesh_in->generation == last_mesh_generation_ &&
       interp_in->generation == last_interp_generation_) {
@@ -156,7 +162,7 @@ void BuildLeadField::execute() {
     int i;
     for (i=0; i<nnodes; i++) (*rhs)[i]=0;
     
-    vector<pair<int,double> >::iterator iter = interp->fdata()[0].begin();
+    vector<pair<TetVolMesh::Cell::index_type,double> >::iterator iter = interp->fdata()[0].begin();
     while (iter != interp->fdata()[0].end()) {
       int idx = (*iter).first;
       double val = (*iter).second;
