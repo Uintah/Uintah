@@ -38,6 +38,7 @@
  *
  */
 
+#include <Core/Math/Mat.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -48,16 +49,12 @@
 namespace SCIRun {
 
 class MinNormLeastSq : public Module {
-  MatrixIPort* v0_imat_;
-  MatrixIPort* v1_imat_;
-  MatrixIPort* v2_imat_;
+  MatrixIPort* A0_imat_;
+  MatrixIPort* A1_imat_;
+  MatrixIPort* A2_imat_;
   MatrixIPort* b_imat_;
   MatrixOPort* w_omat_;
-  MatrixOPort* x_omat_;
-
-  double det_3x3(double* p1, double* p2, double* p3);
-  int solve_3x3(double a[3][3], double b[3],double x[3]);
-  double error_norm(double* x1, double* x2, int n);
+  MatrixOPort* bprime_omat_;
 
 public:
   MinNormLeastSq(GuiContext* ctx);
@@ -75,62 +72,24 @@ MinNormLeastSq::~MinNormLeastSq()
 {
 }
 
-double
-MinNormLeastSq::det_3x3(double* p1, double* p2, double* p3)
-{
-  return p1[0]*p2[1]*p3[2]-p1[0]*p2[2]*p3[1]-p1[1]*p2[0]*p3[2]+p2[0]*p1[2]*p3[1]+p3[0]*p1[1]*p2[2]-p1[2]*p2[1]*p3[0];
-} 
-
-int
-MinNormLeastSq::solve_3x3(double a[3][3], double b[3],double x[3])
-{
-  const double D = det_3x3(a[0],a[1],a[2]);
-  const double D1 = det_3x3(b,a[1],a[2]);
-  const double D2 = det_3x3(a[0],b,a[2]);
-  const double D3 = det_3x3(a[0],a[1],b);
-  if ( D!=0){ 
-    x[0] = D1/D;
-    x[1] = D2/D; 
-    x[2] = D3/D; 
-  } else {
-    error("DET = 0!");
-    x[0] = 1;
-    x[1] = 0; 
-    x[2] = 0;
-    return(-1);
-  }
-  return(0);
-}
-
-double 
-MinNormLeastSq::error_norm( double* x1, double* x2,int  n)
-{
-  double err= 0;
-  for (int i=0;i<n;i++)
-  {
-    err = err + (x1[i]-x2[i])*(x1[i]-x2[i]);
-  }
-  return(sqrt(err));
-}
-
 void
 MinNormLeastSq::execute()
 {
-  v0_imat_ = (MatrixIPort *)get_iport("BasisVec1(Col)");
-  v1_imat_ = (MatrixIPort *)get_iport("BasisVec2(Col)");
-  v2_imat_ = (MatrixIPort *)get_iport("BasisVec3(Col)");
+  A0_imat_ = (MatrixIPort *)get_iport("BasisVec1(Col)");
+  A1_imat_ = (MatrixIPort *)get_iport("BasisVec2(Col)");
+  A2_imat_ = (MatrixIPort *)get_iport("BasisVec3(Col)");
   b_imat_  = (MatrixIPort *)get_iport("TargetVec(Col)");
-  w_omat_  = (MatrixOPort *)get_oport("WeightVec(Row)");
-  x_omat_  = (MatrixOPort *)get_oport("ResultVec(Col)");
-  if (!v0_imat_) {
+  w_omat_  = (MatrixOPort *)get_oport("WeightVec(Col)");
+  bprime_omat_  = (MatrixOPort *)get_oport("ResultVec(Col)");
+  if (!A0_imat_) {
     error("Unable to initialize iport 'BasisVec1(Col)'.");
     return;
   }
-  if (!v1_imat_) {
+  if (!A1_imat_) {
     error("Unable to initialize iport 'BasisVec2(Col)'.");
     return;
   }
-  if (!v2_imat_) {
+  if (!A2_imat_) {
     error("Unable to initialize iport 'BasisVec3(Col)'.");
     return;
   }
@@ -142,80 +101,45 @@ MinNormLeastSq::execute()
     error("Unable to initialize oport 'WeightVec(Col)'.");
     return;
   }
-  if (!x_omat_) {
+  if (!bprime_omat_) {
     error("Unable to initialize oport 'ResultVec(Col)'.");
     return;
   }
   
-  int i,j;
+  int i;
   vector<MatrixHandle> in(4);
-  if (!v0_imat_->get(in[0])) return;
-  if (!v1_imat_->get(in[1])) return;
-  if (!v2_imat_->get(in[2])) return;
+  if (!A0_imat_->get(in[0])) return;
+  if (!A1_imat_->get(in[1])) return;
+  if (!A2_imat_->get(in[2])) return;
   if (!b_imat_->get(in[3])) return;
 
-  vector<ColumnMatrix *> v(4);
-  for (i = 0; i < (int)in.size(); i++) {
-    ASSERT (v[i] = dynamic_cast<ColumnMatrix *>(in[i].get_rep()))
+  vector<ColumnMatrix *> Ac(4);
+  for (i = 0; i < 4; i++) {
+    ASSERT (Ac[i] = dynamic_cast<ColumnMatrix *>(in[i].get_rep()))
   }
-  int size = v[0]->nrows();
-  for (i = 1; i < (int)in.size(); i++) {
-    ASSERT ( v[i]->nrows() == size )
+  int size = Ac[0]->nrows();
+  for (i = 1; i < 4; i++) {
+    ASSERT ( Ac[i]->nrows() == size )
   }
-  ColumnMatrix *b = v[3];
-  double *w = new double[3];
-  double *x = new double[size];
-
-  double a[3][3];
-  double a_b[3];
-
+  double *A[3];
   for (i=0; i<3; i++) {
-    for (j=0; j<3; j++)
-      a[i][j]=0;
-    a_b[i]=0;
+    A[i]=&((*Ac[i])[0]);
   }
+  double *b = &((*Ac[3])[0]);
+  double *bprime = new double[size];
+  double *x = new double[3];
 
-  double dc[3];
-  for (i=0; i<3; i++) 
-    dc[i] = (*v[i])[0];
-  double b_dc=(*b)[0];
-
-  for(i=0; i<size; i++) {
-    a[0][0] += ((*v[0])[i]-dc[0])*((*v[0])[i]-dc[0]);
-    a[0][1] += ((*v[0])[i]-dc[0])*((*v[1])[i]-dc[1]);
-    a[0][2] += ((*v[0])[i]-dc[0])*((*v[2])[i]-dc[2]);
-    a[1][1] += ((*v[1])[i]-dc[1])*((*v[1])[i]-dc[1]);
-    a[1][2] += ((*v[1])[i]-dc[1])*((*v[2])[i]-dc[2]);
-    a[2][2] += ((*v[2])[i]-dc[2])*((*v[2])[i]-dc[2]);
-  }
-  
-  a[1][0] = a[0][1];
-  a[2][0] = a[0][2];
-  a[2][1] = a[1][2];
-   
-  for(i=0; i<size; i++) {
-    for (j=0; j<3; j++)
-      a_b[j] += ((*v[j])[i]-dc[j])*((*b)[i]-b_dc);
-  }
-
-  solve_3x3(a, a_b, w);
-
-  for(i=0; i<size; i++) {
-    x[i] = 0;
-    for (j=0; j<3; j++) 
-      x[i] += w[j]*((*v[j])[i]-dc[j]);
-  }
+  min_norm_least_sq_3(A, b, x, bprime, size, 1);
    
   ColumnMatrix* w_vec = new ColumnMatrix(3);
-  w_vec->set_data(w);   
+  w_vec->set_data(x);   
   MatrixHandle w_vecH(w_vec);
   w_omat_->send(w_vecH);
 
-  ColumnMatrix* x_vec = new ColumnMatrix(size);
-  x_vec->set_data(x);
-  MatrixHandle x_vecH(x_vec);
-  x_omat_->send(x_vecH);
+  ColumnMatrix* bprime_vec = new ColumnMatrix(size);
+  bprime_vec->set_data(bprime);
+  MatrixHandle bprime_vecH(bprime_vec);
+  bprime_omat_->send(bprime_vecH);
 }    
-
 
 } // End namespace SCIRun
