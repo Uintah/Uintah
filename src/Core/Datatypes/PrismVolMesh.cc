@@ -1208,10 +1208,9 @@ PrismVolMesh::get_weights(const Point &pt,
 	// have a division so if the point is on an edge there is no
 	// divide by zero error.
 	for( i=0,j=1,k=TRI_NNODES-1; i<TRI_NNODES; i++, j++, k++ ) {
-	  w[fTable[i]] =
-	    prism_area2( pt,
-			 p[fTable[j%TRI_NNODES]],
-			 p[fTable[k%TRI_NNODES]] );
+	  w[fTable[i]] = prism_area2( pt,
+				      p[fTable[j%TRI_NNODES]],
+				      p[fTable[k%TRI_NNODES]] );
 	  
 	  total += w[fTable[i]];
 	}
@@ -1237,10 +1236,9 @@ PrismVolMesh::get_weights(const Point &pt,
 	    // Get the area of the triangle formed by the node and
 	    // its two neighbors and divide it by the two triangles
 	    // formed by the point, node and one of the nodes neighbors.
-	    w[fTable[i]] =
-	      prism_area2(p[fTable[i]],
-			  p[fTable[j%QUAD_NNODES]],
-			  p[fTable[k%QUAD_NNODES]]) /
+	    w[fTable[i]] = prism_area2(p[fTable[i]],
+				       p[fTable[j%QUAD_NNODES]],
+				       p[fTable[k%QUAD_NNODES]]) /
 	      (area[i] * area[k%QUAD_NNODES]);
 
 	    total += w[fTable[i]];
@@ -1248,10 +1246,8 @@ PrismVolMesh::get_weights(const Point &pt,
 	} else {
 	  // Special case point is on an edge so bilenar interpolation
 	  w[fTable[i]] =
-	    (pt                      -
-	     p[fTable[j%QUAD_NNODES]]).safe_normalize() /
-	    (p[fTable[i]] -
-	     p[fTable[j%QUAD_NNODES]]).safe_normalize();
+	    (pt           - p[fTable[j%QUAD_NNODES]]).safe_normalize() /
+	    (p[fTable[i]] - p[fTable[j%QUAD_NNODES]]).safe_normalize();
 
 	  w[fTable[j%QUAD_NNODES]] = 1.0 - w[fTable[i]];
 
