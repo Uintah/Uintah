@@ -210,25 +210,25 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Array1<string> names;
   names.add(string("386dx"));
-  names.add(string("3dglasses1"));
-  names.add(string("3dglasses2"));
+  names.add(string("3d-glasses-01"));
+  names.add(string("3d-glasses-02"));
   names.add(string("abacus"));
-  names.add(string("coffee-mug2"));
-  names.add(string("coffee-mug3"));
-  names.add(string("coffee-mug4"));
-  names.add(string("coffee-mug5"));
-  names.add(string("corbu-float1"));
-  names.add(string("corbu-float2"));
-  names.add(string("corbu-float3"));
-  names.add(string("corbu-float4"));
-  names.add(string("corbu-float5"));
+  names.add(string("coffee-cup-01"));
+  names.add(string("coffee-cup-02"));
+  names.add(string("coffee-cup-03"));
+  names.add(string("coffee-cup-04"));
+  names.add(string("corbusier-01"));
+  names.add(string("corbusier-02"));
+  names.add(string("corbusier-03"));
+  names.add(string("corbusier-04"));
+  names.add(string("corbusier-05"));
   names.add(string("counterbase"));
   names.add(string("countertop"));
-  names.add(string("end-table1"));
-  names.add(string("end-table2"));
-  names.add(string("end-table3"));
-  names.add(string("end-table4"));
-  names.add(string("end-table5"));
+  names.add(string("end-table-01"));
+  names.add(string("end-table-02"));
+  names.add(string("end-table-03"));
+  names.add(string("end-table-04"));
+  names.add(string("end-table-05"));
   names.add(string("futuristic-curio1"));
   names.add(string("futuristic-curio2"));
   names.add(string("hmd"));
@@ -261,35 +261,41 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
 
 
+
+
   //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
-  Light *holo_light0 = new Light(Point(-10, 10, 3), Color(0.4,0.4,0.6), 0);
-  Light *holo_light1 = new Light(Point(-10, 6, 3), Color(0.4,0.4,0.6), 0);
-  Light *holo_light2 = new Light(Point(-8, 8, 2), Color(0.4,0.4,0.6), 0);
-  Light *holo_light3 = new Light(Point(-6, 6, 3), Color(0.4,0.4,0.6), 0);
+  Light *holo_light0 = new Light(Point(-8, 8, 3.8), Color(0.3,0.3,0.4), 0);
+  Light *holo_light1 = new Light(Point(-10, 10, 2.5), Color(0.3,0.3,0.4), 0);
+  Light *holo_light2 = new Light(Point(-10, 6, 2.5), Color(0.3,0.3,0.4), 0);
+  Light *holo_light3 = new Light(Point(-6, 6, 2.5), Color(0.3,0.3,0.4), 0);
+  Light *holo_light4 = new Light(Point(-6, 10, 2.5), Color(0.3,0.3,0.4), 0);
   holo_light0->name_ = "hololight0";
   holo_light1->name_ = "hololight1";
   holo_light2->name_ = "hololight2";
   holo_light3->name_ = "hololight3";
+  holo_light4->name_ = "hololight4";
 
-  //CUTTING PLANE ACROSS SEVERAL OBJECTS
-  CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(.45,-.45,-.76), Point(-8,8,2));
-  ColorMap *cmap = new ColorMap("/usr/sci/data/Geometry/volumes/vol_cmap");
+  //CUTTING PLANE FOR THE HOLOGRAMS
+  CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,2));
 
 
   //ADD THE VISIBLE FEMALE DATASET
+  ColorMap *vcmap = new ColorMap("/usr/sci/data/Geometry/volumes/vfem");
   Material* vmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   vmat->my_lights.add(holo_light0);
   vmat->my_lights.add(holo_light1);
   vmat->my_lights.add(holo_light2);
   vmat->my_lights.add(holo_light3);
+  vmat->my_lights.add(holo_light4);
 
-  Material *vcutmat = new CutMaterial(vmat, cmap, cpdpy);
+  Material *vcutmat = new CutMaterial(vmat, vcmap, cpdpy);
   vcutmat->my_lights.add(holo_light0);
   vcutmat->my_lights.add(holo_light1);
   vcutmat->my_lights.add(holo_light2);
   vcutmat->my_lights.add(holo_light3);
+  vcutmat->my_lights.add(holo_light4);
 
-  CutVolumeDpy* vcvdpy = new CutVolumeDpy(1224.5, cmap);
+  CutVolumeDpy* vcvdpy = new CutVolumeDpy(1200.5, vcmap);
   
   HVolumeBrick16* slc0=new HVolumeBrick16(vcutmat, vcvdpy,
 					  "/usr/sci/data/Geometry/volumes/vfem16_0",
@@ -335,26 +341,30 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   vtrans->pre_rotate(3.14/2.0, Vector(0,1,0));
   vtrans->pre_translate(Vector(-8, 8, 2));
 
-  SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,2), Vector(0,0,1), 0.5);
+  SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,2), Vector(0,0,1), 0.1);
   vinst->name_ = "Spinning Visible Woman";
 
   CutGroup *vcut = new CutGroup(cpdpy);
   vcut->add(vinst);
 
+
   //ADD THE DAVE HEAD DATA SET
-  Material* hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes/dave");
+  Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   hmat->my_lights.add(holo_light0);
   hmat->my_lights.add(holo_light1);
   hmat->my_lights.add(holo_light2);
   hmat->my_lights.add(holo_light3);
+  hmat->my_lights.add(holo_light4);
 
-  Material *hcutmat = new CutMaterial(hmat, cmap, cpdpy);
+  Material *hcutmat = new CutMaterial(hmat, hcmap, cpdpy);
   hcutmat->my_lights.add(holo_light0);
   hcutmat->my_lights.add(holo_light1);
   hcutmat->my_lights.add(holo_light2);
   hcutmat->my_lights.add(holo_light3);
+  hcutmat->my_lights.add(holo_light4);
 
-  CutVolumeDpy* hcvdpy = new CutVolumeDpy(82.5, cmap);
+  CutVolumeDpy* hcvdpy = new CutVolumeDpy(82.5, hcmap);
 
   HVolumeBrick16* davehead=new HVolumeBrick16(hcutmat, hcvdpy,
 					      "/usr/sci/data/Geometry/volumes/dave",
@@ -373,12 +383,53 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   hcut->add(dinst);
   hcut->name_ = "Cutting Plane";
 
-  
-  SelectableGroup *sg = new SelectableGroup(10);
+
+  //ADD THE GEOLOGY DATA SET
+  ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes/Seismic/geo");
+  Material* gmat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  gmat->my_lights.add(holo_light0);
+  gmat->my_lights.add(holo_light1);
+  gmat->my_lights.add(holo_light2);
+  gmat->my_lights.add(holo_light3);
+  gmat->my_lights.add(holo_light4);
+
+  Material *gcutmat = new CutMaterial(gmat, gcmap, cpdpy);
+  gcutmat->my_lights.add(holo_light0);
+  gcutmat->my_lights.add(holo_light1);
+  gcutmat->my_lights.add(holo_light2);
+  gcutmat->my_lights.add(holo_light3);
+  gcutmat->my_lights.add(holo_light4);
+
+  CutVolumeDpy* gcvdpy = new CutVolumeDpy(16137.7, gcmap);
+
+  HVolumeBrick16* geology=new HVolumeBrick16(gcutmat, gcvdpy,
+					      "/usr/sci/data/Geometry/volumes/Seismic/stack-16high.raw",
+					      3, nworkers);
+  InstanceWrapperObject *giw = new InstanceWrapperObject(geology);
+
+  Transform *gtrans = new Transform();
+  gtrans->pre_translate(Vector(8, -8, -2)); 
+  gtrans->rotate(Vector(1,0,0), Vector(0,0,1));
+  gtrans->pre_translate(Vector(-8, 8, 2));
+
+  SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,2), Vector(0,0,1), 0.1);
+  ginst->name_ = "Spinning Geology";
+
+  CutGroup *gcut = new CutGroup(cpdpy);
+  gcut->name_ = "Geology Cutting Plane";
+  gcut->add(ginst);
+
+
+  //PUT THE VOLUMES INTO A SWITCHING GROUP  
+  SelectableGroup *sg = new SelectableGroup(60);
   sg->add(vcut);
   sg->add(hcut);
-  sg->name_ = "VolVis Switching Items";
+  sg->add(gcut);
+  sg->name_ = "VolVis Selection";
+
   g->add(sg);
+
+
 
 
   Color cdown(0.1, 0.1, 0.1);
@@ -404,23 +455,34 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->addObjectOfInterest( sg, true );
   scene->addObjectOfInterest( vinst, false );
   scene->addObjectOfInterest( dinst, false );
+  scene->addObjectOfInterest( ginst, false );
   scene->addObjectOfInterest( hcut, false );
 
   scene->add_per_matl_mood_light(holo_light0);
   scene->add_per_matl_mood_light(holo_light1);
   scene->add_per_matl_mood_light(holo_light2);
   scene->add_per_matl_mood_light(holo_light3);
+  scene->add_per_matl_mood_light(holo_light4);
 
   scene->attach_auxiliary_display(vcvdpy);
   scene->attach_auxiliary_display(hcvdpy);
+  scene->attach_auxiliary_display(gcvdpy);
   scene->attach_auxiliary_display(cpdpy);
+
+  vcvdpy->setName("Visible Female Volume");
+  hcvdpy->setName("Brain Volume");
+  gcvdpy->setName("Geological Volume");
+  cpdpy->setName("Cutting Plane");
 
   scene->attach_display(vcvdpy);
   (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
   scene->attach_display(hcvdpy);
   (new Thread(hcvdpy, "HEAD Volume Dpy"))->detach();
+  scene->attach_display(gcvdpy);
+  (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
   scene->attach_display(cpdpy);
   (new Thread(cpdpy, "CutPlane Dpy"))->detach();
+
 
 
   return scene;
