@@ -185,7 +185,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 	 // File exists, we do NOT need to emit metadata
 	 d_writeMeta=false;
 	 break;
-       } else if(s != ENOENT){
+       } else if(errno != ENOENT){
+	 cerr << "Cannot stat file: " << name.str() << ", errno=" << errno << '\n';
 	 throw ErrnoException("stat", errno);
        }
      }
@@ -212,8 +213,10 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      MPI_Barrier(d_myworld->getComm());
      // Remove the tmp files...
      int s = unlink(myname.str().c_str());
-     if(s != 0)
+     if(s != 0){
+       cerr << "Cannot unlink file: " << myname.str() << '\n';
        throw ErrnoException("unlink", errno);
+     }
      int count=d_writeMeta?1:0;
      int nunique;
      MPI_Reduce(&count, &nunique, 1, MPI_INT, MPI_SUM, 0,
@@ -1026,13 +1029,17 @@ void DataArchiver::output(const ProcessorGroup*,
   DOM_Element rootElem = doc.getDocumentElement();
   // Open the data file
   int fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
-  if(fd == -1)
+  if(fd == -1){
+    cerr << "Cannot open dataFile: " << dataFilename << '\n';
     throw ErrnoException("DataArchiver::output (open call)", errno);
+  }
 
   struct stat st;
   int s = fstat(fd, &st);
-  if(s == -1)
+  if(s == -1){
+    cerr << "Cannot fstat: " << dataFilename << '\n';
     throw ErrnoException("DataArchiver::output (stat call)", errno);
+  }
   ASSERTEQ(cur, st.st_size);
 
   for(int p=0;p<patches->size();p++){
