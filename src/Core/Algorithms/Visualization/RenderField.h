@@ -330,6 +330,75 @@ RenderField<Fld>::render_materials(const Fld *sfld,
       }
     }
     break;
+
+  case Field::EDGE:
+    {
+      typename Fld::mesh_type::Edge::iterator citer;  
+      mesh->begin(citer);  
+      typename Fld::mesh_type::Edge::iterator citer_end;  
+      mesh->end(citer_end);
+      
+      while (citer != citer_end) {
+	typename Fld::value_type tmp;
+	
+	if (!(sfld->value(tmp, *citer) && (to_double(tmp, val)))) { 
+	  def_color = true; 
+	}
+	
+	MaterialHandle mat;
+	if (color_handle_.get_rep() == 0) def_color = true;
+	if (def_color) mat = def_mat_handle_;
+	else mat = color_handle_->lookup(val);
+	
+	ind_mat_t::iterator iter = mats_->find(*citer);
+	if (iter != mats_->end()) {
+	  // we have stored a color before.
+	  MaterialHandle &existing = (*mats_)[*citer];
+	  //actually change the underlying object for all who point to it.
+	  *(existing.get_rep()) = *(mat.get_rep());
+	} else {
+	  mat.detach();
+	  (*mats_)[*citer] = mat;
+	}
+	++citer;  
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename Fld::mesh_type::Face::iterator citer;  
+      mesh->begin(citer);  
+      typename Fld::mesh_type::Face::iterator citer_end;  
+      mesh->end(citer_end);
+      
+      while (citer != citer_end) {
+	typename Fld::value_type tmp;
+	
+	if (!(sfld->value(tmp, *citer) && (to_double(tmp, val)))) { 
+	  def_color = true; 
+	}
+	
+	MaterialHandle mat;
+	if (color_handle_.get_rep() == 0) def_color = true;
+	if (def_color) mat = def_mat_handle_;
+	else mat = color_handle_->lookup(val);
+	
+	ind_mat_t::iterator iter = mats_->find(*citer);
+	if (iter != mats_->end()) {
+	  // we have stored a color before.
+	  MaterialHandle &existing = (*mats_)[*citer];
+	  //actually change the underlying object for all who point to it.
+	  *(existing.get_rep()) = *(mat.get_rep());
+	} else {
+	  mat.detach();
+	  (*mats_)[*citer] = mat;
+	}
+	++citer;  
+      }
+    }
+    break;
+
   case Field::CELL:
     {
       typename Fld::mesh_type::Cell::iterator citer;  
@@ -363,11 +432,10 @@ RenderField<Fld>::render_materials(const Fld *sfld,
       }
     }
     break;
-  case Field::EDGE:
-  case Field::FACE:
+
   case Field::NONE:
-    cerr << "implement me" << endl;
-    def_color = true;
+  default:
+    cerr << "Unknown data location." << endl;
     break;
   }
 }
@@ -447,12 +515,14 @@ RenderField<Fld>::render_nodes(const Fld *sfld,
     Vector vec(0,0,0);
     switch (sfld->data_at()) {
     case Field::NODE:
-      typename Fld::value_type tmp;
-      // color was selected in the render_materials pass.
-      if (node_display_type == "Disks") {
-	if (sfld->value(tmp, *niter) && (to_vector(tmp, vec))) {
-	}
-      } 
+      {
+	typename Fld::value_type tmp;
+	// color was selected in the render_materials pass.
+	if (node_display_type == "Disks") {
+	  if (sfld->value(tmp, *niter) && (to_vector(tmp, vec))) {
+	  }
+	} 
+      }
       break;
     case Field::EDGE:
     case Field::FACE:
