@@ -1051,7 +1051,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         desc << "Initialization_Mat_" << indx << "_patch_"<< patch->getID();
         printData(patch,   1, desc.str(), "rho_CC",      rho_CC[m]);
         printData(patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
-     // printData(patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[m]);
+        printData(patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[m]);
         printData(patch,   1, desc.str(), "Temp_CC",     Temp_CC[m]);
         printData(patch,   1, desc.str(), "vol_frac_CC", vol_frac_CC[m]);
         printVector(patch, 1, desc.str(), "vel_CC", 0,   vel_CC[m]);;
@@ -2260,6 +2260,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         mom_source[c].x( (-pressure_source * delY * delZ +
                            vol_frac[c] * viscous_source +
                            mass * gravity.x() * include_term) * delT );
+
         //__________________________________
         //    Y - M O M E N T U M
         pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
@@ -2319,6 +2320,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         }
       }
       } // if doMechOld
+
+      setBC(press_force, "set_if_sym_BC",patch, indx); 
+
       new_dw->put(mom_source,   lb->mom_source_CCLabel,  indx, patch);
       new_dw->put(press_force,  lb->press_force_CCLabel, indx, patch);
       new_dw->put(doMechOld,    lb->doMechLabel);
@@ -2877,6 +2881,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
       }
     }
+
     //---- P R I N T   D A T A ------ 
     if (switchDebugMomentumExchange_CC ) {
       for(int m = 0; m < numALLMatls; m++) {
@@ -2943,7 +2948,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     new_dw->allocate(qV_CC,      lb->qV_CCLabel, 0,patch,Ghost::AroundCells,1);
     new_dw->allocate(q_CC,       lb->q_CCLabel,  0,patch,Ghost::AroundCells,1);
     int numALLMatls = d_sharedState->getNumMatls();
-    
+
     for (int m = 0; m < numALLMatls; m++ ) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -3096,6 +3101,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
       } 
     }
+
     delete advector;
   }  // patch loop 
 }
