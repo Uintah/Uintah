@@ -217,7 +217,11 @@ bool	IComINetSocket::bind(IComAddress& address, IComSocketError &err)
 			{
 				err.errnr = errno;
 				err.error = getbinderror(err.errnr);				
+#ifdef _WIN32
+				::closesocket(socketfd_);
+#else
 				::close(socketfd_);
+#endif
 				hassocket_ = false;
 				socketfd_ = 0;
 				unlock();
@@ -246,7 +250,11 @@ bool	IComINetSocket::bind(IComAddress& address, IComSocketError &err)
 			{
 				err.errnr = errno;
 				err.error = getbinderror(err.errnr);
+#ifdef _WIN32
+				::closesocket(socketfd_);
+#else
 				::close(socketfd_);
+#endif
 				hassocket_ = false;
 				socketfd_ = 0;
 				unlock();
@@ -378,7 +386,11 @@ bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketErro
 				err.errnr = errno;
                 
 				err.error = getconnecterror(errno);
+#ifdef _WIN32
+				::closesocket(socketfd_);
+#else
 				::close(socketfd_);
+#endif
 				hassocket_ = false;
 				socketfd_ = 0;
 				unlock();
@@ -437,7 +449,11 @@ bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketErro
 				// Find out what went wrong in connecting to the server
 				err.errnr = errno;
 				err.error = getconnecterror(errno);
+#ifdef _WIN32
+				::closesocket(socketfd_);
+#else
 				::close(socketfd_);
+#endif
 				hassocket_ = false;
 				socketfd_ = 0;
 				unlock();
@@ -536,17 +552,25 @@ bool IComINetSocket::settimeout(int secs, int microsecs, IComSocketError &err)
 	microsecs_ = microsecs; 
 	if (hassocket_)
 	{
+#ifdef _WIN32
+                int t = secs * 1000 + microsecs/1000; // takes ms
+                int size = sizeof(int);
+                char* tvp = (char*) t;
+#else
 		struct timeval tv;
 		tv.tv_sec = secs;
 		tv.tv_usec = microsecs;
-		if ( ::setsockopt(socketfd_,SOL_SOCKET,SO_RCVTIMEO,&tv,sizeof(tv)) < 0)
+                int size = sizeof(tv);
+                struct timeval* tvp = &tv;
+#endif
+		if ( ::setsockopt(socketfd_,SOL_SOCKET,SO_RCVTIMEO,tvp,size) < 0)
 		{
 			err.errnr = errno;
 			err.error = getsockopterror(errno);
 			unlock();
 			return(false);
 		}
-		if ( ::setsockopt(socketfd_,SOL_SOCKET,SO_SNDTIMEO,&tv,sizeof(tv)) < 0);
+		if ( ::setsockopt(socketfd_,SOL_SOCKET,SO_SNDTIMEO,tvp,size) < 0);
 		{
 			err.errnr = errno;
 			err.error = getsockopterror(errno);
@@ -742,9 +766,14 @@ bool	IComINetSocket::poll(IComPacketHandle &packet, IComSocketError &err)
 
 	if (packet == 0) packet = scinew IComPacket;
 	
+#ifdef _WIN32
+        int flags = MSG_PEEK;
+#else
+        int flags = MSG_PEEK|MSG_DONTWAIT;
+#endif
 	// We just peek, non-blocking whether we can read a byte
 	// If so a package is coming and it is worthwile to wait for it
-	len = ::recv(socketfd_,&(buffer[0]),1,MSG_DONTWAIT|MSG_PEEK);
+	len = ::recv(socketfd_,&(buffer[0]),1,flags);
 	if ((len < 0)&&(errno != EAGAIN))
 	{
 

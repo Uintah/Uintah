@@ -43,9 +43,13 @@
 #include <Core/ICom/IComAddress.h>
 #include <Core/ICom/IComVirtualSocket.h>
 #include <Core/Thread/Mutex.h>
+#ifndef _WIN32
 #include <sys/socket.h>
-#include <netdb.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#else
+#include <winsock2.h>
+#endif
 
 
 namespace SCIRun {
