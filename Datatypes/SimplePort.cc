@@ -18,7 +18,6 @@
 
 #include <Datatypes/SimplePort.h>
 #include <Classlib/Assert.h>
-#include <Classlib/Timer.h>
 #include <Dataflow/Connection.h>
 #include <Dataflow/Module.h>
 #include <Malloc/Allocator.h>
@@ -41,9 +40,6 @@
 //#define DEBUG 1
 
 extern char** global_argv;
-
-//CPUTimer timer;
-WallClockTimer timer1;
 
 template<class T>
 SimpleIPort<T>::SimpleIPort(Module* module, const clString& portname,

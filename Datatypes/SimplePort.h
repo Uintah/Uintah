@@ -20,6 +20,7 @@
 
 #include <Dataflow/Port.h>
 #include <Multitask/ITC.h>
+#include <Classlib/Timer.h>
 
 template<class T>
 struct SimplePortComm {
@@ -59,6 +60,7 @@ template<class T>
 class SimpleOPort : public OPort {
     int sent_something;
     T handle;
+    WallClockTimer timer1;
 public:
     SimpleOPort(Module*, const clString& name, int protocol=SimpleIPort<T>::Atomic);
     virtual ~SimpleOPort();
