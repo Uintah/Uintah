@@ -66,15 +66,11 @@ GLAnimatedStreams::GLAnimatedStreams(const GLAnimatedStreams& copy)
 
 void GLAnimatedStreams::init()
 {
+  ResetStreams();
+  initColorMap();
+}
 
-  if( fx )
-    delete [] fx;
-  if( tail ) 
-    delete [] tail;
-  if( head )
-    delete [] head;
-  
-  fx = new Point[NUMSOLS];
+void GLAnimatedStreams::initColorMap() {
   BBox bb;
   bb  = vfh_->mesh()->get_bounding_box();
   maxwidth = std::max(bb.max().x() - bb.min().x(),
@@ -85,10 +81,60 @@ void GLAnimatedStreams::init()
   if(!_cmapH->IsScaled()){
     _cmapH->Scale(minspeed, maxspeed);
   }
+}
+
+void GLAnimatedStreams::SetColorMap( ColorMapHandle map) {
+  mutex.lock();
+  this->_cmapH = map;
+  cmapHasChanged = true;
+  initColorMap();
+  mutex.unlock();
+}
+
+void GLAnimatedStreams::SetVectorField( FieldHandle vfh ){
+  cerr << "GLAnimatedStreams::SetVectorField:start\n";
+  
+  mutex.lock();
+  this->vfh_ = vfh;
+  mutex.unlock();
+  init();
+}
+
+// tries to keep going with a new vector field.  If the new field is
+// incompatable with the old one then the effective call is to
+// SetVectorField().
+void GLAnimatedStreams::ChangeVectorField( FieldHandle new_vfh ) {
+  cerr << "GLAnimatedStreams::ChangeVectorField:start\n";
+  BBox old_bbox = vfh_->mesh()->get_bounding_box();
+  BBox new_bbox = new_vfh->mesh()->get_bounding_box();
+  if (old_bbox.min() == new_bbox.min() && old_bbox.max() == new_bbox.max()){
+    // then the bounding boxes are the same
+    mutex.lock();
+    vfh_ = new_vfh;
+    mutex.unlock();
+  } else {
+    // different bounding boxes - call SetVectorField
+    SetVectorField(new_vfh);
+  }
+}
+
+void GLAnimatedStreams::ResetStreams() {
+  mutex.lock();
+
+  if( fx )
+    delete [] fx;
+  if( tail ) 
+    delete [] tail;
+  if( head )
+    delete [] head;
+  
+  fx = new Point[NUMSOLS];
   tail = new streamerNode*[NUMSOLS];
   head = new streamerNode*[NUMSOLS];
 
+  mutex.unlock();
 }
+
 GLAnimatedStreams::~GLAnimatedStreams()
 {
   delete [] fx;
