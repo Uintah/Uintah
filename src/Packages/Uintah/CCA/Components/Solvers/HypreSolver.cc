@@ -75,6 +75,7 @@ public:
   int skip;
   int jump;
   int logging;
+  bool symmetric;
 };
 
 template<class Types>
@@ -130,18 +131,28 @@ public:
 
       // Create the stencil
       HYPRE_StructStencil stencil;
-      HYPRE_StructStencilCreate(3, 7, &stencil);
-      int offsets[7][3] = {{0,0,0},
-			   {1,0,0}, {-1,0,0},
-			   {0,1,0}, {0,-1,0},
-			   {0,0,1}, {0,0,-1}};
-      for(int i=0;i<7;i++)
-	HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+      if(params->symmetric){
+	HYPRE_StructStencilCreate(3, 4, &stencil);
+	int offsets[4][3] = {{0,0,0},
+			     {-1,0,0},
+			     {0,-1,0},
+			     {0,0,-1}};
+	for(int i=0;i<4;i++)
+	  HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+      } else {
+	HYPRE_StructStencilCreate(3, 7, &stencil);
+	int offsets[7][3] = {{0,0,0},
+			     {1,0,0}, {-1,0,0},
+			     {0,1,0}, {0,-1,0},
+			     {0,0,1}, {0,0,-1}};
+	for(int i=0;i<7;i++)
+	  HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+      }
 
       // Create the matrix
       HYPRE_StructMatrix HA;
       HYPRE_StructMatrixCreate(pg->getComm(), grid, stencil, &HA);
-      HYPRE_StructMatrixSetSymmetric(HA, 0);
+      HYPRE_StructMatrixSetSymmetric(HA, params->symmetric);
       int ghost[] = {1,1,1,1,1,1};
       HYPRE_StructMatrixSetNumGhost(HA, ghost);
       HYPRE_StructMatrixInitialize(HA);
@@ -160,16 +171,41 @@ public:
 	IntVector h = patch->getHighIndex(basis, ec);
 
 	// Feed it to Hypre
-	for(int z=l.z();z<h.z();z++){
-	  for(int y=l.y();y<h.y();y++){
-	    int stencil_indices[] = {0,1,2,3,4,5,6};
-	    const double* values = &A[IntVector(l.x(), y, z)].p;
-	    IntVector ll(l.x(), y, z);
-	    IntVector hh(h.x()-1, y, z);
-	    HYPRE_StructMatrixSetBoxValues(HA,
-					   ll.get_pointer(), hh.get_pointer(),
-					   7, stencil_indices,
-					   const_cast<double*>(values));
+	if(params->symmetric){
+	  double* values = new double[(h.x()-l.x())*4];	
+	  int stencil_indices[] = {0,1,2,3};
+	  for(int z=l.z();z<h.z();z++){
+	    for(int y=l.y();y<h.y();y++){
+	      const Stencil7* AA = &A[IntVector(l.x(), y, z)];
+	      double* p = values;
+	      for(int x=l.x();x<h.x();x++){
+		*p++ = AA->p;
+		*p++ = AA->w;
+		*p++ = AA->s;
+		*p++ = AA->b;
+		AA++;
+	      }
+	      IntVector ll(l.x(), y, z);
+	      IntVector hh(h.x()-1, y, z);
+	      HYPRE_StructMatrixSetBoxValues(HA,
+					     ll.get_pointer(), hh.get_pointer(),
+					     4, stencil_indices, values);
+
+	    }
+	  }
+	  delete[] values;
+	} else {
+	  int stencil_indices[] = {0,1,2,3,4,5,6};
+	  for(int z=l.z();z<h.z();z++){
+	    for(int y=l.y();y<h.y();y++){
+	      const double* values = &A[IntVector(l.x(), y, z)].p;
+	      IntVector ll(l.x(), y, z);
+	      IntVector hh(h.x()-1, y, z);
+	      HYPRE_StructMatrixSetBoxValues(HA,
+					     ll.get_pointer(), hh.get_pointer(),
+					     7, stencil_indices,
+					     const_cast<double*>(values));
+	    }
 	  }
 	}
       }
@@ -519,30 +555,6 @@ public:
 	}
       }
 
-#if 0
-      {
-	static int count=0;
-	count++;
-	ostringstream name;
-	name << "A.dat." << new_dw->getID() << "." << count;
-	HYPRE_StructMatrixPrint(name.str().c_str(), HA, 1);
-      }
-      {
-	static int count=0;
-	count++;
-	ostringstream name;
-	name << "B.dat." << new_dw->getID() << "." << count;
-	HYPRE_StructVectorPrint(name.str().c_str(), HB, 1);
-      }
-      {
-	static int count=0;
-	count++;
-	ostringstream name;
-	name << "X.dat." << new_dw->getID() << "." << count;
-	HYPRE_StructVectorPrint(name.str().c_str(), HX, 1);
-      }
-#endif
-
       HYPRE_StructMatrixDestroy(HA);
       HYPRE_StructVectorDestroy(HB);
       HYPRE_StructVectorDestroy(HX);
@@ -690,6 +702,7 @@ SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const strin
     p->jump = 0;
     p->logging = 0;
   }
+  p->symmetric=true;
   return p;
 }
 
