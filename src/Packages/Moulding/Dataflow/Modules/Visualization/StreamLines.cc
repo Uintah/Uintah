@@ -30,6 +30,8 @@ using namespace SCIRun;
 using std::cerr;
 using std::endl;
 
+  //template class GenericInterpolate<Vector>;
+
 // LUTs for the RK-fehlberg algorithm 
 double a[]   ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
 double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
@@ -54,17 +56,17 @@ public:
 private:
   // data members
 
-  FieldIPort                 *vfport_;
-  FieldIPort                 *sfport_;
-  FieldOPort                 *oport_;
+  FieldIPort                    *vfport_;
+  FieldIPort                    *sfport_;
+  FieldOPort                    *oport_;
 
-  FieldHandle                vfhandle_;
-  FieldHandle                sfhandle_;
-  FieldHandle                ohandle_;
+  FieldHandle                   vfhandle_;
+  FieldHandle                   sfhandle_;
+  FieldHandle                   ohandle_;
 
-  Field                      *vf_;
+  Field                         *vf_;
 
-  GenericInterpolate<Vector> *interp_;
+  GenericInterpolate<Vector>    *interp_;
 
   // member functions
 
@@ -84,13 +86,13 @@ StreamLines::StreamLines(const clString& id)
   : Module("StreamLines", id, Source)
   //, "Visualization", "Moulding")
 {
-  vfport_ = scinew FieldIPort(this, "Flow field", FieldIPort::Atomic);
+  vfport_ = scinew FieldIPort(this, "FlowField", FieldIPort::Atomic);
   add_iport(vfport_);
 
-  sfport_ = scinew FieldIPort(this, "Seed field", FieldIPort::Atomic);
+  sfport_ = scinew FieldIPort(this, "SeedField", FieldIPort::Atomic);
   add_iport(sfport_);
 
-  oport_ = scinew FieldOPort(this, "Stream lines", FieldIPort::Atomic);
+  oport_ = scinew FieldOPort(this, "StreamLines", FieldIPort::Atomic);
   add_oport(oport_);
 
   vf_ = 0;
@@ -107,22 +109,21 @@ StreamLines::ComputeRKFTerms(Array1<Vector>& v /* storage for terms */,
 {
   int check = 0;
 
-#if 0
-  check |= interp_(*vf_,p,v[0]);
-  check |= interp_(*vf_,p+v[0]*d[1][0],v[1]);
-  check |= interp_(*vf_,p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
-  check |= interp_(*vf_,p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],v[3]);
-  check |= interp_(*vf_,p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
-		   v[3]*d[4][3],v[4]);
-  check |= interp_(*vf_,p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
-		   v[3]*d[5][3]+v[4]*d[5][4],v[5]);
-
+  check |= interp_->interpolate(p,v[0]);
+  check |= interp_->interpolate(p+v[0]*d[1][0],v[1]);
+  check |= interp_->interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
+  check |= interp_->interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],v[3]);
+  check |= interp_->interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
+				v[3]*d[4][3],v[4]);
+  check |= interp_->interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
+				v[3]*d[5][3]+v[4]*d[5][4],v[5]);
+  
   v[0]*=s;
   v[1]*=s;
   v[2]*=s;
   v[3]*=s;
   v[4]*=s;
-#endif
+
   return check;
 }
   
@@ -184,8 +185,7 @@ void StreamLines::execute()
 
   // we expect that the field is a vector field
   if (vf_->get_type_name(1) != "Vector") {
-    postMessage("StreamLines: ERROR: The input field is not a vector field."
-		"  Exiting.");
+    postMessage("StreamLines: ERROR: FlowField is not a Vector field");
     return;
   }
 
