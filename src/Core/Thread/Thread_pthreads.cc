@@ -772,18 +772,19 @@ Mutex::lock()
     oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
   }
 
-#if defined( __APPLE__ ) || defined ( _AIX )
   // Temporary hack:
-  // On OSX and AIX, this call may come before the constructor (for static vars) for some reason.
-  // To solve this problem we allocate priv_ and init it if the constructor was not called yet.
+  // On OSX and AIX, this call may come before the constructor (for
+  // static vars) for some reason.  To solve this problem we allocate
+  // priv_ and init it if the constructor was not called yet.
+  // Note:  This would appear to cause a deadlock or crash 
+  // if we lock on priv_ and then call the constructor to replace it.
   if ( !priv_ ) {
-    //fprintf(stderr, "Mutex:lock() - priv_ does not exits. reallocating\n");
     priv_=new Mutex_private;
     if(pthread_mutex_init(&priv_->mutex, NULL) != 0)
       throw ThreadError(std::string("pthread_mutex_init: ")
 			+strerror(errno));		
   }
-#endif
+
   int status = pthread_mutex_lock(&priv_->mutex);
   if(status != 0){
     fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
