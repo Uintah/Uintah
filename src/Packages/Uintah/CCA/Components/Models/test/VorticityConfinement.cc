@@ -275,3 +275,10 @@ void VorticityConfinement::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
+//______________________________________________________________________
+//
+void VorticityConfinement::scheduleErrorEstimate(const LevelP&,
+                                           SchedulerP&)
+{
+  // Not implemented yet
+}

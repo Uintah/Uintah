@@ -427,3 +427,10 @@ void flameSheet_rxn::computeSpecificHeat(CCVariable<double>&,
 {
   //do nothing
 }
+//______________________________________________________________________
+//
+void flameSheet_rxn::scheduleErrorEstimate(const LevelP&,
+                                           SchedulerP&)
+{
+  // Not implemented yet
+}

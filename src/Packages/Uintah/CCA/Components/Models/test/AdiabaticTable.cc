@@ -814,3 +814,11 @@ void AdiabaticTable::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
+
+
+//______________________________________________________________________
+//
+void AdiabaticTable::scheduleErrorEstimate(const LevelP&,
+                                           SchedulerP&)
+{
+}
