@@ -79,6 +79,11 @@ public:
       virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls);
 
+      virtual void sched_computeTurbSubmodelPred(SchedulerP&, 
+						 const PatchSet* patches,
+						 const MaterialSet* matls);
+
+
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of Turbulence Model data
@@ -147,6 +152,12 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw);
+ 
+      void computeTurbSubmodelPred(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse* old_dw,
+				   DataWarehouse* new_dw);
       ///////////////////////////////////////////////////////////////////////
       // Actually Calculate the subgrid scale variance
       //    [in] 

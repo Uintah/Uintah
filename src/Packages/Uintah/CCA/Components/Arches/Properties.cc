@@ -777,6 +777,11 @@ Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, Ghost::None,
 		numGhostCells);
+  if (d_numMixStatVars > 0) {
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
+		numGhostCells);
+  }
+
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarPredLabel, Ghost::None,
 		  numGhostCells);
@@ -876,6 +881,14 @@ Properties::computePropsPred(const ProcessorGroup*,
       new_dw->get(scalar[ii], d_lab->d_scalarPredLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
 
+    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
+
+    if (d_numMixStatVars > 0) {
+      for (int ii = 0; ii < d_numMixStatVars; ii++)
+	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
+		    matlIndex, patch, Ghost::None, nofGhostCells);
+    }
+
 
     StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
     if (d_mixingModel->getNumRxnVars() > 0) {
@@ -919,6 +932,15 @@ Properties::computePropsPred(const ProcessorGroup*,
 
 	  }
 
+	  if (d_numMixStatVars > 0) {
+
+	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
+
+	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
+
+	    }
+
+	  }
 	  // after computing variance get that too, for the time being setting the 
 	  // value to zero
 	  //	  inStream.d_mixVarVariance[0] = 0.0;
