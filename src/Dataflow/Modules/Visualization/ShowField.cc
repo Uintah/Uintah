@@ -107,6 +107,7 @@ class ShowField : public Module
   //! Refinement resolution for cylinders and spheres
   GuiInt                   resolution_;
   int                      res_;
+  DynamicLoader            loader_;
   RenderFieldBase         *renderer_;
 
 public:
@@ -180,14 +181,13 @@ ShowField::execute()
 
     error(td->get_h_file_path().c_str());
 
-    DynamicLoader loader;
     // Do I have the algorithm already?
     DynamicAlgoHandle alg = 0;
     CompileInfo *ci = RenderFieldBase::get_compile_info(td);
-    if (! loader.get(ci->filename_, alg)) {
-      if (loader.compile_and_store(*ci)) {
+    if (! loader_.get(ci->filename_, alg)) {
+      if (loader_.compile_and_store(*ci)) {
 	// fetch the algorithm.
-	loader.get(ci->filename_, alg);
+	loader_.get(ci->filename_, alg);
       }
       else {
 	fld_gen_ = -1;
@@ -201,25 +201,12 @@ ShowField::execute()
       error("ShowField could not get algorithm!!");
       return;
     }
-    node_display_type_.reset();
-    string ndt = node_display_type_.get();
-    node_scale_.reset();
-    double ns = node_scale_.get();
-    edge_display_type_.reset();
-    string edt = edge_display_type_.get();
-    edge_scale_.reset();
-    double es = edge_scale_.get();
-
-    renderer_->render(fld_handle, nodes_dirty_, edges_dirty_, faces_dirty_, 
-		      def_mat_handle_, use_def_color_, color_handle_,
-		      ndt, edt, ns, es, res_);
-
     fld_gen_ = fld_handle->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
     MeshBaseHandle mh = fld_handle->mesh();
-    mh->finish_mesh();
+    mh->finish_mesh();  
   }
-
+  
   color_->get(color_handle_);
   if(!color_handle_.get_rep()){
     warning("No ColorMap in port 3 ColorMap.");
@@ -245,6 +232,19 @@ ShowField::execute()
 
   //dispatch1(fld_handle, render);
   //  if (disp_error) return; // dispatch already printed an error message. 
+
+  node_display_type_.reset();
+  string ndt = node_display_type_.get();
+  node_scale_.reset();
+  double ns = node_scale_.get();
+  edge_display_type_.reset();
+  string edt = edge_display_type_.get();
+  edge_scale_.reset();
+  double es = edge_scale_.get();
+
+  renderer_->render(fld_handle, nodes_dirty_, edges_dirty_, faces_dirty_, 
+		    def_mat_handle_, use_def_color_, color_handle_,
+		    ndt, edt, ns, es, res_);
 
   // cleanup...
   if (nodes_dirty_) {
