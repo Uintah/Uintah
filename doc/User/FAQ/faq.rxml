@@ -155,7 +155,8 @@ EndSection
       </question>
       <answer>
 	<para>
-	  Look in <filename>/etc/X11/XFree86Config</filename> for a
+	  Look in <filename>/etc/X11/XF86Config</filename> or
+          <filename>/etc/X11/xorg.conf</filename> for a
 	  section named <quote>Device</quote>. The accelerated ATI
 	  driver is called <quote>fglrx</quote>:
 	  <literallayout class="monospaced">
@@ -163,6 +164,7 @@ Section "Device"
     &#x22EE;
     Driver      "fglrx"  &lt;== accelerated
     Driver      "radeon" &lt;== non-accelerated
+    Driver      "ati"    &lt;== non-accelerated
 	  </literallayout>
 	  The Accelerated Nvidia driver is called <quote>nvidia</quote>
 	  <literallayout class="monospaced">
