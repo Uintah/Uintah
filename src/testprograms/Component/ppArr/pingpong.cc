@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 	  std::cerr << "setCallerDistribution completed\n";
 
 
-	  SSIDL::array1<std::string> arr(2);
+	  SSIDL::array1<std::string> arr;
 	  int j=pp->pingpong(arr);
 	  for(int i=0; i<arr.size(); i++){
 	    cerr<<"arr["<<i<<"]="<<arr[i]<<endl;
