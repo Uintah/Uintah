@@ -36,13 +36,13 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Input Matrix</name>
+	<name>Transform Matrix</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>Output Field</name>
+	<name>Transformed Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
