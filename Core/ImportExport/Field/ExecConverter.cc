@@ -44,6 +44,7 @@
 
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Util/sci_system.h>
 #include <iostream>
 #include <fstream>
@@ -63,14 +64,15 @@ Exec_setup_command(const char *cfilename, const string &precommand,
   
   // Base filename.
   string::size_type loc = filename.find_last_of("/");
-  const string basefilename = filename.substr(loc);
+  const string basefilename =
+    (loc==string::npos)?filename:filename.substr(loc+1);
 
   // Base filename with first extension removed.
   loc = basefilename.find_last_of(".");
   const string basenoext = basefilename.substr(0, loc);
 
   // Temporary filename.
-  tmpfilename = "/tmp/" + basenoext + "-" + "123456" + ".fld";
+  tmpfilename = "/tmp/" + basenoext + "-" + to_string(getpid()) + ".fld";
 
   // Filename with first extension removed.
   loc = filename.find_last_of(".");
@@ -451,18 +453,35 @@ TextStructQuadSurfField_plugin("TextStructQuadSurfField",
 			       TextStructQuadSurfField_writer);
 
 
+// VTK Trisurf files.
+
+static FieldHandle
+VTKtoTriSurfFieldswap_reader(ProgressReporter *pr, const char *filename)
+{
+  const string command =
+    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    "VTKtoTriSurfField %f %t -swap_endian -bin_out";
+  return Exec_reader(pr, filename, command);
+}
+
+static FieldIEPlugin
+VTKtoTriSurfFieldswap_plugin("VTKtoTriSurfField-swap",
+			     ".vtk", "",
+			     VTKtoTriSurfFieldswap_reader,
+			     NULL);
+
 
 static FieldHandle
 VTKtoTriSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "VTKtoTriSurfField %f %t -bin_out";
+    "VTKtoTriSurfField %f %t -_endian -bin_out";
   return Exec_reader(pr, filename, command);
 }
 
 static FieldIEPlugin
 VTKtoTriSurfField_plugin("VTKtoTriSurfField",
-			 "", "",
-			 VTKtoTriSurfField_reader,
-			 NULL);
+			     ".vtk", "",
+			     VTKtoTriSurfField_reader,
+			     NULL);
