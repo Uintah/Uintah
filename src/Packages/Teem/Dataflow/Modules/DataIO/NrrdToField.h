@@ -175,33 +175,32 @@ execute(MeshHandle& mHandle,
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   typename MESH::Node::iterator inodeItr;
-
+  
   imesh->begin( inodeItr );
-
+  
   register int i, j, k;
-  int rank = pointsH->nrrd->axis[1].size;
-
-    PNTYPE *ptr = (PNTYPE *)(pointsH->nrrd->data);
-    
-    for( k=0; k<kdim; k++ ) {
-      for( j=0; j<jdim; j++ ) {
-	for( i=0; i<idim; i++ ) {
-	  
-	  int index = (i * jdim + j) * kdim + k;
-
-	  float xVal = 0, yVal = 0, zVal = 0;
-
-	  // Mesh
-	  if( rank >= 1 ) xVal = ptr[index*rank + 0];
-	  if( rank >= 2 ) yVal = ptr[index*rank + 1];
-	  if( rank >= 3 ) zVal = ptr[index*rank + 2];
+  int rank = pointsH->nrrd->axis[0].size;
+  
+  PNTYPE *ptr = (PNTYPE *)(pointsH->nrrd->data);
+  for( i=0; i<idim; i++ ) {
+    for( j=0; j<jdim; j++ ) {
+      for( k=0; k<kdim; k++ ) {
 	
-	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
-
-	  ++inodeItr;
-	}
+	int index = i + idim*(j + jdim*k);
+	
+	float xVal = 0, yVal = 0, zVal = 0;
+	
+	// Mesh
+	if( rank >= 1 ) xVal = ptr[index*rank + 0];
+	if( rank >= 2 ) yVal = ptr[index*rank + 1];
+	if( rank >= 3 ) zVal = ptr[index*rank + 2];
+	
+	imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
+	
+	++inodeItr;
       }
     }
+  }
 }
 
 
@@ -213,7 +212,7 @@ public:
   virtual void execute(MeshHandle& mHandle,
 		       NrrdDataHandle pointsH,
 		       NrrdDataHandle connectH,
-		       unsigned int connectivity) = 0;
+		       unsigned int connectivity, int which) = 0;
 };
 
 template< class MESH, class PNTYPE, class CNTYPE >
@@ -224,7 +223,7 @@ public:
   virtual void execute(MeshHandle& mHandle,
 		       NrrdDataHandle pointsH,
 		       NrrdDataHandle connectH,
-		       unsigned int connectivity);
+		       unsigned int connectivity, int which);
 };
 
 
@@ -234,7 +233,7 @@ UnstructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle pointsH,
 	NrrdDataHandle connectH,
-	unsigned int connectivity)
+	unsigned int connectivity, int which)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   typename MESH::Node::iterator inodeItr;
@@ -261,16 +260,33 @@ execute(MeshHandle& mHandle,
 
     CNTYPE *cPtr = cPtr = (CNTYPE *)(connectH->nrrd->data);
 
-    int nelements = connectH->nrrd->axis[0].size;
+    int nelements = 0;
+    if (which == 0) {
+      // p x n
+      nelements = connectH->nrrd->axis[1].size;
+    } else {
+      // n x p
+      nelements = connectH->nrrd->axis[0].size;
+    }
 
     typename MESH::Node::array_type array(connectivity);
 
-    for( int i=0; i<nelements; i++ ) {
-      for( unsigned int j=0; j<connectivity; j++ ) {
-	array[j] = (int) cPtr[i*connectivity+j];
+    if (which == 0) {
+      // p x n
+      for( int i=0; i<nelements; i++ ) {
+	for( unsigned int j=0; j<connectivity; j++ ) {
+	  array[j] = (int) cPtr[j*connectivity+i];
+	}
+	imesh->add_elem( array );
       }
-
-      imesh->add_elem( array );
+    } else {
+      // n x p
+      for( int i=0; i<nelements; i++ ) {
+	for( unsigned int j=0; j<connectivity; j++ ) {
+	  array[j] = (int) cPtr[i*connectivity+j];
+	}
+	imesh->add_elem( array );
+      }
     }
   }
 }
@@ -344,9 +360,10 @@ execute(MeshHandle& mHandle,
     
     register int i, j, k, index;
     
-    for( k=0; k<kdim; k++ ) {
+    for( i=0; i<idim; i++ ) {
       for( j=0; j<jdim; j++ ) {
-	for( i=0; i<idim; i++ ) {
+	for( k=0; k<kdim; k++ ) {
+
 	  if (permute)
 	    index = (k * jdim + j) * idim + i;
 	  else
@@ -461,9 +478,9 @@ execute(MeshHandle& mHandle,
 				  
     NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
 
-    for( k=0; k<kdim; k++ ) {
+    for( i=0; i<idim; i++ ) {
       for( j=0; j<jdim; j++ ) {
-	for( i=0; i<idim; i++ ) {
+	for( k=0; k<kdim; k++ ) {
 	  if( permute )
 	    index = (k * jdim + j) * idim + i;
 	  else 
@@ -564,7 +581,7 @@ execute(MeshHandle& mHandle,
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
-
+  
   if (dataH != 0 ) {
     // determine if nrrd is unknown, node or cell centered
     int data_center = nrrdCenterUnknown;
@@ -576,29 +593,28 @@ execute(MeshHandle& mHandle,
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
     else
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
-
+    
     typename FIELD::mesh_type::Node::iterator iter, end;
-
+    
     imesh->begin( iter );
     imesh->end( end );
-
+    
     register int i, j, k, index;
-      
+    
     NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
-      
-    for( k=0; k<kdim; k++ ) {
+    for( i=0; i<idim; i++ ) {
       for( j=0; j<jdim; j++ ) {
-	for( i=0; i<idim; i++ ) {
+	for( k=0; k<kdim; k++ ) {
 	  if( permute )
 	    index = (k * jdim + j) * idim + i;
 	  else 
 	    index = (i * jdim + j) * kdim + k;
 	  
 	  Tensor tmp;
-
+	  
 	  if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 6) {
 	    // 3D symmetric tensor
-
+	    
 	    if (build_eigens == 1) {
 	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
 	      tenEigensolve(eval, evec, ptr);
@@ -612,7 +628,7 @@ execute(MeshHandle& mHandle,
 	      Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
 	      Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
 	      Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
-
+	      
 	      tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
 	      tmp.mat_[0][0] = (*ptr); 
 	      ++ptr;
@@ -631,12 +647,6 @@ execute(MeshHandle& mHandle,
 	      ++ptr;
 	      ifield->set_value( tmp, *iter);
 	    } else {
-// 	      tmp.mat_[0][0] = ptr[index*3];
-// 	      tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
-// 	      tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
-// 	      tmp.mat_[1][1] = ptr[index*3+3];
-// 	      tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
-// 	      tmp.mat_[2][2] = ptr[index*3+5];
 	      tmp.mat_[0][0] = (*ptr); 
 	      ++ptr;
 	      tmp.mat_[0][1] = (*ptr); 
@@ -656,7 +666,7 @@ execute(MeshHandle& mHandle,
 	    }
 	  } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 7) {
 	    // 3D symmetric tensor with mask
-
+	    
 	    if (build_eigens == 1) {
 	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
 	      tenEigensolve(eval, evec, ptr);
@@ -669,7 +679,7 @@ execute(MeshHandle& mHandle,
 	      Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
 	      Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
 	      Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
-
+	      
 	      tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
 	      ++ptr; // skip first value (confidence)
 	      tmp.mat_[0][0] = (*ptr); 
@@ -696,13 +706,6 @@ execute(MeshHandle& mHandle,
 		    tmp.mat_[x][y]=0;
 		
 	      } else {
-// 		// skip mask
-// 		tmp.mat_[0][0] = ptr[index*3+1];
-// 		tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
-// 		tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
-// 		tmp.mat_[1][1] = ptr[index*3+4];
-// 		tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
-// 		tmp.mat_[2][2] = ptr[index*3+6];
 		++ptr; // skip first value (confidence)
 		tmp.mat_[0][0] = (*ptr); 
 		++ptr;
@@ -724,7 +727,7 @@ execute(MeshHandle& mHandle,
 	    }
 	  } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) {
 	    // not symmetric, do a straight across copy
-
+	    
 	    if (build_eigens == 1) {
 	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
 	      tenEigensolve(eval, evec, ptr);
@@ -738,7 +741,7 @@ execute(MeshHandle& mHandle,
 	      Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
 	      Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
 	      Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
-
+	      
 	      tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
 	      tmp.mat_[0][0] = (*ptr); 
 	      ++ptr;
@@ -760,15 +763,6 @@ execute(MeshHandle& mHandle,
 	      ++ptr;
 	      ifield->set_value( tmp, *iter);
 	    } else {
-// 	      tmp.mat_[0][0] = ptr[index*3];
-// 	      tmp.mat_[0][1] = ptr[index*3+1];
-// 	      tmp.mat_[0][2] = ptr[index*3+2];
-// 	      tmp.mat_[1][0] = ptr[index*3+3];
-// 	      tmp.mat_[1][1] = ptr[index*3+4];
-// 	      tmp.mat_[1][2] = ptr[index*3+4];
-// 	      tmp.mat_[2][0] = ptr[index*3+5];
-// 	      tmp.mat_[2][1] = ptr[index*3+6];
-// 	      tmp.mat_[2][2] = ptr[index*3+7];
 	      tmp.mat_[0][0] = (*ptr);
 	      ++ptr;
 	      tmp.mat_[0][1] = (*ptr);
@@ -790,7 +784,7 @@ execute(MeshHandle& mHandle,
 	      ifield->set_value( tmp, *iter);
 	    }
 	  } else {
-	    return FieldHandle( ifield );
+	    return 0;
 	  }
 	  ++iter;
 	}
@@ -840,7 +834,6 @@ execute(MeshHandle& mHandle,
 	  float eval[3], evec[9], eval_scl[3], evec_scl[9];
 	  tenEigensolve(eval, evec, ptr);
 	  
-	  //float scl = ptr[0] > 0.5;
 	  float scl = 1.0;
 	  for (int cc=0; cc<3; cc++) {
 	    ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
@@ -868,17 +861,6 @@ execute(MeshHandle& mHandle,
 	tmp.mat_[2][2] = (*ptr); 
 	++ptr;
 	ifield->set_value( tmp, *iter);
-	//} else {
-	// 	  tmp.mat_[0][0] = ptr[index*3];
-	// 	  tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
-	// 	  tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
-	// 	  tmp.mat_[1][1] = ptr[index*3+3];
-	// 	  tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
-	// 	  tmp.mat_[2][2] = ptr[index*3+5];
-	// 	  ifield->set_value( tmp, *iter);
-	
-	//ifield->set_value( tmp, *iter);
-	//}
       } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 7) {
 	// 3D symmetric tensor with mask
 	
@@ -923,12 +905,6 @@ execute(MeshHandle& mHandle,
 	    
 	  } else {
 	    // skip mask
-// 	    tmp.mat_[0][0] = ptr[index*3+1];
-// 	    tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
-// 	    tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
-// 	    tmp.mat_[1][1] = ptr[index*3+4];
-// 	    tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
-// 	    tmp.mat_[2][2] = ptr[index*3+6];
 	    ++ptr; // skip mask
 	    tmp.mat_[0][0] = (*ptr); 
 	    ++ptr;
@@ -986,15 +962,6 @@ execute(MeshHandle& mHandle,
 	  ++ptr;
 	  ifield->set_value( tmp, *iter);
 	} else {
-// 	  tmp.mat_[0][0] = ptr[index*3];
-// 	  tmp.mat_[0][1] = ptr[index*3+1];
-// 	  tmp.mat_[0][2] = ptr[index*3+2];
-// 	  tmp.mat_[1][0] = ptr[index*3+3];
-// 	  tmp.mat_[1][1] = ptr[index*3+4];
-// 	  tmp.mat_[1][2] = ptr[index*3+4];
-// 	  tmp.mat_[2][0] = ptr[index*3+5];
-// 	  tmp.mat_[2][1] = ptr[index*3+6];
-// 	  tmp.mat_[2][2] = ptr[index*3+7];
 	  tmp.mat_[0][0] = (*ptr); 
 	  ++ptr;
 	  tmp.mat_[0][1] = (*ptr); 
