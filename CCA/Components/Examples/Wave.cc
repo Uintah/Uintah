@@ -109,37 +109,47 @@ void Wave::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
+Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int step, int nsteps)
 {
   if(integration == "Euler"){
     Task* task = scinew Task("timeAdvance",
-                             this, &Wave::timeAdvanceEuler);
+                             this, &Wave::timeAdvanceEuler, step, nsteps);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
     task->requires(Task::OldDW, pi_label, Ghost::None, 0);
+    if(level->getIndex()>0){        // REFINE 
+      addRefineDependencies(task, phi_label, step, nsteps);
+    }
     //task->requires(Task::OldDW, sharedState_->get_delt_label());
     task->computes(phi_label);
     task->computes(pi_label);
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   } else if(integration == "RK4"){
     Task* task = scinew Task("setupRK4",
-                             this, &Wave::setupRK4);
+                             this, &Wave::setupRK4, step, nsteps);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
     task->requires(Task::OldDW, pi_label, Ghost::None, 0);
+    if(level->getIndex()>0){        // REFINE 
+      addRefineDependencies(task, phi_label, step, nsteps);
+    }
     task->computes(phi_label);
     task->computes(pi_label);
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
     for(int i=0;i<4;i++){
-      Step* step = &rk4steps[i];
+      Step* s = &rk4steps[i];
       Task* task = scinew Task("timeAdvance",
-                               this, &Wave::timeAdvanceRK4, step);
+                               this, &Wave::timeAdvanceRK4, s, step, nsteps);
       //task->requires(Task::OldDW, sharedState_->get_delt_label());
       task->requires(Task::OldDW, phi_label, Ghost::None);
       task->requires(Task::OldDW, pi_label, Ghost::None);
-      task->requires(step->cur_dw, step->curphi_label, Ghost::AroundCells, 1);
-      task->requires(step->cur_dw, step->curpi_label, Ghost::None, 0);
-      task->computes(step->newphi_label);
-      task->computes(step->newpi_label);
+      task->requires(s->cur_dw, s->curphi_label, Ghost::AroundCells, 1);
+      task->requires(s->cur_dw, s->curpi_label, Ghost::None, 0);
+
+      if(level->getIndex()>0){        // REFINE 
+        addRefineDependencies(task, s->curphi_label, (s->cur_dw == Task::OldDW?step:step+1), nsteps);
+      }
+      task->computes(s->newphi_label);
+      task->computes(s->newpi_label);
       task->modifies(phi_label);
       task->modifies(pi_label);
       sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -168,7 +178,7 @@ void Wave::initialize(const ProcessorGroup*,
       if(initial_condition == "Chombo"){
         // Initial conditions to  mimic AMRWaveEqn from Chombo
         // Only matches when the domain is [-.5,-.5,-.5] to [.5,.5,.5]
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        for(CellIterator iter(phi.getLowIndex(), phi.getHighIndex()); !iter.done(); iter++){
           Point pos = patch->nodePosition(*iter);
           double dist = (pos.asVector().length2());
           phi[*iter] = exp(-dist/(r0*r0))/(r0*r0*r0);
@@ -197,8 +207,17 @@ void Wave::computeStableTimestep(const ProcessorGroup*,
 void Wave::timeAdvanceEuler(const ProcessorGroup*,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw)
+			DataWarehouse* old_dw, DataWarehouse* new_dw, int step, int nsteps)
 {
+  const Level* level = getLevel(patches);
+  const Level* coarseLevel = 0;
+  DataWarehouse* codw = 0;
+  DataWarehouse* cndw = 0;
+  if (level->getIndex() > 0) {
+    coarseLevel = level->getCoarserLevel().get_rep();
+    codw = old_dw->getOtherDataWarehouse(Task::CoarseOldDW);
+    cndw = old_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  }
   //Loop for all patches on this processor
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -206,16 +225,22 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
       int matl = matls->get(m);
 
       // cout << " Doing Wave::timeAdvanceEuler on patch " << patch->getID() << ", matl " << matl << endl;
-      const Level* level = getLevel(patches);
       delt_vartype dt;
       old_dw->get(dt, sharedState_->get_delt_label(), level);
 
       constCCVariable<double> oldPhi;
       old_dw->get(oldPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
+
+      if(level->getIndex() > 0){        // REFINE
+        refineFaces(patch, level, coarseLevel, oldPhi.castOffConst(),
+                    phi_label, step, nsteps, matl, codw, cndw);
+      }                      
+
       constCCVariable<double> oldPi;
       old_dw->get(oldPi, pi_label, matl, patch, Ghost::None, 0);
 
       CCVariable<double> newPhi;
+      //new_dw->allocateAndPut(newPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
       new_dw->allocateAndPut(newPhi, phi_label, matl, patch);
 
       CCVariable<double> newPi;
@@ -236,22 +261,16 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
         const IntVector& c = *iter;
 
         // Compute curl
-        double curlPhi = sumdx2 * oldPhi[c]
-          + (oldPhi[c+IntVector(1,0,0)] + oldPhi[c-IntVector(1,0,0)]) * inv_dx2.x()
-          + (oldPhi[c+IntVector(0,1,0)] + oldPhi[c-IntVector(0,1,0)]) * inv_dx2.y()
-          + (oldPhi[c+IntVector(0,0,1)] + oldPhi[c-IntVector(0,0,1)]) * inv_dx2.z();
+        double curlPhi = curl(oldPhi, c, sumdx2, inv_dx2);
 
         // Integrate
         newPhi[c] = oldPhi[c] + oldPi[c] * delt;
         newPi[c] = oldPi[c] + curlPhi * delt;
 
-        //        cerr << c << ", phi=" << newPhi[c] << ", pi=" << newPi[c] << '\n';
         sumPhi += newPhi[c];
         if(newPhi[c] > maxphi)
           maxphi = newPhi[c];
       }
-      //      cerr << "sumPhi=" << sumPhi << '\n';
-      //      cerr << "maxPhi=" << maxphi << '\n';
     }
   }
 }
@@ -259,8 +278,18 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
 void Wave::setupRK4(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
-                    DataWarehouse* old_dw, DataWarehouse* new_dw)
+                    DataWarehouse* old_dw, DataWarehouse* new_dw, int step, int nsteps)
 {
+  const Level* level = getLevel(patches);
+  const Level* coarseLevel = 0;
+  DataWarehouse* codw = 0;
+  DataWarehouse* cndw = 0;
+  if (level->getIndex() > 0) {
+    coarseLevel = level->getCoarserLevel().get_rep();
+    codw = old_dw->getOtherDataWarehouse(Task::CoarseOldDW);
+    cndw = old_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  }
+
   //Loop for all patches on this processor
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -269,6 +298,12 @@ void Wave::setupRK4(const ProcessorGroup*,
 
       constCCVariable<double> oldPhi;
       old_dw->get(oldPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
+
+      if(level->getIndex() > 0){        // REFINE
+        refineFaces(patch, level, coarseLevel, oldPhi.castOffConst(),
+                    phi_label, step, nsteps, matl, codw, cndw);
+      }                      
+
       constCCVariable<double> oldPi;
       old_dw->get(oldPi, pi_label, matl, patch, Ghost::None, 0);
 
@@ -289,8 +324,18 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw, DataWarehouse* new_dw,
-                          Wave::Step* step)
+                          Wave::Step* s, int step, int nsteps)
 {
+  const Level* level = getLevel(patches);
+  const Level* coarseLevel = 0;
+  DataWarehouse* codw = 0;
+  DataWarehouse* cndw = 0;
+  if (level->getIndex() > 0) {
+    coarseLevel = level->getCoarserLevel().get_rep();
+    codw = old_dw->getOtherDataWarehouse(Task::CoarseOldDW);
+    cndw = old_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  }
+
   //Loop for all patches on this processor
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -298,23 +343,35 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
       int matl = matls->get(m);
 
       //cout << " Doing Wave::timeAdvanceRK4 on patch " << patch->getID() << ", matl " << matl << endl;
-      const Level* level = getLevel(patches);
       delt_vartype dt;
       old_dw->get(dt, sharedState_->get_delt_label(), level);
 
-      DataWarehouse* cur_dw = new_dw->getOtherDataWarehouse(step->cur_dw);
+      DataWarehouse* cur_dw = new_dw->getOtherDataWarehouse(s->cur_dw);
       constCCVariable<double> curPhi;
-      cur_dw->get(curPhi, step->curphi_label, matl, patch, Ghost::AroundCells, 1);
+      cur_dw->get(curPhi, s->curphi_label, matl, patch, Ghost::AroundCells, 1);
+
+      if(level->getIndex() > 0){        // REFINE
+        refineFaces(patch, level, coarseLevel, curPhi.castOffConst(),
+                    phi_label, s->cur_dw == Task::OldDW ? step: step+1, nsteps, matl, codw, cndw);
+      }                      
+
+
       constCCVariable<double> curPi;
-      cur_dw->get(curPi, step->curpi_label, matl, patch, Ghost::None, 0);
+      cur_dw->get(curPi, s->curpi_label, matl, patch, Ghost::None, 0);
 
       CCVariable<double> newPhi;
-      new_dw->allocateAndPut(newPhi, step->newphi_label, matl, patch);
+      new_dw->allocateAndPut(newPhi, s->newphi_label, matl, patch);
       CCVariable<double> newPi;
-      new_dw->allocateAndPut(newPi, step->newpi_label, matl, patch);
+      new_dw->allocateAndPut(newPi, s->newpi_label, matl, patch);
 
       constCCVariable<double> oldPhi;
       old_dw->get(oldPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
+
+      if(level->getIndex() > 0){        // REFINE
+        refineFaces(patch, level, coarseLevel, oldPhi.castOffConst(),
+                    phi_label, step, nsteps, matl, codw, cndw);
+      }                      
+
       constCCVariable<double> oldPi;
       old_dw->get(oldPi, pi_label, matl, patch, Ghost::None, 0);
 
@@ -332,17 +389,13 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
       Vector dx = patch->dCell();
       double sumdx2 = -2 / (dx.x()*dx.x()) -2/(dx.y()*dx.y()) - 2/(dx.z()*dx.z());
       Vector inv_dx2(1./(dx.x()*dx.x()), 1./(dx.y()*dx.y()), 1./(dx.z()*dx.z()));
-      double dtstep = dt * step->stepweight;
-      double dttotal = dt * step->totalweight;
-      //cerr << "STEP: " << step-&rk4steps[0] << '\n';
+      double dtstep = dt * s->stepweight;
+      double dttotal = dt * s->totalweight;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         const IntVector& c = *iter;
 
         // Compute curl
-        double curlPhi = sumdx2 * curPhi[c]
-          + (curPhi[c+IntVector(1,0,0)] + curPhi[c-IntVector(1,0,0)]) * inv_dx2.x()
-          + (curPhi[c+IntVector(0,1,0)] + curPhi[c-IntVector(0,1,0)]) * inv_dx2.y()
-          + (curPhi[c+IntVector(0,0,1)] + curPhi[c-IntVector(0,0,1)]) * inv_dx2.z();
+        double curlPhi = curl(curPhi, c, sumdx2, inv_dx2);
 
         // Integrate
         newPhi[c] = oldPhi[c] + curPi[c] * dtstep;

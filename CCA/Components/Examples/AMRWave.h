@@ -56,6 +56,12 @@ WARNING
                                               SchedulerP& sched);
     virtual void scheduleTimeAdvance( const LevelP& level, 
 				      SchedulerP&, int step, int nsteps );
+  protected:
+    virtual void addRefineDependencies( Task* /*task*/, const VarLabel* /*label*/,
+                                        int /*step*/, int /*nsteps*/ );
+    virtual void refineFaces(const Patch* finePatch, const Level* fineLevel, const Level* coarseLevel, 
+                      CCVariable<double>& finevar, const VarLabel* label, int step, int nsteps,
+                      int matl, DataWarehouse* coarse_old_dw, DataWarehouse* coarse_new_dw);
   private:
     void errorEstimate(const ProcessorGroup*,
 		       const PatchSubset* patches,
@@ -69,6 +75,11 @@ WARNING
                  const PatchSubset* patches,
                  const MaterialSubset* matls,
                  DataWarehouse*, DataWarehouse* new_dw);
+
+    void refineCell(CCVariable<double>& finevar, constCCVariable<double>& coarsevar, IntVector fineIndex,
+                    const Level* fineLevel, const Level* coarseLevel); 
+    void coarsenCell(CCVariable<double>& coarsevar, constCCVariable<double>& finevar, IntVector coarseIndex,
+                    const Level* fineLevel, const Level* coarseLevel); 
 
     AMRWave(const AMRWave&);
     AMRWave& operator=(const AMRWave&);
