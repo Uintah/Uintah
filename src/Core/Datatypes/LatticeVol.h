@@ -113,6 +113,7 @@ public:
   virtual void io(Piostream &stream);
   bool get_gradient(Vector &, const Point &);
   bool interpolate(Data&, const Point&);
+  virtual const TypeDescription* get_type_description() const;
 private:
   static Persistent* maker();
 };
@@ -162,6 +163,26 @@ LatticeVol<Data>::get_type_name(int n) const
   return type_name(n);
 }
 
+template <class T>
+const TypeDescription* 
+get_type_description(LatticeVol<T>*)
+{
+  static TypeDescription* td = 0;
+  static string lv("LatticeVol");
+  static string path(__FILE__);
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    td = scinew TypeDescription(lv, sub, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* 
+LatticeVol<T>::get_type_description() const 
+{
+  return SCIRun::get_type_description((LatticeVol<T>*)0);
+}
 
 #define LATTICEVOL_VERSION 2
 

@@ -31,8 +31,10 @@
 #ifndef Datatypes_FieldIndex_h
 #define Datatypes_FieldIndex_h
 
-#include <vector>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
+#include <Core/Datatypes/TypeDescription.h>
+#include <vector>
 
 namespace SCIRun {
 
@@ -106,6 +108,58 @@ operator+=(const vector<CellIndex<T> >& l, const vector<CellIndex<T> >& r) {
   return l;
 }
 
+template <class T>
+const TypeDescription* get_type_description(NodeIndex<T>*)
+{
+  static TypeDescription* td = 0;
+  static string n("NodeIndex");
+  static string path(__FILE__); 
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    td = scinew TypeDescription(n, sub, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* get_type_description(EdgeIndex<T>*)
+{
+  static TypeDescription* td = 0;
+  static string n("EdgeIndex");
+  static string path(__FILE__); 
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    td = scinew TypeDescription(n, sub, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* get_type_description(FaceIndex<T>*)
+{
+  static TypeDescription* td = 0;
+  static string n("FaceIndex");
+  static string path(__FILE__); 
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    td = scinew TypeDescription(n, sub, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* get_type_description(CellIndex<T>*)
+{
+  static TypeDescription* td = 0;
+  static string n("CellIndex");
+  static string path(__FILE__); 
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    td = scinew TypeDescription(n, sub, path);
+  }
+  return td;
+}
+
 #define FIELDINDEXBASE_VERSION 1
 
 template<class T>
@@ -114,6 +168,6 @@ void Pio(Piostream& stream, FieldIndexBase<T>& data)
   Pio(stream, data.index_);
 }
 
-}
+} // end namespace SCIRun
 
 #endif // Datatypes_FieldIndex_h
