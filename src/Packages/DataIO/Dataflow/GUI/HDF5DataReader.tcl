@@ -150,8 +150,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	toplevel $w -class TkFDialog
 
 	global current_cursor
-	set current_cursor [$w cget -cursor]
-
+	$w config -cursor $current_cursor
 
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
@@ -190,6 +189,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -initialdir $initdir \
 	    -defaultextension $defext
 
+
+	$w config -cursor $current_cursor
+
 	moveToCursor $w
 	wm deiconify $w
     }
@@ -224,6 +226,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set datasets [set $this-datasets]
 
 	toplevel $w
+
+	global current_cursor
+	set current_cursor [$w cget -cursor]
 
 	# read an HDF5 file
 	iwidgets::labeledframe $w.f -labeltext "HDF5 File Browser"
