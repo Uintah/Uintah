@@ -30,15 +30,31 @@ Category: Fields
 ClipField
 Downsample
 FieldFilter
+FieldSeed
 Gradient
 Magnitude
 
 Category: Image
+Binop
+Edge
 FFTImage
 FilterImage
 IFFTImage
+Gauss
+Hist
+ImageConvolve
+ImageGen
 ImageToGeom
+ImageTest
+Noise
+RunMatlab
+Ridge
+Sharpen
+Subsample
 PMFilterImage
+Threshold
+Unop
+ViewHist
 WhiteNoiseImage
 
 Category: Matrix
@@ -70,6 +86,7 @@ Category: Readers
 ColumnMatrixReader
 ContourSetReader
 GeomReader
+ImageReader
 MatrixReader
 MeshReader
 MultimeshReader
@@ -77,6 +94,7 @@ PointsReader
 ScalarFieldReader
 SigmaSetReader
 SurfaceReader
+TiffReader
 VectorFieldReader
 VectorFieldOceanReader
 
@@ -112,12 +130,14 @@ GenColorMap
 GenTransferFunc
 GenFieldEdges
 Hedgehog
+ImageViewer
 IsoMask
 IsoSurface
 IsoSurfaceSP
 OctIsoSurface
 RescaleColorMap
 Streamline
+Ted
 VectorSeg
 VolVis
 WidgetTest
@@ -136,4 +156,5 @@ ScalarFieldWriter
 SigmaSetWriter
 SurfaceWriter
 TetraWriter
+TiffWriter
 VectorFieldWriter
