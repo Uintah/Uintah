@@ -69,7 +69,9 @@ PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Core/TkExtensions Core/Algorithms/Visualization \
 	Core/GLVolumeRenderer Core/GeomInterface
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+
+INCLUDES += $(FTGL_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
