@@ -66,27 +66,33 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
                                bool (*fwriter)(ProgressReporter *pr,
                                                MatrixHandle f,
                                                const char *filename))
-  : pluginname(pname),
-    fileextension(fextension),
-    filemagic(fmagic),
-    filereader(freader),
-    filewriter(fwriter)
+  : pluginname_(pname),
+    fileExtension_(fextension),
+    fileMagic_(fmagic),
+    fileReader_(freader),
+    fileWriter_(fwriter)
 {
   matrixIEPluginMutex.lock();
+  cout << "registering " << pname << " with extension " << fextension << "\n";
   if (!matrix_plugin_table)
   {
+    cout << "Creating the matrix_plugin_table: " << &matrix_plugin_table << "\n";
     matrix_plugin_table = scinew map<string, MatrixIEPlugin *>();
+    cout << "         the matrix_plugin_table is now " << matrix_plugin_table << "\n";
   }
 
-  string tmppname = pluginname;
+  string tmppname = pluginname_;
   int counter = 2;
   while (1)
   {
     map<string, MatrixIEPlugin *>::iterator loc = matrix_plugin_table->find(tmppname);
     if (loc == matrix_plugin_table->end())
     {
-      if (tmppname != pluginname) { ((string)pluginname) = tmppname; }
-      (*matrix_plugin_table)[pluginname] = this;
+      if (tmppname != pluginname_) { ((string)pluginname_) = tmppname; }
+
+      cout << "Adding to table " << matrix_plugin_table << " this: " << pluginname_ << "\n";
+
+      (*matrix_plugin_table)[pluginname_] = this;
       break;
     }
     if (*(*loc).second == *this)
@@ -95,11 +101,13 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
       break;
     }
 
-    cout << "WARNING: Multiple MatrixIEPlugins with '" << pluginname
+    cout << "WARNING: Multiple MatrixIEPlugins with '" << pluginname_
 	 << "' name.\n";
-    tmppname = pluginname + "(" + to_string(counter) + ")";
+    tmppname = pluginname_ + "(" + to_string(counter) + ")";
     counter++;
   }
+
+  cout << "MatrixIEPlugins: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << "\n";
 
   matrixIEPluginMutex.unlock();
 }
@@ -111,16 +119,18 @@ MatrixIEPlugin::~MatrixIEPlugin()
   if (matrix_plugin_table == NULL)
   {
     cerr << "WARNING: MatrixIEPlugin.cc: ~MatrixIEPlugin(): matrix_plugin_table is NULL\n";
-    cerr << "         For: " << pluginname << "\n";
+    cerr << "         For: " << pluginname_ << "\n";
     return;
   }
 
   matrixIEPluginMutex.lock();
 
-  map<string, MatrixIEPlugin *>::iterator iter = matrix_plugin_table->find(pluginname);
+  cout << "MatrixIEPlugins DESTRUCTOR: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << ", " << pluginname_ << "\n";
+
+  map<string, MatrixIEPlugin *>::iterator iter = matrix_plugin_table->find(pluginname_);
   if (iter == matrix_plugin_table->end())
   {
-    cerr << "WARNING: MatrixIEPlugin " << pluginname << 
+    cerr << "WARNING: MatrixIEPlugin " << pluginname_ << 
       " not found in database for removal.\n";
   }
   else
@@ -141,11 +151,11 @@ MatrixIEPlugin::~MatrixIEPlugin()
 bool
 MatrixIEPlugin::operator==(const MatrixIEPlugin &other) const
 {
-  return (pluginname == other.pluginname &&
-	  fileextension == other.fileextension &&
-	  filemagic == other.filemagic &&
-	  filereader == other.filereader &&
-	  filewriter == other.filewriter);
+  return (pluginname_ == other.pluginname_ &&
+	  fileExtension_ == other.fileExtension_ &&
+	  fileMagic_ == other.fileMagic_ &&
+	  fileReader_ == other.fileReader_ &&
+	  fileWriter_ == other.fileWriter_);
 }
 
 
@@ -155,11 +165,13 @@ MatrixIEPluginManager::get_importer_list(vector<string> &results)
 {
   if (matrix_plugin_table == NULL) return;
 
+  cout << "get_importer_list: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << "\n";
+
   matrixIEPluginMutex.lock();
   map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
   while (itr != matrix_plugin_table->end())
   {
-    if ((*itr).second->filereader != NULL)
+    if ((*itr).second->fileReader_ != NULL)
     {
       results.push_back((*itr).first);
     }
@@ -174,11 +186,13 @@ MatrixIEPluginManager::get_exporter_list(vector<string> &results)
 {
   if (matrix_plugin_table == NULL) return;
 
+  cout << "get_exporter_list: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << "\n";
+
   matrixIEPluginMutex.lock();
   map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
   while (itr != matrix_plugin_table->end())
   {
-    if ((*itr).second->filewriter != NULL)
+    if ((*itr).second->fileWriter_ != NULL)
     {
       results.push_back((*itr).first);
     }
