@@ -211,7 +211,8 @@ Arches::scheduleInitialize(const LevelP& level,
   d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
 
   // computing flow inlet areas
-  d_boundaryCondition->sched_calculateArea(sched, patches, matls);
+  if (d_boundaryCondition->getInletBC())
+    d_boundaryCondition->sched_calculateArea(sched, patches, matls);
 
   // Set the profile (output Varlabel have SP appended to them)
   // require : densityIN,[u,v,w]VelocityIN

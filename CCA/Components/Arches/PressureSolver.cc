@@ -327,9 +327,10 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // boundaries in the explicit projection, we want to 
     // show the effect of AE, etc. in AP for the 
     // intrusion boundaries
-    if (d_boundaryCondition->getIntrusionBC())
-      d_boundaryCondition->intrusionPressureBC(pc, patch, cellinfo,
-					      &pressureVars,&constPressureVars);
+    if (d_boundaryCondition->anyArchesPhysicalBC())
+      if (d_boundaryCondition->getIntrusionBC())
+        d_boundaryCondition->intrusionPressureBC(pc, patch, cellinfo,
+					         &pressureVars,&constPressureVars);
     
     if (d_MAlab)
       d_boundaryCondition->mmpressureBC(pc, patch, cellinfo,
@@ -339,8 +340,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw, 
 					 &pressureVars);
 
-    d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
-				    cellinfo, &pressureVars,&constPressureVars);
+    if (d_boundaryCondition->anyArchesPhysicalBC())
+      d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
+				      cellinfo, &pressureVars,&constPressureVars);
     // apply underelaxation to eqn
 // Pressure underrelaxation is turned off since it breaks continuity!!!
 /*    if (!(d_pressure_correction))

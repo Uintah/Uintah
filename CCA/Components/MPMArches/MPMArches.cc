@@ -2237,7 +2237,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     // Begin loop to calculate gas-solid exchange terms for each
     // solid material with the gas phase
     
-    int ffieldid = d_arches->getBoundaryCondition()->getFlowId();
+    int ffieldid = d_arches->getBoundaryCondition()->flowCellType();
     int mmwallid = d_arches->getBoundaryCondition()->getMMWallId();
     
     double viscos = d_arches->getTurbulenceModel()->getMolecularViscosity();
@@ -3349,7 +3349,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     // Begin loop to calculate gas-solid exchange terms for each
     // solid material with the gas phase
     
-    int ffieldid = d_arches->getBoundaryCondition()->getFlowId();
+    int ffieldid = d_arches->getBoundaryCondition()->flowCellType();
     int mmwallid = d_arches->getBoundaryCondition()->getMMWallId();
     
     double csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();

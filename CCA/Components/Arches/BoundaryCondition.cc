@@ -103,7 +103,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_nofScalars = d_props->getNumMixVars();
   MM_CUTOFF_VOID_FRAC = 0.5;
   d_wallBdry = 0;
-  d_pressureBdry = 0;
+  d_pressureBC = 0;
   d_outletBC = 0;
 }
 
@@ -113,7 +113,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 BoundaryCondition::~BoundaryCondition()
 {
   delete d_wallBdry;
-  delete d_pressureBdry;
+  delete d_pressureBC;
   delete d_outletBC;
 }
 
@@ -129,43 +129,55 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_numInlets = 0;
   int total_cellTypes = 0;
   int numMixingScalars = d_props->getNumMixVars();
-  for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
-       inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
-    d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
-    d_flowInlets[d_numInlets].problemSetup(inlet_db);
-    d_cellTypes.push_back(total_cellTypes);
-    // compute density and other dependent properties
-    d_flowInlets[d_numInlets].streamMixturefraction.d_initEnthalpy=true;
-    d_props->computeInletProperties(
-                      d_flowInlets[d_numInlets].streamMixturefraction,
-		      d_flowInlets[d_numInlets].calcStream);
-    ++total_cellTypes;
-    ++d_numInlets;
+  
+  if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
+    d_inletBoundary = true;
+    for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
+         inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
+      d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
+      d_flowInlets[d_numInlets].problemSetup(inlet_db);
+      d_cellTypes.push_back(total_cellTypes);
+      // compute density and other dependent properties
+      d_flowInlets[d_numInlets].streamMixturefraction.d_initEnthalpy=true;
+      d_props->computeInletProperties(
+                        d_flowInlets[d_numInlets].streamMixturefraction,
+		        d_flowInlets[d_numInlets].calcStream);
+      ++total_cellTypes;
+      ++d_numInlets;
+    }
   }
+  else {
+    cout << "Flow inlet boundary not specified" << endl;
+    d_inletBoundary = false;
+  }
+ 
   if (ProblemSpecP wall_db = db->findBlock("WallBC")) {
+    d_wallBoundary = true;
     d_wallBdry = scinew WallBdry(total_cellTypes);
     d_wallBdry->problemSetup(wall_db);
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
   else {
-    cerr << "Wall boundary not specified" << endl;
+    cout << "Wall boundary not specified" << endl;
+    d_wallBoundary = false;
   }
   
   if (ProblemSpecP press_db = db->findBlock("PressureBC")) {
-    d_pressBoundary = true;
-    d_pressureBdry = scinew PressureInlet(numMixingScalars, total_cellTypes);
-    d_pressureBdry->problemSetup(press_db);
+    d_pressureBoundary = true;
+    d_pressureBC = scinew PressureInlet(numMixingScalars, total_cellTypes);
+    d_pressureBC->problemSetup(press_db);
     // compute density and other dependent properties
-    d_pressureBdry->streamMixturefraction.d_initEnthalpy=true;
+    d_pressureBC->streamMixturefraction.d_initEnthalpy=true;
     d_props->computeInletProperties(
-                		 d_pressureBdry->streamMixturefraction, 
-		        	 d_pressureBdry->calcStream);
+                		 d_pressureBC->streamMixturefraction, 
+		        	 d_pressureBC->calcStream);
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
   else {
-    d_pressBoundary = false;
+    cout << "Pressure boundary not specified" << endl;
+    d_pressureBoundary = false;
   }
   
   if (ProblemSpecP outlet_db = db->findBlock("outletBC")) {
@@ -181,8 +193,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     ++total_cellTypes;
   }
   else {
+    cout << "Outlet boundary not specified" << endl;
     d_outletBoundary = false;
   }
+
   if (ProblemSpecP intrusion_db = db->findBlock("intrusions")) {
     d_intrusionBoundary = true;
     d_intrusionBC = scinew IntrusionBdry(total_cellTypes);
@@ -191,8 +205,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     ++total_cellTypes;
   }
   else {
+    cout << "Intrusion boundary not specified" << endl;
     d_intrusionBoundary = false;
   }
+
   // if multimaterial then add an id for multimaterial wall
   if (d_MAlab) 
     d_mmWallID = total_cellTypes;
@@ -240,35 +256,19 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     IntVector idxHi = domHi;
  
     // initialize CCVariable to -1 which corresponds to flowfield
-    int celltypeval;
-    fort_celltypeinit(idxLo, idxHi, cellType, d_flowfieldCellTypeVal);
+    // fort_celltypeinit(idxLo, idxHi, cellType, d_flowfieldCellTypeVal);
+    cellType.initialize(-1);
     
     // Find the geometry of the patch
     Box patchBox = patch->getBox();
 
     // wall boundary type
+    int celltypeval;
     {
-      int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
-      for (int ii = 0; ii < nofGeomPieces; ii++) {
-	GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
-	Box geomBox = piece->getBoundingBox();
-	Box b = geomBox.intersect(patchBox);
-	// check for another geometry
-	if (!(b.degenerate())) {
-	  CellIterator iter = patch->getCellCenterIterator(b);
-	  IntVector idxLo = iter.begin();
-	  IntVector idxHi = iter.end() - IntVector(1,1,1);
-	  celltypeval = d_wallBdry->d_cellTypeID;
-	  fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
-	}
-      }
-    }
-    // initialization for pressure boundary
-    {
-      if (d_pressBoundary) {
-	int nofGeomPieces = (int)d_pressureBdry->d_geomPiece.size();
-	for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPiece*  piece = d_pressureBdry->d_geomPiece[ii];
+      if (d_wallBoundary) {
+        int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
+        for (int ii = 0; ii < nofGeomPieces; ii++) {
+	  GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
 	  Box geomBox = piece->getBoundingBox();
 	  Box b = geomBox.intersect(patchBox);
 	  // check for another geometry
@@ -276,7 +276,26 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	    CellIterator iter = patch->getCellCenterIterator(b);
 	    IntVector idxLo = iter.begin();
 	    IntVector idxHi = iter.end() - IntVector(1,1,1);
-	    celltypeval = d_pressureBdry->d_cellTypeID;
+	    celltypeval = d_wallBdry->d_cellTypeID;
+	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
+	  }
+        }
+      }
+    }
+    // initialization for pressure boundary
+    {
+      if (d_pressureBoundary) {
+	int nofGeomPieces = (int)d_pressureBC->d_geomPiece.size();
+	for (int ii = 0; ii < nofGeomPieces; ii++) {
+	  GeometryPiece*  piece = d_pressureBC->d_geomPiece[ii];
+	  Box geomBox = piece->getBoundingBox();
+	  Box b = geomBox.intersect(patchBox);
+	  // check for another geometry
+	  if (!(b.degenerate())) {
+	    CellIterator iter = patch->getCellCenterIterator(b);
+	    IntVector idxLo = iter.begin();
+	    IntVector idxHi = iter.end() - IntVector(1,1,1);
+	    celltypeval = d_pressureBC->d_cellTypeID;
 	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 	  }
 	}
@@ -302,29 +321,34 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
     // set boundary type for inlet flow field
-    for (int ii = 0; ii < d_numInlets; ii++) {
-      int nofGeomPieces = (int)d_flowInlets[ii].d_geomPiece.size();
-      for (int jj = 0; jj < nofGeomPieces; jj++) {
-	GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
-	Box geomBox = piece->getBoundingBox();
-	Box b = geomBox.intersect(patchBox);
-	// check for another geometry
-	if (b.degenerate())
-	  continue; // continue the loop for other inlets
-	// iterates thru box b, converts from geometry space to index space
-	// make sure this works
+    {
+      if (d_inletBoundary) {
+        for (int ii = 0; ii < d_numInlets; ii++) {
+          int nofGeomPieces = (int)d_flowInlets[ii].d_geomPiece.size();
+          for (int jj = 0; jj < nofGeomPieces; jj++) {
+	    GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
+	    Box geomBox = piece->getBoundingBox();
+	    Box b = geomBox.intersect(patchBox);
+	    // check for another geometry
+	    if (b.degenerate())
+	    continue; // continue the loop for other inlets
+	    // iterates thru box b, converts from geometry space to index space
+	    // make sure this works
 #if 0
-	CellIterator iter = patch->getCellCenterIterator(b);
-	IntVector idxLo = iter.begin();
-	IntVector idxHi = iter.end() - IntVector(1,1,1);
-	celltypeval = d_flowInlets[ii].d_cellTypeID;
-	fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
+	    CellIterator iter = patch->getCellCenterIterator(b);
+	    IntVector idxLo = iter.begin();
+	    IntVector idxHi = iter.end() - IntVector(1,1,1);
+	    celltypeval = d_flowInlets[ii].d_cellTypeID;
+	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 #endif
-	for (CellIterator iter = patch->getCellCenterIterator(b); !iter.done(); iter++) {
-	  Point p = patch->cellPosition(*iter);
-	  if (piece->inside(p)) 
-	    cellType[*iter] = d_flowInlets[ii].d_cellTypeID;
-	}
+	    for (CellIterator iter = patch->getCellCenterIterator(b);
+	         !iter.done(); iter++) {
+	      Point p = patch->cellPosition(*iter);
+	      if (piece->inside(p)) 
+	        cellType[*iter] = d_flowInlets[ii].d_cellTypeID;
+	    }
+          }
+        }
       }
     }
     
@@ -696,8 +720,8 @@ BoundaryCondition::computePressureBC(const ProcessorGroup* ,
     
     fort_calpbc(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 		pressure, density, viscosity, cellType, 
-		d_pressureBdry->d_cellTypeID,
-		d_pressureBdry->refPressure,
+		d_pressureBC->d_cellTypeID,
+		d_pressureBC->refPressure,
 		cellinfo->dxepu, cellinfo->dynpv, cellinfo->dztpw,
 		xminus, xplus, yminus, yplus, zminus, zplus);
     
@@ -803,435 +827,6 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
 }
 
 //****************************************************************************
-// Actually calculate the velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::velocityBC(const ProcessorGroup*,
-			      const Patch* patch,
-			      int index,
-			      CellInformation* cellinfo,
-			      ArchesVariables* vars,
-			      ArchesConstVariables* constvars) 
-{
-  //get Molecular Viscosity of the fluid
-  double molViscosity = d_physicalConsts->getMolecularViscosity();
-
-  // Call the fortran routines
-  switch(index) {
-  case 1:
-    uVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
-    break;
-  case 2:
-    vVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
-    break;
-  case 3:
-    wVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
-    break;
-  default:
-    cerr << "Invalid Index value" << endl;
-    break;
-  }
-}
-
-//****************************************************************************
-// call fortran routine to calculate the U Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::uVelocityBC(const Patch* patch,
-			       double VISCOS,
-			       CellInformation* cellinfo,
-			       ArchesVariables* vars,
-		               ArchesConstVariables* constvars)
-{
-  int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int outlet_celltypeval = -10;
-  if (d_outletBoundary)
-    outlet_celltypeval = d_outletBC->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-  // for no ghost cells
-  
-  // ** Reverted back to old ways
-  // for a single patch should be equal to 1 and nx
-  //IntVector idxLoU = vars->cellType.getFortLowIndex();
-  //IntVector idxHiU = vars->cellType.getFortHighIndex();
-  // computes momentum source term due to wall
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  fort_bcuvel(constvars->uVelocity, vars->uVelocityCoeff[Arches::AP],
-	      vars->uVelocityCoeff[Arches::AE],
-	      vars->uVelocityCoeff[Arches::AW], 
-	      vars->uVelocityCoeff[Arches::AN], 
-	      vars->uVelocityCoeff[Arches::AS], 
-	      vars->uVelocityCoeff[Arches::AT], 
-	      vars->uVelocityCoeff[Arches::AB], 
-	      vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-	      vars->uVelocityConvectCoeff[Arches::AE],
-	      vars->uVelocityConvectCoeff[Arches::AW],
-	      vars->uVelocityConvectCoeff[Arches::AN],
-	      vars->uVelocityConvectCoeff[Arches::AS],
-	      vars->uVelocityConvectCoeff[Arches::AT],
-	      vars->uVelocityConvectCoeff[Arches::AB],
-	      constvars->vVelocity, constvars->wVelocity,
-	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
-	      constvars->viscosity,
-	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-	      cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
-	      xminus, xplus, yminus, yplus, zminus, zplus);
-
-}
-
-//****************************************************************************
-// call fortran routine to calculate the V Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::vVelocityBC(const Patch* patch,
-			       double VISCOS,
-			       CellInformation* cellinfo,
-			       ArchesVariables* vars,
-		               ArchesConstVariables* constvars)
-{
-  int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int outlet_celltypeval = -10;
-  if (d_outletBoundary)
-    outlet_celltypeval = d_outletBC->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-  // for a single patch should be equal to 1 and nx
-  //IntVector idxLoV = vars->cellType.getFortLowIndex();
-  //IntVector idxHiV = vars->cellType.getFortHighIndex();
-  // computes momentum source term due to wall
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  // computes remianing diffusion term and also computes source due to gravity
-  fort_bcvvel(constvars->vVelocity, vars->vVelocityCoeff[Arches::AP],
-	      vars->vVelocityCoeff[Arches::AE],
-	      vars->vVelocityCoeff[Arches::AW], 
-	      vars->vVelocityCoeff[Arches::AN], 
-	      vars->vVelocityCoeff[Arches::AS], 
-	      vars->vVelocityCoeff[Arches::AT], 
-	      vars->vVelocityCoeff[Arches::AB], 
-	      vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-	      vars->vVelocityConvectCoeff[Arches::AE],
-	      vars->vVelocityConvectCoeff[Arches::AW],
-	      vars->vVelocityConvectCoeff[Arches::AN],
-	      vars->vVelocityConvectCoeff[Arches::AS],
-	      vars->vVelocityConvectCoeff[Arches::AT],
-	      vars->vVelocityConvectCoeff[Arches::AB],
-	      constvars->uVelocity, constvars->wVelocity,
-	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
-	      constvars->viscosity,
-	      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
-	      cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
-	      xminus, xplus, yminus, yplus, zminus, zplus);
-
-}
-
-//****************************************************************************
-// call fortran routine to calculate the W Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::wVelocityBC(const Patch* patch,
-			       double VISCOS,
-			       CellInformation* cellinfo,
-			       ArchesVariables* vars,
-		               ArchesConstVariables* constvars)
-{
-  int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int outlet_celltypeval = -10;
-  if (d_outletBoundary)
-    outlet_celltypeval = d_outletBC->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-  // for no ghost cells
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-  // for a single patch should be equal to 1 and nx
-  //IntVector idxLoW = vars->cellType.getFortLowIndex();
-  //IntVector idxHiW = vars->cellType.getFortHighIndex();
-  // computes momentum source term due to wall
-  fort_bcwvel(constvars->wVelocity, vars->wVelocityCoeff[Arches::AP],
-	      vars->wVelocityCoeff[Arches::AE],
-	      vars->wVelocityCoeff[Arches::AW], 
-	      vars->wVelocityCoeff[Arches::AN], 
-	      vars->wVelocityCoeff[Arches::AS], 
-	      vars->wVelocityCoeff[Arches::AT], 
-	      vars->wVelocityCoeff[Arches::AB], 
-	      vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-	      vars->wVelocityConvectCoeff[Arches::AE],
-	      vars->wVelocityConvectCoeff[Arches::AW],
-	      vars->wVelocityConvectCoeff[Arches::AN],
-	      vars->wVelocityConvectCoeff[Arches::AS],
-	      vars->wVelocityConvectCoeff[Arches::AT],
-	      vars->wVelocityConvectCoeff[Arches::AB],
-	      constvars->uVelocity, constvars->vVelocity,
-	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
-	      constvars->viscosity,
-	      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
-	      cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
-	      xminus, xplus, yminus, yplus, zminus, zplus);
-
-}
-
-//****************************************************************************
-// Actually compute the pressure bcs
-//****************************************************************************
-void 
-BoundaryCondition::pressureBC(const ProcessorGroup*,
-			      const Patch* patch,
-			      DataWarehouse* /*old_dw*/,
-			      DataWarehouse* /*new_dw*/,
-			      CellInformation* /*cellinfo*/,
-			      ArchesVariables* vars,
-			      ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector domLo = constvars->cellType.getFortLowIndex();
-  IntVector domHi = constvars->cellType.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-  IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
-  IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
-  for(int i=0;i<7;i++){
-     ASSERTEQ(domLong,
-	      vars->pressCoeff[i].getWindow()->getLowIndex());
-     ASSERTEQ(domHing+IntVector(1,1,1),
-	      vars->pressCoeff[i].getWindow()->getHighIndex());
-  }
-  ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
-  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int outlet_celltypeval = -10;
-  if (d_outletBoundary)
-    outlet_celltypeval = d_outletBC->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
-  // ** WARNING ** Symmetry is hardcoded to -3
-  // int symmetry_celltypeval = -3;
-
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  int neumann_bc = -1;
-  int dirichlet_bc = 1;
-  //fortran call
-  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-	       vars->pressCoeff[Arches::AP],
-	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
-	       vars->pressNonlinearSrc, vars->pressLinearSrc,
-	       constvars->cellType, wall_celltypeval, wall_celltypeval,
-	       neumann_bc,
-	       xminus, xplus, yminus, yplus, zminus, zplus);
-
-  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-	       vars->pressCoeff[Arches::AP],
-	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
-	       vars->pressNonlinearSrc, vars->pressLinearSrc,
-	       constvars->cellType, wall_celltypeval, outlet_celltypeval,
-	       neumann_bc,
-	       xminus, xplus, yminus, yplus, zminus, zplus);
-
-  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-	       vars->pressCoeff[Arches::AP],
-	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
-	       vars->pressNonlinearSrc, vars->pressLinearSrc,
-	       constvars->cellType, wall_celltypeval, press_celltypeval,
-	       dirichlet_bc,
-	       xminus, xplus, yminus, yplus, zminus, zplus);
-  
-  for (int ii = 0; ii < d_numInlets; ii++) {
-  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-	       vars->pressCoeff[Arches::AP],
-	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
-	       vars->pressNonlinearSrc, vars->pressLinearSrc,
-	       constvars->cellType, wall_celltypeval, 
-	       d_flowInlets[ii].d_cellTypeID,
-	       neumann_bc,
-	       xminus, xplus, yminus, yplus, zminus, zplus);
-  }
-}
-
-//****************************************************************************
-// Actually compute the scalar bcs
-//****************************************************************************
-void 
-BoundaryCondition::scalarBC(const ProcessorGroup*,
-			    const Patch* patch,
-			    int /*index*/,
-			    CellInformation* cellinfo,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector domLo = constvars->density.getFortLowIndex();
-  IntVector domHi = constvars->density.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
-  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
-  //               Fmixin hardcoded to 0
-  int symmetry_celltypeval = -3;
-  int sfield = -4;
-  int outletfield = -5;
-  if (d_outletBoundary)
-    outletfield = d_outletBC->d_cellTypeID;
-  int ffield = -1;
-  double fmixin = 0.0;
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  //fortran call
-  fort_bcscalar(domLo, domHi, idxLo, idxHi, constvars->scalar,
-		vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
-		vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
-		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
-		vars->scalarDiffusionCoeff[Arches::AE],
-		vars->scalarDiffusionCoeff[Arches::AW],
-		vars->scalarDiffusionCoeff[Arches::AN], 
-		vars->scalarDiffusionCoeff[Arches::AS],
-		vars->scalarDiffusionCoeff[Arches::AT],
-		vars->scalarDiffusionCoeff[Arches::AB],
-		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-		constvars->density, fmixin, constvars->uVelocity,
-		constvars->vVelocity, constvars->wVelocity,cellinfo->sew,
-		cellinfo->sns, cellinfo->stb, constvars->cellType,
-		wall_celltypeval, symmetry_celltypeval,
-		d_flowInlets[0].d_cellTypeID, press_celltypeval, ffield,
-		sfield, outletfield,
-		xminus, xplus, yminus, yplus, zminus, zplus);
-}
-
-
-
-//****************************************************************************
-// Actually compute the scalar bcs
-//****************************************************************************
-void 
-BoundaryCondition::enthalpyBC(const ProcessorGroup*,
-			    const Patch* patch,
-			    CellInformation* cellinfo,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector domLo = constvars->density.getFortLowIndex();
-  IntVector domHi = constvars->density.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
-  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
-  //               Fmixin hardcoded to 0
-  int symmetry_celltypeval = -3;
-  int sfield = -4;
-  int outletfield = -5;
-  int ffield = -1;
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  //fortran call
-  fort_bcenthalpy(domLo, domHi, idxLo, idxHi, constvars->enthalpy,
-		  vars->scalarCoeff[Arches::AE],
-		  vars->scalarCoeff[Arches::AW],
-		  vars->scalarCoeff[Arches::AN],
-		  vars->scalarCoeff[Arches::AS],
-		  vars->scalarCoeff[Arches::AT],
-		  vars->scalarCoeff[Arches::AB],
-		  vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-		  constvars->density, constvars->uVelocity,
-		  constvars->vVelocity,
-		  constvars->wVelocity, cellinfo->sew, cellinfo->sns,
-		  cellinfo->stb, constvars->cellType, wall_celltypeval,
-		  symmetry_celltypeval, d_flowInlets[0].d_cellTypeID,
-		  press_celltypeval, ffield, sfield, outletfield,
-		  xminus, xplus, yminus, yplus, zminus, zplus);
-
-}
-
-
-void 
-BoundaryCondition::enthalpyRadWallBC(const ProcessorGroup*,
-				     const Patch* patch,
-				     CellInformation*,
-				     ArchesVariables* vars)
-{
-
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  //fortran call
-  fort_enthalpyradwallbc(idxLo, idxHi, vars->qfluxe, vars->qfluxw,
-			 vars->qfluxn, vars->qfluxs, vars->qfluxt,
-			 vars->qfluxb, vars->temperature, vars->cellType,
-			 wall_celltypeval, xminus, xplus, yminus, yplus,
-			 zminus, zplus);
-}
-
-
-
-
-
-
-
-//****************************************************************************
 // Actually set flat profile at flow inlet boundary
 //****************************************************************************
 void 
@@ -1273,20 +868,14 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->getModifiable(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
-    if (d_reactingScalarSolve) {
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
       // reactscalar will be zero at the boundaries, so no further calculation
       // is required.
-    }
-    IntVector domLoEnth;
-    IntVector domHiEnth;
+    if (d_reactingScalarSolve)
+      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
     
-    if (d_enthalpySolve) {
+    if (d_enthalpySolve) 
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
-    // Get the low and high index for the patch and the variables
-      domLoEnth = enthalpy.getFortLowIndex();
-      domHiEnth = enthalpy.getFortHighIndex();
-    }
+
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -1297,55 +886,80 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
     // loop thru the flow inlets to set all the components of velocity and density
-    double time = 0.0; 
-    for (int indx = 0; indx < d_numInlets; indx++) {
-      sum_vartype area_var;
-      new_dw->get(area_var, d_flowInlets[indx].d_area_label);
-      double area = area_var;
+    if (d_inletBoundary) {
+      double time = 0.0; 
+      for (int indx = 0; indx < d_numInlets; indx++) {
+        sum_vartype area_var;
+        new_dw->get(area_var, d_flowInlets[indx].d_area_label);
+        double area = area_var;
       
-      // Get a copy of the current flowinlet
-      // check if given patch intersects with the inlet boundary of type index
-      FlowInlet fi = d_flowInlets[indx];
-      //cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
-      //cerr << "density=" << fi.calcStream.d_density << endl;
-      fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
-		 cellType, area, fi.d_cellTypeID, fi.flowRate, fi.inletVel,
-		 fi.calcStream.d_density,
-		 xminus, xplus, yminus, yplus, zminus, zplus, time);
+        // Get a copy of the current flow inlet
+        // check if given patch intersects with the inlet boundary of type index
+        FlowInlet fi = d_flowInlets[indx];
+        //cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
+        //cerr << "density=" << fi.calcStream.d_density << endl;
+        fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
+		   cellType, area, fi.d_cellTypeID, fi.flowRate, fi.inletVel,
+		   fi.calcStream.d_density,
+		   xminus, xplus, yminus, yplus, zminus, zplus, time);
 
-      fort_profscalar(idxLo, idxHi, density, cellType,
-		      fi.calcStream.d_density, fi.d_cellTypeID,
-		      xminus, xplus, yminus, yplus, zminus, zplus);
-      if (d_enthalpySolve)
-      fort_profscalar(idxLo, idxHi, enthalpy, cellType,
-		      fi.calcStream.d_enthalpy, fi.d_cellTypeID,
-		      xminus, xplus, yminus, yplus, zminus, zplus);
+        fort_profscalar(idxLo, idxHi, density, cellType,
+		        fi.calcStream.d_density, fi.d_cellTypeID,
+		        xminus, xplus, yminus, yplus, zminus, zplus);
+        if (d_enthalpySolve)
+        fort_profscalar(idxLo, idxHi, enthalpy, cellType,
+		        fi.calcStream.d_enthalpy, fi.d_cellTypeID,
+		        xminus, xplus, yminus, yplus, zminus, zplus);
 
-    }   
-    if (d_pressureBdry) {
+      }
+    }
+    if (d_pressureBoundary) {
       // set density
       fort_profscalar(idxLo, idxHi, density, cellType,
-		      d_pressureBdry->calcStream.d_density,
-		      d_pressureBdry->d_cellTypeID,
+		      d_pressureBC->calcStream.d_density,
+		      d_pressureBC->d_cellTypeID,
 		      xminus, xplus, yminus, yplus, zminus, zplus);
-      if (d_enthalpySolve){
+      if (d_enthalpySolve)
 	fort_profscalar(idxLo, idxHi, enthalpy, cellType,
-			d_pressureBdry->calcStream.d_enthalpy,
-			d_pressureBdry->d_cellTypeID,
+			d_pressureBC->calcStream.d_enthalpy,
+			d_pressureBC->d_cellTypeID,
 			xminus, xplus, yminus, yplus, zminus, zplus);
-      }
-    }    
+    }
+    if (d_outletBoundary) {
+      // set density
+      fort_profscalar(idxLo, idxHi, density, cellType,
+		      d_outletBC->calcStream.d_density,
+		      d_outletBC->d_cellTypeID,
+		      xminus, xplus, yminus, yplus, zminus, zplus);
+      if (d_enthalpySolve)
+	fort_profscalar(idxLo, idxHi, enthalpy, cellType,
+			d_outletBC->calcStream.d_enthalpy,
+			d_outletBC->d_cellTypeID,
+			xminus, xplus, yminus, yplus, zminus, zplus);
+    }
+
     for (int indx = 0; indx < d_nofScalars; indx++) {
-      for (int ii = 0; ii < d_numInlets; ii++) {
-	double scalarValue = d_flowInlets[ii].streamMixturefraction.d_mixVars[indx];
-	fort_profscalar(idxLo, idxHi, scalar[indx], cellType,
-			scalarValue, d_flowInlets[ii].d_cellTypeID,
+      if (d_inletBoundary) {
+        for (int ii = 0; ii < d_numInlets; ii++) {
+	  double scalarValue = 
+		 d_flowInlets[ii].streamMixturefraction.d_mixVars[indx];
+	  fort_profscalar(idxLo, idxHi, scalar[indx], cellType,
+			  scalarValue, d_flowInlets[ii].d_cellTypeID,
+			  xminus, xplus, yminus, yplus, zminus, zplus);
+	}
+      }
+      if (d_pressureBoundary) {
+	double scalarValue = 
+	       d_pressureBC->streamMixturefraction.d_mixVars[indx];
+	fort_profscalar(idxLo, idxHi, scalar[indx], cellType, scalarValue,
+			d_pressureBC->d_cellTypeID,
 			xminus, xplus, yminus, yplus, zminus, zplus);
       }
-      if (d_pressBoundary) {
-	double scalarValue = d_pressureBdry->streamMixturefraction.d_mixVars[indx];
+      if (d_outletBoundary) {
+	double scalarValue = 
+	       d_outletBC->streamMixturefraction.d_mixVars[indx];
 	fort_profscalar(idxLo, idxHi, scalar[indx], cellType, scalarValue,
-			d_pressureBdry->d_cellTypeID,
+			d_outletBC->d_cellTypeID,
 			xminus, xplus, yminus, yplus, zminus, zplus);
       }
     }
@@ -1368,7 +982,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     IntVector indexLow;
     IntVector indexHigh;
     double maxUxplus = -10000000000.0;
-    int out_celltypeval = outletCellType();
     
       indexLow = patch->getSFCXFORTLowIndex();
       indexHigh = patch->getSFCXFORTHighIndex();
@@ -1385,14 +998,17 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       }
       new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsU_label); 
 
-      if ((!(out_celltypeval==-10))&&(xplus)) {
+      if ((d_outletBoundary)&&(xplus)) {
+        int outlet_celltypeval = outletCellType();
         int colX = indexHigh.x();
         for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
           for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 
               IntVector currCell(colX, colY, colZ);
+              IntVector xplusCell(colX+1, colY, colZ);
 
-	      maxUxplus = Max(uVelocity[currCell], maxUxplus);
+	      if (cellType[xplusCell] == outlet_celltypeval)
+	        maxUxplus = Max(uVelocity[currCell], maxUxplus);
           }
         }
       }
@@ -1430,6 +1046,424 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     
   }
 }
+
+//****************************************************************************
+// Actually calculate the velocity BC
+//****************************************************************************
+void 
+BoundaryCondition::velocityBC(const ProcessorGroup*,
+			      const Patch* patch,
+			      int index,
+			      CellInformation* cellinfo,
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars) 
+{
+  //get Molecular Viscosity of the fluid
+  double molViscosity = d_physicalConsts->getMolecularViscosity();
+
+  // Call the fortran routines
+  switch(index) {
+  case 1:
+    uVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
+    break;
+  case 2:
+    vVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
+    break;
+  case 3:
+    wVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
+    break;
+  default:
+    cerr << "Invalid Index value" << endl;
+    break;
+  }
+}
+
+//****************************************************************************
+// call fortran routine to calculate the U Velocity BC
+//****************************************************************************
+void 
+BoundaryCondition::uVelocityBC(const Patch* patch,
+			       double VISCOS,
+			       CellInformation* cellinfo,
+			       ArchesVariables* vars,
+		               ArchesConstVariables* constvars)
+{
+  int wall_celltypeval = wallCellType();
+  int pressure_celltypeval = pressureCellType();
+  int outlet_celltypeval = outletCellType();
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  // for no ghost cells
+  
+  // ** Reverted back to old ways
+  // for a single patch should be equal to 1 and nx
+  //IntVector idxLoU = vars->cellType.getFortLowIndex();
+  //IntVector idxHiU = vars->cellType.getFortHighIndex();
+  // computes momentum source term due to wall
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  fort_bcuvel(constvars->uVelocity, vars->uVelocityCoeff[Arches::AP],
+	      vars->uVelocityCoeff[Arches::AE],
+	      vars->uVelocityCoeff[Arches::AW], 
+	      vars->uVelocityCoeff[Arches::AN], 
+	      vars->uVelocityCoeff[Arches::AS], 
+	      vars->uVelocityCoeff[Arches::AT], 
+	      vars->uVelocityCoeff[Arches::AB], 
+	      vars->uVelNonlinearSrc, vars->uVelLinearSrc,
+	      vars->uVelocityConvectCoeff[Arches::AE],
+	      vars->uVelocityConvectCoeff[Arches::AW],
+	      vars->uVelocityConvectCoeff[Arches::AN],
+	      vars->uVelocityConvectCoeff[Arches::AS],
+	      vars->uVelocityConvectCoeff[Arches::AT],
+	      vars->uVelocityConvectCoeff[Arches::AB],
+	      constvars->vVelocity, constvars->wVelocity,
+	      idxLo, idxHi, constvars->cellType,
+	      wall_celltypeval, outlet_celltypeval, pressure_celltypeval,
+	      constvars->viscosity,
+	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+	      cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
+	      xminus, xplus, yminus, yplus, zminus, zplus);
+
+}
+
+//****************************************************************************
+// call fortran routine to calculate the V Velocity BC
+//****************************************************************************
+void 
+BoundaryCondition::vVelocityBC(const Patch* patch,
+			       double VISCOS,
+			       CellInformation* cellinfo,
+			       ArchesVariables* vars,
+		               ArchesConstVariables* constvars)
+{
+  int wall_celltypeval = wallCellType();
+  int pressure_celltypeval = pressureCellType();
+  int outlet_celltypeval = outletCellType();
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  // for a single patch should be equal to 1 and nx
+  //IntVector idxLoV = vars->cellType.getFortLowIndex();
+  //IntVector idxHiV = vars->cellType.getFortHighIndex();
+  // computes momentum source term due to wall
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  // computes remianing diffusion term and also computes source due to gravity
+  fort_bcvvel(constvars->vVelocity, vars->vVelocityCoeff[Arches::AP],
+	      vars->vVelocityCoeff[Arches::AE],
+	      vars->vVelocityCoeff[Arches::AW], 
+	      vars->vVelocityCoeff[Arches::AN], 
+	      vars->vVelocityCoeff[Arches::AS], 
+	      vars->vVelocityCoeff[Arches::AT], 
+	      vars->vVelocityCoeff[Arches::AB], 
+	      vars->vVelNonlinearSrc, vars->vVelLinearSrc,
+	      vars->vVelocityConvectCoeff[Arches::AE],
+	      vars->vVelocityConvectCoeff[Arches::AW],
+	      vars->vVelocityConvectCoeff[Arches::AN],
+	      vars->vVelocityConvectCoeff[Arches::AS],
+	      vars->vVelocityConvectCoeff[Arches::AT],
+	      vars->vVelocityConvectCoeff[Arches::AB],
+	      constvars->uVelocity, constvars->wVelocity,
+	      idxLo, idxHi, constvars->cellType,
+	      wall_celltypeval, outlet_celltypeval, pressure_celltypeval,
+	      constvars->viscosity,
+	      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
+	      cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
+	      xminus, xplus, yminus, yplus, zminus, zplus);
+
+}
+
+//****************************************************************************
+// call fortran routine to calculate the W Velocity BC
+//****************************************************************************
+void 
+BoundaryCondition::wVelocityBC(const Patch* patch,
+			       double VISCOS,
+			       CellInformation* cellinfo,
+			       ArchesVariables* vars,
+		               ArchesConstVariables* constvars)
+{
+  int wall_celltypeval = wallCellType();
+  int pressure_celltypeval = pressureCellType();
+  int outlet_celltypeval = outletCellType();
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  // for no ghost cells
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+  // for a single patch should be equal to 1 and nx
+  //IntVector idxLoW = vars->cellType.getFortLowIndex();
+  //IntVector idxHiW = vars->cellType.getFortHighIndex();
+  // computes momentum source term due to wall
+  fort_bcwvel(constvars->wVelocity, vars->wVelocityCoeff[Arches::AP],
+	      vars->wVelocityCoeff[Arches::AE],
+	      vars->wVelocityCoeff[Arches::AW], 
+	      vars->wVelocityCoeff[Arches::AN], 
+	      vars->wVelocityCoeff[Arches::AS], 
+	      vars->wVelocityCoeff[Arches::AT], 
+	      vars->wVelocityCoeff[Arches::AB], 
+	      vars->wVelNonlinearSrc, vars->wVelLinearSrc,
+	      vars->wVelocityConvectCoeff[Arches::AE],
+	      vars->wVelocityConvectCoeff[Arches::AW],
+	      vars->wVelocityConvectCoeff[Arches::AN],
+	      vars->wVelocityConvectCoeff[Arches::AS],
+	      vars->wVelocityConvectCoeff[Arches::AT],
+	      vars->wVelocityConvectCoeff[Arches::AB],
+	      constvars->uVelocity, constvars->vVelocity,
+	      idxLo, idxHi, constvars->cellType,
+	      wall_celltypeval, outlet_celltypeval, pressure_celltypeval,
+	      constvars->viscosity,
+	      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
+	      cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
+	      xminus, xplus, yminus, yplus, zminus, zplus);
+
+}
+
+//****************************************************************************
+// Actually compute the pressure bcs
+//****************************************************************************
+void 
+BoundaryCondition::pressureBC(const ProcessorGroup*,
+			      const Patch* patch,
+			      DataWarehouse* /*old_dw*/,
+			      DataWarehouse* /*new_dw*/,
+			      CellInformation* /*cellinfo*/,
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars)
+{
+  // Get the low and high index for the patch
+  IntVector domLo = constvars->cellType.getFortLowIndex();
+  IntVector domHi = constvars->cellType.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
+  IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
+  for(int i=0;i<7;i++){
+     ASSERTEQ(domLong,
+	      vars->pressCoeff[i].getWindow()->getLowIndex());
+     ASSERTEQ(domHing+IntVector(1,1,1),
+	      vars->pressCoeff[i].getWindow()->getHighIndex());
+  }
+  ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
+  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
+
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = wallCellType();
+  int pressure_celltypeval = pressureCellType();
+  int outlet_celltypeval = outletCellType();
+  // ** WARNING ** Symmetry is hardcoded to -3
+  // int symmetry_celltypeval = -3;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  int neumann_bc = -1;
+  int dirichlet_bc = 1;
+  //fortran call
+  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
+	       vars->pressCoeff[Arches::AP],
+	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+	       vars->pressNonlinearSrc, vars->pressLinearSrc,
+	       constvars->cellType, wall_celltypeval, wall_celltypeval,
+	       neumann_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
+
+  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
+	       vars->pressCoeff[Arches::AP],
+	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+	       vars->pressNonlinearSrc, vars->pressLinearSrc,
+	       constvars->cellType, wall_celltypeval, outlet_celltypeval,
+	       neumann_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
+
+  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
+	       vars->pressCoeff[Arches::AP],
+	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+	       vars->pressNonlinearSrc, vars->pressLinearSrc,
+	       constvars->cellType, wall_celltypeval, pressure_celltypeval,
+	       dirichlet_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
+  
+  for (int ii = 0; ii < d_numInlets; ii++) {
+  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
+	       vars->pressCoeff[Arches::AP],
+	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+	       vars->pressNonlinearSrc, vars->pressLinearSrc,
+	       constvars->cellType, wall_celltypeval, 
+	       d_flowInlets[ii].d_cellTypeID,
+	       neumann_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
+  }
+}
+
+//****************************************************************************
+// Actually compute the scalar bcs
+//****************************************************************************
+void 
+BoundaryCondition::scalarBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    int /*index*/,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars)
+{
+  // Get the low and high index for the patch
+  IntVector domLo = constvars->density.getFortLowIndex();
+  IntVector domHi = constvars->density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = wallCellType();
+  int pressure_celltypeval = pressureCellType();
+  int outlet_celltypeval = outletCellType();
+  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
+  //               Fmixin hardcoded to 0
+  int symmetry_celltypeval = -3;
+  int sfield = -4;
+  int ffield = -1;
+  double fmixin = 0.0;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  //fortran call
+  fort_bcscalar(domLo, domHi, idxLo, idxHi, constvars->scalar,
+		vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
+		vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
+		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
+		vars->scalarDiffusionCoeff[Arches::AE],
+		vars->scalarDiffusionCoeff[Arches::AW],
+		vars->scalarDiffusionCoeff[Arches::AN], 
+		vars->scalarDiffusionCoeff[Arches::AS],
+		vars->scalarDiffusionCoeff[Arches::AT],
+		vars->scalarDiffusionCoeff[Arches::AB],
+		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
+		constvars->density, fmixin, constvars->uVelocity,
+		constvars->vVelocity, constvars->wVelocity,cellinfo->sew,
+		cellinfo->sns, cellinfo->stb, constvars->cellType,
+		wall_celltypeval, symmetry_celltypeval,
+		d_flowInlets[0].d_cellTypeID, pressure_celltypeval, ffield,
+		sfield, outlet_celltypeval,
+		xminus, xplus, yminus, yplus, zminus, zplus);
+}
+
+
+
+//****************************************************************************
+// Actually compute the scalar bcs
+//****************************************************************************
+void 
+BoundaryCondition::enthalpyBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars)
+{
+  // Get the low and high index for the patch
+  IntVector domLo = constvars->density.getFortLowIndex();
+  IntVector domHi = constvars->density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = wallCellType();
+  int pressure_celltypeval = pressureCellType();
+  int outlet_celltypeval = outletCellType();
+  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
+  //               Fmixin hardcoded to 0
+  int symmetry_celltypeval = -3;
+  int sfield = -4;
+  int ffield = -1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  //fortran call
+  fort_bcenthalpy(domLo, domHi, idxLo, idxHi, constvars->enthalpy,
+		  vars->scalarCoeff[Arches::AE],
+		  vars->scalarCoeff[Arches::AW],
+		  vars->scalarCoeff[Arches::AN],
+		  vars->scalarCoeff[Arches::AS],
+		  vars->scalarCoeff[Arches::AT],
+		  vars->scalarCoeff[Arches::AB],
+		  vars->scalarNonlinearSrc, vars->scalarLinearSrc,
+		  constvars->density, constvars->uVelocity,
+		  constvars->vVelocity,
+		  constvars->wVelocity, cellinfo->sew, cellinfo->sns,
+		  cellinfo->stb, constvars->cellType, wall_celltypeval,
+		  symmetry_celltypeval, d_flowInlets[0].d_cellTypeID,
+		  pressure_celltypeval, ffield, sfield, outlet_celltypeval,
+		  xminus, xplus, yminus, yplus, zminus, zplus);
+
+}
+
+
+void 
+BoundaryCondition::enthalpyRadWallBC(const ProcessorGroup*,
+				     const Patch* patch,
+				     CellInformation*,
+				     ArchesVariables* vars)
+{
+
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = wallCellType();
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  //fortran call
+  fort_enthalpyradwallbc(idxLo, idxHi, vars->qfluxe, vars->qfluxw,
+			 vars->qfluxn, vars->qfluxs, vars->qfluxt,
+			 vars->qfluxb, vars->temperature, vars->cellType,
+			 wall_celltypeval, xminus, xplus, yminus, yplus,
+			 zminus, zplus);
+}
+
+
+
+
+
 
 //****************************************************************************
 // Documentation here
@@ -2827,7 +2861,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+  int pressure_celltypeval = pressureCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -2842,7 +2876,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-        if (constvars->cellType[xminusCell] == press_celltypeval)
+        if (constvars->cellType[xminusCell] == pressure_celltypeval)
 //	  if (constvars->uVelocity[currCell] <= 0.0)
                         vars->scalar[xminusCell] = vars->scalar[currCell];
 //	  else vars->scalar[xminusCell] = 0.0;
@@ -2855,7 +2889,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xplusCell] == press_celltypeval)
+        if (constvars->cellType[xplusCell] == pressure_celltypeval)
 //	  if (constvars->uVelocity[xplusCell] >= 0.0)
                         vars->scalar[xplusCell] = vars->scalar[currCell];
 //	  else vars->scalar[xplusCell] = 0.0;
@@ -2868,7 +2902,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
-        if (constvars->cellType[yminusCell] == press_celltypeval)
+        if (constvars->cellType[yminusCell] == pressure_celltypeval)
 //	  if (constvars->vVelocity[currCell] <= 0.0)
                         vars->scalar[yminusCell] = vars->scalar[currCell];
 //	  else vars->scalar[yminusCell] = 0.0;
@@ -2881,7 +2915,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == press_celltypeval)
+        if (constvars->cellType[yplusCell] == pressure_celltypeval)
 //	  if (constvars->vVelocity[yplusCell] >= 0.0)
                         vars->scalar[yplusCell] = vars->scalar[currCell];
 //	  else vars->scalar[yplusCell] = 0.0;
@@ -2894,7 +2928,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
-        if (constvars->cellType[zminusCell] == press_celltypeval)
+        if (constvars->cellType[zminusCell] == pressure_celltypeval)
 //	  if (constvars->wVelocity[currCell] <= 0.0)
                         vars->scalar[zminusCell] = vars->scalar[currCell];
 //	  else vars->scalar[zminusCell] = 0.0;
@@ -2907,7 +2941,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == press_celltypeval)
+        if (constvars->cellType[zplusCell] == pressure_celltypeval)
 //	  if (constvars->wVelocity[zplusCell] >= 0.0)
                         vars->scalar[zplusCell] = vars->scalar[currCell];
 //	  else vars->scalar[zplusCell] = 0.0;
@@ -2921,7 +2955,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
-        if (constvars->cellType[yminusCell] == press_celltypeval) {
+        if (constvars->cellType[yminusCell] == pressure_celltypeval) {
 	   double out_vel = constvars->vVelocity[currCell];
            vars->scalar[yminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
@@ -2943,7 +2977,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == press_celltypeval) {
+        if (constvars->cellType[yplusCell] == pressure_celltypeval) {
 	   double out_vel = constvars->vVelocity[yplusCell];
            vars->scalar[yplusCell]= (- delta_t * out_vel *
                (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
@@ -2965,7 +2999,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
-        if (constvars->cellType[zminusCell] == press_celltypeval) {
+        if (constvars->cellType[zminusCell] == pressure_celltypeval) {
 	   double out_vel = constvars->wVelocity[currCell];
            vars->scalar[zminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
@@ -2987,7 +3021,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == press_celltypeval) {
+        if (constvars->cellType[zplusCell] == pressure_celltypeval) {
 	   double out_vel = constvars->wVelocity[zplusCell];
            vars->scalar[zplusCell]= (- delta_t * out_vel *
                (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
@@ -3021,7 +3055,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+  int pressure_celltypeval = pressureCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3036,7 +3070,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-        if (constvars->cellType[xminusCell] == press_celltypeval)
+        if (constvars->cellType[xminusCell] == pressure_celltypeval)
                         vars->enthalpy[xminusCell] = vars->enthalpy[currCell];
       }
     }
@@ -3047,7 +3081,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xplusCell] == press_celltypeval)
+        if (constvars->cellType[xplusCell] == pressure_celltypeval)
                         vars->enthalpy[xplusCell] = vars->enthalpy[currCell];
       }
     }
@@ -3058,7 +3092,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
-        if (constvars->cellType[yminusCell] == press_celltypeval)
+        if (constvars->cellType[yminusCell] == pressure_celltypeval)
                         vars->enthalpy[yminusCell] = vars->enthalpy[currCell];
       }
     }
@@ -3069,7 +3103,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == press_celltypeval)
+        if (constvars->cellType[yplusCell] == pressure_celltypeval)
                         vars->enthalpy[yplusCell] = vars->enthalpy[currCell];
       }
     }
@@ -3080,7 +3114,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
-        if (constvars->cellType[zminusCell] == press_celltypeval)
+        if (constvars->cellType[zminusCell] == pressure_celltypeval)
                         vars->enthalpy[zminusCell] = vars->enthalpy[currCell];
       }
     }
@@ -3091,7 +3125,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == press_celltypeval)
+        if (constvars->cellType[zplusCell] == pressure_celltypeval)
                         vars->enthalpy[zplusCell] = vars->enthalpy[currCell];
       }
     }
@@ -3116,9 +3150,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = -10;
-  if (d_outletBoundary)
-     out_celltypeval = d_outletBC->d_cellTypeID;
+  int outlet_celltypeval = outletCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3134,7 +3166,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xminusCell] == out_celltypeval) {
+        if (constvars->cellType[xminusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->uVelocity[xplusCell];
            vars->scalar[xminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
@@ -3156,7 +3188,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xplusCell] == out_celltypeval) {
+        if (constvars->cellType[xplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->uVelocity[xplusCell];
 	   out_vel = maxAbsU;
            vars->scalar[xplusCell]= (- delta_t * out_vel *
@@ -3180,7 +3212,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yminusCell] == out_celltypeval) {
+        if (constvars->cellType[yminusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->vVelocity[yplusCell];
            vars->scalar[yminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
@@ -3202,7 +3234,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == out_celltypeval) {
+        if (constvars->cellType[yplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->vVelocity[currCell];
            vars->scalar[yplusCell]= (- delta_t * out_vel *
                (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
@@ -3225,7 +3257,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zminusCell] == out_celltypeval) {
+        if (constvars->cellType[zminusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->wVelocity[zplusCell];
            vars->scalar[zminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
@@ -3247,7 +3279,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == out_celltypeval) {
+        if (constvars->cellType[zplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->wVelocity[currCell];
            vars->scalar[zplusCell]= (- delta_t * out_vel *
                (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
@@ -3285,9 +3317,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = -10;
-  if (d_outletBoundary)
-    out_celltypeval = d_outletBC->d_cellTypeID;
+  int outlet_celltypeval = outletCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3303,7 +3333,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xminusCell] == out_celltypeval) {
+        if (constvars->cellType[xminusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->uVelocity[xplusCell];
            vars->enthalpy[xminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
@@ -3321,7 +3351,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xplusCell] == out_celltypeval) {
+        if (constvars->cellType[xplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->uVelocity[currCell];
            vars->enthalpy[xplusCell]= (- delta_t * out_vel *
                (constvars->old_density[xplusCell]*constvars->old_enthalpy[xplusCell] -
@@ -3340,7 +3370,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yminusCell] == out_celltypeval) {
+        if (constvars->cellType[yminusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->vVelocity[yplusCell];
            vars->enthalpy[yminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
@@ -3358,7 +3388,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == out_celltypeval) {
+        if (constvars->cellType[yplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->vVelocity[currCell];
            vars->enthalpy[yplusCell]= (- delta_t * out_vel *
                (constvars->old_density[yplusCell]*constvars->old_enthalpy[yplusCell] -
@@ -3377,7 +3407,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zminusCell] == out_celltypeval) {
+        if (constvars->cellType[zminusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->wVelocity[zplusCell];
            vars->enthalpy[zminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
@@ -3395,7 +3425,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == out_celltypeval) {
+        if (constvars->cellType[zplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->wVelocity[currCell];
            vars->enthalpy[zplusCell]= (- delta_t * out_vel *
                (constvars->old_density[zplusCell]*constvars->old_enthalpy[zplusCell] -
@@ -3424,7 +3454,7 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
   IntVector idxHi = patch->getCellFORTHighIndex();
   // stores cell type info for the patch with the ghost cell type
   for (int indx = 0; indx < d_numInlets; indx++) {
-    // Get a copy of the current flowinlet
+    // Get a copy of the current flow inlet
     FlowInlet fi = d_flowInlets[indx];
     
     // assign flowType the value that corresponds to flow
@@ -3457,7 +3487,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+  int pressure_celltypeval = pressureCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3473,7 +3503,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xminusCell] == press_celltypeval) {
+        if (constvars->cellType[xminusCell] == pressure_celltypeval) {
            vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
            vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
         if (!(yminus && (colY == idxLo.y())))
@@ -3491,7 +3521,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constvars->cellType[xplusCell] == press_celltypeval) {
+        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
            vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
         if (!(yminus && (colY == idxLo.y())))
@@ -3509,7 +3539,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yminusCell] == press_celltypeval) {
+        if (constvars->cellType[yminusCell] == pressure_celltypeval) {
         if (!(xminus && (colX == idxLo.x())))
            vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
            vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
@@ -3527,7 +3557,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
-        if (constvars->cellType[yplusCell] == press_celltypeval) {
+        if (constvars->cellType[yplusCell] == pressure_celltypeval) {
         if (!(xminus && (colX == idxLo.x())))
            vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
            vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
@@ -3545,7 +3575,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zminusCell] == press_celltypeval) {
+        if (constvars->cellType[zminusCell] == pressure_celltypeval) {
         if (!(xminus && (colX == idxLo.x())))
            vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
         if (!(yminus && (colY == idxLo.y())))
@@ -3563,7 +3593,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if (constvars->cellType[zplusCell] == press_celltypeval) {
+        if (constvars->cellType[zplusCell] == pressure_celltypeval) {
         if (!(xminus && (colX == idxLo.x())))
            vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
         if (!(yminus && (colY == idxLo.y())))
@@ -3581,7 +3611,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xminusCell] == press_celltypeval) {
+        if (constvars->cellType[xminusCell] == pressure_celltypeval) {
            vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
            vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
         if (!(yminus && (colY == idxLo.y())))
@@ -3599,7 +3629,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constvars->cellType[xplusCell] == press_celltypeval) {
+        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
            vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
         if (!(yminus && (colY == idxLo.y())))
@@ -3621,7 +3651,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[yminusCell] == press_celltypeval) {
+        if (constvars->cellType[yminusCell] == pressure_celltypeval) {
            double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
 			                constvars->old_density[yminusCell]);
         if (!(xminus && (colX == idxLo.x())))
@@ -3670,7 +3700,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector yplusplusCell(colX, colY+2, colZ);
         IntVector ypluszplusCell(colX, colY+1, colZ+1);
         IntVector ypluszminusCell(colX, colY+1, colZ-1);
-        if (constvars->cellType[yplusCell] == press_celltypeval) {
+        if (constvars->cellType[yplusCell] == pressure_celltypeval) {
            double old_avden = 0.5 * (constvars->old_density[yplusCell] +
 			             constvars->old_density[currCell]);
         if (!(xminus && (colX == idxLo.x())))
@@ -3715,7 +3745,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zminusCell] == press_celltypeval) {
+        if (constvars->cellType[zminusCell] == pressure_celltypeval) {
            double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
 			                constvars->old_density[zminusCell]);
         if (!(xminus && (colX == idxLo.x())))
@@ -3763,7 +3793,7 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector zplusyplusCell(colX, colY+1, colZ+1);
         IntVector zplusyminusCell(colX, colY-1, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if (constvars->cellType[zplusCell] == press_celltypeval) {
+        if (constvars->cellType[zplusCell] == pressure_celltypeval) {
            double old_avden = 0.5 * (constvars->old_density[zplusCell] +
 			             constvars->old_density[currCell]);
         if (!(xminus && (colX == idxLo.x())))
@@ -3815,9 +3845,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = -10;
-  if (d_outletBoundary)
-    out_celltypeval = d_outletBC->d_cellTypeID;
+  int outlet_celltypeval = outletCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3840,7 +3868,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector xpluszminusCell(colX+1, colY, colZ-1);
         IntVector xminusyminusCell(colX-1, colY-1, colZ);
         IntVector xminuszminusCell(colX-1, colY, colZ-1);
-        if (constvars->cellType[xminusCell] == out_celltypeval) {
+        if (constvars->cellType[xminusCell] == outlet_celltypeval) {
            double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
 			                constvars->old_density[xminusCell]);
            double avden = 0.5 * (constvars->density[xplusCell] +
@@ -3918,7 +3946,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector xplusyplusCell(colX+1, colY+1, colZ);
         IntVector xpluszplusCell(colX+1, colY, colZ+1);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constvars->cellType[xplusCell] == out_celltypeval) {
+        if (constvars->cellType[xplusCell] == outlet_celltypeval) {
            double old_avden = 0.5 * (constvars->old_density[xplusCell] +
 			             constvars->old_density[currCell]);
            double avden = 0.5 * (constvars->density[xplusCell] +
@@ -3986,7 +4014,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector xplusyplusCell(colX+1, colY+1, colZ);
         IntVector xpluszplusCell(colX+1, colY, colZ+1);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constvars->cellType[xplusCell] == out_celltypeval) {
+        if (constvars->cellType[xplusCell] == outlet_celltypeval) {
            double old_avden,avden,avdenlow,new_avden,out_vel;
         if (!(zplus && (colZ == maxZ))) {
            old_avden = 0.5 * (constvars->old_density[xplusCell] +
@@ -4043,7 +4071,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector ypluszminusCell(colX, colY+1, colZ-1);
         IntVector yminusxminusCell(colX-1, colY-1, colZ);
         IntVector yminuszminusCell(colX, colY-1, colZ-1);
-        if (constvars->cellType[yminusCell] == out_celltypeval) {
+        if (constvars->cellType[yminusCell] == outlet_celltypeval) {
            double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
 			                constvars->old_density[yminusCell]);
            double avden = 0.5 * (constvars->density[yplusCell] +
@@ -4115,7 +4143,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector yplusxminusCell(colX-1, colY+1, colZ);
         IntVector ypluszminusCell(colX, colY+1, colZ-1);
         IntVector yplusplusCell(colX, colY+2, colZ);
-        if (constvars->cellType[yplusCell] == out_celltypeval) {
+        if (constvars->cellType[yplusCell] == outlet_celltypeval) {
            double old_avden = 0.5 * (constvars->old_density[yplusCell] +
 			             constvars->old_density[currCell]);
            double avden = 0.5 * (constvars->density[yplusCell] +
@@ -4189,7 +4217,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector zplusyminusCell(colX, colY-1, colZ+1);
         IntVector zminusxminusCell(colX-1, colY, colZ-1);
         IntVector zminusyminusCell(colX, colY-1, colZ-1);
-        if (constvars->cellType[zminusCell] == out_celltypeval) {
+        if (constvars->cellType[zminusCell] == outlet_celltypeval) {
            double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
 			                constvars->old_density[zminusCell]);
            double avden = 0.5 * (constvars->density[zplusCell] +
@@ -4261,7 +4289,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
         IntVector zplusxminusCell(colX-1, colY, colZ+1);
         IntVector zplusyminusCell(colX, colY-1, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if (constvars->cellType[zplusCell] == out_celltypeval) {
+        if (constvars->cellType[zplusCell] == outlet_celltypeval) {
            double old_avden = 0.5 * (constvars->old_density[zplusCell] +
 			             constvars->old_density[currCell]);
            double avden = 0.5 * (constvars->density[zplusCell] +
@@ -4337,10 +4365,8 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = -10;
-  if (d_outletBoundary)
-    out_celltypeval = d_outletBC->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+  int outlet_celltypeval = outletCellType();
+  int pressure_celltypeval = pressureCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -4360,8 +4386,8 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if ((constvars->cellType[xminusCell] == press_celltypeval)||
-            (constvars->cellType[xminusCell] == out_celltypeval)) {
+        if ((constvars->cellType[xminusCell] == pressure_celltypeval)||
+            (constvars->cellType[xminusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
            break;
@@ -4391,9 +4417,9 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        //if ((constvars->cellType[xplusCell] == press_celltypeval)||
-          //  (constvars->cellType[xplusCell] == out_celltypeval)) {
-        if (constvars->cellType[xplusCell] == press_celltypeval) {
+        //if ((constvars->cellType[xplusCell] == pressure_celltypeval)||
+          //  (constvars->cellType[xplusCell] == outlet_celltypeval)) {
+        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
           switch (index) {
            case Arches::XDIR:
            break;
@@ -4423,8 +4449,8 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if ((constvars->cellType[yminusCell] == press_celltypeval)||
-            (constvars->cellType[yminusCell] == out_celltypeval)) {
+        if ((constvars->cellType[yminusCell] == pressure_celltypeval)||
+            (constvars->cellType[yminusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
         if (!(zplus && (colZ == maxZ)))
@@ -4454,8 +4480,8 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
-        if ((constvars->cellType[yplusCell] == press_celltypeval)||
-            (constvars->cellType[yplusCell] == out_celltypeval)) {
+        if ((constvars->cellType[yplusCell] == pressure_celltypeval)||
+            (constvars->cellType[yplusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
         if (!(zplus && (colZ == maxZ)))
@@ -4485,8 +4511,8 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        if ((constvars->cellType[zminusCell] == press_celltypeval)||
-            (constvars->cellType[zminusCell] == out_celltypeval)) {
+        if ((constvars->cellType[zminusCell] == pressure_celltypeval)||
+            (constvars->cellType[zminusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
         if (!(yplus && (colY == maxY)))
@@ -4516,8 +4542,8 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if ((constvars->cellType[zplusCell] == press_celltypeval)||
-            (constvars->cellType[zplusCell] == out_celltypeval)) {
+        if ((constvars->cellType[zplusCell] == pressure_celltypeval)||
+            (constvars->cellType[zplusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
         if (!(yplus && (colY == maxY)))
@@ -4553,10 +4579,8 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = -10;
-  if (d_outletBoundary)
-    out_celltypeval = d_outletBC->d_cellTypeID;
-  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+  int outlet_celltypeval = outletCellType();
+  int pressure_celltypeval = pressureCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -4573,8 +4597,8 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-        if ((constvars->cellType[xminusCell] == out_celltypeval)||
-            (constvars->cellType[xminusCell] == press_celltypeval)) {
+        if ((constvars->cellType[xminusCell] == outlet_celltypeval)||
+            (constvars->cellType[xminusCell] == pressure_celltypeval)) {
            double avdenlow = 0.5 * (constvars->density[currCell] +
 			            constvars->density[xminusCell]);
 
@@ -4594,9 +4618,9 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-     //   if ((constvars->cellType[xplusCell] == out_celltypeval)||
-       //     (constvars->cellType[xplusCell] == press_celltypeval)) {
-        if (constvars->cellType[xplusCell] == press_celltypeval) {
+     //   if ((constvars->cellType[xplusCell] == outlet_celltypeval)||
+       //     (constvars->cellType[xplusCell] == pressure_celltypeval)) {
+        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
            double avden = 0.5 * (constvars->density[xplusCell] +
 			         constvars->density[currCell]);
 
@@ -4616,8 +4640,8 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
 	IntVector yminusCell(colX, colY-1, colZ);
-        if ((constvars->cellType[yminusCell] == out_celltypeval)||
-            (constvars->cellType[yminusCell] == press_celltypeval)) {
+        if ((constvars->cellType[yminusCell] == outlet_celltypeval)||
+            (constvars->cellType[yminusCell] == pressure_celltypeval)) {
            double avdenlow = 0.5 * (constvars->density[currCell] +
 			            constvars->density[yminusCell]);
 
@@ -4637,8 +4661,8 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
-        if ((constvars->cellType[yplusCell] == out_celltypeval)||
-            (constvars->cellType[yplusCell] == press_celltypeval)) {
+        if ((constvars->cellType[yplusCell] == outlet_celltypeval)||
+            (constvars->cellType[yplusCell] == pressure_celltypeval)) {
            double avden = 0.5 * (constvars->density[yplusCell] +
 			         constvars->density[currCell]);
 
@@ -4659,8 +4683,8 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
 	IntVector zminusCell(colX, colY, colZ-1);
-        if ((constvars->cellType[zminusCell] == out_celltypeval)||
-            (constvars->cellType[zminusCell] == press_celltypeval)) {
+        if ((constvars->cellType[zminusCell] == outlet_celltypeval)||
+            (constvars->cellType[zminusCell] == pressure_celltypeval)) {
            double avdenlow = 0.5 * (constvars->density[currCell] +
 			            constvars->density[zminusCell]);
 
@@ -4680,8 +4704,8 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if ((constvars->cellType[zplusCell] == out_celltypeval)||
-            (constvars->cellType[zplusCell] == press_celltypeval)) {
+        if ((constvars->cellType[zplusCell] == outlet_celltypeval)||
+            (constvars->cellType[zplusCell] == pressure_celltypeval)) {
            double avden = 0.5 * (constvars->density[zplusCell] +
 			         constvars->density[currCell]);
 
@@ -4811,7 +4835,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 
       for (int indx = 0; indx < d_numInlets; indx++) {
 
-	// Get a copy of the current flowinlet
+	// Get a copy of the current flow inlet
 	// assign flowType the value that corresponds to flow
 	//CellTypeInfo flowType = FLOW;
 	FlowInlet fi = d_flowInlets[indx];
@@ -4825,16 +4849,16 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 		throw InvalidValue("Flow comming out of inlet");
       } 
 
-      if (d_pressBoundary) {
-	int press_celltypeval = d_pressureBdry->d_cellTypeID;
+      if (d_pressureBoundary) {
+	int pressure_celltypeval = d_pressureBC->d_cellTypeID;
 	fort_inlpresbcinout(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
-			    density, cellType, press_celltypeval,
+			    density, cellType, pressure_celltypeval,
 			    flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
 			    cellinfo->stb, xminus, xplus, yminus, yplus,
 			    zminus, zplus);
       }
       if (d_outletBoundary) {
-	int out_celltypeval = d_outletBC->d_cellTypeID;
+	int outlet_celltypeval = d_outletBC->d_cellTypeID;
 	if (xminus) {
 	  int colX = idxLo.x();
   	  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -4842,7 +4866,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	      IntVector currCell(colX, colY, colZ);
       	      IntVector xminusCell(colX-1, colY, colZ);
 
-	      if (cellType[xminusCell] == out_celltypeval) {
+	      if (cellType[xminusCell] == outlet_celltypeval) {
                  double avdenlow = 0.5 * (density[currCell] +
 	      		            density[xminusCell]);
      	    	 floutbc += avdenlow*uVelocity[currCell] *
@@ -4859,7 +4883,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	      IntVector currCell(colX, colY, colZ);
 	      IntVector xplusCell(colX+1, colY, colZ);
 
-	      if (cellType[xplusCell] == out_celltypeval) {
+	      if (cellType[xplusCell] == outlet_celltypeval) {
 	         double avden = 0.5 * (density[xplusCell] +
 	      		         density[currCell]);
 	         floutbc += avden*uVelocity[xplusCell] *
@@ -4876,7 +4900,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      IntVector currCell(colX, colY, colZ);
  	      IntVector yminusCell(colX, colY-1, colZ);
 
- 	      if (cellType[yminusCell] == out_celltypeval) {
+ 	      if (cellType[yminusCell] == outlet_celltypeval) {
  	         double avdenlow = 0.5 * (density[currCell] +
  	      		            density[yminusCell]);
  	         floutbc += avdenlow*vVelocity[currCell] *
@@ -4893,7 +4917,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      IntVector currCell(colX, colY, colZ);
  	      IntVector yplusCell(colX, colY+1, colZ);
 
- 	      if (cellType[yplusCell] == out_celltypeval) {
+ 	      if (cellType[yplusCell] == outlet_celltypeval) {
  	         double avden = 0.5 * (density[yplusCell] +
  	      		         density[currCell]);
  	         floutbc += avden*vVelocity[yplusCell] *
@@ -4910,7 +4934,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      IntVector currCell(colX, colY, colZ);
  	      IntVector zminusCell(colX, colY, colZ-1);
 
- 	      if (cellType[zminusCell] == out_celltypeval) {
+ 	      if (cellType[zminusCell] == outlet_celltypeval) {
  	         double avdenlow = 0.5 * (density[currCell] +
  	      		            density[zminusCell]);
  	         floutbc += avdenlow*wVelocity[currCell] *
@@ -4927,7 +4951,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      IntVector currCell(colX, colY, colZ);
  	      IntVector zplusCell(colX, colY, colZ+1);
 
- 	      if (cellType[zplusCell] == out_celltypeval) {
+ 	      if (cellType[zplusCell] == outlet_celltypeval) {
  	         double avden = 0.5 * (density[zplusCell] +
  	      		         density[currCell]);
  	         floutbc += avden*wVelocity[zplusCell] *
@@ -5066,9 +5090,8 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
 		  	    patch);
 
-      int outlet_celltypeval = -10;
-      if (d_outletBoundary)
-        outlet_celltypeval = d_outletBC->d_cellTypeID;
+      int outlet_celltypeval = outletCellType();
+      if (d_outletBoundary) {
 // Assuming outlet is xplus
       IntVector indexLow = patch->getCellFORTLowIndex();
       IntVector indexHigh = patch->getCellFORTHighIndex();
@@ -5090,6 +5113,7 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
 	    }
 	  }
 	}
+      }
       }
     }
 }

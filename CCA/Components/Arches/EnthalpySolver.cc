@@ -632,17 +632,17 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     }
     if (d_conv_scheme > 0) {
-      int wallID = d_boundaryCondition->wallCellType();
+      int wall_celltypeval = d_boundaryCondition->wallCellType();
       if (d_conv_scheme == 2)
         d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
 					        maxAbsU, maxAbsV, maxAbsW, 
 				  	        &enthalpyVars,
-						&constEnthalpyVars, wallID);
+						&constEnthalpyVars, wall_celltypeval);
       else
         d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
 					       maxAbsU, maxAbsV, maxAbsW, 
 				  	       &enthalpyVars,
-					       &constEnthalpyVars, wallID);
+					       &constEnthalpyVars, wall_celltypeval);
     }
 
     if (d_radiationCalc) {
@@ -700,14 +700,16 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate the enthalpy boundary conditions
     // inputs : enthalpySP, scalCoefSBLM
     // outputs: scalCoefSBLM
-    d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
-				    &enthalpyVars, &constEnthalpyVars);
+    if (d_boundaryCondition->anyArchesPhysicalBC()) {
+      d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
+				      &enthalpyVars, &constEnthalpyVars);
 
-    if (d_boundaryCondition->getIntrusionBC()) {
-      d_boundaryCondition->intrusionEnergyExBC(pc, patch, cellinfo,
+      if (d_boundaryCondition->getIntrusionBC()) {
+        d_boundaryCondition->intrusionEnergyExBC(pc, patch, cellinfo,
 					      &enthalpyVars,&constEnthalpyVars);
-      d_boundaryCondition->intrusionEnthalpyBC(pc, patch, delta_t, cellinfo,
+        d_boundaryCondition->intrusionEnthalpyBC(pc, patch, delta_t, cellinfo,
 					      &enthalpyVars,&constEnthalpyVars);
+      }
     }
 
     // apply multimaterial intrusion wallbc
@@ -931,12 +933,12 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 
 
 // Outlet bc is done here not to change old enthalpy
-    int out_celltypeval = d_boundaryCondition->outletCellType();
-    if (!(out_celltypeval==-10))
+    if (d_boundaryCondition->getOutletBC())
     d_boundaryCondition->enthalpyOutletBC(pc, patch,  cellinfo, 
 					  &enthalpyVars, &constEnthalpyVars,
 					  delta_t, maxAbsU, maxAbsV, maxAbsW);
 
+    if (d_boundaryCondition->getPressureBC())
     d_boundaryCondition->enthalpyPressureBC(pc, patch,  cellinfo, 
 				  	    &enthalpyVars,&constEnthalpyVars);
 

@@ -2064,8 +2064,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-  int out_celltypeval = d_boundaryCondition->outletCellType();
-  if (!(out_celltypeval == -10)) {
+  int outlet_celltypeval = d_boundaryCondition->outletCellType();
+  if (!(outlet_celltypeval == -10)) {
   if (xminus) {
     int colX = idxLo.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -2073,7 +2073,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
 
-        if (cellType[xminusCell] == out_celltypeval) {
+        if (cellType[xminusCell] == outlet_celltypeval) {
            densityGuess[xminusCell] = delta_t * maxAbsU *
                (density[currCell] - density[xminusCell]) /
 	       cellinfo->dxep[colX-1];
@@ -2090,7 +2090,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
 
-        if (cellType[xplusCell] == out_celltypeval) {
+        if (cellType[xplusCell] == outlet_celltypeval) {
            densityGuess[xplusCell] -= delta_t * maxUxplus *
                (density[xplusCell] - density[currCell]) /
 	       cellinfo->dxpw[colX+1];
@@ -2107,7 +2107,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
 
-        if (cellType[yminusCell] == out_celltypeval) {
+        if (cellType[yminusCell] == outlet_celltypeval) {
            densityGuess[yminusCell] = delta_t * maxAbsV *
                (density[currCell] - density[yminusCell]) /
 	       cellinfo->dynp[colY-1];
@@ -2124,7 +2124,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
 
-        if (cellType[yplusCell] == out_celltypeval) {
+        if (cellType[yplusCell] == outlet_celltypeval) {
            densityGuess[yplusCell] -= delta_t * maxAbsV *
                (density[yplusCell] - density[currCell]) /
 	       cellinfo->dyps[colY+1];
@@ -2141,7 +2141,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
 
-        if (cellType[zminusCell] == out_celltypeval) {
+        if (cellType[zminusCell] == outlet_celltypeval) {
            densityGuess[zminusCell] = delta_t * maxAbsW *
                (density[currCell] - density[zminusCell]) /
 	       cellinfo->dztp[colZ-1];
@@ -2158,7 +2158,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
 
-        if (cellType[zplusCell] == out_celltypeval) {
+        if (cellType[zplusCell] == outlet_celltypeval) {
            densityGuess[zplusCell] -= delta_t * maxAbsW *
                (density[zplusCell] - density[currCell]) /
 	       cellinfo->dzpb[colZ+1];
@@ -2169,7 +2169,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     }
   }
   }
-  int press_celltypeval = d_boundaryCondition->pressureCellType();
+  int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+  if (!(pressure_celltypeval == -10)) {
   if (xminus) {
     int colX = idxLo.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -2177,7 +2178,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
 	
-        if (cellType[xminusCell] == press_celltypeval)
+        if (cellType[xminusCell] == pressure_celltypeval)
           densityGuess[xminusCell] = densityGuess[currCell];
       }
     }
@@ -2189,7 +2190,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
 
-        if (cellType[xplusCell] == press_celltypeval)
+        if (cellType[xplusCell] == pressure_celltypeval)
           densityGuess[xplusCell] = densityGuess[currCell];
       }
     }
@@ -2201,7 +2202,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
 	
-        if (cellType[yminusCell] == press_celltypeval)
+        if (cellType[yminusCell] == pressure_celltypeval)
           densityGuess[yminusCell] = densityGuess[currCell];
       }
     }
@@ -2213,7 +2214,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
 
-        if (cellType[yplusCell] == press_celltypeval)
+        if (cellType[yplusCell] == pressure_celltypeval)
           densityGuess[yplusCell] = densityGuess[currCell];
       }
     }
@@ -2225,7 +2226,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
 
-        if (cellType[zminusCell] == press_celltypeval)
+        if (cellType[zminusCell] == pressure_celltypeval)
           densityGuess[zminusCell] = densityGuess[currCell];
       }
     }
@@ -2237,10 +2238,11 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
 
-        if (cellType[zplusCell] == press_celltypeval)
+        if (cellType[zplusCell] == pressure_celltypeval)
           densityGuess[zplusCell] = densityGuess[currCell];
       }
     }
+  }
   }
 */
   }
