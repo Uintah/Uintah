@@ -39,11 +39,15 @@ namespace Uintah {
       : next(next), comp(comp), req(req),                  
         fromPatch(fromPatch), low(low), high(high), matl(matl)
     {
-      ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
+      ASSERTL2(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
+
+#if SCI_ASSERTION_LEVEL >= 2
       Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(), true);
-      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getLowIndex(basis, req->var->getBoundaryLayer())) ==
+#endif
+
+      ASSERTL2(fromPatch == 0 || (Min(low, fromPatch->getLowIndex(basis, req->var->getBoundaryLayer())) ==
 				fromPatch->getLowIndex(basis, req->var->getBoundaryLayer())));
-      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getHighIndex(basis, req->var->getBoundaryLayer())) ==
+      ASSERTL2(fromPatch == 0 || (Max(high, fromPatch->getHighIndex(basis, req->var->getBoundaryLayer())) ==
 				fromPatch->getHighIndex(basis, req->var->getBoundaryLayer())));
       toTasks.push_back(toTask);
     }
