@@ -163,7 +163,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
-  t->computes(lb->bElBarLabel);
   t->computes(d_sharedState->get_delt_label());
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
@@ -510,7 +509,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::OldDW,lb->pVolumeLabel,            Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeOldLabel,         Ghost::None,0);
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->bElBarLabel,             Ghost::None,0);
 
   task->modifies(lb->dispNewLabel);
   task->modifies(lb->gVelocityLabel);
