@@ -11,14 +11,15 @@
 	<maxTime>100.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
-	<delt_max>.4</delt_max>
-	<max_initial_delt>2.e-3</max_initial_delt>
-	<initial_delt_range>1.e-1</initial_delt_range>
-	<timestep_multiplier>.8</timestep_multiplier>
+	<delt_max>9e99</delt_max>
+	<max_initial_delt>1.e-3</max_initial_delt>
+	<initial_delt_range>0</initial_delt_range>
+	<max_delt_increase>0.5</max_delt_increase>	
+	<timestep_multiplier>1</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>cfd.uda</filebase>
-	<outputInterval>.1</outputInterval>
+	<outputInterval>.005</outputInterval>
 	<save label = "density"/>
 <!--	<save label = "xvelocity"/>
 	<save label = "yvelocity"/>
@@ -44,6 +45,8 @@
 	<buoyancy>0</buoyancy>
 	<thermal_conduction>0</thermal_conduction>
 	<random_initial_velocities>[1.e-5,1.e-5,1.e-5]</random_initial_velocities>
+	<vorticity_confinement>cellbased</vorticity_confinement>
+	<vorticity_confinement_scale>.1</vorticity_confinement_scale>
 	<Solver>
 	   <Parameters>
 	      <tolerance>1.e-4</tolerance>
