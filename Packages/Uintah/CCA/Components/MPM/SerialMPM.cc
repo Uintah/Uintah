@@ -146,6 +146,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 {
   Task* t = scinew Task("SerialMPM::actuallyInitialize",
 			this, &SerialMPM::actuallyInitialize);
+  t->computes(lb->partCountLabel);
   t->computes(lb->pXLabel);
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
@@ -161,6 +162,11 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pToughnessLabel);
   }
   t->computes(d_sharedState->get_delt_label());
+  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+
+  t = scinew Task("SerialMPM::printParticleCount",
+		  this, &SerialMPM::printParticleCount);
+  t->requires(Task::NewDW, lb->partCountLabel);
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
@@ -680,12 +686,30 @@ void SerialMPM::scheduleCarryForwardVariables(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+void SerialMPM::printParticleCount(const ProcessorGroup* pg,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse*,
+				   DataWarehouse* new_dw)
+{
+  if(pg->myrank() == 0){
+    static bool printed=false;
+    if(!printed){
+      sumlong_vartype pcount;
+      new_dw->get(pcount, lb->partCountLabel);
+      cerr << "Created " << pcount << " total particles\n";
+      printed=true;
+    }
+  }
+}
+
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 				   const PatchSubset* patches,
 				   const MaterialSubset* matls,
 				   DataWarehouse*,
 				   DataWarehouse* new_dw)
 {
+  particleIndex totalParticles=0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -697,6 +721,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
        particleIndex numParticles = mpm_matl->countParticles(patch);
+       totalParticles+=numParticles;
 
        mpm_matl->createParticles(numParticles, NAPID, patch, new_dw);
 
@@ -716,6 +741,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
     new_dw->put(NAPID, lb->ppNAPIDLabel, 0, patch);
   }
+  new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
 
 

@@ -264,6 +264,9 @@ MPMLabel::MPMLabel()
 			CCVariable<double>::getTypeDescription() );
 
   // Reduction variables
+  partCountLabel = scinew VarLabel("particleCount",
+				   sumlong_vartype::getTypeDescription());
+
   delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
 
   StrainEnergyLabel = scinew VarLabel( "StrainEnergy",
@@ -377,6 +380,7 @@ MPMLabel::~MPMLabel()
   delete gradPressNCLabel;
   delete dTdt_NCLabel;
 
+  delete partCountLabel;
   delete delTLabel;
 
   delete StrainEnergyLabel;
