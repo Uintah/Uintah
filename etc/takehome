@@ -6,5 +6,7 @@ set release = `cat etc/release`
 cvs rdiff -c -r $name"_"$release work > patch.$release
 gzip patch.$release
 @ release ++
+cd ../th/work
+cvs update -d
 cvs tag $name"_"$release
 echo $release > etc/release
