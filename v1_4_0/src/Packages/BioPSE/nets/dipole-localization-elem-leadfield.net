@@ -286,8 +286,8 @@ set $m16-def-color-g 0.5
 set $m16-def-color-b 0.5
 set $m16-node_display_type {Spheres}
 set $m16-edge_display_type {Lines}
-set $m16-node_scale 0.035
-set $m16-edge_scale 0.03
+set $m16-node_scale [expr 0.035 * ${global-scale}]
+set $m16-edge_scale [expr 0.03 * ${global-scale}]
 set $m16-show_progress -2147483647
 set $m16-resolution 10
 set $m17-notes {}
@@ -313,8 +313,8 @@ set $m20-def-color-g 0.5
 set $m20-def-color-b 0.5
 set $m20-node_display_type {Spheres}
 set $m20-edge_display_type {Lines}
-set $m20-node_scale 0.036
-set $m20-edge_scale 0.03
+set $m20-node_scale [expr 0.036 * ${global-scale}]
+set $m20-edge_scale [expr 0.03 * ${global-scale}]
 set $m20-show_progress -2147483647
 set $m20-resolution 10
 set $m21-notes {}
@@ -353,9 +353,9 @@ set $m25-def-color-b {0.5}
 set $m25-node_display_type {Disks}
 set $m25-edge_display_type {Lines}
 set $m25-active_tab {Nodes}
-set $m25-node_scale {0.05}
-set $m25-edge_scale {0.03}
-set $m25-vectors_scale {0.03}
+set $m25-node_scale [expr 0.05 * ${global-scale}]
+set $m25-edge_scale [expr 0.03 * ${global-scale}]
+set $m25-vectors_scale [expr 0.03 * ${global-scale}]
 set $m25-show_progress {-2147483647}
 set $m25-resolution {10}
 $m1 initialize_ui
