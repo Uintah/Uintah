@@ -54,7 +54,10 @@
 
 namespace SCIRun {  
 
-  #define BLOCK(R) MxNScheduler::makeBlock(R)
+  ////////////////////
+  // R = process rank; S = process size; L = array length in this dimension
+  #define BLOCK(R,S,L) MxNScheduler::makeBlock(R,S,L)
+  #define CYCLIC(R,S,L) MxNScheduler::makeCyclic(R,S,L)
 
   //String comparison function for std::map
   struct ltstr
@@ -92,10 +95,11 @@ namespace SCIRun {
     MxNArrayRep* callerGetCallerRep(std::string distname);
 
     /////////
-    // Static methods that retrieve a appropriate MxNArrayRep
+    // Static methods that retrieve a appropriate Index
     // to each process participating in a defined distribution
     // such as block, cyclic, etc.
-    static MxNArrayRep* makeBlock(int rank);
+    static Index* makeBlock(int rank, int size, int length);
+    static Index* makeCyclic(int rank, int size, int length);
     
     ////////////
     // (Callee Metods)

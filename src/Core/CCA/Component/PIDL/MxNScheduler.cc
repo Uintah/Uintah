@@ -95,10 +95,23 @@ MxNArrayRep* MxNScheduler::calleeGetCalleeRep(std::string distname)
   return NULL;
 }
 
-MxNArrayRep* MxNScheduler::makeBlock(int rank)
+Index* MxNScheduler::makeBlock(int rank, int size, int length)
 {
+  int sizePproc;
+  int sta, fin;
 
+  ////////////
+  // Block size per process is calculated using a ceiling division
+  sizePproc = (int)std::ceil(length*1.0 / size*1.0);
 
+  sta = rank * sizePproc;
+  fin = std::min(((rank+1) * sizePproc),length);
+  return (new Index(sta,fin-1,1));  
+}
+
+Index* MxNScheduler::makeCyclic(int rank, int size, int length)
+{
+  return (new Index(rank,length,size));  
 }
 
 void* MxNScheduler::getArray(std::string distname)
