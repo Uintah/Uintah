@@ -108,17 +108,32 @@ MinNormLeastSq::execute()
   
   int i;
   vector<MatrixHandle> in(4);
-  if (!A0_imat_->get(in[0])) return;
-  if (!A1_imat_->get(in[1])) return;
-  if (!A2_imat_->get(in[2])) return;
-  if (!b_imat_->get(in[3])) return;
+  if (!A0_imat_->get(in[0]) || !in[0].get_rep()) { 
+    error("No data in BasisVec1"); 
+    return;
+  }
+  if (!A1_imat_->get(in[1]) || !in[1].get_rep()) {
+    error("No data in BasisVec2");
+    return;
+  }
+  if (!A2_imat_->get(in[2]) || !in[2].get_rep()) {
+    error("No data in BasisVec3");
+    return;
+  }
+  if (!b_imat_->get(in[3]) || !in[3].get_rep()) {
+    error("No data in TargetVec");
+    return;
+  }
   vector<ColumnMatrix *> Ac(4);
   for (i = 0; i < 4; i++) {
-    ASSERT (Ac[i] = dynamic_cast<ColumnMatrix *>(in[i].get_rep()))
+    Ac[i] = in[i]->column();
   }
   int size = Ac[0]->nrows();
   for (i = 1; i < 4; i++) {
-    ASSERT ( Ac[i]->nrows() == size )
+    if ( Ac[i]->nrows() != size ) {
+      error("ColumnMatrices are different sizes");
+      return;
+    }
   }
   double *A[3];
   for (i=0; i<3; i++) {
