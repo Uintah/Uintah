@@ -1325,7 +1325,7 @@ int HexMesh::locate (const Point& P, int & idx)
 
 
 /*******************************************************************************
-* Interpolation operator
+* Interpolation operators
 *
 *     This function returns the value at the given data point.  
 *******************************************************************************/
@@ -1346,56 +1346,6 @@ double HexMesh::interpolate (const Point & p, const Array1<double> & data, int &
   if (h == NULL)
     return -1;
     
-
-  // Patch to deal with tetra.
-  
-  /*
-  if (h->node_index(0) == h->node_index(1) &&
-      h->node_index(1) == h->node_index(2) &&
-      h->node_index(2) == h->node_index(3))
-  {
-    cout << "Tetra.\n";
-    Point p1(h->node(0));
-    Point p2(h->node(4));
-    Point p3(h->node(6));
-    Point p4(h->node(7));
-    double x1=p1.x();
-    double y1=p1.y();
-    double z1=p1.z();
-    double x2=p2.x();
-    double y2=p2.y();
-    double z2=p2.z();
-    double x3=p3.x();
-    double y3=p3.y();
-    double z3=p3.z();
-    double x4=p4.x();
-    double y4=p4.y();
-    double z4=p4.z();
-    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
-    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
-    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
-    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-    double iV6=1./(a1+a2+a3+a4);
-
-    double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
-    double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
-    double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
-    double value = data[h->node_index(0)] * iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
-    double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
-    double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
-    double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
-    value += data[h->node_index(4)] * iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
-    double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
-    double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
-    double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
-    value += data[h->node_index(6)] * iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
-    double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
-    double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
-    double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
-    return value + data[h->node_index(7)] * iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
-  }
-*/
-
   // Find interpolants.
   
   h->find_stu (p.vector(), s, t, u);
@@ -1418,6 +1368,49 @@ double HexMesh::interpolate (const Point & p, const Array1<double> & data, int &
            - sm1*tp1*up1*data[h->node_index(7)]) * 0.125;
 }
 
+double HexMesh::interpolate (const Point & P, const Array1<Vector> & data,
+			     Vector &v, int & start)
+{
+  Hexahedron * h;
+  double s, t, u, sm1, sp1, tm1, tp1, um1, up1;
+
+  // Find which node has this point.
+
+  locate (P, start);
+  if (start < 0)
+    return -1;
+
+  h = find_element (start);
+
+  if (h == NULL)
+    return -1;
+
+
+  // Find interpolants.
+
+  h->find_stu (P.vector(), s, t, u);
+  sm1 = s - 1;
+  sp1 = s + 1;
+  tm1 = t - 1;
+  tp1 = t + 1;
+  um1 = u - 1;
+  up1 = u + 1;
+
+  // Assign the interpolated vector
+
+  v = (- data[h->node_index(0)]*(sm1*tm1*um1)
+       + data[h->node_index(1)]*(sp1*tm1*um1)
+       - data[h->node_index(2)]*(sp1*tp1*um1)
+       + data[h->node_index(3)]*(sm1*tp1*um1)
+       + data[h->node_index(4)]*(sm1*tm1*up1)
+       - data[h->node_index(5)]*(sp1*tm1*up1)
+       + data[h->node_index(6)]*(sp1*tp1*up1)
+       - data[h->node_index(7)]*(sm1*tp1*up1)) * 0.125;
+
+  // Return something that i don't understand
+
+  return 0.0;
+}
 
 /*******************************************************************************
 * Bounding box operator
