@@ -15,7 +15,11 @@
 #include <SCICore/Datatypes/cVector.h>
 #include <fstream>
 using std::complex;
+#ifndef _WIN32
 using std::cerr;
+#else
+#include <iostream.h>
+#endif
 using std::abs;
 using std::conj;
 using std::endl;
@@ -239,6 +243,9 @@ void cVector::io(Piostream&) {
 
 //
 // $Log$
+// Revision 1.6  1999/10/26 21:52:05  moulding
+// added a #ifndef block for win32.  cerr isn't in visual c++'s std namespace yet.
+//
 // Revision 1.5  1999/10/07 02:07:36  sparker
 // use standard iostreams and complex type
 //
