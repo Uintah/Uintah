@@ -600,7 +600,6 @@ DWDatabase<VarType, DomainType>::getVarLabelMatlLevelTriples( vector<VarLabelMat
       DomainRecord* domainRecord = domainiter->second;
       for(int i=0;i<(int)(domainRecord->getVars().size());i++){
 	if(domainRecord->getVars()[i].var){
-	  cout << "  Label(" << nameRecord->label->getName() << "): Level(" << domainRecord->getDomain() << "): Material(" << i-1 << ")" << endl; 
 	  vars.push_back(VarLabelMatlLevel(nameRecord->label, i-1, domainRecord->getDomain() ));
 	}
       }
