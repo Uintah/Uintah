@@ -34,19 +34,13 @@
    It is not a complete general purpose interface although several of
    the functions are.
 */
-
 #include <sci_defs.h>
 
 #ifdef HAVE_MDSPLUS
 
-#include "mdsPlusAPI.h"
-
 #include <mdslib.h>
 
-/* These are not defined in mdslib.h so define them here. */
-int MdsOpen(char *tree, int* shot);
-void MdsDisconnect();
-int MdsSetSocket( int *socket );
+#include "mdsPlusAPI.h"
 
 /* If an MDSPlus call is successful the first bit is set. */
 #define status_ok( status ) ((status & 1) == 1)
@@ -83,17 +77,45 @@ void MDS_SetSocket( int socket )
   MdsSetSocket( &socket );
 }
 
-/*  Query the rank of the node - as in the number of dimensions. */
-int get_rank( const char *signal ) {
+/*  Query to see if the node is valid - does it really exist. */
+int is_valid( const char *signal) {
+
+  /* local vars */
+  char buf[1024];                     /* Buffer for MDS+ exp */
+
+  int *nid = NULL;
+  int *len = NULL;
+
+  /* Put GETNCI() TDI function around signal name */
+  memset(buf, 0, sizeof(buf));
+  sprintf( buf, "GETNCI(%s,\"NID_NUMBER\")", signal );
+
+  nid = (int*) get_value( buf, DTYPE_LONG );
+
+  /* Put GETNCI() TDI function around signal name */
+  memset(buf, 0, sizeof(buf));
+  sprintf( buf, "GETNCI(%s,\"LENGTH\")", signal );
+
+  len = (int*) get_value( buf, DTYPE_LONG );
+
+  return (nid && len) ? (*len>1) : 0;
+}
+
+/*  Query the type of the node - as in the data type. */
+int get_type( const char *signal ) {
 
   /* Local vars */
   char buf[1024];                     /* Buffer for MDS+ exp */
 
-  /* Put RANK() TDI function around signal name. */
+  int *type = NULL;
+
+  /* Put KIND and DATA TDI functions around signal name */
   memset(buf,  0,sizeof(buf));
-  sprintf(buf, "RANK(%s)", signal);
-    
-  return get_value( buf );
+  sprintf(buf, "KIND(DATA(%s))", signal);
+
+  type = (int*) get_value( buf, DTYPE_LONG );
+
+  return type ? *type : -1;
 }
 
 /*  Query the size of the node  - as in the number of elements. */
@@ -102,239 +124,219 @@ int get_size( const char *signal) {
   /* local vars */
   char buf[1024];                     /* Buffer for MDS+ exp */
 
+  int *size = NULL;
+
   /* Put SIZE() TDI function around signal name */
   memset(buf, 0, sizeof(buf));
   sprintf(buf, "SIZE(%s)", signal);
 
-  return get_value( buf );
+  size = (int*) get_value( buf, DTYPE_LONG );
+
+  return size ? *size : -1;
 }
 
-/*  Query the long value of the node - as in the number of slices. */
-int get_value( const char *signal ) {
+/*  Query the rank of the node - as in the number of dimensions. */
+int get_rank( const char *signal ) {
 
   /* Local vars */
-  char buf[1024];                     /* Buffer for MDS+ exp */   
-  int len, dsc;                       /* Used in MDS+ calls  */
-  int null = 0;
-  int dtype_long = DTYPE_LONG;        /* MDS+ Descripter type def, long */
+  char buf[1024];                     /* Buffer for MDS+ exp */
 
-  int value = 0;
-  int retVal;
+  int *rank = NULL;
 
-  /* Build a descriptor for fectching the data. */
-  dsc = descr(&dtype_long, &value, &null);
-
-  /* Put the signal name in the buffer passed to MDS. */
-  memset(buf,0,sizeof(buf));
-  sprintf(buf,"%s", signal);
+  /* Put RANK() TDI function around signal name. */
+  memset(buf,  0,sizeof(buf));
+  sprintf(buf, "RANK(%s)", signal);
     
-  /* Use MdsValue to get the value */
-  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? value : -1;
+  rank = (int*) get_value( buf, DTYPE_LONG );
 
-  return retVal;
-}
-
-/*  Query the long values of the node - as in the nids the of slices. */
-int* get_values( const char *signal, int size ) {
-
-  /* Local vars */
-  char buf[1024];                     /* buffer for MDS+ exp */  
-  int len, dsc;                       /* Used in MDS+ calls  */
-  int null = 0;
-  int dtype_long = DTYPE_LONG;        /* MDS+ Descripter type def, long */
-
-  int* values = (int *) malloc(size * sizeof(int));
-  int* retVal;
-
-  /* Build a descriptor for fectching the data. */
-  dsc = descr(&dtype_long, values, &size, &null);
-
-  /* Put the signal in the buffer passed to mds. */
-  memset(buf,0,sizeof(buf));
-  sprintf(buf,"%s", signal);
-
-  /* Use MdsValue to get the value */
-  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? values : NULL;
-
-  return retVal;
-}
-
-/*  Query the double value of the node - as in the slice time. */
-double get_datum( const char *signal ) {
-
-  /* Local vars */
-  char buf[1024];                     /* Buffer for MDS+ exp */   
-  int len, dsc;                       /* Used in MDS+ calls  */
-  int null = 0;
-  int dtype_long = DTYPE_DOUBLE;      /* MDS+ Descripter type def, double */
-
-  double datum = 0;
-  double retVal;
-
-  /* Build a descriptor for fectching the data. */
-  dsc = descr(&dtype_long, &datum, &null);
-
-  /* Put the signal name in the buffer passed to MDS. */
-  memset(buf,0,sizeof(buf));
-  sprintf(buf,"%s", signal);
-    
-  /* Use MdsValue to get the value */
-  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? datum : -1;
-
-  return retVal;
-}
-
-/*  Query the double values of the node - as in the signal for the of slices. */
-double* get_data( const char *signal, int size )
-{
-  /* local vars */
-  char buf[1024];                     /* buffer for MDS+ exp */   
-  int len, dsc;                       /* Used in MDS+ calls  */
-  int null = 0;
-  int dtype_double = DTYPE_DOUBLE;    /* MDS+ Descripter type def, long */
-
-  /* Create a data array of sufficient size.  Note: Tried to use a
-     * multidimensional array, which works for static allocation.
-     * However, MdsValue seems to get confused about using dynamically
-     * allocated multidimensional arrays. */
-  double *data = (double *) malloc(size * sizeof(double));
-  double* retVal;
-
-  memset(data,0,sizeof(data));
-  dsc = descr(&dtype_double, data, &size, &null);
-
-  /* Put the signal in the buffer passed to mds. */
-  memset(buf,0,sizeof(buf));
-  sprintf(buf,"%s", signal);
-
-  /* Use MdsValue to get the value */
-  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
-
-  return retVal;
-}
-
-/*  Query the string values of the node - as in the name of the slices. */
-char* get_string( const char *signal )
-{
-  /* local vars */
-  char buf[1024];                     /* buffer for MDS+ exp */
-  int len, dsc;                       /* Used in MDS+ calls  */
-  int null = 0;
-  int dtype_cstring = DTYPE_CSTRING;  /* MDS+ Descripter type def, cstring */
-
-  int size = 32;
-
-    /* Create a data array of sufficient size. */
-  char *data = (char *) malloc(size * sizeof(char));
-  char* retVal;
-
-  memset(data,0,sizeof(data));
-  dsc = descr(&dtype_cstring, data, &null, &size);
-
-  /* Put the signal in the buffer passed to Mds. */
-  memset(buf,0,sizeof(buf));
-  sprintf(buf,"%s", signal);
-
-  /* Use MdsValue to get the value */
-  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
-
-  return retVal;
+  return rank ? *rank : -1;
 }
 
 /* Get the rank and number of dimensions for a particular signal. */
-int get_dims( const char *node, int *dims )
+int get_dims( const char *signal, int **dims )
 {
   char buf[1024];                 /* buffer for MDS+ exp */
-
-  int i, rank;
+  int i;
 
   /* Fetch the rank of the signal. */
-  sprintf( buf, "%s", node );
-  rank = get_rank( buf );
+  int rank = get_rank( signal );
 
-  if( 0 < rank && rank < 4 ) { 
+  if( rank > 0 ) {
+    *dims = malloc( rank * sizeof( int ) );
+
     /* Fetch the dimensions of the signal. */
-    for( i=0; i<rank; i++ )
-      {
-	sprintf( buf, "%s,%d", node, i );
-
-	dims[i] = get_size( buf );
-      }
+    for( i=0; i<rank; i++ ) {
+      sprintf( buf, "%s,%d", signal, i );
+    
+      (*dims)[i] = get_size( buf );
+    }
   }
 
   return rank;
 }
 
-/*  Query the server for the cylindrical or cartesian components of the grid. */
-double* get_grid( const char *axis, int *dims )
-{
-  char *gridStr = "\\NIMROD::TOP.OUTPUTS.CODE.GRID";
-  char buf[1024];                 /* buffer for MDS+ exp */
 
-  int i, rank, size = 1;
+/*  Query the long value of the node - as in the number of slices. */
+void* get_value( const char *signal, int dtype ) {
 
-  /* Fetch the Grid data from the node. */
-  sprintf( buf, "%s:%s", gridStr, axis );
-  rank = get_dims( buf, dims );
+  /* Local vars */
+  char buf[1024];                     /* Buffer for MDS+ exp */   
+  int len, dsc;                       /* Used in MDS+ calls  */
+  int null = 0;
 
-  /* Make sure the rank is correct for the axis specified. */
-  if( ( strcmp( axis, "R"        ) == 0 && rank == 2 ) ||
-      ( strcmp( axis, "PHI"      ) == 0 && rank == 1 ) ||
-      ( strcmp( axis, "X"        ) == 0 && rank == 3 ) ||
-      ( strcmp( axis, "Y"        ) == 0 && rank == 3 ) ||
-      ( strcmp( axis, "Z"        ) == 0 && rank == 2 ) ||
-      ( strcmp( axis, "K"        ) == 0 && rank == 1 ) ||
-      ( strcmp( axis, "RADIAL"   ) == 0 && rank == 1 ) ||
-      ( strcmp( axis, "POLOIDAL" ) == 0 && rank == 1 ) )
-  {
-    /* The dimensions for the axis. */
-    for( i=0; i<rank; i++ )
-      size *= dims[i];
+  int size = 1;
+  void *value;
 
-    /* Get the data for the axis. */
-    sprintf( buf, "%s:%s", gridStr, axis );
+  switch( dtype ) {
+  case DTYPE_UCHAR:
+  case DTYPE_USHORT:
+  case DTYPE_ULONG:
+  case DTYPE_ULONGLONG:
+  case DTYPE_CHAR:
+  case DTYPE_SHORT:
+  case DTYPE_LONG:
+  case DTYPE_LONGLONG:
+    dtype = DTYPE_LONG;
+    value = (void*) malloc( sizeof( int ) );
+    break;
 
-    return get_data( buf, size );
-  }
-  else
+  case DTYPE_FLOAT:
+  case DTYPE_FS:
+    dtype = DTYPE_FLOAT;
+    value = (void*) malloc( sizeof( float ) );
+    break;
+
+  case DTYPE_DOUBLE:
+  case DTYPE_FT:
+    dtype = DTYPE_DOUBLE;
+    value = (void*) malloc( sizeof( double ) );
+    break;
+
+  case DTYPE_CSTRING:
+    /* Put SIZEOF() TDI function around signal name */
+    memset(buf, 0, sizeof(buf));
+    sprintf( buf, "SIZEOF(%s)", signal );
+  
+    size = (int) (*(int*) get_value( buf, DTYPE_LONG ));
+
+    dtype = DTYPE_CSTRING;
+    value = (void*) malloc( size * sizeof( char ) );
+    break;
+
+  default:
     return NULL;
+    break;
+  }
+
+  /* Build a descriptor for fectching the data. */
+  if( dtype == DTYPE_CSTRING )
+    dsc = descr(&dtype, value, &null, &size);
+  else
+    dsc = descr(&dtype, value, &null);
+
+  /* Put the signal name in the buffer passed to MDS. */
+  memset(buf,0,sizeof(buf));
+  sprintf(buf,"%s", signal);
+    
+  /* Use MdsValue to get the value */
+  return status_ok( MdsValue(buf, &dsc, &null, &len) ) ? value : NULL;
 }
 
-/*  Query the server for the slice nids for the shot. */
-int get_slice_ids( int **nids )
-{
-  char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
-  char buf[1024];                 // buffer for MDS+ exp     
+/*  Query the long values of the node - as in the nids the of slices. */
+void* get_values( const char *signal, int dtype ) {
 
-  int nSlices;
+  is_valid( signal );
 
-  /* Query the server for the number of slices in the tree. */
-  sprintf( buf, "getnci(\'\\%s\',\'NUMBER_OF_CHILDREN\')", sliceStr );
-  nSlices = get_value(  buf );
+  /* Local vars */
+  char buf[1024];                     /* buffer for MDS+ exp */  
+  int len, dsc;                       /* Used in MDS+ calls  */
+  int null = 0;
+  int *dims;
+  int i, size = 1;
 
-  /* Query the nid numbers of the slices. */
-  sprintf( buf, "getnci(\"\\%s.*\",\"NID_NUMBER\")", sliceStr );
+  void* values;
 
-  *nids = get_values( buf, nSlices );
+  int rank = get_dims( signal, &dims );
 
-  return nSlices;
+  if( rank < 0 )
+    return NULL;
+
+  if( rank == 0 )
+    return get_value( signal, dtype );
+
+  
+  for( i=0; i<rank; i++ )
+    size *= dims[i];
+  
+  free( dims );
+
+  switch( dtype ) {
+  case DTYPE_UCHAR:
+  case DTYPE_USHORT:
+  case DTYPE_ULONG:
+  case DTYPE_ULONGLONG:
+  case DTYPE_CHAR:
+  case DTYPE_SHORT:
+  case DTYPE_LONG:
+  case DTYPE_LONGLONG:
+    dtype = DTYPE_LONG;
+    values = (void*) malloc( size * sizeof( int ) );
+    break;
+
+  case DTYPE_FLOAT:
+  case DTYPE_FS:
+    dtype = DTYPE_FLOAT;
+    values = (void*) malloc( size * sizeof( float ) );
+    break;
+
+  case DTYPE_DOUBLE:
+  case DTYPE_FT:
+    dtype = DTYPE_DOUBLE;
+    values = (void*) malloc( size * sizeof( double ) );
+    break;
+
+  case DTYPE_CSTRING:
+    dtype = DTYPE_CSTRING;
+    values = (void*) malloc( size * sizeof( char ) );
+    break;
+
+  default:
+    return NULL;
+    break;
+  }
+
+  memset(values,0,sizeof(values));
+
+  /* Build a descriptor for fectching the data. */
+  if( dtype == DTYPE_CSTRING )
+    dsc = descr(&dtype, values, &null, &size);
+  else
+    dsc = descr(&dtype, values, &size, &null);
+
+  /* Put the signal in the buffer passed to mds. */
+  memset(buf,0,sizeof(buf));
+  sprintf(buf,"%s", signal);
+
+  /* Use MdsValue to get the value */
+  return status_ok( MdsValue(buf, &dsc, &null, &len) ) ? values : NULL;
 }
+
 
 /*  Query the server for the slice name. */
-char* get_slice_name( const int *nids, int slice )
+char* get_name( const int nid )
 {
   char buf[1024];                 // buffer for MDS+ exp     
   char *name = NULL;              // Used to hold the name of the slice 
 
-  int i;
-
   /* Query the name of the slice node, that nids[slice] refers to. */
-  sprintf( buf, "getnci(%i,\"NODE_NAME\")", nids[slice] );
-  name = get_string( buf );
+  memset(buf,0,sizeof(buf));
+  sprintf( buf, "GETNCI(%i,\"NODE_NAME\")", nid );
+
+  name = get_value( buf, DTYPE_CSTRING );
 
   /* Trim the white spaces off of the node name. */
   if( name ) {
-    i = 0;
+    int i = 0;
     while (name[i] != ' ') i++;
     name[i] = '\0';
   }
@@ -342,16 +344,59 @@ char* get_slice_name( const int *nids, int slice )
   return name;
 }
 
+
+/*  Query the server for the components of the grid. */
+double* get_grid( const char *axis, int **dims )
+{
+  char *gridStr = "\\NIMROD::TOP.OUTPUTS.CODE.GRID";
+  char buf[1024];                 /* buffer for MDS+ exp */
+
+  /* Fetch the Grid data from the node. */
+  sprintf( buf, "%s:%s", gridStr, axis );
+
+  get_dims( buf, dims );
+
+  /* Get the data for the axis. */
+  sprintf( buf, "%s:%s", gridStr, axis );
+  
+  return (double*) get_values( buf, DTYPE_DOUBLE );
+}
+
+/*  Query the server for the slice nids for the shot. */
+int get_slice_ids( int **nids )
+{
+  char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
+  char buf[1024];                 /* buffer for MDS+ exp */
+
+  int *nSlices = NULL;
+
+  /* Query the server for the number of slices in the tree. */
+  sprintf( buf, "GETNCI(%s,\"NUMBER_OF_CHILDREN\")", sliceStr );
+  
+  nSlices = (int*) get_value( buf, DTYPE_LONG );
+
+  /* Query the nid numbers of the slices. */
+  sprintf( buf, "GETNCI(\"\\%s.*\",\"NID_NUMBER\")", sliceStr );
+
+  *nids = (int*) get_values( buf, DTYPE_LONG );
+
+  return nSlices ? *nSlices : 0;
+}
+
 /*  Query the server for the slice time. */
 double get_slice_time( const char *name )
 {
   char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
-  char buf[1024];                 // buffer for MDS+ exp     
+  char buf[1024];                 /* buffer for MDS+ exp */
+
+  double *time;
 
   // Get the time of the slice.
   sprintf(buf,"%s.%s:TIME", sliceStr, name );
 
-  return get_datum( buf );
+  time = (double*) get_value( buf, DTYPE_DOUBLE );
+
+  return time ? *time : 0.0;
 }
 
 
@@ -359,32 +404,17 @@ double get_slice_time( const char *name )
 double *get_slice_data( const char *name,
 			const char *space,
 			const char *node,
-			int *dims )
+			int **dims )
 {
   char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
 
-  char buf[1024];                 // buffer for MDS+ exp     
+  char buf[1024];                 /* buffer for MDS+ exp */
 
-  int i, rank, size = 1;
-
-  /*  */
+  /* Fetch the data from the node */
   sprintf(buf, "%s.%s.%s.%s", sliceStr, name, space, node);
 
-  /* Fetch the rank and size of the signal. */
-  rank = get_dims( buf, dims );
-
-  if( rank == 3 ) {
-
-    /* Get the total size of the signal. */
-    for( i=0; i<rank; i++ )
-      size *= dims[i];
-
-    /* Fetch the data from the node */
-    sprintf(buf,"%s.%s.%s.%s", sliceStr, name, space, node);
-
-    return get_data( buf, size );
-  }
-  else
-    return NULL;
+  get_dims( buf, dims );
+  
+  return (double*) get_values( buf, DTYPE_DOUBLE );
 }
 #endif  // HAVE_MDSPLUS
