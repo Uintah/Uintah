@@ -172,6 +172,7 @@
 			<res>[2,2,2]</res>
 		    </box>
 		   </union>
+		   <res>[2,2,2]</res>
  		</geom_object>
 		<velocity_field>1</velocity_field>
 	    </material>
@@ -198,6 +199,7 @@
 			<res>[2,2,2]</res>
 	            </box>
 		  </difference>
+		  <res>[2,2,2]</res>
  		</geom_object>
 		<velocity_field>1</velocity_field>
 	     </material>
@@ -217,6 +219,7 @@
 			<radius>0.75</radius>
 			<res>[2,2,2]</res>
 		    </cylinder>
+		    <res>[2,2,2]</res>
 		</geom_object>
 		<velocity_field>2</velocity_field>
 	    </material>
@@ -237,6 +240,7 @@
 			<radius>0.75</radius>
 			<res>[2,2,2]</res>
 		    </sphere>
+                    <res>[2,2,2]</res>
 		</geom_object>
 		<velocity_field>3</velocity_field>
 	    </material>
@@ -257,6 +261,7 @@
 			<file>crack.dat</file>
 			<res>[2,2,2]</res>
 		    </tri>
+	            <res>[2,2,2]</res>
 		</geom_object>
 		<velocity_field>4</velocity_field>
 	    </material>
@@ -288,6 +293,7 @@
 			<res>[2,2,2]</res>
 	            </cylinder>
 		  </intersection>
+		  <res>[2,2,2]</res>
 		</geom_object>
 		<velocity_field>1</velocity_field>
 	    </material>
@@ -296,18 +302,19 @@
     </MaterialProperties>
 	
     <Grid>
-	<Region>
-	    <label>1</label>
-	    <min>[0,0,0]</min>
-	    <max>[1,1,1]</max>
-	    <res>[20,20,20]</res>
-	</Region>
-	<Region>
-	    <label>2</label>
-	    <min>[1,1,1]</min>
-	    <max>[2,2,2]</max>
-	    <res>[10,10,10]</res>
-	</Region>
+	<Level>
+	    <Box label="1">
+	    	<lower>[0,0,0]</lower>
+	    	<upper>[1,1,1]</upper>
+	        <resolution>[20,20,20]</resolution>
+		<patches>[2,2,2]</patches>
+	    </Box>
+	    <Box label="2">
+	    	<lower>[1,1,1]</lower>
+	    	<upper>[2,2,2]</upper>
+	    	<spacing>[.1,.1,.1]</spacing>
+	    </Box>
+	</Level>
     </Grid>
 
     <!-- Question - how do we want to attach a bc to a region of the grid? -->
