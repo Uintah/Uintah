@@ -16,14 +16,19 @@ for lock in *.lock; do
   fi
 done
 
+if [ ! -d "trash" ]; then
+  mkdir trash
+fi
+
 # delete all SCIRun.* directories that aren't locked
+# -- move them to the trash directory first
 for BUILDROOT in SCIRun.*; do
   if [ -d "$BUILDROOT" ]; then
     if [ ! -f "$BUILDROOT/lock" ]; then
       cd "$BUILDROOT"
       echo "y" | /usr/local/bin/cvs release -d SCIRun > /dev/null 2>&1
       cd ".."
-      rm -rf "$BUILDROOT"
+      mv "$BUILDROOT" trash/.
     fi
   fi
 done
@@ -31,17 +36,9 @@ done
 # delete whatever can be deleted from the trash before adding to it
 rm -rf trash
 
-# whatever couldn't get deleted, move to the trash
-for BUILDROOT in SCIRun.*; do
-  if [ -d "$BUILDROOT" ]; then
-    if [ ! -d "trash" ]; then
-      mkdir trash
-    fi
-    if [ ! -f "$BUILDROOT/lock" ]; then
-      mv "$BUILDROOT" trash/.
-    fi
-  fi
-done
+if [ ! -d "trash" ]; then
+  exit 0 # cleanup was successful
+fi
 
 echo "These need to be removed by their owner"
 echo ""
