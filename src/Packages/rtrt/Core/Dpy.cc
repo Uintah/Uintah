@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Camera.h>
+#include <Packages/rtrt/Core/Stealth.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Ball.h>
@@ -19,24 +20,27 @@
 #include <Packages/rtrt/Core/MiscMath.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/Scene.h>
+
 #include <iostream>
+
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
+
 #include <unistd.h>
+#include <strings.h>
+
 #include <sys/time.h>
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <strings.h>
+#include <X11/keysym.h>
+
 #include "FontString.h"
 /* #include <SpeedShop/api.h> */
 
 using namespace rtrt;
-//using SCIRun::Mutex;
-//using SCIRun::Thread;
-//using SCIRun::Time;
 using namespace SCIRun;
+
 using std::endl;
 using std::cerr;
 
@@ -104,9 +108,9 @@ namespace rtrt {
 
   bool stereo;
 
-  Camera *camera;
+  Camera   * camera;
 
-  BallData *ball;
+  BallData * ball;
 
   int last_x,last_y;
 
@@ -426,24 +430,291 @@ static void drawrstats(int nworkers, Worker** workers,
 
 float Galpha=1.0; // doh!  global variable...  probably should be moved...
 
+/* Lost code... didn't know what key to bind these to...
+   after I moved them from the keypad...
+
+    float   & base_threshold = priv->base_threshold;
+    float   & full_threshold = priv->full_threshold;
+
+    base_threshold*=2;
+    cerr << "base_threshold=" << base_threshold << '\n';
+    base_threshold/=2;
+    cerr << "base_threshold=" << base_threshold << '\n';
+    full_threshold*=2;
+    cerr << "full_threshold=" << full_threshold << '\n';
+    full_threshold/=2;
+    cerr << "full_threshold=" << full_threshold << '\n';
+*/
+
+static Stealth stealth;
+
+void
+Dpy::handle_keypress( unsigned long key )
+{
+  static double FPS = 15;
+
+  int     & maxdepth       = priv->maxdepth;
+  bool    & stereo         = priv->stereo;  
+  bool    & animate        = priv->animate;
+  double  & FrameRate      = priv->FrameRate;
+  bool    & draw_pstats    = priv->draw_pstats;
+  bool    & draw_rstats    = priv->draw_rstats;
+  int     & shadow_mode    = priv->shadow_mode;
+  int     & showing_scene  = priv->showing_scene;
+
+  int     & left           = priv->left;
+  int     & up             = priv->up;
+
+  Camera *& camera         = priv->camera;
+
+  printf("key is %x\n", key );
+
+  switch( key ){
+
+  // KEYPAD KEYS USED FOR MOVEMENT
+
+  // SPEED up or slow down
+  case XK_KP_Add:
+    stealth.accelerate();
+    break;
+  case XK_KP_Subtract:
+    stealth.decelerate();
+    break;
+  // PITCH up and down
+  case XK_KP_Up:
+    cout << "pitchdown\n";
+    stealth.pitchDown();
+    break;
+  case XK_KP_Begin:
+    cout << "pitchup\n";
+    stealth.pitchUp();
+    break;
+  // SLIDE left and right
+  case XK_KP_Page_Up:
+    stealth.slideRight();
+    break;
+  case XK_KP_Home:
+    stealth.slideLeft();
+    break;
+  // TURN left and right
+  case XK_KP_Left:
+    stealth.turnLeft();
+    break;
+  case XK_KP_Right:
+    stealth.turnRight();
+    break;
+  // SLOW down and STOP
+  case XK_KP_Delete:
+    stealth.slowDown();
+    break;
+  case XK_KP_Insert:
+    stealth.stopAllMovement();
+    break;
+  // ACCELERATE UPWARDS or DOWNWARDS
+  case XK_KP_Multiply: 
+    stealth.goUp();   // Accelerate UP
+    break;
+  case XK_KP_Divide: 
+    stealth.goDown(); // Accelerate DOWN
+    break;
+  case XK_KP_Page_Down:
+    break;
+
+  case XK_Escape:
+  case XK_q:
+    scene->rtrt_engine->exit_clean(1);
+    //	Thread::exitAll(1);
+    break;
+  case XK_2:
+    stereo=true;
+    break;
+  case XK_1:
+    stereo=false;
+    break;
+  case XK_a:
+    animate=!animate;
+    break;
+  case XK_minus:
+    maxdepth--;
+    if(maxdepth<0)
+      maxdepth=0;
+    cerr << "maxdepth=" << maxdepth << '\n';
+    break;
+  case XK_equal: // + ('plus') key without the shift...
+    maxdepth++;
+    cerr << "maxdepth=" << maxdepth << '\n';
+    break;
+  case XK_f:
+    FPS -= 1;
+    if (FPS <= 0.0) FPS = 1.0;
+    FrameRate = 1.0/FPS;
+    break;
+  case XK_g:
+    FPS += 1.0;
+    FrameRate = 1.0/FPS;
+    cerr << FPS << endl;
+    break;
+
+	// turning on/off jittered sampling...
+  case XK_j:
+    scene->rtrt_engine->do_jitter=1-scene->rtrt_engine->do_jitter;
+    break;
+
+    // below is for blending "pixels" in
+    // frameless rendering...
+
+  case XK_Home:
+    Galpha += 0.1;
+    if (Galpha > 1.0) Galpha = 1.0;
+    cerr << Galpha << endl;
+    break;
+  case XK_End:
+    Galpha -= 0.1;
+    if (Galpha < 0.0) Galpha = 0.0;
+    cerr << Galpha << endl;
+    break;
+
+  case XK_y: // sychronizing mode for frameless...
+    synch_frameless = 1-synch_frameless;
+    //doing_frameless = 1-doing_frameless; // just toggle...
+    cerr << synch_frameless << " Synch?\n";
+    break;
+
+  case XK_c:
+    camera->print();
+    break;
+  case XK_p:
+    draw_pstats=!draw_pstats;
+    break;
+  case XK_r:
+    draw_rstats=!draw_rstats;
+    break;
+  case XK_t:
+    scene->hotspots=!scene->hotspots;
+    break;
+  case XK_v:
+    {
+      // Animate lookat point to center of BBox...
+      Object* obj=scene->get_object();
+      BBox bbox;
+      obj->compute_bounds(bbox, 0);
+      if(bbox.valid()){
+	camera->set_lookat(bbox.center());
+        
+	// Move forward/backwards until entire view is in scene...
+	// change this a little, make it so that the FOV must
+	// be 60 deg...
+	// 60 degrees sucks - try 40
+
+	const double FOVtry=40;
+
+	Vector diag(bbox.diagonal());
+	double w=diag.length();
+	Vector lookdir(camera->get_lookat()-camera->get_eye()); 
+	lookdir.normalize();
+	const double scale = 1.0/(2*tan(DtoR(FOVtry/2.0)));
+	double length = w*scale;
+	camera->set_fov(FOVtry);
+	camera->set_eye(camera->get_lookat() - lookdir*length);
+	camera->setup();
+      }
+    }
+    break;
+  case XK_w:
+    cerr << "Saving file\n";
+    scene->get_image(showing_scene)->save("images/image.raw");
+    break;
+  case XK_s:
+    shadow_mode++;
+    if(shadow_mode>3)
+      shadow_mode=0;
+    break;
+  case XK_h:
+    scene->ambient_hack = !scene->ambient_hack;
+    break;
+  case XK_Up:
+    up+=4;
+    break;
+  case XK_Down:
+    up-=4;
+    break;
+  case XK_Left:
+    left+=4;
+    break;
+  case XK_Right:
+    left-=4;
+    break;
+  }
+} // end handle_keypress();
+
+static double    eye_dist = 0;
+static double    prev_time[3]; // history for quaternions and time
+static HVect     prev_quat[3];
+static Transform prev_trans;
+
+void
+Dpy::handle_mouse_press( XEvent & e )
+{
+  int       & last_x    = priv->last_x;
+  int       & last_y    = priv->last_y;
+  double    & last_time = priv->last_time;
+  BallData *& ball      = priv->ball;
+  Camera    * camera    = scene->get_camera( priv->showing_scene );
+
+  switch( e.xbutton.button ){
+  case Button1:
+    last_x = e.xbutton.x;
+    last_y = e.xbutton.y;
+    break;
+  case Button2:
+    {
+      //inertia_mode = 0;
+      last_x = e.xbutton.x;
+      last_y = e.xbutton.y;
+			
+      // Find the center of rotation...
+      double rad = 0.8;
+      HVect center(0,0,0,1.0);
+			
+	  // we also want to keep the old transform information
+	  // around (so stuff correlates correctly)
+			
+      Vector y_axis,x_axis;
+      camera->get_viewplane(y_axis, x_axis);
+      Vector z_axis(camera->eye-camera->lookat);
+			
+
+      x_axis.normalize();
+      y_axis.normalize();
+
+      eye_dist = z_axis.normalize();
+
+      prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+			
+      ball->Init();
+      ball->Place(center,rad);
+      HVect mouse((2.0*e.xbutton.x)/priv->xres - 1.0,2.0*(priv->yres-e.xbutton.y*1.0)/priv->yres - 1.0,0.0,1.0);
+      ball->Mouse(mouse);
+      ball->BeginDrag();
+
+      prev_time[0] = SCIRun::Time::currentSeconds();
+      prev_quat[0] = mouse;
+      prev_time[1] = prev_time[2] = -100;
+
+      ball->Update();
+      last_time=SCIRun::Time::currentSeconds();
+      break;
+    }
+  case Button3:
+    last_x=e.xbutton.x;
+    last_y=e.xbutton.y;
+    break;
+  }
+}
+
 void Dpy::get_input()
 {
     //bool& exposed = priv->exposed;
-  int& shadow_mode= priv->shadow_mode;
-  bool& animate= priv->animate;
-  bool& draw_pstats= priv->draw_pstats;
-  bool& draw_rstats= priv->draw_rstats;
-  int& showing_scene= priv->showing_scene;
-  int& maxdepth= priv->maxdepth;
-
-  float& base_threshold= priv->base_threshold;
-  float& full_threshold= priv->full_threshold;
-
-  int& left= priv->left;
-  int& up= priv->up;
-
-  bool& stereo= priv->stereo;  
-
   Camera *& camera = priv->camera;
 
   BallData *& ball = priv->ball;
@@ -453,18 +724,7 @@ void Dpy::get_input()
 
   double& last_time = priv->last_time;
 
-  double& FrameRate = priv->FrameRate;
-
   //int& doing_frameless = priv->doing_frameless;
-
-  static double eye_dist=0;
-
-  static Transform prev_trans;
-
-  static double prev_time[3]; // history for quaternions and time
-  static HVect prev_quat[3];
-
-  static double FPS = 15;
 
   while (XEventsQueued(priv->dpy, QueuedAfterReading)){
     XEvent e;
@@ -476,203 +736,11 @@ void Dpy::get_input()
       priv->exposed=true;
       break;
     case KeyPress:
-      switch(XKeycodeToKeysym(priv->dpy, e.xkey.keycode, 0)){
-      case XK_Escape:
-      case XK_q:
-	scene->rtrt_engine->exit_clean(1);
-	//	Thread::exitAll(1);
-	break;
-      case XK_2:
-	stereo=true;
-	break;
-      case XK_1:
-	stereo=false;
-	break;
-      case XK_a:
-	animate=!animate;
-	break;
-      case XK_plus:
-	break;
-      case XK_minus:
-	break;
-      case XK_f:
-	FPS -= 1;
-	if (FPS <= 0.0) FPS = 1.0;
-	FrameRate = 1.0/FPS;
-	break;
-      case XK_g:
-	FPS += 1.0;
-	FrameRate = 1.0/FPS;
-	cerr << FPS << endl;
-	break;
-
-	// turning on/off jittered sampling...
-      case XK_j:
-	scene->rtrt_engine->do_jitter=1-scene->rtrt_engine->do_jitter;
-	break;
-
-	// below is for blending "pixels" in
-	// frameless rendering...
-
-      case XK_Home:
-	Galpha += 0.1;
-	if (Galpha > 1.0) Galpha = 1.0;
-	cerr << Galpha << endl;
-	break;
-      case XK_End:
-	Galpha -= 0.1;
-	if (Galpha < 0.0) Galpha = 0.0;
-	cerr << Galpha << endl;
-	break;
-
-      case XK_y: // sychronizing mode for frameless...
-	synch_frameless = 1-synch_frameless;
-	//doing_frameless = 1-doing_frameless; // just toggle...
-	cerr << synch_frameless << " Synch?\n";
-	break;
-
-      case XK_c:
-	camera->print();
-	break;
-      case XK_p:
-	draw_pstats=!draw_pstats;
-	break;
-      case XK_r:
-	draw_rstats=!draw_rstats;
-	break;
-      case XK_t:
-	  scene->hotspots=!scene->hotspots;
-	  break;
-      case XK_v:
-	{
-	  // Animate lookat point to center of BBox...
-	  Object* obj=scene->get_object();
-	  BBox bbox;
-	  obj->compute_bounds(bbox, 0);
-	  if(bbox.valid()){
-	    camera->set_lookat(bbox.center());
-        
-	    // Move forward/backwards until entire view is in scene...
-	    // change this a little, make it so that the FOV must
-	    // be 60 deg...
-	    // 60 degrees sucks - try 40
-
-	    const double FOVtry=40;
-
-	    Vector diag(bbox.diagonal());
-	    double w=diag.length();
-	    Vector lookdir(camera->get_lookat()-camera->get_eye()); 
-	    lookdir.normalize();
-	    const double scale = 1.0/(2*tan(DtoR(FOVtry/2.0)));
-	    double length = w*scale;
-	    camera->set_fov(FOVtry);
-	    camera->set_eye(camera->get_lookat() - lookdir*length);
-	    camera->setup();
-	  }
-	}
-      break;
-      case XK_w:
-	cerr << "Saving file\n";
-	scene->get_image(showing_scene)->save("images/image.raw");
-	break;
-      case XK_s:
-	shadow_mode++;
-	if(shadow_mode>3)
-	  shadow_mode=0;
-	break;
-      case XK_h:
-	scene->ambient_hack = !scene->ambient_hack;
-	break;
-      case XK_KP_Add:
-	maxdepth++;
-	cerr << "maxdepth=" << maxdepth << '\n';
-	break;
-      case XK_KP_Subtract:
-	maxdepth--;
-	if(maxdepth<0)
-	  maxdepth=0;
-	cerr << "maxdepth=" << maxdepth << '\n';
-	break;
-      case XK_KP_Up:
-	base_threshold*=2;
-	cerr << "base_threshold=" << base_threshold << '\n';
-	break;
-      case XK_KP_Down:
-	base_threshold/=2;
-	cerr << "base_threshold=" << base_threshold << '\n';
-	break;
-      case XK_KP_Page_Up:
-	full_threshold*=2;
-	cerr << "full_threshold=" << full_threshold << '\n';
-	break;
-      case XK_KP_Page_Down:
-	full_threshold/=2;
-	cerr << "full_threshold=" << full_threshold << '\n';
-	break;
-      case XK_Up:
-	up+=4;
-	break;
-      case XK_Down:
-	up-=4;
-	break;
-      case XK_Left:
-	left+=4;
-	break;
-      case XK_Right:
-	left-=4;
-	break;
-      }
+      handle_keypress( XKeycodeToKeysym(priv->dpy, e.xkey.keycode, 0) );
       break;
     case ButtonPress:
-      switch(e.xbutton.button){
-      case Button1:
-	last_x=e.xbutton.x;
-	last_y=e.xbutton.y;
-	break;
-      case Button2:
-	{
-	  //inertia_mode=0;
-	  last_x=e.xbutton.x;
-	  last_y=e.xbutton.y;
-			
-	  // Find the center of rotation...
-	  double rad = 0.8;
-	  HVect center(0,0,0,1.0);
-			
-	  // we also want to keep the old transform information
-	  // around (so stuff correlates correctly)
-			
-	  Vector y_axis,x_axis;
-	  camera->get_viewplane(y_axis, x_axis);
-	  Vector z_axis(camera->eye-camera->lookat);
-			
-
-	  x_axis.normalize();
-	  y_axis.normalize();
-
-	  eye_dist = z_axis.normalize();
-
-	  prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
-			
-	  ball->Init();
-	  ball->Place(center,rad);
-	  HVect mouse((2.0*e.xbutton.x)/priv->xres - 1.0,2.0*(priv->yres-e.xbutton.y*1.0)/priv->yres - 1.0,0.0,1.0);
-	  ball->Mouse(mouse);
-	  ball->BeginDrag();
-
-	  prev_time[0] = SCIRun::Time::currentSeconds();
-	  prev_quat[0] = mouse;
-	  prev_time[1] = prev_time[2] = -100;
-
-	  ball->Update();
-	  last_time=SCIRun::Time::currentSeconds();
-	  break;
-	}
-      case Button3:
-	last_x=e.xbutton.x;
-	last_y=e.xbutton.y;
-	break;
-      }
+      handle_mouse_press( e );
+      break;
     case MotionNotify:
       switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
       case Button1Mask:
@@ -865,7 +933,7 @@ void Dpy::get_input()
       cerr << "Unknown event, type=" << e.type << '\n';
     }
   }
-}
+} // end get_input()
 
 int Dpy::get_num_procs() {
   return nworkers;
@@ -1093,10 +1161,12 @@ void Dpy::run()
       {
 	Camera* cam1=scene->get_camera(showing_scene);
 	Camera* cam2=scene->get_camera(rendering_scene);
+
 	if(*cam1 != *cam2){
 	  *cam1=*cam2;
 	  changed=true;
 	}
+
 	if(animate && scene->animate)
 	  obj->animate(SCIRun::Time::currentSeconds(), changed);
 	if(scene->shadow_mode != shadow_mode){
@@ -1310,8 +1380,10 @@ void Dpy::run()
 		  fov);
       }
 
-      if (display_frames)
+      if (display_frames) {
 	get_input(); // this does all of the x stuff...
+	priv->camera->updatePosition( stealth );
+      }
 
       if(im->get_xres() != priv->xres || im->get_yres() != priv->yres || im->get_stereo() != stereo){
 	delete im;

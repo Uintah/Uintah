@@ -13,6 +13,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Scene.cc \
 	$(SRCDIR)/Image.cc \
 	$(SRCDIR)/Camera.cc \
+	$(SRCDIR)/Stealth.cc \
 	$(SRCDIR)/Sphere.cc \
 	$(SRCDIR)/Background.cc \
 	$(SRCDIR)/Object.cc \
