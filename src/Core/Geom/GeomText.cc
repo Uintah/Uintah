@@ -51,8 +51,9 @@ GeomText::GeomText()
 {
 }
 
-GeomText::GeomText( const string &text, const Point &at, const Color &c)
-: GeomObj(), text(text), at(at), c(c)
+GeomText::GeomText( const string &text, const Point &at, const Color &c,
+		    const string &fontsize)
+  : GeomObj(), text(text), at(at), c(c), fontsize(fontsize)
 {
 }
 
