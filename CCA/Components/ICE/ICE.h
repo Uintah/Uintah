@@ -17,9 +17,14 @@
 #include <Core/Containers/StaticArray.h>
 #include <vector>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-
+/*`==========TESTING==========*/
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h> 
+/*==========TESTING==========`*/
 namespace Uintah {
-
+/*`==========TESTING==========*/
+  class SolverInterface;
+  class SolverParameters; 
+/*==========TESTING==========`*/
 using namespace SCIRun;
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
@@ -281,7 +286,40 @@ using namespace SCIRun;
                                           DataWarehouse*,
                                           DataWarehouse*); 
 
-//__________________________________
+//__________________________________ 
+//  I M P L I C I T   I C E
+                          
+      void scheduleImplicitPressureSolve(SchedulerP&,
+                                         const LevelP&,                       
+                                         SolverInterface*,                   
+                                         const SolverParameters*, 
+                                         const PatchSet* patches, 
+                                         const MaterialSubset*,                  
+                                         const MaterialSubset*,           
+                                         const MaterialSubset*,           
+                                         const MaterialSet* );             
+                                            
+      void setupMatrix(const ProcessorGroup*,
+                       const PatchSubset* patches,                      
+                       const MaterialSubset* ,                          
+                       DataWarehouse* old_dw,                           
+                       DataWarehouse* new_dw);
+                       
+       void updatePressure(const ProcessorGroup*,
+                           const PatchSubset* patches,                      
+                           const MaterialSubset* ,                          
+                           DataWarehouse* old_dw,                           
+                           DataWarehouse* new_dw); 
+                                                
+      void petscExample(const PatchSubset* patches);
+      
+      void petscMapping( const PatchSubset* patches,
+                         int numlrows,
+                         int numlcolumns,
+                         int gobalrows,
+                         int gobalcolumns);
+//__________________________________ 
+//   O T H E R                            
                                
       void printConservedQuantities(const ProcessorGroup*,
                                     const PatchSubset* patches,
@@ -380,6 +418,7 @@ using namespace SCIRun;
       bool d_RateForm;
       bool d_EqForm;
       bool d_add_delP_Dilatate; 
+      bool d_impICE;
       int d_dbgVar1;
       int d_dbgVar2;
       int d_max_iter_equilibration;
@@ -464,7 +503,10 @@ using namespace SCIRun;
 
       ICE(const ICE&);
       ICE& operator=(const ICE&);
-
+/*`==========TESTING==========*/
+      SolverInterface* solver;
+      SolverParameters* solver_parameters; 
+/*==========TESTING==========`*/    
       
     };
 

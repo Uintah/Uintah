@@ -6,7 +6,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-
+/*`==========TESTING==========*/
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h> 
+/*==========TESTING==========`*/
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -74,6 +76,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_EqForm            = false;
   d_add_delP_Dilatate = true; 
   d_add_heat          = false;
+  d_impICE            = false;
 
   d_dbgVar1      = 0;     //inputs for debugging
   d_dbgVar2      = 0;
@@ -86,6 +89,9 @@ ICE::~ICE()
   delete lb;
   delete MIlb;
   delete d_advector;
+/*`==========TESTING==========*/
+  releasePort("solver");
+/*==========TESTING==========`*/
 }
 
 /* ---------------------------------------------------------------------
@@ -102,6 +108,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     cout<<"dataArhiver in ICE is null now exiting; "<<endl;
     exit(1);
   }
+/*`==========TESTING==========*/
+  solver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  if(!solver) {
+    throw InternalError("ICE:couldn't get solver port");
+  } 
+/*==========TESTING==========`*/
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -222,7 +234,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     } 
   }
  
-    
+/*`==========TESTING==========*/
+//__________________________________
+// Pull out implicit solver parameters
+  ProblemSpecP impSolver = cfd_ice_ps->findBlock("Solver");
+  if (impSolver) {
+    solver_parameters = solver->readParameters(impSolver, "implicitPressure");
+    d_impICE = true; 
+  }
+/*==========TESTING==========`*/  
   //__________________________________
   // Pull out from Time section
   d_initialDt = 10000.0;
@@ -419,11 +439,25 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   scheduleAddExchangeContributionToFCVel( sched, patches, all_matls);    
 
   scheduleMassExchange(                   sched, patches, all_matls);
-
+/*`==========TESTING==========*/
+  if(!d_impICE) {
   scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
                                                           ice_matls_sub, 
                                                           mpm_matls_sub,
                                                           all_matls);
+  }
+                                                          
+  if(d_impICE) {
+   scheduleImplicitPressureSolve(  sched, level,        solver,
+                                                        solver_parameters,
+                                                        patches,
+                                                        press_matl,
+                                                        ice_matls_sub,
+                                                        mpm_matls_sub,
+                                                        all_matls);
+  }
+/*==========TESTING==========`*/                                                          
+                                                          
 
   scheduleComputePressFC(                 sched, patches, press_matl,
                                                           all_matls);
