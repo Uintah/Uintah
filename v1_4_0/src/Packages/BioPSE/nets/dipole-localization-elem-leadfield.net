@@ -373,6 +373,5 @@ set $m27-function {x+500}
 $m1 initialize_ui
 $m2 initialize_ui
 $m10 initialize_ui
-$m25 initialize_ui
 
 ::netedit scheduleok
