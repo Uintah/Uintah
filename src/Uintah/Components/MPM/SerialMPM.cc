@@ -107,6 +107,10 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    cSelfContactLabel = new VarLabel( "c.selfContact",
 			      CCVariable<bool>::getTypeDescription() );
 
+   cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
+			      CCVariable<Vector>::getTypeDescription() );
+
+
    // I'm not sure about this one:
    deltLabel = 
      new VarLabel( "delt", delt_vartype::getTypeDescription() );
@@ -386,6 +390,62 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	sched->addTask(t);
       }
+
+      {
+	 /*
+	  * labelSelfContactCells
+	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
+	  *   operation(label the cell which has self-contact)
+	  *   out(C.SELFCONTACTLABEL)
+	  */
+	 Task* t = new Task("Fracture::labelSelfContactCells",
+			    region, old_dw, new_dw,
+			    d_fractureModel,
+			    &Fracture::labelSelfContactCells);
+
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( old_dw, cSurfaceNormalLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
+			 Task::None);
+
+	    t->computes( new_dw, cSelfContactLabel, idx, region );
+	 }
+
+	 sched->addTask(t);
+      }
+
+      {
+	 /*
+	  * updateNodeInformationInContactCells
+	  *   in(C.SELFCONTACT,G.VELOCITY,G.ACCELERATION)
+	  *   operation(update the node information including velocities and
+	  *   accelerations in nodes of contact-cells)
+	  *   out(G.VELOCITY,G.ACCELERATION)
+	  */
+	 Task* t = new Task("Fracture::updateSurfaceNormalOfBoundaryParticle",
+			    region, old_dw, new_dw,
+			    d_fractureModel,
+			    &Fracture::updateSurfaceNormalOfBoundaryParticle);
+
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( old_dw, cSelfContactLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, gVelocityLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, gAccelerationLabel, idx, region,
+			 Task::None);
+
+	    t->computes( new_dw, gVelocityLabel, idx, region );
+	    t->computes( new_dw, gAccelerationLabel, idx, region );
+	 }
+
+	 sched->addTask(t);
+      }
       
       {
 	 /*
@@ -411,6 +471,41 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->requires(old_dw, deltLabel );
 	    t->computes(new_dw, pVelocityLabel, idx, region );
 	    t->computes(new_dw, pXLabel, idx, region );
+	 }
+
+	 sched->addTask(t);
+      }
+
+      {
+	 /*
+	  * updateParticleInformationInContactCells
+	  *   in(P.DEFORMATIONMEASURE)
+	  *   operation(update the surface normal of each boundary particles)
+	  * out(P.SURFACENORMAL)
+	  */
+	 Task* t = new Task("Fracture::updateSurfaceNormalOfBoundaryParticle",
+			    region, old_dw, new_dw,
+			    d_fractureModel,
+			    &Fracture::updateSurfaceNormalOfBoundaryParticle);
+
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( old_dw, pXLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, pVelocityLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, pExternalForceLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, pDeformationMeasureLabel, idx, region,
+			 Task::None);
+	    t->requires( old_dw, pStressLabel, idx, region,
+			 Task::None);
+
+	    t->computes( new_dw, pXLabel, idx, region );
+	    t->computes( new_dw, pVelocityLabel, idx, region );
+	    t->computes( new_dw, pDeformationMeasureLabel, idx, region );
+	    t->computes( new_dw, pStressLabel, idx, region );
 	 }
 
 	 sched->addTask(t);
@@ -620,14 +715,6 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 	 cm->computeStressTensor(region, mpm_matl, old_dw, new_dw);
       }
    }
-}
-
-void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
-				    const Region* /*region*/,
-				    const DataWarehouseP& /*old_dw*/,
-				    DataWarehouseP& /*new_dw*/)
-{
-  //Tan: not finished yet. 
 }
 
 void SerialMPM::computeInternalForce(const ProcessorContext*,
@@ -917,15 +1004,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   ts++;
 }
 
-void SerialMPM::crackGrow(const ProcessorContext*,
-                          const Region* /*region*/,
-                          const DataWarehouseP& /*old_dw*/,
-                          DataWarehouseP& /*new_dw*/)
-{
-}
-
-
 // $Log$
+// Revision 1.50  2000/05/10 18:34:15  tan
+// Added computations on self-contact cells for cracked surfaces.
+//
 // Revision 1.49  2000/05/10 05:01:33  tan
 // linked to farcture model.
 //
