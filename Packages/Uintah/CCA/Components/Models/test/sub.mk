@@ -18,6 +18,6 @@ SRCS	+= \
        $(SRCDIR)/TableTest.cc \
        $(SRCDIR)/TestModel.cc \
        $(SRCDIR)/flameSheet_rxn.cc \
+#       $(SRCDIR)/Mixing2.cc
 #       $(SRCDIR)/Mixing2.cc \
 #       $(SRCDIR)/Mixing3.cc
-

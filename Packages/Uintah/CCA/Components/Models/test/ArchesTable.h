@@ -73,6 +73,16 @@ WARNING
       double value;
     };
     vector<DefaultValue*> defaults;
+
+    int getInt(istream&);
+    double getDouble(istream&);
+    bool getBool(istream&);
+    string getString(istream&);
+
+    bool startline;
+    void error(istream& in);
+    void skipComments(istream& in);
+    void eatWhite(istream& in);
   };
 } // End namespace Uintah
     
