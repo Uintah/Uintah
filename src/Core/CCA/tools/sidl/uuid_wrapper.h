@@ -48,7 +48,8 @@ extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
 }
 #define UUID_GENERATE
 #else
-#error We need either sys/uuid.h or uuid/uuid.h
+#define GENERATE_CUSTOM_UUID
+#include <Core/Util/GenerateUUID.h>
 #endif
 #endif
 
@@ -57,11 +58,11 @@ extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
  * */
 std::string getUUID()
 {
+#ifdef UUID_CREATE
   char* uuid_str;
   uuid_t uuid;
-
-#ifdef UUID_CREATE
   uint_t status;
+
   uuid_create(&uuid, &status);
   if(status != uuid_s_ok){
     std::cerr << "Error creating uuid!\n";
@@ -73,14 +74,23 @@ std::string getUUID()
     std::cerr << "Error creating uuid string!\n";
     exit(1);
   }
+  return std::string(uuid_str);
 #endif
+
 #ifdef UUID_GENERATE
+  char* uuid_str;
+  uuid_t uuid;
+
   uuid_str = (char*)malloc(64*sizeof(char));
   uuid_generate( uuid );
   uuid_unparse(uuid, uuid_str);
+  return std::string(uuid_str);
 #endif
 
-  return std::string(uuid_str);
+#ifdef GENERATE_CUSTOM_UUID
+  return genUUID();
+#endif
+
 }
 
 
