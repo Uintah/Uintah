@@ -28,6 +28,8 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/NrrdData
 
 
 SRCS     += \
+	$(SRCDIR)/ChooseNrrd.cc\
+	$(SRCDIR)/EditTupleAxis.cc\
 	$(SRCDIR)/NrrdInfo.cc\
 	$(SRCDIR)/NrrdSelectTime.cc\
 #[INSERT NEW CODE FILE HERE]
