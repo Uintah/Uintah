@@ -79,6 +79,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SampleLattice.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/SampleField.tcl \
+	$(SRCDIR)/ShowColorMap.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
