@@ -1,9 +1,12 @@
-<faq>
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xml-stylesheet href="../faq.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
 <!-- 
 
   each faq is a collection of entries.  Entries are a paired question and
   answer, along with a set of keywords.  Questions and answers are delimited
-  with <p>, <pre> or <img> tags.
+  with <p> or <pre> tags.
 
   <entry>
     <keywords>SGI, endian</keywords>
@@ -24,9 +27,52 @@
 
  -->
 
-</faq>
- 
+<faq name="User FAQ">
+  <entry>
+    <keywords>unable to load module, can't find symbol</keywords>
+    <question>
+      <p>
+        When I run SCIRun, one or more messages appear in the message
+        window indicating a problem with a package and/or module.
+      </p>
+      <p>
+        The message(s) is/are similar to the following:
+      </p>
+      <pre>
+        Loading package 'SCIRun'
+        Unable to load module 'CastField' :
+         - can't find symbol 'make_CastField'
 
- -->
+        or
 
+        Unable to load all of package 'Teem' (category 'DataIO' failed) :
+        - libPackages_Teem_Dataflow.so: cannot open shared object file: No such file or directory
+        - libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared object file: No such file or directory
+      </pre>
+    </question>
+    <answer>
+      <p>
+        Each module for a given package has it's own .xml file that 
+        describes it.  When SCIRun starts, it parses all the .xml files
+        in the packages (under Dataflow/XML) and tries to find the 
+	matching code within the related .so files.  If the .so files cannot
+        be found the message "No such file or directory" is given.  If the .so
+        can be found, but the code for a particular module does not exist 
+        within the library, then the message "can't find symbol" is given.
+      </p>
+      <p>
+        The message(s) may or may not indicate a problem with SCIRun. 
+        For some modules, the
+        .xml file may be listed but the code has not yet been
+	completed (this may
+        be common for module developers).  For others it may mean that the
+        SCIRun installation is some how corrupt (.so files have been deleted,
+        moved, etc.)
+      </p>
+      <p>
+        The solution to this problem is to either a) build the libraries
+        that the .xml files need, or b) remove the offending .xml files.
+      </p>
+    </answer>
+  </entry>
 </faq>
