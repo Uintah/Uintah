@@ -11,21 +11,21 @@
 
 namespace Uintah {
 
-  ////////////////////////////////////////////////////////////////////////////
-  /*! 
-    \class GUVMaterial
-    \brief Material model for Giant Unilamellar Vescicles
-    \author Biswajit Banerjee \n
-    C-SAFE and Department of Mechanical Engineering \n
-    University of Utah \n
-    Copyright (C) 2004 University of Utah \n
+////////////////////////////////////////////////////////////////////////////
+/*! 
+   \class GUVMaterial
+   \brief Material model for Giant Unilamellar Vescicles
+   \author Biswajit Banerjee \n
+   C-SAFE and Department of Mechanical Engineering \n
+   University of Utah \n
+   Copyright (C) 2004 University of Utah \n
 
-    The GUVs are assumed to consist of two phases that have different 
-    shear and bulk moduli.
+   The GUVs are assumed to consist of two phases that have different 
+   shear and bulk moduli.
 
-    \warning  Only isotropic hyperelastic materials
-  */
-  ////////////////////////////////////////////////////////////////////////////
+   \warning  Only isotropic hyperelastic materials
+*/
+////////////////////////////////////////////////////////////////////////////
 
   class GUVMaterial : public ShellMaterial {
 
@@ -62,13 +62,13 @@ namespace Uintah {
 
     /*! Schedule compute of type - the rest come from ShellMaterial */
     virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
+					       const MPMMaterial* matl,
+					       const PatchSet* patches) const;
 
     /*! initialize each GUV particle's constitutive model data */
     virtual void initializeCMData(const Patch* patch,
-                                  const MPMMaterial* matl,
-                                  DataWarehouse* new_dw);
+				  const MPMMaterial* matl,
+				  DataWarehouse* new_dw);
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
@@ -76,7 +76,7 @@ namespace Uintah {
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* subset,
-                                   map<const VarLabel*, ParticleVariableBase*>* newState,
+                          map<const VarLabel*, ParticleVariableBase*>* newState,
                                    ParticleSubset* delset,
                                    DataWarehouse* old_dw);
 
@@ -85,26 +85,8 @@ namespace Uintah {
          
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
-                                       const MPMMaterial* matl,
-                                       DataWarehouse* new_dw);
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    /*! Add computes and requires for interpolation of particle rotation to 
-      grid */
-    //
-    virtual void addComputesRequiresParticleRotToGrid(Task* task,
-                                                      const MPMMaterial* matl,
-                                                      const PatchSet* patches);
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    /*! Actually interpolate normal rotation from particles to the grid */
-    //
-    virtual void interpolateParticleRotToGrid(const PatchSubset* patches,
-                                              const MPMMaterial* matl,
-                                              DataWarehouse* old_dw,
-                                              DataWarehouse* new_dw);
+				       const MPMMaterial* matl,
+				       DataWarehouse* new_dw);
 
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
@@ -112,9 +94,9 @@ namespace Uintah {
 
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
-                                     const MPMMaterial* matl,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -129,31 +111,20 @@ namespace Uintah {
     /*! Actually update rotation rate */
     //
     virtual void particleNormalRotRateUpdate(const PatchSubset* patches,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw);
+				             const MPMMaterial* matl,
+				             DataWarehouse* old_dw,
+				             DataWarehouse* new_dw);
 
-    double computeRhoMicroCM(double pressure,
-                             const double p_ref,
-                             const MPMMaterial* matl,
-                             double type);
+    virtual double computeRhoMicroCM(double pressure,
+				     const double p_ref,
+				     const MPMMaterial* matl);
 
-    void computePressEOSCM(double rho_m, double& press_eos,
-                           double p_ref,
-                           double& dp_drho, double& ss_new,
-                           const MPMMaterial* matl,
-                           double type);
+    virtual void computePressEOSCM(double rho_m, double& press_eos,
+				   double p_ref,
+				   double& dp_drho, double& ss_new,
+				   const MPMMaterial* matl);
 
-    double computeRhoMicroCM(double pressure,
-                             const double p_ref,
-                             const MPMMaterial* matl);
-
-    void computePressEOSCM(double rho_m, double& press_eos,
-                           double p_ref,
-                           double& dp_drho, double& ss_new,
-                           const MPMMaterial* matl);
-
-    double getCompressibility();
+    virtual double getCompressibility();
 
   private:
 
@@ -163,7 +134,7 @@ namespace Uintah {
     // to sig33 = 0 and the Cauchy stress */
     //
     virtual bool computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig,
-                                              double bulk, double shear);
+                                      double bulk, double shear);
 
   };
 } // End namespace Uintah
