@@ -23,7 +23,7 @@ namespace Datatypes {
 
 class SCICORESHARE cDMatrix:public cMatrix{
   
-private:
+public:
     typedef std::complex<double> Complex;
     Complex **a;
   int Size;
@@ -64,6 +64,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  1999/10/26 21:55:55  moulding
+// changed the typedef in the cDMatrix class declaration from private to public.
+//
 // Revision 1.5  1999/10/07 02:07:35  sparker
 // use standard iostreams and complex type
 //
