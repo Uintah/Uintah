@@ -39,10 +39,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <string.h>
 #ifndef _WIN32
 #include <unistd.h>
 #else
-#include <string.h>
 #include <io.h>
 #endif
   
@@ -668,6 +668,11 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:33  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/17 06:38:24  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

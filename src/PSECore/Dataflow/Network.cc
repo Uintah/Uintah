@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <iostream.h>
+#include <string.h>
 
 //#define DEBUG 1
 
@@ -397,6 +398,11 @@ int Network::delete_module(const clString& id)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:32  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:38:23  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

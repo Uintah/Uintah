@@ -141,7 +141,7 @@ Tcl_AppInit(interp)
     Tcl_Interp *interp;		/* Interpreter for application. */
 {
   /* Dd: Begin */
-    Tk_Window main;
+    Tk_Window mainwin;
     Visual* visual;
     int depth = 32;
     Colormap colormap;
@@ -153,7 +153,7 @@ Tcl_AppInit(interp)
 
   /* Dd: Begin */
 #if 0
-    main = Tk_MainWindow(interp);
+    mainwin = Tk_MainWindow(interp);
 printf("main = %p\n", main);
 
     /* Use a truecolor visual if one is available */
@@ -164,7 +164,7 @@ printf("main = %p\n", main);
     if (visual == NULL) {
 	return TCL_ERROR;
     }
-    if (!Tk_SetWindowVisual(main, visual, (unsigned) depth, colormap)) {
+    if (!Tk_SetWindowVisual(mainwin, visual, (unsigned) depth, colormap)) {
 	return TCL_ERROR;
     }
 #endif

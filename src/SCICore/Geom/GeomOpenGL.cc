@@ -904,7 +904,7 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 			  GL_NEAREST);
 	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-#if !defined(LINUX)&&!defined(_WIN32)
+#if !defined(__linux)&&!defined(_WIN32)
 	  glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,
 				   GL_INTENSITY_EXT,
 				   conv_dim,conv_dim,
@@ -1756,9 +1756,9 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
       if (r>1.0 || ks>1.0)
 	cerr << r << " " << ks << " Error - out of range...\n";
       
-      tmap1d[i*3+0] = r*255;
-      tmap1d[i*3+1] = r*255;    // just have them be red for now...
-      tmap1d[i*3+2] = r*255;
+      tmap1d[i*3+0] = (unsigned char)(r*255);
+      tmap1d[i*3+1] = (unsigned char)(r*255);    // just have them be red for now...
+      tmap1d[i*3+2] = (unsigned char)(r*255);
     }
     // now set the end conditions...
 
@@ -1916,7 +1916,7 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
       }
     } else { // this is from the stream line data...
       if (colors.size()) {
-	unsigned char aval = alpha*255; // quantize this...
+	unsigned char aval = (unsigned char)(alpha*255); // quantize this...
 	for(int p=0;p<pts.size()/2;p++){
 	  Point& pt=pts[sorted[i]];
 	  Point& pt2=pts[sorted[i]+1]; // already times2...
@@ -4150,6 +4150,11 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:36  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/17 23:50:22  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -178,8 +178,10 @@ void Task::activate(int task_arg)
     sched_lock->lock();
     pthread_attr_t attr;
     pthread_attr_init(&attr);
+#ifndef __linux
     pthread_attr_setstacksize(&attr, priv->stacklen);
     pthread_attr_setstackaddr(&attr, priv->sp);
+#endif
     if(pthread_create(&priv->threadid, NULL, runbody, (void*)args) != 0) {
 	perror("pthread_create");
 	exit(1);
@@ -831,7 +833,8 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
 void Task::cancel_itimer(int which_timer)
 {
     priv->handle_alrm=0;
-    for(int idx=0;idx<ntimers;idx++){
+    int idx;
+    for(idx=0;idx<ntimers;idx++){
 	if(timers[idx]->id == which_timer)
 	    break;
     }
@@ -878,7 +881,7 @@ Barrier::~Barrier()
 void Barrier::wait(int n)
 {
     priv->lock.lock();
-    int orig_count=priv->count++;
+    priv->count++;
     if(priv->count==n){
         priv->count=0; // Reset the counter...
         priv->lock.unlock();

@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-SRCS     = Task_irix.cc ITC.cc Task.cc lock_mips.s
+SRCS     = @TASK_IMPL@ ITC.cc Task.cc @LOCK_IMPL@
 
 INCLUDES = -I$(OBJTOP)
 

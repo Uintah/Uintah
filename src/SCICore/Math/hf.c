@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#ifdef LINUX
+#ifdef __linux
   #include <values.h>
   #define fsqrt(x) ((float)sqrt(x))
 #endif

@@ -23,7 +23,7 @@
 #endif
 #include <sci_config.h>
 
-#ifdef sun
+#if defined(sun) || defined(__linux)
 #define MMAP_TYPE char
 #else
 #define MMAP_TYPE void
@@ -91,6 +91,11 @@ void OSHunk::free(OSHunk* hunk)
 
 //
 // $Log$
+// Revision 1.5  1999/08/23 06:30:37  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.4  1999/08/19 05:30:56  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

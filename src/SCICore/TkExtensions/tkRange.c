@@ -372,9 +372,9 @@ RangeWidgetCmd(clientData, interp, argc, argv)
 	if (rangePtr->vertical) {
 	    x = rangePtr->vertTroughX + rangePtr->width/2
 		    + rangePtr->borderWidth;
-	    y = TkpValueToPixel(rangePtr, value);
+	    y = TkpRangeValueToPixel(rangePtr, value);
 	} else {
-	    x = TkpValueToPixel(rangePtr, value);
+	    x = TkpRangeValueToPixel(rangePtr, value);
 	    y = rangePtr->horizTroughY + rangePtr->width/2
 		    + rangePtr->borderWidth;
 	}
@@ -399,9 +399,9 @@ RangeWidgetCmd(clientData, interp, argc, argv)
 	if (rangePtr->vertical) {
 	    x = rangePtr->vertTroughX + rangePtr->width/2
 		    + rangePtr->borderWidth;
-	    y = TkpValueToPixel(rangePtr, value);
+	    y = TkpRangeValueToPixel(rangePtr, value);
 	} else {
-	    x = TkpValueToPixel(rangePtr, value);
+	    x = TkpRangeValueToPixel(rangePtr, value);
 	    y = rangePtr->horizTroughY + rangePtr->width/2
 		    + rangePtr->borderWidth;
 	}
@@ -429,7 +429,7 @@ RangeWidgetCmd(clientData, interp, argc, argv)
 	    || (Tcl_GetInt(interp, argv[3], &y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
-	value = PixelToValue(rangePtr, x, y);
+	value = TkRangePixelToValue(rangePtr, x, y);
 	sprintf(interp->result, rangePtr->format, value);
     } else if ((c == 'g') && (strncmp(argv[1], "getMin", length) == 0)) {
 	double value;
@@ -463,7 +463,7 @@ RangeWidgetCmd(clientData, interp, argc, argv)
 		|| (Tcl_GetInt(interp, argv[3], &y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
-	thing = RangeElement(rangePtr, x,y);
+	thing = TkpRangeElement(rangePtr, x,y);
 	switch (thing) {
 	    case TROUGH1:	interp->result = "trough1";	break;
 	    case RANGE:		interp->result = "range";	break;
