@@ -80,9 +80,8 @@ proc gui {canvas has} {
     global $modframe.ff.ui
     set p $modframe.ff
     if $has {
-        unpack_icon $p
         make_ui_button $p
-        pack_icon $p $has
+        pack $p.ui -side left -ipadx 5 -ipady 2 -before $p.title
     } else {
         destroy $p.ui
         pack forget $p.ui
@@ -94,22 +93,6 @@ proc make_ui_button {p} {
     button $p.ui -text "UI" -borderwidth 2 \
        -anchor center \
           -font $ui_font
-}
-
-proc pack_icon {p gui} {
-    if $gui {
-        pack $p.ui -side left -ipadx 5 -ipady 2
-    }
-    pack $p.title -side top -padx 2 -anchor w 
-    pack $p.time -side left -padx 2
-    pack $p.inset -side left -fill y -padx 2 -pady 2
-}
-
-proc unpack_icon {p} {
-    pack forget $p.ui
-    pack forget $p.title
-    pack forget $p.time
-    pack forget $p.inset
 }
 
 proc make_icon {canvas modx mody {gui 0} } {
@@ -144,10 +127,13 @@ proc make_icon {canvas modx mody {gui 0} } {
     # make a UI button if necessary
     if {$gui} {
         make_ui_button $p
+        pack $p.ui -side left -ipadx 5 -ipady 2
     }
 
     # pack the stuff now
-    pack_icon $p $gui
+    pack $p.title -side top -padx 2 -anchor w 
+    pack $p.time -side left -padx 2
+    pack $p.inset -side left -fill y -padx 2 -pady 2
     
     # Stick it in the canvas
     
