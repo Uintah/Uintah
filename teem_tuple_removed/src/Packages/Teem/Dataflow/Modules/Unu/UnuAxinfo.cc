@@ -173,7 +173,6 @@ void UnuAxinfo::execute()
     }
        
     if (do_clear) {
-      cerr << "Clearing\n";
       // delete the guivars  in the vectors and then clear
       // all of them
       vector<GuiString*>::iterator iter1 = label_.begin();
