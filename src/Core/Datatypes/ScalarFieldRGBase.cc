@@ -49,8 +49,6 @@ ScalarFieldRGBase::ScalarFieldRGBase(clString r)
 	rep = Uchar;
     else if (r=="double")
 	rep = Double;
-    else if (r=="uchar")
-	rep = Uchar;
     else
 	rep = Void;
 }
@@ -376,6 +374,9 @@ void ScalarFieldRGBase::distribute_samples()
 
 //
 // $Log$
+// Revision 1.6  1999/12/28 20:45:17  kuzimmer
+// added cell-centered data structures
+//
 // Revision 1.5  1999/10/07 02:07:32  sparker
 // use standard iostreams and complex type
 //
