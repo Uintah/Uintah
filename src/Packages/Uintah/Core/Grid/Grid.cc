@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <values.h>
 
@@ -51,6 +52,70 @@ void Grid::performConsistencyCheck() const
   // Compute total volume - compare if not first time
 
   //cerr << "Grid::performConsistencyCheck not done\n";
+  
+  //__________________________________
+  //  bullet proofing with multiple levels
+  if(d_levels.size() > 0) {
+    for(int i=0;i<(int)d_levels.size() -1 ;i++) {
+      LevelP level     = d_levels[i];
+      LevelP fineLevel = level->getFinerLevel();
+      Vector dx_level     = level->dCell();
+      Vector dx_fineLevel = fineLevel->dCell();
+
+      //__________________________________
+      //make sure that the refinement ratio
+      //is really 2 between all levels     
+      Vector refineRatio_test = dx_level/dx_fineLevel;
+      Vector refineRatio = fineLevel-> getRefinementRatio().asVector();
+      Vector smallNum(1e-3, 1e-3, 1e-3);
+      
+      if (Abs(refineRatio_test - refineRatio).length() > smallNum.length() ) {
+        ostringstream desc;
+        desc << " The refinement Ratio between Level " << level->getIndex()
+             << " and Level " << fineLevel->getIndex() 
+             << " is NOT equal to [2,2,2] but " 
+             << refineRatio_test << endl;
+        throw InvalidGrid(desc.str());
+      }
+      //__________________________________
+      // finer level can't lay outside of the coarser level
+      BBox C_box,F_box;
+      level->getSpatialRange(C_box);
+      fineLevel->getSpatialRange(F_box);
+      
+      Point Cbox_min = C_box.min();
+      Point Cbox_max = C_box.max(); 
+      Point Fbox_min = F_box.min();
+      Point Fbox_max = F_box.max();
+      
+      if(Fbox_min.x() < Cbox_min.x() ||
+         Fbox_min.y() < Cbox_min.y() ||
+         Fbox_min.z() < Cbox_min.z() ||
+         Fbox_max.x() > Cbox_max.x() ||
+         Fbox_max.y() > Cbox_max.y() ||
+         Fbox_max.z() > Cbox_max.z() ) {
+        ostringstream desc;
+        desc << " The finer Level " << fineLevel->getIndex()
+             << " "<< F_box.min() << " "<< F_box.max()
+             << " can't lay outside of coarser level " << level->getIndex()
+             << " "<< C_box.min() << " "<< C_box.max() << endl;
+        throw InvalidGrid(desc.str());
+      }
+      
+      //__________________________________
+      // fine grid must have an even number of cells
+      Vector cells = (Fbox_max - Fbox_min)/dx_fineLevel;
+      IntVector i_cells( Round(cells.x()), 
+                         Round(cells.y()), 
+                         Round(cells.z()) );
+      if ( i_cells.x()%2 != 0 || i_cells.y()%2 != 0 || i_cells.z()%2 != 0 ){
+        ostringstream desc;
+        desc << " The finer Level " << fineLevel->getIndex()
+             << " must have an even number of cells " <<  i_cells << endl;
+        throw InvalidGrid(desc.str()); 
+      }
+    }
+  }
 }
 
 void Grid::printStatistics() const
