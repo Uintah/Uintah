@@ -12,53 +12,47 @@
 #include <SCICore/Math/MinMax.h>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCICore {
+namespace Datatypes {
 
 using namespace SCICore::Math;
 
 PersistentTypeID LatticeGeom::type_id("LatticeGeom", "Datatype", 0);
 
 LatticeGeom::LatticeGeom() :
-  d_dim(0), d_nx(0), d_ny(0), d_nz(0)
+  d_dim(0), d_nx(1), d_ny(1), d_nz(1)
 {
 }
+
 
 
 LatticeGeom::LatticeGeom(int ix)
 {
-  d_dim = 1;
-  d_nx = Max(1, ix);
-  d_ny = 0;
-  d_nz = 0;
-  computeBoundingBox();
+  d_prescale.load_identity();
+  resize(ix);
 }
 
 LatticeGeom::LatticeGeom(int ix, int iy)
 {
-  d_dim = 2;
-  d_nx = Max(1, ix);
-  d_ny = Max(1, iy);
-  d_nz = 0;
-  computeBoundingBox();
+  d_prescale.load_identity();
+  resize(ix, iy);
 }
 
 LatticeGeom::LatticeGeom(int ix, int iy, int iz)
 {
-  d_dim = 3;
-  d_nx = Max(1, ix);
-  d_ny = Max(1, iy);
-  d_nz = Max(1, iz);
-  computeBoundingBox();
+  d_prescale.load_identity();
+  resize(ix, iy, iz);
 }
+
+
 
 LatticeGeom::LatticeGeom(int ix,
 			 const Point &a, const Point &b)
 {
   d_dim = 1;
-  d_nx = Max(1, ix);
-  d_ny = 0;
-  d_nz = 0;
+  d_nx = Min(ix, 1);
+  d_ny = 1;
+  d_nz = 1;
 
   BBox box;
   box.extend(a);
@@ -70,9 +64,9 @@ LatticeGeom::LatticeGeom(int ix, int iy,
 			 const Point &a, const Point &b)
 {
   d_dim = 2;
-  d_nx = Max(1, ix);
-  d_ny = Max(1, iy);
-  d_nz = 0;
+  d_nx = Min(ix, 1);
+  d_ny = Min(iy, 1);
+  d_nz = 1;
 
   BBox box;
   box.extend(a);
@@ -84,9 +78,9 @@ LatticeGeom::LatticeGeom(int ix, int iy, int iz,
 			 const Point &a, const Point &b)
 {
   d_dim = 3;
-  d_nx = Max(1, ix);
-  d_ny = Max(1, iy);
-  d_nz = Max(1, iz);
+  d_nx = Min(ix, 1);
+  d_ny = Min(iy, 1);
+  d_nz = Min(iz, 1);
 
   BBox box;
   box.extend(a);
@@ -115,9 +109,19 @@ LatticeGeom::getInfo()
 bool
 LatticeGeom::computeBoundingBox()
 {
+  const int x = d_nx-1;
+  const int y = d_ny-1;
+  const int z = d_nz-1;
+
   d_bbox.reset();
-  d_bbox.extend(d_trans.project(Point(0, 0, 0)));
-  d_bbox.extend(d_trans.project(Point(d_nx-1, d_ny-1, d_nz-1)));
+  d_bbox.extend(d_transform.project(Point(0, 0, 0)));
+  d_bbox.extend(d_transform.project(Point(0, 0, z)));
+  d_bbox.extend(d_transform.project(Point(0, y, 0)));
+  d_bbox.extend(d_transform.project(Point(0, y, z)));
+  d_bbox.extend(d_transform.project(Point(x, 0, 0)));
+  d_bbox.extend(d_transform.project(Point(x, 0, z)));
+  d_bbox.extend(d_transform.project(Point(x, y, 0)));
+  d_bbox.extend(d_transform.project(Point(x, y, z)));
   return true;
 }
 
@@ -168,9 +172,9 @@ LatticeGeom::resize(int x)
 {
   d_dim = 1;
   d_nx = Min(x, 1);
-  d_ny = 0;
-  d_nz = 0;
-  computeBoundingBox();
+  d_ny = 1;
+  d_nz = 1;
+  updateTransform();
 }
 
 void
@@ -179,8 +183,8 @@ LatticeGeom::resize(int x, int y)
   d_dim = 2;
   d_nx = Min(x, 1);
   d_ny = Min(y, 1);
-  d_nz = 0;
-  computeBoundingBox();
+  d_nz = 1;
+  updateTransform();
 }
 
 void
@@ -190,7 +194,7 @@ LatticeGeom::resize(int x, int y, int z)
   d_nx = Min(x, 1);
   d_ny = Min(y, 1);
   d_nz = Min(z, 1);
-  computeBoundingBox();
+  updateTransform();
 }
 
 #if 0  
@@ -223,23 +227,40 @@ void LatticeGeom::compute_deltas(){
 void
 LatticeGeom::setBoundingBox(BBox &box)
 {
+  d_prescale.load_identity();
+
   Vector offset(box.min());
-  d_trans.post_translate(offset);
+  d_prescale.post_translate(offset);
 
   Vector diag = box.diagonal();
-  Vector sdiag(diag.x() / (d_nx - 1.0),
-	       diag.y() / (d_ny - 1.0),
-	       diag.z() / (d_nz - 1.0));
+  Vector sdiag(diag.x(), diag.y(), diag.z());
 
-  d_trans.post_scale(sdiag);
-  d_trans.compute_imat();
-  computeBoundingBox();
+  d_prescale.post_scale(sdiag);
+  d_prescale.compute_imat();
+
+  updateTransform();
 }
 
 void
 LatticeGeom::io(Piostream&)
 {
 }
+
+
+
+void
+LatticeGeom::updateTransform()
+{
+  d_transform = d_prescale;
+  const double x = Min(d_nx - 1.0, 1.0);
+  const double y = Min(d_ny - 1.0, 1.0);
+  const double z = Min(d_nz - 1.0, 1.0);
+  Vector scale(x, y, z);
+  d_transform.pre_scale(scale);
+
+  computeBoundingBox();
+}
+
 
 
 } // end Datatypes

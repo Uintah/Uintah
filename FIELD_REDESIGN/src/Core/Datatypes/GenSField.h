@@ -35,7 +35,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 
 
 template <class T, class G, class A=DiscreteAttrib<T> > 
-  class SCICORESHARE GenSField: public SField, public SLInterpolate
+  class SCICORESHARE GenSField: public Field, public SLInterpolate
 {
   public:
     
@@ -120,7 +120,7 @@ PersistentTypeID GenSField<T,G,A>::type_id("GenSField", "Datatype", 0);
 
 template <class T, class G, class A >
 GenSField<T,G,A>::GenSField():
-  SField()
+  Field()
 {
 }
 
@@ -131,7 +131,7 @@ GenSField<T,G,A>::~GenSField()
 
 template <class T, class G, class A >
 GenSField<T,G,A>::GenSField(G* igeom, A* iattrib):
-  SField(), geom(igeom), attrib(iattrib)
+  Field(), geom(igeom), attrib(iattrib)
 {
 }
 
