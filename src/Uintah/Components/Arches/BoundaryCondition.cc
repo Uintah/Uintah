@@ -181,7 +181,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 
   // wall boundary type
   {
-    int nofGeomPieces = d_wallBdry->d_geomPiece.size();
+    int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
     for (int ii = 0; ii < nofGeomPieces; ii++) {
       GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
       Box geomBox = piece->getBoundingBox();
@@ -211,7 +211,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   // initialization for pressure boundary
   {
     if (d_pressBoundary) {
-      int nofGeomPieces = d_pressureBdry->d_geomPiece.size();
+      int nofGeomPieces = (int)d_pressureBdry->d_geomPiece.size();
       for (int ii = 0; ii < nofGeomPieces; ii++) {
 	GeometryPiece*  piece = d_pressureBdry->d_geomPiece[ii];
 	Box geomBox = piece->getBoundingBox();
@@ -241,7 +241,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   // initialization for outlet boundary
   {
     if (d_outletBoundary) {
-      int nofGeomPieces = d_outletBC->d_geomPiece.size();
+      int nofGeomPieces = (int)d_outletBC->d_geomPiece.size();
       for (int ii = 0; ii < nofGeomPieces; ii++) {
 	GeometryPiece*  piece = d_outletBC->d_geomPiece[ii];
 	Box geomBox = piece->getBoundingBox();
@@ -270,7 +270,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   }
   // set boundary type for inlet flow field
   for (int ii = 0; ii < d_numInlets; ii++) {
-    int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
+    int nofGeomPieces = (int)d_flowInlets[ii].d_geomPiece.size();
     for (int jj = 0; jj < nofGeomPieces; jj++) {
       GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
       Box geomBox = piece->getBoundingBox();
@@ -361,7 +361,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
   for (int ii = 0; ii < d_numInlets; ii++) {
 
     // Loop thru the number of geometry pieces in each inlet
-    int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
+    int nofGeomPieces = (int)d_flowInlets[ii].d_geomPiece.size();
     for (int jj = 0; jj < nofGeomPieces; jj++) {
 
       // Intersect the geometry piece with the patch box
@@ -2273,6 +2273,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.62  2000/10/07 05:37:49  sparker
+// Fixed warnings under g++
+//
 // Revision 1.61  2000/10/06 23:07:47  rawat
 // fixed some more bc routines for mulit-patch
 //
