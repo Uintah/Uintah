@@ -24,7 +24,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
-//  
+//    EditColorMap2D
 //    File   : EditTransferFunc2.cc
 //    Author : Milan Ikits
 //    Author : Michael Callahan
@@ -107,11 +107,18 @@ public:
   void draw_histo();
   void redraw();
 
-  void push(int x, int y, int button, int modifier);
+  void push(int x, int y, int button);
   void motion(int x, int y);
-  void release(int x, int y, int button);
+  void release(int x, int y);
+  void mouse_pick(int x, int y, int b);
+  void set_window_cursor(int x, int y);
 
 private:
+  ColorMap2IPort*			cmap_iport_;
+  ColorMap2OPort*			cmap_oport_;
+  NrrdIPort*				hist_iport_;
+  ColorMap2Handle			sent_cmap2_;
+  bool					just_resend_selection_;
   TkOpenGLContext *                     ctx_;
   int                                   width_;
   int                                   height_;
@@ -124,7 +131,8 @@ private:
   bool                                  use_pbuffer_;
   bool                                  use_back_buffer_;
   
-  int                                   icmap_gen_;
+  int                                   icmap_generation_;
+  int                                   hist_generation_;
 
   Nrrd*                                 histo_;
   bool                                  histo_dirty_;
@@ -133,34 +141,27 @@ private:
   bool                                  cmap_dirty_;
   bool                                  cmap_size_dirty_;
   GLuint                                cmap_tex_;
-  
-  // Which widget is selected.
-  int                                   pick_widget_;
+
+  int					mouse_widget_;
+  int					mouse_object_;
   int					pick_widget_on_execute_;
-  // The part of the widget that is selected.
-  int                                   pick_object_; 
   // Push on undo when motion occurs, not on select.
   bool                                  first_motion_;
-  bool save_ppm_;
+  bool					save_ppm_;
 
-
+  void					select_widget(int, int);
   //! functions and for panning.
-  void translate_start(int x, int y);
-  void translate_motion(int x, int y);
-  void translate_end(int x, int y);
+  void					translate_start(int x, int y);
+  void					translate_motion(int x, int y);
+  void					translate_end(int x, int y);
 
   //! functions and for zooming.
-  void scale_start(int x, int y);
-  void scale_motion(int x, int y);
-  void scale_end(int x, int y);
+  void					scale_start(int x, int y);
+  void					scale_motion(int x, int y);
+  void					scale_end(int x, int y);
 
-  void screen_val(int &x, int &y);
+  void					screen_val(int &x, int &y);
   
-  // functions for saving and forming swatches
-//  void save_ppm(const char * const filename, 
-//                int sx, int sy, int bpp,
-//                const unsigned char * buf);
-
   int                                   mouse_last_x_;
   int                                   mouse_last_y_;
   GuiDouble                             pan_x_;
@@ -172,6 +173,11 @@ private:
   GuiInt                                gui_faux_;
   GuiDouble                             gui_histo_;
 
+
+  // The currently selected widget
+  GuiInt			        gui_selected_widget_;
+  // The currently selected widgets selected object
+  GuiInt			        gui_selected_object_;
 
   GuiInt			        gui_num_entries_;
   vector<GuiString *>		        gui_name_;
@@ -200,21 +206,26 @@ DECLARE_MAKER(EditTransferFunc2)
 
 EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   : Module("EditTransferFunc2", ctx, Filter, "Visualization", "SCIRun"),
+    cmap_iport_((ColorMap2IPort*)get_iport("Input Colormap")),
+    cmap_oport_((ColorMap2OPort*)get_oport("Output Colormap")),
+    hist_iport_((NrrdIPort*)get_iport("Histogram")),
+    sent_cmap2_(0),
+    just_resend_selection_(0),
     ctx_(0), 
     button_(0), 
     shader_factory_(0),
     pbuffer_(0), 
     use_pbuffer_(true), 
     use_back_buffer_(true),
-    icmap_gen_(-1),
+    icmap_generation_(-1),
     histo_(0), 
     histo_dirty_(false), 
     histo_tex_(0),
     cmap_dirty_(true), 
     cmap_tex_(0),
-    pick_widget_(-1), 
+    mouse_widget_(-1),
+    mouse_object_(0),
     pick_widget_on_execute_(-1),
-    pick_object_(0), 
     first_motion_(true),
     save_ppm_(false),
     mouse_last_x_(0),
@@ -225,6 +236,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     updating_(false),
     gui_faux_(ctx->subVar("faux")),
     gui_histo_(ctx->subVar("histo")),
+    gui_selected_widget_(ctx->subVar("selected_widget"), -1),
+    gui_selected_object_(ctx->subVar("selected_object"), -1),
     gui_num_entries_(ctx->subVar("num-entries")),
     filename_(ctx->subVar("filename")),
     old_filemodification_(0),
@@ -332,66 +345,60 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   }
 
   // mouse commands are motion, down, release
-  if (args[1] == "mouse") {
-    int x, y, b, m;
-    string_to_int(args[3], x);
-    string_to_int(args[4], y);
+  // mouse commands are motion, down, release
+  if (args[1] == "resend_selection") {
+    just_resend_selection_ = true;
+    want_to_execute();
+  } else if (args[1] == "mouse") {
+    int x, y, X, Y, b;
+    string_to_int(args[5], b); // which button it was
+    string_to_int(args[3], X);
+    string_to_int(args[4], Y);
+    x = X;
+    y = Y;
+    // X, Y are unscaled/untranslated coordinates
+    // x, y are scaled/translated coordinates
     screen_val(x,y);
     if (args[2] == "motion") {
-      if (button_ == 0) // not buttons down!
-	return;
       motion(x, y);
-    } else {
-      string_to_int(args[5], b); // which button it was
-      if (args[2] == "push") {
-	string_to_int(args[6], m); // which button it was
-	push(x, y, b, m);
-      } else if (args[2] == "release") {
-	release(x, y, b);
-      } else if (args[2] == "translate") {
-	string_to_int(args[4], x);
-	string_to_int(args[5], y);
-	if (args[3] == "start") {
-	  translate_start(x, y);
-	} else if (args[3] == "move") {
-	  translate_motion(x, y);
-	} else {
-	  // end
-	  translate_end(x, y);
-	}	
-      } else if (args[2] == "reset") {
-	pan_x_.set(0.0);
-	pan_y_.set(0.0);
-	scale_.set(1.0);
-	redraw();
-      } else if (args[2] == "scale") {
-	string_to_int(args[4], x);
-	string_to_int(args[5], y);
-	if (args[3] == "start") {
-	  scale_start(x, y);
-	} else if (args[3] == "move") {
-	  scale_motion(x, y);
-	} else {
-	  // end
-	  scale_end(x, y);
-	}
-      }
+    } else if (args[2] == "push") {
+      push(x, y, b);
+    } else if (args[2] == "release") {
+      release(x, y);
+    } else if (args[2] == "x_late_start") {
+      translate_start(X, Y);
+    } else if (args[2] == "x_late_motion") {
+      translate_motion(X, Y);
+    } else if (args[2] == "x_late_end") {
+      translate_end(X, Y);
+    } else if (args[2] == "reset") {
+      pan_x_.set(0.0);
+      pan_y_.set(0.0);
+      scale_.set(1.0);
+      redraw();
+    } else if (args[2] == "scale_start") {
+      scale_start(X, Y);
+    } else if (args[2] == "scale_motion") {
+      scale_motion(X, Y);
+    } else if (args[2] == "scale_end") {
+      scale_end(X, Y);
     }
   } else if (args[1] == "resize") {
-    string_to_int(args[2], width_);
-    string_to_int(args[3], height_);
-    redraw();
-  } else if (args[1] == "expose") {
+    //    cerr << "Resize\n";
+    //    if (!ctx_) return;
+    //    width_ = ctx_->width();
+    //    height_ = ctx_->height();
+    width_ = 512;
+    height_ = 256;
     redraw();
   } else if (args[1] == "redraw") {
     reset_vars();
     if (args.count() > 2)
     {
+      select_widget(gui_selected_widget_.get(), 
+		    gui_selected_object_.get());
       cmap_dirty_ = true;
     }
-    redraw();
-  } else if (args[1] == "redrawcmap") {
-    cmap_dirty_ = true;
     redraw();
   } else if (args[1] == "destroygl") {
     if (ctx_) {
@@ -404,8 +411,8 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       delete ctx_;
     }
     ctx_ = scinew TkOpenGLContext(args[2], 0, 512, 256);
-    width_ = 512;
-    height_ = 256;
+    width_ = ctx_->width();
+    height_ = ctx_->height();
   } else if (!args[1].compare(0, 13, "color_change-")) {
     int n;
     string_to_int(args[1].substr(13), n);
@@ -421,7 +428,6 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     const double g = gui_color_g_[n]->get();
     const double b = gui_color_b_[n]->get();
     const double a = gui_color_a_[n]->get();
-    pick_widget_on_execute_ = n;
     Color c(widgets_[n]->color());
     if (r != c.r() || g != c.g() || b != c.b() || a != widgets_[n]->alpha())
     {
@@ -436,27 +442,35 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     widgets_.push_back(scinew TriangleCM2Widget());
     undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
-    redraw();
     update_to_gui();
+    select_widget(widgets_.size()-1, 1);
+    redraw();
     want_to_execute();
   } else if (args[1] == "addrectangle") {
     widgets_.push_back(scinew RectangleCM2Widget());
     undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
-    redraw();
     update_to_gui();
+    select_widget(widgets_.size()-1, 1);
+    redraw();
     want_to_execute();
   } else if (args[1] == "deletewidget") {
-    if (pick_widget_ != -1 && pick_widget_ < (int)widgets_.size())
+    gui_selected_widget_.reset();
+    if (gui_selected_widget_.get() != -1 && 
+	gui_selected_widget_.get() < (int)widgets_.size())
     {
       // Delete widget.
-      undo_stack_.push(UndoItem(UndoItem::UNDO_DELETE,
-				pick_widget_, widgets_[pick_widget_]));
-      widgets_.erase(widgets_.begin() + pick_widget_);
-      pick_widget_ = -1;
+      undo_stack_.push(UndoItem(UndoItem::UNDO_DELETE, 
+				gui_selected_widget_.get(),
+				widgets_[gui_selected_widget_.get()]));
+      widgets_.erase(widgets_.begin() + gui_selected_widget_.get());
       cmap_dirty_ = true;
-      redraw();
       update_to_gui();
+      if (gui_selected_widget_.get() >= (int)widgets_.size())
+	select_widget(widgets_.size()-1, 1);
+      else 
+	select_widget(gui_selected_widget_.get(), 1);
+      redraw();
       want_to_execute();
     }
   } else if (!args[1].compare(0, 12, "shadewidget-")) {
@@ -618,31 +632,22 @@ EditTransferFunc2::presave()
     gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
   }
 
-  // Delete all of the unused variables.
-  for (i = widgets_.size(); i < gui_name_.size(); i++)
+  const unsigned int ws = widgets_.size();
+  if (ws < gui_name_.size())
   {
-    const string num = to_string(i);
-    //    ctx->erase("name-" + num);
-    //    ctx->erase(num +"-color-r");
-    //    ctx->erase(num +"-color-g");
-    //    ctx->erase(num +"-color-b");
-    //    ctx->erase(num +"-color-a");
-    //    ctx->erase("state-" + num);
-    //    ctx->erase("shadeType-" + num);
-    //    ctx->erase("on-" + num);
+    // Delete all of the unused variables.
+    for (i = ws; i < gui_name_.size(); i++)
+    {
+      delete gui_name_[i];
+      delete gui_color_r_[i];
+      delete gui_color_g_[i];
+      delete gui_color_b_[i];
+      delete gui_color_a_[i];
+      delete gui_wstate_[i];
+      delete gui_sstate_[i];
+      delete gui_onstate_[i];
+    }
 
-    delete gui_name_[i];
-    delete gui_color_r_[i];
-    delete gui_color_g_[i];
-    delete gui_color_b_[i];
-    delete gui_color_a_[i];
-    delete gui_wstate_[i];
-    delete gui_sstate_[i];
-    delete gui_onstate_[i];
-  }
-  if (widgets_.size() < gui_name_.size())
-  {
-    const unsigned int ws = widgets_.size();
     gui_name_.erase(gui_name_.begin() + ws, gui_name_.end());
     gui_color_r_.erase(gui_color_r_.begin() + ws, gui_color_r_.end());
     gui_color_g_.erase(gui_color_g_.begin() + ws, gui_color_g_.end());
@@ -727,7 +732,7 @@ EditTransferFunc2::update_to_gui(bool forward)
   resize_gui();
   for (unsigned int i = 0; i < widgets_.size(); i++)
   {
-    gui_name_[i]->set("Generic");
+    gui_name_[i]->set(widgets_[i]->name());
     Color c(widgets_[i]->color());
     gui_color_r_[i]->set(c.r());
     gui_color_g_[i]->set(c.g());
@@ -796,70 +801,78 @@ EditTransferFunc2::tcl_unpickle()
 
 
 void
-EditTransferFunc2::push(int x, int y, int button, int modifier)
-{
-  int i;
-
-  button_ = button;
-  first_motion_ = true;
-
-  for (i = 0; i < (int)widgets_.size(); i++)
+EditTransferFunc2::select_widget(int widget, int object) {
+  for (int i = 0; i < (int)widgets_.size(); i++)
   {
     widgets_[i]->unselect_all();
   }
+  gui_selected_widget_.set(widget);
+  gui_selected_object_.set(object);
+  if (widget >= 0 && widget < (int)widgets_.size())
+    widgets_[widget]->select(object);
+}
+  
 
-  pick_widget_ = -1;
-  pick_object_ = 0;
-  if (modifier == 0)
-  {
-    for (i = widgets_.size()-1; i >= 0; i--)
-    {
-      const int tmp = widgets_[i]->pick1(x, height_-1-y, width_, height_);
-      if (tmp)
-      {
-	pick_widget_ = i;
-	pick_object_ = tmp;
-	widgets_[i]->select(tmp);
-	break;
-      }
-    }
-  }
-  if (pick_widget_ == -1)
-  {
-    for (i = widgets_.size()-1; i >= 0; i--)
-    {
-      const int m = modifier;
-      const int tmp = widgets_[i]->pick2(x, height_-1-y, width_, height_, m);
-      if (tmp)
-      {
-	pick_widget_ = i;
-	pick_object_ = tmp;
-	widgets_[i]->select(tmp);
-	break;
-      }
-    }
-  }
-  if (pick_widget_ != -1)
-  {
-    redraw();
-  }
+
+void
+EditTransferFunc2::push(int x, int y, int button)
+{
+  button_ = button;
+  first_motion_ = true;
+  mouse_pick(x,y,button);
+  select_widget(mouse_widget_, mouse_object_);
+  redraw();
 }
 
+void
+EditTransferFunc2::mouse_pick(int x, int y, int b) {
+  const bool right_button_down = (b==3);
+  if (!right_button_down)
+    for (mouse_widget_ = widgets_.size()-1; mouse_widget_>=0; mouse_widget_--)
+      if ((mouse_object_ = widgets_[mouse_widget_]->pick1
+	   (x, height_-1-y, width_, height_))) break;
+  
+  if (!mouse_object_)
+    for (mouse_widget_ = widgets_.size()-1; mouse_widget_>=0; mouse_widget_--)
+      if ((mouse_object_ = widgets_[mouse_widget_]->pick2
+	   (x, height_-1-y, width_, height_, right_button_down))) break;
+}
+
+void
+EditTransferFunc2::set_window_cursor(int x, int y)
+{
+  const int old_mouse_wid = mouse_widget_;
+  const int old_mouse_obj = mouse_object_;
+  mouse_pick(x,y,0);
+  if (old_mouse_wid != mouse_widget_ || old_mouse_obj != mouse_object_) {
+    string cstr("crosshair");
+    if (mouse_widget_ != -1) 
+      cstr = widgets_[mouse_widget_]->tk_cursorname(mouse_object_);
+    Tk_DefineCursor(ctx_->tkwin_, Tk_GetCursor
+		    (the_interp, ctx_->tkwin_, ccast_unsafe(cstr)));
+  }
+}
 
 
 void
 EditTransferFunc2::motion(int x, int y)
 {
-  if (pick_widget_ != -1)
+  if (button_ == 0) {
+    set_window_cursor(x,y);
+    return;
+  }
+  
+  const int selected = gui_selected_widget_.get();
+  if (selected != -1)
   {
     if (first_motion_)
     {
-      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, pick_widget_,
-				widgets_[pick_widget_]->clone()));
+      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, selected,
+				widgets_[selected]->clone()));
       first_motion_ = false;
     }
 
-    widgets_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
+    widgets_[selected]->move(x, height_-1-y, width_, height_);
     cmap_dirty_ = true;
     updating_ = true;
     update_to_gui(true);
@@ -871,12 +884,14 @@ EditTransferFunc2::motion(int x, int y)
 
 
 void
-EditTransferFunc2::release(int x, int y, int button)
+EditTransferFunc2::release(int x, int y)
 {
   button_ = 0;
-  if (pick_widget_ != -1)
+  set_window_cursor(x,y);
+  const int selected = gui_selected_widget_.get();
+  if (selected != -1)
   {
-    widgets_[pick_widget_]->release(pick_object_, x, height_-1-y, width_, height_);
+    widgets_[selected]->release(x, height_-1-y, width_, height_);
     updating_ = false;
     cmap_dirty_ = true;
 
@@ -889,48 +904,37 @@ EditTransferFunc2::release(int x, int y, int button)
 void
 EditTransferFunc2::execute()
 {
-  ColorMap2IPort* cmap_iport = (ColorMap2IPort*)get_iport("Input Colormap");
-  if (cmap_iport) {
-    ColorMap2Handle icmap_handle;
-    cmap_iport->get(icmap_handle);
+  ASSERTMSG(cmap_iport_, "EditTransferFunc2: cant find input CM2 port");  
+  ASSERTMSG(cmap_oport_, "EditTransferFunc2: cant find output CM2 port");
+  ASSERTMSG(hist_iport_, "EditTransferFunc2: cant find input histo port");
 
-    bool no_input = !icmap_handle.get_rep();
-    bool new_input = !no_input && icmap_handle->generation != icmap_gen_;
+  ColorMap2Handle icmap = 0;
+  cmap_iport_->get(icmap);
+  
+  if (icmap.get_rep() && icmap->generation != icmap_generation_) {
+    widgets_ = icmap->widgets();
+    icmap_generation_ = icmap->generation;
+    cmap_dirty_ = true;
+    if (!just_resend_selection_ && icmap->selected() != -1) 
+      gui_selected_widget_.set(icmap->selected());
+  }
 
-    if (new_input) {
-      widgets_ = icmap_handle->widgets();
-      icmap_gen_ = icmap_handle->generation;
-      cmap_dirty_ = true;
-      if (icmap_handle->selected() != -1) 
-	pick_widget_ = icmap_handle->selected();
-    }
-  }
-  if (pick_widget_on_execute_ > 0 && pick_widget_on_execute_ < widgets_.size())
-  {
-    pick_widget_ = pick_widget_on_execute_;
-    pick_widget_on_execute_ = -1;
-  }
-      
-  gui_num_entries_.reset();
   if ((unsigned)gui_num_entries_.get() != widgets_.size()) {  
     resize_gui();
     update_to_gui();
   }
 
   NrrdDataHandle h = 0;
-  NrrdIPort* histo_port = (NrrdIPort*)get_iport("Histogram");
-  if(histo_port)
-    histo_port->get(h);
+  hist_iport_->get(h);
 
-  if(h.get_rep()) {
+  if (h.get_rep() && h->generation != hist_generation_) {
+    hist_generation_ = h->generation;
     if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
       error("Invalid input dimension.");
     }
-    if(histo_ != h->nrrd) {
-      histo_ = h->nrrd;
-      histo_dirty_ = true;
-    }
-  } else {
+    histo_ = h->nrrd;
+    histo_dirty_ = true;
+  } else if (!h.get_rep()) {
     if(histo_ != 0)
       histo_dirty_ = true;
     histo_ = 0;
@@ -939,13 +943,13 @@ EditTransferFunc2::execute()
   if (histo_dirty_ || cmap_dirty_) {
     redraw();
   }
-  
-  ColorMap2OPort* cmap_port = (ColorMap2OPort*)get_oport("Output Colormap");
-  if (cmap_port) {
-    ColorMap2 *cm2 = scinew ColorMap2(widgets_, updating_, gui_faux_.get());
-    cm2->selected() = pick_widget_;
-    cmap_port->send(ColorMap2Handle(cm2));
-  }
+
+  if (!just_resend_selection_)
+    sent_cmap2_ = scinew ColorMap2(widgets_, updating_, gui_faux_.get());
+  just_resend_selection_ = false;
+  sent_cmap2_->selected() = gui_selected_widget_.get();
+  cmap_oport_->send(sent_cmap2_);
+
 }
 
 
@@ -953,12 +957,10 @@ bool
 EditTransferFunc2::make_current()
 {
   // check if it was created
-  if(!ctx_) {
+  if(!ctx_ || ctx_->width() < 3 || ctx_->height() < 3) {
     return false;
   }
-
   ctx_->make_current();
-
   return true;
 }
 
