@@ -79,8 +79,9 @@ Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
 
 Object_proxy::~Object_proxy()
 {
-::std::cout << "~Object_proxy\n";
-//delete (rm.intracomm);
+  ::std::cout << "~Object_proxy\n";
+  if(rm.localSize > 1)
+    delete (rm.intracomm);
 }
 
 
