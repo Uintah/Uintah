@@ -173,9 +173,14 @@ void TexCuttingPlanes::execute(void)
 				  tex,
 				  cmap);
 
+    volren->SetControlPoint(tex->get_field_transform().unproject(control_widget->ReferencePoint()));
+    volren->SetInterp( bool(interp_mode.get()));
+
     if(tex->CC()){
       volren->SetInterp(false);
       interp_mode.set(0);
+    } else {
+      volren->SetInterp(interp_mode.get());
     }
 
     ogeom->addObj( volren, "Volume Slicer");
@@ -199,6 +204,7 @@ void TexCuttingPlanes::execute(void)
 	control_widget->SetScale(dv.length()/80.0);
       }
       volren->SetVol( tex.get_rep() );
+      volren->SetControlPoint(tex->get_field_transform().unproject(control_widget->ReferencePoint()));
     }
 
     volren->SetInterp( bool(interp_mode.get()));
