@@ -20,6 +20,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Thread/Time.h>
 
 #include <iomanip>
 #include <errno.h>
@@ -124,79 +125,87 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    d_nextCheckpointTime=d_checkpointInterval; // no need to checkpoint t=0
 
    if(Parallel::usingMPI()){
-      // See if we have a shared filesystem
-      bool shared;
-      if(d_myworld->myrank() == 0){
-	 d_dir = makeVersionedDir(d_filebase);
-	 string tmpname = d_dir.getName()+"/tmp.tmp";
-	 ostringstream test_string;
-	 char hostname[MAXHOSTNAMELEN];
-	 if(gethostname(hostname, MAXHOSTNAMELEN) != 0)
-	    strcpy(hostname, "unknown???");
-	 test_string << hostname << " " << getpid() << '\n';
-	 {
-	    ofstream tmpout(tmpname.c_str());
-	    tmpout << test_string.str();
-	 }
-	 int outlen = (int)(test_string.str().length()+tmpname.length()+2);
-	 char* outbuf = scinew char[outlen];
-	 strcpy(outbuf, test_string.str().c_str());
-	 strcpy(outbuf+test_string.str().length()+1, tmpname.c_str());
-	 MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
-	 MPI_Bcast(outbuf, outlen, MPI_CHAR, 0, d_myworld->getComm());
-	 delete[] outbuf;
-	 shared=true;
-      } else {
-	 int inlen;
-	 MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
-	 char* inbuf = scinew char[inlen];
-	 MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
-	 char* test_string = inbuf;
-	 char* tmpname = test_string+strlen(test_string)+1;
-	 ifstream tmpin(tmpname);
-	 if(tmpin){
-	    char* in = scinew char[strlen(test_string)+1];
-	    tmpin.read(in, (int)strlen(test_string));
-	    in[strlen(test_string)]=0;
-	    if(strcmp(test_string, in) != 0){
-	       cerr << "Different strings?\n";
-	       shared=false;
-	    } else {
-	       shared=true;
-	    }
-	 } else {
-	    shared=false;
-	 }
-	 char* p = tmpname+strlen(tmpname)-1;
-	 while(p>tmpname && *p != '/')
-	    p--;
-	 *p=0;
-	 d_dir = Dir(tmpname);
-#if 0
-	 cerr << d_myworld->myrank() << " dir=" << d_dir.getName();
-	 if(shared)
-	    cerr << " shared\n";
-	 else
-	    cerr << " NOT shared\n";
-#endif
-	 delete[] inbuf;
-      }
-      int s = shared;
-      int allshared;
-      MPI_Allreduce(&s, &allshared, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
-      if(allshared){
-	 if(d_myworld->myrank() == 0){
-	    d_writeMeta = true;
-	 } else {
-	    d_writeMeta = false;
-	 }
-      } else {
-	 d_writeMeta = true;
-      }
-      if(d_myworld->myrank() == 0){
-	 string tmpname = d_dir.getName()+"/tmp.tmp";
-	 unlink(tmpname.c_str());
-      }
+     // See how many shared filesystems that we have
+     double start=Time::currentSeconds();
+     string basename;
+     if(d_myworld->myrank() == 0){
+       // Create a unique string, using hostname+pid
+       char hostname[MAXHOSTNAMELEN];
+       if(gethostname(hostname, MAXHOSTNAMELEN) != 0)
+	 strcpy(hostname, "unknown???");
+       ostringstream test_string;
+       test_string << hostname << "-" << getpid() << '\n';
+       const char* outbuf = test_string.str().c_str();
+       int outlen = strlen(outbuf);
+       MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
+       MPI_Bcast(const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
+		 d_myworld->getComm());
+       basename = test_string.str();
+     } else {
+       int inlen;
+       MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
+       char* inbuf = scinew char[inlen+1];
+       MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
+       inbuf[inlen]='\0';
+       basename=inbuf;
+     }
+     // Create a file, of the name p0_hostname-p0_pid-processor_number
+     ostringstream myname;
+     myname << basename << "-" << d_myworld->myrank() << ".tmp";
+     {
+       // This will be an empty file, everything is encoded in the name anyway
+       ofstream tmpout(myname.str().c_str());
+     }
+     MPI_Barrier(d_myworld->getComm());
+     // See who else we can see
+     d_writeMeta=true;
+     int i;
+     for(i=0;i<d_myworld->myrank();i++){
+       ostringstream name;
+       name << basename << "-" << i << ".tmp";
+       struct stat st;
+       int s=stat(name.str().c_str(), &st);
+       if(s == 0 && S_ISREG(st.st_mode)){
+	 // File exists, we do NOT need to emit metadata
+	 d_writeMeta=false;
+	 break;
+       } else if(s != ENOENT){
+	 throw ErrnoException("stat", errno);
+       }
+     }
+     MPI_Barrier(d_myworld->getComm());
+     if(d_writeMeta){
+       d_dir = makeVersionedDir(d_filebase);
+       {
+	 ofstream tmpout(myname.str().c_str());
+	 tmpout << d_dir.getName();
+       }
+     }
+     MPI_Barrier(d_myworld->getComm());
+     if(!d_writeMeta){
+       ostringstream name;
+       name << basename << "-" << i << ".tmp";
+       ifstream in(name.str().c_str());
+       if(!in){
+	 throw InternalError("File not found on second pass for filesystem discovery!");
+       }
+       string dirname;
+       in >> dirname;
+       d_dir=Dir(dirname);
+     }
+     MPI_Barrier(d_myworld->getComm());
+     // Remove the tmp files...
+     int s = unlink(myname.str().c_str());
+     if(s != 0)
+       throw ErrnoException("unlink", errno);
+     int count=d_writeMeta?1:0;
+     int nunique;
+     MPI_Reduce(&count, &nunique, 1, MPI_INT, MPI_SUM, 0,
+		d_myworld->getComm());
+     if(d_myworld->myrank() == 0){
+       double dt=Time::currentSeconds()-start;
+       cerr << "Discovered " << nunique << " unique filesystems in " << dt << " seconds\n";
+     }
    } else {
       d_dir = makeVersionedDir(d_filebase);
       d_writeMeta = true;
