@@ -82,10 +82,10 @@
     <para>
       <orderedlist>
         <listitem>
-          <para>
+          <para><emphasis>
             Obtain the source trees for SCIRun and any desired
             packages.
-          </para>
+          </emphasis></para>
           <para>          
             If you have access to the SCIRun CVS repository (i.e. you are
             a student or staff member of the SCI Institute), then contact a
@@ -97,10 +97,10 @@
           </para>
         </listitem>
         <listitem>
-          <para>
+          <para><emphasis>
             Unzip the SCIRun source tree into a directory of your
             choosing.
-          </para>
+          </emphasis></para>
           <para>
             The chosen directory will be referred to as 
             <term>INSTALL_DIR</term> from now on.
@@ -155,7 +155,18 @@
 
         </listitem>
         <listitem>
-          Unzip the packages (if any) into /SCIRun/src/Packages.
+          <para><emphasis>
+            Unzip the packages (if any) into
+            <term>INSTALL_DIR</term>/SCIRun/src/Packages.
+          </emphasis></para>
+          <para>
+            For example, if installing the BioPSE package:
+          </para>
+          <computeroutput>
+            cd <term>INSTALL_DIR</term>/SCIRun/src/Packages
+            gunzip BioPSE.PKG.x.x.x.tar.gz
+            tar xvf BioPSE.PKG.x.x.x.tar
+          </computeroutput>
         </listitem>
       </orderedlist>
     </para>          
@@ -167,319 +178,196 @@
     <para>
       <orderedlist>
         <listitem>
-          Ensure that the target install machine matches the above 
-          system requirements.
+          <para><emphasis>
+            Ensure that the target install machine matches the above 
+            system requirements.
+          </emphasis></para>
+
+          <para>
+            See the <ulink url="installguide.xml?cont=3&amp;dir=2">Thirdparty
+            Software Installation and Build Instructions</ulink> for more
+            information.
+          </para>
+ 
         </listitem>
         <listitem>
-          Run configure from a directory of your choosing.  The chosen
-          directory will be referred to as <term>BUILD_DIR</term> from now on.
+          <para><emphasis>
+            Run configure from a directory of your choosing.
+          </emphasis></para>
+          <para>
+            The chosen directory will be referred to as
+            <term>BUILD_DIR</term> from now on.
+          </para>
+          <para>
+            An example of a typical configure command (please 
+            excuse the line wrap):
+          </para>
+
+          <computeroutput>
+            cd <term>INSTALL_DIR</term>/SCIRun/src
+            ./configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \
+                        --enable-package="<term>PACKNAME_1</term> <term>PACKNAME_2</term> ..."
+          </computeroutput>
+
+          <para>
+            Where <term>PACKNAME_X</term> is the name of a SCIRun package
+            installed above.
+          </para>
+    
+          <para>
+            There are many options for configuring SCIRun with location 
+            as the chief option.  SCIRun can be configured from within
+            the <term>INSTALL_DIR</term>/SCIRun/src 
+            directory, as is commonly done, which yields the following:
+          </para>
+     
+          <sect2>
+            <para>
+              <term>BUILD_DIR</term> = <term>INSTALL_DIR</term>/SCIRun/src
+            </para>
+          </sect2>
+
+          <para>
+            However, SCIRun can also be configured from locations other 
+            than the source directory which allows for having multiple
+            builds for different platforms, or for for different ABI's
+            (Applications Binary Interface) while still sharing a single 
+            source directory: 
+          </para>
+
+          <computeroutput>
+            cd <term>INSTALL_DIR</term>/SCIRun
+            mkdir linux
+            mkdir sgi32
+            mkdir sgi64
+            cd linux
+            ../src/configure <term>CONFIGURE_OPTIONS</term>
+            cd ../sgi32
+            ../src/configure <term>CONFIGURE_OPTIONS</term>
+            cd ../sgi64
+            ../src/configure --enable-64bit <term>CONFIGURE_OPTIONS</term>
+          </computeroutput>
+
+          <para>
+            In addition to the configure location, there are several 
+            options that may be invoked at configure time by supplying
+            the configure command with arguments. The available
+            <term>CONFIGURE_OPTIONS</term> can be found in the 
+            <ulink url="#conftable">appendix</ulink> below. 
+          </para>
         </listitem>
         <listitem>
-          Run GNU make in the <term>BUILD_DIR</term> directory.
+          <para><emphasis>
+            Run GNU make in the <term>BUILD_DIR</term> directory.
+          </emphasis></para>
+          <para>
+            To run GNU make, simply type "make" or "gmake", depending
+            on how the command for GNU make is spelled on the target
+            install machine:
+          </para>
+
+          <computeroutput>
+            cd <term>BUILD_DIR</term>
+            gmake
+          </computeroutput>
+    
+          <para>
+            Just like configure, GNU make has some useful options.  The 
+            "number of jobs" option, is the most commonly used option
+            for building SCIRun : 
+          </para>
+   
+          <computeroutput>
+            gmake -j <term>NUM_JOBS</term>
+          </computeroutput>
+    
+          <para>
+            Where <term>NUM_JOBS</term> is an integer. If the target
+            install machine has multiple processors, setting
+            <term>NUM_JOBS</term> to the number of processors
+            available uses all the processors to build SCIRun 
+            in parallel, often significantly speeding up the time to
+            build SCIRun. 
+          </para>
+
+          <para>
+            Additional options for GNU make can be found 
+            <ulink url="http://www.gnu.org/manual/make/html_mono/make.html#SEC92">here</ulink>
+          </para>
         </listitem>
       </orderedlist>
     </para>
   </sect1>
-</chapter>
 
-<!--
-    <p class="firstpara">
-      <a name="instpackages"><b>3. Install the package(s) (if any) into 
-         <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src/Packages
-	</b></a>
-    </p>
-      
-    <p class="firstpara">
-      Unzip and untar the package source tree into <b><i><font 
-      color=green>INSTALL_DIR</font></i></b>/SCIRun/src/Packages.
-        For example, if installing the BioPSE
-      package:
-    </p>
-    
-    <pre class="example"><font color=blue>cd <b><i><font
-	color=green>INSTALL_DIR</font></i></b>/SCIRun/src/Packages
-gunzip BioPSE.PKG.x.x.x.tar.gz
-tar xvf BioPSE.PKG.x.x.x.tar</font>
-    </pre>
-
-<p class="head"><a name="Building">Building SCIRun and Packages</a></p>
-  <p class="firstpara">
-    <b>1. Ensure that the target install machine
-      matches the above system requirements.</b>
-  </p>
-
-  <p class="firstpara">
-    See the <a href="ThirdpartyInfo.html">Thirdparty Software Installation and Build Instructions</a> for more information.
-
-  <p class="firstpara">
-    <a name="Configure">
-    <b>2. Run configure from a directory of your choosing.</b></a>
-  </p>
-
-  <p class="firstpara"> 
-    The chosen configure directory will be referred to as <b><i><font
-    color=green>BUILD_DIR</font></i></b> from now on.
-  </p>
-
-  <p class="firstpara">
-    An example of a typical configure command:
-  </p>
-
-  <pre class="example"><b><i><font
-      color="green">INSTALL_DIR</font></i></b><font color="blue">/SCIRun/src/configure -=with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \<br>
-                                 -=enable-package="<b><i><font
-    color="green">PACKNAME_1 PACKNAME_2 ...</font></i></b>" </font>
-  </pre>
-
-    <p class="firstpara">
-      Where <b><i><font
-      color=green>PACKNAME_X</font></i></b> is the name of a SCIRun package
-      installed above.
-    </p>
-
-    
-<p class="firstpara"> There are many options for configuring SCIRun with location 
-  as the chief option. SCIRun can be configured from within the <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src 
-  directory, as is commonly done: </p>
-
-    <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
-./configure <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b></font>
-    </pre>
-
-    <p class="firstpara">
-      Configuring in the source directory yields:
-    </p>
-
-    <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
-    </pre>
-
-    
-<p class="firstpara"> However, SCIRun can also be configured from locations other 
-  than the source directory which allows for having builds for multiple platforms, 
-  or for multiple ABI's (Applications Binary Interface) while sharing a single 
-  source directory: </p>
-
-    <pre class="example"><font color="blue">cd <b><i><font color="green">INSTALL_DIR</font></i></b>/SCIRun
-mkdir linux
-mkdir sgi32
-mkdir sgi64
-cd linux
-../src/configure <b><i><font color="green">CONFIGURE_OPTIONS</font></i></b>
-cd ../sgi32
-../src/configure <b><i><font color="green">CONFIGURE_OPTIONS</font></i></b>
-cd ../sgi64
-../src/configure -=enable-64bit <b><i><font color="green">CONFIGURE_OPTIONS</font></i></b></font>
-    </pre>
-
-    <p class="firstpara">
-      The <b><i><font color=green>BUILD_DIR</font></i></b>'s for the above, in order, would be:
-    </p>
-
-    <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/linux
-<b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/sgi32
-<b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/sgi64
-    </pre>
-
-    
-<p class="firstpara"> In addition to the configure location, there are several 
-  options that may be invoked at configure time by supplying the configure with 
-  arguments. The available <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b> 
-  can be found in the <a href="#conftable">appendix</a> below. </p>
-
-    <p class="firstpara">   
-      <a name="Make"><b>3. Run GNU make in the <i><font
-      color=green>BUILD_DIR</font></i> directory</b>.</a>
-    </p>
-
-    <p class="firstpara">
-      To run GNU make, simply type:
-    </p>
-
-    <pre class="example"><font color=blue>make</font></pre>
-
-    <p class="firstpara">
-      or
-    </p>
-
-    <pre class="example"><font color=blue>gmake</font></pre>
-      
-    <p class="firstpara">
-      Depending on how the command for GNU make is spelled on the target
-      install machine.
-    </p>
-
-    
-<p class="firstpara"> Just like configure, GNU make has some useful options. The 
-  "number of jobs" option, is the most commonly used option for building SCIRun 
-  : </p>
-
-    <pre class="example"><font color=blue>gmake -j <b><i><font color=green>NUM_JOBS</font></i></b></font></pre>
-
-    
-<p class="firstpara"> Where <b><i><font color=green>NUM_JOBS</font></i></b> is 
-  an integer. If the target install machine has multiple processors, setting <b><i><font color=green>NUM_JOBS</font></i></b> 
-  to the number of processors available uses all the processors to build SCIRun 
-  in parallel, often significantly speeding up the time to build SCIRun. </p>
-
-    
-<p class="firstpara"> Additional options for GNU make can be found <a href=http://www.gnu.org/manual/make/html_mono/make.html#SEC92>here</a>. 
-</p>
-
-<p class="head"><a name="RunningSCIRun">Running SCIRun</a></p>
-    <P class="firstpara">
+  <sect1>
+    <title>Running SCIRun</title>
+    <para>
       After a successful build, there will be an executable in
-      the <i><b><font color=green>BUILD_DIR</font></b></i> directory named:
-    </P>
-
-    <pre class="example"><font color=blue>scirun</font>
-    </pre>
-
-    <p class="firstpara">
-      Running this will open the SCIRun network editor window and start
-      a console (called the SCIRun console) in the shell where scirun was
-      started from.
-    </p>   
-
-    <p class="firstpara">
+      the <term>BUILD_DIR</term> directory named "scirun".  Running
+      this will open the SCIRun network editor window and start a
+      console (called the SCIRun console) in the shell where scirun
+      was started from. 
+    </para>   
+    <para>
       If the window does not appear, note any errors
       displayed in the SCIRun console and see the getting
       help section below.  Of course, it might just be
       hiding behind other windows on the desktop!
-    </p>
+    </para>
+  </sect1>
 
-<p class="head"><a name="AdditionalDocs">Additional Documentation</a></p>
-    <p class="firstpara">
+  <sect1>
+    <title>Additional Documentation</title>
+    <para>
       Additional Documentation about SCIRun can be obtained on
       the web at:
-    </p>
+    </para>
+    <para>
+      <ulink url="http://software.sci.utah.edu/software/doc/index.html">
+      http://software.sci.utah.edu/software/doc/index.html</ulink>
+    </para>
+  </sect1>
 
-    <pre class="example"><A HREF="http://software.sci.utah.edu/software/doc/index.html">
-http://software.sci.utah.edu/software/doc/index.html</A>
-    </pre>
-
-<p class="head"><a name="GettingHelp">Getting Help</a></p>
-    <p class="firstpara">
+  <sect1>
+    <title>Getting Help</title>
+    <para>
       There is a mailing list available for asking questions about
       using or installing SCIRun or to get help with resolving a problem.
-        To subscribe to the mailing list, send email to:
-    </p>
+      To subscribe to the mailing list, send email to:
+    </para>
 
-    <A HREF="mailto:majordomo@cs.utah.edu"><pre class="example">majordomo@cs.utah.edu</pre></A>
+    <para>
+      <email>majordomo@cs.utah.edu</email>
+    </para>
 
-    <p class="firstpara">
-      with the following in the body of the message:
-    </p>
+    <para>
+      with the following in the body of the message (no subject):
+    </para>
 
-    <pre class="example"><font color=blue>subscribe scirun-users</font>
-    </pre>
+    <computeroutput>
+      subscribe scirun-users
+    </computeroutput>
 
-    <p class="firstpara">
+    <para>
       To use the mailing list, simply send your question or problem
       as an email to the list:
-    </p>
+    </para>
 
-    <A HREF="mailto:scirun-users@cs.utah.edu"><pre class="example">scirun-users@cs.utah.edu</pre></A>
+    <para>
+      <email>scirun-users@cs.utah.edu</email>
+    </para>
 
-    <P class="firstpara">
+    <para>
       To aid in problem resolution, include a verbatim (cut and paste) copy of
-      the error(s) displayed (if any).  Also include a short description of
+      the errors displayed (if any).  Also include a short description of
       what you we're doing (running a network, building the tree, etc.) and
       which version of SCIRun you have.
-    </P>
+    </para>
+  </sect1>
 
-<p class="head"><a name="Gotchas">Known Issues</a></p>
-  <p class="firstpara">
-    This section describes known issues with installing and building SCIRun.
-    It also includes solutions when available. 
-  </p>
-
-<p class="subhead">Building on Red Hat linux doesn't work</p>
-    <p class="firstpara">
-      Red Hat linux (version 7.0) is shipped with a version of the GNU 
-      Compiler Collection (GCC) that does not work for building SCIRun.  Please
-      see <a href=http://www.gnu.org/software/gcc/gcc-2.96.html>
-      http://www.gnu.org/software/gcc/gcc-2.96.html</a> for details.
-      If you are using Red Hat, you should install GCC version 2.95.2 or
-      2.95.3.  Red Hat 7.0 also ships with other required software (e.g. Tcl
-      distributions) that will need to be upgraded.
-    </p>
-
-<p class="subhead">Path Specifications</p>
-    <p class="firstpara">
-     If any of the software, SCIRun or thirdparty, is installed into a user's
-     home directory, <i><b>do not</b></i> use abbreviations such as tilde
-     expansion when specifying paths.  Instead, use full absolute paths.
-     For example, use /home/bob/SCIRun instead of ~bob/SCIRun for the 
-     -=prefix arguments when configuring.  Most abbreviation techniques will
-     not get expanded by the build scripts for any of the software.
-    </p>
-
-<p class="subhead">Configuring SCIRun</p>
-  <p class="firstpara">
-    The configure script expects the OpenGL headers to live in /usr/include/GL
-    or /usr/X11R6/include/GL.
-    Some linux distributions have the OpenGL headers installed in
-    /usr/local/include/GL.  This is 
-    non-standard and should be corrected, as this may cause version
-    conflicts with other pieces of  
-    software located in /usr/local.
-  </p>
-
-<p class="subhead">Full source of Tcl and Tk required</p>
-  <p class="firstpara">
-    SCIRun currently requires the full source of Tcl and Tk to be installed.
-    This is required because SCIRun defines a few Tk widgets of it's own, and
-    needs some headers from the source that aren't included with typical
-    installations.  If your system already has the correct Tcl and Tk versions
-    installed, you will have to re-install (see above) in order to have the
-    sources included.
-  </p>
-
-<p class="head"><a name="tested">Tested PC Systems</a></p>
-
-<p class="subhead">linux distributions</p>
-  <p class="firstpara">
-    SCIRun has been built and tested on several flavors of linux
-    including:
-  </p>
-
-  <p class="firstpara">
-    Mandrake 8.0 (need to add zlib headers)<br>
-    Mandrake 7.2 (most out-of-box solution)<br>
-    SuSE 7.0 professional<br>
-    Debian (need to be a deb-head!)<br>
-    RedHat 7.0 (requires many updates first)
-  </p>
-  
-<p class="subhead">Processors</p>
-  <p class="firstpara">
-    SCIRun has been built and tested on the following processor configurations:
-  </p>
-
-  <p class="firstpara">
-    Single Intel Pentium II<br>
-    Dual Intel Pentium II<br>
-    Single Intel Pentium III<br>
-    Dual Intel Pentium III<br>
-    Single Intel Pentium 4<br>
-    Single AMD Athlon
-  </p>
-
-<p class="subhead">Graphics cards</p>
-  <p class="firstpara">
-  </p>
-
-  <p class="Firstpara">
-    SCIRun has been tested using NVIDIA GeForce and Quadro
-    graphics cards for hardware accelerated 3D OpenGL in XFree86 version 4.1.0
-    using the 1.0-1251 drivers, on both Intel and AMD machines.
-  </p>
-
-<p class="head"><a name="Appendix">Appendix</a></p>
-
-<p class="subhead"><a name="conftable">Configure options for SCIRun</a></p>
-
-    <p class="firstpara">
+  <sect1>
+    <title>Appendix</title>
+    <para>
       <table border="2" cellspacing="2" cellpadding="4">
       <tr><td>-=enable-package</td><td>Compile the listed packages.  SCIRun
       modules are compiled automatically.  To also build the BioPSE and
@@ -555,5 +443,86 @@ http://software.sci.utah.edu/software/doc/index.html</A>
       algorithms.
       </td></tr>
       </table>
-    <p></p>
+    </para>
+  </sect1>
+</chapter>
+
+<!--
+
+
+
+<p class="subhead">Path Specifications</p>
+    <p class="firstpara">
+     If any of the software, SCIRun or thirdparty, is installed into a user's
+     home directory, <i><b>do not</b></i> use abbreviations such as tilde
+     expansion when specifying paths.  Instead, use full absolute paths.
+     For example, use /home/bob/SCIRun instead of ~bob/SCIRun for the 
+     -=prefix arguments when configuring.  Most abbreviation techniques will
+     not get expanded by the build scripts for any of the software.
+    </p>
+
+<p class="subhead">Configuring SCIRun</p>
+  <p class="firstpara">
+    The configure script expects the OpenGL headers to live in /usr/include/GL
+    or /usr/X11R6/include/GL.
+    Some linux distributions have the OpenGL headers installed in
+    /usr/local/include/GL.  This is 
+    non-standard and should be corrected, as this may cause version
+    conflicts with other pieces of  
+    software located in /usr/local.
+  </p>
+
+<p class="subhead">Full source of Tcl and Tk required</p>
+  <p class="firstpara">
+    SCIRun currently requires the full source of Tcl and Tk to be installed.
+    This is required because SCIRun defines a few Tk widgets of it's own, and
+    needs some headers from the source that aren't included with typical
+    installations.  If your system already has the correct Tcl and Tk versions
+    installed, you will have to re-install (see above) in order to have the
+    sources included.
+  </p>
+
+<p class="head"><a name="tested">Tested PC Systems</a></p>
+
+<p class="subhead">linux distributions</p>
+  <p class="firstpara">
+    SCIRun has been built and tested on several flavors of linux
+    including:
+  </p>
+
+  <p class="firstpara">
+    Mandrake 8.0 (need to add zlib headers)<br>
+    Mandrake 7.2 (most out-of-box solution)<br>
+    SuSE 7.0 professional<br>
+    Debian (need to be a deb-head!)<br>
+    RedHat 7.0 (requires many updates first)
+  </p>
+  
+<p class="subhead">Processors</p>
+  <p class="firstpara">
+    SCIRun has been built and tested on the following processor configurations:
+  </p>
+
+  <p class="firstpara">
+    Single Intel Pentium II<br>
+    Dual Intel Pentium II<br>
+    Single Intel Pentium III<br>
+    Dual Intel Pentium III<br>
+    Single Intel Pentium 4<br>
+    Single AMD Athlon
+  </p>
+
+<p class="subhead">Graphics cards</p>
+  <p class="firstpara">
+  </p>
+
+  <p class="Firstpara">
+    SCIRun has been tested using NVIDIA GeForce and Quadro
+    graphics cards for hardware accelerated 3D OpenGL in XFree86 version 4.1.0
+    using the 1.0-1251 drivers, on both Intel and AMD machines.
+  </p>
+
+<p class="head"><a name="Appendix">Appendix</a></p>
+
+
 -->
