@@ -10,8 +10,10 @@ SRCS += \
 	$(SRCDIR)/RadiationModel.cc \
 	$(SRCDIR)/DORadiationModel.cc
 
-ifneq ($(HAVE_PETSC),)
+ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/RadLinearSolver.cc
+else
+  SRCS += $(SRCDIR)/FakeRadLinearSolver.cc
 endif
 
 PSELIBS := \
@@ -25,7 +27,11 @@ PSELIBS := \
 	Core/Thread     \
 	Core/Geometry   
 
-LIBS := $(XML_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
+
+ifneq ($(HAVE_PETSC),)
+LIBS := $(LIBS) $(PETSC_LIBRARY) 
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
