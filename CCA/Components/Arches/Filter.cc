@@ -35,8 +35,8 @@ using namespace SCIRun;
 // ****************************************************************************
 // Default constructor for Filter
 // ****************************************************************************
-Filter::Filter(const ArchesLabel* label, const ProcessorGroup* myworld)
-   : d_lab(label), d_myworld(myworld)
+Filter::Filter(const ArchesLabel* label, const ProcessorGroup* myworld) :
+  d_myworld(myworld), d_lab(label)
 {
   d_perproc_patches= 0;
   d_matrixInitialize = false;
