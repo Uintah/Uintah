@@ -337,12 +337,9 @@ public:
   bool locate(face_index &, const Point &) const { return false; }
   bool locate(cell_index &, const Point &) const;
 
-  bool unlocate(Point &result, node_index idx) const;
-  bool unlocate(Point &result, edge_index idx) const { return false; }
-  bool unlocate(Point &result, face_index idx) const { return false; }
-  bool unlocate(Point &result, cell_index idx) const;
-
-  void get_point(Point &, node_index) const;
+  void get_point(Point &p, node_index i) const
+  { return get_center(p, i); }
+    
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

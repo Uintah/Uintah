@@ -102,7 +102,7 @@ Gradient::dispatch_latticevol(F *f)
   while (ci != lvm->cell_end())
   {
     Point p;
-    lvm->unlocate(p, *ci);
+    lvm->get_center(p, *ci);
     Vector v;
     f->get_gradient(v, p);
     result->set_value(v, *ci);
