@@ -63,7 +63,7 @@ DEALINGS IN THE SOFTWARE.
       </li>
       <li>EditColorMap (Visualization) replaces GenTransferFunc and
           provides many more features.</li>
-      <li>CangeFieldBasis (Fields) module replaces ChangeFieldDataAt</li>
+      <li>ChangeFieldBasis (Fields) module replaces ChangeFieldDataAt</li>
       <li>ViewSlices (Render) module for viewing 2D slices of 3D Nrrds.</li>
       <li>The FieldToCanonicalTransform module was removed.</li>
       <li>The ReplaceScalarDataValue and ScaleFieldData are deprecated and
@@ -146,7 +146,7 @@ DEALINGS IN THE SOFTWARE.
       transform as NrrdData property that can be used again if
       converted back to a Field using NrrdToField.</li>
       <li>NrrdWriter (DataIO) can write out just .nrrd or .nhdr
-      directly and will only write out a .nd file if specifed or if
+      directly and will only write out a .nd file if specified or if
       there are NrrdData properties.</li>
       <li>UnuResample (Unu) - Fixed to pass correct parameters to teem call.</li>
       <li>NrrdGradient (NrrdData) - Compute the gradient vector for
@@ -158,7 +158,7 @@ DEALINGS IN THE SOFTWARE.
     <ul>
       <li>Fixed setting pixel container when not copying data in
           FieldToImage (Converters).</li>
-      <li>Handle buildling with ITK 1.4, 1.6, 1.9, and 1.10 (Note,
+      <li>Handle building with ITK 1.4, 1.6, 1.9, and 1.10 (Note,
       1.10 will be released soon.  We have preemptively fixed GCC 3.4
       compile problems).</li>
     </ul>
@@ -169,7 +169,7 @@ DEALINGS IN THE SOFTWARE.
     <ul>
       <li>GatherPoints (Fields) - replaced by GatherPoints.</li>
       <li>GenTransferFunc (Visualization) replaced by EditColorMap.</li>
-      <li>ChangeFieldDataAt (Fields) moduled renamed to CangeFieldBasis</li>
+      <li>ChangeFieldDataAt (Fields) module renamed to ChangeFieldBasis</li>
     </ul>
 
     <h1>Infrastructure Enhancements</h1>
@@ -220,11 +220,11 @@ DEALINGS IN THE SOFTWARE.
       when user specifies the packages names (eg: TEEM).</li>
       <li>NRRD datatype moved from the Teem package into the SCIRun Core.</li>
       <li>Fixed get_weights mesh_ crash in ImageMesh, bug #2303.</li>
-      <li>Fixed static synchronization crash bug in dynamic complilation code.</li>
+      <li>Fixed static synchronization crash bug in dynamic compilation code.</li>
       <li>Fixed std::remove usage associated crashes.</li>
       <li>Fixed texture map bind order in GeomColorMap (color synchronization bug).</li>
       <li>Added missing closedir to tcl reader, should fix 'too many open files' bug.</li>
-      <li>Fixed FieldSubSample.net crash bug: preserve types when interping.</li>
+      <li>Fixed FieldSubSample.net crash bug: preserve types when interpolating.</li>
       <li>Added a 'to_index' member to the Mesh classes for portably
       converting unsigned ints into element indices.</li>
       <li>Make all of the IOable classes inherit from PropertyManager.</li>
@@ -275,7 +275,7 @@ DEALINGS IN THE SOFTWARE.
     <h1>Environment Variables</h1>
     <ul>
       <li>SCIRUN_DATAFILE added.  Allows user to specify different datafiles that reside in the same SCIRUN_DATASET directory.</li>
-      <li>SCIRUN_THRIDPARTY_DIR added.  Allows user to manually set location of thirdparty directory after compilation.  Used for re-locatable build.</li>
+      <li>SCIRUN_THIRDPARTY_DIR added.  Allows user to manually set location of thirdparty directory after compilation.  Used for re-locatable build.</li>
       <li>SCIRUN_FONT_PATH added.&nbsp; Allows user to specify location of TrueType fonts.</li>
       <li>SCIRUN_RCFILE_VERSION added.&nbsp; Allows SCIRun to determine if .scirunrc needs updating.</li>      
     </ul>
