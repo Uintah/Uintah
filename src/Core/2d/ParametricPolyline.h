@@ -40,9 +40,11 @@ namespace SCIRun {
   
 using std::map;
 using std::pair;
-typedef map<double, pair<double, double> >::iterator iter;
 
 class SCICORESHARE ParametricPolyline : public DrawObj {
+
+  typedef map<double, pair<double, double> >::iterator iter;
+
 protected:
   map< double, pair<double,double> > data_;
   double tmin_, tmax_, xmin_, xmax_, ymin_, ymax_;

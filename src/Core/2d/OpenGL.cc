@@ -91,8 +91,10 @@ ParametricPolyline::draw( bool )
 
   iter i = data_.begin();
 
+  // we want to draw the points in parameter sorted order
+  // maps iterate in sorted order of their key
   while (i != data_.end()) 
-      glVertex2f((*i).second.first,(*i).second.second);
+    glVertex2f((*i).second.first,(*i).second.second);
 
   glEnd();
 }
