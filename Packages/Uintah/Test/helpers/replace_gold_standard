@@ -78,13 +78,13 @@ if [ $yesno = "y" -o $yesno = "yes" ]; then
 #  echo "chgrp -R csafe $gold_standard_dir/$testname/*"
   chgrp -R csafe "$gold_standard_dir/$testname"/* 
   if [ $? != "0" ]; then
-    echo "$testname replacement failed - Could not change groups"
+    echo "Could not change groups"
     exit 1
   fi
 #  echo "chmod -R g+rwX $gold_standard_dir/$testname/*"
   chmod -R g+rwX "$gold_standard_dir/$testname"/*
   if [ $? != "0" ]; then
-    echo "$testname replacement failed - Could not change permissions"
+    echo "Could not change permissions"
     exit 1
   fi
 
