@@ -17,7 +17,9 @@ SRCS       += \
        $(SRCDIR)/SmagorinskyModel.cc \
        $(SRCDIR)/DynamicModel.cc \
        $(SRCDIR)/TurbulenceFactory.cc \
-       $(SRCDIR)/impICE.cc
+       $(SRCDIR)/impICE.cc \
+       $(SRCDIR)/NG_NozzleBCs.cc 
+       
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
