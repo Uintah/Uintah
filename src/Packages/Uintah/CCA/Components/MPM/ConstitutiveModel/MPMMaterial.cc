@@ -37,7 +37,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb)
-  : Material(ps), lb(lb)
+  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_fracture(0), d_eos(0)
 {
    // Constructor
 
@@ -108,6 +108,7 @@ MPMMaterial::~MPMMaterial()
   delete d_cm;
   delete d_burn;
   delete d_fracture;
+  delete d_eos;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
