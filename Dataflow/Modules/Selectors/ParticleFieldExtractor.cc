@@ -430,9 +430,9 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	  archive.query(pvs, psVar.get(), matl, *r, time);
 	  break;
 	case TypeDescription::int_type:
-	  cerr << "Getting data for ParticleVariable<int>\n";
+	  //cerr << "Getting data for ParticleVariable<int>\n";
 	  archive.query(pvint, psVar.get(), matl, *r, time);
-	  cerr << "Got data\n";
+	  //cerr << "Got data\n";
 	  break;
 	}
       }
@@ -477,9 +477,9 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	    break;
 	  case TypeDescription::int_type:
 	    scalars[dest]=pvint[*iter];
-	    if (scalars[dest] == 1) {
-	      cerr << "scalars[" << dest << "] = " << scalars[dest] << endl;
-	    }
+	    //if (scalars[dest] == 1) {
+	    //cerr << "scalars[" << dest << "] = " << scalars[dest] << endl;
+	    //}
 	    break;
 	  }
 	else
