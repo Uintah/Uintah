@@ -13,8 +13,8 @@
 #include <PSECommon/Dataflow/Module.h>
 #include <SCICore/Geom/Sphere.h>
 #include <SCICore/Geom/Group.h>
-#include <PSECommon/CommonDatatypes/GeometryPort.h>
-#include <PSECommon/CommonDatatypes/GeometryComm.h>
+#include <PSECommon/Datatypes/GeometryPort.h>
+#include <PSECommon/Datatypes/GeometryComm.h>
 #include <SCICore/Malloc/Allocator.h>
 
 class GeomPortTest : public Module {

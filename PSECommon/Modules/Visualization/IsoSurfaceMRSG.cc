@@ -18,15 +18,15 @@
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Stack.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <SCICore/CoreDatatypes/Mesh.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <SCICore/Datatypes/Mesh.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geom/GeomTimeGroup.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/GeomTriangles.h>
@@ -50,7 +50,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
@@ -654,6 +654,11 @@ void IsoSurfaceMRSG::iso_reg_grid(ScalarFieldRG* field, double isoval,
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:09  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:58  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
@@ -675,7 +680,7 @@ void IsoSurfaceMRSG::iso_reg_grid(ScalarFieldRG* field, double isoval,
 // Initial commit
 //
 // Revision 1.2  1999/04/27 22:58:00  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:33  dav
 // Import sources

@@ -14,10 +14,10 @@
  */
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <stdio.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -26,13 +26,13 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECore::Dataflow::Module;
-using PSECore::CommonDatatypes::SurfaceIPort;
-using PSECore::CommonDatatypes::SurfaceOPort;
-using PSECore::CommonDatatypes::SurfaceHandle;
-using PSECore::CommonDatatypes::TriSurface;
-using PSECore::CommonDatatypes::ScalarFieldIPort;
-using PSECore::CommonDatatypes::ScalarFieldHandle;
-using PSECore::CommonDatatypes::ScalarFieldUG;
+using PSECore::Datatypes::SurfaceIPort;
+using PSECore::Datatypes::SurfaceOPort;
+using PSECore::Datatypes::SurfaceHandle;
+using PSECore::Datatypes::TriSurface;
+using PSECore::Datatypes::ScalarFieldIPort;
+using PSECore::Datatypes::ScalarFieldHandle;
+using PSECore::Datatypes::ScalarFieldUG;
 
 using SCICore::Containers::clString;
 
@@ -91,6 +91,11 @@ void SFUGtoSurf::execute() {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:00  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:54  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

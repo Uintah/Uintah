@@ -14,14 +14,14 @@
 #ifndef SCI_project_ImagePort_h
 #define SCI_project_ImagePort_h 1
 
-#include <CommonDatatypes/SimplePort.h>
-#include <CoreDatatypes/Image.h>
+#include <Datatypes/SimplePort.h>
+#include <Datatypes/Image.h>
 
 namespace SCIRun {
 namespace Datatypes {
 
-using namespace PSECommon::CommonDatatypes;
-using namespace SCICore::CoreDatatypes;
+using namespace PSECommon::Datatypes;
+using namespace SCICore::Datatypes;
 
 typedef SimpleIPort<ImageHandle> ImageIPort;
 typedef SimpleOPort<ImageHandle> ImageOPort;
@@ -31,6 +31,11 @@ typedef SimpleOPort<ImageHandle> ImageOPort;
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:48:54  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/07/27 16:58:47  mcq
 // Initial commit
 //

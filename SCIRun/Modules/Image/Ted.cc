@@ -13,13 +13,13 @@
 #include <Containers/Array1.h>
 #include <Util/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CoreDatatypes/ScalarFieldRGshort.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CoreDatatypes/ScalarFieldRGBase.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldRGint.h>
+#include <Datatypes/ScalarFieldRGshort.h>
+#include <Datatypes/ScalarFieldRGfloat.h>
+#include <Datatypes/ScalarFieldRGBase.h>
 #include <Geometry/Point.h>
 #include <Math/MinMax.h>
 #include <Malloc/Allocator.h>
@@ -51,7 +51,7 @@ namespace SCIRun {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Multitask;
@@ -708,6 +708,11 @@ int Ted::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:58  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:40:02  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

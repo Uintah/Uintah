@@ -19,10 +19,10 @@
 #include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Connection.h>
 #include <Dataflow/Module.h>
-#include <PSECommon/CommonDatatypes/TYPEPort.h>
-#include <PSECommon/CommonDatatypes/TYPE.h>
-#include <PSECommon/CommonDatatypes/BooleanPort.h>
-#include <PSECommon/CommonDatatypes/Boolean.h>
+#include <PSECommon/Datatypes/TYPEPort.h>
+#include <PSECommon/Datatypes/TYPE.h>
+#include <PSECommon/Datatypes/BooleanPort.h>
+#include <PSECommon/Datatypes/Boolean.h>
 #include <SCICore/Malloc/Allocator.h>
 
 class TYPEIterator : public Module {

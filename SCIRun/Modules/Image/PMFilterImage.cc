@@ -26,7 +26,7 @@ namespace Modules {
 using namespace SCICore::TclInterface;
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 
 using namespace SCIRun::Datatypes;
 
@@ -203,6 +203,11 @@ void PMFilterImage::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:57  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:40:01  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

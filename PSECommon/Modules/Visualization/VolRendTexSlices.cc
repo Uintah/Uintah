@@ -14,9 +14,9 @@
 
 #include <SCICore/Containers/Array1.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
 #include <SCICore/Geom/GeomTexSlices.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/MiscMath.h>
@@ -31,7 +31,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
@@ -144,6 +144,11 @@ void VolRendTexSlices::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:11  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:59  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
@@ -165,7 +170,7 @@ void VolRendTexSlices::execute()
 // Initial commit
 //
 // Revision 1.2  1999/04/27 22:58:02  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:34  dav
 // Import sources

@@ -13,13 +13,13 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/CommonDatatypes/GeometryPort.h>
-#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGshort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
+#include <PSECommon/Datatypes/GeometryPort.h>
+#include <PSECommon/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -51,7 +51,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECommon::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Multitask;
@@ -699,6 +699,11 @@ int Ted::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:11  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:20:11  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so
@@ -716,7 +721,7 @@ int Ted::makeCurrent(void)
 // Initial commit
 //
 // Revision 1.2  1999/04/27 22:58:02  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:33  dav
 // Import sources

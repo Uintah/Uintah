@@ -32,8 +32,8 @@ LOG
 
 #include <SCICore/TclInterface/TCLvar.h> 
 
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECore/CommonDatatypes/VectorFieldPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/VectorFieldPort.h>
 #include <PSECore/Dataflow/Module.h> 
 
 #include <Uintah/Datatypes/Particles/ParticleGridReader.h>
@@ -45,7 +45,7 @@ namespace Modules {
 
 using namespace Uintah::Datatypes;
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 
 class ParticleGridVisControl : public Module { 
@@ -104,6 +104,11 @@ private:
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:49:03  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:20:22  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

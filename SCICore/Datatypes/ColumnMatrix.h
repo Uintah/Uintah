@@ -15,7 +15,7 @@
 
 #include <SCICore/share/share.h>
 
-#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 
 #ifdef KCC
@@ -25,7 +25,7 @@ class ostream;
 #endif
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::PersistentSpace::Piostream;
@@ -100,11 +100,16 @@ inline double& ColumnMatrix::operator[](int i) const
     return data[i];
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:31  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:44  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -119,7 +124,7 @@ inline double& ColumnMatrix::operator[](int i) const
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/25 04:07:05  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:51  dav
 // Import sources

@@ -517,7 +517,7 @@ RadMesh* RadMesh::clone()
 #define RadMesh_VERSION 1
 void RadMesh::io(Piostream& stream) {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::CoreDatatypes::Pio;
+    using SCICore::Datatypes::Pio;
     using SCICore::Containers::Pio;
     using SCICore::Geometry::Pio;
     using SCICore::GeomSpace::Pio;
@@ -548,6 +548,11 @@ PersistentTypeID RadMesh::type_id("RadMesh", "Datatype", make_RadMesh);
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:33  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/23 02:52:57  dmw
 // Dave's Datatypes
 //

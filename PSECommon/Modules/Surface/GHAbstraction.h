@@ -14,14 +14,14 @@
  */
 
 #include <PSECommon/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Datatypes/TriSurface.h>
 
 class Model;
 
 namespace PSECommon {
 namespace Modules {
 
-using SCICore::CoreDatatypes::TriSurface;
+using SCICore::Datatypes::TriSurface;
 using PSECommon::Dataflow::Module;
 
 class GHAbstraction {
@@ -55,6 +55,11 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:47:59  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:37:42  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

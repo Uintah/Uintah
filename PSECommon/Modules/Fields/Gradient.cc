@@ -13,18 +13,18 @@
  */
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGdouble.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGshort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
-// #include <SCICore/CoreDatatypes/ScalarFieldRGuchar.h>
-#include <PSECore/CommonDatatypes/VectorFieldPort.h>
-#include <SCICore/CoreDatatypes/VectorFieldRG.h>
-#include <SCICore/CoreDatatypes/VectorFieldUG.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
+// #include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <PSECore/Datatypes/VectorFieldPort.h>
+#include <SCICore/Datatypes/VectorFieldRG.h>
+#include <SCICore/Datatypes/VectorFieldUG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
@@ -32,7 +32,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -177,6 +177,11 @@ void Gradient::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:47  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:44  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

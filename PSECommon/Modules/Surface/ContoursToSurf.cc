@@ -15,11 +15,11 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Util/Assert.h>
 #include <PSECore/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/ContourSet.h>
-#include <PSECore/CommonDatatypes/ContourSetPort.h>
-#include <SCICore/CoreDatatypes/Surface.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Datatypes/ContourSet.h>
+#include <PSECore/Datatypes/ContourSetPort.h>
+#include <SCICore/Datatypes/Surface.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geometry/Grid.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
@@ -32,12 +32,12 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECore::Dataflow::Module;
-using PSECore::CommonDatatypes::ContourSetIPort;
-using PSECore::CommonDatatypes::SurfaceOPort;
-using PSECore::CommonDatatypes::SurfaceIPort;
-using PSECore::CommonDatatypes::SurfaceHandle;
-using PSECore::CommonDatatypes::TriSurface;
-using PSECore::CommonDatatypes::ContourSetHandle;
+using PSECore::Datatypes::ContourSetIPort;
+using PSECore::Datatypes::SurfaceOPort;
+using PSECore::Datatypes::SurfaceIPort;
+using PSECore::Datatypes::SurfaceHandle;
+using PSECore::Datatypes::TriSurface;
+using PSECore::Datatypes::ContourSetHandle;
 
 using SCICore::Containers::Array1;
 using SCICore::Containers::clString;
@@ -326,6 +326,11 @@ void ContoursToSurf::contours_to_surf(const Array1<ContourSetHandle> &contours,
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:59  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:53  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -13,7 +13,7 @@
  */
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
@@ -38,7 +38,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
@@ -182,6 +182,11 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:12  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:18:00  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

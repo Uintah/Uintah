@@ -11,15 +11,15 @@
  */
 
 #include <Containers/Array2.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRGBase.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldRGdouble.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CoreDatatypes/ScalarFieldRGshort.h>
-#include <CoreDatatypes/ScalarFieldRGuchar.h>
-#include <CoreDatatypes/ScalarFieldRGchar.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/ScalarFieldRGBase.h>
+#include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldRGdouble.h>
+#include <Datatypes/ScalarFieldRGfloat.h>
+#include <Datatypes/ScalarFieldRGint.h>
+#include <Datatypes/ScalarFieldRGshort.h>
+#include <Datatypes/ScalarFieldRGuchar.h>
+#include <Datatypes/ScalarFieldRGchar.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
@@ -39,7 +39,7 @@ typedef enum {SCI, PCGV, NRRD, RAW} FTYPE; // file type
 typedef enum {BIN, ASCII} BTYPE; // binary / ascii type (for SCI)
 
 using namespace SCICore::PersistentSpace;
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
 

@@ -14,13 +14,13 @@
 #ifndef SCI_project_VectorFieldUG_h
 #define SCI_project_VectorFieldUG_h 1
 
-#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/Datatypes/VectorField.h>
 
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/Datatypes/Mesh.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 class SCICORESHARE VectorFieldUG : public VectorField {
 public:
@@ -47,11 +47,16 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:46  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:59  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -66,7 +71,7 @@ public:
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/27 21:14:31  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:48  dav
 // oopps...?

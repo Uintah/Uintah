@@ -25,7 +25,7 @@ namespace Datatypes {
 
 using SCICore::Containers::Queue;
 using SCICore::Geometry::Vector;
-using SCICore::CoreDatatypes::Persistent;
+using SCICore::Datatypes::Persistent;
 
 static Persistent* maker()
 {
@@ -344,6 +344,11 @@ ScalarField* ManhattanDist::clone()
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:34  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/23 02:52:59  dmw
 // Dave's Datatypes
 //

@@ -12,20 +12,20 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/CoreDatatypes/SparseRowMatrix.h>
+#include <SCICore/Datatypes/SparseRowMatrix.h>
 #include <SCICore/Math/ssmult.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Exceptions/Exceptions.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Datatypes/ColumnMatrix.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdio.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 static Persistent* maker()
 {
@@ -312,11 +312,16 @@ void SparseRowMatrix::io(Piostream& stream)
     stream.end_class();
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:41  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:20:19  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so
@@ -334,7 +339,7 @@ void SparseRowMatrix::io(Piostream& stream)
 // Initial commit
 //
 // Revision 1.1  1999/04/25 04:07:17  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:51  dav
 // Import sources

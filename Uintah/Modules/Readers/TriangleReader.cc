@@ -14,7 +14,7 @@
 
 #include <Util/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
+#include <Datatypes/GeometryPort.h>
 #include <Geom/GeomTriangles.h>
 #include <Malloc/Allocator.h>
 #include <TclInterface/TCLTask.h>
@@ -28,7 +28,7 @@ namespace Uintah {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 using namespace SCICore::Malloc; 
@@ -200,6 +200,11 @@ void TriangleReader::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:49:05  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:40:14  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -211,7 +216,7 @@ void TriangleReader::execute()
 // added beginnings of support for g++ compilation
 //
 // Revision 1.2  1999/04/27 22:57:53  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1  1999/04/25 02:38:10  dav
 // more things that should have been there but were not

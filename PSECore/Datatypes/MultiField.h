@@ -16,7 +16,7 @@
 
 #include <PSECore/share/share.h>
 
-#include <PSECore/CommonDatatypes/Datatype.h>
+#include <PSECore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>

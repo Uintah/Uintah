@@ -14,20 +14,25 @@
 #ifndef SCI_project_ScaledBoxWidgetDataHandlePort_h
 #define SCI_project_ScaledBoxWidgetDataHandlePort_h 1
 
-#include <PSECore/CommonDatatypes/SimplePort.h>
-#include <PSECore/CommonDatatypes/ScaledBoxWidgetData.h>
+#include <PSECore/Datatypes/SimplePort.h>
+#include <PSECore/Datatypes/ScaledBoxWidgetData.h>
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
 typedef SimpleIPort<ScaledBoxWidgetDataHandle> ScaledBoxWidgetDataIPort;
 typedef SimpleOPort<ScaledBoxWidgetDataHandle> ScaledBoxWidgetDataOPort;
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:23  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:11  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

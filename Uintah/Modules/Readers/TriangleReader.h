@@ -47,9 +47,9 @@
     ------------------------------------------- */
 
 #include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CoreDatatypes/ColorMap.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/ColorMapPort.h>
+#include <Datatypes/ColorMap.h>
 #include <Geom/GeomTri.h>
 #include <Geom/GeomGroup.h>
 
@@ -62,7 +62,7 @@ namespace Uintah {
 namespace Modules {
 
 using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECommon::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -88,6 +88,11 @@ private:
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:49:06  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/19 23:53:00  sparker
 // Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
 // problems.  May have broken KCC support.
@@ -103,7 +108,7 @@ private:
 // added beginnings of support for g++ compilation
 //
 // Revision 1.2  1999/04/27 22:57:53  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1  1999/04/25 02:38:10  dav
 // more things that should have been there but were not

@@ -18,8 +18,8 @@
 #include <PSECore/Comm/MessageBase.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/HashTable.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/GeometryComm.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryComm.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/Lighting.h>
@@ -31,10 +31,10 @@
 namespace PSECommon {
 namespace Modules {
 
-using PSECore::CommonDatatypes::GeomID;
+using PSECore::Datatypes::GeomID;
 using PSECore::Comm::MessageBase;
 using PSECore::Comm::MessageTypes;
-using PSECore::CommonDatatypes::GeomReply;
+using PSECore::Datatypes::GeomReply;
 
 using SCICore::Containers::HashTable;
 using SCICore::Multitask::Mailbox;
@@ -136,6 +136,11 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:47:58  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:19:53  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

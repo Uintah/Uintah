@@ -22,7 +22,7 @@ namespace SCIRun {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 
 using namespace SCIRun::Datatypes;
 
@@ -96,6 +96,11 @@ void IFFTImage::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:56  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:39:59  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

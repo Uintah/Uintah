@@ -20,7 +20,7 @@
 namespace DaveW {
 namespace Datatypes {
 
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 
 typedef SimpleIPort<SigmaSetHandle> SigmaSetIPort;
 typedef SimpleOPort<SigmaSetHandle> SigmaSetOPort;
@@ -30,6 +30,11 @@ typedef SimpleOPort<SigmaSetHandle> SigmaSetOPort;
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:35  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/23 02:53:01  dmw
 // Dave's Datatypes
 //

@@ -2,13 +2,13 @@
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Containers/Array1.h>
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
 
 namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 
 /**************************************

@@ -62,7 +62,7 @@ cerr << "After '" << packagePath << "'\n";
     }
 
     // Parse the element apart into soName and tclPath, using the default
-    // tclpath (soName's directory + "/TCL") if there isn't one specified.
+    // tclpath (soName's directory + "/GUI") if there isn't one specified.
 
     clString soName;
     clString tclPath;
@@ -75,9 +75,9 @@ cerr << "After '" << packagePath << "'\n";
     } else {
       soName=packageElt;
       if(pathname(packageElt)!="")
-        tclPath=pathname(packageElt)+"/TCL";
+        tclPath=pathname(packageElt)+"/GUI";
       else
-        tclPath=pathname(packageElt)+"TCL";
+        tclPath=pathname(packageElt)+"GUI";
     }
 
     // Load the package

@@ -15,11 +15,11 @@
 #include <SCICore/Containers/Assert.h>
 #include <SCICore/Containers/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/CommonDatatypes/ContourSet.h>
-#include <PSECommon/CommonDatatypes/ContourSetPort.h>
-#include <PSECommon/CommonDatatypes/Surface.h>
-#include <PSECommon/CommonDatatypes/SurfacePort.h>
-#include <PSECommon/CommonDatatypes/TriSurface.h>
+#include <PSECommon/Datatypes/ContourSet.h>
+#include <PSECommon/Datatypes/ContourSetPort.h>
+#include <PSECommon/Datatypes/Surface.h>
+#include <PSECommon/Datatypes/SurfacePort.h>
+#include <PSECommon/Datatypes/TriSurface.h>
 #include <SCICore/Geometry/Grid.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/MinMax.h>

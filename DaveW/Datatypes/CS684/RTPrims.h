@@ -21,8 +21,8 @@ namespace Datatypes {
 using SCICore::Containers::Array2;
 using SCICore::Containers::LockingHandle;
 using SCICore::Containers::clString;
-using SCICore::CoreDatatypes::Datatype;
-using SCICore::CoreDatatypes::SurfaceHandle;
+using SCICore::Datatypes::Datatype;
+using SCICore::Datatypes::SurfaceHandle;
 using SCICore::GeomSpace::MaterialHandle;
 using SCICore::GeomSpace::View;
 using SCICore::Geometry::Dot;
@@ -348,6 +348,11 @@ void Pio(Piostream&, RTLight&);
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:33  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/23 02:52:57  dmw
 // Dave's Datatypes
 //

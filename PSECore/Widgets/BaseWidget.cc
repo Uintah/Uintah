@@ -17,7 +17,7 @@
 #include <PSECore/Constraints/BaseConstraint.h>
 #include <PSECore/Constraints/ConstraintSolver.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/NotFinished.h>
 
@@ -725,6 +725,11 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:28  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/19 23:52:58  sparker
 // Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
 // problems.  May have broken KCC support.

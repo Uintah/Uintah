@@ -11,21 +11,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_CommonDatatypes_SurfTree_h
-#define SCI_CommonDatatypes_SurfTree_h 1
+#ifndef SCI_Datatypes_SurfTree_h
+#define SCI_Datatypes_SurfTree_h 1
 
 #include <SCICore/share/share.h>
 
-#include <SCICore/CoreDatatypes/Surface.h>
-#include <SCICore/CoreDatatypes/Mesh.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Datatypes/Surface.h>
+#include <SCICore/Datatypes/Mesh.h>
+#include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/BBox.h>
 #include <stdlib.h> // For size_t
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using Containers::Array1;
 using Geometry::BBox;
@@ -56,7 +56,7 @@ typedef struct EdgeInfo {
     int wireEntry;
     Array1<int> faces;		// which faces is an edge part of
 
-    friend SCICORESHARE void Pio(Piostream& stream, CoreDatatypes::EdgeInfo& edge);
+    friend SCICORESHARE void Pio(Piostream& stream, Datatypes::EdgeInfo& edge);
 } EdgeInfo;
 
 typedef struct NodeInfo {
@@ -65,7 +65,7 @@ typedef struct NodeInfo {
     Array1<int> edges;	// which edges is a node part of
     Array1<int> nbrs;	// which nodes are one neighbors
 
-    friend SCICORESHARE void Pio(Piostream& stream, CoreDatatypes::NodeInfo& node);
+    friend SCICORESHARE void Pio(Piostream& stream, Datatypes::NodeInfo& node);
 } NodeInfo;
 
 class TopoSurfTree;
@@ -129,11 +129,16 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:42  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:55  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -151,7 +156,7 @@ public:
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/27 21:14:29  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 //
 

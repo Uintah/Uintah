@@ -13,11 +13,11 @@
  */
 
 #include <PSECore/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/BasicSurfaces.h>
-#include <SCICore/CoreDatatypes/ColorMap.h>
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/Datatypes/BasicSurfaces.h>
+#include <SCICore/Datatypes/ColorMap.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/GeomPick.h>
 #include <SCICore/Geom/GeomSphere.h>
@@ -32,18 +32,18 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECore::Dataflow::Module;
-using PSECore::CommonDatatypes::Surface;
-using PSECore::CommonDatatypes::SurfaceHandle;
-using PSECore::CommonDatatypes::MaterialHandle;
-using PSECore::CommonDatatypes::CylinderSurface;
-using PSECore::CommonDatatypes::SphereSurface;
-using PSECore::CommonDatatypes::PointSurface;
-using PSECore::CommonDatatypes::ColorMapIPort;
-using PSECore::CommonDatatypes::ColorMapHandle;
-using PSECore::CommonDatatypes::SurfaceIPort;
-using PSECore::CommonDatatypes::SurfaceOPort;
-using PSECore::CommonDatatypes::GeometryIPort;
-using PSECore::CommonDatatypes::GeometryOPort;
+using PSECore::Datatypes::Surface;
+using PSECore::Datatypes::SurfaceHandle;
+using PSECore::Datatypes::MaterialHandle;
+using PSECore::Datatypes::CylinderSurface;
+using PSECore::Datatypes::SphereSurface;
+using PSECore::Datatypes::PointSurface;
+using PSECore::Datatypes::ColorMapIPort;
+using PSECore::Datatypes::ColorMapHandle;
+using PSECore::Datatypes::SurfaceIPort;
+using PSECore::Datatypes::SurfaceOPort;
+using PSECore::Datatypes::GeometryIPort;
+using PSECore::Datatypes::GeometryOPort;
 using PSECore::Widgets::GaugeWidget;
 using PSECore::Widgets::PointWidget;
 
@@ -334,6 +334,11 @@ void GenSurface::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:59  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:53  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

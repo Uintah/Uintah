@@ -12,8 +12,8 @@
 
 #include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/CommonDatatypes/ContourSet.h>
-#include <PSECommon/CommonDatatypes/ContourSetPort.h>
+#include <PSECommon/Datatypes/ContourSet.h>
+#include <PSECommon/Datatypes/ContourSetPort.h>
 // #include <Devices/Dialbox.h>
 // #include <Devices/DBContext.h>
 #include <SCICore/Geometry/Vector.h>

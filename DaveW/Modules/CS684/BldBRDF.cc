@@ -41,8 +41,8 @@ namespace DaveW {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
-using namespace SCICore::CoreDatatypes;
+using namespace PSECore::Datatypes;
+using namespace SCICore::Datatypes;
 using namespace SCICore::TclInterface;
 
 class BldBRDF : public Module {
@@ -100,6 +100,11 @@ void BldBRDF::tcl_command(TCLArgs& args, void* userdata) {
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:36  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/24 06:22:59  dmw
 // Added in everything for the DaveW branch
 //

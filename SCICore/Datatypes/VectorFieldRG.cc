@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/VectorFieldRG.h>
+#include <SCICore/Datatypes/VectorFieldRG.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 static Persistent* maker()
 {
@@ -184,11 +184,16 @@ VectorField* VectorFieldRG::clone()
     return scinew VectorFieldRG(*this);
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:46  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:59  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -203,7 +208,7 @@ VectorField* VectorFieldRG::clone()
 // updated makefiles.main
 //
 // Revision 1.1  1999/04/25 04:07:21  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:48  dav
 // Import sources

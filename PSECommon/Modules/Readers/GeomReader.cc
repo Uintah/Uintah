@@ -13,7 +13,7 @@
  */
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Geom/GeomScene.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLTask.h>
@@ -23,7 +23,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::PersistentSpace;
@@ -101,6 +101,11 @@ void GeomReader::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:54  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:50  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

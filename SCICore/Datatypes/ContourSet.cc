@@ -12,10 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/ContourSet.h>
+#include <SCICore/Datatypes/ContourSet.h>
 
 #include <SCICore/Containers/String.h>
-#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/Datatypes/Surface.h>
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Malloc/Allocator.h>
 
@@ -24,7 +24,7 @@
 #define Sqr(x) ((x)*(x))
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 static Persistent* make_ContourSet(){
     return scinew ContourSet;
@@ -141,11 +141,16 @@ ContourSet* ContourSet::clone()
 {
     return scinew ContourSet(*this);
 }
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:32  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:44  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -157,7 +162,7 @@ ContourSet* ContourSet::clone()
 // added beginnings of support for g++ compilation
 //
 // Revision 1.1  1999/04/27 21:14:26  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:34  dav
 // oopps...?

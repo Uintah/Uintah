@@ -14,22 +14,27 @@
 #ifndef SCI_project_ColorMapPort_h
 #define SCI_project_ColorMapPort_h 1
 
-#include <PSECore/CommonDatatypes/SimplePort.h>
-#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <PSECore/Datatypes/SimplePort.h>
+#include <SCICore/Datatypes/ColorMap.h>
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 
 typedef SimpleIPort<ColorMapHandle> ColorMapIPort;
 typedef SimpleOPort<ColorMapHandle> ColorMapOPort;
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:19  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:07  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

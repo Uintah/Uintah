@@ -14,9 +14,9 @@
 
 #include <SCICore/Persistent/Pstreams.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarField.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
@@ -24,7 +24,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -124,6 +124,11 @@ void MultiScalarFieldWriter::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:15  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:18:01  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
@@ -148,7 +153,7 @@ void MultiScalarFieldWriter::execute()
 // added beginnings of support for g++ compilation
 //
 // Revision 1.2  1999/04/27 22:58:05  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:33  dav
 // Import sources

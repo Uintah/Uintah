@@ -12,10 +12,10 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/CoreDatatypes/cVector.h>
+#include <SCICore/Datatypes/cVector.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 // Dd: Should this be here?
 PersistentTypeID cVector::type_id("cVector", "Datatype", 0);
@@ -228,11 +228,16 @@ void cVector::io(Piostream&) {
   cerr << "cVector::io not finished\n";
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:48  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:39:02  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -241,7 +246,7 @@ void cVector::io(Piostream&) {
 // Initial commit
 //
 // Revision 1.1  1999/04/25 04:07:25  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:48  dav
 // Import sources

@@ -17,11 +17,11 @@
 #include <SCICore/Containers/Array2.h>
 #include <SCICore/Containers/String.h>
 
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECommon/CommonDatatypes/ColorMapPort.h>
-#include <SCICore/CoreDatatypes/Image.h>
-#include <PSECommon/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <PSECommon/Datatypes/ScalarFieldPort.h>
+#include <PSECommon/Datatypes/ColorMapPort.h>
+#include <SCICore/Datatypes/Image.h>
+#include <PSECommon/Datatypes/GeometryPort.h>
 
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/View.h>

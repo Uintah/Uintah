@@ -11,14 +11,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_CoreDatatypes_Array3_h
-#define SCI_CoreDatatypes_Array3_h 1
+#ifndef SCI_Datatypes_Array3_h
+#define SCI_Datatypes_Array3_h 1
 
 #include <SCICore/Util/Assert.h>
-#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Datatypes/Datatype.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
@@ -62,7 +62,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 ////////////////////////////////////////////////////////////
@@ -70,14 +70,14 @@ public:
 // Start of included LockArray3.cc
 //
 
-#include <SCICore/CoreDatatypes/LockArray3.h>
+#include <SCICore/Datatypes/LockArray3.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 
 #include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::Geometry::Point;
 
@@ -192,7 +192,7 @@ void LockArray3<T>::io(Piostream&)
 #define LockArray3_VERSION 1
 
 template<class T>
-void Pio(Piostream& stream, SCICore::CoreDatatypes::LockArray3<T>& data)
+void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>& data)
 {
     /*int version=*/stream.begin_class("LockArray3", LockArray3_VERSION);
     if(stream.reading()){
@@ -218,18 +218,23 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::LockArray3<T>& data)
 }
 
 template<class T>
-void Pio(Piostream& stream, SCICore::CoreDatatypes::LockArray3<T>*& data) {
+void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>*& data) {
     if (stream.reading()) {
 	data=scinew LockArray3<T>;
     }
     Pio(stream, *data);
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:34  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/19 23:18:04  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
@@ -251,7 +256,7 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::LockArray3<T>*& data) {
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/25 04:07:08  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:51  dav
 // Import sources

@@ -14,12 +14,12 @@
 
 #include <SCICore/Containers/Array1.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <SCICore/CoreDatatypes/Mesh.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <SCICore/Datatypes/Mesh.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
 #include <SCICore/Geom/GeomGrid.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/GeomLine.h>
@@ -40,7 +40,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
@@ -655,6 +655,11 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:05  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:56  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -14,14 +14,14 @@
 #ifndef SCI_project_VectorField_h
 #define SCI_project_VectorField_h 1
 
-#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
@@ -72,11 +72,16 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:45  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:57  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -91,7 +96,7 @@ public:
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/25 04:07:20  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:48  dav
 // Import sources

@@ -51,7 +51,7 @@ using DaveW::Datatypes::ManhattanDist;
 using DaveW::Datatypes::ScalarTriSurface;
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 
 using namespace SCICore::TclInterface;
@@ -1334,6 +1334,11 @@ void Coregister::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:38  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/24 06:23:01  dmw
 // Added in everything for the DaveW branch
 //
