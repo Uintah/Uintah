@@ -117,7 +117,7 @@ StaticMixingTable::computeProps(const InletStream& inStream,
   		cout<< "Mixture fraction is :  "<< mixFrac << endl;
   		cout<< "Mixture fraction variance is :  "<< mixFracVars << endl;
 	}
-	if(abs(heat_loss) < small)
+	if(fabs(heat_loss) < small)
 		heat_loss=0.0;
         if(heat_loss > enthalpyLoss[d_enthalpycount-1])
 		heat_loss = enthalpyLoss[d_enthalpycount-1];
@@ -213,14 +213,14 @@ double StaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double
   double max_curr_Zvar = mixfrac*(1.0-mixfrac);
   double max_Zvar = min(mixfracVars,max_curr_Zvar);
   double g, gi1, gp, gi2;
-  if(meanMix[m_index*d_mixfraccount+nx_lo][var_index]<=small || abs(meanMix[m_index*d_mixfraccount+nx_lo][var_index]-1.0)<=small)
+  if(meanMix[m_index*d_mixfraccount+nx_lo][var_index]<=small || fabs(meanMix[m_index*d_mixfraccount+nx_lo][var_index]-1.0)<=small)
 	g=0.0;
   else{
 	gi1=max_Zvar*meanMix[m_index*d_mixfraccount+nx_lo][var_index]*(1.0-meanMix[m_index*d_mixfraccount+nx_lo][var_index])/(max_curr_Zvar+small);
         g=gi1*double(d_mixvarcount-1)/(meanMix[m_index*d_mixfraccount+nx_lo][var_index]*(1.0-meanMix[m_index*d_mixfraccount+nx_lo][var_index]));
   }
 
-  if(meanMix[m_index*d_mixfraccount+nx_hi][var_index]<=small || abs(meanMix[m_index*d_mixfraccount+nx_hi][var_index]-1.0)<=small)
+  if(meanMix[m_index*d_mixfraccount+nx_hi][var_index]<=small || fabs(meanMix[m_index*d_mixfraccount+nx_hi][var_index]-1.0)<=small)
 	gp=0.0;
   else{
 	gi2=max_Zvar*meanMix[m_index*d_mixfraccount+nx_hi][var_index]*(1.0-meanMix[m_index*d_mixfraccount+nx_hi][var_index])/(max_curr_Zvar+small);
