@@ -369,8 +369,14 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
 			T _datamin, T _datamax, Array3<T> _indata):
   VolumeBase(matl, dpy), depth(depth), work(NULL), filebase(NULL),
   nx(_nx), ny(_ny), nz(_nz), datadiag(max-min),
-  datamin(_datamin), datamax(_datamax), indata(_indata)
+  datamin(_datamin), datamax(_datamax)
 {
+  indata.resize(nx,ny,nz);
+  int nn=nx*ny*nz;
+  T *orig=_indata.get_dataptr();
+  T *cpy=indata.get_dataptr();
+  for (int c=0; c<nn; c++) cpy[c]=orig[c];
+
   //cerr << "Dim of indata = (" << indata.dim1() << ", " << indata.dim2() <<
   //", " << indata.dim3() << ")\n";
 #if 1
