@@ -46,7 +46,7 @@ PressureSolver::PressureSolver(int nDim,
 				     d_generation(0)
 {
   // Inputs
-  d_pressureINLabel = scinew VarLabel("pressureIN",
+  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
 			     CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				 SFCXVariable<double>::getTypeDescription() );
@@ -149,7 +149,7 @@ void PressureSolver::solve(const LevelP& level,
   //++d_generation;
 
   //computes stencil coefficients and source terms
-  // require : pressureIN, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
+  // require : pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
   // compute : uVelConvCoefPBLM, vVelConvCoefPBLM, wVelConvCoefPBLM
   //           uVelCoefPBLM, vVelCoefPBLM, wVelCoefPBLM, uVelLinSrcPBLM
   //           vVelLinSrcPBLM, wVelLinSrcPBLM, uVelNonLinSrcPBLM 
@@ -201,7 +201,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       int matlIndex = 0;
 
       // Requires
-      tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -335,6 +335,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.28  2000/07/07 23:07:45  rawat
+// added inlet bc's
+//
 // Revision 1.27  2000/07/03 05:30:15  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -203,13 +203,10 @@ extern "C"
     //
     void
     FORT_INLBCS(const int* domLoU, const int* domHiU, 
-		const int* idxLoU, const int* idxHiU,
 		double* uVelocity, 
 		const int* domLoV, const int* domHiV, 
-		const int* idxLoV, const int* idxHiV,
 		double* vVelocity, 
 		const int* domLoW, const int* domHiW, 
-		const int* idxLoW, const int* idxHiW,
 		double* wVelocity, 
 		const int* domLo, const int* domHi, 
 		const int* idxLo, const int* idxHi, 
@@ -217,12 +214,31 @@ extern "C"
 		const int* cellType,
 		const int* cellTypeVal);
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // set pressure BC:
+    //
+    void
+    FORT_CALPBC(const int* domLoU, const int* domHiU, 
+		double* uVelocity, 
+		const int* domLoV, const int* domHiV, 
+		double* vVelocity, 
+		const int* domLoW, const int* domHiW, 
+		double* wVelocity, 
+		const int* domLo, const int* domHi, 
+		const int* idxLo, const int* idxHi,
+		double* pressure, double* density,
+		int* celltype, const int* celltypeval,
+		double* refPressure);
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.10  2000/07/07 23:07:44  rawat
+// added inlet bc's
+//
 // Revision 1.9  2000/07/03 05:30:13  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -108,7 +108,13 @@ public:
       // GROUP: Access functions
       ////////////////////////////////////////////////////////////////////////
       //
-      // Get the number if inlets (primary + secondary)
+      // Returns pressureBC flag
+      //
+      int getPressureBC() { return d_pressBoundary; }
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Get the number of inlets (primary + secondary)
       //
       int getNumInlets() { return d_numInlets; }
 
@@ -140,6 +146,14 @@ public:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw);
 
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Schedule Computation of Pressure boundary conditions terms. 
+      //
+      void sched_computePressureBC(const LevelP& level,
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
       ////////////////////////////////////////////////////////////////////////
       //
       // Schedule Computation of Velocity boundary conditions terms. 
@@ -184,7 +198,7 @@ public:
       // Schedule Compute Pressure BCS
       // used for pressure boundary type
       //
-      void sched_computePressureBC(const LevelP& level,
+      void sched_recomputePressureBC(const LevelP& level,
 				   SchedulerP& sched,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw);
@@ -313,6 +327,15 @@ private:
       //
       // Actually calculate pressure bcs
       //
+      void calcPressureBC(const ProcessorGroup* pc,
+			  const Patch* patch,
+			  DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Actually calculate pressure bcs
+      //
       void calculatePressBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw,
@@ -432,6 +455,12 @@ private:
       const VarLabel* d_wVelocitySPLabel;
       const VarLabel* d_scalarSPLabel;
 
+      // Labels for calcPressureBC
+      const VarLabel* d_uVelocitySPBCLabel;
+      const VarLabel* d_vVelocitySPBCLabel;
+      const VarLabel* d_wVelocitySPBCLabel;
+      const VarLabel* d_pressureSPBCLabel;
+      
       // Labels for data used/computed by setInletVelocityBC()
       const VarLabel* d_densityCPLabel;
       const VarLabel* d_uVelocitySIVBCLabel;
@@ -478,6 +507,9 @@ private:
   
 //
 // $Log$
+// Revision 1.33  2000/07/07 23:07:45  rawat
+// added inlet bc's
+//
 // Revision 1.32  2000/07/03 05:30:14  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -91,6 +91,16 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_scalarSPLabel = scinew VarLabel("scalarSP", 
 				    CCVariable<double>::getTypeDescription() );
   
+  // labels computed by calculatePressureBC
+  
+  d_uVelocitySPBCLabel = scinew VarLabel("uVelocitySPBC", 
+				    SFCXVariable<double>::getTypeDescription() );
+  d_vVelocitySPBCLabel = scinew VarLabel("vVelocitySPBC", 
+				    SFCYVariable<double>::getTypeDescription() );
+  d_wVelocitySPBCLabel = scinew VarLabel("wVelocitySPBC", 
+				    SFCZVariable<double>::getTypeDescription() );
+  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC", 
+				   CCVariable<double>::getTypeDescription() );
 
   // 2) The labels used/computed by setInletVelocityBC (SIVBC)
   d_densityCPLabel = scinew VarLabel("densityCP", 
@@ -609,6 +619,117 @@ BoundaryCondition::sched_velocityBC(const LevelP& level,
 // Schedule the computation of the presures bcs
 //****************************************************************************
 void 
+BoundaryCondition::sched_computePressureBC(const LevelP& level,
+				    SchedulerP& sched,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+      //copies old db to new_db and then uses non-linear
+      //solver to compute new values
+      Task* tsk = scinew Task("BoundaryCondition::calcPressureBC",patch,
+			      old_dw, new_dw, this,
+			      &BoundaryCondition::calcPressureBC);
+
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      
+      // This task requires the pressure
+      tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      // This task computes new uVelocity, vVelocity and wVelocity
+      tsk->computes(new_dw, d_pressureSPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelocitySPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelocitySPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelocitySPBCLabel, matlIndex, patch);
+
+      sched->addTask(tsk);
+    }
+  }
+}
+
+//****************************************************************************
+// Actually calculate the pressure BCs
+//****************************************************************************
+void 
+BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
+				  const Patch* patch,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw) 
+{
+  CCVariable<int> cellType;
+  CCVariable<double> density;
+  CCVariable<double> pressure;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
+  int matlIndex = 0;
+  int nofGhostCells = 0;
+
+  // get cellType, pressure and velocity
+  old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+
+  // Get the low and high index for the patch and the variables
+  IntVector domLoScalar = density.getFortLowIndex();
+  IntVector domHiScalar = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+
+  FORT_CALPBC(domLoU.get_pointer(), domHiU.get_pointer(), 
+	      uVelocity.getPointer(),
+	      domLoV.get_pointer(), domHiV.get_pointer(), 
+	      vVelocity.getPointer(),
+	      domLoW.get_pointer(), domHiW.get_pointer(), 
+	      wVelocity.getPointer(),
+	      domLoScalar.get_pointer(), domHiScalar.get_pointer(), 
+	      idxLo.get_pointer(), idxHi.get_pointer(), 
+	      pressure.getPointer(),
+	      density.getPointer(), 
+	      cellType.getPointer(),
+	      &(d_pressureBdry->d_cellTypeID),
+	      &(d_pressureBdry->refPressure));
+
+  // Put the calculated data into the new DW
+  new_dw->put(uVelocity, d_uVelocitySPBCLabel, matlIndex, patch);
+  new_dw->put(vVelocity, d_vVelocitySPBCLabel, matlIndex, patch);
+  new_dw->put(wVelocity, d_wVelocitySPBCLabel, matlIndex, patch);
+  new_dw->put(pressure, d_pressureSPBCLabel, matlIndex, patch);
+} 
+
+//****************************************************************************
+// Schedule the computation of the presures bcs
+//****************************************************************************
+void 
 BoundaryCondition::sched_pressureBC(const LevelP& level,
 				    SchedulerP& sched,
 				    DataWarehouseP& old_dw,
@@ -676,13 +797,15 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires old densityCP, [u,v,w]VelocitySP
+      tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
       tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // This task computes new density, uVelocity, vVelocity and wVelocity
@@ -699,7 +822,7 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 // Schedule the compute of Pressure BC
 //****************************************************************************
 void 
-BoundaryCondition::sched_computePressureBC(const LevelP& level,
+BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
 					   SchedulerP& sched,
 					   DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
@@ -1362,11 +1485,11 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   // get cellType, velocity and density
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
@@ -1378,25 +1501,12 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLoU = uVelocity.getFortLowIndex();
   IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
   IntVector domLoV = vVelocity.getFortLowIndex();
   IntVector domHiV = vVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
   IntVector domLoW = wVelocity.getFortLowIndex();
   IntVector domHiW = wVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
-
   // stores cell type info for the patch with the ghost cell type
   for (int indx = 0; indx < d_numInlets; indx++) {
-
-    // Get area
-    sum_vartype area_var;
-    old_dw->get(area_var, d_flowInlets[indx].d_area_label);
-    double area = area_var;
-
     // Get a copy of the current flowinlet
     FlowInlet fi = d_flowInlets[indx];
 
@@ -1404,13 +1514,10 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
     //CellTypeInfo flowType = FLOW;
 
     FORT_INLBCS(domLoU.get_pointer(), domHiU.get_pointer(), 
-		idxLoU.get_pointer(), idxHiU.get_pointer(), 
 		uVelocity.getPointer(),
 		domLoV.get_pointer(), domHiV.get_pointer(), 
-		idxLoV.get_pointer(), idxHiV.get_pointer(), 
 		vVelocity.getPointer(),
 		domLoW.get_pointer(), domHiW.get_pointer(), 
-		idxLoW.get_pointer(), idxHiW.get_pointer(), 
 		wVelocity.getPointer(),
 		domLo.get_pointer(), domHi.get_pointer(), 
 		idxLo.get_pointer(), idxHi.get_pointer(), 
@@ -1628,10 +1735,20 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 	     << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
 
   if (d_pressureBdry) {
+    // set density
     FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    density.getPointer(), cellType.getPointer(),
 		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
+    // set scalar values at the boundary
+    for (int indx = 0; indx < d_nofScalars; indx++) {
+      double scalarValue = d_pressureBdry->streamMixturefraction[indx];
+      FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      scalar[indx].getPointer(), cellType.getPointer(),
+		      &scalarValue, &d_pressureBdry->d_cellTypeID);
+    }
+  
     cout << " After setting flat profile for Pressure Bdry" << endl;
     for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
@@ -1856,6 +1973,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.36  2000/07/07 23:07:44  rawat
+// added inlet bc's
+//
 // Revision 1.35  2000/07/03 05:30:13  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //
