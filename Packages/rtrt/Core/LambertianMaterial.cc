@@ -73,7 +73,7 @@ void LambertianMaterial::shade(Color& result, const Ray& ray,
 		cos_theta=-cos_theta;
 		light_dir=-light_dir;
 	    }
-	    result+=light->get_color()*R*(cos_theta*shadowfactor);
+	    result+=light->get_color(light_dir)*R*(cos_theta*shadowfactor);
 	} else {
 	    cx->stats->ds[depth].inshadow++;
 	}

@@ -71,7 +71,7 @@ void MetalMaterial::shade(Color& result, const Ray& ray,
 	Vector light_dir=light->get_pos()-hitpos;
 	light_dir.normalize();
 //	if (ray_objnormal_dot*Dot(normal,light_dir)>0) continue;
-	result+=light->get_color() * specular_reflectance *
+	result+=light->get_color(light_dir) * specular_reflectance *
                    phong_term( ray.direction(), light_dir, normal, phong_exponent);
     }
 

@@ -99,8 +99,8 @@ void CrowMarble::shade(Color& result, const Ray& ray,
 	    }
             double k2 = (1-cos_theta);
             k2 *= k2*k2*k2*k2;
-	    difflight+=light->get_color()*((1-k1)*(1-k2)*shadowfactor);
-            speclight+=light->get_color() * shadowfactor * phong_term( ray.direction(), light_dir,
+	    difflight+=light->get_color(light_dir)*((1-k1)*(1-k2)*shadowfactor);
+            speclight+=light->get_color(light_dir) * shadowfactor * phong_term( ray.direction(), light_dir,
                                  normal, phong_exponent);
 	} else {
 	    cx->stats->ds[depth].inshadow++;

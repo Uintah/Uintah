@@ -85,6 +85,9 @@ Light::Light(const Point& pos,
 	     double intensity, /* = 1.0 */
 	     bool   moodLight  /* = false */ ) :
   radius(radius), 
+  fixed_to_eye(false),
+  eye_offset_basis(0,0,0),
+  last_offset(0,0,0),
   intensity_(intensity), 
   origIntensity_(intensity), 
   currentColor_(color*intensity), 
@@ -117,8 +120,16 @@ Light::updateIntensity( double toIntensity )
 void
 Light::updatePosition( const Point & newPos )
 { 
-  pos = newPos; 
-  sphere_->updatePosition( newPos );
+  pos = newPos+last_offset;
+  sphere_->updatePosition( pos );
+}
+
+void
+Light::updatePosition( const Point & newPos, const Vector &offset, const Vector &/*fwd*/ )
+{ 
+  last_offset = offset;
+  pos = newPos+offset;
+  sphere_->updatePosition( pos );
 }
 
 const int LIGHT_VERSION = 1;
@@ -134,6 +145,8 @@ Light::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, pos);
   SCIRun::Pio(str, moodLight_);
   SCIRun::Pio(str, isOn_);
+  SCIRun::Pio(str, eye_offset_basis);
+  SCIRun::Pio(str, last_offset);
   if (str.reading()) {
     init();
   }

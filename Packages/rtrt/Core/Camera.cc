@@ -306,7 +306,11 @@ Camera::updatePosition( Stealth & stealth,
   for(int i = 0; i < scene->nlights(); i++) {
     Light *light = scene->light(i);
     if (light->fixed_to_eye) {
-      light->updatePosition(eye);
+//      light->updatePosition(eye, side, theUp, forward);
+      light->updatePosition(eye, Vector(side*light->eye_offset_basis.x()+
+					theUp*light->eye_offset_basis.y()+
+					forward*light->eye_offset_basis.z()),
+			    forward);
     }
   }
 }

@@ -118,12 +118,12 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
     double scaled_dist = light_dist*extinction_scale;
     if(n_dot_light > 0){
       // Light is outside of the surface, use extinction_out
-      color=light->get_color()*Color(powf(extinction_out.red(), scaled_dist),
+      color=light->get_color(light_dir)*Color(powf(extinction_out.red(), scaled_dist),
 				     powf(extinction_out.green(), scaled_dist),
 				     powf(extinction_out.blue(), scaled_dist));
     } else {
       // Light is inside of the surface, use exctinction_in
-      color=light->get_color()*Color(powf(extinction_in.red(), scaled_dist),
+      color=light->get_color(light_dir)*Color(powf(extinction_in.red(), scaled_dist),
 				     powf(extinction_in.green(), scaled_dist),
 				     powf(extinction_in.blue(), scaled_dist));
     }

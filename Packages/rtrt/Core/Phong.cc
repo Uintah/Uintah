@@ -77,13 +77,13 @@ void Phong::shade(Color& result, const Ray& ray,
 	cos_theta=-cos_theta;
 	light_dir=-light_dir;
       }
-      difflight+=light->get_color()*(cos_theta*shadowfactor);
+      difflight+=light->get_color(light_dir)*(cos_theta*shadowfactor);
       if(specpow > 0.0){
 	Vector H=light_dir-ray.direction();
 	H.normalize();
 	double cos_alpha= Dot(H, normal);
 	if ( cos_alpha > 0 )
-	  speclight+=light->get_color() * shadowfactor * ipow( cos_alpha, specpow);
+	  speclight+=light->get_color(light_dir) * shadowfactor * ipow( cos_alpha, specpow);
       }
     } else {
       cx->stats->ds[depth].inshadow++;
