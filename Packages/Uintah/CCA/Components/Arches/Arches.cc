@@ -80,6 +80,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   // not sure, do we need to reduce and put in datawarehouse
   db->require("grow_dt", d_deltaT);
+  db->require("variable_dt", d_variableTimeStep);
   db->require("reacting_flow", d_reactingFlow);
   db->require("solve_enthalpy", d_calcEnthalpy);
 
@@ -281,27 +282,32 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     double delta_t = d_deltaT; // max value allowed
     //    double temp_t = 0;
     double small_num = 1e-30;
+    double delta_t2 = delta_t;
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  double tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
 	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-			  Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-                          small_num;
-	  delta_t=Min(1.0/tmp_time, delta_t);
+	                  Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+	                  small_num;
+	  delta_t2=Min(1.0/tmp_time, delta_t2);
 #if 0								  
-	  delta_t=Min(Abs(cellinfo->sew[colX]/
-			  (uVelocity[currCell]+small_num)),delta_t);
-	  delta_t=Min(Abs(cellinfo->sns[colY]/
-			  (vVelocity[currCell]+small_num)), delta_t);
-	  delta_t=Min(Abs(cellinfo->stb[colZ]/
-			  (wVelocity[currCell]+small_num)), delta_t);
+	  delta_t2=Min(Abs(cellinfo->sew[colX]/
+			  (uVelocity[currCell]+small_num)),delta_t2);
+	  delta_t2=Min(Abs(cellinfo->sns[colY]/
+			  (vVelocity[currCell]+small_num)), delta_t2);
+	  delta_t2=Min(Abs(cellinfo->stb[colZ]/
+			  (wVelocity[currCell]+small_num)), delta_t2);
 #endif
 	}
       }
     }
-    cerr << " min time step: " << delta_t << endl;
+    cerr << " Courant condition for time step: " << delta_t2 << endl;
+    if (d_variableTimeStep) {
+      delta_t = delta_t2;
+    }
+    cout << "time step used: " << delta_t << endl;
     new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
   }
 }
