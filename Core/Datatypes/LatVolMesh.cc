@@ -324,5 +324,12 @@ LatVolMesh::io(Piostream& stream)
   stream.end_class();
 }
 
+const string 
+LatVolMesh::type_name(int)
+{
+  static const string name = "LatVolMesh";
+  return name;
+}
+
 
 } // namespace SCIRun
