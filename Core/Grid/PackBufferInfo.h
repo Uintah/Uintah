@@ -6,6 +6,7 @@
 #include <vector>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
   using namespace std;
@@ -14,7 +15,7 @@ namespace Uintah {
   {
   public:
     PackedBuffer(int bytes)
-      : buf((void*)(new char[bytes])), bufsize(bytes) {}
+      : buf((void*)(scinew char[bytes])), bufsize(bytes) {}
     ~PackedBuffer()
     { delete[] buf; }
     void* getBuffer() { return buf; }
