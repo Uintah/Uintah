@@ -16,7 +16,7 @@
 
 #include <FieldConverters/share/share.h>
 #include <Core/Datatypes/LockArray3.h>
-#include <Core/Datatypes/ScalarField.h>
+#include <FieldConverters/Core/Datatypes/ScalarField.h>
 
 namespace FieldConverters {
 
