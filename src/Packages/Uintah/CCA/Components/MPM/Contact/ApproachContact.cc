@@ -29,8 +29,10 @@ using std::string;
 using namespace std;
 
 
-ApproachContact::ApproachContact(ProblemSpecP& ps,SimulationStateP& d_sS,
+ApproachContact::ApproachContact(const ProcessorGroup* myworld,
+                                 ProblemSpecP& ps,SimulationStateP& d_sS,
                                  MPMLabel* Mlb,MPMFlags* MFlag)
+  : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
   d_vol_const=0.;
@@ -39,8 +41,6 @@ ApproachContact::ApproachContact(ProblemSpecP& ps,SimulationStateP& d_sS,
   ps->get("volume_constraint",d_vol_const);
 
   d_sharedState = d_sS;
-  lb = Mlb;
-  flag = MFlag;
 
   if(flag->d_8or27==8){
     NGP=1;
@@ -97,6 +97,8 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
     for(int m=0;m<matls->size();m++){
+      if(!d_matls.requested(m)) continue;
+      
       int dwi = matls->get(m);
 
       new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
@@ -105,14 +107,8 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
                                                        dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,  dwi, patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,  dwi, patch);
-      if (flag->d_fracture) 
-	new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
-			      patch);
-      else {
-      new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,
-			     patch);
-      frictionWork[m].initialize(0.);
-      }
+      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
+                            patch);
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
       IntVector low(patch->getInteriorNodeLowIndex());
@@ -354,6 +350,8 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
+      if(!d_matls.present(gmass, c)) continue;
+      
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 
@@ -691,10 +689,13 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
   }
 }
 
-void ApproachContact::addComputesAndRequiresInterpolated( Task* t,
-					     const PatchSet* ,
-					     const MaterialSet* ms) const
+void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = new Task("ApproachContact::exMomInterpolated", 
+                      this, &ApproachContact::exMomInterpolated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW,   lb->delTLabel);
   t->requires(Task::OldDW,   lb->pXLabel,           Ghost::AroundNodes, NGP);
@@ -706,17 +707,19 @@ void ApproachContact::addComputesAndRequiresInterpolated( Task* t,
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
-  if (flag->d_fracture)
-    t->modifies(lb->frictionalWorkLabel, mss);
-  else
-    t->computes(lb->frictionalWorkLabel);
+  t->modifies(lb->frictionalWorkLabel, mss);
   t->modifies(lb->gVelocityLabel, mss);
+  
+  sched->addTask(t, patches, ms);
 }
 
-void ApproachContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet* ,
-					     const MaterialSet* ms) const
+void ApproachContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = new Task("ApproachContact::exMomIntegrated", 
+                      this, &ApproachContact::exMomIntegrated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gNormTractionLabel,     Ghost::None);
@@ -727,5 +730,6 @@ void ApproachContact::addComputesAndRequiresIntegrated( Task* t,
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->gAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
-
+  
+  sched->addTask(t, patches, ms);
 }

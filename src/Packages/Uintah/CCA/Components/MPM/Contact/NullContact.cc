@@ -21,8 +21,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 using namespace Uintah;
 
-NullContact::NullContact(SimulationStateP& d_sS,
+NullContact::NullContact(const ProcessorGroup* myworld,
+                         SimulationStateP& d_sS,
 			 MPMLabel* Mlb,MPMFlags* MFlags)
+  : Contact(myworld, Mlb, MFlags, 0)
 {
   // Constructor
   d_sharedState = d_sS;
@@ -72,35 +74,34 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
       new_dw->getModifiable(gv_star, lb->gVelocityStarLabel,        dwi, patch);
       new_dw->getModifiable(gacc,    lb->gAccelerationLabel,        dwi, patch);
-      if (flag->d_fracture)
-	new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel, dwi,
-			      patch);
-      else {
-	new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi,
-			       patch);
-	frictionalWork.initialize(0.);
-      }
+      new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel, dwi,
+                            patch);
     }
   }
 }
 
-void NullContact::addComputesAndRequiresInterpolated( Task* t,
-						const PatchSet*,
-						const MaterialSet* ms) const
+void NullContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+						const PatchSet* patches,
+						const MaterialSet* ms)
 {
+  Task * t = new Task("NullContact::exMomInterpolated", this, &NullContact::exMomInterpolated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->modifies(lb->gVelocityLabel, mss);
+  
+  sched->addTask(t, patches, ms);
 }
 
-void NullContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet* ,
-					     const MaterialSet* ms) const
+void NullContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = new Task("NullContact::exMomIntegrated", this, &NullContact::exMomIntegrated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->modifies(lb->gVelocityStarLabel, mss);
   t->modifies(lb->gAccelerationLabel, mss);
-  if (flag->d_fracture)
-    t->modifies(lb->frictionalWorkLabel, mss);
-  else
-    t->computes(lb->frictionalWorkLabel);
+  t->modifies(lb->frictionalWorkLabel, mss);
+  
+  sched->addTask(t, patches, ms);
 }

@@ -29,8 +29,10 @@ using std::string;
 using namespace std;
 
 
-FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
+FrictionContact::FrictionContact(const ProcessorGroup* myworld,
+                                 ProblemSpecP& ps,SimulationStateP& d_sS,
                                  MPMLabel* Mlb,MPMFlags* Mflag)
+  : Contact(myworld, Mlb, Mflag, ps)
 {
   // Constructor
   d_vol_const=0.;
@@ -90,7 +92,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
 
-
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni;
     ni.reserve(interpolator->size());
@@ -102,6 +103,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
     for(int m=0;m<matls->size();m++){
+      if(!d_matls.requested(m)) continue;
+      
       int dwi = matls->get(m);
 
       new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
@@ -110,14 +113,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,  dwi, patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,  dwi, patch);
-      if (flag->d_fracture)
-        new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
-                              patch);
-      else {
-        new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,
-                               patch);
-        frictionWork[m].initialize(0.);
-      }
+      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
+                            patch);
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
       IntVector low(patch->getInteriorNodeLowIndex());
@@ -357,6 +354,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
+      if(!d_matls.present(gmass, c)) continue;
+      
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 
@@ -693,12 +692,19 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     // This converts frictional work into a temperature rate
     for(int m=0;m<matls->size();m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      double c_v = mpm_matl->getSpecificHeat();
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
-        if(frictionWork[m][c]<0.0){
-          cout << "dT/dt is negative: " << frictionWork[m][c] << endl;
+      
+      if(!d_matls.requested(m)) {
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+          frictionWork[m][*iter] = 0;
+        }  
+      } else {
+        double c_v = mpm_matl->getSpecificHeat();
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
+          if(frictionWork[m][c]<0.0){
+            cout << "dT/dt is negative: " << frictionWork[m][c] << endl;
+          }
         }
       }
     }
@@ -706,11 +712,13 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   }
 }
 
-void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
-                                                          const PatchSet* ,
+void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+                                                          const PatchSet* patches,
                                                           const MaterialSet* ms)
-  const
 {
+  Task * t = new Task("Friction::exMomInterpolated", 
+                      this, &FrictionContact::exMomInterpolated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW,   lb->delTLabel);
   t->requires(Task::OldDW,   lb->pXLabel,           Ghost::AroundNodes, NGP);
@@ -722,18 +730,19 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
-  if (flag->d_fracture)
-    t->modifies(lb->frictionalWorkLabel, mss);
-  else
-    t->computes(lb->frictionalWorkLabel);
+  t->modifies(lb->frictionalWorkLabel, mss);
   t->modifies(lb->gVelocityLabel, mss);
+  
+  sched->addTask(t, patches, ms);
 }
 
-void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
-                                                        const PatchSet* ,
-                                                        const MaterialSet* ms) 
-  const
+void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* ms) 
 {
+  Task * t = new Task("Friction::exMomIntegrated", 
+                      this, &FrictionContact::exMomIntegrated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gNormTractionLabel,     Ghost::None);
@@ -745,4 +754,5 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
   t->modifies(             lb->gAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
 
+  sched->addTask(t, patches, ms);
 }

@@ -30,8 +30,10 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-SpecifiedBodyContact::SpecifiedBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS, 
+SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
+                                           ProblemSpecP& ps,SimulationStateP& d_sS, 
                                            MPMLabel* Mlb, MPMFlags* MFlag)
+  : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
   // read a list of values from a file
@@ -39,7 +41,9 @@ SpecifiedBodyContact::SpecifiedBodyContact(ProblemSpecP& ps,SimulationStateP& d_
   ps->get("filename", fname);
   
   ps->require("direction",d_direction);
-  ps->getWithDefault("material", d_material, 0);
+  
+  ps->getWithDefault("master_material", d_material, 0);
+  d_matls.add(d_material); // always need specified material
   
   if(fname!="") {
     std::ifstream is(fname.c_str());
@@ -142,13 +146,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       int dwi = matls->get(m);
       new_dw->get(gmass[m],           lb->gMassLabel,     dwi, patch,Ghost::None,0);
       new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel,     dwi, patch);
-      if (flag->d_fracture)
-        new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
-      else {
-        new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,
-                               patch);
-        frictionWork[m].initialize(0.);
-      }
+      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
     }
     const double tcurr = d_sharedState->getElapsedTime();
     
@@ -172,12 +170,13 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
       
-      if(!compare(gmass[d_material][c],0.0)){ // only update if shares cell with rigid body d_material
+      if(d_matls.present(gmass, c)) { // only update if shares cell with all requested materials
+
         for(int n = 0; n < numMatls; n++){ // update rigid body here
           Vector rigid_vel = requested_velocity;
           if(rigid_velocity) {
             rigid_vel = gvelocity[d_material][c];
-            if(n==d_material) break; // compatibility with old mode, where rigid velocity doesnt change material 0
+            if(n==d_material) continue; // compatibility with old mode, where rigid velocity doesnt change material 0
           }
           
           // set each velocity component being modified to a new velocity
@@ -218,14 +217,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
      new_dw->get(gvelocity[m],lb->gVelocityInterpLabel, dwi,patch, Ghost::None,0); // -> v^k
      new_dw->getModifiable(gvelocity_star[m],  lb->gVelocityStarLabel,   dwi,patch); // -> v*^k+1
      new_dw->getModifiable(gacceleration[m],   lb->gAccelerationLabel,   dwi,patch); // -> a*^k+1/2
-     if (flag->d_fracture)
-       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
-			     patch);
-     else {
-       new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,
-			      patch);
-       frictionWork[m].initialize(0.);
-     }
+     new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
+                           patch);
     }
     
     delt_vartype delT;
@@ -247,19 +240,19 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
       
-      if(!compare(gmass[d_material][c],0.0)){
+      if(d_matls.present(gmass, c)) { // only update if shares cell with all requested materials
         
         for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
           Vector rigid_vel = requested_velocity;
           if(rigid_velocity) {
             rigid_vel = gvelocity_star[d_material][c];
-            if(n==d_material) break; // compatibility with rigid motion, doesnt affect matl 0
+            if(n==d_material) continue; // compatibility with rigid motion, doesnt affect matl 0
           }
           
           Vector new_vel( gvelocity_star[n][c] );
-          if(d_direction[0]) new_vel.x( rigid_vel.x() );
-          if(d_direction[1]) new_vel.y( rigid_vel.y() );
-          if(d_direction[2]) new_vel.z( rigid_vel.z() );
+          if(n==d_material || d_direction[0]) new_vel.x( rigid_vel.x() );
+          if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
+          if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
           
           gvelocity_star[n][c] =  new_vel;
           gacceleration[n][c]  = (gvelocity_star[n][c]  - gvelocity[n][c])/delT;
@@ -269,29 +262,36 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   }
 }
 
-void SpecifiedBodyContact::addComputesAndRequiresInterpolated( Task* t,
-					     const PatchSet* ,
-					     const MaterialSet* ms) const
+void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = new Task("SpecifiedBodyContact::exMomInterpolated",
+                      this, &SpecifiedBodyContact::exMomInterpolated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->modifies(             lb->gVelocityLabel,       mss);
+  
+  sched->addTask(t, patches, ms);
 }
 
-void SpecifiedBodyContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet*,
-					     const MaterialSet* ms) const
+void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = new Task("SpecifiedBodyContact::exMomIntegrated", 
+                      this, &SpecifiedBodyContact::exMomIntegrated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gVelocityInterpLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,   mss);
   t->modifies(             lb->gAccelerationLabel,   mss);
-  if (flag->d_fracture)
-    t->modifies(           lb->frictionalWorkLabel,  mss);
-  else
-    t->computes(           lb->frictionalWorkLabel);
+  t->modifies(             lb->frictionalWorkLabel,  mss);
+  
+  sched->addTask(t, patches, ms);
 }
 
 

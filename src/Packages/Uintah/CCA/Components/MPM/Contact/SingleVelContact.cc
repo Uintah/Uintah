@@ -33,8 +33,10 @@ using namespace Uintah;
 using namespace SCIRun;
 using std::vector;
 
-SingleVelContact::SingleVelContact(ProblemSpecP& ps, SimulationStateP& d_sS, 
+SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,
+                                   ProblemSpecP& ps, SimulationStateP& d_sS, 
 				   MPMLabel* Mlb,MPMFlags* MFlag)
+  : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
   d_sharedState = d_sS;
@@ -71,20 +73,29 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      Vector centerOfMassMom(0,0,0);
-      double centerOfMassMass=0.0;
-      for(int n = 0; n < numMatls; n++){
-	centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
-	centerOfMassMass+=gmass[n][c]; 
-      }
+      if(d_matls.present(gmass, c)) {
+        
+        Vector centerOfMassMom(0,0,0);
+        double centerOfMassMass=0.0;
+        
+        for(int n = 0; n < numMatls; n++){
+          if(d_matls.requested(n)) {
+            centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
+            centerOfMassMass+=gmass[n][c]; 
+          }
+        }
+        
+        // Set each field's velocity equal to the center of mass velocity
+        centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+        for(int n = 0; n < numMatls; n++) {
+          if(d_matls.requested(n)) {
+            gvelocity[n][c] = centerOfMassVelocity;
+          }
+        }
 
-      // Set each field's velocity equal to the center of mass velocity
-      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for(int n = 0; n < numMatls; n++){
-	gvelocity[n][c] = centerOfMassVelocity;
       }
+      
     }
-
   }
 }
 
@@ -116,62 +127,71 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
      new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
-     if (flag->d_fracture)
-       new_dw->getModifiable(frictionWork[m], lb->frictionalWorkLabel, dwi,
-			     patch);
-     else {
-       new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,
-			      patch);
-       frictionWork[m].initialize(0.);
-     }
+     new_dw->getModifiable(frictionWork[m], lb->frictionalWorkLabel, dwi,
+                           patch);
     }
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
+    
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      centerOfMassMom=zero;
-      centerOfMassMass=0.0; 
-      for(int  n = 0; n < numMatls; n++){
-	centerOfMassMom+=gvelocity_star[n][c] * gmass[n][c];
-	centerOfMassMass+=gmass[n][c]; 
-      }
+      if(d_matls.present(gmass, c)) {
 
-      // Set each field's velocity equal to the center of mass velocity
-      // and adjust the acceleration of each field to account for this
-      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for(int  n = 0; n < numMatls; n++){
-	Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
-	gvelocity_star[n][c] = centerOfMassVelocity;
-	gacceleration[n][c]+=Dvdt;
+        centerOfMassMom=zero;
+        centerOfMassMass=0.0; 
+        for(int  n = 0; n < numMatls; n++){
+          if(d_matls.requested(n)) {
+            centerOfMassMom+=gvelocity_star[n][c] * gmass[n][c];
+            centerOfMassMass+=gmass[n][c]; 
+          }
+        }
+        
+        // Set each field's velocity equal to the center of mass velocity
+        // and adjust the acceleration of each field to account for this
+        centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+        for(int  n = 0; n < numMatls; n++){
+          if(d_matls.requested(n)) {
+            Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
+            gvelocity_star[n][c] = centerOfMassVelocity;
+            gacceleration[n][c]+=Dvdt;
+          }
+        }
       }
     }
+    
   }
 }
 
-void SingleVelContact::addComputesAndRequiresInterpolated(Task* t,
-						  const PatchSet*,
-				     		  const MaterialSet* ms) const
+void SingleVelContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+						  const PatchSet* patches,
+				     		  const MaterialSet* ms)
 {
+  Task * t = new Task("SingleVelContact::exMomInterpolated", 
+                      this, &SingleVelContact::exMomInterpolated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires( Task::NewDW, lb->gMassLabel,          Ghost::None);
 
   t->modifies(              lb->gVelocityLabel, mss);
+  
+  sched->addTask(t, patches, ms);
 }
 
-void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet* ,
-					     const MaterialSet* ms) const
+void SingleVelContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = new Task("SingleVelContact::exMomIntegrated", 
+                      this, &SingleVelContact::exMomIntegrated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
-  if (flag->d_fracture)
-    t->modifies(             lb->frictionalWorkLabel,mss);
-  else
-    t->computes(             lb->frictionalWorkLabel);
+  t->modifies(             lb->frictionalWorkLabel,mss);
+  
+  sched->addTask(t, patches, ms);
 }

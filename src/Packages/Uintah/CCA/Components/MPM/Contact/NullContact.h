@@ -55,7 +55,8 @@ WARNING
       
     public:
       // Constructor
-      NullContact(SimulationStateP& ss, MPMLabel* lb,
+      NullContact(const ProcessorGroup* myworld,
+                  SimulationStateP& ss, MPMLabel* lb,
 		  MPMFlags* MFlag);
       
       // Destructor
@@ -75,13 +76,13 @@ WARNING
 				   DataWarehouse* old_dw,
 				   DataWarehouse* new_dw);
       
-      virtual void addComputesAndRequiresInterpolated(Task* task,
+      virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
 
-      virtual void addComputesAndRequiresIntegrated(Task* task,
+      virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
 
     };
 } // End namespace Uintah
