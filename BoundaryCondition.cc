@@ -100,7 +100,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 				     d_enthalpySolve(calcEnthalpy)
 {
   d_nofScalars = d_props->getNumMixVars();
-  MM_CUTOFF_VOID_FRAC = 0.01;
+  MM_CUTOFF_VOID_FRAC = 0.5;
   d_wallBdry = 0;
   d_pressureBdry = 0;
   d_outletBC = 0;
