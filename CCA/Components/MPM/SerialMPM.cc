@@ -41,6 +41,9 @@
 #include <iostream>
 #include <fstream>
 
+#undef KUMAR
+//#define KUMAR
+
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -1020,6 +1023,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         fillFaceNormal(internalforce,patch, face,offset);
       }
     }
+#ifdef KUMAR
+    internalforce.initialize(Vector(0,0,0));
+#endif
   }
 #ifdef INTEGRAL_TRACTION
   if(integralArea > 0.){
