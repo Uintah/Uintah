@@ -873,8 +873,17 @@ proc startIPortConnection {imodid iwhich x y} {
     set typename [lindex [lindex [$imodid-c iportinfo] $iwhich] 2]
     set portname [lindex [lindex [$imodid-c iportinfo] $iwhich] 3]
     set fullname $typename:$portname
-    eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
-	    -anchor sw -text {$fullname} -tags "tempname"
+
+    frame $netedit_canvas.frame
+    label $netedit_canvas.frame.label -text $fullname -foreground white -bg #036
+    pack $netedit_canvas.frame $netedit_canvas.frame.label    
+    $netedit_canvas create window [lindex $coords 0]\
+	    [lindex $coords 1] -window $netedit_canvas.frame \
+	    -anchor sw -tags "tempname" 
+    
+#    set curtext [eval $netedit_canvas create text [lindex $coords 0]\
+#	    [lindex $coords 1] -anchor sw -text {$fullname} -tags "tempname"]
+#    $curtext configure -foreground white
     foreach i $new_conn_oports {
 	set omodid [lindex $i 0]
 	set owhich [lindex $i 1]
@@ -967,8 +976,15 @@ proc startOPortConnection {omodid owhich x y} {
     set typename [lindex [lindex [$omodid-c oportinfo] $owhich] 2]
     set portname [lindex [lindex [$omodid-c oportinfo] $owhich] 3]
     set fullname $typename:$portname
-    eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
-	    -anchor nw -text {$fullname} -tags "tempname"
+    frame $netedit_canvas.frame
+    label $netedit_canvas.frame.label -text $fullname -foreground white -bg #036
+    pack $netedit_canvas.frame $netedit_canvas.frame.label    
+    $netedit_canvas create window [lindex $coords 0]\
+	    [lindex $coords 1] -window $netedit_canvas.frame \
+	    -anchor nw -tags "tempname" 
+    
+#    eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
+#	    -anchor nw -text {$fullname} -tags "tempname"
     foreach i $new_conn_iports {
 	set imodid [lindex $i 0]
 	set iwhich [lindex $i 1]
@@ -1540,6 +1556,7 @@ proc endPortConnection {portcolor} {
     global netedit_canvas
     $netedit_canvas delete tempconnections
     $netedit_canvas delete tempname
+    destroy $netedit_canvas.frame
     global potential_connection
     
     if { $potential_connection != "" } {
