@@ -215,6 +215,7 @@
     <MaterialProperties>
        <ICE>
          <material>
+           <isSurroundingMatl> true                     </isSurroundingMatl> 
            <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
            <viscosity>          15.6e-6                 </viscosity>
