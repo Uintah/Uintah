@@ -733,6 +733,21 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	cv.eyep=cv.lookat-lookdir*dist/old_dist;
 	PRINTVAR(autoview_sw, cv.eyep);
 	animate_to_view(cv, 2.0);
+    } else if(args[1] == "dolly"){
+	if(args.count() != 3){
+	    args.error("dolly needs an amount");
+	    return;
+	}
+	double amount;
+	if(!args[2].get_double(amount)){
+	    args.error("Can't figure out amount");
+	    return;
+	}
+	View cv(view.get());
+	Vector lookdir(cv.eyep-cv.lookat);
+	lookdir*=amount;
+	cv.eyep=cv.lookat+lookdir;
+	animate_to_view(cv, 1.0);
     } else {
 	args.error("Unknown minor command for Roe");
     }
