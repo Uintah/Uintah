@@ -252,7 +252,7 @@ Isosurface::execute()
       const double valTyped = gui_iso_value_typed_.get();
       if (val != valTyped) {
 	char s[1000];
-	sprintf(s, "Typed isovalue: %g was out of range.  Using isovalue: %g instead.", valTyped, val);
+	sprintf(s, "Typed isovalue %g was out of range.  Using isovalue %g instead.", valTyped, val);
 	warning(s);
 	gui_iso_value_typed_.set(val);
       }
