@@ -1,5 +1,5 @@
 /*
- *  Lat3VolMesh.h: Templated Mesh defined on a 3D Regular Grid
+ *  LatVolMesh.h: Templated Mesh defined on a 3D Regular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef SCI_project_Lat3VolMesh_h
-#define SCI_project_Lat3VolMesh_h 1
+#ifndef SCI_project_LatVolMesh_h
+#define SCI_project_LatVolMesh_h 1
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/FieldIterator.h>
@@ -24,7 +24,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE Lat3VolMesh : public Datatype
+class SCICORESHARE LatVolMesh : public Datatype
 {
 public:
 
@@ -51,9 +51,9 @@ public:
   typedef face_index      face_array[6];
   typedef cell_index      cell_array[8];
 
-  Lat3VolMesh(int x, int y, int z, Point &min, Point &max);
-  Lat3VolMesh(const Lat3VolMesh &);
-  virtual ~Lat3VolMesh();
+  LatVolMesh(int x, int y, int z, Point &min, Point &max);
+  LatVolMesh(const LatVolMesh &);
+  virtual ~LatVolMesh();
 
   node_iterator node_begin() const;
   node_iterator node_end() const;
@@ -113,13 +113,13 @@ public:
 
 private:
 
-  //! the object space extents of a Lat3VolMesh
+  //! the object space extents of a LatVolMesh
   Point min_, max_;
 
-  //! the node_index extents of a Lat3VolMesh (min=0, max=n)
+  //! the node_index extents of a LatVolMesh (min=0, max=n)
   int nx_, ny_, nz_;
 
-  // returns a Lat3VolMesh
+  // returns a LatVolMesh
   static Persistent *maker();
 };
 
@@ -142,7 +142,7 @@ struct IPoint
 
 struct NCIter : public IPoint
 {
-  NCIter(const Lat3VolMesh *m, int i, int j, int k) : IPoint(i, j, k), mesh_(m) {}
+  NCIter(const LatVolMesh *m, int i, int j, int k) : IPoint(i, j, k), mesh_(m) {}
 
   const IPoint &operator *() { return *this; }
 
@@ -156,13 +156,13 @@ struct NCIter : public IPoint
     return !(*this == a);
   }
 
-  const Lat3VolMesh *mesh_;
+  const LatVolMesh *mesh_;
 };
 
 
 struct NodeIter : public NCIter
 {
-  NodeIter(const Lat3VolMesh *m, int i, int j, int k) : NCIter(m, i, j, k) {}
+  NodeIter(const LatVolMesh *m, int i, int j, int k) : NCIter(m, i, j, k) {}
 
   NodeIter &operator++()
   {
@@ -191,7 +191,7 @@ struct NodeIter : public NCIter
 
 struct CellIter : public NCIter
 {
-  CellIter(const Lat3VolMesh *m, int i, int j, int k) : NCIter(m, i, j, k) {}
+  CellIter(const LatVolMesh *m, int i, int j, int k) : NCIter(m, i, j, k) {}
 
   CellIter &operator++()
   {
@@ -221,7 +221,7 @@ private:
 
 
 
-#endif // SCI_project_Lat3VolMesh_h
+#endif // SCI_project_LatVolMesh_h
 
 
 
