@@ -977,7 +977,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     glPushName(0x12345678); //for the object
     glPushName(0x12345678); //for the object's face index
 #endif
-#ifdef __sgi
+
     if(!viewwindow->do_bawgl.get()){ //Regular flavor picking
       double aspect=double(xres)/double(yres);
       // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
@@ -1007,7 +1007,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       bawgl->setSurfaceView();
       bawgl->setVirtualView();      
     }
-#endif
+
     drawinfo->lighting=0;
     drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
     drawinfo->pickmode=1;
