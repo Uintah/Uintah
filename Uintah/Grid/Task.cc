@@ -166,8 +166,51 @@ Task::getRequires() const
   return d_reqs;
 }
 
+void
+Task::display( ostream & out ) const
+{
+  out << d_taskName << " (" << d_tasktype << "): ";
+  if( d_patch != 0 ){
+    out << "[Patch: " << d_patch->getID() << ", DW: " << d_fromDW->getID()
+	<< ", " << d_toDW->getID() << ", ";
+  } else {
+    out << "(No Patch), ";
+  }
+  if( d_completed ){ out << "Completed]"; } else { out << "Not Completed]"; }
+}
+
+ostream &
+operator << (ostream &out, const Task & task)
+{
+  task.display( out );
+  return out;
+}
+
+ostream &
+operator << (ostream &out, const Task::TaskType & tt)
+{
+  switch( tt ) {
+  case Task::Normal:
+    out << "Normal";
+    break;
+  case Task::Reduction:
+    out << "Reduction";
+    break;
+  case Task::Scatter:
+    out << "Scatter";
+    break;
+  case Task::Gather:
+    out << "Gather";
+    break;
+  }
+  return out;
+}
+
 //
 // $Log$
+// Revision 1.17  2000/08/23 22:33:40  dav
+// added an output operator for task
+//
 // Revision 1.16  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support
