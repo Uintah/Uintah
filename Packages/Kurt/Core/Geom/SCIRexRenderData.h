@@ -36,6 +36,7 @@ struct SCIRexRenderData {
   OGLXVisual *visual_;
   Barrier *barrier_;
   int waiters_;
+  bool waiters_changed_;
   Mutex *mutex_;
   double *mvmat_;
   double *pmat_;
@@ -43,6 +44,7 @@ struct SCIRexRenderData {
   Material *mat_;
   double time_;
   int *comp_order_;
+  int comp_count_;
 };
   
 } // end namspace Kurt

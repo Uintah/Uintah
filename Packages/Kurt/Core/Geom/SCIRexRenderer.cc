@@ -66,6 +66,7 @@ SCIRexRenderer::SCIRexRenderer(int id)
     brick_size_(128),
     slice_alpha_(1.0),
     windows_init_(false),
+    compositers_init_(false),
     cmapHasChanged_(true),
     render_data_(0)
 {
@@ -92,6 +93,7 @@ SCIRexRenderer::SCIRexRenderer(int id, vector<char *>& displays,
     brick_size_(128),
     slice_alpha_(0.5),
     windows_init_(false),
+    compositers_init_(false),
     cmapHasChanged_(true),
     render_data_(0)
 {
@@ -107,9 +109,11 @@ SCIRexRenderer::SCIRexRenderer(int id, vector<char *>& displays,
   render_data_->visual_ =  new OGLXVisual(OGLXVisual::RGBA_SB_VISUAL);
   render_data_->barrier_ = new Barrier("SCIRexRenderer");
   render_data_->waiters_ = displays.size() + ncompositers + 1;
+  render_data_->waiters_changed_ = false;
   render_data_->mutex_ = &win_mutex_;
   render_data_->mvmat_ = new double[16];
   render_data_->pmat_ = new double[16];
+  render_data_->comp_count_ = 0;
 
   // Here is where we need to split up the volume between the windows
   make_render_windows(tex_, min_, max, is_fixed_, brick_size_, displays);
@@ -141,6 +145,7 @@ SCIRexRenderer::SCIRexRenderer(const SCIRexRenderer& copy)
     brick_size_(copy.brick_size_),
     slice_alpha_(copy.slice_alpha_),
     windows_init_(copy.windows_init_),
+    compositers_init_(copy.compositers_init_),
     cmapHasChanged_(copy.cmapHasChanged_)
 {
   mutex_.lock();
@@ -159,6 +164,22 @@ SCIRexRenderer::~SCIRexRenderer()
     (*cit)->kill();
 
   render_data_->barrier_->wait(render_data_->waiters_);
+  
+  delete render_data_->visual_;
+  delete render_data_->barrier_;
+  delete render_data_->mvmat_;
+  delete render_data_->pmat_;
+  delete [] render_data_->depth_buffer_;
+  delete [] render_data_->write_buffer_;
+  delete [] render_data_->comp_order_;
+  
+  vector<GLTexture3D *>::iterator tit = textures.begin();
+  for(; tit != textures.end(); tit++)
+    delete *tit;
+
+  vector<GLVolumeRenderer *>::iterator vit = renderers.begin();
+    for(; vit != renderers.end(); vit++)
+    delete *vit;
 }
 
 GeomObj* 
@@ -208,24 +229,7 @@ SCIRexRenderer::draw(DrawInfoOpenGL* di, Material* mat, double time)
 void 
 SCIRexRenderer::draw()
 {
-  if(!windows_init_){
-    Thread *th;
-    int i;
-    for(i = 0; i < int(windows.size()); i++){
-      ostringstream win;
-      win << "Window-"<<i;
-      th = new Thread(windows[i], win.str().c_str());
-      th->detach();
-    }
-    
-    for(i = 0; i < int(compositers.size()); i++){
-      ostringstream comp;
-      comp << "Compositer-"<<i;
-      th = new Thread(compositers[i], comp.str().c_str());
-      th->detach();
-    }
-    windows_init_ = true;
-  }
+  
   Barrier *barrier = render_data_->barrier_;
   int waiters = render_data_->waiters_;
 
@@ -233,7 +237,6 @@ SCIRexRenderer::draw()
 //   cerr<<"check for Exit in renderer thread"<<endl;
 //   win_mutex_.unlock();
   barrier->wait(waiters);
-
 //   win_mutex_.lock(); 
 //   cerr<<"update info for in renderer thread"<<endl;
 //   win_mutex_.unlock();
@@ -273,7 +276,6 @@ SCIRexRenderer::draw()
   glDisable(GL_BLEND);
   barrier->wait(waiters);
   render_data_->viewport_changed_ = false;
-
 }
 
 void
@@ -355,7 +357,7 @@ SCIRexRenderer::update_compositer_data()
     }
   }
 
-  if(render_data_->viewport_changed_){
+  if(render_data_->viewport_changed_ || !compositers_init_){
     double ncompositers = (double)compositers.size();
     vector<SCIRexCompositer *>::iterator it = compositers.begin();
 //     cerr<<"viewport = "<<render_data_->viewport_y_<<" by "<<
@@ -366,6 +368,7 @@ SCIRexRenderer::update_compositer_data()
 //       cerr<<"ymin, ymax = "<<ymin<<", "<<ymax<<"\n";
       (*it)->SetFrame(0,ymin,render_data_->viewport_x_, ymax);
     }
+    compositers_init_ = true;
   }
   //SET ORDER SOMEWHERE HERE
 }
@@ -393,6 +396,35 @@ SCIRexRenderer::setup()
 //   glColor4f(1,1,1,1); // set to all white for modulation
 
   // check to see if the window size has changed.
+  Thread *th;
+  int i = 0;
+  
+  if(!windows_init_){
+    vector<SCIRexWindow *>::iterator it = windows.begin();
+    for(; it != windows.end(); ++it){
+      ostringstream win;
+      win << "Window-"<<i++;
+      th = new Thread(*it, win.str().c_str());
+      th->detach();
+    }
+    windows_init_ = true;
+    
+  }
+
+  i = 0;
+  if(!compositers_init_){
+    vector<SCIRexCompositer *>::iterator it = compositers.begin();
+    for(; it != compositers.end(); ++it){
+      ostringstream comp;
+//       comp << "Compositer-"<<render_data_->comp_count_++;
+      comp << "Compositer-"<<i++;
+//       cerr<<"Creating thread for "<<comp.str()<<endl;
+      th = new Thread(*it, comp.str().c_str());
+      th->detach();
+    }
+  }
+
+//   cerr<<"Checking viewport\n";
   SCIRexRenderData *rd = render_data_;
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
@@ -408,7 +440,9 @@ SCIRexRenderer::setup()
       scinew unsigned char[ 4*rd->viewport_x_ * rd->viewport_y_ ];
   }
 
+ 
   // read the depth buffer.
+//  cerr<<"Reading the depth buffer.\n";
   glPixelStorei(GL_PACK_ALIGNMENT,1);
   glReadBuffer(GL_BACK);
   glReadPixels(0,0,
@@ -418,9 +452,11 @@ SCIRexRenderer::setup()
 	       GL_UNSIGNED_BYTE, rd->depth_buffer_);
 
   // set the view matrix
+//   cerr<<"Setting the view matrix.\n";
   glGetDoublev(GL_MODELVIEW_MATRIX, rd->mvmat_);
   glGetDoublev(GL_PROJECTION_MATRIX, rd->pmat_);
 }
+
 void
 SCIRexRenderer::preDraw()
 {
@@ -492,6 +528,134 @@ SCIRexRenderer::saveobj(std::ostream&, const std::string&, GeomSave*)
 {
    NOT_FINISHED("SCIRexRenderer::saveobj");
     return false;
+}
+
+void
+SCIRexRenderer::UpdateCompositers( int n )
+{
+  mutex_.lock();
+  
+  // store the current number of barrier waiters
+  int waiters = render_data_->waiters_;
+  
+  // what is the change in barrier waiters?
+  int nmore = n - compositers.size();
+  render_data_->waiters_ += nmore;
+  render_data_->waiters_changed_ = true;
+
+  // now destroy the compositers and rebuild
+  vector<SCIRexCompositer *>::iterator it = compositers.begin();
+  vector<SCIRexCompositer *>::iterator it_end = compositers.end();
+  for(; it != it_end; ++it){
+    (*it)->kill();
+  }
+  compositers.clear();
+  compositers_init_ = false;
+  
+  render_data_->barrier_->wait(waiters);
+//   cerr<<"passed barrier in UpdateCompositers\n";
+  render_data_->waiters_changed_ = false;
+  for(int i = 0; i < n; i++){
+    compositers.push_back(new SCIRexCompositer( render_data_ ));
+    for(int j = 0; j < int( windows.size()); j++) {
+      compositers[i]->add( windows[j] );
+    }  
+  }
+//   cerr<<"New compositers built\n";
+  mutex_.unlock();
+//   cerr<<"mutex unlocked\n";
+}
+
+void
+SCIRexRenderer::Build()
+{
+  mutex_.lock();
+  GLTexture3D *texture;
+  LatVolMesh *mesh = dynamic_cast<LatVolMesh *> (tex_->mesh().get_rep());
+  if(mesh){
+    // set the transform for later use.
+    field_transform = mesh->get_transform();
+
+    // establish the axis with the most data.  We'll split along that axis.
+    int long_dim = 0; // 0 not set, 1 x, 2 y, 3 z
+    int long_dim_size = 0;
+    
+    int x_dim = mesh->get_nx(),  // store these because we're
+        y_dim = mesh->get_ny(),  // going to mess with them later
+        z_dim = mesh->get_nz();  // and we want to save the orginal values
+    cerr<<"nx, ny, nz = "<<x_dim<<", "<<y_dim<<", "<<z_dim<<endl;
+    int min_x = mesh->get_min_x(),
+      min_y = mesh->get_min_y(),
+      min_z = mesh->get_min_z();
+
+    if ( x_dim >= y_dim && x_dim >= z_dim ){ 
+      long_dim = 1;
+      long_dim_size = x_dim;
+    } else if( y_dim >= z_dim){
+      long_dim = 2;
+      long_dim_size = y_dim;
+    } else {
+      long_dim = 3;
+      long_dim_size = z_dim;
+    }
+
+    // How many windows?  Make a subtexture for each window.
+    int ntextures = textures.size();
+    int i,j;
+    // is dim_size > brick_size_?  Hopefully yes, otherwise we
+    // should not be using this code.
+    cerr<<"Original brick size is "<<brick_size_<<endl;
+    int bsize = brick_size_;
+    while( long_dim_size  < (ntextures-1)* bsize ){
+      bsize = largestPowerOf2( bsize -1 );
+    }  
+    for(i = 0, j = 0; i < ntextures; i++, j+= (bsize-1)){
+      // edit the mesh so that the texture constructor 
+      // iterates over the correct range.
+      if( i == (ntextures - 1) ){
+	if(long_dim == 1){
+	  mesh->set_min_x(min_x + j); 
+	  mesh->set_nx(x_dim - j); 
+	} else if(long_dim == 2){
+	  mesh->set_min_y(min_y + j); 
+	  mesh->set_ny(y_dim - j); 
+	} else {
+	  mesh->set_min_z(min_z + j); 
+	  mesh->set_nz(z_dim - j); 
+	}	  
+      } else {
+	if(long_dim == 1){
+	  mesh->set_min_x(min_x + j);
+	  mesh->set_nx(bsize); 
+	} else if(long_dim == 2){
+	  mesh->set_min_y(min_y + j); 
+	  mesh->set_ny(bsize); 
+	} else {
+	  mesh->set_min_z(min_z + j);
+	  mesh->set_nz(bsize);
+	}	  
+      }
+      if(!textures[i]->replace_data(tex_, min_, max_, is_fixed_)){
+	textures[i] = scinew GLTexture3D(tex_, min_, max_, 
+					 is_fixed_, brick_size_);
+      }
+    }
+    // Now just in case something unseen is using the mesh, set it back to
+    // its original form. Probably, unecessary.
+    // update!! it is necessary! Can't animate without it...
+    mesh->set_min_x(min_x);
+    mesh->set_min_y(min_y);
+    mesh->set_min_z(min_z);
+    mesh->set_nx(x_dim);
+    mesh->set_ny(y_dim);
+    mesh->set_nz(z_dim);
+
+  } else {
+    cerr<<"dynamic_cast<LatVolMesh *> failed !\n";
+    cerr<<"initialization/rebuild failed !\n";
+    ASSERT( mesh );
+  }
+  mutex_.unlock();
 }
 void
 SCIRexRenderer::make_render_windows(FieldHandle tex_, 
@@ -589,10 +753,10 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
       if (!is_fixed_) { // if not fixed, overwrite min/max values on Gui
 	texture->getminmax(min_, max_);
       }
-      BBox bb0;
-      texture->get_bounds( bb0 );
-      cerr<<"texture bounding box at construction = "<<
-	bb0.min()<<", "<<bb0.max()<<endl;
+//       BBox bb0;
+//       texture->get_bounds( bb0 );
+//       cerr<<"texture bounding box at construction = "<<
+// 	bb0.min()<<", "<<bb0.max()<<endl;
 
       texture->set_slice_bounds(Point(min_x, min_y, min_z),
 				Point(min_x + x_dim, min_y + y_dim, 
@@ -611,12 +775,13 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
     
     // Now just in case something unseen is using the mesh, set it back to
     // its original form. Probably, unecessary.
-//     mesh->set_min_x(min_x);
-//     mesh->set_min_y(min_y);
-//     mesh->set_min_z(min_z);
-//     mesh->set_nx(x_dim);
-//     mesh->set_ny(y_dim);
-//     mesh->set_nz(z_dim);
+    // update!! it is necessary!  Can't animate without it...
+    mesh->set_min_x(min_x);
+    mesh->set_min_y(min_y);
+    mesh->set_min_z(min_z);
+    mesh->set_nx(x_dim);
+    mesh->set_ny(y_dim);
+    mesh->set_nz(z_dim);
   } else {
     cerr<<"dynamic_cast<LatVolMesh *> failed !\n";
     cerr<<"initialization/rebuild failed !\n";

@@ -30,16 +30,21 @@ SCIRexCompositer::~SCIRexCompositer()
 void
 SCIRexCompositer::run()
 {
-  do{
+  for(;;){
+    int i = 0;
 //     render_data_->mutex_->lock(); 
-//     cerr<<"check for Exit "<<my_thread_->getThreadName()<<endl;
+//     cerr<<"check for Exit "<<my_thread_->getThreadName()<<"   "<<i++<<endl;
 //     render_data_->mutex_->unlock();
-    render_data_->barrier_->wait(render_data_->waiters_);
-    if( die_ ){  
-//       render_data_->mutex_->lock(); 
-//       cerr<<"Returning from thread "<<my_thread_->getThreadName()<<endl;
-//       render_data_->mutex_->unlock();
-      break;
+    for(;;){
+      render_data_->barrier_->wait(render_data_->waiters_);
+      if( die_ ){  
+	render_data_->mutex_->lock(); 
+	cerr<<"Returning from thread "<<my_thread_->getThreadName()<<endl;
+	render_data_->mutex_->unlock();
+	return;
+      } else if(!render_data_->waiters_changed_){
+	break;
+      }
     }
 //     render_data_->mutex_->lock(); 
 //     cerr<<"update info for "<<my_thread_->getThreadName()<<endl;
@@ -59,7 +64,7 @@ SCIRexCompositer::run()
 //     render_data_->mutex_->unlock();
     render_data_->barrier_->wait( render_data_->waiters_);
     
-  }while(true);
+  }
 }
 void 
 SCIRexCompositer::add( SCIRexWindow* r)

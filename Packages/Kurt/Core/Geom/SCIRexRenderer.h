@@ -113,20 +113,18 @@ public:
   int getBrickSize(){ return brick_size_; }
   void SetBrickSize( int bs ) { brick_size_ = bs; }
   
-  void Build(){
-    mutex_.lock(); 
-    NOT_FINISHED("SCIRexRenderer::Build");
-    mutex_.unlock();}
+  void Build();
 
+  void UpdateCompositers( int n );
   // if the SetVol and or SetBrickSize SetRange are called, Build must 
   // be called before any other operations.
   void SetVol( FieldHandle tex ){ this->tex_ = tex;}
   
   void SetColorMap( ColorMapHandle map){
-    mutex_.lock();
+     mutex_.lock();
     this->cmap_ = map;
     cmapHasChanged_ = true;
-    mutex_.unlock();
+     mutex_.unlock();
     vector<GLVolumeRenderer *>::iterator it  = renderers.begin();
     for(; it != renderers.end(); it++)
       (*it)->SetColorMap(map);
@@ -184,7 +182,8 @@ private:
 
   Transform field_transform;
   
-  bool windows_init_;
+  bool windows_init_; 
+  bool compositers_init_;
   bool cmapHasChanged_;
   unsigned char transfer_functions_[8][1024];
   

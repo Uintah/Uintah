@@ -52,6 +52,8 @@ itcl_class Kurt_Visualization_SCIRex {
 	set $this-displays ""
 	global $this-compositers
 	set $this-compositers 2
+	global $this-autofire
+	set $this-autofire 1
     }
 
 
@@ -64,13 +66,11 @@ itcl_class Kurt_Visualization_SCIRex {
 	}
 	toplevel $w
 	wm minsize $w 250 300
-	set n "$this-c needexecute "
-
+	set n "$this needexecute "
 
 	frame $w.dpyframe -relief groove -border 2
 	label $w.dpyframe.l -text "List displays:"
-	entry $w.dpyframe.entry -textvariable $this-displays \
-	    -bg white
+	entry $w.dpyframe.entry -textvariable $this-displays 
 	pack  $w.dpyframe -side top -padx 2 -pady 2 -fill both
 	pack $w.dpyframe.l $w.dpyframe.entry -side top \
 	    -padx 2 -pady 2 -fill both -fill x
@@ -170,11 +170,16 @@ itcl_class Kurt_Visualization_SCIRex {
 		-orient horizontal 
 
 	pack $w.stransp $w.nslice  -side top -fill x
-
+	
+	global $this-autofire
+	checkbutton $w.autofire -text "Auto Execute" -indicatoron true \
+	    -variable $this-autofire
+	pack $w.autofire -side top -fill x
 	button $w.exec -text "Execute" -command $n
 	pack $w.exec -side top -fill x
 	bind $w.nslice <ButtonRelease> $n
 	bind $w.stransp <ButtonRelease> $n
+	bind $w.cmpframe.s <ButtonRelease> $n
 	
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side top -fill x
@@ -211,6 +216,13 @@ itcl_class Kurt_Visualization_SCIRex {
         $w.f3.e2 configure -state disabled -foreground $color
 	$this-c needexecute	
 
+    }
+
+    method needexecute {} {
+	global $this-autofire
+	if { [set $this-autofire] == 1} {
+	    $this-c needexecute
+	}
     }
 
     method fixedScale { } {
@@ -251,6 +263,12 @@ itcl_class Kurt_Visualization_SCIRex {
 		-command "$this-c needexecute"
 	    pack $f.brickdim$v -side left -padx 2 -fill x
 	}
+    }
+
+    method disableDpy {} {
+	set w .ui[modname]
+	set color "#505050"
+	$w.dpyframe.entry configure -state disabled -foreground $color
     }
 }
 
