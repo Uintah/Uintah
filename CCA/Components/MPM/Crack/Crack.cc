@@ -217,18 +217,18 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
 
 }
 
-void Crack::addComputesAndRequiresCrackDiscretization(Task* t,
-                                const PatchSet* patches,
-                                const MaterialSet* matls) const
+void Crack::addComputesAndRequiresCrackDiscretization(Task* /*t*/,
+                                const PatchSet* /*patches*/,
+                                const MaterialSet* /*matls*/) const
 {
 // do nothing currently 
 }
 
 void Crack::CrackDiscretization(const ProcessorGroup*,
                                 const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+                                const MaterialSubset* /*matls*/,
+                                DataWarehouse* /*old_dw*/,
+                                DataWarehouse* /*new_dw*/)
 {
   int cn,ce;
   int k,i,j,ni,nj,n1,n2,n3;
@@ -249,7 +249,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
        }
 
        cn = 0;  // current node
-       ce = 0;  // icurrent element
+       ce = 0;  // current element
 
        //Discretize quadrilaterals
        nstart0=0;  // starting node number for each level (in j direction)
@@ -408,8 +408,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
 }
 
 void Crack::addComputesAndRequiresParticleVelocityField(Task* t,
-                                const PatchSet* patches,
-                                const MaterialSet* matls) const
+                                const PatchSet* /*patches*/,
+                                const MaterialSet* /*matls*/) const
 {  
   //t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundCells, NGN);
@@ -421,7 +421,7 @@ void Crack::addComputesAndRequiresParticleVelocityField(Task* t,
 
 void Crack::ParticleVelocityField(const ProcessorGroup*,
                                 const PatchSubset* patches,
-                                const MaterialSubset* matls,
+                                const MaterialSubset* /*matls*/,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
@@ -759,7 +759,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 }
 
 void Crack::addComputesAndRequiresCrackAdjustInterpolated(Task* t,
-                                const PatchSet* patches,
+                                const PatchSet* /*patches*/,
                                 const MaterialSet* matls) const
 {
   const MaterialSubset* mss = matls->getUnion();
@@ -792,7 +792,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
 {
   enum {NO=0,YES};
 
-  double mua,mub;
+  double mua=0.0,mub=0.0;
   double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
   double vol0,normVol;
   Vector va,vb,vc,dva,dvb,ta,tb,na,nb,norm;
@@ -992,7 +992,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
 }
 
 void Crack::addComputesAndRequiresCrackAdjustIntegrated(Task* t,
-                                const PatchSet* patches,
+                                const PatchSet* /*patches*/,
                                 const MaterialSet* matls) const
 {
   const MaterialSubset* mss = matls->getUnion();
@@ -1024,7 +1024,7 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
 {
   enum {NO=0,YES};
 
-  double mua,mub;
+  double mua=0.0,mub=0.0;
   double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
   double vol0,normVol;
   Vector aa,ab,va,vb,vc,dva,dvb,ta,tb,na,nb,norm;
@@ -1244,8 +1244,8 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
 }
 
 void Crack::addComputesAndRequiresMoveCrack(Task* t,
-                                const PatchSet* patches,
-                                const MaterialSet* matls) const
+                                const PatchSet* /*patches*/,
+                                const MaterialSet* /*matls*/) const
 {
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
@@ -1261,7 +1261,7 @@ void Crack::addComputesAndRequiresMoveCrack(Task* t,
 
 void Crack::MoveCrack(const ProcessorGroup*,
                       const PatchSubset* patches,
-                      const MaterialSubset* matls,
+                      const MaterialSubset* /*matls*/,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
