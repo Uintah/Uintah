@@ -73,7 +73,7 @@ WARNING
     virtual bool isAdaptive() { return d_isAdaptive; }
 
     //! Asks if we are going to do regridding
-    virtual bool flaggedCellsOnFinestLevel(const GridP& grid);
+    virtual bool flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched);
 
     //! Returns the max number of levels this regridder will store
     virtual int maxLevels() { return d_maxLevels; }

@@ -41,7 +41,7 @@ WARNING
     virtual ~BNRRegridder();
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched);
+    virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched);
   };
 
 } // End namespace Uintah
