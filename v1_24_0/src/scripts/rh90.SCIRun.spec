@@ -36,7 +36,7 @@
 %undefine	__check_files
 %define thirdpartydotver 0
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
-%define insightver  1.8.1
+%define insightver  2.0.0
 
 
 Name:		%{defname}BioPSE
@@ -128,7 +128,7 @@ mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
 export JAVA_HOME=/usr/java/jdk1.3.1_08
 export PATH=${JAVA_HOME}/bin:${PATH}
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" -with-insight="/usr/local/lib/InsightToolkit" --enable-package="BioPSE Teem Insight MatlabInterface"
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{thirdpartyversion}/Linux/gcc-%{gccver}-32bit/" -with-insight="/usr/local/lib/InsightToolkit" --enable-package="BioPSE Teem Insight MatlabInterface"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
 tar -xvzf %{SOURCE4}
 #tar -xvzf %{SOURCE5}
