@@ -95,11 +95,10 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 }
 
 
-SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy)
+SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy) :
+  Matrix(copy.nrows_, copy.ncols_),
+  nnz(copy.nnz)
 {
-  nrows_ = copy.nrows_;
-  ncols_ = copy.ncols_;
-  nnz = copy.nnz;
   rows = scinew int[nrows_+1];
   columns = scinew int[nnz];
   a = scinew double[nnz];
