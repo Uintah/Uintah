@@ -68,6 +68,12 @@ public:
     friend Point AffineCombination(const Point&, double,
 				   const Point&, double);
     friend void Pio(Piostream&, Point&);
+
+
+    // is one point within a small interval of another?
+
+    int Overlap( double a, double b, double e );
+    int InInterval( Point a, double epsilon );
 };
 
 ostream& operator<<(ostream& os, const Point& p);

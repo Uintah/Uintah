@@ -100,3 +100,34 @@ void Pio(Piostream& stream, Point& p)
     Pio(stream, p._z);
     stream.end_cheap_delim();
 }
+
+
+int
+Point::Overlap( double a, double b, double e )
+{
+  double hi, lo, h, l;
+  
+  hi = a + e;
+  lo = a - e;
+  h  = b + e;
+  l  = b - e;
+
+  if ( ( hi > l ) && ( lo < h ) )
+    return 1;
+  else
+    return 0;
+}
+  
+int
+Point::InInterval( Point a, double epsilon )
+{
+  if ( Overlap( _x, a.x(), epsilon ) &&
+      Overlap( _y, a.y(), epsilon )  &&
+      Overlap( _z, a.z(), epsilon ) )
+    return 1;
+  else
+    return 0;
+}
+
+
+
