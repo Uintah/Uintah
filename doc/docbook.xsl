@@ -118,6 +118,14 @@
   <td class="firstpara"><xsl:apply-templates mode="web"/></td>
 </xsl:template>
 
+<xsl:template match="part/title" mode="web">
+  <p class="title"><xsl:value-of select="."/></p>
+</xsl:template>
+ 
+<xsl:template match="part/subtitle" mode="web">
+  <p class="subtitle"><xsl:value-of select="."/></p>
+</xsl:template>
+
 <xsl:template match="chapter/title" mode="web">
   <p class="title"><xsl:value-of select="."/></p>
 </xsl:template>
@@ -279,6 +287,14 @@
   <td class="pfirstpara"><xsl:apply-templates mode="print"/></td>
 </xsl:template>
 
+<xsl:template match="part/title" mode="print">
+  <p class="ptitle"><xsl:value-of select="."/></p>
+</xsl:template>
+ 
+<xsl:template match="part/subtitle" mode="print">
+  <p class="psubtitle"><xsl:value-of select="."/></p>
+</xsl:template>
+
 <xsl:template match="chapter/title" mode="print">
   <p class="ptitle"><xsl:value-of select="."/></p>
 </xsl:template>
@@ -384,9 +400,9 @@
         </area>
  
 
-        <area coords="0,41,156,64" shape="rect" alt="Installation Guide">
+        <area coords="0,41,156,64" shape="rect" alt="SCIRun Installation">
         <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.xml?cont=0&amp;dir=2')" />
+        <xsl:value-of select="concat($swidk,'/doc/TechnicalGuide/TechnicalGuide.xml?dir=2&amp;cont=p1c1')" />
         </xsl:attribute>
         </area>
 
@@ -397,13 +413,13 @@
         </xsl:attribute>
         </area>
 
-        <area coords="257,41,397,64" shape="rect" alt="Developer's Guide">
+        <area coords="257,41,397,64" shape="rect" alt="SCIRun Development">
         <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/DeveloperGuide/devguide.xml?cont=0&amp;dir=2')" />
+        <xsl:value-of select="concat($swidk,'/doc/TechnicalGuide/TechnicalGuide.xml?dir=2&amp;cont=p2c1')" />
         </xsl:attribute>
         </area>
  
-        <area coords="398,41,535,64" shape="rect" alt="Reference Guide">  
+        <area coords="398,41,535,64" shape="rect" alt="SCIRun Reference">  
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/ReferenceGuide/refguide.html')" />
         </xsl:attribute>
@@ -411,7 +427,7 @@
 
         <area coords="536,41,600,64" shape="rect" alt="FAQ">  
         <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/FAQ/faq.xml?cont=0&amp;dir=2')" />
+        <xsl:value-of select="concat($swidk,'/doc/FAQ/faq.xml?dir=2&amp;cont=0')" />
         </xsl:attribute>
         </area>
 </map> 
@@ -426,7 +442,7 @@
   <xsl:value-of select="/book/bookinfo/title"/>
 </xsl:variable>
 
-<xsl:if test="$cont=0">
+<xsl:if test="$cont='TOC'">
 
 <!-- ********** Table of Contents ********* -->
 
@@ -436,7 +452,7 @@
 <a>
   <xsl:attribute name="href">
     <xsl:value-of
-      select="concat($source,'?dir=2&amp;cont=1')"/>
+      select="concat($source,'?dir=2&amp;cont=p1c1')"/>
   </xsl:attribute>
   NEXT
 </a>
@@ -459,91 +475,104 @@
 
 <hr size="1"/>
 
-<xsl:for-each select="./chapter">
-  <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
+<xsl:for-each select="./part">
+  <xsl:variable name="partnum"><xsl:number/></xsl:variable>
 
   <p class="head">
-    <xsl:value-of select="$chapnum"/>
-    <xsl:value-of select="concat(' ',' ')"/>
-    <a>
-      <xsl:attribute name="href">
-        <xsl:value-of select="concat($source,'?dir=2&amp;cont=',$chapnum)"/>
-      </xsl:attribute>  
-      <xsl:value-of select="./title" />
-    </a>
+    <xsl:value-of select="concat('Part ',$partnum,': ')"/>
+    <xsl:value-of select="./title" />
   </p>
+  <xsl:for-each select="./chapter">
+    <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
-  <p class="firstpara">
-    <xsl:value-of select="./sect1/para" />
-  </p>
+    <p class="subhead">
+      <xsl:value-of select="$chapnum"/>
+      <xsl:value-of select="concat(' ',' ')"/>
+      <a>
+        <xsl:attribute name="href">
+          <xsl:value-of 
+            select="concat($source,'?dir=2&amp;cont=p',
+	                   $partnum,'c',$chapnum)"/>
+        </xsl:attribute>  
+        <xsl:value-of select="./title" />
+      </a>
+    </p>
 
+    <p class="firstpara">
+      <xsl:value-of select="./sect1/para" />
+    </p>
+
+  </xsl:for-each>
 </xsl:for-each>
 
 </xsl:if>
 
-<xsl:if test="$cont>0">
+<xsl:if test="$cont!='TOC' and $cont!='print'">
 
 <!-- *********** Chapters ************ -->
 
-<xsl:for-each select="./chapter">
-  <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
-  <xsl:variable name="prev">
-    <xsl:value-of select="$chapnum - 1"/>
-  </xsl:variable>
-  <xsl:variable name="next">
-    <xsl:value-of select="$chapnum + 1"/>
-  </xsl:variable>
+<xsl:for-each select="./part">
+  <xsl:variable name="partnum"><xsl:number/></xsl:variable>
+  <xsl:for-each select="./chapter">
+    <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
+    <xsl:variable name="prev">
+      <xsl:value-of select="$chapnum - 1"/>
+    </xsl:variable>
+    <xsl:variable name="next">
+      <xsl:value-of select="$chapnum + 1"/>
+    </xsl:variable>
 
-  <xsl:if test="$chapnum=$cont">
-    <table border="0"><tr><td width="50">
-    <xsl:choose>
-    <xsl:when test="$chapnum&gt;0">
-      <a>
-        <xsl:attribute name="href">
-          <xsl:value-of
-            select="concat($source,'?dir=2&amp;cont=',$prev)"/>
-        </xsl:attribute>
+    <xsl:if test="concat('p',$partnum,'c',$chapnum)=$cont">
+      <table border="0"><tr><td width="50">
+      <xsl:choose>
+      <xsl:when test="$chapnum&gt;1">
+        <a>
+          <xsl:attribute name="href">
+            <xsl:value-of
+              select="concat($source,'?dir=2&amp;cont=p',$partnum,'c',$prev)"/>
+          </xsl:attribute>
+          PREV
+          <xsl:value-of select="concat(' ',' ')"/>
+        </a>
+      </xsl:when>
+      <xsl:otherwise>
         PREV
-        <xsl:value-of select="concat(' ',' ')"/>
-      </a>
-    </xsl:when>
-    <xsl:otherwise>
-      PREV
-    </xsl:otherwise>
-    </xsl:choose>
-    </td>
+      </xsl:otherwise>
+      </xsl:choose>
+      </td>
 
-    <td width="50">
-    <xsl:choose>
-    <xsl:when test="$chapnum&lt;last()">
-      <a>
-        <xsl:attribute name="href">
-          <xsl:value-of
-            select="concat($source,'?dir=2&amp;cont=',$next)"/>
-        </xsl:attribute>
+      <td width="50">
+      <xsl:choose>
+      <xsl:when test="$chapnum&lt;last()">
+        <a>
+          <xsl:attribute name="href">
+            <xsl:value-of
+              select="concat($source,'?dir=2&amp;cont=p',$partnum,'c',$next)"/>
+          </xsl:attribute>
+          NEXT
+        </a>
+      </xsl:when>
+      <xsl:otherwise>
         NEXT
-      </a>
-    </xsl:when>
-    <xsl:otherwise>
-      NEXT
-    </xsl:otherwise>
-    </xsl:choose>
-    </td></tr></table>
+      </xsl:otherwise>
+      </xsl:choose>
+      </td></tr></table>
 
-    <p class="title">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
-  </xsl:if>
+      <p class="title">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
+    </xsl:if>
 
-  <xsl:if test="$chapnum=$cont">
-    <xsl:for-each select="./sect1">
-      <xsl:variable name="sectnum"><xsl:number/></xsl:variable>
-      <xsl:apply-templates mode="web">
-        <xsl:with-param name="sectn">
-          <xsl:value-of select="$sectnum"/>
-        </xsl:with-param>
-      </xsl:apply-templates>
-    </xsl:for-each>
-  </xsl:if>
+    <xsl:if test="concat('p',$partnum,'c',$chapnum)=$cont">
+      <xsl:for-each select="./sect1">
+        <xsl:variable name="sectnum"><xsl:number/></xsl:variable>
+        <xsl:apply-templates mode="web">
+          <xsl:with-param name="sectn">
+            <xsl:value-of select="$sectnum"/>
+          </xsl:with-param>
+        </xsl:apply-templates>
+      </xsl:for-each>
+    </xsl:if>
 
+  </xsl:for-each>
 </xsl:for-each>
 
 </xsl:if>
@@ -557,13 +586,11 @@
 </p>
 
 <p class="subtitle">
-  Version 
-  <xsl:value-of select="concat(' ',' ')"/>
-  <xsl:value-of select="./bookinfo/edition"/>
+  <xsl:value-of select="concat('Version ',./bookinfo/edition)"/>
 </p>
 
 <center>
-  <img src="http://www.sci.utah.edu/sci_images/SCI_logo.jpg" vspace="50"/>
+  <img src="../images/SCI_logo.jpg" vspace="50"/>
 </center>
 
 <p class="psubtitle">
@@ -579,54 +606,80 @@
 <hr size="1"/>
 
 <p class="fineprint">
-  Copyright (c)
-  <xsl:value-of select="./bookinfo/copyright/year"/>
-  <xsl:value-of select="concat(' ',' ')"/>
-  <xsl:value-of select="./bookinfo/copyright/holder"/>
+  <xsl:value-of select="concat('Copyright(c)',
+                               ./bookinfo/copyright/year,' ',
+                               ./bookinfo/copyright/holder)" />
 </p>
 
 <br/>
 
 <p class="ptitle">Table of Contents</p>
 
-<xsl:for-each select="./chapter">
-  <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
+<xsl:for-each select="./part">
+  <xsl:variable name="partnum"><xsl:number/></xsl:variable>
 
   <p class="phead">
-    <xsl:value-of select="$chapnum"/> 
-    <xsl:value-of select="concat(' ',' ')"/>
-    <xsl:value-of select="./title" />
+    <xsl:value-of select="concat('Part ',$partnum,': ',./title)"/>
   </p>
 
-  <p class="pfirstpara">
-    <xsl:value-of select="./sect1/para" />
-  </p>
+  <xsl:for-each select="./chapter">
+    <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
-  <ul>
-    <xsl:for-each select="./sect1/title">
-      <li><xsl:value-of select="."/></li>
-    </xsl:for-each>
-  </ul>
+    <p class="psubhead">
+      <xsl:value-of select="concat($chapnum,' ',./title)"/>
+    </p>
+
+    <ul>
+      <xsl:for-each select="./sect1">
+        <xsl:if test="./title!=''">
+          <li>
+            <xsl:value-of select="./title"/>
+            <ul>
+              <xsl:for-each select="./sect2">
+                <xsl:if test="./title!=''">
+                  <li><xsl:value-of select="./title"/></li>
+                </xsl:if>
+              </xsl:for-each>
+            </ul>
+          </li>
+        </xsl:if>
+      </xsl:for-each>
+    </ul>
 
 
+  </xsl:for-each>
 </xsl:for-each>
 
-<xsl:for-each select="./chapter">
-  <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
+<xsl:for-each select="./part">
+  <xsl:variable name="partnum"><xsl:number/></xsl:variable>
 
   <br/>
+  
+  <p class="ptitle">
+    <xsl:value-of select="concat('Part ',$partnum,': ',./title)"/>
+  </p>
 
-  <p class="ptitle">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
+  <xsl:for-each select="./chapter">
+    <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
-  <xsl:for-each select="./sect1">
-    <xsl:variable name="sectnum"><xsl:number/></xsl:variable>
-    <xsl:apply-templates mode="print">
-      <xsl:with-param name="sectn">
-        <xsl:value-of select="$sectnum"/>
-      </xsl:with-param>
-    </xsl:apply-templates>
+    <!-- all br's translate into forced page breaks (see .css) -->
+    <br/>
+
+    <p class="ptitle">
+      <xsl:value-of select="concat('Chapter ',$chapnum,': ',
+                                   ./title)"/>
+    </p>
+
+    <xsl:for-each select="./sect1">
+      <xsl:variable name="sectnum"><xsl:number/></xsl:variable>
+      <xsl:apply-templates mode="print">
+        <xsl:with-param name="sectn">
+          <xsl:value-of select="$sectnum"/>
+        </xsl:with-param>
+      </xsl:apply-templates>
+    </xsl:for-each>
+
   </xsl:for-each>
-
 </xsl:for-each>
 
 </xsl:if>
