@@ -435,7 +435,8 @@ itcl_class Roe {
             wm geometry $w.wframe.bench 1024x768+0+0
             $this-c switchvisual $w.wframe.bench.draw 0 1024 768
             if {[winfo exists $w.wframe.bench.draw]} {
-                bindEvents $w.wframe.bench.draw
+                bind $w <Expose> "$this-c redraw"
+		bind $w <Configure> "$this-c redraw"
                 bind $w <KeyPress-Escape> "$w.mframe.f.bench invoke"
                 pack $w.wframe.bench.draw -expand yes -fill both
             }
