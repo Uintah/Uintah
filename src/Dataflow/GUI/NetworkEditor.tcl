@@ -497,6 +497,7 @@ proc popupSaveMenu {} {
 
     if { $netedit_savefile != "" } {
 	netedit savenetwork  $netedit_savefile
+	saveMacroModules $netedit_savefile
     }
 }
 
@@ -922,6 +923,8 @@ proc loadfile {netedit_loadfile} {
 		set command "set ::$m"
 		append command "$pram $value"
 
+		puts "command: $command"
+
 		# Execute the "real" command
 		eval $command
 
@@ -949,6 +952,41 @@ proc loadfile {netedit_loadfile} {
     
     # close the file
     close $fchannel
-    puts "got this far..."
+}
+
+
+
+proc saveMacroModules { netedit_file } {
+    global CurrentMacroModules
+    
+    if { [file exists $netedit_file] } {
+	set fchannel [open $netedit_file]
+    } else {
+	return
+    }
+    
+    # Used in tracking modnames
+    set curr_modname ""
+    
+    set var_list ""
+    
+    # read in the first line of the file
+    set curr_line [gets $fchannel]
+    while { ! [eof $fchannel] } {
+	if { [string match "set m*" $curr_line] } {
+	    set var_list "$var_list [lindex $curr_line 1]"
+	} else {
+	    # do nothing
+	}
+
+	set curr_line [gets $fchannel]
+    }
+    
+    puts "var_list: $var_list"
 
 }
+
+
+
+
+
