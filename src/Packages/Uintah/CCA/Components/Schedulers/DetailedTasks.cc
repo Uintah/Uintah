@@ -14,8 +14,8 @@ using namespace std;
 
 #include <Core/Thread/Mutex.h>
 
-#ifdef __digital__
-// DEC doesn't have this...
+#if defined(__digital__) || defined(_AIX)
+// AIX and DEC don't have this...
 namespace Uintah {
   template <class Iter, class Compare>
   bool is_sorted(Iter begin, Iter end, Compare compare)
@@ -191,7 +191,6 @@ DetailedTasks::computeLocalTasks(int me)
 
 	if( mixedDebug.active() ) {
 	  cerrLock.lock();
-	  //	  mixedDebug << "Initially Ready Task: "
 	  mixedDebug << "Initially Ready Task: " 
 		     << task->getTask()->getName() << endl;
 	  cerrLock.unlock();
@@ -565,8 +564,8 @@ DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
 	continue;
       ASSERTEQ(req->dw, Task::NewDW);
       // Only scrub if this is not an initialization timestep.
-	// Only scrub if it is not part of the original requires and
-	// This is not an initialization timestep
+      // Only scrub if it is not part of the original requires and
+      // This is not an initialization timestep
       if(scrub_new && initreqs.find(req->var) == initreqs.end()){
 	newmap[req->var]=dtask;
       }
@@ -619,7 +618,9 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
- readyQueueMutex_.lock();
+#if !defined( _AIX )
+  readyQueueMutex_.lock();
+#endif
  
   internalDependencySatisfiedTasks_.push_back(task);
 
@@ -629,22 +630,26 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 	       << internalDependencySatisfiedTasks_.size() << " ready.\n";
     cerrLock.unlock();
   }
-
+#if !defined( _AIX )
+  // need to make a non-binary semaphore under aix for this to work.
   readyQueueSemaphore_.up();
-
- readyQueueMutex_.unlock();
+  readyQueueMutex_.unlock();
+#endif
 }
 
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
   // Block until the list has an item in it.
+#if !defined( _AIX )
   readyQueueSemaphore_.down();
- readyQueueMutex_.lock();
+  readyQueueMutex_.lock();
+#endif
   DetailedTask* nextTask = internalDependencySatisfiedTasks_.front();
   internalDependencySatisfiedTasks_.pop_front();
- readyQueueMutex_.unlock();
-
+#if !defined( _AIX )
+  readyQueueMutex_.unlock();
+#endif
   return nextTask;
 }
 
@@ -652,7 +657,9 @@ void
 DetailedTasks::initTimestep()
 {
   internalDependencySatisfiedTasks_ = initiallyReadyTasks_;
+#if !defined( _AIX )
   readyQueueSemaphore_.up((int)internalDependencySatisfiedTasks_.size());
+#endif
   incrementDependencyGeneration();
   initializeBatches();
 }
