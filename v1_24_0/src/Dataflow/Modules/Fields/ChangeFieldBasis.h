@@ -41,6 +41,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 
+#include <algorithm>
 
 namespace SCIRun {
 
@@ -200,6 +201,10 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
     if (rr && cc)
     {
+      for (int i = 0; i < nrows; i++)
+      {
+        std::sort(cc + rr[i], cc + rr[i+1]);
+      }
       interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
     }
     else if (rr)
@@ -253,7 +258,7 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 	cc[i] = cctmp[i];
 	d[i] = dtmp[i];
       }
-    
+
       interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
     }    
     else if (basis_order == 1 && fsrc->basis_order() == 0 && 
@@ -349,7 +354,7 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 	cc[i] = cctmp[i];
 	d[i] = dtmp[i];
       }
-    
+
       interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
     }
   } catch (...)
