@@ -23,6 +23,7 @@
  *
  *  Copyright (C) 2000 SCI Group
  */
+#include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -52,6 +53,495 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+
+namespace Uintah {
+  
+#define GRID_COLOR 1
+#define NODE_COLOR 2
+  // should match the values in the tcl code
+#define NC_VAR 0
+#define CC_VAR 1
+
+class GridVisualizer : public VariablePlotter {
+public:
+  GridVisualizer(const string& id);
+
+  virtual ~GridVisualizer() {}
+
+  virtual void execute();
+  
+  virtual void widget_moved(int last);
+  void tcl_command(TCLArgs& args, void* userdata);
+  virtual void geom_pick(GeomPick* pick, void* userdata, GeomObj* picked);
+  virtual void geom_pick(GeomPick* pick, void* userdata);
+  virtual void geom_pick(GeomPick* pick, ViewWindow* window,
+			 int data, const BState& bs);
+  
+protected:
+  void addBoxGeometry(GeomLines* edges, const Box& box);
+  void setupColors();
+  MaterialHandle getColor(string color, int type);
+
+  void initialize_ports();
+  void setup_widget();
+  void update_widget();
+  Box get_widget_boundary();
+
+
+  GeometryOPort* ogeom;
+  MaterialHandle level_color[6];
+  MaterialHandle node_color[6];
+
+  GuiString level1_grid_color;
+  GuiString level2_grid_color;
+  GuiString level3_grid_color;
+  GuiString level4_grid_color;
+  GuiString level5_grid_color;
+  GuiString level6_grid_color;
+  GuiString level1_node_color;
+  GuiString level2_node_color;
+  GuiString level3_node_color;
+  GuiString level4_node_color;
+  GuiString level5_node_color;
+  GuiString level6_node_color;
+  GuiInt plane_on; // the selection plane
+  GuiInt node_select_on; // the nodes
+  GuiDouble radius;
+  GuiInt polygons;
+
+  CrowdMonitor widget_lock;
+  FrameWidget *widget2d;
+  int init;
+  int widget_id;
+  bool widget_on;
+  bool nodes_on;
+  int need_2d;
+  vector<int> old_id_list;
+  vector<int> id_list;
+};
+
+static string widget_name("GridVisualizer Widget");
+ 
+extern "C" Module* make_GridVisualizer(const string& id) {
+  return scinew GridVisualizer(id);
+}
+
+} // end namespace Uintah
+
+GridVisualizer::GridVisualizer(const string& id):
+  VariablePlotter("GridVisualizer", id),
+  level1_grid_color("level1_grid_color",id, this),
+  level2_grid_color("level2_grid_color",id, this),
+  level3_grid_color("level3_grid_color",id, this),
+  level4_grid_color("level4_grid_color",id, this),
+  level5_grid_color("level5_grid_color",id, this),
+  level6_grid_color("level6_grid_color",id, this),
+  level1_node_color("level1_node_color",id, this),
+  level2_node_color("level2_node_color",id, this),
+  level3_node_color("level3_node_color",id, this),
+  level4_node_color("level4_node_color",id, this),
+  level5_node_color("level5_node_color",id, this),
+  level6_node_color("level6_node_color",id, this),
+  plane_on("plane_on",id,this),
+  node_select_on("node_select_on",id,this),
+  radius("radius",id,this),
+  polygons("polygons",id,this),
+  widget_lock("GridVusualizer widget lock"),
+  init(1)
+{
+  float INIT(0.1);
+  widget2d = scinew FrameWidget(this, &widget_lock, INIT, false);
+}
+
+void GridVisualizer::initialize_ports() {
+  // Create the input port
+  in= (ArchiveIPort *) get_iport("Data Archive");
+  // Create the output port
+  ogeom= (GeometryOPort *) get_oport("Geometry");
+}
+
+void GridVisualizer::setup_widget() {
+  // setup widget
+  cerr << "\t\tStarting widget stuff\n";
+  if (init == 1) {
+    init = 0;
+    GeomObj *w2d = widget2d->GetWidget();
+    widget_id = ogeom->addObj(w2d, widget_name, &widget_lock);
+
+    widget2d->Connect (ogeom);
+  }
+
+  setupColors();
+}
+
+void GridVisualizer::update_widget() {
+  cerr << "\t\tStarting locator\n";
+  widget_on = plane_on.get() != 0;
+  widget2d->SetState(widget_on);
+  // set thier mode to resize/translate only
+  widget2d->SetCurrentMode(3);
+
+  if (need_2d != 0){
+    Point min, max;
+    BBox gridBB;
+    grid->getSpatialRange(gridBB);
+    min = gridBB.min();
+    max = gridBB.max();
+    
+    Point center = min + (max-min)/2.0;
+    double max_scale;
+    if (need_2d == 1) {
+      // Find the boundary and put in optimal place
+      // in xy plane with reasonable frame thickness
+      Point right( max.x(), center.y(), center.z());
+      Point down( center.x(), min.y(), center.z());
+      widget2d->SetPosition( center, right, down);
+      max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
+    } else if (need_2d == 2) {
+      // Find the boundary and put in optimal place
+      // in yz plane with reasonable frame thickness
+      Point right( center.x(), center.y(), max.z());
+      Point down( center.x(), min.y(), center.z());	    
+      widget2d->SetPosition( center, right, down);
+      max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
+    } else {
+      // Find the boundary and put in optimal place
+      // in xz plane with reasonable frame thickness
+      Point right( max.x(), center.y(), center.z());
+      Point down( center.x(), center.y(), min.z());	    
+      widget2d->SetPosition( center, right, down);
+      max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
+    }
+    widget2d->SetScale( max_scale/30. );
+    need_2d = 0;
+  }
+}
+
+Box GridVisualizer::get_widget_boundary() {
+  if (widget_on) {
+    // get the position of the frame widget and determine
+    // the boundaries
+    Point center, R, D, I;
+    widget2d->GetPosition( center, R, D);
+    I = center;
+    Vector v1 = R - center;
+    Vector v2 = D - center;
+      
+    // calculate the edge points
+    Point upper = center + v1 + v2;
+    Point lower = center - v1 - v2;
+      
+    // need to determine extents of lower/upper
+    Point temp1 = upper;
+    upper = Max(temp1,lower);
+    lower = Min(temp1,lower);
+    return Box(lower,upper);
+  }
+  else {
+    BBox gridBB;
+    grid->getSpatialRange(gridBB);
+    return Box(gridBB.min(),gridBB.max());
+  }
+}
+  
+void GridVisualizer::execute()
+{
+  cerr << "GridVisualizer::execute:start\n";
+
+  initialize_ports();
+  
+  // clean out ogeom
+  for (unsigned int i = 0; i < id_list.size(); i++)
+    ogeom->delObj(id_list[i]);
+  id_list.clear();
+
+  if (initialize_grid() == 2)
+    return;
+  update_tcl_window();
+  
+  setup_widget();
+  update_widget();
+  
+  cerr << "GridVisualizer::execute:Finished the widget stuff\n";
+
+  GeomGroup* pick_nodes = scinew GeomGroup;
+  int nu,nv;
+  double rad;
+  bool node_on = node_select_on.get() != 0;
+  Box widget_box;
+
+  if (node_on) {
+    GeomSphere::getnunv(polygons.get(), nu, nv);
+    rad = radius.get();
+    widget_box = get_widget_boundary();
+  }
+  
+  //-----------------------------------------
+  // for each level in the grid
+  for(int l = 0;l<numLevels;l++){
+    LevelP level = grid->getLevel(l);
+
+    // there can be up to 6 colors only
+    int color_index = l;
+    if (color_index >= 6)
+      color_index = 5;
+    
+    // edges is all the edges made up all the patches in the level
+    GeomLines* edges = scinew GeomLines();
+
+    // nodes consists of the nodes in all the patches in the level
+    GeomPts* nodes = scinew GeomPts(1); // 1 is the number of points
+
+    // spheres that will be the selectable nodes
+    GeomGroup* spheres = scinew GeomGroup;
+    
+    Level::const_patchIterator iter;
+    //---------------------------------------
+    // for each patch in the level
+    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
+      const Patch* patch=*iter;
+      Box box = patch->getBox();
+      addBoxGeometry(edges, box);
+
+      switch (var_orientation.get()) {
+      case NC_VAR:
+	//------------------------------------
+	// for each node in the patch
+	for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
+	  nodes->add(patch->nodePosition(*iter),
+		     node_color[color_index].get_rep());
+	}
+	
+	//------------------------------------
+	// for each node in the patch that intersects the widget space
+	if(node_on) {
+	  for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
+	    spheres->add(scinew GeomSphere(patch->nodePosition(*iter),
+					   rad,nu,nv,l,*iter));
+	  }
+	}
+	break;
+
+      case CC_VAR:
+	//------------------------------------
+	// for each node in the patch
+	for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+	  nodes->add(patch->cellPosition(*iter),
+		     node_color[color_index].get_rep());
+	}
+	
+	//------------------------------------
+	// for each node in the patch that intersects the widget space
+	if(node_on) {
+	  for(CellIterator iter = patch->getCellIterator(widget_box); !iter.done(); iter++){
+	    spheres->add(scinew GeomSphere(patch->cellPosition(*iter),
+					   rad,nu,nv,l,*iter));
+	  }
+	}
+	break;
+      }
+    }
+
+    // add all the nodes for the level
+    ostringstream name_nodes;
+    name_nodes << "Nodes - level " << l;
+    id_list.push_back(ogeom->addObj(nodes, name_nodes.str().c_str()));
+
+    // add all the edges for the level
+    ostringstream name_edges;
+    name_edges << "Patches - level " << l;
+    id_list.push_back(ogeom->addObj(scinew GeomMaterial(edges, level_color[color_index]), name_edges.str().c_str()));
+
+    // add the spheres for the nodes
+    pick_nodes->add(scinew GeomMaterial(spheres, node_color[color_index]));
+  }
+
+  if (node_on) {
+    GeomPick* pick = scinew GeomPick(pick_nodes,this);
+    id_list.push_back(ogeom->addObj(pick,"Selectable Nodes"));
+  }
+  cerr << "GridVisualizer::execute:end\n";
+}
+
+void GridVisualizer::widget_moved(int last)
+{
+  if(last && !abort_flag) {
+    abort_flag=1;
+    want_to_execute();
+  }
+}
+
+void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
+{
+  if(args.count() < 2) {
+    args.error("GridVisualizer needs a minor command");
+    return;
+  }
+  if(args[1] == "findxy") {
+    need_2d=1;
+    want_to_execute();
+  }
+  else if(args[1] == "findyz") {
+    need_2d=2;
+    want_to_execute();
+  }
+  else if(args[1] == "findxz") {
+    need_2d=3;
+    want_to_execute();
+  }
+  else {
+    VariablePlotter::tcl_command(args, userdata);
+  }
+}
+
+// if a pick event was received extract the id from the picked
+void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
+			       GeomObj* picked) {
+#if DEBUG
+  cerr << "Caught pick event in GridVisualizer!\n";
+  cerr << "this = " << this << ", pick = " << pick << endl;
+  cerr << "User data = " << userdata << endl;
+#endif
+  IntVector id;
+  int level;
+  if ( picked->getId( id ) && picked->getId(level)) {
+    cerr<<"Id = "<< id << " Level = " << level << endl;
+    currentNode.id = id;
+    index_l.set(level);
+    index_x.set(currentNode.id.x());
+    index_y.set(currentNode.id.y());
+    index_z.set(currentNode.id.z());
+#if 0  // may implement this some day
+    // add the selected sphere to the geometry
+    Point p;
+    int nu,nv;
+    double rad = radius.get() * 1.5;
+    getnunv(&nu,&nv);
+    switch (var_orientation.get()) {
+    case NC_VAR:
+      //p = patch->nodePosition(currentNode);
+      break;
+    case CC_VAR:
+      //p = patch->cellPosition(currentNode);
+      break;
+    }
+    if (!node_selected) {
+      selected_sphere = scinew GeomSphere(p,rad,nu,nv,
+					  currentNode.level,currentNode.id);
+      GeomPick* pick = scinew GeomPick(scinew GeomMaterial(selected_sphere, getColor("green",GRID_COLOR)),this);
+      ogeom->addObj(pick,"Selected Node");
+      node_selected = true;
+    }
+    else {
+      //seleted_sphere->move(p);
+    }
+#endif
+  }
+  else
+    cerr<<"Not getting the correct data\n";
+}
+
+// this doesn't do anything.  They are only here to eliminate compiler warnings
+void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/) {
+}
+
+// this doesn't do anything.  They are only here to eliminate compiler warnings
+void GridVisualizer::geom_pick(GeomPick* /*pick*/, ViewWindow* /*window*/,
+			       int /*data*/, const BState& /*bs*/) {
+}
+
+// adds the lines to edges that make up the box defined by box 
+void GridVisualizer::addBoxGeometry(GeomLines* edges, const Box& box)
+{
+  Point min = box.lower();
+  Point max = box.upper();
+  
+  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), max.y(), min.z()));
+  edges->add(Point(min.x(), min.y(), min.z()), Point(max.x(), min.y(), min.z()));
+  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), max.y(), min.z()));
+  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), max.y(), min.z()), Point(max.x(), max.y(), min.z()));
+  edges->add(Point(min.x(), max.y(), min.z()), Point(min.x(), max.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), max.z()), Point(max.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), max.z()), Point(min.x(), max.y(), max.z()));
+  edges->add(Point(max.x(), max.y(), min.z()), Point(max.x(), max.y(), max.z()));
+  edges->add(Point(max.x(), min.y(), max.z()), Point(max.x(), max.y(), max.z()));
+  edges->add(Point(min.x(), max.y(), max.z()), Point(max.x(), max.y(), max.z()));
+}
+
+// grabs the colors form the UI and assigns them to the local colors
+void GridVisualizer::setupColors() {
+  ////////////////////////////////
+  // Set up the colors used
+
+  // define some colors
+  // assign some colors to the different levels
+  level_color[0] = getColor(level1_grid_color.get(),GRID_COLOR);
+  level_color[1] = getColor(level2_grid_color.get(),GRID_COLOR);
+  level_color[2] = getColor(level3_grid_color.get(),GRID_COLOR);
+  level_color[3] = getColor(level4_grid_color.get(),GRID_COLOR);
+  level_color[4] = getColor(level5_grid_color.get(),GRID_COLOR);
+  level_color[5] = getColor(level6_grid_color.get(),GRID_COLOR);
+
+  // assign some colors to the different nodes in the levels
+  node_color[0] = getColor(level1_node_color.get(),NODE_COLOR);
+  node_color[1] = getColor(level2_node_color.get(),NODE_COLOR);
+  node_color[2] = getColor(level3_node_color.get(),NODE_COLOR);
+  node_color[3] = getColor(level4_node_color.get(),NODE_COLOR);
+  node_color[4] = getColor(level5_node_color.get(),NODE_COLOR);
+  node_color[5] = getColor(level6_node_color.get(),NODE_COLOR);
+}
+
+// based on the color expressed by color returns the color
+MaterialHandle GridVisualizer::getColor(string color, int type) {
+  float i;
+  if (type == GRID_COLOR)
+    i = 1.0;
+  else
+    i = 0.7;
+  if (color == "red")
+    return scinew Material(Color(0,0,0), Color(i,0,0),
+			   Color(.5,.5,.5), 20);
+  else if (color == "green")
+    return scinew Material(Color(0,0,0), Color(0,i,0),
+			   Color(.5,.5,.5), 20);
+  else if (color == "yellow")
+    return scinew Material(Color(0,0,0), Color(i,i,0),
+			   Color(.5,.5,.5), 20);
+  else if (color == "magenta")
+    return scinew Material(Color(0,0,0), Color(i,0,i),
+			   Color(.5,.5,.5), 20);
+  else if (color == "cyan")
+    return scinew Material(Color(0,0,0), Color(0,i,i),
+			   Color(.5,.5,.5), 20);
+  else if (color == "blue")
+    return scinew Material(Color(0,0,0), Color(0,0,i),
+			   Color(.5,.5,.5), 20);
+  else
+    return scinew Material(Color(0,0,0), Color(i,i,i),
+			   Color(.5,.5,.5), 20);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0 // old code
+
 //#include <string>
 
 using namespace SCIRun;
@@ -60,11 +550,6 @@ using namespace std;
 
 namespace Uintah {
 
-#define GRID_COLOR 1
-#define NODE_COLOR 2
-  // should match the values in the tcl code
-#define NC_VAR 0
-#define CC_VAR 1
 
 struct ID {
   IntVector id;
@@ -75,17 +560,9 @@ class GridVisualizer : public Module {
 public:
   GridVisualizer(const string& id);
   virtual ~GridVisualizer();
-  virtual void execute();
-  virtual void widget_moved(int last);
-  void tcl_command(TCLArgs& args, void* userdata);
-  virtual void geom_pick(GeomPick* pick, void* userdata, GeomObj* picked);
-  virtual void geom_pick(GeomPick* pick, void* userdata);
-  virtual void geom_pick(GeomPick* pick, ViewWindow* window,
-			 int data, const BState& bs);
   void pick();
   
 private:
-  void addBoxGeometry(GeomLines* edges, const Box& box);
   bool getGrid();
   void setupColors();
   MaterialHandle getColor(string color, int type);
@@ -107,27 +584,7 @@ private:
   string currentNode_str();
   
   ArchiveIPort* in;
-  GeometryOPort* ogeom;
-  MaterialHandle level_color[6];
-  MaterialHandle node_color[6];
-
-  GuiString level1_grid_color;
-  GuiString level2_grid_color;
-  GuiString level3_grid_color;
-  GuiString level4_grid_color;
-  GuiString level5_grid_color;
-  GuiString level6_grid_color;
-  GuiString level1_node_color;
-  GuiString level2_node_color;
-  GuiString level3_node_color;
-  GuiString level4_node_color;
-  GuiString level5_node_color;
-  GuiString level6_node_color;
-  GuiInt plane_on; // the selection plane
-  GuiInt node_select_on; // the nodes
   GuiInt var_orientation; // whether node center or cell centered
-  GuiDouble radius;
-  GuiInt polygons;
   GuiInt nl;
   GuiInt index_x;
   GuiInt index_y;
@@ -265,80 +722,6 @@ GridP GridVisualizer::getGrid()
 }
 #endif
 
-// adds the lines to edges that make up the box defined by box 
-void GridVisualizer::addBoxGeometry(GeomLines* edges, const Box& box)
-{
-  Point min = box.lower();
-  Point max = box.upper();
-  
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), max.y(), min.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(max.x(), min.y(), min.z()));
-  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), max.y(), min.z()));
-  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), max.y(), min.z()), Point(max.x(), max.y(), min.z()));
-  edges->add(Point(min.x(), max.y(), min.z()), Point(min.x(), max.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), max.z()), Point(max.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), max.z()), Point(min.x(), max.y(), max.z()));
-  edges->add(Point(max.x(), max.y(), min.z()), Point(max.x(), max.y(), max.z()));
-  edges->add(Point(max.x(), min.y(), max.z()), Point(max.x(), max.y(), max.z()));
-  edges->add(Point(min.x(), max.y(), max.z()), Point(max.x(), max.y(), max.z()));
-}
-
-// grabs the colors form the UI and assigns them to the local colors
-void GridVisualizer::setupColors() {
-  ////////////////////////////////
-  // Set up the colors used
-
-  // define some colors
-  // assign some colors to the different levels
-  level_color[0] = getColor(level1_grid_color.get(),GRID_COLOR);
-  level_color[1] = getColor(level2_grid_color.get(),GRID_COLOR);
-  level_color[2] = getColor(level3_grid_color.get(),GRID_COLOR);
-  level_color[3] = getColor(level4_grid_color.get(),GRID_COLOR);
-  level_color[4] = getColor(level5_grid_color.get(),GRID_COLOR);
-  level_color[5] = getColor(level6_grid_color.get(),GRID_COLOR);
-
-  // assign some colors to the different nodes in the levels
-  node_color[0] = getColor(level1_node_color.get(),NODE_COLOR);
-  node_color[1] = getColor(level2_node_color.get(),NODE_COLOR);
-  node_color[2] = getColor(level3_node_color.get(),NODE_COLOR);
-  node_color[3] = getColor(level4_node_color.get(),NODE_COLOR);
-  node_color[4] = getColor(level5_node_color.get(),NODE_COLOR);
-  node_color[5] = getColor(level6_node_color.get(),NODE_COLOR);
-}
-
-// based on the color expressed by color returns the color
-MaterialHandle GridVisualizer::getColor(string color, int type) {
-  float i;
-  if (type == GRID_COLOR)
-    i = 1.0;
-  else
-    i = 0.7;
-  if (color == "red")
-    return scinew Material(Color(0,0,0), Color(i,0,0),
-			   Color(.5,.5,.5), 20);
-  else if (color == "green")
-    return scinew Material(Color(0,0,0), Color(0,i,0),
-			   Color(.5,.5,.5), 20);
-  else if (color == "yellow")
-    return scinew Material(Color(0,0,0), Color(i,i,0),
-			   Color(.5,.5,.5), 20);
-  else if (color == "magenta")
-    return scinew Material(Color(0,0,0), Color(i,0,i),
-			   Color(.5,.5,.5), 20);
-  else if (color == "cyan")
-    return scinew Material(Color(0,0,0), Color(0,i,i),
-			   Color(.5,.5,.5), 20);
-  else if (color == "blue")
-    return scinew Material(Color(0,0,0), Color(0,0,i),
-			   Color(.5,.5,.5), 20);
-  else
-    return scinew Material(Color(0,0,0), Color(i,i,i),
-			   Color(.5,.5,.5), 20);
-}
-
 void GridVisualizer::add_type(string &type_list,const TypeDescription *subtype)
 {
   switch ( subtype->getType() ) {
@@ -398,300 +781,6 @@ void GridVisualizer::setVars(GridP grid) {
   TCL::execute(id + " setType_list " + type_list.c_str());  
 }
 
-void GridVisualizer::getnunv(int* nu, int* nv) {
-#define MIN_POLYS 8
-#define MAX_POLYS 400
-#define MIN_NU 4
-#define MAX_NU 20
-#define MIN_NV 2
-#define MAX_NV 20
-  // calculate the spheres nu,nv based on the number of polygons
-  float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
-  *nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
-  *nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-}
-
-void GridVisualizer::execute()
-{
-
-  cerr << "\t\tEntering execute.\n";
-  // Create the input port
-  in= (ArchiveIPort *) get_iport("Data Archive");
-  // Create the output port
-  ogeom= (GeometryOPort *) get_oport("Geometry");
-
-  old_id_list = id_list;
-  // clean out ogeom
-  if (old_id_list.size() != 0)
-    for (int i = 0; i < (int)old_id_list.size(); i++)
-      ogeom->delObj(old_id_list[i]);
-  id_list.clear();
-
-  // Get the handle on the grid and the number of levels
-  bool new_grid = getGrid();
-  if(!grid)
-    return;
-  int numLevels = grid->numLevels();
-
-  // setup the tickle stuff
-  setupColors();
-  if (new_grid) {
-    nl.set(numLevels);
-    names.clear();
-    types.clear();
-    archive->queryVariables(names, types);
-  }
-  // make sure the variables are properly displayed
-  setVars(grid);
-  string visible;
-  TCL::eval(id + " isVisible", visible);
-  if ( visible == "1") {
-    TCL::execute(id + " destroyFrames");
-    TCL::execute(id + " build");
-    
-    TCL::execute("update idletasks");
-    reset_vars();
-  }
-  
-  // setup widget
-  cerr << "\t\tStarting widget stuff\n";
-  if (init == 1) {
-    init = 0;
-    GeomObj *w2d = widget2d->GetWidget();
-    widget_id = ogeom->addObj(w2d, widget_name, &widget_lock);
-
-    widget2d->Connect (ogeom);
-  }
-  widget_on = plane_on.get() != 0;
-  widget2d->SetState(widget_on);
-  widget2d->SetCurrentMode(1);
-
-  cerr << "\t\tStarting locator\n";
-  if (need_2d != 0){
-    Point min, max;
-    BBox gridBB;
-    grid->getSpatialRange(gridBB);
-    min = gridBB.min();
-    max = gridBB.max();
-    
-    Point center = min + (max-min)/2.0;
-    double max_scale;
-    if (need_2d == 1) {
-      // Find the boundary and put in optimal place
-      // in xy plane with reasonable frame thickness
-      Point right( max.x(), center.y(), center.z());
-      Point down( center.x(), min.y(), center.z());
-      widget2d->SetPosition( center, right, down);
-      max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
-    } else if (need_2d == 2) {
-      // Find the boundary and put in optimal place
-      // in yz plane with reasonable frame thickness
-      Point right( center.x(), center.y(), max.z());
-      Point down( center.x(), min.y(), center.z());	    
-      widget2d->SetPosition( center, right, down);
-      max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
-    } else {
-      // Find the boundary and put in optimal place
-      // in xz plane with reasonable frame thickness
-      Point right( max.x(), center.y(), center.z());
-      Point down( center.x(), center.y(), min.z());	    
-      widget2d->SetPosition( center, right, down);
-      max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
-    }
-    widget2d->SetScale( max_scale/30. );
-    need_2d = 0;
-  }
-  
-  cerr << "\t\tFinished the widget stuff\n";
-
-  GeomGroup* pick_nodes = scinew GeomGroup;
-  int nu,nv;
-  double rad = radius.get();
-  bool node_on = node_select_on.get() != 0;
-  Box widget_box;
-  
-  if (node_on) {
-    getnunv(&nu,&nv);
-    
-    if (widget_on) {
-      // get the position of the frame widget and determine
-      // the boundaries
-      Point center, R, D, I;
-      widget2d->GetPosition( center, R, D);
-      I = center;
-      Vector v1 = R - center;
-      Vector v2 = D - center;
-      
-      // calculate the edge points
-      Point upper = center + v1 + v2;
-      Point lower = center - v1 - v2;
-      
-      // need to determine extents of lower/upper
-      Point temp1 = upper;
-      upper = Max(temp1,lower);
-      lower = Min(temp1,lower);
-      widget_box = Box(lower,upper);
-    }
-    else {
-      BBox gridBB;
-      grid->getSpatialRange(gridBB);
-      widget_box = Box(gridBB.min(),gridBB.max());
-    }
-  }
-  
-  //-----------------------------------------
-  // for each level in the grid
-  for(int l = 0;l<numLevels;l++){
-    LevelP level = grid->getLevel(l);
-
-    // there can be up to 6 colors only
-    int color_index = l;
-    if (color_index >= 6)
-      color_index = 5;
-    
-    // edges is all the edges made up all the patches in the level
-    GeomLines* edges = scinew GeomLines();
-
-    // nodes consists of the nodes in all the patches in the level
-    GeomPts* nodes = scinew GeomPts(1); // 1 is the number of points
-
-    // spheres that will be the selectable nodes
-    GeomGroup* spheres = scinew GeomGroup;
-    
-    Level::const_patchIterator iter;
-    //---------------------------------------
-    // for each patch in the level
-    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
-      const Patch* patch=*iter;
-      Box box = patch->getBox();
-      addBoxGeometry(edges, box);
-
-      switch (var_orientation.get()) {
-      case NC_VAR:
-	//------------------------------------
-	// for each node in the patch
-	for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-	  nodes->add(patch->nodePosition(*iter),
-		     node_color[color_index].get_rep());
-	}
-	
-	//------------------------------------
-	// for each node in the patch that intersects the widget space
-	if(node_on) {
-	  for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
-	    spheres->add(scinew GeomSphere(patch->nodePosition(*iter),
-					   rad,nu,nv,l,*iter));
-	  }
-	}
-	break;
-
-      case CC_VAR:
-	//------------------------------------
-	// for each node in the patch
-	for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-	  nodes->add(patch->cellPosition(*iter),
-		     node_color[color_index].get_rep());
-	}
-	
-	//------------------------------------
-	// for each node in the patch that intersects the widget space
-	if(node_on) {
-	  for(CellIterator iter = patch->getCellIterator(widget_box); !iter.done(); iter++){
-	    spheres->add(scinew GeomSphere(patch->cellPosition(*iter),
-					   rad,nu,nv,l,*iter));
-	  }
-	}
-	break;
-      }
-    }
-
-    // add all the nodes for the level
-    ostringstream name_nodes;
-    name_nodes << "Nodes - level " << l;
-    id_list.push_back(ogeom->addObj(nodes, name_nodes.str().c_str()));
-
-    // add all the edges for the level
-    ostringstream name_edges;
-    name_edges << "Patches - level " << l;
-    id_list.push_back(ogeom->addObj(scinew GeomMaterial(edges, level_color[color_index]), name_edges.str().c_str()));
-
-    // add the spheres for the nodes
-    pick_nodes->add(scinew GeomMaterial(spheres, node_color[color_index]));
-  }
-
-  if (node_on) {
-    GeomPick* pick = scinew GeomPick(pick_nodes,this);
-    id_list.push_back(ogeom->addObj(pick,"Selectable Nodes"));
-  }
-#if 0
-  // may implement this some day
-  if (node_selected) {
-    //Point p;
-    switch (var_orientation.get()) {
-    case NC_VAR:
-      //p = patch->nodePosition(currentNode);
-      break;
-    case CC_VAR:
-      //p = patch->cellPosition(currentNode);
-      break;
-    }
-    //seleted_sphere->move(p);
-  }
-#endif
-  cerr << "\t\tFinished execute\n";
-}
-
-void GridVisualizer::widget_moved(int last)
-{
-  if(last && !abort_flag) {
-    abort_flag=1;
-    want_to_execute();
-  }
-}
-
-void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
-{
-  if(args.count() < 2) {
-    args.error("Streamline needs a minor command");
-    return;
-  }
-  if(args[1] == "findxy") {
-    need_2d=1;
-    want_to_execute();
-  }
-  else if(args[1] == "findyz") {
-    need_2d=2;
-    want_to_execute();
-  }
-  else if(args[1] == "findxz") {
-    need_2d=3;
-    want_to_execute();
-  }
-  else if(args[1] == "extract_data") {
-    int i = 2;
-    string displaymode(args[i++]);
-    string varname(args[i++]);
-    string index(args[i++]);
-    int num_mat;
-    string_to_int(args[i++], num_mat);
-    cerr << "Extracting " << num_mat << " materals:";
-    vector< string > mat_list;
-    vector< string > type_list;
-    for (int j = i; j < i+(num_mat*2); j++) {
-      string mat(args[j]);
-      mat_list.push_back(mat);
-      j++;
-      string type(args[j]);
-      type_list.push_back(type);
-    }
-    cerr << endl;
-    cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
-    extract_data(displaymode,varname,mat_list,type_list,index);
-  }
-  else {
-    Module::tcl_command(args, userdata);
-  }
-}
 
 bool GridVisualizer::is_cached(string name, string& data) {
   map< string, string >::iterator iter;
@@ -930,61 +1019,6 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 
 
 
-// if a pick event was received extract the id from the picked
-void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
-			       GeomObj* picked) {
-#if DEBUG
-  cerr << "Caught pick event in GridVisualizer!\n";
-  cerr << "this = " << this << ", pick = " << pick << endl;
-  cerr << "User data = " << userdata << endl;
-#endif
-  IntVector id;
-  int level;
-  if ( picked->getId( id ) && picked->getId(level)) {
-    cerr<<"Id = "<< id << " Level = " << level << endl;
-    currentNode.id = id;
-    index_l.set(level);
-    index_x.set(currentNode.id.x());
-    index_y.set(currentNode.id.y());
-    index_z.set(currentNode.id.z());
-#if 0  // may implement this some day
-    // add the selected sphere to the geometry
-    Point p;
-    int nu,nv;
-    double rad = radius.get() * 1.5;
-    getnunv(&nu,&nv);
-    switch (var_orientation.get()) {
-    case NC_VAR:
-      //p = patch->nodePosition(currentNode);
-      break;
-    case CC_VAR:
-      //p = patch->cellPosition(currentNode);
-      break;
-    }
-    if (!node_selected) {
-      selected_sphere = scinew GeomSphere(p,rad,nu,nv,
-					  currentNode.level,currentNode.id);
-      GeomPick* pick = scinew GeomPick(scinew GeomMaterial(selected_sphere, getColor("green",GRID_COLOR)),this);
-      ogeom->addObj(pick,"Selected Node");
-      node_selected = true;
-    }
-    else {
-      //seleted_sphere->move(p);
-    }
-#endif
-  }
-  else
-    cerr<<"Not getting the correct data\n";
-}
-
-// this doesn't do anything.  They are only here to eliminate compiler warnings
-void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/) {
-}
-
-// this doesn't do anything.  They are only here to eliminate compiler warnings
-void GridVisualizer::geom_pick(GeomPick* /*pick*/, ViewWindow* /*window*/,
-			       int /*data*/, const BState& /*bs*/) {
-}
 
 // if a pick event was received extract the id from the picked
 void GridVisualizer::pick() {
@@ -997,3 +1031,5 @@ void GridVisualizer::pick() {
 }
 
 } // End namespace Uintah
+
+#endif
