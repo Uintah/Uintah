@@ -49,7 +49,10 @@ private:
   ScaledBoxWidget *box_;
   CrowdMonitor widget_lock_;
   BBox last_bounds_;
-  GuiInt mode_;  // 1 replace 2 intersect 3 union 4 invert 5 remove 6 undo
+  GuiString clip_location_;
+  GuiString clip_mode_;
+  GuiInt    autoexec_;
+  GuiString exec_mode_;
   int  last_input_generation_;
   int  last_clip_generation_;
   ClipperHandle clipper_;
@@ -60,7 +63,7 @@ public:
   virtual ~ClipField();
 
   virtual void execute();
-
+  virtual void widget_moved(int);
 };
 
 
@@ -72,11 +75,14 @@ extern "C" Module* make_ClipField(const string& id) {
 ClipField::ClipField(const string& id)
   : Module("ClipField", id, Source, "Fields", "SCIRun"),
     widget_lock_("ClipField widget lock"),
-    mode_("runmode", id, this),
+    clip_location_("clip-location", id, this),
+    clip_mode_("clipmode", id, this),
+    autoexec_("autoexec", id, this),
+    exec_mode_("execmode", id, this),
     last_input_generation_(0),
     last_clip_generation_(0)
 {
-  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 1);
+  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 0);
 }
 
 
@@ -176,55 +182,61 @@ ClipField::execute()
     }
   }
 
-  const int mode = mode_.get();
-  if (mode || !clipper_.get_rep())
+
+  if (!clipper_.get_rep())
   {
+    clipper_ = box_->get_clipper();
+    do_clip_p = true;
+  }
+  else if (exec_mode_.get() == "execute")
+  {
+    undo_stack_.push(clipper_);
     ClipperHandle ctmp = box_->get_clipper();
-    if (mode == 6)
+    if (clip_mode_.get() == "intersect")
     {
-      if (!undo_stack_.empty())
-      {
-	clipper_ = undo_stack_.top();
-	undo_stack_.pop();
-	do_clip_p = true;
-      }
+      clipper_ = scinew IntersectionClipper(ctmp, clipper_);
+    }
+    else if (clip_mode_.get() == "union")
+    {
+      clipper_ = scinew UnionClipper(ctmp, clipper_);
+    }
+    else if (clip_mode_.get() == "remove")
+    {
+      ctmp = scinew InvertClipper(ctmp);
+      clipper_ = scinew IntersectionClipper(ctmp, clipper_);
     }
     else
     {
-      if (clipper_.get_rep())
-      {
-	undo_stack_.push(clipper_);
-      }
-      switch (mode)
-      {
-      case 2:
-	clipper_ = scinew IntersectionClipper(ctmp, clipper_);
-	break;
-
-      case 3:
-	clipper_ = scinew UnionClipper(ctmp, clipper_);
-	break;
-
-      case 4:
-	clipper_ = scinew InvertClipper(clipper_);
-	break;
-
-      case 5:
-	ctmp = scinew InvertClipper(ctmp);
-	clipper_ = scinew IntersectionClipper(ctmp, clipper_);
-	break;
-
-      case 1:
-      default:
-	clipper_ = ctmp;
-      }
+      clipper_ = ctmp;
+    }
+    do_clip_p = true;
+  }
+  else if (exec_mode_.get() == "invert")
+  {
+    undo_stack_.push(clipper_);
+    clipper_ = scinew InvertClipper(clipper_);
+    do_clip_p = true;
+  }
+  else if (exec_mode_.get() == "undo")
+  {
+    if (!undo_stack_.empty())
+    {
+      clipper_ = undo_stack_.top();
+      undo_stack_.pop();
       do_clip_p = true;
     }
   }
+#if 0
+  else if (exec_mode_.get() == "location")
+  {
+    do_clip_p = true;
+  }
+#endif
 
   if (do_clip_p || ifieldhandle->generation != last_input_generation_)
   {
     last_input_generation_ = ifieldhandle->generation;
+    exec_mode_.set("");
 
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfo *ci = ClipFieldAlgo::get_compile_info(ftd);
@@ -252,6 +264,18 @@ ClipField::execute()
     ofield_port->send(ofield);
   }
 }
+
+
+void
+ClipField::widget_moved(int i)
+{
+  if (i == 1 && autoexec_.get())
+  {
+    exec_mode_.set("execute");
+    want_to_execute();
+  }
+}
+
 
 
 CompileInfo *

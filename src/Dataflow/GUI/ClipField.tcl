@@ -20,44 +20,35 @@ itcl_class SCIRun_Fields_ClipField {
     constructor {config} {
         set name ClipField
 
-	global $this-runmode
+	global $this-clip-location  # Where to clip
+	global $this-clipmode       # Which clip mode to use.
+	global $this-autoexecute    # Execute on widget button up?
+	global $this-execmode    # Which of three executes to use.
 
         set_defaults
     }
 
     method set_defaults {} {
-	set $this-runmode 0
+	set $this-clip-location cell
+	set $this-clipmode replace
+	set $this-autoexecute 0
+	set $this-execmode 0
     }
 
-    method replace {} {
-	set $this-runmode 1
+    method execrunmode {} {
+	set $this-execmode execute
 	$this-c needexecute
     }
-
-    method intersect {} {
-	set $this-runmode 2
-	$this-c needexecute
-    }
-
-    method union {} {
-	set $this-runmode 3
-	$this-c needexecute
-    }
-
     method invert {} {
-	set $this-runmode 4
-	$this-c needexecute
-    }
-
-    method remove {} {
-	set $this-runmode 5
+	set $this-execmode invert
 	$this-c needexecute
     }
 
     method undo {} {
-	set $this-runmode 6
+	set $this-execmode undo
 	$this-c needexecute
     }
+
 
     method ui {} {
         set w .ui[modname]
@@ -67,23 +58,39 @@ itcl_class SCIRun_Fields_ClipField {
         }
         toplevel $w
 
-	frame $w.row1
+	frame $w.location -relief groove -borderwidth 2
+	frame $w.execmode -relief groove -borderwidth 2
+	frame $w.whenexecute
+	frame $w.executes -relief groove -borderwidth 2
 
-	pack $w.row1 -side top -e y -f both -padx 5 -pady 5
+	label $w.location.label -text "Clip Location"
+	radiobutton $w.location.cell -text "Cell Centers" -variable $this-clip-location -value cell
+	radiobutton $w.location.nodeone -text "One Node" -variable $this-clip-location -value nodeone
+	radiobutton $w.location.nodeall -text "All Nodes" -variable $this-clip-location -value nodeall
+
+	pack $w.location.label -side top -expand yes -fill both
+	pack $w.location.cell $w.location.nodeone $w.location.nodeall -side top -anchor w
+
+	label $w.execmode.label -text "Execute Action"
+	radiobutton $w.execmode.replace -text "Replace" -variable $this-clipmode -value replace
+	radiobutton $w.execmode.union -text "Union" -variable $this-clipmode -value union
+	radiobutton $w.execmode.intersect -text "Intersect" -variable $this-clipmode -value intersect
+	radiobutton $w.execmode.remove -text "Remove" -variable $this-clipmode -value remove
+
+	pack $w.execmode.label -side top -fill both
+	pack $w.execmode.replace $w.execmode.union $w.execmode.intersect $w.execmode.remove  -side top -anchor w 
+
+	checkbutton $w.whenexecute.check -text "Execute automatically" -variable $this-autoexecute
 	
-	button $w.row1.replace -text "Replace" -command "$this replace"
-	button $w.row1.intersect -text "Intersect" -command "$this intersect"
-	button $w.row1.union -text "Union" -command "$this union"
-	button $w.row1.invert -text "Invert" -command "$this invert"
-	button $w.row1.remove -text "Remove" -command "$this remove"
-	button $w.row1.undo -text "Undo" -command "$this undo"
-	pack $w.row1.replace \
-	     $w.row1.union \
-	     $w.row1.remove \
-	     $w.row1.intersect \
-	     $w.row1.invert \
-	     $w.row1.undo \
-	     -side top -e n -f both
+	pack $w.whenexecute.check -side top -expand yes -fill both
+	
+	button $w.executes.execute -text "Execute" -command "$this execrunmode"
+	button $w.executes.invert -text "Invert" -command "$this invert"
+	button $w.executes.undo -text "Undo" -command "$this undo"
+	pack $w.executes.execute $w.executes.invert $w.executes.undo -side left -e y -f both -padx 5 -pady 5
+
+	pack $w.location $w.execmode $w.whenexecute $w.executes -side top -e y -f both -padx 5 -pady 5
+	
     }
 }
 
