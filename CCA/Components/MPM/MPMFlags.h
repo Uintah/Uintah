@@ -32,6 +32,7 @@ namespace Uintah {
     };
 
     int         d_8or27;// Number of nodes a particle can interact with
+    double      d_ref_temp; // Reference temperature for thermal stress  
     std::string d_integrator_type; // Explicit or implicit time integration
     IntegratorType d_integrator;
 
