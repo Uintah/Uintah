@@ -10,7 +10,7 @@ ERRORS_TO=$6
 $SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR > $TMPDIR/compare_uda.log 2>&1
 retval=$?
 if [ $retval != "0" ]; then
-    cat $TMPDIR/compare_dat_files.msg > $TMPDIR/error_info.msg
+    cat $TMPDIR/compare_uda.log > $TMPDIR/error_info.msg
     cat $TMPDIR/error_info.msg
 
     if [ "$ERRORS_TO" != "" -a $retval -gt "0" ]; then
