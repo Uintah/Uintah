@@ -50,7 +50,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-SHARE Tcl_Interp* the_interp;
+  SHARE Tcl_Interp* the_interp;
 #ifdef __cplusplus
 }
 #endif
@@ -66,14 +66,17 @@ EXTERN void		TkConsoleCreate(void);
 EXTERN int		TkConsoleInit(Tcl_Interp *interp);
 
 extern int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int argc, char **argv));
+				  Tcl_Interp *interp, int argc, char **argv));
 extern int BevelCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int argc, char **argv));
+				 Tcl_Interp *interp, int argc, char **argv));
 /* extern int Tk_RangeCmd _ANSI_ARGS_((ClientData clientData, */
 /* 	Tcl_Interp *interp, int argc, char **argv)); */
 extern int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int argc, char **argv));
+				     Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
+
+// this calls Thread::exitAll(int);
+extern void exit_all_threads(int rv);
 
 #ifdef _WIN32 
 #define EXPORT  __declspec(dllimport)
@@ -128,25 +131,25 @@ static void* wait_func_data;
 
 SHARE int
 tkMain(argc, argv, nwait_func, nwait_func_data)
-    int argc;			/* Number of command-line arguments. */
-    char **argv;		/* Values of command-line arguments. */
-    void (*nwait_func)(void*);
-    void* nwait_func_data;
+     int argc;			/* Number of command-line arguments. */
+     char **argv;		/* Values of command-line arguments. */
+     void (*nwait_func)(void*);
+     void* nwait_func_data;
 {
-    wait_func=nwait_func;
-    wait_func_data=nwait_func_data;
+  wait_func=nwait_func;
+  wait_func_data=nwait_func_data;
 #ifdef _WIN32
-    /*
-     * Create the console channels and install them as the standard
-     * channels.  All I/O will be discarded until TkConsoleInit is
-     * called to attach the console to a text widget.
-     */
+  /*
+   * Create the console channels and install them as the standard
+   * channels.  All I/O will be discarded until TkConsoleInit is
+   * called to attach the console to a text widget.
+   */
 
-		printf("Calling TkConsoleCreate\n");
-    TkConsoleCreate();
+  printf("Calling TkConsoleCreate\n");
+  TkConsoleCreate();
 #endif
-    Tk_Main(argc, argv, Tcl_AppInit);
-    return 0;			/* Needed only to prevent compiler warning. */
+  Tk_Main(argc, argv, Tcl_AppInit);
+  return 0;			/* Needed only to prevent compiler warning. */
 }
 
 /*
@@ -170,124 +173,125 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
 
 SHARE int
 Tcl_AppInit(interp)
-    Tcl_Interp *interp;		/* Interpreter for application. */
+     Tcl_Interp *interp;		/* Interpreter for application. */
 {
-    the_interp=interp;
+  the_interp=interp;
 
-    printf("Initializing the tcl packages: ");
-    fflush(stdout);
+  printf("Initializing the tcl packages: ");
+  fflush(stdout);
 
-    printf("tcl, ");
-    if (Tcl_Init(interp) == TCL_ERROR) {
-      printf("Tcl_Init() failed\n");
-	return TCL_ERROR;
-    }
-    fflush(stdout);
-    printf("tk, ");
-    if (Tk_Init(interp) == TCL_ERROR) {
-      printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
-	return TCL_ERROR;
-    }
-    fflush(stdout);
-    Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
+  printf("tcl, ");
+  if (Tcl_Init(interp) == TCL_ERROR) {
+    printf("Tcl_Init() failed\n");
+    return TCL_ERROR;
+  }
+  fflush(stdout);
+  printf("tk, ");
+  if (Tk_Init(interp) == TCL_ERROR) {
+    printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
+
+    exit_all_threads(TCL_ERROR);
+  }
+  fflush(stdout);
+  Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
 #ifdef _WIN32
-    /*
-     * Initialize the console only if we are running as an interactive
-     * application.
-     */
-	printf("Calling TkConsoleInit\n");
-    if (TkConsoleInit(interp) == TCL_ERROR) {
-		printf("Error in TkConsoleInit\n");
-	   return TCL_ERROR;
-    }
+  /*
+   * Initialize the console only if we are running as an interactive
+   * application.
+   */
+  printf("Calling TkConsoleInit\n");
+  if (TkConsoleInit(interp) == TCL_ERROR) {
+    printf("Error in TkConsoleInit\n");
+    return TCL_ERROR;
+  }
 #endif
 
 
 #ifdef TK_TEST
-    if (Tktest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "Tktest", Tktest_Init,
-            (Tcl_PackageInitProc *) NULL);
+  if (Tktest_Init(interp) == TCL_ERROR) {
+    return TCL_ERROR;
+  }
+  Tcl_StaticPackage(interp, "Tktest", Tktest_Init,
+		    (Tcl_PackageInitProc *) NULL);
 #endif /* TK_TEST */
 
 
-    /*
-     * Call the init procedures for included packages.  Each call should
-     * look like this:
-     *
-     * if (Mod_Init(interp) == TCL_ERROR) {
-     *     return TCL_ERROR;
-     * }
-     *
-     * where "Mod" is the name of the module.
-     */
-    printf("itcl, ");
-    if (Itcl_Init(interp) == TCL_ERROR) {
-      printf("Itcl_Init() failed\n");
-        return TCL_ERROR;
-    }
-    fflush(stdout);
-    printf("itk, ");
-    if (Itk_Init(interp) == TCL_ERROR) {
-      printf("Itk_Init() failed\n");
-        return TCL_ERROR;
-    }
-    fflush(stdout);
-    printf("blt, ");
-    if (Blt_Init(interp) == TCL_ERROR) {
-      printf("Blt_Init() failed\n");
-	return TCL_ERROR;
-    }
+  /*
+   * Call the init procedures for included packages.  Each call should
+   * look like this:
+   *
+   * if (Mod_Init(interp) == TCL_ERROR) {
+   *     return TCL_ERROR;
+   * }
+   *
+   * where "Mod" is the name of the module.
+   */
+  printf("itcl, ");
+  if (Itcl_Init(interp) == TCL_ERROR) {
+    printf("Itcl_Init() failed\n");
+    return TCL_ERROR;
+  }
+  fflush(stdout);
+  printf("itk, ");
+  if (Itk_Init(interp) == TCL_ERROR) {
+    printf("Itk_Init() failed\n");
+    return TCL_ERROR;
+  }
+  fflush(stdout);
+  printf("blt, ");
+  if (Blt_Init(interp) == TCL_ERROR) {
+    printf("Blt_Init() failed\n");
+    return TCL_ERROR;
+  }
 
 #ifdef HAVE_PLPLOT
-    fflush(stdout);
-    printf("PLplot, ");
-    if (Pltk_Init(interp) == TCL_ERROR) {
-      printf("Pltk_Init() failed\n");
-	return TCL_ERROR;
-    }
+  fflush(stdout);
+  printf("PLplot, ");
+  if (Pltk_Init(interp) == TCL_ERROR) {
+    printf("Pltk_Init() failed\n");
+    return TCL_ERROR;
+  }
 #endif
 
-    Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
-    Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
-    Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
+  Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
+  Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
+  Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
 #ifdef HAVE_PLPLOT
-    Tcl_StaticPackage(interp, "Pltk", Pltk_Init, (Tcl_PackageInitProc *) NULL);
+  Tcl_StaticPackage(interp, "Pltk", Pltk_Init, (Tcl_PackageInitProc *) NULL);
 #endif
 
-    printf("Done.\n");
-    fflush(stdout);
+  printf("Done.\n");
+  fflush(stdout);
 
-    /*
-     *  This is itkwish, so import all [incr Tcl] commands by
-     *  default into the global namespace.  Fix up the autoloader
-     *  to do the same.
-     */
-    if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
-            "::itk::*", /* allowOverwrite */ 1) != TCL_OK) {
-        return TCL_ERROR;
-    }
+  /*
+   *  This is itkwish, so import all [incr Tcl] commands by
+   *  default into the global namespace.  Fix up the autoloader
+   *  to do the same.
+   */
+  if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
+		 "::itk::*", /* allowOverwrite */ 1) != TCL_OK) {
+    return TCL_ERROR;
+  }
 
-    if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
-            "::itcl::*", /* allowOverwrite */ 1) != TCL_OK) {
-        return TCL_ERROR;
-    }
+  if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
+		 "::itcl::*", /* allowOverwrite */ 1) != TCL_OK) {
+    return TCL_ERROR;
+  }
 
-    if (Tcl_Eval(interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }") != TCL_OK) {
-        return TCL_ERROR;
-    }
+  if (Tcl_Eval(interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }") != TCL_OK) {
+    return TCL_ERROR;
+  }
 
-    /*
-     * Call Tcl_CreateCommand for application-specific commands, if
-     * they weren't already created by the init procedures called above.
-     */
+  /*
+   * Call Tcl_CreateCommand for application-specific commands, if
+   * they weren't already created by the init procedures called above.
+   */
 
-    /*
-     * Call Tcl_CreateCommand for application-specific commands, if
-     * they weren't already created by the init procedures called above.
-     */
+  /*
+   * Call Tcl_CreateCommand for application-specific commands, if
+   * they weren't already created by the init procedures called above.
+   */
 
 #ifdef _WIN32
 #define PARAMETERTYPE int*
@@ -295,43 +299,43 @@ Tcl_AppInit(interp)
 #define PARAMETERTYPE
 #endif
 
-    printf("Adding SCI extensions to tcl: ");
-    fflush(stdout);
+  printf("Adding SCI extensions to tcl: ");
+  fflush(stdout);
 
 #ifdef SCI_OPENGL
-    printf("OpenGL widget, ");
-    Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) Tk_MainWindow(interp),
-		      (void (*)(PARAMETERTYPE)) NULL);
+  printf("OpenGL widget, ");
+  Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) Tk_MainWindow(interp),
+		    (void (*)(PARAMETERTYPE)) NULL);
 #endif
-    fflush(stdout);
-    printf("bevel widget, ");
-    Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
-		      (void (*)(PARAMETERTYPE)) NULL);
-/*     Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp), */
-/*                       (void (*)(PARAMETERTYPE)) NULL); */
-    fflush(stdout);
-    printf("cursor, ");
-    Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
-		      (ClientData) Tk_MainWindow(interp), NULL);
+  fflush(stdout);
+  printf("bevel widget, ");
+  Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
+		    (void (*)(PARAMETERTYPE)) NULL);
+  /*     Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp), */
+  /*                       (void (*)(PARAMETERTYPE)) NULL); */
+  fflush(stdout);
+  printf("cursor, ");
+  Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
+		    (ClientData) Tk_MainWindow(interp), NULL);
 
-    printf("Done.\n");
-    fflush(stdout);
+  printf("Done.\n");
+  fflush(stdout);
 
-    /*
-     * Initialize the BLine Canvas item
-     */
+  /*
+   * Initialize the BLine Canvas item
+   */
 
-    BLineInit();
+  BLineInit();
 
-    /*
-     * Specify a user-specific startup file to invoke if the application
-     * is run interactively.  Typically the startup file is "~/.apprc"
-     * where "app" is the name of the application.  If this line is deleted
-     * then no user-specific startup file will be run under any conditions.
-     */
+  /*
+   * Specify a user-specific startup file to invoke if the application
+   * is run interactively.  Typically the startup file is "~/.apprc"
+   * where "app" is the name of the application.  If this line is deleted
+   * then no user-specific startup file will be run under any conditions.
+   */
 
-    Tcl_SetVar(interp, "tcl_rcFileName", "~/.scirc", TCL_GLOBAL_ONLY);
-    (*wait_func)(wait_func_data);
-    return TCL_OK;
+  Tcl_SetVar(interp, "tcl_rcFileName", "~/.scirc", TCL_GLOBAL_ONLY);
+  (*wait_func)(wait_func_data);
+  return TCL_OK;
 }
 

@@ -61,7 +61,12 @@
 
 #define THREAD_DEFAULT_STACKSIZE 64*1024*2
 
-
+// provide "C" interface to exitAll
+extern "C" { 
+void exit_all_threads(int rc) {
+  SCIRun::Thread::exitAll(rc);
+}
+}
 namespace SCIRun {
 
 class ParallelHelper : public Runnable {
