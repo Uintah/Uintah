@@ -4,7 +4,7 @@ _included_solib_mk = yes
 include $(SRCTOP)/scripts/recurse.mk
 include $(OBJTOP)/scripts/compile.mk
 
-SUBOBJS = $(shell $(MAKE) reportObjs)
+SUBOBJS = $(shell $(MAKE) --no-print-directory reportObjs)
 
 all:: $(SOLIB)
 
