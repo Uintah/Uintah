@@ -72,7 +72,7 @@
                               <value> [0.0,10.0,0.0] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Dirichlet">
-                              <value> 300.0  </value>
+                              <value> 298.0  </value>
         </BCType>
         <BCType id = "all" label = "Density"      var = "Dirichlet">
                               <value>  0.6560618010 </value>
@@ -92,10 +92,10 @@
                               <value> [0.,0.1,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Dirichlet">
-                              <value> 300.0  </value>
+                              <value> 298.0  </value>
         </BCType>
         <BCType id = "all" label = "Density"      var = "Dirichlet">
-                              <value> 1.1784717376136  </value>
+                              <value>1.179383368997318   </value>
         </BCType>
         <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
@@ -133,7 +133,18 @@
         </BCType>
       </Face>
     </BoundaryConditions>
+  <!--
        <Level>
+           <Box label = "1">
+              <lower>        [-6,0.0,0]     </lower>
+              <upper>        [ 6,8,0.04]     </upper>         
+              <extraCells>   [1,1,1]         </extraCells>
+              <patches>      [3,2,1]         </patches>    
+              <resolution>   [300,200,1]     </resolution>
+           </Box>
+       </Level>
+    -->
+        <Level>
            <Box label = "1">
               <lower>        [-2,0.00,0]     </lower>
               <upper>        [ 2,4,0.04]     </upper>         
@@ -160,6 +171,7 @@
       <save label = "speedSound_CC"/>
       <save label = "modelEng_src"/>
       <save label = "cumulativeEnergyReleased"/>
+      <save label= "rhs"/>
       <compression>gzip</compression>
       <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
@@ -172,6 +184,7 @@
      <dbg_EndIndex>        [47,0,2]    </dbg_EndIndex>
      <dbg_Matls>           [0,1]       </dbg_Matls>
      <dbg_SigFigs>         10          </dbg_SigFigs>
+     <debug label = "switchDebugConvergence"/>
      <!--<debug label = "switchTestConservation"/>
          <debug label = "switchDebug_EQ_RF_press"/>-->
    </Debug>
@@ -207,7 +220,7 @@
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-7 </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <iters_before_timestep_restart> 10 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
 	     <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
@@ -234,11 +247,15 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,0,0]   </gravity>
+       <gravity>            [0,-9.81,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--  Note:  The initial density, pressure and temperature for the      -->
+    <!--         for the entire flow field is set to the reference state    -->
+    <!--         of the table.  What you specify below will be wiped out    --> 
+    <!--         by the model.                                              -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
@@ -246,15 +263,15 @@
            <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
            <isSurroundingMatl>          true            </isSurroundingMatl>
-           <dynamic_viscosity>          0.0             </dynamic_viscosity>
-           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <dynamic_viscosity>          15.89e-6        </dynamic_viscosity>
+           <thermal_conductivity>       26.3e-3         </thermal_conductivity>
            <specific_heat>              716.5           </specific_heat>
            <speed_of_sound>             376             </speed_of_sound>
            <gamma>                      1.4             </gamma>
            <geom_object>
               <box label = "world">
-                <min>       [ -5, -5, -0.1 ]    </min>
-                <max>       [  5,  5,  0.1 ]   </max>
+                <min>       [ -10, -10, -0.1 ]    </min>
+                <max>       [  10,  10,  0.1 ]   </max>
               </box>
               <res>                [2,2,2]             </res>
               <velocity>           [.0,.0,.0]          </velocity>
@@ -277,9 +294,6 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-          <derivedValue name="reference_heat_capac_Cv">[heat_capac_Cv]</derivedValue>
-          <derivedValue name="reference_gamma">[gamma]</derivedValue>
-          <constantValue name="reference_Temp">298</constantValue>
 	   <filename>inputs/Models/ch4.rxn</filename>
 	</table>
         <material>BackgroundGas</material>
@@ -291,8 +305,8 @@
         
           <geom_object>
              <box label = "world">
-               <min>       [ -5, -5, -0.1 ]    </min>
-               <max>       [  5,  5,  0.1 ]   </max>
+               <min>       [ -10, -10, -0.1 ]    </min>
+               <max>       [  10,  10,  0.1 ]   </max>
              </box>
              <scalar>    0.00   </scalar>
           </geom_object>
