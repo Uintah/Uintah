@@ -12,13 +12,28 @@
  */
 
 #include <Nektar/Datatypes/NektarScalarFieldPort.h>
+#include <Nektar/share/share.h>
 
-namespace Nektar {
-  namespace Datatypes {
+//namespace Nektar {
+//namespace Datatypes {
 
-    template<> clString SimpleIPort<NektarScalarFieldHandle>::port_type("NektarScalarField");
-    template<> clString SimpleIPort<NektarScalarFieldHandle>::port_color("Blue");
-    
-  } // End namespace Datatypes
-} // End namespace Nektar
+using namespace SCICore::Containers;
+using namespace Nektar::Datatypes;
+
+extern "C" {
+  NektarSHARE IPort* make_NektarScalarFieldIPort(Module* module,
+						 const clString& name) {
+    return new SimpleIPort<NektarScalarFieldHandle>(module,name);
+  }
+  NektarSHARE OPort* make_NektarScalarFieldOPort(Module* module, const 
+						 clString& name) {
+    return new SimpleOPort<NektarScalarFieldHandle>(module,name);
+  }
+}
+
+template<> clString SimpleIPort<NektarScalarFieldHandle>::port_type("NektarScalarField");
+template<> clString SimpleIPort<NektarScalarFieldHandle>::port_color("Blue");
+
+//} // End namespace Datatypes
+//} // End namespace Nektar
 
