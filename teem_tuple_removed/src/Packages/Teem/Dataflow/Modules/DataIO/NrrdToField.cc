@@ -328,7 +328,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       
       return ofield_handle;
     }
-    cerr << "Tried to use field but failed\n";
+    //cerr << "Tried to use field but failed\n";
   }
   
 
@@ -378,7 +378,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	error("Connections nrrd must have one axis with a size less than or equal to 8.");
 	return 0;
       }
-      
+
       int pts = connect->axis[which].size;
       
       switch (pts) {
