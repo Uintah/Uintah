@@ -47,6 +47,7 @@ namespace Uintah {
 
      /// Goes through the Detailed tasks and assigns each to its own processor.
      virtual void assignResources(DetailedTasks& tg);
+     virtual void assignResources(DetailedTasks3& tg);
 
      /// Creates the Load Balancer's Neighborhood.  This is a vector of patches 
      /// that represent any patch that this load balancer will potentially have to 

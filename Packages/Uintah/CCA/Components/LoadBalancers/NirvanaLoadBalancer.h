@@ -42,6 +42,7 @@ namespace Uintah {
     NirvanaLoadBalancer(const ProcessorGroup* myworld, const IntVector& layout);
     ~NirvanaLoadBalancer();
     virtual void assignResources(DetailedTasks& tg);
+    virtual void assignResources(DetailedTasks3& tg);
     virtual int getPatchwiseProcessorAssignment(const Patch* patch);
    private:
      NirvanaLoadBalancer(const NirvanaLoadBalancer&);
