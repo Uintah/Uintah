@@ -633,7 +633,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pKineticEnergyDensityLabel);
 
   VarLabel::destroy(pgCodeLabel);
-  VarLabel::destroy(pKineticEnergyDensityLabel);
   VarLabel::destroy(pVelGradsLabel);
 
   VarLabel::destroy(gNumPatlsLabel);
