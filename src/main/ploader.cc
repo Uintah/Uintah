@@ -39,6 +39,8 @@
  */
 
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/DT/DataTransmitter.h>
+#include <Core/CCA/Comm/PRMI.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/CCA/PIDL/MalformedURL.h>
 #include <Core/Thread/Thread.h>
@@ -47,7 +49,7 @@
 #include <sys/stat.h>
 #include <mpi.h>
 
-//using namespace std;
+using namespace std;
 using namespace SCIRun;
 using namespace sci::cca;
 #define VERSION "2.0.0" // this needs to be synced with the contents of
@@ -110,6 +112,45 @@ main(int argc, char *argv[] )
     MPI_Comm_size(MPI_COMM_WORLD,&(sl->mpi_size));
     MPI_Comm_rank(MPI_COMM_WORLD,&(sl->mpi_rank));
 
+    //save size, rank in DT, so DT does not have to make MPI calls to get size, rank
+    //...
+
+    DTAddress dtAddr=PIDL::getDT()->getAddress();
+
+    if(sl->mpi_rank==0){
+      PRMI::orderSvc_ep=PRMI::orderSvcEp.getEP();
+      PRMI::orderSvc_addr.ip=dtAddr.ip;
+      PRMI::orderSvc_addr.port=dtAddr.port;
+    }
+    //root broadcast order service ep and DT address
+    MPI_Bcast(&PRMI::orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&PRMI::orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&PRMI::orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
+
+    int* int_buf;
+    short* short_buf;
+    if(sl->mpi_rank==0){
+      PRMI::lockSvc_ep_list=new DTPoint*[sl->mpi_size];
+      PRMI::lockSvc_addr_list=new DTAddress[sl->mpi_size];
+      int_buf=new int[sl->mpi_size];
+      short_buf=new short[sl->mpi_size];
+    }
+    //collect all lock service ep list and DT addresses
+    MPI_Gather(&dtAddr.ip, 1, MPI_INT, PRMI::lockSvc_ep_list, 1, MPI_INT,
+	       0, MPI_COMM_WORLD);
+    MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
+	       0, MPI_COMM_WORLD);
+    MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
+	       0, MPI_COMM_WORLD);
+    if(sl->mpi_rank==0){
+      for(int i=0; i<sl->mpi_size; i++){
+	PRMI::lockSvc_addr_list[i].ip=int_buf[i];
+	PRMI::lockSvc_addr_list[i].port=short_buf[i];
+      }
+      delete []int_buf;
+      delete []short_buf;
+    }
+    
 
     //Inform everyone else of my distribution
     //(this is in correspondence with the instantiate() call)
@@ -128,6 +169,7 @@ main(int argc, char *argv[] )
       std::cerr << "Cannot get framework from url=" << frameworkURL << std::endl;
       return 0;
     }
+
     sci::cca::AbstractFramework::pointer framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
   
     typedef char urlString[100] ;
