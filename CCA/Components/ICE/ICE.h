@@ -662,7 +662,8 @@ using namespace SCIRun;
       bool   d_dbgGnuPlot;
       IntVector d_dbgBeginIndx;
       IntVector d_dbgEndIndx; 
-      vector<int> d_dbgMatls; 
+      vector<int> d_dbgMatls;
+      int d_dbgLevel; 
       int d_dbgSigFigs;
       
       bool d_usingLODI;
