@@ -278,7 +278,7 @@ Matlab::execute()
 	 // Hence, a new strategy:
 	 
 	  strcpy(cl,"matlab -nodesktop -nosplash -r \"addpath('");
-	  strcat(cl,SCIRUN_OBJDIR);
+	  strcat(cl,sci_getenv("SCIRUN_OBJDIR"));
 	  strcat(cl,"/matlab/engine'); mlabengine(0,'");
 	  strcat(cl,hport);
 	  strcat(cl,"');\" &");
