@@ -140,21 +140,59 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        <BCType id = "0" label = "Pressure"       var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
-      </Face>             
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f-variance"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
       <Face side = "z+">
-        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        <BCType id = "0" label = "Pressure"       var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f-variance"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>        [-2,0.00,0]     </lower>
-              <upper>        [ 2,4,0.04]     </upper>         
+              <lower>        [-3,0.00,-3]     </lower>
+              <upper>        [ 3,6,3]     </upper>         
               <extraCells>   [1,1,1]         </extraCells>
-              <patches>      [1,1,1]         </patches>    
-              <resolution>   [100,100,1]     </resolution>
+              <patches>      [5,5,8]         </patches>    
+              <resolution>   [120,120,120]     </resolution>
            </Box>
        </Level>
     </Grid>
@@ -163,16 +201,14 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>imp_CH4Jet_CoFlow.uda</filebase>
+      <filebase>/local/csafe/raid1/sparker/fire.uda</filebase>
      <outputInterval>0.01</outputInterval>
 <!--      <outputTimestepInterval> 1 </outputTimestepInterval> -->
-      <save label = "delP_Dilatate"/>
       <save label = "press_CC"/>  
       <save label = "vel_CC"/>
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
       <save label = "scalar-f"/>
-      <save label = "speedSound_CC"/>
       <save label = "modelEng_src"/>
       <save label = "cumulativeEnergyReleased"/>
       <save label = "scalar-f-variance"/>
@@ -204,7 +240,7 @@
         
         <!--______________turbulence models____________-->
        <turbulence model = "Germano">                 
-          <model_constant>      1.00 </model_constant>
+          <model_constant>      0.1 </model_constant>
           <filter_width>        1.0 </filter_width>
           <test_filter_width>   2.0 </test_filter_width>
           <turb_Pr>             0.4 </turb_Pr>                          
@@ -279,8 +315,8 @@
            <gamma>                      1.4             </gamma>
            <geom_object>
               <box label = "world">
-                <min>       [ -5, -5, -0.1 ]    </min>
-                <max>       [  5,  5,  0.1 ]   </max>
+                <min>       [ -5, -5, -5]    </min>
+                <max>       [  15,  15,  15 ]   </max>
               </box>
               <res>                [2,2,2]             </res>
               <velocity>           [.0,.01,.0]          </velocity>
@@ -320,8 +356,8 @@
         
           <geom_object>
              <box label = "world">
-               <min>       [ -5, -5, -0.1 ]    </min>
-               <max>       [  5,  5,  0.1 ]   </max>
+               <min>       [ -5, -5, -5 ]    </min>
+               <max>       [  15,  15,  15 ]   </max>
              </box>
              <scalar>    0.00   </scalar>
           </geom_object>
