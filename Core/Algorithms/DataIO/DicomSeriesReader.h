@@ -45,7 +45,7 @@
 #include "itkDicomImageIO.h"
 #include "itkImageSeriesReader.h"
 #include "itkDICOMSeriesFileNames.h"
-#include "Testing/Code/BasicFilters/itkFilterWatcher.h"
+//#include "Testing/Code/BasicFilters/itkFilterWatcher.h"
 #include <Core/Algorithms/DataIO/DicomImage.h>
 
 // Standard lib includes

@@ -95,7 +95,7 @@ DicomImage DicomSeriesReader::read_series( char * dir )
   reader->SetImageIO(io);
   std::cout << names;
 
-  FilterWatcher watcher(reader);
+  //FilterWatcher watcher(reader);
 
   // Check for the ordering specified
   // Hard-code the ordering for now
@@ -117,7 +117,6 @@ DicomImage DicomSeriesReader::read_series( char * dir )
   ImageNDType::Pointer image = reader->GetOutput();
 
   return DicomImage( io, image );
-
 }
 
 } // End namespace SCIRun
