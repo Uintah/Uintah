@@ -300,10 +300,9 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	expscale $vector.slide -label "Vector Scale" \
 		-orient horizontal \
-		-variable $this-vectors_scale -command "$this-c data_scale"
+		-variable $this-vectors_scale
 
-	bind $vector.slide.scale <ButtonRelease> \
-		"$this-c data_scale"
+	bind $vector.slide.scale <ButtonRelease> "$this-c data_scale"
     }
 
     # Text Tab
