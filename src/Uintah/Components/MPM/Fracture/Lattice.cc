@@ -20,13 +20,15 @@ Lattice(const Patch* patch,const ParticleVariable<Point>& pX)
   }
 }
 
-void Lattice::fingNeighborWithout(particleIndex pIndex)
+bool Lattice::containCell(const IntVector& cellIndex) const
 {
-//  (*this)[ d_patch->findCell( d_pX[pIndex] ) ];
-}
-
-void Lattice::fingNeighborWith(particleIndex pIndex)
-{
+  if( cellIndex.x() >= getLowIndex().x() &&
+      cellIndex.y() >= getLowIndex().y() &&
+      cellIndex.z() >= getLowIndex().z() &&
+      cellIndex.x() < getHighIndex().x() &&
+      cellIndex.y() < getHighIndex().y() &&
+      cellIndex.z() < getHighIndex().z() ) return true;
+  else return false;
 }
 
 const Patch* Lattice::getPatch()
@@ -44,6 +46,9 @@ const ParticleVariable<Point>& Lattice::getParticlesPosition()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/06/05 23:57:51  tan
+// Added conainCell().
+//
 // Revision 1.3  2000/06/05 22:32:38  tan
 // Added function to find neighbor for a given particle index.
 //
