@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
@@ -56,9 +57,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 
 #ifdef BRYAN
   // this is for dividing the entire regridding problem into patchwise domains
-  DataWarehouse* new_dw = scheduler->getLastDW();
+  DataWarehouse* parent_dw = scheduler->getLastDW();
   DataWarehouse::ScrubMode ParentNewDW_scrubmode =
-                           new_dw->setScrubbing(DataWarehouse::ScrubNone);
+                           parent_dw->setScrubbing(DataWarehouse::ScrubNone);
 
 
   SchedulerP tempsched = scheduler->createSubScheduler();
@@ -66,7 +67,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   // it's normally unconventional to pass the new_dw in in the old_dw's spot,
   // but we don't even use the old_dw and on the first timestep it could be null 
   // and not initialize the parent dws.
-  tempsched->initialize(3, 1, new_dw, new_dw);
+  tempsched->initialize(3, 1, parent_dw, parent_dw);
 
   tempsched->clearMappings();
   tempsched->mapDataWarehouse(Task::ParentOldDW, 0);
@@ -75,49 +76,51 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   tempsched->mapDataWarehouse(Task::NewDW, 3);
 
   // make sure we have data in our subolddw
-  //tempsched->advanceDataWarehouse(oldGrid);
   tempsched->advanceDataWarehouse(oldGrid);
-  
+  tempsched->advanceDataWarehouse(oldGrid);
+
   tempsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-
-  for (int i = 0; i < 4; i++)
-    rdbg << " DW " << i << ": " << tempsched->get_dw(i) << endl;
-
+  
 
   int ngc;
   for ( int levelIndex = 0; levelIndex < oldGrid->numLevels() && levelIndex < d_maxLevels-1; levelIndex++ ) {
-    //Task* dummy_task = new Task("DUMMY", this, &HierarchicalRegridder::dummyTask);
-    //dummy_task->computes(d_sharedState->get_refineFlag_label());
-    //tempsched->addTask(dummy_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
-
+  // copy refine flags to the "old dw" so mpi copying will work correctly
+    const PatchSubset* psub = scheduler->getLoadBalancer()->createPerProcessorPatchSet(oldGrid->getLevel(levelIndex))->getSubset(d_myworld->myrank());
+    MaterialSubset* msub = scinew MaterialSubset;
+    msub->add(0);
+    DataWarehouse* old_dw = tempsched->get_dw(2);
+    old_dw->transferFrom(parent_dw, d_sharedState->get_refineFlag_label(), psub, msub);
+    delete msub;
+                       
+                       
     // dilate flagged cells on this level
-    Task* dilate_task = new Task("RegridderCommon::Dilate2 Creation",
+    Task* dilate_task = scinew Task("RegridderCommon::Dilate2 Creation",
                                  dynamic_cast<RegridderCommon*>(this),
                                  &RegridderCommon::Dilate2, 
-                                 DILATE_CREATION, new_dw);
+                                 DILATE_CREATION, old_dw);
     ngc = Max(d_cellCreationDilation.x(), d_cellCreationDilation.y());
     ngc = Max(ngc, d_cellCreationDilation.z());
     
-    dilate_task->requires(Task::ParentNewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+    dilate_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
     dilate_task->computes(d_dilatedCellsCreationLabel);
     tempsched->addTask(dilate_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
     if (d_cellCreationDilation != d_cellDeletionDilation) {
       // dilate flagged cells (for deletion) on this level)
-      Task* dilate_delete_task = new Task("RegridderCommon::Dilate2 Deletion",
+      Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate2 Deletion",
                                           dynamic_cast<RegridderCommon*>(this),
                                           &RegridderCommon::Dilate2,
-                                          DILATE_DELETION, new_dw);
+                                          DILATE_DELETION, old_dw);
 
       ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
       ngc = Max(ngc, d_cellDeletionDilation.z());
 
-      dilate_delete_task->requires(Task::ParentNewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+      dilate_delete_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
       dilate_delete_task->computes(d_dilatedCellsDeletionLabel);
       tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
     }
     // mark subpatches on this level (subpatches represent where patches on the next
     // level will be created).
-    Task* mark_task = new Task("HierarchicalRegridder::MarkPatches2",
+    Task* mark_task = scinew Task("HierarchicalRegridder::MarkPatches2",
                                this, &HierarchicalRegridder::MarkPatches2);
     mark_task->requires(Task::NewDW, d_dilatedCellsCreationLabel, Ghost::None);
     if (d_cellCreationDilation != d_cellDeletionDilation)
@@ -129,7 +132,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   
   tempsched->compile();
   tempsched->execute();
-  new_dw->setScrubbing(ParentNewDW_scrubmode);
+  parent_dw->setScrubbing(ParentNewDW_scrubmode);
   GatherSubPatches(oldGrid, tempsched);
   return CreateGrid2(oldGrid, ups);
 #else
@@ -288,7 +291,7 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
 	  }
 	} // end for subIter
       } else {
-	cout << "ALREADY ACTIVE." << endl;
+	rdbg << "ALREADY ACTIVE." << endl;
       } // end if (*d_patchActive[parentLevelIdx])[parentLatticeIdx])
       rdbg << endl;
     } // end for iter
@@ -322,7 +325,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
 
     IntVector startidx = latticeIdx * d_latticeRefinementRatio[levelIdx];
 
-    SubPatchFlag* subpatches = new SubPatchFlag(startidx, startidx+numSubPatches);
+    SubPatchFlag* subpatches = scinew SubPatchFlag(startidx, startidx+numSubPatches);
     PerPatch<SubPatchFlagP> activePatches(subpatches);
     
     // use pointers here to avoid a lot of const nonsense with the original version of Regridder
@@ -349,14 +352,14 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
       IntVector latticeStartIdx = startidx + idx;
       IntVector latticeEndIdx = latticeStartIdx + IntVector(1,1,1);
       
-      rdbg << "MarkPatches() startCell         = " << startCell         << endl;
-      rdbg << "MarkPatches() endCell           = " << endCell           << endl;
-      rdbg << "MarkPatches() latticeIdx        = " << latticeIdx        << endl;
-      rdbg << "MarkPatches() realPatchSize     = " << realPatchSize     << endl;
-      rdbg << "MarkPatches() numSubPatches     = " << numSubPatches     << endl;
-      rdbg << "MarkPatches() currentIdx        = " << idx               << endl;
-      rdbg << "MarkPatches() startCellSubPatch = " << startCellSubPatch << endl;
-      rdbg << "MarkPatches() endCellSubPatch   = " << endCellSubPatch   << endl;
+//       rdbg << "MarkPatches() startCell         = " << startCell         << endl;
+//       rdbg << "MarkPatches() endCell           = " << endCell           << endl;
+//       rdbg << "MarkPatches() latticeIdx        = " << latticeIdx        << endl;
+//       rdbg << "MarkPatches() realPatchSize     = " << realPatchSize     << endl;
+//       rdbg << "MarkPatches() numSubPatches     = " << numSubPatches     << endl;
+//       rdbg << "MarkPatches() currentIdx        = " << idx               << endl;
+//       rdbg << "MarkPatches() startCellSubPatch = " << startCellSubPatch << endl;
+//       rdbg << "MarkPatches() endCellSubPatch   = " << endCellSubPatch   << endl;
 
       if (flaggedCellsExist(*dilatedCellsCreated, startCellSubPatch, endCellSubPatch)) {
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
@@ -375,7 +378,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
 //           childLatticeEndIdx = childLatticeEndIdx * d_latticeRefinementRatio[childLevelIdx];
 //         }
       } else {
-        rdbg << "Not Marking or deleting [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
+        //        rdbg << "Not Marking or deleting [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
       }
     }
   }
@@ -480,9 +483,8 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
   d_patches.resize(toplevel+2);
 
   for (int i = toplevel; i >= 0; i--) {
-    rdbg << "  gathering on level " << toplevel << i << endl;
+    rdbg << "  gathering on level TOP " << toplevel << " Level " << i << endl;
     const Level* l = oldGrid->getLevel(i).get_rep();
-    // gather sub patches from all procs
     
     // place to end up with all subpatches
     vector<SubPatchFlagP> allSubpatches(l->numPatches());
@@ -492,91 +494,78 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
       for (Level::const_patchIterator iter = l->patchesBegin(); iter != l->patchesEnd(); iter++) {
         procAssignment[(*iter)->getLevelIndex()] = lb->getPatchwiseProcessorAssignment(*iter);
       }
+      // gives us number of things on each proc
       vector<int> sorted_processorAssignment = procAssignment;
       sort(sorted_processorAssignment.begin(), sorted_processorAssignment.end());
       
       vector<int> displs;
-      vector<int> recvcounts(d_myworld->myrank(),0); // init the counts to 0
+      vector<int> recvcounts(d_myworld->size(),0); // init the counts to 0
       
+      int numSubpatches = d_patchNum[i+1].x() * d_patchNum[i+1].y() * d_patchNum[i+1].z();
+
+      // num subpatches per patch
+      int nsppp = d_latticeRefinementRatio[i].x() * d_latticeRefinementRatio[i].y() * d_latticeRefinementRatio[i].z();
+
       int offsetProc = 0;
-      for (i = 0; i < (int)procAssignment.size(); i++) {
+      for (int p = 0; p < (int)sorted_processorAssignment.size(); p++) {
         // set the offsets for the MPI_Gatherv
-        if ( offsetProc == sorted_processorAssignment[i]) {
-          displs.push_back(i);
+        if ( offsetProc == sorted_processorAssignment[p]) {
+          displs.push_back(p*nsppp);
           offsetProc++;
         }
-        recvcounts[sorted_processorAssignment[i]]++;
+        recvcounts[sorted_processorAssignment[p]] += nsppp;
       }
+    
+      // create the buffers to send/recv the data
+      int* recvbuf = scinew int[numSubpatches];
+      int* sendbuf = scinew int[recvcounts[d_myworld->myrank()]];
+
+      int sendbufindex = 0;
+
+      // use this to sort the allSubPatchBuffer in order of processor.  The displs
+      // array keeps track of the index of the final array that holds the first
+      // item of each processor.  So use this to put allSubPatchBuffer in the right
+      // order, by referencing it, and then the next item for that processor will
+      // go in that value + nsppp.
+      vector<int> subpatchSorter = displs;
       
       // for this mpi communication, we're going to Gather all subpatch information to allprocessors.
-      // We're going to get what data we have from the DW and put its pointer data in subPatchBuffer.  While
+      // We're going to get what data we have from the DW and put its pointer data in sendbuf.  While
       // we're doing that, we need to prepare the receiving buffer to receive these, so we create a subPatchFlag
       // for each patch we're going to receive from, and then put it in the right order, as the 
       // MPI_Allgatherv puts them in order of processor.
       
-      vector<void*> subPatchBuffer;
-      vector<void*> allSubpatchBuffer(l->numPatches());
-      
-      // use this to sort the allSubPatchBuffer in order of processor.  The distls
-      // array keeps track of the index of the final array that holds the first
-      // item of each processor.  So use this to put allSubPatchBuffer in the right
-      // order, by referencing it, and then the next item for that processor will
-      // go in that value +1.
-      vector<int> subpatchSorter = displs;
-      
-      
-      // get ready to gather the subpatches
       for (Level::const_patchIterator citer = l->patchesBegin();
            citer != l->patchesEnd(); citer++) {
         Patch *patch = *citer;
-        int index = subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)]++;
+
+        // the subpatchSorter's index is in terms of the numbers of the subpatches
+        int index = subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)];
+        subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)]+=nsppp;
         IntVector patchIndex = patch->getCellLowIndex()/d_patchSize[i];
-        // prepare the receiving buffer (well, the buffer's buffer) to be the correct size
-        SubPatchFlagP spf1 = new SubPatchFlag(d_latticeRefinementRatio[i]*patchIndex,
-                                              d_latticeRefinementRatio[i]*(patchIndex+IntVector(1,1,1)));
-        
-        allSubpatches[index] = spf1;
-        allSubpatchBuffer[index] = spf1.get_rep()->subpatches.getBasePointer();
-        
+
+        // create the recv buffers to 
+        SubPatchFlagP spf1 = scinew SubPatchFlag;
+        spf1->initialize(d_latticeRefinementRatio[i]*patchIndex,
+                         d_latticeRefinementRatio[i]*(patchIndex+IntVector(1,1,1)), &recvbuf[index]);
+              
+        allSubpatches[index/nsppp] = spf1;
+
         if (procAssignment[patch->getLevelIndex()] != d_myworld->myrank())
           continue;
         
         // get the variable and prepare to send it: put its base pointer in the send buffer
         PerPatch<SubPatchFlagP> spf2;
         dw->get(spf2, d_activePatchesLabel, 0, patch);
-        subPatchBuffer.push_back(spf2.get().get_rep()->subpatches.getBasePointer());
+        for (int idx = 0; idx < nsppp; idx++) {
+          sendbuf[idx + sendbufindex] = spf2.get()->subpatches[idx];
+        }
+        sendbufindex += nsppp;
       }
-      
-      //construct a mpi datatype for the subpatches, using a dummy SubPatchFlag
-      // in case this proc doesn't have one on this level
-      SubPatchFlagP dummy;
-      dummy = new SubPatchFlag(IntVector(0,0,0), d_latticeRefinementRatio[i]);
-      CCVariable<int> *ccDummy = &dummy.get_rep()->subpatches;
-      MPI_Datatype subpatchtype;
-      MPI_Datatype basetype=MPI_INT;
-      IntVector low, high, s, strides, dataLow;
-      ccDummy->getSizes(low, high, dataLow, s, strides);
-      
-      //IntVector off = low - dataLow;
-      IntVector d = ccDummy->getHighIndex() - ccDummy->getLowIndex();
-      MPI_Datatype type1d;
-      MPITypeLock.lock();
-      MPI_Type_hvector(d.x(), 1, strides.x(), basetype, &type1d);
-      MPI_Datatype type2d;
-      MPI_Type_hvector(d.y(), 1, strides.y(), type1d, &type2d);
-      MPI_Type_free(&type1d);
-      MPI_Type_hvector(d.z(), 1, strides.z(), type2d, &subpatchtype);
-      MPI_Type_free(&type2d);
-      MPI_Type_commit(&subpatchtype);
-      MPITypeLock.unlock();  
-      
-      MPI_Allgatherv(&subPatchBuffer[0],subPatchBuffer.size(),subpatchtype,
-                     &allSubpatchBuffer[0], &recvcounts[0], &displs[0], subpatchtype,
-                     d_myworld->getComm());
-      
-      MPITypeLock.lock();
-      MPI_Type_free(&subpatchtype);
-      MPITypeLock.unlock();
+
+      MPI_Allgatherv(sendbuf, sendbufindex, MPI_INT, 
+                     recvbuf, &recvcounts[0], &displs[0], MPI_INT, d_myworld->getComm());
+
     }
     else {
       // for the single-proc case, just put the subpatches in the same container
@@ -593,9 +582,10 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
     // loop over each patch's subpatches (these will be the patches on level+1)
     for (unsigned j = 0; j < allSubpatches.size(); j++) {
       rdbg << "   Doing subpatches index " << j << endl;
-      for (CellIterator iter(allSubpatches[j].get_rep()->getLowIndex(), allSubpatches[j].get_rep()->getHighIndex()); 
+      for (CellIterator iter(allSubpatches[j].get_rep()->low_, allSubpatches[j].get_rep()->high_); 
            !iter.done(); iter++) {
         IntVector idx(*iter);
+        
         // if that subpatch is active...
         if ((*allSubpatches[j].get_rep())[idx]) {
           // add this subpatch to become the next level's patch
@@ -606,17 +596,19 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
             IntVector range = Ceil(d_minBoundaryCells.asVector()/d_patchSize[i].asVector());
             for (CellIterator inner(IntVector(-1,-1,-1)*range, range); !inner.done(); inner++) {
               // "dilate" each subpatch, adding it to the patches on the coarser level
-              IntVector idx = (idx + *inner) / d_latticeRefinementRatio[i];
-              if ((idx.x() < 0 || idx.x() > d_patchNum[i].x()) ||
-                  (idx.y() < 0 || idx.y() > d_patchNum[i].y()) ||
-                  (idx.z() < 0 || idx.z() > d_patchNum[i].z()))
-                break;
-              d_patches[i].insert(idx);
+              IntVector dilate_idx = (idx + *inner) / d_latticeRefinementRatio[i];
+              if ((dilate_idx.x() < 0 || dilate_idx.x() > d_patchNum[i].x()) ||
+                  (dilate_idx.y() < 0 || dilate_idx.y() > d_patchNum[i].y()) ||
+                  (dilate_idx.z() < 0 || dilate_idx.z() > d_patchNum[i].z()))
+                continue;
+              rdbg << "  Adding dilated subpatch " << dilate_idx << endl;
+              d_patches[i].insert(dilate_idx);
             }
           }
         } // end if allSubpatches[j][idx]
-        else
-          rdbg << " NOT adding subpatch " << idx << " to level " << i+1 << endl;
+        else {
+          //           rdbg << " NOT adding subpatch " << idx << " to level " << i+1 << endl;
+        }
       } // end for celliterator
     } // end for unsigned j
   } // end for i = toplevel
