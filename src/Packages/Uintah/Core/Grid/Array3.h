@@ -50,7 +50,7 @@ WARNING
 	: d_index(index), d_array3(array3) { }
       iterator(const iterator& iter)
 	: d_index(iter.d_index), d_array3(iter.d_array3) { }
-      ~iterator() {}
+      virtual ~iterator() {}
 
       iterator& operator=(const iterator& it2)
       { d_array3 = it2.d_array3; d_index = it2.d_index; return *this; }
@@ -118,26 +118,32 @@ WARNING
       const_iterator(const Array3<T>* array3, IntVector index)
 	: iterator(const_cast<Array3<T>*>(array3), index) { }
       const_iterator(const const_iterator& iter)
-	: iterator(iter.d_array3, iter.index) { }
+	: iterator(iter) { }
       ~const_iterator() {}
 
       const_iterator& operator=(const const_iterator& it2)
-      { ::operator=(it2); return *this; }
+      { iterator::operator=(it2); return *this; }
+
+      inline bool operator==(const const_iterator& it2) const
+      { return iterator::operator==(it2); }
 
       inline bool operator==(const iterator& it2) const
-      { return ::operator==(it2); }
+      { return iterator::operator==(it2); }
       
+      inline bool operator!=(const const_iterator& it2) const
+      { return iterator::operator!=(it2); }
+
       inline bool operator!=(const iterator& it2) const
-      { return ::operator!=(it2); }
+      { return iterator::operator!=(it2); }
       
       inline const T& operator*() const
-      { return ::operator*(); }
+      { return iterator::operator*(); }
 
       inline const_iterator& operator++()
-      { ::operator++(); return *this; }
+      { iterator::operator++(); return *this; }
 
       inline const_iterator& operator--()
-      { ::operator--(); return *this; }
+      { iterator::operator--(); return *this; }
 
       inline const_iterator operator++(int)
       {
@@ -154,7 +160,7 @@ WARNING
       }
 
       IntVector getIndex() const
-      { return ::getIndex(); }
+      { return iterator::getIndex(); }
     };    
 
   public:
