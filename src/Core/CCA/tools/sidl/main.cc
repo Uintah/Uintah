@@ -30,7 +30,7 @@
 
 extern int yyparse();
 extern FILE* yyin;
-extern Specification specs;
+extern Specification* parse_spec;
 using std::cerr;
 using std::endl;
 using std::string;
@@ -50,13 +50,11 @@ const char* find_cpp()
   possible_cpps.push_back( "/usr/lib/cpp" );
   possible_cpps.push_back( "/usr/bin/cpp" );
 
-  for( unsigned int cnt = 0; cnt < possible_cpps.size(); cnt++ )
-    {
-      if( stat( possible_cpps[ cnt ], &s ) != -1 )
-	{
-	  return possible_cpps[ cnt ];
-	}
+  for( unsigned int cnt = 0; cnt < possible_cpps.size(); cnt++ ) {
+    if( stat( possible_cpps[ cnt ], &s ) != -1 ) {
+      return possible_cpps[ cnt ];
     }
+  }
 
   cerr << "ERROR in: ./SCIRun/src/Core/CCA/tools/sidl/main.cc:\n";
   cerr << "Cpp: doesn't seem to exist... bye.\n";
@@ -69,125 +67,137 @@ char* find_builtin()
 #ifndef SIDL_BUILTINS
 #error SIDL_BUILTINS should point to the directory containing cia.sidl
 #endif
-    return SIDL_BUILTINS "CIA.sidl";
+  return SIDL_BUILTINS "CIA.sidl";
 }
 
 int main(int argc, char* argv[])
 {
-    extern int yydebug;
-    yydebug=0;
-    bool failed=false;
-    int nfiles=0;
+  extern int yydebug;
+  yydebug=0;
+  bool failed=false;
+  int nfiles=0;
 
-    const char* cpp=find_cpp();
-    bool done_builtin=false;
+  const char* cpp=find_cpp();
+  bool done_builtin=false;
 
-    std::string outfile;
-    bool emit_header=false;
+  std::string outfile;
+  bool emit_header=false;
 
-    for(int i=1;i<argc;i++){
-	if(strcmp(argv[i], "-yydebug") == 0){
-	    yydebug=1;
-	} else if(argv[i][0]=='-'){
-	    std::string arg(argv[i]);
-	    if(arg == "-o") {
-		i++;
-		if(i>=argc){
-		    cerr << "No file specified for -o\n";
-		    exit(1);
-		}
-		outfile=argv[i];
-	    } else if(arg == "-h") {
-		emit_header=true;
-	    } else if(arg == "-cia") {
-		doing_cia=true;
-	    } else {
-		cerr << "Unknown option: " << argv[i] << endl;
-		exit(1);
-	    }
-	} else {
-	    if(!done_builtin && !doing_cia){
-		foremit=false;
-		char* builtin=find_builtin();
-		char* buf=new char[strlen(cpp)+strlen(builtin)+10];
-		sprintf(buf, "%s %s", cpp, builtin);
-		yyin=popen(buf, "r");
-		delete[] buf;
-		if(!yyin){
-		    cerr << "Error opening file: " << builtin << '\n';
-		    failed=true;
-		}
-		if(yyparse()){
-		    cerr << "Error parsing file: " << builtin << '\n';
-		    failed=true;
-		}
-		if(pclose(yyin) == -1){
-		    perror("pclose");
-		    failed=true;
-		}
-		done_builtin=true;
-	    }
+  SpecificationList specs;
 
-	    foremit=true;
-	    nfiles++;
-	    char* buf=new char[strlen(cpp)+strlen(argv[i])+10];
-	    sprintf(buf, "%s %s", cpp, argv[i]);
-	    yyin=popen(buf, "r");
-	    delete[] buf;
-	    if(!yyin){
-		cerr << "Error opening file: " << argv[i] << '\n';
-		failed=true;
-	    }
-	    if(yyparse()){
-		cerr << "Error parsing file: " << argv[i] << '\n';
-		failed=true;
-	    }
-	    if(pclose(yyin) == -1){
-		perror("pclose");
-		failed=true;
-	    }
+  for(int i=1;i<argc;i++){
+    if(strcmp(argv[i], "-yydebug") == 0){
+      yydebug=1;
+    } else if(argv[i][0]=='-'){
+      std::string arg(argv[i]);
+      if(arg == "-o") {
+	i++;
+	if(i>=argc){
+	  cerr << "No file specified for -o\n";
+	  exit(1);
 	}
-    }
-    if(failed){
+	outfile=argv[i];
+      } else if(arg == "-h") {
+	emit_header=true;
+      } else if(arg == "-cia") {
+	doing_cia=true;
+      } else {
+	cerr << "Unknown option: " << argv[i] << endl;
 	exit(1);
-    }
-    if(nfiles==0){
-	cerr << "Must specify a file to parse\n";
-    }
-
-    /*
-     * Static checking
-     */
-    specs.staticCheck();
-
-    /*
-     * Emit code
-     */
-    std::ofstream devnull("/dev/null");
-    if(outfile != ""){
-	std::ofstream out(outfile.c_str());
-	if(!out){
-	    cerr << "Error opening output file: " << outfile << '\n';
-	    exit(1);
-	}
-	string hname=outfile;
-	int l=hname.length()-1;
-	while(l>0 && hname[l] != '.')
-	    l--;
-	if(l>0)
-	    hname=hname.substr(0, l);
-	hname+= ".h";
-	if(emit_header)
-	    specs.emit(devnull, out, hname);
-	else
-	    specs.emit(out, devnull, hname);
+      }
     } else {
-	string hname="stdout";
-	if(emit_header)
-	    specs.emit(devnull, std::cout, hname);
-	else
-	    specs.emit(std::cout, devnull, hname);
+      if(!done_builtin && !doing_cia){
+	foremit=false;
+	char* builtin=find_builtin();
+	char* buf=new char[strlen(cpp)+strlen(builtin)+10];
+	sprintf(buf, "%s %s", cpp, builtin);
+	yyin=popen(buf, "r");
+	delete[] buf;
+	if(!yyin){
+	  cerr << "Error opening file: " << builtin << '\n';
+	  failed=true;
+	}
+	if(yyparse()){
+	  cerr << "Error parsing file: " << builtin << '\n';
+	  failed=true;
+	}
+	if(pclose(yyin) == -1){
+	  perror("pclose");
+	  failed=true;
+	}
+	specs.add(parse_spec);
+	parse_spec=0;
+	done_builtin=true;
+      }
+      
+      foremit=true;
+      nfiles++;
+      char* buf=new char[strlen(cpp)+strlen(argv[i])+10];
+      sprintf(buf, "%s %s", cpp, argv[i]);
+      yyin=popen(buf, "r");
+      delete[] buf;
+      if(!yyin){
+	cerr << "Error opening file: " << argv[i] << '\n';
+	failed=true;
+      }
+      if(yyparse()){
+	cerr << "Error parsing file: " << argv[i] << '\n';
+	failed=true;
+      }
+      if(pclose(yyin) == -1){
+	perror("pclose");
+	failed=true;
+      }
+      parse_spec->setTopLevel();
+      specs.add(parse_spec);
+      parse_spec=0;
     }
-    return 0;
+  }
+  if(failed){
+    exit(1);
+  }
+  if(nfiles==0){
+    cerr << "Must specify a file to parse\n";
+  }
+
+  /*
+   * Process imports...
+   */
+  specs.processImports();
+
+  /*
+   * Static checking
+   */
+  specs.staticCheck();
+
+  /*
+   * Emit code
+   */
+  std::ofstream devnull("/dev/null");
+  if(outfile != ""){
+    std::ofstream out(outfile.c_str());
+    if(!out){
+      cerr << "Error opening output file: " << outfile << '\n';
+      exit(1);
+    }
+    string hname=outfile;
+    int l=hname.length()-1;
+    while(l>0 && hname[l] != '.')
+      l--;
+    if(l>0)
+      hname=hname.substr(0, l);
+    hname+= ".h";
+    if(emit_header)
+      specs.emit(devnull, out, hname);
+    else
+      specs.emit(out, devnull, hname);
+  } else {
+    string hname="stdout";
+    if(emit_header)
+      specs.emit(devnull, std::cout, hname);
+    else
+      specs.emit(std::cout, devnull, hname);
+  }
+  return 0;
 }
 
