@@ -64,10 +64,14 @@ int main(int argc, char **argv) {
   mesh->set_nz(base->nz);
   mesh->set_min(base->get_point(0,0,0));
   mesh->set_max(base->get_point(base->nx-1,base->ny-1,base->nz-1));
+  cout << "node index space extents = " 
+       << base->nx << ", " << base->ny << ", " << base->nz << endl;
+  cout << "object space extents     = "
+       << mesh->get_min() << ", " << mesh->get_max() << endl;
 
   // create storage for the data, and copy base's data into it
   FData3d<double> fdata = lf->fdata();
-  // grow the array here
+  fdata.newsize(base->nx+1,base->ny+1,base->nz+1);
   LatVolMesh::NodeIter iter = mesh->node_begin();
   int i=0,j=0,k=0;
   while (iter != mesh->node_end()) {
@@ -82,8 +86,8 @@ int main(int argc, char **argv) {
     }
   }
   
-  BinaryPiostream out_stream(argv[2], Piostream::Write);
-  //Pio(stream, fH);
+  TextPiostream out_stream(argv[2], Piostream::Write);
+  Pio(out_stream, fH);
 
   return 0;  
 }    
