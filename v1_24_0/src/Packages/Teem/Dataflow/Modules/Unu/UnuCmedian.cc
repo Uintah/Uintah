@@ -64,6 +64,12 @@ private:
   GuiDouble       weight_;
   GuiInt          bins_;
   GuiInt          pad_;
+  int             old_mode_;
+  int             old_radius_;
+  double          old_weight_;
+  int             old_bins_;
+  int             old_pad_;
+  int             old_generation_;
 };
 
 DECLARE_MAKER(UnuCmedian)
@@ -74,7 +80,9 @@ UnuCmedian::UnuCmedian(SCIRun::GuiContext *ctx) :
   radius_(ctx->subVar("radius")),
   weight_(ctx->subVar("weight")),
   bins_(ctx->subVar("bins")),
-  pad_(ctx->subVar("pad"))
+  pad_(ctx->subVar("pad")),
+  old_mode_(-1), old_radius_(-1), old_weight_(-1.0),
+  old_bins_(-1), old_pad_(-1), old_generation_(-1)
 {
 }
 
@@ -148,6 +156,22 @@ UnuCmedian::execute()
 
   Nrrd *nin = nrrd_handle->nrrd;
   NrrdDataHandle nsend(0);
+
+  bool do_execute = false;
+  if (old_mode_ != mode_.get() || old_radius_ != radius_.get() ||
+      old_weight_ != weight_.get() || old_pad_ != pad_.get() ||
+      old_generation_ != nrrd_handle->generation) {
+    do_execute = true;
+    old_mode_ = mode_.get();
+    old_radius_ = radius_.get();
+    old_weight_ = weight_.get();
+    old_pad_ = pad_.get();
+    old_generation_ = nrrd_handle->generation;
+  }
+
+  // only execute if needed
+  if (!do_execute)
+    return;
 
   // loop over the tuple axis, and do the median filtering for 
   // each scalar set independently, copy non scalar sets unchanged.
