@@ -15,6 +15,7 @@
 using namespace SCIRun;
 using namespace Uintah;
 
+
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false); 
 /* --------------------------------------------------------------------- 
@@ -30,9 +31,10 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    cout_doing<<"Doing computeRateFormPressure on patch "
+    if (cout_doing.active()) {
+      cout_doing<<"Doing computeRateFormPressure on patch "
               << patch->getID() <<"\t\t MPMICE" << endl;
+    }
 
     double tmp;
     double press_ref= d_sharedState->getRefPress();
