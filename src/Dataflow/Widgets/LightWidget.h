@@ -46,9 +46,13 @@ class FrameWidget;
 class LightWidget : public BaseWidget {
 public:
    LightWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+   LightWidget( Module* module, CrowdMonitor* lock, 
+		double widget_scale, Point source,
+		Point direct, Point cone, double rad, double rat );
    LightWidget( const LightWidget& );
+   
    ~LightWidget();
-
+   void init( Module* module);
    virtual void redraw();
    virtual void geom_moved(GeomPickHandle, int, double, const Vector&, int,
 			   const BState&, const Vector &pick_offset);
@@ -64,9 +68,13 @@ public:
   const Vector& GetAxis();
   Point GetSource() const;
   Point GetPointAt() const;
+  Point GetCone() const;
   void SetPointAt( const Point& p );
+  void SetCone( const Point& p );
   double GetRadius() const;
   void SetRadius( double r );
+  double GetRatio() const;
+  void SetRatio( double r );
 
    // Variable indexs
    enum { SourceVar, DirectVar, ConeVar, DistVar, RadiusVar, RatioVar };
