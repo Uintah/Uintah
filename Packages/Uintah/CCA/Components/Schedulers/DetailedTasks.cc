@@ -9,11 +9,13 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+
+#include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
 #include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
-using std::is_sorted;
+using namespace std;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time) 
