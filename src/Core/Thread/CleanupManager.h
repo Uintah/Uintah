@@ -40,6 +40,22 @@
  *  Copyright (C) 2004 SCI Group
  */
 
+//  How to use this class:
+//  
+//  #include <Core/Thread/CleanupManager.h>
+//  
+//  Make a callback function that takes zero arguements and returns
+//  void.  Be very careful about introducing crashes into this
+//  callback function as it then becomes difficult to exit from
+//  scirun.  It's recommended that you avoid calling scinew from
+//  within your callback.
+//  
+//  Register with CleanupManager::add_callback(YOUR_CALLBACK_HERE);
+//  
+//  Your callback will only ever be called once, no matter how many
+//  times you register it.  In addition you can unregister it or
+//  design it such that it doesn't do anything if it doesn't need to.
+
 #ifndef SCI_project_CleanupManager_h
 #define SCI_project_CleanupManager_h 1
 
