@@ -7,7 +7,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICERF.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 
@@ -202,7 +202,7 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
                                                                   press_matl,
                                                                   all_matls);
 
-  d_ice->scheduleComputeFCPressDiff(              sched, patches, ice_matls_sub,
+  d_ice->scheduleComputeFCPressDiffRF(            sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
@@ -212,7 +212,7 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
 //                                                                  press_matl,
 //                                                                  all_matls);
 
-  d_ice->scheduleComputeFaceCenteredVelocities(   sched, patches, ice_matls_sub,
+  d_ice->scheduleComputeFaceCenteredVelocitiesRF( sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
@@ -236,10 +236,10 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
 
   d_ice->scheduleComputePressFC(                  sched, patches, press_matl,
                                                                   all_matls);
-  d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, press_matl,
+  d_ice->scheduleAccumulateMomentumSourceSinksRF( sched, patches, press_matl,
                                                                   ice_matls_sub,
                                                                   all_matls);
-  d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, press_matl,
+  d_ice->scheduleAccumulateEnergySourceSinksRF(   sched, patches, press_matl,
                                                                   all_matls);
 
   scheduleInterpolatePressCCToPressNC(            sched, patches, press_matl,
@@ -265,7 +265,7 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   scheduleCCMomExchange(                          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
-  d_ice->scheduleComputeLagrangianSpecificVolume( sched, patches, press_matl,
+  d_ice->scheduleComputeLagrangianSpecificVolumeRF(sched, patches, press_matl,
 								  all_matls);
   scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
