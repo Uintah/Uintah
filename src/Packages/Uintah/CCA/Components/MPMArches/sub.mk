@@ -8,6 +8,14 @@ SRCS     += \
 	$(SRCDIR)/MPMArches.cc \
 	$(SRCDIR)/MPMArchesLabel.cc
 
+ifneq ($(CC_DEPEND_REGEN),-MD)
+# The fortran code doesn't work under g++ yet
+SUBDIRS := $(SRCDIR)/fortran 
+
+include $(SRCTOP)/scripts/recurse.mk
+FLIB := -lftn
+endif
+
 PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
@@ -23,6 +31,6 @@ PSELIBS := \
 	Core/Geometry   \
 	Dataflow/XMLUtil
 
-LIBS := $(XML_LIBRARY) -lm
+LIBS := $(XML_LIBRARY) $(FLIB) $(MPI_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

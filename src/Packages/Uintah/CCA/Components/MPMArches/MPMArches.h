@@ -78,22 +78,30 @@ public:
 				   const LevelP& level, SchedulerP&);
 
 
-  void scheduleInterpolateNCToCC(SchedulerP&, const PatchSet*,
-				 const MaterialSet*);
+  void scheduleInterpolateNCToCC(SchedulerP&,
+				 const PatchSet* patches,
+				 const MaterialSet* matls);
 
-  void scheduleInterpolateCCToFC(SchedulerP&, const PatchSet*,
-				 const MaterialSet*);
-
-
-  void scheduleComputeVoidFrac(SchedulerP&, const PatchSet*,
-			       const MaterialSet*);
-
-  void scheduleMomExchange(SchedulerP&, const PatchSet*,
-			   const MaterialSet*);
+  void scheduleInterpolateCCToFC(SchedulerP&,
+				 const PatchSet* patches,
+				 const MaterialSet* matls);
 
 
+  void scheduleComputeVoidFrac(SchedulerP& sched,
+			       const PatchSet* patches,
+			       const MaterialSet* arches_matls,
+			       const MaterialSet* mpm_matls,
+			       const MaterialSet* all_matls);
 
-protected:
+  void scheduleMomExchange(SchedulerP& sched,
+			   const PatchSet* patches,
+			   const MaterialSet* arches_matls,
+			   const MaterialSet* mpm_matls,
+			   const MaterialSet* all_matls);
+
+
+
+ protected:
 
   void interpolateNCToCC(const ProcessorGroup*,
 			 const PatchSubset* patches,
@@ -109,16 +117,35 @@ protected:
 
   void computeVoidFrac(const ProcessorGroup*,
 		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
+		       const MaterialSubset*,
 		       DataWarehouse* old_dw,
-		       DataWarehouse* new_dw) ;
+		       DataWarehouse* new_dw);
 
 
   void doMomExchange(const ProcessorGroup*,
 		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
+		     const MaterialSubset*,
 		     DataWarehouse* old_dw,
 		     DataWarehouse* new_dw);
+
+  void collectToCCGasMomExchSrcs(const ProcessorGroup*,
+				 const PatchSubset* patches,
+				 const MaterialSubset*,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
+
+  void interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
+				       const PatchSubset* patches,
+				       const MaterialSubset* ,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw);
+
+  void redistributeDragForceFromCCtoFC(const ProcessorGroup*,
+				       const PatchSubset* patches,
+				       const MaterialSubset* ,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw);
+
 
   double d_SMALL_NUM;
   // GROUP: Constructors (Private):
