@@ -27,7 +27,7 @@ namespace rtrt {
     // adds a new widget to the end of the vector
     virtual void addWidget( int x, int y );
     // cycles through widget types: tri->rect(ell)->rect(1d)->rect(deft)->tri..
-    virtual void cycleWidgets( int type );
+    virtual void cycleWidgets( void );
     // draws all widgets in widgets vector without their textures
     virtual void drawWidgets( GLenum mode );
     // paints widget textures onto the background
@@ -109,6 +109,8 @@ namespace rtrt {
     // Used only for a rendering hack
     bool skip_opacity( Voxel2D<float> v1, Voxel2D<float> v2,
 		       Voxel2D<float> v3, Voxel2D<float> v4 );
+    // Colors widget frames after they are loaded from a file
+    void colorWidgetFrames( void );    
     // Called whenever the user interface is changed
     virtual void animate(bool &changed);
 
