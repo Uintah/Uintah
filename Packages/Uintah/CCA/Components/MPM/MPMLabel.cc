@@ -275,6 +275,9 @@ MPMLabel::MPMLabel()
   AccArchesNCLabel = scinew VarLabel("AccArchesNC",
 			NCVariable<Vector>::getTypeDescription() );
 
+  frictionalWorkLabel = scinew VarLabel("frictionalWork",
+			NCVariable<double>::getTypeDescription());
+
   // Reduction variables
   partCountLabel = scinew VarLabel("particleCount",
 				   sumlong_vartype::getTypeDescription());
@@ -398,6 +401,7 @@ MPMLabel::~MPMLabel()
   delete dTdt_NCLabel;
   delete massBurnFractionLabel;
   delete AccArchesNCLabel;
+  delete frictionalWorkLabel;
 
   delete partCountLabel;
   delete delTLabel;
