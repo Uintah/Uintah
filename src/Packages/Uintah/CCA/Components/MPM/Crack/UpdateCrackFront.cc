@@ -1,6 +1,6 @@
 /********************************************************************************
     Crack.cc
-    PART SEVEN: UPDATE CRACK FRONT 
+    PART SEVEN: UPDATE CRACK FRONT AND CALCULATE CRACK-FRONT NORMALS
 
     Created by Yajun Guo in 2002-2004.
 ********************************************************************************/
@@ -8,7 +8,7 @@
 #include "Crack.h"
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -317,11 +317,16 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
     
         /* Task 4: Calculate normals, tangential normals and binormals
         */         
-        short smoothSuccessfully=CalculateCrackFrontNormals(m);
-        if(!smoothSuccessfully) {
-          if(pid==0) cout << "   ! Crack-front normals are obtained "
-                          << "by raw crack-front points."
-                          << endl;
+        if(smoothCrackFront) { // Smooth crack front with cubic-spline
+          short smoothSuccessfully=SmoothCrackFrontAndCalculateNormals(m);
+          if(!smoothSuccessfully) {
+          //  if(pid==0)
+          //    cout << " ! Crack-front normals are obtained "
+          //         << "by raw crack-front points." << endl;
+          }
+        }
+        else { // Calculate crack-front normals directly
+          CalculateCrackFrontNormals(m);
         }
    
       } // End of if(d_doCrackPropagation!="false")
@@ -329,8 +334,8 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       // Output crack elems, crack points and crack-front nodes
       // visualization
       if(doCrackVisualization) {
-        int timestepIdx=d_sharedState->getCurrentTopLevelTimeStep();
-        if(pid==0) OutputCrackGeometry(m,timestepIdx);
+        int curTimeStep=d_sharedState->getCurrentTopLevelTimeStep();
+        if(pid==0) OutputCrackGeometry(m,curTimeStep);
       }
 
     } // End of loop over matls
