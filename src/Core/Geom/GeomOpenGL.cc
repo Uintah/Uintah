@@ -150,7 +150,7 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	}
     }
     di->set_matl(matl);
-#if (_MIPS_SZPTR == 64) || defined(__digital__)
+#if (_MIPS_SZPTR == 64) || defined(__digital__) || defined(_AIX)
     unsigned long o=(unsigned long)this;
     unsigned int o1=(o>>32)&0xffffffff;
     unsigned int o2=o&0xffffffff;
@@ -2188,7 +2188,7 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
     if(di->pickmode){
 	// cerr <<"found a widget " << (GLuint)this << endl;
 	++di->npicks;
-#if (_MIPS_SZPTR == 64) || defined(__digital__)
+#if (_MIPS_SZPTR == 64) || defined(__digital__) || defined(_AIX)
 	unsigned long o=(unsigned long)this;
 	unsigned int o1=(o>>32)&0xffffffff;
 	unsigned int o2=o&0xffffffff;
