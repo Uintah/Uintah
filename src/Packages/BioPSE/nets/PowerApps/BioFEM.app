@@ -698,14 +698,26 @@ class BioFEMApp {
     method save_session {} {
 	global mods
 	
+	if {$saveFile == ""} {
+	    
+	    set types {
+		{{App Settings} {.ses} }
+		{{Other} { * } }
+	    } 
+	    set saveFile [ tk_getSaveFile -defaultextension {.ses} \
+			       -filetypes $types ]
+	}	
 	set types {
 	    {{App Settings} {.set} }
 	    {{Other} { * } }
 	} 
-	set savefile [ tk_getSaveFile -defaultextension {.set} \
+	set saveFile [ tk_getSaveFile -defaultextension {.set} \
 			   -filetypes $types ]
-	if { $savefile != "" } {
-	    set fileid [open $savefile w]
+	if { $saveFile != "" } {
+	    # configure title
+	    wm title .standalone "BioFEM - [getFileName $saveFile]" 
+
+	    set fileid [open $saveFile w]
 	    
 	    # Save out data information 
 	    puts $fileid "# BioFEM Session\n"
@@ -744,8 +756,8 @@ class BioFEMApp {
 	    {{Other} { * }}
 	}
 	
-	set file [tk_getOpenFile -filetypes $types]
-	if {$file != ""} {
+	set saveFile [tk_getOpenFile -filetypes $types]
+	if {$saveFile != ""} {
 	    
 	    # Reset application 
 	    reset_app
@@ -754,7 +766,7 @@ class BioFEMApp {
 		global $g
 	    }
 	    
-	    source $file
+	    source $saveFile
 	    
 
 	    # set a few variables that need to be reset
