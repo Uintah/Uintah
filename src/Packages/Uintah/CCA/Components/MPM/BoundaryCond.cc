@@ -22,19 +22,19 @@ template<class T> void fillFace(NCVariable<T>& var,const Patch* patch,
   IntVector low,hi;
   low = patch->getInteriorNodeLowIndex();
   low+= offset;
-  //cout <<"low "<<low-offset<<"  Low + offset "<<low<<endl;
+  cout <<"low "<<low-offset<<"  Low + offset "<<low<<endl;
   
   hi = patch->getInteriorNodeHighIndex();      
   hi -= offset;
-  //cout <<"high "<<hi+offset<<"  hi - offset "<<hi<<endl;
+  cout <<"high "<<hi+offset<<"  hi - offset "<<hi<<endl;
   
   switch (face) {
   case Patch::xplus:
     for (int j = low.y(); j<hi.y(); j++) {
       for (int k = low.z(); k<hi.z(); k++) {
 	var[IntVector(hi.x()-1,j,k)] = value;
-	//cout<<"fillFace xPlus "<<"patch "<<patch->getID()<<" "<<
-	//   IntVector(hi.x()-1,j,k)<<endl;
+	cout<<"fillFace xPlus "<<"patch "<<patch->getID()<<" "<<
+	   IntVector(hi.x()-1,j,k)<<endl;
       }
     }
     break;
@@ -42,8 +42,8 @@ template<class T> void fillFace(NCVariable<T>& var,const Patch* patch,
     for (int j = low.y(); j<hi.y(); j++) {
       for (int k = low.z(); k<hi.z(); k++) {
 	var[IntVector(low.x(),j,k)] = value;
-	//cout<<"fillFace xMinus "<<"patch "<<patch->getID()<<" "<<
-	//   IntVector(low.x(),j,k)<<endl;
+	cout<<"fillFace xMinus "<<"patch "<<patch->getID()<<" "<<
+	   IntVector(low.x(),j,k)<<endl;
       }
     }
     break;
@@ -51,8 +51,8 @@ template<class T> void fillFace(NCVariable<T>& var,const Patch* patch,
     for (int i = low.x(); i<hi.x(); i++) {
       for (int k = low.z(); k<hi.z(); k++) {
 	var[IntVector(i,hi.y()-1,k)] = value;
-	//cout<<"fillFace yplus "<<"patch "<<patch->getID()<<" "<<
-	//   IntVector(i,hi.y()-1,k)<<endl;
+	cout<<"fillFace yplus "<<"patch "<<patch->getID()<<" "<<
+	   IntVector(i,hi.y()-1,k)<<endl;
       }
     }
     break;
@@ -60,8 +60,8 @@ template<class T> void fillFace(NCVariable<T>& var,const Patch* patch,
     for (int i = low.x(); i<hi.x(); i++) {
       for (int k = low.z(); k<hi.z(); k++) {
 	var[IntVector(i,low.y(),k)] = value;
-	//cout<<"fillFace yminus "<<"patch "<<patch->getID()<<" "<<
-	//   IntVector(i,low.y(),k)<<endl;
+	cout<<"fillFace yminus "<<"patch "<<patch->getID()<<" "<<
+	   IntVector(i,low.y(),k)<<endl;
       }
     }
     break;
@@ -69,8 +69,8 @@ template<class T> void fillFace(NCVariable<T>& var,const Patch* patch,
     for (int i = low.x(); i<hi.x(); i++) {
       for (int j = low.y(); j<hi.y(); j++) {
 	var[IntVector(i,j,hi.z()-1)] = value;
-	//cout<<"fillFace zplus "<<"patch "<<patch->getID()<<" "<<
-	//   IntVector(i,j,hi.z()-1)<<endl;
+	cout<<"fillFace zplus "<<"patch "<<patch->getID()<<" "<<
+	   IntVector(i,j,hi.z()-1)<<endl;
       }
     }
     break;
@@ -78,8 +78,8 @@ template<class T> void fillFace(NCVariable<T>& var,const Patch* patch,
     for (int i = low.x(); i<hi.x(); i++) {
       for (int j = low.y(); j<hi.y(); j++) {
 	var[IntVector(i,j,low.z())] = value;
-	//cout<<"fillFace zminus "<<"patch "<<patch->getID()<<" "<<
-	//   IntVector(i,j,low.z())<<endl;
+	cout<<"fillFace zminus "<<"patch "<<patch->getID()<<" "<<
+	   IntVector(i,j,low.z())<<endl;
       }
     }
     break;
