@@ -1,4 +1,5 @@
 #define GROUP_IN_TIMEOBJ 1
+//#define USE_BRICK
 
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Cylinder.h>
@@ -35,6 +36,7 @@
 
 using namespace rtrt;
 using SCIRun::Thread;
+using namespace std;
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int nworkers)
@@ -146,7 +148,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	  HVolumeBrick* hvol=new HVolumeBrick(matl0, dpy, files[i],
 					      depth, nworkers);
 #else
+	  //Material *matl0=new Phong( Color(.6,1,.4), Color(1,1,1), 100, 0);
 	  HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > * hvol = new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (matl0, dpy, files[i], depth, nworkers);
+	  char buf[1000];
+	  sprintf(buf, "%s_%02d", files[i], i);
+	  hvol->name_ = buf;
+	  hvol->print(cout);
 #endif
 	  group->add(hvol);
 	    if(showgrid){
@@ -252,9 +259,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	obj=group;
     }
 
+    PlaneDpy *pd = 0;
     if(cut){
-	PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,100));
+      pd=new PlaneDpy(Vector(0,0,1), Point(0,0,100));
 	obj=new CutPlane(obj, pd);
+	//obj->set_matl(new Phong(Color(1,0,1), Color(0,1,0), 100));
 	(new Thread(pd, "Cutting plane display thread"))->detach();
     }
 
@@ -281,6 +290,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     scene->select_shadow_mode( No_Shadows );
     scene->attach_display(dpy);
+    if (cut)
+      scene->attach_display(pd);
+    scene->addObjectOfInterest(obj, true);
     return scene;
 }
 

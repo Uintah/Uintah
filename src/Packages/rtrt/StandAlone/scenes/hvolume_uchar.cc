@@ -163,6 +163,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     Scene* scene=new Scene(obj, cam,
 			   bgcolor, cdown, cup, groundplane,
 			   ambient_scale);
+    scene->addObjectOfInterest(obj, true);
     //scene->add_light(new Light(Point(50,-30,30), Color(1.0,0.8,0.2), 0));
     scene->add_light(new Light(Point(1100,-600,3000), Color(1.0,1.0,1.0), 0));
     scene->set_background_ptr( new LinearBackground(
