@@ -19,6 +19,7 @@
 #include <Geom/View.h>
 #include <Geometry/BBox.h>
 #include <TCL/TCL.h>
+#include <TCL/TCLvar.h>
 
 class DBContext;
 class GeomObj;
@@ -27,6 +28,20 @@ class Light;
 class Salmon;
 class Vector;
 class Renderer;
+
+class TCLView : public TCLvar {
+    TCLPoint eyep;
+    TCLPoint lookat;
+    TCLVector up;
+    TCLdouble fov;
+public:
+    TCLView(const clString& name, const clString& id, TCL* tcl);
+    ~TCLView();
+    TCLView(const TCLView&);
+
+    View get();
+    void set(const View&);
+};
 
 class Roe : public TCL {
     Salmon* manager;
@@ -72,7 +87,7 @@ public:
     HashTable<clString, int> light_on;
 
     // The Camera
-    View view;
+    TCLView view;
 };
 
 #endif
