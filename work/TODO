@@ -24,8 +24,8 @@ Finish and FIX:
       Fix +/- button
       Better in/out buttons
       New node types:
-         Material
-         Pick
+DONE         Material
+DONE         Pick
          Handle
          Rendermode
       Better triangles - vertex types - with normals, colors
@@ -50,10 +50,10 @@ DONE      Background editor
       Clipping plane editor
       More Light types
 DONE      Nix Material Stacks
-      NNix objdraw - pass lighting innnto objdraw
-      Nit lit member
+      Nix objdraw - pass lighting into objdraw
+      Nix lit member
       Fix picking with new draw functions
-      Finish Headlight for multiple bounces
+DONE      Finish Headlight for multiple bounces
       Fix segfault when autoview on no objects
       Raytracer
 DONE	 Progressive refinement
@@ -61,17 +61,16 @@ DONE	 Pass Material* instead of MaterialHandle
 	 Finish intersection routines
 	    Cone
 	    Cylinder
-	    Disc
+DONE	    Disc
 	    Line
+DONE	    Sphere
 	    Tube
-	    PointLight
 	    Polyline
 	    Tetra
-	    Tri
-	    TriStrip
+DONE	    Tri
+DONE	    TriStrip
 	    VCTri
 	    VCTriStrip
-	    Tube
 	 PointLight
 	 Fix transformations
 	 Bounding boxes
