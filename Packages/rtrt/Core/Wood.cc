@@ -34,8 +34,6 @@ void Wood::shade(Color& result, const Ray& ray,
 		  double, const Color&,
 		  Context* cx)
 {
-
-
     double nearest=hit.min_t;
     Object* obj=hit.hit_obj;
     Point hitpos(ray.origin()+ray.direction()*nearest);
@@ -46,7 +44,7 @@ void Wood::shade(Color& result, const Ray& ray,
     double z=hitpos.z();
     double r=sqrt(y*y+z*z);
     r*=ringscale;
-    r+=abs(noise(r));
+    r+=fabs(noise(r));
     r-=(int)r; // mod r,1
     r=SmoothStep(r, 0, 0.8) - SmoothStep(r, 0.83, 1.0);
     Color Rd=Interpolate(lightwood, darkwood, r);
