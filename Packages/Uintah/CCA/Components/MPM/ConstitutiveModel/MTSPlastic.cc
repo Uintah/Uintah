@@ -144,41 +144,12 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
                               const MPMMaterial* ,
                               const particleIndex idx)
 {
-  //cout << "sigma_a " << d_const.sigma_a << endl;
-  //cout << "mu_0 " << d_const.mu_0 << endl; //b1
-  //cout << "D " << d_const.D << endl; //b2
-  //cout << "T_0 " << d_const.T_0 << endl; //b3
-  //cout << "koverbcubed " << d_const.koverbcubed << endl;
-  //cout << "g_0i " << d_const.g_0i << endl;
-  //cout << "g_0e " << d_const.g_0e << endl; // g0
-  //cout << "edot_0i " << d_const.edot_0i << endl;
-  //cout << "edot_0e " << d_const.edot_0e << endl; //edot
-  //cout << "p_i " << d_const.p_i << endl;
-  //cout << "q_i " << d_const.q_i << endl;
-  //cout << "p_e " << d_const.p_e << endl; //p
-  //cout << "q_e " << d_const.q_e << endl; //q
-  //cout << "sigma_i " << d_const.sigma_i << endl;
-  //cout << "a_0 " << d_const.a_0 << endl;
-  //cout << "a_1 " << d_const.a_1 << endl;
-  //cout << "a_2 " << d_const.a_2 << endl;
-  //cout << "a_3 " << d_const.a_3 << endl;
-  //cout << "theta_IV " << d_const.theta_IV << endl;
-  //cout << "alpha " << d_const.alpha << endl;
-  //cout << "edot_es0 " << d_const.edot_es0 << endl;
-  //cout << "g_0es " << d_const.g_0es << endl; //A
-  //cout << "sigma_es0 " << d_const.sigma_es0 << endl;
-
   // Calculate strain rate and incremental strain
   double edot = sqrt(rateOfDeformation.NormSquared()/1.5);
-  if (edot < 0.00001) {
-    pPlasticStrain_new[idx] = pPlasticStrain[idx];
-    return 0.0;
-  } else {
-    pPlasticStrain_new[idx] = pPlasticStrain[idx] + edot*delT;
-  }
+  pPlasticStrain_new[idx] = pPlasticStrain[idx] + edot*delT;
+  if (edot < 1.0e-10) edot = 1.0e-10;
 
   double delEps = edot*delT;
-  //cout << "edot = " << edot << " delEps = " << delEps << endl;
 
   // Calculate mu and mu/mu_0
   double mu_mu_0 = 1.0 - d_const.D/(d_const.mu_0*(exp(d_const.T_0/T) - 1.0)); 
@@ -230,7 +201,8 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
   pMTS_new[idx] = sigma_e;
   //cout << "sigma_e = " << sigma_e << endl;
   double sigma = d_const.sigma_a + S_i*d_const.sigma_i + S_e*sigma_e;
-  //cout << "sigma = " << sigma << endl;
+  //cout << "MTS::edot = " << edot << " delEps = " << delEps 
+  //     << " sigma_Y = " << sigma << endl;
   return sigma;
 }
 
