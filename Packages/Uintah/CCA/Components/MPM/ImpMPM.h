@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Core/Geometry/Vector.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <sgi_stl_warnings_off.h>
@@ -346,6 +347,7 @@ private:
 	 
   SimulationStateP d_sharedState;
   MPMLabel* lb;
+  MPMFlags* flags;
 
   double           d_nextOutputTime;
   double           d_outputInterval;

@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -96,17 +97,16 @@ ShellMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 void 
 ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
 			       SimulationStateP& sharedState,
-			       MPMLabel* lb, int /*n8or27*/,
-			       string integrator, bool /*haveLoadCurve*/,
-			       bool /*doErosion*/)
+			       MPMLabel* lb, 
+                               MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, d_8or27,integrator,
-					  d_useLoadCurves, d_doErosion);
+    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags);
+
     //register as an MPM material
     sharedState->registerMPMMaterial(mat);
   }

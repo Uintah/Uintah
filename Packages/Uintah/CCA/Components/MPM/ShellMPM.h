@@ -51,9 +51,7 @@ protected:
   ///////////////////////////////////////////////////////////////////////////
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
 				    SimulationStateP& sharedState,
-				    MPMLabel* lb, int n8or27,
-				    string integrator, bool haveLoadCurve,
-				    bool doErosion);
+				    MPMLabel* lb, MPMFlags* flags);
 	 
   ///////////////////////////////////////////////////////////////////////////
   //
