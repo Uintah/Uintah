@@ -146,8 +146,10 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
   }
   
   int nbuckets = sfs->nbuckets_.get();
-  vector<int> hits(nbuckets, 0);
-  double frac = (nbuckets-1)/(sfs->max_.get() - sfs->min_.get());
+  vector<int> hits(nbuckets+1, 0);
+  double range = sfs->max_.get() - sfs->min_.get();
+  if (range < 0.00001 || range > -0.00001) range = 1.0;
+  double frac = (nbuckets-1)/range;
   
 
   typename FIELD::value_type sigma;
