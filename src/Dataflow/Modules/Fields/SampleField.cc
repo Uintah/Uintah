@@ -54,11 +54,11 @@ class SampleField : public Module
   GeometryOPort  *ogport_;
 
   FieldHandle    vfhandle_;
-  Field          *vf_;
 
   bool           firsttime_;
   int            widgetid_;
-  Point          endpoint0_,endpoint1_;
+  Point          endpoint0_;
+  Point          endpoint1_;
 
   GuiInt    endpoints_;
   GuiDouble endpoint0x_;
@@ -72,6 +72,7 @@ class SampleField : public Module
   GuiInt maxSeeds_;
   GuiInt numSeeds_;
   GuiInt rngSeed_;
+  GuiInt rngInc_;
   GuiInt clamp_;
   GuiInt autoexec_;
   GuiString widgetType_;
@@ -80,7 +81,8 @@ class SampleField : public Module
 
   int vf_generation_;
 
-  void generate_widget_seeds(Field *field);
+  void execute_rake();
+  void execute_random();
 
 public:
   CrowdMonitor widget_lock_;
@@ -93,6 +95,7 @@ public:
 
 
 DECLARE_MAKER(SampleField)
+
 
 SampleField::SampleField(GuiContext* ctx)
   : Module("SampleField", ctx, Filter, "Fields", "SCIRun"),
@@ -109,6 +112,7 @@ SampleField::SampleField(GuiContext* ctx)
     maxSeeds_(ctx->subVar("maxseeds")),
     numSeeds_(ctx->subVar("numseeds")),
     rngSeed_(ctx->subVar("rngseed")),
+    rngInc_(ctx->subVar("rnginc")),
     clamp_(ctx->subVar("clamp")),
     autoexec_(ctx->subVar("autoexecute")),
     widgetType_(ctx->subVar("type")),
@@ -117,7 +121,6 @@ SampleField::SampleField(GuiContext* ctx)
     vf_generation_(0),
     widget_lock_("StreamLines widget lock")
 {
-  vf_ = 0;
   widgetid_=0;;
   rake_ = 0;
 
@@ -158,17 +161,19 @@ SampleField::widget_moved(bool last)
 
 
 void
-SampleField::generate_widget_seeds(Field *field)
+SampleField::execute_rake()
 {
-  const BBox bbox = field->mesh()->get_bounding_box();
+  const BBox bbox = vfhandle_->mesh()->get_bounding_box();
   Point min = bbox.min();
   Point max = bbox.max();
   double quarterl2norm;
 
-  if (firsttime_) {
+  if (firsttime_)
+  {
     firsttime_ = false;
 
-    if(!endpoints_.get()) {
+    if(!endpoints_.get())
+    {
       Point center(min.x()+(max.x()-min.x())/2.,
 		   min.y()+(max.y()-min.y())/2.,
 		   min.z()+(max.z()-min.z())/2.);
@@ -242,6 +247,47 @@ SampleField::generate_widget_seeds(Field *field)
   ofport_->send(seeds);
 }
 
+
+
+void
+SampleField::execute_random()
+{
+  const TypeDescription *mtd = vfhandle_->mesh()->get_type_description();
+  CompileInfo *ci = SampleFieldAlgo::get_compile_info(mtd);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    error("Could not compile algorithm.");
+    return;
+  }
+  SampleFieldAlgo *algo =
+    dynamic_cast<SampleFieldAlgo *>(algo_handle.get_rep());
+  if (algo == 0)
+  {
+    error("Could not get algorithm.");
+    return;
+  }
+  FieldHandle seedhandle(algo->execute(vfhandle_, numSeeds_.get(),
+				       rngSeed_.get(), randDist_.get(), 
+				       clamp_.get()));
+  if (rngInc_.get())
+  {
+    rngSeed_.set(rngSeed_.get()+1);
+  }
+
+  if (widgetid_)
+  {
+    ogport_->delObj(widgetid_);
+    ogport_->flushViews();
+  }
+  widgetid_ = 0;
+  rake_ = 0;
+
+  ofport_->send(seedhandle);
+}
+
+
+
 void
 SampleField::execute()
 {
@@ -262,43 +308,20 @@ SampleField::execute()
     return;
   }
   // The field input is required.
-  if (!ifport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
+  if (!ifport_->get(vfhandle_) || !vfhandle_.get_rep())
   {
+    error("Required input field is empty.");
     return;
   }
 
   const string &tab = whichTab_.get();
-  if (tab == "Random")
+  if (tab == "Widget")
   {
-    const TypeDescription *mtd = vfhandle_->mesh()->get_type_description();
-    CompileInfo *ci = SampleFieldAlgo::get_compile_info(mtd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    SampleFieldAlgo *algo =
-      dynamic_cast<SampleFieldAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
-    FieldHandle seedhandle(algo->execute(vfhandle_, numSeeds_.get(),
-					 rngSeed_.get(), randDist_.get(), 
-                                         clamp_.get()));
-    rngSeed_.set(rngSeed_.get()+1);
-    ofport_->send(seedhandle);
-
-    if (widgetid_) { ogport_->delObj(widgetid_); }
-    widgetid_ = 0;
-    rake_ = 0;
-    ogport_->flushViews();
+    execute_rake();
   }
-  else if (tab=="Widget")
+  else if (tab == "Random")
   {
-    generate_widget_seeds(vf_);
+    execute_random();
   }
 }
 

@@ -31,6 +31,7 @@ itcl_class SCIRun_Fields_SampleField {
 	global $this-dist
 	global $this-numseeds
 	global $this-rngseed
+	global $this-rnginc
 	global $this-whichtab
         global $this-clamp
         global $this-autoexecute
@@ -39,6 +40,7 @@ itcl_class SCIRun_Fields_SampleField {
 	set $this-dist impuni
 	set $this-numseeds 10
 	set $this-rngseed 1
+	set $this-rnginc 1
 	set $this-whichtab Widget
         set $this-clamp 0
         set $this-autoexecute 0
@@ -115,6 +117,9 @@ itcl_class SCIRun_Fields_SampleField {
               -anchor w
 	entry $rtab.f1.rngseed -text $this-rngseed -width 10
 	pack $rtab.f1.rngseed_l $rtab.f1.rngseed -side left -anchor w
+	checkbutton $rtab.rnginc -text "Increment seed on execute" \
+	    -var $this-rnginc
+	pack $rtab.rnginc -side top
 	frame $rtab.f2
 	pack $rtab.f2 -side top
 	label $rtab.f2.numseeds_l -text "number of samples" -width 23 \
