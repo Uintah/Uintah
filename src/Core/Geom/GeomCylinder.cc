@@ -244,10 +244,13 @@ bool GeomColoredCylinders::saveobj(ostream&, const string&, GeomSave*)
 void GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
 			       const Point& p2, MaterialHandle c2)
 {
-  points_.push_back(p1);
-  points_.push_back(p2);
-  colors_.push_back(c1);
-  colors_.push_back(c2);
+  if ((p1 - p2).length2() > 1.0e-12)
+  {
+    points_.push_back(p1);
+    points_.push_back(p2);
+    colors_.push_back(c1);
+    colors_.push_back(c2);
+  }
 }
 
 void
