@@ -11,12 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Grid.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <Geometry/Grid.h>
 #include <Classlib/Array1.h>
 #include <Classlib/Array3.h>
 #include <Classlib/String.h>
+#include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
 
