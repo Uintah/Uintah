@@ -571,17 +571,14 @@ globus_cond_timedwait(globus_cond_t *cv,
 		      globus_abstime_t *time)
 {
     globus_thread_blocking_will_block();
-    double dt=time->tv_sec+time->tv_nsec/1000000.;
-    std::cerr << "timedWait: dt=" << dt << '\n';
-#if 0
-    if((*(ConditionVariable**)cv)->timedWait(**(Mutex**)mut, dt))
+
+    struct timespec at;
+    at.tv_sec = time->tv_sec;
+    at.tv_nsec = time->tv_nsec;
+    if((*(ConditionVariable**)cv)->timedWait(**(Mutex**)mut, &at))
 	return GLOBUS_SUCCESS;
     else
 	return ETIMEDOUT;
-#else
-    (*(ConditionVariable**)cv)->wait(**(Mutex**)mut);
-    return GLOBUS_SUCCESS;
-#endif
 }
 
 /*
