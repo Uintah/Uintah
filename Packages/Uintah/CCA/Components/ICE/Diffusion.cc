@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Core/Exceptions/InternalError.h>
 
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
@@ -26,6 +27,14 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
                                   const CCVariable<double>& diff_coeff,
                                   const double delT)
 {
+  //__________________________________
+  //  bullet proofing against AMR
+  const Level* level = patch->getLevel();
+  if (level->getIndex() > 0) {
+    throw InternalError("AMRICE:scalarDiffusionOperator, computational footprint"
+                        " has not been tested " );
+  }
+  
   SFCXVariable<double> q_X_FC;
   SFCYVariable<double> q_Y_FC;
   SFCZVariable<double> q_Z_FC;
@@ -187,6 +196,14 @@ void computeTauX( const Patch* patch,
                   const Vector dx,                       
                   SFCXVariable<Vector>& tau_X_FC)        
 {
+  //__________________________________
+  //  bullet proofing against AMR
+  const Level* level = patch->getLevel();
+  if (level->getIndex() > 0) {
+    throw InternalError("AMRICE:computeTauX, computational footprint "
+                        " has not been tested " );
+  }
+  
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
   //__________________________________
@@ -316,6 +333,14 @@ void computeTauY( const Patch* patch,
                   const Vector dx,                       
                   SFCYVariable<Vector>& tau_Y_FC)        
 {
+  //__________________________________
+  //  bullet proofing against AMR
+  const Level* level = patch->getLevel();
+  if (level->getIndex() > 0) {
+    throw InternalError("AMRICE:computeTauY, computational footprint"
+                        " has not been tested " );
+  }
+  
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
   //__________________________________
@@ -443,6 +468,13 @@ void computeTauZ( const Patch* patch,
                   const Vector dx,                       
                   SFCZVariable<Vector>& tau_Z_FC)        
 {
+  //__________________________________
+  //  bullet proofing against AMR
+  const Level* level = patch->getLevel();
+  if (level->getIndex() > 0) {
+    throw InternalError("AMRICE:computeTauZ, computational footprint"
+                        " has not been tested " );
+  }
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
  
