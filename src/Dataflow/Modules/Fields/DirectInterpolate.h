@@ -69,10 +69,12 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     mesh->get_center(p, *itr);
 
     double val;
-    if (sfi->interpolate(val, p))
+    if (!sfi->interpolate(val, p))
     {
-      fld->set_value((typename Fld::value_type)val, *itr);
+      sfi->find_closest(val, p);
     }
+    fld->set_value((typename Fld::value_type)val, *itr);
+      
 
     ++itr;
   }
@@ -86,7 +88,7 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 class DirectInterpVectorAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *sfi) = 0;
+  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *field,
@@ -99,14 +101,14 @@ class DirectInterpVectorAlgo : public DirectInterpVectorAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *sfi);
+  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
 DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
-					  VectorFieldInterface *sfi)
+					  VectorFieldInterface *vfi)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
   if (!fld2->is_scalar()) { return 0; }
@@ -122,10 +124,11 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     mesh->get_center(p, *itr);
 
     Vector val;
-    if (sfi->interpolate(val, p))
+    if (!vfi->interpolate(val, p))
     {
-      fld->set_value(val, *itr);
+      vfi->find_closest(val, p);
     }
+    fld->set_value(val, *itr);
 
     ++itr;
   }
@@ -138,7 +141,7 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 class DirectInterpTensorAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *sfi) = 0;
+  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *field,
@@ -151,14 +154,14 @@ class DirectInterpTensorAlgo : public DirectInterpTensorAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *sfi);
+  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
 DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
-					  TensorFieldInterface *sfi)
+					  TensorFieldInterface *tfi)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
   if (!fld2->is_scalar()) { return 0; }
@@ -174,10 +177,11 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     mesh->get_center(p, *itr);
 
     Tensor val;
-    if (sfi->interpolate(val, p))
+    if (!tfi->interpolate(val, p))
     {
-      fld->set_value(val, *itr);
+      tfi->find_closest(val, p);
     }
+    fld->set_value(val, *itr);
 
     ++itr;
   }

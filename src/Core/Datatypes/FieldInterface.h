@@ -53,6 +53,8 @@ public:
   virtual bool interpolate(double &result, const Point &p) const = 0;
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const = 0;
+
+  virtual void find_closest(double &result, const Point &p) const = 0;
 };
 
 
@@ -68,7 +70,7 @@ public:
   virtual bool interpolate(double &result, const Point &p) const;
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const;
-
+  virtual void find_closest(double &result, const Point &p) const;
 private:
 
   bool finterpolate(double &result, const Point &p) const;
@@ -173,6 +175,7 @@ SFInterface<F>::finterpolate(double &result, const Point &p) const
   }
   return true;
 }
+
 
 template <class F>
 bool
@@ -287,6 +290,112 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 }
 
 
+template <class F>
+void
+SFInterface<F>::find_closest(double &minout, const Point &p) const
+{
+  double mindist = 1.0e6;
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch (fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::index_type index;
+      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      typename F::value_type val;
+      fld_->value(val, index);
+      minout = (double)val;
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::index_type index;
+      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      typename F::value_type val;
+      fld_->value(val, index);
+      minout = (double)val;
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::index_type index;
+      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      typename F::value_type val;
+      fld_->value(val, index);
+      minout = (double)val;
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::index_type index;
+      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      typename F::value_type val;
+      fld_->value(val, index);
+      minout = (double)val;
+    }
+    break;
+    
+  case F::NONE:
+    break;
+  }
+}
+
+
 class VectorFieldInterface {
 public:
   VectorFieldInterface() {}
@@ -297,6 +406,7 @@ public:
   virtual bool interpolate(Vector &result, const Point &p) const = 0;
   virtual bool interpolate_many(vector<Vector> &results,
 				const vector<Point> &points) const = 0;
+  virtual void find_closest(Vector &result, const Point &p) const = 0;
 };
 
 
@@ -313,6 +423,7 @@ public:
   virtual bool interpolate(Vector &result, const Point &p) const;
   virtual bool interpolate_many(vector<Vector> &results,
 				const vector<Point> &points) const;
+  virtual void find_closest(Vector &result, const Point &p) const;
 
 private:
   bool finterpolate(Vector &result, const Point &p) const;
@@ -555,6 +666,104 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 }
 
 
+template <class F>
+void
+VFInterface<F>::find_closest(Vector &minout, const Point &p) const
+{
+  double mindist = 1.0e6;
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch (fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::index_type index;
+      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::index_type index;
+      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::index_type index;
+      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::index_type index;
+      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+    
+  case F::NONE:
+    break;
+  }
+}
+
+
 
 class TensorFieldInterface
 {
@@ -566,6 +775,7 @@ public:
   virtual bool interpolate(Tensor &result, const Point &p) const = 0;
   virtual bool interpolate_many(vector<Tensor> &results,
 				const vector<Point> &points) const = 0;
+  virtual void find_closest(Tensor &result, const Point &p) const = 0;
 };
 
 
@@ -580,6 +790,7 @@ public:
   virtual bool interpolate(Tensor &result, const Point &p) const;
   virtual bool interpolate_many(vector<Tensor> &results,
 				const vector<Point> &points) const;
+  virtual void find_closest(Tensor &result, const Point &p) const;
   
 private:
   bool finterpolate(Tensor &result, const Point &p) const;
@@ -711,6 +922,102 @@ TFInterface<F>::interpolate_many(vector<Tensor> &results,
 }
 
 
+template <class F>
+void
+TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
+{
+  double mindist = 1.0e6;
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch (fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::index_type index;
+      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::index_type index;
+      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::index_type index;
+      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::index_type index;
+      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
+      while (bi != ei)
+      {
+	Point c;
+	mesh->get_center(c, *bi);
+	const double dist = (p - c).length();
+	if (dist < mindist)
+	{
+	  mindist = dist;
+	  index = *bi;
+	}
+	++bi;
+      }
+      fld_->value(minout, index);
+    }
+    break;
+    
+  case F::NONE:
+    break;
+  }
+}
 
 
 } // end namespace SCIRun
