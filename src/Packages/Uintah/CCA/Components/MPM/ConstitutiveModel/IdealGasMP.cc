@@ -18,8 +18,10 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using namespace Uintah;

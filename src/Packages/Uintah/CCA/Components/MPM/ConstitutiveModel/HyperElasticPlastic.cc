@@ -16,12 +16,13 @@
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
-#include <iostream>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Util/NotFinished.h>
-
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using namespace Uintah;

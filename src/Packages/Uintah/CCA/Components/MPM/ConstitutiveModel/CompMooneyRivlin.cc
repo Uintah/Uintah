@@ -18,7 +18,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <values.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 

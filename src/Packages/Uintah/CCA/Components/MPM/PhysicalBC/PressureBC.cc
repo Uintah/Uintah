@@ -6,7 +6,9 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/SphereGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/DifferenceGeometryPiece.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

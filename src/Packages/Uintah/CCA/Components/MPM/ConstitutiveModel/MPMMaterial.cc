@@ -34,7 +34,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
 #include <Core/Util/NotFinished.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
 
