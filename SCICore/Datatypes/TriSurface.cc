@@ -98,6 +98,20 @@ TriSurface::TriSurface(const TriSurface& copy, Representation)
     normals=copy.normals;
 }
 
+TriSurface& TriSurface::operator=(const TriSurface& t)
+{
+    points=t.points;
+    elements=Array1<TSElement*>(t.elements.size());
+    for (int i=0; i<t.elements.size(); i++)
+	elements[i]=new TSElement(*(t.elements[i]));
+    bcIdx=t.bcIdx;
+    bcVal=t.bcVal;
+    haveNodeInfo=t.haveNodeInfo;
+    nodeNbrs=t.nodeNbrs;
+    normType=t.normType;
+    normals=t.normals;
+}
+
 TriSurface::~TriSurface() {
 }
 
@@ -1132,6 +1146,9 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 03:24:32  dmw
+// added = operator for TriSurface
+//
 // Revision 1.6  1999/08/28 17:54:37  sparker
 // Integrated new Thread library
 //
