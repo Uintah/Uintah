@@ -379,47 +379,53 @@ TriWidget::manipulate( float x, float dx, float y, float dy ) {
 void 
 TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
 			   float master_alpha ) {
-  int x, y;
-  int startx, starty, endx, endy;
-  starty = (int)((midLeftVertex[1]-55)*textureHeight/240.0f);
-  endy = (int)((upperLeftVertex[1]-55)*textureHeight/240.0f);
+  float startyf = (midLeftVertex[1]-55.0f)*(float)textureHeight/240.0f;
+  float endyf = (upperLeftVertex[1]-55.0f)*(float)textureHeight/240.0f;
+  float height = endyf-startyf;
+  float heightFactor = (float)textureHeight/height;
+  int starty = (int)startyf;
+  int endy = (int)endyf;
   float fractionalHeight = ((midLeftVertex[1]-lowerVertex[1])/
 			    (upperLeftVertex[1]-lowerVertex[1]));
   // fractionalHeight iterative increment-step value
-  float fhInterval = (1.0f-fractionalHeight)/(endy-starty);
-  float intensity;
-  float opacity_offset = 2*((opac_x-upperLeftVertex[0])/
-			    (upperRightVertex[0]-upperLeftVertex[0]))-1.0;
-  float halfWidth;
-  float halfHeight = (endy-starty)*0.5f;
-  for( y = starty; y < endy; y++ ) {
+  float fhInterval = (1.0f-fractionalHeight)/height;
+  float opacity_offset = 2.0f*((opac_x-upperLeftVertex[0])/
+			       (upperRightVertex[0]-upperLeftVertex[0]))-1.0f;
+  for( int y = starty; y < endy; y++ ) {
+    int texture_y = (int)(((float)y-startyf)*heightFactor);
+    int texture_x = texture_y*textureWidth/textureHeight;
     // higher precision values for intensity computation
     float startxf = (lowerVertex[0]-5-(lowerVertex[0]-upperLeftVertex[0])*
 		     fractionalHeight)*textureWidth/490.0f;
     float endxf = (lowerVertex[0]-5+(upperRightVertex[0]-lowerVertex[0])*
 		   fractionalHeight)*textureWidth/490.0f;
-    startx = (int)startxf;
-    endx = (int)endxf;
-    halfWidth = (endxf-startxf)*0.5;
+    float widthFactor = (float)textureWidth/(endxf-startxf);
+
+    int startx = (int)startxf;
+    int endx = (int)endxf;
     // paint one row of this widget's texture onto background texture
     if( !switchFlag )
-      for( x = startx; x < endx; x++ ) {
-	intensity = (halfWidth-fabs(x-startxf-halfWidth))/halfWidth;
+      for( int x = startx; x < endx; x++ ) {
+	int texture_x = (int)((x-startxf)*widthFactor);
+	if( texture_x < 0 )
+	  texture_x = 0;
+	else if( texture_x >= textureWidth )
+	  texture_x = textureWidth-1;
 	blend( texture_dest[y][x], 
 	       transText->current_color[0], 
 	       transText->current_color[1], 
 	       transText->current_color[2],
-	       (intensity+opacity_offset)*master_alpha );
-      } // for
-    else {
-      intensity = (halfHeight-fabs(y-starty-halfHeight))/halfHeight;
-      for( x = startx; x < endx; x++ )
+	       (transText->textArray[0][texture_x][3]+
+		opacity_offset)*master_alpha );
+      } // for()
+    else
+      for( int x = startx; x < endx; x++ )
 	blend( texture_dest[y][x],
 	       transText->current_color[0],
 	       transText->current_color[1],
 	       transText->current_color[2],
-	       (intensity+opacity_offset)*master_alpha );
-    }
+	       (transText->textArray[0][texture_y][3]+opacity_offset)*master_alpha );
+
     fractionalHeight += fhInterval;
   } // for
 } // paintTransFunc()
@@ -802,111 +808,112 @@ RectWidget::reflectTrans( void ) {
 void
 RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
 			    float master_alpha ) {
-  int x, y;
-  int startx, starty, endx, endy;
-  startx = (int)((upperLeftVertex[0]-5) * textureWidth/490.0f);
-  endx = (int)((lowerRightVertex[0]-5) * textureWidth/490.0f);
-  starty = textureHeight-(int)((295.0f-lowerRightVertex[1]) * textureHeight/240.0f);
-  endy = textureHeight-(int)((295.0f-upperLeftVertex[1]) * textureHeight/240.0f);
-  float midx, midy;
-  midx = (float)(endx+startx)/2.0f;
-  midy = (float)(endy+starty)/2.0f;
-  float intensity;
-  float opacStar_alpha_off = 2*((opac_x-upperLeftVertex[0])/
-				(lowerRightVertex[0]-upperLeftVertex[0]))-1.0; 
-  float alpha_x_off = 0.0f;
-  float alpha_y_off = 0.0f;
-  // if not elliptical texture
-  if( type != 1 ) {
-    alpha_x_off = 2.0f*(focus_x-upperLeftVertex[0])/width-1.0f;
-    alpha_y_off = 2.0f*(focus_y-lowerRightVertex[1])/height-1.0f;
-  }
-  float height = endy-starty;
-  float width = endx-startx;
-  float halfWidth = width*0.5;
+  float startxf = (upperLeftVertex[0]-5.0f)*(float)textureWidth/490.0f;
+  float endxf = (lowerRightVertex[0]-5.0f)*(float)textureWidth/490.0f;
+  int startx = (int)startxf;
+  int endx = (int)endxf;
+  float startyf = (float)textureHeight*(lowerRightVertex[1]-55.0f)/240.0f;
+  float endyf = (float)textureHeight*(upperLeftVertex[1]-55.0f)/240.0f;
+  int starty = (int)startyf;
+  int endy = (int)endyf;
+  float midx = (endxf+startxf)*0.5f;
+  float midy = (endyf+startyf)*0.5f;
+  float opacStar_alpha_off = 2.0f*((opac_x-upperLeftVertex[0])/
+				(lowerRightVertex[0]-upperLeftVertex[0]))-1.0f; 
+  float height = endyf-startyf;
+  float width = endxf-startxf;
+  float halfWidth = width*0.5f;
   float halfHeight = height*0.5f;
-  float half_x = (focus_x-upperLeftVertex[0])/this->width*width+startx;
+  float half_x = (focus_x-upperLeftVertex[0])/this->width*width+startxf;
   float half_y = ((focus_y-(upperLeftVertex[1]-this->height))/
-		  this->height*(endy-starty)+starty);
+		  this->height*height+startyf);
+  float alpha_x_off = 2.0f*(focus_x-upperLeftVertex[0])/this->width-1.0f;
+  float alpha_y_off = 2.0f*(focus_y-lowerRightVertex[1])/this->height-1.0f;
+
   switch( type ) {
     // elliptical texture
   case 1:
-    for( y = starty; y < endy; y++ )
-      for( x = startx; x < endx; x++ ) {
-	intensity = 1.0 - 2*(x-half_x)*(x-half_x)/(halfWidth*halfWidth) - 
-	  2*(y-half_y)*(y-half_y)/(height*height/4);
-	if( intensity < 0 )
-	  intensity = 0;
+    for( int y = starty; y < endy; y++ ) {
+      for( int x = startx; x < endx; x++ ) {
+	float intensity = 1.0f - (2.0f*(x-half_x)*(x-half_x)/(halfWidth*halfWidth)+
+				  2.0f*(y-half_y)*(y-half_y)/(halfHeight*halfHeight));
+	if( intensity < 0.0f )
+	  intensity = 0.0f;
 	blend( texture_dest[y][x], 
-	       transText->textArray[(int)((y-starty)/height*textureHeight)]
-	       [(int)((x-startx)/width*textureWidth)][0], 
-	       transText->textArray[(int)((y-starty)/height*textureHeight)]
-	       [(int)((x-startx)/width*textureWidth)][1], 
-	       transText->textArray[(int)((y-starty)/height*textureHeight)]
-	       [(int)((x-startx)/width*textureWidth)][2],
+	       transText->current_color[0], 
+	       transText->current_color[1], 
+	       transText->current_color[2],
 	       (intensity+opacStar_alpha_off)*master_alpha );
       } // for()
+    } // for()
     break;
   case 2:
-    for( y = starty; y < endy; y++ )
+    for( int y = starty; y < endy; y++ ) {
       if( !switchFlag )
-	for( x = startx; x < endx; x++ ) {
-	  intensity = (halfWidth-fabs(x-startx-halfWidth))/halfWidth;
+	for( int x = startx; x < endx; x++ ) {
+	  int texture_x = (int)(((float)x-startxf)/width*(float)textureWidth);
+	  if( texture_x >= textureWidth )
+	    texture_x = textureWidth-1;
+	  else if( texture_x < 0 )
+	    texture_x = 0;
 	  blend( texture_dest[y][x],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][0],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][1],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][2],
-		 ((intensity+opacStar_alpha_off+
-		   alpha_x_off*(float)(x-midx)/(float)width))*master_alpha );
+		 transText->current_color[0],
+		 transText->current_color[1],
+		 transText->current_color[2],
+		 (transText->textArray[0][texture_x][3]+opacStar_alpha_off+
+		  alpha_x_off*((float)x-midx)/width)*master_alpha );
 	} // for()
       else {
-	intensity = (halfHeight-fabs(y-starty-halfHeight))/halfHeight;
-	for( x = startx; x < endx; x++ )
+	float y_alpha = alpha_y_off*((float)y-midy)/height;
+	for( int x = startx; x < endx; x++ ) {
+	  int texture_x = (int)(((float)y-startyf)/height*(float)textureWidth);
+	  if( texture_x >= textureWidth )
+	    texture_x = textureWidth-1;
+	  else if( texture_x < 0 )
+	    texture_x = 0;
 	  blend( texture_dest[y][x],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][0],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][1],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][2],
-		 ((intensity+opacStar_alpha_off+alpha_y_off*(float)(y-midy)/
-		   (float)height))*master_alpha );
-      }
+		 transText->current_color[0],
+		 transText->current_color[1],
+		 transText->current_color[2],
+		 (transText->textArray[0][texture_x][3]+opacStar_alpha_off+
+		  y_alpha)*master_alpha );
+	  } // for()
+      } // else
+    } // for()
     break;
     // rainbow texture
   case 3:
-    for( y = starty; y < endy; y++ )
+    float x_alpha = alpha_x_off/width;
+    for( int y = starty; y < endy; y++ ) {
+      float y_alpha = alpha_y_off*((float)y-midy)/height;
+      float init_intensity = 0.5f+opacStar_alpha_off+y_alpha;
       if( !switchFlag )
-	for( x = startx; x < endx; x++ ) {
-	  intensity = 0.5f;
+	for( int x = startx; x < endx; x++ ) {
+	  int texture_x = (int)(((float)x-startxf)/width*textureWidth);
+	  if( texture_x >= textureWidth )
+	    texture_x = textureWidth-1;
+	  else if( texture_x < 0 )
+	    texture_x = 0;
 	  blend( texture_dest[y][x],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][0],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][1],
-		 transText->textArray[(int)((y-starty)/height*textureHeight)]
-		 [(int)((x-startx)/width*textureWidth)][2],
-		 (intensity+opacStar_alpha_off+
-		  (alpha_x_off*(float)(x-midx)/(float)(width))+
-		  (alpha_y_off*(float)(y-midy)/(float)(height)))*master_alpha );
+		 transText->textArray[0][texture_x][0],
+		 transText->textArray[0][texture_x][1],
+		 transText->textArray[0][texture_x][2],
+		 (init_intensity+x_alpha*((float)x-midx))*master_alpha );
 	} // for()
       else {
-	intensity = 0.5f;
-	for( x = startx; x < endx; x++ )
+	int texture_x = (int)(((float)y-startyf)/height*textureWidth);
+	if( texture_x >= textureWidth )
+	  texture_x = textureWidth-1;
+	else if( texture_x < 0 )
+	  texture_x = 0;
+	for( int x = startx; x < endx; x++ )
 	  blend( texture_dest[y][x],
-		 transText->textArray[(int)((x-startx)/width*textureWidth)]
-		 [(int)((y-starty)/height*textureHeight)][0],
-		 transText->textArray[(int)((x-startx)/width*textureWidth)]
-		 [(int)((y-starty)/height*textureHeight)][1],
-		 transText->textArray[(int)((x-startx)/width*textureWidth)]
-		 [(int)((y-starty)/height*textureHeight)][2],
-		 ((intensity+opacStar_alpha_off+
-		   alpha_x_off*(float)(x-midx)/(float)(width)+
-		   alpha_y_off*(float)(y-midy)/(float)(height)))*master_alpha );
-      }
+		 transText->textArray[0][texture_x][0],
+		 transText->textArray[0][texture_x][1],
+		 transText->textArray[0][texture_x][2],
+		 (init_intensity+x_alpha*((float)x-midx))*master_alpha );
+      } // else
+    } // for()
     break;
   } // switch()
 } // paintTransFunc()
