@@ -33,6 +33,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
+	$(SRCDIR)/ChangeFieldDataType.tcl \
+	$(SRCDIR)/ChangeFieldBounds.tcl \
 	$(SRCDIR)/ClipField.tcl \
 	$(SRCDIR)/ClipLattice.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
@@ -46,6 +48,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/EditField.tcl\
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
+	$(SRCDIR)/FieldInfo.tcl\
 	$(SRCDIR)/FieldMeasures.tcl \
 	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldWriter.tcl \
