@@ -612,6 +612,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->gTemperatureLabel,      Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->frictionalWorkLabel,    Ghost::AroundCells,1);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
@@ -1824,7 +1825,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of grid data on which the new part. values depend
       NCVariable<Vector> gvelocity_star, gacceleration;
       NCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
-      NCVariable<double> dTdt, massBurnFraction;
+      NCVariable<double> dTdt, massBurnFraction, frictionalTempRate;
 
       delt_vartype delT;
 
@@ -1842,16 +1843,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocate(pmassNew,         lb->pMassLabel_preReloc,        pset);
       new_dw->allocate(pvolumeNew,       lb->pVolumeLabel_preReloc,      pset);
 
-      new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,
+      new_dw->get(gvelocity_star,     lb->gVelocityStarLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gacceleration,    lb->gAccelerationLabel,
+      new_dw->get(gacceleration,      lb->gAccelerationLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel,
+      new_dw->get(gTemperatureRate,   lb->gTemperatureRateLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gTemperature,     lb->gTemperatureLabel,
+      new_dw->get(gTemperature,       lb->gTemperatureLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
+      new_dw->get(gTemperatureNoBC,   lb->gTemperatureNoBCLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
+      new_dw->get(frictionalTempRate, lb->frictionalWorkLabel,
+			dwindex, patch, Ghost::AroundCells, 1);
+
       if(d_with_ice){
         new_dw->get(dTdt, lb->dTdt_NCLabel, dwindex,patch,Ghost::AroundCells,1);
         new_dw->get(massBurnFraction, lb->massBurnFractionLabel,
@@ -1898,7 +1902,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           // Accumulate the contribution from each surrounding vertex
           for(int k = 0; k < 8; k++) {
 	     if( conn[k] ) {
-                tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]]) * S[k];
+                tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
+			     frictionalTempRate[ni[k]])     * S[k];
              }
 	  }
 	  
@@ -1956,7 +1961,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           for (int k = 0; k < 8; k++) {
 	      vel      += gvelocity_star[ni[k]]  * S[k];
    	      acc      += gacceleration[ni[k]]   * S[k];
-              tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]]) * S[k];
+              tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
+			   frictionalTempRate[ni[k]])     * S[k];
               burnFraction += massBurnFraction[ni[k]] * S[k];
           }
 

@@ -75,14 +75,20 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       NCVariable<Vector> gv_star;
       NCVariable<Vector> gacc;
+      NCVariable<double> frictionalWork;
+
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       new_dw->get(gv_star, lb->gVelocityStarLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(gacc,    lb->gAccelerationLabel, dwi, patch, Ghost::None, 0);
 
-      new_dw->modify(gv_star, lb->gVelocityStarLabel, dwi, patch);
-      new_dw->modify(gacc,    lb->gAccelerationLabel, dwi, patch);
+      new_dw->allocate(frictionalWork, lb->frictionalWorkLabel, dwi, patch);
+      frictionalWork.initialize(0.);
+
+      new_dw->modify(gv_star,           lb->gVelocityStarLabel, dwi, patch);
+      new_dw->modify(gacc,              lb->gAccelerationLabel, dwi, patch);
+      new_dw->put(frictionalWork,    lb->frictionalWorkLabel,dwi,patch);
     }
   }
 }
@@ -102,4 +108,6 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
   const MaterialSubset* mss = ms->getUnion();
   t->modifies(lb->gVelocityStarLabel, mss);
   t->modifies(lb->gAccelerationLabel, mss);
+  t->computes(lb->frictionalWorkLabel);
+
 }

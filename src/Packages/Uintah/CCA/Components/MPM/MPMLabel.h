@@ -115,6 +115,7 @@ using std::vector;
       const VarLabel* gradPAccNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction
       const VarLabel* massBurnFractionLabel; //for burn modeling
+      const VarLabel* frictionalWorkLabel;
       
       const VarLabel* fVelocityLabel; //for interaction with ICE
       const VarLabel* fMassLabel; //for interaction with ICE
