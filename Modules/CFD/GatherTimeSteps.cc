@@ -190,7 +190,15 @@ void GatherTimeSteps::process_event()
       }
       currtime++;
     }
-
+    break;
+  case MessageTypes::ModuleGeneric2:
+    {
+      // reset button pressed - dump all geometry and reset currtime
+      delete tgroup;
+      tgroup = new GeomTimeGroup();
+      currtime = 1;
+      tsp.set(0);
+    }
     break;
   default:
     cerr << "GatherTimeSteps: Illegal Message type: " << gmsg->type << endl;
@@ -210,6 +218,8 @@ void GatherTimeSteps::tcl_command(TCLArgs& args, void* userdata)
     }
     if( args[1] == "update" ){
       mailbox.send(new MessageBase(MessageTypes::ModuleGeneric1));
+    } else if( args[1] == "reset" ) {
+      mailbox.send(new MessageBase(MessageTypes::ModuleGeneric2));
     } else {
       Module::tcl_command(args, userdata);
     }
