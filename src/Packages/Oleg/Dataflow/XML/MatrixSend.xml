@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
+<!DOCTYPE component SYSTEM "../../../../../doc/component.dtd">
+<?xml-stylesheet href="../../../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <component name="MatrixSend" category="DataIO">
   <overview>
