@@ -22,7 +22,8 @@ SRCDIR := StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Math
+PSELIBS := Core/Datatypes Core/Disclosure Core/Containers Core/Persistent \
+           Core/Exceptions Core/Thread Core/Geometry Core/Math
 endif
 LIBS := -lm
 

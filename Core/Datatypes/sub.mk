@@ -28,7 +28,6 @@ SRCS += $(SRCDIR)/Brick.cc		    	\
         $(SRCDIR)/cd_templates.cc	    	\
         $(SRCDIR)/Datatype.cc		    	\
         $(SRCDIR)/DenseMatrix.cc	    	\
-	$(SRCDIR)/DynamicLoader.cc	    	\
         $(SRCDIR)/Field.cc		    	\
         $(SRCDIR)/FieldSet.cc		    	\
         $(SRCDIR)/GenFunction.cc	    	\
@@ -47,7 +46,6 @@ SRCS += $(SRCDIR)/Brick.cc		    	\
         $(SRCDIR)/TetVolMesh.cc 	    	\
         $(SRCDIR)/TriDiagonalMatrix.cc	    	\
         $(SRCDIR)/TriSurfMesh.cc	    	\
-	$(SRCDIR)/TypeDescription.cc	    	\
 	$(SRCDIR)/TypeName.cc		    	\
         $(SRCDIR)/VoidStar.cc			\
 	$(SRCDIR)/GLTexture3D.cc 		\
@@ -73,7 +71,7 @@ SRCS += $(SRCDIR)/Brick.cc		    	\
 
 
 
-PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
+PSELIBS := Core/Persistent Core/Disclosure Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math Core/Util
 LIBS := $(GL_LIBS) -lm

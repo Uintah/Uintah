@@ -46,8 +46,8 @@ SRCS     += \
 #	$(SRCDIR)/ManipFields.cc\
 
 
-PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
-	Core/Datatypes Dataflow/Widgets Core/Persistent Core/Exceptions \
+PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil Dataflow/Widgets \
+	Core/Datatypes Core/Disclosure Core/Persistent Core/Exceptions \
 	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
 	Core/Datatypes Core/Geometry Core/TkExtensions \
 	Core/Math Core/Util

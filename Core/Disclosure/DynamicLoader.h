@@ -17,8 +17,8 @@
 //    Author : Martin Cole
 //    Date   : Mon May 21 10:57:54 2001
 
-#if ! defined(Datatypes_DynamicLoader_h)
-#define Datatypes_DynamicLoader_h
+#if ! defined(Disclosure_DynamicLoader_h)
+#define Disclosure_DynamicLoader_h
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
@@ -82,4 +82,4 @@ private:
 
 } // End namespace SCIRun
 
-#endif //Datatypes_DynamicLoader_h
+#endif //Disclosure_DynamicLoader_h

@@ -41,8 +41,8 @@ SRCS     += \
 	$(SRCDIR)/PathWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
-	Core/Exceptions Core/Thread Core/Containers \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Disclosure \
+	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes \
 	Core/Util Core/Geom Core/TkExtensions \
 	Dataflow/Widgets

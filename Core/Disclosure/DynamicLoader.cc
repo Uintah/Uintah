@@ -17,7 +17,7 @@
 //    Author : Martin Cole
 //    Date   : Mon May 21 10:57:38 2001
 
-#include <Core/Datatypes/DynamicLoader.h>
+#include <Core/Disclosure/DynamicLoader.h>
 #include <sci_defs.h>
 #include <string>
 #include <Core/Util/soloader.h>
