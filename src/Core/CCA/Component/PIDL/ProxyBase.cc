@@ -30,21 +30,27 @@
 #include <Core/Thread/Thread.h>
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <iostream>
 #include <Core/CCA/tools/sidl/uuid_wrapper.h>
+#include <assert.h>
 
 using namespace SCIRun;
 
 ProxyBase::ProxyBase() 
-: proxy_uuid("NONENONENONENONENONENONENONENONENONE") { }
+: proxy_uuid("NONENONENONENONENONENONENONENONENONE") 
+{
+  Reference *ref=new Reference();
+  rm.insertReference(ref);
+}
 
-/*
+//remove it later
 ProxyBase::ProxyBase(const Reference& ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  rm.insertReference(&ref);
+  assert(false);
+  //rm.insertReference(&ref);
 }
-*/
 
 ProxyBase::ProxyBase(Reference *ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
@@ -63,7 +69,7 @@ ProxyBase::~ProxyBase()
   /*Close all connections*/
   refList::iterator iter = rm.d_ref.begin();
   for(unsigned int i=0; i < rm.d_ref.size(); i++, iter++) {
-    (*iter).chan->closeConnection();
+    (*iter)->chan->closeConnection();
   }
   /*Delete intercommunicator*/
   if((rm.localSize > 1)&&(rm.intracomm != NULL))
@@ -72,14 +78,8 @@ ProxyBase::~ProxyBase()
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
 {
-  /*First clean up given reference*/
-  if(ref.chan!=NULL) delete ref.chan;
-  /*...then copy*/
   if (copy) {
-    Reference *d_ref;
-    d_ref = rm.getIndependentReference();
-    ref = *(d_ref);
-    ref.chan = (d_ref->chan)->SPFactory(true);
+    rm.getIndependentReference()->cloneTo(ref);
   }
   else {
     ref = *(rm.getIndependentReference()); 

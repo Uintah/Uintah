@@ -45,41 +45,32 @@ ReferenceMgr::ReferenceMgr(int rank, int size)
 
 ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
 {
-  d_ref = copy.d_ref;
-  for(unsigned int i=0; i < d_ref.size(); i++) {
-    //if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
-    d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
-  }
-  localSize = copy.localSize;
-  localRank = copy.localRank;
-  s_lSize = copy.s_lSize;
-  s_refSize = copy.s_refSize;
-  intracomm = copy.intracomm;
+  //for test only, will be removed.
+  // this method should never be called.
+  assert(false);
   return *this;
 }
 
 ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
   :localSize(copy.localSize),localRank(copy.localRank),
-   s_lSize(copy.s_lSize), s_refSize(copy.s_refSize),
-   d_ref(copy.d_ref), intracomm(copy.intracomm)  
+   s_lSize(copy.s_lSize), s_refSize(copy.s_refSize),intracomm(copy.intracomm)  
 {
-  for(unsigned int i=0; i < d_ref.size(); i++) {
-    //if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
-    d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
+  for(unsigned int i=0; i < copy.d_ref.size(); i++) {
+    d_ref.push_back(copy.d_ref[i]->clone());
   }
 }
 
 ReferenceMgr::~ReferenceMgr()
 {
-  refList::iterator iter = d_ref.begin();
-  for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
-    (*iter).chan->closeConnection();
-  }
+  //refList::iterator iter = d_ref.begin();
+  //  for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
+  //  (*iter)->chan->closeConnection();
+  // }
 }
 
 Reference* ReferenceMgr::getIndependentReference() const
 {
-  return (Reference*)(&(d_ref[localRank % s_refSize]));
+  return d_ref[localRank % s_refSize];
 }
 
 ::std::vector<Reference*> ReferenceMgr::getCollectiveReference(callType tip)
@@ -94,12 +85,12 @@ Reference* ReferenceMgr::getIndependentReference() const
   switch(tip) {
   case (CALLONLY):
   case (NOCALLRET):
-    refPtrList.insert(refPtrList.begin(), &(d_ref[localRank % s_refSize]));
+    refPtrList.insert(refPtrList.begin(), d_ref[localRank % s_refSize]);
     break;
   case (CALLNORET):
     iter = d_ref.begin() + (localRank + s_lSize);
     for(int i=(localRank + s_lSize); i < (int)s_refSize; i+=s_lSize, iter+=s_lSize) 
-      refPtrList.insert(refPtrList.begin(), &(d_ref[i]));
+      refPtrList.insert(refPtrList.begin(), d_ref[i]);
     break;
   case (REDIS):
     ::std::cerr << "ERROR :: getCollectiveReference called for REDIS\n";
@@ -116,7 +107,7 @@ refList* ReferenceMgr::getAllReferences() const
   return (refList*)(rl);
 }
 
-void ReferenceMgr::insertReference(const Reference& ref)
+void ReferenceMgr::insertReference(Reference *ref)
 {
   d_ref.insert(d_ref.begin(),ref);
   s_refSize++;

@@ -31,40 +31,81 @@
 #include "Reference.h"
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+#include <assert.h>
 using namespace SCIRun;
 
 Reference::Reference()
 {
-  //chan = PIDL::getSpChannel();
-  chan = NULL;
-  d_vtable_base=TypeInfo::vtable_invalid;    
+  chan = PIDL::getSpChannel();
+  d_vtable_base=TypeInfo::vtable_invalid;
+  primary=true;
 }
 
 Reference::Reference(SpChannel* n_chan)
 {
   d_vtable_base=TypeInfo::vtable_invalid;
   chan = n_chan;
+  primary=true;
 }
 
 Reference::Reference(const Reference& copy)
-  :d_vtable_base(copy.d_vtable_base) 
 {
-  if(copy.chan != NULL)
-    chan = (copy.chan)->SPFactory(false);
+  assert(false);
+  _copy(copy);
+}
+
+Reference *
+Reference::clone()
+{		    
+  Reference * Clone=new Reference();
+  Clone->d_vtable_base=d_vtable_base;
+  Clone->primary=primary;
+  //cannot clone non-primary Reference
+  assert(primary); 
+  
+  //channel must not be null
+  assert(chan!=NULL);
+  delete Clone->chan;
+  Clone->chan = chan->SPFactory(true);
+  return Clone;
+}
+
+void
+Reference::cloneTo(Reference &Clone)
+{		    
+  Clone.d_vtable_base=d_vtable_base;
+  Clone.primary=primary;
+  //cannot clone non-primary Reference
+  assert(primary); 
+  
+  //channel must not be null
+  assert(chan!=NULL);
+  
+  //this should be removed later
+  delete Clone.chan;
+
+  Clone.chan = chan->SPFactory(true);
 }
 
 Reference::~Reference()
 {
-  if(chan != NULL) 
-    delete chan;
+  if(primary) delete chan;
 }
 
 Reference& Reference::operator=(const Reference& copy)
 {
+  return _copy(copy);
+}
+
+Reference& Reference::_copy(const Reference& copy)
+{
   d_vtable_base=copy.d_vtable_base;
-  //if(chan!=NULL) delete chan;  //k.z
-  if(copy.chan != NULL)
-    chan = (copy.chan)->SPFactory(false);
+  if(primary && chan!=NULL) delete chan; 
+
+  //cannot copy Reference without a SP channel
+  assert(copy.chan != NULL);
+  chan = (copy.chan)->SPFactory(false);
+  primary=false;
   return *this;
 }
 

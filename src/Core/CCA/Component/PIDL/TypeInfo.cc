@@ -71,7 +71,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
 
   ReferenceMgr* _rm;
   _rm = p->_proxyGetReferenceMgr(); 
-  Message* message = _rm->d_ref[0].chan->getMessage();
+  Message* message = _rm->d_ref[0]->chan->getMessage();
 
   // Get a startpoint ready for the reply
   message->createMessage();
@@ -111,7 +111,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     // addReference to the other processes in case it is a parallel component
     for(unsigned int i=1; i < _rm->d_ref.size(); i++) {
       /*CALLNORET*/
-      message = _rm->d_ref[i].chan->getMessage();
+      message = _rm->d_ref[i]->chan->getMessage();
       message->createMessage();
       //Marshal flag which informs handler that
       // this message is CALLNORET
@@ -124,7 +124,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       int _numCalls = 1;
       message->marshalInt(&_numCalls);
       // Send the message
-      int _handler= _rm->d_ref[i].getVtableBase()+0;
+      int _handler= _rm->d_ref[i]->getVtableBase()+0;
       message->sendMessage(_handler);
       message->destroyMessage();
     }
@@ -132,12 +132,12 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     // return the correct proxy
     ReferenceMgr new_rm(*_rm);
     for(unsigned int i=0; i < new_rm.d_ref.size(); i++)
-      new_rm.d_ref[i].d_vtable_base=vtbase;
+      new_rm.d_ref[i]->d_vtable_base=vtbase;
     return (*d_priv->create_proxy)(new_rm);
 
 /*
     for(unsigned int i=0; i < _rm->d_ref.size(); i++)
-      _rm->d_ref[i].d_vtable_base=vtbase;
+      _rm->d_ref[i]->d_vtable_base=vtbase;
     return (*d_priv->create_proxy)(*_rm);
 */
   }
