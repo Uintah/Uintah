@@ -1,0 +1,2 @@
+0 23 * * * /usr/sci/projects/Uintah/tester/bin/tcsh_run "/usr/sci/projects/Uintah/tester/bin/startTester -j 2 -sendmail"
+0 2 * * * /usr/sci/projects/Uintah/tester/bin/tcsh_run "/usr/sci/projects/Uintah/tester/bin/scirunBuildTest -j 2"
