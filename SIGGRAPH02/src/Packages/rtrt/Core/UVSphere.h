@@ -30,9 +30,6 @@ void Pio(Piostream&, rtrt::UVSphere*&);
 
 namespace rtrt {
 
-using namespace rtrt;
-using namespace SCIRun;
-
 class UVSphere : public Object, public UVMapping {
 
  protected:
