@@ -207,31 +207,35 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField() : 
   Field(),
-  mesh_(mesh_handle_type(new mesh_type())),
-  //fdata_(fdata_type(0))
-  fdata_(fdata_type())
+  mesh_(mesh_handle_type(scinew mesh_type()))
 {
+  if (data_at != NONE && mesh_.get_rep())
+  {
+    resize_fdata();
+  }
 }
 
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField(data_location data_at) : 
   Field(data_at),
-  mesh_(mesh_handle_type(new mesh_type())),
-  //fdata_(fdata_type(0)) 
-  fdata_(fdata_type()) 
+  mesh_(mesh_handle_type(scinew mesh_type()))
 {
+  if (data_at != NONE && mesh_.get_rep())
+  {
+    resize_fdata();
+  }
 }
 
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh, 
 					data_location data_at) : 
   Field(data_at),
-  mesh_(mesh),
-  //fdata_(fdata_type(0))
-  fdata_(fdata_type())
+  mesh_(mesh)
 {
   if (data_at != NONE && mesh_.get_rep())
+  {
     resize_fdata();
+  }
 }
 
 template <class Mesh, class FData>
