@@ -316,7 +316,7 @@ void ParticleVis::execute()
 		sp = scinew GeomSphere( (*p_it)[*iter],
 					scalefactor * radius.get(),
 					nu, nv);
-		sp->setId((*id_it)[*iter]);
+		sp->setId((long long)((*id_it)[*iter]));
 	      } else { // make an ellips
 		double matrix[16];
 		Matrix3 M = (*t_it)[*iter];
@@ -333,14 +333,14 @@ void ParticleVis::execute()
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  scalefactor * radius.get(),
 					  nu, nv, &(matrix[0]), 2);
-		sp->setId((*id_it)[*iter]);
+		sp->setId((long long)((*id_it)[*iter]));
 	      }
 	    }
 	  } else {
 	    if(!hasTensors){
 	      //cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 	      sp = scinew GeomSphere( (*p_it)[*iter], radius.get(), nu, nv);
-	      sp->setId((*id_it)[*iter]);
+	      sp->setId((long long)((*id_it)[*iter]));
 	    } else {
 	      double matrix[16];
 	      Matrix3 M = (*t_it)[*iter];
@@ -362,7 +362,7 @@ void ParticleVis::execute()
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  radius.get(), nu, nv, &(matrix[0]),
 					  2);
-		sp->setId((*id_it)[*iter]);
+		sp->setId((long long)((*id_it)[*iter]));
 	      }
 	    }
 	  }
