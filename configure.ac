@@ -1919,7 +1919,7 @@ fi
 
 SCI_TRY_LINK(MPEGE,MPEG library,,,mpege,$_sci_lib,,,optional)
 
-if test "$HAVE_MPEGE"; then
+if test "$HAVE_MPEGE" = "yes"; then
   DEF_MPEG="#define HAVE_MPEG 1"
 fi
 
@@ -1970,7 +1970,7 @@ for i in $_sci_lib; do
     ],optional)
   fi
 
-  if test "$HAVE_MAGICK"; then
+  if test "$HAVE_MAGICK" = "yes"; then
     DEF_MAGICK="#define HAVE_MAGICK 1"
   fi
 
@@ -2043,7 +2043,7 @@ SCI_TRY_LINK(Z,zlib library and header,[
 #include <zlib.h>
 ],$_sci_inc,z,$_sci_lib,,,not-optional)
 
-if test "$HAVE_Z"; then
+if test "$HAVE_Z" = "yes"; then
    DEF_Z="#define HAVE_ZLIB 1"
 fi
 
@@ -2112,7 +2112,7 @@ if test "$sci_check_blas" = "yes"; then
     *)
        SCI_TRY_LINK(BLAS,blas library,,,
                       blas,$_sci_lib,$F_LIB_FLAG,,optional)
-       if test "$HAVE_BLAS" = "no"; then
+       if test "$HAVE_BLAS" != "yes"; then
          SCI_TRY_LINK(BLAS,fblas library,,,
                       fblas,$_sci_lib,$F_LIB_FLAG,,not-optional)
        fi
@@ -2157,7 +2157,7 @@ AC_SUBST(INC_FTGL_H)
 ##  --  search for lapack stuff  -----------------------------------------
 
 if test "$sci_check_lapack" = "yes" &&
-   test "$HAVE_F" && test "$HAVE_BLAS"; then
+   test "$HAVE_F" = "yes" && test "$HAVE_BLAS" = "yes"; then
   if test "$with_lapack"; then
     _sci_lib="$with_lapack"
   else
@@ -2167,11 +2167,11 @@ if test "$sci_check_lapack" = "yes" &&
 
   SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 
-  if test "$HAVE_LAPACK" = "no"; then
+  if test "$HAVE_LAPACK" != "yes"; then
     SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
   fi
 
-  if test "$HAVE_LAPACK" = "no"; then
+  if test "$HAVE_LAPACK" != "yes"; then
     SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
     if test "$HAVE_LAPACK" = "yes"; then
        AC_MSG_WARN(Using complib for lapack)
@@ -2234,12 +2234,12 @@ if test "$sci_check_mpi" = "yes"; then
         #include <mpi.h>
         ],$_sci_inc /usr/include/mpi,mpi lam util pmpi,$_sci_lib,,,optional)
 
-        if test "$HAVE_MPI" = "no"; then
+        if test "$HAVE_MPI" != "yes"; then
            SCI_TRY_LINK(MPI,mpi library and header,[
            #include <mpi.h>
            ],$_sci_inc /usr/include/mpi,mpi,$_sci_lib,,,optional)
 
-           if test "$HAVE_MPI" = "no"; then
+           if test "$HAVE_MPI" != "yes"; then
               SCI_TRY_LINK(MPI,mpich library and header,[
               #include <mpi.h>
               ],$_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
@@ -2338,7 +2338,7 @@ SCI_TRY_LINK(MPIUNI,mpi-uni libraries and headers,[
 #include <mpi.h>
 ],$_sci_inc,mpiuni,$_sci_lib,,,optional)
 
-if test "$HAVE_MPIUNI" = "no"; then
+if test "$HAVE_MPIUNI" != "yes"; then
    SCI_TRY_LINK(MPIUNICH,mpiunich and pmpiunich libraries,,
                   $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
 
