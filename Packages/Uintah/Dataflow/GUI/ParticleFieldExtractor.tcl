@@ -360,7 +360,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    wm deiconify $graph_window
             raise $graph_window
 	}
-	if {![winfo exists $graph_window.vars]} {
+	if {[winfo exists $graph_window.vars]} {
 	    destroy $graph_window.vars
 	}
     }
@@ -579,15 +579,15 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
     method addGraphingVar {part_id name mat_list type i} {
 	if {[winfo exists $graph_window]} {
 	    if {![winfo exists $graph_window.vars]} {
-		frame $graph_window.vars -borderwidth 3 -relief ridge
+		frame $graph_window.vars -borderwidth 3
 		pack $graph_window.vars -side top -fill x -padx 2 -pady 2
 	    }
 	    set varid "$type$i"
-	    set fname "$graph_window.$varid"
+	    set fname "$graph_window.vars.$varid"
 
 	    #puts "addVar: fname = $fname"
 	    frame $fname
-	    pack $fname -side top -fill x -padx 2 -pady 2
+	    pack $fname -side top -fill x -padx 0 -pady 0
 
 	    label $fname.label -text "$name"
 	    pack $fname.label -side left -padx 2 -pady 2
