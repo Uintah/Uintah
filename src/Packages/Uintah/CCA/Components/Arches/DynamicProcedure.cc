@@ -802,9 +802,9 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     StencilMatrix<Array3<double> > SHATIJ; //6 point tensor
     StencilMatrix<Array3<double> > betaIJ;  //6 point tensor
     StencilMatrix<Array3<double> > betaHATIJ; //6 point tensor
-    int numGC = 1;
-    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
-    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+
+    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
 
     int tensorSize = 6; //  1-> 11, 2->22, 3->33, 4 ->12, 5->13, 6->23
     for (int ii = 0; ii < tensorSize; ii++) {
@@ -1968,12 +1968,6 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     tempCs.initialize(0.0);
 	  //     calculate the local Smagorinsky coefficient
 	  //     perform "clipping" in case MLij is negative...
-    double factor = 1.0;
-#if 1
-    if (time < 2.0)
-      factor = (time+0.000001)*0.5;
-#endif
-
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1987,17 +1981,25 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	}
       }
     }
-#define FILTER_Cs_squared
-#ifdef FILTER_Cs_squared
+
+    if (d_filter_cs_squared) {
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, tempCs, Cs);
 #else
+    // filtering without petsc is not implemented
+    // if it needs to be then tempCs will have to be computed with ghostcells
     Cs.copy(tempCs, tempCs.getLowIndex(),
 		      tempCs.getHighIndex());
 #endif
-#else
+    }
+    else
     Cs.copy(tempCs, tempCs.getLowIndex(),
 		      tempCs.getHighIndex());
+
+    double factor = 1.0;
+#if 1
+    if (time < 2.0)
+      factor = (time+0.000001)*0.5;
 #endif
 
     if (d_MAlab) {
@@ -2043,9 +2045,9 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
     if (xminus) {
+      int colX = indexLow.x();
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
-	  int colX = indexLow.x();
 	  IntVector currCell(colX-1, colY, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -2053,9 +2055,9 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }
     if (xplus) {
+      int colX =  indexHigh.x();
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
-	  int colX =  indexHigh.x();
 	  IntVector currCell(colX+1, colY, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -2063,9 +2065,9 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }
     if (yminus) {
+      int colY = indexLow.y();
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-	  int colY = indexLow.y();
 	  IntVector currCell(colX, colY-1, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -2073,9 +2075,9 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }
     if (yplus) {
+      int colY =  indexHigh.y();
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-	  int colY =  indexHigh.y();
 	  IntVector currCell(colX, colY+1, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -2083,9 +2085,9 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }
     if (zminus) {
+      int colZ = indexLow.z();
       for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-	  int colZ = indexLow.z();
 	  IntVector currCell(colX, colY, colZ-1);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -2093,9 +2095,9 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }
     if (zplus) {
+      int colZ =  indexHigh.z();
       for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-	  int colZ =  indexHigh.z();
 	  IntVector currCell(colX, colY, colZ+1);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -2174,9 +2176,8 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 #endif
     
-    int numGC = 1;
-    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
-    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
     Array3<double> phiSqr(idxLo, idxHi);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {

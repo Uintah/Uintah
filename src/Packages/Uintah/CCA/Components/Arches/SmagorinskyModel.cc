@@ -77,6 +77,7 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
     db->require("turbulentPrandtlNumber",d_turbPrNo);
   else
     d_turbPrNo = 0.4;
+  db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 
 }
 
@@ -232,9 +233,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
     if (xminus) {
+      int colX = lowIndex.x();
       for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
 	for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
-	  int colX = lowIndex.x();
 	  IntVector currCell(colX-1, colY, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -242,9 +243,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (xplus) {
+      int colX =  highIndex.x();
       for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
 	for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
-	  int colX =  highIndex.x();
 	  IntVector currCell(colX+1, colY, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -252,9 +253,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (yminus) {
+      int colY = lowIndex.y();
       for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
 	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  int colY = lowIndex.y();
 	  IntVector currCell(colX, colY-1, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -262,9 +263,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (yplus) {
+      int colY =  highIndex.y();
       for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
 	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  int colY =  highIndex.y();
 	  IntVector currCell(colX, colY+1, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -272,9 +273,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (zminus) {
+      int colZ = lowIndex.z();
       for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
 	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  int colZ = lowIndex.z();
 	  IntVector currCell(colX, colY, colZ-1);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -282,9 +283,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (zplus) {
+      int colZ =  highIndex.z();
       for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
 	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
-	  int colZ =  highIndex.z();
 	  IntVector currCell(colX, colY, colZ+1);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -414,9 +415,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
     if (xminus) {
+      int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  int colX = idxLo.x();
 	  IntVector currCell(colX-1, colY, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -424,9 +425,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (xplus) {
+      int colX = idxHi.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  int colX = idxHi.x();
 	  IntVector currCell(colX+1, colY, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -434,9 +435,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (yminus) {
+      int colY = idxLo.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colY = idxLo.y();
 	  IntVector currCell(colX, colY-1, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -444,9 +445,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (yplus) {
+      int colY = idxHi.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colY = idxHi.y();
 	  IntVector currCell(colX, colY+1, colZ);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -454,9 +455,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (zminus) {
+      int colZ = idxLo.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colZ = idxLo.z();
 	  IntVector currCell(colX, colY, colZ-1);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -464,9 +465,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       }
     }
     if (zplus) {
+      int colZ = idxHi.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colZ = idxHi.z();
 	  IntVector currCell(colX, colY, colZ+1);
 	  if (cellType[currCell] != wallID)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
