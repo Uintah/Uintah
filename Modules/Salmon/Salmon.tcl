@@ -202,13 +202,13 @@ itcl_class Roe {
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
 	canvas $m.objlist.canvas -width 400 -height 100 \
-	        -scrollregion "0 0 500 100" \
+	        -scrollregion "0 0 400 100" \
 		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0
 	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
 	
 	frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
 	pack $m.objlist.canvas.frame
-	$m.objlist.canvas create window 0 0 -window $m.objlist.canvas.frame \
+	$m.objlist.canvas create window 0 1 -window $m.objlist.canvas.frame \
 		-anchor nw
 	
 	scrollbar $m.objlist.scroll -relief sunken \
@@ -382,11 +382,12 @@ itcl_class Roe {
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
 	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
 	#tkwait visibility $m.objlist.canvas.frame.obj$objid
+	update idletasks
 	set width [winfo width $m.objlist.canvas.frame]
 	set height [winfo height $m.objlist.canvas.frame]
-	$m.objlist.canvas configure -scrollregion "0 0 $width $height" \
-		-width $width -height $height
-
+	$m.objlist.canvas configure -scrollregion "0 0 $width $height"
+	set view [$m.objlist.canvas yview]
+	$m.objlist.scroll set [lindex $view 0] [lindex $view 1]
     }
     
     method addObject2 {objid} {
