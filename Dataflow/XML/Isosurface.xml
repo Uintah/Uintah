@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd"?>
 <?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+<!cocoon-process type="xslt">
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -27,10 +27,10 @@
       <author>Yarden Livnat</author>
     </authors>
     <summary>Isosurface allows visualization of an isopotential
-     surface within a model. IsoSurface allows interactive extraction of isosurfaces in the voltage field.  
+     surface within a model. IsoSurface also allows interactive extraction of isosurfaces in the voltage field.  
      </summary>
      <description>
-      <p>A small sphere controls the starting point of the isosurface alogortihm, and an attached 3D arrow widget may be moved using the mouse, allowing interactive exploration of the voltage field.  Draggin on the arrow allows the the user to move the widget along the line defined by the gradient; dragging on the sphere allows unconstrianed movement of the seed point.</p>
+      <p>A small sphere controls the starting point of the isosurface alogorithm, and an attached 3D arrow widget may be moved using the mouse, allowing interactive exploration of the voltage field.  Dragging on the arrow allows the the user to move the widget along the line defined by the gradient; dragging on the sphere allows unconstrained movement of the seed point.</p>
 
 <p>In the Isosurface module GUI, changing the Iso Value allows visualization of any isopotential surface. The Update options are: On Release, Manual and Auto.  On Release will not re-execute the module until the user releases the Iso Value scroll bar. If the user selects the Manual option, the module will not re-execute until they press the Extract button.  The Auto option re-executes the module every time the Iso Value scroll bar moves. If the user selects the Auto Extract from New Field option and a new Field comes in, the module completely re-executes, calculating a new Isosurface.  The Build TriSurfField check box allows the user to pass the generated Isosurface downstream. If the ColorMap does not pass in to the Isosurface module, the user can specify the Default Color. </p>
       <p>The Isosurface can be calculated using the Marching Cubes method (MC), which examines the isopotential at the
@@ -50,22 +50,20 @@
         use instead.</p>
       <p> The Isosurface can be calculated using the Marching Cubes
 method, which examines the isopotential at the corners of every
-element within the input field.  This operation is parallelizeable and allows the user to specify how many threads are used to do the
-computation.  If only a few isovalues are to be examined then this is
-a great choice.
-      </p>
+element within the input field.  This operation may be parallelized, and allows the user to specify how many threads are used to do the
+computation.  This is a good choice if examining only a few isovalues.      </p>
       <p>
 	The NOISE method computes and stores a table containing all of the input field elements and their values.  Then when the isovalue is specified the surface can be extracted more quickly by looking in the table for the appropriate values.  This gives better interactive
 performance at the cost of some setup time and space.  
       </p>
       <p>
-        As of September 2002 this module can handle scalar fields of the following geometry type: LatVolField, StructHexVolField, TetVolField,HexVolField, TriSurfField, QuadSurfField and ImageField.
+        As of September 2002, this module can manage scalar fields of the following geometry type: LatVolField, StructHexVolField, TetVolField,HexVolField, TriSurfField, QuadSurfField and ImageField.
 Isocontours are generated for the surface input fields, and
 Isosurfaces are generated for the volume input fields.
       </p>
       <p>
-        As of Febuary 2003 this module can handle scalar fields that
-        contain cell centered data.  If the data is located at the
+        As of Febuary 2003, this module can handle scalar fields that
+        contain cell-centered data.  If the data is located at the
         cells, then the surfaces are created along the appropriate
         cell faces rather than using interpolated values from the
         nodes.
