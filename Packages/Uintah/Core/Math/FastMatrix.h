@@ -66,6 +66,7 @@ namespace Uintah {
 
     void transpose(const FastMatrix& transpose);
     void multiply(const vector<double>& b, vector<double>& X) const;
+    void multiply(const double* b, double* X) const;
     void multiply(const FastMatrix& a, const FastMatrix& b);
     void multiply(double s);
     double conditionNumber() const;
