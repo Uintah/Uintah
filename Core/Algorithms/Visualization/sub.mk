@@ -19,6 +19,8 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
+INCLUDES += $(TEEM_INCLUDE)
+
 SRCDIR   := Core/Algorithms/Visualization
 
 SRCS     += \
