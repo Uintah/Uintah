@@ -380,7 +380,6 @@ SliceRenderer::multi_level_draw()
 
   // set up stenciling
   if(use_stencil_){
-//     cerr<<"Using Stencil\n";
     glClearStencil(0);
     glStencilMask(1);
     glStencilFunc(GL_EQUAL, 0, 1);

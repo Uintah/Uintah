@@ -217,12 +217,9 @@ VolumeVisualizer::execute()
   if( s == "0" )
     gui->execute(id + " buildTopLevel");
 
-//    cerr<<"tex->nlevels() = "<<tex->nlevels() <<"\n";
   if( tex->nlevels() > 1 && gui_multi_level_.get() == 1){
     gui_multi_level_.set(tex->nlevels());
-//      cerr<<"building multi-level ... ";
     gui->execute(id + " build_multi_level");
-//      cerr<<" done \n";
   } else if(tex->nlevels() == 1 && gui_multi_level_.get() > 1){
     gui_multi_level_.set(1);
     gui->execute(id + " destroy_multi_level");

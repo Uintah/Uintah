@@ -247,18 +247,6 @@ Pbuffer::create ()
       gluCheckExtension((GLubyte*)"GL_NV_texture_rectangle", 
 			(GLubyte*)glGetString(GL_EXTENSIONS));
 
-#if defined(OGL_DBG)
-    std::cerr << "----- info from Pbuffer::create() in Core/Volume -----" 
-	      << std::endl;
-    std::cerr << "-- mATI_render_texture : " 
-	      << mATI_render_texture << std::endl;
-    std::cerr << "-- mATI_pixel_format_float: " 
-	      << mATI_pixel_format_float << std::endl;
-    std::cerr << "-- mNV_float_buffer: " 
-	      << mNV_float_buffer << std::endl;
-    std::cerr << "-- mNV_texture_rectangle: " 
-	      << mNV_texture_rectangle << std::endl;
-#endif    
     if(minor < 3 || (mFormat == GL_FLOAT && 
 		     !(mATI_pixel_format_float || mNV_float_buffer))) {
       mSupported = false;
