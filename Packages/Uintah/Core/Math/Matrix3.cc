@@ -80,7 +80,7 @@ void swapbytes( Uintah::Matrix3& m){
 // zero, assuming error is caused by round-off.
 #define NEAR_ZERO 1e-10
 
-void Matrix3::set(const int i, const int j, const double value)
+void Matrix3::set(int i, int j, double value)
 {
   // Assign the Matrix3 the value components
    mat3[i-1][j-1] = value;

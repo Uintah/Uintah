@@ -150,7 +150,7 @@ double conditionNum(SparseMatrix<double,int>& A)
     old_eigen = l_eigen;
     l_eigen = Uintah::eigenvalue(A,y);
     k++;
-  } while (abs(l_eigen-old_eigen) > 1e-8);
+  } while (fabs(l_eigen-old_eigen) > 1e-8);
 
   cout << "Number of iteration: " << k << " large eigenvalue: " << l_eigen
        << endl;
@@ -184,7 +184,7 @@ double conditionNum(SparseMatrix<double,int>& A)
     old_eigen = s_eigen;
     s_eigen = Uintah::eigenvalue(S,y);
     k++;
-  } while (abs(s_eigen - old_eigen) > 1e-10);
+  } while (fabs(s_eigen - old_eigen) > 1e-10);
 
   s_eigen += shift;
 
