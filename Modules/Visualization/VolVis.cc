@@ -283,12 +283,18 @@ VolVis::VolVis(const clString& id)
 
   Color temp(0.,0.,0.);
   ibgColor.set( temp );
+  bgColor = temp;
 
   homeSFgeneration = -1;
 
-//  minSV.set(0);
-//  maxSV.set(121);
+  minSV.set(0);
+  maxSV.set(121);
 
+  rasterX = 100;
+  rasterY = 100;
+
+  Image.newsize(100,100);
+  Image.initialize( bgColor );
 }
 
 
@@ -408,10 +414,6 @@ VolVis::UpdateTransferFncArray( clString x, clString y )
   char * suppl = new char[CANVAS_WIDTH*4+1];
   char * form = new char[64];
 
-  cerr << "The 2 strings are: #@\n";
-  cerr << x << endl;
-  cerr << y << endl;
-
   // clear the scalar value and opacity arrays
 
   Opacity.remove_all();
@@ -489,6 +491,7 @@ VolVis::UpdateTransferFncArray( clString x, clString y )
 	/ ( CANVAS_WIDTH );
     }
 
+#if 0  
   // check the 2 arrays (TEMP)
 
   cerr << "The arrays are #" << NodeCount << ":\n";
@@ -506,6 +509,7 @@ VolVis::UpdateTransferFncArray( clString x, clString y )
   cerr << "Opacity @# " << Opacity.size() << endl;
   for ( i = 0; i < Opacity.size(); i++ )
     cerr << i << " #@: " << Opacity[i] << endl;
+#endif  
 
 }
 
@@ -685,29 +689,11 @@ VolVis::execute()
   Levoy levoyModule ( homeSFRGrid, colormapport,
 		     ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
 
-  // TEMP!!!!!!  sometimes a seg fault happens here
-// should be here if i don't want a seg fault.  talk
-  // to Steve on how in the world can i fix it.  the seg
-  // fault happens when i click on 'ui' when it is calcing.
-  // TEMP!!! imagelock.lock();
-
   // calculate the new image
 
-  // LOCK_PROB:
-  // if i place  "imagelock.lock();" here, and unlock it after
-  // setting the raster sizes, sr simply stalls and after performing
-  // the calculation ( it happily just sits there...)
-  
   tempImage = levoyModule.TraceRays ( iView.get(),
 			 iRasterX.get(), iRasterY.get(), projection.get() );
 
-  // LOCK_PROB:
-  // if i leave  "imagelock.lock();" here, and during the calculation
-  // i move to my other virtual environment, it gives
-  // me an Array2 dimensions error!
-  // basically, it dies when i try to redraw!!!!!!!!!!!!!!!!!!!!!!!!
-
-  
   // lock it because the Image array will be modified
 
   imagelock.lock();
@@ -728,7 +714,7 @@ VolVis::execute()
 
   delete tempImage;
 
-  // TEMP!  what does this do?
+  // execute a tcl command
 
   TCL::execute(id+" redraw_when_idle");
   

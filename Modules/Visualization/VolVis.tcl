@@ -80,6 +80,10 @@ itcl_class VolVis {
 
 	set CanvasWidth  201
 	set CanvasHeight 201
+
+	global Selected
+
+	set Selected 0
     }
     
     #
@@ -212,6 +216,8 @@ itcl_class VolVis {
 
 	global curX curY
 
+	global Selected
+
 	# as the mouse moves across the canvas, the sliders follow
 
 	bind $w.main.top.gcanvas <Any-Motion> "$this UpdateSliders $w %x %y"
@@ -231,12 +237,14 @@ itcl_class VolVis {
 	$w.main.top.gcanvas bind node <Button-1> {
 	    set curX %x
 	    set curY %y
+
+	    set Selected 1
 	}
 
 	# interactively move the node
 	
 	$w.main.top.gcanvas bind node <B1-Motion> \
-		"$this moveNode $w.main.top.gcanvas %x %y"
+		"set Selected 1; $this moveNode $w.main.top.gcanvas %x %y"
 
 	# delete a node
 
@@ -247,7 +255,11 @@ itcl_class VolVis {
 
 	bind $w.main.top.gcanvas <Double-Button-1>  \
 		"$this introduceNode $w.main.top.gcanvas %x %y"
-	
+
+	# let go of node; no node is selected
+
+	bind $w.main.top.gcanvas <ButtonRelease-1> { set Selected 0; \
+	    puts "released!"}
     }
 
 
@@ -475,25 +487,63 @@ itcl_class VolVis {
 
     method UpdateSliders { w x y } {
 
-	# delete the slider that is already on the screen
-	
+	global Selected
+
+	# delete the sliders
+
 	$w.main.top.entireSideRuler.slid.slider delete all
-	$w.main.top.entireSideRuler.slid.slider create line \
-		0 $y 6 $y
-	$w.main.top.entireSideRuler.slid.slider create line \
-		0 [expr $y + 1]  6 [expr $y + 1]
-	$w.main.top.entireSideRuler.slid.slider create line \
-		0 [expr $y - 1]  6 [expr $y - 1]
-
-	# draw an appropriate slider
-
 	$w.main.bot.entireBottomRuler.slid.slider delete all
-	$w.main.bot.entireBottomRuler.slid.slider create line \
-		$x 0 $x 6
-	$w.main.bot.entireBottomRuler.slid.slider create line \
-		[expr $x + 1] 1 [expr $x + 1] 6
-	$w.main.bot.entireBottomRuler.slid.slider create line \
-		[expr $x - 1] 1 [expr $x - 1] 6
+	
+	
+	if { ! $Selected } {
+
+	    # draw the new side slider
+	    
+	    $w.main.top.entireSideRuler.slid.slider create line \
+		    0 $y 6 $y
+	    $w.main.top.entireSideRuler.slid.slider create line \
+		    0 [expr $y + 1]  6 [expr $y + 1]
+	    $w.main.top.entireSideRuler.slid.slider create line \
+		    0 [expr $y - 1]  6 [expr $y - 1]
+
+	    # draw the new bottom slider
+
+	    $w.main.bot.entireBottomRuler.slid.slider create line \
+		    $x 0 $x 6
+	    $w.main.bot.entireBottomRuler.slid.slider create line \
+		    [expr $x + 1] 1 [expr $x + 1] 6
+	    $w.main.bot.entireBottomRuler.slid.slider create line \
+		    [expr $x - 1] 1 [expr $x - 1] 6
+
+	} else {
+	    puts "i am selected, so i'm not updating the slider"
+	    
+	    set node    [ $w.main.top.gcanvas find withtag current ]
+	    set myIndex [lsearch $AllNodeIndexes $node]
+	    set newX    [lindex $Xvalues $myIndex]
+	    set newY    [lindex $Yvalues $myIndex]
+
+	    # draw the new side slider
+	    
+	    $w.main.top.entireSideRuler.slid.slider create line \
+		    0 $newY 6 $newY
+	    $w.main.top.entireSideRuler.slid.slider create line \
+		    0 [expr $newY + 1]  6 [expr $newY + 1]
+	    $w.main.top.entireSideRuler.slid.slider create line \
+		    0 [expr $newY - 1]  6 [expr $newY - 1]
+
+	    # draw the new bottom slider
+
+	    $w.main.bot.entireBottomRuler.slid.slider create line \
+		    $newX 0 $newX 6
+	    $w.main.bot.entireBottomRuler.slid.slider create line \
+		    [expr $newX + 1] 1 [expr $newX + 1] 6
+	    $w.main.bot.entireBottomRuler.slid.slider create line \
+		    [expr $newX - 1] 1 [expr $newX - 1] 6
+
+	    
+	}
+	
     }
 
     
