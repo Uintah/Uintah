@@ -40,6 +40,7 @@
 #include <Core/Math/MiscMath.h>
 #include <math.h>
 
+#include <algorithm>
 #include <map>
 #include <iostream>
 #include <string>
