@@ -20,7 +20,7 @@ TriGeometryPiece::~TriGeometryPiece()
 {
 }
 
-bool TriGeometryPiece::inside(const Point &p) const
+bool TriGeometryPiece::inside(const Point &) const
 {
     cerr << "TriGeometry piece not finished!\n";
     return false;
