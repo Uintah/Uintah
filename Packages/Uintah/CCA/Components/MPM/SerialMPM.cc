@@ -249,6 +249,7 @@ void SerialMPM::scheduleComputeBoundaryContact(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pCrackNormalLabel, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pIsBrokenLabel, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pVolumeLabel, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pVelocityLabel, Ghost::AroundCells, 1);
 
   t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
 
@@ -629,8 +630,9 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pVelocityLabel_preReloc,Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::AroundCells, 1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
   t->requires(Task::NewDW, lb->pRotationRateLabel,          Ghost::None);
@@ -1819,20 +1821,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
 	
-//	  if(numConnectedNodes != 0) {
-            pxnew[idx]        = px[idx]        + vel * delT;
-            pvelocitynew[idx] = pvelocity[idx] + acc * delT;
-/*
-          }
-	  else {        
-	    cout<<"isolated particle!"<<endl;
-	    exit(0);
-   	    //for isolated particles in fracture
-            pxnew[idx]      =  px[idx] + pvelocity[idx] * delT;
-            pvelocitynew[idx] = pvelocity[idx] +
-	    pexternalForce[idx] / (pmass[idx] * delT);
-          }
-*/
+	  int constraint = mpm_matl->getFractureModel()->getConstraint();
+          if( constraint > 0) {
+	    vel[constraint] = 0.;
+	    acc[constraint] = 0.;
+	  }
+	  
+	  pxnew[idx]        = px[idx]        + vel * delT;
+          pvelocitynew[idx] = pvelocity[idx] + acc * delT;
+
 	  pmassNew[idx]   = pmass[idx];
           pvolumeNew[idx] = pvolume[idx];
 

@@ -303,86 +303,76 @@ double ParticlesNeighbor::computeCrackClosureIntegral(
         const Point& pTip,
 	double R,
 	const Vector& nx,
-	const Vector& ny,
-        double sigma,
+	Vector ny,
+        const Matrix3& stress,
 	const ParticleVariable<Point>& pX,
-	const ParticleVariable<double>& pVolume ) const
+	const ParticleVariable<Vector>& pVelocity,
+	const ParticleVariable<double>& pVolume,
+	double delT ) const
 {
-  static double open_limit = DBL_MAX/2;
-  if(sigma<0) return 0;
-
-  double openxy = DBL_MAX;
-  double openxY = DBL_MAX;
-  double openXy = DBL_MAX;
-  double openXY = DBL_MAX;
+  ny = -ny;
+  
+  Vector Vxy,VxY,VXy,VXY;
+  double volumexy = 0;
+  double volumexY = 0;
+  double volumeXy = 0;
+  double volumeXY = 0;
 
   int num = size();
   for(int k=0; k<num; k++) {
     int index = (*this)[k];
 
     Vector d = pX[index] - pTip;
-    double r = pow( pVolume[index],0.333333 ) /2;
-
-    //cout<<"pX: "<<pX[index] 
-    //    <<"pTip: "<<pTip<<endl;
-	
     double dx = Dot(d,nx);
     double dy = Dot(d,ny);
 
     if( d.length() < R * 3 ) {
-      //cout<<"dx: "<<dx<<"  dy: "<<dy<<endl;
-
       if(dy>0) {
-        double open = dy-r;
-//	cout<<"dx: "<<dx<<"  dy: "<<dy<<"  open: "<<open<<endl;
         if( dx>0 ) {
-	  if( open < openXY ) openXY = open;
+	  VXY += pVelocity[index] * pVolume[index];
+	  volumeXY += pVolume[index];
 	}
         else {
-	  if( open < openxY ) openxY = open;
+	  VxY += pVelocity[index] * pVolume[index];
+	  volumexY += pVolume[index];
 	}
       }
       else {
-        double open = -dy-r;
-//	cout<<"dx: "<<dx<<"  dy: "<<dy<<"  open: "<<open<<endl;
         if( dx>0 ) {
-	  if( open < openXy ) openXy = open;
+	  VXy += pVelocity[index] * pVolume[index];
+	  volumeXy += pVolume[index];
 	}
         else {
-	  if( open < openxy ) openxy = open;
+	  Vxy += pVelocity[index] * pVolume[index];
+	  volumexy += pVolume[index];
 	}
       }
     }
   }
   
-/*
-  cout<<" openXY: "<<openXY
-      <<" openXy: "<<openXy
-      <<" openxY: "<<openxY
-      <<" openxy: "<<openxy<<endl;
-*/
-    
   double G = 0;
-  if( openXY < open_limit &&
-      openxY < open_limit &&
-      openXy < open_limit &&
-      openxy < open_limit )
+  if( volumeXY > 0 && volumexY > 0 && volumeXy > 0 && volumexy > 0 )
   {
-    double openx = openxY + openxy;
-    double openX = openXY + openXy;
-    if(openx<0)openx=0;
-    if(openX<0)openX=0;
-      
-    G = sigma * (openx-openX);
+    VXY /= volumeXY;
+    VxY /= volumexY;
+    VXy /= volumeXy;
+    Vxy /= volumexy;
+    
+    Vector Vdiff = (VxY - Vxy) - (VXY - VXy);
 
-/*
-    cout<<"openx: "<<openx
-        <<"openX: "<<openX
-	<<"G: "<<endl;
-*/
+    Vector nz = Cross(nx,ny);
+    double sigy1 = Dot( nx, stress * ny );
+    double sigy2 = Dot( ny, stress * ny );
+    double sigy3 = Dot( nz, stress * ny );
+    
+    double G1 = sigy1 * Dot(Vdiff,nx) * delT;
+    double G2 = sigy2 * Dot(Vdiff,ny) * delT;
+    double G3 = sigy3 * Dot(Vdiff,nz) * delT;
+    
+    //cout<<"G1: "<<G1<<" G2: "<<G2<<" G3: "<<G3<<endl;
+    
+    G = G1 + G2 + G3;
   }
-  
-//  cout<<endl<<endl;
   
   if(G>0) return G;
   else return 0;
