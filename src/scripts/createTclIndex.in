@@ -2,6 +2,6 @@
 
 ITCLSH << END
 source TCL_INIT_DIR/init.tcl
-source TCL_INIT_DIR/itcl.tcl 
+source ITCL_INIT_DIR/itcl.tcl 
 auto_mkindex $1
 END
