@@ -330,49 +330,107 @@ distance2(const Point &p0, const Point &p1)
 
 bool
 QuadSurfMesh::locate(Node::index_type &loc, const Point &p) const
-{
-  Node::iterator ni, nie;
-  begin(ni);
-  end(nie);
-
-  loc = *ni;
-  if (ni == nie)
+{ 
+  Node::iterator bi, ei;
+  Point center;
+  begin(bi);
+  end(ei);
+  loc = 0;
+  
+  bool found = false;
+  double mindist = 0.0;
+  while (bi != ei) 
   {
-    return false;
-  }
-
-  double min_dist = distance2(p, points_[*ni]);
-  loc = *ni;
-  ++ni;
-
-  while (ni != nie)
-  {
-    const double dist = distance2(p, points_[*ni]);
-    if (dist < min_dist)
-    {
-      loc = *ni;
+    get_center(center, *bi);
+    const double dist = (p - center).length2();
+    if (!found || dist < mindist) 
+    {      
+      loc = *bi;
+      mindist = dist;
+      found = true;
     }
-    ++ni;
+    ++bi;
   }
-  return true;
+  return found;
+}
+
+
+static double
+distance_to_line2(const Point &p, const Point &a, const Point &b)
+{
+  Vector m = b - a;
+  Vector n = p - a;
+  if (m.length2() < 1e-6)
+  {
+    return n.length2();
+  }
+  else
+  {
+    const double t0 = Dot(m, n) / Dot(m, m);
+    if (t0 <= 0) return (n).length2();
+    else if (t0 >= 1.0) return (p - b).length2();
+    else return (n - m * t0).length2();
+  }
 }
 
 
 bool
-QuadSurfMesh::locate(Edge::index_type &loc, const Point &) const
+QuadSurfMesh::locate(Edge::index_type &loc, const Point &p) const
 {
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on QuadSurfMesh first");
+
+  Edge::iterator bi, ei;
+  Node::array_type nodes;
+  begin(bi);
+  end(ei);
   loc = 0;
-  ASSERTFAIL("Locate Edge not implemented in QuadSurfMesh");
-  return false;
+  
+  bool found = false;
+  double mindist = 0.0;
+  while (bi != ei)
+  {
+    get_nodes(nodes,*bi);
+    const double dist = distance_to_line2(p, points_[nodes[0]], points_[nodes[1]]);
+    if (!found || dist < mindist)
+    {
+      loc = *bi;
+      mindist = dist;
+      found = true;
+    }
+    ++bi;
+  }
+  return found;
 }
 
 
 bool
-QuadSurfMesh::locate(Face::index_type &loc, const Point &) const
-{
+QuadSurfMesh::locate(Face::index_type &loc, const Point &p) const
+{  
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on QuadSurfMesh first");
+
+  Face::iterator bi, ei;
+  Point center;
+  begin(bi);
+  end(ei);
   loc = 0;
-  ASSERTFAIL("Locate Face not implemented in QuadSurfMesh");
-  return false;
+  
+  bool found = false;
+  double mindist = 0.0;
+  while (bi != ei) 
+  {
+    get_center(center, *bi);
+    const double dist = (p - center).length2();
+    if (!found || dist < mindist) 
+    {      
+      loc = *bi;
+      mindist = dist;
+      found = true;
+    }
+    ++bi;
+  }
+  return found;
 }
 
 
@@ -380,7 +438,6 @@ bool
 QuadSurfMesh::locate(Cell::index_type &loc, const Point &) const
 {
   loc = 0;
-  ASSERTFAIL("Locate Cell not implemented in QuadSurfMesh");
   return false;
 }
 
