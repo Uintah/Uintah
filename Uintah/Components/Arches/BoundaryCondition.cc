@@ -37,9 +37,9 @@ BoundaryCondition::~BoundaryCondition()
 void BoundaryCondition::problemSetup(const ProblemSpecP& params)
 {
 #if 0
-  ProblemSpecP db = params->findBlock("Boundary Conditions");
+  ProblemSpecP db = params->findBlock("BoundaryConditions");
   int numFlowInlets;
-  db->require("NumFlowInlets", numFlowInlets);
+  db->require("numFlowInlets", numFlowInlets);
   dw->put(numFlowInlets, "NumFlowInlets");
   int numMixingScalars;
   // set number of scalars in properties based on

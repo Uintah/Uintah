@@ -75,6 +75,6 @@ Properties::Stream::Stream()
 
 void Properties::Stream::problemSetup(ProblemSpecP& params)
 {
-  params->require("Density", d_density);
-  params->require("Temperature", d_temperature);
+  params->require("density", d_density);
+  params->require("temperature", d_temperature);
 }

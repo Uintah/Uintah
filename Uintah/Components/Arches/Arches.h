@@ -7,11 +7,17 @@
  */
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
+#include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/CFDInterface.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Parallel/ProcessorContext.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
+   class VarLabel;
    namespace ArchesSpace {
 
 class PhysicalConstants;
@@ -51,7 +57,8 @@ private:
     Arches& operator=(const Arches&);
     void paramInit(const ProcessorContext*,
 		   const Region* region,
-		   const DataWarehouseP& old_dw);
+		   DataWarehouseP& old_dw,
+		   DataWarehouseP& );
     double d_deltaT;
     PhysicalConstants* d_physicalConsts;
     NonlinearSolver* d_nlSolver;
@@ -62,6 +69,16 @@ private:
     TurbulenceModel* d_turbModel;
   // Boundary conditions
     BoundaryCondition* d_boundaryCondition;
+    
+    // Variable labels that are used by the simulation controller
+    // SimulationStateP d_sharedState;
+    const VarLabel* d_deltLabel;
+    const VarLabel* d_densityLabel;
+    const VarLabel* d_pressureLabel;
+    const VarLabel* d_scalarLabel;
+    const VarLabel* d_velocityLabel;
+    const VarLabel* d_viscosityLabel;
+
 };
 
 } // end namespace ArchesSpace
@@ -69,6 +86,9 @@ private:
 
 //
 // $Log$
+// Revision 1.19  2000/05/20 22:54:14  bbanerje
+// Again, adding the first set of changes to get the scheduler to add tasks.
+//
 // Revision 1.18  2000/05/09 22:56:22  sparker
 // Changed name of namespace
 //
