@@ -26,7 +26,7 @@ DESCRIPTION
 
 #include <SCICore/TclInterface/TCLvar.h>
 
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Dataflow/Module.h>
 
 #include <Uintah/Datatypes/Particles/ParticleSet.h>
@@ -38,7 +38,7 @@ namespace Modules {
 
 using namespace Uintah::Datatypes;
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 
 

@@ -32,17 +32,17 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <SCICore/Datatypes/ColorMap.h>
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
 
 namespace Uintah {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
@@ -313,6 +313,11 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:49:03  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:18:08  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
