@@ -182,7 +182,7 @@ ShowField::execute()
 
     DynamicLoader loader;
     // Do I have the algorithm already?
-    DynamicAlgoBase *alg = 0;
+    DynamicAlgoHandle alg = 0;
     CompileInfo *ci = RenderFieldBase::get_compile_info(td);
     if (! loader.get(ci->filename_, alg)) {
       if (loader.compile_and_store(*ci)) {
@@ -196,8 +196,11 @@ ShowField::execute()
 	return;
       }
     }
-    renderer_ = dynamic_cast<RenderFieldBase*>(alg);
-    
+    renderer_ = dynamic_cast<RenderFieldBase*>(alg.get_rep());
+    if (renderer_ == 0) {
+      error("ShowField could not get algorithm!!");
+      return;
+    }
     node_display_type_.reset();
     string ndt = node_display_type_.get();
     node_scale_.reset();
