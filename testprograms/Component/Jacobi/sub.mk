@@ -17,21 +17,20 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component
+SRCDIR := testprograms/Component/Jacobi
 
-SUBDIRS := \
-	$(SRCDIR)/argtest	\
-	$(SRCDIR)/framework	\
-	$(SRCDIR)/memstress	\
-	$(SRCDIR)/mitest	\
-	$(SRCDIR)/objects	\
-	$(SRCDIR)/pingpong	\
-	$(SRCDIR)/spectest      \
-	$(SRCDIR)/pingpongArr   \
-	$(SRCDIR)/mxn  	        \
-	$(SRCDIR)/mxnargtest    \
-	$(SRCDIR)/OESort        \
-	$(SRCDIR)/Jacobi
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/Thread \
+	Core/Exceptions Core/globus_threads Core/CCA/Component/Comm
+endif
+LIBS := $(MPI_LIBRARY) 
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+PROGRAM := $(SRCDIR)/Jacobi
+SRCS := $(SRCDIR)/Jacobi.cc $(SRCDIR)/Jacobi_sidl.cc \
+	$(SRCDIR)/Jacobi_impl.cc
+GENHDRS := $(SRCDIR)/Jacobi_sidl.h
+
+include $(SCIRUN_SCRIPTS)/program.mk
 

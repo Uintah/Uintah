@@ -17,21 +17,20 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component
+SRCDIR := testprograms/Component/OESort
 
-SUBDIRS := \
-	$(SRCDIR)/argtest	\
-	$(SRCDIR)/framework	\
-	$(SRCDIR)/memstress	\
-	$(SRCDIR)/mitest	\
-	$(SRCDIR)/objects	\
-	$(SRCDIR)/pingpong	\
-	$(SRCDIR)/spectest      \
-	$(SRCDIR)/pingpongArr   \
-	$(SRCDIR)/mxn  	        \
-	$(SRCDIR)/mxnargtest    \
-	$(SRCDIR)/OESort        \
-	$(SRCDIR)/Jacobi
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/Thread \
+	Core/Exceptions Core/globus_threads Core/CCA/Component/Comm
+endif
+LIBS := $(MPI_LIBRARY) 
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+PROGRAM := $(SRCDIR)/OESort
+SRCS := $(SRCDIR)/OESort.cc $(SRCDIR)/OESort_sidl.cc \
+	$(SRCDIR)/OESort_impl.cc
+GENHDRS := $(SRCDIR)/OESort_sidl.h
+
+include $(SCIRUN_SCRIPTS)/program.mk
 

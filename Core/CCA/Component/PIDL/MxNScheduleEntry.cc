@@ -134,6 +134,14 @@ void* MxNScheduleEntry::getCompleteArray()
       if (callee_rep[0]->isIntersect(caller_rep[i]))
 	  rl.push_back(caller_rep[i]);
     }
+    //Return NULL if there is no redistribution
+    if (rl.size() == 0) {
+      int** temp_ptr = new int*;
+      (*temp_ptr) = NULL;
+      arr_ptr = (void*) temp_ptr; 
+      return arr_ptr;
+    }
+
     //Wait until all of those requests are received
     descriptorList::iterator iter = rl.begin();
     for(unsigned int i=0; i < rl.size(); iter++, i++) {

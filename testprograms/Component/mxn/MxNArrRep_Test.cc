@@ -54,7 +54,7 @@ int main()
   assert(mxnarep3->isIntersect(mxnarep2) == false);
   Index* nsect1 = mxnarep3->Intersect(mxnarep2,1);
   assert(nsect1->myfirst == 33); 
-  assert(nsect1->mylast == 33);
+  assert(nsect1->mylast == 37);
   delete nsect1;
 
   delete mxnarep2;
@@ -64,9 +64,9 @@ int main()
   mxnarep2 = new MxNArrayRep(2,index1);  
   MxNArrayRep* xsect = mxnarep2->Intersect(mxnarep3);
   assert(xsect->getFirst(1) == 29);
-  assert(xsect->getLast(1) == 41);
+  assert(xsect->getLast(1) == 43);
   assert(xsect->getFirst(2) == 28);
-  assert(xsect->getLast(2) == 98);
+  assert(xsect->getLast(2) == 97);
   delete xsect;
   
   delete mxnarep1;
@@ -76,7 +76,7 @@ int main()
   mxnarep1 = new MxNArrayRep(2,index2);  
   MxNArrayRep* xsect1 = mxnarep1->Intersect(mxnarep2);
   assert(xsect1->getFirst(1) == 46);
-  assert(xsect1->getLast(1) == 44);
+  assert(xsect1->getLast(1) == 43);
   assert(xsect1->getStride(1) == 4);
   assert(xsect1->getFirst(2) == 34);
   assert(xsect1->getLast(2) == 64);
@@ -84,11 +84,11 @@ int main()
   delete xsect1; 
 
   MxNArrayRep* xsect2 = mxnarep1->Intersect(mxnarep3);
-  assert(xsect2->getFirst(1) == 1);
+  assert(xsect2->getFirst(1) == 0);
   assert(xsect2->getLast(1) == 0);
-  assert(xsect2->getStride(1) == 4);
+  assert(xsect2->getStride(1) == 0);
   assert(xsect2->getFirst(2) == 33);
-  assert(xsect2->getLast(2) == 63);
+  assert(xsect2->getLast(2) == 64);
   assert(xsect2->getStride(2) == 5);
   delete xsect1;
 

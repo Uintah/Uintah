@@ -14,7 +14,7 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 */
-
+ 
 
 #include <sci_config.h>
 #include "Spec.h"
@@ -1380,36 +1380,68 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 
 
   /***********************************/
-  /*CALLONLY                         */
+  /*CALLNORET                        */
   /***********************************/
-  string callonly_ldr;
+  string call_ldr;
   if (isCollective) {
     e.out << leader2 << "else {\n";
-    e.out << leader2 << "  /*CALLONLY*/\n";
-    callonly_ldr=e.out.push_leader();
+
+    call_ldr=e.out.push_leader();
+    e.out << leader2 << "\n";
+    e.out << leader2 << "int rate = _refL[0].par_size;\n";
+    e.out << leader2 << "iter = _refL.begin() + (_refL[0].par_rank + rate);\n";
+    
+    e.out << leader2 << "for(unsigned int i=(_refL[0].par_rank + rate); i < _refL.size(); i+=rate, iter+=rate) {\n";
+    e.out << leader2 << "  /*CALLNORET*/\n";
+    string loop_leader1=e.out.push_leader();
+    e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
+    e.out << leader2 << "message->createMessage();\n";
+
+    int argNum=0;
+    if (doRedistribution) {
+      e.out << leader2 << "//Marshal flag which informs handler that\n";
+      e.out << leader2 << "// this message is CALLNORET\n";
+      e.out << leader2 << "int _flag = 3;\n";
+      e.out << leader2 << "message->marshalInt(&_flag);\n";
+    }
+    if(list.size() != 0)
+      e.out << leader2 << "// Marshal the arguments\n";
+    argNum=0;
+    for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+      argNum++;
+      Argument* arg=*iter;
+      if(arg->getMode() != Argument::Out) {
+	std::ostringstream argname;
+	argname << "_arg" << argNum;
+	arg->emit_marshal(e, argname.str(), "1", handlerOff , true, ArgIn, false);
+      }
+    }
+    
+    e.out << leader2 << "// Send the message\n";
+    e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
+    e.out << leader2 << "message->sendMessage(_handler);\n";
+    e.out << leader2 << "message->destroyMessage();\n";
+    
+    e.out.pop_leader(loop_leader1);
+    e.out << leader2 << "}\n\n";
+
   }
 
-  if (isCollective) 
+
+  /***********************************/
+  /*CALLONLY                         */
+  /***********************************/
+  if (isCollective) { 
+    e.out << leader2 << "/*CALLONLY*/\n";
     e.out << leader2 << "iter = _refL.begin() + _refL[0].par_rank;\n";
-  else
+  } else {
     e.out << leader2 << "iter = _refL.begin() + ( _refL[0].par_rank % _refL.size() );\n";
-    
+  }
+
   e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
   e.out << leader2 << "message->createMessage();\n";
 
   int argNum=0;
-  /*
-  for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-    argNum++;
-    Argument* arg=*iter;
-    if(arg->getMode() != Argument::Out) {
-      std::ostringstream argname;
-      argname << "_arg" << argNum;
-      arg->emit_marshalsize(e, argname.str(), "_size", "1");
-    }
-  }
-  */
-
   if (isCollective) {
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLONLY:\n";
@@ -1464,7 +1496,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   }
 
   if (isCollective) {
-    e.out.pop_leader(callonly_ldr);
+    e.out.pop_leader(call_ldr);
     e.out << leader2 << "}\n";
   }
 
@@ -1486,17 +1518,6 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "message->createMessage();\n";
 
     argNum=0;
-    /*
-    for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-      argNum++;
-      Argument* arg=*iter;
-      if(arg->getMode() != Argument::Out) {
-	std::ostringstream argname;
-	argname << "_arg" << argNum;
-	arg->emit_marshalsize(e, argname.str(), "_size", "1");
-      }
-    }
-    */
     if (doRedistribution) {
       e.out << leader2 << "//Marshal flag which informs handler that\n";
       e.out << leader2 << "// this message is CALLNORET\n";
@@ -1516,7 +1537,6 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       }
     }
     
-
     e.out << leader2 << "// Send the message\n";
     e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
@@ -1627,9 +1647,11 @@ void Argument::emit_prototype_defin(SState& out, const std::string& arg,
 
 void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
 			       const string& qty, const int handler, 
-			       ArgContext ctx, const bool /*specialRedis*/,
+			       ArgContext ctx, const bool specialRedis,
 			       bool declare) const
 {
+  if(specialRedis) return;
+
   if(qty != "1"){
     cerr << "ArrayType::emit_unmarshall, qty != 1: " << qty << '\n';
     exit(1);
@@ -1709,9 +1731,11 @@ bool ArrayType::uniformsize() const
 
 void ArrayType::emit_marshal(EmitState& e, const string& arg,
 			     const string& /*qty*/, const int handler, 
-			     bool top, ArgContext ctx, bool /*specialRedis*/,
+			     bool top, ArgContext ctx, bool specialRedis,
 			     storageT bufferStore) const
 {
+
+  if (specialRedis) return;
 
   if (bufferStore == doRetreive) {
     if (ctx == ReturnType) {
@@ -1798,9 +1822,11 @@ void ArrayType::emit_prototype(SState& out, ArgContext ctx,
 
 void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
 				 const string& qty, const int handler,
-				 ArgContext ctx, const bool /*specialRedis*/,
+				 ArgContext ctx, const bool specialRedis,
 				 bool declare) const
 {
+  if(specialRedis) return;
+
   if(cname == "void"){
     // What?
     cerr << "Trying to unmarshal a void!\n";
@@ -1901,9 +1927,11 @@ void BuiltinType::emit_declaration(EmitState& e, const string& arg) const
 
 void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 			       const string& qty, const int /*handler*/, bool/* top*/,
-			       ArgContext ctx, bool /*specialRedis*/, 
+			       ArgContext ctx, bool specialRedis, 
 			       storageT bufferStore) const
 {
+  if (specialRedis) return;
+
   if (bufferStore == doRetreive) {
     if (ctx == ReturnType) {
       e.out << leader2 << arg << " = *((" << cname << "*)(_sc->storage.get(" << e.handlerNum << ",0"
@@ -2154,6 +2182,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
       else if (ctx == ArgOut) {
 	// *********** OUT arg -- Special Redis ******************************
 	e.out << leader2 << "//Collect redistributions of out arguments:\n";
+	e.out << leader2 << "if (1) { //Hack to prevent variable shadowing of _rl_out and _this_rep\n";
 	e.out << leader2 << "SCIRun::descriptorList _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" 
 	      << distarr->getName() << "\");\n";
@@ -2207,9 +2236,11 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out.pop_leader(templeader); 
 	e.out << leader2 << "  delete _meta_arr_rep;\n"; 
 	e.out << leader2 << "}\n";   
+	e.out << leader2 << "}\n";
 
 	//TEMPORARY TEST:
 	e.out << leader2 << "//Test\n";
+	e.out << leader2 << "if (1) {\n";
 	e.out << leader2 << "std::ostringstream fname;\n";
 	e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << _refL[0].par_rank << \".caller.out\";\n";
 	e.out << leader2 << "d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
@@ -2224,8 +2255,9 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	  e.out << leader2 << "    d_sched->dbg << k << \",\" << i << \"out_arr = \" << " 
 		<< arg << "[k][i] << \"\\n\";\n";
 	}
-	e.out << leader2 << "if (_sc->d_sched->dbg)\n";
+	e.out << leader2 << "if (d_sched->dbg)\n";
 	e.out << leader2 << "  d_sched->dbg.close();\n";
+	e.out << leader2 << "}\n";
 	//EOF TEMPORARY TEST
 
 	// *********** END OF OUT arg -- Special Redis ******************************	
@@ -2242,6 +2274,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	
 	//TEMPORARY TEST
 	e.out << leader2 << "//Test\n";
+	e.out << leader2 << "if (1) {\n";
 	e.out << leader2 << "std::ostringstream fname;\n";
 	e.out << leader2 << "int rank;\n";
 	e.out << leader2 << "MPI_Comm_rank(MPI_COMM_WORLD,&rank);\n";
@@ -2260,6 +2293,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	}
 	e.out << leader2 << "if (_sc->d_sched->dbg)\n";
 	e.out << leader2 << " _sc->d_sched->dbg.close();\n";
+	e.out << leader2 << "}\n";
 	//EOF TEMPORARY TEST
 	// *********** END OF IN arg -- No Special Redis ******************************
       }
@@ -2388,6 +2422,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	// *********** IN arg -- Special Redis ******************************
 	e.out << "\n";
 	e.out << leader2 << "//Redistribute the array:\n";
+	e.out << leader2 << "if (1) { //Hack to prevent varable shadowing on rl & this_rep\n";
 	e.out << leader2 << "SCIRun::descriptorList rl = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* this_rep = d_sched->callerGetCallerRep(\"" 
 	      << distarr->getName() << "\");\n";
@@ -2438,6 +2473,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->sendMessage(_handler);\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
 	e.out << leader2 << "}\n";
+	e.out << leader2 << "}\n"; //if (1) ...
 	// *********** END OF IN arg -- Special Redis ******************************
       }
       else if (ctx == ArgOut) {
