@@ -226,7 +226,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
              lower.z() <= position[pIdx].z() && position[pIdx].z() <= upper.z() )
          {
              pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
-             cout << pexternalforce[pIdx] << endl;
+             //cout << pexternalforce[pIdx] << endl;
          }
        }
      }
@@ -422,6 +422,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.51.4.1  2000/10/17 00:59:17  sparker
+// Commented out print statement of externalforce
+//
 // Revision 1.51  2000/09/25 20:23:19  sparker
 // Quiet g++ warnings
 //
