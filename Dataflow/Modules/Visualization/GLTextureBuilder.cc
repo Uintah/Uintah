@@ -117,7 +117,9 @@ void GLTextureBuilder::execute(void)
 
 void GLTextureBuilder::real_execute(FieldHandle sfield)
 {
-  if (!sfield.get_rep() || sfield->get_type_name(0) != "LatticeVol")
+  if (!sfield.get_rep() ||
+      (sfield->mesh()->get_type_description()->get_name() !=
+       get_type_description((LatVolMesh *)0)->get_name()))
   {
     return;
   }

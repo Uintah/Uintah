@@ -222,7 +222,7 @@ Isosurface::send_results()
 void
 Isosurface::new_field( FieldHandle &field )
 {
-  const string type = field->get_type_name();
+  const string type = field->get_type_description()->get_name();
 
   ScalarFieldInterface *sfi = field->query_scalar_interface();
   if (! sfi) {
