@@ -62,7 +62,7 @@ public:
   virtual ~GridSliceVis();
   virtual void widget_moved(int last);    
   virtual void execute();
-  virtual void tcl_command( TCLArgs&, void* );
+  void tcl_command( TCLArgs&, void* );
 
 private:
 
@@ -90,6 +90,10 @@ private:
   GuiInt drawZ;
   GuiInt drawView;
   GuiInt interp_mode;
+  GuiDouble point_x;
+  GuiDouble point_y;
+  GuiDouble point_z;
+  GuiInt point_init;
 
   SliceRenderer* sliceren;
   Vector ddv;
