@@ -238,7 +238,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                                d_iters_before_timestep_restart, 5);
     d_impICE = true; 
   }
-    
+
   //__________________________________
   // Pull out TimeStepControl data
   ProblemSpecP tsc_ps = cfd_ice_ps->findBlock("TimeStepControl");
@@ -2120,7 +2120,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     constCCVariable<double> press;
     CCVariable<double> press_new, press_copy;
     Ghost::GhostType  gn = Ghost::None;
-    
+
     //__________________________________
     //  Implicit press needs two copies of press 
     old_dw->get(press,                lb->press_CCLabel, 0,patch,gn, 0); 
@@ -2183,34 +2183,32 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       double delPress = 0.;
       bool converged  = false;
       count           = 0;
-      double vol_frac_not_close_packed = 1.0;
 
       while ( count < d_max_iter_equilibration && converged == false) {
         count++;
-        double A = 0.;
-        double B = 0.;
-        double C = 0.;
 
         //__________________________________
         // evaluate press_eos at cell i,j,k
         for (int m = 0; m < numMatls; m++)  {
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
           ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
-                                               cv[m][c], Temp[m][c],press_eos[m],
-                                               dp_drho[m], dp_de[m]);
+                                              cv[m][c], Temp[m][c],press_eos[m],
+                                              dp_drho[m], dp_de[m]);
         }
+
         //__________________________________
         // - compute delPress
         // - update press_CC     
+        double A = 0., B = 0., C = 0.;
         for (int m = 0; m < numMatls; m++)   {
           double Q =  press_new[c] - press_eos[m];
-          double y =  dp_drho[m] * ( rho_CC[m][c]/
-                 (vol_frac[m][c] * vol_frac[m][c]) ); 
-          double div_y = 1./y;
+          double div_y =  (vol_frac[m][c] * vol_frac[m][c])
+            / (dp_drho[m] * rho_CC[m][c] + d_SMALL_NUM);
           A   +=  vol_frac[m][c];
           B   +=  Q*div_y;
           C   +=  div_y;
         }
+        double vol_frac_not_close_packed = 1.0;
         delPress = (A - vol_frac_not_close_packed - B)/C;
 
         press_new[c] += delPress;
@@ -2276,6 +2274,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       for (int m = 0; m < numMatls; m++){
         if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) { 
+          cout << "m = " << m << endl;
           throw MaxIteration(c,count,n_passes,
                       "MaxIteration reached rho_micro < 0 || vol_frac < 0");
         }
