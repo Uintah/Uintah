@@ -89,7 +89,7 @@ namespace SCIRun {
 using namespace SCIRun;
   
 PackageDB::PackageDB(GuiInterface* gui)
-  : db_(new Packages), packageList_(0), gui(gui)
+  : db_(new Packages), packageList_(0), gui(gui), loading_app_(false)
 {
 }
 
@@ -465,8 +465,13 @@ void PackageDB::loadPackage(bool resolve)
     gui->postMessage("\nFinished loading packages.",false);
     if (!getenv("SCI_NOSPLASH"))
     {
-      gui->execute("if [winfo exists .splash] {hideSplash \"true\"}");
-      gui->eval("update idletasks",result);
+      if (!loading_app_) {
+	gui->execute("if [winfo exists .splash] {hideSplash \"true\"}");
+	gui->eval("update idletasks",result);
+      } else {
+	gui->execute(".splash.fb configure -labeltext {Loading PowerApp...}");
+	gui->eval("update idletasks",result);
+      }
     }
   } else {
     cerr << "Finished loading packages\n";
@@ -765,6 +770,10 @@ ModuleInfo* PackageDB::GetModuleInfo(const string& name, const string& catname,
 
 void PackageDB::setSplashPath(string p) {
   splash_path_ = p;
+}
+
+void PackageDB::setLoadingApp(bool b) {
+  loading_app_ = b;
 }
 
 
