@@ -100,6 +100,10 @@ Connection* Network::connection(int i)
 
 string Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
+    if (p1 >= m1->numOPorts() || p2 >= m2->numIPorts())
+    {
+      return "";
+    }
 
     Connection* conn=scinew Connection(m1, p1, m2, p2);
     ostringstream ids;

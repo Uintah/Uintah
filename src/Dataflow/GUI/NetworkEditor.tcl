@@ -550,6 +550,12 @@ proc addModule2 {package category module modid} {
 proc addConnection {omodid owhich imodid iwhich} {
 
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
+    if {"" == $connid} {
+	tk_messageBox -type ok -parent . -message \
+	    "Invalid connection found while loading network.  Discarding." \
+	    -icon warning
+	return
+    }
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
     
     global connection_list
