@@ -26,12 +26,13 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   Ignition and Growth
+   JWL++ "Reactive Flow Model"
 
 DESCRIPTION
-   Model for detontation of HE based on "Sideways Plate Push Test for
-   Detonating Explosives", C.M Tarver, W.C. Tao, Chet. G. Lee, Propellant,
-   Explosives, Pyrotechnics, 21, 238-246, 1996.
+   Model for detontation of HE based on "JWL++:  A Simple Reactive
+   Flow Code Package for Detonation", P.Clark Souers, Steve Anderson,
+   James Mercer, Estella McGuire and Peter Vitello, Propellants,
+   Explosives, Pyrotechnics, 25, 54-58, 2000.
   
 WARNING
 
