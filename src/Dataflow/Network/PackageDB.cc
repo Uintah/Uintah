@@ -118,14 +118,20 @@ void PackageDB::loadPackage(const clString& packPath)
       bname = clString("Packages_")+bname+"_";
     }
 
+    clString xmldir = packageElt+"/Dataflow/XML";
+    std::map<int,char*>* files;
+    files = GetFilenamesEndingWith((char*)xmldir(),".xml");
+
+    if (!files) {
+      postMessage(clString("Unable to load package ")+pname+
+		  ":\n - Couldn't find "+xmldir+" directory");
+      continue;
+    }
+
     new_package = new package;
     new_package->name=pname;
     packages.insert(std::pair<int,
 		    package*>(packages.size(),new_package));
-
-    clString xmldir = packageElt+"/Dataflow/XML";
-    std::map<int,char*>* files = 
-      GetFilenamesEndingWith((char*)xmldir(),".xml");
 
     mod_count += files->size();
 

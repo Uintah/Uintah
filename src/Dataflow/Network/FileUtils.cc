@@ -106,10 +106,8 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
   DIR* dir = opendir(d);
   char* newstring = 0;
 
-  if (!dir) {
-    printf("directory not found: %s\n",d);
+  if (!dir) 
     return 0;
-  }
 
   newmap = new std::map<int,char*>;
 
