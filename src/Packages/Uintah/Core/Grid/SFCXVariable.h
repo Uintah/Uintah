@@ -127,7 +127,7 @@ WARNING
     virtual IntVector getLow()
     { return getLowIndex(); }
     virtual IntVector getHigh()
-    { return getLowIndex(); }
+    { return getHighIndex(); }
 
     // Replace the values on the indicated face with value
    
