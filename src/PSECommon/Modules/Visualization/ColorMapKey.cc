@@ -90,22 +90,22 @@ void ColorMapKey::execute() {
   sq->set_texture( map->raw1d );
   all->add( sq );
   
-  // if the scalar field is present, we can add numbers and place the
-  // billboard more intelligently.
-  ScalarFieldHandle sf;
-  if( isf->get( sf ) ) {
 
-    ScalarFieldRG *grid = sf->getRG();
-    // but we need it to be a regular grid.
-    if( grid == 0 ) {
-      cerr << "ColorMapKey wants ScalarFieldRG, didn't get it\n";
-      return;
-    }
-    double max = -1e30;
-    double min = 1e30;
-
-    int i,j,k;
-    if( !map->IsScaled()) {
+  int i,j,k;
+  double max = -1e30;
+  double min = 1e30;
+  if( !map->IsScaled()) {
+    ScalarFieldHandle sf;
+    if( isf->get( sf ) ) {
+      
+      ScalarFieldRG *grid = sf->getRG();
+      // but we need it to be a regular grid.
+      // if the scalar field is present, we can add numbers and place the
+      // billboard more intelligently.
+      if( grid == 0 ) {
+	cerr << "ColorMapKey wants ScalarFieldRG, didn't get it\n";
+	return;
+      }
       for(i = 0; i < grid->nx; i++){
 	for(j = 0; j < grid->ny; j++){
 	  for(k = 0; k < grid->nz; k++){
@@ -119,29 +119,29 @@ void ColorMapKey::execute() {
 	max += 0.001;
       }
       map->Scale(min,max);
-    } else {
-      max = map->max;
-      min = map->min;
     }
-    // some bases for positioning text
-    double xloc = xsize;
-    double yloc = -1 + 1.1 * ysize;
-
-    // create min and max numbers at the ends
-    char value[80];
-    sprintf(value, "%.2g", max );
-    all->add( new GeomMaterial( new GeomText(value, Point(xloc,yloc,0) ),
-					     white) );
-    sprintf(value, "%.2g", min );
-    all->add( new GeomMaterial( new GeomText(value, Point(0,yloc,0)), white));
-
-    // fill in 3 other places
-    for( i = 1; i < 4; i++ ) {
-      sprintf( value, "%.2g", min + i*(max-min)/4.0 );
-      all->add( new GeomMaterial( new GeomText(value,Point(xloc*i/4.0,yloc,0)),
-				  white) );
-    }    
+  } else {
+    max = map->max;
+    min = map->min;
   }
+  // some bases for positioning text
+  double xloc = xsize;
+  double yloc = -1 + 1.1 * ysize;
+  
+  // create min and max numbers at the ends
+  char value[80];
+  sprintf(value, "%.2g", max );
+  all->add( new GeomMaterial( new GeomText(value, Point(xloc,yloc,0) ),
+			      white) );
+  sprintf(value, "%.2g", min );
+  all->add( new GeomMaterial( new GeomText(value, Point(0,yloc,0)), white));
+  
+  // fill in 3 other places
+  for( i = 1; i < 4; i++ ) {
+    sprintf( value, "%.2g", min + i*(max-min)/4.0 );
+    all->add( new GeomMaterial( new GeomText(value,Point(xloc*i/4.0,yloc,0)),
+				white) );
+  }    
 
   GeomSticky *sticky = new GeomSticky(all);
   ogeom->delAll();
@@ -153,6 +153,9 @@ void ColorMapKey::execute() {
 
 //
 // $Log$
+// Revision 1.11  2001/01/09 21:28:34  kuzimmer
+// Modified ColorMapKey so that it will always work when a colormap has been pre-scaled to the data
+//
 // Revision 1.10  2000/06/13 20:31:19  kuzimmer
 // Modified RescaleColorMap to set the scaled flag in the color map.
 // Modified ColorMapKey so that it scales the colormap to the data if it
