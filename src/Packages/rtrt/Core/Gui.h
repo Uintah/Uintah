@@ -245,6 +245,9 @@ private:
 
   GLUI_Spinner * numThreadsSpinner_;
 
+  GLUI_Spinner * ray_offset_spinner;
+  float ray_offset;
+
   float lightBrightness_;
   float ambientBrightness_;
 
@@ -346,6 +349,7 @@ private:
   static void SGAutoCycleCB( int id );
   static void SGNoSkipCB( int id );
   static void SGNextItemCB( int id );
+  static void SGCurrentFrameCB( int id );
   static void SISpinCB( int id );
   static void SIIncMagCB( int id );
   static void SIDecMagCB( int id );
@@ -380,6 +384,8 @@ private:
   static void updateRotateSensitivityCB( int id );
   static void updateTranslateSensitivityCB( int id );
   static void updateFovCB( int id );
+
+  static void updateRayOffsetCB( int id );
 
   static void updateDepthCB( int id );
 
@@ -422,7 +428,6 @@ private:
   ////////////////////////////////////////////////////////////////
 
 };
-
 
 } // end namespace rtrt
 
