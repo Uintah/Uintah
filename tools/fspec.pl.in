@@ -1,6 +1,6 @@
 #!@PERL@
 
-$g77=@G77@;
+$fortran_underscore=@FORTRAN_UNDERSCORE@;
 
 $source=shift;
 $output=shift;
@@ -52,7 +52,7 @@ LINE: while(<FILE>){
 	if(&simpletype($type)){
 	    print OUT "$type\* $name";
 	} elsif(&knownvartype($type) && &simpletype($tmpltype)){
-	    if($g77){
+	    if($fortran_underscore){
 		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
 		    print OUT "int* $name\_$v, ";
 		}
@@ -95,7 +95,7 @@ LINE: while(<FILE>){
 	if(&knownvartype($type)){
 	    print OUT "  IntVector $name\_low = $name.getWindow()->getOffset();\n";
 	    print OUT "  IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low - IntVector(1, 1, 1);\n";
-	    if($g77){
+	    if($fortran_underscore){
 		foreach $d ("x", "y", "z") {
 		    print OUT "  int $name\_low_$d = $name\_low.$d();\n";
 		    print OUT "  int $name\_high_$d = $name\_high.$d();\n";
@@ -123,7 +123,7 @@ LINE: while(<FILE>){
 	if(&simpletype($type)){
 	    print OUT "&$name";
 	} elsif(&knownvartype($type)){
-	    if($g77){
+	    if($fortran_underscore){
 		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
 		    print OUT "&$name\_$v, ";
 		}
@@ -164,7 +164,7 @@ LINE: while(<FILE>){
 	if(&simpletype($type)){
 	    $s.="$name";
 	} elsif(&knownvartype($type) && &simpletype($tmpltype)){
-	    if($g77){
+	    if($fortran_underscore){
 		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
 		    $s.="$name\_$v, ";
 		}
@@ -200,7 +200,7 @@ LINE: while(<FILE>){
 	} elsif(&knownvartype($type) && &simpletype($tmpltype)){
 	    $s="integer ";
 	    $sep="";
-	    if($g77){
+	    if($fortran_underscore){
 		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
 		    $s.=$sep;
 		    $sep=", ";
@@ -213,7 +213,7 @@ LINE: while(<FILE>){
 	    print OUT &formatf($s)."\n";
 	    $ftype=&ftype($tmpltype);
 	    $s="$ftype $name(";
-	    if($g77){
+	    if($fortran_underscore){
 		$sep="";
 		foreach $v ("x", "y", "z"){
 		    $s.=$sep;
@@ -355,7 +355,7 @@ sub ftype {
 sub cname {
     my($name);
     $name =$_[0];
-    if($g77 && $name =~ /_/){
+    if($fortran_underscore && $name =~ /_/){
 	$name.="_";
     }
     $name.="_";
@@ -365,7 +365,7 @@ print OUT "#ifndef PASS1\n";
 print OUT "#define PASS1(x) x/**/_low, x/**/_high, x\n";
 print OUT "#endif\n";
 print OUT "#ifndef PASS3\n";
-if($g77){
+if($fortran_underscore){
     print OUT "#define PASS3A(x) ";
     foreach $v ("low_x", "low_y", "low_z"){
 	print OUT "x/**/_$v, ";
