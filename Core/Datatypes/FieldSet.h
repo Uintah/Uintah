@@ -54,6 +54,18 @@ public:
   bool remove(FieldSetHandle fieldset);
 
   bool find_first_field(FieldHandle &result, const string name);
+
+  vector<FieldSetHandle>::iterator fieldset_begin()
+  { return fieldsets_.begin(); }
+  vector<FieldSetHandle>::iterator fieldset_end()
+  { return fieldsets_.end(); }
+  vector<FieldHandle>::iterator field_begin()
+  { return fields_.begin(); }
+  vector<FieldHandle>::iterator field_end()
+  { return fields_.end(); }
+
+  void push_back(FieldSetHandle fh) { fieldsets_.push_back(fh); }
+  void push_back(FieldHandle fh)    { fields_.push_back(fh); }
 };
 
 
