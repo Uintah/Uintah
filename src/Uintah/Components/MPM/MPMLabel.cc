@@ -157,10 +157,10 @@ MPMLabel::MPMLabel()
   gTemperatureRateLabel = new VarLabel("g.temperatureRate",
 			NCVariable<double>::getTypeDescription());
 
-  gInternalHeatRateLabel = new VarLabel("g.internalTemperatureRate",
+  gInternalHeatRateLabel = new VarLabel("g.internalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
-  gExternalHeatRateLabel = new VarLabel("g.externalTemperatureRate",
+  gExternalHeatRateLabel = new VarLabel("g.externalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
   // Cell centered variables
@@ -202,6 +202,10 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.13  2000/06/23 20:56:14  tan
+// Fixed mistakes in label names of gInternalHeatRateLabel and
+// gExternalHeatRateLabel.
+//
 // Revision 1.12  2000/06/23 20:02:26  tan
 // Create pTemperatureLabel in the MPMLable constructor.
 //
