@@ -39,6 +39,7 @@ static void do_lock()
 
 static void do_unlock()
 {
+    ASSERT(lock_count>0);
     if(--lock_count == 0){
 	owner=0;
 	tlock->unlock();
