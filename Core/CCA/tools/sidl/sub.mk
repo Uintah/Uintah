@@ -41,7 +41,7 @@ SRCS := $(SRCDIR)/Spec.cc $(SRCDIR)/SymbolTable.cc $(SRCDIR)/emit.cc \
 
 PROGRAM := $(SRCDIR)/sidl
 SIDL_EXE := $(PROGRAM)
-PSELIBS :=
+PSELIBS := Core/Util
 LIBS := $(UUID_LIB)
 
 include $(SCIRUN_SCRIPTS)/program.mk
