@@ -94,6 +94,7 @@ private:
   GuiDouble gui_specular_;
   GuiDouble gui_shine_;
   GuiInt gui_light_;
+  GuiInt gui_blend_res_;
   
   VolumeRenderer *volren_;
 };
@@ -122,6 +123,7 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_specular_(ctx->subVar("specular")),
     gui_shine_(ctx->subVar("shine")),
     gui_light_(ctx->subVar("light")),
+    gui_blend_res_(ctx->subVar("blend_res")),
     volren_(0)
 {
 }
@@ -232,6 +234,12 @@ VolumeVisualizer::execute(){
   } else {
     volren_->set_sw_raster(gui_sw_raster_.get());
   }
+  if(!volren_->use_blend_buffer()) {
+    gui_blend_res_.set(8);
+  } else {
+    volren_->set_blend_num_bits(gui_blend_res_.get());
+  }
+
   volren_->set_shading(gui_shading_.get());
   volren_->set_material(gui_ambient_.get(), gui_diffuse_.get(),
                         gui_specular_.get(), gui_shine_.get());

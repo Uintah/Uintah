@@ -25,6 +25,8 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 	set_defaults
     }
     method set_defaults {} {
+        global $this-blend_res
+        set $this-blend_res 8
 	global $this-sampling_rate_lo
 	set $this-sampling_rate_lo 1.0
 	global $this-sampling_rate_hi
@@ -71,17 +73,32 @@ itcl_class Volume_Visualization_VolumeVisualizer {
         set s "$this state"
 
 	global $this-render_style
-	label $w.f.l -text "Rendering Style"
-	radiobutton $w.f.modeo -text "Over Operator" -relief flat \
+	label $w.f.l -text "Blending"
+	pack $w.f.l -side top -fill x
+
+        frame $w.f.fmode
+        pack $w.f.fmode -padx 2 -pady 2 -fill x
+        label $w.f.fmode.mode -text "Mode"
+	radiobutton $w.f.fmode.modeo -text "Over Operator" -relief flat \
 		-variable $this-render_style -value 0 \
 		-anchor w -command $n
-	radiobutton $w.f.modem -text "MIP" -relief flat \
+	radiobutton $w.f.fmode.modem -text "MIP" -relief flat \
 		-variable $this-render_style -value 1 \
 		-anchor w -command $n
-# 	radiobutton $w.f.modea -text "Attenuate" -relief flat \
-# 		-variable $this-render_style -value 2 \
-# 		-anchor w -command $n
-	pack $w.f.l $w.f.modeo $w.f.modem -side top -fill x -padx 4 -pady 4
+	pack $w.f.fmode.mode $w.f.fmode.modeo $w.f.fmode.modem \
+            -side left -fill x -padx 4 -pady 4
+
+        frame $w.f.fres
+        pack $w.f.fres -padx 2 -pady 2 -fill x
+        label $w.f.fres.res -text "Resolution (bits)"
+	radiobutton $w.f.fres.b0 -text 8 -variable $this-blend_res -value 8 \
+	    -command $n
+	radiobutton $w.f.fres.b1 -text 16 -variable $this-blend_res -value 16 \
+	    -command $n
+	radiobutton $w.f.fres.b2 -text 32 -variable $this-blend_res -value 32 \
+	    -command $n
+	pack $w.f.fres.res $w.f.fres.b0 $w.f.fres.b1 $w.f.fres.b2 \
+            -side left -fill x -padx 4 -pady 4
 
         #-----------------------------------------------------------
         # Shading
@@ -96,7 +113,7 @@ itcl_class Volume_Visualization_VolumeVisualizer {
         #-----------------------------------------------------------
         # Light
         #-----------------------------------------------------------
- 	frame $w.f5 -relief groove -borderwidth 2
+ 	frame $w.f5
  	pack $w.f5 -padx 2 -pady 2 -fill x
  	label $w.f5.light -text "Attach Light to"
  	radiobutton $w.f5.light0 -text "Light 0" -relief flat \
