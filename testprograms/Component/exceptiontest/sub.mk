@@ -17,31 +17,27 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component
+SRCDIR := testprograms/Component/exceptiontest
 
-SUBDIRS := \
-	$(SRCDIR)/argtest	\
-	$(SRCDIR)/framework	\
-	$(SRCDIR)/memstress	\
-	$(SRCDIR)/mitest	\
-	$(SRCDIR)/objects	\
-	$(SRCDIR)/pingpong	\
-	$(SRCDIR)/spectest      \
-        $(SRCDIR)/pp            \
-	$(SRCDIR)/exceptiontest 
-
-ifeq ($(HAVE_MPI),yes)
-SUBDIRS += \
-	$(SRCDIR)/pingpongArr   \
-	$(SRCDIR)/mxn  	        \
-	$(SRCDIR)/mxnargtest    \
-	$(SRCDIR)/Jacobi        \
-	$(SRCDIR)/LUFactor      \
-	$(SRCDIR)/OESort        \
-	$(SRCDIR)/subsetter     \
-	$(SRCDIR)/ppArr         \
-	$(SRCDIR)/passPPtr
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
+	Core/Exceptions Core/CCA/Component/Comm
 endif
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+ifeq ($(HAVE_GLOBUS),yes)
+PSELIBS+=Core/globus_threads
+LIBS := $(GLOBUS_LIBRARY)
+else
+LIBS :=
+endif
+
+
+PROGRAM := $(SRCDIR)/pingthrow
+SRCS := $(SRCDIR)/pingthrow.cc $(SRCDIR)/PingThrow_sidl.cc \
+	$(SRCDIR)/PingThrow_impl.cc
+GENHDRS := $(SRCDIR)/PingThrow_sidl.h
+
+include $(SCIRUN_SCRIPTS)/program.mk
 
