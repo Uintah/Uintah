@@ -22,6 +22,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
+#include <Core/Thread/Mutex.h>
 #include <sci_defs.h>
 #include <map>
 #include <iostream>
@@ -40,6 +41,7 @@ KillMap::KillMap()
 
 static map<string, const TypeDescription*>* types = 0;
 static vector<const TypeDescription*>* typelist=0;
+static Mutex typelist_lock("TypeDescription::typelist lock");
 static bool killed=false;
 
 KillMap::~KillMap()
@@ -59,19 +61,36 @@ KillMap::~KillMap()
 
 KillMap killit;
 
-void TypeDescription::register_type()
+
+void
+TypeDescription::register_type()
 {
-  if(!types){
+  typelist_lock.lock();
+  if (!types)
+  {
     ASSERT(!killed);
-    ASSERT(!typelist)
-    types=scinew map<string, const TypeDescription*>;
-    typelist=new vector<const TypeDescription*>;
+    ASSERT(!typelist);
+
+    // This will make sure that if types was not initialized when we
+    // entered this block, that we will not try and reinitialize types
+    // and typelist.
+    if (!types)
+    {
+      types = scinew map<string, const TypeDescription*>;
+      typelist = scinew vector<const TypeDescription*>;
+    }
   }
+
   map<string, const TypeDescription*>::iterator iter = types->find(get_name());
-  if(iter == types->end())
-    (*types)[get_name()]=this;
+  if (iter == types->end())
+  {
+    (*types)[get_name()] = this;
+  }
   typelist->push_back(this);
+  
+  typelist_lock.unlock();
 }
+
 
 TypeDescription::TypeDescription(const string &name, const string &path,
 				 const string &namesp) : 
@@ -162,8 +181,14 @@ TypeDescription::fill_compile_info(CompileInfo *ci) const
 const TypeDescription* 
 TypeDescription::lookup_type(const std::string& t)
 {
-  if(!types)
-    types=scinew map<string, const TypeDescription*>;   
+  if(!types) {
+    typelist_lock.lock();
+    if (!types) {
+      types=scinew map<string, const TypeDescription*>;
+      typelist=new vector<const TypeDescription*>;
+    }
+    typelist_lock.unlock();
+  }
   
   map<string, const TypeDescription*>::iterator iter = types->find(t);
    if(iter == types->end())
