@@ -22,13 +22,20 @@
 #include <Core/Containers/StaticArray.h>
 #include <float.h>
 #include <stdio.h>
+#include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
+//__________________________________
+//  To turn on normal output
+//  setenv SCI_DEBUG MPMICE_NORMAL_COUT:+, MPMICE_DOING_COUT.....
+//  MPMICE_NORMAL_COUT:  dumps out during problemSetup 
+//  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
+//  default is OFF
+static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
+static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
-//#define DOING
-#undef DOING
 #define EOSCM
 //#undef EOSCM
 //#define IDEAL_GAS
@@ -77,8 +84,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
   
-  cerr << "Done with problemSetup \t\t\t MPMICE" <<endl;
-  cerr << "--------------------------------\n"<<endl;
+  cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
+  cout_norm << "--------------------------------\n"<<endl;
 }
 //______________________________________________________________________
 //
@@ -94,8 +101,8 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 			   this, &MPMICE::actuallyInitialize);
   sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 
-  cerr << "Doing Initialization \t\t\t MPMICE" <<endl;
-  cerr << "--------------------------------\n"<<endl; 
+  cout_norm << "Doing Initialization \t\t\t MPMICE" <<endl;
+  cout_norm << "--------------------------------\n"<<endl; 
 }
 
 //______________________________________________________________________
@@ -220,9 +227,8 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
                                            const MaterialSubset* press_matl,
 						 const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleInterpolatePressCCToPressNC" << endl;
-#endif 
+  cout_doing << "MPMICE::scheduleInterpolatePressCCToPressNC" << endl;
+  
   Task* t=scinew Task("MPMICE::interpolatePressCCToPressNC",
 		      this, &MPMICE::interpolatePressCCToPressNC);
   
@@ -239,9 +245,8 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                      const MaterialSubset* mpm_matl,
 					  const MaterialSet* all_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleInterpolatePAndGradP" << endl;
-#endif 
+  cout_doing << "MPMICE::scheduleInterpolatePAndGradP" << endl;
+ 
    Task* t=scinew Task("MPMICE::interpolatePAndGradP",
 		   this, &MPMICE::interpolatePAndGradP);
 
@@ -264,9 +269,8 @@ void MPMICE::scheduleInterpolateVelIncFCToNC(SchedulerP& sched,
 					     const PatchSet* patches,
 					     const MaterialSet* mpm_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleInterpolateVelIncFCToNC" << endl;
-#endif 
+  cout_doing << "MPMICE::scheduleInterpolateVelIncFCToNC" << endl;
+
    Task* t=scinew Task("MPMICE::interpolateVelIncFCToNC",
                  this, &MPMICE::interpolateVelIncFCToNC);
 
@@ -288,9 +292,8 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
 					 const PatchSet* patches,
 					 const MaterialSet* mpm_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
-#endif 
+  cout_doing << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
+ 
    /* interpolateNCToCC */
    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
 		   this, &MPMICE::interpolateNCToCC_0);
@@ -315,9 +318,9 @@ void MPMICE::scheduleInterpolateNCToCC(SchedulerP& sched,
 				       const PatchSet* patches,
 				       const MaterialSet* mpm_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleInterpolateNCToCC" << endl;
-#endif 
+
+  cout_doing << "MPMICE::scheduleInterpolateNCToCC" << endl;
+
    /* interpolateNCToCC */
 
    Task* t=scinew Task("MPMICE::interpolateNCToCC",
@@ -342,9 +345,9 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
                                const MaterialSubset* mpm_matls,
 				   const MaterialSet* all_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleCCMomExchange" << endl;
-#endif 
+
+  cout_doing << "MPMICE::scheduleCCMomExchange" << endl;
+ 
   Task* t=scinew Task("MPMICE::doCCMomExchange",
 		  this, &MPMICE::doCCMomExchange);
                                  // I C E
@@ -372,9 +375,9 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
 				       const PatchSet* patches,
 				       const MaterialSet* mpm_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleInterpolateCCToNC" << endl;
-#endif 
+
+  cout_doing << "MPMICE::scheduleInterpolateCCToNC" << endl;
+
   Task* t=scinew Task("MPMICE::interpolateCCToNC",
 		  this, &MPMICE::interpolateCCToNC);
                 
@@ -400,9 +403,8 @@ void MPMICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
                                             const MaterialSubset* press_matl,
 						  const MaterialSet* all_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleComputeEquilibrationPressure" << endl;
-#endif 
+  cout_doing << "MPMICE::scheduleComputeEquilibrationPressure" << endl;
+
   Task* t = scinew Task("MPMICE::computeEquilibrationPressure",
                      this, &MPMICE::computeEquilibrationPressure);
 
@@ -436,9 +438,8 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
                                     const MaterialSubset* press_matl,
 					 const MaterialSet* all_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleHEChemistry" << endl;
-#endif 
+  cout_doing << "MPMICE::scheduleHEChemistry" << endl;
+
   Task* t = scinew Task("MPMICE::HEChemistry",
 		    this, &MPMICE::HEChemistry);
  
@@ -463,9 +464,9 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
 						 const PatchSet* patches,
 					         const MaterialSet* mpm_matls)
 {
-#ifdef DOING
-  cout << "MPMICE::scheduleInterpolateMassBurnFractionToNC" << endl;
-#endif 
+
+  cout_doing << "MPMICE::scheduleInterpolateMassBurnFractionToNC" << endl;
+
   Task* t = scinew Task("MPMICE::interpolateMassBurnFractionToNC",
 		    this, &MPMICE::interpolateMassBurnFractionToNC);
  
@@ -514,10 +515,10 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 {			       
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing interpolatePressCCToPressNC on patch "<< patch->getID()
+
+    cout_doing<<"Doing interpolatePressCCToPressNC on patch "<<patch->getID()
        <<"\t\t MPMICE" << endl;
-#endif 
+ 
     CCVariable<double> pressCC;
     NCVariable<double> pressNC;
 
@@ -550,10 +551,10 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing interpolatePressureToParticles on patch "<< patch->getID()
-       <<"\t\t MPMICE" << endl;
-#endif
+
+    cout_doing<<"Doing interpolatePressureToParticles on patch "<<
+      patch->getID()<<"\t\t MPMICE" << endl;
+
     NCVariable<double> pressNC;
     IntVector ni[8];
     double S[8];
@@ -687,10 +688,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing interpolateNCToCC_0 on patch "<< patch->getID()
-       <<"\t\t\t MPMICE" << endl;
-#endif
+
+    cout_doing << "Doing interpolateNCToCC_0 on patch "<< patch->getID()
+               <<"\t\t\t MPMICE" << endl;
+
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector zero(0.0,0.0,0.);
     Vector dx = patch->dCell();
@@ -826,10 +827,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing interpolateNCToCC on patch "<< patch->getID()
-       <<"\t\t\t MPMICE" << endl;
-#endif
+    cout_doing << "Doing interpolateNCToCC on patch "<< patch->getID()
+               <<"\t\t\t MPMICE" << endl;
+
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector zero(0.,0.,0.);
 
@@ -895,10 +895,9 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing doCCMomExchange on patch "<< patch->getID()
-       <<"\t\t\t MPMICE" << endl;
-#endif
+    cout_doing << "Doing doCCMomExchange on patch "<< patch->getID()
+               <<"\t\t\t MPMICE" << endl;
+
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numICEMatls = d_sharedState->getNumICEMatls();
     int numALLMatls = numMPMMatls + numICEMatls;
@@ -1208,10 +1207,10 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing interpolateCCToNC on patch "<< patch->getID()
-       <<"\t\t\t MPMICE" << endl;
-#endif
+
+    cout_doing << "Doing interpolateCCToNC on patch "<< patch->getID()
+               <<"\t\t\t MPMICE" << endl;
+
     //__________________________________
     // This is where I interpolate the CC 
     // changes to NCs for the MPMMatls
@@ -1294,10 +1293,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing computeEquilibrationPressure on patch "<< patch->getID()
-       <<"\t\t MPMICE" << endl;
-#endif
+
+    cout_doing<<"Doing computeEquilibrationPressure on patch "
+              << patch->getID() <<"\t\t MPMICE" << endl;
+
     double    converg_coeff = 100.;
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    sum, tmp;
@@ -1787,10 +1786,10 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing HEChemistry on patch "<< patch->getID()
-       <<"\t\t\t\t MPMICE" << endl;
-#endif
+
+    cout_doing << "Doing HEChemistry on patch "<< patch->getID()
+               <<"\t\t\t\t MPMICE" << endl;
+
     int numALLMatls=d_sharedState->getNumMatls();
     StaticArray<CCVariable<double> > burnedMass(numALLMatls);
     StaticArray<CCVariable<double> > releasedHeat(numALLMatls);
@@ -2039,10 +2038,10 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-#ifdef DOING
-  cout << "Doing interpolateMassBurnFractionToNC on patch "<< patch->getID()
-       <<"\t MPMICE" << endl;
-#endif
+
+    cout_doing << "Doing interpolateMassBurnFractionToNC on patch "
+               << patch->getID() <<"\t MPMICE" << endl;
+
     // Interpolate the CC burn fraction to the nodes
 
     int numALLMatls = d_sharedState->getNumMPMMatls() + 
