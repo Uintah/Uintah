@@ -264,6 +264,7 @@ public:
 
   void itemAdded(GeomViewerItem*);
   void itemDeleted(GeomViewerItem*);
+  void itemRenamed(GeomViewerItem*, string newname);
   void rotate(double angle, Vector v, Point p);
   void rotate_obj(double angle, const Vector& v, const Point& p);
   void translate(Vector v);
