@@ -142,14 +142,14 @@ void Viewer::do_execute()
 	    int did_some=1;
 	    while(did_some){
 	      did_some=0;
-	      for(int i=0;i<viewwindow.size();i++){
+	      for(unsigned int i=0;i<viewwindow.size();i++){
 		did_some+=viewwindow[i]->need_redraw;
 		viewwindow[i]->redraw_if_needed();
 	      }
 	    }
     }
     if (process_event(1) == 86) {
-      for(int i=0;i<viewwindow.size();i++){
+      for(unsigned int i=0;i<viewwindow.size();i++){
 	ViewWindow* r=viewwindow[i];
 	r->current_renderer->kill_helper();
       }
@@ -179,7 +179,7 @@ int Viewer::process_event(int block)
 	{
 	    ViewerMessage* rmsg=(ViewerMessage*)msg;
 	    ViewWindow* r=0;
-	    int i;
+	    unsigned int i;
 	    for(i=0;i<viewwindow.size();i++){
 		r=viewwindow[i];
 		if(r->id == rmsg->rid)
@@ -201,7 +201,7 @@ int Viewer::process_event(int block)
     case MessageTypes::ViewWindowDumpImage:
 	{
 	    ViewerMessage* rmsg=(ViewerMessage*)msg;
-	    for(int i=0;i<viewwindow.size();i++){
+	    for(unsigned int i=0;i<viewwindow.size();i++){
 		ViewWindow* r=viewwindow[i];
 		if(r->id == rmsg->rid){
                  r->current_renderer->saveImage(rmsg->filename, rmsg->format);
@@ -214,7 +214,7 @@ int Viewer::process_event(int block)
 	{
 	    geomlock.readLock();
 	    ViewerMessage* rmsg=(ViewerMessage*)msg;
-	    for(int i=0;i<viewwindow.size();i++){
+	    for(unsigned int i=0;i<viewwindow.size();i++){
 		ViewWindow* r=viewwindow[i];
 		if(r->id == rmsg->rid){
 		    r->dump_objects(rmsg->filename, rmsg->format);
@@ -227,7 +227,7 @@ int Viewer::process_event(int block)
     case MessageTypes::ViewWindowMouse:
 	{
 	    ViewWindowMouseMessage* rmsg=(ViewWindowMouseMessage*)msg;
-	    for(int i=0;i<viewwindow.size();i++){
+	    for(unsigned int i=0;i<viewwindow.size();i++){
 		ViewWindow* r=viewwindow[i];
 		if(r->id == rmsg->rid){
 		    (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, rmsg->state, rmsg->btn, rmsg->time);
@@ -259,7 +259,7 @@ int Viewer::process_event(int block)
 	flushViews();
 	if(gmsg->wait){
 	    // Synchronized redraw - do it now and signal them...
-	    for(int i=0;i<viewwindow.size();i++)
+	    for(unsigned int i=0;i<viewwindow.size();i++)
 		viewwindow[i]->redraw_if_needed();
 	    gmsg->wait->up();
 	}
@@ -268,14 +268,14 @@ int Viewer::process_event(int block)
 	gmsg->nreply->send(viewwindow.size());
 	break;
     case MessageTypes::GeometryGetData:
-	if(gmsg->which_viewwindow >= viewwindow.size()){
+	if((unsigned int)(gmsg->which_viewwindow) >= viewwindow.size()){
 	    gmsg->datareply->send(0);
 	} else {
 	    viewwindow[gmsg->which_viewwindow]->getData(gmsg->datamask, gmsg->datareply);
 	}
 	break;
     case MessageTypes::GeometrySetView:
-	if(gmsg->which_viewwindow < viewwindow.size()){
+	if((unsigned int)(gmsg->which_viewwindow) < viewwindow.size()){
 	    viewwindow[gmsg->which_viewwindow]->setView(gmsg->view);
 	}
 	break;
@@ -320,7 +320,7 @@ void Viewer::initPort(Mailbox<GeomReply>* reply)
 //----------------------------------------------------------------------
 void Viewer::flushViews()
 {
-  for (int i=0; i<viewwindow.size(); i++)
+  for (unsigned int i=0; i<viewwindow.size(); i++)
     viewwindow[i]->force_redraw();
 }
 
@@ -333,7 +333,7 @@ void Viewer::addObj(GeomViewerPort* port, int serial, GeomObj *obj,
     GeomViewerItem* si = scinew GeomViewerItem(obj, pname, lock);
     port->addObj(si,serial);
     // port->objs->insert(serial, si);
-    for (int i=0; i<viewwindow.size(); i++) {
+    for (unsigned int i=0; i<viewwindow.size(); i++) {
 	viewwindow[i]->itemAdded(si);
     }
 }
@@ -343,7 +343,7 @@ void Viewer::delObj(GeomViewerPort* port, int serial, int del)
 {
     GeomViewerItem* si;
     if((si = ((GeomViewerItem*)port->getObj(serial)))){
-	for (int i=0; i<viewwindow.size(); i++)
+	for (unsigned int i=0; i<viewwindow.size(); i++)
 	    viewwindow[i]->itemDeleted(si);
 	port->delObj(serial, del);
     } else {
@@ -360,7 +360,7 @@ void Viewer::delAll(GeomViewerPort* port)
   for ( ; iter.first != iter.second; iter.first++) {
     GeomViewerItem* si =
       (GeomViewerItem*)((*iter.first).second);
-    for (int i=0; i<viewwindow.size(); i++)
+    for (unsigned int i=0; i<viewwindow.size(); i++)
       viewwindow[i]->itemDeleted(si);
   }
   
@@ -369,13 +369,13 @@ void Viewer::delAll(GeomViewerPort* port)
 
 void Viewer::addTopViewWindow(ViewWindow *r)
 {
-    topViewWindow.add(r);
+    topViewWindow.push_back(r);
 }
 
 void Viewer::delTopViewWindow(ViewWindow *r)
 {
-    for (int i=0; i<topViewWindow.size(); i++) {
-	if (r==topViewWindow[i]) topViewWindow.remove(i);
+    for (unsigned int i=0; i<topViewWindow.size(); i++) {
+	if (r==topViewWindow[i]) topViewWindow.erase(topViewWindow.begin()+i);
     }
 } 
 
@@ -383,7 +383,7 @@ void Viewer::delTopViewWindow(ViewWindow *r)
 #ifdef OLDUI
 void Viewer::spawnIndCB(CallbackData*, void*)
 {
-  topViewWindow.add(scinew ViewWindow(this));
+  topViewWindow.push_back(scinew ViewWindow(this));
   topViewWindow[topViewWindow.size()-1]->SetTop();
   GeomItem *item;
   for (int i=0; i<topViewWindow[0]->geomItemA.size(); i++) {
@@ -406,9 +406,9 @@ void Viewer::spawnIndCB(CallbackData*, void*)
 //----------------------------------------------------------------------
 void Viewer::delete_viewwindow(ViewWindow* delviewwindow)
 {
-  for(int i=0;i<viewwindow.size();i++){
+  for(unsigned int i=0;i<viewwindow.size();i++){
     if(viewwindow[i] == delviewwindow){
-      viewwindow.remove(i);
+      viewwindow.erase(viewwindow.begin() + i);
       delete delviewwindow;
     }
   }
@@ -426,8 +426,7 @@ void Viewer::tcl_command(TCLArgs& args, void* userdata)
 	    args.error("addviewwindow must have a RID");
 	    return;
 	}
-	ViewWindow* r=scinew ViewWindow(this, args[2]);
-	viewwindow.add(r);
+	viewwindow.push_back(scinew ViewWindow(this, args[2]));
     } else if(args[1] == "listrenderers"){
         vector<string> rlist;
 	AVLTreeIter<string, RegisterRenderer*> iter(Renderer::get_db());
@@ -586,8 +585,8 @@ void Viewer::emit_vars(ostream& out, string& midx)
 {
   TCL::emit_vars(out, midx);
   string viewwindowstr;
-  for(int i=0;i<viewwindow.size();i++){
-    viewwindowstr=midx+string("-ViewWindow_")+to_string(i);
+  for(unsigned int i=0;i<viewwindow.size();i++){
+    viewwindowstr=midx+string("-ViewWindow_")+to_string((int)i);
     out << midx << " ui\n";
     viewwindow[i]->emit_vars(out, viewwindowstr);
   }

@@ -84,7 +84,7 @@ RescaleColorMap::execute()
     dynamic_port_range range = get_iports("Field");
     if (range.first == range.second)
       return;
-    port_iter pi = range.first;
+    port_map::iterator pi = range.first;
     while (pi != range.second)
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);

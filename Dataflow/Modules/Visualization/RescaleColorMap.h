@@ -20,15 +20,12 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Containers/Array1.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
 namespace SCIRun {
 
 class RescaleColorMap : public Module {
-  Array1<FieldIPort*> fieldports;
-
 public:
 
   //! Constructor taking [in] id as an identifier
@@ -36,6 +33,7 @@ public:
 
   virtual ~RescaleColorMap();
   virtual void execute();
+
 protected:
   bool success_;
 

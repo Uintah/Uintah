@@ -103,7 +103,7 @@ private:
   GuiDouble gamma;
   ColorMapOPort  *outport;
   ColorMapHandle cmap;
-  Array1< Color > colors;
+  vector< Color > colors;
   bool genMap(const string& s);
 
 }; //class GenStandardColorMaps

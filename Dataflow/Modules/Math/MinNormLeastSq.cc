@@ -152,18 +152,18 @@ MinNormLeastSq::execute()
   }
   
   int i,j;
-  Array1<MatrixHandle> in(4);
+  vector<MatrixHandle> in(4);
   if (!v0_imat_->get(in[0])) return;
   if (!v1_imat_->get(in[1])) return;
   if (!v2_imat_->get(in[2])) return;
   if (!b_imat_->get(in[3])) return;
 
-  Array1<ColumnMatrix *> v(4);
-  for (i = 0; i < in.size(); i++) {
+  vector<ColumnMatrix *> v(4);
+  for (i = 0; i < (int)in.size(); i++) {
     ASSERT (v[i] = dynamic_cast<ColumnMatrix *>(in[i].get_rep()))
   }
   int size = v[0]->nrows();
-  for (i = 1; i < in.size(); i++) {
+  for (i = 1; i < (int)in.size(); i++) {
     ASSERT ( v[i]->nrows() == size )
   }
   ColumnMatrix *b = v[3];

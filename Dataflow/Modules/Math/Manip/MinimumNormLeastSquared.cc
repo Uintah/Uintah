@@ -71,7 +71,7 @@ void execute(const vector<MatrixHandle>& in, vector<MatrixHandle>& out)
 {
   enum { number_of_columns = 4 };
   int i,j;
-  Array1<ColumnMatrix *> v(4);
+  vector<ColumnMatrix *> v(4);
   ASSERT( in.size() == 4 )
   ASSERT( out.size() == 2 )
   for (i = 0; i < in.size(); i++) {
