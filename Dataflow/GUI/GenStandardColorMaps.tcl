@@ -179,54 +179,56 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	canvas $w.f.f1.canvas -bg "#ffffff" -height 40 
 	pack $w.f.f1.canvas -anchor w -expand yes -fill x
 
+	TooltipMultiline $w.f.f1.canvas \
+	    "The red line represents the alpha value.  Use the left mouse button to add a\n" \
+	    "node for editing the line or to move an existing node.  You can use the\n" \
+	    "right mouse button to delete a node.  Alpha defaults to 0.5."
 
-	label $w.l0 -text "Left click to adjust alpha."
-	label $w.l1 -text "Right click to remove node."
-	label $w.l2 -text "Alpha defaults to 0.5."
-	pack $w.l0 $w.l1 $w.l2 -side top -anchor c
+	label $w.l0 -text "Click above to adjust alpha."
+	pack $w.l0 -anchor c
 	
-	frame $w.f3 -relief flat -borderwidth 2
-	pack $w.f3 -side top -anchor c -expand yes -fill x
+	frame $w.f3 -relief groove -borderwidth 2
+	pack $w.f3 -side top -anchor c -expand yes -fill x -padx 2
 	scale $w.f3.s -orient horizontal -from -1 -to 1 -showvalue true \
-	    -label Shift -variable $this-gamma -resolution 0.01 -tickinterval 1
-	pack $w.f3.s -side left -expand yes -fill x
+	    -label "Shift" -variable $this-gamma -resolution 0.01 -tickinterval 1
+	pack $w.f3.s -expand yes -fill x -padx 2
 	
+	Tooltip $w.f3.s "Skews the color map to the left or right."
+
+	scale $w.f3.s2 -from [set $this-minRes] -to 256 -state normal \
+		-orient horizontal  -variable $this-resolution -label "Resolution"
+	pack $w.f3.s2 -expand yes -fill x -pady 2 -padx 2
+
+	Tooltip $w.f3.s2 "Sets the number of unique colors used in the color map."
+	
+	bind $w.f3.s2 <ButtonRelease> \
+	    "$this setres; $this update; $this-c needexecute"
+
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -padx 2 -pady 2 -expand yes -fill both
 	
-	make_labeled_radio $w.f2.types "ColorMaps" $n top \
-	    $this-mapType {
-		{ "Gray" 0 } \
-		    { "Inverse Gray" 1 } \
-		    { "Rainbow" 2} \
-		    { "Inverse Rainbow " 3 } \
-		    { "Darkhue" 4} \
-		    { "Inverse Darkhue" 5} \
-		    { "Lighthue" 6} \
-		    { "Blackbody" 7} \
-		    { "Inverse Blackbody" 8} \
-		    { "Don" 9} \
-		    { "Dark Gray" 10} \
-		    { "Red Tint" 11} \
-		    { "Orange Tint" 12} \
-		    { "Yelow Tint" 13} \
-		    { "Green Tint" 14} \
-		    { "Blue Tint" 15} \
-		    { "Purple Tint" 16} \
-		    { "BP Seismic" 17} \
-		}
+	make_labeled_radio $w.f2.types "ColorMaps" $n "split" $this-mapType \
+	    {   { "Gray" 0 } \
+		{ "Inverse Gray" 1 } \
+		{ "Rainbow" 2} \
+		{ "Inverse Rainbow " 3 } \
+		{ "Darkhue" 4} \
+		{ "Inverse Darkhue" 5} \
+		{ "Lighthue" 6} \
+		{ "Blackbody" 7} \
+		{ "Inverse Blackbody" 8} \
+		{ "Don" 9} \
+		{ "Dark Gray" 10} \
+		{ "Red Tint" 11} \
+		{ "Orange Tint" 12} \
+		{ "Yelow Tint" 13} \
+		{ "Green Tint" 14} \
+		{ "Blue Tint" 15} \
+		{ "Purple Tint" 16} \
+		{ "BP Seismic" 17} \
+	    }
 	    
-	pack $w.f2.types -in $w.f2 -side left
-	frame $w.f2.f3 -relief groove -borderwidth 2	
-	pack $w.f2.f3 -side left -padx 2 -pady 2 -expand yes -fill both
-	label $w.f2.f3.label -text "Resolution"
-	pack $w.f2.f3.label -side top -pady 2
-	scale $w.f2.f3.s -from [set $this-minRes] -to 256 -state normal \
-		-orient horizontal  -variable $this-resolution 
-	pack $w.f2.f3.s -side top -padx 2 -pady 2 -fill x
-	
-	bind $w.f2.f3.s <ButtonRelease> \
-	    "$this setres; $this update; $this-c needexecute"
+	pack $w.f2.types -expand yes -fill both
 
 	bind $w.f.f1.canvas <Expose> "$this canvasExpose"
 	bind $w.f.f1.canvas <Button-1> "$this selectNode %x %y"
@@ -263,7 +265,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	    8  { set $this-minRes 10}
 	    default {set $this-minRes 19}
 	}
-	$w.f2.f3.s configure -from [set $this-minRes]
+	$w.f3.s2 configure -from [set $this-minRes]
 	$this update
 	$this-c needexecute
 	

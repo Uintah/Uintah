@@ -157,6 +157,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	     return
 	 } else {
 	     toplevel $window.color
+	     wm title $window.color "Color Chooser"
 	     makeColorPicker $window.color $color \
 		     "$this setColor $col $color $colMsg" \
 		     "destroy $window.color"
@@ -197,7 +198,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		 -text $text -command $cmmd
 	 
 	 #pack the node color frame
-	 pack $frame.colorFrame.set_color $frame.colorFrame.col -side left
+	 pack $frame.colorFrame.set_color $frame.colorFrame.col -side left -padx 2
 	 pack $frame.colorFrame -side left
 
     }

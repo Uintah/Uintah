@@ -4,26 +4,50 @@
 #
 #   Author: J. Davison de St. Germain
 #
-#   Moves the given "window" to near the cursor location.
+#
+#   Moves the given "window" to near the cursor location.  It also
+#   withdraws the window.  This is because it needs to determine the
+#   size of the window for proper positioning of the window near the
+#   edges of the screen.  If you want the window to be remapped, 
+#   set the _optional_ parameter to "leave_up":
+#
+#   moveToCursor $w "leave_up"
+#
+#   or use the default version
+#
+#   moveToCursor $w
 #
 
 set screenWidth [winfo screenwidth .]
 set screenHeight [winfo screenheight .]
 
-proc moveToCursor { window } {
+proc moveToCursor { window { leave_up "no" } } {
+
+  # If we are currently running a script... ie, we are loading the net
+  # from a file, then do not move GUI to the mouse.
+  if [string length [info script]] {
+      return
+  }
 
   global screenHeight screenWidth
 
   set cursorXLoc [expr [winfo pointerx .]]
   set cursorYLoc [expr [winfo pointery .]]
 
-  # Neither commands "winfo width $window", or "winfo reqwidth
-  # $window" return the windows (soon to be) width.  (Ie: the window
-  # has not yet been "realized", and has a width of '1'.  Therefore I
-  # am just goin to assume GUI window size of 300x300 for now.
-  # This works fairly well for all but really big windows.
-  set guiWidth 300
-  set guiHeight 300
+  # After fixing BioPSEFilebox.tcl, I need to at least thank Samsonov
+  # because his comments did clue me in on how to get the width and
+  # height of a widget.  You have to "withdraw" it first and call
+  # "update idletasks" to make it figure out its geometry ... so now
+  # this will work!
+  if { [winfo ismapped $window] == 0 } {
+      if { $leave_up != "leave_up" } {
+	  wm withdraw $window
+      }
+      ::update idletasks
+  }
+
+  set guiWidth [winfo reqwidth $window]
+  set guiHeight [winfo reqheight $window]
 
   if { $cursorXLoc < 100 } {
       set windowXLoc [expr $cursorXLoc / 2]
@@ -36,9 +60,13 @@ proc moveToCursor { window } {
   if { $cursorYLoc < 100 } {
       set windowYLoc [expr $cursorYLoc / 2]
   } elseif { $cursorYLoc > ($screenHeight - $guiHeight) } {
-      set windowYLoc [expr $screenHeight - $guiHeight - 20]
+      set windowYLoc [expr $screenHeight - $guiHeight - 50]
   } else {
       set windowYLoc [expr $cursorYLoc - 80]
+  }
+
+  if { $leave_up == "leave_up" } {
+      wm deiconify $window
   }
 
   wm geometry $window +$windowXLoc+$windowYLoc

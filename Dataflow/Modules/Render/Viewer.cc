@@ -59,6 +59,7 @@ DECLARE_MAKER(Viewer)
 //----------------------------------------------------------------------
 Viewer::Viewer(GuiContext* ctx)
   : Module("Viewer", ctx, ViewerSpecial,"Render","SCIRun"),
+    view_window_lock_("Viewer view window lock"),
     geomlock_("Viewer geometry lock"), 
     // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
@@ -162,6 +163,10 @@ Viewer::process_event()
 
   case MessageTypes::GoAwayWarn:
     stop_rendering_ = true;
+    //stop spinning windows...
+    for(unsigned i = 0; i < view_window_.size(); i++) {
+      view_window_[i]->inertia_mode = 0;
+    }    
     break;
 
   case MessageTypes::ExecuteModule:
@@ -597,8 +602,10 @@ void Viewer::delete_viewwindow(ViewWindow* delviewwindow)
   {
     if(view_window_[i] == delviewwindow)
     {
+      view_window_lock_.lock();
       view_window_.erase(view_window_.begin() + i);
       delete delviewwindow;
+      view_window_lock_.unlock();
     }
   }
 }

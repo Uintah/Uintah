@@ -344,6 +344,31 @@ void SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
     memrefs+=2*sizeof(int)*nr+nnz*sizeof(int)+2*nnz*sizeof(double)+nr*sizeof(double);
 }
 
+void SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
+{
+    // Compute A*x=b
+    ASSERT(x.nrows() == nncols);
+    ASSERT(b.nrows() == nnrows);
+    ASSERT(x.ncols() == b.ncols());
+    int i, j, k;
+    cout << "x size = " << x.nrows() << " " << x.ncols() << "\n";
+    cout << "b size = " << b.nrows() << " " << b.ncols() << "\n";
+    
+    for (j = 0; j < b.ncols(); j++)
+    {
+      for (i = 0; i < b.nrows(); i++)
+      {
+	double sum = 0.0;
+	for (k = rows[i]; k < rows[i+1]; k++)
+	{
+	  sum += a[k] * x.get(columns[k], j);
+	}
+	b.put(i, j, sum);
+      }
+    }
+}
+
+
 void SparseRowMatrix::print() const
 {
     cerr << "Sparse RowMatrix: " << endl;

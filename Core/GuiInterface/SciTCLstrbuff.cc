@@ -16,7 +16,7 @@
 */
 
 /*
- *  TCLstrbuff.cc: implementation of string buffer for TclStream itcl-class 
+ *  SciTCLstrbuff.cc: implementation of string buffer for SciTclStream itcl-class 
  *
  *  Written by:
  *   Alexei Samsonov
@@ -27,7 +27,7 @@
  *   Copyright (C) 2000 SCI Group
  */
 
-#include <Core/GuiInterface/TCLstrbuff.h>
+#include <Core/GuiInterface/SciTCLstrbuff.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <string.h>
@@ -40,11 +40,11 @@ namespace SCIRun {
 using namespace std;
 
 ////////////
-// TCLstrbuff implementation
+// SciTCLstrbuff implementation
 
 //////////
 // Constructor/Destructor
-TCLstrbuff::TCLstrbuff(GuiContext* ctx)
+SciTCLstrbuff::SciTCLstrbuff(GuiContext* ctx)
  : GuiVar(ctx), ostringstream()
 {
   ctx->dontSave();
@@ -61,7 +61,7 @@ TCLstrbuff::TCLstrbuff(GuiContext* ctx)
   ctx->unlock();
 }
 
-TCLstrbuff::~TCLstrbuff(){
+SciTCLstrbuff::~SciTCLstrbuff(){
   string varname = ctx->getfullname();
   Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
   Tcl_UnsetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
@@ -70,13 +70,13 @@ TCLstrbuff::~TCLstrbuff(){
 
 //////////
 //   
-void TCLstrbuff::emit(std::ostream&, string&){
+void SciTCLstrbuff::emit(std::ostream&, string&){
   
 }
 
 //////////
 //
-TCLstrbuff& TCLstrbuff::flush(){
+SciTCLstrbuff& SciTCLstrbuff::flush(){
  
   ctx->lock();
 
@@ -99,22 +99,22 @@ TCLstrbuff& TCLstrbuff::flush(){
   return *this;
 }
 
-TCLstrbuff& operator<<(TCLstrbuff& stream, TCLstrbuff& (*mp)(TCLstrbuff&)){
+SciTCLstrbuff& operator<<(SciTCLstrbuff& stream, SciTCLstrbuff& (*mp)(SciTCLstrbuff&)){
   return mp(stream);
 }
 
-TCLstrbuff& endl(TCLstrbuff& stream){
+SciTCLstrbuff& endl(SciTCLstrbuff& stream){
   static_cast<ostringstream&>(stream)<<'\n';
   stream.flush();
   return stream;
 }
 
-TCLstrbuff& flush(TCLstrbuff& stream){
+SciTCLstrbuff& flush(SciTCLstrbuff& stream){
   stream.flush();
   return stream;
 }
 
-TCLstrbuff& ends(TCLstrbuff& stream){
+SciTCLstrbuff& ends(SciTCLstrbuff& stream){
   static_cast<ostringstream&>(stream)<<'\0';
   stream.flush();
   return stream;

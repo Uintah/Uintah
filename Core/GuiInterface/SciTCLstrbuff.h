@@ -16,7 +16,7 @@
 */
 
 /*
- *  TCLstrbuff.h: class to define string buffer for TclStream itcl-class 
+ *  TCLstrbuff.h: class to define string buffer for SciTclStream itcl-class 
  * 
  *  Written by:
  *   Alexei Samsonov
@@ -41,7 +41,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class SCICORESHARE TCLstrbuff : public GuiVar, public ostringstream{
+class SCICORESHARE SciTCLstrbuff : public GuiVar, public ostringstream{
   
   // GROUP: private data
   //////////
@@ -56,15 +56,15 @@ public:
   // GROUP: Constructor/Destructor
   //////////
   // 
-  TCLstrbuff(GuiContext* ctx);
-  virtual ~TCLstrbuff();
+  SciTCLstrbuff(GuiContext* ctx);
+  virtual ~SciTCLstrbuff();
   
   // GROUP: public member functions
   //////////
   // 
-  TCLstrbuff& flush();
+  SciTCLstrbuff& flush();
  
-  template<class T> inline TCLstrbuff& operator<<(T pVal){
+  template<class T> inline SciTCLstrbuff& operator<<(T pVal){
     static_cast<ostringstream&>(*this)<<pVal;
     return *this;
   }
@@ -72,10 +72,10 @@ public:
   virtual void emit(std::ostream&, string& midx);
 };
 
-TCLstrbuff& operator<<(TCLstrbuff& stream, TCLstrbuff& (*mp)(TCLstrbuff&));
-TCLstrbuff& endl(TCLstrbuff& stream);
-TCLstrbuff& flush(TCLstrbuff& stream);
-TCLstrbuff& ends(TCLstrbuff& stream);
+SciTCLstrbuff& operator<<(SciTCLstrbuff& stream, SciTCLstrbuff& (*mp)(SciTCLstrbuff&));
+SciTCLstrbuff& endl(SciTCLstrbuff& stream);
+SciTCLstrbuff& flush(SciTCLstrbuff& stream);
+SciTCLstrbuff& ends(SciTCLstrbuff& stream);
 
 } // end namespace SCIRun
 

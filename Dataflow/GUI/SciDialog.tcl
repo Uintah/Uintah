@@ -229,7 +229,7 @@ proc createSciDialog { args } {
   wm deiconify .sci_dialog
   #raise .sci_dialog
 
-  grab .sci_dialog
+  catch {grab .sci_dialog}
 
   # Wait until a button is pressed.
   tkwait variable ::sci_dialog_result

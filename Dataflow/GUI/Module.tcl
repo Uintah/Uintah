@@ -36,7 +36,7 @@ itcl_class Module {
     }
 			
     constructor {config} {
-	set msgLogStream "[TclStream msgLogStream#auto]"
+	set msgLogStream "[SciTclStream msgLogStream#auto]"
 	# these live in parallel temporarily
 	global $this-notes Notes
 	if ![info exists $this-notes] { set $this-notes "" }
@@ -75,6 +75,10 @@ itcl_class Module {
     public time "00.00" {$this update_time}
     public isSubnetModule 0
     public subnetNumber 0
+
+    method get_msg_state {} {
+	return $msg_state
+    }
 
     method compiling_p {} { return $compiling_p }
     method set_compiling_p { val } { 
@@ -254,6 +258,9 @@ itcl_class Module {
 	if {$make_progress_graph} {
 	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
 	}
+
+	# If we are NOT currently running a script... ie, not loading the net
+	# from a file
 	if ![string length [info script]] {
 	    unselectAll
 	    global CurrentlySelectedModules
@@ -396,11 +403,16 @@ itcl_class Module {
 	    set color grey75
 	}
 	global Subnet
-	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set number $Subnet([modname])
+	set canvas $Subnet(Subnet${number}_canvas)
 	set indicator $canvas.module[modname].ff.msg.indicator
 	place forget $indicator
 	$indicator configure -width $indicator_width -background $color
 	place $indicator -relheight 1 -anchor nw 
+
+	if $number {
+	    SubnetIcon$number update_msg_state
+	}
 
 	if {[winfo exists .standalone]} {
 	    app indicate_error [modname] $msg_state
@@ -429,34 +441,63 @@ itcl_class Module {
 	if [$this is_subnet] return
 	set w .mLogWnd[modname]
 	
-	# does the window exist?
-	if [winfo exists $w] {
-	    raise $w
+	if {[winfo exists $w]} {
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
 	    return
 	}
 	
 	# create the window
 	toplevel $w
+	moveToCursor $w "leave_up"
 	append t "Log for " [modname]
 	set t "$t -- pid=[$this-c getpid]"
 	wm title $w $t
 	
 	frame $w.log
-	text $w.log.txt -relief sunken -bd 2 -yscrollcommand "$w.log.sb set"
+	# Create the txt in the "disabled" state so that a user cannot type into the text field.
+	# Also, must give it a width and a height so that it will be allowed to automatically
+	# change the width and height (go figure?).
+	text $w.log.txt -relief sunken -bd 2 -yscrollcommand "$w.log.sb set" -state disabled \
+	    -height 2 -width 10
 	scrollbar $w.log.sb -relief sunken -command "$w.log.txt yview"
-	pack $w.log.txt -side left -padx 5 -pady 5 -expand 1 -fill both
-	pack $w.log.sb -side left -padx 0 -pady 5 -fill y
+	pack $w.log.txt -side left -padx 5 -pady 2 -expand 1 -fill both
+	pack $w.log.sb -side left -padx 0 -pady 2 -fill y
 
 	frame $w.fbuttons 
 	# TODO: unregister only for streams with the supplied output
-	button $w.fbuttons.ok -text "OK" \
-	    -command "$this destroyStreamOutput $w"
+	button $w.fbuttons.clear -text "Clear" -command "$this clearStreamOutput"
+	button $w.fbuttons.ok    -text "Close" -command "wm withdraw $w"
 	
-	pack $w.fbuttons.ok -side bottom -padx 5 -pady 5 -ipadx 3 -ipady 3
-	pack $w.log -side top -padx 5 -pady 5 -fill both -expand 1
-	pack $w.fbuttons -side bottom -padx 5 -pady 5 -fill none -expand 0
+	Tooltip $w.fbuttons.ok "Close this window.  The log is not effected."
+	TooltipMultiline $w.fbuttons.clear \
+            "If the log indicates anything but an error, the Clear button\n" \
+            "will clear the message text from the log and reset the warning\n" \
+            "indicator to No Message.  Error messages cannot be cleared -- you\n" \
+	    "must fix the problem and re-execute the module."
+
+	pack $w.fbuttons.clear $w.fbuttons.ok -side left -expand yes -fill both \
+	    -padx 5 -pady 5 -ipadx 3 -ipady 3
+	pack $w.log      -side top -padx 5 -pady 2 -fill both -expand 1
+	pack $w.fbuttons -side top -padx 5 -pady 2 -fill x
+
+	wm minsize $w 450 150
 
 	$msgLogStream registerOutput $w.log.txt
+    }
+
+    method clearStreamOutput { } {
+	# Clear the text widget 
+	$msgLogStream clearTextWidget
+
+	# Clear the module indicator color if
+        # not in an error state
+	if {$msg_state != "Error"} {
+	    set_msg_state "Reset"
+	}
     }
     
     method destroyStreamOutput {w} {
@@ -505,10 +546,29 @@ itcl_class Module {
 	
 }   
 
-proc fadeinIcon { modid { seconds 0.333 } } {
+proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {
     if [llength [info script]] {
 	$modid setColorAndTitle
 	return
+    }
+    global Color Subnet
+    if $center {
+	set canvas $Subnet(Subnet$Subnet($modid)_canvas)
+	set bbox [$canvas bbox $modid]
+	if { [lindex $bbox 0] < [$canvas canvasx 0] ||
+	     [lindex $bbox 1] < [$canvas canvasy 0] ||
+	     [lindex $bbox 2] > [$canvas canvasy [winfo width $canvas]] ||
+	     [lindex $bbox 3] > [$canvas canvasy [winfo height $canvas]] } {
+	    set modW [expr [lindex $bbox 2] - [lindex $bbox 0]]
+	    set modH [expr [lindex $bbox 3] - [lindex $bbox 1]]
+	    set canScroll [$canvas cget -scrollregion]
+	    set x [expr [lindex $bbox 0] - ([winfo width  $canvas] - $modW)/2]
+	    set y [expr [lindex $bbox 1] - ([winfo height $canvas] - $modH)/2]
+	    set x [expr $x/([lindex $canScroll 2] - [lindex $canScroll 0])]
+	    set y [expr $y/([lindex $canScroll 3] - [lindex $canScroll 1])]
+	    $canvas xview moveto $x
+	    $canvas yview moveto $y
+	}
     }
 
     set frequency 12
@@ -518,8 +578,6 @@ proc fadeinIcon { modid { seconds 0.333 } } {
     set dA [expr double(1.0/($seconds*$frequency))]
     set alpha $dA
 	    
-    set toggle 1
-    global Color
     $modid setColorAndTitle $Color(IconFadeStart)
     while { $t < $stopAt } {
 	set color [blend $Color(Selected) $Color(IconFadeStart) $alpha]
@@ -610,12 +668,14 @@ proc regenConnectionMenu { menu_id conn } {
 }
 
 proc notesDoneModule { id } {
-    global Notes $id-notes
-    set $id-notes $Notes($id)
+    global $id-notes Notes
+    if { [info exists Notes($id)] } {
+	set $id-notes $Notes($id)
+    }
 }
 
 proc notesWindow { id {done ""} } {
-    global Notes Color
+    global Notes Color Subnet
     if { [winfo exists .notes] } { destroy .notes }
     setIfExists cache Notes($id) ""
     toplevel .notes
@@ -626,7 +686,7 @@ proc notesWindow { id {done ""} } {
     frame .notes.b
     button .notes.b.done -text "Done" \
 	-command "okNotesWindow $id \"$done\""
-    button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end"
+    button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end; set Notes($id) {}"
     button .notes.b.cancel -text "Cancel" -command \
 	"set Notes($id) \"$cache\"; destroy .notes"
 
@@ -639,17 +699,17 @@ proc notesWindow { id {done ""} } {
 	"colorNotes $id"
 
     frame .notes.d -relief groove -borderwidth 2
+
     setIfExists Notes($id-Position) Notes($id-Position) def
-    make_labeled_radio .notes.d.pos "Display:" "" left Notes($id-Position) \
-	{
-	    { "Default" def } \
-		{ "None" none } \
-		{ "Tooltip" tooltip } \
-		{ "Top" n } \
-		{ "Left" w } \
-		{ "Right" e } \
-		{ "Bottom" s } \
-	    }
+
+    set radiobuttons { {"Default" def} {"None" none} {"Tooltip" tooltip} {"Top" n} }
+    if [info exists Subnet($id)] {
+	lappend radiobuttons {"Left" w}
+	lappend radiobuttons {"Right" e}
+	lappend radiobuttons {"Bottom" s}
+    }
+	
+    make_labeled_radio .notes.d.pos "Display:" "" left Notes($id-Position) $radiobuttons
 
     pack .notes.input -fill x -side top -padx 5 -pady 3
     pack .notes.d -fill x -side top -padx 5 -pady 0
@@ -936,11 +996,13 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 	}
     }
 
-    if { [isaSubnetEditor [oMod conn]] } {
+    if { [isaSubnetEditor [oMod conn]] && 
+	 ![llength [portConnections [oPort conn]]] } {
 	foreach econn [portConnections "SubnetIcon${subnet} [oNum conn] i"] {
 	    destroyConnection $econn
 	}
-	if { [canvasExists $canvas SubnetIcon${subnet}] } {
+	set iconcanvas $Subnet(Subnet$Subnet(SubnetIcon$subnet)_canvas)
+	if { [canvasExists $iconcanvas SubnetIcon${subnet}] } {
 	    removePort [oPort conn]
 	}
     }
@@ -949,7 +1011,8 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 	foreach econn [portConnections "SubnetIcon${subnet} [iNum conn] o"] {
 	    destroyConnection $econn
 	}
-	if { [canvasExists $canvas SubnetIcon${subnet}] } {
+	set iconcanvas $Subnet(Subnet$Subnet(SubnetIcon$subnet)_canvas)
+	if { [canvasExists $iconcanvas SubnetIcon${subnet}] } {
 	    removePort [iPort conn]
 	}
     }
@@ -1532,13 +1595,14 @@ proc moduleHelp {modid} {
 }
 
 proc moduleDestroy {modid} {
-    netedit deletemodule_warn $modid
     global Subnet CurrentlySelectedModules
     networkHasChanged
     if [isaSubnetIcon $modid] {
 	foreach submod $Subnet(Subnet$Subnet(${modid}_num)_Modules) {
 	    moduleDestroy $submod
 	}
+    } else {
+	netedit deletemodule_warn $modid
     }
 
     # Deleting the module connections backwards works for dynamic modules
@@ -1715,7 +1779,7 @@ proc findRealConnections { conn } {
 	    lappend connections [makeConn $oport $iport]
 	}
     }
-    return $connections
+    return [lsort -integer -index 3 $connections]
 }
 
 proc drawPorts { modid { porttypes "i o" } } {
@@ -1800,7 +1864,8 @@ proc drawPort { port { color red } { connected 0 } } {
 
 proc lightPort { { port "" } { color "black" } } {
     global Subnet LitPorts
-
+    if {![info exists Subnet([pMod port])]} return
+    
     if ![string length $port] {
 	if [info exists LitPorts] {
 	    foreach port [lsort -unique $LitPorts] {
@@ -2024,7 +2089,9 @@ proc unsetIfExists { Varname } {
 
 
 proc notesTrace { ArrayName Index mode } {
+    global Subnet $Index-notes
     networkHasChanged
+    # the next lines are to handle notes color and options
     set pos [string last - $Index]
     if { $pos != -1 } { set Index [string range $Index 0 [expr $pos-1]] }
     drawNotes $Index
@@ -2203,4 +2270,15 @@ proc iNum { connection_varname } {
 proc iPort { connection_varname } {
     upvar $connection_varname connection
     return "[lrange $connection 2 3] i"
+}
+
+# Returns 1 if the window is mapped.  Use this function if you don't
+# know whether the window exists yet.
+proc windowIsMapped { w } {
+    if {[winfo exists $w]} {
+	if {[winfo ismapped $w]} {
+	    return 1
+	}
+    }
+    return 0
 }

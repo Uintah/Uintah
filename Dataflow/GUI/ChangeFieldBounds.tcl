@@ -69,7 +69,6 @@ itcl_class SCIRun_FieldsGeometry_ChangeFieldBounds {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -102,14 +101,10 @@ itcl_class SCIRun_FieldsGeometry_ChangeFieldBounds {
 
 	pack $edit.l1 $edit.l2 -side top 
 
-	frame $w.exec
-	pack $w.exec -side bottom -padx 5 -pady 5
-	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
-	button $w.exec.reset -text "Reset Widget" -command "$this reset"
-	button $w.exec.copy -text "Copy Input To Output" \
-	    -command "$this copy_attributes"
-	pack $w.exec.execute $w.exec.reset $w.exec.copy \
-	    -side left -padx 15 -pady 5
+	makeSciButtonPanel $w $w $this \
+	    "\"Reset Widget\" \"$this reset\" \"\"" \
+	    "\"In to Out\" \"$this reset\" \"Copy input to output.\" "
+	moveToCursor $w	
     }
 
     method reset {} {

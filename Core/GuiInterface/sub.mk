@@ -28,7 +28,7 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/MemStats.cc \
 	$(SRCDIR)/TCLInterface.cc \
 	$(SRCDIR)/TCLTask.cc \
-	$(SRCDIR)/TCLstrbuff.cc \
+	$(SRCDIR)/SciTCLstrbuff.cc \
 	$(SRCDIR)/TclObj.cc
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
