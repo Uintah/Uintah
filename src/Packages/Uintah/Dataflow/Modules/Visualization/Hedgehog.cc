@@ -474,8 +474,8 @@ Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
   //const string type = vfld->get_type_name(1);
   if( field_type == "LatVolField"){
     // use virtual field interpolation
-    VectorFieldInterface *vfi;
-    if( (vfi = vfld->query_vector_interface())){
+    VectorFieldInterfaceHandle vfi(vfld->query_vector_interface());
+    if( vfi.get_rep() != 0 ){
       return vfi->interpolate( val, p);
     } 
   }    
@@ -490,8 +490,8 @@ Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
   //const string type = sfld->get_type_name(1);
   if( sfld->get_type_name(0) == "LatVolField" ){
     // use virtual field interpolation
-    ScalarFieldInterface *sfi;
-    if(( sfi = sfld->query_scalar_interface())){
+    ScalarFieldInterfaceHandle sfi(sfld->query_scalar_interface());
+    if( sfi.get_rep() != 0){
       return sfi->interpolate( val, p);
     }
   } else {

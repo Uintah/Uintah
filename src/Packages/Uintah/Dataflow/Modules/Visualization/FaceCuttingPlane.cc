@@ -148,7 +148,7 @@ FaceCuttingPlane::~FaceCuttingPlane()
 void FaceCuttingPlane::get_minmax(FieldHandle f)
 {
   double mn, mx;
-  ScalarFieldInterface* sfi = f->query_scalar_interface();
+  ScalarFieldInterfaceHandle sfi(f->query_scalar_interface());
   sfi->compute_min_max(mn, mx);
   minmax_ = pair<double, double>(mn, mx);
 }
@@ -305,7 +305,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
   Vector diagv(b.diagonal());
   int nx, ny, nz, nf;
   get_dimensions(mesh_, nx, ny, nz);
-  cerr<<"nx, ny, nz = "<<nx<<", "<<ny<<", "<<nz<<endl;
+//   cerr<<"nx, ny, nz = "<<nx<<", "<<ny<<", "<<nz<<endl;
   if(!control_widget_){
     control_widget_=scinew PointWidget(this, &control_lock_, 0.2);
     ddx_ = Vector(diagv.x()/(nx-1),0,0);
