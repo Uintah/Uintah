@@ -432,12 +432,31 @@ Grid* HierarchicalRegridder::CreateGrid(Grid* oldGrid, const ProblemSpecP& ups)
       if ((*d_patchActive[levelIdx])[idx]) {
         IntVector startCell       = idx * d_patchSize[levelIdx];
         IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[levelIdx] - IntVector(1,1,1);
+        IntVector inStartCell(startCell);
+        IntVector inEndCell(endCell);
         if (idx.x() == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0)-1;
         if (idx.y() == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1)-1;
         if (idx.z() == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2)-1;
-        // endCell = Min (endCell, d_cellNum[levelIdx]);
-        // ignores extra cells, boundary conditions.
-        /*Patch* newPatch =*/ newLevel->addPatch(startCell-extraCells, endCell + IntVector(1,1,1) + extraCells , startCell, endCell + IntVector(1,1,1));
+
+        // add extra cells - set if there is no patch next to it in each direction
+        IntVector low, high;
+        if (idx.x() < 1 || !(*d_patchActive[levelIdx])[idx-IntVector(1,0,0)])
+          low[0] = extraCells.x();
+        if (idx.y() < 1 || !(*d_patchActive[levelIdx])[idx-IntVector(0,1,0)])
+          low[1] = extraCells.y();
+        if (idx.z() < 1 || !(*d_patchActive[levelIdx])[idx-IntVector(0,0,1)])
+          low[2] = extraCells.z();
+        if (idx.x() >= d_patchNum[levelIdx].x() || !(*d_patchActive[levelIdx])[idx+IntVector(1,0,0)])
+          low[0] = extraCells.x();
+        if (idx.y() >= d_patchNum[levelIdx].y() || !(*d_patchActive[levelIdx])[idx+IntVector(0,1,0)])
+          low[1] = extraCells.y();
+        if (idx.z() >= d_patchNum[levelIdx].z() || !(*d_patchActive[levelIdx])[idx+IntVector(0,0,1)])
+          low[2] = extraCells.z();
+
+        startCell -= low;
+        endCell += high;
+
+        newLevel->addPatch(startCell, endCell + IntVector(1,1,1), inStartCell, inEndCell + IntVector(1,1,1));
         //newPatch->setLayoutHint(oldPatch->layouthint);
       }
     }
@@ -662,12 +681,35 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
       rdbg << "   Creating patch "<< *iter << endl;
       IntVector startCell       = idx * d_patchSize[levelIdx];
       IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[levelIdx] - IntVector(1,1,1);
+      IntVector inStartCell(startCell);
+      IntVector inEndCell(endCell);
+
+      // do extra cells - add if there is no neighboring patch
+      IntVector low(0,0,0), high(0,0,0);
+      if (d_patches[levelIdx].find(idx-IntVector(1,0,0)) == d_patches[levelIdx].end())
+        low[0] = extraCells.x();
+      if (d_patches[levelIdx].find(idx-IntVector(0,1,0)) == d_patches[levelIdx].end())
+        low[1] = extraCells.y();
+      if (d_patches[levelIdx].find(idx-IntVector(0,0,1)) == d_patches[levelIdx].end())
+        low[2] = extraCells.z();
+
+      if (d_patches[levelIdx].find(idx+IntVector(1,0,0)) == d_patches[levelIdx].end())
+        high[0] = extraCells.x();
+      if (d_patches[levelIdx].find(idx+IntVector(0,1,0)) == d_patches[levelIdx].end())
+        high[1] = extraCells.y();
+      if (d_patches[levelIdx].find(idx+IntVector(0,0,1)) == d_patches[levelIdx].end())
+        high[2] = extraCells.z();
+
       if (idx.x() == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0)-1;
       if (idx.y() == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1)-1;
       if (idx.z() == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2)-1;
-      // endCell = Min (endCell, d_cellNum[levelIdx]);
-      // ignores extra cells, boundary conditions.
-      /*Patch* newPatch =*/ newLevel->addPatch(startCell-extraCells, endCell + IntVector(1,1,1) + extraCells , startCell, endCell + IntVector(1,1,1));
+
+      rdbg << "     Adding extra cells: " << low << ", " << high << endl;
+
+      startCell -= low;
+      endCell += high;
+
+      newLevel->addPatch(startCell, endCell + IntVector(1,1,1), inStartCell, inEndCell + IntVector(1,1,1));
       //newPatch->setLayoutHint(oldPatch->layouthint);
     }
     if((levelIdx < oldGrid->numLevels()) && oldGrid->getLevel(levelIdx)->getPeriodicBoundaries() != IntVector(0,0,0)) {
