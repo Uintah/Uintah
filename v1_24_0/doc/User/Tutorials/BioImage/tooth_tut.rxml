@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
     <para>
       Now select <filename>tooth.nhdr</filename> and click
-      <guibutton>Set</guibutton>.  Click
+      <guibutton>Set</guibutton>.  The file browser window will close. Click
       <guibutton>Update</guibutton>, located near the bottom of the
       Processing Pane (item 4 in <xref linkend="fig.load"/>), to load
       the data into BioImage.
@@ -94,7 +94,7 @@ DEALINGS IN THE SOFTWARE.
     </figure>
     
     <para>
-      The slice windows show sagittal, coronal, and axial views
+      The slice panes show sagittal, coronal, and axial views
       respectively. Depending on the order of the axes in the volume,
       the data may need to be flipped or permuted so that axis labels
       are correct.  The Viewing Cube, located in the Processing Pane
@@ -164,7 +164,8 @@ DEALINGS IN THE SOFTWARE.
 
     <para>
       Click the Processing Pane's <guibutton>Update</guibutton> button
-      to apply the filter.
+      to apply the filter. Notice the panes in the Visualizion Pane
+      update with the resampled images.
     </para>
 
     <para>
@@ -251,7 +252,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	The Visualization Pane is composed of four sub-panes: the
 	volume pane on top, and the sagittal, coronal, and axial slice
-	panes (respectively) on the bottom.  Initially, the volume
+	panes on the bottom.  Initially, the volume
 	pane displays a three dimensional representation of the data
 	as orthogonal slices.
       </para>
@@ -292,7 +293,7 @@ DEALINGS IN THE SOFTWARE.
 	<title>A Slice Pane and its Controls</title>
 	<mediaobject>
 	  <textobject>
-	    <phrase>2d Viewer Window showing tooth dataset.</phrase>
+	    <phrase>2d Viewer pane showing tooth dataset.</phrase>
 	  </textobject>
 	  <imageobject>
 	    <imagedata fileref="Figures/2dview.eps" align="center" format="EPS"/>
@@ -358,7 +359,7 @@ DEALINGS IN THE SOFTWARE.
     <section>
       <title>Coloring Slices</title>
       <para>
-	Colors displayed in the slice panes are greyscale and
+	The colors displayed in the slice panes are greyscale and
 	represent the underlying density data values: highest
 	density corresponds to white, lowest density are colored
 	black, and in between areas are colored shades of grey.
@@ -370,7 +371,7 @@ DEALINGS IN THE SOFTWARE.
 	Visualization Settings pane's <guilabel>Planes</guilabel> tab.
 	Then select a color range by clicking one of the
 	<guilabel>Color Planes By</guilabel> radio buttons&#x2014;see
-	<xref linkend="fig.planesTab"/>
+	<xref linkend="fig.planesTab"/>, item 8.
 	
 	<figure id="fig.planesTab">
 	  <title>Options for controlling planes</title>
@@ -405,7 +406,8 @@ DEALINGS IN THE SOFTWARE.
 
       <para>
 	Choose the Rainbow colormap and notice the difference in the
-	resulting images displayed in the viewer windows.
+	resulting images displayed in the slice plane as shown in
+	<xref linkend="fig.rainbow_color_applied"/>.
       </para>
       <para>
 	With the rainbow colormap it is easier to see small variations
@@ -584,7 +586,7 @@ DEALINGS IN THE SOFTWARE.
       <guibutton>Autoview</guibutton> restores a resonable view.
       Pressing <keycombo
       action="simul"><keycap>Control</keycap><keycap>V</keycap></keycombo>
-      performs the same function.
+      in the volume visualization pane performs the same function.
     </para>
 
     <!--
@@ -609,7 +611,7 @@ DEALINGS IN THE SOFTWARE.
 	To edit the transfer function, press <guibutton>Edit
 	Transfer Function</guibutton>, located in the Visualization Settings
 	pane's <guilabel>Volume Rendering
-	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/>.  This
+	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/> item 3.  This
 	displays the transfer function editor shown in <xref
 	linkend="fig.editTFWindow"/>. 
       </para>
@@ -673,17 +675,19 @@ DEALINGS IN THE SOFTWARE.
 
     <section>
       <title>Emphasizing Tooth Materials</title>
-      
+
       <para>
-	In the tooth histogram <xref linkend="fig.histo"/>
+	In the tooth histogram in <xref linkend="fig.histo"/>
 	four distinct materials are visible, denoted by areas of
 	high concentration near the bottom of the histogram.
       </para>
-      
+
       <para>
-	The tooth's root is visualized by adding a rectangle over the
-	first material area, as shown in <xref
-	linkend="fig.root_ren_tf"/>.
+	Turn off the current widgets by clicking the corresponding 
+	On checkboxes. The tooth's root is visualized by adding a 
+	rectangle over them first material area, as shown in <xref
+	linkend="fig.root_ren_tf"/>. To do this, click the 
+	<guibutton>Add Rectangle</guibutton> button in the Editor UI.
       </para>
       
       <figure id="fig.root_ren_tf">
