@@ -868,7 +868,7 @@ int main(int argc, char** argv)
       
       double time = times[t];
       double time2 = times2[t];
-      cout << "time = " << time << "\n";
+      cerr << "time = " << time << "\n";
       GridP grid = da1->queryGrid(time);
       GridP grid2 = da2->queryGrid(times2[t]);
 
@@ -945,7 +945,7 @@ int main(int argc, char** argv)
 	  std::string var = vars[v];
 	  const Uintah::TypeDescription* td = types[v];
 	  const Uintah::TypeDescription* subtype = td->getSubType();
-	  cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	  cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	  for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
 	    LevelP level2 = grid2->getLevel(l);
@@ -975,7 +975,7 @@ int main(int argc, char** argv)
 		abort_uncomparable();  
 	      }
 	    
-	      cout << "\t\tPatch: " << patch->getID() << "\n";
+	      cerr << "\t\tPatch: " << patch->getID() << "\n";
 
 	      if (!compare(patch->getBox().lower(), patch2->getBox().lower(),
 			   abs_tolerance, rel_tolerance) ||
@@ -999,7 +999,7 @@ int main(int argc, char** argv)
 	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		  matlIter != matls.end(); matlIter++){
 		int matl = *matlIter;
-		cout << "\t\t\tMaterial: " << matl << "\n";
+		cerr << "\t\t\tMaterial: " << matl << "\n";
 		if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
 		  switch(subtype->getType()){
 		  case Uintah::TypeDescription::double_type:
@@ -1068,7 +1068,7 @@ int main(int argc, char** argv)
 	const Uintah::TypeDescription* subtype = td->getSubType();
 	if (td->getType() == Uintah::TypeDescription::ParticleVariable)
 	  continue;
-	cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	for(int l=0;l<grid->numLevels();l++){
 	  LevelP level = grid->getLevel(l);
 	  LevelP level2 = grid2->getLevel(l);
