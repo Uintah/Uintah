@@ -1,9 +1,9 @@
 
-#include "BrainDamagedScheduler.h"
-#include "OnDemandDataWarehouse.h"
-#include "ProcessorContext.h"
-#include "SchedulerException.h"
-#include "Task.h"
+#include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
+#include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Uintah/Parallel/ProcessorContext.h>
+#include <Uintah/Exceptions/SchedulerException.h>
+#include <Uintah/Grid/Task.h>
 #include <SCICore/Thread/SimpleReducer.h>
 using SCICore::Thread::SimpleReducer;
 #include <SCICore/Thread/Thread.h>
@@ -22,8 +22,14 @@ using std::vector;
 
 BrainDamagedScheduler::BrainDamagedScheduler()
 {
+    numThreads=0;
     reducer = new SimpleReducer("BrainDamagedScheduler only barrier/reducer");
     pool = new ThreadPool("BrainDamagedScheduler worker threads");
+}
+
+void BrainDamagedScheduler::setNumThreads(int nt)
+{
+    numThreads = nt;
 }
 
 BrainDamagedScheduler::TaskRecord::~TaskRecord()

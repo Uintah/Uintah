@@ -1,0 +1,11 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = SerialMPM.cc ThreadedMPM.cc \
+	   BoundCond.cc CompMooneyRivlin.cc GeometryGrid.cc \
+	   GeometryObject.cc GeometryPiece.cc Material.cc Problem.cc
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk

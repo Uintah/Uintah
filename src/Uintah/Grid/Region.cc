@@ -1,8 +1,8 @@
 
-#include "Region.h"
-#include "NodeSubIterator.h"
-#include "Primes.h"
-#include "SubRegion.h"
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/NodeSubIterator.h>
+#include <Uintah/Math/Primes.h>
+#include <Uintah/Grid/SubRegion.h>
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Max;

@@ -2,7 +2,7 @@
 #ifndef UINTAH_HOMEBREW_ONDEMANDDATAWAREHOUSE_H
 #define UINTAH_HOMEBREW_ONDEMANDDATAWAREHOUSE_H
 
-#include "DataWarehouse.h"
+#include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <map>
 

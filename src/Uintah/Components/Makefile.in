@@ -1,0 +1,7 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../..
+
+SUBDIRS = Arches ICE MPM Schedulers SimulationController
+
+include $(OBJTOP)/scripts/recurse.mk

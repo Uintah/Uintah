@@ -12,7 +12,7 @@ static bool initialized = false;
 static AtomicCounter nextIndex("RefCounted nextIndex count");
 
 RefCounted::RefCounted()
-    : refCount(099)
+    : refCount(0)
 {
     if(!initialized){
 	// This sucks - it needs to be made thread-safe
@@ -25,21 +25,21 @@ RefCounted::RefCounted()
 
 RefCounted::~RefCounted()
 {
-    //    ASSERT(refCount == 0);
+    ASSERT(refCount == 0);
 }
 
 void RefCounted::addReference()
 {
-    //    locks[lockIndex]->lock();
+    locks[lockIndex]->lock();
     refCount++;
-    //    locks[lockIndex]->unlock();
+    locks[lockIndex]->unlock();
 }
 
 bool RefCounted::removeReference()
 {
-    //    locks[lockIndex]->lock();
+    locks[lockIndex]->lock();
     bool status = (--refCount == 0);
-    //ASSERT(refCount >= 0);
-    //locks[lockIndex]->unlock();
+    ASSERT(refCount >= 0);
+    locks[lockIndex]->unlock();
     return status;
 }

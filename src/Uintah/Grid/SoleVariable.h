@@ -2,8 +2,8 @@
 #ifndef UINTAH_HOMEBREW_SoleVariable_H
 #define UINTAH_HOMEBREW_SoleVariable_H
 
-#include "DataItem.h"
-#include "TypeMismatchException.h"
+#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Exceptions/TypeMismatchException.h>
 #include <iostream> // TEMPORARY
 
 template<class T>

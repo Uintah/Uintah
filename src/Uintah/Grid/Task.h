@@ -2,8 +2,8 @@
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
-#include "DataWarehouseP.h"
-#include "Handle.h"
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/Handle.h>
 #include <string>
 #include <vector>
 

@@ -1,9 +1,10 @@
+
 #ifndef __GEOMETRY_OBJECT_H__
 #define __GEOMETRY_OBJECT_H__
 
 #include "GeometryPiece.h"
 #include "BoundCond.h"
-#include "DataWarehouseP.h"
+#include <Uintah/Interface/DataWarehouseP.h>
 #include <iosfwd>
 #include <vector>
 namespace SCICore {
@@ -51,6 +52,12 @@ public:
 
 #endif // __GEOMETRY_OBJECT_H__
 // $Log$
+// Revision 1.2  2000/02/27 07:48:41  sparker
+// Homebrew code all compiles now
+// First step toward PSE integration
+// Added a "Standalone Uintah Simulation" (sus) executable
+// MPM does NOT run yet
+//
 // Revision 1.1  2000/02/24 06:11:56  sparker
 // Imported homebrew code
 //

@@ -38,16 +38,16 @@ Version   Programmer         Date       Description
  ---------------------------------------------------------------------*/   
 
 
-#include "ICE.h"
-#include "DataWarehouse.h"
-#include "Grid.h"
-#include "Task.h"
-#include "Level.h"
-#include "Scheduler.h"
-#include "CCVariable.h"
-#include "ProblemSpec.h"
-#include "Region.h"
-#include "SoleVariable.h"
+#include <Uintah/Components/ICE/ICE.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/SoleVariable.h>
 #include <SCICore/Geometry/Vector.h>
 using SCICore::Geometry::Vector;
 
@@ -57,17 +57,20 @@ using SCICore::Geometry::Vector;
 #include <stdlib.h>
 #include <iostream>
 using std::cerr;
+#if 0
 #include "ICE/Header_files/nrutil+.h"
 #include "ICE/Header_files/functionDeclare.h"
 #include "ICE/Header_files/parameters.h"
 #include "ICE/Header_files/switches.h"
 #include "ICE/Header_files/macros.h"
 #include "ICE/Header_files/cpgplot.h"            /*must have this for plotting to work   */
+#endif
 
 extern "C" void audit();
 
 ICE::ICE()
 {
+#if 0
 /*______________________________________________________________________ 
 *                       MEMORY SECTION
 * 
@@ -77,21 +80,24 @@ ICE::ICE()
 audit();
 #include "ICE/Header_files/allocate_memory.i"
 audit();
+#endif
 }
 
 ICE::~ICE()
 {
+#if 0
 /* -----------------------------------------------------------------------  
 *  Free the memory                                                         
 * -----------------------------------------------------------------------  */
     fprintf(stderr,"Now deallocating memory\n");
 #include "ICE/Header_files/free_memory.i"
-    
+#endif
 }
 
 void ICE::problemSetup(const ProblemSpecP& params, GridP& grid,
 		       DataWarehouseP& ds)
 {
+#if 0
 audit();
 /*__________________________________
 *   Plotting variables
@@ -204,11 +210,13 @@ int m=1;
 #else
     cerr << "put vel_CC not done\n";
 #endif
+#endif
 }
 
 void ICE::computeStableTimestep(const LevelP& level,
 				SchedulerP& sched, DataWarehouseP& dw)
 {
+#if 0
     for(Level::const_regionIterator iter=level->regionsBegin();
 	iter != level->regionsEnd(); iter++){
 	const Region* region=*iter;
@@ -224,6 +232,7 @@ void ICE::computeStableTimestep(const LevelP& level,
 	//t->whatis the cost model?();
 	sched->addTask(t);
     }
+#endif
 }
 
 void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
@@ -231,6 +240,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
 					const DataWarehouseP& fromDW,
 					DataWarehouseP& toDW)
 {
+#if 0
 #if 0
     CCVariable<Vector> vel_CC;
     fromDW->get(vel_CC, "vel_CC", region);
@@ -250,12 +260,14 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
 		    nMaterials );
 
     //toDW->put("delt", delt);
+#endif
 }
 
 void ICE::timeStep(double t, double delt,
 		   const LevelP& level, SchedulerP& sched,
 		   const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
+#if 0
     for(Level::const_regionIterator iter=level->regionsBegin();
 	iter != level->regionsEnd(); iter++){
 	const Region* region=*iter;
@@ -274,6 +286,7 @@ void ICE::timeStep(double t, double delt,
     }
     this->cheat_t=t;
     this->cheat_delt=delt;
+#endif
 }
 
 void ICE::actuallyTimeStep(const ProcessorContext*,
@@ -281,6 +294,7 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
 			   const DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW)
 {
+#if 0
     double t = this->cheat_t;
     double delt = this->cheat_delt;
     int should_I_write_output = Is_it_time_to_write_output( t, t_output_vars  );
@@ -562,5 +576,6 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
      cerr << "sum rho=" << sumRho << '\n';
      cerr << "sum eng=" << sumEng << '\n';
      cerr << "ii=" << int_eng_CC[5][5][1][1] << '\n';
+#endif
 }
 

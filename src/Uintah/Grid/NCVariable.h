@@ -2,9 +2,9 @@
 #ifndef UINTAH_HOMEBREW_NCVariable_H
 #define UINTAH_HOMEBREW_NCVariable_H
 
-#include "Array3.h"
-#include "DataItem.h"
-#include "DataWarehouseException.h"
+#include <Uintah/Grid/Array3.h>
+#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Exceptions/DataWarehouseException.h>
 class TypeDescription;
 
 template<class T>
