@@ -667,7 +667,6 @@ GeometryComm::GeometryComm(const GeometryComm &copy)
 
 GeometryComm::~GeometryComm()
 {
-  if (reply) delete reply;
 }
 
 
