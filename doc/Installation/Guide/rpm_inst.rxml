@@ -1,0 +1,192 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<section id="sec.rpminst">
+<title id="title.rpminst">&sr; Installation from RPMs (Linux)</title>
+
+<section>
+<title>Introduction</title>
+
+<para>
+Root privileges are required to install the &sr;
+<acronym>RPM</acronym>s.  The system administrator can install these
+if necessary.
+</para>
+
+<para>
+The following procedure installs &sr; in
+<filename>/usr/local/&sr;/bin</filename>.
+</para>
+
+<para>
+RPM installation consists of the following steps:
+<orderedlist>
+<listitem>
+<para>Downloading the &sr; RPM distribution and &sr;'s sample data
+sets.</para>
+</listitem>
+<listitem>
+<para>Installing &sr; using the <command>rpm</command> command.</para>
+</listitem>
+<listitem>
+<para>Installing &sr;'s sample data sets.</para>
+</listitem>
+<listitem>
+<para>Installing &sr;'s documentation.</para>
+</listitem>
+</orderedlist>
+</para>
+
+</section>
+
+<section>
+<title>Downloading</title>
+<para>
+From <acronym>SCI</acronym>'s <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page download the following files:
+
+<itemizedlist>
+<listitem>
+<para>
+<filename>&sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
+for Mandrake 9 systems, or
+<filename>&sr;-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
+for Redhat 8 systems.
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+</itemizedlist>
+</para>
+
+</section>
+
+<section>
+<title>Installing</title>
+
+<para>
+Open a shell terminal (e.g. xterm) and enter the command
+<command>su</command> to become the root user (superuser).  The
+<command>su</command> command will prompt for root's password:
+<literallayout class="monospaced">
+rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
+</literallayout>
+for Mandrake 9 systems and
+<literallayout class="monospaced">
+rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
+</literallayout>
+for Red Hat 8 systems.  The RPM should take approximately one minute
+to install.
+</para>
+<para>
+Type <command>exit</command> to leave the root account.
+</para>
+<!-- <para> -->
+<!-- <xref linkend="fig.rpm_cmd"/> shows this process. -->
+<!-- </para> -->
+<para>
+&sr; can be removed using the <command>rpm</command> command:
+<literallayout class="monospaced">
+rpm -e &sr;
+</literallayout>
+Read  <citetitle pubwork="section"><xref
+endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
+<link linkend="sec.starting">starting</link> &sr;.
+</para>
+<!-- <figure id="fig.rpm_cmd"> -->
+<!-- <title>RPM installation process</title> -->
+<!-- <mediaobject> -->
+<!-- <imageobject> -->
+<!-- <imagedata fileref="rpm_cmd.gif" format="GIF"/> -->
+<!-- </imageobject> -->
+<!-- <caption> -->
+<!-- <para> -->
+<!-- RPM installation process.  Assumes RPM file was downloaded to -->
+<!-- <filename>/tmp</filename>. -->
+<!-- </para> -->
+<!-- </caption> -->
+<!-- </mediaobject> -->
+<!-- </figure> -->
+
+</section>
+
+<section>
+<title>&sr;'s Sample Data Sets</title>
+<para>
+Install
+the sample data sets into
+<filename>/usr/local</filename>.  You must have root privileges.
+</para>
+<para>
+Become root:
+<literallayout class="monospaced">
+su -
+</literallayout>
+and type:
+<literallayout class="monospaced">
+gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+</literallayout>
+This will create <filename>/usr/local/&sr;Data</filename>, the
+sample data sets directory.  Type <command>exit</command> to leave the
+root account.
+</para>
+</section>
+
+<section>
+<title>&sr;'s Documentation</title>
+<para>
+The following procedure installs the documentation
+in the directory <filename>/usr/local</filename>
+</para>
+<para>
+Use the <command>su</command> command to become the root user.  Then
+<command>Cd</command> to the directory containing the compressed
+documentation tarball and type:
+<literallayout class="monospaced">
+gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+</literallayout>
+This will create <filename>/usr/local/&sr;Docs</filename>, the
+&sr; documentation directory. Type <command>exit</command> to leave the
+root account.
+</para>
+<para>
+Point a browser at
+<filename>/usr/local/&sr;Docs/doc/index.html</filename> to view &sr;'s
+online documentation.
+</para>
+</section>
+
+</section>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

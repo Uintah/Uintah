@@ -1,0 +1,585 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<appendix id="ap.lsrcvs">
+<title>Local &sr; Source Code Control Using CVS</title>
+
+
+<section>
+<title>Introduction</title>
+
+<para>This is a brief explanation of how we're using CVS at Northeastern
+University to manage our local &sr; software development. </para>
+
+<para>We are treating SCI Institute as a software vendor and using
+CVS's built-in capability to track third-party sources in parallel
+with the modifications we make to that source. As we download releases
+from SCI Institute, we use the <command>import</command> command to
+check the &sr;/BioPSE source code and documentation onto a vendor
+branch in our local repository. CVS automatically establishes a main
+trunk, along which development versions of files get
+stored. Initially, files are <quote>copied</quote> from the vendor
+branch to the main trunk. As we check out files, make modifications,
+and/or add new files, and commit these changes, our modifications
+appear as new versions of these files on the main trunk. When a new
+release of &sr;/BioPSE becomes available, we use import again to
+store the new code on the vender branch. If a file has been both
+locally modified and changed in the new release, CVS gives a warning
+that the file from the new release must be merged into the main
+trunk. The <command>checkout -j</command> command is useful for doing
+this merge and is probably best issued on a file-by-file basis. If a
+file has been locally modified but not changed by the new release, no
+change is required; the locally modified file remains unchanged on the
+main trunk. If a file has not been locally modified, but changes from
+one release to the next, the new release revision is automatically
+<quote>copied</quote> to the main trunk. CVS reserves the tag
+<quote>HEAD</quote> to identify the latest revision of a file in the
+repository, which in our case will probably always be on the main
+trunk. </para>
+
+<para>The CVS manual is quite useful and available at <ulink
+url="http://www.cvshome.org/docs/manual/">www.cvshome.org</ulink>
+along with the CVS downloads. The cvs manpage is also very
+informative.</para>
+
+</section>
+
+<section>
+<title>Importing a Release</title>
+
+<para>This section describes a procedure for downloading a release,
+extracting files, and importing files into the CVS repository</para>
+
+<para>This procedure should be followed once for each release in order
+to import the released source code into the CVS repository. No
+compilation is done, therefore the result is not a working
+tree. See <citetitle pubwork="section"><xref endterm="title.create-work-dir"
+linkend="sec.create-work-dir"/></citetitle> to create a working directory.</para>
+
+<orderedlist>
+<listitem>
+<para>Set environment variable: 
+<literallayout class="monospaced">
+setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
+</literallayout>
+</para>
+</listitem>
+
+<listitem>
+<para>Create directory to store tar files. It is suggested to move away from
+   roland and begin storing these files on the ECE file system, eg.,
+   <filename>/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars</filename>.
+   </para>
+</listitem>
+
+<listitem>
+<para>Download zipped tar files from <ulink
+   url="http:://software.sci.utah.edu/archive_entry.html">http:://software.sci.utah.edu/archive_entry.html.</ulink>
+   A username, which is an email address, and a password may be
+   needed to access this page.
+ </para>
+</listitem>
+
+<listitem>
+<para>
+Use gunzip to inflate all zip files.
+</para>
+</listitem>
+
+<listitem>
+<para>Extract source code files for import into the CVS repository. For example:
+<orderedlist>
+<listitem>
+<para>Create a directory on an appropriate file system: <filename>&sr;.1.6.0</filename>
+and <command>cd </command>into it</para>
+</listitem>
+
+<listitem>
+<literallayout class="monospaced">
+tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/&sr;.1.6.0
+</literallayout>
+</listitem>
+
+<listitem>
+<literallayout class="monospaced">
+tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/docs.1.6.0.tar
+</literallayout>
+</listitem>
+
+<listitem>
+<literallayout class="monospaced">
+cd ./&sr;/src/Packages
+</literallayout>
+</listitem>
+
+<listitem>
+<literallayout class="monospaced">
+tar xvf \
+/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/BioPSE.PKG.1.6.0.tar
+</literallayout>
+</listitem>
+
+<listitem>
+<literallayout class="monospaced">
+tar xvf \
+/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/MatlabInterface.PKG.1.6.0.tar
+</literallayout> 
+
+</listitem>
+</orderedlist>
+</para>
+</listitem>
+
+<listitem>
+<para>Import source files into CVS repository. Run the following command in
+   the <filename>./&sr;</filename> directory.
+<literallayout class="monospaced">
+cvs import -m"Import of release 1.6.0" /proj/cdsp/biomed2/cvs&sr;
+SCI_DIST V1_6_0 > cvsimport.out
+</literallayout>
+Redirect output to a file in order to reliably identify any conflicts.
+</para>
+
+<note>
+<para>Files that have been <quote>retired</quote> in the new release, need to be removed
+and committed individually (or en masse). Use the following commands
+to remove retired files: 
+<literallayout class="monospaced">
+cvs rm -f `cat remove.txt`
+cvs commit -m"sync removed files" `cat remove.txt`
+</literallayout>
+<filename>remove.txt</filename> is a space-delimited list of retired
+files. The cvs <command>rm</command> command marks files for removal;
+the <command>commit</command> command modifies the database,
+implementing the removal. The files remain in the archive and can
+still be retrieved at a later time, but they will not be automatically
+retrieved as part of a global checkout.
+</para>
+</note>
+
+<tip>
+<para>The <command>add</command> and <command>rm</command> commands
+are similar in that they schedule an action to take place in the
+repository, but do not actually modify the repository themselves. The
+<command>commit</command> command implements the action scheduled by
+<command>add</command> or <command>rm</command>. This is in contrast
+to other cvs commands, such as <command>checkout</command> and
+<command>checkin</command>, that take their own action.
+</para>
+</tip>
+</listitem>
+
+<listitem>
+<para>Resolve any conflicts that occur between the imported files and locally
+modified files:
+<literallayout class="monospaced">
+cvs checkout -jSCI_DIST:yesterday -jSCI_DIST filename 
+</literallayout>
+(see Section 13 of the CVS manual).
+</para>
+</listitem>
+</orderedlist>
+
+</section>
+
+<section id="sec.create-work-dir">
+<title id="title.create-work-dir">Creating a Working Scirun Directory Tree</title>
+
+<para>This procedure assumes the latest &sr;/BioPSE tar files have
+already been downloaded, and the source code has been imported, and
+merged if necessary, into the repository. The following steps build a
+working directory by extracting the Thirdparty software, DataSets, and
+documentation from tar files and obtaining the &sr;/BioPSE source
+code from the CVS repository. This procedure also assumes, for the
+present, that the BioPSE and MatlabInterface packages are
+desired in the working directory, and no other packages have been
+imported into the repository. Under this model, it is expected that
+each developer will be writing and compiling code in his/her own
+working directory, independently of other developers. Periodically,
+all developers will check their work in (commit) to the common
+repository.
+</para>
+
+<orderedlist>
+<listitem>
+<literallayout class="monospaced">
+setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
+</literallayout>
+<para>
+or to retrieve source code via ssh:
+</para>
+<literallayout class="monospaced">
+setenv CVSROOT gateway.ece.neu.edu:/proj/cdsp/biomed2/cvs&sr;
+setenv CVS_RSH ssh
+</literallayout>
+</listitem>
+
+<listitem>
+<para>Create a top-level &sr; directory. This can be anything
+because it is a personal working directory, eg.,
+<filename>/usr/people/scirun/&sr;.1.6.0.lk</filename> or
+<filename>/export/scratch/&sr;.1.6.0.test</filename>.
+</para>
+</listitem>
+
+<listitem>
+<para><command>cd</command> into this directory</para>
+</listitem>
+
+<listitem>
+<para>Assuming unzipped tar files reside in
+<filename>/proj/cdsp/biomed2/&sr;Downloads/vx.x.x_tars</filename>,
+issue the following commands (version numbers given as an example):
+<orderedlist>
+<listitem>
+<literallayout class="monospaced">
+tar xvf \
+/proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/Thirdparty_install.1.6.0
+</literallayout>
+</listitem>
+<listitem>
+<literallayout class="monospaced">
+tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/DataSets.1.6.0.tar
+</literallayout>
+</listitem>
+<listitem>
+<literallayout class="monospaced">
+tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/docs.1.6.0.tar
+</literallayout></listitem>
+</orderedlist>
+</para>
+</listitem>
+
+<listitem>
+<para>
+<command>cd</command> into the Thirdparty directory created in the
+previous step, eg.,
+</para>
+<literallayout class="monospaced">
+cd /export/scratch/&sr;.1.6.0.test/Thirdparty_install.1.4.3. 
+</literallayout>
+<note>
+<para>The Thirdparty software distributed with v1.6.0 is unchanged from
+v1.4.2. This is why the numbers 1.4.3 and 1.4.2 appear.</para>
+</note>
+
+<para>Run the install script:</para>
+
+<literallayout class="monospaced">
+python install <replaceable>INSTALLDIR</replaceable> [irix, Linux] [sgi, gcc] [32, 64]
+</literallayout>
+
+<para>where <replaceable>INSTALLDIR</replaceable> is the top-level
+working directory, eg.,
+<filename>/export/scratch/&sr;.1.6.0.test</filename>, and brackets
+indicate lists of options for each argument.
+</para>
+
+<para>This creates a 1.4.2 directory (because the thirdparty
+software has not changed with v1.6.0) under
+<replaceable>INSTALLDIR</replaceable> containing all the necessary
+thirdparty software libraries.
+</para>
+
+<para>The previous 5 steps take care of the &sr; installation that
+is independent of CVS. The remaining steps retrieve the &sr;/BioPSE
+source code that has been imported to the repository, and build the
+&sr; program.
+</para>
+</listitem>
+
+<listitem>
+<para>
+<command>cd</command> back to <replaceable>INSTALLDIR</replaceable>
+</para>
+</listitem>
+
+<listitem>
+<para>Create a &sr; directory below
+<replaceable>INSTALLDIR</replaceable></para>
+</listitem>
+
+<listitem>
+<para><command>cd</command> into <filename>&sr;</filename></para>
+</listitem>
+
+<listitem>
+<para>Enter the following command to checkout the HEAD revision of the
+&sr;/BioPSE source code files. Note that the period at the end of the
+line below is an essential part of the command.</para>
+<literallayout class="monospaced">
+cvs checkout . 
+</literallayout>
+
+<para>This command creates and populates the src and doc directories below
+<filename>./&sr;</filename>. 
+</para>
+</listitem>
+
+<listitem>
+<para>Create an sgi32 or linux (or appropriate other) directory below
+the <filename>./&sr;</filename> directory, and <command>cd</command>
+into this directory.</para>
+</listitem>
+
+<listitem>
+<para>Run configure as follows (eg.):</para>
+<literallayout class="monospaced">
+../src/configure
+--with-thirdparty=/export/scratch/&sr;.1.6.0.test/1.4.2/Linux/gcc-32bit  
+--enable-package='BioPSE MatlabInterface'--enable-debug
+</literallayout>
+
+<para>If configure does not run successfully under sgi, try setting
+the following environment variables and repeat the configure
+command.</para>
+
+<literallayout class="monospaced">
+setenv CC cc
+setenv CXX CC
+setenv F77 f77
+</literallayout>
+
+</listitem>
+
+<listitem>
+<para>Compile &sr;/BioPSE:</para>
+<literallayout class="monospaced">
+gmake -j <replaceable>JOBNUMBER</replaceable>
+</literallayout>
+
+<para>where 5 is a typical value for
+<replaceable>JOBNUMBER</replaceable></para>
+
+<para>&sr; may appear to compile successfully, but run-time errors
+may occur if environment variables starting with
+<envar>LD_LIBRARY</envar> were set prior to compilation. Therefore, it is
+recommended to unset these environment variables when compiling and
+running &sr;, e.g.,</para>
+
+<literallayout class="monospaced">
+unsetenv LD_LIBRARY_PATH
+</literallayout>
+</listitem>
+</orderedlist>
+
+</section>
+
+<section>
+<title>Common CVS Commands</title>
+
+<para>CVS commands are issued by typing <command>cvs</command>,
+followed by a list of global options (if any), followed by the desired
+cvs command name, followed by a list of options specific to that
+command (if any). Below are some commonly used commands and examples
+of how they are invoked. A CVS command can apply to a single file, a
+directory or the whole repository.</para>
+
+<tip>
+<para>If entering cvs alone results in a "command not found" error, type
+<filename>/usr/bin/cvs</filename>.</para>
+</tip>
+
+<variablelist>
+<varlistentry>
+<term><command>checkout</command></term>
+<listitem>
+
+<para>Obtain an editable version of a file(s) from the
+repository. Can be abbreviated as <command>co</command>.</para>
+
+<variablelist>
+<varlistentry>
+<term><command>cvs co .</command></term>
+<listitem>
+<para>Checkout the entire tree; invoke where the
+<filename>src</filename> and <filename>doc</filename> directories are to
+be created</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>cvs co src/Core/Datatypes/TriSurfMesh.cc</command></term>
+<listitem>
+<para>Checkout the HEAD (the tip of the tree) revision of a specific
+file; invoke at the top of the working tree, where src and doc
+subdirectories reside or where they are to be
+created. Invoking this command in the subdirectory where the file
+resides, or without giving the path specification as indicated,
+will not work.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>cvs co -rV1_4_2 src/Core/Datatypes/TriSurfMesh.cc</command></term>
+<listitem>
+<para>Checkout a tagged revision of a specific file; invoke at the top of
+the working tree, where src and doc subdirectories reside, or where
+they are to be created.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>update</command></term> 
+<listitem>
+<para>Bring the working directory up to date with the repository. This
+command replaces files in the working directory if a more recent
+version of the file exists in the repository and the local copy is
+unchanged. If the repository contains a revision more recent than the
+ancestor of the local copy, and the local copy has been modified, this
+command attempts to merge the latest revision in the repository with
+the local copy. It is a good idea to first run this command with the
+<option>-n</option> global option. Running update with the
+<option>-n</option> option causes cvs to tell you would it would do
+without modifying any files.  It is best to issue this command by
+piping its output to a file so that all files in which a conflict
+occurred can be reliably identified. If conflicts arise, cvs indicates
+this with a 'C' in the output.  Running update prior to checking in
+files is strongly recommended to ensure that someone else's changes
+are not over-written.</para>
+
+<variablelist>
+<varlistentry>
+<term><command>cvs -n update -A -P -d > cvsupdate.out</command></term>
+<listitem>
+<para>Find out what cvs would do if the update command were issued;
+invoke in the top level directory (where src and doc reside), and
+redirect output to a file.  Option <option>-A</option> resets any
+sticky tags, <option>-P</option> prunes empty directories, and
+<option>-d</option> creates any directories that exist in the
+repository if they are missing from the working directory.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>cvs update -A -P -d</command></term>
+<listitem>
+<para>Do the update for real. Options same as above.  The output of
+this command is:</para>
+<screen>
+RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.cc,v
+retrieving revision 1.2
+retrieving revision 1.3
+Merging differences between 1.2 and 1.3 into TriSurfMesh.cc
+C Core/Datatypes/TriSurfMesh.cc
+RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.h,v
+retrieving revision 1.2
+retrieving revision 1.4
+Merging differences between 1.2 and 1.4 into TriSurfMesh.h
+M Core/Datatypes/TriSurfMesh.h
+U Core/Datatypes/TypeName.h
+? Core/Datatypes/TriSurfMesh.cc.1.2
+</screen>
+<para>The character at the beginning of certain lines indicates the
+result of the update. The "C" indicates that cvs tried to merge two
+revisions and encountered conflicts, which are highlighted by the
+standard diff demarcations. Manual resolution is required. "M"
+means the files were merged successfully, "U" means the file is
+unchanged, and "?" means there is no record of the file in the
+repository.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>add</command></term>
+
+<listitem>
+<para>To schedule newly created file(s) to be added to the repository, there
+must be a working copy of the new file. The add command is used to
+tell CVS about the new file (see the manual for instructions on adding
+new directories). The add command must be invoked from the directory in
+which the new file exists. Then run the commit command to
+check the file into the repository.  For example:</para>
+<literallayout class="monospaced">
+cvs add <replaceable>filename</replaceable>
+</literallayout>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term> <command>commit</command></term>
+<listitem>
+<para>Incorporate changes from the working directory into the
+   repository. <command>commit</command> is abbreviated as <command>ci</command>.</para>
+
+<tip>
+<para>When checking in files, cvs will prompt for comments using
+the vi editor, unless otherwise specified. To avoid vi, 
+set the <envar>EDITOR</envar> environment variable to point to an editor. For example:</para>
+<literallayout class="monospaced">
+setenv EDITOR emacs
+</literallayout>
+</tip>
+
+<para>The command:</para>
+
+<literallayout class="monospaced">
+cvs ci TriSurfMesh.cc
+</literallayout>	
+
+<para>commits the working version of a file, making it the HEAD (tip of
+the tree) revision; typically invoked in the directory where the
+file resides without any path specification (not sure if it can be
+run any other way). CVS will automatically assign the next internal
+revision number to the file upon checkin.</para>
+
+<para>The "-m" option can be used to avoid being put into an editor:</para>
+
+<literallayout class="monospaced">
+cvs ci -m"this is my checkin comment" TriSurfMesh.cc
+</literallayout>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>rdiff</command></term>
+<listitem>
+<para>Create a patch file for use by SCI to incorporate changes made
+locally into the next official release. See manual for details.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><command>log</command></term>
+<listitem>
+<para>View log information about a file, such as revision numbers and
+check in comments. Most conveniently invoked in the directory in which
+the file of interest resides, e.g.:</para>
+<literallayout class="monospaced">
+cvs log TriSurfMesh.cc
+</literallayout>
+</listitem>
+</varlistentry>
+</variablelist>
+
+</section>
+
+</appendix>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
