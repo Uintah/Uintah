@@ -155,6 +155,18 @@ if {[file exists $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld]} {
 set $m13-nodes-on {1}
 set $m13-edges-on {0}
 set $m13-faces-on {0}
+set $m13-text-on {0}
+set $m13-text-color-r {1.0}
+set $m13-text-color-g {1.0}
+set $m13-text-color-b {1.0}
+set $m13-text-fontsize {1}
+set $m13-text-precision {3}
+set $m13-text-render_locations {0}
+set $m13-text-show-data {1}
+set $m13-text-show-nodes {0}
+set $m13-text-show-edges {0}
+set $m13-text-show-faces {0}
+set $m13-text-show-cells {0}
 set $m13-node_display_type {Spheres}
 set $m13-node_scale [expr 0.03 * ${global-scale}]
 set $m13-resolution {7}
@@ -175,9 +187,9 @@ set $m16-tolerance [expr 0.004 * ${global-scale}]
 set $m16-maxsteps {250}
 set $m16-method {5}
 
-set $m19-def-color-r {0.3}
-set $m19-def-color-g {0.3}
-set $m19-def-color-b {0.3}
+set $m19-def-color-r {0.5}
+set $m19-def-color-g {0.5}
+set $m19-def-color-b {0.5}
 set $m19-def-color-a {0.85}
 set $m19-nodes-on {0}
 set $m19-edges-on {1}
@@ -195,6 +207,7 @@ if {[file exists $DATADIR/$DATASET/$DATASET-dipole.pcv.fld]} {
 set $m22-nodes-on {0}
 set $m22-edges-on {0}
 set $m22-faces-on {1}
+set $m22-use-normals {1}
 
 ::netedit scheduleok
 
@@ -248,7 +261,7 @@ class BioFEMApp {
 	set viewer_width 640
 	set viewer_height 670
 	
-	set vis_width [expr $notebook_width + 40]
+	set vis_width [expr $notebook_width + 60]
 	set vis_height $viewer_height
 
         set initialized 0
@@ -303,7 +316,8 @@ class BioFEMApp {
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
 	$eviewer setWindow $win.viewer $viewer_width $viewer_height
-	
+	set_dataset 0
+
 	### Menu
 	build_menu $win
 
@@ -360,12 +374,10 @@ class BioFEMApp {
 
     }
 
-    method set_dataset {} {
+    method set_dataset { andexec } {
 	global mods
 	global DATADIR
 	global DATASET
-
-	puts $DATASET
 
 	source $DATADIR/$DATASET/$DATASET.settings
 
@@ -383,8 +395,6 @@ class BioFEMApp {
 	set $mods(ShowField-StreamLines)-edge_scale [expr 0.01 * ${global-scale}]
 	set $mods(StreamLines)-stepsize [expr 0.004 * ${global-scale}]
 	set $mods(StreamLines)-tolerance [expr 0.004 * ${global-scale}]
-
-
 
 	global $mods(FieldReader-conductivities)-filename
 	set $mods(FieldReader-conductivities)-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
@@ -415,8 +425,7 @@ class BioFEMApp {
 	set $mods(Viewer)-ViewWindow_0-view-up-z ${view-up-z}
 	set $mods(Viewer)-ViewWindow_0-view-fov ${view-fov}
 
-
-	$this execute_Data
+	if {$andexec} { $this execute_Data }
     }
 
 
@@ -469,11 +478,11 @@ class BioFEMApp {
 	    
 	set dataset [$f.dataset childsite]
 
-	radiobutton $dataset.brain-eg -text "Brain EG" -variable DATASET -value brain-eg -command "$this set_dataset"
-	radiobutton $dataset.cyl3 -text "Cyl3" -variable DATASET -value cyl3 -command "$this set_dataset"
-	radiobutton $dataset.sphere -text "Sphere" -variable DATASET -value sphere -command "$this set_dataset"
-	radiobutton $dataset.utahtorso-lowres -text "Utah Torso Lowres" -variable DATASET -value utahtorso-lowres -command "$this set_dataset"
-	radiobutton $dataset.utahtorso -text "Utah Torso" -variable DATASET -value utahtorso -command "$this set_dataset"
+	radiobutton $dataset.brain-eg -text "Brain EG" -variable DATASET -value brain-eg -command "$this set_dataset 1"
+	radiobutton $dataset.cyl3 -text "Cyl3" -variable DATASET -value cyl3 -command "$this set_dataset 1"
+	radiobutton $dataset.sphere -text "Sphere" -variable DATASET -value sphere -command "$this set_dataset 1"
+	radiobutton $dataset.utahtorso-lowres -text "Utah Torso Lowres" -variable DATASET -value utahtorso-lowres -command "$this set_dataset 1"
+	radiobutton $dataset.utahtorso -text "Utah Torso" -variable DATASET -value utahtorso -command "$this set_dataset 1"
 
 	pack $dataset.brain-eg $dataset.cyl3 $dataset.sphere $dataset.utahtorso-lowres $dataset.utahtorso -anchor w -side top
 
@@ -697,14 +706,26 @@ class BioFEMApp {
     method save_session {} {
 	global mods
 	
+	if {$saveFile == ""} {
+	    
+	    set types {
+		{{App Settings} {.ses} }
+		{{Other} { * } }
+	    } 
+	    set saveFile [ tk_getSaveFile -defaultextension {.ses} \
+			       -filetypes $types ]
+	}	
 	set types {
 	    {{App Settings} {.set} }
 	    {{Other} { * } }
 	} 
-	set savefile [ tk_getSaveFile -defaultextension {.set} \
+	set saveFile [ tk_getSaveFile -defaultextension {.set} \
 			   -filetypes $types ]
-	if { $savefile != "" } {
-	    set fileid [open $savefile w]
+	if { $saveFile != "" } {
+	    # configure title
+	    wm title .standalone "BioFEM - [getFileName $saveFile]" 
+
+	    set fileid [open $saveFile w]
 	    
 	    # Save out data information 
 	    puts $fileid "# BioFEM Session\n"
@@ -714,10 +735,27 @@ class BioFEMApp {
 	    save_class_variables $fileid
 
 	    close $fileid
+
+	    global NetworkChanged
+	    set NetworkChanged 0
 	}
     }
 
 
+    #########################
+    ### save_class_variables
+    #########################
+    # Save out all of the class variables 
+    method save_class_variables { fileid} {
+	puts $fileid "\n# Class Variables\n"
+	foreach v [info variable] {
+	    set var [get_class_variable_name $v]
+	    if {$var != "this" } {
+		puts $fileid "set $var \{[set $var]\}"
+	    }
+	}
+	puts $fileid "set loading 1"
+    }
     
     
     method load_session {} {	
@@ -726,8 +764,8 @@ class BioFEMApp {
 	    {{Other} { * }}
 	}
 	
-	set file [tk_getOpenFile -filetypes $types]
-	if {$file != ""} {
+	set saveFile [tk_getOpenFile -filetypes $types]
+	if {$saveFile != ""} {
 	    
 	    # Reset application 
 	    reset_app
@@ -736,24 +774,35 @@ class BioFEMApp {
 		global $g
 	    }
 	    
-	    source $file
+	    source $saveFile
 	    
 
 	    # set a few variables that need to be reset
 	    set indicate 0
 	    set cycle 0
 	    set IsVAttached 1
+	    set executing_modules 0
 	    
 	    # configure all tabs by calling all configure functions
-	    $vis_frame_tab1 view $c_left_tab
-	    $vis_frame_tab2 view $c_left_tab
+	    if {$c_left_tab != ""} {
+		$vis_frame_tab1 view $c_left_tab
+		$vis_frame_tab2 view $c_left_tab
+	    }
 
 	    change_indicator_labels "Press Execute to Load Data..."
 	}	
     }
 
+    ##############################
+    ### save_image
+    ##############################
+    # To be filled in by child class. It should save out the
+    # viewer image.
+    method save_image {} {
+	global mods
+	$mods(Viewer)-ViewWindow_0 makeSaveImagePopup
+    }
 
-    
     
     method show_help {} {
 	tk_messageBox -message "Please refer to the online BioFEM Tutorial\nhttp://software.sci.utah.edu/doc/User/BioFEMTutorial" -type ok -icon info -parent .standalone
@@ -820,7 +869,13 @@ class BioFEMApp {
 	
     method execute_Data {} {
 	global mods 
-	
+
+	global $mods(StreamLines-rake)-force-rake-reset
+	set $mods(StreamLines-rake)-force-rake-reset 1
+
+	global $mods(ShowDipole)-force-field-reset
+	set $mods(ShowDipole)-force-field-reset 1
+
 	$mods(FieldReader-conductivities)-c needexecute
 	$mods(FieldReader-electrodes)-c needexecute
 	$mods(FieldReader-probe)-c needexecute
@@ -926,12 +981,19 @@ class BioFEMApp {
     method build_electrodes_tab { f } {
 	global mods
 	global $mods(ShowField-Electrodes)-nodes-on
+	global $mods(ShowField-Electrodes)-text-on
 
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Electrodes" \
 		-variable $mods(ShowField-Electrodes)-nodes-on \
 		-command "$mods(ShowField-Electrodes)-c toggle_display_nodes"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
+
+	    checkbutton $f.text -text "Show Values as Text" \
+		-variable $mods(ShowField-Electrodes)-text-on \
+		-command "$mods(ShowField-Electrodes)-c toggle_display_text"
+
+	    pack $f.text -side top -anchor nw -padx 3 -pady 3
 	}
     }
 
@@ -968,7 +1030,13 @@ class BioFEMApp {
 	    bind $f.isoval.val <Return> "$mods(Isosurface)-c needexecute"
 
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
-		-side left -anchor nw -padx 3      
+		-side left -anchor nw -padx 3
+
+	    checkbutton $f.normals -text "Interpolate Smooth Normals" \
+		    -variable $mods(ShowField-Isosurface)-use-normals \
+		    -command "$mods(ShowField-Isosurface)-c rerender_faces"
+
+	    pack $f.normals -side top -anchor w -padx 20
 	}
     }	    
 

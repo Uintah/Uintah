@@ -56,8 +56,9 @@ using std::endl;
 #include <afxwin.h>
 #endif
 
-#define VERSION "1.20.0" // this needs to be synced with the contents of
-                         // SCIRun/doc/edition.xml
+// This needs to be synced with the contents of
+// SCIRun/doc/edition.xml and Dataflow/GUI/NetworkEditor.tcl
+#define VERSION "1.20.1"                         
 
 using namespace SCIRun;
 
@@ -302,6 +303,8 @@ main(int argc, char *argv[] )
     gui->eval("wm deiconify .", result);
     gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
   } else {
+    // set that we are loading an app
+    packageDB->setLoadingApp(true);
     // determine which standalone and set splash
     if(strstr(argv[startnetno], "BioTensor")) {
       packageDB->setSplashPath("Packages/Teem/Dataflow/GUI/splash-tensor.ppm");
@@ -324,7 +327,7 @@ main(int argc, char *argv[] )
 
   if (startnetno)
   {
-    string command = string( "loadnet " ) + argv[startnetno];
+    string command = string( "loadnet {" ) + argv[startnetno] + string("}");
     gui->eval(command.c_str(), result);
 
     if (execute_flag || getenv("SCI_REGRESSION_TESTING"))

@@ -35,7 +35,7 @@ set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 195 
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 195 338]
 set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 420]
 set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 491]
-set m8 [addModuleAtPosition "Insight" "DataIO" "Switch" 10 93]
+set m8 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 10 93]
 
 
 addConnection $m0 0 $m3 0
@@ -183,7 +183,7 @@ set $m7-ViewWindow_0-global-type {Gouraud}
 set $m7-ViewWindow_0-ortho-view {0}
 set $m7-ViewWindow_0-unused {1}
 set $m8-notes {}
-set $m8-which_port {1}
+set $m8-port-index {0}
 $m0 initialize_ui
 
 ::netedit scheduleok

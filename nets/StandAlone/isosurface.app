@@ -145,9 +145,13 @@ class IsoApp {
     method build_app {} {
 	global mods
 
+	if [winfo exists .splash] {
+	    hideSplash true
+	}
+
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
-	$eviewer setWindow $win.viewer
+	$eviewer setWindow $win.viewer $viewer_width $viewer_height
 
 
 	set att_msg "Detach from Viewer"
@@ -231,7 +235,7 @@ class IsoApp {
 
 
     method init_Pframe { m msg case } {
-
+        global mods
 	if { [winfo exists $m] } {
 	    ### Menu
 	    frame $m.main_menu -relief raised -borderwidth 3
@@ -242,13 +246,17 @@ class IsoApp {
 	    
 	    menu $m.main_menu.file.menu -tearoff false
 	    
-	    $m.main_menu.file.menu add command -label "Save Ctr+S" \
+	    $m.main_menu.file.menu add command -label "Load  Session...  Ctr+O" \
+		-underline 0 -command "$this load_session" -state active
+
+
+	    $m.main_menu.file.menu add command -label "Save Session...  Ctr+S" \
 		-underline 0 -command "$this save_session" -state active
 	    
-	    $m.main_menu.file.menu add command -label "Load  Ctr+O" \
-		-underline 0 -command "$this load_session" -state active
+   	    $m.main_menu.file.menu add command -label "Save Image..." \
+	        -underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active 
 	    
-	    $m.main_menu.file.menu add command -label "Quit   Ctr+Q" \
+	    $m.main_menu.file.menu add command -label "Quit       Ctr+Q" \
 		-underline 0 -command "$this exit_app" -state active
 	    
 	    pack $m.main_menu.file -side left
@@ -679,7 +687,8 @@ class IsoApp {
 	global $mods(FieldReader)-filename
 	$mods(FieldReader) ui
 	
-	tkwait window .ui$mods(FieldReader)
+	#set theWindow [$mods(FieldReader) make_file_open_box]
+	tkwait window .__biopse_filedialog1
 
 	update idletasks
 

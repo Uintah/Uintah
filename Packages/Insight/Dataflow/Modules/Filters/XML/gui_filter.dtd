@@ -30,11 +30,13 @@
 <!ELEMENT checkbutton (default)>
 
 
-<!ELEMENT scrollbar (min, max, default)>
+<!ELEMENT scrollbar (min, max, step?, default)>
 
 <!ELEMENT min (#PCDATA)>
 
 <!ELEMENT max (#PCDATA)>
+
+<!ELEMENT step (#PCDATA)>
 
 <!ELEMENT radiobutton (button+, default)>
 

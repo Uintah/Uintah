@@ -86,6 +86,8 @@ private:
   GuiString file_;
   GuiString file_del_;
   GuiString messages_;
+  GuiInt    num_files_;
+  vector< GuiString* > filenames_;
 
   //! Ports
   NrrdOPort*      onrrd_;
@@ -111,7 +113,8 @@ AnalyzeToNrrd::AnalyzeToNrrd(GuiContext* ctx)
   : Module("AnalyzeToNrrd", ctx, Source, "DataIO", "Teem"),
     file_(ctx->subVar("file")),
     file_del_(ctx->subVar("file-del")),
-    messages_(ctx->subVar("messages"))
+    messages_(ctx->subVar("messages")),
+    num_files_(ctx->subVar("num-files"))
 {
 }
 
@@ -141,6 +144,8 @@ AnalyzeToNrrd::~AnalyzeToNrrd(){
 void AnalyzeToNrrd::execute(){
 
 #ifdef HAVE_INSIGHT
+
+  gui->execute(id + " sync_filenames");
 
   // If no Analyze files were specified via the UI, print error and return
   if( all_files_.size() == 0 ) 
@@ -217,11 +222,15 @@ void AnalyzeToNrrd::tcl_command(GuiArgs& args, void* userdata)
   if( args[1] == "add_data" )
   {
 #ifdef HAVE_INSIGHT
+    if (args.count() == 3) {
+      string file = args[2];
+      
+      all_files_.insert( all_files_.end(), file );
 
-    file_ = (ctx->subVar("file"));
-    string file = file_.get();
-
-    all_files_.insert( all_files_.end(), file );
+      ostringstream str;
+      str << "filenames" << all_files_.size()-1;
+      filenames_.insert(filenames_.end(), new GuiString(ctx->subVar(str.str())));
+    }
 
 #endif
   } 
@@ -230,12 +239,12 @@ void AnalyzeToNrrd::tcl_command(GuiArgs& args, void* userdata)
 #ifdef HAVE_INSIGHT
 
     // Get the selected file to be deleted
-    file_del_ = (ctx->subVar("file-del"));
     string file_del = file_del_.get();
 
     // Find the matching entry in the all_files vector and remove it
     int num_files = all_files_.size();
     vector<string>::iterator iter = all_files_.begin();
+    vector<GuiString*>::iterator iter2 = filenames_.begin();
      
     for( int i = 0; i < num_files; i++ )
     {
@@ -243,12 +252,22 @@ void AnalyzeToNrrd::tcl_command(GuiArgs& args, void* userdata)
       {
         // Erase this element from the vector of files
         all_files_.erase( iter );
+
+	// remove the guivar from filenames
+	filenames_.erase( iter2 );
       }  
       iter++;
+      iter2++;
     }
 
 #endif
   }
+  else if ( args[1] == "clear_data" )
+    {
+#ifdef HAVE_INSIGHT
+      all_files_.clear();
+#endif      
+    }
   else 
   {
     Module::tcl_command(args, userdata);
@@ -346,6 +365,11 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
       nrrd->axis[1].spacing = image.get_spacing(0);
       nrrd->axis[2].spacing = image.get_spacing(1);
       nrrd->axis[3].spacing = image.get_spacing(2);
+
+      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 3, nrrdCenterNode);
     }
     else if( dim == 2 ) 
     {
@@ -370,6 +394,10 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
       nrrd->axis[2].label = strdup("y");
       nrrd->axis[1].spacing = image.get_spacing(0);
       nrrd->axis[2].spacing = image.get_spacing(1);
+
+      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
     }
     else
     {
@@ -445,6 +473,11 @@ NrrdData * AnalyzeToNrrd::join_nrrds( vector<Nrrd*> arr )
   sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
   sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
   sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[3].spacing; 
+
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
 
   return sciNrrd;
 }
