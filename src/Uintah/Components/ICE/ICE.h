@@ -26,35 +26,37 @@ public:
    virtual void problemSetup(
                         const ProblemSpecP& params, 
                         GridP& grid,
-			   SimulationStateP&);
+			SimulationStateP&);
+
    virtual void scheduleInitialize(
                         const LevelP& level,
 			   SchedulerP&,
 			   DataWarehouseP&);
 
-   void actuallyInitialize(
-                        const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP& /* old_dw */,
-			   DataWarehouseP& new_dw);
    
-   virtual void scheduleComputeStableTimestep(
-                        const LevelP&,
+   virtual void scheduleComputeStableTimestep(const LevelP&,
 			   SchedulerP&,
 			   DataWarehouseP&);
-   void actuallyComputeStableTimestep(
-                        const ProcessorGroup*,
+
+   virtual void scheduleTimeAdvance(double t, 
+				    double dt, 
+				    const LevelP&, 
+				    SchedulerP&,
+				    DataWarehouseP&, 
+				    DataWarehouseP&);
+
+ protected:
+
+   void actuallyInitialize(const ProcessorGroup*,
+			   const Patch* patch,
+			   DataWarehouseP&  old_dw,
+			   DataWarehouseP& new_dw);
+
+   void actuallyComputeStableTimestep(const ProcessorGroup*,
 			   const Patch* patch,
 			   DataWarehouseP&,
 			   DataWarehouseP&);
 
-   virtual void scheduleTimeAdvance(
-                        double t, 
-                        double dt, 
-			   const LevelP&, 
-			   SchedulerP&,
-			   DataWarehouseP&, 
-			   DataWarehouseP&);
 
 
    void actually_Bottom_of_main_loop(
@@ -207,7 +209,7 @@ void after_each_step_wrapper(
    
  private:
  ICELabel* lb; 
- 
+ SimulationStateP d_sharedState;
 
  
    int  i,j,k,m,   
@@ -364,6 +366,11 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.23  2000/10/04 23:38:21  jas
+// All of the steps are in place with just dummy functions.  delT is
+// hardwired in for the moment so that we can actually do multiple
+// time steps with empty functions.
+//
 // Revision 1.22  2000/10/04 20:19:03  jas
 // Get rid of Labels.  Now in ICELabel.
 //
