@@ -124,7 +124,7 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
 		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
     WaveSpeed = dx/WaveSpeed;
-    double delT_new = WaveSpeed.minComponent();
+    double delT_new = d_fudge*WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -295,7 +295,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   }
 
   WaveSpeed = dx/WaveSpeed;
-  double delT_new = WaveSpeed.minComponent();
+  double delT_new = d_fudge*WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   new_dw->put(pstress, lb->pStressLabel, matlindex, patch);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
@@ -408,6 +408,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.25  2000/06/09 23:52:37  bard
+// Added fudge factors to time step calculations.
+//
 // Revision 1.24  2000/06/09 21:07:33  jas
 // Added code to get the fudge factor directly into the constitutive model
 // inititialization.

@@ -108,8 +108,8 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
      c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
     }
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
-    // Fudge factor of .8 added, just in case
-    double delT_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+    // Fudge factor added, just in case
+    double delT_new = d_fudge*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -236,8 +236,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       pvolumedef[idx]=pvolume[idx];
     }
     WaveSpeed = sqrt(Max(c_rot,c_dil));
-    // Fudge factor of .8 added, just in case
-    double delT_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    // Fudge factor added, just in case
+    double delT_new = d_fudge*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(pstress, lb->pStressLabel, matlindex, patch);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
@@ -352,6 +352,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.41  2000/06/09 23:52:36  bard
+// Added fudge factors to time step calculations.
+//
 // Revision 1.40  2000/06/09 21:02:39  jas
 // Added code to get the fudge factor directly into the constitutive model
 // inititialization.
