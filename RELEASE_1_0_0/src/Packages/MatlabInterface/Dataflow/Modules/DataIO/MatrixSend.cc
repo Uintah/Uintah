@@ -143,11 +143,13 @@ void MatrixSend::execute()
     int nnz=smatr->get_nnz();
 
 
+   /*
     int k;
     printf("Send sparse nr nc nnz: %i %i %i\n",nr,nc,nnz);
     printf("rows:"); for(k=0;k<nc+1;k++) printf(" %i",rows[k]); printf("\n");
     printf("cols:"); for(k=0;k<nnz;k++) printf(" %i",cols[k]); printf("\n");
     printf("d   :"); for(k=0;k<nnz;k++) printf(" %g",d[k]); printf("\n");
+   */
 
     sprintf(cb,"%i %i %i %i %i\n",nnz,9,endian(),nr,nc);
     bring(wordy,2,(char *)hport,lcb,cb);
