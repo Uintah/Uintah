@@ -96,7 +96,10 @@ public:
     int check_clip; // see if you should ignore clipping planes
     
     int clip_planes; // clipping planes that are on
-    double point_size; // so points and lines can be thicker than 1 pixel
+    double point_size; // so points can be thicker than 1 pixel
+    double line_width; // so lines can be thicker than 1 pixel
+    double polygon_offset_factor; // so lines and points are offset from faces
+    double polygon_offset_units; // so lines and points are offset from faces
 
     Material* current_matl;
     void set_matl(Material*);
