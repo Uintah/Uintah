@@ -94,6 +94,12 @@
 
 #include <stdlib.h>
  
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif 
+ 
+ 
 namespace MatlabIO {
 
 class matlabarray : public matfilebase {
@@ -366,7 +372,11 @@ public:
   void createlongmatrix(std::vector<long> &values, std::vector<long> &dims);  
   void createlongmatrix(long m,long n, long *values);
   
-  
+  void createintscalar(int value);
+  void createintvector(std::vector<int> &values);
+  void createintvector(long n, int *values);
+  void createintmatrix(std::vector<int> &values, std::vector<long> &dims);  
+  void createintmatrix(long m,long n, int *values);  
   
   // string arrays in this implementation will allow changing the size 
   void createstringarray(); 
@@ -456,16 +466,16 @@ public:
   // Conversion tools to mitype
   
   template<class T> mitype getmitype(T &test);
-  mitype  getmitype(char &test);
-  mitype  getmitype(unsigned char &test);
-  mitype  getmitype(unsigned short &test);
-  mitype  getmitype(signed short &test);
-  mitype  getmitype(unsigned long &test);
-  mitype  getmitype(signed long &test);
-  mitype  getmitype(float &test);
-  mitype  getmitype(double &test); 
-  mitype  getmitype(unsigned int &test);
-  mitype  getmitype(signed int &test);
+  inline mitype  getmitype(char &test);
+  inline mitype  getmitype(unsigned char &test);
+  inline mitype  getmitype(unsigned short &test);
+  inline mitype  getmitype(signed short &test);
+  inline mitype  getmitype(unsigned long &test);
+  inline mitype  getmitype(signed long &test);
+  inline mitype  getmitype(float &test);
+  inline mitype  getmitype(double &test); 
+  inline mitype  getmitype(unsigned int &test);
+  inline mitype  getmitype(signed int &test);
   
   
 private:
@@ -482,7 +492,6 @@ private:
   // will calculate the neworder of all elements
   
   void reorder_permute(std::vector<long> &newindices,std::vector<long> permorder);
-  
 };
   
   
@@ -723,12 +732,6 @@ template<class T> inline void matlabarray::setimagnumericarray(std::vector<T> &v
     m_->pimag_.putandcastvector(vec,type);
 }
 
-
-
-
-
-
-
 template<class T> inline void matlabarray::getrowsarray(T *rows,long size)
 {
     if (m_ == 0) throw internal_error();
@@ -768,17 +771,30 @@ matlabarray::mitype  inline matlabarray::getmitype(unsigned short &/*test*/)
 matlabarray::mitype  inline matlabarray::getmitype(signed short &/*test*/)
 { return(matlabarray::miINT16); }
 
-matlabarray::mitype  inline matlabarray::getmitype(unsigned long &/*test*/) 
-{ return(matlabarray::miUINT32); }
+matlabarray::mitype  inline matlabarray::getmitype(unsigned long &test) 
+{ 
+    if (sizeof(test) == 8) return(matlabarray::miUINT64);
+    return(matlabarray::miUINT32); 
+}
 
-matlabarray::mitype  inline matlabarray::getmitype(signed long &/*test*/) 
-{ return(matlabarray::miINT32); }
+matlabarray::mitype  inline matlabarray::getmitype(long &test) 
+{ 
+    if (sizeof(test) == 8) return(matlabarray::miINT64);
+    return(matlabarray::miINT32); 
+}
 
-matlabarray::mitype  inline matlabarray::getmitype(unsigned int &/*test*/) 
-{ return(matlabarray::miUINT32); }
 
-matlabarray::mitype  inline matlabarray::getmitype(signed int &/*test*/) 
-{ return(matlabarray::miINT32); }
+matlabarray::mitype  inline matlabarray::getmitype(unsigned int &test) 
+{ 
+    if (sizeof(test) == 8) return(matlabarray::miUINT64);
+    return(matlabarray::miUINT32); 
+}
+
+matlabarray::mitype  inline matlabarray::getmitype(signed int &test) 
+{ 
+    if (sizeof(test) == 8) return(matlabarray::miINT64);
+    return(matlabarray::miINT32); 
+}
 
 matlabarray::mitype  inline matlabarray::getmitype(float &/*test*/) 
 { return(matlabarray::miSINGLE); }
@@ -786,9 +802,11 @@ matlabarray::mitype  inline matlabarray::getmitype(float &/*test*/)
 matlabarray::mitype  inline matlabarray::getmitype(double &/*test*/) 
 { return(matlabarray::miDOUBLE); } 
 
+} // namespace
 
-
-
-}
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
 
 #endif

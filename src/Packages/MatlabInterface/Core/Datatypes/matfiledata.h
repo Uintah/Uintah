@@ -76,11 +76,18 @@
 
 #include <stdlib.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 #include "matfilebase.h"
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
  
 namespace MatlabIO {
 
@@ -256,11 +263,11 @@ template<class T> void matfiledata::getandcast(T *dataptr,long dsize)
 	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
 	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
 	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;		
 #ifdef JGS_MATLABIO_USE_64INTS
@@ -327,12 +334,12 @@ template<class T> void matfiledata::getandcast(T **dataptr,long dim1, long dim2)
 		 s = 0; for(p=0;p<dim2;p++) for(q=0;q<dim1;q++) {dataptr[p][q] = static_cast<T>(ptr[s++]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
 		 long p,q,s;
 		 s = 0; for(p=0;p<dim2;p++) for(q=0;q<dim1;q++) {dataptr[p][q] = static_cast<T>(ptr[s++]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
 		 long p,q,s;
 		 s = 0; for(p=0;p<dim2;p++) for(q=0;q<dim1;q++) {dataptr[p][q] = static_cast<T>(ptr[s++]); }}
 	   break;		
@@ -407,12 +414,12 @@ template<class T> void matfiledata::getandcast(T ***dataptr,long dim1, long dim2
 		 s = 0; for(p=0;p<dim3;p++) for(q=0;q<dim2;q++) for(r=0;r<dim1;r++) {dataptr[p][q][r] = static_cast<T>(ptr[s++]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
 		 long p,q,r,s;
 		 s = 0; for(p=0;p<dim3;p++) for(q=0;q<dim2;q++) for(r=0;r<dim1;r++) {dataptr[p][q][r] = static_cast<T>(ptr[s++]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
 		 long p,q,r,s;
 		 s = 0; for(p=0;p<dim3;p++) for(q=0;q<dim2;q++) for(r=0;r<dim1;r++) {dataptr[p][q][r] = static_cast<T>(ptr[s++]); }}
 	   break;		
@@ -474,11 +481,11 @@ template<class T> void matfiledata::getandcastvector(std::vector<T> &vec)
 	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
 	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
 	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;		
 #ifdef JGS_MATLABIO_USE_64INTS
@@ -528,10 +535,10 @@ template<class T> T matfiledata::getandcastvalue(long index)
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer()); val = static_cast<T>(ptr[index]);}
 	   break;
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer()); val = static_cast<T>(ptr[index]);}
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer()); val = static_cast<T>(ptr[index]);}
 	   break;
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer()); val = static_cast<T>(ptr[index]);}
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer()); val = static_cast<T>(ptr[index]);}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   
 	case miINT64: 
@@ -588,12 +595,12 @@ template<class T> void matfiledata::putandcast(T *dataptr,long dsize,mitype dtyp
 	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned short>(dataptr[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<signed long>(dataptr[p]); }}
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
+	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<int32_t>(dataptr[p]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned long>(dataptr[p]); }}
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
+	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<u_int32_t>(dataptr[p]); }}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   		
 	case miINT64: 
@@ -640,38 +647,38 @@ template<class T> void matfiledata::putandcast(T **dataptr,long dim1, long dim2 
 	case miUINT8: case miUTF8:
 	   { unsigned char *ptr = static_cast<unsigned char *>(databuffer());
 		 long p,q,s;
-	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed char>(dataptr[p][q]); }}
+	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<unsigned char>(dataptr[p][q]); }}
 	   break;
 	case miINT16: 
 	   { signed short *ptr = static_cast<signed short *>(databuffer());
 		 long p,q,s;
-	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed char>(dataptr[p][q]); }}
+	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed short>(dataptr[p][q]); }}
 	   break;
 	case miUINT16: case miUTF16:
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer());
 		 long p,q,s;
-	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed char>(dataptr[p][q]); }}
+	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed short>(dataptr[p][q]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
 		 long p,q,s;
-	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed char>(dataptr[p][q]); }}
+	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<int32_t>(dataptr[p][q]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
 		 long p,q,s;
-	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed char>(dataptr[p][q]); }}
+	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<u_int32_t>(dataptr[p][q]); }}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   		
 	case miINT64: 
 	   { int64 *ptr = static_cast<int64 *>(databuffer());
 		 long p,q,s;
-	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed char>(dataptr[p][q]); }}
+	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<int64>(dataptr[p][q]); }}
 	   break;   
 	case miUINT64: 
 	   { uint64 *ptr = static_cast<uint64 *>(databuffer());
 		 long p,q,s;
-	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<signed char>(dataptr[p][q]); }}
+	     s = 0; for(long p=0;p<dim2;p++) for(long q=0;q<dim1;q++) { ptr[s++] = static_cast<uint64>(dataptr[p][q]); }}
 	   break;	
 #endif	   
 	case miSINGLE: 
@@ -710,27 +717,27 @@ template<class T> void matfiledata::putandcast(T ***dataptr,long dim1, long dim2
 	case miUINT8: case miUTF8:
 	   { unsigned char *ptr = static_cast<unsigned char *>(databuffer());
 		 long p,q,r,s;
-	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<signed char>(dataptr[p][q][r]); }}
+	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<unsigned char>(dataptr[p][q][r]); }}
 	   break;
 	case miINT16: 
 	   { signed short *ptr = static_cast<signed short *>(databuffer());
 		 long p,q,r,s;
-	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<signed char>(dataptr[p][q][r]); }}
+	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<signed short>(dataptr[p][q][r]); }}
 	   break;
 	case miUINT16: case miUTF16:
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer());
 		 long p,q,r,s;
-	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<signed char>(dataptr[p][q][r]); }}
+	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<unsigned short>(dataptr[p][q][r]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
 		 long p,q,r,s;
-	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<signed char>(dataptr[p][q][r]); }}
+	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<int32_t>(dataptr[p][q][r]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
 		 long p,q,r,s;
-	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<signed char>(dataptr[p][q][r]); }}
+	     s = 0; for(long p=0;p<dim3;p++) for(long q=0;q<dim2;q++) for(long r=0;r<dim2;r++) { ptr[s++] = static_cast<u_int32_t>(dataptr[p][q][r]); }}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   		
 	case miINT64: 
@@ -788,12 +795,12 @@ template<class T> void matfiledata::putandcastvector(std::vector<T> &vec,mitype 
 	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned short>(vec[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<signed long>(vec[p]); }}
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer());
+	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<int32_t>(vec[p]); }}
 	   break;   
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned long>(vec[p]); }}
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer());
+	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<u_int32_t>(vec[p]); }}
 	   break;	
 #ifdef JGS_MATLABIO_USE_64INTS	   	
 	case miINT64: 
@@ -838,10 +845,10 @@ template<class T> void matfiledata::putandcastvalue(T val,long index)
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer()); ptr[index] = static_cast<unsigned short>(val);}
 	   break;
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer()); ptr[index] = static_cast<signed long>(val);}
+	   { int32_t *ptr = static_cast<int32_t *>(databuffer()); ptr[index] = static_cast<int32_t>(val);}
 	   break;
 	case miUINT32: case miUTF32:
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer()); ptr[index] = static_cast<unsigned long>(val);}
+	   { u_int32_t *ptr = static_cast<u_int32_t *>(databuffer()); ptr[index] = static_cast<u_int32_t>(val);}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   
 	case miINT64: 
@@ -862,6 +869,10 @@ template<class T> void matfiledata::putandcastvalue(T val,long index)
     }
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif
 
 } // end namespace
 

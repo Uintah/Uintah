@@ -91,7 +91,6 @@ void matfile::mfswapbytes(void *vbuffer,long elsize,long size)
    	    break;
       default:
         throw unknown_type();
-     	break; 
    }  
 }
 
@@ -176,7 +175,7 @@ void matfile::mfwriteheader()
     
     if (m_->fptr_ == 0) return;
     mfwrite(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),116,0);
-	mfwrite(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(long),2,116);    
+	mfwrite(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(int32_t),2,116);    
     mfwrite(static_cast<void *>(&(m_->version_)),sizeof(short),1,124);
     mfwrite(static_cast<void *>(&endian),sizeof(short),1,126);
 }
@@ -194,7 +193,7 @@ void matfile::mfreadheader()
     if (endian != 19785) if (endian == 18765) m_->byteswap_ = 1; else throw invalid_file_format();
 
     mfread(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),116,0);
-	mfread(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(long),2,116);
+	mfread(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(int32_t),2,116);
     mfread(static_cast<void *>(&(m_->version_)),sizeof(short),1,124);
 }
 
@@ -515,7 +514,7 @@ bool matfile::opencompression()
 		// We need to decompress the buffer
 		char *sourcebuffer = 0;
 		matfiledata destbuffer;
-		long *destbufferheader = 0;
+		int32_t *destbufferheader = 0;
 		long destlen = 0;
 		
 		// We do some dynamic allocation here, if this fails the function
@@ -531,7 +530,7 @@ bool matfile::opencompression()
 			// and of what size this one is.
 
 			destlen = 8;
-			destbufferheader = new long[2];
+			destbufferheader = new int32_t[2];
 			// uncompress the first few bytes
 			// we need to do a few ugly casts as somehow the compiler does not recognize
 			// they are all pointers.
@@ -541,7 +540,7 @@ bool matfile::opencompression()
 			if (destlen != 8) throw compression_error();
 			
 			// If byteswapping needs to be done, it needs to be done
-			if (m_->byteswap_) mfswapbytes(destbufferheader,4,2);
+			if (m_->byteswap_) mfswapbytes(destbufferheader,sizeof(int32_t),2);
 			
 			// The first long should be indicating it is a matrix
 			if (destbufferheader[0] != static_cast<long>(miMATRIX)) throw invalid_file_format();
@@ -665,16 +664,16 @@ long matfile::gototag(long tagaddress)
 
 void matfile::readtag(matfiledata& md)
 {
-    long  size = 0;
-    long  type = 0;
+    int32_t  size = 0;
+    int32_t  type = 0;
     
     md.clear();
     try
     {
         if (m_->curptr_.hdrptr == m_->curptr_.endptr) return;
         
-        mfread(static_cast<void *>(&type),sizeof(long),1,m_->curptr_.hdrptr);
-        mfread(static_cast<void *>(&size),sizeof(long),1,m_->curptr_.hdrptr+4);
+        mfread(static_cast<void *>(&type),sizeof(int32_t),1,m_->curptr_.hdrptr);
+        mfread(static_cast<void *>(&size),sizeof(int32_t),1,m_->curptr_.hdrptr+4);
         m_->curptr_.datptr = m_->curptr_.hdrptr+8;
  
         if (type >= miEND)
@@ -682,20 +681,20 @@ void matfile::readtag(matfiledata& md)
             short	csizetype[2];
             // trick the reader in reading a 32bit long, so both 16bit integers
             // are in the proper order.
-            mfread(static_cast<void *>(&(csizetype[0])),sizeof(long),1,m_->curptr_.hdrptr);
+            mfread(static_cast<void *>(&(csizetype[0])),sizeof(int32_t),1,m_->curptr_.hdrptr);
             if (byteswapmachine())
 			{
-				size = static_cast<long>(csizetype[1]);
-				type = static_cast<long>(csizetype[0]);			
+				size = static_cast<int32_t>(csizetype[1]);
+				type = static_cast<int32_t>(csizetype[0]);			
 			}
 			else
 			{
-				size = static_cast<long>(csizetype[0]);
-				type = static_cast<long>(csizetype[1]);
+				size = static_cast<int32_t>(csizetype[0]);
+				type = static_cast<int32_t>(csizetype[1]);
             }
             m_->curptr_.datptr = m_->curptr_.hdrptr+4;
         }
-        m_->curptr_.size = size;
+        m_->curptr_.size = static_cast<long>(size);
 
         // If type still invalid then something else is going on
         // Throw an exception as we cannot read this field
@@ -713,16 +712,16 @@ void matfile::readtag(matfiledata& md)
 
 void matfile::readdat(matfiledata& md)
 {
-    long  size = 0;
-    long  type = 0;
+    int32_t  size = 0;
+    int32_t  type = 0;
     
     md.clear();
     try
     {
         if (m_->curptr_.hdrptr == m_->curptr_.endptr) return;
         
-        mfread(static_cast<void *>(&type),sizeof(long),1,m_->curptr_.hdrptr);
-        mfread(static_cast<void *>(&size),sizeof(long),1,m_->curptr_.hdrptr+4);
+        mfread(static_cast<void *>(&type),sizeof(int32_t),1,m_->curptr_.hdrptr);
+        mfread(static_cast<void *>(&size),sizeof(int32_t),1,m_->curptr_.hdrptr+4);
         m_->curptr_.datptr = m_->curptr_.hdrptr+8;
  
         if (type >= miEND)
@@ -730,20 +729,20 @@ void matfile::readdat(matfiledata& md)
             short	csizetype[2];
             // trick the reader in reading a 32bit long, so both 16bit integers
             // are in the proper order.
-            mfread(static_cast<void *>(&(csizetype[0])),sizeof(long),1,m_->curptr_.hdrptr);
+            mfread(static_cast<void *>(&(csizetype[0])),sizeof(int32_t),1,m_->curptr_.hdrptr);
             if (byteswapmachine())
 			{
-				size = static_cast<long>(csizetype[1]);
-				type = static_cast<long>(csizetype[0]);			
+				size = static_cast<int32_t>(csizetype[1]);
+				type = static_cast<int32_t>(csizetype[0]);			
 			}
 			else
 			{
-				size = static_cast<long>(csizetype[0]);
-				type = static_cast<long>(csizetype[1]);
+				size = static_cast<int32_t>(csizetype[0]);
+				type = static_cast<int32_t>(csizetype[1]);
             }
 			m_->curptr_.datptr = m_->curptr_.hdrptr+4;
         }
-        m_->curptr_.size = size;
+        m_->curptr_.size = static_cast<long>(size);
 
         // If type still invalid then something else is going on
         // Throw an exception as we cannot read this field
@@ -790,10 +789,10 @@ void matfile::writetag(matfiledata& md)
     }
     else
     {   // write a normal header     
-        long size = md.bytesize();
-        long type = static_cast<long>(md.type());
-        mfwrite(static_cast<void *>(&type),sizeof(long),1,m_->curptr_.hdrptr);
-        mfwrite(static_cast<void *>(&size),sizeof(long),1,m_->curptr_.hdrptr+4);
+        int32_t size = md.bytesize();
+        int32_t type = static_cast<int32_t>(md.type());
+        mfwrite(static_cast<void *>(&type),sizeof(int32_t),1,m_->curptr_.hdrptr);
+        mfwrite(static_cast<void *>(&size),sizeof(int32_t),1,m_->curptr_.hdrptr+4);
         m_->curptr_.datptr = m_->curptr_.hdrptr+8;
         m_->curptr_.size = size;
     }  

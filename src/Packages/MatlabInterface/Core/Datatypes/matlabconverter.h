@@ -55,9 +55,12 @@
  * SCIRun data types have a lot of different classes, hence we need to include
  * a large number of class definitions......
  */
-
+ 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
+#include <sgi_stl_warnings_on.h>
+
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -491,7 +494,7 @@ template <class MESH> void matlabconverter::mladdnodesfield(SCIRun::LockingHandl
 	SCIRun::Point P;
 	std::vector<double> nodes(3*numnodes);
 	std::vector<long> dims(2);
-	dims[0] = 3; dims[1] = numnodes;
+	dims[0] = 3; dims[1] = static_cast<long>(numnodes);
 
 	// Extracting data from the SCIRun classes is a painfull process
 	// and we end up with at least three function calls per node.
@@ -526,7 +529,7 @@ void matlabconverter::mladdedgesfield(SCIRun::LockingHandle<MESH> meshH,matlabar
 	typename MESH::Node::array_type a;
 	std::vector<typename MESH::Node::index_type> edges(num*numedges);
 	std::vector<long> dims(2);	
-	dims[0] = num; dims[1] = numedges;
+	dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numedges);
 	
 	// SCIRun iterators are limited in supporting any index management
 	// Hence I prefer to do it with integer and convert to the required
@@ -563,7 +566,7 @@ void matlabconverter::mladdfacesfield(SCIRun::LockingHandle<MESH> meshH,matlabar
 	typename MESH::Node::array_type a;
 	std::vector<typename MESH::Node::index_type> faces(num*numfaces);
 	std::vector<long> dims(2);	
-	dims[0] = num; dims[1] = numfaces;
+	dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numfaces);
 		
 	// Another painfull and slow conversion process.....
 	unsigned int q = 0;
@@ -597,7 +600,7 @@ void matlabconverter::mladdcellsfield(SCIRun::LockingHandle<MESH> meshH,matlabar
 	typename MESH::Node::array_type a;
 	std::vector<typename MESH::Node::index_type> cells(num*numcells);
 	std::vector<long> dims(2);	
-	dims[0] = num; dims[1] = numcells;
+	dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numcells);
 		
 	// ..............	
 	unsigned int q = 0;
@@ -729,7 +732,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 	long p,q;
 	
 	bool zerobased = false;  
-	long size = mldata.size();
+	long size = static_cast<long>(mldata.size());
 	for (p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
 	
 	if (zerobased == false)
@@ -762,7 +765,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // If not we assume one based numbering
 	
    bool zerobased = false;  
-   long size = mldata.size();
+   long size = static_cast<long>(mldata.size());
    for (long p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
 	
    if (zerobased == false)
@@ -807,7 +810,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // If not we assume one based numbering
 	
    bool zerobased = false;  
-   long size = mldata.size();
+   long size = static_cast<long>(mldata.size());
    for (long p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
 	
    if (zerobased == false)

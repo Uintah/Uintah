@@ -68,11 +68,12 @@
 #include "matfile.h"
 #include "matfiledata.h"
 #include "matlabarray.h"
- 
+
+#include <sgi_stl_warnings_off.h> 
 #include <vector>
 #include <string>
 #include <iostream>
-
+#include <sgi_stl_warnings_on.h>
 
  
 namespace MatlabIO {
