@@ -17,8 +17,8 @@
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
-#include <Core/Containers/Array1.h>
-
+#include <vector>
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
@@ -84,7 +84,9 @@ public:
 
   void get_point(Point &result, node_index index) const;
   
-
+  template <class Iter, class Functor>
+  void fill_points(Iter begin, Iter end, Functor fill_ftor);
+ 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int);
@@ -95,15 +97,30 @@ private:
   bool inside4_p(int, const Point &p);
 
 
-  Array1<Point>        points_;
-  Array1<index_type>   cells_;
-  Array1<index_type>   neighbors_;
+  vector<Point>        points_;
+  vector<index_type>   cells_;
+  vector<index_type>   neighbors_;
 
 };
 
 // Handle type for TetVolMesh mesh.
 typedef LockingHandle<TetVolMesh> TetVolMeshHandle;
 
+
+
+template <class Iter, class Functor>
+void
+TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
+  cout << "started" << endl;
+  Iter iter = begin;
+  points_.resize(end - begin); // resize to the new size
+  vector<Point>::iterator piter = points_.begin();
+  while (iter != end) {
+    *piter = fill_ftor(*iter);
+    ++piter; ++iter;
+  }
+  
+}
 } // namespace SCIRun
 
 
