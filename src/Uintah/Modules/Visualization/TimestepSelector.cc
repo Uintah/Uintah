@@ -68,18 +68,22 @@ void TimestepSelector::execute()
      }
    }
 
-   DataArchive& archive = *((*(handle.get_rep()))());
-
    vector< double > times;
    vector< int > indices;
-   archive.queryTimesteps( indices, times );
-   if( archiveH.get_rep() == 0 ||
-       archiveH.get_rep() != handle.get_rep()){
-     TCL::execute(id + " SetTimeRange " + to_string((int)times.size()));
-     archiveH = handle;
+   try {
+      DataArchive& archive = *((*(handle.get_rep()))());
+      archive.queryTimesteps( indices, times );
+      if( archiveH.get_rep() == 0 ||
+	  archiveH.get_rep() != handle.get_rep()){
+	 TCL::execute(id + " SetTimeRange " + to_string((int)times.size()));
+	 archiveH = handle;
+      }
    }
-
-   
+   catch (const SCICore::Exceptions::InternalError& e) {
+      cerr << "TimestepSelector caught exception: " << e.message() << endl;
+      tcl_status.set("Exception");
+      return;
+   }
 
    // what time is it?
    
@@ -90,7 +94,7 @@ void TimestepSelector::execute()
    if(t < (int)times.size())
      idx = t;
    if(t >= (int)times.size())
-     idx=times.size()-1;
+     idx=(int)times.size()-1;
 
    timeval.set(times[idx]);
 
