@@ -1,6 +1,5 @@
 
 #include <Packages/Uintah/CCA/Components/MD/SerialMD.h>
-#include <Packages/Uintah/Core/Grid/Array3Index.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
