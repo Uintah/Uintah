@@ -205,7 +205,7 @@ void UserModule::create_interface()
     btn->SetHeight(bsize);
     btn->SetBackground(bgcolor->pixel());
     btn->SetHighlightThickness(0);
-    if(ui_button_enabled)
+    if(!ui_button_enabled)
 	btn->SetSensitive(False);
     new MotifCallback<UserModule>FIXCB(btn, XmNactivateCallback,
 				       &netedit->mailbox, this,
