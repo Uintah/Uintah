@@ -482,7 +482,6 @@ void DataArchiver::addRestartStamp(DOMDocument* indexDoc, Dir& fromDir,
    attrValue = to_xml_ch_ptr2(timestep_str.str().c_str());
 
    restartInfo->setAttribute(attrName, attrValue);
-   delete [] attrValue;
 
    restarts->appendChild(returnTab);
    restarts->appendChild(restartInfo);
