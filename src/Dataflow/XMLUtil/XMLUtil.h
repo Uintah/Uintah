@@ -102,7 +102,7 @@ bool string_is(const XMLCh *childname, const char *const name) {
 const DOMNode* findNode(const std::string &name, const DOMNode *node);
 const DOMNode* findNextNode(const std::string& name, const DOMNode* node);
 const DOMNode* findTextNode(const DOMNode* node);
-void outputContent(std::ostream& target, const XMLCh *s);
+void outputContent(std::ostream& target, const char *s);
 std::ostream& operator<<(std::ostream& target, const DOMText* toWrite);
 std::ostream& operator<<(std::ostream& target, const DOMNode* toWrite);
 void appendElement(DOMElement* root, const DOMText* name,
