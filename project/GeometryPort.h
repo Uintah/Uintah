@@ -43,6 +43,7 @@ class GeometryOPort : public OPort {
     GeometryIPort* in;
     int portid;
     GeomID serial;
+    int dirty;
 
     virtual void reset();
     virtual void finish();
@@ -63,6 +64,7 @@ public:
     GeometryComm(int, GeomID, GeomObj*);
     GeometryComm(int, GeomID);
     GeometryComm(int);
+    GeometryComm();
     virtual ~GeometryComm();
 
     Mailbox<int>* reply;

@@ -24,7 +24,7 @@
 
 static String fallback_resources[] = {
     "*fontList: screen14",
-    "*background: pink3",
+    "*background: #b06271",
     NULL
     };
 

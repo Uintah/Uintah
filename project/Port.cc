@@ -36,21 +36,21 @@ Port::Port(Module* module, const clString& typename,
 : module(module), typename(typename),
   portname(portname), colorname(colorname),
   protocols(protocols), u_proto(0), bgcolor(0), top_shadow(0),
-  bottom_shadow(0), drawing_a(0)
+  bottom_shadow(0), drawing_a(0), portstate(Off)
 {
 }
 
 IPort::IPort(Module* module, const clString& typename,
 	     const clString& portname, const clString& colorname,
 	     int protocols)
-: Port(module, typename, portname, colorname, protocols), port_on(0)
+: Port(module, typename, portname, colorname, protocols)
 {
 }
 
 OPort::OPort(Module* module, const clString& typename,
 	     const clString& portname, const clString& colorname,
 	     int protocols)
-: Port(module, typename, portname, colorname, protocols), port_on(0)
+: Port(module, typename, portname, colorname, protocols)
 {
 }
 
@@ -78,6 +78,8 @@ void Port::get_colors(ColorManager* cm)
     bottom_shadow=bgcolor->bottom_shadow();
     port_on_color=new XQColor(cm, PORT_ON_COLOR);
     port_off_color=new XQColor(cm, PORT_OFF_COLOR);
+    port_reset_color=new XQColor(cm, PORT_RESET_COLOR);
+    port_finish_color=new XQColor(cm, PORT_FINISH_COLOR);
 }
 
 Connection* Port::connection(int i)
@@ -107,10 +109,19 @@ void IPort::update_light()
     evl->lock();
     Display* dpy=XtDisplay(*drawing_a);
     Drawable win=XtWindow(*drawing_a);
-    if(port_on)
-	XSetForeground(dpy, gc, port_on_color->pixel());
-    else
+    switch(portstate){
+    case Off:
 	XSetForeground(dpy, gc, port_off_color->pixel());
+	break;
+    case Resetting:
+	XSetForeground(dpy, gc, port_reset_color->pixel());
+	break;
+    case Finishing:
+	XSetForeground(dpy, gc, port_finish_color->pixel());
+	break;
+    case On:
+	XSetForeground(dpy, gc, port_on_color->pixel());
+    }
     XFillRectangle(dpy, win, gc, xlight, ylight,
 		   MODULE_PORTPAD_WIDTH, MODULE_PORTLIGHT_HEIGHT);
     evl->unlock();
@@ -123,45 +134,46 @@ void OPort::update_light()
     evl->lock();
     Display* dpy=XtDisplay(*drawing_a);
     Drawable win=XtWindow(*drawing_a);
-    if(port_on)
-	XSetForeground(dpy, gc, port_on_color->pixel());
-    else
+    switch(portstate){
+    case Off:
 	XSetForeground(dpy, gc, port_off_color->pixel());
+	break;
+    case Resetting:
+	XSetForeground(dpy, gc, port_reset_color->pixel());
+	break;
+    case Finishing:
+	XSetForeground(dpy, gc, port_finish_color->pixel());
+	break;
+    case On:
+	XSetForeground(dpy, gc, port_on_color->pixel());
+    }
     XFillRectangle(dpy, win, gc, xlight, ylight,
 		   MODULE_PORTPAD_WIDTH, MODULE_PORTLIGHT_HEIGHT);
     evl->unlock();
 }
 
-void IPort::turn_on()
+void IPort::turn_on(PortState st)
 {
-    if(!port_on){
-	port_on=1;
-	update_light();
-    }
+    portstate=st;
+    update_light();
 }
 
 void IPort::turn_off()
 {
-    if(port_on){
-	port_on=0;
-	update_light();
-    }
+    portstate=Off;
+    update_light();
 }
 
-void OPort::turn_on()
+void OPort::turn_on(PortState st)
 {
-    if(!port_on){
-	port_on=1;
-	update_light();
-    }
+    portstate=st;
+    update_light();
 }
 
 void OPort::turn_off()
 {
-    if(port_on){
-	port_on=0;
-	update_light();
-    }
+    portstate=Off;
+    update_light();
 }
 
 void Port::set_context(int xlight_, int ylight_, DrawingAreaC* drawing_a_,

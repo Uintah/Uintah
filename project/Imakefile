@@ -31,11 +31,12 @@ SCI_LIBS = \
 	SCI_MultitaskLib \
 	SCI_ClassLib \
 	SCI_GeometryLib \
+	SCI_MathLib \
 	../../templates/fast_templates.o \
 	../../wrapper/libMInT/libMInT.a \
 	SCI_MallocLib
 
-../../templates/fast_templates.o: $(OBJS)
+../../templates/fast_templates.o: $(OBJS) ../modules/modules.o
 	make_templates ../../templates
 
 SCI_LDFLAGS = -laudio -laudiofile SCI_LM SCI_LTHREAD SCI_LMOTIF \

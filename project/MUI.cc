@@ -1,6 +1,6 @@
 
 /*
- *  MUI.h: Module User Interface classes
+ *  MUI.cc: Module User Interface classes
  *
  *  Written by:
  *   Steven G. Parker
@@ -20,16 +20,24 @@
 
 #include <MUI.h>
 #include <CallbackCloners.h>
+#include <ModuleShape.h>
 #include <MotifCallback.h>
 #include <MtXEventLoop.h>
 #include <NetworkEditor.h>
 #include <NotFinished.h>
 #include <UserModule.h>
+#include <XQColor.h>
 #include <Mt/DialogShell.h>
+#include <Mt/DrawingArea.h>
 #include <Mt/FileSelectionBox.h>
 #include <Mt/RowColumn.h>
 #include <Mt/Scale.h>
 extern MtXEventLoop* evl;
+#define MUI_FONT "screen14"
+#define ONOFF_NSTEPS 10
+#define ONOFF_INSET 2
+#define ONOFF_BORDER 4
+#define ONOFF_BEVEL 2
 
 struct MUI_window_private {
     DialogShellC shell;
@@ -55,7 +63,7 @@ void MUI_window::attach(MUI_widget* widget)
 
 void MUI_window::detach(MUI_widget*)
 {
-    NOT_FINISHED("MUI");
+    NOT_FINISHED("MUI_window::detach");
 }
 
 void MUI_window::activate()
@@ -67,7 +75,7 @@ void MUI_window::activate()
 
 void MUI_window::reconfigure()
 {
-    NOT_FINISHED("MUI");
+    NOT_FINISHED("MUI_window::reconfigure");
 }
 
 void MUI_window::popup()
@@ -117,7 +125,7 @@ MUI_widget::~MUI_widget()
 
 void MUI_widget::set_title(const clString&)
 {
-    NOT_FINISHED("MUI");
+    NOT_FINISHED("MUI_widget::set_title");
 }
 
 void MUI_widget::dispatch(const clString& newstr, clString* str, 
@@ -136,6 +144,21 @@ void MUI_widget::dispatch(const clString& newstr, clString* str,
 }
 
 void MUI_widget::dispatch(double newdata, double* data,
+			  int info)
+{
+    if(dispatch_policy==Immediate){
+	*data=newdata;
+	window->get_module()->mui_callback(cbdata, info);
+    } else {
+	// Send it to the module...
+	MUI_Module_Message* msg=new MUI_Module_Message(window->get_module(),
+						       newdata, data,
+						       cbdata, info);
+	window->get_module()->mailbox.send(msg);
+    }
+}
+
+void MUI_widget::dispatch(int newdata, int* data,
 			  int info)
 {
     if(dispatch_policy==Immediate){
@@ -248,20 +271,154 @@ void MUI_file_selection::cancel_callback(CallbackData*, void*)
     window->popdown();
 }
 
-MUI_onoff_switch::MUI_onoff_switch(const clString& name, int*,
+MUI_onoff_switch::MUI_onoff_switch(const clString& name, int* data,
 				   DispatchPolicy dp, void* cbdata)
-: MUI_widget(name, cbdata, dp)
+: MUI_widget(name, cbdata, dp), data(data)
 {
-    NOT_FINISHED("MUI");
 }
 
 MUI_onoff_switch::~MUI_onoff_switch()
 {
 }
 
-void MUI_onoff_switch::attach(MUI_window*, EncapsulatorC*)
+void MUI_onoff_switch::attach(MUI_window* _window, EncapsulatorC* parent)
 {
-    NOT_FINISHED("onoff switch");
+    evl->lock();
+    Display* dpy=evl->get_display();
+    XFontStruct* font;
+    
+    if( (font = XLoadQueryFont(dpy, MUI_FONT)) == 0){
+	cerr << "Error loading font: " << MUI_FONT << endl;
+	exit(-1);
+    }
+    int dir;
+    int ascent;
+    XCharStruct dim;
+    if(!XTextExtents(font, name(), name.len(), &dir,
+		     &ascent, &descent, &dim)){
+	cerr << "XTextExtents failed...\n";
+	exit(-1);
+    }
+    fh=ascent+descent;
+    height=3*fh+2*ONOFF_INSET+3*ONOFF_BORDER;
+    width=dim.width+2*ONOFF_BORDER;
+    window=_window;
+    NetworkEditor* netedit=window->get_module()->netedit;
+    sw=new DrawingAreaC;
+    sw->SetWidth(width);
+    sw->SetHeight(height);
+    sw->SetResizePolicy(XmRESIZE_NONE);
+    new MotifCallback<MUI_onoff_switch>FIXCB(sw, XmNexposeCallback,
+					     &netedit->mailbox, this,
+					     &MUI_onoff_switch::expose_callback,
+					     0, 0);
+    sw->Create(*parent, "onoff");
+    new MotifCallback<MUI_onoff_switch>FIXCB(sw,
+					     "<Btn1Down>",
+					     &netedit->mailbox, this,
+					     &MUI_onoff_switch::event_callback, 0,
+					     &CallbackCloners::event_clone);
+    new MotifCallback<MUI_onoff_switch>FIXCB(sw,
+					     "<Btn1Up>",
+					     &netedit->mailbox, this,
+					     &MUI_onoff_switch::event_callback, 0,
+					     &CallbackCloners::event_clone);
+    if(*data)
+	anim=ONOFF_NSTEPS;
+    else
+	anim=0;
+    bgcolor=new XQColor(netedit->color_manager, MODULE_BGCOLOR);
+    top_shadow=bgcolor->top_shadow();
+    bot_shadow=bgcolor->bottom_shadow();
+    text_color=bgcolor->fg_color();
+    inset_color=bgcolor->select_color();
+    GC gc=XCreateGC(dpy, XtWindow(*sw), 0, 0);
+    XSetFont(dpy, gc, font->fid);
+    vgc=(void*)gc;
+    evl->unlock();
+}
+
+void MUI_onoff_switch::event_callback(CallbackData*, void*)
+{
+    int newdata;
+    if(anim){
+	// It's on... turn it off...
+	evl->lock();
+	Display* dpy=XtDisplay(*sw);
+	for(anim=ONOFF_NSTEPS;anim>=0;anim--){
+	    XClearWindow(dpy, XtWindow(*sw));
+	    expose_callback(0, 0);
+	    XFlush(dpy);
+	    Task::sleep(0.2);
+	}
+	evl->unlock();
+	anim=0;
+	newdata=0;
+    } else {
+	// It's off... turn it on...
+	evl->lock();
+	Display* dpy=XtDisplay(*sw);
+	for(anim=0;anim<=ONOFF_NSTEPS;anim++){
+	    XClearWindow(dpy, XtWindow(*sw));
+	    expose_callback(0, 0);
+	    XFlush(dpy);
+	    Task::sleep(0.2);
+	}
+	evl->unlock();
+	newdata=1;
+	anim=ONOFF_NSTEPS;
+    }
+    dispatch(newdata, data, Value);
+}
+
+static void draw_shadow(Display* dpy, Window win, GC gc,
+			int xmin, int ymin, int xmax, int ymax,
+			int width, Pixel top, Pixel bot)
+{
+    XSetForeground(dpy, gc, top);
+    for(int i=0;i<width;i++){
+	XDrawLine(dpy, win, gc, xmin, ymin+i, xmax-i, ymin+i);
+	XDrawLine(dpy, win, gc, xmin+i, ymin, xmin+i, ymax-i);
+    }
+    XSetForeground(dpy, gc, bot);
+    for(i=0;i<width;i++){
+	XDrawLine(dpy, win, gc, xmax-i, ymin+i+1, xmax-i, ymax);
+	XDrawLine(dpy, win, gc, xmin+i+1, ymax-i, xmax, ymax-i);
+    }
+}
+
+void MUI_onoff_switch::expose_callback(CallbackData*, void*)
+{
+    evl->lock();
+    int left=ONOFF_BORDER;
+    Display* dpy=XtDisplay(*sw);
+    GC gc=(GC)vgc;
+    Window win=XtWindow(*sw);
+    XSetForeground(dpy, gc, text_color->pixel());
+    XDrawString(dpy, win, gc, ONOFF_BORDER, height-ONOFF_BORDER-descent,
+		name(), name.len());
+    draw_shadow(dpy, win, gc, left, ONOFF_BORDER,
+		left+fh+2*ONOFF_INSET, ONOFF_BORDER+2*fh+2*ONOFF_INSET,
+		ONOFF_INSET, bot_shadow->pixel(), top_shadow->pixel());
+    XSetForeground(dpy, gc, inset_color->pixel());
+    XFillRectangle(dpy, win, gc, left+ONOFF_INSET, ONOFF_BORDER+ONOFF_INSET,
+		   fh+1, 2*fh+1);
+    int top=ONOFF_BORDER+ONOFF_INSET+((ONOFF_NSTEPS-anim)*fh)/ONOFF_NSTEPS;
+    draw_shadow(dpy, win, gc, left+ONOFF_INSET, top,
+		left+ONOFF_INSET+fh, top+fh, ONOFF_BEVEL,
+		top_shadow->pixel(), bot_shadow->pixel());
+    XSetForeground(dpy, gc, bgcolor->pixel());
+    XFillRectangle(dpy, win, gc, left+ONOFF_INSET+ONOFF_BEVEL,
+		   top+ONOFF_BEVEL, fh-2*ONOFF_BEVEL+1, fh-2*ONOFF_BEVEL+1);
+    XSetForeground(dpy, gc, text_color->pixel());
+    if(anim==0){
+	XDrawString(dpy, win, gc, left+2*ONOFF_INSET+fh+3,
+		    height-ONOFF_BORDER-fh-descent-ONOFF_INSET, "Off", 3);
+    } else if(anim==ONOFF_NSTEPS){
+	XDrawString(dpy, win, gc, left+2*ONOFF_INSET+fh+3,
+		    height-ONOFF_BORDER-2*fh-descent-ONOFF_INSET, "On", 2);
+    }
+    evl->unlock();
 }
 
 MUI_Module_Message::MUI_Module_Message(UserModule* module,
@@ -281,6 +438,14 @@ MUI_Module_Message::MUI_Module_Message(UserModule* module, double newddata,
 {
 }
 
+MUI_Module_Message::MUI_Module_Message(UserModule* module, int newidata,
+				       int* idata, void* cbdata, int flags)
+: MessageBase(MessageTypes::MUIDispatch), type(IntData),
+  module(module), newidata(newidata), idata(idata), cbdata(cbdata),
+  flags(flags)
+{
+}
+
 MUI_Module_Message::~MUI_Module_Message()
 {
 }
@@ -294,5 +459,26 @@ void MUI_Module_Message::do_it()
     case DoubleData:
 	*ddata=newddata;
 	break;
+    case IntData:
+	*idata=newidata;
+	break;
     }
 }
+
+MUI_point::MUI_point(const clString& name, Point* data,
+		     DispatchPolicy dp, int dispatch_drag,
+		     void* cbdata)
+: MUI_widget(name, cbdata, dp), data(data), dispatch_drag(dispatch_drag)
+{
+    NOT_FINISHED("MUI_point::MUI_point");
+}
+
+MUI_point::~MUI_point()
+{
+}
+
+void MUI_point::attach(MUI_window* _window, EncapsulatorC* parent)
+{
+    NOT_FINISHED("MUI_point::attach");
+}
+

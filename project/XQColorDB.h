@@ -225,7 +225,9 @@ XQColor_named_colors.insert("medium orchid", RGBColor(0.729412,0.333333,0.827451
 XQColor_named_colors.insert("MediumOrchid", RGBColor(0.729412,0.333333,0.827451));
 XQColor_named_colors.insert("dark orchid", RGBColor(0.6,0.196078,0.8));
 XQColor_named_colors.insert("DarkOrchid", RGBColor(0.6,0.196078,0.8));
+#endif
 XQColor_named_colors.insert("dark violet", RGBColor(0.580392,0,0.827451));
+#if 0
 XQColor_named_colors.insert("DarkViolet", RGBColor(0.580392,0,0.827451));
 XQColor_named_colors.insert("blue violet", RGBColor(0.541176,0.168627,0.886275));
 XQColor_named_colors.insert("BlueViolet", RGBColor(0.541176,0.168627,0.886275));
@@ -497,10 +499,10 @@ XQColor_named_colors.insert("HotPink3", RGBColor(0.803922,0.376471,0.564706));
 XQColor_named_colors.insert("HotPink4", RGBColor(0.545098,0.227451,0.384314));
 XQColor_named_colors.insert("pink1", RGBColor(1,0.709804,0.772549));
 XQColor_named_colors.insert("pink2", RGBColor(0.933333,0.662745,0.721569));
-XQColor_named_colors.insert("pink3", RGBColor(0.803922,0.568627,0.619608));
 #endif
-XQColor_named_colors.insert("pink4", RGBColor(0.545098,0.388235,0.423529));
+XQColor_named_colors.insert("pink3", RGBColor(0.803922,0.568627,0.619608));
 #if 0
+XQColor_named_colors.insert("pink4", RGBColor(0.545098,0.388235,0.423529));
 XQColor_named_colors.insert("LightPink1", RGBColor(1,0.682353,0.72549));
 XQColor_named_colors.insert("LightPink2", RGBColor(0.933333,0.635294,0.678431));
 XQColor_named_colors.insert("LightPink3", RGBColor(0.803922,0.54902,0.584314));
@@ -901,3 +903,4 @@ XQColor_named_colors.insert("Indigo", RGBColor(0.294118,0,0.509804));
 XQColor_named_colors.insert("Indigo2", RGBColor(0.129412,0.533333,0.407843));
 XQColor_named_colors.insert("Crimson", RGBColor(0.862745,0.0784314,0.235294));
 #endif
+XQColor_named_colors.insert("steve1", RGBColor(.690196,.384313,.443137));

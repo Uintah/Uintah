@@ -28,6 +28,7 @@ public:
 	GeometryAddObj,
 	GeometryDelObj,
 	GeometryDelAll,
+	GeometryFlush,
     };
 };
 

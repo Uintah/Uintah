@@ -52,6 +52,7 @@ void GeometryIPort::finish()
 void GeometryOPort::reset()
 {
     if(!outbox){
+	turn_on(Resetting);
 	Connection* connection=connections[0];
 	Module* mod=connection->iport->get_module();
 	outbox=&mod->mailbox;
@@ -60,28 +61,38 @@ void GeometryOPort::reset()
 	outbox->send(new GeometryComm(&tmp));
 	portid=tmp.receive();
 	serial=1;
+	turn_off();
     }
+    dirty=0;
 }
 
 void GeometryOPort::finish()
 {
+    if(dirty){
+	turn_on(Finishing);
+	outbox->send(new GeometryComm);
+	turn_off();
+    }
 }
 
 GeomID GeometryOPort::addObj(GeomObj* obj)
 {
     GeomID id=serial++;
     outbox->send(new GeometryComm(portid, id, obj));
+    dirty=1;
     return id;
 }
 
 void GeometryOPort::delObj(GeomID id)
 {
     outbox->send(new GeometryComm(portid, id));
+    dirty=1;
 }
 
 void GeometryOPort::delAll()
 {
     outbox->send(new GeometryComm(portid));
+    dirty=1;
 }
 
 GeometryComm::GeometryComm(Mailbox<int>* reply)
@@ -104,6 +115,11 @@ GeometryComm::GeometryComm(int portno, GeomID serial)
 GeometryComm::GeometryComm(int portno)
 : MessageBase(MessageTypes::GeometryDelAll),
   portno(portno)
+{
+}
+
+GeometryComm::GeometryComm()
+: MessageBase(MessageTypes::GeometryFlush)
 {
 }
 

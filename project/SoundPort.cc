@@ -66,7 +66,7 @@ void SoundIPort::finish()
 	cerr << "Not all of sound was read...\n";
 	state=Flushing;
 	while(state != Done)
-	    do_read();
+	    do_read(1);
     }
     if(sample_buf){
 	delete[] sample_buf;
@@ -81,14 +81,14 @@ int SoundIPort::nsamples()
 	return 0;
     }
     while(state == Begin)
-	do_read();
+	do_read(0);
     return total_samples;
 }
 
 double SoundIPort::sample_rate()
 {
     while(state == Begin)
-	do_read();
+	do_read(0);
 
     return rate;
 }
@@ -96,14 +96,17 @@ double SoundIPort::sample_rate()
 int SoundIPort::is_stereo()
 {
     while(state == Begin)
-	do_read();
+	do_read(0);
 
     return stereo;
 }
 
-void SoundIPort::do_read()
+void SoundIPort::do_read(int fin)
 {
-    turn_on();
+    if(fin)
+	turn_on(Finishing);
+    else
+	turn_on();
     SoundComm* comm;
     comm=mailbox.receive();
     switch(comm->action){

@@ -49,8 +49,8 @@ void Field3DIPort::reset()
 
 void Field3DIPort::finish()
 {
-    if(!recvd){
-	turn_on();
+    if(!recvd && nconnections() > 0){
+	turn_on(Finishing);
 	Field3DComm* msg=mailbox.receive();
 	delete msg;
 	turn_off();
@@ -64,9 +64,9 @@ void Field3DOPort::reset()
 
 void Field3DOPort::finish()
 {
-    if(!sent_something){
+    if(!sent_something && nconnections() > 0){
 	// Tell them that we didn't send anything...
-	turn_on();
+	turn_on(Finishing);
 	if(!in){
 	    Connection* connection=connections[0];
 	    in=(Field3DIPort*)connection->iport;

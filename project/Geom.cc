@@ -15,6 +15,8 @@
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <Math/Trig.h>
+#include <Math/TrigTable.h>
 #include <iostream.h>
 
 GeomObj::GeomObj()
@@ -96,6 +98,40 @@ void Tetra::draw() {
     glEnd();
 }
 
+GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
+: cen(cen), rad(rad), nu(nu), nv(nv)
+{
+}
+
+GeomSphere::~GeomSphere()
+{
+}
+
+void GeomSphere::draw()
+{
+    glColor3f(.7, .7, .7);
+    SinCosTable u(nu, 0, 2.*Pi);
+    SinCosTable v(nv, -Pi/2., Pi/2., rad);
+    for(int i=0;i<nu-1;i++){
+	glBegin(GL_TRIANGLE_STRIP);
+	double x0=u.sin(i);
+	double y0=u.cos(i);
+	double x1=u.sin(i+1);
+	double y1=u.cos(i+1);
+	for(int j=0;j<nv-1;j++){
+	    double r0=v.sin(j);
+	    double z0=v.cos(j);
+	    double r1=v.sin(j+1);
+	    double z1=v.cos(j+1);
+	    glVertex3d(x0*r0, y0*r0, z0);
+	    glVertex3d(x1*r0, y1*r0, z0);
+	    glVertex3d(x0*r1, y0*r1, z1);
+	    glVertex3d(x1*r1, y1*r1, z1);
+	}
+	glEnd();
+    }
+}
+
 GeomPt::GeomPt(const Point& p)
 : p1(p)
 {
@@ -108,5 +144,6 @@ void GeomPt::draw() {
     glColor3f(0, 0, 1);
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
+    glEnd();
 }
 

@@ -36,6 +36,13 @@ protected:
     DrawingAreaC* drawing_a;
     int xlight, ylight;
     GC gc;
+    enum PortState {
+	Off,
+	Resetting,
+	Finishing,
+	On,
+    };
+    PortState portstate;
 public:
     Port(Module*, const clString&, const clString&,
 	 const clString&, int protocols);
@@ -58,17 +65,18 @@ public:
     XQColor* bottom_shadow;
     XQColor* port_on_color;
     XQColor* port_off_color;
+    XQColor* port_reset_color;
+    XQColor* port_finish_color;
     void move();
     clString get_typename();
     clString get_portname();
 };
 
 class IPort : public Port {
-    int port_on;
 protected:
     IPort(Module*, const clString&, const clString&,
 	  const clString&, int protocols);
-    void turn_on();
+    void turn_on(PortState st=On);
     void turn_off();
 public:
     void update_light();
@@ -79,7 +87,7 @@ class OPort : public Port {
 protected:
     OPort(Module*, const clString&, const clString&,
 	  const clString&, int protocols);
-    void turn_on();
+    void turn_on(PortState st=On);
     void turn_off();
 public:
     void update_light();

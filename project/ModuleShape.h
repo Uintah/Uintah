@@ -14,7 +14,7 @@
 #ifndef SCI_project_ModuleShape_h
 #define SCI_project_ModuleShape_h 1
 
-#define MODULE_BGCOLOR "pink4"
+#define MODULE_BGCOLOR "steve1"
 #define MODULE_EXECCOLOR "red"
 #define MODULE_COMPLETEDCOLOR "green"
 #define MODULE_EDGE_WIDTH 3
@@ -35,6 +35,8 @@
 #define MIN_WIRE_EXTEND 8
 #define PORT_ON_COLOR "red"
 #define PORT_OFF_COLOR "black"
+#define PORT_RESET_COLOR "blue"
+#define PORT_FINISH_COLOR "dark violet"
 
 #endif
 

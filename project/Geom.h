@@ -61,6 +61,18 @@ public:
     virtual void draw();
 };
 
+class GeomSphere : public GeomObj {
+public:
+    Point cen;
+    double rad;
+    int nu;
+    int nv;
+
+    GeomSphere(const Point&, double, int nu=20, int nv=10);
+    virtual ~GeomSphere();
+    virtual void draw();
+};
+
 class GeomPt : public GeomObj {
 public:
     Point p1;
@@ -69,4 +81,5 @@ public:
     virtual ~GeomPt();
     virtual void draw();
 };
+
 #endif

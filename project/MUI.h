@@ -20,12 +20,15 @@
 
 class clString;
 class CallbackData;
+class DrawingAreaC;
 class EncapsulatorC;
 class FileSelectionBoxC;
 class MUI_widget;
 class MUI_window_private;
+class Point;
 class ScaleC;
 class UserModule;
+class XQColor;
 
 class MUI_window {
     MUI_window_private* priv;
@@ -87,6 +90,7 @@ public:
 	Slider,
 	Dial,
 	ThumbWheel,
+	Guage,
     };
     MUI_slider_real(const clString& name, double* data,
 		    DispatchPolicy, int dispatch_drag,
@@ -104,13 +108,41 @@ public:
     };
 };
 
+class MUI_point : public MUI_widget {
+    Point* data;
+    int dispatch_drag;
+public:
+    MUI_point(const clString& name, Point* data,
+	      DispatchPolicy, int dispatch_drag,
+	      void* cbdata=0);
+    virtual ~MUI_point();
+    virtual void attach(MUI_window*, EncapsulatorC*);
+};
+
 class MUI_onoff_switch : public MUI_widget {
+    int* data;
+    DrawingAreaC* sw;
+    int anim;
+    XQColor* bgcolor;
+    XQColor* top_shadow;
+    XQColor* bot_shadow;
+    XQColor* inset_color;
+    XQColor* text_color;
+    int fh;
+    int width, height;
+    int descent;
+    void* vgc;
+    void event_callback(CallbackData*, void*);
+    void expose_callback(CallbackData*, void*);
 public:
     MUI_onoff_switch(const clString& name, int* data,
 		     DispatchPolicy,
 		     void* cbdata=0);
     ~MUI_onoff_switch();
     virtual void attach(MUI_window*, EncapsulatorC*);
+    enum Event {
+	Value,
+    };
 };
 
 class MUI_file_selection : public MUI_widget {
@@ -132,9 +164,12 @@ class MUI_Module_Message : public MessageBase {
     clString* str;
     double newddata;
     double* ddata;
+    int newidata;
+    int* idata;
     enum Type {
 	DoubleData,
 	StringData,
+	IntData,
     };
     Type type;
 public:
@@ -142,6 +177,8 @@ public:
 		       const clString&, clString*, void*, int);
     MUI_Module_Message(UserModule* module,
 		       double, double*, void*, int);
+    MUI_Module_Message(UserModule* module,
+		       int, int*, void*, int);
     virtual ~MUI_Module_Message();
 
     void do_it();

@@ -55,7 +55,7 @@ private:
     double* sample_buf;
     int bufp;
     int recvd_samples;
-    void do_read();
+    void do_read(int fin);
 protected:
     friend class SoundOPort;
     Mailbox<SoundComm*> mailbox;
@@ -102,12 +102,12 @@ public:
 inline double SoundIPort::next_sample()
 {
     if(state != HaveSamples)
-	do_read();
+	do_read(0);
     double s=sample_buf[bufp++];
     if(bufp>=sbufsize){
 	state=NeedSamples;
 	if(state != HaveSamples)
-	    do_read();
+	    do_read(0);
 	bufp=0;
     }
     return s;
