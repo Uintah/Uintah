@@ -214,8 +214,9 @@ private:
 		     int level,  T* tex, Octree<Brick*>* node,
 		     Semaphore* thread_sema, ThreadGroup* tg);
   
+  // friend needed by gcc-2.95.3 compiler
   template <class T>
-  class run_make_brick_data : public Runnable {
+  friend class run_make_brick_data : public Runnable {
   public:
     run_make_brick_data(GLTexture3D* tex3D,
 		      Semaphore *thread,
@@ -233,7 +234,6 @@ private:
     T* tex_;
     Array3<unsigned char>* bd_;
   };
-  // friend class template <class T> run_make_brick_data<T>;
 
   //  template <class T>
   class run_make_low_res_brick_data : public Runnable {
@@ -259,6 +259,7 @@ private:
     //    T* tex;
     Array3<unsigned char>* bd_;
   };
+
 };
 
 
