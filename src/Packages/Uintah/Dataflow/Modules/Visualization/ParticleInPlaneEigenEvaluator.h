@@ -1,5 +1,5 @@
-#ifndef __VISUALIZATION_INPLANEEIGENEVALUATOR_H__
-#define __VISUALIZATION_INPLANEEIGENEVALUATOR_H__
+#ifndef __VISUALIZATION_PARTICLEINPLANEEIGENEVALUATOR_H__
+#define __VISUALIZATION_PARTICLEINPLANEEIGENEVALUATOR_H__
 
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Dataflow/Module.h>
@@ -15,10 +15,10 @@ namespace Modules {
   using namespace PSECore::Datatypes;
   using namespace SCICore::TclInterface;
 
-  class InPlaneEigenEvaluator: public Module {
+  class ParticleInPlaneEigenEvaluator: public Module {
   public:
-    InPlaneEigenEvaluator(const clString& id);
-    virtual ~InPlaneEigenEvaluator() {}
+    ParticleInPlaneEigenEvaluator(const clString& id);
+    virtual ~ParticleInPlaneEigenEvaluator() {}
     
     virtual void execute(void);
     
@@ -28,11 +28,11 @@ namespace Modules {
     TCLint tclCalculationType;
     TCLdouble tclDelta;
     
-    TensorFieldIPort *in;
+    TensorParticlesIPort *in;
 
-    ScalarFieldOPort *spout; // for eigen value data
+    ScalarParticlesOPort *spout; // for eigen value data
   };
 }
 }
-#endif // __VISUALIZATION_INPLANEEIGENEVALUATOR_H__
+#endif // __VISUALIZATION_PARTICLEINPLANEEIGENEVALUATOR_H__
 
