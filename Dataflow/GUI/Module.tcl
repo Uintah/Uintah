@@ -934,15 +934,16 @@ proc disableConnection { conn } {
     global Disabled
     set connid [makeConnID $conn]
     setIfExists disabled Disabled($connid) 0
-    if {!$disabled} {
-	set Disabled($connid) 1
-	set command blockconnection
-    } else {
+    if {$disabled} {
 	set Disabled($connid) 0
-	set command unblockconnection
-    }
-    foreach conn [findRealConnections $conn] {
-	netedit $command [makeConnID $conn]
+	foreach conn [findRealConnections $conn] {
+	    eval netedit addconnection $conn
+	}
+    } else {
+	set Disabled($connid) 1
+	foreach conn [findRealConnections $conn] {
+	    netedit deleteconnection [makeConnID $conn]
+	}
     }
 
 }
