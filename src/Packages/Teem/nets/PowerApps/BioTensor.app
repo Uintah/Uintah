@@ -349,12 +349,13 @@ set c177 [addConnection $m130 0 $m44 10]
 set c178 [addConnection $m131 1 $m44 11]
 set c179 [addConnection $m136 0 $m103 0]
 set c180 [addConnection $m105 0 $m136 1]
+set c181 [addConnection $m102 0 $m111 3]
 
 
 set $m0-notes {}
-set $m0-label {unknown}
-set $m0-type {Scalar}
-set $m0-axis {axis0}
+# set $m0-label {unknown}
+# set $m0-type {Scalar}
+# set $m0-axis {axis0}
 #set $m0-add {0}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m0-filename $DATADIR/$DATASET/demo-DWI.nrrd
@@ -917,9 +918,9 @@ set $m47-join-axis {0}
 set $m47-incr-dim {0}
 set $m47-dim {4}
 set $m48-notes {}
-set $m48-label {unknown}
-set $m48-type {Scalar}
-set $m48-axis {axis0}
+# set $m48-label {unknown}
+# set $m48-type {Scalar}
+# set $m48-axis {axis0}
 #set $m48-add {1}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m48-filename $DATADIR/$DATASET/demo-B0.nrrd
@@ -929,9 +930,9 @@ if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
 set $m49-notes {}
 set $m49-port-index {0}
 set $m50-notes {}
-set $m50-label {unknown}
-set $m50-type {Scalar}
-set $m50-axis {axis0}
+# set $m50-label {unknown}
+# set $m50-type {Scalar}
+# set $m50-axis {axis0}
 #set $m50-add {0}
 if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
     set $m50-filename $DATADIR/$DATASET/demo-gradients.txt
@@ -1024,9 +1025,9 @@ set $m61-max {105.93144989013672}
 set $m61-makeSymmetric {0}
 set $m62-notes {}
 set $m63-notes {}
-set $m63-label {unknown}
-set $m63-type {Scalar}
-set $m63-axis {axisCreateNewTuple}
+# set $m63-label {unknown}
+# set $m63-type {Scalar}
+# set $m63-axis {axisCreateNewTuple}
 #set $m63-add {1}
 set $m63-filename {}
 # set $m64-notes {}
@@ -4064,8 +4065,8 @@ class BioTensorApp {
 		    return
 		}
 
-		global $mods(NrrdReader1)-axis
-		set $mods(NrrdReader1)-axis axis0
+		# global $mods(NrrdReader1)-axis
+		# set $mods(NrrdReader1)-axis axis0
 
 		if {$data_mode == "DWIknownB0"} {
 		    global $mods(NrrdReader-T2)-filename
@@ -4075,8 +4076,8 @@ class BioTensorApp {
 			return
 		    }
 		    
-		    global $mods(NrrdReader-T2)-axis
-		    set $mods(NrrdReader-T2)-axis axis0
+		    # global $mods(NrrdReader-T2)-axis
+		    # set $mods(NrrdReader-T2)-axis axis0
 		}
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
 		# Dicom 
@@ -4142,8 +4143,8 @@ class BioTensorApp {
 				    "Please specify a valid nrrd file\nwith Tensors before executing." -type ok -icon info -parent .standalone] 
 		    return
 		}
-		global $mods(NrrdReader1)-axis
-		set $mods(NrrdReader1)-axis axis0
+		# global $mods(NrrdReader1)-axis
+		# set $mods(NrrdReader1)-axis axis0
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
 		# Dicom 
 		global $mods(DicomToNrrd1)-num-entries
@@ -4528,8 +4529,8 @@ class BioTensorApp {
 	    $variance_tab1.reg configure -state normal
 	    $variance_tab2.reg configure -state normal
 
-	    global $mods(NrrdReader-Gradient)-axis
-	    set $mods(NrrdReader-Gradient)-axis axis0
+	    # global $mods(NrrdReader-Gradient)-axis
+	    # set $mods(NrrdReader-Gradient)-axis axis0
 
 	    # execute
 	    $mods(TendEpireg)-c needexecute
@@ -4710,8 +4711,8 @@ class BioTensorApp {
 	    }
 	    
 	    # Set the BMatrix to add a tuple axis
-	    global $mods(NrrdReader-BMatrix)-axis
-	    set $mods(NrrdReader-BMatrix)-axis {axisCreateNewTuple}
+	    # global $mods(NrrdReader-BMatrix)-axis
+	    # set $mods(NrrdReader-BMatrix)-axis {axisCreateNewTuple}
 	    
 	} 
 	
