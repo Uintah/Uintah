@@ -58,7 +58,7 @@ using namespace SCIRun;
 using namespace std;
 
 // This set stores all of the environemnt keys that were set when scirun was
-// started.  Its checked by sci_putenv to ensure we don't overwrite env variables
+// started. Its checked by sci_putenv to ensure we don't overwrite variables
 static map<string,string> scirun_env;
 
 // MacroSubstitute takes var_value returns a string with the environment
@@ -178,7 +178,8 @@ SCIRun::create_sci_environment(char **env, char *execname)
     sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
   if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
     sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
-  sci_putenv("SCIRUN_ITCL_WIDGETS", MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
+  sci_putenv("SCIRUN_ITCL_WIDGETS", 
+	     MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
 
 }
 
@@ -201,7 +202,7 @@ emptyOrComment( const char * line )
   return true;
 }
 
-// parse_scirunrc reads the .scirunrc file 'rcfile' into the program's enviroment
+// parse_scirunrc reads the .scirunrc file 'rcfile' into the SCIRuns enviroment
 // It uses sci_putenv to set variables in the environment. 
 // Returns true if the file was opened and parsed.  False otherwise.
 bool
@@ -244,7 +245,7 @@ SCIRun::parse_scirunrc( const string &rcfile )
 
 	// Only put the var into the environment if it is not already there.
 	if(!SCIRun::sci_getenv( var ) || 
-	   // Except the .scirunrc version, that should always come from the file
+	   // Except the .scirunrc version, it should always come from the file
 	   string(var) == string("SCIRUN_RCFILE_VERSION")) {
 	  sci_putenv(var,sub);
 	} 
