@@ -1,4 +1,9 @@
 
+convert: convertall
+
+all:
+
+#define all convertall
 #include <config/sci.cf>
 
 SEG_TARGET = SegToCS
@@ -75,10 +80,10 @@ SC_TARGET = GenScalp
 SC_SRCS = GenScalp.cc
 SC_OBJS = GenScalp.o
 SC_LIBS = \
-	Classlib/libClasslib.a \
-	Multitask/libMultitask.a \
-	Classlib/libClasslib.a \
-	Math/libMath.a
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Math/libMath.a
 
 SC_LDFLAGS = SCI_LM
 SCIProgramTarget2($(SC_TARGET), $(SC_OBJS), $(SC_LIBS), $(SC_LDFLAGS))
@@ -113,7 +118,22 @@ JASUG_LIBS = \
 JASUG_LDFLAGS = SCI_LM
 SCIProgramTarget2($(JASUG_TARGET), $(JASUG_OBJS), $(JASUG_LIBS), $(JASUG_LDFLAGS))
 
+GE_TARGET = GEtoSF
+GE_SRCS = GEtoSF.cc
+GE_OBJS = GEtoSF.o
+GE_LIBS = \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Math/libMath.a \
+	$(TOP)/Malloc/libMalloc.a
+
+GE_LDFLAGS = SCI_LM
+SCIProgramTarget2($(GE_TARGET), $(GE_OBJS), $(GE_LIBS), $(GE_LDFLAGS))
+
 SRCS = $(SEG_SRCS) $(JAS_SRCS) $(SC_SRCS) $(MESH_SRCS) $(VP_SRCS) \
-	$(IVES_SRCS) $(JASUG_SRCS) $(SJAS_SRCS)
+	$(IVES_SRCS) $(JASUG_SRCS) $(GE_SRCS) $(SJAS_SRCS)
 SCIDependTarget($(SRCS))
 
