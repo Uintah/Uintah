@@ -1,36 +1,24 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Array3Index.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/PressureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/DensityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-
 #include <Core/Datatypes/DenseMatrix.h>
 #include <vector>
 #include <Core/Geometry/Vector.h>
@@ -269,9 +257,6 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
       t->computes( dw, lb->viscosity_CCLabel,      dwindex, patch);
       t->computes( dw, lb->vol_frac_CCLabel,       dwindex, patch);
       t->computes( dw, lb->vel_CCLabel,            dwindex, patch);
-      t->computes( dw, lb->uvel_FCLabel,           dwindex, patch);
-      t->computes( dw, lb->vvel_FCLabel,           dwindex, patch);
-      t->computes( dw, lb->wvel_FCLabel,           dwindex, patch);
     }
     
     t->computes(dw, lb->press_CCLabel,0, patch);
@@ -708,7 +693,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(const Patch* patch, SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::schedulePrintConservedQuantities(const Patch* patch,
 					   SchedulerP& sched,
-					   DataWarehouseP& old_dw,
+					   DataWarehouseP&,
 					   DataWarehouseP& new_dw)
 {
   Task* task = scinew Task("ICE::printConservedQuantities",
@@ -811,9 +796,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   vector<CCVariable<double>   > visc_CC(numMatls);
   vector<CCVariable<double>   > vol_frac_CC(numMatls);
   vector<CCVariable<Vector>   > vel_CC(numMatls);
-  vector<SFCXVariable<double> > uvel_FC(numMatls);
-  vector<SFCYVariable<double> > vvel_FC(numMatls);
-  vector<SFCZVariable<double> > wvel_FC(numMatls);
   CCVariable<double>    press_CC;  
   vector<double>        cv(numMatls);
   new_dw->allocate(press_CC,lb->press_CCLabel, 0,patch);
@@ -835,10 +817,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->allocate(visc_CC[m],     lb->viscosity_CCLabel,     dwindex,patch);
     new_dw->allocate(vol_frac_CC[m], lb->vol_frac_CCLabel,      dwindex,patch);
     new_dw->allocate(vel_CC[m],      lb->vel_CCLabel,           dwindex,patch);
- 
-    new_dw->allocate(uvel_FC[m],     lb->uvel_FCLabel,          dwindex,patch);
-    new_dw->allocate(vvel_FC[m],     lb->vvel_FCLabel,          dwindex,patch);
-    new_dw->allocate(wvel_FC[m],     lb->wvel_FCLabel,          dwindex,patch);
   }
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -848,10 +826,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
                               press_CC,  numALLMatls,    patch, new_dw);
                               
     cv[m] = ice_matl->getSpecificHeat();
-     
-    uvel_FC[m].initialize(0.);
-    vvel_FC[m].initialize(0.);
-    wvel_FC[m].initialize(0.);
     
     setBC(rho_top_cycle[m], "Density",      patch);
     setBC(Temp_CC[m],       "Temperature",  patch);
@@ -891,9 +865,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->put(Temp_CC[m],       lb->temp_CCLabel,           dwindex,patch);
     new_dw->put(speedSound[m],    lb->speedSound_CCLabel,     dwindex,patch);
     new_dw->put(vel_CC[m],        lb->vel_CCLabel,            dwindex,patch);
-    new_dw->put(uvel_FC[m],       lb->uvel_FCLabel,           dwindex,patch);
-    new_dw->put(vvel_FC[m],       lb->vvel_FCLabel,           dwindex,patch);
-    new_dw->put(wvel_FC[m],       lb->wvel_FCLabel,           dwindex,patch);
     new_dw->put(visc_CC[m],       lb->viscosity_CCLabel,      dwindex,patch);
   
     if (switchDebugInitialize){
@@ -1427,7 +1398,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 #endif
   
   int numMatls = d_sharedState->getNumMatls();
-  int itworked;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
   double tmp;
@@ -1511,7 +1481,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E  
       //   - backout velocities           
-      itworked = a.solve(b);
+      a.solve(b);
       for(int m = 0; m < numMatls; m++)  {
 	vvel_FCME[m][curcell] = vvel_FC[m][curcell] + b[m];
       }
@@ -1556,7 +1526,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities
-      itworked = a.solve(b);
+      a.solve(b);
      
       for(int m = 0; m < numMatls; m++) {
 	uvel_FCME[m][curcell] = uvel_FC[m][curcell] + b[m];
@@ -1599,7 +1569,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities 
-      itworked = a.solve(b);
+      a.solve(b);
       for(int m = 0; m < numMatls; m++) {
 	wvel_FCME[m][curcell] = wvel_FC[m][curcell] + b[m];
       }
@@ -2276,7 +2246,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 #endif
   int     numMatls  = d_sharedState->getNumICEMatls();
   double  tmp;
-  int     itworked;
   Vector dx         = patch->dCell();
   double vol        = dx.x()*dx.y()*dx.z();
   delt_vartype delT;
@@ -2366,7 +2335,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
     acopy = a;
-    itworked = acopy.solve(b);
+    acopy.solve(b);
 
     for(int m = 0; m < numMatls; m++) {
         vel_CC[m][*iter].x( vel_CC[m][*iter].x() + b[m] );
@@ -2385,7 +2354,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
     acopy    = a;
-    itworked = acopy.solve(b);
+    acopy.solve(b);
     
     for(int m = 0; m < numMatls; m++)   {
         vel_CC[m][*iter].y( vel_CC[m][*iter].y() + b[m] );
@@ -2404,7 +2373,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }    
     acopy    = a;
-    itworked = acopy.solve(b);
+    acopy.solve(b);
     
     for(int m = 0; m < numMatls; m++)  {
       vel_CC[m][*iter].z( vel_CC[m][*iter].z() + b[m] );
@@ -2435,7 +2404,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
     //     S O L V E, Add exchange contribution to orig value
-    itworked = a.solve(b);
+    a.solve(b);
     
     for(int m = 0; m < numMatls; m++) {
       Temp_CC[m][*iter] = Temp_CC[m][*iter] + b[m];
@@ -2598,13 +2567,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
       advectQFirst(q_CC, patch, OFS,OFE, OFC, q_advected);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        sp_vol_CC[*iter] = (q_CC[*iter] + q_advected[*iter]);
+        sp_vol_CC[*iter] = (q_CC[*iter] + q_advected[*iter]/vol);
       }
      // Divide by the new rho_CC.  This must be done in the extraCells
      // for now, because I don't know how to set the BCs for sp_vol.
      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){        
        if(rho_CC[*iter] > 1000.*d_SMALL_NUM){
-                sp_vol_CC[*iter] /= (rho_CC[*iter] + d_SMALL_NUM);
+                sp_vol_CC[*iter] /= rho_CC[*iter];
         }
         else{
                 sp_vol_CC[*iter] = 1./rho_micro[*iter];
@@ -2645,7 +2614,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
  If the switch is turned on then print out the conserved quantities.
 _______________________________________________________________________ */
 void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
-				   DataWarehouseP& old_dw,
+				   DataWarehouseP&,
 				   DataWarehouseP& new_dw)
 {
   Vector mom_xyz_dir(0.0, 0.0, 0.0);
@@ -2715,9 +2684,9 @@ void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
 
 
     double change_total_mom = 
-                100.0 * (total_momentum - initial_total_mom)/(initial_total_mom);
+                100.0 * (total_momentum - initial_total_mom)/(initial_total_mom + d_SMALL_NUM);
     double change_total_eng = 
-                100.0 * (total_energy - initial_total_eng)/(initial_total_eng);
+                100.0 * (total_energy - initial_total_eng)/(initial_total_eng + d_SMALL_NUM);
 
     fprintf(stderr, "Totals: \t mass %5.6g \t\tmomentum %5.6f \t\t energy %5.6g\n",
                     total_mass, total_momentum, total_energy);
