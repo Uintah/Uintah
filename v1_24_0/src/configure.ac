@@ -3467,10 +3467,8 @@ if test -e $freetype_bin/freetype-config; then
     AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
     includes=`$freetype_bin/freetype-config --cflags`
-    FREETYPE_LIB_FLAG=`$freetype_bin/freetype-config --libs`
-
     SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                 $_sci_inc,$FREETYPE_LIB_FLAG,$_sci_lib,$includes,,$_sci_optional)
+                 $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
 
     INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
