@@ -1,6 +1,6 @@
 
 /*
- * Sphere.h: Sphere objects
+ * Pt.h: Pts objects
  *
  *  Written by:
  *   Steven G. Parker & David Weinstein

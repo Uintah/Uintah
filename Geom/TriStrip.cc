@@ -14,6 +14,7 @@
 #include <Geom/TriStrip.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Geom/Save.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
@@ -76,9 +77,29 @@ void GeomTriStrip::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriStrip::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTriStrip::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 {
-    NOT_FINISHED("GeomTriStrip::saveobj");
+    if(format == "vrml") {
+      NOT_FINISHED("GeomTriStrip::saveobj");
+    } else if(format == "rib") {
+	saveinfo->indent(out);
+	out << "PointsPolygons " << verts.size() << " [ ";
+	int i;
+	for(i=0; i < verts.size(); i++)
+	  out << "3 ";
+	out << "] ";
+	for(i=0; i < verts.size(); i++)
+	  out << i * 3 << " ";
+	out << "] \"P\" [ ";
+	for(i=0; i < verts.size(); i++)
+	  out << verts[i]->p.x() << " "
+	      << verts[i]->p.y() << " "
+	      << verts[i]->p.z() << " ";
+	out << " ]\n\n";
+	cerr << "Should output color and normal here.\n";
+    } else {
+      NOT_FINISHED("GeomTriStrip::saveobj");
+    }
     return false;
 }
 

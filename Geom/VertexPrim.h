@@ -33,6 +33,14 @@ struct GeomVertex : public Persistent {
     virtual void emit_normal(DrawInfoOpenGL* di);
 #endif
 
+#if 0
+    // These are here for emiting to a file.
+    virtual void io_emit_all(ostream& out, const clString& format,
+    void io_emit_point(ostream& out, const clString& format, 
+    virtual void io_emit_matl(ostream& out, const clString& format, 
+    virtual void io_emit_normal(ostream& out, const clString& format, 
+#endif
+
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 #if 0

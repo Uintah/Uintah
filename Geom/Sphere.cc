@@ -176,6 +176,7 @@ void GeomSphere::io(Piostream& stream)
 bool GeomSphere::saveobj(ostream& out, const clString& format,
 			 GeomSave* saveinfo)
 {
+    cerr << "saveobj Sphere\n";
     if(format == "vrml"){
 	saveinfo->start_tsep(out);
 	saveinfo->start_node(out, "Sphere");
@@ -183,6 +184,14 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 	out << "radius " << rad << "\n";
 	saveinfo->end_node(out);
 	saveinfo->end_tsep(out);
+	return true;
+    } else if(format == "rib"){
+	saveinfo->start_trn(out);
+	saveinfo->indent(out);
+	out << "Translate " << cen.x() << " "  << cen.y() << " "  << cen.z() << "\n";
+	saveinfo->indent(out);
+	out << "Sphere " << rad << " " << -rad << " " << rad << " 360\n";
+	saveinfo->end_trn(out);
 	return true;
     } else {
 	NOT_FINISHED("GeomSphere::saveobj");

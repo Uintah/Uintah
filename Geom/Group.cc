@@ -264,10 +264,17 @@ void GeomGroup::io(Piostream& stream)
 bool GeomGroup::saveobj(ostream& out, const clString& format,
 			GeomSave* saveinfo)
 {
-    for(int i=0;i<objs.size();i++){
+    static int cnt = 0;
+    cnt++;
+    cerr << "saveobj Group " << cnt << "\n";
+
+    for(int i=0;i<objs.size();i++){ cerr << cnt << ">";
 	if(!objs[i]->saveobj(out, format, saveinfo))
+	  { cnt--;
 	    return false;
+	  }
     }
+    cnt--;
     return true;
 }
 

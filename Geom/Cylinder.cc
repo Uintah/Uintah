@@ -190,6 +190,13 @@ bool GeomCylinder::saveobj(ostream& out, const clString& format,
 	saveinfo->end_node(out);
 	saveinfo->end_tsep(out);
 	return true;
+    } else if(format == "rib"){
+	saveinfo->start_trn(out);
+	saveinfo->rib_orient(out, bottom, axis);
+	saveinfo->indent(out);
+	out << "Cylinder " << rad << " 0 " << height << " 360\n";
+	saveinfo->end_trn(out);
+	return true;
     } else {
 	NOT_FINISHED("GeomCylinder::saveobj");
 	return false;
@@ -265,6 +272,14 @@ bool GeomCappedCylinder::saveobj(ostream& out, const clString& format,
 	out << "height " << height << "\n";
 	saveinfo->end_node(out);
 	saveinfo->end_tsep(out);
+	return true;
+    } else if(format == "rib"){
+	saveinfo->start_trn(out);
+	saveinfo->rib_orient(out, bottom, axis);
+	saveinfo->indent(out);
+	out << "Cylinder " << rad << " 0 " << height << " 360\n";
+	out << "Disk " << height << " " << rad << " 360\n";
+	saveinfo->end_trn(out);
 	return true;
     } else {
 	NOT_FINISHED("GeomCylinder::saveobj");

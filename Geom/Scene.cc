@@ -77,6 +77,74 @@ bool GeomScene::save(const clString& filename, const clString& format)
 	    return false;
 	saveinfo.unindent();
 	out << "}\n";
+
+    } else if(format == "rib"){
+	//////////////////////////////
+	// RIB Output
+	out << "##RenderMan RIB-Structure 1.0\n";
+	out << "version 3.03\n\n";
+	GeomSave saveinfo;
+	saveinfo.nindent=0;
+
+	// Do rendering info.
+	out << "PixelVariance 0.01\n";
+	out << "Format 400 300 1.0\n";
+	out << "Display \"" << filename << ".tif\" \"file\" \"rgb\"\n\n";
+
+	// Do lighting.
+
+	out << "LightSource \"distantlight\" 1  \"intensity\" 0.75  \"from\"  [ 1 -3 -5 ]  \"to\"  [ 0 0 0 ]  \"lightcolor\"  [ 1 1 1 ]\n";
+	out << "LightSource \"spotlight\" 1  \"intensity\" 0.5  \"from\"  [ -2 0 5 ] \"to\"  [ .22 0 0 ]  \"lightcolor\"  [ 0.5 1 1 ] \"coneangle\" 0.8\n";
+	out << "LightSource \"ambientlight\" 2  \"intensity\" 0.5\n";
+
+	// Do view.
+	Point eyep(view.eyep());
+	out << "\nProjection \"perspective\" \"fov\" " << view.fov() << "\n";
+
+	/* Z vector */
+	Vector z = view.lookat() - view.eyep();
+
+	z.normalize();
+	
+	/* Y vector */
+	Vector y = -view.up();
+	
+	/* X vector = Z cross Y */
+	Vector x = Cross(z,y);
+
+	x.normalize();
+	
+	/* Recompute Y = X cross Z */
+	y = Cross(x, z);
+
+	// Not technically necessary.
+	y.normalize();
+
+	out << "ConcatTransform [ "
+#if 1
+	    << -x.x() << " " << -y.x() << " " << z.x() << " 0  "
+	    << -x.y() << " " << -y.y() << " " << z.y() << " 0  "
+	    << -x.z() << " " << -y.z() << " " << z.z() << " 0  "
+#else
+	    << x.x() << " " << x.y() << " " << x.z() << " 0  "
+	    << y.x() << " " << y.y() << " " << y.z() << " 0  "
+	    << z.x() << " " << z.y() << " " << z.z() << " 0  "
+#endif
+	    << "0 0 0 1 ]\n";
+	out << "Translate " << -eyep.x() << " " << -eyep.y() << " " << -eyep.z() << "\n";
+
+	saveinfo.indent(out);
+	out << "\nWorldBegin\n";
+	saveinfo.indent();
+	{
+	    // Do objects...
+	    bool status=top->saveobj(out, format, &saveinfo);
+	    if(!status)
+		return false;
+	}
+	saveinfo.unindent();
+	out << "WorldEnd\n";
+
     } else {
 	cerr << "Format not supported: " << format << endl;
 	return false;
@@ -101,6 +169,7 @@ void GeomSave::indent(ostream& out)
     }
 }
 
+// These guys are for VRML.
 void GeomSave::start_sep(ostream& out)
 {
     indent(out);
@@ -127,6 +196,35 @@ void GeomSave::end_tsep(ostream& out)
     unindent();
     indent(out);
     out << "}\n";
+}
+
+// These guys are for RIB.
+void GeomSave::start_attr(ostream& out)
+{
+    indent(out);
+    out << "AttributeBegin\n";
+    indent();
+}
+
+void GeomSave::end_attr(ostream& out)
+{
+    unindent();
+    indent(out);
+    out << "AttributeEnd\n";
+}
+
+void GeomSave::start_trn(ostream& out)
+{
+    indent(out);
+    out << "TransformBegin\n";
+    indent();
+}
+
+void GeomSave::end_trn(ostream& out)
+{
+    unindent();
+    indent(out);
+    out << "TransformEnd\n";
 }
 
 void GeomSave::start_node(ostream& out, char* name)
@@ -189,3 +287,73 @@ void GeomSave::orient(ostream& out, const Point& center, const Vector& up,
     }
     end_node(out);
 }
+
+void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
+		      const Vector& new_up)
+{
+    indent(out);
+
+    Vector upn(up.normal());
+
+    Vector axis(Cross(upn, Vector(0,0,1)));
+    if(axis.length2() > 1.e-6) {
+      Vector NewX = axis.normal();
+
+      Vector NewY1(Cross(NewX, upn));
+      Vector NewY = NewY1.normal();
+
+#if 0
+      out << "ConcatTransform [ "
+	  << -NewX.x() << " " << -NewX.y() << " " << -NewX.z() << " 0  "
+	  << -NewY.x() << " " << -NewY.y() << " " << -NewY.z() << " 0  "
+	  << upn.x() << " " << upn.y() << " " << upn.z() << " 0  "
+	  << center.x() << " " << center.y() << " " << center.z() << " 1 ]\n";
+#else
+
+      out << "ConcatTransform [ "
+	  << -NewX.x() << " " << -NewX.y() << " " << -NewX.z() << " 0  "
+	  << -NewY.x() << " " << -NewY.y() << " " << -NewY.z() << " 0  "
+	  << upn.x() << " " << upn.y() << " " << upn.z() << " 0  "
+	  << center.x() << " " << center.y() << " " << center.z() << " 1 ]\n";
+#endif
+    } else {
+        cerr << "Can't orient it.\n";
+    }      
+}
+
+#if 0
+   /* Z vector */
+Vector z = view.eyep() - view.lookat();
+
+z.normalize();
+
+   /* Y vector */
+   y = up;
+
+   /* X vector = Y cross Z */
+Vector x = Cross(y,z);
+
+   /* Recompute Y = Z cross X */
+Vector y = Cross(z, x);
+
+   /* cross product gives area of parallelogram, which is < 1.0 for
+    * non-perpendicular unit-length vectors; so normalize x, y here
+    */
+
+x.normalize();
+
+y.normalize();
+
+#define M(row,col)  m[col*4+row]
+   M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
+   M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
+   M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
+   M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
+#undef M
+   glMultMatrixd( m );
+
+   /* Translate Eye to Origin */
+   glTranslated( -eyex, -eyey, -eyez );
+
+}
+#endif

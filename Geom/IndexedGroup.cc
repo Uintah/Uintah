@@ -100,6 +100,7 @@ void GeomIndexedGroup::io(Piostream& stream)
 bool GeomIndexedGroup::saveobj(ostream& out, const clString& format,
 			       GeomSave* saveinfo)
 {
+  cerr << "saveobj IndexedGroup\n";
     HashTableIter<int, GeomObj*> iter(&objs);
     for(iter.first();iter.ok();++iter) {
 	GeomObj *obj = iter.get_data();

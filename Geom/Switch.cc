@@ -90,10 +90,17 @@ void GeomSwitch::intersect(const Ray& ray, Material* matl, Hit& hit)
 bool GeomSwitch::saveobj(ostream& out, const clString& format,
 			 GeomSave* saveinfo)
 {
+    cerr << "saveobj Switch ";
     if(state)
+      {
+	cerr << "yep.\n";
 	return child->saveobj(out, format, saveinfo);
+      }
     else
+      {
+	cerr << "nope.\n";
 	return true;
+      }
 }
 
 #define GEOMSWITCH_VERSION 1
