@@ -109,12 +109,12 @@ void ConfigureWireElectrode::execute() {
     ++idx;
   }
   Vector up, b1, b2;
-  for (int i=0; i<nn; i++) {
+  for (unsigned int i=0; i<nn; i++) {
     pts[i].resize(nu);
     pts_idx[i].resize(nu);
     if (i==0) {
       up=(c[i+1]-c[i]).normal();
-    } else if (i==nn-1) {
+    } else if (i==(unsigned int)(nn-1)) {
       up=(c[i]-c[i-1]).normal();
     } else {
       up=(c[i+1]-c[i-1]).normal();
@@ -130,7 +130,7 @@ void ConfigureWireElectrode::execute() {
       pts_idx[i][u]=quadMesh->add_point(pts[i][u]);
     }
   }
-  for (int i=0; i<nn-1; i++) {
+  for (unsigned int i=0; i<(unsigned int)(nn-1); i++) {
     int u;
     for (u=0; u<nu-1; u++) {
       quadMesh->add_quad(pts[i][u], pts[i][u+1], pts[i+1][u+1], pts[i+1][u]);
