@@ -311,6 +311,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+      if(free_datatype)
+	 MPI_Type_free(&datatype);
+
   d_lock.readUnlock();
       return;
    }
@@ -330,6 +333,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+      if(free_datatype)
+	 MPI_Type_free(&datatype);
+
   d_lock.readUnlock();
       return;
    }
@@ -349,6 +355,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+      if(free_datatype)
+	 MPI_Type_free(&datatype);
+
   d_lock.readUnlock();
       return;
    }
