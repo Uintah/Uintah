@@ -570,12 +570,19 @@ WARNING
     //////////
     // Prints out all information about the task, including dependencies
     void displayAll( ostream & out ) const;
+
+    int getTaskNumber() const {
+      return taskNumber;
+    }
+    void setTaskNumber(int tn) {
+      taskNumber = tn;
+    }
     
   protected: // class Task
     friend class TaskGraph;
     bool visited;
     bool sorted;
-    int  d_resourceIndex;
+    int taskNumber;
     void setSets(const PatchSet* patches, const MaterialSet* matls);
     
   private: // class Task
