@@ -110,10 +110,10 @@
   </xsl:for-each>
   <xsl:for-each select="./answer">
     <xsl:for-each select="./p">
-      <p class="firstclass"><xsl:value-of select="."/></p>
+      <p class="firstclass"><xsl:apply-templates/></p>
     </xsl:for-each>
     <xsl:for-each select="./pre">
-      <pre class="example"><xsl:value-of select="."/></pre>
+      <pre class="example"><xsl:apply-templates/></pre>
     </xsl:for-each>
   </xsl:for-each>
 </xsl:for-each>
@@ -134,3 +134,4 @@
 </xsl:template>
 
 </xsl:stylesheet>
+esheet>
