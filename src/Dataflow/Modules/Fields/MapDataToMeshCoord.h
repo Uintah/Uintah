@@ -53,18 +53,16 @@ FieldHandle
 MapDataToMeshCoordAlgoT<FIELD>::execute(FieldHandle field_h, int coord)
 {
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
-  typename FIELD::mesh_type *imesh = 
-    dynamic_cast<typename FIELD::mesh_type *>(ifield->get_typed_mesh().get_rep());
-
   FIELD *ofield = ifield->clone();
-  ofield->mesh()->clone();
+
+  ofield->mesh_detach();
+
   typename FIELD::mesh_type *omesh = ofield->get_typed_mesh().get_rep();
 
   typename FIELD::mesh_type::Node::iterator bn, en;
   omesh->begin(bn);
   omesh->end(en);
-  typename FIELD::fdata_type::iterator di;
-  di = ofield->fdata().begin();
+  typename FIELD::fdata_type::iterator di = ofield->fdata().begin();
 
   if (coord == 3) {
     omesh->synchronize(Mesh::NORMALS_E);
@@ -84,7 +82,7 @@ MapDataToMeshCoordAlgoT<FIELD>::execute(FieldHandle field_h, int coord)
       omesh->get_normal(n, *bn);
       p += n*tmp;
     }
-    omesh->set_point(p, *bn);
+    omesh->set_point(*bn, p);
     ++bn;
     ++di;
   }
