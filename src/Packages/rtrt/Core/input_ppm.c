@@ -87,7 +87,7 @@ texture *ReadPPMTexture( char *infilename )
   int i, j, count=0;
   int img_max;
   long img_size;
-  int r, g, b, bw;
+  int r, g, b, bw = 0;
   int c, mode, raw=0, ascii=0;
   texture *t;
   
