@@ -135,6 +135,7 @@ public:
    getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
    void printParticleSubsets();
 
+   void print();
    // NCVariables Variables
    virtual void allocateTemporary(NCVariableBase&, const Patch*,
 				  Ghost::GhostType = Ghost::None,
@@ -259,7 +260,7 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
 
-   void sendMPI(SendState& ss, DependencyBatch* batch,
+   void sendMPI(SendState& ss, SendState& rs, DependencyBatch* batch,
 		const VarLabel* pos_var, BufferInfo& buffer, 
                 OnDemandDataWarehouse* old_dw, const DetailedDep* dep);
    void recvMPI(SendState& rs, BufferInfo& buffer, DependencyBatch* batch,
