@@ -224,6 +224,16 @@ void after_each_step_wrapper(
  ICELabel* lb; 
  SimulationStateP d_sharedState;
  double d_SMALL_NUM;
+ double d_pressure;
+ 
+ struct ic {
+   Vector d_velocity;
+   double d_micro_density;
+   double d_temperature;
+   double d_volume_fraction;
+ };
+
+ vector<struct ic> d_ic;
 
  
  ICE(const ICE&);
@@ -267,6 +277,10 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.33  2000/10/31 04:16:17  jas
+// Fixed some errors in speed of sound and equilibration pressure calculation.
+// Added initial conditions.
+//
 // Revision 1.32  2000/10/25 22:22:13  jas
 // Change the fflux and eflux struct so that the data members begin with d_.
 // This makes g++ happy.

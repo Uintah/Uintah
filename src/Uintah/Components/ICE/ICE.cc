@@ -105,6 +105,25 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   cout << "Number of materials: " << d_sharedState->getNumMatls() << endl;
 
+  // Pull out the initial conditions
+  
+  d_ic.resize(d_sharedState->getNumMatls());
+  
+  ProblemSpecP ic_ps = prob_spec->findBlock("InitialConditions");
+  ProblemSpecP ice_ic_ps = ic_ps->findBlock("ICE");
+  ice_ic_ps->require("pressure",d_pressure);
+  int m = 0;
+  for (ProblemSpecP ps = ice_ic_ps->findBlock("material"); ps != 0;
+       ps = ps->findNextBlock("material") ) {
+    ps->require("volume_fraction",d_ic[m].d_volume_fraction);
+    ps->require("velocity",d_ic[m].d_velocity);
+    ps->require("micro_density",d_ic[m].d_micro_density);
+    ps->require("temperature",d_ic[m].d_temperature);
+    m++;
+  }
+
+  
+    
 }
 
 void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched, 
@@ -127,7 +146,7 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 	t->computes(dw, lb->rho_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->cv_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->viscosity_CCLabel, ice_matl->getDWIndex(),patch);
-
+	t->computes(dw, lb->vol_frac_CCLabel, ice_matl->getDWIndex(), patch);
 	t->computes(dw, lb->uvel_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->vvel_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->wvel_CCLabel,ice_matl->getDWIndex(),patch);
@@ -515,8 +534,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   new_dw->put(delt_vartype(dT), lb->delTLabel);
 
   CCVariable<double> rho_micro, temp, cv, rho_CC,press,speedSound;
-  CCVariable<double> uvel_CC,vvel_CC,wvel_CC, visc_CC;
+  CCVariable<double> uvel_CC,vvel_CC,wvel_CC, visc_CC,vol_frac_CC;
   new_dw->allocate(press,lb->press_CCLabel,0,patch);
+
+  // Store the initial pressure
+  press.initialize(d_pressure);
+  // The application of the pressure bcs will overwrite the extra cell
+  // locations.
 
   // Store the pressure BCs
   for(Patch::FaceType face = Patch::startFace;
@@ -534,12 +558,11 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }
   }
 
-  cout << "low index = " << press.getLowIndex() << endl;
-  cout << "high index = " << press.getHighIndex() << endl;
-
+#if 0
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     cout << "press["<< *iter<< "]=" << press[*iter] << endl;
   } 
+#endif
 
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
@@ -552,10 +575,24 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
       new_dw->allocate(speedSound,lb->speedSound_CCLabel,vfindex,patch);
       new_dw->allocate(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
+      new_dw->allocate(vol_frac_CC,lb->vol_frac_CCLabel,vfindex,patch);
 
       new_dw->allocate(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->allocate(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
+
+      // Set the initial conditions:
+      uvel_CC.initialize(d_ic[m].d_velocity.x());
+      vvel_CC.initialize(d_ic[m].d_velocity.y());
+      wvel_CC.initialize(d_ic[m].d_velocity.z());
+      rho_micro.initialize(d_ic[m].d_micro_density);
+      rho_CC.initialize(d_ic[m].d_micro_density*d_ic[m].d_volume_fraction);
+      temp.initialize(d_ic[m].d_temperature);
+      vol_frac_CC.initialize(d_ic[m].d_volume_fraction);
+      speedSound.initialize(ice_matl->getSpeedOfSound());
+      visc_CC.initialize(ice_matl->getViscosity());
+      cv.initialize(ice_matl->getSpecificHeat());
+
 
       // Set the boundary conditions:
       //    uvel,vvel,wvel,temp,rho_CC
@@ -587,6 +624,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 	}
       }
 
+#if 0
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	cout << "rho_CC["<< *iter<< "]=" << rho_CC[*iter] << endl;
 	cout << "temp["<< *iter<< "]=" << temp[*iter] << endl;
@@ -595,9 +633,11 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 	cout << "wvel_CC["<< *iter<< "]=" << wvel_CC[*iter] << endl;
 	
       } 
+#endif
 
       new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
+      new_dw->put(vol_frac_CC,lb->vol_frac_CCLabel,vfindex,patch);
       new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
       new_dw->put(speedSound,lb->speedSound_CCLabel,vfindex,patch);
@@ -728,10 +768,9 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 
   press_new = press;
 
-  bool converged = false;
-
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     double delPress = 0.;
+    bool converged = false;
     while( converged == false) {
      double A = 0.;
      double B = 0.;
@@ -751,6 +790,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 					     dp_drho[m],dp_de[m]);
        }
      }
+     
      vector<double> Q(numMatls),y(numMatls);     
      for (int m = 0; m < numMatls; m++) {
        Material* matl = d_sharedState->getMaterial(m);
@@ -766,6 +806,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
      }
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
+     cout << "delPress=" << delPress << endl;
      press_new[*iter] += delPress;
 
      for (int m = 0; m < numMatls; m++) {
@@ -816,86 +857,91 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
        converged = true;
      
     }  // end of converged
+  }
+  // Update the boundary conditions for the variables:
+  // Pressure (press_new)
 
-    // Update the boundary conditions for the variables:
-    // Pressure (press_new)
-
-    for(Patch::FaceType face = Patch::startFace;
-	face <= Patch::endFace; face=Patch::nextFace(face)){
-      vector<BoundCond* > bcs;
-      bcs = patch->getBCValues(face);
-      for (int i = 0; i<(int)bcs.size(); i++ ) {
-	string bcs_type = bcs[i]->getType();
-	if (bcs_type == "Pressure") {
-	  PressureBoundCond* bc = 
-	    static_cast<PressureBoundCond*>(bcs[i]);
-	  //cout << "bc value = " << bc->getPressure() << endl;
-	    press_new.fillFace(face,bc->getPressure());
-	}
-      }
-    }
-    
-    // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
-
-    Vector dx = patch->dCell();
-    Vector gravity = d_sharedState->getGravity();
-    IntVector highIndex = patch->getCellHighIndex();
-    IntVector lowIndex = patch->getCellLowIndex();
-
-    double width = (highIndex.x() - lowIndex.x())*dx.x();
-    double height = (highIndex.y() - lowIndex.y())*dx.y();
-    double depth = (highIndex.z() - lowIndex.z())*dx.z();
-
-    if (gravity.x() != 0.) {
-    // x direction
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	IntVector curcell = *iter;
-	double press_hydro = 0.;
-	for (int m = 0; m < numMatls; m++) {
-	  press_hydro += rho[m][*iter]* gravity.x()*
-	    ((double) (curcell-highIndex).x()*dx.x()- width);
-	}
-	press_new[*iter] -= press_hydro;
-      }
-    }
-    if (gravity.y() != 0.) {
-      // y direction
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	IntVector curcell = *iter;
-	double press_hydro = 0.;
-	for (int m = 0; m < numMatls; m++) {
-	  press_hydro += rho[m][*iter]* gravity.y()*
-	    ( (double) (curcell-highIndex).y()*dx.y()- height);
-	}
-	press_new[*iter] -= press_hydro;
-      }
-    }
-    if (gravity.z() != 0.) {
-      // z direction
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	IntVector curcell = *iter;
-	double press_hydro = 0.;
-	for (int m = 0; m < numMatls; m++) {
-	  press_hydro += rho[m][*iter]* gravity.z()*
-	    ((double) (curcell-highIndex).z()*dx.z()- depth);
-	}
-	press_new[*iter] -= press_hydro;
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++) {
+    cout << "press_new["<<*iter<<"]="<<press_new[*iter] << endl;
+  }
+  
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCond* > bcs;
+    bcs = patch->getBCValues(face);
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      string bcs_type = bcs[i]->getType();
+      if (bcs_type == "Pressure") {
+	PressureBoundCond* bc = 
+	  static_cast<PressureBoundCond*>(bcs[i]);
+	press_new.fillFace(face,bc->getPressure());
       }
     }
   }
-
+  
+ 
+  
+  // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
+  
+  Vector dx = patch->dCell();
+  Vector gravity = d_sharedState->getGravity();
+  IntVector highIndex = patch->getCellHighIndex();
+  IntVector lowIndex = patch->getCellLowIndex();
+  
+  double width = (highIndex.x() - lowIndex.x())*dx.x();
+  double height = (highIndex.y() - lowIndex.y())*dx.y();
+  double depth = (highIndex.z() - lowIndex.z())*dx.z();
+  
+  if (gravity.x() != 0.) {
+    // x direction
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector curcell = *iter;
+      double press_hydro = 0.;
+      for (int m = 0; m < numMatls; m++) {
+	press_hydro += rho[m][*iter]* gravity.x()*
+	  ((double) (curcell-highIndex).x()*dx.x()- width);
+      }
+      press_new[*iter] -= press_hydro;
+    }
+  }
+  if (gravity.y() != 0.) {
+    // y direction
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector curcell = *iter;
+      double press_hydro = 0.;
+      for (int m = 0; m < numMatls; m++) {
+	press_hydro += rho[m][*iter]* gravity.y()*
+	  ( (double) (curcell-highIndex).y()*dx.y()- height);
+      }
+      press_new[*iter] -= press_hydro;
+    }
+  }
+  if (gravity.z() != 0.) {
+    // z direction
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector curcell = *iter;
+      double press_hydro = 0.;
+      for (int m = 0; m < numMatls; m++) {
+	press_hydro += rho[m][*iter]* gravity.z()*
+	  ((double) (curcell-highIndex).z()*dx.z()- depth);
+      }
+      press_new[*iter] -= press_hydro;
+    }
+  }
+  
+  
   // Store new pressure, speedSound,vol_frac
   for (int m = 0; m < numMatls; m++) {
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if (ice_matl) {
-	int vfindex = matl->getVFIndex();
-	new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
-	new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
+      int vfindex = matl->getVFIndex();
+      new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
+      new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
     }
   }
   new_dw->put(press_new,lb->press_CCLabel,0,patch);
-    
+  
 }
 
 void ICE::actuallyStep1c(const ProcessorGroup*,
@@ -2302,6 +2348,10 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.54  2000/10/31 04:16:17  jas
+// Fixed some errors in speed of sound and equilibration pressure calculation.
+// Added initial conditions.
+//
 // Revision 1.53  2000/10/27 23:41:01  jas
 // Added more material constants and some debugging output.
 //
