@@ -280,6 +280,13 @@ void ViewWindow::get_bounds(BBox& bbox)
       viewwindow_objs[i]->get_bounds(bbox);
   }
   // XXX - END   - ASF ADDED FOR UNICAM
+
+  // If the bounding box is empty, make it default to sane view.
+  if (!bbox.valid())
+  {
+    bbox.extend(Point(-1.0, -1.0, -1.0));
+    bbox.extend(Point(1.0, 1.0, 1.0));
+  }
 }
 
 void ViewWindow::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
