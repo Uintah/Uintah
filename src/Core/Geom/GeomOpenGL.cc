@@ -4253,7 +4253,7 @@ void HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
 
   int vp[4];
-  float proj[16];
+  //float proj[16];
   glGetIntegerv( GL_VIEWPORT, vp );
   glClearColor(0.0, 0.0, 0.0, 0.0);
 

@@ -32,6 +32,7 @@ using std::endl;
 
 using namespace SCIRun;
 
+int
 main(int argc, char **argv) {
     int selIdx=-1;
     if (argc != 5 && argc != 4) {
