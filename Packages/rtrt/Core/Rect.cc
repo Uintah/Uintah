@@ -58,7 +58,7 @@ void Rect::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     hit.hit(this, t);
 }
 
-void Rect::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+void Rect::light_intersect(const Ray& ray, HitInfo& hit, Color& /*atten*/,
 			   DepthStats* st, PerProcessorContext*)
 {
     st->rect_isect++;
