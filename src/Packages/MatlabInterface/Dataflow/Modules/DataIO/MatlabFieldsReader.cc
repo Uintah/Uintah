@@ -54,6 +54,7 @@
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/NrrdString.h>
 
 namespace MatlabIO {
 
@@ -150,6 +151,21 @@ MatlabFieldsReader::~MatlabFieldsReader()
 // Inner workings of this module
 void MatlabFieldsReader::execute()
 {
+      NrrdIPort *filenameport;
+      if ((filenameport = static_cast<NrrdIPort *>(get_iport("filename"))))
+      {
+        NrrdDataHandle nrrdH;
+        if (filenameport->get(nrrdH))
+        {
+            NrrdString fname(nrrdH);
+            std::string filename = fname.getstring();
+            guifilename_.set(filename);
+            ctx->reset();
+        }
+      }
+
+
+
 	// Get the filename from TCL.
 	std::string filename = guifilename_.get();
 	

@@ -28,7 +28,7 @@
 
  
 /*
- * FILE: MatlabMatricesReader.cc
+ * FILE: MatlabBundlesReader.cc
  * AUTH: Jeroen G Stinstra
  * DATE: 30 MAR 2004
  */
@@ -38,15 +38,17 @@
  *
  */
 
+#include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
+
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/BundlePort.h>
+#include <Core/Datatypes/NrrdData.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
@@ -57,16 +59,16 @@ namespace MatlabIO {
 
 using namespace SCIRun;
 
-class MatlabMatricesReader : public Module 
+class MatlabBundlesReader : public Module 
 {
 
 public:
 
 	// Constructor
-	MatlabMatricesReader(GuiContext*);
+	MatlabBundlesReader(GuiContext*);
 
 	// Destructor
-	virtual ~MatlabMatricesReader();
+	virtual ~MatlabBundlesReader();
 
 	// Std functions for each module
 	// execute():
@@ -110,17 +112,16 @@ private:
   GuiString				guimatrixinfotexts_;   	// A list of matrix-information strings of the contents of a .mat-file
   GuiString				guimatrixnames_;	// A list of matrix-names of the contents of a .mat-file 
   GuiString				guimatrixname_;		// the name of the matrix that has been selected
-  GuiInt				guidisabletranspose_; // Do not convert from Fortran ordering to C++ ordering
-  
+
   // Ports (We only use one output port)
-  MatrixOPort*			omatrix_[NUMPORTS];
+  SCIRun::BundleOPort*			omatrix_[NUMPORTS];
   
   // Class for translating matlab objects into SCIRun objects
   matlabconverter		translate_;
   
 };
 
-DECLARE_MAKER(MatlabMatricesReader)
+DECLARE_MAKER(MatlabBundlesReader)
 
 // Constructor:
 // Initialise all the variables shared between TCL and SCIRun
@@ -128,13 +129,12 @@ DECLARE_MAKER(MatlabMatricesReader)
 // settings of a previously created module
 // matrixinfotexts and matrixnames serve as outputs to TCL.
 
-MatlabMatricesReader::MatlabMatricesReader(GuiContext* ctx)
-  : Module("MatlabMatricesReader", ctx, Source, "DataIO", "MatlabInterface"),
+MatlabBundlesReader::MatlabBundlesReader(GuiContext* ctx)
+  : Module("MatlabBundlesReader", ctx, Source, "DataIO", "MatlabInterface"),
     guifilename_(ctx->subVar("filename")),
     guimatrixinfotexts_(ctx->subVar("matrixinfotexts")),     
     guimatrixnames_(ctx->subVar("matrixnames")),    
-	guimatrixname_(ctx->subVar("matrixname")),
-	guidisabletranspose_(ctx->subVar("disable-transpose"))
+	guimatrixname_(ctx->subVar("matrixname"))
 {
 	indexmatlabfile(false);
 }
@@ -142,13 +142,13 @@ MatlabMatricesReader::MatlabMatricesReader(GuiContext* ctx)
 // Destructor:
 // All my objects have descrutors and hence nothing needs
 // explicit descruction
-MatlabMatricesReader::~MatlabMatricesReader()
+MatlabBundlesReader::~MatlabBundlesReader()
 {
 }
 
 // Execute:
 // Inner workings of this module
-void MatlabMatricesReader::execute()
+void MatlabBundlesReader::execute()
 {
 
       NrrdIPort *filenameport;
@@ -164,17 +164,13 @@ void MatlabMatricesReader::execute()
         }
       }
 
-
-
 	// Get the filename from TCL.
 	std::string filename = guifilename_.get();
-	int disable_transpose = guidisabletranspose_.get();
-	translate_.setdisabletranspose(disable_transpose);
 	
 	// If the filename is empty, launch an error
 	if (filename == "")
 	{
-		error("MatlabMatricesReader: No file name was specified");
+		error("MatlabBundlesReader: No file name was specified");
 		return;
 	}
 
@@ -184,11 +180,11 @@ void MatlabMatricesReader::execute()
 		{
 	
 			// Find the output port the scheduler has created 
-			omatrix_[p] = static_cast<MatrixOPort *>(get_oport(static_cast<int>(p)));
+			omatrix_[p] = static_cast<SCIRun::BundleOPort *>(get_oport(static_cast<int>(p)));
 
 			if(!omatrix_[p]) 
 			{
-				error("MatlabMatricesReader: Unable to initialize output port");
+				error("MatlabBundlesReader: Unable to initialize output port");
 				return;
 			}
 	
@@ -214,8 +210,8 @@ void MatlabMatricesReader::execute()
 			// The data is still in matlab format and the next function
 			// creates a SCIRun matrix object
 	
-			SCIRun::MatrixHandle mh;
-			translate_.mlArrayTOsciMatrix(ma,mh,static_cast<SCIRun::Module *>(this));
+			SCIRun::BundleHandle mh;
+			translate_.mlArrayTOsciBundle(ma,mh,static_cast<SCIRun::Module *>(this));
 			
 			// Put the SCIRun matrix in the hands of the scheduler
 			omatrix_[p]->send(mh);
@@ -226,39 +222,39 @@ void MatlabMatricesReader::execute()
 		
 	catch (matlabfile::could_not_open_file)
 	{
-		error("MatlabMatricesReader: Could not open file");
+		error("MatlabBundlesReader: Could not open file");
 	}
 	catch (matlabfile::invalid_file_format)
 	{
-		error("MatlabMatricesReader: Invalid file format");
+		error("MatlabBundlesReader: Invalid file format");
 	}
 	catch (matlabfile::io_error)
 	{
-		error("MatlabMatricesReader: IO error");
+		error("MatlabBundlesReader: IO error");
 	}
 	catch (matlabfile::out_of_range)
 	{
-		error("MatlabMatricesReader: Out of range");
+		error("MatlabBundlesReader: Out of range");
 	}
 	catch (matlabfile::invalid_file_access)
 	{
-		error("MatlabMatricesReader: Invalid file access");
+		error("MatlabBundlesReader: Invalid file access");
 	}
 	catch (matlabfile::empty_matlabarray)
 	{
-		error("MatlabMatricesReader: Empty matlab array");
+		error("MatlabBundlesReader: Empty matlab array");
 	}
 	catch (matlabfile::matfileerror) 
 	{
-		error("MatlabMatricesReader: Internal error in reader");
+		error("MatlabBundlesReader: Internal error in reader");
 	}
 }
 
 
-void MatlabMatricesReader::tcl_command(GuiArgs& args, void* userdata)
+void MatlabBundlesReader::tcl_command(GuiArgs& args, void* userdata)
 {
 	if(args.count() < 2){
-		args.error("MatlabMatricesReader needs a minor command");
+		args.error("MatlabBundlesReader needs a minor command");
 		return;
 	}
 
@@ -283,7 +279,7 @@ void MatlabMatricesReader::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-matlabarray MatlabMatricesReader::readmatlabarray(long p)
+matlabarray MatlabBundlesReader::readmatlabarray(long p)
 {
 	matlabarray marray;
 	std::string filename = guifilename_.get();
@@ -329,7 +325,7 @@ matlabarray MatlabMatricesReader::readmatlabarray(long p)
 
 
 
-void MatlabMatricesReader::indexmatlabfile(bool postmsg)
+void MatlabBundlesReader::indexmatlabfile(bool postmsg)
 {
 	
 	std::string filename = "";
@@ -340,8 +336,9 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
 	
 	guimatrixinfotexts_.set(matrixinfotexts);
 	guimatrixnames_.set(matrixnames);
-	
+
 	translate_.setpostmsg(postmsg);
+
 	
 	filename = guifilename_.get();	
 
@@ -380,7 +377,7 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
 		
 		// all matlab data is stored in a matlabarray object
 		matlabarray ma;
-		long cindex = 0;		// compability index, which matlab array fits the SCIRun matrix best? 
+		long cindex = 0;		// compatibility index, which matlab array fits the SCIRun Bundle best? 
 		long maxindex = 0;		// highest index found so far
 			
 		// Scan the file and see which matrices are compatible
@@ -391,7 +388,7 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
 		for (long p=0;p<mfile.getnummatlabarrays();p++)
 		{
 			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-			if ((cindex = translate_.sciMatrixCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
+			if ((cindex = translate_.sciBundleCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
 			{
 				// in case we need to propose a matrix to load, select
 				// the one that is most compatible with the data
@@ -444,37 +441,25 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
 
 	catch (matlabfile::could_not_open_file)
 	{
-		displayerror("MatlabMatricesReader: Could not open file");
+		displayerror("MatlabBundlesReader: Could not open file");
 	}
 	catch (matlabfile::invalid_file_format)
 	{
-		displayerror("MatlabMatricesReader: Invalid file format");
+		displayerror("MatlabBundlesReader: Invalid file format");
 	}
 	catch (matlabfile::io_error)
 	{
-		displayerror("MatlabMatricesReader: IO error");
-	}
-	catch (matlabfile::out_of_range)
-	{
-		displayerror("MatlabMatricesReader: Out of range");
-	}
-	catch (matlabfile::invalid_file_access)
-	{
-		displayerror("MatlabMatricesReader: Invalid file access");
-	}
-	catch (matlabfile::empty_matlabarray)
-	{
-		displayerror("MatlabMatricesReader: Empty matlab array");
+		displayerror("MatlabBundlesReader: IO error");
 	}
 	catch (matlabfile::matfileerror) 
 	{
-		displayerror("MatlabMatricesReader: Internal error in reader");
+		displayerror("MatlabBundlesReader: Internal error in reader");
 	}
 	return;
 }
 
 
-void MatlabMatricesReader::displayerror(std::string str)
+void MatlabBundlesReader::displayerror(std::string str)
 {
   gui->lock();
   // Explicit call to TCL
