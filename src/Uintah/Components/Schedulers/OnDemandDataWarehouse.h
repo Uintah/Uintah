@@ -108,11 +108,27 @@ public:
 		    int matlIndex, const Patch*);
 
    // FC Variables -- fron jas ... need to be fixed...
-   virtual void allocate(FCVariableBase&, const VarLabel*,
+   virtual void allocate(XFCVariableBase&, const VarLabel*,
 			 int matlIndex, const Patch*);
-   virtual void get(FCVariableBase&, const VarLabel*, int matlIndex,
+   virtual void get(XFCVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void put(const FCVariableBase&, const VarLabel*,
+   virtual void put(const XFCVariableBase&, const VarLabel*,
+		    int matlIndex, const Patch*);
+
+   // FC Variables -- fron jas ... need to be fixed...
+   virtual void allocate(YFCVariableBase&, const VarLabel*,
+			 int matlIndex, const Patch*);
+   virtual void get(YFCVariableBase&, const VarLabel*, int matlIndex,
+		    const Patch*, Ghost::GhostType, int numGhostCells);
+   virtual void put(const YFCVariableBase&, const VarLabel*,
+		    int matlIndex, const Patch*);
+
+   // FC Variables -- fron jas ... need to be fixed...
+   virtual void allocate(ZFCVariableBase&, const VarLabel*,
+			 int matlIndex, const Patch*);
+   virtual void get(ZFCVariableBase&, const VarLabel*, int matlIndex,
+		    const Patch*, Ghost::GhostType, int numGhostCells);
+   virtual void put(const ZFCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*);
 
 
@@ -195,7 +211,9 @@ private:
 
    DWDatabase<NCVariableBase>       d_ncDB;
    DWDatabase<CCVariableBase>       d_ccDB;
-   DWDatabase<FCVariableBase>       d_fcDB;
+   DWDatabase<XFCVariableBase>       d_xfcDB;
+   DWDatabase<YFCVariableBase>       d_yfcDB;
+   DWDatabase<ZFCVariableBase>       d_zfcDB;
    DWDatabase<SFCXVariableBase>     d_sfcxDB;
    DWDatabase<SFCYVariableBase>     d_sfcyDB;
    DWDatabase<SFCZVariableBase>     d_sfczDB;
@@ -230,6 +248,9 @@ private:
 
 //
 // $Log$
+// Revision 1.40  2000/11/28 03:55:22  jas
+// Added X,Y,Z FCVariables to the data warehouse.
+//
 // Revision 1.39  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //

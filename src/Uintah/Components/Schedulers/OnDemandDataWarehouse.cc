@@ -968,24 +968,28 @@ OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
 }
 
 void
-OnDemandDataWarehouse::allocate(FCVariableBase& var,
+OnDemandDataWarehouse::allocate(XFCVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
 				const Patch* patch)
 {
   d_lock.writeLock();
    // Error checking
-   if(d_fcDB.exists(label, matlIndex, patch))
-      throw InternalError("FC variable already exists: "+label->getName());
+   if(d_xfcDB.exists(label, matlIndex, patch))
+      throw InternalError("XFC variable already exists: "+label->getName());
 
    // Allocate the variable
    // Probably should be getFaceLowIndex() . . .
-   var.allocate(patch->getFaceLowIndex(), patch->getFaceHighIndex());
+#if 0
+   cout << "allocating fc variable of size: " << patch->getXFaceLowIndex() <<
+     " " << patch->getXFaceHighIndex() << endl;
+#endif
+   var.allocate(patch->getXFaceLowIndex(), patch->getXFaceHighIndex());
   d_lock.writeUnlock();
 }
 
 void
-OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
+OnDemandDataWarehouse::get(XFCVariableBase& var, const VarLabel* label,
 			   int matlIndex,
 			   const Patch* patch, Ghost::GhostType gtype,
 			   int numGhostCells)
@@ -996,10 +1000,10 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
-      if(!d_fcDB.exists(label, matlIndex, patch))
+      if(!d_xfcDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
-      d_fcDB.get(label, matlIndex, patch, var);
+      d_xfcDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
       int l,h;
@@ -1013,8 +1017,8 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	 // All 27 neighbors
 	 l=-1;
 	 h=1;
-	 lowIndex = patch->getFaceLowIndex()-gc;
-	 highIndex = patch->getFaceHighIndex()+gc;
+	 lowIndex = patch->getXFaceLowIndex()-gc;
+	 highIndex = patch->getXFaceHighIndex()+gc;
 	 cerr << "Faces around nodes is probably not functional!\n";
 	 break;
       case Ghost::AroundCells:
@@ -1023,8 +1027,8 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	 // all 6 faces
 	 l=-1;
 	 h=1;
-	 lowIndex = patch->getFaceLowIndex()-gc;
-         highIndex = patch->getFaceHighIndex()+gc;
+	 lowIndex = patch->getXFaceLowIndex()-gc;
+         highIndex = patch->getXFaceHighIndex()+gc;
 	 break;
       default:
 	 throw InternalError("Illegal ghost type");
@@ -1034,23 +1038,23 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
       // change it to traverse only thru patches with adjoining faces
       const Level* level = patch->getLevel();
       std::vector<const Patch*> neighbors;
-      IntVector low(patch->getFaceLowIndex()+IntVector(l,l,l));
-      IntVector high(patch->getFaceHighIndex()+IntVector(h,h,h));
+      IntVector low(patch->getXFaceLowIndex()+IntVector(l,l,l));
+      IntVector high(patch->getXFaceHighIndex()+IntVector(h,h,h));
       level->selectPatches(low,high,neighbors);
       for(int i = 0;i<(int)neighbors.size();i++) {
 	const Patch* neighbor = neighbors[i];
 	if(neighbor){
-	  if(!d_fcDB.exists(label, matlIndex, neighbor))
+	  if(!d_xfcDB.exists(label, matlIndex, neighbor))
 	    throw InternalError("Position variable does not exist: "+ 
 				label->getName());
-	  FCVariableBase* srcvar = 
-	    d_fcDB.get(label, matlIndex, neighbor);
+	  XFCVariableBase* srcvar = 
+	    d_xfcDB.get(label, matlIndex, neighbor);
 
 	  using SCICore::Geometry::Max;
 	  using SCICore::Geometry::Min;
 
-	  IntVector low = Max(lowIndex, neighbor->getFaceLowIndex());
-	  IntVector high= Min(highIndex, neighbor->getFaceHighIndex());
+	  IntVector low = Max(lowIndex, neighbor->getXFaceLowIndex());
+	  IntVector high= Min(highIndex, neighbor->getXFaceHighIndex());
 
 	  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	      || ( high.z() < low.z() ) )
@@ -1058,11 +1062,12 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	  
 	  var.copyPatch(srcvar, low, high);
 	  IntVector dfaces = high-low;
-	  totalFaces+=dfaces.x()+dfaces.y()+dfaces.z();
+	  // Needs to be checked - jas
+	  totalFaces+=dfaces.x()*dfaces.y()*dfaces.z();
 	}
       }
       IntVector dn = highIndex-lowIndex;
-      long wantfaces = dn.x()+dn.y()+dn.z();
+      long wantfaces = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantfaces, totalFaces);
    }
 #endif
@@ -1070,18 +1075,262 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 }
 
 void
-OnDemandDataWarehouse::put(const FCVariableBase& var, const VarLabel* label,
+OnDemandDataWarehouse::put(const XFCVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Patch* patch )
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_fcDB.exists(label, matlIndex, patch))
+   if(d_xfcDB.exists(label, matlIndex, patch))
       throw InternalError("FC variable already exists: "+label->getName());
 
    // Put it in the database
-   d_fcDB.put(label, matlIndex, patch, var.clone(), true);
+   d_xfcDB.put(label, matlIndex, patch, var.clone(), true);
+  d_lock.writeUnlock();
+}
+
+void
+OnDemandDataWarehouse::allocate(YFCVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Patch* patch)
+{
+  d_lock.writeLock();
+   // Error checking
+   if(d_yfcDB.exists(label, matlIndex, patch))
+      throw InternalError("YFC variable already exists: "+label->getName());
+
+   // Allocate the variable
+   // Probably should be getFaceLowIndex() . . .
+#if 0
+   cout << "allocating yfc variable of size: " << patch->getYFaceLowIndex() <<
+     " " << patch->getYFaceHighIndex() << endl;
+#endif
+   var.allocate(patch->getYFaceLowIndex(), patch->getYFaceHighIndex());
+  d_lock.writeUnlock();
+}
+
+void
+OnDemandDataWarehouse::get(YFCVariableBase& var, const VarLabel* label,
+			   int matlIndex,
+			   const Patch* patch, Ghost::GhostType gtype,
+			   int numGhostCells)
+{
+  d_lock.readLock();
+#if 1
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
+      if(!d_yfcDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
+      d_yfcDB.get(label, matlIndex, patch, var);
+#if 1
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundNodes");
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getYFaceLowIndex()-gc;
+	 highIndex = patch->getYFaceHighIndex()+gc;
+	 cerr << "Faces around nodes is probably not functional!\n";
+	 break;
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // all 6 faces
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getYFaceLowIndex()-gc;
+         highIndex = patch->getYFaceHighIndex()+gc;
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalFaces=0;
+      // change it to traverse only thru patches with adjoining faces
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low(patch->getYFaceLowIndex()+IntVector(l,l,l));
+      IntVector high(patch->getYFaceHighIndex()+IntVector(h,h,h));
+      level->selectPatches(low,high,neighbors);
+      for(int i = 0;i<(int)neighbors.size();i++) {
+	const Patch* neighbor = neighbors[i];
+	if(neighbor){
+	  if(!d_yfcDB.exists(label, matlIndex, neighbor))
+	    throw InternalError("Position variable does not exist: "+ 
+				label->getName());
+	  YFCVariableBase* srcvar = 
+	    d_yfcDB.get(label, matlIndex, neighbor);
+
+	  using SCICore::Geometry::Max;
+	  using SCICore::Geometry::Min;
+
+	  IntVector low = Max(lowIndex, neighbor->getYFaceLowIndex());
+	  IntVector high= Min(highIndex, neighbor->getYFaceHighIndex());
+
+	  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+	      || ( high.z() < low.z() ) )
+	    throw InternalError("Patch doesn't overlap?");
+	  
+	  var.copyPatch(srcvar, low, high);
+	  IntVector dfaces = high-low;
+	  totalFaces+=dfaces.x()*dfaces.y()*dfaces.z();
+	}
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantfaces = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantfaces, totalFaces);
+   }
+#endif
+  d_lock.readUnlock();
+}
+
+void
+OnDemandDataWarehouse::put(const YFCVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Patch* patch )
+{
+  d_lock.writeLock();
+   ASSERT(!d_finalized);
+
+   // Error checking
+   if(d_yfcDB.exists(label, matlIndex, patch))
+      throw InternalError("YFC variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_yfcDB.put(label, matlIndex, patch, var.clone(), true);
+  d_lock.writeUnlock();
+}
+
+void
+OnDemandDataWarehouse::allocate(ZFCVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Patch* patch)
+{
+  d_lock.writeLock();
+   // Error checking
+   if(d_zfcDB.exists(label, matlIndex, patch))
+      throw InternalError("ZFC variable already exists: "+label->getName());
+
+   // Allocate the variable
+   // Probably should be getFaceLowIndex() . . .
+#if 0
+   cout << "allocating zfc variable of size: " << patch->getZFaceLowIndex() <<
+     " " << patch->getZFaceHighIndex() << endl;
+#endif
+   var.allocate(patch->getZFaceLowIndex(), patch->getZFaceHighIndex());
+  d_lock.writeUnlock();
+}
+
+void
+OnDemandDataWarehouse::get(ZFCVariableBase& var, const VarLabel* label,
+			   int matlIndex,
+			   const Patch* patch, Ghost::GhostType gtype,
+			   int numGhostCells)
+{
+  d_lock.readLock();
+#if 1
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
+      if(!d_zfcDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
+      d_zfcDB.get(label, matlIndex, patch, var);
+#if 1
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundNodes");
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getZFaceLowIndex()-gc;
+	 highIndex = patch->getZFaceHighIndex()+gc;
+	 cerr << "Faces around nodes is probably not functional!\n";
+	 break;
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // all 6 faces
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getZFaceLowIndex()-gc;
+         highIndex = patch->getZFaceHighIndex()+gc;
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalFaces=0;
+      // change it to traverse only thru patches with adjoining faces
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low(patch->getZFaceLowIndex()+IntVector(l,l,l));
+      IntVector high(patch->getZFaceHighIndex()+IntVector(h,h,h));
+      level->selectPatches(low,high,neighbors);
+      for(int i = 0;i<(int)neighbors.size();i++) {
+	const Patch* neighbor = neighbors[i];
+	if(neighbor){
+	  if(!d_zfcDB.exists(label, matlIndex, neighbor))
+	    throw InternalError("Position variable does not exist: "+ 
+				label->getName());
+	  ZFCVariableBase* srcvar = 
+	    d_zfcDB.get(label, matlIndex, neighbor);
+
+	  using SCICore::Geometry::Max;
+	  using SCICore::Geometry::Min;
+
+	  IntVector low = Max(lowIndex, neighbor->getZFaceLowIndex());
+	  IntVector high= Min(highIndex, neighbor->getZFaceHighIndex());
+
+	  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+	      || ( high.z() < low.z() ) )
+	    throw InternalError("Patch doesn't overlap?");
+	  
+	  var.copyPatch(srcvar, low, high);
+	  IntVector dfaces = high-low;
+	  totalFaces+=dfaces.x()*dfaces.y()*dfaces.z();
+	}
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantfaces = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantfaces, totalFaces);
+   }
+#endif
+  d_lock.readUnlock();
+}
+
+void
+OnDemandDataWarehouse::put(const ZFCVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Patch* patch )
+{
+  d_lock.writeLock();
+   ASSERT(!d_finalized);
+
+   // Error checking
+   if(d_zfcDB.exists(label, matlIndex, patch))
+      throw InternalError("ZFC variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_zfcDB.put(label, matlIndex, patch, var.clone(), true);
   d_lock.writeUnlock();
 }
 
@@ -1496,7 +1745,9 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 	  d_sfcxDB.exists(label, patch) ||
 	  d_sfcyDB.exists(label, patch) ||
 	  d_sfczDB.exists(label, patch) ||
-	  d_fcDB.exists(label, patch) ||
+	  d_xfcDB.exists(label, patch) ||
+	  d_yfcDB.exists(label, patch) ||
+	  d_zfcDB.exists(label, patch) ||
 	  d_particleDB.exists(label, patch) ){
   d_lock.readUnlock();
 	return true;
@@ -1536,8 +1787,16 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
       SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
       var->emit(oc);
       varFound = true;
-   } else if(d_fcDB.exists(label, matlIndex, patch)) {
-     FCVariableBase* var = d_fcDB.get(label, matlIndex, patch);
+   } else if(d_xfcDB.exists(label, matlIndex, patch)) {
+     XFCVariableBase* var = d_xfcDB.get(label, matlIndex, patch);
+     var->emit(oc);
+     varFound = true;
+   } else if(d_yfcDB.exists(label, matlIndex, patch)) {
+     YFCVariableBase* var = d_yfcDB.get(label, matlIndex, patch);
+     var->emit(oc);
+     varFound = true;
+   } else if(d_zfcDB.exists(label, matlIndex, patch)) {
+     ZFCVariableBase* var = d_zfcDB.get(label, matlIndex, patch);
      var->emit(oc);
      varFound = true;
    }
@@ -1610,6 +1869,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.58  2000/11/28 03:55:22  jas
+// Added X,Y,Z FCVariables to the data warehouse.
+//
 // Revision 1.57  2000/11/21 21:58:24  jas
 // Fixes for FCVariables.
 //
