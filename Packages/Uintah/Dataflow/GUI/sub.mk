@@ -17,7 +17,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GridVisualizer.tcl\
 	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/RescaleColorMap.tcl\
-	$(SRCDIR)/Isosurface.tcl\
 	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/CuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
