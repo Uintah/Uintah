@@ -89,8 +89,6 @@ set m22 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 825
 set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 825 577]
 set m24 [addModuleAtPosition "SCIRun" "Fields" "ScaleFieldData" 412 603]
 set m25 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 412 663]
-set m26 [addModuleAtPosition "SCIRun" "Math" "LinAlgUnary" 430 543]
-set m27 [addModuleAtPosition "SCIRun" "Math" "LinAlgUnary" 858 282]
 
 addConnection $m4 1 $m3 0
 addConnection $m5 1 $m3 1
@@ -132,10 +130,8 @@ addConnection $m23 0 $m25 1
 addConnection $m19 0 $m24 0
 addConnection $m25 0 $m3 4
 addConnection $m0 0 $m1 0
-addConnection $m26 0 $m24 1
-addConnection $m6 1 $m26 0
-addConnection $m27 0 $m21 1
-addConnection $m17 0 $m27 0
+addConnection $m17 0 $m21 1
+addConnection $m6 1 $m24 1
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -370,14 +366,6 @@ set $m25-edge_scale [expr 0.03 * ${global-scale}]
 set $m25-vectors_scale [expr 0.03 * ${global-scale}]
 set $m25-show_progress {-2147483647}
 set $m25-resolution {20}
-set $m26-notes {}
-set $m26-show_status {1}
-set $m26-op {Function}
-set $m26-function {x+500}
-set $m27-notes {}
-set $m27-show_status {1}
-set $m27-op {Function}
-set $m27-function {x+500}
 $m1 initialize_ui
 $m2 initialize_ui
 $m10 initialize_ui
