@@ -57,7 +57,7 @@ class ViewWindow;
 class Viewer : public Module {
     
 public:
-  typedef map<string, void*>	        MapStringVoid;
+  typedef map<string, void*> MapStringVoid;
 
 private:
   vector<ViewWindow*> viewwindow;
@@ -66,7 +66,6 @@ private:
   virtual void do_execute();
 
   int max_portno;
-  //virtual void connection(Module::ConnectionMode, int, int);
 
   MapStringVoid specific;
     
@@ -97,13 +96,7 @@ public:
 
 				// The scene...
   GeomIndexedGroup ports;	// this contains all of the ports...
-
-#if 0    
-  MapIntPortInfo portHash;
-#endif
-
-				// Lighting
-  Lighting lighting;
+  Lighting lighting;            // Lighting
 
   int process_event(int block);
 
