@@ -3219,8 +3219,8 @@ AC_SUBST(AUDIO_LIB_DIR_FLAG)
 
 # Default values:
 _sci_optional=required
-_sci_lib="$sci_thirdparty_lib"
-_sci_inc="$sci_thirdparty_include"
+_sci_lib="$sci_thirdparty_libs"
+_sci_inc="$sci_thirdparty_includes"
 
 if test "$with_teem"; then
   if test "$with_teem" = "yes"; then
