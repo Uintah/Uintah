@@ -2,12 +2,8 @@
 #include "Barrier.h"
 #include "ConditionVariable.h"
 #include "Mutex.h"
-#include "PoolMutex.h"
-#include "RealtimeThread.h"
 #include "Semaphore.h"
 #include "ThreadGroup.h"
-#include "ThreadListener.h"
-#include "ThreadEvent.h"
 #include "Thread.h"
 #include <iostream.h>
 #include <stdio.h>
@@ -50,16 +46,11 @@ struct Thread_private {
     bool detached;
 };
 
-static char* poolmutex_names[N_POOLMUTEX];
-static char poolmutex_namearray[N_POOLMUTEX*20]; // Enough to hold "PoolMutex #%d"
-
 static Thread_private* active[MAXTHREADS];
-static int nactive;
+static int numActive;
 static bool initialized;
 static pthread_mutex_t sched_lock;
-static pthread_mutex_t pool_mutex[N_POOLMUTEX];
 static pthread_key_t thread_key;
-static struct timeval start_time;
 static sem_t main_sema;
 
 static void lock_scheduler() {
@@ -104,51 +95,52 @@ struct Barrier_private {
 };
 
 Barrier_private::Barrier_private()
-: cond0("Barrier condition 0"), cond1("Barrier condition 1"),
-  mutex("Barrier lock"), nwait(0), cc(0)
+: mutex("Barrier lock"),
+  cond0("Barrier condition 0"), cond1("Barrier condition 1"),
+  cc(0), nwait(0)
 {
 }   
 
-Barrier::Barrier(const char* name, int nthreads)
- : name(name), nthreads(nthreads), threadGroup(0)
+Barrier::Barrier(const std::string& name, int numThreads)
+ : d_name(name), d_numThreads(numThreads), d_threadGroup(0)
 {
     if(!initialized){
 	Thread::initialize();
     }
-    priv=new Barrier_private;
+    d_priv=new Barrier_private;
 }
 
-Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
- : name(name), nthreads(0), threadGroup(threadGroup)
+Barrier::Barrier(const std::string& name, ThreadGroup* threadGroup)
+ : d_name(name), d_numThreads(0), d_threadGroup(threadGroup)
 {
     if(!initialized){
 	Thread::initialize();
     }
-    priv=new Barrier_private;
+    d_priv=new Barrier_private;
 }
 
 Barrier::~Barrier()
 {
-    delete priv;
+    delete d_priv;
 }
 
 void Barrier::wait()
 {
-    int n=threadGroup?threadGroup->nactive(true):nthreads;
-    Thread_private* p=Thread::currentThread()->priv;
-    int oldstate=push_bstack(p, STATE_BLOCK_SEMAPHORE, name);
-    priv->mutex.lock();
-    ConditionVariable& cond=priv->cc?priv->cond0:priv->cond1;
-    int me=priv->nwait++;
-    if(priv->nwait == n){
+    int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
+    Thread_private* p=Thread::currentThread()->d_priv;
+    int oldstate=push_bstack(p, STATE_BLOCK_SEMAPHORE, d_name.c_str());
+    d_priv->mutex.lock();
+    ConditionVariable& cond=d_priv->cc?d_priv->cond0:d_priv->cond1;
+    /*int me=*/d_priv->nwait++;
+    if(d_priv->nwait == n){
 	// Wake everybody up...
-	priv->nwait=0;
-	priv->cc=1-priv->cc;
-	cond.cond_broadcast();
+	d_priv->nwait=0;
+	d_priv->cc=1-d_priv->cc;
+	cond.conditionBroadcast();
     } else {
-	cond.wait(priv->mutex);
+	cond.wait(d_priv->mutex);
     }
-    priv->mutex.unlock();
+    d_priv->mutex.unlock();
     pop_bstack(p, oldstate);
 }
 
@@ -156,39 +148,45 @@ struct Mutex_private {
     pthread_mutex_t mutex;
 };
 
-Mutex::Mutex(const char*) {
-    priv=new Mutex_private;
-    if(pthread_mutex_init(&priv->mutex, NULL) != 0){
+Mutex::Mutex(const std::string& name)
+    : d_name(name)
+{
+    d_priv=new Mutex_private;
+    if(pthread_mutex_init(&d_priv->mutex, NULL) != 0){
 	perror("pthread_mutex_init");
 	Thread::niceAbort();
     }
 }
 
-Mutex::~Mutex() {
-    if(pthread_mutex_destroy(&priv->mutex) != 0){
+Mutex::~Mutex()
+{
+    if(pthread_mutex_destroy(&d_priv->mutex) != 0){
 	perror("pthread_mutex_destroy");
 	Thread::niceAbort();
     }
-    delete priv;
+    delete d_priv;
 }
 
-void Mutex::unlock() {
-    if(pthread_mutex_unlock(&priv->mutex) != 0){
+void Mutex::unlock()
+{
+    if(pthread_mutex_unlock(&d_priv->mutex) != 0){
 	perror("pthread_mutex_unlock");
 	Thread::niceAbort();
     }
 }
 
-void Mutex::lock() {
-    if(pthread_mutex_lock(&priv->mutex) != 0){
+void Mutex::lock()
+{
+    if(pthread_mutex_lock(&d_priv->mutex) != 0){
 	perror("pthread_mutex_lock");
 	Thread::niceAbort();
     }
 }
 
-bool Mutex::try_lock() {
-    if(pthread_mutex_trylock(&priv->mutex) != 0){
-	if(errno == EAGAIN)
+bool Mutex::tryLock()
+{
+    if(pthread_mutex_trylock(&d_priv->mutex) != 0){
+	if(errno == EAGAIN || errno == EINTR)
 	    return false;
 	perror("pthread_mutex_trylock");
 	Thread::niceAbort();
@@ -196,48 +194,48 @@ bool Mutex::try_lock() {
     return true;
 }
 
-PoolMutex::PoolMutex() { NF }
-PoolMutex::~PoolMutex() { NF }
-void PoolMutex::lock() { NF }
-bool PoolMutex::try_lock() { NF;return 0; }
-void PoolMutex::unlock() { NF }
-
 struct Semaphore_private {
     sem_t sem;
 };
 
-Semaphore::Semaphore(const char* name, int value) : name(name) {
-    priv=new Semaphore_private;
-    if(sem_init(&priv->sem, 0, value) != 0){
+Semaphore::Semaphore(const std::string& name, int value)
+    : d_name(name)
+{
+    d_priv=new Semaphore_private;
+    if(sem_init(&d_priv->sem, 0, value) != 0){
 	perror("sem_init");
 	Thread::niceAbort();
     }
 }
     
-Semaphore::~Semaphore() {
-    if(sem_destroy(&priv->sem) != 0){
+Semaphore::~Semaphore()
+{
+    if(sem_destroy(&d_priv->sem) != 0){
 	perror("sem_destroy");
 	Thread::niceAbort();
     }
-    delete priv;
+    delete d_priv;
 }
 
-void Semaphore::up() {
-    if(sem_post(&priv->sem) != 0){
+void Semaphore::up()
+{
+    if(sem_post(&d_priv->sem) != 0){
 	perror("sem_post");
 	Thread::niceAbort();
     }
 }
 
-void Semaphore::down() {
-    if(sem_wait(&priv->sem) != 0){
+void Semaphore::down()
+{
+    if(sem_wait(&d_priv->sem) != 0){
 	perror("sem_wait");
 	Thread::niceAbort();
     }
 }
 
-bool Semaphore::tryDown() {
-    if(sem_trywait(&priv->sem) != 0){
+bool Semaphore::tryDown()
+{
+    if(sem_trywait(&d_priv->sem) != 0){
 	if(errno == EAGAIN)
 	    return false;
 	perror("sem_trywait");
@@ -246,14 +244,16 @@ bool Semaphore::tryDown() {
     return true;
 }
 
-void ThreadGroup::gangSchedule() { NF }
+void ThreadGroup::gangSchedule()
+{
+    NF
+}
 
-void Thread::alert(int) { NF }
-
-void Thread::check_exit() {
+void Thread::checkExit()
+{
     lock_scheduler();
     int done=true;
-    for(int i=0;i<nactive;i++){
+    for(int i=0;i<numActive;i++){
 	Thread_private* p=active[i];
 	if(!p->thread->isDaemon()){
 	    done=false;
@@ -266,7 +266,8 @@ void Thread::check_exit() {
 	Thread::exitAll(0);
 }
 
-Thread* Thread::currentThread() { 
+Thread* Thread::currentThread()
+{
     void* p=pthread_getspecific(thread_key);
     if(!p){
 	perror("pthread_getspecific");
@@ -275,26 +276,27 @@ Thread* Thread::currentThread() {
     return (Thread*)p;
 }
 
-double Thread::secondsPerTick() { NF;return 0; }
-
-void Thread::join() {
+void Thread::join()
+{
     Thread* us=Thread::currentThread();
-    int os=push_bstack(us->priv, STATE_JOINING, threadname);
-    if(sem_wait(&priv->done) != 0){
+    int os=push_bstack(us->d_priv, STATE_JOINING, d_threadname.c_str());
+    if(sem_wait(&d_priv->done) != 0){
 	perror("sem_wait");
 	Thread::niceAbort();
     }
-    pop_bstack(us->priv, os);
+    pop_bstack(us->d_priv, os);
     detach();
 }
 
-void Thread::profile(FILE*, FILE*) { NF }
-int Thread::numProcessors() {
+//void Thread::profile(FILE*, FILE*) { NF }
+int Thread::numProcessors()
+{
     return 1;
 }
 
-void Thread_shutdown(Thread* thread) {
-    Thread_private* priv=thread->priv;
+void Thread_shutdown(Thread* thread)
+{
+    Thread_private* priv=thread->d_priv;
 
     if(sem_post(&priv->done) != 0){
 	perror("sem_post");
@@ -310,23 +312,23 @@ void Thread_shutdown(Thread* thread) {
     }
 
     // Allow this thread to run anywhere...
-    if(thread->cpu != -1)
+    if(thread->d_cpu != -1)
 	thread->migrate(-1);
 
     priv->thread=0;
     lock_scheduler();
     /* Remove it from the active queue */
     int i;
-    for(i=0;i<nactive;i++){
+    for(i=0;i<numActive;i++){
 	if(active[i]==priv)
 	    break;
     }
-    for(i++;i<nactive;i++){
+    for(i++;i<numActive;i++){
 	active[i-1]=active[i];
     }
-    nactive--;
+    numActive--;
     unlock_scheduler();
-    Thread::check_exit();
+    Thread::checkExit();
     if(priv->threadid == 0){
 	priv->state=STATE_PROGRAM_EXIT;
 	if(sem_wait(&main_sema) == -1){
@@ -336,11 +338,13 @@ void Thread_shutdown(Thread* thread) {
     }
 }
 
-void Thread_run(Thread* t) {
+void Thread_run(Thread* t)
+{
     t->run_body();
 }
 
-static void* run_threads(void* priv_v) {
+static void* run_threads(void* priv_v)
+{
     Thread_private* priv=(Thread_private*)priv_v;
     if(pthread_setspecific(thread_key, priv->thread) != 0){
 	perror("pthread_setspecific");
@@ -354,107 +358,88 @@ static void* run_threads(void* priv_v) {
     return 0;
 }
 
-void Thread::os_start(bool) {
+void Thread::os_start(bool)
+{
     if(!initialized){
 	Thread::initialize();
     }
 
-    priv=new Thread_private;
+    d_priv=new Thread_private;
 
-    if(sem_init(&priv->done, 0, 0) != 0){
+    if(sem_init(&d_priv->done, 0, 0) != 0){
 	perror("sem_init");
 	Thread::niceAbort();
     }
-    if(sem_init(&priv->delete_ready, 0, 0) != 0){
+    if(sem_init(&d_priv->delete_ready, 0, 0) != 0){
 	perror("sem_init");
 	Thread::niceAbort();
     }
-    priv->state=STATE_STARTUP;
-    priv->bstacksize=0;
-    priv->detached=0;
+    d_priv->state=STATE_STARTUP;
+    d_priv->bstacksize=0;
+    d_priv->detached=0;
 
-    priv->thread=this;
-    priv->threadid=0;
+    d_priv->thread=this;
+    d_priv->threadid=0;
     lock_scheduler();
-    if(pthread_create(&priv->threadid, NULL, run_threads, priv) != 0){
+    if(pthread_create(&d_priv->threadid, NULL, run_threads, d_priv) != 0){
 	perror("pthread_create");
 	Thread::niceAbort();
     }
-    active[nactive]=priv;
-    nactive++;
+    active[numActive]=d_priv;
+    numActive++;
     unlock_scheduler();
 }
 
-double Thread::currentSeconds() {
-    struct timeval now_time;
-    if(gettimeofday(&now_time, 0) != 0){
-	perror("gettimeofday");
-	Thread::niceAbort();
-    }
-    return (now_time.tv_sec-start_time.tv_sec)+(now_time.tv_usec-start_time.tv_usec)*1.e-6;
-}
-void Thread::stop() { NF }
-void Thread::resume() { NF }
-
-SysClock Thread::currentTicks() { 
-    struct timeval now_time;
-    if(gettimeofday(&now_time, 0) != 0){
-	perror("gettimeofday");
-	Thread::niceAbort();
-    }
-    return (now_time.tv_sec-start_time.tv_sec)*100000+(now_time.tv_usec-start_time.tv_usec);
+void Thread::stop()
+{
+    NF
 }
 
-int Thread::couldBlock(const char* why) {
-    Thread_private* p=Thread::currentThread()->priv;
-    return push_bstack(p, STATE_BLOCK_ANY, why);
+void Thread::resume()
+{
+    NF
 }
 
-void Thread::couldBlock(int restore) {
-    Thread_private* p=Thread::currentThread()->priv;
+int Thread::couldBlock(const std::string& why)
+{
+    Thread_private* p=Thread::currentThread()->d_priv;
+    return push_bstack(p, STATE_BLOCK_ANY, why.c_str());
+}
+
+void Thread::couldBlockDone(int restore)
+{
+    Thread_private* p=Thread::currentThread()->d_priv;
     pop_bstack(p, restore);
 }
 
-void Thread::detach() {
-    if(sem_post(&priv->delete_ready) != 0){
+void Thread::detach()
+{
+    if(sem_post(&d_priv->delete_ready) != 0){
 	perror("sem_post");
 	Thread::niceAbort();
     }
-    priv->detached=1;
-    if(pthread_detach(priv->threadid) != 0){
+    d_priv->detached=1;
+    if(pthread_detach(d_priv->threadid) != 0){
 	perror("pthread_detach");
 	Thread::niceAbort();
     }
 }
 
-void Thread::setPriority(int) { NF }
-double Thread::ticksPerSecond() { return 1000000; }
-void Thread::exitAll(int) { NF }
+void Thread::setPriority(int)
+{
+    NF
+}
 
-void Thread::initialize() {
-    if(gettimeofday(&start_time, 0) != 0){
-	perror("getimeofday");
-	Thread::niceAbort();
-    }
+void Thread::exitAll(int)
+{
+    NF
+}
+
+void Thread::initialize()
+{
     if(pthread_mutex_init(&sched_lock, NULL) != 0){
 	perror("pthread_mutex_init");
 	Thread::niceAbort();
-    }
-
-    // Allocate PoolMutex pool
-    unsigned int c=0;
-    for(int i=0;i<N_POOLMUTEX;i++){
-	if(pthread_mutex_init(&pool_mutex[i], NULL) != 0){
-	    perror("pthread_mutex_init");
-	    Thread::niceAbort();
-	}
-	poolmutex_names[i]=&poolmutex_namearray[c];
-	sprintf(poolmutex_names[i], "PoolMutex #%d", i);
-	c+=strlen(poolmutex_names[i])+1;
-	if(c > sizeof(poolmutex_namearray)){
-	    fprintf(stderr, "PoolMutex name array overflow!\n");
-	    exit(1);
-	}
     }
 
     if(pthread_key_create(&thread_key, NULL) != 0){
@@ -462,21 +447,21 @@ void Thread::initialize() {
 	Thread::niceAbort();
     }
 
-    ThreadGroup::default_group=new ThreadGroup("default group", 0);
-    Thread* mainthread=new Thread(ThreadGroup::default_group, "main");
-    mainthread->priv=new Thread_private;
-    mainthread->priv->thread=mainthread;
-    mainthread->priv->state=STATE_RUNNING;
-    mainthread->priv->bstacksize=0;
+    ThreadGroup::s_defaultGroup=new ThreadGroup("default group", 0);
+    Thread* mainthread=new Thread(ThreadGroup::s_defaultGroup, "main");
+    mainthread->d_priv=new Thread_private;
+    mainthread->d_priv->thread=mainthread;
+    mainthread->d_priv->state=STATE_RUNNING;
+    mainthread->d_priv->bstacksize=0;
     if(pthread_setspecific(thread_key, mainthread) != 0){
 	perror("pthread_setspecific");
 	Thread::niceAbort();
     }
-    if(sem_init(&mainthread->priv->done, 0, 0) != 0){
+    if(sem_init(&mainthread->d_priv->done, 0, 0) != 0){
 	perror("sem_init");
 	Thread::niceAbort();
     }
-    if(sem_init(&mainthread->priv->delete_ready, 0, 0) != 0){
+    if(sem_init(&mainthread->d_priv->delete_ready, 0, 0) != 0){
 	perror("sem_init");
 	Thread::niceAbort();
     }
@@ -485,8 +470,8 @@ void Thread::initialize() {
 	Thread::niceAbort();
     }
     lock_scheduler();
-    active[nactive]=mainthread->priv;
-    nactive++;
+    active[numActive]=mainthread->d_priv;
+    numActive++;
     unlock_scheduler();
 
     //install_signal_handlers();
@@ -494,41 +479,94 @@ void Thread::initialize() {
     initialized=1;
 }
 
-void Thread::waitUntil(double seconds) {
-    waitFor(seconds-currentSeconds());
-}
-
-void Thread::waitFor(double seconds) {
-    if(seconds<=0)
-	return;
-    struct timespec ts;
-    ts.tv_sec=(int)seconds;
-    ts.tv_nsec=(int)(1.e9*(seconds-ts.tv_sec));
-    while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
-}
-
-void Thread::waitUntil(SysClock time) {
-    waitFor(time-currentTicks());
-}
-
-void Thread::waitFor(SysClock time) {
-    if(time<=0)
-	return;
-    struct timespec ts;
-    ts.tv_sec=(int)(time*1.e-6);
-    ts.tv_nsec=(int)(1.e9*(time*1.e-6-ts.tv_sec));
-    while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
-}
-
-void RealtimeThread::frameYield() { NF }
-void RealtimeThread::frameReady() { NF }
-void RealtimeThread::frameSchedule(int, RealtimeThread*) { NF }
-
-void Thread::yield() {
+void Thread::yield()
+{
     sched_yield();
 }
 
 void Thread::migrate(int proc)
 {
     // Nothing for now...
+}
+
+
+
+#include "WorkQueue.h"
+#include "Thread.h"
+#include <iostream.h>
+#include "AtomicCounter.h"
+#include <stdio.h>
+
+/*
+ * Doles out work assignment to various worker threads.  Simple
+ * attempts are made at evenly distributing the workload.
+ * Initially, assignments are relatively large, and will get smaller
+ * towards the end in an effort to equalize the total effort.
+ */
+struct WorkQueue_private {
+    WorkQueue_private();
+    AtomicCounter counter;
+};
+
+WorkQueue_private::WorkQueue_private()
+    : counter("WorkQueue counter", 0)
+{
+}
+
+void WorkQueue::init()
+{
+    d_priv->counter.set(0);
+    fill();
+}
+
+WorkQueue::WorkQueue(const std::string& name, int totalAssignments,
+		     int nthreads, bool dynamic, int granularity)
+    : d_name(name), d_numThreads(nthreads),
+      d_totalAssignments(totalAssignments), d_granularity(granularity),
+      d_assignments(0), d_dynamic(dynamic)
+{
+    if(!initialized){
+	Thread::initialize();
+    }
+    d_priv=new WorkQueue_private();
+    init();
+}
+
+WorkQueue::WorkQueue(const std::string& name)
+    : d_name(name), d_assignments(0)
+{
+    d_totalAssignments=0;
+    d_priv=0;
+}
+
+WorkQueue::~WorkQueue()
+{
+    if(d_priv){
+	delete d_priv;
+    }
+}
+
+bool WorkQueue::nextAssignment(int& start, int& end)
+{
+    int i=d_priv->counter++;
+    if(i >= (int)d_assignments.size())
+	return false;
+    start=d_assignments[i];
+    end=d_assignments[i+1];
+    return true;
+}
+
+void WorkQueue::refill(int new_ta, int new_numThreads,
+		       bool new_dynamic, int new_granularity)
+{
+    if(new_ta == d_totalAssignments && new_numThreads == d_numThreads
+       && new_dynamic == d_dynamic && new_granularity == d_granularity){
+	d_priv->counter.set(0);
+    } else {
+	d_totalAssignments=new_ta;
+	d_numThreads=new_numThreads;
+	d_dynamic=new_dynamic;
+	d_granularity=new_granularity;
+	init();
+    }
 }

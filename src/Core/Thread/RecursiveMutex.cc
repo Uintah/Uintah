@@ -11,29 +11,34 @@
  * be used unless the recursive lock feature is really required.
  */
 
-RecursiveMutex::RecursiveMutex(const char* name) : mylock(name) {
-    owner=0;
-    lock_count=0;
+RecursiveMutex::RecursiveMutex(const std::string& name)
+    : d_myLock(name)
+{
+    d_owner=0;
+    d_lockCount=0;
 }
 
-RecursiveMutex::~RecursiveMutex() {
+RecursiveMutex::~RecursiveMutex()
+{
 }
 
-void RecursiveMutex::lock() {
+void RecursiveMutex::lock()
+{
     Thread* me=Thread::currentThread();
-    if(owner == me){
-        lock_count++;
+    if(d_owner == me){
+        d_lockCount++;
         return;
     }
-    mylock.lock();
-    owner=me;
-    lock_count=1;
+    d_myLock.lock();
+    d_owner=me;
+    d_lockCount=1;
 }
 
-void RecursiveMutex::unlock() {
-    if(--lock_count == 0){
-        owner=0;
-        mylock.unlock();
+void RecursiveMutex::unlock()
+{
+    if(--d_lockCount == 0){
+        d_owner=0;
+        d_myLock.unlock();
     }
 }
 
