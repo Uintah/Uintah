@@ -250,7 +250,6 @@
 <xsl:text>        pack </xsl:text><xsl:value-of select="$path"/>
 <xsl:text>
 
-                  set $this-</xsl:text><xsl:value-of select="@name"/><xsl:text> </xsl:text><xsl:value-of select="$default"/><xsl:text>
 </xsl:text>
 </xsl:template>
 
