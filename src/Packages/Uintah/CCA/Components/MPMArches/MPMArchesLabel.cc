@@ -291,90 +291,90 @@ MPMArchesLabel::MPMArchesLabel()
 
 MPMArchesLabel::~MPMArchesLabel()
 {
-  delete cMassLabel;
-  delete cVolumeLabel;
-  delete solid_fraction_CCLabel;
+  VarLabel::destroy(cMassLabel);
+  VarLabel::destroy(cVolumeLabel);
+  VarLabel::destroy(solid_fraction_CCLabel);
 
-  delete vel_CCLabel;
-  delete xvel_CCLabel;
-  delete yvel_CCLabel;
-  delete zvel_CCLabel;
+  VarLabel::destroy(vel_CCLabel);
+  VarLabel::destroy(xvel_CCLabel);
+  VarLabel::destroy(yvel_CCLabel);
+  VarLabel::destroy(zvel_CCLabel);
 
-  delete xvel_FCXLabel;
-  delete xvel_FCYLabel;
-  delete xvel_FCZLabel;
+  VarLabel::destroy(xvel_FCXLabel);
+  VarLabel::destroy(xvel_FCYLabel);
+  VarLabel::destroy(xvel_FCZLabel);
 
-  delete yvel_FCXLabel;
-  delete yvel_FCYLabel;
-  delete yvel_FCZLabel;
+  VarLabel::destroy(yvel_FCXLabel);
+  VarLabel::destroy(yvel_FCYLabel);
+  VarLabel::destroy(yvel_FCZLabel);
 
-  delete zvel_FCXLabel;
-  delete zvel_FCYLabel;
-  delete zvel_FCZLabel;
+  VarLabel::destroy(zvel_FCXLabel);
+  VarLabel::destroy(zvel_FCYLabel);
+  VarLabel::destroy(zvel_FCZLabel);
 
-  delete DragForceX_CCLabel;
-  delete DragForceY_CCLabel;
-  delete DragForceZ_CCLabel;
+  VarLabel::destroy(DragForceX_CCLabel);
+  VarLabel::destroy(DragForceY_CCLabel);
+  VarLabel::destroy(DragForceZ_CCLabel);
 
 #if 0
-  delete DragForceX_FCXLabel;
+  VarLabel::destroy(DragForceX_FCXLabel);
 #endif
-  delete DragForceY_FCXLabel;
-  delete DragForceZ_FCXLabel;
+  VarLabel::destroy(DragForceY_FCXLabel);
+  VarLabel::destroy(DragForceZ_FCXLabel);
 
-  delete DragForceX_FCYLabel;
+  VarLabel::destroy(DragForceX_FCYLabel);
 #if 0
-  delete DragForceY_FCYLabel;
+  VarLabel::destroy(DragForceY_FCYLabel);
 #endif
-  delete DragForceZ_FCYLabel;
+  VarLabel::destroy(DragForceZ_FCYLabel);
 
-  delete DragForceX_FCZLabel;
-  delete DragForceY_FCZLabel;
+  VarLabel::destroy(DragForceX_FCZLabel);
+  VarLabel::destroy(DragForceY_FCZLabel);
 #if 0
-  delete DragForceZ_FCZLabel;
+  VarLabel::destroy(DragForceZ_FCZLabel);
 #endif
 
-  delete PressureForce_FCXLabel;
-  delete PressureForce_FCYLabel;
-  delete PressureForce_FCZLabel;
+  VarLabel::destroy(PressureForce_FCXLabel);
+  VarLabel::destroy(PressureForce_FCYLabel);
+  VarLabel::destroy(PressureForce_FCZLabel);
 
-  delete SumAllForcesCCLabel;
-  delete SumAllForcesNCLabel;
-  delete AccArchesCCLabel;
-  delete AccArchesNCLabel;
+  VarLabel::destroy(SumAllForcesCCLabel);
+  VarLabel::destroy(SumAllForcesNCLabel);
+  VarLabel::destroy(AccArchesCCLabel);
+  VarLabel::destroy(AccArchesNCLabel);
 
-  delete void_frac_CCLabel;
+  VarLabel::destroy(void_frac_CCLabel);
 
-  delete d_uVel_mmLinSrc_CCLabel;
-  delete d_uVel_mmLinSrc_CC_CollectLabel;
-  delete d_uVel_mmLinSrcLabel;
-  delete d_uVel_mmLinSrc_FCYLabel;
-  delete d_uVel_mmLinSrc_FCZLabel;
-  delete d_uVel_mmNonlinSrc_CCLabel;
-  delete d_uVel_mmNonlinSrc_CC_CollectLabel;
-  delete d_uVel_mmNonlinSrcLabel;
-  delete d_uVel_mmNonlinSrc_FCYLabel;
-  delete d_uVel_mmNonlinSrc_FCZLabel;
+  VarLabel::destroy(d_uVel_mmLinSrc_CCLabel);
+  VarLabel::destroy(d_uVel_mmLinSrc_CC_CollectLabel);
+  VarLabel::destroy(d_uVel_mmLinSrcLabel);
+  VarLabel::destroy(d_uVel_mmLinSrc_FCYLabel);
+  VarLabel::destroy(d_uVel_mmLinSrc_FCZLabel);
+  VarLabel::destroy(d_uVel_mmNonlinSrc_CCLabel);
+  VarLabel::destroy(d_uVel_mmNonlinSrc_CC_CollectLabel);
+  VarLabel::destroy(d_uVel_mmNonlinSrcLabel);
+  VarLabel::destroy(d_uVel_mmNonlinSrc_FCYLabel);
+  VarLabel::destroy(d_uVel_mmNonlinSrc_FCZLabel);
 
-  delete d_vVel_mmLinSrc_CCLabel;
-  delete d_vVel_mmLinSrc_CC_CollectLabel;
-  delete d_vVel_mmLinSrcLabel;
-  delete d_vVel_mmLinSrc_FCZLabel;
-  delete d_vVel_mmLinSrc_FCXLabel;
-  delete d_vVel_mmNonlinSrc_CCLabel;
-  delete d_vVel_mmNonlinSrc_CC_CollectLabel;
-  delete d_vVel_mmNonlinSrcLabel;
-  delete d_vVel_mmNonlinSrc_FCZLabel;
-  delete d_vVel_mmNonlinSrc_FCXLabel;
+  VarLabel::destroy(d_vVel_mmLinSrc_CCLabel);
+  VarLabel::destroy(d_vVel_mmLinSrc_CC_CollectLabel);
+  VarLabel::destroy(d_vVel_mmLinSrcLabel);
+  VarLabel::destroy(d_vVel_mmLinSrc_FCZLabel);
+  VarLabel::destroy(d_vVel_mmLinSrc_FCXLabel);
+  VarLabel::destroy(d_vVel_mmNonlinSrc_CCLabel);
+  VarLabel::destroy(d_vVel_mmNonlinSrc_CC_CollectLabel);
+  VarLabel::destroy(d_vVel_mmNonlinSrcLabel);
+  VarLabel::destroy(d_vVel_mmNonlinSrc_FCZLabel);
+  VarLabel::destroy(d_vVel_mmNonlinSrc_FCXLabel);
 
-  delete d_wVel_mmLinSrc_CCLabel;
-  delete d_wVel_mmLinSrc_CC_CollectLabel;
-  delete d_wVel_mmLinSrcLabel;
-  delete d_wVel_mmLinSrc_FCXLabel;
-  delete d_wVel_mmLinSrc_FCYLabel;
-  delete d_wVel_mmNonlinSrc_CCLabel;
-  delete d_wVel_mmNonlinSrc_CC_CollectLabel;
-  delete d_wVel_mmNonlinSrcLabel;
-  delete d_wVel_mmNonlinSrc_FCXLabel;
-  delete d_wVel_mmNonlinSrc_FCYLabel;
+  VarLabel::destroy(d_wVel_mmLinSrc_CCLabel);
+  VarLabel::destroy(d_wVel_mmLinSrc_CC_CollectLabel);
+  VarLabel::destroy(d_wVel_mmLinSrcLabel);
+  VarLabel::destroy(d_wVel_mmLinSrc_FCXLabel);
+  VarLabel::destroy(d_wVel_mmLinSrc_FCYLabel);
+  VarLabel::destroy(d_wVel_mmNonlinSrc_CCLabel);
+  VarLabel::destroy(d_wVel_mmNonlinSrc_CC_CollectLabel);
+  VarLabel::destroy(d_wVel_mmNonlinSrcLabel);
+  VarLabel::destroy(d_wVel_mmNonlinSrc_FCXLabel);
+  VarLabel::destroy(d_wVel_mmNonlinSrc_FCYLabel);
 }

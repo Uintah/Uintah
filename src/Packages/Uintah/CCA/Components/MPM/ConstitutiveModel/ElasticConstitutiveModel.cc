@@ -44,8 +44,8 @@ ElasticConstitutiveModel::~ElasticConstitutiveModel()
   // Destructor
 
   //cout << "Calling ElasticConstitutiveModel destructor . . . " << endl;
-  delete p_cmdata_label;
-  delete p_cmdata_label_preReloc;
+  VarLabel::destroy(p_cmdata_label);
+  VarLabel::destroy(p_cmdata_label_preReloc);
  
 }
 
