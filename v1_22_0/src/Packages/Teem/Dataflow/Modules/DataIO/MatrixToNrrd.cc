@@ -142,6 +142,7 @@ MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH) {
   
   NrrdData *nd = scinew NrrdData();
   nrrdAlloc(nd->nrrd, nrrdTypeDouble, 1, size);
+  nrrdAxisInfoSet(nd->nrrd, nrrdAxisInfoLabel, "column-data");
   nd->nrrd->axis[0].kind = nrrdKindDomain;
 
   double *val = (double*)nd->nrrd->data;
@@ -154,7 +155,6 @@ MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH) {
   }
 
   // send the data nrrd
-  nd->nrrd->axis[0].label = "column-data";
   NrrdDataHandle dataH(nd);
   ndata_->send(dataH);  
 }
@@ -169,6 +169,7 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   
   NrrdData *nd = scinew NrrdData();
   nrrdAlloc(nd->nrrd, nrrdTypeDouble, 2, cols, rows);
+  nrrdAxisInfoSet(nd->nrrd, nrrdAxisInfoLabel, "dense-columns" , "dense-rows");
   nd->nrrd->axis[0].kind = nrrdKindDomain;
   nd->nrrd->axis[1].kind = nrrdKindDomain;
 
@@ -184,8 +185,6 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   }
 
   // send the data nrrd
-  nd->nrrd->axis[0].label = "dense-columns";
-  nd->nrrd->axis[1].label = "dense-rows";
   NrrdDataHandle dataH(nd);
   ndata_->send(dataH);  
 }
@@ -200,14 +199,17 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
   // create 3 nrrds (data, rows, cols)
   NrrdData *data_n = scinew NrrdData();
   nrrdAlloc(data_n->nrrd, nrrdTypeDouble, 1, nnz);
+  nrrdAxisInfoSet(data_n->nrrd, nrrdAxisInfoLabel, "sparse-data");
   data_n->nrrd->axis[0].kind = nrrdKindDomain;
 
   NrrdData *rows_n = scinew NrrdData();
   nrrdAlloc(rows_n->nrrd, nrrdTypeInt, 1, rows+1);
+  nrrdAxisInfoSet(rows_n->nrrd, nrrdAxisInfoLabel, "sparse-rows");
   rows_n->nrrd->axis[0].kind = nrrdKindDomain;
 
   NrrdData *cols_n = scinew NrrdData();
   nrrdAlloc(cols_n->nrrd, nrrdTypeInt, 1, nnz);
+  nrrdAxisInfoSet(cols_n->nrrd, nrrdAxisInfoLabel, "sparse-columns");
   cols_n->nrrd->axis[0].kind = nrrdKindDomain;
 
   // pointers to nrrds
@@ -234,9 +236,6 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
 
   
   // send nrrds
-  data_n->nrrd->axis[0].label = "sparse-data";
-  rows_n->nrrd->axis[0].label = "sparse-rows";
-  cols_n->nrrd->axis[0].label = "sparse-columns";
   NrrdDataHandle dataH(data_n);
   NrrdDataHandle rowsH(rows_n);
   NrrdDataHandle colsH(cols_n);
