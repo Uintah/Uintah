@@ -88,15 +88,18 @@ void LinAlgBinary::execute() {
     error("LinAlgBinary: Add has not been implemented yet.");
     return;
   } else if (op == "Mult") {
-    ColumnMatrix *bC = dynamic_cast<ColumnMatrix*>(bH.get_rep());
-    if (!bC) {
-      error("LinAlgBinary: Mult has only been implemented for Mat x ColMat.");
+    if (aH->nrows() == 4 && aH->ncols() == 4 &&
+	bH->nrows() == 4 && bH->ncols() == 4) {
+      Transform aT(aH->toTransform());
+      Transform bT(bH->toTransform());
+      aT.post_trans(bT);
+      DenseMatrix *cm = scinew DenseMatrix(aT);
+      omat_->send(MatrixHandle(cm));
+      return;
+    } else {
+      error("LinAlgBinary: Mult has only been implemented for 4x4 matrices.");
       return;
     }
-    
-    //    ColumnMatrix *r;
-//    omat_->send(MatrixHandle(m));
-    return;
   } else {
     warning("Don't know operation "+op);
     return;

@@ -1,6 +1,5 @@
-
 /*
- *  LinAlgUnary: Unary matrix operations -- transpose, negate
+ *  LinAlgUnary: Unary matrix operations -- just transpose for now
  *
  *  Written by:
  *   David Weinstein
@@ -11,9 +10,6 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -22,9 +18,6 @@
 namespace SCIRun {
 
 class LinAlgUnary : public Module {
-  MatrixIPort* imat_;
-  MatrixOPort* omat_;
-
   GuiString op_;
 public:
   LinAlgUnary(const string& id);
@@ -48,8 +41,8 @@ LinAlgUnary::~LinAlgUnary()
 }
 
 void LinAlgUnary::execute() {
-  imat_ = (MatrixIPort *)get_iport("Input");
-  omat_ = (MatrixOPort *)get_oport("Output");
+  MatrixIPort* imat_ = (MatrixIPort *)get_iport("Input");
+  MatrixOPort* omat_ = (MatrixOPort *)get_oport("Output");
 
   if (!imat_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
