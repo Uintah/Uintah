@@ -29,6 +29,28 @@
       <p>Version Date: June 2001</p><p>Version: 1.0</p>
     </description>
   </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Mesh</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Data</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>VectorField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Field(double)</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
   <testing>
   </testing>
 </component>
