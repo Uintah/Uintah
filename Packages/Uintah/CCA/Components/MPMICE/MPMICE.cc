@@ -1375,8 +1375,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
         if(mpm_matl){                //  M P M
   #ifdef EOSCM
-          rho_micro[m][c] =  mpm_matl->getConstitutiveModel()->
-            computeRhoMicroCM(press_new[c],press_ref, mpm_matl);
+          rho_micro[m][c] = mass_CC[m][c]/mat_vol[m][c];
 
           mpm_matl->getConstitutiveModel()->
             computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
