@@ -200,6 +200,11 @@ void FaceCuttingPlane::execute()
   if (!infield->get( field ))
     return;
 
+  if(field->get_type_name(0) != "LatVolField"){
+    warning("This module only works with a LatVolField as input. No action!");
+    return;
+  }
+
   if(!field->is_scalar()){
     cerr<<"Not a scalar field\n ";
     return;
@@ -410,11 +415,11 @@ void FaceCuttingPlane::execute()
   ScalarFieldInterface *sfi = 0;
   if( field->get_type_name(0) == "LatVolField")
     sfi = field->query_scalar_interface();
-	
+
+  
 //   int i_inc = Max(grid_mult * u_mult, 1);
 //   int j_inc = Max(grid_mult * v_mult, 1);
 
-  
   int u_ = u_num, 
       v_ = v_num;
 //   if(horiz) v_++;
