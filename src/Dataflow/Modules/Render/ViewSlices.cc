@@ -3376,7 +3376,7 @@ ViewSlices::rasterize_colormap2() {
   cm2_buffer_.initialize(0.0);
   for (unsigned int i = 0; i < cm2_->widgets().size(); ++i) {
     if (!cm2_->widgets()[i]->is_empty()) {
-      cm2_->widgets()[i]->rasterize(cm2_buffer_, false);
+      cm2_->widgets()[i]->rasterize(cm2_buffer_, cm2_->faux());
     }
   }
 }
