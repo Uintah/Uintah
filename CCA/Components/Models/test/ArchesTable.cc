@@ -372,7 +372,7 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
 	  cerr << "index=" << index << '\n';
 	  throw InternalError("Interpolate outside range of table");
 	}
-	int idx = (int)idx;
+	int idx = (int)index;
 	w[i] = index-idx;
 	idx0[i] = ind->offset[idx];
 	idx1[i] = ind->offset[idx+1];
@@ -435,7 +435,7 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
         cerr << "index=" << index << '\n';
         throw InternalError("Interpolate outside range of table");
       }
-      int idx = (int)idx;
+      int idx = (int)index;
       w[i] = index-idx;
       idx0[i] = ind->offset[idx];
       idx1[i] = ind->offset[idx+1];
@@ -474,9 +474,6 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
     double value = dep->data[index] * weight;
     sum += value;
   }
-  delete[] idx0;
-  delete[] idx1;
-  delete[] w;  
   return sum;
 }
 
