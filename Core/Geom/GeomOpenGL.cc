@@ -45,6 +45,7 @@
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomColorMap.h>
 #include <Core/Geom/GeomCone.h>
+#include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomDisc.h>
 #include <Core/Geom/GeomObj.h>
@@ -2434,6 +2435,17 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   glDisable(GL_TEXTURE_1D);
 
   post_draw(di);
+}
+
+void
+GeomCull::draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  if (normal_) {
+    double mat[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+    if (Dot(Vector(mat[2], mat[6], mat[10]), *normal_) < 0) return;
+  }
+  child_->draw(di,matl,time);
 }
 
 
@@ -5891,6 +5903,36 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   post_draw(di);
 }
+
+
+void GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di,matl,0)) return;
+  glColor4d(1.0,1.0,1.0,1.0);
+  glEnable(GL_BLEND);
+  glDepthMask(GL_FALSE);
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_TEXTURE_2D);  
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  double trans[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, trans);
+  Transform modelview;
+  modelview.set(trans);
+  // The next two lines are a stupid hack to get the transpose
+  modelview.get_trans(trans);
+  modelview.set(trans);
+  build_transform(modelview);
+  transform_.get_trans(trans);
+  glMultMatrixd((GLdouble *)trans);
+  render();
+  glPopMatrix();
+  glDepthMask(GL_TRUE);
+  glDisable(GL_TEXTURE_2D);
+  glDisable(GL_BLEND);
+  post_draw(di);
+}
+
 
 
 void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
