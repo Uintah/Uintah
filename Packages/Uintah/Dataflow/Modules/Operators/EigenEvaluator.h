@@ -6,13 +6,13 @@
 
 #include <string>
 
+namespace Uintah {
 using std::string;
 using namespace SCIRun;
-namespace Uintah {
 
   class EigenEvaluator: public Module {
   public:
-    EigenEvaluator(const string& id);
+    EigenEvaluator(GuiContext* ctx);
     virtual ~EigenEvaluator() {}
     
     virtual void execute(void);

@@ -59,10 +59,10 @@ struct PatchData {
   
 class PatchDataVisualizer : public Module {
 public:
-  PatchDataVisualizer(const string& id);
+  PatchDataVisualizer(GuiContext* ctx);
   virtual ~PatchDataVisualizer();
   virtual void execute();
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
 
 private:
   void addBoxGeometry(GeomLines* edges, const Box& box,
@@ -95,14 +95,12 @@ private:
 
 static string widget_name("PatchDataVisualizer Widget");
  
-extern "C" Module* make_PatchDataVisualizer(const string& id) {
-  return scinew PatchDataVisualizer(id);
-}
+DECLARE_MAKER(PatchDataVisualizer)
 
-PatchDataVisualizer::PatchDataVisualizer(const string& id)
-: Module("PatchDataVisualizer", id, Filter, "Visualization", "Uintah"),
-  radius("radius",id,this),
-  polygons("polygons",id,this),
+  PatchDataVisualizer::PatchDataVisualizer(GuiContext* ctx)
+: Module("PatchDataVisualizer", ctx, Filter, "Visualization", "Uintah"),
+  radius(ctx->subVar("radius")),
+  polygons(ctx->subVar("polygons")),
   old_generation(-1), old_timestep(0),
   grid(NULL)
 {
@@ -185,11 +183,11 @@ void PatchDataVisualizer::execute()
   // setup the tickle stuff
   if (new_grid) {
     string visible;
-    TCL::eval(id + " isVisible", visible);
+    gui->eval(id + " isVisible", visible);
     if ( visible == "1") {
-      TCL::execute(id + " Rebuild");
+      gui->execute(id + " Rebuild");
       
-      TCL::execute("update idletasks");
+      gui->execute("update idletasks");
       reset_vars();
     }
   }
@@ -289,7 +287,7 @@ void PatchDataVisualizer::execute()
 
 // This is called when the tcl code explicity calls a function besides
 // needexecute.
-void PatchDataVisualizer::tcl_command(TCLArgs& args, void* userdata)
+void PatchDataVisualizer::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");

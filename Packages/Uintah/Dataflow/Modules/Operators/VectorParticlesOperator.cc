@@ -11,19 +11,13 @@
 namespace Uintah {
 
 
-extern "C" Module* make_VectorParticlesOperator( const string& id ) { 
-  return scinew VectorParticlesOperator( id );
-}
+ DECLARE_MAKER(VectorParticlesOperator)
 
 
-VectorParticlesOperator::VectorParticlesOperator(const string& id)
-  : Module("VectorParticlesOperator",id,Source, "Operators", "Uintah"),
-    guiOperation("operation", id, this)
+VectorParticlesOperator::VectorParticlesOperator(GuiContext* ctx)
+  : Module("VectorParticlesOperator",ctx,Source, "Operators", "Uintah"),
+    guiOperation(ctx->subVar("operation"))
 {
-  // Create Ports
-  // Add ports to the Module
-  add_iport(in);
-  add_oport(spout);
 }
   
 void VectorParticlesOperator::execute(void) {

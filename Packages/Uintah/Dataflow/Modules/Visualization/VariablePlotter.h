@@ -20,11 +20,11 @@ public:
   
 class VariablePlotter : public Module {
 public:
-  VariablePlotter(const string& id);
-  VariablePlotter(const string& name, const string& id);
+  VariablePlotter(GuiContext* ctx);
+  VariablePlotter(const string& name, GuiContext* ctx);
   virtual ~VariablePlotter();
   virtual void execute();
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
 
 protected:
   bool getGrid();

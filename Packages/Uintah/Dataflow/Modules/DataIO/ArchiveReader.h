@@ -47,7 +47,7 @@ public:
   GuiString tcl_status;
   GuiString filebase; 
   ////////// Constructors
-  ArchiveReader(const string& id); 
+  ArchiveReader(GuiContext* ctx);
   virtual ~ArchiveReader(); 
   virtual void execute(); 
 

@@ -49,20 +49,20 @@ using namespace SCIRun;
 #pragma set woff 1682
 #endif
 
-ParticleVis::ParticleVis(const string& id) :
-  Module("ParticleVis", id, Filter, "Visualization", "Uintah"), 
-  min_("min_", id, this),  max_("max_", id, this),
-  isFixed("isFixed", id, this),
-  current_time("current_time", id, this),
-  radius("radius", id, this), 
-  drawcylinders("drawcylinders", id, this),
-  length_scale("length_scale", id, this),
-  head_length("head_length", id, this), width_scale("width_scale",id,this),
-  shaft_rad("shaft_rad", id,this),
-  show_nth("show_nth", id, this),
-  drawVectors("drawVectors",id,this), 
-  drawspheres("drawspheres", id, this),
-  polygons("polygons", id, this),
+ParticleVis::ParticleVis(GuiContext* ctx) :
+  Module("ParticleVis", ctx, Filter, "Visualization", "Uintah"), 
+  min_(ctx->subVar("min_")),  max_(ctx->subVar("max_")),
+  isFixed(ctx->subVar("isFixed")),
+  current_time(ctx->subVar("current_time")),
+  radius(ctx->subVar("radius")), 
+  drawcylinders(ctx->subVar("drawcylinders")),
+  length_scale(ctx->subVar("length_scale")),
+  head_length(ctx->subVar("head_length")), width_scale(ctx->subVar("width_scale")),
+  shaft_rad(ctx->subVar("shaft_rad")),
+  show_nth(ctx->subVar("show_nth")),
+  drawVectors(ctx->subVar("drawVectors")),
+  drawspheres(ctx->subVar("drawspheres")),
+  polygons(ctx->subVar("polygons")),
   MIN_POLYS(8), MAX_POLYS(400),
   MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
@@ -114,12 +114,12 @@ void ParticleVis::execute()
   if(spin1->get(scaleSet)){
     if( scaleSet.get_rep() != 0) {
       hasScale = true;
-      TCL::execute(id + " scalable 1");
+      gui->execute(id + " scalable 1");
     } else {
-      TCL::execute(id + " scalable 0");
+      gui->execute(id + " scalable 0");
     }
   } else {
-    TCL::execute(id + " scalable 0");
+    gui->execute(id + " scalable 0");
   }
 
 
@@ -367,7 +367,5 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   // Now modify so that points and spheres store index.
 }
   
-extern "C" Module* make_ParticleVis( const string& id ) {
-  return scinew ParticleVis( id );
-}
+DECLARE_MAKER(ParticleVis);
 } // End namespace Uintah

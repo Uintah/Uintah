@@ -127,7 +127,7 @@ public:
   // Constructor taking
   //    [in] id as an identifier
   //
-  Hedgehog(const string& id);
+  Hedgehog(GuiContext* ctx);
        
         // GROUP:  Destructor:
         ///////////////////////////
@@ -146,7 +146,7 @@ public:
         //                                  findxy,
         //                                  findyz,
         //                                  findxz
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   bool interpolate(FieldHandle f, const Point& p, Vector& val);
   bool interpolate(FieldHandle f, const Point& p, double& val);
 //  bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
@@ -157,21 +157,19 @@ public:
 static string module_name("Hedgehog");
 static string widget_name("Hedgehog Widget");
 
-extern "C" Module* make_Hedgehog(const string& id) {
-  return new Hedgehog(id);
-}       
+  DECLARE_MAKER(Hedgehog);
 
-Hedgehog::Hedgehog(const string& id)
-: Module("Hedgehog", id, Filter, "Visualization", "Uintah"),
+Hedgehog::Hedgehog(GuiContext* ctx)
+: Module("Hedgehog", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("Hedgehog widget lock"),
-  length_scale("length_scale", id, this),
-  width_scale("width_scale", id, this),
-  head_length("head_length", id, this),
-  type("type", id, this),
-  exhaustive_flag("exhaustive_flag", id, this),
-  vector_default_color("vector_default_color", id, this),
-  drawcylinders("drawcylinders", id, this),
-  shaft_rad("shaft_rad", id, this),
+  length_scale(ctx->subVar("length_scale")),
+  width_scale(ctx->subVar("width_scale")),
+  head_length(ctx->subVar("head_length")),
+  type(ctx->subVar("type")),
+  exhaustive_flag(ctx->subVar("exhaustive_flag")),
+  vector_default_color(ctx->subVar("vector_default_color")),
+  drawcylinders(ctx->subVar("drawcylinders")),
+  shaft_rad(ctx->subVar("shaft_rad")),
   shaft(new Material(Color(0,0,0), Color(.6, .6, .6),
 		     Color(.6, .6, .6), 10)),
   head(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10)),
@@ -430,7 +428,7 @@ void Hedgehog::widget_moved(int last)
 }
 
 
-void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
+void Hedgehog::tcl_command(GuiArgs& args, void* userdata)
 {
     if(args.count() < 2)
 	{

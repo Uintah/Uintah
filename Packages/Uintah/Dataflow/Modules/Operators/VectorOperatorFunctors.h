@@ -10,6 +10,7 @@
 #include <Core/Geometry/Vector.h>
 
 /* Functors used by VectorFieldOperator and VectorParticlesOperator */
+namespace Uintah {
 using SCIRun::Vector;
 
 struct VectorElementExtractionOp
@@ -30,5 +31,4 @@ struct LengthOp
   { return v.length(); }
 };
 
-
-
+}

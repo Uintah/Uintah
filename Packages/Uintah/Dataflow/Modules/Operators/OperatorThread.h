@@ -9,13 +9,11 @@
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <iostream>
-using std::cerr;
-using std::endl;
 
 namespace Uintah {
+  using std::cerr;
+  using std::endl;
   using namespace SCIRun;
-
-
 
 template<class Data, class ScalarField, class Op>
 class OperatorThread : public Runnable

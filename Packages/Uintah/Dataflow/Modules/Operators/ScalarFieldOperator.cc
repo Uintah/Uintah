@@ -13,13 +13,11 @@ using namespace SCIRun;
 
 namespace Uintah {
  
-extern "C" Module* make_ScalarFieldOperator( const string& id ) { 
-  return scinew ScalarFieldOperator( id );}
+DECLARE_MAKER(ScalarFieldOperator)
 
-
-ScalarFieldOperator::ScalarFieldOperator(const string& id)
-  : Module("ScalarFieldOperator",id,Source, "Operators", "Uintah"),
-    guiOperation("operation", id, this)
+ScalarFieldOperator::ScalarFieldOperator(GuiContext* ctx)
+  : Module("ScalarFieldOperator",ctx,Source, "Operators", "Uintah"),
+    guiOperation(ctx->subVar("operation"))
 {
 }
   

@@ -15,14 +15,12 @@ using namespace SCIRun;
 
 namespace Uintah {
  
-extern "C" Module* make_ScalarFieldAverage( const string& id ) { 
-  return scinew ScalarFieldAverage( id );}
+DECLARE_MAKER(ScalarFieldAverage)
 
-
-ScalarFieldAverage::ScalarFieldAverage(const string& id)
-  : Module("ScalarFieldAverage",id,Source, "Operators", "Uintah"),
-    t0_("t0_", id, this), t1_("t1_", id, this),
-    tsteps_("tsteps_", id, this),
+ScalarFieldAverage::ScalarFieldAverage(GuiContext* ctx)
+  : Module("ScalarFieldAverage",ctx,Source, "Operators", "Uintah"),
+    t0_(ctx->subVar("t0_")), t1_(ctx->subVar("t1_")),
+    tsteps_(ctx->subVar("tsteps_")),
     aveField(0), varname(""), time(0)
 {
 }

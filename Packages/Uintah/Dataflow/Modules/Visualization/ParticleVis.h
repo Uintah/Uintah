@@ -46,7 +46,7 @@ class ParticleVis : public Module {
     int last_generation;
     void *cbClass;
  public:
-    ParticleVis(const string& id);
+  ParticleVis(GuiContext* ctx);
     virtual ~ParticleVis();
     virtual void geom_pick(GeomPick*, void*, GeomObj*);
     virtual void execute();

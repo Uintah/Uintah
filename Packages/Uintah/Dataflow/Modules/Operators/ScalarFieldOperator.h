@@ -14,17 +14,16 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <string>
 #include <iostream>
+
+namespace Uintah {
 using std::string;
 using std::cerr;
 using std::endl;
-
-
-namespace Uintah {
 using namespace SCIRun;
 
   class ScalarFieldOperator: public Module, public UnaryFieldOperator {
   public:
-    ScalarFieldOperator(const string& id);
+    ScalarFieldOperator(GuiContext* ctx);
     virtual ~ScalarFieldOperator() {}
     
     virtual void execute(void);

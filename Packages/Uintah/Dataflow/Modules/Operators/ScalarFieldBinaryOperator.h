@@ -49,17 +49,16 @@ WARNING
 #include <Dataflow/Ports/FieldPort.h>
 #include <string>
 #include <iostream>
+
+namespace Uintah {
 using std::string;
 using std::cerr;
 using std::endl;
-
-
-namespace Uintah {
 using namespace SCIRun;
 
   class ScalarFieldBinaryOperator: public Module, public BinaryFieldOperator {
   public:
-    ScalarFieldBinaryOperator(const string& id);
+    ScalarFieldBinaryOperator(GuiContext* ctx);
     virtual ~ScalarFieldBinaryOperator() {}
     
     virtual void execute(void);

@@ -9,14 +9,13 @@
 #include <Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <string>
 
-using std::string;
-
 namespace Uintah {
+using std::string;
 using namespace SCIRun;
 
   class VectorParticlesOperator: public Module {
   public:
-    VectorParticlesOperator(const string& id);
+    VectorParticlesOperator(GuiContext* ctx);
     virtual ~VectorParticlesOperator() {}
     
     virtual void execute(void);

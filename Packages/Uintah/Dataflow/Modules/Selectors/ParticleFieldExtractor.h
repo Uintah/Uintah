@@ -63,7 +63,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  ParticleFieldExtractor(const string& id); 
+  ParticleFieldExtractor(GuiContext* ctx);
 
   // GROUP: Destructors
   //////////
@@ -84,7 +84,7 @@ public:
 
   //////////
   // command from the tcl code
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
   
 protected:
   
@@ -182,11 +182,13 @@ private:
 		 int scalar_type, bool have_sp,
 		 bool have_vp, bool have_tp, bool have_ids,
 		 Semaphore *sema, Mutex *smutex,
-		 Mutex *vmutex, Mutex *tmutex, Mutex *imutex):
+		 Mutex *vmutex, Mutex *tmutex, Mutex *imutex,
+		 GuiInterface* gui):
 	pfe(pfe), archive(archive), patch(patch), sp(sp), vp(vp), tp(tp),
 	pset(pset), scalar_type(scalar_type), have_sp(have_sp),
 	have_vp(have_vp), have_tp(have_tp), have_ids(have_ids), sema(sema),
-	smutex(smutex), vmutex(vmutex), tmutex(tmutex), imutex(imutex){}
+	smutex(smutex), vmutex(vmutex), tmutex(tmutex), imutex(imutex),
+      gui(gui){}
       
       void  run();
     private:
@@ -207,6 +209,7 @@ private:
       Mutex *vmutex;
       Mutex *tmutex;
       Mutex *imutex;
+      GuiInterface* gui;
     };
 } // End namespace Uintah
 

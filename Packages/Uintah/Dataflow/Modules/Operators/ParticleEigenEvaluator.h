@@ -7,14 +7,13 @@
 #include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <string>
 
-using std::string;
-using namespace SCIRun;
-
 namespace Uintah {
+  using std::string;
+  using namespace SCIRun;
 
   class ParticleEigenEvaluator: public Module {
   public:
-    ParticleEigenEvaluator(const string& id);
+    ParticleEigenEvaluator(GuiContext* ctx);
     virtual ~ParticleEigenEvaluator() {}
     
     virtual void execute(void);
