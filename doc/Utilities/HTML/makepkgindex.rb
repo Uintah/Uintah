@@ -16,21 +16,32 @@
 #
 
 #
-# Build an index.html file for all html files in the current directory.
+# Build an index.html file for all html files in the specified package.
 #
 # This script is used by doc/Developers/Modules/Makefile to build
-# an index.html file for each package description directory
-# in the Modules directory.
+# an index.html file for each package.
 #
 
+class Entry
+  attr_reader :file, :base
+  def initialize(file)
+    @file = file
+    @base = File.basename(file)
+  end
+  def <=>(e)
+    @base <=> e.base
+  end
+end
+
 packageName = ARGV[0]
-packageDir = ARGV[1]
+xmlDir = ARGV[1]
+texDir = ARGV[2]
 
 begin
   File.open("#{packageName}.html", "w") do |index|
 
 # Insert boilerplate at top of file
-  index.print <<ZZZZZ
+  index.print <<EndOfString
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <!--
 The contents of this file are subject to the University of Utah Public
@@ -65,18 +76,24 @@ document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='s
 <script language="JavaScript">
 document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\\/script>');
 </script>
-ZZZZZ
+EndOfString
 
   # Generate page heading.
-#  package = File.basename(`pwd`).strip
   index.print("<p class='title'> #{packageName} Module Descriptions</p>\n")
   index.print("<hr size='1'/>")
 
   # Generate index of modules.  Alphabetical order in 3 columns.
-  files = Dir["#{packageDir}/*.html"].sort
+  entries = []
+  Dir["#{xmlDir}/*.html"].each do |f|
+    entries << Entry.new(f)
+  end
+  Dir["#{texDir}/*/*/*.html"].each do |f|
+    entries << Entry.new(f)
+  end
+  entries.sort!
   numCols = 3
-  numRows = files.size() / numCols
-  extras = files.size() % numCols
+  numRows = entries.size() / numCols
+  extras = entries.size() % numCols
   numRowsArray = [ numRows, numRows, numRows ]
   if extras > 0
     numRowsArray[0] += 1
@@ -84,25 +101,25 @@ ZZZZZ
   if extras > 1
     numRowsArray[1] += 1
   end
-  table = []
-  table[0] = files[0, numRowsArray[0]]
-  table[1] = files[numRowsArray[0], numRowsArray[1]]
-  table[2] = files[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
+  etable = []
+  etable[0] = entries[0, numRowsArray[0]]
+  etable[1] = entries[numRowsArray[0], numRowsArray[1]]
+  etable[2] = entries[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
   index.print("<table align='center' cellspacing='5'>\n")
   numRows.times do |i|
     index.print("<tr>\n")
     numCols.times do |j|
-      file = table[j][i]
+      file = (etable[j][i]).file
       index.print("<td><a href='#{file}'>#{File.basename(file, '.html')}</a></td>\n")
     end
     index.print("</tr>\n")
   end
   if extras > 0
     index.print("<tr>\n")
-    file = table[0][numRows]
+    file = (etable[0][numRows]).file
     index.print("<td><a href='#{file}'>#{File.basename(file, '.html')}</a></td>\n")
     if extras > 1
-      file = table[1][numRows]
+      file = (etable[1][numRows]).file
       index.print("<td><a href='#{file}'>#{File.basename(file, '.html')}</a></td>\n")
     end        
     index.print("</tr>\n")
@@ -110,17 +127,17 @@ ZZZZZ
   index.print("</table>\n")
 
   # Generate end of file boilerplate.
-  index.print <<ZZZZZ
+  index.print <<EndOfString
 <script language="JavaScript">
 document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\\/script>');
 </script>
 </body>
 </html>
-ZZZZZ
+EndOfString
 
   end
 
-rescue
+rescue => oops
   print("Unable to build #{packageName}.html for package\n")
-  print($!, "\n")
+  print("Reason: ", oops.message, "\n")
 end
