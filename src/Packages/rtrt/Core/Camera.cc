@@ -37,8 +37,8 @@ Camera::Camera()
 Camera::Camera(const Point& eye, const Point& lookat,
 	       const Vector& up, double fov, double ray_offset) :
   eye(eye), lookat(lookat), up(up), fov(fov), 
-  verticalFov_(fov), ray_offset(ray_offset), windowAspectRatio_(1.0),
-  eyesep(1)
+  verticalFov_(fov), windowAspectRatio_(1.0),
+  eyesep(1), ray_offset(ray_offset)
 {
   setup();
 }
@@ -323,7 +323,8 @@ Camera::followPath( Stealth & stealth )
 {
   
   stealth.getNextLocation( this );
-  setup();
+  // This call to setup is redundant as getNextLocation calls it.
+  //  setup();
 }
 
 void
