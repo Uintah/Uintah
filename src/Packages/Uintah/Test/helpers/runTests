@@ -15,16 +15,18 @@ if [ ! -d "$BUILDROOT"/opt ]; then
 fi
 
 failed=0
+dbg_failed=0
+opt_failed=0
 build_and_run "dbg" "$DBG_CONFIGURE" > "$BUILDROOT"/dbg/log 2>&1
 if [ $? != 0 ]; then
   failed=1
-  echo "*** Some dbg tests failed." >> "$BUILDROOT"/log
+  dbg_failed=1
 fi
 
 build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
 if [ $? != 0 ]; then
   failed=1
-  echo "*** Some opt tests failed." >> "$BUILDROOT"/log
+  opt_failed=1
 fi
 
 if [ $failed == "0" ]; then
@@ -32,21 +34,42 @@ if [ $failed == "0" ]; then
 fi
 
 echo "" >> "$BUILDROOT"/log
-echo "Debug build log:" >> "$BUILDROOT"/log
+echo "" >> "$BUILDROOT"/log
+    echo "/--------------------------\\" >> "$BUILDROOT"/log
+if [ $dbg_failed != "0" ]; then
+    echo "| DEBUG TESTS - failed     |" >> "$BUILDROOT"/log
+else
+    echo "| DEBUG TESTS - passed     |" >> "$BUILDROOT"/log
+fi
+    echo "\\--------------------------/" >> "$BUILDROOT"/log
+echo "" >> "$BUILDROOT"/log
 cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
 echo "" >> "$BUILDROOT"/log
-echo "Optimized build log:" >> "$BUILDROOT"/log
+echo "" >> "$BUILDROOT"/log
+    echo "/--------------------------\\" >> "$BUILDROOT"/log
+if [ $opt_failed != "0" ]; then
+    echo "| OPTIMIZED TESTS - failed |" >> "$BUILDROOT"/log
+else
+    echo "| OPTIMIZED TESTS - passed |" >> "$BUILDROOT"/log
+fi
+    echo "\\--------------------------/" >> "$BUILDROOT"/log
+echo "" >> "$BUILDROOT"/log
 cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
 
-# build_and_run should write summare_log files
+# build_and_run should write summary_log files
 if [ -f "$BUILDROOT"/dbg/summary_log ]; then
-    echo "Summary for dbg mode tests:" >> "$BUILDROOT"/log
+    echo "" >> "$BUILDROOT"/log
+    echo "/--------------------------\\" >> "$BUILDROOT"/log
+    echo "|    DEBUG TEST SUMMARY    |" >> "$BUILDROOT"/log
+    echo "\\--------------------------/" >> "$BUILDROOT"/log
     echo "" >> "$BUILDROOT"/log
     cat "$BUILDROOT"/dbg/summary_log >> "$BUILDROOT"/log
 fi
 if [ -f "$BUILDROOT"/opt/summary_log ]; then
-    echo "Summary for opt mode tests:" >> "$BUILDROOT"/log
     echo "" >> "$BUILDROOT"/log
+    echo "/--------------------------\\" >> "$BUILDROOT"/log
+    echo "|  OPTIMIZED TEST SUMMARY  |" >> "$BUILDROOT"/log
+    echo "\\--------------------------/" >> "$BUILDROOT"/log
     cat "$BUILDROOT"/opt/summary_log >> "$BUILDROOT"/log
 fi
 echo "" >> "$BUILDROOT"/log
