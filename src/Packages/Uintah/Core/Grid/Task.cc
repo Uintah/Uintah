@@ -257,9 +257,15 @@ Task::modifies(const VarLabel* var,
 	       const MaterialSubset* matls, DomainSpec matls_dom)
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
+    // in order to implement modifies for reduction variables, the
+    // TaskGraph::setupTaskConnections would have to be rewritten for
+    // one thing.
+    throw InternalError("Modifies not implemented for reduction variables.");
+    /*
     // default material for a reduction variable is the global material (-1)
     matls = getGlobalMatlSubset();
     matls_dom = OutOfDomain;
+    */
   }  
 
   Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
