@@ -128,10 +128,10 @@ cd /usr/local/SCIRun/bin
 	  launching.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/gui-launch.jpg" align="center" format="JPG"/>
+	  <imagedata fileref="Figures/gui-launch.eps" align="center" format="EPS"/>
 	</imageobject>
 	<imageobject>
-	  <imagedata fileref="Figures/gui-launch.eps" align="center" format="EPS"/>
+	  <imagedata fileref="Figures/gui-launch.jpg" align="center" format="JPG"/>
 	</imageobject>
       </mediaobject>
     </figure>

@@ -1,5 +1,5 @@
 <!--
-For more information, please see: http://software.sci.utah.edu
+    For more information, please see: http://software.sci.utah.edu
 
 The MIT License
 
@@ -28,24 +28,45 @@ DEALINGS IN THE SOFTWARE.
 
 <chapter id="summary">
   <title>Summary</title>
- 
+  
   <para>
-      We have now seen how to use and manipulate some of the various aspects of BioImage.  Not only can BioImage read in multiple data types, but it can also directly manipulate that data to facilitate visualization and exploration. 
+    We have now seen how to use and manipulate some of the various
+    aspects of BioImage.  Not only can BioImage read in multiple
+    data types, but it can also directly manipulate that data to
+    facilitate visualization and exploration.
   </para>
- 
+  
   <para>
-      We have seen how BioImage is capable of loading a Nrrd-based dataset, the CT Tooth.  After loading in this data, several filters were applied to directly manipulate the data before the visualization of it.  These filters included a Cropping filter and a Resampling filter.
+    We have seen how BioImage is capable of loading a Nrrd-based
+    dataset, the CT Tooth.  After loading in this data, several
+    filters were applied to directly manipulate the data before the
+    visualization of it.  These filters included a Cropping filter
+    and a Resampling filter.
   </para>
- 
+  
   <para>
-      After the modifying the data, it is sent down for visualization.  The first part of the tutorial showed how to view data in the 3 2-d viewing panes.  Changing the data in these 2-d panes was accomplished with the sliders under each pane.  The window and level of these 2-d viewers were changed in order to more easily view parts of the tooth structures.
+    After the modifying the data, it is sent down for visualization.
+    The first part of the tutorial showed how to view data in the 3
+    2-d viewing panes.  Changing the data in these 2-d panes was
+    accomplished with the sliders under each pane.  The window and
+    level of these 2-d viewers were changed in order to more easily
+    view parts of the tooth structures.
   </para>
- 
+  
   <para>
-      BioImage also has a volume renderer for data visualization and exploration.  Not only was the volume renderer activated, but the 3-d viewer was also manipulated in order to present a desired view to the user.  The volume renderer is not only controlled by the window and level set in the 2-d panes, but also by the renderer's transfer function.  It was shown how to properly edit this transfer function in order to highlight various aspects of the dataset.
+    BioImage also has a volume renderer for data visualization and
+    exploration.  Not only was the volume renderer activated, but
+    the 3-d viewer was also manipulated in order to present a
+    desired view to the user.  The volume renderer is not only
+    controlled by the window and level set in the 2-d panes, but
+    also by the renderer's transfer function.  It was shown how to
+    properly edit this transfer function in order to highlight
+    various aspects of the dataset.
   </para>
- 
+  
   <para>
-      The basic use of BioImage has been explored through the use of the CT Tooth dataset.  For further questions and reference, please see the reference guide.
+    The basic use of BioImage has been explored through the use of
+    the CT Tooth dataset.  For further questions and reference,
+    please see the reference guide.
   </para>
- </chapter>
+</chapter>

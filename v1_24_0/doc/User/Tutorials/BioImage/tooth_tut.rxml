@@ -34,27 +34,30 @@ DEALINGS IN THE SOFTWARE.
 
   <section>
     <title>Loading Data</title>
-    <para>Upon opening BioImage, the
-    first module visible in the Processing Pane is the Load Data
-    frame as seen in label 2 of <xref linkend="fig.load"/>.  This 
-    tutorial will load a CT volume of a tooth.  The volume
-    is stored in a format called Nrrd which means Nearly-Raw Raster
-    Data.  To load the volume, select the Nrrd tab.  This will allow 
-    BioImage to properly process the Nrrd format.  Please see 
-    <xref linkend="ch.ref_data"/> for information on loading other 
-    supported formats.  
+    <para>
+      Upon opening BioImage, the first module visible in the
+      Processing Pane is the Load Data frame as seen in label 2 of
+      <xref linkend="fig.load"/>.  This tutorial will load a CT volume
+      of a tooth.  The volume is stored in a format called Nrrd which
+      means Nearly-Raw Raster Data.  To load the volume, select the
+      Nrrd tab.  This will allow BioImage to properly process the Nrrd
+      format.  Please see <xref linkend="ch.ref_data"/> for
+      information on loading other supported formats.
     </para>
     <para>
-      After selecting the Nrrd tab, press the "Browse" button to open the File
-      Selection Dialog.  Navigate to the proper location and select the
-      "tooth.nhdr" file.  After highlighting the proper dataset, press the
-      "Set" button to load the data.  The File Selection Dialog will disapear.
-      Press the green "Update" button located near the bottom of the Processing
-      Pane as show in <xref linkend="fig.load"/> labeled 4, to complete the process of
-      loading the data into BioImage.  Clicking the "Update" button will finalize 
-      and apply the new filter rules.  Only after clicking the Update button will any
-      changes made to the data be applied to the data being visualized.
+      After selecting the Nrrd tab, press the "Browse" button to open
+      the File Selection Dialog.  Navigate to the proper location and
+      select the "tooth.nhdr" file.  After highlighting the proper
+      dataset, press the "Set" button to load the data.  The File
+      Selection Dialog will disapear.  Press the green "Update" button
+      located near the bottom of the Processing Pane as show in <xref
+      linkend="fig.load"/> labeled 4, to complete the process of
+      loading the data into BioImage.  Clicking the "Update" button
+      will finalize and apply the new filter rules.  Only after
+      clicking the Update button will any changes made to the data be
+      applied to the data being visualized.
     </para>
+
     <figure id="fig.load">
       <title>Loading Data User Interface</title>
       <mediaobject>
@@ -70,13 +73,14 @@ DEALINGS IN THE SOFTWARE.
       </mediaobject>
     </figure>
 
-    <para>After loading the data into BioImage, the 4 view windows
-    will contain visualizations of the data as shown in 
-    <xref linkend="fig.viewing-pane"/>. The top window
-    will contain a 3D reconstruction of the data, while the bottom
-    three windows will present 3 different, orthogonal, slices of the
-    data.  
+    <para>
+      After loading the data into BioImage, the 4 view windows will
+      contain visualizations of the data as shown in <xref
+      linkend="fig.viewing-pane"/>. The top window will contain a 3D
+      reconstruction of the data, while the bottom three windows will
+      present 3 different, orthogonal, slices of the data.
     </para>
+
     <figure id="fig.viewing-pane">
       <title>Viewing Pane After Clicking Update</title>
       <mediaobject>
@@ -93,20 +97,22 @@ DEALINGS IN THE SOFTWARE.
     </figure>
     
     <para>
-      The 3 slice windows should show the sagittal, coronal, and axial views
-      and be labeled accordingly. Depending on the order of the axes in the 
-      loaded volume, the data may need to be flipped or permuted so that the axis
-      labels are correct.  The Viewing Cube, located in the Load Data window
-      labeled 3 in <xref linkend="fig.load"/> allows
-      the user to change the orientation of the slices presented in the
-      4 windows.  The orientation of each view can be changed by
-      altering the abbreviation next to the proper arrow.  By default,
-      the axial, sagittal, and coronal slices are viewed from the
-      superior, anterior, and left views respectively.  To change this,
-      simply select the appropriate arrow entry box, change the value, and then
-      click the cube button in the middle.  This will change all four
-      views in the drawing space.  The valid options are:
+      The 3 slice windows should show the sagittal, coronal, and axial
+      views and be labeled accordingly. Depending on the order of the
+      axes in the loaded volume, the data may need to be flipped or
+      permuted so that the axis labels are correct.  The Viewing Cube,
+      located in the Load Data window labeled 3 in <xref
+      linkend="fig.load"/> allows the user to change the orientation
+      of the slices presented in the 4 windows.  The orientation of
+      each view can be changed by altering the abbreviation next to
+      the proper arrow.  By default, the axial, sagittal, and coronal
+      slices are viewed from the superior, anterior, and left views
+      respectively.  To change this, simply select the appropriate
+      arrow entry box, change the value, and then click the cube
+      button in the middle.  This will change all four views in the
+      drawing space.  The valid options are:
     </para>
+
     <simplelist type="vert" columns="1">
       <member>S: Superior</member>
       <member>I: Inferior</member>
@@ -115,6 +121,7 @@ DEALINGS IN THE SOFTWARE.
       <member>L: Left</member>
       <member>R: Right</member>
     </simplelist>
+
     <para>
       To reset the views to the default parameters, simply press
       the "Reset" button in the lower right corner of the Load Data
@@ -124,38 +131,45 @@ DEALINGS IN THE SOFTWARE.
 
   <section>
     <title>Resampling and Cropping.</title>
-    <para>BioImage focuses on data display, interaction, and
-    manipulation.  This is all possible through the use of Dynamic
-    Filters.  The various filters available are located at the top of
-    the Processing Pane.  These filters, Resample, Crop, Histogram, and
-    CMedian allow finer control over the interaction and manipulation
-    of the data displayed in the visualization windows.</para>
+    <para>
+      BioImage focuses on data display, interaction, and manipulation.
+      This is all possible through the use of Dynamic Filters.  The
+      various filters available are located at the top of the
+      Processing Pane.  These filters, Resample, Crop, Histogram, and
+      CMedian allow finer control over the interaction and
+      manipulation of the data displayed in the visualization windows.
+    </para>
 
     <para>
-      To help manage space in the filter history, minimize the Load Data
-      frame by clicking on the black triangle next to the label 
-      "Data - Unknown". This will hide the specific ui and leave
-      only the label showing.
+      To help manage space in the filter history, minimize the Load
+      Data frame by clicking on the black triangle next to the label
+      "Data - Unknown". This will hide the specific ui and leave only
+      the label showing.
     </para>
 
-    <para>To add a Resample filter, click the "Resample" button from
-    the menu of buttons labeled 1 in <xref linkend="fig.load"/>.  A
-    new window will appear immediately below the Load Data window as
-    shown in label 2 of <xref linkend="fig.filter"/>.
-    This window allows for resampling in each dimension as well as a
-    parameterized method for resampling.  To downsample this data set
-    in each dimension, change the "x1" to "x0.5" in each dimension.
-    The "x0.5" is a magnification factor applied to 
-    the dataset along each dimension.</para>
-
-    <para>Click the "Update" button to finalize and apply the Resample
-    filter.</para>
-
-    <para>To add a cropping filter, click the "Crop" button.  A new
-    window will appear immediately below the Resample filter.  Also,
-    notice that a set of boxes appears over the dataset in the 2D
-    Viewers.
+    <para>
+      To add a Resample filter, click the "Resample" button from the
+      menu of buttons labeled 1 in <xref linkend="fig.load"/>.  A new
+      window will appear immediately below the Load Data window as
+      shown in label 2 of <xref linkend="fig.filter"/>.  This window
+      allows for resampling in each dimension as well as a
+      parameterized method for resampling.  To downsample this data
+      set in each dimension, change the "x1" to "x0.5" in each
+      dimension.  The "x0.5" is a magnification factor applied to the
+      dataset along each dimension.
     </para>
+
+    <para>
+      Click the "Update" button to finalize and apply the Resample
+      filter.
+    </para>
+
+    <para>
+      To add a cropping filter, click the "Crop" button.  A new window
+      will appear immediately below the Resample filter.  Also, notice
+      that a set of boxes appears over the dataset in the 2D Viewers.
+    </para>
+    
     <figure id="fig.crop_module_added">
       <title>Adding a crop filter</title>
       <mediaobject>
@@ -170,19 +184,26 @@ DEALINGS IN THE SOFTWARE.
 	</imageobject>
       </mediaobject>
     </figure>
-    <para>The extents of the various boxes present a visual
-    indication of the area of the dataset that will remain after the
-    application of the Cropping filter.  The small yellow circles at
-    the corners can be clicked-and-dragged in order to interactively
-    change the size of the cropping filter as seen in <xref linkend="fig.crop_module_added"/>
+
+    <para>
+      The extents of the various boxes present a visual indication of
+      the area of the dataset that will remain after the application
+      of the Cropping filter.  The small yellow circles at the corners
+      can be clicked-and-dragged in order to interactively change the
+      size of the cropping filter as seen in <xref
+      linkend="fig.crop_module_added"/>
     </para>
+    
     <para>
       Section <xref linkend="chap.filters"/>
       discusses each filter in more detail and their common uses.
     </para>
 
-    <para>Click the "Update" button to finalize and apply the Crop
-    filter to the Resampled dataset.</para>
+    <para>
+      Click the "Update" button to finalize and apply the Crop filter
+      to the Resampled dataset.
+    </para>
+
     <figure id="fig.filter">
       <title>Dynamic Filters</title>
       <mediaobject>
@@ -199,457 +220,504 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>
-      Notice that each of these filters are applied sequentially
-      from the Load Data window to the last filter in the list.  To
-      remove a filter from the list of filters applied to the data,
-      simply click on the red 'X' button in the appropriate filter.  
-      This will remove the filter from the pipeline completely. See
-      <xref linkend="sec.dynamic_filters"/> for more information regarding
+      Notice that each of these filters are applied sequentially from
+      the Load Data window to the last filter in the list.  To remove
+      a filter from the list of filters applied to the data, simply
+      click on the red 'X' button in the appropriate filter.  This
+      will remove the filter from the pipeline completely. See <xref
+      linkend="sec.dynamic_filters"/> for more information regarding
       dynamic filters and how to insert and delete them.
     </para>
+
   </section><!-- end:Resampling and Cropping -->
 
-  <section><title>Viewing the Data</title>
-    <section><title>Viewer Layout</title>
+  <section>
+    <title>Visualizing Tooth Slices</title>
+
+    <section>
+      <title>Selecting Slices</title>
+
       <para>
-        The Rendering Window is composed of four main windows. The upper
-        window is the 3D viewer window. By default the 3D viewer displays
-        slice planes of the axial, sagittal and coronal planes oriented 
-        relative to each other in 3-space.
+	The Rendering Window is composed of four main windows. The
+	upper window is the 3D viewer window. By default the 3D viewer
+	displays slice planes of the axial, sagittal and coronal
+	planes oriented relative to each other in 3-space.
       </para>
-    </section><!-- end:Viewer Layout -->    
-    <section id="sec.2dviewers">
-      <title>Viewing 2D Slices</title>
+
       <para>
-        The remaining viewer windows display 2D images of the individual
-        slice planes and can be used to change the location of the slice planes
-        inside of the dataset. The lower right window controls the axial plane, the lower center
-        window controls the coronal plane, and the lower left window controls the saggital plane,
+	The remaining viewer windows display 2D images of the
+	individual slice planes and can be used to change the location
+	of the slice planes inside of the dataset. The lower right
+	window controls the axial plane, the lower center window
+	controls the coronal plane, and the lower left window controls
+	the saggital plane.
       </para>
+
       <figure id="fig.2dview">
-        <title>2D Viewer Windows</title>
-        <mediaobject>
+	<title>2D Viewer Windows</title>
+	<mediaobject>
 	  <textobject>
 	    <phrase>2d Viewer Window showing tooth dataset.</phrase>
 	  </textobject>
 	  <imageobject>
-	  <imagedata fileref="Figures/2dview.eps" align="center" format="EPS"/>
+	    <imagedata fileref="Figures/2dview.eps" align="center" format="EPS"/>
 	  </imageobject>
 	  <imageobject>
-	  <imagedata fileref="Figures/2dview.jpg" align="center" format="JPG"/>
+	    <imagedata fileref="Figures/2dview.jpg" align="center" format="JPG"/>
 	  </imageobject>
-        </mediaobject>
+	</mediaobject>
       </figure>
 
-      <section><title>Slice Planes</title>
-        <para>Each slice plane can be manipulated via sliders</para>
-        <figure id="fig.2dslider">
-	  <title>Slice plane slider</title>
-	  <mediaobject>
-	    <textobject>
-	      <phrase>Slider used to move change location of slice plane.</phrase>
-	    </textobject>
-	    <imageobject>
-	    <imagedata fileref="Figures/2dslider.eps" align="center" format="EPS"/>
-	    </imageobject>
-	    <imageobject>
-	    <imagedata fileref="Figures/2dslider.jpg" align="center" format="JPG"/>
-	    </imageobject>
-	  </mediaobject>
-        </figure>
-        <para>
-	  Looking at the lower left slice window, we see the 2D slice
-	  and corresponding slider controls for the saggital plane.  The
-	  location of the slice plane inside of the volume is displayed
-	  on the left side of the slider.  By default, the slice is
-	  placed at the center of the volume, which for the tooth
-	  dataset corresponds to the 51st slice along the saggital axis.
-        </para>
-        <section><title>Moving the slices</title>
-	  <para>
-	    If we move the slice plane slider over to the left until it reads 68,
-	    we see the 68th saggital slice displayed in both the 2D and 3D viewers.
-	  </para>
-	  <figure id="fig.68saggitalBoth">
-	    <title>Slice plane slider moved to 68th saggital slice</title>
-	    <mediaobject>
-	      <textobject>
-	        <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
-	      </textobject>
-	      <imageobject>
-	      <imagedata fileref="Figures/68saggitalBoth.eps" align="center" format="EPS"/>
-	      </imageobject>
-	      <imageobject>
-	      <imagedata fileref="Figures/68saggitalBoth.jpg" align="center" format="JPG"/>
-	      </imageobject>
-	    </mediaobject>
-	  </figure>
-	  <para>
-	    Other controls for moving the slice plane:
-	    <simplelist type="vert" columns="1">
-	      <member>Keyboard &lt; &gt; : previous/next slice</member>
-	      <member>Keyboard +/-: zoom in and out on the slice</member>
-	      <member>Keyboard Arrow Keys: move the slice up/down right/left</member>
-	      <member>Mouse Scroll Wheel : previous/next slice</member>
-	      <member>Shift-Mouse Scroll Wheel : zoom in and out on the slice</member>
-	    </simplelist>
-	  </para>
-        </section><!-- end:Moving the slice plane -->
-      
-        <section><title>Changing slice colors</title>
-	  <para>
-	    The colors displayed in the viewers are greyscale and
-	    represent the underlying values of the data. The colors may
-	    represent density, in which case the highest densities
-	    correspond to white colored areas and the lowest density
-	    regions are colored in black, with in between areas in
-	    shades of grey.
-	  </para>
-	  <para>
-	    It is possible to change the colormaps to use other ranges
-	    of colors. Instead of ranging from white to black there is
-	    an option that goes from blue to red, or uses a rainbow
-	    colors. To change the colormap, choose the "Planes" tab
-	    and select the desired colormap using the radiobuttons in
-	    the Color Planes By frame.
-	    <figure id="fig.planesTab">
-	      <title>Options for controlling planes</title>
-	      <mediaobject>
-	        <textobject>
-		  <phrase>Options for controlling planes.</phrase>
-	        </textobject>
-	        <imageobject>
-		<imagedata fileref="Figures/planesTab.eps" align="center" format="EPS"/>
-	        </imageobject>
-	        <imageobject>
-		<imagedata fileref="Figures/planesTab.jpg" align="center" format="JPG"/>
-	        </imageobject>
-	      </mediaobject>
-	    </figure>
-	    <figure id="fig.rainbow_color_applied"><title>Rainbow colormap</title>
-	      <mediaobject>
-		<textobject>
-		  <phrase>Rainbow colormap</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/rainbow_color_applied.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/rainbow_color_applied.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	    </figure>	
-	  </para>
-	  <para>
-	    Choose the Rainbow colormap and notice the difference in the
-	    resulting images displayed in the viewer windows.
-	  </para>
-	  <para>
-	    Using a rainbow color map makes it easier to identify
-	    variations in the underlying data, but also makes it more
-	    difficult to correlate differences in colors to differences
-	    in data (ie is green high density?).
-	  </para>
-        </section><!-- end:Changing slice colormaps -->
-	<section><title>Moving the slice planes with the center mouse button</title>
-          <para>
-	    The slice planes can be moved via the mouse. In each 2D viewer there
-	    are crosshairs which correspond to the two planes orthogonal to the
-	    current 2D view. Use the center mouse button to click and drag the cross
-	    hairs and change the location of the corresponding planes.
-	  </para>
-	</section><!-- end:Moving the slice planes with the mouse -->
-        <section><title>Emphasizing features using a "window width" and "level" </title>
-          <para>
-	    The "window width" and "level" controls can be used to emphasise data values in Viewers. The default
-	    "level" (or center value) is the center value of the dataset, and the "range" (range of displayed values)
-	    is the whole dataset.
-	    With the default window and level, all values in the dataset are visible in the viewer. Changing the 
-	    "window width" and "level" may allow us to view certain features of the dataset, like
-	    bone for example.
-	  </para>
-	  <para>
-	    The easiest way to change the "window width" and "level" is using the slider  
-	    shown in label 4 of <xref linkend="fig.planesTab"/> in the Planes tab.
-	    There are two sliders which can be used to set the window width and level. It is also possible to type
-	    in a numerical value for the window with and level by clicking on the digit displayed next to the 
-	    slider and typing in a value.
-	  </para>
+      <para>Each slice plane can be manipulated via sliders</para>
 
-	  <para>
-	    Using the left mouse button inside of the 2D viewer also changes the window and level. Left clicking 
-	    and dragging the mouse up and down inside of the 2D viewer changes the level.
-	    Left clicking and dragging the mouse side to side inside of the 2D viewer changes the window width. 
-	    Choosing a small window width would mean that only a small range of values would
-	    be visible at any given time in the viewer.
-	  </para>
-	  <para>
-	    The tooth dataset has data values ranging from 0 to 1300, and corresponding default level of 650, 
-	    and a default window width of 1300. If we set the window width to a very narrow 77, and 
-	    set the window level to 942, we see that the enamel becomes the only material visible in the viewer window.
-	  </para>
-	  <figure id="fig.enamel_window_level_control">
-	    <title>Window and Level Sliders</title>
-	    <mediaobject>
-	      <textobject>
-	        <phrase>Window and Level for enamel on tooth dataset.</phrase>
-	      </textobject>
-	      <imageobject>
-	      <imagedata fileref="Figures/enamel_window_level_control.eps" align="center" format="EPS"/>
-	      </imageobject>
-	      <imageobject>
-	      <imagedata fileref="Figures/enamel_window_level_control.jpg" align="center" format="JPG"/>
-	      </imageobject>
-	    </mediaobject>
-	  </figure>
-	</section>
-      </section><!-- Slice Planes -->
-    </section><!-- The 2D Viewers -->
-    <section><title>The 3D Viewer</title>
-      <para>
-        The 3D Viewer is displayed in the upper left portion of the Visualization Pane.
-	The 3D Viewer by default displays the saggital, axial and coronal planes. 
-      </para>
-      <figure id="fig.3dview">
-        <title>3d Viewer Window</title>
-        <mediaobject>
+      <figure id="fig.2dslider">
+	<title>Slice plane slider</title>
+	<mediaobject>
 	  <textobject>
-	    <phrase>3d Viewer Window showing tooth dataset.</phrase>
+	    <phrase>Slider used to move change location of slice plane.</phrase>
 	  </textobject>
 	  <imageobject>
-	  <imagedata fileref="Figures/3dview.eps" align="center" format="EPS"/>
+	    <imagedata fileref="Figures/2dslider.eps" align="center" format="EPS"/>
 	  </imageobject>
 	  <imageobject>
-	  <imagedata fileref="Figures/3dview.jpg" align="center" format="JPG"/>
+	    <imagedata fileref="Figures/2dslider.jpg" align="center" format="JPG"/>
 	  </imageobject>
-        </mediaobject>
+	</mediaobject>
       </figure>
-      <section><title>Mouse controls for the 3D viewer</title>
+
+      <para>
+	Looking at the lower left slice window, we see the 2D slice
+	and corresponding slider controls for the saggital plane.  The
+	location of the slice plane inside of the volume is displayed
+	on the left side of the slider.  By default, the slice is
+	placed at the center of the volume, which for the tooth
+	dataset corresponds to the 51st slice along the saggital axis.
+      </para>
+
+      <para>
+	If we move the slice plane slider over to the left until it
+	reads 68, we see the 68th saggital slice displayed in both the
+	2D and 3D viewers.
+      </para>
+
+      <figure id="fig.68saggitalBoth">
+	<title>Slice plane slider moved to 68th saggital slice</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/68saggitalBoth.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/68saggitalBoth.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <para>
+	Other controls for moving the slice plane:
+	<simplelist type="vert" columns="1">
+	  <member>Keyboard &lt; &gt; : previous/next slice</member>
+	  <member>Keyboard +/-: zoom in and out on the slice</member>
+	  <member>Keyboard Arrow Keys: move the slice up/down right/left</member>
+	  <member>Mouse Scroll Wheel : previous/next slice</member>
+	  <member>Shift-Mouse Scroll Wheel : zoom in and out on the slice</member>
+	</simplelist>
+      </para>
+
+      <section>
+	<title>Moving the slice planes with the center mouse button</title>
 	<para>
-	  The 3D Viewer can be manipulated using the mouse. Please see the SCIRun Userguide for
-	  more detailed information on navigating inside of the Viewer Window.
-	  <ulink url="../../Guide/usersguide/srug6_3.html"><citetitle>Section 6.3 of the SCIRun Userguide:
-	  "Mouse Control in the Viewer Window"</citetitle></ulink>.
-	  http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
+	  The slice planes can be moved via the mouse. In each 2D
+	  viewer there are crosshairs which correspond to the two
+	  planes orthogonal to the current 2D view. Use the center
+	  mouse button to click and drag the cross hairs and change
+	  the location of the corresponding planes.
 	</para>
-        <para>
-	  A quick list of the most commonly used mouse commands:
-	  <simplelist type="vert" columns="1">
-	    <member>Left Mouse Button: translate up/down, side-to-side</member>
-	    <member>Right Mouse Button: zoom in and out</member>
-	    <member>Center Mouse Button: rotate the object</member>
-	  </simplelist>
-	</para>
-        <para>
-	  If the object is no longer in view, you can go to the "3D
-	  Options" tab in the left control panel and click "Autoview"
-	  and a reasonable default view will be set.  Pressing the
-	  Control-V buttons inside of the 3D window will also autoview
-	  the volume.
-	</para>
-      </section><!-- end:Mouse Controls for the 3D Viewer -->
-      <section><title>Volume Rendering</title>
-        <para>
-	  In addition to viewing 2D slices of the data, it is also possible to
-	  view a full 3D Volume rendering of the data.
-	</para>
-	<figure id="fig.3dVolRen"><title>Volume Rendering in 3D Viewer Window</title>
+      </section><!-- end:Moving the slice planes with the mouse -->
+      
+    </section><!-- end: Selecting Slices -->
+
+    <section>
+      <title>Coloring Slices</title>
+      <para>
+	The colors displayed in the viewers are greyscale and
+	represent the underlying values of the data. The colors may
+	represent density, in which case the highest densities
+	correspond to white colored areas and the lowest density
+	regions are colored in black, with in between areas in
+	shades of grey.
+      </para>
+      <para>
+	It is possible to change the colormaps to use other ranges
+	of colors. Instead of ranging from white to black there is
+	an option that goes from blue to red, or uses a rainbow
+	colors. To change the colormap, choose the "Planes" tab
+	and select the desired colormap using the radiobuttons in
+	the Color Planes By frame.
+	<figure id="fig.planesTab">
+	  <title>Options for controlling planes</title>
 	  <mediaobject>
 	    <textobject>
-	      <phrase>Volume Rendering in 3D Viewer Window</phrase>
+	      <phrase>Options for controlling planes.</phrase>
 	    </textobject>
 	    <imageobject>
-	      <imagedata fileref="Figures/3dVolRen.eps" align="center" format="EPS"/>
+	      <imagedata fileref="Figures/planesTab.eps" align="center" format="EPS"/>
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="Figures/3dVolRen.jpg" align="center" format="JPG"/>
+	      <imagedata fileref="Figures/planesTab.jpg" align="center" format="JPG"/>
 	    </imageobject>
 	  </mediaobject>
 	</figure>
-	<section><title>Turning on Volume Rendering</title>
-	  <para>
-	    To turn on Volume Rendering, select the Volume Rendering tab and put a checkmark in
-	    the box labelled "Show Volume Rendering".
-	  </para>
-	  <figure id="fig.volrender_tab"><title>Turning on Volume Rendering</title>
-	    <mediaobject>
-	      <textobject>
-		<phrase>Turning on Volume Rendering</phrase>
-	      </textobject>
-	      <imageobject>
-		<imagedata fileref="Figures/volrender_tab.eps" align="center" format="EPS"/>
-	      </imageobject>
-	      <imageobject>
-		<imagedata fileref="Figures/volrender_tab.jpg" align="center" format="JPG"/>
-	      </imageobject>
-	    </mediaobject>
-	  </figure>
-	</section><!-- end:Turning on Volume Rendering -->
+	<figure id="fig.rainbow_color_applied"><title>Rainbow colormap</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Rainbow colormap</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/rainbow_color_applied.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/rainbow_color_applied.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+	</figure>	
+      </para>
+
+      <para>
+	Choose the Rainbow colormap and notice the difference in the
+	resulting images displayed in the viewer windows.
+      </para>
+      <para>
+	Using a rainbow color map makes it easier to identify
+	variations in the underlying data, but also makes it more
+	difficult to correlate differences in colors to differences in
+	data (ie is green high density?).
+      </para>
+    </section><!-- end:Changing slice colormaps -->
+
+    <section>
+      <title>Emphasizing Tooth Features</title>
+      <para>
+	The "window width" and "level" controls can be used to
+	emphasise data values in Viewers. The default "level" (or
+	center value) is the center value of the dataset, and the
+	"range" (range of displayed values) is the whole dataset.
+	With the default window and level, all values in the
+	dataset are visible in the viewer. Changing the "window
+	width" and "level" may allow us to view certain features
+	of the dataset, like bone for example.
+      </para>
+      <para>
+	The easiest way to change the "window width" and "level"
+	is using the slider shown in label 4 of <xref
+	linkend="fig.planesTab"/> in the Planes tab.  There are
+	two sliders which can be used to set the window width and
+	level. It is also possible to type in a numerical value
+	for the window with and level by clicking on the digit
+	displayed next to the slider and typing in a value.
+      </para>
+
+      <para>
+	Using the left mouse button inside of the 2D viewer also
+	changes the window and level. Left clicking and dragging
+	the mouse up and down inside of the 2D viewer changes the
+	level.  Left clicking and dragging the mouse side to side
+	inside of the 2D viewer changes the window width.
+	Choosing a small window width would mean that only a small
+	range of values would be visible at any given time in the
+	viewer.
+      </para>
+      <para>
+	The tooth dataset has data values ranging from 0 to 1300,
+	and corresponding default level of 650, and a default
+	window width of 1300. If we set the window width to a very
+	narrow 77, and set the window level to 942, we see that
+	the enamel becomes the only material visible in the viewer
+	window.
+      </para>
+      <figure id="fig.enamel_window_level_control">
+	<title>Window and Level Sliders</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Window and Level for enamel on tooth dataset.</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_window_level_control.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/enamel_window_level_control.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+    </section>
+  </section><!-- Slice Planes -->
+
+  <section>
+    <title>Visualizing the Tooth Volume</title>
+    <para>
+      The 3D Viewer is displayed in the upper left portion of the
+      Visualization Pane.  The 3D Viewer by default displays the
+      saggital, axial and coronal planes.
+    </para>
+    <figure id="fig.3dview">
+      <title>3d Viewer Window</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>3d Viewer Window showing tooth dataset.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dview.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dview.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      In addition to viewing 2D slices of the data, it is also
+      possible to view a full 3D Volume rendering of the data.
+    </para>
+    <figure id="fig.3dVolRen"><title>Volume Rendering in 3D Viewer Window</title>
+    <mediaobject>
+      <textobject>
+	<phrase>Volume Rendering in 3D Viewer Window</phrase>
+      </textobject>
+      <imageobject>
+	<imagedata fileref="Figures/3dVolRen.eps" align="center" format="EPS"/>
+      </imageobject>
+      <imageobject>
+	<imagedata fileref="Figures/3dVolRen.jpg" align="center" format="JPG"/>
+      </imageobject>
+    </mediaobject>
+    </figure>
+
+    <para>
+      To turn on Volume Rendering, select the Volume Rendering
+      tab and put a checkmark in the box labelled "Show Volume
+      Rendering".
+    </para>
+    <figure id="fig.volrender_tab"><title>Turning on Volume Rendering</title>
+    <mediaobject>
+      <textobject>
+	<phrase>Turning on Volume Rendering</phrase>
+      </textobject>
+      <imageobject>
+	<imagedata fileref="Figures/volrender_tab.eps" align="center" format="EPS"/>
+      </imageobject>
+      <imageobject>
+	<imagedata fileref="Figures/volrender_tab.jpg" align="center" format="JPG"/>
+      </imageobject>
+    </mediaobject>
+    </figure>
+
+    <para>
+      The 3D Viewer can be manipulated using the mouse. Please see
+      the SCIRun Userguide for more detailed information on
+      navigating inside of the Viewer Window.  <ulink
+      url="../../Guide/usersguide/srug6_3.html"><citetitle>Section
+      6.3 of the SCIRun Userguide: "Mouse Control in the Viewer
+      Window"</citetitle></ulink>.
+      http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
+    </para>
+    <para>
+      A quick list of the most commonly used mouse commands:
+      <simplelist type="vert" columns="1">
+	<member>Left Mouse Button: translate up/down, side-to-side</member>
+	<member>Right Mouse Button: zoom in and out</member>
+	<member>Center Mouse Button: rotate the object</member>
+      </simplelist>
+    </para>
+    <para>
+      If the object is no longer in view, you can go to the "3D
+      Options" tab in the left control panel and click "Autoview"
+      and a reasonable default view will be set.  Pressing the
+      Control-V buttons inside of the 3D window will also autoview
+      the volume.
+    </para>
+
+    <!--
 	<section><title>Using the Paintbrush</title>
-          <para>
-	    (Talk about the paintbrush interface when it is ready) 
-	  </para>
-	</section><!-- end:Using the Paintbrush -->
-	<section><title>Editing the Transfer Function</title> 
-	  <para>
-	    The Transfer Function assigns optical properties to 3D data in order to  
-	    help the user comprehend the data visually. The transfer function maps
-	    color to specific data values. 
-	  </para>
-	  <para>
-	    To edit the transfer function directly, select the "Edit Transfer Function"
-	    button in the Volume Rendering Tab. <xref linkend="fig.volrender_tab"/>
-	  </para>
-	  <section><title>The Edit Transfer Function Window</title>
-            <figure id="fig.editTFWindow"><title>The Edit Transfer Function Window</title>
-              <mediaobject>
-		<textobject>
-		  <phrase>The Edit Transfer Function Window</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/editTFWindow.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/editTFWindow.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	    </figure>
-	    <para>
-	      The Edit Transfer Function Window <xref linkend="fig.editTFWindow"/>
-	      provides an advanced interface to the color-to-data mapping used for
-	      volume rendering.
-	    </para>
-	    <para>
-	      The Edit Transfer Function Window shows a histogram <xref linkend="fig.histo"/>
-	      of the data values contained in the dataset.
-	    </para>
-	    <figure id="fig.histo"><title>Histogram of values in dataset</title>
-	      <mediaobject>
-		<textobject>
-		  <phrase>Histogram of values in dataset</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/histo.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/histo.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	    </figure>
-	    <para>
-	      The X axis of the histogram corresponds to the value or 'V' of the dataset, and 
-	      usually corresponds with a measured quantity, such as density. For the sample
-	      tooth dataset, the X axis has a range from 0-1300.
-	    </para>
-	    <para>
-	      The Y axis of the histogram corresponds to the Gradient Magnitude 
-	      or 'G' of the dataset. Areas with high Gradient Magnitude correspond to
-	      material borders in the dataset.
-	    </para>
-	    <section>
-	      <title>Assigning Color to the Different Tooth Materials</title>
-	      <para>
-		In the tooth histogram <xref linkend="fig.histo"/> there are four distinct
-		materials, denoted by areas of high concentration near the bottom of the
-		histogram.
-	      </para>
-	      <para>
-		If we do an "add rectangle" and drag the newly formed rectangle over to the
-		first material, we see that the material corresponds to the root of the
-		tooth.
-	      </para>
-	      <figure id="fig.root_ren_tf"><title>The root of the tooth displayed in the viewer</title>
-	      <mediaobject>
-		<textobject>
-		  <phrase>The root of the tooth displayed in the viewer</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/root_ren_tf.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/root_ren_tf.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	      </figure>
-	      <para>
-		Similarly, we discover the air surrounding the tooth <xref linkend="fig.air_ren_tf"/>,
-		the tooth dentin <xref linkend="fig.dentin_ren_tf"/> and tooth 
-		enamel <xref linkend="fig.enamel_ren"/>.
-	      </para>
-	      <figure id="fig.air_ren_tf"><title>The air around the tooth displayed in the viewer</title>
-	      <mediaobject>
-		<textobject>
-		  <phrase>The air around the tooth displayed in the viewer</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/air_ren_tf.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/air_ren_tf.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	      </figure>
-	      <figure id="fig.dentin_ren_tf"><title>The dentin of the tooth displayed in the viewer</title>
-              <mediaobject>
-		<textobject>
-		  <phrase>The dentin of the tooth displayed in the viewer</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/dentin_ren_tf.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/dentin_ren_tf.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	      </figure>
-	      <figure id="fig.enamel_ren"><title>The enamel of the tooth displayed in the viewer</title>
-              <mediaobject>
-		<textobject>
-		  <phrase>The enamel of the tooth displayed in the viewer</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/enamel_ren_tf.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/enamel_ren_tf.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	      </figure>
-	    </section><!-- end:Assigning color to the different tooth materials -->
-	    <section><title>Assinging color to the borders between materials</title>
-	      <para>
-		The arcs in the histogram <xref linkend="fig.histo"/> represent the borders
-		between different materials in the tooth dataset. If we add a triangle to the
-		transfer function and position it on the arc <xref linkend="fig.border_dentin_enamel_ren_tf"/>
-		connecting the dentin and enamel, we see the dentin-enamel border displayed 
-		<xref linkend="fig.border_dentin_enamel_ren_tf"/> in the viewer window.
-	      </para>
-	      <figure id="fig.border_dentin_enamel_ren_tf"><title>Adding color to the transfer function</title>
-              <mediaobject>
-		<textobject>
-		  <phrase>Adding color tp the transfer function</phrase>
-		</textobject>
-		<imageobject>
-		  <imagedata fileref="Figures/border_dentin_enamel_ren_tf.eps" align="center" format="EPS"/>
-		</imageobject>
-		<imageobject>
-		  <imagedata fileref="Figures/border_dentin_enamel_ren_tf.jpg" align="center" format="JPG"/>
-		</imageobject>
-	      </mediaobject>
-	      </figure>
-	    </section><!-- end:Assinging color to the borders between materials -->
-	    <section>
-	      <title>Additional Controls in the Edit Transfer Function Window</title>
-	      <para>
-		The other controls in the Edit Transfer Function window can be used to
-		turn the individual color widget on/off, change their color or assign
-		then a name. There are also controls to load/save the color widgets to disk,
-		and to delete individual color widgets.
-	      </para>
-	    </section><!-- end:Other controls in the Edit Transfer Function window -->
-	  </section><!-- end:The Edit Transfer Function Window -->
-	</section><!-- end: Editing the Transfer Fuction -->
-      </section><!-- end:Volume Rendering -->
-    </section><!-- end:3D Viewer -->
-  </section><!-- Visualization -->
+	<para>
+	(Talk about the paintbrush interface when it is ready)
+	</para>
+	</section>
+    -->
+
+    <section>
+      <title>Transfer Functions</title>
+      <para>
+	The Transfer Function assigns optical properties to 3D
+	data in order to help the user comprehend the data
+	visually. The transfer function maps color to specific
+	data values.
+      </para>
+      <para>
+	To edit the transfer function directly, select the "Edit
+	Transfer Function" button in the Volume Rendering
+	Tab. <xref linkend="fig.volrender_tab"/>
+      </para>
+
+      <figure id="fig.editTFWindow"><title>The Edit Transfer Function Window</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>The Edit Transfer Function Window</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/editTFWindow.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/editTFWindow.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+      </figure>
+      <para>
+	The Edit Transfer Function Window <xref
+	linkend="fig.editTFWindow"/> provides an advanced
+	interface to the color-to-data mapping used for volume
+	rendering.
+      </para>
+      <para>
+	The Edit Transfer Function Window shows a histogram
+	<xref linkend="fig.histo"/> of the data values contained
+	in the dataset.
+      </para>
+      <figure id="fig.histo"><title>Histogram of values in dataset</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Histogram of values in dataset</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/histo.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/histo.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+      </figure>
+      <para>
+	The X axis of the histogram corresponds to the value or
+	'V' of the dataset, and usually corresponds with a
+	measured quantity, such as density. For the sample tooth
+	dataset, the X axis has a range from 0-1300.
+      </para>
+      <para>
+	The Y axis of the histogram corresponds to the Gradient
+	Magnitude or 'G' of the dataset. Areas with high
+	Gradient Magnitude correspond to material borders in the
+	dataset.
+      </para>
+
+      <para>
+	The other controls in the Edit Transfer Function window
+	can be used to turn the individual color widget on/off,
+	change their color or assign then a name. There are also
+	controls to load/save the color widgets to disk, and to
+	delete individual color widgets.
+      </para>
+    </section>
+
+    <section>
+      <title>Emphasizing Tooth Materials</title>
+      <para>
+	In the tooth histogram <xref linkend="fig.histo"/>
+	there are four distinct materials, denoted by areas of
+	high concentration near the bottom of the histogram.
+      </para>
+      <para>
+	If we do an "add rectangle" and drag the newly formed
+	rectangle over to the first material, we see that the
+	material corresponds to the root of the tooth.
+      </para>
+      <figure id="fig.root_ren_tf"><title>The root of the tooth displayed in the viewer</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>The root of the tooth displayed in the viewer</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/root_ren_tf.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/root_ren_tf.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+      </figure>
+      <para>
+	Similarly, we discover the air surrounding the tooth <xref linkend="fig.air_ren_tf"/>,
+	the tooth dentin <xref linkend="fig.dentin_ren_tf"/> and tooth 
+	enamel <xref linkend="fig.enamel_ren"/>.
+      </para>
+      <figure id="fig.air_ren_tf"><title>The air around the tooth displayed in the viewer</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>The air around the tooth displayed in the viewer</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/air_ren_tf.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/air_ren_tf.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+      </figure>
+      <figure id="fig.dentin_ren_tf"><title>The dentin of the tooth displayed in the viewer</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>The dentin of the tooth displayed in the viewer</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/dentin_ren_tf.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/dentin_ren_tf.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+      </figure>
+      <figure id="fig.enamel_ren"><title>The enamel of the tooth displayed in the viewer</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>The enamel of the tooth displayed in the viewer</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/enamel_ren_tf.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/enamel_ren_tf.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+      </figure>
+    </section><!-- end:Emphasizing Tooth Materials -->
+
+    <section>
+      <title>Emphasizing Tooth Material Borders</title>
+      <para>
+	The arcs in the histogram <xref linkend="fig.histo"/>
+	represent the borders between different materials in
+	the tooth dataset. If we add a triangle to the
+	transfer function and position it on the arc <xref
+	linkend="fig.border_dentin_enamel_ren_tf"/> connecting
+	the dentin and enamel, we see the dentin-enamel border
+	displayed <xref
+	linkend="fig.border_dentin_enamel_ren_tf"/> in the
+	viewer window.
+      </para>
+      <figure id="fig.border_dentin_enamel_ren_tf">
+	<title>Adding color to the transfer function</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Adding color tp the transfer function</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/border_dentin_enamel_ren_tf.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/border_dentin_enamel_ren_tf.jpg" align="center" format="JPG"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+    </section><!-- end:Emphsizing Tooth Material Borders -->
+
+  </section><!-- end: Emphsizing Tooth Material Borders -->
 </chapter>
