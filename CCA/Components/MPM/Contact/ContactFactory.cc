@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ApproachContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -40,6 +41,9 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
 
       else if (con_type == "rigid")
 	 return(scinew RigidBodyContact(child,ss,lb,flag));
+    
+      else if (con_type == "specified")
+	 return(scinew SpecifiedBodyContact(child,ss,lb,flag));
     
       else {
 	 cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
