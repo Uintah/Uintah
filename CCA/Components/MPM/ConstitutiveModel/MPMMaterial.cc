@@ -220,7 +220,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	pCrackNormal[pIdx] = Vector(0.,0.,0.);
 	pTipNormal[pIdx] = Vector(0.,0.,0.);
 	pExtensionDirection[pIdx] = Vector(0.,0.,0.);
-	pCrackSurfacePressure[pIdx] = d_initialPressure;
+	pCrackSurfacePressure[pIdx] = 0;
      }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
@@ -289,10 +289,12 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	   if(vdis > 0 && vdis < r) {
 	     pIsBroken[pIdx] = 1;
 	     pCrackNormal[pIdx] = - bc->e3();
+	     pCrackSurfacePressure[pIdx] = d_initialPressure;
 	   }
 	   else if(vdis <= 0 && vdis >= -r) {
              pIsBroken[pIdx] = 1;
 	     pCrackNormal[pIdx] = bc->e3();
+	     pCrackSurfacePressure[pIdx] = d_initialPressure;
 	   }
 	 }
 	 else {
