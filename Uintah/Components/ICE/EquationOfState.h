@@ -60,8 +60,6 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
 
-	 virtual void addParticleState(std::vector<const VarLabel*>& from,
-				       std::vector<const VarLabel*>& to) = 0;
 
         protected:
 
@@ -73,6 +71,9 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.3  2000/10/04 23:41:25  jas
+// Get rid of particle stuff.
+//
 // Revision 1.2  2000/10/04 20:17:51  jas
 // Change namespace ICE to ICESpace.
 //
