@@ -4,7 +4,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>J & K calculation for DCB specimen with 4 patches and 2 mats</title>
+	<title>SIF calculation for DCB specimen with 4 patches and 2 mats</title>
    </Meta>
 
    <Time>
