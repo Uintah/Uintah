@@ -84,6 +84,12 @@ ICELabel::ICELabel()
      scinew VarLabel("q_CC",CCVariable<double>::getTypeDescription());
     q_advectedLabel = 
      scinew VarLabel("q_advected",CCVariable<double>::getTypeDescription());
+    term1Label = 
+     scinew VarLabel("term1",CCVariable<double>::getTypeDescription());
+    term2Label = 
+     scinew VarLabel("term2",CCVariable<double>::getTypeDescription());
+    term3Label = 
+     scinew VarLabel("term3",CCVariable<double>::getTypeDescription());
 
   // Face centered variables
     uvel_FCLabel       = 
@@ -141,6 +147,9 @@ ICELabel::~ICELabel()
     delete zmom_L_ME_CCLabel;
     delete int_eng_L_ME_CCLabel;
     delete q_CCLabel;
+    delete term1Label;
+    delete term2Label;
+    delete term3Label;
 
     // Face centered variables
     delete uvel_FCLabel;
@@ -154,6 +163,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.12  2000/10/25 23:12:17  guilkey
+// Fixed step2, reorganized 6and7 just a little bit.
+//
 // Revision 1.11  2000/10/24 23:07:21  guilkey
 // Added code for steps6and7.
 //
