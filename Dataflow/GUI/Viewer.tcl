@@ -285,8 +285,8 @@ itcl_class ViewWindow {
 	toplevel $w; wm withdraw $w
 
 	bind $w <Destroy> "$this killWindow %W" 
-	wm title $w "ViewWindow"
-	wm iconname $w "ViewWindow"
+	wm title $w "View Window"
+	wm iconname $w "View Window"
 	wm minsize $w 100 100
 	set_defaults 
 
@@ -1003,6 +1003,12 @@ itcl_class ViewWindow {
 
     method makeViewPopup {} {
 	set w .view[modname]
+
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return
+	}
+
 	toplevel $w
 	wm title $w "View"
 	wm iconname $w view
@@ -1031,6 +1037,12 @@ itcl_class ViewWindow {
 
     method makeSceneMaterialsPopup {} {
 	set w .scenematerials[modname]
+
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return
+	}
+
 	toplevel $w
 	wm title $w "Scene Materials"
 	wm iconname $w materials
@@ -1685,6 +1697,7 @@ itcl_class ViewWindow {
 	pack $w.l $w.o $w.breset $w.bclose -side top -expand yes -fill x
 
 	moveToCursor $w "leave_up"
+	wm deiconify $w
     }
 	
     method makeLightControl { w i } {
