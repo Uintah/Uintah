@@ -17,16 +17,16 @@
 namespace SCIRun {
 
 //! Instead of calling this with a node_index just call get_point yourself.
-template <class Mesh, class Index, class WeightArray>
+template <class Mesh, class Index>
 void
 calc_weights(const Mesh *mesh, Index i, const Point &p, 
-	     WeightArray &weights) {
+	     typename Mesh::weight_array &weights) {
   
   typename Mesh::node_array nodes;
   mesh->get_nodes(nodes, i);
 
   weights.resize(nodes.size()); //clear and size correctly.
-  typename WeightArray::iterator witer = weights.begin();
+  typename Mesh::weight_array::iterator witer = weights.begin();
 
   Point np;
 
