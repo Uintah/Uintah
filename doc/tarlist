@@ -16,10 +16,14 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#
 # Print to stdout a list of files to be included in the tar archive.
 # This script is used as a filter by doc/Makefile.
-#
+
+# To do: Consider a per-directory 'doc-include' file which lists
+# files to be included in the doc distribution.  Then the
+# responsibility of this file would be to slurp up the contents of all
+# those files and produce a list of files to be included in the doc
+# distro.
 
 Dir.chdir("..")
 root=File.basename(Dir.pwd())
@@ -52,6 +56,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/Developer/Guide/dev/Figures/msts.gif
 #{root}/doc/Developer/Guide/dev/Figures/pdts.gif
 #{root}/doc/Developer/Guide/srdg.pdf
+#{root}/doc/Developer/Modules/srmrg.pdf
 #{root}/doc/Developer/CodeViews/html
 #{root}/doc/Utilities/Figures
 #{root}/doc/Utilities/TeX/scirun-doc.sty
@@ -79,5 +84,6 @@ $stdout.print(Dir["
 #{root}/src/Packages/*/Dataflow/XML/*.html
 #{root}/src/Packages/*/Dataflow/TeX/*/*.jpg
 #{root}/src/Packages/*/Dataflow/TeX/*/*.gif
-#{root}/src/Packages/*/Dataflow/TeX/*/*/*"
-].join(" "))
+#{root}/src/Packages/*/Dataflow/TeX/*/*/*
+#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.gif
+"].join(" "))
