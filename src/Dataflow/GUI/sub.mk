@@ -107,6 +107,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/TclStream.tcl \
+	$(SRCDIR)/Rescale.tcl \
 
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Dataflow/GUI
 
