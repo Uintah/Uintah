@@ -1916,14 +1916,16 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       delP_MassX[c]    =  term1[c]/term3[c];
       delP_Dilatate[c] = -term2[c]/term3[c];
       press_CC[c]      = pressure[c] + delP_MassX[c] + delP_Dilatate[c];
-      press_CC[c]      = max(1e-12, press_CC[c]);
-/*`==========TESTING==========*/
-      //__________________________________
-      // FOR THE BAK'S SHOCK TUBE PROBLEMS
-      if(d_RateForm) {
-        press_CC[c]    = pressure[c];
-      }  
-/*==========TESTING==========`*/ 
+    }
+    //____ B U L L E T   P R O O F I N G----
+    // This was done to help robustify the equilibration
+    // pressure calculation in MPMICE.  Also, in rate form, negative
+    // mean pressures are allowed.
+    if(d_EqForm){
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+        IntVector c = *iter;
+        press_CC[c] = max(1.0e-12, press_CC[c]);  
+      }
     }
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
@@ -1938,23 +1940,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //printData( patch, 1,desc.str(), "delP_MassX",    delP_MassX);
       printData( patch, 1,desc.str(), "Press_CC",      press_CC);
     }
-   //____ B U L L E T   P R O O F I N G----
-#if 0
-    // I'm commenting this out since I've rendered this check
-    // useless by the addition of:
-    // press_CC[c] = max(1e-12, press_CC[c]);
-    // above.  This was done to help robustify the equilibration
-    // pressure calculation in MPMICE.  Also, in rate form, negative
-    // mean pressures are allowed, so this needs to go anyway.
-
-    IntVector neg_cell;
-    if(!areAllValuesPositive(press_CC, neg_cell) ) {
-      ostringstream warn;
-      warn<<"ERROR: ICE::computeDelPressAndUpdatePressCC, cell "
-          << neg_cell<< " Negative press_CC";
-      throw InvalidValue(warn.str());
-    }
-#endif
   }  // patch loop
 }
 
@@ -2403,40 +2388,25 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,   lb->sp_vol_CCLabel,    indx,patch,Ghost::None,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
       new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,Ghost::None,0);
-      if (d_RateForm) {     //RATE FORM
-        new_dw->get(matl_press,lb->matl_press_CCLabel,indx,patch,Ghost::None,0);
-      }
-
-#ifdef ANNULUSICE
-      constCCVariable<double> rho_CC;
-      new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,Ghost::None,0);
-#endif
       new_dw->allocateAndPut(int_eng_source, lb->int_eng_source_CCLabel, indx,patch);
 
       //__________________________________
       //   Compute source from volume dilatation
       //   Exclude contribution from delP_MassX
       int_eng_source.initialize(0.);
-      if (d_EqForm) {     //EQ FORM
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
-          B = speedSound[c] * speedSound[c];
-          int_eng_source[c] = (A/B) * delP_Dilatate[c];
-        }
-      }
 
-      if (d_RateForm) {     //RATE FORM
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          A = vol * vol_frac[c] * (matl_press[c]+delP_Dilatate[c])*sp_vol_CC[c];
-          B = speedSound[c] * speedSound[c];
-          int_eng_source[c] = (A/B) * delP_Dilatate[c];
-        }
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
+        B = speedSound[c] * speedSound[c];
+        int_eng_source[c] = (A/B) * delP_Dilatate[c];
       }
 
 #ifdef ANNULUSICE
       if(n_iter <= 4000){
+        constCCVariable<double> rho_CC;
+        new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,Ghost::None,0);
+
         if(m==2){
           for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
             IntVector c = *iter;
@@ -2587,7 +2557,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         if (switchDebugLagrangianValues ) {
           ostringstream desc;
           desc <<"BOT_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
-          printVector(patch,1, desc.str(), "mom_L_CC", 0, mom_L);
+          printData(  patch,1, desc.str(), "mass_L_CC",    mass_L);
+          printVector(patch,1, desc.str(), "mom_L_CC", 0,  mom_L);
           printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
 
         }
