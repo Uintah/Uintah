@@ -144,9 +144,24 @@ ChangeFieldDataAt::execute()
   const string &d = outputdataat_.get();
   if (d == "Nodes")
   {
-    basis_order = 1;
+    if (fh->mesh()->dimensionality() == 0)
+    {
+      basis_order = 0;
+    }
+    else
+    {
+      basis_order = 1;
+    }
   }
-  else if (d == "Cells")
+  else if (d == "Edges" && fh->mesh()->dimensionality() == 1)
+  {
+    basis_order = 0;
+  }
+  else if (d == "Faces" && fh->mesh()->dimensionality() == 2)
+  {
+    basis_order = 0;
+  }
+  else if (d == "Cells" && fh->mesh()->dimensionality() == 3)
   {
     basis_order = 0;
   }
