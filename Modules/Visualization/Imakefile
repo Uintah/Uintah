@@ -15,14 +15,14 @@ OPENGLSRCS =
 #endif
 
 OBJS = BitVisualize.o  BoxClipSField.o  CuttingPlane.o FastRender.o    \
-	GenAxes.o GenColormap.o  GenFieldEdges.o  \
-	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o  LevoyVis.o  \
+	GenAxes.o GenColormap.o  GenFieldEdges.o GenTransferFunc.o  \
+	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o \
 	OctIsoSurface.o     \
 	RescaleColormap.o  Streamline.o  VectorSeg.o  VolVis.o   \
 	WidgetTest.o
 SRCS = BitVisualize.cc BoxClipSField.cc CuttingPlane.cc FastRender.c    \
-	GenAxes.cc GenColormap.cc GenFieldEdges.cc \
-	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc LevoyVis.cc \
+	GenAxes.cc GenColormap.cc GenFieldEdges.cc GenTransferFunc.cc \
+	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc \
 	 OctIsoSurface.cc    \
 	RescaleColormap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
 	WidgetTest.cc
@@ -33,8 +33,23 @@ LOCALINCLUDES = $(OPENGLINCS)
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom -lGeometry \
-	-lTCL -lscitk -ltk -lClasslib -lMultitask  $(OPENGLLIBS) \
+	-lTCL -lscitk -ltk -ltcl -lClasslib -lMultitask  $(OPENGLLIBS) \
 	-lMalloc -lm -lC -lc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+
+#ifdef SCI_MACHINE_SGI
+#ifdef SCI_IRIX_BIN_o32
+OPTLEVEL = -O2
+#else
+OPTLEVEL = -O3 -OPT:roundoff=3:div_split=ON:alias=typed:fast_exp=ON
+#endif
+OPTFLAGS = SCI_BinFlags -I$(TOP) $(OPTLEVEL)  -fullwarn
+#else
+OPTFLAGS = $(CFLAGS)
+#endif
+
+SUPEROPTFLAGS = 
+FastRender.o: FastRender.c
+	$(CC) $(OPTFLAGS) -c FastRender.c
