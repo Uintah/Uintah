@@ -1847,7 +1847,16 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 			       NCsolidMass[nodeIdx[2]]+
 			       NCsolidMass[nodeIdx[4]]+
 			       NCsolidMass[nodeIdx[6]] )) / delZ;
-	  
+
+	  double MaxMass = NCsolidMass[nodeIdx[0]];
+	  double MinMass = NCsolidMass[nodeIdx[0]];
+	  for (int nodeNumber=0; nodeNumber<8; nodeNumber++)
+	    {
+	      if (NCsolidMass[nodeIdx[nodeNumber]]>MaxMass)
+		MaxMass = NCsolidMass[nodeIdx[nodeNumber]];
+	      if (NCsolidMass[nodeIdx[nodeNumber]]<MinMass)
+		MinMass = NCsolidMass[nodeIdx[nodeNumber]];
+	    }	  
 
 	  double absGradRho = sqrt(gradRhoX*gradRhoX +
 				   gradRhoY*gradRhoY +
@@ -1860,8 +1869,11 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 
 	  bool doTheBurn = 1;
     
-	  if (absGradRho < 1.e-5) doTheBurn = 0;
-
+	  /* Here is the new criterion for the surface:
+	     if (MnodeMax - MnodeMin) / Mcell > 0.5 - consider it a surface
+	  */
+	  if ((MaxMass-MinMass)/MaxMass < .5) doTheBurn = 0;
+    
 	  if (doTheBurn) {
 
 	      normalX = gradRhoX/absGradRho;
