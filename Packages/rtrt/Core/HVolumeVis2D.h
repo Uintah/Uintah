@@ -94,28 +94,178 @@ public:
 template<class DataT>
 class VMCell4 {
 public:
-  // Need to make sure we have a 64 bit thing
+  // Need to make sure we have 4 groups of 64 bit values
   unsigned long long course_hash1;
   unsigned long long course_hash2;
   unsigned long long course_hash3;
   unsigned long long course_hash4;
+
   // The max of unsigned long long is ULLONG_MAX
   VMCell4(): course_hash1(0),course_hash2(0),course_hash3(0),course_hash4(0) {}
 
   void turn_on_bits(float vmin, float vmax, float gmin, float gmax,
 		    Voxel2D<float> data_min, Voxel2D<float> data_max) {
-    // We know that we have 64 bits, so figure out where min and max map
-    // into [0..63].
-    int min_x_index=(int)((vmin-data_min.v())/(data_max.v()-data_min.v())*7.0);
-    int max_x_index=(int)ceilf((vmax-data_min.v())/
-			       (data_max.v()-data_min.v())*7.0);
-    int min_y_index=(int)((gmin-data_min.g())/(data_max.g()-data_min.g())*7.0);
-    int max_y_index=(int)ceilf((gmax-data_min.g())/
-			       (data_max.g()-data_min.g())*7.0);
 
-  for(int i = min_y_index; i <= max_y_index; i++)
-    for(int j = min_x_index; j <= max_x_index; j++)
-      course_hash |= 1ULL << (i*8+j);
+    int min_x_index=(int)((vmin-data_min.v())/(data_max.v()-data_min.v())*15.0);
+    int max_x_index=(int)ceilf((vmax-data_min.v())/
+			       (data_max.v()-data_min.v())*15.0);
+    int min_y_index=(int)((gmin-data_min.g())/(data_max.g()-data_min.g())*15.0);
+    int max_y_index=(int)ceilf((gmax-data_min.g())/
+			       (data_max.g()-data_min.g())*15.0);
+    
+    for(int i = max(8,min_y_index); i <= max_y_index; i++) {
+      for(int j = min_x_index; j < min(8,max_x_index); j++)
+	course_hash3 |= 1ULL << ((i-8)*8+j);
+      for(int j = max(8,min_x_index); j <= max_x_index; j++)
+	course_hash4 |= 1ULL << ((i-8)*8+j-8);
+    }
+    for(int i = min_y_index; i < min(8,max_y_index); i++) {
+      for(int j = min_x_index; j < min(8,max_x_index); j++)
+	course_hash1 |= 1ULL << (i*8+j);
+      for(int j = max(8,min_x_index); j <= max_x_index; j++)
+	course_hash2 |= 1ULL << (i*8+j-8);
+    }
+
+//      scramble_bits();
+  }
+
+  void scramble_bits() {
+    unsigned long long temp_hash1 = 0;
+    unsigned long long temp_hash2 = 0;
+    unsigned long long temp_hash3 = 0;
+    unsigned long long temp_hash4 = 0;
+    for(int i = 0; i < 8; i++)
+      for(int j = 0; j < 8; j++) {
+	int hashNum = (j+i*2)%4;
+	if(hashNum == 0) {
+	  if(course_hash1 & (1ULL << (j/4+i*2)))
+	    temp_hash1 |= 1ULL << (i*8+j);
+	} else if(hashNum == 1) {
+	  if(course_hash2 & (1ULL << (j/4+i*2)))
+	    temp_hash1 |= 1ULL << (i*8+j);
+	} else if(hashNum == 2) {
+	  if(course_hash3 & (1ULL << (j/4+i*2)))
+	    temp_hash1 |= 1ULL << (i*8+j);
+	} else {
+	  if(course_hash4 & (1ULL << (j/4+i*2)))
+	    temp_hash1 |= 1ULL << (i*8+j);
+	}
+      }
+
+    for(int i = 0; i < 8; i++)
+      for(int j = 0; j < 8; j++) {
+	int hashNum = (j+i*2)%4;
+	if(hashNum == 0) {
+	  if(course_hash1 & (1ULL << (j/4+i*2 + 16)))
+	    temp_hash2 |= 1ULL << (i*8+j);
+	} else if(hashNum == 1) {
+	  if(course_hash2 & (1ULL << (j/4+i*2 + 16)))
+	    temp_hash2 |= 1ULL << (i*8+j);
+	} else if(hashNum == 2) {
+	  if(course_hash3 & (1ULL << (j/4+i*2 + 16)))
+	    temp_hash2 |= 1ULL << (i*8+j);
+	} else {
+	  if(course_hash4 & (1ULL << (j/4+i*2 + 16)))
+	    temp_hash2 |= 1ULL << (i*8+j);
+	}
+      }
+
+    for(int i = 0; i < 8; i++)
+      for(int j = 0; j < 8; j++) {
+	int hashNum = (j+i*2)%4;
+	if(hashNum == 0) {
+	  if(course_hash1 & (1ULL << (j/4+i*2 + 32)))
+	    temp_hash3 |= 1ULL << (i*8+j);
+	} else if(hashNum == 1) {
+	  if(course_hash2 & (1ULL << (j/4+i*2 + 32)))
+	    temp_hash3 |= 1ULL << (i*8+j);
+	} else if(hashNum == 2) {
+	  if(course_hash3 & (1ULL << (j/4+i*2 + 32)))
+	    temp_hash3 |= 1ULL << (i*8+j);
+	} else {
+	  if(course_hash4 & (1ULL << (j/4+i*2 + 32)))
+	    temp_hash3 |= 1ULL << (i*8+j);
+	}
+      }
+
+    for(int i = 0; i < 8; i++)
+      for(int j = 0; j < 8; j++) {
+	int hashNum = (j+i*2)%4;
+	if(hashNum == 0) {
+	  if(course_hash1 & (1ULL << (j/4+i*2 + 48)))
+	    temp_hash4 |= 1ULL << (i*8+j);
+	} else if(hashNum == 1) {
+	  if(course_hash2 & (1ULL << (j/4+i*2 + 48)))
+	    temp_hash4 |= 1ULL << (i*8+j);
+	} else if(hashNum == 2) {
+	  if(course_hash3 & (1ULL << (j/4+i*2 + 48)))
+	    temp_hash4 |= 1ULL << (i*8+j);
+	} else {
+	  if(course_hash4 & (1ULL << (j/4+i*2 + 48)))
+	    temp_hash4 |= 1ULL << (i*8+j);
+	}
+      }
+
+    for( int i = 7; i >= 0; i-- ) {
+      for( int j = 0; j < 8; j++ )
+	if(course_hash3 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      for( int j = 0; j < 8; j++ )
+	if(course_hash4 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      cerr << endl;
+    }
+    for( int i = 7; i >= 0; i-- ) {
+      for( int j = 0; j < 8; j++ )
+	if(course_hash1 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      for( int j = 0; j < 8; j++ )
+	if(course_hash2 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      cerr << endl;
+    }
+    cerr << endl;
+    
+    course_hash1 = temp_hash1;
+    course_hash2 = temp_hash2;
+    course_hash3 = temp_hash3;
+    course_hash4 = temp_hash4;
+    
+    for( int i = 7; i >= 0; i-- ) {
+      for( int j = 0; j < 8; j++ )
+	if(course_hash3 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      for( int j = 0; j < 8; j++ )
+	if(course_hash4 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      cerr << endl;
+    }
+    for( int i = 7; i >= 0; i-- ) {
+      for( int j = 0; j < 8; j++ )
+	if(course_hash1 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      for( int j = 0; j < 8; j++ )
+	if(course_hash2 & (1ULL << i*8+j))
+	  cerr << "1";
+	else
+	  cerr << "0";
+      cerr << endl;
+    }
+    cerr << endl;
   }
 
   inline VMCell4<DataT>& operator |= (const VMCell4<DataT>& v) {
@@ -132,8 +282,17 @@ public:
       ((course_hash4 & v.course_hash4) != 0);
   }
   void print(bool print_endl = true) {
-    for( int i = 0; i < 64; i++) {
-      unsigned long long bit= course_hash & (1ULL << i);
+    for( int i = 0; i < 256; i++) {
+      int hashNum = i%4;
+      unsigned long long bit;
+      if(hashNum == 0)
+	bit= course_hash1 & (1ULL << i);
+      if(hashNum == 1)
+	bit= course_hash2 & (1ULL << i);
+      if(hashNum == 2)
+	bit= course_hash3 & (1ULL << i);
+      if(hashNum == 3)
+	bit= course_hash4 & (1ULL << i);
       if (bit)
 	cout << "1";
       else
@@ -142,20 +301,63 @@ public:
     if (print_endl) cout << endl;
   }
   void printblock(bool print_endl = true) {
+//      for(int i = 15; i >= 0; i--) {
+//        for(int j = 0; j < 16; j++) {
+//  	int hashNum = (i*2+j)%4;
+//  	unsigned long long bit;
+//  	if(hashNum == 0)
+//  	  bit = course_hash1 & (1ULL << (i*8+j));
+//  	if(hashNum == 1)
+//  	  bit = course_hash2 & (1ULL << (i*8+j));
+//  	if(hashNum == 2)
+//  	  bit = course_hash3 & (1ULL << (i*8+j));
+//  	if(hashNum == 3)
+//  	  bit = course_hash4 & (1ULL << (i*8+j));
+//  	if(bit)
+//  	  cerr << "1";
+//  	else
+//  	  cerr << "0";
+//        }
+    unsigned long long bit;
     for(int i = 7; i >= 0; i--) {
-      for(int j = 0; j < 8; j++) {
-	unsigned long long bit = course_hash & (1ULL << (i*8+j));
+      for(int j = 0; j < 7; j++) {
+	bit = course_hash3 & (1ULL << (i*8+j));
 	if(bit)
 	  cerr << "1";
 	else
 	  cerr << "0";
       }
-      if (print_endl) cerr << endl;
+      for(int j = 0; j < 7; j++) {
+	bit = course_hash4 & (1ULL << (i*8+j));
+	if(bit)
+	  cerr << "1";
+	else
+	  cerr << "0";
+      }
+      cerr << endl;
     }
+    for(int i = 7; i >= 0; i--) {
+      for(int j = 0; j < 7; j++) {
+	bit = course_hash1 & (1ULL << (i*8+j));
+	if(bit)
+	  cerr << "1";
+	else
+	  cerr << "0";
+      }
+      for(int j = 0; j < 7; j++) {
+	bit = course_hash2 & (1ULL << (i*8+j));
+	if(bit)
+	  cerr << "1";
+	else
+	  cerr << "0";
+      }
+      cerr << endl;
+    }
+    if (print_endl) cerr << endl;
   }
 };
 
-template<class DataT, class MetaCT>
+template<class DataT, class MetaCT4>
 class HVolumeVis2D: public VolumeVis2D {
 protected:
 public:
@@ -170,12 +372,12 @@ public:
   double* ixsize;
   double* iysize;
   double* izsize;
-  BrickArray3<MetaCT>* macrocells;
+  BrickArray3<MetaCT4>* macrocells;
   WorkQueue* work;
 
   void parallel_calc_mcell(int);
-  void calc_mcell(int depth, int ix, int iy, int iz, MetaCT& mcell);
-  void isect(int depth, MetaCT &transfunct, double t,
+  void calc_mcell(int depth, int ix, int iy, int iz, MetaCT4& mcell);
+  void isect(int depth, MetaCT4 &transfunct, double t,
 	     double dtdx, double dtdy, double dtdz,
 	     double next_x, double next_y, double next_z,
 	     int ix, int iy, int iz,
@@ -216,8 +418,8 @@ public:
 
 extern Mutex io_lock_;
   
-template<class DataT, class MetaCT>
-HVolumeVis2D<DataT,MetaCT>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
+template<class DataT, class MetaCT4>
+HVolumeVis2D<DataT,MetaCT4>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
 					 Voxel2D<float> data_min,
 					 Voxel2D<float> data_max,
 					 int depth, Point min, Point max,
@@ -302,7 +504,7 @@ HVolumeVis2D<DataT,MetaCT>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
   if(depth==1){
     macrocells=0;
   } else {
-    macrocells=new BrickArray3<MetaCT>[depth+1];
+    macrocells=new BrickArray3<MetaCT4>[depth+1];
     int xs=1;
     int ys=1;
     int zs=1;
@@ -315,7 +517,7 @@ HVolumeVis2D<DataT,MetaCT>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
     }
     cerr << "Building hierarchy\n";
 #if 0
-    MetaCT top;
+    MetaCT4 top;
     calc_mcell(depth-1, 0, 0, 0, top);
     cerr << "Min: " << top.min << ", Max: " << top.max << '\n';
 #else
@@ -325,7 +527,7 @@ HVolumeVis2D<DataT,MetaCT>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
     int totaltop=nx*ny*nz;
     work=new WorkQueue("Building hierarchy");
     work->refill(totaltop, np, 5);
-    SCIRun::Parallel<HVolumeVis2D<DataT,MetaCT> > phelper(this, &HVolumeVis2D<DataT,MetaCT>::parallel_calc_mcell);
+    SCIRun::Parallel<HVolumeVis2D<DataT,MetaCT4> > phelper(this, &HVolumeVis2D<DataT,MetaCT4>::parallel_calc_mcell);
     SCIRun::Thread::parallel(phelper, np, true);
     delete work;
 #endif
@@ -336,14 +538,14 @@ HVolumeVis2D<DataT,MetaCT>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
   cerr << "**************************************************\n";
 }
 
-template<class DataT, class MetaCT>
-HVolumeVis2D<DataT,MetaCT>::~HVolumeVis2D()
+template<class DataT, class MetaCT4>
+HVolumeVis2D<DataT,MetaCT4>::~HVolumeVis2D()
 {
 }
 
-template<class DataT, class MetaCT>
-void HVolumeVis2D<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
-					  int startz, MetaCT& mcell)
+template<class DataT, class MetaCT4>
+void HVolumeVis2D<DataT,MetaCT4>::calc_mcell(int depth, int startx, int starty,
+					  int startz, MetaCT4& mcell)
 {
   int endx=startx+xsize[depth];
   int endy=starty+ysize[depth];
@@ -397,18 +599,20 @@ void HVolumeVis2D<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
     int nx=xsize[depth-1];
     int ny=ysize[depth-1];
     int nz=zsize[depth-1];
-    BrickArray3<MetaCT>& mcells=macrocells[depth];
+    BrickArray3<MetaCT4>& mcells=macrocells[depth];
     for(int x=startx;x<endx;x++){
       for(int y=starty;y<endy;y++){
 	for(int z=startz;z<endz;z++){
 	  // Compute the mcell for this block and store it in tmp
-	  MetaCT tmp;
+	  MetaCT4 tmp;
 	  calc_mcell(depth-1, x*nx, y*ny, z*nz, tmp);
 	  // Stash it away
 	  mcells(x,y,z)=tmp;
 	  // Now aggregate all the mcells created for this depth by
 	  // doing a bitwise or.
     	  mcell |= tmp;
+//    	  cerr << x << ", " << y << ", " << z << endl;
+//    	  mcell.printblock();
 	}
       }
     }
@@ -416,22 +620,22 @@ void HVolumeVis2D<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
 }
 
 // This function should not be called if depth is less than 2.
-template<class DataT, class MetaCT>
-void HVolumeVis2D<DataT,MetaCT>::parallel_calc_mcell(int)
+template<class DataT, class MetaCT4>
+void HVolumeVis2D<DataT,MetaCT4>::parallel_calc_mcell(int)
 {
   int ny=ysize[depth-1];
   int nz=zsize[depth-1];
   int nnx=xsize[depth-2];
   int nny=ysize[depth-2];
   int nnz=zsize[depth-2];
-  BrickArray3<MetaCT>& mcells=macrocells[depth-1];
+  BrickArray3<MetaCT4>& mcells=macrocells[depth-1];
   int s, e;
   while(work->nextAssignment(s, e)){
     for(int block=s;block<e;block++){
       int z=block%nz;
       int y=(block%(nz*ny))/nz;
       int x=(block/(ny*nz));
-      MetaCT tmp;
+      MetaCT4 tmp;
       calc_mcell(depth-2, x*nnx, y*nny, z*nnz, tmp);
       mcells(x,y,z)=tmp;
     }
@@ -440,8 +644,8 @@ void HVolumeVis2D<DataT,MetaCT>::parallel_calc_mcell(int)
 
 //#define BIGLER_DEBUG
 
-template<class DataT, class MetaCT>
-void HVolumeVis2D<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
+template<class DataT, class MetaCT4>
+void HVolumeVis2D<DataT,MetaCT4>::isect(int depth, MetaCT4 &transfunct, double t,
 				     double dtdx, double dtdy, double dtdz,
 				  double next_x, double next_y, double next_z,
 				     int ix, int iy, int iz,
@@ -531,7 +735,7 @@ void HVolumeVis2D<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	    else if(rhos[i].g()>gmax)
 	      gmax=rhos[i].g();
 	  }
-	  MetaCT mcell;
+	  MetaCT4 mcell;
 	  mcell.turn_on_bits(vmin, vmax, gmin, gmax, data_min, data_max);
 	  // If what we are looking for is inside this cell
 	  if(mcell & transfunct)
@@ -714,7 +918,7 @@ void HVolumeVis2D<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	break;
     }
   } else {
-    BrickArray3<MetaCT>& mcells=macrocells[depth];
+    BrickArray3<MetaCT4>& mcells=macrocells[depth];
     for(;;){
       int gx=startx+ix;
       int gy=starty+iy;
@@ -726,7 +930,14 @@ void HVolumeVis2D<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
       cerr << "doing macrocell: " << gx << ", " << gy << ", " << gz << ": "<<endl;
       flush(cerr);
 #endif
-      MetaCT& mcell=mcells(gx,gy,gz);
+      MetaCT4& mcell=mcells(gx,gy,gz);
+//        mcell.printblock();
+//        MetaCT4 temp;
+//        temp.course_hash1 = mcell.course_hash1 & transfunct.course_hash1;
+//        temp.course_hash2 = mcell.course_hash2 & transfunct.course_hash2;
+//        temp.course_hash3 = mcell.course_hash3 & transfunct.course_hash3;
+//        temp.course_hash4 = mcell.course_hash4 & transfunct.course_hash4;
+//        temp.printblock();
       if(mcell & transfunct){
 	// Do this cell...
 	int new_cx=xsize[depth-1];
@@ -826,11 +1037,11 @@ void HVolumeVis2D<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 #endif
 }
 
-template<class DataT, class MetaCT>
-void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
-				     const HitInfo& hit, int ray_depth,
-				     double atten, const Color& accumcolor,
-				     Context* ctx)
+template<class DataT, class MetaCT4>
+void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
+					const HitInfo& hit, int ray_depth,
+					double atten, const Color& accumcolor,
+					Context* ctx)
 {
   bool fast_render_mode = dpy->fast_render_mode;
   // opacity is the accumulating opacities
@@ -963,8 +1174,11 @@ void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   Vector cellcorner((orig-min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
 
-  MetaCT transfunct;
-  transfunct.course_hash = dpy->UIgrid;
+  MetaCT4 transfunct;
+  transfunct.course_hash1 = dpy->UIgrid1;
+  transfunct.course_hash2 = dpy->UIgrid2;
+  transfunct.course_hash3 = dpy->UIgrid3;
+  transfunct.course_hash4 = dpy->UIgrid4;
   
   isect(depth-1, transfunct, t_min, dtdx, dtdy, dtdz, next_x, next_y, next_z,
 	ix, iy, iz, dix_dx, diy_dy, diz_dz,
@@ -1107,8 +1321,8 @@ void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   result = total;
 }
 
-template<class DataT, class MetaCT>
-void HVolumeVis2D<DataT,MetaCT>::print(ostream& out) {
+template<class DataT, class MetaCT4>
+void HVolumeVis2D<DataT,MetaCT4>::print(ostream& out) {
   //  out << "name_ = "<<get_name()<<endl;
   out << "min = "<<min<<", max = "<<max<<endl;
   out << "datadiag = "<<datadiag<<", hierdiag = "<<hierdiag<<", ihierdiag = "<<ihierdiag<<", sdiag = "<<sdiag<<endl;
