@@ -1,32 +1,32 @@
-body {background-color:#DDDDDD; text-color:#000000; font-family:"arial", "helvetica", "sans-serif"; margin-left:2em; margin-right:2em}
+body {background-color:#EEEEEE; text-color:#000000; font-family:"times"; margin-left:2em; margin-right:2em}
 
-p {margin-left:100px; margin-right:80px; font-family:"arial", "helvetica", "sans-serif"}
+p {margin-left:90px; margin-right:80px; font-family:"serif"}
 
-.toc {list-style-type:"upper-roman"; font-family:"arial", "helvetica", "sans-serif"; margin-left:120px; margin-right:120px}
+.toc {list-style-type:"upper-roman"; font-family:"serif"; margin-left:60px; margin-right:60px}
 
-.subtoc {list-style-type:disc; font-family:"arial", "helvetica", "sans-serif"}
+.subtoc {list-style-type:disc; font-family:"serif"}
 
 
-.title {font-family:times; text-align:center; font-size:x-large}
+.title {font-family: "times"; font-weight:bold; font-size:x-large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
 
 .subtitle {font-family:times; text-align:center; font-weight:bold}
 
-.head {background-color:#6699FF; color:#000000; margin:0px; border:none; font-size:large; text-indent:80px; margin-bottom:30px; font-family:"arial", "helvetica", "sans-serif"}
+.head {color:#000000; margin:0px; margin-top:25px; border:none; font-size:large; font-family:"arial", "helvetica", "sans-serif"}
 
-.subhead {background-color:#99CCFF; margin:0px; border:none; font-size:1.15em; text-indent:80px; margin-bottom:10px; font-family:"arial", "helvetica", "sans-serif"}
+.subhead {margin-left:10px; border:none; margin-top:0px; margin-bottom:0px; font-style:italic; font-size:1.15em; font-family:"arial", "helvetica", "sans-serif"}
 
 .subsubhead {background-color:#BBBBBB; margin:0px; border:none;  font-weight:bold; text-indent:80px; margin-bottom:10px; font-family:"arial", "helvetica", "sans-serif"}
 
-.firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"arial", "helvetica", "sans-serif"}
+.firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"}
 
-.nextpara {margin-left:20px; margin-right:10px; text-align:left; text-indent:2em;  font-family:"arial", "helvetica", "sans-serif"}
+.nextpara {margin-left:20px; margin-right:10px; text-align:left; text-indent:2em;  font-family:"serif"}
 
 .example {margin-left:50px; white-space:pre; font-family:monospace}
 
 blockquote {margin-left:150px; font-family:times}
 
-.list {font-family:"arial", "helvetica", "sans-serif"; margin-left:100px}
+.list {font-family:"serif"; margin-left:60px}
 
 td {font-family:"arial", "helvetica", "sans-serif"}
 
-.small {font-size:small; margin-right:5em; font-family:"arial", "helvetica", "sans-serif"}
+.small {font-size:small; font-family:"arial", "helvetica", "sans-serif"}
