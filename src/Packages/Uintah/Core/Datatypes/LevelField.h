@@ -69,6 +69,8 @@ public:
 
   virtual bool compute_min_max(double &minout, double &maxout) const;
   virtual bool interpolate(double &result, const Point &p) const;
+  virtual bool interpolate_many(vector<double> &results,
+				const vector<Point> &points) const;
 private:
   const LevelField<Data>* fld_;
 };
@@ -565,6 +567,12 @@ bool LevelFieldSFI<Data>::compute_min_max(double &minout, double& maxout) const
 
 template <class Data>
 bool LevelFieldSFI<Data>::interpolate( double& result, const Point &p) const
+{
+  return false;
+}
+template <class Data> 
+bool LevelFieldSFI<Data>::interpolate_many(vector<double> &results,
+				const vector<Point> &points) const
 {
   return false;
 }
