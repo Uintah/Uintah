@@ -26,7 +26,8 @@ FieldReader::FieldReader()
     outfield=new Field3DOPort(this, "Field", Field3DIPort::Atomic);
     add_oport(outfield);
 
-    add_ui(new MUI_file_selection("IsoContour value", &filename));
+    add_ui(new MUI_file_selection("IsoContour value", &filename,
+				  MUI_widget::NotExecuting));
 }
 
 FieldReader::FieldReader(const FieldReader& copy, int deep)
@@ -59,4 +60,9 @@ void FieldReader::execute()
     field->io(*stream);
     delete stream;
     outfield->send_field(field);
+}
+
+void FieldReader::mui_callback(void*, int)
+{
+    want_to_execute();
 }

@@ -26,6 +26,7 @@ public:
     virtual ~FieldReader();
     virtual Module* clone(int deep);
     virtual void execute();
+    virtual void mui_callback(void*, int);
 };
 
 #endif

@@ -23,6 +23,7 @@ class GeometryOPort;
 class IsoSurface : public UserModule {
     Field3DIPort* infield;
     GeometryOPort* ogeom;
+    int abort_flag;
 
     int have_seedpoint;
     Point seed_point;
@@ -41,6 +42,7 @@ public:
     virtual ~IsoSurface();
     virtual Module* clone(int deep);
     virtual void execute();
+    virtual void mui_callback(void*, int);
 };
 
 #endif

@@ -28,9 +28,11 @@ SoundReader::SoundReader()
     add_oport(osound);
 
     // Set up the interface
-    MUI_onoff_switch* oo=new MUI_onoff_switch("Input",
-					      &onoff, 0);
-    add_ui(oo);
+    /*
+       MUI_onoff_switch* oo=new MUI_onoff_switch("Input",
+       &onoff, 0);
+       add_ui(oo);
+       */
     filename="isound.aifc";
 }
 

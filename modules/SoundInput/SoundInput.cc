@@ -31,9 +31,9 @@ SoundInput::SoundInput()
     add_oport(osound);
 
     // Set up the interface
-    MUI_onoff_switch* oo=new MUI_onoff_switch("Input",
-					      &onoff, 0);
-    add_ui(oo);
+    //MUI_onoff_switch* oo=new MUI_onoff_switch("Input",
+    //&onoff, 0);
+    //add_ui(oo);
 }
 
 SoundInput::SoundInput(const SoundInput& copy, int deep)

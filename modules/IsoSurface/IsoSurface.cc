@@ -32,7 +32,8 @@ IsoSurface::IsoSurface()
     add_oport(ogeom);
 
     isoval=1;
-    MUI_slider_real* slider=new MUI_slider_real("IsoContour value", &isoval);
+    MUI_slider_real* slider=new MUI_slider_real("IsoContour value", &isoval,
+						MUI_widget::Immediate, 1);
     add_ui(slider);
 
     have_seedpoint=0;
@@ -117,3 +118,8 @@ void IsoSurface::iso_tetrahedra(const Field3DHandle&, double)
     NOT_FINISHED("IsoSurface::iso_tetrahedra");
 }
 
+void IsoSurface::mui_callback(void*, int)
+{
+    abort_flag=1;
+    want_to_execute();
+}
