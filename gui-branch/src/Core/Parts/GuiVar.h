@@ -93,6 +93,12 @@ public:
 };
 
 template<> void 
+GuiTypedVar<string>::string_set( const string &value )
+{
+  value_ = value;
+}
+
+template<> void 
 GuiTypedVar<int>::string_set( const string &value )
 {
   string_to_int( value, value_ );
