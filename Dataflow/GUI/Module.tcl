@@ -46,6 +46,11 @@ set undoList ""
 global redoList
 set redoList ""
 
+global HelpText
+set HelpText(Module) "L - Select\nR - Menu"
+set HelpText(Connection) "L - Highlight\nM - Connect
+set HelpText(Notes) "L - Edit\nM - Hide"
+
 itcl_class Module {
    
     method modname {} {
@@ -327,8 +332,9 @@ itcl_class Module {
 		bind $portlight <ButtonPress-1> "TracePort [modname] $isoport $i"
 		bind $portlight <ButtonRelease-1> "deleteTrace"
 
-		Tooltip $port "L - Highlight\nM - Connect"
-		Tooltip $portlight "L - Highlight\nM - Connect"
+		global HelpText
+		Tooltip $port $HelpText(Connection)
+		Tooltip $portlight $HelpText(Connection)
 		incr i
 	    } 
 	}
@@ -699,7 +705,7 @@ proc notesWindow { id done } {
 	{
 	    { "Default" def } \
 		{ "None" none } \
-		{ "Tooltip" n } \
+		{ "Tooltip" tooltip } \
 		{ "Top" n } \
 		{ "Left" w } \
 		{ "Right" e } \
@@ -769,7 +775,7 @@ proc checkForDisabledModules { args } {
 }
 
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
-    global maincanvas minicanvas Color Notes Disabled
+    global maincanvas minicanvas Color Notes Disabled HelpText
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     eval $maincanvas create bline $path -width 7 -borderwidth 2 \
 	-fill \"$portcolor\" -tags $connid
@@ -782,14 +788,14 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
 
     $maincanvas bind $connid <ButtonPress-1> \
 	"canvasRaise $connid; TraceConnection $omodid $owhich $imodid $iwhich"
-    $maincanvas bind $connid <ButtonRelease-2> \
+    $maincanvas bind $connid <Control-Button-2> \
 	"destroyConnection $connid $omodid $imodid 1"
     $maincanvas bind $connid <ButtonPress-3> \
 	"connectionMenu %X %Y $connid $omodid $owhich $imodid $iwhich"
     $maincanvas bind $connid <ButtonRelease> \
 	"+deleteTrace $omodid $owhich $imodid $iwhich"
-
-    canvasTooltip $connid "$connid";#"L - Highlight\nM - Delete\nR - Menu"
+   
+    canvasTooltip $connid $HelpText(Module)
 }
 
 # Deletes red connections on canvas and turns port lights black
@@ -988,18 +994,20 @@ proc getModuleNotesOptions { module } {
 	    return [list [lindex $bbox 0] [lindex $bbox 1] \
 			-anchor sw -justify left]
 	}
-	e {
-	    return [list [expr [lindex $bbox 2] + $off] [lindex $bbox 1] \
-			-anchor nw -justify right]
-	}
 	s {
 	    return [list [lindex $bbox 0] [lindex $bbox 3]  \
 			-anchor nw -justify left]
 	}
-	default {
+	w {
 	    return [list [expr [lindex $bbox 0] - $off] [lindex $bbox 1] \
 			-anchor ne -justify left]
 	}
+	# east is default
+	default {
+	    return [list [expr [lindex $bbox 2] + $off] [lindex $bbox 1] \
+			-anchor nw -justify right]
+	}
+
     }
 }
 
@@ -1359,15 +1367,29 @@ proc drawNotes { args } {
 	if { ![info exists NotesPos($id)] } {
 	    set NotesPos($id) def
 	}
+	
+	set isModuleNotes [winfo exists $maincanvas.module$id]
 
-	if { $NotesPos($id) == "none" } {
+	if {$NotesPos($id) == "tooltip"} {
+	    if { $isModuleNotes } {
+		Tooltip $$maincanvas.module$id $Notes($id) 
+	    } else {
+		canvasTooltip $id $Notes($id)
+	    }
+	} else {
+	    global HelpText
+	    if { $isModuleNotes } {
+		Tooltip $maincanvas.module$id $HelpText(Module)
+	    } else {
+		canvasTooltip $id $HelpText(Connection)
+	    }
+	}
+
+	if { $NotesPos($id) == "none" || $NotesPos($id) == "tooltip"} {
 	    $maincanvas delete $id-notes
 	    $maincanvas delete $id-notes-shadow
 	    continue
 	}
-	    
-	
-	set isModuleNotes [winfo exists $maincanvas.module$id]
 	
 	if { ![info exists Color(Notes-$id)] } { 
 	    if { [info exists Color($id)] } {
