@@ -22,21 +22,14 @@ set port_width 13
 global port_height
 set port_height 7 
 
-global selected_color
-set selected_color LightSkyBlue2
-#set selected_color darkgray
-
-global unselected_color
-set unselected_color gray
+global Color
+set Color(Selected) LightSkyBlue2
+set Color(Disabled) "\#555555"
+set Color(Compiling) "\#f0e68c"
+set Color(Trace) red
 
 global CurrentlySelectedModules
 set CurrentlySelectedModules ""
-
-global BlockedModules
-set BlockedModules ""
-
-global sel_module_box
-set sel_module_box ""
 
 global startX
 set startX 0
@@ -53,7 +46,6 @@ set undoList ""
 global redoList
 set redoList ""
 
-
 itcl_class Module {
    
     method modname {} {
@@ -61,13 +53,12 @@ itcl_class Module {
     }
 			
     constructor {config} {
-	set msgLogStream [TclStream msgLogStream#auto]
+	set msgLogStream "[TclStream msgLogStream#auto]"
+	# these live in parallel temporarily
+	global $this-notes Notes
+	if ![info exists $this-notes] { set $this-notes "" }
+	if ![info exists Notes([modname])] { set Notes([modname]) "" }
 
-	global $this-notes	
-	if ![info exists $this-notes] {
-	    set $this-notes ""
-	}
-	
 	# messages should be accumulating
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
@@ -92,12 +83,24 @@ itcl_class Module {
     protected old_width 0
     protected indicator_width 15
     protected initial_width 0
-    protected mconnected {}
-    protected made_icon 0
+    # flag set when the module is compiling
+    protected compiling_p 0
+    # flag set when the module has all incoming ports blocked
     public state "NeedData" {$this update_state}
     public msg_state "Reset" {$this update_msg_state}
     public progress 0 {$this update_progress}
     public time "00.00" {$this update_time}
+
+    method compiling_p {} { return $compiling_p }
+    method set_compiling_p { val } { 
+	set compiling_p $val	
+	setColorAndTitle
+        if {[winfo exists .standalone]} {
+	    app indicate_dynamic_compile [modname] \
+		[expr $val?"start":"stop"]
+	}
+
+    }
 
     method name {} {
 	return $name
@@ -140,11 +143,7 @@ itcl_class Module {
     }
 
     method have_ui {} {
-	if {[$this info method ui] != ""} {
-	    return 1;
-	} else {
-	    return 0;
-	}
+	return [llength [$this info method ui]]
     }
 
     #  Make the modules icon on a particular canvas
@@ -155,6 +154,9 @@ itcl_class Module {
 	lappend modules [modname]
 	global mainCanvasWidth mainCanvasHeight
 	
+	global Disabled
+	set Disabled([modname]) 0	
+	
 	set modframe $canvas.module[modname]
 	frame $modframe -relief raised -borderwidth 3 
 	
@@ -162,23 +164,11 @@ itcl_class Module {
 	bind $modframe <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
 	bind $modframe <ButtonRelease-1> "moduleEndDrag $modframe $canvas %X %Y"
 	bind $modframe <Control-Button-1> "moduleStartDrag $canvas [modname] %X %Y 1"
-#$this toggleSelected $canvas 1"
-
-	bind $modframe <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
+	bind $modframe <3> "moduleMenu %X %Y $canvas $minicanvas [modname]"
 	
 	frame $modframe.ff
-	pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
-	 
 	set p $modframe.ff
-
-	if {[have_ui]} {
-	    global ui_font
-	    button $p.ui -text "UI" -borderwidth 2 -font $ui_font \
-		-anchor center -command "$this initialize_ui"
-	    pack $p.ui -side left -ipadx 5 -ipady 2
-	}
-	global modname_font
-	global time_font
+	pack $p -side top -expand yes -fill both -padx 5 -pady 6
 
 	#  Make the mini module icon on a particular canvas
 	set miniframe $minicanvas.module[modname]
@@ -192,17 +182,24 @@ itcl_class Module {
 		[expr $modx/$SCALEX + 4] [expr $mody/$SCALEY + 2] \
 		-outline "" -fill $basecolor -tags [modname]
 
-	# Make the title
-	label $p.title -text "$name" -font $modname_font -anchor w
-	if {$make_progress_graph} {
-	    pack $p.title -side top -padx 2 -anchor w
-	} else {
-	    pack $p.title -side left -padx 2 -anchor w
+	if {[have_ui]} {
+	    global ui_font
+	    button $p.ui -text "UI" -borderwidth 2 -font $ui_font \
+		-anchor center -command "$this initialize_ui"
+	    pack $p.ui -side left -ipadx 5 -ipady 2
 	}
+
+	# Make the title
+	global modname_font
+	label $p.title -text "$name" -font $modname_font -anchor w
+	pack $p.title -side [expr $make_progress_graph?"top":"left"] \
+	    -padx 2 -anchor w
 	bind $p.title <Map> "$this setDone"
-	
+
+
 	# Make the time label
 	if {$make_time} {
+	    global time_font
 	    label $p.time -text "00.00" -font $time_font
 	    pack $p.time -side left -padx 2
 	}
@@ -217,20 +214,12 @@ itcl_class Module {
 	}
 
 	# Make the message indicator
-	if {!$make_progress_graph} {
-	    # No progress graph so pack next to title
-	    frame $p.msg -relief sunken -height 15 -borderwidth 1 \
-		-width [expr $indicator_width+2]
-	    pack $p.msg -side right  -padx 2 -pady 2
-	    frame $p.msg.indicator -relief raised -width 0 -height 0 \
-		-borderwidth 2 -background blue
-	} else {
-	    frame $p.msg -relief sunken -height 15 -borderwidth 1 \
-		-width [expr $indicator_width+2]
-	    pack $p.msg -side left  -padx 2 -pady 2
-	    frame $p.msg.indicator -relief raised -width 0 -height 0 \
-		-borderwidth 2 -background blue
-	}
+	frame $p.msg -relief sunken -height 15 -borderwidth 1 \
+	    -width [expr $indicator_width+2]
+	pack $p.msg -side [expr $make_progress_graph?"left":"right"] \
+	    -padx 2 -pady 2
+	frame $p.msg.indicator -relief raised -width 0 -height 0 \
+	    -borderwidth 2 -background blue
 	bind $p.msg.indicator <Button> "$this displayLog"
 
 	update_msg_state
@@ -277,22 +266,6 @@ itcl_class Module {
 	
 	menu $p.menu -tearoff false -disabledforeground white
 
-	# Destroy selected items with a Ctrl-D press
-	bind all <Control-d> "moduleDestroySelected $canvas $minicanvas"
-	# Clear the canvas
-	bind all <Control-l> "ClearCanvas"
-
-	bind all <Control-z> "undo"
-	bind all <Control-y> "redo"
-        
-	# Select the item in focus, and unselect all others
-	bind $canvas <1> "startBox %X %Y $canvas 0"
-	bind $canvas <Control-Button-1> "startBox %X %Y $canvas 1"
-	bind $canvas <B1-Motion> "makeBox %X %Y $canvas"
-	bind $canvas <ButtonRelease-1> "endBox %X %Y $canvas"
-
-	bind $p <1> "$canvas raise $this"
-
 	bindtags $p [linsert [bindtags $p] 1 $modframe]
 	bindtags $p.title [linsert [bindtags $p.title] 1 $modframe]
 	if {$make_time} {
@@ -301,19 +274,9 @@ itcl_class Module {
 	if {$make_progress_graph} {
 	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
 	}
-	set made_icon 1
 	update idletasks
     }
     
-    method set_moduleConnected { ModuleConnected } {
-	set mconnected $ModuleConnected
-    }
-    
-    method get_moduleConnected {} {
-	return $mconnected
-    }
-
-
     method configurePorts {canvas args} {
 	if ![llength $args] { set args "i o" }
 	foreach porttype $args {
@@ -356,66 +319,70 @@ itcl_class Module {
 		bind $port <B2-Motion> "trackPortConnection [modname] $i $porttype %x %y"
 		bind $port <ButtonRelease-2> "endPortConnection"
 		bind $port <ButtonPress-1> "TracePort [modname] $isoport $i"
-		bind $port <ButtonRelease-1> "canvasDelete tempConnection"
-		
+		bind $port <ButtonRelease-1> "deleteTrace"
+
+		bind $portlight <2> "startPortConnection [modname] $i $porttype \"$portname\" %x %y"
+		bind $portlight <B2-Motion> "trackPortConnection [modname] $i $porttype %x %y"
+		bind $portlight <ButtonRelease-2> "endPortConnection"
+		bind $portlight <ButtonPress-1> "TracePort [modname] $isoport $i"
+		bind $portlight <ButtonRelease-1> "deleteTrace"
+
+		Tooltip $port "L - Highlight\nM - Connect"
+		Tooltip $portlight "L - Highlight\nM - Connect"
 		incr i
 	    } 
 	}
-	rebuildConnections [netedit getconnected [modname]] 0
+	rebuildConnections [netedit getconnected [modname]]
     }
-
-
-
    
-    method setColorAndTitle {canvas color args} {
-	set m [modname]
-	$canvas.module$m configure -background $color
-	$canvas.module$m.ff configure -background $color
-	$canvas.module$m.ff.title configure -background $color
-	if {[$m have_ui]} {
-	    $canvas.module$m.ff.ui configure -background $color
+    method setColorAndTitle {args} {
+	global maincanvas Color Disabled basecolor
+	set m $maincanvas.module[modname]
+	$m configure -relief raised
+	set color $basecolor
+	if { $Disabled([modname]) } { 
+	    set color $Color(Disabled) 
+	    $m configure -relief sunken
 	}
-	if {$make_time} {
-	    $canvas.module$m.ff.time configure -background $color
+	if { [$this is_selected] } { set color $Color(Selected) }
+	if { $compiling_p } {
+	    set color $Color(Compiling)
+	    set $args "COMPILING"
 	}
-	
-	if {[llength $args] < 1} {
-	    $canvas.module$m.ff.title configure -text $name -justify left
-	} else {
-	    $canvas.module$m.ff.title configure -text $args -justify left
-	}	
+	$m configure -background $color
+	$m.ff configure -background $color
+	$m.ff.title configure -background $color
+	if {[$this have_ui]} { $m.ff.ui configure -background $color }
+	if {$make_time} { $m.ff.time configure -background $color }
+	if {![llength $args]} { set args $name }
+	$m.ff.title configure -text "$args" -justify left
+	update idletasks
     }
        
-    method addSelected {canvas color} {
+    method addSelected {canvas} {
 	if {![$this is_selected]} { 
 	    global CurrentlySelectedModules
 	    lappend CurrentlySelectedModules [modname]
-	    setColorAndTitle $canvas $color
+	    setColorAndTitle
 	}
     }    
 
-    method removeSelected {canvas color} {
+    method removeSelected {canvas} {
 	if {[$this is_selected]} {
 	    #Remove me from the Currently Selected Module List
 	    global CurrentlySelectedModules
 	    set pos [lsearch $CurrentlySelectedModules [modname]]
 	    set CurrentlySelectedModules \
 		[lreplace $CurrentlySelectedModules $pos $pos]
-	    setColorAndTitle $canvas $color
+	    setColorAndTitle
 	}
     }
     
     method toggleSelected { canvas option } {
 	global CurrentlySelectedModules
-	global selected_color unselected_color
-	if { $option == 0 } {
-	    unselectAll
-	}
-	if [is_selected] {
-	    removeSelected $canvas $unselected_color
-	} else {
-	    addSelected $canvas $selected_color	    
-	}
+	if { $option == 0 } { unselectAll }
+	if [is_selected] { removeSelected $canvas
+	} else { addSelected $canvas }
     }
     
     method lightOPort {which color} {
@@ -435,23 +402,18 @@ itcl_class Module {
     }
   
     method update_progress {} {
-	if {!$make_progress_graph} return
 	set width [expr int($progress*($graph_width-4))]
-	if {$width == $old_width} return
+	if {!$make_progress_graph || $width == $old_width } return
 	global maincanvas
-	set modframe $maincanvas.module[modname]
-	if {$width == 0} {
-	    place forget $modframe.ff.inset.graph
+	set graph $maincanvas.module[modname].ff.inset.graph
+	if {$width == 0} { 
+	    place forget $graph
 	} else {
-	    $modframe.ff.inset.graph configure -width $width
-	    if {$old_width == 0} {
-		place $modframe.ff.inset.graph -relheight 1 \
-		    -anchor nw
-	    }
+	    $graph configure -width $width
+	    if {$old_width == 0} { place $graph -relheight 1 -anchor nw }
 	    if {[winfo exists .standalone]} {
 		app update_progress [modname] $state
 	    }
-	    
 	}
 	set old_width $width
     }
@@ -504,23 +466,6 @@ itcl_class Module {
 	update_progress
     }
 
-    method light_module { } {
-	global maincanvas
-	setColorAndTitle $maincanvas "\#f0e68c" "COMPILING"
-
-        if {[winfo exists .standalone]} {
-	    app indicate_dynamic_compile [modname] "start"
-	}
-    }
-
-    method reset_module_color { } {
-	global maincanvas
-	setColorAndTitle $maincanvas grey75
-        if {[winfo exists .standalone]} {
-	    app indicate_dynamic_compile [modname] "stop"
-	}
-    }
-	
     method update_msg_state {} { 
 	if {$msg_state == "Error"} {
 	    set p 1
@@ -571,9 +516,7 @@ itcl_class Module {
 
     method is_selected {} {
 	global CurrentlySelectedModules
-	if {[lsearch $CurrentlySelectedModules [modname]] != -1} {
-	    return 1
-	}
+	if {[lsearch $CurrentlySelectedModules [modname]] != -1} { return 1 }
 	return 0
     }
 
@@ -659,16 +602,13 @@ itcl_class Module {
     }
 }   
 
-proc popup_menu {x y canvas minicanvas modid} {
-    global CurrentlySelectedModules
-    global menu_id
+proc moduleMenu {x y canvas minicanvas modid} {
     set menu_id "$canvas.module$modid.ff.menu"
-    regenMenu $modid $menu_id $canvas $minicanvas 
-    # popup the menu
+    regenModuleMenu $modid $menu_id $canvas $minicanvas 
     tk_popup $menu_id $x $y    
 }
 
-proc regenMenu {modid menu_id canvas minicanvas} {
+proc regenModuleMenu {modid menu_id canvas minicanvas} {
     # Wipe the menu clean...
     for {set c 0} {$c <= 10 } {incr c } {
 	$menu_id delete $c
@@ -679,7 +619,7 @@ proc regenMenu {modid menu_id canvas minicanvas} {
     $menu_id add separator
     $menu_id add command -label "Execute" -command "$thisc needexecute"
     $menu_id add command -label "Help" -command "moduleHelp $modid"
-    $menu_id add command -label "Notes" -command "moduleNotes $name $modid"
+    $menu_id add command -label "Notes" -command "notesWindow $modid notesDoneModule"
     if [$modid is_selected] { 
 	$menu_id add command -label "Destroy Selected" \
 	    -command "moduleDestroySelected $canvas $minicanvas"
@@ -687,68 +627,217 @@ proc regenMenu {modid menu_id canvas minicanvas} {
     $menu_id add command -label "Destroy" \
 	-command "moduleDestroy $canvas $minicanvas $modid"
     $menu_id add command -label "Show Log" -command "$modid displayLog"
-
+    global Disabled
+    if $Disabled($modid) {
+	$menu_id add command -label "Enable" -command "disableModule $modid 0"
+    } else {
+	$menu_id add command -label "Disable" -command "disableModule $modid 1"
+    }
 }
 
-proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
-    global maincanvas minicanvas
-    set path [routeConnection $omodid $owhich $imodid $iwhich]
-    set temp "a"
-
-    eval $maincanvas create bline $path -width 7 -borderwidth 2 -fill \"$portcolor\" -tags $connid
-
-    global $connid-block
-    set $connid-block 0
-    $maincanvas bind $connid <ButtonRelease-2> "block_pipe $connid $omodid $owhich $imodid $iwhich $portcolor"
-    $maincanvas bind $connid <ButtonPress-3> "destroyConnection $connid $omodid $imodid 1"
-    $maincanvas bind $connid <ButtonPress-1> "TracePipe $omodid $owhich $imodid $iwhich"
-# lightPipe $temp $omodid $owhich $imodid $iwhich"
-    $maincanvas bind $connid <ButtonRelease-1> "canvasDelete tempConnection"
-    $maincanvas bind $connid <Control-Button-1> "canvasRaise $connid"
-
-    eval $minicanvas create line [scalePath $path] -width 1 -fill \"$portcolor\" -tags $connid
-
-    $minicanvas lower $connid
-    
-    return
-    
-    global $connid-annotation modname_font
-    set $connid-annotation "$owhich to $iwhich"
-    set text [set $connid-annotation]
-    set x [expr [lindex $path 0]+[expr ([lindex $path end-1]-[lindex $path 0])/2]]
-    set y [expr [lindex $path 3]-10]
-    eval $maincanvas create text $x $y -text \"$text\" -width [expr abs([lindex $path 4] - [lindex $path 2])] -fill "\"$portcolor\"" -tags $connid-annotation -font $modname_font
-    $maincanvas bind $connid-annotation <ButtonPress-1> "puts \"you clicked on $connid !\""
-    
+# args == { connid omodid owhich imodid iwhich }
+proc connectionMenu {x y args} {
+    if { [llength $args] != 5 } { return }
+    global maincanvas
+    set menu_id "$maincanvas.menu[lindex args 0]"
+    eval regenConnectionMenu $menu_id $args
+    tk_popup $menu_id $x $y    
 }
 
-global TracedPorts
-set TracedPorts ""
+proc regenConnectionMenu { menu_id args } {
+    # create menu if it doesnt exist
+    if ![winfo exists $menu_id] {
+	menu $menu_id -tearoff 0 -disabledforeground white
+    }
+    # Wipe the menu clean...
+    for {set c 0} {$c <= 10 } {incr c } {
+	$menu_id delete $c
+    }
+    $menu_id add command -label "Connection" -state disabled
+    $menu_id add separator
+    $menu_id add command -label "Delete" -command \
+	"destroyConnection [lindex $args 0] [lindex $args 1] [lindex $args 3]"
+    global Disabled
+    $menu_id add command -command "eval block_pipe $args" \
+	-label [expr $Disabled([lindex $args 0])?"Enable":"Disable"]
+    set id [lindex $args 0]
+    $menu_id add command -label "Annotate" -command \
+	"notesWindow $id notesDoneConnection"
+#annotateConnection [lindex $args 0]"
+#    $menu_id add command -label "Insert" -command \
+}
 
-proc TracePort { modid isoport args } {
-    global TracedPorts
-    set sameportindex [expr $isoport?1:3]
-    set otherportindex [expr $isoport?3:1]
-    if [llength $args] { set TracedPorts "" }
-    foreach conn [netedit getconnected $modid] {
-	if { [lsearch $TracedPorts [lindex $conn 0]] == -1 && \
-	      $modid == [lindex $conn $sameportindex] && \
-	    (![llength $args] || \
-		 [lindex $conn [expr $sameportindex+1]] == [lindex $args 0])} {
-	    lappend TracedPorts [lindex $conn 0]
-	    eval lightPipe tempConnection [lrange $conn 1 4]
-	    TracePort [lindex $conn $otherportindex] $isoport
+
+proc notesDoneConnection { id } {
+    drawNotes $id
+}
+
+proc notesDoneModule { id } {
+    global Notes $id-notes
+    set $id-notes $Notes($id)
+    drawNotes $id
+}
+
+
+proc notesWindow { id done } {
+    global Notes Color NotesPos
+    if { [winfo exists .notes] } { destroy .notes }
+    toplevel .notes
+    text .notes.input -relief sunken -bd 2 -height 20
+    frame .notes.b
+    button .notes.b.done -text "Done" -command "okNotesWindow $id \"$done\""
+    button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end"
+    button .notes.b.cancel -text "Cancel" -command "destroy .notes"
+
+    set color white
+    if [info exists Color(Notes-$id)] { set color $Color(Notes-$id) }
+    button .notes.b.color -fg black -bg $color -text "Text Color" \
+	-command "colorNotes $id"
+    frame .notes.d -relief groove -borderwidth 2
+    if {![info exists NotesPos($id)] } { set NotesPos($id) def }
+    make_labeled_radio .notes.d.pos "Display:" "" left NotesPos($id) \
+	{
+	    { "Default" def } \
+		{ "None" none } \
+		{ "Tooltip" n } \
+		{ "Top" n } \
+		{ "Left" w } \
+		{ "Right" e } \
+		{ "Bottom" s } \
+	    }
+
+    pack .notes.input -fill x -side top -padx 5 -pady 3
+    pack .notes.d -fill x -side top -padx 5 -pady 0
+    pack .notes.d.pos
+    pack .notes.b -fill y -side bottom -pady 3
+    pack .notes.b.done .notes.b.clear .notes.b.cancel .notes.b.color \
+	-side right -padx 5 -pady 5 -ipadx 3 -ipady 3
+
+	    
+
+    if [info exists Notes($id)] {.notes.input insert 1.0 $Notes($id)}
+}
+
+proc colorNotes { id } {
+    global Color
+    tk_chooseColor -initialcolor [.notes.b.color cget -bg]
+    set Color(Notes-$id) [.notes.b.color cget -bg]
+    .notes.b.color configure -bg $Color(Notes-$id)
+}
+
+    
+
+proc okNotesWindow { id done } {
+    global Notes
+    set Notes($id) [.notes.input get 1.0 "end - 1 chars"]
+    destroy .notes
+    eval $done $id
+    update idletasks
+}
+
+
+proc disableModule { module state } {
+    global Disabled CurrentlySelectedModules
+    set mods [expr [$module is_selected]?"$CurrentlySelectedModules":"$module"]
+    foreach modid $mods {
+	# iterate through every conneciton into and out of the module
+	foreach connectionInfo [netedit getconnected $modid] {
+	    # if connection is already equal to state, then dont do anything
+	    if { $Disabled([lindex $connectionInfo 0]) == $state } { continue }
+	    # otherwise, enable or disable the connection
+	    eval block_pipe $connectionInfo
 	}
     }
 }
 
-proc TracePipe { args } {
+proc checkForDisabledModules { args } {
+    global Disabled
+    # iterate through unique modules to set disabled flag
+    foreach modid [lsort -unique [eval list $args]] {
+	# assume module is disabled
+	set Disabled($modid) 1
+	foreach connectionInfo [netedit getconnected $modid] {
+	    # if connection is enabled, then enable module
+	    if { !$Disabled([lindex $connectionInfo 0]) } {
+		set Disabled($modid) 0
+		# module is enabled, continue onto next module
+		break;
+	    }
+	}
+	$modid setColorAndTitle
+    }
+}
+
+proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
+    global maincanvas minicanvas Color Notes Disabled
+    set path [routeConnection $omodid $owhich $imodid $iwhich]
+    eval $maincanvas create bline $path -width 7 -borderwidth 2 \
+	-fill \"$portcolor\" -tags $connid
+    eval $minicanvas create line [scalePath $path] -width 1 \
+	-fill \"$portcolor\" -tags $connid
+    $minicanvas lower $connid
+    if ![info exists Notes($connid)] { set Notes($connid) "" }
+    set Disabled($connid) 0
+    set Color($connid) $portcolor
+
+    $maincanvas bind $connid <ButtonPress-1> \
+	"canvasRaise $connid; TraceConnection $omodid $owhich $imodid $iwhich"
+    $maincanvas bind $connid <ButtonRelease-2> \
+	"destroyConnection $connid $omodid $imodid 1"
+    $maincanvas bind $connid <ButtonPress-3> \
+	"connectionMenu %X %Y $connid $omodid $owhich $imodid $iwhich"
+    $maincanvas bind $connid <ButtonRelease> \
+	"+deleteTrace $omodid $owhich $imodid $iwhich"
+
+    canvasTooltip $connid "$connid";#"L - Highlight\nM - Delete\nR - Menu"
+}
+
+# Deletes red connections on canvas and turns port lights black
+# args = { omodid owhich imodid iwhich }
+proc deleteTrace { args } {
+    canvasDelete tempConnection
+    if { [llength $args] != 4 } { return }
+    [lindex $args 0] lightOPort [lindex $args 1] black
+    [lindex $args 2] lightIPort [lindex $args 3] black
+}
+
+
+global TracedPorts
+set TracedPorts ""
+
+proc TracePort { modid traceoport { port "all" } } {
+    global TracedPorts
+    if {$port == "all" } { set TracedPorts "" }
+    set portidx [expr $traceoport?1:3]
+    foreach conn [netedit getconnected $modid] {
+	# if 1. Port not already traced and
+	#    2. Connection originates at this module and
+	#    3. Either we want to trace all module ports or
+	#       $conn is the port we want to trace
+	if { [lsearch $TracedPorts [lindex $conn 0]] == -1 && \
+	      $modid == [lindex $conn $portidx] && \
+	      ($port == "all" || [lindex $conn [expr $portidx+1]] == $port)} {
+	    lappend TracedPorts [lindex $conn 0]
+	    eval lightPipe tempConnection [lrange $conn 1 4]
+	    TracePort [lindex $conn [expr $traceoport?3:1]] $traceoport
+	}
+    }
+}
+
+proc TraceConnection { args } {
     if { [llength $args] != 4 } return
     eval lightPipe tempConnection $args
-    global TracedPorts
+    global TracedPorts Color
     set TracedPorts ""
+    [lindex $args 0] lightOPort [lindex $args 1] $Color(Trace)
+    [lindex $args 2] lightIPort [lindex $args 3] $Color(Trace)
     TracePort [lindex $args 0] 0
     TracePort [lindex $args 2] 1
+}
+
+proc canvasExists { arg } {
+    global maincanvas
+    return [expr [llength [$maincanvas find withtag $arg]]?1:0]
 }
 
 proc canvasDelete { args } {
@@ -765,31 +854,34 @@ proc canvasRaise { args } {
     }
 }
 
-proc block_pipe { connid omodid owhich imodid iwhich pcolor} {
-    global maincanvas minicanvas
-    global $connid-block
-
-    if {![set $connid-block]} {
-	eval $maincanvas itemconfigure $connid -width 3 -fill gray
-	eval $minicanvas itemconfigure $connid -fill gray
-	incr $connid-block
+proc block_pipe { connid omodid owhich imodid iwhich } {
+    global maincanvas minicanvas Disabled Color
+    if {!$Disabled($connid)} {
+        $maincanvas itemconfigure $connid -width 3 -fill gray
+	$minicanvas itemconfigure $connid -fill gray
+	set Color(Notes-$connid) gray
+	drawNotes $connid
+	set Disabled($connid) 1
 	netedit blockconnection $connid
     } else {
-	eval $maincanvas itemconfigure $connid -width 7 -fill $pcolor
-	eval $minicanvas itemconfigure $connid -fill $pcolor
-	set $connid-block 0
+	$maincanvas itemconfigure $connid -width 7 -fill $Color($connid)
+	$minicanvas itemconfigure $connid -fill $Color($connid)
+	set Color(Notes-$connid) $Color($connid)
+	drawNotes $connid
+	set Disabled($connid) 0
 	netedit unblockconnection $connid
     }
+    checkForDisabledModules $imodid $omodid
     canvasRaise $connid
 }
 
 proc lightPipe { temp omodid owhich imodid iwhich } {
-    global maincanvas minicanvas
+    global maincanvas minicanvas Color
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     eval $maincanvas create bline $path -width 7 \
-	-borderwidth 2 -fill red  -tags $temp
+	-borderwidth 2 -fill $Color(Trace)  -tags $temp
     eval $minicanvas create line [scalePath $path] -width 1 \
-	-fill red -tags $temp
+	-fill $Color(Trace) -tags $temp
     $minicanvas itemconfigure $omodid -fill green
     $minicanvas itemconfigure $imodid -fill green
     canvasRaise $temp
@@ -799,9 +891,8 @@ proc lightPipe { temp omodid owhich imodid iwhich } {
 proc addConnection {omodid owhich imodid iwhich args } {
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
     if {"" == $connid} {
-	tk_messageBox -type ok -parent . -message \
-	    "Invalid connection found while loading network: addConnection $omodid $owhich $imodid $iwhich -- discarding." \
-	    -icon warning
+	tk_messageBox -type ok -parent . -icon wanring -message \
+	    "Invalid connection found while loading network: addConnection $omodid $owhich $imodid $iwhich -- discarding." 
 	return
     }
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]    
@@ -824,13 +915,16 @@ proc addConnection {omodid owhich imodid iwhich args } {
 
 # set the optional args command to anything to record the undo action
 proc destroyConnection {connid omodid imodid args} { 
-    global maincanvas minicanvas
-    $maincanvas delete $connid
-    $minicanvas delete $connid
+    global maincanvas
+    deleteTrace
+    canvasDelete $connid
     netedit deleteconnection $connid $omodid 
     $omodid configurePorts $maincanvas o
     $imodid configurePorts $maincanvas i
-
+    if { [canvasExists $connid-notes] } {
+	$maincanvas delete $connid-notes
+	$maincanvas delete $connid-notes-shadow
+    }
     #if we got here from undo, record this action as undoable
     if [llength $args] {
 	global undoList redoList
@@ -840,29 +934,84 @@ proc destroyConnection {connid omodid imodid args} {
     }
 }
 
+proc shadow { pos } {
+    return [list [expr 1+[lindex $pos 0]] [expr 1+[lindex $pos 1]]]
+}
+
 proc scalePath { path } {
     set minipath ""
     global SCALEX SCALEY
     set doingX 1
     foreach point $path {
-	if $doingX {
-	    lappend minipath [expr round($point/$SCALEX)] 
-	} else {
-	    lappend minipath [expr round($point/$SCALEY)] 
-	}
+	if $doingX { lappend minipath [expr round($point/$SCALEX)] 
+	} else { lappend minipath [expr round($point/$SCALEY)] }
 	set doingX [expr !$doingX]
     }
     return $minipath
 }
     
-proc rebuildConnections {list color} {
-    global maincanvas minicanvas
+proc getConnectionNotesOptions { id } {
+    set path [eval routeConnection [parseConnectionID $id]]
+    set off 7
+    # set true if input module is left of the output module on the canvas
+    set left [expr [lindex $path 0] > [lindex $path end-1]]
+    switch [llength $path] {
+	4 { 
+	    return [list [lindex $path 0] \
+			[expr ([lindex $path 1]+[lindex $path 3])/2-$off] \
+		    -width 0 -anchor s]
+	}
+	8 { 
+	    # if output module is right of input module
+	    set x1 [expr $left?[lindex $path 6]:[expr [lindex $path 0]+$off]]
+	    set x2 [expr $left?[expr [lindex $path 0]-$off]:[lindex $path 6]]
+	    return [list [expr $x1+($x2-$x1)/2] [expr [lindex $path 3]-$off] \
+			-width [expr $x2-$x1] -anchor s]
+	}	
+	default {
+	    set x [expr ($left?[lindex $path 4]:[lindex $path 6])+$off]
+	    set x2 [expr ($left?[lindex $path 2]:[lindex $path 8])-2*$off]
+	    set y [expr ($left?[expr [lindex $path 3]-$off]:\
+			       [expr [lindex $path end-2]+$off])]
+	    return [list $x $y -width [expr $x2-$x] \
+			-anchor [expr $left?"sw":"nw"]]
+	}
+    }
+}
+
+proc getModuleNotesOptions { module } {
+    global maincanvas NotesPos
+    set bbox [$maincanvas bbox $module]
+    set off 2
+    switch $NotesPos($module) {
+	n {
+	    return [list [lindex $bbox 0] [lindex $bbox 1] \
+			-anchor sw -justify left]
+	}
+	e {
+	    return [list [expr [lindex $bbox 2] + $off] [lindex $bbox 1] \
+			-anchor nw -justify right]
+	}
+	s {
+	    return [list [lindex $bbox 0] [lindex $bbox 3]  \
+			-anchor nw -justify left]
+	}
+	default {
+	    return [list [expr [lindex $bbox 0] - $off] [lindex $bbox 1] \
+			-anchor ne -justify left]
+	}
+    }
+}
+
+
+proc rebuildConnections { list } {
+    global maincanvas minicanvas modname_font
     foreach conn $list {
 	set id [lindex $conn 0]
-	#canvasRaise $id
 	set path [eval routeConnection [lrange $conn 1 end]]
 	eval $maincanvas coords $id $path
 	eval $minicanvas coords $id [scalePath $path]
+	drawNotes $id
     }
 }
 
@@ -884,10 +1033,9 @@ proc startPortConnection {modid which porttype portname x y} {
 }
 
 proc trackPortConnection {modid which porttype x y} {
-    global new_conn_ports
+    global new_conn_ports maincanvas potential_connection Color
     if ![llength $new_conn_ports] return
     set isoport [string equal $porttype o]
-    global maincanvas
     set ox1 [winfo x $maincanvas.module$modid.port$porttype$which]
     set ox2 [lindex [$maincanvas coords $modid] 0]
     set x [expr $x+$ox1+$ox2]
@@ -906,28 +1054,23 @@ proc trackPortConnection {modid which porttype x y} {
 	}
     }
     $maincanvas itemconfigure tempconnections -fill black
-
-    global potential_connection
     set potential_connection ""
     if {$minport != ""} {	
 	$maincanvas raise [join "temp $minport" ""]
-	$maincanvas itemconfigure [join "temp $minport" ""] -fill red
+	$maincanvas itemconfigure [join "temp $minport" ""] -fill $Color(Trace)
 	if {$isoport} { set potential_connection "$modid $which $minport"
 	} else { set potential_connection "$minport $modid $which" }
     } 
 }
 
-
 proc endPortConnection {} {
-    global maincanvas
-    $maincanvas delet tempname
+    global maincanvas potential_connection
+    $maincanvas delete tempname
     $maincanvas delete tempconnections
-    global potential_connection
     if { $potential_connection != "" } {
 	eval addConnection $potential_connection 1
     }
 }
-
 
 proc parseConnectionID {conn} {
     set index1 [string first "_p" $conn ]
@@ -940,9 +1083,6 @@ proc parseConnectionID {conn} {
     set iwhich [string range $conn [expr $index4+2] end]
     return "$omodid $owhich $imodid $iwhich"
 }
-
-
-
 
 proc undo {} {
     global undoList redoList
@@ -991,8 +1131,6 @@ proc redo {} {
     }
 }
 
-
-
 proc routeConnection {omodid owhich imodid iwhich} {
     set outpos [computePortCoords $omodid $owhich 1]
     set inpos [computePortCoords $imodid $iwhich 0]
@@ -1000,34 +1138,26 @@ proc routeConnection {omodid owhich imodid iwhich} {
     set oy [lindex $outpos 1]
     set ix [lindex $inpos 0]
     set iy [lindex $inpos 1]
-
-    set minextend 10
     if {$ox == $ix && $oy < $iy} {
 	return [list $ox $oy $ix $iy]
-    } elseif {[expr $oy+2*$minextend] < $iy} {
+    } elseif {[expr $oy+19] < $iy} {
 	set my [expr ($oy+$iy)/2]
 	return [list $ox $oy $ox $my $ix $my $ix $iy]
     } else {
-	set mx $ox
-	if {$ix < $mx} {
-	    set mx $ix
-	}
-	return [list $ox $oy $ox [expr $oy+10] [expr $mx-50] [expr $oy+10] \
-		[expr $mx-50] [expr $iy-10] $ix [expr $iy-10] $ix $iy]
+	set mx [expr ($ox<$ix?$ox:$ix)-50]
+	return [list $ox $oy $ox [expr $oy+10] $mx [expr $oy+10] \
+		    $mx [expr $iy-10] $ix [expr $iy-10] $ix $iy]
     }
 }
 
 proc computePortCoords {modid which isoport} {
-    global maincanvas
-    global port_spacing
-    global port_width
+    global maincanvas port_spacing port_width
     set at [$maincanvas coords $modid]
     set x [expr $which*$port_spacing+6+$port_width/2+[lindex $at 0]]
-    if {$isoport} {
-	set y [expr [winfo height $maincanvas.module$modid]+[lindex $at 1]]
-    } else {
-	set y [lindex $at 1]
-    }
+    set h [winfo height $maincanvas.module$modid]
+    # this is to get rid of a bug for modules not mapped to the canvas
+    set h [expr $h>1?$h:57]
+    set y [expr ($isoport?$h:0) + [lindex $at 1]]
     return [list $x $y]
 }
 
@@ -1037,14 +1167,15 @@ proc computeDist {x1 y1 x2 y2} {
     return [expr sqrt($dx*$dx+$dy*$dy)]
 }
 
+global ignoreModuleMove 
+set ignoreModuleMove 1
+
 proc moduleStartDrag {maincanvas modid x y toggleOnly} {
-    puts $modid
-    global ignoreModuleMove 
+    global ignoreModuleMove CurrentlySelectedModules rebuildConnectionList
     set ignoreModuleMove 0
 
     if $toggleOnly {
 	$modid toggleSelected $maincanvas 1
-      	global ignoreModuleMove
 	set ignoreModuleMove 1
 	return
     }
@@ -1054,297 +1185,259 @@ proc moduleStartDrag {maincanvas modid x y toggleOnly} {
     raise $wname
 
     #set module movement coordinates
-    global startX startY
-    global lastX lastY
+    global startX startY lastX lastY
     set lastX $x
     set lastY $y
     set startX $x
     set startY $y
        
     #if clicked module isnt selected, unselect all and select this
-    if { ! [$modid is_selected] } {
-	$modid toggleSelected $maincanvas 0
-    }
+    if { ![$modid is_selected] } { $modid toggleSelected $maincanvas 0 } 
 
-    #build connection lists for all selected modules to draw pipes when moving
-    global CurrentlySelectedModules
+    #build a connection list for all selected modules to draw pipes when moving
+    set rebuildConnectionList ""
     foreach csm $CurrentlySelectedModules {
-	$csm set_moduleConnected [netedit getconnected $csm]
+	eval lappend rebuildConnectionList [netedit getconnected $csm]
     }
     
     #create a gray bounding box around moving modules
-    global sel_module_box
-    set sel_module_box [$maincanvas create rectangle [compute_bbox $maincanvas]]
-    $maincanvas itemconfigure $sel_module_box -outline darkgray
+    if {[llength $CurrentlySelectedModules] > 1} {
+	$maincanvas create rectangle [compute_bbox $maincanvas] \
+	    -outline darkgray -tags tempbox
+    }
 }
 
 proc moduleDrag {maincanvas minicanvas modid x y} {
-    global ignoreModuleMove
+    global ignoreModuleMove CurrentlySelectedModules rebuildConnectionList
     if $ignoreModuleMove return
-    global grouplastX
-    global grouplastY
-    global lastX
-    global lastY
-
+    global grouplastX grouplastY lastX lastY
     set bbox [compute_bbox $maincanvas]
     # When the user tries to drag a group of modules off the canvas,
     # Offset the lastX and or lastY variable, so that they can only drag
     #groups to the border of the canvas
-    set min_possibleX [expr [lindex $bbox 0] + ($x-$lastX)]
-    set min_possibleY [expr [lindex $bbox 1] + ($y-$lastY)]
-    
-    if {$min_possibleX <= 0} {
-	set lastX [expr $lastX+$min_possibleX]
-    }
-    if {$min_possibleY <= 0} {
-	set lastY [expr $lastY+$min_possibleY]
-    }
-    
-    set max_possibleX [expr [lindex $bbox 2] + ($x-$lastX)]
-    set max_possibleY [expr [lindex $bbox 3] + ($y-$lastY)]
-    
-    if {$max_possibleX >= 4500} {
-	set diff [expr $max_possibleX-4500]
-	set lastX $lastX-$diff
-    }
-    if {$max_possibleY >= 4500} {
-	set diff [expr $max_possibleY-4500]
-	set lastY $lastY-$diff
-    }
-    
-    # Move each module individually and redraw all connections
-    global CurrentlySelectedModules
+    set min_possibleX [expr [lindex $bbox 0] + $x - $lastX]
+    set min_possibleY [expr [lindex $bbox 1] + $y - $lastY]    
+    if {$min_possibleX <= 0} { set lastX [expr [lindex $bbox 0] + $x] } 
+    if {$min_possibleY <= 0} { set lastY [expr [lindex $bbox 1] + $y] }
+    set max_possibleX [expr [lindex $bbox 2] + $x - $lastX]
+    set max_possibleY [expr [lindex $bbox 3] + $y - $lastY]
+    if {$max_possibleX >= 4500} { set lastX [expr [lindex $bbox 2]+$x-4500] }
+    if {$max_possibleY >= 4500} { set lastY [expr [lindex $bbox 3]+$y-4500] }
+
+    # Move each module individually
     foreach csm $CurrentlySelectedModules {
 	do_moduleDrag $maincanvas $minicanvas $csm $x $y
-	rebuildConnections [$csm get_moduleConnected] 0
     }	
-    
     set lastX $grouplastX
     set lastY $grouplastY
-    
-    global sel_module_box
-    $maincanvas coords $sel_module_box [compute_bbox $maincanvas]
+    # redraw connections between moved modules
+    rebuildConnections [lsort -unique $rebuildConnectionList]
+    # move the bounding selection rectangle
+    $maincanvas coords tempbox [compute_bbox $maincanvas]
 }    
 
 proc do_moduleDrag {maincanvas minicanvas modid x y} {
-
-    global xminwarped
-    global xmaxwarped
-    global yminwarped
-    global ymaxwarped
-    global lastX lastY
-    global SCALEX SCALEY
-    global CurrentlySelectedModules
-    global sel_module_box
-
-    set templastX $lastX
-    set templastY $lastY
-        
-    # Canvas-relative X and Y module coordinates
-    set modxpos [ lindex [ $maincanvas coords $modid ] 0 ]
-    set modypos [ lindex [ $maincanvas coords $modid ] 1 ]
-    
-    # X and Y coordinates of canvas origin
-    set Xbounds [ winfo rootx $maincanvas ]
-    set Ybounds [ winfo rooty $maincanvas ]
-    
-    # Canvas width and height
-    set canwidth [ winfo width $maincanvas ]
-    set canheight [winfo height $maincanvas ]
-    
-    # Canvas-relative max module bounds coordinates
-    set mmodxpos [ lindex [$maincanvas bbox $modid ] 2]
-    set mmodypos [ lindex [$maincanvas bbox $modid ] 3]
-
-    # Absolute max canvas coordinates
-    set maxx [expr $Xbounds+$canwidth]
-    set maxy [expr $Ybounds+$canheight]
-    
-    # Absolute canvas max coordinates 
-    set ammodxpos [expr $Xbounds+$mmodxpos]
-    set ammodypos [expr $Ybounds+$mmodypos]
-    
+    global lastX lastY grouplastX grouplastY SCALEX SCALEY
     global mainCanvasWidth mainCanvasHeight
-    
-    # Current canvas relative minimum viewable-canvas bounds
-    set currminxbdr [expr ([lindex [$maincanvas xview] 0]*$mainCanvasWidth)]
-    set currminybdr [expr ([lindex [$maincanvas yview] 0]*$mainCanvasHeight)]
-    
-    # Current canvas relative maximum viewable-canvas bounds
-    set currxbdr [expr $canwidth + ([lindex [$maincanvas xview] 0]*$mainCanvasWidth)]
-    set currybdr [expr $canheight+ ([lindex [$maincanvas yview] 0]*$mainCanvasHeight)]
 
-    # Cursor warping flags
-    set xminwarped 0
-    set xmaxwarped 0
-    set yminwarped 0
-    set ymaxwarped 0
-
-    set xs 0
-    set ys 0
+    set grouplastX $x
+    set grouplastY $y
+    set bbox [$maincanvas bbox $modid]
     
-    set currx [expr $x-$Xbounds]
+    # Canvas Window width and height
+    set width  [winfo width  $maincanvas]
+    set height [winfo height $maincanvas]
 
-    set mainCanvasWidth [expr double($mainCanvasWidth)]
-    set mainCanvasHeight [expr double($mainCanvasHeight)]
-    #############################################
-    
-    # if user attempts to drag module off near end of canvas
-    if { [expr $modxpos+($x-$lastX)] <= $currminxbdr} {
-	#if viewable canvas is not on the border of the main canvas
-	if { $currminxbdr > 0} {
-	    set xbegView [lindex [$maincanvas xview] 0]
-	    set xdiff [expr ($modxpos+($x-$lastX))-$currminxbdr]
-	    set mvx [expr (($xdiff/$mainCanvasWidth)+$xbegView)]
-	    $maincanvas xview moveto $mvx
+    # Total Canvas width and height
+    set canWidth  [expr double($mainCanvasWidth)]
+    set canHeight [expr double($mainCanvasHeight)]
+        
+    # Cursor movement delta from last position
+    set dx [expr $x - $lastX]
+    set dy [expr $y - $lastY]
+
+    # if user attempts to drag module off left edge of canvas
+    set modx [lindex $bbox 0]
+    set left [$maincanvas canvasx 0] 
+    if { [expr $modx+$dx] <= $left } {
+	if { $left > 0 } {
+	    $maincanvas xview moveto [expr ($modx+$dx)/$canWidth]
 	}
-    
-	#if viewable canvas is on the border of the main canvas
-	if { [expr $modxpos+($x-$lastX)] <= 0 } {
-	    $maincanvas move $modid [expr -$modxpos] 0
-	    $minicanvas move $modid [expr (-$modxpos)/$SCALEX] 0
-	    set lastX $x
+	if { [expr $modx+$dx] <= 0 } {
+	    $maincanvas move $modid [expr -$modx] 0
+	    $minicanvas move $modid [expr (-$modx)/$SCALEX] 0
+	    set dx 0
 	}
-
     }
     
-    #if user attempts to drag module off far end of canvas
-    if { [expr $mmodxpos+($x-$lastX)] >= $currxbdr} {
-	if {$currxbdr < $mainCanvasWidth} {
-	    #if not on edge of canvas, move viewable area right	 
-	    set xbegView [lindex [$maincanvas xview] 0]
-	    set xdiff [expr ($mmodxpos+($x-$lastX))-$currxbdr]
-	    set mvx [expr (($xdiff/$mainCanvasWidth)+$xbegView)]
-	    $maincanvas xview moveto $mvx
+    #if user attempts to drag module off right edge of canvas
+    set modx [lindex $bbox 2]
+    set right [$maincanvas canvasx $width] 
+    if { [expr $modx+$dx] >= $right } {
+	if { $right < $canWidth } {
+	    $maincanvas xview moveto [expr ($modx+$dx-$width)/$canWidth]
 	}
-	
-	# if the right side of the module is at the right edge
-	# of the canvas.
-	if { [expr $mmodxpos+($x-$lastX)] >= $mainCanvasWidth} {
-	    # dont' let the module move off the right side of the
-	    # entire canvas
-	    $maincanvas move $modid [expr ($mainCanvasWidth-$mmodxpos)] 0
-	    $minicanvas move $modid [expr (($mainCanvasWidth-$mmodxpos)/$SCALEX)] 0
-	    set lastX $x
+	if { [expr $modx+$dx] >= $canWidth } {
+	    $maincanvas move $modid [expr $canWidth-$modx] 0
+	    $minicanvas move $modid [expr ($canWidth-$modx)/$SCALEX] 0
+	    set dx 0
 	} 
     }
     
-    #cursor-boundary check and warp for x-axis
-    if { [expr $x-$Xbounds] > $canwidth } {
-	cursor warp $maincanvas $canwidth [expr $y-$Ybounds]
-	set currx $canwidth
-	set xmaxwarped 1
-    }
-    
-    if { [expr $x-$Xbounds] < 0 } {
-	cursor warp $maincanvas 0 [expr $y-$Ybounds]
-	set currx 0
-	set xminwarped 1
-    }
-    
-    #Y boundary checks
-    if { [expr $modypos+($y-$lastY)] <= $currminybdr} {
-	if {$currminybdr > 0} {
-	    set ybegView [lindex [$maincanvas yview] 0]
-	    set ydiff [expr ($modypos+($y-$lastY))-$currminybdr]
-	    set mvy [expr (($ydiff/$mainCanvasHeight)+$ybegView)]	    
-	    $maincanvas yview moveto $mvy
+    #if user attempts to drag module off top edge of canvas
+    set mody [lindex $bbox 1]
+    set top [$maincanvas canvasy 0]
+    if { [expr $mody+$dy] <= $top } {
+	if { $top > 0 } {
+	    $maincanvas yview moveto [expr ($mody+$dy)/$canHeight]
 	}    
-	#if viewable canvas is on the border of the main canvas
-	if { [expr $modypos+($y-$lastY)] <= 0 } {
-	    $maincanvas move $modid 0 [expr -$modypos]
-	    $minicanvas move $modid 0 [expr (-$modypos)/$SCALEY]
-	    set lastY $y
+	if { [expr $mody+$dy] <= 0 } {
+	    $maincanvas move $modid 0 [expr -$mody]
+	    $minicanvas move $modid 0 [expr (-$mody)/$SCALEY]
+	    set dy 0
 	}
     }
  
-    #if user attempts to drag module off far end of canvas
-    #round currybdr
-    set currybdr [expr int($currybdr+.5)]
-    if { [expr $mmodypos+($y-$lastY)] >= $currybdr} {
-	if {$currybdr < $mainCanvasHeight} {
-	    #if not on edge of canvas, move viewable area down
-	    set ybegView [lindex [$maincanvas yview] 0]
-	    set ydiff [expr ($mmodypos+($y-$lastY))-$currybdr]
-	    set mvy [expr (($ydiff/$mainCanvasHeight)+$ybegView)]
-	    $maincanvas yview moveto $mvy
-	}
-	
-	# if the bottom side of the module is at the bottom edge
-	# of the canvas.
-	if { [expr $mmodypos+($y-$lastY)] >= $mainCanvasHeight} {
-	    # dont' let the module move off the bottom side of the
-	    # entire canvas
-	    $maincanvas move $modid 0 [expr ($mainCanvasHeight-$mmodypos)]
-	    $minicanvas move $modid 0 [expr (($mainCanvasHeight-$mmodypos)/$SCALEY)]
-	    set lastY $y
+    #if user attempts to drag module off bottom edge of canvas
+    set mody [lindex $bbox 3]
+    set bottom [$maincanvas canvasy $height]
+    if { [expr $mody+$dy] >= $bottom } {
+	if { $bottom < $canHeight } {
+	    $maincanvas yview moveto [expr ($mody+$dy-$height)/$canHeight]
+	}	
+	if { [expr $mody+$dy] >= $canHeight } {
+	    $maincanvas move $modid 0 [expr $canHeight-$mody]
+	    $minicanvas move $modid 0 [expr ($canHeight-$mody)/$SCALEY]
+	    set dy 0
 	}
     }
 
+    # X and Y coordinates of canvas origin
+    set Xbounds [winfo rootx $maincanvas]
+    set Ybounds [winfo rooty $maincanvas]
+    set currx [expr $x-$Xbounds]
+
+    #cursor-boundary check and warp for x-axis
+    if { [expr $x-$Xbounds] > $width } {
+	cursor warp $maincanvas $width [expr $y-$Ybounds]
+	set currx $width
+	set scrollwidth [.bot.neteditFrame.vscroll cget -width]
+	set grouplastX [expr $Xbounds + $width - 5 - $scrollwidth]
+    }
+    if { [expr $x-$Xbounds] < 0 } {
+	cursor warp $maincanvas 0 [expr $y-$Ybounds]
+	set currx 0
+	set grouplastX $Xbounds
+    }
+    
     #cursor-boundary check and warp for y-axis
+    if { [expr $y-$Ybounds] > $height } {
+	cursor warp $maincanvas $currx $height
+	set scrollwidth [.bot.neteditFrame.hscroll cget -width]
+	set grouplastY [expr $Ybounds + $height - 5 - $scrollwidth]
+    }
     if { [expr $y-$Ybounds] < 0 } {
 	cursor warp $maincanvas $currx 0
-	set yminwarped 1
+	set grouplastY $Ybounds
     }
     
-    if { [expr $y-$Ybounds] > $canheight } {
-	cursor warp $maincanvas $currx $canheight
-	set ymaxwarped 1
-    }
+    # if there is no movement to perform, then return
+    if {!$dx && !$dy} { return }
     
-    #####################################################################
-    $maincanvas move $modid [expr $x-$lastX] [expr $y-$lastY]
-    $minicanvas move $modid [expr ( $x - $lastX ) / $SCALEX ] \
-	                    [expr ( $y - $lastY ) / $SCALEY ]
-    #####################################################################
-        
-    #if the mouse has been warped, adjust $lastX accordingly
-    if { $xmaxwarped } {
-	set lastX [expr $maxx - [.bot.neteditFrame.vscroll cget -width] - 5]
-	set xs 1
-    } 
-    if { $xminwarped } {
-	set lastX $Xbounds
-	set xs 1
-    } 
-    if { $yminwarped } {
-	set lastY $Ybounds
-	set ys 1
-    } 
-    if { $ymaxwarped } {
-	set lastY [expr $maxy - [.bot.neteditFrame.hscroll cget -width] - 5]
-	set ys 1
-    } 
-    if { $xs==0 } {
-	set lastX $x
-    }
-    if { $ys==0 } {
-	set lastY $y
-    }
+    # Perform the actual move of the module window
+    $maincanvas move $modid $dx $dy
+    $minicanvas move $modid [expr $dx / $SCALEX ] [expr $dy / $SCALEY ]
     
-    global grouplastX
-    global grouplastY
-    
-    set grouplastX $lastX
-    set grouplastY $lastY
-
-    set lastX $templastX
-    set lastY $templastY
+    drawNotes $modid
 }
 
-proc moduleEndDrag {mframe maincanvas x y} {
-    global ignoreModuleMove
-    if $ignoreModuleMove return
 
-    global sel_module_box CurrentlySelectedModules
-    if {$sel_module_box != ""} {
-	$maincanvas delete $sel_module_box
+proc drawNotes { args } {
+    global Color Notes Font modname_font maincanvas NotesPos
+    set Font(Notes) $modname_font
+    foreach id $args {
+	if { ![info exists NotesPos($id)] } {
+	    set NotesPos($id) def
+	}
+
+	if { $NotesPos($id) == "none" } {
+	    $maincanvas delete $id-notes
+	    $maincanvas delete $id-notes-shadow
+	    continue
+	}
+	    
+	
+	set isModuleNotes [winfo exists $maincanvas.module$id]
+	
+	if { ![info exists Color(Notes-$id)] } { 
+	    if { [info exists Color($id)] } {
+		set Color(Notes-$id) $Color($id)
+	    } else {
+		set Color(Notes-$id) white 
+	    }
+	}
+
+	if { ![info exists Notes($id)] } { set Notes($id) "" }
+	
+	if { ![canvasExists $id-notes] } {
+	    $maincanvas create text 0 0 -text "" \
+		-tags "$id-notes notes" -fill white
+	    $maincanvas create text 0 0 -text "" -fill black \
+		-tags "$id-notes-shadow shadow"
+	}
+
+        set shadowCol [expr [brightness $Color(Notes-$id)]>0.2?"black":"white"]
+
+	if { [canvasExists $id-notes] } {	
+	    if { $isModuleNotes } {
+		set opts [getModuleNotesOptions $id]
+	    } else {
+		set opts [getConnectionNotesOptions $id]
+	    }
+	    $maincanvas coords $id-notes [lrange $opts 0 1]
+	    $maincanvas coords $id-notes-shadow [shadow [lrange $opts 0 1]]
+	    
+	    eval $maincanvas itemconfigure $id-notes \
+		[lrange $opts 2 end] \
+		-fill $Color(Notes-$id) \
+		-font $Font(Notes) \
+		-text \"$Notes($id)\"
+		
+	    eval $maincanvas itemconfigure $id-notes-shadow \
+		[lrange $opts 2 end] \
+		-fill $shadowCol \
+		-font $Font(Notes) \
+		-text \"$Notes($id)\"
+		
+	    if {!$isModuleNotes} {
+		$maincanvas bind $id-notes <ButtonPress-1> \
+		    "notesWindow $id notesDoneConnection"
+		$maincanvas bind $id-notes <ButtonPress-2> \
+		    "global NotesPos; set NotesPos($id) none; drawNotes $id"
+		canvasTooltip $id-notes "L - Edit\nM - Hide"
+	    } else {
+		$maincanvas bind $id-notes <ButtonPress-1> \
+		    "notesWindow $id notesDoneModule"
+		$maincanvas bind $id-notes <ButtonPress-2> \
+		    "global NotesPos; set NotesPos($id) none; drawNotes $id"
+		canvasTooltip $id-notes "L - Edit\nM - Hide"
+	    }
+		
+	}
     }
-    computeModulesBbox
-    global startX startY
+    $maincanvas raise shadow
+    $maincanvas raise notes
+}
     
-    if {[expr [expr abs($startX-$x) > 2] || \
-	     [expr abs($startY-$y) > 2]] && \
+
+
+proc moduleEndDrag {mframe maincanvas x y} {
+    global ignoreModuleMove CurrentlySelectedModules startX startY
+    if $ignoreModuleMove return
+    $maincanvas delete tempbox
+    computeModulesBbox
+    # If only one module was selected and moved, then unselect when done
+    if {([expr abs($startX-$x)] > 2 || [expr abs($startY-$y)] > 2) && \
 	    [llength $CurrentlySelectedModules] == 1} unselectAll    
 }
 
@@ -1375,28 +1468,6 @@ proc moduleHelp {modid} {
     pack $w.fbuttons.ok -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
 
     $w.help.txt insert end [$modid-c help]
-}
-
-# By Mohamed Dekhil
-proc moduleNotes {name mclass} {    
-    global $mclass-notes
-    set w .module_notes
-    toplevel $w
-    text $w.tnotes -relief sunken -bd 2 
-    frame $w.fbuttons 
-    button $w.fbuttons.ok -text "Done" -command "okNotes $w $mclass"
-    button $w.fbuttons.cancel -text "Cancel" -command "destroy $w"
-    
-    pack $w.tnotes $w.fbuttons -side top -padx 5 -pady 5
-    pack $w.fbuttons.ok -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
-    if [info exists $mclass-notes] {$w.tnotes insert 1.0 [set $mclass-notes]}
-}
-
-# By Mohamed Dekhil
-proc okNotes {w mclass} {
-    global $mclass-notes
-    set $mclass-notes [$w.tnotes get 1.0 end]
-    destroy $w
 }
 
 proc moduleDestroy {maincanvas minicanvas modid} {
@@ -1449,117 +1520,69 @@ proc moduleDestroySelected {maincanvas minicanvas} {
     }
 }
 
-global startx starty rect
-global InitiallySelectedModules
+
+global Box
+set Box(InitiallySelected) ""
+set Box(x0) 0
+set Box(y0) 0
 
 proc startBox {X Y maincanvas keepselected} {
-    global CurrentlySelectedModules
-    global InitiallySelectedModules
-    global mainCanvasWidth mainCanvasHeight
-    global startx starty rect
-
+    global Box CurrentlySelectedModules
+    set Box(InitiallySelected) $CurrentlySelectedModules
     if {!$keepselected} {
 	unselectAll
-	set InitiallySelectedModules ""
-    } else {
-	set InitiallySelectedModules $CurrentlySelectedModules
+	set Box(InitiallySelected) ""
     }
-    
-    set sx [expr $X-[winfo rootx $maincanvas]]
-    set sy [expr $Y-[winfo rooty $maincanvas]]
-    
-    set startx [expr $sx + \
-	int([expr (([lindex [$maincanvas xview] 0]*$mainCanvasWidth))])]
-    set starty [expr $sy + \
-        int([expr (([lindex [$maincanvas yview] 0]*$mainCanvasHeight))])]
-  
-    #Begin the bounding box
-    set rect [$maincanvas create rectangle $startx $starty $startx $starty] 
-    
-    global rx ry
-    set rx [winfo rootx $maincanvas]
-    set ry [winfo rooty $maincanvas]    
+    #Canvas Relative current X and Y positions
+    set Box(x0) [expr $X - [winfo rootx $maincanvas] + [$maincanvas canvasx 0]]
+    set Box(y0) [expr $Y - [winfo rooty $maincanvas] + [$maincanvas canvasy 0]]
+    # Create the bounding box graphic
+    $maincanvas create rectangle $Box(x0) $Box(y0) $Box(x0) $Box(y0)\
+	-tags "tempbox temp"    
 }
 
-proc makeBox {X Y maincanvas} {
-    global CurrentlySelectedModules
-    global InitiallySelectedModules
-    global mainCanvasWidth mainCanvasHeight
-    global selected_color unselected_color
-    global startx starty rx ry
-    global rect
-    
+proc makeBox {X Y maincanvas} {    
+    global Box CurrentlySelectedModules
     #Canvas Relative current X and Y positions
-    set currx [expr [expr ($X-$rx)] + \
-       int([expr (([lindex [$maincanvas xview] 0]*$mainCanvasWidth))])]
-    set curry [expr [expr ($Y-$ry)] + \
-       int([expr (([lindex [$maincanvas yview] 0]*$mainCanvasHeight))])]
-
+    set x1 [expr $X - [winfo rootx $maincanvas] + [$maincanvas canvasx 0]]
+    set y1 [expr $Y - [winfo rooty $maincanvas] + [$maincanvas canvasy 0]]
     #redraw box
-    $maincanvas coords $rect $startx $starty $currx $curry    
-
+    $maincanvas coords tempbox $Box(x0) $Box(y0) $x1 $y1
     # select all modules which overlap the current bounding box
     set overlappingModules ""
-    set overlap [$maincanvas find overlapping $startx $starty $currx $curry]
+    set overlap [$maincanvas find overlapping $Box(x0) $Box(y0) $x1 $y1]
     foreach i $overlap {
 	set s "[$maincanvas itemcget $i -tags]"
 	if {[$maincanvas type $s] == "window"} {
 	    lappend overlappingModules $s
-	    if {[lsearch $CurrentlySelectedModules $s] == -1} {
-		$s addSelected $maincanvas $selected_color
+	    if { ![$s is_selected] } {
+		$s addSelected $maincanvas
 	    }
 	}
     }
-
     # remove those not initally selected or overlapped by box
     foreach mod $CurrentlySelectedModules {
 	if {[lsearch $overlappingModules $mod] == -1 && \
-		[lsearch $InitiallySelectedModules $mod] == -1} {
-	    $mod removeSelected $maincanvas $unselected_color
+		[lsearch $Box(InitiallySelected) $mod] == -1} {
+	    $mod removeSelected $maincanvas
 	}
     }
 }
 
 proc endBox {X Y maincanvas} {
-    global rect
-    $maincanvas delete $rect
+    $maincanvas delete tempbox
 }
 
 proc unselectAll {} {
-    global CurrentlySelectedModules maincanvas unselected_color
+    global CurrentlySelectedModules maincanvas
     foreach i $CurrentlySelectedModules {
-	$i removeSelected $maincanvas $unselected_color
+	$i removeSelected $maincanvas
     }
 }
 
-proc compute_bbox {maincanvas} {
-    #Compute and return the coordinated of a bounding box containing all
-    #CurrentlySelectedModules
-    global CurrentlySelectedModules
-    set maxx 0
-    set maxy 0
-    set minx 4500
-    set miny 4500
-
-    foreach csm  $CurrentlySelectedModules {
-	set curr_coords [$maincanvas coords $csm]
-
-	#Find $maxx and $maxy
-	if { [lindex [$maincanvas bbox $csm] 2] > $maxx} {
-	    set maxx [lindex [$maincanvas bbox $csm] 2]
-	}
-	if { [lindex [$maincanvas bbox $csm] 3] > $maxy} {
-	    set maxy [lindex [$maincanvas bbox $csm] 3]
-	}
-
-	#Find $minx and $miny
-	if { [lindex $curr_coords 0] <= $minx} {
-	    set minx [lindex $curr_coords 0]
-	}
-	if { [lindex $curr_coords 1] <= $miny} {
-	    set miny [lindex $curr_coords 1]
-	}
-    }
-    
-    return "$minx $miny $maxx $maxy"
-}
+# Courtesy of the Tcl'ers Wiki (http://mini.net/tcl)
+proc brightness color {
+    foreach {r g b} [winfo rgb . $color] break
+    set max [lindex [winfo rgb . white] 0]
+    expr {($r*0.3 + $g*0.59 + $b*0.11)/$max}
+ } ;#RS, after [Kevin Kenny]
