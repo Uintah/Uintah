@@ -144,7 +144,7 @@ public:
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
 
-  virtual bool is_editable() const { return true; }
+  virtual bool is_editable() const { return false; }
     
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

@@ -257,6 +257,8 @@ public:
 	       const Point &p3, const Point &p4, const Point &p5, 
 	       const Point &p6, const Point &p7);
   Elem::index_type add_elem(Node::array_type a);
+  void node_reserve(size_t s) { points_.reserve(s); }
+  void elem_reserve(size_t s) { edges_.reserve(s*8); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 3; }
 

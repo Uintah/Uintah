@@ -513,6 +513,9 @@ public:
 				  const Point &p5);
   Elem::index_type	add_elem(Node::array_type a);
 
+  void node_reserve(size_t s) { points_.reserve(s); }
+  void elem_reserve(size_t s) { cells_.reserve(s*6); }
+
 
   //! Subdivision methods
   void			delete_cells(set<int> &to_delete);

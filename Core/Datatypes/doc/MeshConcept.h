@@ -264,17 +264,27 @@ public:
   Elem::index_type add_elem(Node::array_type a);
   //! Change a point within the mesh.
   /*! This only works if the mesh is editable.
+   *  This also works on non-editable meshes that are structured.
    *  This method is optional.
    */
   void set_point(const Point &point, Node::index_type index);
+
+  //! Reserve space in the mesh for new elements.
+  /*! This only works if the mesh is editable.  This is an
+   *  optimization and may do nothing.  Elem reserve reserves the
+   *  number of new elements to be added, not their size.  For example
+   *  if you are going to add 8 tris to a mesh you should reserve 8
+   *  and not 24.
+   */
+  void node_reserve(size_t s);
+  void elem_reserve(size_t s);
 
   //! Flush any edits made to the mesh.
   /*! Any edits made to a mesh must be flushed with this call in order
    *  to guarantee that they show up in any mesh queries.  For instance,
    *  if a point is added to a PointCloudMesh, this must be called
    *  before the point is locatable.  Usually this call updates any
-   *  search structures associated with a mesh.
-   */
+   *  search structures associated with a mesh.  */
   virtual void flush_changes();
  
 

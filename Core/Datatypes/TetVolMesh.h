@@ -472,6 +472,9 @@ public:
 				const Point &p3);
   Elem::index_type	add_elem(Node::array_type a);
 
+  void node_reserve(size_t s) { points_.reserve(s); }
+  void elem_reserve(size_t s) { cells_.reserve(s*4); }
+
 
   //! Subdivision methods
   //! given 2 cells that share a face, split the 2 tets into 3 by connecting
