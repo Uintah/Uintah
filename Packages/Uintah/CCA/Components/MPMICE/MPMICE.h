@@ -216,7 +216,6 @@ protected:
   ICE*             d_ice;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
-  bool             d_fracture;
   double d_SMALL_NUM;
 };
 
