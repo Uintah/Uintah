@@ -59,9 +59,15 @@ using std::pair;
       // files up to the specified timestep from restartFromDir if
       // fromScratch is false and will set time and timestep variables
       // appropriately to continue smoothly from that timestep.
-      virtual void restartSetup(Dir& restartFromDir, int timestep,
-				double time, bool fromScratch,
+      // If timestep is negative, then all timesteps will get copied
+      // if they are to be copied at all (fromScratch is false).
+      virtual void restartSetup(Dir& restartFromDir, int startTimestep,
+				int timestep, double time, bool fromScratch,
 				bool removeOldDir);
+
+      // Copy a section from another uda's index.xml.
+      void copySection(Dir& fromDir, string section);
+
       //////////
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
@@ -154,10 +160,14 @@ using std::pair;
       void createIndexXML(Dir& dir);
 
       // helpers for restartSetup
-      void copyTimesteps(Dir& fromDir, Dir& toDir, int maxTimestep,
-			 bool removeOld, bool areCheckpoints = false);
-      void copyDatFiles(Dir& fromDir, Dir& toDir, int maxTimestep,
-			bool removeOld);
+      void addRestartStamp(DOM_Document indexDoc, Dir& fromDir,
+			   int timestep);
+
+      void copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
+			 int maxTimestep, bool removeOld,
+			 bool areCheckpoints = false);
+      void copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
+			int maxTimestep, bool removeOld);
    
       // add saved global (reduction) variables to index.xml
       void indexAddGlobals();
