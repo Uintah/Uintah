@@ -1,7 +1,7 @@
 
 catch {rename PadField ""}
 
-itcl_class Kurt_VolVis_PadField {
+itcl_class Kurt_Vis_PadField {
     inherit Module
     constructor {config} {
 	set name PadField
