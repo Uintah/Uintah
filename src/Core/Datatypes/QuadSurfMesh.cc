@@ -298,6 +298,25 @@ QuadSurfMesh::get_neighbor(Face::index_type &neighbor,
   return false;
 }
 
+void
+QuadSurfMesh::get_neighbors(Face::array_type &neighbor,
+			   Face::index_type idx) const
+{
+  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
+	    "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
+  Edge::array_type edges;
+  get_edges(edges, idx);
+
+  neighbor.clear();
+  Edge::array_type::iterator iter = edges.begin();
+  while (iter != edges.end()) {
+    Face::index_type f;
+    if (get_neighbor(f, idx, *iter)) {
+      neighbor.push_back(f);
+    }
+    ++iter;
+  }
+}
 
 static double
 distance2(const Point &p0, const Point &p1)
