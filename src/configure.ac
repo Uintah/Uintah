@@ -1414,12 +1414,21 @@ else
   _sci_inc="/usr/X11R6/include"
 fi
 
+# GLU_OTHERS, GLU_OTHERS_FLAG
+
+# These variables are used to supply libraries which GL and GLU may
+# need.  As it turns out, the gl libraries in linux need the pthread
+# library.  We need to make two versions of the variable though.
+# GLU_OTHERS is used without the -l and GLU_OTHERS_FLAG includes it.
+  
 case $host in
   *linux*)
   GLU_OTHERS="pthread"
+  GLU_OTHERS_FLAG="-lpthread"
   ;;
   *)
   GLU_OTHERS=""
+  GLU_OTHERS_FLAG=""
   ;;
 esac
 
@@ -2511,7 +2520,7 @@ AC_SUBST(NETSOLVE_LIB_DIR_FLAG)
 
 if test "$sci_check_glut" = "yes"; then
 
-   libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG -l$GLU_OTHERS"
+   libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS_FLAG"
 
    if test "$with_glut"; then
      _sci_lib="$with_glut/$BASE_LIB_DIR"
