@@ -218,6 +218,9 @@ ShowField::execute()
     fld_gen_ = fld_handle->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; 
     faces_dirty_ = true; data_dirty_ = true;
+    Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
+					def_color_b_.get()));
+    def_mat_handle_ = m;
   }
   
   color_->get(color_handle_);
@@ -317,9 +320,9 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     def_color_r_.reset();
     def_color_g_.reset();
     def_color_b_.reset();
-    Material m(Color(def_color_r_.get(), def_color_g_.get(), 
-		     def_color_b_.get()));
-    *def_mat_handle_.get_rep() = m;
+    Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
+					def_color_b_.get()));
+    def_mat_handle_ = m;
     if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
