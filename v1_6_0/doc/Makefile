@@ -42,6 +42,7 @@ tar: products
 		$${root}/doc/Installation/index.html \
                 $${root}/doc/Installation/Guide/*.html \
 		$${root}/doc/User/index.html \
+		$${root}/doc/User/FAQ/*.gif \
 		$${root}/doc/User/Guide/usersguide \
 		$${root}/doc/User/Guide/Figures \
 		$${root}/doc/User/Tutorial \
