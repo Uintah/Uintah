@@ -364,7 +364,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 				    req->d_patch, d_myworld,
 				    MPI_ANY_SOURCE,
 				    req->d_serialNumber, &size, &requestid);
-			if(size != -){
+			if(size != -1){
 			   log.logRecv(req, size);
 			   recv_ids.push_back(requestid);
 			}
@@ -451,7 +451,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 				       dep->d_task->getAssignedResourceIndex(),
 				       dep->d_serialNumber,
 				       &size, &requestid);
-			   if(size != -){
+			   if(size != -1){
 			      log.logSend(dep, size);
 			      send_ids.push_back(requestid);
 			   }
@@ -885,6 +885,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.27  2000/09/30 05:33:10  sparker
+// Fixed typo
+//
 // Revision 1.26  2000/09/29 21:19:57  sparker
 // Do not log send or wait for the send if size == -1
 //
