@@ -68,20 +68,24 @@
     int     i,j,k,m,
             counter;                    /* used in debugging code           */      
 
-    char    filename[]="if";      
+    char    filename[100];      
     FILE    *fp;
 /*______________________________________________________________________
 * Initialize local variables
 *_______________________________________________________________________*/
     counter =0;
+
+
+
+
 /*__________________________________
 * Open the file
-*___________________________________*/
-/*      printf("Input the input file name\n");
-    scanf("%s",filename);  */
+*___________________________________*/ 
+    printf("\n\nInput the input file name\n");
+    scanf("%s",filename); 
     
-    
-    
+/*     strcpy(filename,filepath);
+    strcat(filename,"if"); */
     fp = fopen(filename,"r");
     if(fp == NULL)
         Message(1,"File: input.c","Subroutine: input","Error: Couldn't open the input data file");

@@ -338,8 +338,8 @@ static int  iterNum;                    /* Iteration number                 */
                     * based on stability requirements
                     * see references
                     *___________________________________*/
-                    A   = fudge_factor * 0.5 * pow(delX, 2.0)/fabs(uvel_CC[m][i][j][k]); 
-                    B   = fudge_factor * 0.5 * pow(delY, 2.0)/fabs(vvel_CC[m][i][j][k]);
+                    A   = fudge_factor * 0.5 * pow(delX, 2.0)/fabs(uvel_CC[m][i][j][k] + SMALL_NUM); 
+                    B   = fudge_factor * 0.5 * pow(delY, 2.0)/fabs(vvel_CC[m][i][j][k] + SMALL_NUM);
                     delt_stability = DMIN(A, delt_stability);
                     delt_stability = DMIN(B, delt_stability);
                 }
