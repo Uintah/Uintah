@@ -29,14 +29,8 @@
 
 #include <Dataflow/share/share.h>
 
-#include <Core/Datatypes/MeshBase.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/LatticeVol.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/Datatypes/PointCloud.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Modules/Fields/EditField.h>
@@ -84,12 +78,6 @@ public:
 
   virtual ~EditField();
 
-  template <class FSRC, class FOUT>
-  FieldHandle create_edited_field(FSRC *, FOUT *, Field::data_location,
-				  bool transform_p,
-				  //const typename FSRC::value_type &translate,
-				  double scale,
-				  double translate);
   void clear_vals();
   void update_input_attributes(FieldHandle);
   bool check_types(FieldHandle);
@@ -240,41 +228,6 @@ bool EditField::check_types(FieldHandle f)
   }
   warning("The selected type and the input field type are incompatable.");
   return false;
-}
-
-template <class FSRC, class FOUT>
-FieldHandle
-EditField::create_edited_field(FSRC *fsrc, FOUT *,
-			       Field::data_location fout_at,
-			       bool transform_p, double scale,
-			       double translate)
-{
-  // Create the field with the new mesh and data location.
-  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), fout_at);
-
-  // Copy the (possibly transformed) data to the new field.
-  fout->resize_fdata();
-  typename FSRC::fdata_type::iterator in = fsrc->fdata().begin();
-  typename FOUT::fdata_type::iterator out = fout->fdata().begin();
-  typename FSRC::fdata_type::iterator end = fsrc->fdata().end();
-  if (fout_at == fsrc->data_at())
-  {
-    while (in != end)
-    {
-      if (transform_p)
-      {
-	// Linearly transform the data.
-	*out = (typename FOUT::value_type)(*in * scale + translate);
-      }
-      else
-      {
-	*out = (typename FOUT::value_type)(*in);
-      }
-      ++in; ++out;
-    }
-  }
-
-  return fout;
 }
 
 
@@ -476,6 +429,7 @@ void EditField::execute()
     
   oport->send(ef);
 }
+
     
 void EditField::tcl_command(TCLArgs& args, void* userdata)
 {
