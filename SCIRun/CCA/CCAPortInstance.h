@@ -63,6 +63,7 @@ namespace SCIRun {
     bool decrementUseCount();
   private:
     friend class CCAComponentInstance;
+    friend class BridgeComponentInstance;
     std::string name;
     std::string type;
     sci::cca::TypeMap::pointer properties;

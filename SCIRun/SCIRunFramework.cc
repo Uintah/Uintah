@@ -30,6 +30,7 @@
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
+#include <SCIRun/Bridge/BridgeComponentModel.h>
 #if HAVE_BABEL
 #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
@@ -58,6 +59,7 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(internalServices=new InternalComponentModel(this));
   models.push_back(new SCIRunComponentModel(this));
   models.push_back(cca=new CCAComponentModel(this));
+  models.push_back(new BridgeComponentModel(this));
 #if HAVE_BABEL
   models.push_back(babel=new BabelComponentModel(this));
 #endif
@@ -239,10 +241,11 @@ ComponentInstance*
 SCIRunFramework::lookupComponent(const std::string& name)
 {
   map<string, ComponentInstance*>::iterator iter = activeInstances.find(name);
-  if(iter == activeInstances.end())
+  if(iter == activeInstances.end()) {
     return 0;
-  else
+  } else {
     return iter->second;
+  }
 }
 
 sci::cca::ComponentID::pointer
