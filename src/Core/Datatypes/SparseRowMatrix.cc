@@ -65,8 +65,8 @@ SparseRowMatrix::SparseRowMatrix()
 }
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
-				       Array1<int>& in_rows,
-				       Array1<int>& in_cols)
+				 Array1<int>& in_rows,
+				 Array1<int>& in_cols)
 : nnrows(nnrows), 
   nncols(nncols)
 {
@@ -581,6 +581,51 @@ void SparseRowMatrix::scalar_multiply(double s)
   {
     a[i] *= s;
   }
+}
+
+
+MatrixHandle
+SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
+{
+  ASSERTRANGE(r1, 0, r2+1);
+  ASSERTRANGE(r2, r1, nnrows);
+  ASSERTRANGE(c1, 0, c2+1);
+  ASSERTRANGE(c2, c1, nncols);
+
+  int i, j;
+  int *rs = scinew int[r2-r1+2];
+  vector<int> csv;
+  vector<double> valsv;
+
+  rs[0] = 0;
+  for (i = r1; i < nnrows; i++)
+  {
+    rs[i-r1+1] = rs[i-r1];
+    for (j = rows[i]; j < rows[i+1]; j++)
+    {
+      if (columns[j] >= c1 && columns[j] <= c2)
+      {
+	csv.push_back(columns[j] - c1);
+	valsv.push_back(a[j]);
+	rs[i-r1+1]++;
+      }
+    }
+  }
+
+
+  int *cs = scinew int[csv.size()];
+  for (i = 0; i < csv.size(); i++)
+  {
+    cs[i] = csv[i];
+  }
+
+  double *vals = scinew double[valsv.size()];
+  for (i = 0; i < valsv.size(); i++)
+  {
+    vals[i] = valsv[i];
+  }
+  
+  return scinew SparseRowMatrix(r2-r1+1, c2-c1+1, rs, cs, valsv.size(), vals);
 }
 
 } // End namespace SCIRun

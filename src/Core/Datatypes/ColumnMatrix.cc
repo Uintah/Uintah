@@ -454,6 +454,22 @@ void ColumnMatrix::scalar_multiply(double s)
   }
 }
 
+
+MatrixHandle
+ColumnMatrix::submatrix(int r1, int c1, int r2, int c2)
+{
+  ASSERTRANGE(r1, 0, r2+1);
+  ASSERTRANGE(r2, r1, rows);
+  ASSERTEQ(c1, 0);
+  ASSERTEQ(c2, 0);
+
+  ColumnMatrix *mat = scinew ColumnMatrix(r2 - r1 + 1);
+  memcpy(mat->data, data + r1, (r2 - r1 + 1) * sizeof(double));
+
+  return mat;
+}
+
+
 } // End namespace SCIRun
 
 

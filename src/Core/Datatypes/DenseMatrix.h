@@ -106,6 +106,7 @@ public:
   virtual void    print(ostream&) const;
   
   virtual void scalar_multiply(double s);
+  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
   //! fast accessors
   inline double*  operator[](int r){

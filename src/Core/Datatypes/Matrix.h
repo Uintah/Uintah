@@ -117,6 +117,7 @@ public:
   virtual void print() const {}
 
   virtual void scalar_multiply(double s) = 0;
+  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2) = 0;
 
   // Separate raw files.
   void set_raw(bool v) { separate_raw_ = v; }

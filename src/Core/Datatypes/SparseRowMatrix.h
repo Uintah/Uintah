@@ -102,6 +102,7 @@ public:
   virtual SparseRowMatrix* clone();
 
   virtual void scalar_multiply(double s);
+  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
   //! Persistent representation...
   virtual void io(Piostream&);
