@@ -26,9 +26,6 @@ itcl_class PSECommon_Matrix_BldTransform {
 	global $this-scalex
 	global $this-scaley
 	global $this-scalez
-	global $this-flipx
-	global $this-flipy
-	global $this-flipz
 	global $this-tx
 	global $this-ty
 	global $this-tz
@@ -38,6 +35,9 @@ itcl_class PSECommon_Matrix_BldTransform {
 	global $this-pre
 	global $this-lastxform
 	global $this-whichxform
+	global $this-xmapTCL
+	global $this-ymapTCL
+	global $this-zmapTCL
 	set $this-rx 0
 	set $this-ry 0
 	set $this-rz 1
@@ -46,9 +46,6 @@ itcl_class PSECommon_Matrix_BldTransform {
 	set $this-scalex 0
 	set $this-scaley 0
 	set $this-scalez 0
-	set $this-flipx 0
-	set $this-flipy 0
-	set $this-flipz 0
 	set $this-tx 0
 	set $this-ty 0
 	set $this-tz 0
@@ -58,6 +55,9 @@ itcl_class PSECommon_Matrix_BldTransform {
 	set $this-shv 0
 	set $this-lastxform translate
 	set $this-whichxform 0
+	set $this-xmapTCL 1
+	set $this-ymapTCL 2
+	set $this-zmapTCL 3
     }
     method ui {} {
 	set w .ui[modname]
@@ -95,8 +95,11 @@ itcl_class PSECommon_Matrix_BldTransform {
 		-text Rotate -variable $this-whichxform -value 2
 	radiobutton $w.f.which.shear -command "$this setxform $w shear" \
 		-text Shear -variable $this-whichxform -value 3
+	radiobutton $w.f.which.permute -command "$this setxform $w permute" \
+		-text Permute -variable $this-whichxform -value 4
 	pack $w.f.which.trans $w.f.which.scale $w.f.which.rot \
-		$w.f.which.shear -side left -fill x -expand 1
+		$w.f.which.shear $w.f.which.permute -side left \
+		-fill x -expand 1
 	pack $w.f.prepost $w.f.which -side top -fill x -expand 1
 
 	frame $w.f.t -relief groove -borderwidth 5
@@ -129,7 +132,41 @@ itcl_class PSECommon_Matrix_BldTransform {
 		-to 360.0 -resolution 0.1
 	pack $w.f.r.x $w.f.r.y $w.f.r.z $w.f.r.th -fill x -expand 1 -side top
 
-	global $this-scale
+	global $this-xstr
+	global $this-ystr
+	global $this-zstr
+	$this bldAllMapStr
+	frame $w.f.p
+	label $w.f.p.l -text "Field Map"
+	pack $w.f.p.l -side top -fill both -expand 1
+	frame $w.f.p.m -relief sunken -bd 2
+	frame $w.f.p.m.l
+	button $w.f.p.m.l.x -text "FlipX" -command "$this flipx" -padx 8
+	button $w.f.p.m.l.y -text "FlipY" -command "$this flipy" -padx 8
+	button $w.f.p.m.l.z -text "FlipZ" -command "$this flipz" -padx 8
+	pack $w.f.p.m.l.x $w.f.p.m.l.y $w.f.p.m.l.z -side top
+	pack $w.f.p.m.l -side left -expand 1 -fill x
+	frame $w.f.p.m.r
+	label $w.f.p.m.r.x -textvariable $this-xstr
+	label $w.f.p.m.r.y -textvariable $this-ystr
+	label $w.f.p.m.r.z -textvariable $this-zstr
+	pack $w.f.p.m.r.x $w.f.p.m.r.y $w.f.p.m.r.z -side top
+	pack $w.f.p.m.r -side left -expand 1 -fill x
+	pack $w.f.p.m -side top -fill x -expand 1
+	frame $w.f.p.b -relief sunken -bd 2
+	frame $w.f.p.b.l
+	frame $w.f.p.b.r
+	button $w.f.p.b.l.cp -text "Cycle+" -command "$this cyclePos"
+	button $w.f.p.b.l.cn -text "Cycle-" -command "$this cycleNeg"
+	button $w.f.p.b.l.res -text "Reset" -command "$this reset"
+	button $w.f.p.b.r.sxy -text "SwapXY" -command "$this swapXY"
+	button $w.f.p.b.r.syz -text "SwapYZ" -command "$this swapYZ"
+	button $w.f.p.b.r.sxz -text "SwapXZ" -command "$this swapXZ"
+	pack $w.f.p.b.l.cp $w.f.p.b.l.cn $w.f.p.b.l.res -side top -expand 1 -fill both
+	pack $w.f.p.b.r.sxy $w.f.p.b.r.syz $w.f.p.b.r.sxz -side top -expand 1 -fill both
+	pack $w.f.p.b.l $w.f.p.b.r -side left -expand 1 -fill both
+	pack $w.f.p.b -side bottom -fill both -expand 1
+	
 	global $this-scalex
 	global $this-scaley
 	global $this-scalez
@@ -150,13 +187,6 @@ itcl_class PSECommon_Matrix_BldTransform {
 	label $w.f.s.sz.l -text "Log ScaleZ: "
 	scale $w.f.s.sz.s -variable $this-scalez -orient horizontal \
 		-from -3.000 -to 3.000 -resolution .001 -showvalue true
-	global $this-flipx
-	global $this-flipy
-	global $this-flipz
-	frame $w.f.s.flip -relief groove -borderwidth 5
-	checkbutton $w.f.s.flip.x -variable $this-flipx -text "Flip X"
-	checkbutton $w.f.s.flip.y -variable $this-flipy -text "Flip Y"
-	checkbutton $w.f.s.flip.z -variable $this-flipz -text "Flip Z"
 	pack $w.f.s.g.l -side left
 	pack $w.f.s.g.s -side left -expand 1 -fill x
 	pack $w.f.s.sx.l -side left
@@ -165,10 +195,7 @@ itcl_class PSECommon_Matrix_BldTransform {
 	pack $w.f.s.sy.s -side left -expand 1 -fill x
 	pack $w.f.s.sz.l -side left
 	pack $w.f.s.sz.s -side left -expand 1 -fill x
-	pack $w.f.s.flip.x $w.f.s.flip.y $w.f.s.flip.z -padx 3 -fill x \
-		-expand 1
-	pack $w.f.s.g $w.f.s.sx $w.f.s.sy $w.f.s.sz $w.f.s.flip -side top \
-		-fill x -expand 1
+	pack $w.f.s.g $w.f.s.sx $w.f.s.sy $w.f.s.sz -side top -fill x -expand 1
 
 	global $this-shu
 	global $this-shv
@@ -194,6 +221,10 @@ itcl_class PSECommon_Matrix_BldTransform {
 	if {[set $this-lastxform] == "rotate"} {pack forget $w.f.r}
 	if {[set $this-lastxform] == "scale"} {pack forget $w.f.s}
 	if {[set $this-lastxform] == "shear"} {pack forget $w.f.sh}
+	if {[set $this-lastxform] == "permute"} {
+	    pack forget $w.f.p
+	    pack $w.f.t -side top -fill x -expand 1
+	}
 
 	set $this-lastxform $t
 	
@@ -216,6 +247,124 @@ itcl_class PSECommon_Matrix_BldTransform {
 	    pack $w.f.sh -side top -fill x -expand 1
 	    return
 	}
+	if {$t == "permute"} {
+	    pack forget $w.f.t
+	    pack $w.f.p -side top -fill x -expand 1
+	    return
+	}
     }
+
+    method valToStr { v } {
+	if {$v == 1} {
+	    return x+
+	}
+	if {$v == -1} {
+	    return x-
+	}
+	if {$v == 2} {
+	    return y+
+	}
+	if {$v == -2} {
+	    return y-
+	}
+	if {$v == 3} {
+	    return z+
+	}
+	return "z-"
+    }
+
+    method bldAllMapStr { } {
+	global $this-xmapTCL
+	global $this-ymapTCL
+	global $this-zmapTCL
+	global $this-xstr
+	global $this-ystr
+	global $this-zstr
+	
+	set xx [$this valToStr [set $this-xmapTCL]]
+	set yy [$this valToStr [set $this-ymapTCL]]
+	set zz [$this valToStr [set $this-zmapTCL]]
+	set $this-xstr "x <- $xx"
+	set $this-ystr "y <- $yy"
+	set $this-zstr "z <- $zz"
+    }
+
+    method flipx { } {
+	global $this-xmapTCL
+	set $this-xmapTCL [expr [set $this-xmapTCL] * -1]
+	$this bldAllMapStr
+    }
+    
+    method flipy { } {
+	global $this-ymapTCL
+	set $this-ymapTCL [expr [set $this-ymapTCL] * -1]
+	$this bldAllMapStr
+    }
+    
+    method flipz { } {
+	global $this-zmapTCL
+	set $this-zmapTCL [expr [set $this-zmapTCL] * -1]
+	$this bldAllMapStr
+    }
+
+    method cyclePos { } {
+	global $this-xmapTCL
+	global $this-ymapTCL
+	global $this-zmapTCL
+	set tmp [set $this-xmapTCL]
+	set $this-xmapTCL [set $this-ymapTCL]
+	set $this-ymapTCL [set $this-zmapTCL]
+	set $this-zmapTCL $tmp
+	$this bldAllMapStr
+    }
+
+    method cycleNeg { } {
+	global $this-xmapTCL
+	global $this-ymapTCL
+	global $this-zmapTCL
+	set tmp [set $this-zmapTCL]
+	set $this-zmapTCL [set $this-ymapTCL]
+	set $this-ymapTCL [set $this-xmapTCL]
+	set $this-xmapTCL $tmp
+	$this bldAllMapStr
+    }
+
+    method reset { } {
+	global $this-xmapTCL
+	global $this-ymapTCL
+	global $this-zmapTCL
+	set $this-xmapTCL 1
+	set $this-ymapTCL 2
+	set $this-zmapTCL 3
+	$this bldAllMapStr
+    }
+
+    method swapXY { } {
+	global $this-xmapTCL
+	global $this-ymapTCL
+	set tmp [set $this-xmapTCL]
+	set $this-xmapTCL [set $this-ymapTCL]
+	set $this-ymapTCL $tmp
+	$this bldAllMapStr
+    }
+
+    method swapXZ { } {
+	global $this-xmapTCL
+	global $this-zmapTCL
+	set tmp [set $this-xmapTCL]
+	set $this-xmapTCL [set $this-zmapTCL]
+	set $this-zmapTCL $tmp
+	$this bldAllMapStr
+    }
+
+    method swapYZ { } {
+	global $this-ymapTCL
+	global $this-zmapTCL
+	set tmp [set $this-ymapTCL]
+	set $this-ymapTCL [set $this-zmapTCL]
+	set $this-zmapTCL $tmp
+	$this bldAllMapStr
+    }
+
 }
 
