@@ -532,7 +532,7 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::integrateAcceleration",
 			    this, &SerialMPM::integrateAcceleration);
 
-  const MaterialSubset* mss = matls->getUnion();
+  //const MaterialSubset* mss = matls->getUnion();
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
