@@ -82,6 +82,9 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
 
     animate_       (context->subVar("animate")),
 
+    mergedata_(-1),
+    assumesvt_(-1),
+
     error_(false)
 {
   for( int ic=0; ic<MAX_DIMS; ic++ ) {
