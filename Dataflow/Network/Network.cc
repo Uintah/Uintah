@@ -103,7 +103,7 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
 
     Connection* conn=scinew Connection(m1, p1, m2, p2);
     ostringstream ids;
-    ids << m1->id << "_" << p1 << "_to_" << m2->id << "_p" << p2;
+    ids << m1->id << "_p" << p1 << "_to_" << m2->id << "_p" << p2;
     conn->id=ids.str();
     conn->connect();
     connections.push_back(conn);
@@ -123,7 +123,7 @@ int Network::disconnect(const string& connId)
     return 0;
   }
  
-  delete connections[i];	//connection destructor,tears down data channel
+  delete connections[i];
   connections.erase(connections.begin() + i);
   return 1;
 }
