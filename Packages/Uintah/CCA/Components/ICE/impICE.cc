@@ -646,14 +646,15 @@ void ICE::updatePressure(const ProcessorGroup*,
     
     setBC(press_CC, placeHolder, sp_vol_CC, 
          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv); 
-    
+    delete lv; 
+        
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
       ostringstream desc;
       desc << "BOT_updatePressure_patch_" << patch->getID();
       printData( 0, patch, 1,desc.str(), "imp_delP",      imp_delP); 
       printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
-    }  
+    }
   } // patch loop
 }
  
