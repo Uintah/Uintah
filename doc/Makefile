@@ -31,41 +31,18 @@ tarball : tar
 	-rm -f ${TARBALL}
 	gzip ${TAR}
 
+# Construct list of files to be included in the tar archive.  Edit
+# tarlist to make changes to this list.
+tarlist := ${shell ruby tarlist}
+
 # Build all docs and put them in a tar archive.
+root := ${shell cd ..; basename `pwd` }
 tar: products
 	@echo "Making a tar archive"
 	-rm -f SCIRunDocs.tar
-	cd ..; root=`pwd`; root=`basename $${root}`;\
-	cd ..; gnutar --exclude='*CVS*' --create --verbose \
-		--file=$${root}/doc/SCIRunDocs.tar \
-		$${root}/doc/index.html \
-		$${root}/doc/.htaccess \
-		$${root}/doc/Documentum/index.html \
-		$${root}/doc/Documentum/documentum.html \
-		$${root}/doc/Documentum/module-latex \
-		$${root}/doc/Documentum/module-xml \
-		$${root}/doc/Installation/index.html \
-                $${root}/doc/Installation/Guide/*.html \
-		$${root}/doc/User/index.html \
-		$${root}/doc/User/Guide/usersguide \
-		$${root}/doc/User/Guide/Figures \
-		$${root}/doc/User/Tutorial \
-		$${root}/doc/User/Guide/usersguide.ps.gz \
-		$${root}/doc/User/Guide/usersguide2.ps.gz \
-		$${root}/doc/Developer/index.html \
-                $${root}/doc/Developer/Guide/*.html \
-                $${root}/doc/Developer/Guide/dev/Figures \
-		$${root}/doc/Developer/Modules/*.html \
-		$${root}/doc/Developer/CodeViews/html \
-		$${root}/doc/FAQBook/*.html \
-                $${root}/doc/Utilities/HTML/*.css \
-                $${root}/doc/Utilities/HTML/*.js \
-		$${root}/doc/Utilities/Figures \
-		$${root}/src/Dataflow/XML/*.html \
-		$${root}/src/Dataflow/Modules/*/doc \
-		$${root}/src/Packages/*/Dataflow/XML/*.html \
-		$${root}/src/Packages/*/Dataflow/TeX/*/*/* \
-		$${root}/src/Packages/*/Dataflow/TeX/*/figs
+	cd ../..; gnutar --exclude='*CVS*' --exclude='auto' \
+		--create --verbose --file=${root}/doc/SCIRunDocs.tar \
+		${tarlist}
 
 # Build all docs.
 products:
