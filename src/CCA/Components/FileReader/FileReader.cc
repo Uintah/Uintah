@@ -39,9 +39,9 @@
 using namespace std;
 using namespace SCIRun;
 
-extern "C" gov::cca::Component::pointer make_SCIRun_FileReader()
+extern "C" sci::cca::Component::pointer make_SCIRun_FileReader()
 {
-  return gov::cca::Component::pointer(new FileReader());
+  return sci::cca::Component::pointer(new FileReader());
 }
 
 
@@ -56,16 +56,16 @@ FileReader::~FileReader()
   cerr << "called ~FileReader()\n";
 }
 
-void FileReader::setServices(const gov::cca::Services::pointer& svc)
+void FileReader::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   //register provides ports here ...  
 
-  gov::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   myUIPort::pointer uip(&uiPort);
   myPDEDescriptionPort::pointer pdep(&pdePort);
-  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
-  svc->addProvidesPort(pdep,"pde","gov.cca.PDEDescriptionPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(pdep,"pde","sci.cca.ports.PDEDescriptionPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
@@ -129,22 +129,22 @@ int myUIPort::ui()
 }
 
 
-SIDL::array1<double> myPDEDescriptionPort::getNodes() 
+SSIDL::array1<double> myPDEDescriptionPort::getNodes() 
 {
   return com->nodes;
 }
 
-SIDL::array1<int> myPDEDescriptionPort::getBoundaries() 
+SSIDL::array1<int> myPDEDescriptionPort::getBoundaries() 
 {
   return com->boundaries;
 }
  
-SIDL::array1<int> myPDEDescriptionPort::getDirichletNodes()
+SSIDL::array1<int> myPDEDescriptionPort::getDirichletNodes()
 {
   return com->dirichletNodes;
 }
 
-SIDL::array1<double> myPDEDescriptionPort::getDirichletValues()
+SSIDL::array1<double> myPDEDescriptionPort::getDirichletValues()
 {
   return com->dirichletValues;
 }
