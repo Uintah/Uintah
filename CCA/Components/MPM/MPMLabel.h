@@ -24,77 +24,43 @@ using std::vector;
       const VarLabel* partCountLabel;
       
       //non PermanentParticleState
-      const VarLabel* pDeformationMeasureLabel;
-      const VarLabel* pConnectivityLabel;
-      const VarLabel* pCrackEffectiveLabel;
-      const VarLabel* pContactForceLabel;
-
-      const VarLabel* pXXLabel;
-      
-      const VarLabel* pStressLabel_afterFracture;
-      const VarLabel* pStressLabel_afterStrainRate;
-
-      const VarLabel* pVelocityLabel_afterFracture;
-      const VarLabel* pVelocityLabel_afterUpdate;
-      
-      const VarLabel* pStrainEnergyLabel;
-      const VarLabel* pRotationRateLabel;
-
+      const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pPressureLabel;
+      const VarLabel* pVolumeDeformedLabel;
       
       //PermanentParticleState
-      const VarLabel* pStressLabel;
-      const VarLabel* pCrackRadiusLabel;
-      const VarLabel* pVolumeLabel;
-      const VarLabel* pVolumeDeformedLabel;
-      const VarLabel* pMassLabel;
-      const VarLabel* pVelocityLabel;
-      const VarLabel* pExternalForceLabel;
-      const VarLabel* pXLabel;
-      const VarLabel* pSurfLabel;
-      const VarLabel* pIsBrokenLabel; //for fracture
-      const VarLabel* pCrackNormalLabel; //for fracture
-      const VarLabel* pTipNormalLabel; //for fracture
-      const VarLabel* pExtensionDirectionLabel; //for fracture
-      const VarLabel* pToughnessLabel; //for fracture
-      const VarLabel* pEnergyReleaseRateLabel; //for fracture
-      const VarLabel* pCrackSurfacePressureLabel; //for explosive fracture
-      const VarLabel* pDisplacementLabel; //for fracture
-      const VarLabel* pTemperatureLabel; //for heat conduction
-      const VarLabel* pTemperatureGradientLabel; //for heat conduction
-      const VarLabel* pExternalHeatRateLabel; //for heat conduction
-      const VarLabel* pParticleIDLabel;
-      const VarLabel* pIsIgnitedLabel; //for burn models
-      const VarLabel* pMassRateLabel; //for burn models
-
+      const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pDeformationMeasureLabel_preReloc;
+      const VarLabel* pStressLabel;
       const VarLabel* pStressLabel_preReloc;
+      const VarLabel* pCrackRadiusLabel;
       const VarLabel* pCrackRadiusLabel_preReloc;
+      const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeLabel_preReloc;
+      const VarLabel* pMassLabel;
       const VarLabel* pMassLabel_preReloc;
+      const VarLabel* pVelocityLabel;
       const VarLabel* pVelocityLabel_preReloc;
+      const VarLabel* pExternalForceLabel;
       const VarLabel* pExternalForceLabel_preReloc;
+      const VarLabel* pXLabel;
       const VarLabel* pXLabel_preReloc;
+      const VarLabel* pSurfLabel;
       const VarLabel* pSurfLabel_preReloc;
-      const VarLabel* pIsBrokenLabel_preReloc; //for fracture
-      const VarLabel* pCrackNormalLabel_preReloc; //for fracture
-      const VarLabel* pTipNormalLabel_preReloc; //for fracture
-      const VarLabel* pExtensionDirectionLabel_preReloc; //for fracture
-      const VarLabel* pToughnessLabel_preReloc; //for fracture
-      const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
-      const VarLabel* pCrackSurfacePressureLabel_preReloc; //for explosive fracture
-      const VarLabel* pDisplacementLabel_preReloc; //for fracture
+      const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
+      const VarLabel* pExternalHeatRateLabel; //for heat conduction
       const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
+      const VarLabel* pParticleIDLabel;
       const VarLabel* pParticleIDLabel_preReloc;
-      const VarLabel* pIsIgnitedLabel_preReloc; //for burn models
-      const VarLabel* pMassRateLabel_preReloc; //for burn models
+      const VarLabel* pSizeLabel;
+      const VarLabel* pSizeLabel_preReloc;
 
       const VarLabel* pTang1Label;
-      const VarLabel* pTang2Label;
-      const VarLabel* pNormLabel;
       const VarLabel* pTang1Label_preReloc;
+      const VarLabel* pTang2Label;
       const VarLabel* pTang2Label_preReloc;
+      const VarLabel* pNormLabel;
       const VarLabel* pNormLabel_preReloc;
       
       const VarLabel* gMassLabel;

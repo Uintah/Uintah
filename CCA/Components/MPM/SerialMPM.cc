@@ -5,12 +5,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -39,7 +37,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Util/NotFinished.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/NormalFracture.h>
 
 #include <iostream>
 #include <fstream>
@@ -48,6 +45,8 @@ using namespace Uintah;
 using namespace SCIRun;
 
 using namespace std;
+
+#define MAX_BASIS 27
 
 /*`====================*/ 
 //#define DOING    
@@ -62,7 +61,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
 {
   lb = scinew MPMLabel();
   d_nextOutputTime=0.;
-  d_fracture = false;
   d_SMALL_NUM_MPM=1e-200;
   d_with_ice    = false;
   d_with_arches = false;
@@ -83,9 +81,13 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 {
    d_sharedState = sharedState;
 
+   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
+   if(!mpm_soln_ps->get("nodes8or27", d_8or27))
+      d_8or27 = 8;
+
    MPMPhysicalBCFactory::create(prob_spec);
 
-   contactModel = ContactFactory::create(prob_spec,sharedState, lb);
+   contactModel = ContactFactory::create(prob_spec,sharedState, lb, d_8or27);
    thermalContactModel =
 		 ThermalContactFactory::create(prob_spec, sharedState, lb);
 
@@ -101,13 +103,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps, lb);
+     MPMMaterial *mat = scinew MPMMaterial(ps, lb, d_8or27);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }
 
    cout << "Number of materials: " << d_sharedState->getNumMatls() << endl;
-
 
    // Load up all the VarLabels that will be used in each of the
    // physical models
@@ -121,24 +122,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
 					lb->pExternalForceLabel_preReloc);
 
-     if(mpm_matl->getFractureModel()){
-       d_fracture = true;
-       lb->registerPermanentParticleState(m,lb->pCrackNormalLabel,
-			lb->pCrackNormalLabel_preReloc); 
-       lb->registerPermanentParticleState(m,lb->pTipNormalLabel,
-			lb->pTipNormalLabel_preReloc);
-       lb->registerPermanentParticleState(m,lb->pExtensionDirectionLabel,
-			lb->pExtensionDirectionLabel_preReloc);
-       lb->registerPermanentParticleState(m,lb->pToughnessLabel,
-			lb->pToughnessLabel_preReloc); 
-       lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
-			lb->pIsBrokenLabel_preReloc); 
-       lb->registerPermanentParticleState(m,lb->pCrackSurfacePressureLabel,
-			lb->pCrackSurfacePressureLabel_preReloc); 
-       lb->registerPermanentParticleState(m,lb->pDisplacementLabel,
-			lb->pDisplacementLabel_preReloc); 
-     }
-     
      lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
 					  lb->pTemperatureLabel_preReloc); 
        //lb->registerPermanentParticleState(m,lb->pExternalHeatRateLabel,
@@ -150,6 +133,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 					lb->pMassLabel_preReloc);
      lb->registerPermanentParticleState(m,lb->pVolumeLabel,
 					lb->pVolumeLabel_preReloc);
+     if(d_8or27==27){
+       lb->registerPermanentParticleState(m,lb->pSizeLabel,
+                                            lb->pSizeLabel_preReloc);
+     }
      
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
 					lb->d_particleState_preReloc[m]);
@@ -171,16 +158,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
+  t->computes(lb->pSizeLabel);
   t->computes(lb->doMechLabel);
-  if(d_fracture){
-    t->computes(lb->pIsBrokenLabel);
-    t->computes(lb->pCrackNormalLabel);
-    t->computes(lb->pTipNormalLabel);
-    t->computes(lb->pExtensionDirectionLabel);
-    t->computes(lb->pToughnessLabel);
-    t->computes(lb->pCrackSurfacePressureLabel);
-    t->computes(lb->pDisplacementLabel);
-  }
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel);
 
@@ -205,12 +184,6 @@ void SerialMPM::scheduleTimeAdvance(const LevelP&         level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-  if(d_fracture) {
-    scheduleSetPositions(                 sched, patches, matls);
-    scheduleComputeBoundaryContact(       sched, patches, matls);
-    scheduleComputeConnectivity(          sched, patches, matls);
-  }
-
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
@@ -225,81 +198,10 @@ void SerialMPM::scheduleTimeAdvance(const LevelP&         level,
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
-  if(d_fracture) {
-    scheduleComputeFracture(              sched, patches, matls);
-    scheduleComputeCrackExtension(        sched, patches, matls);
-  }
-  scheduleCarryForwardVariables(          sched, patches, matls);
-
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
 				    lb->d_particleState_preReloc,
 				    lb->pXLabel, lb->d_particleState,
 				    lb->pParticleIDLabel, matls);
-}
-
-void SerialMPM::scheduleSetPositions(SchedulerP& sched,
-				     const PatchSet* patches,
-				     const MaterialSet* matls)
-{
-  Task* t = scinew Task( "SerialMPM::setPositions",
-			  this,&SerialMPM::setPositions);
-  t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
-  t->computes(lb->pXXLabel);
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleComputeBoundaryContact(SchedulerP& sched,
-					       const PatchSet* patches,
-					       const MaterialSet* matls)
-{
- /*
-  * computeBoundaryContact
-  *   in(P.X, P.VOLUME, P.NEWISBROKEN, P.NEWCRACKSURFACENORMAL)
-  *   operation(computeBoundaryContact)
-  * out(P.STRESS) */
-
-  Task* t = scinew Task( "SerialMPM::computeBoundaryContact",
-			  this,&SerialMPM::computeBoundaryContact);
-
-  t->requires(Task::OldDW, lb->pXLabel,           Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,      Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pIsBrokenLabel,    Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormalLabel, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVelocityLabel,    Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pMassLabel,        Ghost::AroundCells, 1);
-
-  t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
-
-  t->computes(lb->pContactForceLabel);
-  t->computes(lb->pCrackEffectiveLabel);
-
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
-					    const PatchSet* patches,
-					    const MaterialSet* matls)
-{
- /*
-  * computeConnectivity
-  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
-  *   operation(compute the visibility information of particles to the
-  *   related nodes)
-  * out(P.VISIBILITY) */
-
-  Task* t = scinew Task( "SerialMPM::computeConnectivity",
-			  this,&SerialMPM::computeConnectivity);
-
-  t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVolumeLabel, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormalLabel, Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, lb->pCrackEffectiveLabel, Ghost::AroundCells, 1);
-
-  t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
-
-  t->computes(lb->pConnectivityLabel);
-
-  sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
@@ -322,6 +224,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pExternalForceLabel,Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pTemperatureLabel,  Ghost::AroundNodes,1);
+  if(d_8or27==27){
+   t->requires(Task::OldDW, lb->pSizeLabel,         Ghost::AroundNodes,1);
+  }
 //    t->requires(Task::OldDW, lb->pExternalHeatRateLabel,
 //						Ghost::AroundNodes,1);
 
@@ -337,16 +242,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
 
-  if(d_fracture) {
-    t->requires(Task::NewDW,lb->pContactForceLabel, Ghost::AroundNodes, 1 );
-    t->requires(Task::NewDW, lb->pConnectivityLabel, Ghost::AroundNodes, 1 );
-
-    //for explosive fracture
-    t->requires(Task::OldDW, lb->pCrackNormalLabel,  Ghost::AroundNodes, 1 );
-    t->requires(Task::OldDW, lb->pCrackSurfacePressureLabel,
-      Ghost::AroundNodes, 1 );
-  }
-     
   t->computes(lb->TotalMassLabel);
   sched->addTask(t, patches, matls);
 }
@@ -420,17 +315,16 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
   t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(),
 						Task::OutOfDomain, Ghost::None);
-  t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->pStressLabel_preReloc,      Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,                 Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pXLabel,                    Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pMassLabel,                 Ghost::AroundNodes,1);
+  if(d_8or27==27){
+   t->requires(Task::OldDW, lb->pSizeLabel,               Ghost::AroundNodes,1);
+  }
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          Ghost::AroundNodes,1);
-  }
-
-  if(d_fracture) {
-    t->requires(Task::NewDW, lb->pConnectivityLabel, Ghost::AroundNodes, 1 );
   }
 
   t->computes(lb->gInternalForceLabel);
@@ -454,12 +348,11 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
 			this, &SerialMPM::computeInternalHeatRate);
 
   t->requires(Task::OldDW, lb->pXLabel,              Ghost::AroundNodes, 1);
+  if(d_8or27==27){
+   t->requires(Task::OldDW, lb->pSizeLabel,          Ghost::AroundNodes,1);
+  }
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel, Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gTemperatureLabel,    Ghost::AroundCells, 2);
-
-  if(d_fracture) {
-    t->requires(Task::NewDW,lb->pConnectivityLabel,Ghost::AroundNodes,1);
-  }
 
   t->computes(lb->gInternalHeatRateLabel);
   sched->addTask(t, patches, matls);
@@ -640,6 +533,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
+  if(d_8or27==27){
+   t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
+  }
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
 
   if(d_with_ice){
@@ -647,131 +543,20 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->requires(Task::NewDW, lb->massBurnFractionLabel,   Ghost::AroundCells,1);
   }
 
-  if(d_fracture) {
-    t->requires(Task::NewDW, lb->pConnectivityLabel,      Ghost::None);
-    t->requires(Task::OldDW, lb->pDisplacementLabel,      Ghost::None);
-    t->computes(lb->pDisplacementLabel_preReloc);
-  }
-
-  t->computes(lb->pVelocityLabel_afterUpdate);
+  t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
   t->computes(lb->pExternalForceLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
+  if(d_8or27==27){
+    t->computes(lb->pSizeLabel_preReloc);
+  }
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
-					const PatchSet* patches,
-					const MaterialSet* matls)
-{
- /*
-  * computeFracture
-  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
-  *   operation(compute the visibility information of particles to the
-  *   related nodes)
-  * out(P.VISIBILITY) */
-
-  Task* t = scinew Task( "SerialMPM::computeFracture",
-			  this,&SerialMPM::computeFracture);
-
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-
-  t->requires(Task::OldDW, lb->pXLabel,                   Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pTipNormalLabel,           Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pExtensionDirectionLabel,  Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->pStressLabel_afterStrainRate,
-    Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pToughnessLabel,           Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->pStrainEnergyLabel,        Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pMassLabel,                Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pIsBrokenLabel,            Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pCrackNormalLabel,         Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pDisplacementLabel,        Ghost::AroundCells,1);
-
-  t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
-  t->requires(Task::NewDW, lb->pRotationRateLabel,          Ghost::None);
-  t->requires(Task::OldDW, lb->pCrackSurfacePressureLabel,  Ghost::None);
-  t->requires(Task::NewDW, lb->pVelocityLabel_afterUpdate,  Ghost::None);
-
-  t->computes(lb->pToughnessLabel_preReloc);
-  t->computes(lb->pIsBrokenLabel_preReloc);
-  t->computes(lb->pCrackNormalLabel_preReloc);
-  t->computes(lb->pStressLabel_afterFracture);
-  t->computes(lb->pCrackSurfacePressureLabel_preReloc);
-  t->computes(lb->pVelocityLabel_afterFracture);
-
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleComputeCrackExtension(SchedulerP& sched,
-					const PatchSet* patches,
-					const MaterialSet* matls)
-{
- /*
-  * scheduleComputeCrackExtension
-  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
-  *   operation(compute the visibility information of particles to the
-  *   related nodes)
-  * out(P.VISIBILITY) */
-
-  Task* t = scinew Task( "SerialMPM::computeCrackExtension",
-			  this,&SerialMPM::computeCrackExtension);
-
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-
-  t->requires(Task::OldDW, lb->pXLabel,                   Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->pIsBrokenLabel_preReloc,   Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->pCrackNormalLabel_preReloc,Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pExtensionDirectionLabel,  Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::AroundCells,1);
-
-  t->requires(Task::NewDW, lb->pXXLabel,                  Ghost::None);
-  t->requires(Task::OldDW, lb->pTipNormalLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->pRotationRateLabel,        Ghost::None);
-
-  t->computes(lb->pTipNormalLabel_preReloc);
-  t->computes(lb->pExtensionDirectionLabel_preReloc);
-  
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleCarryForwardVariables(SchedulerP& sched,
-					      const PatchSet* patches,
-					      const MaterialSet* matls)
-{
-  /* carryForwardVariables
-   * in(p.x,p.stressBeforeFractureRelease,p.isNewlyBroken,
-   *   p.crackSurfaceNormal)
-   *   operation(check the stress on each particle to see
-   *   if the microcrack will initiate and/or grow)
-   * out(p.stress) */
-
-  Task* t = scinew Task("SerialMPM::carryForwardVariables",
-		         this,&SerialMPM::carryForwardVariables);
-
-  if(d_fracture) {
-    t->requires(Task::NewDW, lb->pStressLabel_afterFracture,
-		Ghost::None);
-    t->requires(Task::NewDW, lb->pVelocityLabel_afterFracture,
-		Ghost::None);
-  }
-  else {
-    t->requires(Task::NewDW, lb->pStressLabel_afterStrainRate,
-		Ghost::None);			 
-    t->requires(Task::NewDW, lb->pVelocityLabel_afterUpdate,
-		Ghost::None);
-  }
-  
-  t->computes(lb->pStressLabel_preReloc);
-  t->computes(lb->pVelocityLabel_preReloc);
   sched->addTask(t, patches, matls);
 }
 
@@ -821,11 +606,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
-       if(mpm_matl->getFractureModel()) {
-	 mpm_matl->getFractureModel()->initializeFractureModelData( patch,
-						mpm_matl, new_dw);
-       }       
-
        int dwindex = mpm_matl->getDWIndex();
 
        contactModel->initializeContact(patch,dwindex,new_dw);
@@ -846,25 +626,6 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 					      DataWarehouse*,
 					      DataWarehouse*)
 {
-}
-
-void SerialMPM::computeConnectivity(
-                   const ProcessorGroup*,
-		   const PatchSubset* patches,
-		   const MaterialSubset*,
-		   DataWarehouse* old_dw,
-		   DataWarehouse* new_dw)
-{
-#ifdef DOING
-  cout <<"computeConnectivity " <<"\t\t\t\t MPM"<< endl;
-#endif
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++) {
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    mpm_matl->getFractureModel()->computeConnectivity(
-	  patches, mpm_matl, old_dw, new_dw);
-  }
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
@@ -895,7 +656,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
-      constParticleVariable<Vector> pvelocity, pexternalforce;
+      constParticleVariable<Vector> pvelocity, pexternalforce,psize;
       ParticleVariable<double> pexternalheatrate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
@@ -908,6 +669,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
+      if(d_8or27==27){
+        old_dw->get(psize,        lb->pSizeLabel,          pset);
+      }
 
       new_dw->allocate(pexternalheatrate, lb->pExternalHeatRateLabel, pset);
 
@@ -961,76 +725,26 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       }
 #endif
+      IntVector ni[MAX_BASIS];
+      double S[MAX_BASIS];
 
-      if(mpm_matl->getFractureModel()) {  // Do interpolation with fracture
-
-        constParticleVariable<int> pConnectivity;
-        constParticleVariable<Vector> pContactForce;
-        constParticleVariable<Vector> pCrackNormal;
-	constParticleVariable<double> pCrackSurfacePressure;
-
-        new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
-        new_dw->get(pContactForce, lb->pContactForceLabel, pset);
-	
-	//for explosive fracture
-	old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset);
-	old_dw->get(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel,pset);
-
-
-        for(ParticleSubset::iterator iter = pset->begin();
-		iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-
-	  // Get the node indices that surround the cell
-	  IntVector ni[8];
-	  double S[8];
-
-  	  patch->findCellAndWeights(px[idx], ni, S);
-
-          Connectivity connectivity(pConnectivity[idx]);
-  	  int conn[8];
-	  connectivity.getInfo(conn);
-      	  Connectivity::modifyWeights(conn,S,Connectivity::connect);
-
-          for(int k = 0; k < 8; k++) {
-	    if( patch->containsNode(ni[k]) ) {
-	      if( conn[k] ) {
-	        gmassglobal[ni[k]]    += pmass[idx]          * S[k];
-	        gmass[ni[k]]          += pmass[idx]          * S[k];
-	        gvolume[ni[k]]        += pvolume[idx]        * S[k];
-	        gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-	        gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
-                gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-
-	        totalmass += pmass[idx] * S[k];
-
-	        double area = M_PI * pow(0.75/M_PI*pvolume[idx],0.6667);
-	        gexternalforce[ni[k]] += 
-		  ( pexternalforce[idx] + pContactForce[idx] - 
-		    pCrackNormal[idx] * (pCrackSurfacePressure[idx] * area)
-		  ) * S[k];
-	        gvelocity[ni[k]]     += pvelocity[idx] *pmass[idx]*S[k];
-	      }
-	    }
-	  }
-        }
-      }
-      else {  // Do interpolation without fracture
-        for(ParticleSubset::iterator iter = pset->begin();
+      for(ParticleSubset::iterator iter = pset->begin();
 						iter != pset->end(); iter++){
 	  particleIndex idx = *iter;
 
 	  // Get the node indices that surround the cell
-	  IntVector ni[8];
-	  double S[8];
-
-  	  patch->findCellAndWeights(px[idx], ni, S);
+          if(d_8or27==8){
+  	    patch->findCellAndWeights(px[idx], ni, S);
+          }
+          else if(d_8or27==27){
+  	    patch->findCellAndWeights27(px[idx], ni, S);
+          }
 
           total_mom += pvelocity[idx]*pmass[idx];
 
 	  // Add each particles contribution to the local mass & velocity 
 	  // Must use the node indices
-	  for(int k = 0; k < 8; k++) {
+	  for(int k = 0; k < d_8or27; k++) {
 	    if(patch->containsNode(ni[k])) {
 	       gmassglobal[ni[k]]    += pmass[idx]          * S[k];
 	       gmass[ni[k]]          += pmass[idx]          * S[k];
@@ -1045,7 +759,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    }
 	  }
         }
-      }
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
 	gvelocity[*iter] /= gmass[*iter];
@@ -1125,39 +838,6 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
    }
 }
 
-void SerialMPM::setPositions( const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset*,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing setPositions " << patch->getID()
-         <<"\t\t\t\t MPM"<< endl;
-  #endif
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      int matlindex = mpm_matl->getDWIndex();
-        
-      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-
-      constParticleVariable<Point> pX;
-      ParticleVariable<Point> pXX;
-    
-      old_dw->get(pX, lb->pXLabel, pset);
-      new_dw->allocate(pXX, lb->pXXLabel, pset);
-    
-      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
-        pXX[*iter] = pX[*iter];
-      }
-
-      new_dw->put(pXX, lb->pXXLabel);
-    }
-  }
-}
-	    
 void SerialMPM::computeInternalForce(const ProcessorGroup*,
 				     const PatchSubset* patches,
 				     const MaterialSubset* ,
@@ -1184,7 +864,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     double integralArea = 0.;
 
     NCVariable<Matrix3>       gstressglobal;
-    constNCVariable<double>        gmassglobal;
+    constNCVariable<double>   gmassglobal;
     new_dw->get(gmassglobal,  lb->gMassLabel,
 		d_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
     new_dw->allocate(gstressglobal,lb->gStressForSavingLabel, 
@@ -1197,26 +877,28 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       // and the constitutive model
       constParticleVariable<Point>   px;
       constParticleVariable<double>  pvol, pmass;
+      constParticleVariable<double>  p_pressure;
       constParticleVariable<Matrix3> pstress;
+      constParticleVariable<Vector> psize;
       NCVariable<Vector>        internalforce;
       NCVariable<Matrix3>       gstress;
-      constNCVariable<double>        gmass;
-
-      constParticleVariable<double>  p_pressure;
+      constNCVariable<double>   gmass;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
 					       Ghost::AroundNodes, 1,
 					       lb->pXLabel);
 
-      old_dw->get(px,      lb->pXLabel, pset);
-      old_dw->get(pmass,   lb->pMassLabel, pset);
-      new_dw->get(pvol,    lb->pVolumeDeformedLabel, pset);
-      new_dw->get(pstress, lb->pStressLabel_afterStrainRate, pset);
+      old_dw->get(px,      lb->pXLabel,                      pset);
+      old_dw->get(pmass,   lb->pMassLabel,                   pset);
+      new_dw->get(pvol,    lb->pVolumeDeformedLabel,         pset);
+      new_dw->get(pstress, lb->pStressLabel_preReloc,        pset);
+      if(d_8or27==27){
+        old_dw->get(psize, lb->pSizeLabel,                   pset);
+      }
       new_dw->get(gmass,   lb->gMassLabel, matlindex, patch, Ghost::None, 0);
 
-      new_dw->allocate(gstress,lb->gStressForSavingLabel, matlindex, patch);
-      new_dw->allocate(internalforce, lb->gInternalForceLabel,
-						matlindex, patch);
+      new_dw->allocate(gstress,      lb->gStressForSavingLabel,matlindex,patch);
+      new_dw->allocate(internalforce,lb->gInternalForceLabel,  matlindex,patch);
 
       if(d_with_ice){
         new_dw->get(p_pressure,lb->pPressureLabel, pset);
@@ -1232,58 +914,23 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       }
 
       internalforce.initialize(Vector(0,0,0));
+      IntVector ni[MAX_BASIS];
+      double S[MAX_BASIS];
+      Vector d_S[MAX_BASIS];
 
-      if(mpm_matl->getFractureModel()) {
-        constParticleVariable<int>    pConnectivity;
-        new_dw->get(pConnectivity,  lb->pConnectivityLabel,  pset);
-
-        for(ParticleSubset::iterator iter = pset->begin();
-		iter != pset->end(); iter++){
-           particleIndex idx = *iter;
-  
-           // Get the node indices that surround the cell
-           IntVector ni[8];
-
-           Vector d_S[8];
-	   double S[8];
-
-           patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-
-           Connectivity connectivity(pConnectivity[idx]);
-  	   int conn[8];
-	   connectivity.getInfo(conn);
-	 
-           Connectivity::modifyShapeDerivatives(conn,d_S,Connectivity::connect);
-      	   Connectivity::modifyWeights(conn,S,Connectivity::connect);
-
-           for(int k = 0; k < 8; k++) {
-	     if( patch->containsNode(ni[k]) ) {
-	       if( conn[k] ) {
-                 gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
-                 gstressglobal[ni[k]] += pstress[idx] * pmass[idx]*S[k];
-	         Vector div(d_S[k].x()*oodx[0],
-	                    d_S[k].y()*oodx[1],
-			    d_S[k].z()*oodx[2]);
-	         internalforce[ni[k]] -=
-		     (div * (pstress[idx] - Id*p_pressure[idx]) * pvol[idx]);
-	       }
-	     }
-	   }
-        }
-      }
-      else {
-        for(ParticleSubset::iterator iter = pset->begin();
+      for(ParticleSubset::iterator iter = pset->begin();
 						iter != pset->end(); iter++){
           particleIndex idx = *iter;
   
           // Get the node indices that surround the cell
-          IntVector ni[8];
-          Vector d_S[8];
-          double S[8];
+           if(d_8or27==8){
+             patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
+           }
+           else if(d_8or27==27){
+             patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S);
+           }
 
-          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-
-          for (int k = 0; k < 8; k++){
+          for (int k = 0; k < d_8or27; k++){
 	    if(patch->containsNode(ni[k])){
 	       Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
@@ -1294,7 +941,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	     }
           }
       }
-    }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         gstress[*iter] /= gmass[*iter];
@@ -1383,8 +1029,9 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       
       constParticleVariable<Point>  px;
       constParticleVariable<double> pvol;
+      constParticleVariable<Vector> psize;
       ParticleVariable<Vector> pTemperatureGradient;
-      constNCVariable<double>       gTemperature;
+      constNCVariable<double>  gTemperature;
       NCVariable<double>       internalHeatRate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
@@ -1393,9 +1040,12 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 
       old_dw->get(px,           lb->pXLabel,              pset);
       new_dw->get(pvol,         lb->pVolumeDeformedLabel, pset);
+      if(d_8or27==27){
+        old_dw->get(psize,      lb->pSizeLabel,           pset);
+      }
+
       new_dw->get(gTemperature, lb->gTemperatureLabel,    matlindex, patch,
 						Ghost::AroundCells, 2);
-
       new_dw->allocate(internalHeatRate, lb->gInternalHeatRateLabel,
 			matlindex, patch);
       new_dw->allocate(pTemperatureGradient,lb->pTemperatureGradientLabel,pset);
@@ -1403,18 +1053,23 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       internalHeatRate.initialize(0.);
 
       // First compute the temperature gradient at each particle
+      IntVector ni[MAX_BASIS];
+      Vector d_S[MAX_BASIS];
+
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
          particleIndex idx = *iter;
 
          // Get the node indices that surround the cell
-         IntVector ni[8];
-         Vector d_S[8];
-
-         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+         if(d_8or27==8){
+            patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+         }
+         else if(d_8or27==27){
+            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+         }
 
 	 pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
-         for (int k = 0; k < 8; k++){
+         for (int k = 0; k < d_8or27; k++){
              for (int j = 0; j<3; j++) {
                pTemperatureGradient[idx](j) += 
                     gTemperature[ni[k]] * d_S[k](j) * oodx[j];
@@ -1428,11 +1083,14 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
          particleIndex idx = *iter;
   
          // Get the node indices that surround the cell
-         IntVector ni[8];
-         Vector d_S[8];
-         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+         if(d_8or27==8){
+            patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+         }
+         else if(d_8or27==27){
+            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+         }
 
-         for (int k = 0; k < 8; k++){
+         for (int k = 0; k < d_8or27; k++){
 	   if(patch->containsNode(ni[k])){
              Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
@@ -1868,11 +1526,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew;
-      constParticleVariable<Vector> pvelocity, pexternalForce;
-      ParticleVariable<Vector> pvelocitynew, pexternalForceNew;
+      constParticleVariable<Vector> pvelocity, pexternalForce,psize;
+      ParticleVariable<Vector> pvelocitynew, pexternalForceNew,psizeNew;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       ParticleVariable<double> pmassNew,pvolumeNew,pTemperatureNew;
-      //ParticleVariable<double> pToughness;
+      constParticleVariable<long64> pids;
+      ParticleVariable<long64> pids_new;
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
@@ -1892,13 +1551,21 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pexternalForce,        lb->pExternalForceLabel,        pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,          pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,             pset);
+      old_dw->get(pids, lb->pParticleIDLabel, pset);
       new_dw->allocate(pTemperatureNew,  lb->pTemperatureLabel_preReloc, pset);
-      new_dw->allocate(pvelocitynew,     lb->pVelocityLabel_afterUpdate, pset);
+      new_dw->allocate(pvelocitynew,     lb->pVelocityLabel_preReloc,    pset);
       new_dw->allocate(pxnew,            lb->pXLabel_preReloc,           pset);
       new_dw->allocate(pmassNew,         lb->pMassLabel_preReloc,        pset);
       new_dw->allocate(pvolumeNew,       lb->pVolumeLabel_preReloc,      pset);
       new_dw->allocate(pexternalForceNew,lb->pExternalForceLabel_preReloc,pset);
+      new_dw->allocate(pids_new,         lb->pParticleIDLabel_preReloc,  pset);
+      pids_new.copyData(pids);
       pexternalForceNew.copyData(pexternalForce);
+      if(d_8or27==27){
+        old_dw->get(psize,               lb->pSizeLabel,                 pset);
+        new_dw->allocate(psizeNew,       lb->pSizeLabel_preReloc,        pset);
+        psizeNew.copyData(psize);
+      }
 
       new_dw->get(gvelocity_star,     lb->gVelocityStarLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
@@ -1935,86 +1602,21 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
 
-      IntVector ni[8];
+      IntVector ni[MAX_BASIS];
+      double S[MAX_BASIS];
+      Vector d_S[MAX_BASIS];
 
-    
-      if(mpm_matl->getFractureModel()) {
-        constParticleVariable<int> pConnectivity;
-        new_dw->get(pConnectivity,  lb->pConnectivityLabel,  pset);
-	
-	constParticleVariable<Vector> pDisplacement;
-	ParticleVariable<Vector> pDisplacement_new;
-	old_dw->get(pDisplacement, lb->pDisplacementLabel,  pset);
-        new_dw->allocate(pDisplacement_new,lb->pDisplacementLabel_preReloc,
-			 pset);
-
-
-        for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();
-	    iter++){
+      for(ParticleSubset::iterator iter = pset->begin();
+                                                  iter != pset->end(); iter++){
 	  particleIndex idx = *iter;
-
-          double S[8];
-
-          patch->findCellAndWeights(px[idx], ni, S);
-
-          Connectivity connectivity(pConnectivity[idx]);
-  	  int conn[8];
-	  connectivity.getInfo(conn);
-      	  Connectivity::modifyWeights(conn,S,Connectivity::connect);
-
-          double tempRate = 0;
-          // Accumulate the contribution from each surrounding vertex
-          for(int k = 0; k < 8; k++) {
-	     if( conn[k] ) {
-                tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
-			     frictionalTempRate[ni[k]])     * S[k];
-             }
-	  }
-	  
-          vel = Vector(0.0,0.0,0.0);
-          acc = Vector(0.0,0.0,0.0);
-          for(int k = 0; k < 8; k++) {
-	     if( conn[k] ) {
-	        vel += gvelocity_star[ni[k]]  * S[k];
-   	        acc += gacceleration[ni[k]]   * S[k];
-             }
-	  }
-	  
-          // Update the particle's position and velocity
-          pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-	
-	  int constraint = mpm_matl->getFractureModel()->getConstraint();
-          if( constraint > 0) {
-	    vel[constraint] = 0.;
-	    acc[constraint] = 0.;
-	  }
-	  
-	  pxnew[idx]        = px[idx]        + vel * delT;
-          pvelocitynew[idx] = pvelocity[idx] + acc * delT;
-
-	  pmassNew[idx]   = pmass[idx];
-          pvolumeNew[idx] = pvolume[idx];
-
-          ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	  CMV += pvelocitynew[idx]*pmass[idx];
-
-	  pDisplacement_new[idx] = pDisplacement[idx] + vel * delT;
-        }
-
-        new_dw->put(pDisplacement_new, lb->pDisplacementLabel_preReloc);
-      }
-      else {  // Interpolate to particles if no fracture is involved
-        for(ParticleSubset::iterator iter = pset->begin();
-	    iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-
-          double S[8];
-          Vector d_S[8];
 
           // Get the node indices that surround the cell
-          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
+          if(d_8or27==8){
+            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
+          }
+          else if(d_8or27==27){
+            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S);
+          }
 
           vel = Vector(0.0,0.0,0.0);
           acc = Vector(0.0,0.0,0.0);
@@ -2022,7 +1624,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           double burnFraction = 0;
 
           // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < 8; k++) {
+          for (int k = 0; k < d_8or27; k++) {
 	      vel      += gvelocity_star[ni[k]]  * S[k];
    	      acc      += gacceleration[ni[k]]   * S[k];
               tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
@@ -2057,25 +1659,22 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
 	  CMV += pvelocitynew[idx]*pmass[idx];
           massLost += (pmass[idx] - pmassNew[idx]);
-        }
       }
       
       // Store the new result
-      new_dw->put(pxnew,           lb->pXLabel_preReloc);
-      new_dw->put(pvelocitynew,    lb->pVelocityLabel_afterUpdate);
+      new_dw->put(pxnew,             lb->pXLabel_preReloc);
+      new_dw->put(pvelocitynew,      lb->pVelocityLabel_preReloc);
       new_dw->put(pexternalForceNew, lb->pExternalForceLabel_preReloc);
-      new_dw->put(pmassNew,        lb->pMassLabel_preReloc);
-      new_dw->put(pvolumeNew,      lb->pVolumeLabel_preReloc);
-      new_dw->put(pTemperatureNew, lb->pTemperatureLabel_preReloc);
+      new_dw->put(pmassNew,          lb->pMassLabel_preReloc);
+      new_dw->put(pvolumeNew,        lb->pVolumeLabel_preReloc);
+      new_dw->put(pTemperatureNew,   lb->pTemperatureLabel_preReloc);
+      new_dw->put(pids_new,          lb->pParticleIDLabel_preReloc);
+      if(d_8or27==27){
+        new_dw->put(psizeNew,        lb->pSizeLabel_preReloc);
+      }
       new_dw->deleteParticles(delete_particles);
       delete delete_particles;
 
-      constParticleVariable<long64> pids;
-      ParticleVariable<long64> pids_new;
-      old_dw->get(pids, lb->pParticleIDLabel, pset);
-      new_dw->allocate(pids_new, lb->pParticleIDLabel_preReloc, pset);
-      pids_new.copyData(pids);
-      new_dw->put(pids_new, lb->pParticleIDLabel_preReloc);
     }
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
@@ -2086,110 +1685,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //  cout << "Solid momentum after advection = " << CMV << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
-  }
-}
-
-void SerialMPM::computeCrackExtension(
-                   const ProcessorGroup*,
-		   const PatchSubset* patches,
-		   const MaterialSubset* ,
-		   DataWarehouse* old_dw,
-		   DataWarehouse* new_dw)
-{
-#ifdef DOING
-  cout <<"Doing computeCrackExtension "<<"\t\t\t\t MPM"<< endl;
-#endif
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++) {
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    mpm_matl->getFractureModel()->computeCrackExtension(
-	  patches, mpm_matl, old_dw, new_dw);
-  }
-}
-
-void SerialMPM::computeFracture(
-                   const ProcessorGroup*,
-		   const PatchSubset* patches,
-		   const MaterialSubset* ,
-		   DataWarehouse* old_dw,
-		   DataWarehouse* new_dw)
-{
-#ifdef DOING
-  cout <<"Doing computeFracture "<<"\t\t\t\t MPM"<< endl;
-#endif
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++) {
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    mpm_matl->getFractureModel()->computeFracture(
-	  patches, mpm_matl, old_dw, new_dw);
-  }
-}
-
-void SerialMPM::computeBoundaryContact(
-                   const ProcessorGroup*,
-		   const PatchSubset* patches,
-		   const MaterialSubset* ,
-		   DataWarehouse* old_dw,
-		   DataWarehouse* new_dw)
-{
-#ifdef DOING
-  cout <<"Doing computeBoundaryContact "<<"\t\t\t\t MPM"<< endl;
-#endif
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++) {
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    mpm_matl->getFractureModel()->
-       computeBoundaryContact(patches, mpm_matl, old_dw, new_dw);
-  }
-}
-
-void SerialMPM::carryForwardVariables( const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset*,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout <<"Doing carryForwardVariables on patch " << patch->getID()
-         <<"\t\t\t MPM"<< endl;
-  #endif
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      int matlindex = mpm_matl->getDWIndex();
-        
-      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-
-      //stress
-      constParticleVariable<Matrix3> pStress;
-      ParticleVariable<Matrix3> pStress_new;
-      if(mpm_matl->getFractureModel()) {
-        new_dw->get(pStress, lb->pStressLabel_afterFracture, pset);
-      }
-      else {
-        new_dw->get(pStress, lb->pStressLabel_afterStrainRate, pset);
-      }
-      new_dw->allocate(pStress_new, lb->pStressLabel_preReloc, pset);
-      pStress_new.copyData(pStress);
-      new_dw->put(pStress_new, lb->pStressLabel_preReloc);
-
-      //velocity
-      constParticleVariable<Vector> pVelocity;
-      ParticleVariable<Vector> pVelocity_new;
-      if(mpm_matl->getFractureModel()) {
-        new_dw->get(pVelocity, lb->pVelocityLabel_afterFracture, pset);
-      }
-      else {
-        new_dw->get(pVelocity, lb->pVelocityLabel_afterUpdate, pset);
-      }
-      new_dw->allocate(pVelocity_new, lb->pVelocityLabel_preReloc, pset);
-      pVelocity_new.copyData(pVelocity);
-      new_dw->put(pVelocity_new, lb->pVelocityLabel_preReloc);
-    }
   }
 }
 

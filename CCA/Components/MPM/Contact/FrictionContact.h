@@ -56,10 +56,12 @@ WARNING
 
          // Coefficient of friction
          double d_mu;
+         int d_8or27;
 
       public:
 	 // Constructor
-	 FrictionContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb);
+	 FrictionContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb,
+                                                                   int n8or27);
 	 
 	 // Destructor
 	 virtual ~FrictionContact();

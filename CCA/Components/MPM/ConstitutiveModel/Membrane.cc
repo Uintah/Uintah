@@ -24,7 +24,7 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb)
+Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
 
@@ -36,6 +36,8 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb)
 
   defGradInPlaneLabel_preReloc  = VarLabel::create( "p.defgrad_in_plane+",
                         ParticleVariable<Matrix3>::getTypeDescription() );
+
+  d_8or27 = n8or27;
 
 }
 
@@ -162,6 +164,10 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Vector> T1,T2;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+    if(d_8or27==27){
+      constParticleVariable<Vector> psize;
+      old_dw->get(psize,             lb->pSizeLabel,                  pset);
+    }
     Vector I(1,0,0);
     Vector J(0,1,0);
     Vector K(0,0,1);
@@ -172,10 +178,10 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(defGradIPOld,        defGradInPlaneLabel,          pset);
-    old_dw->get(ptang1,              lb->pTang1Label,                  pset);
-    old_dw->get(ptang2,              lb->pTang2Label,                  pset);
-    new_dw->allocate(pstress_new,    lb->pStressLabel_afterStrainRate, pset);
-    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel,       pset);
+    old_dw->get(ptang1,              lb->pTang1Label,              pset);
+    old_dw->get(ptang2,              lb->pTang2Label,              pset);
+    new_dw->allocate(pstress_new,    lb->pStressLabel_preReloc,    pset);
+    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocate(deformationGradient_new,
 				lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocate(T1,        lb->pTang1Label_preReloc,              pset);
@@ -197,21 +203,26 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
        velGrad.set(0.0);
        // Get the node indices that surround the cell
-       IntVector ni[8];
-       Vector d_S[8];
-       T1[idx] = ptang1[idx];
-       T2[idx] = ptang2[idx];
+       IntVector ni[MAX_BASIS];
+       Vector d_S[MAX_BASIS];
 
-       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+       if(d_8or27==8){
+          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        }
+        else if(d_8or27==27){
+          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+        }
 
-       for(int k = 0; k < 8; k++) {
+       for(int k = 0; k < d_8or27; k++) {
 	const Vector& gvel = gvelocity[ni[k]];
 	 for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
 	      velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
 	    }
 	 }
-      }
+       }
+      T1[idx] = ptang1[idx];
+      T2[idx] = ptang2[idx];
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -422,7 +433,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-    new_dw->put(pstress_new,            lb->pStressLabel_afterStrainRate);
+    new_dw->put(pstress_new,            lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(defGradIP,              defGradInPlaneLabel_preReloc);
     new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
@@ -452,7 +463,11 @@ void Membrane::addComputesAndRequires(Task* task,
 						 matlset, Ghost::AroundCells,1);
    task->requires(Task::OldDW, lb->delTLabel);
 
-   task->computes(lb->pStressLabel_afterStrainRate,      matlset);
+   if(d_8or27==27){
+     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+   }
+
+   task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
    task->computes(defGradInPlaneLabel_preReloc,          matlset);
    task->computes(lb->pVolumeDeformedLabel,              matlset);

@@ -9,6 +9,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Containers/StaticArray.h>
 
 #include <string>
 #include <iosfwd>
@@ -116,20 +117,34 @@ WARNING
 			     IntVector nodeIndex[8]) const;
      
      //////////
-     // Insert Documentation Here:
+     // The first three of these are for linear interpolation
      void findCellAndWeights(const Point& pos,
-			     IntVector ni[8], double S[8]) const;
+			     IntVector ni[8],
+                             double S[8]) const;
      
-     //////////
-     // Insert Documentation Here:
-     void findCellAndShapeDerivatives( const Point& pos,
-				       IntVector ni[8],
-				       Vector S[8]) const;
+     void findCellAndShapeDerivatives(const Point& pos,
+			              IntVector ni[8],
+				      Vector S[8]) const;
 
      void findCellAndWeightsAndShapeDerivatives(const Point& pos,
 						IntVector ni[8], 
 						double S[8],
 						Vector d_S[8]) const;
+     //////////
+     // These are for higher order (27 node) interpolation
+     void findCellAndWeights27(const Point& pos,
+                                     IntVector ni[27],
+                                     double S[27]) const;
+     
+     void findCellAndShapeDerivatives27(const Point& pos,
+			                IntVector ni[27],
+				        Vector S[27]) const;
+
+     void findCellAndWeightsAndShapeDerivatives27(const Point& pos,
+                                                  IntVector ni[27], 
+                                                  double S[27],
+                                                  Vector d_S[27]) const;
+     //////////
      //////////
      // Insert Documentation Here:
      CellIterator getCellIterator(const IntVector gc = IntVector(0,0,0)) const;

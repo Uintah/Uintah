@@ -26,7 +26,6 @@ class GeometryObject;
 class GeometryPiece;
 class ConstitutiveModel;
 class Burn;
-class Fracture;
 class EquationOfState;
       
 /**************************************
@@ -60,7 +59,7 @@ WARNING
 
       class MPMMaterial : public Material {
       public:
-	 MPMMaterial(ProblemSpecP&, MPMLabel* lb);
+	 MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27);
 	 
 	 ~MPMMaterial();
 	 
@@ -70,9 +69,6 @@ WARNING
 
 	 // Return correct burn model pointer for this material
 	 Burn * getBurnModel();
-
-	 // Return correct burn fracture pointer for this material
-	 Fracture * getFractureModel() const;
 
 	 // Return correct EOS model pointer for this material
 	 EquationOfState* getEOSModel() const;
@@ -93,7 +89,7 @@ WARNING
 				       ParticleVariable<double>& mass,
 				       ParticleVariable<double>& volume,
 				       ParticleVariable<double>& temperature,
-				       ParticleVariable<double>& tensilestrengt,
+				       ParticleVariable<Vector>& size,
 				       ParticleVariable<long64>& particleID,
 				       CCVariable<short int>& cellNAPID,
 				       const Patch*);
@@ -106,7 +102,7 @@ WARNING
 				       ParticleVariable<double>& mass,
 				       ParticleVariable<double>& volume,
 				       ParticleVariable<double>& temperature,
-				       ParticleVariable<double>& tensilestrengt,
+				       ParticleVariable<Vector>& size,
 				       ParticleVariable<long64>& particleID,
 				       CCVariable<short int>& cellNAPID,
 				       const Patch*,
@@ -123,11 +119,6 @@ WARNING
          double getSpecificHeat() const;
          double getHeatTransferCoefficient() const;
          double getInitialDensity() const;
-
-         //for FractureModel
-	 double getPressureRate() const;
-	 double getExplosivePressure() const;
-	 double getInitialPressure() const;
 
          // For MPMICE
          double getGamma() const;
@@ -147,9 +138,6 @@ WARNING
          // Burn model
 	 Burn *d_burn;
 
-         // Fracture model
-	 Fracture *d_fracture;
-
 	 // EOS model
 	 EquationOfState* d_eos;
 	 
@@ -163,11 +151,6 @@ WARNING
 
          //for ThermalContactModel
          double d_heatTransferCoefficient;
-
-         //for FractureModel
-         double d_pressureRate;
-	 double d_explosivePressure;
-	 double d_initialPressure;
 
 	 std::vector<GeometryObject*> d_geom_objs;
 

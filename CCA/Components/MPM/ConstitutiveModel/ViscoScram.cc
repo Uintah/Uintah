@@ -23,7 +23,7 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb)
+ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
 
@@ -57,6 +57,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb)
                             ParticleVariable<double>::getTypeDescription() );
   pRandLabel_preReloc        = VarLabel::create( "p.rand+",
                             ParticleVariable<double>::getTypeDescription() );
+  d_8or27 = n8or27;
 }
 
 ViscoScram::~ViscoScram()
@@ -219,15 +220,15 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
-    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocate(deformationGradient_new,
-		     lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocate(pstressnew,     lb->pStressLabel_afterStrainRate,  pset);
-    new_dw->allocate(pCrackRadius,   lb->pCrackRadiusLabel_preReloc,    pset);
-    new_dw->allocate(statedata, p_statedata_label_preReloc, pset);
-    old_dw->copyOut(statedata, p_statedata_label, pset);    
-    new_dw->allocate(pRand, pRandLabel_preReloc, pset);
-    old_dw->copyOut(pRand, pRandLabel, pset);    
+		     lb->pDeformationMeasureLabel_preReloc,         pset);
+    new_dw->allocate(pstressnew,     lb->pStressLabel_preReloc,     pset);
+    new_dw->allocate(pCrackRadius,   lb->pCrackRadiusLabel_preReloc,pset);
+    new_dw->allocate(statedata, p_statedata_label_preReloc,         pset);
+    old_dw->copyOut(statedata, p_statedata_label,                   pset);    
+    new_dw->allocate(pRand, pRandLabel_preReloc,                    pset);
+    old_dw->copyOut(pRand, pRandLabel,                              pset);    
 
     ASSERTEQ(pset, statedata.getParticleSubset());
 
@@ -237,6 +238,10 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
             Ghost::AroundCells, 1);
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
+    if(d_8or27==27){
+      constParticleVariable<Vector> psize;
+      old_dw->get(psize,             lb->pSizeLabel,                  pset);
+    }
     double Gmw[5];
     Gmw[0]=d_initialData.G[0];
     Gmw[1]=d_initialData.G[1];
@@ -265,11 +270,16 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       velGrad.set(0.0);
       // Get the node indices that surround the cell
-      IntVector ni[8];
-      Vector d_S[8];
-      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+      IntVector ni[MAX_BASIS];
+      Vector d_S[MAX_BASIS];
+      if(d_8or27==8){
+          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+       }
+       else if(d_8or27==27){
+          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+       }
 
-       for(int k = 0; k < 8; k++) {
+       for(int k = 0; k < d_8or27; k++) {
            const Vector& gvel = gvelocity[ni[k]];
            for (int j = 0; j<3; j++){
              for (int i = 0; i<3; i++) {
@@ -574,7 +584,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 	delT_new = 100.0;
     }
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-    new_dw->put(pstressnew,            lb->pStressLabel_afterStrainRate);
+    new_dw->put(pstressnew,            lb->pStressLabel_preReloc);
     new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
@@ -600,11 +610,14 @@ void ViscoScram::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pVelocityLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pTemperatureLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  if(d_8or27==27){
+    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+  }
 
   task->requires(Task::NewDW, lb->gVelocityLabel,    matlset,
                   Ghost::AroundCells, 1);
 
-  task->computes(lb->pStressLabel_afterStrainRate,        matlset);
+  task->computes(lb->pStressLabel_preReloc,        matlset);
   task->computes(lb->pCrackRadiusLabel_preReloc,          matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,   matlset);
   task->computes(pRandLabel_preReloc,                     matlset);

@@ -198,7 +198,7 @@
                     </box>
                     <res>               [2,2,2]         </res>
                     <velocity>          [0.0,0.0,0.0]   </velocity>
-                    <temperature>       400             </temperature>
+                    <temperature>       300             </temperature>
                 </geom_object>
          </material>
 
@@ -231,7 +231,7 @@
               </difference>
                <res>                      [2,2,2]          </res>
                <velocity>           [0.0,0.0,0.0]      </velocity>
-               <temperature>        400.0               </temperature>
+               <temperature>        300.0               </temperature>
                <density>              0.88447102        </density>
                <pressure>           101325.0             </pressure>
            </geom_object>

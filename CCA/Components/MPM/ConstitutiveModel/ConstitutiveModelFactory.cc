@@ -20,7 +20,7 @@ using std::ofstream;
 using namespace Uintah;
 
 ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
-							 MPMLabel* lb)
+						 MPMLabel* lb, int n8or27)
 {
    ProblemSpecP child = ps->findBlock("constitutive_model");
    if(!child)
@@ -30,25 +30,25 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       throw ProblemSetupException("No type for constitutive_model");
    
    if (mat_type == "comp_mooney_rivlin")
-      return(scinew CompMooneyRivlin(child,lb));
+      return(scinew CompMooneyRivlin(child,lb,n8or27));
    
    else if (mat_type ==  "comp_neo_hook")
-      return(scinew CompNeoHook(child,lb));
+      return(scinew CompNeoHook(child,lb,n8or27));
       
    else if (mat_type == "comp_neo_hook_plastic")
-      return(scinew CompNeoHookPlas(child,lb));
+      return(scinew CompNeoHookPlas(child,lb,n8or27));
    
    else if (mat_type ==  "visco_scram")
-      return(scinew ViscoScram(child,lb));
+      return(scinew ViscoScram(child,lb,n8or27));
    
    else if (mat_type ==  "hypo_elastic")
-      return(scinew HypoElastic(child,lb));
+      return(scinew HypoElastic(child,lb,n8or27));
    
    else if (mat_type ==  "mw_visco_elastic")
-      return(scinew MWViscoElastic(child,lb));
+      return(scinew MWViscoElastic(child,lb,n8or27));
    
    else if (mat_type ==  "membrane")
-      return(scinew Membrane(child,lb));
+      return(scinew Membrane(child,lb,n8or27));
    
    else 
       throw ProblemSetupException("Unknown Material Type R ("+mat_type+")");

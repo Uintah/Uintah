@@ -19,25 +19,23 @@
 #include <fstream>
 #include <iostream>
 
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
-
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb)
+MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
 
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
   d_se=0;
+  d_8or27 = n8or27;
 }
 
 MWViscoElastic::~MWViscoElastic()
 {
   // Destructor
-
 }
 
 void MWViscoElastic::initializeCMData(const Patch* patch,
@@ -144,8 +142,12 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+    if(d_8or27==27){
+      constParticleVariable<Vector> psize;
+      old_dw->get(psize,             lb->pSizeLabel,                  pset);
+    }
 
-    new_dw->allocate(pstress, lb->pStressLabel_afterStrainRate, pset);
+    new_dw->allocate(pstress, lb->pStressLabel_preReloc,     pset);
     new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocate(pvolume, lb->pVolumeDeformedLabel, pset);
     
@@ -165,11 +167,6 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<int> pConnectivity;
     ParticleVariable<Vector> pRotationRate;
     ParticleVariable<double> pStrainEnergy;
-    if(matl->getFractureModel()) {
-      new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
-      new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
-      new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
-    }
 
     double G = d_initialData.G;
     double bulk = d_initialData.K;
@@ -180,50 +177,22 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
       velGrad.set(0.0);
       // Get the node indices that surround the cell
-      IntVector ni[8];
-      Vector d_S[8];
-      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+      IntVector ni[MAX_BASIS];
+      Vector d_S[MAX_BASIS];
+      if(d_8or27==8){
+          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+       }
+       else if(d_8or27==27){
+          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S);
+       }
 
-      if(matl->getFractureModel()) {
-	//ratation rate: (omega1,omega2,omega3)
-	double omega1 = 0;
-	double omega2 = 0;
-	double omega3 = 0;
-
-	Connectivity connectivity(pConnectivity[idx]);
-	int conn[8];
-	connectivity.getInfo(conn);
-	connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
-	
-	for(int k = 0; k < 8; k++) {
-	  if( conn[k] ) {
-	    const Vector& gvel = gvelocity[ni[k]];
-	    for (int j = 0; j<3; j++){
-	      for (int i = 0; i<3; i++) {
-	        velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
-              }
-	    }
-	    //rotation rate computation, required for fracture
-	    //NOTE!!! gvel(0) = gvel.x() !!!
-	    omega1 += -gvel(2) * d_S[k](1) * oodx[1] +
-	              gvel(1) * d_S[k](2) * oodx[2];
-	    omega2 += -gvel(0) * d_S[k](2) * oodx[2] +
-	              gvel(2) * d_S[k](0) * oodx[0];
-            omega3 += -gvel(1) * d_S[k](0) * oodx[0] +
-	              gvel(0) * d_S[k](1) * oodx[1];
-	  }
-	}
-	pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
-      }
-      else {
-        for(int k = 0; k < 8; k++) {
+      for(int k = 0; k < d_8or27; k++) {
 	  const Vector& gvel = gvelocity[ni[k]];
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
 	      velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
 	    }
 	  }
-	}
       }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime
@@ -263,8 +232,6 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 		   D(1,3)*OldStress(1,3) +
 		   D(2,3)*OldStress(2,3))) * pvolume[idx]*delT;
 
-      if(matl->getFractureModel()) pStrainEnergy[idx] = e;
-      		   
       d_se += e;		   
 
       // Compute wave speed at each particle, store the maximum
@@ -284,15 +251,10 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-    new_dw->put(pstress,               lb->pStressLabel_afterStrainRate);
+    new_dw->put(pstress,               lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient,   lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
     new_dw->put(pvolume,               lb->pVolumeDeformedLabel);
-
-    if( matl->getFractureModel() ) {
-      new_dw->put(pRotationRate, lb->pRotationRateLabel);
-      new_dw->put(pStrainEnergy, lb->pStrainEnergyLabel);
-    }
   }
 }
 
@@ -310,16 +272,13 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::NewDW, lb->gVelocityLabel,    matlset,
                   Ghost::AroundCells, 1);
+  if(d_8or27==27){
+    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+  }
 
-  task->computes(lb->pStressLabel_afterStrainRate,      matlset);
+  task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
-
-  if(matl->getFractureModel()) {
-    task->requires(Task::NewDW, lb->pConnectivityLabel,  matlset,Ghost::None);
-    task->computes(lb->pRotationRateLabel, matlset);
-    task->computes(lb->pStrainEnergyLabel, matlset);
-  }
 }
 
 double MWViscoElastic::computeRhoMicroCM(double pressure,
