@@ -51,7 +51,8 @@
 
   <definition>
   <!-- Give the definition for a term, or concept, that is embodied
-       by this directory. -->
+       by this directory.  Please provide feature length rather than
+       short story definitions. -->
     <term>
       Module
     </term>
@@ -171,6 +172,11 @@
   </definition>
 
   <example>
+  <!-- give an example of how to use the classes and/or functions
+       here.  Again, more is better, however give only exactly 
+       that which is being explained, no superfluous text (i.e.
+       please don't cut and paste from existing code.) -->
+    
     <p>
       To get data into and out of your module's execute function, you
       need to use the module's ports.  In order to use the ports, 
@@ -178,6 +184,10 @@
       that port's get() function with a handle to the type of data
       expected on the port.  On success, the handle passed to get()
       will represent the data that is on that input port:
+
+      #include <Dataflow/Ports/MatrixPort.h>
+
+      ...
 
       void SomeModule::execute() {
 
