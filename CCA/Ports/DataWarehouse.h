@@ -68,10 +68,12 @@ WARNING
       
       virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const =0;
 
-      // Generic put, passing Variable as a pointer rather than by reference
-      // to avoid ambiguity with other put overloaded methods.
+      // Generic put and allocate, passing Variable as a pointer rather than
+      // by reference to avoid ambiguity with other put overloaded methods.
       virtual void put(Variable*, const VarLabel*, int matlIndex,
 		       const Patch*) = 0;
+      virtual void allocateAndPutGridVar(Variable*, const VarLabel*, 
+					 int matlIndex, const Patch*) = 0;
  
       // Reduction Variables
       virtual void allocate(ReductionVariableBase&, const VarLabel*,
@@ -94,8 +96,10 @@ WARNING
       virtual ParticleSubset* getParticleSubset(int matlIndex,
 			 const Patch*, Ghost::GhostType, int numGhostCells,
 			 const VarLabel* posvar) = 0;
-      virtual void allocate(ParticleVariableBase&, const VarLabel*,
-			    ParticleSubset*) = 0;
+      virtual void allocateTemporary(ParticleVariableBase&,
+				     ParticleSubset*) = 0;
+      virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
+				  ParticleSubset*) = 0;
       virtual void get(constParticleVariableBase&, const VarLabel*,
 		       ParticleSubset*) = 0;
       virtual void get(constParticleVariableBase&, const VarLabel*,
@@ -115,12 +119,21 @@ WARNING
       getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
 
       // Generic grid based variables
+
+      void copyOutGridData(Variable* var, const VarLabel* label, int matlIndex,
+			   const Patch* patch,
+			   Ghost::GhostType gtype = Ghost::None,
+			   int numGhostCells = 0);
+     
      
       // Node Centered (NC) Variables
-      virtual void allocate(NCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*,
-			    Ghost::GhostType = Ghost::None,
-			    int numGhostCells = 0) = 0;
+      virtual void allocateTemporary(NCVariableBase&, const Patch*,
+				     Ghost::GhostType = Ghost::None,
+				     int numGhostCells = 0) = 0;
+      virtual void allocateAndPut(NCVariableBase&, const VarLabel*,
+				  int matlIndex, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0) = 0;
       virtual void get(constNCVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(NCVariableBase&, const VarLabel*,
@@ -137,10 +150,13 @@ WARNING
 		       int matlIndex, const Patch*, bool replace = false) = 0;
       
       // Cell Centered (CC) Variables
-      virtual void allocate(CCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*, 
-			    Ghost::GhostType = Ghost::None,
-			    int numGhostCells = 0) = 0;
+      virtual void allocateTemporary(CCVariableBase&, const Patch*, 
+				     Ghost::GhostType = Ghost::None,
+				     int numGhostCells = 0) = 0;
+      virtual void allocateAndPut(CCVariableBase&, const VarLabel*,
+				  int matlIndex, const Patch*, 
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0) = 0;
       virtual void get(constCCVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(CCVariableBase&, const VarLabel*,
@@ -157,10 +173,13 @@ WARNING
 		       int matlIndex, const Patch*, bool replace = false) = 0;
 
       // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
-      virtual void allocate(SFCXVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*,
-			    Ghost::GhostType = Ghost::None,
-			    int numGhostCells = 0) = 0;
+      virtual void allocateTemporary(SFCXVariableBase&, const Patch*,
+				     Ghost::GhostType = Ghost::None,
+				     int numGhostCells = 0) = 0;
+      virtual void allocateAndPut(SFCXVariableBase&, const VarLabel*,
+				  int matlIndex, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0) = 0;
       virtual void get(constSFCXVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(SFCXVariableBase&, const VarLabel*,
@@ -176,10 +195,13 @@ WARNING
       virtual void put(SFCXVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
 
-      virtual void allocate(SFCYVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*,
-			    Ghost::GhostType = Ghost::None,
-			    int numGhostCells = 0) = 0;
+      virtual void allocateTemporary(SFCYVariableBase&, const Patch*,
+				     Ghost::GhostType = Ghost::None,
+				     int numGhostCells = 0) = 0;
+      virtual void allocateAndPut(SFCYVariableBase&, const VarLabel*,
+				  int matlIndex, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0) = 0;
       virtual void get(constSFCYVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(SFCYVariableBase&, const VarLabel*,
@@ -195,10 +217,13 @@ WARNING
       virtual void put(SFCYVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
 
-      virtual void allocate(SFCZVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*,
-			    Ghost::GhostType = Ghost::None,
-			    int numGhostCells = 0) = 0;
+      virtual void allocateTemporary(SFCZVariableBase&, const Patch*,
+				     Ghost::GhostType = Ghost::None,
+				     int numGhostCells = 0) = 0;
+      virtual void allocateAndPut(SFCZVariableBase&, const VarLabel*,
+				  int matlIndex, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0) = 0;
       virtual void get(constSFCZVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(SFCZVariableBase&, const VarLabel*,
