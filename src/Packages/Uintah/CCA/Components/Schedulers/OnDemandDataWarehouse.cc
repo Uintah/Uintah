@@ -1458,6 +1458,10 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   // super patch group gets here first, does the allocating for the entire
   // super patch group.
  d_lock.writeLock();
+
+  if (getCurrentTask() == 0) {
+    throw InternalError("OnDemandDataWarehouse::AllocateAndPutGridVar can only be used when the dw has a current task.");
+  }
  
   checkPutAccess(label, matlIndex, patch, false);  
   bool exists = db.exists(label, matlIndex, patch);
@@ -1488,11 +1492,12 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
     ASSERT(superPatchGroup != 0);
 
 #ifdef WAYNE_DEBUG
-  IntVector diff = superHighIndex - superLowIndex;
-  int allocSize = diff.x() * diff.y() * diff.z();
-  totalGridAlloc += allocSize;
-  cerr << "Allocate " << label->getName() << ", matl " << matlIndex << ": " << superLowIndex << " - " << superHighIndex << " = " << allocSize << endl;  
+    IntVector diff = superHighIndex - superLowIndex;
+    int allocSize = diff.x() * diff.y() * diff.z();
+    totalGridAlloc += allocSize;
+    cerr << "Allocate " << label->getName() << ", matl " << matlIndex << ": " << superLowIndex << " - " << superHighIndex << " = " << allocSize << endl;  
 #endif
+    
     var.allocate(superLowIndex, superHighIndex);
     
     Level::selectType encompassedPatches;
