@@ -94,7 +94,7 @@ LINE: while(<FILE>){
 	($type, $tmpltype, $name) = &parsearg($a);
 	if(&knownvartype($type)){
 	    print OUT "  IntVector $name\_low = $name.getWindow()->getOffset();\n";
-	    print OUT "  IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low + IntVector(1, 1, 1);\n";
+	    print OUT "  IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low - IntVector(1, 1, 1);\n";
 	    if($g77){
 		foreach $d ("x", "y", "z") {
 		    print OUT "  int $name\_low_$d = $name\_low.$d();\n";
