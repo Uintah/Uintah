@@ -54,7 +54,8 @@ PSELIBS := \
 	Core/Geometry \
 	Core/Thread \
 	Core/Util \
-	Core/OS
+	Core/OS \
+	Core/Containers
 endif
 LIBS 	:= $(XML_LIBRARY)
 
