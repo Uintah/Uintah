@@ -200,3 +200,18 @@ string Port::get_colorname()
 {
   return color_name;
 }
+
+
+void OPort::issue_no_port_caching_warning()
+{
+  // Don't really care about thread safety since the worst that happens is
+  // multiple warnings are printed.  Not worth creating the lock over.
+  static bool warnonce = true;
+  if (warnonce)
+  {
+    warnonce = false;
+    std::cerr << "Warning: SCIRUN_NO_PORT_CACHING on!!!\n";
+    std::cerr << "Warning: This will break interactive SCIRun usage.\n";
+    std::cerr << "Warning: See .scirunrc for details.\n";
+  }
+}

@@ -47,6 +47,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Util/Environment.h>
 
 namespace SCIRun {
 
@@ -146,6 +147,11 @@ SimpleOPort<T>::SimpleOPort(Module* module,
     sent_something_(true),
     handle_(0)
 {
+  if (sci_getenv_p("SCIRUN_NO_PORT_CACHING"))
+  {
+    issue_no_port_caching_warning();
+    cache_ = false;
+  }
 }
 
 
