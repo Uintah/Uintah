@@ -65,11 +65,11 @@ private:
 
   GuiString tcl_status;
 
-  GuiInt animate;
-  GuiInt anisleep;
   GuiInt time;
   GuiInt max_time;
   GuiDouble timeval;
+  GuiInt animate;
+  GuiInt anisleep;
 
   ArchiveIPort *in;
   ArchiveOPort *out;
