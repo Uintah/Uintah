@@ -31,7 +31,7 @@
 #ifndef Component_PIDL_Object_h
 #define Component_PIDL_Object_h
 
-#include <CCALib/SmartPointer.h>
+#include <Core/CCA/SmartPointer.h>
 
 namespace SCIRun {
   class MutexPool;

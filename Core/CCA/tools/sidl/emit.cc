@@ -182,7 +182,8 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << "#include <Core/CCA/Component/CIA/CIA_sidl.h>\n";
   hdr << "#include <Core/CCA/Component/CIA/array.h>\n";
   hdr << "#include <Core/CCA/Component/CIA/string.h>\n";
-  hdr << "#include <CCALib/SmartPointer.h>\n";
+  //hdr << "#include <CCALib/SmartPointer.h>\n";
+  hdr << "#include <Core/CCA/SmartPointer.h>\n";
   hdr << "#include <complex>\n";
   hdr << "\n";
   hdr << e.fwd.str();
