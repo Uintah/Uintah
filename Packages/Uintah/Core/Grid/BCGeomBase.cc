@@ -288,9 +288,7 @@ void BCGeomBase::determineSFLimits(Patch::FaceType face, const Patch* patch)
 		bind2nd(plus<IntVector>(),IntVector(0,0,-1)));
       break;
     }
-  case Patch::numFaces:
-    break;
-  case Patch::invalidFace:
+  default:
     break;
   }
   setSFCXIterator(sfx);
