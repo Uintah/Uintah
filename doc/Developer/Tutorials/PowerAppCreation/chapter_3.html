@@ -206,7 +206,12 @@ variable execute_color
 # needed.
 variable colormap_width
 variable colormap_height
-variable colormap_res    
+variable colormap_res
+
+# Stores saved session filename. This filename
+# should be displayed along with the title when loaded and
+# should be used when Save Session is selected.
+variable saveFile    
 </pre>
 
                 <h4>
@@ -279,10 +284,10 @@ method get_module_variable_name { var }
 #########################
 ### save_disabled_modules
 #########################
-# Save out the call to disable all modules that ar
-# currently disabled
+# Save out the call to disable all modules
+# that are currently disabled
 method save_disabled_modules { fileid } 
-    
+
 
 #######################
 ### get_class_variable_name
