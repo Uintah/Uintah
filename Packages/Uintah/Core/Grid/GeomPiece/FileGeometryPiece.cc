@@ -127,3 +127,10 @@ void FileGeometryPiece::readPoints(int pid)
   }
   source.close();
 }
+
+int
+FileGeometryPiece::createPoints()
+{
+  cout << "You should be reading points .. not creating them" << endl;  
+  return 0;
+}
