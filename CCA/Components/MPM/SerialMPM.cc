@@ -96,16 +96,17 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      NGN=2;
    }
 
-   string integrator_type;
-   if (mpm_soln_ps) {
-	mpm_soln_ps->get("time_integrator",integrator_type);
-     if (integrator_type == "implicit")
-       d_integrator = Implicit;
-     else
-       if (integrator_type == "explicit")
-	 d_integrator = Explicit;
-   } else
+  //__________________________________
+  // Grab time_integrator, default is explicit
+   string integrator_type = "explicit";
+   d_integrator = Explicit;
+   mpm_soln_ps->get("time_integrator",integrator_type);
+   if (integrator_type == "implicit"){
+     d_integrator = Implicit;
+   }
+   if (integrator_type == "explicit") {
      d_integrator = Explicit;
+   }
    
    MPMPhysicalBCFactory::create(prob_spec);
 
