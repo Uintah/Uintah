@@ -11,12 +11,12 @@
   *
  *  Copyright (C) 1997 SCI Group
  */
+
 #include <iostream>
 using std::cerr;
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/TrivialAllocator.h>
@@ -1208,6 +1208,10 @@ void TopoSurfTree::TypesToSurfs() {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 18:44:19  dahart
+// Replaced all instances of HashTable<class X, class Y> with the STL
+// map<class X, class Y>.  Removed all includes of HashTable.h
+//
 // Revision 1.2  1999/10/07 02:06:21  sparker
 // use standard iostreams and complex type
 //

@@ -16,11 +16,12 @@
 #include <DaveW/Datatypes/General/SegFld.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
+
+#include <map.h>
 #include <iostream>
 using std::cerr;
 
@@ -38,6 +39,7 @@ class SegFldToSurfTree : public Module {
     SegFldIPort* infield;
     SurfaceOPort* outsurf;
 public:
+
     SegFldToSurfTree(const clString& id);
     virtual ~SegFldToSurfTree();
     virtual void execute();
@@ -174,34 +176,42 @@ void bldSplits(ScalarFieldRGchar* ch,
 
 int getNode(int ii, int jj, int kk, int n, const Vector &v, 
 	    SegFld& field, const Array1<int>& splT, 
-	    const Array1<int>& splI, HashTable<int,int>* hash,
+	    const Array1<int>& splI, map<int,int>* hash,
 	    SurfTree& surf) {
     int h;
     int pidx=(ii<<20)+(jj<<10)+kk;
-    if (!hash->lookup(pidx, h)) {
-	hash->insert(pidx, surf.nodes.size());
-	h=surf.nodes.size();
+    map<int,int>::iterator iter = hash->find(pidx);
+    if (iter == hash->end()) {
+	(*hash)[pidx] = surf.nodes.size();
+	h = surf.nodes.size();
 	surf.nodes.add(field.get_point(ii,jj,kk)+v);
-    } else if (h<0) {
-	h = -h-1;
-	if (splT[h] & (1<<n)) 
-	    h = splI[h];
-	else
-	    h = splI[h]+1;
+    } else {
+	h = (*iter).second;
+	if (h<0) {
+	    h = -h-1;
+	    if (splT[h] & (1<<n)) 
+		h = splI[h];
+	    else
+		h = splI[h]+1;
+	}
     }
-//    cerr << "Getting node ("<<ii<<","<<jj<<","<<kk<<") n="<<n<<" h="<<h<<"\n";
+    //cerr << "Getting node ("<<ii<<","<<jj<<","<<kk<<") n="<<n<<" h="<<h<<"\n";
     return h;
 }
 
 int getEdge(int ii, int jj, int kk, int o, SurfTree& surf, int p1, int p2,
-	    HashTable<int,int>* ehash) {
+	    map<int,int>* ehash) {
     int h;
     int eidx=(ii<<21)+(jj<<12)+(kk<<3)+o;
-    if (!ehash->lookup(eidx, h)) {
-	ehash->insert(eidx, surf.edges.size());
+    map<int,int>::iterator iter = ehash->find(eidx);
+    if (iter == ehash->end()) {
+	(*ehash)[eidx] = surf.edges.size();
 	h=surf.edges.size();
 	surf.edges.add(new TSEdge(p1, p2));
 	surf.edgeI.resize(surf.edgeI.size()+1);
+    }
+    else {
+	h = (*iter).second;
     }
     return h;
 }
@@ -387,8 +397,8 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 
     int p1, p2, p3, p4, p5, p6, p7, bcomp;
     int e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12;
-    HashTable<int,int>* hash = new HashTable<int,int>;
-    HashTable<int,int>* ehash = new HashTable<int,int>;
+    map<int,int>* hash = new map<int,int>;
+    map<int,int>* ehash = new map<int,int>;
     Point min, max;
     field.get_bounds(min, max);
     Vector v((max-min)*.5);
@@ -407,10 +417,9 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 	int ii=idx.x-1;
 	int jj=idx.y-1;
 	int kk=idx.z-1;
-	int dummy;
 	int pidx=(ii<<20)+(jj<<10)+kk;
-	if (!hash->lookup(pidx, dummy)) {
-	    hash->insert(pidx, -(i+1));
+	if (hash->find(pidx) == hash->end()) {
+	    (*hash)[pidx] = -(i+1);
 	} 
 	// else cerr << "SegFldToSurfTree - why would I be here??\n";
 	splI.add(surf.nodes.size());
@@ -541,6 +550,10 @@ void SegFldToSurfTree::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 18:44:21  dahart
+// Replaced all instances of HashTable<class X, class Y> with the STL
+// map<class X, class Y>.  Removed all includes of HashTable.h
+//
 // Revision 1.6  2000/03/17 09:25:35  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

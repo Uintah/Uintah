@@ -28,6 +28,8 @@
 #include <SCICore/Datatypes/SymSparseRowMatrix.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
+
+#include <map.h>
 #include <iostream>
 using std::cerr;
 
@@ -58,7 +60,7 @@ class BuildFDMatrix : public Module {
 			    const Array1<char>& nmn);
     void add_lcl_gbl(Matrix& gbl_a, const Array1<double>& lcl,
 		     int i, int j, int k, int ny, int nz,
-		     HashTable<int, double>& hash, ColumnMatrix& rhs);
+		     map<int, double>& hash, ColumnMatrix& rhs);
 public:
     BuildFDMatrix(const clString& id);
     virtual ~BuildFDMatrix();
@@ -189,7 +191,7 @@ void BuildFDMatrix::execute()
 cerr << "Number of non-conducting voxels: "<<num_nmn;
 cerr << "\nNumber of conducting voxels: "<<num_nonnmn;
 cerr << "\nNumber of left, right, up, down, fwd and bk nbrs: "<<nl<<" "<<nr<<" "<<nu<<" "<<nd<<" "<<nf<<" "<<nb<<"\n";
-    HashTable<int, double> hash;
+    map<int, double> hash;
     Array1<NodeHandle> nodes;
     surfh->get_surfnodes(nodes);
     for (i=0; i<nodes.size(); i++) {
@@ -198,7 +200,7 @@ cerr << "\nNumber of left, right, up, down, fwd and bk nbrs: "<<nl<<" "<<nr<<" "
 cerr << "point is at: ("<<nodes[i]->p.x()<<", "<<nodes[i]->p.y()<<", "<<nodes[i]->p.z()<<")\n";
 	int row=z+(sf->nz*(y+x*sf->ny));
 cerr << "surf node at field point: ("<<x<<", "<<y<<", "<<z<<"), row: "<<row<<"\n";
-	hash.insert(row, nodes[i]->bc->value);
+	hash[row] = nodes[i]->bc->value;
     }
 
     Matrix* gbl_matrix=scinew SparseRowMatrix(ndof, ndof, rows, cols);
@@ -228,13 +230,13 @@ cerr << "surf node at field point: ("<<x<<", "<<y<<", "<<z<<"), row: "<<row<<"\n
 		// Build local matrix
 		Array1<double> lcl(27);
 		for (int ii=0; ii<27; ii++) lcl[ii]=0;
-		double xx;
 
 		// if it's Dirichlet, just set the diagonal term
-		if (!hash.lookup(curr, xx) && !nmn[sf->grid(i,j,k)]) {
+		if (hash.find(curr) == hash.end() && !nmn[sf->grid(i,j,k)]) {
 		    build_local_matrix(*sigs, sf, lcl, i, j, k, nmn);
 		} else {
-		    if (hash.lookup(curr,xx)) cerr << "Dirichlet: "<<curr<<"\n";
+		    if (hash.find(curr) == hash.end())
+		      cerr << "Dirichlet: "<<curr<<"\n";
 		    lcl[13]=1;
 		}
 		add_lcl_gbl(*gbl_matrix, lcl, i, j, k, sf->ny, sf->nz,
@@ -316,33 +318,40 @@ void BuildFDMatrix::build_local_matrix(const Array2<double>& sigs,
 void BuildFDMatrix::add_lcl_gbl(Matrix& gbl_a, 
 				const Array1<double>& lcl,
 				int i, int j, int k, int ny, int nz,
-				HashTable<int, double>& hash, 
+				map<int, double>& hash, 
 				ColumnMatrix& rhs)
 {
     int ii, jj, kk, ci, cj, ck;
     long idx=k+nz*(j+i*ny);
+    map<int,double>::iterator iter;
     for (ii=0, ci=i-1; ii<3; ii++, ci++)
 	for (jj=0, cj=j-1; jj<3; jj++, cj++)
 	    for (kk=0, ck=k-1; kk<3; kk++, ck++) {
 		long c_idx=idx+(nz*ny*(ii-1))+(nz*(jj-1))+kk-1;
 		if (Abs(lcl[ii*9+jj*3+kk])>.0000000001) {
-		    double val;	
-//cerr << "node("<<idx<<") - lcl["<<ii*9+jj*3+kk<<"],global["<<c_idx<<"] = "<<lcl[ii*9+jj*3+kk]<<"   ";
-		    if (hash.lookup(c_idx, val)) {	// Dirichlet node
+		    double val;
+		    //cerr << "node("<<idx<<") -
+		    //lcl["<<ii*9+jj*3+kk<<"],global["<<c_idx<<"] =
+		    //"<<lcl[ii*9+jj*3+kk]<<"   ";
+		    iter = hash.find(c_idx);
+		    // Dirichlet node
+		    if (iter != hash.end()) {
+			val = (*iter).second;
 			cerr << "Dirichlet: "<<c_idx<<"\n";
 			if (ii!=1 || jj!=1 || kk!=1) {
 			    rhs[idx]-=val*lcl[ii*9+jj*3+kk];
-//			    lcl[ii*9+jj*3+kk]=0;
+			    //lcl[ii*9+jj*3+kk]=0;
 			} else {
 			    rhs[idx]=val;
 			}
-//cerr << "RHS["<<idx<<"]="<<rhs[idx]<<"\n";
+			//cerr << "RHS["<<idx<<"]="<<rhs[idx]<<"\n";
 		    }
 		    gbl_a[idx][c_idx] += lcl[ii*9+jj*3+kk];
-//cerr << "gbl_a["<<idx<<"]["<<c_idx<<"] = "<<gbl_a[idx][c_idx]<<"\n";
+		    //cerr << "gbl_a["<<idx<<"]["<<c_idx<<"] =
+		    //"<<gbl_a[idx][c_idx]<<"\n";
 		}
 	    }
-//    cerr << "\n";
+    //cerr << "\n";
 }
 
 } // End namespace Modules
@@ -350,6 +359,10 @@ void BuildFDMatrix::add_lcl_gbl(Matrix& gbl_a,
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 18:44:22  dahart
+// Replaced all instances of HashTable<class X, class Y> with the STL
+// map<class X, class Y>.  Removed all includes of HashTable.h
+//
 // Revision 1.5  2000/03/17 09:25:41  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
