@@ -12912,7 +12912,7 @@ _sci_includes=''
 
 
 
-if test "$HAVE_MPEGE"; then
+if test "$HAVE_MPEGE" = "yes"; then
   DEF_MPEG="#define HAVE_MPEG 1"
 fi
 
@@ -13151,7 +13151,7 @@ _sci_includes=''
 
   fi
 
-  if test "$HAVE_MAGICK"; then
+  if test "$HAVE_MAGICK" = "yes"; then
     DEF_MAGICK="#define HAVE_MAGICK 1"
   fi
 
@@ -13600,7 +13600,7 @@ _sci_includes=''
 
 
 
-if test "$HAVE_Z"; then
+if test "$HAVE_Z" = "yes"; then
    DEF_Z="#define HAVE_ZLIB 1"
 fi
 
@@ -15177,7 +15177,7 @@ _sci_libs=''
 _sci_includes=''
 
 
-       if test "$HAVE_BLAS" = "no"; then
+       if test "$HAVE_BLAS" != "yes"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -15582,7 +15582,7 @@ fi # end sci_check_blas
 ##  --  search for lapack stuff  -----------------------------------------
 
 if test "$sci_check_lapack" = "yes" &&
-   test "$HAVE_F" && test "$HAVE_BLAS"; then
+   test "$HAVE_F" = "yes" && test "$HAVE_BLAS" = "yes"; then
   if test "$with_lapack"; then
     _sci_lib="$with_lapack"
   else
@@ -15767,7 +15767,7 @@ _sci_includes=''
 
 
 
-  if test "$HAVE_LAPACK" = "no"; then
+  if test "$HAVE_LAPACK" != "yes"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -15946,7 +15946,7 @@ _sci_includes=''
 
   fi
 
-  if test "$HAVE_LAPACK" = "no"; then
+  if test "$HAVE_LAPACK" != "yes"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -16374,7 +16374,7 @@ _sci_includes=''
 
 
 
-        if test "$HAVE_MPI" = "no"; then
+        if test "$HAVE_MPI" != "yes"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -16565,7 +16565,7 @@ _sci_includes=''
 
 
 
-           if test "$HAVE_MPI" = "no"; then
+           if test "$HAVE_MPI" != "yes"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -17096,7 +17096,7 @@ _sci_includes=''
 
 
 
-if test "$HAVE_MPIUNI" = "no"; then
+if test "$HAVE_MPIUNI" != "yes"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
