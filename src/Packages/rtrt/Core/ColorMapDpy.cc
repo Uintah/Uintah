@@ -145,13 +145,6 @@ void ColorMapDpy::run() {
 
   init();
 
-  for(;;){
-    XEvent e;
-    XNextEvent(dpy, &e);
-    if(e.type == MapNotify)
-      break;
-  }
-
   setup_vars();
   bool need_hist=true;
 

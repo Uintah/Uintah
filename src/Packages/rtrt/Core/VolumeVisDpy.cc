@@ -99,13 +99,6 @@ void VolumeVisDpy::run() {
 
   init();
 
-  for(;;){
-    XEvent e;
-    XNextEvent(dpy, &e);
-    if(e.type == MapNotify)
-      break;
-  }
-
   setup_vars();
   // We only want to compute the histogram when the user requests
   bool need_hist=false;

@@ -302,14 +302,6 @@ Dpy::run()
     open_display(parentWindow, false);
 
     init();
-  
-    // Create the Xevent handler
-    for(;;){
-      XEvent e;
-      XNextEvent(dpy, &e);
-      if(e.type == MapNotify)
-	break;
-    }
   }
 
 #if 0
