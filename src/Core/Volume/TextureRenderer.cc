@@ -671,8 +671,6 @@ TextureRenderer::build_colormap2()
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
         glDisable(GL_BLEND);
-        //glEnable(GL_BLEND);
-        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
         glActiveTexture(GL_TEXTURE0);
 #endif
@@ -680,21 +678,11 @@ TextureRenderer::build_colormap2()
         // rasterize widgets
         vector<CM2WidgetHandle> widgets = cmap2_->widgets();
         for (unsigned int i=0; i<widgets.size(); i++) {
-	  if (!dynamic_cast<PaintCM2Widget*>(widgets[i].get_rep())) continue;
           raster_buffer_->bind(GL_FRONT);
 	      widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), raster_buffer_);
           raster_buffer_->release(GL_FRONT);
           raster_buffer_->swapBuffers();
         }
-        for (unsigned int i=0; i<widgets.size(); i++) {
-	  if (dynamic_cast<PaintCM2Widget*>(widgets[i].get_rep())) continue;
-          raster_buffer_->bind(GL_FRONT);
-          widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), raster_buffer_);
-          raster_buffer_->release(GL_FRONT);
-          raster_buffer_->swapBuffers();
-        }
-
-        //glDisable(GL_BLEND);
         raster_buffer_->deactivate();
         raster_buffer_->set_use_texture_matrix(true);
       }
