@@ -25,6 +25,9 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
+#define OLD_SPARSE
+#undef OLD_SPARSE
+
 CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
@@ -122,6 +125,7 @@ void CompNeoHookImplicit::computeStableTimestep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
+#if 0
 void CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 				      const MPMMaterial* matl,
 				      DataWarehouse* old_dw,
@@ -252,6 +256,8 @@ void CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+#endif
+
 void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches,
 					      const MPMMaterial* matl,
 					      DataWarehouse* old_dw,
@@ -267,14 +273,17 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 #if 1
   IntVector nodes(0,0,0);
   int num_nodes(0);
-  
+#if 0 
   cerr << "nodes = " << nodes << endl;
   cerr << "number of patches = " << patches->size() << endl;
+#endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
+#if 0
     cerr << "num_nodes = " << num_nodes << "\n";
+#endif
   }
 
 #endif
@@ -284,7 +293,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
 #ifdef HAVE_PETSC
     IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     l2g.copy(d_petscLocalToGlobal[patch]);
 #endif
@@ -305,7 +314,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     cerr << "number of particles = " << pset->numParticles() << endl;
-    constParticleVariable<Point> px;
+    constParticleVariable<Point> px,px_ghost;
     ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
     constParticleVariable<Matrix3> deformationGradient,bElBar_old;
     ParticleVariable<Matrix3> pstress;
@@ -366,58 +375,21 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
       vector<int> dof(0);
       
-      //      for(int k = 0; k < 8 && patch->containsNode(ni[k]); k++) {
       int l2g_node_num;
       for(int k = 0; k < 8; k++) {
 	// Need to loop over the neighboring patches l2g to get the right
 	// dof number.
+#if 0
 	cerr << "working on node = " << ni[k] << endl;
 	cerr << "patch extents = " << patch->getNodeLowIndex() << " " 
 	     << patch->getNodeHighIndex() << endl;
-	if (!patch->containsNode(ni[k])) {
-	  cerr << "patch doesn't contain node: " << ni[k] << endl;
-#if 0
-	  IntVector lowIndex = patch->getNodeLowIndex();
-	  IntVector highIndex = patch->getNodeHighIndex();
-	  lowIndex -= IntVector(1,1,1);
-	  highIndex += IntVector(1,1,1);
 #endif
-	  IntVector lowIndex,highIndex;
-	  const Level* level = patch->getLevel();
-	  level->findIndexRange(lowIndex,highIndex);
-	  Level::selectType neighbors;
-	  level->selectPatches(lowIndex, highIndex, neighbors);
-	  cerr << "number of neighbors = " << neighbors.size() << endl;
-	  for (int n = 0; n < neighbors.size(); n++){
-	    cerr << "neighbor extents = " << neighbors[n]->getNodeLowIndex() 
-		 << " " << neighbors[n]->getNodeHighIndex() << endl;
-	    cerr << "node extents = " << ni[k] << endl;
-	    cerr << "containsNode = " << neighbors[n]->containsNode(ni[k]) 
-		 << endl;
-	  }
-	  for (int n = 0; n < neighbors.size(); n++) {
-	    if (neighbors[n]->containsNode(ni[k])) {
-	      const Patch* neighbor = neighbors[n];
-	      // I had to comment out the following to get it to compile
-#ifdef HAVE_PETSC
-	      l2g_node_num = (d_petscLocalToGlobal)[neighbor][ni[k]];
-#endif
-	      cerr << "l2g_node_num = " << l2g_node_num << endl;
-	      dof. push_back(l2g_node_num);
-	      dof.push_back(l2g_node_num+1);
-	      dof.push_back(l2g_node_num+2);
-	    }
-	  }
-	 } else {
-	  // I had to comment out the following to get it to compile
-#ifdef HAVE_PETSC
 	  l2g_node_num = l2g[ni[k]];
-#endif
-	  cerr << "l2g_node_num = " << l2g_node_num << endl;
+	  // cerr << "l2g_node_num = " << l2g_node_num << endl;
 	  dof.push_back(l2g_node_num);
 	  dof.push_back(l2g_node_num+1);
 	  dof.push_back(l2g_node_num+2);
-	}  
+	  
 
 #ifndef HAVE_PETSC 		
 	int node_num = ni[k].x() + (nodes.x())*ni[k].y() + (nodes.x())*
@@ -667,19 +639,23 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	for (int J = 0; J < (int)dof.size(); J++) {
 	  int dofj = dof[J];
 #if 1
-#if 1
+#ifdef OLD_SPARSE
 	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
 #endif
+#if 0
 	  cerr << "kmat[" << I << "][" << J << "]= " << kmat(I,J) << endl;
 	  cerr << "kgeo[" << I << "][" << J << "]= " << kgeo(I,J) << endl;
 #endif
+#endif
+#ifdef OLD_SPARSE
 	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I,J) + kgeo(I,J));
+#endif
 #ifdef HAVE_PETSC
 	  PetscScalar v = kmat(I,J) + kgeo(I,J);
 	  MatSetValues(A,1,&dofi,1,&dofj,&v,ADD_VALUES);
 #endif
-#if 1
+#ifdef OLD_SPARSE
 	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
 #endif
