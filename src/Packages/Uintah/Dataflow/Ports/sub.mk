@@ -16,6 +16,7 @@ PSELIBS := \
 	Core/Containers \
         Core/Thread \
 	Core/Geom \
+	Core/Util \
 	Core/Geometry \
 	Core/Exceptions \
         Core/Persistent \
