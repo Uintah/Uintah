@@ -33,29 +33,10 @@ PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Insight
 
 CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
 
-XMLS :=  \
-	sci_DiscreteGaussianImageFilter.xml \
-	sci_GradientRecursiveGaussianImageFilter.xml \
-        sci_GradientAnisotropicDiffusionImageFilter.xml \
-        sci_VectorGradientAnisotropicDiffusionImageFilter.xml \
-        sci_CurvatureAnisotropicDiffusionImageFilter.xml \
-        sci_VectorCurvatureAnisotropicDiffusionImageFilter.xml \
-        sci_GradientMagnitudeImageFilter.xml \
-	sci_WatershedRelabeler.xml \
-	sci_WatershedSegmenter.xml \
-	sci_ThresholdSegmentationLevelSetImageFilter.xml \
-	sci_BinaryThresholdImageFilter.xml \
-	sci_ReflectImageFilter.xml \
-	sci_CannySegmentationLevelSetImageFilter.xml \
-	sci_WatershedSegmentTreeGenerator.xml \
-	sci_WatershedImageFilter.xml \
-	sci_MeanImageFilter.xml \
-	sci_UnaryFunctorImageFilter.xml \
-	sci_VectorIndexSelectionCastImageFilter.xml \
-	sci_RescaleIntensityImageFilter.xml \
-#[INSERT NEW CODE FILE HERE]
+XMLS_PATH = $(PATH_TO_SCIRUN)/Packages/Insight/Dataflow/Modules/Filters/XML
+XMLS :=  $(shell ls $(XMLS_PATH)/sci_*.xml)
 
-INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
+INSIGHT_TCL_GEN := $(patsubst $(XMLS_PATH)/sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
 
 Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/XML/sci_%.xml
 	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateTCL.xsl $(PATH_TO_PACKAGE)/Dataflow/GUI/$*.tcl
