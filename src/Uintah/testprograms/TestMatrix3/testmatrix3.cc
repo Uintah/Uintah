@@ -54,9 +54,12 @@ SuiteTree* matrix3TestTree()
 
   //Matrix3 matrix(1e-10, 0, 0, 0, 1e-10, 0, 0, 0, 1e-10);
   //Matrix3 matrix(1e6, 0, 0, 0, 1e6, 0, 0, 0, 1e6);
+
+  /* Was doing some testing here
   Matrix3 M = randomMatrix();
   displayEigen(M);
   displayEigen(M*.0001);
+  */
 
   return matrix3Tests;
 
