@@ -111,6 +111,7 @@ int TecplotReader::getNMaterials()
   return materials.size();
 }
 void TecplotReader::GetParticleData(int particleId,
+				    clString pSetName,
                                     clString varname,
                                     Array1<double>& values)
 {
@@ -816,6 +817,9 @@ VectorFieldHandle TecplotReader::makeVectorField(int ii, int jj,
 
 //
 // $Log$
+// Revision 1.7  1999/12/28 21:11:45  kuzimmer
+// modified so that picking works again
+//
 // Revision 1.6  1999/10/07 02:08:28  sparker
 // use standard iostreams and complex type
 //
