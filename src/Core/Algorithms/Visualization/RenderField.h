@@ -129,10 +129,7 @@ private:
 		       MaterialHandle m0);
   inline void add_point(const Point &p, GeomPts *g, 
 			MaterialHandle m0);
-  inline void add_edge(const Point &p1, const Point &p2, double scale, 
-		       GeomGroup *g, MaterialHandle mh_avg,
-		       bool cyl = true);
-  
+
   inline  MaterialHandle choose_mat(bool def, int idx) {  
     if (def) return def_mat_handle_;
     ASSERT(mats_ != 0); 
@@ -529,7 +526,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   const bool cyl = edge_display_type == "Cylinders";
 
   GeomCLines* cedges = NULL;
-  GeomGroup* edges = NULL;
+  GeomColoredCylinders* edges = NULL;
   if (!cyl && sfld->data_at() == Field::NODE)
   {
     cedges = scinew GeomCLines;
@@ -539,7 +536,9 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   }
   else
   {
-    edges = scinew GeomGroup;
+    edges = scinew GeomColoredCylinders;
+    edges->set_radius(edge_scale);
+    edges->set_nu_nv(2*res_, 1); // Why is this 2*rez_ instead of rez?
     GeomDL *display_list = scinew GeomDL(edges);
     edge_switch_ = scinew GeomSwitch(display_list);
   }
@@ -558,30 +557,45 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     switch (sfld->data_at()) {
     case Field::NODE:
       {
+	MaterialHandle m1 = choose_mat(false, nodes[0]);
+	MaterialHandle m2 = choose_mat(false, nodes[1]);
 	if (cyl)
 	{
-	  MaterialHandle m1 = choose_mat(false, nodes[0]);
-	  add_edge(p1, p2, edge_scale, edges, m1, cyl);
+	  edges->add(p1, m1->diffuse, p2, m2->diffuse);
 	}
 	else
 	{
-	  // does not average anymore, so that switching color maps is fast.
-	  MaterialHandle m1 = choose_mat(false, nodes[0]);
-	  MaterialHandle m2 = choose_mat(false, nodes[1]);
 	  cedges->add(p1, m1->diffuse, p2, m2->diffuse);
 	}
       }
       break;
     case Field::EDGE:
       {
-	add_edge(p1, p2, edge_scale, edges,
-		 choose_mat(false, *eiter), cyl);
+	MaterialHandle m1 = choose_mat(false, *eiter);
+	if (cyl)
+	{
+	  edges->add(p1, m1->diffuse, p2, m1->diffuse);
+	}
+	else
+	{
+	  cedges->add(p1, m1->diffuse, p2, m1->diffuse);
+	}
       }
       break;
     case Field::FACE:
     case Field::CELL:
     case Field::NONE:
-      add_edge(p1, p2, edge_scale, edges, choose_mat(true, 0), cyl);
+      {
+	MaterialHandle m1 = choose_mat(true, 0);
+	if (cyl)
+	{
+	  edges->add(p1, m1->diffuse, p2, m1->diffuse);
+	}
+	else
+	{
+	  cedges->add(p1, m1->diffuse, p2, m1->diffuse);
+	}
+      }
       break;
     }
     
@@ -705,22 +719,6 @@ RenderField<Fld, Loc>::render_all(const Fld *fld, bool nodes,
   }
 }
 
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_edge(const Point &p0, const Point &p1,  
-				double scale, GeomGroup *g, MaterialHandle mh_avg,
-				bool cyl) 
-{
-  if (cyl) {
-    GeomCylinder *c = new GeomCylinder(p0, p1, scale, 2*res_);
-    g->add(scinew GeomMaterial(c, mh_avg));
-  } else {
-    GeomLine *l = new GeomLine(p0, p1);
-    l->setLineWidth(scale);
-    g->add(scinew GeomMaterial(l, mh_avg));
-  }
-}
 
 template <class Fld, class Loc>
 void 
