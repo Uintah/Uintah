@@ -2,42 +2,24 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/BoundCond.h>
-#include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
-#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Math/MinMax.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -45,18 +27,14 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
-#undef KUMAR
-//#define KUMAR
-
 using namespace Uintah;
 using namespace SCIRun;
 
 using namespace std;
 
 #define MAX_BASIS 27
-#undef INTEGRAL_TRACTION
 
-static DebugStream cout_doing("MPM", false);
+static DebugStream cout_doing("ShellMPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
@@ -84,7 +62,7 @@ ShellMPM::~ShellMPM()
 //
 void 
 ShellMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-		       SimulationStateP& sharedState)
+                       SimulationStateP& sharedState)
 {
   SerialMPM::problemSetup(prob_spec, grid, sharedState);
 }
@@ -96,8 +74,8 @@ ShellMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 //
 void 
 ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
-			       SimulationStateP& sharedState,
-			       MPMLabel* lb, 
+                               SimulationStateP& sharedState,
+                               MPMLabel* lb, 
                                MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
@@ -118,8 +96,8 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
 //
 void 
 ShellMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls)
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls)
 {
   // First do the standard SerialMPM stuff
   SerialMPM::scheduleInterpolateParticlesToGrid(sched, patches, matls);
@@ -134,11 +112,11 @@ ShellMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 //
 void 
 ShellMPM::schedInterpolateParticleRotToGrid(SchedulerP& sched,
-					    const PatchSet* patches,
-					    const MaterialSet* matls)
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
 {
   Task* t = scinew Task("ShellMPM::interpolateParticleRotToGrid",
-			this,&ShellMPM::interpolateParticleRotToGrid);
+                        this,&ShellMPM::interpolateParticleRotToGrid);
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -155,10 +133,10 @@ ShellMPM::schedInterpolateParticleRotToGrid(SchedulerP& sched,
 //
 void 
 ShellMPM::interpolateParticleRotToGrid(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* ,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw)
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* ,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
@@ -176,8 +154,8 @@ ShellMPM::interpolateParticleRotToGrid(const ProcessorGroup*,
 //
 void 
 ShellMPM::scheduleComputeInternalForce(SchedulerP& sched,
-				       const PatchSet* patches,
-				       const MaterialSet* matls)
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls)
 {
   // Call the SerialMPM version first
   SerialMPM::scheduleComputeInternalForce(sched, patches, matls);
@@ -192,11 +170,11 @@ ShellMPM::scheduleComputeInternalForce(SchedulerP& sched,
 //
 void 
 ShellMPM::schedComputeRotInternalMoment(SchedulerP& sched,
-				        const PatchSet* patches,
-				        const MaterialSet* matls)
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
 {
   Task* t = scinew Task("MPM::computeRotInternalMoment",
-		        this, &ShellMPM::computeRotInternalMoment);
+                        this, &ShellMPM::computeRotInternalMoment);
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -213,10 +191,10 @@ ShellMPM::schedComputeRotInternalMoment(SchedulerP& sched,
 //
 void 
 ShellMPM::computeRotInternalMoment(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* ,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw)
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
 {
   // Loop over materials
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -234,8 +212,8 @@ ShellMPM::computeRotInternalMoment(const ProcessorGroup*,
 //
 void 
 ShellMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
-				       const PatchSet* patches,
-				       const MaterialSet* matls)
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls)
 {
   // Call SerialMPM version first
   SerialMPM::scheduleSolveEquationsMotion(sched, patches, matls);
@@ -250,11 +228,11 @@ ShellMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
 //
 void 
 ShellMPM::schedComputeRotAcceleration(SchedulerP& sched,
-				      const PatchSet* patches,
-				      const MaterialSet* matls)
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls)
 {
   Task* t = scinew Task("MPM::computeRotAcceleration",
-		        this, &ShellMPM::computeRotAcceleration);
+                        this, &ShellMPM::computeRotAcceleration);
 
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
@@ -273,10 +251,10 @@ ShellMPM::schedComputeRotAcceleration(SchedulerP& sched,
 //
 void 
 ShellMPM::computeRotAcceleration(const ProcessorGroup*,
-			         const PatchSubset* patches,
-			         const MaterialSubset*,
-			         DataWarehouse* old_dw,
-			         DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
 {
   // Loop over materials
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -294,8 +272,8 @@ ShellMPM::computeRotAcceleration(const ProcessorGroup*,
 //
 void 
 ShellMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
-						  const PatchSet* patches,
-						  const MaterialSet* matls)
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls)
 {
   // First Schedule update of the rate of shell normal rotation
   schedParticleNormalRotRateUpdate(sched, patches, matls);
@@ -310,18 +288,24 @@ ShellMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 //
 void 
 ShellMPM::schedParticleNormalRotRateUpdate(SchedulerP& sched,
-					   const PatchSet* patches,
-					   const MaterialSet* matls)
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
 {
   Task* t=scinew Task("ShellMPM::schedParticleNormalRotRateUpdate",
-		      this, &ShellMPM::particleNormalRotRateUpdate);
+                      this, &ShellMPM::particleNormalRotRateUpdate);
 
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
-    if (smcm) smcm->addComputesRequiresRotRateUpdate(t, mpm_matl, patches);
+    if (smcm) {
+      GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
+      if (guv)
+        guv->addComputesRequiresRotRateUpdate(t, mpm_matl, patches);
+      else
+        smcm->addComputesRequiresRotRateUpdate(t, mpm_matl, patches);
+    }
   }
   sched->addTask(t, patches, matls);
 }
@@ -332,10 +316,10 @@ ShellMPM::schedParticleNormalRotRateUpdate(SchedulerP& sched,
 //
 void 
 ShellMPM::particleNormalRotRateUpdate(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* ,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* ,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   // Loop over materials
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -343,8 +327,13 @@ ShellMPM::particleNormalRotRateUpdate(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
-    if (smcm) 
-      smcm->particleNormalRotRateUpdate(patches, mpm_matl, old_dw, new_dw);
+    if (smcm) {
+      GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
+      if (guv)
+        guv->particleNormalRotRateUpdate(patches, mpm_matl, old_dw, new_dw);
+      else
+        smcm->particleNormalRotRateUpdate(patches, mpm_matl, old_dw, new_dw);
+    }
   } 
 }
 

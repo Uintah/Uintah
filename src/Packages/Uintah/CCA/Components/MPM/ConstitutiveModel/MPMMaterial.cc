@@ -1,10 +1,18 @@
 //  MPMMaterial.cc
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/GUVParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -13,22 +21,11 @@
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/SphereMembraneGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/ShellGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/NullGeometryPiece.h>
-#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -56,8 +53,12 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flags)
   else if (dynamic_cast<Membrane*>(d_cm) != 0)
     d_particle_creator = scinew MembraneParticleCreator(this,lb, flags);
 
-  else if (dynamic_cast<ShellMaterial*>(d_cm) != 0)
-    d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
+  else if (dynamic_cast<ShellMaterial*>(d_cm) != 0) {
+    if (dynamic_cast<GUVMaterial*>(d_cm) != 0)
+      d_particle_creator = scinew GUVParticleCreator(this,lb, flags);
+    else
+      d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
+  }
 
   else
     d_particle_creator = scinew DefaultParticleCreator(this,lb, flags);
@@ -167,6 +168,9 @@ MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags)
 
   else if (dynamic_cast<ShellMaterial*>(d_cm))
     d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
+
+  else if (dynamic_cast<GUVMaterial*>(d_cm))
+    d_particle_creator = scinew GUVParticleCreator(this,lb, flags);
 
   else
     d_particle_creator = scinew DefaultParticleCreator(this,lb, flags);

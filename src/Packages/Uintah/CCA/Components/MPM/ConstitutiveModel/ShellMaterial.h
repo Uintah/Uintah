@@ -12,17 +12,17 @@
 
 namespace Uintah {
 
-////////////////////////////////////////////////////////////////////////////
-/*! 
-   \class ShellMaterial
-   \brief Material model for shells (stresses normal to the shell are zero).
-   \author Biswajit Banerjee \n
-   C-SAFE and Department of Mechanical Engineering \n
-   University of Utah \n
-   Copyright (C) 2003 University of Utah \n
-   \warning  Only isotropic hypoelastic shells implemented.
-*/
-////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
+  /*! 
+    \class ShellMaterial
+    \brief Material model for shells (stresses normal to the shell are zero).
+    \author Biswajit Banerjee \n
+    C-SAFE and Department of Mechanical Engineering \n
+    University of Utah \n
+    Copyright (C) 2003 University of Utah \n
+    \warning  Only isotropic hypoelastic shells implemented.
+  */
+  ////////////////////////////////////////////////////////////////////////////
 
   class ShellMaterial : public ConstitutiveModel {
 
@@ -57,9 +57,10 @@ namespace Uintah {
     const VarLabel* pRotMassLabel;
     const VarLabel* pNormalRotAccLabel;
 
-  private:
+  protected:
     CMData d_initialData;
 
+  private:
     // Prevent copying of this class
     // copy constructor
     //ShellMaterial(const ShellMaterial &cm);
@@ -74,131 +75,131 @@ namespace Uintah {
     virtual ~ShellMaterial();
 
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     // initialize  each particle's constitutive model data
     virtual void initializeCMData(const Patch* patch,
-				  const MPMMaterial* matl,
-				  DataWarehouse* new_dw);
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
 
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* subset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* subset,
+                          map<const VarLabel*, ParticleVariableBase*>* newState,
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
-	 
+                                  std::vector<const VarLabel*>& to);
+         
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
-				       const MPMMaterial* matl,
-				       DataWarehouse* new_dw);
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Add computes and requires for interpolation of particle rotation to 
-        grid */
+      grid */
     //
-    void addComputesRequiresParticleRotToGrid(Task* task,
-					      const MPMMaterial* matl,
-					      const PatchSet* patches);
+    virtual void addComputesRequiresParticleRotToGrid(Task* task,
+                                                      const MPMMaterial* matl,
+                                                      const PatchSet* patches);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Actually interpolate normal rotation from particles to the grid */
     //
-    void interpolateParticleRotToGrid(const PatchSubset* patches,
-				      const MPMMaterial* matl,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw);
+    virtual void interpolateParticleRotToGrid(const PatchSubset* patches,
+                                              const MPMMaterial* matl,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw);
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Add computes and requires computation of rotational internal moment */
     //
-    void addComputesRequiresRotInternalMoment(Task* task,
-					      const MPMMaterial* matl,
-					      const PatchSet* patches);
+    virtual void addComputesRequiresRotInternalMoment(Task* task,
+                                                      const MPMMaterial* matl,
+                                                      const PatchSet* patches);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Actually compute rotational Internal moment */
     //
-    void computeRotInternalMoment(const PatchSubset* patches,
-				  const MPMMaterial* matl,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw);
+    virtual void computeRotInternalMoment(const PatchSubset* patches,
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Add computes and requires computation of rotational acceleration */
     //
-    void addComputesRequiresRotAcceleration(Task* task,
-					    const MPMMaterial* matl,
-					    const PatchSet* patches);
+    virtual void addComputesRequiresRotAcceleration(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* patches);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Actually compute rotational acceleration */
     //
-    void computeRotAcceleration(const PatchSubset* patches,
-				const MPMMaterial* matl,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw);
+    virtual void computeRotAcceleration(const PatchSubset* patches,
+                                        const MPMMaterial* matl,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Add computes and requires update of rotation rate */
     //
-    void addComputesRequiresRotRateUpdate(Task* task,
-					  const MPMMaterial* matl,
-					  const PatchSet* patches); 
+    virtual void addComputesRequiresRotRateUpdate(Task* task,
+                                                  const MPMMaterial* matl,
+                                                  const PatchSet* patches); 
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Actually update rotation rate */
     //
-    void particleNormalRotRateUpdate(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+    virtual void particleNormalRotRateUpdate(const PatchSubset* patches,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
 
     virtual double computeRhoMicroCM(double pressure,
-				     const double p_ref,
-				     const MPMMaterial* matl);
+                                     const double p_ref,
+                                     const MPMMaterial* matl);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   double p_ref,
-				   double& dp_drho, double& ss_new,
-				   const MPMMaterial* matl);
+                                   double p_ref,
+                                   double& dp_drho, double& ss_new,
+                                   const MPMMaterial* matl);
 
     virtual double getCompressibility();
 
     virtual void addComputesAndRequires(Task* ,
-					const MPMMaterial* ,
-					const PatchSet* ,
-					const bool ) const
-    {
-    }
-	 
+                                        const MPMMaterial* ,
+                                        const PatchSet* ,
+                                        const bool ) const
+      {
+      }
+         
   protected:
 
     ///////////////////////////////////////////////////////////////////////////
@@ -206,7 +207,7 @@ namespace Uintah {
     /*! Calculate the incremental rotation matrix for a shell particle */
     //
     Matrix3 calcIncrementalRotation(const Vector& r, const Vector& n,
-				    double delT);
+                                    double delT);
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -232,14 +233,16 @@ namespace Uintah {
     //
     /*! Calculate the shell elastic stress */
     //
-    void computeShellElasticStress(Matrix3& F, Matrix3& sig);
+    void computeShellElasticStress(Matrix3& F, Matrix3& sig,
+                                   double bulk, double shear);
 
     ///////////////////////////////////////////////////////////////////////////
     //
     /*! Calculate the plane stress deformation gradient corresponding
     // to sig33 = 0 and the Cauchy stress */
     //
-    bool computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig);
+    bool computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig,
+                                      double bulk, double shear);
 
     ///////////////////////////////////////////////////////////////////////////
     //
