@@ -182,9 +182,12 @@ Color Raytracer::shade(const Ray& ray, const Hit& hit,
 
     // Transform to object space
     Point obj_hit_position=hit_position;
-    Vector obj_normal=hit.prim()->normal(obj_hit_position);
+    Vector obj_normal=hit.prim()->normal(obj_hit_position, hit);
     // Transform normal back to world space
     Vector normal=obj_normal;
+    if(Dot(normal, ray.direction()) > 0){
+	normal=-normal;
+    }
 
     // Apply lighting...
     Lighting& l=salmon->lighting;
