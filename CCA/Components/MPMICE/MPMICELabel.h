@@ -27,6 +27,9 @@ using std::vector;
       const VarLabel* scratch3Label; 
       const VarLabel* scratchVecLabel;
       const VarLabel* NC_CCweightLabel;
+ 
+      const VarLabel* TempGradLabel;      // Needed by burn model --- temporary 
+      const VarLabel* aveSurfTempLabel;    
     };
 
 } // end namespace Uintah

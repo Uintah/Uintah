@@ -45,7 +45,12 @@ MPMICELabel::MPMICELabel()
                      CCVariable<Vector>::getTypeDescription());
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
-
+  //______ D U C T   T A P E__________
+  //  WSB1 burn model
+  TempGradLabel        = VarLabel::create("TempGrad",
+                     CCVariable<double>::getTypeDescription());
+  aveSurfTempLabel     = VarLabel::create("aveSurfTemp",
+                     CCVariable<double>::getTypeDescription());
 } 
 
 MPMICELabel::~MPMICELabel()
@@ -65,4 +70,8 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(scratch3Label);
   VarLabel::destroy(scratchVecLabel); 
   VarLabel::destroy(NC_CCweightLabel);
+  //______ D U C T   T A P E__________
+  //  WSB1 burn model
+  VarLabel::destroy(TempGradLabel);
+  VarLabel::destroy(aveSurfTempLabel);
 }
