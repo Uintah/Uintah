@@ -51,7 +51,10 @@ AC_DEFUN([SCI_TRY_LINK], [
 ## arg 6 : lib paths -L
 ## arg 7 : extra link flags 
 ## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
 ## 
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -63,10 +66,12 @@ AC_DEFUN([SCI_TRY_LINK], [
 ##      INC_$1_H          => all the -I's
 ##      HAVE_$1_H         => yes or no
 
-ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
+if test $# != 9; then
+     AC_MSG_ERROR(Wrong number of parameters ($#) for SCI-TRY-LINK for $2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+fi
 
-ifelse([$9],[optional],,[$9],[not-optional],,
-       [AC_FATAL(arg 9 must be either 'optional' or 'not-optional')])dnl
+
+ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
 
 AC_MSG_CHECKING(for $2 ($9))
 _sci_savelibs=$LIBS
@@ -75,8 +80,18 @@ _sci_savecflags=$CFLAGS
 _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
+
+if test "$9" != "optional" -a "$9" != "required" -a "$9" != "specific"; then
+     AC_MSG_ERROR(Last parameter of SCI-TRY-LINK for $2 must be: optional or required or specific.  (You had $9.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+fi
+
+# If $4 (the -I paths) is blank, do nothing, else do the for statement.
 ifelse([$4],[],,[
 for i in $4; do
+  if test "$i" = "/usr/include"; then
+     echo ""
+     AC_MSG_ERROR(Please do not specify /usr/include as the location for $2 include files.)
+  fi
   # make sure it exists
   if test -d $i; then
     if test -z "$_sci_includes"; then
@@ -88,6 +103,51 @@ for i in $4; do
 done
 ])dnl
 
+if test "$9" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $6 (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $6; do
+    if test "$value" = "/usr/lib"; then
+       echo ""
+       AC_MSG_ERROR(Please do not specify /usr/lib as the location for libs $5.)
+    fi
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then  
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $2 only one library path may be specified (you had: $6).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $4
+  __sci_pass=false
+  __sci_first_time=true
+  for value in ""$4; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then  
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $2 only one include path may be specified (you had: $4).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+  fi
+fi
+  
 ifelse([$5],[],_sci_libs=,[
 for i in $5; do
   if test -z "$_sci_libs"; then
@@ -117,7 +177,18 @@ CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
 LIBS="$_sci_libs $7 $LIBS"
 
-AC_TRY_LINK([$3],[$8],[
+# Build up a list of the #include <file> lines for use in compilation:
+__sci_pound_includes=
+for i in ""$3; do
+    # Have to have the "" for the SGI sh. 
+    if test "$i" = ""; then
+      continue
+    fi
+    __sci_pound_includes="$__sci_pound_includes
+#include <$i>"
+done
+
+AC_TRY_LINK($__sci_pound_includes,[$8],[
 eval LIB_DIR_$1='"$6"'
 
 if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
@@ -146,13 +217,32 @@ eval HAVE_$1="no"
 eval INC_$1_H=''
 eval HAVE_$1_H="no"
 AC_MSG_RESULT(not found)
-if test "$9" = "not-optional"; then
+if test "$9" != "optional"; then
   SCI_MSG_ERROR([[Test for required $1 failed. 
     To see the failed compile information, look in config.log, 
     search for $1. Please install the relevant libraries
      or specify the correct paths and try to configure again.]])
 fi
 ])
+
+if test "$9" = "specific"; then
+#echo specific
+  # Make sure the exact includes were found
+  for i in ""$3; do
+#echo looking for $4/$i
+    if test ! -e $4/$i; then
+     AC_MSG_ERROR(Specificly requested $2 include file '$4/$i' was not found)
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in ""$5; do
+#echo looking for $6/$i
+    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
+     AC_MSG_ERROR(Specificly requested $2 library file '$6/$i' was not found)
+    fi
+  done
+fi
+
 
 #restore variables
 CFLAGS=$_sci_savecflags
@@ -415,47 +505,47 @@ AC_DEFUN([SCI_ARG_VAR], [
 ##
 ##  INIT_PACKAGE_CHECK_VARS
 ##  
-##  Initialize all the variables that guard dependency checks required
+##  Initialize all the variables that guard REQUIRED dependencies
 ##  by specific configurations.
 ##
 AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
 
   # This list is alphabetical.  Please keep it that way.
-  sci_check_audio=no
-  sci_check_awk=no
-  sci_check_babel=no
-  sci_check_blas=no
-  sci_check_crypto=no
-  sci_check_etags=no
-  sci_check_exc=no 
-  sci_check_fortran=no
-  sci_check_hdf5=no
-  sci_check_globus=no
-  sci_check_glui=no
-  sci_check_glut=no
-  sci_check_gmake=no 
-  sci_check_gzopen=no
-  sci_check_hypre=no
-  sci_check_insight=no
-  sci_check_jpeg=no
-  sci_check_lapack=no
-  sci_check_mdsplus=no
-  sci_check_mpi=no
-  sci_check_netsolve=no
-  sci_check_oogl=no
-  sci_check_perl=no
-  sci_check_petsc=no
-  sci_check_plplot=no
-  sci_check_qt=no
-  sci_check_ssl=no
-  sci_check_tau=no
-  sci_check_teem=no
-  sci_check_thirdparty=no
-  sci_check_tiff=no
-  sci_check_tools=no
-  sci_check_unipetc=no
-  sci_check_uuid=no
-  sci_check_vdt=no
+  sci_required_audio=no
+  sci_required_awk=no
+  sci_required_babel=no
+  sci_required_blas=no
+  sci_required_crypto=no
+  sci_required_etags=no
+  sci_required_exc=no 
+  sci_required_fortran=no
+  sci_required_hdf5=no
+  sci_required_globus=no
+  sci_required_glui=no
+  sci_required_glut=no
+  sci_required_gmake=no 
+  sci_required_gzopen=no
+  sci_required_hypre=no
+  sci_required_insight=no
+  sci_required_jpeg=no
+  sci_required_lapack=no
+  sci_required_mdsplus=no
+  sci_required_mpi=no
+  sci_required_netsolve=no
+  sci_required_oogl=no
+  sci_required_perl=no
+  sci_required_petsc=no
+  sci_required_plplot=no
+  sci_required_qt=no
+  sci_required_ssl=no
+  sci_required_tau=no
+  sci_required_teem=no
+  sci_required_thirdparty=no
+  sci_required_tiff=no
+  sci_required_tools=no
+  sci_required_unipetc=no
+  sci_required_uuid=no
+  sci_required_vdt=no
 
 ])
 ##
@@ -472,50 +562,48 @@ case $1 in
   BioPSE)
   ;;
   Teem)
-    sci_check_teem=yes
+    sci_required_teem=yes
   ;;
   VDT)
-    sci_check_vdt=yes
+    sci_required_vdt=yes
   ;;
   MatlabInterface)
   ;;
   Uintah)
-    sci_check_fortran=yes
-    sci_check_mpi=yes
-    sci_check_blas=yes
-    sci_check_lapack=yes
-    sci_check_hypre=yes
-    sci_check_petsc=yes
-    sci_check_perl=yes
-    sci_check_tools=yes
+    sci_required_fortran=yes
+    sci_required_mpi=yes
+    sci_required_blas=yes
+    sci_required_lapack=yes
+    sci_required_perl=yes
+    sci_required_tools=yes
   ;;
   Fusion)
   ;;
   DataIO)
-    sci_check_mdsplus=yes
-    sci_check_hdf5=yes
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
   ;;
   SCIRun2)
-    sci_check_babel=yes
-    sci_check_uuid=yes
+    sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Remote)
-    sci_check_jpeg=yes
-    sci_check_tiff=yes
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
   ;;
   NetSolve)
-    sci_check_netsolve=yes
+    sci_required_netsolve=yes
   ;;
   rtrt)
-    sci_check_glut=yes
-    sci_check_glui=yes
-    sci_check_oogl=yes
-    sci_check_audio=yes 
-    sci_check_teem=yes
+    sci_required_glut=yes
+    sci_required_glui=yes
+    sci_required_oogl=yes
+    sci_required_audio=yes 
+    sci_required_teem=yes
   ;;
   Insight)
-    sci_check_insight=yes
-    sci_check_xalan=yes
+    sci_required_insight=yes
+    sci_required_xalan=yes
   ;;
   *)
     AC_MSG_WARN(No known dependencies for Package $1)
