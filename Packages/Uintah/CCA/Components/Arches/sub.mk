@@ -43,7 +43,10 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/CCA/Components/Arches/fortran \
 	Packages/Uintah/CCA/Components/Arches/Mixing \
-	Core/Exceptions
+	Packages/Uintah/CCA/Ports \
+	Packages/Uintah/Core/Parallel \
+	Core/Exceptions \
+	Core/Geometry
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 ifneq ($(PETSC_DIR),)

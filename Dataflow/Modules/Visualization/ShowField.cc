@@ -136,7 +136,7 @@ class ShowField : public Module
     DATA,
     DATA_AT
   };
-  bit_vector               render_state_;
+  vector<bool>               render_state_;
   void maybe_execute(toggle_type_e dis_type);
   Vector                  *bounding_vector_;
 public:

@@ -28,6 +28,7 @@
 
 %{
 
+#include <alloca.h>
 #include <iostream>
 #include <string.h>
 #include <strings.h>
@@ -43,11 +44,11 @@ using namespace SCIRun;
 
 int yylex();			// Defined in the scanner
 
-namespace SCIRun {
-  
-void yyerror(char *s);		// Defined below and called automatically when
+extern "C" void yyerror(char *s);		// Defined below and called automatically when
 				// bison detects a parse error
 
+namespace SCIRun {
+  
 extern int linenumber;		// the current line number
 extern int waserror;		// true if an error ever happens
 
@@ -177,10 +178,8 @@ function : TCONST {
 
 %%
 
-namespace SCIRun {
-
 //----------------------------------------------------------------------
-void fnerror (char *s) {
+extern "C" void fnerror (char *s) {
   cerr << "error";
   if (s) cerr << ": " << s;
   cerr << endl;
@@ -190,5 +189,3 @@ void fnerror (char *s) {
     waserror = 1;
   }
 }
-
-} // End namespace SCIRun

@@ -29,7 +29,7 @@ endif
 
 LIBS := 
 ifeq ($(NEED_SONAME),yes)
-LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) -ldl -lz
+LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) -lz
 endif
 
 PROGRAM := $(PROGRAM_PSE)

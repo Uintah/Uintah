@@ -16,7 +16,7 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#ifndef __sgi  /* This file is for linux only. */
+#ifdef __linux  /* This file is for linux only. */
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -46,6 +46,10 @@
 #endif
    - cm
 */
+#ifdef __digital__
+#define __environ environ
+#endif
+
 /* added by mc trying to fix hang bug on dual cpu machines */
 #define WAITPID_CANNOT_BLOCK_SIGCHLD
 #define NO_WAITPID

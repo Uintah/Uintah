@@ -34,7 +34,7 @@ SRCS     += $(SRCDIR)/BBox.cc \
 	    $(SRCDIR)/Vector.cc
 
 PSELIBS := Core/Persistent Core/Containers \
-	   Core/Exceptions
+	   Core/Exceptions Core/Util
 LIBS := $(DEFAULT_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

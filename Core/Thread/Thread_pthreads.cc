@@ -453,7 +453,11 @@ handle_abort_signals(int sig,
 #ifdef PPC
     void* addr=(void*)ctx.regs->dsisr;
 #else
+#if 0
     void* addr=(void*)ctx.cr2;
+#else
+    void* addr=0;
+#endif
 #endif
 #endif
     char* signam=Core_Thread_signal_name(sig, addr);
@@ -465,12 +469,6 @@ handle_abort_signals(int sig,
     if(sigaction(sig, &action, NULL) == -1)
 	throw ThreadError(std::string("sigaction failed")
 			  +strerror(errno));
-}
-
-int
-Thread::get_thread_id()
-{
-    return priv_->threadid;
 }
 
 void

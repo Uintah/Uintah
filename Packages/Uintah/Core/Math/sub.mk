@@ -14,6 +14,7 @@ PSELIBS := \
 	Core/Exceptions                 \
 	Core/Util                       \
 	Core/Geometry                   \
+	Core/Thread			\
 	Packages/Uintah/Core/Disclosure 
 
 

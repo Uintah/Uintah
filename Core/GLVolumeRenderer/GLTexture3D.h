@@ -195,9 +195,6 @@ private:
 		     Semaphore* thread_sema, ThreadGroup* tg);
   
   template <class T>
-#if ! defined(__sgi) && ! defined(_AIX)
-  friend 
-#endif
   class run_make_brick_data : public Runnable {
   public:
     run_make_brick_data(GLTexture3D* tex3D,
@@ -219,9 +216,6 @@ private:
   // friend class template <class T> run_make_brick_data<T>;
 
   //  template <class T>
-#if ! defined(__sgi) && ! defined(_AIX)
-  friend 
-#endif
   class run_make_low_res_brick_data : public Runnable {
   public:
     run_make_low_res_brick_data(GLTexture3D* tex3D,
