@@ -4,6 +4,7 @@
 <meta name="generator" content="Adobe GoLive 4">
 <title>Geometry Visualization</title>
 <!-- Changed by: Ted Dustman, 22-Feb-2002 -->
+<!-- Changed by: TjD, 24-Feb-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -331,7 +332,6 @@ interest.<br>
     receives its input data. We accomplish this by using <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
     Compilation</a>. <br>
-    [|<I think this is redundant and too deep the tutorial, Rob>]--->
     
     <p>You will notice a delay when ShowField executes for the first time. 
     This happens when the module compiles the algorithm specific to the
@@ -339,6 +339,7 @@ interest.<br>
     into SCIRun.  We cache away this compiled algorithm in a
     shared library, loading it without delay the next time you run
     SCIRun.
+    [|<I think this is redundant and too deep the tutorial, Rob>]--->
 
     <p>ShowField will then execute the newly loaded algorithm
     passing its results to downstream modules.
