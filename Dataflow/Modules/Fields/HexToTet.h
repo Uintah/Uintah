@@ -39,7 +39,7 @@ namespace SCIRun {
 class HexToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, std::ostream &) = 0;
+  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -51,14 +51,14 @@ class HexToTetAlgoT : public HexToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, std::ostream &msg);
+  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
 };
 
 
 template <class FSRC>
 bool
 HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-			     std::ostream &msg)
+			     ProgressReporter *mod)
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -211,7 +211,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+4));
     }
   } else {
-    msg << "Warning: did not load data values, use DirectInterp" << endl;
+    mod->warning("Could not load data values, use DirectInterp if needed.");
   }
   return true;
 }
@@ -220,7 +220,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 class LatToTetAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool execute(FieldHandle, FieldHandle&, std::ostream &) = 0;
+  virtual bool execute(FieldHandle, FieldHandle&, ProgressReporter *) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
@@ -232,14 +232,14 @@ class LatToTetAlgoT : public LatToTetAlgo
 {
 public:
   //! virtual interface. 
-  virtual bool execute(FieldHandle src, FieldHandle& dst, std::ostream &msg);
+  virtual bool execute(FieldHandle src, FieldHandle& dst, ProgressReporter *m);
 };
 
 
 template <class FSRC>
 bool
 LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-			     std::ostream &msg)
+			     ProgressReporter *mod)
 {
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -256,9 +256,6 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     tvmesh->add_point(p);
     ++nbi;
   }
-
-  hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
-  hvmesh->synchronize(Mesh::FACES_E);
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   hvmesh->begin(bi); hvmesh->end(ei);
@@ -356,7 +353,7 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       ++cbi;
     }
   } else {
-    msg << "Warning: did not load data values, use DirectInterp" << endl;
+    mod->warning("Could not load data values, use DirectInterp if needed.");
   }
   return true;
 }
