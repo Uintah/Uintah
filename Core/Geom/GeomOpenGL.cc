@@ -1010,14 +1010,6 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
       glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
     }
 
-    glMatrixMode(GL_TEXTURE);
-    glPushMatrix();
-
-    glScaled(1.0 / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
-    glTranslated(-cmap_->getMin(), 0.0, 0.0);
-
-    glMatrixMode(GL_MODELVIEW);
-
     // Send Cmap
     glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE,
 		 cmap_->rawRGBA_);
@@ -1036,6 +1028,15 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     }
     
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+    // Do Cmap transform to min-max
+    glMatrixMode(GL_TEXTURE);
+    glPushMatrix();
+
+    glScaled(1.0 / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
+    glTranslated(-cmap_->getMin(), 0.0, 0.0);
+
+    glMatrixMode(GL_MODELVIEW);
 
     // Draw child
     di->using_cmtexture_++;
