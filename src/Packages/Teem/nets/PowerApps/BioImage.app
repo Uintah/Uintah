@@ -52,7 +52,7 @@ set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
 global mods
 set mods(Viewer) $m1
 
-set mods(ViewImage) ""
+set mods(ViewSlices) ""
 set mods(EditTransferFunc) ""
 
 # Tooltips
@@ -90,28 +90,18 @@ set show_MIP_y 0
 set show_MIP_z 0
 set show_guidelines 1
 global filter2Dtextures
-set filter2Dtextures 0
+set filter2Dtextures 1
 global planes_mapType
 set planes_mapType 0
 global planes_threshold
 set planes_threshold 0
-global axial_min axial_max
-set axial_min 1
-set axial_max 1
-global axial_mode
-set axial_mode 0
 
-global coronal_min coronal_max
-set coronal_min 1
-set coronal_max 1
-global coronal_mode
-set coronal_mode 0
+global slice_frame
+set slice_frame(axial) ""
+set slice_frame(coronal) ""
+set slice_frame(sagittal) ""
+set slice_frame(volume) ""
 
-global sagittal_min sagittal_max
-set sagittal_min 1
-set sagittal_max 1
-global sagittal_mode
-set sagittal_mode 0
 
 
 # volume rendering
@@ -201,15 +191,12 @@ class BioImageApp {
 	set 0_samples 2
 	set 1_samples 2
 	set 2_samples 2
-        set sizex 0
-        set sizey 0
-        set sizez 0
 
         set has_autoviewed 0
         set has_executed 0
         set data_dir ""
         set 2D_fixed 0
-	set ViewImage_executed_on_error 0
+	set ViewSlices_executed_on_error 0
         set current_crop -1
 
         set turn_off_crop 0
@@ -289,15 +276,15 @@ class BioImageApp {
 
 
 	if {$msg_state == "Error"} {
-	    if {[string first "ViewImage" $which] != -1} {
+	    if {[string first "ViewSlices" $which] != -1} {
 		# hopefully, getting here means that we have new data, and that NrrdInfo
-		# has caught it but didn't change slice stuff in time before the ViewImage
+		# has caught it but didn't change slice stuff in time before the ViewSlices
 		# module executed
 		global mods
-		if {$mods(ViewImage) != ""} {
-		    if {$ViewImage_executed_on_error == 0} {
-			set ViewImage_executed_on_error 1
-			after 100 "$mods(ViewImage)-c needexecute"
+		if {$mods(ViewSlices) != ""} {
+		    if {$ViewSlices_executed_on_error == 0} {
+			set ViewSlices_executed_on_error 1
+			after 100 "$mods(ViewSlices)-c needexecute"
 		    } elseif {$error_module == ""} {
 			set error_module $which
 			# turn progress graph red
@@ -317,8 +304,8 @@ class BioImageApp {
 		#puts "FIX ME implement indicate_error"
 		change_indicator_labels "Visualizing..."
 		change_indicate_val 0
-		if {[string first "ViewImage" $which] != -1} {
-		    set ViewImage_executed_on_error 0
+		if {[string first "ViewSlices" $which] != -1} {
+		    set ViewSlices_executed_on_error 0
 		}
 	    }
 	}
@@ -351,49 +338,50 @@ class BioImageApp {
 		set has_autoviewed 1
 		after 200 "$mods(Viewer)-ViewWindow_0-c autoview"
 	    }
-        } elseif {[string first "ViewImage" $which] != -1 && $state == "Completed"} {
+        } elseif {[string first "ViewSlices" $which] != -1 && $state == "Completed"} {
             if {$2D_fixed == 0} {
                 # simulate a click in each window and set them to the correct views
 		global mods
 
 		# force initial draw in correct modes
-		global $mods(ViewImage)-axial-viewport0-axis
-		global $mods(ViewImage)-sagittal-viewport0-axis
-		global $mods(ViewImage)-coronal-viewport0-axis
- 		global $mods(ViewImage)-axial-viewport0-clut_ww
- 		global $mods(ViewImage)-sagittal-viewport0-clut_ww
- 		global $mods(ViewImage)-coronal-viewport0-clut_ww
- 		global $mods(ViewImage)-axial-viewport0-clut_wl
- 		global $mods(ViewImage)-sagittal-viewport0-clut_wl
- 		global $mods(ViewImage)-coronal-viewport0-clut_wl
+		global $mods(ViewSlices)-axial-viewport0-axis
+		global $mods(ViewSlices)-sagittal-viewport0-axis
+		global $mods(ViewSlices)-coronal-viewport0-axis
+ 		global $mods(ViewSlices)-axial-viewport0-clut_ww
+ 		global $mods(ViewSlices)-sagittal-viewport0-clut_ww
+ 		global $mods(ViewSlices)-coronal-viewport0-clut_ww
+ 		global $mods(ViewSlices)-axial-viewport0-clut_wl
+ 		global $mods(ViewSlices)-sagittal-viewport0-clut_wl
+ 		global $mods(ViewSlices)-coronal-viewport0-clut_wl
 
-		set $mods(ViewImage)-axial-viewport0-axis 2
-		set $mods(ViewImage)-sagittal-viewport0-axis 0
-		set $mods(ViewImage)-coronal-viewport0-axis 1
-
-                set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
-                set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
-
-		set $mods(ViewImage)-axial-viewport0-clut_ww $ww
-		set $mods(ViewImage)-sagittal-viewport0-clut_ww $ww
-		set $mods(ViewImage)-coronal-viewport0-clut_ww $ww
-
-		set $mods(ViewImage)-axial-viewport0-clut_wl $wl
-		set $mods(ViewImage)-sagittal-viewport0-clut_wl $wl
-		set $mods(ViewImage)-coronal-viewport0-clut_wl $wl
+		set $mods(ViewSlices)-sagittal-viewport0-axis 0
+		set $mods(ViewSlices)-coronal-viewport0-axis 1
+		set $mods(ViewSlices)-axial-viewport0-axis 2
 
 
-		
-                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
-                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
-                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
+                set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
+                set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
+		set $mods(ViewSlices)-axial-viewport0-clut_ww $ww
+		set $mods(ViewSlices)-sagittal-viewport0-clut_ww $ww
+		set $mods(ViewSlices)-coronal-viewport0-clut_ww $ww
 
-		# rebind 2D windows to call the ViewImage callback and then BioImage's so we
+		set $mods(ViewSlices)-axial-viewport0-clut_wl $wl
+		set $mods(ViewSlices)-sagittal-viewport0-clut_wl $wl
+		set $mods(ViewSlices)-coronal-viewport0-clut_wl $wl
+
+
+		global slice_frame
+                $mods(ViewSlices)-c rebind $slice_frame(axial).axial
+                $mods(ViewSlices)-c rebind $slice_frame(sagittal).sagittal
+                $mods(ViewSlices)-c rebind $slice_frame(coronal).coronal
+
+
+		# rebind 2D windows to call the ViewSlices callback and then BioImage's so we
 		# can catch the release
 	        
-		bind  .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
-		bind   .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
-		bind  .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
+		bind  $slice_frame(axial).axial <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y; $this update_ViewSlices_button_release %b"
+		bind   $slice_frame(sagittal).sagittal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y; $this update_ViewSlices_button_release %b"
+		bind  $slice_frame(coronal).coronal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y; $this update_ViewSlices_button_release %b"
 
 		global vol_width vol_level
 		set vol_width $ww
@@ -412,8 +400,8 @@ class BioImageApp {
  		set [set UnuJhisto]-maxs "$max nan"
  		set [set UnuJhisto]-mins "$min nan"
 
-		global planes_threshold $mods(ViewImage)-min
-		set planes_threshold [set $mods(ViewImage)-min]
+		global planes_threshold $mods(ViewSlices)-min
+		set planes_threshold [set $mods(ViewSlices)-min]
 
 
 
@@ -430,78 +418,33 @@ class BioImageApp {
 		after 200 "$mods(Viewer)-ViewWindow_0-c autoview"
 	    }
 
-	    global $mods(ViewImage)-min $mods(ViewImage)-max
+	    global $mods(ViewSlices)-min $mods(ViewSlices)-max
 
-	    $this update_planes_threshold_slider_min_max [set $mods(ViewImage)-min] [set $mods(ViewImage)-max]
+	    $this update_planes_threshold_slider_min_max [set $mods(ViewSlices)-min] [set $mods(ViewSlices)-max]
 
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
-	    # update slice sliders
-	    global $which-size0 
+	    set axis_num 0
+	    global slice_frame
+	    foreach axis "sagittal coronal axial" {
+		# get Nrrd Dimensions from NrrdInfo Module
+		upvar \#0 $which-size$axis_num nrrd_size
+		set size [expr $nrrd_size - 1]
 
-	    global $which-size1
-	    if {[info exists $which-size1]} {
-		global $which-size1 $which-size2
+		$slice_frame($axis).modes.slider.slice.s configure -from 0 -to $size
+		$slice_frame($axis).modes.slider.slab.s configure -from 0 -to $size
 
-		set sizex [expr [set $which-size0] - 1]
-		set sizey [expr [set $which-size1] - 1]
-		set sizez [expr [set $which-size2] - 1]
+		if {!$loading} {
+		    upvar \#0 $mods(ViewSlices)-$axis-viewport0-slice slice
+		    upvar \#0 $mods(ViewSlices)-$axis-viewport0-slab_min slab_min
+		    upvar \#0 $mods(ViewSlices)-$axis-viewport0-slab_max slab_max
 
+		    # set slice to be middle slice
+		    set slice [expr $size/2]		;# 50%
+		    set slab_min [expr $size/4]		;# 25%
+		    set slab_max [expr $size*3/4]	;# 75%
+		} 
+		incr axis_num
 	    }
-
-	    global $mods(ViewImage)-axial-viewport0-slab_width
-	    global $mods(ViewImage)-sagittal-viewport0-slab_width
-	    global $mods(ViewImage)-coronal-viewport0-slab_width
-
-
-  	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.slider.slice.s configure -from 0 -to $sizez
-            .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.slider.slab.s configure -from 0 -to $sizez
-  	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slider.slice.s configure -from 0 -to $sizex
-  	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slider.slab.s configure -from 0 -to $sizex
- 	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slider.slice.s configure -from 0 -to $sizey
- 	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slider.slab.s configure -from 0 -to $sizey
-
-	    global $mods(ViewImage)-axial-viewport0-slice
-	    global $mods(ViewImage)-sagittal-viewport0-slice
-	    global $mods(ViewImage)-coronal-viewport0-slice
-
-	    if {!$loading} {
-		# set slice to be middle slice
-
-		set $mods(ViewImage)-axial-viewport0-slice [expr $sizez/2]
-		set $mods(ViewImage)-sagittal-viewport0-slice [expr $sizex/2]
-		set $mods(ViewImage)-coronal-viewport0-slice [expr $sizey/2]
-		
-		global axial_min axial_max
-		global sagittal_min sagittal_max
-		global coronal_min coronal_max
-		set axial_min [expr $sizez/2]
-		set axial_max [expr $sizez/2]
-		set sagittal_min [expr $sizex/2]
-		set sagittal_max [expr $sizex/2]
-		set coronal_min [expr $sizey/2]
-		set coronal_max [expr $sizey/2]
-
-		set centerz [expr $sizez/2]
-		set minz [expr $centerz - [expr $centerz/2]]
-		set maxz [expr $centerz + [expr $centerz/2]]
-		set axial_min $minz
-		set axial_max $maxz
-		set $mods(ViewImage)-axial-viewport0-slab_width $centerz
-
-		set centerx [expr $sizex/2]
-		set minx [expr $centerx - [expr $centerx/2]]
-		set maxx [expr $centerx + [expr $centerx/2]]
-		set sagittal_min $minx
-		set sagittal_max $maxx
-		set $mods(ViewImage)-sagittal-viewport0-slab_width $centerx
-
-		set centery [expr $sizey/2]
-		set miny [expr $centery - [expr $centery/2]]
-		set maxy [expr $centery + [expr $centery/2]]
-		set coronal_min $miny
-		set coronal_max $maxy
-		set $mods(ViewImage)-coronal-viewport0-slab_width $centery
-	    } 
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
@@ -748,11 +691,11 @@ class BioImageApp {
 	} 
     }
 
-    method build_viewers {viewer viewimage} {
+    method old_build_viewers {viewer viewimage} {
 	set w $win.viewers
 	
 	global mods
-	set mods(ViewImage) $viewimage
+	set mods(ViewSlices) $viewimage
 
 	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
@@ -791,200 +734,18 @@ class BioImageApp {
 
 	$viewimage control_panel $w.cp
 	$viewimage add_nrrd_tab $w 1
+	global slice_frame
+	set slice_frame(3d) $topl
+	set slice_frame(axial) $topr
+	set slice_frame(coronal) $botr
+	set slice_frame(sagittal) $botl
 
-	# modes for axial
-	frame $topr.modes
-	pack $topr.modes -side bottom -padx 0 -pady 0  -expand yes -fill x
-
-	frame $topr.modes.buttons
-	frame $topr.modes.slider
-	pack $topr.modes.buttons $topr.modes.slider \
-	    -side top -pady 0 -anchor n -expand yes -fill x
-
-	global axial_mode axial_min axial_max
-	global $mods(ViewImage)-axial-viewport0-slice
-
-	# Radiobuttons
-	radiobutton $topr.modes.buttons.slice -text "Slice" \
-	    -variable axial_mode -value 0 \
-	    -command "$this update_axial_mode"
-	radiobutton $topr.modes.buttons.slab -text "Slab" \
-	    -variable axial_mode -value 1 \
-	    -command "$this update_axial_mode"
-	radiobutton $topr.modes.buttons.mip -text "MIP" \
-	    -variable axial_mode -value 2 \
-	    -command "$this update_axial_mode"
-	pack $topr.modes.buttons.slice $topr.modes.buttons.slab \
-	    $topr.modes.buttons.mip -side left -anchor n -padx 2 \
-	    -expand yes -fill x
-
-	# Initialize with slice scale visible
-	frame $topr.modes.slider.slice
-	pack $topr.modes.slider.slice -side top -anchor n 
-	scale $topr.modes.slider.slice.s -label "" \
-	    -variable $mods(ViewImage)-axial-viewport0-slice \
-	    -from 0 -to 20 -width 15 \
-	    -length 120 -showvalue false \
-	    -orient horizontal -command "$this update_axial_slice"
-	    
-
-	entry $topr.modes.slider.slice.l -width 3 \
-	    -textvariable $mods(ViewImage)-axial-viewport0-slice -relief flat
-
-	pack $topr.modes.slider.slice.s $topr.modes.slider.slice.l \
-	    -side left -anchor n -padx 2 -pady 0
-	
-	# Create range widget for slab mode
-	frame $topr.modes.slider.slab
-	label $topr.modes.slider.slab.min \
-	    -textvariable axial_min 
-	range $topr.modes.slider.slab.s -from 0 -to 20 \
-	    -orient horizontal -showvalue false \
-	    -length 130 -rangecolor "#830101" -width 15 \
-	    -varmin axial_min -varmax axial_max \
-	    -command "$this update_axial_slab $axial_min $axial_max"
-
-	label $topr.modes.slider.slab.max -textvariable axial_max 
-
-	pack $topr.modes.slider.slab.min $topr.modes.slider.slab.s \
-	    $topr.modes.slider.slab.max -side left -anchor n -padx 0 -pady 0
-
-	# show/hide bar
-	set img [image create photo -width 1 -height 1]
-	button $topr.modes.expand -height 4 -bd 2 -relief raised -image $img \
-	    -cursor based_arrow_down \
-	    -command "$this hide_control_panel $topr.modes"
-	pack $topr.modes.expand -side bottom -fill both
-
-
-
-	# modes for sagittal
-	frame $botl.modes
-	pack $botl.modes -side bottom -padx 0 -pady 0 -expand yes -fill x
-
-
-	frame $botl.modes.buttons
-	frame $botl.modes.slider
-	pack $botl.modes.buttons $botl.modes.slider \
-	    -side top -pady 0 -anchor n -expand yes -fill x
-
-	global sagittal_mode sagittal_min sagittal_max
-	global $mods(ViewImage)-sagittal-viewport0-slice
-
-	# Radiobuttons
-	radiobutton $botl.modes.buttons.slice -text "Slice" \
-	    -variable sagittal_mode -value 0 \
-	    -command "$this update_sagittal_mode"
-	radiobutton $botl.modes.buttons.slab -text "Slab" \
-	    -variable sagittal_mode -value 1 \
-	    -command "$this update_sagittal_mode"
-	radiobutton $botl.modes.buttons.mip -text "MIP" \
-	    -variable sagittal_mode -value 2 \
-	    -command "$this update_sagittal_mode"
-	pack $botl.modes.buttons.slice $botl.modes.buttons.slab \
-	    $botl.modes.buttons.mip -side left -anchor n -padx 2 \
-	    -expand yes -fill x
-
-	# Initialize with slice scale visible
-	frame $botl.modes.slider.slice
-	pack $botl.modes.slider.slice -side top -anchor n 
-	scale $botl.modes.slider.slice.s -label "" \
-	    -variable $mods(ViewImage)-sagittal-viewport0-slice \
-	    -from 0 -to 20 -width 15 \
-	    -length 120 -showvalue false \
-	    -orient horizontal -command "$this update_sagittal_slice"
-
-	entry $botl.modes.slider.slice.l -width 3 \
-	    -textvariable $mods(ViewImage)-sagittal-viewport0-slice -relief flat
-
-	pack $botl.modes.slider.slice.s $botl.modes.slider.slice.l \
-	    -side left -anchor n -padx 2 -pady 0
-	
-	# Create range widget for slab mode
-	frame $botl.modes.slider.slab
-	label $botl.modes.slider.slab.min \
-	    -textvariable sagittal_min 
-	range $botl.modes.slider.slab.s -from 0 -to 20 \
-	    -orient horizontal -showvalue false \
-	    -length 130 -rangecolor "#830101" -width 15 \
-	    -varmin sagittal_min -varmax sagittal_max \
-	    -command "$this update_sagittal_slab $sagittal_min $sagittal_max"
-
-	label $botl.modes.slider.slab.max -textvariable sagittal_max 
-
-	pack $botl.modes.slider.slab.min $botl.modes.slider.slab.s \
-	    $botl.modes.slider.slab.max -side left -anchor n -padx 0 -pady 0
-
-	# show/hide bar
-	set img [image create photo -width 1 -height 1]
-	button $botl.modes.expand -height 4 -bd 2 -relief raised -image $img \
-	    -cursor based_arrow_down \
-	    -command "$this hide_control_panel $botl.modes"
-	pack $botl.modes.expand -side bottom -fill both
-
-	# modes for coronal
-	frame $botr.modes
-	pack $botr.modes -side bottom -padx 0 -pady 0 -expand yes -fill x
-
-
-	frame $botr.modes.buttons
-	frame $botr.modes.slider
-	pack $botr.modes.buttons $botr.modes.slider \
-	    -side top -pady 0 -anchor n -expand yes -fill x
-
-	global coronal_mode coronal_min coronal_max
-	global $mods(ViewImage)-coronal-viewport0-slice
-
-	# Radiobuttons
-	radiobutton $botr.modes.buttons.slice -text "Slice" \
-	    -variable coronal_mode -value 0 \
-	    -command "$this update_coronal_mode"
-	radiobutton $botr.modes.buttons.slab -text "Slab" \
-	    -variable coronal_mode -value 1 \
-	    -command "$this update_coronal_mode"
-	radiobutton $botr.modes.buttons.mip -text "MIP" \
-	    -variable coronal_mode -value 2 \
-	    -command "$this update_coronal_mode"
-	pack $botr.modes.buttons.slice $botr.modes.buttons.slab \
-	    $botr.modes.buttons.mip -side left -anchor n -padx 2 \
-	    -expand yes -fill x
-
-	# Initialize with slice scale visible
-	frame $botr.modes.slider.slice
-	pack $botr.modes.slider.slice -side top -anchor n 
-	scale $botr.modes.slider.slice.s -label "" \
-	    -variable $mods(ViewImage)-coronal-viewport0-slice \
-	    -from 0 -to 20 -width 15 \
-	    -length 120 -showvalue false \
-	    -orient horizontal -command "$this update_coronal_slice"
-
-	entry $botr.modes.slider.slice.l -width 3 \
-	    -textvariable $mods(ViewImage)-coronal-viewport0-slice -relief flat
-
-	pack $botr.modes.slider.slice.s $botr.modes.slider.slice.l \
-	    -side left -anchor n -padx 2 -pady 0
-	
-	# Create range widget for slab mode
-	frame $botr.modes.slider.slab
-	label $botr.modes.slider.slab.min \
-	    -textvariable coronal_min 
-	range $botr.modes.slider.slab.s -from 0 -to 20 \
-	    -orient horizontal -showvalue false \
-	    -length 130 -rangecolor "#830101" -width 15 \
-	    -varmin coronal_min -varmax coronal_max \
-	    -command "$this update_coronal_slab $coronal_min $coronal_max"
-
-	label $botr.modes.slider.slab.max -textvariable coronal_max 
-
-	pack $botr.modes.slider.slab.min $botr.modes.slider.slab.s \
-	    $botr.modes.slider.slab.max -side left -anchor n -padx 0 -pady 0
-
-	# show/hide bar
-	set img [image create photo -width 1 -height 1]
-	button $botr.modes.expand -height 4 -bd 2 -relief raised -image $img \
-	    -cursor based_arrow_down \
-	    -command "$this hide_control_panel $botr.modes"
-	pack $botr.modes.expand -side bottom -fill both
+	foreach axis "sagittal coronal axial" {
+	    create_2d_frame $slice_frame($axis) $axis
+	    $viewimage gl_frame $slice_frame($axis).$axis
+	    pack $slice_frame($axis).$axis \
+		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
+	}
 
 	# embed viewer in top left
 	global mods
@@ -996,11 +757,159 @@ class BioImageApp {
  	pack $topl -side top -anchor n \
  	    -expand 1 -fill both -padx 0 -pady 0
 
-	# add 3 slice windows
-	pack [$viewimage gl_frame $topr "Axial" $w] -side top -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack [$viewimage gl_frame $botl "Sagittal" $w] -side top -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack [$viewimage gl_frame $botr "Coronal" $w] -side top -padx 0 -pady 0 -ipadx 0 -ipady 0
     }
+
+
+    method build_viewers {viewer viewimage} {
+	set w $win.viewers
+	
+	global mods
+	set mods(ViewSlices) $viewimage
+
+	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
+	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
+	    -sashcursor sb_v_double_arrow -width $viewer_width -height $viewer_height
+	pack $w.topbot -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+	
+	$w.topbot add top -margin 3 -minimum 0
+	$w.topbot add bottom  -margin 0 -minimum 0
+
+	set bot [$w.topbot childsite top]
+	set top [$w.topbot childsite bottom]
+
+	iwidgets::panedwindow $top.lmr -orient vertical -thickness 0 \
+	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
+	    -sashcursor sb_h_double_arrow
+
+	$top.lmr add left -margin 3 -minimum 0
+	$top.lmr add middle -margin 3 -minimum 0
+	$top.lmr add right -margin 3 -minimum 0
+	set topl [$top.lmr childsite left]
+	set topm [$top.lmr childsite middle]
+	set topr [$top.lmr childsite right]
+
+	pack $top.lmr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+
+	$viewimage control_panel $w.cp
+	$viewimage add_nrrd_tab $w 1
+	global slice_frame
+	set slice_frame(3d) $bot
+	set slice_frame(sagittal) $topl
+	set slice_frame(coronal) $topm
+	set slice_frame(axial) $topr
+
+
+	foreach axis "sagittal coronal axial" {
+	    create_2d_frame $slice_frame($axis) $axis
+	    $viewimage gl_frame $slice_frame($axis).$axis
+	    pack $slice_frame($axis).$axis \
+		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
+	}
+
+	# embed viewer in top left
+	global mods
+ 	set eviewer [$mods(Viewer) ui_embedded]
+
+ 	$eviewer setWindow $slice_frame(3d) [expr $viewer_width/2] \
+ 	    [expr $viewer_height/2] \
+
+ 	pack $slice_frame(3d) -side top -anchor n \
+ 	    -expand 1 -fill both -padx 0 -pady 0
+
+    }
+
+    method create_2d_frame { window axis } {
+	# Modes for $axis
+	frame $window.modes
+	pack $window.modes -side bottom -padx 0 -pady 0 -expand 1 -fill x
+	
+	frame $window.modes.buttons
+	frame $window.modes.slider
+	pack $window.modes.buttons $window.modes.slider \
+	    -side top -pady 0 -anchor n -expand yes -fill x
+
+	global mods slice_frame
+	
+	# Radiobuttons
+	radiobutton $window.modes.buttons.slice -text "Slice" \
+	    -variable $mods(ViewSlices)-$axis-viewport0-mode -value 0 \
+	    -command "$this update_ViewSlices_mode $axis"
+	radiobutton $window.modes.buttons.slab -text "Slab" \
+	    -variable $mods(ViewSlices)-$axis-viewport0-mode -value 1 \
+	    -command "$this update_ViewSlices_mode $axis"
+	radiobutton $window.modes.buttons.mip -text "MIP" \
+	    -variable $mods(ViewSlices)-$axis-viewport0-mode -value 2 \
+	    -command "$this update_ViewSlices_mode $axis"
+	pack $window.modes.buttons.slice $window.modes.buttons.slab \
+	    $window.modes.buttons.mip -side left -anchor n -padx 2 \
+	    -expand yes -fill x
+	
+	# Initialize with slice scale visible
+	frame $window.modes.slider.slice
+	pack $window.modes.slider.slice -side top -anchor n -expand 1 -fill x
+
+	# dummy value label
+	label $window.modes.slider.slice.dummy \
+	    -justify right -width 3 -anchor e
+	# slice slider
+	scale $window.modes.slider.slice.s \
+	    -variable $mods(ViewSlices)-$axis-viewport0-slice \
+	    -from 0 -to 20 -width 15 \
+	    -showvalue false \
+	    -orient horizontal \
+	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis"
+	# slice value label
+	label $window.modes.slider.slice.l \
+	    -textvariable $mods(ViewSlices)-$axis-viewport0-slice \
+	    -justify left -width 3 -anchor w
+
+	
+	pack $window.modes.slider.slice.dummy -anchor w -side left \
+	    -padx 0 -pady 0 -expand 0
+	
+	pack $window.modes.slider.slice.l -anchor e -side right \
+	    -padx 0 -pady 0 -expand 0
+
+	pack $window.modes.slider.slice.s -anchor n -side left \
+	    -padx 0 -pady 0 -expand 1 -fill x
+
+	
+	# Create range widget for slab mode
+	frame $window.modes.slider.slab
+	# min range value label
+	label $window.modes.slider.slab.min \
+	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_min \
+	    -justify right -width 3 -anchor e
+	# MIP slab range widget
+	range $window.modes.slider.slab.s -from 0 -to 20 \
+	    -orient horizontal -showvalue false \
+	    -rangecolor "#830101" -width 15 \
+	    -varmin $mods(ViewSlices)-$axis-viewport0-slab_min \
+	    -varmax $mods(ViewSlices)-$axis-viewport0-slab_max \
+	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis"
+	# max range value label
+	label $window.modes.slider.slab.max \
+	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_max \
+	    -justify left -width 3 -anchor w
+	
+	pack $window.modes.slider.slab.min -anchor w -side left \
+	    -padx 0 -pady 0 -expand 0 
+
+	pack $window.modes.slider.slab.max -anchor e -side right \
+	    -padx 0 -pady 0 -expand 0 
+
+	pack $window.modes.slider.slab.s \
+	    -side left -anchor n -padx 0 -pady 0 -expand 1 -fill x
+
+	# show/hide bar
+	set img [image create photo -width 1 -height 1]
+	button $window.modes.expand -height 4 -bd 2 \
+	    -relief raised -image $img \
+	    -cursor based_arrow_down \
+	    -command "$this hide_control_panel $window.modes"
+	pack $window.modes.expand -side bottom -fill both
+    }
+    
 
     method show_control_panel { w } {
 	pack forget $w.expand
@@ -1019,17 +928,17 @@ class BioImageApp {
 	    -cursor based_arrow_up
     }
 
-    method update_ViewImage_button_release {b} {
+    method update_ViewSlices_button_release {b} {
  	if {$b == 1} {
  	    # Window/level just changed
  	    global link_winlevel
  	    if {$link_winlevel == 1} {
 		global mods vol_width vol_level
-		global $mods(ViewImage)-axial-viewport0-clut_ww 
-		global $mods(ViewImage)-axial-viewport0-clut_wl
+		global $mods(ViewSlices)-axial-viewport0-clut_ww 
+		global $mods(ViewSlices)-axial-viewport0-clut_wl
 		
-		set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
-		set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+		set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
+		set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
 		set min [expr $wl-$ww/2]
 		set max [expr $wl+$ww/2]
 
@@ -1060,7 +969,6 @@ class BioImageApp {
 		
  	    # update background threshold slider min/max 
  	    # $this update_planes_threshold_slider_min_max
-
  	    $this update_planes_threshold
  	}
     }
@@ -1234,7 +1142,7 @@ class BioImageApp {
 	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 410 2286]
 	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 392 2348]
 	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 392 2409]
-            set m26 [addModuleAtPosition "SCIRun" "Render" "ViewImage" 704 2057]
+            set m26 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 704 2057]
 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 741 1977]
 	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
 
@@ -1305,11 +1213,11 @@ class BioImageApp {
 	    # connect 2D Viewer to 3D Viewer
 	    set c37 [addConnection $m26 0 $mods(Viewer) 1]
 
-	    # connect EditTransferFunc2 to ViewImage for painting
-	    set c42 [addConnection $m14 0 $m26 3]
+	    # connect EditTransferFunc2 to ViewSlices for painting
+	    set c42 [addConnection $m14 0 $m26 4]
 
-	    # connect Gradient Magnitude to ViewImage for painting
-	    set c43 [addConnection $m9 0 $m26 4]
+	    # connect Gradient Magnitude to ViewSlices for painting
+	    set c43 [addConnection $m9 0 $m26 5]
 
 	    # more connections
 	    set c44 [addConnection $m10 0 $m37 1]
@@ -2132,9 +2040,9 @@ class BioImageApp {
             grid configure $page.planes.zm -row 2 -column 1 -sticky "w"
 
             # display window and level
-            global $mods(ViewImage)-axial-viewport0-clut_ww 
-            global $mods(ViewImage)-axial-viewport0-clut_wl
-            global $mods(ViewImage)-min $mods(ViewImage)-max
+            global $mods(ViewSlices)-axial-viewport0-clut_ww 
+            global $mods(ViewSlices)-axial-viewport0-clut_wl
+            global $mods(ViewSlices)-min $mods(ViewSlices)-max
 
             iwidgets::labeledframe $page.winlevel \
                  -labeltext "Window/Level Controls" \
@@ -2148,29 +2056,29 @@ class BioImageApp {
             pack $winlevel.ww $winlevel.wl -side top -anchor ne -pady 0
 
             label $winlevel.ww.l -text "Window Width"
-            scale $winlevel.ww.s -variable $mods(ViewImage)-axial-viewport0-clut_ww \
+            scale $winlevel.ww.s -variable $mods(ViewSlices)-axial-viewport0-clut_ww \
                 -from 0 -to 9999 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_width"
             bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.ww.e -textvariable $mods(ViewImage)-axial-viewport0-clut_ww \
+            entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww \
                 -relief flat
             bind $winlevel.ww.e <Return> "$this change_window_width 1; $this execute_vol_ren_when_linked"
             pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
 
             label $winlevel.wl.l -text "Window Level "
-            scale $winlevel.wl.s -variable $mods(ViewImage)-axial-viewport0-clut_wl \
+            scale $winlevel.wl.s -variable $mods(ViewSlices)-axial-viewport0-clut_wl \
                 -from 0 -to 9999 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_level"
             bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.wl.e -textvariable $mods(ViewImage)-axial-viewport0-clut_wl \
+            entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl \
                 -relief flat
             bind $winlevel.wl.e <Return> "$this change_window_level 1; $this execute_vol_ren_when_linked"
             pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
 
-            trace variable $mods(ViewImage)-min w "$this update_window_level_scales"
-            trace variable $mods(ViewImage)-max w "$this update_window_level_scales"
+            trace variable $mods(ViewSlices)-min w "$this update_window_level_scales"
+            trace variable $mods(ViewSlices)-max w "$this update_window_level_scales"
 
             # Background threshold
             global planes_threshold
@@ -2475,8 +2383,8 @@ class BioImageApp {
        bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $this update_planes_threshold"
         pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
 
-        trace variable $mods(ViewImage)-min w "$this update_volume_window_level_scales"
-        trace variable $mods(ViewImage)-max w "$this update_volume_window_level_scales"
+        trace variable $mods(ViewSlices)-min w "$this update_volume_window_level_scales"
+        trace variable $mods(ViewSlices)-max w "$this update_volume_window_level_scales"
        
 
         ### Renderer Options Tab
@@ -2814,12 +2722,12 @@ class BioImageApp {
         global $m1-maxAxis1
         global $m1-maxAxis2
         if {$has_executed == 1} {
-	    global $mods(ViewImage)-crop_maxAxis0
-            global $mods(ViewImage)-crop_maxAxis1
-            global $mods(ViewImage)-crop_maxAxis2
-            set $m1-maxAxis0 [set $mods(ViewImage)-crop_maxAxis0]
-            set $m1-maxAxis1 [set $mods(ViewImage)-crop_maxAxis1]
-            set $m1-maxAxis2 [set $mods(ViewImage)-crop_maxAxis2]     
+	    global $mods(ViewSlices)-crop_maxAxis0
+            global $mods(ViewSlices)-crop_maxAxis1
+            global $mods(ViewSlices)-crop_maxAxis2
+            set $m1-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0]
+            set $m1-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
+            set $m1-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]     
         } 
 #         else {
 #             set $m1-maxAxis0 "M"
@@ -2965,10 +2873,10 @@ class BioImageApp {
 	addConnection $m1 0 $m2 0
 	addConnection $m2 0 $ChooseNrrd $choose
 
-        global $mods(ViewImage)-min
-        global $mods(ViewImage)-max
-        set min [set $mods(ViewImage)-min]
-        set max [set $mods(ViewImage)-max]
+        global $mods(ViewSlices)-min
+        global $mods(ViewSlices)-max
+        set min [set $mods(ViewSlices)-min]
+        set max [set $mods(ViewSlices)-max]
 
         if {$min == -1 && $max == -1} {
 	    # min/max haven't been set becuase it hasn't executed yet
@@ -3138,10 +3046,10 @@ class BioImageApp {
 
     method update_window_level_scales {varname varele varop} {
 	global mods
-	global $mods(ViewImage)-min $mods(ViewImage)-max
+	global $mods(ViewSlices)-min $mods(ViewSlices)-max
 
-	set min [set $mods(ViewImage)-min]
-	set max [set $mods(ViewImage)-max]
+	set min [set $mods(ViewSlices)-min]
+	set max [set $mods(ViewSlices)-max]
         set span [expr abs([expr $max-$min])]
 
 	# configure window width scale
@@ -3162,19 +3070,19 @@ class BioImageApp {
     method change_window_width { val } {
 	# sync other windows with axial window width
 	global mods
-	global $mods(ViewImage)-axial-viewport0-clut_ww
-	global $mods(ViewImage)-sagittal-viewport0-clut_ww
-	global $mods(ViewImage)-coronal-viewport0-clut_ww
+	global $mods(ViewSlices)-axial-viewport0-clut_ww
+	global $mods(ViewSlices)-sagittal-viewport0-clut_ww
+	global $mods(ViewSlices)-coronal-viewport0-clut_ww
 
-	set val [set $mods(ViewImage)-axial-viewport0-clut_ww]
+	set val [set $mods(ViewSlices)-axial-viewport0-clut_ww]
 
-	set $mods(ViewImage)-sagittal-viewport0-clut_ww $val
-	set $mods(ViewImage)-coronal-viewport0-clut_ww $val
+	set $mods(ViewSlices)-sagittal-viewport0-clut_ww $val
+	set $mods(ViewSlices)-coronal-viewport0-clut_ww $val
 
 	# set windows to be dirty
-	$mods(ViewImage)-c setclut
+	$mods(ViewSlices)-c setclut
 
-	$mods(ViewImage)-c redrawall
+	$mods(ViewSlices)-c redrawall
       
         # if window levels linked, change the vol_width
         global link_winlevel
@@ -3188,19 +3096,19 @@ class BioImageApp {
     method change_window_level { val } {
 	# sync other windows with axial window level
 	global mods
-	global $mods(ViewImage)-axial-viewport0-clut_wl
-	global $mods(ViewImage)-sagittal-viewport0-clut_wl
-	global $mods(ViewImage)-coronal-viewport0-clut_wl
+	global $mods(ViewSlices)-axial-viewport0-clut_wl
+	global $mods(ViewSlices)-sagittal-viewport0-clut_wl
+	global $mods(ViewSlices)-coronal-viewport0-clut_wl
 
-	set v [set $mods(ViewImage)-axial-viewport0-clut_wl]
+	set v [set $mods(ViewSlices)-axial-viewport0-clut_wl]
 
-	set $mods(ViewImage)-sagittal-viewport0-clut_wl $v
-	set $mods(ViewImage)-coronal-viewport0-clut_wl $v
+	set $mods(ViewSlices)-sagittal-viewport0-clut_wl $v
+	set $mods(ViewSlices)-coronal-viewport0-clut_wl $v
 
 	# set windows to be dirty
-	$mods(ViewImage)-c setclut
+	$mods(ViewSlices)-c setclut
 
-	$mods(ViewImage)-c redrawall
+	$mods(ViewSlices)-c redrawall
 
         # if window levels linked, change the vol_level
         global link_winlevel
@@ -3213,10 +3121,10 @@ class BioImageApp {
 
      method update_volume_window_level_scales {varname varele varop} {
  	global mods
- 	global $mods(ViewImage)-min $mods(ViewImage)-max
+ 	global $mods(ViewSlices)-min $mods(ViewSlices)-max
 
- 	set min [set $mods(ViewImage)-min]
- 	set max [set $mods(ViewImage)-max]
+ 	set min [set $mods(ViewSlices)-min]
+ 	set max [set $mods(ViewSlices)-max]
         set span [expr abs([expr $max-$min])]
 
  	# configure window width scale
@@ -3250,14 +3158,14 @@ class BioImageApp {
        	 set [set UnuJhisto]-maxs "$max nan"
        	 set [set UnuJhisto]-mins "$min nan"
 
-         # if linked, change the ViewImage window width and level
+         # if linked, change the ViewSlices window width and level
          global link_winlevel
          if {$link_winlevel == 1 && $val != -1} {
 	     global mods
-	     global $mods(ViewImage)-axial-viewport0-clut_ww
-	     global $mods(ViewImage)-axial-viewport0-clut_wl
-             set $mods(ViewImage)-axial-viewport0-clut_ww $vol_width
-             set $mods(ViewImage)-axial-viewport0-clut_wl $vol_level
+	     global $mods(ViewSlices)-axial-viewport0-clut_ww
+	     global $mods(ViewSlices)-axial-viewport0-clut_wl
+             set $mods(ViewSlices)-axial-viewport0-clut_ww $vol_width
+             set $mods(ViewSlices)-axial-viewport0-clut_wl $vol_level
 
              # update all windows
              $this change_window_width -1
@@ -3294,11 +3202,11 @@ class BioImageApp {
 	if {$link_winlevel == 1} {
 	    # Set vol_width and vol_level to Viewimage window width and level
 	    global vol_width vol_level mods
-	    global $mods(ViewImage)-axial-viewport0-clut_ww
-	    global $mods(ViewImage)-axial-viewport0-clut_wl
+	    global $mods(ViewSlices)-axial-viewport0-clut_ww
+	    global $mods(ViewSlices)-axial-viewport0-clut_wl
 
-            set vol_width [set $mods(ViewImage)-axial-viewport0-clut_ww]
-            set vol_level [set $mods(ViewImage)-axial-viewport0-clut_wl]
+            set vol_width [set $mods(ViewSlices)-axial-viewport0-clut_ww]
+            set vol_level [set $mods(ViewSlices)-axial-viewport0-clut_wl]
 
             $this change_volume_window_width_and_level 1
 
@@ -3335,20 +3243,20 @@ class BioImageApp {
 
         if {!$loading && [lindex $filters($which) $filter_type] == "crop"} {
 	 if {$turn_off_crop == 0} {
-	    global $mods(ViewImage)-crop_minPadAxis0 $mods(ViewImage)-crop_maxPadAxis0
-            global $mods(ViewImage)-crop_minPadAxis1 $mods(ViewImage)-crop_maxPadAxis1
-	    global $mods(ViewImage)-crop_minPadAxis2 $mods(ViewImage)-crop_maxPadAxis2
+	    global $mods(ViewSlices)-crop_minPadAxis0 $mods(ViewSlices)-crop_maxPadAxis0
+            global $mods(ViewSlices)-crop_minPadAxis1 $mods(ViewSlices)-crop_maxPadAxis1
+	    global $mods(ViewSlices)-crop_minPadAxis2 $mods(ViewSlices)-crop_maxPadAxis2
 
-            # turn on Cropping widgets in ViewImage windows
+            # turn on Cropping widgets in ViewSlices windows
 	    # corresponding with padding values from filter $which
             set pad_vals [lindex $filters($which) 11]
 
-            set $mods(ViewImage)-crop_minPadAxis0 [lindex $pad_vals 0]
-	    set $mods(ViewImage)-crop_maxPadAxis0 [lindex $pad_vals 1]
-	    set $mods(ViewImage)-crop_minPadAxis1 [lindex $pad_vals 2]
-	    set $mods(ViewImage)-crop_maxPadAxis1 [lindex $pad_vals 3]
-	    set $mods(ViewImage)-crop_minPadAxis2 [lindex $pad_vals 4]
-	    set $mods(ViewImage)-crop_maxPadAxis2 [lindex $pad_vals 5]
+            set $mods(ViewSlices)-crop_minPadAxis0 [lindex $pad_vals 0]
+	    set $mods(ViewSlices)-crop_maxPadAxis0 [lindex $pad_vals 1]
+	    set $mods(ViewSlices)-crop_minPadAxis1 [lindex $pad_vals 2]
+	    set $mods(ViewSlices)-crop_maxPadAxis1 [lindex $pad_vals 3]
+	    set $mods(ViewSlices)-crop_minPadAxis2 [lindex $pad_vals 4]
+	    set $mods(ViewSlices)-crop_maxPadAxis2 [lindex $pad_vals 5]
 
             # if crop values are all 0, this is the first time using the crop
             # and the values should be set to bounding box
@@ -3365,23 +3273,23 @@ class BioImageApp {
             }
                 
 
-            # should set ViewImage crop vals if they have been set
+            # should set ViewSlices crop vals if they have been set
             if {$needs_update == 1 && !$first_time} {
-		global $mods(ViewImage)-crop_minAxis0 $mods(ViewImage)-crop_maxAxis0
-		global $mods(ViewImage)-crop_minAxis1 $mods(ViewImage)-crop_maxAxis1
-		global $mods(ViewImage)-crop_minAxis2 $mods(ViewImage)-crop_maxAxis2
+		global $mods(ViewSlices)-crop_minAxis0 $mods(ViewSlices)-crop_maxAxis0
+		global $mods(ViewSlices)-crop_minAxis1 $mods(ViewSlices)-crop_maxAxis1
+		global $mods(ViewSlices)-crop_minAxis2 $mods(ViewSlices)-crop_maxAxis2
 		    
                 set updating_crop_ui 1
-                $mods(ViewImage)-c startcrop
-		set $mods(ViewImage)-crop_minAxis0 [set [set UnuCrop]-minAxis0]
-		set $mods(ViewImage)-crop_minAxis1 [set [set UnuCrop]-minAxis1]
-		set $mods(ViewImage)-crop_minAxis2 [set [set UnuCrop]-minAxis2]
-		set $mods(ViewImage)-crop_maxAxis0 [set [set UnuCrop]-maxAxis0]
-		set $mods(ViewImage)-crop_maxAxis1 [set [set UnuCrop]-maxAxis1]
-		set $mods(ViewImage)-crop_maxAxis2 [set [set UnuCrop]-maxAxis2]
-                $mods(ViewImage)-c updatecrop
+                $mods(ViewSlices)-c startcrop
+		set $mods(ViewSlices)-crop_minAxis0 [set [set UnuCrop]-minAxis0]
+		set $mods(ViewSlices)-crop_minAxis1 [set [set UnuCrop]-minAxis1]
+		set $mods(ViewSlices)-crop_minAxis2 [set [set UnuCrop]-minAxis2]
+		set $mods(ViewSlices)-crop_maxAxis0 [set [set UnuCrop]-maxAxis0]
+		set $mods(ViewSlices)-crop_maxAxis1 [set [set UnuCrop]-maxAxis1]
+		set $mods(ViewSlices)-crop_maxAxis2 [set [set UnuCrop]-maxAxis2]
+                $mods(ViewSlices)-c updatecrop
             } else {
-                $mods(ViewImage)-c startcrop
+                $mods(ViewSlices)-c startcrop
             }
 	    set turn_off_crop 1
 	    set updating_crop_ui 0
@@ -3398,16 +3306,16 @@ class BioImageApp {
 	global mods
 
 	# get values from UnuCrop, then
-	# set ViewImage crop values
+	# set ViewSlices crop values
  	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
         if {$type == "min"} {
-    	    global [set UnuCrop]-minAxis$i $mods(ViewImage)-crop_minAxis$i
+    	    global [set UnuCrop]-minAxis$i $mods(ViewSlices)-crop_minAxis$i
             set min [set [set UnuCrop]-minAxis$i]
-            set $mods(ViewImage)-crop_minAxisi$ $min           
+            set $mods(ViewSlices)-crop_minAxisi$ $min           
         } else {
-    	    global [set UnuCrop]-maxAxis$i $mods(ViewImage)-crop_maxAxis$i
+    	    global [set UnuCrop]-maxAxis$i $mods(ViewSlices)-crop_maxAxis$i
             set max [set [set UnuCrop]-maxAxis$i]
-            set $mods(ViewImage)-crop_maxAxisi$ $max 
+            set $mods(ViewSlices)-crop_maxAxisi$ $max 
         }
 
 	# if crop on, update it
@@ -3424,7 +3332,7 @@ class BioImageApp {
 
     method stop_crop {} {
         global mods
-        $mods(ViewImage)-c stopcrop
+        $mods(ViewSlices)-c stopcrop
         set turn_off_crop 0
     }
 
@@ -3655,31 +3563,31 @@ class BioImageApp {
              # update the correct UnuCrop variable
              if {[string first "crop_minAxis0" $varname] != -1} {
 		 global [set UnuCrop]-minAxis0
-                 global $mods(ViewImage)-crop_minAxis0
-                 set [set UnuCrop]-minAxis0 [expr [set $mods(ViewImage)-crop_minAxis0] + [lindex $pad_vals 0]]
+                 global $mods(ViewSlices)-crop_minAxis0
+                 set [set UnuCrop]-minAxis0 [expr [set $mods(ViewSlices)-crop_minAxis0] + [lindex $pad_vals 0]]
              } elseif {[string first "crop_maxAxis0" $varname] != -1} {
 		 global [set UnuCrop]-maxAxis0
-                 global $mods(ViewImage)-crop_maxAxis0
-                 #set [set UnuCrop]-maxAxis0 [expr [set $mods(ViewImage)-crop_maxAxis0]+ [lindex $pad_vals 1]] 
-                 set [set UnuCrop]-maxAxis0 [set $mods(ViewImage)-crop_maxAxis0] 
+                 global $mods(ViewSlices)-crop_maxAxis0
+                 #set [set UnuCrop]-maxAxis0 [expr [set $mods(ViewSlices)-crop_maxAxis0]+ [lindex $pad_vals 1]] 
+                 set [set UnuCrop]-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0] 
              } elseif {[string first "crop_minAxis1" $varname] != -1} {
 		 global [set UnuCrop]-minAxis1
-                 global $mods(ViewImage)-crop_minAxis1
-                 set [set UnuCrop]-minAxis1 [expr [set $mods(ViewImage)-crop_minAxis1] + [lindex $pad_vals 2]]
+                 global $mods(ViewSlices)-crop_minAxis1
+                 set [set UnuCrop]-minAxis1 [expr [set $mods(ViewSlices)-crop_minAxis1] + [lindex $pad_vals 2]]
  	    } elseif {[string first "crop_maxAxis1" $varname] != -1} {
  	        global [set UnuCrop]-maxAxis1
-		global $mods(ViewImage)-crop_maxAxis1
-		#set [set UnuCrop]-maxAxis1 [expr [set $mods(ViewImage)-crop_maxAxis1] + [lindex $pad_vals 3]]
-                 set [set UnuCrop]-maxAxis1 [set $mods(ViewImage)-crop_maxAxis1]
+		global $mods(ViewSlices)-crop_maxAxis1
+		#set [set UnuCrop]-maxAxis1 [expr [set $mods(ViewSlices)-crop_maxAxis1] + [lindex $pad_vals 3]]
+                 set [set UnuCrop]-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
              } elseif {[string first "crop_minAxis2" $varname] != -1} {
 		 global [set UnuCrop]-minAxis2
-                 global $mods(ViewImage)-crop_minAxis2
-                 set [set UnuCrop]-minAxis2 [expr [set $mods(ViewImage)-crop_minAxis2] + [lindex $pad_vals 4]]
+                 global $mods(ViewSlices)-crop_minAxis2
+                 set [set UnuCrop]-minAxis2 [expr [set $mods(ViewSlices)-crop_minAxis2] + [lindex $pad_vals 4]]
  	    } elseif {[string first "crop_maxAxis2" $varname] != -1} {
  	        global [set UnuCrop]-maxAxis2
-		global $mods(ViewImage)-crop_maxAxis2
-		#set [set UnuCrop]-maxAxis2 [expr [set $mods(ViewImage)-crop_maxAxis2] + [lindex $pad_vals 5]]
-                set [set UnuCrop]-maxAxis2 [set $mods(ViewImage)-crop_maxAxis2]
+		global $mods(ViewSlices)-crop_maxAxis2
+		#set [set UnuCrop]-maxAxis2 [expr [set $mods(ViewSlices)-crop_maxAxis2] + [lindex $pad_vals 5]]
+                set [set UnuCrop]-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]
              }
          }
     }
@@ -4497,7 +4405,7 @@ class BioImageApp {
 	}
 
         # rebuild the viewer windows
-        $this build_viewers $mods(Viewer) $mods(ViewImage)
+        $this build_viewers $mods(Viewer) $mods(ViewSlices)
 
         set loading_ui 0
 
@@ -4591,9 +4499,9 @@ class BioImageApp {
 
     method update_planes_threshold {} {
 	global mods planes_threshold 
-        global $mods(ViewImage)-axial-viewport0-clut_ww $mods(ViewImage)-axial-viewport0-clut_wl
-        set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
-        set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+        global $mods(ViewSlices)-axial-viewport0-clut_ww $mods(ViewSlices)-axial-viewport0-clut_wl
+        set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
+        set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
         set min [expr $wl-$ww/2]
         set max [expr $wl+$ww/2]
 
@@ -4627,13 +4535,15 @@ class BioImageApp {
     }
 
    method toggle_filter2Dtextures {} {
-       global filter2Dtextures mods
+       global filter2Dtextures mods slice_frame
+       upvar \#0 $mods(ViewSlices)-texture_filter filter
+       set filter $filter2Dtextures
 
-       if {$filter2Dtextures == 1} {
+       $mods(ViewSlices)-c texture_rebind $slice_frame(axial).axial
+       $mods(ViewSlices)-c texture_rebind $slice_frame(sagittal).sagittal
+       $mods(ViewSlices)-c texture_rebind $slice_frame(coronal).coronal
 
-       } else {
-       
-       } 
+
    }
 
     method toggle_show_guidelines {} {
@@ -4641,13 +4551,13 @@ class BioImageApp {
   	 $this check_crop
 
          global mods show_guidelines
-         global $mods(ViewImage)-axial-viewport0-show_guidelines
-         global $mods(ViewImage)-sagittal-viewport0-show_guidelines
-         global $mods(ViewImage)-coronal-viewport0-show_guidelines
+         global $mods(ViewSlices)-axial-viewport0-show_guidelines
+         global $mods(ViewSlices)-sagittal-viewport0-show_guidelines
+         global $mods(ViewSlices)-coronal-viewport0-show_guidelines
 
-         set $mods(ViewImage)-axial-viewport0-show_guidelines $show_guidelines
-         set $mods(ViewImage)-sagittal-viewport0-show_guidelines $show_guidelines
-         set $mods(ViewImage)-coronal-viewport0-show_guidelines $show_guidelines
+         set $mods(ViewSlices)-axial-viewport0-show_guidelines $show_guidelines
+         set $mods(ViewSlices)-sagittal-viewport0-show_guidelines $show_guidelines
+         set $mods(ViewSlices)-coronal-viewport0-show_guidelines $show_guidelines
   }
 
     method update_planes_color_by {} {
@@ -4700,183 +4610,44 @@ class BioImageApp {
         }
     }
 
-    method update_axial_mode {} {
-	global axial_mode mods
-	global $mods(ViewImage)-axial-viewport0-mode
+    method update_ViewSlices_mode { axis args } {
+	global mods slice_frame
+        upvar \#0 $mods(ViewSlices)-$axis-viewport0-mode mode
 	
-        set w .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite
+        set w $slice_frame($axis)
         # forget and repack appropriate widget
-	if {$axial_mode == 0} {
+	if {$mode == 0} {
 	    # Slice mode
-	    set $mods(ViewImage)-axial-viewport0-mode 0
-            $this update_axial_slice 1
-            if {[winfo exists $w.modes.slider.slab] == 1} {
-		pack forget $w.modes.slider.slab
-	    }
-            pack  $w.modes.slider.slice -side top -anchor n 
-	} elseif {$axial_mode == 1} {
+            $this update_ViewSlices_slice $axis
+            pack forget $w.modes.slider.slab
+            pack $w.modes.slider.slice -side top -anchor n -expand 1 -fill x
+	} elseif {$mode == 1} {
 	    # Slab mode
-	    set $mods(ViewImage)-axial-viewport0-mode 1
-            $this update_axial_slab 1 1 1
-            if {[winfo exists $w.modes.slider.slice] == 1} {
-		pack forget $w.modes.slider.slice
-	    }
-            pack  $w.modes.slider.slab -side top -anchor n
+            $this update_ViewSlices_slab $axis
+    	    pack forget $w.modes.slider.slice
+            pack $w.modes.slider.slab -side top -anchor n -expand 1 -fill x
 	} else {
 	    # Full MIP mode
-	    set $mods(ViewImage)-axial-viewport0-mode 1
-            global $mods(ViewImage)-axial-viewport0-slab_width
-            set $mods(ViewImage)-axial-viewport0-slab_width $sizez
-            $mods(ViewImage)-c rebind $w.axial
-            if {[winfo exists $w.modes.slider.slice] == 1} {
-		pack forget $w.modes.slider.slice
-	    }
-            if {[winfo exists $w.modes.slider.slab] == 1} {
-		pack forget $w.modes.slider.slab
-	    }
+            $mods(ViewSlices)-c rebind $w.$axis
+            pack forget $w.modes.slider.slice
+  	    pack forget $w.modes.slider.slab
 	}
     }
 
-    method update_axial_slice {var} {
-	global axial_mode mods
-
-	if {$axial_mode == 0} {
-	    $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
+    method update_ViewSlices_slice { axis args } {
+	global mods slice_frame
+        upvar \#0 $mods(ViewSlices)-$axis-viewport0-mode mode
+	if {$mode == 0} {
+	    $mods(ViewSlices)-c rebind $slice_frame($axis).$axis
         }
     }
 
-    method update_axial_slab {var1 var2 unknown} {
-	global axial_min axial_max axial_mode mods
-
-	if {$axial_mode == 1} {
-            global $mods(ViewImage)-axial-viewport0-slab_width
-            global $mods(ViewImage)-axial-viewport0-slice
-            set width [expr $axial_max - $axial_min]
-            set slice [expr $width/2]
-            set $mods(ViewImage)-axial-viewport0-slice [expr $axial_min + $slice]
-            set $mods(ViewImage)-axial-viewport0-slab_width $width
-            $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
-	}
-    }
-
-
-
-    method update_sagittal_mode {} {
-	global sagittal_mode mods
-	global $mods(ViewImage)-sagittal-viewport0-mode
-
-        set w .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite
-        # forget and repack appropriate widget
-	if {$sagittal_mode == 0} {
-	    # Slice mode
-	    set $mods(ViewImage)-sagittal-viewport0-mode 0
-            $this update_sagittal_slice 1
-            if {[winfo exists $w.modes.slider.slab] == 1} {
-		pack forget $w.modes.slider.slab
-	    }
-            pack  $w.modes.slider.slice -side top -anchor n 
-	} elseif {$sagittal_mode == 1} {
-	    # Slab mode
-	    set $mods(ViewImage)-sagittal-viewport0-mode 1
-            $this update_sagittal_slab 1 1 1
-            if {[winfo exists $w.modes.slider.slice] == 1} {
-		pack forget $w.modes.slider.slice
-	    }
-            pack  $w.modes.slider.slab -side top -anchor n
-	} else {
-	    # Full MIP mode
-	    set $mods(ViewImage)-sagittal-viewport0-mode 1
-            global $mods(ViewImage)-sagittal-viewport0-slab_width
-            set $mods(ViewImage)-sagittal-viewport0-slab_width $sizez
-            $mods(ViewImage)-c rebind $w.sagittal
-            if {[winfo exists $w.modes.slider.slice] == 1} {
-		pack forget $w.modes.slider.slice
-	    }
-            if {[winfo exists $w.modes.slider.slab] == 1} {
-		pack forget $w.modes.slider.slab
-	    }
-	}
-    }
-
-    method update_sagittal_slice {var} {
-	global sagittal_mode mods
-
-	if {$sagittal_mode == 0} {
-            $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
+    method update_ViewSlices_slab { axis args } {
+	global mods slice_frame
+        upvar \#0 $mods(ViewSlices)-$axis-viewport0-mode mode
+	if { $mode == 1 } {
+          $mods(ViewSlices)-c rebind $slice_frame($axis).$axis
         }
-    }
-
-    method update_sagittal_slab {var1 var2 unknown} {
-	global sagittal_min sagittal_max sagittal_mode mods
-
-	if {$sagittal_mode == 1} {
-            global $mods(ViewImage)-sagittal-viewport0-slab_width
-            global $mods(ViewImage)-sagittal-viewport0-slice
-            set width [expr $sagittal_max - $sagittal_min]
-            set slice [expr $width/2]
-            set $mods(ViewImage)-sagittal-viewport0-slice [expr $sagittal_min + $slice]
-            $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal  set $mods(ViewImage)-sagittal-viewport0-slab_width $width
-
-	}
-    }
-
-    method update_coronal_mode {} {
-	global coronal_mode mods
-	global $mods(ViewImage)-coronal-viewport0-mode
-
-        set w .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite
-        # forget and repack appropriate widget
-	if {$coronal_mode == 0} {
-	    # Slice mode
-	    set $mods(ViewImage)-coronal-viewport0-mode 0
-            $this update_coronal_slice 1
-            if {[winfo exists $w.modes.slider.slab] == 1} {
-		pack forget $w.modes.slider.slab
-	    }
-            pack  $w.modes.slider.slice -side top -anchor n 
-	} elseif {$coronal_mode == 1} {
-	    # Slab mode
-	    set $mods(ViewImage)-coronal-viewport0-mode 1
-            $this update_coronal_slab 1 1 1
-            if {[winfo exists $w.modes.slider.slice] == 1} {
-		pack forget $w.modes.slider.slice
-	    }
-            pack  $w.modes.slider.slab -side top -anchor n
-	} else {
-	    # Full MIP mode
-	    set $mods(ViewImage)-coronal-viewport0-mode 1
-            global $mods(ViewImage)-coronal-viewport0-slab_width
-            set $mods(ViewImage)-coronal-viewport0-slab_width $sizez
-            $mods(ViewImage)-c rebind $w.coronal
-            if {[winfo exists $w.modes.slider.slice] == 1} {
-		pack forget $w.modes.slider.slice
-	    }
-            if {[winfo exists $w.modes.slider.slab] == 1} {
-		pack forget $w.modes.slider.slab
-	    }
-	}
-    }
-
-    method update_coronal_slice {var} {
-	global coronal_mode mods
-
-	if {$coronal_mode == 0} {
-            $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
-        }
-    }
-
-    method update_coronal_slab {var1 var2 unknown} {
-	global coronal_min coronal_max coronal_mode mods
-
-	if {$coronal_mode == 1} {
-            global $mods(ViewImage)-coronal-viewport0-slab_width
-            global $mods(ViewImage)-coronal-viewport0-slice
-            set width [expr $coronal_max - $coronal_min]
-            set slice [expr $width/2]
-            set $mods(ViewImage)-coronal-viewport0-slice [expr $coronal_min + $slice]
-            set $mods(ViewImage)-coronal-viewport0-slab_width $width
-            $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
-	}
     }
 
     method set_saved_class_var {var val} {
@@ -4960,16 +4731,13 @@ class BioImageApp {
     variable 0_samples
     variable 1_samples
     variable 2_samples
-    variable sizex
-    variable sizey
-    variable sizez
 
     variable has_autoviewed
     variable has_executed
 
     variable data_dir
     variable 2D_fixed
-    variable ViewImage_executed_on_error
+    variable ViewSlices_executed_on_error
     variable current_crop
     variable turn_off_crop
     variable updating_crop_ui
