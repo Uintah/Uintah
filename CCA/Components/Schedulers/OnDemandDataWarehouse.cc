@@ -1518,15 +1518,6 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
       nonGhostPatches.insert((*superPatchGroup)[i]);
     }
 
-    if (d_myworld->myrank() == 0) {
-      cerr << "SuperPatch: " << superLowIndex << " - " << superHighIndex
-	   << endl;
-      Level::selectType::iterator iter2 = encompassedPatches.begin();    
-      for (; iter2 != encompassedPatches.end(); ++iter2) {
-	cerr << **iter2 << endl;
-      }
-    }
-   
     Level::selectType::iterator iter = encompassedPatches.begin();    
     for (; iter != encompassedPatches.end(); ++iter) {
       const Patch* patchGroupMember = *iter;
