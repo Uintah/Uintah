@@ -420,7 +420,7 @@ PACKAGE_DIRS=""
 # make sure the package dir exists
 for i in $package; do
    if test ! -d "$path_to_src/Packages/$i"; then
-      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src"Packages")!)
+      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
    fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
    # set the package dependent checks

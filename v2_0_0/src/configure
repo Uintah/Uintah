@@ -2279,8 +2279,8 @@ PACKAGE_DIRS=""
 # make sure the package dir exists
 for i in $package; do
    if test ! -d "$path_to_src/Packages/$i"; then
-      { { echo "$as_me:$LINENO: error: Package '$i' does not exist (in $path_to_src\"Packages\")!" >&5
-echo "$as_me: error: Package '$i' does not exist (in $path_to_src\"Packages\")!" >&2;}
+      { { echo "$as_me:$LINENO: error: Package '$i' does not exist (in $path_to_src/Packages/)!" >&5
+echo "$as_me: error: Package '$i' does not exist (in $path_to_src/Packages/)!" >&2;}
    { (exit 1); exit 1; }; }
    fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
