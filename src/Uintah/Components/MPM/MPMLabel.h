@@ -51,7 +51,8 @@ namespace Uintah {
       
       const VarLabel* cSelfContactLabel; //for fracture, CCVariable
       const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
-      
+      const VarLabel* cBurnedMassLabel; //for burn models
+
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
 
@@ -63,6 +64,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.9  2000/06/13 23:06:38  guilkey
+// Added a CCVariable for the burned particle mass to go into.
+//
 // Revision 1.8  2000/06/08 16:56:51  guilkey
 // Added tasks and VarLabels for HE burn model stuff.
 //
