@@ -76,10 +76,10 @@ void Pio(Piostream& stream, Element*& data)
     if(stream.reading())
 	data=new Element(0, 0,0,0,0);
     stream.begin_cheap_delim();
-    Pio(stream, data->n1);
-    Pio(stream, data->n2);
-    Pio(stream, data->n3);
-    Pio(stream, data->n4);
+    Pio(stream, data->n[0]);
+    Pio(stream, data->n[1]);
+    Pio(stream, data->n[2]);
+    Pio(stream, data->n[3]);
     stream.end_cheap_delim();
 }
 
@@ -93,8 +93,9 @@ void Pio(Piostream& stream, Node*& data)
 }
 
 Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
-: mesh(mesh), n1(n1), n2(n2), n3(n3), n4(n4)
+: mesh(mesh)
 {
+    n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
 }
 
 Node::Node(const Point& p)
@@ -150,7 +151,7 @@ static int unify(int not, const Array1<int>& n1, const Array1<int>& n2, const Ar
 int Element::face(int i)
 {
     if(faces[i] == -2){
-	int* idx=&n1;
+	int* idx=&(n[0]);
 	int i1=idx[(i+1)%4];
         int i2=idx[(i+2)%4];
 	int i3=idx[(i+3)%4];
@@ -174,10 +175,10 @@ void Mesh::compute_neighbors()
     t1.start();
     for(i=0;i<elems.size();i++){
 	Element* elem=elems[i];
-	Node* n1=nodes[elem->n1];
-	Node* n2=nodes[elem->n2];
-	Node* n3=nodes[elem->n3];
-	Node* n4=nodes[elem->n4];
+	Node* n1=nodes[elem->n[0]];
+	Node* n2=nodes[elem->n[1]];
+	Node* n3=nodes[elem->n[2]];
+	Node* n4=nodes[elem->n[3]];
 	n1->elems.add(i);
 	n2->elems.add(i);
 	n3->elems.add(i);
@@ -198,10 +199,10 @@ void Mesh::compute_neighbors()
 #if 0
     for(i=0;i<elems.size();i++){
 	Element* elem=elems[i];
-	Node* n1=nodes[elem->n1];
-	Node* n2=nodes[elem->n2];
-	Node* n3=nodes[elem->n3];
-	Node* n4=nodes[elem->n4];
+	Node* n1=nodes[elem->n[0]];
+	Node* n2=nodes[elem->n[1]];
+	Node* n3=nodes[elem->n[2]];
+	Node* n4=nodes[elem->n[3]];
 	elem->faces[0]=unify(i, n2->elems, n3->elems, n4->elems);
 	elem->faces[1]=unify(i, n1->elems, n3->elems, n4->elems);
 	elem->faces[2]=unify(i, n1->elems, n2->elems, n4->elems);
@@ -220,10 +221,10 @@ void Mesh::compute_neighbors()
 
 int Mesh::inside(const Point& p, Element* elem)
 {
-    Point p1(nodes[elem->n1]->p);
-    Point p2(nodes[elem->n2]->p);
-    Point p3(nodes[elem->n3]->p);
-    Point p4(nodes[elem->n4]->p);
+    Point p1(nodes[elem->n[0]]->p);
+    Point p2(nodes[elem->n[1]]->p);
+    Point p3(nodes[elem->n[2]]->p);
+    Point p4(nodes[elem->n[3]]->p);
     double x1=p1.x();
     double y1=p1.y();
     double z1=p1.z();
@@ -275,10 +276,10 @@ int Mesh::inside(const Point& p, Element* elem)
 void Mesh::get_interp(Element* elem, const Point& p,
 		      double& s1, double& s2, double& s3, double& s4)
 {
-    Point p1(nodes[elem->n1]->p);
-    Point p2(nodes[elem->n2]->p);
-    Point p3(nodes[elem->n3]->p);
-    Point p4(nodes[elem->n4]->p);
+    Point p1(nodes[elem->n[0]]->p);
+    Point p2(nodes[elem->n[1]]->p);
+    Point p3(nodes[elem->n[2]]->p);
+    Point p4(nodes[elem->n[3]]->p);
     double x1=p1.x();
     double y1=p1.y();
     double z1=p1.z();
@@ -318,10 +319,10 @@ void Mesh::get_interp(Element* elem, const Point& p,
 void Mesh::get_grad(Element* elem, const Point&,
 		    Vector& g1, Vector& g2, Vector& g3, Vector& g4)
 {
-    Point p1(nodes[elem->n1]->p);
-    Point p2(nodes[elem->n2]->p);
-    Point p3(nodes[elem->n3]->p);
-    Point p4(nodes[elem->n4]->p);
+    Point p1(nodes[elem->n[0]]->p);
+    Point p2(nodes[elem->n[1]]->p);
+    Point p3(nodes[elem->n[2]]->p);
+    Point p4(nodes[elem->n[3]]->p);
     double x1=p1.x();
     double y1=p1.y();
     double z1=p1.z();

@@ -92,7 +92,7 @@ int ScalarFieldUG::interpolate(const Point& p, double& value)
     double s1,s2,s3,s4;
     Element* e=mesh->elems[ix];
     mesh->get_interp(e, p, s1, s2, s3, s4);
-    value=data[e->n1]*s1+data[e->n2]*s2+data[e->n3]*s3+data[e->n4]*s4;
+    value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
     return 1;
 }
 
@@ -104,5 +104,5 @@ Vector ScalarFieldUG::gradient(const Point& p)
     Vector g1, g2, g3, g4;
     Element* e=mesh->elems[ix];
     mesh->get_grad(e, p, g1, g2, g3, g4);
-    return g1*data[e->n1]+g2*data[e->n2]+g3*data[e->n3]+g4*data[e->n4];
+    return g1*data[e->n[0]]+g2*data[e->n[1]]+g3*data[e->n[2]]+g4*data[e->n[3]];
 }
