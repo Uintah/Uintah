@@ -127,7 +127,7 @@ void ErrorMetric::execute()
          cerr << "Unknown ErrorMetric::methodTCL - "<<methodTCL.get()<<"\n";
          *val=0;
      }
-     cerr << "Error="<<*val<<"\n";
+//     cerr << "Error="<<*val<<"\n";
      errorP->send(errorH);
 }
 } // End namespace Modules
@@ -136,6 +136,9 @@ void ErrorMetric::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/09/22 18:43:25  dmw
+// added new GUI
+//
 // Revision 1.2  1999/09/08 02:26:27  sparker
 // Various #include cleanups
 //
