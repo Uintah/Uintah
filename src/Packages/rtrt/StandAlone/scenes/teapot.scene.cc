@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/Disc.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Phong.h>
+#include <Packages/rtrt/Core/PhongLight.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <iostream>
@@ -58,7 +59,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       //double bgscale=0.5;
       //Color groundcolor(.62, .62, .62);
       //Color averagelight(1,1,.8);
-      double ambient_scale=.5;
+      double ambient_scale=.3;
       int subdivlevel = 4;
 
 
@@ -434,7 +435,24 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
       scene->select_shadow_mode( Hard_Shadows );
       scene->maxdepth = 50;
       scene->shadowobj = new BV1(shadow);
-      scene->add_light(new Light(Point(200,400,1300), Color(.8,.8,.8), 0));
+//      scene->add_light(new Light(Point(200,400,1300), Color(.8,.8,.8), 0));
       scene->animate=false;
+
+  Light * rightHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(2,2,2), 
+					  3.0, Up, 16);
+  rightHeadlight->name_ = "right headlight";
+  rightHeadlight->fixed_to_eye = 1;
+  rightHeadlight->eye_offset_basis = Vector(-22, -1, 22);
+
+  Light * leftHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(1,1,1), 
+					 3.0, Up, 16);
+  leftHeadlight->name_ = "left headlight";
+  leftHeadlight->fixed_to_eye = 1;
+  leftHeadlight->eye_offset_basis = Vector(22,-1,22);
+
+  scene->add_light( rightHeadlight );
+  scene->add_light( leftHeadlight );
+
+
       return scene;
 }
