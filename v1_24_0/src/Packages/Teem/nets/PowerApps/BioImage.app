@@ -1769,6 +1769,23 @@ class BioImageApp {
 	    if {[lindex $filters($i) $filter_type] == "crop" &&
 		[lindex $filters($i) $which_row] != -1} {
 		set reset 1
+	    } elseif  {[lindex $filters($i) $filter_type] == "resample" &&
+		      [lindex $filters($i) $which_row] != -1} {
+		set reset 1
+	    }
+	}
+
+	if {$reset == 1} {
+	    set result [tk_messageBox -message "Downstream crop and resample filters will be reset. Do you want to proceed with changing the orientation?" -type okcancel -icon info -parent .standalone]
+	    if {$result == "cancel"} {
+		return
+	    }
+	}
+		
+	for {set i 1} {$i < $num_filters} {incr i} {
+	    if {[lindex $filters($i) $filter_type] == "crop" &&
+		[lindex $filters($i) $which_row] != -1} {
+		set reset 1
 		set UnuCrop [lindex [lindex $filters($i) $modules] 0]
 		global [set UnuCrop]-minAxis0
 		global [set UnuCrop]-maxAxis0
@@ -1795,10 +1812,6 @@ class BioImageApp {
 	    }
 	}
 
-	if {$reset == 1} {
-	    tk_messageBox -message "Downstream crop and resample module are being reset." -type ok -icon info -parent .standalone
-	}
-	
 	# Permute into order where top   = S/I
 	#                          front = A/P
 	#                          side    L/R
