@@ -29,7 +29,7 @@ void VectorParticlesOperator::execute(void)
   VectorParticlesHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"VectorParticlesOperator::execute(void) Didn't get a handle\n";
+    error("VectorParticlesOperator::execute(void) Didn't get a handle");
     return;
   }
 
