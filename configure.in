@@ -807,13 +807,6 @@ case $host in
     ;;
 esac
 
-if test "$is_64bit" = "yes"; then
-  NBITS=64
-else
-  NBITS=32
-fi
-AC_SUBST(NBITS)
-
 #########################################################################
 ## Make sure number of bit build for Thirdparty and SCIRun compile match
 ##
@@ -1031,6 +1024,7 @@ case $host in
     fi
     ;;
   *)
+    ;;
 esac
 AC_MSG_RESULT($CC_DEPEND_REGEN)
 rm -f configure-test.*
@@ -1100,6 +1094,22 @@ AC_SUBST(PERL)
 
 ##  set the default language after the build tools are found
 AC_LANG_CPLUSPLUS
+
+##  ----------  See if this is a 64 bit machine --------------------------
+AC_CHECK_SIZEOF(void *,0)
+case $ac_cv_sizeof_void_p in
+ 8)
+  NBITS=64
+  ;;
+ 4)
+  NBITS=32
+  ;;
+ *)
+  AC_MSG_ERROR(This machine has some strange sizeof(void*):
+  $ac_cv_sizeof_voidp.)
+  ;;
+esac
+AC_SUBST(NBITS)
 
 ##  ----------------------------------------------------------------------
 ##  ----------  search for required libraries and headers  ---------------
@@ -1844,6 +1854,7 @@ case $host in
     ;;
   *)
     PETSC_ARCH=unknown
+    ;;
 esac
 
 AC_CHECKING(for an MPI PETSc...)
