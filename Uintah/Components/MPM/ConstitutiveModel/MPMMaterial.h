@@ -91,6 +91,12 @@ WARNING
 
 	 int checkForSurface(const GeometryPiece* piece,
 				const Point p, const Vector dxpp);
+
+
+         //for HeatConductionModel
+         double getThermalConductivity() const;
+         double getSpecificHeat() const;
+         double getHeatTransferCoefficient() const;
 				
       private:
 	 
@@ -101,6 +107,14 @@ WARNING
 	 HEBurn *d_burn;
 	 
 	 double d_density;
+
+         //for HeatConductionModel
+         double d_thermalConductivity;
+         double d_specificHeat;
+         
+         //for ThermalContactModel
+         double d_heatTransferCoefficient;
+
 	 std::vector<GeometryObject*> d_geom_objs;
 
 	 // Prevent copying of this class
@@ -115,6 +129,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.26  2000/06/26 18:44:28  tan
+// Different heat_conduction properties for different materials are allowed
+// in the MPM simulation.
+//
 // Revision 1.25  2000/06/23 01:26:02  tan
 // Moved material property toughness to Fracture class.
 //

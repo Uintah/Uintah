@@ -55,6 +55,15 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    // Step 2 -- get the general material properties
 
    ps->require("density",d_density);
+   
+   if( MPMPhysicalModules::heatConductionModel ) {
+     ps->require("thermal_conductivity",d_thermalConductivity);
+     ps->require("specific_heat",d_specificHeat);
+   }
+
+   if( MPMPhysicalModules::thermalContactModel ) {
+     ps->require("heat_transfer_coefficient",d_heatTransferCoefficient);
+   }
 
    // Step 3 -- Loop through all of the pieces in this geometry object
 
@@ -310,7 +319,27 @@ int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
   }
 }
 
+double MPMMaterial::getThermalConductivity() const
+{
+  return d_thermalConductivity;
+}
+
+double MPMMaterial::getSpecificHeat() const
+{
+  return d_specificHeat;
+}
+
+double MPMMaterial::getHeatTransferCoefficient() const
+{
+  return d_heatTransferCoefficient;
+}
+
+
 // $Log$
+// Revision 1.38  2000/06/26 18:44:37  tan
+// Different heat_conduction properties for different materials are allowed
+// in the MPM simulation.
+//
 // Revision 1.37  2000/06/23 22:09:36  tan
 // Added DatawareHouse allocation for ptemperatureGradient and pexternalHeatRate.
 //

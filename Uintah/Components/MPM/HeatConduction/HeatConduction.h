@@ -56,17 +56,9 @@ public:
   // Constructor
   HeatConduction(ProblemSpecP& ps,SimulationStateP& d_sS);
 
-  double getThermalConductivity() const;
-  double getSpecificHeat() const;
-  double getHeatTransferCoefficient() const;
 
 private:
   SimulationStateP d_sharedState;
-
-  double d_thermalConductivity;
-  double d_specificHeat;
-  double d_heatTransferCoefficient;
-         
 };
       
 } // end namespace MPM
@@ -75,6 +67,10 @@ private:
 #endif // __HeatConduction__
 
 // $Log$
+// Revision 1.3  2000/06/26 18:43:00  tan
+// Different heat_conduction properties for different materials are allowed
+// in the MPM simulation.
+//
 // Revision 1.2  2000/06/22 22:36:07  tan
 // Moved heat conduction physical parameters (thermalConductivity, specificHeat,
 // and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
