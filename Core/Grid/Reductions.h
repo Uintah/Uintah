@@ -41,6 +41,14 @@ namespace Uintah {
 	 }
       };
 
+      public:
+      template<class T> class Max {
+      public:
+	 T operator()(T a, T b) {
+	    return a>b?a:b;
+	 }
+      };
+
       template<class T> class Sum {
       public:
 	 T operator()(T a, T b) {

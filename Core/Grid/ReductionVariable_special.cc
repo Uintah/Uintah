@@ -23,6 +23,18 @@ ReductionVariable<double, Reductions::Min<double> >
 template<>
 #endif
 void
+ReductionVariable<double, Reductions::Max<double> >
+   ::getMPIBuffer(void*& buf, int& count,
+		  MPI_Datatype& datatype, MPI_Op& op)
+{
+   buf = &value;
+   datatype = MPI_DOUBLE;
+   count = 1;
+   op = MPI_MAX;
+}
+
+template<>
+void
 ReductionVariable<double, Reductions::Sum<double> >
    ::getMPIBuffer(void*& buf, int& count,
 		  MPI_Datatype& datatype, MPI_Op& op)

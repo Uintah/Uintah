@@ -39,6 +39,8 @@ namespace Uintah {
 
    typedef ReductionVariable<double, Reductions::Min<double> > delt_vartype;
 
+   typedef ReductionVariable<double, Reductions::Max<double> > max_vartype;
+
    typedef ReductionVariable<double, Reductions::Sum<double> > sum_vartype;
 
    typedef ReductionVariable<bool, Reductions::And<bool> > bool_and_vartype;
