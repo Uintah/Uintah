@@ -77,8 +77,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebugMomentumExchange_CC       = false; 
   switchDebugSource_Sink               = false; 
   switchDebug_advance_advect           = false; 
-  switchTestConservation               = false; 
-  switchDebugConvergence               = false;
+  switchTestConservation               = false;
 
   d_RateForm          = false;
   d_EqForm            = false; 
@@ -543,8 +542,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->viscosityLabel);
   t->computes(lb->gammaLabel);
   t->computes(lb->specific_heatLabel);
-  t->computes(lb->press_CCLabel, press_matl, oims);
-  t->computes(lb->imp_delPLabel, press_matl, oims); 
+  t->computes(lb->press_CCLabel,     press_matl, oims);
+  t->computes(lb->initialGuessLabel, press_matl, oims); 
   
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
@@ -721,7 +720,23 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
   scheduleUpdateVolumeFraction(            sched, level,   all_matls);
 
+
+  scheduleComputeVel_FC(                   sched, patches,ice_matls_sub, 
+                                                         mpm_matls_sub, 
+                                                         press_matl,    
+                                                         all_matls,     
+                                                         false);        
+
+  scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
+                                                         all_matls,
+                                                         false);
+                                                          
   if(d_impICE) {        //  I M P L I C I T
+  
+    scheduleSetupRHS(                     sched, patches,  one_matl, 
+                                                           all_matls,
+                                                           false);
+  
     scheduleImplicitPressureSolve(         sched, level,   patches,
                                                            one_matl,      
                                                            press_matl,    
@@ -734,16 +749,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                            press_matl,
                                                            all_matls);    
                                                            
-  }                     //  IMPLICIT AND EXPLICIT
-    scheduleComputeVel_FC(                  sched, patches,ice_matls_sub, 
-                                                           mpm_matls_sub, 
-                                                           press_matl,    
-                                                           all_matls,     
-                                                           false);        
-
-    scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
-                                                           all_matls,
-                                                           false); 
+  }                    
 
   if(!d_impICE){         //  E X P L I C I T
     scheduleComputeDelPressAndUpdatePressCC(sched, patches,press_matl,     
@@ -1775,10 +1781,10 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     StaticArray<CCVariable<double>   > gamma(numMatls);
     CCVariable<double>    press_CC, imp_initialGuess;
     
-    new_dw->allocateAndPut(press_CC,         lb->press_CCLabel, 0,patch);
-    new_dw->allocateAndPut(imp_initialGuess, lb->imp_delPLabel, 0,patch);
+    new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
+    new_dw->allocateAndPut(imp_initialGuess, lb->initialGuessLabel, 0,patch);
     press_CC.initialize(0.0);
-    imp_initialGuess.initialize(1.0); 
+    imp_initialGuess.initialize(0.0); 
 
     //__________________________________
     //  Thermo and transport properties
@@ -1834,7 +1840,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 Temp_CC[m],    speedSound[m], 
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC, numALLMatls, patch, new_dw);
-
+                                
       setBC(rho_CC[m],     "Density",     patch, d_sharedState, indx, new_dw);
       setBC(rho_micro[m],  "Density",     patch, d_sharedState, indx, new_dw);
       setBC(Temp_CC[m],    "Temperature", patch, d_sharedState, indx, new_dw);
@@ -2569,13 +2575,13 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     if(recursion) {
       pNewDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       pOldDW  = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
-      old_dw->get(press_CC,lb->press_CCLabel, 0, patch,gac, 1);
     } else {
       pNewDW  = new_dw;
       pOldDW  = old_dw;
-      new_dw->get(press_CC,lb->press_CCLabel, 0, patch,gac, 1);
     }
      
+    new_dw->get(press_CC,lb->press_CCLabel, 0, patch,gac, 1);
+    
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(),level);   
      
