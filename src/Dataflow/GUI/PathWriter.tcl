@@ -54,6 +54,8 @@ itcl_class SCIRun_DataIO_PathWriter {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+	    # Refresh UI
+	    biopseFDialog_RefreshCmd $w
 	    return
 	}
 	
