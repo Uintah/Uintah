@@ -1,3 +1,7 @@
+#if 1
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/interp_centertoface_fort.h>
+#include "../../Arches/fortran/param4.h"
+#else
       subroutine interp_centertoface(
      $     phi_fc, 
      $     phi_cc,
@@ -39,6 +43,7 @@ c
       integer ioff
       integer joff
       integer koff
+#endif
 
 *     local variables
 

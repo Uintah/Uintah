@@ -1,3 +1,7 @@
+#if 1
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/redistribute_dragforce_cc_fort.h>
+#include "../../Arches/fortran/param4.h"
+#else
       subroutine redistribute_dragforce_cc(
      $     dragforcex_fcx,
      $     dragforcex_cc,
@@ -29,6 +33,7 @@
       integer ioff
       integer joff
       integer koff
+#endif
 
 *     local variables
 

@@ -1,3 +1,6 @@
+#if 1
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
+#else
       subroutine collect_drag_cc(
      $     su_dragx_cc, sp_dragx_cc,
      $     su_dragx_fc, sp_dragx_fc,
@@ -49,6 +52,7 @@
       integer ioff
       integer joff
       integer koff
+#endif
 
 *     local variables
 

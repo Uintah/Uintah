@@ -1,33 +1,40 @@
 // MPMArches.cc
 
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesFort.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <Core/Containers/StaticArray.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Core/Containers/StaticArray.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 
 
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
+
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/interp_centertoface_fort.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/momentum_exchange_term_continuous_cc_fort.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/pressure_force_fort.h>
+
 MPMArches::MPMArches(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -101,8 +108,8 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
-  const MaterialSubset* arches_matls_sub = arches_matls->getUnion();
-  const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
+  //const MaterialSubset* arches_matls_sub = arches_matls->getUnion();
+  //const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
   if(d_fracture) {
     d_mpm->scheduleSetPositions(sched, patches, mpm_matls);
@@ -165,7 +172,7 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   }
   d_mpm->scheduleCarryForwardVariables(sched, patches, mpm_matls);
 
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  //int numMPMMatls = d_sharedState->getNumMPMMatls();
 
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,
@@ -188,7 +195,7 @@ void MPMArches::scheduleInterpolateNCToCC(SchedulerP& sched,
     // primitive variable initialization
   Task* t=scinew Task("MPMArches::interpolateNCToCC",
 		      this, &MPMArches::interpolateNCToCC);
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  //int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numGhostCells = 1;
   t->requires(Task::NewDW, Mlb->gMassLabel, 
 	      Ghost::AroundCells, numGhostCells);
@@ -651,7 +658,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
-      Vector zero(0.0,0.0,0.0);
+      //Vector zero(0.0,0.0,0.0);
       int numGhostCells = 1;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
@@ -1250,69 +1257,30 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       IntVector xdim_lo_upz = xvelFCZ_solid[m].getFortLowIndex();
       IntVector xdim_hi_upz = xvelFCZ_solid[m].getFortHighIndex();
       
-      FORT_MM_MOM_EXCH_CONT(
-			    uVelNonlinearSrc_fcy.getPointer(),
-			    uVelLinearSrc_fcy.getPointer(),
-			    uVelNonlinearSrc_fcz.getPointer(),
-			    uVelLinearSrc_fcz.getPointer(),
-			    uVelNonlinearSrc_cc.getPointer(),
-			    uVelLinearSrc_cc.getPointer(),
-			    dragForceX_fcy[m].getPointer(),
-			    dragForceX_fcz[m].getPointer(),
-			    dragForceX_cc[m].getPointer(),
-			    xvelCC_gas.getPointer(),
-			    xvelCC_solid[m].getPointer(),
-			    xvelFCY_solid[m].getPointer(),
-			    xvelFCZ_solid[m].getPointer(),
-			    gas_fraction_cc.getPointer(),
-			    solid_fraction_cc[m].getPointer(),
-			    &viscos, 
-			    &csmag,
-			    cellinfo->sew.get_objs(),
-			    cellinfo->sns.get_objs(),
-			    cellinfo->stb.get_objs(),
-			    cellinfo->yy.get_objs(),
-			    cellinfo->zz.get_objs(),
-			    cellinfo->yv.get_objs(),
-			    cellinfo->zw.get_objs(),
-			    dim_lo.get_pointer(), 
-			    dim_hi.get_pointer(),
-			    xdim_lo_su_fcy.get_pointer(),
-			    xdim_hi_su_fcy.get_pointer(),
-			    xdim_lo_sp_fcy.get_pointer(),
-			    xdim_hi_sp_fcy.get_pointer(),
-			    xdim_lo_su_fcz.get_pointer(),
-			    xdim_hi_su_fcz.get_pointer(),
-			    xdim_lo_sp_fcz.get_pointer(),
-			    xdim_hi_sp_fcz.get_pointer(),
-			    xdim_lo_su_cc.get_pointer(),
-			    xdim_hi_su_cc.get_pointer(),
-			    xdim_lo_sp_cc.get_pointer(),
-			    xdim_hi_sp_cc.get_pointer(),
-			    xdim_lo_dx_fcy.get_pointer(),
-			    xdim_hi_dx_fcy.get_pointer(),
-			    xdim_lo_dx_fcz.get_pointer(),
-			    xdim_hi_dx_fcz.get_pointer(),
-			    dim_lo_dx_cc.get_pointer(),
-			    dim_hi_dx_cc.get_pointer(),
-			    dim_lo_ugc.get_pointer(),
-			    dim_hi_ugc.get_pointer(),
-			    dim_lo_upc.get_pointer(),
-			    dim_hi_upc.get_pointer(),
-			    xdim_lo_upy.get_pointer(),
-			    xdim_hi_upy.get_pointer(),
-			    xdim_lo_upz.get_pointer(),
-			    xdim_hi_upz.get_pointer(),
-			    dim_lo_eps.get_pointer(),
-			    dim_hi_eps.get_pointer(),
-			    dim_lo_epss.get_pointer(),
-			    dim_hi_epss.get_pointer(),
-			    valid_lo.get_pointer(),
-			    valid_hi.get_pointer(),
-			    &ioff, &joff, &koff,
-			    &indexflo, &indext1, &indext2,
-			    cellType.getPointer(),
-			    &mmwallid, &ffieldid);
+      fort_momentum_exchange_term_continuous_cc(uVelNonlinearSrc_fcy,
+						uVelLinearSrc_fcy,
+						uVelNonlinearSrc_fcz,
+						uVelLinearSrc_fcz,
+						uVelNonlinearSrc_cc,
+						uVelLinearSrc_cc,
+						dragForceX_fcy[m],
+						dragForceX_fcz[m],
+						dragForceX_cc[m],
+						xvelCC_gas,
+						xvelCC_solid[m],
+						xvelFCY_solid[m],
+						xvelFCZ_solid[m],
+						gas_fraction_cc,
+						solid_fraction_cc[m],
+						viscos, csmag,
+						cellinfo->sew, cellinfo->sns,
+						cellinfo->stb, cellinfo->yy,
+						cellinfo->zz, cellinfo->yv,
+						cellinfo->zw,
+						valid_lo, valid_hi,
+						ioff, joff, koff,
+						indexflo, indext1, indext2,
+						cellType, mmwallid, ffieldid);
       
       // code for y-direction momentum exchange
       
@@ -1366,70 +1334,31 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       IntVector ydim_lo_upz = yvelFCX_solid[m].getFortLowIndex();
       IntVector ydim_hi_upz = yvelFCX_solid[m].getFortHighIndex();
-      
-      FORT_MM_MOM_EXCH_CONT(
-			    vVelNonlinearSrc_fcz.getPointer(),
-			    vVelLinearSrc_fcz.getPointer(),
-			    vVelNonlinearSrc_fcx.getPointer(),
-			    vVelLinearSrc_fcx.getPointer(),
-			    vVelNonlinearSrc_cc.getPointer(),
-			    vVelLinearSrc_cc.getPointer(),
-			    dragForceY_fcz[m].getPointer(),
-			    dragForceY_fcx[m].getPointer(),
-			    dragForceY_cc[m].getPointer(),
-			    yvelCC_gas.getPointer(),
-			    yvelCC_solid[m].getPointer(),
-			    yvelFCZ_solid[m].getPointer(),
-			    yvelFCX_solid[m].getPointer(),
-			    gas_fraction_cc.getPointer(),
-			    solid_fraction_cc[m].getPointer(),
-			    &viscos, 
-			    &csmag,
-			    cellinfo->sns.get_objs(),
-			    cellinfo->stb.get_objs(),
-			    cellinfo->sew.get_objs(),
-			    cellinfo->zz.get_objs(),
-			    cellinfo->xx.get_objs(),
-			    cellinfo->zw.get_objs(),
-			    cellinfo->xu.get_objs(),
-			    dim_lo.get_pointer(), 
-			    dim_hi.get_pointer(),
-			    ydim_lo_su_fcy.get_pointer(),
-			    ydim_hi_su_fcy.get_pointer(),
-			    ydim_lo_sp_fcy.get_pointer(),
-			    ydim_hi_sp_fcy.get_pointer(),
-			    ydim_lo_su_fcz.get_pointer(),
-			    ydim_hi_su_fcz.get_pointer(),
-			    ydim_lo_sp_fcz.get_pointer(),
-			    ydim_hi_sp_fcz.get_pointer(),
-			    ydim_lo_su_cc.get_pointer(),
-			    ydim_hi_su_cc.get_pointer(),
-			    ydim_lo_sp_cc.get_pointer(),
-			    ydim_hi_sp_cc.get_pointer(),
-			    ydim_lo_dx_fcy.get_pointer(),
-			    ydim_hi_dx_fcy.get_pointer(),
-			    ydim_lo_dx_fcz.get_pointer(),
-			    ydim_hi_dx_fcz.get_pointer(),
-			    dim_lo_dx_cc.get_pointer(),
-			    dim_hi_dx_cc.get_pointer(),
-			    dim_lo_ugc.get_pointer(),
-			    dim_hi_ugc.get_pointer(),
-			    dim_lo_upc.get_pointer(),
-			    dim_hi_upc.get_pointer(),
-			    ydim_lo_upy.get_pointer(),
-			    ydim_hi_upy.get_pointer(),
-			    ydim_lo_upz.get_pointer(),
-			    ydim_hi_upz.get_pointer(),
-			    dim_lo_eps.get_pointer(),
-			    dim_hi_eps.get_pointer(),
-			    dim_lo_epss.get_pointer(),
-			    dim_hi_epss.get_pointer(),
-			    valid_lo.get_pointer(),
-			    valid_hi.get_pointer(),
-			    &ioff, &joff, &koff,
-			    &indexflo, &indext1, &indext2,
-			    cellType.getPointer(),
-			    &mmwallid, &ffieldid);
+
+      fort_momentum_exchange_term_continuous_cc(vVelNonlinearSrc_fcz,
+						vVelLinearSrc_fcz,
+						vVelNonlinearSrc_fcx,
+						vVelLinearSrc_fcx,
+						vVelNonlinearSrc_cc,
+						vVelLinearSrc_cc,
+						dragForceY_fcz[m],
+						dragForceY_fcx[m],
+						dragForceY_cc[m],
+						yvelCC_gas,
+						yvelCC_solid[m],
+						yvelFCZ_solid[m],
+						yvelFCX_solid[m],
+						gas_fraction_cc,
+						solid_fraction_cc[m],
+						viscos, csmag,
+						cellinfo->sew, cellinfo->sns,
+						cellinfo->stb, cellinfo->zz,
+						cellinfo->xx, cellinfo->zw,
+						cellinfo->xu,
+						valid_lo, valid_hi,
+						ioff, joff, koff,
+						indexflo, indext1, indext2,
+						cellType, mmwallid, ffieldid);
 
     // code for z-direction momentum exchange
 			  
@@ -1483,70 +1412,31 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       IntVector zdim_lo_upz = zvelFCY_solid[m].getFortLowIndex();
       IntVector zdim_hi_upz = zvelFCY_solid[m].getFortHighIndex();
-      
-      FORT_MM_MOM_EXCH_CONT(
-			    wVelNonlinearSrc_fcx.getPointer(),
-			    wVelLinearSrc_fcx.getPointer(),
-			    wVelNonlinearSrc_fcy.getPointer(),
-			    wVelLinearSrc_fcy.getPointer(),
-			    wVelNonlinearSrc_cc.getPointer(),
-			    wVelLinearSrc_cc.getPointer(),
-			    dragForceZ_fcx[m].getPointer(),
-			    dragForceZ_fcy[m].getPointer(),
-			    dragForceZ_cc[m].getPointer(),
-			    zvelCC_gas.getPointer(),
-			    zvelCC_solid[m].getPointer(),
-			    zvelFCX_solid[m].getPointer(),
-			    zvelFCY_solid[m].getPointer(),
-			    gas_fraction_cc.getPointer(),
-			    solid_fraction_cc[m].getPointer(),
-			    &viscos, 
-			    &csmag,
-			    cellinfo->stb.get_objs(),
-			    cellinfo->sew.get_objs(),
-			    cellinfo->sns.get_objs(),
-			    cellinfo->xx.get_objs(),
-			    cellinfo->yy.get_objs(),
-			    cellinfo->xu.get_objs(),
-			    cellinfo->yv.get_objs(),
-			    dim_lo.get_pointer(), 
-			    dim_hi.get_pointer(),
-			    zdim_lo_su_fcy.get_pointer(),
-			    zdim_hi_su_fcy.get_pointer(),
-			    zdim_lo_sp_fcy.get_pointer(),
-			    zdim_hi_sp_fcy.get_pointer(),
-			    zdim_lo_su_fcz.get_pointer(),
-			    zdim_hi_su_fcz.get_pointer(),
-			    zdim_lo_sp_fcz.get_pointer(),
-			    zdim_hi_sp_fcz.get_pointer(),
-			    zdim_lo_su_cc.get_pointer(),
-			    zdim_hi_su_cc.get_pointer(),
-			    zdim_lo_sp_cc.get_pointer(),
-			    zdim_hi_sp_cc.get_pointer(),
-			    zdim_lo_dx_fcy.get_pointer(),
-			    zdim_hi_dx_fcy.get_pointer(),
-			    zdim_lo_dx_fcz.get_pointer(),
-			    zdim_hi_dx_fcz.get_pointer(),
-			    dim_lo_dx_cc.get_pointer(),
-			    dim_hi_dx_cc.get_pointer(),
-			    dim_lo_ugc.get_pointer(),
-			    dim_hi_ugc.get_pointer(),
-			    dim_lo_upc.get_pointer(),
-			    dim_hi_upc.get_pointer(),
-			    zdim_lo_upy.get_pointer(),
-			    zdim_hi_upy.get_pointer(),
-			    zdim_lo_upz.get_pointer(),
-			    zdim_hi_upz.get_pointer(),
-			    dim_lo_eps.get_pointer(),
-			    dim_hi_eps.get_pointer(),
-			    dim_lo_epss.get_pointer(),
-			    dim_hi_epss.get_pointer(),
-			    valid_lo.get_pointer(),
-			    valid_hi.get_pointer(),
-			    &ioff, &joff, &koff,
-			    &indexflo, &indext1, &indext2,
-			    cellType.getPointer(),
-			    &mmwallid, &ffieldid);
+
+      fort_momentum_exchange_term_continuous_cc(wVelNonlinearSrc_fcx,
+						wVelLinearSrc_fcx,
+						wVelNonlinearSrc_fcy,
+						wVelLinearSrc_fcy,
+						wVelNonlinearSrc_cc,
+						wVelLinearSrc_cc,
+						dragForceZ_fcx[m],
+						dragForceZ_fcy[m],
+						dragForceZ_cc[m],
+						zvelCC_gas,
+						zvelCC_solid[m],
+						zvelFCX_solid[m],
+						zvelFCY_solid[m],
+						gas_fraction_cc,
+						solid_fraction_cc[m],
+						viscos, csmag,
+						cellinfo->sew, cellinfo->sns,
+						cellinfo->stb, cellinfo->xx,
+						cellinfo->yy, cellinfo->xu,
+						cellinfo->yv,
+						valid_lo, valid_hi,
+						ioff, joff, koff,
+						indexflo, indext1, indext2,
+						cellType, mmwallid, ffieldid);
       
       // code for pressure forces (direction-independent)
       
@@ -1565,34 +1455,11 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       valid_lo = patch->getCellFORTLowIndex();
       valid_hi = patch->getCellFORTHighIndex();
       
-      FORT_MM_PRESSFORCE(
-			 pressForceX[m].getPointer(),
-			 pressForceY[m].getPointer(),
-			 pressForceZ[m].getPointer(),
-			 gas_fraction_cc.getPointer(),
-			 solid_fraction_cc[m].getPointer(),
-			 pressure.getPointer(),
-			 cellinfo->sew.get_objs(),
-			 cellinfo->sns.get_objs(),
-			 cellinfo->stb.get_objs(),
-			 dim_lo.get_pointer(),
-			 dim_hi.get_pointer(),
-			 dim_lo_fcx.get_pointer(),
-			 dim_hi_fcx.get_pointer(),
-			 dim_lo_fcy.get_pointer(),
-			 dim_hi_fcy.get_pointer(),
-			 dim_lo_fcz.get_pointer(),
-			 dim_hi_fcz.get_pointer(),
-			 dim_lo_eps.get_pointer(),
-			 dim_hi_eps.get_pointer(),
-			 dim_lo_epss.get_pointer(),
-			 dim_hi_epss.get_pointer(),
-			 dim_lo_pres.get_pointer(),
-			 dim_hi_pres.get_pointer(),
-			 valid_lo.get_pointer(),
-			 valid_hi.get_pointer(),
-			 cellType.getPointer(),
-			 &mmwallid, &ffieldid);
+      fort_pressure_force(pressForceX[m], pressForceY[m], pressForceZ[m],
+			  gas_fraction_cc, solid_fraction_cc[m],
+			  pressure, cellinfo->sew, cellinfo->sns,
+			  cellinfo->stb, valid_lo, valid_hi, cellType,
+			  mmwallid, ffieldid);
     }
     
     // Calculation done: now put things back in data warehouse
@@ -1801,23 +1668,11 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     
     dim_lo_sp_fc = sp_dragx_fcy.getFortLowIndex();
     dim_hi_sp_fc = sp_dragx_fcy.getFortHighIndex();
-    
-    FORT_COLLECT_FCDRAG_TO_CC(
-			      su_dragx_cc.getPointer(),
-			      sp_dragx_cc.getPointer(),
-			      su_dragx_fcy.getPointer(),
-			      sp_dragx_fcy.getPointer(),
-			      &koff, &ioff, &joff,
-			      dim_lo_su_cc.get_pointer(),
-			      dim_hi_su_cc.get_pointer(),
-			      dim_lo_sp_cc.get_pointer(),
-			      dim_hi_sp_cc.get_pointer(),
-			      dim_lo_su_fc.get_pointer(),
-			      dim_hi_su_fc.get_pointer(),
-			      dim_lo_sp_fc.get_pointer(),
-			      dim_hi_sp_fc.get_pointer(),
-			      valid_lo.get_pointer(),
-			      valid_hi.get_pointer());
+
+    fort_collect_drag_cc(su_dragx_cc, sp_dragx_cc,
+			 su_dragx_fcy, sp_dragx_fcy,
+			 koff, ioff, joff,
+			 valid_lo, valid_hi);
 
     // for second transverse direction, i.e., z
     
@@ -1827,22 +1682,10 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_sp_fc = sp_dragx_fcz.getFortLowIndex();
     dim_hi_sp_fc = sp_dragx_fcz.getFortHighIndex();
 
-    FORT_COLLECT_FCDRAG_TO_CC(
-			      su_dragx_cc.getPointer(),
-			      sp_dragx_cc.getPointer(),
-			      su_dragx_fcz.getPointer(),
-			      sp_dragx_fcz.getPointer(),
-			      &joff, &koff, &ioff,
-			      dim_lo_su_cc.get_pointer(),
-			      dim_hi_su_cc.get_pointer(),
-			      dim_lo_sp_cc.get_pointer(),
-			      dim_hi_sp_cc.get_pointer(),
-			      dim_lo_su_fc.get_pointer(),
-			      dim_hi_su_fc.get_pointer(),
-			      dim_lo_sp_fc.get_pointer(),
-			      dim_hi_sp_fc.get_pointer(),
-			      valid_lo.get_pointer(),
-			      valid_hi.get_pointer());
+    fort_collect_drag_cc(su_dragx_cc, sp_dragx_cc,
+			 su_dragx_fcz, sp_dragx_fcz,
+			 joff, joff, ioff,
+			 valid_lo, valid_hi);
     
     // collect y-direction sources from face centers to cell center
     
@@ -1867,22 +1710,11 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_sp_fc = sp_dragy_fcz.getFortLowIndex();
     dim_hi_sp_fc = sp_dragy_fcz.getFortHighIndex();
     
-    FORT_COLLECT_FCDRAG_TO_CC(
-			      su_dragy_cc.getPointer(),
-			      sp_dragy_cc.getPointer(),
-			      su_dragy_fcz.getPointer(),
-			      sp_dragy_fcz.getPointer(),
-			      &koff, &ioff, &joff,
-			      dim_lo_su_cc.get_pointer(),
-			      dim_hi_su_cc.get_pointer(),
-			      dim_lo_sp_cc.get_pointer(),
-			      dim_hi_sp_cc.get_pointer(),
-			      dim_lo_su_fc.get_pointer(),
-			      dim_hi_su_fc.get_pointer(),
-			      dim_lo_sp_fc.get_pointer(),
-			      dim_hi_sp_fc.get_pointer(),
-			      valid_lo.get_pointer(),
-			      valid_hi.get_pointer());
+    fort_collect_drag_cc(su_dragy_cc, sp_dragy_cc,
+			 su_dragy_fcz, sp_dragy_fcz,
+			 koff, ioff, joff,
+			 valid_lo, valid_hi);
+
     
     // for second transverse direction, i.e., x
     
@@ -1892,22 +1724,10 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_sp_fc = sp_dragy_fcx.getFortLowIndex();
     dim_hi_sp_fc = sp_dragy_fcx.getFortHighIndex();
     
-    FORT_COLLECT_FCDRAG_TO_CC(
-			      su_dragy_cc.getPointer(),
-			      sp_dragy_cc.getPointer(),
-			      su_dragy_fcx.getPointer(),
-			      sp_dragy_fcx.getPointer(),
-			      &joff, &koff, &ioff,
-			      dim_lo_su_cc.get_pointer(),
-			      dim_hi_su_cc.get_pointer(),
-			      dim_lo_sp_cc.get_pointer(),
-			      dim_hi_sp_cc.get_pointer(),
-			      dim_lo_su_fc.get_pointer(),
-			      dim_hi_su_fc.get_pointer(),
-			      dim_lo_sp_fc.get_pointer(),
-			      dim_hi_sp_fc.get_pointer(),
-			      valid_lo.get_pointer(),
-			      valid_hi.get_pointer());
+    fort_collect_drag_cc(su_dragy_cc, sp_dragy_cc,
+			 su_dragy_fcx, sp_dragy_fcx,
+			 joff, koff, ioff,
+			 valid_lo, valid_hi);
     
     // collect z-direction sources from face centers to cell center
     
@@ -1932,22 +1752,11 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_sp_fc = sp_dragz_fcx.getFortLowIndex();
     dim_hi_sp_fc = sp_dragz_fcx.getFortHighIndex();
     
-    FORT_COLLECT_FCDRAG_TO_CC(
-			      su_dragz_cc.getPointer(),
-			      sp_dragz_cc.getPointer(),
-			      su_dragz_fcx.getPointer(),
-			      sp_dragz_fcx.getPointer(),
-			      &koff, &ioff, &joff,
-			      dim_lo_su_cc.get_pointer(),
-			      dim_hi_su_cc.get_pointer(),
-			      dim_lo_sp_cc.get_pointer(),
-			      dim_hi_sp_cc.get_pointer(),
-			      dim_lo_su_fc.get_pointer(),
-			      dim_hi_su_fc.get_pointer(),
-			      dim_lo_sp_fc.get_pointer(),
-			      dim_hi_sp_fc.get_pointer(),
-			      valid_lo.get_pointer(),
-			      valid_hi.get_pointer());
+    fort_collect_drag_cc(su_dragz_cc, sp_dragz_cc,
+			 su_dragz_fcx, sp_dragz_fcx,
+			 koff, ioff, joff,
+			 valid_lo, valid_hi);
+
     
     // for second transverse direction, i.e., y
     
@@ -1957,22 +1766,10 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_sp_fc = sp_dragz_fcy.getFortLowIndex();
     dim_hi_sp_fc = sp_dragz_fcy.getFortHighIndex();
     
-    FORT_COLLECT_FCDRAG_TO_CC(
-			      su_dragz_cc.getPointer(),
-			      sp_dragz_cc.getPointer(),
-			      su_dragz_fcy.getPointer(),
-			      sp_dragz_fcy.getPointer(),
-			      &joff, &koff, &ioff,
-			      dim_lo_su_cc.get_pointer(),
-			      dim_hi_su_cc.get_pointer(),
-			      dim_lo_sp_cc.get_pointer(),
-			      dim_hi_sp_cc.get_pointer(),
-			      dim_lo_su_fc.get_pointer(),
-			      dim_hi_su_fc.get_pointer(),
-			      dim_lo_sp_fc.get_pointer(),
-			      dim_hi_sp_fc.get_pointer(),
-			      valid_lo.get_pointer(),
-			      valid_hi.get_pointer());
+    fort_collect_drag_cc(su_dragz_cc, sp_dragz_cc,
+			 su_dragz_fcy, sp_dragz_fcy,
+			 joff, koff, ioff,
+			 valid_lo, valid_hi);
     
     // Calculation done: now put things in DW
     
@@ -2100,16 +1897,9 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_cc = su_dragx_cc.getFortLowIndex();
     dim_hi_cc = su_dragx_cc.getFortHighIndex();
     
-    FORT_MM_INTERP_CCTOFC(
-			  su_dragx_fcx.getPointer(),
-			  su_dragx_cc.getPointer(),
-			  &ioff, &joff, &koff,
-			  dim_lo_fc.get_pointer(),
-			  dim_hi_fc.get_pointer(),
-			  dim_lo_cc.get_pointer(),
-			  dim_hi_cc.get_pointer(),
-			  valid_lo.get_pointer(),
-			  valid_hi.get_pointer());
+    fort_interp_centertoface(su_dragx_fcx,
+			     su_dragx_cc, ioff, joff, koff,
+			     valid_lo, valid_hi);
     
     // linear source
     
@@ -2119,16 +1909,9 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_cc = sp_dragx_cc.getFortLowIndex();
     dim_hi_cc = sp_dragx_cc.getFortHighIndex();
     
-    FORT_MM_INTERP_CCTOFC(
-			  sp_dragx_fcx.getPointer(),
-			  sp_dragx_cc.getPointer(),
-			  &ioff, &joff, &koff,
-			  dim_lo_fc.get_pointer(),
-			  dim_hi_fc.get_pointer(),
-			  dim_lo_cc.get_pointer(),
-			  dim_hi_cc.get_pointer(),
-			  valid_lo.get_pointer(),
-			  valid_hi.get_pointer());
+    fort_interp_centertoface(sp_dragx_fcx,
+			     sp_dragx_cc, ioff, joff, koff,
+			     valid_lo, valid_hi);
     
     // Interpolate y-momentum source terms
     
@@ -2147,16 +1930,9 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_cc = su_dragy_cc.getFortLowIndex();
     dim_hi_cc = su_dragy_cc.getFortHighIndex();
     
-    FORT_MM_INTERP_CCTOFC(
-			  su_dragy_fcy.getPointer(),
-			  su_dragy_cc.getPointer(),
-			  &ioff, &joff, &koff,
-			  dim_lo_fc.get_pointer(),
-			  dim_hi_fc.get_pointer(),
-			  dim_lo_cc.get_pointer(),
-			  dim_hi_cc.get_pointer(),
-			  valid_lo.get_pointer(),
-			  valid_hi.get_pointer());
+    fort_interp_centertoface(su_dragy_fcy,
+			     su_dragy_cc, ioff, joff, koff,
+			     valid_lo, valid_hi);
     
     // linear source
     
@@ -2166,16 +1942,9 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_cc = sp_dragy_cc.getFortLowIndex();
     dim_hi_cc = sp_dragy_cc.getFortHighIndex();
     
-    FORT_MM_INTERP_CCTOFC(
-			  sp_dragy_fcy.getPointer(),
-			  sp_dragy_cc.getPointer(),
-			  &ioff, &joff, &koff,
-			  dim_lo_fc.get_pointer(),
-			  dim_hi_fc.get_pointer(),
-			  dim_lo_cc.get_pointer(),
-			  dim_hi_cc.get_pointer(),
-			  valid_lo.get_pointer(),
-			  valid_hi.get_pointer());
+    fort_interp_centertoface(sp_dragy_fcy,
+			     sp_dragy_cc, ioff, joff, koff,
+			     valid_lo, valid_hi);
     
     // Interpolate z-momentum source terms
     
@@ -2194,16 +1963,9 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_cc = su_dragz_cc.getFortLowIndex();
     dim_hi_cc = su_dragz_cc.getFortHighIndex();
     
-    FORT_MM_INTERP_CCTOFC(
-			  su_dragz_fcz.getPointer(),
-			  su_dragz_cc.getPointer(),
-			  &ioff, &joff, &koff,
-			  dim_lo_fc.get_pointer(),
-			  dim_hi_fc.get_pointer(),
-			  dim_lo_cc.get_pointer(),
-			  dim_hi_cc.get_pointer(),
-			  valid_lo.get_pointer(),
-			  valid_hi.get_pointer());
+    fort_interp_centertoface(su_dragz_fcz,
+			     su_dragz_cc, ioff, joff, koff,
+			     valid_lo, valid_hi);
     
     // linear source
     
@@ -2213,17 +1975,9 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     dim_lo_cc = sp_dragz_cc.getFortLowIndex();
     dim_hi_cc = sp_dragz_cc.getFortHighIndex();
     
-    FORT_MM_INTERP_CCTOFC(
-			  sp_dragz_fcz.getPointer(),
-			  sp_dragz_cc.getPointer(),
-			  &ioff, &joff, &koff,
-			  dim_lo_fc.get_pointer(),
-			  dim_hi_fc.get_pointer(),
-			  dim_lo_cc.get_pointer(),
-			  dim_hi_cc.get_pointer(),
-			  valid_lo.get_pointer(),
-			  valid_hi.get_pointer());
-    
+    fort_interp_centertoface(sp_dragz_fcz,
+			     sp_dragz_cc, ioff, joff, koff,
+			     valid_lo, valid_hi);
     // Calculation done: now put things in DW
     
     new_dw->put(su_dragx_fcx, d_MAlb->d_uVel_mmNonlinSrcLabel,
@@ -2324,17 +2078,9 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       int ioff = 1;
       int joff = 0;
       int koff = 0;
-      
-      FORT_MM_REDISTRIBUTE_DRAG(
-				dragForceX_fcx.getPointer(),
-				dragForceX_cc.getPointer(),
-				&ioff, &joff, &koff,
-				dim_lo_fcx.get_pointer(),
-				dim_hi_fcx.get_pointer(),
-				dim_lo_cc.get_pointer(),
-				dim_hi_cc.get_pointer(),
-				valid_lo.get_pointer(),
-				valid_hi.get_pointer());
+
+      fort_mm_redistribute_drag(dragForceX_fcx, dragForceX_cc,
+				ioff, joff, koff, valid_lo, valid_hi);
       
       // redistribute y-direction drag forces
       
@@ -2351,16 +2097,8 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       joff = 1;
       koff = 0;
       
-      FORT_MM_REDISTRIBUTE_DRAG(
-				dragForceY_fcy.getPointer(),
-				dragForceX_cc.getPointer(),
-				&ioff, &joff, &koff,
-				dim_lo_fcx.get_pointer(),
-				dim_hi_fcx.get_pointer(),
-				dim_lo_cc.get_pointer(),
-				dim_hi_cc.get_pointer(),
-				valid_lo.get_pointer(),
-				valid_hi.get_pointer());
+      fort_mm_redistribute_drag(dragForceY_fcx, dragForceY_cc,
+				ioff, joff, koff, valid_lo, valid_hi);
       
       // redistribute z-direction drag forces
       
@@ -2377,16 +2115,8 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       joff = 0;
       koff = 1;
       
-      FORT_MM_REDISTRIBUTE_DRAG(
-				dragForceZ_fcz.getPointer(),
-				dragForceZ_cc.getPointer(),
-				&ioff, &joff, &koff,
-				dim_lo_fcx.get_pointer(),
-				dim_hi_fcx.get_pointer(),
-				dim_lo_cc.get_pointer(),
-				dim_hi_cc.get_pointer(),
-				valid_lo.get_pointer(),
-				valid_hi.get_pointer());
+      fort_mm_redistribute_drag(dragForceZ_fcx, dragForceZ_cc,
+				iof,f joff, koff, valid_lo, valid_hi);
       
       // Calculation done; now put things back in DW
       

@@ -1,0 +1,16 @@
+void momentum_exchange_term_continuous_cc(Array3<double> su_dragx_fcy,
+     Array3<double> sp_dragx_fcy, Array3<double> su_dragx_fcz,
+     Array3<double> sp_dragx_fcz, CCVariable<double> su_dragx_cc,
+     CCVariable<double> sp_dragx_cc, Array3<double> dragforcex_fcy,
+     Array3<double> dragforcex_fcz, CCVariable<double> dragforcex_cc,
+     CCVariable<double> ug_cc, CCVariable<double> up_cc,
+     Array3<double> up_fcy, Array3<double> up_fcz,
+     CCVariable<double> eps_gas, CCVariable<double> eps_solid,
+     double viscos, double csmag, OffsetArray1<double> sew,
+     OffsetArray1<double> sns, OffsetArray1<double> stb,
+     OffsetArray1<double> yy, OffsetArray1<double> zz,
+     OffsetArray1<double> yv, OffsetArray1<double> zw,
+     IntVector valid_lo, IntVector valid_hi, int ioff,
+     int joff, int koff, int indexflo, int indext1, int indext3,
+     CCVariable<int> pcell, int wall, int ffield);
+
