@@ -1,7 +1,8 @@
 #!/usr/local/bin/python
 
+from os import symlink
 from sys import argv,exit
-from helpers.runSusTest import runSusTests
+from helpers.runSusTests import runSusTests
 
 TESTS = [   ("methane_explicit", "methane_explicit_table.ups", 1.1, "chem_meth.bin"), \
             ("methane_explicit_8patch", "methane_explicit_table_8patch.ups", 8, "chem_meth.bin")
