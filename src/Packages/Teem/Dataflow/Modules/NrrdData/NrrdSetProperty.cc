@@ -1,5 +1,5 @@
 /*
- *  NrrdSetProperty: Set a property for a Field (or its Mesh)
+ *  NrrdSetProperty: Set a property for a Nrrd
  *
  *  Written by:
  *   David Weinstein
@@ -72,6 +72,74 @@ NrrdSetProperty::~NrrdSetProperty()
 }
 
 void NrrdSetProperty::execute() {
+
+
+  NrrdIPort *inrrd_port = (NrrdIPort *)get_iport("Input");
+
+  if (!inrrd_port) {
+    error("Unable to initialize iport 'Input'.");
+    return;
+  }
+  
+  NrrdDataHandle nHandle;
+
+  // The nrrd input is required.
+  if (!inrrd_port->get(nHandle) || !(nHandle.get_rep()) ) {
+    error( "No handle or representation" );
+    return;
+  }
+
+  bool update = false;
+
+  // If no data or a change recreate the nrrd.
+  if( !nHandle_.get_rep() ||
+      nGeneration_ != nHandle->generation ) {
+    nGeneration_ = nHandle->generation;
+  
+    // Add the current properties to the display.
+    for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
+      int    p_int;
+      float  p_float;
+      string p_string;
+
+      string name = nHandle->get_property_name( ic );
+      string type("other");
+      string value("Can not display");
+      int readonly = 1;
+
+      if( nHandle->get_property( name, p_int ) ) {
+	type = string( "int" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_int );
+	value = string( tmpStr );
+	readonly = 1;
+
+      } else if( nHandle->get_property( name, p_float ) ) {
+	type = string( "float" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%f", p_float );
+	value = string( tmpStr );
+	readonly = 1;
+
+      } else if( nHandle->get_property( name, p_string ) ) {
+	type = string( "string" );
+	value = p_string;
+	readonly = 1;
+      }
+
+      ostringstream str;
+      str << id << " setEntry {";
+      str << name << "} ";
+      str << type << " {";
+      str << value << "} ";
+      str << readonly << " ";
+
+      gui->execute(str.str().c_str());
+    }
+
+    update = true;
+  }
+
   // Save off the defaults
   nEntries_.reset();               // Number of entries
   sProperty_.reset();              // Default Property
@@ -79,7 +147,11 @@ void NrrdSetProperty::execute() {
   sValue_.reset();                 // Default Value 
   iReadOnly_.reset();              // Default Read Only
 
-  entries_ = nEntries_.get();                // Number of entries
+  if( entries_ != (unsigned int) nEntries_.get() ) {
+    entries_ = nEntries_.get();              // Number of entries
+    update = true;
+  }
+
   property_ = sProperty_.get();              // Default Property
   type_ = sType_.get();                      // Default Type 
   value_ = sValue_.get();                    // Default Value 
@@ -128,71 +200,6 @@ void NrrdSetProperty::execute() {
   }
 
 
-  NrrdIPort *inrrd_port = (NrrdIPort *)get_iport("Input");
-
-  if (!inrrd_port) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
-  
-  NrrdDataHandle nHandle;
-
-  // The nrrd input is required.
-  if (!inrrd_port->get(nHandle) || !(nHandle.get_rep()) ) {
-    error( "No handle or representation" );
-    return;
-  }
-
-  bool update = false;
-
-  // If no data or a change recreate the nrrd.
-  if( !nHandle_.get_rep() ||
-      nGeneration_ != nHandle->generation ) {
-    nGeneration_ = nHandle->generation;
-    update = true;
-  }
-  
-  // Add the current properties to the display.
-  for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
-    int    p_int;
-    float  p_float;
-    string p_string;
-
-    string name = nHandle->get_property_name( ic );
-    string type("other");
-    string value("Can not display");
-    int readonly = 1;
-
-    if( nHandle->get_property( name, p_int ) ) {
-      type = string( "int" );
-      char tmpStr[128];
-      sprintf( tmpStr, "%d", p_int );
-      value = string( tmpStr );
-      readonly = 1;
-
-    } else if( nHandle->get_property( name, p_float ) ) {
-      type = string( "float" );
-      char tmpStr[128];
-      sprintf( tmpStr, "%f", p_float );
-      value = string( tmpStr );
-      readonly = 1;
-
-    } else if( nHandle->get_property( name, p_string ) ) {
-      type = string( "string" );
-      value = p_string;
-      readonly = 1;
-    }
-
-    ostringstream str;
-    str << id << " setEntry {";
-    str << name << "} ";
-    str << type << " {";
-    str << value << "} ";
-    str << readonly << " ";
-
-    gui->execute(str.str().c_str());
-  }
-
   for( unsigned int ic=0; ic<entries_; ic++ ) {
     gProperty_[ic]->reset();
     gType_[ic]->reset();
@@ -200,6 +207,7 @@ void NrrdSetProperty::execute() {
 
     string tmpStr;
 
+    // Compare with the current stored properties.
     tmpStr = gProperty_[ic]->get();
     if( tmpStr != properties_[ic] ) {
       properties_[ic] = tmpStr;
@@ -218,7 +226,7 @@ void NrrdSetProperty::execute() {
       update = true;
     }
 
-    // Compare with the current properties.
+    // Compare with the current nrrd properties.
     int    p_int;
     float  p_float;
     string p_string;
@@ -247,18 +255,38 @@ void NrrdSetProperty::execute() {
 
     for( unsigned int ic=0; ic<entries_; ic++ ) {
 
-      if( types_[ic] == "int" )
-	nHandle->set_property(properties_[ic], atoi(values_[ic].c_str()), false);
-      else if( types_[ic] == "float" )
-	nHandle->set_property(properties_[ic], atof(values_[ic].c_str()), false);
-      else if( types_[ic] == "string" )
-	nHandle->set_property(properties_[ic], values_[ic], false);
+      if( types_[ic] == "int" ) {
+	int p_int = (int) atoi(values_[ic].c_str());
+	nHandle->set_property(properties_[ic], p_int, false);
 
-      else if( types_[ic] == "unknown" ) {
+      } else if( types_[ic] == "float" ) {
+	float p_float = (float) atof(values_[ic].c_str());
+	nHandle->set_property(properties_[ic], p_float, false);
+
+      } else if( types_[ic] == "string" ) {
+	string p_string = (string) values_[ic];
+	nHandle->set_property(properties_[ic], p_string, false);
+
+      } else if( types_[ic] == "unknown" ) {
 	error( properties_[ic] + " has an unknown type" );
 	error_ = true;
 	return;
       }
+    }
+
+    // Remove the deleted properties.
+    for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
+      string name = nHandle->get_property_name( ic );
+
+      unsigned int jc;
+
+      for( jc=0; jc<entries_; jc++ ) {
+	if( name == properties_[jc] )
+	  break;
+      }
+
+      if( jc == entries_ )
+	nHandle->remove_property( name );
     }
 
     nHandle_ = nHandle;
