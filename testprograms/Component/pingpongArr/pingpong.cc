@@ -118,7 +118,6 @@ int main(int argc, char* argv[])
 
 	if(server) {
 	  PingPong_impl* pp=new PingPong_impl;
-          //pp->createSubset(0);
 
           //Set up server's requirement of the distribution array 
 	  Index** dr = new Index* [1]; 
@@ -151,7 +150,6 @@ int main(int argc, char* argv[])
 	    abort();
 	  }
 
-	  pp->createSubset(2);
 	  //Set up the array and the timer  
 	  double stime=Time::currentSeconds();
           cerr << mysize << ", " << myrank << "\n";
