@@ -73,6 +73,7 @@ private:
   GuiDouble timeval;
   GuiInt animate;
   GuiInt anisleep;
+  GuiInt tinc;
 
   ArchiveIPort *in;
   ArchiveOPort *out;

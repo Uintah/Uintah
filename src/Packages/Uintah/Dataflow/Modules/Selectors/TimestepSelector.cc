@@ -37,6 +37,7 @@ TimestepSelector::TimestepSelector(GuiContext* ctx)
     timeval(ctx->subVar("timeval")),
     animate(ctx->subVar("animate")),
     anisleep(ctx->subVar("anisleep")),
+    tinc(ctx->subVar("tinc")),
     archiveH(0),
     def_color_r_(ctx->subVar("def-color-r")),
     def_color_g_(ctx->subVar("def-color-g")),
@@ -90,14 +91,15 @@ void TimestepSelector::execute()
 
    // what time is it?
    
-   int t = time.get();
+   unsigned int t = time.get();
 
    // set the index for the correct timestep.
-   int idx = 0;
-   if(t < (int)times.size())
+   unsigned int idx = 0;
+   if(t < times.size())
      idx = t;
-   if(t >= (int)times.size())
-     idx=(int)times.size()-1;
+   // Do a bounds check
+   if(t >= times.size())
+     idx = times.size()-1;
 
    timeval.set(times[idx]);
 
@@ -113,13 +115,27 @@ void TimestepSelector::execute()
      while( animate.get() ) { // && idx < (int)times.size() - 1){
        //       archive.purgeTimestepCache( times[idx] );
        DataArchive::cacheOnlyCurrentTimestep = true;
-       idx++;
-       if (idx == times.size()-1 ) break;  // idx = 0; //for continuous cycle
+       // Get tinc and make sure it is a good value.
+       int tinc_val = tinc.get();
+       if (tinc_val < 0) {
+	 error("Time Step Increment is less than 0.");
+	 break;
+       } else if (tinc_val == 0) {
+	 warning("Time Step Increment is equal to 0.  The time step will not increment.");
+       }
+       cout << "times.size() = "<<times.size()<<endl;
+       cout << "idx = "<<idx<<", tinc_val = "<<tinc_val<<endl;
+       // See if incrementing idx will go out of bounds.  If it will
+       // don't change it.
+       if (idx + tinc_val < times.size())
+	 idx+=tinc_val;
+       else
+	 break;
+       cout << "after: idx = "<<idx<<", tinc_val = "<<tinc_val<<endl;
        tcl_status.set( to_string( times[idx] ));
        time.set( idx );
        handle->SetTimestep( idx );
        out->send_intermediate( handle );
-       sleep(unsigned( anisleep.get()));
        reset_vars();
        v =  times[idx];
        hour = trunc( v/3600.0);
@@ -147,10 +163,12 @@ void TimestepSelector::execute()
        ogeom->delAll();
        ogeom->addObj(sticky, "TimeStamp");
        ogeom->flushViews();
-       
+       sleep(unsigned( anisleep.get()));
      }
      animate.set(0);
    }
+   time.set( idx );
+   reset_vars();
    handle->SetTimestep( idx );
    out->send(handle);
 
