@@ -35,6 +35,20 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_is_injured(7)
     global $this-gui_is_injured(8)
     global $this-gui_is_injured(9)
+    global $this-gui_parent(1)
+    global $this-gui_parent(2)
+    global $this-gui_sibling(1)
+    global $this-gui_sibling(2)
+    global $this-gui_sibling(3)
+    global $this-gui_sibling(4)
+    global $this-gui_child(1)
+    global $this-gui_child(2)
+    global $this-gui_child(3)
+    global $this-gui_child(4)
+    global $this-gui_child(5)
+    global $this-gui_child(6)
+    global $this-gui_child(7)
+    global $this-gui_child(8)
     global $this-FME_on
     global $this-Files_on
     global $this-enableDraw
@@ -75,6 +89,20 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_is_injured(7) "0"
     set $this-gui_is_injured(8) "0"
     set $this-gui_is_injured(9) "0"
+    set $this-gui_parent(1) ""
+    set $this-gui_parent(2) ""
+    set $this-gui_sibling(1) ""
+    set $this-gui_sibling(2) ""
+    set $this-gui_sibling(3) ""
+    set $this-gui_sibling(4) ""
+    set $this-gui_child(1) ""
+    set $this-gui_child(2) ""
+    set $this-gui_child(3) ""
+    set $this-gui_child(4) ""
+    set $this-gui_child(5) ""
+    set $this-gui_child(6) ""
+    set $this-gui_child(7) ""
+    set $this-gui_child(8) ""
     set $this-FME_on "no"
     set $this-Files_on "no"
     set $this-enableDraw "no"
@@ -237,6 +265,7 @@ itcl_class VS_DataFlow_HotBox {
   }
   # end method set_querytype
 
+
   #############################################################################
   # method ui
   #
@@ -382,6 +411,39 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.probeUI.slide $w.probeUI.loc -side bottom -expand yes -fill x
 
     ######################################
+    # FMA Hierarchy UI
+    ######################################
+    frame $w.hier
+    frame $w.hier.titles
+    frame $w.hier.multi
+    canvas $w.hier.titles.l1 -width 150 -height 20
+    $w.hier.titles.l1 create text 20 10 -text "Parent"
+    listbox $w.hier.multi.l1
+    canvas $w.hier.titles.l2 -width 150 -height 20
+    $w.hier.titles.l2 create text 20 10 -text "Sibling"
+    listbox $w.hier.multi.l2
+    canvas $w.hier.titles.l3 -width 100 -height 20
+    $w.hier.titles.l3 create text 20 10 -text "Child"
+    listbox $w.hier.multi.l3
+    scrollbar $w.hier.vs
+    grid $w.hier.titles -column 0 -row 0 -sticky nsew
+    grid $w.hier.multi -column 0 -row 1 -sticky nsew
+    grid $w.hier.vs -column 1 -row 0 -rowspan 2 -sticky ns
+    grid $w.hier.titles.l1 -column 0 -row 0 -padx 1
+    grid $w.hier.titles.l2 -column 1 -row 0 -padx 1
+    grid $w.hier.titles.l3 -column 2 -row 0 -padx 1 -sticky ew
+    grid $w.hier.multi.l1 -column 0 -row 1 -sticky ns
+    grid $w.hier.multi.l2 -column 1 -row 1 -sticky ns
+    grid $w.hier.multi.l3 -column 2 -row 1 -sticky ns -sticky ewns
+    grid rowconfigure    $w.hier 1 -weight 1
+    grid columnconfigure $w.hier 0 -weight 1
+    grid rowconfigure    $w.hier.titles 1 -weight 1
+    grid columnconfigure $w.hier.titles 2 -weight 1
+    grid rowconfigure    $w.hier.multi 1 -weight 1
+    grid columnconfigure $w.hier.multi 2 -weight 1
+    # pack $w.hier -fill both -expand 1
+
+    ######################################
     # Query UI
     ######################################
     frame $w.controls
@@ -410,9 +472,9 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.controls2.querytypelabel $w.controls2.adjacenttobutton $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
 
     if { [set $this-Files_on] == "yes" } {
-    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     } else {
-    pack $w.togFilesUI $w.f $w.probeUI $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     }
 # pack $w.title -side top
   }
