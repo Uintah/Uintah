@@ -12,6 +12,7 @@ all:: modules.o
 MODULES = FieldReader/FieldReader.o \
 	IsoSurface/IsoSurface.o \
 	Salmon/Salmon.o \
+	Salmon/Roe.o \
 	SoundInput/SoundInput.o \
 	SoundFilter/SoundFilter.o \
 	SoundMixer/SoundMixer.o \
