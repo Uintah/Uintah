@@ -1761,17 +1761,39 @@ AC_SUBST(HAVE_LIBBLAS)
 AC_SUBST(LIBBLAS)
 
 ##  --  search for lapack stuff  -----------------------------------------
-for i in $lapack `dirname $LIBBLAS` $thirdparty $SCI_LAB_TP_DEFAULT; do
+
+BLAS_PATH=""
+if test "$LIBBLAS"; then
+  BLAS_PATH=`dirname $LIBBLAS`
+fi
+for i in $lapack $BLAS_PATH $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,lapack,main,break,continue,$BLAS_LIBRARY -lblas $FLIBS)
+  SCI_CHECK_LIB($i/lib,lapack,main,
+    LAPACK="-llapack"; break,,
+    $BLAS_LIBRARY -lblas $FLIBS)
+  SCI_CHECK_LIB($i/lib,complib.sgimath,main,
+    LIBLAPACK="$i/lib"; 
+    LAPACK="-lcomplib.sgimath"; break,,
+    $BLAS_LIBRARY -lblas $FLIBS)
+  SCI_CHECK_LIB($i/lib,complib.sgimath_mp,main,
+    LIBLAPACK="$i/lib"; 
+    LAPACK="-lcomplib.sgimath_mp"; break,continue,
+    $BLAS_LIBRARY -lblas $FLIBS)    
 done
 
 if test "$LIBLAPACK"; then
   LAPACK_DEF="#define LAPACK_ENABLED 1"
+  if test "$LIBLAPACK" != "/usr/lib" ||
+     test "$LIBLAPACK" != "/lib" ||
+     test "$LIBLAPACK" != "/usr/lib/" ||
+     test "$LIBLAPACK" != "/lib/"; then
+    LAPACK_LIBRARY=-L$LIBLAPACK
+  fi
 fi
 
+AC_SUBST(LAPACK)
 AC_SUBST(LAPACK_DEF)
 AC_SUBST(HAVE_LAPACK)
 AC_SUBST(LIBLAPACK)
@@ -1786,7 +1808,7 @@ fi
 
 case $host in
   *-irix*)
-    if test "is_64bit" = "yes"; then
+    if test "$is_64bit" = "yes"; then
       PETSC_ARCH=IRIX64
     else
       PETSC_ARCH=IRIX
@@ -1812,15 +1834,15 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
   fi
   SCI_CHECK_LIB($i/lib/$PETSC_SUB/$PETSC_ARCH,petsc,main,,HAVE_LIBPETSC=no,
     -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
-    -lpetscts -lpetscvec $LAPACK_LIBRARY -llapack $BLAS_LIBRARY -lblas \
+    -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK $BLAS_LIBRARY -lblas \
     $X_LIBRARY -lX11 $MPI_LIBRARY $MPI $FLIBS -lm)
   if test "$HAVE_LIBPETSC" != "yes"; then
     SCI_CHECK_LIB($i/lib,petsc,main,,continue,
       -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
-      -lpetscts -lpetscvec $LAPACK_LIBRARY -llapack $BLAS_LIBRARY -lblas \
+      -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK $BLAS_LIBRARY -lblas \
       $X_LIBRARY -lX11 $MPI_LIBRARY $MPI $FLIBS -lm)
   fi
-  SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,
+  SCI_CHECK_HEADERS($i/include,petsc.h,,break,
     -I$INCMPI_H -I$i/bmake/$PETSC_ARCH)
   if test "$LIBPETSC" &&
      test "$INCPETSC_H"; then
