@@ -159,12 +159,32 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
     if(begin == end)
       return 0;
     begin++; // skip ]
+
     int id_index = addDependentVariable(id);
     Dep* dep = deps[id_index];
     if(dep->type == Dep::ConstantValue)
       return new Expr(dep->constantValue);
     else
       return new Expr(id_index);
+  } else if(next == '{'){
+    // Independent variable...
+    begin++;
+    string id;
+    while(begin != end && *begin != '}')
+      id.push_back(*begin++);
+    if(begin == end)
+      return 0;
+    begin++; // skip }
+
+    return new Expr(id);
+  } else if(next =='('){
+    // Parenthetical
+    begin++;
+    Expr* child = parse_addsub(begin, end);
+    if(!child || *begin++ != ')')
+      return 0;
+    else
+      return child;
   } else if(isdigit(next)){
     string constant;
     while((*begin >= '0' && *begin <= '9') || *begin == '.')
@@ -271,11 +291,9 @@ void ArchesTable::setup()
     in_deps[j] = dep;
   }
 
-  // Next, read units
-  for(int j=0;j<ndeps;j++){
-    Dep* dep = in_deps[j];
-    dep->units = getString(in);
-  }
+  // Next, read units - they may not all be there, so we just read the
+  // line and throw it away...
+  getLine(in);
 
   // Next, read the axis weights for everything but the first axis
   for(int i=1;i<nvars;i++){
@@ -297,6 +315,16 @@ void ArchesTable::setup()
       double value = getDouble(in);
       dep->data[i] = value;
     }
+  }
+
+  // Make sure that we are at the end of the file
+  skipComments(in);
+  if(in){
+    cerr << "Rest of file:\n";
+    while(in)
+      cerr << in.get();
+    cerr << '\n';
+    throw InternalError("Data remaining in file after read\n");
   }
 
   // finalize axes
@@ -337,6 +365,7 @@ void ArchesTable::setup()
     }
     newstride *= axis_sizes[axis_map[i]];
   }
+  ASSERT(firststride != 0);
   long newsize = newstride;
 
   // Down-slice the table if necessary
@@ -414,7 +443,6 @@ void ArchesTable::setup()
       }
       if(!found)
         throw InternalError("Default value for "+in_inds[i]->name+" not found");
-
       InterpAxis* axis = inputdep->axes[i];
       int l=0;
       int h=axis->weights.size()-1;
@@ -501,9 +529,10 @@ void ArchesTable::checkAxes(const vector<InterpAxis*>& a,
       out_axes=b;
     return;
   } else {
-    if(b.size() == 0)
+    if(b.size() == 0){
       out_axes=a;
-    return;
+      return;
+    }
   }
   if(a.size() != b.size())
     throw InternalError("Cannot compute a derived quantity on variables with different dimension");
@@ -587,10 +616,41 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     break;
   case 'i':
     {
-      double* from = deps[expr->dep]->data;
+      int idx;
+      for(idx=0;idx<static_cast<int>(inds.size());idx++){
+        if(inds[idx]->name == expr->id)
+          break;
+      }
+      if(idx == static_cast<int>(inds.size()))
+        throw InternalError("Cannot find variable in expression: "+expr->id);
+      int firstdep=0;
+      while(firstdep != static_cast<int>(deps.size())
+            && static_cast<int>(deps[firstdep]->axes.size()) == 0)
+        firstdep++;
+      if(firstdep == static_cast<int>(deps.size()))
+        throw InternalError("Cannot find a variable with axes");
+      out_axes=deps[firstdep]->axes;
+      InterpAxis* axis = out_axes[idx];
+      int stride = axis->offset[1]-axis->offset[0];
+      int n = axis->weights.size();
+      int skip = n*stride;
+      int index=0;
+      for(int i=0;i<size;i+=skip){
+        for(int j=0;j<n;j++){
+          double value = axis->weights[j];
+          for(int k=0;k<stride;k++){
+              data[index++]=value;
+          }
+        }
+      }
+    }
+    break;
+  case 'd':
+    {
+      double* from = deps[expr->var]->data;
       for(int i=0;i<size;i++)
         data[i] = from[i];
-      out_axes = deps[expr->dep]->axes;
+      out_axes = deps[expr->var]->axes;
     }
     break;
   default:
@@ -700,6 +760,10 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
   Dep* dep = deps[index];
   int ni = dep->axes.size();
   ASSERT(ni < MAXINDEPENDENTS);
+  ASSERT(ni == static_cast<int>(independents.size()));
+  if(dep->type == Dep::ConstantValue)
+    return dep->constantValue;
+
   double w[MAXINDEPENDENTS];
   long idx0[MAXINDEPENDENTS];
   long idx1[MAXINDEPENDENTS];
@@ -830,12 +894,31 @@ string ArchesTable::getString(istream& in)
   return result;
 }
 
+string ArchesTable::getLine(istream& in)
+{
+  eatWhite(in);
+  if(startline)
+    skipComments(in);
+  eatWhite(in);
+
+  string result;
+  eatWhite(in);
+  for(;;){
+    int c = in.get();
+    if(c == '\n' || !in)
+      break;
+    result.push_back(c);
+  }
+  result.erase(result.find_last_not_of(" \t\n")+1);
+  return result;
+}
+
 void ArchesTable::skipComments(istream& in)
 {
   eatWhite(in);
   int c = in.get();
-  while(c == '#'){
-    while(c != '\n')
+  while(in && c == '#'){
+    while(in && c != '\n')
       c = in.get();
     eatWhite(in);
     c=in.get();
@@ -846,9 +929,10 @@ void ArchesTable::skipComments(istream& in)
 void ArchesTable::eatWhite(istream& in)
 {
   int c = in.get();
-  while(isspace(c))
+  while(in && isspace(c))
     c = in.get();
-  in.unget();
+  if(in)
+    in.unget();
 }
 
 void ArchesTable::Dep::addAxis(InterpAxis* newAxis)
