@@ -10,7 +10,8 @@
    </Meta>
 
    <Time>
-	<maxTime>1.0</maxTime>
+	<maxTime>0.01</maxTime>
+        <maxIterations> 10 </maxIterations>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
@@ -19,7 +20,7 @@
 
    <DataArchiver>
         <filebase>bigbar.uda</filebase>
-        <outputInterval>.01</outputInterval>
+        <outputInterval>.02</outputInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
         <save label = "p.stress"/>
@@ -82,11 +83,11 @@
     <Grid>
 	<Level>
 	    <Box label="1">
-		<lower>[ -2.5, -5.5, -0.5   ]</lower>
-		<upper>[  22.5, 3.5, 1.5]</upper>
+		<lower>[ -2.5, -1.0, -0.5   ]</lower>
+		<upper>[  22.5, 2.0, 1.5]</upper>
 <!--            <resolution>[22,20,1]</resolution> -->
 	        <resolution>[100,36,8]</resolution>
-		<patches>[1,1,1]</patches>
+		<patches>[2,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -96,17 +97,17 @@
 		<force>
 			<lower>[0.0, 0.0, 0.0]</lower>
 			<upper>[0.0, 0.0, 1.0]</upper>
-		        <force_density>[0,500,0]</force_density>
+		        <force_density>[0,50,0]</force_density>
 		</force>
 		<force>
 			<lower>[20.0, 0.0, 0.0]</lower>
 			<upper>[20.0, 0.0, 1.0]</upper>
-		        <force_density>[0,500,0]</force_density>
+		        <force_density>[0,50,0]</force_density>
 		</force>
 		<force>
 			<lower>[10.0, 1.0, 0.0]</lower>
 			<upper>[10.0, 1.0, 1.0]</upper>
-		        <force_density>[0,-500,0]</force_density>
+		        <force_density>[0,-50,0]</force_density>
 		</force>
 	</MPM>
     </PhysicalBC>
