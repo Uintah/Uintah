@@ -596,7 +596,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
       }
 
-#if 0
       {
 	 /*
 	  * crackGrow
@@ -617,18 +616,18 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pStressLabel, idx, patch,
 			 Ghost::None);
- 	      t->requires( new_dw, lb->pXLabel, idx, patch,
+	      t->requires( new_dw, lb->pIsBrokenLabel, idx, patch,
 			 Ghost::None);
 	      t->requires( new_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
 			 Ghost::None);
 
+	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch );
 	    }
 	 }
 
 	 sched->addTask(t);
       }
-#endif
 
 #if 0
       {
@@ -1114,10 +1113,15 @@ void SerialMPM::labelBrokenCells(const ProcessorGroup*,
 }
 
 void SerialMPM::crackGrow(const ProcessorGroup*,
-				    const Patch* /*patch*/,
-				    DataWarehouseP& /*old_dw*/,
-				    DataWarehouseP& /*new_dw*/)
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw)
 {
+   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
+      Material* matl = d_sharedState->getMaterial(m);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      mpm_matl->getFractureModel()->crackGrow(patch, mpm_matl, old_dw, new_dw);
+   }
 }
 
 void SerialMPM::computeInternalForce(const ProcessorGroup*,
@@ -1766,6 +1770,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.127  2000/09/05 08:00:19  tan
+// Added crack grow for crack propagation.
+//
 // Revision 1.126  2000/09/05 07:43:51  tan
 // Applied BrokenCellShapeFunction to constitutive models where fracture
 // is involved.
