@@ -25,6 +25,7 @@
 	<save label = "p.x"/>
 	<save label = "p.volume"/>
 	<save label = "p.stress"/>
+        <save label = "p.particleID"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
 
