@@ -180,8 +180,8 @@ int main(int argc, char* argv[])
 
           //Set up server's requirement of the distribution array 
 	  Index** dr = new Index* [2]; 
-	  dr[0] = new Index(myrank,99,mysize);
-          dr[1] = new Index(myrank,2,mysize);
+	  dr[1] = new Index(myrank,99,mysize);
+          dr[0] = new Index(myrank,2,mysize);
 	  MxNArrayRep* arrr = new MxNArrayRep(2,dr);
 	  serv->setCalleeDistribution("D",arrr);
 
@@ -219,8 +219,8 @@ int main(int argc, char* argv[])
 	  //Inform everyone else of my distribution
           //(this sends a message to all the callee objects)
           Index** dr = new Index* [2];
-          dr[0] = new Index(sta1,fin1,1);
-          dr[1] = new Index(0,1,1);
+          dr[1] = new Index(sta1,fin1,1);
+          dr[0] = new Index(0,1,1);
           MxNArrayRep* arrr = new MxNArrayRep(2,dr);
 	  serv->setCallerDistribution("D",arrr); 
 
