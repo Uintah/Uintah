@@ -44,13 +44,13 @@ SRCDIR := Packages/BioPSE/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
-	$(SRCDIR)/BuildFEMatrix.tcl\
+	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\
 	$(SRCDIR)/SurfaceToSurface.tcl\
 #[INSERT NEW TCL FILE HERE]
+#	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
