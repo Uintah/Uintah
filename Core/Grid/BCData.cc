@@ -7,6 +7,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <algorithm>
+#include <typeinfo> // for typeid
 #include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
