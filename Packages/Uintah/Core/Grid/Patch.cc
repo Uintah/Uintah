@@ -88,9 +88,9 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 	throw InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches");
       }
     }
-    d_id -= index; 
+    d_id -= index;
+    ASSERT(patches.find(d_id) == patches.end());    
     patches[d_id]=this;
-    ASSERT(patches.find(d_id) == patches.end());
     in_database = true;
    ids_init.unlock();    
   }      
