@@ -22,6 +22,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -685,6 +686,16 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
    
   d_lock.writeUnlock();
 }
+
+void 
+OnDemandDataWarehouse::setDelT(double delt, const VarLabel* delt_label, const Level* level)
+{
+  for(int i=1;i<=level->getIndex();i++) {     // REFINE
+    delt *= level->getGrid()->getLevel(i)->timeRefinementRatio();
+  }
+  put(delt_vartype(delt), delt_label);
+}
+
 
 void
 OnDemandDataWarehouse::override(const ReductionVariableBase& var,
