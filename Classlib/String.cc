@@ -20,9 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 
-static TrivialAllocator* srep_alloc=0;
-
 #ifdef BROKEN
+static TrivialAllocator* srep_alloc=0;
 
 inline void* clString::srep::operator new(size_t)
 {

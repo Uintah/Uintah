@@ -368,7 +368,7 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
 	perror("mmap");
 	exit(-1);
     }
-    xdrmem_create(xdr, addr, len, XDR_DECODE);
+    xdrmem_create(xdr, (caddr_t)addr, len, XDR_DECODE);
 #endif
     char hdr[100];
     if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
@@ -386,7 +386,7 @@ BinaryPiostream::~BinaryPiostream()
 	if(dir==Read){
 #ifdef SCI_NOMMAP_IO
 #else
-	    if(munmap(addr, len) != 0){
+	    if(munmap((caddr_t)addr, len) != 0){
 		perror("munmap");
 		exit(-1);
 	    }

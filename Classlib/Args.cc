@@ -185,6 +185,7 @@ int Arg_stringval::handle(int argc, char** argv, int& idx)
     clString next(argv[idx++]);
     val=next;
     set=1;
+    return 1;
 }
 
 void Arg_stringval::usage_specific()
@@ -226,6 +227,7 @@ int Arg_intval::handle(int argc, char** argv, int& idx)
 	return 0; // Bad value
     }
     set=1;
+    return 1;
 }
 
 void Arg_intval::usage_specific()
@@ -267,6 +269,7 @@ int Arg_doubleval::handle(int argc, char** argv, int& idx)
 	return 0; // Bad value
     }
     set=1;
+    return 1;
 }
 
 void Arg_doubleval::usage_specific()
