@@ -17,8 +17,8 @@ using namespace std;
 
 ColorMap::ColorMap(const int num_bins) {
   //default, black to white
-  ColorCells.add(new ColorCell(Color(0.0,0.0,0.0), 0.0));
-  ColorCells.add(new ColorCell(Color(1.0,1.0,1.0), 1.0));
+  ColorCells.add(ColorCell(Color(0.0,0.0,0.0), 0.0));
+  ColorCells.add(ColorCell(Color(1.0,1.0,1.0), 1.0));
 
   // Allocate the slices
   Array1<Color> *color_slices = new Array1<Color>(num_bins);
@@ -26,7 +26,16 @@ ColorMap::ColorMap(const int num_bins) {
   create_slices();
 }
 
-ColorMap::ColorMap(char * filebase, const int num_bins) {
+ColorMap::ColorMap(Array1<ColorCell> &color_in, const int num_bins):
+  ColorCells(color_in)
+{
+  // Allocate the slices
+  Array1<Color> *color_slices = new Array1<Color>(num_bins);
+  slices.set_results_ptr(color_slices);
+  create_slices();
+}
+
+ColorMap::ColorMap(char * filebase, const int num_bins, bool valuelast) {
   
   char buf[200];
   sprintf(buf, "%s.cmp", filebase);
@@ -35,19 +44,22 @@ ColorMap::ColorMap(char * filebase, const int num_bins) {
   if(!in){
     cerr << "COLORMAP ERROR " << filename << ".cmp NO SUCH FILE!" << "\n";
     cerr << "Creating default color map.\n";
-    ColorCells.add(new ColorCell(Color(0.0,0.0,0.0), 0.0));
-    ColorCells.add(new ColorCell(Color(1.0,1.0,1.0), 1.0));
+    ColorCells.add(ColorCell(Color(0.0,0.0,0.0), 0.0));
+    ColorCells.add(ColorCell(Color(1.0,1.0,1.0), 1.0));
     return;
   } 
   float r,g,b,v;
   while (!in.eof()) {
-    in >> r >> g >> b >> v;
+    if (valuelast)
+      in >> r >> g >> b >> v;
+    else
+      in >> v >> r >> g >> b;
     if (!in.eof()) {
-      ColorCells.add(new ColorCell(Color(r,g,b), v));
+      ColorCells.add(ColorCell(Color(r,g,b), v));
     }
   }
-  ColorCells[0]->v = 0.0;
-  ColorCells[ColorCells.size()-1]->v = 1.0;
+  ColorCells[0].v = 0.0;
+  ColorCells[ColorCells.size()-1].v = 1.0;
 
   // Allocate the slices
   Array1<Color> *color_slices = new Array1<Color>(num_bins);
@@ -55,50 +67,12 @@ ColorMap::ColorMap(char * filebase, const int num_bins) {
   create_slices();
 }
 
-#if 0
-Color ColorMap::indexColorMap(float v) {
-  //look up a value and return a color
-  if (v < 0.0f) v = 0.0f;
-  if (v > 1.0f) v = 1.0f;
-    
-  int nearestlow = 0;
-  int middle = ColorCells.size()/2;
-  int nearesthigh = ColorCells.size();
-  
-  //    bool found = false;
-  //    while (!found) {
-  for (;;) {
-    if (nearestlow+1 == nearesthigh) {
-      break;
-    }
-    if ((ColorCells[middle]->v) == v) {
-      nearestlow = middle;
-      nearesthigh = middle;
-      break;
-    }
-    if ((ColorCells[middle]->v) > v) {
-      nearesthigh = middle;
-      middle = nearestlow + (middle-nearestlow)/2;
-    }
-    if ((ColorCells[middle]->v) < v) {
-      nearestlow = middle;
-      middle = middle + (nearesthigh-middle)/2;
-    }
-    
-  }
-  
-  float rng = ColorCells[nearesthigh]->v - ColorCells[nearestlow]->v;
-  float dif;
-  if (rng)
-    dif = (v - ColorCells[nearestlow]->v) / rng;
-  else 
-    dif = 0.0;
-  
-  return Interpolate(ColorCells[nearesthigh]->c, 
-		     ColorCells[nearestlow]->c, 
-		     dif); 
+ColorMap::~ColorMap() {
+  // Since the slices were allocated by us, we should delete them
+  Array1<Color> *color_slices = slices.get_results_ptr();
+  if (color_slices)
+    delete color_slices;
 }
-#endif
 
 Color ColorMap::indexColorMap(float v) {
   return slices.lookup_bound(v);
@@ -110,12 +84,17 @@ void ColorMap::create_slices() {
   int start = 0;
   int end;
   int nindex = slices.size() - 1;
+  // These next three variables are for cases when the placement range
+  // is not [0..1].  This will renormalize the values.
+  float value_min = ColorCells[0].v;
+  float value_max = ColorCells[ColorCells.size()-1].v;
+  float irange = 1/(value_max - value_min);
   for (int s_index = 0; s_index < (ColorCells.size()-1); s_index++) {
     // the start has already been computed, so you need to figure out
     // the end.
-    end = (int)(ColorCells[s_index+1]->v * nindex);
-    Color val = ColorCells[s_index]->c;
-    Color val_inc = (ColorCells[s_index+1]->c - val) * (1.0f/(end - start));
+    end = (int)((ColorCells[s_index+1].v-value_min) * irange * nindex);
+    Color val = ColorCells[s_index].c;
+    Color val_inc = (ColorCells[s_index+1].c - val) * (1.0f/(end - start));
     for (int i = start; i <= end; i++) {
       //    cout << "val = "<<val<<", ";
       slices[i] = val;
@@ -128,7 +107,7 @@ void ColorMap::create_slices() {
 ostream& operator<<(ostream& out, const ColorMap& cmp)
 {
   for (int i = 0; i < cmp.ColorCells.size(); i++) {
-    out << cmp.ColorCells[i]->c << " @ " << cmp.ColorCells[i]->v << "\n";
+    out << cmp.ColorCells[i].c << " @ " << cmp.ColorCells[i].v << "\n";
   }
   return out;
 }
@@ -144,10 +123,10 @@ void ColorMap::save() {
     return;
   } 
   for (int i = 0; i < ColorCells.size(); i++) {
-    out << ColorCells[i]->c.red() << " ";
-    out << ColorCells[i]->c.green() << " ";
-    out << ColorCells[i]->c.blue() << " ";
-    out << ColorCells[i]->v << endl;
+    out << ColorCells[i].c.red() << " ";
+    out << ColorCells[i].c.green() << " ";
+    out << ColorCells[i].c.blue() << " ";
+    out << ColorCells[i].v << endl;
   }
   out.close();
 }
