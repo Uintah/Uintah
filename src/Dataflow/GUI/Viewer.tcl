@@ -222,6 +222,8 @@ itcl_class BaseViewWindow {
 	initGlobal $this-fogcolor-r 0.0
 	initGlobal $this-fogcolor-g 0.0
 	initGlobal $this-fogcolor-b 1.0
+	initGlobal $this-fog-start 0.0
+	initGlobal $this-fog-end 0.714265
 
 	setGlobal $this-global-light 1
 	setGlobal $this-global-fog 0
@@ -978,7 +980,17 @@ itcl_class ViewWindow {
             -command "$this makeFogColorPopup"
 
 	pack $w.colorFrame.set_color $w.colorFrame.col -side left -padx 2
-	pack $w.usebg $w.colorFrame -side top -padx 4 -pady 4 -anchor w
+
+	scale $w.start -label "Fog Start:" -command "$this-c redraw" \
+	    -variable $this-fog-start -orient horizontal -from 0 -to .5 \
+	    -resolution 0.01 -showvalue true -tickinterval 1 -digits 3
+
+	scale $w.end -label "Fog End:" -command "$this-c redraw" \
+	    -variable $this-fog-end -orient horizontal -from 0 -to 1.75 \
+	    -resolution 0.01 -showvalue true -tickinterval 1 -digits 3
+	    
+	pack $w.usebg $w.colorFrame $w.start $w.end \
+	    -side top -padx 4 -pady 4 -anchor w -fill x
     }
 
     method makeFogColorPopup {} {

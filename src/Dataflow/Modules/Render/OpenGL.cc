@@ -892,9 +892,13 @@ OpenGL::redraw_frame()
 	double fognear, fogfar;
 	compute_fog_depth(view, fognear, fogfar);
 	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_START, float(fognear));
-	// Arbitrarily brighened by 1.40, picked to look good.
-	glFogf(GL_FOG_END,float((fogfar - fognear) * 1.40 + fognear));
+	const float fnear =
+	  fognear + (fogfar - fognear) * view_window_->gui_fog_start_.get();
+	glFogf(GL_FOG_START, fnear);
+	const double ffar =
+	  fognear + (fogfar - fognear) / 
+	  Max(view_window_->gui_fog_end_.get(), 0.001);
+	glFogf(GL_FOG_END, ffar);
 	GLfloat bgArray[4];
 	if (view_window_->gui_fogusebg_.get())
 	{
