@@ -27,10 +27,12 @@ SRCS     += \
         $(SRCDIR)/AS245.F\
         $(SRCDIR)/mvtpdf.F\
         $(SRCDIR)/mnormpdf.F\
+	$(SRCDIR)/ItPDSimPartGui.cc \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Packages/MIT/Core/Datatypes \
+PSELIBS := \
+	Packages/MIT/Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
 	Core/2d \
 	Core/Datatypes \

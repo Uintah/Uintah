@@ -238,13 +238,12 @@ void Sampler::metropolis()
       results->k_.add(k) ;
 
       vector<double> v(nparms);
-      //v.resize(1);
       for (int i=0; i<nparms; i++) {
 	results->data_[i].add(theta[old][i]);
 	v[i]=theta[old][i];
       }
       if ( graph_ ) 
-	graph_->add_values(nparms,v);      
+	graph_->add_values(v);
     }
   }
 
