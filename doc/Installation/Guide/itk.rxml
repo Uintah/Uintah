@@ -50,15 +50,22 @@ code distribution.</para>
 
 </section>
 
-<section>
-<title>Obtaining <acronym>ITK</acronym></title>
+<section id="sec.obitk">
+<title id="sec.title.obitk">Obtaining <acronym>ITK</acronym></title>
 
 <para>The Insight toolkit must be installed before building &sr;.  The
-Insight toolkit and its installation instructions are available on
-the <ulink url="http://www.itk.org"><acronym>ITK</acronym> web
-site</ulink>.  <acronym>ITK</acronym> installation requires CMake, an
-open-source, cross-platform build tool.  CMake can be obtained from
-the <ulink url="http://www.cmake.org">CMake web site</ulink>.</para>
+Insight toolkit and its installation instructions are available on the
+<ulink url="http://www.itk.org"><acronym>ITK</acronym> web
+site</ulink>.  &sr; supports <acronym>ITK</acronym> version 1.4.
+<acronym>ITK</acronym> installation requires CMake, an open-source,
+cross-platform build tool.  CMake can be obtained from the <ulink
+url="http://www.cmake.org">CMake web site</ulink>.</para>
+
+<note>
+<para>&sr;'s Insight package must also be downloaded to add support
+for ITK in &sr;.  See <link endterm="sec.title.sources"
+linkend="sec.sources"/>.</para>
+</note>
 
 </section>
 

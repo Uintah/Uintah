@@ -62,8 +62,8 @@ export CFLAGS CXXFLAGS
 </note>
 </section>
 
-<section>
-<title>Downloading and Unpacking Sources</title>
+<section id="sec.sources">
+<title id="sec.title.sources">Downloading and Unpacking Sources</title>
 
 <orderedlist>
 
@@ -83,6 +83,13 @@ archive</ulink> page obtain the following:
 <para>
 &sr; package sources, e.g. <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 </para>
+<note>
+<para>Download
+<filename>Insight.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+to add support for ITK in &sr;.  See also <link
+endterm="sec.title.obitk" linkend="sec.obitk"/>.
+</para>
+</note>
 </listitem>
 <listitem>
 <para>
