@@ -10,14 +10,11 @@
  *  Copyright (C) 2003 U of U
  */
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Variables/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -35,6 +32,10 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 
 #include <teem/nrrd.h>
 
