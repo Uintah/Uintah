@@ -86,19 +86,20 @@ proc makeNetworkEditor {} {
     .main_menu.stats.menu add command -label "Threads..." -underline 0 \
 	    -command showThreadStats
 
-    menubutton .main_menu.help -text "Help" -underline 0 \
-	-menu .main_menu.help.menu
-    menu .main_menu.help.menu
-
-    .main_menu.help.menu add command -label "Help..." -underline 0 \
-	    -command { tk_messageBox -message "I'm helpless" }
+#    menubutton .main_menu.help -text "Help" -underline 0 \
+#	-menu .main_menu.help.menu
+#    menu .main_menu.help.menu
+#
+#    .main_menu.help.menu add command -label "Help..." -underline 0 \
+#	    -command { tk_messageBox -message "I'm helpless" }
 
 #    pack .main_menu.file        \
 #         .main_menu.modules     \
 #         .main_menu.appModules     -side left
     pack .main_menu.file -side left
-    pack .main_menu.help        \
-         .main_menu.stats          -side right
+#    pack .main_menu.help        \
+#         .main_menu.stats          -side right
+#    pack .main_menu.stats          -side right
 
 #    tk_menuBar .main_menu .main_menu.file .main_menu.modules \
 #                          .main_menu.stats .main_menu.help
