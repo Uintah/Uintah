@@ -99,16 +99,32 @@ sci_getenv( const string & key )
   return value;
 }
 
-void
+#if defined(__sgi)
+// SGI doesn't have setenv so we make our own...
+int
+setenv(const char * name, const char * value, int overwrite )
+{
+  printf("pid is %d\n",getpid());
+  if( sci_getenv( name ) && !overwrite ) {
+    return 0;
+  }
+  char input[2048];
+  sprintf( input, "%s=%s", name, value );
+
+  int rv = putenv( input );
+
+  return rv;
+}
+#endif
+
+int
 sci_putenv( const string &key, const string &val )
 {
   char keya[1024], vala[1024];
   sprintf( keya, "%s", key.c_str() );
   sprintf( vala, "%s", val.c_str() );
 
-  printf( "Adding to environment: %s = %s\n", keya,vala );
-
-  setenv( keya, vala, 1 );
+  return setenv( keya, vala, 1 );
 }  
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -118,7 +134,7 @@ bool
 emptyOrComment( const char * line )
 {
   const char A_TAB = '	';
-  int   length = strlen( line );
+  int   length = (int)strlen( line );
 
   for( int pos = 0; pos < length; pos++ ) {
     if( line[pos] == '#' ) {
@@ -153,7 +169,7 @@ parse_scirunrc( const string rcfile )
     // If we get to the EOF:
     if( !fgets( line, 1024, filein ) ) break;
 
-    int length = strlen(line);
+    int length = (int)strlen(line);
     if( length > 0 ) {
       // Replace CR with EOL.
       line[length-1] = 0;
