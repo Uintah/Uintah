@@ -49,6 +49,7 @@ public:
     GenericField<TetVolMesh, vector<T> >(data_at) {}
   TetVol(TetVolMeshHandle mesh, Field::data_location data_at) : 
     GenericField<TetVolMesh, vector<T> >(mesh, data_at) {}
+  virtual Field *clone() { return new TetVol(*this); }
 
   virtual ~TetVol() {};
 

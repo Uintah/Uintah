@@ -72,6 +72,8 @@ public:
 
   virtual ~GenericField() {}
 
+  virtual Field *clone() { return new GenericField<Mesh, FData>(*this); }
+
   //! Required virtual functions from field base.
   virtual MeshBaseHandle mesh() const
   { return MeshBaseHandle(mesh_.get_rep()); }
