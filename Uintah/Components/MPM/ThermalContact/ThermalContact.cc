@@ -29,75 +29,58 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
 					DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMatls();
-  int NVFs = d_sharedState->getNumVelFields();
 
-  std::vector<NCVariable<double> > gmass(NVFs);
-  std::vector<NCVariable<double> > gTemperature(NVFs);
-  std::vector<NCVariable<double> > thermalContactHeatExchangeRate(NVFs);
+  std::vector<NCVariable<double> > gmass(numMatls);
+  std::vector<NCVariable<double> > gTemperature(numMatls);
+  std::vector<NCVariable<double> > thermalContactHeatExchangeRate(numMatls);
 
-  //  const MPMLabel *lb = MPMLabel::getLabels();
-  
-  //  int m, n, vfindex;
-  Material* matl;
-  MPMMaterial* mpm_matl;
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
   
   for(int m = 0; m < numMatls; m++){
-    matl = d_sharedState->getMaterial( m );
-    mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if(mpm_matl){
-      int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    int dwindex = mpm_matl->getDWIndex();
+    new_dw->get(gmass[dwindex], lb->gMassLabel,dwindex, patch, Ghost::None, 0);
+    new_dw->get(gTemperature[dwindex], lb->gTemperatureLabel, dwindex, patch,
          Ghost::None, 0);
-      new_dw->get(gTemperature[vfindex], lb->gTemperatureLabel, vfindex, patch,
-         Ghost::None, 0);
-      new_dw->allocate(thermalContactHeatExchangeRate[vfindex],
-         lb->gThermalContactHeatExchangeRateLabel, vfindex, patch);
-      thermalContactHeatExchangeRate[vfindex].initialize(0);
-    }
+    new_dw->allocate(thermalContactHeatExchangeRate[dwindex],
+         lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
+    thermalContactHeatExchangeRate[dwindex].initialize(0);
   }
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
     double numerator=0.0;
     double denominator=0.0;
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      if(mpm_matl){
-        int n = matl->getVFIndex();
-        double Cp=mpm_matl->getSpecificHeat();
-        //double K=mpm_matl->getThermalConductivity();
-        numerator   += gTemperature[n][*iter] * gmass[n][*iter] * Cp;
-        denominator += gmass[n][*iter] * Cp;
-      }
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int n = mpm_matl->getDWIndex();
+      double Cp=mpm_matl->getSpecificHeat();
+      //double K=mpm_matl->getThermalConductivity();
+      numerator   += gTemperature[n][*iter] * gmass[n][*iter] * Cp;
+      denominator += gmass[n][*iter] * Cp;
     }
       
     if( !compare(denominator,0.0) ) {
       double contactTemperature = numerator/denominator;
       for(int m = 0; m < numMatls; m++) {
-        matl = d_sharedState->getMaterial( m );
-        mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-        
-        if(mpm_matl){
-	    //double Cp=mpm_matl->getSpecificHeat();
-          //double K=mpm_matl->getThermalConductivity();
-          int n = matl->getVFIndex();
-	  if( !compare(gmass[n][*iter],0.0)){
-            thermalContactHeatExchangeRate[n][*iter] =
-		(contactTemperature - gTemperature[n][*iter])/delT;
+         //double Cp=mpm_matl->getSpecificHeat();
+         //double K=mpm_matl->getThermalConductivity();
+          if( !compare(gmass[m][*iter],0.0)){
+            thermalContactHeatExchangeRate[m][*iter] =
+		(contactTemperature - gTemperature[m][*iter])/delT;
           }
-	  else {
-	    thermalContactHeatExchangeRate[n][*iter] = 0.0;
-	  }
-        }
+          else {
+              thermalContactHeatExchangeRate[m][*iter] = 0.0;
+          }
       }
     }
   }
 
-  for(int n=0; n< NVFs; n++){
+  for(int n = 0; n < numMatls; n++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
+    int dwindex = mpm_matl->getDWIndex();
     new_dw->put(thermalContactHeatExchangeRate[n], 
-      lb->gThermalContactHeatExchangeRateLabel, n, patch);
+      lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
   }
 
 }
@@ -115,7 +98,6 @@ void ThermalContact::addComputesAndRequires(Task* t,
                                              DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
   t->requires( new_dw, lb->gTemperatureLabel, idx, patch, Ghost::None);
 
@@ -125,6 +107,9 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.15  2000/12/04 20:00:21  guilkey
+// Got rid of vfindex references.
+//
 // Revision 1.14  2000/09/25 20:23:22  sparker
 // Quiet g++ warnings
 //
