@@ -615,8 +615,6 @@ void  lodi_bc_preprocess( const Patch* patch,
                           SimulationStateP& sharedState)
 {
   cout_doing << "lodi_bc_preprocess on patch "<<patch->getID()<< endl;
-  
-  Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   constCCVariable<double> press_CC;
   constCCVariable<double> vol_frac_CC;
