@@ -1,14 +1,17 @@
 #ifndef __MPM_FLAGS_H__
 #define __MPM_FLAGS_H__
 
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
     \class MPMFlags
-    \brief A structure that store the plasticity state data
+    \brief A structure that store the flags used for a MPM simulation
     \author Biswajit Banerjee \n
     C-SAFE and Department of Mechanical Engineering \n
     University of Utah \n
@@ -35,11 +38,15 @@ namespace Uintah {
 
     double      d_adiabaticHeating; // Flag adiabatic plastic heating on/off
     double      d_artificialDampCoeff;
+    double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
+    double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2
     double      d_forceIncrementFactor;
 
     MPMFlags();
 
     ~MPMFlags();
+
+    void readMPMFlags(ProblemSpecP& ps);
 
   private:
 
