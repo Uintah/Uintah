@@ -65,6 +65,9 @@ public:
   const VarLabel* get_refineFlag_label() const {
     return refineFlag_label;
   }
+  const VarLabel* get_refinePatchFlag_label() const {
+    return refinePatchFlag_label;
+  }
 
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
@@ -142,6 +145,7 @@ private:
       
   const VarLabel* delt_label;
   const VarLabel* refineFlag_label;
+  const VarLabel* refinePatchFlag_label;
 
   std::vector<Material*>       matls;
   std::vector<MPMMaterial*>    mpm_matls;
