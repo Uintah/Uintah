@@ -63,6 +63,7 @@
 
 	<ARCHES>
 	    <grow_dt>0.01</grow_dt>
+	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>smagorinsky</turbulence_model>
             <reacting_flow>true</reacting_flow>
