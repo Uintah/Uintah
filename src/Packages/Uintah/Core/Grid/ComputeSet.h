@@ -261,6 +261,10 @@ namespace Uintah {
   }
 
   // specialized for patch in ComputeSet_special.cc
+  template<>  
+  bool ComputeSubset<const Patch*>::compareElems(const Patch* e1,
+						 const Patch* e2);
+
   template<class T>
   bool ComputeSubset<T>::compareElems(T e1, T e2)
   { return e1 < e2; }
