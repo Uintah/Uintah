@@ -22,6 +22,7 @@
 #include <Core/Geom/GeomCone.h>
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomTransform.h>
+#include <sci_defs.h>
 #ifdef HAVE_TEEM
 #include <teem/ten.h>
 #endif
@@ -352,14 +353,14 @@ RenderTensorFieldBase::map_emphasis(double old)
 {
   if (old < 0.0) old = 0.0;
   else if (old > 1.0) old = 1.0;
-  //return tan(old * (M_PI / 2.0 * 0.999));
+  return tan(old * (M_PI / 2.0 * 0.999));
   // Map old 3.5 value onto new 0.825 value.
-  return tan(old * (atan(3.5) / (0.825 * 4.0)));
+  //return tan(old * (atan(3.5) / (0.825 * 4.0)));
 }
 
 
 // emphasis was 3.5 and looked reasonable.  It should currently be
-// computed via 'tan(VAL * M_PI / 4 * 0.999)', where VAL is [0,1].
+// computed via 'tan(VAL * M_PI / 2 * 0.999)', where VAL is [0,1].
 
 void 
 RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
