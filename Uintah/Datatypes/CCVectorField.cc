@@ -13,14 +13,14 @@ namespace SCICore{
 
 
 CCVectorField::CCVectorField()
-  :VectorField( Uintah )
+  :VectorFieldRG()
 {
 }
 
 
 CCVectorField::CCVectorField(const CCVectorField& copy)
   //  : UintahScalarField( copy )
-  :VectorField( copy ), grid(copy.grid), level(copy.level),
+  :VectorFieldRG( copy ), grid(copy.grid), level(copy.level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
   for(int i = 0; i < copy._vars.size(); i++){
@@ -33,7 +33,7 @@ CCVectorField::CCVectorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<Vector> >& vars)
   //  : UintahScalarField( grid, level, var, mat )
-  : VectorField( Uintah ), grid(grid), level(level),
+  : VectorFieldRG(), grid(grid), level(level),
     _varname(var), _matIndex(mat)
 {
   for(int i = 0; i < vars.size(); i++){

@@ -1,7 +1,7 @@
 #ifndef SCI_project_NCVectorField_h
 #define SCI_project_NCVectorField_h 1
 
-#include <SCICore/Datatypes/VectorField.h>
+#include <SCICore/Datatypes/VectorFieldRG.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
@@ -15,7 +15,7 @@ using namespace SCICore::Geometry;
 using namespace Uintah;
 using std::vector;
 
-class SCICORESHARE NCVectorField : public VectorField {
+class SCICORESHARE NCVectorField : public VectorFieldRG {
 public:
   NCVectorField();
   NCVectorField(const NCVectorField&);
