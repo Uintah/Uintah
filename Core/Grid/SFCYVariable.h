@@ -102,18 +102,26 @@ WARNING
 
 
     // Replace the values on the indicated face with value
-    void fillFace(Patch::FaceType face, const T& value,
-		  IntVector offset = IntVector(0,0,0))
+    void fillFace(const Patch* patch, Patch::FaceType face,
+                  const T& value, IntVector offset = IntVector(0,0,0))
     { 
-      IntVector low,hi;
-      low = getLowIndex() + offset;
-      hi = getHighIndex() - offset;
       //__________________________________
-      //  Note that getHighIndex returns 
-      //  IntVector (ncells+gc, ncells+gc+1, ncells+gc] 
-      //cout<< "fillFace SCYVariable.h"<<endl;
-      //cout<< "low: "<<low<<endl;
-      //cout<< "hi: "<<hi<<endl;
+      // Add (0,1,0) to low index when no 
+      // neighbor patches are present 
+      IntVector low,hi; 
+      int numGC = 0;
+      low = patch->getCellLowIndex();
+      low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		       patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:1,
+		       patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+      hi  = patch->getCellHighIndex();
+      hi +=IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
+		       patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
+		       patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+      // cout<< "fillFace: SFCYVariable.h"<<endl;
+      // cout<< "low: "<<low<<" Low + offset: "<<low + offset<<endl;
+      // cout<< "hi:  "<<hi <<" hi  - offset: "<<hi -offset<<endl;
+      
       switch (face) {
       case Patch::xplus:
 	for (int j = low.y(); j<hi.y(); j++) {
@@ -166,18 +174,27 @@ WARNING
     };
      
     // Set the Neumann BC condition using a 1st order approximation
-    void fillFaceFlux(Patch::FaceType face, const T& value, const Vector& dx,
-		      IntVector offset = IntVector(0,0,0))
+    void fillFaceFlux(const Patch* patch, Patch::FaceType face, 
+                      const T& value, const Vector& dx,
+		        IntVector offset = IntVector(0,0,0))
     { 
-      IntVector low,hi;
-      low = getLowIndex() + offset;
-      hi = getHighIndex() - offset;
       //__________________________________
-      //  Note that getHighIndex returns 
-      //  IntVector (ncells+gc, ncells+gc+1, ncells+gc] 
-      //cout<< "fillFaceFlux: SCYVariable.h"<<endl;
-      //cout<< "low: "<<low<<endl;
-      //cout<< "hi: "<<hi<<endl;
+      // Add (0,1,0) to low index when no 
+      // neighbor patches are present 
+      IntVector low,hi; 
+      int numGC = 0;
+      low = patch->getCellLowIndex();
+      low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		       patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:1,
+		       patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+      hi  = patch->getCellHighIndex();
+      hi +=IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
+		       patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
+		       patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+      // cout<< "fillFaceflux: SFCYVariable.h"<<endl;
+      // cout<< "low: "<<low<<" Low + offset: "<<low + offset<<endl;
+      // cout<< "hi:  "<<hi <<" hi  - offset: "<<hi -offset<<endl;
+
       switch (face) {
       case Patch::xplus:
 	for (int j = low.y(); j<hi.y(); j++) {
