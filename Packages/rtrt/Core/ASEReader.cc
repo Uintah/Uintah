@@ -15,6 +15,7 @@
 #include <Packages/rtrt/Core/ASETokens.h>
 #include <Packages/rtrt/Core/ASEReader.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
+#include <Packages/rtrt/Core/SubMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
@@ -44,7 +45,7 @@ degenerate(const Point &p0, const Point &p1, const Point &p2)
   return false;
 }
 
-void handleSCENE(token_list* children1, unsigned loop1, string env_map)
+void processSCENE(token_list* children1, unsigned loop1, string env_map)
 {
   token_list *children2, *children3;
   children2 = (*children1)[loop1]->GetChildren();
@@ -52,7 +53,7 @@ void handleSCENE(token_list* children1, unsigned loop1, string env_map)
   env_map = (*(((BitmapToken*)((*children3))[0])->GetArgs()))[0];
 }
 
-void handleGEOMOBJECT(token_list* children1, unsigned loop1, 
+void processGEOMOBJECT(token_list* children1, unsigned loop1, 
                       Array1<Material*> &ase_matls, const Transform t,
                       Group *objgroup)
 {
@@ -63,10 +64,12 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
   vector<unsigned>  *v2=0;
   vector<unsigned>  *v4=0;
   vector<double>    *v5=0;
+  vector<unsigned>  *v6=0;
   unsigned loop2, length2;
   unsigned loop3, length3;
   unsigned matl_index = 0;
   token_list *children2, *children3;
+  Material *mat=0;
   matl_index = 
     ((GeomObjectToken*)((*children1)[loop1]))->GetMaterialIndex();
   if (ase_matls.size()<=matl_index)
@@ -85,6 +88,8 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
                    "*MESH_FACE_LIST") {
           v2 = ((MeshFaceListToken*)
                 ((*children3)[loop3]))->GetFaces();
+          v6 = ((MeshFaceListToken*)
+                ((*children3)[loop3]))->GetMtlId();
         } else if ((*children3)[loop3]->GetMoniker() ==
                    "*MESH_TVERTLIST") {
           v3 = ((MeshTVertListToken*)
@@ -100,10 +105,7 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
           
         }
       }
-      cerr << "size of vert list = " << v1->size()/3 << endl;
-      cerr << "size of face list = " << v2->size()/3 << endl;
-      cerr << "size of tvert list = " << v3->size()/3 << endl;
-      cerr << "size of tface list = " << v4->size()/3 << endl;
+
       if (v1 && v1->size() && v2 && v2->size()) {
         Group *group = new Group();
         unsigned loop4, length4;
@@ -117,8 +119,16 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
           findex2 = (*v2)[index++]*3;
           findex3 = (*v2)[index]*3;
           
+          mat = ase_matls[matl_index];
+
+          SubMaterial *sub = dynamic_cast<SubMaterial*>(mat);
+          if (sub && v6 && v6->size()) {
+            Material *check = (*sub)[(*v6)[loop4]];
+            if (check) mat = check;            
+          }
+          
           if (v3 && v3->size() && v4 && v4->size() &&
-              ((ImageMaterial*)ase_matls[matl_index])->valid()) {
+              ((ImageMaterial*)mat)->valid()) {
             index   = loop4*3;
             findex4 = (*v4)[index++]*3;
             findex5 = (*v4)[index++]*3;
@@ -134,7 +144,7 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
             if (!degenerate(p0,p1,p2)) {
               TexturedTri* tri;
               
-              if (v5 && v5->size()) {
+              if (0 && v5 && v5->size()) {
                 index2 = loop4*9;
                 
                 vn0 = t.project(Vector((*v5)[index2],(*v5)[index2+1],
@@ -144,11 +154,9 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
                 vn2 = t.project(Vector((*v5)[index2+6],(*v5)[index2+7],
                                        (*v5)[index2+8]));
                 
-                tri = new TexturedTri( ase_matls[matl_index],
-                                       p0,p1,p2,vn0,vn1,vn2);
+                tri = new TexturedTri(mat,p0,p1,p2,vn0,vn1,vn2);
               } else {
-                tri = new TexturedTri( ase_matls[matl_index],
-                                       p0,p1,p2);
+                tri = new TexturedTri(mat,p0,p1,p2);
               }
               
               group->add(tri);
@@ -157,9 +165,7 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
               p1 = Point((*v3)[findex5],(*v3)[findex5+1],(*v3)[findex5+2]);
               p2 = Point((*v3)[findex6],(*v3)[findex6+1],(*v3)[findex6+2]);
               
-              //cerr << "texcoord index = " << loop4 << " :" << endl;
-              //cerr << p0 << endl << p1 << endl << p2 << endl;
-              tri->set_texcoords( p0, p1, p2 );
+              tri->set_texcoords(p0,p1,p2);
             }
           } else {
             p0 = t.project(Point((*v1)[findex1],(*v1)[findex1+1],
@@ -173,7 +179,7 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
               
               Tri *tri; 
               
-              if (v5 && v5->size()) {
+              if (0 && v5 && v5->size()) {
                 
                 vn0 = t.project(Vector((*v5)[loop4*9],(*v5)[loop4*9+1],
                                        (*v5)[loop4*9+2]));
@@ -182,10 +188,9 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
                 vn2 = t.project(Vector((*v5)[loop4*9+6],(*v5)[loop4*9+7],
                                        (*v5)[loop4*9+8]));
                 
-                tri = new Tri( ase_matls[matl_index],
-                               p0,p1,p2,vn0,vn1,vn2);
+                tri = new Tri(mat,p0,p1,p2,vn0,vn1,vn2);
               } else {
-                tri = new Tri( ase_matls[matl_index], p0, p1, p2);
+                tri = new Tri(mat,p0,p1,p2);
               }
               group->add(tri);
             }
@@ -198,11 +203,12 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
       v3 = 0;
       v4 = 0;
       v5 = 0;
+      v6 = 0;
     }
   }
 }
 
-void handleGROUP(token_list* children1, unsigned loop1,
+void processGROUP(token_list* children1, unsigned loop1,
                  Array1<Material*> &ase_matls, const Transform t,
                  Group *objgroup)
 {
@@ -210,17 +216,121 @@ void handleGROUP(token_list* children1, unsigned loop1,
   unsigned loop2,length2 = children2->size();
   for (loop2=0; loop2<length2; ++loop2) {
     if ((*children2)[loop2]->GetMoniker() == "*GEOMOBJECT") {
-      handleGEOMOBJECT(children2,loop2,ase_matls,t,objgroup);
+      processGEOMOBJECT(children2,loop2,ase_matls,t,objgroup);
     } else if ((*children2)[loop2]->GetMoniker() == "*GROUP") {
-      handleGROUP(children2,loop2,ase_matls,t,objgroup);
+      processGROUP(children2,loop2,ase_matls,t,objgroup);
     }
   }
 }
 
-void handleMATERIAL_LIST(token_list* children1, unsigned loop1,
+void processSUBMATERIAL(token_list* children2, unsigned loop2,
+                       SubMaterial *parent)
+{
+  MaterialToken *token = ((MaterialToken*)((*children2)[loop2]));
+  double ambient[3];
+  double diffuse[3];
+  double specular[3];
+  unsigned loop3, length3;
+  token_list *children3 = 0;
+  Material *mat = 0;
+  if (token->GetNumSubMtls()==0) {
+    token->GetAmbient(ambient);
+    token->GetDiffuse(diffuse);
+    token->GetSpecular(specular);
+    if (token->GetTMapFilename()=="" && !token->GetTransparency()) {
+      mat = new Phong(Color(diffuse),
+                      Color(specular),
+                      token->GetShine()*1000,
+                      0);
+    } else if (token->GetTMapFilename()=="") {
+      mat = new PhongMaterial(Color(diffuse),
+                              1.-token->GetTransparency(),
+                              .3,token->GetShine()*1000,true);
+    } else {
+      mat = new ImageMaterial((char*)(token->GetTMapFilename().c_str()),
+                              ImageMaterial::Tile,
+                              ImageMaterial::Tile,
+                              1.,
+                              Color(specular),
+                              token->GetShine()*1000,
+                              token->GetTransparency(),
+                              0);
+
+      ((ImageMaterial*)mat)->flip();
+    }
+  } else {
+    mat = new SubMaterial();
+    children3 = (*children2)[loop2]->GetChildren();
+    length3 = children3->size();
+    for (loop3=0; loop3<length3; ++loop3) {
+      if ((*children3)[loop3]->GetMoniker() == "*SUBMATERIAL") {
+        processSUBMATERIAL(children3,loop3,(SubMaterial*)mat);
+      }
+    }
+  }  
+
+  if (mat)
+    parent->add_material(mat);
+  else
+    parent->add_material(new Phong(Color(diffuse),
+                                   Color(specular),
+                                   token->GetShine()*1000,
+                                   0)); 
+}
+
+void processMATERIAL(token_list* children2, unsigned loop2,
+                    Array1<Material*> &ase_matls)
+{
+  MaterialToken *token = ((MaterialToken*)((*children2)[loop2]));
+  token_list *children3 = 0;
+  unsigned loop3, length3;
+  double ambient[3];
+  double diffuse[3];
+  double specular[3];
+  if (token->GetNumSubMtls()==0) {
+    token->GetAmbient(ambient);
+    token->GetDiffuse(diffuse);
+    token->GetSpecular(specular);
+    if (token->GetTMapFilename()=="" && !token->GetTransparency()) {
+      ase_matls[token->GetIndex()] = 
+        new Phong(Color(diffuse),
+                  Color(specular),
+                  token->GetShine()*1000,
+                  0);
+    } else if (token->GetTMapFilename()=="") {
+      ase_matls[token->GetIndex()] = 
+        new PhongMaterial(Color(diffuse),1.-token->GetTransparency(),
+                          .3,token->GetShine()*1000,true);
+    } else {
+      ase_matls[token->GetIndex()] = 
+        new ImageMaterial((char*)(token->GetTMapFilename().c_str()),
+                          ImageMaterial::Tile,
+                          ImageMaterial::Tile,
+                          1.,
+                          Color(specular),
+                          token->GetShine()*1000,
+                          token->GetTransparency(),
+                          0);
+      ((ImageMaterial*)(ase_matls[token->GetIndex()]))->flip();
+    }
+  } else {
+    ase_matls[token->GetIndex()] = new SubMaterial();
+    children3 = (*children2)[loop2]->GetChildren();
+    length3 = children3->size();
+    for (loop3=0; loop3<length3; ++loop3) {
+      if ((*children3)[loop3]->GetMoniker() == "*SUBMATERIAL") {
+        processSUBMATERIAL(children3,loop3,
+                          (SubMaterial*)(ase_matls[token->GetIndex()]));
+      }
+    }
+  }
+}
+
+void processMATERIAL_LIST(token_list* children1, unsigned loop1,
                          Array1<Material*> &ase_matls)
 {
   unsigned loop2, length2;
+  unsigned loop3, length3;
   unsigned matl_index = 0;
   token_list *children2, *children3;
   children2 = (*children1)[loop1]->GetChildren();
@@ -228,35 +338,7 @@ void handleMATERIAL_LIST(token_list* children1, unsigned loop1,
   ase_matls.resize(length2*2);
   for (loop2=0; loop2<length2; ++loop2) {
     if ((*children2)[loop2]->GetMoniker() == "*MATERIAL") {
-      MaterialToken *token = ((MaterialToken*)((*children2)[loop2]));
-      double ambient[3];
-      double diffuse[3];
-      double specular[3];
-      token->GetAmbient(ambient);
-      token->GetDiffuse(diffuse);
-      token->GetSpecular(specular);
-      if (token->GetTMapFilename()=="" && !token->GetTransparency()) {
-        ase_matls[token->GetIndex()] = 
-          new Phong(Color(diffuse),
-                    Color(specular),
-                    token->GetShine()*1000,
-                    0);
-      } else if (token->GetTMapFilename()=="") {
-        ase_matls[token->GetIndex()] = 
-          new PhongMaterial(Color(diffuse),1.-token->GetTransparency(),
-                            .3,token->GetShine()*1000,true);
-      } else {
-        ase_matls[token->GetIndex()] = 
-          new ImageMaterial((char*)(token->GetTMapFilename().c_str()),
-                            ImageMaterial::Tile,
-                            ImageMaterial::Tile,
-                            1.,
-                            Color(specular),
-                            token->GetShine()*1000,
-                            token->GetTransparency(),
-                            0);
-        ((ImageMaterial*)(ase_matls[token->GetIndex()]))->flip();
-      }
+      processMATERIAL(children2,loop2,ase_matls);
     }
   }
 }
@@ -279,14 +361,15 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
   length1 = children1->size();
   for (loop1=0; loop1<length1; ++loop1) {
     if ((*children1)[loop1]->GetMoniker() == "*SCENE") {
-      handleSCENE(children1,loop1,env_map);
+      processSCENE(children1,loop1,env_map);
     } else if ((*children1)[loop1]->GetMoniker() == "*GEOMOBJECT") {
-      handleGEOMOBJECT(children1,loop1,ase_matls,t,objgroup);
+      processGEOMOBJECT(children1,loop1,ase_matls,t,objgroup);
     } else if ((*children1)[loop1]->GetMoniker() == "*MATERIAL_LIST") {
-      handleMATERIAL_LIST(children1,loop1,ase_matls);
+      processMATERIAL_LIST(children1,loop1,ase_matls);
     } else if ((*children1)[loop1]->GetMoniker() == "*GROUP") {
-      handleGROUP(children1,loop1,ase_matls,t,objgroup);
+      processGROUP(children1,loop1,ase_matls,t,objgroup);
     }
   }
   return true;
 }
+
