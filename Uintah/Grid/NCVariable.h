@@ -68,7 +68,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
      
      //////////
      // Insert Documentation Here:
-     virtual NCVariable<T>* clone() const;
+     virtual NCVariableBase* clone() const;
      
      //////////
      // Insert Documentation Here:
@@ -237,10 +237,11 @@ class NCVariable : public Array3<T>, public NCVariableBase {
       }
    
    template<class T>
-      NCVariable<T>*
+      NCVariableBase*
       NCVariable<T>::clone() const
       {
-	 return scinew NCVariable<T>(*this);
+	 NCVariable<T>* tmp=scinew NCVariable<T>(*this);
+	 return tmp;
       }
    
    template<class T>
@@ -373,6 +374,10 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 
 //
 // $Log$
+// Revision 1.29  2000/09/25 18:12:19  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.28  2000/08/08 01:32:46  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

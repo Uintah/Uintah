@@ -44,12 +44,16 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
 	SCICore/Geometry PSECore/XMLUtil 
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.23  2000/09/25 18:12:20  sparker
+# do not use covariant return types due to problems with g++
+# other linux/g++ fixes
+#
 # Revision 1.22  2000/07/27 22:39:51  sparker
 # Implemented MPIScheduler
 # Added associated support

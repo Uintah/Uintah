@@ -71,7 +71,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
       //////////
       // Insert Documentation Here:
-      virtual CCVariable<T>* clone() const;
+      virtual CCVariableBase* clone() const;
       
       //////////
       // Insert Documentation Here:
@@ -251,7 +251,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       }
    
    template<class T>
-      CCVariable<T>*
+      CCVariableBase*
       CCVariable<T>::clone() const
       {
 	 return scinew CCVariable<T>(*this);
@@ -381,6 +381,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.23  2000/09/25 18:12:19  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.22  2000/09/25 14:41:31  rawat
 // added mpi support for cell centered and staggered cell variables
 //

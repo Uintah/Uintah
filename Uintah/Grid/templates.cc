@@ -1,4 +1,5 @@
 
+#if 0
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/NCVariable.h>
 
@@ -18,6 +19,10 @@ template class NCVariable<Vector>;
 
 //
 // $Log$
+// Revision 1.2  2000/09/25 18:12:20  sparker
+// do not use covariant return types due to problems with g++
+// other linux/g++ fixes
+//
 // Revision 1.1  2000/05/20 08:09:32  sparker
 // Improved TypeDescription
 // Finished I/O
@@ -25,3 +30,4 @@ template class NCVariable<Vector>;
 //
 //
 
+#endif
