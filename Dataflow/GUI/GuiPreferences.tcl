@@ -38,14 +38,28 @@ proc initGuiPreferences { } {
     set guiPreferences("MoveGuiToMouse") 1    
 }
 
+# Turns 'true/false', 'on/off', 'yes/no', '1/0' into '1/0' respectively
+proc boolToInt { val } {
+    if { $val == "true" || $val == "on" || $val == "yes" || $val == "1" } {
+	return "1"
+    } else {
+        return "0"
+    }
+}
+
 # Called from scirun_env.cc:
 proc setGuiPreference { setting value } {
     global guiPreferences
-    puts "Setting $setting to $value"
+
+    # Can't use (eg: in SciMoveToCursor.tcl) !"true"... you can only
+    # use !"1"... therefore I must convert all these values to 0/1.
+    set intVal [boolToInt $value]
+
+    puts "Setting $setting to $intVal"
     if { $setting == "UseGuiFetch" } {
-	set guiPreferences("UseGuiFetch") $value
+	set guiPreferences("UseGuiFetch") $intVal
     } elseif { $setting == "MoveGuiToMouse" } {
-	set guiPreferences("MoveGuiToMouse") $value
+	set guiPreferences("MoveGuiToMouse") $intVal
     } else {
 	createSciDialog -error -title "Bad Gui Preference" -button1 "Close" \
 	    -message "The Gui Preference ($setting) specified in your .scirunrc file is in valid.\nIt will be ignored."
