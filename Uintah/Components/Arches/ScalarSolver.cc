@@ -333,6 +333,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   // compute eqn residual
   d_linearSolver->computeScalarResidual(pc, patch, new_dw, matrix_dw, index, 
 					d_scalarVars);
+  new_dw->put(sum_vartype(d_scalarVars->residScalar), d_lab->d_scalarResidLabel);
+  new_dw->put(sum_vartype(d_scalarVars->truncScalar), d_lab->d_scalarTruncLabel);
   // apply underelax to eqn
   d_linearSolver->computeScalarUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 					  d_scalarVars);
@@ -342,12 +344,13 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   // put back the results
   new_dw->put(d_scalarVars->scalar, d_lab->d_scalarSPLabel, 
 	      index, patch);
-  new_dw->put(sum_vartype(d_scalarVars->residScalar), d_lab->d_scalarResidLabel);
-  new_dw->put(sum_vartype(d_scalarVars->truncScalar), d_lab->d_scalarTruncLabel);
 }
 
 //
 // $Log$
+// Revision 1.22  2000/08/14 02:34:57  bbanerje
+// Removed a small buf in sum_vars for residual in MomentumSolver and ScalarSolver
+//
 // Revision 1.21  2000/08/12 23:53:19  bbanerje
 // Added Linegs part to the solver.
 //

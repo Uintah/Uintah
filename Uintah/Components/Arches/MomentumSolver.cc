@@ -554,6 +554,24 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   // compute eqn residual
   d_linearSolver->computeVelResidual(pc, patch, new_dw, matrix_dw, index, 
 				     d_velocityVars);
+  // put the summed residuals into new_dw
+  switch (index) {
+  case Arches::XDIR:
+    new_dw->put(sum_vartype(d_velocityVars->residUVel), d_lab->d_uVelResidPSLabel);
+    new_dw->put(sum_vartype(d_velocityVars->truncUVel), d_lab->d_uVelTruncPSLabel);
+    break;
+  case Arches::YDIR:
+    new_dw->put(sum_vartype(d_velocityVars->residVVel), d_lab->d_vVelResidPSLabel);
+    new_dw->put(sum_vartype(d_velocityVars->truncVVel), d_lab->d_vVelTruncPSLabel);
+    break;
+  case Arches::ZDIR:
+    new_dw->put(sum_vartype(d_velocityVars->residWVel), d_lab->d_wVelResidPSLabel);
+    new_dw->put(sum_vartype(d_velocityVars->truncWVel), d_lab->d_wVelTruncPSLabel);
+    break;
+  default:
+    throw InvalidValue("Invalid index in MomentumSolver");  
+  }
+
   // apply underelax to eqn
   d_linearSolver->computeVelUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 				     d_velocityVars);
@@ -565,20 +583,14 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   case Arches::XDIR:
     new_dw->put(d_velocityVars->uVelocity, d_lab->d_uVelocitySPBCLabel, 
 				     matlIndex, patch);
-    new_dw->put(sum_vartype(d_velocityVars->residUVel), d_lab->d_uVelResidPSLabel);
-    new_dw->put(sum_vartype(d_velocityVars->truncUVel), d_lab->d_uVelTruncPSLabel);
     break;
   case Arches::YDIR:
     new_dw->put(d_velocityVars->vVelocity, d_lab->d_vVelocitySPBCLabel,
 				      matlIndex, patch);
-    new_dw->put(sum_vartype(d_velocityVars->residVVel), d_lab->d_vVelResidPSLabel);
-    new_dw->put(sum_vartype(d_velocityVars->truncVVel), d_lab->d_vVelTruncPSLabel);
     break;
   case Arches::ZDIR:
     new_dw->put(d_velocityVars->wVelocity, d_lab->d_wVelocitySPBCLabel, 
 				     matlIndex, patch);
-    new_dw->put(sum_vartype(d_velocityVars->residWVel), d_lab->d_wVelResidPSLabel);
-    new_dw->put(sum_vartype(d_velocityVars->truncWVel), d_lab->d_wVelTruncPSLabel);
     break;
   default:
     throw InvalidValue("Invalid index in MomentumSolver");  
@@ -590,6 +602,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.25  2000/08/14 02:34:57  bbanerje
+// Removed a small buf in sum_vars for residual in MomentumSolver and ScalarSolver
+//
 // Revision 1.24  2000/08/12 23:53:19  bbanerje
 // Added Linegs part to the solver.
 //
