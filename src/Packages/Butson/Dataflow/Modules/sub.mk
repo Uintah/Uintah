@@ -11,6 +11,6 @@ SUBDIRS := \
 	$(SRCDIR)/Genesis \
 #[INSERT NEW CATEGORY DIR HERE]
 
-include $(OBJTOP_ABS)/scripts/recurse.mk
+include $(SRCTOP_ABS)/scripts/recurse.mk
 
 

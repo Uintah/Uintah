@@ -1,6 +1,6 @@
 #Makefile fragment for the Packages/Kurt/Core directory
 
-include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
+include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
 
 SRCDIR := Packages/Kurt/Core
 SUBDIRS := \
@@ -8,9 +8,9 @@ SUBDIRS := \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/ThirdParty \
 
-include $(OBJTOP_ABS)/scripts/recurse.mk
+include $(SRCTOP_ABS)/scripts/recurse.mk
 
 PSELIBS := 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk
+include $(SRCTOP_ABS)/scripts/largeso_epilogue.mk
