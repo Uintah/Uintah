@@ -25,14 +25,14 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 #
-catch {rename EditTransferFunc2 ""}
+catch {rename EditColorMap2D ""}
 
-itcl_class SCIRun_Visualization_EditTransferFunc2 {
+itcl_class SCIRun_Visualization_EditColorMap2D {
     inherit Module
     protected highlighted
     protected frames
     constructor {config} {
-        set name EditTransferFunc2
+        set name EditColorMap2D
 	set highlighted -1
 	set frames ""
         set_defaults
@@ -154,7 +154,7 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 
 		checkbutton $e.on -text "" -padx 20 -justify center \
 		    -relief flat -variable $this-on-$i -onvalue 1 -offvalue 0 \
-		    -anchor w -command "$this-c toggleon-$i; $this select_widget $i"
+		    -anchor w -command "$this-c toggleon-$i"
 		frame $e.fill -width 500
 		bind $e.fill <ButtonPress> "$this select_widget $i"
 		pack $e.name $e.color $e.shade $e.on $e.fill -side left \

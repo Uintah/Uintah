@@ -25,7 +25,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //    EditColorMap2D
-//    File   : EditTransferFunc2.cc
+//    File   : EditColorMap2D.cc
 //    Author : Milan Ikits
 //    Author : Michael Callahan
 //    Date   : Thu Jul  8 01:50:58 2004
@@ -76,11 +76,11 @@ struct UndoItem
 };
 
 
-class EditTransferFunc2 : public Module {
+class EditColorMap2D : public Module {
 
 public:
-  EditTransferFunc2(GuiContext* ctx);
-  virtual ~EditTransferFunc2();
+  EditColorMap2D(GuiContext* ctx);
+  virtual ~EditColorMap2D();
 
   virtual void execute();
 
@@ -202,10 +202,10 @@ private:
 
 
 
-DECLARE_MAKER(EditTransferFunc2)
+DECLARE_MAKER(EditColorMap2D)
 
-EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
-  : Module("EditTransferFunc2", ctx, Filter, "Visualization", "SCIRun"),
+EditColorMap2D::EditColorMap2D(GuiContext* ctx)
+  : Module("EditColorMap2D", ctx, Filter, "Visualization", "SCIRun"),
     cmap_iport_((ColorMap2IPort*)get_iport("Input Colormap")),
     cmap_oport_((ColorMap2OPort*)get_oport("Output Colormap")),
     hist_iport_((NrrdIPort*)get_iport("Histogram")),
@@ -256,7 +256,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
 }
 
 
-EditTransferFunc2::~EditTransferFunc2()
+EditColorMap2D::~EditColorMap2D()
 {
   delete pbuffer_;
   delete shader_factory_;
@@ -268,14 +268,14 @@ EditTransferFunc2::~EditTransferFunc2()
 
 
 void
-EditTransferFunc2::translate_start(int x, int y)
+EditColorMap2D::translate_start(int x, int y)
 {
   mouse_last_x_ = x;
   mouse_last_y_ = y;
 }
 
 void
-EditTransferFunc2::translate_motion(int x, int y)
+EditColorMap2D::translate_motion(int x, int y)
 {
   float xmtn = float(mouse_last_x_ - x) / float(width_);
   float ymtn = -float(mouse_last_y_ - y) / float(height_);
@@ -289,19 +289,19 @@ EditTransferFunc2::translate_motion(int x, int y)
 }
 
 void
-EditTransferFunc2::translate_end(int x, int y)
+EditColorMap2D::translate_end(int x, int y)
 {
   redraw();
 }
 
 void
-EditTransferFunc2::scale_start(int x, int y)
+EditColorMap2D::scale_start(int x, int y)
 {
   mouse_last_y_ = y;
 }
 
 void
-EditTransferFunc2::scale_motion(int x, int y)
+EditColorMap2D::scale_motion(int x, int y)
 {
   float ymtn = -float(mouse_last_y_ - y) / float(height_);
   mouse_last_y_ = y;
@@ -313,7 +313,7 @@ EditTransferFunc2::scale_motion(int x, int y)
 }
 
 void
-EditTransferFunc2::scale_end(int x, int y)
+EditColorMap2D::scale_end(int x, int y)
 {
   redraw();
 }
@@ -326,7 +326,7 @@ do_round(float d)
 }
 
 void
-EditTransferFunc2::screen_val(int &x, int &y)
+EditColorMap2D::screen_val(int &x, int &y)
 {
   const float cx = width_ * 0.5;
   const float cy = height_ * 0.5;
@@ -337,7 +337,7 @@ EditTransferFunc2::screen_val(int &x, int &y)
 }
 
 void
-EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
+EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
     args.error("No command for EditTransferFunc");
@@ -531,7 +531,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 
     struct stat buf;
     if(stat(fn.c_str(), &buf) == -1) {
-      error(string("EditTransferFunc2 error - file not found: '")+fn+"'");
+      error(string("EditColorMap2D error - file not found: '")+fn+"'");
       return;
     }
 
@@ -595,10 +595,10 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 }
 
 void
-EditTransferFunc2::save_function(const string& filename)
+EditColorMap2D::save_function(const string& filename)
 {
     if (filename == "") {
-      error("Warning;  No filename provided to EditTransferFunc2");
+      error("Warning;  No filename provided to EditColorMap2D");
       return;
     }
 
@@ -619,7 +619,7 @@ EditTransferFunc2::save_function(const string& filename)
 }
 
 void
-EditTransferFunc2::presave()
+EditColorMap2D::presave()
 {
   unsigned int i;
 
@@ -661,7 +661,7 @@ EditTransferFunc2::presave()
 
 
 void
-EditTransferFunc2::undo()
+EditColorMap2D::undo()
 {
   bool gui_update = false;
   if (!undo_stack_.empty())
@@ -698,7 +698,7 @@ EditTransferFunc2::undo()
 
 
 void
-EditTransferFunc2::resize_gui(int n)
+EditColorMap2D::resize_gui(int n)
 {
   gui_num_entries_.set(n==-1?widgets_.size():n);
   unsigned int i = 0;
@@ -726,7 +726,7 @@ EditTransferFunc2::resize_gui(int n)
 
 
 void
-EditTransferFunc2::update_to_gui(bool forward)
+EditColorMap2D::update_to_gui(bool forward)
 {
   // Update GUI
   resize_gui();
@@ -746,7 +746,7 @@ EditTransferFunc2::update_to_gui(bool forward)
 
 
 void
-EditTransferFunc2::update_from_gui()
+EditColorMap2D::update_from_gui()
 {
   gui_num_entries_.reset();
   resize_gui();
@@ -769,7 +769,7 @@ EditTransferFunc2::update_from_gui()
 
 
 void
-EditTransferFunc2::tcl_unpickle()
+EditColorMap2D::tcl_unpickle()
 {
   widgets_.clear();
 
@@ -801,7 +801,7 @@ EditTransferFunc2::tcl_unpickle()
 
 
 void
-EditTransferFunc2::select_widget(int widget, int object) {
+EditColorMap2D::select_widget(int widget, int object) {
   for (int i = 0; i < (int)widgets_.size(); i++)
   {
     widgets_[i]->unselect_all();
@@ -815,7 +815,7 @@ EditTransferFunc2::select_widget(int widget, int object) {
 
 
 void
-EditTransferFunc2::push(int x, int y, int button)
+EditColorMap2D::push(int x, int y, int button)
 {
   button_ = button;
   first_motion_ = true;
@@ -825,7 +825,7 @@ EditTransferFunc2::push(int x, int y, int button)
 }
 
 void
-EditTransferFunc2::mouse_pick(int x, int y, int b) {
+EditColorMap2D::mouse_pick(int x, int y, int b) {
   const bool right_button_down = (b==3);
   if (!right_button_down)
     for (mouse_widget_ = widgets_.size()-1; mouse_widget_>=0; mouse_widget_--)
@@ -839,7 +839,7 @@ EditTransferFunc2::mouse_pick(int x, int y, int b) {
 }
 
 void
-EditTransferFunc2::set_window_cursor(int x, int y)
+EditColorMap2D::set_window_cursor(int x, int y)
 {
   const int old_mouse_wid = mouse_widget_;
   const int old_mouse_obj = mouse_object_;
@@ -855,7 +855,7 @@ EditTransferFunc2::set_window_cursor(int x, int y)
 
 
 void
-EditTransferFunc2::motion(int x, int y)
+EditColorMap2D::motion(int x, int y)
 {
   if (button_ == 0) {
     set_window_cursor(x,y);
@@ -884,7 +884,7 @@ EditTransferFunc2::motion(int x, int y)
 
 
 void
-EditTransferFunc2::release(int x, int y)
+EditColorMap2D::release(int x, int y)
 {
   button_ = 0;
   set_window_cursor(x,y);
@@ -902,11 +902,11 @@ EditTransferFunc2::release(int x, int y)
 }
 
 void
-EditTransferFunc2::execute()
+EditColorMap2D::execute()
 {
-  ASSERTMSG(cmap_iport_, "EditTransferFunc2: cant find input CM2 port");  
-  ASSERTMSG(cmap_oport_, "EditTransferFunc2: cant find output CM2 port");
-  ASSERTMSG(hist_iport_, "EditTransferFunc2: cant find input histo port");
+  ASSERTMSG(cmap_iport_, "EditColorMap2D: cant find input CM2 port");  
+  ASSERTMSG(cmap_oport_, "EditColorMap2D: cant find output CM2 port");
+  ASSERTMSG(hist_iport_, "EditColorMap2D: cant find input histo port");
 
   ColorMap2Handle icmap = 0;
   cmap_iport_->get(icmap);
@@ -955,7 +955,7 @@ EditTransferFunc2::execute()
 
 
 bool
-EditTransferFunc2::make_current()
+EditColorMap2D::make_current()
 {
   // check if it was created
   if(!ctx_ || ctx_->width() < 3 || ctx_->height() < 3) {
@@ -966,7 +966,7 @@ EditTransferFunc2::make_current()
 }
 
 void
-EditTransferFunc2::init_pbuffer() 
+EditColorMap2D::init_pbuffer() 
 {
   //----------------------------------------------------------------
   // decide what rasterization to use
@@ -1009,7 +1009,7 @@ EditTransferFunc2::init_pbuffer()
 }
 
 void
-EditTransferFunc2::rasterize_widgets()
+EditColorMap2D::rasterize_widgets()
 {
   //----------------------------------------------------------------
   // update local array
@@ -1097,7 +1097,7 @@ EditTransferFunc2::rasterize_widgets()
   }
 } 
 void
-EditTransferFunc2::draw_histo()
+EditColorMap2D::draw_histo()
 {
 #ifdef HAVE_AVR_SUPPORT
   glActiveTexture(GL_TEXTURE0);
@@ -1123,7 +1123,7 @@ EditTransferFunc2::draw_histo()
   glDisable(GL_TEXTURE_2D);
 }
 
-void EditTransferFunc2::save_ppm(const char * const filename,
+void EditColorMap2D::save_ppm(const char * const filename,
               int sx, int sy,
               int bpp, const unsigned char * buf)
 {
@@ -1174,7 +1174,7 @@ void EditTransferFunc2::save_ppm(const char * const filename,
 }
 
 void
-EditTransferFunc2::draw_colormap()
+EditColorMap2D::draw_colormap()
 {
   // draw cmap
   if(use_back_buffer_) {
@@ -1260,7 +1260,7 @@ EditTransferFunc2::draw_colormap()
 }
 
 void
-EditTransferFunc2::update_histo()
+EditColorMap2D::update_histo()
 {
   //----------------------------------------------------------------
   // update histo tex
@@ -1303,7 +1303,7 @@ EditTransferFunc2::update_histo()
 }
 
 void
-EditTransferFunc2::redraw()
+EditColorMap2D::redraw()
 {
   gui->lock();
 

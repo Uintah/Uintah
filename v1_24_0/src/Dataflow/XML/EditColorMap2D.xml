@@ -33,17 +33,17 @@
 
 
 
-<component name="EditTransferFunc2" category="Visualization" optional="true">
+<component name="EditColorMap2D" category="Visualization" optional="true">
   <overview>
     <authors>
       <author>Milan Ikits</author>
       <author>Michael Callahan</author>
     </authors>
-    <summary>EditTransferFunc2 is used for interactively creating and editing ColorMap2 transfer functions for use in volume visualization.
+    <summary>EditColorMap2D is used for interactively creating and editing ColorMap2 transfer functions for use in volume visualization.
     </summary>
     <description>
 
-      <p>EditTransferFunc2 is used for interactively creating and
+      <p>EditColorMap2D is used for interactively creating and
 editing ColorMap2 transfer functions for use in volume visualization.
 These are two dimensional colormaps where the horizontal axis
 represents the scalar values of the data and the vertical axis

@@ -44,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/AddLight.cc\
 	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/EditColorMap.cc\
+	$(SRCDIR)/EditColorMap2D.cc\
 	$(SRCDIR)/GenAxes.cc\
 	$(SRCDIR)/GenClock.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
@@ -54,7 +55,6 @@ SRCS     += \
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowMatrix.cc\
 	$(SRCDIR)/StreamLines.cc\
-	$(SRCDIR)/EditTransferFunc2.cc\
 	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/TextureBuilder.cc\
 	$(SRCDIR)/VolumeSlicer.cc\
