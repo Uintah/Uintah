@@ -42,7 +42,7 @@ using namespace SCIRun;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG ICE_NORMAL_COUT:+, ICE_DOING_COUT:+ ....
+//  setenv SCI_DEBUG "ICE_NORMAL_COUT:+,ICE_DOING_COUT:+"
 //  ICE_NORMAL_COUT:  dumps out during problemSetup 
 //  ICE_DOING_COUT:   dumps when tasks are scheduled and performed
 //  default is OFF
@@ -370,8 +370,7 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   scheduleAccumulateEnergySourceSinks(    sched, patches, press_matl,
                                                           all_matls);
 
-  scheduleComputeLagrangianValues(        sched, patches, mpm_matls_sub,
-                                                          all_matls);
+  scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
   scheduleAddExchangeToMomentumAndEnergy( sched, patches, all_matls);
 
@@ -524,9 +523,11 @@ void  ICE::scheduleMassExchange(SchedulerP& sched,
   Task* task = scinew Task("ICE::massExchange",
                      this, &ICE::massExchange);
   task->requires(Task::NewDW, lb->rho_CCLabel,  Ghost::None);
+  task->requires(Task::OldDW, lb->vel_CCLabel,  Ghost::None); 
   task->requires(Task::OldDW, lb->temp_CCLabel, Ghost::None);
   task->computes(lb->burnedMass_CCLabel);
-  task->computes(lb->releasedHeat_CCLabel);
+  task->computes(lb->int_eng_comb_CCLabel);
+  task->computes(lb->mom_comb_CCLabel);
   task->computes(lb->created_vol_CCLabel);
   
   sched->addTask(task, patches, matls);
@@ -663,12 +664,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 
 /* ---------------------------------------------------------------------
  Function~  ICE:: scheduleComputeLagrangianValues--
- Note:      Only loop over ICE materials, mom_L for MPM is computed
-            prior to this function.  
+ Note:      Only loop over ICE materials  
 _____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
                                      const PatchSet* patches,
-                                     const MaterialSubset* mpm_matls,
                                      const MaterialSet* ice_matls)
 {
   cout_doing << "ICE::scheduleComputeLagrangianValues" << endl;
@@ -679,15 +678,10 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   task->requires(Task::OldDW,lb->vel_CCLabel,             Ghost::None);
   task->requires(Task::OldDW,lb->temp_CCLabel,            Ghost::None);
   task->requires(Task::NewDW,lb->mom_source_CCLabel,      Ghost::None);
+  task->requires(Task::NewDW,lb->mom_comb_CCLabel,        Ghost::None);
   task->requires(Task::NewDW,lb->burnedMass_CCLabel,      Ghost::None);
-  task->requires(Task::NewDW,lb->releasedHeat_CCLabel,    Ghost::None);
+  task->requires(Task::NewDW,lb->int_eng_comb_CCLabel,    Ghost::None);
   task->requires(Task::NewDW,lb->int_eng_source_CCLabel,  Ghost::None);
-  if (switchDebugLagrangianValues ) {
-  task->requires(Task::NewDW,lb->mom_L_CCLabel,     mpm_matls,
-                                                          Ghost::None);
-  task->requires(Task::NewDW,lb->int_eng_L_CCLabel, mpm_matls,
-                                                          Ghost::None);
-  }
 
   task->computes(lb->mom_L_CCLabel);
   task->computes(lb->int_eng_L_CCLabel);
@@ -2031,14 +2025,16 @@ void ICE::massExchange(const ProcessorGroup*,
 
    int numMatls   =d_sharedState->getNumMatls();
    int numICEMatls=d_sharedState->getNumICEMatls();
-   StaticArray<CCVariable<double> > burnedMass(numMatls);
-   StaticArray<CCVariable<double> > releasedHeat(numMatls);
+   StaticArray<constCCVariable<Vector> > vel_CC(numMatls);
    StaticArray<constCCVariable<double> > rho_CC(numMatls);
    StaticArray<constCCVariable<double> > Temp_CC(numMatls);
    StaticArray<CCVariable<double> > created_vol(numMatls);
+   StaticArray<CCVariable<double> > burnedMass(numMatls);
+   StaticArray<CCVariable<double> > int_eng_comb(numMatls);
+   StaticArray<CCVariable<Vector> > mom_comb(numMatls);
    StaticArray<double> cv(numMatls);
    
-   int reactant_indx = -1;
+   int react = -1;
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -2046,37 +2042,40 @@ void ICE::massExchange(const ProcessorGroup*,
 
       // Look for the reactant material
       if (matl->getRxProduct() == Material::reactant)
-       reactant_indx = matl->getDWIndex();
+       react = matl->getDWIndex();
 
       int indx = matl->getDWIndex();
+      old_dw->get(vel_CC[m], lb->vel_CCLabel, indx,patch,Ghost::None, 0);
       new_dw->get(rho_CC[m], lb->rho_CCLabel, indx,patch,Ghost::None, 0);
       old_dw->get(Temp_CC[m],lb->temp_CCLabel,indx,patch,Ghost::None, 0);
       new_dw->allocate(burnedMass[m],  lb->burnedMass_CCLabel,  indx,patch);
-      new_dw->allocate(releasedHeat[m],lb->releasedHeat_CCLabel,indx,patch);
+      new_dw->allocate(int_eng_comb[m],lb->int_eng_comb_CCLabel,indx,patch);
       new_dw->allocate(created_vol[m], lb->created_vol_CCLabel, indx,patch);
+      new_dw->allocate(mom_comb[m],    lb->mom_comb_CCLabel,  indx,patch);
       burnedMass[m].initialize(0.0);
-      releasedHeat[m].initialize(0.0); 
+      int_eng_comb[m].initialize(0.0); 
       created_vol[m].initialize(0.0);
-
+      mom_comb[m].initialize(0.0);
       cv[m] = ice_matl->getSpecificHeat();
     }
     //__________________________________
-    // Do the exchange if there is a reactant (reactant_indx >= 0)
+    // Do the exchange if there is a reactant (react >= 0)
     // and the switch is on.
-    if(d_massExchange && (reactant_indx >= 0)){       
+    if(d_massExchange && (react >= 0)){       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        double mass_hmx = rho_CC[reactant_indx][c] * vol;
+        double mass_hmx = rho_CC[react][c] * vol;
         if (mass_hmx > d_SMALL_NUM)  {
-          double burnedMass_tmp = (rho_CC[reactant_indx][c] * vol/100.0); 
-          burnedMass[reactant_indx][c] =  -burnedMass_tmp;
-          releasedHeat[reactant_indx][c] = -burnedMass_tmp
-                                         *  cv[reactant_indx]
-                                         *  Temp_CC[reactant_indx][c];
+          double burnedMass_tmp  = (rho_CC[react][c] * vol/2.0); 
+          burnedMass[react][c]   = -burnedMass_tmp;
+          int_eng_comb[react][c] = -burnedMass_tmp
+                                   * cv[react]               
+                                   * Temp_CC[react][c];    
+          mom_comb[react][c]     = -vel_CC[react][c] * burnedMass_tmp;
           // Commented out for now as I'm not sure that this is appropriate
           // for regular ICE - Jim 7/30/01
-//          created_vol[reactant_indx][c]  =
-//                          -burnedMass_tmp/rho_micro_CC[reactant_indx][c];
+//          created_vol[react][c]  =
+//                          -burnedMass_tmp/rho_micro_CC[react][c];
         }
       }
       //__________________________________
@@ -2086,16 +2085,14 @@ void ICE::massExchange(const ProcessorGroup*,
       for(int prods = 0; prods < numICEMatls; prods++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(prods);
         if (ice_matl->getRxProduct() == Material::product) {
-          for(int m = 0; m < numICEMatls; m++) {
-            for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-              IntVector c = *iter;
-              burnedMass[prods][c]  -= burnedMass[m][c];
-              releasedHeat[prods][c] -=
-                              burnedMass[m][c]*cv[m]*Temp_CC[m][c];
+          for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+            IntVector c = *iter;
+            burnedMass[prods][c]  = -burnedMass[react][c];
+            int_eng_comb[prods][c]= -int_eng_comb[react][c];
+            mom_comb[prods][c]    = -mom_comb[react][c];
            // Commented out for now as I'm not sure that this is appropriate
           // for regular ICE - Jim 7/30/01
 //             created_vol[prods][c]  -= created_vol[m][c];
-           }
          }
        }
       }    
@@ -2106,7 +2103,8 @@ void ICE::massExchange(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->put(burnedMass[m],   lb->burnedMass_CCLabel,   indx,patch);
-      new_dw->put(releasedHeat[m], lb->releasedHeat_CCLabel, indx,patch);
+      new_dw->put(int_eng_comb[m], lb->int_eng_comb_CCLabel, indx,patch);
+      new_dw->put(mom_comb[m],     lb->mom_comb_CCLabel,     indx,patch);
       new_dw->put(created_vol[m],  lb->created_vol_CCLabel,  indx,patch);
     }
 #ifdef DEBUG
@@ -2118,8 +2116,9 @@ void ICE::massExchange(const ProcessorGroup*,
         int indx = matl->getDWIndex();
         ostringstream desc;
         desc << "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
-        printData(patch, 0, desc.str(),"burnedMass", burnedMass[m]);
-        printData(patch, 0, desc.str(),"releasedHeat", releasedHeat[m]);
+        printData(patch, 0, desc.str(),"burnedMass",   burnedMass[m]);
+        printData(patch, 0, desc.str(),"int_eng_comb", int_eng_comb[m]);
+        printData(patch, 0, desc.str(),"mom_comb",   mom_comb[m]);
       }
 
     }
@@ -2447,8 +2446,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 /* ---------------------------------------------------------------------
  Function~  ICE::computeLagrangianValues--
  Computes lagrangian mass momentum and energy
- Note:      Only loop over ICE materials, mom_L for MPM is computed
-            prior to this function
+ Note:    Only loop over ICE materials, mom_L, massL and int_eng_L
+           for MPM is computed in computeLagrangianValuesMPM()
  ---------------------------------------------------------------------  */
 void ICE::computeLagrangianValues(const ProcessorGroup*,  
                                   const PatchSubset* patches,
@@ -2472,7 +2471,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
      Material* matl = d_sharedState->getMaterial( m );
      int indx = matl->getDWIndex();
      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
      CCVariable<Vector> mom_L; 
      CCVariable<double> int_eng_L; 
      CCVariable<double> mass_L;
@@ -2480,17 +2478,20 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       constCCVariable<double> rho_CC, temp_CC;
       constCCVariable<Vector> vel_CC;
       constCCVariable<double> int_eng_source, burnedMass;
-      constCCVariable<double> releasedHeat;
+      constCCVariable<double> int_eng_comb;
       constCCVariable<Vector> mom_source;
+      constCCVariable<Vector> mom_comb;
 
       new_dw->get(rho_CC,  lb->rho_CCLabel,     indx,patch,Ghost::None, 0);
       old_dw->get(vel_CC,  lb->vel_CCLabel,     indx,patch,Ghost::None, 0);
       old_dw->get(temp_CC, lb->temp_CCLabel,    indx,patch,Ghost::None, 0);
       new_dw->get(burnedMass,     lb->burnedMass_CCLabel,indx,patch,
                                                            Ghost::None, 0);
-      new_dw->get(releasedHeat,   lb->releasedHeat_CCLabel,indx,patch,
+      new_dw->get(int_eng_comb,   lb->int_eng_comb_CCLabel,indx,patch,
                                                            Ghost::None, 0);
       new_dw->get(mom_source,     lb->mom_source_CCLabel,indx,patch,
+                                                           Ghost::None, 0);
+      new_dw->get(mom_comb,       lb->mom_comb_CCLabel,  indx,patch,
                                                            Ghost::None, 0);
       new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,indx,patch,
                                                            Ghost::None, 0);
@@ -2530,34 +2531,25 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           mass_L[c] = std::max( (mass + burnedMass[c] ), min_mass);
 
           massGain += burnedMass[c];
+          
+          //  must have a minimum momentum   
+          for (int dir = 0; dir <3; dir++) {  //loop over all three directons                         
+            double min_mom_L = vel_CC[c](dir) * min_mass;
 
-          //  must have a minimum momentum                            
-          Vector min_mom_L = vel_CC[c] * min_mass;
-       // Todd:  I believe the second term here to be flawed as was
-       // int_eng_tmp.  We should create a "burnedMomentum" or something
-       // to do this right.  Someday.
-          Vector mom_L_tmp = vel_CC[c] * mass;
-//                         + vel_CC[c] * burnedMass[c];
-                               
-           // find the max between mom_L_tmp and min_mom_L
-           // but keep the sign of the mom_L_tmp     
-           // You need the d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
-          double plus_minus_one_x = (mom_L_tmp.x()+d_SMALL_NUM)/
-                                    (fabs(mom_L_tmp.x()+d_SMALL_NUM));
-          double plus_minus_one_y = (mom_L_tmp.y()+d_SMALL_NUM)/
-                                    (fabs(mom_L_tmp.y()+d_SMALL_NUM));
-          double plus_minus_one_z = (mom_L_tmp.z()+d_SMALL_NUM)/
-                                    (fabs(mom_L_tmp.z()+d_SMALL_NUM));
-          
-          double mom_L_x = std::max( fabs(mom_L_tmp.x()), min_mom_L.x() );
-          double mom_L_y = std::max( fabs(mom_L_tmp.y()), min_mom_L.y() );
-          double mom_L_z = std::max( fabs(mom_L_tmp.z()), min_mom_L.z() );
-          
-          mom_L_x = plus_minus_one_x * mom_L_x;
-          mom_L_y = plus_minus_one_y * mom_L_y;
-          mom_L_z = plus_minus_one_z * mom_L_z;
- 
-          mom_L[c] = Vector(mom_L_x,mom_L_y,mom_L_z) + mom_source[c];
+         // Todd:  I believe the second term here to be flawed as was
+         // int_eng_tmp.  We should create a "burnedMomentum" or something
+         // to do this right.  Someday.
+            double mom_L_tmp = vel_CC[c](dir) * mass;
+                             + mom_comb[c](dir);
+  
+             // Preserve the original sign on momemtum     
+             // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
+            double plus_minus_one = (mom_L_tmp + d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp + d_SMALL_NUM));
+            
+            mom_L[c](dir) = mom_source[c](dir) +
+                  plus_minus_one * std::max( fabs(mom_L_tmp), min_mom_L );
+          }
 
           // must have a minimum int_eng   
           double min_int_eng = min_mass * cv * temp_CC[c];
@@ -2567,7 +2559,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           //  int_eng_tmp    = the amount of internal energy for this
           //                   matl in this cell coming into this task
           //  int_eng_source = thermodynamic work = f(delP_Dilatation)
-          //  releasedHeat   = enthalpy of reaction gained by the
+          //  int_eng_comb   = enthalpy of reaction gained by the
           //                   product gas, PLUS (OR, MINUS) the
           //                   internal energy of the reactant
           //                   material that was liberated in the
@@ -2578,10 +2570,9 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           int_eng_L[c] = int_eng_tmp +
                              int_eng_source[c] +
-                             releasedHeat[c];
+                             int_eng_comb[c];
 
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
-
          }
        cout << "Mass gained by the gas this timestep = " << massGain << endl;
        }  //  if (mass exchange)
@@ -2599,32 +2590,24 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          string warn = "ICE::computeLagrangianValues: Negative Internal energy or Temperature detected";
          throw InvalidValue(warn);
         }
-      }  // if (ice_matl)
+
 #ifdef DEBUG
-      //---- P R I N T   D A T A ------ 
-      // Dump out all the matls data
-      if (switchDebugLagrangianValues ) {
-        constCCVariable<double> int_eng_L_Debug = int_eng_L; 
-        constCCVariable<Vector> mom_L_Debug = mom_L;
-         if(mpm_matl) {
-          new_dw->get(int_eng_L_Debug,lb->int_eng_L_CCLabel,indx,patch,Ghost::None,0);
-          new_dw->get(mom_L_Debug,    lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
+        //---- P R I N T   D A T A ------ 
+        // Dump out all the matls data
+        if (switchDebugLagrangianValues ) {
+          ostringstream desc;
+          desc <<"Bot_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
+          printVector(patch,1, desc.str(), "xmom_L_CC", 0, mom_L);
+          printVector(patch,1, desc.str(), "ymom_L_CC", 1, mom_L);
+          printVector(patch,1, desc.str(), "zmom_L_CC", 2, mom_L);
+          printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
+
         }
-        ostringstream desc;
-        desc <<"Bot_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
-        printVector(patch,1, desc.str(), "xmom_L_CC", 0, mom_L_Debug);
-        printVector(patch,1, desc.str(), "ymom_L_CC", 1, mom_L_Debug);
-        printVector(patch,1, desc.str(), "zmom_L_CC", 2, mom_L_Debug);
-        printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L_Debug); 
-           
-      }
 #endif
-      
-      if(ice_matl)  {
         new_dw->put(mom_L,     lb->mom_L_CCLabel,     indx,patch);
         new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
         new_dw->put(mass_L,    lb->mass_L_CCLabel,    indx,patch);
-      }
+      }  // if (ice_matl)
     }  // end numALLMatl loop
   }  // patch loop
 }
