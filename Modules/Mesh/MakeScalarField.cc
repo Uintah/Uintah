@@ -10,15 +10,22 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Mesh/MakeScalarField.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Geometry/Point.h>
-#include <iostream.h>
-#include <fstream.h>
+
+class MakeScalarField : public Module {
+public:
+    MakeScalarField(const clString& id);
+    MakeScalarField(const MakeScalarField&, int deep);
+    virtual ~MakeScalarField();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_MakeScalarField(const clString& id)
 {

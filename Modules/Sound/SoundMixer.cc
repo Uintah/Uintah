@@ -11,12 +11,29 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/SoundMixer.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
-#include <iostream.h>
+
+struct SoundMixer_PortInfo {
+    double gain;
+    SoundIPort* isound;
+};
+
+class SoundMixer : public Module {
+    double overall_gain;
+    SoundOPort* osound;
+    Array1<SoundMixer_PortInfo*> portinfo;
+public:
+    SoundMixer(const clString& id);
+    SoundMixer(const SoundMixer&, int deep);
+    virtual ~SoundMixer();
+    virtual Module* clone(int deep);
+    virtual void connection(Module::ConnectionMode, int, int);
+    virtual void execute();
+};
 
 static Module* make_SoundMixer(const clString& id)
 {

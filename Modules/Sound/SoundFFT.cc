@@ -17,13 +17,24 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/SoundFFT.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 #include <Math/Trig.h>
 #include <iostream.h>
-#include <fstream.h>
+
+class SoundFFT : public Module {
+    SoundOPort* outsound;
+    SoundIPort* insound;
+public:
+    SoundFFT(const clString& id);
+    SoundFFT(const SoundFFT&, int deep);
+    virtual ~SoundFFT();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_SoundFFT(const clString& id)
 {

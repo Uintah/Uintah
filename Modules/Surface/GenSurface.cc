@@ -10,14 +10,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Surface/GenSurface.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 
-#include <iostream.h>
-#include <fstream.h>
+class GenSurface : public Module {
+public:
+    GenSurface(const clString& id);
+    GenSurface(const GenSurface&, int deep);
+    virtual ~GenSurface();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_GenSurface(const clString& id)
 {
