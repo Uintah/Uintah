@@ -20,8 +20,9 @@ itcl_class SCIRun_Render_SynchronizeGeometry {
         toplevel $w
 	wm title $w "Geometry Barrier"
 	
-	checkbutton $w.enforce -text "Enforce Barrier " -variable $this-enforce \
-	    -onvalue 1 -offvalue 0 -padx 5
+	checkbutton $w.enforce -text "Enforce Barrier " \
+	    -variable $this-enforce \
+	    -onvalue 1 -offvalue 0 -padx 5 -command "$this-c needexecute"
 	pack $w.enforce
 	
 	makeSciButtonPanel $w $w $this
