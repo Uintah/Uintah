@@ -64,7 +64,7 @@ endif
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
-	Core/Math Core/Util
+	Core/Math Core/Util Core/Basis
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
