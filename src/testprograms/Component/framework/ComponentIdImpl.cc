@@ -42,7 +42,7 @@ ComponentIdImpl::init( const string &host, const string &program )
 
 ComponentIdImpl::~ComponentIdImpl()
 {
-  cerr << "componenet " << id_ << " destructor\n";
+  cerr << "ComponenetIdImpl " << id_ << " destructor\n";
 }
 
 string
