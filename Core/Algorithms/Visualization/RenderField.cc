@@ -56,6 +56,39 @@ RenderFieldBase::get_compile_info(const TypeDescription *ftd,
   return rval;
 }
 
+
+RenderFieldDataBase::RenderFieldDataBase()
+{}
+
+RenderFieldDataBase::~RenderFieldDataBase()
+{}
+
+CompileInfoHandle
+RenderFieldDataBase::get_compile_info(const TypeDescription *vftd,
+				      const TypeDescription *cftd,
+				      const TypeDescription *ltd)
+{
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("RenderFieldData");
+  static const string base_class_name("RenderFieldDataBase");
+
+  CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
+					 vftd->get_filename() + "." +
+					 cftd->get_filename() + "." +
+					 ltd->get_filename() + ".",
+					 base_class_name, 
+					 template_class_name, 
+					 vftd->get_name() + ", " +
+					 cftd->get_name() + ", " +
+					 ltd->get_name());
+
+  rval->add_include(include_path);
+  vftd->fill_compile_info(rval);
+  cftd->fill_compile_info(rval);
+  return rval;
+}
+
+
 template <>
 bool
 to_double(const double&in, double &out)

@@ -132,6 +132,7 @@ class ShowField : public Module
   int                      node_resolution_;
   int                      edge_resolution_;
   LockingHandle<RenderFieldBase>  renderer_;
+  LockingHandle<RenderFieldDataBase>  data_renderer_;
 
   enum toggle_type_e {
     NODE = 0,
@@ -149,9 +150,9 @@ public:
   ShowField(GuiContext* ctx);
   virtual ~ShowField();
   virtual void execute();
-  void check_for_vector_data(FieldHandle fld_handle);
-  bool fetch_typed_algorithm(FieldHandle fld_handle);
-  bool determine_dirty(FieldHandle fld_handle);
+  bool check_for_vector_data(FieldHandle fld_handle);
+  bool fetch_typed_algorithm(FieldHandle fld_handle, FieldHandle vfld_handle);
+  bool determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle);
   virtual void tcl_command(GuiArgs& args, void* userdata);
 };
 
@@ -214,6 +215,7 @@ ShowField::ShowField(GuiContext* ctx) :
   node_resolution_(0),
   edge_resolution_(0),
   renderer_(0),
+  data_renderer_(0),
   render_state_(5),
   bounding_vector_(0)
 {
@@ -271,9 +273,11 @@ ShowField::~ShowField()
 }
 
 
-void
+bool
 ShowField::check_for_vector_data(FieldHandle fld_handle) {
   // Test for vector data possibility
+  if (fld_handle.get_rep() == 0) { return false; }
+
   has_vec_data_.reset();
   nodes_as_disks_.reset();
   if (fld_handle->query_vector_interface(this) != 0) {
@@ -283,21 +287,22 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
     if (fld_handle->data_at() == Field::NODE && nodes_as_disks_.get() == 0) {
       nodes_as_disks_.set(1); 
     }
+    return true;
   } else if (nodes_as_disks_.get() == 1) {
     nodes_as_disks_.set(0);
   }
+  return false;
 }
 
 
 bool
-ShowField::fetch_typed_algorithm(FieldHandle fld_handle) 
+ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
+				 FieldHandle vfld_handle) 
 {
   const TypeDescription *ftd = fld_handle->get_type_description();
   const TypeDescription *ltd = fld_handle->data_at_type_description();
   // description for just the data in the field
-  const TypeDescription *data_type_description = 
-    fld_handle->get_type_description(1);
-  cur_field_data_type_ = data_type_description->get_name();
+  cur_field_data_type_ = fld_handle->get_type_description(1)->get_name();
 
   // Get the Algorithm.
   CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
@@ -307,20 +312,35 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle)
     mesh_generation_ = -1;
     return false;
   }
+
+  if (vfld_handle.get_rep())
+  {
+    const TypeDescription *vftd = vfld_handle->get_type_description();
+    CompileInfoHandle dci =
+      RenderFieldDataBase::get_compile_info(vftd, ftd, ltd);
+    if (!module_dynamic_compile(dci, data_renderer_))
+    {
+      data_renderer_ = 0;
+      return false;
+    }
+  }
   return true;
 }
 
 
 bool
-ShowField::determine_dirty(FieldHandle fld_handle) 
+ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle) 
 {
   bool mesh_new = fld_handle->mesh()->generation != mesh_generation_;
   bool field_new = fld_handle->generation != field_generation_;
 
   if (mesh_new) {
     // completely new, all dirty, or just new geometry, so data_at invalid too.
-    check_for_vector_data(fld_handle);
-    if (!fetch_typed_algorithm(fld_handle)) { return false; }
+    if (!check_for_vector_data(fld_handle))
+    {
+      check_for_vector_data(vfld_handle);
+    }
+    if (!fetch_typed_algorithm(fld_handle, vfld_handle)) { return false; }
     field_generation_  = fld_handle->generation;  
     mesh_generation_ = fld_handle->mesh()->generation; 
     nodes_dirty_ = true; 
@@ -350,13 +370,18 @@ ShowField::determine_dirty(FieldHandle fld_handle)
     
   } else if (!mesh_new && field_new) {
     // same geometry, new data.
-    check_for_vector_data(fld_handle);
+    if (!check_for_vector_data(fld_handle))
+    {
+      check_for_vector_data(vfld_handle);
+    }
 
     const TypeDescription *data_type_description = 
       fld_handle->get_type_description(1);
     string fdt = data_type_description->get_name();
-    if (cur_field_data_type_ != fdt && !fetch_typed_algorithm(fld_handle)) { 
-      return false; 
+    if (cur_field_data_type_ != fdt &&
+	!fetch_typed_algorithm(fld_handle, vfld_handle))
+    { 
+      return false;
     }
     data_at_dirty_ = true; //we need to rerender colors..
     edges_dirty_ = true; // Edges don't cache color.
@@ -376,7 +401,6 @@ ShowField::execute()
   FieldIPort *field_iport = (FieldIPort *)get_iport("Field");
   ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
-  FieldHandle fld_handle;
 
   if (!field_iport) {
     error("Unable to initialize iport 'Field'.");
@@ -391,15 +415,42 @@ ShowField::execute()
     return;
   }
 
+  FieldHandle fld_handle;
   field_iport->get(fld_handle);
-  if(!fld_handle.get_rep()){
+  if(!fld_handle.get_rep())
+  {
     warning("No Data in port 1 field.");
     return;
-  } else {
-    // What has changed from last time?  A false return value means that we 
-    // could not load the algorithm from the dynamic loader.
-    if (! determine_dirty(fld_handle)) { return; }
   }
+
+  FieldIPort *vfield_iport = (FieldIPort *)get_iport("Orientation Field");
+  FieldHandle vfld_handle;
+  vfield_iport->get(vfld_handle);
+  if (vfld_handle.get_rep())
+  {
+    if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep())
+    {
+      error("Color and Orientation fields must share the same mesh.");
+      return;
+    }
+    if (vfld_handle->data_at() != fld_handle->data_at())
+    {
+      warning("Color and Orientation fields must have data at the same location.");
+      return;
+    }
+  }
+  else if (fld_handle->query_vector_interface())
+  {
+    vfld_handle = fld_handle;
+  }
+  else
+  {
+    vfld_handle = 0;
+  }
+
+  // What has changed from last time?  A false return value means that we 
+  // could not load the algorithm from the dynamic loader.
+  if (! determine_dirty(fld_handle, vfld_handle)) { return; }
   
   // if no colormap was attached, the argument doesn't get changed,
   // so we need to set it manually
@@ -495,7 +546,7 @@ ShowField::execute()
 
     renderer_->set_mat_map(&idx_mats_);
     renderer_->render(fld_handle, 
-		      do_nodes, do_edges, do_faces, do_data,
+		      do_nodes, do_edges, do_faces, false,
 		      def_mat_handle_, data_at_dirty_, color_handle,
 		      ndt, edt, ns, es, vs, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
@@ -527,11 +578,23 @@ ShowField::execute()
       face_id_ = ogeom_->addObj(renderer_->face_switch_, name);
     }
   }  
-  if (do_data) {
+  if (do_data)
+  {
     data_dirty_ = false;
-    if (renderer_.get_rep() && vectors_on_.get()) {
+    if (vfld_handle.get_rep() &&
+	data_renderer_.get_rep() &&
+	vectors_on_.get())
+    {
       if (data_id_) ogeom_->delObj(data_id_);
-      data_id_ = ogeom_->addObj(renderer_->data_switch_, "Vector Data");
+      GeomHandle data = data_renderer_->render_data(vfld_handle,
+						    fld_handle,
+						    color_handle,
+						    def_mat_handle_,
+						    ndt, vs,
+						    normalize_vectors_.get(),
+						    bidirectional_.get(),
+						    arrow_heads_on_.get());
+      data_id_ = ogeom_->addObj(data, "Vectors");
     }
   }
   if (do_text) {
