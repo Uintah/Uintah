@@ -36,6 +36,10 @@ itcl_class Module {
     }
 			
     constructor {config} {
+	global $this-gui-x $this-gui-y
+        set $this-gui-x -1
+        set $this-gui-y -1
+
 	set msgLogStream "[SciTclStream msgLogStream#auto]"
 	# these live in parallel temporarily
 	global $this-notes Notes
@@ -142,6 +146,35 @@ itcl_class Module {
 	    after 1 "wm geometry $w {}"
 
 	    wm title $w [set_title [modname]]
+	}
+    }
+
+    # Brings the UI window to near the mouse.
+    method fetch_ui {} {
+	set w .ui[modname]
+	# Mac window manager top window bar height is 22 pixels (at
+	# least on my machine.)  Because the 'winfo y' command does
+	# not take this into account (at least on the Mac, need to
+	# check PC), we need to do so explicitly. -Dav
+	set wm_border_height 22
+	if {[winfo exists $w] != 0} {
+	    global $this-gui-x $this-gui-y
+	    set $this-gui-x [winfo x $w]
+	    set $this-gui-y [expr [winfo y $w] - $wm_border_height]
+	    moveToCursor $w
+	    # Raise the window
+	    initialize_ui
+	}
+    }
+
+    # Returns the UI window to where the user had originally placed it.
+    method return_ui {} {
+	set w .ui[modname]
+	if {[winfo exists $w] != 0} {
+            global $this-gui-x $this-gui-y
+	    wm geometry $w +[set $this-gui-x]+[set $this-gui-y]
+	    # Raise the window
+	    initialize_ui
 	}
     }
 
@@ -600,10 +633,16 @@ proc moduleMenu {x y modid} {
 
 proc regenModuleMenu {modid menu_id} {
     # Wipe the menu clean...
-    for {set c 0} {$c <= 10 } {incr c } {
-	$menu_id delete $c
+
+    set num_entries [$menu_id index end]
+    if { $num_entries == "none" } { 
+	set num_entries 0
+    }
+    for {set c 0} {$c <= $num_entries} {incr c } {
+	$menu_id delete 0
     }
     global Subnet Disabled
+
     set name [$modid name]
     $menu_id add command -label "$modid" -state disabled
     $menu_id add separator
@@ -628,12 +667,20 @@ proc regenModuleMenu {modid menu_id} {
 	    -command "expandSubnet $modid"
     }
 
-    if ![llength $Subnet(${modid}_connections)] return
-    setIfExists disabled Disabled($modid) 0
-    if $disabled {
-	$menu_id add command -label "Enable" -command "disableModule $modid 0"
-    } else {
-	$menu_id add command -label "Disable" -command "disableModule $modid 1"
+    if {[llength $Subnet(${modid}_connections)]} {
+	setIfExists disabled Disabled($modid) 0
+	if $disabled {
+	    $menu_id add command -label "Enable" -command "disableModule $modid 0"
+	} else {
+	    $menu_id add command -label "Disable" -command "disableModule $modid 1"
+	}
+    }
+
+    global guiPreferences
+    if { $guiPreferences("UseGuiFetch") } {
+        $menu_id add separator
+	$menu_id add command -label "Fetch UI"  -command "$modid fetch_ui"
+	$menu_id add command -label "Return UI" -command "$modid return_ui"
     }
 }
 
