@@ -60,6 +60,7 @@ DEALINGS IN THE SOFTWARE.
       <li>ApplyMappingMatrix (FieldsData) - Was ApplyInterpMatrix</li>
       <li>DirectMapping (FieldsData) - Was DirectInterpolate</li>
       <li>MatrixInfo (Math) - Information about a SCIRun matrix.</li>
+      <li>EditColorMap2D (Visualization) - Was EditTransferFunc2
     </ul>
 
     <h2> Teem Modules (Category in parentheses) </h2>
@@ -95,6 +96,7 @@ DEALINGS IN THE SOFTWARE.
       <li>EditColorMap2D (Visualization) - load/save use cmap2 format, not .xff files
       <li>EditColorMap2D (Visualization) - fix endian bug in ppm thumbnail images on macs
       <li>TransformMesh (modules with scrolling text dialog) - UI comes back to the size the user specifies
+      
     </ul>
 
     <h2>Teem Modules (Category in parentheses)</h2>
@@ -127,6 +129,7 @@ DEALINGS IN THE SOFTWARE.
       <li>ApplyInterpolant (FieldsData) - Use ApplyMappingMatrix instead.</li>
       <li>ApplyInterpMatrix (FieldsData) - Use ApplyMappingMatrix instead.</li>
       <li>DirectInterpolate (FieldsData) - Use DirectMapping instead.</li>
+      <li>EditTransferFunc2 (Visualization) - Use EditColorMap2D instead.</li>
     </ul>
 
     <h1> Power App Enhancements </h1>
@@ -148,8 +151,39 @@ DEALINGS IN THE SOFTWARE.
       <li>BioImage (Teem) - Scroll wheel now works in history frame.</li>
       <li>BioImage (Teem) - Now uses a RescaleColorMap module for volume rendering for machines that do not support shaders.</li>
       <li>BioImage (Teem) - Now handles loading different datasets.</li>
-      <li>BioImage (Teem) - Allows user to turn 2D text on or off.</li>
+      <li>BioImage (Teem) - Allow user to change color of 2D text.</li>
+      <li>BioImage (Teem) - Allow user to turn 2D text on or off.</li>
       <li>BioImage (Teem) - Updated tutorial figures.</li>
+      <li>BioImage (EditColorMap2d) - Allow user to paint directly in EditColorMap2D window when paint widget is selected.</li>
+      <li>BioImage (EditColorMap2d) - Widgets now save the value range in which they were created.</li>
+      <li>BioImage (EditColorMap2d) - Add 'X' Delete button to widgets to quickly delete widgets.<li>
+      <li>BioImage (EditColorMap2d) - Fix un-necessary multiple redraws of volume rendering when moving widgets.</li>
+      <li>BioImage (EditColorMap2d) - Paint strokes scale with window zoom level.</li>
+      <li>BioImage (EditColorMap2d) - Swatches save to ~/SCIRun/Colormaps directory</li>
+      <li>BioImage (ViewSlices) - Toggle button to display Anatomical or Cartesian Coordinates in Orientation labels</li>
+      <li>BioImage (ViewSlices) - Real-time update of volume rendering transfer function when painting.</li>
+      <li>BioImage (ViewSlices) - Over and Under Layers while painting volume rendering transfer function.</li>
+      <li>BioImage (ViewSlices) - Add 'Show Transfer Function in 2D' checkbutton.</li>
+      <li>BioImage (ViewSlices) - Autoviewing of 2D slice windows.</li>
+      <li>BioImage (ViewSlices) - Gradient Threshold slider masks paint in low gradient areas.</li>
+      <li>BioImage (ViewSlices) - Add lighting to 2D slices in 3D window</li>
+
+      <li>BioImage (ViewSlices) - Change Window Width and Window Level to handle floating point value ranges.</li>
+      <li>BioImage (ViewSlices) - Disable painting when cropping.</li>
+      <li>BioImage (ViewSlices) - Remove padding for cropping as eye now shows correct data.</li>
+      <li>BioImage (ViewSlices) - Fix display of data that was flipped by unu flip before loading.</li>
+      <li>BioImage (ViewSlices) - Change Zoom to be up/left is zoom out and down/right is zoom in to be consistent with 3D window.</li>
+      <li>BioImage (Viewer) - Fix 3D autoview when loading a dataset for the first time.</li>
+      <li>BioImage (GUI) - Move eye radio button to between filters and automatically update when changing eye.</li>
+      <li>BioImage (GUI) - Automatic Re-Orginization of filters in Network Editor</li>
+
+
+	
+      <li>BioImage (GUI) - Crop filter has number spinners for changing bounds with mouse.</li>
+      <li>BioImage (GUI) - Add 'Show 2D Crop Region' checkbutton for crop filter to toggle display of crop region of interest.</li>
+      <li>BioImage (GUI) - Autoload corresponding .cmap2 file when loading all nrrds (not just distributed datasets).</li>
+      <li>BioImage - Fix connections between filters when inserting/deleting image processing filters.</li>
+      <li>BioImage - Gracefully refuse to load non-3D datasets.</li>
       <li>All PowerApps (Teem) - changed the label of Nrrd file reader to reflect ability to read in generic raster data, such as .vff and .vol       
 
     </ul>
@@ -178,11 +212,31 @@ DEALINGS IN THE SOFTWARE.
       <li>Create virtual destructor for GeomColormapInterface.</li>
       <li>Use const references for Masked*Field indices where appropriate.</li>
       <li>Fix volume rendering transparency on apples with unsupported hardware.</li>
+      <li>Change FreeType texture to render to 1 channel to save texture memory</li>
+      <li>Change name of base RPMs from SCIRun to SCIRunBioPSE</li>
+      <li>Major re-factoring of SCIRun->Render->ViewSlices to use function pointers for common tasks</li>
+      <li>Re-Layout of BioImage underlying network makes network debugging easier.</li>
+      <li>Throttle ViewSlices redraw loop if mouse is not in GL window.</li>
+      <li>Fix bug rendering ViewSlices slice positions in wrong locaiton on first draw.</li>
+      <li>Print name of mutex when displaying error about destroying locked mutex.</li>
+      <li>Fix bug that was creating new widgets in EditColorMap2D off-screen</li>
+      <li>Added 'bool GuiVar::changed()' method that return true if the TCL var has changed. Useful for determining if re-execution is necessary.</li>
+      <li>Fix bug that was disabling hardware widget rasterizaiton in EditColorMap2D.</li>
+      <li>Flip input nrrd in Y in Teem->Converters->NrrdToColorMap2.</li>
+      <li>Added methods GuiArgs::get_int() & GuiArgs::get_double(), that automatically convert TCL arguments to tcl_command to their numeric representation and handle error checking too.</li>
+      <li>Added versioning of .scirunrc file.  Prompts user to copy .scirunrc file if version of SCIRun is newer than the version the users .scirunrc file was written for.</li>
+      <li>Bug #2535.  Fix duplicating module on subnet.</li>
+      <li>Bug #2536: Support for dopuble-quote character '"' in Tooltips.</li>
+      <li>Clear EditColorMap2d undo stack when loading new .cmap2 file</li>
+      <li>Package RPMS and OSX binary release with ITK 2.0.0.</li>
+      <li>Add button 'New ViewSlices Window' to open multiple ViewSlices GL windows for one module</li>
+      <li>Bug #2031, update wording and numbering of viewer windows in menus.</li>
     </ul>
 
     <h1>Environment Variables</h1>
     <ul>
-      <li></li>      
+      <li>SCIRUN_RCFILE_VERSION - Allows versioning of .scirunrc file.</li>
+      <li>SCIRUN_DISABLE_SHADERS - Manually disables GL ARB fragment shaders for debugging.</li>
     </ul>
 
     <h1>GUI Enhancements</h1>
