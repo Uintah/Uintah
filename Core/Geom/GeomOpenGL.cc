@@ -2065,8 +2065,11 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     else { di->dir = -1; }
   }
 
-  const vector<unsigned int> &clist =
+  vector<unsigned int> &clist =
     (di->axis==0)?xindices_:((di->axis==1)?yindices_:zindices_);
+
+  bool &reverse = 
+    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
 
   di->polycount+=points_.size()/6;
 
@@ -2081,19 +2084,14 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);
 
-  if (di->dir == 1)
+  if (di->dir == 1 && reverse ||
+      di->dir == -1 && !reverse)
   {
-    glDrawElements(GL_LINES, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
+    std::reverse(clist.begin(), clist.end());
+    reverse = !reverse;
   }
-  else
-  {
-    glBegin(GL_LINES);
-    for (int i = clist.size()-1; i >= 0; i--)
-    {
-      glArrayElement(clist[i]);
-    }
-    glEnd();
-  }
+
+  glDrawElements(GL_LINES, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
 
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_COLOR_ARRAY);

@@ -120,6 +120,9 @@ protected:
   vector<unsigned int> xindices_;
   vector<unsigned int> yindices_;
   vector<unsigned int> zindices_;
+  bool xreverse_;
+  bool yreverse_;
+  bool zreverse_;
 
 public:
   GeomTranspLines();

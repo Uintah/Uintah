@@ -297,12 +297,21 @@ PersistentTypeID GeomTranspLines::type_id("GeomTranspLines", "GeomCLines",
 					  make_GeomTranspLines);
 
 GeomTranspLines::GeomTranspLines()
-  : GeomCLines()
+  : GeomCLines(),
+    xreverse_(false),
+    yreverse_(false),
+    zreverse_(false)
 {
 }
 
 GeomTranspLines::GeomTranspLines(const GeomTranspLines& copy)
-  : GeomCLines(copy)
+  : GeomCLines(copy),
+    xindices_(copy.xindices_),
+    yindices_(copy.yindices_),
+    zindices_(copy.zindices_),
+    xreverse_(copy.xreverse_),
+    yreverse_(copy.yreverse_),
+    zreverse_(copy.zreverse_)
 {
 }
 
@@ -348,6 +357,10 @@ GeomTranspLines::sort()
 {
   const unsigned int vsize = points_.size() / 6;
   if (xindices_.size() == vsize*2) return;
+  
+  xreverse_ = false;
+  yreverse_ = false;
+  zreverse_ = false;
 
   vector<pair<float, unsigned int> > tmp(vsize);
   unsigned int i;
