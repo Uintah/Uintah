@@ -1072,8 +1072,7 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
 
     // Get the plastic strain
     d_plastic->getInternalVars(pset, old_dw);
-    d_plastic->allocateAndPutInternalVars(pset, new_dw);
-    //    d_plastic->initializeInternalVars(pset, new_dw);
+    d_plastic->allocateAndPutRigid(pset, new_dw);
 
     double rho_orig = matl->getInitialDensity();
 

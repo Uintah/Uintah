@@ -136,6 +136,20 @@ IsoHardeningPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
 }
 
 void
+IsoHardeningPlastic::allocateAndPutRigid(ParticleSubset* pset,
+                                         DataWarehouse* new_dw)
+{
+  new_dw->allocateAndPut(pAlpha_new, pAlphaLabel_preReloc, pset);
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
+  // Initializing to zero for the sake of RigidMPM's carryForward
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++){
+     pPlasticStrain_new[*iter] = 0.0;
+     pAlpha_new[*iter] = 0.0;
+  }
+}
+
+void
 IsoHardeningPlastic::updateElastic(const particleIndex idx)
 {
   pAlpha_new[idx] = pAlpha[idx];
