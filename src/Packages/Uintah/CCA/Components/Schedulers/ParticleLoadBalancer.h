@@ -45,7 +45,7 @@ namespace Uintah {
     virtual int getOldProcessorAssignment(const VarLabel* var,
 					  const Patch* patch, const int matl);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
-
+    virtual bool isDynamic() { return d_dynamicAlgorithm != static_lb; }
     // maintain lb state and call one of the assignPatches functions
     virtual void dynamicReallocation(const GridP& grid, const SchedulerP& sch);
     virtual void restartInitialize(ProblemSpecP& pspec, XMLURL tsurl);
