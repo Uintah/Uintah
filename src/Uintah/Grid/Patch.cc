@@ -51,6 +51,21 @@ Patch::~Patch()
 {
 }
 
+int Patch::findClosestNode(const Point& pos, IntVector& idx) const
+{
+  int p[3];
+  idx = d_level->getCellIndex(pos);
+  Point cellP = d_level->getCellPosition(idx);
+  for(int i=0;i<3;++i) {
+    if( pos(i)>cellP(i) ) {
+      idx[i]++;
+      p[i] = 1;
+    }
+    else p[i] = 0;
+  }
+  return p[0]+p[1]*2+p[2]*4;
+}
+
 bool Patch::findCell(const Point& pos, IntVector& ci) const
 {
    ci = d_level->getCellIndex(pos);
@@ -777,6 +792,9 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 
 //
 // $Log$
+// Revision 1.33  2001/01/15 22:14:56  tan
+// Added a function to findClosestNode for a given point.
+//
 // Revision 1.32  2000/12/22 00:10:30  jas
 // Got rid of the X,Y,Z FCVariable and friends.
 //

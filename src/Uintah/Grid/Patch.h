@@ -92,6 +92,10 @@ WARNING
        // This will need to change for stretched grids
        return d_level->dCell();
      }
+
+     //////////
+     // Find the closest node index to a point
+     int findClosestNode(const Point& pos, IntVector& idx) const;
      
      //////////
      // Find the index of a cell contaning the given Point. 
@@ -332,6 +336,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.29  2001/01/15 22:14:36  tan
+// Added a function to findClosestNode for a given point.
+//
 // Revision 1.28  2001/01/04 00:12:09  jas
 // Return an IntVector(0,0,0) for NFaces().  This is only used in FaceIterator.
 //
