@@ -59,7 +59,7 @@
 #   The version number of this .scirunrc file.
 #   Used in determining if the users existing.scirunrc 
 #   needs to be updated upon starup of SCIRun.
-SCIRUN_RCFILE_VERSION = 1.24.0
+SCIRUN_RCFILE_VERSION = 1.24.0.1
 
 
 # The MALLOC_* environment variables can be set in order to help
@@ -125,7 +125,7 @@ SCIRUN_RCFILE_VERSION = 1.24.0
 
 ### SCIRUN_DATA = [path]
 #   Directory location that 'Reader' modules will default to.
-# SCIRUN_DATA = /usr/sci/data/SCIRunData/1.20.1
+# SCIRUN_DATA = /usr/sci/data/SCIRunData/$(SCIRUN_VERISON)
 
 
 ### SCIRUN_DATASET = [name]

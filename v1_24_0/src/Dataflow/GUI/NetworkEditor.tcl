@@ -1620,7 +1620,7 @@ proc promptUserToCopySCIRunrc {} {
     wm withdraw $w
     set copyResult 0
     set dontAskAgain 0
-    set version [netedit getenv SCIRUN_VERSION]
+    set version [netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]
     wm title $w "Copy v$version .scirunrc file?"
     label $w.message -text "A newer version of your ~/.scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?\n\n" -justify left
     frame $w.but
@@ -1634,7 +1634,7 @@ proc promptUserToCopySCIRunrc {} {
     vwait copyResult
     if { $dontAskAgain && !$copyResult } {
 	if [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] return
-	puts $rcfile "\n\# This next variable was added when the user chose 'Dont Ask This Question Again'"
+	puts $rcfile "\n\# This section added when the user chose 'Dont Ask This Question Again'"
 	puts $rcfile "\# when prompted about updating the .scirurc file version"
 	puts $rcfile "SCIRUN_RCFILE_VERSION=${version}"
 	close $rcfile
