@@ -1282,7 +1282,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
   /**/
 
   /* PLANE STRESS + ALL COMPONENTS
-  while (tau(3,3) > 1.0e-10*bulk) {
+  while (tau(2,2) > 1.0e-10*bulk) {
 
     // Calculate dtaudF
     dtau_33_dF(F, J, dTdF);
@@ -1290,7 +1290,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     // Calculate updated F_ij
     for (int ii = 0; ii < 3; ++ii) {
       for (int jj = 0; jj < 3; ++jj) {
-        F(ii+1,jj+1) = -tau(3,3)/dTdF(ii+1,jj+1) + F(ii+1,jj+1);
+        F(ii,jj) = -tau(2,2)/dTdF(ii,jj) + F(ii,jj);
       }
     }
 
@@ -1333,7 +1333,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
   double sig33m = 0.0; // Cauchy stress
   double slope = 0;
 
-  // Initial guess for F(3,3), delta
+  // Initial guess for F(2,2), delta
   double delta = 1.0;
   double epsilon = 1.e-14;
   F(2,2) = 1.0/(F(0,0)*F(1,1));
@@ -1380,7 +1380,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     sm = (bm - One*(bm.Trace()/3.0))*(shear/Jm);
     sig33m = pm + sm(2,2);
 
-    // Calculate slope and increment F(3,3)
+    // Calculate slope and increment F(2,2)
     slope = (Fp(2,2)-Fm(2,2))/(sig33p-sig33m);
     delta = -sig(2,2)*slope;
     F(2,2) += delta;
@@ -1420,9 +1420,9 @@ ShellMaterial::dtau_33_dF(const Matrix3& F, double J, Matrix3& dTdF)
   double K = d_initialData.Bulk; double mu = d_initialData.Shear;
   double KJ = K*J; double muJ23 = twothird*mu/J23; double muJ53 = mu/J53;
 
-  double F11 = F(1,1); double F12 = F(1,2); double F13 = F(1,3);
-  double F21 = F(2,1); double F22 = F(2,2); double F23 = F(2,3);
-  double F31 = F(3,1); double F32 = F(3,2); double F33 = F(3,3);
+  double F11 = F(0,0); double F12 = F(0,1); double F13 = F(0,2);
+  double F21 = F(1,0); double F22 = F(1,1); double F23 = F(1,2);
+  double F31 = F(2,0); double F32 = F(2,1); double F33 = F(2,2);
 
   double F11Sq = F11*F11; double F12Sq = F12*F12; double F13Sq = F13*F13; 
   double F21Sq = F21*F21; double F22Sq = F22*F22; double F23Sq = F23*F23; 
@@ -1445,27 +1445,27 @@ ShellMaterial::dtau_33_dF(const Matrix3& F, double J, Matrix3& dTdF)
   double F1123 = F11*F23; double F2113 = F21*F13;
 
   // dTdF11
-  dTdF(1,1) = KJ*(F2233-F2332) - twothird*muJ23*F11 +
+  dTdF(0,0) = KJ*(F2233-F2332) - twothird*muJ23*F11 +
               (twonine*F11*(-F12*F3123-F13*F2132+F22*F3113+F33*F1221)
                +(F2233-F2332)*SS_1)*muJ53;
   // dTdF12
-  dTdF(1,2) = KJ*(-F2133+F3123) - muJ23*F12 + (F3123-F2133)*SS*muJ53;
+  dTdF(0,1) = KJ*(-F2133+F3123) - muJ23*F12 + (F3123-F2133)*SS*muJ53;
   // dTdF13
-  dTdF(1,3) = KJ*(F2132-F3122) - muJ23*F13 + (-F3122+F2132)*SS*muJ53;
+  dTdF(0,2) = KJ*(F2132-F3122) - muJ23*F13 + (-F3122+F2132)*SS*muJ53;
   // dTdF21
-  dTdF(2,1) = KJ*(-F1233+F1332) - muJ23*F21 + (-F1233+F1332)*SS*muJ53;
+  dTdF(1,0) = KJ*(-F1233+F1332) - muJ23*F21 + (-F1233+F1332)*SS*muJ53;
   // dTdF22
-  dTdF(2,2) = KJ*(F1133-F3113) - twothird*muJ23*F22 +
+  dTdF(1,1) = KJ*(F1133-F3113) - twothird*muJ23*F22 +
               (twonine*F22*(F33*F1221-F13*F2132-F12*F3123+F11*F2332)
               +(-F3113+F1133)*SS_2)*muJ53;
   // dTdF23
-  dTdF(2,3) = KJ*(-F1132+F3112) - muJ23*F23 + (F3112-F1132)*SS*muJ53;
+  dTdF(1,2) = KJ*(-F1132+F3112) - muJ23*F23 + (F3112-F1132)*SS*muJ53;
   // dTdF31
-  dTdF(3,1) = KJ*(F1223-F1322) + 2.0*muJ23*F31 + (F1223-F1322)*SS*muJ53;
+  dTdF(2,0) = KJ*(F1223-F1322) + 2.0*muJ23*F31 + (F1223-F1322)*SS*muJ53;
   // dTdF32
-  dTdF(3,2) = KJ*(-F1123+F2113)+ 2.0*muJ23*F32 + (-F1123+F2113)*SS*muJ53;
+  dTdF(2,1) = KJ*(-F1123+F2113)+ 2.0*muJ23*F32 + (-F1123+F2113)*SS*muJ53;
   // dTdF33
-  dTdF(3,3) = KJ*(F1122-F1221) + 2.0*twothird*muJ23*F33 +
+  dTdF(2,2) = KJ*(F1122-F1221) + 2.0*twothird*muJ23*F33 +
              (fournine*F33*(-F22*F3113+F13*F2132+F12*F3123-F11*F2332)+
               (F1122-F1221)*SS_3)*muJ53;
 }
