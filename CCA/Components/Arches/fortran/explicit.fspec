@@ -1,4 +1,4 @@
-void explicit(IntVector idxLo, IntVector idxHi,
+void explicit_func(IntVector idxLo, IntVector idxHi,
 	CCVariable<double> phi, CCVariable<double> old_phi,
 	CCVariable<double> ae, CCVariable<double> aw,
 	CCVariable<double> an, CCVariable<double> as,
