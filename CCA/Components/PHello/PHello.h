@@ -42,7 +42,7 @@
 #define SCIRun_CCA_Components_PHello_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-
+#include <mpi.h>
 namespace SCIRun {
   
   class myUIPort : public virtual sci::cca::ports::UIPort {
@@ -65,8 +65,9 @@ namespace SCIRun {
     PHello();
     ~PHello();
     void setServices(const sci::cca::Services::pointer& svc);
+    void setCommunicator(int comm);
+    MPI_Comm MPI_COMM_COM;
   private:
-    
     PHello(const PHello&);
     PHello& operator=(const PHello&);
     sci::cca::Services::pointer services;
