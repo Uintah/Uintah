@@ -264,6 +264,12 @@ namespace Uintah {
       // computed for new_dw in Smagorinsky Model
 
       const VarLabel* d_scalarVarSPLabel;
+      // required for flamelet model
+      const VarLabel* d_scalarDissINLabel;
+
+      // computed for new_dw in Smagorinsky Model fir flamelet
+
+      const VarLabel* d_scalarDissSPLabel;
 
       // Scalar Coef
 

@@ -203,6 +203,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // the same subroutine can be used to solve multiple scalarVars
       d_turbModel->sched_computeScalarVariance(sched, patches, matls);
     }
+    d_turbModel->sched_computeScalarDissipation(sched, patches, matls);
   }
 
   if (d_enthalpySolve)
