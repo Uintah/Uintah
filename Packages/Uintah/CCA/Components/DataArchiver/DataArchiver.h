@@ -8,8 +8,6 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
 
-class DOMDocument;
-
 namespace Uintah {
 
 using std::string;
@@ -164,7 +162,8 @@ using std::pair;
       };
 
    private:
-      DOMDocument* loadDocument(std::string xmlName);     
+      // returns a ProblemSpecP that you need to call releaseDocument on
+      ProblemSpecP loadDocument(std::string xmlName);     
 
       void initSaveLabels(SchedulerP& sched);
       void initCheckpoints(SchedulerP& sched);
@@ -185,7 +184,7 @@ using std::pair;
       void createIndexXML(Dir& dir);
 
       // helpers for restartSetup
-      void addRestartStamp(DOMDocument* indexDoc, Dir& fromDir,
+      void addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 			   int timestep);
 
       void copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
