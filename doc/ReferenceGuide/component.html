@@ -98,6 +98,8 @@ This section introduces the component specification document.  You should
 have already read <A NAME="tex2html2"
   HREF="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/specProcedure.html"><I>Module Design/Implementation Procedure</I></A>
 <P>
+A postscript verison of this document can be found, relative to the top
+  of your SCIRun CVS tree, in <TT>doc/ReferenceGuide/component.ps</TT>.
 
 <H2><A NAME="SECTION00021000000000000000"></A>
 <A NAME="Purpose"></A>
@@ -111,19 +113,21 @@ design and implementation of a component.
 
 <P>
 The XML component specification documents the use, design,
-implementation, and testing of a SCIRun component.  It also serves as data for
-applications and databases.  For example:
+implementation, and testing of a SCIRun component.  
+
+<P>
+It also serves as data for applications and databases.  For example:
 
 <P>
 
 <UL>
-<LI>Documention (html and pdf forms) for component users and developers
+<LI>Documentation (html and pdf forms) for component users and developers
   will be generated from the component specification.
 
 <P>
 </LI>
 <LI>The collection of all component specifications will be part of a
-  searchable database.
+  search-able database.
 
 <P>
 </LI>
@@ -137,13 +141,13 @@ applications and databases.  For example:
 </UL>
 
 <P>
-Component specifications are written in a special markup language.  This
-language (call it the component specification markup language if you
-like) is in turn formulated using the <I>eXtensible Markup Language</I>
+Component specifications are written in a special mark-up language.  This
+language (call it the component specification mark-up language if you
+like) is in turn formulated using the <I>eXtensible Mark-up Language</I>
 (XML).
 
 <P>
-<I>Note: Components that are not accomponied by a valid and complete
+<I>Note: Components that are not accompanied by a valid and complete
   specification document will not be incorporated into official
   releases of the PSE software.</I>
 
@@ -179,11 +183,11 @@ the following goals:
 </DL>
 
 <P>
-The component specification markup language is similar in concept to HTML but
+The component specification mark-up language is similar in concept to HTML but
 has a different (and much smaller) set of tags and a simpler and more
 regular set of document composition rules.
 Section&nbsp;<A HREF="component.html#Rules__Structure__and_Content"><I>Rules, Structure, and Content</I></A> describes
-the component specification markup language in detail.
+the component specification mark-up language in detail.
 
 <P>
 
@@ -199,7 +203,7 @@ element attributes), and the way they must be used in order to produce a
 valid XML document.
 
 <P>
-The component specification's DTD can be found here (relative to the top
+The component specification DTD can be found here (relative to the top
 of your cvs tree):
 
 <P>
@@ -227,7 +231,7 @@ Rules, Structure, and Content
 </H1>
 
 <P>
-This section describes the component specification markup language in
+This section describes the component specification mark-up language in
 detail.
 
 <P>
@@ -274,7 +278,7 @@ where <TT>&lt;top-of-cvs-tree&gt;</TT> is the path to the top of your SCIRun CVS
 </LI>
 <LI>Every element must be delimited with a start-tag and an end-tag.
   Tags are enclosed in angle brackets.  This means you may not use the
-  literal form of the characters <TT>&lt;</TT> and <TT>&gt;</TT> in your
+  literal forms of the characters <TT>&lt;</TT> and <TT>&gt;</TT> in your
   elements' content.  Instead you must type <TT>&amp;lt;</TT> and
   <TT>&amp;gt;</TT> respectively.
 
@@ -351,7 +355,7 @@ element, which is used in several contexts, is not described in detail here
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;summary&gt;</TT></STRONG></DT>
-<DD>Short (1 or 2 sentance) summary of component's function.
+<DD>Short (1 or 2 sentence) summary of component's function.
       
 </DD>
 <DT><STRONG><TT>&lt;/summary&gt;</TT></STRONG></DT>
@@ -387,7 +391,7 @@ element, which is used in several contexts, is not described in detail here
     &lt;<TT>inputs</TT>&gt; followed by &lt;<TT>outputs</TT>&gt;.
     <DL>
 <DT><STRONG><TT>&lt;inputs&gt;</TT></STRONG></DT>
-<DD>Describes the components's inputs. Inputs may
+<DD>Describes the component's inputs. Inputs may
       come from a port, a file, or a device.  Zero or more &lt;<TT>port</TT>&gt;
       elements are used to describe inputs from ports.  Zero or more
       &lt;<TT>file</TT>&gt; elements are used to describe inputs from files.  Zero
@@ -397,7 +401,7 @@ element, which is used in several contexts, is not described in detail here
       <DL>
 <DT><STRONG><TT>&lt;port&gt;</TT></STRONG></DT>
 <DD>States that input data comes from a port. 
-        Subelements describe the data further.
+        Sub-elements describe the data further.
         <DL>
 <DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the data 
@@ -409,8 +413,8 @@ element, which is used in several contexts, is not described in detail here
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
-<DD>The name of a PSE datatype, i.e. the 
-          datatype that is being transmitted on this port.
+<DD>The name of a PSE data type, i.e. the 
+          data type that is being transmitted on this port.
           
 </DD>
 <DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
@@ -433,7 +437,7 @@ element, which is used in several contexts, is not described in detail here
 </DD>
 <DT><STRONG><TT>&lt;file&gt;</TT></STRONG></DT>
 <DD>States that input comes from a file.
-        Subelements describe the data further.
+        Sub-elements describe the data further.
         <DL>
 <DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the data 
@@ -445,8 +449,8 @@ element, which is used in several contexts, is not described in detail here
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
-<DD>The name of a PSE datatype, i.e. the 
-          datatype being read from the file.  <I>Note: Only PSE datatypes
+<DD>The name of a PSE data type, i.e. the 
+          data type being read from the file.  <I>Note: Only PSE data types
             may be read from files - no custom formats allowed!</I>
           
 </DD>
@@ -461,7 +465,7 @@ element, which is used in several contexts, is not described in detail here
 </DD>
 <DT><STRONG><TT>&lt;device&gt;</TT></STRONG></DT>
 <DD>States that input comes from a device.
-        Subelements describe the data further.
+        Sub-elements describe the data further.
         <DL>
 <DT><STRONG><TT>&lt;devicename&gt;</TT></STRONG></DT>
 <DD>Device's name.
@@ -498,7 +502,7 @@ element, which is used in several contexts, is not described in detail here
       &lt;<TT>device</TT>&gt; elements to describe outputs to devices.
       <DL>
 <DT><STRONG><TT>&lt;port&gt;</TT></STRONG></DT>
-<DD>States that output is sent a port. Subelements describe the data further.
+<DD>States that output is sent a port. Sub-elements describe the data further.
         <DL>
 <DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>A high level description of the data
@@ -510,8 +514,8 @@ element, which is used in several contexts, is not described in detail here
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
-<DD>The name of a PSE datatype, i.e. the 
-          datatype that is being transmitted on this port.
+<DD>The name of a PSE data type, i.e. the 
+          data type that is being transmitted on this port.
           
 </DD>
 <DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
@@ -534,7 +538,7 @@ element, which is used in several contexts, is not described in detail here
 </DD>
 <DT><STRONG><TT>&lt;file&gt;</TT></STRONG></DT>
 <DD>States that output is sent to a file.  It's 
-        subelements describe the outputs.
+        sub-elements describe the outputs.
         <DL>
 <DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>A high level description of the data 
@@ -546,8 +550,8 @@ element, which is used in several contexts, is not described in detail here
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
-<DD>The name of a PSE datatype, i.e. the 
-          datatype being written to the file.
+<DD>The name of a PSE data type, i.e. the 
+          data type being written to the file.
           
 </DD>
 <DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
@@ -561,7 +565,7 @@ element, which is used in several contexts, is not described in detail here
 </DD>
 <DT><STRONG><TT>&lt;device&gt;</TT></STRONG></DT>
 <DD>States that output goes to a device.
-        Subelements describe the output further.
+        Sub-elements describe the output further.
         <DL>
 <DT><STRONG><TT>&lt;devicename&gt;</TT></STRONG></DT>
 <DD>Device's name.
@@ -598,7 +602,7 @@ element, which is used in several contexts, is not described in detail here
 </DD>
 <DT><STRONG><TT>&lt;gui&gt;</TT></STRONG></DT>
 <DD>States that the component supports a GUI.
-  Subelements describe the GUI.
+  Sub-elements describe the GUI.
   <DL>
 <DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>Describes the purpose of the GUI, e.g.
@@ -610,7 +614,7 @@ element, which is used in several contexts, is not described in detail here
 </DD>
 <DT><STRONG><TT>&lt;parameter&gt;</TT></STRONG></DT>
 <DD>Declares 1 GUI  parameter.  A parameter is a
-    GUI  item that can be modified by the user.  Subelements describe the
+    GUI  item that can be modified by the user.  Sub-elements describe the
     parameter.  Use 1 parameter element for each item in the GUI.
     <DL>
 <DT><STRONG><TT>&lt;widget&gt;</TT></STRONG></DT>
@@ -655,11 +659,11 @@ element, which is used in several contexts, is not described in detail here
 <DD>
 </DD>
 <DT><STRONG><TT>&lt;testing&gt;</TT></STRONG></DT>
-<DD>Starts the testing section.  Subelements specify
+<DD>Starts the testing section.  Sub-elements specify
   1 or more testing plans.
   <DL>
 <DT><STRONG><TT>&lt;plan&gt;</TT></STRONG></DT>
-<DD>Declares 1 testing plan.  Subelements specify the
+<DD>Declares 1 testing plan.  Sub-elements specify the
     testing plan's details.
     <DL>
 <DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
@@ -722,8 +726,8 @@ It allows you to organize your text into paragraphs, lists, and
 other structured content.
 
 <P>
-Note that the literal form of the characters &lt;, &gt;, and &amp; may not be
-used (this is an XML thing).  Instead you must type <TT>&amp;lt;</TT>,
+Note that the literal forms of the characters &lt;, &gt;, and &amp; may not be
+used in element content.  Instead you must type <TT>&amp;lt;</TT>,
 <TT>&amp;gt;</TT>, and <TT>&amp;amp;</TT> respectively.
 
 <P>
@@ -782,7 +786,7 @@ or &lt;<TT>slink</TT>&gt; elements:
 
 <P>
 The &lt;<TT>cite</TT>&gt; element marks text as the title of a paper or
-book (but is not itself a hyperlink).
+book (but is not itself a hyper-link).
 
 <P>
 The &lt;<TT>slink</TT>&gt; and &lt;<TT>rlink</TT>&gt; elements allow you to reference
@@ -883,7 +887,7 @@ shown by indentation.
 </DD>
 <DT><STRONG><TT>&lt;cite&gt;</TT></STRONG></DT>
 <DD>Encloses a reference to a paper or other
-      publication.  Is not itself a hyperlink but it may be used within the
+      publication.  Is not itself a hyper-link but it may be used within the
       &lt;<TT>slink</TT>&gt; and &lt;<TT>rlink</TT>&gt; elements.
       
 </DD>
@@ -1198,13 +1202,13 @@ To start a new component specification with [x]emacs do this:
   Replace <TT>&lt;top-of-cvs-tree&gt;</TT> with the path to the top of your SCIRun   CVS tree.
 </LI>
 <LI>Select the <B>Parse DTD</B> item from the <B>DTD</B> menu
-  which can be found in the window's main menu bar.  Or type <TT>C-c
+  which can be found in the window's main menu bar, or type <TT>C-c
     C-p</TT>.
 </LI>
-<LI>Insert the top level &lt;<TT>component</TT>&gt; element using [x]emacs popup
+<LI>Insert the top level &lt;<TT>component</TT>&gt; element using [x]emacs pop-up
   menu (shift-button1 or shift-button3 for emacs and button3 for xemacs):
   Position the cursor at the end of the file and select the item named
-  <B>component</B> from the popup menu.  After doing this you will be
+  <B>component</B> from the pop-up menu.  After doing this you will be
   prompted for the &lt;<TT>component</TT>&gt; element's <TT>name</TT>,
   <TT>package</TT>, and <TT>category</TT> attributes.
   attribute.  After typing in each of the attributes [X]Emacs 
@@ -1215,32 +1219,40 @@ To start a new component specification with [x]emacs do this:
   Refer to section&nbsp;<A HREF="component.html#Rules__Structure__and_Content"><I>Rules, Structure, and Content</I></A> if you have question about the
   content of any elements.
 </LI>
-<LI>Some elements, like the &lt;<TT>description</TT>&gt; element, are composed of
-  subelements.  To add subelements, position the cursor between the start
-  and end tags of the element and then insert an element using [x]emacs 
-  popup menu.  The popup menu will list elements that are valid at the
-  insertion point.
-</LI>
 <LI>The &lt;<TT>gui</TT>&gt; element is not automatically inserted by [x]emacs 
   because a gui is optional.  Most components will support a gui though so
   you will probably need to insert the &lt;<TT>gui</TT>&gt; element.  Do this by
   positioning the cursor after the end tag of the &lt;<TT>io</TT>&gt; element.
-  Then select the &lt;<TT>gui</TT>&gt; element from [x]emacs popup menu.  [X]Emacs 
-  will insert the &lt;<TT>gui</TT>&gt; and its required subelements.
-</LI>
-<LI>A few elements (namely &lt;<TT>slink</TT>&gt; and &lt;<TT>rlink</TT>&gt;)
-  elements take attributes.  If these elements are added via [x]emacs popup
-  menu then [x]emacs will prompt you for the element's attribute values.  If
-  these element's are added manually then you may add the attributes via the
-  popup menu: position the cursor anywhere within the element's start tag
-  and select the desired attribute from the popup menu's list of
-  attributes.  [X]Emacs will prompt you for the value of the attribute and
-  insert it in the element's start tag.
+  Then select the &lt;<TT>gui</TT>&gt; element from [x]emacs pop-up menu.  [X]Emacs 
+  will insert the &lt;<TT>gui</TT>&gt; and its required sub-elements.
 </LI>
 <LI>Complete the component specification by adding content, elements, and
   attributes.
 </LI>
 </OL>
+
+<P>
+Note:
+
+<P>
+
+<UL>
+<LI>Most elements (like the &lt;<TT>description</TT>&gt; element) are composed of
+  sub-elements.  To add sub-elements, position the cursor between the start
+  and end tags of the element and then insert an element using [x]emacs 
+  pop-up menu.  The pop-up menu will list elements that are valid at the
+  insertion point.
+</LI>
+<LI>A few elements (namely &lt;<TT>slink</TT>&gt; and &lt;<TT>rlink</TT>&gt;)
+  elements take attributes.  If these elements are added via [x]emacs pop-up
+  menu then [x]emacs will prompt you for the element's attribute values.  If
+  these element's are added manually then you may add the attributes via the
+  pop-up menu: position the cursor anywhere within the element's start tag
+  and select the desired attribute from the pop-up menu's list of
+  attributes.  [X]Emacs will prompt you for the value of the attribute and
+  insert it in the element's start tag.
+</LI>
+</UL>
 
 <P>
 
@@ -1271,7 +1283,7 @@ preamble section to the following:
 
 <P>
 This change will break emacs' XML mode though so be sure to revert
-to the orginal before using emacs.
+to the original before using emacs.
 
 <P>
 
