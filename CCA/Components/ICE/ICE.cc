@@ -276,6 +276,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     solver_parameters->setSolveOnExtraCells(false);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
     impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
+    impSolver->getWithDefault("iters_before_timestep_restart",    
+                               d_iters_before_timestep_restart, 5);
     d_impICE = true; 
   }
     
@@ -1395,7 +1397,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       }  // ice_matl
     }  // matl loop   
 //    cout << "delT based on conduction "<< delt_cond<<endl;
-    
+
     delt = std::min(delt_CFL, delt_cond);
     delt = std::min(delt, d_initialDt);
     d_initialDt = 10000.0;

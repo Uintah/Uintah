@@ -548,6 +548,7 @@ using namespace SCIRun;
       int d_dbgVar2;
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
+      int d_iters_before_timestep_restart;
       double d_outer_iter_tolerance;
       
       // ADD HEAT VARIABLES
