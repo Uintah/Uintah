@@ -106,7 +106,7 @@
       <!--______________BOTTOM____________-->
             
       <!--  fuel jet -->
-      <Face circle = "y-" origin = "0.0 -0.1 0.0" radius = ".05">
+      <Face annulus = "y-" origin = "0.0 -0.1 0.0" inner_radius = ".015" outer_radius = ".035">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
@@ -142,7 +142,7 @@
                               <value> 0.0   </value>
         </BCType>
         <BCType id = "4" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,1.0,0.] </value>
+                              <value> [0.,2.0,0.] </value>
         </BCType>
         <BCType id = "4" label = "Temperature"  var = "Dirichlet">
                               <value> 298.0  </value>
@@ -255,7 +255,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>CH4_2D_soupToNuts.uda</filebase>
+      <filebase>CH4_2D_annulus.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
       <compression>gzip</compression>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
