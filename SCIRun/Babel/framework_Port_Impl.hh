@@ -3,15 +3,15 @@
 // Symbol:        framework.Port-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030403 18:32:11 MST
-// Generated:     20030403 18:32:13 MST
+// SIDL Created:  20030405 01:08:34 MST
+// Generated:     20030405 01:08:37 MST
 // Description:   Server-side implementation for framework.Port
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 14
-// source-url    = file:/home/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_Port_Impl_hh

@@ -192,8 +192,7 @@ bool BabelComponentModel::haveComponent(const std::string& type)
 }
 
 ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
-						       const std::string& type,
-						       const sci::cca::Loader::pointer &loader)
+						       const std::string& type)
 {
   
   gov::cca::Component component;
