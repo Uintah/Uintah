@@ -202,8 +202,11 @@ main(int argc, char *argv[] )
       cout << SRCTOP << "/.scirunrc" << endl;
   }
 
-  if (!foundrc)
-    cout << "not found" << endl;
+  if( !foundrc )
+    {
+      cout << "not found.  (Note: This is not an error, though you\n"
+	   << "might consider putting a .scirunrc file in your home dir.)\n";
+    }
 
   // wait for the main window to display before continuing the startup.
   gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
@@ -216,7 +219,7 @@ main(int argc, char *argv[] )
 
   if (startnetno)
   {
-    string command = string("if {[catch {source ") + argv[startnetno] + "}]} { handle_bad_startnet " + argv[startnetno] + "}";
+    string command = string( "loadnet " ) + argv[startnetno];
     gui->eval(command.c_str(), result);
   }
 
