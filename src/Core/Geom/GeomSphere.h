@@ -32,8 +32,8 @@
 #define SCI_Geom_Sphere_h 1
 
 #include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
 
 namespace SCIRun {
 
@@ -68,6 +68,41 @@ public:
   // This is a helper function which determins the nu and nv given an
   // approximate number of polygons desired.
   static void getnunv(const int num_polygons, int &nu, int &nv);
+};
+
+
+class SCICORESHARE GeomSpheres : public GeomObj {
+private:
+  vector<Point> centers_;
+  vector<double> radii_;
+  vector<unsigned char> colors_;
+  vector<float> indices_;
+  int nu_;
+  int nv_;
+  double global_radius_;
+  
+public:
+
+  GeomSpheres(double radius = 1.0, int nu=8, int nv=8);
+  GeomSpheres(const GeomSpheres &copy);
+  virtual ~GeomSpheres();
+  
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+  
+  void add(const Point &center);
+  void add(const Point &center, const MaterialHandle &mat);
+  void add(const Point &center, float index);
+  void add_radius(const Point &cen, double radius);
+  void add_radius(const Point &cen, double radius, const MaterialHandle &mat);
+  void add_radius(const Point &cen, double radius, float index);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 };
 
 } // End namespace SCIRun

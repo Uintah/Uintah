@@ -57,21 +57,6 @@ RenderFieldBase::get_compile_info(const TypeDescription *ftd,
 
 
 void 
-RenderFieldBase::add_sphere(const Point &p0, double scale,
-			    int resolution,
-			    GeomGroup *g, MaterialHandle mh)
-{
-  if (scale > 0.0)
-  {
-    GeomSphere *s = scinew GeomSphere(p0, scale, resolution, resolution);
-    if (mh.get_rep()) { g->add(scinew GeomMaterial(s, mh)); }
-    else { g->add(s); }
-  }
-}
-
-
-
-void 
 RenderFieldBase::add_disk(const Point &p, const Vector &vin,
 			  double scale, int resolution,
 			  GeomGroup *g, MaterialHandle mh)
@@ -404,24 +389,6 @@ RenderScalarFieldBase::get_compile_info(const TypeDescription *vftd,
   vftd->fill_compile_info(rval);
   cftd->fill_compile_info(rval);
   return rval;
-}
-
-void
-RenderScalarFieldBase::add_sphere(const Point &p, double scale, int resolution,
-				  GeomGroup *g, GeomPoints *points,
-				  MaterialHandle color)
-{
-  if (scale > 1.0e-12)
-  {
-    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-    if (color.get_rep()) { g->add(scinew GeomMaterial(s, color)); }
-    else { g->add(s); }
-  }
-  else if (points)
-  {
-    if (color.get_rep()) { points->add(p, color); }
-    else { points->add(p); }
-  }
 }
 
 } // end namespace SCIRun

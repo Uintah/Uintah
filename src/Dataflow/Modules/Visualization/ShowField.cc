@@ -754,7 +754,12 @@ ShowField::execute()
 							   sdt, sscale,
 							   data_resolution_,
 							   transp);
-      data_id_ = ogeom_->addObj(data, fname + (transp?"Transparent Scalars":"Scalars"));
+
+      GeomHandle gmat =
+	scinew GeomMaterial(data, def_material_);
+      GeomHandle geom =
+	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      data_id_ = ogeom_->addObj(geom, fname + (transp?"Transparent Scalars":"Scalars"));
     }
   }
   if (do_text) {
