@@ -59,14 +59,15 @@ WARNING
 	 
       public:
 	 // constructor
-	 CompMooneyRivlin(const Region* region,
-			  const MPMMaterial* matl);
-	 
-	 // constructor
 	 CompMooneyRivlin(ProblemSpecP& ps);
 	 
 	 // destructor 
 	 virtual ~CompMooneyRivlin();
+	 
+	 // compute stable timestep for this region
+	 virtual void computeStableTimestep(const Region* region,
+					    const MPMMaterial* matl,
+					    DataWarehouseP& new_dw);
 	 
 	 // compute stress at each particle in the region
 	 virtual void computeStressTensor(const Region* region,
@@ -111,6 +112,9 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.14  2000/05/02 06:07:11  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.13  2000/04/27 23:18:43  sparker
 // Added problem initialization for MPM
 //

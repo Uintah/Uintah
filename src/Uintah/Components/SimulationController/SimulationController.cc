@@ -23,6 +23,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Parallel/ProcessorContext.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -124,7 +125,7 @@ void SimulationController::run()
    while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
 
-      ReductionVariable<double> delt_var;
+      delt_vartype delt_var;
       old_ds->get(delt_var, sharedState->get_delt_label());
       double delt = delt_var;
 
@@ -363,6 +364,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.12  2000/05/02 06:07:18  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.11  2000/04/26 06:48:36  sparker
 // Streamlined namespaces
 //

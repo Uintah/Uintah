@@ -41,6 +41,13 @@ WARNING
       
       virtual ~NCVariableBase();
       
+      virtual void copyPointer(const NCVariableBase&) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual NCVariableBase* clone() const = 0;
+
+      virtual void allocate(const Region*) = 0;
    protected:
       NCVariableBase(const NCVariableBase&);
       NCVariableBase();
@@ -53,6 +60,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/05/02 06:07:22  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.2  2000/04/26 06:48:50  sparker
 // Streamlined namespaces
 //

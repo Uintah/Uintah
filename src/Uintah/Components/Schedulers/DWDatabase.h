@@ -5,6 +5,7 @@
 #include <vector>
 #include <SCICore/Exceptions/InternalError.h>
 #include <Uintah/Exceptions/UnknownVariable.h>
+#include <Uintah/Grid/VarLabel.h>
 
 namespace Uintah {
    using SCICore::Exceptions::InternalError;
@@ -67,7 +68,7 @@ private:
       ~NameRecord();
    };
 
-   typedef std::map<const VarLabel*, NameRecord*> nameDBtype;
+   typedef std::map<const VarLabel*, NameRecord*, VarLabel::Compare> nameDBtype;
    nameDBtype names;
 
    DWDatabase(const DWDatabase&);
@@ -212,6 +213,9 @@ void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 
 //
 // $Log$
+// Revision 1.4  2000/05/02 06:07:16  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.3  2000/05/01 16:18:16  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data

@@ -47,8 +47,12 @@ WARNING
       // Insert Documentation Here:
       static const TypeDescription* getTypeDescription();
       
-      virtual NCVariable<T>* clone() const;
+      virtual void copyPointer(const NCVariableBase&);
       
+      //////////
+      // Insert Documentation Here:
+      virtual NCVariable<T>* clone() const;
+
       //////////
       // Insert Documentation Here:
       virtual void allocate(const Region*);
@@ -79,6 +83,16 @@ WARNING
       }
    
    template<class T>
+      void
+      NCVariable<T>::copyPointer(const NCVariableBase& copy)
+      {
+	 const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(&copy);
+	 if(!c)
+	    throw TypeMismatchException("Type mismatch in NC variable");
+	 *this = *c;
+      }
+
+   template<class T>
       NCVariable<T>&
       NCVariable<T>::operator=(const NCVariable<T>& copy)
       {
@@ -105,15 +119,17 @@ WARNING
       {
 	 if(getWindow())
 	    throw InternalError("Allocating an NCvariable that is apparently already allocated!");
-#if 0
-	 resize(region->getNx()+1, region->getNy()+1, region->getNz()+1);
-#endif
+	 IntVector res(region->getNCells());
+	 resize(res.x()+1, res.y()+1, res.z()+1);
       }
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/05/02 06:07:21  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.8  2000/04/26 06:48:49  sparker
 // Streamlined namespaces
 //

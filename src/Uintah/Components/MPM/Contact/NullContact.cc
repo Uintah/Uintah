@@ -13,11 +13,10 @@ static char *id="@(#) $Id$";
 
 using namespace Uintah::MPM;
 
-NullContact::NullContact(ProblemSpecP& ps,SimulationStateP& ss)
+NullContact::NullContact(ProblemSpecP& /*ps*/,SimulationStateP& /*ss*/)
 {
   // Constructor
-
-  
+ 
 
 }
 
@@ -28,24 +27,27 @@ NullContact::~NullContact()
 }
 
 void NullContact::exMomInterpolated(const ProcessorContext*,
-				    const Region* region,
-				    const DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+				    const Region*,
+				    const DataWarehouseP& /*old_dw*/,
+				    DataWarehouseP& /*new_dw*/)
 {
   
 
 }
 
 void NullContact::exMomIntegrated(const ProcessorContext*,
-				  const Region* region,
-                                  const DataWarehouseP& old_dw,
-                                  DataWarehouseP& new_dw)
+				  const Region*,
+                                  const DataWarehouseP& /*old_dw*/,
+                                  DataWarehouseP& /*new_dw*/)
 {
 
   
 }
 
 // $Log$
+// Revision 1.6  2000/05/02 06:07:14  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.5  2000/04/27 21:28:58  jas
 // Contact is now created using a factory.
 //

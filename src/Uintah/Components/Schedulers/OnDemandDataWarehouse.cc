@@ -36,20 +36,14 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
 }
 
-void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
+void OnDemandDataWarehouse::get(ReductionVariableBase& var,
+				const VarLabel* label) const
 {
-#if 0
-    dbType::const_iterator iter = d_reductions.find(name);
-    if(iter == d_data.end())
-	throw UnknownVariable("Variable not found: "+name);
-    DataRecord* dr = iter->second;
-    if(dr->region != 0)
-	throw InternalError("Region not allowed here");
-    if(dr->td != td)
-	throw TypeMismatchException("Type mismatch");
-    dr->di->get(result);
-#endif
-   cerr << "OnDemandDataWarehouse::get(ReductionVariable) not finished\n";
+   reductionDBtype::const_iterator iter = reductiondb.find(label);
+   if(iter == reductiondb.end())
+      throw UnknownVariable(label->getName());
+
+   var.copyPointer(*iter->second->var);
 }
 
 void OnDemandDataWarehouse::allocate(ReductionVariableBase&,
@@ -58,9 +52,16 @@ void OnDemandDataWarehouse::allocate(ReductionVariableBase&,
    cerr << "OnDemend DataWarehouse::allocate(ReductionVariable) not finished\n";
 }
 
-void OnDemandDataWarehouse::put(const ReductionVariableBase&, const VarLabel*)
+void OnDemandDataWarehouse::put(const ReductionVariableBase& var,
+				const VarLabel* label)
 {
-   cerr << "OnDemend DataWarehouse::put(ReductionVariable) not finished\n";
+   reductionDBtype::const_iterator iter = reductiondb.find(label);
+   if(iter == reductiondb.end()){
+      reductiondb[label]=new ReductionRecord(var.clone());
+      iter = reductiondb.find(label);
+   } else {
+      iter->second->var->reduce(var);
+   }
 }
 
 void OnDemandDataWarehouse::get(ParticleVariableBase& var,
@@ -135,27 +136,56 @@ void OnDemandDataWarehouse::put(const ParticleVariableBase& var,
    particledb.put(label, matlIndex, region, var, true);
 }
 
-void OnDemandDataWarehouse::get(NCVariableBase&, const VarLabel*,
-				int, const Region*, int) const
+void OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
+				int matlIndex, const Region* region,
+				int numGhostCells) const
 {
-   cerr << "OnDemend DataWarehouse::get(NCVariable) not finished\n";
+   if(numGhostCells != 0)
+      throw InternalError("Ghost cells don't work, go away");
+   if(!ncdb.exists(label, matlIndex, region))
+      throw UnknownVariable(label->getName());
+   ncdb.get(label, matlIndex, region, var);
 }
 
-void OnDemandDataWarehouse::allocate(NCVariableBase&, const VarLabel*,
-				     int, const Region*)
+void OnDemandDataWarehouse::allocate(NCVariableBase& var,
+				     const VarLabel* label,
+				     int matlIndex,
+				     const Region* region)
 {
-   cerr << "OnDemend DataWarehouse::allocate(NCVariable) not finished\n";
+   // Error checking
+   if(ncdb.exists(label, matlIndex, region))
+      throw InternalError("NC variable already exists: "+label->getName());
+
+   // Allocate the variable
+   var.allocate(region);
+
+   // Put it in the database
+   ncdb.put(label, matlIndex, region, var, false);
 }
 
-void OnDemandDataWarehouse::put(const NCVariableBase&, const VarLabel*,
-				int, const Region*)
+void OnDemandDataWarehouse::put(const NCVariableBase& var,
+				const VarLabel* label,
+				int matlIndex, const Region* region)
 {
-   cerr << "OnDemend DataWarehouse::put(NCVariable) not finished\n";
+   // Error checking
+   if(!ncdb.exists(label, matlIndex, region))
+      throw InternalError("Variable does not exist: "+position_label->getName());
+
+   // Put it in the database
+   ncdb.put(label, matlIndex, region, var, true);
+}
+
+OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
+   : var(var)
+{
 }
 
 
 //
 // $Log$
+// Revision 1.15  2000/05/02 06:07:16  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.14  2000/05/01 16:18:16  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data

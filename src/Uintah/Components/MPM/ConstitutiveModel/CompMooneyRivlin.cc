@@ -17,6 +17,7 @@
 #include <SCICore/Math/MinMax.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <iostream>
 using std::cerr;
 using namespace Uintah::MPM;
@@ -24,20 +25,14 @@ using SCICore::Math::Min;
 using SCICore::Math::Max;
 using SCICore::Geometry::Vector;
 
-CompMooneyRivlin::CompMooneyRivlin(const Region* /*region*/,
-				   const MPMMaterial* /*matl*/)
-{
-   p_cmdata_label = new VarLabel("p.cmdata",
-                    ParticleVariable<CMData>::getTypeDescription());
-
-}
-
 CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
 {
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_constant_3",d_initialData.C3);
   ps->require("he_constant_4",d_initialData.C4);
+  p_cmdata_label = new VarLabel("p.cmdata",
+				ParticleVariable<CMData>::getTypeDescription());
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -69,6 +64,49 @@ void CompMooneyRivlin::initializeCMData(const Region* region,
    new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
    new_dw->put(deformationGradient, pDeformationMeasureLabel, matl->getDWIndex(), region);
    new_dw->put(pstress, pStressLabel, matl->getDWIndex(), region);
+
+   computeStableTimestep(region, matl, new_dw);
+}
+
+void CompMooneyRivlin::computeStableTimestep(const Region* region,
+					     const MPMMaterial* matl,
+					     DataWarehouseP& new_dw)
+{
+   // This is only called for the initial timestep - all other timesteps
+   // are computed as a side-effect of computeStressTensor
+  Vector dx = region->dCell();
+  int matlindex = matl->getDWIndex();
+
+  // Retrieve the array of constitutive parameters
+  ParticleVariable<CMData> cmdata;
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
+  ParticleVariable<double> pmass;
+  new_dw->get(pmass, pMassLabel, matlindex, region, 0);
+  ParticleVariable<double> pvolume;
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, 0);
+
+  ParticleSubset* pset = pmass.getParticleSubset();
+  ASSERT(pset == pvolume.getParticleSubset());
+
+  double c_dil = 0.0,c_rot = 0.0;
+  for(ParticleSubset::iterator iter = pset->begin();
+      iter != pset->end(); iter++){
+     particleIndex idx = *iter;
+
+     double C1 = cmdata[idx].C1;
+     double C2 = cmdata[idx].C2;
+     double C4 = cmdata[idx].C4;
+
+     // Compute wave speed at each particle, store the maximum
+     double mu = 2.*(C1 + C2);
+     double PR = (2.*C1 + 5.*C2 + 2.*C4) / (4.*C4 + 5.*C1 + 11.*C2);
+     double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
+     c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
+     c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+    }
+    double WaveSpeed = sqrt(Max(c_rot,c_dil));
+    double delt_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    new_dw->put(delt_vartype(delt_new), deltLabel);
 }
 
 void CompMooneyRivlin::computeStressTensor(const Region* region,
@@ -87,7 +125,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
   int matlindex = matl->getDWIndex();
 
   // Create array for the particle position
-  ParticleVariable<Vector> px;
+  ParticleVariable<Point> px;
   old_dw->get(px, pXLabel, matlindex, region, 0);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
@@ -106,8 +144,9 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
   old_dw->get(pvolume, pVolumeLabel, matlindex, region, 0);
 
   NCVariable<Vector> gvelocity;
+
   new_dw->get(gvelocity, gVelocityLabel, matlindex,region, 0);
-  ReductionVariable<double> delt;
+  delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
   ParticleSubset* pset = px.getParticleSubset();
@@ -122,7 +161,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
      velGrad.set(0.0);
      // Get the node indices that surround the cell
-     Array3Index ni[8];
+     IntVector ni[8];
      Vector d_S[8];
      if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
          continue;
@@ -180,9 +219,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
     }
     WaveSpeed = sqrt(Max(c_rot,c_dil));
     double delt_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
-    new_dw->put(ReductionVariable<double>(delt_new),
-		deltLabel);
-
+    new_dw->put(delt_vartype(delt_new), deltLabel);
     new_dw->put(pstress, pStressLabel, matlindex, region);
     new_dw->put(deformationGradient, pDeformationMeasureLabel,
 		matlindex, region);
@@ -280,6 +317,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.16  2000/05/02 06:07:11  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.15  2000/05/01 17:25:00  jas
 // Changed the var labels to be consistent with SerialMPM.
 //

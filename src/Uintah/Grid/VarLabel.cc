@@ -1,7 +1,9 @@
 
 #include <Uintah/Grid/VarLabel.h>
+#include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
 VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 		   VarType vartype)
@@ -9,10 +11,19 @@ VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 {
 }
 
+bool VarLabel::Compare::operator()(const VarLabel* v1, const VarLabel* v2) const
+{
+   if(v1 == v2)
+      return false;
+   return v1->getName() < v2->getName();
+}
 
 
 //
 // $Log$
+// Revision 1.5  2000/05/02 06:07:23  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.4  2000/04/28 20:24:44  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly

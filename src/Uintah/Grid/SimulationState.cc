@@ -3,12 +3,13 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/Material.h>
+#include <Uintah/Grid/Reductions.h>
 
 using namespace Uintah;
 
 SimulationState::SimulationState()
 {
-   delt_label = new VarLabel("delt", ReductionVariable<double>::getTypeDescription());
+   delt_label = new VarLabel("delt", ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -19,6 +20,9 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.6  2000/05/02 06:07:23  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.5  2000/04/28 20:24:44  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly

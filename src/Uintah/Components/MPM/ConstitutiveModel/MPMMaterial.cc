@@ -140,6 +140,8 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 		    getDWIndex(), region);
    ParticleVariable<Vector> pvelocity;
    new_dw->allocate(pvelocity, pVelocityLabel, getDWIndex(), region);
+   ParticleVariable<Vector> pexternalforce;
+   new_dw->allocate(pexternalforce, pExternalForceLabel, getDWIndex(), region);
    ParticleVariable<double> pmass;
    new_dw->allocate(pmass, pMassLabel, getDWIndex(), region);
    ParticleVariable<double> pvolume;
@@ -148,7 +150,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position,
-			       pvelocity,pmass,pvolume, region);
+			       pvelocity,pexternalforce,pmass,pvolume, region);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -188,6 +190,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 					   particleIndex start,
 					   ParticleVariable<Point>& position,
 					   ParticleVariable<Vector>& velocity,
+					   ParticleVariable<Vector>& pexternalforce,
 					   ParticleVariable<double>& mass,
 					   ParticleVariable<double>& volume,
 					   const Region* region)
@@ -216,6 +219,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		  velocity[start+count]=obj->getInitialVelocity();
 		  mass[start+count]=d_density * volume[start+count];
+		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  count++;
 	       }
 	    }

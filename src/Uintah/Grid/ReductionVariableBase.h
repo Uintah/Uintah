@@ -41,6 +41,9 @@ WARNING
       
       virtual ~ReductionVariableBase();
       
+      virtual void copyPointer(const ReductionVariableBase&) = 0;
+      virtual ReductionVariableBase* clone() const = 0;
+      virtual void reduce(const ReductionVariableBase&) = 0;
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();
@@ -53,6 +56,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/05/02 06:07:22  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.2  2000/04/26 06:48:53  sparker
 // Streamlined namespaces
 //

@@ -7,6 +7,7 @@
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/VarTypes.h>
 
 using namespace Uintah::MPM;
 
@@ -27,9 +28,9 @@ ConstitutiveModel::ConstitutiveModel()
 
    pVolumeLabel = new VarLabel("p.volume",
                                  ParticleVariable<double>::getTypeDescription());
-
    gVelocityLabel = new VarLabel("g.velocity",
                                    NCVariable<Vector>::getTypeDescription());
+   deltLabel = new VarLabel("delt", delt_vartype::getTypeDescription());
 }
 
 ConstitutiveModel::~ConstitutiveModel()
