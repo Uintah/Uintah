@@ -77,6 +77,38 @@ main(int argc, char **argv) {
     cellstream >> i0;
     if (!cellstream) break;
     cellstream >> i1 >> i2 >> i3 >> i4 >> i5 >> i6 >> i7;
+    if (i0<0 || i0>=npts) {
+      cerr << "Error - i0 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
+    if (i1<0 || i1>=npts) {
+      cerr << "Error - i1 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
+    if (i2<0 || i2>=npts) {
+      cerr << "Error - i2 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
+    if (i3<0 || i3>=npts) {
+      cerr << "Error - i3 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
+    if (i4<0 || i4>=npts) {
+      cerr << "Error - i4 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
+    if (i5<0 || i5>=npts) {
+      cerr << "Error - i5 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
+    if (i6<0 || i6>=npts) {
+      cerr << "Error - i6 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
+    if (i7<0 || i7>=npts) {
+      cerr << "Error - i7 out of bounts (cell "<<count<<")\n";
+      exit(0);
+    }
     count++;
     hvm->add_hex(nodeIndex[i0], nodeIndex[i1], nodeIndex[i2], nodeIndex[i3],
 		 nodeIndex[i4], nodeIndex[i5], nodeIndex[16], nodeIndex[i7]);
