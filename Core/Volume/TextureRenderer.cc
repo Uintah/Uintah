@@ -567,7 +567,7 @@ TextureRenderer::build_colormap2()
         glActiveTexture(GL_TEXTURE0);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         // rasterize widgets
-        vector<CM2Widget*> widgets = cmap2_->widgets();
+        vector<CM2WidgetHandle> widgets = cmap2_->widgets();
         for (unsigned int i=0; i<widgets.size(); i++) {
           raster_buffer_->bind(GL_FRONT);
           widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), raster_buffer_);
@@ -638,7 +638,7 @@ TextureRenderer::build_colormap2()
             raster_array_(i,j,3) = 0.0;
           }
         }
-        vector<CM2Widget*>& widget = cmap2_->widgets();
+        vector<CM2WidgetHandle>& widget = cmap2_->widgets();
         // rasterize widgets
         for(unsigned int i=0; i<widget.size(); i++) {
           widget[i]->rasterize(raster_array_, cmap2_->faux());
