@@ -177,16 +177,13 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Parallelogram2.cc \
 	$(SRCDIR)/MIPMaterial.cc \
 	$(SRCDIR)/RServer.cc \
-	$(SRCDIR)/GeoProbeReader.cc
+	$(SRCDIR)/GeoProbeReader.cc \
+	$(SRCDIR)/PNGImage.cc
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
 
-#ifneq ($(HAVE_PNG),)
-ifeq ($(findstring png, $(PNG_LIBRARY)),png)
-  SRCS += $(SRCDIR)/PNGImage.cc
-endif
-
 SUBDIRS := $(SRCDIR)/Shadows \
+	$(SRCDIR)/PathTracer \
 #	   $(SRCDIR)/LightField \
 
 include $(SRCTOP)/scripts/recurse.mk
