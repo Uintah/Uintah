@@ -39,7 +39,7 @@
  *  Copyright (C) 2004 SCI Institute
  */
 
-// Use a standalone converter to do the matrix conversion into a
+// Use a standalone converter to convert a scirun object into a
 // temporary file, then read in that file.
 
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
@@ -167,15 +167,15 @@ Exec_reader(ProgressReporter *pr,
     }
     
     // Read the file
-    MatrixHandle matrix;
-    Pio(*stream, matrix);
+    MatrixHandle handle;
+    Pio(*stream, handle);
 
     pr->remark(string("ExecConverter - Successfully converted ")
 	       + cfilename + ".");
 
     unlink(tmpfilename.c_str());
     
-    return matrix;
+    return handle;
   }
 
   unlink(tmpfilename.c_str());
@@ -186,7 +186,7 @@ Exec_reader(ProgressReporter *pr,
 
 static bool
 Exec_writer(ProgressReporter *pr,
-	    MatrixHandle matrix,
+	    MatrixHandle handle,
 	    const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
@@ -197,18 +197,18 @@ Exec_writer(ProgressReporter *pr,
   Piostream *stream = scinew BinaryPiostream(tmpfilename, Piostream::Write);
   if (stream->error())
   {
+    delete stream;
     pr->error("ExecConverter - Could not open temporary file '" + tmpfilename +
 	      "' for writing.");
     result = false;
   }
   else
   {
-    Pio(*stream, matrix);
-    
+    Pio(*stream, handle);
+    delete stream;
     result = Exec_execute_command(pr, command, tmpfilename);
   }
   unlink(tmpfilename.c_str());
-  delete stream;
 
   return result;
 }
