@@ -1,6 +1,7 @@
 #include "FractureParticleCreator.h"
 
 using namespace Uintah;
+using std::vector;
 
 FractureParticleCreator::FractureParticleCreator()
 {
@@ -16,13 +17,15 @@ void FractureParticleCreator::createParticles(MPMMaterial* matl,
 					      const Patch*,
 					      DataWarehouse* new_dw,
 					      MPMLabel* lb,
-					      std::vector<GeometryObject*>& d_geom_objs)
+					      vector<GeometryObject*>& d_geom_objs)
 {
+
+  //ParticleCreator::applyForceBC(start,pexternalforce,pmass,position);
 
 }
 
 particleIndex FractureParticleCreator::countParticles(const Patch* patch,
-						      std::vector<GeometryObject*>& d_geom_objs) const
+						      vector<GeometryObject*>& d_geom_objs) const
 {
 
   return ParticleCreator::countParticles(patch,d_geom_objs);

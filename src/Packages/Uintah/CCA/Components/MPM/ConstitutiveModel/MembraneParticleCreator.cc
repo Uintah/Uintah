@@ -144,31 +144,7 @@ void MembraneParticleCreator::createParticles(MPMMaterial* matl,
     start += count; 
   }
 
-
-  particleIndex particlesNum = start;
-  for(particleIndex pIdx=0;pIdx<particlesNum;++pIdx) {
-     pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
-
-     const Point& p( position[pIdx] );
-     
-     for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
-       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
-        
-       if (bcs_type == "Force") {
-         ForceBC* bc = dynamic_cast<ForceBC*>
-			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
-
-         const Point& lower( bc->getLowerRange() );
-         const Point& upper( bc->getUpperRange() );
-          
-         if(lower.x()<= p.x() && p.x() <= upper.x() &&
-            lower.y()<= p.y() && p.y() <= upper.y() &&
-            lower.z()<= p.z() && p.z() <= upper.z() ){
-               pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
-         }
-       }
-     }
-  }
+  ParticleCreator::applyForceBC(start,pexternalforce,pmass,position);
 
 }
 
