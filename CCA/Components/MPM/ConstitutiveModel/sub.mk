@@ -5,6 +5,7 @@
 SRCDIR   := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel
 
 SRCS     += \
+	$(SRCDIR)/RigidMaterial.cc        	\
 	$(SRCDIR)/CompMooneyRivlin.cc        	\
 	$(SRCDIR)/ConstitutiveModelFactory.cc 	\
 	$(SRCDIR)/ConstitutiveModel.cc        	\
