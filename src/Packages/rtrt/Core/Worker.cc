@@ -229,7 +229,7 @@ void Worker::run()
 	    if (scene->get_rtrt_engine()->do_jitter) {
 	      Color sum;
 	      Color resulta,resultb; // 4 samples
-	      double stime;
+	      double stime = 0;
 	      if( hotSpotMode )
 		stime = SCIRun::Time::currentSeconds();
 	      for(int y=sy;y<ey;y++){

@@ -65,7 +65,7 @@
 	  
 	io_lock_.lock();
 	for(int jj=0;jj<chunkorder.size();jj++) {
-	  int swappos = drand48()*chunkorder.size();
+	  int swappos = (int)(drand48()*chunkorder.size());
 	  if (swappos == chunki) {
 	    cerr << "Bad Swap!\n";
 	  }
@@ -185,7 +185,7 @@
       if (scene->get_rtrt_engine()->shuffleClusters) {
 	io_lock_.lock(); // drand48 isn't thread safe...
 	for(int i=0;i<myintervals.size();i++) {
-	  int swappos = drand48()*myintervals.size();
+	  int swappos = (int)(drand48()*myintervals.size());
 	  if (swappos != i) {
 	    int tmp = myintervals[i];
 	    myintervals[i] = myintervals[swappos];
@@ -223,7 +223,7 @@
 	}
 
 	for(int pos=0;pos<mysizes[chunk];pos++) {
-	  int swappos = drand48()*mysizes[chunk];
+	  int swappos = (int)(drand48()*mysizes[chunk]);
 	  if (swappos != pos) {
 	    int tmp = xpos[pos];
 	    xpos[pos] = xpos[swappos];
@@ -240,8 +240,8 @@
       nwork = pi;
     }
 	
-    int camerareload = nwork*scene->get_rtrt_engine()->updatePercent;
-    int cameracounter = camerareload - drand48()*camerareload; // random
+    int camerareload = (int)(nwork*scene->get_rtrt_engine()->updatePercent);
+    int cameracounter = (int)(camerareload - drand48()*camerareload); // random
       
     float alpha=1.0; // change it after 1st iteration...
       
@@ -309,7 +309,7 @@
     }
 
     for(int ii=0;ii<jitterMask.size();ii++)
-      jitterMask[ii] = drand48()*100;
+      jitterMask[ii] = (int)(drand48()*100.0);
 
     io_lock_.unlock();
 
@@ -341,7 +341,7 @@
 
       if (!scene->get_rtrt_engine()->do_jitter) {
 	
-	double stime;
+	double stime = 0;
 	if(hotSpotMode)
 	  stime=SCIRun::Time::currentSeconds();
 	for(int ci=0;ci<xpos.size();ci++) { 
@@ -450,10 +450,9 @@
 	  double xib=jPosX[ji+2]+xoffset;
 	  double yib=jPosY[ji+2]+yoffset;
 	  int oji=(ji+1)&1;
-	  double stime;
+	  double stime = 0;
 	  if( hotSpotMode )
-	    //stime=Thread::currentSeconds();
-	      stime=SCIRun::Time::currentSeconds();
+	    stime = SCIRun::Time::currentSeconds();
 	  for(int ci=0;ci<xpos.size();ci++) { 
 	    Ray ray;
 	    Color result;
