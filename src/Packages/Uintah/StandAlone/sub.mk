@@ -68,6 +68,7 @@ endif
 ifeq ($(CC),newmpxlc)
   LIBS := \
 	$(TCL_LIBRARY) \
+	$(TEEM_LIBRARY) \
         $(XML_LIBRARY) \
 	$(Z_LIBRARY) \
         $(THREAD_LIBRARY) \
