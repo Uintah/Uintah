@@ -311,13 +311,14 @@ itcl_class BaseViewWindow {
     }
 
     method addObject {objid name} {
-	initGlobal "$this-$objid-type" Default
+	initGlobal "$this-$objid-useglobal" 1
 	initGlobal "$this-$objid-light" 1
 	initGlobal "$this-$objid-fog" 0
 	initGlobal "$this-$objid-debug" 0
 	initGlobal "$this-$objid-clip" 1
 	initGlobal "$this-$objid-cull" 0
 	initGlobal "$this-$objid-dl" 0
+	initGlobal "$this-$objid-type" Gouraud
 	global ModuleSavedVars
 	set vid [$viewer modname]
 	foreach state {type light fog debug clip cull dl} {
@@ -1080,9 +1081,8 @@ itcl_class ViewWindow {
 		-relief raised -menu $menun
 	menu $menun
 
-	$menun add radiobutton -label "Use Global Controls" \
-	    -variable $this-$objid-type -value "Default"\
-	    -command "$this-c redraw"
+	$menun add checkbutton -label "Use Global Controls" \
+	    -variable $this-$objid-useglobal -command "$this-c redraw"
 
 	$menun add separator
 
@@ -1102,7 +1102,7 @@ itcl_class ViewWindow {
 	$menun add separator
 
 	$menun add radiobutton -label Wire -variable $this-$objid-type \
-	    -command "$this-c redraw"	    
+	    -command "$this-c redraw"
 	$menun add radiobutton -label Flat -variable $this-$objid-type \
 	    -command "$this-c redraw"
 	$menun add radiobutton -label Gouraud -variable $this-$objid-type \

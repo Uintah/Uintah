@@ -105,13 +105,6 @@ void
 SynchronizeGeometry::do_execute()
 {
   ogeom_ = (GeometryOPort*)getOPort("Output Geometry");
-
-  if (ogeom_ == NULL)
-  {
-    error("Unable to initialize iport 'Output Geometry");
-    return;
-  }
-
   for (;;)
   {
     MessageBase *msg = mailbox.receive();

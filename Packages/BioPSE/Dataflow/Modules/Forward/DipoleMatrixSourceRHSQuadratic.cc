@@ -132,14 +132,21 @@ DipoleMatrixSourceRHSQuadratic::execute()
   // if the user passed in a vector the right size, copy it into ours
 
   rhsIn = dynamic_cast<ColumnMatrix*>(mat_handle2.get_rep());
-  if (mat_handle2.get_rep() && rhsIn && (rhsIn->nrows()==nnodes))
-    for (int i=0; i<nnodes; i++) (*rhs)[i]=(*rhsIn)[i];
+  if (mat_handle2.get_rep() && rhsIn &&
+      ((unsigned int)(rhsIn->nrows()) == nnodes))
+  {
+    for (unsigned int i=0; i<nnodes; i++) (*rhs)[i]=(*rhsIn)[i];
+  }
   else
+  {
     rhs->zero();
+  }
 
   LockingHandle<PointCloudField<Vector> > hDipField;
      
-  if (mp->get_type_name(0)!="PointCloudField" || mp->get_type_name(1)!="Vector"){
+  if (mp->get_type_name(0)!="PointCloudField" ||
+      mp->get_type_name(1)!="Vector")
+  {
     error("Supplied field is not of type PointCloudField<Vector>.");
     return;
   }

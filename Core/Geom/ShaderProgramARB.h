@@ -54,7 +54,8 @@ public:
 
   void setLocalParam(int, float, float, float, float);
 
-  // This is only callable from within a valid opengl context!
+  // Call init_shaders_supported before shaders_supported queries!
+  static void init_shaders_supported();
   static bool shaders_supported();
 
 protected:

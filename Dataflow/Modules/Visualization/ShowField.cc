@@ -552,19 +552,6 @@ ShowField::execute()
   ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
 
-  if (!field_iport) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-  if (!color_iport) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Scene Graph'.");
-    return;
-  }
-
   FieldHandle fld_handle;
   if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
   {
@@ -644,6 +631,11 @@ ShowField::execute()
     data_dirty_ = true;
   }
   data_resolution_ = gui_data_resolution_.get();
+
+  if (color_map_changed && faces_usetexture_.get() &&
+      dynamic_cast<ImageMesh *>(fld_handle->mesh().get_rep())){
+    faces_dirty_ = true;
+  }
 
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) &&
@@ -795,8 +787,14 @@ ShowField::execute()
       if (face_id_) ogeom_->delObj(face_id_);
       GeomHandle gmat =
 	scinew GeomMaterial(renderer_->face_switch_, def_material_);
-      GeomHandle geom =
-	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      GeomHandle geom;
+      if (faces_usetexture_.get() &&
+	  dynamic_cast<ImageMesh *>(fld_handle->mesh().get_rep()))
+      {
+	geom = scinew GeomSwitch(gmat);
+      } else {
+	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      }
       face_id_ = ogeom_->addObj(geom, fname + name);
     }
   }

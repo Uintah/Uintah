@@ -237,18 +237,8 @@ SetupFEMatrix::build_composite_matrix(const vector<pair<string, Tensor> > &tens)
 void
 SetupFEMatrix::execute()
 {
-  
   iportField_ = (FieldIPort *)get_iport("Mesh");
   oportMtrx_ = (MatrixOPort *)get_oport("Stiffness Matrix");
-
-  if (!iportField_) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!oportMtrx_) {
-    error("Unable to initialize oport 'Stiffness Matrix'.");
-    return;
-  }
 
   //! Validate input
   FieldHandle hField;

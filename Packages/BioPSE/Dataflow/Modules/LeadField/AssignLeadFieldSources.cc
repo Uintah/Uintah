@@ -94,31 +94,6 @@ AssignLeadFieldSources::execute()
   ofp3 = (FieldOPort*)get_oport("PointCloud(Vector)");
   ofp4 = (FieldOPort*)get_oport("PrimaryPointCloud(Vector)");
 
-  if (!ifp) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!imp) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!ofp) {
-    error("Unable to initialize oport 'VectorField'.");
-    return;
-  }
-  if (!ofp2) {
-    error("Unable to initialize oport 'Field(double)'.");
-    return;
-  }
-  if (!ofp3) {
-    error("Unable to initialize oport 'PointCloud(Vector)'.");
-    return;
-  }
-  if (!ofp4) {
-    error("Unable to initialize oport 'PrimaryPointCloud(Vector)'.");
-    return;
-  }
-  
   // Get input matrix.
   MatrixHandle imatrix;
   if (!(imp->get(imatrix)) || !(imatrix.get_rep())) {

@@ -229,10 +229,6 @@ void
 ModifyConductivities::execute()
 {
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
-  if (!ifp) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
   FieldHandle field;
   if (!(ifp->get(field) && field.get_rep()))
   {
@@ -255,10 +251,6 @@ ModifyConductivities::execute()
   bool created_p = false;
 
   MatrixIPort *imp = (MatrixIPort *)get_iport("Tensor Matrix");
-  if (!imp) {
-    error("Unable ti initialize iport 'Tensor Matrix'.");
-    return;
-  }
   MatrixHandle imatrix;
   vector<string> tensor_names;
 
@@ -448,18 +440,10 @@ ModifyConductivities::execute()
 
   // Forward the matrix results.
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-  if (!omp) {
-    error("Unable to initialize " + name + "'s Output Matrix port.");
-    return;
-  }
   omp->send(omatrix);
 
   // Forward the field results.
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  if (!ofp) {
-    error("Unable to initialize " + name + "'s Output Field port.");
-    return;
-  }
   ofp->send(field);
 }
 

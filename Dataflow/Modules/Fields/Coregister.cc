@@ -100,19 +100,6 @@ Coregister::execute()
   PointCloudMeshHandle fixedM, mobileM;
   PointCloudMesh::Node::size_type nnodes;
   
-  if (!fixed) {
-    error("Unable to initialize iport 'Fixed PointCloudField'.");
-    return;
-  }
-  if (!mobile) {
-    error("Unable to initialize iport 'Mobile PointCloudField'.");
-    return;
-  }
-  if (!dfield) {
-    error("Unable to initialize iport 'DistanceField From Fixed'.");
-    return;
-  }
-
   if (!fixed->get(fixedH)) return;
   fixedPC = dynamic_cast<PointCloudField<double> *>(fixedH.get_rep());
   if (!fixedPC) return;
@@ -138,10 +125,6 @@ Coregister::execute()
   }
 
   MatrixOPort *omat = (MatrixOPort *)get_oport("Transform");
-  if (!omat) {
-    error("Unable to initialize oport 'Transform'.");
-    return;
-  }
 
   Array1<Point> fixedPts, mobilePts;
   Transform trans;

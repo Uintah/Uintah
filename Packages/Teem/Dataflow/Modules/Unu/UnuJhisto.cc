@@ -103,19 +103,6 @@ void
   inrrd1_ = (NrrdIPort *)get_iport("InputNrrd1");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!weight_) {
-    error("Unable to initialize iport 'WeightNrrd'.");
-    return;
-  }
-  if (!inrrd1_) {
-    error("Unable to initialize iport 'InputNrrd1'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
-
   Nrrd *weight = 0;
   Nrrd *nin1 = 0;
   Nrrd *nout = nrrdNew();
@@ -160,11 +147,6 @@ void
   while (pi != nrange.second)
   {
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
-    if (!inrrd) {
-      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-      return;
-    }
-
     NrrdDataHandle nrrd;
     if (inrrd->get(nrrd) && nrrd.get_rep()) {
       if (nrrd->nrrd->dim > max_dim)
@@ -433,8 +415,10 @@ void
     nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", to_string(nrrd0_minmax->max).c_str());
     nrrdRangeNix(nrrd0_minmax);
 
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_min", to_string(min[0]).c_str());
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_max", to_string(max[0]).c_str());
+    NrrdRange *nout_minmax = nrrdRangeNewSet(nout, nrrdBlind8BitRangeFalse);
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_min", to_string(nout_minmax->min).c_str());
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_max", to_string(nout_minmax->max).c_str());
+    nrrdRangeNix(nout_minmax);
 
     delete bin;
     delete min;

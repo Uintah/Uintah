@@ -88,18 +88,6 @@ void UnuAxinfo::execute()
   
   update_state(NeedData);
   
-  if (!iport) 
-    {
-      error("Unable to initialize iport 'Nrrd'.");
-      return;
-    }
-  
-  if (!oport) 
-    {
-      error("Unable to initialize oport 'Nrrd'.");
-      return;
-    }
-  
   // The input port (with data) is required.
   NrrdDataHandle nh;
   if (!iport->get(nh)) 
@@ -178,8 +166,7 @@ void UnuAxinfo::execute()
   NrrdDataHandle out(nrrd);
   
   // Copy the properties.
-  *((PropertyManager *) out.get_rep()) =
-    *((PropertyManager *) nh.get_rep());
+  out->copy_properties(nh.get_rep());
   
   oport->send(out);
 

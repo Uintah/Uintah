@@ -426,48 +426,7 @@ namespace BioPSE
     	MatrixOPort *oportInvSol = (MatrixOPort *)get_oport("InverseSoln");
 	MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
     	MatrixOPort *oportRegInvMat = (MatrixOPort *)get_oport("RegInverseMat");
-
-
-    	if (!iportMeasDat) 
-      	{
-    		error("Unable to initialize iport 'MeasuredPots'.");
-		return;
-      	}
-	if (!iportU) 
-      	{
-    		error("Unable to initialize iport 'U'.");
-		return;
-      	}
-
-	if (!iportS) 
-      	{
-    		error("Unable to initialize iport 'S'.");
-		return;
-      	}
-
-	if (!iportV) 
-      	{
-    		error("Unable to initialize iport 'V'.");
-		return;
-      	}
-	if (!iportX) 
-     	{
-  		error("Unable to initialize iport 'X'.");
-		return;
-     	 	}
-	if (!oportInvSol) 
-      	{
-    		error("Unable to initialize oport 'InverseSoln'.");
-		return;
-      	}
-    	if (!oportRegInvMat) 
-      	{
-    		error("Unable to initialize oport 'RegInverseMat'.");
-		return;
-      	}
-    	
     	// DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
-    	
 	MatrixHandle hMatrixMeasDat, hMatrixU, hMatrixS, hMatrixV ,hMatrixX;
     	    
     	

@@ -153,7 +153,8 @@ public:
 
   bool get_neighbor(Face::index_type &neighbor, Face::index_type face,
 		    Edge::index_type edge) const;
-  void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+  void get_neighbors(vector<Node::index_type> &array,
+                     Node::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(Node::index_type /*idx*/) const { return 0.0; };
@@ -183,7 +184,7 @@ public:
 
   int get_valence(Node::index_type idx) const
   {
-    Node::array_type nodes;
+    vector<Node::index_type> nodes;
     get_neighbors(nodes, idx);
     return (int)nodes.size();
   }

@@ -138,20 +138,8 @@ void
 ShowDipoles::execute()
 {
   FieldIPort *ifield = (FieldIPort *)get_iport("dipoleFld");
-  if (!ifield) {
-    error("Unable to initialize iport 'dipoleFld'.");
-    return;
-  }
   FieldOPort *ofield = (FieldOPort *)get_oport("dipoleFld");
-  if (!ofield) {
-    error("Unable to initialize oport 'dipoleFld'.");
-    return;
-  }
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
   
   // if this is the first execution then try loading all the values
   // from saved GuiVars, load the widgets from these values
@@ -223,10 +211,6 @@ ShowDipoles::load_gui()
     // it is possible that these were created already, dont do it twice.
     if ((int)widget_id_.size() != num_dipoles_.get()) {
       GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-      if (!ogeom) {
-	error("Unable to initialize oport 'Geometry'.");
-	return;
-      }
 
       ArrowWidget *a = scinew ArrowWidget(this, &widget_lock_, 
 					  widgetSizeGui_.get());
@@ -274,10 +258,6 @@ ShowDipoles::new_input_data(PointCloudField<Vector> *in)
     num_dipoles_.reset();
   } else {
     GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-    if (!ogeom) {
-      error("Unable to initialize oport 'Geometry'.");
-      return;
-    }
 
     unsigned i;
     for (i = num_dipoles_.get(); i < widget_switch_.size(); i++)
@@ -358,11 +338,6 @@ ShowDipoles::last_as_vec()
   }
 
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
-
   ogeom->flushViews();
 }
 
@@ -400,11 +375,6 @@ ShowDipoles::scale_mode_changed()
   last_scale_mode_ = scaleMode;
 
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
-
   ogeom->flushViews();
 }
 
@@ -428,10 +398,6 @@ ShowDipoles::scale_changed()
   last_scale_ = widgetSizeGui_.get();
 
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
   ogeom->flushViews();
 }
 
@@ -531,10 +497,6 @@ ShowDipoles::widget_moved(bool release, BaseWidget*)
     draw_lines();
 
     GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-    if (!ogeom) {
-      error("Unable to initialize oport 'Geometry'.");
-      return;
-    }
     ogeom->flushViews();
   }
   if (release) want_to_execute();
@@ -544,10 +506,6 @@ void
 ShowDipoles::draw_lines()
 {
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
 
   showLinesGui_.reset();
   if (gidx_) { 

@@ -73,41 +73,37 @@ SparseRowMatrix::clone()
 }
 
 
-SparseRowMatrix::SparseRowMatrix()
-  : nnrows(0),
-    nncols(0),
-    rows(0),
-    columns(0),
-    nnz(0),
-    a(0)
+SparseRowMatrix::SparseRowMatrix() :
+  rows(0),
+  columns(0),
+  nnz(0),
+  a(0)
 {
 }
 
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				 int* rows, int* columns,
-				 int nnz, double* a_)
-  : nnrows(nnrows),
-    nncols(nncols),
-    rows(rows),
-    columns(columns),
-    nnz(nnz),
-    a(a_)
+				 int nnz, double* a_) :
+  Matrix(nnrows, nncols),
+  rows(rows),
+  columns(columns),
+  nnz(nnz),
+  a(a_)
 {
   if (a == 0) { a = scinew double[nnz]; }
 }
 
 
-SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy)
-  : nnrows(copy.nnrows),
-    nncols(copy.nncols),
-    nnz(copy.nnz)
+SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy) :
+  Matrix(copy.nrows_, copy.ncols_),
+  nnz(copy.nnz)
 {
-  rows = scinew int[nnrows+1];
+  rows = scinew int[nrows_+1];
   columns = scinew int[nnz];
   a = scinew double[nnz];
   memcpy(a, copy.a, sizeof(double)*nnz);
-  memcpy(rows, copy.rows, sizeof(int)*(nnrows+1));
+  memcpy(rows, copy.rows, sizeof(int)*(nrows_+1));
   memcpy(columns, copy.columns, sizeof(int)*nnz);
 }
 
@@ -139,12 +135,12 @@ SparseRowMatrix::sparse()
 DenseMatrix *
 SparseRowMatrix::dense()
 {
-  DenseMatrix *dm = scinew DenseMatrix(nnrows,nncols);
-  if (nnrows==0) return dm;
+  DenseMatrix *dm = scinew DenseMatrix(nrows_, ncols_);
+  if (nrows_ == 0) return dm;
   dm->zero();
   int count=0;
   int nextRow;
-  for (int r=0; r<nnrows; r++)
+  for (int r=0; r<nrows_; r++)
   {
     nextRow = rows[r+1];
     while (count<nextRow)
@@ -160,11 +156,11 @@ SparseRowMatrix::dense()
 ColumnMatrix *
 SparseRowMatrix::column()
 {
-  ColumnMatrix *cm = scinew ColumnMatrix(nnrows);
-  if (nnrows)
+  ColumnMatrix *cm = scinew ColumnMatrix(nrows_);
+  if (nrows_)
   {
     cm->zero();
-    for (int i=0; i<nnrows; i++)
+    for (int i=0; i<nrows_; i++)
     {
       // If the first column entry for the row is a zero.
       if (columns[rows[i]] == 0)
@@ -181,15 +177,29 @@ SparseRowMatrix::column()
 }
 
 
+double *
+SparseRowMatrix::get_data_pointer()
+{
+  return a;
+}
+
+
+size_t
+SparseRowMatrix::get_data_size()
+{
+  return nnz;
+}
+
+
 SparseRowMatrix *
 SparseRowMatrix::transpose()
 {
   double *t_a = scinew double[nnz];
   int *t_columns = scinew int[nnz];
-  int *t_rows = scinew int[nncols+1];
+  int *t_rows = scinew int[ncols_+1];
   int t_nnz = nnz;
-  int t_nncols = nnrows;
-  int t_nnrows = nncols;
+  int t_nncols = nrows_;
+  int t_nnrows = ncols_;
   SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
 					      t_columns, t_nnz, t_a);
 
@@ -211,7 +221,7 @@ SparseRowMatrix::transpose()
   }
 
   int c = 0;
-  for (int r=0; r<nnrows; r++)
+  for (int r=0; r<nrows_; r++)
   {
     for (; c<rows[r+1]; c++)
     {
@@ -257,7 +267,7 @@ SparseRowMatrix::getIdx(int i, int j)
 }
 
 
-double&
+double
 SparseRowMatrix::get(int i, int j) const
 {
   int row_idx=rows[i];
@@ -268,16 +278,7 @@ SparseRowMatrix::get(int i, int j) const
   {
     if (h<l)
     {
-#if 0
-      cerr << "column " << j << " not found in row "<<i << ": ";
-      for (int idx=row_idx;idx<next_idx;idx++)
-	cerr << columns[idx] << " ";
-      cerr << endl;
-      ASSERTFAIL("Column not found");
-#endif
-      static double zero;
-      zero=0;
-      return zero;
+      return 0.0;
     }
     int m=(l+h)/2;
     if (j<columns[m])
@@ -299,28 +300,64 @@ SparseRowMatrix::get(int i, int j) const
 void
 SparseRowMatrix::put(int i, int j, double d)
 {
-  get(i,j)=d;
+  int row_idx=rows[i];
+  int next_idx=rows[i+1];
+  int l=row_idx;
+  int h=next_idx-1;
+  for (;;)
+  {
+    if (h<l)
+    {
+      ASSERTFAIL("SparseRowMatrix::put into invalid(dataless) location.");
+      return;
+    }
+    int m=(l+h)/2;
+    if (j<columns[m])
+    {
+      h=m-1;
+    }
+    else if (j>columns[m])
+    {
+      l=m+1;
+    }
+    else
+    {
+      a[m] = d;
+      return;
+    }
+  }
 }
 
 
 void
 SparseRowMatrix::add(int i, int j, double d)
 {
-  get(i,j)+=d;
-}
-
-
-int
-SparseRowMatrix::nrows() const
-{
-  return nnrows;
-}
-
-
-int
-SparseRowMatrix::ncols() const
-{
-  return nncols;
+  int row_idx=rows[i];
+  int next_idx=rows[i+1];
+  int l=row_idx;
+  int h=next_idx-1;
+  for (;;)
+  {
+    if (h<l)
+    {
+      ASSERTFAIL("SparseRowMatrix::add into invalid(dataless) location.");
+      return;
+    }
+    int m=(l+h)/2;
+    if (j<columns[m])
+    {
+      h=m-1;
+    }
+    else if (j>columns[m])
+    {
+      l=m+1;
+    }
+    else
+    {
+      a[m] += d;
+      return;
+    }
+  }
 }
 
 
@@ -362,10 +399,10 @@ SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 		      int) const
 {
   // Compute A*x=b
-  ASSERT(x.nrows() == nncols);
-  ASSERT(b.nrows() == nnrows);
-  if (beg==-1)beg=0;
-  if (end==-1)end=nnrows;
+  ASSERT(x.nrows() == ncols_);
+  ASSERT(b.nrows() == nrows_);
+  if (beg==-1) beg = 0;
+  if (end==-1) end = nrows_;
   double* xp=&x[0];
   double* bp=&b[0];
   ssmult(beg, end, rows, columns, a, xp, bp);
@@ -383,14 +420,14 @@ SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				int beg, int end, int) const
 {
   // Compute At*x=b
-  ASSERT(x.nrows() == nnrows);
-  ASSERT(b.nrows() == nncols);
-  if (beg==-1)beg=0;
-  if (end==-1)end=nnrows;
+  ASSERT(x.nrows() == nrows_);
+  ASSERT(b.nrows() == ncols_);
+  if (beg==-1) beg = 0;
+  if (end==-1) end = nrows_;
   double* bp=&b[0];
   for (int i=beg; i<end; i++)
     bp[i] = 0;
-  for (int j=0; j<nnrows; j++)
+  for (int j=0; j<nrows_; j++)
   {
     if (!x[j]) continue;
     double xj = x[j];
@@ -412,8 +449,8 @@ void
 SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
 {
   // Compute A*x=b
-  ASSERT(x.nrows() == nncols);
-  ASSERT(b.nrows() == nnrows);
+  ASSERT(x.nrows() == ncols_);
+  ASSERT(b.nrows() == nrows_);
   ASSERT(x.ncols() == b.ncols());
   int i, j, k;
   //  cout << "x size = " << x.nrows() << " " << x.ncols() << "\n";
@@ -431,6 +468,51 @@ SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
       b.put(i, j, sum);
     }
   }
+}
+
+
+MatrixHandle
+SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
+{
+  // Compute A*B=C
+  ASSERT(b.nrows() == ncols_);
+
+  int i, j, k;
+
+  int *crow = scinew int[nrows_+1];
+  vector<int> ccolv;
+  vector<double> cdatav;
+
+  crow[0] = 0;
+  for (i = 0; i < nrows_; i++)
+  {
+    crow[i+1] = crow[i];
+    for (j = 0; j < b.ncols(); j++)
+    {
+      double sum = 0.0;
+      for (k = rows[i]; k < rows[i+1]; k++)
+      {
+        sum += a[k] * b.get(columns[k], j);
+      }
+      if (sum != 0.0)
+      {
+        ccolv.push_back(j);
+        cdatav.push_back(sum);
+        crow[i+1]++;
+      }
+    }
+  }
+
+  int *ccol = scinew int[ccolv.size()];
+  double *cdata = scinew double[cdatav.size()];
+  for (i=0; i < (int)ccolv.size(); i++)
+  {
+    ccol[i] = ccolv[i];
+    cdata[i] = cdatav[i];
+  }
+
+  return scinew SparseRowMatrix(nrows_, b.ncols(), crow, ccol,
+                                cdatav.size(), cdata);
 }
 
 
@@ -456,18 +538,18 @@ SparseRowMatrix::io(Piostream& stream)
   // Do the base class first...
   Matrix::io(stream);
 
-  stream.io(nnrows);
-  stream.io(nncols);
+  stream.io(nrows_);
+  stream.io(ncols_);
   stream.io(nnz);
   if (stream.reading())
   {
     a=new double[nnz];
     columns=new int[nnz];
-    rows=new int[nnrows+1];
+    rows=new int[nrows_+1];
   }
   int i;
   stream.begin_cheap_delim();
-  for (i=0;i<=nnrows;i++)
+  for (i=0;i<=nrows_;i++)
     stream.io(rows[i]);
   stream.end_cheap_delim();
 
@@ -657,9 +739,9 @@ MatrixHandle
 SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
 {
   ASSERTRANGE(r1, 0, r2+1);
-  ASSERTRANGE(r2, r1, nnrows);
+  ASSERTRANGE(r2, r1, nrows_);
   ASSERTRANGE(c1, 0, c2+1);
-  ASSERTRANGE(c2, c1, nncols);
+  ASSERTRANGE(c2, c1, ncols_);
 
   int i, j;
   int *rs = scinew int[r2-r1+2];
@@ -667,7 +749,7 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
   vector<double> valsv;
 
   rs[0] = 0;
-  for (i = r1; i < nnrows; i++)
+  for (i = r1; i <= r2; i++)
   {
     rs[i-r1+1] = rs[i-r1];
     for (j = rows[i]; j < rows[i+1]; j++)
@@ -682,18 +764,35 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
   }
 
   int *cs = scinew int[csv.size()];
+  double *vals = scinew double[valsv.size()];
   for (i = 0; (unsigned int)i < csv.size(); i++)
   {
     cs[i] = csv[i];
-  }
-
-  double *vals = scinew double[valsv.size()];
-  for (i = 0; (unsigned int)i < valsv.size(); i++)
-  {
     vals[i] = valsv[i];
   }
 
-  return scinew SparseRowMatrix(r2-r1+1, c2-c1+1, rs, cs, (int)valsv.size(), vals);
+  return scinew SparseRowMatrix(r2-r1+1, c2-c1+1, rs, cs,
+                                (int)valsv.size(), vals);
 }
+
+
+SparseRowMatrix *
+SparseRowMatrix::identity(int size)
+{ 
+  int *r = scinew int[size+1];
+  int *c = scinew int[size];
+  double *d = scinew double[size];
+
+  int i;
+  for (i=0; i<size; i++)
+  {
+    c[i] = r[i] = i;
+    d[i] = 1.0;
+  }
+  r[i] = i;
+
+  return scinew SparseRowMatrix(size, size, r, c, size, d);
+}
+
 
 } // End namespace SCIRun

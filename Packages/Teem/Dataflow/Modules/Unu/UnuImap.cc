@@ -102,19 +102,6 @@ void
   idmap_ = (NrrdIPort *)get_iport("IrregularMapNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!idmap_) {
-    error("Unable to initialize iport 'IrregularNrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
-
   if (!inrrd_->get(nrrd_handle))
     return;
   if (!idmap_->get(dmap_handle))
@@ -182,8 +169,7 @@ void
   NrrdDataHandle out(nrrd);
 
   // Copy the properties.
-  *((PropertyManager *) out.get_rep()) =
-    *((PropertyManager *) nrrd_handle.get_rep());
+  out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
   for (int i=0; i<nin->dim && i<nout->dim; i++)

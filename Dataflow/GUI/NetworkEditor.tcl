@@ -567,6 +567,10 @@ proc findMovedModulePath { packvar catvar modvar } {
 {SCIRun Fields ChangeFieldDataAt} {SCIRun FieldsData ChangeFieldBasis}
 {SCIRun Visualization GenTransferFunc} {SCIRun Visualization EditColorMap}
 {SCIRun Visualization EditTransferFunc2} {SCIRun Visualization EditColorMap2D}
+{SCIRun FieldsData BuildInterpMatrix} {SCIRun FieldsData BuildMappingMatrix}
+{SCIRun FieldsData ApplyInterpMatrix} {SCIRun FieldsData ApplyMappingMatrix}
+{SCIRun FieldsData DirectInterpolate} {SCIRun FieldsData DirectMapping}
+{SCIRun Fields DirectInterpolate} {SCIRun FieldsData DirectMapping}
 "
 
     upvar 1 $packvar package $catvar category $modvar module
@@ -1320,7 +1324,7 @@ proc hideProgress { args } {
 }
 
 proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
-    if { [envBool SCIRUN_HIDE_PROGRESS] } return
+    if { [envBool SCIRUN_HIDE_PROGRESS] && ![winfo exists .standalone] } return
     update idletasks
     set w .splash
     if { ![winfo exists $w] } {
@@ -1340,8 +1344,14 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
     }
     set w $w.frame
 
+    # do not show if either env vars are set to true, the only 
+    # exception is when we are calling this from a powerapp's
+    # show_help
     if { [envBool SCIRUN_NOSPLASH] || [envBool SCI_NOSPLASH] } {
 	set show_image 0
+    }
+    if {[winfo exists .standalone]} {
+	set show_image 1
     }
 
     if { [winfo exists $w.fb] } {

@@ -76,12 +76,7 @@ RescaleColorMap::execute()
   ColorMapHandle cHandle;
   ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("ColorMap");
  
- if (!cmap_port) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-
-  // the colormap input is required
+  // The colormap input is required.
   if (!cmap_port->get(cHandle) || !(cHandle.get_rep())) {
     error( "No colormap handle or representation" );
     return;
@@ -106,10 +101,6 @@ RescaleColorMap::execute()
     
     while (pi != range.second) {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
-      if (!ifield) {
-	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-	return;
-      }
       
       // Increment here!  We do this because last one is always
       // empty so we can test for it before issuing empty warning.
@@ -222,17 +213,10 @@ RescaleColorMap::execute()
     }
   }
 
-  // Get a handle to the output colormap port.
-  if( cHandle_.get_rep() ) {
-    ColorMapOPort *ocolormap_port = 
-      (ColorMapOPort *) get_oport("ColorMap");
-
-    if (!ocolormap_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the data downstream
+  if( cHandle_.get_rep() )
+  {
+    ColorMapOPort *ocolormap_port = (ColorMapOPort *) get_oport("ColorMap");
     ocolormap_port->send( cHandle_ );
   }
 }

@@ -77,19 +77,7 @@ IntegrateCurrent::execute()
   FieldIPort* efield_port = (FieldIPort *) get_iport("TetMesh EField");
   FieldIPort* sigmas_port = (FieldIPort *) get_iport("TetMesh Sigmas");
   FieldIPort* trisurf_port = (FieldIPort *) get_iport("TriSurf");
-  if (!efield_port) {
-    error("Unable to initialize iport 'TetMesh EField'.");
-    return;
-  }
-  if (!sigmas_port) {
-    error("Unable to initialize iport 'TetMesh Sigmas'.");
-    return;
-  }
-  if (!trisurf_port) {
-    error("Unable to initialize iport 'TriSurf'.");
-    return;
-  }
-  
+
   FieldHandle efieldH, sigmasH, trisurfH;
 
   if (!efield_port->get(efieldH) || !efieldH.get_rep()) {

@@ -133,11 +133,16 @@ SliceRenderer::draw_slice()
 
   //--------------------------------------------------------------------------
 
-  int nc = tex_->nc();
-  int nb0 = tex_->nb(0);
-  bool use_cmap1 = cmap1_.get_rep();
-  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
-  if(!use_cmap1 && !use_cmap2) return;
+  const int nc = tex_->nc();
+  const int nb0 = tex_->nb(0);
+  const bool use_cmap1 = cmap1_.get_rep();
+  const bool use_cmap2 =
+    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+  if (!use_cmap1 && !use_cmap2)
+  {
+    tex_->unlock_bricks();
+    return;
+  }
   GLboolean use_fog = glIsEnabled(GL_FOG);
   
   //--------------------------------------------------------------------------
@@ -332,11 +337,16 @@ SliceRenderer::multi_level_draw()
 
   //--------------------------------------------------------------------------
 
-  int nc = tex_->nc();
-  int nb0 = tex_->nb(0);
-  bool use_cmap1 = cmap1_.get_rep();
-  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
-  if(!use_cmap1 && !use_cmap2) return;
+  const int nc = tex_->nc();
+  const int nb0 = tex_->nb(0);
+  const bool use_cmap1 = cmap1_.get_rep();
+  const bool use_cmap2 =
+    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+  if (!use_cmap1 && !use_cmap2)
+  {
+    tex_->unlock_bricks();
+    return;
+  }
   GLboolean use_fog = glIsEnabled(GL_FOG);
   
   //--------------------------------------------------------------------------

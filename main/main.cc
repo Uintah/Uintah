@@ -52,6 +52,8 @@
 #include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
+#include <Core/Geom/ShaderProgramARB.h>
+
 
 #include <Core/Services/ServiceLog.h>
 #include <Core/Services/ServiceDB.h>
@@ -80,6 +82,7 @@ using std::cout;
 #pragma set woff 1209
 #pragma set woff 1424
 #endif
+
 
 using namespace SCIRun;
 
@@ -219,6 +222,49 @@ public:
     Thread::exitAll(1);
   }
 };
+
+
+// show_licence_and_copy_sciunrc is not in Core/Util/Environment.h because it
+// depends on GuiInterface to present the user with the license dialog.
+void
+show_license_and_copy_scirunrc(GuiInterface *gui) {
+  const string tclresult = gui->eval("licenseDialog 1");
+  if (tclresult == "cancel")
+  {
+    Thread::exitAll(1);
+  }
+  // check to make sure home directory is there
+  const char* HOME = sci_getenv("HOME");
+  const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
+  ASSERT(HOME);
+  ASSERT(srcdir);
+  if (!HOME) return;
+  // If the user accepted the license then create a .scirunrc for them
+  if (tclresult == "accept") {
+    string homerc = string(HOME)+"/.scirunrc";
+    string cmd;
+    if (gui->eval("validFile "+homerc) == "1") {
+      string backuprc = homerc+"."+string(SCIRUN_VERSION)+"."+
+	string(SCIRUN_RCFILE_SUBVERSION);
+      cmd = string("cp -f ")+homerc+" "+backuprc;
+      std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
+      if (sci_system(cmd.c_str())) {
+	std::cerr << "Error executing: " << cmd << std::endl;
+      }
+    }
+
+    cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
+    std::cout << "Copying " << srcdir << "/scirunrc to " <<
+      homerc << "...\n";
+    if (sci_system(cmd.c_str())) {
+      std::cerr << "Error executing: " << cmd << std::endl;
+    } else { 
+      // if the scirunrc file was copied, then parse it
+      parse_scirunrc(homerc);
+    }
+  }
+}
+
 
 class TCLSocketRunner : public Runnable
 {
@@ -386,6 +432,17 @@ main(int argc, char *argv[], char **environment) {
   
   // Determine if SCIRun is in regression testing mode
   const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
+
+  // Test for shaders.
+  SCIRun::ShaderProgramARB::init_shaders_supported();
+
+  // Load the Network file specified from the command line
+  if (startnetno) {
+    gui->eval("loadnet {"+string(argv[startnetno])+"}");
+    if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || doing_regressions) {
+      gui->eval("netedit scheduleall");
+    }
+  }
 
   // When doing regressions, make thread to kill ourselves after timeout
   if (doing_regressions) {

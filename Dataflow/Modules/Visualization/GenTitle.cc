@@ -125,19 +125,9 @@ void GenTitle::execute(){
 
   // Get a handle to the output geom port.
   GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Title");
-  
-  if (!ogeom_port) {
-    error("Unable to initialize oport 'Title'.");
-    return;
-  }
-  
+
   // Get the time via a matrix
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Time Matrix");
-  
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Time Matrix'.");
-    return;
-  }
   
   if (iShowValue_.get() ) {
     MatrixHandle mHandle;
@@ -287,11 +277,6 @@ GenTitle::tcl_command(GuiArgs& args, void* userdata) {
     /*
     // Get a handle to the output geom port.
     GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Title");
-    
-    if (!ogeom_port) {
-      error("Unable to initialize oport 'Title'.");
-      return;
-    }
     
     color_r_.reset();
     color_g_.reset();

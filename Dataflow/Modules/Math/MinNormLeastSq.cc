@@ -93,31 +93,7 @@ MinNormLeastSq::execute()
   b_imat_  = (MatrixIPort *)get_iport("TargetVec(Col)");
   w_omat_  = (MatrixOPort *)get_oport("WeightVec(Col)");
   bprime_omat_  = (MatrixOPort *)get_oport("ResultVec(Col)");
-  if (!A0_imat_) {
-    error("Unable to initialize iport 'BasisVec1(Col)'.");
-    return;
-  }
-  if (!A1_imat_) {
-    error("Unable to initialize iport 'BasisVec2(Col)'.");
-    return;
-  }
-  if (!A2_imat_) {
-    error("Unable to initialize iport 'BasisVec3(Col)'.");
-    return;
-  }
-  if (!b_imat_) {
-    error("Unable to initialize iport 'TargetVec(Col)'.");
-    return;
-  }
-  if (!w_omat_) {
-    error("Unable to initialize oport 'WeightVec(Col)'.");
-    return;
-  }
-  if (!bprime_omat_) {
-    error("Unable to initialize oport 'ResultVec(Col)'.");
-    return;
-  }
-  
+
   int i;
   vector<MatrixHandle> in(4);
   if (!A0_imat_->get(in[0]) || !in[0].get_rep()) { 

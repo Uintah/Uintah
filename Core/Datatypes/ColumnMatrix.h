@@ -57,55 +57,71 @@ class DenseMatrix;
 class SparseRowMatrix;
 
 class ColumnMatrix : public Matrix {
-  int rows;
   double* data;
-public:
-  double* get_data() const {return data;}
-  void set_data(double* d) {data = d;} 
 
-  ColumnMatrix(int rows=0);
-  virtual ~ColumnMatrix();
+public:
+  ColumnMatrix(int rows = 0);
   ColumnMatrix(const ColumnMatrix&);
   ColumnMatrix& operator=(const ColumnMatrix&);
   virtual ColumnMatrix* clone();
-  inline double& operator[](int) const;
+  virtual ~ColumnMatrix();
 
   virtual DenseMatrix *dense();
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
 
-//  ColumnMatrix *add(ColumnMatrix *m);
-  virtual Matrix *transpose();
+  virtual double *get_data_pointer();
+  virtual size_t get_data_size();
 
-  virtual double& get(int, int) const;
-  double& get(int) const;
-  virtual void put(int row, int col, double val);
-  void put(int row, double val);
-  virtual string type_name() { return "ColumnMatrix"; }
-  virtual int nrows() const;
-  virtual int ncols() const;
-  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
-  virtual int solve(ColumnMatrix&);
-  virtual int solve(vector<double>& sol);
+  inline double& operator[](int r) const
+  {
+    ASSERTRANGE(r, 0, nrows_)
+    return data[r];
+  }
+  double* get_data() const {return data;}
+  void set_data(double* d) {data = d;} 
+  double  get(int r) const      { ASSERTRANGE(r, 0, nrows_); return data[r]; };
+  void    put(int r, double val) { ASSERTRANGE(r, 0, nrows_); data[r] = val; };
+
+  void resize(int);
+
   virtual void zero();
-  virtual double sumOfCol(int);
+  virtual double get(int, int) const;
+  virtual void put(int row, int col, double val);
+  virtual void add(int row, int col, double val);
+  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
+
+  virtual Matrix *transpose();
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs, int beg=-1, int end=-1, 
 		    int spVec=0) const;
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs,
 			      int beg=-1, int end=-1, int spVec=0) const;
-  virtual void print();
-
   virtual void scalar_multiply(double s);
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
+
+  int solve(ColumnMatrix&);
+  int solve(vector<double>& sol);
+  double sumOfCol(int);
 
   DenseMatrix exterior(const ColumnMatrix &) const;
   double vector_norm() const;
   double vector_norm(int& flops, int& memrefs) const;
   double vector_norm(int& flops, int& memrefs, int beg, int end) const;
+
   
+  virtual void print();
+  virtual void print() const;
+  virtual void print(std::ostream&) const;
+  
+  // Persistent representation...
+  virtual string type_name() { return "ColumnMatrix"; }
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
+
   friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
   friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
   friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
@@ -134,28 +150,13 @@ public:
   friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
 				int& flops, int& refs,
 				int beg, int end);
-  friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
+  friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, 
+			double s, const ColumnMatrix&);
   friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  
-  virtual void print() const;
-  virtual void print(std::ostream&) const;
-  void resize(int);
-  
-  // Persistent representation...
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, 
+		  const ColumnMatrix&);
 };
-} // End namespace SCIRun
-#include <Core/Util/Assert.h>
 
-namespace SCIRun {
-
-inline double& ColumnMatrix::operator[](int i) const
-{
-    ASSERTRANGE(i, 0, rows)
-    return data[i];
-}
 
 } // End namespace SCIRun
 

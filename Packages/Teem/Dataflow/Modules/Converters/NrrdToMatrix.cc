@@ -116,23 +116,6 @@ void
   ncols_ = (NrrdIPort *)get_iport("Columns");
   omat_ = (MatrixOPort *)get_oport("Matrix");
 
-  if (!ndata_) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!nrows_) {
-    error("Unable to initialize iport 'Rows'.");
-    return;
-  }
-  if (!ncols_) {
-    error("Unable to initialize iport 'Columns'.");
-    return;
-  }
-  if (!omat_) {
-    error("Unable to initialize oport 'Matrix'.");
-    return;
-  }
-
   NrrdDataHandle dataH;
   NrrdDataHandle rowsH;
   NrrdDataHandle colsH;

@@ -47,7 +47,6 @@
 #include <sci_defs/bits_defs.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/PBuffer.h> // #defines HAVE_PBUFFER
-#include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/GuiInterface/TCLTask.h>
@@ -640,6 +639,8 @@ OpenGL::render_and_save_image(int x, int y,
     regressioncounter--;
     if (regressioncounter <= 0)
     {
+      std::cout.flush();
+      std::cerr.flush();
       Thread::exitAll(0);
     }
     else
@@ -745,6 +746,22 @@ OpenGL::redraw_frame()
   drawinfo_->reset();
 
   int do_stereo=view_window_->gui_do_stereo_.get();
+  if (do_stereo)
+  {
+    GLboolean supported;
+    glGetBooleanv(GL_STEREO, &supported);
+    if (!supported)
+    {
+      do_stereo = false;
+      static bool warnonce = true;
+      if (warnonce)
+      {
+        cout << "Stereo display selected but not supported.\n";
+        warnonce = false;
+      }
+    }
+  }
+
   drawinfo_->ambient_scale_ = view_window_->gui_ambient_scale_.get();
   drawinfo_->diffuse_scale_ = view_window_->gui_diffuse_scale_.get();
   drawinfo_->specular_scale_ = view_window_->gui_specular_scale_.get();
@@ -1482,11 +1499,20 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
   tclID_ = (string) tclID;
 
+  GuiInt useglobal(ctx_->subVar(tclID+"-useglobal", false));
+  if (useglobal.valid() && useglobal.get())
+  {
+    setState(drawinfo, "global");
+    return;
+  }
+
   GuiString type(ctx_->subVar(tclID+"-type",false));
   if (type.valid()) {
-    if (type.get() == "Default")
+    if (type.get() == "Default") 
     {
-      setState(drawinfo,"global");	
+      // 'Default' should be unreachable now, subsumed by useglobal variable.
+      type.set("Gouraud"); // semi-backwards compatability.
+      setState(drawinfo,"global");
       return; // if they are using the default, con't change
     } 
     else if(type.get() == "Wire")

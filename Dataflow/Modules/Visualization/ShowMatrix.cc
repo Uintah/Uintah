@@ -597,10 +597,6 @@ ShowMatrix::execute()
   while (pi != range.second) {
     MatrixIPort *iport = (MatrixIPort *)get_iport(pi->second);
     pi++;
-    if (!iport) {
-      error("Unable to initialize iport '");// + to_string(pi->second) + "'.");
-      return;
-    }
     MatrixHandle matrix;
     if (iport->get(matrix) && matrix.get_rep()) {
       matrices.push_back(matrix);

@@ -135,12 +135,7 @@ AddLight::execute()
   static LightType lt = DirectionalLight;
   bool need_new_light = false;
   GeometryOPort *ogeom_ = (GeometryOPort *)get_oport("Geometry");
-  
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
-  
+
   if(!light_widget_){
     
     if( control_pos_saved_.get() == 1 ) {

@@ -60,28 +60,22 @@ class SparseRowMatrix;
 class DenseMatrix;
 class ColumnMatrix;
 class Matrix;
-class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
 class SHARE Matrix : public PropertyManager
 {
 public:
-  Matrix() : separate_raw_(false), raw_filename_("") {}
-
-  //! make a duplicate, needed to support detach from LockingHandle
+  Matrix(int nrows = 0, int ncols = 0) :
+    nrows_(nrows), ncols_(ncols), separate_raw_(false), raw_filename_("") {}
   virtual ~Matrix();
+
+  //! Make a duplicate, needed to support detach from LockingHandle
   virtual Matrix* clone() = 0;
 
-  //! convert this matrix to a DenseMatrix.
+  //! Convert this matrix to the specified type.
   virtual DenseMatrix* dense() = 0;
-  //! convert this matrix to a SparseRowMatrix.
   virtual SparseRowMatrix* sparse() = 0;
-  //! convert this matrix to a ColumnMatrix.
   virtual ColumnMatrix* column() = 0;
-
-  bool is_dense();
-  bool is_sparse();
-  bool is_column();
 
   // No conversion is done.
   // NULL is returned if the matrix is not of the appropriate type.
@@ -89,29 +83,38 @@ public:
   SparseRowMatrix *as_sparse();
   ColumnMatrix *as_column();
 
-  virtual Matrix* transpose() = 0;
+  // Test to see if the matrix is this subtype.
+  inline bool is_dense() { return as_dense() != NULL; }
+  inline bool is_sparse() { return as_sparse() != NULL; }
+  inline bool is_column() { return as_column() != NULL; }
+
+  inline int nrows() const { return nrows_; }
+  inline int ncols() const { return ncols_; }
+
   virtual double* get_val() { return 0; }
   virtual int* get_row()    { return 0; }
   virtual int* get_col()    { return 0; }
 
-  Transform toTransform();
-  
-  virtual double& get(int, int) const = 0;
+  virtual double *get_data_pointer() = 0;
+  virtual size_t get_data_size() = 0;
+
+  virtual void zero() = 0;
+  virtual double  get(int, int) const = 0;
   virtual void    put(int r, int c, double val) = 0;
-  inline MatrixRow operator[](int r);
-
-  //friend Matrix *Add(Matrix *, Matrix *);
-  //friend Matrix *Mult(Matrix *, Matrix *);
-
-  virtual string type_name() { return "Matrix"; }
-
-  virtual void zero()=0;
-  virtual int nrows() const=0;
-  virtual int ncols() const=0;
+  virtual void    add(int r, int c, double val) = 0;
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
+
+  virtual Matrix* transpose() = 0;
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs,
 		    int beg=-1, int end=-1, int spVec=0) const=0;
+  virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+			      int& flops, int& memrefs,
+			      int beg=-1, int end=-1, int spVec=0) const=0;
+  virtual void scalar_multiply(double s) = 0;
+  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2) = 0;
+
+  Transform toTransform();
   DenseMatrix *direct_inverse();
   DenseMatrix *iterative_inverse();
   int cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
@@ -140,16 +143,6 @@ public:
 		 int useLhsAsGuess=0) const;
   int bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs) const;
 
-  virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-			      int& flops, int& memrefs,
-			      int beg=-1, int end=-1, int spVec=0) const=0;
-
-  virtual void print(ostream&) const {}
-  virtual void print() const {}
-
-  virtual void scalar_multiply(double s) = 0;
-  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2) = 0;
-
   // Separate raw files.
   void set_raw(bool v) { separate_raw_ = v; }
   bool get_raw() { return separate_raw_; }
@@ -157,33 +150,20 @@ public:
   { raw_filename_ = f; separate_raw_ = true; }
   const string get_raw_filename() const { return raw_filename_; }
 
+  virtual void print(ostream&) const {}
+  virtual void print() const {}
+
   // Persistent representation.
+  virtual string type_name() { return "Matrix"; }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 protected:
+  int      nrows_;
+  int      ncols_;
   bool     separate_raw_;
   string   raw_filename_;
 };
-
-
-class MatrixRow
-{
-  Matrix* matrix;
-  int row;
-public:
-  inline MatrixRow(Matrix* matrix, int row) : matrix(matrix), row(row) {}
-  inline ~MatrixRow() {}
-
-  inline double& operator[](int col) {return matrix->get(row, col);}
-};
-
-
-inline MatrixRow
-Matrix::operator[](int row)
-{
-  return MatrixRow(this, row);
-}
 
 
 void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);

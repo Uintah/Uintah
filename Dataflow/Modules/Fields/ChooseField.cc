@@ -74,10 +74,6 @@ void
 ChooseField::execute()
 {
   FieldOPort *ofld = (FieldOPort *)get_oport("Field");
-  if (!ofld) {
-    error("Unable to initialize oport 'Field'.");
-    return;
-  }
 
   update_state(NeedData);
 
@@ -121,10 +117,6 @@ ChooseField::execute()
     }
 
     ifield = (FieldIPort *)get_iport(port_number);
-    if (!ifield) {
-      error("Unable to initialize iport '" + to_string(port_number) + "'.");
-      return;
-    }
     ifield->get(field);
   }
   

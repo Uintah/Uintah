@@ -60,7 +60,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         trace vdelete $this-marker w "$this unpickle"
     }
     
-    method raise_color {col color colMsg} {
+    method raise_color {button color module_command} {
         global $color
         set windowname .ui[modname]_color
         if {[winfo exists $windowname]} {
@@ -68,18 +68,18 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	}
 	# makeColorPicker now creates the $window.color toplevel.
 	makeColorPicker $windowname $color \
-	    "$this set_color $col $color $colMsg" \
+	    "$this set_color $button $color $module_command" \
 	    "destroy $windowname"
     }
     
-    method set_color { col color { colMsg "" } } {
+    method set_color { button color { module_command "" } } {
 	upvar \#0 $color-r r $color-g g $color-b b
 	# format the r,g,b colors into a hexadecimal string representation
 	set colstr [format \#%04x%04x%04x [expr int($r * 65535)] \
 			[expr int($g * 65535)] [expr int($b * 65535)]]
-	$col config -background $colstr -activebackground $colstr
-	if { [string length $colMsg] } {
-	    $this-c $colMsg
+	$button config -background $colstr -activebackground $colstr
+	if { [string length $module_command] } {
+	    $this-c $module_command
 	}
     }
     
@@ -455,7 +455,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	pack $frame.f0 -padx 2 -pady 2 -fill x
 	checkbutton $frame.f0.faux -text "Opacity Modulation (Faux Shading)" \
 	    -relief flat -variable $this-faux -onvalue 1 -offvalue 0 \
-	    -anchor w -command "$this-c needexecute; $this-c redraw true"
+	    -anchor w -command "$this-c redraw; $this-c needexecute"
 	pack $frame.f0.faux -side top -fill x -padx 4
 
         iwidgets::scrolledframe $w.widgets -hscrollmode none \

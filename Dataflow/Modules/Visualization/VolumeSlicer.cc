@@ -43,13 +43,12 @@
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Geom/View.h>
 #include <Core/Volume/SliceRenderer.h>
-#include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Dataflow/Ports/Colormap2Port.h>
 
 #include <iostream>
 #include <algorithm>
-#include <Core/Volume/Utils.h>
 #include <Core/Volume/VideoCardInfo.h>
 
 namespace SCIRun {
@@ -157,18 +156,6 @@ void VolumeSlicer::execute()
   icmap2_ = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom_ = (GeometryOPort*)get_oport("Geometry");
   ocmap_ = (ColorMapOPort*)get_oport("ColorMap");
-  if (!intexture_) {
-    error("Unable to initialize iport 'GL Texture'.");
-    return;
-  }
-  if (!icmap1_ && !icmap2_) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
   
   if (!(intexture_->get(tex_) && tex_.get_rep()))
   {
@@ -183,18 +170,21 @@ void VolumeSlicer::execute()
 
   if (c2)
   {
-#ifndef HAVE_AVR_SUPPORT
-    warning("ColorMap2 usage is not supported by this build.");
-    cmap2 = 0;
-    c2 = false;
-#else
-    if (tex_->nc() == 1)
+    if (!ShaderProgramARB::shaders_supported())
     {
-      warning("ColorMap2 requires gradient magnitude in the texture.");
+      warning("ColorMap2 usage is not supported by this machine.");
       cmap2 = 0;
       c2 = false;
     }
-#endif
+    else
+    {
+      if (tex_->nc() == 1)
+      {
+        warning("ColorMap2 requires gradient magnitude in the texture.");
+        cmap2 = 0;
+        c2 = false;
+      }
+    }
   }
 
   if (!c1 && !c2)

@@ -81,10 +81,6 @@ MoveElemToNode::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Elem Field");
   FieldHandle ifield;
-  if (!ifp) {
-    error("Unable to initialize iport 'Elem Field'.");
-    return;
-  }
   if (!(ifp->get(ifield) && ifield.get_rep()))
   {
     return;
@@ -93,10 +89,6 @@ MoveElemToNode::execute()
   // Get the output port now, because we may be able to pass the field
   // directly through if it is already cell centered.
   FieldOPort *ofp = (FieldOPort *)get_oport("Node Field");
-  if (!ofp) {
-    error("Unable to initialize oport 'Node Field'.");
-    return;
-  }
 
   string ext = "";
   const TypeDescription *mtd = ifield->mesh()->get_type_description();

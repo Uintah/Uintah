@@ -43,6 +43,7 @@
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h> // for SWAP
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/Assert.h>
@@ -242,15 +243,6 @@ if(glXGetConfig(display, &vinfo[i], attrib, &value) != 0){\
   cerr << "Error getting attribute: " << #attrib << std::endl; \
   TCLTask::unlock(); \
   return string(""); \
-}
-
-// SWAP ----------------------------------------------------------------
-template <class T>
-inline void SWAP(T& a, T& b) {
-  T temp;
-  temp = a;
-  a = b;
-  b = temp;
 }
 
 

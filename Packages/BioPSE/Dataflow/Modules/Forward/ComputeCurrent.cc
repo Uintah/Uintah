@@ -78,19 +78,6 @@ ComputeCurrent::execute()
   FieldIPort* sigmas_port = (FieldIPort *) get_iport("TetMesh Sigmas");
   FieldOPort* ofield_port = (FieldOPort *) get_oport("Currents");
 
-  if (!efield_port) {
-    error("Unable to initialize iport 'TetMesh EField'.");
-    return;
-  }
-  if (!sigmas_port) {
-    error("Unable to initialize iport 'TetMesh Sigmas'.");
-    return;
-  }
-  if (!ofield_port) {
-    error("Unable to initialize oport 'Currents'.");
-    return;
-  }
-
   FieldHandle efieldH, sigmasH;
 
   if (!efield_port->get(efieldH) || !efieldH.get_rep()) {

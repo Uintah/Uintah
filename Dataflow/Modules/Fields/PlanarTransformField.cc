@@ -106,29 +106,17 @@ PlanarTransformField::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
 
   FieldHandle fieldin;
-
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
-
   if (!(ifp->get(fieldin) && fieldin.get_rep())) {
     error( "No field handle or representation." );
     return;
   }
 
+  int axis, tx=0, ty=0;
+
   // Get a handle to the index matrix port.
   MatrixIPort *imp = (MatrixIPort *)get_iport("Index Matrix");
 
   MatrixHandle matrixin;
-
-  if (!imp) {
-    error("Unable to initialize iport 'Index Matrix'.");
-    return;
-  }
-
-  int axis, tx=0, ty=0;
-
   if (imp->get(matrixin) ) {
     if( !matrixin.get_rep()) {
       error( "No index matrix representation." );
@@ -165,15 +153,9 @@ PlanarTransformField::execute()
   }
     
   // Get a handle to the output field port.
-  if ( fieldout_.get_rep() ) {
-
+  if ( fieldout_.get_rep() )
+  {
     FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-    
-    if (!ofp) {
-      error("Unable to initialize oport 'Transformed Field'.");
-      return;
-    }
-    
     ofp->send(fieldout_);
   }
 }

@@ -77,22 +77,6 @@ TendMake::execute()
 
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inconfidence_) {
-    error("Unable to initialize iport 'Confidence'.");
-    return;
-  }
-  if (!inevals_) {
-    error("Unable to initialize iport 'Evals'.");
-    return;
-  }
-  if (!inevecs_) {
-    error("Unable to initialize iport 'Evecs'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
   if (!inconfidence_->get(conf_handle))
     return;
   if (!inevals_->get(eval_handle))

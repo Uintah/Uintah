@@ -1839,13 +1839,14 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
       double cmin = color_handle->getMin();
       double cmax = color_handle->getMax();
       double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
-      const Color &c = color_handle->getColor( index );
+      const Color &c = color_handle->getColor(index);
 
       // fill the texture
       texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
       texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
       texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
-      texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 0.0, 1.0)*255);
+      texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 
+					     0.0, 1.0)*255);
       ++niter;
     }
 
@@ -1876,13 +1877,14 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
        double cmin = color_handle->getMin();
        double cmax = color_handle->getMax();
        double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
-       const Color &c = color_handle->getColor( index );
+       const Color &c = color_handle->getColor(index);
 
        // fill the texture
        texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
        texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
        texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
-       texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 0.0, 1.0) * 255);
+       texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 
+					      0.0, 1.0) * 255);
 
      ++fiter;
      }

@@ -27,12 +27,12 @@
 */
 
 
-//    File   : DirectInterpolate.h
+//    File   : DirectMapping.h
 //    Author : Michael Callahan
 //    Date   : June 2001
 
-#if !defined(DirectInterpolate_h)
-#define DirectInterpolate_h
+#if !defined(DirectMapping_h)
+#define DirectMapping_h
 
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Thread.h>
@@ -89,7 +89,7 @@ class DirectInterpAlgoT : public DirectInterpAlgo
     Barrier barrier;
     Mutex maplock;
     
-    _DIData() : barrier("DirectInterpolate Barrier"), maplock("DirectInterpolate Map Lock") {}
+    _DIData() : barrier("DirectMapping Barrier"), maplock("DirectMapping Map Lock") {}
   } DIData;
 
 public:
@@ -395,4 +395,4 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 
 } // end namespace SCIRun
 
-#endif // DirectInterpolate_h
+#endif // DirectMapping_h

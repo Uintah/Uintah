@@ -76,22 +76,12 @@ void
 ChangeCoordinates::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-  if (!iport) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   
   // The input port (with data) is required.
   FieldHandle field;
   if (!iport->get(field) || !field.get_rep())
   {
     error("No input data");
-    return;
-  }
-
-  FieldOPort *ofld = (FieldOPort *)get_oport("Output Field");
-  if (!ofld) {
-    error("Unable to initialize oport 'Field'.");
     return;
   }
 
@@ -104,6 +94,8 @@ ChangeCoordinates::execute()
   Handle<ChangeCoordinatesAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
   algo->execute(field->mesh(), oldsystem, newsystem);
+
+  FieldOPort *ofld = (FieldOPort *)get_oport("Output Field");
   ofld->send(field);
 }
 
