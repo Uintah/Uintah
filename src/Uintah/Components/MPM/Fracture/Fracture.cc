@@ -4,6 +4,7 @@
 
 #include <Uintah/Components/MPM/MPMLabel.h>
 #include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/VarTypes.h>
 
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/NodeIterator.h>
@@ -298,16 +299,31 @@ updateParticleInformationInContactCells(
 {
   const MPMLabel* lb = MPMLabel::getLabels();
 
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
+
   ParticleVariable<Point> pX;
+  ParticleVariable<double> pMass;
+  ParticleVariable<Matrix3> pStress;
+  ParticleVariable<Vector> pVelocity;
+  ParticleVariable<Matrix3> pDeformationGradient;
+  
   ParticleSubset* subset = old_dw->getParticleSubset(matlindex, patch);
   old_dw->get(pX, lb->pXLabel, subset);
+  old_dw->get(pMass, lb->pMassLabel, subset);
+  old_dw->get(pStress, lb->pStressLabel, subset);
+  old_dw->get(pVelocity, lb->pVelocityLabel, subset);
+  new_dw->allocate(pDeformationGradient, lb->pDeformationMeasureLabel, subset);
+  
   Lattice lattice(patch,pX);
+  
+  Vector internalForce,acceleration,velocity;
 
-  for(CellIterator iter(lattice.getLowIndex(),lattice.getHighIndex());
-                   !iter.done(); 
-                   iter++)
+  for(CellIterator cellIter(lattice.getLowIndex(),lattice.getHighIndex());
+                   !cellIter.done(); 
+                   cellIter++)
   {
-    Cell& cell = lattice[*iter];
+    Cell& cell = lattice[*cellIter];
     if(cell.particles.size() > 0)
     {
       std::vector<particleIndex>::const_iterator pIdxIter;
@@ -315,17 +331,23 @@ updateParticleInformationInContactCells(
           pIdxIter != cell.particles.end();
           ++pIdxIter)
       {
-/*
-        LeastrSquareInterpolateVector(pX,
-   const ParticleVariable<Vector>& pValue,
-   *pIdxIter,
-   const IntVector& cellIndex,
-   const Lattice& lattice,
-   ParticleVariable<Matrix3>& pInterpolateValue)
-*/
+        LeastrSquareInterpolateInternalForce(
+          pX,pStress,*pIdxIter,*cellIter,lattice,internalForce);
+        acceleration = internalForce /= pMass[*pIdxIter];
+
+        LeastrSquareInterpolateVector(
+          pX,pVelocity,*pIdxIter,*cellIter,lattice,velocity,
+          pDeformationGradient[*pIdxIter]);
+          
+        pX[*pIdxIter] += velocity * delT;
+        pVelocity[*pIdxIter] += acceleration * delT;
       }
     }
   }
+
+  new_dw->put(pX, lb->pXLabel_preReloc);
+  new_dw->put(pVelocity, lb->pVelocityLabel_preReloc);
+  new_dw->put(pDeformationGradient, lb->pDeformationMeasureLabel_preReloc);
 }
 
 void
@@ -335,7 +357,8 @@ LeastrSquareInterpolateDouble(const ParticleVariable<Point>& pX,
    const particleIndex pIdx,
    const IntVector& cellIndex,
    const Lattice& lattice,
-   ParticleVariable<Vector>& pInterpolateValue)
+   double& interpolateValue,
+   Vector& gradientValue)
 {
 }
 
@@ -346,7 +369,8 @@ LeastrSquareInterpolateVector(const ParticleVariable<Point>& pX,
    const particleIndex pIdx,
    const IntVector& cellIndex,
    const Lattice& lattice,
-   ParticleVariable<Matrix3>& pInterpolateValue)
+   Vector& interpolateValue,
+   Matrix3& gradientValue)
 {
 }
 
@@ -357,7 +381,7 @@ LeastrSquareInterpolateInternalForce(const ParticleVariable<Point>& pX,
    const particleIndex pIdx,
    const IntVector& cellIndex,
    const Lattice& lattice,
-   ParticleVariable<Vector>& pInternalForce)
+   Vector& pInternalForce)
 {
 }
 
@@ -406,6 +430,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.25  2000/07/05 21:37:52  tan
+// Filled in the function of updateParticleInformationInContactCells.
+//
 // Revision 1.24  2000/06/23 16:49:32  tan
 // Added LeastSquare Approximation and Lattice for neighboring algorithm.
 //
