@@ -164,13 +164,13 @@ void UnuAxinfo::execute()
       nout->axis[axis].kind = nrrdKindUnknown;
     }
     
-    if (AIR_EXISTS(min_.get())) {
+    if (airExists_d(min_.get())) {
       nout->axis[axis].min = min_.get();
     }
-    if (AIR_EXISTS(max_.get())) {
+    if (airExists_d(max_.get())) {
       nout->axis[axis].max = max_.get();
     }
-    if (AIR_EXISTS(spacing_.get())) {
+    if (airExists_d(spacing_.get())) {
       nout->axis[axis].spacing = spacing_.get();
     }
   }
