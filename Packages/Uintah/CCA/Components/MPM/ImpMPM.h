@@ -204,6 +204,13 @@ private:
                                        DataWarehouse* new_dw,
                                        bool recursion);
 
+  void computeContactForce(            const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       bool recursion);
+
   void iterate(                        const ProcessorGroup* pg,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -270,6 +277,9 @@ private:
                                     const MaterialSet*,const bool recursion);
 
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
+				    const MaterialSet*, const bool recursion);
+
+  void scheduleComputeContactForce( SchedulerP&, const PatchSet*,
 				    const MaterialSet*, const bool recursion);
 
   void scheduleFormQ(               SchedulerP&, const PatchSet*,

@@ -80,6 +80,7 @@ using std::vector;
       const VarLabel* gMomExedVelocityStarLabel;
       const VarLabel* gExternalForceLabel;
       const VarLabel* gInternalForceLabel;
+      const VarLabel* gContactForceLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
       const VarLabel* gSp_volLabel;          // specific volume 

@@ -174,6 +174,9 @@ MPMLabel::MPMLabel()
   gInternalForceLabel = VarLabel::create( "g.internalforce",
 			NCVariable<Vector>::getTypeDescription() );
   
+  gContactForceLabel  = VarLabel::create( "g.contactforce",
+			NCVariable<Vector>::getTypeDescription() );
+  
   gVelocityStarLabel = VarLabel::create( "g.velocity_star",
 			NCVariable<Vector>::getTypeDescription() );
   
@@ -376,6 +379,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gMomExedVelocityLabel);
   VarLabel::destroy(gExternalForceLabel);
   VarLabel::destroy(gInternalForceLabel);
+  VarLabel::destroy(gContactForceLabel);
   VarLabel::destroy(gVelocityStarLabel);
   VarLabel::destroy(gMomExedVelocityStarLabel);
   VarLabel::destroy(gNormTractionLabel);

@@ -243,6 +243,8 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleComputeInternalForce(           sched, d_perproc_patches,matls,false);
 
+//  scheduleComputeContactForce(            sched, d_perproc_patches,matls,false);
+
   scheduleFormQ(                          sched, d_perproc_patches,matls,false);
 
   scheduleSolveForDuCG(                   sched, d_perproc_patches,matls);
@@ -299,6 +301,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gAccelerationLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gInternalForceLabel);
+  t->computes(lb->gContactForceLabel);
   t->computes(lb->gStressForSavingLabel);
   t->computes(lb->TotalMassLabel);
   
@@ -414,7 +417,7 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 					  const bool recursion)
 {
   Task* t = scinew Task("ImpMPM::computeInternalForce",
-			this, &ImpMPM::computeInternalForce,recursion);
+                         this, &ImpMPM::computeInternalForce,recursion);
 
   if (recursion) {
     t->requires(Task::ParentOldDW,lb->pXLabel,        Ghost::AroundNodes,1);
@@ -433,9 +436,33 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
     t->modifies(lb->gInternalForceLabel);  
     t->modifies(lb->gStressForSavingLabel);  
   }
-  
+
   sched->addTask(t, patches, matls);
-  
+
+}
+
+void ImpMPM::scheduleComputeContactForce(SchedulerP& sched,
+					 const PatchSet* patches,
+					 const MaterialSet* matls,
+					 const bool recursion)
+{
+  Task* t = scinew Task("ImpMPM::computeContactForce",
+                         this, &ImpMPM::computeContactForce,recursion);
+
+  if (recursion) {
+    t->requires(Task::ParentNewDW,lb->gMassLabel,         Ghost::None);
+    t->requires(Task::ParentNewDW,lb->gVelocityLabel,     Ghost::None);
+    t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
+    t->computes(lb->gContactForceLabel);  
+  } else {
+    t->requires(Task::NewDW,lb->gMassLabel,               Ghost::None);
+    t->requires(Task::NewDW,lb->gVelocityLabel,           Ghost::None);
+    t->requires(Task::OldDW,d_sharedState->get_delt_label());
+    t->modifies(lb->gContactForceLabel);  
+  }
+
+  sched->addTask(t, patches, matls);
+
 }
 
 void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
@@ -449,6 +476,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
   if (recursion) {
     t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
     t->requires(Task::NewDW,      lb->gInternalForceLabel,gnone,0);
+//  t->requires(Task::NewDW,      lb->gContactForceLabel, gnone,0);
     t->requires(Task::ParentNewDW,lb->gExternalForceLabel,gnone,0);
     t->requires(Task::OldDW,      lb->dispNewLabel,       gnone,0);
     t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,  gnone,0);
@@ -457,6 +485,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
   } else {
     t->requires(Task::OldDW,      d_sharedState->get_delt_label());
     t->requires(Task::NewDW,      lb->gInternalForceLabel,gnone,0);
+//  t->requires(Task::NewDW,      lb->gContactForceLabel, gnone,0);
     t->requires(Task::NewDW,      lb->gExternalForceLabel,gnone,0);
     t->requires(Task::NewDW,      lb->dispNewLabel,       gnone,0);
     t->requires(Task::NewDW,      lb->gVelocityLabel,     gnone,0);
@@ -536,14 +565,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 
   task->hasSubScheduler();
 
-  // Required in computeStressTensor
-  //task->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
-#if 0
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
-#endif
-
-  // Trying out as was done with gVelocityOld
-  // We get the parent's old_dw
   task->requires(Task::OldDW,lb->pXLabel,                 Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeLabel,            Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeOldLabel,         Ghost::None,0);
@@ -568,7 +589,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::NewDW,lb->dispIncNorm);
 
   sched->addTask(task,d_perproc_patches,d_sharedState->allMaterials());
-
 }
 
 void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
@@ -613,7 +633,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gVelocityLabel,         Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->dispNewLabel,           Ghost::AroundCells,1);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
@@ -662,35 +681,29 @@ void ImpMPM::iterate(const ProcessorGroup*,
   
   GridP grid = level->getGrid();
   subsched->advanceDataWarehouse(grid);
+  const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
   // Create the tasks
 
-  scheduleDestroyMatrix(          subsched, level->eachPatch(),
-                                         d_sharedState->allMPMMaterials(),true);
+  scheduleDestroyMatrix(          subsched,level->eachPatch(), matls,true);
 
-  scheduleCreateMatrix(           subsched, level->eachPatch(), 
-                                         d_sharedState->allMPMMaterials(),true);
+  scheduleCreateMatrix(           subsched,level->eachPatch(), matls,true);
   
-  scheduleComputeStressTensor(    subsched,level->eachPatch(),
-                                         d_sharedState->allMPMMaterials(),true);
+  scheduleComputeStressTensor(    subsched,level->eachPatch(), matls,true);
 
-  scheduleFormStiffnessMatrix(    subsched,level->eachPatch(),
-                                        d_sharedState->allMPMMaterials(),true);
+  scheduleFormStiffnessMatrix(    subsched,level->eachPatch(), matls,true);
 
-  scheduleComputeInternalForce(   subsched,level->eachPatch(),
-                                         d_sharedState->allMPMMaterials(),true);
+  scheduleComputeInternalForce(   subsched,level->eachPatch(), matls,true);
 
-  scheduleFormQ(                  subsched,level->eachPatch(),
-                                         d_sharedState->allMPMMaterials(),true);
+//  scheduleComputeContactForce(    subsched,level->eachPatch(), matls,true);
 
-  scheduleSolveForDuCG(           subsched,level->eachPatch(),
-                                         d_sharedState->allMPMMaterials());
+  scheduleFormQ(                  subsched,level->eachPatch(), matls,true);
 
-  scheduleUpdateGridKinematics(   subsched,level->eachPatch(),
-                                         d_sharedState->allMPMMaterials(),true);
+  scheduleSolveForDuCG(           subsched,level->eachPatch(), matls);
 
-  scheduleCheckConvergence(       subsched,level,level->eachPatch(),
-                                         d_sharedState->allMPMMaterials(),true);
+  scheduleUpdateGridKinematics(   subsched,level->eachPatch(), matls,true);
+
+  scheduleCheckConvergence(       subsched,level,level->eachPatch(),matls,true);
  
   subsched->compile(d_myworld);
 
@@ -874,7 +887,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the grid data
       NCVariable<double> gmass,gvolume;
       NCVariable<Vector> gvelocity,gvelocity_old,gacceleration,dispNew;
-      NCVariable<Vector> gexternalforce,ginternalforce;
+      NCVariable<Vector> gexternalforce,ginternalforce,gcontactforce;
       NCVariable<Matrix3> gstress;
 
       new_dw->allocateAndPut(gmass,         lb->gMassLabel,         matl,patch);
@@ -885,6 +898,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gacceleration, lb->gAccelerationLabel, matl,patch);
       new_dw->allocateAndPut(gexternalforce,lb->gExternalForceLabel,matl,patch);
       new_dw->allocateAndPut(ginternalforce,lb->gInternalForceLabel,matl,patch);
+      new_dw->allocateAndPut(gcontactforce, lb->gContactForceLabel, matl,patch);
       new_dw->allocateAndPut(gstress,     lb->gStressForSavingLabel,matl,patch);
 
 
@@ -896,6 +910,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gacceleration.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
       ginternalforce.initialize(Vector(0,0,0));
+      gcontactforce.initialize(Vector(0,0,0));
       gstress.initialize(Matrix3(0.));
 
       // Interpolate particle data to Grid data.
@@ -1355,7 +1370,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
+
     cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
 	       <<"\t\t\t IMPM"<< "\n" << "\n";
     
@@ -1437,9 +1452,75 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
   }
 }
 
+void ImpMPM::computeContactForce(const ProcessorGroup*,
+				 const PatchSubset* patches,
+				 const MaterialSubset* ,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw,
+				 const bool recursion)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Vector centerOfMassVelocity(0.0,0.0,0.0);
+
+    cout_doing <<"Doing computeContactForce on patch " << patch->getID()
+	       <<"\t\t\t IMPM"<< "\n" << "\n";
+
+    delt_vartype dt;
+
+    Ghost::GhostType  gnone = Ghost::None;
+    int numMatls = d_sharedState->getNumMPMMatls();
+    StaticArray<constNCVariable<double> >  gmass(numMatls);
+    StaticArray<constNCVariable<Vector> >  gvelocity(numMatls);
+    StaticArray<NCVariable<Vector> >  con_force(numMatls);
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      if (recursion) {
+	DataWarehouse* parent_old_dw =
+	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+	DataWarehouse* parent_new_dw =
+	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+	parent_new_dw->get(gmass[m],  lb->gMassLabel,     dwi,patch,gnone,0);
+	new_dw->get(gvelocity[m],     lb->gVelocityLabel, dwi,patch,gnone,0);
+//	parent_old_dw->get(dt,d_sharedState->get_delt_label());
+      	new_dw->allocateAndPut(con_force[m],lb->gContactForceLabel, dwi, patch);
+      } else {
+	new_dw->get(gmass[m],         lb->gMassLabel,       dwi,patch,gnone,0);
+	new_dw->get(gvelocity[m],     lb->gVelocityOldLabel,dwi,patch,gnone,0);
+//     	old_dw->get(dt, d_sharedState->get_delt_label() );
+	new_dw->getModifiable(con_force[m], lb->gContactForceLabel, dwi, patch);
+      }
+    }
+
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      Vector centerOfMassMom(0,0,0);
+      double centerOfMassMass=0.0;
+      for(int n = 0; n < numMatls; n++){
+        centerOfMassMom +=gvelocity[n][c] * gmass[n][c];
+        centerOfMassMass+=gmass[n][c];
+      }
+
+      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+      for(int n = 0; n < numMatls; n++){
+	con_force[n][c] = Vector(0.,0.,0.);
+//      con_force[n][c] = (centerOfMassVelocity-gvelocity[n][c])*gmass[n][c]/dt;
+	if(!compare(gmass[n][c],0.0)){
+          con_force[n][c] = (centerOfMassVelocity-gvelocity[n][c])*gmass[n][c]/1.e-2;
+	  cout << "con_force " << con_force[n][c] << endl;
+	  cout << "centerOfMassVel " << centerOfMassVelocity
+               << " gvelocity " << gvelocity[n][c] << endl;
+	}
+      }
+    }
+  }
+}
+
 void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
-			const MaterialSubset*, DataWarehouse* old_dw,
-			DataWarehouse* new_dw, const bool recursion)
+                   const MaterialSubset*, DataWarehouse* old_dw,
+                   DataWarehouse* new_dw, const bool recursion)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1460,7 +1541,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       delt_vartype dt;
       Ghost::GhostType  gnone = Ghost::None;
 
-      constNCVariable<Vector> extForce, intForce;
+      constNCVariable<Vector> extForce, intForce, conForce;
       constNCVariable<Vector> dispNew,velocity,accel;
       constNCVariable<double> mass;
       if (recursion) {
@@ -1471,6 +1552,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
         parent_old_dw->get(dt,d_sharedState->get_delt_label());
         new_dw->get(       intForce, lb->gInternalForceLabel,dwi,patch,gnone,0);
+//      new_dw->get(       conForce, lb->gContactForceLabel, dwi,patch,gnone,0);
         old_dw->get(       dispNew,  lb->dispNewLabel,       dwi,patch,gnone,0);
         parent_new_dw->get(extForce, lb->gExternalForceLabel,dwi,patch,gnone,0);
         parent_new_dw->get(velocity, lb->gVelocityOldLabel,  dwi,patch,gnone,0);
@@ -1478,6 +1560,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         parent_new_dw->get(mass,     lb->gMassLabel,         dwi,patch,gnone,0);
       } else {
         new_dw->get(intForce,        lb->gInternalForceLabel,dwi,patch,gnone,0);
+//      new_dw->get(conForce,        lb->gContactForceLabel, dwi,patch,gnone,0);
         new_dw->get(extForce,        lb->gExternalForceLabel,dwi,patch,gnone,0);
         new_dw->get(dispNew,         lb->dispNewLabel,       dwi,patch,gnone,0);
         new_dw->get(velocity,        lb->gVelocityLabel,     dwi,patch,gnone,0);
@@ -1509,6 +1592,12 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
                    accel[n].y())*mass[n];
           v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
                    accel[n].z())*mass[n];
+//          v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
+//                   accel[n].x())*mass[n] - 1.*conForce[n].x();
+//          v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
+//                   accel[n].y())*mass[n] - 1.*conForce[n].y();
+//          v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
+//                   accel[n].z())*mass[n] - 1.*conForce[n].z();
         }
         d_solver[m]->fillVector(dof[0],double(v[0]));
         d_solver[m]->fillVector(dof[1],double(v[1]));
@@ -1613,7 +1702,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
+      int dwi = mpm_matl->getDWIndex();
 
       NCVariable<Vector> dispNew,velocity;
       constNCVariable<Vector> dispInc,dispNew_old,velocity_old;
@@ -1626,18 +1715,18 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         DataWarehouse* parent_old_dw = 
           new_dw->getOtherDataWarehouse(Task::ParentOldDW);
         parent_old_dw->get(dt, d_sharedState->get_delt_label());
-        old_dw->get(dispNew_old, lb->dispNewLabel, matlindex,patch,gnone,0);
-        new_dw->get(dispInc,     lb->dispIncLabel, matlindex,patch,gnone,0);
-        new_dw->allocateAndPut(dispNew,  lb->dispNewLabel,     matlindex,patch);
-        new_dw->allocateAndPut(velocity, lb->gVelocityLabel,   matlindex,patch);
-        parent_new_dw->get(velocity_old, lb->gVelocityOldLabel,matlindex,patch,
-                                                                       gnone,0);
+        old_dw->get(dispNew_old,         lb->dispNewLabel,   dwi,patch,gnone,0);
+        new_dw->get(dispInc,             lb->dispIncLabel,   dwi,patch,gnone,0);
+        new_dw->allocateAndPut(dispNew,  lb->dispNewLabel,   dwi,patch);
+        new_dw->allocateAndPut(velocity, lb->gVelocityLabel, dwi,patch);
+        parent_new_dw->get(velocity_old, lb->gVelocityOldLabel,
+                                                             dwi,patch,gnone,0);
       }
       else {
-        new_dw->getModifiable(dispNew,  lb->dispNewLabel,   matlindex,patch);
-        new_dw->getModifiable(velocity, lb->gVelocityLabel, matlindex,patch);
-        new_dw->get(dispInc,     lb->dispIncLabel,     matlindex,patch,gnone,0);
-        new_dw->get(velocity_old,lb->gVelocityOldLabel,matlindex,patch,gnone,0);
+        new_dw->getModifiable(dispNew, lb->dispNewLabel,     dwi,patch);
+        new_dw->getModifiable(velocity,lb->gVelocityLabel,   dwi,patch);
+        new_dw->get(dispInc,           lb->dispIncLabel,     dwi,patch,gnone,0);
+        new_dw->get(velocity_old,      lb->gVelocityOldLabel,dwi,patch,gnone,0);
         old_dw->get(dt, d_sharedState->get_delt_label());
       } 
 
@@ -1757,7 +1846,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
       new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
       new_dw->put(sum_vartype(dispIncQNorm),  lb->dispIncQNorm);
 
-     }  // matlindex == 0
+     }
 
     }  // End of loop over materials
   }  // End of loop over patches
@@ -1813,8 +1902,8 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
       double fodt = 4./(delT);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	acceleration[*iter] = dispNew[*iter]*fodts - velocity[*iter]*fodt
-	  - acceleration[*iter];
+	IntVector c = *iter;
+	acceleration[c] = dispNew[c]*fodts - velocity[c]*fodt - acceleration[c];
       }
 
     }
@@ -1823,10 +1912,10 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
 
 
 void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
-						const PatchSubset* patches,
-						const MaterialSubset* ,
-						DataWarehouse* old_dw,
-						DataWarehouse* new_dw)
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* ,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1837,7 +1926,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     // Performs the interpolation from the cell vertices of the grid
-    // acceleration and velocity to the particles to update their
+    // acceleration and displacement to the particles to update their
     // velocity and position respectively
     Vector disp(0.0,0.0,0.0);
     Vector acc(0.0,0.0,0.0);
@@ -1861,7 +1950,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<double> pmassNew,pvolumeNew,newpvolumeold,pTemp;
   
       // Get the arrays of grid data on which the new part. values depend
-      constNCVariable<Vector> dispNew, gacceleration,gvelocity;
+      constNCVariable<Vector> dispNew, gacceleration;
       constNCVariable<double> dTdt;
 
       delt_vartype delT;
@@ -1892,7 +1981,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->get(dispNew,      lb->dispNewLabel,      dwindex, patch, gac, 1);
       new_dw->get(gacceleration,lb->gAccelerationLabel,dwindex, patch, gac, 1);
-      new_dw->get(gvelocity,    lb->gVelocityLabel,    dwindex, patch, gac, 1);
      
       NCVariable<double> dTdt_create, massBurnFraction_create;	
       new_dw->allocateTemporary(dTdt_create, patch,Ghost::None,0);
