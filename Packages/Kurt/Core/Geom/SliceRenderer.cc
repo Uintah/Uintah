@@ -16,6 +16,7 @@
 */
 
 #include <Packages/Kurt/Core/Geom/SliceRenderer.h>
+#include <Core/Util/NotFinished.h>
 // #include <Core/Geometry/Point.h>
 // #include <Core/Datatypes/Field.h>
 

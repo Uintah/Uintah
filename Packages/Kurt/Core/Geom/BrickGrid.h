@@ -10,14 +10,15 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <Core/Datatypes/Field.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Packages/Kurt/Core/Geom/BrickGridThread.h>
 #include <Packages/Kurt/Core/Geom/GridBrick.h>
+#include <vector>
 
 using std::pair;
+using std::vector;
 
 namespace Kurt {
 
@@ -33,7 +34,6 @@ using SCIRun::LatVolField;
 using SCIRun::Piostream;
 using SCIRun::Thread;
 using Uintah::ShareAssignArray3;
-using Uintah::LevelField;
 using Uintah::Semaphore;
 class GridVolRen;
 
@@ -176,10 +176,7 @@ public:
     
 private:
   template <class Data>
-    void level_field_init( LevelField<Data>& tex );
-
-  template <class Data>
-    void lat_vol_init( LatVolField<Data>& tex );
+    void init( LatVolField<Data>& tex );
 
   unsigned char SETVAL(double val);
   bool is_fixed_;
@@ -194,112 +191,9 @@ private:
 
 
 
-template<class Data> 
-void BrickGrid::level_field_init(LevelField<Data>& tex)
-{
-  int nx,ny,nz;
-  int bx,by,bz;
-
-  const string data_type = tex.get_type_name(1);
-  typename LevelField<Data>::mesh_type *m = tex.get_typed_mesh().get_rep();
-
-  min_ = m->get_min();
-  max_ = m->get_max();
-  
-  if( tex.data_at() == Field::CELL ){
-    nx = m->get_nx()-1;
-    ny = m->get_ny()-1;
-    nz = m->get_nz()-1;
-  } else {
-    nx = m->get_nx();
-    ny = m->get_ny();
-    nz = m->get_nz();
-  }
-
-  bx = ceil((nx-1)/(double)(brick_size_ - 1));
-  by = ceil((ny-1)/(double)(brick_size_ - 1));
-  bz = ceil((nz-1)/(double)(brick_size_ - 1));
-
-
-  int i,j,k;
-  int ix,iy,iz, bs;
-  double dx,dy,dz;
-  Vector diag(max_ - min_);
-  dx = diag.x()/(nx - 1);
-  dy = diag.y()/(ny - 1);
-  dz = diag.z()/(nz - 1);
-  
-
-  if( !bricks_ )
-    bricks_ = scinew Array3<GridBrick*>(bx,by,bz);
-  else {
-    for( i = 0; i < bricks_->dim1(); i++)
-      for( j = 0; j < bricks_->dim2(); j++)
-	for( k = 0; k < bricks_->dim3(); k++)
-	  delete (*bricks_)(i,j,k);
-
-    bricks_->newsize(bx,by,bz);
-  }
-
-  ix = 0;
-  bs = brick_size_ - 1;
-  for(i = 0; i < bx; i++, ix += bs){
-    iy = 0;
-    for(j = 0; j < by; j++, iy += bs){
-      iz = 0;
-      for(k = 0; k < bz; k++, iz+= bs) {
-	int padx = 0, pady = 0, padz = 0;
-	Array3<unsigned char> *brick_data =
-	  scinew Array3<unsigned char>(brick_size_,brick_size_,brick_size_);
-	IntVector imin(ix,iy,iz);
-	IntVector imax(Min(ix+bs,nx-1),
-		       Min(iy+bs,ny-1),
-		       Min(iz+bs,nz-1));
-	if( ix+bs > nx-1) {
-	  padx = ix+bs - (nx - 1) ;
-	  imax.x(nx - 1);
-	}
-	if( iy+bs > ny - 1) {
-	  pady = iy+bs - (ny - 1) ;
-	  imax.y(ny - 1);
-	}
-	if( iz+bs > nz -1) {
-	  padz = iz+bs - (nz - 1) ;
-	  imax.z(nz - 1 );
-	}
-
-	(*bricks_)(i,j,k) =  scinew GridBrick(min_ + imin*Vector(dx,dy,dz),
-				       min_ + imax*Vector(dx,dy,dz),
-				       imin, imax, padx, pady, padz,
-				       0, brick_data);
-
-      }
-    }
-  }
-
-  int max_workers = Max(Thread::numProcessors()/2, 4);
-  Semaphore* sema = scinew Semaphore( "BrickGrid  semaphore",
-					     max_workers); 
-
-  vector<ShareAssignArray3<Data> > tdata = tex.fdata();
-  vector<ShareAssignArray3<Data> >::iterator vit = tdata.begin();
-  vector<ShareAssignArray3<Data> >::iterator vit_end = tdata.end();
-  IntVector offset( (*vit).getLowIndex() );
-  for(;vit != vit_end; ++ vit){
-    sema->down();
-    Thread *thrd = 
-      scinew Thread( scinew BrickGridThread<Data>(*vit, minmax_,
-						  bricks_, offset, sema),
-		     "BrickGrid worker");
-    thrd->detach();
-  }
-  sema->down(max_workers);
-  if(sema) delete sema;
-  
-}
 
 template<class Data> 
-void BrickGrid::lat_vol_init( LatVolField<Data>& tex )
+void BrickGrid::init( LatVolField<Data>& tex )
 {
   int nx,ny,nz;
   int bx,by,bz;
@@ -320,14 +214,9 @@ void BrickGrid::lat_vol_init( LatVolField<Data>& tex )
   }
   tex_x_ = nx; tex_y_ = ny; tex_z_ = nz;
 
-//   cerr<<"Texture Data size = ("<<nx<<","<<ny<<","<<nz<<
-//     ")\nTexture min point is "<< min_<<
-//     "\nTexture max point is "<<max_<<endl;
-
   bx = ceil((nx-1)/(double)(brick_size_ - 1));
   by = ceil((ny-1)/(double)(brick_size_ - 1));
   bz = ceil((nz-1)/(double)(brick_size_ - 1));
-
 
   int i,j,k;
   int ix,iy,iz, bs;
@@ -404,24 +293,6 @@ void BrickGrid::lat_vol_init( LatVolField<Data>& tex )
       }
     }
   }
-//   for(i = 0; i < bx; i++, ix += bs){
-//     iy = 0;
-//     for(j = 0; j < by; j++, iy += bs){
-//       iz = 0;
-//       for(k = 0; k < bz; k++, iz+= bs) {
-// 	IntVector imin(ix,iy,iz);
-// 	IntVector imax(Min(ix+bs,nx-1),
-// 		       Min(iy+bs,ny-1),
-// 		       Min(iz+bs,nz-1));
-// 	sema->down();
-// 	Thread *thrd = 
-// 	  scinew Thread( scinew LatVolThread<Data>(tex,imin,imax, minmax_,
-// 				      ((*bricks_)(i,j,k))->texture(), sema),
-// 		     "BrickGrid worker");
-// 	thrd->detach();
-//       }
-//     }
-//   }
   sema->down(max_workers);
   if(sema) delete sema;
 }
