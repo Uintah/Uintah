@@ -130,7 +130,7 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
         }
         toplevel $w -borderwidth 5
 
-	iwidgets::scrolledframe $w.tensors -hscrollmode none
+	iwidgets::scrolledframe $w.tensors -hscrollmode none -vscrollmode dynamic
 
 	#puts "modcon: $w"
 
