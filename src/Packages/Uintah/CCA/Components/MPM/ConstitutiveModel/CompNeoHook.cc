@@ -293,7 +293,7 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    const MaterialSubset* matlset = matl->thisMaterial();
    task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
+   //   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						 matlset, Ghost::None);
