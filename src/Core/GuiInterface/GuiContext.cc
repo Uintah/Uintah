@@ -39,6 +39,7 @@ using namespace SCIRun;
 GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
   : gui(gui), name(name), cached(false), save(save)
 {
+  gui->execute("initVar \""+name+"\""); 
 }
 
 GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
