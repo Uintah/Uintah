@@ -60,10 +60,10 @@ namespace Uintah {
     
     const VarLabel* pViscoStressLabel;
     const VarLabel* pViscoStressLabel_preReloc;//visco stress
-    
+
     const VarLabel* pPrevStressLabel;
     const VarLabel* pPrevStressLabel_preReloc;
-    
+
     const VarLabel* pHistory1Label;
     const VarLabel* pHistory1Label_preReloc;
 
@@ -168,9 +168,6 @@ namespace Uintah {
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
-
-    const VarLabel* bElBarLabel;
-    const VarLabel* bElBarLabel_preReloc;
 
   };
 } // End namespace Uintah
