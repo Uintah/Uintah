@@ -79,13 +79,13 @@ itcl_class Fusion_Render_Plot2DViewer {
         } else {
 	    toplevel $w
 
-# Plotting window.
+	    # Plotting window.
 	    PLWin $w.plw
 
-# Main ui which will be detachable.
+	    # Main ui which will be detachable.
 	    frame $w.ui
 
-# Plot tabs window with in the main ui window.
+	    # Plot tabs window with in the main ui window.
 	    iwidgets::labeledframe $w.ui.tab_title \
 		-labelpos nw -labeltext "Plots"
 
@@ -101,7 +101,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 	    $plot.tabs configure -tabpos "n"
 	    pack $plot.tabs -side top -expand yes
 
-# UI Widget window.
+	    # UI Widget window.
 	    frame $w.ui.widgets
 
 	    #  Options
@@ -724,13 +724,14 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 #Create a rainbow color map.
 	rainbow_cmap1 $w 36 1
-	set cOffset [expr 1.0/($zmax-$zmin)]
+	set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
 
 # Select color 1 from colormap 0
 	$w cmd plcol0 1
 
 # Set the plotting envelope i.e. the min-max of the plot.
-	$w cmd plenv $xmin $xmax $ymin $ymax 0 0
+	$w cmd plenv [set $this-xmin] [set $this-xmax] \
+  	             [set $this-ymin] [set $this-ymax] 0 0
 
 	global $this-title-$plt
 	global $this-abscissa-$plt
@@ -739,8 +740,6 @@ itcl_class Fusion_Render_Plot2DViewer {
 # Select color 2 from colormap 0
 	$w cmd plcol0 5
 	$w cmd pllab [set $this-abscissa-$plt] [set $this-ordinate-$plt] [set $this-title-$plt]
-
-# Draw a point for each node
 
 	matrix xPt float 1
 	matrix yPt float 1
@@ -764,6 +763,8 @@ itcl_class Fusion_Render_Plot2DViewer {
 		global $this-skip-$plt-$dat
 		set inc [set $this-skip-$plt-$dat]
 
+# Draw a point for each node
+
 		if { $fill == 0 } {
 
 		    for {set i 0} {$i < [set $this-idim-$dat]} {incr i $inc} {
@@ -773,14 +774,13 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 			if { [set $this-color-$plt-$dat] == 0 } {
 
-			    set col [expr ([v-$dat $i 0]-$zmin)*$cOffset]
+			    set col [expr ([v-$dat $i 0]-[set $this-zmin])*$cOffset]
 			    
 			    if { 1.0 < $col } { set col 1.0 }
 			    if { $col < 0.0 } { set col 0.0 }
 			    
 			    $w cmd plcol1 $col
 			} else {
-
 			    $w cmd plcol0 [set $this-color-$plt-$dat]
 			}
 # Plot a symbol 
@@ -828,8 +828,6 @@ itcl_class Fusion_Render_Plot2DViewer {
 
     method plot2D {{w loopback} plt fill } {
 
-	set dat 0
-
 	global $this-xmin
 	global $this-xmax
 	global $this-ymin
@@ -837,132 +835,177 @@ itcl_class Fusion_Render_Plot2DViewer {
 	global $this-zmin
 	global $this-zmax
 
-	global $this-idim-$dat
-	global $this-jdim-$dat
+	set xmin  10000000.0
+	set xmax -10000000.0
+	set ymin  10000000.0
+	set ymax -10000000.0
+	set zmin  10000000.0
+	set zmax -10000000.0
 
-	if { [set $this-idim-$dat] >= 1 &&
-	     [set $this-jdim-$dat] == 1 } {
-	    plot1D $w $plt $fill
+	set plotSomething 0
 
-# Make sure there is data for this data.
-	} elseif { [set $this-idim-$dat] >= 1 &&
-		   [set $this-jdim-$dat] >= 1 } {
+	for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
 	    
-	    global haveData
+	    global $this-active-$plt-$dat
+	    global $this-idim-$dat
 
-	    set haveData 0
+	    # Make sure the data is active and there is data.
+	    if { [set $this-active-$plt-$dat] == 1 &&
+		 [set $this-idim-$dat] >= 1 } {
+
+		global $this-idim-$dat
+		global $this-jdim-$dat
+		
+		global haveData
+
+		set haveData 0
 
 # Matrices with the xy cordinates plus the value at that coordinate.
-	    matrix x float [set $this-idim-$dat] [set $this-jdim-$dat]
-	    matrix y float [set $this-idim-$dat] [set $this-jdim-$dat]
-	    matrix v float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix x-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix y-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix v-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
 
 # Get the values from the c++ code.
-	    $this-c vertex_coords $dat $this-slice-$plt-$dat x y v
+		$this-c vertex_coords $dat $this-slice-$plt-$dat \
+		    x-$dat y-$dat v-$dat
 
 # Make sure the data was retrived properly.
-	    if { $haveData != 1 } return
+		if { $haveData != 1 } return
+
+# Get the min max for this data set.
+		if { $xmin > [set $this-xmin] } { set xmin [set $this-xmin] }
+		if { $xmax < [set $this-xmax] } { set xmax [set $this-xmax] }
+		if { $ymin > [set $this-ymin] } { set ymin [set $this-ymin] }
+		if { $ymax < [set $this-ymax] } { set ymax [set $this-ymax] }
+		if { $zmin > [set $this-zmin] } { set zmin [set $this-zmin] }
+		if { $zmax < [set $this-zmax] } { set zmax [set $this-zmax] }
+
+		set plotSomething 1
+	    }
+	}
+
+	if { $plotSomething == 0 } return
 
 #Create a rainbow color map.
-	    rainbow_cmap1 $w 36 1
-	    set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+	rainbow_cmap1 $w 36 1
+	set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
 
 # Select color 1 from colormap 0
-	    $w cmd plcol0 1
-# Set the plotting envelope i.e. the min-max of the plot.
-	    $w cmd plenv [set $this-xmin] [set $this-xmax] \
-		         [set $this-ymin] [set $this-ymax] 0 0
+	$w cmd plcol0 1
 
-	    global $this-title-$plt
-	    global $this-abscissa-$plt
-	    global $this-ordinate-$plt
+# Set the plotting envelope i.e. the min-max of the plot.
+	$w cmd plenv [set $this-xmin] [set $this-xmax] \
+  	             [set $this-ymin] [set $this-ymax] 0 0
+
+	global $this-title-$plt
+	global $this-abscissa-$plt
+	global $this-ordinate-$plt
 
 # Select color 2 from colormap 0
-	    $w cmd plcol0 5
-	    $w cmd pllab [set $this-abscissa-$plt] [set $this-ordinate-$plt] [set $this-title-$plt]
+	$w cmd plcol0 5
+	$w cmd pllab [set $this-abscissa-$plt] [set $this-ordinate-$plt] [set $this-title-$plt]
+
+
+#	if { [set $this-idim-$dat] >= 1 &&
+#	     [set $this-jdim-$dat] == 1 } {
+#	    plot1D $w $plt $fill
+#    }
+
+	matrix xPt float 1
+	matrix yPt float 1
+
+	matrix xPoly float 5
+	matrix yPoly float 5
+
+	for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
+	    
+	    global $this-active-$plt-$dat
+	    global $this-idim-$dat
+	    global $this-jdim-$dat
+
+	    # Make sure the data is active and there is data.
+	    if { [set $this-active-$plt-$dat] == 1 &&
+		 [set $this-idim-$dat] >= 1 &&
+		 [set $this-jdim-$dat] >= 1 } {
 
 # Set the increment ammount
-	    set inc [set $this-skip-$plt-$dat]
+		global $this-skip-$plt-$dat
+		set inc [set $this-skip-$plt-$dat]
 
 # Draw a point for each node
 
-	    if { $fill == 0 } {
-		matrix xPt float 1
-		matrix yPt float 1
+		if { $fill == 0 } {
 
-		for {set j 0} {$j < [set $this-jdim-$dat]} {incr j $inc} {
-		    for {set i 0} {$i < [set $this-idim-$dat]} {incr i $inc} {
-			
-			xPt 0 = [x $i $j]
-			yPt 0 = [y $i $j]
-
-			if { [set $this-color-$plt-$dat] == 0 } {
-
-			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]	
-
-			    if { 1.0 < $col } { set col 1.0 }
-			    if { $col < 0.0 } { set col 0.0 }
+		    for {set j 0} {$j < [set $this-jdim-$dat]} {incr j $inc} {
+			for {set i 0} {$i < [set $this-idim-$dat]} {incr i $inc} {
 			    
-			    $w cmd plcol1 $col
-			} else {
-			    $w cmd plcol0 [set $this-color-$plt-$dat]
-			}
+			    xPt 0 = [x-$dat $i $j]
+			    yPt 0 = [y-$dat $i $j]
+
+			    if { [set $this-color-$plt-$dat] == 0 } {
+
+				set col [expr ([v-$dat $i $j]-[set $this-zmin])*$cOffset]	
+				
+				if { 1.0 < $col } { set col 1.0 }
+				if { $col < 0.0 } { set col 0.0 }
+				
+				$w cmd plcol1 $col
+			    } else {
+				$w cmd plcol0 [set $this-color-$plt-$dat]
+			    }
 # Plot a symbol 
-			$w cmd plpoin 1 xPt yPt 1
+			    $w cmd plpoin 1 xPt yPt 1
+			}
 		    }
-		}
-	    } else {
+		} else {
 
 # Draw a polygon or a filled polygon.
 
-		matrix xPoly float 5
-		matrix yPoly float 5
-
-		for {set j $inc} {$j < [set $this-jdim-$dat]} {incr j $inc } {
-		    for {set i $inc} {$i < [set $this-idim-$dat]} {incr i $inc} {
+		    for {set j $inc} {$j < [set $this-jdim-$dat]} {incr j $inc } {
+			for {set i $inc} {$i < [set $this-idim-$dat]} {incr i $inc} {
 
 # Create a polygon for this index.
-			set i1 [expr $i-$inc]
-			set j1 [expr $j-$inc]
-			
-			xPoly 0 = [x $i1 $j1]
-			yPoly 0 = [y $i1 $j1]
-
-			xPoly 1 = [x $i $j1]
-			yPoly 1 = [y $i $j1]
-
-			xPoly 2 = [x $i $j]
-			yPoly 2 = [y $i $j]
-
-			xPoly 3 = [x $i1 $j]
-			yPoly 3 = [y $i1 $j]
-
-			xPoly 4 = [x $i1 $j1]
-			yPoly 4 = [y $i1 $j1]
-
-			if { [set $this-color-$plt-$dat] == 0 } {
-
-			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]
+			    set i1 [expr $i-$inc]
+			    set j1 [expr $j-$inc]
 			    
-			    if { 1.0 < $col } { set col 1.0 }
-			    if { $col < 0.0 } { set col 0.0 }
-			    
-			    $w cmd plcol1 $col
-			} else {
-			    $w cmd plcol0 [set $this-color-$plt-$dat]
-			}
+			    xPoly 0 = [x-$dat $i1 $j1]
+			    yPoly 0 = [y-$dat $i1 $j1]
 
-			if { $fill == 1 || $fill == 2 } {
-			    $w cmd plline 5 xPoly yPoly
-			} elseif { $fill == 3 } {
-			    $w cmd plfill 4 xPoly yPoly
+			    xPoly 1 = [x-$dat $i $j1]
+			    yPoly 1 = [y-$dat $i $j1]
+
+			    xPoly 2 = [x-$dat $i $j]
+			    yPoly 2 = [y-$dat $i $j]
+
+			    xPoly 3 = [x-$dat $i1 $j]
+			    yPoly 3 = [y-$dat $i1 $j]
+
+			    xPoly 4 = [x-$dat $i1 $j1]
+			    yPoly 4 = [y-$dat $i1 $j1]
+
+			    if { [set $this-color-$plt-$dat] == 0 } {
+
+				set col [expr ([v-$dat $i $j]-[set $this-zmin])*$cOffset]
+				
+				if { 1.0 < $col } { set col 1.0 }
+				if { $col < 0.0 } { set col 0.0 }
+				
+				$w cmd plcol1 $col
+			    } else {
+				$w cmd plcol0 [set $this-color-$plt-$dat]
+			    }
+
+			    if { $fill == 1 || $fill == 2 } {
+				$w cmd plline 5 xPoly yPoly
+			    } elseif { $fill == 3 } {
+				$w cmd plfill 4 xPoly yPoly
+			    }
 			}
 		    }
 		}
 	    }
 	}
     }
-
 
     # {w loopback} = the plplot window
     # plt = the plot number
@@ -971,11 +1014,6 @@ itcl_class Fusion_Render_Plot2DViewer {
 
     method plot3D {{w loopback} plt fill} {
 
-	set dat 0
-# For some reason we have to advance to the next plot with 3D plots.
-# This is notthe case with 2D plots.
-	$w cmd pladv 0
-
 	global $this-xmin
 	global $this-xmax
 	global $this-ymin
@@ -983,159 +1021,203 @@ itcl_class Fusion_Render_Plot2DViewer {
 	global $this-zmin
 	global $this-zmax
 
-	global $this-altitude-$plt
-	global $this-azimuth-$plt
+	set xmin  10000000.0
+	set xmax -10000000.0
+	set ymin  10000000.0
+	set ymax -10000000.0
+	set zmin  10000000.0
+	set zmax -10000000.0
 
-	global $this-idim-$dat
-	global $this-jdim-$dat
+	set plotSomething 0
 
-# Make sure there is data for this data.
-	if { [set $this-idim-$dat] >= 1 &&
-	     [set $this-jdim-$dat] >= 1 } {
+	for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
+	    
+	    global $this-active-$plt-$dat
+	    global $this-idim-$dat
 
-	    global haveData
+	    # Make sure the data is active and there is data.
+	    if { [set $this-active-$plt-$dat] == 1 &&
+		 [set $this-idim-$dat] >= 1 } {
 
-	    set haveData 0
+		global $this-idim-$dat
+		global $this-jdim-$dat
+
+		global haveData
+
+		set haveData 0
 
 # Matrices with the xy cordinates plus the value at that coordinate.
-	    matrix x float [set $this-idim-$dat] [set $this-jdim-$dat]
-	    matrix y float [set $this-idim-$dat] [set $this-jdim-$dat]
-	    matrix z float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix x-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix y-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix z-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
 
-#  Get the values from the c++ code.
-	    $this-c vertex_coords $dat $this-slice-$plt-$dat x y z
+# Get the values from the c++ code.
+		$this-c vertex_coords $dat $this-slice-$plt-$dat \
+		    x-$dat y-$dat z-$dat
 
 # Make sure the data was retrived properly.
-	    if { $haveData != 1 } return
-	    
-#Create a rainbow color map.
-	    rainbow_cmap1 $w 36 1
-	    set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+		if { $haveData != 1 } return
+
+# Get the min max for this data set.
+		if { $xmin > [set $this-xmin] } { set xmin [set $this-xmin] }
+		if { $xmax < [set $this-xmax] } { set xmax [set $this-xmax] }
+		if { $ymin > [set $this-ymin] } { set ymin [set $this-ymin] }
+		if { $ymax < [set $this-ymax] } { set ymax [set $this-ymax] }
+		if { $zmin > [set $this-zmin] } { set zmin [set $this-zmin] }
+		if { $zmax < [set $this-zmax] } { set zmax [set $this-zmax] }
+
+		set plotSomething 1
+	    }
+	}
+
+	if { $plotSomething == 0 } return
+
+# Update the window index.
+	$w cmd pladv 0
+
+# Create a rainbow color map.
+	rainbow_cmap1 $w 36 1
+	set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
+
+# Select color 1 from colormap 0
+	$w cmd plcol0 1
 
 # Specify viewport using coordinates
-		$w cmd plvpor 0.0 1.0 0.0 0.9
+	$w cmd plvpor 0.0 1.0 0.0 0.9
 # Specify world coordinates of viewport boundaries
-		$w cmd plwind -1.0 1.0 -0.9 1.1
+	$w cmd plwind -1.0 1.0 -0.9 1.1
 
-		$w cmd plcol0 1
-
-		$w cmd plw3d 1.0 1.0 1.0 \
-		    [set $this-xmin] [set $this-xmax] \
-		    [set $this-ymin] [set $this-ymax] \
-		    [set $this-zmin] [set $this-zmax] \
-		    [set $this-altitude-$plt] [set $this-azimuth-$plt]
+	$w cmd plw3d 1.0 1.0 1.0 \
+	    [set $this-xmin] [set $this-xmax] \
+	    [set $this-ymin] [set $this-ymax] \
+	    [set $this-zmin] [set $this-zmax] \
+	    [set $this-altitude-$plt] [set $this-azimuth-$plt]
 
 # Draw a box with axes, etc, in 3-d
-		$w cmd plcol0 2
+	$w cmd plcol0 2
 
-		set title [format "Plot %d Alt=%.0f, Az=%.0f" \
-			       $plt \
-			       [set $this-altitude-$plt] \
-			       [set $this-azimuth-$plt] ]
-		$w cmd plmtex "t" 1.0 0.5 0.5 $title
+	set title [format "Plot %d Alt=%.0f, Az=%.0f" \
+		       $plt \
+		       [set $this-altitude-$plt] \
+		       [set $this-azimuth-$plt] ]
+	$w cmd plmtex "t" 1.0 0.5 0.5 $title
 
-		$w cmd plbox3 "bnstu" "R" 0.0 0 \
-		    "bnstu" "Z" 0.0 0 \
-		    "bcdmnstuv" "Pressure" 0.0 0
+	$w cmd plbox3 "bnstu" "R" 0.0 0 \
+	    "bnstu" "Z" 0.0 0 \
+	    "bcdmnstuv" "Pressure" 0.0 0
 
-	    set inc [set $this-skip-$plt-$dat]
+	matrix xPt float 1
+	matrix yPt float 1
+	matrix zPt float 1
+
+	matrix xPoly float 5
+	matrix yPoly float 5
+	matrix zPoly float 5
+	matrix zzPoly float 5 5
+	matrix draw int 4 = { 1, 1, 1, 1 }
+
+	for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
+	    
+	    global $this-active-$plt-$dat
+	    global $this-idim-$dat
+	    global $this-jdim-$dat
+
+	    # Make sure the data is active and there is data.
+	    if { [set $this-active-$plt-$dat] == 1 &&
+		 [set $this-idim-$dat] >= 1 &&
+		 [set $this-jdim-$dat] >= 1 } {
+
+# Set the increment ammount
+		global $this-skip-$plt-$dat
+		set inc [set $this-skip-$plt-$dat]
 
 # Draw a point for each node
 
-	    if { $fill == 0 } {
-		matrix xPt float 1
-		matrix yPt float 1
-		matrix zPt float 1
+		if { $fill == 0 } {
 
-		for {set j 0} {$j < [set $this-jdim-$dat]} {incr j $inc} {
-		    for {set i 0} {$i < [set $this-idim-$dat]} {incr i $inc} {
-			
-			xPt 0 = [x $i $j]
-			yPt 0 = [y $i $j]
-			zPt 0 = [z $i $j]
+		    for {set j 0} {$j < [set $this-jdim-$dat]} {incr j $inc} {
+			for {set i 0} {$i < [set $this-idim-$dat]} {incr i $inc} {
+			    
+			    xPt 0 = [x-$dat $i $j]
+			    yPt 0 = [y-$dat $i $j]
+			    zPt 0 = [z-$dat $i $j]
 
-			if { [set $this-color-$plt-$dat] == 0 } {
+			    if { [set $this-color-$plt-$dat] == 0 } {
 
-			    set col [expr ([z $i 0]-[set $this-zmin])*$cOffset]
+				set col [expr ([z-$dat $i $j]-[set $this-zmin])*$cOffset]
+
+				if { 1.0 < $col } { set col 1.0 }
+				if { $col < 0.0 } { set col 0.0 }
+				
+				$w cmd plcol1 $col
+			    } else {
+				$w cmd plcol0 [set $this-color-$plt-$dat]
+			    }
+
+			    $w cmd plcol1 $col
+			    $w cmd plpoin3 1 xPt yPt zPt 1
+			}
+		    }
+		} else {
+
+# Draw a polygon or a filled polygon.
+
+		    for {set j $inc} {$j < [set $this-jdim-$dat]} {incr j $inc} {
+			for {set i $inc} {$i < [set $this-idim-$dat]} {incr i $inc} {
+
+# Create a polygon for this index.
+			    set i1 [expr $i-$inc]
+			    set j1 [expr $j-$inc]
+
+			    xPoly 0 = [x-$dat $i1 $j1]
+			    yPoly 0 = [y-$dat $i1 $j1]
+			    zPoly 0 = [z-$dat $i1 $j1]
+
+			    xPoly 1 = [x-$dat $i1 $j]
+			    yPoly 1 = [y-$dat $i1 $j]
+			    zPoly 1 = [z-$dat $i1 $j]
+
+			    xPoly 2 = [x-$dat $i $j]
+			    yPoly 2 = [y-$dat $i $j]
+			    zPoly 2 = [z-$dat $i $j]
+
+			    xPoly 3 = [x-$dat $i $j1]
+			    yPoly 3 = [y-$dat $i $j1]
+			    zPoly 3 = [z-$dat $i $j1]
+
+			    xPoly 4 = [x-$dat $i1 $j1]
+			    yPoly 4 = [y-$dat $i1 $j1]
+			    zPoly 4 = [z-$dat $i1 $j1]
+
+			    for {set k 0} {$j < 5} {incr j 1} {
+
+				zzPoly 0 $k = [z-$dat $i1 $j1]
+				zzPoly 1 $k = [z-$dat $i1 $j]
+				zzPoly 2 $k = [z-$dat $i $j]
+				zzPoly 3 $k = [z-$dat $i $j1]
+				zzPoly 4 $k = [z-$dat $i1 $j1]
+			    }
+
+			    set col [expr ([z-$dat $i $j]-[set $this-zmin])*$cOffset]
 
 			    if { 1.0 < $col } { set col 1.0 }
 			    if { $col < 0.0 } { set col 0.0 }
-			    
+
 			    $w cmd plcol1 $col
-			} else {
-			    $w cmd plcol0 [set $this-color-$plt-$dat]
-			}
 
-			$w cmd plcol1 $col
-			$w cmd plpoin3 1 xPt yPt zPt 1
-		    }
-		}
-	    } else {
-
-
-# Draw a polygon or a filled polygon.
-		matrix xPoly float 5
-		matrix yPoly float 5
-		matrix zPoly float 5
-		matrix zzPoly float 5 5
-		matrix draw int 4 = { 1, 1, 1, 1 }
-
-		for {set j $inc} {$j < [set $this-jdim-$dat]} {incr j $inc} {
-		    for {set i $inc} {$i < [set $this-idim-$dat]} {incr i $inc} {
-
-# Create a polygon for this index.
-			set i1 [expr $i-$inc]
-			set j1 [expr $j-$inc]
-
-			xPoly 0 = [x $i1 $j1]
-			yPoly 0 = [y $i1 $j1]
-			zPoly 0 = [z $i1 $j1]
-
-			xPoly 1 = [x $i1 $j]
-			yPoly 1 = [y $i1 $j]
-			zPoly 1 = [z $i1 $j]
-
-			xPoly 2 = [x $i $j]
-			yPoly 2 = [y $i $j]
-			zPoly 2 = [z $i $j]
-
-			xPoly 3 = [x $i $j1]
-			yPoly 3 = [y $i $j1]
-			zPoly 3 = [z $i $j1]
-
-			xPoly 4 = [x $i1 $j1]
-			yPoly 4 = [y $i1 $j1]
-			zPoly 4 = [z $i1 $j1]
-
-			for {set k 0} {$j < 5} {incr j 1} {
-
-			    zzPoly 0 $k = [z $i1 $j1]
-			    zzPoly 1 $k = [z $i1 $j]
-			    zzPoly 2 $k = [z $i $j]
-			    zzPoly 3 $k = [z $i $j1]
-			    zzPoly 4 $k = [z $i1 $j1]
-			}
-
-			set col [expr ([z $i $j]-[set $this-zmin])*$cOffset]
-
-			if { 1.0 < $col } { set col 1.0 }
-			if { $col < 0.0 } { set col 0.0 }
-
-			$w cmd plcol1 $col
-
-			if { $fill == 1 } {
-			    $w cmd plline3 5 xPoly yPoly zPoly
-			} elseif { $fill == 2 } {
-			    $w cmd plpoly3 5 xPoly yPoly zPoly draw
-			} elseif { $fill == 3 } {
-			    $w cmd plfill3 4 xPoly yPoly zPoly
+			    if { $fill == 1 } {
+				$w cmd plline3 5 xPoly yPoly zPoly
+			    } elseif { $fill == 2 } {
+				$w cmd plpoly3 5 xPoly yPoly zPoly draw
+			    } elseif { $fill == 3 } {
+				$w cmd plfill3 4 xPoly yPoly zPoly
+			    }
 			}
 		    }
 		}
 	    }
 	}
     }
-
 
 
 # Routine for setting colour map1 to rainbow.

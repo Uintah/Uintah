@@ -136,7 +136,7 @@ void Plot2DViewer::execute(){
                fHandle->get_type_description(0)->get_name() == "StructCurveField" ) {
       ScanlineMesh *slmInput = (ScanlineMesh*) fHandle->mesh().get_rep();
 
-      idim = slmInput->get_length();
+      idim = slmInput->get_nx();
       jdim = 1;
       kdim = 1;
     } else {
