@@ -2,6 +2,7 @@
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/TypeDescription.h>
 using namespace Uintah;
+using namespace std;
 
 ParticleVariableBase::~ParticleVariableBase()
 {	
@@ -68,6 +69,9 @@ void ParticleVariableBase::getMPIBuffer(void*& buf, int& count,
 
 //
 // $Log$
+// Revision 1.4.4.2  2000/10/07 00:04:44  witzel
+// using namespace std;
+//
 // Revision 1.4.4.1  2000/10/02 15:00:45  sparker
 // Support for sending only boundary particles
 //
