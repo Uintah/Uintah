@@ -105,7 +105,8 @@ Gui::Gui() :
   lightBrightness_(1.0), ambientBrightness_(1.0),
   mouseDown_(0), beQuiet_(true),
   lightsOn_(true), lightsBeingRendered_(false),
-  keypadAttached_(false), rightButtonMenuActive_(true)
+  keypadAttached_(false), rightButtonMenuActive_(true),
+  displayRStats_(false), displayPStats_(false)
 {
   inputString_[0] = 0;
 }
@@ -796,8 +797,28 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
   activeGui->last_x_ = mouse_x;
   activeGui->last_y_ = mouse_y;
 
-
 } // end handleMouseMotion()
+
+void
+Gui::handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z )
+{
+  cout << "spaceball motion: " << sbm_x << ", " << sbm_y << ", "
+       << sbm_z << ", " << "\n"; 
+}
+
+void
+Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z )
+{
+  cout << "spaceball rotate: " << sbr_x << ", " << sbr_y << ", "
+       << sbr_z << ", " << "\n"; 
+}
+
+void
+Gui::handleSpaceballButtonCB( int button, int state )
+{
+  cout << "spaceball button: " << button << "\n"; 
+}
+
 
 void
 Gui::toggleRoutesWindowCB( int /*id*/ )
