@@ -107,7 +107,7 @@ echo "" >> "$BUILDROOT"/log
 chmod -R g+w "$BUILDROOT"
 chmod -R g+w "$TEST_DATA"
 
-if [ "$SEND_MAIL_TO" != "" ]; then
+if [ "$VERBOSE" == "no" -a "$SEND_MAIL_TO" != "" ]; then
     if [ $failed == "0" ]; then
 	subject="SUCCESS: Regression tests on `hostname`"
     else
