@@ -276,7 +276,7 @@ public:
   SciTCLstrbuff msgStream_;
 protected:
   void get_position(int& x, int& y);
-  virtual void emit_vars(std::ostream& out, const std::string& modname);
+  virtual void emit_vars(std::ostream& out, const std::string& prefix);
   void setStackSize(unsigned long stackSize);
   void reset_vars();
 
@@ -302,7 +302,6 @@ private:
   Thread *helper_thread;
   Network* network;
 
-  GuiString  notes ;
   bool        show_stats_;
   Module(const Module&);
   Module& operator=(const Module&);
