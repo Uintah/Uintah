@@ -13,12 +13,18 @@
 
 #include <Mesh.h>
 #include <Classlib/String.h>
+#include <Classlib/Timer.h>
+#include <Classlib/TrivialAllocator.h>
 #include <iostream.h>
+
+static TrivialAllocator Element_alloc(sizeof(Element));
+static TrivialAllocator Node_alloc(sizeof(Node));
 
 static Persistent* make_Mesh()
 {
     return new Mesh;
 }
+
 PersistentTypeID Mesh::typeid("Mesh", "Datatype", make_Mesh);
 
 Mesh::Mesh()
@@ -32,6 +38,10 @@ Mesh::Mesh(int nnodes, int nelems)
 
 Mesh::~Mesh()
 {
+    for(int i=0;i<nodes.size();i++)
+	delete nodes[i];
+    for(i=0;i<elems.size();i++)
+	delete elems[i];
 }
 
 #define MESH_VERSION 1
@@ -39,17 +49,24 @@ Mesh::~Mesh()
 void Mesh::io(Piostream& stream)
 {
     int version=stream.begin_class("Mesh", MESH_VERSION);
+    CPUTimer t1;
+    t1.start();
     Pio(stream, nodes);
     Pio(stream, elems);
     stream.end_class();
-    if(stream.reading())
+    t1.stop();
+    cerr << "Read time: " << t1.time() << endl;
+    if(stream.reading()){
+	for(int i=0;i<elems.size();i++)
+	    elems[i]->mesh=this;
 	compute_neighbors();
+    }
 }
 
 void Pio(Piostream& stream, Element*& data)
 {
     if(stream.reading())
-	data=new Element(0,0,0,0);
+	data=new Element(0, 0,0,0,0);
     stream.begin_cheap_delim();
     Pio(stream, data->n1);
     Pio(stream, data->n2);
@@ -67,8 +84,8 @@ void Pio(Piostream& stream, Node*& data)
     stream.end_cheap_delim();
 }
 
-Element::Element(int n1, int n2, int n3, int n4)
-: n1(n1), n2(n2), n3(n3), n4(n4)
+Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
+: mesh(mesh), n1(n1), n2(n2), n3(n3), n4(n4)
 {
 }
 
@@ -79,20 +96,63 @@ Node::Node(const Point& p)
 
 static int unify(int not, const Array1<int>& n1, const Array1<int>& n2, const Array1<int>& n3)
 {
-    for(int i=0;i<n1.size();i++){
-	int idx=n1[i];
-	if(idx != not){
-	    for(int j=0;j<n2.size();j++){
-		if(n2[j] == idx){
-		    // Look in n3
-		    for(int k=0;k<n3.size();k++){
-			if(n3[k] == idx)
-			    return idx;
-		    }
+    int s1=n1.size();
+    int s2=n2.size();
+    int s3=n3.size();
+    int i1=0;
+    int i2=0;
+    int i3=0;
+    while(i1<s1 && i2<s2 && i3<s3){
+	int d1=n1[i1];
+	int d2=n2[i2];
+	int d3=n3[i3];
+	if(d1==d2){
+	    if(d2==d3){
+		if(d1 != not){
+		    // Found it...
+		    return d1;
+		} else {
+		    i1++;
+		    i2++;
+		    i3++;
 		}
+	    } else if(d3<d1){
+		i3++;
+	    } else {
+		i1++;
+		i2++;
+	    }
+	} else if(d1<d2){
+	    if(d1<d3){
+		i1++;
+	    } else {
+		i3++;
+	    }
+	} else {
+	    if(d2<d3){
+		i2++;
+	    } else {
+		i3++;
 	    }
 	}
     }
+    return -1;
+}
+
+int Element::face(int i)
+{
+    if(faces[i] == -2){
+	int* idx=&n1;
+	int i1=idx[(i+1)%4];
+        int i2=idx[(i+2)%4];
+	int i3=idx[(i+3)%4];
+	Node* n1=mesh->nodes[i1];
+	Node* n2=mesh->nodes[i2];
+	Node* n3=mesh->nodes[i3];
+	// Compute it...
+	unify(i, n1->elems, n2->elems, n3->elems);
+    }
+    return faces[i];
 }
 
 void Mesh::compute_neighbors()
@@ -102,62 +162,46 @@ void Mesh::compute_neighbors()
 	nodes[i]->elems.remove_all();
     // Compute element info for nodes
     cerr << "Computing element info...\n";
+    CPUTimer t1;
+    t1.start();
     for(i=0;i<elems.size();i++){
 	Element* elem=elems[i];
 	Node* n1=nodes[elem->n1];
 	Node* n2=nodes[elem->n2];
 	Node* n3=nodes[elem->n3];
 	Node* n4=nodes[elem->n4];
-     	int haveit=0;
-	for(int ii=0;ii<n1->elems.size();ii++){
-	    if(n1->elems[ii] == i){
-		haveit=1;
-		break;
-	    }
-	}
-	if(!haveit)
-	    n1->elems.add(i);
-	haveit=0;
-	for(ii=0;ii<n2->elems.size();ii++){
-	    if(n2->elems[ii] == i){
-		haveit=1;
-		break;
-	    }
-	}
-	if(!haveit)
-	    n2->elems.add(i);
-	haveit=0;
-	for(ii=0;ii<n3->elems.size();ii++){
-	    if(n3->elems[ii] == i){
-		haveit=1;
-		break;
-	    }
-	}
-	if(!haveit)
-	    n3->elems.add(i);
-	haveit=0;
-	for(ii=0;ii<n4->elems.size();ii++){
-	    if(n4->elems[ii] == i){
-		haveit=1;
-		break;
-	    }
-	}
-	if(!haveit)
-	    n4->elems.add(i);
+	n1->elems.add(i);
+	n2->elems.add(i);
+	n3->elems.add(i);
+	n4->elems.add(i);
     }
+    t1.stop();
+    cerr << "Element info time: " << t1.time() << endl;
+    t1.clear();
+    t1.start();
     cerr << "Computing face neighbors...\n";
     // Compute face neighbors
     for(i=0;i<elems.size();i++){
+	elems[i]->faces[0]=-2;
+	elems[i]->faces[1]=-2;
+	elems[i]->faces[2]=-2;
+	elems[i]->faces[3]=-2;
+    }
+#if 0
+    for(i=0;i<elems.size();i++){
 	Element* elem=elems[i];
 	Node* n1=nodes[elem->n1];
 	Node* n2=nodes[elem->n2];
 	Node* n3=nodes[elem->n3];
 	Node* n4=nodes[elem->n4];
-	elem->face[0]=unify(i, n2->elems, n3->elems, n4->elems);
-	elem->face[1]=unify(i, n1->elems, n3->elems, n4->elems);
-	elem->face[2]=unify(i, n1->elems, n2->elems, n4->elems);
-	elem->face[3]=unify(i, n1->elems, n2->elems, n3->elems);
+	elem->faces[0]=unify(i, n2->elems, n3->elems, n4->elems);
+	elem->faces[1]=unify(i, n1->elems, n3->elems, n4->elems);
+	elem->faces[2]=unify(i, n1->elems, n2->elems, n4->elems);
+	elem->faces[3]=unify(i, n1->elems, n2->elems, n3->elems);
     }
+#endif
+    t1.stop();
+    cerr << "Face neighbors time: " << t1.time() << endl;
     cerr << "compute_neighbors done\n";
 }
 
@@ -315,4 +359,24 @@ int Mesh::locate(const Point& p, int& ix)
 	}
     }
     return 0;
+}
+
+void* Element::operator new(size_t)
+{
+    return Element_alloc.alloc();
+}
+
+void Element::operator delete(void* rp, size_t)
+{
+    Element_alloc.free(rp);
+}
+
+void* Node::operator new(size_t)
+{
+    return Node_alloc.alloc();
+}
+
+void Node::operator delete(void* rp, size_t)
+{
+    Node_alloc.free(rp);
 }

@@ -84,6 +84,8 @@ void SimpleOPort<T>::finish()
 template<class T>
 void SimpleOPort<T>::send(const T& data)
 {
+    if(nconnections() == 0)
+	return;
     if(!in){
 	Connection* connection=connections[0];
 	in=(SimpleIPort<T>*)connection->iport;
@@ -104,9 +106,9 @@ int SimpleIPort<T>::get(T& data)
 {
     turn_on();
     SimplePortComm<T>* comm=mailbox.receive();
+    recvd=1;
     if(comm->have_data){
        data=comm->data;
-       recvd=1;
        delete comm;
        turn_off();
        return 1;

@@ -18,14 +18,21 @@
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
 #include <Geometry/Point.h>
+#include <stdlib.h> // For size_t
+
+class Mesh;
 
 struct Element {
+    int faces[4];
     int n1;
     int n2;
     int n3;
     int n4;
-    Element(int, int, int, int);
-    int face[4];
+    Mesh* mesh;
+    Element(Mesh*, int, int, int, int);
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+    int face(int);
 };
 
 void Pio(Piostream&, Element*&);
@@ -34,6 +41,8 @@ struct Node {
     Point p;
     Node(const Point&);
     Array1<int> elems;
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
 };
 
 void Pio(Piostream&, Node*&);

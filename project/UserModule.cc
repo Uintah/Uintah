@@ -447,7 +447,7 @@ int UserModule::should_execute()
     int changed=0;
     if(sched_class != Sink){
 	// See if any outputs are connected...
-	int have_outputs;
+	int have_outputs=0;
 	for(int i=0;i<oports.size();i++){
 	    if(oports[i]->nconnections() > 0){
 		have_outputs=1;
@@ -463,8 +463,8 @@ int UserModule::should_execute()
 	    OPort* port=oports[i];
 	    for(int c=0;c<port->nconnections();c++){
 		Module* mod=port->connection(c)->iport->get_module();
-		if(mod->sched_state == SchedNewData
-		   || mod->sched_state == SchedRegenData){
+		if(mod->sched_state != SchedNewData
+		   && mod->sched_state != SchedRegenData){
 		    sched_state=SchedRegenData;
 		    changed=1;
 		    break;
@@ -479,7 +479,7 @@ int UserModule::should_execute()
 	    IPort* port=iports[i];
 	    for(int c=0;c<port->nconnections();c++){
 		Module* mod=port->connection(c)->oport->get_module();
-		if(mod->sched_state == SchedNewData){
+		if(mod->sched_state != SchedNewData){
 		    sched_state=SchedNewData;
 		    changed=1;
 		    break;

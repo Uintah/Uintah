@@ -199,7 +199,7 @@ void MeshView::makeLevels(const MeshHandle& mesh)
 	    counter++;
 	    Element* e=mesh->elems[x];
 	    for(int i=0;i<4;i++){
-		int neighbor=e->face[i];
+		int neighbor=e->face(i);
 		if(neighbor !=-1 && levels[neighbor] == -1)
 		    q.append(neighbor);
 	    }

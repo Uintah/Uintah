@@ -731,27 +731,31 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 	Element* element=mesh->elems[ix];
 	int nbrs=iso_tetra(element, mesh, field, isoval, group);
 	if(nbrs & FACE1){
-	    if(!visited.is_set(element->face[0])){
-		visited.set(element->face[0]);
-		surfQ.append(element->face[0]);
+	    int f0=element->face(0);
+	    if(f0 != -1 && !visited.is_set(f0)){
+		visited.set(f0);
+		surfQ.append(f0);
 	    }
 	}
 	if(nbrs & FACE2){
-	    if(!visited.is_set(element->face[1])){
-		visited.set(element->face[1]);
-		surfQ.append(element->face[1]);
+	    int f1=element->face(1);
+	    if(f1 != -1 && !visited.is_set(f1)){
+		visited.set(f1);
+		surfQ.append(f1);
 	    }
 	}
 	if(nbrs & FACE3){
-	    if(!visited.is_set(element->face[2])){
-		visited.set(element->face[2]);
-		surfQ.append(element->face[2]);
+	    int f2=element->face(2);
+	    if(f2 != -1 && !visited.is_set(f2)){
+		visited.set(f2);
+		surfQ.append(f2);
 	    }
 	}
 	if(nbrs & FACE4){
-	    if(!visited.is_set(element->face[3])){
-		visited.set(element->face[3]);
-		surfQ.append(element->face[3]);
+	    int f3=element->face(3);
+	    if(f3 != -1 && !visited.is_set(f3)){
+		visited.set(f3);
+		surfQ.append(f3);
 	    }
 	}
 	counter++;
