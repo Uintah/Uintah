@@ -22,7 +22,7 @@
 # if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
-include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/BioPSE/Core/Datatypes
 
@@ -34,5 +34,5 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math Core/Util
 
-include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

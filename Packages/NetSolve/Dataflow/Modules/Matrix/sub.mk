@@ -8,7 +8,7 @@
 # if you want to edit this file by hand, see the "Create A New Component"
 # documentation on how to do it correctly.
 
-include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/NetSolve/Dataflow/Modules/Matrix
 
@@ -28,6 +28,6 @@ LIBS := $(TK_LIBRARY) $(GL_LIBS) /nfs/sci/data1/SCIRun_Thirdparty_32/lib32/libne
 
 #$(NETSOLVE_ROOT)/lib/SGI64/libnetsolve.a -lm
 
-include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 

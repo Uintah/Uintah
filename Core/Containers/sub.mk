@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Containers
 
@@ -30,5 +30,5 @@ SRCS     += $(SRCDIR)/Sort.cc \
 
 PSELIBS := Core/Exceptions Core/Tester Core/Thread
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -51,5 +51,5 @@ CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/Dataflow/GUI\" \
 $(SRCDIR)/main.o:	$(SRCDIR)/main.cc Makefile
 	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

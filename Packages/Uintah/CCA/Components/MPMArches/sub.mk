@@ -1,6 +1,6 @@
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/MPMArches
 
@@ -12,7 +12,7 @@ ifneq ($(CC_DEPEND_REGEN),-MD)
 # The fortran code doesn't work under g++ yet
 SUBDIRS := $(SRCDIR)/fortran 
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 FLIB := -lftn
 endif
 
@@ -33,4 +33,4 @@ PSELIBS := \
 
 LIBS := $(PETSC_LIBS) $(XML_LIBRARY) $(FLIB) $(MPI_LIBRARY) -lm
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -22,5 +22,5 @@ SUBDIRS := \
 	$(SRCDIR)/Core \
 	$(SRCDIR)/Dataflow \
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 

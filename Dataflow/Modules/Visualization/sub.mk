@@ -24,7 +24,7 @@
 # if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Modules/Visualization
 
@@ -50,4 +50,4 @@ PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Widgets \
 	Core/TkExtensions Dataflow/Modules/Render
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

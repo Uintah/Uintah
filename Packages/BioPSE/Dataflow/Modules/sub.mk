@@ -31,4 +31,4 @@ SUBDIRS := \
 	$(SRCDIR)/Visualization\
 #[INSERT NEW CATEGORY DIR HERE]
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk

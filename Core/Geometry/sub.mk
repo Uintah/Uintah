@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Geometry
 
@@ -29,4 +29,4 @@ SRCS     += $(SRCDIR)/BBox.cc $(SRCDIR)/Grid.cc $(SRCDIR)/IntVector.cc \
 PSELIBS := Core/Persistent Core/Containers Core/Exceptions Core/Tester
 LIBS := $(DEFAULT_LIBS) -lm
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -39,12 +39,6 @@
 # deleting these files.
 .PRECIOUS: %_sidl.h %_sidl.cc
 
-# Directory variables
-SRCTOP  := @top_srcdir@
-SRCDIR  := @srcdir@
-OBJTOP  := .
-OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
-SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
 
 ifeq ($(OBJTOP),.)
 LIBDIR := lib/

@@ -29,5 +29,5 @@ LIBS := $(THREAD_LIBS)
 PROGRAM := $(SRCDIR)/bps
 SRCS := $(SRCDIR)/bps.cc
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

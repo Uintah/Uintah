@@ -31,5 +31,5 @@ PROGRAM := $(SRCDIR)/memstress
 SRCS := $(SRCDIR)/memstress.cc $(SRCDIR)/memstress_sidl.cc
 GENHDRS := $(SRCDIR)/memstress_sidl.h
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

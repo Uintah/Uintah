@@ -8,7 +8,7 @@
 # if you want to edit this file by hand, see the "Create A New Component"
 # documentation on how to do it correctly.
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/MC/Core/Datatypes
 
@@ -18,5 +18,5 @@ SRCS     += \
 PSELIBS :=
 LIBS :=
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

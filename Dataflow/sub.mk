@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Dataflow
 
@@ -32,11 +32,11 @@ SUBDIRS := \
 	$(SRCDIR)/Widgets \
 	$(SRCDIR)/XMLUtil \
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Core
 LIBS := $(TCL_LIBRARY) $(XML_LIBRARY) $(GL_LIBS) $(TK_LIBRARY) \
         $(IMAGE_LIBS) -lm
 
-include $(SRCTOP)/scripts/largeso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 

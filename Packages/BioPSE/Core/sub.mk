@@ -17,7 +17,7 @@
 
 #Makefile fragment for the Packages/BioPSE/Core directory
 
-include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/BioPSE/Core
 
@@ -25,9 +25,9 @@ SUBDIRS := \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Algorithms \
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP_ABS)/scripts/largeso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

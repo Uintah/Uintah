@@ -14,5 +14,5 @@ SUBDIRS := \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/HETransformation
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 

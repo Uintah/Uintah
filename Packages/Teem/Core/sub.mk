@@ -17,15 +17,15 @@
 
 #Makefile fragment for the Packages/Teem/Core directory
 
-include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/Teem/Core
 SUBDIRS := \
 	$(SRCDIR)/Datatypes \
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
 LIBS := $(TEEM_LIBRARY) -lm
 
-include $(SRCTOP_ABS)/scripts/largeso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

@@ -25,7 +25,7 @@
 # if you want to edit this file by hand, see the "Create A New Component"
 # documentation on how to do it correctly.
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/FieldConverters/Core/Datatypes
 
@@ -42,5 +42,5 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/Math
 LIBS := -lm
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

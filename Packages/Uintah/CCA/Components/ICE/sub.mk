@@ -1,5 +1,5 @@
 # Makefile fragment for this subdirectory
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/ICE
 
@@ -11,7 +11,7 @@ SRCS	+= \
 
 SUBDIRS := $(SRCDIR)/EOS 
  
-include $(SRCTOP)/scripts/recurse.mk          
+include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
 	Packages/Uintah/CCA/Components/HETransformation \
@@ -28,7 +28,7 @@ PSELIBS := \
 
 LIBS	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 
 

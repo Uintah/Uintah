@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Ports
 
@@ -40,5 +40,5 @@ PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
 	Core/Persistent Core/Datatypes
 LIBS := 
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

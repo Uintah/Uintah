@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Datatypes
 
@@ -74,7 +74,7 @@ PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Math Core/Util
 LIBS := $(GL_LIBS) -lm
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 clean::
 	rm -f $(GENSRCS)

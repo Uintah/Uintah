@@ -32,5 +32,5 @@ SRCS := $(SRCDIR)/pingpong.cc $(SRCDIR)/PingPong_sidl.cc \
 	$(SRCDIR)/PingPong_impl.cc
 GENHDRS := $(SRCDIR)/PingPong_sidl.h
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

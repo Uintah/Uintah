@@ -19,6 +19,6 @@
 # we are building small sos
 
 ifeq ($(LARGESOS),yes)
-include $(SRCTOP)/scripts/so_epilogue.mk
+include $(SCIRUN_SCRIPTS)/so_epilogue.mk
 endif
 

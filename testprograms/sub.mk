@@ -24,5 +24,5 @@ ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := $(SUBDIRS) $(SRCDIR)/Component
 endif
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 

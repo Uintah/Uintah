@@ -31,5 +31,5 @@ PROGRAM := $(SRCDIR)/objects
 SRCS := $(SRCDIR)/objects.cc $(SRCDIR)/objects_sidl.cc
 GENHDRS := $(SRCDIR)/objects_sidl.h
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

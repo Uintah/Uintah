@@ -16,7 +16,7 @@
 -->
 
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE dir SYSTEM "../../../doc/UserGuide/dirspec.dtd">
+<!DOCTYPE dir SYSTEM "../../../../doc/UserGuide/dirspec.dtd">
 
 <dir name="Core/Exceptions">
   <fit>
@@ -82,7 +82,11 @@
          they are caught (uses -lexc).
       </p>
     </when>
-  </use
+  </use>
+  <definition>
+    <term></term>
+    <p></p>
+  </definition>
 </dir>
 
 <!-- author comments: suggestions for new/better tags for this xml file

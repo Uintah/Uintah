@@ -15,18 +15,18 @@
 #  University of Utah. All Rights Reserved.
 #
 
-include $(SRCTOP)/scripts/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/MatlabInterface/Core
 
 SUBDIRS := \
         $(SRCDIR)/Datatypes \
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP)/scripts/largeso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 
 

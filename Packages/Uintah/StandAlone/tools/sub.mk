@@ -4,5 +4,5 @@ SRCDIR := Packages/Uintah/StandAlone/tools
 
 SUBDIRS := $(SRCDIR)/graphview
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
