@@ -93,6 +93,7 @@ ImageExporter::execute()
     return;
   }
 
+#ifdef HAVE_MAGICK
   // If no name is provided, return.
   string fn(filename_.get());
   if(fn == "")
@@ -231,6 +232,10 @@ ImageExporter::execute()
   C_Magick::DestroyImage(image);
   C_Magick::DestroyImageInfo(image_info);
   C_Magick::DestroyMagick();
+#else
+  error("ImageMagick not found.  Please verify that you have the application development installation of ImageMagick.");
+  return;
+#endif
 }
 
 
