@@ -2089,6 +2089,13 @@ SCI_CHECK_HEADERS($LIBITK/../include,itk.h,$INCITCL_H $INCTK_H $INCTCL_H,,not-op
 SCI_CHECK_LIB($dirs,BLT,main,$TK_LIBRARY -ltk $TCL_LIBRARY -ltcl,,not-optional)
 SCI_CHECK_HEADERS($LIBBLT/../include,blt.h,$INCTCL_H $INCTK_H,,not-optional)
 
+SCI_CHECK_LIB($dirs,plplotd,main,$TK_LIBRARY -ltk $TCL_LIBRARY -ltcl,,not-optional)
+SCI_CHECK_HEADERS($LIBPLPLOTD/../include /usr/include/plplot,plplot.h,$INCTCL_H $INCTK_H,,not-optional)
+
+if test "$HAVE_LIBPLPLOTD && test "$HAVE_PLPLOT_H""; then
+    DEF_PLPLOT="#define HAVE_PLPLOT 1"
+fi
+
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
 CORRECT_ITCL_VERSION=no
@@ -2119,6 +2126,9 @@ AC_SUBST(LIBITK)
 AC_SUBST(INCITK_H)
 AC_SUBST(LIBBLT)
 AC_SUBST(INCBLT_H)
+AC_SUBST(LIBPLPLOTD)
+AC_SUBST(INCPLPLOT_H)
+AC_SUBST(DEF_PLPLOT)
 
 ##  --  search for xerces-c++ stuff  --------------------------------------
 echo
@@ -2324,13 +2334,16 @@ AC_SUBST(MPEGE_LIBRARY)
 dirs="$mdsplus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,MdsLib_client,main,,no,optional)
+SCI_CHECK_HEADERS($LIBMDSLIB_CLIENT/../include,mdslib.h,,no,optional)
+
+# Slight name change for convience
 if test "$HAVE_LIBMDSLIB_CLIENT"; then
    LIBMDSPLUS="$LIBMDSLIB_CLIENT"
 fi
 
-SCI_CHECK_HEADERS($LIBMDSLIB_CLIENT/../include,mdslib.h,,no,optional)
+# Slight name change for convience
 if test "$HAVE_MDSLIB_H"; then
-   INCMDSPLUS_H="-I$LIBMDSLIB_CLIENT/../include"
+   INCMDSPLUS_H=$INCMDSLIB_H
 fi
 
 if test "$LIBMDSPLUS" && test "$INCMDSPLUS_H"; then
