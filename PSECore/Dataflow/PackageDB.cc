@@ -13,6 +13,7 @@
 #include <PSECore/Dataflow/StrX.h>
 #include <PSECore/Dataflow/NetworkEditor.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <stdio.h>
 #include <iostream>
 #include <ctype.h>
 using std::cerr;
@@ -66,6 +67,9 @@ void PackageDB::loadPackage(const clString& packPath)
   // Where URL is a filename or a url to an XML file that
   // describes the components in the package.
   clString packagePath = packPath;
+  clString result;
+  char string[100];
+  int index=0;
   while(packagePath!="") {
     
     // Strip off the first element, leave the rest in the path for the next
@@ -83,11 +87,12 @@ void PackageDB::loadPackage(const clString& packPath)
     
     // Load the package
     postMessage(clString("Loading package '")+packageElt+"'", false);
+    TCL::eval("update idletasks",result);
 
     // The GUI path is hard-wired to be "PACKAGENAME/GUI""
     TCL::execute(clString("lappend auto_path ")+packageElt+"/GUI");
 
-    // get *.xml in the above GUI directory.
+    // get *.xml in the PACKAGENAME/XML directory.
     clString xmldir = packageElt+"/XML";
     std::map<int,char*>* files = 
       GetFilenamesEndingWith((char*)xmldir(),".xml");
@@ -109,23 +114,26 @@ void PackageDB::loadPackage(const clString& packPath)
 	clString firsterror(SOError());
 	libname = clString("lib")+basename(packageElt)+".so";
 	so = GetLibraryHandle(libname());
-	if (!so)
+	if (!so) {
 	  postMessage("PackageDB: Couldn't load all of package \\\""+
 		      basename(packageElt)+"\\\"\n  "+
 		      firsterror()+"\n  "+SOError());
+	  TCL::eval("update idletasks",result);
+	}
       }
       
       if (so) {
 	clString make(clString("make_")+node->name);
 	makeaddr = (ModuleMaker)GetHandleSymbolAddress(so,make());
-	if (!makeaddr)
+	if (!makeaddr) {
 	  postMessage(clString("PackageDB: Couldn't find component \\\"")+
 		      node->name+"\\\"\n  "+
 		      SOError());
+	  TCL::eval("update idletasks",result);
+	}
       }
       
       if (makeaddr) {
-	char* str = 0;
 	IPortInfo* ipinfo;
 	OPortInfo* opinfo;
 	ModuleInfo* info = scinew ModuleInfo;
@@ -161,9 +169,11 @@ void PackageDB::loadPackage(const clString& packPath)
 	registerModule(info);
       }
     }
+    sprintf(string,"createPackageMenu %d",index++);
+    TCL::execute(string);
   }
   
-  TCL::execute("createCategoryMenu");
+  //  TCL::execute("createCategoryMenu");
 }
   
 void PackageDB::registerModule(ModuleInfo* info) {
@@ -360,6 +370,10 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.25  2000/11/29 08:24:39  moulding
+// - changed startup print statements
+// - force some tcl commands to complete to allow "see it as it happens" behavior
+//
 // Revision 1.24  2000/11/21 22:44:30  moulding
 // initial commit of auto-port facility (not yet operational).
 //
