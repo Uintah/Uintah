@@ -1739,14 +1739,16 @@ int main(int argc, char** argv)
 		  int matl = *matlIter;
 		  
 		  // dumps header and variable info to file
-		  ostringstream fnum, matnum;
+		  ostringstream fnum, pnum, matnum; 
 		  string filename;
 		  int timestepnum=t+1;
 		  fnum << setw(4) << setfill('0') << timestepnum;
+                  pnum << setw(4) << setfill('0') << patch->getID();
 		  matnum << setw(4) << setfill('0') << matl;
 		  string partroot("stress.t");
-		  string partext(".m");
-		  filename = partroot+fnum.str()+partext+matnum.str();
+                  string partextp(".p"); 
+		  string partextm(".m");
+		  filename = partroot+fnum.str()+partextp+pnum.str()+partextm+matnum.str();
 		  ofstream partfile(filename.c_str());
 		  partfile << "# x, y, z, st11, st12, st13, st21, st22, st23, st31, st32, st33" << endl;
 		  
@@ -1768,7 +1770,7 @@ int main(int argc, char** argv)
 				   << (value[*iter])(1,3) << " " << (value[*iter])(2,1) << " "
 				   << (value[*iter])(2,2) << " " << (value[*iter])(2,3) << " "
 				   << (value[*iter])(3,1) << " " << (value[*iter])(3,2) << " "
-				   << (value[*iter])(3,3) << endl;
+                                   << (value[*iter])(3,3) << endl;
 			}
 		      }
 		    }
