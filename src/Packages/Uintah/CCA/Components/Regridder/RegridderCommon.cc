@@ -306,7 +306,6 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
   // This is a HUGE memory waste.
 
   for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++ ) {
-    
     const Patch* patch = *patchIter;
     IntVector l(patch->getCellLowIndex());
     IntVector h(patch->getCellHighIndex());
@@ -375,7 +374,6 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     }
     dilate_dbg << endl;
   }
-
 
   IntVector arraySize = flaggedCells.size();
   IntVector dilatedArraySize = dilatedFlaggedCells.size();
