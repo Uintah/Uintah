@@ -437,7 +437,10 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
    
   unsigned int i = 0;
 
-  if (timestep == -1 && indices.size() > 0) {
+  if (timestep == 0) {
+    i = 0; // timestep == 0 means use the first timestep
+  }
+  else if (timestep == -1 && indices.size() > 0) {
     i = (unsigned int)(indices.size() - 1); 
   }
   else {
