@@ -919,17 +919,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch, gac, 1);
 
-    int reactant_indx = -1;
-    double thresholdTemperature = 1e6;
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      if(mpm_matl->getRxProduct() == Material::reactant){
-        reactant_indx = m;
-        thresholdTemperature =
-                     mpm_matl->getBurnModel()->getThresholdTemperature();
-      }
-    }
-
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
@@ -1007,9 +996,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         // MPMICE::computeLagrangianValuesMPM
         double one_or_zero = (cmass[c] - very_small_mass)/cmass[c];
 
-        Temp_CC[c]   = (1.0-one_or_zero)*Temp_CC_ice[c] + one_or_zero*Temp_CC_mpm;
-        vel_CC[c]    = (1.0-one_or_zero)*vel_CC_ice[c]  + one_or_zero*vel_CC_mpm;
-        sp_vol_CC[c] = (1.0-one_or_zero)*sp_vol_CC_ice[c] + one_or_zero*sp_vol_mpm;   
+        Temp_CC[c]  = (1.0-one_or_zero)*Temp_CC_ice[c]+one_or_zero*Temp_CC_mpm;
+        vel_CC[c]   = (1.0-one_or_zero)*vel_CC_ice[c] +one_or_zero*vel_CC_mpm;
+        sp_vol_CC[c]= (1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;   
       }
       //  Set BC's
       setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
@@ -1998,17 +1987,15 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                                                         prod_indx,patch,gn,0);
 
         new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,  
-                                                        prod_indx,patch);
+                                                               prod_indx,patch);
         new_dw->allocateAndPut(sumCreatedVol,  Ilb->created_vol_CCLabel,
-                                                        prod_indx,patch);
+                                                               prod_indx,patch);
         new_dw->allocateAndPut(sumReleasedHeat,Ilb->int_eng_comb_CCLabel,
-                                                        prod_indx,patch);
+                                                               prod_indx,patch);
         new_dw->allocateAndPut(sumMom_comb,    Ilb->mom_comb_CCLabel,    
-                                                        prod_indx,patch);
-        new_dw->allocateAndPut(onSurface,     MIlb->onSurfaceLabel, 
-                                                        0, patch);
-        new_dw->allocateAndPut(surfaceTemp,   MIlb->surfaceTempLabel,
-                                                        0, patch);
+                                                               prod_indx,patch);
+        new_dw->allocateAndPut(onSurface,     MIlb->onSurfaceLabel,   0, patch);
+        new_dw->allocateAndPut(surfaceTemp,   MIlb->surfaceTempLabel, 0, patch);
         onSurface.initialize(0.0);
         sumMom_comb.initialize(0.0);
         surfaceTemp.initialize(0.0);
@@ -2021,14 +2008,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       // Reactant data
       if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
         int react_indx = mpm_matl->getDWIndex();  
-        new_dw->get(solidTemperature,MIlb->temp_CCLabel, react_indx,patch,gn,0);
-        new_dw->get(solidMass,       MIlb->cMassLabel,   react_indx,patch,gn,0);
+        new_dw->get(solidTemperature,MIlb->temp_CCLabel,react_indx,patch,gn, 0);
+        new_dw->get(solidMass,       MIlb->cMassLabel,  react_indx,patch,gn, 0);
         new_dw->get(sp_vol_CC,       Ilb->sp_vol_CCLabel,react_indx,patch,gn,0);
-        new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, react_indx,patch,gac,2);     
-        new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, react_indx,patch,gac,2);     
-        new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, react_indx,patch,gac,2);     
-        new_dw->get(vel_CC,          MIlb->vel_CCLabel,  react_indx,patch,gn,0);
-        new_dw->get(NCsolidMass,     Mlb->gMassLabel,    react_indx,patch,gac,1);
+        new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel,react_indx,patch,gac,2);
+        new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel,react_indx,patch,gac,2);
+        new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel,react_indx,patch,gac,2);
+        new_dw->get(vel_CC,          MIlb->vel_CCLabel, react_indx,patch,gn, 0);
+        new_dw->get(NCsolidMass,     Mlb->gMassLabel,   react_indx,patch,gac,1);
       }
     }
     
