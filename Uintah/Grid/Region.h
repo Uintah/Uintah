@@ -8,15 +8,16 @@
 
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
-
+#include <SCICore/Geometry/IntVector.h>
 
 #include <iostream> // TEMPORARY
 
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-
 namespace Uintah {
 namespace Grid {
+
+using SCICore::Geometry::Point;
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::IntVector;
 
 class NodeIterator;
 class NodeSubIterator;
@@ -92,28 +93,12 @@ public:
 
     //////////
     // Insert Documentation Here:
-    inline int getNx() const {
-	return d_nx;
-    }
-
-    //////////
-    // Insert Documentation Here:
-    inline int getNy() const {
-	return d_ny;
-    }
-
-    //////////
-    // Insert Documentation Here:
-    inline int getNz() const {
-	return d_nz;
-    }
-
-    //////////
-    // Insert Documentation Here:
+#if 0
     inline bool contains(const Array3Index& idx) const {
 	return idx.i() >= 0 && idx.j() >= 0 && idx.k() >= 0
 	    && idx.i() <= d_nx && idx.j() <= d_ny && idx.k() <= d_nz;
     }
+#endif
 protected:
     friend class Level;
 
@@ -121,7 +106,7 @@ protected:
     // Insert Documentation Here:
     Region(const SCICore::Geometry::Point& min,
 	   const SCICore::Geometry::Point& max,
-	   int nx, int ny, int nz);
+	   const SCICore::Geometry::IntVector& res);
     ~Region();
 
 private:
@@ -135,7 +120,7 @@ private:
 
     //////////
     // Insert Documentation Here:
-    int d_nx, d_ny, d_nz;
+    IntVector d_res;
 
     friend class NodeIterator;
 };
@@ -153,16 +138,22 @@ inline NodeIterator Region::begin() const
     return NodeIterator(this, 0, 0, 0);
 }
 
+#if 0
 inline NodeIterator Region::end() const
 {
     return NodeIterator(this, d_nx+1, d_ny+1, d_nz+1);
 }
+#endif
 
 } // end namespace Grid
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/04/12 23:00:50  sparker
+// Starting problem setup code
+// Other compilation fixes
+//
 // Revision 1.4  2000/03/22 00:32:13  sparker
 // Added Face-centered variable class
 // Added Per-region data class

@@ -43,12 +43,16 @@ Level::regionIterator Level::regionsEnd()
     return d_regions.end();
 }
 
-Region* Level::addRegion(const Point& min, const Point& max,
-			 int nx, int ny, int nz)
+Region* Level::addRegion(const Point& lower, const Point& upper,
+			 const IntVector& res)
 {
-    Region* r = new Region(min, max, nx, ny, nz);
+    Region* r = new Region(lower, upper, res);
     d_regions.push_back(r);
     return r;
+}
+
+void Level::performConsistencyCheck() const
+{
 }
 
 } // end namespace Grid
@@ -56,6 +60,10 @@ Region* Level::addRegion(const Point& min, const Point& max,
 
 //
 // $Log$
+// Revision 1.3  2000/04/12 23:00:47  sparker
+// Starting problem setup code
+// Other compilation fixes
+//
 // Revision 1.2  2000/03/16 22:07:59  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

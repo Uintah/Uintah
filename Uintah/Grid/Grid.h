@@ -51,11 +51,14 @@ public:
 
   //////////
   // Returns a "Handle" to the "idx"th level 
-  LevelP& getLevel(int idx);
+  const LevelP& getLevel(int idx) const;
 
   //////////
   // Adds a level to the grid.
   void    addLevel(const LevelP& level);
+
+  void performConsistencyCheck() const;
+  void printStatistics() const;
 
 private:
   std::vector<LevelP> d_levels;
@@ -69,6 +72,10 @@ private:
 
 //
 // $Log$
+// Revision 1.3  2000/04/12 23:00:46  sparker
+// Starting problem setup code
+// Other compilation fixes
+//
 // Revision 1.2  2000/03/16 22:07:58  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

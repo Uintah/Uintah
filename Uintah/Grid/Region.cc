@@ -19,8 +19,8 @@ namespace Uintah {
 namespace Grid {
 
 Region::Region(const Point& lower, const Point& upper,
-	       int nx, int ny, int nz)
-    : d_lower(lower), d_upper(upper), d_nx(nx), d_ny(ny), d_nz(nz)
+	       const IntVector& res)
+    : d_lower(lower), d_upper(upper), d_res(res)
 {
 }
 
@@ -28,12 +28,15 @@ Region::~Region()
 {
 }
 
+#if 0
 Vector Region::dCell() const
 {
     Vector diag = d_upper - d_lower;
     return Vector(diag.x()/d_nx, diag.y()/d_ny, diag.z()/d_nz);
 }
+#endif
 
+#if 0
 void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 {
     Vector cellpos = (pos-d_lower.asVector()) * 
@@ -109,6 +112,7 @@ bool Region::findCellAndShapeDerivatives(const Vector& pos,
     d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
     return ix>= 0 && iy>=0 && iz>=0 && ix<d_nx && iy<d_ny && iz<d_nz;
 }
+#endif
 
 void decompose(int numProcessors, int sizex, int sizey, int sizez,
 	       int& numProcessors_x, int& numProcessors_y,
@@ -154,6 +158,7 @@ void decompose(int numProcessors, int sizex, int sizey, int sizez,
     }
 }
 
+#if 0
 void Region::subregionIteratorPair(int i, int n,
 				   NodeSubIterator& iter,
 				   NodeSubIterator& end) const
@@ -199,12 +204,17 @@ SubRegion Region::subregion(int i, int n) const
     u=Min(u, d_upper);
     return SubRegion(l, u, sx, sy, sz, ex, ey, ez);
 }
+#endif
 
 } // end namespace Grid
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.4  2000/04/12 23:00:49  sparker
+// Starting problem setup code
+// Other compilation fixes
+//
 // Revision 1.3  2000/03/16 22:08:01  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //
