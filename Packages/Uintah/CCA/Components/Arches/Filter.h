@@ -56,7 +56,6 @@ WARNING
    none
 
 ****************************************/
-
 class Filter{
 
 public:
@@ -114,8 +113,12 @@ private:
    int d_nz, o_nz; // number of non zero values in a row
 #endif
 }; // End class Filter.h
-
 } // End namespace Uintah
 
 #endif  
   
+
+
+
+
+
