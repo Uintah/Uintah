@@ -315,12 +315,7 @@ void FractureMPM::scheduleExMomInterpolated(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls)
 {
-  Task* t = scinew Task("Contact::exMomInterpolated",
-		    contactModel,
-		    &Contact::exMomInterpolated);
-
-  contactModel->addComputesAndRequiresInterpolated(t, patches, matls);
-  sched->addTask(t, patches, matls);
+  contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
 
 void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
@@ -600,13 +595,7 @@ void FractureMPM::scheduleExMomIntegrated(SchedulerP& sched,
    *		  velocity fields to feel the influence of the
    *		  the others according to specific rules)
    *   out(G.VELOCITY_STAR, G.ACCELERATION) */
-
-  Task* t = scinew Task("Contact::exMomIntegrated",
-		   contactModel,
-		   &Contact::exMomIntegrated);
-
-  contactModel->addComputesAndRequiresIntegrated(t, patches, matls);
-  sched->addTask(t, patches, matls);
+  contactModel->addComputesAndRequiresIntegrated(sched, patches, matls);
 }
 
 void FractureMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,

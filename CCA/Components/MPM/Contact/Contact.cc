@@ -3,7 +3,8 @@
 
 using namespace Uintah;
 
-Contact::Contact()
+Contact::Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag, ProblemSpecP ps)
+  : UintahParallelComponent(myworld), lb(Mlb), flag(MFlag), d_matls(ps)
 {
 }
 

@@ -29,8 +29,10 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS, 
+RigidBodyContact::RigidBodyContact(const ProcessorGroup* myworld,
+                                   ProblemSpecP& ps,SimulationStateP& d_sS, 
 				   MPMLabel* Mlb, MPMFlags* MFlag)
+  : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
   d_stop_time = 999999.99;  // default is to never stop
@@ -54,6 +56,8 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS,
   d_sharedState = d_sS;
   lb = Mlb;
   flag = MFlag;
+  
+  d_matls.add(0); // always need material 0 for rigid contact
 }
 
 RigidBodyContact::~RigidBodyContact()
@@ -68,9 +72,6 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 					 DataWarehouse*,
 					 DataWarehouse* new_dw)
 {
-  Vector centerOfMassMom(0.0,0.0,0.0);
-  double centerOfMassMass;
-
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
@@ -96,15 +97,9 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-      centerOfMassMom=Vector(0.,0.,0.);
-      centerOfMassMass=0.0; 
-      for(int n = 0; n < numMatls; n++){
-        centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
-        centerOfMassMass+=gmass[n][c]; 
-      }
 
       // Set each field's velocity equal to the velocity of material 0
-      if(!compare(gmass[0][c],0.0)){
+      if(d_matls.present(gmass, *iter)) {
         for(int n = 1; n < numMatls; n++){
           int xn = d_direction.x()*n;
           int yn = d_direction.y()*n;
@@ -127,9 +122,7 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw)
 {
-  Vector centerOfMassMom(0.0,0.0,0.0);
   Vector Dvdt(0.0,0.0,0.0);
-  double centerOfMassMass;
 
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int p=0;p<patches->size();p++){
@@ -148,13 +141,7 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
      new_dw->get(gvelocity[m],lb->gVelocityInterpLabel,dwi,patch,Ghost::None,0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
      new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
-     if (flag->d_fracture)
-       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
-     else {
-       new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,
-			      patch);
-       frictionWork[m].initialize(0.);
-     }
+     new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
     }
 
     delt_vartype delT;
@@ -173,17 +160,8 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-      centerOfMassMom=Vector(0.,0.,0.);
-      centerOfMassMass=0.0; 
-      for(int  n = 0; n < numMatls; n++){
-         centerOfMassMom+=gvelocity_star[n][c] * gmass[n][c];
-         centerOfMassMass+=gmass[n][c]; 
-      }
 
-      // Set each field's velocity equal to the center of mass velocity
-      // and adjust the acceleration of each field to account for this
-
-      if(!compare(gmass[0][c],0.0)){  // Non-rigid matl
+      if(d_matls.present(gmass, *iter)) {
         for(int  n = 1; n < numMatls; n++){
           int xn = d_direction.x()*n;
           int yn = d_direction.y()*n;
@@ -202,30 +180,34 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
   }
 }
 
-void RigidBodyContact::addComputesAndRequiresInterpolated( Task* t,
-					     const PatchSet* ,
-					     const MaterialSet* ms) const
+void RigidBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = new Task("RigidBodyContact::exMomInterpolated", 
+                      this, &RigidBodyContact::exMomInterpolated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-
   t->modifies(             lb->gVelocityLabel, mss);
+  
+  sched->addTask(t, patches, ms);
 }
 
-void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
-					     const PatchSet*,
-					     const MaterialSet* ms) const
+void RigidBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
+					     const PatchSet* patches,
+					     const MaterialSet* ms) 
 {
+  Task * t = scinew Task("RigidBodyContact::exMomIntegrated", 
+                         this, &RigidBodyContact::exMomIntegrated);
+  
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gVelocityInterpLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
-  if (flag->d_fracture)
-    t->modifies(             lb->frictionalWorkLabel, mss);
-  else
-    t->computes(             lb->frictionalWorkLabel);
+  t->modifies(             lb->frictionalWorkLabel, mss);
 
  //__________________________________
  //  add requirements for Northrup Grumman nozzle
@@ -233,6 +215,8 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
  #include "../../MPMICE/NGC_nozzle.i"
  #undef rigidBody_1
 
+  
+  sched->addTask(t, patches, ms);
 }
 
 

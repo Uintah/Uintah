@@ -4,6 +4,7 @@
 #define __SINGLE_VEL_H__
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h> 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -58,11 +59,12 @@ WARNING
 	 SingleVelContact(const SingleVelContact &con);
 	 SingleVelContact& operator=(const SingleVelContact &con);
 	 
-	 SimulationStateP d_sharedState;
-	 
+	 SimulationStateP    d_sharedState;
+         
       public:
 	 // Constructor
-	 SingleVelContact(ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,
+	 SingleVelContact(const ProcessorGroup* myworld,
+                          ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,
 			  MPMFlags* MFlag);
 	 
 	 // Destructor
@@ -81,13 +83,13 @@ WARNING
 				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw);
 
-         virtual void addComputesAndRequiresInterpolated(Task* task,
+         virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
 
-         virtual void addComputesAndRequiresIntegrated(Task* task,
+         virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
       };
 } // End namespace Uintah
       

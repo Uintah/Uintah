@@ -2,10 +2,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>

@@ -4,6 +4,7 @@
 #define __FRICTION_H__
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h> 
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
@@ -53,8 +54,8 @@ WARNING
 	 FrictionContact(const FrictionContact &con);
 	 FrictionContact& operator=(const FrictionContact &con);
 	 
-	 SimulationStateP d_sharedState;
-
+	 SimulationStateP    d_sharedState;
+         
          // Coefficient of friction
          double d_mu;
          // Nodal volume fraction that must occur before contact is applied
@@ -64,7 +65,8 @@ WARNING
 
       public:
 	 // Constructor
-	 FrictionContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb,
+	 FrictionContact(const ProcessorGroup* myworld,
+                         ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb,
 			 MPMFlags* MFlag);
 	 
 	 // Destructor
@@ -83,13 +85,13 @@ WARNING
 				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw);
 	 
-         virtual void addComputesAndRequiresInterpolated(Task* task,
+         virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
 
-         virtual void addComputesAndRequiresIntegrated(Task* task,
+         virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
       };
 } // End namespace Uintah
       

@@ -63,10 +63,11 @@ WARNING
 	 double d_stop_time;
          IntVector d_direction;
 	 Vector d_vel_after_stop;
-	 
+         
       public:
 	 // Constructor
-	 RigidBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS,
+	 RigidBodyContact(const ProcessorGroup* myworld,
+                          ProblemSpecP& ps,SimulationStateP& d_sS,
 			  MPMLabel* lb,MPMFlags* flag);
 	 
 	 // Destructor
@@ -85,13 +86,13 @@ WARNING
 				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw);
 
-         virtual void addComputesAndRequiresInterpolated(Task* task,
+         virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
 
-         virtual void addComputesAndRequiresIntegrated(Task* task,
+         virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
 					     const PatchSet* patches,
-					     const MaterialSet* matls) const;
+					     const MaterialSet* matls);
       };
       
 } // end namespace Uintah
