@@ -735,7 +735,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       ogeom_->delObj(data_id_);
       data_id_ = 0;
     }
-    maybe_execute(DATA_AT);
+    maybe_execute(DATA);
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
     nodes_on_.reset();
