@@ -45,7 +45,7 @@ WARNING
     // Per cell
 
      virtual double computeRhoMicro(double press,double gamma,
-                                    double cv, double Temp) =0;
+                                    double cv, double Temp, double rho_guess)=0;
 
      virtual void computePressEOS(double rhoM, double gamma,
                                   double cv, double Temp,

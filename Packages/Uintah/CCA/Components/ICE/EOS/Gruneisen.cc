@@ -23,7 +23,7 @@ Gruneisen::~Gruneisen()
 }
 //__________________________________
 double Gruneisen::computeRhoMicro(double P, double,
-                                 double , double T)
+                                 double , double T, double)
 {
   // Pointwise computation of microscopic density
   double rhoM = rho0*((1./A)*((P-P0) - B*(T-T0)) + 1.);
