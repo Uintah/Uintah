@@ -336,6 +336,8 @@ MixedScheduler::createDepencyList( DataWarehouseP & old_dw,
 	if( ( task->isReductionTask() ) ||
 	    ( task->getType() == Task::Gather ) || 
 	    ( task->getType() == Task::Scatter ) ) {
+	   // MAY NEED TO WORRY ABOUT MULTIPLE COMPUTES FOR REDUCTION
+	   // TASKS.
 	  const Task::Dependency* cmp = d_graph.getComputesForRequires(dep);
 	  if( cmp->d_task->getAssignedResourceIndex() != me ){
 	    continue; 
@@ -1689,6 +1691,10 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.9  2001/01/05 21:29:55  witzel
+// Added a comment warning that reduction tasks may have multiple computes
+// for a requires now which may affect the createDepencyList algorithm.
+//
 // Revision 1.8  2000/12/22 00:13:52  jas
 // Got rid of X,Y,Z FCVariable stuff.  Changes to get rid of g++ warnings.
 //
