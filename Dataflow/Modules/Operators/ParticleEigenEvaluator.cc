@@ -17,7 +17,8 @@ ParticleEigenEvaluator::ParticleEigenEvaluator(GuiContext* ctx)
 {
 }
   
-void ParticleEigenEvaluator::execute(void) {
+void ParticleEigenEvaluator::execute(void) 
+{
   //  gui_status.set("Calling EigenEvaluator!"); 
 
   in = (TensorParticlesIPort *) get_iport("Tensor Particles");
@@ -28,7 +29,7 @@ void ParticleEigenEvaluator::execute(void) {
   TensorParticlesHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"Didn't get a handle\n";
+    std::cerr<<"ParticleEigenEvaluator::execute(void) Didn't get a handle\n";
     return;
   }
 

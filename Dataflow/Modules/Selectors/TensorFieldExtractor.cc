@@ -126,7 +126,7 @@ void TensorFieldExtractor::execute()
   
   ArchiveHandle handle;
    if(!in->get(handle)){
-     warning("Didn't get a handle.");
+     warning("TensorFieldExtractor::execute() Didn't get a handle.");
      return;
    }
    
