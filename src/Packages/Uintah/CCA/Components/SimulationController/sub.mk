@@ -17,7 +17,9 @@ PSELIBS := \
 	Core/OS       \
 	Core/Geometry \
 	Core/Thread   \
+	Core/Util   \
 	Core/Exceptions
+
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

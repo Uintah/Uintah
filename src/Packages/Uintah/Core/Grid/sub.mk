@@ -61,6 +61,7 @@ PSELIBS := \
 	Core/Thread                      \
 	Core/Exceptions                  \
 	Core/Geometry                    \
+	Core/Containers                  \
 	Core/Util                        \
 	Dataflow/XMLUtil
 
