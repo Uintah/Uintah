@@ -107,12 +107,12 @@ namespace SCIRun {
     //  numfields    -> The number of fields stored in the bundle 
     //  getfieldname -> Get the nth name in the bundle for building a contents list
   
-    LockingHandle<Field> getfield(std::string name) { return get<Field>(name); }
-    void setfield(std::string name, LockingHandle<Field> &field) { set<Field>(name,field); }
-    void remfield(std::string name) { rem(name); }
-    bool isfield(std::string name)  { return is<Field>(name); }
-    int  numfields() { return num<Field>(); }
-    std::string getfieldname(int index) {return getName<Field>(index); }
+    LockingHandle<Field> getField(std::string name) { return get<Field>(name); }
+    void setField(std::string name, LockingHandle<Field> &field) { set<Field>(name,field); }
+    void remField(std::string name) { rem(name); }
+    bool isField(std::string name)  { return is<Field>(name); }
+    int  numFields() { return num<Field>(); }
+    std::string getFieldName(int index) {return getName<Field>(index); }
   
     // The basic functions for managing matrices
     //  getmatrix     -> retrieve a Handle to a matrix stored in the bundle
@@ -137,18 +137,17 @@ namespace SCIRun {
     //  numnrrds   -> The number of nrrds stored in the bundle 
     //  getnrrdname -> Get the nth name in the bundle for building a contents list
   
-    LockingHandle<NrrdData> getNrrd(std::string name) { return get<NrrdData>(name); }
-    NrrdScalar getNrrdScalar(std::string name) {return NrrdScalar(get<NrrdData>(name)); }
-    NrrdString getNrrdString(std::string name) {return NrrdString(get<NrrdData>(name)); }  
+    LockingHandle<NrrdData> getNrrd(std::string name);
+    NrrdScalar getNrrdScalar(std::string name) {return NrrdScalar(getNrrd(name)); }
+    NrrdString getNrrdString(std::string name) {return NrrdString(getNrrd(name)); }  
     void setNrrd(std::string name, LockingHandle<NrrdData> &nrrd) { set<NrrdData>(name,nrrd); }
     void setNrrdScalar(std::string name, NrrdScalar scalar) { NrrdDataHandle nrrd = scalar.gethandle(); set<NrrdData>(name,nrrd); }
     void setNrrdString(std::string name, NrrdString string) { NrrdDataHandle nrrd = string.gethandle(); set<NrrdData>(name,nrrd); }
 
     void remNrrd(std::string name) { rem(name); }
-    bool isNrrd(std::string name)  { return is<NrrdData>(name); }
-    int  numNrrds() { return num<NrrdData>(); }
-    std::string getNrrdName(int index) {return getName<NrrdData>(index); }
-  
+    bool isNrrd(std::string name);
+    int  numNrrds();
+    std::string getNrrdName(int index);
   
     // The basic functions for managing colormaps
     //  getcolormap     -> retrieve a Handle to a colormap stored in the bundle
@@ -293,11 +292,14 @@ namespace SCIRun {
   template<class T> inline std::string
   Bundle::getName(int index)
   {
-    int cnt = 0;
+    int cnt = -1;
     size_t p;
-    for (p=0;(p<bundleName_.size())&&(cnt != index);p++)
+    for (p=0;p<bundleName_.size();p++)
+    {
       if (dynamic_cast<T*>(bundle_[p].get_rep()) != 0) cnt++;
-    if (p < bundleName_.size()) return bundleName_[p];
+      if (index == cnt) break;
+    }
+    if ((p < bundleName_.size())&&(cnt==index)) return bundleName_[p];
     return std::string("");
   }
 
