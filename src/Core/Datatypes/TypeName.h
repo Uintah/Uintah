@@ -95,12 +95,6 @@ template <class T> const string find_type_name(Array2<T>*)
   return name;
 }
 
-template <class T> const string find_type_name(CellIndex<T>*)
-{
-  static const string name = string("CellIndex") + FTNS + find_type_name((T*)0) + FTNE;
-  return name;
-}
-
 template <class T> const string find_type_name(vector<T>*)
 {
   static const string name = string("vector") + FTNS + find_type_name((T*)0) + FTNE;

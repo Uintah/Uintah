@@ -226,6 +226,105 @@ ImageMesh::get_weights(const Point &p,
 }
 
 
+const TypeDescription* get_type_description(ImageMesh::NodeIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("ImageMesh::NodeIndex",
+				ImageMesh::get_h_file_path(),
+				"SCIRun");
+  }
+  return td;
+}
+const TypeDescription* get_type_description(ImageMesh::EdgeIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("ImageMesh::EdgeIndex",
+				ImageMesh::get_h_file_path(),
+				"SCIRun");
+}
+  return td;
+}
+const TypeDescription* get_type_description(ImageMesh::FaceIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("ImageMesh::FaceIndex",
+				ImageMesh::get_h_file_path(),
+				"SCIRun");
+  }
+  return td;
+}
+const TypeDescription* get_type_description(ImageMesh::CellIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("ImageMesh::CellIndex",
+				ImageMesh::get_h_file_path(),
+				"SCIRun");
+  }
+  return td;
+}
+
+
+void
+Pio(Piostream& stream, ImageMesh::NodeIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    Pio(stream, n.j_);
+    stream.end_cheap_delim();
+}
+
+void
+Pio(Piostream& stream, ImageMesh::EdgeIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    stream.end_cheap_delim();
+}
+
+void
+Pio(Piostream& stream, ImageMesh::FaceIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    Pio(stream, n.j_);
+    stream.end_cheap_delim();
+}
+
+void
+Pio(Piostream& stream, ImageMesh::CellIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    stream.end_cheap_delim();
+}
+
+
+const string find_type_name(ImageMesh::NodeIndex *)
+{
+  static string name = "ImageMesh::NodeIndex";
+  return name;
+}
+const string find_type_name(ImageMesh::EdgeIndex *)
+{
+  static string name = "ImageMesh::EdgeIndex";
+  return name;
+}
+const string find_type_name(ImageMesh::FaceIndex *)
+{
+  static string name = "ImageMesh::FaceIndex";
+  return name;
+}
+const string find_type_name(ImageMesh::CellIndex *)
+{
+  static string name = "ImageMesh::CellIndex";
+  return name;
+}
+
+
 #define LATVOLMESH_VERSION 1
 
 void

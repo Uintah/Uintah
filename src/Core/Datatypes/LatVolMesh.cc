@@ -248,6 +248,47 @@ LatVolMesh::get_weights(const Point &p,
   }
 }
 
+const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("LatVolMesh::NodeIndex",
+				LatVolMesh::get_h_file_path(),
+				"SCIRun");
+  }
+  return td;
+}
+const TypeDescription* get_type_description(LatVolMesh::EdgeIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("LatVolMesh::EdgeIndex",
+				LatVolMesh::get_h_file_path(),
+				"SCIRun");
+}
+  return td;
+}
+const TypeDescription* get_type_description(LatVolMesh::FaceIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("LatVolMesh::FaceIndex",
+				LatVolMesh::get_h_file_path(),
+				"SCIRun");
+  }
+  return td;
+}
+const TypeDescription* get_type_description(LatVolMesh::CellIndex *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("LatVolMesh::CellIndex",
+				LatVolMesh::get_h_file_path(),
+				"SCIRun");
+  }
+  return td;
+}
+
 void
 Pio(Piostream& stream, LatVolMesh::NodeIndex& n)
 {
@@ -256,6 +297,53 @@ Pio(Piostream& stream, LatVolMesh::NodeIndex& n)
     Pio(stream, n.j_);
     Pio(stream, n.k_);
     stream.end_cheap_delim();
+}
+
+void
+Pio(Piostream& stream, LatVolMesh::EdgeIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    stream.end_cheap_delim();
+}
+
+void
+Pio(Piostream& stream, LatVolMesh::FaceIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    stream.end_cheap_delim();
+}
+
+void
+Pio(Piostream& stream, LatVolMesh::CellIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    Pio(stream, n.j_);
+    Pio(stream, n.k_);
+    stream.end_cheap_delim();
+}
+
+const string find_type_name(LatVolMesh::NodeIndex *)
+{
+  static string name = "LatVolMesh::NodeIndex";
+  return name;
+}
+const string find_type_name(LatVolMesh::EdgeIndex *)
+{
+  static string name = "LatVolMesh::EdgeIndex";
+  return name;
+}
+const string find_type_name(LatVolMesh::FaceIndex *)
+{
+  static string name = "LatVolMesh::FaceIndex";
+  return name;
+}
+const string find_type_name(LatVolMesh::CellIndex *)
+{
+  static string name = "LatVolMesh::CellIndex";
+  return name;
 }
 
 #define LATVOLMESH_VERSION 1
@@ -404,12 +492,4 @@ LatVolMesh::get_h_file_path() {
   return path;
 }
 
-const TypeDescription* get_type_description(LatVolMesh::Node::index_type *) {
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("LatVolMesh::NodeIndex", 
-				LatVolMesh::get_h_file_path(), "SCIRun");
-  }
-  return td;
-}
 } // namespace SCIRun

@@ -35,7 +35,6 @@
 #include <Core/Datatypes/ContourMesh.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/TriSurf.h>
-#include <Core/Datatypes/InterpolantTypes.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
 

@@ -33,7 +33,6 @@ SRCS += $(SRCDIR)/ColorMap.cc		    	\
         $(SRCDIR)/Geom.c          	    	\
         $(SRCDIR)/Image.cc		    	\
         $(SRCDIR)/ImageMesh.cc		    	\
-        $(SRCDIR)/InterpolantTypes.cc		\
 	$(SRCDIR)/LatVolMesh.cc 		\
         $(SRCDIR)/Matrix.cc		    	\
         $(SRCDIR)/MeshBase.cc		    	\

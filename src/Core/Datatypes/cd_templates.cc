@@ -559,6 +559,7 @@ template <> bool LatticeVol<Vector>::get_gradient(Vector &, const Point &/*p*/)
   return false;
 }
 
+
 #ifdef __sgi
 #pragma reset woff 1468
 #endif

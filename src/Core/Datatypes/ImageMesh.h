@@ -46,6 +46,7 @@ class SCICORESHARE ImageMesh : public MeshBase
 {
 public:
 
+  static inline const string get_h_file_path() { return string(__FILE__); }
 
   struct UnfinishedIndex
   {
@@ -62,12 +63,18 @@ public:
   {
     EdgeIndex() : UnfinishedIndex() {}
     EdgeIndex(unsigned i) : UnfinishedIndex(i) {}
+    friend void Pio(Piostream&, EdgeIndex&);
+    friend const TypeDescription* get_type_description(EdgeIndex *);
+    friend const string find_type_name(EdgeIndex *);
   };
 
   struct CellIndex : public UnfinishedIndex
   {
     CellIndex() : UnfinishedIndex() {}
     CellIndex(unsigned i) : UnfinishedIndex(i) {}
+    friend void Pio(Piostream&, CellIndex&);
+    friend const TypeDescription* get_type_description(CellIndex *);
+    friend const string find_type_name(CellIndex *);
   };
 
   struct UnfinishedIter : public UnfinishedIndex
@@ -144,12 +151,18 @@ public:
   {
     FaceIndex() : ImageIndex() {}
     FaceIndex(unsigned i, unsigned j) : ImageIndex(i, j) {}
+    friend void Pio(Piostream&, FaceIndex&);
+    friend const TypeDescription* get_type_description(FaceIndex *);
+    friend const string find_type_name(FaceIndex *);
   };
 
   struct NodeIndex : public ImageIndex
   {
     NodeIndex() : ImageIndex() {}
     NodeIndex(unsigned i, unsigned j) : ImageIndex(i, j) {}
+    friend void Pio(Piostream&, NodeIndex&);
+    friend const TypeDescription* get_type_description(NodeIndex *);
+    friend const string find_type_name(NodeIndex *);
   };
 
   struct ImageIter : public ImageIndex

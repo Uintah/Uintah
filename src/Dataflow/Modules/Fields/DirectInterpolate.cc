@@ -39,7 +39,6 @@
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/InterpolantTypes.h>
 #include <Core/Datatypes/Dispatch1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>

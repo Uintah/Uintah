@@ -190,6 +190,34 @@ void Pio(Piostream& stream, FieldIndexBase<T>& data)
   Pio(stream, data.index_);
 }
 
+template <class T> const string find_type_name(NodeIndex<T> *)
+{
+  static const string name =
+    string("NodeIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  return name;
+}
+
+template <class T> const string find_type_name(EdgeIndex<T> *)
+{
+  static const string name =
+    string("EdgeIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  return name;
+}
+
+template <class T> const string find_type_name(FaceIndex<T> *)
+{
+  static const string name =
+    string("FaceIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  return name;
+}
+
+template <class T> const string find_type_name(CellIndex<T> *)
+{
+  static const string name =
+    string("CellIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  return name;
+}
+
 } // end namespace SCIRun
 
 #endif // Datatypes_FieldIndex_h
