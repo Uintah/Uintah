@@ -38,6 +38,11 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
                         ParticleVariable<Matrix3>::getTypeDescription() );
 
   d_8or27 = n8or27;
+  if(d_8or27==8){
+    NGN=1;
+  } else if(d_8or27==27){
+    NGN=2;
+  }
 
 }
 
@@ -157,19 +162,20 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress_new,defGradIP;
     constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
-    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Vector> pvelocity,psize;
     constParticleVariable<Vector> ptang1,ptang2,pnorm;
     ParticleVariable<Vector> T1,T2,T3;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
-    constParticleVariable<Vector> psize;
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,                  pset);
-    }
     Vector I(1,0,0);
     Vector J(0,1,0);
     Vector K(0,0,1);
 
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+
+    if(d_8or27==27){
+      old_dw->get(psize,                    lb->pSizeLabel,               pset);
+    }
     old_dw->get(px,                         lb->pXLabel,                  pset);
     old_dw->get(pmass,                      lb->pMassLabel,               pset);
     old_dw->get(pstress,                    lb->pStressLabel,             pset);
@@ -188,7 +194,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, Ghost::AroundCells,1);
+    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac,NGN);
     old_dw->get(delT, lb->delTLabel);
 
     double shear = d_initialData.Shear;
@@ -423,13 +429,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       se += e;
 
       Vector pvelocity_idx = pvelocity[idx];
-      if(pmass[idx] > 0){
-        c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
-      }
-      else{
-        c_dil = 0.0;
-        pvelocity_idx = Vector(0.0,0.0,0.0);
-      }
+      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
   		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -454,25 +454,23 @@ void Membrane::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const PatchSet*) const
 {
+   Ghost::GhostType  gac   = Ghost::AroundCells;
    const MaterialSubset* matlset = matl->thisMaterial();
-   task->requires(Task::OldDW, lb->pXLabel,        matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pMassLabel,     matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-						   matlset, Ghost::None);
-   task->requires(Task::OldDW, defGradInPlaneLabel,matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pStressLabel,
-						   matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pTang1Label,    matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pTang2Label,    matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pNormLabel,     matlset, Ghost::None);
-   task->requires(Task::NewDW, lb->gVelocityLabel,
-						 matlset, Ghost::AroundCells,1);
+   task->requires(Task::OldDW,lb->pXLabel,                 matlset,Ghost::None);
+   task->requires(Task::OldDW,lb->pMassLabel,              matlset,Ghost::None);
+   task->requires(Task::OldDW,lb->pVelocityLabel,          matlset,Ghost::None);
+   task->requires(Task::OldDW,lb->pDeformationMeasureLabel,matlset,Ghost::None);
+   task->requires(Task::OldDW,defGradInPlaneLabel,         matlset,Ghost::None);
+   task->requires(Task::OldDW,lb->pStressLabel,            matlset,Ghost::None);
+   task->requires(Task::OldDW,lb->pTang1Label,             matlset,Ghost::None);
+   task->requires(Task::OldDW,lb->pTang2Label,             matlset,Ghost::None);
+   task->requires(Task::OldDW,lb->pNormLabel,              matlset,Ghost::None);
+   if(d_8or27==27){
+     task->requires(Task::OldDW, lb->pSizeLabel,           matlset,Ghost::None);
+   }
+   task->requires(Task::NewDW, lb->gVelocityLabel,         matlset,gac, NGN);
    task->requires(Task::OldDW, lb->delTLabel);
 
-   if(d_8or27==27){
-     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
-   }
 
    task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

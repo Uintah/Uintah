@@ -34,6 +34,11 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_PR",d_initialData.PR);
   d_8or27 = n8or27;
+  if(d_8or27==8){
+    NGN=1;
+  } else if(d_8or27==27){
+    NGN=2;
+  }
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -134,10 +139,12 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     constParticleVariable<Vector> psize;
+
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+
     if(d_8or27==27){
       old_dw->get(psize,             lb->pSizeLabel,                     pset);
     }
-
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
@@ -147,8 +154,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
-		Ghost::AroundCells, 1);
+    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
 
     constParticleVariable<int> pConnectivity;
@@ -273,17 +279,17 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->gVelocityLabel,   matlset,
-		 Ghost::AroundCells, 1);
-  task->requires(Task::OldDW, lb->delTLabel);
-
   if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
+  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
+
+  task->requires(Task::OldDW, lb->delTLabel);
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

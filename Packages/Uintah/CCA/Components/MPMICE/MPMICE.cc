@@ -83,6 +83,11 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
   d_8or27 = d_mpm->d_8or27; 
+  if(d_8or27==8){
+    NGN=1;
+  } else if(d_8or27==MAX_BASIS){
+    NGN=2;
+  }
   //__________________________________
   //  I C E
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
@@ -357,12 +362,12 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
    Ghost::GhostType  gac = Ghost::AroundCells;
    t->requires(Task::OldDW, d_sharedState->get_delt_label());
    
-   t->requires(Task::NewDW, MIlb->press_NCLabel,       press_matl,gac, 1);
+   t->requires(Task::NewDW, MIlb->press_NCLabel,       press_matl,gac, NGN);
    t->requires(Task::NewDW, MIlb->cMassLabel,          mpm_matl,  gac, 1);
    t->requires(Task::NewDW, Ilb->press_force_CCLabel,  mpm_matl,  gac, 1);
-   t->requires(Task::OldDW, Mlb->pXLabel,              mpm_matl, Ghost::None);
+   t->requires(Task::OldDW, Mlb->pXLabel,              mpm_matl,  Ghost::None);
    if(d_8or27==27){
-     t->requires(Task::OldDW, Mlb->pSizeLabel,         mpm_matl, Ghost::None);
+     t->requires(Task::OldDW, Mlb->pSizeLabel,         mpm_matl,  Ghost::None);
    }
    t->computes(Mlb->pPressureLabel,   mpm_matl);
    t->computes(Mlb->gradPAccNCLabel,  mpm_matl);
@@ -384,7 +389,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
                  this, &MPMICE::interpolateNCToCC_0);
 
-   t->requires(Task::OldDW, Mlb->doMechLabel, Ghost::None);   
+   t->requires(Task::OldDW, Mlb->doMechLabel,      Ghost::None);   
    t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
    t->requires(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
    t->requires(Task::NewDW, Mlb->gVelocityLabel,   Ghost::AroundCells, 1); 
@@ -741,7 +746,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     double p_ref = d_sharedState->getRefPress();
     constNCVariable<double>   pressNC;    
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(pressNC, MIlb->press_NCLabel,  0, patch, gac, 1);
+    new_dw->get(pressNC, MIlb->press_NCLabel,  0, patch, gac, NGN);
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );

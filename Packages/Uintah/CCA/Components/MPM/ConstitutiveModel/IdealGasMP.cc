@@ -32,6 +32,11 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
   ps->require("specific_heat",d_initialData.cv);
 
   d_8or27 = n8or27;
+  if(d_8or27==8){
+    NGN=1;
+  } else if(d_8or27==27){
+    NGN=2;
+  }
 
 }
 
@@ -143,9 +148,11 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass,ptemp;
     ParticleVariable<double> pvolume_deformed;
-    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+
+    Ghost::GhostType  gac   = Ghost::AroundCells;
 
     old_dw->get(px,                          lb->pXLabel,                 pset);
     old_dw->get(pmass,                       lb->pMassLabel,              pset);
@@ -154,15 +161,14 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    if(d_8or27==27){
+      old_dw->get(psize,                     lb->pSizeLabel,              pset);
+    }
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, Ghost::AroundCells,1);
+    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
-    constParticleVariable<Vector> psize;
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,                  pset);
-    }
 
     double gamma = d_initialData.gamma;
     double cv    = d_initialData.cv;
@@ -218,13 +224,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       pstress[idx] = Identity*(-p);
 
       Vector pvelocity_idx = pvelocity[idx];
-      if(pmass[idx] > 0){
-        c_dil = sqrt(tmp);
-      }
-      else{
-        c_dil = 0.0;
-        pvelocity_idx = Vector(0.0,0.0,0.0);
-      }
+      c_dil = sqrt(tmp);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
   		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -248,6 +248,7 @@ void IdealGasMP::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const PatchSet*) const
 {
+   Ghost::GhostType  gac   = Ghost::AroundCells;
    const MaterialSubset* matlset = matl->thisMaterial();
    task->requires(Task::OldDW, lb->pXLabel,             matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pMassLabel,          matlset, Ghost::None);
@@ -255,13 +256,13 @@ void IdealGasMP::addComputesAndRequires(Task* task,
    task->requires(Task::OldDW, lb->pVelocityLabel,      matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						        matlset, Ghost::None);
-   task->requires(Task::NewDW,lb->gVelocityLabel,matlset,Ghost::AroundCells,1);
+   if(d_8or27==27){
+     task->requires(Task::OldDW, lb->pSizeLabel,        matlset, Ghost::None);
+   }
+   task->requires(Task::NewDW,lb->gVelocityLabel,matlset,gac,NGN);
 
    task->requires(Task::OldDW, lb->delTLabel);
 
-   if(d_8or27==27){
-     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
-   }
 
    task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

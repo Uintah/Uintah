@@ -42,6 +42,11 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
 		ParticleVariable<Matrix3>::getTypeDescription());
   d_8or27 = n8or27;
+  if(d_8or27==8){
+    NGN=1;
+  } else if(d_8or27==27){
+    NGN=2;
+  }
 }
 
 void CompNeoHookPlas::addParticleState(std::vector<const VarLabel*>& from,
@@ -176,10 +181,12 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     constParticleVariable<Vector> psize;
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,                  pset);
-    }
 
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+
+    if(d_8or27==27){
+      old_dw->get(psize,               lb->pSizeLabel,                   pset);
+    }
     old_dw->get(px,                    lb->pXLabel,                      pset);
     old_dw->get(bElBar,                bElBarLabel,                      pset);
     old_dw->get(statedata_old,         p_statedata_label,                pset);
@@ -194,8 +201,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
     statedata.copyData(statedata_old);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
-	      Ghost::AroundCells, 1);
+    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
 
     constParticleVariable<int> pConnectivity;
@@ -311,13 +317,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // Compute wave speed at each particle, store the maximum
 
       Vector pvelocity_idx = pvelocity[idx];
-      if(pmass[idx] > 0) {
-        c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
-      }
-      else{
-        c_dil = 0.0;
-        pvelocity_idx = Vector(0.0,0.0,0.0);
-      }
+      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
 		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -355,6 +355,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const PatchSet*) const
 {
+  Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
   task->requires(Task::OldDW, p_statedata_label,           matlset,Ghost::None);
@@ -362,13 +363,12 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW, bElBarLabel,                 matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, 
-                 Ghost::AroundCells, 1);
+  if(d_8or27==27){
+    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
+  }
+  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->doMechLabel);
-  if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
-  }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
