@@ -213,6 +213,7 @@ MatlabCall::MatlabCall() :
   error_handler_ = scinew  MatlabCallErrorHandler(this);
   add_stdout_handler(dynamic_cast<SystemCallHandler*>(handler_.get_rep()));
   add_stderr_handler(dynamic_cast<SystemCallHandler*>(error_handler_.get_rep()));
+  use_stdout_timeout(true);
 }
 
 MatlabCall::~MatlabCall()
@@ -523,7 +524,7 @@ void MatlabEngine::handle_service(IComPacketHandle &packet)
         }
 
       std::string str = packet->getstring();
-      matlab_handle_->put_stdin(str);
+      matlab_handle_->put_stdin(str,true);
     }                    
     break;
 
@@ -583,7 +584,7 @@ std::string     MatlabEngine::addcode(std::string &mfile)
     }
 
   std::string newcode;
-  newcode += "fprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-START\\n');\n";
+  newcode += "\nfprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-START\\n');\n";
   newcode += "try\n";
   if(path != "") newcode += "addpath('" + path + "')\n";
   newcode += command;
