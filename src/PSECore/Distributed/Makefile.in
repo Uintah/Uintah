@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../..
-
-SRCS     = SlaveController.cc
-
-INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
-
-include $(SRCTOP)/scripts/objs.mk
