@@ -80,6 +80,30 @@ bool convert(To*& to_str, From*& from_str) {
   return false;
 }
 
+// same as above, but utilizes a second buffer (for attribute maps)
+template <class To, class From>
+bool convert2(To*& to_str, From*& from_str) {
+  if (!lcptrans_) {
+    lcptrans_ = XMLPlatformUtils::fgTransService->makeNewLCPTranscoder();
+  }
+  static unsigned int buf_sz_ = 255;
+  static To* char_buf_ = new To[buf_sz_ + 1];
+  unsigned int sz = lcptrans_->calcRequiredSize(from_str);
+  if (sz > buf_sz_) {
+    buf_sz_ = sz;
+    delete[] char_buf_;
+    char_buf_ = new To[buf_sz_ + 1];
+  }
+  
+  if (lcptrans_->transcode(from_str, char_buf_, buf_sz_)) {
+    // make sure we are null terminated
+    char_buf_[sz] = '\0';
+    to_str = char_buf_;
+    return true;
+  }
+  return false;
+}
+
 
 inline
 const char* to_char_ptr(const XMLCh  *t) {
@@ -92,6 +116,14 @@ inline
 const XMLCh* to_xml_ch_ptr(const char *t) {
   XMLCh* rval;
   if (convert(rval, t)) return rval;
+  else return 0;
+}
+
+// same as above but utilizes a second buffer (for attribute maps)
+inline
+const XMLCh* to_xml_ch_ptr2(const char *t) {
+  XMLCh* rval;
+  if (convert2(rval, t)) return rval;
   else return 0;
 }
 
