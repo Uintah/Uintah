@@ -627,10 +627,10 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int indx= mpm_matl->getDWIndex();
       new_dw->allocateTemporary(rho_micro, patch);
-      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,      indx,patch);
-      new_dw->allocateAndPut(rho_CC, Ilb->rho_CCLabel,         indx,patch); 
-      new_dw->allocateAndPut(Temp_CC, MIlb->temp_CCLabel,         indx,patch);
-      new_dw->allocateAndPut(vel_CC, MIlb->vel_CCLabel,          indx,patch);
+      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx,patch);      
+      new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx,patch);      
+      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx,patch);      
+      new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx,patch);      
       
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
@@ -665,18 +665,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         throw ProblemSetupException(warn.str() );
       }
       
-      //__________________________________
-      //You may need to adjust Temp_CC if g!=0
-      // for thermo consistency, for now ignore it 2/11/02
-      // allocateAndPut instead:
-      /* new_dw->put(sp_vol_CC,    Ilb->sp_vol_CCLabel, indx,patch);         */;
-      // allocateAndPut instead:
-      /* new_dw->put(rho_CC,       Ilb->rho_CCLabel,    indx,patch);         */;
-      // allocateAndPut instead:
-      /* new_dw->put(Temp_CC,     MIlb->temp_CCLabel,   indx,patch);         */;
-      // allocateAndPut instead:
-      /* new_dw->put(vel_CC,      MIlb->vel_CCLabel,    indx,patch);  */;
-      
       //---- P R I N T   D A T A ------        
       if (d_ice->switchDebugInitialize){      
         ostringstream desc;
@@ -692,8 +680,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 
     double doMech = 999.9;
     new_dw->put(delt_vartype(doMech), Mlb->doMechLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(NC_CCweight,  MIlb->NC_CCweightLabel,    0, patch); */;
   } // Patch loop
 }
 
@@ -730,8 +716,6 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
         pressNC[*iter]  += .125*pressCC[cIdx[in]];
       }
     }
-    // allocateAndPut instead:
-    /* new_dw->put(pressNC,MIlb->press_NCLabel,0,patch); */;
   }
 }
 
@@ -775,10 +759,10 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       constParticleVariable<Point> px;
       constParticleVariable<Vector> psize;
       if(d_8or27==27){
-        old_dw->get(psize,        Mlb->pSizeLabel,          pset);
+        old_dw->get(psize,              Mlb->pSizeLabel,     pset);     
       }
-      new_dw->allocateAndPut(pPressure, Mlb->pPressureLabel,      pset);
-      old_dw->get(px,             Mlb->pXLabel,             pset);
+      new_dw->allocateAndPut(pPressure, Mlb->pPressureLabel, pset);     
+      old_dw->get(px,                   Mlb->pXLabel,        pset);     
 
      //__________________________________
      // Interpolate NC pressure to particles
@@ -821,10 +805,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
             <<patch->getID();                   
         printNCVector( patch, 1,desc.str(),"gradPAccNC",0,gradPAccNC);
       }
-      // allocateAndPut instead:
-      /* new_dw->put(pPressure,   Mlb->pPressureLabel); */;
-      // allocateAndPut instead:
-      /* new_dw->put(gradPAccNC,  Mlb->gradPAccNCLabel, indx, patch); */;
     }  // numMPMMatls
   } //patches
 }
@@ -846,9 +826,11 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z(); 
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;     
+    
     constNCVariable<double> NC_CCweight;
-    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch,
-              Ghost::AroundCells, 1);
+    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch, gac, 1);
 
     int reactant_indx = -1;
     double thresholdTemperature = 1e6;
@@ -864,7 +846,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     delt_vartype doMechOld;
     old_dw->get(doMechOld, Mlb->doMechLabel);
     static int first_small_dt = 0;
-
+   
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
@@ -877,9 +859,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       constCCVariable<double> Temp_CC_ice;
       constCCVariable<Vector> vel_CC_ice; 
 
-      new_dw->allocateAndPut(cmass, MIlb->cMassLabel,   indx, patch);    
+      new_dw->allocateAndPut(cmass,   MIlb->cMassLabel,   indx, patch);    
       new_dw->allocateAndPut(cvolume, MIlb->cVolumeLabel, indx, patch);
-      new_dw->allocateAndPut(vel_CC, MIlb->vel_CCLabel,  indx, patch);    
+      new_dw->allocateAndPut(vel_CC,  MIlb->vel_CCLabel,  indx, patch);    
       new_dw->allocateAndPut(Temp_CC, MIlb->temp_CCLabel, indx, patch);   
 
       double rho_orig = mpm_matl->getInitialDensity();
@@ -887,15 +869,12 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       cmass.initialize(very_small_mass);
       cvolume.initialize( very_small_mass/rho_orig);
          
-      new_dw->get(gmass,Mlb->gMassLabel,  indx, patch,Ghost::AroundCells, 1);
-      new_dw->get(gvolume,      
-                  Mlb->gVolumeLabel,      indx, patch,Ghost::AroundCells, 1);
-      new_dw->get(gvelocity,    
-                  Mlb->gVelocityLabel,    indx, patch,Ghost::AroundCells, 1);
-      new_dw->get(gtemperature, 
-                  Mlb->gTemperatureLabel, indx, patch,Ghost::AroundCells, 1);
-      old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel, indx,patch,Ghost::None,0);
-      old_dw->get(vel_CC_ice,   MIlb->vel_CCLabel,  indx,patch,Ghost::None,0);
+      new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
+      new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
+      new_dw->get(gvelocity,    Mlb->gVelocityLabel,    indx, patch,gac, 1);
+      new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
+      old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
+      old_dw->get(vel_CC_ice,   MIlb->vel_CCLabel,      indx, patch,gn, 0);
       IntVector nodeIdx[8];
       
       //---- P R I N T   D A T A ------ 
@@ -979,15 +958,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         d_ice->printData(   patch, 1,desc.str(), "Temp_CC",   Temp_CC);
         d_ice->printVector( patch, 1,desc.str(), "vel_CC", 0,vel_CC);
       } 
-     
-      // allocateAndPut instead:
-      /* new_dw->put(cmass,    MIlb->cMassLabel,   indx, patch);     */;
-      // allocateAndPut instead:
-      /* new_dw->put(cvolume,  MIlb->cVolumeLabel, indx, patch);     */;
-      // allocateAndPut instead:
-      /* new_dw->put(vel_CC,   MIlb->vel_CCLabel,  indx, patch);     */;
-      // allocateAndPut instead:
-      /* new_dw->put(Temp_CC,  MIlb->temp_CCLabel, indx, patch);    */;
     }
     if(doMechNew < 0.){
        first_small_dt++;
@@ -1014,13 +984,14 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
     double cellVol = dx.x()*dx.y()*dx.z();
     double inv_cellVol = 1.0/cellVol;
     double very_small_mass = d_TINY_RHO * cellVol; 
-    
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;         
+         
     constNCVariable<double> NC_CCweight;
     NCVariable<double>NC_CCweight_copy;
     new_dw->allocateAndPut(NC_CCweight_copy, MIlb->NC_CCweightLabel, 0,patch);
-    old_dw->get(NC_CCweight,          MIlb->NC_CCweightLabel, 0,patch,
-              Ghost::AroundCells, 1);
-              
+    old_dw->get(NC_CCweight,                 MIlb->NC_CCweightLabel, 0,patch, 
+                                                                      gac, 1);
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
@@ -1034,27 +1005,18 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       constCCVariable<Vector> mom_comb;
       constCCVariable<double> Temp_CC_sur;
       constCCVariable<Vector> vel_CC_sur; 
-      new_dw->get(gmass,        
-                  Mlb->gMassLabel,           indx,patch,Ghost::AroundCells,1);
-      new_dw->get(gvelocity,    
-                  Mlb->gVelocityStarLabel,   indx,patch,Ghost::AroundCells,1);
-      new_dw->get(gtempstar,
-                  Mlb->gTemperatureStarLabel,indx,patch,Ghost::AroundCells,1);
-      new_dw->get(cmass,       
-                  MIlb->cMassLabel,          indx,patch,Ghost::None,0);    
-      new_dw->get(burnedMassCC,
-                  MIlb->burnedMassCCLabel,   indx,patch,Ghost::None,0);    
-      new_dw->get(int_eng_comb, 
-                  Ilb->int_eng_comb_CCLabel, indx,patch,Ghost::None,0);    
-      new_dw->get(mom_comb,     
-                  Ilb->mom_comb_CCLabel,     indx,patch,Ghost::None,0);
-      new_dw->get(Temp_CC_sur,  
-                  MIlb->temp_CCLabel,        indx,patch,Ghost::None,0);    
-      new_dw->get(vel_CC_sur,   
-                  MIlb->vel_CCLabel,         indx,patch,Ghost::None,0);
+      new_dw->get(gmass,       Mlb->gMassLabel,           indx,patch,gac,1);
+      new_dw->get(gvelocity,   Mlb->gVelocityStarLabel,   indx,patch,gac,1);
+      new_dw->get(gtempstar,   Mlb->gTemperatureStarLabel,indx,patch,gac,1);
+      new_dw->get(cmass,       MIlb->cMassLabel,          indx,patch,gn,0);    
+      new_dw->get(burnedMassCC,MIlb->burnedMassCCLabel,   indx,patch,gn,0);    
+      new_dw->get(int_eng_comb,Ilb->int_eng_comb_CCLabel, indx,patch,gn,0);    
+      new_dw->get(mom_comb,    Ilb->mom_comb_CCLabel,     indx,patch,gn,0);
+      new_dw->get(Temp_CC_sur, MIlb->temp_CCLabel,        indx,patch,gn,0);    
+      new_dw->get(vel_CC_sur,  MIlb->vel_CCLabel,         indx,patch,gn,0);
                                                            
-      new_dw->getModifiable(rho_CC,Ilb->rho_CCLabel,      indx,patch);   
-      new_dw->allocateAndPut(mass_L, Ilb->mass_L_CCLabel,   indx,patch);      
+      new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,      indx,patch);   
+      new_dw->allocateAndPut(mass_L,    Ilb->mass_L_CCLabel,   indx,patch);      
       new_dw->allocateAndPut(cmomentum, Ilb->mom_L_CCLabel,    indx,patch);   
       new_dw->allocateAndPut(int_eng_L, Ilb->int_eng_L_CCLabel,indx,patch);   
 
@@ -1169,20 +1131,12 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         d_ice->printData(   patch, 1,desc.str(), "int_eng_L", int_eng_L);
         d_ice->printVector( patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
       }
-       // allocateAndPut instead:
-       /* new_dw->put(cmomentum,   Ilb->mom_L_CCLabel,    indx, patch);      */;
-       // allocateAndPut instead:
-       /* new_dw->put(int_eng_L,   Ilb->int_eng_L_CCLabel,indx, patch);      */;
-       // allocateAndPut instead:
-       /* new_dw->put(mass_L,      Ilb->mass_L_CCLabel,   indx, patch);      */;
-    }
+    }  //numMatls
     //__________________________________
     // carry forward interpolation weight 
     IntVector low = patch->getNodeLowIndex();
     IntVector hi  = patch->getNodeHighIndex();
     NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
-    // allocateAndPut instead:
-    /* new_dw->put(NC_CCweight_copy, MIlb->NC_CCweightLabel, 0,patch); */;
   }  //patches
 }
 
@@ -1256,8 +1210,6 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         printNCVector( patch, 1,desc.str(),"gvelocity",    0,gvelocity);
         printNCVector( patch, 1,desc.str(),"gacceleration",0,gacceleration);
       }
-      // allocateAndPut instead:
-      /* new_dw->put(dTdt_NC,           Mlb->dTdt_NCLabel,       indx,patch); */;
     }  
   }  //patches
 }
@@ -1331,10 +1283,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp;
+    
+    Ghost::GhostType  gn = Ghost::None;
     //  P R E S S 
     new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
     new_dw->allocateTemporary(delPress_tmp, patch); 
-    old_dw->get(press, Ilb->press_CCLabel, 0,patch,Ghost::None, 0); 
+    old_dw->get(press, Ilb->press_CCLabel, 0,patch,gn, 0); 
 
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -1342,24 +1296,28 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(ice_matl){                    // I C E
-        old_dw->get(Temp[m],     Ilb->temp_CCLabel,  indx,patch,Ghost::None,0);
-        old_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,Ghost::None,0);
-        old_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,Ghost::None,0);
-        old_dw->get(vel_CC[m],   Ilb->vel_CCLabel,   indx,patch,Ghost::None,0);
+        old_dw->get(Temp[m],     Ilb->temp_CCLabel,  indx,patch,gn,0);
+        old_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
+        old_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0);
+        old_dw->get(vel_CC[m],   Ilb->vel_CCLabel,   indx,patch,gn,0);
         cv[m] = ice_matl->getSpecificHeat();
       }
       if(mpm_matl){                    // M P M
-        new_dw->get(Temp[m],     MIlb->temp_CCLabel, indx,patch,Ghost::None,0);
-        new_dw->get(mat_vol[m],  MIlb->cVolumeLabel, indx,patch,Ghost::None,0);
-        new_dw->get(mass_CC[m],  MIlb->cMassLabel,   indx,patch,Ghost::None,0);
-        new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,Ghost::None,0);
+        new_dw->get(Temp[m],     MIlb->temp_CCLabel, indx,patch,gn,0);
+        new_dw->get(mat_vol[m],  MIlb->cVolumeLabel, indx,patch,gn,0);
+        new_dw->get(mass_CC[m],  MIlb->cMassLabel,   indx,patch,gn,0);
+        new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
-      new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,       indx, patch);
-      new_dw->allocateAndPut(vol_frac[m], Ilb->vol_frac_CCLabel,  indx, patch);
       new_dw->allocateTemporary(rho_micro[m],  patch);
-      new_dw->allocateAndPut(speedSound_new[m], Ilb->speedSound_CCLabel,indx,patch);
-      new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx, patch);
+      new_dw->allocateAndPut(rho_CC_new[m],    Ilb->rho_CCLabel,       
+                                                                indx, patch);
+      new_dw->allocateAndPut(vol_frac[m],      Ilb->vol_frac_CCLabel,  
+                                                                indx, patch);
+      new_dw->allocateAndPut(speedSound_new[m],Ilb->speedSound_CCLabel,
+                                                                indx,patch);
+      new_dw->allocateAndPut(sp_vol_new[m],    Ilb->sp_vol_CCLabel,    
+                                                                indx, patch);
       speedSound_new[m].initialize(0.0);
     }
     
@@ -1684,23 +1642,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         sp_vol_new[m][c] = 1.0/rho_micro[m][c];
       }
     }  
-    //__________________________________
-    //    Put all matls into new dw
-    for (int m = 0; m < numALLMatls; m++)   {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      // allocateAndPut instead:
-      /* new_dw->put( vol_frac[m],      Ilb->vol_frac_CCLabel,   indx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put( speedSound_new[m],Ilb->speedSound_CCLabel, indx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put( sp_vol_new[m],    Ilb->sp_vol_CCLabel,     indx, patch);  */;
-      // allocateAndPut instead:
-      /* new_dw->put( rho_CC_new[m],    Ilb->rho_CCLabel,        indx, patch); */;
-    }
-    // allocateAndPut instead:
-    /* new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch); */;
-
 
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  { 
@@ -1774,7 +1715,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     int prod_indx = -1;
     delt_vartype doMech;
     old_dw->get(doMech, Mlb->doMechLabel);
-    
+    Ghost::GhostType  gn = Ghost::None;    
+   
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -1785,35 +1727,40 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       //  burnedMass, createdVol, int_eng_comb
       //  must still be allocated and initialized = 0,
       //  other tasks depend on them.
-      new_dw->allocateAndPut(burnedMass[m], MIlb->burnedMassCCLabel,   indx,patch);
-      new_dw->allocateAndPut(createdVol[m], Ilb->created_vol_CCLabel, indx,patch);
-      new_dw->allocateAndPut(int_eng_react[m], Ilb->int_eng_comb_CCLabel,indx,patch);
-      new_dw->allocateAndPut(mom_comb[m], Ilb->mom_comb_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(burnedMass[m],    MIlb->burnedMassCCLabel,  
+                                                                indx,patch);
+      new_dw->allocateAndPut(createdVol[m],    Ilb->created_vol_CCLabel, 
+                                                                indx,patch);
+      new_dw->allocateAndPut(int_eng_react[m], Ilb->int_eng_comb_CCLabel,
+                                                                indx,patch);
+      new_dw->allocateAndPut(mom_comb[m],      Ilb->mom_comb_CCLabel,    
+                                                                indx,patch);
             
       burnedMass[m].initialize(0.0);
       createdVol[m].initialize(0.0);
       int_eng_react[m].initialize(0.0); 
       mom_comb[m].initialize(0.0);
+
       //__________________________________
       // Pull out products data, should be only
       // 1 product matl
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
         prod_indx = ice_matl->getDWIndex();
-        new_dw->get(gasPressure,          Ilb->press_equil_CCLabel,
-                                      0, patch, Ghost::None,0);
-        old_dw->get(gasTemperature,       Ilb->temp_CCLabel,
-                                      prod_indx, patch, Ghost::None,0);
-        new_dw->get(gasVolumeFraction,    Ilb->vol_frac_CCLabel,
-                                      prod_indx, patch, Ghost::None,0);
-        new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,   
-                                      prod_indx, patch);
-        new_dw->allocateAndPut(sumCreatedVol, Ilb->created_vol_CCLabel,  
-                                      prod_indx, patch);
-        new_dw->allocateAndPut(sumReleasedHeat, Ilb->int_eng_comb_CCLabel, 
-                                      prod_indx, patch);
-        new_dw->allocateAndPut(sumMom_comb, Ilb->mom_comb_CCLabel, 
-                                      prod_indx, patch);
-        sumBurnedMass.initialize(0.0);
+        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,   
+                                                0,      patch,gn,0);
+        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,    
+                                                        prod_indx,patch,gn,0);
+        new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
+                                                        prod_indx,patch,gn,0);
+        new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,  
+                                                        prod_indx,patch);
+        new_dw->allocateAndPut(sumCreatedVol,  Ilb->created_vol_CCLabel,
+                                                        prod_indx,patch);
+        new_dw->allocateAndPut(sumReleasedHeat,Ilb->int_eng_comb_CCLabel,
+                                                        prod_indx,patch);
+        new_dw->allocateAndPut(sumMom_comb,    Ilb->mom_comb_CCLabel,    
+                                                        prod_indx,patch);
+        sumBurnedMass.initialize(0.0); 
         sumCreatedVol.initialize(0.0);
         sumReleasedHeat.initialize(0.0);
         sumMom_comb.initialize(0.0);
@@ -1979,6 +1926,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
      }  // numALLMatls loop
     }  // if d_massExchange
     
+    
+    //__________________________________
+    //  set symetric BC
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -1986,24 +1936,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
         setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
-        // allocateAndPut instead:
-        /* new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   indx, patch); */;
-        // allocateAndPut instead:
-        /* new_dw->put(sumReleasedHeat, Ilb->int_eng_comb_CCLabel,indx, patch);  */;
-        // allocateAndPut instead:
-        /* new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, indx, patch); */;
-        // allocateAndPut instead:
-        /* new_dw->put(sumMom_comb,     Ilb->mom_comb_CCLabel,    indx, patch); */;
-      }
-      else{
-        // allocateAndPut instead:
-        /* new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  indx, patch); */;
-        // allocateAndPut instead:
-        /* new_dw->put(int_eng_react[m],Ilb->int_eng_comb_CCLabel,indx, patch);  */;
-        // allocateAndPut instead:
-        /* new_dw->put(createdVol[m],    Ilb->created_vol_CCLabel,indx, patch); */;
-        // allocateAndPut instead:
-        /* new_dw->put(mom_comb[m],      Ilb->mom_comb_CCLabel,   indx, patch); */;
       }
     }
     //---- P R I N T   D A T A ------ 
@@ -2056,20 +1988,19 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-
+    Ghost::GhostType  gac = Ghost::AroundCells;
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int dwindex = matl->getDWIndex();
+      int indx = matl->getDWIndex();
       if(mpm_matl){
         constCCVariable<double> burnedMassCC;
         constCCVariable<double> massCC;
         NCVariable<double> massBurnFraction;
-        new_dw->get(burnedMassCC,     MIlb->burnedMassCCLabel,dwindex,patch,
-                                                  Ghost::AroundCells,1);
-        new_dw->get(massCC,           MIlb->cMassLabel,       dwindex,patch,
-                                                  Ghost::AroundCells,1);
-        new_dw->allocateAndPut(massBurnFraction, Mlb->massBurnFractionLabel,dwindex,patch);
+        new_dw->get(burnedMassCC, MIlb->burnedMassCCLabel,   indx,patch, gac,1);                     
+        new_dw->get(massCC,       MIlb->cMassLabel,          indx,patch, gac,1);
+        new_dw->allocateAndPut(massBurnFraction, 
+                                  Mlb->massBurnFractionLabel,indx,patch);
         massBurnFraction.initialize(0.);
 
         IntVector cIdx[8];
@@ -2081,8 +2012,6 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 
           }
         }
-        // allocateAndPut instead:
-        /* new_dw->put(massBurnFraction,Mlb->massBurnFractionLabel, dwindex,patch); */;
       }  //if(mpm_matl)
     }  //ALLmatls  
   }  //patches
