@@ -49,8 +49,37 @@ public:
   //! virtual interface. 
   virtual FieldHandle execute(MeshBaseHandle src, MeshBaseHandle dst,
 			      Field::data_location loc);
+
+private:
+  double find_closest(typename LSRC::index_type &index,
+		      MSRC *mesh, const Point &p);
+
+  static const double MAX_DIST = 1.0e6;
 };
 
+
+
+template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
+double
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p)
+{
+  typename LSRC::iterator itr = mesh->tbegin((typename LSRC::iterator *)0);
+  typename LSRC::iterator eitr = mesh->tend((typename LSRC::iterator *)0);
+  double mindist = MAX_DIST;
+  while (itr != eitr)
+  {
+    Point c;
+    mesh->get_center(c, *itr);
+    const double dist = (p - c).length();
+    if (dist < mindist)
+    {
+      mindist = dist;
+      index = *itr;
+    }
+    ++itr;
+  }
+  return mindist;
+}
 
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
@@ -86,9 +115,11 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshBaseHandle src_meshH
     }
     else
     {
-      //typename LSRC::index_type index;
-      //find_closest(src_mesh, (LSRC *)0, index, p);
-      //v.push_back(pair<typename LSRC::index_type, double>(index, 1.0));
+      typename LSRC::index_type index;
+      if (find_closest(index, src_mesh, p) < MAX_DIST)
+      {
+	v.push_back(pair<typename LSRC::index_type, double>(index, 1.0));
+      }
     }
 
     ofield->set_value(v, *itr);
