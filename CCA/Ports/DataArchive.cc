@@ -223,6 +223,7 @@ DataArchive::queryGrid( double time )
       cerr << "WARNING: Unknown grid data: " << toString(n.getNodeName()) << '\n';
     }
   }
+  
   d_lock.unlock();
   grid->performConsistencyCheck();
   ASSERTEQ(grid->numLevels(), numLevels);
@@ -288,7 +289,9 @@ DataArchive::query( Variable& var, const std::string& name,
 {
   double tstart = Time::currentSeconds();
   XMLURL url;
+  d_lock.lock();  
   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
+  d_lock.unlock();
   if(vnode == 0){
     cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
     throw InternalError("Variable not found");
@@ -302,6 +305,7 @@ void
 DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
 		    int matlIndex, const Patch* patch )
 {
+  d_lock.lock();
   DOM_NamedNodeMap attributes = vnode.getAttributes();
   DOM_Node typenode = attributes.getNamedItem("type");
   if(typenode == 0)
@@ -358,6 +362,7 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
   int s = close(fd);
   if(s == -1)
     throw ErrnoException("DataArchive::query (read call)", errno);
+  d_lock.unlock();  
 }
 
 void 
@@ -708,6 +713,7 @@ ConsecutiveRangeSet DataArchive::queryMaterials( const string& name,
 						 double time)
 {
   double start = Time::currentSeconds();
+  d_lock.lock();
 
   MaterialHashMaps* matlVarHashMaps =
     getTopLevelVarHashMaps()->findPatchData(time, patch);
@@ -726,8 +732,10 @@ ConsecutiveRangeSet DataArchive::queryMaterials( const string& name,
     if (matlVarHashMaps->findVariable(name, matl, url) != 0)
       result.addInOrder(matl);
   }
-
+  
+  d_lock.unlock();
   dbg << "DataArchive::queryMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
+
   return result;
 }
 
