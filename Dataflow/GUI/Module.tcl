@@ -1069,7 +1069,6 @@ proc drawNotes { args } {
 
     foreach id $args {
 	setIfExists position Notes($id-Position) def	
-	setIfExists isModuleNotes  0
 	setIfExists color Color($id) white
 	setIfExists color Notes($id-Color) $color
 	setIfExists text Notes($id) ""
@@ -1080,9 +1079,12 @@ proc drawNotes { args } {
 	}
 	
 	if $isModuleNotes {
+	    if { ![info exists Subnet($id)] } return
 	    set subnet $Subnet($id)
 	} else {
-	    set subnet $Subnet([lindex [parseConnectionID $id] 0])
+	    set idx [lindex [parseConnectionID $id] 0]
+	    if { ![info exists Subnet($idx)] } return
+	    set subnet $Subnet($idx)
 	}
 	set canvas $Subnet(Subnet${subnet}_canvas)
 
