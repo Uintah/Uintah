@@ -277,11 +277,17 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
   serr << "DynamicLoader - Executing: " << command << endl;
 
   FILE *pipe = 0;
+  bool result = true;
 #ifdef __sgi
+  //if (serr == cerr)
+  //{
+  //command += " >> " + file + "log 2>&1";
+  //}
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
     serr << "DynamicLoader::compile_so() syscal error unable to make.\n";
+    result = false;
   }
 #else
   command += " > " + file + "log 2>&1";
@@ -289,7 +295,7 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
   if(status != 0) {
     serr << "DynamicLoader::compile_so() syscal error " << status << ": "
 	 << "command was '" << command << "'\n";
-    return false;
+    result = false;
   }
   pipe = fopen((OTF_OBJ_DIR + "/" + file + "log").c_str(), "r");
 #endif
@@ -301,13 +307,16 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
   }
 
 #ifdef __sgi
-  pclose(pipe);
+  if (pipe) { pclose(pipe); }
 #else
-  fclose(pipe);
+  if (pipe) { fclose(pipe); }
 #endif
 
-  serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
-  return true;
+  if (result)
+  {
+    serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
+  }
+  return result;
 }
 
 
