@@ -511,8 +511,8 @@ class CompositeBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator>  {
 public:
   CompositeBox(const vector<BB*>& basicBoxes,
 	       typename SB::Region region, Volume totalVolume)
-    : SB(region, totalVolume), basicBoxes_(basicBoxes), 
-      activeSubSuperBoxMaxValue_(0), parent_(0), isActive_( false )
+    : SB(region, totalVolume), isActive_( false ), basicBoxes_(basicBoxes), 
+      activeSubSuperBoxMaxValue_(0), parent_(0)
   { init(basicBoxes_); }
 
   template <class BoxPIterator>
