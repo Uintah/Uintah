@@ -8,8 +8,7 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for MixRxnTable
 //****************************************************************************
-//MixRxnTable::MixRxnTable(int numIndepVars, int stateSpaceDim, 
-//			 MixRxnTableInfo* tableInfo)
+//MixRxnTable::MixRxnTable(int numIndepVars, MixRxnTableInfo* tableInfo)
 MixRxnTable::MixRxnTable()
 {
 }
