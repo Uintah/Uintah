@@ -15,9 +15,12 @@ itcl_class PartToGeom {
     method ui {} {
 	set w .ui$this
 	if {[winfo exists $w]} {
+	    wm deiconify $w
 	    raise $w
 	    return;
 	}
+	set type ""
+  
 	toplevel $w
 	wm minsize $w 300 20
 
@@ -32,6 +35,12 @@ itcl_class PartToGeom {
 	expscale $w.radius -label "Radius:" -orient horizontal \
 		-variable $this-radius -command "$this-c needexecute"
 	pack $w.radius -side top -fill x
+
+	scale $w.res -label "Polygons:" -orient horizontal \
+	    -variable $this-polygons -command "$this-c needexecute" \
+	    -from 8 -to 400 -tickinterval 392
+
+	pack $w.res -side top -expand yes -fill x
     }
 }
 
