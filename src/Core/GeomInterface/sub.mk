@@ -21,7 +21,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/GeomInterface
 
-SRCS := $(SRCDIR)/Pickable.cc
+SRCS += \
+	$(SRCDIR)/Pickable.cc
 
 PSELIBS :=
 LIBS :=
