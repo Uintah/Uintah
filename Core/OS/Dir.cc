@@ -46,6 +46,11 @@ Dir::Dir(const string& name)
 {
 }
 
+Dir::Dir(const Dir& dir)
+  : name_(dir.name_)
+{
+}
+
 Dir::~Dir()
 {
 }
