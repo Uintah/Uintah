@@ -117,11 +117,9 @@ ICE::~ICE()
   releasePort("solver");
 }
 
-
 bool ICE::restartableTimesteps()
 {
-  // Only implicit ICE will restart timesteps
-  return d_impICE;
+  return true;
 }
 
 double ICE::recomputeTimestep(double current_dt)
@@ -2441,7 +2439,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       // - divide vol_frac_cc/vol
       bool bulletProof_test=true;
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test); 
+                                    bulletProof_test, new_dw); 
       //__________________________________
       //   advect vol_frac
       advector->advectQ(vol_frac, patch, q_advected, new_dw);  
@@ -3782,7 +3780,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //   Advection preprocessing
       bool bulletProof_test=true;
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test); 
+                                    bulletProof_test, new_dw); 
 
       //__________________________________
       // Advect mass and backout rho_CC
@@ -3929,7 +3927,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         IntVector c = *iter;
         mach[c]  = vel_CC[c].length()/speedSound[c];
       }
-      
+
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
        ostringstream desc;

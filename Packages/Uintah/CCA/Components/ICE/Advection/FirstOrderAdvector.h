@@ -29,7 +29,8 @@ namespace Uintah {
                                  const double& delT, 
                                  const Patch* patch,
                                  const int&  indx,
-                                 const bool& bulletProof_test);
+                                 const bool& bulletProof_test,
+                                 DataWarehouse* new_dw);
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                              const Patch* patch,

@@ -513,7 +513,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       // Advection preprocessing
       bool bulletProof_test=false;
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
-                                    bulletProof_test); 
+                                    bulletProof_test, parent_new_dw); 
 
       advector->advectQ(vol_frac, patch, q_advected,  
                         vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);  
