@@ -11,15 +11,17 @@ set runDate " Fri  Feb 23 19101"
 global runTime
 set runTime " 11:36:38"
 
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 449 505]
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 184 63]
 set m1 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrix" 33 211]
 set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 220 213]
 set m3 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 431 73]
 set m4 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 431 11]
-set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 449 505]
 set m6 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 202 290]
 set m7 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 238 150]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 184 354]
+
+after 2000
 
 addConnection $m4 0 $m3 0
 addConnection $m3 1 $m5 0
