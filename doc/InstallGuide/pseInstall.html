@@ -41,7 +41,7 @@
 <!-- *************************************************************** -->
 
 <p class="title">Installation and Build Instructions for the SCIRun PSE</p>
-<p class="subtitle">(Unix version - Updated March 25, 2001)</p>
+<p class="subtitle">(Unix version - Updated April 2, 2001)</p>
 
 <p class="head">Table of contents</p>
 <ol class="toc">
@@ -53,6 +53,7 @@
       <LI><A HREF="#AdditionalDocs">Additional Documentation</A></LI>
       <LI><A HREF="#GettingHelp">Getting Help</A></LI>
       <LI><A HREF="#Gotchas">Known Issues</A></LI>
+      <LI><A HREF="#tested">Tested Systems</A></LI>
       <LI><A HREF="#Appendix">Appendix</A></LI>
 </ol>
 
@@ -312,7 +313,8 @@
 
 <p class="head"><a name="Installing">Installing SCIRun</a></p>
     <p class="firstpara">
-      <a name = "Obtain"><b>1. Obtain a copy of the SCIRun source tree.</b></a>
+      <a name = "Obtain"><b>1. Obtain the source trees for SCIRun and any
+      desired packages.</b></a>
     </p>
 
     <p class="firstpara">
@@ -326,8 +328,8 @@
     </p>
 
     <p class="firstpara">
-      <a name="Installdir"><b>2. Install the source tree into a directory
-      of your choosing.</b></a>
+      <a name="Installdir"><b>2. Install the SCIRun source tree into a
+	directory of your choosing.</b></a>
     </p>
 
     <p class="firstpara">
@@ -335,6 +337,11 @@
       home directory or a system application directory.  There is no "make
       install" step in the build process, so which ever directory is chosen
       is where SCIRun will be installed.
+    </p>
+
+    <p class="firstpara">
+      The chosen install directory will be referred to as <b><i><font
+      color=green>INSTALL_DIR</font></i></b> from now on.
     </p>
 
     <p class="firstpara">
@@ -346,15 +353,15 @@
     color=green>INSTALL_DIR</font></i></b> = /home/bob</pre>
 
     <p class="firstpara">
-      Change directories to the <b><i><font color=green>INSTALL_DIR</font>
-      </i></b> directory.  Depending on how SCIRun was obtained, either 
+      Depending on how SCIRun was obtained, either 
     </p>
 
     <p class="firstpara">
       a) unzip and untar the SCIRun source tree:
     </p>
     
-    <pre class="example"><font color=blue>cd /home/bob
+    <pre class="example"><font color=blue>cd <b><i><font 
+    color=green>INSTALL_DIR</font></i></b>
 gunzip SCIRun.tar.gz
 tar xvf SCIRun.tar</font>
     </pre>
@@ -367,7 +374,8 @@ tar xvf SCIRun.tar</font>
       b) checkout the SCIRun source tree from the CVS repository:
     </p>
 
-    <pre class="example"><font color=blue>cd /home/bob
+    <pre class="example"><font color=blue>cd <b><i><font 
+    color=green>INSTALL_DIR</font></i></b>
 cvs checkout SCIRun</font>
     </pre>
 
@@ -376,14 +384,29 @@ cvs checkout SCIRun</font>
       </i></b> directory will have a sub directory named SCIRun:
     </p>
 
-    <pre class="example">/home/bob/SCIRun</pre>
+    <pre class="example"><b><i><font 
+    color=green>INSTALL_DIR</font></i></b>/SCIRun</pre>
 
     <p class="firstpara">
-      The chosen install directory will be referred to as <b><i><font
-      color=green>INSTALL_DIR</font></i></b> from now on.
+      <a name="instpackages"><b>3. Install the package(s) (if any) into 
+         <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src/Packages
+	</b></a>
     </p>
       
-<p class="head"><a name="Building">Building SCIRun</a></p>
+    <p class="firstpara">
+      Unzip and untar the package source tree into <b><i><font 
+      color=green>INSTALL_DIR</font></i></b>/SCIRun/src/Packages.
+        For example, if installing the version 1.0.1 BioPSE
+      package:
+    </p>
+    
+    <pre class="example"><font color=blue>cd <b><i><font
+	color=green>INSTALL_DIR</font></i></b>/SCIRun/src/Packages
+gunzip BioPSE.PKG.1.0.1.tar.gz
+tar xvf BioPSE.PKG.1.0.1.tar</font>
+    </pre>
+
+<p class="head"><a name="Building">Building SCIRun and Packages</a></p>
   <p class="firstpara">
     <b>1. Ensure that the target install machine
       matches the above system requirements.</b>
@@ -407,8 +430,16 @@ cvs checkout SCIRun</font>
   </p>
 
   <pre class="example"><b><i><font
-      color=green>INSTALL_DIR</font></i></b><font color=blue>/SCIRun/src/configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32</font>
+      color=green>INSTALL_DIR</font></i></b><font color=blue>/SCIRun/src/configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \<br>
+                                 --enable-package="<b><i><font
+    color=green>PACKNAME_1 PACKNAME_2 ...</font></i></b>" </font>
   </pre>
+
+    <p class="firstpara">
+      Where <b><i><font
+      color=green>PACKNAME_X</i></b></font> is the name of a SCIRun package
+      installed above.
+    </p>
 
     <p class="firstpara">
       There are many options for configuring SCIRun.  Chief among them
@@ -614,24 +645,39 @@ http://www.cs.utah.edu/scirun_docs/doc</A>
     sources included.
   </p>
 
-<p class="subhead">Recommended linux distributions, processors and graphics 
-cards</p>
+<p class="head"><a name="tested">Tested PC Systems</a></p>
+
+<p class="subhead">linux distributions</p>
   <p class="firstpara">
-    SCIRun has been successfully built on several versions of linux including
-    Mandrake 7.2, SuSE 7.0,
-    and Debian 2.2.x (stable and unstable).  It has also been successfully
-    installed (after much coaxing)
-    on Redhat systems.
+    SCIRun has been built and tested on several flavors of linux
+    including:
   </p>
 
   <p class="firstpara">
-    SCIRun has been successfully installed on
-    single and dual processor Intel
-    machines, and on single processor AMD machines.
+    Mandrake 7.2 (easiest, "most out-of-box" solution)<br>
+    SuSE 7.0 professional<br>
+    Debian 2.2.x<br>
+    RedHat 7.0 (requires many updates first)
+  </p>
+  
+<p class="subhead">Processors</p>
+  <p class="firstpara">
+    SCIRun has been built and tested on the following processor configurations:
+  </p>
+
+  <p class="firstpara">
+    Single Intel Pentium III<br>
+    Dual Intel Pentium III<br>
+    Single Intel Pentium 4<br>
+    Single AMD Athlon
+  </p>
+
+<p class="subhead">Graphics cards</p>
+  <p class="firstpara">
   </p>
 
   <p class="Firstpara">
-    SCIRun has only been able to successfully use NVIDIA GeForce and Quadro
+    SCIRun has been tested using NVIDIA GeForce and Quadro
     graphics cards for hardware accelerated 3D OpenGL in XFree86 version 4.0.2
     using the 0-9.6 drivers, on both Intel and AMD machines.
   </p>

@@ -42,7 +42,7 @@ href="http://www.sci.utah.edu/research/research.html">
 <!-- *************************************************************** -->
 
 <p class="title">Quick Start Installation</p>
-<p class="subtitle">(Unix version - Updated March 25, 2001)</p>
+<p class="subtitle">(Unix version - Updated April 2, 2001)</p>
 
     <p class="firstpara">
       This document is intended as a quick installation check list.  See
@@ -282,13 +282,13 @@ href="http://www.sci.utah.edu/research/research.html">
     </p>
 
 
-<p class="head"><a name="Installing">Installing SCIRun</a></p>
+<p class="head"><a name="Installing">Installing SCIRun and Packages</a></p>
     <p class="firstpara">
-      <b>1. Obtain a copy of the SCIRun source tree.</b>  <a href="pseInstall.html#Obtain">more...</a>
+      <b>1. Obtain the source trees for SCIRun and any desired packages.</b>  <a href="pseInstall.html#Obtain">more...</a>
     </p>
 
     <p class="firstpara">
-      <b>2. Install the source tree into a directory
+      <b>2. Install the SCIRun source tree into a directory
       of your choosing.</b>  <a href="pseInstall.html#Installdir">more...</a>  
     </p>
 
@@ -296,8 +296,14 @@ href="http://www.sci.utah.edu/research/research.html">
       The chosen install directory will be referred to as <b><i><font
       color=green>INSTALL_DIR</font></i></b> from now on.
     </p>
+
+    <p class="firstpara">
+      <b>3. Install the package(s) (if any) into 
+         <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src/Packages
+	</b><a href="pseInstall.html#instpackages">more...</a>
+    </p>
       
-<p class="head"><a name="Building">Building SCIRun</a></p>
+<p class="head"><a name="Building">Building SCIRun and Packages</a></p>
   <p class="firstpara">
     <b>1. Ensure that the target install machine
       matches the above system requirements.</b>
@@ -319,8 +325,16 @@ href="http://www.sci.utah.edu/research/research.html">
   </p>
 
   <pre class="example"><b><i><font
-      color=green>INSTALL_DIR</font></i></b><font color=blue>/SCIRun/src/configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32</font>
+      color=green>INSTALL_DIR</font></i></b><font color=blue>/SCIRun/src/configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \<br>
+                                 --enable-package="<b><i><font
+    color=green>PACKNAME_1 PACKNAME_2 ...</font></i></b>" </font>
   </pre>
+
+    <p class="firstpara">
+      Where <b><i><font
+      color=green>PACKNAME_X</i></b></font> is the name of a SCIRun package
+      installed above.
+    </p>
 
   <p class="firstpara">   
     <b>3. Run GNU make in the <i><font
