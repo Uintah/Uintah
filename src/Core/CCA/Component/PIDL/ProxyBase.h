@@ -34,6 +34,7 @@
 #include <Core/CCA/Component/PIDL/Reference.h>
 #include <Core/CCA/Component/PIDL/MxNScheduler.h>
 #include <vector> 
+#include <string>
 
 namespace SCIRun {
 
@@ -95,9 +96,18 @@ DESCRIPTION
 	  /////////
 	  // Returns the whole reference list or a copy of it.
 	  void _proxyGetReferenceList(refList& ref, bool copy) const;
-	  
+
+	  //////////
+	  // Returns the unique identifier of this proxy 
+          ::std::string getProxyUUID(); 
+
 	private:
 
+          ////////
+	  // A unique name representing the entire proxy component
+	  // (Mostly used to represent the same proxy among the proxy's 
+	  // parallel processes) 
+	  ::std::string proxy_uuid; 
 	};
 } // End namespace SCIRun
 

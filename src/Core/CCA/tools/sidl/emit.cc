@@ -19,21 +19,7 @@
 #include <sci_config.h>
 #include "Spec.h"
 #include "SymbolTable.h"
-#if HAVE_SYS_UUID_H
-extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
-#include <sys/uuid.h>
-}
-#define UUID_CREATE
-#else
-#if HAVE_UUID_UUID_H
-extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
-#include <uuid/uuid.h>
-}
-#define UUID_GENERATE
-#else
-#error We need either sys/uuid.h or uuid/uuid.h
-#endif
-#endif
+#include "uuid_wrapper.h"
 
 #include <algorithm>
 #include <iostream>
@@ -119,37 +105,6 @@ std::string produceLegalVar(std::string illegalVar)
    }
    return legal;
 }
-
-/*
-Retreives a UUID
-*/
-std::string getUUID()
-{
-  char* uuid_str;
-  uuid_t uuid;
-
-#ifdef UUID_CREATE
-  uint_t status;
-  uuid_create(&uuid, &status);
-  if(status != uuid_s_ok){
-    cerr << "Error creating uuid!\n";
-    exit(1);
-  }
-  
-  uuid_to_string(&uuid, &uuid_str, &status);
-  if(status != uuid_s_ok){
-    cerr << "Error creating uuid string!\n";
-    exit(1);
-  }
-#endif
-#ifdef UUID_GENERATE
-  uuid_str = (char*)malloc(64*sizeof(char));
-  uuid_generate( uuid );
-  uuid_unparse(uuid, uuid_str);
-#endif  
-
-  return std::string(uuid_str);
-}	
 
 struct Leader {
 };
@@ -814,8 +769,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "int _flag;\n";
     e.out << leader2 << "message->unmarshalInt(&_flag);\n";
     e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
-    e.out << leader2 << "int _sessionID;\n";
-    e.out << leader2 << "message->unmarshalInt(&_sessionID);\n";
+    e.out << leader2 << "::std::string _sessionID(64, ' ');\n";
+    e.out << leader2 << "message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
     e.out << leader2 << "int _numCalls;\n";
     e.out << leader2 << "message->unmarshalInt(&_numCalls);\n";
     e.out << leader2 << "//Check if it's the right session for this request to be satisfied\n";
@@ -1422,8 +1377,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "int _flag = 4;\n";
     e.out << leader2 << "message->marshalInt(&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
-    e.out << leader2 << "int _sessionID = 13;\n";
-    e.out << leader2 << "message->marshalInt(&_sessionID);\n";
+    e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
+    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
     e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
     e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > rank_offset) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
@@ -1490,8 +1445,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "int _flag = 3;\n";
     e.out << leader2 << "message->marshalInt(&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
-    e.out << leader2 << "int _sessionID = 13;\n";
-    e.out << leader2 << "message->marshalInt(&_sessionID);\n";
+    e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
+    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
     e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
     e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
@@ -1540,8 +1495,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "int _flag = 2;\n";
     e.out << leader2 << "message->marshalInt(&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
-    e.out << leader2 << "int _sessionID = 13;\n";
-    e.out << leader2 << "message->marshalInt(&_sessionID);\n";
+    e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
+    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
     e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
     e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > _refL[0].par_rank) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
@@ -2251,8 +2206,8 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int _flag = 1;\n";
 	e.out << leader2 << "  message->marshalInt(&_flag);\n";
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
-	e.out << leader2 << "  int _sessionID = 13;\n";
-	e.out << leader2 << "  message->marshalInt(&_sessionID);\n";
+        e.out << leader2 << "  ::std::string _sessionID = getProxyUUID();\n";
+        e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
 	e.out << leader2 << "  int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << thisMethod->numRedisMessages << ";\n";
 	e.out << leader2 << "  ((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
@@ -2509,8 +2464,8 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int _flag = 1;\n";
 	e.out << leader2 << "  message->marshalInt(&_flag);\n";
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
-	e.out << leader2 << "  int _sessionID = 13;\n";
-	e.out << leader2 << "  message->marshalInt(&_sessionID);\n";
+        e.out << leader2 << "  ::std::string _sessionID = getProxyUUID();\n";
+        e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
 	e.out << leader2 << "  int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << thisMethod->numRedisMessages << ";\n";
 	e.out << leader2 << "  ((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";

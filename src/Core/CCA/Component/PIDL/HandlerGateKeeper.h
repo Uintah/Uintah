@@ -36,7 +36,7 @@
 
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
-#include <vector>
+#include <string>
 
 namespace SCIRun {
 /**************************************
@@ -49,7 +49,7 @@ KEYWORDS
    
 DESCRIPTION
    The HandlerGateKeeper class is associated with a server
-   and it's purpose is to make parallel component invocations
+   and it's purpose is to make collective component invocations
    be serviced one-by-one. The parallel component's processes
    can make several invocations to a callee parallel components.
    This class differentiates between calls of one parallel component
@@ -70,7 +70,7 @@ DESCRIPTION
     ///////
     // Gets access to critical section for all processes invoking with the
     // same session ID
-    int getTickets(int sessionID, int number_of_calls);
+    int getTickets(::std::string sessionID, int number_of_calls);
 
     ///////
     // Releases access to critical section after called number_of_calls for 
@@ -80,7 +80,7 @@ DESCRIPTION
   private:
     //////////
     // The current session ID of the component that has access
-    int currentID;
+    ::std::string currentID;
 
     //////////
     // Number of calls associated with a specific session

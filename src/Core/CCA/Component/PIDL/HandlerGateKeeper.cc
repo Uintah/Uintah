@@ -31,7 +31,7 @@
 using namespace SCIRun;
 
 HandlerGateKeeper::HandlerGateKeeper()
-  :currentID(0), callsToGo(0), d_gate_sema("HandlerGateKeeper Semaphore",0)
+  :currentID(64,' '), callsToGo(0), d_gate_sema("HandlerGateKeeper Semaphore",0)
 {
 }
 
@@ -39,7 +39,7 @@ HandlerGateKeeper::~HandlerGateKeeper()
 {
 }
 
-int HandlerGateKeeper::getTickets(int sessionID, int number_of_calls)
+int HandlerGateKeeper::getTickets(::std::string sessionID, int number_of_calls)
 {
   if((callsToGo > 0)&&(currentID != sessionID)) {
     d_gate_sema.down(); 	
@@ -54,7 +54,9 @@ int HandlerGateKeeper::getTickets(int sessionID, int number_of_calls)
 void HandlerGateKeeper::releaseOneTicket() 
 {
   callsToGo--;
-  if(callsToGo == 0)
+  if(callsToGo == 0) {
+    currentID.clear();
     d_gate_sema.up();	  
+  }
 }
 
