@@ -48,195 +48,132 @@
 
 									
               <div align="left"> 
-                <p>In Chapters 1 and 2 we constructed SCIRun networks to visualize<br>
-                  the<br>
-                  geometry and data values in a Field. In this Chapter we will<br>
-                  explore<br>
-                  some more visualization techniques, and will look at &quot;filter&quot;<br>
-                  modules<br>
-                  that take in a Field and produce a new derived Field as output.<br>
-                  Rather than building one net to introduce all of these new<br>
-                  modules,<br>
-                  we will construct several nets, with each describing a single<br>
-                  algorithm. To keep things simple, we will divide this chapter<br>
-                  into<br>
-                  three sub-sections, one for each method.<br>
-                  <br>
-                  <br>
-                  <br>
+                <p>&lt;subhead:Chapter overview&gt;<br>
+
+                <p>In Chapters 1 and 2 we constructed SCIRun networks
+                to visualize the geometry and data values in a Field.
+                In this Chapter we will explore some more
+                visualization techniques, and will look at
+                &quot;filter&quot; modules that take in a Field and
+                produce a new derived Field as output.  Rather than
+                building one net to introduce all of these new
+                modules, we will construct several nets, with each
+                describing a single algorithm.  To keep things simple,
+                we will divide this chapter into three sections,
+                one for each method.
                 
-                <p>3A) SampleField<br>
-                  <br>
-                  Given a large Field of data, it is often useful to sample a<br>
-                  subset of<br>
-                  the Field in order to make the visualization manageable and 
-                  to<br>
-                  avoid<br>
-                  visual clutter. One example of this is to examine a cutting<br>
-                  plane<br>
-                  inside of a three-dimensional dataset. A similar technique is 
-                  to<br>
-                  <br>
-                  examine a cutting volume.<br>
-                  <br>
-                  In SCIRun, the functionality described above is split into two<br>
-                  steps.<br>
-                  The first step is to generate a set of samples points; the second<br>
-                  is<br>
-                  to interpolate the datavalues from the original Field onto those<br>
-                  new<br>
-                  sample points. In this sub-section we will describe some of 
-                  our<br>
-                  sample generation modules. In 3B we will talk about data<br>
-                  interpolation.<br>
-                  <br>
-                  To generate a cutting plane, we use a Fields-&gt;SamplePlane 
-                  module.<br>
-                  <br>
-                  This module takes a Field as input, and sends a Field as output.<br>
-                  The<br>
-                  input Field is only used to specify the geometric bounds for 
-                  the<br>
-                  samples. The SamplePlane module generates a set of regularly<br>
-                  spaced<br>
-                  samples on a Plane (an ImageField) that can be chosen to line 
-                  up<br>
-                  with<br>
-                  the X, Y, or Z axis. The user specifies the orientation, as 
-                  well<br>
-                  as<br>
-                  the number of samples via the module's UI.<br>
-                  <br>
-                  An example of using this module is shown in Figure xx. We have<br>
-                  created<br>
-                  a FieldReader module and a SamplePlane module, and have hooked<br>
-                  them<br>
-                  together. For this example, we will use the<br>
-                  sphere-voltage.pcd.fld as<br>
-                  our input file. The output of SamplePlane is a Field that<br>
-                  contains<br>
-                  geometry (an ImageMesh), but no meaningful data yet. We can<br>
-                  visualize its<br>
-                  geometry, though, using a ShowField module and a Viewer module.
-                <p>A) SampleField-Michael 
-                <p>&nbsp;
-                <p>description&gt;<br>
-                  &lt;p&gt;<br>
-                  SampleField generates samples from any type of input field and 
-                  outputs<br>
-                  the samples as a PointCloud field. The samples can be generated<br>
-                  randomly or user selected via a 3D widget. <br>
-                  &lt;/p&gt;<br>
-                  &lt;p&gt;<br>
-                  The random sampling can be weighted by importance (determined 
-                  by<br>
-                  the data value of the sample) or left unweighted. The random 
-                  sampling<br>
-                  can also be limited to the selection of node points, rather 
-                  than points<br>
-                  from the interior of the fields elements, by clamping the samples 
-                  to<br>
-                  nodes. <br>
-                  &lt;/p&gt;<br>
-                  &lt;p&gt;<br>
-                  The &quot;uniform&quot; distributions are a uniformly random 
-                  function over the<br>
-                  spacial extents of the field (i.e. the elements are weighted 
-                  by their<br>
-                  volume or area), whereas the &quot;scattered&quot; distributions 
-                  are a uniformly<br>
-                  random function over the elements only (i.e. all elements have 
-                  the same<br>
-                  weight). The &quot;importance weighted&quot; distributions multiply 
-                  the existing<br>
-                  weight of a sample by the interpolated data value associated 
-                  with it,<br>
-                  while the &quot;not weighted&quot; distributions leave the existing 
-                  weight of <br>
-                  a sample unchanged.<br>
-                  B) DirectInterpolate-Michael
-                <p>In the previous sub-section, we generated sample distributions<br>
-                  based<br>
-                  on an input Field. In this section, we will use the<br>
-                  DirectInterpolate<br>
-                  module to interpolate datavalues onto that geometry. We begin 
-                  by<br>
-                  <br>
-                  creating a FieldReader and a SamplePlane module, as described 
-                  in<br>
-                  3A.<br>
-                  To map datavalues onto the plane, we use the DirectInterpolate<br>
-                  module. To the first input port we attach the datavalues source,<br>
-                  in<br>
-                  this case the output from the FieldReader. To the second input<br>
-                  port we attach the destination field, in this case the output<br>
-                  from<br>
-                  SamplePlane. The DirectInterpolate module uses linear<br>
-                  interpolation<br>
-                  to compute new values.<br>
-                  <br>
-                  Having computed the values on the plane, we can now visualize 
-                  the<br>
-                  <br>
-                  plane with color-mapped geometry. To do this, we hook up the<br>
-                  modules<br>
-                  just as we did in Chapter 2. The net you are using should look<br>
-                  like<br>
-                  the one in Figure xx, and the image in the ViewWindow should 
-                  look<br>
-                  like<br>
-                  the image in Figure xx.<br>
-                  DirectInterpolate generates a new field that contains the<br>
-                  geometry of the destination field, but with all of the<br>
-                  data values linearly interpolated from the source field.<br>
-                  It should work correctly with all of the current field<br>
-                  and data types. The data will be stored at the elements<br>
-                  specified in the destination field. 
-                <p><br>
-                  C) Gradient and Streamlines description-DMW
-                <p>The last visualization module we will introduce in this<br>
-                  Chapter<br>
-                  will be the StreamLines module. This module takes in a<br>
-                  VectorField,<br>
-                  and a Field of sample points (as might have been generated using<br>
-                  for<br>
-                  example a Rake in section 3B), and outputs a new Field consisting<br>
-                  of<br>
-                  a sequence of advected path-integral positions generated rom<br>
-                  integrating the sample positions through the (derivative)<br>
-                  VectorField. In the example Datasets directories, we do not 
-                  have<br>
-                  any<br>
-                  <br>
-                  <br>
-                  <br>
-                <p><br>
-                  D) Build SampleField net-Michael(A) 
-                <p>To use this module, we connect the field we would like to sample 
-                  to<br>
-                  the input port on top of the module. The sample points come 
-                  out at<br>
-                  the bottom and in this case are connected to the StreamLines 
-                  module as<br>
-                  the seed points for the streamlines. If the widget is to be 
-                  used to<br>
-                  generate the sample points, it's port is connected to the Viewer 
-                  as<br>
-                  well.<br>
-                  <br>
-                  E) Build DirectInterpolate net-Michael(B)
-                <p>The field we are interested in interpolating from is connected 
-                  to the<br>
-                  Source port on the top left of the module. The new field that 
-                  we wish<br>
-                  to fill in with values from the source field is connected to 
-                  the<br>
-                  Destination port on the top right of the module.<br>
-                <p><br>
-                  F) Build Grandient/Streamline net-DMW(C)<br>
-                  G) Additional descriptions of derived field modules-DMW<br>
-                  <br>
-                  <br>
+                <p>&lt;section:3A - SampleField&gt;<br>
+
+		<p>Given a large Field of data, it is often useful to
+                sample a subset of the Field in order to make the
+                visualization manageable and to avoid visual clutter.
+                One example of this is to examine a cutting plane
+                inside of a three-dimensional dataset.  A similar
+                technique is to examine a cutting volume.
+                  
+		<p>In SCIRun, the functionality described above is
+                split into two steps.  The first step is to generate a
+                set of samples points; the second is to interpolate
+                the datavalues from the original Field onto those new
+                sample points.  In this sub-section we will describe
+                some of our sample generation modules.  In the next
+                sub-section we will talk about data interpolation.
+                  
+                <p>To generate a cutting plane, we use a
+                SCIRun/Fields/FieldBoundary module.  This module takes
+                a Field as input, and sends a Field as output.  The
+                input Field is only used to specify the geometric
+                bounds for the samples.  The SamplePlane module
+                generates a set of regularly spaced samples on a Plane
+                (an ImageField) that can be chosen to line up with the
+                X, Y, or Z axis.  The user specifies the orientation,
+                as well as the number of samples via the module's UI.
+                  
+                <p>An example of using this module is shown in Figure
+                xx.  We have created a FieldReader module and a
+                SamplePlane module, and have hooked them together.
+                For this example, we will again use the
+                utahtorso-lowres-voltage.tvd.fld as our input file.
+                The output of SamplePlane is a Field that contains
+                geometry (an ImageMesh), but no meaningful data yet.
+                We can visualize its geometry, though, using a
+                ShowField module and a Viewer module.
+
+                <p>SampleField generates samples from any type of
+                input field and outputs the samples as a PointCloud
+                field.  The samples can be generated randomly or user
+                selected via a 3D widget.  The random sampling can be
+                weighted by importance (determined by the data value
+                of the sample) or left unweighted.  The random
+                sampling can also be limited to the selection of node
+                points, rather than points from the interior of the
+                fields elements, by clamping the samples to nodes.
+                The &quot;uniform&quot; distributions are a uniformly
+                random function over the spacial extents of the field
+                (i.e.  the elements are weighted by their volume or
+                area), whereas the &quot;scattered&quot; distributions
+                are a uniformly random function over the elements only
+                (i.e.  all elements have the same weight).  The
+                &quot;importance weighted&quot; distributions multiply
+                the existing weight of a sample by the interpolated
+                data value associated with it, while the &quot;not
+                weighted&quot; distributions leave the existing weight
+                of a sample unchanged.
+
+                <p>&lt;section:3B - DirectInterpolate&gt;<br>
+
+                <p>In the previous sub-section, we generated sample
+                distributions based on an input Field.  In this
+                section, we will use the DirectInterpolate module to
+                interpolate datavalues onto that geometry.  We begin
+                by creating a FieldReader and a SamplePlane module, as
+                described above.  To map datavalues onto the plane, we
+                use the DirectInterpolate module.  To the first input
+                port we attach the datavalues source, in this case the
+                output from the FieldReader.  To the second input port
+                we attach the destination field, in this case the
+                output from SamplePlane.  The DirectInterpolate module
+                uses linear interpolation to compute new values.
+                  
+                <p>Having computed the values on the plane, we can now
+                visualize the plane with color-mapped geometry.  To do
+                this, we hook up the modules just as we did in Chapter
+                2.  The net you are using should look like the one in
+                Figure xx, and the image in the ViewWindow should look
+                like the image in Figure xx.  DirectInterpolate
+                generates a new field that contains the geometry of
+                the destination field, but with all of the data values
+                linearly interpolated from the source field.  It
+                should work correctly with all of the current field
+                and data types.  The data will be stored at the
+                elements specified in the destination field.
+
+                <p>&lt;section:3C - Streamlines network&gt;<br>
+
+                <p>The last visualization module we will introduce in
+                this Chapter will be the StreamLines module.  This
+                module takes in a VectorField, and a Field of sample
+                points (as might have been generated using for example
+                a Rake), and outputs a new Field consisting of a
+                sequence of advected path-integral positions generated
+                from integrating the sample positions through the
+                (derivative) VectorField.  In the example Datasets
+                directories, we do not have any
+
+                <p>To use this module, we connect the field we would
+                like to sample to the input port on top of the module.
+                The sample points come out at the bottom and in this
+                case are connected to the StreamLines module as the
+                seed points for the streamlines.  If the widget is to
+                be used to generate the sample points, it's port is
+                connected to the Viewer as well.
+                  
+                <p>The field we are interested in interpolating from
+                is connected to the Source port on the top left of the
+                module.  The new field that we wish to fill in with
+                values from the source field is connected to the
+                Destination port on the top right of the module.
+
               </div>
 
 								</td>
