@@ -63,7 +63,7 @@ Time::currentTicks()
 	throw ThreadError(std::string("gettimeofday failed: ")
 			  +strerror(errno));
 
-    return (now_time.tv_sec-start_time.tv_sec)*100000+(now_time.tv_usec-start_time.tv_usec);
+    return (now_time.tv_sec-start_time.tv_sec)*1000000+(now_time.tv_usec-start_time.tv_usec);
 }
 
 double
@@ -121,6 +121,9 @@ Time::waitFor(SysClock time)
 
 //
 // $Log$
+// Revision 1.6  2000/09/28 19:18:38  yarden
+// minor bug fix in currenTicks()
+//
 // Revision 1.5  2000/07/27 19:22:58  yarden
 // correct use of nanosleep
 //
