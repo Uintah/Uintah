@@ -52,7 +52,7 @@ public:
   bool			types_equal_p(FieldHandle);
   virtual void		execute();
   virtual void		tcl_command(GuiArgs&, void*);
-  GuiString		typename_;   // the out field type
+  GuiString		outputtypename_;   // the out field type
   int			generation_;
 };
 
@@ -60,7 +60,7 @@ public:
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
   : Module("ChangeFieldDataType", ctx, Source, "Fields", "SCIRun"),
-    typename_(ctx->subVar("typename2")),
+    outputtypename_(ctx->subVar("outputtypename")),
     generation_(-1)
 {
 }
@@ -72,28 +72,30 @@ ChangeFieldDataType::~ChangeFieldDataType(){
 
 bool ChangeFieldDataType::check_types(FieldHandle f)
 {
-  const string &oname = f->get_type_description()->get_name();
-  const string &nname = typename_.get();
+  const string &iname = f->get_type_description()->get_name();
+  const string &oname = outputtypename_.get();
   
+  string::size_type iindx = iname.find('<');
   string::size_type oindx = oname.find('<');
-  string::size_type nindx = nname.find('<');
 
-  if (oindx == nindx)
+  if (iindx == oindx)
   {
-    if (oname.substr(0, oindx) == nname.substr(0, nindx))
+    if (iname.substr(0, iindx) == oname.substr(0, oindx))
     {
       return true;
     }
   }
-  warning("The selected type and the input field type are incompatable.");
+  string s(string("Input type is ") + iname + string(" -- selected type is ") + oname + "\n");
+  warning(s);
+  warning("The input field type and selected type are incompatable.");
   return false;
 }
 
 bool ChangeFieldDataType::types_equal_p(FieldHandle f)
 {
-  const string &oname = f->get_type_description()->get_name();
-  const string &nname = typename_.get();
-  return oname == nname;
+  const string &iname = f->get_type_description()->get_name();
+  const string &oname = outputtypename_.get();
+  return iname == oname;
 }
 
 
@@ -110,7 +112,7 @@ ChangeFieldDataType::execute()
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
   {
-    gui->execute(string("set ")+id+"-typename \"---\"");
+    gui->execute(string("set ")+id+"-inputtypename \"---\"");
     return;
   }
 
@@ -125,8 +127,14 @@ ChangeFieldDataType::execute()
   {
     generation_ = fh.get_rep()->generation;
     const string &tname = fh->get_type_description()->get_name();
-    gui->execute(string("set ")+id+"-typename \"" + tname + "\"");
+    gui->execute(string("set ")+id+"-inputtypename \"" + tname + "\"");
     gui->execute(id+" copy_attributes; update idletasks");
+  }
+
+  // verify that the requested edits are possible (type check)
+  if (!check_types(fh))
+  {
+    outputtypename_.set(fh->get_type_description()->get_name());
   }
 
   if (types_equal_p(fh))
@@ -137,16 +145,11 @@ ChangeFieldDataType::execute()
     return;
   }
 
-  // verify that the requested edits are possible (type check)
-  if (!check_types(fh))
-  {
-    typename_.set(fh->get_type_description()->get_name());
-  }
-
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
   CompileInfo *ci =
-    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, typename_.get());
+    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td,
+						    outputtypename_.get());
   Handle<ChangeFieldDataTypeAlgoCreate> algo;
   if (!module_dynamic_compile(*ci, algo)) return;
 

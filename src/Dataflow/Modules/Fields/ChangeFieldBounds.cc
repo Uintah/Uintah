@@ -49,14 +49,14 @@ public:
   ChangeFieldBounds(GuiContext* ctx);
   virtual ~ChangeFieldBounds();
 
-  GuiDouble		datamin_;    // the out data min
-  GuiDouble		datamax_;    // the out data max
-  GuiDouble		cx_;	// the out geometry (center point and size)
-  GuiDouble		cy_;
-  GuiDouble		cz_;
-  GuiDouble		sizex_;
-  GuiDouble		sizey_;
-  GuiDouble		sizez_;
+  GuiDouble		outputdatamin_;    // the out data min
+  GuiDouble		outputdatamax_;    // the out data max
+  GuiDouble		outputcenterx_;	// the out geometry (center point and size)
+  GuiDouble		outputcentery_;
+  GuiDouble		outputcenterz_;
+  GuiDouble		outputsizex_;
+  GuiDouble		outputsizey_;
+  GuiDouble		outputsizez_;
   GuiInt		cdataminmax_;   // minmax checkbox
 
   CrowdMonitor		widget_lock_;
@@ -83,14 +83,14 @@ public:
 
 ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   : Module("ChangeFieldBounds", ctx, Source, "Fields", "SCIRun"),
-    datamin_(ctx->subVar("datamin2")),
-    datamax_(ctx->subVar("datamax2")),
-    cx_(ctx->subVar("cx2")),
-    cy_(ctx->subVar("cy2")),
-    cz_(ctx->subVar("cz2")),
-    sizex_(ctx->subVar("sizex2")),
-    sizey_(ctx->subVar("sizey2")),
-    sizez_(ctx->subVar("sizez2")),
+    outputdatamin_(ctx->subVar("outputdatamin")),
+    outputdatamax_(ctx->subVar("outputdatamax")),
+    outputcenterx_(ctx->subVar("outputcx")),
+    outputcentery_(ctx->subVar("outputcy")),
+    outputcenterz_(ctx->subVar("outputcz")),
+    outputsizex_(ctx->subVar("outputsizex")),
+    outputsizey_(ctx->subVar("outputsizey")),
+    outputsizez_(ctx->subVar("outputsizez")),
     cdataminmax_(ctx->subVar("cdataminmax")),
     widget_lock_("ChangeFieldBounds widget lock"),
     generation_(-1),
@@ -109,14 +109,14 @@ ChangeFieldBounds::~ChangeFieldBounds(){
 void
 ChangeFieldBounds::clear_vals() 
 {
-  gui->execute(string("set ")+id+"-datamin \"---\"");
-  gui->execute(string("set ")+id+"-datamax \"---\"");
-  gui->execute(string("set ")+id+"-cx \"---\"");
-  gui->execute(string("set ")+id+"-cy \"---\"");
-  gui->execute(string("set ")+id+"-cz \"---\"");
-  gui->execute(string("set ")+id+"-sizex \"---\"");
-  gui->execute(string("set ")+id+"-sizey \"---\"");
-  gui->execute(string("set ")+id+"-sizez \"---\"");
+  gui->execute(string("set ")+id+"-inputdatamin \"---\"");
+  gui->execute(string("set ")+id+"-inputdatamax \"---\"");
+  gui->execute(string("set ")+id+"-inputcx \"---\"");
+  gui->execute(string("set ")+id+"-inputcy \"---\"");
+  gui->execute(string("set ")+id+"-inputcz \"---\"");
+  gui->execute(string("set ")+id+"-inputsizex \"---\"");
+  gui->execute(string("set ")+id+"-inputsizey \"---\"");
+  gui->execute(string("set ")+id+"-inputsizez \"---\"");
   gui->execute(id+" update_multifields");
 }
 
@@ -131,21 +131,21 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
   size = bbox.diagonal();
   center = bbox.center();
 
-  gui->execute(string("set ")+id+"-cx "+to_string(center.x()));
-  gui->execute(string("set ")+id+"-cy "+to_string(center.y()));
-  gui->execute(string("set ")+id+"-cz "+to_string(center.z()));
-  gui->execute(string("set ")+id+"-sizex "+to_string(size.x()));
-  gui->execute(string("set ")+id+"-sizey "+to_string(size.y()));
-  gui->execute(string("set ")+id+"-sizez "+to_string(size.z()));
+  gui->execute(string("set ")+id+"-inputcx "+to_string(center.x()));
+  gui->execute(string("set ")+id+"-inputcy "+to_string(center.y()));
+  gui->execute(string("set ")+id+"-inputcz "+to_string(center.z()));
+  gui->execute(string("set ")+id+"-inputsizex "+to_string(size.x()));
+  gui->execute(string("set ")+id+"-inputsizey "+to_string(size.y()));
+  gui->execute(string("set ")+id+"-inputsizez "+to_string(size.z()));
 
   ScalarFieldInterface *sdi = f->query_scalar_interface(this);
   if (sdi && f->data_at() != Field::NONE) {
     sdi->compute_min_max(minmax_.first,minmax_.second);
-    gui->execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
-    gui->execute(string("set ")+id+"-datamax "+to_string(minmax_.second));
+    gui->execute(string("set ")+id+"-inputdatamin "+to_string(minmax_.first));
+    gui->execute(string("set ")+id+"-inputdatamax "+to_string(minmax_.second));
   } else {
-    gui->execute(string("set ")+id+"-datamin \"--- N/A ---\"");
-    gui->execute(string("set ")+id+"-datamax \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-inputdatamin \"--- N/A ---\"");
+    gui->execute(string("set ")+id+"-inputdatamax \"--- N/A ---\"");
   }
 
 
@@ -309,9 +309,9 @@ ChangeFieldBounds::execute()
   {
     if (fh->query_scalar_interface(this))
     {
-      scale = (datamax_.get() - datamin_.get()) /
+      scale = (outputdatamax_.get() - outputdatamin_.get()) /
 	(minmax_.second - minmax_.first);
-      translate = datamin_.get() - minmax_.first * scale;
+      translate = outputdatamin_.get() - minmax_.first * scale;
     }
     else
     {
@@ -405,17 +405,17 @@ void ChangeFieldBounds::tcl_command(GuiArgs& args, void* userdata)
  
   if (args[1] == "execute" || args[1] == "update_widget") {
     Point center, right, down, in;
-    cx_.reset(); cy_.reset(); cz_.reset();
-    sizex_.reset(); sizey_.reset(); sizez_.reset();
-    if (sizex_.get() <= 0 || sizey_.get() <= 0 || sizez_.get() <= 0) {
+    outputcenterx_.reset(); outputcentery_.reset(); outputcenterz_.reset();
+    outputsizex_.reset(); outputsizey_.reset(); outputsizez_.reset();
+    if (outputsizex_.get() <= 0 || outputsizey_.get() <= 0 || outputsizez_.get() <= 0) {
       error("Degenerate BBox requested.");
       widget_moved(true);           // force values back to widget settings
       return;                    // degenerate 
     }
-    Vector sizex(sizex_.get(),0,0);
-    Vector sizey(0,sizey_.get(),0);
-    Vector sizez(0,0,sizez_.get());
-    center = Point(cx_.get(),cy_.get(),cz_.get());
+    Vector sizex(outputsizex_.get(),0,0);
+    Vector sizey(0,outputsizey_.get(),0);
+    Vector sizez(0,0,outputsizez_.get());
+    center = Point(outputcenterx_.get(),outputcentery_.get(),outputcenterz_.get());
     right = Point(center + sizex/2.);
     down = Point(center + sizey/2.);
     in = Point(center + sizez/2.);
@@ -430,15 +430,15 @@ void ChangeFieldBounds::widget_moved(bool last)
 {
   if (last) {
     Point center, right, down, in;
-    cx_.reset(); cy_.reset(); cz_.reset();
-    sizex_.reset(); sizey_.reset(); sizez_.reset();
+    outputcenterx_.reset(); outputcentery_.reset(); outputcenterz_.reset();
+    outputsizex_.reset(); outputsizey_.reset(); outputsizez_.reset();
     box_->GetPosition(center,right,down,in);
-    cx_.set(center.x());
-    cy_.set(center.y());
-    cz_.set(center.z());
-    sizex_.set((right.x()-center.x())*2.);
-    sizey_.set((down.y()-center.y())*2.);
-    sizez_.set((in.z()-center.z())*2.);
+    outputcenterx_.set(center.x());
+    outputcentery_.set(center.y());
+    outputcenterz_.set(center.z());
+    outputsizex_.set((right.x()-center.x())*2.);
+    outputsizey_.set((down.y()-center.y())*2.);
+    outputsizez_.set((in.z()-center.z())*2.);
     want_to_execute();
   }
 }

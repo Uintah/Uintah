@@ -29,13 +29,13 @@ itcl_class SCIRun_Fields_ChangeFieldDataType {
 
 	# these won't be saved 
 	global $this-fldname
-	global $this-typename
+	global $this-inputtypename
 	set $this-fldname "---"
-	set $this-typename "---"
+	set $this-inputtypename "---"
 
 	# these will be saved
-	global $this-typename2
-	set $this-typename2 "--- No typename ---"
+	global $this-outputtypename
+	set $this-outputtypename "--- No typename ---"
     }
 
     method ui {} {
@@ -46,26 +46,26 @@ itcl_class SCIRun_Fields_ChangeFieldDataType {
         }
         toplevel $w
 
-	iwidgets::Labeledframe $w.att -labelpos nw \
+	iwidgets::Labeledframe $w.input -labelpos nw \
 		               -labeltext "Input Field Type" 
 			       
-	pack $w.att 
-	set att [$w.att childsite]
+	pack $w.input 
+	set input [$w.input childsite]
 	
-	labelpair $att.l1 "Name" $this-fldname
-	labelpair $att.l2 "Typename" $this-typename
-	pack $att.l1 $att.l2 -side top 
+	labelpair $input.name "Name" $this-fldname
+	labelpair $input.typename "Typename" $this-inputtypename
+	pack $input.name $input.typename -side top 
 
-	iwidgets::Labeledframe $w.edit -labelpos nw \
+	iwidgets::Labeledframe $w.output -labelpos nw \
 		               -labeltext "Output Field Type" 
 			       
-	pack $w.edit 
-	set edit [$w.edit childsite]
+	pack $w.output 
+	set output [$w.output childsite]
 	
-	labelcombo $edit.l1 "Typename" \
-		   "[possible_typenames [set $this-typename2]]" \
-                   $this-typename2
-	pack $edit.l1 -side top 
+	labelcombo $output.name "Typename" \
+		   "[possible_typenames [set $this-outputtypename]]" \
+                   $this-outputtypename
+	pack $output.name -side top 
 
 	frame $w.exec
 	pack $w.exec -side bottom -padx 5 -pady 5
@@ -208,11 +208,11 @@ itcl_class SCIRun_Fields_ChangeFieldDataType {
 	if {![winfo exists $w]} {
 	    return
 	}
-	set edit [$w.edit childsite]
+	set output [$w.output childsite]
 
-        if {"[set $this-typename]"!="1"} {
-	  config_labelcombo $edit.l1 [possible_typenames \
-            [set $this-typename]] [set $this-typename]
+        if {"[set $this-inputtypename]"!="1"} {
+	  config_labelcombo $output.name [possible_typenames \
+            [set $this-inputtypename]] [set $this-inputtypename]
         }
     }
 
@@ -280,23 +280,29 @@ itcl_class SCIRun_Fields_ChangeFieldDataType {
 	if {![winfo exists $win]} {
 	    return
 	}
+	global $this-outputtypename
+	set oldtype [set $this-outputtypename]
 	$win.c delete 0 end
 	if {[llength $arglist]==0} {
 	    $win.c insert end ""
 	}
 	set i 0
+	set found 0
 	set length [llength $arglist]
 	for {set elem [lindex $arglist $i]} {$i<$length} \
 	    {incr i 1; set elem [lindex $arglist $i]} {
-	    $win.c insert end $elem
+		if {$elem == $oldtype} {
+		    set found 1; 
+		}
+		$win.c insert end $elem
 	}
-	
-	if {"$sel"!="---"} {
-	    $win.c select $sel
+    
+	if {$found == 1} {
+	    $win.c select $oldtype
+	} else {
+	    if {"$sel"!="---"} {
+		$win.c select $sel
+	    }
 	}
     }
 }
-
-
-
-
