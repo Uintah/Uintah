@@ -635,6 +635,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (zplus) indexHighW += IntVector(0,0,1); 
 
     int flowID = d_boundaryCondition->flowCellType();
+    int mmWallID = d_boundaryCondition->getMMWallId();
     for (int colZ = indexLowU.z(); colZ <= indexHighU.z(); colZ ++) {
       for (int colY = indexLowU.y(); colY <= indexHighU.y(); colY ++) {
         for (int colX = indexLowU.x(); colX <= indexHighU.x(); colX ++) {
@@ -670,19 +671,17 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		if (cellType[filterCell+shift] != flowID) {
 	          // intrusion
 		  if (filterCell+shift == currCell+shift) {
-		    filterRhoU[currCell] = vol*uVel[filterCell]*
-			   0.5*(density[filterCell]+
-			        density[filterCell-IntVector(1,0,0)]);
-		    totalVol = vol;
+		  // do nothing here, assuming intrusion velocity is 0
 		  }
 		}
 		// inside the domain
-		else {
-		  filterRhoU[currCell] += vol*uVel[filterCell]*
-			   0.5*(density[filterCell]+
-			        density[filterCell-IntVector(1,0,0)]);
-		  totalVol += vol;
-		}
+		else
+		  if (cellType[filterCell+shift-IntVector(1,0,0)] != mmWallID) {
+		    filterRhoU[currCell] += vol*uVel[filterCell]*
+			     0.5*(density[filterCell]+
+			          density[filterCell-IntVector(1,0,0)]);
+		    totalVol += vol;
+		  }
 	      }
 	    }
 	  }
@@ -726,19 +725,17 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		if (cellType[filterCell+shift] != flowID) {
 	          // intrusion
 		  if (filterCell+shift == currCell+shift) {
-		    filterRhoV[currCell] = vol*vVel[filterCell]*
-			   0.5*(density[filterCell]+
-			        density[filterCell-IntVector(0,1,0)]);
-		    totalVol = vol;
+		  // do nothing here, assuming intrusion velocity is 0
 		  }
 		}
 		// inside the domain
-		else {
-		  filterRhoV[currCell] += vol*vVel[filterCell]*
-			   0.5*(density[filterCell]+
-			        density[filterCell-IntVector(0,1,0)]);
-		  totalVol += vol;
-		}
+		else
+		  if (cellType[filterCell+shift-IntVector(0,1,0)] != mmWallID) {
+		    filterRhoV[currCell] += vol*vVel[filterCell]*
+			     0.5*(density[filterCell]+
+			          density[filterCell-IntVector(0,1,0)]);
+		    totalVol += vol;
+		  }
 	      }
 	    }
 	  }
@@ -782,19 +779,17 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		if (cellType[filterCell+shift] != flowID) {
 	          // intrusion
 		  if (filterCell+shift == currCell+shift) {
-		    filterRhoW[currCell] = vol*wVel[filterCell]*
-			   0.5*(density[filterCell]+
-			        density[filterCell-IntVector(0,0,1)]);
-		    totalVol = vol;
+		  // do nothing here, assuming intrusion velocity is 0
 		  }
 		}
 		// inside the domain
-		else {
-		  filterRhoW[currCell] += vol*wVel[filterCell]*
-			   0.5*(density[filterCell]+
-			        density[filterCell-IntVector(0,0,1)]);
-		  totalVol += vol;
-		}
+		else
+		  if (cellType[filterCell+shift-IntVector(0,0,1)] != mmWallID) {
+		    filterRhoW[currCell] += vol*wVel[filterCell]*
+			     0.5*(density[filterCell]+
+			          density[filterCell-IntVector(0,0,1)]);
+		    totalVol += vol;
+		  }
 	      }
 	    }
 	  }
