@@ -593,7 +593,6 @@ itcl_class VS_DataFlow_HotBox {
     label $w.probeUI.slideTime.timeLabel -text "Time"
     entry $w.probeUI.slideTime.timeVal -width 5 -textvariable $this-currentTime
     bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
-    bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
     pack $w.probeUI.slideTime.slide $w.probeUI.slideTime.timeLabel $w.probeUI.slideTime.timeVal -side left -expand yes -fill x
     pack $w.probeUI.slideTime $w.probeUI.loc -side bottom -expand yes -fill x
 
@@ -644,6 +643,24 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_parent_list [list [set $this-gui_parent(0)] \
                                     [set $this-gui_parent(1)] \
                                     [set $this-gui_parent(2)] \
+                                    [set $this-gui_parent(3)] \
+                                    [set $this-gui_parent(4)] \
+                                    [set $this-gui_parent(5)] \
+                                    [set $this-gui_parent(6)] \
+                                    [set $this-gui_parent(7)]]
+    set $this-gui_sibling_list [list [set $this-gui_sibling(0)] \
+                                     [set $this-gui_sibling(1)] \
+                                     [set $this-gui_sibling(2)] \
+                                     [set $this-gui_sibling(3)]]
+    set $this-gui_child_list [list [set $this-gui_child(0)] \
+                                   [set $this-gui_child(1)] \
+                                   [set $this-gui_child(2)] \
+                                   [set $this-gui_child(3)] \
+                                   [set $this-gui_child(4)] \
+                                   [set $this-gui_child(5)] \
+                                   [set $this-gui_child(6)] \
+                                   [set $this-gui_child(7)] \
+                                   [set $this-gui_child(8)] \
                                    [set $this-gui_child(9)] \
                                    [set $this-gui_child(10)] \
                                    [set $this-gui_child(11)] \
