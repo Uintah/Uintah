@@ -24,10 +24,9 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Apply an anisotropy metric to a DT volume. The anisotropy value
-will be zero in the locations which don't meet the given confidence threshold. </p>
-      <p>Anisotropy Metric : Which anisotropy metric to plot. All the Westin metrics come in
-       two versions.</summary>
-    <description>
+will be zero in the locations which don't meet the given confidence threshold. 
+     </summary>
+     <description>
       <p>Apply an anisotropy metric to a DT volume. The anisotropy value
 will be zero in the locations which don't meet the given confidence threshold. </p>
       <p>Anisotropy Metric : Which anisotropy metric to plot. All the Westin metrics come in
