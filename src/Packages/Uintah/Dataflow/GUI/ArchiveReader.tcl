@@ -17,7 +17,7 @@ itcl_class Uintah_DataIO_ArchiveReader {
 
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    return;
+	    return
 	}
 
 	global $this-filebase
@@ -27,19 +27,23 @@ itcl_class Uintah_DataIO_ArchiveReader {
 	set len [string length [set $this-filebase]]
 	if { $len == 0 } { set len 40 }
 	frame $w.f 
-	pack $w.f 
-	label $w.f.l -text "Choose Archive"
+
+	pack $w.f -padx 5 -pady 5 -expand yes -fill both
+
+	label $w.f.l -text "Current Archive: "
 	entry $w.f.e -textvariable $this-filebase -width $len
-	frame $w.f.b
-	pack $w.f.l $w.f.e $w.f.b -side top -pady 2 -expand yes -fill x
-
-	button $w.f.b.b1 -text "Browse" -command "$this get_uda"
-	button $w.f.b.b2 -text "Execute" \
-	    -command $n
-	pack $w.f.b.b1 $w.f.b.b2 -side left -padx 2
-
 	bind $w.f.e <Return> $n 
 
+	pack $w.f.l $w.f.e -side left -expand yes -fill x -anchor w
+
+	TooltipMultiline $w.f.l \
+            "This field displays the currently selected\n" \
+	    "UDA (Uintah Data Archive)."
+
+	TooltipMultiline "$w.f.e" "Click the 'Select UDA' button to choose an UDA,\nor enter the full path yourself."
+
+	makeSciButtonPanel $w $w $this "\" Select UDA \" \"$this get_uda\" \"Press to select an UDA directory.\""
+	moveToCursor $w
     }
     method get_uda {} {
 	set w .ui[modname]
