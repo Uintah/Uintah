@@ -9,5 +9,7 @@ SRCS     += \
 	$(SRCDIR)/FrictionContact.cc  \
 	$(SRCDIR)/ApproachContact.cc  \
 	$(SRCDIR)/ContactFactory.cc   \
+	$(SRCDIR)/CompositeContact.cc \
 	$(SRCDIR)/NullContact.cc      \
+	$(SRCDIR)/ContactMaterialSpec.cc \
 	$(SRCDIR)/Contact.cc

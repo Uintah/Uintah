@@ -163,7 +163,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
 
   MPMPhysicalBCFactory::create(prob_spec);
 
-  contactModel = ContactFactory::create(prob_spec,sharedState,lb,flags);
+  contactModel = ContactFactory::create(d_myworld, prob_spec,sharedState,lb,flags);
   thermalContactModel =
     ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
 
@@ -538,12 +538,7 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
-  Task* t = scinew Task("Contact::exMomInterpolated",
-                        contactModel,
-                        &Contact::exMomInterpolated);
-
-  contactModel->addComputesAndRequiresInterpolated(t, patches, matls);
-  sched->addTask(t, patches, matls);
+  contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -805,12 +800,7 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
    *              the others according to specific rules)
    *   out(G.VELOCITY_STAR, G.ACCELERATION) */
 
-  Task* t = scinew Task("Contact::exMomIntegrated",
-                        contactModel,
-                        &Contact::exMomIntegrated);
-
-  contactModel->addComputesAndRequiresIntegrated(t, patches, matls);
-  sched->addTask(t, patches, matls);
+  contactModel->addComputesAndRequiresIntegrated(sched, patches, matls);
 }
 
 void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,

@@ -5,6 +5,7 @@
 
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -53,7 +54,7 @@ DESCRIPTION
     <type>specified</type>
     <filename>fname.txt</filename>
     <direction>[1,1,1]</direction>
-    <material>0</material>
+    <material>0</material> 
   </contact>
 
   where filename points to an existing test file (which much exist from all 
@@ -92,8 +93,8 @@ DESCRIPTION
   the velocity_after_stop is optional, with default (0,0,0).
 
   
-  Notes:
-  
+  Notes: (Probably out of date - Jim ??)
+     
      Contact conditions are specified in two stages, and deal with 4 velocity fields
      
      v^k        velocity at start of exMomInterpolated
@@ -144,7 +145,8 @@ DESCRIPTION
     
   public:
     // Constructor
-    SpecifiedBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,MPMFlags*flag);
+    SpecifiedBodyContact(const ProcessorGroup* myworld,
+                         ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,MPMFlags*flag);
 	 
     // Destructor
     virtual ~SpecifiedBodyContact();
@@ -162,13 +164,13 @@ DESCRIPTION
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-    virtual void addComputesAndRequiresInterpolated(Task* task,
+    virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                     const PatchSet* patches,
-                                                    const MaterialSet* matls) const;
+                                                    const MaterialSet* matls);
 
-    virtual void addComputesAndRequiresIntegrated(Task* task,
+    virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
                                                   const PatchSet* patches,
-                                                  const MaterialSet* matls) const;
+                                                  const MaterialSet* matls);
   };
       
 } // end namespace Uintah

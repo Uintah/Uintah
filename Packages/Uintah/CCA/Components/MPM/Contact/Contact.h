@@ -1,7 +1,11 @@
 #ifndef __CONTACT_H__
 #define __CONTACT_H__
 
+#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h>
+#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
 #include <math.h>
 
@@ -44,10 +48,10 @@ WARNING
 
 ****************************************/
 
-      class Contact {
+  class Contact : public UintahParallelComponent {
       public:
          // Constructor
-	 Contact();
+         Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag, ProblemSpecP ps);
 	 virtual ~Contact();
 
 	 // Basic contact methods
@@ -62,18 +66,20 @@ WARNING
 				      const MaterialSubset* matls,
 				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw) = 0;
-
-         virtual void addComputesAndRequiresInterpolated(Task* task,
-					   const PatchSet* patches,
-					   const MaterialSet* matls) const = 0;
+         
+         virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls) = 0;
 	 
-         virtual void addComputesAndRequiresIntegrated(Task* task,
-					   const PatchSet* patches,
-					   const MaterialSet* matls) const = 0;
-
+         virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
+				      const PatchSet* patches,
+				      const MaterialSet* matls) = 0;
+         
       protected:
 	 MPMLabel* lb;
 	 MPMFlags* flag;
+	 
+         ContactMaterialSpec d_matls;
       };
       
       inline bool compare(double num1, double num2) {
