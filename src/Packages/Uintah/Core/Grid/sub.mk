@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/UnionGeometryPiece.cc \
 	$(SRCDIR)/DifferenceGeometryPiece.cc \
 	$(SRCDIR)/IntersectionGeometryPiece.cc \
+	$(SRCDIR)/FileGeometryPiece.cc \
 	$(SRCDIR)/GeometryPieceFactory.cc \
 	$(SRCDIR)/VelocityBoundCond.cc \
 	$(SRCDIR)/TemperatureBoundCond.cc \
