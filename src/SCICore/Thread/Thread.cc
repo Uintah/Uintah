@@ -209,65 +209,90 @@ void
 Thread::niceAbort()
 {
 #ifndef _WIN32
-    for(;;){
-        char action;
 #ifdef __sgi
-	// Use -lexc to print out a stack trace
-	static const int MAXSTACK = 100;
-	static const int MAXNAMELEN = 1000;
-	__uint64_t addrs[MAXSTACK];
-	char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
-	char* names[MAXSTACK];
-	for(int i=0;i<MAXSTACK;i++)
-	    names[i]=cnames_str+i*MAXNAMELEN;
-	int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
-	if(nframes == 0){
-	    fprintf(stderr, "Backtrace not available!\n");
-	} else {
-	    fprintf(stderr, "Backtrace:\n");
-	    for(int i=0;i<nframes;i++)
-		fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
-	}
-#endif
-        Thread* s=Thread::self();
-	print_threads();
-	fprintf(stderr, "\n");
-	fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-	fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
-	fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
-	fflush(stderr);
-	char buf[100];
-	while(read(fileno(stdin), buf, 100) <= 0){
-	    if(errno != EINTR){
-		fprintf(stderr, "\nCould not read response, exiting\n");
-		buf[0]='e';
-		exitAll(1);
-	    }
-	}
-	action=buf[0];
-        char command[500];
-        switch(action){
-        case 'r': case 'R':
-	    return;
-        case 'd': case 'D':
-	    sprintf(command, "winterm -c dbx -p %d &", getpid());
-	    system(command);	
-	    break;
-        case 'c': case 'C':
-	    sprintf(command, "cvd -pid %d &", getpid());
-	    system(command);	
-	    break;
-        case 'k': case 'K':
-	    exit();
-	    break;
-        case 'e': case 'E':
-	    exitAll(1);
-	    break;
-        default:
-	    break;
-        }
+    // Use -lexc to print out a stack trace
+    static const int MAXSTACK = 100;
+    static const int MAXNAMELEN = 1000;
+    __uint64_t addrs[MAXSTACK];
+    char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
+    char* names[MAXSTACK];
+    for(int i=0;i<MAXSTACK;i++)
+    	names[i]=cnames_str+i*MAXNAMELEN;
+    int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
+    if(nframes == 0){
+    	fprintf(stderr, "Backtrace not available!\n");
+    } else {
+    	fprintf(stderr, "Backtrace:\n");
+    	for(int i=0;i<nframes;i++)
+    	    fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
     }
-#endif
+#endif	// __sgi
+
+    char* smode = getenv("SCI_SIGNALMODE");
+    if (!smode)
+    	smode = "ask";
+	
+    Thread* s=Thread::self();
+    print_threads();
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
+    fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
+	
+    for (;;) {
+        if (strcasecmp(smode, "ask") == 0) {
+    	    char buf[100];
+    	    fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
+    	    fflush(stderr);
+    	    while(read(fileno(stdin), buf, 100) <= 0){
+    	    	if(errno != EINTR){
+    	    	    fprintf(stderr, "\nCould not read response, exiting\n");
+    	    	    buf[0]='e';
+    	    	    exitAll(1);
+    	    	}
+    	    }
+	    switch (buf[0]) {
+    	    case 'r': case 'R':
+	    	smode = "resume";
+		break;
+	    case 'd': case 'D':
+	    	smode = "dbx";
+		break;
+	    case 'c': case 'C':
+	    	smode = "cvd";
+		break;
+	    case 'k': case 'K':
+	    	smode = "kill";
+		break;
+	    case 'e': case 'E':
+	    	smode = "exit";
+		break;
+	    default:
+	    	break;
+	    }
+    	}
+
+    	if (strcasecmp(smode, "resume") == 0) {
+    	    return;
+	} else if (strcasecmp(smode, "dbx") == 0) {
+    	    char command[500];
+    	    sprintf(command, "winterm -c dbx -p %d &", getpid());
+	    system(command);
+	    smode = "ask";
+	} else if (strcasecmp(smode, "cvd") == 0) {
+    	    char command[500];
+	    sprintf(command, "cvd -pid %d &", getpid());
+	    system(command);
+	    smode = "ask";
+	} else if (strcasecmp(smode, "kill") == 0) {
+    	    exit();
+	} else if (strcasecmp(smode, "exit") == 0) {
+    	    exitAll(1);
+	} else {
+	    fprintf(stderr, "Unrecognized option, exiting\n");
+	    smode = "exit";
+	}
+    }
+#endif	// _WIN32
 }
 
 int
@@ -334,6 +359,9 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.20  2000/06/13 23:58:57  jehall
+// - Modified niceAbort() to allow default action via environment variable
+//
 // Revision 1.19  2000/06/09 21:01:40  yarden
 // return THREAD_DEFAULT_STACKSIZE to its earlier size
 //
