@@ -413,6 +413,12 @@ SCI_ARG_WITH(ftgl,
   [with_ftgl=""])
 
 
+
+SCI_ARG_ENABLE(advanced-volume-rendering,
+  AC_HELP_STRING(--enable-advanced-volume-rendering,
+                 Override default tests for this capability),
+  [avr="$enableval"],
+  [avr="test"])
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
                  Turn on verbose configure output),
@@ -1708,7 +1714,6 @@ AC_SUBST(INC_GL_H)
 
 # Test for advanced volume rendering capability
 
-
 SCI_COMPILE_LINK_TEST(EXT_HDRS,correct OpenGL extension headers ,
 [
   #define GL_GLEXT_PROTOTYPES
@@ -1720,42 +1725,66 @@ $_sci_inc, GL, $_sci_lib,,
   int r = 5;
 ],optional)
 
-DEF_OGL_EXT_HDRS=""
-DEF_HAVE_AVR=""
-
 if test "$HAVE_EXT_HDRS" = "yes"; then
-  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"	
-  SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
-  [
-    #define GL_GLEXT_PROTOTYPES
-    #include <GL/gl.h>
-    #include <GL/glext.h>
-  ],
-  $_sci_inc, GL, $_sci_lib,,
-  [
-    glBindProgramARB(0,0);
-    glActiveTexture(0);
-  ],optional)
+  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
 else
-  SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
-  [
-    #include <GL/gl.h>
-  ],
-  $_sci_inc, GL, $_sci_lib,,
-  [
-    glActiveTexture(0);
-  ],optional)
-
+  DEF_OGL_EXT_HDRS=""
 fi
-  
 
-if test "$HAVE_AVR" = "yes"; then
+if test "$avr" = "yes"; then
+  AC_MSG_WARN([
+  *** Will include the advance volume rendering code in compilation.  ***
+  *** configure can erroneously determine this platform can use avr.  ***
+  *** use --disable-advanced-volume-rendering if compilation fails.   ***
+  ])  
   COMPILE_AVR=1
   DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
+elif test "$avr" = "no"; then
+  AC_MSG_WARN([
+  *** Will not compile the advance volume rendering code. ***
+  ])
+  COMPILE_AVR=""
+  DEF_HAVE_AVR=""
+else
+  DEF_HAVE_AVR=""
+  
+  if test "$HAVE_EXT_HDRS" = "yes"; then
+    SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
+    [
+      #define GL_GLEXT_PROTOTYPES
+      #include <GL/gl.h>
+      #include <GL/glext.h>
+    ],
+    $_sci_inc, GL, $_sci_lib,,
+    [
+      glBindProgramARB(0,0);
+      glActiveTexture(0);
+    ],optional)
+  else
+    SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
+    [
+      #include <GL/gl.h>
+    ],
+    $_sci_inc, GL, $_sci_lib,,
+    [
+      glActiveTexture(0);
+    ],optional)
+  
+  fi
+      
+  if test "$HAVE_AVR" = "yes"; then
+  AC_MSG_WARN([
+  *** Will include the advance volume rendering code in compilation.  ***
+  *** configure can erroneously determine this platform can use avr.  ***
+  *** use --disable-advanced-volume-rendering if compilation fails.   ***
+  ])  
+    COMPILE_AVR=1
+    DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
+  fi
+  
+  AC_LANG(C)
+  
 fi
-
-AC_LANG(C)
-
 AC_SUBST(DEF_OGL_EXT_HDRS)
 AC_SUBST(COMPILE_AVR)
 AC_SUBST(DEF_HAVE_AVR)
