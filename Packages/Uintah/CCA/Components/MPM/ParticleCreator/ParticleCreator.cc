@@ -31,7 +31,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
                                  MPMLabel* lb,
                                  MPMFlags* flags)
 {
-  d_8or27 = flags->d_8or27;
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_fracture = flags->d_fracture;
@@ -265,9 +264,7 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   task->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::None);
   //task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pErosionLabel, Ghost::None);
-
-  if (d_8or27 == 27)
-    task->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
 
   if (d_useLoadCurves)
     task->requires(Task::OldDW,lb->pLoadCurveIDLabel, Ghost::None);
@@ -322,8 +319,7 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   new_dw->get(o_volume,lb->pVolumeDeformedLabel,delset);
   //old_dw->get(o_volume,lb->pVolumeLabel,delset);
   new_dw->get(o_erosion,lb->pErosionLabel_preReloc,delset);
-  if (d_8or27 == 27) 
-    old_dw->get(o_size,lb->pSizeLabel,delset);
+  old_dw->get(o_size,lb->pSizeLabel,delset);
   if (d_useLoadCurves) 
     old_dw->get(o_loadcurve,lb->pLoadCurveIDLabel,delset);
 
@@ -339,8 +335,7 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
     psp_vol[*n]=o_sp_vol[*o];
     pparticleID[*n]=o_particleID[*o];
     perosion[*n]=o_erosion[*o];
-    if (d_8or27 == 27) 
-      psize[*n]=o_size[*o];
+    psize[*n]=o_size[*o];
     if (d_useLoadCurves) 
       pLoadCurveID[*n]=o_loadcurve[*o];
   }
@@ -355,8 +350,7 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   (*newState)[lb->pSp_volLabel]=psp_vol.clone();
   (*newState)[lb->pParticleIDLabel]=pparticleID.clone();
   (*newState)[lb->pErosionLabel]=perosion.clone();
-  if (d_8or27 == 27) 
-    (*newState)[lb->pSizeLabel]=psize.clone();
+  (*newState)[lb->pSizeLabel]=psize.clone();
   if (d_useLoadCurves) 
     (*newState)[lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
 }
@@ -546,10 +540,8 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
     particle_state_preReloc.push_back(lb->pColorLabel_preReloc);
   }
 
-  if (d_8or27 == 27) {
-    particle_state.push_back(lb->pSizeLabel);
-    particle_state_preReloc.push_back(lb->pSizeLabel_preReloc);
-  }
+  particle_state.push_back(lb->pSizeLabel);
+  particle_state_preReloc.push_back(lb->pSizeLabel_preReloc);
 
   if (d_useLoadCurves) {
     particle_state.push_back(lb->pLoadCurveIDLabel);
