@@ -26,6 +26,7 @@ struct SoundComm {
     Action action;
     double sample_rate;
     int nsamples;
+    int stereo;
     int sbufsize;
     double* samples;
 };
@@ -44,10 +45,12 @@ private:
 	Done,
 	NeedSamples,
 	HaveSamples,
+	Flushing,
     };
     State state;
     int total_samples;
     double rate;
+    int stereo;
     int sbufsize;
     double* sample_buf;
     int bufp;
@@ -61,8 +64,9 @@ public:
     virtual ~SoundIPort();
     int nsamples();
     double sample_rate();
-    double next_sample();
-    int end_of_stream();
+    inline double next_sample();
+    inline int end_of_stream();
+    int is_stereo();
 
     virtual void reset();
     virtual void finish();
@@ -71,6 +75,7 @@ public:
 class SoundOPort : public OPort {
     int total_samples;
     double rate;
+    int stereo;
     enum State {
 	Begin,
 	Transmitting,
@@ -86,10 +91,31 @@ public:
     virtual ~SoundOPort();
     void set_nsamples(int);
     void set_sample_rate(double);
+    void set_stereo(int);
     void put_sample(double);
+    void put_sample(double, double);
 
     virtual void reset();
     virtual void finish();
 };
+
+inline double SoundIPort::next_sample()
+{
+    if(state != HaveSamples)
+	do_read();
+    double s=sample_buf[bufp++];
+    if(bufp>=sbufsize){
+	state=NeedSamples;
+	if(state != HaveSamples)
+	    do_read();
+	bufp=0;
+    }
+    return s;
+}
+
+inline int SoundIPort::end_of_stream()
+{
+    return state==Done;
+}
 
 #endif /* SCI_project_SoundPort_h */

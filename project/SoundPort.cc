@@ -39,6 +39,7 @@ void SoundOPort::reset()
     state=Begin;
     total_samples=0;
     rate=-1;
+    stereo=0;
 }
 
 SoundOPort::SoundOPort(Module* module, const clString& portname, int protocol)
@@ -56,12 +57,16 @@ SoundOPort::~SoundOPort()
 void SoundIPort::reset()
 {
     state=Begin;
+    bufp=0;
 }
 
 void SoundIPort::finish()
 {
     if(state != Done){
 	cerr << "Not all of sound was read...\n";
+	state=Flushing;
+	while(state != Done)
+	    do_read();
     }
     if(sample_buf){
 	delete[] sample_buf;
@@ -88,23 +93,12 @@ double SoundIPort::sample_rate()
     return rate;
 }
 
-double SoundIPort::next_sample()
+int SoundIPort::is_stereo()
 {
-    if(state != HaveSamples)
+    while(state == Begin)
 	do_read();
-    double s=sample_buf[bufp++];
-    if(bufp>=sbufsize){
-	state=NeedSamples;
-	if(state != HaveSamples)
-	    do_read();
-	bufp=0;
-    }
-    return s;
-}
 
-int SoundIPort::end_of_stream()
-{
-    return state==Done;
+    return stereo;
 }
 
 void SoundIPort::do_read()
@@ -117,20 +111,21 @@ void SoundIPort::do_read()
 	ASSERT(state==Begin);
 	total_samples=comm->nsamples;
 	rate=comm->sample_rate;
+	stereo=comm->stereo;
 	recvd_samples=0;
 	state=NeedSamples;
 	break;
     case SoundComm::SoundData:
-	ASSERT(state==NeedSamples);
+	ASSERT(state==NeedSamples || state==Flushing);
 	if(sample_buf)
 	    delete[] sample_buf;
 	sample_buf=comm->samples;
 	sbufsize=comm->sbufsize;
 	recvd_samples+=sbufsize;
-	state=HaveSamples;
+	if(state==NeedSamples)state=HaveSamples;
 	break;
     case SoundComm::EndOfStream:
-	ASSERT(state==NeedSamples || state==Begin);
+	ASSERT(state==NeedSamples || state==Flushing || state==Begin);
 	state=Done;
 	total_samples=recvd_samples;
 	break;
@@ -175,6 +170,12 @@ void SoundOPort::set_sample_rate(double r)
     rate=r;
 }
 
+void SoundOPort::set_stereo(int s)
+{
+    ASSERT(state == Begin);
+    stereo=s;
+}
+
 void SoundOPort::put_sample(double s)
 {
     ASSERT(state != End);
@@ -185,13 +186,14 @@ void SoundOPort::put_sample(double s)
 	comm->action=SoundComm::Parameters;
 	comm->sample_rate=rate;
 	comm->nsamples=total_samples;
+	comm->stereo=stereo;
 	if(!in){
 	    Connection* connection=connections[0];
 	    in=(SoundIPort*)connection->iport;
 	}
 	in->mailbox.send(comm);
 	state=Transmitting;
-	sbufsize=(int)(rate/20);
+	sbufsize=(int)(rate/10);
 	ptr=0;
 	turn_off();
     }
@@ -213,4 +215,10 @@ void SoundOPort::put_sample(double s)
 	ptr=0;
 	turn_off();
     }
+}
+
+void SoundOPort::put_sample(double sl, double sr)
+{
+    put_sample(sl);
+    put_sample(sr);
 }

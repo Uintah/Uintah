@@ -30,6 +30,7 @@ SCI_LIBS = \
 	../modules/modules.o \
 	SCI_MultitaskLib \
 	SCI_ClassLib \
+	SCI_GeometryLib \
 	../../templates/fast_templates.o \
 	../../wrapper/libMInT/libMInT.a \
 	SCI_MallocLib

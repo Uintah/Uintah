@@ -56,6 +56,16 @@ Field3D::~Field3D()
 {
 }
 
+double Field3D::get(int i, int j, int k)
+{
+    return s_grid(i, j, k);
+}
+
+Point Field3D::get_point(int i, int j, int k)
+{
+    return Point(i,j,k);
+}
+
 void Field3D::set_size(int _nx, int _ny, int _nz)
 {
     nx=_nx;

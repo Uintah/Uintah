@@ -63,6 +63,8 @@ public:
     int get_nz();
     void get_n(int&, int&, int&);
     Vector*** get_dataptr();
+    double get(int, int, int);
+    Point get_point(int, int, int);
 
     // Only for tetrahedra
     int get_ntetra();

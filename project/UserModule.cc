@@ -484,7 +484,7 @@ int UserModule::should_execute()
 
 void UserModule::do_execute()
 {
-    // Reset all of the output ports...
+    // Reset all of the ports...
     for(int i=0;i<oports.size();i++){
 	OPort* port=oports[i];
 	port->reset();
@@ -500,7 +500,11 @@ void UserModule::do_execute()
     state=Completed;
     update_progress(1.0);
 
-    // Call finish on all output ports...
+    // Call finish on all ports...
+    for(i=0;i<iports.size();i++){
+	IPort* port=iports[i];
+	port->finish();
+    }
     for(i=0;i<oports.size();i++){
 	OPort* port=oports[i];
 	port->finish();
