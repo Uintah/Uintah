@@ -22,6 +22,8 @@ OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
 	   $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS))) \
 	   $(patsubst %.s,%.o,$(filter %.s,$(SRCS))) \
 	   $(patsubst %.F,%.o,$(filter %.F,$(SRCS))) \
+	   $(patsubst %.f,%.o,$(filter %.f,$(SRCS))) \
+	   $(patsubst %.fif,%.o,$(filter %.fif,$(SRCS))) \
 	   $(patsubst %.y,%.o,$(filter %.y,$(SRCS)))
 
 LIBNAME := $(LIBDIR)lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
