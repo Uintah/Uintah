@@ -840,10 +840,10 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    Node* n1=mesh->nodes[element->n[0]];
-    Node* n2=mesh->nodes[element->n[1]];
-    Node* n3=mesh->nodes[element->n[2]];
-    Node* n4=mesh->nodes[element->n[3]];
+    NodeHandle n1=mesh->nodes[element->n[0]];
+    NodeHandle n2=mesh->nodes[element->n[1]];
+    NodeHandle n3=mesh->nodes[element->n[2]];
+    NodeHandle n4=mesh->nodes[element->n[3]];
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;

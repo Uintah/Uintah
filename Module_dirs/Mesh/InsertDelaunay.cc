@@ -114,7 +114,8 @@ void InsertDelaunay::execute()
 	if(surfs[isurf]->closed){
 	    for(i=0;i<nnodes;i++){
 		update_progress(ndone, ntodo);
-		if(mesh->nodes[i] && surfs[isurf]->inside(mesh->nodes[i]->p)){
+		if(mesh->nodes[i].get_rep() && 
+		   surfs[isurf]->inside(mesh->nodes[i]->p)){
 		    // Remove this node...
 		    mesh->remove_delaunay(i, 0);
 		    ngone++;
