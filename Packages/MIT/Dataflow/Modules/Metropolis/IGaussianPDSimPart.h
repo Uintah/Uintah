@@ -29,6 +29,14 @@ public:
   virtual void compute( vector<double> &, vector<double> & );
   virtual double lpr( vector<double> &);
 
+  const vector<double> &mean() { return mean_; }
+
+  // set values
+  void means( const vector<double> &);
+  void mean( int, double );
+
+  // Signals
+  Signal1< const vector<double> &> mean_changed;
 };
   
 

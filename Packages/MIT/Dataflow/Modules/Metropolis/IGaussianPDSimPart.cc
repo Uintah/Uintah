@@ -81,6 +81,18 @@ IGaussianPDSimPart::lpr( vector<double> &theta)
   return value;
 }
 
+void
+IGaussianPDSimPart::means( const vector<double> &values )
+{
+  mean_ = values;
+}
+
+void
+IGaussianPDSimPart::mean( int i, double v ) 
+{
+  mean_[i] = v;
+}
+
 } // End namespace MIT
 
 
