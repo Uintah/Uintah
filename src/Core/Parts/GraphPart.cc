@@ -17,50 +17,47 @@
 
 
 /*
- *  Interface.h
+ *  GraphPart.cc
  *
  *  Written by:
  *   Yarden Livnat
- *   Deinterfacement of Computer Science
+ *   Department of Computer Science
  *   University of Utah
  *   Sep 2001
  *
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_PartInterface_h
-#define SCI_PartInterface_h 
-
-#include <string>
-#include <vector>
-#include <Core/Util/Signals.h>
+#include <iostream>
+#include <Core/Parts/GraphPart.h>
 
 namespace SCIRun {
   
-class Part;
-class SciEvent;
+GraphPart::GraphPart( PartInterface *parent, const string &name)
+  : Part( parent, name ), PartInterface( this, parent, "GraphGui" )
+{
+  interface_ = this;
+  cerr <<"GP = " << this << endl;
+}
 
-class PartInterface {
-protected:
-  string type_;
-  Part *part_;
-  PartInterface *parent_;
-  vector<PartInterface *> children_;
+GraphPart::~GraphPart()
+{
+}
 
-public:
-  PartInterface( Part *, PartInterface *parent, const string &type );
-  virtual ~PartInterface();
+void 
+GraphPart::set_num_lines( int n )
+{
+  data_.resize(n);
+}
   
-  Part *part() { return part_; }
-  
-  void add_child( PartInterface *);
-  void rem_child( PartInterface *);
-  string type() { return type_; }
-
-  Signal1<PartInterface *> has_child;
-  Signal1<SciEvent *> report;
+void 
+GraphPart::add_values( vector<double> &v)
+{
+  for (unsigned i=0; i<v.size(); i++)
+    data_[i].push_back(v[i]);
+  new_values( v );
 };
 
 } // namespace SCIRun
 
-#endif // SCI_Interface_h
+

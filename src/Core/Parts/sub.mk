@@ -23,13 +23,12 @@ SRCDIR := Core/Parts
 
 SRCS     += $(SRCDIR)/EventManager.cc \
 	$(SRCDIR)/PartInterface.cc \
-
+	$(SRCDIR)/GraphPart.cc \
 
 PSELIBS := Core/Exceptions \
 	Core/Util \
 	Core/Thread \
 	Core/Persistent \
-#LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
