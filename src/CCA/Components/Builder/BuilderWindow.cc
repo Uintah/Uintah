@@ -437,7 +437,7 @@ void BuilderWindow::load()
     ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
   }
 
-  for(unsigned int i = 0; i < load_Connections_size; i++ ) 
+  for(int i = 0; i < load_Connections_size; i++ ) 
   {
     int iu, ip;
     std::string up, pp;
@@ -503,7 +503,10 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   cerr << "Should put properties on component before creating\n";
 
   gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0),url);
-
+  if(cid.isNull()){
+    cerr << "instantiateFailed...\n";
+    return;
+  }
   CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
   CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
 
@@ -515,8 +518,7 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   }
   // TEK
   cerr << "BuilderWindow::instantiateCompnent(): Leaving..." << endl;
- // TEK
-
+  // TEK
 }
 
 void BuilderWindow::componentActivity(const gov::cca::ports::ComponentEvent::pointer& e)
