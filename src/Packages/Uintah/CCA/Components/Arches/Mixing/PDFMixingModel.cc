@@ -317,7 +317,7 @@ PDFMixingModel::computeProps(const InletStream& inStream,
   }
     getProps(mixRxnVar, outStream); //function in DynamicTable
     //outStream.print(cout);
-    //#if 0
+#if 0
     cout << "PDF::getProps mixRxnVar = " << endl;
     for (int ii = 0; ii < mixRxnVar.size(); ii++) {
       cout.width(10);
@@ -325,7 +325,7 @@ PDFMixingModel::computeProps(const InletStream& inStream,
       if (!(ii % 10)) cout << endl; 
     }
     cout << endl;
-    //#endif
+#endif
  
 }
 
@@ -474,7 +474,7 @@ PDFMixingModel::readStaticTable() {
 	    normg = 1.0;
 	  }
 	  indepVars[kk] = normg;
-	  cout << "PDF:indepVars = " << indepVars[0] << " " << indepVars[1] << endl;	  
+	  //cout << "PDF:indepVars = " << indepVars[0] << " " << indepVars[1] << endl;	  
 	  dataCount++; // Counter for number of total entries in data file
 	  // Read in species mass fractions
 	  for (int jj = 0; jj < numSpecies; jj++) {
@@ -555,7 +555,7 @@ PDFMixingModel::readStaticTable() {
 	    d_mixTable->Insert(tableIndex, vec_stateSpaceVars);
 	    delete [] tableIndex;
 	} // for(ii = 0 to numVarDiv)
-      cout << "dataCount = " << dataCount << endl;
+      //cout << "dataCount = " << dataCount << endl;
     } //while(mixfile) - end of for loop
   mixfile.close();
 
