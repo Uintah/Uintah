@@ -360,6 +360,7 @@ ShowField::determine_dirty(FieldHandle fld_handle)
     }
     data_at_dirty_ = true; //we need to rerender colors..
     edges_dirty_ = true; // Edges don't cache color.
+    data_dirty_ = true; // Data doesn't cache color.
     text_dirty_ = true; // Text doesn't cache color.
   } //else both are the same as last time, nothing dirty.
   
