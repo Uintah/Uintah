@@ -206,7 +206,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 
     NCVariable<Vector> gvelocity;
 
-    new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
+    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
             Ghost::AroundCells, 1);
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
@@ -544,7 +544,7 @@ void ViscoScram::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pVolumeLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pTemperatureLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
+  task->requires(Task::NewDW, lb->gVelocityLabel,    matlset,
                   Ghost::AroundCells, 1);
 
   task->computes(lb->pStressLabel_afterStrainRate, matlset);

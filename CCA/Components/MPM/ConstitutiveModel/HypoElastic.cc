@@ -150,7 +150,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
 
-    new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
+    new_dw->get(gvelocity,           lb->gVelocityLabel, matlindex,patch,
 		Ghost::AroundCells, 1);
 
     old_dw->get(delT, lb->delTLabel);
@@ -249,7 +249,7 @@ void HypoElastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pVolumeLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pTemperatureLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
+  task->requires(Task::NewDW, lb->gVelocityLabel,    matlset,
                   Ghost::AroundCells, 1);
 
   task->computes(lb->pStressLabel_afterStrainRate,      matlset);
