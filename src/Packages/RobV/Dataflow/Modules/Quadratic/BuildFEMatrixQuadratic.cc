@@ -283,10 +283,11 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   TetVolMesh::Cell::iterator ii, iie;
 
   TetVolMesh::Node::array_type cell_nodes(10);
+
   qtvm_->begin(ii); qtvm_->end(iie);
   for (; ii != iie; ++ii){
     if (qtvm_->test_nodes_range(*ii, start_node, end_node)){ 
-      build_local_matrix(*ii,lcl_matrix,i);
+      build_local_matrix(*ii,lcl_matrix,*ii);   //?? element ??
       add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,*ii,start_node, end_node);
     }
   }
