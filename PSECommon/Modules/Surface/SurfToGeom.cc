@@ -65,7 +65,7 @@ class SurfToGeom : public Module {
   ColorMapIPort* icmap;
   ColorMapOPort* ocmap;
   GeometryOPort* ogeom;
-
+  
   Array1<MaterialHandle> c;
 
   TCLdouble range_min;
@@ -81,6 +81,7 @@ class SurfToGeom : public Module {
   TCLdouble clr_b;
   TCLint normals;
   TCLstring ntype;
+  TCLstring outofboundsval;
   int have_sf, have_cm;
 
   void surf_to_geom(const SurfaceHandle&, GeomGroup*);
@@ -101,7 +102,7 @@ SurfToGeom::SurfToGeom(const clString& id)
     ntype("ntype", id, this), rad("rad", id, this), resol("resol", id, this),
     named("named", id, this), clr_r("clr-r", id, this), 
     clr_g("clr-g", id, this), clr_b("clr-b", id, this), 
-    normals("normals", id, this)
+    normals("normals", id, this), outofboundsval("outofboundsval", id, this)
 {
   // Create the input port
   isurface=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
@@ -371,7 +372,11 @@ void SurfToGeom::execute()
 	    cmap->min=min;
 	    cmap->max=max;
 	  }
-	  MaterialHandle omatl = cmap->lookup(max+min/2);
+	  clString obvalStr=outofboundsval.get();
+	  double obval;
+	  if (!obvalStr.get_double(obval))
+	    obval=(max+min)/2;
+	  MaterialHandle omatl = cmap->lookup(obval);
 	  cerr << "LOOKING GOOD!\n";
 	  for (int i=0; i< ts->elements.size(); i++) {
 	    double interp;
@@ -711,6 +716,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.15  2000/11/02 21:43:54  dmw
+// added outofbounds GUI value
+//
 // Revision 1.14  2000/10/29 04:34:56  dmw
 // BuildFEMatrix -- ground an arbitrary node
 // SolveMatrix -- when preconditioning, be careful with 0's on diagonal
