@@ -158,5 +158,20 @@
     </answer>
   </entry>
 
+  <entry>
+    <keywords>DBL_EPSILON</keywords>
+    <question>
+      <p>
+         What do we know about the DBL_EPSILON being undefined under linux?
+      </p>
+    </question>
+    <answer>
+      <p>
+         Should be in limits.h or float.h.  I once found it here:
+         /usr/lib/gcc-lib/i586-mandrake-linux/2.98.3/include/limits.h
+      </p>
+    </answer>
+  </entry>
+
 </faq>
 
