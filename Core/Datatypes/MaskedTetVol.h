@@ -69,7 +69,7 @@ public:
   void    io(Piostream &stream);
 
   void initialize_mask(char masked) {
-    for (char *c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
+    for (vector<char>::iterator c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
   }
 
   void resize_fdata() {
