@@ -34,16 +34,15 @@
 
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Ports/BundlePort.h>
-#include <Dataflow/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
 extern "C" {
-  SCICORESHARE IPort* make_BundleIPort(Module* module, const string& name) {
+  IPort* make_BundleIPort(Module* module, const string& name) {
   return scinew SimpleIPort<BundleHandle>(module,name);
 }
-  SCICORESHARE OPort* make_BundleOPort(Module* module, const string& name) {
+  OPort* make_BundleOPort(Module* module, const string& name) {
   return scinew SimpleOPort<BundleHandle>(module,name);
 }
 }

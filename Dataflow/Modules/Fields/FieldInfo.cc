@@ -34,7 +34,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/share/share.h>
 
 #include <Core/Containers/Handle.h>
 #include <Core/Geometry/BBox.h>
@@ -50,7 +49,7 @@ namespace SCIRun {
 using std::endl;
 using std::pair;
 
-class PSECORESHARE FieldInfo : public Module {
+class FieldInfo : public Module {
 private:
   GuiString gui_fldname_;
   GuiString gui_typename_;

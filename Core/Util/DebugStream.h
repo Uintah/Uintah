@@ -67,8 +67,6 @@
 #define __mbstate_t mbstate_t
 #endif
 
-#include <Core/share/share.h>
-
 #include <stdlib.h> // for getenv()
 #include <sgi_stl_warnings_off.h>
 #include <string>

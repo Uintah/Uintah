@@ -44,12 +44,11 @@
 #ifndef SCI_project_Plane_Constraint_h
 #define SCI_project_Plane_Constraint_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 namespace SCIRun {
 
-class PSECORESHARE PlaneConstraint : public BaseConstraint {
+class PlaneConstraint : public BaseConstraint {
 public:
    PlaneConstraint( const string& name,
 		    const Index numSchemes,

@@ -42,14 +42,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Dataflow/Ports/NrrdPort.h>
-
-#include <Dataflow/share/share.h>
 #include <Core/Datatypes/NrrdString.h>
 
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE BundleGetMatrix : public Module {
+class BundleGetMatrix : public Module {
 public:
   BundleGetMatrix(GuiContext*);
 

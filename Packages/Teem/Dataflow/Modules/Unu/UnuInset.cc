@@ -47,7 +47,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuInset : public Module {
+class UnuInset : public Module {
 public:
   UnuInset(GuiContext*);
 

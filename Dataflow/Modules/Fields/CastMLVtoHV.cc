@@ -44,8 +44,6 @@
 #include <Core/Containers/Handle.h>
 #include <math.h>
 
-#include <Core/share/share.h>
-
 #include <vector>
 #include <iostream>
 
@@ -53,7 +51,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class PSECORESHARE CastMLVtoHV : public Module {
+class CastMLVtoHV : public Module {
 private:
   int            last_gen_;
   FieldHandle    ofieldH_;

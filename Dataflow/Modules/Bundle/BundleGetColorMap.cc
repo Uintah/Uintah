@@ -45,12 +45,10 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Datatypes/NrrdString.h>
 
-#include <Dataflow/share/share.h>
-
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE BundleGetColorMap : public Module {
+class BundleGetColorMap : public Module {
 public:
   BundleGetColorMap(GuiContext*);
 

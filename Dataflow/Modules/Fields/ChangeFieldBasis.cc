@@ -44,7 +44,7 @@
 namespace SCIRun {
 
 
-class PSECORESHARE ChangeFieldBasis : public Module {
+class ChangeFieldBasis : public Module {
 public:
   GuiString outputdataat_;    // the out data at
   GuiString inputdataat_;     // the in data at

@@ -48,13 +48,11 @@
 #include <Dataflow/Ports/MatrixPort.h>
 
 
-#include <Packages/BioPSE/share/share.h>
-
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE DipoleMatrixSourceRHSQuadratic : public Module {
+class DipoleMatrixSourceRHSQuadratic : public Module {
 public:
   DipoleMatrixSourceRHSQuadratic(GuiContext *context);
 

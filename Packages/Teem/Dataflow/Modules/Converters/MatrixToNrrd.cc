@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -53,7 +51,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE MatrixToNrrd : public Module {
+class MatrixToNrrd : public Module {
 public:
 
   MatrixIPort* imat_;

@@ -30,19 +30,18 @@
 //    Date   : Mon Jul  5 18:46:29 2004
 
 #include <Dataflow/Ports/Colormap2Port.h>
-#include <Dataflow/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
 extern "C" {
 
-PSECORESHARE SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
+SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
                                                 const std::string& name) {
   return scinew SCIRun::SimpleIPort<ColorMap2Handle>(module,name);
 }
   
-PSECORESHARE SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
+SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
                                                 const std::string& name) {
   return scinew SCIRun::SimpleOPort<ColorMap2Handle>(module,name);
 }

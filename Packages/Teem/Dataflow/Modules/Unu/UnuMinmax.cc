@@ -43,8 +43,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Ports/NrrdPort.h>
 
 
@@ -52,7 +50,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuMinmax : public Module {
+class UnuMinmax : public Module {
 public:
   UnuMinmax(GuiContext*);
 

@@ -51,13 +51,12 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Packages/BioPSE/Core/Algorithms/Forward/SphericalVolumeConductor.h>
-#include <Packages/BioPSE/share/share.h>
 
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE AnisoSphereModel : public Module {
+class AnisoSphereModel : public Module {
 
   // ports
   FieldIPort  *hInElectrodes;

@@ -36,7 +36,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/share/share.h>
 
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -55,7 +54,7 @@ namespace SCIRun {
 using std::endl;
 using std::pair;
 
-class PSECORESHARE ChangeFieldBounds : public Module {
+class ChangeFieldBounds : public Module {
 public:
   ChangeFieldBounds(GuiContext* ctx);
   virtual ~ChangeFieldBounds();

@@ -44,7 +44,6 @@
 #ifndef SCI_project_Constraint_Solver_h
 #define SCI_project_Constraint_Solver_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 #include <stack>
@@ -54,7 +53,7 @@ using std::stack;
 
 
 typedef unsigned char uchar;
-struct PSECORESHARE StackItem {
+struct StackItem {
    inline StackItem() : var(0), iter(0) {}
    inline StackItem( BaseVariable* v ) : var(v), iter(0) {}
    inline StackItem( BaseVariable* v, const uchar i ) : var(v), iter(i) {}
@@ -70,7 +69,7 @@ struct PSECORESHARE StackItem {
    uchar iter;
 };
 
-class PSECORESHARE ConstraintSolver {
+class ConstraintSolver {
 public:
    ConstraintSolver();
    ConstraintSolver( const double epsilon );

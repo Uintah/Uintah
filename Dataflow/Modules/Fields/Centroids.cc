@@ -43,8 +43,6 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <math.h>
 
-#include <Core/share/share.h>
-
 #include <vector>
 #include <iostream>
 
@@ -52,7 +50,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class PSECORESHARE Centroids : public Module {
+class Centroids : public Module {
 public:
   Centroids(GuiContext* ctx);
   virtual ~Centroids();

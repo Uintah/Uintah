@@ -57,7 +57,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE NrrdToField : public Module {
+class NrrdToField : public Module {
 public:
   enum {UNKNOWN=0,UNSTRUCTURED=1,STRUCTURED=2,IRREGULAR=4,REGULAR=8};
 

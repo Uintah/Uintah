@@ -47,7 +47,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuSplice : public Module {
+class UnuSplice : public Module {
 public:
   UnuSplice(GuiContext*);
 

@@ -55,14 +55,11 @@
 #include <iostream>
 
 
-
-#include <Packages/BioPSE/share/share.h>
-
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE ElectrodeManager : public Module {
+class ElectrodeManager : public Module {
   //! Private data
 
   //! Output port

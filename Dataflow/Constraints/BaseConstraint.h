@@ -44,7 +44,6 @@
 #ifndef SCI_project_Base_Constraint_h
 #define SCI_project_Base_Constraint_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseVariable.h>
 #include <Core/Containers/Array2.h>
 #include <string>
@@ -55,7 +54,7 @@ using std::string;
 using std::vector;
 
 
-class PSECORESHARE BaseConstraint {
+class BaseConstraint {
    friend class BaseVariable;
    friend class ConstraintSolver;
 public:
@@ -104,7 +103,7 @@ protected:
 			 const double Epsilon,
 			 BaseVariable*& var, VarCore& c );
 };
-inline PSECORESHARE std::ostream& operator<<( std::ostream& os, BaseConstraint& v );
+inline std::ostream& operator<<( std::ostream& os, BaseConstraint& v );
 
 
 /***************************************************************************

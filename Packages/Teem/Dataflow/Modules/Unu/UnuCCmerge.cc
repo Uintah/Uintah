@@ -47,7 +47,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuCCmerge : public Module {
+class UnuCCmerge : public Module {
 public:
   UnuCCmerge(GuiContext*);
 

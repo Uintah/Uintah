@@ -54,13 +54,11 @@
 #include <vector>
 
 
-#include <Packages/BioPSE/share/share.h>
-
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE ShowDipoles : public Module {
+class ShowDipoles : public Module {
 public:
   ShowDipoles(GuiContext *context);
   virtual ~ShowDipoles();

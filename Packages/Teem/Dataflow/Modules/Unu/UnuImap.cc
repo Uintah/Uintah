@@ -46,7 +46,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuImap : public Module {
+class UnuImap : public Module {
 public:
   UnuImap(GuiContext*);
 

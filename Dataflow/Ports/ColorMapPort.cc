@@ -47,10 +47,10 @@ namespace SCIRun {
 
 
 extern "C" {
-PSECORESHARE IPort* make_ColorMapIPort(Module* module, const string& name) {
+IPort* make_ColorMapIPort(Module* module, const string& name) {
   return scinew SimpleIPort<ColorMapHandle>(module,name);
 }
-PSECORESHARE OPort* make_ColorMapOPort(Module* module, const string& name) {
+OPort* make_ColorMapOPort(Module* module, const string& name) {
   return scinew SimpleOPort<ColorMapHandle>(module,name);
 }
 }

@@ -48,6 +48,9 @@
 #include <Core/Containers/StringUtil.h>
 #include <sys/stat.h>
 #include <sstream>
+#ifdef _WIN32
+#include <process.h> // for getpid
+#endif
 
 namespace SCITeem {
 

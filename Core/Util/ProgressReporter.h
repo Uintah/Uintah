@@ -44,7 +44,6 @@
 #ifndef SCIRun_Core_Util_ProgressReporter_h
 #define SCIRun_Core_Util_ProgressReporter_h
 
-#include <Core/share/share.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
@@ -56,7 +55,7 @@ namespace SCIRun {
 
   //using namespace std;
 
-class SCICORESHARE ProgressReporter 
+class ProgressReporter 
 {
 public:
   typedef enum {Starting, Compiling, CompilationDone, Done } ProgressState;

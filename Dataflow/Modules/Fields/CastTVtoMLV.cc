@@ -46,8 +46,6 @@
 #include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
 
-#include <Core/share/share.h>
-
 #include <vector>
 #include <iostream>
 
@@ -55,7 +53,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class PSECORESHARE CastTVtoMLV : public Module {
+class CastTVtoMLV : public Module {
 private:
   GuiInt nx_;
   GuiInt ny_;

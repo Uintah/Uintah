@@ -46,7 +46,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuCCadj : public Module {
+class UnuCCadj : public Module {
 public:
   UnuCCadj(GuiContext*);
 
