@@ -15,7 +15,8 @@
 using namespace rtrt;
 using namespace std;
 
-ImageMaterial::ImageMaterial(int, char* texfile, ImageMaterial::Mode umode,
+ImageMaterial::ImageMaterial(int, const string &texfile, 
+			     ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
 			     double refl)
@@ -26,7 +27,7 @@ ImageMaterial::ImageMaterial(int, char* texfile, ImageMaterial::Mode umode,
     outcolor=Color(0,0,0);
 }
 
-ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
+ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
 			     double refl)
@@ -39,7 +40,7 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
   outcolor=Color(0,0,0);
 }
 
-ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
+ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
 			     double refl,  double transp)
@@ -152,10 +153,10 @@ skip:
                accumcolor, cx);
 }
 
-void ImageMaterial::read_hdr_image(char* filename)
+void ImageMaterial::read_hdr_image(const string &filename)
 {
    char buf[200];
-   sprintf(buf, "%s.hdr", filename);
+   sprintf(buf, "%s.hdr", filename.c_str());
    ifstream in(buf);
    if(!in){
      cerr << "Error opening header: " << buf << '\n';
@@ -167,7 +168,7 @@ void ImageMaterial::read_hdr_image(char* filename)
      cerr << "Error reading header: " << buf << '\n';
      exit(1);
    }
-   ifstream indata(filename);
+   ifstream indata(filename.c_str());
    image.resize(nu, nv);
    for(int i=0;i<nu;i++){
      for(int j=0;j<nv;j++){
