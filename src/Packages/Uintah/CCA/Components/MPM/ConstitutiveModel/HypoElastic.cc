@@ -34,9 +34,20 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
 #ifdef FRACTURE
-  ps->get("KIc",d_initialData.KIc);
-  ps->get("KIIc",d_initialData.KIIc);
+  // Read in fracture toughness curve versus crack velocity
+  ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
+  if(curve_ps!=0) {
+    for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
+  	  	     child_ps=child_ps->findNextBlock("point")) {
+      double Vc,KIc,KIIc;
+      child_ps->get("Vc",Vc);
+      child_ps->get("KIc",KIc);
+      child_ps->get("KIIc",KIIc);
+      d_initialData.Kc.push_back(Vector(Vc,KIc,KIIc));
+    }		  
+  }
 #endif
+  
   d_8or27 = n8or27;
   if(d_8or27==8){
     NGN=1;
@@ -54,8 +65,7 @@ HypoElastic::HypoElastic(const HypoElastic* cm)
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
 #ifdef FRACTURE
-  d_initialData.KIc = cm->d_initialData.KIc;
-  d_initialData.KIIc = cm->d_initialData.KIIc;
+  d_initialData.Kc = cm->d_initialData.Kc;
 #endif
 }
 
@@ -423,17 +433,16 @@ void HypoElastic::carryForward(const PatchSubset* patches,
 // Convert J-integral into stress intensity factors for hypoelastic materials
 void 
 HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
-                     const Vector& C,const Vector& V,Vector& SIF)
+                     const double& C,const Vector& V,Vector& SIF)
 {                    
   /* J--J integral, C--Crack velocity, V--COD near crack tip
      in local coordinates. */ 
      
-  double J1,C1,C2,CC,V1,V2;
+  double J1,CC,V1,V2;
   
   J1=J.x();                           // total energy release rate
   V1=V.y();  V2=V.x();                // V1--opening COD, V2--sliding COD
-  C1=C.x();  C2=C.y();                
-  CC=C1*C1+C2*C2;                     // square of crack propagating velocity
+  CC=C*C;                             // square of crack propagating velocity
   
   // get material properties
   double rho_orig,G,K,v,k;
@@ -452,6 +461,9 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
   else {                              // for dynamic crack
     Cs2=G/rho_orig;
     Cd2=(k+1.)/(k-1.)*Cs2;
+
+    if(CC>Cs2) CC=Cs2;
+    
     B1=sqrt(1.-CC/Cd2);
     B2=sqrt(1.-CC/Cs2);
     D=4.*B1*B2-(1.+B2*B2)*(1.+B2*B2);
@@ -499,8 +511,9 @@ HypoElastic::GetPropagationDirection(const double& KI,
     return theta;
   }
   else {
-    cout << "*** Crack propagation angle larger than PI/2."
-         << " Program terminated." << endl;
+    cout << "*** Crack propagation angle larger than PI/2"
+         << " (KI=" << KI << ", KII=" << KII << ")." 
+	 << " Programm terminated." << endl;
     exit(1);
   }
 }
@@ -508,13 +521,36 @@ HypoElastic::GetPropagationDirection(const double& KI,
 // Detect if crack propagates by maximum stress criterion
 // for FRACTURE
 short
-HypoElastic::CrackSegmentPropagates(const double& KI,
+HypoElastic::CrackSegmentPropagates(const double& Vc,const double& KI,
                                   const double& KII)
 {
-  double KIc  = d_initialData.KIc;
-  double cosTheta,sinTheta,cosTheta2,Kq;
+  // Dynamic fracture toughness Kc(Vc,KIc,KIIC)	
+  vector<Vector> Kc = d_initialData.Kc;
+  
+  // Determine fracture toughness KIc at velocity Vc
+  int num=Kc.size();                  
+  double KIc=-1.; 
+  if(Vc<=Kc[0].x()) { // Beyond the left bound
+    KIc=Kc[0].y();
+  }  
+  else if(Vc>=Kc[num-1].x()) { // Beyond the right bound
+    KIc=Kc[num-1].y();
+  }  
+  else { // In between 
+    for(int i=0; i<num-1;i++) {
+      double Vi=Kc[i].x();
+      double Vj=Kc[i+1].x();    
+      if(Vc>=Vi && Vc<Vj) {	
+        double Ki=Kc[i].y();
+        double Kj=Kc[i+1].y();      
+        KIc=Ki+(Kj-Ki)*(Vc-Vi)/(Vj-Vi);
+        break;
+      }
+    } // End of loop over i
+  }
 
   // The direction of the maximum hoop stress
+  double cosTheta,sinTheta,cosTheta2,Kq;
   if(fabs(KI)==0.0 || fabs(KII/KI)>50.0) { // pure mode II
     cosTheta = 1./3.;
     sinTheta = (KII>=0.) ? -0.942809 : 0.942809;
@@ -533,8 +569,10 @@ HypoElastic::CrackSegmentPropagates(const double& KI,
   cosTheta2=sqrt((1.+cosTheta)/2.);
   Kq=KI*pow(cosTheta2,3)-1.5*KII*cosTheta2*sinTheta;
 
-  if(Kq>=KIc) return 1;
-  else        return 0;
+  if(Kq>=KIc)
+    return 1;
+  else   
+    return 0;
 }
 
 void HypoElastic::addComputesAndRequires(Task* task,

@@ -18,6 +18,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 
 namespace Uintah {
   class HypoElastic : public ConstitutiveModel {
@@ -27,8 +28,11 @@ namespace Uintah {
     struct CMData {
       double G;
       double K;
-      double KIc;  // Mode I fracture toughness (for FRACTURE)
-      double KIIc; // Mode II fracture toughness (for FRACTURE)
+//#ifdef FRACTURE       
+      // Fracture toughness at various velocities
+      // in the format Vector(Vc,KIc,KIIc)
+      vector<Vector> Kc; 
+//#endif       
     };
 
   private:
@@ -109,13 +113,14 @@ namespace Uintah {
     // Convert J-integral into stress intensity factors
     // for hypoelastic materials (for FRACTURE) 
     virtual void ConvertJToK(const MPMMaterial* matl, const Vector& J,
-                             const Vector& C,const Vector& V,
+                             const double& C,const Vector& V,
                              Vector& SIF);
     // Determine crack propagation direction (for FRACTURE)
     virtual double GetPropagationDirection(const double& KI, const double& KII);
 
     // Detect if crack propagates (for FRACTURE)
-    virtual short CrackSegmentPropagates(const double& KI, const double& KII);
+    virtual short CrackSegmentPropagates(const double& Vc, 
+		                         const double& KI, const double& KII);
   };
 
 } // End namespace Uintah
