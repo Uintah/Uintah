@@ -49,6 +49,7 @@ tar: products
 		$${root}/doc/User/Guide/usersguide2.ps.gz \
 		$${root}/doc/Developer/index.html \
                 $${root}/doc/Developer/Guide/*.html \
+                $${root}/doc/Developer/Guide/dev/Figures \
 		$${root}/doc/Developer/Modules/*.html \
 		$${root}/doc/Developer/CodeViews/html \
 		$${root}/doc/FAQBook/*.html \
