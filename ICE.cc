@@ -529,6 +529,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
     t->computes(lb->f_theta_CCLabel);
   }
                         // EQ & RATE FORM
+  t->computes(lb->f_theta_CCLabel); 
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->sp_vol_CCLabel);
@@ -821,40 +822,30 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const MaterialSet* matls)
 {
   Task* t;
-  if (d_RateForm) {     //RATE FORM
-    cout_doing << "ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
-    t = scinew Task("ICE::computeLagrangianSpecificVolumeRF",
-                        this,&ICE::computeLagrangianSpecificVolumeRF);
-  }  
-  else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeLagrangianSpecificVolume" << endl;
-    t = scinew Task("ICE::computeLagrangianSpecificVolume",
-                        this,&ICE::computeLagrangianSpecificVolume);
-  }
+
+  cout_doing << "ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
+  t = scinew Task("ICE::computeLagrangianSpecificVolumeRF",
+                      this,&ICE::computeLagrangianSpecificVolumeRF);
+
   Ghost::GhostType  gn  = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;       
-  if (d_EqForm) {            // EQ FORM
-    t->requires(Task::NewDW, lb->mass_L_CCLabel,      gn);     
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
-    t->requires(Task::NewDW, lb->rho_CCLabel,         gn);
-    t->requires(Task::NewDW, lb->created_vol_CCLabel, gn); 
-    t->computes(lb->spec_vol_L_CCLabel);
-  } 
-  else if (d_RateForm) {     // RATE FORM
-    t->requires(Task::OldDW, lb->delTLabel);
-    t->requires(Task::NewDW, lb->rho_CCLabel,         gn);
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
-    t->requires(Task::NewDW, lb->Tdot_CCLabel,        gn);
-    t->requires(Task::NewDW, lb->f_theta_CCLabel,     gn);
-    t->requires(Task::NewDW, lb->vol_frac_CCLabel,    gac,1);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,1); 
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,1); 
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,1);
-    t->requires(Task::OldDW, lb->temp_CCLabel,   ice_matls,   gn);
-    t->requires(Task::NewDW, lb->temp_CCLabel,   mpm_matls,   gn);
-    t->computes(lb->spec_vol_L_CCLabel);
-    t->computes(lb->spec_vol_source_CCLabel);
-  }
+
+  t->requires(Task::OldDW, lb->delTLabel);                         
+  t->requires(Task::NewDW, lb->rho_CCLabel,         gn);           
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);           
+  t->requires(Task::NewDW, lb->Tdot_CCLabel,        gn);           
+  t->requires(Task::NewDW, lb->f_theta_CCLabel,     gn);           
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel,    gac,1);        
+  t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,1);        
+  t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,1);        
+  t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,1);        
+  t->requires(Task::OldDW, lb->temp_CCLabel,   ice_matls,   gn);   
+  t->requires(Task::NewDW, lb->temp_CCLabel,   mpm_matls,   gn);   
+  t->requires(Task::NewDW, lb->created_vol_CCLabel, gn);           
+
+  t->computes(lb->spec_vol_L_CCLabel);                             
+  t->computes(lb->spec_vol_source_CCLabel);                        
+
   sched->addTask(t, patches, matls);
 }
 /* ---------------------------------------------------------------------
@@ -1198,12 +1189,14 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     StaticArray<double> press_eos(numMatls);
     StaticArray<double> dp_drho(numMatls),dp_de(numMatls);
+    StaticArray<double> kappa(numMatls);
     StaticArray<CCVariable<double> > vol_frac(numMatls);
     StaticArray<CCVariable<double> > rho_micro(numMatls);
     StaticArray<CCVariable<double> > rho_CC_new(numMatls);
     StaticArray<CCVariable<double> > sp_vol_CC(numMatls);
     StaticArray<CCVariable<double> > speedSound(numMatls);
     StaticArray<CCVariable<double> > speedSound_new(numMatls);
+    StaticArray<CCVariable<double> > f_theta(numMatls); 
     StaticArray<constCCVariable<double> > Temp(numMatls);
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numMatls);
@@ -1226,7 +1219,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocateTemporary(rho_micro[m],  patch);
       new_dw->allocateAndPut(vol_frac[m],   lb->vol_frac_CCLabel,indx, patch);  
       new_dw->allocateAndPut(rho_CC_new[m], lb->rho_CCLabel,     indx, patch);  
-      new_dw->allocateAndPut(sp_vol_CC[m],  lb->sp_vol_CCLabel,  indx, patch);  
+      new_dw->allocateAndPut(sp_vol_CC[m],  lb->sp_vol_CCLabel,  indx, patch); 
+      new_dw->allocateAndPut(f_theta[m],    lb->f_theta_CCLabel, indx, patch);  
       new_dw->allocateAndPut(speedSound_new[m], lb->speedSound_CCLabel,
                                                                  indx, patch);
       cv[m] = matl->getSpecificHeat();
@@ -1240,9 +1234,12 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();
           iter++) {
+/*`==========TESTING==========*/
+// This might be wrong.  Try 1/sp_vol -- Todd 11/22
         rho_micro[m][*iter] = 
          ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma[m],cv[m],
-                                        Temp[m][*iter]); 
+                                        Temp[m][*iter]);  
+/*==========TESTING==========`*/
 
         ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
                                          cv[m], Temp[m][*iter],
@@ -1403,6 +1400,20 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     // therefore need the machinery here
     for (int m = 0; m < numMatls; m++)   {
       rho_CC_new[m].copyData(rho_CC[m]);
+    }
+
+    //__________________________________
+    //  compute f_theta  
+    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      double sumVolFrac_kappa = 0.0;
+      for (int m = 0; m < numMatls; m++) {
+        kappa[m] = sp_vol_CC[m][c]/(speedSound_new[m][c]*speedSound_new[m][c]);
+        sumVolFrac_kappa += vol_frac[m][c]*kappa[m];
+      }
+      for (int m = 0; m < numMatls; m++) {
+        f_theta[m][c] = vol_frac[m][c]*kappa[m]/sumVolFrac_kappa;
+      }
     }
 
    //---- P R I N T   D A T A ------   
@@ -2624,6 +2635,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::computeLagrangianSpecificVolume--
+              C U R R E N T   N O T   U S E D
+              canidate for the code attic
  ---------------------------------------------------------------------  */
 void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,  
                                           const PatchSubset* patches,
