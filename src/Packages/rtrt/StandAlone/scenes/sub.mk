@@ -19,6 +19,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/htvolumebrick.mo \
 	$(SRCDIR)/hvolumebrick16.mo \
 	$(SRCDIR)/hvolumebrickfloat.mo \
+	$(SRCDIR)/hvolume_uchar.mo \
 	$(SRCDIR)/flux.mo \
 	$(SRCDIR)/i3d.mo \
 	$(SRCDIR)/miphvb16.mo \
