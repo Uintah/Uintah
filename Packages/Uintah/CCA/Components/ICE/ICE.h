@@ -320,19 +320,13 @@ using namespace SCIRun;
 			      CCVariable<eflux>& r_out_y_CF,
 			      CCVariable<eflux>& r_out_z_CF);
       
-      void advectQFirst(const CCVariable<double>& q_CC,
+      template<class T> void advectQFirst(const CCVariable<T>& q_CC,
 			const Patch* patch,
 			const CCVariable<fflux>& OFS,
 			const CCVariable<eflux>& OFE,
 			const CCVariable<cflux>& OFC,
-			CCVariable<double>& q_advected);
-      
-      void advectQFirst(const CCVariable<Vector>& q_CC,
-			const Patch* patch,
-			const CCVariable<fflux>& OFS,
-			const CCVariable<eflux>& OFE,
-			const CCVariable<cflux>& OFC,
-			CCVariable<Vector>& q_advected);
+			CCVariable<T>& q_advected);
+
 
       void qOutfluxFirst(const CCVariable<double>& q_CC,const Patch* patch,
 			 CCVariable<fflux>& q_out,

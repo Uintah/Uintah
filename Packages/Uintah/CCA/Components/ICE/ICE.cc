@@ -3403,15 +3403,16 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>&     uvel_FC,
        
  advect_preprocessing MUST be done prior to this function
  ---------------------------------------------------------------------  */
-void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
-		       const CCVariable<fflux>&    OFS,
-		       const CCVariable<eflux>&    OFE,
-		       const CCVariable<cflux>&    OFC,
-		       CCVariable<double>&         q_advected)
+template <class T> void ICE::advectQFirst(const CCVariable<T>&   q_CC,
+					  const Patch* patch,
+					  const CCVariable<fflux>&    OFS,
+					  const CCVariable<eflux>&    OFE,
+					  const CCVariable<cflux>&    OFC,
+					  CCVariable<T>&    q_advected)
   
 {
-  double  sum_q_outflux, sum_q_outflux_EF, sum_q_outflux_CF, sum_q_influx;
-  double sum_q_influx_EF, sum_q_influx_CF;
+  T  sum_q_outflux, sum_q_outflux_EF, sum_q_outflux_CF, sum_q_influx;
+  T  sum_q_influx_EF, sum_q_influx_CF;
   IntVector adjcell;
   
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
@@ -3420,12 +3421,12 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
     int j = curcell.y();
     int k = curcell.z();
    
-    sum_q_outflux       = 0.0;
-    sum_q_outflux_EF    = 0.0;
-    sum_q_outflux_CF    = 0.0;
-    sum_q_influx        = 0.0;
-    sum_q_influx_EF     = 0.0;
-    sum_q_influx_CF     = 0.0;
+    sum_q_outflux      *= 0.0;
+    sum_q_outflux_EF   *= 0.0;
+    sum_q_outflux_CF   *= 0.0;
+    sum_q_influx       *= 0.0;
+    sum_q_influx_EF    *= 0.0;
+    sum_q_influx_CF    *= 0.0;
     
     //__________________________________
     //  OUTFLUX: SLAB 
@@ -3512,118 +3513,6 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
 
 }
 
-/* ---------------------------------------------------------------------
- Function~  ICE::advectQFirst-- Vector version*/
-void ICE::advectQFirst(const CCVariable<Vector>&   q_CC,const Patch* patch,
-		       const CCVariable<fflux>&    OFS,
-		       const CCVariable<eflux>&    OFE,
-		       const CCVariable<cflux>&    OFC,
-		       CCVariable<Vector>&         q_advected)
-  
-{
-  Vector  sum_q_outflux, sum_q_outflux_EF, sum_q_outflux_CF;
-  Vector  sum_q_influx,  sum_q_influx_EF,  sum_q_influx_CF;
-
-  IntVector adjcell;
-  Vector zero(0.,0.,0.);
-  
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-    IntVector curcell = *iter;
-    int i = curcell.x();
-    int j = curcell.y();
-    int k = curcell.z();
-
-    sum_q_outflux       = zero;
-    sum_q_outflux_EF    = zero;
-    sum_q_outflux_CF    = zero;
-    sum_q_influx        = zero;
-    sum_q_influx_EF     = zero;
-    sum_q_influx_CF     = zero;
-    
-    //__________________________________
-    //  OUTFLUX: SLAB 
-    for(int face = TOP; face <= BACK; face++ )  {
-      sum_q_outflux  += q_CC[*iter] * OFS[*iter].d_fflux[face];
-    }
-    //__________________________________
-    //  OUTFLUX: EDGE_FLUX
-    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )   {
-      sum_q_outflux_EF += q_CC[*iter] * OFE[*iter].d_eflux[edge];
-    }
-    //__________________________________
-    //  OUTFLUX: CORNER FLUX
-    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
-      sum_q_outflux_CF +=  q_CC[*iter] * OFC[*iter].d_cflux[corner];
-    } 
-
-
-    //__________________________________
-    //  INFLUX: SLABS
-    adjcell = IntVector(i, j+1, k);	// TOP
-    sum_q_influx  += q_CC[adjcell] * OFS[adjcell].d_fflux[BOTTOM];
-    adjcell = IntVector(i, j-1, k);	// BOTTOM
-    sum_q_influx  += q_CC[adjcell] * OFS[adjcell].d_fflux[TOP];
-    adjcell = IntVector(i+1, j, k);	// RIGHT
-    sum_q_influx  += q_CC[adjcell] * OFS[adjcell].d_fflux[LEFT];
-    adjcell = IntVector(i-1, j, k);	// LEFT
-    sum_q_influx  += q_CC[adjcell] * OFS[adjcell].d_fflux[RIGHT];
-    adjcell = IntVector(i, j, k+1);	// FRONT
-    sum_q_influx  += q_CC[adjcell] * OFS[adjcell].d_fflux[BACK];
-    adjcell = IntVector(i, j, k-1);	// BACK
-    sum_q_influx  += q_CC[adjcell] * OFS[adjcell].d_fflux[FRONT];
-    //__________________________________
-    //  INFLUX: EDGES
-    adjcell = IntVector(i+1, j+1, k);	// TOP_R
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[BOT_L];
-    adjcell = IntVector(i, j+1, k+1);   // TOP_FR
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[BOT_BK];
-    adjcell = IntVector(i-1, j+1, k);	// TOP_L
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[BOT_R];
-    adjcell = IntVector(i, j+1, k-1);	// TOP_BK
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[BOT_FR];
-    adjcell = IntVector(i+1, j-1, k);	// BOT_R
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[TOP_L];
-    adjcell = IntVector(i, j-1, k+1);	// BOT_FR
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[TOP_BK];
-    adjcell = IntVector(i-1, j-1, k);	// BOT_L
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[TOP_R];
-    adjcell = IntVector(i, j-1, k-1);	// BOT_BK
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[TOP_FR];
-    adjcell = IntVector(i+1, j, k-1);	// RIGHT_BK
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[LEFT_FR];
-    adjcell = IntVector(i+1, j, k+1);	// RIGHT_FR
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[LEFT_BK];
-    adjcell = IntVector(i-1, j, k-1);	// LEFT_BK
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[RIGHT_FR];
-    adjcell = IntVector(i-1, j, k+1);	// LEFT_FR
-    sum_q_influx_EF += q_CC[adjcell] * OFE[adjcell].d_eflux[RIGHT_BK];
-
-    //__________________________________
-    //   INFLUX: CORNER FLUX
-    adjcell = IntVector(i+1, j+1, k-1);	// TOP_R_BK
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[BOT_L_FR];
-    adjcell = IntVector(i+1, j+1, k+1);	// TOP_R_FR
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[BOT_L_BK];
-    adjcell = IntVector(i-1, j+1, k-1);	// TOP_L_BK
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[BOT_R_FR];
-    adjcell = IntVector(i-1, j+1, k+1);	// TOP_L_FR
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[BOT_R_BK];
-    adjcell = IntVector(i+1, j-1, k-1);	// BOT_R_BK
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[TOP_L_FR];
-    adjcell = IntVector(i+1, j-1, k+1);	// BOT_R_FR
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[TOP_L_BK];
-    adjcell = IntVector(i-1, j-1, k-1); // BOT_L_BK
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[TOP_R_FR];
-    adjcell = IntVector(i-1, j-1, k+1);	// BOT_L_FR
-    sum_q_influx_CF += q_CC[adjcell] * OFC[adjcell].d_cflux[TOP_R_BK];
-
-    //__________________________________
-    //  Calculate the advected q at t + delta t
-    q_advected[*iter] = - sum_q_outflux - sum_q_outflux_EF - sum_q_outflux_CF
-                        + sum_q_influx  + sum_q_influx_EF  + sum_q_influx_CF;
-
-  }
-}
 
 /*---------------------------------------------------------------------
  Function~  ICE::qOutfluxFirst-- 
