@@ -1,0 +1,6 @@
+
+package PingPong {
+    interface PingPong {
+	int pingpong(in int test);
+    };
+};

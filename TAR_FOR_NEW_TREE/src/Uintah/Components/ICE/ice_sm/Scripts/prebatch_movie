@@ -1,0 +1,32 @@
+#
+# Runs Preplot on TECFL'XX' on the range $1 <= 'XX' <= $end.
+#
+if ($1 == 0  || $2 == 0 ) goto err
+if ($1 == '' || $2 == '') goto err
+ 
+@ n = $1
+ 
+ while ($1 <= $n && $n <= $2)
+ #while (1 <= $n && $n <= 96) 
+
+
+  if ($n < 10) then
+    set tec = 'tecfl0'
+  else
+    set tec = 'tecfl'
+  endif
+ 
+ echo 'doing '$tec$n
+ preplot6 $tec$n
+ 
+# /usr/bin/rm $tec$n
+ 
+ @ n++
+ 
+end
+exit 0
+err:
+  echo 'usage: '$0' $1 $2, where $1 is the first dump,'
+  echo '                          and $2 is the last dump,'
+  echo '                        excluding the leading zeros.'
+  exit 1
