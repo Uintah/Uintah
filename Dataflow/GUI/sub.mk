@@ -78,7 +78,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/ScaledBoxWidget.tcl \
 	$(SRCDIR)/ScaledFrameWidget.tcl \
-	$(SRCDIR)/SeedField.tcl \
+	$(SRCDIR)/SampleField.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
