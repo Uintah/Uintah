@@ -2,7 +2,7 @@
 #ifndef Uintah_Components_Arches_Filter_h
 #define Uintah_Components_Arches_Filter_h
 
-#include <sci_defs.h>
+#include <sci_defs/petsc_defs.h>
 
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
