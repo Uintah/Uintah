@@ -20,6 +20,7 @@
 
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/Handle.h>
 
 #include <SCICore/Datatypes/Surface.h>
 #include <SCICore/Geometry/Point.h>
@@ -36,13 +37,14 @@ namespace GeomSpace {
 namespace Datatypes {
 
 using Containers::LockingHandle;
+using Containers::Handle;
 using Geometry::Vector;
 using Geometry::Point;
 using GeomSpace::GeomGroup;
 using Containers::HashTable;
 
 struct Node;
-typedef LockingHandle<Node> NodeHandle;
+typedef Handle<Node> NodeHandle;
 
 #define STORE_ELEMENT_BASIS
 
@@ -85,8 +87,10 @@ struct DirichletBC {
     DirichletBC(const SurfaceHandle&, double);
 };
 
-struct Node : public Datatype {
+struct Node : public Persistent {
+//struct Node {
     Point p;
+    int ref_cnt;
     Node(const Point&);
     Array1<int> elems;
 
@@ -233,6 +237,13 @@ void Pio(Piostream& stream, ElementVersion1& node);
 
 //
 // $Log$
+// Revision 1.5  2000/02/02 22:07:11  dmw
+// Handle - added detach and Pio
+// TrivialAllocator - fixed mis-allignment problem in alloc()
+// Mesh - changed Nodes from LockingHandle to Handle so we won't run out
+// 	of locks for semaphores when building big meshes
+// Surface - just had to change the forward declaration of node
+//
 // Revision 1.4  1999/09/05 05:32:27  dmw
 // updated and added Modules from old tree to new
 //
