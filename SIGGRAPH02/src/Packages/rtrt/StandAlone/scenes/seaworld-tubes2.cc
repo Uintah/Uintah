@@ -102,7 +102,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
-  Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.004, 400.0, Color(.97, .98, 1), Color(1,1,1), false, 1);
+  Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.0, 400.0, Color(.97, .98, 1), Color(1,1,1), false, 1);
   Material* air_bubble     = new DielectricMaterial(1.0, 1.1, 0.004, 400.0, Color(1, 1, 1), Color(1.01,1.01,1.01), false);
 //  Material* water_to_glass   = new PhongMaterial(Color(.5, .5, .5), .2, 0.8, 20, true); 
 //  Material* water_to_glass   = new InvisibleMaterial(); 
@@ -302,7 +302,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   ruins->add(new Box(seawhite, Point(7.3,-15.5,-1.5), Point(19.5,-3.3,0)));
   ruins->add(new Box(seawhite, Point(-23.3,-25.5,-1.5), Point(-3.5,-3.5,0)));
-  
   
   Array1<Material *> matls;
   string env_map;
@@ -558,7 +557,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.16, .06, .06));
   //t3.pre_rotate(-.8, Vector(0, 0, 1));
-  t3.pre_translate(Vector(-1, -18.6, 1.3));
+  t3.pre_translate(Vector(1, -15.6, 1.3));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
                    t3, patch5))
@@ -649,7 +648,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_rotate(M_PI / 2.0 , Vector(1, 0, 0));
   t3.pre_scale(Vector(4.5, 4.5, 4.5));
-  t3.pre_translate(Vector(3, -25, 0));
+  t3.pre_translate(Vector(4, -30, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.mtl",
                    t3, temple2))
@@ -666,7 +665,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     exit(-1);
  
   /**********************************************************************/
-  // iceberg1
+/*  // iceberg1
   t3.load_identity();
   t3.pre_scale(Vector(.3, .3, .3));
   t3.pre_translate(Vector(-60, 30, 0));
@@ -674,12 +673,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
                    t3, iceberg))
     exit(-1);
-
+*/
   /**********************************************************************/
   // iceberg2
   t3.load_identity();
-  t3.pre_scale(Vector(.3, .3, .3));
-  t3.pre_translate(Vector(30, -40, 0));
+  t3.pre_scale(Vector(1.4, .5, .9));
+  t3.pre_translate(Vector(0, -70, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
                    t3, iceberg2))
@@ -987,10 +986,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   all_tubes->add(temp);  
   //  all_tubes->add(new HierarchicalGrid (rock4, 20, 6, 6, 10, 10, 4));
 
-  temp = new Grid (iceberg, 40);
+/*  temp = new Grid (iceberg, 40);
   temp->set_name("iceberg");
   all_tubes->add(temp);  
-
+*/
   temp = new Grid (iceberg2, 40);
   temp->set_name("iceberg2");
   all_tubes->add(temp);  
@@ -1061,9 +1060,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->addObjectOfInterest(TVI10, true);
   scene->addObjectOfInterest(tan, true);
   scene->addObjectOfInterest(seawhite, true);
-  
-  
 
+  
   bubbles->set_name("bubbles");
 
   scene->select_shadow_mode( Hard_Shadows );
