@@ -63,6 +63,8 @@ public:
   SearchGridBase(unsigned int x, unsigned int y, unsigned int z,
 		 const Transform &t);
 
+  virtual ~SearchGridBase() {}
+  
   //! get the mesh statistics
   unsigned get_ni() const { return ni_; }
   unsigned get_nj() const { return nj_; }
