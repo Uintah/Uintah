@@ -302,6 +302,9 @@ private:
   std::vector<XMLURL> d_tsurl;
   TimeHashMaps* d_varHashMaps;
   
+  typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
+  psetDBType d_psetDB;
+ 
   // if used, different processors read different parts of the archive
   int d_processor;
   int d_numProcessors;

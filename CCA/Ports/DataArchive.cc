@@ -320,9 +320,18 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
     int numParticles;
     if(!get(vnode, "numParticles", numParticles))
       throw InternalError("Cannot get numParticles");
-    ParticleSubset* psubset = scinew
-      ParticleSubset(scinew ParticleSet(numParticles), true,
-		     matlIndex, patch);
+    psetDBType::key_type key(matlIndex, patch);
+    ParticleSubset* psubset = 0;
+    psetDBType::iterator psetIter = d_psetDB.find(key);
+    if(psetIter != d_psetDB.end()) {
+      psubset = (*psetIter).second;
+    }
+    if (psubset == 0 || psubset->numParticles() != numParticles)
+    {
+     d_psetDB[key] = psubset =
+       scinew ParticleSubset(scinew ParticleSet(numParticles), true,
+			     matlIndex, patch);
+    }
     (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
   else if (td->getType() != TypeDescription::ReductionVariable)
@@ -534,11 +543,15 @@ DataArchive::initVariable(const Patch* patch,
   ParticleVariableBase* particles;
   if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
     if (!dw->haveParticleSubset(matl, patch)) {
-      int numParticles = particles->getParticleSubset()->numParticles(); 
-      dw->createParticleSubset(numParticles, matl, patch);
+      dw->saveParticleSubset(matl, patch, particles->getParticleSubset());
+    }
+    else {
+      ASSERTEQ(dw->getParticleSubset(matl, patch),
+	       particles->getParticleSubset());
     }
   }
 
+  var->setAllocationLabel(label);
   dw->put(var, label, matl, patch);
 }
 
