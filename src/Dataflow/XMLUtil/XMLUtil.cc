@@ -16,6 +16,7 @@
 */
 
 
+#include <Core/Util/notset.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -29,8 +30,6 @@
 using namespace std;
 
 namespace SCIRun {
-
-const char _NOTSET_[] = "(null string)";
 
 static void postMessage(const string& errmsg)
 {
@@ -597,43 +596,6 @@ char* getSerializedChildren(DOM_Node& d)
   }
   
   return fullstring;
-}
-
-char* removeWhiteSpace(char* string)
-{
-  char* newstring = 0;
-  int index1 = 0, index2 = 0;
-
-  index2 = strlen(string)-1;
-
-  newstring = new char[index2+2];
-  newstring[0] = '\0';
-
-  while ((index1<=index2) &&
-	 (string[index1]==' '||
-	  string[index1]=='\t' ||
-	  string[index1]=='\n' ||
-	  string[index1]=='\r')) index1++;
-
-  while ((index2>=index1) &&
-	 (string[index2]==' '||
-	  string[index2]=='\t' ||
-	  string[index2]=='\n' ||
-	  string[index2]=='\r')) index2--;
-
-  if (index1>index2) {
-    delete [] string;
-    return NOT_SET;
-  }
-
-  string[index2+1]='\0';
-  sprintf(newstring,"%s",&string[index1]);
-
-  sprintf(string,"%s",newstring);
-
-  delete[] newstring;
-
-  return string;
 }
 
 string xmlto_string(const DOMString& str)
