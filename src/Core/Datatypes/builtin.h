@@ -32,6 +32,8 @@
 #define builtin_h
 
 #include <Core/Datatypes/TypeName.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/share/share.h>
 
 namespace SCIRun {
 

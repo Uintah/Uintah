@@ -34,6 +34,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
+#include <Core/share/share.h>
 #include <string>
 
 namespace SCIRun {
