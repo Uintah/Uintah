@@ -114,11 +114,11 @@ main(int argc, char **argv) {
     exit(0);
   }
   if (header) fprintf(fTxt, "%d\n", size);
-  double alpha;
+  //double alpha;
   for (int c=0; c<size; c++) {
     double t=c*1./(size-1.);
     Color clr = handle->FindColor(t);
-    double alpha = handle->FindAlpha(t);
+    const double alpha = handle->FindAlpha(t);
     fprintf(fTxt, "%lf %lf %lf %lf %lf\n", clr.r(), clr.g(), clr.b(), alpha, t);
   }
   fclose(fTxt);

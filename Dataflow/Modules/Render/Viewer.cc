@@ -438,8 +438,9 @@ void Viewer::delete_patch_portnos(int portid)
       GeomIndexedGroup::IterIntGeomObj iter = pi->getIter();
       for (; iter.first != iter.second; iter.first++)
       {
-	GeomViewerItem* si;
-	if (si = dynamic_cast<GeomViewerItem*>((*iter.first).second.get_rep()))
+	GeomViewerItem* si = 
+	  dynamic_cast<GeomViewerItem*>((*iter.first).second.get_rep());
+	if (si)
 	{
 	  const string::size_type loc = si->getString().find_last_of('(');
 	  string newname =
