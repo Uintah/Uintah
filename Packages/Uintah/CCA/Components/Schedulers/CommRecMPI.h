@@ -74,7 +74,7 @@ public:
     : unpackHandler_(unpackHandler), batchHandler_(batchHandler)
   {}
 
-  ~ReceiveHandler()
+  virtual ~ReceiveHandler()
   { delete unpackHandler_; delete batchHandler_; }
 
   virtual void finishedCommunication(const ProcessorGroup * pg)
