@@ -17,25 +17,7 @@
 #include <Constraints/BaseConstraint.h>
 #include <Classlib/Debug.h>
 
-static DebugSwitch bc_debug1("BaseConstraint", "print");
-static DebugSwitch bc_debug2("BaseConstraint", "vars");
-static DebugSwitch bc_debug3("BaseConstraint", "cons");
-
-static DebugSwitch bc_debug21("BaseConstraint2", "print");
-static DebugSwitch bc_debug22("BaseConstraint2", "vars");
-static DebugSwitch bc_debug23("BaseConstraint2", "cons");
-
-static DebugSwitch bc_debug31("BaseConstraint3", "print");
-static DebugSwitch bc_debug32("BaseConstraint3", "vars");
-static DebugSwitch bc_debug33("BaseConstraint3", "cons");
-
-static DebugSwitch bc_debug41("BaseConstraint4", "print");
-static DebugSwitch bc_debug42("BaseConstraint4", "cons");
-
-static DebugSwitch bc_debug51("BaseConstraint5", "print");
-static DebugSwitch bc_debug52("BaseConstraint5", "vars");
-
-static DebugSwitch bc_debug6("Antidisestablishmentarianism", "dumb");
+static DebugSwitch bc_debug("BaseConstraint", "Print");
 
 static Index recursion=0;
 
@@ -118,20 +100,23 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
    Index index, index2;
    int reallynew = !(epsilonequal(Epsilon, value, newValue));
 
-   cout << "Recursion level = " << recursion++ << endl;
+   if (bc_debug) {
+      cout << "Recursion level = " << recursion++ << endl;
+      
+      cout << name << " S(" << levellevel << ")*";
+      for (index=0; index<level; index++)
+	 cout << " ";
+      cout << "*" << endl;
+      
+      cout << "Old value (" << (Point)value << ") " << (reallynew?"!=":"==")
+	   << " newValue (" << (Point)newValue << ").  Using Epsilon of ("
+	   << Epsilon << ")." << endl;
 
-   cout << name << " S(" << levellevel << ")*";
-   for (index=0; index<level; index++)
-      cout << " ";
-   cout << "*" << endl;
-
-   cout << "Old value (" << (Point)value << ") " << (reallynew?"!=":"==")
-	<< " newValue (" << (Point)newValue << ").  Using Epsilon of ("
-	<< Epsilon << ")." << endl;
-
+      cout << "LevelLevel is " << levellevel << " and Level is " << level << "." << endl;
+   }
+   
    value = newValue;
 
-   cout << "LevelLevel is " << levellevel << " and Level is " << level << "." << endl;
    if (++level == MaxDepth) {
       level = 0;
       if (++levellevel < numconstraints) {
@@ -144,7 +129,7 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
       }
       else {
 	 levellevel = level = 0;
-	 cerr << "Maximum recursion level reached for all constraints!" << endl;
+	 cerr << "Maximum level reached for all constraints!" << endl;
 	 cout << "Accepting current approximation." << endl;
 	 cout << "Recursion level = " << --recursion << endl;
 	 return;
@@ -160,13 +145,15 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
    }
    else
       level--;
-   
-   cout << name << " E(" << levellevel << ")*";
-   for (index=0; index<level; index++)
-      cout << " ";
-   cout << "*" << endl;
 
-   cout << "Recursion level = " << --recursion << endl;
+   if (bc_debug) {
+      cout << name << " E(" << levellevel << ")*";
+      for (index=0; index<level; index++)
+	 cout << " ";
+      cout << "*" << endl;
+      
+      cout << "Recursion level = " << --recursion << endl;
+   }
 }
 
 void

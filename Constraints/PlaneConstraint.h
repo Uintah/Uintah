@@ -24,7 +24,7 @@ public:
 		    const Index numSchemes,
 		    Variable* p,
 		    Variable* norm, Variable* offsetInX );
-   ~PlaneConstraint();
+   virtual ~PlaneConstraint();
 
 protected:
    virtual void Satisfy( const Index index, const Scheme scheme );

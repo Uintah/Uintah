@@ -14,6 +14,9 @@
 
 #include <Constraints/DistanceConstraint.h>
 #include <Geometry/Vector.h>
+#include <Classlib/Debug.h>
+
+static DebugSwitch dc_debug("BaseConstraint", "Distance");
 
 DistanceConstraint::DistanceConstraint( const clString& name,
 					const Index numSchemes,
@@ -43,8 +46,10 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
    Variable& v2 = *vars[2];
    Point temp;
 
-   ChooseChange(index, scheme);
-   printc(cout, scheme);
+   if (dc_debug) {
+      ChooseChange(index, scheme);
+      printc(cout, scheme);
+   }
    
    /* Q <- Sc + Sr * Normalize(P-Sc) */
    switch (ChooseChange(index, scheme)) {

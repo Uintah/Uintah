@@ -24,7 +24,7 @@ public:
 			 const Index numSchemes,
 			 Variable* dist1InX, Variable* dist2InX,
 			 Variable* hypoInX );
-   ~PythagorasConstraint();
+   virtual ~PythagorasConstraint();
    
 protected:
    virtual void Satisfy( const Index index, const Scheme scheme );

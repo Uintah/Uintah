@@ -14,6 +14,9 @@
 
 #include <Constraints/SegmentConstraint.h>
 #include <Geometry/Vector.h>
+#include <Classlib/Debug.h>
+
+static DebugSwitch sc_debug("BaseConstraint", "Segment");
 
 SegmentConstraint::SegmentConstraint( const clString& name,
 				      const Index numSchemes,
@@ -30,6 +33,10 @@ SegmentConstraint::SegmentConstraint( const clString& name,
    Register();
 };
 
+SegmentConstraint::~SegmentConstraint()
+{
+}
+
 
 void
 SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
@@ -41,8 +48,10 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
    double t;
    Point p;
 
-   ChooseChange(index, scheme);
-   print();
+   if (sc_debug) {
+      ChooseChange(index, scheme);
+      print();
+   }
    
    switch (ChooseChange(index, scheme)) {
    case 0:

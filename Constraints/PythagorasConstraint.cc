@@ -13,7 +13,9 @@
 
 
 #include <Constraints/PythagorasConstraint.h>
+#include <Classlib/Debug.h>
 
+static DebugSwitch pc_debug("BaseConstraint", "Pythagoras");
 
 PythagorasConstraint::PythagorasConstraint( const clString& name,
 					    const Index numSchemes,
@@ -30,6 +32,10 @@ PythagorasConstraint::PythagorasConstraint( const clString& name,
    Register();
 };
 
+PythagorasConstraint::~PythagorasConstraint()
+{
+}
+
 
 void
 PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
@@ -38,9 +44,11 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
    Point temp;
-   
-   ChooseChange(index, scheme);
-   print();
+
+   if (pc_debug) {
+      ChooseChange(index, scheme);
+      print();
+   }
    
    /* A^2 + B^2 = C^2 */
    switch (ChooseChange(index, scheme)) {

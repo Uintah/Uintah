@@ -14,6 +14,9 @@
 
 #include <Constraints/LineConstraint.h>
 #include <Geometry/Vector.h>
+#include <Classlib/Debug.h>
+
+static DebugSwitch lc_debug("BaseConstraint", "Line");
 
 LineConstraint::LineConstraint( const clString& name,
 				const Index numSchemes,
@@ -30,6 +33,10 @@ LineConstraint::LineConstraint( const clString& name,
    Register();
 };
 
+LineConstraint::~LineConstraint()
+{
+}
+
 
 void
 LineConstraint::Satisfy( const Index index, const Scheme scheme )
@@ -40,8 +47,10 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme )
    Vector norm;
    double t;
 
-   ChooseChange(index, scheme);
-   print();
+   if (lc_debug) {
+      ChooseChange(index, scheme);
+      print();
+   }
    
    switch (ChooseChange(index, scheme)) {
    case 0:
