@@ -271,7 +271,7 @@ void ArchesTable::setup()
   vector<InterpAxis*> in_axes(nvars);
   long stride = axis_sizes[0];
   in_axes[0] = 0;
-  for(int i=1;i<nvars;i++){
+  for(int i=nvars-1;i>=1;i--){
     in_axes[i] = new InterpAxis(axis_sizes[i], stride);
     stride *= axis_sizes[i];
   }
@@ -468,6 +468,7 @@ void ArchesTable::setup()
 	  w[j] *= w1;
 	}
       }
+      s<<=1;
     }
 
     // Interpolate...
@@ -545,7 +546,7 @@ void ArchesTable::checkAxes(const vector<InterpAxis*>& a,
 }
 
 void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
-                      double* data, int size)
+                           double* data, int size)
 {
   switch(expr->op){
   case '+':
