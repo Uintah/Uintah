@@ -385,7 +385,11 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     method swatch_save {} {
         global $this-filename
         set curdir [pwd]
-        set path [netedit getenv HOME]
+        set path "[netedit getenv HOME]/SCIRun"
+	if { ! [file isdirectory $path] } {
+	    file mkdir $path
+	}
+	
         set numPPM 0
        
         cd $path
