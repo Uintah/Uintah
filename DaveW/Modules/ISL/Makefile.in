@@ -2,7 +2,8 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = Downhill_Simplex.cc OptDip.cc SGI_LU.cc SGI_Solve.cc
+SRCS     = Downhill_Simplex.cc LeastSquaresFit.cc OptDip.cc \
+	   SGI_LU.cc SGI_Solve.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 

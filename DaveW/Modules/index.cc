@@ -48,6 +48,7 @@ MP(VecSplit)
 
 // ISL
 MP(Downhill_Simplex)
+MP(LeastSquaresSolve)
 MP(OptDip)
 MP(SGI_LU)
 MP(SGI_Solve)
@@ -136,6 +137,7 @@ void initPackage(const clString& tcl) {
   
   // ISL
   RM("ISL",	      "Downhill_Simplex",	 make_Downhill_Simplex,	    tcl+"/Downhill_Simplex.tcl");
+  RM("ISL",	      "LeastSquaresSolve",	 make_LeastSquaresSolve,    "");
   RM("ISL",	      "OptDip",			 make_OptDip,	   	    tcl+"/OptDip.tcl");
   RM("ISL",	      "SGI_Solve",		 make_SGI_Solve,	    tcl+"/SGI_Solve.tcl");
   RM("ISL",	      "SGI_LU",			 make_SGI_LU,		    tcl+"/SGI_LU.tcl");
