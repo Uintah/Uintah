@@ -392,8 +392,9 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
 		    bool do_verbose, float radius, float radius_factor) {
   AuditDefaultAllocator();
   if (debug) cerr << "Start of append_spheres\n";
-  SphereData sphere_data;
   if (debug) cerr << "Size of material_data_list = " << material_data_list.size() << "\n";
+  if (material_data_list.size() <= 0)
+    return;
   //--------------------------------------------------
   // set up the first min/max
   // and determine number of particles and variables
@@ -469,6 +470,7 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
   
   //---------
   // allocate memory for particle data
+  SphereData sphere_data;
   sphere_data.data = (float*)malloc(num_variables*num_particles*sizeof(float));
   //	    if (do_verbose)
   //cerr << "---Extracting data and writing it out  ";
@@ -654,9 +656,10 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
   int numvars = data_group[0].numvars;
   float radius = 0;
   for (int i = 0; i < data_group.size(); i++) {
+    if (debug) cerr << "data_group[" << i << "].numvars = " << data_group[i].numvars << endl;
     total_spheres += data_group[i].nspheres;
     if (numvars != data_group[i].numvars) {
-      cerr << "numvars does not match: Goodbye!\n";
+      cerr << "numvars does not match: numvars = " << numvars << ", data_group[i].numvars = " << data_group[i].numvars << " Goodbye!\n";
       abort();
     }
     radius += data_group[i].radius;
@@ -1028,8 +1031,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		  iter != material_data_list.end();) {
 	      MaterialData md = *iter;
 	      ParticleSubset* pset = md.p_x.getParticleSubset();
-	      if (!pset) {
-		if (do_verbose) cerr << "No particle location variable found for material " << md.material_index << "\n";
+	      if (debug) cerr << "numParticles = " << pset->numParticles() << endl;
+	      if ((pset == NULL) || (pset->numParticles() <= 0)) {
+		if (do_verbose) cerr << "No particle location variable found or no particles exist for material" << md.material_index << " over patch " << patch->getID() << "\n";
 		iter = material_data_list.erase(iter);
 		if (do_verbose) cerr << "Size of material_data_list is " << material_data_list.size() << endl;
 	      } else {
