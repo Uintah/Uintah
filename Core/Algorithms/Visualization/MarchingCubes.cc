@@ -54,7 +54,8 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
   } else if (sname.find("TetVolField") != string::npos) {
     subname.append("TetMC<" + td->get_name() + "> ");
     subinc.append(TetMCBase::get_h_file_path());
-  } else if (sname.find("HexVolField") != string::npos) {
+  } else if (sname.find("HexVolField") != string::npos ||
+	     sname.find("StructHexVolField") != string::npos) {
     subname.append("UHexMC<" + td->get_name() + "> ");
     subinc.append(UHexMCBase::get_h_file_path());
   } else {
