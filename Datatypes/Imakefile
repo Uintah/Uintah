@@ -1,7 +1,7 @@
 
 #include <config/sci.cf>
 
-OBJS = BasicSurfaces.o  ColorMap.o  ColorMapPort.o  \
+OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	ColumnMatrix.o  ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  Image.o  ImagePort.o Interval.o IntervalPort.o \
@@ -18,10 +18,11 @@ OBJS = BasicSurfaces.o  ColorMap.o  ColorMapPort.o  \
 	Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  VectorFieldOcean.o \
-	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
 	VectorFieldZone.o LockArray3.o \
-        \
-	VoidStar.o  VoidStarPort.o
+	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
+        HexMesh.o HexMeshPort.o  ScalarFieldHUG.o VectorFieldHUG.o \
+	VoidStar.o  VoidStarPort.o  \
+	ssmult.o
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc
 SRCS = $(GENSRCS) BasicSurfaces.cc  \
@@ -44,6 +45,7 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	TriDiagonalMatrix.cc TriSurface.cc \
 	VectorField.cc  VectorFieldOcean.cc \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
+        HexMesh.cc HexMeshPort.cc ScalarFieldHUG.cc VectorFieldHUG.cc \
 	LockArray3.cc \
 	VectorFieldZone.cc
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \

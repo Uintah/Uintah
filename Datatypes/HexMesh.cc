@@ -249,7 +249,7 @@ void HexFace::calc_face (HexMesh * m)
   if (d < 0)
   {
     my_normal *= -1.0; 
-    d *= -1.0;
+    my_d *= -1.0;
   } 
         
 }

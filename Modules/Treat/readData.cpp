@@ -10,7 +10,7 @@
 int Node::numberOfBCS = 0;
 
 int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
-	     Property &propertyList ) {
+	     Property &propertyList, char* sarcname ) {
   
 // returns 0 on error
 
@@ -82,8 +82,9 @@ int readData(Array1<Node*> &nodeList, Array1<Element*> &elementList,
   // read in SARCF file ########################
 
   cout << "SARCF file..." << endl;
-  fin.open("SARCF");
+  fin.open(sarcname);
   if (!fin) {
+      cout << sarcname << "\n";
     cout << "Unable to open SARCF for reading.\n";
     return(0);
   }

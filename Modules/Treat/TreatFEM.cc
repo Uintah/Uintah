@@ -37,6 +37,9 @@ public:
     virtual ~TreatFEM();
     virtual Module* clone(int deep);
     virtual void execute();
+    clString sarcfile;
+    HexMeshHandle hexmesh;
+    virtual void tcl_command(TCLArgs& args, void* userdata);
 };
 
 extern "C" {
@@ -64,6 +67,7 @@ TreatFEM::TreatFEM(const clString& id)
     add_oport(outpower);
     outvfield=new VectorFieldOPort(this, "Velocity", VectorFieldIPort::Atomic);
     add_oport(outvfield);
+    sarcfile="SARCF";
 }
 
 TreatFEM::TreatFEM(const TreatFEM& copy, int deep)
@@ -114,15 +118,16 @@ void TreatFEM::execute()
   // ----------------------------------------------------------
 
   cerr << "Reading Data Files " << endl;
-  if (!readData(nodeList, elementList, propertyList)) {
+  if (!readData(nodeList, elementList, propertyList, sarcfile())) {
     cout << "Error in reading data files. Exiting program." << endl;
     exit(1);
   } else {
     cout << "All data files read successfully." << endl;
   }
 
+  if(!hexmesh.get_rep()){
   cout << "Creating HexMesh data structure" << endl;
-  HexMesh* hexmesh=new HexMesh;
+  hexmesh=new HexMesh;
   for(i=0;i<nodeList.size();i++){
       Node* n=nodeList[i];
       hexmesh->add_node(n->getNum(), n->getX(), n->getY(), n->getZ());
@@ -140,8 +145,11 @@ void TreatFEM::execute()
       e.index[7]=in->getNode(7)->getNum();
       hexmesh->add_element(i+1, e);
   }
+  hexmesh->finish();
+  }
+
   outmesh->send(hexmesh);
-  ScalarFieldHUG* pfield=new ScalarFieldHUG(hexmesh);
+  ScalarFieldHUG* pfield=new ScalarFieldHUG(hexmesh.get_rep());
   pfield->data.resize(nodeList.size()+1);
   for (i=0;i<nodeList.size();i++) {
       pfield->data[nodeList[i]->getNum()]=nodeList[i]->getSarc();
@@ -286,10 +294,10 @@ void TreatFEM::execute()
 
   cout << "\n\nDone with FEM " << endl;
 
-  ScalarFieldHUG* field=new ScalarFieldHUG(hexmesh);
+  ScalarFieldHUG* field=new ScalarFieldHUG(hexmesh.get_rep());
   field->data.resize(nodeList.size()+1);
   for (i=0;i<nodeList.size();i++) {
-      field->data[i+1]=nodeList[i]->getTemp();
+      field->data[nodeList[i]->getNum()]=nodeList[i]->getTemp();
   }
   outfield->send(field);
 
@@ -467,4 +475,18 @@ bool SparseMatrix::solveSCIRun(TreatFEM* module) {
   }
   scirun_rhs->put_lhs(old_data);
   return true;
+}
+
+void TreatFEM::tcl_command(TCLArgs& args, void* userdata)
+{
+    if(args.count() < 2)
+        {
+            args.error("Coregister needs a minor command");
+            return;
+        }
+    if(args[1] == "sarc") {
+	
+    } else {
+	Module::tcl_command(args, userdata);
+    }
 }

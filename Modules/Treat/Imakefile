@@ -3,7 +3,7 @@
 
 OBJS = TreatFEM.o  property.o   element.o   sparseMatrix.o   \
 	readData.o   block.o
-SRCS = TreatFEM.cc property.cpp element.cpp sparseMatirx.cpp \
+SRCS = TreatFEM.cc property.cpp element.cpp sparseMatrix.cpp \
 	readData.cpp block.cpp
 
 LIBNAME = Treat

@@ -231,6 +231,9 @@ new GeomGrid(1280/downsample, 896/downsample,
     }
   }
   return grid;
+#else
+  return 0;
+#endif
 }
 
 void VectorFieldOcean::get_boundary_lines(Array1<Point>& lines)
