@@ -119,7 +119,7 @@ GenFunction& GenFunction::operator=(const GenFunction& copy){
 
 void GenFunction::set_funcs(const StrV& ss, int dd){
      
-  unsigned int dims=ss.size();
+  unsigned int dims=(unsigned int)ss.size();
   int fdims=0;
     
   ASSERT(ss.size()>0 && ss.size()>=dims);
