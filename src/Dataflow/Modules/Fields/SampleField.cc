@@ -286,9 +286,9 @@ SampleField::execute_rake(FieldHandle ifield)
     endpoint1_ = Point(gui_endpoint1x_.get(),gui_endpoint1y_.get(),gui_endpoint1z_.get()); 
 
     if (rake_) {
+      rake_->SetScale(gui_widgetscale_.get()); // do first, widget_moved resets
       rake_->SetEndpoints(endpoint0_, endpoint1_);
       rake_->SetRatio(1/16.0);
-      rake_->SetScale(gui_widgetscale_.get());
       if (wtype_ == 1) { ogport_->flushViews(); }
     }
 
@@ -299,8 +299,8 @@ SampleField::execute_rake(FieldHandle ifield)
   if (!rake_) {
     rake_ = scinew GaugeWidget(this, &gui_widget_lock_, gui_widgetscale_.get(), true);
     rake_->Connect(ogport_);
+    rake_->SetScale(gui_widgetscale_.get()); // do first, widget_moved resets
     rake_->SetEndpoints(endpoint0_,endpoint1_);
-    rake_->SetScale(gui_widgetscale_.get());
     rake_->SetRatio(1/16.0);
   }
 
@@ -405,9 +405,9 @@ SampleField::execute_ring(FieldHandle ifield)
     ns = (s * scale).length() / sqrt(3.0);
 
     // Apply the new coordinates.
+    ring_->SetScale(ns); // do first, widget_moved resets
     ring_->SetPosition(nc, nn, nr);
     ring_->SetRadius(nr);
-    ring_->SetScale(ns);
     gui_widgetscale_.set(ns);
 
     ring_bbox_ = ibox;
@@ -507,8 +507,8 @@ SampleField::execute_frame(FieldHandle ifield)
     ns = (s * scale).length() / sqrt(3.0);
 
     // Apply the new coordinates.
+    frame_->SetScale(ns); // do first, widget_moved resets
     frame_->SetPosition(nc, nr, nd);
-    frame_->SetScale(ns);
     gui_widgetscale_.set(ns);
 
     frame_bbox_ = ibox;
