@@ -9,6 +9,7 @@
 
 using namespace Uintah;
 using namespace std;
+using namespace SCIRun;
 
 extern Mutex varLock;
 

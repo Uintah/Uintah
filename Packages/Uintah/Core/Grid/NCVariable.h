@@ -8,14 +8,13 @@
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Exceptions/ErrnoException.h>
+#include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
 #include <unistd.h>
-#include <errno.h>
 
 namespace Uintah {
 

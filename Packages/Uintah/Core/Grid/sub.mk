@@ -5,7 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Core/Grid
 
 SRCS     += \
-	$(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
+	$(SRCDIR)/Box.cc \
 	$(SRCDIR)/BufferInfo.cc $(SRCDIR)/PackBufferInfo.cc \
 	$(SRCDIR)/CellIterator.cc $(SRCDIR)/CCVariableBase.cc \
 	$(SRCDIR)/SFCXVariableBase.cc $(SRCDIR)/SFCYVariableBase.cc \
@@ -19,7 +19,7 @@ SRCS     += \
 	$(SRCDIR)/ReductionVariable_special.cc \
 	$(SRCDIR)/Patch.cc \
 	$(SRCDIR)/SimulationState.cc \
-	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubPatch.cc \
+	$(SRCDIR)/SimulationTime.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc \
 	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/templates.cc $(SRCDIR)/PerPatchBase.cc \
