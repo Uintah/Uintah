@@ -40,7 +40,8 @@ SimpleRxn::SimpleRxn(const ProcessorGroup* myworld,
   : ModelInterface(myworld), params(params)
 {
   d_matl_set = 0;
-  lb = scinew ICELabel();
+  lb  = scinew ICELabel();
+  Slb = scinew SimpleRxnLabel();
 }
 
 //__________________________________
@@ -49,11 +50,13 @@ SimpleRxn::~SimpleRxn()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
-  delete lb;
-    
+  
   VarLabel::destroy(d_scalar->scalar_CCLabel);
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
+  VarLabel::destroy(Slb->lastProbeDumpTimeLabel);
+  delete lb;
+  delete Slb;
   
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                 iter != d_scalar->regions.end(); iter++){
@@ -112,7 +115,9 @@ if (!oldStyleAdvect.active()){
   d_scalar->diffusionCoefLabel = VarLabel::create("scalar-diffCoef",td_CCdouble);
   d_scalar->scalar_source_CCLabel = 
                                  VarLabel::create("scalar-f_src",  td_CCdouble);
-
+  Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
+                                            max_vartype::getTypeDescription());
+  
   d_modelComputesThermoTransportProps = true;
   
   setup->registerTransportedVariable(d_matl_set->getSubset(0),
@@ -188,7 +193,6 @@ if (!oldStyleAdvect.active()){
   ProblemSpecP probe_ps = child->findBlock("probePoints");
   if (probe_ps) {
     probe_ps->require("probeSamplingFreq", d_probeFreq);
-    d_oldProbeDumpTime = -1.0/d_probeFreq;
      
     Vector location = Vector(0,0,0);
     map<string,string> attr;                    
@@ -224,6 +228,7 @@ void SimpleRxn::scheduleInitialize(SchedulerP& sched,
   t->modifies(lb->press_CCLabel);
   
   t->computes(d_scalar->scalar_CCLabel);
+  t->computes(Slb->lastProbeDumpTimeLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -307,7 +312,8 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     } // Over cells
 
     //__________________________________
-    //  Dump out a header to the probe point files
+    //  Dump out a header for the probe point files
+    new_dw->put(max_vartype(0.0), Slb->lastProbeDumpTimeLabel);
     if (d_usingProbePts){
       FILE *fp;
       IntVector cell;
@@ -469,6 +475,12 @@ void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->modifies(mi->momentum_source_CCLabel);
   t->modifies(mi->energy_source_CCLabel);
   t->modifies(d_scalar->scalar_source_CCLabel);
+  //__________________________________
+  //  if dumping out probePts
+  if (d_usingProbePts){
+    t->requires(Task::OldDW, Slb->lastProbeDumpTimeLabel);
+    t->computes(Slb->lastProbeDumpTimeLabel);
+  }
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -512,6 +524,7 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
     double fuzzyZero = 0.0 - 1e10;
     int     numCells = 0, sum = 0;
     double f_stoic= d_scalar->f_stoic;
+
     //__________________________________   
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -564,28 +577,37 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
                               placeHolder, placeHolder,  f_old,
                               f_src, diff_coeff, delT);
     }
+
+
     //__________________________________
     //  dump out the probe points
-    if (d_usingProbePts){
-      double time = d_dataArchiver->getCurrentTime();
-      double nextDumpTime = d_oldProbeDumpTime + 1.0/d_probeFreq;
+    if (d_usingProbePts ) {
       
-      if ( time >= nextDumpTime) {
-        d_oldProbeDumpTime = time;
+      max_vartype lastDumpTime;
+      old_dw->get(lastDumpTime, Slb->lastProbeDumpTimeLabel);
+      double oldProbeDumpTime = lastDumpTime;
+      
+      double time = d_dataArchiver->getCurrentTime();
+      double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
+      
+      if (time >= nextDumpTime){        // is it time to dump the points
         FILE *fp;
         string udaDir = d_dataArchiver->getOutputLocation();
         IntVector cell_indx;
-
+        
+        // loop through all the points and dump if that patch contains them
         for (unsigned int i =0 ; i < d_probePts.size(); i++) {
-           if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
-             string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
-             fp = fopen(filename.c_str(), "a");
-             fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
-             fclose(fp);
+          if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
+            string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
+            fp = fopen(filename.c_str(), "a");
+            fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+            fclose(fp);
           }
-        }  // loop over probe pts
-      }  // if(time to dump)
-    } // if(probePts) 
+        }
+        oldProbeDumpTime = time;
+      }  // time to dump
+      new_dw->put(max_vartype(oldProbeDumpTime), Slb->lastProbeDumpTimeLabel);
+    } // if(probePts)  
   }
 }
 //__________________________________      
