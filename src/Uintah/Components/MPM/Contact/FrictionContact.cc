@@ -188,6 +188,8 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   vector<NCVariable<double> > gmass(NVFs);
   vector<NCVariable<Vector> > gvelocity_star(NVFs);
   vector<NCVariable<Vector> > gacceleration(NVFs);
+  vector<NCVariable<double> > normtraction(NVFs);
+  vector<NCVariable<Vector> > surfnorm(NVFs);
 
   Vector surnor;
 
@@ -383,6 +385,8 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel,
 						 vfindex, region, 0);
       new_dw->get(gacceleration[vfindex],gAccelerationLabel,vfindex,region,0);
+      new_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , region, 0);
+      new_dw->get(surfnorm[vfindex], gSurfNormLabel,vfindex , region, 0);
     }
   }
   delt_vartype delt;
@@ -396,14 +400,51 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
        centerOfMassMass+=gmass[n][*iter]; 
     }
 
-    // Set each field's velocity equal to the center of mass velocity
-    // and adjust the acceleration of each field to account for this
+    // Apply Coulomb friction contact
+    // For grid points with mass calculate velocity
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for(int  n = 0; n < NVFs; n++){
-        Dvdt = (centerOfMassVelocity - gvelocity_star[n][*iter])/delt;
-	gvelocity_star[n][*iter] = centerOfMassVelocity;
-	gacceleration[n][*iter]+=Dvdt;
+
+      // Loop over velocity fields.  Only proceed if velocity field
+      // is nonzero (not numerical noise) and the difference from
+      // the centerOfMassVelocity is nonzero (More than one velocity
+      // field is contributing to grid vertex).
+      for(int n = 0; n < NVFs; n++){
+        Vector deltaVelocity=gvelocity_star[n][*iter]-centerOfMassVelocity;
+        if(!compare(gvelocity_star[n][*iter].length(),0.0)
+           && !compare(deltaVelocity.length(),0.0)){
+
+          // Apply frictional contact if the surface is in compression
+          // or the surface is stress free and surface is approaching.
+          // Otherwise apply free surface conditions (do nothing).
+          double normalDeltaVelocity=Dot(deltaVelocity,surfnorm[n][*iter]);
+          if((normtraction[n][*iter] < 0.0) ||
+	     (!compare(fabs(normtraction[n][*iter]),0.0) &&
+              normalDeltaVelocity>0.0)){
+
+	    // Specialize algorithm in case where approach velocity
+	    // is in direction of surface normal.
+	    Dvdt = -gvelocity_star[n][*iter];
+	    if(compare( (deltaVelocity
+			 -surfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
+	      gvelocity_star[n][*iter]-= surfnorm[n][*iter]*normalDeltaVelocity;
+	    }
+	    else{
+	      Vector surfaceTangent=
+		(deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity)/
+                (deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity).length();
+	      double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+	      double frictionCoefficient=
+		Min(d_mu,tangentDeltaVelocity/normalDeltaVelocity);
+	      gvelocity_star[n][*iter]-=
+		(surfnorm[n][*iter]+surfaceTangent*frictionCoefficient)*
+		normalDeltaVelocity;
+	    }
+	    Dvdt+=gvelocity_star[n][*iter];
+	    Dvdt=Dvdt/delt;
+	    gacceleration[n][*iter]+=Dvdt;
+          }
+	}
       }
     }
   }
@@ -416,6 +457,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.11  2000/05/06 00:01:49  bard
+// Finished frictional contact logic.  Compiles but doesn't yet work.
+//
 // Revision 1.10  2000/05/05 22:37:27  bard
 // Added frictional contact logic.  Compiles but doesn't yet work.
 //
