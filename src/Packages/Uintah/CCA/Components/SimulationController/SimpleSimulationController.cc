@@ -473,7 +473,7 @@ SimpleSimulationController::run()
 	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
 	
 	scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-	
+
 	scheduler->execute(d_myworld);
 
 	if(scheduler->get_dw(1)->timestepRestarted()){
@@ -490,15 +490,16 @@ SimpleSimulationController::run()
 	  
 	  scheduler->replaceDataWarehouse(1, grid);
 	} else {
+	  success = true;
 	  if(scheduler->get_dw(1)->timestepAborted()){
 	    throw InternalError("Execution aborted, cannot restart timestep\n");
 	  }
 	}
-	if(output && success) {
-	  output->executedTimestep();
-	  output->finalizeTimestep(t, 0, grid, scheduler);
-	}
       } while(!success);
+      if(output) {
+	output->executedTimestep();
+	output->finalizeTimestep(t, 0, grid, scheduler);
+      }
 
       t += delt;
    }
