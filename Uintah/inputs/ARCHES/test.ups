@@ -71,7 +71,7 @@
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
 		<Stream>
-		    <density>1</density>
+		    <density>0.5</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
@@ -81,7 +81,10 @@
 		<FlowInlet>
 		    <Flow_rate>1</Flow_rate>
 		    <MixtureFraction>
-			<Mixfrac>1</Mixfrac>
+			<Mixfrac>0.3</Mixfrac>
+	            </MixtureFraction>
+		    <MixtureFraction>
+			<Mixfrac>0.7</Mixfrac>
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <inletType>primary</inletType>
@@ -103,7 +106,10 @@
 		<PressureBC>
 		    <flowRate>0</flowRate>
 		    <MixtureFraction>
-			<Mixfrac>0</Mixfrac>
+			<Mixfrac>0.3</Mixfrac>
+	            </MixtureFraction>
+		    <MixtureFraction>
+			<Mixfrac>0.7</Mixfrac>
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <RefPressure>1</RefPressure>
@@ -128,6 +134,9 @@
 		</PressureBC>
 		<outletBC>
 		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0</Mixfrac>
+	            </MixtureFraction>
 		    <MixtureFraction>
 			<Mixfrac>0</Mixfrac>
 	            </MixtureFraction>
