@@ -60,10 +60,10 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     datasets_(context->subVar("datasets")),
     dumpname_(context->subVar("dumpname")),
 
+    nDims_(context->subVar("ndims")),
+
     mergeData_(context->subVar("mergeData")),
     assumeSVT_(context->subVar("assumeSVT")),
-
-    nDims_(context->subVar("ndims")),
 
     error_(false)
 {
@@ -121,6 +121,9 @@ void HDF5DataReader::execute() {
 
   vector< string > paths;
   vector< string > datasets;
+
+  if( new_filename.length() == 0 || new_datasets.length() == 0 )
+    return;
 
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
@@ -199,7 +202,7 @@ void HDF5DataReader::execute() {
 
     vector< vector<NrrdDataHandle> > nHandles;
     
-    for( int ic=0; ic<paths.size(); ic++ ) {
+    for( unsigned int ic=0; ic<paths.size(); ic++ ) {
 
       NrrdDataHandle handle = readDataset(new_filename, paths[ic], 
 					  datasets[ic]);
@@ -321,8 +324,8 @@ void HDF5DataReader::execute() {
 
     int cc = 0;
 
-    for( int ic=0; ic<nHandles.size(); ic++ ) {
-      for( int jc=0; jc<nHandles[ic].size(); jc++ ) {
+    for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
+      for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
 	nHandles_[cc] = nHandles[ic][jc];
 
 	++cc;
@@ -447,7 +450,7 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 					    string group,
 					    string dataset ) {
   vector< int > idims;
-
+  
 #ifdef HAVE_HDF5
   herr_t status;
 
@@ -477,15 +480,29 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
   /* Get the rank (number of dims) in the space. */
   int ndims = H5Sget_simple_extent_ndims(file_space_id);
 
-  hsize_t *dims = new hsize_t[ndims];
+  if (H5Sis_simple(file_space_id)) {
+    if (ndims == 0) {
+      /* scalar dataspace */
+      idims.push_back( 1 );
 
-  /* Get the dims in the space. */
-  int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+    } else {
+      /* simple dataspace */
+      hsize_t *dims = new hsize_t[ndims];
 
-  if( ndim != ndims ) {
-    error( "Data dimensions not match. " );
-    error_ = true;
-    return idims;
+      /* Get the dims in the space. */
+      int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+
+      if( ndim != ndims ) {
+	error( "Data dimensions not match. " );
+	error_ = true;
+	return idims;
+      }
+
+      for( int ic=0; ic<ndims; ic++ )
+	idims.push_back( dims[ic] );
+      
+      delete dims;
+    }
   }
 
   /* Terminate access to the data space. */ 
@@ -505,12 +522,6 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
   if( (status = H5Fclose(file_id)) < 0 ) {
     error( "Error closing file. " );
   }
-
-
-  for( int ic=0; ic<ndims; ic++ )
-    idims.push_back( dims[ic] );
-
-  delete dims;
 #endif
 
   return idims;
@@ -521,6 +532,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 					   string group,
 					   string dataset ) {
 #ifdef HAVE_HDF5
+  void *data = NULL;
+
   herr_t  status;
  
   /* Open the file using default properties. */
@@ -529,53 +542,32 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   if( (file_id = H5Fopen(filename.c_str(),
 			 H5F_ACC_RDONLY, H5P_DEFAULT)) < 0 ) {
     error( "Error opening file. " );
+    return NULL;
   }
 
   /* Open the group in the file. */
   if( (g_id = H5Gopen(file_id, group.c_str())) < 0 ) {
     error( "Error opening group. " );
+    return NULL;
   }
 
   /* Open the dataset in the file. */
   if( (ds_id = H5Dopen(g_id, dataset.c_str())) < 0 ) {
-    error( "Error opening file space. " );
+    error( "Error opening data space. " );
+    return NULL;
   }
 
   /* Open the coordinate space in the file. */
   if( (file_space_id = H5Dget_space( ds_id )) < 0 ) {
     error( "Error opening file space. " );
-  }
-    
-  /* Get the rank (number of dims) in the space. */
-  int ndims = H5Sget_simple_extent_ndims(file_space_id);
-
-  hsize_t *dims = new hsize_t[ndims];
-
-  /* Get the dims in the space. */
-  int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
-
-  if( ndim != ndims ) {
-    error( "Data dimensions not match. " );
-    error_ = true;
     return NULL;
   }
-
-  for( int ic=0; ic<nDims_.get(); ic++ ) {
-    if( dims_[ic] != dims[ic] ) {
-      error( "Data do not have the same number of elements. " );
-      error_ = true;
-      return NULL;
-    }
-  }
-
-
+    
   hid_t type_id = H5Dget_type(ds_id);
 
   hid_t mem_type_id;
 
   unsigned int nrrd_type;
-
-  int size = H5Tget_size(type_id);
 
   switch (H5Tget_class(type_id)) {
   case H5T_INTEGER:
@@ -606,86 +598,136 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       return NULL;
     }
     break;
+  case H5T_COMPOUND:
+    error("Compound HDF5 data types can be converted into Nrrds.");
+    error_ = true;
+    return NULL;
+    break;
+
   default:
     error("Unknown or unsupported HDF5 data type");
     error_ = true;
     return NULL;
   }
 
+  hsize_t size = H5Tget_size(type_id);
+
+  if( H5Tget_size(type_id) > H5Tget_size(mem_type_id) )
+    size = H5Tget_size(type_id);
+  else
+    size = H5Tget_size(mem_type_id);
+
+  if( size == 0 ) {
+    error( "Null data size. " );
+    return NULL;
+  }
+
   H5Tclose(type_id);
  
+  /* Get the rank (number of dims) in the space. */
+  int ndims = H5Sget_simple_extent_ndims(file_space_id);
 
-  hssize_t *start = new hssize_t[ndims];
-  hsize_t *stride = new hsize_t[ndims];
-  hsize_t *count = new hsize_t[ndims];
-  hsize_t *block = new hsize_t[ndims];
+  hsize_t *count;
+  hsize_t *dims;
 
-  for( int ic=0; ic<nDims_.get(); ic++ ) {
-    start[ic]  = starts_[ic];
-    stride[ic] = strides_[ic];
-    count[ic]  = counts_[ic];
-    block[ic]  = 1;
-  }
+  if (H5Sis_simple(file_space_id)) {
+    if (ndims == 0) {
+      /* scalar dataspace */
+      ndims = 1;
+      dims = new hsize_t[ndims];
+      count = new hsize_t[ndims];
 
-  for( int ic=nDims_.get(); ic<ndims; ic++ ) {
-    start[ic]  = 0;
-    stride[ic] = 1;
-    count[ic]  = dims[ic];
-    block[ic]  = 1;
-  }
+      dims[0] = 1;
+      count[0] = 1;
 
-  int cc = 1;
+      if( (data = new char[size]) == NULL ) {
+	error( "Can not allocate enough memory for the data" );
+	error_ = true;
+	return NULL;
+      }
 
-  for( int ic=0; ic<ndims; ic++ )
-    cc *= count[ic];
+      status = H5Dread(ds_id, mem_type_id,
+		       H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+		       data);
 
-  status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
-			       start, stride, count, block);
+    } else {
+      /* simple dataspace */
+      dims = new hsize_t[ndims];
+      count = new hsize_t[ndims];
 
-  hid_t mem_space_id = H5Screate_simple (ndims, count, NULL );
+      /* Get the dims in the space. */
+      int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
 
-  for( int d=0; d<ndims; d++ ) {
-    start[d] = 0;
-    stride[d] = 1;
-  }
+      if( ndim != ndims ) {
+	error( "Data dimensions not match. " );
+	error_ = true;
+	return NULL;
+      }
 
-  status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-			       start, stride, count, block);
+      for( int ic=0; ic<nDims_.get(); ic++ ) {
+	if( (unsigned int) dims_[ic] != dims[ic] ) {
+	  error( "Data do not have the same number of elements. " );
+	  error_ = true;
+	  return NULL;
+	}
+      }
 
-  void *data;
 
-  if( mem_type_id == H5T_NATIVE_INT ) {
-    if( (data = new int[cc]) == NULL ) {
-      error( "Can not allocate enough memory for the data" );
-      error_ = true;
-      return NULL;
+      hssize_t *start = new hssize_t[ndims];
+      hsize_t *stride = new hsize_t[ndims];
+      hsize_t *block = new hsize_t[ndims];
+
+      for( int ic=0; ic<nDims_.get(); ic++ ) {
+	start[ic]  = starts_[ic];
+	stride[ic] = strides_[ic];
+	count[ic]  = counts_[ic];
+	block[ic]  = 1;
+      }
+
+      for( int ic=nDims_.get(); ic<ndims; ic++ ) {
+	start[ic]  = 0;
+	stride[ic] = 1;
+	count[ic]  = dims[ic];
+	block[ic]  = 1;
+      }
+
+      status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
+				   start, stride, count, block);
+
+      hid_t mem_space_id = H5Screate_simple (ndims, count, NULL );
+
+      for( int d=0; d<ndims; d++ ) {
+	start[d] = 0;
+	stride[d] = 1;
+      }
+
+      status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
+				   start, stride, count, block);
+
+      for( int ic=0; ic<ndims; ic++ )
+	size *= count[ic];
+
+      if( (data = new char[size]) == NULL ) {
+	error( "Can not allocate enough memory for the data" );
+	error_ = true;
+	return NULL;
+      }
+
+      status = H5Dread(ds_id, mem_type_id,
+		       mem_space_id, file_space_id, H5P_DEFAULT, 
+		       data);
+
+      /* Terminate access to the data space. */
+      status = H5Sclose(mem_space_id);
+
+      delete start;
+      delete stride;
+      delete block;
     }
   }
-
-  else if( mem_type_id == H5T_NATIVE_FLOAT ) {
-    if( (data = new float[cc]) == NULL ) {
-      error( "Can not allocate enough memory for the data" );
-      error_ = true;
-      return NULL;
-    }
-  }
-
-  else if( mem_type_id == H5T_NATIVE_DOUBLE ) {
-    if( (data = new double[cc]) == NULL ) {
-      error( "Can not allocate enough memory for the data" );
-      error_ = true;
-      return NULL;
-    }
-  }
-
-  status = H5Dread(ds_id, mem_type_id,
-		   mem_space_id, file_space_id, H5P_DEFAULT, 
-		   data);
 
   /* Terminate access to the data space. */ 
   status = H5Sclose(file_space_id);
-  /* Terminate access to the data space. */
-  status = H5Sclose(mem_space_id);
 
 
   string tuple_type_str(":Scalar");
@@ -921,10 +963,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
 
   delete dims;
-  delete start;
-  delete stride;
   delete count;
-  delete block;
 
   /* Terminate access to the dataset. */
   status = H5Dclose(ds_id);
@@ -950,6 +989,9 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 #ifdef HAVE_HDF5
     filename_.reset();
     string new_filename(filename_.get());
+
+    if( new_filename.length() == 0 )
+      return;
 
     // Read the status of this file so we can compare modification timestamps
     struct stat buf;
@@ -997,7 +1039,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       sPtr.close();
 
       if (stat(tmp_filename.c_str(), &buf)) {
-	error( string("File not found ") + tmp_filename );
+	error( string("Temporary dump file not found ") + tmp_filename );
 	return;
       } 
 
@@ -1020,6 +1062,9 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     datasets_.reset();
     string new_filename(filename_.get());
     string new_datasets(datasets_.get());
+
+    if( new_filename.length() == 0 ||  new_datasets.length() == 0 )
+      return;
 
     // Read the status of this file so we can compare modification timestamps
     struct stat buf;
@@ -1050,7 +1095,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       for( int ic=0; ic<MAX_DIMS; ic++ )
 	dims_[ic] = 1;
 
-      for( int ic=0; ic<paths.size(); ic++ ) {
+      for( unsigned int ic=0; ic<paths.size(); ic++ ) {
 
 	vector<int> dims =
 	  getDatasetDims( new_filename, paths[ic], datasets[ic] );
@@ -1059,14 +1104,14 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
 	  ndims = dims.size();
 
-	  for( int jc=0; jc<ndims && jc<MAX_DIMS; jc++ )
+	  for( unsigned int jc=0; jc<ndims && jc<MAX_DIMS; jc++ )
 	    dims_[jc] = dims[jc];
 	} else {
 
 	  if( ndims > dims.size() )
 	    ndims = dims.size();
 
-	  for( int jc=0; jc<ndims && jc<MAX_DIMS; jc++ ) {
+	  for( unsigned int jc=0; jc<ndims && jc<MAX_DIMS; jc++ ) {
 	    if( dims_[jc] != dims[jc] ) {
 	      ndims = 0;
 	      break;
@@ -1075,7 +1120,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 	}
       }
 
-      bool set = (ndims != nDims_.get());
+      bool set = (ndims != (unsigned int) nDims_.get());
 
       if( !set ) {
 	for( int ic=0; ic<MAX_DIMS; ic++ ) {
@@ -1090,7 +1135,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
 	string dimstr( "{ " );
 
-	for( int ic=0; ic<ndims && ic<MAX_DIMS; ic++ ) {
+	for( unsigned int ic=0; ic<ndims && ic<MAX_DIMS; ic++ ) {
 	  char dim[8];
 
 	  sprintf( dim, " %d ", dims_[ic] );
