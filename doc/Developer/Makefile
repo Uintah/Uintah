@@ -32,7 +32,7 @@
 
 PRODUCTS = Guide FAQ Modules CodeViews 
 treetop := ../..
-edition := edition := ${treetop}/src/main/sci_version.h
+edition := ${treetop}/src/main/sci_version.h
 
 default: index.html products
 
