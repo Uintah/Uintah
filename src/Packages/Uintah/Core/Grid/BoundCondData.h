@@ -46,7 +46,7 @@ WARNING
     BCData();
     ~BCData();
     void setBCValues(int mat_id,BoundCondBase* bc);
-    BoundCondBase* getBCValues(int mat_id,const string& type) const;
+    const BoundCondBase* getBCValues(int mat_id,const string& type) const;
     
    private:
     // The vector is for the material id, the map is for the name of the
