@@ -66,6 +66,23 @@ void Patch::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 }
 #endif
 
+void Patch::findCellsFromNode( const IntVector& nodeIndex,
+                               IntVector cellIndex[8]) const
+{
+   int ix = nodeIndex.x();
+   int iy = nodeIndex.y();
+   int iz = nodeIndex.z();
+
+   cellIndex[0] = IntVector(ix, iy, iz)+d_lowIndex;
+   cellIndex[1] = IntVector(ix, iy, iz-1)+d_lowIndex;
+   cellIndex[2] = IntVector(ix, iy-1, iz)+d_lowIndex;
+   cellIndex[3] = IntVector(ix, iy-1, iz-1)+d_lowIndex;
+   cellIndex[4] = IntVector(ix-1, iy, iz)+d_lowIndex;
+   cellIndex[5] = IntVector(ix-1, iy, iz-1)+d_lowIndex;
+   cellIndex[6] = IntVector(ix-1, iy-1, iz)+d_lowIndex;
+   cellIndex[7] = IntVector(ix-1, iy-1, iz-1)+d_lowIndex;
+}
+
 bool Patch::findCellAndWeights(const Point& pos,
 				IntVector ni[8], double S[8]) const
 {
@@ -366,6 +383,10 @@ Patch::determineGhostPatches( int numGhostCells )
 
 //
 // $Log$
+// Revision 1.3  2000/06/02 19:58:01  tan
+// Added function findCellsFromNode() to find the 8 neighboring cell
+// indexes according to a given node index.
+//
 // Revision 1.2  2000/06/01 22:14:06  tan
 // Added findCell(const Point& pos).
 //

@@ -91,8 +91,14 @@ WARNING
       void findCell(const Point& pos, int& ix, int& iy, int& iz) const;
 
       //////////
-      // Insert Documentation Here:
+      // tan: Find the index of a cell contaning the given Point
       IntVector findCell(const Point& pos) const;
+
+      //////////
+      // tan: Find the 8 neighboring cell indexes according to a 
+      // given node index
+      void findCellsFromNode( const IntVector& nodeIndex,
+                              IntVector cellIndex[8]) const;
       
       //////////
       // Insert Documentation Here:
@@ -264,6 +270,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.3  2000/06/02 19:57:50  tan
+// Added function findCellsFromNode() to find the 8 neighboring cell
+// indexes according to a given node index.
+//
 // Revision 1.2  2000/06/01 22:13:54  tan
 // Added findCell(const Point& pos).
 //
