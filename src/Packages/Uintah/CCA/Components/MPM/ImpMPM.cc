@@ -176,7 +176,8 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP&, SchedulerP&)
 
 void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 {
-  const PatchSet* patches = level->eachPatch();
+  //  const PatchSet* patches = level->eachPatch();
+  const PatchSet* patches = level->allPatches();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
   scheduleInterpolateParticlesToGrid(sched, patches, matls);
@@ -1001,11 +1002,8 @@ void ImpMPM::scheduleSolveForDuCGR(SchedulerP& sched,
 			&ImpMPM::solveForDuCG,recursion);
 #endif
   t->assumeDataInNewDW();
-  if (recursion)
-    t->computes(lb->dispIncLabel);
-  else
-    t->computes(lb->dispIncLabel);
-  
+  t->computes(lb->dispIncLabel);
+    
   sched->addTask(t, patches, matls);
   
 }
@@ -1268,6 +1266,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   // DONE
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    cout << "number of patches = " << patches->size() << endl;
+    cout << "p = " << p << endl;
 
     cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->getID()
 	       <<"\t\t IMPM"<< "\n" << "\n";
@@ -1562,6 +1562,21 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 
 {
   // DONE
+
+  WRONG
+  int nn = 0;
+  IntVector nodes(0,0,0);
+  cout << "nodes = " << nodes << endl;
+  cout << "number of patches = " << patches->size() << endl;
+  for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
+    IntVector num_nodes = patch->getNNodes();
+    nn += (num_nodes.x())*(num_nodes.y())*(num_nodes.z())*3;
+    nodes = IntVector(Max(num_nodes.x(),nodes.x()),
+		      Max(num_nodes.y(),nodes.y()),
+		      Max(num_nodes.z(),nodes.z()));
+    cout << "nodes = " << nodes << endl;
+  }
   if (!dynamic)
     return;
   for(int p=0;p<patches->size();p++){
@@ -1570,7 +1585,7 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
     cout_doing <<"Doing formStiffnessMatrixPetsc " << patch->getID()
 	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
-    IntVector nodes = patch->getNNodes();
+    // IntVector nodes = patch->getNNodes();
 
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
