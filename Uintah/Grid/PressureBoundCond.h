@@ -39,20 +39,17 @@ WARNING
   
 ****************************************/
 
-   class PressureBoundCond : public BoundCond  {
+  class PressureBoundCond : public BoundCond<double>  {
    public:
-      PressureBoundCond(double& p);
-      PressureBoundCond(ProblemSpecP& ps);
-      virtual ~PressureBoundCond();
-      virtual std::string getType() const;
-
-      double  getPressure() const;
-         
+     PressureBoundCond(ProblemSpecP& ps,std::string& kind);
+     virtual ~PressureBoundCond();
+     virtual double  getValue() const;
+     
    private:
-      PressureBoundCond(const PressureBoundCond&);
-      PressureBoundCond& operator=(const PressureBoundCond&);
-      
-      double  d_press;
+     PressureBoundCond(const PressureBoundCond&);
+     PressureBoundCond& operator=(const PressureBoundCond&);
+     
+     double  d_press;
      
    };
    
@@ -60,6 +57,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.1  2000/10/18 03:39:48  jas
 // Implemented Pressure boundary conditions.
 //

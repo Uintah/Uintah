@@ -1,5 +1,5 @@
-#ifndef UINTAH_GRID_DensityBoundCond_H
-#define UINTAH_GRID_DensityBoundCond_H
+#ifndef UINTAH_GRID_TemperatureBoundCond_H
+#define UINTAH_GRID_TemperatureBoundCond_H
 
 #include <Uintah/Grid/BoundCond.h>
 #include <Uintah/Interface/ProblemSpecP.h>
@@ -12,12 +12,12 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   DensityBoundCond
+   TemperatureBoundCond
    
    
 GENERAL INFORMATION
 
-   DensityBoundCond.h
+   TemperatureBoundCond.h
 
    John A. Schmidt
    Department of Mechanical Engineering
@@ -28,7 +28,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   DensityBoundCond
+   TemperatureBoundCond
 
 DESCRIPTION
    Long description...
@@ -37,32 +37,29 @@ WARNING
   
 ****************************************/
 
-   class DensityBoundCond : public BoundCond<double>  {
+   class TemperatureBoundCond : public BoundCond<double>  {
    public:
-     DensityBoundCond(ProblemSpecP& ps,std::string& kind);
-     virtual ~DensityBoundCond();
-     virtual double getValue() const;
-     
+      TemperatureBoundCond(ProblemSpecP& ps,std::string& kind);
+      virtual ~TemperatureBoundCond();
+      virtual double getValue() const;
+      
    private:
-     DensityBoundCond(const DensityBoundCond&);
-     DensityBoundCond& operator=(const DensityBoundCond&);
-     
-     double d_rho;
+      TemperatureBoundCond(const TemperatureBoundCond&);
+      TemperatureBoundCond& operator=(const TemperatureBoundCond&);
+
+      double d_temp;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
-// Revision 1.2  2000/11/02 21:25:55  jas
+// Revision 1.1  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
 // declared differently in the *.ups file.
 //
-// Revision 1.1  2000/10/26 23:27:20  jas
-// Added Density Boundary Conditions needed for ICE.
-//
-//
+
 
 #endif
 

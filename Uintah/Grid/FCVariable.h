@@ -142,6 +142,58 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 	};
      
+      // Set the Neumann BC condition using a 1st order approximation
+      void fillFaceFlux(Patch::FaceType face, const T& value)
+	{ 
+	  IntVector low = getLowIndex();
+	  IntVector hi = getHighIndex();
+	  switch (face) {
+	  case Patch::xplus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(hi.x()-1,j,k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::xminus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(low.x(),j,k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::yplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,hi.y()-1,k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::yminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,low.y(),k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::zplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,hi.z()-1)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::zminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,low.z())] = value;
+	      }
+	    }
+	    break;
+	  }
+
+	};
+     
       // Use to apply symmetry boundary conditions.  On the
       // indicated face, replace the component of the vector
       // normal to the face with 0.0
@@ -384,6 +436,11 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.15  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.14  2000/10/26 23:27:20  jas
 // Added Density Boundary Conditions needed for ICE.
 //

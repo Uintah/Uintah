@@ -1,7 +1,7 @@
 #ifndef UINTAH_GRID_NoneBoundCond_H
 #define UINTAH_GRID_NoneBoundCond_H
 
-#include <Uintah/Grid/BoundCond.h>
+#include <Uintah/Grid/BoundCondBase.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 
 using namespace Uintah;
@@ -37,15 +37,12 @@ WARNING
   
 ****************************************/
 
-   class NoneBoundCond : public BoundCond  {
+   class NoneBoundCond : public BoundCondBase  {
    public:
-      NoneBoundCond() {};
-      NoneBoundCond(ProblemSpecP& ps) {};
+      NoneBoundCond() : BoundCondBase("None") {};
+      NoneBoundCond(ProblemSpecP& ps){};
       virtual ~NoneBoundCond() {};
-      virtual std::string getType() const {
-	return "None";
-      };
-         
+               
    private:
       NoneBoundCond(const NoneBoundCond&);
       NoneBoundCond& operator=(const NoneBoundCond&);
@@ -57,6 +54,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.1  2000/06/27 22:31:50  jas
 // Grid boundary conditions that are stored at the patch level.
 //
