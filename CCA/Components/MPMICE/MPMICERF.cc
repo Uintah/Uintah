@@ -33,7 +33,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     cout_doing<<"Doing computeRateFormPressure on patch "
               << patch->getID() <<"\t\t MPMICE" << endl;
 
-    double    tmp;
+    double tmp;
     double press_ref= d_sharedState->getRefPress();
     int numICEMatls = d_sharedState->getNumICEMatls();
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -46,9 +46,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<double> dp_drho(numALLMatls),dp_de(numALLMatls);
     StaticArray<double> mat_volume(numALLMatls);
     StaticArray<double> mat_mass(numALLMatls);
-    StaticArray<double> cv(numALLMatls);
-    StaticArray<double> gamma(numALLMatls);
-    StaticArray<double> kappa(numALLMatls);
+    StaticArray<CCVariable<double> > kappa(numALLMatls);
     StaticArray<CCVariable<double> > vol_frac(numALLMatls);
     StaticArray<CCVariable<double> > rho_micro(numALLMatls);
     StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
@@ -59,6 +57,8 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > matl_press(numALLMatls);
 
     StaticArray<constCCVariable<double> > placeHolder(0);
+    StaticArray<constCCVariable<double> > cv(numALLMatls);
+    StaticArray<constCCVariable<double> > gamma(numALLMatls);
     StaticArray<constCCVariable<double> > Temp(numALLMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
     StaticArray<constCCVariable<double> > mat_vol(numALLMatls);
@@ -78,20 +78,21 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(ice_matl){                    // I C E
-        old_dw->get(Temp[m],      Ilb->temp_CCLabel,  indx,patch,gn,0);
-        old_dw->get(rho_CC[m],    Ilb->rho_CCLabel,   indx,patch,gn,0);
-        old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,indx,patch,gn,0);
-        cv[m]    = ice_matl->getSpecificHeat();
-        gamma[m] = ice_matl->getGamma();
+        old_dw->get(Temp[m],      Ilb->temp_CCLabel,      indx,patch,gn,0);
+        old_dw->get(rho_CC[m],    Ilb->rho_CCLabel,       indx,patch,gn,0);
+        old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx,patch,gn,0);
+        new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
+        new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
       }
       if(mpm_matl){                    // M P M    
         new_dw->get(Temp[m],     MIlb->temp_CCLabel,  indx,patch,gn,0); 
         new_dw->get(mat_vol[m],  MIlb->cVolumeLabel,  indx,patch,gn,0); 
         new_dw->get(mass_CC[m],  MIlb->cMassLabel,    indx,patch,gn,0); 
-        cv[m] = mpm_matl->getSpecificHeat();
       }
+       new_dw->allocateTemporary(kappa[m],         patch);
       new_dw->allocateTemporary(rho_CC_scratch[m], patch);
       new_dw->allocateTemporary(rho_micro[m],      patch);
+      
       new_dw->allocateAndPut(sp_vol_new[m],Ilb->sp_vol_CCLabel,    indx,patch);
       new_dw->allocateAndPut(rho_CC_new[m],Ilb->rho_CCLabel,       indx,patch);
       new_dw->allocateAndPut(vol_frac[m],  Ilb->vol_frac_CCLabel,  indx,patch);
@@ -112,7 +113,8 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     // identically full after initialization
     static int tstep=1;
     if(tstep==0){
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){        IntVector c = *iter;
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){        
+        IntVector c = *iter;
         double total_mat_vol = 0.0;
         double total_ice_vol=0.0;
         for (int m = 0; m < numALLMatls; m++) {
@@ -180,8 +182,8 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
         if(ice_matl){                // I C E
          rho_micro[m][c]  = 1.0/sp_vol_CC[m][c];
          sp_vol_new[m][c] = sp_vol_CC[m][c];
-         ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                         cv[m],Temp[m][c],
+         ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
+                                         cv[m][c],Temp[m][c],
                                          press_eos[m],dp_drho[m],dp_de[m]);
 
          mat_mass[m]   = rho_CC_scratch[m][c] * cell_vol;
@@ -206,7 +208,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
 /*`==========TESTING==========*/
     //  speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
         speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
-        kappa[m] = sp_vol_new[m][c]/ 
+        kappa[m][c] = sp_vol_new[m][c]/ 
                             (speedSound_new[m][c] * speedSound_new[m][c]); 
 /*==========TESTING==========`*/
        }  // for ALLMatls...
@@ -217,12 +219,12 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
        double f_theta_denom = 0.0;
        for (int m = 0; m < numALLMatls; m++) {
          vol_frac[m][c] = mat_volume[m]/total_mat_vol;
-         f_theta_denom += vol_frac[m][c]*kappa[m];
+         f_theta_denom += vol_frac[m][c]*kappa[m][c];
        }
        //__________________________________
        // Compute press_new
        for (int m = 0; m < numALLMatls; m++) {
-         f_theta[m][c] = vol_frac[m][c]*kappa[m]/f_theta_denom;
+         f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/f_theta_denom;
          press_new[c] += f_theta[m][c]*matl_press[m][c];
        }
     } // for(CellIterator...)
