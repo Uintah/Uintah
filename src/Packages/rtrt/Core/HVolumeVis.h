@@ -56,7 +56,7 @@ public:
       max_index = 63;
 #if 1
     for (int i = min_index; i <= max_index; i++)
-      course_hash |= 1 << i;
+      course_hash |= 1ULL << i;
 #else
     // The idea here is to create two bit fields that we can and together.
     //    max    min
@@ -68,8 +68,8 @@ public:
     // haven't already been turned on.  We don't want to turn off bits that
     // have already been turned on.
 #  if 0
-    unsigned long long high = ((1 << max_index) - 1) | (1 << max_index);
-    unsigned long long low = ~((1 << min_index) - 1);
+    unsigned long long high = ((1ULL << max_index) - 1) | (1ULL << max_index);
+    unsigned long long low = ~((1ULL << min_index) - 1);
     course_hash |= high & low;      
 #  else
     // Here min and max go the other way ( min ---> max ).
@@ -86,8 +86,8 @@ public:
     return (course_hash & v.course_hash) != 0;
   }
   void print(bool print_endl = true) {
-    for( int i = 63; i >= 0; i--) {
-      unsigned long long bit= course_hash & (1 << i);
+    for( int i = 0; i < 64; i++) {
+      unsigned long long bit= course_hash & (1ULL << i);
       if (bit)
 	cout << "1";
       else
@@ -879,8 +879,9 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   Vector celldir(dir*ihierdiag*cellsize);
 
   MetaCT transfunct;
-  transfunct.turn_on_bits(28,100,0,255);
-  transfunct.turn_on_bits(156,228,0,255);
+  transfunct.course_hash = dpy->course_hash;
+  //  transfunct.turn_on_bits(28,100,0,255);
+  //  transfunct.turn_on_bits(156,228,0,255);
   //  transfunct.turn_on_bits(0,255,0,255);
   //  transfunct.print();
   
