@@ -350,7 +350,7 @@ public:
 
   void get_point(Point &p, node_index i) const
   { get_center(p, i); }
-  void get_normal(Vector &result, node_index index) const
+  void get_normal(Vector &/* result */, node_index /* index */) const
   { ASSERTFAIL("not implemented") }
 
   
