@@ -14,12 +14,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
 
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Parallel.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/BV2.h>
@@ -31,9 +26,19 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
+
+#include <Core/Malloc/Allocator.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Parallel.h>
+#include <Dataflow/Network/Module.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <GL/glut.h>
 #include <dlfcn.h>
-#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -268,20 +273,6 @@ void RTRTViewer::start_rtrt() {
     Thread::parallel(this, &RTRTViewer::GlutHelper, 1, false, xres, yres);
     cout << "thread started\n";
     first_time = false;
-
-    // Let the GUI know about the lights.
-    int cnt;
-    for( cnt = 0; cnt < current_scene->nlights(); cnt++ ) {
-      gui->addLight( current_scene->light( cnt ) );
-    }
-    for(;cnt < current_scene->nlights()+current_scene->nPerMatlLights();cnt++){
-      Light *light = current_scene->per_matl_light(cnt -
-						   current_scene->nlights() );
-      if( light->name_ != "" )
-	light->name_ = light->name_ + " (pm)";
-      gui->addLight( light );
-    }
-    
   }
 } // end start_rtrt()
 
@@ -308,6 +299,22 @@ void RTRTViewer::GlutHelper(int, int xres, int yres) {
   // Must do this after glut is initialized.
   Gui::createMenus( mainWindowId, startSoundThread, show_gui);
 
+
+  // Let the GUI know about the lights.
+  int cnt;
+  Gui *gui = Gui::getActiveGui();
+  for( cnt = 0; cnt < current_scene->nlights(); cnt++ ) {
+    cout << "Adding light ("<<current_scene->light(cnt)->name_ <<")("<<cnt<<")\n";
+    gui->addLight( current_scene->light( cnt ) );
+  }
+  for(;cnt < current_scene->nlights()+current_scene->nPerMatlLights();cnt++){
+    Light *light = current_scene->per_matl_light(cnt -
+						 current_scene->nlights() );
+    if( light->name_ != "" )
+      light->name_ = light->name_ + " (pm)";
+    gui->addLight( light );
+  }
+    
   cout << "running glutMainLoop()\n";
   glutMainLoop();
 }
