@@ -54,7 +54,7 @@ namespace Uintah {
 	 }
          T getBenignValue() const {
            T tmp;
-           fun_getLargeValue(&tmp);
+           fun_getSmallValue(&tmp);
            return tmp;
          }
       };
