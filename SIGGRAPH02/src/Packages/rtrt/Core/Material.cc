@@ -144,6 +144,8 @@ Material::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, my_lights);
   AmbientType &tmp = local_ambient_mode;
   SCIRun::Pio(str, (unsigned int&)tmp);
+  SCIRun::Pio(str, uscale);
+  SCIRun::Pio(str, vscale);
   str.end_class();
 }
 
