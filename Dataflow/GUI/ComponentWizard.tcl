@@ -80,20 +80,24 @@ proc make_io_gui_pane {p} {
     checkbutton $p.dynamicport -text "Last port is dynamic"
     place $p.dynamicport -x 1.5i -y 3.95i -width 2i -height .33i
 
+    global $p.c.moduleFakeModule.iports
+    global $p.c.moduleFakeModule.oports
+    set $p.c.moduleFakeModule.iports [list]
+    set $p.c.moduleFakeModule.oports [list]
     make_icon $p.c 2.5i 1.75i [set $p.hasgui_value]
 
     frame $p.cmds
     
     set modframe $p.c.moduleFakeModule
-    global $modframe.iports
-    set $modframe.iports [list]
-    button $p.cmds.add_port -text "Add Input Port" \
-        -command "global $modframe.iports; \
-                  set port $modframe.iport_info\[llength \[set $modframe.iports\]\]; \
-                  global \$port; \
-                  lappend $modframe.iports \$port; \
-                  configIPorts $modframe"
-    pack $p.cmds.add_port -padx $PADi -pady $PADi \
+    global "$modframe.i ports"
+    global "$modframe.o ports"
+    set "$modframe.i ports" [list]
+    set "$modframe.o ports" [list]
+    button $p.cmds.add_iport -text "Add Input Port" -command "eval add_port $modframe i"
+    button $p.cmds.add_oport -text "Add Output Port" -command "eval add_port $modframe o"
+    pack $p.cmds.add_iport -padx $PADi -pady $PADi \
+        -ipadx $PADi -ipady $PADi -expand yes -side top -anchor nw -fill x
+    pack $p.cmds.add_oport -padx $PADi -pady $PADi \
         -ipadx $PADi -ipady $PADi -expand yes -side top -anchor nw -fill x
 
     pack $p.cmds -expand no -side right -anchor ne -padx $PADi -pady $PADi
@@ -170,25 +174,79 @@ proc make_icon {canvas modx mody {gui 0} } {
 	    -tags FakeModule -anchor center
 }
 
-proc configIPorts {icon} {
-    set port_width 13
-    set port_spacing 18
-    set port_height 7
+proc add_port {modframe type} {
+    set ports ${type}ports
+    global $modframe.$ports
+    global portid; 
+    if [expr ! [info exists portid]] {
+        set portid 0
+    }
+    incr portid;
+    lappend $modframe.$ports componentWizardPort$portid; 
+    configPorts $modframe $type
+}
+
+proc configPorts {icon type} {
+    set ports ${type}ports
     set i 0
-    global $icon.iports
-    foreach t [set $icon.iports] {
-        puts $t
-        set portcolor red
-        set x [expr $i * $port_spacing + 6]
-        set e top
-        if [ expr [lsearch [place slaves $icon] $icon.iport$i] == -1 ] {
-            bevel $icon.iport$i -width $port_width \
-                -height $port_height -borderwidth 3 \
-                -edge $e -background $portcolor \
-                -pto 2 -pwidth 7 -pborder 2       
-            place $icon.iport$i -bordermode outside -x $x -y 0 -anchor nw
-        }
+    global $icon.$ports
+    foreach t [set $icon.$ports] {
+        placePort $icon $t $i $type
         incr i
     }
 }
-	
+
+proc placePort {icon portnum pos type} {
+    set port_width 13
+    set port_spacing 18
+    set port_height 7
+    set portcolor red
+    set x [expr $pos * $port_spacing + 6]
+    set ports ${type}ports
+    set e top
+    set port ${type}port${portnum}
+    set portlight ${port}light
+    if [ expr [lsearch [place slaves $icon] $icon.$port] == -1 ] {
+        bevel $icon.$port -width $port_width \
+            -height $port_height -borderwidth 3 \
+            -edge $e -background $portcolor \
+            -pto 2 -pwidth 7 -pborder 2       
+        frame $icon.$portlight -width $port_width -height 4 \
+        -relief raised -background black -borderwidth 0 
+        set menu $icon.$port.menu
+        global $menu
+        menu $menu -tearoff 0
+        $menu add command -label "Delete" \
+            -command "remove_port $icon $portnum $type"
+        bind $icon.$port <ButtonPress-3> "tk_popup $menu %X %Y"
+    } else {
+        # we may to move the ports around
+        place forget $icon.$port
+        place forget $icon.$portlight
+    }
+    if [expr [string compare $type i] == 0] {
+        place $icon.$portlight -in $icon.$port \
+            -x 0 -rely 1.0 -anchor nw
+        place $icon.$port -bordermode outside -x $x -y 0 -anchor nw
+    } else {
+        place $icon.$portlight -in $icon.$port -x 0 -y 0 -anchor sw
+        place $icon.$port -bordermode ignore -rely 1 -anchor sw -x $x
+    }
+}
+
+
+proc remove_port {icon portnum type} {
+    set port ${type}port${portnum}
+    set ports ${type}ports
+    global $icon.$ports
+    set item_num [lsearch [set $icon.$ports] $portnum]
+    place forget $icon.$port
+    destroy $icon.${port}light
+    destroy $icon.$port
+    if [expr $item_num != -1] {
+        set $icon.$ports [concat [lrange [set $icon.$ports] 0 [expr $item_num - 1]] \
+            [lrange [set $icon.$ports] [expr $item_num + 1] [llength [set $icon.$ports]]]]
+        configPorts $icon $type
+    }
+}
+
