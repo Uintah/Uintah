@@ -221,6 +221,9 @@ string ViewWindow::set_id(const string& new_id)
 void ViewWindow::itemAdded(GeomViewerItem* si)
 {
   ObjTag* vis;
+
+  // Invalidate the bounding box
+  bb.reset();
     
   viter = visible.find(si->name_);
   if(viter==visible.end()){
@@ -238,9 +241,8 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
     str << id << " addObject2 " << vis->tagid;
     gui->execute(str.str());
   }
-  // invalidate the bounding box
-  bb.reset();
-  need_redraw=true;
+
+  need_redraw = true;
 }
 
 void ViewWindow::itemDeleted(GeomViewerItem *si)
