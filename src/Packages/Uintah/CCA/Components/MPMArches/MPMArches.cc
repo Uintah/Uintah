@@ -60,6 +60,7 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 {
   d_mpm->scheduleInitialize(      level, sched, dw);
   d_arches->scheduleInitialize(      level, sched, dw);
+  // add compute void fraction to be used by gas density and viscosity
   cerr << "Doing Initialization \t\t\t MPMArches" <<endl;
   cerr << "--------------------------------\n"<<endl; 
 }
