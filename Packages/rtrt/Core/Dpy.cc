@@ -1081,8 +1081,12 @@ void Dpy::run()
       drawstats[showing_scene]->add(Time::currentSeconds(), Color(1,0,0));
       barrier->wait(nworkers+1);
       // exit if you are supposed to
-      if (scene->rtrt_engine->stop_execution())
-	Thread::exit();
+      if (scene->rtrt_engine->stop_execution()) {
+	XCloseDisplay(priv->dpy);
+	cerr << "Display thread exiting\n"; flush(cerr);
+	return;
+	//	Thread::exit();
+      }
 
       scene->refill_work(rendering_scene, nworkers);
       //bool changed=false;

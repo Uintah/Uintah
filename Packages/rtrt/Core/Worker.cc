@@ -142,8 +142,11 @@ void Worker::run()
       barrier->wait(dpy->get_num_procs()+1);
 
       // exit if you are supposed to
-      if (scene->get_rtrt_engine()->stop_execution())
-	Thread::exit();
+      if (scene->get_rtrt_engine()->stop_execution()) {
+	cerr << "Worker thread exiting\n"; flush(cerr);
+	return;
+	//Thread::exit();
+      }	
 
       counters->end_frame();
 #if 0
