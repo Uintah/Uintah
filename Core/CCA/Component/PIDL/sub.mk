@@ -46,11 +46,16 @@ SRCS     += \
 
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS := Core/Exceptions Core/Thread Core/globus_threads Core/CCA/Component/Comm/Intra
-LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) $(MPI_LIBRARY) $(UUID_LIB) $(M_LIBRARY)
+PSELIBS := Core/Exceptions Core/Thread Core/globus_threads 
+LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) $(UUID_LIB) $(M_LIBRARY)
 else
-PSELIBS := Core/Exceptions Core/Thread Core/CCA/Component/Comm/Intra
-LIBS := $(MPI_LIBRARY) $(UUID_LIB) $(M_LIBRARY)
+PSELIBS := Core/Exceptions Core/Thread 
+LIBS := $(UUID_LIB) $(M_LIBRARY)
+endif
+
+ifeq ($(HAVE_MPI),1) 
+PSELIBS += Core/CCA/Component/Comm/Intra
+LIBS += $(MPI_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
