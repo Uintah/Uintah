@@ -256,7 +256,7 @@ Thread::niceAbort()
     fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname_);
   else
     fprintf(stderr, "With NULL thread pointer\n");
-	
+
   for (;;) {
     if (strcasecmp(smode, "ask") == 0) {
       char buf[100];

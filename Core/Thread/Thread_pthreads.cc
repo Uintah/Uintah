@@ -95,6 +95,8 @@ struct Thread_private {
   sem_t done;
   sem_t delete_ready;
   sem_t block_sema;
+  bool is_blocked;
+  bool ismain;
 };
 }
 
@@ -168,7 +170,7 @@ Thread_shutdown(Thread* thread)
 			+strerror(errno));
 
    // Wait to be deleted...
-   if (priv->threadid != 0)
+   if (!priv->ismain)
       if(sem_wait(&priv->delete_ready) == -1)
 	 throw ThreadError(std::string("sem_wait failed")
 			   +strerror(errno));
@@ -188,10 +190,10 @@ Thread_shutdown(Thread* thread)
       active[i-1]=active[i];
    }
    numActive--;
-   unlock_scheduler();
    if(pthread_setspecific(thread_key, 0) != 0)
      fprintf(stderr, "Warning: pthread_setspecific failed");
-   bool wait_main = (priv->threadid == 0);
+   unlock_scheduler();
+   bool wait_main = priv->ismain;
    delete thread;
    priv->thread=0;
    delete priv;
@@ -264,57 +266,64 @@ static
 void*
 run_threads(void* priv_v)
 {
-    Thread_private* priv=(Thread_private*)priv_v;
-    if(sem_wait(&priv->block_sema) != 0)
-	throw ThreadError(std::string("sem_wait: ")
-			  +strerror(errno));
-    if(pthread_setspecific(thread_key, priv->thread) != 0)
-	throw ThreadError(std::string("pthread_setspecific failed")
-			  +strerror(errno));
-    priv->state=Thread::RUNNING;
-    Thread_run(priv->thread);
-    priv->state=Thread::SHUTDOWN;
-    Thread_shutdown(priv->thread);
-    return 0; // Never reached
+  Thread_private* priv=(Thread_private*)priv_v;
+  int err;
+  if((err=pthread_setspecific(thread_key, priv->thread)) != 0){
+    fprintf(stderr, "errno=%d, key=%d\n", err, thread_key);
+    throw ThreadError(std::string("pthread_setspecific failed")
+		      +strerror(errno));
+  }
+  priv->is_blocked=true;
+  if(sem_wait(&priv->block_sema) != 0)
+    throw ThreadError(std::string("sem_wait: ")
+		      +strerror(errno));
+  priv->is_blocked=false;
+  priv->state=Thread::RUNNING;
+  Thread_run(priv->thread);
+  priv->state=Thread::SHUTDOWN;
+  Thread_shutdown(priv->thread);
+  return 0; // Never reached
 }
 
 void
 Thread::os_start(bool stopped)
 {
-    if(!initialized)
-      Thread::initialize();
+  if(!initialized)
+    Thread::initialize();
 
-    priv_=new Thread_private;
+  priv_=new Thread_private;
 
-    if(sem_init(&priv_->done, 0, 0) != 0)
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
-    if(sem_init(&priv_->delete_ready, 0, 0) != 0)
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
-    priv_->state=STARTUP;
-    priv_->bstacksize=0;
-    for(int i=0;i<MAXBSTACK;i++)
-	priv_->blockstack[i]=bstack_init;
+  if(sem_init(&priv_->done, 0, 0) != 0)
+    throw ThreadError(std::string("sem_init failed")
+		      +strerror(errno));
+  if(sem_init(&priv_->delete_ready, 0, 0) != 0)
+    throw ThreadError(std::string("sem_init failed")
+		      +strerror(errno));
+  priv_->state=STARTUP;
+  priv_->bstacksize=0;
+  for(int i=0;i<MAXBSTACK;i++)
+    priv_->blockstack[i]=bstack_init;
     
-    priv_->thread=this;
-    priv_->threadid=0;
+  priv_->thread=this;
+  priv_->threadid=0;
+  priv_->is_blocked=false;
+  priv_->ismain=false;
 
-    if(sem_init(&priv_->block_sema, 0, stopped?0:1))
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
+  if(sem_init(&priv_->block_sema, 0, stopped?0:1))
+    throw ThreadError(std::string("sem_init failed")
+		      +strerror(errno));
 
-    lock_scheduler();
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, stacksize_);
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setstacksize(&attr, stacksize_);
 		
-    if(pthread_create(&priv_->threadid, &attr, run_threads, priv_) != 0)
-	throw ThreadError(std::string("pthread_create failed")
-			  +strerror(errno));
-    active[numActive]=priv_;
-    numActive++;
-    unlock_scheduler();
+  lock_scheduler();
+  active[numActive]=priv_;
+  numActive++;
+  if(pthread_create(&priv_->threadid, &attr, run_threads, priv_) != 0)
+    throw ThreadError(std::string("pthread_create failed")
+		      +strerror(errno));
+  unlock_scheduler();
 }
 
 void
@@ -362,28 +371,45 @@ Thread::detach()
 void
 Thread::exitAll(int code)
 {
-  exiting=true;
-  if(initialized){
-    
+  if(initialized && !exiting){
+    exiting=true;
     lock_scheduler();
     if(initialized){
-      // Uninitialize...
-      if(sem_post(&main_sema) != 0)
-	throw ThreadError(std::string("sem_post failed")
-			  +strerror(errno));
+      // Stop all of the other threads before we die, because
+      // global destructors may destroy primitives that other
+      // threads are using...
+      Thread* me = Thread::self();
+      for(int i=0;i<numActive;i++){
+	Thread_private* t = active[i];
+	if(t->thread != me){
+	  pthread_kill(t->threadid, SIGUSR1);
+	}
+      }
+      // Wait for all threads to be in the signal handler
+      int numtries=1000000;
+      bool done=false;
+      while(--numtries && !done){
+	done=true;
+	for(int i=0;i<numActive;i++){
+	  Thread_private* t = active[i];
+	  if(t->thread != me){
+	    if(!t->is_blocked)
+	      done=false;
+	  }
+	}
+	pthread_yield();
+      }
+      if(!numtries){
+	for(int i=0;i<numActive;i++){
+	  Thread_private* t = active[i];
+	  if(t->thread != me && !t->is_blocked)
+	    fprintf(stderr, "Thread: %s is slow to stop, giving up\n", t->thread->getThreadName());
+	}
+      }
       if(sem_destroy(&main_sema) != 0)
 	throw ThreadError(std::string("sem_destroy failed")
 			  +strerror(errno));
-      if(sem_destroy(&control_c_sema) != 0)
-	throw ThreadError(std::string("sem_destroy failed")
-			  +strerror(errno));
-      if(ThreadGroup::s_default_group)
-	delete ThreadGroup::s_default_group;
-      initialized=false;
       unlock_scheduler();
-      if(pthread_key_delete(thread_key) != 0)
-	throw ThreadError(std::string("pthread_key_delete failed")
-			  +strerror(errno));
     }
     ::exit(code);
   }
@@ -493,10 +519,19 @@ static
 void
 handle_siguser1(int)
 {
-    Thread* self=Thread::self();
-    if(sem_wait(&self->priv_->block_sema) != 0)
-	throw ThreadError(std::string("sem_wait: ")
-			  +strerror(errno));
+  Thread* self=Thread::self();
+  if(!self){
+    // This can happen if the thread is just started and hasn't had
+    // the opportunity to call setspecific for the thread id yet
+    for(int i=0;i<numActive;i++)
+      if(pthread_self() == active[i]->threadid)
+	self=active[i]->thread;
+  }
+  self->priv_->is_blocked=true;
+  if(sem_wait(&self->priv_->block_sema) != 0)
+    throw ThreadError(std::string("sem_wait: ")
+		      +strerror(errno));
+  self->priv_->is_blocked=false;
 }
 
 /*
@@ -536,7 +571,7 @@ install_signal_handlers()
 			  +strerror(errno));
 
     action.sa_handler=(SIG_HANDLER_T)handle_siguser1;
-    if(sigaction(SIGQUIT, &action, NULL) == -1)
+    if(sigaction(SIGUSR1, &action, NULL) == -1)
 	throw ThreadError(std::string("SIGUSR1 failed")
 			  +strerror(errno));
 }
@@ -583,6 +618,9 @@ Thread::initialize()
   mainthread->priv_->thread=mainthread;
   mainthread->priv_->state=RUNNING;
   mainthread->priv_->bstacksize=0;
+  mainthread->priv_->is_blocked=false;
+  mainthread->priv_->threadid=pthread_self();
+  mainthread->priv_->ismain=true;
   for(int i=0;i<MAXBSTACK;i++)
       mainthread->priv_->blockstack[i]=bstack_init;
   if(pthread_setspecific(thread_key, mainthread) != 0)
@@ -860,44 +898,43 @@ ConditionVariable::wait(Mutex& m)
 bool
 ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 {
-    Thread_private* p=Thread::self()->priv_;
-    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
-    bool success;
-    if(abstime){
-	int err=pthread_cond_timedwait(&priv_->cond, &m.priv_->mutex,
-				       abstime);
-	if(err != 0){
-	    if(err == ETIMEDOUT)
-		success=false;
-	    else
-		throw ThreadError(std::string("pthread_cond_timedwait: ")
-				  +strerror(errno));
-	} else {
-	    success=true;
-	}
+  Thread_private* p=Thread::self()->priv_;
+  int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+  bool success;
+  if(abstime){
+    int err=pthread_cond_timedwait(&priv_->cond, &m.priv_->mutex,
+				   abstime);
+    if(err != 0){
+      if(err == ETIMEDOUT)
+	success=false;
+      else
+	throw ThreadError(std::string("pthread_cond_timedwait: ")
+			  +strerror(errno));
     } else {
-	if(pthread_cond_wait(&priv_->cond, &m.priv_->mutex) != 0)
-	    throw ThreadError(std::string("pthread_cond_wait: ")
-			      +strerror(errno));
-	success=true;
+      success=true;
     }
-    Thread::pop_bstack(p, oldstate);
-    return success;
+  } else {
+    if(pthread_cond_wait(&priv_->cond, &m.priv_->mutex) != 0)
+      throw ThreadError(std::string("pthread_cond_wait: ")
+			+strerror(errno));
+    success=true;
+  }
+  Thread::pop_bstack(p, oldstate);
+  return success;
 }
 
 void
 ConditionVariable::conditionSignal()
 {
-    if(pthread_cond_signal(&priv_->cond) != 0)
-	throw ThreadError(std::string("pthread_cond_signal: ")
-
-			  +strerror(errno));
+  if(pthread_cond_signal(&priv_->cond) != 0)
+    throw ThreadError(std::string("pthread_cond_signal: ")
+		      +strerror(errno));
 }
 
 void
 ConditionVariable::conditionBroadcast()
 {
-    if(pthread_cond_broadcast(&priv_->cond) != 0)
-	throw ThreadError(std::string("pthread_cond_broadcast: ")
-			  +strerror(errno));
+  if(pthread_cond_broadcast(&priv_->cond) != 0)
+    throw ThreadError(std::string("pthread_cond_broadcast: ")
+		      +strerror(errno));
 }
