@@ -16,8 +16,6 @@ using namespace Uintah;
 using std::cerr;
 using std::endl;
 
-vector<vector<const VarLabel* > > MPMLabel::d_particleState;
-vector<vector<const VarLabel* > > MPMLabel::d_particleState_preReloc;
 
 MPMLabel::MPMLabel()
 {
