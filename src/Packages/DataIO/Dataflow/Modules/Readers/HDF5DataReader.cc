@@ -871,7 +871,7 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
   vector< int > idims;
   
 #ifdef HAVE_HDF5
-  herr_t status;
+  herr_t status = 0;
 
   /* Open the file using default properties. */
   hid_t file_id, ds_id, g_id, file_space_id;
@@ -951,7 +951,7 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 
 #ifdef HAVE_HDF5
 herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
-  herr_t status;
+  herr_t status = 0;
 
   hid_t attr_id = H5Aopen_name(group_id, aname);
 
@@ -1007,6 +1007,9 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
 	return -1;
       }
       break;
+    case H5T_REFERENCE:
+	return status;
+      break;
     default:
       cerr << "Unknown or unsupported HDF5 data type" << endl;
       return -1;
@@ -1049,7 +1052,7 @@ herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
 
     if( status < 0 ) {
       cerr << "Can not read data" << endl;
-      return -1;
+      return status;
     }
 
     // This ensures that the last character is NULL.
@@ -1113,7 +1116,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 #ifdef HAVE_HDF5
   void *data = NULL;
 
-  herr_t  status;
+  herr_t status = 0;
  
   /* Open the file using default properties. */
   hid_t file_id, g_id, ds_id, file_space_id;
@@ -1178,7 +1181,14 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     }
     break;
   case H5T_COMPOUND:
-    error("Compound HDF5 data types can not be converted into Nrrds.");
+    error("At this time HDF5 Compound types can not be converted into Nrrds.");
+    error_ = true;
+    return NULL;
+    break;
+
+  case H5T_REFERENCE:
+    error("At this time HDF5 Reference types are not followed.");
+    error("Please select the actual object.");
     error_ = true;
     return NULL;
     break;
@@ -1433,8 +1443,12 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   delete dims;
   delete count;
 
+  // Add the attributs from the dataset.
+  H5Aiterate(ds_id, NULL, add_attribute, nout);
+
   std::string parent = group;
 
+  // Add the attributs from the parents.
   while( parent.length() > 0 ) {
   
     hid_t p_id = H5Gopen(file_id, parent.c_str());
@@ -1455,6 +1469,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     parent.erase( pos, parent.length()-pos);
   }
 
+  // Add the attributs from the top level.
   parent = "/";
 
   hid_t p_id = H5Gopen(file_id, parent.c_str());

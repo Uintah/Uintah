@@ -666,6 +666,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
     method process_attribute { tree parent fileId input } {
 
 	if {[gets $fileId line] >= 0 && \
+	    [string first "DATATYPE" $line] == -1} {
+	    set message "Bad datatype formation: "
+	    append message $line
+	    $this-c error $message
+	    return
+	}
+
+	set start [string first "\"" $line]
+	set end   [string  last "\"" $line]
+	set type  [string range $line [expr $start+1] [expr $end-1]]
+
+	if {[gets $fileId line] >= 0 && \
 	    [string first "DATA" $line] == -1} {
 	    set message "Bad attribute data formation: "
 	    append message $line
@@ -696,7 +708,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set aname [process_name $input]
 	    set info(type) ""
 	    set info(Node-Type) "Attribute"
-	    set info(Data-Type) ""
+	    set info(Data-Type) $type
 	    set info(Value) $attr
 	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
