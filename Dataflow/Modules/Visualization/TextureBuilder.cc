@@ -46,10 +46,6 @@
 
 #include <Core/Datatypes/MRLatVolField.h>
 
-#include <sgi_stl_warnings_off.h>
-#include <limits>
-#include <sgi_stl_warnings_on.h>
-
 namespace SCIRun {
 
 static SCIRun::DebugStream dbg("TextureBuilder", false);
@@ -274,8 +270,8 @@ TextureBuilder::new_gfield(FieldHandle gfield)
   FData3d<Vector>::const_iterator bi, ei;
   bi = gfld->fdata().begin();
   ei = gfld->fdata().end();
-  double gminval = std::numeric_limits<double>::max();
-  double gmaxval = -gminval;
+  double gminval = DBL_MAX;
+  double gmaxval = DBL_MIN;
   // Moved sqrt out of loop, do after.
   while (bi != ei)
   {
