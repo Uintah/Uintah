@@ -84,6 +84,8 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
        switchDebugLagrangianValues      = true;
       else if (debug_attr["label"] == "switchDebugLagrangianSpecificVol")
        switchDebugLagrangianSpecificVol = true;
+      else if (debug_attr["label"] == "switchDebugLagrangianTransportedVars")
+       switchDebugLagrangianTransportedVars = true;
       else if (debug_attr["label"] == "switchDebugMomentumExchange_CC")
        switchDebugMomentumExchange_CC   = true;
       else if (debug_attr["label"] == "switchDebugSource_Sink")
