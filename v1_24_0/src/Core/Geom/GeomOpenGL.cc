@@ -6333,6 +6333,7 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
   glActiveTexture(GL_TEXTURE1);
 
 #endif
+
   bool bound = glIsTexture(texname_);
 
   if(!bound){
@@ -6381,8 +6382,10 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     
     if(trans_){
-//       glAlphaFunc(GL_GREATER, alpha_cutoff_);
-//       glEnable(GL_ALPHA_TEST);
+#if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader) 
+      glAlphaFunc(GL_GREATER, alpha_cutoff_);
+      glEnable(GL_ALPHA_TEST);
+#endif
       glEnable(GL_BLEND);
       glBlendEquation(GL_FUNC_ADD);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -6410,7 +6413,7 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glMultiTexCoord3f(GL_TEXTURE2, -vz, 0.0, 0.0);
       }
 #else
-      glTexCoord2fv(GL_TEXTURE,tex_coords_+i*2);
+      glTexCoord2fv(tex_coords_+i*2);
 #endif
       glVertex3fv(pos_coords_+i*3);
     }
@@ -6424,15 +6427,15 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
     if( use_fog ) {
       fog_shader_->release();
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
       glActiveTexture(GL_TEXTURE2);
       glDisable(GL_TEXTURE_3D);
-#endif
     } else {
       shader_->release();
     }
+#endif
       
   } else {
     cerr<<"Some sort of texturing error\n";
