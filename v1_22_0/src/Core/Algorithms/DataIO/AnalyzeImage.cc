@@ -51,7 +51,6 @@
  
 // SCIRun includes
 #include <Core/Algorithms/DataIO/AnalyzeImage.h>
-#include <teem/nrrd.h>
 
 using namespace std;
 
@@ -103,32 +102,26 @@ AnalyzeImage::AnalyzeImage( itk::AnalyzeImageIO::Pointer io,
   if( type == typeid(short) )
   {
     data_type_ = "SHORT";
-    nrrd_type_ = nrrdTypeShort;
   }
   else if( type == typeid(unsigned short) )
   {
     data_type_ = "USHORT";
-    nrrd_type_ = nrrdTypeUShort;
   }
   else if( type == typeid(char) )
   {
     data_type_ = "CHAR";
-    nrrd_type_ = nrrdTypeChar;
   }
   else if( type == typeid(unsigned char) )
   {
     data_type_ = "UCHAR";
-    nrrd_type_ = nrrdTypeUChar;
   }
   else if( type == typeid(float) )
   {
     data_type_ = "FLOAT";
-    nrrd_type_ = nrrdTypeFloat;
   }
   else
   {
     data_type_ = "UNKNOWN";
-    nrrd_type_ = nrrdTypeUnknown;
   }
 
 
@@ -179,7 +172,6 @@ AnalyzeImage::AnalyzeImage(const AnalyzeImage& d)
   }
 
   data_type_ = d.data_type_;
-  nrrd_type_ = d.nrrd_type_;
 
   dim_ = d.dim_;
 
@@ -364,20 +356,6 @@ int AnalyzeImage::get_index( int i )
 {
   assert( i >= 0 && i < dim_ );
   return index_[i];
-}
-
-/*===========================================================================*/
-// 
-// get_nrrd_type
-//
-// Description : Returns the nrrdType for the given image
-//
-// Arguments   : 
-//
-//
-unsigned int AnalyzeImage::get_nrrd_type( )
-{
-  return nrrd_type_;
 }
 
 /*===========================================================================*/
