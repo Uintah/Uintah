@@ -37,9 +37,7 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn>
-                   <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <fracture></fracture>
                 <density>1000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>

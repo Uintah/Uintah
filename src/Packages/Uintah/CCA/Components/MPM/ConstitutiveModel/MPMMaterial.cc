@@ -58,12 +58,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb)
    if(!d_cm)
       throw ParameterNotFound("No constitutive model");
 
-#if 0
    d_burn = BurnFactory::create(ps);
-#else
-   d_burn = 0;
-   NOT_FINISHED("Burn busted - Steve");
-#endif
 	
    d_fracture = FractureFactory::create(ps);
 

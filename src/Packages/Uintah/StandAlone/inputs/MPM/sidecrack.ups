@@ -47,9 +47,7 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn>
-                   <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <fracture>
                    <type>normal</type>
                 </fracture>

@@ -173,6 +173,7 @@
     <MaterialProperties>
 	<ICE>
 	  <material>
+            <burn type = "null" />
 	    <ideal_gas>
 		<gas_constant>287 </gas_constant>
 	    </ideal_gas>
@@ -196,6 +197,7 @@
 	    </geom_object>
 	  </material>
 	  <material>
+            <burn type = "null" />
 	    <ideal_gas>
 		<gas_constant>287 </gas_constant>
 	    </ideal_gas>
