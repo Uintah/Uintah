@@ -65,7 +65,7 @@ Polyline::Polyline( int i )
 {
   ostringstream name;
   
-  name << "l"<<i;
+  name << "line-"<<i;
   set_name( name.str() );
 }
   
@@ -89,14 +89,18 @@ Polyline::add( double v )
     if ( v < min_ ) min_ = v;
     else if ( max_ < v ) max_ = v;
 
+  lock();
   data_.add(v);
+  unlock();
 }
 
 void
 Polyline::get_bounds( BBox2d &bb )
 {
+  lock();
   bb.extend( Point2d(0, min_));
   bb.extend( Point2d(data_.size()-1, max_ ) );
+  unlock();
 }
 
 #define POLYLINE_VERSION 1

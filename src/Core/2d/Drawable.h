@@ -34,6 +34,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Thread/Mutex.h>
 #include <sci_config.h>
 
 #include <iosfwd>
@@ -41,24 +42,31 @@
 namespace SCIRun {
 
 class  BBox2D;
+class  OpenGLWindow;
 
 class SCICORESHARE Drawable : public Datatype {
 private:
+  Mutex *lock_;
   string name_;
   bool enabled_;
   Drawable *parent_;
+
+ protected:
+  OpenGLWindow *ogl_;
 
 public:
   Drawable(const string &name="");
   virtual ~Drawable();
 
+  void lock() { lock_->lock(); }
+  void unlock() { lock_->unlock(); }
   string name() { return name_;}
   void set_name ( const string &name) { name_=name;}
   Drawable *parent() { return parent_; }
   void set_parent( Drawable *p ) { parent_ = p; }
   bool is_enabled() { return enabled_; }
   void enable( bool state ) { enabled_ = state; }
-
+  virtual void set_opengl ( OpenGLWindow *w ) { ogl_ = w ; }
   virtual void need_redraw() {}
   virtual void reset_bbox();
   virtual void get_bounds(BBox2d&) = 0;

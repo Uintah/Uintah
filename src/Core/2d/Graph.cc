@@ -52,23 +52,30 @@ ObjInfo::set_id( const string &id)
 
 
 Graph::Graph( const string &id )
-  : TclObj( "Graph" ), Drawable( id )
+  : TclObj( "Graph" ), Drawable( id ), gl_window("gl-window", id, this )
 {
-  lock_ = scinew Mutex((string("Graph::")+id).c_str());
   obj_ = 0;
 
-  ostringstream tmp;
-  tmp << id << "-" << generation;
-  set_id( tmp.str() );
+  set_id( id );
+
+  ogl_ = scinew OpenGLWindow;
+  ogl_->set_id( id + "-gl" );
 }
 
 void
 Graph::set_window( const string &window )
 {
-  TclObj::set_window( window);
+  TclObj::set_window( window );
+  reset_vars();
+  ogl_->set_window( gl_window.get(), id());
   
   if ( obj_ ) {
-    obj_->set_window( window + ".ctrl");
+    obj_->obj_->set_opengl( ogl_ );
+    TclObj *to = dynamic_cast<TclObj *>(obj_->obj_);
+    if ( to ) {
+      to->set_window( window );
+      if ( ogl_ ) ogl_->command( string(" setobj ") + to->id() );
+    }
   }
 }
 
@@ -82,8 +89,14 @@ Graph::add( const string &name, Drawable *d )
   obj_ = scinew ObjInfo (name, d );
 
   obj_->set_id( id() + "-obj" );
-  if ( initialized_ &&  window() != "" )
-    obj_->set_window( window() + ".ctrl" );
+  if ( ogl_->initialized() &&  window() != "" ) {
+    obj_->obj_->set_opengl( ogl_ );
+    TclObj *to = dynamic_cast<TclObj *>(obj_->obj_);
+    if ( to ) {
+      to->set_window( window() );
+      command( string(" setobj ") + to->id() );
+    }
+  }
 }
 
 
@@ -96,27 +109,23 @@ Graph::need_redraw()
 void
 Graph::update()
 {
-  if ( !initialized_ || !obj_) {
+  if ( !ogl_->initialized() || !obj_) {
     return; 
   }
   
-  pre();
-  clear();
+  ogl_->pre();
+  ogl_->clear();
   obj_->draw();
-  post();
+  ogl_->post();
 }
 
 void
 Graph::tcl_command(TCLArgs& args, void* userdata)
 {
-  if ( OpenGLWindow::tcl_command( args, userdata ) ) 
-   return;
-
   if ( args[1] == "redraw" ) {
-    if ( initialized_ ) 
+    if ( ogl_->initialized() ) 
       update();
   }
-
 }
 
 

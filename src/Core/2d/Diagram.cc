@@ -38,8 +38,9 @@ using std::ostringstream;
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Diagram.h>
+#include <Core/2d/Hairline.h>
 #include <Core/2d/BBox2d.h>
-
+#include <Core/2d/OpenGLWindow.h>
 
 namespace SCIRun {
 
@@ -53,8 +54,11 @@ PersistentTypeID Diagram::type_id("diagram", "Drawable", make_Diagram);
 Diagram::Diagram( const string &name)
   : TclObj( "Diagram"), Drawable(name)
 {
-  select_mode = 2;
-  scale_mode = 1;
+  select_mode_ = 2;
+  scale_mode_ = 1;
+  draw_mode_ = Draw;
+  selected_widget_ = -1;
+  selected_ = 0;
 }
 
 
@@ -78,6 +82,12 @@ Diagram::add( Drawable *d )
 
 
 void
+Diagram::add_widget( Widget *w )
+{
+  widget_.add(w);
+}
+
+void
 Diagram::reset_bbox()
 {
   graphs_bounds_.reset();
@@ -93,6 +103,7 @@ Diagram::get_bounds( BBox2d &bb )
   bb.extend( graphs_bounds_ );
 }
 
+
 void
 Diagram::tcl_command(TCLArgs& args, void* userdata)
 {
@@ -100,18 +111,55 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
     int plot = atoi( args[2].c_str() );
     bool state = args[3] == "0" ? false : true;
     graph_[plot]->enable( state );
-   if ( parent() ) parent()->need_redraw();
+    redraw();
   } 
   else if ( args[1] == "select-one" ) {
     selected_ = atoi( args[2].c_str() );
-   if ( parent() ) parent()->need_redraw();
+    redraw();
   } 
   else if ( args[1] == "redraw" ) {
     reset_vars();
-    select_mode = gui_select->get();
-    scale_mode = gui_scale->get();
-    if ( parent() ) parent()->need_redraw();
+    select_mode_ = gui_select->get();
+    scale_mode_ = gui_scale->get();
+    redraw();
   }
+  else if ( args[1] == "ButtonPress" ) {
+    int x, y, b;
+    string_to_int(args[2], x);
+    string_to_int(args[3], y);
+    string_to_int(args[4], b);
+    button_press( x, y, b );
+  }
+  else if ( args[1] == "Motion" ) {
+    int x, y, b;
+    string_to_int(args[2], x);
+    string_to_int(args[3], y);
+    string_to_int(args[4], b);
+    button_motion( x, y, b );
+  }
+  else if ( args[1] == "ButtonRelease" ) {
+    int x, y, b;
+    string_to_int(args[2], x);
+    string_to_int(args[3], y);
+    string_to_int(args[4], b);
+    button_release( x, y, b );
+  }
+  else if ( args[1] == "widget" ) {
+    // start a widget
+    if ( args[2] == "hairline" ) {
+      BBox2d b1, b2;
+      get_bounds( b1 );
+      b2.extend( Point2d( b1.min().x(), 0 ) );
+      b2.extend( Point2d( b1.max().x(), 1 ) );
+      add_widget( scinew Hairline( b2, "Hairline") );
+      redraw();
+    }
+    else {
+      cerr << "Diagram[tcl_command]: unknown widget requested" << endl;
+    }
+  }
+  else
+    cerr << "Diagram[tcl_command]: unknown tcl command requested" << endl;
 }
 
 void
@@ -129,7 +177,6 @@ Diagram::set_id( const string & id )
 void
 Diagram::set_window( const string & window )
 {
-  cerr << "Diagram name = " << name() << endl;
   TclObj::set_window( window, name() );
 
   for (int i=0; i<graph_.size(); i++) {
@@ -141,7 +188,69 @@ Diagram::set_window( const string & window )
     tcl_exec();
   }
 }
-  
+
+
+void
+Diagram::button_press( int x, int y, int button )
+{
+  if ( ogl_ ) {
+    draw_mode_ = Pick;
+
+    GLuint buffer[10]; 
+
+    ogl_->pre();
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+
+    GLint viewport[4];
+    glGetIntegerv( GL_VIEWPORT, viewport );
+
+    gluPickMatrix(x, y, 10, 10, viewport );
+
+    glSelectBuffer( 10, buffer );
+    glRenderMode( GL_SELECT );
+    glInitNames();
+    glPushName(2);
+
+    draw();
+
+    int n = glRenderMode( GL_RENDER );
+
+    if ( n > 0 ) {
+      selected_widget_ = buffer[3];
+      widget_[ selected_widget_ ]->select( x, y, button );
+    }
+
+    glPopMatrix();
+    ogl_->post();
+    
+    draw_mode_ = Draw;
+    redraw();
+  }
+  else
+    cerr << "diagram no ogl \n";
+}
+
+void
+Diagram::button_motion( int x, int y, int button )
+{
+  if ( selected_widget_ != -1 ) {
+    widget_[selected_widget_]->move( x, y, button );
+    redraw();
+  }
+}
+
+void
+Diagram::button_release( int x, int y, int button )
+{
+  if ( selected_widget_ != -1) {
+    widget_[ selected_widget_ ]->release(x, y, button );
+    selected_widget_ = -1;
+    redraw();
+  }
+}
+
 #define DIAGRAM_VERSION 1
 
 void 

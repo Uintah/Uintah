@@ -22,13 +22,14 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TclObj.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/Color.h>
 
 
 namespace SCIRun {
 
-class OpenGLWindow {
+class OpenGLWindow : public TclObj {
 private:
   Mutex *lock_;
 
@@ -49,19 +50,34 @@ public:
   void unlock() { lock_->unlock(); }
 
   bool init( const string &);
-  bool tcl_command(TCLArgs&, void*);
+  bool initialized() { return initialized_; }
+  virtual void tcl_command(TCLArgs&, void*);
+  
+  virtual void clear();
+  virtual void pre();
+  virtual void post();
+  void print_string( char *);
 
+  OpenGLWindow *sub_window( int l, int r, int t, int b );
 protected:
   virtual void report_init() {}
-  void clear();
-  void pre();
-  void post();
   void make_raster_font();
-  void print_string( char *);
 
   bool initialized_;
 };
 
+
+/* class OpenGLSubWindow : public OpenGLWindow { */
+/*  private: */
+/*   int left_, right_, top_, bottom_; */
+
+/*  public: */
+/*   OpenGLSubWindow( OpenGLWindow &ogl, int l, int r, int t, int b )  */
+/*     : OpenGLWindow(ogl), left_(l), right_(r), top_(t), bottom_(b) */
+/*     { */
+/*     } */
+
+/* }; */
 
 } // End namespace SCIRun
 

@@ -15,56 +15,62 @@
   University of Utah. All Rights Reserved.
 */
 
+
 /*
- *  Drawable.cc: Displayable 2D object
+ *  Widget.cc: 
  *
  *  Written by:
  *   Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
- *   July 2001
+ *   Aug 2001
  *
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/2d/Drawable.h>
 
+#include <stdio.h>
 #include <iostream>
 using std::cerr;
-using std::endl;
+using std::ostream;
+#include <sstream>
+using std::ostringstream;
+
+#include <Core/Malloc/Allocator.h>
+#include <Core/2d/Widget.h>
+
 
 namespace SCIRun {
 
-PersistentTypeID Drawable::type_id("Drawable", "Datatype", 0);
-
-Drawable::Drawable( const string &name) 
-  : name_(name), enabled_(true), parent_(0), ogl_(0)
+Persistent* make_Widget()
 {
-  lock_ = scinew Mutex( name.c_str() );
+  return scinew Widget;
+}
+
+PersistentTypeID Widget::type_id("Widget", "Drawable", make_Widget);
+
+Widget::Widget( const string &name)
+  : Drawable(name)
+{
 }
 
 
-Drawable::~Drawable()
+Widget::~Widget()
 {
 }
 
-void Drawable::reset_bbox()
+  
+#define WIDGET_VERSION 1
+
+void 
+Widget::io(Piostream& stream)
 {
-  // Nothing to do, by default.
+  stream.begin_class("Widget", WIDGET_VERSION);
+  Drawable::io(stream);
+  stream.end_class();
 }
 
-void Drawable::io(Piostream&)
-{
-  // Nothing for now...
-}
 
-void Pio( Piostream & stream, Drawable *& obj )
-{
-  Persistent* tmp=obj;
-  stream.io(tmp, Drawable::type_id);
-  if(stream.reading())
-    obj=(Drawable*)tmp;
-}
+} // namespace SCIRun
 
-} // End namespace SCIRun
+  
