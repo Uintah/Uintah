@@ -20,12 +20,14 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-using namespace SCIRun;
-
 namespace Uintah {
 
   using std::string;
   using std::map;
+
+  using SCIRun::Vector;
+  using SCIRun::Point;
+  using SCIRun::IntVector;
 
   class NodeIterator;
   class CellIterator;
