@@ -1,0 +1,159 @@
+#ifndef __SHELL_CONSTITUTIVE_MODEL_H__
+#define __SHELL_CONSTITUTIVE_MODEL_H__
+
+#include <math.h>
+#include "ConstitutiveModel.h"
+#include "PlasticityModel.h"
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <vector>
+
+namespace Uintah {
+
+/**************************************
+
+CLASS
+   ShellMaterial
+   
+   ShellMaterial Model
+
+GENERAL INFORMATION
+
+   ShellMaterial.h
+
+   Biswajit Banerjee
+   Department of Mechanical Engineering
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2003 University of Utah
+
+KEYWORDS
+   ShellMaterial formulation
+
+DESCRIPTION
+   
+WARNING
+
+   Only Isotropic ShellMaterials
+  
+****************************************/
+  class ShellMaterial : public ConstitutiveModel {
+
+  public:
+    // Create datatype for storing model parameters
+    struct CMData {
+      double Bulk;
+      double Shear;
+    };
+
+  private:
+    CMData d_initialData;
+
+    // Prevent copying of this class
+    // copy constructor
+    ShellMaterial(const ShellMaterial &cm);
+    ShellMaterial& operator=(const ShellMaterial &cm);
+
+  public:
+    // constructors
+    ShellMaterial(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+       
+    // destructor
+    virtual ~ShellMaterial();
+
+    // compute stable timestep for this patch
+    virtual void computeStableTimestep(const Patch* patch,
+				       const MPMMaterial* matl,
+				       DataWarehouse* new_dw);
+
+    // compute stress at each particle in the patch
+    virtual void computeStressTensor(const PatchSubset* patches,
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw);
+
+    virtual void computeStressTensor(const PatchSubset* patches,
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw,
+				     Solver* solver,
+				     const bool recursion);
+
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+				  std::vector<const VarLabel*>& to);
+	 
+    // initialize  each particle's constitutive model data
+    virtual void initializeCMData(const Patch* patch,
+				  const MPMMaterial* matl,
+				  DataWarehouse* new_dw);
+
+    virtual void addInitialComputesAndRequires(Task* task,
+					       const MPMMaterial* matl,
+					       const PatchSet* patches) const;
+
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches) const;
+
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches,
+					const bool recursion) const;
+
+    virtual double computeRhoMicroCM(double pressure,
+				     const double p_ref,
+				     const MPMMaterial* matl);
+
+    virtual void computePressEOSCM(double rho_m, double& press_eos,
+				   double p_ref,
+				   double& dp_drho, double& ss_new,
+				   const MPMMaterial* matl);
+
+    virtual double getCompressibility();
+
+    // class function to read correct number of parameters
+    // from the input file
+    static void readParameters(ProblemSpecP ps, double *p_array);
+
+    // class function to write correct number of parameters
+    // from the input file, and create a new object
+    static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+
+    // member function to read correct number of parameters
+    // from the input file, and any other particle information
+    // need to restart the model for this particle
+    // and create a new object
+    static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
+
+    // class function to create a new object from parameters
+    static ConstitutiveModel* create(double *p_array);
+
+  protected:
+
+    // Calculate the incremental rotation matrix for a shell particle
+    Matrix3 calcIncrementalRotation(const Vector& r, const Vector& n,
+                                     double delT);
+
+    // Calculate the total rotation matrix for a shell particle
+    Matrix3 calcTotalRotation(const Vector& n0, const Vector& n);
+
+    // Calculate the rotation matrix given and angle and the axis
+    // of rotation
+    Matrix3 calcRotationMatrix(double angle, const Vector& axis);
+
+    // Calculate the in-plane velocity and rotation gradient 
+    void calcInPlaneGradient(const Vector& n, Matrix3& velGrad,
+                             Matrix3& rotGrad);
+
+    // Calculate the plane stress deformation gradient corresponding
+    // to sig33 = 0 and the Cauchy stress
+    void computePlaneStressDefGrad(Matrix3& F, Matrix3& sig);
+
+  };
+} // End namespace Uintah
+      
+
+
+#endif  // __SHELL_CONSTITUTIVE_MODEL_H__ 
+
