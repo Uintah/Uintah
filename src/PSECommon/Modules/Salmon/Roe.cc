@@ -253,8 +253,13 @@ void Roe::get_bounds(BBox& bbox)
 
   // XXX - START - ASF ADDED FOR UNICAM
 //   cerr << "roe_objs.size() = " << roe_objs.size() << endl;
-  for(int i=0;i<roe_objs.size();i++)
-    roe_objs[i]->get_bounds(bbox);
+  int objs_size = roe_objs.size();
+  int draw_size = roe_objs_draw.size();
+  for(int i=0;i<roe_objs.size();i++) {
+    
+    if (i<draw_size && roe_objs_draw[i])
+      roe_objs[i]->get_bounds(bbox);
+  }
   // XXX - END   - ASF ADDED FOR UNICAM
 }
 
@@ -2085,6 +2090,10 @@ GeomGroup* Roe::createGenAxes() {
 } // End namespace PSECommon
 
 // $Log$
+// Revision 1.24  2000/12/06 04:36:03  moulding
+// only include roe_objs that are visible in the get_bounds() test.  This prevents
+// the axes from forcing the autoview to use it's bounding box when not visible.
+//
 // Revision 1.23  2000/12/04 17:34:42  yarden
 // fix a bug caused by a clash between darby's last
 // update and the code from Brown.
