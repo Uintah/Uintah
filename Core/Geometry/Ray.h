@@ -34,7 +34,7 @@ public:
 
     Point origin() const;
     Vector direction() const;
-  Point parameter(double t); // returns the Point at parameter t
+  Point parameter(double t) const; // returns the Point at parameter t
 			     //  does not pre-normalized direction
     
   
