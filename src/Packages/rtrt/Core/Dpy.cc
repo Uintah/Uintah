@@ -76,6 +76,7 @@
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
 #include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Grid2.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
@@ -353,8 +354,17 @@ Dpy::checkGuiFlags()
 
   if(animate && scene->animate) {
     Array1<Object*> & objects = scene->animateObjects_;
-    for( int num = 0; num < objects.size(); num++ )
+    for( int num = 0; num < objects.size(); num++ ) {
       objects[num]->animate(SCIRun::Time::currentSeconds(), changed);
+      Grid2 *anim_grid = objects[num]->get_anim_grid();
+      BBox bbox;
+      if (anim_grid) {
+        objects[num]->compute_bounds(bbox, 1E-5);
+        anim_grid->remove(objects[num],bbox);
+        anim_grid->insert(objects[num],bbox);
+        bbox.reset();
+      }
+    }
   }
 
   if( attachedObject_ ) {
