@@ -602,9 +602,9 @@ itcl_class ViewWindow {
 	set actual 0
 	foreach w [winfo children .] {
 	    set parts [split $w -]
-	    set viewer [lindex $parts 0]
+	    set viewer_id [lindex $parts 0]
 	    set window [lindex $parts 1]
-	    if { [string equal $myviewer $viewer] } {
+	    if { [string equal $myviewer $viewer_id] } {
 		if { ![string equal $mywindow $window] } {
 		    set num [lindex [split $window _] end]
 		    $m add command -label "Get View from Viewer $num" \
