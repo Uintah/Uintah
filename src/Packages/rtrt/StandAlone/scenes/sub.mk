@@ -44,8 +44,6 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/uintahdata.mo \
 	$(SRCDIR)/vfem.mo \
 	$(SRCDIR)/volume_color.mo \
-	$(SRCDIR)/VolumeVisMod.mo \
-	$(SRCDIR)/VolumeVis2DMod.mo \
 	$(SRCDIR)/vthorax.mo \
 	$(SRCDIR)/ASE-RTRT.mo\
 	$(SRCDIR)/simple_tri.mo \
@@ -63,7 +61,6 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/davidhead.mo  \
 #	$(SRCDIR)/figure1.mo \
-#	$(SRCDIR)/dtiglyph.mo 
 #	$(SRCDIR)/david_old.mo \
 #	$(SRCDIR)/ramsey.mo \
 # 	$(SRCDIR)/miptest.mo \
@@ -80,8 +77,6 @@ SCENES := $(SRCDIR)/0.mo \
 #	$(SRCDIR)/cutdemo.mo  \
 #	$(SRCDIR)/basic-sea.mo  \
 #	$(SRCDIR)/spinning_instance_demo.mo \
-#	$(SRCDIR)/science-room.mo \
-#	$(SRCDIR)/science-room-full.mo \
 #	$(SRCDIR)/stadium.mo \
 #	$(SRCDIR)/multi-scene.mo \
 
@@ -90,6 +85,16 @@ ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
 SCENES += \
 	$(SRCDIR)/uintahisosurface.mo \
 	$(SRCDIR)/uintahparticle2.mo
+endif
+
+ifeq ($(findstring Teem, $(LOAD_PACKAGE)),Teem)
+SCENES += \
+	$(SRCDIR)/VolumeVisMod.mo \
+	$(SRCDIR)/VolumeVis2DMod.mo \
+	$(SRCDIR)/VolumeVisRGBAMod.mo \
+#	$(SRCDIR)/dtiglyph.mo \
+#	$(SRCDIR)/science-room.mo \
+#	$(SRCDIR)/science-room-full.mo \
 endif
 
 
@@ -122,6 +127,9 @@ $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/VolumeVis2DMod.mo: $(SRCDIR)/VolumeVis2DMod.o
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+
+$(SRCDIR)/VolumeVisRGBAMod.mo: $(SRCDIR)/VolumeVisRGBAMod.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
