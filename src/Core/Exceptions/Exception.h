@@ -62,9 +62,10 @@ namespace SCIRun {
 	 static void sci_throw(const Exception& exc);
 	 static bool alwaysFalse();
       protected:
+         const char* stacktrace_;
       private:
 	 Exception& operator=(const Exception&);
-	 const char* stacktrace_;
+
       };
 } // End namespace SCIRun
 
