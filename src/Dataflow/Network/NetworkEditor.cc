@@ -290,7 +290,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("netedit getconnections needs a module name");
 	    return;
 	}
-	std::cerr << "Finding module: " << args[2] << std::endl;
 	Module* mod=net->get_module_by_id(args[2]);
 	if(!mod){
 	    args.error("netedit addconnection can't find output module");
