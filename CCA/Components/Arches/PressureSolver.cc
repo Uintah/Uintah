@@ -169,6 +169,10 @@ void
 PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
 					const MaterialSet* matls,double delta_t)
 {
+
+  // Build momentum equation coefficients and sources that are needed 
+  // to later build pressure equation coefficients and source
+
   {
     Task* tsk = scinew Task( "Psolve::BuildCoeff", 
 			     this, &PressureSolver::buildLinearMatrix,
@@ -244,6 +248,10 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     
     sched->addTask(tsk, patches, matls);
   }
+
+  // Now build pressure equation coefficients from momentum equation 
+  // coefficients
+
   {
     Task* tsk = scinew Task( "Psolve::BuildCoeffP",
 			     this,
@@ -283,6 +291,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     /// requires convection coeff because of the nodal
     // differencing
     // computes all the components of velocity
+
     tsk->requires(Task::NewDW, d_lab->d_uVelCoefPBLMLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, numGhostCells);
@@ -308,6 +317,12 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     tsk->requires(Task::NewDW, d_lab->d_wVelNonLinSrcPBLMLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
+
+    if (d_MAlab) {
+      tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		    Ghost::AroundCells, numGhostCells);
+    }
+
     sched->addTask(tsk, patches, matls);
   }
 
@@ -518,7 +533,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 
 
 // ****************************************************************************
-// Actually build of linear matrix
+// Actual build of linear matrices for momentum components
 // ****************************************************************************
 void 
 PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
@@ -673,7 +688,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       d_source->calculateVelocitySource(pc, patch, 
 					delta_t, index,
 					cellinfo, &pressureVars);
+
       // add multimaterial momentum source term
+
       if (d_MAlab)
 	d_source->computemmMomentumSource(pc, patch, index, cellinfo,
 					  &pressureVars);
@@ -684,6 +701,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 					    mmVars, &pressureVars);
       }
 #endif
+
       // Calculate the Velocity BCS
       //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
       //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
@@ -695,6 +713,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    cellinfo, &pressureVars);
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
+
     if (d_MAlab)
       d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo, &pressureVars);
     
@@ -703,12 +722,14 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
     //           [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+
     d_source->modifyVelMassSource(pc, patch, delta_t, index,
 				  &pressureVars);
 
     // Calculate Velocity diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
     //  outputs: [u,v,w]VelCoefPBLM
+
     d_discretize->calculateVelDiagonal(pc, patch,
 				       index,
 				       &pressureVars);
@@ -745,7 +766,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
 }
 // ****************************************************************************
-// Actually build of linear matrix
+// Actually build of linear matrix for pressure equation
 // ****************************************************************************
 void 
 PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
@@ -830,11 +851,24 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
 					 delta_t, cellinfo, &pressureVars);
 
+    // Modify pressure coefficients for multimaterial formulation
+
+    if (d_MAlab) {
+
+      new_dw->get(pressureVars.voidFraction,
+		  d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+		  Ghost::AroundCells, numGhostCells);
+
+      d_discretize->mmModifyPressureCoeffs(pc, patch, &pressureVars);
+
+    }
+
     // Calculate Pressure Source
     //  inputs : pressureSPBC, [u,v,w]VelocitySIVBC, densityCP,
     //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
     //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
     // Allocate space
+
     new_dw->allocate(pressureVars.pressLinearSrc, 
 		     d_lab->d_presLinSrcPBLMLabel, matlIndex, patch);
     new_dw->allocate(pressureVars.pressNonlinearSrc, 
@@ -843,28 +877,33 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     d_source->calculatePressureSource(pc, patch, delta_t,
 				      cellinfo, &pressureVars);
 
-
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM
     //  outputs: presCoefPBLM
+
     d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				    cellinfo, &pressureVars);
     // do multimaterial bc
+
     if (d_MAlab)
       d_boundaryCondition->mmpressureBC(pc, patch, cellinfo, &pressureVars);
+
     // Calculate Pressure Diagonal
     //  inputs : presCoefPBLM, presLinSrcPBLM
     //  outputs: presCoefPBLM 
+
     d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw, 
 					 &pressureVars);
   
     // put required vars
+
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
 		  ii, patch);
     }
     new_dw->put(pressureVars.pressNonlinearSrc, 
 		d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+
 #ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
 #endif
