@@ -26,10 +26,10 @@ extern "C" {
 /*
  * Class:     ptolemy_scirun_StartSCIRun
  * Method:    getScirun
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)I
  */
 JNIEXPORT jint JNICALL Java_ptolemy_scirun_StartSCIRun_getScirun
-  (JNIEnv *, jobject, jstring, jstring, jstring);
+  (JNIEnv *, jobject, jstring, jstring, jstring, jint);
 
 /*
  * Class:     ptolemy_scirun_StartSCIRun

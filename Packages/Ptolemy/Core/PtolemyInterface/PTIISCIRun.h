@@ -8,21 +8,22 @@
 #include <Core/Thread/Runnable.h>
 
 #include <iostream>
-
+#include <jni.h>
 using namespace SCIRun;
 
 class StartSCIRun : public Runnable {
 public:
-  StartSCIRun(std::string netPath, std::string data, std::string module) 
-  		{ netName = netPath;  dataPath = data;  readerName = module; }
-  StartSCIRun() { netName = "";  dataPath = "";  readerName = "";}
-  virtual ~StartSCIRun() { netName = "";  std::cerr << "~StartSCIRun" << std::endl; }
+  StartSCIRun(std::string netPath, std::string data, std::string module, jint run) 
+  		{ netName = netPath;  dataPath = data;  readerName = module; runNet = run; }
+  StartSCIRun() { netName = "";  dataPath = "";  readerName = ""; runNet = 0; }
+  virtual ~StartSCIRun() 
+  		{ netName = "";  dataPath = "";  readerName = ""; runNet = 0;  std::cerr << "~StartSCIRun" << std::endl; }
   void run();
 private:
   std::string netName;
   std::string dataPath;
   std::string readerName;
-  
+  jint runNet;
 };
 
 class PTIIWorker : public Runnable {
