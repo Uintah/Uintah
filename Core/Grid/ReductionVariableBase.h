@@ -49,8 +49,9 @@ WARNING
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
       virtual void print(ostream&) = 0;
-      virtual void getMPIBuffer(void*& buf, int& count,
-				MPI_Datatype& datatype, MPI_Op& op) = 0;
+      virtual void getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op) = 0;
+      virtual void getMPIData(vector<char>& buf, int& index) = 0;
+      virtual void putMPIData(vector<char>& buf, int& index) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(string& elems, unsigned long& totsize,
