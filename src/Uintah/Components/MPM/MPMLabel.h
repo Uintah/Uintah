@@ -75,6 +75,9 @@ namespace Uintah {
       const VarLabel* gInternalHeatRateLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gThermalContactHeatExchangeRateLabel;
+      const VarLabel* gNormTractionLabel;
+      const VarLabel* gSurfNormLabel;
+      const VarLabel* gStressLabel;
       
       const VarLabel* cSelfContactLabel; //for fracture, CCVariable
       const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
@@ -96,6 +99,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.20  2000/08/04 16:42:42  guilkey
+// Added VarLabels specific to FrictionContact so that those variables
+// can be pleaseSaved.
+//
 // Revision 1.19  2000/07/27 22:17:16  jas
 // Consolidated the registerPermanentParticleState to take both the
 // regular labels and the pre_Reloc labels.
