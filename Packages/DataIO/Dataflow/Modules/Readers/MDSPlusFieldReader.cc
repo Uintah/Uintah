@@ -435,7 +435,7 @@ void MDSPlusFieldReader::execute(){
     vector< pair< int, double > > sliceList;
 
     for( int ic=0; ic<nSlices; ic++ ) {
-      name = mds.slice_name( nids[ic] );
+      name = mds.name( nids[ic] );
       time = mds.slice_time( name );
 
       sliceList.push_back( pair< int, double >(ic, time) );
@@ -486,7 +486,7 @@ void MDSPlusFieldReader::execute(){
 
       slice = sliceList[ic].first;
 
-      name = mds.slice_name( nids[slice] );
+      name = mds.name( nids[slice] );
       time = mds.slice_time( name );
 
       {
