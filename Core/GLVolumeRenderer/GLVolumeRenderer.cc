@@ -273,9 +273,9 @@ GLVolumeRenderer::BuildTransferFunctions( )
       //	  if( j == 128 ) cerr <<" c.b() = "<< c.b()<<std::endl;
       //	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
 
-      transfer_functions_[i][4*j + 0] = (unsigned char)(c.r()*255);
-      transfer_functions_[i][4*j + 1] = (unsigned char)(c.g()*255);
-      transfer_functions_[i][4*j + 2] = (unsigned char)(c.b()*255);
+      transfer_functions_[i][4*j + 0] = (unsigned char)(c.r()*alpha2*255);
+      transfer_functions_[i][4*j + 1] = (unsigned char)(c.g()*alpha2*255);
+      transfer_functions_[i][4*j + 2] = (unsigned char)(c.b()*alpha2*255);
       transfer_functions_[i][4*j + 3] = (unsigned char)(alpha2*255);
     }
   }
