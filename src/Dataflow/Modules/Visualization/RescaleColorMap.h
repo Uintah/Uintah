@@ -31,31 +31,11 @@ class RescaleColorMap : public Module {
 
 public:
 
-        // GROUP:  Constructors:
-        ///////////////////////////
-        // Constructs an instance of class RescaleColorMap
-        // Constructor taking
-        //    [in] id as an identifier
+  //! Constructor taking [in] id as an identifier
   RescaleColorMap(const string& id);
 
-        // GROUP:  Destructor:
-        ///////////////////////////
-        // Destructor
   virtual ~RescaleColorMap();
-
-  virtual void get_minmax(FieldHandle f);
-
-  template<class F> void dispatch_minmax(F *f) 
-  { success_ = field_minmax(*f, minmax_); }
-
-        // GROUP:  Access functions:
-        ///////////////////////////
-        // execute() - execution scheduled by scheduler
   virtual void execute();
-        ///////////////////////////
-
-  //  virtual void connection(ConnectionMode mode, int which_port, int);
-
 protected:
   bool success_;
 

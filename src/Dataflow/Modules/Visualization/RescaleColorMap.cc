@@ -38,39 +38,11 @@
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/DispatchScalar1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
 namespace SCIRun {
-
-/**************************************
-CLASS
-   RescaleColorMap
-
-   A module that can scale the colormap values to fit the data
-   or express a fixed data range.
-
-GENERAL INFORMATION
-   RescaleColorMap.h
-   Written by:
-
-     Kurt Zimmerman<br>
-     Department of Computer Science<br>
-     University of Utah<br>
-     June 1999
-
-     Copyright (C) 1998 SCI Group
-
-KEYWORDS
-   ColorMap, Transfer Function
-
-DESCRIPTION
-   This module takes a color map and some data or vector field
-   and scales the map to fit that field.
-
-****************************************/
 
 extern "C" Module* make_RescaleColorMap(const string& id) {
   return new RescaleColorMap(id);
@@ -86,11 +58,6 @@ RescaleColorMap::RescaleColorMap(const string& id)
 
 RescaleColorMap::~RescaleColorMap()
 {
-}
-
-
-void RescaleColorMap::get_minmax(FieldHandle field) {
-  dispatch_scalar1(field, dispatch_minmax);
 }
 
 void
@@ -113,14 +80,29 @@ RescaleColorMap::execute()
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
       FieldHandle field;
       if (ifield->get(field)) {
-        if ( !field->is_scalar() ) {
-          error("Not a scalar input field.");
+
+	ScalarFieldInterface *sfi = field->query_scalar_interface();
+	VectorFieldInterface *vfi = field->query_vector_interface();
+	if (sfi) {
+	  // get minmax of the scalar field.
+	  if ( !field->get("minmax", minmax_)) {
+	    sfi->compute_min_max(minmax_.first, minmax_.second);
+	    // cache this potentially expensive to compute value.
+	    field->store("minmax", minmax_);
+	  }
+	} else if (vfi) {
+	  // get minmax of the vector field.
+	  static pair<Vector, Vector> minmax;
+	  if ( !field->get("minmax", minmax)) {
+	    vfi->compute_min_max(minmax.first, minmax.second);
+	    // cache this potentially expensive to compute value.
+	    field->store("minmax", minmax);
+	  }
+	  minmax_.first = 0.0;
+	  minmax_.second = minmax.second.length();
+	} else {
+          error("RescaleColorMap::Not a scalar or vector input field.");
           return;
-        }
-	get_minmax(field);
-	if (!success_) {
-	  error("Can not compute minmax for input field.");
-	  return;
 	}
 	cmap->Scale( minmax_.first, minmax_.second);
 	min.set( minmax_.first );
