@@ -6,8 +6,10 @@
 #include <string>
 #include <vector>
 
+#if !defined( linux )
 #include <dmedia/audiofile.h>
 #include <dmedia/audio.h>
+#endif
 
 namespace rtrt {
 
