@@ -11,10 +11,11 @@ using namespace Uintah;
 
 SimulationState::SimulationState(ProblemSpecP &ps)
 {
-   delt_label = scinew VarLabel("delT",
+   VarLabel* nonconstDelt = scinew VarLabel("delT",
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
-
-
+   nonconstDelt->allowMultipleComputes();
+   delt_label = nonconstDelt;
+   
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
 
@@ -51,6 +52,9 @@ SimulationState::~SimulationState()
 
 //
 // $Log$
+// Revision 1.18  2001/01/05 18:57:12  witzel
+// allow delT to have multiple computes in the task graph
+//
 // Revision 1.17  2000/11/13 21:39:57  guilkey
 // Added stuff for ICEMaterial analogous to the MPMMaterial stuff added
 // last week.
