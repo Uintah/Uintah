@@ -32,8 +32,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/ColumnMatrix.h>
+#include <Dataflow/Modules/Fields/ScaleFieldData.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
@@ -67,6 +66,7 @@ ScaleFieldData::~ScaleFieldData()
 }
 
 
+
 void
 ScaleFieldData::execute()
 {
@@ -85,29 +85,53 @@ ScaleFieldData::execute()
   {
     return;
   }
-  const unsigned int rows = imatrix->nrows();
 
-  // Create a new Vector field with the same geometry handle as field.
-  const string geom_name = ifield->get_type_name(0);
-  const string data_name = ifield->get_type_name(1);
-
-  if (data_name == "Vector" && geom_name == "PointCloud") {
-    PointCloud<Vector> *pc = dynamic_cast<PointCloud<Vector> *>(ifieldhandle.get_rep());
-    if (rows != pc->fdata().size()) {
-      error("Different size data vectors.");
-      return;
-    }
-    PointCloud<Vector> *pcs = pc->clone();
-    for (unsigned int i=0; i<pc->fdata().size(); i++) {
-      pcs->fdata()[i] = pc->fdata()[i] * imatrix->get(i, 0);
-    }
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    FieldHandle ofieldhandle(pcs);
-    ofield_port->send(ofieldhandle);
-  } else {
-    error("I only know how to scale vectors.");
+  const TypeDescription *ftd = ifieldhandle->get_type_description();
+  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+  CompileInfo *ci = ScaleFieldDataAlgo::get_compile_info(ftd, ltd);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    cout << "Could not compile algorithm." << std::endl;
     return;
   }
+  ScaleFieldDataAlgo *algo =
+    dynamic_cast<ScaleFieldDataAlgo *>(algo_handle.get_rep());
+  if (algo == 0)
+  {
+    cout << "Could not get algorithm." << std::endl;
+    return;
+  }
+  FieldHandle ofieldhandle(algo->execute(ifieldhandle, imatrix));
+
+  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  ofield_port->send(ofieldhandle);
 }
+
+
+
+CompileInfo *
+ScaleFieldDataAlgo::get_compile_info(const TypeDescription *field_td,
+				     const TypeDescription *loc_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ScaleFieldDataAlgoT");
+  static const string base_class_name("ScaleFieldDataAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       to_filename(field_td->get_name()) + "." +
+		       to_filename(loc_td->get_name()) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       field_td->get_name() + ", " + loc_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  field_td->fill_compile_info(rval);
+  return rval;
+}
+
 
 } // End namespace SCIRun
