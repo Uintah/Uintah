@@ -119,6 +119,15 @@ void Array1<T>::remove_all()
     _size=0;
 }
 
+template<class T>
+void Array1<T>::resize(int newsize)
+{
+    if(newsize > _size)
+	grow(newsize-_size);
+    else
+	_size=newsize;
+}
+
 #define ARRAY1_VERSION 1
 
 template<class T>
