@@ -1075,7 +1075,7 @@ ImageCM2Widget::clone()
 const float trans = 1.0/255.0;
 
 void
-ImageCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
+ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, bool /*faux*/, 
 			  Pbuffer* pbuffer)
 {
   CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - start")
@@ -1183,7 +1183,7 @@ ImageCM2Widget::resize(int width, int height)
 }
 
 void
-ImageCM2Widget::rasterize(Array3<float>& array, bool faux)
+ImageCM2Widget::rasterize(Array3<float>& array, bool /*faux*/)
 {
   if (! pixels_.get_rep()) return;
   ASSERT(pixels_->nrrd->type == nrrdTypeFloat);

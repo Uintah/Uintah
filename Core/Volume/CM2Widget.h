@@ -218,7 +218,7 @@ public:
   virtual void release (int obj, int x, int y, int w, int h) {}
   
   virtual std::string tcl_pickle() {return "i";}
-  virtual void tcl_unpickle(const std::string &p) {}
+  virtual void tcl_unpickle(const std::string &/*p*/) {}
 
   virtual void io(SCIRun::Piostream &stream);
   static SCIRun::PersistentTypeID type_id;

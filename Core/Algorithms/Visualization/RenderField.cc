@@ -214,14 +214,14 @@ to_double(const Vector &in, double &out)
 
 template <>
 bool
-to_double(const Tensor &in, double &out)
+to_double(const Tensor &/*in*/, double &/*out*/)
 {
   return false;
 }
 
 template <>
 bool
-to_double(const string &in, double &out)
+to_double(const string &/*in*/, double &/*out*/)
 {
   return false;
 }
