@@ -230,7 +230,7 @@ class ViewImage : public Module
   //! output port
   GeometryOPort *	ogeom_;
 
-  FreeTypeLibrary	freetype_lib_;
+  FreeTypeLibrary *	freetype_lib_;
   map<string, FreeTypeFace *>		fonts_;
   Labels		labels_;
   
@@ -379,32 +379,42 @@ ViewImage::ViewImage(GuiContext* ctx) :
   min_(ctx->subVar("min"), -1),
   max_(ctx->subVar("max"), -1),
   ogeom_(0),
-  freetype_lib_(),
+  freetype_lib_(0),
   fonts_(),
   labels_(0)
 {
   try {
-    string sdir;
-    const char *dir = sci_getenv("SCIRUN_FONT_PATH");
-    if (dir) 
-      sdir = dir;
-    else
-      sdir = string(sci_getenv("SCIRUN_SRCDIR"))+"/Fonts";
-
-    fonts_["default"] = freetype_lib_.load_face(sdir+"/scirun.ttf");
-    fonts_["anatomical"] = fonts_["default"];
-    fonts_["patientname"] = fonts_["default"];
-    fonts_["postiion"] = fonts_["default"];
-
+    freetype_lib_ = scinew FreeTypeLibrary();
   } catch (...) {
-    fonts_.clear();
-    fonts_["default"] = 0;
-    fonts_["anatomical"] = fonts_["default"];
-    fonts_["patientname"] = fonts_["default"];
-    fonts_["postiion"] = fonts_["default"];
+    error("Cannot Initialize FreeType Library.  Did you configure with --with-freetype= ?");
+    error("Module will not render text.");
+  }
 
-    std::cerr << id << ": Error loading fonts.\n" <<
-      "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n";
+  if (freetype_lib_) {
+    try {
+      freetype_lib_ = scinew FreeTypeLibrary();
+      string sdir;
+      const char *dir = sci_getenv("SCIRUN_FONT_PATH");
+      if (dir) 
+	sdir = dir;
+      else
+	sdir = string(sci_getenv("SCIRUN_SRCDIR"))+"/Fonts";
+      
+      fonts_["default"] = freetype_lib_->load_face(sdir+"/scirun.ttf");
+      fonts_["anatomical"] = fonts_["default"];
+      fonts_["patientname"] = fonts_["default"];
+      fonts_["position"] = fonts_["default"];
+      
+    } catch (...) {
+      fonts_.clear();
+      fonts_["default"] = 0;
+      fonts_["anatomical"] = fonts_["default"];
+      fonts_["patientname"] = fonts_["default"];
+      fonts_["position"] = fonts_["default"];
+      
+      error("Error loading fonts.\n"
+	    "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
+    }
   }
 }
 
@@ -1093,8 +1103,8 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
   draw_position_label(window);
   draw_anatomical_labels(window);
-  FreeTypeFace *font = fonts_["paitentname"];
-  if (font) {
+  FreeTypeFace *font = fonts_["patientname"];
+  if (0 && font) {
     font->set_points(20.0);
     draw_label(window, "Patient Name: Anonymous", 
 	       window.viewport_->width() - 2,
