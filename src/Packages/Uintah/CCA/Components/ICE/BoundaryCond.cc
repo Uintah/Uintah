@@ -32,8 +32,8 @@ bool insideOfObject(const int i,
   Vector dx = patch->dCell();
   //__________________________________
   //  Hard coded for a jet 
-  Vector origin(0.5, 0.0, 0.0);         // origin of jet
-  double radius = 0.2;                  // radius of jet
+  Vector origin(0.0, 0.0, 0.0);         // origin of jet
+  double radius = 0.05;                  // radius of jet
   double x = (double) (i) * dx.x() + dx.x()/2.0;
   double z = (double) (k) * dx.z() + dx.z()/2.0;
 
@@ -340,6 +340,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
 #if JET_BC
 //        cout << " I'm in density "<< face << endl;
         double hardCodedDensity = 1.1792946927* (300.0/1000.0);
+//        double hardCodedDensity = 1.1792946927;
         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
                               hardCodedDensity, offset);  
  #endif 
@@ -439,7 +440,7 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 /*`==========TESTING==========*/
 #if JET_BC
 //        cout << " I'm in VelocityBC "<< face <<endl;
-        Vector hardCodedVelocity(0,0.01,0);
+        Vector hardCodedVelocity(0,100.0,0);
         AddSourceBC<CCVariable<Vector>,Vector >(variable, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
@@ -680,7 +681,7 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 /*`==========TESTING==========*/
 #if JET_BC
 //        cout << " I'm in SFCYVariable "<< endl;
-        double hardCodedVelocity = 0.01;
+        double hardCodedVelocity = 100.0;
         AddSourceBC<SFCYVariable<double>,double >(variable, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
