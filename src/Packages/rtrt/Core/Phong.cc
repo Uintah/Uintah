@@ -13,10 +13,9 @@
 using namespace rtrt;
 using namespace SCIRun;
 
-Phong::Phong(const Color& ambient, const Color& diffuse,
-	     const Color& specular, int specpow, double refl)
-    : ambient(ambient), diffuse(diffuse), specular(specular),
-      specpow(specpow), refl(refl)
+Phong::Phong(const Color& diffuse, const Color& specular,
+	     int specpow, double refl)
+    : diffuse(diffuse), specular(specular), specpow(specpow), refl(refl)
 {
 }
 
@@ -92,16 +91,10 @@ void Phong::shade(Color& result, const Ray& ray,
     }
   }
     
-#if 0
-    if(cx->scene->ambient_hack){
-      result=diffuse*(difflight+ambient_hack(cx->scene, normal))
-	    +specular*speclight;
-    } else {
-#endif
-      result=ambient+diffuse*difflight+specular*speclight;
-#if 0
-    }
-#endif
+  const Color & ambient = cx->scene->getAmbientColor();
+
+  result=ambient+diffuse*difflight+specular*speclight;
+
   if (depth < cx->scene->maxdepth && (refl>0 )){
     double thresh=cx->scene->base_threshold;
     double ar=atten*refl;

@@ -15,11 +15,10 @@ using namespace rtrt;
 using namespace std;
 
 ImageMaterial::ImageMaterial(int, char* texfile, ImageMaterial::Mode umode,
-			     ImageMaterial::Mode vmode,
-			     const Color& ambient, double Kd,
+			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
 			     double refl)
-    : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
+    : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
       specpow(specpow), refl(refl),  transp(0), flip_(false), valid_(false)
 {
     read_hdr_image(texfile);
@@ -27,11 +26,10 @@ ImageMaterial::ImageMaterial(int, char* texfile, ImageMaterial::Mode umode,
 }
 
 ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
-			     ImageMaterial::Mode vmode,
-			     const Color& ambient, double Kd,
+			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
 			     double refl)
-    : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
+    : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
       specpow(specpow), refl(refl),  transp(0), flip_(false), valid_(false)
 {
     read_image(texfile);
@@ -39,11 +37,10 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
 }
 
 ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
-			     ImageMaterial::Mode vmode,
-			     const Color& ambient, double Kd,
+			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
 			     double refl,  double transp)
-    : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
+    : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
       specpow(specpow), refl(refl),  transp(transp), flip_(false), 
       valid_(false)
 {
@@ -145,7 +142,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 #endif
     }
 skip:
-    phongshade(result, ambient, diffuse, specular, specpow, refl,
+    phongshade(result, diffuse, specular, specpow, refl,
                 ray, hit, depth,  atten,
                accumcolor, cx);
 }

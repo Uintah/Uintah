@@ -8,13 +8,12 @@
 namespace rtrt {
 
 class Phong : public Material {
-  Color ambient;
   Color diffuse;
   Color specular;
   double refl;
   int specpow;
 public:
-    Phong(const Color& ambient, const Color& diffuse,
+    Phong(const Color& diffuse,
 	  const Color& specular, int specpow, double refl=0);
     virtual ~Phong();
     virtual void shade(Color& result, const Ray& ray,
