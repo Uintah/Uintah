@@ -44,7 +44,7 @@ WARNING
     virtual ~Regridder();
 
     //! Initialize with regridding parameters from ups file
-    virtual void problemSetup(const ProblemSpecP& params) = 0;
+    virtual void problemSetup(const ProblemSpecP& params, const GridP&) = 0;
 
     //! Asks if we need to recompile the task graph.
     virtual bool needRecompile(double time, double delt,
