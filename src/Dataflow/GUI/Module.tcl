@@ -363,7 +363,7 @@ itcl_class Module {
 	$p.menu add command -label "$this" -state disabled
 	$p.menu add separator
 	$p.menu add command -label "Execute" -command "$this-c needexecute"
-	$p.menu add command -label "Help" -command "moduleHelp $name"
+	$p.menu add command -label "Help" -command "moduleHelp [modname]"
 
 # This menu item was added by Mohamed Dekhil for the CSAFE project
 	$p.menu add command -label "Notes" -command "moduleNotes $name [modname]"
@@ -960,7 +960,7 @@ proc regenMenu {modid menu_id canvas minicanvas} {
     $menu_id add separator
     $menu_id add command -label "Execute" -command\
 	    "[$modid get_this_c] needexecute"
-    $menu_id add command -label "Help" -command "moduleHelp [$modid name]"
+    $menu_id add command -label "Help" -command "moduleHelp $modid"
     $menu_id add command -label "Notes" -command "moduleNotes\
 	    [$modid name] [$modid modname]"
     $menu_id add command -label "Group Selected" -command "makeMacroModule\
@@ -2666,10 +2666,8 @@ proc configureOPorts {modid} {
     }
 }
 
-proc moduleHelp {name} {
-    global pse_root
-    tk_messageBox -message "For help on this module, point your web browser at:\n$pse_root/GuiFiles/help/$name" 
-#    helpPage [glob $pse_root/help/$name.html]
+proc moduleHelp {modid} {
+    $modid-c help
 }
 
 # By Mohamed Dekhil

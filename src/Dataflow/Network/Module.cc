@@ -502,6 +502,12 @@ void Module::tcl_command(GuiArgs& args, void*)
     }
   } else if(args[1] == "getpid"){
     args.result(to_string(pid_));
+  } else if(args[1] == "help"){
+    const string filename = "/tmp/" + id + ".html";
+    FILE *file = fopen(filename.c_str(), "w");
+    fprintf(file, "%s\n", description.c_str());
+    fclose(file);
+    system(("mozilla " + filename).c_str());
   } else {
     args.error("Unknown minor command for module: "+args[1]);
   }

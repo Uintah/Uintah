@@ -209,6 +209,7 @@ namespace SCIRun {
     string moduleName;
     string packageName;
     string categoryName;
+    string description;
     Scheduler* sched;
     bool lastportdynamic;
     int pid_;

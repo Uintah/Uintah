@@ -318,7 +318,7 @@ void PackageDB::loadPackage(bool resolve)
 	 i!=files->end();
 	 i++) {
       if (node) DestroyComponentNode(node);
-      node = CreateComponentNode(3);
+      node = CreateComponentNode(1);
       ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second).c_str(), gui);
 
       if (notset==node->name||notset==node->category) continue;
@@ -340,6 +340,7 @@ void PackageDB::loadPackage(bool resolve)
 	new_module->moduleName = node->name;
 	new_module->categoryName = node->category;
 	new_module->packageName = pname;
+	new_module->help_description = node->overview->description;
 	new_module->maker = 0;
 	new_module->uiFile = "not currently used";
 	new_module->iports = scinew std::map<int,IPortInfo*>;
@@ -583,6 +584,8 @@ Module* PackageDB::instantiateModule(const string& packageName,
     module->packageName=packageName;
   if (unknown == module->categoryName)
     module->categoryName=categoryName;
+
+  module->description = moduleInfo->help_description;
 
   // copy other fields 
   module->lastportdynamic = moduleInfo->lastportdynamic;

@@ -47,6 +47,7 @@ namespace SCIRun {
       string packageName;
       string categoryName;
       string moduleName;
+      string help_description;
       ModuleMaker maker;
       string uiFile;
       std::map<int,IPortInfo*>* iports;
