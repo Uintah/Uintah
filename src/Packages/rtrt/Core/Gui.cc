@@ -139,7 +139,7 @@ static int routeNumber = 0;
 // threads spinner, the machine goes into a fit.  If possible, this
 // number should be set dynamically based on the number of processors
 // on the machine that rtrt is running on.
-#define MAX_NUM_THREADS 54 
+#define MAX_NUM_THREADS 120
 
 Gui::Gui() :
   selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
