@@ -89,7 +89,7 @@ DependencyBatch::~DependencyBatch()
 }
 
 void
-DetailedTasks::assignMessageTags(vector<Task*>& tasks)
+DetailedTasks::assignMessageTags(int me)
 {
   // maps from, to (process) pairs to indices for each batch of that pair
   map< pair<int, int>, int > perPairBatchIndices;
@@ -101,11 +101,25 @@ DetailedTasks::assignMessageTags(vector<Task*>& tasks)
     int to = batch->to;
     ASSERT(to != -1);
 
-    // Easier to go in reverse order now, instead of reinitializing
-    // perPairBatchIndices.
-    pair<int, int> fromToPair = make_pair(from, to);    
-    batches[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
-								   one */
+    if (from == me || to == me) {
+      // Easier to go in reverse order now, instead of reinitializing
+      // perPairBatchIndices.
+      pair<int, int> fromToPair = make_pair(from, to);    
+      batches[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
+								     one */
+    }
+  }
+  
+  if(dbg.active()) {
+    map< pair<int, int>, int >::iterator iter;
+    for (iter = perPairBatchIndices.begin(); iter != perPairBatchIndices.end();
+	 iter++) {
+      int from = iter->first.first;
+      int to = iter->first.second;
+      int num = iter->second;
+      dbg << num << " messages from process " << from << " to process " << to
+	  << endl;
+    }
   }
 } // end assignMessageTags()
 
@@ -140,7 +154,7 @@ DetailedTasks::getInitialRequires()
 void
 DetailedTasks::computeLocalTasks(int me)
 {
-  initiallyReadyTasks_.clear();
+  initiallyReadyTasks_ = TaskQueue();
   if(localtasks.size() != 0)
     return;
   for(int i=0;i<(int)tasks.size();i++){
@@ -151,7 +165,7 @@ DetailedTasks::computeLocalTasks(int me)
       localtasks.push_back(task);
 
       if (task->areInternalDependenciesSatisfied()) {
-	initiallyReadyTasks_.push_back(task);
+	initiallyReadyTasks_.push(task);
 
 	if( mixedDebug.active() ) {
 	  cerrLock.lock();
@@ -220,6 +234,7 @@ DetailedTask::doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
       }
     cerrLock.unlock();
   }
+  
   task->doit(pg, patches, matls, old_dw, new_dw);
 
   if( mixedDebug.active() ) {
@@ -227,6 +242,34 @@ DetailedTask::doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
     mixedDebug << this << " DetailedTask::done doit() for task " 
 	       << task << "\n";
     cerrLock.unlock();
+  }
+}
+
+void DetailedTask::findRequiringTasks(const VarLabel* var,
+				      list<DetailedTask*>& requiringTasks)
+{
+  // find requiring tasks
+
+  // find external requires
+  for (DependencyBatch* batch = getComputes(); batch != 0;
+       batch = batch->comp_next) {
+    for (DetailedDep* dep = batch->head; dep != 0; 
+	 dep = dep->next) {
+      if (dep->req->var == var) {
+	requiringTasks.insert(requiringTasks.end(), dep->toTasks.begin(),
+			      dep->toTasks.end());
+      }
+    }
+  }
+
+  // find internal requires
+  map<DetailedTask*, InternalDependency*>::iterator internalDepIter;
+  for (internalDepIter = internalDependents.begin();
+       internalDepIter != internalDependents.end(); ++internalDepIter) {
+    if (internalDepIter->second->vars.find(var) !=
+	internalDepIter->second->vars.end()) {
+      requiringTasks.push_back(internalDepIter->first);
+    }
   }
 }
 
@@ -255,7 +298,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   }
 
   if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex()) {
-    to->addInternalDependency(from);
+    to->addInternalDependency(from, req->var);
     return;
   }
   int toresource = to->getAssignedResourceIndex();
@@ -358,17 +401,23 @@ DetailedTask::addRequires(DependencyBatch* req)
 }
 
 void
-DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask)
+DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
+				    const VarLabel* var)
 {
   if (taskGroup->mustConsiderInternalDependencies()) {
     // Avoid unnecessary multiple internal dependency links between tasks.
-    if (prerequisiteTask->internalDependents.find(this) ==
-	prerequisiteTask->internalDependents.end()) {
-      internalDependencies.push_back(InternalDependency(prerequisiteTask, this,
+    map<DetailedTask*, InternalDependency*>::iterator foundIt =
+      prerequisiteTask->internalDependents.find(this);
+    if (foundIt == prerequisiteTask->internalDependents.end()) {
+      internalDependencies.push_back(InternalDependency(prerequisiteTask,
+							this, var,
 							0/* not satisfied */));
       prerequisiteTask->
 	internalDependents[this] = &internalDependencies.back();
       numPendingInternalDependencies = internalDependencies.size();
+    }
+    else {
+      foundIt->second->addVarLabel(var);
     }
   }
 }
@@ -585,13 +634,13 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 #if !defined( _AIX )
   readyQueueMutex_.lock();
 #endif
- 
-  internalDependencySatisfiedTasks_.push_back(task);
+
+  readyTasks_.push(task);
 
   if( mixedDebug.active() ) {
     cerrLock.lock();
     mixedDebug << *task << " satisfied.  Now " 
-	       << internalDependencySatisfiedTasks_.size() << " ready.\n";
+	       << readyTasks_.size() << " ready.\n";
     cerrLock.unlock();
   }
 #if !defined( _AIX )
@@ -609,8 +658,9 @@ DetailedTasks::getNextInternalReadyTask()
   readyQueueSemaphore_.down();
   readyQueueMutex_.lock();
 #endif
-  DetailedTask* nextTask = internalDependencySatisfiedTasks_.front();
-  internalDependencySatisfiedTasks_.pop_front();
+  DetailedTask* nextTask = readyTasks_.front();
+  //DetailedTask* nextTask = readyTasks_.top();
+  readyTasks_.pop();
 #if !defined( _AIX )
   readyQueueMutex_.unlock();
 #endif
@@ -620,9 +670,9 @@ DetailedTasks::getNextInternalReadyTask()
 void
 DetailedTasks::initTimestep()
 {
-  internalDependencySatisfiedTasks_ = initiallyReadyTasks_;
+  readyTasks_ = initiallyReadyTasks_;
 #if !defined( _AIX )
-  readyQueueSemaphore_.up((int)internalDependencySatisfiedTasks_.size());
+  readyQueueSemaphore_.up((int)readyTasks_.size());
 #endif
   incrementDependencyGeneration();
   initializeBatches();
