@@ -12,6 +12,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
+#include <Core/Math/MinMax.h>
+#include "./TntJama/tnt.h"
+#include "./TntJama/jama_eig.h"
 
 #include <stdlib.h>
 
@@ -25,10 +28,13 @@
 #endif
 
 using namespace Uintah;
+//using namespace TNT;
+//using namespace JAMA;
 
 using std::cout;
 using std::endl;
 using std::ostream;
+using SCIRun::Vector;
 
 const string& 
 Matrix3::get_h_file_path() {
@@ -39,40 +45,40 @@ Matrix3::get_h_file_path() {
 // Added for compatibility with Core types
 namespace SCIRun {
 
-using std::string;
+  using std::string;
 
-template<> const string find_type_name(Matrix3*)
-{
-  static const string name = "Matrix3";
-  return name;
-}
-
-const TypeDescription* get_type_description(Matrix3*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
+  template<> const string find_type_name(Matrix3*)
+  {
+    static const string name = "Matrix3";
+    return name;
   }
-  return td;
-}
 
-void
-Pio(Piostream& stream, Matrix3& mat)
-{
+  const TypeDescription* get_type_description(Matrix3*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
+    }
+    return td;
+  }
+
+  void
+  Pio(Piostream& stream, Matrix3& mat)
+  {
     stream.begin_cheap_delim();
     Pio(stream, mat(0,0)); Pio(stream, mat(0,1)); Pio(stream, mat(0,2));
     Pio(stream, mat(1,0)); Pio(stream, mat(1,1)); Pio(stream, mat(1,2));
     Pio(stream, mat(2,0)); Pio(stream, mat(2,1)); Pio(stream, mat(2,2));
     stream.end_cheap_delim();
-}
+  }
 
-// needed for bigEndian/littleEndian conversion
-void swapbytes( Uintah::Matrix3& m){
-  double *p = (double *)(&m);
-  SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
-  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
-  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
-}
+  // needed for bigEndian/littleEndian conversion
+  void swapbytes( Uintah::Matrix3& m){
+    double *p = (double *)(&m);
+    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  }
 
 } // namespace SCIRun
 
@@ -85,7 +91,7 @@ void swapbytes( Uintah::Matrix3& m){
 void Matrix3::set(int i, int j, double value)
 {
   // Assign the Matrix3 the value components
-   mat3[i][j] = value;
+  mat3[i][j] = value;
 }
 
 Matrix3 Matrix3::Inverse() const
@@ -98,25 +104,25 @@ Matrix3 Matrix3::Inverse() const
 
   det = this->Determinant();
   if ( det == 0.0 )
-  {
-    cout << "Singular matrix in matrix inverse..." << endl;
-    exit(1);
-  }
+    {
+      cout << "Singular matrix in matrix inverse..." << endl;
+      exit(1);
+    }
   else
-  {
-    inv_matrix(0,0) = (*this)(1,1)*(*this)(2,2) - (*this)(1,2)*(*this)(2,1);
-    inv_matrix(0,1) = -(*this)(0,1)*(*this)(2,2) + (*this)(2,1)*(*this)(0,2);
-    inv_matrix(0,2) = (*this)(0,1)*(*this)(1,2) - (*this)(1,1)*(*this)(0,2);
-    inv_matrix(1,0) = -(*this)(1,0)*(*this)(2,2) + (*this)(2,0)*(*this)(1,2);
-    inv_matrix(1,1) = (*this)(0,0)*(*this)(2,2) - (*this)(0,2)*(*this)(2,0);
-    inv_matrix(1,2) = -(*this)(0,0)*(*this)(1,2) + (*this)(1,0)*(*this)(0,2);
-    inv_matrix(2,0) = (*this)(1,0)*(*this)(2,1) - (*this)(2,0)*(*this)(1,1);
-    inv_matrix(2,1) = -(*this)(0,0)*(*this)(2,1) + (*this)(2,0)*(*this)(0,1);
-    inv_matrix(2,2) = (*this)(0,0)*(*this)(1,1) - (*this)(0,1)*(*this)(1,0);
+    {
+      inv_matrix(0,0) = (*this)(1,1)*(*this)(2,2) - (*this)(1,2)*(*this)(2,1);
+      inv_matrix(0,1) = -(*this)(0,1)*(*this)(2,2) + (*this)(2,1)*(*this)(0,2);
+      inv_matrix(0,2) = (*this)(0,1)*(*this)(1,2) - (*this)(1,1)*(*this)(0,2);
+      inv_matrix(1,0) = -(*this)(1,0)*(*this)(2,2) + (*this)(2,0)*(*this)(1,2);
+      inv_matrix(1,1) = (*this)(0,0)*(*this)(2,2) - (*this)(0,2)*(*this)(2,0);
+      inv_matrix(1,2) = -(*this)(0,0)*(*this)(1,2) + (*this)(1,0)*(*this)(0,2);
+      inv_matrix(2,0) = (*this)(1,0)*(*this)(2,1) - (*this)(2,0)*(*this)(1,1);
+      inv_matrix(2,1) = -(*this)(0,0)*(*this)(2,1) + (*this)(2,0)*(*this)(0,1);
+      inv_matrix(2,2) = (*this)(0,0)*(*this)(1,1) - (*this)(0,1)*(*this)(1,0);
  
-    inv_matrix = inv_matrix/det;
+      inv_matrix = inv_matrix/det;
 
-  }
+    }
   return inv_matrix;
 
 } //end Inverse()
@@ -137,8 +143,8 @@ inline void swap(double& v1, double& v2)
 // any row has zeroes in every other row and a one in that row.
 // If rhs == NULL, then the rhs is assumed to be
 // the zero vector and thus will not need to change.
-void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
-			       double relative_scale)
+void Matrix3::triangularReduce(Matrix3& A, SCIRun::Vector* rhs, int& num_zero_rows,
+                               double relative_scale)
 {
   int i, j, k, pivot;
   int pivoting_row = 0;
@@ -155,15 +161,15 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
     for (j = pivoting_row; j < 3; j++) {
       tmp = fabs(A.mat3[j][i]);
       if (tmp > mag) {
-	mag = tmp;
-	pivot = j;
+        mag = tmp;
+        pivot = j;
       }
     }
 
     if (pivot == -1) {
       for (j = pivoting_row; j < 3; j++)
-	// < NEAR_ZERO absolute value is treated as zero, so set it to zero
-	A.mat3[j][i] = 0;
+        // < NEAR_ZERO absolute value is treated as zero, so set it to zero
+        A.mat3[j][i] = 0;
       continue;
     }
 
@@ -173,25 +179,25 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
       A.mat3[pivot][i] = A.mat3[pivoting_row][i];
       A.mat3[pivoting_row][i] = 1; // normalized    
       for (j = i+1 /* zeroes don't need to be swapped */; j < 3; j++) {
-	tmp = A.mat3[pivot][j];
-	A.mat3[pivot][j] = A.mat3[pivoting_row][j];
-	A.mat3[pivoting_row][j] = tmp * norm_multiplier; // normalize
+        tmp = A.mat3[pivot][j];
+        A.mat3[pivot][j] = A.mat3[pivoting_row][j];
+        A.mat3[pivoting_row][j] = tmp * norm_multiplier; // normalize
       }
       
       if (rhs != NULL) {
-	// swap and normalize rhs in the same manner
-	tmp = (*rhs)[pivot];
-	(*rhs)[pivot] = (*rhs)[pivoting_row];
-	(*rhs)[pivoting_row] = tmp * norm_multiplier; // normalizing
+        // swap and normalize rhs in the same manner
+        tmp = (*rhs)[pivot];
+        (*rhs)[pivot] = (*rhs)[pivoting_row];
+        (*rhs)[pivoting_row] = tmp * norm_multiplier; // normalizing
       }
     }
     else {
       // just normalize
       A.mat3[pivoting_row][i] = 1; 
       for (j = i+1 /* zeroes don't need to be normalized */; j < 3; j++)
-	A.mat3[pivoting_row][j] *= norm_multiplier;
+        A.mat3[pivoting_row][j] *= norm_multiplier;
       if (rhs != NULL)
-	(*rhs)[pivoting_row] *= norm_multiplier; // normalizing
+        (*rhs)[pivoting_row] *= norm_multiplier; // normalizing
     }
 
     // eliminate ith column from other rows via row reduction
@@ -201,9 +207,9 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
       // (note that the pivoting row has been normalized)
       double mult = A.mat3[k][i]; // remember that pivoting_row is normalized
       for (j = i + 1; j < 3; j++)
-	A.mat3[k][j] -= mult * A.mat3[pivoting_row][j]; 
+        A.mat3[k][j] -= mult * A.mat3[pivoting_row][j]; 
       if (rhs != NULL)
-	(*rhs)[k] -= mult * (*rhs)[pivoting_row];
+        (*rhs)[k] -= mult * (*rhs)[pivoting_row];
       A.mat3[k][i] = 0;
     }
 
@@ -213,7 +219,7 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
   if (rhs != NULL) {
     for (i = 0; i < 3; i++)
       if (fabs((*rhs)[i]) <= relNearZero)
-	(*rhs)[i] = 0; // set near zero's to zero to compensate for round-off
+        (*rhs)[i] = 0; // set near zero's to zero to compensate for round-off
   }
   
   num_zero_rows = 3 - pivoting_row;
@@ -229,8 +235,8 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
 // {{0, 1, c} {0, 0, 0} {0, 0, 0}}, plane solution 
 // {{0, 0, 1} {0, 0, 0} {0, 0, 0}}, plane solution 
 // {{0, 0, 0} {0, 0, 0} {0, 0, 0}} -> solution only iff rhs = {0, 0, 0} 
-bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
-				     int num_zero_rows) const
+bool Matrix3::solveParticularReduced(const SCIRun::Vector& rhs, SCIRun::Vector& xp,
+                                     int num_zero_rows) const
 {
   double x, y, z;
   switch (num_zero_rows) {
@@ -251,14 +257,14 @@ bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
       z = rhs[1];
 
       if (mat3[0][0] == 0) {
-	// {{0, 1, 0} {0, 0, 1} {0, 0, 0}}
-	y = rhs[0]; // y = rhs[0]
-	x = 0; // arbitrary choice -- for simplicity
+        // {{0, 1, 0} {0, 0, 1} {0, 0, 0}}
+        y = rhs[0]; // y = rhs[0]
+        x = 0; // arbitrary choice -- for simplicity
       }
       else {
-	// {{1, b, 0} {0, 0, 1} {0, 0, 0}}
-	y = 0; // arbitrary choice -- for simplicity
-	x = rhs[0]; // x + b*(y=0) = rhs[0] -> x = rhs[0]
+        // {{1, b, 0} {0, 0, 1} {0, 0, 0}}
+        y = 0; // arbitrary choice -- for simplicity
+        x = rhs[0]; // x + b*(y=0) = rhs[0] -> x = rhs[0]
       }
     }
     else {
@@ -269,7 +275,7 @@ bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
       x = rhs[0]; // x + c*(z=0) = rhs[0] -> x = rhs[0]
     }
 
-    xp = Vector(x, y, z);
+    xp = SCIRun::Vector(x, y, z);
     return true;
 
   case 2:
@@ -287,14 +293,14 @@ bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
     // make xp(i) (first non-zero column) non-zero and
     // the other two 0 because that is perfectly valid and
     // for simplicity.
-    xp = Vector(0, 0, 0);
+    xp = SCIRun::Vector(0, 0, 0);
     xp[i] = rhs[0];
 
     return true;
   case 3:
     // solution only if rhs == 0 (in which case everywhere is a solution)
-    if (rhs == Vector(0, 0, 0)) {
-      xp = Vector(0, 0, 0); // arbitrarily choose {0, 0, 0}
+    if (rhs == SCIRun::Vector(0, 0, 0)) {
+      xp = SCIRun::Vector(0, 0, 0); // arbitrarily choose {0, 0, 0}
       return true;
     }
     else
@@ -305,55 +311,55 @@ bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
 }
  
 // solveHomogenous for a Matrix that has already by triangularReduced.
-std::vector<Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
+std::vector<SCIRun::Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
 {
-  std::vector<Vector> basis_vectors;
+  std::vector<SCIRun::Vector> basis_vectors;
 
   basis_vectors.resize(num_zero_rows);
   
   switch (num_zero_rows) {
   case 3:
     // Solutions everywhere : A = 0 matrix
-    basis_vectors[0] = Vector(1, 0, 0);
-    basis_vectors[1] = Vector(0, 1, 0);
-    basis_vectors[2] = Vector(0, 0, 1);
+    basis_vectors[0] = SCIRun::Vector(1, 0, 0);
+    basis_vectors[1] = SCIRun::Vector(0, 1, 0);
+    basis_vectors[2] = SCIRun::Vector(0, 0, 1);
     break;
 
   case 1:
     {
-    // line of solutions : A = {{a, b, c} {0, d, e} {0, 0, 0}}
-    // do backwards substition, using value of 1 arbitrarily
-    // if a variable is not constrained
+      // line of solutions : A = {{a, b, c} {0, d, e} {0, 0, 0}}
+      // do backwards substition, using value of 1 arbitrarily
+      // if a variable is not constrained
 
-    Vector v;
-    if (mat3[1][1] == 0) {
-      // A = {{a, b, c} {0, 0, 1} {0, 0, 0}
-      v[2] = 0; // e*z = 0, e != 0 -> z = 0
-      if (mat3[0][0] == 0) {
-	// A = {{0, 1, c} {0, 0, 1} {0, 0, 0}
-	// y + c*z = 0 -> y = 0
-	v[1] = 0; // y = 0;
-	v[0] = 1; // x is arbitrary (non-zero)
+      SCIRun::Vector v;
+      if (mat3[1][1] == 0) {
+        // A = {{a, b, c} {0, 0, 1} {0, 0, 0}
+        v[2] = 0; // e*z = 0, e != 0 -> z = 0
+        if (mat3[0][0] == 0) {
+          // A = {{0, 1, c} {0, 0, 1} {0, 0, 0}
+          // y + c*z = 0 -> y = 0
+          v[1] = 0; // y = 0;
+          v[0] = 1; // x is arbitrary (non-zero)
+        }
+        else {
+          // A = {{1, b, c} {0, 0, 1} {0, 0, 0}
+          v[1] = 1; // y is arbitrary (non-zer0)
+          // x + b*y + c*0 = 0 -> x + b*y = 0 -> x = -b*y = -b
+          v[0] = -mat3[0][1];
+        }
       }
       else {
-	// A = {{1, b, c} {0, 0, 1} {0, 0, 0}
-	v[1] = 1; // y is arbitrary (non-zer0)
-	// x + b*y + c*0 = 0 -> x + b*y = 0 -> x = -b*y = -b
-	v[0] = -mat3[0][1];
+        // A = {{1, b, c} {0, 1, e} {0, 0, 0}
+        v[2] = 1; // z is arbitrary (non-zero)
+
+        // y + e*z = 0 -> y = -e*z = -e
+        v[1] = -mat3[1][2];
+
+        //  x + b*y + c*z -> x = -(b*y + c*z) = -(b*y + c) 
+        v[0] = -(mat3[0][1] * v[1] + mat3[0][2]);
       }
-    }
-    else {
-      // A = {{1, b, c} {0, 1, e} {0, 0, 0}
-      v[2] = 1; // z is arbitrary (non-zero)
-
-      // y + e*z = 0 -> y = -e*z = -e
-      v[1] = -mat3[1][2];
-
-      //  x + b*y + c*z -> x = -(b*y + c*z) = -(b*y + c) 
-      v[0] = -(mat3[0][1] * v[1] + mat3[0][2]);
-    }
-    basis_vectors[0] = v;
-    break;
+      basis_vectors[0] = v;
+      break;
     }
 
   case 2:
@@ -377,18 +383,18 @@ std::vector<Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
 
     if (max_index == 0) {
       // |a| largest, use line2 and line3
-      basis_vectors[0] = Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
-      basis_vectors[1] = Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
+      basis_vectors[0] = SCIRun::Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
+      basis_vectors[1] = SCIRun::Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
     }
     else if (max_index == 1) {
       // |b| largest, use line1 and line3
-      basis_vectors[0] = Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
-      basis_vectors[1] = Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
+      basis_vectors[0] = SCIRun::Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
+      basis_vectors[1] = SCIRun::Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
     }
     else {
       // |c| largest, use line1 and line2
-      basis_vectors[0] = Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
-      basis_vectors[1] = Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
+      basis_vectors[0] = SCIRun::Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
+      basis_vectors[1] = SCIRun::Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
     }
   }
 
@@ -398,73 +404,66 @@ std::vector<Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
 // Polar decomposition of a non-singular square matrix
 // If rightFlag == true return right stretch and rotation
 // else return left stretch and rotation
-void Matrix3::polarDecomposition(Matrix3& stretch,
-                                 Matrix3& rotation,
+void Matrix3::polarDecomposition(Matrix3& U,
+                                 Matrix3& R,
                                  double tolerance,
                                  bool rightFlag) const
 {
-  double det = this->Determinant();
+  Matrix3 F = *this;
+  double det = F.Determinant();
   if ( det == 0.0 ) {
     cout << "Singular matrix in polar decomposition..." << endl;
     exit(1);
   }
-
-  // Calculate the right (C) Cauchy-Green tensor 
-  // where C = Ftranspose*F 
-  Matrix3 C = (this->Transpose())*(*this);
-
-  // Find the principal invariants of the left or right Cauchy-Green tensor (b) 
-  // where b = F*Ftransposeb
+  Matrix3 C = F.Transpose()*F;
   double I1 = C.Trace();
-  double I1Square = I1*I1;
-  Matrix3 CSquare = C*C;
-  double I2 = 0.5*(I1Square - CSquare.Trace());
+  Matrix3 Csq = C*C;
+  double I2 = .5*(I1*I1 - Csq.Trace());
   double I3 = C.Determinant();
+  double b = I2 - (I1*I1)/3.0;
+  double c = -(2.0/27.0)*I1*I1*I1 + (I1*I2)/3.0 - I3;
+  double TOL3 = tolerance;
+  //double TOL3 = 1e-8;
+  double x[3];
 
-  // Find the principal stretches lambdaA, lambdaB, lambdaC
-  // or lambda(ii), ii = 1..3
-  double lambda[4]; lambda[0] = 0.0;
-  double oneThird = 1.0/3.0;
-  double oneThirdI1 = oneThird*I1;
-  double bb = I2 - oneThird*I1Square;
-  double cc = -(2.0/27.0)*I1Square*I1 + oneThirdI1*I2 - I3;
-  if (fabs(bb) > tolerance) {
-    double mm = 2.0*sqrt(-oneThird*bb);
-    double nn = 3.0*cc/(mm*bb);
-    if (fabs(nn) > 1.0) nn /= fabs(nn);
-    double tt = oneThird*atan(sqrt(1-(nn*nn))/nn);
-    for (int ii = 1; ii < 4; ++ii) 
-      lambda[ii] = sqrt(mm*cos(tt+2.0*(double)(ii-1)*oneThird*M_PI) + oneThirdI1); 
+  if(fabs(b) <= TOL3){
+    c = (c > 0.0) ? c : 0.0; x[0] = -pow(c,1./3.); x[1] = x[0]; x[2] = x[0];
   } else {
-    for (int ii = 1; ii < 4; ++ii) 
-      lambda[ii] = sqrt(-pow(cc, oneThird) + oneThirdI1); 
+    double m = 2.*sqrt(-b/3.0);
+    double n = (3.*c)/(m*b);
+    if (fabs(n) > 1.0) n = copysign(1.0,n);  // n = cos(theta) 
+                                             // and cannot be greater than 1.0
+    double t = atan2(sqrt(1-n*n),n)/3.0;
+    for(int i=0;i<3;i++){
+      x[i] = m * cos(t + 2.*(((double) i) - 1.)*M_PI/3.);
+    }
+  }
+  double lam[3];
+  for(int i=0;i<3;i++) {
+    double xpI = x[i] + I1/3.0;
+    double maxXpI = (xpI > TOL3 ? xpI : TOL3);
+    lam[i] = sqrt(maxXpI);
   }
 
-  // Find the stretch tensor 
-  Matrix3 one;
-  one.Identity();
-  double lambda2p3 = lambda[2] + lambda[3];
-  double lambda2m3 = lambda[2]*lambda[3];
-  double i1 = lambda[1] + lambda2p3;
-  double i2 = lambda[1]*lambda2p3 + lambda2m3;
-  double i3 = lambda[1]*lambda2m3;
-  double DD = i1*i2 - i3;
-  if (fabs(DD) > 0.0 && fabs(i3) > 0.0) {
-    stretch = (CSquare*(-1) + C*(i1*i1-i2) + one*(i1*i3))*(1.0/DD);
-    Matrix3 stretchInv = (C - (stretch*i1 - one*i2))*(1.0/i3);
+  double i1 = lam[0] + lam[1] + lam[2];
+  double i2 = lam[0]*lam[1] + lam[0]*lam[2] + lam[1]*lam[2];
+  double i3 = lam[0]*lam[1]*lam[2];
+  double D = i1*i2 - i3;
 
-    // Calculate the rotation tensor
-    rotation = (*this)*stretchInv;
-    if (!rightFlag) stretch = (rotation*stretch)*(rotation.Transpose());
-    for (int ii = 1; ii < 4; ++ii) {
-      for (int jj = 1; jj < 4; ++jj) {
-	if (fabs(stretch(ii,jj)) < tolerance) stretch(ii,jj) = 0.0;
-	if (fabs(rotation(ii,jj)) < tolerance) rotation(ii,jj) = 0.0;
-      }
+  Matrix3 One; One.Identity();
+  U = (C*(i1*i1-i2) + One*i1*i3 - Csq)*(1./D);
+  Matrix3 Uinv = (C - U*i1 + One*i2)*(1./i3);
+  R = F*Uinv;
+  if (!rightFlag) U = F*R.Transpose();
+
+  // Set small values to zero
+  for (int i = 0 ; i < 3; ++i) {
+    for (int j = 0 ; j < 3; ++j) {
+      R(i,j) = R(i,j) > TOL3 ? R(i,j) : 0.0;
+      U(i,j) = U(i,j) > TOL3 ? U(i,j) : 0.0;
     }
   }
 }
-
 
 
 int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
@@ -573,27 +572,73 @@ ostream & operator << (ostream &out_file, const Matrix3 &m3)
   return out_file;
 }
 
-namespace Uintah {
-MPI_Datatype makeMPI_Matrix3()
+void
+Matrix3::eigen(SCIRun::Vector& eval, Matrix3& evec)
 {
-   ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
+  // Convert the current matrix into a 2x2 TNT Array
+  TNT::Array2D<double> A = toTNTArray2D();
 
-   MPI_Datatype mpitype;
-   MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
+  // Compute the eigenvectors using JAMA
+  JAMA::Eigenvalue<double> eig(A);
+  TNT::Array1D<double> d(3);
+  eig.getRealEigenvalues(d);
+  TNT::Array2D<double> V(3,3);
+  eig.getV(V);
 
-   return mpitype;
-}
-
-const TypeDescription* fun_getTypeDescription(Matrix3*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
-				&makeMPI_Matrix3);
+  // Sort in descending order
+  for (int ii = 0; ii < 2; ++ii) {
+    int kk = ii;
+    double valk = d[ii];
+    for (int jj = ii+1; jj < 3; jj++) {
+      double valj = d[jj];
+      if (valj > valk) 
+        {
+          kk = jj;
+          valk = valj; 
+        }
+    }
+    if (kk != ii) {
+      double temp = d[ii];
+      d[ii] = d[kk];
+      d[kk] = temp;
+      for (int ll = 0; ll < 3; ++ll) {
+        temp = V[ll][ii];
+        V[ll][ii] = V[ll][kk];
+        V[ll][kk] = temp;
+      }
+    }
   }
-  return td;
+
+  // Store in eval and evec
+  for (int ii = 0; ii < 3; ++ii) {
+    eval[ii] = d[ii];
+    for (int jj = 0; jj < 3; ++jj) {
+      evec(ii,jj) = V[ii][jj];
+    }
+  }
+
 }
+namespace Uintah {
+  MPI_Datatype makeMPI_Matrix3()
+  {
+    ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
+
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
+    MPI_Type_commit(&mpitype);
+
+    return mpitype;
+  }
+
+  const TypeDescription* fun_getTypeDescription(Matrix3*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
+                                  &makeMPI_Matrix3);
+    }
+    return td;
+  }
 
 } // End namespace Uintah
 
