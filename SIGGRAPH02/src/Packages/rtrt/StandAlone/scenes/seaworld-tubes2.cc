@@ -103,10 +103,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
-  //Material* glass_to_air = new DielectricMaterial(1.0, 1.5, 0.04, 400.0, Color(.80, .93 , .87), Color(1,1,1), false);
-  //Material* water_to_glass = new DielectricMaterial(1.5, 1.3, 0.04, 400.0, Color(.80, .84 , .93), Color(1,1,1), false);
-
-//  Material* glass_to_air   = new DielectricMaterial(1.0, 1.0, 0.01, 400.0, Color(1, 1, 1), Color(1,1,1), false);
   Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.004, 400.0, Color(.97, .98, 1), Color(1,1,1), false, 1);
   Material* air_bubble     = new DielectricMaterial(1.0, 1.1, 0.004, 400.0, Color(1, 1, 1), Color(1.01,1.01,1.01), false);
 //  Material* water_to_glass   = new PhongMaterial(Color(.5, .5, .5), .2, 0.8, 20, true); 
@@ -114,7 +110,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
   Material* red = new LambertianMaterial(Color(1,0,0));
   Material* tan = new SeaLambertianMaterial(Color(0.6,0.6,0.2), tvcc);
-  //Material* tan = new LambertianMaterial(Color(0.6,0.6,0.2));
   Material* seawhite = new SeaLambertianMaterial(Color(0.3,0.3,0.3), tvcc);
   Material* black = new PhongMaterial(Color(0.05,0.05,0.05), 1.0);
   Material* metal = new MetalMaterial(Color(0.1,0.1,0.1));
@@ -129,36 +124,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   /**********************************************************************/
   // south tube
-/*
-  // glass tube
-//  Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -6, 1), Point(4, -6, 1), 2);
-  Object *south_tube_outer = new Cylinder(water_to_glass, Point(-4, -6, 1), Point(4, -6, 1), 2.05);
-//  south_tube->add(south_tube_inner);
-  south_tube->add(south_tube_outer);
-  // floor
-  south_tube->add(new Rect(checker, Point(0, -6, 0), Vector(4, 0, 0), Vector(0, 1.5, 0)));
-  // north curb
-  south_tube->add(new Rect(white, Point(0, -4.25, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
-  south_tube->add(new Rect(white, Point(0, -4.475, .1), Vector(4, 0, 0), Vector(0, -.025, -.1)));
-  south_tube->add(new Cylinder(white, Point(-4, -4.4, .2), Point(4, -4.4, .2), .05));
-  // south curb
-  south_tube->add(new Rect(white, Point(0, -7.75, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
-  south_tube->add(new Rect(white, Point(0, -7.525, .1), Vector(4, 0, 0), Vector(0, .025, -.1)));
-  south_tube->add(new Cylinder(white, Point(-4, -7.6, .2), Point(4, -7.6, .2), .05));
-  // seals
-  // west seal
-  south_tube->add(new Ring(black, Point(-4, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(-3.9, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-3.9, -6, 1), Point(-4, -6, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-3.9, -6, 1), Point(-4, -6, 1), 2.2));
-  // east seal
-  south_tube->add(new Ring(black, Point(4, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(3.9, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(3.9, -6, 1), Point(4, -6, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(3.9, -6, 1), Point(4, -6, 1), 2.2));  
   
-  all_tubes->add(south_tube);
-*/
   // glass tube
   //Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -6, 1), Point(4, -6, 1), 2);
   Object *south_tube_outer = new Cylinder(water_to_glass, Point(-4, -6, 1), Point(7.5, -6, 1), 2.05);
@@ -194,9 +160,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   /**********************************************************************/
   // north tube
 
-//  Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
+  //  Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
   Object *north_tube_outer = new Cylinder(water_to_glass, Point(-4, 10, 1), Point(4, 10, 1), 2.05);
-//  north_tube->add(north_tube_inner);
+  //  north_tube->add(north_tube_inner);
   north_tube->add(north_tube_outer);
   // floor
   north_tube->add(new Rect(checker, Point(0, 10, 0), Vector(4, 0, 0), Vector(0, 1.5 ,0)));
@@ -228,9 +194,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // west tube
 
   // glass tube
-//  Object *west_tube_inner = new Cylinder(glass_to_air, Point(-10, -4, 1), Point(-10, 4, 1), 2);
+  //  Object *west_tube_inner = new Cylinder(glass_to_air, Point(-10, -4, 1), Point(-10, 4, 1), 2);
   Object *west_tube_outer = new Cylinder(water_to_glass, Point(-10, -4, 1), Point(-10, 4, 1), 2.05);
-//  west_tube->add(west_tube_inner);
+  //  west_tube->add(west_tube_inner);
   west_tube->add(west_tube_outer);
 
   // floor
@@ -263,35 +229,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       
   /**********************************************************************/
   // east tube
-/*  
-  // Object *east_tube_inner = new Cylinder(glass_to_air, Point(10, -4, 1), Point(10, 4, 1), 2);
-  Object *east_tube_outer = new Cylinder(water_to_glass, Point(10, -4, 1), Point(10, 4, 1), 2.05);
-  // east_tube->add(east_tube_inner);
-  east_tube->add(east_tube_outer);
-  // floor
-  east_tube->add(new Rect(checker, Point(10, 0, 0), Vector(1.5, 0, 0), Vector(0, 4, 0)));
-  // west curb
-  east_tube->add(new Rect(white, Point(8.25, 0, .25), Vector(0, 4, 0), Vector(-.15, 0, 0)));
-  east_tube->add(new Rect(white, Point(8.475, 0, .1), Vector(0, 4, 0), Vector(.025, 0, -.1)));
-  east_tube->add(new Cylinder(white, Point(8.4, -4, .2), Point(8.4, 4, .2), .05));
-  // east curb
-  east_tube->add(new Rect(white, Point(11.75, 0, .25), Vector(0, 4, 0), Vector(-.15, 0, 0)));
-  east_tube->add(new Rect(white, Point(11.525, 0, .1), Vector(0, 4, 0), Vector(-.025,0, -.1)));
-  east_tube->add(new Cylinder(white, Point(11.6, -4, .2), Point(11.6, 4, .2), .05));
-  // seals
-  // west seal
-  south_tube->add(new Ring(black, Point(-10, -4, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(-10, -3.9, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-10, -3.9, 1), Point(-10, -4, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-10, -3.9, 1), Point(-10, -4, 1), 2.2));
-  // east seal
-  south_tube->add(new Ring(black, Point(-10, 4, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(-10, 3.9, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 4, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 4, 1), 2.2));
- 
-  all_tubes->add(east_tube);
-*/
 
   Point center_point1(10, .25, 0);
   Vector center_vec1(10, .25, 0);
@@ -785,15 +722,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/keith/sharks/shark1.mtl",
                    t3, shark1))
       exit(-1);
-/*
-  t3.load_identity();
-  t3.pre_scale(Vector(.1, .1, .1));
-  t3.pre_translate(Vector(-20, -1, -.8));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/Anker/anker.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/Anker/anker.mtl",
-                   t3, anker))
-      exit(-1);
-*/
   t3.load_identity();
   t3.pre_rotate(-.25 * M_PI, Vector(0, 0, 1));
   t3.pre_rotate(.1 * M_PI, Vector(-1, 0, 0));
@@ -803,40 +731,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/fish/krabbe/krabbe.mtl",
                    t3, krabbe))
       exit(-1); 
-/*
-  t3.load_identity();
-  t3.pre_scale(Vector(1.2, 1.2, 1.2));
-  t3.pre_translate(Vector(-1, -3, 1.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school1))
-      exit(-1);
- 
-  t3.pre_translate(Vector(0, -.5, -.25));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school2))
-      exit(-1);
-
-  t3.pre_translate(Vector(-.5 ,-.5, .5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school3))
-      exit(-1);  
-  t3.pre_translate(Vector(1.20, .2, -.3));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school4))
-      exit(-1);
-
-  t3.load_identity();
-  t3.pre_scale(Vector(1.3, 1.3, 1.3));
-  t3.pre_translate(Vector(2, 7, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
-                   t3, tiger))
-      exit(-1);  
-*/
+  
   t3.load_identity();
   t3.pre_scale(Vector(1.2, 1.2, 1.2));
   t3.pre_translate(Vector(0, -3, 1.5));
@@ -1115,9 +1010,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   all_tubes->add(temp);  
   // all_tubes->add(new Grid(rock_tower, 10));
   
-  temp = new BV1(erect_group);
-  temp->set_name("erect_group");
-  all_tubes->add(temp);
+//  temp = new BV1(erect_group);
+//  temp->set_name("erect_group");
+//  all_tubes->add(temp);
 
   temp = new BV1(ruins);
   temp->set_name("ruins");
@@ -1177,11 +1072,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-  scene->add_light(new Light(Point(20, 20, 90), Color(.3,.3,.3), 0));
-  //scene->add_light(new Light(Point(0, -10, 2.9), Color(.8,.8,.8), 0));
-  //scene->add_light(new Light(Point(0, 10, 2.9), Color(.8,.8,.8), 0));
-  //scene->add_light(new Light(Point(-10, 0, 2.9), Color(.8,.8,.8), 0));
-  //scene->add_light(new Light(Point(10, 0, 2.9), Color(.8,.8,.8), 0));
+  //scene->add_light(new Light(Point(20, 20, 90), Color(.3,.3,.3), 0));
   scene->animate=true;
   
   
