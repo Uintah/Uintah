@@ -199,6 +199,14 @@ Sphere::updatePosition( const Point & pos )
   cen = pos;
 }
 
+void
+Sphere::updateRadius( double new_radius ) {
+  if (new_radius < 0) {
+    new_radius = 0;
+  }
+  radius = new_radius;
+}
+
 const int SPHERE_VERSION = 1;
 
 void 

@@ -76,7 +76,7 @@ void Light::init() {
 
   // Create a yellow sphere that can be rendered in the location
   // of the light.
-  sphere_ = new Sphere( white_halo /*flat_yellow*/, pos, 0.1 );
+  sphere_ = new Sphere( white_halo /*flat_yellow*/, pos, radius );
 }
 
 Light::Light(const Point& pos,
@@ -130,6 +130,15 @@ Light::updatePosition( const Point & newPos, const Vector &offset, const Vector 
   last_offset = offset;
   pos = newPos+offset;
   sphere_->updatePosition( pos );
+}
+
+void
+Light::updateRadius( double new_radius ) {
+  if (new_radius < 0) {
+    new_radius = 0;
+  }
+  radius = new_radius;
+  sphere_->updateRadius(new_radius);
 }
 
 const int LIGHT_VERSION = 1;
