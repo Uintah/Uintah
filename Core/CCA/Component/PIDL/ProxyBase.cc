@@ -41,7 +41,14 @@ ProxyBase::ProxyBase()
 ProxyBase::ProxyBase(const Reference& ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  rm.insertReference(ref);
+	rm.insertReference(ref);
+}
+
+ProxyBase::ProxyBase(Reference *ref )
+: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
+{ 
+	rm.insertReference(*ref);
+	delete ref;
 }
 
 ProxyBase::ProxyBase(const ReferenceMgr& refM)
@@ -57,12 +64,6 @@ ProxyBase::~ProxyBase()
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
 {
   if (copy) {
-    /*Clean up the passed reference just in case*/
-    if (ref.chan != NULL) {
-      delete (ref.chan);
-      ref.chan = NULL;
-    }
-
     Reference *d_ref;
     d_ref = rm.getIndependentReference();
     ref = *(d_ref);
@@ -89,6 +90,7 @@ void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
     d_ref = rm.getAllReferences();
     ref = *(d_ref);
     for(unsigned int i=0; i < d_ref->size(); i++) {      
+	if(ref[i].chan!=NULL) delete ref[i].chan; //k.z.
       ref[i].chan = ((*d_ref)[i].chan)->SPFactory(true);
     }
   }

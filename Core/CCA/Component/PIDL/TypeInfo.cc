@@ -31,9 +31,14 @@
 #include "TypeInfo.h"
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/Comm/Message.h>
+
+#ifdef HAVE_GLOBUS
 #include <Core/CCA/Component/Comm/ReplyEP.h>
+#endif
+
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
@@ -86,7 +91,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   message->marshalInt(&uuid_size); 
   message->marshalChar(const_cast<char*>(d_priv->uuid.c_str()),uuid_size);
  
-  int addRef=1; //Tell the isa handler to increment the ref count on the object
+  int addRef=PIDL::isNexus(); //Tell the isa handler to increment the ref count on the object
 
   message->marshalInt(&addRef);
 
@@ -135,7 +140,11 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     ReferenceMgr* new_rm = new ReferenceMgr(*_rm);
     for(unsigned int i=0; i < new_rm->d_ref.size(); i++)
       new_rm->d_ref[i].d_vtable_base=vtbase;
-    return (*d_priv->create_proxy)(*new_rm);
+    //return (*d_priv->create_proxy)(*new_rm);
+Object *obj=
+    (*d_priv->create_proxy)(*new_rm);
+	delete new_rm;
+	return obj;
   }
 }
 

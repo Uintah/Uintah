@@ -46,6 +46,7 @@ ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
 {
   d_ref = copy.d_ref;
   for(unsigned int i=0; i < d_ref.size(); i++) {
+	if(d_ref[i].chan!=NULL) delete d_ref[i].chan; //K.z.
     d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
   }
   localSize = copy.localSize;
@@ -64,7 +65,9 @@ ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
    intracomm(copy.intracomm) 
 {
   for(unsigned int i=0; i < d_ref.size(); i++) {
-    d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
+	if(d_ref[i].chan!=NULL) delete d_ref[i].chan; //K.z.
+
+      		  d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
   }
   if(isSubset) {
     save_lSize = copy.save_lSize;
