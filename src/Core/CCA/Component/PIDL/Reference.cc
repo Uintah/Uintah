@@ -35,28 +35,33 @@ using namespace SCIRun;
 
 Reference::Reference()
 {
-  chan = PIDL::getSpChannel();
+  //chan = PIDL::getSpChannel();
+  chan = NULL;
   d_vtable_base=TypeInfo::vtable_invalid;    
+}
+
+Reference::Reference(SpChannel* n_chan)
+{
+  d_vtable_base=TypeInfo::vtable_invalid;
+  chan = n_chan;
 }
 
 Reference::Reference(const Reference& copy)
   :d_vtable_base(copy.d_vtable_base) 
 {
-  chan = (copy.chan)->SPFactory(false);
+  if(copy.chan != NULL)
+    chan = (copy.chan)->SPFactory(false);
 }
 
 Reference::~Reference(){
-  if (chan != NULL) {
-    delete chan;
-    chan = NULL;
-  }
 }
 
 Reference& Reference::operator=(const Reference& copy)
 {
   d_vtable_base=copy.d_vtable_base;
-  if(chan!=NULL) delete chan;  //k.z
-  chan = (copy.chan)->SPFactory(false);
+  //if(chan!=NULL) delete chan;  //k.z
+  if(copy.chan != NULL)
+    chan = (copy.chan)->SPFactory(false);
   return *this;
 }
 

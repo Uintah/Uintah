@@ -40,7 +40,7 @@ Object_proxy::Object_proxy(const Reference& ref)
 }
 
 Object_proxy::Object_proxy(const URL& url)
-  : ProxyBase(new Reference())
+  : ProxyBase(new Reference(PIDL::getSpChannel()))
 {
   rm.d_ref[0].chan->openConnection(url);
   rm.d_ref[0].d_vtable_base=TypeInfo::vtable_methods_start;
@@ -51,11 +51,11 @@ Object_proxy::Object_proxy(const URL& url)
 Object_proxy::Object_proxy(const int urlc, const URL urlv[], int mysize, int myrank)
 {
   for(int i=0; i < urlc; i++) {
-    Reference *ref = new Reference();
+    Reference *ref = new Reference(PIDL::getSpChannel());
     ref->chan->openConnection(urlv[i]);
     ref->d_vtable_base=TypeInfo::vtable_methods_start;
     rm.insertReference(*ref);
-    delete ref;	 //k.z.
+    delete ref;	
   }
   rm.localSize = mysize;
   rm.s_lSize = mysize;
@@ -68,11 +68,11 @@ Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
 {
   std::vector<URL>::const_iterator iter = urlv.begin();
   for(unsigned int i=0; i < urlv.size(); i++, iter++) {
-    Reference *ref = new Reference();
+    Reference *ref = new Reference(PIDL::getSpChannel());
     ref->chan->openConnection(*iter);
     ref->d_vtable_base=TypeInfo::vtable_methods_start;
     rm.insertReference(*ref);
-    delete ref; //k.z.
+    delete ref; 
   }
   rm.localSize = mysize;
   rm.s_lSize = mysize;

@@ -47,7 +47,7 @@ ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
 {
   d_ref = copy.d_ref;
   for(unsigned int i=0; i < d_ref.size(); i++) {
-    if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
+    //if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
     d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
   }
   localSize = copy.localSize;
@@ -64,7 +64,7 @@ ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
    d_ref(copy.d_ref), intracomm(copy.intracomm)  
 {
   for(unsigned int i=0; i < d_ref.size(); i++) {
-    if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
+    //if(d_ref[i].chan!=NULL) delete d_ref[i].chan; 
     d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
   }
 }
@@ -74,6 +74,7 @@ ReferenceMgr::~ReferenceMgr()
   refList::iterator iter = d_ref.begin();
   for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
     (*iter).chan->closeConnection();
+    if(d_ref[i].chan!=NULL) delete d_ref[i].chan;
   }
 }
 

@@ -47,15 +47,15 @@ int HandlerGateKeeper::getTickets(int handler_num, ::std::string sessionID, int 
   if((callsToGo[handler_num] > 0)&&(currentID.find(handler_num) != currentID.end())
 		                 &&(currentID[handler_num] != sessionID)) {
     d_gate_mutex.unlock();
-    ::std::cerr << "I shot the sheriff, currentID =" << currentID[handler_num] << ", sessionID=" << sessionID << "\n";
+    //::std::cerr << "I shot the sheriff, currentID =" << currentID[handler_num] << ", sessionID=" << sessionID << "\n";
     d_gate_sema.down(); 	
     d_gate_mutex.lock();
   }
   if((currentID.find(handler_num) == currentID.end())||(currentID[handler_num] != sessionID)) {
     currentID.insert(IDMap_valType(handler_num, sessionID));
     if(number_of_calls == 0) number_of_calls++; 
-    ::std::cout << "current sessionID for handler " << handler_num << "is '" 
-		<< currentID[handler_num] << "', numCalls=" << number_of_calls << "\n";
+    //::std::cout << "current sessionID for handler " << handler_num << "is '" 
+    //		<< currentID[handler_num] << "', numCalls=" << number_of_calls << "\n";
     callsToGo[handler_num] = number_of_calls;
   }
   d_gate_mutex.unlock();
