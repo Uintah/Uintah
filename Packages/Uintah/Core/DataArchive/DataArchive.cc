@@ -27,6 +27,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 using namespace std;
 
 using namespace Uintah;
@@ -60,7 +64,7 @@ DataArchive::DataArchive(const std::string& filebase,
   
   if(d_base.isRelative()){
     char path[MAXPATHLEN];
-    string url = string("file://")+getwd(path)+"/.";
+    string url = string("file://")+getcwd(path, MAXPATHLEN)+"/.";
     d_base.makeRelativeTo(url.c_str());
     if( d_base.isRelative() && verbose )
       cerr << "base is still relative!\n";
