@@ -1,4 +1,3 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
@@ -32,7 +31,7 @@ using namespace std;
 #define MAX_BASIS 27
 
 FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
-                                 MPMLabel* Mlb,int n8or27)
+                                 MPMLabel* Mlb,MPMFlags* Mflag)
 {
   // Constructor
   IntVector v_f;
@@ -44,11 +43,11 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
 
   d_sharedState = d_sS;
   lb = Mlb;
-  d_8or27=n8or27;
-  if(d_8or27==8){
+  flag = Mflag;
+  if(flag->d_8or27){
     NGP=1;
     NGN=1;
-  } else if(d_8or27==MAX_BASIS){
+  } else if(flag->d_8or27==MAX_BASIS){
     NGP=2;
     NGN=2;
   }
@@ -104,12 +103,14 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,  dwi, patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,  dwi, patch);
-#ifdef FRACTURE
-      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
-#else      
-      new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
-      frictionWork[m].initialize(0.);
-#endif      
+      if (flag->d_fracture)
+	new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
+			      patch);
+      else {
+	new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,
+			       patch);
+	frictionWork[m].initialize(0.);
+      }
       gsurfnorm[m].initialize(zero);
 
       IntVector low(patch->getInteriorNodeLowIndex());
@@ -292,7 +293,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       
       // Next, interpolate the stress to the grid
       constParticleVariable<Vector> psize;
-      if(d_8or27==MAX_BASIS){
+      if(flag->d_8or27==MAX_BASIS){
         old_dw->get(psize, lb->pSizeLabel, pset);
       }
 
@@ -303,15 +304,15 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        if(d_8or27==8){
+        if(flag->d_8or27==8){
           patch->findCellAndWeights(px[idx], ni, S);
         }
-        else if(d_8or27==27){
+        else if(flag->d_8or27==27){
           patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
         }
         // Add each particles contribution to the local mass & velocity
         // Must use the node indices
-        for(int k = 0; k < d_8or27; k++) {
+        for(int k = 0; k < flag->d_8or27; k++) {
           if (patch->containsNode(ni[k]))
             gstress[m][ni[k]] += pstress[idx] * S[k];
         }
@@ -404,11 +405,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   Dv=-normal_normaldV;
                   
                   // Calculate work done by frictional force
-#ifdef FRACTURE
-                  frictionWork[n][c] += 0.;
-#else                               
-                  frictionWork[n][c] = 0.;
-#endif
+		  if (flag->d_fracture)
+		    frictionWork[n][c] += 0.;
+		  else
+		    frictionWork[n][c] = 0.;
                 }
 
                 // General algorithm, including frictional slip.  The
@@ -430,17 +430,16 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   // conventional definition.  However, here it is calculated
                   // as positive (Work=-force*distance).
                   if(compare(frictionCoefficient,d_mu)){
-#ifdef FRACTURE
-                    frictionWork[n][c] += mass*frictionCoefficient
-                      * (normalDeltaVel*normalDeltaVel) *
-                      (tangentDeltaVelocity/fabs(normalDeltaVel)-
-                       frictionCoefficient);
-#else               
-                    frictionWork[n][c] = mass*frictionCoefficient
-                      * (normalDeltaVel*normalDeltaVel) *
-                      (tangentDeltaVelocity/fabs(normalDeltaVel)-
-                       frictionCoefficient);
-#endif              
+		    if (flag->d_fracture)
+		      frictionWork[n][c] += mass*frictionCoefficient
+			* (normalDeltaVel*normalDeltaVel) *
+			(tangentDeltaVelocity/fabs(normalDeltaVel)-
+			 frictionCoefficient);
+		    else
+		      frictionWork[n][c] = mass*frictionCoefficient
+			* (normalDeltaVel*normalDeltaVel) *
+			(tangentDeltaVelocity/fabs(normalDeltaVel)-
+			 frictionCoefficient);
                   }
                 }
 
@@ -684,7 +683,7 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
   t->requires(Task::OldDW,   lb->delTLabel);
   t->requires(Task::OldDW,   lb->pXLabel,           Ghost::AroundNodes, NGP);
   t->requires(Task::OldDW,   lb->pStressLabel,      Ghost::AroundNodes, NGP);
-  if(d_8or27==27){
+  if(flag->d_8or27==27){
     t->requires(Task::OldDW, lb->pSizeLabel,        Ghost::AroundNodes, NGP);
   }
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::AroundNodes, 1);
@@ -693,11 +692,10 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
-#ifdef FRACTURE
-  t->modifies(lb->frictionalWorkLabel, mss);
-#else    
-  t->computes(lb->frictionalWorkLabel);
-#endif
+  if (flag->d_fracture)
+    t->modifies(lb->frictionalWorkLabel, mss);
+  else
+    t->computes(lb->frictionalWorkLabel);
   t->modifies(lb->gVelocityLabel, mss);
 }
 

@@ -8,6 +8,7 @@ namespace Uintah {
 
   class Contact;
   class MPMLabel;
+  class MPMFlags;
 
   class ContactFactory
   {
@@ -17,7 +18,7 @@ namespace Uintah {
     // and calls the proper class' readParameters()
     // addMaterial() calls this
     static Contact* create(const ProblemSpecP& ps,SimulationStateP& ss,
-                                              MPMLabel* lb, int n8or27);
+			   MPMLabel* lb, MPMFlags* MFlag);
   };
 } // End namespace Uintah
   

@@ -5,7 +5,6 @@
 // be used for example when a single velocity field is
 // present in the problem, so doing contact wouldn't make
 // sense.
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/NullContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -19,9 +18,11 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 using namespace Uintah;
 
-NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* Mlb)
+NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS,
+			 MPMLabel* Mlb,MPMFlags* MFlags)
 {
   // Constructor
  
@@ -30,6 +31,7 @@ NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* Mlb)
 
   d_sharedState = d_sS;
   lb = Mlb;
+  flag = MFlags;
 
 }
 
@@ -74,12 +76,14 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
       new_dw->getModifiable(gv_star, lb->gVelocityStarLabel,        dwi, patch);
       new_dw->getModifiable(gacc,    lb->gAccelerationLabel,        dwi, patch);
-#ifdef FRACTURE
-      new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel, dwi, patch);
-#else	    
-      new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi, patch);
-      frictionalWork.initialize(0.);
-#endif      
+      if (flag->d_fracture)
+	new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel, dwi,
+			      patch);
+      else {
+	new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi,
+			       patch);
+	frictionalWork.initialize(0.);
+      }
     }
   }
 }
@@ -99,9 +103,8 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
   const MaterialSubset* mss = ms->getUnion();
   t->modifies(lb->gVelocityStarLabel, mss);
   t->modifies(lb->gAccelerationLabel, mss);
-#ifdef FRACTURE
-  t->modifies(lb->frictionalWorkLabel, mss);
-#else    
-  t->computes(lb->frictionalWorkLabel);
-#endif
+  if (flag->d_fracture)
+    t->modifies(lb->frictionalWorkLabel, mss);
+  else
+    t->computes(lb->frictionalWorkLabel);
 }
