@@ -93,6 +93,8 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Util/DynamicCompilation.h>
+#include <Core/Util/ProgressReporter.h>
 
 #include <Dataflow/Ports/NrrdPort.h>
 
@@ -214,39 +216,39 @@
    void prefersciobjects();
 
    // SCIRun MATRICES
-   long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::Module *module);
-   void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::Module *module);
+   long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::ProgressReporter* pr);
+   void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::ProgressReporter* pr);
 
    // SCIRun NRRDS
-   long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::Module *module);
-   void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::Module *module);
+   long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::ProgressReporter* pr);
+   void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::ProgressReporter* pr);
 
 #ifdef HAVE_BUNDLE
    // SCIRun Bundles (Currently contained in the CardioWave Package)
-   long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::Module *module);
-   void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::Module *module);
+   long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::ProgressReporter* pr);
+   void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::ProgressReporter* pr);
 #endif
 
-   // The reference status of the reader/compatible modules has been changed.
+   // The reference status of the reader/compatible prs has been changed.
    // So I can change the contents without affecting the matrices at the input
    // This is a cleaner solution. 
 
    // SCIRun Fields/Meshes
-   long sciFieldCompatible(matlabarray mlarray,std::string &infostring, SCIRun::Module *module);
+   long sciFieldCompatible(matlabarray mlarray,std::string &infostring, SCIRun::ProgressReporter* pr);
 
    // DYNAMICALLY COMPILING CONVERTERS
    // Note: add the pointer from the Module which makes the call, so the user sees
    // the ouput of the dynamic compilation phase, for example
    //   matlabconverter translate;
    //   translate.sciFieldTOmlArray(scifield,mlarray,this);
-   // ALL the dynamic code is in the matlabconverter class it just needs a pointer to the module
+   // ALL the dynamic code is in the matlabconverter class it just needs a pointer to the pr
    // class.
 	
-   void mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield,SCIRun::Module *module);
-   void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray,SCIRun::Module *module);
+   void mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield,SCIRun::ProgressReporter* pr);
+   void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray,SCIRun::ProgressReporter* pr);
 
 
    // SUPPORT FUNCTIONS
@@ -257,7 +259,7 @@
 
  private:
    // FUNCTIONS FOR COMMUNICATING WITH THE USER
-   void	postmsg(SCIRun::Module *moduleptr, std::string msg);
+   void	postmsg(SCIRun::ProgressReporter* pr, std::string msg);
    bool	postmsg_;
 
    // THE REST OF THE FUNCTIONS ARE PRIVATE
@@ -317,6 +319,9 @@
      // Property matrix to set properties
      matlabarray property;
 		
+     // Interpolation matrices as used in CVRTI
+     matlabarray interp;
+    
      int  basis_order;
    };
 
@@ -1022,7 +1027,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    }
 
    // Dynamically do the field contents. Luckily this is better templated and hence a couple
-   // of templated functions do the trick
+   // of templated functions do the tricks
 
    if (field->basis_order() > -1)
    {
