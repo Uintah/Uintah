@@ -38,23 +38,9 @@ ScalarFieldRGBase::ScalarFieldRGBase(Representation r, int x, int y, int z)
 
 ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
 : ScalarField(copy), nx(copy.nx), ny(copy.ny), nz(copy.nz), 
-  is_augmented(0),next(0)
+  rep(copy.rep),
+  is_augmented(0), next(0)
 {
-    clString r=copy.getType();
-    if (r=="float")
-	rep = Float;
-    else if (r=="int")
-	rep = Int;
-    else if (r=="short")
-	rep = Short;
-    else if (r=="char")
-	rep = Char;
-    else if (r=="uchar")
-	rep = Uchar;
-    else if (r=="double")
-	rep = Double;
-    else
-	rep = Void;
 }
 
 ScalarFieldRGBase::~ScalarFieldRGBase()
@@ -63,7 +49,9 @@ ScalarFieldRGBase::~ScalarFieldRGBase()
     delete next; // propogate down the links...
 }
 
-clString ScalarFieldRGBase::getType() const {
+
+const char *
+ScalarFieldRGBase::getType() const {
     if (rep==Double)
         return ("double");
     else if (rep==Float)
