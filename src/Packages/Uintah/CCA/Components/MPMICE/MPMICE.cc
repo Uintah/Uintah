@@ -52,7 +52,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_ice->setICELabel(Ilb);
    d_ice->problemSetup(prob_spec, grid, d_sharedState);
 
-   cerr << "MPMICE::problemSetup passed.\n";
+   cerr << "Done with problemSetup \t\t\t MPMICE" <<endl;
+   cerr << "--------------------------------\n"<<endl;
 }
 //______________________________________________________________________
 //
@@ -62,6 +63,8 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 {
   d_mpm->scheduleInitialize(level, sched, dw);
   d_ice->scheduleInitialize(level, sched, dw);
+   cerr << "Doing Initialization \t\t\t MPMICE" <<endl;
+   cerr << "--------------------------------\n"<<endl; 
 }
 //______________________________________________________________________
 //
@@ -495,6 +498,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.,0.,0.);
   Vector dx = patch->dCell();
+  static int timestep = 0;
   double vol = dx.x()*dx.y()*dx.z();
   double d_SMALL_NUM = 1.e-100;       // TEMPORARY THIS SHOULD BE PRIVATE DATA
   cout << "\n_________________________________________________"<< endl;  
@@ -525,7 +529,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
      cmass.initialize(0.);
      cvolume.initialize(0.);
-     vel_CC.initialize(zero);
+/*`==========TESTING==========*/ 
+     vel_CC.initialize(zero);     // carry the velocity forward in cells where there are no
+                                    // mpm matls
+ /*==========TESTING==========`*/
 
      new_dw->get(gmass,     Mlb->gMassLabel,           matlindex, patch, 
                                                  Ghost::AroundCells, 1);
@@ -544,17 +551,35 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 	 vel_CC[*iter]   +=      gvelocity[nodeIdx[in]]*.125*gmass[nodeIdx[in]];
        }
        
-       rho_CC[*iter]       =  cmass[*iter]/vol;
-       vel_CC[*iter]      /= (cmass[*iter] + d_SMALL_NUM);
+       rho_CC[*iter]       =  cmass[*iter]/vol + d_SMALL_NUM;
+       vel_CC[*iter]      /= (cmass[*iter]     + d_SMALL_NUM);
        Temp_CC[*iter]      =  300.0;           // H A R D W I R E D 
        cv_CC[*iter]        =  716;             // H A R D W I R E D 
+                                               // need to carry forward
        int_eng_L_CC[*iter] = Temp_CC[*iter] * cv_CC[*iter] * cmass[*iter];
        
      }
 
+//__________________________________
+//   H A R D W I R E
+// Jim: note we need the velocity and temperature
+//      defined everyhere, even where there are no particles.  If we 
+//      don't then the Malloc lib initializes it as a NAN.
+    if(timestep==0){
+    cout<<"I've hardwired the initial CC Vars for mpm matl"<<endl;
+      Vector initialVel_CC(0.,0.,0.);
+      double initialTemp_CC = 300.0;
+      double initialCv_CC   = 716.0;
+      vel_CC.initialize(initialVel_CC);
+      Temp_CC.initialize(initialTemp_CC);
+      cv_CC.initialize(initialCv_CC);
+    }
+     timestep++;
+
   //  Set BC's and put into new_dw
      d_ice->setBC(rho_CC,  "Density",    patch);
      d_ice->setBC(vel_CC,  "Velocity",   patch);
+     d_ice->setBC(Temp_CC, "Temperature",patch);
      
      new_dw->put(cmass,     MIlb->cMassLabel,         matlindex, patch);
      new_dw->put(cvolume,   MIlb->cVolumeLabel,       matlindex, patch);
@@ -609,6 +634,15 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
        cmomentum[*iter] += mom_source[*iter];
      }
 
+#if 1
+/*`==========TESTING==========*/ 
+    char description[50];
+    sprintf(description, "interpolateNCToCC_%d ",matlindex); 
+    d_ice->printVector( patch,1, description, "xmom_L", 0, cmomentum);
+    d_ice->printVector( patch,1, description, "ymom_L", 1, cmomentum);
+    d_ice->printVector( patch,1, description, "zmom_L", 2, cmomentum);   
+ /*==========TESTING==========`*/
+ #endif
      new_dw->put(cmomentum, MIlb->mom_L_CCLabel, matlindex, patch);
   }
 }
@@ -673,7 +707,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 //  }
 
   // Hardwiring the values for the momentum exchange for now
-  // Need to change input file
+  // Need to change input file 
   K[0][0] = 0.;         H[0][0] = 0.;
   K[0][1] = 1.e10;      H[0][1] = 0.0;
   K[1][0] = 1.e10;      H[1][0] = 0.0;
@@ -863,7 +897,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   //  Set the Boundary conditions 
   //   Do this for all matls even though MPM doesn't
   //   care about this.  For two identical ideal gases
-  //   mom_L_ME and int_eng_L_ME should be identical 
+  //   mom_L_ME and int_eng_L_ME should be identical and this
+  //   is useful when debugging.
   for (int m = 0; m < numALLMatls; m++)  {
       d_ice->setBC(vel_CC[m], "Velocity",   patch);
       d_ice->setBC(Temp_CC[m],"Temperature",patch);
