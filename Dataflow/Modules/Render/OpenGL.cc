@@ -1307,6 +1307,9 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       pick_pick=(GeomPick*)hit_pick;
       pick_obj->getId(pick_index); //(int)hit_pick_index;
       //cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<"\n";
+
+      // x,y,min_z is our point... we can unproject it to get model-space pt
+
     }
   }
   viewer->geomlock_.readUnlock();
@@ -1397,6 +1400,9 @@ void ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   string dl(tclID+"-"+"dl");
   string debug(tclID+"-"+"debug");
   string psize(tclID+"-"+"psize");
+  string lineWidth(tclID+"-"+"lineWidth");
+  string polygonOffsetFactor(tclID+"-"+"polygonOffsetFactor");
+  string polygonOffsetUnits(tclID+"-"+"polygonOffsetUnits");
   string movie(tclID+"-"+"movie");
   string movieName(tclID+"-"+"movieName");
   string movieFrame(tclID+"-"+"movieFrame");
@@ -1443,6 +1449,15 @@ void ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
     
     if (ctx->getSub(psize,dval)) {
       drawinfo->point_size = dval;
+    }
+    if (ctx->getSub(lineWidth,dval)) {
+      drawinfo->line_width = dval;
+    }
+    if (ctx->getSub(polygonOffsetFactor,dval)) {
+      drawinfo->polygon_offset_factor = dval;
+    }
+    if (ctx->getSub(polygonOffsetUnits,dval)) {
+      drawinfo->polygon_offset_units = dval;
     }
     
     if (ctx->getSub(use_clip,val)) {

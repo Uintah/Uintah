@@ -113,6 +113,14 @@ namespace SCIRun {
 
 int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 {
+  if (di->polygon_offset_factor || di->polygon_offset_units) {
+    glPolygonOffset(di->polygon_offset_factor, di->polygon_offset_units);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+  }
+  glPointSize(di->point_size);
+  glLineWidth(di->line_width);
+  glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+
     /* All primitives that get drawn must check the return value of this
        function to determine if they get drawn or not */
   if((!di->pickmode)||(di->pickmode&&di->pickchild)){
@@ -168,6 +176,7 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 
 int GeomObj::post_draw(DrawInfoOpenGL* di)
 {
+  glDisable(GL_POLYGON_OFFSET_FILL);
     if(di->pickmode && di->pickchild){
 #if (_MIPS_SZPTR == 64)
 	glPopName();
@@ -1951,14 +1960,12 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
     if(!pre_draw(di, matl, 0)) return;
     di->polycount++;
     // Set line width. Set it 
-    glLineWidth(lineWidth_);
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glEnd();
     // HACK set line width back to default
     // our scenegraph needs more graceful control of such state.
-    glLineWidth(1.0);
     post_draw(di);
 }
 
@@ -1966,16 +1973,9 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 0)) return;
     di->polycount+=pts.size()/2;
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     double lwr[2], lw[1];
     glGetDoublev(GL_LINE_WIDTH_RANGE, lwr);
     glGetDoublev(GL_LINE_WIDTH, lw);
-//    cerr << "GeomLines::draw()\n";
-//    cerr << "  pre line width was "<<lw[0]<<"\n";
-//    cerr << "  Range = "<<lwr[0]<<" to "<<lwr[1]<<"\n";
-    glLineWidth(di->point_size);
-    glGetDoublev(GL_LINE_WIDTH, lw);
-//    cerr << "  post line width is "<<lw[0]<<"\n";
     glBegin(GL_LINES);
     for(int i=0;i<pts.size();i++){
       Point& pt=pts[i];
@@ -1992,8 +1992,6 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   di->polycount+=points_.size()/6;
 
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-
   //glEnable(GL_BLEND);
   //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -2007,7 +2005,7 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glDrawArrays(GL_LINES, 0, points_.size()/3);
 
-  glLineWidth(1.0);
+  glLineWidth(di->line_width);
 
   //glDisable(GL_BLEND);
 
@@ -2028,9 +2026,6 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   // can't mix them...
 
   // first set up the line size stuff...
-  
-  glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-  glLineWidth(di->point_size);
   
   // here is where the texture stuff has to be done...
   // first setup the texture matrix...
@@ -2346,7 +2341,6 @@ void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 {
     if(!pre_draw(di, matl, 0)) return;
     di->polycount+=verts.size()-1;
-    glPointSize(di->point_size);
     glBegin(GL_LINE_STRIP);
     if(times.size() == verts.size()){
       for(int i=0;i<verts.size() && currenttime >= times[i];i++){
@@ -2444,8 +2438,6 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   di->polycount+=pts.size()/3;
   //  glPushAttrib(GL_POINT_BIT);
-  glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-  glPointSize(di->point_size);
   
   if (di->pickmode) {
     if (pickable) {
@@ -4579,7 +4571,6 @@ DrawInfoOpenGL::init_font(int a)
       fontstatus[a] = 2;
       return false;
     }
-
     glXUseXFont(id, first, last-first+1, fontbase[a]+first);
     fontstatus[a] = 1;
   }

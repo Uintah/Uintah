@@ -182,6 +182,10 @@ itcl_class ViewWindow {
 #		-command "$this makeAnimationPopup"
 	$w.menu.edit.menu add command -label "Point Size..." -underline 0 \
 		-command "$this makePointSizePopup"
+	$w.menu.edit.menu add command -label "Line Width..." -underline 0 \
+		-command "$this makeLineWidthPopup"
+	$w.menu.edit.menu add command -label "Polygon Offset..." -underline 0 \
+		-command "$this makePolygonOffsetPopup"
 	$w.menu.edit.menu add command -label "Scene Materials..." -underline 0 \
 		-command "$this makeSceneMaterialsPopup"
 #	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
@@ -478,6 +482,9 @@ itcl_class ViewWindow {
 	global "$this-global-light"
 	global "$this-global-fog"
 	global "$this-global-psize"
+	global "$this-global-lineWidth"
+	global "$this-global-polygonOffsetFactor"
+	global "$this-global-polygonOffsetUnits"
 	global "$this-global-type"
 	global "$this-global-debug"
 	global "$this-global-clip"
@@ -498,6 +505,9 @@ itcl_class ViewWindow {
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
 	set "$this-global-psize" 1
+	set "$this-global-lineWidth" 1
+	set "$this-global-polygonOffsetFactor" 0
+	set "$this-global-polygonOffsetUnits" 0
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
 	set "$this-global-clip" 0
@@ -986,6 +996,50 @@ itcl_class ViewWindow {
 	set m $frame.f
 	pack forget $m.objlist.canvas.frame.objt$objid
     }
+
+    method makeLineWidthPopup {} {
+	set w .lineWidth[modname]
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
+	toplevel $w
+	wm title $w "Line Width"
+	wm minsize $w 250 100
+	frame $w.f
+	global $this-global-lineWidth
+	scale $w.f.scale -command "$this-c redraw" -variable \
+		$this-global-lineWidth -orient horizontal -from 1 -to 5 \
+		-resolution .1 -showvalue true -tickinterval 1 -digits 0 \
+		-label "Line Width:"
+	pack $w.f.scale -fill x -expand 1
+	pack $w.f -fill x -expand 1
+    }	
+
+    method makePolygonOffsetPopup {} {
+	set w .polygonOffset[modname]
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
+	toplevel $w
+	wm title $w "Polygon Offset"
+	wm minsize $w 250 100
+	frame $w.f
+	global $this-global-polygonOffsetFactor
+	global $this-global-polygonOffsetUnits
+	scale $w.f.factor -command "$this-c redraw" -variable \
+		$this-global-polygonOffsetFactor -orient horizontal -from -4 \
+		-to 4 -resolution .01 -showvalue true -tickinterval 2 \
+		-digits 3 -label "Offset Factor:"
+	scale $w.f.units -command "$this-c redraw" -variable \
+		$this-global-polygonOffsetUnits -orient horizontal -from -4 \
+		-to 4 -resolution .01 -showvalue true -tickinterval 2 \
+		-digits 3 -label "Offset Units:"
+#	pack $w.f.factor $w.f.units -fill x -expand 1 -pady 10
+	pack $w.f.factor -fill x -expand 1
+	pack $w.f -fill x -expand 1
+    }	
 
     method makePointSizePopup {} {
 	set w .psize[modname]
