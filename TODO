@@ -1,3 +1,18 @@
+Send mail to scirun (Tue)
+Restructure work dir as modules (Tue)
+Finish cvs stuff in configure script (Tue)
+Update Imakefiles to use new config scripts (Tue)
+Import new tcl, tk and itcl (Wed)
+Make library directories (Wed)
+Make library compilation scripts (Wed)
+Make checkin procedures to compiler libraries (Thu)
+Update checkout procedure (Thu)
+Make them specify what type of build to do: (Thu)
+  - simple make
+  - make World
+  - make clean; make World
+    Have make update use this...
+    
 Linux:
     X11
 	Transformations
@@ -11,9 +26,7 @@ Linux:
 	Call sigpause
 
 Fix from SC94:
-    Mesh
-    BuildFEMatrix
-
+Mesh BuildFEMatrix
 Finish and FIX:
    Icons
    Window Titles
@@ -157,7 +170,7 @@ Modules that need work:
    IsoSurface - UI
    SoundFFT - implemennt
    SoundFilter - finish
-   SoundInput - UI/finish
+   toundInput - UI/finish
    SoundOutput - UI
    SoundReader - UI
    SoundMixer - UI
