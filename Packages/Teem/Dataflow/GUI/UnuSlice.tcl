@@ -26,11 +26,11 @@ itcl_class Teem_Unu_UnuSlice {
         set_defaults
     }
     method set_defaults {} {
-        global axis
-        set axis 0
+        global $this-axis
+        set $this-axis 0
 
-        global position
-        set position 0
+        global $this-position
+        set $this-position 0
 
 
     }

@@ -26,8 +26,8 @@ itcl_class Teem_Unu_UnuAxmerge {
         set_defaults
     }
     method set_defaults {} {
-        global axis_merge_list
-        set axis_merge_list ""
+        global $this-axis_merge_list
+        set $this-axis_merge_list ""
 
 
     }

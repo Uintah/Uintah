@@ -26,11 +26,11 @@ itcl_class Teem_Tend_TendExpand {
         set_defaults
     }
     method set_defaults {} {
-        global threshold
-        set threshold 0.0
+        global $this-threshold
+        set $this-threshold 0.0
 
-        global scale
-        set scale 0.0
+        global $this-scale
+        set $this-scale 0.0
 
 
     }

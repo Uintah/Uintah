@@ -26,11 +26,11 @@ itcl_class Teem_Unu_UnuDhisto {
         set_defaults
     }
     method set_defaults {} {
-        global height
-        set height 0
+        global $this-height
+        set $this-height 0
 
-        global log
-        set log 0
+        global $this-log
+        set $this-log 0
 
 
     }

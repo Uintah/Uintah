@@ -26,8 +26,8 @@ itcl_class Teem_Tend_TendEvec {
         set_defaults
     }
     method set_defaults {} {
-        global threshold
-        set threshold 0.0
+        global $this-threshold
+        set $this-threshold 0.0
     }
 
     method ui {} {

@@ -26,8 +26,8 @@ itcl_class Teem_Unu_UnuFlip {
         set_defaults
     }
     method set_defaults {} {
-        global axis
-        set axis 0
+        global $this-axis
+        set $this-axis 0
 
 
     }

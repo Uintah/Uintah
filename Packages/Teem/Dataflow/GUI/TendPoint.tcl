@@ -26,8 +26,8 @@ itcl_class Teem_Tend_TendPoint {
         set_defaults
     }
     method set_defaults {} {
-        global point
-        set point ""
+        global $this-point
+        set $this-point ""
 
 
     }

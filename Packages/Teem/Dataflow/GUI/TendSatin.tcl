@@ -26,26 +26,26 @@ itcl_class Teem_Tend_TendSatin {
         set_defaults
     }
     method set_defaults {} {
-        global anisotropy
-        set anisotropy 0.0
+        global $this-anisotropy
+        set $this-anisotropy 0.0
 
-        global min
-        set min 0.0
+        global $this-min
+        set $this-min 0.0
 
-        global max
-        set max 0.0
+        global $this-max
+        set $this-max 0.0
 
-        global boundary
-        set boundary 0.0
+        global $this-boundary
+        set $this-boundary 0.0
 
-        global thickness
-        set thickness 0.0
+        global $this-thickness
+        set $this-thickness 0.0
 
-        global size
-        set size 0
+        global $this-size
+        set $this-size 0
 
-        global torus
-        set torus 0
+        global $this-torus
+        set $this-torus 0
     }
 
     method ui {} {
