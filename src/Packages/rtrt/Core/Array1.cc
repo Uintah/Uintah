@@ -177,7 +177,7 @@ T* Array1<T>::get_objs()
 
 namespace SCIRun {
 
-#define ARRAY1_VERSION 1
+#define ARRAY1_RTRT_VERSION 1
 template<class T>
 void Pio(Piostream&, rtrt::Array1<T>&);
 
@@ -192,7 +192,7 @@ void Pio(Piostream& stream, rtrt::Array1<double>& array);
 template<class T>
 void Pio(Piostream& stream, rtrt::Array1<T>& array)
 { 
-  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  stream.begin_class("rtrtArray1", ARRAY1_RTRT_VERSION);
   int size=array.size();
   Pio(stream, size);
   if(stream.reading()){
