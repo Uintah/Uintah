@@ -404,10 +404,10 @@ SimpleSimulationController::run()
 	if (n > 3) {
 	  double stdDev, mean;
 
-	  // divide by n-1 and not n, because we wait till n>1 to keep track
+	  // divide by n-2 and not n, because we wait till n>2 to keep track
           // of our stats
-	  stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-1);
-	  mean = sum_of_walltime / (n-1);
+	  stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
+	  mean = sum_of_walltime / (n-2);
 	  //	  ofstream timefile("avg_elapsed_walltime.txt");
 	  //	  timefile << mean << " +- " << stdDev << endl;
 	  cout << "Timestep mean: " << mean << " +- " << stdDev << endl;
