@@ -482,7 +482,7 @@ itcl_class ViewWindow {
 	}
 
 	# New ViewWindow button
-	button $w.menu.newviewer -text "NewViewer" \
+	button $w.menu.newviewer -text "NewWindow" \
 	    -command "$viewer addViewer [modname]" -borderwidth 0
 	
 	pack $w.menu.file -side left
@@ -630,7 +630,7 @@ itcl_class ViewWindow {
 	    if { [string equal $myviewer $viewer_id] } {
 		if { ![string equal $mywindow $window] } {
 		    set num [lindex [split $window _] end]
-		    $m add command -label "Get View from Viewer $num" \
+		    $m add command -label "Get View from Window [expr $num+1]" \
 			-command "set $this-pos ViewWindow$actual; \
                                   $this-c Views"
 		}
@@ -642,7 +642,7 @@ itcl_class ViewWindow {
     method create_view_menu { m } {
 	menu $m -postcommand \
 	    "$this create_other_viewers_view_menu $m.otherviewers"
-	$m add checkbutton -label "Track View Window 0" \
+	$m add checkbutton -label "Track View Window 1" \
 	    -variable $this-trackViewWindow0
 	$m add cascade -menu $m.otherviewers -label "Other Viewers"
 
