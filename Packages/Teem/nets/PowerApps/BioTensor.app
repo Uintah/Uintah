@@ -4542,7 +4542,7 @@ class BioTensorApp {
 	global bmatrix
 	
 	if {$bmatrix == "load"} {
-	    if {[set $mods(NrrdReader-BMatrix)-filename] == ""} {
+	    if {![file exists [set $mods(NrrdReader-BMatrix)-filename]]} {
 		set answer [tk_messageBox -message \
 				"Please load a B-Matrix file containing." -type ok -icon info -parent .standalone]
 		return
@@ -4604,6 +4604,7 @@ class BioTensorApp {
         global mods
         global $mods(ChooseNrrd-ToReg)-port-index
         global do_registration
+	global bmatrix
 	
 	if {$do_registration == 1} {
 	    disableModule $mods(TendEpireg) 0
@@ -4614,6 +4615,10 @@ class BioTensorApp {
 
 	    # change ChooseNrrd
 	    set $mods(ChooseNrrd-ToReg)-port-index 0
+
+	    # set bmatrix selection to load compute
+	    set bmatrix "compute"
+	    $this toggle_b_matrix
         } else {
 	    disableModule $mods(TendEpireg) 1
 	    disableModule $mods(UnuJoin) 1
@@ -4646,6 +4651,10 @@ class BioTensorApp {
 	    	    
 	    # change ChooseNrrd
 	    set $mods(ChooseNrrd-ToReg)-port-index 1
+
+	    # set bmatrix selection to load load
+	    set bmatrix "load"
+	    $this toggle_b_matrix
 
         }
     }
