@@ -64,6 +64,7 @@ for test in TESTS:
     	rc = system("dat_test %s %s/MPM-%s %s/SCIRun/src/Packages/Uintah/Test/ComparisonDats > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT']))
     	if rc != 0:
     	    print "\tWarning, test %s failed dat comparision with error code %s" % (testname, rc)
+	    failcode = 1
 	else:
 	    print "\tComparison tests passed."
     chdir("..")
