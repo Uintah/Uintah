@@ -16,7 +16,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/BurnFactory.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/FractureFactory.h>

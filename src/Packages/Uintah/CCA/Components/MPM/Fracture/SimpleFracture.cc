@@ -14,7 +14,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 
