@@ -5,7 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
-	$(SRCDIR)/BoundCond.cc \
+	$(SRCDIR)/BoundaryCond.cc \
 	$(SRCDIR)/MPMLabel.cc 
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \

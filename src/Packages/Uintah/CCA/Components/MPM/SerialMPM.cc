@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h> // 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Packages/Uintah/CCA/Components/MPM/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
@@ -1070,17 +1071,17 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(vel_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      //cout << "Velocity bc value = " << bc->getValue() << endl;
-	      gvelocity.fillFace(patch, face,bc->getValue(),offset);
+	      fillFace(gvelocity,patch, face,bc->getValue(),offset);
 	    }
 	  }
 	  if (sym_bcs != 0) {
-	     gvelocity.fillFaceNormal(patch, face,offset);
+	     fillFaceNormal(gvelocity,patch, face,offset);
 	  }
 	  if (temp_bcs != 0) {
             TemperatureBoundCond* bc =
 	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Dirichlet") {
-              gTemperature.fillFace(patch, face,bc->getValue(),offset);
+              fillFace(gTemperature,patch, face,bc->getValue(),offset);
 	    }
 	  }
       }
@@ -1336,7 +1337,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         continue;
       if (sym_bcs != 0) {
         IntVector offset(0,0,0);
-        internalforce.fillFaceNormal(patch, face,offset);
+        fillFaceNormal(internalforce,patch, face,offset);
       }
     }
     new_dw->put(internalforce, lb->gInternalForceLabel,   matlindex, patch);
@@ -1771,13 +1772,13 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 	      dynamic_cast<VelocityBoundCond*>(vel_bcs);
 	    //cout << "Velocity bc value = " << bc->getValue() << endl;
 	    if (bc->getKind() == "Dirichlet") {
-	      gvelocity_star.fillFace(patch, face,bc->getValue(),offset);
-	      gacceleration.fillFace( patch, face,Vector(0.0,0.0,0.0),offset);
+	      fillFace(gvelocity_star,patch, face,bc->getValue(),offset);
+	      fillFace(gacceleration, patch, face,Vector(0.0,0.0,0.0),offset);
 	    }
 	  }
 	  if (sym_bcs != 0) {
-	     gvelocity_star.fillFaceNormal(patch, face,offset);
-	     gacceleration.fillFaceNormal( patch, face,offset);
+	     fillFaceNormal(gvelocity_star,patch, face,offset);
+	     fillFaceNormal(gacceleration, patch, face,offset);
 	  }
          //__________________________________
          // Temperature BC
