@@ -12,8 +12,8 @@ using std::endl;
 
 char* find_cpp()
 {
-    return "/usr/lib/gcc-lib/i386-redhat-linux/2.7.2.3/cpp";
-    //return "/usr/lib/cpp";
+    //return "/usr/lib/gcc-lib/i386-redhat-linux/2.7.2.3/cpp";
+    return "/usr/lib/cpp";
 }
 
 char* find_builtin()
@@ -95,6 +95,10 @@ int main(int argc, char* argv[])
 }
 //
 // $Log$
+// Revision 1.4  1999/09/04 06:00:43  sparker
+// Changed place to find cpp
+// Updates to cca spec
+//
 // Revision 1.3  1999/08/30 20:19:29  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

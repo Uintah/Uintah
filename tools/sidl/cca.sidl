@@ -38,18 +38,7 @@ package CCA {
   };
 
 
-  interface ProvidesPort extends Port {
-    // base class for a provides gport.
-  };
-
-
-  interface UsesPort extends Port {
-    void addProvidesPort(in ProvidesPort p);
-    void removeProvidesPort(in ProvidesPort p);
-  };
-
-
-  interface PortInfo{
+  interface PortInfo {
     string getType();
     string getName();
     void setType(in string type);
@@ -67,7 +56,7 @@ package CCA {
      Port getPort(in string name); 
 
      void registerUsesPort(in PortInfo name_and_type);
-     void addProvidesPort(in ProvidesPort inPort, in PortInfo name);
+     void addProvidesPort(in Port inPort, in PortInfo name);
      void addConnectionListener(in ConnectionListener l);
 
      void releasePort(in string name); // different arguments needed?
@@ -75,9 +64,7 @@ package CCA {
 
 
   interface Component {
-
     void setServices(in Services cc);
-    Services getServices();
   };
 
 }; // end package CCA
@@ -109,7 +96,7 @@ package Default { // default (reference) of CCA.PortInfo
     array<CCA.PortInfo,1> getUsesPorts();
     array<CCA.PortInfo,1> getProvidesPorts();
     void registerUsesPort(in CCA.PortInfo name_and_type);
-    void addProvidesPort(in CCA.ProvidesPort inPort, in CCA.PortInfo name);
+    void addProvidesPort(in CCA.Port inPort, in CCA.PortInfo name);
     CCA.Port getPort(in string name);
     void releasePort(in string name);
     void addConnectionListener(in CCA.ConnectionListener l);
@@ -123,7 +110,7 @@ package Default { // default (reference) of CCA.PortInfo
   
     /** This is how the framework adds a UsesPort.  Note that this is
         completely inaccessible from the component. */
-    void addUsesPort(in CCA.PortInfo info, in CCA.UsesPort up);
+    void addUsesPort(in CCA.PortInfo info, in CCA.Port up);
 
     /** Answer with the UsesPort's that have been registered by the
         component holding this CCAServices object. */
@@ -138,26 +125,14 @@ package Default { // default (reference) of CCA.PortInfo
 //=============================================================================
 package DirectConnect {
 
-  interface Port extends CCA.ProvidesPort, CCA.UsesPort, CCA.Port {
-  };
- 
-  interface DefaultPort extends Port {
-    void addProvidesPort(in CCA.ProvidesPort p);
-    void removeProvidesPort(in CCA.ProvidesPort p);
+  interface DefaultPort extends CCA.Port {
+    void addProvidesPort(in CCA.Port p);
+    void removeProvidesPort(in CCA.Port p);
   };
 };
 
 package Go {
-
-  interface ProvidesPort extends CCA.UsesPort {  
-    void go();
-  };
-
-  interface UsesPort extends CCA.UsesPort {  
-    void go();
-  };
-
-  interface DirectPort extends ProvidesPort, UsesPort, CCA.Port {
+  interface Port extends CCA.Port {  
     void go();
   };
 };
@@ -168,47 +143,20 @@ package Go {
 //=============================================================================
 package StringConsumer {
 
-  interface ProvidesPort extends CCA.ProvidesPort {
-    void setString(in string s);
-  };
-
-  interface UsesPort extends CCA.UsesPort {
-    void setString(in string s);
-  };
-
-  interface DirectPort extends DirectConnect.DefaultPort, ProvidesPort, UsesPort {
+  interface Port extends CCA.Port {
     void setString(in string s);
   };
 };
 
 package TimeProducer {
 
-  interface ProvidesPort extends CCA.ProvidesPort {
+  interface Port extends CCA.Port {
     string getTime();
   };
-
-  interface UsesPort extends CCA.UsesPort {
-    string getTime();
-  };
-
-  interface DirectPort extends ProvidesPort, UsesPort, DirectConnect.Port {
-    string getTime();
-  };
-
 };
 
 package DoubleArrayProducer {
-  interface ProvidesPort extends CCA.ProvidesPort {
-    array<double,1> getArray();
-  };
-
-  interface UsesPort extends CCA.UsesPort {
-    array<double,1> getArray();
-  };
-
-  interface DirectPort extends DirectConnect.DefaultPort,
-                               ProvidesPort,
-                               UsesPort {
+  interface Port extends CCA.Port {
     array<double,1> getArray();
   };
 };
@@ -221,13 +169,13 @@ package DoubleArrayProducer {
 //=============================================================================
 package ExampleComponents {
 
-  class StarterComponent implements DirectConnect.DefaultPort, CCA.Component, Go.DirectPort {
+  class StarterComponent implements DirectConnect.DefaultPort, CCA.Component, Go.Port {
     void setServices(in CCA.Services cc);
     CCA.Services getServices();
     void go();
   };
 
-  class TimeStamper implements CCA.Component, StringConsumer.DirectPort {
+  class TimeStamper implements CCA.Component, StringConsumer.Port {
     void setCCAServices(in CCA.Services cc);
     CCA.Services getServices();
     void setString(in string s);
@@ -235,7 +183,7 @@ package ExampleComponents {
 
   class Timer implements DirectConnect.DefaultPort,
                          CCA.Component,
-                         TimeProducer.DirectPort {
+                         TimeProducer.Port {
     void setServices(in CCA.Services svc);
     CCA.Services getServices();
     string getTime();
@@ -290,7 +238,7 @@ package ESIReference {
                           ESI.VectorOperations,
                           ESI.Vector,
                           CCA.Component,
-                          DoubleArrayProducer.DirectPort {
+                          DoubleArrayProducer.Port {
 
 
     /** CCA.component functions */
@@ -299,7 +247,7 @@ package ESIReference {
     CCA.Services getServices();
 
 
-    /** DoubleArrayProducer.DirectPort */
+    /** DoubleArrayProducer.Port */
 
     array<double,1> getArray();
 
