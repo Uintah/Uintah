@@ -416,7 +416,22 @@ void Worker::run()
 		    }
 		  }
 		} // end else hot spot mode 2.
-	      } else {
+	      } else if (false) {
+                // This stores off the depth stuff
+                double dist;
+		for(int y=sy;y<ey;y++){
+		  for(int x=sx;x<ex;x++){
+		    camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
+		    traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx, dist);
+		    (*image)(x,y).set(result);
+                    image->set_depth(x,y,dist);
+		  }
+		}
+                
+              } else {
+                /////////////////////////////////////////////////
+                // Here's the most default case.  Do simple single sample
+                /////////////////////////////////////////////////
 		for(int y=sy;y<ey;y++){
 		  for(int x=sx;x<ex;x++){
 		    if( transMode && (y % 2 == 0) ){
