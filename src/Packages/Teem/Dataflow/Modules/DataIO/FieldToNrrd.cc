@@ -89,7 +89,7 @@ void FieldToNrrd::execute()
     return;
   }
 
-  FieldHandle field_handle;
+  FieldHandle field_handle; 
   if (!ifield_->get(field_handle))
     return;
 
@@ -102,7 +102,7 @@ void FieldToNrrd::execute()
   string lab = label_.get();
   NrrdDataHandle onrrd_handle = algo->convert_to_nrrd(field_handle, lab);
 
-  onrrd_handle->set_orig_mesh(field_handle->mesh());
+  onrrd_handle->set_orig_field(field_handle);
 
   onrrd_->send(onrrd_handle);
 }
