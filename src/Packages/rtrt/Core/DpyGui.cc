@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Image.h>
 
 #include <Core/Thread/Thread.h>
 
@@ -212,15 +213,66 @@ void DpyGui::resize(const int width, const int height) {
 
 void DpyGui::key_pressed(unsigned long key) {
   switch (key) {
+  case XK_a:
+    rtrt_dpy->priv->animate =! rtrt_dpy->priv->animate;
+    cout << "animate is now " << rtrt_dpy->priv->animate << "\n";
+    break;
+  case XK_c:
+    if (shift_pressed) {
+      cout << "\nEnter new camera parameters > ";
+      // Get a line from the command line
+      char buf[200];
+      if (fgets(buf, 200, stdin))
+        // Send it to camera to parse
+        if (!rtrt_dpy->guiCam_->read(buf))
+          cerr << "Parameters didn't affect any change.  Check syntax.\n";
+      fflush(stdin);
+    } else {
+      rtrt_dpy->guiCam_->print();
+    }
+    break;
   case XK_g:
     stopUIs();
     break;
-  case XK_r:
-    redraw = true;
+  case XK_m:
+    switch (rtrt_dpy->priv->dumpFrame) {
+    case 0:
+    case 1: // Start
+      cerr << "Saving every frame to ppm image\n";
+      rtrt_dpy->priv->dumpFrame = -1;
+      break;
+    case -1: // Stop
+    case -2:
+    case -3:
+      cerr << "Stopping movie\n";
+      rtrt_dpy->priv->dumpFrame = -3;
+      break;
+    }
+    break;
+  case XK_p:
+    if (shift_pressed)
+      // Decrease number of threads
+      rtrt_dpy->change_nworkers(-1);
+    else
+      rtrt_dpy->change_nworkers(1);
     break;
   case XK_q:
     cleaned = false;
     rtrt_engine->stop_engine();
+    break;
+  case XK_r:
+    redraw = true;
+    break;
+  case XK_s:
+    if (shift_pressed) {
+      rtrt_dpy->shadowMode_ =
+        ShadowBase::decrement_shadow_type(rtrt_dpy->shadowMode_);
+    } else {
+      rtrt_dpy->shadowMode_ =
+        ShadowBase::increment_shadow_type(rtrt_dpy->shadowMode_);
+    }
+    cout << "Shadow mode now "
+         << ShadowBase::shadowTypeNames[rtrt_dpy->shadowMode_]<<"\n";
     break;
   case XK_t:
     if( rtrt_engine->hotSpotsMode != RTRT::HotSpotsOff)
@@ -245,12 +297,15 @@ void DpyGui::key_pressed(unsigned long key) {
       }
     }
     break;
-  case XK_p:
-    if (shift_pressed)
-      // Decrease number of threads
-      rtrt_dpy->change_nworkers(-1);
-    else
-      rtrt_dpy->change_nworkers(1);
+  case XK_w:
+    if (shift_pressed) {
+      cerr << "Saving raw image file\n";
+      rtrt_dpy->scene->get_image(rtrt_dpy->priv->showing_scene)->
+        save("images/image.raw");
+    } else {
+      cerr << "Saving ppm image file\n";
+      rtrt_dpy->priv->dumpFrame = 1;
+    }
     break;
   case XK_Escape:
     Thread::exitAll(0);
@@ -315,7 +370,11 @@ void DpyGui::button_motion(MouseButton button,
         rotate_from = to;
         
         // Perform the transform
-        rtrt_dpy->guiCam_->transform(trans, Camera::LookAt);
+        if (shift_pressed)
+          // Around the eye point
+          rtrt_dpy->guiCam_->transform(trans, Camera::Eye);
+        else
+          rtrt_dpy->guiCam_->transform(trans, Camera::LookAt);
       }
     }
     break;
