@@ -112,8 +112,6 @@ extern bool pin;
 
 //Mutex rtrt::cameralock("Frameless Camera Synch lock");
 
-Mutex rtrt::xlock("X windows startup lock");
-
 Mutex io_lock_("io lock");
 
 //////////////////////////////////////////////////////////////////
@@ -301,6 +299,9 @@ Dpy::run()
     resize(priv->xres, priv->yres);
     open_display(parentWindow, false);
 
+    // Don't close this if you are a child of the GLUT stuff.
+    dont_close();
+
     init();
   }
 
@@ -344,7 +345,7 @@ Dpy::run()
       // Exit if you are supposed to.
       if (nworkers == 0) {
         cout << "Dpy is closing\n";
-        close_display();
+        cleanup();
         return;
       }
   
@@ -375,7 +376,7 @@ Dpy::run()
       // Exit if you are supposed to.
       if (scene->get_rtrt_engine()->stop_execution()) {
 	cout << "Dpy going down\n";
-        close_display();
+        cleanup();
         return;
         //	Thread::exit();
       }
