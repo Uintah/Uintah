@@ -596,9 +596,9 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   dbg << "Executing " << dts_->numTasks() << " tasks (" << ntasks << " local)\n";
 
   // TEMPORARY
-  cerrLock.lock();
-  cerr << "Executing " << dts_->numTasks() << " tasks (" << ntasks << " local)\n";  
-  cerrLock.unlock();
+//  cerrLock.lock();
+//  cerr << "Executing " << dts_->numTasks() << " tasks (" << ntasks << " local)\n";  
+//  cerrLock.unlock();
   
   if( mixedDebug.active() ) {
     cerrLock.lock();
