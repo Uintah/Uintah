@@ -2,6 +2,7 @@
 #include <Geometry/Transform.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Geometry/Ray.h>
 #include <Math/Trig.h>
 #include <iostream.h>
 
@@ -207,6 +208,11 @@ Vector Transform::project(const Vector& p)
     return Vector(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z(),
 		 mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z(),
 		 mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+}
+
+Ray Transform::project(const Ray& r)
+{
+  return Ray( project(r.origin()), project(r.direction()));
 }
 
 Point Transform::unproject(const Point& p)

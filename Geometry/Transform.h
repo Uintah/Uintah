@@ -4,6 +4,7 @@
 
 class Vector;
 class Point;
+class Ray;
 
 class Transform {
     double mat[4][4];
@@ -43,6 +44,7 @@ public:
     Point unproject(const Point& p);
     Point project(const Point& p);
     Vector project(const Vector& p);
+    Ray project(const Ray& r);
     void get(double*);
     void get_trans(double*);
     void set(double*);
