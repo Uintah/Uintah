@@ -62,6 +62,10 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 
+  virtual void scheduleInitializeKStability(SchedulerP& sched,
+					    const PatchSet* patches,
+					    const MaterialSet* arches_matls);
+
   // Interpolate particle information from particles to grid
   // for the initial condition
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP& sched,
@@ -144,7 +148,13 @@ public:
 
  protected:
 
-  void interpolateParticlesToGrid(const ProcessorGroup*,
+    void initializeKStability(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* arches_matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
+
+    void interpolateParticlesToGrid(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* ,
 				  DataWarehouse* old_dw,
