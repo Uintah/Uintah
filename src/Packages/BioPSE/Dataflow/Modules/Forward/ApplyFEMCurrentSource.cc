@@ -142,7 +142,7 @@ ApplyFEMCurrentSource::execute_dipole()
   // Get the input dipoles.
   FieldHandle hSource;
   if (!iportSource->get(hSource) || !hSource.get_rep()) {
-    error("Can't get handle to source field.");
+    error("Can't get handle to Source field.");
     return;
   }
   PointCloudField<Vector> *hDipField = 
@@ -433,10 +433,15 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   }
 
   TetVolMesh *hTetMesh = 0;
+  HexVolMesh *hHexMesh = 0;
   TriSurfMesh *hTriMesh = 0;
   if ((hTetMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep())))
   {
     remark("Input is a 'TetVolField'");
+  }
+  else if ((hHexMesh = dynamic_cast<HexVolMesh*> (hField->mesh().get_rep())))
+  {
+    remark("Input is a 'HexVolField'");
   }
   else if ((hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep())))
   {
@@ -444,7 +449,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   }
   else
   {
-    error("Supplied field is not 'TetVolField' or 'TriSurfField'");
+    error("Supplied field is not 'TetVolField', 'TriSurfField', or 'HexVolField'");
     return;
   }
 
@@ -453,6 +458,11 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   {
     TetVolMesh::Node::size_type nsizeTet; hTetMesh->size(nsizeTet);
     nsize = nsizeTet;
+  }
+  else if (hHexMesh)
+  {
+    HexVolMesh::Node::size_type nsizeHex; hHexMesh->size(nsizeHex);
+    nsize = nsizeHex;
   }
   else if (hTriMesh)
   {
@@ -496,7 +506,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   }
 
   // process mesh
-  if (hTetMesh)
+  if (hTetMesh || hHexMesh)
   {
     MatrixHandle hMapping;
     iportMapping->get(hMapping);
@@ -506,7 +516,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
     unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
     unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
 	
-    // if we have an Mapping field and a Source field and all types are good,
+    // if we have an Mapping matrix and a Source field and all types are good,
     //  hCurField will be valid after this block
     PointCloudField<double> *hCurField = 0;
     if (hMapping.get_rep() && hSource.get_rep())
@@ -514,7 +524,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       hCurField = dynamic_cast<PointCloudField<double>*> (hSource.get_rep());
       if (!hCurField)
       {
-        error("Can only use a PointCloudField<double> as source when using an Mapping field and a source field -- this mode is for specifying current densities");
+        error("Can only use a PointCloudField<double> as source when using an Mapping matrix and a Source field -- this mode is for specifying current densities");
         return;
       }
       if (hCurField->data_size() != (unsigned int)hMapping->nrows())
@@ -529,18 +539,17 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       }
     }
 	
-    // if we have don't have an Mapping matrix, use the source/sink indices
-    // directly as TetVol nodes
+    // if we have don't have a Mapping matrix, use the source/sink indices
+    // directly as volume nodes
 	
-    // if we do have an Mapping matrix, but we don't have a Source field,
+    // if we do have a Mapping matrix, but we don't have a Source field,
     // then the source/sink indices refer to the PointCloud, so use the
-    // Mapping matrix to get their corresponding TetVol node indices.
+    // Mapping matrix to get their corresponding volume node indices.
 	
-    // if we have an Mapping matrix AND a Source field, then ignore the
-    // source/sink indices.  The Source field and the Mapping matrix
-    // will have the same mesh, where the Mapping matrix specifies the
-    // TetVol node index for each source, and the Source field gives a
-    // scalar quantity (current) for each source.
+    // if we have a Mapping matrix AND a Source field, then ignore the
+    // source/sink indices.  The Mapping matrix defines how the PointCloud
+    //  nodes map to volume mesh nodes, and the Source field gives a
+    // scalar quantity (current density) for each source.
     if (!hMapping.get_rep())
     {
       if ((int)sourceNode >= nsize || (int)sinkNode >= nsize)
@@ -599,7 +608,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
     }
 
     oportRhs->send(MatrixHandle(rhs));
-  }
+  } 
   else if (hTriMesh)
   {
     MatrixHandle hMapping;
