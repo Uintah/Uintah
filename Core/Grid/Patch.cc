@@ -79,6 +79,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       have_layout(realPatch->have_layout),
       layouthint(realPatch->layouthint)
 {
+
   for (int i = 0; i < numFaces; i++)
     d_bctypes[i] = realPatch->d_bctypes[i];
 
@@ -993,6 +994,7 @@ Patch::getSFCIterator(const int dir, const int offset) const
   } else {
     return getSFCZIterator(offset);
   } 
+  throw InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2");
 } 
 
 CellIterator    
