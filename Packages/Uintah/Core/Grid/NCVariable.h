@@ -55,14 +55,13 @@ WARNING
   public:
      
     NCVariable();
-    NCVariable(const NCVariable<T>&);
     virtual ~NCVariable();
      
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
     
-    virtual void copyPointer(const NCVariableBase&);
+    virtual void copyPointer(NCVariableBase&);
 
     virtual void rewindow(const IntVector& low, const IntVector& high)
     { Array3<T>::rewindow(low, high); }    
@@ -272,6 +271,7 @@ WARNING
 
   private:
     NCVariable<T>& operator=(const NCVariable<T>&);
+    NCVariable(const NCVariable<T>&);
     
     static Variable* maker();
   };
@@ -314,7 +314,7 @@ WARNING
    
   template<class T>
   void
-  NCVariable<T>::copyPointer(const NCVariableBase& copy)
+  NCVariable<T>::copyPointer(NCVariableBase& copy)
   {
     const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(&copy);
     if(!c)
@@ -324,12 +324,6 @@ WARNING
 
   template<class T>
   NCVariable<T>::NCVariable()
-  {
-  }
-   
-  template<class T>
-  NCVariable<T>::NCVariable(const NCVariable<T>& copy)
-    : Array3<T>(copy)
   {
   }
    

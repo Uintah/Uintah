@@ -58,14 +58,13 @@ WARNING
   class CCVariable : public Array3<T>, public CCVariableBase {
   public:
     CCVariable();
-    CCVariable(const CCVariable<T>&);
     virtual ~CCVariable();
       
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
     
-    virtual void copyPointer(const CCVariableBase&);
+    virtual void copyPointer(CCVariableBase&);
 
     virtual void rewindow(const IntVector& low, const IntVector& high)
     { Array3<T>::rewindow(low, high); }
@@ -434,6 +433,7 @@ WARNING
       return getWindow();
     }
   private:
+    CCVariable(const CCVariable<T>&);
     CCVariable<T>& operator=(const CCVariable<T>&);
    
     static Variable* maker();
@@ -484,9 +484,9 @@ WARNING
   }
   template<class T>
   void
-  CCVariable<T>::copyPointer(const CCVariableBase& copy)
+  CCVariable<T>::copyPointer(CCVariableBase& copy)
   {
-    const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(&copy);
+    CCVariable<T>* c = dynamic_cast<CCVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in CC variable");
     Array3<T>::copyPointer(*c);
@@ -497,13 +497,6 @@ WARNING
   CCVariable<T>::CCVariable()
   {
     //	 std::cerr << "CCVariable ctor not done!\n";
-  }
-   
-  template<class T>
-  CCVariable<T>::CCVariable(const CCVariable<T>& copy)
-    : Array3<T>(copy)
-  {
-    //	 std::cerr << "CCVariable copy ctor not done!\n";
   }
    
   template<class T>
