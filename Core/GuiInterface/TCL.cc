@@ -100,33 +100,11 @@ static string application()
 void
 TCL::execute(const string& str)
 {
-#ifndef _WIN32
-  if (gm != NULL) {
-    int skt = gm->getConnection();
-
-    printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", 
-	    str.c_str(), skt);
-
-    // format request - no TCL variable name, just a string to execute
-    TCLMessage msg;
-    msg.f = exec;
-    strcpy (msg.un.tstring, str.c_str());
-
-    // send request to server - no need for reply, error goes to Tk
-    if (sendRequest (&msg, skt) == -1) {
-      // error case ???
-    }
-    gm->putConnection (skt);
-  }
-  else
-#endif
-  {
-    TCLTask::lock();
-    int code = Tcl_Eval(the_interp, ccast_unsafe(str));
-    if(code != TCL_OK)
-      Tk_BackgroundError(the_interp);
-    TCLTask::unlock();
-  }
+  TCLTask::lock();
+  int code = Tcl_Eval(the_interp, ccast_unsafe(str));
+  if(code != TCL_OK)
+    Tk_BackgroundError(the_interp);
+  TCLTask::unlock();
 }
 
 
