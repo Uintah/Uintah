@@ -159,10 +159,10 @@ BaseVariable::MoveDelta( const Real deltaValue )
 Index
 BaseVariable::Register( BaseConstraint* constraint, const Index index )
 {
-   constraints.add(constraint);
-   constraint_indexs.add(index);
-   constraint_priorities.add(P_Default);
-   constraint_order.add(0);
+   constraints.push_back(constraint);
+   constraint_indexs.push_back(index);
+   constraint_priorities.push_back(P_Default);
+   constraint_order.push_back(0);
    numconstraints++;
 
    return numconstraints-1;

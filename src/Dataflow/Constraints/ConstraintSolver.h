@@ -73,9 +73,9 @@ public:
    void SetMaxDepth( const Index max );
    Index GetMaxDepth() const;
    
-   int VariablesChanged() const {return changed;}
-   void ResetChanged() {changed = 0;}
-   void SetChanged() {changed = 1;}
+   bool VariablesChanged() const { return changed; }
+   void ResetChanged() { changed = false;}
+   void SetChanged() {changed = true;}
    
    friend class BaseVariable;
 private:
@@ -85,12 +85,9 @@ private:
    
    Real Epsilon;
    Index MaxDepth;
-   int changed;
+   bool changed;
    
-   stack<StackItem> stack_;
-   
-   Index NumVariables;
-   Array1<BaseVariable*> variables;
+   vector<BaseVariable*> variables;
 };
 
 } // End namespace SCIRun

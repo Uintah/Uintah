@@ -146,17 +146,17 @@ protected:
    Index NumPicks;
    Index NumMaterials;
 
-   Array1<BaseConstraint*> constraints;
-   Array1<BaseVariable*> variables;
-   Array1<GeomObj*> geometries;
-   Array1<GeomPick*> picks;
-   Array1<GeomMaterial*> materials;
+   vector<BaseConstraint*> constraints;
+   vector<BaseVariable*>   variables;
+   vector<GeomObj*>        geometries;
+   vector<GeomPick*>       picks;
+   vector<GeomMaterial*>   materials;
 
    enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
    Index NumModes;
    Index NumSwitches;
-   Array1<long> modes;
-   Array1<GeomSwitch*> mode_switches;
+   vector<long> modes;
+   vector<GeomSwitch*> mode_switches;
    Index CurrentMode;
    // modes contains the bitwise OR of Switch0-Switch8
    enum {
