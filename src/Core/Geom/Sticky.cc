@@ -63,8 +63,10 @@ GeomObj* GeomSticky::clone() {
   return scinew GeomSticky( *this );
 }
 
-void GeomSticky::get_bounds( BBox& bb ) {
-  child->get_bounds( bb );
+void
+GeomSticky::get_bounds( BBox& bb )
+{
+  // Stick to screen, no bbox.
 }
 
 #define GeomSticky_VERSION 1
