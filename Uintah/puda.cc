@@ -14,6 +14,7 @@
 #include <Uintah/Interface/DataArchive.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/NodeIterator.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
@@ -223,7 +224,68 @@ int main(int argc, char** argv)
 			   }
 			   break;
 			case TypeDescription::NCVariable:
-			   cerr << "NCVariable not done\n";
+			   switch(subtype->getType()){
+			   case TypeDescription::double_type:
+			      {
+				 NCVariable<double> value;
+				 da->query(value, var, matl, region, time);
+				 cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+				 IntVector dx(value.getHighIndex()-value.getLowIndex());
+				 if(dx.x() && dx.y() && dx.z()){
+				    double min, max;
+				    NodeIterator iter = region->getNodeIterator();
+				    min=max=value[*iter];
+				    for(;!iter.done(); iter++){
+				       min=Min(min, value[*iter]);
+				       max=Max(max, value[*iter]);
+				    }
+				    cerr << "\t\t\t\tmin value: " << min << '\n';
+				    cerr << "\t\t\t\tmax value: " << max << '\n';
+				 }
+			      }
+			      break;
+			   case TypeDescription::Point:
+			      {
+				 NCVariable<Point> value;
+				 da->query(value, var, matl, region, time);
+				 cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+				 IntVector dx(value.getHighIndex()-value.getLowIndex());
+				 if(dx.x() && dx.y() && dx.z()){
+				    Point min, max;
+				    NodeIterator iter = region->getNodeIterator();
+				    min=max=value[*iter];
+				    for(;!iter.done(); iter++){
+				       min=Min(min, value[*iter]);
+				       max=Max(max, value[*iter]);
+				    }
+				    cerr << "\t\t\t\tmin value: " << min << '\n';
+				    cerr << "\t\t\t\tmax value: " << max << '\n';
+				 }
+			      }
+			      break;
+			   case TypeDescription::Vector:
+			      {
+				 NCVariable<Vector> value;
+				 da->query(value, var, matl, region, time);
+				 cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+				 IntVector dx(value.getHighIndex()-value.getLowIndex());
+				 if(dx.x() && dx.y() && dx.z()){
+				    double min, max;
+				    NodeIterator iter = region->getNodeIterator();
+				    min=max=value[*iter].length2();
+				    for(;!iter.done(); iter++){
+				       min=Min(min, value[*iter].length2());
+				       max=Max(max, value[*iter].length2());
+				    }
+				    cerr << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
+				    cerr << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
+				 }
+			      }
+			      break;
+			   default:
+			      cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+			      break;
+			   }
 			   break;
 			default:
 			   cerr << "Variable of unknown type: " << td->getType() << '\n';
@@ -246,6 +308,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.3  2000/05/21 08:19:04  sparker
+// Implement NCVariable read
+// Do not fail if variable type is not known
+// Added misc stuff to makefiles to remove warnings
+//
 // Revision 1.2  2000/05/20 19:54:52  dav
 // browsing puda, added a couple of things to usage, etc.
 //

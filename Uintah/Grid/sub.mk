@@ -22,13 +22,18 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
-	SCICore/Geometry
+	SCICore/Geometry PSECore/XMLUtil
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.15  2000/05/21 08:19:09  sparker
+# Implement NCVariable read
+# Do not fail if variable type is not known
+# Added misc stuff to makefiles to remove warnings
+#
 # Revision 1.14  2000/05/20 08:09:31  sparker
 # Improved TypeDescription
 # Finished I/O

@@ -43,7 +43,8 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Uintah
 else
 PSELIBS := Uintah/Exceptions Uintah/Grid Uintah/Interface \
-	PSECore/XMLUtil SCICore/Exceptions SCICore/Geometry
+	PSECore/XMLUtil SCICore/Exceptions SCICore/Geometry \
+	SCICore/Thread
 endif
 LIBS 	:= $(XML_LIBRARY)
 
@@ -51,6 +52,11 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.9  2000/05/21 08:19:04  sparker
+# Implement NCVariable read
+# Do not fail if variable type is not known
+# Added misc stuff to makefiles to remove warnings
+#
 # Revision 1.8  2000/05/20 08:09:01  sparker
 # Improved TypeDescription
 # Finished I/O

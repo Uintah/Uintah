@@ -18,13 +18,18 @@ include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
-	SCICore/Geometry
+	SCICore/Geometry PSECore/XMLUtil
 LIBS := $(XML_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/05/21 08:19:06  sparker
+# Implement NCVariable read
+# Do not fail if variable type is not known
+# Added misc stuff to makefiles to remove warnings
+#
 # Revision 1.6  2000/05/10 20:02:42  sparker
 # Added support for ghost cells on node variables and particle variables
 #  (work for 1 patch but not debugged for multiple)
