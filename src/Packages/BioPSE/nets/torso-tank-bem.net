@@ -1,4 +1,32 @@
 # SCI Network 1.20
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+}
 
 ::netedit dontschedule
 
@@ -132,7 +160,7 @@ set c42 [addConnection $m8 0 $m9 5]
 set $m0-notes {Read the time-dependent
 known (inner surface)
 potentials}
-set $m0-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/Ucager.mat}
+set $m0-filename $DATADIR/time-dependent/Ucager.mat
 set $m1-notes {Choose which time-step
 from the computed output
 potentials (outer
@@ -155,7 +183,7 @@ set $m1-update-function {1}
 set $m2-notes {Read the time-dependent
 outer surface potentials
 (measured)}
-set $m2-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/Utankr.mat}
+set $m2-filename $DATADIR/time-dependent/Utankr.mat
 set $m3-notes {Choose the same time
 instant as the other data}
 set $m3-row_or_col {col}
@@ -432,13 +460,13 @@ potentials}
 set $m11-op {Mult}
 set $m11-function {x+y}
 set $m12-notes {Read the inner surface (heart)}
-set $m12-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/cage.fld}
+set $m12-filename $DATADIR/time-dependent/cage.fld
 set $m13-notes {Read the outer surface (torso)}
-set $m13-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/tank.fld}
+set $m13-filename $DATADIR/time-dependent/tank.fld
 set $m14-notes {Read geometry for
 measurment sites
 on outer surface}
-set $m14-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/tank_measured_only.fld}
+set $m14-filename $DATADIR/time-dependent/tank_measured_only.fld
 set $m15-notes {Show inner surface}
 set $m15-nodes-on {0}
 set $m15-nodes-transparency {0}
