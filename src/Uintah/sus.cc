@@ -146,6 +146,7 @@ int main(int argc, char** argv)
        if(Parallel::usingMPI()){
 	  scheduler="MPIScheduler"; // Default for parallel runs
 	  loadbalancer="RoundRobinLoadBalancer";
+	  Parallel::noThreading();
        } else {
 	  scheduler="SingleProcessorScheduler"; // Default for serial runs
 	  loadbalancer="SingleProcessorLoadBalancer";
@@ -275,16 +276,22 @@ int main(int argc, char** argv)
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
 	   cerr << "Stack trace: " << e.stackTrace() << '\n';
+	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
+	*/
     } catch (std::exception e){
-       cerr << "Caught std exception: " << e.what() << '\n';
+        cerr << "Caught std exception: " << e.what() << '\n';
+	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();       
+	*/
     } catch(...){
 	cerr << "Caught unknown exception\n";
+	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
+	*/
     }
 
     /*
@@ -295,6 +302,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.24  2000/09/28 23:55:52  dav
+// fix to turn off threads if not using threads
+//
 // Revision 1.23  2000/09/26 21:49:00  dav
 // Added the ability to specify the MixedScheduler on the command line.
 // Added the ability to set an environment var to allow time for debuggers
