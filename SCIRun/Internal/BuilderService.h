@@ -209,13 +209,15 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   int removeLoader(const std::string &name);
 
+  /** Returns the URL of this BuilderService component's framework. */
+  std::string getFrameworkURL();
+
   //virtual void registerFramework(const std::string &frameworkURL); 
   //virtual void registerServices(const sci::cca::Services::pointer &svc);
 
   private:
     BuilderService(SCIRunFramework* fwk, const std::string& name);
     std::vector<sci::cca::Services::pointer> servicesList;	
-    std::string getFrameworkURL();
     AutoBridge autobr;
   };
 }
