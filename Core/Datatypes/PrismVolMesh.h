@@ -532,7 +532,7 @@ public:
 
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Node::index_type /*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type ra;
@@ -586,7 +586,7 @@ public:
     get_neighbors(arr, idx);
     return arr.size();
   }
-  int get_valence(Edge::index_type idx) const { return 0; }
+  int get_valence(Edge::index_type /*idx*/) const { return 0; }
   int get_valence(Face::index_type idx) const
   {
     Face::index_type tmp;
@@ -630,10 +630,10 @@ public:
 			int seed=0) const;
 
   //! the double return val is the volume of the prism.
-  double get_gradient_basis(Cell::index_type ci,
-			    Vector& g0, Vector& g1,
-			    Vector& g2, Vector& g3,
-			    Vector& g4, Vector& g5)
+  double get_gradient_basis(Cell::index_type /*ci*/,
+			    Vector& /*g0*/, Vector& /*g1*/,
+			    Vector& /*g2*/, Vector& /*g3*/,
+			    Vector& /*g4*/, Vector& /*g5*/)
   { ASSERTFAIL("not implemented") }
 
   //! function to test if at least one of cell's nodes are in supplied range

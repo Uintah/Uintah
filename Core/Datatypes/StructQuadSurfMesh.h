@@ -105,11 +105,11 @@ public:
   unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all face_indecies that overlap the BBox in arr.
-  void get_faces(Face::array_type &arr, const BBox &box)
+  void get_faces(Face::array_type &/*arr*/, const BBox &/*box*/)
   { ASSERTFAIL("ScanlineMesh::get_faces for BBox is not implemented."); }
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(const Node::index_type &idx) const { return 0.0; }
+  double get_size(const Node::index_type &/*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -129,7 +129,7 @@ public:
     get_point(p2,ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
-  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_size(Cell::index_type /*idx*/) const { return 0.0; }
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(const Face::index_type &idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
@@ -158,7 +158,7 @@ public:
   { get_center(point, index); }
   void set_point(const Point &point, const Node::index_type &index);
 
-  void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
+  void get_random_point(Point &/*p*/, const Elem::index_type &/*ei*/, int /*seed=0*/) const
   { ASSERTFAIL("not implemented") }
 
   virtual bool is_editable() const { return false; }

@@ -105,11 +105,11 @@ public:
   bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all edge_indecies that overlap the BBox in arr.
-  void get_edges(Edge::array_type &arr, const BBox &box) const
+  void get_edges(Edge::array_type &/*arr*/, const BBox &/*box*/) const
   { ASSERTFAIL("ScanlineMesh::get_edges for BBox is not implemented."); }
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Node::index_type /*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -119,8 +119,8 @@ public:
     get_center(p1, arr[1]);
     return (p1.asVector() - p0.asVector()).length();
   }  
-  double get_size(Face::index_type idx) const { return 0.0; }
-  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_size(Face::index_type /*idx*/) const { return 0.0; }
+  double get_size(Cell::index_type /*idx*/) const { return 0.0; }
   double get_length(Edge::index_type idx) const { return get_size(idx); }
   double get_area(Face::index_type idx) const { return get_size(idx); }
   double get_volume(Cell::index_type idx) const { return get_size(idx); }
@@ -128,9 +128,9 @@ public:
   int get_valence(Node::index_type idx) const 
   { return (idx == (unsigned int) 0 ||
 	    idx == (unsigned int) (points_.size()-1)) ? 1 : 2; }
-  int get_valence(Edge::index_type idx) const { return 0; }
-  int get_valence(Face::index_type idx) const { return 0; }
-  int get_valence(Cell::index_type idx) const { return 0; }
+  int get_valence(Edge::index_type /*idx*/) const { return 0; }
+  int get_valence(Face::index_type /*idx*/) const { return 0; }
+  int get_valence(Cell::index_type /*idx*/) const { return 0; }
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -145,7 +145,7 @@ public:
 
   int get_weights(const Point &, Node::array_type &, double *w);
   int get_weights(const Point &, Edge::array_type &, double *w);
-  int get_weights(const Point &, Face::array_type &, double *w)
+  int get_weights(const Point &, Face::array_type &, double */*w*/)
   {ASSERTFAIL("StructCurveMesh::get_weights for faces isn't supported"); }
   int get_weights(const Point &, Cell::array_type &, double * )
   {ASSERTFAIL("StructCurveMesh::get_weights for cells isn't supported"); }
@@ -153,7 +153,7 @@ public:
   void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
   void set_point(const Point &p, Node::index_type i) { points_[i] = p; }
 
-  void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
+  void get_random_point(Point &/*p*/, const Elem::index_type &/*ei*/, int /*seed=0*/) const
   { ASSERTFAIL("not implemented") }
 
   virtual bool is_editable() const { return false; }
