@@ -69,7 +69,6 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 
         toplevel $w
 
-	
 	frame $w.loc -borderwidth 2
 	frame $w.playmode -relief groove -borderwidth 2
 	frame $w.execmode -relief groove -borderwidth 2
@@ -77,27 +76,28 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
         set playmode $w.playmode
 	set vcr $w.vcr
 
-
-
 	# load the VCR button bitmaps
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set rewind [image create photo -file ${image_dir}/rewind-icon.ppm]
-	set stepb [image create photo -file ${image_dir}/step-back-icon.ppm]
-	set pause [image create photo -file ${image_dir}/pause-icon.ppm]
-	set play [image create photo -file ${image_dir}/play-icon.ppm]
-	set stepf [image create photo -file ${image_dir}/step-forward-icon.ppm]
+	set rewind   [image create photo -file ${image_dir}/rewind-icon.ppm]
+	set stepb    [image create photo -file ${image_dir}/step-back-icon.ppm]
+	set pause    [image create photo -file ${image_dir}/pause-icon.ppm]
+	set play     [image create photo -file ${image_dir}/play-icon.ppm]
+	set stepf    [image create photo -file ${image_dir}/step-forward-icon.ppm]
 	set fforward [image create photo -file ${image_dir}/fast-forward-icon.ppm]
 
 	# Create and pack the VCR buttons frame
-	button $vcr.rewind -image $rewind -command "set $this-current \[set $this-range_min\]"
-	button $vcr.stepb -image $stepb -command "set $this-execmode stepb
-                                                  $this-c needexecute"
-	button $vcr.pause -image $pause -command "$this-c stop"
-	button $vcr.play -image $play -command "set $this-execmode play
-                                                $this-c needexecute"
-	button $vcr.stepf -image $stepf -command "set $this-execmode step
-                                                  $this-c needexecute"
-	button $vcr.fforward -image $fforward -command "set $this-current \[set $this-range_max\]"
+	button $vcr.rewind -image $rewind \
+	    -command "set $this-execmode rewind;   $this-c needexecute"
+	button $vcr.stepb -image $stepb \
+	    -command "set $this-execmode stepb;    $this-c needexecute"
+	button $vcr.pause -image $pause \
+	    -command "set $this-execmode stop;     $this-c needexecute"
+	button $vcr.play  -image $play  \
+	    -command "set $this-execmode play;     $this-c needexecute"
+	button $vcr.stepf -image $stepf \
+	    -command "set $this-execmode step;     $this-c needexecute"
+	button $vcr.fforward -image $fforward \
+	    -command "set $this-execmode fforward; $this-c needexecute"
 
 	pack $vcr.rewind $vcr.stepb $vcr.pause \
 	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
@@ -133,8 +133,6 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	# Restore range to pre-loaded value
 	set $this-range_min $rmin
 	set $this-range_max $rmax
-
-	
 
 
 	label $w.playmode.label -text "Play Mode"
