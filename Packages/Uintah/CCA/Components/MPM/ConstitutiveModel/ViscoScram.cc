@@ -245,10 +245,10 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     Gmw[3]=d_initialData.G[3];
     Gmw[4]=d_initialData.G[4];
 
-    double G = Gmw[0] + Gmw[1] +
- 	       Gmw[2] + Gmw[3] + Gmw[4];
+    //    double G = Gmw[0] + Gmw[1] +
+    // 	       Gmw[2] + Gmw[3] + Gmw[4];
     double cf = d_initialData.CrackFriction;
-    double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
+    //double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
     for(ParticleSubset::iterator iter = pset->begin();
 					     iter != pset->end(); iter++){
