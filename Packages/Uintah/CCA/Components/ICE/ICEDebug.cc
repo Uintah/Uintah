@@ -536,6 +536,7 @@ void ICE::createDirs( const Patch* patch,
   
   ostringstream DW, levelIndex;
   DW << dataArchiver->getCurrentTimestep();
+  
   const Level* level = patch->getLevel();
   levelIndex << "L-"<<level->getIndex();
   
@@ -567,6 +568,15 @@ void ICE::createDirs( const Patch* patch,
   path = udaDir + "/" + dirName + "/" + DW.str();
   mkdir( path.c_str(), 0777 );
   
+  // write out the simulation time
+  string filename = path + "/simTime";
+  double simTime=dataArchiver->getCurrentTime();
+  FILE *fp;
+  fp = fopen(filename.c_str(), "w");
+  fprintf(fp,"%16.15E",simTime);
+  fclose(fp);
+  
+  // finish making the directories
   path = udaDir + "/" + dirName + "/" + DW.str() + "/" + levelIndex.str();
   mkdir( path.c_str(), 0777 );
   
