@@ -506,8 +506,8 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeOldLabel,Ghost::None,0);
 
-  task->modifies(lb->pDeformationMeasureLabel_preReloc);
-  task->modifies(lb->bElBarLabel_preReloc);
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
+  task->requires(Task::OldDW,lb->bElBarLabel,Ghost::None,0);
 
   task->modifies(lb->dispNewLabel);
   task->modifies(lb->gVelocityLabel);
@@ -704,7 +704,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       ParticleSubset* pset = 
 	subsched->get_dw(0)->getParticleSubset(matlindex, patch);
       cerr << "number of particles = " << pset->numParticles() << "\n";
-
+#if 0
       // Needed in computeStressTensorOnly
       constParticleVariable<Matrix3> bElbar,deformationGradient;
       subsched->get_dw(2)->get(bElbar,lb->bElBarLabel_preReloc, pset);
@@ -716,6 +716,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 			    lb->pDeformationMeasureLabel_preReloc,pset);
       bElbar_new.copyData(bElbar);
       deformationGradient_new.copyData(deformationGradient);
+#endif
 
       // Needed in computeAcceleration 
       constNCVariable<Vector> velocity, dispNew;
