@@ -19,6 +19,7 @@ namespace rtrt {
 class DpyGui: public DpyBase {
 public:
   DpyGui();
+  virtual ~DpyGui();
 
   void setDpy(Dpy* newdpy) {
     rtrt_dpy = newdpy;
@@ -47,13 +48,27 @@ protected:
   // Inherited from DpyBase
   virtual void run();
   virtual void init();
-  virtual void key_pressed(unsigned long key);
   virtual void cleanup();
   virtual bool should_close();
+
+  virtual void key_pressed(unsigned long key);
+
+  virtual void button_pressed(MouseButton button, const int x, const int y);
+  virtual void button_released(MouseButton button, const int x, const int y);
+  virtual void button_motion(MouseButton button, const int x, const int y);
+
   virtual void resize(const int width, const int height);
 
+  // These are used for the mouse motion callbacks
+  int last_x, last_y;
+  // This keeps track of the last rotation for the camera
+  Vector rotate_from;
+  // This helps with the arc ball mouse rotations
+  Vector projectToSphere(double x, double y, double radius = 0.8) const;
+  
   // These variables are for external resizing
   int resize_xres, resize_yres;
+
 };
 
   

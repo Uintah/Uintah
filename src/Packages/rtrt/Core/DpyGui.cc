@@ -74,6 +74,9 @@ DpyGui::DpyGui():
   resize_yres = yres;
 }
 
+DpyGui::~DpyGui() {
+}
+
 void DpyGui::addExternalUIInterface(ExternalUIInterface* ui_interface) {
   ui_mutex.lock();
   // See if the pointer is already in there
@@ -105,27 +108,28 @@ void DpyGui::set_resolution(const int width, const int height) {
 
 void DpyGui::stopUIs() {
   ui_mutex.lock();
-  cerr << "DpyGui::stopUIs::calling stop on all guis\n";
+  //  cerr << "DpyGui::stopUIs::calling stop on all guis\n";
   for(size_t i = 0; i < ext_uis.size(); i++) {
     if (ext_uis[i])
       ext_uis[i]->stop();
   }
-  cerr << "DpyGui::stopUIs::finished\n";
+  //  cerr << "DpyGui::stopUIs::finished\n";
   ui_mutex.unlock();
 }
 
 void DpyGui::run() {
-  cerr << "DpyGui::run(): start\n";
+  //  cerr << "DpyGui::run(): start\n";
   open_events_display();
-  cerr << "DpyGui::run(): after open_events_display\n";
+  //  cerr << "DpyGui::run(): after open_events_display\n";
   
   init();
-  cerr << "DpyGui::run(): after init\n";
+  //  cerr << "DpyGui::run(): after init\n";
   
   for(;;) {
     if (should_close()) {
+      cleaned = false;
       cleanup();
-      cerr << "DpyGui::run(): about to return\n";
+      //      cerr << "DpyGui::run(): about to return\n";
       //      for(;;) {}
       return;
     }
@@ -149,14 +153,14 @@ void DpyGui::init() {
   // This lets Dpy know that it can create its window, because you
   // have to wait for the parent (this here).
   rtrt_dpy->release(win);
-  cerr << "DpyGui::init::parentSema up\n";
+  //  cerr << "DpyGui::init::parentSema up\n";
 }
   
 void DpyGui::cleanup() {
   if (cleaned) return;
   else cleaned = true;
 
-  cerr << "DpyGui::cleanup called\n";
+  //  cerr << "DpyGui::cleanup called\n";
   
   // Close the GG thread
   stopUIs();
@@ -166,7 +170,7 @@ void DpyGui::cleanup() {
 
   // Wait for the child to stop rendering
   rtrt_dpy->wait_on_close();
-  cerr << "rtrt_dpy->wait_on_close() finished\n";
+  //  cerr << "rtrt_dpy->wait_on_close() finished\n";
   
   // Can't delete it for now, because it will cause a recursive lock
   // when doing Thread::exitAll().
@@ -174,7 +178,7 @@ void DpyGui::cleanup() {
   //  delete(rtrt_dpy);
 
   close_display();
-  cerr << "DpyGui::cleanup::close_display finished\n";
+  //  cerr << "DpyGui::cleanup::close_display finished\n";
 }
 
 bool DpyGui::should_close() {
@@ -228,30 +232,12 @@ void DpyGui::key_pressed(unsigned long key) {
 
 void DpyGui::key_pressed( unsigned long key ) {
 
-  DpyPrivate * priv = activeGui->priv;
-
-  // int     & maxdepth       = priv->maxdepth;
-  // bool    & stereo         = priv->stereo;  
-  // bool    & animate        = priv->animate;
-  // double  & FrameRate      = priv->FrameRate;
-  // bool    & draw_pstats    = priv->draw_pstats;
-  // bool    & draw_rstats    = priv->draw_rstats;
-  int     & showing_scene  = priv->showing_scene;
-
-  // int     & left           = priv->left;
-  // int     & up             = priv->up;
-
-  int mods   = glutGetModifiers();
-  activeGui->shiftDown_ = mods & GLUT_ACTIVE_SHIFT;
-  activeGui->altDown_   = mods & GLUT_ACTIVE_ALT;
-  activeGui->ctrlDown_  = mods & GLUT_ACTIVE_CTRL;
-
   switch( key ){
 
   // KEYPAD KEYS USED FOR MOVEMENT
 
   case '+':
-    if (activeGui->shiftDown_) {
+    if (shift_pressed) {
       // increase planet orbit speed
       if (ORBIT_SPEED<.02) ORBIT_SPEED=1;
       else ORBIT_SPEED*=1.9;
@@ -496,24 +482,25 @@ void DpyGui::key_pressed( unsigned long key ) {
 #endif
   case 'W':
     cerr << "Saving raw image file\n";
-    activeGui->dpy_->scene->get_image(showing_scene)->save("images/image.raw");
+    dpy->scene->get_image(dpy->priv->showing_scene)->save("images/image.raw");
     break;
   case 'w':
     cerr << "Saving ppm image file\n";
-    activeGui->dpy_->priv->dumpFrame = 1;
+    dpy->priv->dumpFrame = 1;
     break;
   case 'M':
-    cerr << "Saving every frame to ppm image\n";
     switch (activeGui->dpy_->priv->dumpFrame)
       {
       case 0:
       case 1: // Start
-        activeGui->dpy_->priv->dumpFrame = -1;
+        cerr << "Saving every frame to ppm image\n";
+        dpy->priv->dumpFrame = -1;
         break;
       case -1: // Stop
       case -2:
       case -3:
-        activeGui->dpy_->priv->dumpFrame = -3;
+        cerr << "Stopping saving every frame to ppm image\n";
+        dpy->priv->dumpFrame = -3;
         break;
       }
     break;
@@ -542,4 +529,60 @@ void DpyGui::key_pressed( unsigned long key ) {
 
 
 #endif
+
+void DpyGui::button_pressed(MouseButton button,
+                            const int mouse_x, const int mouse_y) {
+
+  switch(button) {
+  case MouseButton2:
+    {
+      double xpos = 2.0*mouse_x/xres - 1.0;
+      double ypos = 1.0 - 2.0*mouse_y/yres;
+      rotate_from = projectToSphere(-xpos, -ypos);
+    }
+    break;
+  } // end switch
+}
+
+void DpyGui::button_released(MouseButton /*button*/,
+                             const int /*x*/, const int /*y*/) {
+}
+
+void DpyGui::button_motion(MouseButton button,
+                           const int mouse_x, const int mouse_y) {
+  switch(button) {
+  case MouseButton2:
+    {
+      double xpos = 2.0*mouse_x/xres - 1.0;
+      double ypos = 1.0 - 2.0*mouse_y/yres;
+      Vector to(projectToSphere(-xpos, -ypos));
+      cerr << "Transforming from "<<rotate_from<<" to "<<to<<"\n";
+      Transform trans;
+      trans.load_identity();
+      trans.rotate(rotate_from, to);
+      rotate_from = to;
+
+      // Perform the transform
+      rtrt_dpy->guiCam_->transform(trans, Camera::LookAt);
+    }
+    break;
+  } // end switch
+}
+
+Vector DpyGui::projectToSphere(double x, double y, double radius) const
+{
+  cerr << "projectToSphere:: (x,y) = ("<<x<<", "<<y<<")\n";
+  x /= radius;
+  y /= radius;
+  double rad2 = x*x+y*y;
+  if(rad2 > 1){
+    double rad = sqrt(rad2);
+    //    x /= rad;
+    //    y /= rad;
+    return Vector(x,y,0);
+  } else {
+    double z = sqrt(1-rad2);
+    return Vector(x,y,z);
+  }
+}
 
