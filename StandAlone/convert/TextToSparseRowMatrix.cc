@@ -153,18 +153,32 @@ main(int argc, char **argv) {
   double d;
   int e;
   int last_r=-1;
+  int lineno = 1;
   for (e=0; e<nnz; e++) {
     matstream >> r >> c >> d;
     if (debugOn)
       cerr << "matrix["<<r<<"]["<<c<<"]="<<d<<"\n";
     r-=baseIndex;
     c-=baseIndex;
+    if (r < 0 || r >= nr)
+    {
+      cerr << "Error: Row " << r << " at entry " << lineno << 
+	" is out of range.\n";
+      return 0;
+    }
+    if (c < 0 || c >= nc)
+    {
+      cerr << "Error: Column " << c << " at entry " << lineno << 
+	" is out of range.\n";
+      return 0;
+    }
     columns[e]=c;
     a[e]=d;
     while(last_r<r) {
       last_r++;
       rows[last_r]=e;
     }
+    ++lineno;
   }
   while(last_r<nr) {
     last_r++;
