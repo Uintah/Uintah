@@ -39,7 +39,6 @@ LOG
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
-#include <Packages/Uintah/Core/Datatypes/PatchDataThread.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
