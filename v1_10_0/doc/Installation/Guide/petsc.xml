@@ -98,22 +98,22 @@ are used to install <acronym>PETSc</acronym> and
 Download and unpack <acronym>PETSc</acronym>'s source distribution:
 <orderedlist>
 <listitem>
-<para>
+
 Browser download:
 <literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz</ulink>
 </literallayout>
-</para>
+
 </listitem>
 <listitem>
-<para>
+
 Unpack:
 <literallayout class="monospaced">
 gunzip -c petsc.tar.gz | tar xvf -
 </literallayout>
-which creates the directory
+creates the directory
 <filename>petsc-<replaceable>x.x.x</replaceable></filename> where
 <replaceable>x.x.x</replaceable> is the <acronym>PETSc</acronym> version.
-</para>
+
 </listitem>
 </orderedlist>
 </para>
@@ -356,11 +356,12 @@ make BOPT=O all
 </section>
 
 <section id="sec.petsc_sr_config">
-<title id="title.petsc_sr_config">Configuring <acronym>PETSc</acronym> &sr;</title>
-<para>The  configure options below add support for
-PETSc in &sr;.  Include these options in the &sr;
-<command>configure</command> command (see <xref linkend="sec.build-sr"
-endterm="title.build-sr"/>). 
+<title id="title.petsc_sr_config">Configuring <acronym>PETSc</acronym>
+&sr;</title> <para>The configure options below add support for PETSc
+in &sr;.  Include these options in the &sr;
+<command>configure</command> command (see <citetitle
+pubwork="section"><xref linkend="sec.build-sr"
+endterm="title.build-sr"/></citetitle>).
 <variablelist>
 <varlistentry>
 <term><option>--with-unipetsc=<replaceable>path-to-petsc</replaceable></option></term>
@@ -410,6 +411,14 @@ to a call of <acronym>PETSc</acronym>'s <function>SLESSolve</function>
 function. SolveMatrix charts the progress of the solution while
 <acronym>PETSc</acronym> iterates.
 </para>
+</section>
+
+<section>
+<title>Next</title> 
+
+<para>Proceed to <citetitle pubwork="section"><xref linkend="sec.source_inst"
+endterm="title.source_inst" /></citetitle> after <acronym>PETSc has been
+installed.</acronym></para>
 </section>
 
 </section>
