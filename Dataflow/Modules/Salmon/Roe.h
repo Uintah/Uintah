@@ -252,11 +252,13 @@ public:
 
 				// Stereo
   TCLint do_stereo;
-
+  TCLvardouble sbase;           // multiplier to stereo base
+  TCLvarint    sr;              // if 0 - parallel shift, 1 - rotational shift
+  
   // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
   TCLint do_bawgl;
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-  
+
   TCLint drawimg;
 
   TCLstring saveprefix;
@@ -294,6 +296,9 @@ public:
 
 //
 // $Log$
+// Revision 1.16  2000/09/29 08:06:59  samsonov
+// Changes in stereo implementation
+//
 // Revision 1.15  2000/06/09 17:50:18  kuzimmer
 // Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
 //
