@@ -148,7 +148,7 @@ class MaterialToken : public Token
 
   virtual void Write(ofstream &str) {
     Indent(str);
-    str << "*MATERIAL " << index_ << "{" << endl;
+    str << "*MATERIAL " << index_ << " {" << endl;
     ++indent_;
     unsigned length = children_.size();
     for (unsigned loop=0; loop<length; ++loop)
@@ -235,7 +235,8 @@ class MaterialNameToken : public Token
 
   virtual void Write(ofstream &str) {
     Indent(str);
-    str << "*MATERIAL_NAME " << ((MaterialToken*)parent_)->GetName() << endl;
+    str << "*MATERIAL_NAME \"" << ((MaterialToken*)parent_)->GetName() 
+        << "\"" << endl;
   }
 
   Token *MakeToken() { return new MaterialNameToken(); }
@@ -534,7 +535,7 @@ class SubMaterialToken : public Token
 
   virtual void Write(ofstream &str) {
     Indent(str);
-    str << "*SUBMATERIAL " << index_ << "{" << endl;
+    str << "*SUBMATERIAL " << index_ << " {" << endl;
     ++indent_;
     unsigned length = children_.size();
     for (unsigned loop=0; loop<length; ++loop)
