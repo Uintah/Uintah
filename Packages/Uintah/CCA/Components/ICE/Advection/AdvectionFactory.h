@@ -2,7 +2,7 @@
 #define _ADVECTION_FACTORY_H_
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-
+#include <string>
 namespace Uintah {
 
   class Advector;
@@ -13,7 +13,8 @@ namespace Uintah {
     // this function has a switch for all known advection_types
     // and calls the proper class' readParameters()
     // addMaterial() calls this
-    static Advector* create(ProblemSpecP& ps);
+    static Advector* create(ProblemSpecP& ps,
+                            std::string& advect_type);
   };
 
 } // End namespace Uintah
