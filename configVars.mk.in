@@ -212,10 +212,22 @@ X11_LIBS := $(X_LIBRARY) -lXext -lX11 $(X_EXTRA_LIBS)
 PROGRAM_PSE   := @EXENAME@
 
 TRACEBACK_LIB := @LIBEXC@
-IMAGE_LIBS := @IMAGE_LIBS@
+
+ifneq (@IMAGE_LIBS@,)
+  ifneq (@LIBCL@,)
+    IMAGE_LIBS := -L@LIBCL@ @IMAGE_LIBS@
+  else 
+    IMAGE_LIBS := @IMAGE_LIBS@
+  endif
+
+  ifneq (@LIBIFL@,)
+    IMAGE_LIBS := -L@LIBIFL@ $(IMAGE_LIBS)
+  endif
+endif
 
 LEX := @LEX@
 YACC := @YACC@ -d -v
+PERL := @PERL@
 
 MAKE_PARALLELISM := @MAKE_PARALLELISM@
 NBITS := @NBITS@
