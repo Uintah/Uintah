@@ -14,11 +14,17 @@ Stealth::Stealth( double scale /* = 100 */ ) :
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
   scale_( scale ), segment_percentage_( 0 )
 {
-  path_.push_back( Point(-5,-5,5) );
-  path_.push_back( Point(5,5,1) );
-  path_.push_back( Point(0,10,5) );
-  path_.push_back( Point(5,5,1) );
-  path_.push_back( Point(-5,-5,5) );
+  path_.push_back( Point(-5.5,-5,5) );
+  path_.push_back( Point(4.5,5.3,1) );
+  path_.push_back( Point(0,10.2,5.1) );
+  path_.push_back( Point(5.4,4.5,1.2) );
+  path_.push_back( Point(-5.2,-5.3,5.4) );
+
+  look_ats_.push_back( Point( 0, 0, 0 ) );
+  look_ats_.push_back( Point( 0, 0, 0 ) );
+  look_ats_.push_back( Point( 0, 0, 0 ) );
+  look_ats_.push_back( Point( 0, 0, 0 ) );
+  look_ats_.push_back( Point( 0, 0, 0 ) );
 }
 
 Stealth::~Stealth()
@@ -154,6 +160,13 @@ Stealth::stopAllMovement()
 }
 
 void
+Stealth::stopPitching()
+{
+  pitch_speed_ = 0;
+  pitch_accel_cnt_ = 0;
+}
+
+void
 Stealth::slowDown()
 {
   double slow_factor = .9;
@@ -164,15 +177,15 @@ Stealth::slowDown()
   rotate_speed_     /= slow_factor;
 }
 
-Point
-Stealth::getNextLocation()
+void
+Stealth::getNextLocation( Point & point, Point & look_at )
 {
   if( path_.size() < 2 ) {
     cout << "Not enough path enformation!\n";
-    return Point(0,0,0);
+    return;
   }
 
-  segment_percentage_ += 1;
+  segment_percentage_ += accel_cnt_;
 
   int begin_index = segment_percentage_ / 100;
   int end_index   = (segment_percentage_ / 100) + 1;
@@ -189,7 +202,76 @@ Stealth::getNextLocation()
 
   double local_percent = segment_percentage_ - (100*begin_index);
 
-  Point new_loc = begin + ((end - begin) * (local_percent / 100.0));
+  point = begin + ((end - begin) * (local_percent / 100.0));
 
-  return new_loc;
+  Point & begin_at = look_ats_[ begin_index ];
+  Point & end_at   = look_ats_[ end_index ];
+
+  look_at = begin_at + ((end_at - begin_at) * (local_percent / 100.0));
+}
+
+
+void
+Stealth::clearPath()
+{
+  cout << "Clearing Path\n";
+  path_.clear();
+  look_ats_.clear();
+}
+
+void
+Stealth::addToPath( const Point & point, const Point & look_at )
+{
+  cout << "Adding point to path\n";
+  path_.push_back( point );
+  look_ats_.push_back( look_at );
+}
+
+void
+Stealth::loadPath( const string & filename )
+{
+  FILE * fp = fopen( filename.c_str(), "r" );
+  if( fp == NULL )
+    {
+      cout << "Error opening file " << filename << ".  Did not load path.\n";
+      return;
+    }
+
+  cout << "loading path\n";
+  clearPath();
+
+  int size = 0;
+  fscanf( fp, "%u\n", &size );
+  for( int cnt = 0; cnt < size; cnt++ )
+    {
+      double ex,ey,ez, lx,ly,lz;
+      fscanf( fp, "%lf %lf %lf  %lf %lf %lf\n", &ex,&ey,&ez, &lx,&ly,&lz );
+
+      Point eye(ex,ey,ez);
+      Point lookat(lx,ly,lz);
+      addToPath( eye, lookat );
+    }
+  fclose( fp );
+}
+
+void
+Stealth::savePath( const string & filename )
+{
+  FILE * fp = fopen( filename.c_str(), "w" );
+  if( fp == NULL )
+    {
+      cout << "error opening file " << filename << ".  Did not save path.\n";
+      return;
+    }
+
+  cout << "Saving path\n";
+
+  fprintf( fp, "%d\n", (int)path_.size() );
+  for( int cnt = 0; cnt < path_.size(); cnt++ )
+    {
+      fprintf( fp, "%2.2lf %2.2lf %2.2lf  %2.2lf %2.2lf %2.2lf\n",
+	       path_[cnt].x(), path_[cnt].y(), path_[cnt].z(),
+	       look_ats_[cnt].x(), look_ats_[cnt].y(), look_ats_[cnt].z() );
+    }
+  fclose( fp );
 }
