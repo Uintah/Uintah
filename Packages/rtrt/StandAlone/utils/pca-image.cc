@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 
   // verify number of dimensions
   if (nin->dim != 3 ) {
-    cerr << me << ":  number of dimesions " << nin->dim << " is not equal to 4." << endl;
+    cerr << me << ":  number of dimesions " << nin->dim << " is not equal to 3." << endl;
     exit(2);
   }
   
@@ -153,6 +153,20 @@ int main(int argc, char *argv[]) {
     exit(2);
   }
 
+  nrrdAxisInfoSet(mean, nrrdAxisInfoLabel, "mean");
+
+  // Free meanY
+  meanY=nrrdNuke(meanY);
+  
+  // Write out the mean value
+  string meanname(string(outfilename_base) + "-mean.nrrd");
+  if (nrrdSave(meanname.c_str(), mean, 0)) {
+    err = biffGet(NRRD);
+    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, meanname.c_str(), err);
+    exit(2);
+  }
+  
+  
   // Allocate our covariance matrix
   Nrrd *cov = nrrdNew();
   if (nrrdAlloc(cov, nrrdTypeDouble,2, num_channels, num_channels))
@@ -235,7 +249,7 @@ int main(int argc, char *argv[]) {
       }
   }
   
-  // Convariance matrix computed
+  // Covariance matrix computed
 
   // Compute eigen values/vectors
 
@@ -285,6 +299,8 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  nrrdAxisInfoSet(transform, nrrdAxisInfoLabel, "channels", "bases");
+  
   {
     float *tdata = (float*)(transform->data);
     double *edata = evec_data;
@@ -306,6 +322,10 @@ int main(int argc, char *argv[]) {
       }
     }
 
+    // Free covariance matrix, eigenvectors
+    cov = nrrdNuke(cov);
+    cov_data = evec_data = 0;
+    
     if (verbose) {
       cout << "\ntransform matrix\n";
       tdata = (float*)(transform->data);
@@ -321,7 +341,7 @@ int main(int argc, char *argv[]) {
       cout << "\n\n";
     }
   }
-  
+
   // Compute our basis textures
   Nrrd *basesTextures = nrrdNew();
   if (nrrdAlloc(basesTextures, nrrdTypeFloat, 3, num_bases, width, height)) {
@@ -330,6 +350,8 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  nrrdAxisInfoSet(basesTextures, nrrdAxisInfoLabel, "bases", "width", "height");
+  
   {
     float *btdata = (float*)(basesTextures->data);
     
@@ -369,46 +391,42 @@ int main(int argc, char *argv[]) {
     nrrdEmpty(pixel);
   }
 
-  // Now generate the image back again
-  Nrrd *nout = nrrdNew();
-  if (nrrdAlloc(nout, nrrdTypeFloat, 3, num_channels, width, height)) {
+  // Free input nrrd and mean
+  nin = nrrdNuke(nin);
+  mean = nrrdNuke(mean);
+  
+  // Write out the basis textures
+  string basisname(string(outfilename_base) + "-bases.nrrd");
+  if (nrrdSave(basisname.c_str(), basesTextures, 0)) {
     err = biffGet(NRRD);
-    fprintf(stderr, "%s: error allocating result image:\n%s", me, err);
-    exit(0);
-  }
-
-  {
-    float *outdata = (float*)(nout->data);
-    float *btdata = (float*)(basesTextures->data);
-    float *mdata = (float*)(mean->data);
-    // Produce one chanel at a time
-    // Loop over each pixel
-    for (int pixel = 0; pixel < (width*height); pixel++) {
-      // Now do transform_transpose * btdata
-      float *tdata = (float*)(transform->data);
-	  
-      for(int r = 0; r < num_channels; r++)
-	for(int c = 0; c < num_bases; c++)
-	  {
-	    outdata[r] += tdata[c*num_channels+r] * btdata[c];
-	  }
-
-      // Add the mean
-      for(int i = 0; i < num_channels; i++) {
-	outdata[i] += mdata[i];
-      }
-      outdata += num_channels;
-      btdata += num_bases;
-    }
-  }
-
-  // Fix the outfilename_base
-  string outfilename(string(outfilename_base) + ".nrrd");
-  if (nrrdSave(outfilename.c_str(), nout, 0)) {
-    err = biffGet(NRRD);
-    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, outfilename.c_str(), err);
+    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, basisname.c_str(), err);
     exit(2);
   }
 
+  // Free bases textures
+  basesTextures = nrrdNuke(basesTextures);
+
+  // Write out the transformation matrix
+  Nrrd *newTrans=nrrdNew();
+  int axes[2] = {1,0};
+  if (nrrdAxesPermute(newTrans, transform, axes)) {
+    err = biffGetDone(NRRD);
+    fprintf(stderr, "%s: error permuting the transformation matrix:\n%s", me, err);
+    exit(2);
+  }
+
+  // Free old transform
+  transform = nrrdNuke(transform);
+  
+  string transname(string(outfilename_base) + "-transform.nrrd");
+  if (nrrdSave(transname.c_str(), newTrans, 0)) {
+    err = biffGet(NRRD);
+    fprintf(stderr, "%s: trouble saving to %s: %s\n", me, transname.c_str(), err);
+    exit(2);
+  }
+
+  // Free new transform
+  newTrans = nrrdNuke(newTrans);
+    
   return 0;
 }
