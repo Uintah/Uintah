@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  Thread_unix.h:  Header file for utiity functions for unix versions
+ *  $Id$
  *		    of the thread class
  *
  *  Written by:
@@ -19,6 +18,6 @@
 
 #include <sys/types.h>
 
-char* SCICore_Thread_signal_name(int sig, int code, caddr_t addr);
+char* SCICore_Thread_signal_name(int sig, void* code);
 
 #endif

@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  Thread: The thread class
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -49,6 +48,14 @@ namespace SCICore {
 	class Thread {
 	public:
 	    //////////
+	    // Possible thread start states
+	    enum ActiveState {
+		Activated,
+		Stopped,
+		NotActivated
+	    };
+	    
+	    //////////
 	    // Create a thread, which will execute the <b>run()</b>
 	    // method in the <b>runner</b> object. The thread <b>name</b>
 	    // is used for identification purposes, and does not need to
@@ -57,7 +64,7 @@ namespace SCICore {
 	    // should belong.  If no group is specified (group==0),
 	    // the default group is used.
 	    Thread(Runnable* runner, const char* name,
-		   ThreadGroup* group=0, bool stopped=false);
+		   ThreadGroup* group=0, ActiveState state=Activated);
 	    
 	    //////////
 	    // Return the <b>ThreadGroup</b> associated with this thread.
@@ -71,6 +78,11 @@ namespace SCICore {
 	    //////////
 	    // Returns true if the thread is tagged as a daemon thread.
 	    bool isDaemon() const;
+	    
+	    //////////
+	    // If the thread is started in the the NotActivated
+	    // state, use this to activate the thread.
+	    void activate(bool stopped);
 	    
 	    //////////
 	    // Arrange to have the thread deleted automatically at exit.
@@ -88,7 +100,7 @@ namespace SCICore {
 	    // stopped state, set the stack size, and then start the
 	    // thread.  Setting the stack size for a thread that is
 	    // running or has ever been run, will throw an exception.
-	    void setStackSzie(unsigned long stackSize);
+	    void setStackSize(unsigned long stackSize);
 	    
 	    //////////
 	    // Returns the stack size for the thread
@@ -173,7 +185,6 @@ namespace SCICore {
 	    friend class Semaphore;
 	    friend class Thread_private;
 	    
-	    Thread(const Thread&);
 	    ~Thread();
 
 	    Runnable* d_runner;
@@ -184,6 +195,7 @@ namespace SCICore {
 	    int d_cpu;
 	    bool d_daemon;
 	    bool d_detached;
+	    bool d_activated;
 	    
 	    void os_start(bool stopped);
 	    static void initialize();
@@ -208,7 +220,8 @@ namespace SCICore {
 	    static int push_bstack(Thread_private*, ThreadState s,
 				   const char* why);
 	    static void pop_bstack(Thread_private*, int oldstate);
-	    
+	    int get_tid();
+	    static void print_threads();
 
 	    class ParallelHelper : public Runnable {
 		const ParallelBase* helper;
@@ -222,6 +235,10 @@ namespace SCICore {
 		    cheat->run(proc);
 		}
 	    };
+
+	    // Cannot copy them
+	    Thread(const Thread&);
+	    Thread& operator=(const Thread&);
 	};	
     }
 }
@@ -230,6 +247,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/08/28 03:46:51  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.6  1999/08/25 22:36:01  sparker
 // More thread library updates - now compiles
 //

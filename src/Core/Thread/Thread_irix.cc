@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  Thread_irix.cc: Irix implementation of the Thread library
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -74,7 +72,6 @@ using SCICore::Thread::ThreadGroup;
 using SCICore::Thread::Time;
 
 extern "C" int __ateachexit(void(*)());
-#define THREAD_STACKSIZE 256*1024*4
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
@@ -98,7 +95,7 @@ namespace SCICore {
 	};
     }
 }
-using SCICore::Thread::Thread_private;
+using Thread_private;
 
 static Thread_private* idle_main;
 static Thread_private* idle[MAXTHREADS];
@@ -131,20 +128,18 @@ static
 void
 lock_scheduler()
 {
-    if(uspsema(schedlock) == -1){
-	perror("uspsema");
-	Thread::niceAbort();
-    }
+    if(uspsema(schedlock) == -1)
+	throw ThreadError(std::string("lock_scheduler failed")
+			  +strerror(errno));
 }
 
 static
 void
 unlock_scheduler()
 {
-    if(usvsema(schedlock) == -1){
-	perror("usvsema");
-	Thread::niceAbort();
-    }
+    if(usvsema(schedlock) == -1)
+	throw ThreadError(std::string("unlock_scheduler failed")
+			  +strerror(errno));
 }
 
 void
@@ -153,17 +148,15 @@ Thread_shutdown(Thread* thread, bool actually_exit)
     Thread_private* priv=thread->d_priv;
     int pid=getpid();
 
-    if(usvsema(priv->done) == -1){
-	perror("usvsema");
-	Thread::niceAbort();
-    }
+    if(usvsema(priv->done) == -1)
+	throw ThreadError(std::string("usvema failed on priv->done")
+			  +strerror(errno));
 
     // Wait to be deleted...
     if(priv->delete_ready){
-	if(uspsema(priv->delete_ready) == -1) {
-	    perror("uspsema");
-	    Thread::niceAbort();
-	}
+	if(uspsema(priv->delete_ready) == -1)
+	    throw ThreadError(std::string("uspsema failed on priv->delete_ready")
+			      +strerror(errno));
     }
     // Allow this thread to run anywhere...
     if(thread->d_cpu != -1)
@@ -196,10 +189,9 @@ Thread_shutdown(Thread* thread, bool actually_exit)
     Thread::checkExit();
     if(pid == main_pid){
 	priv->state=Thread::PROGRAM_EXIT;
-	if(uspsema(main_sema) == -1){
-	    perror("uspsema");
-	    Thread::niceAbort();
-	}
+	if(uspsema(main_sema) == -1)
+	    throw ThreadError(std::string("uspsema failed on main_sema")
+			      +strerror(errno));
     }
     if(actually_exit)
 	_exit(0);
@@ -240,7 +232,7 @@ wait_shutdown()
  * Intialize threads for irix
  */
 void
-SCICore::Thread::Thread::initialize()
+Thread::initialize()
 {
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 3*1024*1024);
@@ -278,6 +270,11 @@ SCICore::Thread::Thread::initialize()
     main_sema=usnewsema(arena, 0);
     nprocessors=Thread::numProcessors();
 
+    control_c_sema=usnewsema(arena, 1);
+    if(!control_c_sema)
+	throw ThreadError(std::stirng("Error creating semaphore")
+			  +strerror(errno));
+
     main_pid=getpid();
     /*
      * The functionality relies on SGI's __ateachexit function.  If
@@ -314,7 +311,6 @@ SCICore::Thread::Thread::initialize()
     thread_local->current_thread=mainthread;
     if(!getenv("THREAD_NO_CATCH_SIGNALS"))
 	install_signal_handlers();
-
 }
 
 static
@@ -327,10 +323,9 @@ run_threads(void* priv_v, size_t)
     for(;;){
 	/* Wait to be started... */
 	priv->state=Thread::IDLE;
-	if(uspsema(priv->startup) == -1){
-	    perror("uspsema");
-	    Thread::niceAbort();
-	}
+	if(uspsema(priv->startup) == -1)
+	    throw ThreadError(std::string("uspsema failed on priv->startup")
+			      +strerror(errno));
 	thread_local->current_thread=priv->thread;
 	priv->state=Thread::RUNNING;
 	priv->thread->run_body();
@@ -341,14 +336,14 @@ run_threads(void* priv_v, size_t)
 }
 
 void
-SCICore::Thread::Thread::exit()
+Thread::exit()
 {
     Thread* self=Thread::self();
     Thread_shutdown(self, true);
 }
 
 void
-SCICore::Thread::Thread::checkExit()
+Thread::checkExit()
 {
     lock_scheduler();
     int done=true;
@@ -366,7 +361,7 @@ SCICore::Thread::Thread::checkExit()
 }
 
 void
-SCICore::Thread::Thread::exitAll(int code)
+Thread::exitAll(int code)
 {
     exiting=true;
     exit_code=code;
@@ -396,7 +391,7 @@ SCICore::Thread::Thread::exitAll(int code)
  * Startup the given thread...
  */
 void
-SCICore::Thread::Thread::os_start(bool stopped)
+Thread::os_start(bool stopped)
 {
     /* See if there is a thread waiting around ... */
     if(!initialized){
@@ -408,7 +403,7 @@ SCICore::Thread::Thread::os_start(bool stopped)
 	d_priv=idle[nidle];
     } else {
 	d_priv=new Thread_private;
-	d_priv->stacklen=THREAD_STACKSIZE;
+	d_priv->stacklen=d_stacksize;
 	d_priv->stackbot=(caddr_t)mmap(0, d_priv->stacklen, PROT_READ|PROT_WRITE,
 				     MAP_SHARED, devzero_fd, 0);
 	d_priv->sp=d_priv->stackbot+d_priv->stacklen-1;
@@ -435,15 +430,13 @@ SCICore::Thread::Thread::os_start(bool stopped)
 			      +strerror(errno));
     }
     /* The thread is waiting to be started, release it... */
-    if(usvsema(d_priv->startup) == -1){
-	perror("usvsema");
-	Thread::niceAbort();
-    }
-    //Thread::event(this, THREAD_START);
+    if(usvsema(d_priv->startup) == -1)
+	throw ThreadError(std::string("usvsema failed on d_priv->startup")
+			  +strerror(errno));
 }
 
 void
-SCICore::Thread::Thread::stop()
+Thread::stop()
 {
     if(blockproc(d_priv->pid) != 0)
 	throw ThreadError(std::string("blockproc returned error: ")
@@ -451,15 +444,15 @@ SCICore::Thread::Thread::stop()
 }
 
 void
-SCICore::Thread::Thread::resume()
+Thread::resume()
 {
     if(unblockproc(d_priv->pid) != 0)
 	throw ThreadError(std::string("unblockproc returned error: ")
-				      +strerror(errno));
+			  +strerror(errno));
 }
 
 void
-SCICore::Thread::Thread::detach()
+Thread::detach()
 {
     if(d_detached)
 	throw ThreadError(std::string("Thread detached when already detached"));
@@ -470,7 +463,7 @@ SCICore::Thread::Thread::detach()
 }
 
 void
-SCICore::Thread::Thread::join()
+Thread::join()
 {
     Thread* us=Thread::self();
     int os=push_bstack(us->d_priv, JOINING, d_threadname);
@@ -483,7 +476,7 @@ SCICore::Thread::Thread::join()
 }
 
 void
-SCICore::Thread::ThreadGroup::gangSchedule()
+ThreadGroup::gangSchedule()
 {
     // This doesn't actually do anything on IRIX because it causes more
     // problems than it solves
@@ -493,9 +486,8 @@ SCICore::Thread::ThreadGroup::gangSchedule()
  * Thread block stack manipulation
  */
 int
-SCICore::Thread::Thread::push_bstack(Thread_private* p,
-				     SCICore::Thread::Thread::ThreadState state,
-				     const char* name)
+Thread::push_bstack(Thread_private* p, Thread::ThreadState state,
+		    const char* name)
 {
     int oldstate=p->state;
     p->state=state;
@@ -507,7 +499,7 @@ SCICore::Thread::Thread::push_bstack(Thread_private* p,
 }
 
 void
-SCICore::Thread::Thread::pop_bstack(Thread_private* p, int oldstate)
+Thread::pop_bstack(Thread_private* p, int oldstate)
 {
     p->bstacksize--;
     if(p->bstacksize < 0)
@@ -515,15 +507,19 @@ SCICore::Thread::Thread::pop_bstack(Thread_private* p, int oldstate)
     p->state=(Thread::ThreadState)oldstate;
 }
 
+int
+Thread::get_tid()
+{
+    return d_priv->pid;
+}
+
 /*
  * Signal handling cruft
  */
-
-
-static
 void
-print_threads(FILE* fp, int print_idle)
+Thread::print_threads()
 {
+    FILE* fp=stderr;
     for(int i=0;i<nactive;i++){
 	Thread_private* p=active[i];
 	const char* tname=p->thread?p->thread->getThreadName():"???";
@@ -540,14 +536,12 @@ print_threads(FILE* fp, int print_idle)
 	}
 	fprintf(fp, ")\n");
     }
-    if(print_idle){
-	for(int i=0;i<nidle;i++){
-	    Thread_private* p=idle[i];
-	    fprintf(fp, "%d: Idle worker\n", p->pid);
-	}
-	if(idle_main){
-	    fprintf(fp, "%d: Completed main thread\n", idle_main->pid);
-	}
+    for(int i=0;i<nidle;i++){
+	Thread_private* p=idle[i];
+	fprintf(fp, "%d: Idle worker\n", p->pid);
+    }
+    if(idle_main){
+	fprintf(fp, "%d: Completed main thread\n", idle_main->pid);
     }
 }
 
@@ -571,10 +565,9 @@ handle_quit(int sig, int code, sigcontext_t*)
 	return; // This is an idle thread...
     if(sig == SIGINT){
 	int st=uscpsema(control_c_sema);
-	if(st==-1){
-	    perror("uscsetlock");
-	    Thread::niceAbort();
-	}
+	if(st==-1)
+	    throw ThreadError(std::string("uscpsema failed")
+			      +strerror(errno));
     
 	if(st == 0){
 	    // This will wait until the other thread is done
@@ -594,8 +587,6 @@ handle_quit(int sig, int code, sigcontext_t*)
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
     if(sig==SIGINT){
 	// Print out the thread states...
-	fprintf(stderr, "\n\nActive threads:\n");
-	print_threads(stderr, 1);
 	Thread::niceAbort();
 	usvsema(control_c_sema);
     } else {
@@ -604,7 +595,6 @@ handle_quit(int sig, int code, sigcontext_t*)
 	exit(1);
     }
 }
-
 
 /*
  * Handle an abort signal - like segv, bus error, etc.
@@ -619,10 +609,9 @@ handle_abort_signals(int sig, int code, sigcontext_t* context)
     sigemptyset(&action.sa_mask);
     action.sa_handler=SIG_DFL;
     action.sa_flags=0;
-    if(sigaction(sig, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }    
+    if(sigaction(sig, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction (SIG_DFL) failed")
+			  +strerror(errno));
 
     Thread* self=Thread::self();
     const char* tname=self?self->getThreadName():"idle or main";
@@ -637,10 +626,9 @@ handle_abort_signals(int sig, int code, sigcontext_t* context)
 
     action.sa_handler=(SIG_PF)handle_abort_signals;
     action.sa_flags=0;
-    if(sigaction(sig, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
+    if(sigaction(sig, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction (restore) failed")
+			  +strerror(errno));
 }
 
 /*
@@ -655,50 +643,43 @@ install_signal_handlers()
     action.sa_flags=0;
 
     action.sa_handler=(SIG_PF)handle_abort_signals;
-    if(sigaction(SIGILL, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
-    if(sigaction(SIGABRT, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
-    if(sigaction(SIGTRAP, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
-    if(sigaction(SIGBUS, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
-    if(sigaction(SIGSEGV, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }
+    if(sigaction(SIGILL, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGILL) failed")
+			  +strerror(errno));
+    if(sigaction(SIGABRT, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGABRT) failed")
+			  +strerror(errno));
+    if(sigaction(SIGTRAP, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGTRAP) failed")
+			  +strerror(errno));
+    if(sigaction(SIGBUS, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGBUS) failed")
+			  +strerror(errno));
+    if(sigaction(SIGSEGV, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGSEGV) failed")
+			  +strerror(errno));
 
     action.sa_handler=(SIG_PF)handle_quit;
-    if(sigaction(SIGQUIT, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }    
-    if(sigaction(SIGINT, &action, NULL) == -1){
-	perror("sigaction");
-	exit(-1);
-    }    
+    if(sigaction(SIGQUIT, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGQUIT) failed")
+			  +strerror(errno));
+    if(sigaction(SIGINT, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGINT) failed")
+			  +strerror(errno));
 }
 
 /*
  * Return the current thread...
  */
 Thread*
-SCICore::Thread::Thread::self()
+Thread::self()
 {
     return thread_local->current_thread;
 }
 
 
 int
-SCICore::Thread::Thread::numProcessors()
+Thread::numProcessors()
 {
     static int nproc=-1;
     if(nproc==-1){
@@ -718,16 +699,16 @@ SCICore::Thread::Thread::numProcessors()
  * Migrate the thread to a CPU.
  */
 void
-SCICore::Thread::Thread::migrate(int proc)
+Thread::migrate(int proc)
 {
     if(proc==-1){
-	if(sysmp(MP_RUNANYWHERE_PID, d_priv->pid) == -1){
-	    perror("sysmp - MP_RUNANYWHERE_PID");
-	}
+	if(sysmp(MP_RUNANYWHERE_PID, d_priv->pid) == -1)
+	    throw ThreadError(std::string("sysmp(MP_RUNANYWHERE_PID) failed")
+			      +strerror(errno));
     } else {
 	if(sysmp(MP_MUSTRUN_PID, proc, d_priv->pid) == -1){
-	    perror("sysmp - MP_MUSTRUN_PID");
-	}
+	    throw ThreadError(std::string("sysmp(_MP_MUSTRUN_PID) failed")
+			      +strerror(errno));
     }
     d_cpu=proc;
 }
@@ -736,26 +717,25 @@ SCICore::Thread::Thread::migrate(int proc)
  * Mutex implementation
  */
 
-SCICore::Thread::Mutex::Mutex(const char* name)
+Mutex::Mutex(const char* name)
     : d_name(name)
 {
     if(!initialized){
 	Thread::initialize();
     }
     d_priv=(Mutex_private*)usnewlock(arena);
-    if(!d_priv){
-	perror("usnewlock");
-	Thread::niceAbort();
-    }
+    if(!d_priv)
+	throw ThreadError(std::string("usnewlock failed")
+			  +strerror(errno));
 }
 
-SCICore::Thread::Mutex::~Mutex()
+Mutex::~Mutex()
 {
     usfreelock((ulock_t)d_priv, arena);
 }
 
 void
-SCICore::Thread::Mutex::lock()
+Mutex::lock()
 {
     Thread* t=Thread::self();
     int os;
@@ -764,90 +744,84 @@ SCICore::Thread::Mutex::lock()
 	p=t->d_priv;
 	os=Thread::push_bstack(p, Thread::BLOCK_MUTEX, d_name);
     }
-    if(ussetlock((ulock_t)d_priv) == -1){
-	perror("ussetlock");
-	Thread::niceAbort();
-    }
+    if(ussetlock((ulock_t)d_priv) == -1)
+	throw ThreadError(std::string("ussetlock failed")
+			  +strerror(errno));
     if(t)
 	Thread::pop_bstack(p, os);
 }
 
 bool
-SCICore::Thread::Mutex::tryLock()
+Mutex::tryLock()
 {
     int st=uscsetlock((ulock_t)d_priv, 100);
-    if(st==-1){
-	perror("uscsetlock");
-	Thread::niceAbort();
-    }
+    if(st==-1)
+	throw ThreadError(std::string("uscsetlock failed")
+			  +strerror(errno));
     return st!=0;
 }
 
 void
-SCICore::Thread::Mutex::unlock()
+Mutex::unlock()
 {
-    if(usunsetlock((ulock_t)d_priv) == -1){
-	perror("usunsetlock");
-	Thread::niceAbort();
-    }
+    if(usunsetlock((ulock_t)d_priv) == -1)
+	throw ThreadError(std::string("usunsetlock failed")
+			  +strerror(errno));
 }
 
 /*
  * Semaphore implementation
  */
 
-SCICore::Thread::Semaphore::Semaphore(const char* name, int count)
+Semaphore::Semaphore(const char* name, int count)
     : d_name(name)
 {
     if(!initialized){
 	Thread::initialize();
     }
     d_priv=(Semaphore_private*)usnewsema(arena, count);
-    if(!d_priv){
-	perror("usnewsema");
-	Thread::niceAbort();
-    }
+    if(!d_priv)
+	throw ThreadError(std::string("usnewsema failed")
+			  +strerror(errno));
 }
 
-SCICore::Thread::Semaphore::~Semaphore()
+Semaphore::~Semaphore()
 {
     if(d_priv)
 	usfreesema((usema_t*)d_priv, arena);
 }
 
 void
-SCICore::Thread::Semaphore::down(int count)
+Semaphore::down(int count)
 {
     Thread_private* p=Thread::self()->d_priv;
     int oldstate=Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, d_name);
     for(int i=0;i<count;i++){
-	if(uspsema((usema_t*)d_priv) == -1){
-	    perror("upsema");
-	    Thread::niceAbort();
-	}
+	if(uspsema((usema_t*)d_priv) == -1)
+	    throw ThreadError(std::string("uspsema failed")
+			      +strerror(errno));
     }
     Thread::pop_bstack(p, oldstate);
 }
 
 bool
-SCICore::Thread::Semaphore::tryDown()
+Semaphore::tryDown()
 {
     int stry=uscpsema((usema_t*)d_priv);
-    if(stry == -1){
-	perror("upsema");
-	Thread::niceAbort();
-    }
+    if(stry == -1)
+	throw ThreadError(std::string("uscpsema failed")
+			  +strerror(errno));
+
     return stry;
 }
 
 void
-SCICore::Thread::Semaphore::up(int count)
+Semaphore::up(int count)
 {
     for(int i=0;i<count;i++){
-	if(usvsema((usema_t*)d_priv) == -1){
-	    perror("usvsema");
-	    Thread::niceAbort();
-	}
+	if(usvsema((usema_t*)d_priv) == -1)
+	    throw ThreadError(std::string("usvsema failed")
+			      +strerror(errno));
     }
 }
 
@@ -875,7 +849,7 @@ namespace SCICore {
     }
 }
 
-SCICore::Thread::Barrier_private::Barrier_private()
+Barrier_private::Barrier_private()
     : cond0("Barrier condition 0"), cond1("Barrier condition 1"),
       mutex("Barrier lock"), nwait(0), cc(0)
 {
@@ -884,10 +858,10 @@ SCICore::Thread::Barrier_private::Barrier_private()
 	    flag=0;
 	    pvar=fetchop_alloc(reservoir);
 	    fprintf(stderr, "***Alloc: %p\n", pvar);
-	    if(!pvar){
-		perror("fetchop_alloc");
-		Thread::niceAbort();
-	    }
+	    if(!pvar)
+		throw ThreadError(std::string("fetchop_alloc failed")
+				  +strerror(errno));
+
 	    storeop_store(pvar, 0);
 	} else {
 	    // Use normal SGI barrier
@@ -896,7 +870,7 @@ SCICore::Thread::Barrier_private::Barrier_private()
     }
 }   
 
-SCICore::Thread::Barrier::Barrier(const char* name, int nthreads)
+Barrier::Barrier(const char* name, int nthreads)
     : d_name(name), d_num_threads(nthreads), d_thread_group(0)
 {
     if(!initialized){
@@ -905,7 +879,7 @@ SCICore::Thread::Barrier::Barrier(const char* name, int nthreads)
     d_priv=new Barrier_private;
 }
 
-SCICore::Thread::Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
+Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
     : d_name(name), d_num_threads(0), d_thread_group(threadGroup)
 {
     if(!initialized){
@@ -914,7 +888,7 @@ SCICore::Thread::Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
     d_priv=new Barrier_private;
 }
 
-SCICore::Thread::Barrier::~Barrier()
+Barrier::~Barrier()
 {
     if(use_fetchop){
 	fetchop_free(reservoir, d_priv->pvar);
@@ -925,7 +899,7 @@ SCICore::Thread::Barrier::~Barrier()
 }
 
 void
-SCICore::Thread::Barrier::wait()
+Barrier::wait()
 {
     int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     Thread_private* p=Thread::self()->d_priv;
@@ -962,6 +936,9 @@ SCICore::Thread::Barrier::wait()
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 03:46:52  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.5  1999/08/25 22:36:02  sparker
 // More thread library updates - now compiles
 //

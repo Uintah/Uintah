@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  AtomicCounter: Thread-safe integer variable
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -43,7 +42,7 @@ WARNING
 
 namespace SCICore {
     namespace Thread {
-	class AtomicCounter_priv;
+	class AtomicCounter_private;
 	class AtomicCounter {
 	public:
 	    //////////
@@ -91,7 +90,11 @@ namespace SCICore {
 
 	private:
 	    const char* d_name;
-	    AtomicCounter_priv* d_priv;
+	    AtomicCounter_private* d_priv;
+
+	    // Cannot copy them
+	    AtomicCounter(const AtomicCounter&);
+	    AtomicCounter& operator=(const AtomicCounter&);
 	};
     }
 }
@@ -100,6 +103,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 03:46:46  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.5  1999/08/25 19:00:46  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads
