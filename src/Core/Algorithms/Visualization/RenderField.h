@@ -361,7 +361,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
   bool def_color = !(color_handle.get_rep());
   bool vec_color = false;
   MaterialHandle vcol(0);
-  if (def_color && sfld->query_vector_interface() != NULL)
+  if (def_color && sfld->query_vector_interface().get_rep())
   {
     def_color = false;
     vec_color = true;
@@ -532,7 +532,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
   bool def_color = !(color_handle.get_rep());
   bool vec_color = false;
   MaterialHandle vcol0(0), vcol1(0);
-  if (def_color && sfld->query_vector_interface() != NULL)
+  if (def_color && sfld->query_vector_interface().get_rep())
   {
     def_color = false;
     vec_color = true;
@@ -713,7 +713,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
   vector<Vector> vvals(20);
   vector<typename Fld::value_type> vals(20);
   vector<double> dvals(20);
-  if (def_color && sfld->query_vector_interface() != NULL)
+  if (def_color && sfld->query_vector_interface().get_rep())
   {
     def_color = false;
     vec_color = true;
@@ -1053,30 +1053,50 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
   std::ostringstream buffer;
   buffer.precision(precision);
 
+  bool vec_color = false;
+  if (color_handle.get_rep() == NULL)
+  {
+    if (!use_default_material &&
+	field_handle->query_vector_interface().get_rep())
+    {
+      vec_color = true;
+    }
+    else
+    {
+      use_default_material = false;
+    }
+  }
+ 
   typename Loc::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
   Point p;
-  while (iter != end) {
+  while (iter != end)
+  {
     typename Fld::value_type val;
-    if (fld->value(val, *iter)) {
+    if (fld->value(val, *iter))
+    {
       mesh->get_center(p, *iter);
 
       buffer.str("");
       buffer << val;
 
-      MaterialHandle m;
       if (use_default_material)
       {
-	m = default_material;
+	texts->add(buffer.str(), p);
+      }
+      else if (vec_color)
+      {
+	Vector vval(0, 0, 0);
+	to_vector(val, vval);
+	texts->add(buffer.str(), p, Color(vval.x(), vval.y(), vval.z()));
       }
       else
       {
-	double dval;
+	double dval = 0.0;
 	to_double(val, dval);
-	m = color_handle->lookup(dval);
+	texts->add(buffer.str(), p, dval);
       }
-      texts->add(buffer.str(), p, m->diffuse);
     }
     ++iter;
   }

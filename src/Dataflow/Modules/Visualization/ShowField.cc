@@ -152,6 +152,7 @@ class ShowField : public Module
   LockingHandle<RenderVectorFieldBase>  data_vector_renderer_;
   LockingHandle<RenderTensorFieldBase>  data_tensor_renderer_;
 
+  GeomHandle text_geometry_;
   GeomHandle data_geometry_;
 
   enum toggle_type_e {
@@ -257,6 +258,7 @@ ShowField::ShowField(GuiContext* ctx) :
   data_scalar_renderer_(0),
   data_vector_renderer_(0),
   data_tensor_renderer_(0),
+  text_geometry_(0),
   data_geometry_(0),
   render_state_(5)
 {
@@ -773,7 +775,7 @@ ShowField::execute()
       MaterialHandle m = scinew Material(Color(text_color_r_.get(),
 					       text_color_g_.get(),
 					       text_color_b_.get()));
-      GeomHandle text =
+      text_geometry_ =
 	renderer_->render_text(fld_handle,
 			       color_map_,
 			       text_use_default_color_.get(), m,
@@ -789,7 +791,11 @@ ShowField::execute()
 
       const char *name =
 	text_backface_cull_.get()?"Culled Text Data":"Text Data";
-      text_id_ = ogeom_->addObj(text, fname + name);
+      GeomHandle gmat =
+	scinew GeomMaterial(text_geometry_, m);
+      GeomHandle geom =
+	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      text_id_ = ogeom_->addObj(geom, fname + name);
     }
   }
 
