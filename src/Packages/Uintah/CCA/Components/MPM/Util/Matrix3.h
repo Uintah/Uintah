@@ -15,6 +15,9 @@
 #include <iosfwd>
 #include <vector>
 
+namespace SCIRun {
+  class TypeDescription;
+}
 namespace Uintah {
 
 using namespace SCIRun;
@@ -176,6 +179,9 @@ class Matrix3 {
   inline bool solve(Vector rhs, Vector& xp,
 		    std::vector<Vector>& xg_basis,
 		    double relative_scale /* MaxAbsElem() suggested */) const;
+  //! support dynamic compilation
+  static const string& get_h_file_path();
+  
 private:
   // Reduce the matrix and rhs, representing the equation system:
   // A*x = y = rhs, to a matrix in upper triangular form with
@@ -550,6 +556,7 @@ inline Vector operator*(const Vector& v, const Matrix3& m3) {
   return Vector(x, y, z);
 }
 
+
 } // End namespace Uintah
 
 std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
@@ -561,6 +568,8 @@ namespace SCIRun {
 using std::string;
 using Uintah::Matrix3;
 template<> const string find_type_name(Matrix3*);
+
+const TypeDescription* get_type_description(Matrix3*);
 
 } // namespace SCIRun
 
