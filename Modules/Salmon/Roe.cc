@@ -44,7 +44,6 @@ Roe::Roe(Salmon* s, const clString& id)
 : id(id), manager(s), view("view", id, this), shading("shading", id, this),
   homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25)
 {
-    homeview=View(Point(500, 500, 500), Point(0,0,0), Vector(0,0,1), 60);
     view.set(homeview);
     TCL::add_command(id, this, 0);
     current_renderer=0;
