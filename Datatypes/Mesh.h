@@ -30,6 +30,8 @@ struct Element {
     int n2;
     int n3;
     int n4;
+    int cond; // index to the conductivities array for the cond
+              // tensor of this element
     Mesh* mesh;
     Element(Mesh*, int, int, int, int);
     void* operator new(size_t);
@@ -56,6 +58,7 @@ class Mesh : public Datatype {
 public:
     Array1<Node*> nodes;
     Array1<Element*> elems;
+    Array1<Array1<double> > cond_tensors;
     Mesh();
     Mesh(int nnodes, int nelems);
     virtual Mesh* clone();
