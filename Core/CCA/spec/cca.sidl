@@ -1041,6 +1041,15 @@ package cca {
 	     */
 	    array<cca.ComponentClassDescription> getAvailableComponentClasses() 
 		throws cca.CCAException ;
+
+            // proposed extension:
+            /**
+             * Add a component class to the framework at runtime.
+             * @param componentClassName The name of a component.
+             * @throws CCAException in the event of error.
+             */
+            void addComponentClass(in string componentClassName)
+                throws cca.CCAException;
 	} // end of cca.ports.ComponentRepository
 
 //<<<<<<<<<<<<<<<<<<<<<<<<<
