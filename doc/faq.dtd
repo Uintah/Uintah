@@ -20,11 +20,13 @@
 
 <!ELEMENT p (#PCDATA)>
 <!ELEMENT pre (#CDATA)>
+<!ELEMENT img (#CDATA)>
 
 <!ELEMENT faq (entry+)>
+<!ATTLIST faq name CDATA #REQUIRED>
 
 <!ELEMENT entry (keywords, question, answer)>
 
 <!ELEMENT keywords (#CDATA)>
-<!ELEMENT question (p|pre)+>
-<!ELEMENT answer (p|pre)+>
+<!ELEMENT question (p|pre|img)+>
+<!ELEMENT answer (p|pre|img)+>
