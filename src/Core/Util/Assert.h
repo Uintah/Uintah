@@ -40,6 +40,7 @@
    SCI_THROW(SCIRun::AssertionFailed(string, __FILE__, __LINE__));
 
 #if SCI_ASSERTION_LEVEL >= 1
+#define IFASSERT(x) x
 #define ASSERTL1(condition) \
    if(!(condition)){ \
       SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
@@ -78,6 +79,7 @@
 #define ASSERTL3(condition)
 #define ASSERTEQ(c1, c2)
 #define ASSERTRANGE(c, l, h)
+#define IFASSERT(x)
 
 #endif
 
