@@ -39,7 +39,8 @@ namespace SCIRun {
 
 class RingWidget : public BaseWidget {
 public:
-  RingWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  RingWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+	      bool is_slideable = true);
   RingWidget( const RingWidget& );
   virtual ~RingWidget();
 
@@ -85,6 +86,8 @@ private:
   Point pick_pointrvar_;
   Point pick_pointdvar_;
   Point pick_slidervar_;
+
+  bool is_slideable_;
 };
 
 
