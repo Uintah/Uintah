@@ -86,6 +86,8 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
+SCIRUN_APP_DIR := $(OBJTOP_ABS)/../$(SCIRUN_APP_NAME).app/Contents
+
 all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM
 
 .PHONY: prereqs
@@ -119,6 +121,26 @@ ontheflylibs:
 	@echo Compiling on-the-fly-libs directory:
 	@mkdir -p on-the-fly-libs
 	@(cd on-the-fly-libs;$(MAKE))
+
+app: all
+	@echo making $(SCIRUN_APP_NAME).app in $(SCIRUN_APP_DIR)
+	@mkdir -p $(SCIRUN_APP_DIR)/MacOS
+	@mkdir -p $(SCIRUN_APP_DIR)/src
+	@mkdir -p $(SCIRUN_APP_DIR)/Thirdparty
+	@cp -rp $(OBJTOP)/* $(SCIRUN_APP_DIR)/MacOS
+	@cp -rp $(SRCTOP)/* $(SCIRUN_APP_DIR)/src
+	@cp -rp $(SCIRUN_THIRDPARTY_DIR)/* $(SCIRUN_APP_DIR)/Thirdparty
+	@mv $(SCIRUN_APP_DIR)/MacOS/scirun $(SCIRUN_APP_DIR)/MacOS/scirun-bin
+	@cp -rp $(SCIRUN_APP_DIR)/src/scripts/SCIRun* $(SCIRUN_APP_DIR)/MacOS/
+	chmod a+x $(SCIRUN_APP_DIR)/MacOS/SCIRun*
+	@cp -rp $(SCIRUN_APP_DIR)/src/scripts/Info.plist $(SCIRUN_APP_DIR)
+	touch app
+
+dmg: app
+	hdiutil create -fs "HFS+J" -volname $(SCIRUN_APP_NAME) -srcfolder $(shell cd $(SCIRUN_APP_DIR)/..; pwd) $(shell cd $(OBJTOP_ABS)/..; pwd)/$(SCIRUN_APP_NAME).dmg
+	touch dmg
+
+
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
