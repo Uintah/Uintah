@@ -21,6 +21,47 @@
 #      October 2000
 #      based on standard TCL tkfbox.tcl source
 
+#
+# NOTE: If you use makeOpenFilebox or makeSaveFilebox and these
+# dialogs ARE NOT the main module GUI (ie: created by the ui method
+# _as_ the UI), then you will need to explicitly deiconify the window 
+# (and move it to the location of the mouse...)
+#
+# ie: something like this:
+#
+#       set w .my_window
+#
+#       if {[winfo exists $w]} {
+#           if { [winfo ismapped $w] == 1} {
+#               raise $w
+#           } else {
+#               wm deiconify $w
+#           }
+#           return
+#        }
+#
+#       toplevel $w
+#       makeSaveFilebox \
+#               -parent $w \
+#               -filevar $this-saveFile \
+#               -command "$this doSaveImage; wm withdraw $w" \
+#               -cancel "wm withdraw $w" \
+#               -title $title \
+#               -filetypes $types \
+#               -initialfile $defname \
+#               -initialdir $initdir \
+#               -defaultextension $defext \
+#               -formatvar $this-saveType \
+#               -formats {ppm raw "by_extension"} \
+#               -imgwidth $this-resx \
+#               -imgheight $this-resy
+#       moveToCursor $w
+#       wm deiconify $w
+#
+#  However, if the save dialog is the main UI window, then the module UI
+#  function takes care of raising it for you.
+#
+
 proc makeOpenFilebox {args} {
     biopseFDialog $args
 }
@@ -28,29 +69,6 @@ proc makeOpenFilebox {args} {
 proc makeSaveFilebox {args} {
     biopseFDialog $args
 }
-
-#--------------------------------------------------------
-# procedure to conform with Dataflow readers
-#proc makeFilebox {w var command cancel} {
-#    wm withdraw $w
-#    set initfile ""
-#    set initdir ""
-#    set defext ""
-#    set title "Open Dataset"
-#    set filetypes {
-#	{{All Files}       {.*}   }
-#    }
-#    makeOpenFilebox -parent $w \
-#	    -filevar $var \
-#	    -command $command \
-#	    -cancel $cancel \
-#	    -defaultextension $defext \
-#	    -filetypes $filetypes \
-#	    -initialdir $initdir \
-#	    -initialfile $initfile  \
-#	    -title $title
-#}
-
 
 #--------------------------------------------------------
 # procedures to call from readers/writers
