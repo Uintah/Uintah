@@ -18,6 +18,7 @@
 #include <SCICore/share/share.h>
 
 #include <SCICore/Exceptions/Exception.h>
+#include <string>
 
 namespace SCICore {
     namespace Thread {
@@ -47,8 +48,13 @@ DESCRIPTION
 	    virtual ~ThreadError();
 
 	    //////////
-	    // Prints out the message associated with this error
-	    virtual std::string message() const;
+	    // returns the message associated with this error
+	    virtual const char* message() const;
+
+	    //////////
+	    // returns the name of this exception (the name of this class)
+	    virtual const char* type() const;
+
 	protected:
 	private:
 	    std::string d_message;
@@ -60,6 +66,11 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  2000/03/23 10:21:27  sparker
+// Use libexc to print out stack straces on the SGI
+// Added "name" method to ThreadError to match exception base class
+// Fixed a compiler warning in Thread_irix.cc
+//
 // Revision 1.7  1999/09/24 19:18:31  moulding
 // removed an '=' from the end of the include guard #define
 //
