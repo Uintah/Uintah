@@ -302,7 +302,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double shear = d_initialData.Shear;
   double rho_0 = matl->getInitialDensity();
   double sqrtTwo = sqrt(2.0);
-  double sqrtThree = sqrt(3.0);
+  //double sqrtThree = sqrt(3.0);
   double totalStrainEnergy = 0.0;
 
   // Loop thru patches
@@ -456,6 +456,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double equivStress = sqrt((trialS.NormSquared())*1.5);
 
       // Calculate flow stress (strain driven problem)
+      //cout << endl << " Particle ID = " << idx << endl << endl;
       double temperature = pTemperature[idx] + pPlasticTemperature[idx];
       double flowStress = d_plasticity->computeFlowStress(tensorEta, 
                                                           temperature,
@@ -475,7 +476,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                porosity, sig);
       //cout << "Equivalent stress = " << equivStress 
       //     << " Flow stress = " << flowStress << endl;
-      if (Phi <= 0.0 || flowStress < 0.00001) {
+      if (Phi <= 0.0) {
 
 	// Calculate the deformed volume
 	double rho_cur = rho_0/J;
@@ -542,27 +543,36 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           double gammadotplus = dplus/cplus;
 
           // Set initial theta
-          double theta = 1.0;
+          double theta = 0.0;
 
           // Calculate u_q and u_eta
-	  Matrix3 u_eta = tensorEta/sqrt(tensorEta.NormSquared());
-	  Matrix3 u_q = q/sqrt(q.NormSquared());
+          double etaeta = sqrt(tensorEta.NormSquared());
+          ASSERT(etaeta != 0);
+	  Matrix3 u_eta = tensorEta/etaeta;
+          double qq = sqrt(q.NormSquared());
+          ASSERT(qq != 0);
+	  Matrix3 u_q = q/qq;
 
 	  // Calculate new dstar
-	  int count = 0;
+	  int count = 1;
 	  double dStarOld = 0.0;
           double dStar = dplus;
-	  do {
+	  while (count < 10) {
 	    dStarOld = dStar;
 
             // Calculate dStar
-            double dStar = ((1.0-0.5*theta)*u_eta.Contract(tensorEta) + 
-			    0.5*theta*u_q.Contract(tensorEta))*sqrt(cplus);
+            dStar = ((1.0-0.5*theta)*u_eta.Contract(tensorEta) + 
+		     0.5*theta*u_q.Contract(tensorEta))*sqrt(cplus);
 
             // Update theta
+            ASSERT(dStar != 0);
 	    theta = (dStar - cplus*gammadotplus)/dStar;
 	    ++count;
-	  } while (fabs(dStar-dStarOld) > d_tol && count < 5);
+            //cout << "dStar = " << dStar << " dStarOld " << dStarOld 
+            //     << " count " << count << endl;
+            double tol_dStar = dStar*1.0e-6;
+	    if (fabs(dStar-dStarOld) < tol_dStar) break;
+	  } 
 
 	  // Calculate delGammaEr
 	  double delGammaEr =  (sqrtTwo*sig - sqrtqs)/(2.0*shear*cplus);
@@ -571,6 +581,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	  delGamma = dStar/cplus*delT - delGammaEr;
 
 	  // Calculate Stilde
+          ASSERT(sig != 0);
 	  double denom = 1.0 + (3.0*sqrtTwo*shear*delGamma)/sig; 
 	  ASSERT(denom != 0);
 	  Stilde = trialS/denom;
@@ -608,7 +619,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	}
         
 	// Do radial return adjustment
-	tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*Stilde.Norm()));
+        double stst = sqrt(1.5*Stilde.NormSquared());
+        ASSERT(stst != 0);
+	tensorS = Stilde*(sig/stst);
 	equivStress = sqrt((tensorS.NormSquared())*1.5);
 
         // Update the porosity
@@ -989,7 +1002,8 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 	  tensorSig.Trace() + tensorD.Trace()*(2.0*shear*delT);
         double sig = flowStress;
         double Phi = d_yield->evalYieldCondition(sqrt(equivStress), flowStress,
-						 traceOfTrialStress, porosity, sig);
+						 traceOfTrialStress, porosity, 
+                                                 sig);
         if (Phi <= 0.0) {
 
 	  // Calculate the deformed volume
@@ -1456,6 +1470,16 @@ HypoElasticPlastic::updatePorosity(const Matrix3& D,
                                    double f,
                                    double ep)
 {
+  // Growth
+  // Calculate trace of D
+  double Dkk = D.Trace();
+  Matrix3 one; one.Identity();
+  Matrix3 eta = D - one*(Dkk/3.0);
+
+  // Calculate rate of growth
+  double fdot_grow = 0.0;
+  if (Dkk > 0.0) fdot_grow = (1.0-f)*Dkk;
+
   // Nucleation 
   // Calculate A
   double temp = (ep - d_porosity.en)/d_porosity.sn;
@@ -1463,20 +1487,19 @@ HypoElasticPlastic::updatePorosity(const Matrix3& D,
     exp(-0.5*temp*temp);
 
   // Calculate plastic strain rate
-  double epdot = sqrt(D.NormSquared()/1.5);
+  double epdot = sqrt(eta.NormSquared()/1.5);
 
   // Calculate rate of nucleation
   double fdot_nucl = A*epdot;
 
-  // Growth
-  // Calculate trace of D
-  double Dkk = D.Trace();
-
-  // Calculate rate of growth
-  double fdot_grow = (1.0-f)*Dkk;
-
   // Update void volume fraction using forward euler
   double f_new = f + delT*(fdot_nucl + fdot_grow);
+  //cout << "Porosity: D = " << D << endl;
+  //cout << "Porosity: eta = " << eta << endl;
+  //cout << "Porosity: Dkk = " << Dkk << endl;
+  //cout << "Porosity::fdot_gr = " << fdot_grow 
+  //     << " fdot_nucl = " << fdot_nucl << " f = " << f 
+  //     << " f_new = " << f_new << endl;
   return f_new;
 }
 
