@@ -87,9 +87,9 @@ class VS_box2D {
     void set_minY(int q) { minY = q; };
     void set_maxX(int q) { maxX = q; };
     void set_maxY(int q) { maxY = q; };
-    char *get_text() { return text; };
+    string &get_text() { return text; };
 
-    void set_text(char *newString) { text = newString; };
+    void set_text(string newString) { text = newString; };
 
     // test whether a coordinate address is insde a box
     bool isInside(int x, int y) {
@@ -98,7 +98,7 @@ class VS_box2D {
 
   private:
     int minX, minY, maxX, maxY;
-    char *text;
+    string text;
 }; // end class VS_box2D
 
 class VS_SCI_Hotbox {
@@ -120,7 +120,7 @@ class VS_SCI_Hotbox {
     VS_SCI_Hotbox(int cX, int cY);
     void setCenter(int cX, int cY) { centerX = cX; centerY = cY;
                                      setAbsBoxCorners(); };
-    void set_text(int whichBox, char *newString) {
+    void set_text(int whichBox, string newString) {
                   if(whichBox < VS_HB_NUM_BOXES)
                       absBoxCorners[whichBox].set_text(newString); };
     void setAbsBoxCorners();
@@ -147,5 +147,6 @@ class VS_SCI_Hotbox {
     static void testCB(void *data);
 }; // end class VS_SCI_Hotbox
 
-} // End namespace VS
 #endif // VS_SCI_HOTBOX_DOT_H
+
+} // End namespace VS

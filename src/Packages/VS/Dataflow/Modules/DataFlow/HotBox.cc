@@ -28,6 +28,8 @@
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geom/GeomSticky.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Dataflow/XMLUtil/StrX.h>
 
 #include <Dataflow/share/share.h>
 
@@ -38,6 +40,13 @@
 #include "soapServiceInterfaceSoapBindingProxy.h" // get proxy
 #include "ServiceInterfaceSoapBinding.nsmap" // get namespace bindings
 #include "stdsoap2.h"
+// Xerces XML parser
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/dom/DOMNodeList.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
 // VS/Hotbox
 #include "VS_SCI_HotBox.h"
 #include "labelmaps.h"
@@ -94,6 +103,7 @@ private:
   GuiString anatomydatasource_;
   GuiString adjacencydatasource_;
   GuiString boundingboxdatasource_;
+  GuiString injurylistdatasource_;
   GuiString currentselection_;
 
   // temporary:  fixed anatomical label map files
@@ -135,6 +145,7 @@ HotBox::HotBox(GuiContext* ctx)
   anatomydatasource_(ctx->subVar("anatomydatasource")),
   adjacencydatasource_(ctx->subVar("adjacencydatasource")),
   boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
+  injurylistdatasource_(ctx->subVar("injurylistdatasource")),
   currentselection_(ctx->subVar("currentselection"))
 {
   // instantiate the HotBox-specific interaction structure
@@ -235,6 +246,7 @@ void
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
   const string boundingBoxDataSrc(boundingboxdatasource_.get());
+  const string injuryListDataSrc(injurylistdatasource_.get());
   const string enableDraw(enableDraw_.get());
 
   // The segmented volume (input field to the Probe)
@@ -296,6 +308,36 @@ void
   VH_AnatomyBoundingBox *selectBox =
       VH_Anatomy_findBoundingBox( boundBoxList, selectName);
 
+  // Read the Injury List -- Every time the HotBox Evaluates
+  try {
+    XMLPlatformUtils::Initialize();
+  } catch (const XMLException& toCatch) {
+    std::cerr << "Error during initialization! :\n"
+         << StrX(toCatch.getMessage()) << endl;
+    return;
+  }
+
+  // Instantiate the DOM parser.
+  XercesDOMParser parser;
+  parser.setDoValidation(false);
+
+  try {
+    parser.parse(injuryListDataSrc.c_str());
+  }  catch (const XMLException& toCatch) {
+    std::cerr << "Error during parsing: '" <<
+      injuryListDataSrc << "'\nException message is:  " <<
+      xmlto_string(toCatch.getMessage());
+      return;
+  }
+                                                                               
+  DOMDocument *doc = parser.getDocument();
+  DOMNodeList *list = doc->getElementsByTagName(to_xml_ch_ptr("wound"));
+  unsigned long nlist = list->getLength();
+  if (nlist == 0) {
+    cout << "HotBox.cc: Error parsing xml file: " << injuryListDataSrc << endl;
+    return;
+  }
+
   // we now have the anatomy name corresponding to the label value at the voxel
   if(dataSource == VS_DATASOURCE_OQAFMA)
   {
@@ -341,6 +383,13 @@ void
       // parse XML query results
       std::string OQAFMA_result = resultStruQL._processStruQLReturn;
       cout << OQAFMA_result;
+      // get an iterator of the ws.soap->dom tree
+      // soap_dom_iterator sdi = ws.soap->dom->begin();
+      // int dom_elem_cnt = 0;
+      // while(sdi != ws.soap->dom->end())
+      // {
+      //   ++sdi; dom_elem_cnt++;
+      // }
     }
     // catch(exception& e)
     // {
@@ -372,7 +421,7 @@ void
   Color text_color;
   text_color = Color(1,1,1);
   MaterialHandle text_material = scinew Material(text_color);
-  text_material->transparency = 0.95;
+  text_material->transparency = 0.75;
 
   GeomLines *lines = scinew GeomLines();
   GeomTexts *texts = scinew GeomTexts();
@@ -386,7 +435,7 @@ void
   // fill in text labels in the HotBox
   char *adjacentName;
   if(adjacencytable->get_num_rel(labelIndexVal) >= 1)
-  {
+  { // Note: TCL UI is 1-indexed, row-major
     if(adjPtr[1] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[1]);
     else
@@ -399,10 +448,11 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[1] << "]: ";
     cerr << adjacentName << endl;
     gui_label1_.set(adjacentName);
-    VS_HotBoxUI->set_text(1, strdup(adjacentName));
-  }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI->set_text(0, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 1)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 2)
-  {
+  { // Note: TCL UI is 1-indexed, row-major
     if(adjPtr[2] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[2]);
     else
@@ -415,10 +465,11 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[2] << "]: ";
     cerr << adjacentName << endl;
     gui_label2_.set(adjacentName);
-    VS_HotBoxUI->set_text(2, strdup(adjacentName));
-  }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI->set_text(3, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 2)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 3)
-  {
+  {  // Note: TCL UI is 1-indexed, row-major
     if(adjPtr[3] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[3]);
     else
@@ -431,10 +482,11 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[3] << "]: ";
     cerr << adjacentName << endl;
     gui_label3_.set(adjacentName);
-    VS_HotBoxUI->set_text(3, strdup(adjacentName));
-  }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI->set_text(5, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 3)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 4)
-  {
+  { // Note: TCL UI is 1-indexed, row-major
     if(adjPtr[4] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[4]);
     else
@@ -447,15 +499,16 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[4] << "]: ";
     cerr << adjacentName << endl;
     gui_label4_.set(adjacentName);
-    VS_HotBoxUI->set_text(4, strdup(adjacentName));
-  }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI->set_text(1, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 4)
 
   gui_label5_.set(selectName);
-  VS_HotBoxUI->set_text(5, strdup(selectName));
+  VS_HotBoxUI->set_text(5, string(selectName, 0, 18));
   currentselection_.set(selectName);
   
   if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
-  {
+  { // Note: TCL UI is 1-indexed, row-major
     if(adjPtr[6] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[6]);
     else
@@ -468,10 +521,11 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[6] << "]: ";
     cerr << adjacentName << endl;
     gui_label6_.set(adjacentName);
-    VS_HotBoxUI->set_text(6, strdup(adjacentName));
-  }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI->set_text(6, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 7)
-  {
+  { // Note: TCL UI is 1-indexed, row-major
     if(adjPtr[7] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[7]);
     else
@@ -484,10 +538,11 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[7] << "]: ";
     cerr << adjacentName << endl;
     gui_label7_.set(adjacentName);
-    VS_HotBoxUI->set_text(7, strdup(adjacentName));
-  }
+    // OpenGL UI is 0-indexed, column-major
+    VS_HotBoxUI->set_text(2, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 7)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 8)
-  {
+  { // Note: TCL UI is 1-indexed, row-major 
     if(adjPtr[8] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[8]);
     else
@@ -500,10 +555,11 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[8] << "]: ";
     cerr << adjacentName << endl;
     gui_label8_.set(adjacentName);
-    VS_HotBoxUI->set_text(8, strdup(adjacentName));
-  }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI->set_text(4, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 8)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
-  {
+  { // Note: TCL UI is 1-indexed, row-major
     if(adjPtr[9] < anatomytable->get_num_names())
         adjacentName = anatomytable->get_anatomyname(adjPtr[9]);
     else
@@ -516,8 +572,9 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[9] << "]: ";
     cerr << adjacentName << endl;
     gui_label9_.set(adjacentName);
-    VS_HotBoxUI->set_text(9, strdup(adjacentName));
-  }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI->set_text(7, string(adjacentName, 0, 18));
+  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
 
   if(enableDraw == "yes")
   {
