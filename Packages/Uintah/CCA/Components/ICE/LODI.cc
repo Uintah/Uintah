@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <typeinfo>
@@ -17,6 +18,65 @@ namespace Uintah {
 //  setenv SCI_DEBUG "LODI_DOING_COUT:+, LODI_DBG_COUT:+"
 static DebugStream cout_doing("LODI_DOING_COUT", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
+
+/* --------------------------------------------------------------------- 
+ Function~  using_LODI_BC--   
+ Purpose~   returns if we are using LODI BC on any face, 
+ ---------------------------------------------------------------------  */
+bool using_LODI_BC(const ProblemSpecP& prob_spec)
+{
+  //__________________________________
+  // search the BoundaryConditions problem spec
+  // determine if LODI bcs are specified
+  ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
+  ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
+ 
+  bool usingLODI = false;
+  
+  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
+                    face_ps=face_ps->findNextBlock("Face")) {
+    
+    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
+                     bc_iter = bc_iter->findNextBlock("BCType")){
+      map<string,string> bc_type;
+      bc_iter->getAttributes(bc_type);
+      if (bc_type["var"] == "LODI") {
+       usingLODI = true;
+      }
+    }
+  }
+  
+  if (usingLODI) {
+    cout << "\n WARNING:  LODI boundary conditions are "
+         << " NOT set during the problem initialization \n " << endl;
+  }
+  return usingLODI;
+}
+/* --------------------------------------------------------------------- 
+ Function~  is_LODI_face--   
+ Purpose~   returns true if this face on this patch is using LODI bcs
+ ---------------------------------------------------------------------  */
+bool is_LODI_face(const Patch* patch,
+                  Patch::FaceType face,
+                  SimulationStateP& sharedState)
+{ 
+  bool is_lodi_face = false;
+  int numMatls = sharedState->getNumICEMatls();
+
+  for (int m = 0; m < numMatls; m++ ) {
+    ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
+    int indx= ice_matl->getDWIndex();
+    bool lodi_pressure =    patch->haveBC(face,indx,"LODI","Pressure");
+    bool lodi_density  =    patch->haveBC(face,indx,"LODI","Density");
+    bool lodi_temperature = patch->haveBC(face,indx,"LODI","Temperature");
+    bool lodi_velocity =    patch->haveBC(face,indx,"LODI","Velocity");
+
+    if (lodi_pressure || lodi_density || lodi_temperature || lodi_velocity) {
+      is_lodi_face = true; 
+    }
+  }
+  return is_lodi_face;
+}
 
 /* --------------------------------------------------------------------- 
  Function~  lodi_getVars_pressBC-- 
@@ -61,12 +121,12 @@ void lodi_getVars_pressBC( const Patch* patch,
            differenceing scheme
 ____________________________________________________________________*/
 void computeDi(StaticArray<CCVariable<Vector> >& d,
-               const vector<bool>& d_is_LODI_face,
                constCCVariable<double>& rho,              
                const CCVariable<double>& press,                   
                constCCVariable<Vector>& vel,                  
                constCCVariable<double>& speedSound_,                    
-               const Patch* patch)                              
+               const Patch* patch,
+               SimulationStateP& sharedState)                              
 {
   cout_doing << "LODI computeLODIFirstOrder "<< endl;
   Vector dx = patch->dCell();
@@ -95,7 +155,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
  
-    if (d_is_LODI_face[face] ) {
+    if (is_LODI_face(patch,face, sharedState) ) {
       cout_dbg << " computing DI on face " << face 
                << " patch " << patch->getID()<<endl;
       //_____________________________________
@@ -154,6 +214,9 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
         } 
         //__________________________________
         // Compute d1-5
+        for (int i = 0; i <= 5; i++){
+          d[i][c] =Vector(0.,0.,0.);
+        } 
         d[1][c][dir0] = (L2 + 0.5 * (L1 + L5))/(speedSoundsqr);
         d[2][c][dir0] = 0.5 * (L5 + L1);
         d[3][c][dir0] = 0.5 * (L5 - L1)/(rho[c] * speedSound);
@@ -169,22 +232,21 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
  Purpose~  compute dissipation coefficients 
 __________________________________________________________________*/ 
 void computeNu(CCVariable<Vector>& nu,
-               const vector<bool>& is_LODI_face,
                const CCVariable<double>& p, 
-               const Patch* patch)
+               const Patch* patch,
+               SimulationStateP& sharedState)
 {
   cout_doing << "LODI computeNu "<< endl;
   double d_SMALL_NUM = 1.0e-100;
     
   // Iterate over the faces encompassing the domain
-  // only set DI on Boundariesfaces that are LODI
   vector<Patch::FaceType>::const_iterator iter;
   
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if (is_LODI_face[face] ) {
+    if (is_LODI_face(patch, face, sharedState) ) {
       cout_dbg << " computing Nu on face " << face 
                << " patch " << patch->getID()<<endl;   
               
@@ -193,9 +255,14 @@ void computeNu(CCVariable<Vector>& nu,
       int P_dir   = axes[0]; // principal direction
       otherDir[0] = axes[1]; // other vector directions
       otherDir[1] = axes[2];  
-
-      for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
-                                                          !iter.done();iter++) {
+      
+      //__________________________________
+      //  At patch boundaries you need to extend
+      // the computational footprint by one cell in ghostCells
+      CellIterator hiLo = patch->getFaceCellIterator(face, "minusEdgeCells");
+      CellIterator iterPlusGhost = patch->addGhostCell_Iter(hiLo,1);
+                        
+      for(CellIterator iter=iterPlusGhost; !iter.done();iter++) {
         IntVector c = *iter;
 
         for ( int i = 0; i < 2 ; i++ ) {  // set both orthogonal components
@@ -204,15 +271,14 @@ void computeNu(CCVariable<Vector>& nu,
           IntVector l = c;
           r[dir] += 1;  // tweak the r and l cell indices
           l[dir] -= 1; 
-                        // 2nd order cell centered difference
+                        // 2nd order cell centered difference 
           nu[c][dir] = fabs(p[r] - 2.0 * p[c] + p[l])/
                         (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM);
         }
       }
       //__________________________________
       //    E D G E S  -- on boundaryFaces only
-      // use cell centered and one sided differencing
-      
+      // use cell centered AND one sided differencing
       vector<Patch::FaceType> b_faces;
       getBoundaryEdges(patch,face,b_faces);
 
@@ -226,10 +292,26 @@ void computeNu(CCVariable<Vector>& nu,
         IntVector axes = patch->faceAxes(face0);
         int Edir1 = axes[0];
         int Edir2 = otherDirection(P_dir, Edir1);
-
-        CellIterator iterLimits =  
-                      patch->getEdgeCellIterator(face,face0,"minusCornerCells");
-
+        
+        //-----------  THIS IS GROSS-------
+        // Find an edge iterator that 
+        // a) doesn't hit the corner cells and
+        // b) extends one cell into the next patch over
+        IntVector offset = IntVector(1,1,1)  - Abs(patch->faceDirection(face)) 
+                                             - Abs(patch->faceDirection(face0));
+        CellIterator edgeIter= PatchEdgeIterator(patch, face, face0, offset);
+        
+        IntVector lo = edgeIter.begin();
+        IntVector hi = edgeIter.end();
+        
+        IntVector patchNeighborLow  = patch->neighborsLow();
+        IntVector patchNeighborHigh = patch->neighborsHigh();
+        
+        lo[Edir2] -= abs(1 - patchNeighborLow[Edir2]);  // increase footprint
+        hi[Edir2] += abs(1 - patchNeighborHigh[Edir2]); // by 1
+        CellIterator iterLimits(lo,hi);
+        //__________________________________
+        
         for(CellIterator iter = iterLimits;!iter.done();iter++){ 
 
           IntVector c = *iter;
@@ -253,28 +335,16 @@ void computeNu(CCVariable<Vector>& nu,
   /*`==========TESTING==========*/
   // Need a clever way to figure out the r and rr indicies
   //  for the two different directions
-  #if 0 
-      vector<IntVector> crn(4);
+      vector<IntVector> crn;
       computeCornerCellIndices(patch, face, crn);
 
-      for( int corner = 0; corner < 4; corner ++ ) {
-        IntVector c = crn[corner];
-
-
-
-        IntVector r  = c;
-        IntVector rr = c;
-        for ( dir.begin();
-          r[Edir2]  -= 1;  // tweak the r and l cell indices
-          rr[Edir2] -= 2;  // One sided differencing
-
-          IntVector adj = c - offset;
-          nu[c][Edir1] = fabs(p[c] - 2.0 * p[r] + p[rr])/
-                        (fabs(p[c] - p[r]) + fabs(p[r] - p[rr])  + d_SMALL_NUM);
+      vector<IntVector>::iterator itr;
+      for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+        IntVector c = *itr;
+        nu[c] = Vector(0,0,0);
       } 
-  #endif     
   /*==========TESTING==========`*/
-    }  // on the right face with LODI BCs
+    }  // on the LODI bc face
   }
 }
 /* --------------------------------------------------------------------- 
@@ -286,9 +356,9 @@ void  lodi_bc_preprocess( const Patch* patch,
                           Lodi_vars* lv,
                           ICELabel* lb,
                           const int indx,
-                          const vector<bool>& is_LODI_face,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw)
+                          DataWarehouse* new_dw,
+                          SimulationStateP& sharedState)
 {
   cout_doing << "lodi_bc_preprocess on patch "<<patch->getID()<< endl;
   
@@ -297,7 +367,7 @@ void  lodi_bc_preprocess( const Patch* patch,
   constCCVariable<double> vol_frac_old;
   
   const double cv = lv->cv;
-  CCVariable<double>& e = lv->e;  // shortcuts to Lodi_vars struct
+  CCVariable<double>& E   = lv->E;  // shortcuts to Lodi_vars struct
   CCVariable<Vector>& vel_CC = lv->vel_CC;
   CCVariable<double>& rho_CC = lv->rho_CC;
   CCVariable<double>& press_tmp = lv->press_tmp; 
@@ -314,13 +384,13 @@ void  lodi_bc_preprocess( const Patch* patch,
   old_dw->get(rho_old,      lb->rho_CCLabel,      indx,patch,gac,1);
   old_dw->get(vel_old,      lb->vel_CCLabel,      indx,patch,gac,1);
   old_dw->get(press_old,    lb->press_CCLabel,    0,   patch,gac,2);
-  old_dw->get(vol_frac_old, lb->vol_frac_CCLabel, indx,patch,gac,1);
+  old_dw->get(vol_frac_old, lb->vol_frac_CCLabel, indx,patch,gac,2);
 
-  new_dw->allocateTemporary(press_tmp,  patch, gac, 2);
-  new_dw->allocateTemporary(nu,         patch, gac, 1);
-  new_dw->allocateTemporary(e,          patch, gac, 1);
-  new_dw->allocateTemporary(rho_CC,     patch, gac, 1);  
-  new_dw->allocateTemporary(vel_CC,     patch, gac, 1);
+  new_dw->allocateTemporary(press_tmp, patch, gac, 2);
+  new_dw->allocateTemporary(nu,        patch, gac, 1);
+  new_dw->allocateTemporary(E,         patch, gac, 1);
+  new_dw->allocateTemporary(rho_CC,    patch, gac, 1);  
+  new_dw->allocateTemporary(vel_CC,    patch, gac, 1);
 
   for (int i = 0; i <= 5; i++){
     new_dw->allocateTemporary(di[i], patch, gac, 1);
@@ -334,11 +404,12 @@ void  lodi_bc_preprocess( const Patch* patch,
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if (is_LODI_face[face] ) {
+    if (is_LODI_face(patch,face, sharedState) ) {
       //__________________________________
       // Create an iterator that iterates over the face
       // + 2 cells inward.  We don't need to hit every
-      // cell on the patch.
+      // cell on the patch.  At patch boundaries you need to extend
+      // the footprint by one/two cells into the next patch
       CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells");
       IntVector lo = iter.begin();
       IntVector hi = iter.end();
@@ -351,38 +422,29 @@ void  lodi_bc_preprocess( const Patch* patch,
         lo[P_dir] -= 2;
       }
       CellIterator iterLimits(lo,hi);
+      CellIterator iterPlusGhost1 = patch->addGhostCell_Iter(iterLimits,1);
+      CellIterator iterPlusGhost2 = patch->addGhostCell_Iter(iterLimits,2);
 
-      //__________________________________
-      // Initialize
-      for(CellIterator iter = iterLimits; !iter.done(); iter++) {
+      //  plus one layer of ghostcells
+      for(CellIterator iter = iterPlusGhost1; !iter.done(); iter++) {  
         IntVector c = *iter;
-        nu[c] = Vector(-9,-9,-9);
-        press_tmp[c] = -9;
-        e[c] = -9;
-        
-        for (int i = 0; i <= 5; i++){
-          di[i][c] =Vector(0.,0.,0.);
-        } 
+        nu[c] = Vector(nanValue,nanValue,nanValue ); 
+        E[c] = rho_old[c] * (cv * temp_old[c]  + 0.5 * vel_old[c].length2() );    
       }
-      //__________________________________
-      //  At patch boundaries you need to extend
-      // the computational footprint by one cell in ghostCells
-      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iterLimits,1);
-
-      for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+      //  plut two layers of ghostcells
+      for(CellIterator iter = iterPlusGhost2; !iter.done(); iter++) {  
         IntVector c = *iter;
-        e[c] = rho_old[c] * (cv * temp_old[c] +  0.5 * vel_old[c].length2() );                                                 
-        press_tmp[c] = vol_frac_old[c] * press_old[c];        
-      }        
+        press_tmp[c] = vol_frac_old[c] * press_old[c];
+      }
     }  //lodi face
   }  // boundary face
 
   //compute dissipation coefficients
-  computeNu(nu, is_LODI_face, press_tmp, patch);
+  computeNu(nu, press_tmp, patch, sharedState);
 
   //compute Di at boundary cells
-  computeDi(di, is_LODI_face, rho_old,  press_tmp, vel_old, 
-            speedSound, patch);
+  computeDi(di, rho_old,  press_tmp, vel_old, 
+            speedSound, patch, sharedState);
 }  
  
 /*________________________________________________________
@@ -857,6 +919,7 @@ void FaceVel_LODI(const Patch* patch,
 /*_________________________________________________________________
  Function~ FaceTemp_LODI--
  Purpose~  Compute temperature in boundary cells on faces
+           Solves equation 9.8 of Reference.
 ___________________________________________________________________*/
 void FaceTemp_LODI(const Patch* patch,
              const Patch::FaceType face,
@@ -872,7 +935,7 @@ void FaceTemp_LODI(const Patch* patch,
   } 
   // shortcuts  
   StaticArray<CCVariable<Vector> >& d = lv->di;
-  const CCVariable<double>& e         = lv->e;
+  const CCVariable<double>& E         = lv->E;
   const CCVariable<double>& rho_new   = lv->rho_CC;
   const CCVariable<double>& rho_old   = lv->rho_old;
   const CCVariable<double>& press_tmp = lv->press_tmp;
@@ -902,21 +965,21 @@ void FaceTemp_LODI(const Patch* patch,
     IntVector l1 = c;
     r1[dir1] += offset[dir1];  // tweak the r and l cell indices
     l1[dir1] -= offset[dir1];
-    qConFrt  = vel_old[r1][dir1] * (e[r1] + press_tmp[r1]);
-    qConLast = vel_old[l1][dir1] * (e[l1] + press_tmp[l1]);
+    qConFrt  = vel_old[r1][dir1] * (E[r1] + press_tmp[r1]);
+    qConLast = vel_old[l1][dir1] * (E[l1] + press_tmp[l1]);
     
     conv_dir1 = computeConvection(nu[r1][dir1], nu[c][dir1], nu[l1][dir1], 
-                                  e[r1], e[c], e[l1], 
+                                  E[r1], E[c], E[l1], 
                                   qConFrt, qConLast, delT, dx[dir1]);
     IntVector r2 = c;
     IntVector l2 = c;
     r2[dir2] += offset[dir2];  // tweak the r and l cell indices
     l2[dir2] -= offset[dir2];
     
-    qConFrt  = vel_old[r2][dir2] * (e[r2] + press_tmp[r2]);
-    qConLast = vel_old[l2][dir2] * (e[l2] + press_tmp[l2]);
+    qConFrt  = vel_old[r2][dir2] * (E[r2] + press_tmp[r2]);
+    qConLast = vel_old[l2][dir2] * (E[l2] + press_tmp[l2]);
     conv_dir2 = computeConvection(nu[r2][dir2], nu[c][dir2], nu[l2][dir2],
-                                  e[r2], e[c], e[l2], 
+                                  E[r2], E[c], E[l2], 
                                   qConFrt, qConLast, delT, dx[dir2]);
 
     double vel_old_sqr = vel_old[c].length2();
@@ -930,9 +993,9 @@ void FaceTemp_LODI(const Patch* patch,
                                  
     term3 = conv_dir1 + conv_dir2;
                                                       
-    double e_tmp = e[c] - delT * (term1 + term2 + term3);               
+    double E_new = E[c] - delT * (term1 + term2 + term3);               
 
-    temp_CC[c] = e_tmp/(rho_new[c]*cv) - 0.5 * vel_new_sqr/cv;
+    temp_CC[c] = E_new/(rho_new[c]*cv) - 0.5 * vel_new_sqr/cv;
   }
   
   //__________________________________
@@ -963,11 +1026,11 @@ void FaceTemp_LODI(const Patch* patch,
       IntVector r = c + offset;  
       IntVector l = c - offset;
 
-      qConFrt  = vel_old[r][Edir2] * (e[r] + press_tmp[r]);
-      qConLast = vel_old[l][Edir2] * (e[l] + press_tmp[l]);
+      qConFrt  = vel_old[r][Edir2] * (E[r] + press_tmp[r]);
+      qConLast = vel_old[l][Edir2] * (E[l] + press_tmp[l]);
     
       double conv = computeConvection(nu[r][Edir2], nu[c][Edir2], nu[l][Edir2],
-                                      e[r], e[c], e[l],               
+                                      E[r], E[c], E[l],               
                                       qConFrt, qConLast, delT, dx[Edir2]); 
                                       
       double vel_old_sqr = vel_old[c].length2();
@@ -997,10 +1060,10 @@ void FaceTemp_LODI(const Patch* patch,
           + rho_old[c] * vel_old[c][Edir1] * (d[5][c][P_dir] + d[3][c][Edir1]); 
       }      
       
-      double e_tmp = e[c] - delT * ( term1 + term2 + term3 + conv);
+      double E_new = E[c] - delT * ( term1 + term2 + term3 + conv);
       double vel_new_sqr = vel_new[c].length2();
 
-      temp_CC[c] = e_tmp/(rho_new[c] *cv) - 0.5 * vel_new_sqr/cv;
+      temp_CC[c] = E_new/(rho_new[c] *cv) - 0.5 * vel_new_sqr/cv;
     }
   }  
  
@@ -1023,9 +1086,9 @@ void FaceTemp_LODI(const Patch* patch,
       + rho_old[c] * vel_old[c].y() * (d[4][c].x() + d[3][c].y() + d[4][c].z())  
       + rho_old[c] * vel_old[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z()); 
 
-    double e_tmp = e[c] - delT * ( term1 + term2 + term3);
+    double E_new = E[c] - delT * ( term1 + term2 + term3);
 
-    temp_CC[c] = e_tmp/rho_new[c]/cv - 0.5 * vel_new_sqr/cv;
+    temp_CC[c] = E_new/(rho_new[c] * cv) - 0.5 * vel_new_sqr/cv;
   }
 } //end of function FaceTempLODI()  
 
