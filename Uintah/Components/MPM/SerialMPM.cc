@@ -97,8 +97,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
      MPMMaterial *mat = scinew MPMMaterial(ps);
-     //register as a generic material
-     sharedState->registerMaterial(mat);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
   }
@@ -2055,6 +2053,11 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.180  2001/01/09 22:35:26  jas
+// Moved registerMaterial to private:.  This is called when you either
+// register a MPM or ICE material.  There is no need to call registerMaterial
+// inside the application.
+//
 // Revision 1.179  2001/01/05 23:04:09  guilkey
 // Using the code that Wayne just commited which allows the delT variable to
 // be "computed" multiple times per timestep, I removed the multiple derivatives
