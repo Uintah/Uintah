@@ -162,6 +162,7 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel*
+      const VarLabel* d_cellInfoLabel ;
 
       // inputs for CalculateVelocitySource 
       const VarLabel* d_uVelocitySIVBCLabel ;
@@ -211,6 +212,10 @@ private:
   
 //
 // $Log$
+// Revision 1.15  2000/07/02 05:47:31  bbanerje
+// Uncommented all PerPatch and CellInformation stuff.
+// Updated array sizes in inlbcs.F
+//
 // Revision 1.14  2000/06/21 07:51:02  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

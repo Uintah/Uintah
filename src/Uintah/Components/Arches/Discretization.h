@@ -171,6 +171,7 @@ private:
       //StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
       // const VarLabel*
+      const VarLabel* d_cellInfoLabel;
 
       // inputs
       const VarLabel* d_uVelocitySIVBCLabel;
@@ -227,6 +228,10 @@ private:
   
 //
 // $Log$
+// Revision 1.21  2000/07/02 05:47:30  bbanerje
+// Uncommented all PerPatch and CellInformation stuff.
+// Updated array sizes in inlbcs.F
+//
 // Revision 1.20  2000/06/29 21:48:59  bbanerje
 // Changed FC Vars to SFCX,Y,ZVars and added correct getIndex() to get domainhi/lo
 // and index hi/lo
