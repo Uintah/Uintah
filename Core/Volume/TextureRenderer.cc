@@ -484,7 +484,7 @@ TextureRenderer::build_colormap1()
     case MODE_SLICE: {
       for(int j=0; j<cmap1_array_.dim1(); j++) {
         // interpolate from colormap
-        Color c = cmap1_->getColor(j*dv);
+        const Color &c = cmap1_->getColor(j*dv);
         double alpha = cmap1_->getAlpha(j*dv);
         // pre-multiply and quantize
         cmap1_array_(j,0) = (unsigned char)(c.r()*alpha*255);
@@ -496,7 +496,7 @@ TextureRenderer::build_colormap1()
     case MODE_MIP: {
       for(int j=0; j<cmap1_array_.dim1(); j++) {
         // interpolate from colormap
-        Color c = cmap1_->getColor(j*dv);
+        const Color &c = cmap1_->getColor(j*dv);
         double alpha = cmap1_->getAlpha(j*dv);
         // pre-multiply and quantize
         cmap1_array_(j,0) = (unsigned char)(c.r()*alpha*255);
@@ -509,7 +509,7 @@ TextureRenderer::build_colormap1()
       double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
       for(int j=0; j<cmap1_array_.dim1(); j++) {
         // interpolate from colormap
-        Color c = cmap1_->getColor(j*dv);
+        const Color &c = cmap1_->getColor(j*dv);
         double alpha = cmap1_->getAlpha(j*dv);
         // scale slice opacity
         alpha = pow(alpha, bp);

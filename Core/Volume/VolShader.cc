@@ -73,11 +73,13 @@ namespace SCIRun {
 #define VOL_FOG_HEAD \
 "PARAM fc = state.fog.color; \n" \
 "PARAM fp = state.fog.params; \n" \
-"ATTRIB tf = fragment.texcoord[1];\n"
+"ATTRIB tf = fragment.texcoord[1];\n" \
+"TEMP fctmp; \n";
 #define VOL_FOG_BODY \
 "SUB v.x, fp.z, tf.x; \n" \
 "MUL_SAT v.x, v.x, fp.w; \n" \
-"LRP c.xyz, v.x, c.xyzz, fc.xyzz; \n"
+"MUL fctmp, c.w, fc; \n" \
+"LRP c.xyz, v.x, c.xyzz, fctmp.xyzz; \n"
 
 #define VOL_FRAG_HEAD \
 "ATTRIB cf = fragment.color; \n"
@@ -102,9 +104,11 @@ namespace SCIRun {
 "MUL n.z, n.z, c.w;" \
 "MAD c.xyz, c.xyzz, n.w, n.z; \n"
 
+/*
 // "MAD n.w, n.z, k.z, n.w; \n"
 // #define VOL_LIT_END \
 // "MUL c.xyz, c.xyzz, n.w; \n"
+*/
 
 #define VOL_FRAGMENT_BLEND_HEAD \
 "TEMP n;"
