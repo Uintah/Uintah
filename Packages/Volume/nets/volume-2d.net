@@ -144,7 +144,7 @@ set $m8-0-color-r {0.95}
 set $m8-0-color-g {0.71}
 set $m8-0-color-b {0.77}
 set $m8-0-color-a {1.0}
-set $m8-state-0 {r 4 0.0117188 0.332031 0.427734 0.453125 0.427807}
+set $m8-state-0 {r 0 0.0117188 0.332031 0.427734 0.453125 0.427807}
 set $m8-name-1 {Generic}
 set $m8-1-color-r {0.6}
 set $m8-1-color-g {0.66}
@@ -156,7 +156,7 @@ set $m8-2-color-r {1.0}
 set $m8-2-color-g {1.0}
 set $m8-2-color-b {0.72}
 set $m8-2-color-a {0.639999985695}
-set $m8-state-2 {r 4 0.701172 0.238281 0.285156 0.28125 0.465753}
+set $m8-state-2 {r 0 0.701172 0.238281 0.285156 0.28125 0.465753}
 set $m8-marker {end}
 
 # Open the Volume->Visualization->EditTransferFunc2 UI

@@ -807,7 +807,7 @@ RectangleCM2Widget::tcl_pickle()
 {
   ostringstream s;
   s << "r ";
-  s << type_ << " ";
+  s << (int)type_ << " ";
   s << left_x_ << " ";
   s << left_y_ << " ";
   s << width_ << " ";
@@ -822,7 +822,9 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
   istringstream s(p);
   char c;
   s >> c;
-  s >> (int)type_;
+  int t;
+  s >> t;
+  type_ = (CM2RectangleType)t;
   s >> left_x_;
   s >> left_y_;
   s >> width_;
