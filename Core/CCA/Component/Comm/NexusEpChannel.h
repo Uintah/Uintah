@@ -85,14 +85,6 @@ private:
   // The endpoint associated with this object.
   globus_nexus_endpoint_t d_endpoint;
 
-  /////////////
-  // Hostname of this computer
-  char* hostname;
-
-  /////////////
-  // Port to listen to. Nexus assigns this.
-  unsigned short port;
-
   void printDebug(string );
 
   //Toggles on/off whether debugging info gets printed

@@ -17,15 +17,18 @@
 
 
 #include "CommError.h"
+#include <iostream>
 #include <sstream>
+using namespace std;
 
 
-CommError::CommError(const std::string& msg, int code)
+CommError::CommError(const string& msg, int code)
     : d_msg(msg), d_code(code)
 {
-    std::ostringstream o;
+    ostringstream o;
     o << d_msg << "(return code=" << d_code << ")";
     d_msg = o.str();
+    cerr << "CommError: " << d_msg << '\n';
 }
 
 CommError::CommError(const CommError& copy)
