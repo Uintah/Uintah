@@ -2,14 +2,17 @@
 #define NektarVectorField_h 1
 
 #include <SCICore/Datatypes/VectorField.h>
+#include <SCICore/Containers/Array1.h>
 #include <vector>
 
 namespace Nektar {
   namespace Datatypes {
 
+    using namespace SCICore::Datatypes;
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/Mesh.h>
+    class NektarVectorField;
+    typedef LockingHandle<NektarVectorField> NektarVectorFieldHandle;
+
     
     class SCICORESHARE NektarVectorField : public VectorField {
     public:

@@ -15,19 +15,22 @@
 #define NektarScalarField_h
 
 #include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace Nektar {
   namespace Datatypes {
     
-#include <SCICore/Containers/Array1.h>
+    using namespace SCICore::Datatypes;
 
+    class NektarScalarField;
+    typedef LockingHandle<NektarScalarField> NektarScalarFieldHandle;
     
     class SCICORESHARE NektarScalarField : public ScalarField {
     public:
       
-      ScalarField();
-      virtual ~ScalarField();
-      virtual ScalarField* clone();
+      NektarScalarField();
+      virtual ~NektarScalarField();
+      virtual NektarScalarField* clone();
 
       virtual void compute_bounds();
       virtual void compute_minmax();

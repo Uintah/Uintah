@@ -19,13 +19,14 @@
 
 namespace Nektar {
   namespace Datatypes {
-    
-    using namespace SCICore::Datatypes;
-    using SCICore::Datatypes::ScalarFieldHandle;
-    
+
+    using namespace PSECore::Datatypes;
+
     typedef SimpleIPort<NektarScalarFieldHandle> NektarScalarFieldIPort;
-    typedef SimpleOPort<NertarScalarFieldHandle> NektarScalarFieldOPort;
+    typedef SimpleOPort<NektarScalarFieldHandle> NektarScalarFieldOPort;
     
   } // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace Nektar
+
+#endif
 

@@ -20,11 +20,10 @@
 namespace Nektar {
   namespace Datatypes {
     
-    using namespace SCICore::Datatypes;
-    using SCICore::Datatypes::VectorFieldHandle;
+    using namespace PSECore::Datatypes;
     
     typedef SimpleIPort<NektarVectorFieldHandle> NektarVectorFieldIPort;
-    typedef SimpleOPort<NertarVectorFieldHandle> NektarVectorFieldOPort;
+    typedef SimpleOPort<NektarVectorFieldHandle> NektarVectorFieldOPort;
     
   } // End namespace Datatypes
 } // End namespace Nektar
