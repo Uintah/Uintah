@@ -106,7 +106,11 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
 void
 DORadiationModel::computeOrdinatesOPL() {
 
-  d_opl = 0.6*d_xumax;
+  //  d_opl = 0.771429*d_xumax;
+
+  //  if(lprobone==true){
+    d_opl = 1.0*d_xumax; 
+    //  }
   if(lprobtwo==true){
     d_opl = 1.76;
   }
@@ -298,7 +302,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 		     su, aw, as, ab, ap,
 		     areaew, arean, areatb, volq, vars->src, plusX, plusY, plusZ, fraction, bands, vars->qfluxe, vars->qfluxw,
 		    vars->qfluxn, vars->qfluxs,
-		    vars->qfluxt, vars->qfluxb);
+		    vars->qfluxt, vars->qfluxb, d_opl);
       //      double timeSetMat = Time::currentSeconds();
       d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, 
 				plusZ, su, ab, as, aw, ap);
@@ -313,10 +317,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 		    plusX, plusY, plusZ, vars->qfluxe, vars->qfluxw,
 		    vars->qfluxn, vars->qfluxs,
 		    vars->qfluxt, vars->qfluxb);
-      }
+    }
       fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,
 		   volq, vars->src);
-        }
+  }
   int me = d_myworld->myrank();
   if(me == 0) {
     cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
