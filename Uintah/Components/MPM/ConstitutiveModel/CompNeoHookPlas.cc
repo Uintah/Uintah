@@ -190,10 +190,10 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
-   // As a side-effect of computeStressTensor, pDilatationalWaveSpeed
+   // As a side-effect of computeStressTensor, pDilationalWaveSpeed
    // are calculated and for delT and saved that will be used later by fracture
-  ParticleVariable<double> pDilatationalWaveSpeed;
-  new_dw->allocate(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel, pset);
+  ParticleVariable<double> pDilationalWaveSpeed;
+  new_dw->allocate(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
 
   NCVariable<Vector> gvelocity;
 
@@ -214,7 +214,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 	
     lattice = scinew Lattice(px);
     brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
+	   pvolume,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
   }
 
   for(ParticleSubset::iterator iter = pset->begin();
@@ -337,7 +337,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
-    pDilatationalWaveSpeed[idx] = c_dil;
+    pDilationalWaveSpeed[idx] = c_dil;
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -355,7 +355,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   // Store the deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 
-  new_dw->put(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel);
+  new_dw->put(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel);
 
   if(matl->getFractureModel()) {
         delete lattice;
@@ -408,7 +408,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
 
-   task->computes(new_dw, lb->pDilatationalWaveSpeedLabel, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pDilationalWaveSpeedLabel, matl->getDWIndex(), patch);
 }
 
 #ifdef __sgi
@@ -440,8 +440,12 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.43  2000/09/08 18:24:10  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.42  2000/09/08 01:46:35  tan
-// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// Added pDilationalWaveSpeedLabel for fracture and is saved as a
 // side-effect of computeStressTensor in each constitutive model class.
 //
 // Revision 1.41  2000/09/07 21:11:09  tan
