@@ -100,8 +100,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
         
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
-      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);
-      new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn,  0);     
+      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);     
       
       //__________________________________
       //  stability constraint due to courant Condition
@@ -146,7 +145,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
 
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
-            double inv_thermalDiffusivity = (rho_CC[c] * cp)/thermalCond;
+            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond);
             double A =  0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
             delt_cond = std::min(A, delt_cond);
           }

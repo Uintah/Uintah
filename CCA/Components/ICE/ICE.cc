@@ -406,12 +406,11 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* all_matls = d_sharedState->allMaterials(); 
-  if (d_EqForm){            // EQ
-    t->requires(Task::NewDW, lb->rho_CCLabel,        gn);      
+  if (d_EqForm){            // EQ      
     t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);  
-    t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);  
+    t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gn,  0);  
   } else if (d_RateForm){   // RATE FORM
-    t->requires(Task::NewDW, lb->rho_CCLabel,        gn);
     t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);
     t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gac, 1); 
@@ -1022,7 +1021,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     double inv_sum_invDelx_sqr = 1.0/( 1.0/(delX * delX) 
                                      + 1.0/(delY * delY) 
                                      + 1.0/(delZ * delZ) );
-    constCCVariable<double> speedSound, rho_CC;
+    constCCVariable<double> speedSound, sp_vol_CC;
     constCCVariable<Vector> vel_CC;
     Ghost::GhostType  gn  = Ghost::None; 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1034,7 +1033,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       int indx= matl->getDWIndex(); 
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
-      new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0);
+      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,  0);
         
       if (!d_impICE) {     //   E X P L I C I T
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -1122,7 +1121,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
-            double inv_thermalDiffusivity = (rho_CC[c] * cp)/thermalCond;
+            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond);
             double A =  0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
             delt_cond = std::min(A, delt_cond);
           }
