@@ -74,8 +74,11 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
         int n = mpm_matl->getDWIndex();
-	if (!flag->d_fracture) 
+	if (!flag->d_fracture) {
+          double gtemp = gTemp[n][*iter];
+          double mass = gmass[n][*iter];
 	  numerator   += (gTemp[n][*iter] * gmass[n][*iter] * Cp[m]);
+        }
 	else
 	  numerator   += (gTemp[n][*iter] * gmass[n][*iter] * Cp[m]
 			  +GTemp[n][*iter] * Gmass[n][*iter] * Cp[m]); //add second
