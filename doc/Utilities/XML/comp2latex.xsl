@@ -182,23 +182,23 @@ does not conform to component.dtd.  Validate the xml input first!
   </xsl:template>
   
   <xsl:template match="term">
-    <xsl:text/>\dfn{<xsl:value-of select="."/>}<xsl:text/>
+    <xsl:text/>\dfn{<xsl:apply-templates/>}<xsl:text/>
   </xsl:template>
   
   <xsl:template match="keyboard">
-    <xsl:text/>\keyboard{<xsl:value-of select="."/>}<xsl:text/>
+    <xsl:text/>\keyboard{<xsl:apply-templates/>}<xsl:text/>
   </xsl:template>
   
   <xsl:template match="keyword">
-    <xsl:text/><xsl:value-of select="."/><xsl:text/>
+    <xsl:text/><xsl:apply-templates/><xsl:text/>
   </xsl:template>
   
   <xsl:template match="acronym">
-    <xsl:text/>\acronym{<xsl:value-of select="."/>}<xsl:text/>
+    <xsl:text/>\acronym{<xsl:apply-templates/>}<xsl:text/>
   </xsl:template>
   
   <xsl:template match="cite">
-    <xsl:text/>\etitle{<xsl:value-of select="."/>}<xsl:text/>
+    <xsl:text/>\etitle{<xsl:apply-templates/>}<xsl:text/>
   </xsl:template>
   
   <xsl:template match="orderedlist">
@@ -234,7 +234,7 @@ does not conform to component.dtd.  Validate the xml input first!
   
   <xsl:template match="authors">
     <xsl:for-each select="author">
-      <xsl:value-of select="."/><xsl:if test="position() != last()">, </xsl:if>
+      <xsl:apply-templates/><xsl:if test="position() != last()">, </xsl:if>
     </xsl:for-each>
   </xsl:template>
   
@@ -242,7 +242,7 @@ does not conform to component.dtd.  Validate the xml input first!
     <xsl:text>&#xA;\begin{centering}&#xA;</xsl:text>
     <xsl:for-each select="port">
       <xsl:text>\begin{tabular}{|p{6cm}|p{6cm}|} \hline&#xA;</xsl:text>
-      <xsl:text/>{\emph{Name:} <xsl:value-of select="name"/>}&amp;<xsl:text/>
+      <xsl:text/>{\emph{Name:} <xsl:apply-templates select="name"/>}&amp;<xsl:text/>
       <xsl:text>{\emph{Type:} </xsl:text>
       <xsl:if test="position()=last() and ancestor::inputs and ancestor::inputs[@lastportdynamic='yes']">
         <xsl:text>Dynamic </xsl:text>
@@ -255,7 +255,7 @@ does not conform to component.dtd.  Validate the xml input first!
         <xsl:when test="ancestor::outputs">\emph{Downstream Module(s):} </xsl:when>
       </xsl:choose>
       <xsl:for-each select="componentname">
-        <xsl:value-of select="."/>
+        <xsl:apply-templates/>
         <xsl:if test="position() != last()">,  </xsl:if>
         <xsl:text> </xsl:text>
       </xsl:for-each>}\\ \hline&#xA;<xsl:text/>
@@ -299,9 +299,9 @@ does not conform to component.dtd.  Validate the xml input first!
     <xsl:text>\begin{centering}&#xA;</xsl:text>
     <xsl:for-each select="parameter">
       <xsl:text>\begin{tabular}{|p{4cm}|p{4cm}|p{4cm}|} \hline&#xA;</xsl:text>
-      <xsl:text/>{\emph{Label:} <xsl:value-of select="label"/>}&amp;<xsl:text/>
-      <xsl:text/>{\emph{Widget:} <xsl:value-of select="widget"/>}&amp;<xsl:text/>
-      <xsl:text/>{\emph{Data Type:} <xsl:value-of select="datatype"/>} \\ \hline&#xA;<xsl:text/>
+      <xsl:text/>{\emph{Label:} <xsl:apply-templates select="label"/>}&amp;<xsl:text/>
+      <xsl:text/>{\emph{Widget:} <xsl:apply-templates select="widget"/>}&amp;<xsl:text/>
+      <xsl:text/>{\emph{Data Type:} <xsl:apply-templates select="datatype"/>} \\ \hline&#xA;<xsl:text/>
       <xsl:text/>\multicolumn{3}{|p{12cm}|}{<xsl:apply-templates select="description"/>} \\ \hline&#xA;<xsl:text/>
       <xsl:text>\end{tabular} \\&#xA;</xsl:text>
       <xsl:text>\vspace{0.25cm}&#xA;</xsl:text>
@@ -420,7 +420,7 @@ does not conform to component.dtd.  Validate the xml input first!
       <xsl:call-template name="replace_all">
         <xsl:with-param name="source" select="$input"/>
         <xsl:with-param name="this" select="'\'"/>
-        <xsl:with-param name="that" select="'\textbackslash'"/>
+        <xsl:with-param name="that" select="'\textbackslash{}'"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="r2">
@@ -476,28 +476,28 @@ does not conform to component.dtd.  Validate the xml input first!
       <xsl:call-template name="replace_all">
         <xsl:with-param name="source" select="$r8"/>
         <xsl:with-param name="this" select="'~'"/>
-        <xsl:with-param name="that" select="'\textasciitilde'"/>
+        <xsl:with-param name="that" select="'\textasciitilde{}'"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="r10">
       <xsl:call-template name="replace_all">
         <xsl:with-param name="source" select="$r9"/>
         <xsl:with-param name="this" select="'^'"/>
-        <xsl:with-param name="that" select="'\textasciicircum'"/>
+        <xsl:with-param name="that" select="'\textasciicircum{}'"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="r11">
       <xsl:call-template name="replace_all">
         <xsl:with-param name="source" select="$r10"/>
         <xsl:with-param name="this" select="'&lt;'"/>
-        <xsl:with-param name="that" select="'\textless'"/>
+        <xsl:with-param name="that" select="'\textless{}'"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="r12">
       <xsl:call-template name="replace_all">
         <xsl:with-param name="source" select="$r11"/>
         <xsl:with-param name="this" select="'&gt;'"/>
-        <xsl:with-param name="that" select="'\textgreater'"/>
+        <xsl:with-param name="that" select="'\textgreater{}'"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:value-of select="$r12"/>
