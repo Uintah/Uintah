@@ -76,9 +76,8 @@ c  call fixval assume abskg to be one but change it in props calculation
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l))*areaew) *
-     &         PI1 * (SIG * abskg(ii-1,jj,kk) * abs(fraction(bands))* 
-     &              tg(ii-1,jj,kk)**4 + (1 - abskg(ii-1,jj,kk))*
-     &         qfluxe(ii-1,jj,kk))
+     &         PI1 * (SIG * abs(fraction(bands))* 
+     &              tg(ii-1,jj,kk)**4)
             end if
          else
             if (pcell(ii+1,j,k).eq.ffield) then
@@ -86,9 +85,8 @@ c  call fixval assume abskg to be one but change it in props calculation
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
-     &         PI1 * (SIG * abskg(ii+1,jj,kk) * abs(fraction(bands))* 
-     &              tg(ii+1,jj,kk)**4 + (1 - abskg(ii+1,jj,kk))*
-     &         qfluxw(ii+1,jj,kk))
+     &         PI1 * (SIG * abs(fraction(bands))* 
+     &              tg(ii+1,jj,kk)**4)
             end if
          endif
          
@@ -99,9 +97,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
-     &         PI1 * (SIG * abskg(ii,jj-1,kk) * abs(fraction(bands)) *
-     &              tg(ii,jj-1,kk)**4 + (1 - abskg(ii,jj-1,kk))*
-     &         qfluxn(ii,jj-1,kk))
+     &         PI1 * (SIG * abs(fraction(bands)) *
+     &              tg(ii,jj-1,kk)**4)
             end if
          else
             if (pcell(ii,jj+1,kk).eq.ffield) then
@@ -110,9 +107,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
-     &         PI1 * (SIG * abskg(ii,jj+1,kk) * abs(fraction(bands)) *
-     &              tg(ii,jj+1,kk)**4 + (1 - abskg(ii,jj+1,kk))*
-     &         qfluxs(ii,jj+1,kk))
+     &         PI1 * (SIG * abs(fraction(bands)) *
+     &              tg(ii,jj+1,kk)**4)
             end if
          endif
 
@@ -123,9 +119,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) *
-     &         PI1 * (SIG * abskg(ii,jj,kk-1) * abs(fraction(bands)) *
-     &              tg(ii,jj,kk-1)**4 + (1 - abskg(ii,jj,kk-1))*
-     &         qfluxt(ii,jj,kk-1))
+     &         PI1 * (SIG * abs(fraction(bands)) *
+     &              tg(ii,jj,kk-1)**4)
             end if
          else
             if (pcell(ii,jj,kk+1).eq.ffield) then
@@ -134,9 +129,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) * 
-     &         PI1 * (SIG * abskg(ii,jj,kk+1) * abs(fraction(bands)) *
-     &              tg(ii,jj,kk+1)**4 + (1 - abskg(ii,jj,kk+1))*
-     &         qfluxb(ii,jj,kk+1))
+     &         PI1 * (SIG * abs(fraction(bands)) *
+     &              tg(ii,jj,kk+1)**4)
             end if
          endif
          
