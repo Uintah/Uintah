@@ -168,17 +168,20 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
 
   setAmbientLevel( ambientScale_ );
 
-  // Make a guess at the initial max_depth
-  BBox bbox;
-  obj->compute_bounds(bbox, 0);
-  Vector diag = bbox.max() - bbox.min();
-  max_depth = diag.length();
-  cout << "Scene::max_depth = "<<max_depth<<"\n";
+  if( obj ) {
+    // Make a guess at the initial max_depth
+    set_object( obj );
+  } 
 }
 
 void
 Scene::set_object(Object* new_obj) 
 {
+  if ( new_obj == 0 )
+    {
+      printf("error: set_object(NULL) is invalid...\n");
+      return;
+    }
   obj        = new_obj;
   if (mainGroup_) delete mainGroup_;
   mainGroup_ = new Group();
@@ -188,6 +191,12 @@ Scene::set_object(Object* new_obj)
   mainGroupWithLights_ = new Group;
   mainGroupWithLights_->add( new_obj );
   mainGroupWithLights_->add( lightsGroup_ );
+
+  BBox bbox;
+  obj->compute_bounds(bbox, 0);
+  Vector diag = bbox.max() - bbox.min();
+  max_depth = diag.length();
+  cout << "Scene::max_depth = "<<max_depth<<"\n";
 }
 
 void
