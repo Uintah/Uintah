@@ -12,9 +12,14 @@
   </implementation>
   <io>
     <inputs lastportdynamic="no">
-      <port>	
-        <name>Matrix</name>
-        <datatype>SCIRun::Matrix</datatype>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Potentials</name>
+	<description>
+	  <p></p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname></componentname>
       </port>
     </inputs>
     <outputs>

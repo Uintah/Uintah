@@ -42,7 +42,7 @@ extern "C" BioPSESHARE Module* make_ShowLeads(const string& id) {
 }
 
 ShowLeads::ShowLeads(const string& id) : 
-  Module("ShowLeads", id, Source, "LeadField", "BioPSE"),
+  Module("ShowLeads", id, Source, "Visualization", "BioPSE"),
   iport_(0),
   units_("time-units", id, this),
   tmin_("time-min", id, this),
@@ -56,7 +56,7 @@ ShowLeads::~ShowLeads(){
 
 void ShowLeads::execute(){
 
-  iport_ = (MatrixIPort *)get_iport("Matrix");
+  iport_ = (MatrixIPort *)get_iport("Potentials");
   if (!iport_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
