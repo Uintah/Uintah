@@ -529,7 +529,9 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
       int offsetProc = 0;
       for (int p = 0; p < (int)sorted_processorAssignment.size(); p++) {
         // set the offsets for the MPI_Gatherv
-        if ( offsetProc == sorted_processorAssignment[p]) {
+        while ( offsetProc <= sorted_processorAssignment[p]) {
+          // the while part is in case there are fewer procs than patches, and we 
+          // have the proc assignment being something like '0 2'
           displs.push_back(p*nsppp);
           offsetProc++;
         }
@@ -561,6 +563,7 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
 
         // the subpatchSorter's index is in terms of the numbers of the subpatches
         int index = subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)];
+
         subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)]+=nsppp;
         IntVector patchIndex = patch->getCellLowIndex()/d_patchSize[i];
 
