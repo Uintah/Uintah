@@ -125,6 +125,18 @@ MPMLabel::MPMLabel()
   pMassRateLabel  = VarLabel::create( "p.massRate",
 			ParticleVariable<double>::getTypeDescription() );
   
+  pTang1Label  = VarLabel::create( "p.tang1",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pTang2Label  = VarLabel::create( "p.tang2",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pTang1Label_preReloc  = VarLabel::create( "p.tang1+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pTang2Label_preReloc  = VarLabel::create( "p.tang2+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
   // Particle Variables 
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
