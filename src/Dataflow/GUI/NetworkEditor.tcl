@@ -1233,7 +1233,7 @@ proc displayErrorWarningOrInfo { msg status } {
 #centers window w1 over window w2
 proc centerWindow { w1 w2 } {
     update
-    wm overrideredirect $w1 1
+#    wm overrideredirect $w1 1
     wm geometry $w1 ""
     update idletasks
     set w [winfo width $w2]
