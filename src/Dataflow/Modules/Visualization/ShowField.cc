@@ -195,7 +195,7 @@ ShowField::execute()
 
   if (nodes_on_) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
   if (edges_on_) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
-  //if (faces_on_) face_id_ = ogeom_->addObj(face_switch_, "Faces");
+  if (faces_on_) face_id_ = ogeom_->addObj(face_switch_, "Faces");
   ogeom_->flushViews();
 }
 
@@ -258,30 +258,30 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     }
   }
 
-//    if ((faces_on_) && (face_id_ == 0)) {
-//      GeomGroup* faces = scinew GeomGroup;
-//      face_switch_ = scinew GeomSwitch(faces);
-//      // Second pass over the faces
-//      //mesh->compute_faces();
-//      typename Field::mesh_type::face_iterator eiter = mesh->face_begin();  
-//      while (eiter != mesh->face_end()) {        
-//        typename Field::mesh_type::node_array nodes;
-//        mesh->get_nodes(nodes, *eiter); ++eiter;
-    
-//        Point p1, p2, p3;
-//        mesh->get_point(p1, nodes[0]);
-//        mesh->get_point(p2, nodes[1]);
-//        mesh->get_point(p3, nodes[1]);
-//        double val1;
-//        if (! c_index->value(val1, nodes[0])) { return false; }
-//        double val2;
-//        if (! c_index->value(val2, nodes[1])) { return false; } 
-//        double val3;
-//        if (! c_index->value(val3, nodes[2])) { return false; } 
-//        add_face(p1, p2, p3, cm->lookup(val1), cm->lookup(val2), 
-//  	       cm->lookup(val3), faces);
-//      }
-//    }
+  if ((faces_on_)) {// && (face_id_ == 0)) {
+    GeomGroup* faces = scinew GeomGroup;
+    face_switch_ = scinew GeomSwitch(faces);
+    // Second pass over the faces
+    //mesh->compute_faces();
+    typename Field::mesh_type::face_iterator fiter = mesh->face_begin();  
+    while (fiter != mesh->face_end()) {        
+      typename Field::mesh_type::node_array nodes;
+      mesh->get_nodes(nodes, *fiter); ++fiter;
+      
+      Point p1, p2, p3;
+      mesh->get_point(p1, nodes[0]);
+      mesh->get_point(p2, nodes[1]);
+      mesh->get_point(p3, nodes[2]);
+      double val1;
+      if (! c_index->value(val1, nodes[0])) { return false; }
+      double val2;
+      if (! c_index->value(val2, nodes[1])) { return false; } 
+      double val3;
+      if (! c_index->value(val3, nodes[2])) { return false; } 
+      add_face(p1, p2, p3, cm->lookup(val1), cm->lookup(val2), 
+	       cm->lookup(val3), faces);
+    }
+  }
 }
 
 void 
