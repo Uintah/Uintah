@@ -113,6 +113,10 @@ class ShowField : public Module
   GuiDouble                edge_scale_;
   GuiInt                   showProgress_;
 
+  //! Refinement resolution for cylinders and spheres
+  GuiInt                   resolution_;
+  int                      res_;
+
   //! Private Methods
   template <class T> bool to_double(const T&, double &) const;
   template <class Msh> void finish_mesh(Msh* m);
@@ -134,7 +138,9 @@ public:
   inline void add_point(const Point &p, GeomPts *g, 
 			MaterialHandle m0);
   inline void add_edge(const Point &p1, const Point &p2, double scale, 
-		       GeomGroup *g, MaterialHandle m0, bool cyl = true);
+		       GeomGroup *g, MaterialHandle mh_avg,
+		       MaterialHandle mh_p0, MaterialHandle mh_p1, 
+		       bool cyl = true);
   inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
 		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
 		       GeomTriangles *g);
@@ -181,7 +187,9 @@ ShowField::ShowField(const clString& id) :
   edge_display_type_("edge_display_type", id, this),
   node_scale_("node_scale", id, this),
   edge_scale_("edge_scale", id, this),
-  showProgress_("show_progress", id, this)
+  resolution_("resolution", id, this),
+  showProgress_("show_progress", id, this),
+  res_(0)
  {
   // Create the input ports
   fld_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
@@ -224,6 +232,12 @@ ShowField::execute()
     colm_gen_ = color_handle_->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
   }
+
+  if (resolution_.get() != res_) {
+    nodes_dirty_ = true;
+    edges_dirty_ = true;
+  }
+  res_ = resolution_.get();
 
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) && (!faces_dirty_))  { return; }
@@ -368,6 +382,7 @@ ShowField::render_edges(const Fld *sfld)
       mesh->get_point(p2, nodes[1]);
       double val1 = 0.L;
       double val2 = 0.L;
+      double val_avg = 0.L;
       switch (sfld->data_at()) {
       case Field::NODE:
 	{
@@ -376,13 +391,15 @@ ShowField::render_edges(const Fld *sfld)
 	  if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
 		 sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2))) { 
 	    def_color = true; 
+	  } else {
+	    val_avg = (val1+val2)/2.;
 	  }
 	}
 	break;
       case Field::EDGE:
 	{
 	  typename Fld::value_type tmp = 0;
-	  if (! (sfld->value(tmp, *eiter) && to_double(tmp, val1))) { 
+	  if (! (sfld->value(tmp, *eiter) && to_double(tmp, val_avg))) { 
 	    def_color = true; 
 	  }
 	}
@@ -396,7 +413,9 @@ ShowField::render_edges(const Fld *sfld)
       bool cyl = false;
       if (edge_display_type_.get() == "Cylinders") { cyl = true; }
       add_edge(p1, p2, edge_scale_.get(), edges, 
-	       choose_mat(def_color, val1), cyl);
+	       choose_mat(def_color, val_avg), 
+	       choose_mat(def_color, val1), 
+	       choose_mat(def_color, val2), cyl);
     }
   }
 }
@@ -486,23 +505,28 @@ ShowField::add_face(const Point &p0, const Point &p1, const Point &p2,
 
 void 
 ShowField::add_edge(const Point &p0, const Point &p1,  
-		    double scale, GeomGroup *g, MaterialHandle mh, 
+		    double scale, GeomGroup *g, MaterialHandle mh_avg,
+		    MaterialHandle mh_p0, MaterialHandle mh_p1,
 		    bool cyl) 
 {
   if (cyl) {
-    GeomCappedCylinder *c = new GeomCappedCylinder(p0, p1, scale);
-    g->add(scinew GeomMaterial(c, mh));
+    GeomCylinder *c = new GeomCylinder(p0, p1, scale, 2*res_);
+    GeomSphere *s1 = new GeomSphere(p0, scale, res_, res_);
+    GeomSphere *s2 = new GeomSphere(p1, scale, res_, res_);
+    g->add(scinew GeomMaterial(c, mh_avg));
+    g->add(scinew GeomMaterial(s1, mh_p0));
+    g->add(scinew GeomMaterial(s2, mh_p1));
   } else {
     GeomLine *l = new GeomLine(p0, p1);
     l->setLineWidth(scale);
-    g->add(scinew GeomMaterial(l, mh));
+    g->add(scinew GeomMaterial(l, mh_avg));
   }
 }
 
 void 
 ShowField::add_sphere(const Point &p0, double scale, 
 		      GeomGroup *g, MaterialHandle mh) {
-  GeomSphere *s = scinew GeomSphere(p0, scale, 8, 4);
+  GeomSphere *s = scinew GeomSphere(p0, scale, res_, res_);
   g->add(scinew GeomMaterial(s, mh));
 }
 
