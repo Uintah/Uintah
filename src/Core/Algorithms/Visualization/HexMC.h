@@ -35,6 +35,7 @@
 #include <Core/Algorithms/Visualization/mcube2.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/QuadSurfField.h>
 
 namespace SCIRun {
 
@@ -62,9 +63,12 @@ private:
   GeomTrianglesP *triangles_;
   bool build_trisurf_;
   TriSurfMeshHandle trisurf_;
+  QuadSurfMeshHandle quadsurf_;
   map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   int nx_, ny_, nz_;
+  vector<long int> node_vector_;
   TriSurfMesh::Node::index_type find_or_add_edgepoint(node_index_type, node_index_type, const Point &);
+  QuadSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
   void extract_c( const cell_index_type &, double);
   void extract_n( const cell_index_type &, double);
 
@@ -95,10 +99,25 @@ void HexMC<Field>::reset( int n, bool build_trisurf )
   nx_ = mesh_->get_ni();
   ny_ = mesh_->get_nj();
   nz_ = mesh_->get_nk();
+  if (field_->data_at() == Field::CELL)
+  {
+    mesh_->synchronize(Mesh::FACES_E);
+    mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
+    node_vector_ = vector<long int>(nx_ * ny_ * nz_, -1);
+  }
+  trisurf_ = 0;
+  quadsurf_ = 0;
   if (build_trisurf_)
-    trisurf_ = new TriSurfMesh; 
-  else 
-    trisurf_=0;
+  {
+    if (field_->data_at() == Field::CELL)
+    {
+      quadsurf_ = new QuadSurfMesh;
+    }
+    else
+    {
+      trisurf_ = new TriSurfMesh; 
+    }
+  }
 }
 
 template<class Field>
@@ -135,6 +154,23 @@ HexMC<Field>::find_or_add_edgepoint(node_index_type n0, node_index_type n1, cons
 
 
 template<class Field>
+QuadSurfMesh::Node::index_type
+HexMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx)
+{
+  QuadSurfMesh::Node::index_type surf_node_idx;
+  long int i = node_vector_[(long int)(tet_node_idx)];
+  if (i != -1) surf_node_idx = (QuadSurfMesh::Node::index_type) i;
+  else {
+    Point p;
+    mesh_->get_point(p, tet_node_idx);
+    surf_node_idx = quadsurf_->add_point(p);
+    node_vector_[(long int)tet_node_idx] = (long int)surf_node_idx;
+  }
+  return surf_node_idx;
+}
+
+
+template<class Field>
 void
 HexMC<Field>::extract( const cell_index_type& cell, double iso )
 {
@@ -152,7 +188,6 @@ HexMC<Field>::extract_c( const cell_index_type& cell, double iso )
   value_type selfvalue;
   if (!field_->value( selfvalue, cell )) return;
   typename mesh_type::Face::array_type faces;
-  mesh_->synchronize(Mesh::FACES_E);
   mesh_->get_faces(faces, cell);
   for (unsigned int f=0; f<faces.size(); f++) {
     cell_index_type nbr_cell;
@@ -167,13 +202,14 @@ HexMC<Field>::extract_c( const cell_index_type& cell, double iso )
 	for (n=0; n<4; n++) mesh_->get_center(p[n], face_nodes[n]);
 	triangles_->add(p[0], p[1], p[2]);
 	triangles_->add(p[2], p[3], p[0]);
-	if (build_trisurf_) {
-	  //TriSurfMesh::Node::index_type vertices[4];
-	  //for (n=0; n<4; n++) {
-	  //vertices[n]=find_or_add_nodepoint(face_nodes[n]);
-	  //}
-	  //trisurf_->add_triangle(vertices[0], vertices[1], vertices[2]);
-	  //trisurf_->add_triangle(vertices[2], vertices[3], vertices[0]);
+	if (build_trisurf_)
+	{
+	  QuadSurfMesh::Node::index_type verts[4];
+	  for (n=0; n<4; n++)
+	  {
+	    verts[n]=find_or_add_nodepoint(face_nodes[n]);
+	  }
+	  quadsurf_->add_quad(verts[0], verts[1], verts[2], verts[3]);
 	}
       }
     }
@@ -238,14 +274,28 @@ template<class Field>
 FieldHandle
 HexMC<Field>::get_field(double value)
 {
-  TriSurfField<double> *fld = 0;
-  if (trisurf_.get_rep())
+  if (field_->data_at() == Field::CELL)
   {
-    fld = scinew TriSurfField<double>(trisurf_, Field::NODE);
-    vector<double>::iterator iter = fld->fdata().begin();
-    while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
+    QuadSurfField<double> *fld = 0;
+    if (quadsurf_.get_rep())
+    {
+      fld = scinew QuadSurfField<double>(quadsurf_, Field::NODE);
+      vector<double>::iterator iter = fld->fdata().begin();
+      while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
+    }
+    return fld;
   }
-  return fld;
+  else
+  {
+    TriSurfField<double> *fld = 0;
+    if (trisurf_.get_rep())
+    {
+      fld = scinew TriSurfField<double>(trisurf_, Field::NODE);
+      vector<double>::iterator iter = fld->fdata().begin();
+      while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
+    }
+    return fld;
+  }
 }
 
      
