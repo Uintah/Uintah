@@ -84,6 +84,7 @@ void CrowdMonitor::write_lock()
     }
     priv->nwriters++;
     priv->ndeep++;
+    priv->owner=self;
     priv->lock.unlock();
 }
 
