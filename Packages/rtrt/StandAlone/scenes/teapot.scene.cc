@@ -1,34 +1,41 @@
 #include <Packages/rtrt/Core/Camera.h>
-#include <Packages/rtrt/Core/Grid.h>
-#include <Packages/rtrt/Core/Disc.h>
-#include <Packages/rtrt/Core/Group.h>
-#include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/PhongLight.h>
-#include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <iostream>
-#include <math.h>
-#include <string.h>
 #include <Packages/rtrt/Core/Point4D.h>
-#include <Packages/rtrt/Core/CrowMarble.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/rtrt/Core/Mesh.h>
-#include <Packages/rtrt/Core/Bezier.h>
-#include <Packages/rtrt/Core/BV1.h>
+
 #include <Packages/rtrt/Core/Checker.h>
 #include <Packages/rtrt/Core/Speckle.h>
-#include <Packages/rtrt/Core/Box.h>
+#include <Packages/rtrt/Core/Phong.h>
+#include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/CrowMarble.h>
 #include <Packages/rtrt/Core/CoupledMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
+#include <Packages/rtrt/Core/ImageMaterial.h>
+
+#include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/Group.h>
+#include <Packages/rtrt/Core/Mesh.h>
+#include <Packages/rtrt/Core/Bezier.h>
+#include <Packages/rtrt/Core/BV1.h>
+#include <Packages/rtrt/Core/Disc.h>
+#include <Packages/rtrt/Core/Box.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/Tri.h>
-#include <Core/Geometry/Transform.h>
-#include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
+
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
+#include <Core/Math/MinMax.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+#include <math.h>
+#include <string.h>
 
 using namespace rtrt;
 
@@ -47,8 +54,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	if(strcmp(argv[i], "-headlight")==0){
 	   headlight=true;
 	} else {
-	  cerr << "Unknown option: " << argv[i] << '\n';
-	  cerr << "Valid options for scene: " << argv[0] << '\n';
+	  std::cerr << "Unknown option: " << argv[i] << '\n';
+	  std::cerr << "Valid options for scene: " << argv[0] << '\n';
 	  return 0;
 	}
       }
@@ -84,8 +91,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
         teapotT.pre_rotate(M_PI_4,Vector(0,0,1));
         teapotT.post_translate(Vector(20,0,0));
  
-        fp = fopen("/opt/SCIRun/data/Geometry/models/teapot.dat","r");
 	Group* teapot=new Group();
+        char *teapot_datafile = "/usr/sci/data/Geometry/models/teapot.dat";
+        fp = fopen(teapot_datafile,"r");
+        if (fp) {
         while (fscanf(fp,"%s",buf) != EOF) {
   	if (!strcasecmp(buf,"bezier")) {
   	  int numumesh, numvmesh, numcoords=3;
@@ -113,13 +122,16 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
           }
         }
         fclose(fp);
+        } else {
+          std::cerr << "Could not load teapot data at "<<teapot_datafile<<"\n";
+        }
       
         Transform bunnyT;
 
 
-    fp = fopen("/opt/SCIRun/data/Geometry/models/bun.ply","r");
+    fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
     if (!fp) {
-      fprintf(stderr,"No such file!\n");
+      fprintf(stderr,"bun.ply could not be loaded!\n");
       exit(-1);
     }
            int num_verts, num_tris;
@@ -157,7 +169,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     fclose(fp);
     
     Material* vwmat=new Phong (Color(.6,.6,0),Color(.5,.5,.5),30);
-    fp = fopen("/opt/SCIRun/data/Geometry/models/vw.geom","r");
+    fp = fopen("/usr/sci/data/Geometry/models/vw.geom","r");
     if (!fp) {
       fprintf(stderr,"No such file!\n");
       exit(-1);
@@ -203,7 +215,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 				 vwT.project(Point(vert[pi2-1][0],vert[pi2-1][1],vert[pi2-1][2])))));
 	      
 	      if(t->isbad()){
-		  cerr << "BAD: " << pi0 << ", " << pi1 << ", " << pi2 << '\n';
+		  std::cerr << "BAD: " << pi0 << ", " << pi1 << ", " << pi2 << '\n';
 	      }
 	  }
       }
@@ -216,11 +228,17 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //printf("Pmax %lf %lf %lf\nPmin %lf %lf %lf\n",max.x(),max.y(),max.z(),
   //min.x(),min.y(),min.z());
 
-   Material* bookcoverimg = new ImageMaterial(1,
-					      "/opt/SCIRun/data/Geometry/textures/i3d97.smaller.gamma",
-                                              ImageMaterial::Clamp,
-                                              ImageMaterial::Clamp, 1,
-                                              Color(0,0,0), 0);
+  char *book_filename = "/usr/sci/data/Geometry/textures/i3d97.smaller.gamma";
+  ImageMaterial* imtest = new ImageMaterial(1, book_filename,
+                                            ImageMaterial::Clamp,
+                                            ImageMaterial::Clamp, 1,
+                                            Color(0,0,0), 0);
+   Material *bookcover_img;
+   if (imtest->valid()) {
+     std::cerr << "Could not load texture for book at "<<book_filename<<"\n";
+     bookcover_img = imtest;
+   } else
+     bookcover_img = new LambertianMaterial(Color(0.1,0.1,0.1));
    Material* papermat = new LambertianMaterial(Color(1,1,1));
    Material* covermat = new LambertianMaterial(Color(0,0,0));
 
@@ -237,7 +255,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
    Parallelogram *bookback = new Parallelogram(covermat,p0,v2,v1);
 
    Point p1(0,150,10);
-   Parallelogram *bookcover = new Parallelogram(bookcoverimg,p1,v2,v1);
+   Parallelogram *bookcover = new Parallelogram(bookcover_img,p1,v2,v1);
 
    Parallelogram *bookside0 = new Parallelogram(papermat,p0,p1-p0,v1);
   
@@ -314,11 +332,17 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       
       //room
 
-      Material* whittedimg = new ImageMaterial(1,
-					       "/opt/SCIRun/data/Geometry/textures/whitted",
-					       ImageMaterial::Clamp,
-					       ImageMaterial::Clamp, 1,
-					       Color(0,0,0), 0);
+      char *whitted_filename = "/usr/sci/data/Geometry/textures/whitted";
+      imtest = new ImageMaterial(1, whitted_filename,
+                                 ImageMaterial::Clamp,
+                                 ImageMaterial::Clamp, 1,
+                                 Color(0,0,0), 0);
+      Material* whittedimg;
+      if (imtest->valid()) {
+        std::cerr << "Could not load texture for whittedimg at "<<whitted_filename<<"\n";
+        whittedimg = imtest;
+      } else
+        whittedimg = new LambertianMaterial(Color(0.9,0.2,0.5));
 
       Vector whittedframev1(0,0,-350*1.2);
       Vector whittedframev2(-500*1.2,0,0);
@@ -326,17 +350,23 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	     new Parallelogram(whittedimg, Point(300,-1600+22,700),whittedframev1,whittedframev2)
 	     ;
 
-      Material* bumpimg = new ImageMaterial(1,
-					    "/opt/SCIRun/data/Geometry/textures/bump",
+      char *bump_filename = "/usr/sci/data/Geometry/textures/bump";
+      imtest = new ImageMaterial(1, bump_filename,
 					    ImageMaterial::Clamp,
 					    ImageMaterial::Clamp, 1,
 					    Color(0,0,0), 0);
-
+      Material* bump_img;
+      if (imtest->valid()) {
+        std::cerr << "Could not load texture for bump img at "<<bump_filename<<"\n";
+        bump_img = imtest;
+      } else
+        bump_img = new LambertianMaterial(Color(0.2,0.9,0.5));
+      
       Vector bumpframev1(0,0,-214*2);
       Vector bumpframev2(0,312*2,0);
 
       Object* pic2=
-	     new Parallelogram(bumpimg,Point(-1600+22,-900,600),bumpframev1,bumpframev2);
+        new Parallelogram(bump_img,Point(-1600+22,-900,600),bumpframev1,bumpframev2);
 
       room10->add(
          new Rect(white, Point(1600,0,600), Vector(0,0,800), Vector(0,1600,0))
@@ -386,7 +416,7 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
 	     nbrick+=4;
 	 }
      }
-     cerr << "Created " << nbrick << " bricks\n";
+     std::cerr << "Created " << nbrick << " bricks\n";
 
       //shelves
      Group* bookcase=new Group();
