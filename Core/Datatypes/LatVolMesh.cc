@@ -66,19 +66,14 @@ LatVolMesh::get_nodes(node_array &, face_index) const
 inline void 
 LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 {
-  node_index a;
-
-  // return the node_indexex  in this cell
-  a.i_ = idx.i_; a.j_ = idx.j_; a.k_ = idx.k_;
-  array[0] = a;
-  array[1] = array[0]; array[1].i_+=1;
-  array[2] = array[0]; array[2].j_+=1;
-  array[3] = array[0]; array[3].i_+=1; array[3].j_+=1;
-
-  array[4] = array[0]; array[4].k_+=1;
-  array[5] = array[1]; array[5].k_+=1;
-  array[6] = array[2]; array[6].k_+=1;
-  array[7] = array[3]; array[7].k_+=1;
+  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_; 
+  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;   array[1].k_ = idx.k_; 
+  array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1; array[2].k_ = idx.k_; 
+  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1; array[3].k_ = idx.k_; 
+  array[4].i_ = idx.i_;   array[4].j_ = idx.j_;   array[4].k_ = idx.k_+1;
+  array[5].i_ = idx.i_+1; array[5].j_ = idx.j_;   array[5].k_ = idx.k_+1;
+  array[6].i_ = idx.i_+1; array[6].j_ = idx.j_+1; array[6].k_ = idx.k_+1;
+  array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
 }
 
 inline void 
@@ -212,13 +207,13 @@ LatVolMesh::locate(node_index &node, const Point &p) const
 inline bool 
 LatVolMesh::locate(edge_index &, const Point &) const
 {
-  return 0;
+  return false;
 }
 
 inline bool
 LatVolMesh::locate(face_index &, const Point &) const 
 {
-  return 0;
+  return false;
 }
 
 inline bool

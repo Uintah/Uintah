@@ -109,10 +109,23 @@ LatticeVol<Data>::io(Piostream &stream)
   stream.end_class();                                                         
 }
 
+
 template <class Data>
 const string
+<<<<<<< LatticeVol.h
+LatticeVol<Data>::type_name(int a)
+=======
 LatticeVol<Data>::type_name(int n)
+>>>>>>> 1.17
 {
+<<<<<<< LatticeVol.h
+  static const string name = "LatticeVol<" + find_type_name((Data *)0) + ">";
+
+  ASSERT((a <= 1) && a >= -1);
+  if ( a < 0 ) return name;
+  if (a == 0) return "LatticeVol"; 
+  return find_type_name((Data *)0);
+=======
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
@@ -128,8 +141,13 @@ LatticeVol<Data>::type_name(int n)
   {
     return find_type_name((Data *)0);
   }
+>>>>>>> 1.17
 } 
 
+<<<<<<< LatticeVol.h
+
+=======
+>>>>>>> 1.17
 #if 0
 template<class Data> int
 LatticeVol::get_size(FIELD::data_location data_at) const
