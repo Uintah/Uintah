@@ -18,15 +18,23 @@ SRCS   += \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Core/Exceptions Core/Geometry \
+PSELIBS := \
+	Core/Algorithms/GLVolumeRenderer \
+	Core/Containers \
 	Core/Datatypes \
-	Core/Containers Core/Geom Core/Thread Core/GLVolumeRenderer \
+	Core/Exceptions \
+	Core/Geom \
+	Core/Geometry \
+	Core/Persistent \
+	Core/GLVolumeRenderer \
+	Core/Thread \
+	Core/Util \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Datatypes \
 	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Dataflow/Modules/Visualization
 
-LIBS := $(LINK) $(XML_LIBRARY) $(GL_LIBS) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(LINK) $(XML_LIBRARY) $(GL_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
