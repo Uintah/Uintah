@@ -55,10 +55,6 @@ itcl_class GenSurface {
 	set $this-point_pos-z 0
 	global $this-point_rad
 	set $this-point_rad .1
-	global $this-widget_color-r $this-widget_color-g $this-widget_color-b
-	set $this-widget_color-r 1
-	set $this-widget_color-g 0
-	set $this-widget_color-b 0
 
 	global $this-cyl_boundary_expr
 	set $this-cyl_boundary_expr ""
@@ -93,7 +89,7 @@ itcl_class GenSurface {
 
 	make_labeled_radio $w.type "Surface Type:" "$this switch_type yes" \
 		top $this-surfacetype \
-		{{Cylinder cylinder} {Sphere sphere}}
+		{{Cylinder cylinder} {Sphere sphere} {Point point}}
 	pack $w.type -side top -padx 5 -anchor w -side top
 
 	frame $w.cylinder -borderwidth 2 -relief groove
@@ -119,10 +115,13 @@ itcl_class GenSurface {
 	make_entry $w.sphere.nv "nv:" $this-sph_nv $n
 	pack $w.sphere.bc $w.sphere.rad $w.sphere.nu $w.sphere.nv -fill x
 
-	frame $w.point
+	frame $w.point -borderwidth 2 -relief groove
+	label $w.point.lab -text "Point:"
+	pack $w.point.lab -side top -pady 5 -anchor w
+	make_entry $w.point.bc "Value:" $this-point_val $n
+	pack $w.point.bc -fill x
 
 	switch_type no
-	puts "rad is [set $this-cyl_rad]";
     }
     method switch_type {exec} {
 	set w .ui$this

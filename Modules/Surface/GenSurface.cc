@@ -25,6 +25,7 @@
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 #include <Widgets/GaugeWidget.h>
+#include <Widgets/PointWidget.h>
 
 class GenSurface : public Module {
     TCLstring surfacetype;
@@ -41,7 +42,7 @@ class GenSurface : public Module {
     TCLint sph_nv;
     TCLPoint point_pos;
     TCLdouble point_rad;
-    TCLColor widget_color;
+    TCLdouble point_val;
 
     TCLstring cyl_boundary_expr;
     TCLstring sph_boundary_expr;
@@ -56,6 +57,7 @@ class GenSurface : public Module {
     int widget_id;
     GaugeWidget* cyl_widget;
     GaugeWidget* sph_widget;
+    PointWidget* pt_widget;
     CrowdMonitor widget_lock;
 
     int surf_id;
@@ -94,9 +96,9 @@ GenSurface::GenSurface(const clString& id)
   sph_rad("sph_rad", id, this),
   sph_nu("sph_nu", id, this), sph_nv("sph_nv", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
-  widget_color("widget_color", id, this),
   cyl_boundary_expr("cyl_boundary_expr", id, this),
-  sph_boundary_expr("sph_boundary_expr", id, this)
+  sph_boundary_expr("sph_boundary_expr", id, this),
+  point_val("point_val", id, this)
 {
     // Create the input port
     ColorMapport=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
@@ -112,6 +114,7 @@ GenSurface::GenSurface(const clString& id)
 
     cyl_widget=new GaugeWidget(this, &widget_lock, .1);
     sph_widget=new GaugeWidget(this, &widget_lock, .1);
+    pt_widget=new PointWidget(this, &widget_lock, .1);
     last_generation=0;
 
     fudge_widget=0;
@@ -126,9 +129,9 @@ GenSurface::GenSurface(const GenSurface& copy, int deep)
   sph_rad("sph_rad", id, this),
   sph_nu("sph_nu", id, this), sph_nv("sph_nv", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
-  widget_color("widget_color", id, this),
   cyl_boundary_expr("cyl_boundary_expr", id, this),
-  sph_boundary_expr("sph_boundary_expr", id, this)
+  sph_boundary_expr("sph_boundary_expr", id, this),
+  point_val("point_val", id, this)
 {
     NOT_FINISHED("GenSurface::GenSurface");
 }
@@ -155,20 +158,10 @@ void GenSurface::execute()
 	if(widget_id)
 	    ogeom->delObj(widget_id, 0); // Don't actually delete the geom...
 	if(st=="point"){
-	    
-#if 0
-	    GeomSphere* widget=scinew GeomSphere(point_pos.get(), point_rad.get());
-	    MaterialHandle widget_matl(scinew Material(Color(0,0,0),
-						    widget_color.get(),
-						    Color(.6, .6, .6), 10));
-	    GeomMaterial* matl=scinew GeomMaterial(widget, widget_matl);
-	    GeomPick* pick=scinew GeomPick(matl, this,
-					Vector(1,0,0), Vector(0,1,0),
-					Vector(0,0,1));
-	    ogeom->addObj(pick, widget_name);
-	    sphere=widget;
-	
-#endif    
+	    widget_id=ogeom->addObj(pt_widget->GetWidget(), "Point source widget", &widget_lock);
+	    pt_widget->Connect(ogeom);
+	    pt_widget->SetPosition(point_pos.get());
+	    pt_widget->SetScale(point_rad.get());
 	} else if(st=="cylinder"){
 	    widget_id=ogeom->addObj(cyl_widget->GetWidget(), "Cylinder source widget",
 				    &widget_lock);
@@ -266,7 +259,12 @@ void GenSurface::execute()
 	fudge_widget=0;
     } else if(st=="point"){
 	surf=scinew PointSurface(point_pos.get());
-//	be=point_boundary_expr.get();
+	double val=point_val.get();
+	cerr << "val=" << val << '\n';
+	Color c(cmap->lookup(val)->diffuse);
+	cerr << "diffuse=" << c.r() << ", " << c.g() << " " << c.b() << '\n';
+	pt_widget->SetMaterial(PointWidget::PointMatl, cmap->lookup(val));
+	be=to_string(val);
     } else {
 	error("Unknown surfacetype: "+st);
     }
@@ -283,7 +281,7 @@ void GenSurface::execute()
     GeomObj* surfobj=surf?surf->get_obj(cmap):0;
     if(surfobj){
 	MaterialHandle surf_matl(scinew Material(Color(0,0,0),
-						 widget_color.get(),
+						 Color(.5,.5,.5),
 						 Color(.6, .6, .6), 10));
 	GeomMaterial* matl=scinew GeomMaterial(surfobj, surf_matl);
 	surf_id=ogeom->addObj(matl, st+" source");
@@ -296,6 +294,8 @@ void GenSurface::widget_moved(int last)
 	return;
     clString st(surfacetype.get());
     if(st=="point"){
+	Point p1(pt_widget->GetPosition());
+	point_pos.set(p1);
     } else if(st=="cylinder"){
 	Point p1, p2;
 	cyl_widget->GetEndpoints(p1, p2);
