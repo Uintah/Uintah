@@ -72,45 +72,7 @@
     export CVSROOT=csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot
   </code></ul>
 
-  <h4>1.3 - Setting up 'use'</h4>
-
-  Building the PSE requires that you have a specific version of Tcl/Tk and
-  [incr Tcl] available.  Because you may be building the PSE for several
-  different ABIs on several different platforms, it is not sufficient to
-  "once and for all" configure your environment for the appropriate versions
-  of [i]Tcl/Tk.<p>
-
-  The 'use' command will let you easily switch among available pre-built
-  versions of [i]Tcl/Tk as you work.  If curious, you can read about 'use'
-  on its web page (under construction at this time):<p>
-
-  <ul><code>
-    http://www.cs.utah.edu/~mcq/doc/use.html
-  </code></ul>
-
-  You need to add a line that enables 'use' to modify your shell's
-  environment.  You should set this in your shell's rc files.  In csh, this
-  line is:<p>
-
-  <ul><code>
-    alias use 'eval `/usr/local/bin/use \!*`'
-  </code></ul>
-
-  In sh/ksh/bash, add the shell function to the appropriate rc file:<p>
-
-  <ul><code>
-    use() {<br>
-    <ul>
-      eval `/usr/local/bin/use $*`<br>
-    </ul>
-    }<br>
-  </code></ul>
-
-  If you type 'use' at a command prompt and do not see a message which
-  begins "# WARNING", you have correctly configured your shell for the 'use'
-  command.<p>
-
-  <h4>1.4 - Getting Rid Of Cruft</h4>
+  <h4>1.3 - Getting Rid Of Cruft</h4>
 
   Previous versions of SCIrun may cause some
   troublesome settings to exist in your environment.  To put this
@@ -185,7 +147,45 @@
      CVS       prebuilt  src
   </code></ul>
 
-  <h4>2.3 - Use [i]Tcl/Tk</h4>
+  <h4>2.3 - Setting up 'use'</h4>
+
+  Building the PSE requires that you have a specific version of Tcl/Tk and
+  [incr Tcl] available.  Because you may be building the PSE for several
+  different ABIs on several different platforms, it is not sufficient to
+  "once and for all" configure your environment for the appropriate versions
+  of [i]Tcl/Tk.<p>
+
+  The 'use' command will let you easily switch among available pre-built
+  versions of [i]Tcl/Tk as you work.  If curious, you can read about 'use'
+  on its web page (under construction at this time):<p>
+
+  <ul><code>
+    http://www.cs.utah.edu/~mcq/doc/use.html
+  </code></ul>
+
+  You need to add a line that enables 'use' to modify your shell's
+  environment.  You should set this in your shell's rc files.  In csh, this
+  line is:<p>
+
+  <ul><code>
+    alias use 'eval `/usr/local/bin/use \!*`'
+  </code></ul>
+
+  In sh/ksh/bash, add the shell function to the appropriate rc file:<p>
+
+  <ul><code>
+    use() {<br>
+    <ul>
+      eval `/usr/local/bin/use $*`<br>
+    </ul>
+    }<br>
+  </code></ul>
+
+  If you type 'use' at a command prompt and do not see a message which
+  begins "# WARNING", you have correctly configured your shell for the 'use'
+  command.<p>
+
+  <h4>2.4 - Use [i]Tcl/Tk</h4>
 
   In order to properly function, the PSE requires that Tcl/Tk 8.0.4 and
   [incr Tcl] 3.0.1 be available in your environment.  The command:<p>
@@ -198,7 +198,7 @@
   want to 'use itcltk64' instead, to get the version of [i]Tcl/Tk built for
   that ABI.<p>
 
-  <h4>2.4 - Configure the sources</h4>
+  <h4>2.5 - Configure the sources</h4>
 
   Before you can build the sources, you must "configure" the source tree,
   which examines your build platform and customizes the PSE's Makefiles
@@ -213,29 +213,56 @@
 
   You may optionally want to pass options to configure as described
   <a href="configure.html">here</a> to enable for example the SCIRun
-  or DaveW packages.  The Uintah package is built by default.<p>
+  or DaveW packages.  The Uintah package is built by default. The names
+  of packages are strung together, space-delimited: <p>
+  
+  <ul><code>
+    $ cd PSE/src<br>
+    $ ./configure --enable-package="SCIRun Uintah DaveW"
+  </code></ul>
 
-  <h4>2.5 - Build the sources</h4>
+  <h4>2.6 - Build the sources</h4>
 
   You must build the sources with the 'gmake' command.  Ordinary 'make's
   won't do.  From the PSE/src directory:<p>
 
   <ul><code>
-    $ gmake
+    $ gmake 
   </code></ul>
+
+  If you are doing the build on a multiprocessor machine, you can speed up the
+  compile by using the j flag to direct the compiler to parallelize the build
+  on, say 10 processors:<p> 
+
+  <ul><code>
+    $ gmake -j 10 
+  </code></ul>
+
+  <h4>2.7 - Updating and rebuilding the sources</h4>
+
+  Typically the fastest way to retrieve and build all the changes to
+  the source tree is via an update rather than a complete checkout. Before
+  the checkout, be sure that you do not have a recurse.mk file in your
+  source tree: <p>
+ 
+  <ul><code>
+    $ rm scripts/recurse.mk
+    $ cvs update -d 
+  </code></ul>
+  
 
 <h3>3 - Starting the PSE</h3>
 
-  When finished building, you'll have a "uintah" binary in PSE/src which you
+  When finished building, you'll have a "pse" binary in PSE/src which you
   can run to start the PSE.  This binary has hard-coded paths to the locations
   of its components, including the PSE packages, the [i]Tcl/Tk libraries and
   files, and others.<p>
 
-  You can run the PSE simply by running 'uintah' in the PSE/src directory:<p>
+  You can run the PSE simply by running 'pse' in the PSE/src directory:<p>
 
   <ul><code>
     $ cd PSE/src<br>
-    $ ./uintah
+    $ ./pse
   </code></ul>
 
   <h4>3.1 - A note about 'use'</h4>
@@ -252,7 +279,8 @@
   You normally need not execute "use itcltk" before each run of the PSE.<p>
 
   If you only ever build with the default (n32) ABI, you might consider
-  adding the line "use itcltk" to your shell's rc files, to avoid thinking
+  adding the line "use itcltk" (and perhaps also "use gmake") to your 
+  shell's rc files, to avoid thinking
   about such things.  The disadvantage to doing this is that "itcltk" may
-  not be compiled for some cs department architecutres, causing 'use' to
+  not be compiled for some cs department architectures, causing 'use' to
   report an error when logging into those machines.<p>
