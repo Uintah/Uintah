@@ -71,6 +71,7 @@ namespace Uintah {
       const VarLabel* gSelfContactLabel; //for fracture
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
+      const VarLabel* gTemperatureStarLabel; //for heat conduction
       const VarLabel* gInternalHeatRateLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gThermalContactHeatExchangeRateLabel;
@@ -95,6 +96,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.17  2000/07/17 23:39:35  tan
+// Fixed problems in MPM heat conduction.
+//
 // Revision 1.16  2000/07/12 18:45:07  jas
 // Cleaned up the creation of the particle state and moved things into
 // MPMLabel.

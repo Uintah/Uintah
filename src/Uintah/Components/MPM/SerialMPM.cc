@@ -73,19 +73,16 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
+
+   MPMPhysicalModules::build(prob_spec,d_sharedState);
+
    Problem prob_description;
    prob_description.preProcessor(prob_spec, grid, d_sharedState);
 
    cerr << "Number of velocity fields = " << d_sharedState->getNumVelFields()
 	<< std::endl;
 
-   /*
-    * Physical Models:
-    */
-    
-   MPMPhysicalModules::build(prob_spec,d_sharedState);
-
-      // Load up all the VarLabels that will be used in each of the
+   // Load up all the VarLabels that will be used in each of the
    // physical models
 
    lb->registerPermanentParticleState(lb->pVelocityLabel);
@@ -499,8 +496,36 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch,
 			Ghost::None);
 	    t->requires(old_dw, d_sharedState->get_delt_label() );
-		     
+
 	    t->computes(new_dw, lb->gVelocityStarLabel, idx, patch );
+	 }
+		     
+	 sched->addTask(t);
+      }
+
+      if(MPMPhysicalModules::heatConductionModel)
+      {
+	 /*
+	  * integrateTemperatureRate
+	  *   in(G.TEMPERATURE, G.TEMPERATURERATE)
+	  *   operation(t* = t + t_rate * dt)
+	  *   out(G.TEMPERATURE_STAR)
+	  * 
+	  */
+	 Task* t = scinew Task("SerialMPM::integrateTemperatureRate",
+			    patch, old_dw, new_dw,
+			    this, &SerialMPM::integrateTemperatureRate);
+	 for(int m = 0; m < numMatls; m++)
+	 {
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+
+            t->requires( new_dw, lb->gTemperatureLabel, idx, 
+	                 patch, Ghost::None);
+            t->requires( new_dw, lb->gTemperatureRateLabel, idx, 
+	                 patch, Ghost::None);
+		     
+            t->computes( new_dw, lb->gTemperatureStarLabel, idx, patch );
 	 }
 		     
 	 sched->addTask(t);
@@ -601,7 +626,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::None);
 	      t->requires(new_dw, lb->gTemperatureRateLabel, idx, patch,
 			Ghost::AroundCells, 1);
-	      t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
+	      t->requires(new_dw, lb->gTemperatureStarLabel, idx, patch,
 			Ghost::AroundCells, 1);
               t->computes(new_dw, lb->pTemperatureRateLabel_preReloc, idx, patch);
               t->computes(new_dw, lb->pTemperatureLabel_preReloc, idx, patch);
@@ -765,10 +790,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
      new_dw->pleaseSave(lb->cBurnedMassLabel, numMatls);
    }
 
-   if(MPMPhysicalModules::heatConductionModel){
+   if(MPMPhysicalModules::heatConductionModel)
+   {
       new_dw->pleaseSave(lb->pTemperatureLabel, numMatls);
       new_dw->pleaseSave(lb->pTemperatureGradientLabel, numMatls);
       //new_dw->pleaseSave(lb->pExternalHeatRateLabel, numMatls);
+
+      new_dw->pleaseSave(lb->gTemperatureLabel, numMatls);
    }
 
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
@@ -1128,7 +1156,6 @@ void SerialMPM::computeInternalHeatRate(
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
 {
-
   Vector dx = patch->dCell();
   double oodx[3];
   oodx[0] = 1.0/dx.x();
@@ -1347,12 +1374,52 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delT;
       }
 
-
       // Put the result in the datawarehouse
       new_dw->put( velocity_star, lb->gVelocityStarLabel, vfindex, patch );
     }
   }
 }
+
+void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
+				      const Patch* patch,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw)
+{
+  // This needs the datawarehouse to allow indexing by material
+
+  int numMatls = d_sharedState->getNumMatls();
+
+  //  const MPMLabel* lb = MPMLabel::getLabels();
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+
+      NCVariable<double> temperature;
+      NCVariable<double> temperatureRate;
+      delt_vartype delT;
+ 
+      new_dw->get(temperature, lb->gTemperatureLabel, vfindex, patch,
+		  Ghost::None, 0);
+      new_dw->get(temperatureRate, lb->gTemperatureRateLabel, vfindex, patch,
+		  Ghost::None, 0);
+
+      old_dw->get(delT, lb->delTLabel);
+
+      NCVariable<double> temperatureStar;
+      new_dw->allocate(temperatureStar, lb->gTemperatureStarLabel, vfindex, patch);
+
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        temperatureStar[*iter] = temperature[*iter] + temperatureRate[*iter] * delT;
+      }
+
+      new_dw->put( temperatureStar, lb->gTemperatureStarLabel, vfindex, patch );
+    }
+  }
+}
+
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						const Patch* patch,
@@ -1372,8 +1439,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
   
-  double tempRate = 0; /* tan: tempRate stands for "temperature variation
-                               time rate", used for heat conduction.  */
+  double tempRate; /* tan: tempRate stands for "temperature variation
+                           time rate", used for heat conduction.  */
   double ke=0;
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
@@ -1425,7 +1492,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 			 pset);
         new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel, vfindex, patch,
            Ghost::AroundCells, 1);
-        new_dw->get(gTemperature, lb->gTemperatureLabel, vfindex, patch,
+        new_dw->get(gTemperature, lb->gTemperatureStarLabel, vfindex, patch,
            Ghost::AroundCells, 1);
       }
 
@@ -1492,7 +1559,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	   acc += gacceleration[ni[k]]   * S[k];
 	   
 	   if(MPMPhysicalModules::heatConductionModel) {
-	      tempRate = gTemperatureRate[ni[k]] * S[k];
+	      tempRate += gTemperatureRate[ni[k]] * S[k];
 	      for (int j = 0; j<3; j++){
 		 pTemperatureGradient[idx](j) += 
 		    gTemperature[ni[k]] * d_S[k](j) * oodx[j];
@@ -1598,6 +1665,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.100  2000/07/17 23:45:03  tan
+// Fixed problems in MPM heat conduction.
+//
 // Revision 1.99  2000/07/12 18:45:07  jas
 // Cleaned up the creation of the particle state and moved things into
 // MPMLabel.
