@@ -101,9 +101,9 @@ ScaleSimilarityModel::computeTurbSubmodel(const ProcessorGroup* pg,
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
+#ifdef PetscFilter
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-#ifdef PetscFilter
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -896,7 +896,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY, colZ);
 	  double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
                  	    (2.0*cellinfo->stb[colZ]);
-	  double invDelta = 1.0/cube_delta;
+	  //double invDelta = 1.0/cube_delta;
 	  filterDen[currCell] = 0.0;
 	  filterUVel[currCell] = 0.0;
 	  filterVVel[currCell] = 0.0;
