@@ -238,7 +238,7 @@ cerr << "In plot_rect()\n";
     lastMaxR=maxRow.get();
     glDisable(GL_LOGIC_OP);
     glFlush();
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "plot_rect got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -284,7 +284,7 @@ cerr << "In plot_matrices()\n";
     }
     glEnd();
     glFlush();
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "plot_matrices got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -377,6 +377,9 @@ int ExtractSubmatrix::makeCurrent(int &xres, int &yres, int &nrows,
 
 //
 // $Log$
+// Revision 1.8  2000/03/20 21:45:34  yarden
+// Linux port: replace int with GLenum
+//
 // Revision 1.7  2000/03/17 09:27:06  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
