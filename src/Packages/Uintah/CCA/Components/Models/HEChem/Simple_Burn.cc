@@ -155,6 +155,9 @@ void Simple_Burn::scheduleMassExchange(SchedulerP& sched,
   t->modifies(mi->energy_source_CCLabel);
   t->modifies(mi->sp_vol_source_CCLabel); 
   sched->addTask(t, level->eachPatch(), mymatls);
+
+  if (one_matl->removeReference())
+    delete one_matl;
 }
 
 //______________________________________________________________________
@@ -185,17 +188,16 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     CCVariable<double> onSurface, surfaceTemp;
     
-    new_dw->getModifiable(mass_src_0,    mi->mass_source_CCLabel,     m0, patch);    
-    new_dw->getModifiable(momentum_src_0,mi->momentum_source_CCLabel, m0, patch); 
-    new_dw->getModifiable(energy_src_0,  mi->energy_source_CCLabel,   m0, patch);   
-    new_dw->getModifiable(sp_vol_src_0,  mi->sp_vol_source_CCLabel,   m0, patch);   
+    new_dw->getModifiable(mass_src_0,    mi->mass_source_CCLabel,     m0,patch);
+    new_dw->getModifiable(momentum_src_0,mi->momentum_source_CCLabel, m0,patch);
+    new_dw->getModifiable(energy_src_0,  mi->energy_source_CCLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  mi->sp_vol_source_CCLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->mass_source_CCLabel,    m1,patch);   
-    new_dw->getModifiable(momentum_src_1,mi->momentum_source_CCLabel,m1,patch);   
-    new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,  m1,patch);   
-    new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,  m1,patch);   
+    new_dw->getModifiable(mass_src_1,    mi->mass_source_CCLabel,     m1,patch);
+    new_dw->getModifiable(momentum_src_1,mi->momentum_source_CCLabel, m1,patch);
+    new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,   m1,patch);
  
-    
     constCCVariable<double> press_CC,gasTemp,gasVol_frac;
     constCCVariable<double> solidTemp,solidMass,solidSp_vol;
 
@@ -208,7 +210,6 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double delX = dx.x();
     double delY = dx.y();
-    double delZ = dx.z();
     Ghost::GhostType  gn  = Ghost::None;    
     Ghost::GhostType  gac = Ghost::AroundCells;   
    
@@ -284,6 +285,8 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
         }
         surfaceTemp[c] = Temp;
 #if 0
+        double delZ = dx.z();
+
         double gradRhoX = 0.25 *
                           ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                             NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
