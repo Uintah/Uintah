@@ -30,7 +30,7 @@ OBJS = Comm\MessageBase.odll\
 	   Datatypes\SoundPort.odll Datatypes\SurfacePort.odll\
 	   Datatypes\VectorFieldPort.odll Datatypes\VoidStarPort.odll\
 	   Datatypes\cMatrixPort.odll Datatypes\cVectorPort.odll\
-	   share\PSECoreDLLEntry.odll\
+	   share\DllEntry.odll\
 	   Widgets\ArrowWidget.odll Widgets\BaseWidget.odll Widgets\BoxWidget.odll\
 	   Widgets\CriticalPointWidget.odll Widgets\CrosshairWidget.odll\
 	   Widgets\FrameWidget.odll Widgets\GaugeWidget.odll Widgets\LightWidget.odll\
