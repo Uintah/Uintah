@@ -1369,16 +1369,25 @@ OpenGL::redraw_frame()
       if(encoding_mpeg_) {
 	AddMpegFrame();
       } else {
+	
+	
+	string fname = viewwindow->curName;
 
-	string fname = viewwindow->curName + string(".mpg");
-
+	// only add extension if not allready there
+	if(!(fname.find(".mpg") != std::string::npos ||
+	     fname.find(".MPG") != std::string::npos ||
+	     fname.find(".mpeg") != std::string::npos ||
+	     fname.find(".MPEG") != std::string::npos)) {
+	  fname = fname + string(".mpg");
+	}
+	
 	// Dump the mpeg in the local dir ... ignoring any path since mpeg
 	// can not handle it.
 	std::string::size_type pos = fname.find_last_of("/");
-	if( pos != std::string::npos ) {
-	  cerr << "Removing the mpeg path." << std::endl;
-	  fname = fname.erase(0, pos+1);
-	}
+	//if( pos != std::string::npos ) {
+	//cerr << "Removing the mpeg path." << std::endl;
+	//fname = fname.erase(0, pos+1);
+	//}
 
 	if( fname.find("%") != std::string::npos ) {
 	  cerr << "Remove the C Style format for the frames." << std::endl;
