@@ -695,11 +695,11 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 				     " variable label not found to save.");
 
       Scheduler::VarLabelMaterialMap::iterator found =
-	 pLabelMatlMap->find(var);
+	 pLabelMatlMap->find(var->getName());
 
       if (found == pLabelMatlMap->end())
          throw ProblemSetupException((*it).labelName +
-				     " variable label not found to save.");
+				     " variable label not computed to save.");
       
       saveItem.label = var;
       saveItem.matls = ConsecutiveRangeSet((*found).second);
@@ -715,6 +715,11 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 
 //
 // $Log$
+// Revision 1.28  2001/01/02 23:47:53  witzel
+// Changed VarLabelMaterialMap to be a map from a VarLabel string name to
+// the materials rather than from a VarLabel* because VarLabel*'s may
+// not necessarily be unique as it is now.
+//
 // Revision 1.27  2000/12/23 02:09:50  witzel
 // Oops, forgot a couple of things with respect to my last commit
 //

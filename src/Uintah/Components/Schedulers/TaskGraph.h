@@ -141,9 +141,9 @@ WARNING
 	 return d_maxSerial;
       }
 
-      // Makes and returns a map that associates VarLabels with
-      // the materials it is computed for.
-      typedef map< const VarLabel*, list<int> > VarLabelMaterialMap;
+      // Makes and returns a map that associates VarLabel names with
+      // the materials the variable is computed for.
+      typedef map< string, list<int> > VarLabelMaterialMap;
       VarLabelMaterialMap* makeVarLabelMaterialMap();
    private:
       TaskGraph(const TaskGraph&);
@@ -169,6 +169,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2001/01/02 23:47:57  witzel
+// Changed VarLabelMaterialMap to be a map from a VarLabel string name to
+// the materials rather than from a VarLabel* because VarLabel*'s may
+// not necessarily be unique as it is now.
+//
 // Revision 1.8  2000/12/23 00:55:13  witzel
 // Changed the makeVarLabelMaterialMap method to make a map that just
 // associates VarLabel*'s with the materials it is computed for, and not
