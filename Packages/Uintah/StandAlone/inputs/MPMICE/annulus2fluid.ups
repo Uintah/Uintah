@@ -259,11 +259,17 @@
 	    <speed_of_sound>             376            </speed_of_sound>
 	    <gamma>                      1.4            </gamma>
 	    <geom_object>
-		<cylinder label = "inner cylinder">
+	      <difference>
+                  <box label="surrounding">
+                    <min>           [-3.0,-3.0,-1.0]    </min>
+                    <max>           [3.0,3.0,1.0]       </max>
+                  </box>
+		   <cylinder label = "outer cylinder">
 			<bottom>       [0.0,0.0,0.0]       </bottom>
 			<top>          [0.0,0.0,.02]       </top>
-			<radius>       0.5                 </radius>
-		</cylinder>
+			<radius>       1.0                 </radius>
+		   </cylinder>
+	        </difference>
 	      <res>		        [2,2,2]            </res>
 	      <velocity>           [0.0,0.0,0.0]        </velocity>
 	      <temperature>        300.0                </temperature>
@@ -283,17 +289,11 @@
 	    <speed_of_sound>             376            </speed_of_sound>
 	    <gamma>                      1.4            </gamma>
 	    <geom_object>
-	      <difference>
-                  <box label="surrounding">
-                    <min>           [-3.0,-3.0,-1.0]    </min>
-                    <max>           [3.0,3.0,1.0]       </max>
-                  </box>
-		   <cylinder label = "outer cylinder">
+		<cylinder label = "inner cylinder">
 			<bottom>       [0.0,0.0,0.0]       </bottom>
 			<top>          [0.0,0.0,.02]       </top>
-			<radius>       1.0                 </radius>
-		   </cylinder>
-	        </difference>
+			<radius>       0.5                 </radius>
+		</cylinder>
 	      <res>		        [2,2,2]            </res>
 	      <velocity>           [0.0,0.0,0.0]        </velocity>
 	      <temperature>        300.0                </temperature>
