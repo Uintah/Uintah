@@ -2,8 +2,14 @@
 #define __OPERATORS_VECTORFIELDOPERATOR_H__
 
 #include "VectorOperatorFunctors.h"
+#include "OperatorThread.h"
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Mutex.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <string>
 #include <iostream>
@@ -30,7 +36,7 @@ using namespace SCIRun;
     
     template<class VectorField, class ScalarField, class VectorOp >
      void computeScalars(VectorField* vectorField, ScalarField* scalarField,
-			 VectorOp op /* TensorOp should be a functor for
+			 VectorOp op /* VectorOp should be a functor for
 					converting tensors scalars */ );
 
     //    TCLstring tcl_status;
@@ -99,26 +105,47 @@ void VectorFieldOperator::computeScalars(VectorField* vectorField,
 
   typename VectorField::mesh_handle_type vmh = vectorField->get_typed_mesh();
   typename ScalarField::mesh_handle_type smh = scalarField->get_typed_mesh();
-
-  if( vectorField->data_at() == Field::CELL){
-    typename VectorField::mesh_type::Cell::iterator v_it = vmh->cell_begin();
-    typename VectorField::mesh_type::Cell::iterator v_end = vmh->cell_end();
-    typename ScalarField::mesh_type::Cell::iterator s_it = smh->cell_begin();
+  if( vectorField->get_type_name(0) != "LevelField"){
+    if( vectorField->data_at() == Field::CELL){
+      typename VectorField::mesh_type::Cell::iterator v_it = vmh->cell_begin();
+      typename VectorField::mesh_type::Cell::iterator v_end = vmh->cell_end();
+      typename ScalarField::mesh_type::Cell::iterator s_it = smh->cell_begin();
     
-    cerr<<"v_it = ("<<(*v_it).i_<<","<<(*v_it).j_<<","<<(*v_it).k_<<
-      "), v_end = ("<<(*v_end).i_<<","<<(*v_end).j_<<","<<(*v_end).k_<<")\n";
-    for( ; v_it != v_end; ++v_it, ++s_it){
-      scalarField->fdata()[*s_it] = op(vectorField->fdata()[*v_it]);
-    }
-  } else {
-    typename VectorField::mesh_type::Node::iterator v_it = vmh->node_begin();
-    typename VectorField::mesh_type::Node::iterator v_end = vmh->node_end();
-    typename ScalarField::mesh_type::Node::iterator s_it = smh->node_begin();
+      /*     cerr<<"v_it = ("<<(*v_it).i_<<","<<(*v_it).j_<<","<<(*v_it).k_<< */
+      /*       "), v_end = ("<<(*v_end).i_<<","<<(*v_end).j_<<","<<(*v_end).k_<<")\n"; */
+      for( ; v_it != v_end; ++v_it, ++s_it){
+	scalarField->fdata()[*s_it] = op(vectorField->fdata()[*v_it]);
+      }
+    } else {
+      typename VectorField::mesh_type::Node::iterator v_it = vmh->node_begin();
+      typename VectorField::mesh_type::Node::iterator v_end = vmh->node_end();
+      typename ScalarField::mesh_type::Node::iterator s_it = smh->node_begin();
   
-    for( ; v_it != v_end; ++v_it, ++s_it){
-      scalarField->fdata()[*s_it] = op(vectorField->fdata()[*v_it]);
+      for( ; v_it != v_end; ++v_it, ++s_it){
+	scalarField->fdata()[*s_it] = op(vectorField->fdata()[*v_it]);
+      }
+    }  
+  } else {
+    int max_workers = Max(Thread::numProcessors()/3, 4);
+    Semaphore* thread_sema = scinew Semaphore( "tensor operator semaphore",
+					       max_workers); 
+    vector<Array3<Vector> > tdata = vectorField->fdata();
+    vector<Array3<Vector> >::iterator vit = tdata.begin();
+    vector<Array3<Vector> >::iterator vit_end = tdata.end();
+    thread_sema->down();
+    IntVector offset( (*vit).getLowIndex() );
+    for(;vit != vit_end; ++vit) {
+      Thread *thrd = 
+	scinew Thread(
+	  scinew OperatorThread< Vector, ScalarField, VectorOp >
+	  ( *vit, scalarField, offset, op, thread_sema ),
+	  "vector operator worker");
+      thrd->detach();
     }
-  }  
+    thread_sema->down(max_workers);
+    if(thread_sema) delete thread_sema;
+  }
+    
 }
 
 }

@@ -2,54 +2,61 @@
 #define __DERIVE_TENSORFIELDOPERATOR_H__
 
 #include "TensorOperatorFunctors.h"
+#include "OperatorThread.h"
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <string>
-
+#include <iostream>
 using std::string;
+using std::cerr;
+using std::endl;
 
 namespace Uintah {
 using namespace SCIRun;
-
-  class TensorFieldOperator: public Module {
-  public:
-    TensorFieldOperator(const string& id);
-    virtual ~TensorFieldOperator() {}
+class TensorFieldOperator: public Module {
+public:
+  TensorFieldOperator(const string& id);
+  virtual ~TensorFieldOperator() {}
     
-    virtual void execute(void);
+  virtual void execute(void);
     
-  private:
-    template<class TensorField, class ScalarField>
+private:
+  template<class TensorField, class ScalarField>
     void performOperation(TensorField* tensorField, ScalarField* scalarField);
 
-    template<class TensorField, class Field>
-      void initField(TensorField* tensorField, Field* field);
+  template<class TensorField, class Field>
+    void initField(TensorField* tensorField, Field* field);
 
-    template<class TensorField, class ScalarField, class TensorOp >
-      void computeScalars(TensorField* tensorField, ScalarField* scalarField,
-			  TensorOp op /* TensorOp should be a functor for
-					 converting tensors scalars */ );    
-    //    TCLstring tcl_status;
-    GuiInt guiOperation;
+  template<class TensorField, class ScalarField, class TensorOp >
+    void computeScalars(TensorField* tensorField, ScalarField* scalarField,
+			TensorOp op /* TensorOp should be a functor for
+				       converting tensors scalars */ );    
+  //    TCLstring tcl_status;
+  GuiInt guiOperation;
 
-    // element extractor operation
-    GuiInt guiRow;
-    GuiInt guiColumn;
+  // element extractor operation
+  GuiInt guiRow;
+  GuiInt guiColumn;
     
     // eigen value/vector operation
     //GuiInt guiEigenSelect;
 
     // eigen 2D operation
-    GuiInt guiPlaneSelect;
-    GuiDouble guiDelta;
-    GuiInt guiEigen2DCalcType;
+  GuiInt guiPlaneSelect;
+  GuiDouble guiDelta;
+  GuiInt guiEigen2DCalcType;
     
-    FieldIPort *in;
+  FieldIPort *in;
 
-    FieldOPort *sfout;
-    //VectorFieldOPort *vfout;
-  };
+  FieldOPort *sfout;
+  //VectorFieldOPort *vfout;
+    
+};
 
 template<class TensorField, class ScalarField>
 void TensorFieldOperator::performOperation(TensorField* tensorField,
@@ -134,26 +141,47 @@ void TensorFieldOperator::computeScalars(TensorField* tensorField,
   typename TensorField::mesh_handle_type tmh = tensorField->get_typed_mesh();
   typename ScalarField::mesh_handle_type smh = scalarField->get_typed_mesh();
 
-  if( tensorField->data_at() == Field::CELL){
-    typename TensorField::mesh_type::Cell::iterator t_it = tmh->cell_begin();
-    typename ScalarField::mesh_type::Cell::iterator s_it = smh->cell_begin();
-    typename TensorField::mesh_type::Cell::iterator t_end = tmh->cell_end();
-    
-    for( ; t_it != t_end; ++t_it, ++s_it){
-      scalarField->fdata()[*s_it] = op(tensorField->fdata()[*t_it]);
-    }
+  if( tensorField->get_type_name(0) != "LevelField"){
+    if( tensorField->data_at() == Field::CELL){
+      typename TensorField::mesh_type::Cell::iterator t_it = tmh->cell_begin();
+      typename ScalarField::mesh_type::Cell::iterator s_it = smh->cell_begin();
+      typename TensorField::mesh_type::Cell::iterator t_end = tmh->cell_end();
+      
+      for( ; t_it != t_end; ++t_it, ++s_it){
+	scalarField->fdata()[*s_it] = op(tensorField->fdata()[*t_it]);
+      }
+    } else {
+      typename TensorField::mesh_type::Node::iterator t_it = tmh->node_begin();
+      typename ScalarField::mesh_type::Node::iterator s_it = smh->node_begin();
+      typename TensorField::mesh_type::Node::iterator t_end = tmh->node_end();
+      
+      for( ; t_it != t_end; ++t_it, ++s_it){
+	scalarField->fdata()[*s_it] = op(tensorField->fdata()[*t_it]);
+      }
+    }  
   } else {
-    typename TensorField::mesh_type::Node::iterator t_it = tmh->node_begin();
-    typename ScalarField::mesh_type::Node::iterator s_it = smh->node_begin();
-    typename TensorField::mesh_type::Node::iterator t_end = tmh->node_end();
-  
-    for( ; t_it != t_end; ++t_it, ++s_it){
-      scalarField->fdata()[*s_it] = op(tensorField->fdata()[*t_it]);
-    }
-  }  
-}
+    int max_workers = Max(Thread::numProcessors()/3, 4);
+    Semaphore* thread_sema = scinew Semaphore( "tensor operator semaphore",
+					       max_workers); 
+    vector<Array3<Matrix3> > tdata = tensorField->fdata();
+    vector<Array3<Matrix3> >::iterator vit = tdata.begin();
+    vector<Array3<Matrix3> >::iterator vit_end = tdata.end();
 
+    IntVector offset( (*vit).getLowIndex() );
+    for(;vit != vit_end; ++vit) {
+      thread_sema->down();
+      Thread *thrd = 
+	scinew Thread(
+	  scinew OperatorThread< Matrix3, ScalarField, TensorOp >
+	  ( *vit, scalarField, offset, op, thread_sema ),
+	  "tensor operator worker");
+      thrd->detach();
+    }
+    thread_sema->down(max_workers);
+    if(thread_sema) delete thread_sema;
+  }
 }
+} // end namespace Uintah 
 
 #endif // __DERIVE_TENSORFIELDOPERATOR_H__
 

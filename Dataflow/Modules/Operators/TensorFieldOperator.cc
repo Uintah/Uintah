@@ -8,7 +8,9 @@
 #include <Core/Geometry/BBox.h>
 
 //#include <SCICore/Math/Mat.h>
-
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 using namespace SCIRun;
 
@@ -51,6 +53,8 @@ void TensorFieldOperator::execute(void) {
     return;
   }
 
+
+    
   LatticeVol<double>  *scalarField = 0;  
   if( LevelField<Matrix3> *tensorField =
       dynamic_cast<LevelField<Matrix3>*>(hTF.get_rep())) {
@@ -58,10 +62,8 @@ void TensorFieldOperator::execute(void) {
     scalarField = scinew LatticeVol<double>(hTF->data_at());
 
     performOperation( tensorField, scalarField );
-  }
-
-  if( scalarField )
     sfout->send(scalarField);
+  }
 }
 
 } // end namespace Uintah
