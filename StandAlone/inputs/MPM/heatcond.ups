@@ -117,9 +117,3 @@
 
 </Uintah_specification>
 
-
-<!-- $Log$
-<!-- Revision 1.5  2000/06/23 15:27:29  tan
-<!-- Moved heat conduction material parameters to <MaterialProperties> <MPM>
-<!-- <heat_conduction>
-<!-- -->
