@@ -1,0 +1,16 @@
+
+#include <config/sci.cf>
+
+OBJS = PerfTest.o  RigorousTest.o
+SRCS = PerfTest.cc RigorousTest.cc tester.cc
+
+LIBNAME = Tester
+SO_LIBS =
+SO_LDFLAGS =
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+
+TESTER_LDFLAGS = -L$(TOP)/lib -lTester
+SCIProgramTarget(tester, tester.o, , $(TESTER_LDFLAGS))
+
