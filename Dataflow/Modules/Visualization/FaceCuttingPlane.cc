@@ -421,7 +421,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
       }
       GeomLine *line = 0;
       if( mesh_->locate(node, p0 + (p1 - p0) * 0.5)){
-// 	sval = lvf->fdata()[node];
+	sval = lvf->fdata()[node];
 // 	cerr<<"located: sval = "<<sval<<" at index ["<<node.i_
 // 	    <<", "<<node.j_<<", "<<node.k_<<"]"<<endl;
       //      get the color from cmap for p 	    
@@ -429,7 +429,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
  	matl = cmap->lookup( sval);
 	line = new GeomLine(p0,p1);
 	float linesz = line_size.get();
-	cerr<<"line size is "<<linesz<<endl;
+// 	cerr<<"line size is "<<linesz<<endl;
 	line->setLineWidth((float)line_size.get());
 	faces->add( scinew GeomMaterial( line, matl));
       } else {
