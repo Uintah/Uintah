@@ -50,19 +50,20 @@ typedef LockingHandle<Matrix> MatrixHandle;
 
 class SCICORESHARE Matrix : public Datatype
 {
-protected:
-  bool     separate_raw_;
-  string   raw_filename_;
-
 public:
-  virtual Matrix* clone()=0;
-  virtual DenseMatrix* dense()=0;
-  virtual SparseRowMatrix* sparse()=0;
-  virtual ColumnMatrix* column()=0;
-  virtual Matrix* transpose()=0;
+  //! make a duplicate, needed to support detach from LockingHandle
+  virtual Matrix* clone() = 0;
+  //! convert this matrix to a DenseMatrix.
+  virtual DenseMatrix* dense() = 0;
+  //! convert this matrix to a SparseRowMatrix.
+  virtual SparseRowMatrix* sparse() = 0;
+  //! convert this matrix to a ColumnMatrix.
+  virtual ColumnMatrix* column() = 0;
+
+  virtual Matrix* transpose() = 0;
   virtual double* get_val() { return 0; }
-  virtual int* get_row() { return 0; }
-  virtual int* get_col() { return 0; }
+  virtual int* get_row()    { return 0; }
+  virtual int* get_col()    { return 0; }
 
   Transform toTransform();
   
@@ -110,6 +111,10 @@ public:
   // Persistent representation.
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
+protected:
+  bool     separate_raw_;
+  string   raw_filename_;
 };
 
 
