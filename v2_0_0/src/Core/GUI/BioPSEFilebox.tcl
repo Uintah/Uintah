@@ -670,10 +670,20 @@ proc biopseFDialog {argstring} {
     if {![string compare $data(-parent) .]} {
         set w .$w
     } else {
-	wm withdraw $data(-parent)
+# parents don't exist anymore...
+#	wm withdraw $data(-parent)
         set w $data(-parent).$w
     }
     
+    # This is a hack.  Here is the problem... biopseFDialog creates
+    # its own window instead of parenting it in the parent that is
+    # passed in.  This is non standard and is different from all the
+    # other GUIs.  Thus I'm hacking this to act correctly on the
+    # cancel and command buttons.  This works because they all do the
+    # same thing (and there are only 4 of them being used.
+    set data(-cancel) "$data(-cancel) $w"
+    set data(-command) "$data(-command) $w"
+
     # (re)create the dialog box if necessary
     if {![winfo exists $w]} {
 	biopseFDialog_Create $w
