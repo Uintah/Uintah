@@ -87,6 +87,8 @@ public:
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls);
 
+      virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
+						  const MaterialSet* matls);
 
 protected:
 
@@ -127,6 +129,12 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw);
+
+      void computeScalarDissipation(const ProcessorGroup*,
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw);
 
 private:
       double d_CF; //model constant
