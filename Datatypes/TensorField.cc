@@ -2,9 +2,6 @@
  *  TensorField.cc: Data structure to represent tensor fields
  *  ---------------
  *
- *  This file was created initally by duping the sciBoolean file
- *  so as I know more about what the heck everything is I'll 
- *  try to through some comments in here.
  *
  *  Eric Lundberg - 1998
  *  
@@ -31,19 +28,20 @@ TensorField<DATA>::TensorField(int in_slices, int in_width, int in_height)
   m_slices = in_slices;
   m_width = in_width;
   m_height = in_height;
+  int ii;
   
   /* Set up the arrays for the tensors*/
   m_tensor_field.resize(TENSOR_ELEMENTS);
   
-  for (int ii = 0; ii < TENSOR_ELEMENTS; ii ++)
+  for (ii = 0; ii < TENSOR_ELEMENTS; ii ++)
     m_tensor_field[ii].newsize(m_slices, m_width, m_height);
   
   /* Set up the arrays for the eigenvectors*/
   m_e_vectors.resize(EVECTOR_ELEMENTS);
-  
+    
   /* Set up the arrays for the eigenvalues*/
   m_e_values.resize(EVECTOR_ELEMENTS);
-
+    
   m_tensorsGood = m_vectorsGood = m_valuesGood = 0;
 }
 
@@ -51,25 +49,6 @@ template<class DATA>
 int TensorField<DATA>::interpolate(const Point& p, double t[][3], int &, int) 
 {
     return interpolate(p, t);
-}
-
-template<class DATA>
-void TensorField<DATA>::get_bounds(Point &min, Point &max) {
-    bmin=min;
-    bmax=max;
-}
-
-template<class DATA>
-void TensorField<DATA>::set_bounds(const Point& min, const Point& max) {
-    bmin=min;
-    bmax=max;
-    diagonal=bmax-bmin;
-    if (m_vectorsGood)
-	for (int i=0; i<EVECTOR_ELEMENTS; i++) 
-	    m_e_vectors[i]->set_bounds(min, max);
-    if (m_valuesGood)
-	for (int i=0; i<EVECTOR_ELEMENTS; i++) 
-	    m_e_values[i]->set_bounds(min, max);
 }
 
 // just do linear interpolation of the matrix entries
@@ -178,26 +157,9 @@ template<class DATA>
 void TensorField<DATA>::io(Piostream& stream)
 {
     stream.begin_class("TensorField", TENSORFIELD_VERSION);
-    
-    Pio(stream, m_type);
-    Pio(stream, m_slices);
-    Pio(stream, m_width);
-    Pio(stream, m_height);
-  
-    printf("Hello world\n");
-    /* Set up the arrays for the tensors*/
-    m_tensor_field.resize(TENSOR_ELEMENTS);
-    
-    for (int ii = 0; ii < TENSOR_ELEMENTS; ii ++)
-      m_tensor_field[ii].newsize(m_slices, m_width, m_height);
-    
-    /* Set up the arrays for the eigenvectors*/
-    m_e_vectors.resize(EVECTOR_ELEMENTS);
-    /* Set up the arrays for the eigenvalues*/
-    m_e_values.resize(EVECTOR_ELEMENTS);
-
-
-    for (int slice = 0; slice < TENSOR_ELEMENTS; slice++)
-      Pio(stream, m_tensor_field[slice]);
+    TensorFieldBase::io(stream);
+    if (m_tensorsGood) {
+	Pio(stream, m_tensor_field);
+    }
     stream.end_class();
 }
