@@ -111,8 +111,9 @@ DirectInterpolate::execute()
 
   ofp_ = (FieldOPort *)get_oport("Interpolant");
 
-  const TypeDescription *td = dfieldhandle->get_type_description();
-  CompileInfo *ci = DirectInterpAlgoBase::get_compile_info(td);
+  const TypeDescription *td0 = dfieldhandle->get_type_description();
+  const TypeDescription *td1 = dfieldhandle->data_at_type_description();
+  CompileInfo *ci = DirectInterpAlgoBase::get_compile_info(td0, td1);
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {

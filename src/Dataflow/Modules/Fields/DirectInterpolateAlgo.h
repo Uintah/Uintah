@@ -37,11 +37,12 @@ public:
   virtual ~DirectInterpAlgoBase();
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *td);
+  static CompileInfo *get_compile_info(const TypeDescription *td1,
+				       const TypeDescription *td2);
 };
 
 
-template <class Fld>
+template <class Fld, class Loc>
 class DirectInterpAlgo : public DirectInterpAlgoBase
 {
 public:
@@ -50,104 +51,31 @@ public:
 };
 
 
-template <class Fld>
+template <class Fld, class Loc>
 FieldHandle
-DirectInterpAlgo<Fld>::execute(FieldHandle fldhandle,
-			       ScalarFieldInterface *sfi)
+DirectInterpAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
+				    ScalarFieldInterface *sfi)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
   if (!fld2->is_scalar()) { return 0; }
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
-  switch (fld->data_at())
+  typedef typename Loc::iterator Itr;
+  Itr itr = mesh->tbegin((Itr *)0);
+  Itr itr_end = mesh->tend((Itr *)0);
+  while (itr != itr_end)
   {
-  case Field::NODE:
+    Point p;
+    mesh->get_center(p, *itr);
+
+    double val;
+    if (sfi->interpolate(val, p))
     {
-      typedef typename Fld::mesh_type::Node::iterator Itr;
-      Itr itr = mesh->node_begin();
-      Itr itr_end = mesh->node_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
+      fld->set_value((typename Fld::value_type)val, *itr);
     }
-    break;
 
-  case Field::EDGE:
-    {
-      typedef typename Fld::mesh_type::Edge::iterator Itr;
-      Itr itr = mesh->edge_begin();
-      Itr itr_end = mesh->edge_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
-    }
-    break;
-
-  case Field::FACE:
-    {
-      typedef typename Fld::mesh_type::Face::iterator Itr;
-      Itr itr = mesh->face_begin();
-      Itr itr_end = mesh->face_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
-    }
-    break;
-
-  case Field::CELL:
-    {
-      typedef typename Fld::mesh_type::Cell::iterator Itr;
-      Itr itr = mesh->cell_begin();
-      Itr itr_end = mesh->cell_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
-    }
-    break;
-
-  default:
-    break;
+    ++itr;
   }
 
   FieldHandle ofh(fld);

@@ -37,8 +37,24 @@ namespace SCIRun {
 DirectInterpAlgoBase::~DirectInterpAlgoBase()
 {}
 
+
+static string
+strip(const string s)
+{
+  string result;
+  for (unsigned int i = 0; i < s.size(); i++)
+  {
+    if (isalnum(s[i]))
+    {
+      result += s[i];
+    }
+  }
+  return result;
+}
+
 CompileInfo *
-DirectInterpAlgoBase::get_compile_info(const TypeDescription *td)
+DirectInterpAlgoBase::get_compile_info(const TypeDescription *td0,
+				       const TypeDescription *td1)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -46,15 +62,15 @@ DirectInterpAlgoBase::get_compile_info(const TypeDescription *td)
   static const string base_class_name("DirectInterpAlgoBase");
 
   CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." + td->get_name(".",
-"."), 
+    scinew CompileInfo(strip(template_class_name + "." + td0->get_name(".", ".") +
+		       td1->get_name(".", ".")) + ".",
                        base_class_name, 
                        template_class_name, 
-                       td->get_name());
+                       td0->get_name() + ", " + td1->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  td->fill_compile_info(rval);
+  td0->fill_compile_info(rval);
   return rval;
 }
 
