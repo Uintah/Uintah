@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="ParticleVis" category="Visualization">
+  <overview>
+    <authors>
+      <author>Packages/Kurt Zimmerman</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: </p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Scalar Particles</name>
+        <datatype>Uintah::ScalarParticles</datatype>
+      </port>
+      <port>
+        <name>Scaling Particles</name>
+        <datatype>Uintah::ScalarParticles</datatype>
+      </port>
+      <port>
+        <name>Vector Particles</name>
+        <datatype>Uintah::VectorParticles</datatype>
+      </port>
+      <port>
+        <name>Tensor Particles</name>
+        <datatype>Uintah::TensorParticles</datatype>
+      </port>
+      <port>
+	<name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+   </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

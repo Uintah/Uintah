@@ -1,0 +1,6 @@
+void symbcs(IntVector domLo, IntVector domHi,
+	IntVector idxLo, IntVector idxHi, CCVariable<double> phi,
+	CCVariable<double> ae, CCVariable<double> aw,
+	CCVariable<double> an, CCVariable<double> as,
+	CCVariable<double> at, CCVariable<double> ab,
+	CCVariable<int> pcell, int symtry, bool lprdjk, bool lprdkk);

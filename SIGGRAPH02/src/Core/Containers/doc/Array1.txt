@@ -1,0 +1,58 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+Array1 is a parameterized type (template class) that implements a
+flexible one dimensional array.
+
+An array is constructed with the following:
+Array1(int size=0, int default_grow_size=10, int asize=-1);
+This looks fairly complex, but encapulates the simple way of using
+the arrays also.  In it's simplest form, with no arguments, Array1
+allocates an array which has 0 elements, and which allocates 10
+elements at a time when growing the array.  The next most common form,
+with a single integer argument, allocates an array of the specified
+size.  Using the second  you can specify how many new elements are
+allocated each time the array is reallocated.  Using a larger number
+for this will cause fewer reallocations when slowly building a large
+array, but is more wasteful when using small arrays.  The third
+argument specifies how many elements to allocate initially.  This can
+be used to jump start the growth of a large array.
+
+The array is accessed through the following methods:
+
+// Accesses the nth element of the array
+T& operator[](int n)
+
+// Returns the size of the array
+int size() 
+
+// Make the array larger by count elements
+void grow(int count, int grow_size=10);
+
+// Add one element to the array.  equivalent to:
+//  grow(1)
+//  array[array.size()-1]=data;
+void add(const T& data);
+
+// Remove one element from the array.  This is very inefficient
+// if you remove anything besides the last element.
+void remove(int);
+
+// Remove all elements in the array.  The array is not freed,
+// and the number of allocated elements remains the same.
+void remove_all();

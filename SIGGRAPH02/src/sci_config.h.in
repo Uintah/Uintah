@@ -1,0 +1,35 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+#ifndef SCI_CONFIG_H
+#define SCI_CONFIG_H
+
+#include "sci_defs.h"
+
+#define HAVE_LIMITS_H 0
+#define HAVE_SYS_SELECT_H 0
+#define HAVE_UNISTD_H 0
+#define HAVE_SYS_TIME_H 0
+#define HAVE_IEEEFP_H 0
+#define HAVE_SYS_UUID_H 0
+#define HAVE_UUID_UUID_H 0
+#define HAVE_EXT_ALGORITHM 0
+#define HAVE_STDINT_H 0
+#define HAVE_INTTYPES_H 0
+
+#endif

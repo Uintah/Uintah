@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="VolumeVisScene" category="Scenes">
+  <overview>
+    <authors>
+      <author>James Bigler</author>
+    </authors>
+    <summary>Volume Rendering Scene for the rtrt</summary>
+    <description>
+      <p>Version Date: Mon Jun  5 14:15:55 MDT 2000</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <outputs>
+      <port>
+        <name>Scene</name>
+        <datatype>rtrt::Scene</datatype>
+      </port>
+   </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,66 @@
+% -*-latex-*-
+% Document name: usersguide.tex
+% Creator: Rob MacLeod [macleod@cvrti.utah.edu]
+% Creation Date: Wed Feb 21 23:50:38 2001
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[11pt]{article}
+\usepackage[]{fancyhdr}
+\usepackage[]{usersguide}
+\usepackage[]{graphics}
+\usepackage[]{epsfig}
+\usepackage[]{html}
+\usepackage{makeidx}
+\usepackage{citexp}
+%\usepackage[]{makeindex}
+\makeindex
+\begin{htmlonly}
+  \include{usersguide.sty}
+\end{htmlonly}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\input{srugmacros}
+
+\begin{rawhtml}
+<script language="JavaScript">
+var treetop="";
+var path = location.pathname;
+while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+treetop += "../";
+path = path.substr(0, path.lastIndexOf("/"));
+}
+document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+</script>
+\end{rawhtml}
+
+% The title page
+\input{title}
+\newpage
+\tableofcontents
+\newpage
+
+% Now the main sections of the manual
+\input{intro}
+\input{concepts}
+\newpage
+\input{running}
+\input{network}
+\input{viewer}
+\input{packages}
+%\input{ui}
+\input{import}
+%\input{samples}
+
+% Now the glossary, appendiced, bibliography, and index
+\newpage
+%\input{glossary}
+\newpage
+%\input{appendices}
+
+\newpage
+\bibliography{biglit,crj,mm}
+\bibliographystyle{unsrt}
+\newpage
+\printindex
+
+\end{document}

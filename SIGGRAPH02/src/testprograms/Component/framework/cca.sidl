@@ -1,0 +1,131 @@
+
+package sci_cca  {
+
+  interface Port {
+  };
+
+  interface PortInfo {
+    string getType();
+    string getName();
+    string getProperty( in string name );
+  };
+  
+  interface ComponentID{
+    string toString();
+  };
+
+  interface Services {
+    Port     getPort(in string name);
+    PortInfo createPortInfo( in string name, 
+			     in string type, 
+			     in array<string, 1> properties );
+    void     registerUsesPort( in PortInfo nameAndType );
+    void     unregisterUsesPort( in string name );
+    void     addProvidesPort( in Port port, in PortInfo name );
+    void     removeProvidesPort( in string name );
+    void     releasePort( in string name );
+    ComponentID getComponentID();
+
+  };
+  
+  
+  interface Component {
+    void setServices( in Services svc );
+  };
+
+};
+
+//
+// Framework dependent section
+//
+
+package sci_cca {
+  
+  interface Framework {
+    Port getPort( in ComponentID, in string );
+    void registerUsesPort( in ComponentID, in PortInfo);
+    void unregisterUsesPort( in ComponentID, in string );
+    void addProvidesPort( in ComponentID, in Port, in PortInfo );
+    void removeProvidesPort( in ComponentID, in string );
+    void releasePort( in ComponentID, in string );
+
+    bool registerComponent( in string host, 
+			    in string program, 
+			    inout Component );
+    void unregisterComponent( in ComponentID );
+  };
+
+  //
+  // framework specific services
+  //
+
+  interface SciServices extends Services {
+    void init( in Framework, in ComponentID );
+    void shutdown();
+  };
+
+  //
+  // ConnectionServices
+  //
+
+  interface BuilderServices extends Port {
+    bool connect( in ComponentID use, in string use_name,
+		  in ComponentID provide, in string provide_name );
+    bool disconnect( in ComponentID use, in string use_name,
+		  in ComponentID provide, in string provide_name );
+    
+    // from CCAT
+
+    // export a port of a sub component as though it is mine. 
+    // i.e. without revealing that component
+    bool exportAs (in ComponentID sub, in string name, in string as );
+
+    // connect a provide port to another component without registrering
+    // the port for the general public
+    bool provideTo (in ComponentID sub, in string use, in string provide );
+  };
+
+  interface RegistryServices extends Port {
+    void getActiveComponentList( out array<ComponentID> componentIds );
+    void shutdown();  // Tells the framework to quit.  Here for now
+                      // as I don't have a better place to put it yet.
+  };
+
+  ////////////////////////////////////////////////////////////
+  //
+  // Component Interfaces
+  // 
+
+  interface TestPort extends Port {
+    void test();
+  };
+
+  ////////////////////////////////////////////////////////////
+  //
+  // REI Interfaces
+  // 
+
+  //// Selective Catalytic Reduction (SCR) Component
+  interface scrInterface extends Port {
+
+    void exec(in     int  cells,      // changed from long...
+	      in     double pressure, 
+	      in     double kgcat,
+	      in     double NH3ratio,
+	      in     double NH3,
+	      inout  double flow,
+	      in     double temp,
+	      in     double NO,
+	      in     double N2,
+	      in     double H2O,
+	      in     double O2,
+	      in     double sum_of_all_others,
+	      in     double heat_loss,
+	      inout  array<double> kmol_s,
+	      inout  double noreduction,
+	      inout  double new_temp,
+	      inout  double kmol_s_tot);
+  };
+
+}; // package sci_cca
+

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ColorMapReader" category="DataIO">
+  <overview>
+    <authors>
+      <author>Steven G. Parker</author>
+    </authors>
+    <summary>The ColorMap Read a persistent colormap from a file on disk.</summary>
+    <description>A ColorMap maps scalar values to color values.Upon opening, the The ColorMapReader GUI defaults to the directory that the user sets for their SCIRUN_DATA environment variable.  Otherwise, the GUI will default to the directory where the user's SCIRun executable resides. The current directory defaults to only show files with an .cmap extension which helps the user determine the difference between ColorMaps and other files.  However, the ColorMapReader can read-in a file with any extension so long as the data has the correct format.  If the user attempts to read-in a file that is other than a SCIRun supported ColorMap, or uses an incorrect file format, an error message appears in the Error frame within the SCIRun enrvironment. Clicking the OK button will load the file and dismiss the GUI.  
+    </description>
+  </overview>
+  <io>
+    <outputs>
+      <port>
+	<name>Output Data</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,96 @@
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter id="quickstart">
+<title>Quick Start SCIRun Installation</title>
+
+<section>
+<title>Introduction</title>
+<para>
+This chapter is a quick installation checklist.
+</para>
+<para>
+SCIRun is officially compatible with two platforms: SGI and Linux.
+</para>
+<para>
+See <xref linkend="inst"/> for minimum system requirements and detailed
+installation instructions.
+</para>
+<para>See <xref linkend="thirdparty"/> for required thirdparty
+software and instructions on its installation.</para>
+</section>
+
+<section>
+<title>Installing SCIRun and Packages</title>
+<para>
+<orderedlist>
+<listitem>
+<para>
+Obtain the source trees for SCIRun and any desired
+packages.
+</para>
+</listitem>
+<listitem>
+<para>
+Unzip the SCIRun source tree into a directory of your
+choosing.
+</para>
+<para>
+The chosen directory will be referred to as 
+<replaceable>install dir</replaceable> from now on.
+</para>
+</listitem>
+<listitem>
+<para>
+Unzip the packages (if any) into 
+<replaceable>install dir</replaceable>/SCIRun/src/Packages.
+</para>
+</listitem>
+</orderedlist>
+</para>          
+</section>
+
+<section>
+<title>Building SCIRun and Packages</title>
+<para>
+<orderedlist>
+<listitem>
+<para>
+Ensure that the target install machine matches the above 
+system requirements.
+</para>
+</listitem>
+<listitem>
+<para>
+Run configure from a directory of your choosing.
+</para>
+<para>
+The chosen directory will be referred to as
+<replaceable>build dir</replaceable> from now on.
+</para>
+</listitem>
+<listitem>
+<para>
+Run GNU make in the <replaceable>build dir</replaceable> directory.
+</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+</chapter>
