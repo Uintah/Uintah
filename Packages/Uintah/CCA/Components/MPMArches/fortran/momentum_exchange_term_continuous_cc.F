@@ -361,51 +361,20 @@ c     sux_cc
 c     spx_cc
 c
 
-c#ifdef __GNUC__
-C The variable names are too long the use the PASS3 macros,
-C so we have to do this - Steve
-c      call arrass(dfx_fcy_low_x, dfx_fcy_low_y,
-c     $ dfx_fcy_low_z, dfx_fcy_high_x,
-c     $ dfx_fcy_high_y, dfx_fcy_high_z,
-c     $ dfx_fcy, zero, valid_lo, valid_hi)
-
       call arrass(
      $     PASS3A(dfx_fcy)
      $     PASS3B(dfx_fcy), 
      $     zero, valid_lo, valid_hi)
-
-c      call arrass(dfx_fcz_low_x, dfx_fcz_low_y,
-c     $ dfx_fcz_low_z, dfx_fcz_high_x,
-c     $ dfx_fcz_high_y, dfx_fcz_high_z,
-c     $ dfx_fcz, zero, valid_lo, valid_hi)
 
       call arrass(
      $     PASS3A(dfx_fcz)
      $     PASS3B(dfx_fcz),
      $     zero, valid_lo, valid_hi)
 
-c      call arrass(dfx_cc_low_x, dfx_cc_low_y,
-c     $ dfx_cc_low_z, dfx_cc_high_x,
-c     $ dfx_cc_high_y, dfx_cc_high_z,
-c     $ dfx_cc, zero, valid_lo, valid_hi)
-
       call arrass(
      $     PASS3A(dfx_cc)
      $     PASS3B(dfx_cc),
      $     zero, valid_lo, valid_hi)
-
-c#else
-#if 0
-      call arrass(dfx_fcy_low, dfx_fcy_high,
-     $ dfx_fcy, zero, valid_lo, valid_hi)
-
-      call arrass(dfx_fcz_low, dfx_fcz_high,
-     $ dfx_fcz, zero, valid_lo, valid_hi)
-
-      call arrass(dfx_cc_low, dfx_cc_high,
-     $ dfx_cc, zero, valid_lo, valid_hi)
-
-#endif
 
 *     start computation
 c
@@ -422,7 +391,7 @@ c     debug, sk, April 14, 2001
 c         print*, 'printing drag forces'
       endif
 
-c     end debug
+c     end debug, sk, April 14, 2001
 
       do 120 k = valid_lo(3), valid_hi(3)
          do 110 j = valid_lo(2), valid_hi(2)
@@ -453,6 +422,32 @@ c     later we will get discrete fraction from mpm to input here.
                   
                   tmult = factor*viscos/dist
                      
+#if 0
+c     debug, sk, April 21, 2002
+                  if (koff.eq.1 .and. i.eq.3 .and. j.eq.9 .and.
+     $                 k.eq.9) then
+                     print*, 'PRINTING debug values of ug and up'
+                     print*, 'position = ',i,j,k
+                     print*, 'void fraction = ',epsg(i,j,k), i,j,k
+                     print*, 'gas velocity = ',ug_cc(i,j,k), i,j,k
+                     print*, 'solid velocity = ',up_cc(i,j,k), i,j,k
+                     print*, 'solid fraction = ',epss(i,j,k), i,j,k
+                     print*, 'factor = ',factor, i,j,k
+                     print*, 'tmult = ',tmult, i,j,k
+                     print*, 'dist = ',dist, i,j,k
+                     print*, 'drep = ',drep, i,j,k
+                     print*, 'epsg_cont = ',epsg_cont, i,j,k
+                     print*, 'two = ',two, i,j,k
+                     print*, 'idf = ',idf, i,j,k
+                     print*, 'idt1 = ', idt1, i,j,k
+                     print*, 'idt2 = ', idt2, i,j,k
+                     print*, 'sew(idf) = ',sew(idf)
+                     print*, 'sns(idt1) = ',sns(idt1)
+                     print*, 'stb(idt2) = ',stb(idt2)
+                  endif
+c     end debug, sk, April 21, 2002
+#endif
+                     
                   sux_cc(i,j,k) = sux_cc(i,j,k) + 
      $                 tmult*area*up_cc(i,j,k) 
 
@@ -469,7 +464,7 @@ c     debug, sk, April 14, 2001
 c                     print*, i,j,k, dfx_cc(i,j,k)
                   endif
 
-c     end debug
+c     end debug, sk, April 14, 2002
 
                end if
 
