@@ -24,7 +24,6 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Math/function.h>
 #include <Core/Datatypes/Field.h>
 
 namespace SCIRun {
