@@ -2135,13 +2135,14 @@ void ICE::addExchangeToMomentumAndEnergy(
   for(int m = 0; m < numMatls; m++)  {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
-    old_dw->get(rho_CC[m],   lb->rho_CCLabel,       dwindex,patch, Ghost::None,0);
-    new_dw->get(mom_L[m],    lb->mom_L_CCLabel,     dwindex,patch, Ghost::None,0);
-    new_dw->get(int_eng_L[m],lb->int_eng_L_CCLabel, dwindex,patch,
-		                                                     Ghost::None,0);
-    new_dw->get(vol_frac_CC[m], lb->vol_frac_CCLabel,dwindex,patch, Ghost::None,0);
+    old_dw->get(rho_CC[m],   lb->rho_CCLabel,  dwindex,patch, Ghost::None,0);
+    new_dw->get(mom_L[m],    lb->mom_L_CCLabel,  dwindex,patch, Ghost::None,0);
+    new_dw->get(int_eng_L[m],lb->int_eng_L_CCLabel,dwindex,patch,
+		Ghost::None,0);
+    new_dw->get(vol_frac_CC[m], lb->vol_frac_CCLabel,dwindex,patch, 
+		Ghost::None,0);
     new_dw->get(rho_micro_CC[m],lb->rho_micro_CCLabel,dwindex,patch,
-		                                                     Ghost::None,0);           
+		Ghost::None,0);           
     old_dw->get(cv_CC[m],lb->cv_CCLabel,dwindex,patch, Ghost::None, 0);
 
     new_dw->allocate( vel_CC[m],     lb->vel_CCLabel,          dwindex, patch);
@@ -2165,10 +2166,12 @@ void ICE::addExchangeToMomentumAndEnergy(
       
   // Set (*)mom_L_ME = (*)mom_L
   // if you have only 1 mat then there is no exchange
+#if 0
   for (int m = 0; m < numMatls; m++) {
     mom_L_ME[m]     = mom_L[m];
     int_eng_L_ME[m] = int_eng_L[m];
   }
+#endif
   
   //__________________________________
   // Convert vars. flux -> primitive 
@@ -2176,9 +2179,12 @@ void ICE::addExchangeToMomentumAndEnergy(
     for (int m = 0; m < numMatls; m++) {
       mass[m] = rho_CC[m][*iter] * vol;
       Temp_CC[m][*iter] = int_eng_L[m][*iter]/(mass[m]*cv_CC[m][*iter]);
+      vel_CC[m][*iter]  =  mom_L[m][*iter]/mass[m];
+#if 0
       vel_CC[m][*iter].x( (mom_L[m][*iter].x()/mass[m] ) );
       vel_CC[m][*iter].y( (mom_L[m][*iter].y()/mass[m] ) );
       vel_CC[m][*iter].z( (mom_L[m][*iter].z()/mass[m] ) );
+#endif
     }  
   }
 
@@ -2302,9 +2308,12 @@ void ICE::addExchangeToMomentumAndEnergy(
     for (int m = 0; m < numMatls; m++) {
       mass[m] = rho_CC[m][*iter] * vol;
       int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv_CC[m][*iter] * mass[m];
+      mom_L_ME[m][*iter] = vel_CC[m][*iter] * mass[m];
+#if 0
       mom_L_ME[m][*iter].x( (vel_CC[m][*iter].x() * mass[m] ) );
       mom_L_ME[m][*iter].y( (vel_CC[m][*iter].y() * mass[m] ) );
       mom_L_ME[m][*iter].z( (vel_CC[m][*iter].z() * mass[m] ) );
+#endif
     }  
   }
    
@@ -3851,6 +3860,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.93  2001/01/15 17:57:33  jas
+// Commented out the assignment of mom_L_ME = mom_L in addExchangeToMomAndEnergy.
+// Simplified the assignment of the primitive vars that are Vector quantities
+// in addExchangeToMomentumAndEnergy.
+//
 // Revision 1.92  2001/01/15 00:28:21  harman
 // converted addExchangeToMomentumAndEnergy from flux to primitive formulation
 //
