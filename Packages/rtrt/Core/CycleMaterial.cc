@@ -30,15 +30,19 @@ CycleMaterial::~CycleMaterial()
 }
 
 void CycleMaterial::next() {
-  current++;
-  if (current<=members.size())
+  if (members.size() == 0) ASSERTFAIL("Cycle material has no members");
+  if (current+1 == members.size())
     current=0;
+  else
+    current++;
 }
 
 void CycleMaterial::prev() {
-  current--;
-  if (current<0)
+  if (members.size() == 0) ASSERTFAIL("Cycle material has no members");
+  if (current-1 < 0)
     current=members.size()-1;
+  else
+    current--;
 }
 
 void CycleMaterial::shade(Color& result, const Ray& ray,
