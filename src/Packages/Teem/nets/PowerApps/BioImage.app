@@ -5022,11 +5022,10 @@ class BioImageApp {
             pack $w.modes.slider.slab -side top -anchor n -expand 1 -fill x
 	} else {
 	    # Full MIP mode
-            $mods(ViewSlices)-c rebind $w.$axis
             pack forget $w.modes.slider.slice
   	    pack forget $w.modes.slider.slab
 	}
-        $mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis
+        $mods(ViewSlices)-c rebind $w.bd.$axis
         $mods(ViewSlices)-c redrawall
     }
 
