@@ -812,7 +812,7 @@ void DataArchive::PatchHashMaps::purgeCache()
   d_matHashMaps.clear();
   d_isParsed = false;
 
-  for (int i = 0; i < docs.size(); i++)
+  for (unsigned int i = 0; i < docs.size(); i++)
     docs[i]->release();
   docs.clear();
 }
