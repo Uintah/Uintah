@@ -210,6 +210,8 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
   
   priv->followPath = false;
 
+  priv->show_frame_rate = true;
+
   shadowMode_ = scene->shadow_mode;
   ambientMode_ = scene->ambient_mode;
 
@@ -640,8 +642,18 @@ Dpy::renderFrame() {
       glLoadIdentity();
       glTranslatef(0.375, 0.375, 0.0);
       displayedImage->draw( renderWindowSize_, fullScreenMode_ );
-      if (priv->show_frame_rate)
+      if (priv->show_frame_rate) {
+	// Figure out how wide the string is
+	int width = calc_width(fontInfo, buf);
+	// Now we want to draw a gray box beneth the font using blending. :)
+	glEnable(GL_BLEND);
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	int textheight=fontInfo->descent+fontInfo->ascent;
+	glColor4f(0.5,0.5,0.5,0.5);
+	glRecti(8,3-fontInfo->descent-2,12+width,fontInfo->ascent+3);
+	glDisable(GL_BLEND);
 	printString(fontbase, 10, 3, buf, Color(1,1,1));
+      }
       display();
 #if 0
       if(priv->displayRStats_ )
