@@ -57,6 +57,8 @@ ParticleVis::ParticleVis(GuiContext* ctx) :
   radius(ctx->subVar("radius")), 
   drawcylinders(ctx->subVar("drawcylinders")),
   length_scale(ctx->subVar("length_scale")),
+  min_crop_length(ctx->subVar("min_crop_length")),
+  max_crop_length(ctx->subVar("max_crop_length")),
   head_length(ctx->subVar("head_length")), width_scale(ctx->subVar("width_scale")),
   shaft_rad(ctx->subVar("shaft_rad")),
   show_nth(ctx->subVar("show_nth")),
@@ -328,10 +330,15 @@ void ParticleVis::execute()
 	}
  	if( drawVectors.get() == 1 && hasVectors){
  	  Vector V = (*v_it)[*iter];
- 	  if(V.length2() * length_scale.get() > 1e-12 )
- 	    arrows->add( (*p_it)[*iter],
- 			 V*length_scale.get(),
- 			 outcolor, outcolor, outcolor);
+	  double len = V.length() * length_scale.get();
+ 	  if(len > min_crop_length.get() ){
+	    if( max_crop_length.get() == 0 ||
+		len < max_crop_length.get()){
+	      arrows->add( (*p_it)[*iter],
+			   V*length_scale.get(),
+			   outcolor, outcolor, outcolor);
+	    }
+	  }
  	}
       }
       
@@ -364,10 +371,15 @@ void ParticleVis::execute()
 	}
  	if( drawVectors.get() == 1 && hasVectors){
  	  Vector V = (*v_it)[*iter];
- 	  if(V.length2() * length_scale.get() > 1e-12 )
- 	    arrows->add( (*p_it)[*iter],
- 			 V*length_scale.get(),
- 			 outcolor, outcolor, outcolor);
+	  double len = V.length() * length_scale.get();
+ 	  if(len > min_crop_length.get() ){
+	    if( max_crop_length.get() == 0 ||
+		len < max_crop_length.get()){
+	      arrows->add( (*p_it)[*iter],
+			   V*length_scale.get(),
+			   outcolor, outcolor, outcolor);
+	    }
+	  }
  	}
       } 
       obj->add( pts );
