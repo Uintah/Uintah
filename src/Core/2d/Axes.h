@@ -36,6 +36,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/2d/Drawable.h>
 #include <Core/share/share.h>
+#include <Core/2d/glprintf.h>
  
 namespace SCIRun {
 
@@ -45,11 +46,13 @@ private:
   int num_v_tics;
   int num_h_tics;
   Color color; 
+  bool initialized;
   
 public:
 
-  Axes(const string &name="") : Drawable(name) {}
-  Axes(int h_tics, int v_tics, const string &name="") : Drawable(name)
+  Axes(const string &name="") : Drawable(name), initialized(false) {}
+  Axes(int h_tics, int v_tics, const string &name="") : Drawable(name),
+    initialized(false)
   { num_v_tics = v_tics; num_h_tics = h_tics; }
   
   virtual ~Axes();
