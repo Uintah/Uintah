@@ -29,6 +29,7 @@ if {[info commands BaseWidget] != ""} {
 }
 
 itcl_class BaseWidget {
+    inherit Module
     constructor {config} {
 	set name BaseWidget
 	global $this-material
