@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/ApproachContact.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
@@ -34,6 +35,9 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
       else if (con_type == "friction")
 	 return(scinew FrictionContact(child,ss,lb,n8or27));
     
+      else if (con_type == "approach")
+	 return(scinew ApproachContact(child,ss,lb,n8or27));
+
       else if (con_type == "rigid")
 	 return(scinew RigidBodyContact(child,ss,lb));
     
