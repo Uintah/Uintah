@@ -33,7 +33,6 @@ itcl_class MIT_DataIO_MeasurementsReader {
     }
 
     method ui {} {
-	global env
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
@@ -41,18 +40,10 @@ itcl_class MIT_DataIO_MeasurementsReader {
 	}
 
 	toplevel $w -class TkFDialog
-	set initdir ""
-	
+
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	
-	if {[info exists env(SCIRUN_DATA)]} {
-	    set initdir $env(SCIRUN_DATA)
-	} elseif {[info exists env(SCI_DATA)]} {
-	    set initdir $env(SCI_DATA)
-	} elseif {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
+	set initdir [netedit getenv SCIRUN_DATA]
 	
 	#######################################################
 	# to be modified for particular reader

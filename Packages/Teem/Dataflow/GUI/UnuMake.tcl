@@ -84,7 +84,6 @@ itcl_class Teem_Unu_UnuMake {
 
     # Method for browsing to the data file
     method make_file_open_box {} {
-	global env
 	global $this-filename
 
 	set w [format "%s-fb" .ui[modname]]
@@ -99,18 +98,10 @@ itcl_class Teem_Unu_UnuMake {
 	}
 
 	toplevel $w -class TkFDialog
-	set initdir ""
 	
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	
-	if {[info exists env(SCIRUN_DATA)]} {
-	    set initdir $env(SCIRUN_DATA)
-	} elseif {[info exists env(SCI_DATA)]} {
-	    set initdir $env(SCI_DATA)
-	} elseif {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
+	set initdir [netedit getenv SCIRUN_DATA]
 	
 	#######################################################
 	# to be modified for particular reader
@@ -148,7 +139,6 @@ itcl_class Teem_Unu_UnuMake {
     # Method for browsing to a header file in
     # the case of writing out the header.
     method make_file_save_box {} {
-	global env
 	global $this-header_filename
 	global $this-header_filetype
 	
@@ -163,18 +153,10 @@ itcl_class Teem_Unu_UnuMake {
 	    return $w
 	}
 	toplevel $w -class TkFDialog
-	set initdir ""
 	
 	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	
-	if {[info exists env(SCIRUN_DATA)]} {
-	    set initdir $env(SCIRUN_DATA)
-	} elseif {[info exists env(SCI_DATA)]} {
-	    set initdir $env(SCI_DATA)
-	} elseif {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
+	# it's used if $this-filename is empty	
+	set initdir [netedit getenv SCIRUN_DATA]
 	
 	#######################################################
 	# to be modified for particular reader
@@ -424,7 +406,6 @@ itcl_class Teem_Unu_UnuMake {
 
 
     method ui {} {
-	global env
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {

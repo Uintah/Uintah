@@ -30,13 +30,10 @@ proc updateFilebox { w } {
 }
 
 proc setFileboxToHomeDir { w } {
-
-    global env
-
     set dirs $w.f.bro.dir.dirs
     set files $w.f.bro.file.files
 
-    fbcd $w $env(PWD) $dirs $files
+    fbcd $w [netedit getenv PWD] $dirs $files
 }
 
 proc makeFileboxWithFilter { w var command cancel filter } {
@@ -49,11 +46,10 @@ proc makeFileboxWithFilter { w var command cancel filter } {
 
     set $w-oldsel ""
 
-    global env
-    if { [info exists env(PSE_DATA)] } {
-	set $w-path $env(PSE_DATA)
+    if { [string length [netedit getenv SCIRUN_DATA]] } {
+	set $w-path [netedit getenv SCIRUN_DATA]
     } else {
-	set $w-path $env(PWD)
+	set $w-path [netedit getenv PWD]
     }
     set $w-oldpath [set $w-path]
 
@@ -140,7 +136,7 @@ proc makeFileboxWithFilter { w var command cancel filter } {
     frame $w.f.but
     button $w.f.but.ok -text OK -command $command
     button $w.f.but.filt -text Filter -command "fbupdate $w $dirs $files"
-    button $w.f.but.home -text Home -command "fbcd $w $env(PWD) $dirs $files"
+    button $w.f.but.home -text Home -command "fbcd $w [netedit getenv PWD] $dirs $files"
     button $w.f.but.data -text Data -command "fbcd $w $w-path $dirs $files"
     button $w.f.but.cancel -text Close -command $cancel
     pack $w.f.but.ok -in $w.f.but -side left -padx 2 -pady 2 -anchor w
