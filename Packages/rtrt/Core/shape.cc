@@ -4,8 +4,7 @@
 
 using namespace rtrt;
 
-GLBar::GLBar( void )
-{
+GLBar::GLBar( void ) {
   left = 200;
   top = 200;
   width = 50;
@@ -16,8 +15,7 @@ GLBar::GLBar( void )
   blue = 1.0;
 }
 
-GLBar::GLBar( float center_x, float center_y, float w, float r, float g, float b )
-{
+GLBar::GLBar( float center_x, float center_y, float w, float r, float g, float b ) {
   left = center_x - w/2;
   top = center_y + 2.5;
   width = w;
@@ -28,15 +26,13 @@ GLBar::GLBar( float center_x, float center_y, float w, float r, float g, float b
   blue = b;
 }
 
-void GLBar::resize( float dx, float dy )
-{
+void GLBar::resize( float dx, float dy ) {
   left -= dx;
   right += dx;
   width += 2*dx;
 }
 
-void GLBar::draw( void )
-{
+void GLBar::draw( void ) {
   glBegin( GL_QUADS );
   glColor3f( red, green, blue );
   glVertex2f( left, top );
@@ -46,16 +42,14 @@ void GLBar::draw( void )
   glEnd();
 }
 
-void GLBar::translate( float dx, float dy )
-{
+void GLBar::translate( float dx, float dy ) {
   left += dx;
   right += dx;
   top += dy;
   bottom += dy;
 }
 
-void GLBar::invertColor( float color[3] )
-{
+void GLBar::invertColor( float color[3] ) {
   red = 1.0 - color[0];
   green = 1.0 - color[1];
   blue = 1.0 - color[2];
@@ -63,8 +57,7 @@ void GLBar::invertColor( float color[3] )
 
 
 
-GLRect::GLRect( void )
-{
+GLRect::GLRect( void ) {
   top = left = 250;
   width = height = 90;
   right = left + width;
@@ -72,8 +65,7 @@ GLRect::GLRect( void )
   red = green = blue = 1.0;
 }
 
-GLRect::GLRect( float t, float l, float w, float h, float r, float g, float b )
-{
+GLRect::GLRect( float t, float l, float w, float h, float r, float g, float b ) {
   top = t;
   left = l;
   width = w;
@@ -85,8 +77,7 @@ GLRect::GLRect( float t, float l, float w, float h, float r, float g, float b )
   blue = b;
 }
 
-void GLRect::draw( void )
-{
+void GLRect::draw( void ) {
   glBegin( GL_QUADS );
   glColor3f( red, green, blue );
   glVertex2f( left, top );
@@ -96,16 +87,14 @@ void GLRect::draw( void )
   glEnd();
 }
 
-void GLRect::translate( float dx, float dy )
-{
+void GLRect::translate( float dx, float dy ) {
   left += dx;
   top += dy;
   bottom += dy;
   right += dx;
 }
 
-void GLRect::invertColor( float color[3] )
-{
+void GLRect::invertColor( float color[3] ) {
   red = 1.0 - color[0];
   green = 1.0 - color[1];
   blue = 1.0 - color[2];
@@ -113,8 +102,7 @@ void GLRect::invertColor( float color[3] )
 
 
 
-GLStar::GLStar( void )
-{
+GLStar::GLStar( void ) {
   top = 100;
   left = 100;
   width = 10;
@@ -125,8 +113,7 @@ GLStar::GLStar( void )
   blue = 1.0;
 }
 
-GLStar::GLStar( float center_x, float center_y, float w, float r, float g, float b )
-{
+GLStar::GLStar( float center_x, float center_y, float w, float r, float g, float b ) {
   top = center_y + w/2;
   left = center_x - w/2;
   width = w;
@@ -137,8 +124,7 @@ GLStar::GLStar( float center_x, float center_y, float w, float r, float g, float
   blue = b;
 }
 
-void GLStar::draw( void )
-{
+void GLStar::draw( void ) {
   glBegin( GL_TRIANGLES );
   glColor3f( red, green, blue );
   glVertex2f( left + width/2, top );
@@ -156,16 +142,14 @@ void GLStar::draw( void )
   glEnd();
 }
 
-void GLStar::translate( float dx, float dy )
-{
+void GLStar::translate( float dx, float dy ) {
   left += dx;
   top += dy;
   bottom += dy;
   right += dx;
 }
 
-void GLStar::invertColor( float color[3] )
-{
+void GLStar::invertColor( float color[3] ) {
   red = 1.0 - color[0];
   green = 1.0 - color[1];
   blue = 1.0 - color[2];
