@@ -15,7 +15,10 @@
 #include <Widgets/GuageWidget.h>
 #include <Constraints/DistanceConstraint.h>
 #include <Constraints/SegmentConstraint.h>
-
+#include <Geom/Cylinder.h>
+#include <Geom/Group.h>
+#include <Geom/Pick.h>
+#include <Geom/Sphere.h>
 
 const Index NumCons = 2;
 const Index NumVars = 4;
@@ -55,34 +58,36 @@ GuageWidget::GuageWidget( Module* module )
    constraints[GuageW_ConstDist]->VarChoices(Scheme2, 2, 2, 1);
    constraints[GuageW_ConstDist]->Priorities(P_Highest, P_Highest, P_Default);
 
-   materials[GuageW_PointMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, 1),
+   materials[GuageW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
 						  Color(.5,.5,.5), 20);
-   materials[GuageW_EdgeMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, .66),
+   materials[GuageW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
 						 Color(.5,.5,.5), 20);
-   materials[GuageW_HighMatl] = new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
+   materials[GuageW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
 						 Color(0,0,.6), 20);
 
    Index geom;
    for (geom = GuageW_SphereL; geom <= GuageW_SphereL; geom++) {
       geometries[geom] = new GeomSphere;
-      geometries[geom]->pick = new GeomPick(module);
-      geometries[geom]->pick->set_highlight(materials[GuageW_HighMatl]);
-      geometries[geom]->pick->set_cbdata((void*)geom);
+      GeomPick* p = new GeomPick(module);
+      p->set_highlight(materials[GuageW_HighMatl]);
+      p->set_cbdata((void*)geom);
+      geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[GuageW_PointMatl]);
    }
    for (geom = GuageW_Cylinder; geom <= GuageW_SliderCyl; geom++) {
       geometries[geom] = new GeomCylinder;
-      geometries[geom]->pick = new GeomPick(module);
-      geometries[geom]->pick->set_highlight(materials[GuageW_HighMatl]);
-      geometries[geom]->pick->set_cbdata((void*)geom);
+      GeomPick* p = new GeomPick(module);
+      p->set_highlight(materials[GuageW_HighMatl]);
+      p->set_cbdata((void*)geom);
+      geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[GuageW_EdgeMatl]);
    }
 
-   widget = new ObjGroup;
+   widget = new GeomGroup;
    for (geom = 0; geom <= NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
-   widget->pick=new GeomPick(module);
+   widget->set_pick(new GeomPick(module));
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -115,7 +120,7 @@ GuageWidget::execute()
    Vector v(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
    v.normalize();
    for (Index geom = 0; geom <= NumGeoms; geom++) {
-      geometries[geom]->pick->set_principal(v);
+      geometries[geom]->get_pick()->set_principal(v);
    }
 }
 

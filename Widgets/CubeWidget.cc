@@ -16,7 +16,10 @@
 #include <Constraints/DistanceConstraint.h>
 #include <Constraints/HypotenousConstraint.h>
 #include <Constraints/PythagorasConstraint.h>
-
+#include <Geom/Cylinder.h>
+#include <Geom/Group.h>
+#include <Geom/Pick.h>
+#include <Geom/Sphere.h>
 
 const Index NumCons = 18;
 const Index NumVars = 11;
@@ -234,34 +237,36 @@ CubeWidget::CubeWidget( Module* module )
    constraints[CubeW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[CubeW_PointMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, 1),
+   materials[CubeW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
 						 Color(.5,.5,.5), 20);
-   materials[CubeW_EdgeMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, .66),
+   materials[CubeW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
 						Color(.5,.5,.5), 20);
-   materials[CubeW_HighMatl] = new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
+   materials[CubeW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
 						Color(0,0,.6), 20);
 
    Index geom;
    for (geom = CubeW_SphereIUL; geom <= CubeW_SphereODL; geom++) {
       geometries[geom] = new GeomSphere;
-      geometries[geom]->pick = new GeomPick(module);
-      geometries[geom]->pick->set_highlight(materials[CubeW_HighMatl]);
-      geometries[geom]->pick->set_cbdata((void*)geom);
+      GeomPick* p=new GeomPick(module);
+      p->set_highlight(materials[CubeW_HighMatl]);
+      p->set_cbdata((void*)geom);
+      geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[CubeW_PointMatl]);
    }
    for (geom = CubeW_CylIU; geom <= CubeW_CylOL; geom++) {
       geometries[geom] = new GeomCylinder;
-      geometries[geom]->pick = new GeomPick(module);
-      geometries[geom]->pick->set_highlight(materials[CubeW_HighMatl]);
-      geometries[geom]->pick->set_cbdata((void*)geom);
+      GeomPick* p = new GeomPick(module);
+      p->set_highlight(materials[CubeW_HighMatl]);
+      p->set_cbdata((void*)geom);
+      geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[CubeW_EdgeMatl]);
    }
 
-   widget=new ObjGroup;
+   widget=new GeomGroup;
    for (geom = 0; geom <= NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
-   widget->pick=new GeomPick(module);
+   widget->set_pick(new GeomPick(module));
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -339,7 +344,7 @@ CubeWidget::execute()
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
    for (Index geom = 0; geom <= NumGeoms; geom++) {
-      geometries[geom]->pick->set_principal(spvec1, spvec2, v);
+      geometries[geom]->get_pick()->set_principal(spvec1, spvec2, v);
    }
 }
 
