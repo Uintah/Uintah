@@ -17,7 +17,7 @@
 
 ##  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ##
-##  This configure.in file has some specialized sections for doing certain
+##  This configure.ac file has some specialized sections for doing certain
 ##  tasks.  If you want to add additional tasks (search for new libraries,
 ##  headers, etc.) please add the new task to the appropriate section.
 ##  Please also try to adhere to the conventions used in this file
@@ -37,8 +37,8 @@
 ##    configure packages
 ##    generate output files
 ##
-##  NOTE: When committing this file, do NOT commit both configure.in
-##  and configure at the same time.  Please commit configure.in FIRST,
+##  NOTE: When committing this file, do NOT commit both configure.ac
+##  and configure at the same time.  Please commit configure.ac FIRST,
 ##  then commit configure separately.  It saves people from conflicts
 ##  with autoconf.
 ##   - Steve
@@ -841,6 +841,12 @@ case $host in
          ;;
       *)
 #      for these compilers: *xlC*) or *KCC*)
+
+         # Tell the compiler that the executable can use a
+         # maximum of 1280MB (5*256MB) of memory per processor
+         # rather than the default of 256MB.
+         LDFLAGS="-bmaxdata:0x50000000 $LDFLAGS"
+
          if test "$enable_64bit" = "yes"; then
             BIT64FLAG=-q64
          fi
