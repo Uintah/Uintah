@@ -179,6 +179,7 @@ private:
 
       const ProcessorGroup* d_myworld;
       int d_conv_scheme;
+      bool d_radRKsteps;
 
 }; // End class EnthalpySolver
 } // End namespace Uintah
