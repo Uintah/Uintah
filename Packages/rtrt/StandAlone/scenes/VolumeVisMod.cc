@@ -592,10 +592,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr << " -colormap nrrd [filename.nrrd] - read in a nrrd for the colormap with alphas\n";
       cerr << " -alpha [filename.nrrd] - read in a nrrd with just the alpha transfer function\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
-      cerr << " -nohv  - use the VolumeVis code instead of HVolumeVis.\n";
       cerr << " -depth - the number of depths to use for the HVolumeVis.\n";
       cerr << "          [defaults to "<<depth<<"]\n";
-      cerr << " -nohv  - do not use the fast version.\n";
+      cerr << " -nohv  - do not use the accelaration structure version.\n";
       return 0;
     }
   }
