@@ -20,7 +20,7 @@
  *  ParametricPolyline.cc: Displayable 2D object
  *
  *  Written by:
- *   Chrid Moulding
+ *   Chris Moulding
  *   Department of Computer Science
  *   University of Utah
  *   July 2001

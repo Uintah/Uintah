@@ -33,6 +33,7 @@
 #include <Core/2d/OpenGL.h>
 #include <Core/2d/glprintf.h>
 #include <Core/2d/Polyline.h>
+#include <Core/2d/ParametricPolyline.h>
 #include <Core/2d/LockedPolyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Hairline.h>
@@ -79,6 +80,21 @@ LockedPolyline::draw( bool )
   glEnd();
 
   read_unlock();
+}
+
+void
+ParametricPolyline::draw( bool )
+{
+  glColor3f( color_.r(), color_.g(), color_.b() );
+
+  glBegin(GL_LINE_STRIP);
+
+  iter i = data_.begin();
+
+  while (i != data_.end()) 
+      glVertex2f((*i).second.first,(*i).second.second);
+
+  glEnd();
 }
   
 void 
