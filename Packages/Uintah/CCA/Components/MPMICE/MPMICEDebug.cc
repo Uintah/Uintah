@@ -29,18 +29,21 @@ void    MPMICE::printData(int matl,
   //__________________________________
   // Limit when we dump
   bool dumpThisMatl = false;
-  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
-    if (matl == d_dbgMatls[m]) {
+  for (int m = 0; m<(int) d_ice->d_dbgMatls.size(); m++) {
+    if (matl == d_ice->d_dbgMatls[m]) {
       dumpThisMatl = true;
     }
   } 
   
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;        
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
+    
+  bool onRightLevel = false;
+  if(levelIndx == d_ice->d_dbgLevel || d_ice->d_dbgLevel == -9) {
+    onRightLevel = true;
+  }
+  
+  if ( onRightLevel && dumpThisMatl == true && d_ice->d_dbgTime_to_printData ) {        
     IntVector low, high; 
     
     d_ice->adjust_dbg_indices( include_EC, patch, d_ice->d_dbgBeginIndx, 
@@ -49,7 +52,7 @@ void    MPMICE::printData(int matl,
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n"; 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs);
+    cerr.precision(d_ice->d_dbgSigFigs);
         
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
@@ -68,7 +71,7 @@ void    MPMICE::printData(int matl,
   }
   //__________________________________
   //  bullet proof
-  if (d_dbgMatls.size() == 0){
+  if (d_ice->d_dbgMatls.size() == 0){
     throw ProblemSetupException(
           "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
   }
@@ -88,18 +91,21 @@ void    MPMICE::printNCVector(int matl,
   //__________________________________
   // Limit when we dump
   bool dumpThisMatl = false;
-  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
-    if (matl == d_dbgMatls[m]) {
+  for (int m = 0; m<(int) d_ice->d_dbgMatls.size(); m++) {
+    if (matl == d_ice->d_dbgMatls[m]) {
       dumpThisMatl = true;
     }
   } 
   
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;             
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
+    
+  bool onRightLevel = false;
+  if(levelIndx == d_ice->d_dbgLevel || d_ice->d_dbgLevel == -9) {
+    onRightLevel = true;
+  }
+  
+  if ( onRightLevel && dumpThisMatl == true && d_ice->d_dbgTime_to_printData ) {            
     IntVector low, high; 
     
     d_ice->adjust_dbg_indices( include_EC, patch, d_ice->d_dbgBeginIndx, 
@@ -107,7 +113,7 @@ void    MPMICE::printNCVector(int matl,
     
     string var_name;
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs); 
+    cerr.precision(d_ice->d_dbgSigFigs); 
     
     for (int dir = 0; dir < 3 ; dir ++ ) { 
       if (dir == 0 ) {
@@ -140,7 +146,7 @@ void    MPMICE::printNCVector(int matl,
   }
   //__________________________________
   //  bullet proof
-  if (d_dbgMatls.size() == 0){
+  if (d_ice->d_dbgMatls.size() == 0){
     throw ProblemSetupException(
           "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
   }
