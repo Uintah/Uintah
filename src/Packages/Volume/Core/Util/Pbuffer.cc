@@ -89,9 +89,6 @@ using std::endl;
 typedef void ( * PFNGLXBINDTEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, int buffer);
 typedef void ( * PFNGLXRELEASETEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, int buffer);
 
-static PFNGLXBINDTEXIMAGEATIPROC glXBindTexImageATI = 0;
-static PFNGLXRELEASETEXIMAGEATIPROC glXReleaseTexImageATI = 0;
-
 #endif /* GLX_ATI_render_texture */
 
 #ifndef GLX_NV_float_buffer
@@ -100,7 +97,45 @@ static PFNGLXRELEASETEXIMAGEATIPROC glXReleaseTexImageATI = 0;
 
 #endif /* GLX_NV_float_buffer */
 
-#define getProcAddress(x) ((*glXGetProcAddress)((const GLubyte*)x))
+#ifndef GL_NV_float_buffer
+
+#define GL_FLOAT_R_NV 0x8880
+#define GL_FLOAT_RG_NV 0x8881
+#define GL_FLOAT_RGB_NV 0x8882
+#define GL_FLOAT_RGBA_NV 0x8883
+#define GL_FLOAT_R16_NV 0x8884
+#define GL_FLOAT_R32_NV 0x8885
+#define GL_FLOAT_RG16_NV 0x8886
+#define GL_FLOAT_RG32_NV 0x8887
+#define GL_FLOAT_RGB16_NV 0x8888
+#define GL_FLOAT_RGB32_NV 0x8889
+#define GL_FLOAT_RGBA16_NV 0x888A
+#define GL_FLOAT_RGBA32_NV 0x888B
+#define GL_TEXTURE_FLOAT_COMPONENTS_NV 0x888C
+#define GL_FLOAT_CLEAR_COLOR_VALUE_NV 0x888D
+#define GL_FLOAT_RGBA_MODE_NV 0x888E
+
+#endif /* GL_NV_float_buffer */
+
+#ifndef GL_NV_texture_rectangle
+
+#define GL_TEXTURE_RECTANGLE_NV 0x84F5
+#define GL_TEXTURE_BINDING_RECTANGLE_NV 0x84F6
+#define GL_PROXY_TEXTURE_RECTANGLE_NV 0x84F7
+#define GL_MAX_RECTANGLE_TEXTURE_SIZE_NV 0x84F8
+
+#endif /* GL_NV_texture_rectangle */
+
+#if !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES)
+
+extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
+
+#endif /* GLX_ARB_get_proc_address */
+
+#define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
+
+static PFNGLXBINDTEXIMAGEATIPROC glXBindTexImageATI = 0;
+static PFNGLXRELEASETEXIMAGEATIPROC glXReleaseTexImageATI = 0;
 
 #endif /* HAVE_GLEW */
 
@@ -110,6 +145,7 @@ static bool mSupported = false;
 static bool mATI_render_texture = false;
 static bool mATI_pixel_format_float = false;
 static bool mNV_float_buffer = false;
+static bool mNV_texture_rectangle = false;
 
 namespace Volume {
 
@@ -133,16 +169,17 @@ Pbuffer::create ()
 #ifdef HAVE_GLEW
     // extension check
     mATI_render_texture = GLXEW_ATI_render_texture;
-    mNV_float_buffer = GLXEW_NV_float_buffer;
     mATI_pixel_format_float = GLXEW_ATI_pixel_format_float;
+    mNV_float_buffer = GLXEW_NV_float_buffer && GLEW_NV_float_buffer;
+    mNV_texture_rectangle = GLEW_NV_texture_rectangle;
     if (!GLXEW_VERSION_1_3
-        || (mRenderTex && !GLXEW_ATI_render_texture) // render texture extensions
         || (mFormat == GL_FLOAT // float buffer extensions
-            && !(GLXEW_ATI_pixel_format_float || GLXEW_NV_float_buffer))) {
+            && !(mATI_pixel_format_float || mNV_float_buffer))) {
       mSupported = false;
     } else {
       mSupported = true;
     }
+    //        || (mRenderTex && !mATI_render_texture) // render texture extensions
 #else
     /* query GLX version */
     int major, minor;
@@ -150,15 +187,17 @@ Pbuffer::create ()
     sscanf(version, "%d.%d", &major, &minor);
     mATI_render_texture = gluCheckExtension((GLubyte*)"GLX_ATI_render_texture", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
     mATI_pixel_format_float = gluCheckExtension((GLubyte*)"GLX_ATI_pixel_format_float", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
-    mNV_float_buffer = gluCheckExtension((GLubyte*)"GLX_NV_float_buffer", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
+    mNV_float_buffer = gluCheckExtension((GLubyte*)"GLX_NV_float_buffer", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS))
+      && gluCheckExtension((GLubyte*)"GL_NV_float_buffer", (GLubyte*)glGetString(GL_EXTENSIONS));
+    mNV_texture_rectangle = gluCheckExtension((GLubyte*)"GL_NV_texture_rectangle", (GLubyte*)glGetString(GL_EXTENSIONS));
     
     if(minor < 3
-       || (mRenderTex && !mATI_render_texture)
-       || (mFormat == GL_FLOAT && !mATI_pixel_format_float && mNV_float_buffer)) {
+       || (mFormat == GL_FLOAT && !(mATI_pixel_format_float || mNV_float_buffer))) {
       mSupported = false;
     } else {
       mSupported = true;
     }
+    //       || (mRenderTex && !mATI_render_texture)
 
     if(mSupported && mATI_render_texture) {
       bool fail = false;
@@ -356,19 +395,34 @@ Pbuffer::create ()
     glXQueryDrawable(mImpl->mDisplay, mImpl->mPbuffer, GLX_HEIGHT,
                      (unsigned int*)&mHeight);
     // ...
-    if (mRenderTex)
-    {
+    if (mRenderTex) {
       // create pbuffer texture object
       glGenTextures(1, &mTex);
-      if (mFormat == GL_FLOAT && mNV_float_buffer)
-        mTexFormat = GL_TEXTURE_RECTANGLE_NV;
-      else
-        mTexFormat = GL_TEXTURE_2D;
-      glBindTexture(mTexFormat, mTex);
-      glTexParameteri(mTexFormat, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      glTexParameteri(mTexFormat, GL_TEXTURE_WRAP_T, GL_CLAMP);
-      glTexParameteri(mTexFormat, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(mTexFormat, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      if(mFormat == GL_FLOAT) {
+        if(mNV_float_buffer) {
+          mTexTarget = GL_TEXTURE_RECTANGLE_NV;
+          if(mNumColorBits == 16)
+            mTexFormat = GL_FLOAT_RGBA16_NV;
+          else
+            mTexFormat = GL_FLOAT_RGBA32_NV;
+        } else {
+          mTexTarget = GL_TEXTURE_2D;
+        }
+      } else {
+        mTexTarget = GL_TEXTURE_2D;
+        mTexFormat = GL_RGBA;
+      }
+      glBindTexture(mTexTarget, mTex);
+      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(mTexTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(mTexTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      if(!mATI_render_texture) {
+        unsigned char* data = new unsigned char[mWidth*mHeight*4];
+        glTexImage2D(mTexTarget, 0, mTexFormat, mWidth, mHeight, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, data);
+        delete [] data;
+      }
     }
     return false;
   }
@@ -403,6 +457,14 @@ Pbuffer::makeCurrent ()
 void
 Pbuffer::swapBuffers ()
 {
+  if(mRenderTex && !mATI_render_texture) {
+    GLint buffer;
+    glGetIntegerv(GL_DRAW_BUFFER, &buffer);
+    glReadBuffer(buffer);
+    glBindTexture(mTexTarget, mTex);
+    glCopyTexSubImage2D(mTexTarget, 0, 0, 0, 0, 0, mWidth, mHeight);
+    glBindTexture(mTexTarget, 0);
+  }
   if (mDoubleBuffer)
     glXSwapBuffers(mImpl->mDisplay, mImpl->mPbuffer);
   else
@@ -414,8 +476,8 @@ Pbuffer::bind (unsigned int buffer)
 {
   if(mRenderTex)
   {
-    glEnable(mTexFormat);
-    glBindTexture(mTexFormat, mTex);
+    glEnable(mTexTarget);
+    glBindTexture(mTexTarget, mTex);
     if(mATI_render_texture) {
       glXBindTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, buffer == GL_FRONT ? 
                          GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
@@ -432,8 +494,8 @@ Pbuffer::release (unsigned int buffer)
       glXReleaseTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, buffer == GL_FRONT ?
                             GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
     }
-    glBindTexture(mTexFormat, 0);
-    glDisable(mTexFormat);
+    glBindTexture(mTexTarget, 0);
+    glDisable(mTexTarget);
   }
 }
 
@@ -456,7 +518,7 @@ Pbuffer::disable ()
 
 Pbuffer::Pbuffer (int width, int height, bool isRenderTex)
   : mWidth(width), mHeight(height), mRenderTex(isRenderTex), mSeparate(false),
-    mTex(0), mTexFormat(GL_TEXTURE_2D), mImpl(new PbufferImpl)
+    mTex(0), mTexTarget(GL_TEXTURE_2D), mImpl(new PbufferImpl)
 {}
 
 Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
@@ -468,7 +530,7 @@ Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
     mDoubleBuffer(isDoubleBuffer), mNumAuxBuffers(numAuxBuffers),
     mNumDepthBits(numDepthBits), mNumStencilBits(numStencilBits),
     mNumAccumBits(numAccumBits), mSeparate(true), mTex(0),
-    mTexFormat(GL_TEXTURE_2D), mImpl(new PbufferImpl)
+    mTexTarget(GL_TEXTURE_2D), mImpl(new PbufferImpl)
 {}
 
 Pbuffer::~Pbuffer ()

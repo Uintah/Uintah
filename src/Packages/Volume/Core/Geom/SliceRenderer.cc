@@ -208,13 +208,13 @@ SliceRenderer::draw()
   load_colormap();
   
   // First set up the Textures.
-  glActiveTextureARB(GL_TEXTURE0_ARB);
+  glActiveTexture(GL_TEXTURE0_ARB);
   glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_REPLACE); 
 
-  glActiveTextureARB(GL_TEXTURE1_ARB);
+  glActiveTexture(GL_TEXTURE1_ARB);
   glEnable(GL_TEXTURE_1D);
-  glActiveTextureARB(GL_TEXTURE0_ARB);
+  glActiveTexture(GL_TEXTURE0_ARB);
 
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_TRUE);
@@ -388,9 +388,9 @@ SliceRenderer::draw()
   glDisable(GL_ALPHA_TEST);
   glDepthMask(GL_TRUE);
   if( cmap_.get_rep() ){
-    glActiveTextureARB(GL_TEXTURE1_ARB);
+    glActiveTexture(GL_TEXTURE1_ARB);
     glDisable(GL_TEXTURE_1D);
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0_ARB);
   }
   glDisable(GL_TEXTURE_3D);
   // glEnable(GL_DEPTH_TEST);  
@@ -429,7 +429,7 @@ SliceRenderer::load_colormap()
 {
   const unsigned char *arr = transfer_function_;
 
-  glActiveTextureARB(GL_TEXTURE1_ARB);
+  glActiveTexture(GL_TEXTURE1_ARB);
   {
     glEnable(GL_TEXTURE_1D);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);

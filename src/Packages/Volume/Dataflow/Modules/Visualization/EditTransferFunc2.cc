@@ -912,7 +912,7 @@ EditTransferFunc2::execute()
 
   update();
   redraw();
-  
+
   Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Colormap");
   if(cmap_port) {
     cmap_port->send(cmap_);

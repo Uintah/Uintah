@@ -71,6 +71,7 @@ protected:
   bool mSeparate; // has separate context
   int mVisualId; // associated visual
   unsigned int mTex; // associated texture id
+  unsigned int mTexTarget; // associated texture target
   unsigned int mTexFormat; // associated texture format
   // GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE_NV
   struct PbufferImpl* mImpl; // implementation specific details
