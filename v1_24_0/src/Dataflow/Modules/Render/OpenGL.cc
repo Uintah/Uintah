@@ -108,9 +108,6 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   tk_gl_context_(0),
   old_tk_gl_context_(0),
   myname_("Not Intialized"),
-#ifdef __APPLE__
-  apple_wait_a_second_(false),
-#endif
   // private member variables
   gui_(gui),
   helper_(0),
@@ -225,9 +222,6 @@ OpenGL::start_helper()
   // This is the first redraw - if there is not an OpenGL thread,
   // start one...
 
-#ifdef __APPLE__  
-  apple_wait_a_second_ = true;
-#endif
   if(!helper_)
   {
     helper_=new OpenGLHelper(this);
@@ -410,12 +404,6 @@ OpenGL::redraw_loop()
       render_and_save_image(resx,resy,fname,ftype);
       do_hi_res_=false;
     }
-#ifdef __APPLE__
-    while (apple_wait_a_second_) { 
-      apple_wait_a_second_=false; 
-      sleep(1);
-    }
-#endif
     redraw_frame();
     for(int i=0;i<nreply;i++) {
       recv_mailbox_.send(REDRAW_DONE);
