@@ -133,7 +133,23 @@ $(SUBMAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
 	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
 
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ALLDEPENDS :=  $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+else
+  ALLDEPENDS := $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+endif
+
+# This is a temporary fix until we implement a better version of clean.
+# This should help avoid people accidently cleaning the entire tree when
+# what they really want is just from the current directory down.
 clean::
+	@echo "If you really want to clean up everything in the whole tree,"
+	@echo "type 'make cleanreally'.  If you want to clean this directory"
+	@echo "on down, type:"
+	@echo "   find . -name \"*.o\" -o -name depend.mk -o -name \\"
+	@echo "                      ii_files -print | xargs rm -rf"
+
+cleanreally::
 	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
