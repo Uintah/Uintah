@@ -2,7 +2,7 @@
 #define __GEOMETRY_OBJECT_H__
 
 #include "GeometryPiece.h"
-#include "BoundCond.h"
+#include "../BoundCond.h"
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <iosfwd>
 #include <vector>
@@ -51,6 +51,9 @@ public:
 
 #endif // __GEOMETRY_OBJECT_H__
 // $Log$
+// Revision 1.3  2000/03/15 22:13:08  jas
+// Added log and changed header file locations.
+//
 // Revision 1.2  2000/03/15 21:58:24  jas
 // Added logging and put guards in.
 //

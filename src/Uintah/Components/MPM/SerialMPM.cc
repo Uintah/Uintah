@@ -5,7 +5,7 @@
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
-#include <Uintah/Components/MPM/Matrix3.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
@@ -14,7 +14,7 @@
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Components/MPM/CompMooneyRivlin.h> // TEMPORARY
+#include <Uintah/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h> // TEMPORARY
 #include <SCICore/Geometry/Vector.h>
 using SCICore::Geometry::Vector;
 #include <SCICore/Geometry/Point.h>
@@ -27,7 +27,7 @@ using std::string;
 #include <fstream>
 using std::ofstream;
 
-#include "Problem.h"
+#include "GeometrySpecification/Problem.h"
 
 
 SerialMPM::SerialMPM()
@@ -553,3 +553,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
     old_dw->get(pexternalforce, "p.externalforce", region, 0);
     new_dw->put(pexternalforce, "p.externalforce", region, 0);
 }
+
+// $Log$
+// Revision 1.4  2000/03/15 22:13:04  jas
+// Added log and changed header file locations.
+//
