@@ -16,20 +16,19 @@
 */
  
 /*
- * C++ (CC) FILE : DicomToNrrd.cc
+ * C++ (CC) FILE : AnalyzeNrrdReader.cc
  *
- * DESCRIPTION   : This module allows an arbitrary number of DICOM series'
+ * DESCRIPTION   : This module allows an arbitrary number of Analyze files
  *                 to be read in and converted to 4D nrrds for processing and
  *                 visualization.  The UI associated with this module provides
- *                 a mechanism for selecting DICOM series' and files within
- *                 those series'.
+ *                 a mechanism for selecting Analyze files.
  *                     
  * AUTHOR(S)     : Jenny Simpson
  *                 SCI Institute
  *                 University of Utah
  *         
  * CREATED       : 9/19/2003
- * MODIFIED      : 10/3/2003
+ * MODIFIED      : 10/4/2003
  * DOCUMENTATION :
  * NOTES         : 
  *
@@ -46,38 +45,28 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #ifdef HAVE_INSIGHT
-#include <Core/Algorithms/DataIO/DicomSeriesReader.h>
-#include <Core/Algorithms/DataIO/DicomImage.h>
+#include <Core/Algorithms/DataIO/AnalyzeReader.h>
+#include <Core/Algorithms/DataIO/AnalyzeImage.h>
 #endif
 
-// Standard includes
-#include <dirent.h>
-
-namespace SCITeem { 
+namespace SCITeem {
 
 using namespace SCIRun;
 
 // ****************************************************************************
-// ***************************** Class: DicomToNrrd ***************************
+// *************************** Class: AnalyzeNrrdReader ***************************
 // ****************************************************************************
  
-struct series 
-{
-  string dir;
-  string series_uid;
-  vector<string> files;
-};
-
-class TeemSHARE DicomToNrrd : public Module 
+class TeemSHARE AnalyzeNrrdReader : public Module 
 {
 
 public:
 
   //! Constructor
-  DicomToNrrd(GuiContext*);
+  AnalyzeNrrdReader(GuiContext*);
 
   //! Destructor
-  virtual ~DicomToNrrd();
+  virtual ~AnalyzeNrrdReader();
 
   virtual void execute();
 
@@ -93,35 +82,27 @@ public:
 
 private:
 
-  void split_string( string src, vector<string> &container );
-
   //! GUI variables
   GuiInt have_insight_;
-  GuiString dir_;
-  GuiString series_uid_;
-  GuiString series_files_;
+  GuiString file_;
+  GuiString file_del_;
   GuiString messages_;
-  GuiString suid_sel_;  
-  GuiString series_del_;
-  GuiInt num_entries_;
-  vector< GuiString* > entry_dir_;
-  vector< GuiString* > entry_suid_;
-  vector< GuiString* > entry_files_;
-
+  GuiInt    num_files_;
+  vector< GuiString* > filenames_;
 
   //! Ports
   NrrdOPort*      onrrd_;
 
-  //! Set of Dicom series' 
-  vector<struct series> all_series_;
+  //! Set of Analyze files 
+  vector<string> all_files_;
 
 };
 
-DECLARE_MAKER(DicomToNrrd)
+DECLARE_MAKER(AnalyzeNrrdReader)
 
 /*===========================================================================*/
 // 
-// DicomToNrrd
+// AnalyzeNrrdReader
 //
 // Description : Constructor
 //
@@ -129,16 +110,13 @@ DECLARE_MAKER(DicomToNrrd)
 //
 // GuiContext* ctx - GUI context
 //
-DicomToNrrd::DicomToNrrd(GuiContext* ctx)
-  : Module("DicomToNrrd", ctx, Source, "DataIO", "Teem"),
+AnalyzeNrrdReader::AnalyzeNrrdReader(GuiContext* ctx)
+  : Module("AnalyzeNrrdReader", ctx, Source, "DataIO", "Teem"),
     have_insight_(ctx->subVar("have-insight", false)),
-    dir_(ctx->subVar("dir")),
-    series_uid_(ctx->subVar("series-uid")),    
-    series_files_(ctx->subVar("series-files")),    
-    messages_(ctx->subVar("messages")),    
-    suid_sel_(ctx->subVar("suid-sel")),    
-    series_del_(ctx->subVar("series-del")),
-    num_entries_(ctx->subVar("num-entries"))
+    file_(ctx->subVar("file")),
+    file_del_(ctx->subVar("file-del")),
+    messages_(ctx->subVar("messages")),
+    num_files_(ctx->subVar("num-files"))
 {
 #ifdef HAVE_INSIGHT
   have_insight_.set(1);
@@ -149,13 +127,13 @@ DicomToNrrd::DicomToNrrd(GuiContext* ctx)
 
 /*===========================================================================*/
 // 
-// ~DicomToNrrd
+// ~AnalyzeNrrdReader
 //
 // Description : Destructor
 //
 // Arguments   : none
 //
-DicomToNrrd::~DicomToNrrd(){
+AnalyzeNrrdReader::~AnalyzeNrrdReader(){
 }
 
 
@@ -164,26 +142,26 @@ DicomToNrrd::~DicomToNrrd(){
 // execute 
 //
 // Description : The execute function for this module.  This is the control
-//               center for the module.  This reads a series of DICOM files,
-//               constructs a nrrd with the DICOM data, and sends the nrrd
+//               center for the module.  This reads a bunch of Analyze files,
+//               constructs a nrrd with the Analyze data, and sends the nrrd
 //               downstream.
 //
 // Arguments   : none
 //
-void DicomToNrrd::execute(){
+void AnalyzeNrrdReader::execute(){
 
 #ifdef HAVE_INSIGHT
 
   gui->execute(id + " sync_filenames");
 
-  // If no DICOM series' were specified via the UI, print error and return
-  if( all_series_.size() == 0 ) 
+  // If no Analyze files were specified via the UI, print error and return
+  if( all_files_.size() == 0 ) 
   {
-    error("(DicomToNrrd::execute) No DICOM series' specified -- use 'UI' button to select series files.");
+    error("(AnalyzeNrrdReader::execute) No Analyze files specified -- use 'UI' button to select Analyze files.");
     return;
   }
   
-  // Build a vector of nrrds from one or more DICOM series'
+  // Build a vector of nrrds from one or more Analyze files
   vector<Nrrd*> arr;
   int ret;
   if( (ret = build_nrrds(arr)) == -1 )
@@ -195,7 +173,7 @@ void DicomToNrrd::execute(){
   NrrdData * sciNrrd = join_nrrds( arr );
   if( sciNrrd == 0 ) 
   {
-    error("(DicomToNrrd::execute) Failed to join nrrds.");
+    error("(AnalyzeNrrdReader::execute) Failed to join nrrds.");
     return;
   }
 
@@ -206,7 +184,7 @@ void DicomToNrrd::execute(){
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
   if( !onrrd_ ) {
-    error("(DicomToNrrd::execute) Unable to initialize oport 'Nrrd'.");
+    error("(AnalyzeNrrdReader::execute) Unable to initialize oport 'Nrrd'.");
     return;
   }
 
@@ -223,34 +201,10 @@ void DicomToNrrd::execute(){
   //nrrdNix(nrrd);
 
 #else
-  error("(DicomToNrrd::execute) Cannot read DICOM files.  Insight module needs to be included.");
+  error("(AnalyzeNrrdReader::execute) Cannot read Analyze files.  Insight module needs to be included.");
   return;
 #endif
 
-}
-
-/*===========================================================================*/
-// 
-// split_string
-//
-// Description : Splits a string into vector of strings where each string is 
-//               space delimited in the original string.
-//
-// Arguments   :
-//
-// string src - String to be split.
-// vector<string> &container - Vector of strings to contain result.
-// 
-void DicomToNrrd::split_string( string src, vector<string> &container )
-{
-  std::istringstream str_data(src);
-  //cerr << "(DicomToNrrd::split_string) src = " << src << endl;
-  string word;
-  while( str_data >> word )
-  {
-    //cerr << "(DicomToNrrd::split_string) word = " << word << endl;
-    container.push_back( word );
-  } 
 }
 
 /*===========================================================================*/
@@ -265,197 +219,70 @@ void DicomToNrrd::split_string( string src, vector<string> &container )
 //
 // void* userdata - ???
 // 
-void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
+void AnalyzeNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
-    args.error("DicomToNrrd needs a minor command");
+    args.error("AnalyzeNrrdReader needs a minor command");
     return;
   }
 
-  if( args[1] == "get_series_uid" ) 
+  if( args[1] == "add_data" )
   {
 #ifdef HAVE_INSIGHT
+    if (args.count() == 3) {
+      string file = args[2];
+      
+      all_files_.insert( all_files_.end(), file );
 
-    DicomSeriesReader reader;
-    string dir = args[2];
-
-    // Check to make sure the directory exists
-    DIR *dirp;
-    dirp = opendir( dir.c_str() );
-    if (!dirp)
-    {
-      string no_dir = string( "No such directory: " + dir );
-      messages_.set( no_dir );
-      string all_suids = "";
-      series_uid_.set( all_suids );
-      return;
+      ostringstream str;
+      str << "filenames" << all_files_.size()-1;
+      filenames_.insert(filenames_.end(), new GuiString(ctx->subVar(str.str())));
     }
-    closedir(dirp);
-
-    reader.set_dir( dir );
-
-    //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << endl;
-
-    // Read all of the series uids from this directory, concatenate them to
-    // form one string, and pass the string to the tcl side.
-    std::vector<std::string> suids = reader.get_series_uids();
-    int num_suids = suids.size();
-    string all_suids = "";
-
-    for( int i = 0; i < num_suids; i++ )
-    {
-      all_suids = string( all_suids + " " + suids[i] );  
-    }
-
-    if( num_suids == 0 )
-    {
-      string none_found = string( "No series' found in directory: " + dir );
-      messages_.set( none_found );
-    }
-
-    //cerr << "(DicomToNrrd::tcl_command) all_suids = " << all_suids << endl;
-
-    series_uid_.set( all_suids );
-#endif
-  }
-  else if( args[1] == "get_series_files" ) 
-  {
-#ifdef HAVE_INSIGHT
-    DicomSeriesReader reader;
-    string dir = args[2];
-    reader.set_dir( dir );
-
-    string suid = args[3];
-
-    //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << endl;
-
-    std::vector<std::string> files = reader.get_file_names( suid );
-    int num_files = files.size();
-    string all_files = "";
-
-    for( int i = 0; i < num_files; i++ )
-    {
-      all_files = string( all_files + " " + files[i] );  
-    }
-
-    //cerr << "(DicomToNrrd::tcl_command) all_files = " << all_files << endl;
-    series_files_.set( all_files );
-#endif
-  }
-  else if( args[1] == "add_data" )
-  {
-#ifdef HAVE_INSIGHT
-
-    string dir = args[2];
-
-    string series_files = args[4];
-
-    string suid_sel = args[3];
-
-    // Create a new series
-    struct series new_series;
-
-    // Convert string of file names to vector of file names
-    vector<string> files;
-    split_string( series_files, files );
-
-    // First entry is always extra, chop it off
-
-    new_series.dir = dir;
-    new_series.series_uid = suid_sel;
-    new_series.files = files;
-
-    // Make sure this has the same number of files as all the other series'
-    if( all_series_.size() > 0 ) 
-    {
-      if( new_series.files.size() != (all_series_[0]).files.size() )
-      {
-        warning( "(DicomToNrrd::tcl_command) Cannot load multiple series' with different numbers of files." );
-      }
-    }
-    all_series_.insert( all_series_.end(), new_series );
-
-    ostringstream str1;
-    str1 << "entry-dir" << all_series_.size() - 1;
-    entry_dir_.insert(entry_dir_.end(), new GuiString(ctx->subVar(str1.str())));
-
-    ostringstream str2;
-    str2 << "entry-suid" << all_series_.size() - 1;
-    entry_suid_.insert(entry_suid_.end(), new GuiString(ctx->subVar(str2.str())));
-
-    ostringstream str3;
-    str3 << "entry-files" << all_series_.size() - 1;
-    entry_files_.insert(entry_files_.end(), new GuiString(ctx->subVar(str3.str())));
 
 #endif
   } 
   else if( args[1] == "delete_data" )
   {
 #ifdef HAVE_INSIGHT
-    // Get the selected series to be deleted
-    string series_del = args[2];
 
-    // Split the series_del string by spaces
-    vector<string> info;
-    split_string( series_del, info );
+    // Get the selected file to be deleted
+    string file_del = args[2];
 
-    //cerr << "info size = " << info.size() << endl;
-
-    if( info.size() < 11 ) {
-      error("(DicomToNrrd::tcl_command) Delete series failed. Bad series info.");
-      return;
-    }
-
-    // Get the directory 
-    string dir = info[1];
-    //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << endl;
-
-    // Get the series uid
-    string suid = info[4];
-    //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << endl;
-
-    // Get the start file
-    string start_file = info[7];
-    //cerr << "(DicomToNrrd::tcl_command) start_file = " << start_file << endl;
-
-    // Get the end file
-    string end_file = info[10];
-    //cerr << "(DicomToNrrd::tcl_command) end_file = " << end_file << endl;
-
-    // Find the matching entry in the all_series vector and remove it
-    int num_series = all_series_.size();
-    vector<struct series>::iterator iter = all_series_.begin();
-    vector<GuiString*>::iterator iter2 = entry_dir_.begin();
-    vector<GuiString*>::iterator iter3 = entry_suid_.begin();
-    vector<GuiString*>::iterator iter4 = entry_files_.begin();
+    // Find the matching entry in the all_files vector and remove it
+    int num_files = all_files_.size();
+    vector<string>::iterator iter = all_files_.begin();
+    vector<GuiString*>::iterator iter2 = filenames_.begin();
      
-    for( int i = 0; i < num_series; i++ )
+    for( int i = 0; i < num_files; i++ )
     {
-      struct series s = all_series_[i];
-     
-      if( (s.dir == dir) && (s.series_uid == suid) && 
-          (s.files[0] == start_file) &&
-          (s.files[s.files.size() - 1] == end_file) )
+      if( file_del == all_files_[i] )
       {
-        // Erase this element from the vector of series'
-        all_series_.erase( iter );
+        // Erase this element from the vector of files
+        all_files_.erase( iter );
 
-	// remove the guivar from the filenames
-	entry_dir_.erase( iter2 );
-	entry_suid_.erase( iter3 );
-	entry_files_.erase( iter4 );
+	// remove the guivar from filenames
+	filenames_.erase( iter2 );
       }  
       iter++;
       iter2++;
-      iter3++;
-      iter4++;
     }
+
+    // Print out the contents of all_files_
+    cout << "(AnalyzeNrrdReader::tcl_command) File " << file_del << " deleted" 
+         << endl;
+    num_files = all_files_.size();
+    for( int j = 0; j < num_files; j++ )
+    {
+      cout << "(AnalyzeNrrdReader::tcl_command) all_files_[" << j << "] = " 
+           << all_files_[j] << endl;
+    }    
+
 #endif
   }
   else if ( args[1] == "clear_data" )
     {
 #ifdef HAVE_INSIGHT
-      all_series_.clear();
+      all_files_.clear();
 #endif      
     }
   else 
@@ -470,46 +297,44 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 // 
 // build_nrrds 
 //
-// Description : Given a set of DICOM series', reads all series' in and builds
-//               one nrrd object for each series.  Returns 0 on success, -1
-//               on failure.
+// Description : Given a set of Analyze files, reads all files in and 
+//               builds one nrrd object for each file.  Returns 0 on success,
+//               -1 on failure.
 //
 // Arguments   : 
 //
 // vector<Nrrd*> & array - Empty vector that will be initialized to contain
-//                         one nrrd object per series.  
+//                         one nrrd object per file.  
 //
-int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
+int AnalyzeNrrdReader::build_nrrds( vector<Nrrd*> & array )
 {
 
-  // Get the number of series' to build nrrds from 
-  int num_series = all_series_.size();
+  // Get the number of files to build nrrds from 
+  int num_files = all_files_.size();
 
-  //cerr << "(DicomToNrrd::build_nrrds) num_series = " << num_series << endl;
-  //int num_series = 1;
+  //cerr << "(AnalyzeNrrdReader::build_nrrds) num_files = " << num_files << endl;
 
-  vector<Nrrd*> arr( num_series );
-  DicomSeriesReader reader;
+  vector<Nrrd*> arr( num_files );
+  AnalyzeReader reader;
 
-  // Read each DICOM series and build a nrrd object from it
-  for( int i = 0; i < num_series; i++ )
+  // Read each Analyze files and build a nrrd object from it
+  for( int i = 0; i < num_files; i++ )
   {
-    // Get the struct for this series
-    struct series ds = all_series_[i];
+    // Get this file
+    string f = all_files_[i];
 
-    DicomImage image;
-    reader.set_dir( ds.dir );
-    reader.set_files( ds.files );
+    AnalyzeImage image;
+    reader.set_file( f );
     int ret;
     if( (ret = reader.read(image)) == -1 )
     {
-      error("(DicomToNrrd::build_nrrds) DICOM read failed.  Check command line output for details.");
+      error("(AnalyzeNrrdReader::build_nrrds) Analyze read failed.  Check command line output for details.");
       return -1;
     }
 
     image.print_image_info();
   
-    // Construct a nrrd from the DICOM data
+    // Construct a nrrd from the Analyze data
     char *err;
     Nrrd *nrrd = nrrdNew();
 
@@ -534,11 +359,11 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
                3, image.get_size(0), 
                image.get_size(1), image.get_size(2)) ) 
       {
-        error( "(DicomToNrrd::execute) Error creating nrrd." );
+        error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
         err = biffGetDone(NRRD);
         // There was an error. "err" is a char* error message, pass it
         // to whatever kind of error handler you are using.  In case
@@ -550,14 +375,14 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
 	    	       nrrdCenterNode, nrrdCenterNode, 
 		       nrrdCenterNode, nrrdCenterNode );
 
-      // nrrd->axis[0].label = "Unknown:Scalar";
+      //nrrd->axis[0].label = "Unknown:Scalar";
       nrrd->axis[0].label = strdup("x");
       nrrd->axis[1].label = strdup("y");
       nrrd->axis[2].label = strdup("z");
       nrrd->axis[0].spacing = image.get_spacing(0);
       nrrd->axis[1].spacing = image.get_spacing(1);
       nrrd->axis[2].spacing = image.get_spacing(2);
- 
+
       nrrdAxisInfoMinMaxSet(nrrd, 0, nrrdCenterNode);
       nrrdAxisInfoMinMaxSet(nrrd, 1, nrrdCenterNode);
       nrrdAxisInfoMinMaxSet(nrrd, 2, nrrdCenterNode);
@@ -565,11 +390,10 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
-               2, image.get_size(0), 
-               image.get_size(1)) ) 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
+               2, image.get_size(0), image.get_size(1)) ) 
       {
-        error( "(DicomToNrrd::execute) Error creating nrrd." );
+        error( "(AnalyzeNrrdReader::execute) Error creating nrrd." );
         err = biffGetDone(NRRD);
         // There was an error. "err" is a char* error message, pass it
         // to whatever kind of error handler you are using.  In case
@@ -593,7 +417,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
     }
     else
     {
-      error( "(DicomToNrrd::build_nrrds) Invalid image dimension." );
+      error( "(AnalyzeNrrdReader::build_nrrds) Invalid image dimension." );
     }
 
     // Add this nrrd to the vector of nrrds
@@ -618,27 +442,28 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
 // vector<Nrrd*> arr - Vector of pointers to nrrd objects. These nrrds should 
 //                     all have the same dimensions. 
 //
-NrrdData * DicomToNrrd::join_nrrds( vector<Nrrd*> arr )
+NrrdData * AnalyzeNrrdReader::join_nrrds( vector<Nrrd*> arr )
 {
   int num_nrrds = arr.size();
-  //cerr << "(DicomToNrrd::join_nrrds) num_nrrds = " << num_nrrds << endl;
+  //cerr << "(AnalyzeNrrdReader::join_nrrds) num_nrrds = " << num_nrrds << endl;
 
   if( num_nrrds == 0 )
   {
-    error( "(DicomToNrrd::join_nrrds) No nrrds built." );
+    error( "(AnalyzeNrrdReader::join_nrrds) No nrrds built." );
     return 0;
   }
 
   // Join all nrrds together into one 4D nrrd object
   NrrdData *sciNrrd = scinew NrrdData();
   sciNrrd->nrrd = nrrdNew();
-
+  
   bool incr = true;
   if (num_nrrds == 1) { incr = false; }
+  
   if( nrrdJoin(sciNrrd->nrrd, &arr[0], num_nrrds, 0, incr) ) 
   {
     char *err = biffGetDone(NRRD);
-    error( string("(DicomToNrrd::join_nrrds) Join Error: ") +  err );
+    error( string("(AnalyzeNrrdReader::join_nrrds) Join Error: ") +  err );
     free(err);
     return 0;
   }
@@ -659,7 +484,6 @@ NrrdData * DicomToNrrd::join_nrrds( vector<Nrrd*> arr )
       new_label += string(",") + string(arr[i]->axis[0].label);
     }
   }
-
   switch (sciNrrd->nrrd->dim) {
   case 4:
     if (incr) {
@@ -670,7 +494,7 @@ NrrdData * DicomToNrrd::join_nrrds( vector<Nrrd*> arr )
       sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
       sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
       sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
-      
+
       nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
       nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
       nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
@@ -678,7 +502,7 @@ NrrdData * DicomToNrrd::join_nrrds( vector<Nrrd*> arr )
     } else {
       return 0;
     }
-    
+
     break;
   case 3:
     if (incr) {
@@ -716,6 +540,7 @@ NrrdData * DicomToNrrd::join_nrrds( vector<Nrrd*> arr )
   default:
     return 0;
   }
+
   return sciNrrd;
 }
 

@@ -15,10 +15,10 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class Teem_DataIO_AnalyzeToNrrd {
+itcl_class Teem_DataIO_AnalyzeNrrdReader {
     inherit Module
     constructor {config} {
-        set name AnalyzeToNrrd
+        set name AnalyzeNrrdReader
         set_defaults
     }
 

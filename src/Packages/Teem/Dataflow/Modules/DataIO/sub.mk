@@ -32,9 +32,9 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 
 SRCS     += \
-	$(SRCDIR)/AnalyzeToNrrd.cc\
+	$(SRCDIR)/AnalyzeNrrdReader.cc\
 	$(SRCDIR)/ConvertToNrrd.cc\
-	$(SRCDIR)/DicomToNrrd.cc\
+	$(SRCDIR)/DicomNrrdReader.cc\
 	$(SRCDIR)/FieldToNrrd.cc\
 	$(SRCDIR)/ImageExporter.cc\
 	$(SRCDIR)/ImageImporter.cc\
