@@ -104,13 +104,13 @@ Matrix3 Matrix3::Inverse() const
   else
   {
     inv_matrix(1,1) = (*this)(2,2)*(*this)(3,3) - (*this)(2,3)*(*this)(3,2);
-    inv_matrix(1,2) = -(*this)(2,1)*(*this)(3,3) + (*this)(2,3)*(*this)(3,1);
-    inv_matrix(1,3) = (*this)(2,1)*(*this)(3,2) - (*this)(2,2)*(*this)(3,1);
-    inv_matrix(2,1) = -(*this)(1,2)*(*this)(3,3) + (*this)(1,3)*(*this)(3,2);
+    inv_matrix(1,2) = -(*this)(1,2)*(*this)(3,3) + (*this)(3,2)*(*this)(1,3);
+    inv_matrix(1,3) = (*this)(1,2)*(*this)(2,3) - (*this)(2,2)*(*this)(1,3);
+    inv_matrix(2,1) = -(*this)(2,1)*(*this)(3,3) + (*this)(3,1)*(*this)(2,3);
     inv_matrix(2,2) = (*this)(1,1)*(*this)(3,3) - (*this)(1,3)*(*this)(3,1);
-    inv_matrix(2,3) = -(*this)(1,1)*(*this)(3,2) + (*this)(1,2)*(*this)(3,1);
-    inv_matrix(3,1) = (*this)(1,2)*(*this)(2,3) - (*this)(1,3)*(*this)(2,2);
-    inv_matrix(3,2) = -(*this)(1,1)*(*this)(2,3) + (*this)(1,3)*(*this)(2,1);
+    inv_matrix(2,3) = -(*this)(1,1)*(*this)(2,3) + (*this)(2,1)*(*this)(1,3);
+    inv_matrix(3,1) = (*this)(2,1)*(*this)(3,2) - (*this)(3,1)*(*this)(2,2);
+    inv_matrix(3,2) = -(*this)(1,1)*(*this)(3,2) + (*this)(3,1)*(*this)(1,2);
     inv_matrix(3,3) = (*this)(1,1)*(*this)(2,2) - (*this)(1,2)*(*this)(2,1);
  
     inv_matrix = inv_matrix/det;
