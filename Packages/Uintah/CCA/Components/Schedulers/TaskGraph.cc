@@ -276,6 +276,8 @@ TaskGraph::setupTaskConnections()
 	d_initRequiredVars.insert(req->var);
       }
     }
+    // Set these to false to prepare for the next loop.
+    task->visited = false;
   }
 #endif
   
@@ -285,13 +287,22 @@ TaskGraph::setupTaskConnections()
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
     addDependencyEdges(task, task->getModifies(), comps, true);
+    // Used here just to warn if a modifies comes before its computes
+    // in the order that tasks were added to the graph.
+    task->visited = true;
   }
- 
+
+  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
+    (*iter)->visited = false; // prepare for next loop
+  
   // Connect the tasks together using the computes/requires info
   // Also do a type check
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
     addDependencyEdges(task, task->getRequires(), comps, false);
+    // Used here just to warn if a requires comes before its computes
+    // or modifies in the order that tasks were added to the graph.
+    task->visited = true;    
   }
 
   // Initialize variables on the tasks
@@ -336,11 +347,25 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	  req->addComp(edge);
 	  compiter->second->addReq(edge);
 	  
-	  if (modifies)
+	  if (modifies) {
 	    // not just requires, but modifies, so the comps map must be
 	    // updated so future modifies or requires will link to this one.
 	    compiter->second = req; // ??? will this work?  let's see
-	  
+	    
+	  }
+	  if (!edge->comp->task->visited &&
+	      !edge->comp->task->isReductionTask()) {
+	    cerr << "\nWarning: A task, '" << task->getName() << "', that ";
+	    if (modifies)
+	      cerr << "modifies '";
+	    else
+	      cerr << "requires '";
+	    cerr << req->var->getName() << "' was added before its last computing";
+	    if (!modifies)
+	      cerr << "/modifying";
+	    cerr << " task, '" << edge->comp->task->getName() << "'"
+		 << endl << endl;
+	  }
 	  count++;
 	  if(dbg.active()){
 	    dbg << "Creating edge from task: " << *compiter->second->task << " to task: " << *task << '\n';
