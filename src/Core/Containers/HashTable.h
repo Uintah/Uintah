@@ -59,16 +59,15 @@ template<class Key> inline int Hash(const Key& k, int hash_size)
   return h;
 }
 
-// Dd: Adding hash function for type "string".  Feel free to change
-// this to make it a good one...
+// X31 hash
 inline int Hash(const std::string& s, int hash_size)
 {
-  int val = 0;
-  for( unsigned int pos = 0; pos < s.length(); pos++ )
+  unsigned int h = 0;
+  for (unsigned int i = 0; i < s.length(); i++)
   {
-    val += s[ pos ];
+    h = ( h << 5 ) - h + s[i];
   }
-  return val % hash_size;
+  return h % hash_size;
 }
 
 inline SCICORESHARE int Hash(const int& k, int hash_size)
