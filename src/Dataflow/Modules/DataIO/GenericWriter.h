@@ -30,7 +30,6 @@
 
 /*
  * Limitations:
- *   The port name in the XML file must be called "Input Data"
  *   Uses .tcl file with "filename" and "filetype"
  *   Input port must be of type SimpleIPort
  */
@@ -74,7 +73,7 @@ template <class HType>
 void
 GenericWriter<HType>::execute()
 {
-  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_iport("Input Data");
+  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_iport(0);
 
   // Read data from the input port
   HType handle;
