@@ -132,6 +132,7 @@ SmoothCylGeomPiece::returnParticleCount(const Patch* patch)
 					       doCreate);
     totCount += count;
   }
+  cout << "Particle Count = " << totCount << endl;
   return totCount;
 }
 
@@ -225,7 +226,7 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
 	// Create points on xy plane
 	double x = currRadius*cosphi;
 	double y = currRadius*sinphi;
-	double z = currZ;
+	double z = 0;
      
 	// Rotate points to correct orientation and
 	// Translate to correct position
@@ -266,7 +267,7 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
 	// Create points on xy plane
 	double x = currRadius*cosphi;
 	double y = currRadius*sinphi;
-	double z = currZ;
+	double z = 0;
      
 	// Rotate points to correct orientation and
 	// Translate to correct position
@@ -310,7 +311,7 @@ SmoothCylGeomPiece::createOrCountSolidCylParticles(const Patch* patch,
   // Find the vector along the axis of the cylinder
   Vector axis = d_top - d_bottom;
   double length = axis.length();
-  axis = axis/length;
+  axis /= length;
 
   // Get the bounding patch box
   Box b = patch->getBox();
@@ -351,15 +352,15 @@ SmoothCylGeomPiece::createOrCountSolidCylParticles(const Patch* patch,
 	// Create points on xy plane
 	double x = currRadius*cosphi;
 	double y = currRadius*sinphi;
-	double z = currZ;
+	double z = 0;
+	Vector pp(x, y, z);
      
 	// Rotate points to correct orientation and
 	// Translate to correct position
-	Vector pp(x, y, z);
 	pp = R*pp + currCenter;
-	Point p(pp);
 
 	// If the patch contains the point, increment count
+	Point p(pp);
 	if(b.contains(p)) {
           if (doCreate) {
 	    particleIndex pidx = start+count;
@@ -438,7 +439,7 @@ SmoothCylGeomPiece::createOrCountHollowCylParticles(const Patch* patch,
 	// Create points on xy plane
 	double x = radLoc*cosphi;
 	double y = radLoc*sinphi;
-	double z = currZ;
+	double z = 0;
      
 	// Rotate points to correct orientation and
 	// Translate to correct position
