@@ -182,9 +182,9 @@ int get_alpha_nrrd(char * filename, Array1<AlphaPos> &alphas) {
     return 1;
   }
 
-  // We need axis[0] to have size of 5
+  // We need axis[0] to have size of 2
   if (nrrd->axis[0].size != 2) {
-    cerr << "Axis[0] must have size of 5\n";
+    cerr << "Axis[0] must have size of 2\n";
     nrrdNuke(nrrd);
     return 1;
   }
@@ -550,6 +550,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << " -specular [float] - the specular factor\n";
       cerr << " -rate [float] - frame rate of the time steps\n";
       cerr << " -colormap [string] - \"rainbow\" or \"inversebb\"\n";
+      cerr << " -colormap nrrd [filename.nrrd] - read in a nrrd for the colormap with alphas\n";
+      cerr << " -alpha [filename.nrrd] - read in a nrrd with just the alpha transfer function\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
       return 0;
     }
