@@ -127,6 +127,7 @@ int ReferenceMgr::getRemoteSize()
 void ReferenceMgr::createSubset(int ssize)
 {
   if(ssize) { 
+    if(ssize >= localSize) return;
     if(!isSubset){
       isSubset=true;
       save_lSize=localSize;
