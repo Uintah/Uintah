@@ -27,7 +27,9 @@ LOG
 #define DEFINE_OLD_IOSTREAM_OPERATORS
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGCC.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
+#include <SCICore/Datatypes/VectorFieldRGCC.h>
 #include "MPRead.h"
 
 #include <sstream>
@@ -238,11 +240,15 @@ MPRead::GetGridPoints( double& o_x, double& o_y, double& o_z,
   in >> o_x >> o_y >> o_z >> dx >> dy >> dz;
   
   minPt = Point(o_x, o_y, o_z);
-  maxPt = Point(o_x + dx*(x_size-1),
-		   o_y + dy*(y_size-1),
-		   o_z + dz*(z_size-1));
-  
-
+  if(currentType == NC ){
+    maxPt = Point(o_x + dx*(x_size-1),
+		  o_y + dy*(y_size-1),
+		  o_z + dz*(z_size-1));
+  } else {
+    maxPt = Point(o_x + dx*(x_size),
+		  o_y + dy*(y_size),
+		  o_z + dz*(z_size));
+  }
   gridState = Scalars;
   return 1;
 }
@@ -300,8 +306,10 @@ MPRead::GetScalarField( ScalarFieldHandle& sf )
   } else if( gridState != Scalars ){
     cerr<<"Error:  you must read the data points first.\n";
     return 0;
-  } else if( currentType == NC){
-    ScalarFieldRG *sfrg = new ScalarFieldRG();
+  } else if( currentType == NC || currentType == CC){
+    ScalarFieldRG *sfrg;
+    if (currentType == NC) sfrg = new ScalarFieldRG();
+    else  sfrg = new ScalarFieldRGCC();
     svCount++;
     cerr<<"Getting scalarfield of size "<< x_size <<" " << y_size <<
       " " << z_size <<endl;
@@ -345,7 +353,7 @@ MPRead::GetScalarField( double *sf, int& length )
   } else if( gridState != Scalars ){
     cerr<<"Error:  you must read the data points first.\n";
     return 0;
-  } else if( currentType != FC && currentType != FC_i ){
+  } else if( currentType == NC || currentType == CC ){
     svCount++;
     length = x_size*y_size*z_size;
     sf = new double[length];
@@ -379,17 +387,15 @@ MPRead::GetVectorField( VectorFieldHandle& vf )
   } else if(gridState != Vectors){
     cerr<<"Error: you haven't read the Scalar variables\n";
     return 0;
-  } else if( currentType == NC){
+  } else if( currentType == NC || currentType == CC){
     vvCount++;
-    VectorFieldRG *vfrg = new VectorFieldRG();
+    VectorFieldRG *vfrg;
+    if (currentType == NC ) vfrg  = new VectorFieldRG();
+    else vfrg = new VectorFieldRGCC();
     vfrg->resize(x_size, y_size, z_size);
-    vfrg->set_bounds(minPt, maxPt);
-    if(fileType == BIN ){
-      Vector *v = &(vfrg->grid(0,0,0));
-      for(int i = 0; i < vfrg->grid.dim1()*vfrg->grid.dim2()*vfrg->grid.dim3();
-	  i++){
-	is.read((char *) &(v[i]), sizeof(double)*3);
-      }
+    vfrg->set_bounds(minPt, maxPt);    if(fileType == BIN ){
+      double size = vfrg->grid.dim1()*vfrg->grid.dim2()*vfrg->grid.dim3();
+      is.read((char *) &(vfrg->grid(0,0,0)), size*sizeof(double)*3);
     } else {
       for(int i = 0; i < vfrg->grid.dim1(); i++ )
 	  for(int j = 0; j < vfrg->grid.dim2(); j++)
@@ -547,6 +553,7 @@ MPRead::GetParticle( Point& p,
 
 int
 MPRead::GetParticleVariableValue( int pid,
+				  clString pSetName,
 				  clString varname,
 				  double& value)
 {
@@ -554,48 +561,66 @@ MPRead::GetParticleVariableValue( int pid,
   clString name, sv, vv, filetype, comment;
   clString type;
   double tmp;
+  double ox,oy,oz, dx,dy,dz;
   Array1<double> X,Y,Z;
   Array1<clString> s,v;
-  int i, N;
+  int i, multiplyer, N;
   bool varfound = false;
   streampos mark  = is.tellg();
-  while(is >> in){
-    if(in == "MPD"){
+  while( ReadBlock( type )){
+    if(type == "HEADER"){
       is.seekg(mark);
       ReadHeader(name, filetype, comment);
-    } else if (in == "GRID"){
+    } else if (type  == "GRID"){
       GetGridInfo( name, type, x_size, y_size, z_size, s, v);
+      N = x_size*y_size*z_size;
       if( currentType == NC || currentType == CC || currentType == FC_i ){
-	is >> tmp; is >> tmp; is >> tmp; is >> tmp; is >> tmp; is >> tmp;
-	if( currentType == NC || currentType == CC )
-	  is.seekg(sizeof(double)*x_size*y_size*z_size, ios::cur);
-	else
-	  is.seekg(sizeof(double)*3*x_size*y_size*z_size);
+	GetGridPoints( ox,oy,oz, dx,dy,dz);
+	multiplyer = N*(sVars.size() + 3*vVars.size());
+	if( currentType == NC || currentType == CC ){
+	  is.seekg(sizeof(double)*multiplyer, ios::cur);
+	}
       } else {
+	GetGridPoints( X, Y, Z );
 	is.seekg(sizeof(double)*x_size*y_size*z_size, ios::cur);
 	if( currentType != FC_i ){
 	  for(i = 0; i < vVars.size(); i++)
+	  NOT_FINISHED("MPRead::GetParticleVariableValue for staggered grids");
 	    is.seekg(sizeof(double)*3*x_size*y_size*z_size, ios::cur);
 	} else {
+	  NOT_FINISHED("MPRead::GetParticleVariableValue for staggered grids");
 	    is.seekg(sizeof(double)*3*x_size*y_size*z_size*3, ios::cur);
 	}
       }
-    } else if (in == "PARTICLES"){
+      state = Open;
+      gridState = Empty;
+    } else if (type == "PARTICLES"){
       GetParticleInfo( name, N, s, v);
-      for( i = 0; i < s.size(); i++){
-	if( s[i] == varname ) varfound = true;
-      }
-      if(varfound){
-	is.seekg(sizeof(double)*(3+s.size()+ v.size()*3)*(pid - 1), ios::cur);
-	is.seekg(sizeof(double)*i, ios::cur);
-	is.read((char *) &value, sizeof(double));
-	return 1;
+      if( name == pSetName ){
+	for( i = 0; i < s.size(); i++){
+	  cerr<< "Reading varname "<< s[i] << "looking for varname "<< varname <<endl;
+	  if( s[i] == varname ){
+	    varfound = true;
+	    break;
+	  }
+	}
+	if(varfound){
+	  is.seekg(sizeof(double)*(3+s.size()+ v.size()*3)*pid, ios::cur);
+	  is.seekg(sizeof(double)*i, ios::cur);
+	  is.read((char *) &value, sizeof(double));
+	  cerr<<"Value = "<< value << endl;
+	  return 1;
+	} else {
+	  return 0;
+	}
       } else {
-	is.seekg(sizeof(double)*(3+s.size()+ v.size()*3)*nParticles,ios::cur);
+	is.seekg(sizeof(double)*(3+s.size()+ v.size()*3)*N,ios::cur);
       }
+
+      state = Open;
     } else {
-	cerr<<"Error: Unknown Block "<<in<<".\n";
-	return 0;
+      cerr<<"Error: Unknown Block "<<in<<".\n";
+      return 0;
     }
     mark = is.tellg();
   }

@@ -75,6 +75,7 @@ public:
 			      Array1<float>& values);
   
   virtual void GetParticleData(int particleId,
+			       clString pSetName,
 			       clString varname,
 			       Array1<double>& values);
 

@@ -75,6 +75,7 @@ public:
 			      bool isVector,
 			      Array1<float>& values)=0;
     virtual void GetParticleData(int particleId,
+				 clString pSetName,
                                  clString varname,
                                  Array1<double>& values) = 0;
   //////////
@@ -102,6 +103,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/12/28 21:09:08  kuzimmer
+// modified file readers so that we can read multiple files for parallel output
+//
 // Revision 1.4  1999/09/21 16:08:30  kuzimmer
 // modifications for binary file format
 //
