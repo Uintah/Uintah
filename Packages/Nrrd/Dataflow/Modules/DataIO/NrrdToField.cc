@@ -62,7 +62,7 @@ void NrrdToField::execute()
 
   if (ninH->nrrd->dim != 3) {
     cerr << "Can only deal with 3-dimensional scalar fields... sorry.\n";
-    exit(0);
+    return;
   }
 
   int nx = ninH->nrrd->size[0];
