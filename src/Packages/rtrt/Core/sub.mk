@@ -139,7 +139,7 @@ SUBDIRS := $(SRCDIR)/Shadows \
 include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS :=  \
-	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 
+	Core/Thread Core/Exceptions Core/Persistent Core/Geometry Packages/rtrt/visinfo 
 
 LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(FASTM_LIBS) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
