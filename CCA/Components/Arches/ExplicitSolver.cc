@@ -1342,7 +1342,7 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_enthalpySolve)
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
  
   tsk->modifies(d_lab->d_densityTempLabel);

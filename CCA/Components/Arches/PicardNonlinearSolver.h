@@ -144,6 +144,10 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
+      void sched_underrelaxation(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
   
 protected :
 
@@ -218,6 +222,14 @@ private:
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
 			   LevelP level, Scheduler* sched);
+
+      void underrelaxation(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
 private:
       // const VarLabel*
       const ArchesLabel* d_lab;
