@@ -195,8 +195,7 @@ public:
   int have_all_neighbors;
 
   const Node &node(int i) const { return *(nodes[i].get_rep()); }
-  //const Point &point(int i) const { return nodes[i].get_rep()->p; }
-  Point tmp;  const Point &point(int) const { return tmp; }
+  const Point &point(int i) const { return nodes[i].get_rep()->p; }
   Element *element(int i) const { return elems[i]; }
   int nodesize() const { return nodes.size(); }
   int elemsize() const { return elems.size(); }
