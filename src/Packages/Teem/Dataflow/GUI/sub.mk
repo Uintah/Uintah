@@ -38,6 +38,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NrrdQuantize.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
 	$(SRCDIR)/NrrdResample.tcl\
+	$(SRCDIR)/NrrdSelectTime.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
 #[INSERT NEW TCL FILE HERE]
 
