@@ -128,7 +128,7 @@
               <extraCells>  [1,1,1]     </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
-	    <spacing>[1,1,1] </spacing>
+	    <spacing>[0.5,0.5,0.5] </spacing>
 	</Level>
     </Grid>
    
@@ -140,11 +140,11 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>symetry3D.uda</filebase>
-	<outputInterval>0.0001</outputInterval>
+	<outputInterval>0.00001</outputInterval>
        <save label="vel_CC"/>
        <save label="temp_CC"/>
        <save label="press_CC"/>
-       <save label="delPress_CC"/>
+       <save label="delP_Dilatate"/>
    </DataArchiver>
    
    <Debug>
