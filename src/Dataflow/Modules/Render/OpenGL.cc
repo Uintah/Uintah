@@ -1,4 +1,4 @@
-/*
+o/*
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
@@ -546,6 +546,14 @@ void OpenGL::redraw_frame()
     tkwin=new_tkwin;
     dpy=Tk_Display(tkwin);
     win=Tk_WindowId(tkwin);
+    // Race condition, don't create the context before the window is done.
+    while (win==0)
+    {
+      gui->unlock();
+      Thread::yield();
+      gui->lock();
+      win = Tk_WindowId(tkwin);
+    }
     cx=OpenGLGetContext(the_interp, ccast_unsafe(myname));
     if(!cx){
       cerr << "Unable to create OpenGL Context!\n";
