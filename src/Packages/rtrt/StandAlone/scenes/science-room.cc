@@ -56,6 +56,11 @@ using namespace rtrt;
 using namespace std;
 using SCIRun::Thread;
 
+#define ADD_VIS_FEM 1
+#define ADD_DAVE_HEAD 1
+#define ADD_CSAFE_FIRE 1
+#define ADD_GEO_DATA 1
+
 void make_walls_and_posters(Group *g, const Point &center) {
   Vector north(0,1,0);
   Vector east(1,0,0);
@@ -685,7 +690,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
 
   //ADD THE VISIBLE FEMALE DATASET
-  ColorMap *vcmap = new ColorMap("/usr/sci/data/Geometry/volumes/vfem");
+#ifdef ADD_VIS_FEM
+  ColorMap *vcmap = new ColorMap("/usr/sci/data/Geometry/volumes/vfem",256);
   Material* vmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   vmat->my_lights.add(holo_light0);
   vmat->my_lights.add(holo_light1);
@@ -751,10 +757,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   CutGroup *vcut = new CutGroup(cpdpy);
   vcut->add(vinst);
+#endif
 
-
+#ifdef ADD_DAVE_HEAD
   //ADD THE DAVE HEAD DATA SET
-  ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes/dave");
+  ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes/dave",256);
   Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   hmat->my_lights.add(holo_light0);
   hmat->my_lights.add(holo_light1);
@@ -787,10 +794,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   CutGroup *hcut = new CutGroup(cpdpy);
   hcut->add(dinst);
   hcut->name_ = "Cutting Plane";
+#endif
 
-
+#ifdef ADD_GEO_DATA
   //ADD THE GEOLOGY DATA SET
-  ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes/Seismic/geo");
+  ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes/Seismic/geo",256);
   Material* gmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   gmat->my_lights.add(holo_light0);
   gmat->my_lights.add(holo_light1);
@@ -823,13 +831,19 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   CutGroup *gcut = new CutGroup(cpdpy);
   gcut->name_ = "Geology Cutting Plane";
   gcut->add(ginst);
-
+#endif
 
   //PUT THE VOLUMES INTO A SWITCHING GROUP  
   SelectableGroup *sg = new SelectableGroup(60);
+#ifdef ADD_VIS_FEM
   sg->add(vcut);
+#endif
+#ifdef ADD_DAVE_HEAD
   sg->add(hcut);
+#endif
+#ifdef ADD_GEO_DATA
   sg->add(gcut);
+#endif
   sg->name_ = "VolVis Selection";
 
   g->add(sg);
@@ -860,35 +874,38 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->animate=true;
 
   scene->addObjectOfInterest( sg, true );
+#ifdef ADD_VIS_FEM
   scene->addObjectOfInterest( vinst, false );
+  scene->attach_auxiliary_display(vcvdpy);
+  vcvdpy->setName("Visible Female Volume");
+  scene->attach_display(vcvdpy);
+  (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
+#endif
+#ifdef ADD_DAVE_HEAD
   scene->addObjectOfInterest( dinst, false );
+  scene->attach_auxiliary_display(hcvdpy);
+  hcvdpy->setName("Brain Volume");
+  scene->attach_display(hcvdpy);
+  (new Thread(hcvdpy, "HEAD Volume Dpy"))->detach();
+#endif
+#ifdef ADD_GEO_DATA
   scene->addObjectOfInterest( ginst, false );
+  scene->attach_auxiliary_display(gcvdpy);
+  gcvdpy->setName("Geological Volume");
+  scene->attach_display(gcvdpy);
+  (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
+#endif
   scene->addObjectOfInterest( hcut, false );
+  scene->attach_auxiliary_display(cpdpy);
+  cpdpy->setName("Cutting Plane");
+  scene->attach_display(cpdpy);
+  (new Thread(cpdpy, "CutPlane Dpy"))->detach();
 
   scene->add_per_matl_mood_light(holo_light0);
   scene->add_per_matl_mood_light(holo_light1);
   scene->add_per_matl_mood_light(holo_light2);
   scene->add_per_matl_mood_light(holo_light3);
   scene->add_per_matl_mood_light(holo_light4);
-
-  scene->attach_auxiliary_display(vcvdpy);
-  scene->attach_auxiliary_display(hcvdpy);
-  scene->attach_auxiliary_display(gcvdpy);
-  scene->attach_auxiliary_display(cpdpy);
-
-  vcvdpy->setName("Visible Female Volume");
-  hcvdpy->setName("Brain Volume");
-  gcvdpy->setName("Geological Volume");
-  cpdpy->setName("Cutting Plane");
-
-  scene->attach_display(vcvdpy);
-  (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
-  scene->attach_display(hcvdpy);
-  (new Thread(hcvdpy, "HEAD Volume Dpy"))->detach();
-  scene->attach_display(gcvdpy);
-  (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
-  scene->attach_display(cpdpy);
-  (new Thread(cpdpy, "CutPlane Dpy"))->detach();
 
   return scene;
 }
