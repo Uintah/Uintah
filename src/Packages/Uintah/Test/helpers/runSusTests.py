@@ -325,9 +325,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 
   # set the command name for mpirun - differs on different platforms
   MPIHEAD="mpirun -np"
-  if environ['OS'] == "OSF":
-    MPIHEAD="prun -n"
-  elif environ['OS'] == "Linux":
+  if environ['OS'] == "Linux":
     MPIHEAD="mpirun -x MALLOC_STATS -np" 
 
   # set where to view the log files
