@@ -66,7 +66,7 @@ WARNING
   class MPIScheduler : public SchedulerCommon {
     MessageLog log;
   public:
-    MPIScheduler(const ProcessorGroup* myworld, Output* oport);
+    MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler = 0);
     virtual ~MPIScheduler();
       
     virtual void problemSetup(const ProblemSpecP& prob_spec);
@@ -120,6 +120,7 @@ WARNING
     
     virtual void verifyChecksum();
 
+    MPIScheduler* parentScheduler;
     const ProcessorGroup* pg_;    
     mpi_timing_info_s     mpi_info_;
     SendRecord            sends_;

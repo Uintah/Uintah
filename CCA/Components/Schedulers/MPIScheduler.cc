@@ -36,7 +36,7 @@ using namespace SCIRun;
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 
-static DebugStream dbg("MPIScheduler", false);
+static DebugStream dbg("MPIScheduler", true);
 static DebugStream timeout("MPIScheduler.timings", false);
 
 Mutex sendsLock( "sendsLock" );
@@ -57,13 +57,14 @@ printTask( ostream& out, DetailedTask* task )
   }
 }
 
-MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
-  : SchedulerCommon(myworld, oport), log(myworld, oport)
+MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler)
+  : SchedulerCommon(myworld, oport), log(myworld, oport), parentScheduler(parentScheduler)
 {
   d_generation = 0;
   d_lasttime=Time::currentSeconds();
   ss_ = 0;
   pg_ = 0;
+  reloc_new_posLabel_=0;
 }
 
 
@@ -82,7 +83,7 @@ MPIScheduler::~MPIScheduler()
 SchedulerP
 MPIScheduler::createSubScheduler()
 {
-  MPIScheduler* newsched = new MPIScheduler(d_myworld, m_outPort);
+  MPIScheduler* newsched = new MPIScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   return newsched;
@@ -327,9 +328,16 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       }
 
       dbg << pg_->myrank() << " --> sending " << *req << " from dw " << dw->getID() << '\n';
-      dw->sendMPI(*ss_, batch, pg_, reloc_new_posLabel_, mpibuff,
-		  dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep(),
-		  req);
+      const VarLabel* posLabel;
+      OnDemandDataWarehouse* posDW;
+      if(!reloc_new_posLabel_){
+	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+	posLabel = parentScheduler->reloc_new_posLabel_;
+      } else {
+	posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+	posLabel = reloc_new_posLabel_;
+      }
+      dw->sendMPI(*ss_, batch, pg_, posLabel, mpibuff, posDW, req);
     }
     // Post the send
     if(mpibuff.count()>0){
@@ -439,9 +447,13 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
 	cerrLock.unlock();
       }
 
-      dw->recvMPI(mpibuff, batch, pg_,
-		  dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep(),
-		  req);
+      OnDemandDataWarehouse* posDW;
+      if(!reloc_new_posLabel_){
+	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+      } else {
+	posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+      }
+      dw->recvMPI(mpibuff, batch, pg_, posDW, req);
       if (!req->isNonDataDependency()) {
 	dts_->setScrubCount(req->req->var, req->matl, req->fromPatch,
 			    req->req->mapDataWarehouse(), dws);
