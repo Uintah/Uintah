@@ -5,8 +5,6 @@
    <Meta>
        <title></title>
    </Meta>
-    
-    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -16,7 +14,7 @@
        <delt_min>           0.0       </delt_min>
        <delt_max>           0.1     </delt_max>
        <delt_init>          1.0e-7    </delt_init>
-	<max_delt_increase>  0.15      </max_delt_increase>
+	<max_delt_increase>  0.5      </max_delt_increase>
        <timestep_multiplier> 1        </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -64,18 +62,18 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
-      <Face circle = "y-" origin = "0.0 0.0 0.0" radius = "0.25">
+      <Face circle = "y-" origin = "0.0 0.0 0.0" radius = "0.5">
         <BCType id = "0" label = "Pressure"       var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.0,1.0,0.0] </value>
+                              <value> [0.0,0.351,0.0] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Dirichlet">
-                              <value> 627.46570  </value>
+                              <value> 637.4657  </value>
         </BCType>
         <BCType id = "all" label = "Density"      var = "Dirichlet">
-                              <value>  .23861344 </value>
+                              <value>  0.23861344 </value>
         </BCType>
         <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
@@ -89,13 +87,13 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.1,0.] </value>
+                              <value> [0.,0.01,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Dirichlet">
                               <value> 298.0  </value>
         </BCType>
         <BCType id = "all" label = "Density"      var = "Dirichlet">
-                              <value> 1.1798322  </value>
+                              <value> 1.1784717376136  </value>
         </BCType>
         <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
@@ -125,91 +123,94 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>             
       <Face side = "z+">
-        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
-<!--
+
        <Level>
-           <Box label = "1">
-              <lower>        [-6,0.0,0]     </lower>
-              <upper>        [ 6,8,0.04]     </upper>         
-              <extraCells>   [1,1,1]         </extraCells>
-              <patches>      [3,2,1]         </patches>    
-              <resolution>   [300,200,1]     </resolution>
-           </Box>
-       </Level>
--->   
-        <Level>
-           <Box label = "1">
-              <lower>        [-2,0.00,0]     </lower>
-              <upper>        [ 2,4,0.04]     </upper>         
+           <Box label = "2">
+              <lower>        [-3,0.0,-0.03]     </lower>
+              <upper>        [ 3,6.0, 0.03]    </upper>         
               <extraCells>   [1,1,1]         </extraCells>
               <patches>      [1,1,1]         </patches>    
               <resolution>   [100,100,1]     </resolution>
            </Box>
        </Level>
-
+<!--
+        Don't forget to change z- z+ boundary conditions
+        <Level>
+        <Box label = "3d">
+          <lower>         [-3, 0, -3]   </lower>
+          <upper>         [ 3, 6,  3]   </upper>
+          <extraCells>    [1,1,1]         </extraCells>
+          <patches>       [5,8,5]       </patches>
+          <resolution>    [200,200,200] </resolution>
+        </Box>
+       </Level>
+--> 
     </Grid>
    
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>imp_JP8Jet_CoFlow.uda</filebase>
+      <filebase>JP8_CoFlow.uda</filebase>
      <outputInterval>0.01</outputInterval>
-      <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
       <save label = "delP_Dilatate"/>
       <save label = "press_CC"/>  
       <save label = "vel_CC"/>
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
       <save label = "scalar-f"/>
-      <save label = "speedSound_CC"/>
       <save label = "modelEng_src"/>
       <save label = "cumulativeEnergyReleased"/>
-      <save label= "rhs"/>
       <compression>gzip</compression>
-      <checkpoint cycle = "2" interval = "0.01"/>
+      <checkpoint cycle = "4" interval = "0.05"/>
    </DataArchiver>
 
    <Debug>
-     <dbg_timeStart>       10.0        </dbg_timeStart>
-     <dbg_timeStop>        0.003       </dbg_timeStop>
-     <dbg_outputInterval>  1e-9        </dbg_outputInterval>
-     <dbg_BeginIndex>      [42,-1,-1]  </dbg_BeginIndex> 
-     <dbg_EndIndex>        [47,0,2]    </dbg_EndIndex>
-     <dbg_Matls>           [0,1]       </dbg_Matls>
-     <dbg_SigFigs>         10          </dbg_SigFigs>
-     <debug label = "switchDebugConvergence"/>
-     <!--<debug label = "switchTestConservation"/>
-         <debug label = "switchDebug_EQ_RF_press"/>-->
-   </Debug>
+	<dbg_GnuPlot>false</dbg_GnuPlot>
+	<dbg_var1>  0     </dbg_var1>
+	<dbg_var2>  0     </dbg_var2>
+	<dbg_SigFigs>5    </dbg_SigFigs>
+	<dbg_Level>  0    </dbg_Level>
+    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-      <cfl>0.25</cfl>
+      <cfl>0.20</cfl>
       <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder"/>
+        <advection type = "SecondOrder"/>
         <solution technique = "EqForm"/>
         
         <!--______________turbulence models____________-->
-<!--     <turbulence model = "Germano">                 
+<!--
+       <turbulence model = "Germano">                 
+          <model_constant>      1.00 </model_constant>
           <filter_width>        1.0 </filter_width>
           <test_filter_width>   2.0 </test_filter_width>
           <turb_Pr>             0.4 </turb_Pr>                          
+          <FilterScalar>
+             <name>scalar-f</name>
+             <material>BackgroundGas</material>
+          </FilterScalar>
         </turbulence>
        
+
         <turbulence model = "Smagorinsky">         
           <model_constant>      0.1 </model_constant>            
           <filter_width>        1.0 </filter_width>
-          <turb_Pr>             0.4 </turb_Pr>                          
+          <FilterScalar>
+             <name>scalar-f</name>
+             <material>BackgroundGas</material>
+          </FilterScalar>
         </turbulence> 
 -->        
         <TimeStepControl>
@@ -217,10 +218,11 @@
           <knob_for_speedSound>  0.01            </knob_for_speedSound>
         </TimeStepControl>
         
+         
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-7 </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 10 </iters_before_timestep_restart>
+           <outer_iteration_tolerance> 1e-6   </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
 	     <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
@@ -232,7 +234,7 @@
 	     <!-- Hypre options -->
 	     <solver>         hybrid  </solver>
 	     <preconditioner> pfmg    </preconditioner>
-	     <tolerance>      1.e-10  </tolerance>
+	      <tolerance>      1.e-8  </tolerance>
 	     <maxiterations>  7500    </maxiterations>
 	     <npre>           1       </npre>
 	     <npost>          1       </npost>
@@ -248,7 +250,6 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
        <gravity>            [0,-9.81,0]   </gravity>
-       <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
@@ -263,21 +264,41 @@
            <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
            <isSurroundingMatl>          true            </isSurroundingMatl>
-           <dynamic_viscosity>          15.89e-6        </dynamic_viscosity>
-           <thermal_conductivity>       26.3e-3         </thermal_conductivity>
+           <dynamic_viscosity>          0.00002         </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.5           </specific_heat>
            <speed_of_sound>             376             </speed_of_sound>
            <gamma>                      1.4             </gamma>
+           
            <geom_object>
+                <difference>
               <box label = "world">
-                <min>       [ -5, -5, -0.1 ]    </min>
-                <max>       [  5,  5,  0.1 ]   </max>
+                  <min>            [-5.0, -5.0, -5.0] </min>
+                  <max>            [ 5.0,  8.0,  5.0] </max>                 
               </box>
+                <cylinder label = "fuelSlug">
+                   <bottom>           [0.0,0.0,0.0]   </bottom>
+                   <top>              [0.0,0.25,0.0]   </top>
+                   <radius>           0.5             </radius>
+                </cylinder>
+              </difference>
               <res>                [2,2,2]             </res>
-              <velocity>           [.0,.0,.0]          </velocity>
-              <density>            1.1501545     </density>
+              <velocity>           [.0,.01,.0]         </velocity>
+              <density>            1.1784717376136     </density>
               <pressure>           101325.0            </pressure>     
-              <temperature>        298.0               </temperature>
+              <temperature>        300.0               </temperature>
+           </geom_object>
+           <geom_object>
+                <cylinder label = "fuelSlug">
+                   <bottom>           [0.0,0.0,0.0]    </bottom>
+                   <top>              [0.0,0.25,0.0]    </top>
+                   <radius>           0.5              </radius>
+                </cylinder>
+              <res>                [2,2,2]             </res>
+              <velocity>           [0.0,0.351,0.0]     </velocity>
+              <density>             0.23861344         </density>
+              <pressure>            101325.0           </pressure>     
+              <temperature>         627.4657             </temperature>
            </geom_object>
          </material>
       </ICE>       
@@ -308,20 +329,36 @@
 	   <filename>inputs/ARCHES/NewStaticMixingTables/JP8_reaction.tbl</filename>
 	</table>
         <material>BackgroundGas</material>
-        <scalar name="f">
+       <scalar name="f">
         <constants>
-              <!--__________________________________-->
-              <!-- if you run this problem with second order you'll need diffusion-->
-        </constants>       
-        
+	   <diffusivity>0</diffusivity>
+        </constants> 
           <geom_object>
+              <difference>
              <box label = "world">
-               <min>       [ -10, -10, -0.1 ]    </min>
-               <max>       [  10,  10,  0.1 ]   </max>
+                  <min>       [-5, -5, -5]   </min>
+                  <max>       [5,   8,  5]   </max>
              </box>
+                <cylinder label = "fuelSlug">
+                   <bottom>           [0.0,0.0,0.0]   </bottom>
+                   <top>              [0.0,0.25,0.0]  </top>
+                   <radius>           0.5             </radius>
+                </cylinder>
+              </difference>
              <scalar>    0.00   </scalar>
           </geom_object>
+           <geom_object>
+               <cylinder label = "fuelSlug">
+                  <bottom>           [0.0,0.0,0.0]   </bottom>
+                  <top>              [0.0,0.25,0.0]  </top>
+                  <radius>           0.5             </radius>
+               </cylinder>
+               <scalar>    1.00   </scalar>
+           </geom_object>
 	</scalar>
+      
+	<varianceScale>0</varianceScale>
+	<varianceMax>1</varianceMax>
       </Model>
     </Models>
 
