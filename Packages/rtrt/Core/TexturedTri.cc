@@ -314,8 +314,8 @@ void TexturedTri::light_intersect(const Ray& ray, HitInfo& hit, Color&,
 Vector TexturedTri::normal(const Point&, const HitInfo& hitinfo)
 {
   double *uv = (double *)hitinfo.scratchpad;
-  double beta = uv[0];
-  double gamma = uv[1];
+  double beta = uv[1];
+  double gamma = uv[0];
 
   return (1.-beta-gamma)*vn1 + beta*vn2 + gamma*vn3;
 }

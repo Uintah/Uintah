@@ -57,7 +57,7 @@ void processSCENE(token_list* children1, unsigned loop1, string env_map)
 }
 
 void processGEOMOBJECT(token_list* children1, unsigned loop1, 
-                      Array1<Material*> &ase_matls, const Transform t,
+                      Array1<Material*> &ase_matls, const Transform tt,
                       Group *objgroup)
 {
   Point p0,p1,p2;
@@ -72,6 +72,7 @@ void processGEOMOBJECT(token_list* children1, unsigned loop1,
   unsigned loop3, length3;
   unsigned matl_index = 0;
   token_list *children2, *children3;
+  Transform t = tt;
   Material *mat=0;
   matl_index = 
     ((GeomObjectToken*)((*children1)[loop1]))->GetMaterialIndex();
@@ -147,15 +148,22 @@ void processGEOMOBJECT(token_list* children1, unsigned loop1,
             if (!degenerate(p0,p1,p2)) {
               TexturedTri* tri;
               
-              if (0 && v5 && v5->size()) {
+              if (v5 && v5->size()) {
                 index2 = loop4*9;
-                
-                vn0 = t.project(Vector((*v5)[index2],(*v5)[index2+1],
-                                       (*v5)[index2+2]));
-                vn1 = t.project(Vector((*v5)[index2+3],(*v5)[index2+4],
-                                       (*v5)[index2+5]));
-                vn2 = t.project(Vector((*v5)[index2+6],(*v5)[index2+7],
-                                       (*v5)[index2+8]));
+
+                Vector vn0((*v5)[index2],
+                           (*v5)[index2+1],
+                           (*v5)[index2+2]);
+                Vector vn1((*v5)[index2+3],
+                           (*v5)[index2+4],
+                           (*v5)[index2+5]);
+                Vector vn2((*v5)[index2+6],
+                           (*v5)[index2+7],
+                           (*v5)[index2+8]);
+                vn0 = t.project_normal(vn0);
+                vn1 = t.project_normal(vn1);
+                vn2 = t.project_normal(vn2);
+          
                 
                 tri = new TexturedTri(mat,p0,p1,p2,vn0,vn1,vn2);
               } else {
@@ -182,14 +190,17 @@ void processGEOMOBJECT(token_list* children1, unsigned loop1,
               
               Tri *tri; 
               
-              if (0 && v5 && v5->size()) {
+              if (v5 && v5->size()) {
                 
-                vn0 = t.project(Vector((*v5)[loop4*9],(*v5)[loop4*9+1],
-                                       (*v5)[loop4*9+2]));
-                vn1 = t.project(Vector((*v5)[loop4*9+3],(*v5)[loop4*9+4],
-                                       (*v5)[loop4*9+5]));
-                vn2 = t.project(Vector((*v5)[loop4*9+6],(*v5)[loop4*9+7],
-                                       (*v5)[loop4*9+8]));
+                vn0 = t.project_normal(Vector((*v5)[loop4*9],
+                                              (*v5)[loop4*9+1],
+                                              (*v5)[loop4*9+2]));
+                vn1 = t.project_normal(Vector((*v5)[loop4*9+3],
+                                              (*v5)[loop4*9+4],
+                                              (*v5)[loop4*9+5]));
+                vn2 = t.project_normal(Vector((*v5)[loop4*9+6],
+                                              (*v5)[loop4*9+7],
+                                              (*v5)[loop4*9+8]));
                 
                 tri = new Tri(mat,p0,p1,p2,vn0,vn1,vn2);
               } else {
