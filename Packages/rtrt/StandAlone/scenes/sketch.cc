@@ -87,7 +87,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Object* obj;
   
   if(files.size()==1){
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > > *hvol = new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > > (matl0, dpy, files[0], depth, nworkers);
+    HVolume<unsigned short, BrickArray3<unsigned short>, BrickArray3<VMCell<unsigned short> > > *hvol = new HVolume<unsigned short, BrickArray3<unsigned short>, BrickArray3<VMCell<unsigned short> > > (matl0, dpy, files[0], depth, nworkers);
 #if 1
     // Now to add a new material
     BBox bbox;
@@ -184,7 +184,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
     
 
-    Material *sm = new SketchMaterial<BrickArray3<short>, short>(hvol->blockdata, bbox, sil_trans, nrrdsil->axis[0].max, cmap);
+    Material *sm = new SketchMaterial<BrickArray3<unsigned short>, unsigned short>(hvol->blockdata, bbox, sil_trans, nrrdsil->axis[0].max, cmap);
     hvol->set_matl(sm);
     gui_materials.add(sm);
 #endif
@@ -200,7 +200,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
     obj=group;
     for(int i=0;i<files.size();i++){
-      Object* hvol = new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > > (matl0, dpy, files[i], depth, nworkers);
+      Object* hvol = new HVolume<unsigned short, BrickArray3<unsigned short>, BrickArray3<VMCell<unsigned short> > > (matl0, dpy, files[i], depth, nworkers);
       group->add(hvol);
     }
   }
