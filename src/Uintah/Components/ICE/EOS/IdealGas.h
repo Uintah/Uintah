@@ -100,9 +100,13 @@ WARNING
 				      double& press, double& dp_drho,
 				      double& dp_de);
 
+	 double getGasConstant() const;
+
         protected:
 
 	 ICELabel* lb;
+      private:
+	double d_gas_constant;
       };
       
    } // end namespace ICE
@@ -110,6 +114,9 @@ WARNING
 #endif  // __IDEAL_GAS_H__
 
 // $Log$
+// Revision 1.5  2000/10/27 23:39:54  jas
+// Added gas constant to lookup.
+//
 // Revision 1.4  2000/10/14 02:49:50  jas
 // Added implementation of compute equilibration pressure.  Still need to do
 // the update of BCS and hydrostatic pressure.  Still some issues with
