@@ -213,6 +213,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
+	    -commandname "Open" \
 	    -command "$w config -cursor watch; \
                       $this set_watch_cursor; \
                       $this-c update_file 0;
@@ -267,9 +268,21 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	# read an HDF5 file
 	iwidgets::labeledframe $w.browser -labeltext "HDF5 File Browser"
 	set f [$w.browser childsite]
-	
-	iwidgets::entryfield $f.fname -labeltext "File:" \
-	    -textvariable $this-filename
+
+	frame $f.fname
+	label $f.fname.l -text "File:"
+	entry $f.fname.e -width 64 -textvariable $this-filename
+
+	pack $f.fname.l -side left -anchor nw -padx 3
+
+	pack $f.fname.e \
+	    -side left -anchor nw -padx 3 -fill both -expand 1
+
+	bind $f.fname.e <Return> \
+	    "$w config -cursor watch; \
+             $this set_watch_cursor; \
+             $this-c update_file 0;
+             $w config -cursor $current_cursor;"
 
 	frame $f.buttons
 
