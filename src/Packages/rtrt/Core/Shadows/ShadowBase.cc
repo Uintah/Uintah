@@ -27,6 +27,20 @@ void ShadowBase::preprocess(Scene*, int&, int&)
 {
 }
 
+int ShadowBase::increment_shadow_type(int shadow_type) {
+  if( shadow_type == Uncached_Shadows )
+    return No_Shadows;
+  else
+    return shadow_type+1;
+}
+
+int ShadowBase::decrement_shadow_type(int shadow_type) {
+  if( shadow_type == No_Shadows )
+    return Uncached_Shadows;
+  else
+    return shadow_type-1;
+}
+
 const int SHADOWBASE_VERSION = 1;
 void 
 ShadowBase::io(SCIRun::Piostream &str)
