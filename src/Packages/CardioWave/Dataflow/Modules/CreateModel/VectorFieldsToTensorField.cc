@@ -93,9 +93,9 @@ VectorFieldsToTensorField::execute()
     return;
   }
 
-  if (ev1mesh->get_nx() != ev2mesh->get_nx() ||
-      ev1mesh->get_ny() != ev2mesh->get_ny() ||
-      ev1mesh->get_nz() != ev2mesh->get_nz())
+  if (ev1mesh->get_ni() != ev2mesh->get_ni() ||
+      ev1mesh->get_nj() != ev2mesh->get_nj() ||
+      ev1mesh->get_nk() != ev2mesh->get_nk())
   {
     error("Fields must be the same size.");
     return;
