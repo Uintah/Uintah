@@ -671,7 +671,7 @@ void ApplyFEMCurrentSource::execute()
     ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
     electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
 
-    unsigned int electrodeModel = (*electrodeParams)[0];
+    unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
     double electrodeLen = (*electrodeParams)[2];
     cout << "electrode model = " << electrodeModel << "  length= " << electrodeLen << endl;
 
