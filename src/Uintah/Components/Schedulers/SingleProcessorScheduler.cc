@@ -320,18 +320,22 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
 	 delete newvar;
       }
-      for(int i=0;i<sr.size();i++){
-	 if(sr[i]->matls[m])
-	    delete sr[i]->matls[m];
-	 delete sr[i];
-      }
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
+   }
+   for(int i=0;i<sr.size();i++){
+      for(int m=0;m<reloc_numMatls;m++)
+	 if(sr[i]->matls[m])
+	    delete sr[i]->matls[m];
+      delete sr[i];
    }
 }
 
 //
 // $Log$
+// Revision 1.16  2000/08/28 17:48:39  sparker
+// Fixed delete for multi-material problems
+//
 // Revision 1.15  2000/08/23 21:40:04  sparker
 // Fixed slight memory leak when particles cross patch boundaries
 //
