@@ -1589,7 +1589,8 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
 	}
       }
       if(prin_dir != -1){
-	double dist=motionv.length();
+//	double dist=motionv.length2()/maxdot;
+        double dist=motionv.length();
 	Vector mtn(pick_pick->principal(prin_dir)*dist);
 	total_x+=mtn.x();
 	total_y+=mtn.y();
@@ -1641,12 +1642,6 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
 #else
     args.result("0");
 #endif // MPEG
-  } else if (args[1] == "have_libimage") {
-#ifdef LIBIMAGE
-    args.result("1");
-#else
-    args.result("0");
-#endif // LIBIMAGE
   } else if (args[1] == "dump_viewwindow") {
     if (args.count() != 4) {
       args.error("ViewWindow::dump_viewwindow needs an output file name and type");
