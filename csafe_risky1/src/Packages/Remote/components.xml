@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the Remote package -->
+
+<package name="Remote">
+  <guiPath>GUI</guiPath>
+
+  <scirun-library category="remoteSalmon">
+
+  <soNames>
+   <soName>libRemote_Modules_remoteSalmon.so</soName>
+   <soName>libRemote.so</soName>
+  </soNames>
+
+  <dataflow-component name="remoteSalmon">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+	<author>David Hart</author>
+      </authors>
+      <version-date>2000</version-date>
+      <version>0.1</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_remoteSalmon</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  </scirun-library>
+
+</package>
