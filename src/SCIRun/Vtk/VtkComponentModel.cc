@@ -76,18 +76,15 @@ extern "C" {
 
 namespace SCIRun {
 
+
+const std::string VtkComponentModel::DEFAULT_PATH =
+    std::string("/CCA/Components/VTK/xml");
+
+
 VtkComponentModel::VtkComponentModel(SCIRunFramework* framework)
   : ComponentModel("vtk"), framework(framework)
 {
-  // Record the path to XML descriptions of components.  The environment
-  // variable SIDL_XML_PATH should be set, otherwise use a default.
-  const char *component_path = getenv("SIDL_XML_PATH");
-  if (component_path != 0) {
-    this->setSidlXMLPath( std::string(component_path) );
-  } else {
-    this->setSidlXMLPath(sci_getenv("SCIRUN_SRCDIR") + std::string("/CCA/Components/VTK/xml"));
-  }
-
+  // move to framework properties
   // Record the path containing DLLs for components.
   const char *dll_path = getenv("SIDL_DLL_PATH");
   if (dll_path != 0) {
@@ -120,39 +117,35 @@ void VtkComponentModel::destroyComponentList()
 void VtkComponentModel::buildComponentList()
 {
   // Initialize the XML4C system
-  try
-    {
+  try {
     XMLPlatformUtils::Initialize();
-    }
-  catch (const XMLException& toCatch)
-    {
+  }
+  catch (const XMLException& toCatch) {
     std::cerr << "Error during initialization! :" << std::endl
               << StrX(toCatch.getMessage()) << std::endl;
     return;
-    }
+  }
   
   destroyComponentList();
 
   std::string component_path(this->getSidlXMLPath());
 
-  std::vector< std::string > paths = this->splitPathString(component_path);
+  std::vector< std::string > paths = splitPathString(component_path);
 
   for (std::vector< std::string>::const_iterator it = paths.begin();
-       it != paths.end(); ++it)
-    {
+       it != paths.end(); ++it) {
     Dir d(*it);
     std::cerr << "VTK Component Model: Looking at directory: " << *it << std::endl;
     std::vector<std::string> files;
     d.getFilenamesBySuffix(".xml", files);
 
     for(std::vector<std::string>::iterator iter = files.begin();
-        iter != files.end(); iter++)
-      {
+        iter != files.end(); iter++) {
       std::string& file = *iter;
       std::cerr << "VTK Component Model: Looking at file" << file << std::endl;
       readComponentDescription(*it+"/"+file);
-      }
     }
+  }
 }
 
 void VtkComponentModel::readComponentDescription(const std::string& file)
@@ -163,26 +156,23 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
   parser.setDoValidation(true);
   parser.setErrorHandler(&handler);
   
-  try
-    {
+  try {
     std::cout << "Parsing file: " << file << std::endl;
     parser.parse(file.c_str());
-    }
-  catch (const XMLException& toCatch)
-    {
+  }
+  catch (const XMLException& toCatch) {
     std::cerr << "Error during parsing: '" <<
       file << "' " << std::endl << "Exception message is:  " <<
       xmlto_string(toCatch.getMessage()) << std::endl;
     handler.foundError=true;
     return;
-    }
-  catch ( ... )
-    {
+  }
+  catch ( ... ) {
     std::cerr << "Unknown error occurred during parsing: '" << file << "' "
               << std::endl;
     handler.foundError=true;
     return;
-    }
+  }
 
   // Get all the top-level document node
   DOMDocument* document = parser.getDocument();
@@ -195,18 +185,16 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
     = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
   std::cout << "Component model name = " << compModelName << std::endl;
 
-  if ( compModelName != std::string(this->prefixName) )
-    {
+  if ( compModelName != std::string(this->prefixName) ) {
     return;
-    }
+  }
   
   // Get a list of the library nodes.  Traverse the list and read component
   // elements at each list node.
   DOMNodeList* libraries
     = document->getElementsByTagName(to_xml_ch_ptr("library"));
 
-  for (unsigned int i = 0; i < libraries->getLength(); i++)
-    {
+  for (unsigned int i = 0; i < libraries->getLength(); i++) {
     DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
     // Read the library name
     std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
@@ -215,8 +203,7 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
     // Get the list of components.
     DOMNodeList* comps
       = library->getElementsByTagName(to_xml_ch_ptr("component"));
-    for (unsigned int j = 0; j < comps->getLength(); j++)
-      {
+    for (unsigned int j = 0; j < comps->getLength(); j++) {
       // Read the component name
       DOMElement *component = static_cast<DOMElement *>(comps->item(j));
       std::string
@@ -227,40 +214,13 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
       VtkComponentDescription* cd = new VtkComponentDescription(this, component_name);
       cd->setLibrary(library_name.c_str()); // record the DLL name
       this->components[cd->type] = cd;
-      }
-    }
+     }
+  }
 }
 
 bool VtkComponentModel::haveComponent(const std::string& type)
 {
   return components.find(type) != components.end();
-}
-
-std::vector<std::string>
-VtkComponentModel::splitPathString(const std::string &path)
-{
-  std::vector<std::string> ans;
-
-  if (path == "" )
-    {
-    return ans;
-    }
-
-  // Split the PATH string into a list of paths.  Key on ';' token.
-  std::string::size_type start = 0;
-  std::string::size_type end   = path.find(';', start);
-  while ( end != path.npos )
-    {
-    std::string substring = path.substr(start, end - start);
-    ans.push_back(substring);
-    start = end + 1;
-    end   = path.find(';', start);
-    }
-  // grab the remaining path
-  std::string substring = path.substr(start, end - start);
-  ans.push_back(substring);
-
-  return ans;  
 }
 
 ComponentInstance* VtkComponentModel::createInstance(const std::string& name,
@@ -269,45 +229,40 @@ ComponentInstance* VtkComponentModel::createInstance(const std::string& name,
   vtk::Component *component;
 
   componentDB_type::iterator iter = components.find(type);
-  if(iter == components.end())
-    { // Could not find this component
+  if (iter == components.end()) { // could not find this component
     return 0;
-    }
+  }
 
   // Get the list of DLL paths to search for the appropriate component library
-  std::vector<std::string> possible_paths = this->splitPathString(this->getSidlDLLPath());
+  std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
   LIBRARY_HANDLE handle;
 
   for (std::vector<std::string>::iterator it = possible_paths.begin();
-       it != possible_paths.end(); it++)
-    {
+       it != possible_paths.end(); it++) {
     std::string so_name = *it + "/" + iter->second->getLibrary();
     handle = GetLibraryHandle(so_name.c_str());
     if (handle)  {  break;   }
-    }
+  }
    
-  if ( !handle )
-    {
+  if ( !handle ) {
     std::cerr << "Could not find component DLL: " << iter->second->getLibrary()
               << " for type " << type << std::endl;
     std::cerr << SOError() << std::endl;
     return 0;
-    }
+  }
   
   std::string makername = "make_"+type;
-  for(int i = 0; i < static_cast<int>(makername.size()); i++)
-    {
+  for(int i = 0; i < static_cast<int>(makername.size()); i++) {
     if (makername[i] == '.') { makername[i]='_'; }
-    }
+  }
   
   //  std::cerr << "looking for symbol:" << makername << std::endl;
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-  if(!maker_v)
-    {
+  if(!maker_v) {
     //    std::cerr <<"Cannot load component symbol " << type << std::endl;
     std::cerr << SOError() << std::endl;
     return 0;
-    }
+  }
   vtk::Component* (*maker)() = (vtk::Component* (*)())(maker_v);
   //  std::cerr << "about to create Vtk component" << std::endl;
   component = (*maker)();
@@ -337,5 +292,26 @@ void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>
     list.push_back(iter->second);
   }
 }
+
+std::string VtkComponentModel::getSidlXMLPath()
+{
+   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+	pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+	    framework->getFrameworkService("cca.FrameworkProperties", "")
+	);
+    if (fwkProperties.isNull()) {
+	std::cerr << "Error: Cannot find framework properties" << std::cerr;
+	return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
+    }
+    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+    std::string s = tm->getString("sidl_xml_path", "");
+
+    if (s.empty()) {
+	s = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
+    }
+    framework->releaseFrameworkService("cca.FrameworkProperties", "");
+    return s;
+}
+
 
 } // end namespace SCIRun

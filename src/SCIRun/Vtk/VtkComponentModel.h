@@ -86,24 +86,18 @@ public:
       registered in this ComponentModel. */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
                                      bool);
-  /**
-   * Get/Set the directory path to the XML files describing Babel
-   * components. By default, sidlXMLPath is initialized to the
-   * environment variable SIDL_XML_PATH. This path is expected to
-   * contain all .scl and .cca files for Babel components.
-   */
-  std::string getSidlXMLPath() const
-  { return sidlXMLPath; }
-  void setSidlXMLPath( const std::string& s)
-  { sidlXMLPath = s; }
+
+  /** ? */
+  virtual void destroyComponentList();
+
+  /** ? */
+  virtual void buildComponentList();
   
   /** Get/set the directory path to component DLLs.  By default,
    * the sidlDLLPath is initialized to the environment variable
    * SIDL_DLL_PATH. */
-  std::string getSidlDLLPath() const
-  { return sidlDLLPath; }
-  void setSidlDLLPath( const std::string& s)
-  { sidlDLLPath = s; }
+  std::string getSidlDLLPath() const { return sidlDLLPath; }
+  void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
   
   /** Get/Set the filename for the DTD describing valid xml files for this
       component model. */
@@ -112,18 +106,20 @@ public:
   //    void setGrammarFileName( const std::string& s )
   //    { grammarFileName = s; }
   
-  /** Breaks a concatenated list of paths into a vector of paths. Splits on
-   * the ';' character. */
-  std::vector<std::string> static splitPathString(const std::string &);
+//   /** Breaks a concatenated list of paths into a vector of paths. Splits on
+//    * the ';' character. */
+//   std::vector<std::string> static splitPathString(const std::string &);
+
+  static const std::string DEFAULT_PATH;
   
 private:
   SCIRunFramework* framework;
   typedef std::map<std::string, VtkComponentDescription*> componentDB_type;
   componentDB_type components;
-  void destroyComponentList();
-  void buildComponentList();
+
+  std::string getSidlXMLPath();
   void readComponentDescription(const std::string& file);
-  std::string sidlXMLPath;
+
   std::string sidlDLLPath;
   //    std::string grammarFileName;
   
