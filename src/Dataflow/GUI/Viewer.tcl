@@ -232,7 +232,7 @@ itcl_class ViewWindow {
 	set_defaults 
 
 	frame $w.menu -relief raised -borderwidth 3
-	pack $w.menu -fill x
+	pack $w.menu -fill x -side top
 
 	menubutton $w.menu.file -text "File" -underline 0 \
 		-menu $w.menu.file.menu
@@ -248,7 +248,7 @@ itcl_class ViewWindow {
 	# Get the list of supported renderers for the pulldown
 	
 	frame $w.wframe -borderwidth 3 -relief sunken
-	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
+	pack $w.wframe -side bottom -expand yes -fill both -padx 4 -pady 4
 
 	set width 640
 	set height 512
@@ -330,125 +330,132 @@ itcl_class ViewWindow {
 	$w.dialbox2 wrapped_dial 2 "Tilt" 0.0 0.0 360.0 1.0 "$this tilt"
 	$w.dialbox2 bounded_dial 3 "FOV" 0.0 0.0 180.0 1.0 "$this fov"
 
-	frame $w.bframe
-	pack $w.bframe -side top -fill x
-	frame $w.bframe.pf
-	pack $w.bframe.pf -side left -anchor n
-	label $w.bframe.pf.perf1 -width 32 -text "100000 polygons in 12.33 seconds"
-	pack $w.bframe.pf.perf1 -side top -anchor n
-	label $w.bframe.pf.perf2 -width 32 -text "Hello"
-	pack $w.bframe.pf.perf2 -side top -anchor n
-	label $w.bframe.pf.perf3 -width 32 -text "Hello"
-	pack $w.bframe.pf.perf3 -side top -anchor n
+	# create the scrolled frame
+	iwidgets::scrolledframe $w.bsframe -width 640 -height 90 \
+		-vscrollmode none -hscrollmode dynamic \
+		-sbwidth 10 -relief groove
+	pack $w.bsframe -side bottom -before $w.wframe -anchor w -expand yes -fill x
 
-	canvas $w.bframe.mousemode -width 200 -height 70 \
+	# get the childsite to add stuff to
+	set bsframe [$w.bsframe childsite]
+
+	frame $bsframe.pf
+	pack $bsframe.pf -side left -anchor n
+	label $bsframe.pf.perf1 -width 32 -text "100000 polygons in 12.33 seconds"
+	pack $bsframe.pf.perf1 -side top -anchor n
+	label $bsframe.pf.perf2 -width 32 -text "Hello"
+	pack $bsframe.pf.perf2 -side top -anchor n
+	label $bsframe.pf.perf3 -width 32 -text "Hello"
+	pack $bsframe.pf.perf3 -side top -anchor n
+
+	canvas $bsframe.mousemode -width 175 -height 60 \
 		-relief groove -borderwidth 2
-	pack $w.bframe.mousemode -side left -fill y -pady 2 -padx 2
-	global $w.bframe.mousemode.text
-	set mouseModeText $w.bframe.mousemode.text
-	$w.bframe.mousemode create text 35 40 -tag mouseModeText \
+	pack $bsframe.mousemode -side left -fill y -pady 2 -padx 2
+	global $bsframe.mousemode.text
+	set mouseModeText $bsframe.mousemode.text
+	$bsframe.mousemode create text 5 30 -tag mouseModeText \
 		-text " Current Mouse Mode " \
 		-anchor w
 
-	frame $w.bframe.v1
-	pack $w.bframe.v1 -side left
-	button $w.bframe.v1.autoview -text "Autoview" -command "$this-c autoview"
-	pack $w.bframe.v1.autoview -fill x -pady 2 -padx 2
+	frame $bsframe.v1
+	pack $bsframe.v1 -side left
+	button $bsframe.v1.autoview -text "Autoview" -command "$this-c autoview"
+	pack $bsframe.v1.autoview -fill x -pady 2 -padx 2
 
-	frame $w.bframe.v1.views             
-	pack $w.bframe.v1.views -side left -anchor nw -fill x -expand 1
+	frame $bsframe.v1.views             
+	pack $bsframe.v1.views -side left -anchor nw -fill x -expand 1
 	
-	menubutton $w.bframe.v1.views.def -text "   Views   " -menu $w.bframe.v1.views.def.m -relief raised -padx 2 -pady 2
+	menubutton $bsframe.v1.views.def -text "   Views   " -menu $bsframe.v1.views.def.m -relief raised -padx 2 -pady 2
 	
-	menu $w.bframe.v1.views.def.m
-	$w.bframe.v1.views.def.m add cascade -label "Look down +X Axis" \
-		-menu $w.bframe.v1.views.def.m.posx
-	$w.bframe.v1.views.def.m add cascade -label "Look down +Y Axis" \
-		-menu $w.bframe.v1.views.def.m.posy
-        $w.bframe.v1.views.def.m add cascade -label "Look down +Z Axis" \
-		-menu $w.bframe.v1.views.def.m.posz
-	$w.bframe.v1.views.def.m add separator
-	$w.bframe.v1.views.def.m add cascade -label "Look down -X Axis" \
-		-menu $w.bframe.v1.views.def.m.negx
-	$w.bframe.v1.views.def.m add cascade -label "Look down -Y Axis" \
-		-menu $w.bframe.v1.views.def.m.negy
-        $w.bframe.v1.views.def.m add cascade -label "Look down -Z Axis" \
-		-menu $w.bframe.v1.views.def.m.negz
+	menu $bsframe.v1.views.def.m
+	$bsframe.v1.views.def.m add cascade -label "Look down +X Axis" \
+		-menu $bsframe.v1.views.def.m.posx
+	$bsframe.v1.views.def.m add cascade -label "Look down +Y Axis" \
+		-menu $bsframe.v1.views.def.m.posy
+        $bsframe.v1.views.def.m add cascade -label "Look down +Z Axis" \
+		-menu $bsframe.v1.views.def.m.posz
+	$bsframe.v1.views.def.m add separator
+	$bsframe.v1.views.def.m add cascade -label "Look down -X Axis" \
+		-menu $bsframe.v1.views.def.m.negx
+	$bsframe.v1.views.def.m add cascade -label "Look down -Y Axis" \
+		-menu $bsframe.v1.views.def.m.negy
+        $bsframe.v1.views.def.m add cascade -label "Look down -Z Axis" \
+		-menu $bsframe.v1.views.def.m.negz
 
-	pack $w.bframe.v1.views.def -side left -pady 2 -padx 2 -fill x
+	pack $bsframe.v1.views.def -side left -pady 2 -padx 2 -fill x
 
-	menu $w.bframe.v1.views.def.m.posx
-	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
+	menu $bsframe.v1.views.def.m.posx
+	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value x1_y1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
+	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value x1_y0 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
+	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value x1_z1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
+	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value x1_z0 -command "$this-c Views"
 
-	menu $w.bframe.v1.views.def.m.posy
-	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
+	menu $bsframe.v1.views.def.m.posy
+	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value y1_x1 -command "$this-c Views" 
-	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
+	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value y1_x0 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
+	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value y1_z1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
+	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value y1_z0 -command "$this-c Views"
 
-	menu $w.bframe.v1.views.def.m.posz
-	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
+	menu $bsframe.v1.views.def.m.posz
+	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value z1_x1 -command "$this-c Views" 
-	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
+	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value z1_x0 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
+	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value z1_y1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
+	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value z1_y0 -command "$this-c Views"
 
-	menu $w.bframe.v1.views.def.m.negx
-	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
+	menu $bsframe.v1.views.def.m.negx
+	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value x0_y1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
+	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value x0_y0 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
+	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value x0_z1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
+	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value x0_z0 -command "$this-c Views"
 
-	menu $w.bframe.v1.views.def.m.negy
-	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
+	menu $bsframe.v1.views.def.m.negy
+	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value y0_x1 -command "$this-c Views" 
-	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
+	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value y0_x0 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
+	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
 		-variable $this-pos -value y0_z1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
+	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
 		-variable $this-pos -value y0_z0 -command "$this-c Views"
 
-	menu $w.bframe.v1.views.def.m.negz
-	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
+	menu $bsframe.v1.views.def.m.negz
+	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
 		-variable $this-pos -value z0_x1 -command "$this-c Views" 
-	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
+	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
 		-variable $this-pos -value z0_x0 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
+	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
 		-variable $this-pos -value z0_y1 -command "$this-c Views"
-	$w.bframe.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
+	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value z0_y0 -command "$this-c Views"
 
-	frame $w.bframe.v2
-	pack $w.bframe.v2 -side left -padx 2 -pady 2
-	button $w.bframe.v2.sethome -text "Set Home View" -padx 2 \
+	frame $bsframe.v2
+	pack $bsframe.v2 -side left -padx 2 -pady 2
+	button $bsframe.v2.sethome -text "Set Home View" -padx 2 \
 		-command "$this-c sethome"
-	pack $w.bframe.v2.sethome -fill x -pady 2
-	button $w.bframe.v2.gohome -text "Go home" -command "$this-c gohome"
-	pack $w.bframe.v2.gohome -fill x -pady 2
+	pack $bsframe.v2.sethome -fill x -pady 2
+	button $bsframe.v2.gohome -text "Go home" -command "$this-c gohome"
+	pack $bsframe.v2.gohome -fill x -pady 2
 	
-	button $w.bframe.more -text "+" -padx 3 \
+	button $bsframe.more -text "+" -padx 3 \
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
 		-command "$this addMFrame $w"
-	pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
+	pack $bsframe.more -pady 2 -padx 2 -anchor se -side right
 
 # AS: initialization of attachment
 	toplevel $w.detached
@@ -464,10 +471,17 @@ itcl_class ViewWindow {
 
 	wm protocol $w.detached WM_DELETE_WINDOW "$this removeMFrame $w"
 	wm withdraw $w.detached
-	
-	frame $w.mframe
-	frame $w.mframe.f
-	pack $w.mframe.f -side top -fill x
+
+	# This is the frame for the geometry controls
+	iwidgets::scrolledframe $w.msframe -width 640 -height 240 \
+		-vscrollmode dynamic -hscrollmode dynamic \
+		-sbwidth 10 -relief groove
+
+	# get the childsite to add stuff to
+	set msframe [$w.msframe childsite]
+
+	frame $msframe.f -relief solid
+	pack $msframe.f -side top -fill x
 
 	set IsAttached 1
 	set IsDisplayed 0
@@ -475,14 +489,16 @@ itcl_class ViewWindow {
 	set att_msg "Double-click here to detach - - - - - - - - - - - - - - - - - - - - -"
 	set det_msg "Double-click here to attach - - - - - - - - - - - - - - - - - - - - -"
 	set detachedFr $w.detached
-	set attachedFr $w.mframe
+	set attachedFr $w.msframe
 	init_frame $detachedFr.f $det_msg
-	init_frame $attachedFr.f $att_msg
+	init_frame $msframe.f $att_msg
 
 # AS: end initialization of attachment
 
 	switchvisual 0
 	$this-c startup
+
+	puts [pack slaves $w]
     }
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
@@ -539,28 +555,30 @@ itcl_class ViewWindow {
 
 	if { $IsAttached!=0 } {
 	    pack forget $attachedFr
-	    append geom [winfo width $w] x [expr [winfo height $w]-[winfo height $w.mframe]]
+	    append geom [winfo width $w] x [expr [winfo height $w]-[winfo height $w.msframe]]
 	    wm geometry $w $geom
 	    update
 	} else { 
 	    wm withdraw $detachedFr
 	}
 	
-	$w.bframe.more configure -command "$this addMFrame $w" -text "+"
+	set bsframe [$w.bsframe childsite]
+	$bsframe.more configure -command "$this addMFrame $w" -text "+"
 	set IsDisplayed 0
     }
     
     method addMFrame {w} {
 
 	if { $IsAttached!=0} {
-	    pack $attachedFr -anchor w -side top -after $w.bframe
-	    append geom [expr [winfo width $w]>[winfo width $w.mframe] ?[winfo width $w]:[winfo width $w.mframe]] x [expr [winfo height $w]+[winfo reqheight $w.mframe]]
+	    pack $attachedFr -anchor w -side bottom -before $w.bsframe -expand yes -fill x
+	    append geom [expr [winfo width $w]>[winfo width $w.msframe] ?[winfo width $w]:[winfo width $w.msframe]] x [expr [winfo height $w]+[winfo reqheight $w.msframe]]
 	    wm geometry $w $geom
 	    update
 	} else {
 	    wm deiconify $detachedFr
 	}
-	$w.bframe.more configure -command "$this removeMFrame $w" -text "-"
+	set bsframe [$w.bsframe childsite]
+	$bsframe.more configure -command "$this removeMFrame $w" -text "-"
 	set IsDisplayed 1
     }
 
@@ -786,15 +804,15 @@ itcl_class ViewWindow {
 	    if { $IsAttached!=0} {
 		pack forget $attachedFr
 		
-		append geom [winfo width $w] x [expr [winfo height $w]-[winfo reqheight $w.mframe]]
+		append geom [winfo width $w] x [expr [winfo height $w]-[winfo reqheight $w.msframe]]
 		wm geometry $w $geom
 		wm deiconify $detachedFr
 		set IsAttached 0
 	    } else {
 		wm withdraw $detachedFr
 		
-		pack $attachedFr -anchor w -side top -after $w.bframe
-		append geom [winfo width $w] x [expr [winfo height $w]+[winfo reqheight $w.mframe]]
+		pack $attachedFr -anchor w -side bottom -before $w.bsframe -expand yes -fill x
+		append geom [winfo width $w] x [expr [winfo height $w]+[winfo reqheight $w.msframe]]
 		wm geometry $w $geom
 		set IsAttached 1
 	    }
@@ -804,9 +822,10 @@ itcl_class ViewWindow {
 
     method updatePerf {p1 p2 p3} {
 	set w .ui[modname]
-	$w.bframe.pf.perf1 configure -text $p1
-	$w.bframe.pf.perf2 configure -text $p2
-	$w.bframe.pf.perf3 configure -text $p3
+	set bsframe [$w.bsframe childsite]
+	$bsframe.pf.perf1 configure -text $p1
+	$bsframe.pf.perf2 configure -text $p2
+	$bsframe.pf.perf3 configure -text $p3
     }
 
     method switchvisual {idx} {
@@ -835,7 +854,8 @@ itcl_class ViewWindow {
             wm geometry $w.wframe 1024x768+1280+0
             $this-c switchvisual $w.wframe.draw 0 1024 768
             if {[winfo exists $w.wframe.draw]} {
-                bind $w <KeyPress-Escape> "$w.mframe.f.bench invoke"
+		set msframe [$w.msframe childsite]
+                bind $w <KeyPress-Escape> "$msframe.f.bench invoke"
 		pack $w.wframe.draw -expand yes -fill both
 		$this-c startbawgl
 	    }
@@ -947,14 +967,16 @@ itcl_class ViewWindow {
     }
 
     method updateMode {msg} {
-	global .ui[modname].bframe.mousemode
-	set mouseModeText .ui[modname].bframe.mousemode
+	set bsframe [.ui[modname].bsframe childsite]
+#	global .ui[modname].bframe.mousemode
+	set mouseModeText $bsframe.mousemode
 	$mouseModeText itemconfigure mouseModeText -text $msg
     }   
 
     method addObject {objid name} {
 	addObjectToFrame $objid $name $detachedFr
-	addObjectToFrame $objid $name $attachedFr
+	set msframe [$attachedFr childsite]
+	addObjectToFrame $objid $name $msframe
     }
 
     method addObjectToFrame {objid name frame} {
@@ -1032,7 +1054,8 @@ itcl_class ViewWindow {
 
     method addObject2 {objid} {
 	addObjectToFrame_2 $objid $detachedFr
-	addObjectToFrame_2 $objid $attachedFr
+	set msframe [$attachedFr childsite]
+	addObjectToFrame_2 $objid $msframe
     }
     
     method addObjectToFrame_2 {objid frame} {
@@ -1045,7 +1068,8 @@ itcl_class ViewWindow {
 
     method removeObject {objid} {
 	removeObjectFromFrame $objid $detachedFr
-	removeObjectFromFrame $objid $attachedFr
+	set msframe [$attachedFr childsite]
+	removeObjectFromFrame $objid $msframe
     }
 
     method removeObjectFromFrame {objid frame} {
