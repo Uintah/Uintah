@@ -212,9 +212,7 @@ void computeTauX( const Patch* patch,
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  hi[0] += patch->getBCType(patch->xplus) ==Patch::Neighbor?1:0; 
   CellIterator iterLimits(low,hi); 
   
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
@@ -343,9 +341,7 @@ void computeTauY( const Patch* patch,
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  hi[1] += patch->getBCType(patch->yplus) ==Patch::Neighbor?1:0; 
   CellIterator iterLimits(low,hi); 
   
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
@@ -473,9 +469,7 @@ void computeTauZ( const Patch* patch,
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
+  hi[2] += patch->getBCType(patch->zplus) ==Patch::Neighbor?1:0; 
   CellIterator iterLimits(low,hi); 
 
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
