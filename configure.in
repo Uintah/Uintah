@@ -2698,7 +2698,7 @@ if test "$HAVE_LIB_NRRD" && test "$HAVE_LIB_AIR" && test "$HAVE_LIB_BIFF" &&
    DEF_TEEM="#define HAVE_TEEM 1"
 fi
 
-if (test "$pkg_teem" = "yes" || "$with_teem" ) && test ! "$DEF_TEEM"; then
+if (test "$with_teem" || test "$pkg_teem" = "yes") && test ! "$DEF_TEEM"; then
   echo
   AC_MSG_ERROR(One or more of the TEEM components is missing.)
   echo
@@ -2708,6 +2708,7 @@ AC_SUBST(TEEM_LIB_FLAG)
 AC_SUBST(TEEM_LIB_DIR_FLAG)
 AC_SUBST(INC_TEEM_H)
 AC_SUBST(DEF_TEEM)
+
 
 ##  --  search for mpeg  -------------------------------------------------
 
