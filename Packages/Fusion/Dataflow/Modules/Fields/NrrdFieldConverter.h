@@ -103,9 +103,13 @@ execute(MeshHandle& mHandle,
     int rank = 0;
     string label(nHandles[mesh[0]]->nrrd->axis[0].label);
 
-    if( label.find( ":Scalar" ) != string::npos )
-      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
-    else if( label.find( ":Vector" ) != string::npos )
+    if( label.find( ":Scalar" ) != string::npos ) {
+      if( nHandles[mesh[0]]->nrrd->dim == 2 )
+	rank = 1;
+      else
+	rank =
+	  nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+    } else if( label.find( ":Vector" ) != string::npos )
       rank = 3;
 
     float xVal = 0, yVal = 0, zVal = 0;
@@ -225,9 +229,13 @@ execute(MeshHandle& mHandle,
     int rank = 0;
     string label(nHandles[mesh[0]]->nrrd->axis[0].label);
 
-    if( label.find( ":Scalar" ) != string::npos )
-      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
-    else if( label.find( ":Vector" ) != string::npos )
+    if( label.find( ":Scalar" ) != string::npos ) {
+      if( nHandles[mesh[0]]->nrrd->dim == 2 )
+	rank = 1;
+      else
+	rank =
+	  nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+    } else if( label.find( ":Vector" ) != string::npos )
       rank = 3;
 
     for( k=0; k<kdim; k++ ) {
@@ -325,9 +333,13 @@ execute(MeshHandle& mHandle,
     int rank = 0;
     string label(nHandles[mesh[1]]->nrrd->axis[0].label);
   
-    if( label.find( ":Scalar" ) != string::npos )
-      rank = nHandles[mesh[1]]->nrrd->axis[ nHandles[mesh[1]]->nrrd->dim-1].size;
-    else if( label.find( ":Vector" ) != string::npos )
+    if( label.find( ":Scalar" ) != string::npos ) {
+      if( nHandles[mesh[1]]->nrrd->dim == 2 )
+	rank = 1;
+      else
+	rank =
+	  nHandles[mesh[1]]->nrrd->axis[ nHandles[mesh[1]]->nrrd->dim-1].size;
+    } else if( label.find( ":Vector" ) != string::npos )
       rank = 3;
 
     for( int index=0; index<npts; index++ ) {
