@@ -1,4 +1,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/FancyAssert.h>
 
 using namespace Uintah;
 
@@ -169,3 +172,102 @@ Advector::~Advector()
 }
 
 
+
+//______________________________________________________________________
+//
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1209
+#endif  
+
+//______________________________________________________________________
+//  
+namespace Uintah {
+
+  static MPI_Datatype makeMPI_fflux()
+  {
+    ASSERTEQ(sizeof(fflux), sizeof(double)*6);
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 6, 6, MPI_DOUBLE, &mpitype);
+    MPI_Type_commit(&mpitype);
+    return mpitype;
+  }
+
+  const TypeDescription* fun_getTypeDescription(fflux*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+				  "fflux", true, 
+				  &makeMPI_fflux);
+    }
+    return td;
+  }
+  
+  static MPI_Datatype makeMPI_eflux()
+  {
+    ASSERTEQ(sizeof(eflux), sizeof(double)*12);
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 12, 12, MPI_DOUBLE, &mpitype);
+    MPI_Type_commit(&mpitype);
+    return mpitype;
+  }
+  
+  const TypeDescription* fun_getTypeDescription(eflux*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+                              "eflux", true, 
+                              &makeMPI_eflux);
+    }
+    return td;
+  }
+  
+  static MPI_Datatype makeMPI_cflux()
+  {
+    ASSERTEQ(sizeof(cflux), sizeof(double)*8);
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 8, 8, MPI_DOUBLE, &mpitype);
+    MPI_Type_commit(&mpitype);
+    return mpitype;
+  }
+  
+  const TypeDescription* fun_getTypeDescription(cflux*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+                              "cflux", true, 
+                              &makeMPI_cflux);
+    }
+    return td;
+  }
+  
+} // namespace Uintah
+
+
+//______________________________________________________________________
+//  
+namespace SCIRun {
+
+  void swapbytes( Uintah::fflux& f) {
+    double *p = f.d_fflux;
+    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  }
+
+  void swapbytes( Uintah::eflux& e) {
+    double *p = e.d_eflux;
+    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  }
+  
+  void swapbytes( Uintah::cflux& c) {
+    double *p = c.d_cflux;
+    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  }
+
+} // namespace SCIRun

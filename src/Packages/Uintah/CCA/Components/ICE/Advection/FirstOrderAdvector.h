@@ -49,14 +49,11 @@ namespace Uintah {
                       CCVariable<Vector>& q_advected,
 			 DataWarehouse* new_dw);
     
-    struct fflux { double d_fflux[6]; };    // face flux
-                                
   private:
     CCVariable<fflux> d_OFS;
     const VarLabel* OFS_CCLabel;
     
     friend class FirstOrderCEAdvector;
-    friend const TypeDescription* fun_getTypeDescription(fflux*);
 
   private:
  
@@ -71,9 +68,6 @@ namespace Uintah {
   };
 }
 
-namespace SCIRun {
-void swapbytes( Uintah::FirstOrderAdvector::fflux& );
-} // namespace SCIRun
 #endif
 
 
