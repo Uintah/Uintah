@@ -558,7 +558,8 @@ void GeomCylinder::draw(DrawInfo* di)
 	    for(int j=0;j<nu-1;j++){
 		double d1=u.sin(j);
 		double d2=u.cos(j);
-		Point p(bot_up+v1*d1+v2*d2);
+		Vector rv(v1*d1+v2*d2);
+		Point p(bot_up+rv);
 		glVertex3d(p.x(), p.y(), p.z());
 	    }
 	    glEnd();
@@ -567,7 +568,8 @@ void GeomCylinder::draw(DrawInfo* di)
 	for(j=0;j<nu-1;j++){
 	    double d1=u.sin(j);
 	    double d2=u.cos(j);
-	    Point p1(bottom+v1*d1+v2*d2);
+	    Vector rv(v1*d1+v2*d2);
+	    Point p1(bottom+rv);
 	    Point p2(p1+axis);
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
@@ -584,8 +586,9 @@ void GeomCylinder::draw(DrawInfo* di)
 	    for(int j=0;j<nu;j++){
 		double d1=u.sin(j);
 		double d2=u.cos(j);
-		Point p1(b1+v1*d1+v2*d2);
-		Point p2(b2+v1*d1+v2*d2);
+		Vector rv(v1*d1+v2*d2);
+		Point p1(b1+rv);
+		Point p2(b2+rv);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		glVertex3d(p2.x(), p2.y(), p2.z());
 	    }
@@ -699,7 +702,10 @@ void GeomCone::draw(DrawInfo* di)
 	    for(int j=0;j<nu-1;j++){
 		double d1=u.sin(j);
 		double d2=u.cos(j);
-		Point p(bot_up+v1*(d1*rad)+v2*(d2*rad));
+		Vector rv1(v1*(d1*rad));
+		Vector rv2(v2*(d2*rad));
+		Vector rv(rv1+rv2);
+		Point p(bot_up+rv);
 		glVertex3d(p.x(), p.y(), p.z());
 	    }
 	    glEnd();
@@ -708,8 +714,14 @@ void GeomCone::draw(DrawInfo* di)
 	for(j=0;j<nu-1;j++){
 	    double d1=u.sin(j);
 	    double d2=u.cos(j);
-	    Point p1(bottom+v1*(d1*bot_rad)+v2*(d2*bot_rad));
-	    Point p2(top+v1*(d1*top_rad)+v2*(d2*top_rad));
+	    Vector trv1(v1*(d1*bot_rad));
+	    Vector trv2(v2*(d2*bot_rad));
+	    Vector trv(trv1+trv2);
+	    Point p1(bottom+trv);
+	    Vector brv1(v1*(d1*top_rad));
+	    Vector brv2(v2*(d2*top_rad));
+	    Vector brv(brv1+brv2);	    
+	    Point p2(top+brv);
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
 	}
@@ -727,10 +739,16 @@ void GeomCone::draw(DrawInfo* di)
 	    for(int j=0;j<nu;j++){
 		double d1=u.sin(j)*rad1;
 		double d2=u.cos(j)*rad1;
-		Point p1(b1+v1*d1+v2*d2);
+		Vector rv1a(v1*d1);
+		Vector rv1b(v2*d2);
+		Vector rv1(rv1a+rv1b);
+		Point p1(b1+rv1);
 		double d3=u.sin(j)*rad2;
 		double d4=u.cos(j)*rad2;
-		Point p2(b2+v1*d3+v2*d4);
+		Vector rv2a(v1*d3);
+		Vector rv2b(v2*d4);
+		Vector rv2(rv2a+rv2b);
+		Point p2(b2+rv2);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		glVertex3d(p2.x(), p2.y(), p2.z());
 	    }
@@ -751,8 +769,9 @@ void GeomCone::draw(DrawInfo* di)
 	    for(i=0;i<=nv;i++){
 		double z1=double(i)/double(nv);
 		double rad=bot_rad+(top_rad-bot_rad)*z1;
-		Point p1(bottom+n1*rad+axis*z1);
-		Point p2(bottom+n2*rad+axis*z1);
+	        Point paz(bottom+axis*z1);
+		Point p1(paz+n1*rad);
+		Point p2(paz+n2*rad);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		glVertex3d(p2.x(), p2.y(), p2.z());
 	    }
@@ -839,7 +858,10 @@ void GeomDisc::draw(DrawInfo* di)
 	    for(int j=0;j<nu-1;j++){
 		double d1=u.sin(j);
 		double d2=u.cos(j);
-		Point p(cen+v1*(d1*r)+v2*(d2*r));
+		Vector rv1a(v1*(d1*r));
+		Vector rv1b(v2*(d2*r));
+		Vector rv1(rv1a+rv1b);
+		Point p(cen+rv1);
 		glVertex3d(p.x(), p.y(), p.z());
 	    }
 	    glEnd();
@@ -848,7 +870,10 @@ void GeomDisc::draw(DrawInfo* di)
 	for(j=0;j<nu-1;j++){
 	    double d1=u.sin(j);
 	    double d2=u.cos(j);
-	    Point p(cen+v1*(d1*rad)+v2*(d2*rad));
+	    Vector rv1a(v1*(d1*rad));
+	    Vector rv1b(v2*(d2*rad));
+	    Vector rv1(rv1a+rv1b);
+	    Point p(cen+rv1);
 	    glVertex3d(cen.x(), cen.y(), cen.z());
 	    glVertex3d(p.x(), p.y(), p.z());
 	}
@@ -866,8 +891,14 @@ void GeomDisc::draw(DrawInfo* di)
 	    for(int j=0;j<nu;j++){
 		double d1=u.sin(j);
 		double d2=u.cos(j);
-		Point p1(cen+v1*(d1*r1)+v2*(d2*r1));
-		Point p2(cen+v1*(d1*r2)+v2*(d2*r2));
+		Vector rv1a(v1*(d1*r1));
+		Vector rv1b(v2*(d2*r1));	
+		Vector rv1(rv1a+rv1b);
+		Point p1(cen+rv1);
+		Vector rv2a(v1*(d1*r2));
+		Vector rv2b(v2*(d2*r2));	
+		Vector rv2(rv2a+rv2b);
+		Point p2(cen+rv2);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		glVertex3d(p2.x(), p2.y(), p2.z());
 	    }
