@@ -193,13 +193,13 @@ class NodeHedgehogWorker: public Runnable {
 public:
   NodeHedgehogWorker(Patch *patch, LevelField<Vector> *field,
 		     FieldHandle ssfield,
-		     bool have_sfield, ColorMapHandle cmap,
+		     bool have_sfield, ColorMapHandle cmap, bool have_cmap,
 		     Box boundaryRegion,
 		     NodeHedgehog *hog, GeomGroup *arrow_group,
 		     double *max_length, Vector* max_vector,
 		     Mutex *amutex, Semaphore *sema):
     patch(patch), field(field), ssfield(ssfield), have_sfield(have_sfield),
-    cmap(cmap), boundaryRegion(boundaryRegion), hog(hog),
+    cmap(cmap), have_cmap(have_cmap), boundaryRegion(boundaryRegion), hog(hog),
     arrow_group(arrow_group),
     max_length(max_length), max_vector(max_vector), amutex(amutex), sema(sema),
     my_max_length(0), my_max_vector(0,0,0)
@@ -253,6 +253,7 @@ private:
   FieldHandle ssfield;
   bool have_sfield;
   ColorMapHandle cmap;
+  bool have_cmap;
   Box boundaryRegion;
   NodeHedgehog *hog;
   GeomGroup *arrow_group;
@@ -285,17 +286,22 @@ private:
     if (length*lenscale < 1.e-3)
       return;
 
-    if(have_sfield) {
-      // get the color from cmap for p 	    
-      MaterialHandle matl;
-      double sval;
-      if (hog->interpolate( ssfield, p, sval))
-	matl = cmap->lookup( sval);
-      else {
-	matl = hog->outcolor;
-      }
+    if(have_cmap) {
+      if(have_sfield) {
+	// get the color from cmap for p 	    
+	MaterialHandle matl;
+	double sval;
+	if (hog->interpolate( ssfield, p, sval))
+	  matl = cmap->lookup( sval);
+	else {
+	  matl = hog->outcolor;
+	}
       
-      arrows->add(p, vv*lenscale, matl, matl, matl);
+	arrows->add(p, vv*lenscale, matl, matl, matl);
+      } else {
+	MaterialHandle matl = cmap->lookup( 0);
+	arrows->add(p, vv*lenscale, matl, matl, matl);
+      }
     }
     else {
       arrows->add(p, vv*lenscale);
@@ -612,6 +618,7 @@ void NodeHedgehog::execute()
 							     ssfield,
 							     have_sfield,
 							     cmap,
+							     have_cmap,
 							     boundaryRegion,
 							     this,
 							     arrows,
