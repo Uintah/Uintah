@@ -63,7 +63,6 @@ using std::ostringstream;
 namespace SCIRun {
 
 DECLARE_MAKER(Isosurface)
-static string surface_name("Isosurface");
 
 
 Isosurface::Isosurface(GuiContext* ctx) : 
@@ -225,38 +224,35 @@ void
 Isosurface::execute()
 {
   update_state(NeedData);
-  FieldIPort *infield = (FieldIPort *)get_iport("Field");
-  FieldHandle field;
+  FieldIPort *ifp = (FieldIPort *)get_iport("Field");
+  FieldHandle fieldin;
 
-  if (!infield)
-  {
+  if (!ifp) {
     error("Unable to initialize iport 'Field'.");
     return;
   }
-  infield->get(field);
-  if(!field.get_rep())
-  {
+
+  if (!(ifp->get(fieldin) && fieldin.get_rep())) {
+    error( "No handle or representation." );
     return;
   }
 
   update_state(JustStarted);
 
-  if ( field->generation != last_generation_ )
-  {
+  if ( fieldin->generation != last_generation_ ) {
     // new field
-    if (!new_field( field )) return;
-    last_generation_ = field->generation;
+    if (!new_field( fieldin )) return;
+    last_generation_ = fieldin->generation;
+
     if ( !gui_extract_from_new_field_.get() )
-    {
       return;
-    }
+
     // fall through and extract isosurface from the new field
   }
 
-  // Color the surface.
+  // Color the Geometry.
   ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Optional Color Map");
-  if (!inColorMap)
-  {
+  if (!inColorMap) {
     error("Unable to initialize iport 'Optional Color Map'.");
     return;
   }
@@ -265,40 +261,30 @@ Isosurface::execute()
   
   vector<double> isovals(0);
   MatrixIPort *inIsoVals = (MatrixIPort *)get_iport("Optional Isovalues");
-  if (!inIsoVals)
-  {
+  if (!inIsoVals) {
     error("Unable to initialize iport 'Optional Isovalues'.");
     return;
   }
+
   MatrixHandle inmat;
-  if (inIsoVals->get(inmat))
-  {
-    int i, j;
-    for (i=0; i < inmat->nrows(); i++)
-    {
-      for (j=0; j < inmat->ncols(); j++)
-      {
+  if (inIsoVals->get(inmat)) {
+    for (int i=0; i < inmat->nrows(); i++) {
+      for (int j=0; j < inmat->ncols(); j++) {
 	isovals.push_back(inmat->get(i, j));
       }
     }
-  }
-  else
-  {
-    if (gui_active_isoval_selection_tab_.get() == "0")
-    { // slider / typed
+  } else {
+    if (gui_active_isoval_selection_tab_.get() == "0") { // slider / typed
       const double val = gui_iso_value_.get();
-      if (val < prev_min_ || val > prev_max_)
-      {
+      if (val < prev_min_ || val > prev_max_) {
 	warning("Typed isovalue out of range -- skipping isosurfacing.");
 	return;
       }
       isovals.push_back(val);
     }
-    else if (gui_active_isoval_selection_tab_.get() == "1")
-    { // quantity
+    else if (gui_active_isoval_selection_tab_.get() == "1") { // quantity
       int num=gui_iso_value_quantity_.get();
-      if (num<1)
-      {
+      if (num<1) {
 	warning("Isosurface quantity must be at least one -- skipping isosurfacing.");
 	return;
       }
@@ -326,17 +312,13 @@ Isosurface::execute()
       for (int i=0; i<num; i++) 
 	isovals.push_back((i+1)*di+qmin);
     }
-    else if (gui_active_isoval_selection_tab_.get() == "2")
-    { // list
+    else if (gui_active_isoval_selection_tab_.get() == "2") { // list
       istringstream vlist(gui_iso_value_list_.get());
       double val;
-      while(!vlist.eof())
-      {
+      while(!vlist.eof()) {
 	vlist >> val;
-	if (vlist.fail())
-	{
-	  if (!vlist.eof())
-	  {
+	if (vlist.fail()) {
+	  if (!vlist.eof()) {
 	    vlist.clear();
 	    warning("List of Isovals was bad at character " +
 		    to_string((int)(vlist.tellg())) +
@@ -344,16 +326,14 @@ Isosurface::execute()
 	  }
 	  break;
 	}
-	else if (!vlist.eof() && vlist.peek() == '%')
-	{
+	else if (!vlist.eof() && vlist.peek() == '%') {
 	  vlist.get();
 	  val = prev_min_ + (prev_max_ - prev_min_) * val / 100.0;
 	}
 	isovals.push_back(val);
       }
     }
-    else
-    {
+    else {
       error("Bad active_isoval_selection_tab value");
       return;
     }
@@ -373,87 +353,80 @@ Isosurface::execute()
   vector<GeomHandle > geometries;
   vector<FieldHandle> fields;
   vector<MatrixHandle> interpolants;
-  const TypeDescription *td = field->get_type_description();
+  const TypeDescription *td = fieldin->get_type_description();
   switch (gui_use_algorithm_.get()) {
   case 0:  // Marching Cubes
     {
       LockingHandle<MarchingCubesAlg> mc_alg;
-      CompileInfoHandle ci = MarchingCubesAlg::get_compile_info(td);
-      if (!module_dynamic_compile(ci, mc_alg))
-      {
-	error( "Marching Cubes can not work with this field.");
-	return;
-      }
-      int np = gui_np_.get();
-      if (np < 1 ) { np = 1; gui_np_.set(np); }
-      if (np > 32 ) { np = 32; gui_np_.set(np); }
-      mc_alg->set_np(np);
-      mc_alg->set_field( field.get_rep() );
-      for (unsigned int iv=0; iv<isovals.size(); iv++)
-      {
-	mc_alg->search( isovals[iv], bfield, bgeom );
-	geometries.push_back( mc_alg->get_geom() );
-	for (int i = 0 ; i < np; i++)
-	{
-	  fields.push_back( mc_alg->get_field(i) );
-	  if (binterp)
-	  {
-	    interpolants.push_back( mc_alg->get_interpolant(i) );
+      if (! mc_alg.get_rep()) {
+	CompileInfoHandle ci = MarchingCubesAlg::get_compile_info(td);
+	if (!module_dynamic_compile(ci, mc_alg)) {
+	  error( "Marching Cubes can not work with this field.");
+	  return;
+	}
+	int np = gui_np_.get();
+	if (np < 1 ) { np = 1; gui_np_.set(np); }
+	if (np > 32 ) { np = 32; gui_np_.set(np); }
+	mc_alg->set_np(np);
+	mc_alg->set_field( fieldin.get_rep() );
+
+	for (unsigned int iv=0; iv<isovals.size(); iv++)  {
+	  mc_alg->search( isovals[iv], bfield, bgeom );
+	  geometries.push_back( mc_alg->get_geom() );
+	  for (int i = 0 ; i < np; i++) {
+	    fields.push_back( mc_alg->get_field(i) );
+	    if (binterp)
+	      interpolants.push_back( mc_alg->get_interpolant(i) );
 	  }
 	}
+	mc_alg->release();
       }
-      mc_alg->release();
     }
     break;
   case 1:  // Noise
     {
       LockingHandle<NoiseAlg> noise_alg;
-      if (! noise_alg.get_rep())
-      {
+      if (! noise_alg.get_rep()) {
 	CompileInfoHandle ci =
 	  NoiseAlg::get_compile_info(td,
-				     field->data_at() == Field::CELL,
-				     field->data_at() == Field::FACE);
-	if (! module_dynamic_compile(ci, noise_alg))
-	{
+				     fieldin->data_at() == Field::CELL,
+				     fieldin->data_at() == Field::FACE);
+	if (! module_dynamic_compile(ci, noise_alg)) {
 	  error( "NOISE can not work with this field.");
 	  return;
 	}
-	noise_alg->set_field(field.get_rep());
-      }
-      for (unsigned int iv=0; iv<isovals.size(); iv++)
-      {
-	geometries.push_back(noise_alg->search(isovals[iv], bfield, bgeom));
-	fields.push_back(noise_alg->get_field());
-	if (binterp)
-	{
-	  interpolants.push_back(noise_alg->get_interpolant());
+	noise_alg->set_field(fieldin.get_rep());
+
+	for (unsigned int iv=0; iv<isovals.size(); iv++) {
+	  geometries.push_back(noise_alg->search(isovals[iv], bfield, bgeom));
+	  fields.push_back(noise_alg->get_field());
+	  if (binterp)
+	    interpolants.push_back(noise_alg->get_interpolant());
 	}
+	noise_alg->release();
       }
-      noise_alg->release();
     }
     break;
 
   case 2:  // View Dependent
     {
       LockingHandle<SageAlg> sage_alg;
-      {
+      if (! sage_alg.get_rep()){
 	CompileInfoHandle ci = SageAlg::get_compile_info(td);
-	if (! module_dynamic_compile(ci, sage_alg))
-	{
+	if (! module_dynamic_compile(ci, sage_alg)) {
 	  error( "SAGE can not work with this field.");
 	  return;
 	}
-	sage_alg->set_field(field.get_rep());
-      } 
-      for (unsigned int iv=0; iv<isovals.size(); iv++)
-      {
-	GeomGroup *group = scinew GeomGroup;
-	GeomPoints *points = scinew GeomPoints();
-	sage_alg->search(isovals[0], group, points);
-	geometries.push_back( group );
+	sage_alg->set_field(fieldin.get_rep());
+
+	for (unsigned int iv=0; iv<isovals.size(); iv++) {
+	  GeomGroup *group = scinew GeomGroup;
+	  GeomPoints *points = scinew GeomPoints();
+	  sage_alg->search(isovals[0], group, points);
+	  geometries.push_back( group );
+	}
+	sage_alg->release();
       }
-      sage_alg->release();
     }
     break;
   default: // Error
@@ -463,132 +436,118 @@ Isosurface::execute()
 
   // Output geometry.
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
-  if (!ogeom)
-  {
+  if (!ogeom) {
     error("Unable to initialize oport 'Geometry'.");
     return;
   }
   
-  // Stop showing the previous surface.
+  // Stop showing the previous geometry.
   bool geomflush = false;
-  if ( geom_id_ )
-  {
+  if ( geom_id_ ) {
     ogeom->delObj( geom_id_ );
     geom_id_ = 0;
     geomflush = true;
   }
-  if (bgeom)
-  {
+
+  if (bgeom) {
     // Merged send_results.
     GeomGroup *geom = scinew GeomGroup;;
 
-    for (unsigned int iv=0; iv<isovals.size(); iv++)
-    {
+    for (unsigned int iv=0; iv<isovals.size(); iv++) {
       MaterialHandle matl;
 
       if (have_ColorMap)
-      {
 	matl= cmap->lookup(isovals[iv]);
-      }
       else
-      {
 	matl = scinew Material(Color(gui_color_r_.get(),
 				     gui_color_g_.get(),
 				     gui_color_b_.get()));
-      }
+
       if (geometries[iv].get_rep()) 
-      {
 	geom->add(scinew GeomMaterial( geometries[iv] , matl ));
-      }
     }
 
     if (!geom->size())
-    {
       delete geom;
-    }
-    else
-    {
-      geom_id_ = ogeom->addObj( geom, surface_name );
+    else {
+      string fldname;
+      if (fieldin->get_property("name",fldname))
+	geom_id_ = ogeom->addObj( geom, fldname );
+      else 
+	geom_id_ = ogeom->addObj( geom, string("Isosurface") );
+
       geomflush = true;
     }
   }
   if (geomflush)
-  {
     ogeom->flushViews();
-  }
 
-  // Output surface.
-  if (bfield && fields.size() && fields[0].get_rep())
-  {
-    FieldOPort *osurf = (FieldOPort *)get_oport("Surface");
-    if (!osurf)
-    {
+  // Output field.
+  if (bfield && fields.size() && fields[0].get_rep()) {
+    FieldOPort *ofield = (FieldOPort *)get_oport("Surface");
+    if (!ofield) {
       error("Unable to initialize oport 'Surface'.");
       return;
     }
 
-    if (fields.size() == 1)
-    {
-      osurf->send(fields[0]);
+    // Copy the name of field to the downstream field.
+    string fldname;
+    if (fieldin->get_property("name",fldname)) {
+      for (unsigned int i=0; i < fields.size(); i++)
+	fields[i]->set_property("name",fldname, false);
+    } else {
+      for (unsigned int i=0; i < fields.size(); i++)
+	fields[i]->set_property("name", string("Isosurface"), false);
     }
-    else
-    {
-      unsigned int i;
-      vector<TriSurfField<double> *> tfields(fields.size());
-      for (i=0; i < fields.size(); i++)
-      {
-	tfields[i] = dynamic_cast<TriSurfField<double> *>(fields[i].get_rep());
-      }
 
-      vector<CurveField<double> *> cfields(fields.size());
-      for (i=0; i < fields.size(); i++)
-      {
-	cfields[i] = dynamic_cast<CurveField<double> *>(fields[i].get_rep());
-      }
+    // Single field.
+    if (fields.size() == 1)
+      ofield->send(fields[0]);
 
-      vector<QuadSurfField<double> *> qfields(fields.size());
-      for (i=0; i < fields.size(); i++)
-      {
-	qfields[i] =
-	  dynamic_cast<QuadSurfField<double> *>(fields[i].get_rep());
-      }
+    // Multiple fields.
+    else {
+      const TypeDescription *mtd = fields[0]->get_type_description();
+      
+      if( mtd->get_name() == "TriSurfField" ) {
+	vector<TriSurfField<double> *> tfields(fields.size());
+	for (unsigned int i=0; i < fields.size(); i++) {
+	  tfields[i] = dynamic_cast<TriSurfField<double> *>(fields[i].get_rep());
+	}
 
-      if (tfields[0])
-      {
-	osurf->send(append_fields(tfields));
-      }
-      else if (cfields[0])
-      {
-	osurf->send(append_fields(cfields));
-      }
-      else if (qfields[0])
-      {
-	osurf->send(append_fields(qfields));
-      }
-      else
-      {
-	osurf->send(fields[0]);
-      }
+	ofield->send(append_fields(tfields));
+
+      } else if( mtd->get_name() == "CurveField" ) {
+
+	vector<CurveField<double> *> cfields(fields.size());
+	for (unsigned int i=0; i < fields.size(); i++) {
+	  cfields[i] = dynamic_cast<CurveField<double> *>(fields[i].get_rep());
+	}
+
+	ofield->send(append_fields(cfields));
+
+      } else if( mtd->get_name() == "QuadSurfField" ) {
+
+	vector<QuadSurfField<double> *> qfields(fields.size());
+	for (unsigned int i=0; i < fields.size(); i++) {
+	  qfields[i] = dynamic_cast<QuadSurfField<double> *>(fields[i].get_rep());
+	}
+
+	ofield->send(append_fields(qfields));
+
+      } else
+	ofield->send(fields[0]);
     }
 
     // Send the interpolant along.
-    if (binterp)
-    {
-      if (interpolants[0].get_rep())
-      {
+    if (binterp) {
+      if (interpolants[0].get_rep()) {
 	if (interpolants.size() == 1)
-	{
 	  ointerp->send(interpolants[0]);
-	}
 	else
-	{
 	  ointerp->send(append_sparse(interpolants));
-	}
       }
       else
-      {
 	warning("Interpolant not computed for this input field type and data location.");
-      }
     }
   }
 }
@@ -598,8 +557,7 @@ bool
 Isosurface::new_field( FieldHandle field )
 {
   ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
-  if (!sfi.get_rep())
-  {
+  if (!sfi.get_rep()) {
     error("Input field does not contain scalar data.");
     return false;
   }
@@ -607,8 +565,7 @@ Isosurface::new_field( FieldHandle field )
   // Set min/max
   pair<double, double> minmax;
   sfi->compute_min_max(minmax.first, minmax.second);
-  if (minmax.first != prev_min_ || minmax.second != prev_max_)
-  {
+  if (minmax.first != prev_min_ || minmax.second != prev_max_) {
     gui_iso_value_min_.set(minmax.first);
     gui_iso_value_max_.set(minmax.second);
     prev_min_ = minmax.first;
