@@ -612,7 +612,7 @@ void DataArchive::PatchHashMaps::parse()
     SimpleErrorHandler handler;
     parser.setErrorHandler(&handler);
     
-    //cerr << "reading: " << toString(url.getURLText()) << '\n';
+    //cerr << "reading: " << toString(urlIt->getURLText()) << '\n';
     parser.parse((*urlIt).getURLText());
     if(handler.foundError)
       throw InternalError("Cannot read timestep file");
@@ -722,7 +722,7 @@ ConsecutiveRangeSet DataArchive::queryMaterials( const string& name,
   if (matlVarHashMaps == NULL) {
     ostringstream msg;
     msg << "Cannot find data for time = " << time << ", patch = " <<
-      patch ? patch->getID() : -1;
+      (patch ? patch->getID() : -1);
     throw InternalError(msg.str());
   }
    
@@ -748,7 +748,7 @@ int DataArchive::queryNumMaterials(const Patch* patch, double time)
   if (matlVarHashMaps == NULL) {
     ostringstream msg;
     msg << "Cannot find data for time = " << time << ", patch = " <<
-      patch ? patch->getID() : -1;
+      (patch ? patch->getID() : -1);
     throw InternalError(msg.str());
   }
 
