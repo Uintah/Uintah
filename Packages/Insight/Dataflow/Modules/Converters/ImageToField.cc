@@ -153,11 +153,11 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   
   if(gui_copy_.get() == 0) {
     // simply point to the itk image
-    fh = new ITKImageFieldType(mh, Field::NODE, n); 
+    fh = new ITKImageFieldType(mh, 1, n); 
   }
   else if(gui_copy_.get() == 1) {
     // copy the data into a SCIRun ImageField
-    fh = new ImageFieldType(mh, Field::NODE);
+    fh = new ImageFieldType(mh, 1);
     ImageMesh::Node::iterator iter, end;
     mh->begin(iter);
     mh->end(end);
@@ -229,11 +229,11 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
   
   if(gui_copy_.get() == 0) {
     // simply referenc itk image
-    fh = new ITKLatVolFieldType(mh, Field::NODE, n); 
+    fh = new ITKLatVolFieldType(mh, 1, n); 
   }
   else if(gui_copy_.get() == 1) {
     // copy the data into a SCIRun LatVolField
-    fh = new LatVolFieldType(mh, Field::NODE); 
+    fh = new LatVolFieldType(mh, 1); 
     LatVolMesh::Node::iterator iter, end;
     mh->begin(iter);
     mh->end(end);
@@ -309,7 +309,7 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun ImageField
-  fh = new ImageFieldType(mh, Field::NODE);
+  fh = new ImageFieldType(mh, 1);
   ImageMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
@@ -387,7 +387,7 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun LatVolField
-  fh = new LatVolFieldType(mh, Field::NODE); 
+  fh = new LatVolFieldType(mh, 1); 
   LatVolMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
@@ -468,7 +468,7 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun ImageField
-  fh = new ImageFieldType(mh, Field::NODE);
+  fh = new ImageFieldType(mh, 1);
   ImageMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
@@ -543,7 +543,7 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun LatVolField
-  fh = new LatVolFieldType(mh, Field::NODE); 
+  fh = new LatVolFieldType(mh, 1); 
   LatVolMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
