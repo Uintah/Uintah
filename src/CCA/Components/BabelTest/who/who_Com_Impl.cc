@@ -31,15 +31,15 @@
 // Symbol:        who.Com-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030618 13:12:27 MDT
-// Generated:     20030618 13:12:33 MDT
+// SIDL Created:  20030915 14:59:09 MST
+// Generated:     20030915 14:59:12 MST
 // Description:   Server-side implementation for who.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 13
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/who/who.sidl
+// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/who/who.sidl
 // 
 #include "who_Com_Impl.hh"
 

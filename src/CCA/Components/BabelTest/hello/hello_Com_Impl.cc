@@ -31,15 +31,15 @@
 // Symbol:        hello.Com-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030618 13:12:37 MDT
-// Generated:     20030618 13:12:40 MDT
+// SIDL Created:  20040303 14:23:00 MST
+// Generated:     20040303 14:23:03 MST
 // Description:   Server-side implementation for hello.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 14
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
+// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
 // 
 #include "hello_Com_Impl.hh"
 

@@ -31,7 +31,8 @@
 
 SRCDIR   := CCA/Components/BabelTest
 
-SUBDIRS := $(SRCDIR)/hello $(SRCDIR)/who $(SRCDIR)/whoc $(SRCDIR)/whof77
+SUBDIRS := $(SRCDIR)/hello $(SRCDIR)/who $(SRCDIR)/whoc $(SRCDIR)/NewPort $(SRCDIR)/BridgeTest \
+	#$(SRCDIR)/whof77
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

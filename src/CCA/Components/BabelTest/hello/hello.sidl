@@ -36,7 +36,7 @@ package hello version 1.0{
 	void setService(in gov.cca.Services svc);
   };
 
-  class dummyPort implements-all gov.cca.ports.IDPort{
+  class IDPort implements-all gov.cca.ports.IDPort{
   };
 
   class Com implements-all gov.cca.Component{
