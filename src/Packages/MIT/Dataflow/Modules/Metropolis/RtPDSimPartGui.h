@@ -17,42 +17,42 @@
 
 
 /*
- *  SamplerInterface.cc
+ *  RtPDSimGui.h
  *
  *  Written by:
  *   Yarden Livnat
- *   Department of Computer Science
+ *   Deinterfacement of Computer Science
  *   University of Utah
- *   Sep 2001
+ *   Oct 2001
  *
  *  Copyright (C) 2001 SCI Group
  */
 
+#ifndef SCI_RtPDSimGui_h
+#define SCI_RtPDSimGui_h 
 
-#include <Packages/MIT/Dataflow/Modules/Metropolis/Sampler.h>
-#include <Packages/MIT/Dataflow/Modules/Metropolis/SamplerInterface.h>
+#include <Core/Util/Signals.h>
+#include <Core/PartsGui/PartGui.h>
 
 namespace MIT {
-  
 
-SamplerInterface::SamplerInterface( Sampler *part, PartInterface *parent )
-  : PartInterface( part, parent, "SamplerInterface" ), sampler_(part)
-{
-  num_iterations_ = 1000;
-  current_iter_ = 1;
-  subsample_ = 1;
-  kappa_ = 0.2;
-}
- 
-SamplerInterface::~SamplerInterface()
-{
-}
+using namespace SCIRun;
 
-void
-SamplerInterface::go( int i)
-{
-  sampler_->go( i );
-}
+class RtPDSimPartGui : public PartGui {
+public:
+  Signal1<float> df;
 
-} // namespace MIT
+  void set_df( float );
+
+public:
+  RtPDSimPartGui( const string &name, const string &script ="RtPDSimPartGui"); 
+  virtual ~RtPDSimPartGui();
+
+  void attach( PartInterface *);
+  virtual void tcl_command( TCLArgs &, void *);
+};
+
+} // namespace SCIRun
+
+#endif // SCI_RtPDSimGui_h
 

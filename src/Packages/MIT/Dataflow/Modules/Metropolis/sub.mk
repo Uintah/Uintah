@@ -17,18 +17,20 @@ SRCS     += \
 	$(SRCDIR)/IUniformPDSimPart.cc\
 	$(SRCDIR)/IGaussianPDSimPart.cc\
 	$(SRCDIR)/ItPDSimPart.cc\
+	$(SRCDIR)/RtPDSimPart.cc\
 	$(SRCDIR)/MultivariateNormalDSimPart.cc\
 	$(SRCDIR)/PriorPart.cc\
 	$(SRCDIR)/LikelihoodPart.cc\
         $(SRCDIR)/SamplerInterface.cc\
         $(SRCDIR)/Sampler.cc\
         $(SRCDIR)/SamplerGui.cc\
+	$(SRCDIR)/ItPDSimPartGui.cc \
+	$(SRCDIR)/RtPDSimPartGui.cc \
+	$(SRCDIR)/IGaussianPDSimPartGui.cc \
         $(SRCDIR)/Bayer.cc\
         $(SRCDIR)/AS245.F\
         $(SRCDIR)/mvtpdf.F\
         $(SRCDIR)/mnormpdf.F\
-	$(SRCDIR)/ItPDSimPartGui.cc \
-	$(SRCDIR)/IGaussianPDSimPartGui.cc \
 #[INSERT NEW CODE FILE HERE]
 
 
