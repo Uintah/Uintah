@@ -1327,7 +1327,7 @@ void OpenGL::real_getData(int datamask, AsyncReply<GeometryData*>* result)
 	TCLTask::lock();
     }
     if(datamask&GEOM_COLORBUFFER){
-	Image* img=res->colorbuffer=new Image(xres, yres);
+	ColorImage* img=res->colorbuffer=new ColorImage(xres, yres);
 	float* data=new float[xres*yres*3];
 	cerr << "xres=" << xres << ", yres=" << yres << endl;
 	WallClockTimer timer;
