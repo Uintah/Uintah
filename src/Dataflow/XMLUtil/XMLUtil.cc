@@ -68,6 +68,8 @@ DOM_Node findTextNode(DOM_Node node)
 string toString(const XMLCh* const str)
 {
     char* s = XMLString::transcode(str);
+    if(!s)
+       return "";
     string ret = string(s);
     delete[] s;
     return ret;
@@ -76,6 +78,8 @@ string toString(const XMLCh* const str)
 string toString(const DOMString& str)
 {
     char* s = str.transcode();
+    if(!s)
+       return "";
     string ret = string(s);
     delete[] s;
     return ret;
@@ -288,6 +292,14 @@ void appendElement(DOM_Element& root, const DOMString& name,
       
 void appendElement(DOM_Element& root, const DOMString& name,
 		   const Point& value)
+{
+   ostringstream val;
+   val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
+   appendElement(root, name, val.str());
+}
+      
+void appendElement(DOM_Element& root, const DOMString& name,
+		   const Vector& value)
 {
    ostringstream val;
    val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
