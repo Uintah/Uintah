@@ -29,9 +29,8 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/MaskedTriSurfField.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -55,7 +54,6 @@ template class GenericField<TriSurfMesh, vector<char> >;
 template class GenericField<TriSurfMesh, vector<unsigned int> >;
 template class GenericField<TriSurfMesh, vector<unsigned short> >;
 template class GenericField<TriSurfMesh, vector<unsigned char> >;
-template class GenericField<TriSurfMesh, vector<vector<pair<NodeIndex<int>,double> > > >;
 
 template class GenericField<CurveMesh, vector<Tensor> >;
 template class GenericField<CurveMesh, vector<Vector> >;
@@ -78,7 +76,6 @@ template class TriSurfField<char>;
 template class TriSurfField<unsigned int>;
 template class TriSurfField<unsigned short>;
 template class TriSurfField<unsigned char>;
-template class TriSurfField<vector<pair<NodeIndex<int>,double> > >;
 
 const TypeDescription* get_type_description(TriSurfField<Tensor> *);
 const TypeDescription* get_type_description(TriSurfField<Vector> *);
@@ -90,7 +87,6 @@ const TypeDescription* get_type_description(TriSurfField<char> *);
 const TypeDescription* get_type_description(TriSurfField<unsigned int> *);
 const TypeDescription* get_type_description(TriSurfField<unsigned short> *);
 const TypeDescription* get_type_description(TriSurfField<unsigned char> *);
-const TypeDescription* get_type_description(TriSurfField<vector<pair<NodeIndex<int>,double> > > *);
 
 template class CurveField<Tensor>;
 template class CurveField<Vector>;

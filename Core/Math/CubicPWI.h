@@ -124,8 +124,8 @@ template <class T> Cubic3DPWI<T>::Cubic3DPWI(const Array1<double>& pts,
 
 template <class T> inline bool Cubic3DPWI<T>::get_value(double w, T& res){
   int i;
-  if (data_valid && (i=get_interval(w))>=0){
-    w-=points[i];
+  if (this->data_valid && (i = this->get_interval(w))>=0){
+    w -= this->points[i];
     res=T(X[i].a+w*(X[i].b+w*(X[i].c+X[i].d*w)), 
 	  Y[i].a+w*(Y[i].b+w*(Y[i].c+Y[i].d*w)),
 	  Z[i].a+w*(Z[i].b+w*(Z[i].c+Z[i].d*w)));
@@ -142,7 +142,7 @@ bool SCICORESHARE set_tangents(const Array1<double>&, const Array1<double>&,
 template <class T> bool 
 Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals){
   int sz=vals.size();
-  reset();
+  this->reset();
   Array1<double> drvX, drvY, drvZ;
   Array1<double> vx, vy, vz;
   vx.resize(sz);
@@ -174,9 +174,9 @@ template <class T> bool
 Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals, 
 			const Array1<Vector>& drvs){
   int sz=0;
-  reset();
+  this->reset();
 
-  if (fill_data(pts) && (sz=points.size())>1 && 
+  if (this->fill_data(pts) && (sz = this->points.size())>1 && 
       sz==vals.size() && sz==drvs.size()){
     cout << "Inside set_data!!!" << endl;
     X.resize(sz);
@@ -201,11 +201,11 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
       drvZ[i]=drvs[i].z();
     }
     
-    data_valid=true;
+    this->data_valid=true;
     double delta, a, b, c, d;
     
     for (int i=0; i<sz-1; i++)
-      if ( (delta=points[i+1]-points[i]) >10e-9){
+      if ( (delta = this->points[i+1] - this->points[i]) >10e-9){
 	
 	a=vx[i];
 	b=drvX[i];
@@ -217,7 +217,7 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
 	X[i].c=c;
 	X[i].d=d;
 	
-	cout << "Interval: " << points[i] << ", " << points[i+1] << endl;
+	cout << "Interval: " << this->points[i] << ", " << this->points[i+1] << endl;
 	cout << "Coeff. are for X: " << X[i].a << endl << X[i].b 
 	     << endl << X[i].c << endl << X[i].d << endl;
 	
@@ -231,7 +231,7 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
 	Y[i].c=c;
 	Y[i].d=d;
 
-	cout << "Interval: " << points[i] << ", " << points[i+1] << endl;
+	cout << "Interval: " << this->points[i] << ", " << this->points[i+1] << endl;
 	cout << "Coeff. are for Y: " << Y[i].a << endl << Y[i].b 
 	     << endl << Y[i].c << endl << Y[i].d << endl;
 	
@@ -247,11 +247,11 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
       }
       else {
 	cout << "Delta is small!!! " << endl;
-	reset();
+	this->reset();
 	break;
       }
   }
-  return data_valid;
+  return this->data_valid;
 }
 
 } // End namespace SCIRun

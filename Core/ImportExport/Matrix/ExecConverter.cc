@@ -308,3 +308,23 @@ TextSparseRowMatrix_plugin("TextSparseRowMatrix",
 			   "", "",
 			   TextSparseRowMatrix_reader,
 			   TextSparseRowMatrix_writer);
+
+//  Conversion of a NeuroFEM/CAUCHY/CURRY ca_perm.knw file in tensor form to SCIRun DenseMatrix format
+
+static MatrixHandle
+NeuroFEMknw_reader(ProgressReporter *pr, const char *filename)
+{
+  ASSERT(sci_getenv("SCIRUN_SRCDIR"));
+  const string command =
+    string(sci_getenv("SCIRUN_SRCDIR")) + "/StandAlone/convert/" +
+    "KnwToDenseMatrix.pl %f %t1 && " +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
+    "TextToDenseMatrix %t1 %t";
+  return Exec_reader(pr, filename, command);
+}
+
+static MatrixIEPlugin
+NeuroFEMknw_plugin("NeuroFEMTensor",
+		       "", "",
+		       NeuroFEMknw_reader,
+		       NULL);

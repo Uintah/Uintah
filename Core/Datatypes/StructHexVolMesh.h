@@ -60,7 +60,7 @@
 #ifndef SCI_project_StructHexVolMesh_h
 #define SCI_project_StructHexVolMesh_h 1
 
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/SearchGrid.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>

@@ -57,40 +57,46 @@
 
 namespace SCIRun {
 
+typedef unsigned int                  under_type;
+
+//! Index and Iterator types required for Mesh Concept.
+struct HexVolMeshNode {
+  typedef NodeIndex<under_type>       index_type;
+  typedef NodeIterator<under_type>    iterator;
+  typedef NodeIndex<under_type>       size_type;
+  typedef StackVector<index_type, 8>  array_type;
+};					
+					
+struct HexVolMeshEdge {				
+  typedef EdgeIndex<under_type>       index_type;
+  typedef EdgeIterator<under_type>    iterator;
+  typedef EdgeIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};					
+					
+struct HexVolMeshFace {				
+  typedef FaceIndex<under_type>       index_type;
+  typedef FaceIterator<under_type>    iterator;
+  typedef FaceIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};					
+					
+struct HexVolMeshCell {				
+  typedef CellIndex<under_type>       index_type;
+  typedef CellIterator<under_type>    iterator;
+  typedef CellIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};
+
+
 class SCICORESHARE HexVolMesh : public Mesh
 {
 public:
-  typedef unsigned int                  under_type;
 
-  //! Index and Iterator types required for Mesh Concept.
-  struct Node {
-    typedef NodeIndex<under_type>       index_type;
-    typedef NodeIterator<under_type>    iterator;
-    typedef NodeIndex<under_type>       size_type;
-    typedef StackVector<index_type, 8>  array_type;
-  };					
-					
-  struct Edge {				
-    typedef EdgeIndex<under_type>       index_type;
-    typedef EdgeIterator<under_type>    iterator;
-    typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };					
-					
-  struct Face {				
-    typedef FaceIndex<under_type>       index_type;
-    typedef FaceIterator<under_type>    iterator;
-    typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };					
-					
-  struct Cell {				
-    typedef CellIndex<under_type>       index_type;
-    typedef CellIterator<under_type>    iterator;
-    typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };
-
+  typedef HexVolMeshNode Node;
+  typedef HexVolMeshEdge Edge;
+  typedef HexVolMeshFace Face;
+  typedef HexVolMeshCell Cell;
   typedef Cell Elem;
 
   HexVolMesh();

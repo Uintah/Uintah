@@ -41,10 +41,8 @@
 #ifndef Datatypes_QuadSurfField_h
 #define Datatypes_QuadSurfField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>

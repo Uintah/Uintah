@@ -46,9 +46,8 @@
 #ifndef Datatypes_StructCurveField_h
 #define Datatypes_StructCurveField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/StructCurveMesh.h>
-#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>

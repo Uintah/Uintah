@@ -47,12 +47,8 @@
 #ifndef Datatypes_StructQuadSurfField_h
 #define Datatypes_StructQuadSurfField_h
 
-#include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Util/Assert.h>
+#include <Core/Datatypes/ImageField.h>
 
 namespace SCIRun {
 
@@ -140,12 +136,12 @@ StructQuadSurfField<Data>::io(Piostream &stream)
   stream.end_class();                                                         
   if (version < 2) {
     FData2d<Data> temp;
-    temp.copy(fdata());
-    resize_fdata();
+    temp.copy(this->fdata());
+    this->resize_fdata();
     int i, j;
-    for (i=0; i<fdata().dim1(); i++)
-      for (j=0; j<fdata().dim2(); j++)
-	fdata()(i,j)=temp(i,j);
+    for (i=0; i<this->fdata().dim1(); i++)
+      for (j=0; j<this->fdata().dim2(); j++)
+	this->fdata()(i,j)=temp(i,j);
   }  
 }
 

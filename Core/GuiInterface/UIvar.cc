@@ -179,7 +179,7 @@ inline bool UiSingle<T>::operator==(const T & right) {
 template<class T>
 inline bool UiSingle<T>::operator!=(const T & right) {
   get();
-  return value_ == right;
+  return value_ != right;
 }
 
 template<class T>

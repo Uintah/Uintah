@@ -58,40 +58,46 @@ namespace SCIRun {
 using std::string;
 using std::vector;
 
+typedef unsigned int under_type;
+
+//! Index and Iterator types required for Mesh Concept.
+struct PointCloudMeshNode {
+  typedef NodeIndex<under_type>       index_type;
+  typedef NodeIterator<under_type>    iterator;
+  typedef NodeIndex<under_type>       size_type;
+  typedef StackVector<index_type, 1>  array_type;
+};
+
+struct PointCloudMeshEdge {
+  typedef EdgeIndex<under_type>       index_type;
+  typedef EdgeIterator<under_type>    iterator;
+  typedef EdgeIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};
+
+struct PointCloudMeshFace {
+  typedef FaceIndex<under_type>       index_type;
+  typedef FaceIterator<under_type>    iterator;
+  typedef FaceIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};
+
+struct PointCloudMeshCell {
+  typedef CellIndex<under_type>       index_type;
+  typedef CellIterator<under_type>    iterator;
+  typedef CellIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};
+
+
 class SCICORESHARE PointCloudMesh : public Mesh
 {
 public:
-  typedef unsigned int under_type;
 
-  //! Index and Iterator types required for Mesh Concept.
-  struct Node {
-    typedef NodeIndex<under_type>       index_type;
-    typedef NodeIterator<under_type>    iterator;
-    typedef NodeIndex<under_type>       size_type;
-    typedef StackVector<index_type, 1>  array_type;
-  };
-
-  struct Edge {
-    typedef EdgeIndex<under_type>       index_type;
-    typedef EdgeIterator<under_type>    iterator;
-    typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };
-
-  struct Face {
-    typedef FaceIndex<under_type>       index_type;
-    typedef FaceIterator<under_type>    iterator;
-    typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };
-
-  struct Cell {
-    typedef CellIndex<under_type>       index_type;
-    typedef CellIterator<under_type>    iterator;
-    typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };
-
+  typedef PointCloudMeshNode Node;
+  typedef PointCloudMeshEdge Edge;
+  typedef PointCloudMeshFace Face;
+  typedef PointCloudMeshCell Cell;
   typedef Node Elem;
 
   PointCloudMesh() {}
