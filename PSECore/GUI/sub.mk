@@ -16,13 +16,16 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ArrowWidget.tcl $(SRCDIR)/BaseWidget.tcl \
 	$(SRCDIR)/RingWidget.tcl $(SRCDIR)/ScaledBoxWidget.tcl \
 	$(SRCDIR)/ScaledFrameWidget.tcl $(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/defaults.tcl $(SRCDIR)/devices.tcl \
-	$(SRCDIR)/platformSpecific.tcl
+	$(SRCDIR)/platformSpecific.tcl $(SRCDIR)/ComponentWizard.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECore/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.3  2000/10/15 04:34:29  moulding
+# more of Phase 1 for new module maker
+#
 # Revision 1.2  2000/03/20 19:37:23  sparker
 # Added VPATH support
 #
