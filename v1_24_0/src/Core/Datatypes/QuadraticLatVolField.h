@@ -209,9 +209,9 @@ template <class Data>
 bool QuadraticLatVolField<Data>::get_gradient(Vector &g, const Point &p)
 {
   // for now we only know how to do this for fields with scalars at the nodes
-  if (query_scalar_interface().get_rep())
+  if (this->query_scalar_interface().get_rep())
   {
-    if( basis_order() == 1)
+    if( this->basis_order() == 1)
     {
       const Point r = this->mesh_->get_transform().unproject(p);
       double x = r.x();
@@ -248,14 +248,14 @@ bool QuadraticLatVolField<Data>::get_gradient(Vector &g, const Point &p)
       double fy = y-iy0;
       double fz = z-iz0;
       QuadraticLatVolMesh *mp = this->mesh_.get_rep();
-      double d000 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
-      double d100 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
-      double d010 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
-      double d110 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
-      double d001 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
-      double d101 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
-      double d011 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
-      double d111 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
+      double d000 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
+      double d100 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
+      double d010 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
+      double d110 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
+      double d001 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
+      double d101 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
+      double d011 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
+      double d111 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
       double z00 = Interpolate(d000, d001, fz);
       double z01 = Interpolate(d010, d011, fz);
       double z10 = Interpolate(d100, d101, fz);
