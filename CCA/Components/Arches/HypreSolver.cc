@@ -186,7 +186,10 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   ny = idxHi.y() - idxLo.y() + 1;
   nz = idxHi.z() - idxLo.z() + 1;
      
-  //  int d_A_num_ghost[6] = {0, 0, 0, 0, 0, 0};
+  for (int i = 0; i < 6; i++)
+    {    
+      d_A_num_ghost[i] = 0;
+    }
 
   d_volume  = nx*ny*nz;    //number of nodes per processor
   bx = 1;
@@ -222,13 +225,13 @@ HypreSolver::gridSetup(const ProcessorGroup*,
       d_ilower[i] = hypre_CTAlloc(int, d_dim);
       d_iupper[i] = hypre_CTAlloc(int, d_dim);
     }
-  /*
+  
   for (int i = 0; i < d_dim; i++)
     {
      d_A_num_ghost[2*i] = 1;
      d_A_num_ghost[2*i + 1] = 1;
     }
-  */
+  
   /* compute d_ilower and d_iupper from (p,q,r), (bx,by,bz), and (nx,ny,nz) */
   int ib = 0;
   
@@ -358,7 +361,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 			    ArchesConstVariables* constvars,
 			    const ArchesLabel*)
 { 
-  double start_time = Time::currentSeconds();
+  double start_time = TimecurrentSeconds();
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
    * Set up the matrix structure
@@ -366,7 +369,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
   HYPRE_StructMatrixSetSymmetric(d_A, 1);
-  //  HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
+  HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 
 
    /*-----------------------------------------------------------
@@ -419,7 +422,10 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   HYPRE_StructMatrixAssemble(d_A);
   //cerr << "Matrix Assemble time = " << Time::currentSeconds()-start_time << endl;
 
-  //HYPRE_StructMatrixPrint("driver.out.A", d_A, 0);
+#if 0
+  HYPRE_StructMatrixPrint("driver.out.A", d_A, 0);
+#endif
+
   hypre_TFree(d_value);
 
   // assemble right hand side and solution vector
@@ -460,17 +466,21 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 
   HYPRE_StructVectorAssemble(d_b);
 
-  //HYPRE_StructVectorPrint("driver.out.b", d_b, 0);
-
+#if 0
+  HYPRE_StructVectorPrint("driver.out.b", d_b, 0);
+#endif
+  
   HYPRE_StructVectorAssemble(d_x);
 
-  //HYPRE_StructVectorPrint("driver.out.x0", d_x, 0);  
- 
+#if 0
+  HYPRE_StructVectorPrint("driver.out.x0", d_x, 0);  
+#endif
+  
   hypre_TFree(d_value);
 
   int me = d_myworld->myrank();
   if(me == 0) {
-    cerr << "Time in HYPRE pressure matrix solve: " << Time::currentSeconds()-start_time << " seconds\n";
+    cerr << "Time in HYPRE Assemble: " << Time::currentSeconds()-start_time << " seconds\n";
   }
 }
 
@@ -626,7 +636,7 @@ HypreSolver::pressLinearSolve()
     }
   }
   if(me == 0) {
-    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", time: " << Time::currentSeconds()-start_time << " seconds\n";
+    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
   }
   return true;
 }
@@ -644,10 +654,12 @@ HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   for (int ib = 0; ib < d_nblocks; ib++)
     {
       HYPRE_StructVectorGetBoxValues(d_x, d_ilower[ib], d_iupper[ib], xvec);
-    }      
-
-  //  HYPRE_StructVectorPrint("driver.out.x", d_x, 0);
-
+    }
+  
+#if 0
+  HYPRE_StructVectorPrint("driver.out.x", d_x, 0);
+#endif
+  
   int i = 0;
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
