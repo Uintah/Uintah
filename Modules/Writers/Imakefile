@@ -5,13 +5,16 @@
 
 OBJS = ContourSetWriter.o   MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o   \
-	SurfaceWriter.o   VectorFieldWriter.o
+	SurfaceWriter.o   VectorFieldWriter.o \
+	TetraWriter.o
 SRCS = ContourSetWriter.cc  MeshWriter.cc  \
 	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
-	SurfaceWriter.cc  VectorFieldWriter.cc
+	SurfaceWriter.cc  VectorFieldWriter.cc \
+	TetraWriter.cc
 TCLS = ContourSetWriter.tcl MeshWriter.tcl \
 	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
-	SurfaceWriter.tcl VectorFieldWriter.tcl
+	SurfaceWriter.tcl VectorFieldWriter.tcl \
+	TetraWriter.tcl
 
 LIBNAME = Writers
 
