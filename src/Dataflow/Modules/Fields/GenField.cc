@@ -28,6 +28,7 @@
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/FlatAttrib.h>
 #include <SCICore/Datatypes/AccelAttrib.h>
+#include <SCICore/Datatypes/BrickAttrib.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Containers/String.h>
@@ -51,7 +52,8 @@ private:
   SFieldOPort* ofield;
   DebugStream dbg;
 
-  template <class A> void fill(A *attrib, int x, int y, int z);
+  //template <class A> void fill(A *attrib, int x, int y, int z);
+  template <class A> void fill(DiscreteAttrib<A> *attrib, int x, int y, int z);
 
 public:
   //      DebugStream dbg;
@@ -93,7 +95,8 @@ GenField::~GenField()
 
 
 template <class A>
-void GenField::fill(A *attrib, int x, int y, int z)
+//void GenField::fill(A *attrib, int x, int y, int z)
+void GenField::fill(DiscreteAttrib<A> *attrib, int x, int y, int z)
 {
   clString mfval, retval;
   mfval=fval.get();
@@ -145,33 +148,26 @@ GenField::execute()
 
   dbg << "attribtype: " << mattribtype << endl; 
   //switch (mattribtype)
+  DiscreteAttrib<double> *attrib;
   switch (mgeomtype)
     {
-    case 1:
-      {
-	FlatAttrib<double> *attrib = new FlatAttrib<double>(x, y, z);
-	fill((FlatAttrib<double> *) attrib, x, y, z);
-	GenSField<double, LatticeGeom> *osf =
-	  new GenSField<double, LatticeGeom>(geom, attrib);
-	osf->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
-	ofield->send(osf);
-	break;
-      }
     case 2:
-      {
-	AccelAttrib<double> *attrib = new AccelAttrib<double>(x, y, z);
-	fill((AccelAttrib<double> *) attrib, x, y, z);
-	GenSField<double, LatticeGeom, AccelAttrib<double> > *osf =
-	  new GenSField<double, LatticeGeom, AccelAttrib<double> >(geom, attrib);
-	osf->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
-	ofield->send(osf);
-	break;
-      }
-
+      //attrib = new AccelAttrib<double>(x, y, z);
+      attrib = new BrickAttrib<double>(x, y, z);
+      break;
+      
     default:
-      error("No attribute type set");
-      return;
+      //attrib = new FlatAttrib<double>(x, y, z);
+      attrib = new DiscreteAttrib<double>(x, y, z);
     }
+  dbg << "filling" << endl;
+  fill(attrib, x, y, z);
+  dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
+  GenSField<double, LatticeGeom> *osf =
+    new GenSField<double, LatticeGeom>(geom, attrib);
+  osf->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
+  SFieldHandle *hndl = new SFieldHandle(osf);
+  ofield->send(*hndl);
 }
 
 
