@@ -139,15 +139,15 @@ void
 Property<T>::io( Piostream &stream)
 {
   const int version = stream.begin_class( type_name(-1), PROPERTY_VERSION);
-  if (version < 2)
-  {
-    cout << "Warning: Possible bad transient flag in property '"
-	 << type_name(-1) << "'\n";
-  }
-  else
+  if (version > 1)
   {
     Pio(stream, transient_);
   }
+  //else
+  //{
+    //cout << "Warning: Possible bad transient flag in property '"
+    //<< type_name(-1) << "'\n";
+  //}
   Pio(stream, obj_);
   stream.end_class();
 }
