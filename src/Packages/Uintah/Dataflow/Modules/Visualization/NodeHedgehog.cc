@@ -207,7 +207,7 @@ public:
     cmap(cmap), have_cmap(have_cmap), boundaryRegion(boundaryRegion), hog(hog),
     arrow_group(arrow_group),
     max_length(max_length), max_vector(max_vector), amutex(amutex), sema(sema),
-    my_max_length(0), my_max_vector(0,0,0), node_debug(false)
+    my_max_length(0), my_max_vector(0,0,0)
   {
     arrows = scinew GeomArrows(hog->width_scale.get(),
 			       1.0 - hog->head_length.get(),
@@ -339,7 +339,8 @@ NodeHedgehog::NodeHedgehog(GuiContext* ctx):
   max_vector_length(ctx->subVar("max_vector_length")),
   add_arrows("NodeHedgehog add_arrows mutex"),
   iPoint_(Point(0,0,0)),
-  dim_(IntVector(1,1,1))
+  dim_(IntVector(1,1,1)),
+  node_debug(false)
 {
   init = 1;
   float INIT(.1);
@@ -425,8 +426,10 @@ void NodeHedgehog::execute()
   if (node_debug) cout << "NodeHedgehog::execute:attempting to extract vector field from port.\n";
   
   FieldHandle vfield;
-  if (!invectorfield->get( vfield ))
+  if (!(invectorfield->get( vfield ) && vfield.get_rep())) {
+    warning("NodeHedgehog::execute() - No data from input vector port.");
     return;
+  }
 
   if( vfield->get_type_name(1) != "Vector" ){
     error ("First field must be a Vector field.");
@@ -448,7 +451,7 @@ void NodeHedgehog::execute()
   
   // Get the scalar field and ColorMap...if you can
   FieldHandle ssfield;
-  int have_sfield=inscalarfield->get( ssfield );
+  int have_sfield = inscalarfield->get( ssfield ) && ssfield.get_rep();
   ScalarFieldInterfaceHandle sf_interface;
   if( have_sfield ){
     if( !ssfield->is_scalar() ){
@@ -461,7 +464,7 @@ void NodeHedgehog::execute()
     }
   }
   ColorMapHandle cmap;
-  int have_cmap=inColorMap->get( cmap );
+  int have_cmap = inColorMap->get( cmap ) && cmap.get_rep();
   if (have_cmap) {
     if (cmap->IsScaled()) {
       if (node_debug) { cout << "cmap is scaled.\n"; }
