@@ -73,9 +73,6 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
     if (fgp) {
       Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
       IntVector ppc = (*obj)->getNumParticlesPerCell();
-      Vector size(1./((double) ppc.x()),
-                  1./((double) ppc.y()),
-                  1./((double) ppc.z()));
       vector<Point>::const_iterator itr;
       vector<Point>* points = fgp->getPoints();
       vector<double>* volumes = fgp->getVolume();
@@ -95,10 +92,6 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
       IntVector ppc = (*obj)->getNumParticlesPerCell();
       Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
       Vector dcorner = dxpp*0.5;
-      // Size as a fraction of the cell size
-      Vector size(1./((double) ppc.x()),
-                  1./((double) ppc.y()),
-                  1./((double) ppc.z()));
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         Point lower = patch->nodePosition(*iter) + dcorner;
@@ -107,15 +100,6 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
             for(int iz=0;iz < ppc.z(); iz++){
               IntVector idx(ix, iy, iz);
               Point p = lower + dxpp*idx;
-              IntVector cell_idx = *iter;
-              // If the assertion fails then we may just need to change
-              // the format of particle ids such that the cell indices
-              // have more bits.
-              ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
-                     && cell_idx.z() <= 0xffff);
-              long64 cellID = ((long64)cell_idx.x() << 16) |
-                ((long64)cell_idx.y() << 32) |
-                ((long64)cell_idx.z() << 48);
               if(piece->inside(p)){
                 pacceleration[start+count]=Vector(0.,0.,0.);
                 pvolumeold[start+count]=dxpp.x()*dxpp.y()*dxpp.z();

@@ -2635,7 +2635,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                           lb->pKineticEnergyDensityLabel, pset);
 
       ParticleSubset* delset = scinew ParticleSubset
-	(pset->getParticleSet(),false,dwi,patch);
+	(pset->getParticleSet(),false,dwi,patch, 0);
 
       pids_new.copyData(pids);
       if(d_8or27==27){

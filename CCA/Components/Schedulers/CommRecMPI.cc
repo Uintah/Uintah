@@ -67,9 +67,9 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg, CommRecMPI & cr,
   indices.clear();
   cr.indices.clear();
   
-  for (i = 0; i < ids.size(); i++)
+  for (i = 0; i < static_cast<int>(ids.size()); i++)
     combinedIDs.push_back(ids[i]);
-  for (i = 0; i < cr.ids.size(); i++)
+  for (i = 0; i < static_cast<int>(cr.ids.size()); i++)
     combinedIDs.push_back(cr.ids[i]);
 
   // if (!pg->myrank())

@@ -156,7 +156,7 @@ ScatterRecord* SPScatterRecords::findRecord(const Patch* from,
   ScatterRecord* rec = scinew ScatterRecord(from, to, matl);
   settype::iterator iter = records.find(rec);
   if(iter == records.end()){
-    rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
+    rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, 0);
     records.insert(rec);
     return rec;
   } else {
@@ -218,9 +218,10 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
       new_dw->get(px, reloc_old_posLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
-						       false, -1, 0);
+						       false, -1, 0, 0);
       ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
-						      false, -1, 0);
+						      false, -1, 0,
+						      pset->numParticles());
 
       // Look for particles that left the patch, 
       // and if they are not in the delete set, put them in relocset
@@ -485,7 +486,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
   }
   if(pr.first == pr.second){
     ScatterRecord* rec = scinew ScatterRecord(from, to, matl);
-    rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
+    rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, 0);
     records.insert(maptype::value_type(make_pair(realTo, matl), rec));
     return rec;
   } else {
@@ -609,9 +610,10 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       new_dw->get(px, reloc_old_posLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
-						       false, -1, 0);
+						       false, -1, 0, 0);
       ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
-						      false, -1, 0);
+						      false, -1, 0,
+						      pset->numParticles());
 
       ParticleSubset* delset = new_dw->getDeleteSubset(matl, patch);
       // Look for particles that left the patch, 
@@ -951,9 +953,10 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
 	  int position=0;
 	  ParticleSubset* unpackset = scinew ParticleSubset(newsubset->getParticleSet(),
-							 false, matl, patch);
+							    false, matl, patch, 0);
+	  unpackset->resize(buf->numParticles);
 	  for(int p=0;p<buf->numParticles;p++,idx++)
-	    unpackset->addParticle(idx);
+	    unpackset->set(p, idx);
 	  newpos->unpackMPI(buf->databuf, buf->bufsize, &position,
 			    pg, unpackset);
 	  for(v=0;v<numVars;v++)
