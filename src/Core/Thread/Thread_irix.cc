@@ -50,7 +50,7 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/WorkQueue.h>
-#include "Thread_unix.h"
+#include <Core/Thread/Thread_unix.h>
 #include <abi_mutex.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -82,8 +82,8 @@ extern "C" {
  *
  */
 
-#include "CrowdMonitor_default.cc"
-#include "RecursiveMutex_default.cc"
+#include <Core/Thread/CrowdMonitor_default.cc>
+#include <Core/Thread/RecursiveMutex_default.cc>
 
 
 extern "C" int __ateachexit(void(*)());
