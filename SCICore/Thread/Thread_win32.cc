@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <iostream.h>
 
+#define MAX(x,y) ((x>y)?x:y)
+#define MIN(x,y) ((x<y)?x:y)
+
 using SCICore::Thread::Mutex;
 using SCICore::Thread::Semaphore;
 using SCICore::Thread::Thread;
@@ -46,7 +49,7 @@ namespace SCICore {
 	};
 
 	struct Semaphore_private {
-	HANDLE semi;
+	HANDLE hSema;
 	};
 
     }
@@ -71,6 +74,7 @@ Mutex::Mutex(const char* name)
 Mutex::~Mutex()
 {
 	CloseHandle(d_priv->lock);
+	delete[] (char*)d_name;
 	delete d_priv;
 }
 
@@ -99,59 +103,49 @@ bool Mutex::tryLock()
 	return 0; // never happens
 }
 
-/*
-Semaphore::Semaphore(int count)
+Semaphore::Semaphore(const char* name,int count)
 {
-	//char buf[100];
-	priv = scinew Semaphore_private;
-	//if(!namelock)
-	//	init_namelock();
-    //WaitForSingleObject(namelock, INFINITE);
-	//sprintf(buf, "Semaphore%d", curname++);
-	//cout << "Semaphore::Semaphore name = " << buf << endl;
-	//ReleaseMutex(namelock);
-	priv->hSema = CreateSemaphore(NULL,count,MAX(10,MIN(2*count,100)),NULL);
-	if (priv->hSema == 0)
+	d_priv = scinew Semaphore_private;
+	d_priv->hSema = CreateSemaphore(NULL,count,MAX(10,MIN(2*count,100)),NULL);
+	if (d_priv->hSema == 0)
 	{
 		int check = GetLastError();
-		//cout << "CreateSemaphore(NULL, " << count << ", " << min(2*count,100) 
-		//     << ", " << buf << ") failed : " << check << ". Exiting." << endl;
 		exit(1);
 	}
+	int length = strlen(name);
+	d_name = new char[length+1];
+	sprintf((char*)d_name,"%s",name);
 }
 
 Semaphore::~Semaphore()
 {
-	CloseHandle(priv->hSema);
-	delete priv;
+	CloseHandle(d_priv->hSema);
+	delete[] (char*)d_name;
+	delete d_priv;
 }
 
-void Semaphore::down()
+void Semaphore::down(int dec)
 {
-	//cout << "starting Semaphore::down { Multitask\\Task_win32.cc }" << endl;
-	int check = WaitForSingleObject(priv->hSema,INFINITE);
-	if (check != WAIT_OBJECT_0)
-	{
-		//cout << "WaitForSingleObject returned: ";
-		if (check == WAIT_ABANDONED);
-			//cout << "WAIT_ABANDONED";
-		else if (check == WAIT_TIMEOUT);
-			//cout << "WAIT_TIMEOUT";
-		else if (check == WAIT_FAILED)
+	int check;
+	for (int loop = 0;loop<dec;loop++) {
+		check = WaitForSingleObject(d_priv->hSema,INFINITE);
+		if (check != WAIT_OBJECT_0)
 		{
-			check = GetLastError();
-			//cout << "WAIT_FAILED : " << check;
+			if (check == WAIT_ABANDONED);
+			else if (check == WAIT_TIMEOUT);
+			else if (check == WAIT_FAILED)
+			{
+				check = GetLastError();
+				cerr << "Uh oh.  One of the WaitForSingleObject()'s failed\n" << endl;
+			}
+			else;
 		}
-		else;
-			//cout << "Other: " << check;
-		//cout << endl;
 	}
-	//cout << "ending Semaphore::down { Multitask\\Task_win32.cc }" << endl;
 }
 
-int Semaphore::try_down()
+bool Semaphore::tryDown()
 {
-	int check = WaitForSingleObject(priv->hSema,0);
+	int check = WaitForSingleObject(d_priv->hSema,0);
 	if (check == WAIT_OBJECT_0)
 		return 0;
 	else if (check == WAIT_TIMEOUT)
@@ -164,28 +158,10 @@ int Semaphore::try_down()
 	return 0; // never happens
 }
 
-void Semaphore::up()
+void Semaphore::up(int inc)
 {
-	//cout << "Semaphore::up { Multitask\\Task_win32.cc }" << endl;
 	long count;
-	ReleaseSemaphore(priv->hSema,1,&count);
-}
-*/
-
-Semaphore::Semaphore(const char* blah1,int blah2)
-{
-}
-
-Semaphore::~Semaphore()
-{
-}
-
-void Semaphore::down(int blah)
-{
-}
-
-void Semaphore::up(int blah)
-{
+	ReleaseSemaphore(d_priv->hSema,inc,&count);
 }
 
 Thread* Thread::self()
