@@ -142,9 +142,7 @@
        <dbg_outputInterval>  1e-9    </dbg_outputInterval>
        <dbg_Matls>           [0]          </dbg_Matls>
        <dbg_BeginIndex>      [-1,-1,-1]   </dbg_BeginIndex>
-       <dbg_SigFigs>         10      </dbg_SigFigs>
-       <debug label = "switchDebugConvergence"/>
-       
+       <dbg_SigFigs>         10      </dbg_SigFigs>       
 
     <!--<debug label = "switchDebugInitialize"/>        
        <debug label = "switchDebug_EQ_RF_press"/> 
