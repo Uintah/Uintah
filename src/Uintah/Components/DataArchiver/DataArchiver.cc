@@ -64,7 +64,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 
    SaveNameItem saveItem;
    ProblemSpecP save = p->findBlock("save");
-   while (save != NULL) {
+   while (save != 0) {
       map<string, string> attributes;
       save->getAttributes(attributes);
       saveItem.labelName = attributes["label"];
@@ -710,6 +710,9 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 
 //
 // $Log$
+// Revision 1.25  2000/12/22 00:12:06  jas
+// Changed NULL to 0 to get rid of g++ warnings.
+//
 // Revision 1.24  2000/12/10 09:06:02  sparker
 // Merge from csafe_risky1
 //
