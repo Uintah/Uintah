@@ -316,10 +316,10 @@ namespace Uintah {
     }
 
     if (!s1->is_sorted()) {
-      throw InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference");
+      SCI_THROW(InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference"));
     }
     if (!s2->is_sorted()) {
-      throw InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference");
+      SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference"));
     }
   
     T el2 = s2->get(0);
@@ -328,7 +328,7 @@ namespace Uintah {
       if(!compareElems(el2, el)) {
 	ostringstream msgstr;
 	msgstr << "Set not sorted: " << el2 << ", " << el;
-	throw InternalError(msgstr.str()); 
+	SCI_THROW(InternalError(msgstr.str())); 
       }
       el2=el;
     }
@@ -398,10 +398,10 @@ namespace Uintah {
       return false;
     }
     if (!s1->is_sorted()) {
-      throw InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::overlaps");
+      SCI_THROW(InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::overlaps"));
     }
     if (!s2->is_sorted()) {
-      throw InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::overlaps");
+      SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::overlaps"));
     }
     int i1=0;
     int i2=0;

@@ -18,6 +18,6 @@ ReductionVariableBase::ReductionVariableBase()
 RefCounted*
 ReductionVariableBase::getRefCounted()
 {
-  throw InternalError("getRefCounted not implemented for ReductionVariable");
+  SCI_THROW(InternalError("getRefCounted not implemented for ReductionVariable"));
 }
     

@@ -1,7 +1,6 @@
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
@@ -9,11 +8,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/constHandle.h>
 #include <Packages/Uintah/Core/Grid/SimpleString.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <map>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -23,8 +23,12 @@ namespace Uintah {
   using std::vector;
   using std::string;
   using std::ostream;
+  using std::multimap;
   
   using namespace SCIRun;
+  class DataWarehouse;
+  class Level;
+  class ProcessorGroup;
 
 /**************************************
   
@@ -242,7 +246,11 @@ WARNING
   public: // class Task
     
     enum WhichDW {
-      OldDW, NewDW
+      OldDW, NewDW, CoarseOldDW, CoarseNewDW, ParentOldDW, ParentNewDW,
+      TotalDWs
+    };
+    enum {
+      NoDW = -1, InvalidDW = -2
     };
     
     enum TaskType {
@@ -251,7 +259,7 @@ WARNING
       InitialSend
     };
     
-    Task(const SimpleString&         taskName, TaskType type)
+    Task(const SimpleString& taskName, TaskType type)
       :  d_taskName(taskName),
 	 d_action(0)
     {
@@ -363,26 +371,17 @@ WARNING
       CoarseLevel,
       FineLevel
     };
-    
+
     //////////
-    // Insert Documentation Here:
-    void requires(WhichDW, const VarLabel*, const PatchSubset* patches = 0,
-		  const MaterialSubset* matls = 0);
-    
-    //////////
-    // Insert Documentation Here:
-    void requires(WhichDW, const VarLabel*, const MaterialSubset* matls);
-    
-    //////////
-    // Insert Documentation Here:
+    // Most general case
     void requires(WhichDW, const VarLabel*,
+		  const PatchSubset* patches, DomainSpec patches_dom,
+		  const MaterialSubset* matls, DomainSpec matls_dom,
 		  Ghost::GhostType gtype, int numGhostCells = 0);
     
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
-		  const PatchSubset* patches, DomainSpec patches_dom,
-		  const MaterialSubset* matls, DomainSpec matls_dom,
 		  Ghost::GhostType gtype, int numGhostCells = 0);
     
     //////////
@@ -400,6 +399,12 @@ WARNING
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
+		  const MaterialSubset* matls,
+		  Ghost::GhostType gtype, int numGhostCells = 0);
+
+    //////////
+    // Insert Documentation Here:
+    void requires(WhichDW, const VarLabel*,
 		  const PatchSubset* patches, DomainSpec patches_dom,
 		  Ghost::GhostType gtype, int numGhostCells = 0);
     
@@ -410,13 +415,21 @@ WARNING
 		  Ghost::GhostType gtype, int numGhostCells = 0);
     
     //////////
-    // Insert Documentation Here:
-    void requires(WhichDW, const VarLabel*,
-		  const MaterialSubset* matls,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+    // Requires only for reduction variables
+    void requires(WhichDW, const VarLabel*, const Level* level = 0,
+		  const MaterialSubset* matls = 0, DomainSpec matls_dom = NormalDomain);
     
     //////////
-    // Insert Documentation Here:
+    // Requires for reduction variables or perpatch veriables
+    void requires(WhichDW, const VarLabel*, const MaterialSubset* matls);
+    
+    //////////
+    // Requires only for perpatch variables
+    void requires(WhichDW, const VarLabel*, const PatchSubset* patches,
+		  const MaterialSubset* matls = 0);
+    
+    //////////
+    // Most general case
     void computes(const VarLabel*,
 		  const PatchSubset* patches, DomainSpec patches_domain, 
 		  const MaterialSubset* matls, DomainSpec matls_domain);
@@ -435,8 +448,18 @@ WARNING
     void computes(const VarLabel*, const MaterialSubset* matls,
 		  DomainSpec matls_domain);
 
-     //////////
+    //////////
     // Insert Documentation Here:
+    void computes(const VarLabel*,
+		  const PatchSubset* patches, DomainSpec patches_domain);
+
+    //////////
+    // Insert Documentation Here:
+    void computes(const VarLabel*, const Level* level,
+		  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain);
+
+     //////////
+    // Most general case
     void modifies(const VarLabel*,
 		  const PatchSubset* patches, DomainSpec patches_domain, 
 		  const MaterialSubset* matls, DomainSpec matls_domain);
@@ -458,8 +481,7 @@ WARNING
     //////////
     // Tells the task to actually execute the function assigned to it.
     void doit(const ProcessorGroup* pc, const PatchSubset*,
-	      const MaterialSubset*, DataWarehouse* fromDW,
-	      DataWarehouse* toDW);
+	      const MaterialSubset*, vector<DataWarehouseP>& dws);
 
     inline const char* getName() const {
       return d_taskName;
@@ -480,6 +502,7 @@ WARNING
       const VarLabel*  var;
       const PatchSubset* patches;
       const MaterialSubset* matls;
+      const Level* reductionLevel;
       Edge* req_head;
       Edge* req_tail;
       Edge* comp_head;
@@ -487,8 +510,11 @@ WARNING
       DomainSpec patches_dom;
       DomainSpec matls_dom;
       Ghost::GhostType gtype;
-      WhichDW dw;
+      WhichDW whichdw;
       int numGhostCells;
+      int mapDataWarehouse() const {
+	return task->mapDataWarehouse(whichdw);
+      }
       
       Dependency(Task* task, WhichDW dw, const VarLabel* var,
 		 const PatchSubset* patches,
@@ -497,23 +523,23 @@ WARNING
 		 DomainSpec matls_dom = NormalDomain,
 		 Ghost::GhostType gtype = Ghost::None,
 		 int numGhostCells = 0);
+      Dependency(Task* task, WhichDW dw, const VarLabel* var,
+		 const Level* reductionLevel,
+		 const MaterialSubset* matls,
+		 DomainSpec matls_dom = NormalDomain);
       ~Dependency();
       inline void addComp(Edge* edge);
       inline void addReq(Edge* edge);
 
-      inline constHandle<PatchSubset>
-      getPatchesUnderDomain(const PatchSubset* domainPatches) const
-      { return getComputeSubsetUnderDomain("patches_dom", patches_dom, patches,
-					   domainPatches); }
+      constHandle<PatchSubset>
+      getPatchesUnderDomain(const PatchSubset* domainPatches) const;
       
-      inline constHandle<MaterialSubset>
-      getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const
-      { return getComputeSubsetUnderDomain("matls_dom", matls_dom, matls,
-					   domainMaterials); }
+      constHandle<MaterialSubset>
+      getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const;
 
     private:
       template <class T>
-      inline static constHandle< ComputeSubset<T> >
+      static constHandle< ComputeSubset<T> >
       getComputeSubsetUnderDomain(string domString, DomainSpec dom,
 				  const ComputeSubset<T>* subset,
 				  const ComputeSubset<T>* domainSubset);
@@ -597,16 +623,14 @@ WARNING
     // Prints out all information about the task, including dependencies
     void displayAll( ostream & out ) const;
     
-    // Assume that any data required/modified from the new dw that doesn't
-    // get computed in the TaskGraph will already be in the new dw.
-    void assumeDataInNewDW()
-    { d_assumeDataInNewDW = true; }
-    
-    bool assumesDataInNewDW() const
-    { return d_assumeDataInNewDW; }
+    int mapDataWarehouse(WhichDW dw) const;
+    DataWarehouse* mapDataWarehouse(WhichDW dw, vector<DataWarehouseP>& dws) const;
     
   protected: // class Task
     friend class TaskGraph;
+    friend class SchedulerCommon;
+    friend class DetailedTasks;
+    void setMapping(int dwmap[TotalDWs]);
     bool visited;
     bool sorted;
     void setSets(const PatchSet* patches, const MaterialSet* matls);
@@ -638,7 +662,6 @@ WARNING
     bool                d_usesThreads;
     bool                d_subpatchCapable;
     bool                d_hasSubScheduler;
-    bool                d_assumeDataInNewDW;
     TaskType		d_tasktype;
     
     Task(const Task&);
@@ -646,6 +669,8 @@ WARNING
 
     static const MaterialSubset* getGlobalMatlSubset();
     static MaterialSubset* globalMatlSubset;
+
+    int dwmap[TotalDWs];
   };
   
   inline void Task::Dependency::addComp(Edge* edge)
@@ -665,25 +690,6 @@ WARNING
       req_tail=edge;
     }
 
-  template <class T>
-  inline constHandle< ComputeSubset<T> > Task::Dependency::
-  getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
-			      const ComputeSubset<T>* subset,
-			      const ComputeSubset<T>* domainSubset)
-  {
-    switch(dom){
-    case Task::NormalDomain:
-      return ComputeSubset<T>::intersection(subset, domainSubset);
-    case Task::OutOfDomain:
-      return subset;
-    case Task::CoarseLevel:
-    case Task::FineLevel:      
-      getOtherLevelComputeSubset(dom, subset, domainSubset);
-    default:
-      throw InternalError(string("Unknown ") + domString + " type");
-    }
-  }
-
 } // End namespace Uintah
 
 
@@ -691,5 +697,7 @@ std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
 std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
 std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
 
+// This mus tbe at the bottom
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
 #endif

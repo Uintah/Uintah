@@ -7,8 +7,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Thread/AtomicCounter.h>
+#include <Core/Thread/Mutex.h>
 #include <iostream>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 
@@ -26,10 +30,14 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, int index)
+static AtomicCounter* ids = 0;
+static Mutex ids_init("ID init");
+
+Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, int index,
+	     int id)
    : grid(grid), d_anchor(anchor), d_dcell(dcell), d_index(index),
      d_patchDistribution(-1,-1,-1),
-     d_periodicBoundaries(0, 0, 0)
+     d_periodicBoundaries(0, 0, 0), d_id(id)
 {
   each_patch=0;
   all_patches=0;
@@ -38,6 +46,20 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, int index)
 #endif
   d_finalized=false;
   d_extraCells = IntVector(0,0,0);
+  if(!ids){
+    ids_init.lock();
+    if(!ids){
+      ids = new AtomicCounter("Patch ID counter", 0);
+    }
+    ids_init.unlock();
+    
+  }
+  if(d_id == -1)
+    d_id = (*ids)++;
+  else if(d_id >= *ids)
+    ids->set(d_id+1);
+  refinementRatio = IntVector(2,2,2); // Hardcoded for now...
+  d_timeRefinementRatio = 2;
 }
 
 Level::~Level()
@@ -106,7 +128,6 @@ Patch* Level::addPatch(const IntVector& lowIndex,
 		       const IntVector& inHighIndex,
 		       int ID)
 {
- 
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
 			    inHighIndex,ID);
     d_realPatches.push_back(r);
@@ -132,7 +153,7 @@ int Level::numPatches() const
 void Level::performConsistencyCheck() const
 {
    if(!d_finalized)
-      throw InvalidGrid("Consistency check cannot be performed until Level is finalized");
+     SCI_THROW(InvalidGrid("Consistency check cannot be performed until Level is finalized"));
   for(int i=0;i<(int)d_virtualAndRealPatches.size();i++){
     Patch* r = d_virtualAndRealPatches[i];
     r->performConsistencyCheck();
@@ -146,7 +167,7 @@ void Level::performConsistencyCheck() const
       if(r1->getBox().overlaps(r2->getBox())){
 	cerr << "r1: " << *r1 << '\n';
 	cerr << "r2: " << *r2 << '\n';
-	throw InvalidGrid("Two patches overlap");
+	SCI_THROW(InvalidGrid("Two patches overlap"));
       }
     }
   }
@@ -233,18 +254,7 @@ Point Level::getCellPosition(const IntVector& v) const
 IntVector Level::getCellIndex(const Point& p) const
 {
    Vector v((p-d_anchor)/d_dcell);
-   // This bit of funky looking code is designed to bypass rounding issues
-   // for negative numbers.  We need to always round down, but a -0.5 rounds
-   // to 0 instead of -1.  So by adding 10000 we get 9999.5, cast to int
-   // would be 9999.  Subtract the 10000 and you get -1.
-
-   //////////////////////////////////////////////////////////////////
-   // if any member of v gets less than -10000 than this code
-   // must be adjusted accordingly
-   //////////////////////////////////////////////////////////////////
-   return IntVector((int)(v.x()+10000.)-10000,
-		    (int)(v.y()+10000.)-10000,
-		    (int)(v.z()+10000.)-10000);
+   return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
 }
 
 Point Level::positionToIndex(const Point& p) const
@@ -623,3 +633,46 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
   }
   return 0;
 }
+
+const LevelP& Level::getCoarserLevel() const
+{
+  return getRelativeLevel(-1);
+}
+
+const LevelP& Level::getFinerLevel() const
+{
+  return getRelativeLevel(1);
+}
+
+IntVector Level::mapCellToCoarser(const IntVector& idx) const
+{
+  return idx/refinementRatio;
+}
+
+IntVector Level::mapCellToFiner(const IntVector& idx) const
+{
+  return idx*grid->getLevel(d_index+1)->refinementRatio;
+}
+
+IntVector Level::mapNodeToCoarser(const IntVector& idx) const
+{
+  return (idx+refinementRatio-IntVector(1,1,1))/refinementRatio;
+}
+
+IntVector Level::mapNodeToFiner(const IntVector& idx) const
+{
+  return idx*grid->getLevel(d_index+1)->refinementRatio;
+}
+
+namespace Uintah {
+  const Level* getLevel(const PatchSubset* subset)
+  {
+    ASSERT(subset->size()>0);
+    const Level* level = subset->get(0)->getLevel();
+    for(int i=1;i<subset->size();i++){
+      ASSERT(level == subset->get(i)->getLevel());
+    }
+    return level;
+  }
+}
+

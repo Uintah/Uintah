@@ -145,7 +145,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::write(out);
       else
-	throw InternalError("Cannot yet write non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
       
     virtual bool emitRLE(ostream& out, DOM_Element /*varnode*/)
@@ -156,7 +156,7 @@ WARNING
 	rle.write(out);
       }
       else
-	throw InternalError("Cannot yet write non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
       return true;
     }
     
@@ -166,7 +166,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::read(in, swapBytes);
       else
-	throw InternalError("Cannot yet read non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet read non-flat objects!\n"));
     }
     
     virtual void readRLE(istream& in, bool swapBytes, int nByteMode)
@@ -177,7 +177,7 @@ WARNING
 	rle.copyOut(Array3<T>::begin(), Array3<T>::end());
       }
       else
-	throw InternalError("Cannot yet write non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
 
     static TypeDescription::Register registerMe;
@@ -246,7 +246,7 @@ WARNING
   {
     NCVariable<T>* c = dynamic_cast<NCVariable<T>* >(&copy);
     if(!c)
-      throw TypeMismatchException("Type mismatch in NC variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in NC variable"));
     copyPointer(*c);
   }
 
@@ -267,8 +267,8 @@ WARNING
 			  const IntVector& highIndex)
   {
     if(getWindow())
-      throw InternalError("Allocating an NCvariable that "
-			  "is apparently already allocated!");
+      SCI_THROW(InternalError("Allocating an NCvariable that "
+			  "is apparently already allocated!"));
     resize(lowIndex, highIndex);
   }
 
@@ -277,7 +277,7 @@ WARNING
   {
     const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(srcptr);
     if(!c)
-      throw TypeMismatchException("Type mismatch in NC variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in NC variable"));
     return *c;
   }
 

@@ -1,5 +1,6 @@
 #include "UnionGeometryPiece.h"
 #include <Core/Geometry/Point.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include "GeometryPieceFactory.h"
 
 using namespace SCIRun;

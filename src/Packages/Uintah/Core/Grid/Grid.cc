@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 
@@ -24,12 +25,13 @@ int Grid::numLevels() const
 
 const LevelP& Grid::getLevel( int l ) const
 {
+  ASSERTRANGE(l, 0, numLevels());
   return d_levels[ l ];
 }
 
-Level* Grid::addLevel(const Point& anchor, const Vector& dcell)
+Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
 {
-  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size());  
+  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), id);  
   d_levels.push_back( level );
   return level;
 }
@@ -43,7 +45,6 @@ void Grid::performConsistencyCheck() const
   // Check overlap between levels
   // See if patches on level 0 form a connected set (warning)
   // Compute total volume - compare if not first time
-  //throw InvalidGrid("Make 7-up yours");
 
   //cerr << "Grid::performConsistencyCheck not done\n";
 }

@@ -67,7 +67,7 @@ WARNING
       {
 	 SoleVariable<T>* ref = dynamic_cast<SoleVariable<T>*>(&copy);
 	 if(!ref)
-	    throw TypeMismatchException("SoleVariable<T>");
+	   SCI_THROW(TypeMismatchException("SoleVariable<T>"));
 	 *ref = *this;
       }
    
@@ -95,7 +95,7 @@ WARNING
       void
       SoleVariable<T>::allocate(const Patch*)
       {
-	 throw TypeMismatchException("SoleVariable shouldn't use allocate");
+	SCI_THROW(TypeMismatchException("SoleVariable shouldn't use allocate"));
       }
 } // End namespace Uintah
    

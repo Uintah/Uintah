@@ -63,7 +63,8 @@ WARNING
 
    class Level : public RefCounted {
    public:
-      Level(Grid* grid, const Point& anchor, const Vector& dcell, int index);
+      Level(Grid* grid, const Point& anchor, const Vector& dcell, int index,
+	    int id = -1);
       virtual ~Level();
       
       void setPatchDistributionHint(const IntVector& patchDistribution);
@@ -86,6 +87,14 @@ WARNING
 		      const IntVector& lowIndex,
 		      const IntVector& highIndex,
 		      int ID);
+
+     // Move up and down the hierarchy
+     const LevelP& getCoarserLevel() const;
+     const LevelP& getFinerLevel() const;
+     IntVector mapNodeToCoarser(const IntVector& idx) const;
+     IntVector mapNodeToFiner(const IntVector& idx) const;
+     IntVector mapCellToCoarser(const IntVector& idx) const;
+     IntVector mapCellToFiner(const IntVector& idx) const;
 
      //////////
      // Find a patch containing the point, return 0 if non exists
@@ -123,6 +132,9 @@ WARNING
       }
 
       void setExtraCells(const IntVector& ec);
+      IntVector getExtraCells() const {
+	return d_extraCells;
+      }
 
       Point getNodePosition(const IntVector&) const;
       Point getCellPosition(const IntVector&) const;
@@ -149,6 +161,15 @@ WARNING
       const PatchSet* allPatches() const;
       const Patch* selectPatchForCellIndex( const IntVector& idx) const;
       const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
+      inline int getID() const {
+        return d_id;
+      }
+     inline int timeRefinementRatio() const {
+       return d_timeRefinementRatio;
+     }
+     inline int getIndex() const {
+       return d_index;
+     }
    private:
       Level(const Level&);
       Level& operator=(const Level&);
@@ -175,6 +196,9 @@ WARNING
       std::vector<Patch*> d_realPatches; // only real patches
       std::vector<Patch*> d_virtualAndRealPatches; // real and virtual
 
+      int d_id;
+     IntVector refinementRatio;
+     int d_timeRefinementRatio;
 #ifdef SELECT_GRID
       IntVector d_idxLow;
       IntVector d_idxHigh;
@@ -188,6 +212,8 @@ WARNING
 #endif
 #endif
    };
+
+   const Level* getLevel(const PatchSubset* subset);
 } // End namespace Uintah
 
 #endif
